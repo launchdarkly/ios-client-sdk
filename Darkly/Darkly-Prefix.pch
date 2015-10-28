@@ -1,0 +1,9 @@
+//
+//  Copyright © 2015 Catamorphic Co. All rights reserved.
+//
+
+#ifdef __OBJC__
+    #import <Foundation/Foundation.h>
+    #import "DarklyConstants.h"
+    #import "NSDictionary+JSON.h"
+#endif
