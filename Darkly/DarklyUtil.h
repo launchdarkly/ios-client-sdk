@@ -1,0 +1,69 @@
+//
+//  Copyright © 2015 Catamorphic Co. All rights reserved.
+//
+
+
+#import <UIKit/UIKit.h>
+#import "LDClient.h"
+#import "DarklyConstants.h"
+
+#define CRITICAL_LOGX(string) \
+if ([DarklyUtil logLevel] >= DarklyLogLevelCriticalOnly) { \
+NSLog(string); \
+}
+
+#define CRITICAL_LOG(format, ...) \
+if ([DarklyUtil logLevel] >= DarklyLogLevelCriticalOnly) { \
+NSLog(format, __VA_ARGS__); \
+}
+
+#define DEBUG_LOGX(string) \
+if ([DarklyUtil logLevel] >= DarklyLogLevelDebug) { \
+NSLog(string); \
+}
+
+#define DEBUG_LOG(format, ...) \
+if ([DarklyUtil logLevel] >= DarklyLogLevelDebug) { \
+NSLog(format, __VA_ARGS__); \
+}
+
+#define PRIVATE_LOGX(string) \
+if (DEBUG) { \
+NSLog(string); \
+}
+
+#define PRIVATE_LOG(format, ...) \
+if (DEBUG) { \
+NSLog(format, __VA_ARGS__); \
+}
+
+#define DARKLY_ASSERT(condition, msg) \
+if (!(condition) && DEBUG) { \
+[NSException raise:@"Assertion Failure" format:@"%s [Line %d] " msg, __PRETTY_FUNCTION__, __LINE__]; \
+}
+
+@interface DarklyUtil : NSObject
+{
+    
+}
+
+// <--- debug assert ---
++ (void)assertThreadIsNotMain;
+
+// <---- device info ----
++ (NSInteger)getSystemVersionAsAnInteger;
++ (BOOL)isIPad;
++ (BOOL)isRetina;
++ (NSString *)getDeviceAsString;
++ (NSString *)getSystemVersionAsString;
+
+// <--- logging ---
++ (void)setLogLevel:(DarklyLogLevel)value;
++ (DarklyLogLevel)logLevel;
+
++ (NSString *)base64EncodeString:(NSString *)unencodedString;
++ (NSString *)base64DecodeString:(NSString *)encodedString;
++ (void)throwException:(NSString *)name reason:(NSString *)reason;
+
+@end
+
