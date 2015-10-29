@@ -24,6 +24,9 @@
     static dispatch_once_t onceToken;
     dispatch_once(&onceToken, ^{
         sharedLDClient = [[self alloc] init];
+        [[NSNotificationCenter defaultCenter] addObserver: self
+                                                 selector:@selector(configUpdated)
+                                                     name: kLDUserUpdatedNotification object: nil];
     });
     return sharedLDClient;
 }
@@ -172,5 +175,14 @@
         DEBUG_LOGX(@"LDClient not started yet!");
         return NO;
     }
+}
+
+// Notification handler for ClientManager user updated
+-(void)configUpdated {
+    [self.delegate userDidUpdate];
+}
+
+-(void)dealloc {
+    self.delegate = nil;
 }
 @end

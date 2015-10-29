@@ -5,8 +5,9 @@
 
 #import "RequestManager.h"
 
+extern NSString *const kLDUserUpdatedNotification;
+
 @interface ClientManager : NSObject  <RequestManagerDelegate> {
-    
 }
 
 @property (nonatomic) BOOL offlineEnabled;
