@@ -6,6 +6,7 @@
 #import "LDUserBuilder.h"
 #import "DarklyUtil.h"
 #import "DataManager.h"
+@import AdSupport;
 
 @interface LDUserBuilder() {
     NSString *key;
@@ -188,7 +189,7 @@
         DEBUG_LOG(@"LDUserBuilder building User with key: %@", key);
         [user key:key];
     } else {
-        NSString *uniqueKey = [[NSUUID UUID] UUIDString];
+        NSString *uniqueKey = [[[ASIdentifierManager sharedManager] advertisingIdentifier] UUIDString];
         DEBUG_LOG(@"LDUserBuilder building User with key: %@", uniqueKey);
         [user key:uniqueKey];
         if (!anonymous) {
