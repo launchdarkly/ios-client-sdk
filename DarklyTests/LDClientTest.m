@@ -168,5 +168,13 @@
     XCTAssertNotNil([[LDClient sharedInstance] currentUserBuilder]);
 }
 
+- (void)testDelegateSet {
+    LDClient *ldClient = [LDClient sharedInstance];
+    
+    ldClient.delegate = self;
+    
+    XCTAssertEqualObjects(self, ldClient.delegate);    
+}
+
 
 @end

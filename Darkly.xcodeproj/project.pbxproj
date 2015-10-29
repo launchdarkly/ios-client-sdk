@@ -489,6 +489,7 @@
 				CC36AA9C1B6D5FED008200F1 /* Frameworks */,
 				CC36AA9D1B6D5FED008200F1 /* Resources */,
 				9E58951B73187EDA355B1E32 /* Copy Pods Resources */,
+				3475A56B296BBA0BA5BDB7B8 /* Embed Pods Frameworks */,
 			);
 			buildRules = (
 			);
@@ -583,6 +584,21 @@
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXShellScriptBuildPhase section */
+		3475A56B296BBA0BA5BDB7B8 /* Embed Pods Frameworks */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputPaths = (
+			);
+			name = "Embed Pods Frameworks";
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "\"${SRCROOT}/Pods/Target Support Files/Pods-DarklyTests/Pods-DarklyTests-frameworks.sh\"\n";
+			showEnvVarsInLog = 0;
+		};
 		392077F34913B4E6B24527E4 /* Copy Pods Resources */ = {
 			isa = PBXShellScriptBuildPhase;
 			buildActionMask = 2147483647;
