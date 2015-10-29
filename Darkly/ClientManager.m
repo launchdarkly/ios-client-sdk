@@ -16,6 +16,8 @@
 
 @synthesize offlineEnabled;
 
+NSString *const kLDUserUpdatedNotification = @"Darkly.UserUpdatedNotification";
+
 +(ClientManager *)sharedInstance
 {
     static ClientManager *sharedApiManager = nil;
@@ -180,6 +182,9 @@
             PollingManager *pollingMgr = [PollingManager sharedInstance];
             DEBUG_LOG(@"ClientManager setting config interval to: %d", configInterval);
             pollingMgr.configurationTimerPollingInterval = configInterval;
+            
+            [[NSNotificationCenter defaultCenter] postNotificationName: kLDUserUpdatedNotification
+                                                                object: nil];
         }
     } else {
         DEBUG_LOGX(@"ClientManager processedConfig method called after receiving failure response from server");
