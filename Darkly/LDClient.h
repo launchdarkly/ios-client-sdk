@@ -10,7 +10,6 @@
 
 
 @protocol ClientDelegate
-@required
 @property (nonatomic, weak) id<ClientDelegate> delegate;
 -(void)userDidUpdate;
 @end
