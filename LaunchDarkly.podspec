@@ -74,7 +74,7 @@ Pod::Spec.new do |s|
   #  Supports git, hg, bzr, svn and HTTP.
   #
 
-  s.source       = { :git => "https://github.com/launchdarkly/ios-client.git", :tag => "0.2.0-beta" }
+  s.source       = { :git => "https://github.com/launchdarkly/ios-client.git", :branch => "cm-ldclient-delegate" }
 
 
 
