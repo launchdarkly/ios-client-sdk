@@ -182,4 +182,7 @@
     [self.delegate userDidUpdate];
 }
 
+-(void)dealloc {
+    self.delegate = nil;
+}
 @end
