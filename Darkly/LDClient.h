@@ -8,10 +8,18 @@
 @class LDConfig;
 @class LDUserBuilder;
 
+
+@protocol ClientDelegate
+@required
+@property (nonatomic, weak) id<ClientDelegate> delegate;
+-(void)userDidUpdate;
+@end
+
 @interface LDClient : NSObject
 
 @property(nonatomic, strong, readonly) User *user;
 @property(nonatomic, strong, readonly) LDConfig *ldConfig;
+@property (nonatomic, assign) id delegate;
 
 + (id)sharedInstance;
 
@@ -24,6 +32,5 @@
 - (BOOL)online;
 - (BOOL)flush;
 - (BOOL)stopClient;
-
 
 @end
