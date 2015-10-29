@@ -179,7 +179,9 @@
 
 // Notification handler for ClientManager user updated
 -(void)configUpdated {
-    [self.delegate userDidUpdate];
+    if (self.delegate && [self.delegate respondsToSelector:@selector(userDidUpdate)]) {
+        [self.delegate userDidUpdate];        
+    }
 }
 
 -(void)dealloc {
