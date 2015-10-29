@@ -24,7 +24,7 @@
     static dispatch_once_t onceToken;
     dispatch_once(&onceToken, ^{
         sharedLDClient = [[self alloc] init];
-        [[NSNotificationCenter defaultCenter] addObserver: self
+        [[NSNotificationCenter defaultCenter] addObserver: sharedLDClient
                                                  selector:@selector(configUpdated)
                                                      name: kLDUserUpdatedNotification object: nil];
     });
