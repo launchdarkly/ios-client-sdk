@@ -50,10 +50,14 @@
                                    inManagedObjectContext:[self managedObjectContext]]];
     NSPredicate *predicate = [NSPredicate predicateWithFormat:@"creationDate == %ld", date];
     request.predicate = predicate;
-    
+
+    __block NSArray *eventMoArray = nil;
+    [self.managedObjectContext performBlockAndWait:^{
+
     NSError *error = nil;
-    NSArray *eventMoArray = [[self managedObjectContext] executeFetchRequest:request
+    eventMoArray = [[self managedObjectContext] executeFetchRequest:request
                                                                        error:&error];
+    }];
     
     if (eventMoArray.count > 0) {
         return eventMoArray.firstObject;
@@ -66,20 +70,22 @@
     NSFetchRequest *request = [[NSFetchRequest alloc] init];
     [request setEntity:[NSEntityDescription entityForName:@"EventEntity"
                                    inManagedObjectContext:[self managedObjectContext]]];
-    NSError *error = nil;
-    NSArray *eventMoArray = [[self managedObjectContext] executeFetchRequest:request
-                                                                       error:&error];
     
+    __block NSMutableArray  *eventsArray = nil;
     
-    NSMutableArray  *eventsArray = @[].mutableCopy;
-    
-    for (int eventCount = 0; [eventMoArray count] > eventCount; eventCount++) {
-        Event *event = [MTLManagedObjectAdapter modelOfClass:[Event class]
-                                           fromManagedObject: [eventMoArray objectAtIndex: eventCount]
-                                                       error: nil];
-        [eventsArray addObject: event];
-    };
-    
+    [self.managedObjectContext performBlockAndWait:^{
+        NSError *error = nil;
+        NSArray *eventMoArray = [[self managedObjectContext] executeFetchRequest:request
+                                                                           error:&error];
+        eventsArray = @[].mutableCopy;
+        
+        for (int eventCount = 0; [eventMoArray count] > eventCount; eventCount++) {
+            Event *event = [MTLManagedObjectAdapter modelOfClass:[Event class]
+                                               fromManagedObject: [eventMoArray objectAtIndex: eventCount]
+                                                           error: nil];
+            [eventsArray addObject: event];
+        };
+    }];
     return eventsArray;
 }
 
@@ -183,7 +189,7 @@
     NSManagedObjectContext *temporaryContext = [[NSManagedObjectContext alloc] initWithConcurrencyType:NSPrivateQueueConcurrencyType];
     temporaryContext.parentContext = [self managedObjectContext];
 
-    [temporaryContext performBlock:^{
+    [temporaryContext performBlockAndWait:^{
         NSError *error = nil;
         if (![temporaryContext save:&error])
             NSLog(@"Error saving to child context %@, %@", error, [error userInfo]);
