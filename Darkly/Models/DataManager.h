@@ -5,6 +5,7 @@
 
 #import <CoreData/CoreData.h>
 #import "User.h"
+#import "UserEntity.h"
 
 @interface DataManager : NSObject
 @property (readonly, strong, nonatomic) NSManagedObjectContext *managedObjectContext;
@@ -22,4 +23,10 @@
 -(void) createCustomEvent: (NSString *)eventKey
 withCustomValuesDictionary: (NSDictionary *)customDict;
 -(NSArray *)allEvents;
+-(Config *) createConfigFromJsonDict: (NSDictionary *)jsonConfigDictionary;
+-(UserEntity *)findUserEntityWithkey: (NSString *)key;
+-(User *)findUserWithkey: (NSString *)key;
+-(void)purgeOldUsers;
+-(void)deleteOrphanedConfig;
+
 @end

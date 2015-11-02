@@ -10,18 +10,106 @@
 #import "Event.h"
 #import "DarklyUtil.h"
 
+static int const kUserCacheSize = 5;
+
 @implementation DataManager
 @synthesize managedObjectContext;
 @synthesize managedObjectModel;
 @synthesize persistentStoreCoordinator;
 
 + (id)sharedManager {
-    static DataManager *sharedAPIManager = nil;
+    static DataManager *sharedDataManager = nil;
     static dispatch_once_t onceToken;
     dispatch_once(&onceToken, ^{
-        sharedAPIManager = [[self alloc] init];
+        sharedDataManager = [[self alloc] init];
     });
-    return sharedAPIManager;
+    return sharedDataManager;
+}
+
+-(void)purgeOldUsers {
+    NSFetchRequest *request = [[NSFetchRequest alloc] init];
+    [request setEntity:[NSEntityDescription entityForName:@"UserEntity"
+                                   inManagedObjectContext:[self managedObjectContext]]];
+    
+    NSSortDescriptor *sortDescriptor = [[NSSortDescriptor alloc] initWithKey:@"updatedAt" ascending:YES];
+    request.sortDescriptors = @[sortDescriptor];
+
+    __block NSArray *userMoArray = nil;
+
+    [self.managedObjectContext performBlockAndWait:^{
+        NSError *error = nil;
+        userMoArray = [[self managedObjectContext] executeFetchRequest:request
+                                                                  error:&error];
+        
+        if (userMoArray.count >= kUserCacheSize) {
+            int numToDelete = (int)userMoArray.count - (kUserCacheSize + 1);
+            for (int userMOIndex = 0; userMOIndex < userMoArray.count; userMOIndex++) {
+                if (userMOIndex < numToDelete) {
+                    DEBUG_LOG(@"Deleting cached User at index: %d", userMOIndex);
+                    [self.managedObjectContext deleteObject: [userMoArray objectAtIndex:userMOIndex]];
+                }
+            }
+        }
+    }];
+    [self saveContext];
+}
+
+-(void)deleteOrphanedConfig {
+    NSFetchRequest *request = [[NSFetchRequest alloc] init];
+    [request setEntity:[NSEntityDescription entityForName:@"ConfigEntity"
+                                   inManagedObjectContext:[self managedObjectContext]]];
+    
+    NSPredicate *predicate = [NSPredicate predicateWithFormat:@"user.key = nil"];
+    request.predicate = predicate;
+
+    __block NSArray *configMoArray = nil;
+
+    [self.managedObjectContext performBlockAndWait:^{
+        NSError *error = nil;
+        configMoArray = [[self managedObjectContext] executeFetchRequest:request
+                                                                  error:&error];
+        
+        for (int configMOIndex = 0; configMOIndex < configMoArray.count; configMOIndex++) {
+            DEBUG_LOG(@"Deleting orphaned config at index: %d", configMOIndex);
+            [self.managedObjectContext deleteObject: [configMoArray objectAtIndex:configMOIndex]];
+        }
+    }];
+}
+
+-(UserEntity *)findUserEntityWithkey:(NSString *)key {
+    DEBUG_LOG(@"Retrieving user with key: %@", key);
+    NSFetchRequest *request = [[NSFetchRequest alloc] init];
+    [request setEntity:[NSEntityDescription entityForName:@"UserEntity"
+                                   inManagedObjectContext:[self managedObjectContext]]];
+    
+    NSPredicate *predicate = [NSPredicate predicateWithFormat:@"key == %@", key];
+    request.predicate = predicate;
+
+    __block NSArray *userMoArray = nil;
+
+    [self.managedObjectContext performBlockAndWait:^{
+        NSError *error = nil;
+        userMoArray = [[self managedObjectContext] executeFetchRequest:request
+                                                                  error:&error];
+    }];
+    
+    if (userMoArray.count > 0) {
+        return userMoArray.firstObject;
+    }
+    return nil;
+}
+
+-(User *)findUserWithkey: (NSString *)key {
+    NSManagedObject *userMo = [self findUserEntityWithkey:key];
+    
+    if (userMo) {
+        NSError *error;
+        User *user = [MTLManagedObjectAdapter modelOfClass:[User class] fromManagedObject:userMo error: &error];
+        
+        NSLog(@"Error is %@", [error debugDescription]);
+        return user;
+    }
+    return nil;
 }
 
 -(void) createFeatureEvent: (NSString *)featureKey keyValue:(BOOL)keyValue defaultKeyValue:(BOOL)defaultKeyValue {
@@ -43,6 +131,19 @@
     [self saveContext];
 }
 
+-(Config *) createConfigFromJsonDict: (NSDictionary *)jsonConfigDictionary {
+    Config *config = [MTLJSONAdapter modelOfClass:[Config class]
+                               fromJSONDictionary:jsonConfigDictionary
+                                            error: nil];
+    
+    [MTLManagedObjectAdapter managedObjectFromModel:config
+                               insertingIntoContext:[[DataManager sharedManager] managedObjectContext]
+                                              error: nil];
+    [self saveContext];
+    
+    return config;
+}
+
 -(NSManagedObject *)findEvent: (NSInteger) date {
     DEBUG_LOG(@"Retrieving event for date: %ld", (long)date);
     NSFetchRequest *request = [[NSFetchRequest alloc] init];
@@ -50,13 +151,13 @@
                                    inManagedObjectContext:[self managedObjectContext]]];
     NSPredicate *predicate = [NSPredicate predicateWithFormat:@"creationDate == %ld", date];
     request.predicate = predicate;
-
+    
     __block NSArray *eventMoArray = nil;
     [self.managedObjectContext performBlockAndWait:^{
-
-    NSError *error = nil;
-    eventMoArray = [[self managedObjectContext] executeFetchRequest:request
-                                                                       error:&error];
+        
+        NSError *error = nil;
+        eventMoArray = [[self managedObjectContext] executeFetchRequest:request
+                                                                  error:&error];
     }];
     
     if (eventMoArray.count > 0) {
@@ -105,7 +206,7 @@
             
             NSMutableDictionary *eventsDictionary = [MTLJSONAdapter JSONDictionaryFromModel:event
                                                                                       error: nil].mutableCopy;
-            NSDictionary *jSONDictionary = currentUser.dictionaryValue;
+            NSDictionary *jSONDictionary = [MTLJSONAdapter JSONDictionaryFromModel:currentUser error: nil];
             [eventsDictionary setObject: jSONDictionary forKey: @"user"];
             [eventJsonDictArray addObject:eventsDictionary];
         }
@@ -186,12 +287,9 @@
 }
 
 -(void)saveInBackground {
-    NSManagedObjectContext *temporaryContext = [[NSManagedObjectContext alloc] initWithConcurrencyType:NSPrivateQueueConcurrencyType];
-    temporaryContext.parentContext = [self managedObjectContext];
-
-    [temporaryContext performBlockAndWait:^{
+    [self.managedObjectContext performBlock:^{
         NSError *error = nil;
-        if (![temporaryContext save:&error])
+        if (![self.managedObjectContext save:&error])
             NSLog(@"Error saving to child context %@, %@", error, [error userInfo]);
     }];
 }

@@ -5,8 +5,11 @@
 #import <XCTest/XCTest.h>
 #import "LDUserBuilder.h"
 #import "User.h"
+#import "DataManager.h"
+#import "DarklyXCTestCase.h"
+#import <OCMock.h>
 
-@interface LDUserBuilderTest : XCTestCase
+@interface LDUserBuilderTest : DarklyXCTestCase
 
 @end
 
@@ -51,7 +54,8 @@
     builder = [builder withEmail:testEmail];
     builder = [builder withAvatar:testAvatar];
     builder = [builder withCustomString:testCustomKey value:testCustomValue];
-    builder = [builder withAnonymous:testAnonymous];
+    builder = [builder withAnonymous:testAnonymous];    
+
     User *user = [builder build];
     XCTAssertEqualObjects([user key], testKey);
     XCTAssertEqualObjects([user ip], testIp);
@@ -67,10 +71,8 @@
 }
 
 - (void)testUserSetAnonymous {
-    NSString *testKey = @"testKey";
     Boolean testAnonymous = YES;
     LDUserBuilder *builder = [[LDUserBuilder alloc] init];
-    builder = [builder withKey:testKey];
     builder = [builder withAnonymous:testAnonymous];
     User *user = [builder build];
     XCTAssertTrue([user anonymous]);
