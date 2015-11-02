@@ -6,6 +6,8 @@
 #import "LDUserBuilder.h"
 #import "DarklyUtil.h"
 #import "DataManager.h"
+#import "UserEntity.h"
+
 @interface LDUserBuilder() {
     NSString *key;
     NSString *ip;
@@ -173,22 +175,26 @@
     return self;
 }
 
-- (LDUserBuilder *)withAnonymous:(BOOL)inputAnonymous
-{
+- (LDUserBuilder *)withAnonymous:(BOOL)inputAnonymous {
     anonymous = inputAnonymous;
     return self;
 }
 
--(User *)build
-{
+-(User *)build {
     DEBUG_LOGX(@"LDUserBuilder build method called");
-    User *user = [[User alloc] init];
+    User *user = nil;
+    
     if (key) {
-        DEBUG_LOG(@"LDUserBuilder building User with key: %@", key);
+        if(!(user = [[DataManager sharedManager] findUserWithkey:key])) {
+            user = [[User alloc] init];
+        }
         [user key:key];
+        DEBUG_LOG(@"LDUserBuilder building User with key: %@", key);
     } else {
         NSString *uniqueKey = [[[UIDevice currentDevice] identifierForVendor] UUIDString];
         DEBUG_LOG(@"LDUserBuilder building User with key: %@", uniqueKey);
+
+        user = [[User alloc] init];
         [user key:uniqueKey];
         if (!anonymous) {
             Boolean currentAnonymous = YES;
@@ -228,8 +234,33 @@
         [user setAnonymous:currentAnonymous];
     }
     DEBUG_LOG(@"LDUserBuilder building User with anonymous: %d", anonymous);
-    [[DataManager sharedManager] saveContext];
+    [self saveUser: user];
     return user;
+}
+
+-(void) saveUser: (User *) user {
+    UserEntity *userEntity = [[DataManager sharedManager] findUserEntityWithkey:key];
+    
+    if(!userEntity) {
+        [MTLManagedObjectAdapter managedObjectFromModel: user
+                                   insertingIntoContext: [[DataManager sharedManager] managedObjectContext]
+                                                  error: nil];
+    } else {
+        userEntity.key = user.key;
+        userEntity.anonymous = [NSNumber numberWithBool: user.anonymous];
+        userEntity.avatar = user.avatar;
+        userEntity.country = user.country;
+        userEntity.custom = user.custom;
+        userEntity.device = user.device;
+        userEntity.email = user.email;
+        userEntity.firstName = user.firstName;
+        userEntity.ip = user.ip;
+        userEntity.lastName = user.lastName;
+        userEntity.os = user.os;
+        userEntity.updatedAt = [NSDate date];
+    }                       
+    
+    [[DataManager sharedManager] saveContext];
 }
 
 @end

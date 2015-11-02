@@ -58,7 +58,8 @@
                @"device": @"device",
                @"os": @"os",
                @"config": @"config",
-               @"anonymous": @"anonymous"
+               @"anonymous": @"anonymous",
+               @"updatedAt": @"updatedAt"
                };
 }
 

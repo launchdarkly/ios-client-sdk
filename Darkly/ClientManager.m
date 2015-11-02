@@ -74,7 +74,7 @@ NSString *const kLDUserUpdatedNotification = @"Darkly.UserUpdatedNotification";
 - (void)willEnterForeground
 {
     DEBUG_LOGX(@"ClientManager entering foreground");
-     PollingManager *pollingMgr = [PollingManager sharedInstance];
+    PollingManager *pollingMgr = [PollingManager sharedInstance];
     [pollingMgr resumeConfigPolling];
     [pollingMgr resumeEventPolling];
 }
@@ -83,9 +83,9 @@ NSString *const kLDUserUpdatedNotification = @"Darkly.UserUpdatedNotification";
 {
     if (!offlineEnabled) {
         DEBUG_LOGX(@"ClientManager syncing events with server");
-
+        
         NSData *eventJsonData = [[DataManager sharedManager] allEventsJsonData];
-
+        
         if (eventJsonData) {
             RequestManager *rMan = [RequestManager sharedInstance];
             [rMan performEventRequest:eventJsonData];
@@ -131,14 +131,14 @@ NSString *const kLDUserUpdatedNotification = @"Darkly.UserUpdatedNotification";
         NSArray *processedJsonArray = [NSJSONSerialization JSONObjectWithData:jsonEventArray options:NSJSONReadingMutableContainers error:nil];
         if (processedJsonArray) {
             BOOL hasMatchedEvents = NO;
-
+            
             // Loop through processedEvents
             for (NSDictionary *processedEventDict in processedJsonArray) {
                 // Attempt to find match in currentEvents based on creationDate
                 
                 Event *processedEvent = [MTLJSONAdapter modelOfClass:[Event class]
-                                                   fromJSONDictionary:processedEventDict
-                                                                error:nil];
+                                                  fromJSONDictionary:processedEventDict
+                                                               error:nil];
                 NSManagedObject *matchedCurrentEvent = [[DataManager sharedManager] findEvent: [processedEvent creationDate]];
                 // If events match
                 if (matchedCurrentEvent) {
@@ -164,9 +164,8 @@ NSString *const kLDUserUpdatedNotification = @"Darkly.UserUpdatedNotification";
     if (success) {
         DEBUG_LOGX(@"ClientManager processedConfig method called after receiving successful response from server");
         // If Success
-        Config *config = [MTLJSONAdapter modelOfClass:[Config class]
-                                   fromJSONDictionary:jsonConfigDictionary
-                                                error: nil];
+        Config *config = [[DataManager sharedManager] createConfigFromJsonDict: jsonConfigDictionary];
+        
         if (config) {
             // Overwrite Config with new config
             LDClient *client = [LDClient sharedInstance];

@@ -14,6 +14,7 @@
 #import "LDClient.h"
 #import <OCMock.h>
 #import "NSArray+UnitTests.h"
+#import "UserEntity.h"
 
 @interface DataManagerTest : DarklyXCTestCase
 @property (nonatomic) id clientMock;
@@ -157,5 +158,44 @@
     NSString *eventUserKey = [userDict objectForKey:@"email"];
 
     XCTAssertTrue([eventUserKey isEqualToString: theUser.email]);    
+}
+
+
+-(void)testFindOrCreateUser {
+    NSString *userKey = @"gus";
+    User *aUser = [[User alloc] init];
+    aUser.key = @"gus";
+    aUser.email = @"gus@anemail.com";
+        
+    [MTLManagedObjectAdapter managedObjectFromModel:aUser 
+                               insertingIntoContext: [[DataManager sharedManager]
+                                                      managedObjectContext] error: nil];
+    [[DataManager sharedManager] saveContext];
+    
+    XCTAssertNotNil(aUser);
+    
+    User *foundAgainUser = [[DataManager sharedManager] findUserWithkey: userKey];
+    
+    XCTAssertNotNil(foundAgainUser);
+    XCTAssertEqual(aUser.email, foundAgainUser.email);
+}
+
+-(void) testPurgeUsers {
+    for(int index = 0; index < 10; index++) {
+        User *aUser = [[User alloc] init];
+        aUser.key = [NSString stringWithFormat: @"gus%d", index];
+        aUser.email = @"gus@anemail.com";
+    
+        [MTLManagedObjectAdapter managedObjectFromModel:aUser
+                                   insertingIntoContext: [[DataManager sharedManager]
+                                                          managedObjectContext] error: nil];
+    }
+    UserEntity *userEntity = [[DataManager sharedManager] findUserEntityWithkey: @"gus1"];
+
+    XCTAssertNotNil(userEntity);
+    [[DataManager sharedManager] purgeOldUsers];
+    
+    userEntity = [[DataManager sharedManager] findUserEntityWithkey: @"gus1"];
+    XCTAssertNil(userEntity);
 }
 @end
