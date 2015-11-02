@@ -23,6 +23,11 @@
         DEBUG_LOG(@"User building User with system version: %@", systemVersion);
         [self setOs:systemVersion];
         
+        // Need to set updated Date
+        NSDate *currentDate = [NSDate date];
+        DEBUG_LOG(@"User building User with updatedAt: %@", currentDate);
+        [self setUpdatedAt:currentDate];
+        
         self.custom = @{};
     }
     
@@ -57,8 +62,8 @@
                @"custom": @"custom",
                @"device": @"device",
                @"os": @"os",
-               @"config": @"config",
-               @"anonymous": @"anonymous"
+               @"anonymous": @"anonymous",
+               @"updatedAt": @"updatedAt"
                };
 }
 
@@ -102,14 +107,33 @@
     for (NSString *originalKey in [super dictionaryValue]) {
         id propertyValue = [self valueForKey:originalKey];
         if ( propertyValue == nil ||
-            [originalKey isEqualToString: @"config"] ||
             ([originalKey isEqualToString: @"custom"] &&
              [(NSDictionary *)propertyValue count] == 0)) {
-            [modifiedDictionaryValue removeObjectForKey:originalKey];
-        }
+                [modifiedDictionaryValue removeObjectForKey:originalKey];
+            }
     }
     
     return [modifiedDictionaryValue copy];
+}
+
++(NSValueTransformer *) updatedAtJSONTransformer {
+    return [MTLValueTransformer transformerUsingForwardBlock:^id(NSString *dateString, BOOL *success, NSError *__autoreleasing *error) {
+        return [[self dateformatter] dateFromString:dateString];
+    } reverseBlock:^id(NSDate *date, BOOL *success, NSError *__autoreleasing *error) {
+        return [[self dateformatter] stringFromDate:date];
+    }];
+}
+
++(NSDateFormatter *)dateformatter{
+    NSDateFormatter *dateFormatter = [[NSDateFormatter alloc] init];
+    dateFormatter.locale = [NSLocale currentLocale];
+    dateFormatter.dateStyle = NSDateFormatterMediumStyle;
+    dateFormatter.dateFormat = @"yyyy-MM-dd'T'HH:mm:ss'Z'";
+    return dateFormatter;
+}
+
++ (NSSet *)propertyKeysForManagedObjectUniquing {
+    return [NSSet setWithObject:@"key"];
 }
 
 @end

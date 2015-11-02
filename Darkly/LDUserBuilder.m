@@ -6,6 +6,8 @@
 #import "LDUserBuilder.h"
 #import "DarklyUtil.h"
 #import "DataManager.h"
+#import "UserEntity.h"
+
 @interface LDUserBuilder() {
     NSString *key;
     NSString *ip;
@@ -173,22 +175,27 @@
     return self;
 }
 
-- (LDUserBuilder *)withAnonymous:(BOOL)inputAnonymous
-{
+- (LDUserBuilder *)withAnonymous:(BOOL)inputAnonymous {
     anonymous = inputAnonymous;
     return self;
 }
 
--(User *)build
-{
+-(User *)build {
     DEBUG_LOGX(@"LDUserBuilder build method called");
-    User *user = [[User alloc] init];
+    User *user = nil;
+    
     if (key) {
-        DEBUG_LOG(@"LDUserBuilder building User with key: %@", key);
+        user = [[DataManager sharedManager] findUserWithkey:key];
+        if(!user) {
+            user = [[User alloc] init];
+        }
         [user key:key];
+        DEBUG_LOG(@"LDUserBuilder building User with key: %@", key);
     } else {
         NSString *uniqueKey = [[[UIDevice currentDevice] identifierForVendor] UUIDString];
         DEBUG_LOG(@"LDUserBuilder building User with key: %@", uniqueKey);
+
+        user = [[User alloc] init];
         [user key:uniqueKey];
         if (!anonymous) {
             Boolean currentAnonymous = YES;
@@ -228,7 +235,7 @@
         [user setAnonymous:currentAnonymous];
     }
     DEBUG_LOG(@"LDUserBuilder building User with anonymous: %d", anonymous);
-    [[DataManager sharedManager] saveContext];
+    [[DataManager sharedManager] saveUser: user];
     return user;
 }
 

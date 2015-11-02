@@ -64,6 +64,30 @@
     XCTAssertTrue([[LDClient sharedInstance] toggle:@"test" default:YES]);
 }
 
+- (void)testUserPersisted {
+    NSString *testApiKey = @"testApiKey";
+    LDConfigBuilder *builder = [[LDConfigBuilder alloc] init];
+    [builder withApiKey:testApiKey];
+    
+    LDUserBuilder *userBuilder = [[LDUserBuilder alloc] init];
+    [userBuilder withKey:@"myKey"];
+    [userBuilder withEmail:@"my@email.com"];
+    
+    [[LDClient sharedInstance] start:builder userBuilder:userBuilder];
+    XCTAssertTrue([[LDClient sharedInstance] toggle:@"test" default:YES]);
+    
+    LDUserBuilder *anotherUserBuilder = [[LDUserBuilder alloc] init];
+    [anotherUserBuilder withKey:@"myKey"];
+
+    User *user = [[LDClient sharedInstance] user];
+    OCMStub([self.dataManagerMock findUserWithkey:[OCMArg any]]).andReturn(user);
+
+    [[LDClient sharedInstance] start:builder userBuilder:anotherUserBuilder];
+    user = [[LDClient sharedInstance] user];
+    
+     XCTAssertEqual(user.email, @"my@email.com");
+}
+
 -(void)testToggleCreatesEventWithCorrectArguments {
     NSString *toggleName = @"test";
     BOOL toggleDefaultValue = YES;
@@ -73,7 +97,7 @@
     OCMStub([self.dataManagerMock createFeatureEvent:[OCMArg any] keyValue:[OCMArg any] defaultKeyValue:[OCMArg any]]);
     [[LDClient sharedInstance] start:builder userBuilder:nil];
     [[LDClient sharedInstance] toggle:toggleName default:toggleDefaultValue];
-
+    
     OCMVerify([self.dataManagerMock createFeatureEvent:toggleName keyValue:toggleDefaultValue defaultKeyValue:toggleDefaultValue]);
     [self.dataManagerMock stopMocking];
 }
@@ -91,12 +115,12 @@
     
     
     OCMStub([self.dataManagerMock createCustomEvent:[OCMArg isKindOfClass:[NSString class]]  withCustomValuesDictionary:[OCMArg isKindOfClass:[NSDictionary class]]]);
-
+    
     XCTAssertTrue([[LDClient sharedInstance] track:@"test" data:customData]);
     
     OCMVerify([self.dataManagerMock createCustomEvent: @"test"
-                      withCustomValuesDictionary: customData]);
-
+                           withCustomValuesDictionary: customData]);
+    
 }
 
 - (void)testOfflineWithoutStart {
@@ -173,7 +197,7 @@
     
     ldClient.delegate = self;
     
-    XCTAssertEqualObjects(self, ldClient.delegate);    
+    XCTAssertEqualObjects(self, ldClient.delegate);
 }
 
 
