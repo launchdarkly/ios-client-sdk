@@ -20,7 +20,14 @@
 
 + (NSDictionary *)managedObjectKeysByPropertyKey {
     // mapping between NSManagaedObject and Mantle object goes here
-    return @{@"featuresJsonDictionary": @"featuresJsonDictionary"};
+    return @{@"featuresJsonDictionary": @"featuresJsonDictionary",
+             @"user": @"user"};
+}
+
++ (NSDictionary *)relationshipModelClassesByPropertyKey {
+    return @{
+             @"user" : [User class]
+             };
 }
 
 -(NSArray *)features {
@@ -67,6 +74,5 @@
         return [feature.key isEqualToString: keyName];
     }];
 }
-
 
 @end

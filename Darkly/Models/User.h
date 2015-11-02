@@ -15,6 +15,7 @@
 @property (nullable, nonatomic, strong) NSString *email;
 @property (nullable, nonatomic, strong) NSString *avatar;
 @property (nullable, nonatomic, strong) NSDictionary *custom;
+@property (nullable, nonatomic, strong) NSDate *updatedAt;
 @property (nullable, nonatomic, strong) Config *config;
 
 @property (nonatomic, assign) BOOL anonymous;
