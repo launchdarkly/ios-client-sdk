@@ -10,6 +10,8 @@
 #import "Event.h"
 #import "DarklyUtil.h"
 
+static int const kUserCacheSize = 5;
+
 @implementation DataManager
 @synthesize managedObjectContext;
 @synthesize managedObjectModel;
@@ -29,7 +31,7 @@
     [request setEntity:[NSEntityDescription entityForName:@"UserEntity"
                                    inManagedObjectContext:[self managedObjectContext]]];
     
-    NSSortDescriptor *sortDescriptor = [[NSSortDescriptor alloc] initWithKey:@"updatedAt" ascending:NO];
+    NSSortDescriptor *sortDescriptor = [[NSSortDescriptor alloc] initWithKey:@"updatedAt" ascending:YES];
     request.sortDescriptors = @[sortDescriptor];
 
     __block NSArray *userMoArray = nil;
@@ -39,9 +41,13 @@
         userMoArray = [[self managedObjectContext] executeFetchRequest:request
                                                                   error:&error];
         
-        if (userMoArray.count > 5) {
-            for (int userMOIndex = 5; userMOIndex < userMoArray.count; userMOIndex++) {
-                [self.managedObjectContext deleteObject: [userMoArray objectAtIndex:userMOIndex]];
+        if (userMoArray.count >= kUserCacheSize) {
+            int numToDelete = (int)userMoArray.count - (kUserCacheSize + 1);
+            for (int userMOIndex = 0; userMOIndex < userMoArray.count; userMOIndex++) {
+                if (userMOIndex < numToDelete) {
+                    DEBUG_LOG(@"Deleting cached User at index: %d", userMOIndex);
+                    [self.managedObjectContext deleteObject: [userMoArray objectAtIndex:userMOIndex]];
+                }
             }
         }
     }];

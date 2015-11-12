@@ -185,7 +185,8 @@
     User *user = nil;
     
     if (key) {
-        if(!(user = [[DataManager sharedManager] findUserWithkey:key])) {
+        user = [[DataManager sharedManager] findUserWithkey:key];
+        if(!user) {
             user = [[User alloc] init];
         }
         [user key:key];
@@ -242,6 +243,7 @@
     UserEntity *userEntity = [[DataManager sharedManager] findUserEntityWithkey:key];
     
     if(!userEntity) {
+        [[DataManager sharedManager] purgeOldUsers];
         [MTLManagedObjectAdapter managedObjectFromModel: user
                                    insertingIntoContext: [[DataManager sharedManager] managedObjectContext]
                                                   error: nil];

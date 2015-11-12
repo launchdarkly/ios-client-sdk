@@ -23,6 +23,11 @@
         DEBUG_LOG(@"User building User with system version: %@", systemVersion);
         [self setOs:systemVersion];
         
+        // Need to set updated Date
+        NSDate *currentDate = [NSDate date];
+        DEBUG_LOG(@"User building User with updatedAt: %@", currentDate);
+        [self setUpdatedAt:currentDate];
+        
         self.custom = @{};
     }
     
