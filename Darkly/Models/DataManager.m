@@ -10,7 +10,7 @@
 #import "Event.h"
 #import "DarklyUtil.h"
 
-static int const kUserCacheSize = 5;
+int const kUserCacheSize = 5;
 
 @implementation DataManager
 @synthesize managedObjectContext;
@@ -41,7 +41,7 @@ static int const kUserCacheSize = 5;
         userMoArray = [[self managedObjectContext] executeFetchRequest:request
                                                                   error:&error];
         
-        if (userMoArray.count >= kUserCacheSize) {
+        if (userMoArray.count > kUserCacheSize) {
             int numToDelete = (int)userMoArray.count - (kUserCacheSize + 1);
             for (int userMOIndex = 0; userMOIndex < userMoArray.count; userMOIndex++) {
                 if (userMOIndex < numToDelete) {
@@ -52,6 +52,22 @@ static int const kUserCacheSize = 5;
         }
     }];
     [self saveContext];
+}
+
+-(void) saveUser: (User *) user {
+    UserEntity *userEntity = [[DataManager sharedManager] findUserEntityWithkey:user.key];
+    
+    if (userEntity) {
+        user.config = [MTLManagedObjectAdapter modelOfClass:[Config class] fromManagedObject: (NSManagedObject *)userEntity.config error: nil];
+    } else {
+        [[DataManager sharedManager] purgeOldUsers];
+    }
+    
+    [MTLManagedObjectAdapter managedObjectFromModel: user
+                               insertingIntoContext: [[DataManager sharedManager] managedObjectContext]
+                                              error: nil];
+    
+    [[DataManager sharedManager] saveContext];
 }
 
 -(void)deleteOrphanedConfig {
@@ -74,6 +90,23 @@ static int const kUserCacheSize = 5;
             [self.managedObjectContext deleteObject: [configMoArray objectAtIndex:configMOIndex]];
         }
     }];
+}
+
+
+-(NSArray *)allUsers {
+    NSFetchRequest *request = [[NSFetchRequest alloc] init];
+    [request setEntity:[NSEntityDescription entityForName:@"UserEntity"
+                                   inManagedObjectContext:[self managedObjectContext]]];
+    
+    __block NSArray *userMoArray = nil;
+
+    [self.managedObjectContext performBlockAndWait:^{
+        NSError *error = nil;
+        userMoArray = [[self managedObjectContext] executeFetchRequest:request
+                                                                  error:&error];
+    }];
+    
+    return userMoArray;
 }
 
 -(UserEntity *)findUserEntityWithkey:(NSString *)key {
@@ -107,6 +140,7 @@ static int const kUserCacheSize = 5;
         User *user = [MTLManagedObjectAdapter modelOfClass:[User class] fromManagedObject:userMo error: &error];
         
         NSLog(@"Error is %@", [error debugDescription]);
+        user.updatedAt = [NSDate date];
         return user;
     }
     return nil;

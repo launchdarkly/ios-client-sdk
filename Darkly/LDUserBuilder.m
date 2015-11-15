@@ -235,22 +235,8 @@
         [user setAnonymous:currentAnonymous];
     }
     DEBUG_LOG(@"LDUserBuilder building User with anonymous: %d", anonymous);
-    [self saveUser: user];
+    [[DataManager sharedManager] saveUser: user];
     return user;
-}
-
--(void) saveUser: (User *) user {
-    [[DataManager sharedManager] purgeOldUsers];
-    UserEntity *userEntity = [[DataManager sharedManager] findUserEntityWithkey:user.key];
-    
-    if (userEntity) {
-        user.config = [MTLManagedObjectAdapter modelOfClass:[Config class] fromManagedObject: userEntity.config error: nil];
-    }
-    [MTLManagedObjectAdapter managedObjectFromModel: user
-                               insertingIntoContext: [[DataManager sharedManager] managedObjectContext]
-                                              error: nil];
-    
-    [[DataManager sharedManager] saveContext];
 }
 
 @end

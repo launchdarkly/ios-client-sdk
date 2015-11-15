@@ -186,7 +186,7 @@
 -(void) testPurgeUsers {
     NSDate *now = [NSDate date];
     
-    for(int index = 0; index < 10; index++) {
+    for(int index = 0; index < kUserCacheSize + 3; index++) {
         User *aUser = [[User alloc] init];
         aUser.key = [NSString stringWithFormat: @"gus%d", index];
         aUser.email = @"gus@anemail.com";
@@ -202,12 +202,18 @@
         
         NSLog(@"PRINT BREAK");
     }
-    UserEntity *userEntity = [[DataManager sharedManager] findUserEntityWithkey: @"gus1"];
+    
+    [self.dataManagerMock saveContext];
+    NSString *userKey = @"gus0";
+
+    NSArray *allUsers = [[DataManager sharedManager] allUsers];
+    UserEntity *userEntity = [[DataManager sharedManager] findUserEntityWithkey: userKey];
 
     XCTAssertNotNil(userEntity);
     [[DataManager sharedManager] purgeOldUsers];
     
-    userEntity = [[DataManager sharedManager] findUserEntityWithkey: @"gus1"];
+    allUsers = [[DataManager sharedManager] allUsers];
+    userEntity = [[DataManager sharedManager] findUserEntityWithkey: userKey];
     XCTAssertNil(userEntity);
 }
 @end

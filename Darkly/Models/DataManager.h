@@ -7,6 +7,8 @@
 #import "User.h"
 #import "UserEntity.h"
 
+extern int const kUserCacheSize;
+
 @interface DataManager : NSObject
 @property (readonly, strong, nonatomic) NSManagedObjectContext *managedObjectContext;
 @property (readonly, strong, nonatomic) NSManagedObjectModel *managedObjectModel;
@@ -28,5 +30,7 @@ withCustomValuesDictionary: (NSDictionary *)customDict;
 -(User *)findUserWithkey: (NSString *)key;
 -(void)purgeOldUsers;
 -(void)deleteOrphanedConfig;
+-(NSArray *)allUsers;
+-(void) saveUser: (User *) user;
 
 @end
