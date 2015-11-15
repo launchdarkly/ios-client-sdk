@@ -41,7 +41,7 @@ int const kUserCacheSize = 5;
         userMoArray = [[self managedObjectContext] executeFetchRequest:request
                                                                   error:&error];
         
-        if (userMoArray.count > kUserCacheSize) {
+        if (userMoArray.count >= kUserCacheSize) {
             int numToDelete = (int)userMoArray.count - (kUserCacheSize + 1);
             for (int userMOIndex = 0; userMOIndex < userMoArray.count; userMOIndex++) {
                 if (userMOIndex < numToDelete) {
