@@ -3,7 +3,7 @@
     <entity name="ConfigEntity" representedClassName="ConfigEntity" syncable="YES">
         <attribute name="featuresJsonDictionary" optional="YES" attributeType="Transformable" syncable="YES"/>
         <attribute name="pollTimeInSeconds" optional="YES" attributeType="Integer 32" defaultValueString="0" syncable="YES"/>
-        <relationship name="user" maxCount="1" deletionRule="Cascade" destinationEntity="UserEntity" inverseName="config" inverseEntity="UserEntity" syncable="YES"/>
+        <relationship name="user" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="UserEntity" inverseName="config" inverseEntity="UserEntity" syncable="YES"/>
     </entity>
     <entity name="EventEntity" syncable="YES">
         <attribute name="creationDate" optional="YES" attributeType="Integer 64" defaultValueString="0.0" syncable="YES"/>
@@ -21,12 +21,12 @@
         <attribute name="device" optional="YES" attributeType="String" syncable="YES"/>
         <attribute name="email" optional="YES" attributeType="String" syncable="YES"/>
         <attribute name="firstName" optional="YES" attributeType="String" syncable="YES"/>
-        <attribute name="groups" optional="YES" attributeType="String" syncable="YES"/>
         <attribute name="ip" optional="YES" attributeType="String" syncable="YES"/>
         <attribute name="key" optional="YES" attributeType="String" syncable="YES"/>
         <attribute name="lastName" optional="YES" attributeType="String" syncable="YES"/>
         <attribute name="os" optional="YES" attributeType="String" syncable="YES"/>
-        <relationship name="config" maxCount="1" deletionRule="Cascade" destinationEntity="ConfigEntity" inverseName="user" inverseEntity="ConfigEntity" syncable="YES"/>
+        <attribute name="updatedAt" optional="YES" attributeType="Date" syncable="YES"/>
+        <relationship name="config" optional="YES" maxCount="1" deletionRule="Cascade" destinationEntity="ConfigEntity" inverseName="user" inverseEntity="ConfigEntity" syncable="YES"/>
     </entity>
     <elements>
         <element name="ConfigEntity" positionX="-65" positionY="153" width="128" height="90"/>
