@@ -40,6 +40,8 @@
 		CC4E8F431B8ABB3500F2A19D /* EventTest.m in Sources */ = {isa = PBXBuildFile; fileRef = CC4E8F421B8ABB3500F2A19D /* EventTest.m */; };
 		CC4E8F461B8B3A7B00F2A19D /* UserTest.m in Sources */ = {isa = PBXBuildFile; fileRef = CC4E8F451B8B3A7B00F2A19D /* UserTest.m */; };
 		CC674C901B7519FB00B6A78D /* FeatureFlag.m in Sources */ = {isa = PBXBuildFile; fileRef = CC674C8F1B7519FB00B6A78D /* FeatureFlag.m */; };
+		CC753A231BF2FB8B001E4124 /* UserEntity+CoreDataProperties.m in Sources */ = {isa = PBXBuildFile; fileRef = CC753A201BF2FB8B001E4124 /* UserEntity+CoreDataProperties.m */; };
+		CC753A281BF2FB8B001E4124 /* UserEntity.m in Sources */ = {isa = PBXBuildFile; fileRef = CC753A221BF2FB8B001E4124 /* UserEntity.m */; };
 		CCA68A0F1B7066230052BE63 /* Event.m in Sources */ = {isa = PBXBuildFile; fileRef = CCA68A0A1B7066230052BE63 /* Event.m */; };
 		CCA68A111B7066230052BE63 /* User.m in Sources */ = {isa = PBXBuildFile; fileRef = CCA68A0E1B7066230052BE63 /* User.m */; };
 		CCA68A131B7066480052BE63 /* CoreData.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = CCA68A121B7066480052BE63 /* CoreData.framework */; };
@@ -146,6 +148,11 @@
 		CC4E8F451B8B3A7B00F2A19D /* UserTest.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = UserTest.m; path = Models/UserTest.m; sourceTree = "<group>"; };
 		CC674C8E1B7519FB00B6A78D /* FeatureFlag.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = FeatureFlag.h; path = Models/FeatureFlag.h; sourceTree = "<group>"; };
 		CC674C8F1B7519FB00B6A78D /* FeatureFlag.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = FeatureFlag.m; path = Models/FeatureFlag.m; sourceTree = "<group>"; };
+		CC753A0A1BF2E043001E4124 /* darkly2.xcdatamodel */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcdatamodel; path = darkly2.xcdatamodel; sourceTree = "<group>"; };
+		CC753A1F1BF2FB8B001E4124 /* UserEntity+CoreDataProperties.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = "UserEntity+CoreDataProperties.h"; path = "Models/UserEntity+CoreDataProperties.h"; sourceTree = "<group>"; };
+		CC753A201BF2FB8B001E4124 /* UserEntity+CoreDataProperties.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = "UserEntity+CoreDataProperties.m"; path = "Models/UserEntity+CoreDataProperties.m"; sourceTree = "<group>"; };
+		CC753A211BF2FB8B001E4124 /* UserEntity.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = UserEntity.h; path = Models/UserEntity.h; sourceTree = "<group>"; };
+		CC753A221BF2FB8B001E4124 /* UserEntity.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = UserEntity.m; path = Models/UserEntity.m; sourceTree = "<group>"; };
 		CCA68A091B7066230052BE63 /* Event.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = Event.h; path = Models/Event.h; sourceTree = "<group>"; };
 		CCA68A0A1B7066230052BE63 /* Event.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = Event.m; path = Models/Event.m; sourceTree = "<group>"; };
 		CCA68A0D1B7066230052BE63 /* User.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = User.h; path = Models/User.h; sourceTree = "<group>"; };
@@ -357,9 +364,21 @@
 			name = Models;
 			sourceTree = "<group>";
 		};
+		CC753A2D1BF2FBB0001E4124 /* CoreData */ = {
+			isa = PBXGroup;
+			children = (
+				CC753A1F1BF2FB8B001E4124 /* UserEntity+CoreDataProperties.h */,
+				CC753A201BF2FB8B001E4124 /* UserEntity+CoreDataProperties.m */,
+				CC753A211BF2FB8B001E4124 /* UserEntity.h */,
+				CC753A221BF2FB8B001E4124 /* UserEntity.m */,
+			);
+			name = CoreData;
+			sourceTree = "<group>";
+		};
 		CCA68A081B7065E50052BE63 /* Models */ = {
 			isa = PBXGroup;
 			children = (
+				CC753A2D1BF2FBB0001E4124 /* CoreData */,
 				CC674C8E1B7519FB00B6A78D /* FeatureFlag.h */,
 				CC674C8F1B7519FB00B6A78D /* FeatureFlag.m */,
 				CCA68A091B7066230052BE63 /* Event.h */,
@@ -694,8 +713,10 @@
 				CC674C901B7519FB00B6A78D /* FeatureFlag.m in Sources */,
 				3A70A7881B6FCFAC00984E23 /* LDClient.m in Sources */,
 				ADE5294F1B8418B200761F3D /* LDUserBuilder.m in Sources */,
+				CC753A281BF2FB8B001E4124 /* UserEntity.m in Sources */,
 				CCA68A111B7066230052BE63 /* User.m in Sources */,
 				CCDDE1771B7418B400DFC04B /* Config.m in Sources */,
+				CC753A231BF2FB8B001E4124 /* UserEntity+CoreDataProperties.m in Sources */,
 				CCA68A0F1B7066230052BE63 /* Event.m in Sources */,
 				3AC5D0DE1B8AA44A00417CBB /* NSDictionary+JSON.m in Sources */,
 				3A9F23D11B82D19900D0EF2F /* RequestManager.m in Sources */,
@@ -1090,9 +1111,10 @@
 		CCA68A141B7066980052BE63 /* darkly.xcdatamodeld */ = {
 			isa = XCVersionGroup;
 			children = (
+				CC753A0A1BF2E043001E4124 /* darkly2.xcdatamodel */,
 				CCA68A151B7066980052BE63 /* darkly.xcdatamodel */,
 			);
-			currentVersion = CCA68A151B7066980052BE63 /* darkly.xcdatamodel */;
+			currentVersion = CC753A0A1BF2E043001E4124 /* darkly2.xcdatamodel */;
 			path = darkly.xcdatamodeld;
 			sourceTree = "<group>";
 			versionGroupType = wrapper.xcdatamodel;
