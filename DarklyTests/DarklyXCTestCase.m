@@ -37,5 +37,7 @@
         [context deleteObject:event];
     }
     [dataManagerMock saveContext];
+    
+    [dataManagerMock setEventCreatedCount: 0];
 }
 @end
