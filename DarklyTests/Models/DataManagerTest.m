@@ -214,4 +214,25 @@
     userEntity = [[DataManager sharedManager] findUserEntityWithkey: userKey];
     XCTAssertNil(userEntity);
 }
+
+-(void)testCreateEventAfterCapacityReached{
+    LDConfigBuilder *builder = [[LDConfigBuilder alloc] init];
+    builder = [builder withCapacity: 2];
+    builder = [builder withApiKey: @"AnApiKey"];
+    LDConfig *config = [builder build];
+    
+    OCMStub([clientMock ldConfig]).andReturn(config);
+    
+    [self.dataManagerMock createCustomEvent:@"aKey" withCustomValuesDictionary: @{@"carrot": @"cake"}];
+    [self.dataManagerMock createCustomEvent:@"aKey" withCustomValuesDictionary: @{@"carrot": @"cake"}];
+    [self.dataManagerMock createCustomEvent:@"aKey" withCustomValuesDictionary: @{@"carrot": @"cake"}];
+    [self.dataManagerMock createFeatureEvent: @"anotherKet" keyValue: YES defaultKeyValue: NO];
+    
+    [self.dataManagerMock saveContext];
+    
+    NSArray *allEvents = [self.dataManagerMock allEvents];
+    
+    XCTAssertTrue(allEvents.count == 2);
+}
+
 @end

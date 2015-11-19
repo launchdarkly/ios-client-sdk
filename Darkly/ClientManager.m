@@ -18,8 +18,7 @@
 
 NSString *const kLDUserUpdatedNotification = @"Darkly.UserUpdatedNotification";
 
-+(ClientManager *)sharedInstance
-{
++(ClientManager *)sharedInstance {
     static ClientManager *sharedApiManager = nil;
     static dispatch_once_t onceToken;
     dispatch_once(&onceToken, ^{
@@ -32,10 +31,7 @@ NSString *const kLDUserUpdatedNotification = @"Darkly.UserUpdatedNotification";
     return sharedApiManager;
 }
 
-
-
-- (void)startPolling
-{
+- (void)startPolling {
     PollingManager *pollingMgr = [PollingManager sharedInstance];
     
     LDClient *client = [LDClient sharedInstance];
@@ -49,8 +45,7 @@ NSString *const kLDUserUpdatedNotification = @"Darkly.UserUpdatedNotification";
 }
 
 
-- (void)stopPolling
-{
+- (void)stopPolling {
     DEBUG_LOGX(@"ClientManager stopPolling method called");
     PollingManager *pollingMgr = [PollingManager sharedInstance];
     
@@ -60,8 +55,7 @@ NSString *const kLDUserUpdatedNotification = @"Darkly.UserUpdatedNotification";
     [self flushEvents];
 }
 
-- (void)willEnterBackground
-{
+- (void)willEnterBackground {
     DEBUG_LOGX(@"ClientManager entering background");
     PollingManager *pollingMgr = [PollingManager sharedInstance];
     
@@ -71,16 +65,14 @@ NSString *const kLDUserUpdatedNotification = @"Darkly.UserUpdatedNotification";
     [self flushEvents];
 }
 
-- (void)willEnterForeground
-{
+- (void)willEnterForeground {
     DEBUG_LOGX(@"ClientManager entering foreground");
     PollingManager *pollingMgr = [PollingManager sharedInstance];
     [pollingMgr resumeConfigPolling];
     [pollingMgr resumeEventPolling];
 }
 
--(void)syncWithServerForEvents
-{
+-(void)syncWithServerForEvents {
     if (!offlineEnabled) {
         DEBUG_LOGX(@"ClientManager syncing events with server");
         
@@ -97,8 +89,7 @@ NSString *const kLDUserUpdatedNotification = @"Darkly.UserUpdatedNotification";
     }
 }
 
--(void)syncWithServerForConfig
-{
+-(void)syncWithServerForConfig {
     if (!offlineEnabled) {
         DEBUG_LOGX(@"ClientManager syncing config with server");
         LDClient *client = [LDClient sharedInstance];
@@ -117,39 +108,18 @@ NSString *const kLDUserUpdatedNotification = @"Darkly.UserUpdatedNotification";
     }
 }
 
-- (void)flushEvents
-{
+- (void)flushEvents {
     [self syncWithServerForEvents];
 }
 
-- (void)processedEvents:(BOOL)success jsonEventArray:(NSData *)jsonEventArray eventInterval:(int)eventInterval
-{
+- (void)processedEvents:(BOOL)success jsonEventArray:(NSData *)jsonEventArray eventInterval:(int)eventInterval {
     // If Success
     if (success) {
         DEBUG_LOGX(@"ClientManager processedEvents method called after receiving successful response from server");
         // Audit cached events versus processed Events and only keep difference
         NSArray *processedJsonArray = [NSJSONSerialization JSONObjectWithData:jsonEventArray options:NSJSONReadingMutableContainers error:nil];
         if (processedJsonArray) {
-            BOOL hasMatchedEvents = NO;
-            
-            // Loop through processedEvents
-            for (NSDictionary *processedEventDict in processedJsonArray) {
-                // Attempt to find match in currentEvents based on creationDate
-                
-                Event *processedEvent = [MTLJSONAdapter modelOfClass:[Event class]
-                                                  fromJSONDictionary:processedEventDict
-                                                               error:nil];
-                NSManagedObject *matchedCurrentEvent = [[DataManager sharedManager] findEvent: [processedEvent creationDate]];
-                // If events match
-                if (matchedCurrentEvent) {
-                    [[[DataManager sharedManager] managedObjectContext] deleteObject:matchedCurrentEvent];
-                    hasMatchedEvents = YES;
-                }
-            }
-            // If number of managedObjects is greater than 0, then Save Context
-            if (hasMatchedEvents) {
-                [[DataManager sharedManager] saveContext];
-            }
+            [[DataManager sharedManager] deleteProcessedEvents: processedJsonArray];
         }
     } else {
         DEBUG_LOGX(@"ClientManager processedEvents method called after receiving failure response from server");
@@ -159,8 +129,7 @@ NSString *const kLDUserUpdatedNotification = @"Darkly.UserUpdatedNotification";
     }
 }
 
-- (void)processedConfig:(BOOL)success jsonConfigDictionary:(NSDictionary *)jsonConfigDictionary configInterval:(int)configInterval
-{
+- (void)processedConfig:(BOOL)success jsonConfigDictionary:(NSDictionary *)jsonConfigDictionary configInterval:(int)configInterval {
     if (success) {
         DEBUG_LOGX(@"ClientManager processedConfig method called after receiving successful response from server");
         // If Success
