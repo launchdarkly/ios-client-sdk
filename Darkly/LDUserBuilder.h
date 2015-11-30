@@ -3,14 +3,14 @@
 //
 
 
-#import "User.h"
+#import "LDUser.h"
 
 @interface LDUserBuilder : NSObject {
     
 }
 
-+ (User *)compareNewBuilder:(LDUserBuilder *)iBuilder withUser:(User *)iUser;
-+ (LDUserBuilder *)retrieveCurrentBuilder:(User *)iUser;
++ (LDUser *)compareNewBuilder:(LDUserBuilder *)iBuilder withUser:(LDUser *)iUser;
++ (LDUserBuilder *)retrieveCurrentBuilder:(LDUser *)iUser;
 
 /**
  * Provide a key to the user builder to identify the user. If this key

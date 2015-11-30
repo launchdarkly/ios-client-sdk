@@ -7,8 +7,8 @@
 #import "PollingManager.h"
 #import "DataManager.h"
 #import "DarklyUtil.h"
-#import "User.h"
-#import "Event.h"
+#import "LDUser.h"
+#import "LDEvent.h"
 #import <BlocksKit/BlocksKit.h>
 #import "NSDictionary+JSON.h"
 
@@ -93,7 +93,7 @@ NSString *const kLDUserUpdatedNotification = @"Darkly.UserUpdatedNotification";
     if (!offlineEnabled) {
         DEBUG_LOGX(@"ClientManager syncing config with server");
         LDClient *client = [LDClient sharedInstance];
-        User *currentUser = client.user;
+        LDUser *currentUser = client.user;
         
         if (currentUser) {
             NSDictionary *jsonDictionary = [MTLJSONAdapter JSONDictionaryFromModel:currentUser error: nil];
@@ -133,13 +133,13 @@ NSString *const kLDUserUpdatedNotification = @"Darkly.UserUpdatedNotification";
     if (success) {
         DEBUG_LOGX(@"ClientManager processedConfig method called after receiving successful response from server");
         // If Success
-        Config *config = [MTLJSONAdapter modelOfClass:[Config class]
+        LDFlagConfig *config = [MTLJSONAdapter modelOfClass:[LDFlagConfig class]
                                    fromJSONDictionary:jsonConfigDictionary
                                                 error: nil];
         if (config) {
             // Overwrite Config with new config
             LDClient *client = [LDClient sharedInstance];
-            User *user = client.user;
+            LDUser *user = client.user;
             config.user = user;
             
             // Save context

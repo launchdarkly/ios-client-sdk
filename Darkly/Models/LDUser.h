@@ -4,9 +4,9 @@
 
 #import <Mantle/Mantle.h>
 #import <MTLManagedObjectAdapter/MTLManagedObjectAdapter.h>
-#import "Config.h"
+#import "LDFlagConfig.h"
 
-@interface User : MTLModel <MTLJSONSerializing, MTLManagedObjectSerializing>
+@interface LDUser : MTLModel <MTLJSONSerializing, MTLManagedObjectSerializing>
 @property (nullable, nonatomic, strong, setter=key:) NSString *key;
 @property (nullable, nonatomic, strong) NSString *ip;
 @property (nullable, nonatomic, strong) NSString *country;
@@ -16,7 +16,7 @@
 @property (nullable, nonatomic, strong) NSString *avatar;
 @property (nullable, nonatomic, strong) NSDictionary *custom;
 @property (nullable, nonatomic, strong) NSDate *updatedAt;
-@property (nullable, nonatomic, strong) Config *config;
+@property (nullable, nonatomic, strong) LDFlagConfig *config;
 
 @property (nonatomic, assign) BOOL anonymous;
 @property (nullable, nonatomic, strong) NSString *device;

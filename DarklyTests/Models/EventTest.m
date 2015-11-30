@@ -3,7 +3,7 @@
 //
 
 #import <XCTest/XCTest.h>
-#import "Event.h"
+#import "LDEvent.h"
 
 @interface EventTest : XCTestCase
 
@@ -20,7 +20,7 @@
 }
 
 - (void)testFeatureEventWithKeyCreatesEventWithDefaults {
-    Event *event = [[Event alloc] featureEventWithKey:@"red" keyValue:NO defaultKeyValue:NO];
+    LDEvent *event = [[LDEvent alloc] featureEventWithKey:@"red" keyValue:NO defaultKeyValue:NO];
     
     XCTAssertEqual(event.key, @"red");
     XCTAssertEqual(event.kind, @"feature");
@@ -30,7 +30,7 @@
 
 - (void)testCustomEventWithKeyCreatesEventWithDefaults {
     NSDictionary *dictionary = @{@"red": @"is not blue"};
-    Event *event = [[Event alloc] customEventWithKey:@"red"
+    LDEvent *event = [[LDEvent alloc] customEventWithKey:@"red"
                                    andDataDictionary: dictionary];
     
     XCTAssertEqual(event.key, @"red");
