@@ -4,13 +4,13 @@
 
 #import "DarklyXCTestCase.h"
 #import <BlocksKit/BlocksKit.h>
-#import "Config.h"
+#import "LDFlagConfig.h"
 #import <Blockskit/BlocksKit.h>
-#import "FeatureFlag.h"
+#import "LDFeatureFlag.h"
 #import "DataManager.h"
-#import "User.h"
-#import "Config.h"
-#import "Event.h"
+#import "LDUser.h"
+#import "LDFlagConfig.h"
+#import "LDEvent.h"
 #import "LDClient.h"
 #import <OCMock.h>
 #import "NSArray+UnitTests.h"
@@ -18,7 +18,7 @@
 
 @interface DataManagerTest : DarklyXCTestCase
 @property (nonatomic) id clientMock;
-@property (nonnull) User *user;
+@property (nonnull) LDUser *user;
 
 @end
 
@@ -28,7 +28,7 @@
 
 - (void)setUp {
     [super setUp];
-    user = [[User alloc] init];
+    user = [[LDUser alloc] init];
     user.firstName = @"Bob";
     user.lastName = @"Giffy";
     user.email = @"bob@gmail.com";
@@ -39,7 +39,7 @@
     clientMock = OCMPartialMock(client);
     OCMStub([clientMock user]).andReturn(user);
     
-    Config *config = [[Config alloc] init];
+    LDFlagConfig *config = [[LDFlagConfig alloc] init];
     config.featuresJsonDictionary = [NSDictionary dictionaryWithObjects:@[@{@"value": @YES}, @{@"value": @NO}]
                                                                 forKeys: @[@"ipaduser", @"iosuser"]];
     user.config = config;
@@ -59,7 +59,7 @@
 
 - (void)testisFlagOnForKey {
     LDClient *client = [LDClient sharedInstance];
-    User * theUser = client.user;
+    LDUser * theUser = client.user;
     
     BOOL ipaduserFlag = [theUser isFlagOn: @"ipaduser"];
     BOOL iosuserFlag = [theUser isFlagOn: @"iosuser"];
@@ -73,12 +73,12 @@
 -(void)testCreateFeatureEvent {
     [[DataManager sharedManager] createFeatureEvent:@"afeaturekey" keyValue:NO defaultKeyValue:NO];
     
-    Event *lastEvent = [self lastCreatedEvent];
+    LDEvent *lastEvent = [self lastCreatedEvent];
     
     XCTAssertEqualObjects(lastEvent.key, @"afeaturekey");
 }
 
--(Event *)lastCreatedEvent {
+-(LDEvent *)lastCreatedEvent {
     NSFetchRequest *request = [[NSFetchRequest alloc] init];
     [request setEntity:[NSEntityDescription entityForName:@"EventEntity"
                                    inManagedObjectContext: [self.dataManagerMock managedObjectContext]]];
@@ -89,7 +89,7 @@
     NSError *error = nil;
     NSManagedObject *eventMo = [[[self.dataManagerMock managedObjectContext] executeFetchRequest:request                                                                          error:&error] objectAtIndex:0];
     
-    return [MTLManagedObjectAdapter modelOfClass:[Event class]
+    return [MTLManagedObjectAdapter modelOfClass:[LDEvent class]
                                fromManagedObject: eventMo
                                            error: &error];
     
@@ -97,8 +97,8 @@
 }
 
 -(void)testAllEvents {
-    Event *event1 = [[Event alloc] init];
-    Event *event2 = [[Event alloc] init];
+    LDEvent *event1 = [[LDEvent alloc] init];
+    LDEvent *event2 = [[LDEvent alloc] init];
     
     event1.key = @"foo";
     event2.key = @"fi";
@@ -109,7 +109,7 @@
     [self.dataManagerMock saveContext];
     
     NSArray *eventArray = [self.dataManagerMock allEvents];
-    NSArray *eventKeys = [eventArray bk_map:^id(Event *event) {
+    NSArray *eventKeys = [eventArray bk_map:^id(LDEvent *event) {
         return event.key;
     }];
     XCTAssertTrue([eventKeys containsObject:event1.key]);
@@ -121,21 +121,21 @@
     
     [self.dataManagerMock saveContext];
     
-    Event *event = [self.dataManagerMock allEvents].firstObject;
+    LDEvent *event = [self.dataManagerMock allEvents].firstObject;
 
     XCTAssertTrue([[event.data allKeys] containsObject: @"carrot"]);
     XCTAssertTrue([event.key isEqualToString: @"aKey"]);    
 }
 
 -(void)testAllEventsJsonData {
-    Event *event1 = [[Event alloc] init];
-    Event *event2 = [[Event alloc] init];
+    LDEvent *event1 = [[LDEvent alloc] init];
+    LDEvent *event2 = [[LDEvent alloc] init];
     
     event1.key = @"foo";
     event2.key = @"fi";
     
     LDClient *client = [LDClient sharedInstance];
-    User *theUser = client.user;
+    LDUser *theUser = client.user;
     
     [self.dataManagerMock createCustomEvent:@"foo" withCustomValuesDictionary:nil];
     [self.dataManagerMock createCustomEvent:@"fi" withCustomValuesDictionary:nil];
@@ -164,7 +164,7 @@
 
 -(void)testFindOrCreateUser {
     NSString *userKey = @"thisisgus";
-    User *aUser = [[User alloc] init];
+    LDUser *aUser = [[LDUser alloc] init];
     aUser.key = userKey;
     aUser.email = @"gus@anemail.com";
     aUser.updatedAt = [NSDate date];
@@ -177,7 +177,7 @@
     
     XCTAssertNotNil(aUser);
     
-    User *foundAgainUser = [[DataManager sharedManager] findUserWithkey: userKey];
+    LDUser *foundAgainUser = [[DataManager sharedManager] findUserWithkey: userKey];
     
     XCTAssertNotNil(foundAgainUser);
     XCTAssertEqual(aUser.email, foundAgainUser.email);
@@ -187,7 +187,7 @@
     NSDate *now = [NSDate date];
     
     for(int index = 0; index < kUserCacheSize + 3; index++) {
-        User *aUser = [[User alloc] init];
+        LDUser *aUser = [[LDUser alloc] init];
         aUser.key = [NSString stringWithFormat: @"gus%d", index];
         aUser.email = @"gus@anemail.com";
         

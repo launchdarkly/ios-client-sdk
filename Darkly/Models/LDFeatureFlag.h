@@ -3,9 +3,9 @@
 //
 
 
-@class User;
+@class LDUser;
 
-@interface FeatureFlag : NSObject 
+@interface LDFeatureFlag : NSObject 
 @property (nullable, nonatomic, strong) NSString *key;
 @property (nonatomic, assign) BOOL isOn;
 

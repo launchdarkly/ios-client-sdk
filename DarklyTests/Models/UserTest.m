@@ -3,7 +3,7 @@
 //
 
 #import <XCTest/XCTest.h>
-#import "User.h"
+#import "LDUser.h"
 
 @interface UserTest : XCTestCase
 @end
@@ -19,7 +19,7 @@
 }
 
 -(void)testAnonymousSetToFalseIfKeySet {
-    User *user = [[User alloc] init];
+    LDUser *user = [[LDUser alloc] init];
     
     user.key = @"aUser";
     
@@ -27,7 +27,7 @@
 }
 
 -(void)testNillValuesExcluded {
-    User *user = [[User alloc] init];
+    LDUser *user = [[LDUser alloc] init];
     
     user.key = @"aUser";
     user.email = @"gus@byrnesinnovation.com";
@@ -43,7 +43,7 @@
 }
 
 -(void) testSettingUserKeyToNilOrBlank {
-    User *user = [[User alloc] init];
+    LDUser *user = [[LDUser alloc] init];
     
     user.key = @"aUser";
     XCTAssertFalse(user.anonymous);

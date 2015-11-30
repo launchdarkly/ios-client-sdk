@@ -2,10 +2,10 @@
 //  Copyright © 2015 Catamorphic Co. All rights reserved.
 //
 
-#import "User.h"
+#import "LDUser.h"
 #import "DarklyUtil.h"
 
-@implementation User
+@implementation LDUser
 
 @synthesize key;
 
@@ -72,12 +72,12 @@
 }
 
 + (NSValueTransformer *)configTransformer {
-    return [NSValueTransformer mtl_validatingTransformerForClass:[Config class]];
+    return [NSValueTransformer mtl_validatingTransformerForClass:[LDFlagConfig class]];
 }
 
 + (NSDictionary *)relationshipModelClassesByPropertyKey {
     return @{
-             @"config" : [Config class]
+             @"config" : [LDFlagConfig class]
              };
 }
 
