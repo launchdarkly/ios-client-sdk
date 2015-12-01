@@ -9,7 +9,7 @@
 #import <OCMock.h>
 #import "RequestManager.h"
 #import "DataManager.h"
-#import "Event.h"
+#import "LDEvent.h"
 #import <Blockskit.h>
 
 @interface ClientManagerTest : DarklyXCTestCase
@@ -24,16 +24,16 @@
 
 - (void)setUp {
     [super setUp];
-    User *user = [[User alloc] init];
+    LDUser *user = [[LDUser alloc] init];
     user.key = @"jeff@test.com";
     user.os = @"80400";
     user.device = @"iPhone";
     
-    Event *event = [[Event alloc] init];
+    LDEvent *event = [[LDEvent alloc] init];
     [event featureEventWithKey:@"blah" keyValue:NO defaultKeyValue:NO];
     
     NSArray *eventArray = @[event];
-    NSArray *eventJsonDictArray = [eventArray bk_map:^id(Event *event) {
+    NSArray *eventJsonDictArray = [eventArray bk_map:^id(LDEvent *event) {
         return [MTLJSONAdapter JSONDictionaryFromModel:event error: nil];
     }];
     

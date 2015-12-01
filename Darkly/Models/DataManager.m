@@ -7,7 +7,7 @@
 #import <Mantle/Mantle.h>
 #import <MTLManagedObjectAdapter/MTLManagedObjectAdapter.h>
 #import <BlocksKit/BlocksKit.h>
-#import "Event.h"
+#import "LDEvent.h"
 #import "DarklyUtil.h"
 
 int const kUserCacheSize = 5;
@@ -57,11 +57,11 @@ int const kUserCacheSize = 5;
     [self saveContext];
 }
 
--(void) saveUser: (User *) user {
+-(void) saveUser: (LDUser *) user {
     UserEntity *userEntity = [[DataManager sharedManager] findUserEntityWithkey:user.key];
     
     if (userEntity) {
-        user.config = [MTLManagedObjectAdapter modelOfClass:[Config class] fromManagedObject: (NSManagedObject *)userEntity.config error: nil];
+        user.config = [MTLManagedObjectAdapter modelOfClass:[LDFlagConfig class] fromManagedObject: (NSManagedObject *)userEntity.config error: nil];
     } else {
         [[DataManager sharedManager] purgeOldUsers];
     }
@@ -97,12 +97,12 @@ int const kUserCacheSize = 5;
     return nil;
 }
 
--(User *)findUserWithkey: (NSString *)key {
+-(LDUser *)findUserWithkey: (NSString *)key {
     NSManagedObject *userMo = [self findUserEntityWithkey:key];
     
     if (userMo) {
         NSError *error;
-        User *user = [MTLManagedObjectAdapter modelOfClass:[User class] fromManagedObject:userMo error: &error];
+        LDUser *user = [MTLManagedObjectAdapter modelOfClass:[LDUser class] fromManagedObject:userMo error: &error];
         
         NSLog(@"Error is %@", [error debugDescription]);
         user.updatedAt = [NSDate date];
@@ -134,8 +134,8 @@ int const kUserCacheSize = 5;
     }];
 }
 
--(Config *) createConfigFromJsonDict: (NSDictionary *)jsonConfigDictionary {
-    Config *config = [MTLJSONAdapter modelOfClass:[Config class]
+-(LDFlagConfig *) createConfigFromJsonDict: (NSDictionary *)jsonConfigDictionary {
+    LDFlagConfig *config = [MTLJSONAdapter modelOfClass:[LDFlagConfig class]
                                fromJSONDictionary:jsonConfigDictionary
                                             error: nil];
     
@@ -152,7 +152,7 @@ int const kUserCacheSize = 5;
     
     if(![self isAtEventCapacity]) {
         DEBUG_LOG(@"Creating event for feature:%@ with value:%d and defaultValue:%d", featureKey, keyValue, defaultKeyValue);
-        Event *featureEvent = [[Event alloc] featureEventWithKey: featureKey keyValue:keyValue defaultKeyValue:defaultKeyValue];
+        LDEvent *featureEvent = [[LDEvent alloc] featureEventWithKey: featureKey keyValue:keyValue defaultKeyValue:defaultKeyValue];
         [MTLManagedObjectAdapter managedObjectFromModel:featureEvent
                                    insertingIntoContext:[self managedObjectContext]
                                                   error:nil];
@@ -167,7 +167,7 @@ int const kUserCacheSize = 5;
 -(void) createCustomEvent: (NSString *)eventKey withCustomValuesDictionary: (NSDictionary *)customDict {
     if(![self isAtEventCapacity]) {
         DEBUG_LOG(@"Creating event for custom key:%@ and value:%@", eventKey, customDict);
-        Event *customEvent = [[Event alloc] customEventWithKey: eventKey  andDataDictionary: customDict];
+        LDEvent *customEvent = [[LDEvent alloc] customEventWithKey: eventKey  andDataDictionary: customDict];
         
         [MTLManagedObjectAdapter managedObjectFromModel:customEvent
                                    insertingIntoContext:[self managedObjectContext]
@@ -214,7 +214,7 @@ int const kUserCacheSize = 5;
         // Loop through processedEvents
         for (NSDictionary *processedEventDict in processedJsonArray) {
             // Attempt to find match in currentEvents based on creationDate
-            Event *processedEvent = [MTLJSONAdapter modelOfClass:[Event class]
+            LDEvent *processedEvent = [MTLJSONAdapter modelOfClass:[LDEvent class]
                                               fromJSONDictionary:processedEventDict
                                                            error:nil];
             NSManagedObject *matchedCurrentEvent = [[DataManager sharedManager] findEvent: [processedEvent creationDate]];
@@ -249,7 +249,7 @@ int const kUserCacheSize = 5;
         eventsArray = @[].mutableCopy;
         
         for (int eventCount = 0; [eventMoArray count] > eventCount; eventCount++) {
-            Event *event = [MTLManagedObjectAdapter modelOfClass:[Event class]
+            LDEvent *event = [MTLManagedObjectAdapter modelOfClass:[LDEvent class]
                                                fromManagedObject: [eventMoArray objectAtIndex: eventCount]
                                                            error: nil];
             [eventsArray addObject: event];
@@ -261,7 +261,7 @@ int const kUserCacheSize = 5;
 -(NSData*) allEventsJsonData {
     NSError *error = nil;
     LDClient *client = [LDClient sharedInstance];
-    User *currentUser = client.user;
+    LDUser *currentUser = client.user;
     
     NSArray *allEvents = [self allEvents];
     
@@ -270,7 +270,7 @@ int const kUserCacheSize = 5;
         NSMutableArray *eventJsonDictArray = [NSMutableArray array];
         
         for (int eventCount = 0; allEvents.count > eventCount; eventCount++) {
-            Event *event = [allEvents objectAtIndex: eventCount];
+            LDEvent *event = [allEvents objectAtIndex: eventCount];
             
             NSMutableDictionary *eventsDictionary = [MTLJSONAdapter JSONDictionaryFromModel:event
                                                                                       error: nil].mutableCopy;

@@ -5,7 +5,7 @@
 #import <Mantle/Mantle.h>
 #import <MTLManagedObjectAdapter/MTLManagedObjectAdapter.h>
 
-@interface Event : MTLModel <MTLJSONSerializing, MTLManagedObjectSerializing>
+@interface LDEvent : MTLModel <MTLJSONSerializing, MTLManagedObjectSerializing>
 @property (nullable, nonatomic, strong) NSString *key;
 @property (nullable, nonatomic, strong) NSString *kind;
 @property (nonatomic) NSInteger creationDate;

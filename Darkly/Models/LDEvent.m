@@ -2,9 +2,9 @@
 //  Copyright © 2015 Catamorphic Co. All rights reserved.
 //
 
-#import "Event.h"
+#import "LDEvent.h"
 
-@implementation Event
+@implementation LDEvent
 
 + (NSDictionary *)JSONKeyPathsByPropertyKey {
     // mapping between json returned from API and mantle attributes goes here

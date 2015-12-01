@@ -5,12 +5,12 @@
 #import <Mantle/Mantle.h>
 #import <MTLManagedObjectAdapter/MTLManagedObjectAdapter.h>
 
-@class User;
+@class LDUser;
 
-@interface Config : MTLModel<MTLJSONSerializing, MTLManagedObjectSerializing>
+@interface LDFlagConfig : MTLModel<MTLJSONSerializing, MTLManagedObjectSerializing>
 @property (nullable, nonatomic, strong) NSDictionary *featuresJsonDictionary;
 @property (nullable, nonatomic, strong) NSArray *features;
-@property (nullable, nonatomic, strong) User *user;
+@property (nullable, nonatomic, strong) LDUser *user;
 
 -(BOOL) isFlagOn: ( NSString * __nonnull )keyName;
 -(BOOL) doesFlagExist: ( NSString * __nonnull )keyName;

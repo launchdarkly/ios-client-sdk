@@ -17,7 +17,7 @@
 
 @interface LDClient : NSObject
 
-@property(nonatomic, strong, readonly) User *user;
+@property(nonatomic, strong, readonly) LDUser *user;
 @property(nonatomic, strong, readonly) LDConfig *ldConfig;
 @property (nonatomic, assign) id delegate;
 
