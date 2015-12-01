@@ -24,7 +24,7 @@
 
 @implementation LDUserBuilder
 
-+ (User *)compareNewBuilder:(LDUserBuilder *)iBuilder withUser:(User *)iUser {
++ (LDUser *)compareNewBuilder:(LDUserBuilder *)iBuilder withUser:(LDUser *)iUser {
     if (iBuilder->key) {
         [iUser key:iBuilder->key];
     }
@@ -53,7 +53,7 @@
     return iUser;
 }
 
-+ (LDUserBuilder *)retrieveCurrentBuilder:(User *)iUser {
++ (LDUserBuilder *)retrieveCurrentBuilder:(LDUser *)iUser {
     LDUserBuilder *userBuilder = [[LDUserBuilder alloc] init];
     if ([iUser key]) {
         [userBuilder withKey:[iUser key]];
@@ -180,14 +180,14 @@
     return self;
 }
 
--(User *)build {
+-(LDUser *)build {
     DEBUG_LOGX(@"LDUserBuilder build method called");
-    User *user = nil;
+    LDUser *user = nil;
     
     if (key) {
         user = [[DataManager sharedManager] findUserWithkey:key];
         if(!user) {
-            user = [[User alloc] init];
+            user = [[LDUser alloc] init];
         }
         [user key:key];
         DEBUG_LOG(@"LDUserBuilder building User with key: %@", key);
@@ -195,7 +195,7 @@
         NSString *uniqueKey = [[[UIDevice currentDevice] identifierForVendor] UUIDString];
         DEBUG_LOG(@"LDUserBuilder building User with key: %@", uniqueKey);
 
-        user = [[User alloc] init];
+        user = [[LDUser alloc] init];
         [user key:uniqueKey];
         if (!anonymous) {
             Boolean currentAnonymous = YES;

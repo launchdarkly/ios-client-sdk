@@ -4,9 +4,9 @@
 
 #import <XCTest/XCTest.h>
 #import <BlocksKit/BlocksKit.h>
-#import "Config.h"
+#import "LDFlagConfig.h"
 #import <Blockskit/BlocksKit.h>
-#import "FeatureFlag.h"
+#import "LDFeatureFlag.h"
 
 
 @interface ConfigTest : XCTestCase
@@ -36,7 +36,7 @@
 - (void)testConfigObjectCreatedFromJson {
     NSError *error = nil;
 
-    Config *config = [MTLJSONAdapter modelOfClass:[Config class]
+    LDFlagConfig *config = [MTLJSONAdapter modelOfClass:[LDFlagConfig class]
                                fromJSONDictionary:self.json
                                             error: &error];
     NSLog(@"Any objects?");
@@ -50,29 +50,29 @@
 - (void)testFeatureFlagObjectsFromJson {
     NSError *error = nil;
     
-    Config *config = [MTLJSONAdapter modelOfClass:[Config class]
+    LDFlagConfig *config = [MTLJSONAdapter modelOfClass:[LDFlagConfig class]
                                fromJSONDictionary:self.json
                                             error: &error];
     NSArray *features = config.features;
     XCTAssertEqual([features count], 3);
     
     NSPredicate *predicate = [NSPredicate predicateWithFormat:@"key==%@",@"devices.hasipad"];
-    FeatureFlag *hasIpadFlag = [features filteredArrayUsingPredicate:predicate].firstObject;
+    LDFeatureFlag *hasIpadFlag = [features filteredArrayUsingPredicate:predicate].firstObject;
     XCTAssertFalse(hasIpadFlag.isOn);
     
     predicate = [NSPredicate predicateWithFormat:@"key==%@",@"isConnected"];
-    FeatureFlag *isConnectedFlag = [features filteredArrayUsingPredicate:predicate].firstObject;
+    LDFeatureFlag *isConnectedFlag = [features filteredArrayUsingPredicate:predicate].firstObject;
     XCTAssertFalse(isConnectedFlag.isOn);
     
     predicate = [NSPredicate predicateWithFormat:@"key==%@",@"isANumber"];
-    FeatureFlag *isANumberFlag = [features filteredArrayUsingPredicate:predicate].firstObject;
+    LDFeatureFlag *isANumberFlag = [features filteredArrayUsingPredicate:predicate].firstObject;
     XCTAssertFalse(isANumberFlag.isOn);
 }
 
 - (void)testFeatureReturnDefaultForNullValue {
     NSError *error = nil;
     
-    Config *config = [MTLJSONAdapter modelOfClass:[Config class]
+    LDFlagConfig *config = [MTLJSONAdapter modelOfClass:[LDFlagConfig class]
                                fromJSONDictionary:self.json
                                             error: &error];
     NSArray *features = config.features;
@@ -85,7 +85,7 @@
 - (void)testIsFlagOnForKey {
     NSError *error = nil;
     
-    Config *config = [MTLJSONAdapter modelOfClass:[Config class]
+    LDFlagConfig *config = [MTLJSONAdapter modelOfClass:[LDFlagConfig class]
                                fromJSONDictionary:self.json
                                             error: &error];
     
@@ -97,7 +97,7 @@
 - (void)testDoesFlagExist {
     NSError *error = nil;
     
-    Config *config = [MTLJSONAdapter modelOfClass:[Config class]
+    LDFlagConfig *config = [MTLJSONAdapter modelOfClass:[LDFlagConfig class]
                                fromJSONDictionary:self.json
                                             error: &error];
 

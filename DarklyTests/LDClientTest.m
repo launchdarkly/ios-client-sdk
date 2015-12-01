@@ -4,10 +4,10 @@
 
 #import "DarklyXCTestCase.h"
 #import "LDClient.h"
-#import "FeatureFlag.h"
+#import "LDFeatureFlag.h"
 #import "DataManager.h"
-#import "User.h"
-#import "Config.h"
+#import "LDUser.h"
+#import "LDFlagConfig.h"
 #import "LDUserBuilder.h"
 #import "PollingManager.h"
 
@@ -79,7 +79,7 @@
     LDUserBuilder *anotherUserBuilder = [[LDUserBuilder alloc] init];
     [anotherUserBuilder withKey:@"myKey"];
 
-    User *user = [[LDClient sharedInstance] user];
+    LDUser *user = [[LDClient sharedInstance] user];
     OCMStub([self.dataManagerMock findUserWithkey:[OCMArg any]]).andReturn(user);
 
     [[LDClient sharedInstance] start:builder userBuilder:anotherUserBuilder];
