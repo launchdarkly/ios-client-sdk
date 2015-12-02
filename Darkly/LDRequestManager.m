@@ -2,10 +2,10 @@
 //  Copyright © 2015 Catamorphic Co. All rights reserved.
 //
 
-#import "RequestManager.h"
+#import "LDRequestManager.h"
 #import "AFNetworking.h"
-#import "DarklyUtil.h"
-#import "ClientManager.h"
+#import "LDUtil.h"
+#import "LDClientManager.h"
 #import "LDConfig.h"
 
 static NSString * const kFeatureFlagUrl = @"/mobile/eval/users/";
@@ -14,17 +14,17 @@ static NSString * const kHeaderApiKey = @"api_key ";
 static NSString * const kConfigRequestCompletedNotification = @"config_request_completed_notification";
 static NSString * const kEventRequestCompletedNotification = @"event_request_completed_notification";
 
-@implementation RequestManager
+@implementation LDRequestManager
 
 @synthesize apiKey, baseUrl, connectionTimeout, delegate, configRequestInProgress, eventRequestInProgress;
 
-+(RequestManager *)sharedInstance
++(LDRequestManager *)sharedInstance
 {
-    static RequestManager *sharedApiManager = nil;
+    static LDRequestManager *sharedApiManager = nil;
     static dispatch_once_t onceToken;
     dispatch_once(&onceToken, ^{
         sharedApiManager = [[self alloc] init];
-        [sharedApiManager setDelegate:[ClientManager sharedInstance]];
+        [sharedApiManager setDelegate:[LDClientManager sharedInstance]];
         LDClient *client = [LDClient sharedInstance];
         LDConfig *config = client.ldConfig;
         [sharedApiManager setApiKey:config.apiKey];

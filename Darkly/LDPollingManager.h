@@ -11,7 +11,7 @@ typedef enum {
     
 } PollingState;
 
-@interface PollingManager : NSObject
+@interface LDPollingManager : NSObject
 {
 @protected
     PollingState pollConfigState;

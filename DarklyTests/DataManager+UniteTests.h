@@ -2,9 +2,9 @@
 //  Copyright © 2015 Catamorphic Co. All rights reserved.
 //
 
-#import "DataManager.h"
+#import "LDDataManager.h"
 
-@interface DataManager (UniteTests)
+@interface LDDataManager (UniteTests)
 +(instancetype)createMockIfNil;
 -(void)nilify;
 @end

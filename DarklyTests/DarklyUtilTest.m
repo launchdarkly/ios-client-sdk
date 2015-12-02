@@ -3,7 +3,7 @@
 //
 
 #import <XCTest/XCTest.h>
-#import "DarklyUtil.h"
+#import "LDUtil.h"
 
 @interface DarklyUtilTest : XCTestCase
 
@@ -24,14 +24,14 @@
 - (void)testBase64EncodeString {
     NSString *input = @"{\"key\": \"test@test.com\", \"ip\": \"192.168.0.1\", \"custom\": {\"customer_ranking\": 10004}}";
     NSString *desired = @"eyJrZXkiOiAidGVzdEB0ZXN0LmNvbSIsICJpcCI6ICIxOTIuMTY4LjAuMSIsICJjdXN0b20iOiB7ImN1c3RvbWVyX3JhbmtpbmciOiAxMDAwNH19";
-    NSString *output = [DarklyUtil base64EncodeString:input];
+    NSString *output = [LDUtil base64EncodeString:input];
     XCTAssertEqualObjects(desired, output);
 }
 
 - (void)testBase64DecodeString {
     NSString *input = @"eyJrZXkiOiAidGVzdEB0ZXN0LmNvbSIsICJpcCI6ICIxOTIuMTY4LjAuMSIsICJjdXN0b20iOiB7ImN1c3RvbWVyX3JhbmtpbmciOiAxMDAwNH19";
     NSString *desired = @"{\"key\": \"test@test.com\", \"ip\": \"192.168.0.1\", \"custom\": {\"customer_ranking\": 10004}}";
-    NSString *output = [DarklyUtil base64DecodeString:input];
+    NSString *output = [LDUtil base64DecodeString:input];
     XCTAssertEqualObjects(desired, output);
 }
 
