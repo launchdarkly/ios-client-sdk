@@ -3,7 +3,7 @@
 //
 
 #import "DarklyXCTestCase.h"
-#import "DataManager.h"
+#import "LDDataManager.h"
 #import "DataManager+UniteTests.h"
 
 
@@ -12,7 +12,7 @@
 
 - (void)setUp {
     [super setUp];
-    dataManagerMock = [DataManager createMockIfNil];
+    dataManagerMock = [LDDataManager createMockIfNil];
 
 }
 

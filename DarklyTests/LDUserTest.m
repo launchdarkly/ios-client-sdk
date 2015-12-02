@@ -5,7 +5,7 @@
 #import <XCTest/XCTest.h>
 #import "LDUserBuilder.h"
 #import "LDUser.h"
-#import "DataManager.h"
+#import "LDDataManager.h"
 #import "DarklyXCTestCase.h"
 #import <OCMock.h>
 

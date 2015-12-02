@@ -12,7 +12,7 @@
 
 @end
 
-@interface RequestManager : NSObject {
+@interface LDRequestManager : NSObject {
     
 }
 
@@ -23,7 +23,7 @@
 @property (nonatomic, assign) BOOL configRequestInProgress;
 @property (nonatomic, assign) BOOL eventRequestInProgress;
 
-+(RequestManager *)sharedInstance;
++(LDRequestManager *)sharedInstance;
 
 -(void)performFeatureFlagRequest:(NSString *)encodedUser;
 

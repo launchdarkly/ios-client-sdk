@@ -3,16 +3,16 @@
 //
 
 
-#import "DarklyUtil.h"
+#import "LDUtil.h"
 
 
-@implementation DarklyUtil
+@implementation LDUtil
 
 
 + (void)assertThreadIsNotMain
 {
 #ifndef NDEBUG
-    if ([DarklyUtil getSystemVersionAsAnInteger] >= __IPHONE_4_0 &&
+    if ([LDUtil getSystemVersionAsAnInteger] >= __IPHONE_4_0 &&
         ![[[[NSBundle mainBundle] infoDictionary] objectForKey:@"UIApplicationExitsOnSuspend"] boolValue])
     {
         assert(![NSThread isMainThread]);

@@ -3,8 +3,8 @@
 //
 
 #import "DarklyXCTestCase.h"
-#import "RequestManager.h"
-#import "DataManager.h"
+#import "LDRequestManager.h"
+#import "LDDataManager.h"
 
 #import <OCMock.h>
 
@@ -27,7 +27,7 @@
     
     NSString *apiKey = @"YOUR_MOBILE_KEY";
     NSString *encodedUserString = @"eyJrZXkiOiAiamVmZkB0ZXN0LmNvbSJ9";
-    RequestManager *requestManager = [RequestManager sharedInstance];
+    LDRequestManager *requestManager = [LDRequestManager sharedInstance];
     [requestManager setApiKey:apiKey];
 
     BOOL requestInProgress = YES;
@@ -50,7 +50,7 @@
     NSString *jsonEventString = @"[{\"kind\": \"feature\", \"user\": {\"key\" : \"jeff@test.com\", \"custom\" : {\"groups\" : [\"microsoft\", \"google\"]}}, \"creationDate\": 1438468068, \"key\": \"isConnected\", \"value\": true, \"default\": false}]";
     NSData* eventData = [jsonEventString dataUsingEncoding:NSUTF8StringEncoding];
     
-    RequestManager *requestManager = [RequestManager sharedInstance];
+    LDRequestManager *requestManager = [LDRequestManager sharedInstance];
     [requestManager setApiKey:apiKey];
     
     BOOL requestInProgress = YES;

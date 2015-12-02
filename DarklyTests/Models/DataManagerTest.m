@@ -7,7 +7,7 @@
 #import "LDFlagConfig.h"
 #import <Blockskit/BlocksKit.h>
 #import "LDFeatureFlag.h"
-#import "DataManager.h"
+#import "LDDataManager.h"
 #import "LDUser.h"
 #import "LDFlagConfig.h"
 #import "LDEvent.h"
@@ -71,7 +71,7 @@
 }
 
 -(void)testCreateFeatureEvent {
-    [[DataManager sharedManager] createFeatureEvent:@"afeaturekey" keyValue:NO defaultKeyValue:NO];
+    [[LDDataManager sharedManager] createFeatureEvent:@"afeaturekey" keyValue:NO defaultKeyValue:NO];
     
     LDEvent *lastEvent = [self lastCreatedEvent];
     
@@ -171,13 +171,13 @@
     aUser.config = user.config;
         
     [MTLManagedObjectAdapter managedObjectFromModel:aUser 
-                               insertingIntoContext: [[DataManager sharedManager]
+                               insertingIntoContext: [[LDDataManager sharedManager]
                                                       managedObjectContext] error: nil];
-    [[DataManager sharedManager] saveContext];
+    [[LDDataManager sharedManager] saveContext];
     
     XCTAssertNotNil(aUser);
     
-    LDUser *foundAgainUser = [[DataManager sharedManager] findUserWithkey: userKey];
+    LDUser *foundAgainUser = [[LDDataManager sharedManager] findUserWithkey: userKey];
     
     XCTAssertNotNil(foundAgainUser);
     XCTAssertEqual(aUser.email, foundAgainUser.email);
@@ -197,7 +197,7 @@
     
         NSError *error;
         [MTLManagedObjectAdapter managedObjectFromModel:aUser
-                                   insertingIntoContext: [[DataManager sharedManager]
+                                   insertingIntoContext: [[LDDataManager sharedManager]
                                                           managedObjectContext] error: &error];
         
         NSLog(@"PRINT BREAK");
@@ -206,12 +206,12 @@
     [self.dataManagerMock saveContext];
     NSString *userKey = @"gus0";
 
-    UserEntity *userEntity = [[DataManager sharedManager] findUserEntityWithkey: userKey];
+    UserEntity *userEntity = [[LDDataManager sharedManager] findUserEntityWithkey: userKey];
 
     XCTAssertNotNil(userEntity);
-    [[DataManager sharedManager] purgeOldUsers];
+    [[LDDataManager sharedManager] purgeOldUsers];
     
-    userEntity = [[DataManager sharedManager] findUserEntityWithkey: userKey];
+    userEntity = [[LDDataManager sharedManager] findUserEntityWithkey: userKey];
     XCTAssertNil(userEntity);
 }
 
