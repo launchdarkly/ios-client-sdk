@@ -137,6 +137,7 @@
 		CC36AA941B6D5FED008200F1 /* libDarkly.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libDarkly.a; sourceTree = BUILT_PRODUCTS_DIR; };
 		CC36AA9F1B6D5FED008200F1 /* DarklyTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = DarklyTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		CC36AAA51B6D5FED008200F1 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		CC43418D1C11718E00FC89B6 /* darkly3.xcdatamodel */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcdatamodel; path = darkly3.xcdatamodel; sourceTree = "<group>"; };
 		CC467AB51B78323F0035C07E /* DataManager.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = DataManager.h; path = Models/DataManager.h; sourceTree = "<group>"; };
 		CC467AB61B78323F0035C07E /* DataManager.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = DataManager.m; path = Models/DataManager.m; sourceTree = "<group>"; };
 		CC4E8F421B8ABB3500F2A19D /* EventTest.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = EventTest.m; path = Models/EventTest.m; sourceTree = "<group>"; };
@@ -1103,10 +1104,11 @@
 		CCA68A141B7066980052BE63 /* darkly.xcdatamodeld */ = {
 			isa = XCVersionGroup;
 			children = (
+				CC43418D1C11718E00FC89B6 /* darkly3.xcdatamodel */,
 				CC753A0A1BF2E043001E4124 /* darkly2.xcdatamodel */,
 				CCA68A151B7066980052BE63 /* darkly.xcdatamodel */,
 			);
-			currentVersion = CC753A0A1BF2E043001E4124 /* darkly2.xcdatamodel */;
+			currentVersion = CC43418D1C11718E00FC89B6 /* darkly3.xcdatamodel */;
 			path = darkly.xcdatamodeld;
 			sourceTree = "<group>";
 			versionGroupType = wrapper.xcdatamodel;

@@ -133,21 +133,25 @@ NSString *const kLDUserUpdatedNotification = @"Darkly.UserUpdatedNotification";
     if (success) {
         DEBUG_LOGX(@"ClientManager processedConfig method called after receiving successful response from server");
         // If Success
-        LDFlagConfig *config = [MTLJSONAdapter modelOfClass:[LDFlagConfig class]
-                                   fromJSONDictionary:jsonConfigDictionary
-                                                error: nil];
-        if (config) {
+        LDFlagConfig *newConfig = [MTLJSONAdapter modelOfClass:[LDFlagConfig class]
+                                            fromJSONDictionary:jsonConfigDictionary
+                                                         error: nil];
+        if (newConfig) {
             // Overwrite Config with new config
             LDClient *client = [LDClient sharedInstance];
             LDUser *user = client.user;
-            config.user = user;
+            UserEntity *userEntity = [[DataManager sharedManager] findUserEntityWithkey: user.key];
+            
+            user.config = newConfig;
+            newConfig.userKey = user.key;
+            ConfigEntity *configEntity = [MTLManagedObjectAdapter managedObjectFromModel:newConfig
+                                                                    insertingIntoContext:[[DataManager sharedManager] managedObjectContext]
+                                                                                   error: nil];
+            userEntity.config = configEntity;
             
             // Save context
-            [MTLManagedObjectAdapter managedObjectFromModel:config
-                                       insertingIntoContext:[[DataManager sharedManager] managedObjectContext]
-                                                      error: nil];
-            [[DataManager sharedManager] deleteOrphanedConfig];
             [[DataManager sharedManager] saveContext];
+            
             // Update polling interval for Config for new config interval
             PollingManager *pollingMgr = [PollingManager sharedInstance];
             DEBUG_LOG(@"ClientManager setting config interval to: %d", configInterval);
@@ -155,13 +159,12 @@ NSString *const kLDUserUpdatedNotification = @"Darkly.UserUpdatedNotification";
             
             [[NSNotificationCenter defaultCenter] postNotificationName: kLDUserUpdatedNotification
                                                                 object: nil];
+        }} else {
+            DEBUG_LOGX(@"ClientManager processedConfig method called after receiving failure response from server");
+            PollingManager *pollingMgr = [PollingManager sharedInstance];
+            DEBUG_LOG(@"ClientManager setting config interval to: %d", configInterval);
+            pollingMgr.configurationTimerPollingInterval = configInterval;
         }
-    } else {
-        DEBUG_LOGX(@"ClientManager processedConfig method called after receiving failure response from server");
-        PollingManager *pollingMgr = [PollingManager sharedInstance];
-        DEBUG_LOG(@"ClientManager setting config interval to: %d", configInterval);
-        pollingMgr.configurationTimerPollingInterval = configInterval;
-    }
 }
 
 @end
