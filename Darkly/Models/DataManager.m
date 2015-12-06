@@ -32,17 +32,17 @@ int const kUserCacheSize = 5;
 -(void)purgeOldUsers {
     NSFetchRequest *request = [[NSFetchRequest alloc] init];
     [request setEntity:[NSEntityDescription entityForName:@"UserEntity"
-                                   inManagedObjectContext:[self managedObjectContext]]];
+                                   inManagedObjectContext:self.managedObjectContext]];
     
     NSSortDescriptor *sortDescriptor = [[NSSortDescriptor alloc] initWithKey:@"updatedAt" ascending:YES];
     request.sortDescriptors = @[sortDescriptor];
-
+    
     __block NSArray *userMoArray = nil;
-
+    
     [self.managedObjectContext performBlockAndWait:^{
         NSError *error = nil;
-        userMoArray = [[self managedObjectContext] executeFetchRequest:request
-                                                                  error:&error];
+        userMoArray = [self.managedObjectContext executeFetchRequest:request
+                                                                 error:&error];
         
         if (userMoArray.count >= kUserCacheSize) {
             int numToDelete = (int)userMoArray.count - (kUserCacheSize + 1);
@@ -53,24 +53,27 @@ int const kUserCacheSize = 5;
                 }
             }
         }
+        [self saveContext];
     }];
-    [self saveContext];
 }
 
 -(void) saveUser: (LDUser *) user {
-    UserEntity *userEntity = [[DataManager sharedManager] findUserEntityWithkey:user.key];
+    UserEntity *userEntity = [self findUserEntityWithkey:user.key];
     
     if (userEntity) {
         user.config = [MTLManagedObjectAdapter modelOfClass:[LDFlagConfig class] fromManagedObject: (NSManagedObject *)userEntity.config error: nil];
     } else {
-        [[DataManager sharedManager] purgeOldUsers];
+        [self purgeOldUsers];
     }
     
-    [MTLManagedObjectAdapter managedObjectFromModel: user
-                               insertingIntoContext: [[DataManager sharedManager] managedObjectContext]
-                                              error: nil];
     
-    [[DataManager sharedManager] saveContext];
+    [self.managedObjectContext performBlockAndWait:^{
+        [MTLManagedObjectAdapter managedObjectFromModel: user
+                                   insertingIntoContext: self.managedObjectContext
+                                                  error: nil];
+        
+        [self saveContext];
+    }];
 }
 
 
@@ -78,17 +81,17 @@ int const kUserCacheSize = 5;
     DEBUG_LOG(@"Retrieving user with key: %@", key);
     NSFetchRequest *request = [[NSFetchRequest alloc] init];
     [request setEntity:[NSEntityDescription entityForName:@"UserEntity"
-                                   inManagedObjectContext:[self managedObjectContext]]];
+                                   inManagedObjectContext:self.managedObjectContext]];
     
     NSPredicate *predicate = [NSPredicate predicateWithFormat:@"key == %@", key];
     request.predicate = predicate;
-
+    
     __block NSArray *userMoArray = nil;
-
+    
     [self.managedObjectContext performBlockAndWait:^{
         NSError *error = nil;
-        userMoArray = [[self managedObjectContext] executeFetchRequest:request
-                                                                  error:&error];
+        userMoArray = [self.managedObjectContext executeFetchRequest:request
+                                                               error:&error];
     }];
     
     if (userMoArray.count > 0) {
@@ -111,41 +114,6 @@ int const kUserCacheSize = 5;
     return nil;
 }
 
-#pragma mark - config
--(void)deleteOrphanedConfig {
-    NSFetchRequest *request = [[NSFetchRequest alloc] init];
-    [request setEntity:[NSEntityDescription entityForName:@"ConfigEntity"
-                                   inManagedObjectContext:[self managedObjectContext]]];
-    
-    NSPredicate *predicate = [NSPredicate predicateWithFormat:@"user.key = nil"];
-    request.predicate = predicate;
-
-    __block NSArray *configMoArray = nil;
-
-    [self.managedObjectContext performBlockAndWait:^{
-        NSError *error = nil;
-        configMoArray = [[self managedObjectContext] executeFetchRequest:request
-                                                                  error:&error];
-        
-        for (int configMOIndex = 0; configMOIndex < configMoArray.count; configMOIndex++) {
-            DEBUG_LOG(@"Deleting orphaned config at index: %d", configMOIndex);
-            [self.managedObjectContext deleteObject: [configMoArray objectAtIndex:configMOIndex]];
-        }
-    }];
-}
-
--(LDFlagConfig *) createConfigFromJsonDict: (NSDictionary *)jsonConfigDictionary {
-    LDFlagConfig *config = [MTLJSONAdapter modelOfClass:[LDFlagConfig class]
-                               fromJSONDictionary:jsonConfigDictionary
-                                            error: nil];
-    
-    [MTLManagedObjectAdapter managedObjectFromModel:config
-                               insertingIntoContext:[[DataManager sharedManager] managedObjectContext]
-                                              error: nil];
-    [self saveContext];
-    
-    return config;
-}
 #pragma mark - events
 
 -(void) createFeatureEvent: (NSString *)featureKey keyValue:(BOOL)keyValue defaultKeyValue:(BOOL)defaultKeyValue {
@@ -153,13 +121,16 @@ int const kUserCacheSize = 5;
     if(![self isAtEventCapacity]) {
         DEBUG_LOG(@"Creating event for feature:%@ with value:%d and defaultValue:%d", featureKey, keyValue, defaultKeyValue);
         LDEvent *featureEvent = [[LDEvent alloc] featureEventWithKey: featureKey keyValue:keyValue defaultKeyValue:defaultKeyValue];
-        [MTLManagedObjectAdapter managedObjectFromModel:featureEvent
-                                   insertingIntoContext:[self managedObjectContext]
-                                                  error:nil];
         
-        int eventCreatedCountInt = [eventCreatedCount intValue];
-        eventCreatedCount = [NSNumber numberWithInt:eventCreatedCountInt + 1];
-        [self saveContext];
+        [self.managedObjectContext performBlockAndWait:^{
+            [MTLManagedObjectAdapter managedObjectFromModel:featureEvent
+                                       insertingIntoContext:self.managedObjectContext
+                                                      error:nil];
+            
+            int eventCreatedCountInt = [eventCreatedCount intValue];
+            eventCreatedCount = [NSNumber numberWithInt:eventCreatedCountInt + 1];
+            [self saveContext];
+        }];
     } else
         DEBUG_LOG(@"Events have surpassed capacity. Discarding feature event %@", featureKey);
 }
@@ -169,12 +140,14 @@ int const kUserCacheSize = 5;
         DEBUG_LOG(@"Creating event for custom key:%@ and value:%@", eventKey, customDict);
         LDEvent *customEvent = [[LDEvent alloc] customEventWithKey: eventKey  andDataDictionary: customDict];
         
-        [MTLManagedObjectAdapter managedObjectFromModel:customEvent
-                                   insertingIntoContext:[self managedObjectContext]
-                                                  error:nil];
-        int eventCreatedCountInt = [eventCreatedCount intValue];
-        eventCreatedCount = [NSNumber numberWithInt:eventCreatedCountInt + 1];
-        [self saveContext];
+        [self.managedObjectContext performBlockAndWait:^{
+            [MTLManagedObjectAdapter managedObjectFromModel:customEvent
+                                       insertingIntoContext:self.managedObjectContext
+                                                      error:nil];
+            int eventCreatedCountInt = [eventCreatedCount intValue];
+            eventCreatedCount = [NSNumber numberWithInt:eventCreatedCountInt + 1];
+            [self saveContext];
+        }];
     } else
         DEBUG_LOG(@"Events have surpassed capacity. Discarding event %@ with dictionary %@", eventKey, customDict);
 }
@@ -189,7 +162,7 @@ int const kUserCacheSize = 5;
     DEBUG_LOG(@"Retrieving event for date: %ld", (long)date);
     NSFetchRequest *request = [[NSFetchRequest alloc] init];
     [request setEntity:[NSEntityDescription entityForName:@"EventEntity"
-                                   inManagedObjectContext:[self managedObjectContext]]];
+                                   inManagedObjectContext:self.managedObjectContext]];
     NSPredicate *predicate = [NSPredicate predicateWithFormat:@"creationDate == %ld", date];
     request.predicate = predicate;
     
@@ -197,7 +170,7 @@ int const kUserCacheSize = 5;
     [self.managedObjectContext performBlockAndWait:^{
         
         NSError *error = nil;
-        eventMoArray = [[self managedObjectContext] executeFetchRequest:request
+        eventMoArray = [self.managedObjectContext executeFetchRequest:request
                                                                   error:&error];
     }];
     
@@ -215,12 +188,12 @@ int const kUserCacheSize = 5;
         for (NSDictionary *processedEventDict in processedJsonArray) {
             // Attempt to find match in currentEvents based on creationDate
             LDEvent *processedEvent = [MTLJSONAdapter modelOfClass:[LDEvent class]
-                                              fromJSONDictionary:processedEventDict
-                                                           error:nil];
-            NSManagedObject *matchedCurrentEvent = [[DataManager sharedManager] findEvent: [processedEvent creationDate]];
+                                                fromJSONDictionary:processedEventDict
+                                                             error:nil];
+            NSManagedObject *matchedCurrentEvent = [self findEvent: [processedEvent creationDate]];
             // If events match
             if (matchedCurrentEvent) {
-                [[[DataManager sharedManager] managedObjectContext] deleteObject:matchedCurrentEvent];
+                [self.managedObjectContext deleteObject:matchedCurrentEvent];
                 hasMatchedEvents = YES;
                 
                 int eventCreatedCountInt = [eventCreatedCount intValue];
@@ -229,7 +202,7 @@ int const kUserCacheSize = 5;
         }
         // If number of managedObjects is greater than 0, then Save Context
         if (hasMatchedEvents) {
-            [[DataManager sharedManager] saveContext];
+            [self saveContext];
         }
     }];    
 }
@@ -238,20 +211,20 @@ int const kUserCacheSize = 5;
     DEBUG_LOGX(@"Retrieving all events");
     NSFetchRequest *request = [[NSFetchRequest alloc] init];
     [request setEntity:[NSEntityDescription entityForName:@"EventEntity"
-                                   inManagedObjectContext:[self managedObjectContext]]];
+                                   inManagedObjectContext:self.managedObjectContext]];
     
     __block NSMutableArray  *eventsArray = nil;
     
     [self.managedObjectContext performBlockAndWait:^{
         NSError *error = nil;
-        NSArray *eventMoArray = [[self managedObjectContext] executeFetchRequest:request
+        NSArray *eventMoArray = [self.managedObjectContext executeFetchRequest:request
                                                                            error:&error];
         eventsArray = @[].mutableCopy;
         
         for (int eventCount = 0; [eventMoArray count] > eventCount; eventCount++) {
             LDEvent *event = [MTLManagedObjectAdapter modelOfClass:[LDEvent class]
-                                               fromManagedObject: [eventMoArray objectAtIndex: eventCount]
-                                                           error: nil];
+                                                 fromManagedObject: [eventMoArray objectAtIndex: eventCount]
+                                                             error: nil];
             [eventsArray addObject: event];
         };
     }];
@@ -310,7 +283,7 @@ int const kUserCacheSize = 5;
         return persistentStoreCoordinator;
     }
     
-    persistentStoreCoordinator = [[NSPersistentStoreCoordinator alloc] initWithManagedObjectModel:[self managedObjectModel]];
+    persistentStoreCoordinator = [[NSPersistentStoreCoordinator alloc] initWithManagedObjectModel: self.managedObjectModel];
     NSURL *storeURL = [[self applicationDocumentsDirectory] URLByAppendingPathComponent:@"darkly.sqlite"];
     NSError *error = nil;
     NSString *failureReason = @"There was an error creating or loading the application's saved data.";
@@ -350,7 +323,7 @@ int const kUserCacheSize = 5;
 #pragma mark - Core Data Saving support
 
 - (void)saveContext {
-    if ([self managedObjectContext] != nil) {
+    if (self.managedObjectContext != nil) {
         [self.managedObjectContext performBlock:^{
             NSError *error = nil;
             if (![self.managedObjectContext save:&error])
