@@ -9,6 +9,8 @@
 #import "DarklyUtil.h"
 
 @implementation LDFlagConfig
+@synthesize user;
+
 + (NSDictionary *)JSONKeyPathsByPropertyKey {
     // mapping between json returned from API and mantle attributes goes here
     return @{@"featuresJsonDictionary": @"items"};
@@ -21,7 +23,8 @@
 + (NSDictionary *)managedObjectKeysByPropertyKey {
     // mapping between NSManagaedObject and Mantle object goes here
     return @{@"featuresJsonDictionary": @"featuresJsonDictionary",
-             @"user": @"user"};
+             @"user": @"user",
+             @"userKey": @"userKey"};
 }
 
 + (NSDictionary *)relationshipModelClassesByPropertyKey {
@@ -73,6 +76,15 @@
     return [self.features bk_any:^BOOL(LDFeatureFlag *feature) {
         return [feature.key isEqualToString: keyName];
     }];
+}
+
+-(void)setUser:(LDUser *)aUser {
+    user = aUser;
+    self.userKey = user.key;
+}
+
++ (NSSet *)propertyKeysForManagedObjectUniquing {
+    return [NSSet setWithObject:@"userKey"];
 }
 
 @end
