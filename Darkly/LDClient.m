@@ -4,10 +4,10 @@
 
 
 #import "LDClient.h"
-#import "ClientManager.h"
-#import "DarklyUtil.h"
-#import "DataManager.h"
-#import "PollingManager.h"
+#import "LDClientManager.h"
+#import "LDUtil.h"
+#import "LDDataManager.h"
+#import "LDPollingManager.h"
 
 @interface LDClient() {
     BOOL clientStarted;
@@ -41,7 +41,7 @@
                 if ([ldConfig debugEnabled]) {
                     logLevel = DarklyLogLevelDebug;
                 }
-                [DarklyUtil setLogLevel:logLevel];
+                [LDUtil setLogLevel:logLevel];
                 
                 clientStarted = YES;
                 DEBUG_LOGX(@"LDClient started");
@@ -50,7 +50,7 @@
                 }
                 user = [inputUserBuilder build];
 
-                ClientManager *clientManager = [ClientManager sharedInstance];
+                LDClientManager *clientManager = [LDClientManager sharedInstance];
                 [clientManager syncWithServerForConfig];
                 [clientManager startPolling];
                 return YES;
@@ -73,7 +73,7 @@
     if (clientStarted) {
         if (builder) {
             user = [LDUserBuilder compareNewBuilder:builder withUser:user];
-            ClientManager *clientManager = [ClientManager sharedInstance];
+            LDClientManager *clientManager = [LDClientManager sharedInstance];
             [clientManager syncWithServerForConfig];
             return YES;
         } else {
@@ -103,7 +103,7 @@
         BOOL flagValue = [user isFlagOn: featureName];
         BOOL returnValue = (flagExists ? flagValue : defaultValue);
         
-        [[DataManager sharedManager] createFeatureEvent: featureName keyValue:returnValue defaultKeyValue:defaultValue];
+        [[LDDataManager sharedManager] createFeatureEvent: featureName keyValue:returnValue defaultKeyValue:defaultValue];
         return returnValue;
     } else {
         DEBUG_LOGX(@"LDClient not started yet!");
@@ -115,7 +115,7 @@
 {
     DEBUG_LOG(@"LDClient track method called for event=%@ and data=%@", eventName, dataDictionary);
     if (clientStarted) {
-        [[DataManager sharedManager] createCustomEvent:eventName
+        [[LDDataManager sharedManager] createCustomEvent:eventName
                             withCustomValuesDictionary: dataDictionary];
         return YES;
     } else {
@@ -128,7 +128,7 @@
 {
     DEBUG_LOGX(@"LDClient offline method called");
     if (clientStarted) {
-        ClientManager *clientManager = [ClientManager sharedInstance];
+        LDClientManager *clientManager = [LDClientManager sharedInstance];
         [clientManager setOfflineEnabled:YES];
         return YES;
     } else {
@@ -141,7 +141,7 @@
 {
     DEBUG_LOGX(@"LDClient online method called");
     if (clientStarted) {
-        ClientManager *clientManager = [ClientManager sharedInstance];
+        LDClientManager *clientManager = [LDClientManager sharedInstance];
         [clientManager setOfflineEnabled:NO];
         [clientManager syncWithServerForConfig];
         return YES;
@@ -154,7 +154,7 @@
 - (BOOL)flush {
     DEBUG_LOGX(@"LDClient flush method called");
     if (clientStarted) {
-        ClientManager *clientManager = [ClientManager sharedInstance];
+        LDClientManager *clientManager = [LDClientManager sharedInstance];
         [clientManager flushEvents];
         return YES;
     } else {
@@ -166,7 +166,7 @@
 - (BOOL)stopClient {
     DEBUG_LOGX(@"LDClient stop method called");
     if (clientStarted) {
-        ClientManager *clientManager = [ClientManager sharedInstance];
+        LDClientManager *clientManager = [LDClientManager sharedInstance];
         [clientManager stopPolling];
         
         clientStarted = NO;

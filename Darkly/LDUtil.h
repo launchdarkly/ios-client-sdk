@@ -8,22 +8,22 @@
 #import "DarklyConstants.h"
 
 #define CRITICAL_LOGX(string) \
-if ([DarklyUtil logLevel] >= DarklyLogLevelCriticalOnly) { \
+if ([LDUtil logLevel] >= DarklyLogLevelCriticalOnly) { \
 NSLog(string); \
 }
 
 #define CRITICAL_LOG(format, ...) \
-if ([DarklyUtil logLevel] >= DarklyLogLevelCriticalOnly) { \
+if ([LDUtil logLevel] >= DarklyLogLevelCriticalOnly) { \
 NSLog(format, __VA_ARGS__); \
 }
 
 #define DEBUG_LOGX(string) \
-if ([DarklyUtil logLevel] >= DarklyLogLevelDebug) { \
+if ([LDUtil logLevel] >= DarklyLogLevelDebug) { \
 NSLog(string); \
 }
 
 #define DEBUG_LOG(format, ...) \
-if ([DarklyUtil logLevel] >= DarklyLogLevelDebug) { \
+if ([LDUtil logLevel] >= DarklyLogLevelDebug) { \
 NSLog(format, __VA_ARGS__); \
 }
 
@@ -42,7 +42,7 @@ if (!(condition) && DEBUG) { \
 [NSException raise:@"Assertion Failure" format:@"%s [Line %d] " msg, __PRETTY_FUNCTION__, __LINE__]; \
 }
 
-@interface DarklyUtil : NSObject
+@interface LDUtil : NSObject
 {
     
 }

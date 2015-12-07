@@ -6,7 +6,7 @@
 #import <BlocksKit/BlocksKit.h>
 #import "LDFeatureFlag.h"
 #import "LDUser.h"
-#import "DarklyUtil.h"
+#import "LDUtil.h"
 
 @implementation LDFlagConfig
 @synthesize user;

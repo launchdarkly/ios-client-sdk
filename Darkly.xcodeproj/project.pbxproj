@@ -9,20 +9,20 @@
 /* Begin PBXBuildFile section */
 		231CBA361B97970E0068BB8C /* UIKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 231CBA351B97970E0068BB8C /* UIKit.framework */; };
 		231CBA431B97AE140068BB8C /* darkly.xcdatamodeld in CopyFiles */ = {isa = PBXBuildFile; fileRef = CCA68A141B7066980052BE63 /* darkly.xcdatamodeld */; };
-		23DCFA9E1B95105A00F15531 /* PollingManager.m in Sources */ = {isa = PBXBuildFile; fileRef = 23DCFA9D1B95105A00F15531 /* PollingManager.m */; };
+		23DCFA9E1B95105A00F15531 /* LDPollingManager.m in Sources */ = {isa = PBXBuildFile; fileRef = 23DCFA9D1B95105A00F15531 /* LDPollingManager.m */; };
 		23E819541B8AA4A700010DD3 /* PollingManagerTest.m in Sources */ = {isa = PBXBuildFile; fileRef = 23E819531B8AA4A700010DD3 /* PollingManagerTest.m */; };
 		3A0F25041B71650C00DAB39F /* LDClientTest.m in Sources */ = {isa = PBXBuildFile; fileRef = 3A70A7891B6FD20600984E23 /* LDClientTest.m */; };
 		3A0F25051B71651400DAB39F /* LDConfigTest.m in Sources */ = {isa = PBXBuildFile; fileRef = 3A70A7931B704BD100984E23 /* LDConfigTest.m */; };
-		3A5F93C01B6F10DB0093E419 /* DarklyUtil.m in Sources */ = {isa = PBXBuildFile; fileRef = 3A5F93BF1B6F10DB0093E419 /* DarklyUtil.m */; };
+		3A5F93C01B6F10DB0093E419 /* LDUtil.m in Sources */ = {isa = PBXBuildFile; fileRef = 3A5F93BF1B6F10DB0093E419 /* LDUtil.m */; };
 		3A5F93C31B6F146F0093E419 /* DarklyUtilTest.m in Sources */ = {isa = PBXBuildFile; fileRef = 3A5F93C21B6F146F0093E419 /* DarklyUtilTest.m */; };
 		3A70A7881B6FCFAC00984E23 /* LDClient.m in Sources */ = {isa = PBXBuildFile; fileRef = 3A70A7871B6FCFAC00984E23 /* LDClient.m */; };
 		3A70A78D1B7008B700984E23 /* LDConfig.m in Sources */ = {isa = PBXBuildFile; fileRef = 3A70A78C1B7008B700984E23 /* LDConfig.m */; };
 		3A70A7971B705F2C00984E23 /* DarklyConstants.m in Sources */ = {isa = PBXBuildFile; fileRef = 3A70A7961B705F2C00984E23 /* DarklyConstants.m */; };
-		3A9F23D11B82D19900D0EF2F /* RequestManager.m in Sources */ = {isa = PBXBuildFile; fileRef = 3A9F23D01B82D19900D0EF2F /* RequestManager.m */; };
+		3A9F23D11B82D19900D0EF2F /* LDRequestManager.m in Sources */ = {isa = PBXBuildFile; fileRef = 3A9F23D01B82D19900D0EF2F /* LDRequestManager.m */; };
 		3AAF19A31B97DF9800FACF58 /* ClientManagerTest.m in Sources */ = {isa = PBXBuildFile; fileRef = 3AAF19A21B97DF9800FACF58 /* ClientManagerTest.m */; };
 		3AB1B71A1B89036A0006E970 /* RequestManagerTest.m in Sources */ = {isa = PBXBuildFile; fileRef = 3AB1B7191B89036A0006E970 /* RequestManagerTest.m */; };
 		3AC5D0DE1B8AA44A00417CBB /* NSDictionary+JSON.m in Sources */ = {isa = PBXBuildFile; fileRef = 3AC5D0DD1B8AA44A00417CBB /* NSDictionary+JSON.m */; };
-		3AD8ACB61B86B5E800922AA6 /* ClientManager.m in Sources */ = {isa = PBXBuildFile; fileRef = 3AD8ACB51B86B5E700922AA6 /* ClientManager.m */; };
+		3AD8ACB61B86B5E800922AA6 /* LDClientManager.m in Sources */ = {isa = PBXBuildFile; fileRef = 3AD8ACB51B86B5E700922AA6 /* LDClientManager.m */; };
 		9D4CD7711BB923A800CBD687 /* darkly.xcdatamodeld in Sources */ = {isa = PBXBuildFile; fileRef = CCA68A141B7066980052BE63 /* darkly.xcdatamodeld */; };
 		9D4CD7721BB923C700CBD687 /* CoreData.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = CCA68A121B7066480052BE63 /* CoreData.framework */; };
 		9D4CD7731BB925DB00CBD687 /* DarklyLibraryModels.bundle in Resources */ = {isa = PBXBuildFile; fileRef = 9D4CD76B1BB9236B00CBD687 /* DarklyLibraryModels.bundle */; };
@@ -34,7 +34,7 @@
 		C7B31E5CF69C4C8F4ACBAE98 /* libPods-DarklyTests.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 8ED514E0C6E63B820CE66018 /* libPods-DarklyTests.a */; };
 		CC01CCE31BB07703006B4A36 /* NSArray+UnitTests.m in Sources */ = {isa = PBXBuildFile; fileRef = CC01CCE21BB07703006B4A36 /* NSArray+UnitTests.m */; };
 		CC36AAA01B6D5FED008200F1 /* libDarkly.a in Frameworks */ = {isa = PBXBuildFile; fileRef = CC36AA941B6D5FED008200F1 /* libDarkly.a */; };
-		CC467AB71B78323F0035C07E /* DataManager.m in Sources */ = {isa = PBXBuildFile; fileRef = CC467AB61B78323F0035C07E /* DataManager.m */; };
+		CC467AB71B78323F0035C07E /* LDDataManager.m in Sources */ = {isa = PBXBuildFile; fileRef = CC467AB61B78323F0035C07E /* LDDataManager.m */; };
 		CC4E8F431B8ABB3500F2A19D /* EventTest.m in Sources */ = {isa = PBXBuildFile; fileRef = CC4E8F421B8ABB3500F2A19D /* EventTest.m */; };
 		CC4E8F461B8B3A7B00F2A19D /* UserTest.m in Sources */ = {isa = PBXBuildFile; fileRef = CC4E8F451B8B3A7B00F2A19D /* UserTest.m */; };
 		CC674C901B7519FB00B6A78D /* LDFeatureFlag.m in Sources */ = {isa = PBXBuildFile; fileRef = CC674C8F1B7519FB00B6A78D /* LDFeatureFlag.m */; };
@@ -97,11 +97,11 @@
 		231CBA3F1B9797680068BB8C /* libPods-Darkly.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = "libPods-Darkly.a"; path = "Pods/../build/Debug-iphoneos/libPods-Darkly.a"; sourceTree = "<group>"; };
 		23AA1AB61B721E3E00FE6A00 /* QuickTest.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = QuickTest.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		23AA1AD11B721E3F00FE6A00 /* QuickTestTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = QuickTestTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
-		23DCFA9C1B95105A00F15531 /* PollingManager.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = PollingManager.h; sourceTree = "<group>"; };
-		23DCFA9D1B95105A00F15531 /* PollingManager.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = PollingManager.m; sourceTree = "<group>"; };
+		23DCFA9C1B95105A00F15531 /* LDPollingManager.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = LDPollingManager.h; sourceTree = "<group>"; };
+		23DCFA9D1B95105A00F15531 /* LDPollingManager.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = LDPollingManager.m; sourceTree = "<group>"; };
 		23E819531B8AA4A700010DD3 /* PollingManagerTest.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = PollingManagerTest.m; sourceTree = "<group>"; };
-		3A5F93BF1B6F10DB0093E419 /* DarklyUtil.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = DarklyUtil.m; sourceTree = "<group>"; };
-		3A5F93C11B6F10F50093E419 /* DarklyUtil.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DarklyUtil.h; sourceTree = "<group>"; };
+		3A5F93BF1B6F10DB0093E419 /* LDUtil.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = LDUtil.m; sourceTree = "<group>"; };
+		3A5F93C11B6F10F50093E419 /* LDUtil.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = LDUtil.h; sourceTree = "<group>"; };
 		3A5F93C21B6F146F0093E419 /* DarklyUtilTest.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = DarklyUtilTest.m; sourceTree = "<group>"; };
 		3A70A7861B6FCF9300984E23 /* LDClient.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = LDClient.h; sourceTree = "<group>"; };
 		3A70A7871B6FCFAC00984E23 /* LDClient.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = LDClient.m; sourceTree = "<group>"; };
@@ -112,14 +112,14 @@
 		3A70A7931B704BD100984E23 /* LDConfigTest.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = LDConfigTest.m; sourceTree = "<group>"; };
 		3A70A7951B705F1100984E23 /* DarklyConstants.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DarklyConstants.h; sourceTree = "<group>"; };
 		3A70A7961B705F2C00984E23 /* DarklyConstants.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = DarklyConstants.m; sourceTree = "<group>"; };
-		3A9F23CF1B82D19900D0EF2F /* RequestManager.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = RequestManager.h; sourceTree = "<group>"; };
-		3A9F23D01B82D19900D0EF2F /* RequestManager.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = RequestManager.m; sourceTree = "<group>"; };
+		3A9F23CF1B82D19900D0EF2F /* LDRequestManager.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = LDRequestManager.h; sourceTree = "<group>"; };
+		3A9F23D01B82D19900D0EF2F /* LDRequestManager.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = LDRequestManager.m; sourceTree = "<group>"; };
 		3AAF19A21B97DF9800FACF58 /* ClientManagerTest.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ClientManagerTest.m; sourceTree = "<group>"; };
 		3AB1B7191B89036A0006E970 /* RequestManagerTest.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = RequestManagerTest.m; sourceTree = "<group>"; };
 		3AC5D0DC1B8AA44A00417CBB /* NSDictionary+JSON.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "NSDictionary+JSON.h"; sourceTree = "<group>"; };
 		3AC5D0DD1B8AA44A00417CBB /* NSDictionary+JSON.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "NSDictionary+JSON.m"; sourceTree = "<group>"; };
-		3AD8ACB41B86B5E700922AA6 /* ClientManager.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ClientManager.h; sourceTree = "<group>"; };
-		3AD8ACB51B86B5E700922AA6 /* ClientManager.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ClientManager.m; sourceTree = "<group>"; };
+		3AD8ACB41B86B5E700922AA6 /* LDClientManager.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = LDClientManager.h; sourceTree = "<group>"; };
+		3AD8ACB51B86B5E700922AA6 /* LDClientManager.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = LDClientManager.m; sourceTree = "<group>"; };
 		468DF0E7F50E33ECF64E2819 /* Pods-Darkly.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Darkly.debug.xcconfig"; path = "Pods/Target Support Files/Pods-Darkly/Pods-Darkly.debug.xcconfig"; sourceTree = "<group>"; };
 		53DB5E9CCD67E192AB4D18D6 /* Pods-DarklyTests.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-DarklyTests.debug.xcconfig"; path = "Pods/Target Support Files/Pods-DarklyTests/Pods-DarklyTests.debug.xcconfig"; sourceTree = "<group>"; };
 		6A58255E063DF2AA8963D16F /* libPods-Darkly.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-Darkly.a"; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -138,8 +138,8 @@
 		CC36AA9F1B6D5FED008200F1 /* DarklyTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = DarklyTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		CC36AAA51B6D5FED008200F1 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		CC43418D1C11718E00FC89B6 /* darkly3.xcdatamodel */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcdatamodel; path = darkly3.xcdatamodel; sourceTree = "<group>"; };
-		CC467AB51B78323F0035C07E /* DataManager.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = DataManager.h; path = Models/DataManager.h; sourceTree = "<group>"; };
-		CC467AB61B78323F0035C07E /* DataManager.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = DataManager.m; path = Models/DataManager.m; sourceTree = "<group>"; };
+		CC467AB51B78323F0035C07E /* LDDataManager.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = LDDataManager.h; path = Models/LDDataManager.h; sourceTree = "<group>"; };
+		CC467AB61B78323F0035C07E /* LDDataManager.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = LDDataManager.m; path = Models/LDDataManager.m; sourceTree = "<group>"; };
 		CC4E8F421B8ABB3500F2A19D /* EventTest.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = EventTest.m; path = Models/EventTest.m; sourceTree = "<group>"; };
 		CC4E8F451B8B3A7B00F2A19D /* UserTest.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = UserTest.m; path = Models/UserTest.m; sourceTree = "<group>"; };
 		CC674C8E1B7519FB00B6A78D /* LDFeatureFlag.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = LDFeatureFlag.h; path = Models/LDFeatureFlag.h; sourceTree = "<group>"; };
@@ -301,8 +301,8 @@
 			isa = PBXGroup;
 			children = (
 				CCEE2B191B9AAD17000447AF /* Managers */,
-				3A5F93C11B6F10F50093E419 /* DarklyUtil.h */,
-				3A5F93BF1B6F10DB0093E419 /* DarklyUtil.m */,
+				3A5F93C11B6F10F50093E419 /* LDUtil.h */,
+				3A5F93BF1B6F10DB0093E419 /* LDUtil.m */,
 				3A70A7861B6FCF9300984E23 /* LDClient.h */,
 				3A70A7871B6FCFAC00984E23 /* LDClient.m */,
 				3A70A78B1B7008A900984E23 /* LDConfig.h */,
@@ -396,14 +396,14 @@
 		CCEE2B191B9AAD17000447AF /* Managers */ = {
 			isa = PBXGroup;
 			children = (
-				CC467AB51B78323F0035C07E /* DataManager.h */,
-				CC467AB61B78323F0035C07E /* DataManager.m */,
-				23DCFA9C1B95105A00F15531 /* PollingManager.h */,
-				23DCFA9D1B95105A00F15531 /* PollingManager.m */,
-				3A9F23CF1B82D19900D0EF2F /* RequestManager.h */,
-				3A9F23D01B82D19900D0EF2F /* RequestManager.m */,
-				3AD8ACB41B86B5E700922AA6 /* ClientManager.h */,
-				3AD8ACB51B86B5E700922AA6 /* ClientManager.m */,
+				CC467AB51B78323F0035C07E /* LDDataManager.h */,
+				CC467AB61B78323F0035C07E /* LDDataManager.m */,
+				23DCFA9C1B95105A00F15531 /* LDPollingManager.h */,
+				23DCFA9D1B95105A00F15531 /* LDPollingManager.m */,
+				3A9F23CF1B82D19900D0EF2F /* LDRequestManager.h */,
+				3A9F23D01B82D19900D0EF2F /* LDRequestManager.m */,
+				3AD8ACB41B86B5E700922AA6 /* LDClientManager.h */,
+				3AD8ACB51B86B5E700922AA6 /* LDClientManager.m */,
 			);
 			name = Managers;
 			sourceTree = "<group>";
@@ -701,7 +701,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				3AD8ACB61B86B5E800922AA6 /* ClientManager.m in Sources */,
+				3AD8ACB61B86B5E800922AA6 /* LDClientManager.m in Sources */,
 				3A70A7971B705F2C00984E23 /* DarklyConstants.m in Sources */,
 				3A70A78D1B7008B700984E23 /* LDConfig.m in Sources */,
 				CC674C901B7519FB00B6A78D /* LDFeatureFlag.m in Sources */,
@@ -713,11 +713,11 @@
 				CC753A231BF2FB8B001E4124 /* UserEntity+CoreDataProperties.m in Sources */,
 				CCA68A0F1B7066230052BE63 /* LDEvent.m in Sources */,
 				3AC5D0DE1B8AA44A00417CBB /* NSDictionary+JSON.m in Sources */,
-				3A9F23D11B82D19900D0EF2F /* RequestManager.m in Sources */,
+				3A9F23D11B82D19900D0EF2F /* LDRequestManager.m in Sources */,
 				CCA68A161B7066980052BE63 /* darkly.xcdatamodeld in Sources */,
-				3A5F93C01B6F10DB0093E419 /* DarklyUtil.m in Sources */,
-				CC467AB71B78323F0035C07E /* DataManager.m in Sources */,
-				23DCFA9E1B95105A00F15531 /* PollingManager.m in Sources */,
+				3A5F93C01B6F10DB0093E419 /* LDUtil.m in Sources */,
+				CC467AB71B78323F0035C07E /* LDDataManager.m in Sources */,
+				23DCFA9E1B95105A00F15531 /* LDPollingManager.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
