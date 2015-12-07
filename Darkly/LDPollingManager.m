@@ -3,12 +3,12 @@
 //
 
 
-#import "PollingManager.h"
-#import "ClientManager.h"
-#import "DarklyUtil.h"
+#import "LDPollingManager.h"
+#import "LDClientManager.h"
+#import "LDUtil.h"
 #import "DarklyConstants.h"
 
-@implementation PollingManager
+@implementation LDPollingManager
 
 
 @synthesize configurationTimer;
@@ -115,7 +115,7 @@ static id sharedInstance = nil;
       DEBUG_LOGX(@"PollingManager config interval reached");
       configPollingCount +=1;
     
-      ClientManager *clientManager = [ClientManager sharedInstance];
+      LDClientManager *clientManager = [LDClientManager sharedInstance];
       [clientManager syncWithServerForConfig];
     }
 }
@@ -244,7 +244,7 @@ static id sharedInstance = nil;
         DEBUG_LOGX(@"PollingManager event interval reached");
         eventPollingCount +=1;
         
-        ClientManager *clientManager = [ClientManager sharedInstance];
+        LDClientManager *clientManager = [LDClientManager sharedInstance];
         [clientManager syncWithServerForEvents];
     }
 }

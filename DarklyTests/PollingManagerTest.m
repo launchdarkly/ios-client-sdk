@@ -3,9 +3,9 @@
 //
 
 #import "DarklyXCTestCase.h"
-#import "PollingManager.h"
-#import "DataManager.h"
-#import "RequestManager.h"
+#import "LDPollingManager.h"
+#import "LDDataManager.h"
+#import "LDRequestManager.h"
 #import <OCMock.h>
 
 @interface PollingManagerTest : DarklyXCTestCase
@@ -19,11 +19,11 @@
 - (void)setUp {
     [super setUp];
     
-    RequestManager *requestManager = [RequestManager sharedInstance];
+    LDRequestManager *requestManager = [LDRequestManager sharedInstance];
     requestManagerMock = OCMPartialMock(requestManager);
     OCMStub([requestManagerMock performFeatureFlagRequest:[OCMArg isKindOfClass:[NSString class]]]);
 
-    id requestManagerClassMock = OCMClassMock([RequestManager class]);
+    id requestManagerClassMock = OCMClassMock([LDRequestManager class]);
     OCMStub(ClassMethod([requestManagerClassMock sharedInstance])).andReturn(requestManagerClassMock);
  }
 
@@ -37,7 +37,7 @@
 
 - (void)testConfigPollingStates {
     // create the expectation with a nice descriptive message
-    PollingManager *dnu =  [PollingManager sharedInstance];
+    LDPollingManager *dnu =  [LDPollingManager sharedInstance];
     dnu.configurationTimerPollingInterval = 5; // for the purposes of the unit tests set it to 5 secs.
     [dnu startConfigPolling];
     
@@ -64,7 +64,7 @@
 
 - (void)testEventPollingStates {
     // create the expectation with a nice descriptive message
-    PollingManager *dnu =  [PollingManager sharedInstance];
+    LDPollingManager *dnu =  [LDPollingManager sharedInstance];
     dnu.eventTimerPollingInterval = 5; // for the purposes of the unit tests set it to 5 secs.
     [dnu startEventPolling];
     
@@ -94,7 +94,7 @@
     // create the expectation with a nice descriptive message
     XCTestExpectation *expectation = [self expectationWithDescription:@"wait for polling to start"];
     
-    PollingManager *dnu =  [PollingManager sharedInstance];
+    LDPollingManager *dnu =  [LDPollingManager sharedInstance];
     dnu.configurationTimerPollingInterval = 1; // for the purposes of the unit tests set it to 1 secs.
     [dnu startConfigPolling];
     
@@ -102,7 +102,7 @@
 
         [dnu stopConfigPolling];
         NSInteger expectedValue = 5;
-        NSInteger actualValue = [PollingManager configPollingCount];
+        NSInteger actualValue = [LDPollingManager configPollingCount];
         
         XCTAssertTrue(actualValue >= expectedValue, @"The returned value doesn't match the expected value.");
         [expectation fulfill];

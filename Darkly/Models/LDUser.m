@@ -3,7 +3,7 @@
 //
 
 #import "LDUser.h"
-#import "DarklyUtil.h"
+#import "LDUtil.h"
 
 @implementation LDUser
 
@@ -14,12 +14,12 @@
     
     if(self != nil) {
         // Need to set device
-        NSString *device = [DarklyUtil getDeviceAsString];
+        NSString *device = [LDUtil getDeviceAsString];
         DEBUG_LOG(@"User building User with device: %@", device);
         [self setDevice:device];
  
         // Need to set os
-        NSString *systemVersion = [DarklyUtil getSystemVersionAsString];
+        NSString *systemVersion = [LDUtil getSystemVersionAsString];
         DEBUG_LOG(@"User building User with system version: %@", systemVersion);
         [self setOs:systemVersion];
         

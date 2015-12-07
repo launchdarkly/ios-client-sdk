@@ -3,12 +3,12 @@
 //
 
 #import "DarklyXCTestCase.h"
-#import "ClientManager.h"
+#import "LDClientManager.h"
 #import "LDUserBuilder.h"
 #import "LDClient.h"
 #import <OCMock.h>
-#import "RequestManager.h"
-#import "DataManager.h"
+#import "LDRequestManager.h"
+#import "LDDataManager.h"
 #import "LDEvent.h"
 #import <Blockskit.h>
 
@@ -48,7 +48,7 @@
     OCMStub(ClassMethod([ldClientMock sharedInstance])).andReturn(ldClientMock);
     OCMStub([ldClientMock user]).andReturn(user);
     
-    requestManagerMock = OCMClassMock([RequestManager class]);
+    requestManagerMock = OCMClassMock([LDRequestManager class]);
     OCMStub(ClassMethod([requestManagerMock sharedInstance])).andReturn(requestManagerMock);
     OCMStub([requestManagerMock performFeatureFlagRequest:[OCMArg isKindOfClass:[NSString class]]]);
     OCMStub([requestManagerMock performEventRequest:[OCMArg any]]);
@@ -65,7 +65,7 @@
     //    "device":"iPhone"}
     NSString *encodedUserString = @"eyJsYXN0TmFtZSI6bnVsbCwiZmlyc3ROYW1lIjpudWxsLCJhbm9ueW1vdXMiOmZhbHNlLCJrZXkiOiJqZWZmQHRlc3QuY29tIiwiYXZhdGFyIjpudWxsLCJvcyI6IjgwNDAwIiwiaXAiOm51bGwsImN1c3RvbSI6bnVsbCwiY29uZmlnIjpudWxsLCJjb3VudHJ5IjpudWxsLCJlbWFpbCI6bnVsbCwiZGV2aWNlIjoiaVBob25lIn0=";
     
-    ClientManager *clientManager = [ClientManager sharedInstance];
+    LDClientManager *clientManager = [LDClientManager sharedInstance];
     [clientManager setOfflineEnabled:NO];
     
     [clientManager syncWithServerForConfig];
@@ -77,7 +77,7 @@
 }
 
 - (void)testSyncWithServerForEvents {
-    ClientManager *clientManager = [ClientManager sharedInstance];
+    LDClientManager *clientManager = [LDClientManager sharedInstance];
     [clientManager setOfflineEnabled:NO];
     
     OCMStub([self.dataManagerMock allEventsJsonData]).andReturn(jsonData);
@@ -95,7 +95,7 @@
     //    "device":"iPhone"}
     NSString *encodedUserString = @"eyJsYXN0TmFtZSI6bnVsbCwiZmlyc3ROYW1lIjpudWxsLCJhbm9ueW1vdXMiOmZhbHNlLCJrZXkiOiJqZWZmQHRlc3QuY29tIiwiYXZhdGFyIjpudWxsLCJvcyI6IjgwNDAwIiwiaXAiOm51bGwsImN1c3RvbSI6bnVsbCwiY29uZmlnIjpudWxsLCJjb3VudHJ5IjpudWxsLCJlbWFpbCI6bnVsbCwiZGV2aWNlIjoiaVBob25lIn0=";
     
-    ClientManager *clientManager = [ClientManager sharedInstance];
+    LDClientManager *clientManager = [LDClientManager sharedInstance];
     [clientManager setOfflineEnabled:YES];
     
     [clientManager syncWithServerForConfig];
@@ -106,7 +106,7 @@
 
 
 - (void)testSyncWithServerForEventsNotProcessedWhenOffline {
-    ClientManager *clientManager = [ClientManager sharedInstance];
+    LDClientManager *clientManager = [LDClientManager sharedInstance];
     [clientManager setOfflineEnabled:YES];    
     [clientManager syncWithServerForEvents];
     
@@ -115,7 +115,7 @@
 }
 
 - (void)testSyncWithServerForEventsWhenFlushCalled {
-    ClientManager *clientManager = [ClientManager sharedInstance];
+    LDClientManager *clientManager = [LDClientManager sharedInstance];
     [clientManager setOfflineEnabled:NO];
     [clientManager flushEvents];
     
@@ -125,7 +125,7 @@
 }
 
 - (void)testSyncWithServerForEventsNotProcessedWhenOfflineWhenFlushCalled {
-    ClientManager *clientManager = [ClientManager sharedInstance];
+    LDClientManager *clientManager = [LDClientManager sharedInstance];
     [clientManager setOfflineEnabled:YES];
     
     [[requestManagerMock reject] performEventRequest:[OCMArg isKindOfClass:[NSData class]]];

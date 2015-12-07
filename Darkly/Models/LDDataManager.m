@@ -3,23 +3,23 @@
 //
 
 
-#import "DataManager.h"
+#import "LDDataManager.h"
 #import <Mantle/Mantle.h>
 #import <MTLManagedObjectAdapter/MTLManagedObjectAdapter.h>
 #import <BlocksKit/BlocksKit.h>
 #import "LDEvent.h"
-#import "DarklyUtil.h"
+#import "LDUtil.h"
 
 int const kUserCacheSize = 5;
 
-@implementation DataManager
+@implementation LDDataManager
 @synthesize managedObjectContext;
 @synthesize managedObjectModel;
 @synthesize persistentStoreCoordinator;
 @synthesize eventCreatedCount;
 
 + (id)sharedManager {
-    static DataManager *sharedDataManager = nil;
+    static LDDataManager *sharedDataManager = nil;
     static dispatch_once_t onceToken;
     dispatch_once(&onceToken, ^{
         sharedDataManager = [[self alloc] init];

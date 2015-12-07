@@ -3,16 +3,16 @@
 //
 
 
-#import "RequestManager.h"
+#import "LDRequestManager.h"
 
 extern NSString *const kLDUserUpdatedNotification;
 
-@interface ClientManager : NSObject  <RequestManagerDelegate> {
+@interface LDClientManager : NSObject  <RequestManagerDelegate> {
 }
 
 @property (nonatomic) BOOL offlineEnabled;
 
-+(ClientManager *)sharedInstance;
++(LDClientManager *)sharedInstance;
 
 - (void)syncWithServerForEvents;
 - (void)syncWithServerForConfig;

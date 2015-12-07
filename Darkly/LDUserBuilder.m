@@ -4,8 +4,8 @@
 
 
 #import "LDUserBuilder.h"
-#import "DarklyUtil.h"
-#import "DataManager.h"
+#import "LDUtil.h"
+#import "LDDataManager.h"
 #import "UserEntity.h"
 
 @interface LDUserBuilder() {
@@ -185,7 +185,7 @@
     LDUser *user = nil;
     
     if (key) {
-        user = [[DataManager sharedManager] findUserWithkey:key];
+        user = [[LDDataManager sharedManager] findUserWithkey:key];
         if(!user) {
             user = [[LDUser alloc] init];
         }
@@ -235,7 +235,7 @@
         [user setAnonymous:currentAnonymous];
     }
     DEBUG_LOG(@"LDUserBuilder building User with anonymous: %d", anonymous);
-    [[DataManager sharedManager] saveUser: user];
+    [[LDDataManager sharedManager] saveUser: user];
     return user;
 }
 

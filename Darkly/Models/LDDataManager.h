@@ -9,13 +9,13 @@
 
 extern int const kUserCacheSize;
 
-@interface DataManager : NSObject
+@interface LDDataManager : NSObject
 @property (readonly, strong, nonatomic) NSManagedObjectContext *managedObjectContext;
 @property (readonly, strong, nonatomic) NSManagedObjectModel *managedObjectModel;
 @property (readonly, strong, nonatomic) NSPersistentStoreCoordinator *persistentStoreCoordinator;
 @property (strong,atomic) NSNumber *eventCreatedCount;
 
-+(DataManager *)sharedManager;
++(LDDataManager *)sharedManager;
 
 -(NSManagedObjectContext *) managedObjectContext;
 -(NSManagedObject *)findEvent: (NSInteger) date;

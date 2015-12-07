@@ -3,21 +3,21 @@
 //
 
 #import "DataManager+UniteTests.h"
-#import "DataManager.h"
+#import "LDDataManager.h"
 
 #import <OCMock.h>
 
-@implementation DataManager (UniteTests)
-static DataManager *mockedSharedAPIManager = nil;
+@implementation LDDataManager (UniteTests)
+static LDDataManager *mockedSharedAPIManager = nil;
 
 
 +(instancetype)createMockIfNil {
-    DataManager *manager = [DataManager swizzled_sharedManager];
+    LDDataManager *manager = [LDDataManager swizzled_sharedManager];
     if (!mockedSharedAPIManager) {
         mockedSharedAPIManager = [OCMockObject partialMockForObject:manager];
         
         
-        NSURL *modelURL = [[NSBundle bundleForClass:[DataManager class]] URLForResource:@"darkly"                                                                      withExtension:@"momd"];
+        NSURL *modelURL = [[NSBundle bundleForClass:[LDDataManager class]] URLForResource:@"darkly"                                                                      withExtension:@"momd"];
         NSManagedObjectModel *mom = [[NSManagedObjectModel alloc] initWithContentsOfURL:modelURL];
         
         NSPersistentStoreCoordinator *psc = [[NSPersistentStoreCoordinator alloc] initWithManagedObjectModel:mom];
@@ -43,7 +43,7 @@ static DataManager *mockedSharedAPIManager = nil;
 }
 
 + (id)swizzled_sharedManager {
-    static DataManager *sharedAPIManager = nil;
+    static LDDataManager *sharedAPIManager = nil;
     static dispatch_once_t onceToken;
     dispatch_once(&onceToken, ^{
         sharedAPIManager = [[self alloc] init];

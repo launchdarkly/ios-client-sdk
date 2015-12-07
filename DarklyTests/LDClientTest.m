@@ -5,11 +5,11 @@
 #import "DarklyXCTestCase.h"
 #import "LDClient.h"
 #import "LDFeatureFlag.h"
-#import "DataManager.h"
+#import "LDDataManager.h"
 #import "LDUser.h"
 #import "LDFlagConfig.h"
 #import "LDUserBuilder.h"
-#import "PollingManager.h"
+#import "LDPollingManager.h"
 
 #import <OCMock.h>
 #import <Blockskit/BlocksKit.h>

@@ -3,23 +3,23 @@
 //
 
 
-#import "ClientManager.h"
-#import "PollingManager.h"
-#import "DataManager.h"
-#import "DarklyUtil.h"
+#import "LDClientManager.h"
+#import "LDPollingManager.h"
+#import "LDDataManager.h"
+#import "LDUtil.h"
 #import "LDUser.h"
 #import "LDEvent.h"
 #import <BlocksKit/BlocksKit.h>
 #import "NSDictionary+JSON.h"
 
-@implementation ClientManager
+@implementation LDClientManager
 
 @synthesize offlineEnabled;
 
 NSString *const kLDUserUpdatedNotification = @"Darkly.UserUpdatedNotification";
 
-+(ClientManager *)sharedInstance {
-    static ClientManager *sharedApiManager = nil;
++(LDClientManager *)sharedInstance {
+    static LDClientManager *sharedApiManager = nil;
     static dispatch_once_t onceToken;
     dispatch_once(&onceToken, ^{
         sharedApiManager = [[self alloc] init];
@@ -32,7 +32,7 @@ NSString *const kLDUserUpdatedNotification = @"Darkly.UserUpdatedNotification";
 }
 
 - (void)startPolling {
-    PollingManager *pollingMgr = [PollingManager sharedInstance];
+    LDPollingManager *pollingMgr = [LDPollingManager sharedInstance];
     
     LDClient *client = [LDClient sharedInstance];
     LDConfig *config = client.ldConfig;
@@ -47,7 +47,7 @@ NSString *const kLDUserUpdatedNotification = @"Darkly.UserUpdatedNotification";
 
 - (void)stopPolling {
     DEBUG_LOGX(@"ClientManager stopPolling method called");
-    PollingManager *pollingMgr = [PollingManager sharedInstance];
+    LDPollingManager *pollingMgr = [LDPollingManager sharedInstance];
     
     [pollingMgr stopConfigPolling];
     [pollingMgr stopEventPolling];
@@ -57,7 +57,7 @@ NSString *const kLDUserUpdatedNotification = @"Darkly.UserUpdatedNotification";
 
 - (void)willEnterBackground {
     DEBUG_LOGX(@"ClientManager entering background");
-    PollingManager *pollingMgr = [PollingManager sharedInstance];
+    LDPollingManager *pollingMgr = [LDPollingManager sharedInstance];
     
     [pollingMgr suspendConfigPolling];
     [pollingMgr suspendEventPolling];
@@ -67,7 +67,7 @@ NSString *const kLDUserUpdatedNotification = @"Darkly.UserUpdatedNotification";
 
 - (void)willEnterForeground {
     DEBUG_LOGX(@"ClientManager entering foreground");
-    PollingManager *pollingMgr = [PollingManager sharedInstance];
+    LDPollingManager *pollingMgr = [LDPollingManager sharedInstance];
     [pollingMgr resumeConfigPolling];
     [pollingMgr resumeEventPolling];
 }
@@ -76,10 +76,10 @@ NSString *const kLDUserUpdatedNotification = @"Darkly.UserUpdatedNotification";
     if (!offlineEnabled) {
         DEBUG_LOGX(@"ClientManager syncing events with server");
         
-        NSData *eventJsonData = [[DataManager sharedManager] allEventsJsonData];
+        NSData *eventJsonData = [[LDDataManager sharedManager] allEventsJsonData];
         
         if (eventJsonData) {
-            RequestManager *rMan = [RequestManager sharedInstance];
+            LDRequestManager *rMan = [LDRequestManager sharedInstance];
             [rMan performEventRequest:eventJsonData];
         } else {
             DEBUG_LOGX(@"ClientManager has no events so won't sync events with server");
@@ -98,8 +98,8 @@ NSString *const kLDUserUpdatedNotification = @"Darkly.UserUpdatedNotification";
         if (currentUser) {
             NSDictionary *jsonDictionary = [MTLJSONAdapter JSONDictionaryFromModel:currentUser error: nil];
             NSString *jsonString = [jsonDictionary ld_jsonString];
-            NSString *encodedUser = [DarklyUtil base64EncodeString:jsonString];
-            [[RequestManager sharedInstance] performFeatureFlagRequest:encodedUser];
+            NSString *encodedUser = [LDUtil base64EncodeString:jsonString];
+            [[LDRequestManager sharedInstance] performFeatureFlagRequest:encodedUser];
         } else {
             DEBUG_LOGX(@"ClientManager has no user so won't sync config with server");
         }
@@ -119,11 +119,11 @@ NSString *const kLDUserUpdatedNotification = @"Darkly.UserUpdatedNotification";
         // Audit cached events versus processed Events and only keep difference
         NSArray *processedJsonArray = [NSJSONSerialization JSONObjectWithData:jsonEventArray options:NSJSONReadingMutableContainers error:nil];
         if (processedJsonArray) {
-            [[DataManager sharedManager] deleteProcessedEvents: processedJsonArray];
+            [[LDDataManager sharedManager] deleteProcessedEvents: processedJsonArray];
         }
     } else {
         DEBUG_LOGX(@"ClientManager processedEvents method called after receiving failure response from server");
-        PollingManager *pollingMgr = [PollingManager sharedInstance];
+        LDPollingManager *pollingMgr = [LDPollingManager sharedInstance];
         DEBUG_LOG(@"ClientManager setting event interval to: %d", eventInterval);
         pollingMgr.eventTimerPollingInterval = eventInterval;
     }
@@ -140,31 +140,32 @@ NSString *const kLDUserUpdatedNotification = @"Darkly.UserUpdatedNotification";
             // Overwrite Config with new config
             LDClient *client = [LDClient sharedInstance];
             LDUser *user = client.user;
-            UserEntity *userEntity = [[DataManager sharedManager] findUserEntityWithkey: user.key];
+            UserEntity *userEntity = [[LDDataManager sharedManager] findUserEntityWithkey: user.key];
             
             user.config = newConfig;
             newConfig.userKey = user.key;
             ConfigEntity *configEntity = [MTLManagedObjectAdapter managedObjectFromModel:newConfig
-                                                                    insertingIntoContext:[[DataManager sharedManager] managedObjectContext]
+                                                                    insertingIntoContext:[[LDDataManager sharedManager] managedObjectContext]
                                                                                    error: nil];
             userEntity.config = configEntity;
             
             // Save context
-            [[DataManager sharedManager] saveContext];
+            [[LDDataManager sharedManager] saveContext];
             
             // Update polling interval for Config for new config interval
-            PollingManager *pollingMgr = [PollingManager sharedInstance];
+            LDPollingManager *pollingMgr = [LDPollingManager sharedInstance];
             DEBUG_LOG(@"ClientManager setting config interval to: %d", configInterval);
             pollingMgr.configurationTimerPollingInterval = configInterval;
             
             [[NSNotificationCenter defaultCenter] postNotificationName: kLDUserUpdatedNotification
                                                                 object: nil];
-        }} else {
-            DEBUG_LOGX(@"ClientManager processedConfig method called after receiving failure response from server");
-            PollingManager *pollingMgr = [PollingManager sharedInstance];
-            DEBUG_LOG(@"ClientManager setting config interval to: %d", configInterval);
-            pollingMgr.configurationTimerPollingInterval = configInterval;
         }
+    } else {
+        DEBUG_LOGX(@"ClientManager processedConfig method called after receiving failure response from server");
+        LDPollingManager *pollingMgr = [LDPollingManager sharedInstance];
+        DEBUG_LOG(@"ClientManager setting config interval to: %d", configInterval);
+        pollingMgr.configurationTimerPollingInterval = configInterval;
+    }
 }
 
 @end
