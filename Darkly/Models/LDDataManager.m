@@ -269,7 +269,7 @@ int const kUserCacheSize = 5;
     if (managedObjectModel != nil) {
         return managedObjectModel;
     }
-    NSString *bundlePath = [[NSBundle mainBundle] pathForResource:@"DarklyLibraryModels"  ofType:@"bundle"];
+    NSString *bundlePath = [[NSBundle bundleForClass:[LDClient class]] pathForResource:@"DarklyLibraryModels"  ofType:@"bundle"];
     NSBundle *bundle = [NSBundle bundleWithPath:bundlePath];
     
     NSString *modelPath = [bundle pathForResource:@"darkly" ofType:@"momd"];
