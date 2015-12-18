@@ -3,7 +3,6 @@
 //
 
 #import "LDFlagConfig.h"
-#import <BlocksKit/BlocksKit.h>
 #import "LDFeatureFlag.h"
 #import "LDUser.h"
 #import "LDUtil.h"
@@ -36,7 +35,8 @@
 -(NSArray *)features {
     NSMutableArray *featuresArray = [[NSMutableArray alloc] init];
     
-    [self.featuresJsonDictionary bk_each:^(id key, NSDictionary *featureJson) {
+    for(id key in self.featuresJsonDictionary) {
+        NSDictionary *featureJson = [self.featuresJsonDictionary objectForKey:key];
         LDFeatureFlag *feature = [[LDFeatureFlag alloc] init];
         feature.key = key;
         
@@ -51,7 +51,7 @@
                 DEBUG_LOG(@"Error parsing value for key: %@", feature.key);
             }
         }
-    }];
+    };
     
     return featuresArray;
 }
@@ -65,17 +65,28 @@
 }
 
 -(BOOL) isFlagOn: ( NSString * __nonnull )keyName {
-    LDFeatureFlag *featureFlag = [self.features bk_match:^BOOL(LDFeatureFlag *feature) {
-        return [feature.key isEqualToString: keyName];
-    }];
+    LDFeatureFlag *matchedFeature = nil;
+    
+    for(LDFeatureFlag *feature in self.features) {
+        if([feature.key isEqualToString: keyName])
+            matchedFeature = feature;
+    };
+    
+    if(!matchedFeature)
+        return false;
         
-    return featureFlag.isOn;
+    return matchedFeature.isOn;
 }
 
 -(BOOL) doesFlagExist: ( NSString * __nonnull )keyName {
-    return [self.features bk_any:^BOOL(LDFeatureFlag *feature) {
-        return [feature.key isEqualToString: keyName];
-    }];
+    LDFeatureFlag *matchedFeature = nil;
+    
+    for(LDFeatureFlag *feature in self.features) {
+        if([feature.key isEqualToString: keyName])
+            matchedFeature = feature;
+    };
+    
+    return matchedFeature != nil;
 }
 
 -(void)setUser:(LDUser *)aUser {
