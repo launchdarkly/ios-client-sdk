@@ -12,7 +12,6 @@
 #import "LDPollingManager.h"
 
 #import <OCMock.h>
-#import <Blockskit/BlocksKit.h>
 
 @interface LDClientTest : DarklyXCTestCase
 

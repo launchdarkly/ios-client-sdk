@@ -10,7 +10,6 @@
 #import "LDRequestManager.h"
 #import "LDDataManager.h"
 #import "LDEvent.h"
-#import <Blockskit.h>
 
 @interface ClientManagerTest : DarklyXCTestCase
 @property (nonatomic) NSData *jsonData;
@@ -33,9 +32,11 @@
     [event featureEventWithKey:@"blah" keyValue:NO defaultKeyValue:NO];
     
     NSArray *eventArray = @[event];
-    NSArray *eventJsonDictArray = [eventArray bk_map:^id(LDEvent *event) {
-        return [MTLJSONAdapter JSONDictionaryFromModel:event error: nil];
-    }];
+    NSMutableArray *eventJsonDictArray = @[].mutableCopy;
+
+    for (LDEvent *event in eventArray) {
+        [eventJsonDictArray addObject: [MTLJSONAdapter JSONDictionaryFromModel:event error: nil]];
+    }
     
     jsonData = [NSJSONSerialization dataWithJSONObject:eventJsonDictArray
                                                        options:NSJSONWritingPrettyPrinted
