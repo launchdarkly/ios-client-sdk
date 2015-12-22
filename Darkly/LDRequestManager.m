@@ -109,15 +109,15 @@ static NSString * const kEventRequestCompletedNotification = @"event_request_com
                                 }
                             }
                             
-                            [delegate processedConfig:YES jsonConfigDictionary:responseObject configInterval:configMaxAge];
+                            [delegate processedConfig:YES jsonConfigDictionary:responseObject configIntervalMillis:configMaxAge*kMillisInSecs];
                         } else {
-                            [delegate processedConfig:NO jsonConfigDictionary:nil configInterval:kMinimumPollingInterval];
+                            [delegate processedConfig:NO jsonConfigDictionary:nil configIntervalMillis:kMinimumPollingIntervalMillis];
                         }
                     });
                 } failure:^(AFHTTPRequestOperation *operation, NSError *error) {
                     dispatch_async(dispatch_get_main_queue(),^{
                         configRequestInProgress = NO;
-                        [delegate processedConfig:NO jsonConfigDictionary:nil configInterval:kMinimumPollingInterval];
+                        [delegate processedConfig:NO jsonConfigDictionary:nil configIntervalMillis:kMinimumPollingIntervalMillis];
                     });
                 }];
                 [op start];
@@ -148,13 +148,13 @@ static NSString * const kEventRequestCompletedNotification = @"event_request_com
                     // Call delegate method
                     dispatch_async(dispatch_get_main_queue(),^{
                         eventRequestInProgress = NO;
-                        [delegate processedEvents:YES jsonEventArray:jsonEventArray eventInterval:kDefaultFlushInterval];
+                        [delegate processedEvents:YES jsonEventArray:jsonEventArray eventIntervalMillis:kDefaultFlushInterval*kMillisInSecs];
                     });
                 } failure:^(AFHTTPRequestOperation *operation, NSError *error) {
                     // Call delegate method
                     dispatch_async(dispatch_get_main_queue(),^{
                         eventRequestInProgress = NO;
-                        [delegate processedEvents:NO jsonEventArray:jsonEventArray eventInterval:kMinimumPollingInterval];
+                        [delegate processedEvents:NO jsonEventArray:jsonEventArray eventIntervalMillis:kMinimumPollingIntervalMillis];
                     });
                 }];
                 [op start];
