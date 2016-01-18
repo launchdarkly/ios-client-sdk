@@ -3,7 +3,7 @@
 //
 
 
-#import "LDFlagConfig.h"
+#import "LDFlagConfigModel.h"
 
 @protocol RequestManagerDelegate <NSObject>
 

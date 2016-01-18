@@ -20,6 +20,8 @@ extern NSString *const kLDUserUpdatedNotification;
 - (void)processedConfig:(BOOL)success jsonConfigDictionary:(NSDictionary *)jsonConfigDictionary configIntervalMillis:(int)configIntervalMillis;
 - (void)startPolling;
 - (void)stopPolling;
+- (void)willEnterBackground;
+- (void)willEnterForeground;
 - (void)flushEvents;
 
 @end

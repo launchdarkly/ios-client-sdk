@@ -8,10 +8,10 @@
 
 #import <OCMock.h>
 
-@interface RequestManagerTest : DarklyXCTestCase
+@interface LDRequestManagerTest : DarklyXCTestCase
 @end
 
-@implementation RequestManagerTest
+@implementation LDRequestManagerTest
 - (void)setUp {
     [super setUp];
 
