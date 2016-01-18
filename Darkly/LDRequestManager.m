@@ -148,7 +148,9 @@ static NSString * const kEventRequestCompletedNotification = @"event_request_com
                     // Call delegate method
                     dispatch_async(dispatch_get_main_queue(),^{
                         eventRequestInProgress = NO;
-                        [delegate processedEvents:YES jsonEventArray:jsonEventArray eventIntervalMillis:kDefaultFlushInterval*kMillisInSecs];
+                        LDClient *client = [LDClient sharedInstance];
+                        LDConfig *config = client.ldConfig;
+                        [delegate processedEvents:YES jsonEventArray:jsonEventArray eventIntervalMillis:[config.flushInterval intValue] * kMillisInSecs];
                     });
                 } failure:^(AFHTTPRequestOperation *operation, NSError *error) {
                     // Call delegate method
