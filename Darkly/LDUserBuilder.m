@@ -6,7 +6,6 @@
 #import "LDUserBuilder.h"
 #import "LDUtil.h"
 #import "LDDataManager.h"
-#import "UserEntity.h"
 
 @interface LDUserBuilder() {
     NSString *key;
@@ -24,7 +23,7 @@
 
 @implementation LDUserBuilder
 
-+ (LDUser *)compareNewBuilder:(LDUserBuilder *)iBuilder withUser:(LDUser *)iUser {
++ (LDUserModel *)compareNewBuilder:(LDUserBuilder *)iBuilder withUser:(LDUserModel *)iUser {
     if (iBuilder->key) {
         [iUser key:iBuilder->key];
     }
@@ -53,7 +52,7 @@
     return iUser;
 }
 
-+ (LDUserBuilder *)retrieveCurrentBuilder:(LDUser *)iUser {
++ (LDUserBuilder *)retrieveCurrentBuilder:(LDUserModel *)iUser {
     LDUserBuilder *userBuilder = [[LDUserBuilder alloc] init];
     if ([iUser key]) {
         [userBuilder withKey:[iUser key]];
@@ -180,14 +179,14 @@
     return self;
 }
 
--(LDUser *)build {
+-(LDUserModel *)build {
     DEBUG_LOGX(@"LDUserBuilder build method called");
-    LDUser *user = nil;
+    LDUserModel *user = nil;
     
     if (key) {
         user = [[LDDataManager sharedManager] findUserWithkey:key];
         if(!user) {
-            user = [[LDUser alloc] init];
+            user = [[LDUserModel alloc] init];
         }
         [user key:key];
         DEBUG_LOG(@"LDUserBuilder building User with key: %@", key);
@@ -195,7 +194,7 @@
         NSString *uniqueKey = [[[UIDevice currentDevice] identifierForVendor] UUIDString];
         DEBUG_LOG(@"LDUserBuilder building User with key: %@", uniqueKey);
 
-        user = [[LDUser alloc] init];
+        user = [[LDUserModel alloc] init];
         [user key:uniqueKey];
         if (!anonymous) {
             Boolean currentAnonymous = YES;

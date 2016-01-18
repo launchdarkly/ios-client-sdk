@@ -3,15 +3,17 @@
 //
 
 #import <XCTest/XCTest.h>
-#import "LDEvent.h"
+#import "LDEventModel.h"
+#import "LDUserModel.h"
 
-@interface EventTest : XCTestCase
-
+@interface LDEventModelTest : XCTestCase
+@property LDUserModel *user;
 @end
 
-@implementation EventTest
+@implementation LDEventModelTest
 - (void)setUp {
     [super setUp];
+    self.user = [[LDUserModel alloc] init];
 }
 
 - (void)tearDown {
@@ -20,7 +22,7 @@
 }
 
 - (void)testFeatureEventWithKeyCreatesEventWithDefaults {
-    LDEvent *event = [[LDEvent alloc] featureEventWithKey:@"red" keyValue:NO defaultKeyValue:NO];
+    LDEventModel *event = [[LDEventModel alloc] initFeatureEventWithKey:@"red" keyValue:NO defaultKeyValue:NO userValue:self.user ];
     
     XCTAssertEqual(event.key, @"red");
     XCTAssertEqual(event.kind, @"feature");
@@ -30,9 +32,9 @@
 
 - (void)testCustomEventWithKeyCreatesEventWithDefaults {
     NSDictionary *dictionary = @{@"red": @"is not blue"};
-    LDEvent *event = [[LDEvent alloc] customEventWithKey:@"red"
-                                   andDataDictionary: dictionary];
     
+    LDEventModel *event = [[LDEventModel alloc] initCustomEventWithKey:@"red" andDataDictionary:dictionary userValue:self.user];
+                 
     XCTAssertEqual(event.key, @"red");
     XCTAssertEqual(event.kind, @"custom");
     XCTAssertEqual([event.data allValues].firstObject,

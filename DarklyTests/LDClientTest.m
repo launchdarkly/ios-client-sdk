@@ -4,10 +4,9 @@
 
 #import "DarklyXCTestCase.h"
 #import "LDClient.h"
-#import "LDFeatureFlag.h"
 #import "LDDataManager.h"
-#import "LDUser.h"
-#import "LDFlagConfig.h"
+#import "LDUserModel.h"
+#import "LDFlagConfigModel.h"
 #import "LDUserBuilder.h"
 #import "LDPollingManager.h"
 
@@ -44,7 +43,9 @@
     NSString *testApiKey = @"testApiKey";
     LDConfigBuilder *builder = [[LDConfigBuilder alloc] init];
     [builder withApiKey:testApiKey];
-    XCTAssertTrue([[LDClient sharedInstance] start:builder userBuilder:nil]);
+    LDClient *client = [LDClient sharedInstance];
+    BOOL didStart = [client start:builder userBuilder:nil];
+    XCTAssertTrue(didStart);
 }
 
 - (void)testStartWithValidConfigMultipleTimes {
@@ -78,11 +79,11 @@
     LDUserBuilder *anotherUserBuilder = [[LDUserBuilder alloc] init];
     [anotherUserBuilder withKey:@"myKey"];
 
-    LDUser *user = [[LDClient sharedInstance] user];
+    LDUserModel *user = [[LDClient sharedInstance] ldUser];
     OCMStub([self.dataManagerMock findUserWithkey:[OCMArg any]]).andReturn(user);
 
     [[LDClient sharedInstance] start:builder userBuilder:anotherUserBuilder];
-    user = [[LDClient sharedInstance] user];
+    user = [[LDClient sharedInstance] ldUser];
     
      XCTAssertEqual(user.email, @"my@email.com");
 }

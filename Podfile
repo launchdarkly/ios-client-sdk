@@ -3,14 +3,9 @@
 
 target 'Darkly' do
   pod 'AFNetworking', '~> 2.5'
-  pod 'Mantle', '~> 2.0'
-  pod 'MTLManagedObjectAdapter', '~> 1.0'
 end
 
 target 'DarklyTests' do
-  pod 'AFNetworking', '~> 2.5'
-  pod 'Mantle', '~> 2.0'
-  pod 'MTLManagedObjectAdapter', '~> 1.0'
   pod 'AFNetworking', '~> 2.5'
   pod 'OCMock', '~> 3.1'
   pod 'OHHTTPStubs', '~> 4.2'
