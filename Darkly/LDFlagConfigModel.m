@@ -10,17 +10,21 @@
 #import "LDUtil.h"
 #import <BlocksKit/BlocksKit.h>
 
+static NSString * const kFeaturesJsonDictionaryKey = @"featuresJsonDictionary";
+
+static NSString * const kFeatureJsonValueName = @"value";
+
 @implementation LDFlagConfigModel
 
 - (void)encodeWithCoder:(NSCoder *)encoder {
     //Encode properties, other class variables, etc
-    [encoder encodeObject:self.featuresJsonDictionary forKey:@"featuresJsonDictionary"];
+    [encoder encodeObject:self.featuresJsonDictionary forKey:kFeaturesJsonDictionaryKey];
 }
 
 - (id)initWithCoder:(NSCoder *)decoder {
     if((self = [super init])) {
         //Decode properties, other class vars
-        self.featuresJsonDictionary = [decoder decodeObjectForKey:@"featuresJsonDictionary"];
+        self.featuresJsonDictionary = [decoder decodeObjectForKey:kFeaturesJsonDictionaryKey];
     }
     return self;
 }
@@ -30,7 +34,7 @@
     
     [self.featuresJsonDictionary bk_each:^(id key, NSDictionary *featureJson) {
         if ([key isEqualToString: keyName]) {
-            id aValue = [featureJson valueForKey:@"value"];
+            id aValue = [featureJson valueForKey:kFeatureJsonValueName];
             if (![aValue isKindOfClass:[NSNull class]] && ![aValue isKindOfClass:[NSString class]]) {
                 @try {
                     result = [aValue boolValue];

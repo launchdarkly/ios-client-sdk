@@ -8,19 +8,22 @@
 
 #import "LDFeatureFlagModel.h"
 
+static NSString * const kKeyKey = @"key";
+static NSString * const kIsOnKey = @"isOn";
+
 @implementation LDFeatureFlagModel
 
 - (void)encodeWithCoder:(NSCoder *)encoder {
     //Encode properties, other class variables, etc
-    [encoder encodeObject:self.key forKey:@"key"];
-    [encoder encodeBool:self.isOn forKey:@"isOn"];
+    [encoder encodeObject:self.key forKey:kKeyKey];
+    [encoder encodeBool:self.isOn forKey:kIsOnKey];
 }
 
 - (id)initWithCoder:(NSCoder *)decoder {
     if((self = [super init])) {
         //Decode properties, other class vars
-        self.key = [decoder decodeObjectForKey:@"key"];
-        self.isOn = [decoder decodeObjectForKey:@"isOn"];
+        self.key = [decoder decodeObjectForKey:kKeyKey];
+        self.isOn = [decoder decodeObjectForKey:kIsOnKey];
     }
     return self;
 }
