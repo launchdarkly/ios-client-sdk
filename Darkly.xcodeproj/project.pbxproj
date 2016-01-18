@@ -12,6 +12,9 @@
 		23DCFA9E1B95105A00F15531 /* LDPollingManager.m in Sources */ = {isa = PBXBuildFile; fileRef = 23DCFA9D1B95105A00F15531 /* LDPollingManager.m */; };
 		23E819541B8AA4A700010DD3 /* PollingManagerTest.m in Sources */ = {isa = PBXBuildFile; fileRef = 23E819531B8AA4A700010DD3 /* PollingManagerTest.m */; };
 		3A0C4DE91C4D93B70059886B /* LDFlagConfigModel.m in Sources */ = {isa = PBXBuildFile; fileRef = 3A0C4DE81C4D93B70059886B /* LDFlagConfigModel.m */; settings = {ASSET_TAGS = (); }; };
+		3A0C4DEC1C4D9A290059886B /* LDFeatureFlagModel.m in Sources */ = {isa = PBXBuildFile; fileRef = 3A0C4DEB1C4D9A290059886B /* LDFeatureFlagModel.m */; settings = {ASSET_TAGS = (); }; };
+		3A0C4DEF1C4D9D660059886B /* LDEventModel.m in Sources */ = {isa = PBXBuildFile; fileRef = 3A0C4DEE1C4D9D660059886B /* LDEventModel.m */; settings = {ASSET_TAGS = (); }; };
+		3A0C4DF21C4DA0330059886B /* LDUserModel.m in Sources */ = {isa = PBXBuildFile; fileRef = 3A0C4DF11C4DA0330059886B /* LDUserModel.m */; settings = {ASSET_TAGS = (); }; };
 		3A0F25041B71650C00DAB39F /* LDClientTest.m in Sources */ = {isa = PBXBuildFile; fileRef = 3A70A7891B6FD20600984E23 /* LDClientTest.m */; };
 		3A0F25051B71651400DAB39F /* LDConfigTest.m in Sources */ = {isa = PBXBuildFile; fileRef = 3A70A7931B704BD100984E23 /* LDConfigTest.m */; };
 		3A5F93C01B6F10DB0093E419 /* LDUtil.m in Sources */ = {isa = PBXBuildFile; fileRef = 3A5F93BF1B6F10DB0093E419 /* LDUtil.m */; };
@@ -103,6 +106,12 @@
 		23E819531B8AA4A700010DD3 /* PollingManagerTest.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = PollingManagerTest.m; sourceTree = "<group>"; };
 		3A0C4DE71C4D93B70059886B /* LDFlagConfigModel.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = LDFlagConfigModel.h; sourceTree = "<group>"; };
 		3A0C4DE81C4D93B70059886B /* LDFlagConfigModel.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = LDFlagConfigModel.m; sourceTree = "<group>"; };
+		3A0C4DEA1C4D9A290059886B /* LDFeatureFlagModel.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = LDFeatureFlagModel.h; sourceTree = "<group>"; };
+		3A0C4DEB1C4D9A290059886B /* LDFeatureFlagModel.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = LDFeatureFlagModel.m; sourceTree = "<group>"; };
+		3A0C4DED1C4D9D660059886B /* LDEventModel.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = LDEventModel.h; sourceTree = "<group>"; };
+		3A0C4DEE1C4D9D660059886B /* LDEventModel.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = LDEventModel.m; sourceTree = "<group>"; };
+		3A0C4DF01C4DA0330059886B /* LDUserModel.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = LDUserModel.h; sourceTree = "<group>"; };
+		3A0C4DF11C4DA0330059886B /* LDUserModel.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = LDUserModel.m; sourceTree = "<group>"; };
 		3A5F93BF1B6F10DB0093E419 /* LDUtil.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = LDUtil.m; sourceTree = "<group>"; };
 		3A5F93C11B6F10F50093E419 /* LDUtil.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = LDUtil.h; sourceTree = "<group>"; };
 		3A5F93C21B6F146F0093E419 /* DarklyUtilTest.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = DarklyUtilTest.m; sourceTree = "<group>"; };
@@ -386,6 +395,12 @@
 				CCDDE1761B7418B400DFC04B /* LDFlagConfig.m */,
 				3A0C4DE71C4D93B70059886B /* LDFlagConfigModel.h */,
 				3A0C4DE81C4D93B70059886B /* LDFlagConfigModel.m */,
+				3A0C4DEA1C4D9A290059886B /* LDFeatureFlagModel.h */,
+				3A0C4DEB1C4D9A290059886B /* LDFeatureFlagModel.m */,
+				3A0C4DED1C4D9D660059886B /* LDEventModel.h */,
+				3A0C4DEE1C4D9D660059886B /* LDEventModel.m */,
+				3A0C4DF01C4DA0330059886B /* LDUserModel.h */,
+				3A0C4DF11C4DA0330059886B /* LDUserModel.m */,
 			);
 			name = Models;
 			sourceTree = "<group>";
@@ -706,8 +721,10 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				3A0C4DEF1C4D9D660059886B /* LDEventModel.m in Sources */,
 				3AD8ACB61B86B5E800922AA6 /* LDClientManager.m in Sources */,
 				3A70A7971B705F2C00984E23 /* DarklyConstants.m in Sources */,
+				3A0C4DEC1C4D9A290059886B /* LDFeatureFlagModel.m in Sources */,
 				3A70A78D1B7008B700984E23 /* LDConfig.m in Sources */,
 				CC674C901B7519FB00B6A78D /* LDFeatureFlag.m in Sources */,
 				3A70A7881B6FCFAC00984E23 /* LDClient.m in Sources */,
@@ -718,6 +735,7 @@
 				CC753A231BF2FB8B001E4124 /* UserEntity+CoreDataProperties.m in Sources */,
 				CCA68A0F1B7066230052BE63 /* LDEvent.m in Sources */,
 				3AC5D0DE1B8AA44A00417CBB /* NSDictionary+JSON.m in Sources */,
+				3A0C4DF21C4DA0330059886B /* LDUserModel.m in Sources */,
 				3A9F23D11B82D19900D0EF2F /* LDRequestManager.m in Sources */,
 				CCA68A161B7066980052BE63 /* darkly.xcdatamodeld in Sources */,
 				3A5F93C01B6F10DB0093E419 /* LDUtil.m in Sources */,

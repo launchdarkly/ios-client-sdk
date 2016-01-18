@@ -8,7 +8,7 @@
 
 #import <Foundation/Foundation.h>
 
-@interface LDFlagConfigModel : NSObject
+@interface LDFlagConfigModel : NSObject <NSCoding>
 
 @property (nullable, nonatomic, strong) NSDictionary *featuresJsonDictionary;
 

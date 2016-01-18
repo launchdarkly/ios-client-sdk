@@ -7,7 +7,6 @@
 //
 
 #import "LDFlagConfigModel.h"
-#import "LDFeatureFlag.h"
 #import "LDUtil.h"
 #import <BlocksKit/BlocksKit.h>
 
@@ -30,15 +29,15 @@
     __block BOOL result = NO;
     
     [self.featuresJsonDictionary bk_each:^(id key, NSDictionary *featureJson) {
-        LDFeatureFlag *feature = [[LDFeatureFlag alloc] init];
-        feature.key = key;
-        id aValue = [featureJson valueForKey:@"value"];
-        if (![aValue isKindOfClass:[NSNull class]] && ![aValue isKindOfClass:[NSString class]]) {
-            @try {
-                result = [aValue boolValue];
-            }
-            @catch (NSException *exception) {
-                DEBUG_LOG(@"Error parsing value for key: %@", feature.key);
+        if ([key isEqualToString: keyName]) {
+            id aValue = [featureJson valueForKey:@"value"];
+            if (![aValue isKindOfClass:[NSNull class]] && ![aValue isKindOfClass:[NSString class]]) {
+                @try {
+                    result = [aValue boolValue];
+                }
+                @catch (NSException *exception) {
+                    DEBUG_LOG(@"Error parsing value for key: %@", keyName);
+                }
             }
         }
     }];
