@@ -81,6 +81,15 @@ static NSString * const kOsKey = @"os";
     return self;
 }
 
+- (nonnull NSString *) convertToJson {
+    NSError *writeError = nil;
+    
+    NSData *jsonData = [NSJSONSerialization dataWithJSONObject:self options:NSJSONWritingPrettyPrinted error:&writeError];
+    NSString *result = [[NSString alloc] initWithData:jsonData encoding:NSUTF8StringEncoding];
+    
+    return result;
+}
+
 -(BOOL) isFlagOn: ( NSString * __nonnull )keyName {
     return [self.config isFlagOn: keyName];
 }

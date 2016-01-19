@@ -17,7 +17,7 @@
 @property (nonatomic, assign) BOOL featureKeyValue;
 @property (nonatomic, assign) BOOL isDefault;
 
-- (nonnull id)initWithDictionary:(NSDictionary * __nonnull)dictionary;
+- (nonnull id)initWithDictionary:(nonnull NSDictionary *)dictionary;
 
 -(nonnull instancetype)featureEventWithKey:(nonnull NSString *)featureKey keyValue:(BOOL)keyValue defaultKeyValue:(BOOL)defaultKeyValue;
 -(nonnull instancetype) customEventWithKey: (nonnull NSString *)featureKey

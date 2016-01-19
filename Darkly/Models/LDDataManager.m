@@ -12,10 +12,9 @@
 
 int const kUserCacheSize = 5;
 
+static NSString * const kUserDictionaryStorageKey = @"ldUserModelDictionary";
+
 @implementation LDDataManager
-@synthesize managedObjectContext;
-@synthesize managedObjectModel;
-@synthesize persistentStoreCoordinator;
 @synthesize eventCreatedCount;
 
 + (id)sharedManager {
@@ -29,89 +28,62 @@ int const kUserCacheSize = 5;
 }
 
 #pragma mark - users
--(void)purgeOldUsers {
-    NSFetchRequest *request = [[NSFetchRequest alloc] init];
-    [request setEntity:[NSEntityDescription entityForName:@"UserEntity"
-                                   inManagedObjectContext:self.managedObjectContext]];
-    
-    NSSortDescriptor *sortDescriptor = [[NSSortDescriptor alloc] initWithKey:@"updatedAt" ascending:YES];
-    request.sortDescriptors = @[sortDescriptor];
-    
-    __block NSArray *userMoArray = nil;
-    
-    [self.managedObjectContext performBlockAndWait:^{
-        NSError *error = nil;
-        userMoArray = [self.managedObjectContext executeFetchRequest:request
-                                                                 error:&error];
-        
-        if (userMoArray.count >= kUserCacheSize) {
-            int numToDelete = (int)userMoArray.count - (kUserCacheSize + 1);
-            for (int userMOIndex = 0; userMOIndex < userMoArray.count; userMOIndex++) {
-                if (userMOIndex < numToDelete) {
-                    DEBUG_LOG(@"Deleting cached User at index: %d", userMOIndex);
-                    [self.managedObjectContext deleteObject: [userMoArray objectAtIndex:userMOIndex]];
-                }
+-(void) purgeOldUser: (NSMutableDictionary *)dictionary {
+    if (dictionary && [dictionary count] >= kUserCacheSize) {
+        NSString *removalKey;
+        NSDate *removalDate;
+        for (id key in dictionary) {
+            LDUserModel *currentUser = [dictionary objectForKey:key];
+            if (!removalKey || removalDate>currentUser.updatedAt) {
+                removalKey = currentUser.key;
+                removalDate = currentUser.updatedAt;
             }
         }
-        [self saveContext];
-    }];
+        [dictionary removeObjectForKey:removalKey];
+    }
 }
 
--(void) saveUser: (LDUser *) user {
-    UserEntity *userEntity = [self findUserEntityWithkey:user.key];
-    
-    if (userEntity) {
-        user.config = [MTLManagedObjectAdapter modelOfClass:[LDFlagConfig class] fromManagedObject: (NSManagedObject *)userEntity.config error: nil];
+-(void) saveUser: (LDUserModel *) user {
+    NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
+    NSMutableDictionary *userDictionary = [self retrieveUserDictionary];
+    if (userDictionary) {
+        LDUserModel *resultUser = [userDictionary objectForKey:user.key];
+        if (resultUser) {
+            // User is found
+            resultUser = user;
+            resultUser.updatedAt = [NSDate date];
+        } else {
+            // User is not found so need to create and purge old users
+            [self purgeOldUser: userDictionary];
+            user.updatedAt = [NSDate date];
+            [userDictionary setObject:user forKey:user.key];
+        }
     } else {
-        [self purgeOldUsers];
+        // No Dictionary exists so create
+        userDictionary = [[NSMutableDictionary alloc] init];
+        [userDictionary setObject:user forKey:user.key];
     }
-    
-    
-    [self.managedObjectContext performBlockAndWait:^{
-        [MTLManagedObjectAdapter managedObjectFromModel: user
-                                   insertingIntoContext: self.managedObjectContext
-                                                  error: nil];
-        
-        [self saveContext];
-    }];
+    [defaults setObject:userDictionary forKey:kUserDictionaryStorageKey];
+    [defaults synchronize];
 }
 
-
--(UserEntity *)findUserEntityWithkey:(NSString *)key {
-    DEBUG_LOG(@"Retrieving user with key: %@", key);
-    NSFetchRequest *request = [[NSFetchRequest alloc] init];
-    [request setEntity:[NSEntityDescription entityForName:@"UserEntity"
-                                   inManagedObjectContext:self.managedObjectContext]];
-    
-    NSPredicate *predicate = [NSPredicate predicateWithFormat:@"key == %@", key];
-    request.predicate = predicate;
-    
-    __block NSArray *userMoArray = nil;
-    
-    [self.managedObjectContext performBlockAndWait:^{
-        NSError *error = nil;
-        userMoArray = [self.managedObjectContext executeFetchRequest:request
-                                                               error:&error];
-    }];
-    
-    if (userMoArray.count > 0) {
-        return userMoArray.firstObject;
+-(LDUserModel *)findUserWithkey: (NSString *)key {
+    LDUserModel *resultUser = nil;
+    NSDictionary *userDictionary = [self retrieveUserDictionary];
+    if (userDictionary) {
+        resultUser = [userDictionary objectForKey:key];
+        if (resultUser) {
+            resultUser.updatedAt = [NSDate date];
+        }
     }
-    return nil;
+    return resultUser;
 }
 
--(LDUser *)findUserWithkey: (NSString *)key {
-    NSManagedObject *userMo = [self findUserEntityWithkey:key];
-    
-    if (userMo) {
-        NSError *error;
-        LDUser *user = [MTLManagedObjectAdapter modelOfClass:[LDUser class] fromManagedObject:userMo error: &error];
-        
-        NSLog(@"Error is %@", [error debugDescription]);
-        user.updatedAt = [NSDate date];
-        return user;
-    }
-    return nil;
+- (NSMutableDictionary *)retrieveUserDictionary {
+    NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
+    NSData *encodedObject = [defaults objectForKey:kUserDictionaryStorageKey];
+    NSMutableDictionary *userDictionary = [NSKeyedUnarchiver unarchiveObjectWithData:encodedObject];
+    return userDictionary;
 }
 
 #pragma mark - events
@@ -259,76 +231,4 @@ int const kUserCacheSize = 5;
     return jsonData;
 }
 
-#pragma mark - Core Data stack
-
-- (NSURL *)applicationDocumentsDirectory {
-    return [[[NSFileManager defaultManager] URLsForDirectory:NSDocumentDirectory inDomains:NSUserDomainMask] lastObject];
-}
-
-- (NSManagedObjectModel *)managedObjectModel {
-    if (managedObjectModel != nil) {
-        return managedObjectModel;
-    }
-    NSString *bundlePath = [[NSBundle bundleForClass:[LDClient class]] pathForResource:@"DarklyLibraryModels"  ofType:@"bundle"];
-    NSBundle *bundle = [NSBundle bundleWithPath:bundlePath];
-    
-    NSString *modelPath = [bundle pathForResource:@"darkly" ofType:@"momd"];
-    NSURL *modelURL = [NSURL fileURLWithPath:modelPath];
-    managedObjectModel = [[NSManagedObjectModel alloc] initWithContentsOfURL:modelURL];
-    return managedObjectModel;
-}
-
-- (NSPersistentStoreCoordinator *)persistentStoreCoordinator {
-    if (persistentStoreCoordinator != nil) {
-        return persistentStoreCoordinator;
-    }
-    
-    persistentStoreCoordinator = [[NSPersistentStoreCoordinator alloc] initWithManagedObjectModel: self.managedObjectModel];
-    NSURL *storeURL = [[self applicationDocumentsDirectory] URLByAppendingPathComponent:@"darkly.sqlite"];
-    NSError *error = nil;
-    NSString *failureReason = @"There was an error creating or loading the application's saved data.";
-    NSDictionary *options = [NSDictionary dictionaryWithObjectsAndKeys:
-                             [NSNumber numberWithBool:YES], NSMigratePersistentStoresAutomaticallyOption,
-                             [NSNumber numberWithBool:YES], NSInferMappingModelAutomaticallyOption, nil];
-    
-    if (![persistentStoreCoordinator addPersistentStoreWithType:NSSQLiteStoreType configuration:nil URL:storeURL options:options error:&error]) {
-        // Report any error we got.
-        NSMutableDictionary *dict = [NSMutableDictionary dictionary];
-        dict[NSLocalizedDescriptionKey] = @"Failed to initialize the application's saved data";
-        dict[NSLocalizedFailureReasonErrorKey] = failureReason;
-        dict[NSUnderlyingErrorKey] = error;
-        error = [NSError errorWithDomain:@"darkly" code:9999 userInfo:dict];
-        NSLog(@"Unresolved error %@, %@", error, [error userInfo]);
-    }
-    
-    return persistentStoreCoordinator;
-}
-
-
-- (NSManagedObjectContext *)managedObjectContext {
-    // Returns the managed object context for the application (which is already bound to the persistent store coordinator for the application.)
-    if (managedObjectContext != nil) {
-        return managedObjectContext;
-    }
-    
-    NSPersistentStoreCoordinator *coordinator = [self persistentStoreCoordinator];
-    if (!coordinator) {
-        return nil;
-    }
-    managedObjectContext = [[NSManagedObjectContext alloc] initWithConcurrencyType:NSPrivateQueueConcurrencyType];
-    [managedObjectContext setPersistentStoreCoordinator:coordinator];
-    return managedObjectContext;
-}
-
-#pragma mark - Core Data Saving support
-
-- (void)saveContext {
-    if (self.managedObjectContext != nil) {
-        [self.managedObjectContext performBlock:^{
-            NSError *error = nil;
-            if (![self.managedObjectContext save:&error])
-                NSLog(@"Error saving to child context %@, %@", error, [error userInfo]);
-        }];
-    }
-}
 @end

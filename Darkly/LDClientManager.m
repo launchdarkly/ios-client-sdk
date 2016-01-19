@@ -9,6 +9,7 @@
 #import "LDUtil.h"
 #import "LDUserModel.h"
 #import "LDEventModel.h"
+#import "LDFlagConfigModel.h"
 #import <BlocksKit/BlocksKit.h>
 #import "NSDictionary+JSON.h"
 
@@ -96,10 +97,13 @@ NSString *const kLDUserUpdatedNotification = @"Darkly.UserUpdatedNotification";
         LDUserModel *currentUser = client.user;
         
         if (currentUser) {
-            NSDictionary *jsonDictionary = [MTLJSONAdapter JSONDictionaryFromModel:currentUser error: nil];
-            NSString *jsonString = [jsonDictionary ld_jsonString];
-            NSString *encodedUser = [LDUtil base64EncodeString:jsonString];
-            [[LDRequestManager sharedInstance] performFeatureFlagRequest:encodedUser];
+            NSString *jsonString = [currentUser convertToJson];
+            if (jsonString) {
+                NSString *encodedUser = [LDUtil base64EncodeString:jsonString];
+                [[LDRequestManager sharedInstance] performFeatureFlagRequest:encodedUser];
+            } else {
+                DEBUG_LOGX(@"ClientManager is not able to convert user to json");
+            }
         } else {
             DEBUG_LOGX(@"ClientManager has no user so won't sync config with server");
         }
@@ -133,25 +137,15 @@ NSString *const kLDUserUpdatedNotification = @"Darkly.UserUpdatedNotification";
     if (success) {
         DEBUG_LOGX(@"ClientManager processedConfig method called after receiving successful response from server");
         // If Success
-        LDFlagConfig *newConfig = [MTLJSONAdapter modelOfClass:[LDFlagConfig class]
-                                            fromJSONDictionary:jsonConfigDictionary
-                                                         error: nil];
+        LDFlagConfigModel *newConfig = [[LDFlagConfigModel alloc] initWithDictionary:jsonConfigDictionary];
+        
         if (newConfig) {
             // Overwrite Config with new config
             LDClient *client = [LDClient sharedInstance];
-            LDUser *user = client.user;
-            UserEntity *userEntity = [[LDDataManager sharedManager] findUserEntityWithkey: user.key];
-            
+            LDUserModel *user = client.user;
             user.config = newConfig;
-            newConfig.userKey = user.key;
-            ConfigEntity *configEntity = [MTLManagedObjectAdapter managedObjectFromModel:newConfig
-                                                                    insertingIntoContext:[[LDDataManager sharedManager] managedObjectContext]
-                                                                                   error: nil];
-            userEntity.config = configEntity;
-            
             // Save context
-            [[LDDataManager sharedManager] saveContext];
-            
+            [[LDDataManager sharedManager] saveUser:user];
             // Update polling interval for Config for new config interval
             LDPollingManager *pollingMgr = [LDPollingManager sharedInstance];
             DEBUG_LOG(@"ClientManager setting config interval to: %d", configInterval);

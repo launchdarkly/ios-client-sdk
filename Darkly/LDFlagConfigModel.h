@@ -12,7 +12,7 @@
 
 @property (nullable, nonatomic, strong) NSDictionary *featuresJsonDictionary;
 
-- (nonnull id)initWithDictionary:(NSDictionary * __nonnull)dictionary;
+- (nonnull id)initWithDictionary:(nonnull NSDictionary *)dictionary;
 
 -(BOOL) isFlagOn: ( NSString * __nonnull )keyName;
 -(BOOL) doesFlagExist: ( NSString * __nonnull )keyName;
