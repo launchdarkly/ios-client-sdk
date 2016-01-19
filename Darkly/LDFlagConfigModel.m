@@ -12,6 +12,8 @@
 
 static NSString * const kFeaturesJsonDictionaryKey = @"featuresJsonDictionary";
 
+static NSString * const kFeaturesJsonDictionaryServerKey = @"items";
+
 static NSString * const kFeatureJsonValueName = @"value";
 
 @implementation LDFlagConfigModel
@@ -25,6 +27,14 @@ static NSString * const kFeatureJsonValueName = @"value";
     if((self = [super init])) {
         //Decode properties, other class vars
         self.featuresJsonDictionary = [decoder decodeObjectForKey:kFeaturesJsonDictionaryKey];
+    }
+    return self;
+}
+
+- (id)initWithDictionary:(NSDictionary *)dictionary {
+    if((self = [super init])) {
+        //Process json that comes down from server
+        self.featuresJsonDictionary = [dictionary objectForKey: kFeaturesJsonDictionaryServerKey];
     }
     return self;
 }

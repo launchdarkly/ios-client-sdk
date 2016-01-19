@@ -3,7 +3,7 @@
 //
 
 
-#import "LDUser.h"
+#import "LDUserModel.h"
 
 @interface LDUserBuilder : NSObject {
     

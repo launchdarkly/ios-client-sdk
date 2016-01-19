@@ -63,6 +63,24 @@ static NSString * const kOsKey = @"os";
     return self;
 }
 
+- (id)initWithDictionary:(NSDictionary *)dictionary {
+    if((self = [super init])) {
+        //Process json that comes down from server
+        self.key = [dictionary objectForKey: kKeyKey];
+        self.ip = [dictionary objectForKey: kIpKey];
+        self.country = [dictionary objectForKey: kCountryKey];
+        self.email = [dictionary objectForKey: kEmailKey];
+        self.firstName = [dictionary objectForKey: kFirstNameKey];
+        self.lastName = [dictionary objectForKey: kLastNameKey];
+        self.avatar = [dictionary objectForKey: kAvatarKey];
+        self.custom = [dictionary objectForKey: kCustomKey];
+        self.device = [dictionary objectForKey: kDeviceKey];
+        self.os = [dictionary objectForKey: kOsKey];
+        self.anonymous = [dictionary objectForKey: kAnonymousKey];
+    }
+    return self;
+}
+
 -(BOOL) isFlagOn: ( NSString * __nonnull )keyName {
     return [self.config isFlagOn: keyName];
 }

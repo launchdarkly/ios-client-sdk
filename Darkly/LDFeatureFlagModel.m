@@ -28,4 +28,14 @@ static NSString * const kIsOnKey = @"isOn";
     return self;
 }
 
+- (id)initWithDictionary:(NSDictionary *)dictionary {
+    if((self = [super init])) {
+        //Process json that comes down from server
+        self.key = [dictionary objectForKey: kKeyKey];
+        NSNumber *isOnValue = [dictionary objectForKey:kIsOnKey];
+        self.isOn = [isOnValue boolValue];
+    }
+    return self;
+}
+
 @end

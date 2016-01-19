@@ -26,6 +26,8 @@
 @property (nullable, nonatomic, strong) NSString *device;
 @property (nullable, nonatomic, strong) NSString *os;
 
+- (nonnull id)initWithDictionary:(NSDictionary * __nonnull)dictionary;
+
 -(BOOL) isFlagOn: (nonnull NSString * )keyName;
 -(BOOL) doesFlagExist: (nonnull NSString *)keyName;
 @end

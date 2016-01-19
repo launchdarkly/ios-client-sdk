@@ -7,8 +7,8 @@
 #import "LDPollingManager.h"
 #import "LDDataManager.h"
 #import "LDUtil.h"
-#import "LDUser.h"
-#import "LDEvent.h"
+#import "LDUserModel.h"
+#import "LDEventModel.h"
 #import <BlocksKit/BlocksKit.h>
 #import "NSDictionary+JSON.h"
 
@@ -93,7 +93,7 @@ NSString *const kLDUserUpdatedNotification = @"Darkly.UserUpdatedNotification";
     if (!offlineEnabled) {
         DEBUG_LOGX(@"ClientManager syncing config with server");
         LDClient *client = [LDClient sharedInstance];
-        LDUser *currentUser = client.user;
+        LDUserModel *currentUser = client.user;
         
         if (currentUser) {
             NSDictionary *jsonDictionary = [MTLJSONAdapter JSONDictionaryFromModel:currentUser error: nil];

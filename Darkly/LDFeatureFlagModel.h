@@ -12,4 +12,6 @@
 @property (nullable, nonatomic, strong) NSString *key;
 @property (nonatomic, assign) BOOL isOn;
 
+- (nonnull id)initWithDictionary:(NSDictionary * __nonnull)dictionary;
+
 @end
