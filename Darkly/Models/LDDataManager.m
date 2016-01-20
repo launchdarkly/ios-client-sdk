@@ -165,9 +165,13 @@ static NSString * const kEventDictionaryStorageKey = @"ldEventModelDictionary";
 
 -(NSData*) allEventsJsonData {
     NSArray *allEvents = [self allEvents];
-    NSError *writeError = nil;
-    NSData *jsonData = [NSJSONSerialization dataWithJSONObject:allEvents options:NSJSONWritingPrettyPrinted error:&writeError];
-    return jsonData;
+    if (allEvents) {
+        NSError *writeError = nil;
+        NSData *jsonData = [NSJSONSerialization dataWithJSONObject:allEvents options:NSJSONWritingPrettyPrinted error:&writeError];
+        return jsonData;
+    } else {
+        return nil;
+    }
 }
 
 @end
