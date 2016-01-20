@@ -7,22 +7,21 @@
 #import <Mantle/Mantle.h>
 #import <MTLManagedObjectAdapter/MTLManagedObjectAdapter.h>
 #import <BlocksKit/BlocksKit.h>
-#import "LDEvent.h"
+#import "LDEventModel.h"
 #import "LDUtil.h"
 
 int const kUserCacheSize = 5;
 
 static NSString * const kUserDictionaryStorageKey = @"ldUserModelDictionary";
+static NSString * const kEventDictionaryStorageKey = @"ldEventModelDictionary";
 
 @implementation LDDataManager
-@synthesize eventCreatedCount;
 
 + (id)sharedManager {
     static LDDataManager *sharedDataManager = nil;
     static dispatch_once_t onceToken;
     dispatch_once(&onceToken, ^{
         sharedDataManager = [[self alloc] init];
-        sharedDataManager.eventCreatedCount = [NSNumber numberWithInt: 0];
     });
     return sharedDataManager;
 }
@@ -44,7 +43,6 @@ static NSString * const kUserDictionaryStorageKey = @"ldUserModelDictionary";
 }
 
 -(void) saveUser: (LDUserModel *) user {
-    NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
     NSMutableDictionary *userDictionary = [self retrieveUserDictionary];
     if (userDictionary) {
         LDUserModel *resultUser = [userDictionary objectForKey:user.key];
@@ -63,6 +61,7 @@ static NSString * const kUserDictionaryStorageKey = @"ldUserModelDictionary";
         userDictionary = [[NSMutableDictionary alloc] init];
         [userDictionary setObject:user forKey:user.key];
     }
+    NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
     [defaults setObject:userDictionary forKey:kUserDictionaryStorageKey];
     [defaults synchronize];
 }
@@ -88,146 +87,86 @@ static NSString * const kUserDictionaryStorageKey = @"ldUserModelDictionary";
 
 #pragma mark - events
 
+- (NSMutableDictionary *)retrieveEventDictionary {
+    NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
+    NSData *encodedObject = [defaults objectForKey:kEventDictionaryStorageKey];
+    NSMutableDictionary *eventDictionary = [NSKeyedUnarchiver unarchiveObjectWithData:encodedObject];
+    return eventDictionary;
+}
+
 -(void) createFeatureEvent: (NSString *)featureKey keyValue:(BOOL)keyValue defaultKeyValue:(BOOL)defaultKeyValue {
-    
-    if(![self isAtEventCapacity]) {
+    NSMutableDictionary *eventDictionary = [self retrieveEventDictionary];
+    if(![self isAtEventCapacity:eventDictionary]) {
         DEBUG_LOG(@"Creating event for feature:%@ with value:%d and defaultValue:%d", featureKey, keyValue, defaultKeyValue);
-        LDEvent *featureEvent = [[LDEvent alloc] featureEventWithKey: featureKey keyValue:keyValue defaultKeyValue:defaultKeyValue];
+        LDClient *client = [LDClient sharedInstance];
+        LDUserModel *currentUser = client.user;
+        LDEventModel *featureEvent = [[LDEventModel alloc] featureEventWithKey: featureKey keyValue:keyValue defaultKeyValue:defaultKeyValue userValue:currentUser];
         
-        [self.managedObjectContext performBlockAndWait:^{
-            [MTLManagedObjectAdapter managedObjectFromModel:featureEvent
-                                       insertingIntoContext:self.managedObjectContext
-                                                      error:nil];
-            
-            int eventCreatedCountInt = [eventCreatedCount intValue];
-            eventCreatedCount = [NSNumber numberWithInt:eventCreatedCountInt + 1];
-            [self saveContext];
-        }];
+        if (!eventDictionary) {
+            // No Dictionary exists so create
+            eventDictionary = [[NSMutableDictionary alloc] init];
+        }
+        [eventDictionary setObject:featureEvent forKey:[NSString stringWithFormat:@"%ld", (long)featureEvent.creationDate]];
+        NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
+        [defaults setObject:eventDictionary forKey:kEventDictionaryStorageKey];
+        [defaults synchronize];
     } else
         DEBUG_LOG(@"Events have surpassed capacity. Discarding feature event %@", featureKey);
 }
 
 -(void) createCustomEvent: (NSString *)eventKey withCustomValuesDictionary: (NSDictionary *)customDict {
-    if(![self isAtEventCapacity]) {
+    NSMutableDictionary *eventDictionary = [self retrieveEventDictionary];
+    if(![self isAtEventCapacity:eventDictionary]) {
         DEBUG_LOG(@"Creating event for custom key:%@ and value:%@", eventKey, customDict);
-        LDEvent *customEvent = [[LDEvent alloc] customEventWithKey: eventKey  andDataDictionary: customDict];
+        LDClient *client = [LDClient sharedInstance];
+        LDUserModel *currentUser = client.user;
+        LDEventModel *customEvent = [[LDEventModel alloc] customEventWithKey: eventKey  andDataDictionary: customDict userValue:currentUser];
         
-        [self.managedObjectContext performBlockAndWait:^{
-            [MTLManagedObjectAdapter managedObjectFromModel:customEvent
-                                       insertingIntoContext:self.managedObjectContext
-                                                      error:nil];
-            int eventCreatedCountInt = [eventCreatedCount intValue];
-            eventCreatedCount = [NSNumber numberWithInt:eventCreatedCountInt + 1];
-            [self saveContext];
-        }];
+        if (!eventDictionary) {
+            // No Dictionary exists so create
+            eventDictionary = [[NSMutableDictionary alloc] init];
+        }
+        [eventDictionary setObject:customEvent forKey:[NSString stringWithFormat:@"%ld", (long)customEvent.creationDate]];
+        NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
+        [defaults setObject:eventDictionary forKey:kEventDictionaryStorageKey];
+        [defaults synchronize];
     } else
         DEBUG_LOG(@"Events have surpassed capacity. Discarding event %@ with dictionary %@", eventKey, customDict);
 }
 
--(BOOL)isAtEventCapacity {
+-(BOOL)isAtEventCapacity:(NSDictionary *)currentDictionary {
     LDConfig *ldConfig = [[LDClient sharedInstance] ldConfig];
-    
-    return ldConfig.capacity && eventCreatedCount >= ldConfig.capacity;
-}
-
--(NSManagedObject *)findEvent: (NSInteger) date {
-    DEBUG_LOG(@"Retrieving event for date: %ld", (long)date);
-    NSFetchRequest *request = [[NSFetchRequest alloc] init];
-    [request setEntity:[NSEntityDescription entityForName:@"EventEntity"
-                                   inManagedObjectContext:self.managedObjectContext]];
-    NSPredicate *predicate = [NSPredicate predicateWithFormat:@"creationDate == %ld", date];
-    request.predicate = predicate;
-    
-    __block NSArray *eventMoArray = nil;
-    [self.managedObjectContext performBlockAndWait:^{
-        
-        NSError *error = nil;
-        eventMoArray = [self.managedObjectContext executeFetchRequest:request
-                                                                  error:&error];
-    }];
-    
-    if (eventMoArray.count > 0) {
-        return eventMoArray.firstObject;
-    }
-    return nil;
+    return ldConfig.capacity && currentDictionary && [NSNumber numberWithInteger:[currentDictionary count]] >= ldConfig.capacity;
 }
 
 -(void) deleteProcessedEvents: (NSArray *) processedJsonArray {
-    __block BOOL hasMatchedEvents = NO;
-    
-    [self.managedObjectContext performBlockAndWait:^{
-        // Loop through processedEvents
-        for (NSDictionary *processedEventDict in processedJsonArray) {
-            // Attempt to find match in currentEvents based on creationDate
-            LDEvent *processedEvent = [MTLJSONAdapter modelOfClass:[LDEvent class]
-                                                fromJSONDictionary:processedEventDict
-                                                             error:nil];
-            NSManagedObject *matchedCurrentEvent = [self findEvent: [processedEvent creationDate]];
-            // If events match
-            if (matchedCurrentEvent) {
-                [self.managedObjectContext deleteObject:matchedCurrentEvent];
-                hasMatchedEvents = YES;
-                
-                int eventCreatedCountInt = [eventCreatedCount intValue];
-                eventCreatedCount = [NSNumber numberWithInt:eventCreatedCountInt - 1];
-            }
+    NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
+    NSMutableDictionary *eventDictionary = [self retrieveEventDictionary];
+    // Loop through processedEvents
+    for (NSDictionary *processedEventDict in processedJsonArray) {
+        LDEventModel *processedEvent = [[LDEventModel alloc] initWithDictionary:processedEventDict];
+        NSString *processedEventCreationDate = [NSString stringWithFormat:@"%ld", (long)processedEvent.creationDate];
+        if ([eventDictionary objectForKey:processedEventCreationDate]) {
+            [eventDictionary removeObjectForKey:processedEventCreationDate];
         }
-        // If number of managedObjects is greater than 0, then Save Context
-        if (hasMatchedEvents) {
-            [self saveContext];
-        }
-    }];    
+    }
+    [defaults setObject:eventDictionary forKey:kEventDictionaryStorageKey];
+    [defaults synchronize];
 }
 
 -(NSArray *)allEvents {
-    DEBUG_LOGX(@"Retrieving all events");
-    NSFetchRequest *request = [[NSFetchRequest alloc] init];
-    [request setEntity:[NSEntityDescription entityForName:@"EventEntity"
-                                   inManagedObjectContext:self.managedObjectContext]];
-    
-    __block NSMutableArray  *eventsArray = nil;
-    
-    [self.managedObjectContext performBlockAndWait:^{
-        NSError *error = nil;
-        NSArray *eventMoArray = [self.managedObjectContext executeFetchRequest:request
-                                                                           error:&error];
-        eventsArray = @[].mutableCopy;
-        
-        for (int eventCount = 0; [eventMoArray count] > eventCount; eventCount++) {
-            LDEvent *event = [MTLManagedObjectAdapter modelOfClass:[LDEvent class]
-                                                 fromManagedObject: [eventMoArray objectAtIndex: eventCount]
-                                                             error: nil];
-            [eventsArray addObject: event];
-        };
-    }];
-    return eventsArray;
+    NSMutableDictionary *eventDictionary = [self retrieveEventDictionary];
+    if (eventDictionary) {
+        return [eventDictionary allValues];
+    } else {
+        return nil;
+    }
 }
 
 -(NSData*) allEventsJsonData {
-    NSError *error = nil;
-    LDClient *client = [LDClient sharedInstance];
-    LDUser *currentUser = client.user;
-    
     NSArray *allEvents = [self allEvents];
-    
-    NSData *jsonData = nil;
-    if (allEvents && allEvents.count>0) {
-        NSMutableArray *eventJsonDictArray = [NSMutableArray array];
-        
-        for (int eventCount = 0; allEvents.count > eventCount; eventCount++) {
-            LDEvent *event = [allEvents objectAtIndex: eventCount];
-            
-            NSMutableDictionary *eventsDictionary = [MTLJSONAdapter JSONDictionaryFromModel:event
-                                                                                      error: nil].mutableCopy;
-            NSDictionary *jSONDictionary = [MTLJSONAdapter JSONDictionaryFromModel:currentUser error: nil];
-            [eventsDictionary setObject: jSONDictionary forKey: @"user"];
-            [eventJsonDictArray addObject:eventsDictionary];
-        }
-        
-        jsonData = [NSJSONSerialization dataWithJSONObject:eventJsonDictArray
-                                                   options:NSJSONWritingPrettyPrinted
-                                                     error:&error];
-    }
+    NSError *writeError = nil;
+    NSData *jsonData = [NSJSONSerialization dataWithJSONObject:allEvents options:NSJSONWritingPrettyPrinted error:&writeError];
     return jsonData;
 }
 

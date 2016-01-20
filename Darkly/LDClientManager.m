@@ -80,8 +80,7 @@ NSString *const kLDUserUpdatedNotification = @"Darkly.UserUpdatedNotification";
         NSData *eventJsonData = [[LDDataManager sharedManager] allEventsJsonData];
         
         if (eventJsonData) {
-            LDRequestManager *rMan = [LDRequestManager sharedInstance];
-            [rMan performEventRequest:eventJsonData];
+            [[LDRequestManager sharedInstance] performEventRequest:eventJsonData];
         } else {
             DEBUG_LOGX(@"ClientManager has no events so won't sync events with server");
         }

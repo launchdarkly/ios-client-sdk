@@ -7,6 +7,7 @@
 //
 
 #import "LDEventModel.h"
+#import "LDUserModel.h"
 
 static NSString * const kKeyKey = @"key";
 static NSString * const kKindKey = @"kind";
@@ -14,6 +15,7 @@ static NSString * const kCreationDateKey = @"creationDate";
 static NSString * const kDataKey = @"data";
 static NSString * const kFeatureKeyValueKey = @"featureKeyValue";
 static NSString * const kIsDefaultKey = @"isDefault";
+static NSString * const kUserKey = @"user";
 
 static NSString * const kFeatureKeyValueServerKey = @"value";
 static NSString * const kIsDefaultServerKey = @"default";
@@ -31,6 +33,7 @@ static NSString * const kCustomEventName = @"custom";
     [encoder encodeObject:self.data forKey:kDataKey];
     [encoder encodeBool:self.featureKeyValue forKey:kFeatureKeyValueKey];
     [encoder encodeBool:self.isDefault forKey:kIsDefaultKey];
+    [encoder encodeObject:self.user forKey:kUserKey];
 }
 
 - (id)initWithCoder:(NSCoder *)decoder {
@@ -42,6 +45,7 @@ static NSString * const kCustomEventName = @"custom";
         self.data = [decoder decodeObjectForKey:kDataKey];
         self.featureKeyValue = [decoder decodeBoolForKey:kFeatureKeyValueKey];
         self.isDefault = [decoder decodeBoolForKey:kIsDefaultKey];
+        self.user = [decoder decodeObjectForKey:kUserKey];
     }
     return self;
 }
@@ -55,26 +59,29 @@ static NSString * const kCustomEventName = @"custom";
         self.creationDate = [creationDateValue boolValue];
         self.featureKeyValue = [dictionary objectForKey: kFeatureKeyValueServerKey];
         self.isDefault = [dictionary objectForKey: kIsDefaultServerKey];
+        self.user = [dictionary objectForKey: kUserKey];
     }
     return self;
 }
 
--(instancetype)featureEventWithKey:(nonnull NSString *)featureKey keyValue:(BOOL)keyValue defaultKeyValue:(BOOL)defaultKeyValue {
+-(instancetype)featureEventWithKey:(nonnull NSString *)featureKey keyValue:(BOOL)keyValue defaultKeyValue:(BOOL)defaultKeyValue userValue:(LDUserModel *)userValue {
     self.key = featureKey;
     self.creationDate = [@(floor([[NSDate date] timeIntervalSince1970]*1000)) longValue];
     self.kind = kFeatureEventName;
     self.featureKeyValue = keyValue;
     self.isDefault = defaultKeyValue;
+    self.user = userValue;
     
     return self;
 }
 
 -(instancetype) customEventWithKey: (NSString *)featureKey
-                 andDataDictionary: (NSDictionary *)customData  {
+                 andDataDictionary: (NSDictionary *)customData userValue:(LDUserModel *)userValue  {
     self.key = featureKey;
     self.creationDate = [@(floor([[NSDate date] timeIntervalSince1970]*1000)) longValue];
     self.kind = kCustomEventName;
     self.data = customData;
+    self.user = userValue;
     
     return self;
 }

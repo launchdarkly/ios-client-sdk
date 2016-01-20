@@ -9,11 +9,9 @@
 extern int const kUserCacheSize;
 
 @interface LDDataManager : NSObject
-@property (strong,atomic) NSNumber *eventCreatedCount;
 
 +(LDDataManager *)sharedManager;
 
--(NSManagedObject *)findEvent: (NSInteger) date;
 -(NSData*) allEventsJsonData;
 -(NSArray *)allEvents;
 -(LDUserModel *)findUserWithkey: (NSString *)key;
