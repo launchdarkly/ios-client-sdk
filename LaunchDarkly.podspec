@@ -134,7 +134,6 @@ Pod::Spec.new do |s|
   # s.xcconfig = { "HEADER_SEARCH_PATHS" => "$(SDKROOT)/usr/include/libxml2" }
   # s.dependency "JSONKit", "~> 1.4"
   s.subspec 'Core' do |ss|
-    ss.dependency 'BlocksKit', '~> 2.2'
     ss.dependency 'AFNetworking', '~> 2.5'
     ss.dependency 'Mantle', '~> 2.0'
     ss.dependency 'MTLManagedObjectAdapter', '~> 1.0'
