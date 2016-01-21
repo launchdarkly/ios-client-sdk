@@ -43,13 +43,6 @@
     config.featuresJsonDictionary = [NSDictionary dictionaryWithObjects:@[@{@"value": @YES}, @{@"value": @NO}]
                                                                 forKeys: @[@"ipaduser", @"iosuser"]];
     user.config = config;
-    
-    NSError *error = nil;
-    [MTLManagedObjectAdapter managedObjectFromModel:user
-                               insertingIntoContext:[self.dataManagerMock managedObjectContext]
-                                              error: &error];
-    
-    [self.dataManagerMock saveContext];
 }
 
 - (void)tearDown {
@@ -106,8 +99,6 @@
     [self.dataManagerMock createCustomEvent:@"foo" withCustomValuesDictionary:nil];
     [self.dataManagerMock createCustomEvent:@"fi" withCustomValuesDictionary:nil];
     
-    [self.dataManagerMock saveContext];
-    
     NSArray *eventArray = [self.dataManagerMock allEvents];
     NSArray *eventKeys = [eventArray bk_map:^id(LDEvent *event) {
         return event.key;
@@ -118,8 +109,6 @@
 
 -(void)testCreateCustomEvent {
     [self.dataManagerMock createCustomEvent:@"aKey" withCustomValuesDictionary: @{@"carrot": @"cake"}];
-    
-    [self.dataManagerMock saveContext];
     
     LDEvent *event = [self.dataManagerMock allEvents].firstObject;
 
@@ -135,12 +124,10 @@
     event2.key = @"fi";
     
     LDClient *client = [LDClient sharedInstance];
-    LDUser *theUser = client.user;
+    LDUserModel *theUser = client.user;
     
     [self.dataManagerMock createCustomEvent:@"foo" withCustomValuesDictionary:nil];
     [self.dataManagerMock createCustomEvent:@"fi" withCustomValuesDictionary:nil];
-    
-    [self.dataManagerMock saveContext];
     
     NSData *eventData = [self.dataManagerMock allEventsJsonData];
     
@@ -170,11 +157,6 @@
     aUser.updatedAt = [NSDate date];
     aUser.config = user.config;
         
-    [MTLManagedObjectAdapter managedObjectFromModel:aUser 
-                               insertingIntoContext: [[LDDataManager sharedManager]
-                                                      managedObjectContext] error: nil];
-    [[LDDataManager sharedManager] saveContext];
-    
     XCTAssertNotNil(aUser);
     
     LDUser *foundAgainUser = [[LDDataManager sharedManager] findUserWithkey: userKey];
@@ -196,23 +178,11 @@
         aUser.updatedAt = dateInXHours;
     
         NSError *error;
-        [MTLManagedObjectAdapter managedObjectFromModel:aUser
-                                   insertingIntoContext: [[LDDataManager sharedManager]
-                                                          managedObjectContext] error: &error];
-        
-        NSLog(@"PRINT BREAK");
     }
     
-    [self.dataManagerMock saveContext];
     NSString *userKey = @"gus0";
 
-    UserEntity *userEntity = [[LDDataManager sharedManager] findUserEntityWithkey: userKey];
-
-    XCTAssertNotNil(userEntity);
-    [[LDDataManager sharedManager] purgeOldUsers];
-    
-    userEntity = [[LDDataManager sharedManager] findUserEntityWithkey: userKey];
-    XCTAssertNil(userEntity);
+    // TODO add test for removing users
 }
 
 -(void)testCreateEventAfterCapacityReached{
@@ -228,11 +198,8 @@
     [self.dataManagerMock createCustomEvent:@"aKey" withCustomValuesDictionary: @{@"carrot": @"cake"}];
     [self.dataManagerMock createFeatureEvent: @"anotherKet" keyValue: YES defaultKeyValue: NO];
     
-    [self.dataManagerMock saveContext];
     
-    NSArray *allEvents = [self.dataManagerMock allEvents];
-    
-    XCTAssertTrue(allEvents.count == 2);
+    // TODO ADD TEST FOR checking if events are not created after capacity reached
 }
 
 @end

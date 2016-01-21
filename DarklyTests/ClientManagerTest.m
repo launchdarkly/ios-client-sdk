@@ -24,10 +24,9 @@
 
 - (void)setUp {
     [super setUp];
-    LDUser *user = [[LDUser alloc] init];
-    user.key = @"jeff@test.com";
-    user.os = @"80400";
-    user.device = @"iPhone";
+    LDUserBuilder *builder = [[LDUserBuilder alloc] init];
+    builder = [builder withKey:@"jeff@test.com"];
+    LDUser *user = [builder build];
     
     LDEvent *event = [[LDEvent alloc] init];
     [event featureEventWithKey:@"blah" keyValue:NO defaultKeyValue:NO];
@@ -42,7 +41,6 @@
                                                          error:nil];
     
     OCMStub([self.dataManagerMock allEventsJsonData]).andReturn(jsonData);
-    [self.dataManagerMock saveContext];
     
     id ldClientMock = OCMClassMock([LDClient class]);
     OCMStub(ClassMethod([ldClientMock sharedInstance])).andReturn(ldClientMock);
