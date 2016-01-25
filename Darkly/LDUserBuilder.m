@@ -6,7 +6,6 @@
 #import "LDUserBuilder.h"
 #import "LDUtil.h"
 #import "LDDataManager.h"
-#import "UserEntity.h"
 
 @interface LDUserBuilder() {
     NSString *key;

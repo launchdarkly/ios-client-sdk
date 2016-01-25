@@ -4,7 +4,7 @@
 
 #import <XCTest/XCTest.h>
 #import "LDUserBuilder.h"
-#import "LDUser.h"
+#import "LDUserModel.h"
 #import "LDDataManager.h"
 #import "DarklyXCTestCase.h"
 #import <OCMock.h>
@@ -27,7 +27,7 @@
 
 - (void)testUserDefaultValues {
     LDUserBuilder *builder = [[LDUserBuilder alloc] init];
-    LDUser *user = [builder build];
+    LDUserModel *user = [builder build];
     XCTAssertNotNil([user key]);
     XCTAssertTrue([user anonymous]);
     XCTAssertNotNil([user device]);
@@ -56,7 +56,7 @@
     builder = [builder withCustomString:testCustomKey value:testCustomValue];
     builder = [builder withAnonymous:testAnonymous];    
 
-    LDUser *user = [builder build];
+    LDUserModel *user = [builder build];
     XCTAssertEqualObjects([user key], testKey);
     XCTAssertEqualObjects([user ip], testIp);
     XCTAssertEqualObjects([user country], testCountry);
@@ -74,7 +74,7 @@
     Boolean testAnonymous = YES;
     LDUserBuilder *builder = [[LDUserBuilder alloc] init];
     builder = [builder withAnonymous:testAnonymous];
-    LDUser *user = [builder build];
+    LDUserModel *user = [builder build];
     XCTAssertTrue([user anonymous]);
 }
 

@@ -3,7 +3,7 @@
 //
 
 #import <XCTest/XCTest.h>
-#import "LDUser.h"
+#import "LDUserModel.h"
 
 @interface UserTest : XCTestCase
 @end
@@ -19,31 +19,15 @@
 }
 
 -(void)testAnonymousSetToFalseIfKeySet {
-    LDUser *user = [[LDUser alloc] init];
+    LDUserModel *user = [[LDUserModel alloc] init];
     
     user.key = @"aUser";
     
     XCTAssertFalse(user.anonymous);
 }
 
--(void)testNillValuesExcluded {
-    LDUser *user = [[LDUser alloc] init];
-    
-    user.key = @"aUser";
-    user.email = @"gus@byrnesinnovation.com";
-    
-    NSDictionary *nonNilValues = user.dictionaryValue;
-    
-    XCTAssertFalse([[nonNilValues allKeys] containsObject: @"firstName"]);
-    
-    user.firstName = @"Billy";
-    nonNilValues = user.dictionaryValue;
-    
-    XCTAssertTrue([[nonNilValues allKeys] containsObject: @"firstName"]);
-}
-
 -(void) testSettingUserKeyToNilOrBlank {
-    LDUser *user = [[LDUser alloc] init];
+    LDUserModel *user = [[LDUserModel alloc] init];
     
     user.key = @"aUser";
     XCTAssertFalse(user.anonymous);

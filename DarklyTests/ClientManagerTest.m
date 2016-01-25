@@ -9,7 +9,7 @@
 #import <OCMock.h>
 #import "LDRequestManager.h"
 #import "LDDataManager.h"
-#import "LDEvent.h"
+#import "LDEventModel.h"
 #import <Blockskit.h>
 
 @interface ClientManagerTest : DarklyXCTestCase
@@ -26,21 +26,10 @@
     [super setUp];
     LDUserBuilder *builder = [[LDUserBuilder alloc] init];
     builder = [builder withKey:@"jeff@test.com"];
-    LDUser *user = [builder build];
+    LDUserModel *user = [builder build];
     
-    LDEvent *event = [[LDEvent alloc] init];
-    [event featureEventWithKey:@"blah" keyValue:NO defaultKeyValue:NO];
-    
-    NSArray *eventArray = @[event];
-    NSArray *eventJsonDictArray = [eventArray bk_map:^id(LDEvent *event) {
-        return [MTLJSONAdapter JSONDictionaryFromModel:event error: nil];
-    }];
-    
-    jsonData = [NSJSONSerialization dataWithJSONObject:eventJsonDictArray
-                                                       options:NSJSONWritingPrettyPrinted
-                                                         error:nil];
-    
-    OCMStub([self.dataManagerMock allEventsJsonData]).andReturn(jsonData);
+    LDEventModel *event = [[LDEventModel alloc] init];
+    [event featureEventWithKey:@"blah" keyValue:NO defaultKeyValue:NO userValue:user];
     
     id ldClientMock = OCMClassMock([LDClient class]);
     OCMStub(ClassMethod([ldClientMock sharedInstance])).andReturn(ldClientMock);

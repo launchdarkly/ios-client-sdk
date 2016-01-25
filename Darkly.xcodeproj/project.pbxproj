@@ -38,14 +38,8 @@
 		CC467AB71B78323F0035C07E /* LDDataManager.m in Sources */ = {isa = PBXBuildFile; fileRef = CC467AB61B78323F0035C07E /* LDDataManager.m */; };
 		CC4E8F431B8ABB3500F2A19D /* EventTest.m in Sources */ = {isa = PBXBuildFile; fileRef = CC4E8F421B8ABB3500F2A19D /* EventTest.m */; };
 		CC4E8F461B8B3A7B00F2A19D /* UserTest.m in Sources */ = {isa = PBXBuildFile; fileRef = CC4E8F451B8B3A7B00F2A19D /* UserTest.m */; };
-		CC674C901B7519FB00B6A78D /* LDFeatureFlag.m in Sources */ = {isa = PBXBuildFile; fileRef = CC674C8F1B7519FB00B6A78D /* LDFeatureFlag.m */; };
-		CC753A231BF2FB8B001E4124 /* UserEntity+CoreDataProperties.m in Sources */ = {isa = PBXBuildFile; fileRef = CC753A201BF2FB8B001E4124 /* UserEntity+CoreDataProperties.m */; };
-		CC753A281BF2FB8B001E4124 /* UserEntity.m in Sources */ = {isa = PBXBuildFile; fileRef = CC753A221BF2FB8B001E4124 /* UserEntity.m */; };
-		CCA68A0F1B7066230052BE63 /* LDEvent.m in Sources */ = {isa = PBXBuildFile; fileRef = CCA68A0A1B7066230052BE63 /* LDEvent.m */; };
-		CCA68A111B7066230052BE63 /* LDUser.m in Sources */ = {isa = PBXBuildFile; fileRef = CCA68A0E1B7066230052BE63 /* LDUser.m */; };
 		CCDDE16D1B74058200DFC04B /* ConfigTest.m in Sources */ = {isa = PBXBuildFile; fileRef = CCDDE16C1B74058200DFC04B /* ConfigTest.m */; };
 		CCDDE1741B7408F200DFC04B /* feature_flags.json in Resources */ = {isa = PBXBuildFile; fileRef = CCDDE1731B7408F200DFC04B /* feature_flags.json */; };
-		CCDDE1771B7418B400DFC04B /* LDFlagConfig.m in Sources */ = {isa = PBXBuildFile; fileRef = CCDDE1761B7418B400DFC04B /* LDFlagConfig.m */; };
 		CCEF66011BAF41FB00103FD5 /* DarklyXCTestCase.m in Sources */ = {isa = PBXBuildFile; fileRef = CCEF66001BAF41FB00103FD5 /* DarklyXCTestCase.m */; };
 		F6D543037360A573275D494D /* libPods-Darkly.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 6A58255E063DF2AA8963D16F /* libPods-Darkly.a */; };
 /* End PBXBuildFile section */
@@ -146,21 +140,9 @@
 		CC467AB61B78323F0035C07E /* LDDataManager.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = LDDataManager.m; path = Models/LDDataManager.m; sourceTree = "<group>"; };
 		CC4E8F421B8ABB3500F2A19D /* EventTest.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = EventTest.m; path = Models/EventTest.m; sourceTree = "<group>"; };
 		CC4E8F451B8B3A7B00F2A19D /* UserTest.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = UserTest.m; path = Models/UserTest.m; sourceTree = "<group>"; };
-		CC674C8E1B7519FB00B6A78D /* LDFeatureFlag.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = LDFeatureFlag.h; path = Models/LDFeatureFlag.h; sourceTree = "<group>"; };
-		CC674C8F1B7519FB00B6A78D /* LDFeatureFlag.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = LDFeatureFlag.m; path = Models/LDFeatureFlag.m; sourceTree = "<group>"; };
-		CC753A1F1BF2FB8B001E4124 /* UserEntity+CoreDataProperties.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = "UserEntity+CoreDataProperties.h"; path = "Models/UserEntity+CoreDataProperties.h"; sourceTree = "<group>"; };
-		CC753A201BF2FB8B001E4124 /* UserEntity+CoreDataProperties.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = "UserEntity+CoreDataProperties.m"; path = "Models/UserEntity+CoreDataProperties.m"; sourceTree = "<group>"; };
-		CC753A211BF2FB8B001E4124 /* UserEntity.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = UserEntity.h; path = Models/UserEntity.h; sourceTree = "<group>"; };
-		CC753A221BF2FB8B001E4124 /* UserEntity.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = UserEntity.m; path = Models/UserEntity.m; sourceTree = "<group>"; };
-		CCA68A091B7066230052BE63 /* LDEvent.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = LDEvent.h; path = Models/LDEvent.h; sourceTree = "<group>"; };
-		CCA68A0A1B7066230052BE63 /* LDEvent.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = LDEvent.m; path = Models/LDEvent.m; sourceTree = "<group>"; };
-		CCA68A0D1B7066230052BE63 /* LDUser.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = LDUser.h; path = Models/LDUser.h; sourceTree = "<group>"; };
-		CCA68A0E1B7066230052BE63 /* LDUser.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = LDUser.m; path = Models/LDUser.m; sourceTree = "<group>"; };
 		CCA68A121B7066480052BE63 /* CoreData.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreData.framework; path = System/Library/Frameworks/CoreData.framework; sourceTree = SDKROOT; };
 		CCDDE16C1B74058200DFC04B /* ConfigTest.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ConfigTest.m; sourceTree = "<group>"; };
 		CCDDE1731B7408F200DFC04B /* feature_flags.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = feature_flags.json; sourceTree = "<group>"; };
-		CCDDE1751B7418B400DFC04B /* LDFlagConfig.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = LDFlagConfig.h; path = Models/LDFlagConfig.h; sourceTree = "<group>"; };
-		CCDDE1761B7418B400DFC04B /* LDFlagConfig.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = LDFlagConfig.m; path = Models/LDFlagConfig.m; sourceTree = "<group>"; };
 		CCEF65FF1BAF41FB00103FD5 /* DarklyXCTestCase.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DarklyXCTestCase.h; sourceTree = "<group>"; };
 		CCEF66001BAF41FB00103FD5 /* DarklyXCTestCase.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = DarklyXCTestCase.m; sourceTree = "<group>"; };
 		CF45FC420AEBF1324FDEF0CF /* Pods-Darkly.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Darkly.release.xcconfig"; path = "Pods/Target Support Files/Pods-Darkly/Pods-Darkly.release.xcconfig"; sourceTree = "<group>"; };
@@ -354,29 +336,9 @@
 			name = Models;
 			sourceTree = "<group>";
 		};
-		CC753A2D1BF2FBB0001E4124 /* CoreData */ = {
-			isa = PBXGroup;
-			children = (
-				CC753A1F1BF2FB8B001E4124 /* UserEntity+CoreDataProperties.h */,
-				CC753A201BF2FB8B001E4124 /* UserEntity+CoreDataProperties.m */,
-				CC753A211BF2FB8B001E4124 /* UserEntity.h */,
-				CC753A221BF2FB8B001E4124 /* UserEntity.m */,
-			);
-			name = CoreData;
-			sourceTree = "<group>";
-		};
 		CCA68A081B7065E50052BE63 /* Models */ = {
 			isa = PBXGroup;
 			children = (
-				CC753A2D1BF2FBB0001E4124 /* CoreData */,
-				CC674C8E1B7519FB00B6A78D /* LDFeatureFlag.h */,
-				CC674C8F1B7519FB00B6A78D /* LDFeatureFlag.m */,
-				CCA68A091B7066230052BE63 /* LDEvent.h */,
-				CCA68A0A1B7066230052BE63 /* LDEvent.m */,
-				CCA68A0D1B7066230052BE63 /* LDUser.h */,
-				CCA68A0E1B7066230052BE63 /* LDUser.m */,
-				CCDDE1751B7418B400DFC04B /* LDFlagConfig.h */,
-				CCDDE1761B7418B400DFC04B /* LDFlagConfig.m */,
 				3A0C4DE71C4D93B70059886B /* LDFlagConfigModel.h */,
 				3A0C4DE81C4D93B70059886B /* LDFlagConfigModel.m */,
 				3A0C4DEA1C4D9A290059886B /* LDFeatureFlagModel.h */,
@@ -709,14 +671,8 @@
 				3A70A7971B705F2C00984E23 /* DarklyConstants.m in Sources */,
 				3A0C4DEC1C4D9A290059886B /* LDFeatureFlagModel.m in Sources */,
 				3A70A78D1B7008B700984E23 /* LDConfig.m in Sources */,
-				CC674C901B7519FB00B6A78D /* LDFeatureFlag.m in Sources */,
 				3A70A7881B6FCFAC00984E23 /* LDClient.m in Sources */,
 				ADE5294F1B8418B200761F3D /* LDUserBuilder.m in Sources */,
-				CC753A281BF2FB8B001E4124 /* UserEntity.m in Sources */,
-				CCA68A111B7066230052BE63 /* LDUser.m in Sources */,
-				CCDDE1771B7418B400DFC04B /* LDFlagConfig.m in Sources */,
-				CC753A231BF2FB8B001E4124 /* UserEntity+CoreDataProperties.m in Sources */,
-				CCA68A0F1B7066230052BE63 /* LDEvent.m in Sources */,
 				3AC5D0DE1B8AA44A00417CBB /* NSDictionary+JSON.m in Sources */,
 				3A0C4DF21C4DA0330059886B /* LDUserModel.m in Sources */,
 				3A9F23D11B82D19900D0EF2F /* LDRequestManager.m in Sources */,
