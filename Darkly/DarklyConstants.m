@@ -4,7 +4,7 @@
 
 #import "DarklyConstants.h"
 
-NSString * const kClientVersion = @"0.4.1-beta";
+NSString * const kClientVersion = @"0.4.2-beta";
 NSString * const kBaseUrl = @"https://app.launchdarkly.com";
 NSString * const kNoApiKeyExceptionName = @"NoApiKeyDefinedException";
 NSString * const kNoApiKeyExceptionReason = @"A valid ApiKey must be provided";
