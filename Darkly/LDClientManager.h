@@ -16,8 +16,8 @@ extern NSString *const kLDUserUpdatedNotification;
 
 - (void)syncWithServerForEvents;
 - (void)syncWithServerForConfig;
-- (void)processedEvents:(BOOL)success jsonEventArray:(NSData *)jsonEventArray eventInterval:(int)eventInterval;
-- (void)processedConfig:(BOOL)success jsonConfigDictionary:(NSDictionary *)jsonConfigDictionary configInterval:(int)configInterval;
+- (void)processedEvents:(BOOL)success jsonEventArray:(NSData *)jsonEventArray eventIntervalMillis:(int)eventIntervalMillis;
+- (void)processedConfig:(BOOL)success jsonConfigDictionary:(NSDictionary *)jsonConfigDictionary configIntervalMillis:(int)configIntervalMillis;
 - (void)startPolling;
 - (void)stopPolling;
 - (void)flushEvents;
