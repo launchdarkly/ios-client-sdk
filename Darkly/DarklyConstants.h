@@ -33,6 +33,8 @@ extern NSString * const kClientAlreadyStartedExceptionName;
 extern NSString * const kClientAlreadyStartedExceptionReason;
 extern NSString * const kIphone;
 extern NSString * const kIpad;
+extern NSString * const kUserDictionaryStorageKey;
+extern NSString * const kEventDictionaryStorageKey;
 extern int const kCapacity;
 extern int const kConnectionTimeout;
 extern int const kDefaultFlushInterval;

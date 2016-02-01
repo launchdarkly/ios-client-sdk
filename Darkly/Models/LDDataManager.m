@@ -12,9 +12,6 @@
 
 int const kUserCacheSize = 5;
 
-static NSString * const kUserDictionaryStorageKey = @"ldUserModelDictionary";
-static NSString * const kEventDictionaryStorageKey = @"ldEventModelDictionary";
-
 @implementation LDDataManager
 
 + (id)sharedManager {
@@ -61,9 +58,7 @@ static NSString * const kEventDictionaryStorageKey = @"ldEventModelDictionary";
         userDictionary = [[NSMutableDictionary alloc] init];
         [userDictionary setObject:user forKey:user.key];
     }
-    NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
-    [defaults setObject:userDictionary forKey:kUserDictionaryStorageKey];
-    [defaults synchronize];
+    [self storeUserDictionary:userDictionary];
 }
 
 -(LDUserModel *)findUserWithkey: (NSString *)key {
@@ -76,6 +71,30 @@ static NSString * const kEventDictionaryStorageKey = @"ldEventModelDictionary";
         }
     }
     return resultUser;
+}
+
+- (void)storeUserDictionary:(NSDictionary *)userDictionary {
+    NSMutableDictionary *archiveDictionary = [[NSMutableDictionary alloc] init];
+    for (NSString *key in userDictionary) {
+        NSData *userEncodedObject = [NSKeyedArchiver archivedDataWithRootObject:(LDUserModel *)[userDictionary objectForKey:key]];
+        [archiveDictionary setObject:userEncodedObject forKey:key];
+    }
+    
+    NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
+    [defaults setObject:archiveDictionary forKey:kUserDictionaryStorageKey];
+    [defaults synchronize];
+}
+
+-(void)storeEventDictionary:(NSDictionary *)eventDictionary {
+    NSMutableDictionary *archiveDictionary = [[NSMutableDictionary alloc] init];
+    for (NSString *key in eventDictionary) {
+        NSData *eventEncodedObject = [NSKeyedArchiver archivedDataWithRootObject:(LDEventModel *)[eventDictionary objectForKey:key]];
+        [archiveDictionary setObject:eventEncodedObject forKey:key];
+    }
+    
+    NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
+    [defaults setObject:archiveDictionary forKey:kEventDictionaryStorageKey];
+    [defaults synchronize];
 }
 
 - (NSMutableDictionary *)retrieveUserDictionary {
@@ -107,9 +126,7 @@ static NSString * const kEventDictionaryStorageKey = @"ldEventModelDictionary";
             eventDictionary = [[NSMutableDictionary alloc] init];
         }
         [eventDictionary setObject:featureEvent forKey:[NSString stringWithFormat:@"%ld", (long)featureEvent.creationDate]];
-        NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
-        [defaults setObject:eventDictionary forKey:kEventDictionaryStorageKey];
-        [defaults synchronize];
+        [self storeEventDictionary:eventDictionary];
     } else
         DEBUG_LOG(@"Events have surpassed capacity. Discarding feature event %@", featureKey);
 }
@@ -127,9 +144,7 @@ static NSString * const kEventDictionaryStorageKey = @"ldEventModelDictionary";
             eventDictionary = [[NSMutableDictionary alloc] init];
         }
         [eventDictionary setObject:customEvent forKey:[NSString stringWithFormat:@"%ld", (long)customEvent.creationDate]];
-        NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
-        [defaults setObject:eventDictionary forKey:kEventDictionaryStorageKey];
-        [defaults synchronize];
+        [self storeEventDictionary:eventDictionary];
     } else
         DEBUG_LOG(@"Events have surpassed capacity. Discarding event %@ with dictionary %@", eventKey, customDict);
 }
@@ -140,7 +155,6 @@ static NSString * const kEventDictionaryStorageKey = @"ldEventModelDictionary";
 }
 
 -(void) deleteProcessedEvents: (NSArray *) processedJsonArray {
-    NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
     NSMutableDictionary *eventDictionary = [self retrieveEventDictionary];
     // Loop through processedEvents
     for (NSDictionary *processedEventDict in processedJsonArray) {
@@ -150,8 +164,7 @@ static NSString * const kEventDictionaryStorageKey = @"ldEventModelDictionary";
             [eventDictionary removeObjectForKey:processedEventCreationDate];
         }
     }
-    [defaults setObject:eventDictionary forKey:kEventDictionaryStorageKey];
-    [defaults synchronize];
+    [self storeEventDictionary:eventDictionary];
 }
 
 -(NSArray *)allEvents {

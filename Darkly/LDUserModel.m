@@ -8,6 +8,7 @@
 
 #import "LDUserModel.h"
 #import "LDFlagConfigModel.h"
+#import "LDUtil.h"
 
 static NSString * const kKeyKey = @"key";
 static NSString * const kIpKey = @"ip";
@@ -64,7 +65,7 @@ static NSString * const kOsKey = @"os";
 }
 
 - (id)initWithDictionary:(NSDictionary *)dictionary {
-    if((self = [super init])) {
+    if((self = [self init])) {
         //Process json that comes down from server
         self.key = [dictionary objectForKey: kKeyKey];
         self.ip = [dictionary objectForKey: kIpKey];
@@ -78,6 +79,31 @@ static NSString * const kOsKey = @"os";
         self.os = [dictionary objectForKey: kOsKey];
         self.anonymous = [dictionary objectForKey: kAnonymousKey];
     }
+    return self;
+}
+
+- (instancetype)init {
+    self = [super init];
+    
+    if(self != nil) {
+        // Need to set device
+        NSString *device = [LDUtil getDeviceAsString];
+        DEBUG_LOG(@"User building User with device: %@", device);
+        [self setDevice:device];
+        
+        // Need to set os
+        NSString *systemVersion = [LDUtil getSystemVersionAsString];
+        DEBUG_LOG(@"User building User with system version: %@", systemVersion);
+        [self setOs:systemVersion];
+        
+        // Need to set updated Date
+        NSDate *currentDate = [NSDate date];
+        DEBUG_LOG(@"User building User with updatedAt: %@", currentDate);
+        [self setUpdatedAt:currentDate];
+        
+        self.custom = @{};
+    }
+    
     return self;
 }
 
