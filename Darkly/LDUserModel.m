@@ -27,6 +27,26 @@ static NSString * const kOsKey = @"os";
 
 @implementation LDUserModel
 
+-(NSDictionary *)dictionaryValue{
+    NSMutableDictionary *dictionary = [[NSMutableDictionary alloc] init];
+    
+    self.key ? [dictionary setObject:self.key forKey: kKeyKey] : nil;
+    self.ip ? [dictionary setObject:self.key forKey: kIpKey] : nil;
+    self.country ? [dictionary setObject:self.key forKey: kCountryKey] : nil;
+    self.firstName ? [dictionary setObject:self.key forKey: kFirstNameKey] : nil;
+    self.lastName ? [dictionary setObject:self.key forKey: kLastNameKey] : nil;
+    self.email ? [dictionary setObject:self.key forKey: kEmailKey] : nil;
+    self.avatar ? [dictionary setObject:self.key forKey: kAvatarKey] : nil;
+    self.custom ? [dictionary setObject:self.key forKey: kCustomKey] : nil;
+    self.updatedAt ? [dictionary setObject:self.key forKey: kUpdatedAtKey] : nil;
+    self.config ? [dictionary setObject:self.key forKey: kConfigKey] : nil;
+    self.anonymous ? [dictionary setObject:self.key forKey: kAnonymousKey] : nil;
+    self.device ? [dictionary setObject:self.key forKey: kDeviceKey] : nil;
+    self.os ? [dictionary setObject:self.key forKey: kOsKey] : nil;
+    
+    return dictionary;
+}
+
 - (void)encodeWithCoder:(NSCoder *)encoder {
     //Encode properties, other class variables, etc
     [encoder encodeObject:self.key forKey:kKeyKey];
@@ -110,7 +130,7 @@ static NSString * const kOsKey = @"os";
 - (nonnull NSString *) convertToJson {
     NSError *writeError = nil;
     
-    NSData *jsonData = [NSJSONSerialization dataWithJSONObject:self options:NSJSONWritingPrettyPrinted error:&writeError];
+    NSData *jsonData = [NSJSONSerialization dataWithJSONObject:[self dictionaryValue] options:NSJSONWritingPrettyPrinted error:&writeError];
     NSString *result = [[NSString alloc] initWithData:jsonData encoding:NSUTF8StringEncoding];
     
     return result;
