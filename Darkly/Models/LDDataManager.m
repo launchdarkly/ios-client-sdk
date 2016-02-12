@@ -108,8 +108,8 @@ int const kUserCacheSize = 5;
 
 - (NSMutableDictionary *)retrieveEventDictionary {
     NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
-    NSData *encodedObject = [defaults objectForKey:kEventDictionaryStorageKey];
-    NSMutableDictionary *eventDictionary = [NSKeyedUnarchiver unarchiveObjectWithData:encodedObject];
+//    NSData *encodedObject = [defaults objectForKey:kEventDictionaryStorageKey];
+    NSMutableDictionary *eventDictionary =  [defaults objectForKey:kEventDictionaryStorageKey];
     return eventDictionary;
 }
 
