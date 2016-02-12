@@ -99,18 +99,26 @@ int const kUserCacheSize = 5;
 
 - (NSMutableDictionary *)retrieveUserDictionary {
     NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
-    NSData *encodedObject = [defaults objectForKey:kUserDictionaryStorageKey];
-    NSMutableDictionary *userDictionary = [NSKeyedUnarchiver unarchiveObjectWithData:encodedObject];
-    return userDictionary;
+    NSMutableDictionary *retrievalDictionary = [[NSMutableDictionary alloc] init];
+    NSDictionary *encodedDictionary = [defaults objectForKey:kUserDictionaryStorageKey];
+    for (NSString *key in encodedDictionary) {
+        LDUserModel *decodedUser = [NSKeyedUnarchiver unarchiveObjectWithData:(NSData *)[encodedDictionary objectForKey:key]];
+        [retrievalDictionary setObject:decodedUser forKey:key];
+    }
+    return retrievalDictionary;
 }
 
 #pragma mark - events
 
 - (NSMutableDictionary *)retrieveEventDictionary {
     NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
-    NSData *encodedObject = [defaults objectForKey:kEventDictionaryStorageKey];
-    NSMutableDictionary *eventDictionary = [NSKeyedUnarchiver unarchiveObjectWithData:encodedObject];
-    return eventDictionary;
+    NSMutableDictionary *retrievalDictionary = [[NSMutableDictionary alloc] init];
+    NSDictionary *encodedDictionary = [defaults objectForKey:kEventDictionaryStorageKey];
+    for (NSString *key in encodedDictionary) {
+        LDEventModel *decodedEvent = [NSKeyedUnarchiver unarchiveObjectWithData:(NSData *)[encodedDictionary objectForKey:key]];
+        [retrievalDictionary setObject:decodedEvent forKey:key];
+    }
+    return retrievalDictionary;
 }
 
 -(void) createFeatureEvent: (NSString *)featureKey keyValue:(BOOL)keyValue defaultKeyValue:(BOOL)defaultKeyValue {

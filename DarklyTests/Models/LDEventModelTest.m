@@ -6,11 +6,11 @@
 #import "LDEventModel.h"
 #import "LDUserModel.h"
 
-@interface EventTest : XCTestCase
+@interface LDEventModelTest : XCTestCase
 @property LDUserModel *user;
 @end
 
-@implementation EventTest
+@implementation LDEventModelTest
 - (void)setUp {
     [super setUp];
     self.user = [[LDUserModel alloc] init];

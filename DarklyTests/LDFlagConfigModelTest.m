@@ -8,17 +8,17 @@
 #import "LDFeatureFlagModel.h"
 
 
-@interface ConfigTest : XCTestCase
+@interface LDFlagConfigModelTest : XCTestCase
 @property (strong, nonatomic) NSString *filepath;
 @property (strong, nonatomic) NSDictionary *json;
 
 @end
 
-@implementation ConfigTest
+@implementation LDFlagConfigModelTest
 
 - (void)setUp {
     [super setUp];
-    self.filepath = [[NSBundle bundleForClass:[ConfigTest class]] pathForResource:@"feature_flags"
+    self.filepath = [[NSBundle bundleForClass:[LDFlagConfigModelTest class]] pathForResource:@"feature_flags"
                                                                            ofType:@"json"];
     NSError *error = nil;
     NSData *data = [NSData dataWithContentsOfFile:self.filepath];

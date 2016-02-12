@@ -12,13 +12,13 @@
 #import "LDEventModel.h"
 #import <Blockskit.h>
 
-@interface ClientManagerTest : DarklyXCTestCase
+@interface LDClientManagerTest : DarklyXCTestCase
 @property (nonatomic) NSData *jsonData;
 @property (nonatomic) id requestManagerMock;
 @end
 
 
-@implementation ClientManagerTest
+@implementation LDClientManagerTest
 @synthesize jsonData;
 @synthesize requestManagerMock;
 
