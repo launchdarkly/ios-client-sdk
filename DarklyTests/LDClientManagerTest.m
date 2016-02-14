@@ -15,12 +15,14 @@
 @interface LDClientManagerTest : DarklyXCTestCase
 @property (nonatomic) NSData *jsonData;
 @property (nonatomic) id requestManagerMock;
+@property (nonatomic) id ldClientMock;
 @end
 
 
 @implementation LDClientManagerTest
 @synthesize jsonData;
 @synthesize requestManagerMock;
+@synthesize ldClientMock;
 
 - (void)setUp {
     [super setUp];
@@ -31,7 +33,7 @@
     LDEventModel *event = [[LDEventModel alloc] init];
     [event featureEventWithKey:@"blah" keyValue:NO defaultKeyValue:NO userValue:user];
     
-    id ldClientMock = OCMClassMock([LDClient class]);
+    ldClientMock = OCMClassMock([LDClient class]);
     OCMStub(ClassMethod([ldClientMock sharedInstance])).andReturn(ldClientMock);
     OCMStub([ldClientMock user]).andReturn(user);
     
@@ -44,6 +46,8 @@
 - (void)tearDown {
     // Put teardown code here. This method is called after the invocation of each test method in the class.
     [super tearDown];
+    [ldClientMock stopMocking];
+    
 }
 
 - (void)testSyncWithServerForConfig {

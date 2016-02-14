@@ -45,7 +45,9 @@
     NSString *testApiKey = @"testApiKey";
     LDConfigBuilder *builder = [[LDConfigBuilder alloc] init];
     [builder withApiKey:testApiKey];
-    XCTAssertTrue([[LDClient sharedInstance] start:builder userBuilder:nil]);
+    LDClient *client = [LDClient sharedInstance];
+    BOOL didStart = [client start:builder userBuilder:nil];
+    XCTAssertTrue(didStart);
 }
 
 - (void)testStartWithValidConfigMultipleTimes {
