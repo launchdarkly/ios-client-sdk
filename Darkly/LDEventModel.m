@@ -86,4 +86,18 @@ static NSString * const kCustomEventName = @"custom";
     return self;
 }
 
+-(NSDictionary *)dictionaryValue{
+    NSMutableDictionary *dictionary = [[NSMutableDictionary alloc] init];
+    
+    self.key ? [dictionary setObject:self.key forKey: kKeyKey] : nil;
+    self.kind ? [dictionary setObject:self.kind forKey: kKindKey] : nil;
+    self.creationDate ? [dictionary setObject:[NSNumber numberWithInteger: self.creationDate] forKey: kCreationDateKey] : nil;
+    self.data ? [dictionary setObject:self.data forKey: kDataKey] : nil;
+    self.featureKeyValue ? [dictionary setObject:[NSNumber numberWithBool: self.featureKeyValue] forKey: kFeatureKeyValueKey] : nil;
+    self.isDefault ? [dictionary setObject:[NSNumber numberWithBool: self.isDefault] forKey: kIsDefaultKey] : nil;
+    self.user ? [dictionary setObject:[self.user dictionaryValue] forKey: kUserKey] : nil;
+    
+    return dictionary;
+}
+
 @end

@@ -5,10 +5,10 @@
 #import <XCTest/XCTest.h>
 #import "LDUserModel.h"
 
-@interface UserTest : XCTestCase
+@interface LDUserModelTest : XCTestCase
 @end
 
-@implementation UserTest
+@implementation LDUserModelTest
 - (void)setUp {
     [super setUp];
 }

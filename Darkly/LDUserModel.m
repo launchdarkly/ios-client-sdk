@@ -30,19 +30,22 @@ static NSString * const kOsKey = @"os";
 -(NSDictionary *)dictionaryValue{
     NSMutableDictionary *dictionary = [[NSMutableDictionary alloc] init];
     
+    NSDateFormatter *formatter = [[NSDateFormatter alloc] init];
+    [formatter setDateFormat:@"yyyy-MM-ddTHH.mm.ss"];
+    
     self.key ? [dictionary setObject:self.key forKey: kKeyKey] : nil;
-    self.ip ? [dictionary setObject:self.key forKey: kIpKey] : nil;
-    self.country ? [dictionary setObject:self.key forKey: kCountryKey] : nil;
-    self.firstName ? [dictionary setObject:self.key forKey: kFirstNameKey] : nil;
-    self.lastName ? [dictionary setObject:self.key forKey: kLastNameKey] : nil;
-    self.email ? [dictionary setObject:self.key forKey: kEmailKey] : nil;
-    self.avatar ? [dictionary setObject:self.key forKey: kAvatarKey] : nil;
-    self.custom ? [dictionary setObject:self.key forKey: kCustomKey] : nil;
-    self.updatedAt ? [dictionary setObject:self.key forKey: kUpdatedAtKey] : nil;
-    self.config ? [dictionary setObject:self.key forKey: kConfigKey] : nil;
-    self.anonymous ? [dictionary setObject:self.key forKey: kAnonymousKey] : nil;
-    self.device ? [dictionary setObject:self.key forKey: kDeviceKey] : nil;
-    self.os ? [dictionary setObject:self.key forKey: kOsKey] : nil;
+    self.ip ? [dictionary setObject:self.ip forKey: kIpKey] : nil;
+    self.country ? [dictionary setObject:self.country forKey: kCountryKey] : nil;
+    self.firstName ? [dictionary setObject:self.firstName forKey: kFirstNameKey] : nil;
+    self.lastName ? [dictionary setObject:self.lastName forKey: kLastNameKey] : nil;
+    self.email ? [dictionary setObject:self.email forKey: kEmailKey] : nil;
+    self.avatar ? [dictionary setObject:self.avatar forKey: kAvatarKey] : nil;
+    self.custom ? [dictionary setObject:self.custom forKey: kCustomKey] : nil;
+    self.updatedAt ? [dictionary setObject:[formatter stringFromDate: self.updatedAt] forKey: kUpdatedAtKey] : nil;
+    self.config ? [dictionary setObject:self.config forKey: kConfigKey] : nil;
+    self.anonymous ? [dictionary setObject:[NSNumber numberWithBool: self.anonymous ] forKey: kAnonymousKey] : nil;
+    self.device ? [dictionary setObject:self.device forKey: kDeviceKey] : nil;
+    self.os ? [dictionary setObject:self.os forKey: kOsKey] : nil;
     
     return dictionary;
 }

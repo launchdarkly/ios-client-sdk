@@ -15,13 +15,13 @@
 #import <OCMock.h>
 #import "NSArray+UnitTests.h"
 
-@interface DataManagerTest : DarklyXCTestCase
+@interface LDDataManagerTest : DarklyXCTestCase
 @property (nonatomic) id clientMock;
 @property (nonnull) LDUserModel *user;
 
 @end
 
-@implementation DataManagerTest
+@implementation LDDataManagerTest
 @synthesize clientMock;
 @synthesize user;
 

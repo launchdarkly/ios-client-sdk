@@ -31,4 +31,5 @@
 
 -(BOOL) isFlagOn: (nonnull NSString * )keyName;
 -(BOOL) doesFlagExist: (nonnull NSString *)keyName;
+-(NSDictionary *)dictionaryValue;
 @end
