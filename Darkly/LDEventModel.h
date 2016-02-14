@@ -20,10 +20,10 @@
 @property (nonatomic, assign) BOOL featureKeyValue;
 @property (nonatomic, assign) BOOL isDefault;
 
-- (nonnull id)initWithDictionary:(nonnull NSDictionary *)dictionary;
+-(nonnull id)initWithDictionary:(nonnull NSDictionary *)dictionary;
+-(nonnull NSDictionary *)dictionaryValue;
 
 -(nonnull instancetype)featureEventWithKey:(nonnull NSString *)featureKey keyValue:(BOOL)keyValue defaultKeyValue:(BOOL)defaultKeyValue userValue:(nonnull LDUserModel *)userValue;
 -(nonnull instancetype) customEventWithKey: (nonnull NSString *)featureKey
                          andDataDictionary: (nonnull NSDictionary *)customData userValue:(nonnull LDUserModel *)userValue;
--(NSDictionary *)dictionaryValue;
 @end

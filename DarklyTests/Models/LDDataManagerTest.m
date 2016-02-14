@@ -78,7 +78,7 @@
     event2.key = @"fi";
     
     
-    NSArray *eventArray = [self.dataManagerMock allEvents];
+    NSArray *eventArray = [self.dataManagerMock allEventsJsonStringArray];
     NSArray *eventKeys = [eventArray bk_map:^id(LDEventModel *event) {
         return event.key;
     }];
@@ -89,7 +89,7 @@
 -(void)testCreateCustomEvent {
     [self.dataManagerMock createCustomEvent:@"aKey" withCustomValuesDictionary: @{@"carrot": @"cake"}];
     
-    LDEventModel *event = [self.dataManagerMock allEvents].firstObject;
+    LDEventModel *event = [self.dataManagerMock allEventsJsonStringArray].firstObject;
 
     XCTAssertTrue([[event.data allKeys] containsObject: @"carrot"]);
     XCTAssertTrue([event.key isEqualToString: @"aKey"]);    

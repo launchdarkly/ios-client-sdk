@@ -116,7 +116,7 @@ int const kUserCacheSize = 5;
     NSDictionary *encodedDictionary = [defaults objectForKey:kEventDictionaryStorageKey];
     for (NSString *key in encodedDictionary) {
         LDEventModel *decodedEvent = [NSKeyedUnarchiver unarchiveObjectWithData:(NSData *)[encodedDictionary objectForKey:key]];
-        [retrievalDictionary setObject:[decodedEvent dictionaryValue] forKey:key];
+        [retrievalDictionary setObject:decodedEvent forKey:key];
     }
     return retrievalDictionary;
 }
@@ -175,17 +175,22 @@ int const kUserCacheSize = 5;
     [self storeEventDictionary:eventDictionary];
 }
 
--(NSArray *)allEvents {
+-(NSArray *)allEventsJsonStringArray {
     NSMutableDictionary *eventDictionary = [self retrieveEventDictionary];
     if (eventDictionary) {
-        return [eventDictionary allValues];
+        NSMutableArray *eventArray = [[NSMutableArray alloc] init];
+        for (NSString *key in eventDictionary) {
+            LDEventModel *currentEvent = [eventDictionary objectForKey:key];
+            [eventArray addObject:[currentEvent dictionaryValue]];
+        }
+        return eventArray;
     } else {
         return nil;
     }
 }
 
 -(NSData*) allEventsJsonData {
-    NSArray *allEvents = [self allEvents];
+    NSArray *allEvents = [self allEventsJsonStringArray];
     if (allEvents) {
         NSError *writeError = nil;
         NSData *jsonData = [NSJSONSerialization dataWithJSONObject:allEvents options:NSJSONWritingPrettyPrinted error:&writeError];
