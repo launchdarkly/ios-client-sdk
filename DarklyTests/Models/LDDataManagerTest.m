@@ -3,7 +3,6 @@
 //
 
 #import "DarklyXCTestCase.h"
-#import <BlocksKit/BlocksKit.h>
 #import "LDFlagConfigModel.h"
 #import "LDFeatureFlagModel.h"
 #import "LDDataManager.h"
@@ -76,13 +75,13 @@
     event1.key = @"foo";
     event2.key = @"fi";
     
-    
-    NSArray *eventArray = [self.dataManagerMock allEvents];
+    NSArray *eventArray = [self.dataManagerMock allEventsJsonStringArray];
     
     NSMutableArray *eventKeys = @[].mutableCopy;
     
-    for(LDEvent *event in eventArray) {
-        [eventKeys addObject: event.key];
+    for(NSDictionary *eventDict in eventArray) {
+        NSString *eventKey = [eventDict allKeys].firstObject;
+        [eventKeys addObject: eventKey];
     }
     
     XCTAssertTrue([eventKeys containsObject:event1.key]);
