@@ -47,14 +47,14 @@
     // Put teardown code here. This method is called after the invocation of each test method in the class.
     [super tearDown];
     [ldClientMock stopMocking];
-    
+    [requestManagerMock stopMocking];
 }
 
 - (void)testSyncWithServerForConfig {
     // {"lastName":null, "firstName":null, "anonymous":false, "key":"jeff@test.com", "avatar":null,
     //        "os":"80400", "ip":null, "custom":null, "config":null, "country":null, "email":null,
     //    "device":"iPhone"}
-    NSString *encodedUserString = @"eyJsYXN0TmFtZSI6bnVsbCwiZmlyc3ROYW1lIjpudWxsLCJhbm9ueW1vdXMiOmZhbHNlLCJrZXkiOiJqZWZmQHRlc3QuY29tIiwiYXZhdGFyIjpudWxsLCJvcyI6IjgwNDAwIiwiaXAiOm51bGwsImN1c3RvbSI6bnVsbCwiY29uZmlnIjpudWxsLCJjb3VudHJ5IjpudWxsLCJlbWFpbCI6bnVsbCwiZGV2aWNlIjoiaVBob25lIn0=";
+    NSString *encodedUserString = @"ewogICJrZXkiIDogImplZmZAdGVzdC5jb20iLAogICJjdXN0b20iIDogewoKICB9LAogICJ1cGRhdGVkQXQiIDogIjIwMTYtMDItMTQiLAogICJkZXZpY2UiIDogImlQaG9uZSIsCiAgIm9zIiA6ICI5LjIiCn0=";
     
     LDClientManager *clientManager = [LDClientManager sharedInstance];
     [clientManager setOfflineEnabled:NO];
@@ -62,9 +62,6 @@
     [clientManager syncWithServerForConfig];
 
     OCMVerify([requestManagerMock performFeatureFlagRequest:[OCMArg isEqual:encodedUserString]]);
-    
-    [requestManagerMock stopMocking];
-    
 }
 
 - (void)testSyncWithServerForEvents {
@@ -77,7 +74,6 @@
     
     OCMVerify([requestManagerMock performFeatureFlagRequest:[OCMArg isEqual:jsonData]]);
     
-    [requestManagerMock stopMocking];
 }
 
 - (void)testSyncWithServerForConfigNotProcessedWhenOffline {
@@ -92,7 +88,6 @@
     [clientManager syncWithServerForConfig];
     
     [requestManagerMock verify];
-    [requestManagerMock stopMocking];
 }
 
 
@@ -102,7 +97,6 @@
     [clientManager syncWithServerForEvents];
     
     [requestManagerMock verify];
-    [requestManagerMock stopMocking];
 }
 
 - (void)testSyncWithServerForEventsWhenFlushCalled {
@@ -112,7 +106,6 @@
     
     OCMVerify([requestManagerMock performEventRequest:[OCMArg isEqual:jsonData]]);
     
-    [requestManagerMock stopMocking];
 }
 
 - (void)testSyncWithServerForEventsNotProcessedWhenOfflineWhenFlushCalled {
@@ -124,6 +117,5 @@
     [clientManager flushEvents];
     
     [requestManagerMock verify];
-    [requestManagerMock stopMocking];
 }
 @end
