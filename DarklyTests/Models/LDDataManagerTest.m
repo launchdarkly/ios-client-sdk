@@ -5,7 +5,6 @@
 #import "DarklyXCTestCase.h"
 #import <BlocksKit/BlocksKit.h>
 #import "LDFlagConfigModel.h"
-#import <Blockskit/BlocksKit.h>
 #import "LDFeatureFlagModel.h"
 #import "LDDataManager.h"
 #import "LDUserModel.h"
@@ -78,10 +77,14 @@
     event2.key = @"fi";
     
     
-    NSArray *eventArray = [self.dataManagerMock allEventsJsonStringArray];
-    NSArray *eventKeys = [eventArray bk_map:^id(LDEventModel *event) {
-        return event.key;
-    }];
+    NSArray *eventArray = [self.dataManagerMock allEvents];
+    
+    NSMutableArray *eventKeys = @[].mutableCopy;
+    
+    for(LDEvent *event in eventArray) {
+        [eventKeys addObject: event.key];
+    }
+    
     XCTAssertTrue([eventKeys containsObject:event1.key]);
     XCTAssertTrue([eventKeys containsObject:event2.key]);
 }
@@ -112,10 +115,12 @@
     
     NSArray *eventsArray = [NSJSONSerialization JSONObjectWithData:eventData                                                        options:kNilOptions error:nil];
 
-    NSArray *allValues = [eventsArray bk_map:^id(NSDictionary *eventDict) {
-        return [eventDict allValues];
-    }];
+    NSMutableArray *allValues = @[].mutableCopy;
     
+    for(NSDictionary *eventDict in eventsArray) {
+        [allValues addObject: eventDict.allValues];
+    }
+
     allValues = [allValues flatten];
     
     XCTAssertTrue([allValues containsObject: @"foo"]);

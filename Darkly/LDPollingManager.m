@@ -12,9 +12,9 @@
 
 
 @synthesize configurationTimer;
-@synthesize configurationTimerPollingInterval;
+@synthesize configurationTimerPollingIntervalMillis;
 @synthesize eventTimer;
-@synthesize eventTimerPollingInterval;
+@synthesize eventTimerPollingIntervalMillis;
 @synthesize pollConfigState;
 @synthesize pollEventState;
 
@@ -35,12 +35,12 @@ static id sharedInstance = nil;
 
 - (id)init {
     if ((self = [super init])) {
-        self.configurationTimerPollingInterval = kDefaultConfigCheckInterval;
-        self.eventTimerPollingInterval = kDefaultFlushInterval;
         configPollingCount = 0;
         eventPollingCount = 0;
-        pollConfigState = POLL_STOPPED;
-        pollEventState = POLL_STOPPED;
+        self.pollConfigState = POLL_STOPPED;
+        self.pollEventState = POLL_STOPPED;
+        self.configurationTimerPollingIntervalMillis = kDefaultProdConfigCheckIntervalMillis;
+        self.eventTimerPollingIntervalMillis = kDefaultFlushInterval*kMillisInSecs;
     }
     return self;
 }
@@ -55,16 +55,12 @@ static id sharedInstance = nil;
 }
 
 //Setter method
-- (void) setConfigurationTimerPollingInterval:(NSTimeInterval)cTimerPollingInterval {
-    configurationTimerPollingInterval = [self calculateConfigPollingInterval:cTimerPollingInterval];
+- (void) setConfigurationTimerPollingIntervalMillis:(NSTimeInterval)cTimerPollingInterval {
+    configurationTimerPollingIntervalMillis = [self calculateConfigPollingIntervalMillis:cTimerPollingInterval];
     if (pollConfigState != POLL_STOPPED && pollConfigState != POLL_SUSPENDED) {
         // pause the config polling interval
         DEBUG_LOGX(@"Pausing config Polling");
         [self pauseConfigPolling];
-        
-        if (cTimerPollingInterval == kMinimumPollingInterval && [[[LDClient sharedInstance] ldConfig] debugEnabled] == YES) {
-            [self configPoll];
-        }
         
         [self updateConfigPollingTimer];
         DEBUG_LOGX(@"updated config Polling");
@@ -74,9 +70,9 @@ static id sharedInstance = nil;
 
 }
 
--(NSTimeInterval)calculateConfigPollingInterval:(NSTimeInterval)cTimerPollingInterval {
-    if (cTimerPollingInterval == kMinimumPollingInterval) {
-        return kDefaultConfigCheckInterval;
+-(NSTimeInterval)calculateConfigPollingIntervalMillis:(NSTimeInterval)cTimerPollingInterval {
+    if (cTimerPollingInterval <= kMinimumPollingIntervalMillis) {
+        return [self retrieveDefaultConfigIntervalMillis];
     } else {
         return cTimerPollingInterval;
     }
@@ -84,7 +80,7 @@ static id sharedInstance = nil;
 
 - (void)startConfigTimer {
     DEBUG_LOGX(@"PollingManager starting initial config polling");
-    if ((!self.configurationTimer) && (self.configurationTimerPollingInterval > 0.0)) {
+    if ((!self.configurationTimer) && (self.configurationTimerPollingIntervalMillis > 0.0)) {
         self.configurationTimer = dispatch_source_create(DISPATCH_SOURCE_TYPE_TIMER, 0, 0,  dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0));
     }
     if (self.configurationTimer) {
@@ -101,8 +97,8 @@ static id sharedInstance = nil;
 }
 
 - (void)updateConfigPollingTimer {
-    if ((self.configurationTimer != NULL) && (self.configurationTimerPollingInterval > 0.0)) {
-        uint64_t interval = (uint64_t)(self.configurationTimerPollingInterval * NSEC_PER_SEC);
+    if ((self.configurationTimer != NULL) && (self.configurationTimerPollingIntervalMillis > 0.0)) {
+        uint64_t interval = (uint64_t)(self.configurationTimerPollingIntervalMillis * NSEC_PER_MSEC);
         dispatch_time_t startTime = dispatch_time(DISPATCH_TIME_NOW, interval);
         dispatch_source_set_timer(self.configurationTimer, startTime, interval, 1.0);
     }
@@ -190,14 +186,14 @@ static id sharedInstance = nil;
 }
 
 //Setter method
-- (void) setEventTimerPollingInterval:(NSTimeInterval)eTimerPollingInterval {
-    eventTimerPollingInterval = [self calculateEventPollingInterval:eTimerPollingInterval];
+- (void) setEventTimerPollingIntervalMillis:(NSTimeInterval)eTimerPollingInterval {
+    eventTimerPollingIntervalMillis = [self calculateEventPollingIntervalMillis:eTimerPollingInterval];
     if (pollEventState != POLL_STOPPED && pollEventState != POLL_SUSPENDED) {
         // pause the event polling interval
         DEBUG_LOGX(@"Pausing event Polling");
         [self pauseEventPolling];
         
-        if (eTimerPollingInterval == kMinimumPollingInterval && [[[LDClient sharedInstance] ldConfig] debugEnabled] == YES) {
+        if (eTimerPollingInterval == kMinimumPollingIntervalMillis && [[[LDClient sharedInstance] ldConfig] debugEnabled] == YES) {
             [self eventPoll];
         }
         
@@ -209,9 +205,9 @@ static id sharedInstance = nil;
     
 }
 
--(NSTimeInterval)calculateEventPollingInterval:(NSTimeInterval)eTimerPollingInterval {
-    if (eTimerPollingInterval == kMinimumPollingInterval) {
-        return kDefaultFlushInterval;
+-(NSTimeInterval)calculateEventPollingIntervalMillis:(NSTimeInterval)eTimerPollingInterval {
+    if (eTimerPollingInterval <= kMinimumPollingIntervalMillis) {
+        return kDefaultFlushInterval*kMillisInSecs;
     } else {
         return eTimerPollingInterval;
     }
@@ -221,7 +217,7 @@ static id sharedInstance = nil;
 - (void)startEventPollTimer
 {
     DEBUG_LOGX(@"PollingManager starting initial event polling");
-    if ((!self.eventTimer) && (self.eventTimerPollingInterval > 0.0)) {
+    if ((!self.eventTimer) && (self.eventTimerPollingIntervalMillis > 0.0)) {
         self.eventTimer = dispatch_source_create(DISPATCH_SOURCE_TYPE_TIMER, 0, 0,  dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0));
     }
     if (self.eventTimer) {
@@ -250,8 +246,8 @@ static id sharedInstance = nil;
 }
 
 - (void)updateEventPollingTimer {
-    if ((self.eventTimer != NULL) && (self.eventTimerPollingInterval > 0.0)) {
-        uint64_t interval = (uint64_t)(self.eventTimerPollingInterval * NSEC_PER_SEC);
+    if ((self.eventTimer != NULL) && (self.eventTimerPollingIntervalMillis > 0.0)) {
+        uint64_t interval = (uint64_t)(self.eventTimerPollingIntervalMillis * NSEC_PER_MSEC);
         dispatch_time_t startTime = dispatch_time(DISPATCH_TIME_NOW, interval);
         dispatch_source_set_timer(self.eventTimer, startTime, interval, 1.0);
     }
@@ -308,6 +304,14 @@ static id sharedInstance = nil;
 #endif
         self.eventTimer = NULL;
         pollEventState = POLL_STOPPED;
+    }
+}
+
+- (int)retrieveDefaultConfigIntervalMillis {
+    if ([[[LDClient sharedInstance] ldConfig] debugEnabled] == YES) {
+        return kDefaultDebugConfigCheckIntervalMillis;
+    } else {
+        return kDefaultProdConfigCheckIntervalMillis;
     }
 }
 

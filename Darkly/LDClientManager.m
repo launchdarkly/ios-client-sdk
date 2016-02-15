@@ -10,7 +10,6 @@
 #import "LDUserModel.h"
 #import "LDEventModel.h"
 #import "LDFlagConfigModel.h"
-#import <BlocksKit/BlocksKit.h>
 #import "NSDictionary+JSON.h"
 
 @implementation LDClientManager
@@ -37,10 +36,8 @@ NSString *const kLDUserUpdatedNotification = @"Darkly.UserUpdatedNotification";
     
     LDClient *client = [LDClient sharedInstance];
     LDConfig *config = client.ldConfig;
-    pollingMgr.eventTimerPollingInterval = [config.flushInterval intValue];
-    // Need to pull the configurationTimerPollingInterval out of persisted data
-    //pollingMgr.configurationTimerPollingInterval = kDefaultConfigCheckInterval;
-    DEBUG_LOG(@"ClientManager startPolling method called with configurationTimerPollingInterval=%f and eventTimerPollingInterval=%f", pollingMgr.configurationTimerPollingInterval, pollingMgr.eventTimerPollingInterval);
+    pollingMgr.eventTimerPollingIntervalMillis = [config.flushInterval intValue] * kMillisInSecs;
+    DEBUG_LOG(@"ClientManager startPolling method called with configurationTimerPollingInterval=%f and eventTimerPollingInterval=%f", pollingMgr.configurationTimerPollingIntervalMillis, pollingMgr.eventTimerPollingIntervalMillis);
     [pollingMgr startConfigPolling];
     [pollingMgr startEventPolling];
 }
@@ -115,7 +112,7 @@ NSString *const kLDUserUpdatedNotification = @"Darkly.UserUpdatedNotification";
     [self syncWithServerForEvents];
 }
 
-- (void)processedEvents:(BOOL)success jsonEventArray:(NSData *)jsonEventArray eventInterval:(int)eventInterval {
+- (void)processedEvents:(BOOL)success jsonEventArray:(NSData *)jsonEventArray eventIntervalMillis:(int)eventIntervalMillis {
     // If Success
     if (success) {
         DEBUG_LOGX(@"ClientManager processedEvents method called after receiving successful response from server");
@@ -127,12 +124,12 @@ NSString *const kLDUserUpdatedNotification = @"Darkly.UserUpdatedNotification";
     } else {
         DEBUG_LOGX(@"ClientManager processedEvents method called after receiving failure response from server");
         LDPollingManager *pollingMgr = [LDPollingManager sharedInstance];
-        DEBUG_LOG(@"ClientManager setting event interval to: %d", eventInterval);
-        pollingMgr.eventTimerPollingInterval = eventInterval;
+        DEBUG_LOG(@"ClientManager setting event interval to: %d", eventIntervalMillis);
+        pollingMgr.eventTimerPollingIntervalMillis = eventIntervalMillis;
     }
 }
 
-- (void)processedConfig:(BOOL)success jsonConfigDictionary:(NSDictionary *)jsonConfigDictionary configInterval:(int)configInterval {
+- (void)processedConfig:(BOOL)success jsonConfigDictionary:(NSDictionary *)jsonConfigDictionary configIntervalMillis:(int)configIntervalMillis {
     if (success) {
         DEBUG_LOGX(@"ClientManager processedConfig method called after receiving successful response from server");
         // If Success
@@ -147,8 +144,8 @@ NSString *const kLDUserUpdatedNotification = @"Darkly.UserUpdatedNotification";
             [[LDDataManager sharedManager] saveUser:user];
             // Update polling interval for Config for new config interval
             LDPollingManager *pollingMgr = [LDPollingManager sharedInstance];
-            DEBUG_LOG(@"ClientManager setting config interval to: %d", configInterval);
-            pollingMgr.configurationTimerPollingInterval = configInterval;
+            DEBUG_LOG(@"ClientManager setting config interval to: %d", configIntervalMillis);
+            pollingMgr.configurationTimerPollingIntervalMillis = configIntervalMillis;
             
             [[NSNotificationCenter defaultCenter] postNotificationName: kLDUserUpdatedNotification
                                                                 object: nil];
@@ -156,8 +153,8 @@ NSString *const kLDUserUpdatedNotification = @"Darkly.UserUpdatedNotification";
     } else {
         DEBUG_LOGX(@"ClientManager processedConfig method called after receiving failure response from server");
         LDPollingManager *pollingMgr = [LDPollingManager sharedInstance];
-        DEBUG_LOG(@"ClientManager setting config interval to: %d", configInterval);
-        pollingMgr.configurationTimerPollingInterval = configInterval;
+        DEBUG_LOG(@"ClientManager setting config interval to: %d", configIntervalMillis);
+        pollingMgr.configurationTimerPollingIntervalMillis = configIntervalMillis;
     }
 }
 

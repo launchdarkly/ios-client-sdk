@@ -10,7 +10,6 @@
 #import "LDRequestManager.h"
 #import "LDDataManager.h"
 #import "LDEventModel.h"
-#import <Blockskit.h>
 
 @interface LDClientManagerTest : DarklyXCTestCase
 @property (nonatomic) NSData *jsonData;
