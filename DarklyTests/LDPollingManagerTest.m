@@ -38,7 +38,7 @@
 - (void)testConfigPollingStates {
     // create the expectation with a nice descriptive message
     LDPollingManager *dnu =  [LDPollingManager sharedInstance];
-    dnu.configurationTimerPollingInterval = 5; // for the purposes of the unit tests set it to 5 secs.
+    dnu.configurationTimerPollingIntervalMillis = 5000; // for the purposes of the unit tests set it to 5 secs.
     [dnu startConfigPolling];
     
     NSInteger expectedValue = POLL_RUNNING;
@@ -65,7 +65,7 @@
 - (void)testEventPollingStates {
     // create the expectation with a nice descriptive message
     LDPollingManager *dnu =  [LDPollingManager sharedInstance];
-    dnu.eventTimerPollingInterval = 5; // for the purposes of the unit tests set it to 5 secs.
+    dnu.eventTimerPollingIntervalMillis = 5000; // for the purposes of the unit tests set it to 5 secs.
     [dnu startEventPolling];
     
     NSInteger expectedValue = POLL_RUNNING;
@@ -95,7 +95,7 @@
     XCTestExpectation *expectation = [self expectationWithDescription:@"wait for polling to start"];
     
     LDPollingManager *dnu =  [LDPollingManager sharedInstance];
-    dnu.configurationTimerPollingInterval = 1; // for the purposes of the unit tests set it to 1 secs.
+    dnu.configurationTimerPollingIntervalMillis = 1000; // for the purposes of the unit tests set it to 1 secs.
     [dnu startConfigPolling];
     
     dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(5 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{

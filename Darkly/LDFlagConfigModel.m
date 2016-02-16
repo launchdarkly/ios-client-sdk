@@ -9,7 +9,6 @@
 #import "LDFlagConfigModel.h"
 #import "LDUtil.h"
 #import "LDFeatureFlagModel.h"
-#import <BlocksKit/BlocksKit.h>
 
 static NSString * const kFeaturesJsonDictionaryKey = @"featuresJsonDictionary";
 
@@ -59,26 +58,24 @@ static NSString * const kFeatureJsonValueName = @"value";
 -(BOOL) isFlagOn: ( NSString * __nonnull )keyName {
     __block BOOL result = NO;
     
-    [self.featuresJsonDictionary bk_each:^(id key, NSDictionary *featureJson) {
-        if ([key isEqualToString: keyName]) {
-            id aValue = [featureJson valueForKey:kFeatureJsonValueName];
-            if (![aValue isKindOfClass:[NSNull class]] && ![aValue isKindOfClass:[NSString class]]) {
-                @try {
-                    result = [aValue boolValue];
-                }
-                @catch (NSException *exception) {
-                    DEBUG_LOG(@"Error parsing value for key: %@", keyName);
-                }
+    NSDictionary *featureJson = [self.featuresJsonDictionary objectForKey: keyName];
+    
+    if (featureJson) {
+        id aValue = [featureJson valueForKey:kFeatureJsonValueName];
+        if (![aValue isKindOfClass:[NSNull class]] && ![aValue isKindOfClass:[NSString class]]) {
+            @try {
+                result = [aValue boolValue];
+            }
+            @catch (NSException *exception) {
+                DEBUG_LOG(@"Error parsing value for key: %@", keyName);
             }
         }
-    }];
+    }
     return result;
 }
 
 -(BOOL) doesFlagExist: ( NSString * __nonnull )keyName {
-    return [self.featuresJsonDictionary bk_any:^(id key, NSDictionary *featureJson) {
-        return [key isEqualToString: keyName];
-    }];
+    return [[self.featuresJsonDictionary allKeys] containsObject: keyName];
 }
 
 @end

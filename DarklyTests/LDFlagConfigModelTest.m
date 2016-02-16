@@ -3,7 +3,6 @@
 //
 
 #import <XCTest/XCTest.h>
-#import <BlocksKit/BlocksKit.h>
 #import "LDFlagConfigModel.h"
 #import "LDFeatureFlagModel.h"
 

@@ -24,9 +24,9 @@ typedef enum {
 @property (nonatomic, assign) PollingState pollEventState;
 
 @property (strong, nonatomic) dispatch_source_t configurationTimer;
-@property (nonatomic) NSTimeInterval configurationTimerPollingInterval;
+@property (nonatomic) NSTimeInterval configurationTimerPollingIntervalMillis;
 @property (strong, nonatomic) dispatch_source_t eventTimer;
-@property (nonatomic) NSTimeInterval eventTimerPollingInterval;
+@property (nonatomic) NSTimeInterval eventTimerPollingIntervalMillis;
 
 + (NSUInteger)configPollingCount;
 + (NSUInteger)eventPollingCount;
