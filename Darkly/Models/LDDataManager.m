@@ -4,8 +4,6 @@
 
 
 #import "LDDataManager.h"
-#import <Mantle/Mantle.h>
-#import <MTLManagedObjectAdapter/MTLManagedObjectAdapter.h>
 #import "LDEventModel.h"
 #import "LDUtil.h"
 

@@ -20,14 +20,6 @@ PODS:
   - AFNetworking/UIKit (2.6.3):
     - AFNetworking/NSURLConnection
     - AFNetworking/NSURLSession
-  - Mantle (2.0.6):
-    - Mantle/extobjc (= 2.0.6)
-  - Mantle/extobjc (2.0.6)
-  - MTLManagedObjectAdapter (1.0.1):
-    - Mantle (~> 2.0)
-    - MTLManagedObjectAdapter/extobjc (= 1.0.1)
-  - MTLManagedObjectAdapter/extobjc (1.0.1):
-    - Mantle (~> 2.0)
   - OCMock (3.2.2)
   - OHHTTPStubs (4.7.0):
     - OHHTTPStubs/Default (= 4.7.0)
@@ -45,15 +37,11 @@ PODS:
 
 DEPENDENCIES:
   - AFNetworking (~> 2.5)
-  - Mantle (~> 2.0)
-  - MTLManagedObjectAdapter (~> 1.0)
   - OCMock (~> 3.1)
   - OHHTTPStubs (~> 4.2)
 
 SPEC CHECKSUMS:
   AFNetworking: cb8d14a848e831097108418f5d49217339d4eb60
-  Mantle: 299966b00759634931699f69cb6a30b9239b944d
-  MTLManagedObjectAdapter: f369edc1226fde2061fe894bd87f256e60cd8f88
   OCMock: 18c9b7e67d4c2770e95bb77a9cc1ae0c91fe3835
   OHHTTPStubs: d2bf6a0f407620d67e75a1d3f12d86a2b1dd15c0
 
