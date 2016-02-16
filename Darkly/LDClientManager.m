@@ -90,7 +90,7 @@ NSString *const kLDUserUpdatedNotification = @"Darkly.UserUpdatedNotification";
     if (!offlineEnabled) {
         DEBUG_LOGX(@"ClientManager syncing config with server");
         LDClient *client = [LDClient sharedInstance];
-        LDUserModel *currentUser = client.user;
+        LDUserModel *currentUser = client.ldUser;
         
         if (currentUser) {
             NSString *jsonString = [currentUser convertToJson];
@@ -138,7 +138,7 @@ NSString *const kLDUserUpdatedNotification = @"Darkly.UserUpdatedNotification";
         if (newConfig) {
             // Overwrite Config with new config
             LDClient *client = [LDClient sharedInstance];
-            LDUserModel *user = client.user;
+            LDUserModel *user = client.ldUser;
             user.config = newConfig;
             // Save context
             [[LDDataManager sharedManager] saveUser:user];

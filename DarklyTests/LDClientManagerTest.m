@@ -34,7 +34,7 @@
     
     ldClientMock = OCMClassMock([LDClient class]);
     OCMStub(ClassMethod([ldClientMock sharedInstance])).andReturn(ldClientMock);
-    OCMStub([ldClientMock user]).andReturn(user);
+    OCMStub([ldClientMock ldUser]).andReturn(user);
     
     requestManagerMock = OCMClassMock([LDRequestManager class]);
     OCMStub(ClassMethod([requestManagerMock sharedInstance])).andReturn(requestManagerMock);

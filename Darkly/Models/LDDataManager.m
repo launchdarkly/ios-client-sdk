@@ -133,7 +133,7 @@ int const kUserCacheSize = 5;
     if(![self isAtEventCapacity:eventDictionary]) {
         DEBUG_LOG(@"Creating event for feature:%@ with value:%d and defaultValue:%d", featureKey, keyValue, defaultKeyValue);
         LDClient *client = [LDClient sharedInstance];
-        LDUserModel *currentUser = client.user;
+        LDUserModel *currentUser = client.ldUser;
         LDEventModel *featureEvent = [[LDEventModel alloc] featureEventWithKey: featureKey keyValue:keyValue defaultKeyValue:defaultKeyValue userValue:currentUser];
         
         if (!eventDictionary) {
@@ -151,7 +151,7 @@ int const kUserCacheSize = 5;
     if(![self isAtEventCapacity:eventDictionary]) {
         DEBUG_LOG(@"Creating event for custom key:%@ and value:%@", eventKey, customDict);
         LDClient *client = [LDClient sharedInstance];
-        LDUserModel *currentUser = client.user;
+        LDUserModel *currentUser = client.ldUser;
         LDEventModel *customEvent = [[LDEventModel alloc] customEventWithKey: eventKey  andDataDictionary: customDict userValue:currentUser];
         
         if (!eventDictionary) {

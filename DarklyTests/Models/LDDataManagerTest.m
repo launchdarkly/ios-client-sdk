@@ -34,7 +34,7 @@
     
     LDClient *client = [LDClient sharedInstance];
     clientMock = OCMPartialMock(client);
-    OCMStub([clientMock user]).andReturn(user);
+    OCMStub([clientMock ldUser]).andReturn(user);
     
     LDFlagConfigModel *config = [[LDFlagConfigModel alloc] init];
     config.featuresJsonDictionary = [NSDictionary dictionaryWithObjects:@[@{@"value": @YES}, @{@"value": @NO}]
@@ -49,7 +49,7 @@
 
 - (void)testisFlagOnForKey {
     LDClient *client = [LDClient sharedInstance];
-    LDUserModel * theUser = client.user;
+    LDUserModel * theUser = client.ldUser;
     
     BOOL ipaduserFlag = [theUser isFlagOn: @"ipaduser"];
     BOOL iosuserFlag = [theUser isFlagOn: @"iosuser"];

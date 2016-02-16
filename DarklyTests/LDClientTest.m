@@ -80,11 +80,11 @@
     LDUserBuilder *anotherUserBuilder = [[LDUserBuilder alloc] init];
     [anotherUserBuilder withKey:@"myKey"];
 
-    LDUserModel *user = [[LDClient sharedInstance] user];
+    LDUserModel *user = [[LDClient sharedInstance] ldUser];
     OCMStub([self.dataManagerMock findUserWithkey:[OCMArg any]]).andReturn(user);
 
     [[LDClient sharedInstance] start:builder userBuilder:anotherUserBuilder];
-    user = [[LDClient sharedInstance] user];
+    user = [[LDClient sharedInstance] ldUser];
     
      XCTAssertEqual(user.email, @"my@email.com");
 }

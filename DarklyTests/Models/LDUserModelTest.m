@@ -18,32 +18,12 @@
     [super tearDown];
 }
 
--(void)testAnonymousSetToFalseIfKeySet {
+-(void)testNewUserSetupProperly {
     LDUserModel *user = [[LDUserModel alloc] init];
     
-    user.key = @"aUser";
-    
-    XCTAssertFalse(user.anonymous);
-}
-
--(void) testSettingUserKeyToNilOrBlank {
-    LDUserModel *user = [[LDUserModel alloc] init];
-    
-    user.key = @"aUser";
-    XCTAssertFalse(user.anonymous);
-    
-    user.key = nil;
-    XCTAssertTrue(user.anonymous);
-    XCTAssertNotNil(user.key);
-
-    user.key = @"";
-    XCTAssertTrue(user.anonymous);
-    XCTAssertNotNil(user.key);
-    
-    user.key = @"notNil";
-    XCTAssertFalse(user.anonymous);
-    XCTAssertNotNil(user.key);
-
+    XCTAssertNotNil(user.os);
+    XCTAssertNotNil(user.device);
+    XCTAssertNotNil(user.updatedAt);
 }
 
 @end
