@@ -7,7 +7,6 @@ end
 
 target 'DarklyTests' do
   pod 'AFNetworking', '~> 2.5'
-  pod 'AFNetworking', '~> 2.5'
   pod 'OCMock', '~> 3.1'
   pod 'OHHTTPStubs', '~> 4.2'
 end
