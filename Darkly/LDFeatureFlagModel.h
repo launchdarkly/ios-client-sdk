@@ -13,5 +13,6 @@
 @property (nonatomic, assign) BOOL isOn;
 
 - (nonnull id)initWithDictionary:(nonnull NSDictionary *)dictionary;
+-(nonnull NSDictionary *)dictionaryValue;
 
 @end

@@ -38,4 +38,13 @@ static NSString * const kIsOnKey = @"isOn";
     return self;
 }
 
+-(NSDictionary *)dictionaryValue{
+    NSMutableDictionary *dictionary = [[NSMutableDictionary alloc] init];
+    
+    self.key ? [dictionary setObject:self.key forKey: kKeyKey] : nil;
+    self.isOn ? [dictionary setObject:[NSNumber numberWithBool: self.isOn] forKey: kIsOnKey] : nil;
+    
+    return dictionary;
+}
+
 @end

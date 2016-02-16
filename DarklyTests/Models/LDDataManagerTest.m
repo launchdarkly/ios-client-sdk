@@ -58,73 +58,38 @@
     
     XCTAssertFalse(iosuserFlag);
     XCTAssertTrue(ipaduserFlag);
-    
-    NSLog(@"Stop");
 }
 
--(void)testCreateFeatureEvent {
-    [[LDDataManager sharedManager] createFeatureEvent:@"afeaturekey" keyValue:NO defaultKeyValue:NO];
+-(void)testAllEventsDictionaryArray {
+    NSString *eventKey1 = @"foo";
+    NSString *eventKey2 = @"fi";
+    [[LDDataManager sharedManager] createFeatureEvent:eventKey1 keyValue:NO defaultKeyValue:NO];
+    [[LDDataManager sharedManager] createCustomEvent:eventKey2 withCustomValuesDictionary:@{@"carrot": @"cake"}];
     
-//    TODO: Write test
-    
-//    XCTAssertEqualObjects(lastEvent.key, @"afeaturekey");
-}
+    NSArray *eventArray = [[LDDataManager sharedManager] allEventsDictionaryArray];
+    NSMutableArray *eventKeyArray = [[NSMutableArray alloc] init];
+    for (NSDictionary *eventDictionary in eventArray) {
+        [eventKeyArray addObject:[eventDictionary objectForKey:@"key"]];
+    }
 
--(void)testAllEvents {
-    LDEventModel *event1 = [[LDEventModel alloc] init];
-    LDEventModel *event2 = [[LDEventModel alloc] init];
-    
-    event1.key = @"foo";
-    event2.key = @"fi";
-    
-    
-    NSArray *eventArray = [self.dataManagerMock allEventsJsonStringArray];
-    NSArray *eventKeys = [eventArray bk_map:^id(LDEventModel *event) {
-        return event.key;
-    }];
-    XCTAssertTrue([eventKeys containsObject:event1.key]);
-    XCTAssertTrue([eventKeys containsObject:event2.key]);
-}
-
--(void)testCreateCustomEvent {
-    [self.dataManagerMock createCustomEvent:@"aKey" withCustomValuesDictionary: @{@"carrot": @"cake"}];
-    
-    LDEventModel *event = [self.dataManagerMock allEventsJsonStringArray].firstObject;
-
-    XCTAssertTrue([[event.data allKeys] containsObject: @"carrot"]);
-    XCTAssertTrue([event.key isEqualToString: @"aKey"]);    
+    XCTAssertTrue([eventKeyArray containsObject:eventKey1]);
+    XCTAssertTrue([eventKeyArray containsObject:eventKey2]);
 }
 
 -(void)testAllEventsJsonData {
-    LDEventModel *event1 = [[LDEventModel alloc] init];
-    LDEventModel *event2 = [[LDEventModel alloc] init];
+    [[LDDataManager sharedManager] createCustomEvent:@"foo" withCustomValuesDictionary:nil];
+    [[LDDataManager sharedManager] createCustomEvent:@"fi" withCustomValuesDictionary:nil];
     
-    event1.key = @"foo";
-    event2.key = @"fi";
+    NSData *eventData = [[LDDataManager sharedManager] allEventsJsonData];
     
-    LDClient *client = [LDClient sharedInstance];
-    LDUserModel *theUser = client.user;
-    
-    [self.dataManagerMock createCustomEvent:@"foo" withCustomValuesDictionary:nil];
-    [self.dataManagerMock createCustomEvent:@"fi" withCustomValuesDictionary:nil];
-    
-    NSData *eventData = [self.dataManagerMock allEventsJsonData];
-    
-    NSArray *eventsArray = [NSJSONSerialization JSONObjectWithData:eventData                                                        options:kNilOptions error:nil];
+    NSArray *eventsArray = [NSJSONSerialization JSONObjectWithData:eventData options:kNilOptions error:nil];
 
-    NSArray *allValues = [eventsArray bk_map:^id(NSDictionary *eventDict) {
-        return [eventDict allValues];
-    }];
+    NSMutableDictionary *eventDictionary = [[NSMutableDictionary alloc] init];
+    for (NSDictionary *currentEventDictionary in eventsArray) {
+        [eventDictionary setObject:[[LDEventModel alloc] initWithDictionary:currentEventDictionary] forKey:[currentEventDictionary objectForKey:@"key"]];
+    }
     
-    allValues = [allValues flatten];
-    
-    XCTAssertTrue([allValues containsObject: @"foo"]);
-    XCTAssertTrue([allValues containsObject: @"fi"]);
-    
-    NSDictionary *userDict = (NSDictionary *)eventsArray.firstObject[@"user"];
-    NSString *eventUserKey = [userDict objectForKey:@"email"];
-
-    XCTAssertTrue([eventUserKey isEqualToString: theUser.email]);    
+    XCTAssertEqual([eventDictionary count], 2);
 }
 
 
@@ -135,33 +100,43 @@
     aUser.email = @"gus@anemail.com";
     aUser.updatedAt = [NSDate date];
     aUser.config = user.config;
-        
-    XCTAssertNotNil(aUser);
+    [[LDDataManager sharedManager] saveUser: aUser];
     
     LDUserModel *foundAgainUser = [[LDDataManager sharedManager] findUserWithkey: userKey];
     
     XCTAssertNotNil(foundAgainUser);
-    XCTAssertEqual(aUser.email, foundAgainUser.email);
+    XCTAssertEqualObjects(aUser.email, foundAgainUser.email);
 }
 
 -(void) testPurgeUsers {
-    NSDate *now = [NSDate date];
+    NSString *baseUserKey = @"gus";
+    NSString *baseUserEmail = @"gus@email.com";
     
     for(int index = 0; index < kUserCacheSize + 3; index++) {
         LDUserModel *aUser = [[LDUserModel alloc] init];
-        aUser.key = [NSString stringWithFormat: @"gus%d", index];
-        aUser.email = @"gus@anemail.com";
+        aUser.key = [NSString stringWithFormat: @"%@%d", baseUserKey, index];
+        aUser.email = [NSString stringWithFormat: @"%@%d", baseUserEmail, index];;
         
-        NSTimeInterval secondsInXHours = index * 60 * 60;
-        NSDate *dateInXHours = [now dateByAddingTimeInterval:secondsInXHours];
+        NSTimeInterval secondsInXHours = (index+1) * 60 * 60 * 24;
+        NSDate *dateInXHours = [[NSDate date] dateByAddingTimeInterval:secondsInXHours];
         aUser.updatedAt = dateInXHours;
-    
-        NSError *error;
+        
+        [[LDDataManager sharedManager] saveUser: aUser];
     }
     
-    NSString *userKey = @"gus0";
-
-    // TODO add test for removing users
+    XCTAssertEqual([[[LDDataManager sharedManager] retrieveUserDictionary] count],kUserCacheSize);
+    NSString *firstCreatedKey = [NSString stringWithFormat: @"%@%d", baseUserKey, 0];
+    LDUserModel *firstCreatedUser = [[LDDataManager sharedManager] findUserWithkey:firstCreatedKey];
+    XCTAssertNil(firstCreatedUser);
+    NSString *secondCreatedKey = [NSString stringWithFormat: @"%@%d", baseUserKey, 1];
+    LDUserModel *secondCreatedUser = [[LDDataManager sharedManager] findUserWithkey:secondCreatedKey];
+    XCTAssertNil(secondCreatedUser);
+    NSString *thirdCreatedKey = [NSString stringWithFormat: @"%@%d", baseUserKey, 2];
+    LDUserModel *thirdCreatedUser = [[LDDataManager sharedManager] findUserWithkey:thirdCreatedKey];
+    XCTAssertNil(thirdCreatedUser);
+    NSString *fourthCreatedKey = [NSString stringWithFormat: @"%@%d", baseUserKey, 3];
+    LDUserModel *fourthCreatedUser = [[LDDataManager sharedManager] findUserWithkey:fourthCreatedKey];
+    XCTAssertNotNil(fourthCreatedUser);
 }
 
 -(void)testCreateEventAfterCapacityReached{
@@ -172,13 +147,12 @@
     
     OCMStub([clientMock ldConfig]).andReturn(config);
     
-    [self.dataManagerMock createCustomEvent:@"aKey" withCustomValuesDictionary: @{@"carrot": @"cake"}];
-    [self.dataManagerMock createCustomEvent:@"aKey" withCustomValuesDictionary: @{@"carrot": @"cake"}];
-    [self.dataManagerMock createCustomEvent:@"aKey" withCustomValuesDictionary: @{@"carrot": @"cake"}];
-    [self.dataManagerMock createFeatureEvent: @"anotherKet" keyValue: YES defaultKeyValue: NO];
+    [[LDDataManager sharedManager] createCustomEvent:@"aKey" withCustomValuesDictionary: @{@"carrot": @"cake"}];
+    [[LDDataManager sharedManager] createCustomEvent:@"aKey" withCustomValuesDictionary: @{@"carrot": @"cake"}];
+    [[LDDataManager sharedManager] createCustomEvent:@"aKey" withCustomValuesDictionary: @{@"carrot": @"cake"}];
+    [[LDDataManager sharedManager] createFeatureEvent: @"anotherKet" keyValue: YES defaultKeyValue: NO];
     
-    
-    // TODO ADD TEST FOR checking if events are not created after capacity reached
+    XCTAssertEqual([[[LDDataManager sharedManager] retrieveEventDictionary] count],2);
 }
 
 @end

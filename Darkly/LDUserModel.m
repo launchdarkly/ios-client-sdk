@@ -42,10 +42,10 @@ static NSString * const kOsKey = @"os";
     self.avatar ? [dictionary setObject:self.avatar forKey: kAvatarKey] : nil;
     self.custom ? [dictionary setObject:self.custom forKey: kCustomKey] : nil;
     self.updatedAt ? [dictionary setObject:[formatter stringFromDate: self.updatedAt] forKey: kUpdatedAtKey] : nil;
-    self.config ? [dictionary setObject:self.config forKey: kConfigKey] : nil;
     self.anonymous ? [dictionary setObject:[NSNumber numberWithBool: self.anonymous ] forKey: kAnonymousKey] : nil;
     self.device ? [dictionary setObject:self.device forKey: kDeviceKey] : nil;
     self.os ? [dictionary setObject:self.os forKey: kOsKey] : nil;
+    self.config ? [dictionary setObject:[self.config dictionaryValue] forKey: kConfigKey] : nil;
     
     return dictionary;
 }
@@ -101,6 +101,12 @@ static NSString * const kOsKey = @"os";
         self.device = [dictionary objectForKey: kDeviceKey];
         self.os = [dictionary objectForKey: kOsKey];
         self.anonymous = [dictionary objectForKey: kAnonymousKey];
+        if (self.config) {
+            self.config = [[LDFlagConfigModel alloc] initWithDictionary:[dictionary objectForKey:kConfigKey]];
+        }
+        if (self.updatedAt) {
+            self.updatedAt = [dictionary objectForKey:kUpdatedAtKey];
+        }
     }
     return self;
 }

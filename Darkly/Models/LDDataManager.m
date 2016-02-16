@@ -30,9 +30,19 @@ int const kUserCacheSize = 5;
         NSDate *removalDate;
         for (id key in dictionary) {
             LDUserModel *currentUser = [dictionary objectForKey:key];
-            if (!removalKey || removalDate>currentUser.updatedAt) {
-                removalKey = currentUser.key;
-                removalDate = currentUser.updatedAt;
+            if (currentUser) {
+                if (removalKey) {
+                    NSComparisonResult result = [removalDate compare:currentUser.updatedAt];
+                    if (result==NSOrderedDescending) {
+                        removalKey = currentUser.key;
+                        removalDate = currentUser.updatedAt;
+                    }
+                } else {
+                    removalKey = currentUser.key;
+                    removalDate = currentUser.updatedAt;
+                }
+            } else {
+                [dictionary removeObjectForKey:removalKey];
             }
         }
         [dictionary removeObjectForKey:removalKey];
@@ -175,7 +185,7 @@ int const kUserCacheSize = 5;
     [self storeEventDictionary:eventDictionary];
 }
 
--(NSArray *)allEventsJsonStringArray {
+-(NSArray *)allEventsDictionaryArray {
     NSMutableDictionary *eventDictionary = [self retrieveEventDictionary];
     if (eventDictionary) {
         NSMutableArray *eventArray = [[NSMutableArray alloc] init];
@@ -190,7 +200,7 @@ int const kUserCacheSize = 5;
 }
 
 -(NSData*) allEventsJsonData {
-    NSArray *allEvents = [self allEventsJsonStringArray];
+    NSArray *allEvents = [self allEventsDictionaryArray];
     if (allEvents) {
         NSError *writeError = nil;
         NSData *jsonData = [NSJSONSerialization dataWithJSONObject:allEvents options:NSJSONWritingPrettyPrinted error:&writeError];

@@ -8,6 +8,7 @@
 
 #import "LDFlagConfigModel.h"
 #import "LDUtil.h"
+#import "LDFeatureFlagModel.h"
 #import <BlocksKit/BlocksKit.h>
 
 static NSString * const kFeaturesJsonDictionaryKey = @"featuresJsonDictionary";
@@ -34,9 +35,25 @@ static NSString * const kFeatureJsonValueName = @"value";
 - (id)initWithDictionary:(NSDictionary *)dictionary {
     if((self = [super init])) {
         //Process json that comes down from server
-        self.featuresJsonDictionary = [dictionary objectForKey: kFeaturesJsonDictionaryServerKey];
+        NSDictionary *featureJsonDictionary = [dictionary objectForKey:kFeaturesJsonDictionaryServerKey];
+        if (featureJsonDictionary) {
+            NSMutableDictionary *featureFlagDictionary = [[NSMutableDictionary alloc] init];
+            for (NSString *key in featureJsonDictionary) {
+                NSDictionary *featureFlagTempDictionary = [featureJsonDictionary objectForKey:key];
+                [featureFlagDictionary setObject:[[LDFeatureFlagModel alloc] initWithDictionary:featureFlagTempDictionary] forKey:key];
+            }
+            self.featuresJsonDictionary = featureFlagDictionary;
+        }
     }
     return self;
+}
+
+-(NSDictionary *)dictionaryValue{
+    NSMutableDictionary *dictionary = [[NSMutableDictionary alloc] init];
+    
+    self.featuresJsonDictionary ? [dictionary setObject:self.featuresJsonDictionary forKey: kFeaturesJsonDictionaryKey] : nil;
+    
+    return dictionary;
 }
 
 -(BOOL) isFlagOn: ( NSString * __nonnull )keyName {
