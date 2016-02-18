@@ -4,7 +4,6 @@
 
 #import "DarklyXCTestCase.h"
 #import "LDClient.h"
-#import "LDFeatureFlagModel.h"
 #import "LDDataManager.h"
 #import "LDUserModel.h"
 #import "LDFlagConfigModel.h"
