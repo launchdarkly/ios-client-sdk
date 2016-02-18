@@ -4,7 +4,6 @@
 
 #import <XCTest/XCTest.h>
 #import "LDFlagConfigModel.h"
-#import "LDFeatureFlagModel.h"
 
 
 @interface LDFlagConfigModelTest : XCTestCase
