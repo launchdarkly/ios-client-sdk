@@ -184,7 +184,7 @@ int const kUserCacheSize = 5;
 
 -(NSArray *)allEventsDictionaryArray {
     NSMutableDictionary *eventDictionary = [self retrieveEventDictionary];
-    if (eventDictionary) {
+    if (eventDictionary && [eventDictionary count]) {
         NSMutableArray *eventArray = [[NSMutableArray alloc] init];
         for (NSString *key in eventDictionary) {
             LDEventModel *currentEvent = [eventDictionary objectForKey:key];
@@ -198,7 +198,7 @@ int const kUserCacheSize = 5;
 
 -(NSData*) allEventsJsonData {
     NSArray *allEvents = [self allEventsDictionaryArray];
-    if (allEvents) {
+    if (allEvents && [allEvents count]) {
         NSError *writeError = nil;
         NSData *jsonData = [NSJSONSerialization dataWithJSONObject:allEvents options:NSJSONWritingPrettyPrinted error:&writeError];
         return jsonData;
