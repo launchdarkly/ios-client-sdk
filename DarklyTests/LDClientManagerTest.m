@@ -12,16 +12,16 @@
 #import "LDEventModel.h"
 
 @interface LDClientManagerTest : DarklyXCTestCase
-@property (nonatomic) NSData *jsonData;
 @property (nonatomic) id requestManagerMock;
 @property (nonatomic) id ldClientMock;
+@property (nonatomic) id dataManagerMock;
 @end
 
 
 @implementation LDClientManagerTest
-@synthesize jsonData;
 @synthesize requestManagerMock;
 @synthesize ldClientMock;
+@synthesize dataManagerMock;
 
 - (void)setUp {
     [super setUp];
@@ -38,8 +38,9 @@
     
     requestManagerMock = OCMClassMock([LDRequestManager class]);
     OCMStub(ClassMethod([requestManagerMock sharedInstance])).andReturn(requestManagerMock);
-    OCMStub([requestManagerMock performFeatureFlagRequest:[OCMArg isKindOfClass:[NSString class]]]);
-    OCMStub([requestManagerMock performEventRequest:[OCMArg any]]);
+    
+    dataManagerMock = OCMClassMock([LDDataManager class]);
+    OCMStub(ClassMethod([dataManagerMock sharedManager])).andReturn(dataManagerMock);
 }
 
 - (void)tearDown {
@@ -47,50 +48,62 @@
     [super tearDown];
     [ldClientMock stopMocking];
     [requestManagerMock stopMocking];
+    [dataManagerMock stopMocking];
 }
 
-- (void)testSyncWithServerForConfig {
-    // {"lastName":null, "firstName":null, "anonymous":false, "key":"jeff@test.com", "avatar":null,
-    //        "os":"80400", "ip":null, "custom":null, "config":null, "country":null, "email":null,
-    //    "device":"iPhone"}
-    NSString *encodedUserString = @"ewogICJrZXkiIDogImplZmZAdGVzdC5jb20iLAogICJjdXN0b20iIDogewoKICB9LAogICJ1cGRhdGVkQXQiIDogIjIwMTYtMDItMTQiLAogICJkZXZpY2UiIDogImlQaG9uZSIsCiAgIm9zIiA6ICI5LjIiCn0=";
-    
+- (void)testSyncWithServerForConfigWhenUserExists {
     LDClientManager *clientManager = [LDClientManager sharedInstance];
     [clientManager setOfflineEnabled:NO];
     
     [clientManager syncWithServerForConfig];
 
-    OCMVerify([requestManagerMock performFeatureFlagRequest:[OCMArg isEqual:encodedUserString]]);
+    OCMVerify([requestManagerMock performFeatureFlagRequest:[OCMArg isKindOfClass:[NSString class]]]);
 }
 
-- (void)testSyncWithServerForEvents {
+- (void)testDoNotSyncWithServerForConfigWhenUserDoesNotExists {
+    NSData *testData = nil;
     LDClientManager *clientManager = [LDClientManager sharedInstance];
     [clientManager setOfflineEnabled:NO];
     
-    OCMStub([self.dataManagerMock allEventsJsonData]).andReturn(jsonData);
-    
-    [clientManager syncWithServerForEvents];
-    
-    OCMVerify([requestManagerMock performFeatureFlagRequest:[OCMArg isEqual:jsonData]]);
-    
-}
-
-- (void)testSyncWithServerForConfigNotProcessedWhenOffline {
-    // {"lastName":null, "firstName":null, "anonymous":false, "key":"jeff@test.com", "avatar":null,
-    //        "os":"80400", "ip":null, "custom":null, "config":null, "country":null, "email":null,
-    //    "device":"iPhone"}
-    NSString *encodedUserString = @"eyJsYXN0TmFtZSI6bnVsbCwiZmlyc3ROYW1lIjpudWxsLCJhbm9ueW1vdXMiOmZhbHNlLCJrZXkiOiJqZWZmQHRlc3QuY29tIiwiYXZhdGFyIjpudWxsLCJvcyI6IjgwNDAwIiwiaXAiOm51bGwsImN1c3RvbSI6bnVsbCwiY29uZmlnIjpudWxsLCJjb3VudHJ5IjpudWxsLCJlbWFpbCI6bnVsbCwiZGV2aWNlIjoiaVBob25lIn0=";
-    
-    LDClientManager *clientManager = [LDClientManager sharedInstance];
-    [clientManager setOfflineEnabled:YES];
+    [[requestManagerMock reject] performEventRequest:[OCMArg isEqual:testData]];
     
     [clientManager syncWithServerForConfig];
     
     [requestManagerMock verify];
 }
 
+- (void)testSyncWithServerForEventsWhenEventsExist {
+    NSData *testData = [[NSData alloc] init];
+    LDClientManager *clientManager = [LDClientManager sharedInstance];
+    [clientManager setOfflineEnabled:NO];
+    
+    OCMStub([dataManagerMock allEventsJsonData]).andReturn(testData);
+    
+    [clientManager syncWithServerForEvents];
+    
+    OCMVerify([requestManagerMock performEventRequest:[OCMArg isEqual:testData]]);
+    
+}
+
+- (void)testDoNotSyncWithServerForEventsWhenEventsDoNotExist {
+    NSData *testData = nil;
+    LDClientManager *clientManager = [LDClientManager sharedInstance];
+    [clientManager setOfflineEnabled:NO];
+    
+    [[requestManagerMock reject] performEventRequest:[OCMArg isEqual:testData]];
+    
+    [clientManager syncWithServerForEvents];
+    
+    [requestManagerMock verify];
+    
+}
 
 - (void)testSyncWithServerForEventsNotProcessedWhenOffline {
+    NSData *testData = [[NSData alloc] init];
+    OCMStub([dataManagerMock allEventsJsonData]).andReturn(testData);
+    
+    [[requestManagerMock reject] performEventRequest:[OCMArg isEqual:testData]];
+    
     LDClientManager *clientManager = [LDClientManager sharedInstance];
     [clientManager setOfflineEnabled:YES];    
     [clientManager syncWithServerForEvents];
@@ -98,21 +111,38 @@
     [requestManagerMock verify];
 }
 
-- (void)testSyncWithServerForEventsWhenFlushCalled {
+- (void)testEventsExistPerformRequestWhenFlushCalled {
+    NSData *testData = [[NSData alloc] init];
+    OCMStub([dataManagerMock allEventsJsonData]).andReturn(testData);
+    
     LDClientManager *clientManager = [LDClientManager sharedInstance];
     [clientManager setOfflineEnabled:NO];
     [clientManager flushEvents];
     
-    OCMVerify([requestManagerMock performEventRequest:[OCMArg isEqual:jsonData]]);
+    OCMVerify([requestManagerMock performEventRequest:[OCMArg isEqual:testData]]);
+}
+
+- (void)testEventsDoNotExistDoNotPerformRequestWhenFlushCalled {
+    NSData *testData = nil;
+    OCMStub([dataManagerMock allEventsJsonData]).andReturn(testData);
     
+    [[requestManagerMock reject] performEventRequest:[OCMArg isEqual:testData]];
+    
+    LDClientManager *clientManager = [LDClientManager sharedInstance];
+    [clientManager setOfflineEnabled:NO];
+    [clientManager flushEvents];
+    
+    [requestManagerMock verify];
 }
 
 - (void)testSyncWithServerForEventsNotProcessedWhenOfflineWhenFlushCalled {
+    NSData *testData = [[NSData alloc] init];
+    OCMStub([dataManagerMock allEventsJsonData]).andReturn(testData);
+    
+    [[requestManagerMock reject] performEventRequest:[OCMArg isEqual:testData]];
+    
     LDClientManager *clientManager = [LDClientManager sharedInstance];
     [clientManager setOfflineEnabled:YES];
-    
-    [[requestManagerMock reject] performEventRequest:[OCMArg isKindOfClass:[NSData class]]];
-    
     [clientManager flushEvents];
     
     [requestManagerMock verify];
