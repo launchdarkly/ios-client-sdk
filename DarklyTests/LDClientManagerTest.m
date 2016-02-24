@@ -155,7 +155,7 @@
 - (void)testProcessedEventsSuccessWithProcessedEvents {
     int eventIntervalMillis = 10;
     LDEventModel *event = [[LDEventModel alloc] init];
-    [event featureEventWithKey:@"blah" keyValue:NO defaultKeyValue:NO userValue:[[LDClient sharedInstance] ldUser]];
+    [event initFeatureEventWithKey:@"blah" keyValue:NO defaultKeyValue:NO userValue:[[LDClient sharedInstance] ldUser]];
     
     NSData *data = [NSJSONSerialization dataWithJSONObject:@[[event dictionaryValue]] options:NSJSONWritingPrettyPrinted error:nil];
     
