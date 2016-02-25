@@ -9,9 +9,8 @@
 @class LDUserBuilder;
 
 
-@protocol ClientDelegate
+@protocol ClientDelegate <NSObject>
 @required
-@property (nonatomic, weak) id<ClientDelegate> delegate;
 -(void)userDidUpdate;
 @end
 
@@ -19,7 +18,7 @@
 
 @property(nonatomic, strong, readonly) LDUser *user;
 @property(nonatomic, strong, readonly) LDConfig *ldConfig;
-@property (nonatomic, assign) id delegate;
+@property (nonatomic, weak) id<ClientDelegate> delegate;
 
 + (id)sharedInstance;
 
