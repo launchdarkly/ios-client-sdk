@@ -31,7 +31,8 @@ static NSString * const kOsKey = @"os";
     NSMutableDictionary *dictionary = [[NSMutableDictionary alloc] init];
     
     NSDateFormatter *formatter = [[NSDateFormatter alloc] init];
-    [formatter setDateFormat:@"yyyy-MM-ddTHH.mm.ss"];
+    [formatter setDateFormat:@"yyyy-MM-dd'T'HH:mm:ss.SSS'Z'"];
+    [formatter setTimeZone:[NSTimeZone timeZoneWithAbbreviation:@"UTC"]];
     
     self.key ? [dictionary setObject:self.key forKey: kKeyKey] : nil;
     self.ip ? [dictionary setObject:self.ip forKey: kIpKey] : nil;
@@ -101,10 +102,8 @@ static NSString * const kOsKey = @"os";
         self.device = [dictionary objectForKey: kDeviceKey];
         self.os = [dictionary objectForKey: kOsKey];
         self.anonymous = [dictionary objectForKey: kAnonymousKey];
-        if (self.config) {
-            self.config = [[LDFlagConfigModel alloc] initWithDictionary:[dictionary objectForKey:kConfigKey]];
-        }
-        if (self.updatedAt) {
+        self.config = [[LDFlagConfigModel alloc] initWithDictionary:[dictionary objectForKey:kConfigKey]];
+        if ([dictionary objectForKey:kUpdatedAtKey]) {
             self.updatedAt = [dictionary objectForKey:kUpdatedAtKey];
         }
     }
