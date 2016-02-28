@@ -9,12 +9,14 @@
 #import <OCMock.h>
 #import "LDRequestManager.h"
 #import "LDDataManager.h"
+#import "LDPollingManager.h"
 #import "LDEventModel.h"
 
 @interface LDClientManagerTest : DarklyXCTestCase
 @property (nonatomic) id requestManagerMock;
 @property (nonatomic) id ldClientMock;
 @property (nonatomic) id dataManagerMock;
+@property (nonatomic) id pollingManagerMock;
 @end
 
 
@@ -22,12 +24,17 @@
 @synthesize requestManagerMock;
 @synthesize ldClientMock;
 @synthesize dataManagerMock;
+@synthesize pollingManagerMock;
 
 - (void)setUp {
     [super setUp];
-    LDUserBuilder *builder = [[LDUserBuilder alloc] init];
-    builder = [builder withKey:@"jeff@test.com"];
-    LDUserModel *user = [builder build];
+    LDUserBuilder *userBuilder = [[LDUserBuilder alloc] init];
+    userBuilder = [userBuilder withKey:@"jeff@test.com"];
+    LDUserModel *user = [userBuilder build];
+    
+    LDConfigBuilder *configBuilder = [[LDConfigBuilder alloc] init];
+    configBuilder = [configBuilder withFlushInterval:30];
+    LDConfig *config = [configBuilder build];
     
     LDEventModel *event = [[LDEventModel alloc] init];
     [event featureEventWithKey:@"blah" keyValue:NO defaultKeyValue:NO userValue:user];
@@ -35,12 +42,16 @@
     ldClientMock = OCMClassMock([LDClient class]);
     OCMStub(ClassMethod([ldClientMock sharedInstance])).andReturn(ldClientMock);
     OCMStub([ldClientMock ldUser]).andReturn(user);
+    OCMStub([ldClientMock ldConfig]).andReturn(config);
     
     requestManagerMock = OCMClassMock([LDRequestManager class]);
     OCMStub(ClassMethod([requestManagerMock sharedInstance])).andReturn(requestManagerMock);
     
     dataManagerMock = OCMClassMock([LDDataManager class]);
     OCMStub(ClassMethod([dataManagerMock sharedManager])).andReturn(dataManagerMock);
+    
+    pollingManagerMock = OCMClassMock([LDPollingManager class]);
+    OCMStub(ClassMethod([pollingManagerMock sharedInstance])).andReturn(pollingManagerMock);
 }
 
 - (void)tearDown {
@@ -49,6 +60,7 @@
     [ldClientMock stopMocking];
     [requestManagerMock stopMocking];
     [dataManagerMock stopMocking];
+    [pollingManagerMock stopMocking];
 }
 
 - (void)testSyncWithServerForConfigWhenUserExists {
@@ -111,40 +123,106 @@
     [requestManagerMock verify];
 }
 
-- (void)testEventsExistPerformRequestWhenFlushCalled {
-    NSData *testData = [[NSData alloc] init];
-    OCMStub([dataManagerMock allEventsJsonData]).andReturn(testData);
-    
+- (void)testStartPolling {
     LDClientManager *clientManager = [LDClientManager sharedInstance];
-    [clientManager setOfflineEnabled:NO];
-    [clientManager flushEvents];
+    [clientManager startPolling];
     
-    OCMVerify([requestManagerMock performEventRequest:[OCMArg isEqual:testData]]);
+    OCMVerify([pollingManagerMock startConfigPolling]);
+    OCMVerify([pollingManagerMock startEventPolling]);
 }
 
-- (void)testEventsDoNotExistDoNotPerformRequestWhenFlushCalled {
-    NSData *testData = nil;
-    OCMStub([dataManagerMock allEventsJsonData]).andReturn(testData);
-    
-    [[requestManagerMock reject] performEventRequest:[OCMArg isEqual:testData]];
-    
+- (void)testStopPolling {
     LDClientManager *clientManager = [LDClientManager sharedInstance];
-    [clientManager setOfflineEnabled:NO];
-    [clientManager flushEvents];
+    [clientManager stopPolling];
     
-    [requestManagerMock verify];
+    OCMVerify([pollingManagerMock stopConfigPolling]);
+    OCMVerify([pollingManagerMock stopEventPolling]);
 }
 
-- (void)testSyncWithServerForEventsNotProcessedWhenOfflineWhenFlushCalled {
-    NSData *testData = [[NSData alloc] init];
-    OCMStub([dataManagerMock allEventsJsonData]).andReturn(testData);
+- (void)testWillEnterBackground {
+    LDClientManager *clientManager = [LDClientManager sharedInstance];
+    [clientManager willEnterBackground];
     
-    [[requestManagerMock reject] performEventRequest:[OCMArg isEqual:testData]];
+    OCMVerify([pollingManagerMock suspendConfigPolling]);
+    OCMVerify([pollingManagerMock suspendEventPolling]);
+}
+
+- (void)testWillEnterForeground {
+    LDClientManager *clientManager = [LDClientManager sharedInstance];
+    [clientManager willEnterForeground];
+    
+    OCMVerify([pollingManagerMock resumeConfigPolling]);
+    OCMVerify([pollingManagerMock resumeEventPolling]);
+}
+
+- (void)testProcessedEventsSuccessWithProcessedEvents {
+    int eventIntervalMillis = 10;
+    LDEventModel *event = [[LDEventModel alloc] init];
+    [event featureEventWithKey:@"blah" keyValue:NO defaultKeyValue:NO userValue:[[LDClient sharedInstance] ldUser]];
+    
+    NSData *data = [NSJSONSerialization dataWithJSONObject:@[[event dictionaryValue]] options:NSJSONWritingPrettyPrinted error:nil];
     
     LDClientManager *clientManager = [LDClientManager sharedInstance];
-    [clientManager setOfflineEnabled:YES];
-    [clientManager flushEvents];
+    [clientManager processedEvents:YES jsonEventArray:data eventIntervalMillis:eventIntervalMillis];
     
-    [requestManagerMock verify];
+    OCMVerify([dataManagerMock deleteProcessedEvents:[OCMArg any]]);
 }
+
+- (void)testProcessedEventsSuccessWithoutProcessedEvents {
+    int eventIntervalMillis = 10;
+    
+    NSData *data = [NSJSONSerialization dataWithJSONObject:@[] options:NSJSONWritingPrettyPrinted error:nil];
+    
+    LDClientManager *clientManager = [LDClientManager sharedInstance];
+    [clientManager processedEvents:YES jsonEventArray:data eventIntervalMillis:eventIntervalMillis];
+    
+    [[dataManagerMock reject] deleteProcessedEvents:[OCMArg any]];
+    
+    [dataManagerMock verify];
+}
+
+- (void)testProcessedEventsFailure {
+    int eventIntervalMillis = 10;
+    
+    LDClientManager *clientManager = [LDClientManager sharedInstance];
+    [clientManager processedEvents:NO jsonEventArray:nil eventIntervalMillis:eventIntervalMillis];
+    
+    [[dataManagerMock reject] deleteProcessedEvents:[OCMArg any]];
+    
+    [dataManagerMock verify];
+}
+
+- (void)testProcessedConfigSuccessWithUserConfig {
+    int configIntervalMillis = 10;
+    
+    NSDictionary *testDictionary = @{@"key":@"value"};
+    
+    LDClientManager *clientManager = [LDClientManager sharedInstance];
+    [clientManager processedConfig:YES jsonConfigDictionary:testDictionary configIntervalMillis:configIntervalMillis];
+    
+    OCMVerify([dataManagerMock saveUser:[OCMArg any]]);
+}
+
+- (void)testProcessedConfigSuccessWithoutUserConfig {
+    int configIntervalMillis = 10;
+    
+    LDClientManager *clientManager = [LDClientManager sharedInstance];
+    [clientManager processedConfig:YES jsonConfigDictionary:nil configIntervalMillis:configIntervalMillis];
+    
+    [[dataManagerMock reject] saveUser:[OCMArg any]];
+    
+    [dataManagerMock verify];
+}
+
+- (void)testProcessedConfigFailure {
+    int configIntervalMillis = 10;
+    
+    LDClientManager *clientManager = [LDClientManager sharedInstance];
+    [clientManager processedConfig:NO jsonConfigDictionary:nil configIntervalMillis:configIntervalMillis];
+    
+    [[dataManagerMock reject] saveUser:[OCMArg any]];
+    
+    [dataManagerMock verify];
+}
+
 @end
