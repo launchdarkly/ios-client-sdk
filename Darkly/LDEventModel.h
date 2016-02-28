@@ -23,7 +23,7 @@
 -(nonnull id)initWithDictionary:(nonnull NSDictionary *)dictionary;
 -(nonnull NSDictionary *)dictionaryValue;
 
--(nonnull instancetype)featureEventWithKey:(nonnull NSString *)featureKey keyValue:(BOOL)keyValue defaultKeyValue:(BOOL)defaultKeyValue userValue:(nonnull LDUserModel *)userValue;
--(nonnull instancetype) customEventWithKey: (nonnull NSString *)featureKey
+-(nonnull instancetype)initFeatureEventWithKey:(nonnull NSString *)featureKey keyValue:(BOOL)keyValue defaultKeyValue:(BOOL)defaultKeyValue userValue:(nonnull LDUserModel *)userValue;
+-(nonnull instancetype)initCustomEventWithKey: (nonnull NSString *)featureKey
                          andDataDictionary: (nonnull NSDictionary *)customData userValue:(nonnull LDUserModel *)userValue;
 @end
