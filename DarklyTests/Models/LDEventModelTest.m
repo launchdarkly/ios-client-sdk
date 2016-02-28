@@ -22,7 +22,7 @@
 }
 
 - (void)testFeatureEventWithKeyCreatesEventWithDefaults {
-    LDEventModel *event = [[LDEventModel alloc] featureEventWithKey:@"red" keyValue:NO defaultKeyValue:NO userValue:self.user ];
+    LDEventModel *event = [[LDEventModel alloc] initFeatureEventWithKey:@"red" keyValue:NO defaultKeyValue:NO userValue:self.user ];
     
     XCTAssertEqual(event.key, @"red");
     XCTAssertEqual(event.kind, @"feature");
@@ -33,7 +33,7 @@
 - (void)testCustomEventWithKeyCreatesEventWithDefaults {
     NSDictionary *dictionary = @{@"red": @"is not blue"};
     
-    LDEventModel *event = [[LDEventModel alloc] customEventWithKey:@"red" andDataDictionary:dictionary userValue:self.user];
+    LDEventModel *event = [[LDEventModel alloc] initCustomEventWithKey:@"red" andDataDictionary:dictionary userValue:self.user];
                  
     XCTAssertEqual(event.key, @"red");
     XCTAssertEqual(event.kind, @"custom");

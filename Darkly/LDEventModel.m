@@ -64,27 +64,41 @@ static NSString * const kCustomEventName = @"custom";
     return self;
 }
 
--(instancetype)featureEventWithKey:(nonnull NSString *)featureKey keyValue:(BOOL)keyValue defaultKeyValue:(BOOL)defaultKeyValue userValue:(LDUserModel *)userValue {
-    self.key = featureKey;
-    self.creationDate = [@(floor([[NSDate date] timeIntervalSince1970]*1000)) longValue];
-    self.kind = kFeatureEventName;
-    self.featureKeyValue = keyValue;
-    self.isDefault = defaultKeyValue;
-    self.user = userValue;
+-(instancetype)initFeatureEventWithKey:(nonnull NSString *)featureKey keyValue:(BOOL)keyValue defaultKeyValue:(BOOL)defaultKeyValue userValue:(LDUserModel *)userValue {
+    if((self = [self init])) {
+        self.key = featureKey;
+        self.kind = kFeatureEventName;
+        self.featureKeyValue = keyValue;
+        self.isDefault = defaultKeyValue;
+        self.user = userValue;
+    }
     
     return self;
 }
 
--(instancetype) customEventWithKey: (NSString *)featureKey
+-(instancetype)initCustomEventWithKey: (NSString *)featureKey
                  andDataDictionary: (NSDictionary *)customData userValue:(LDUserModel *)userValue  {
-    self.key = featureKey;
-    self.creationDate = [@(floor([[NSDate date] timeIntervalSince1970]*1000)) longValue];
-    self.kind = kCustomEventName;
-    self.data = customData;
-    self.user = userValue;
+    if((self = [self init])) {
+        self.key = featureKey;
+        self.kind = kCustomEventName;
+        self.data = customData;
+        self.user = userValue;
+    }
     
     return self;
 }
+
+- (instancetype)init {
+    self = [super init];
+    
+    if(self != nil) {
+        // Need to set creationDate
+        self.creationDate = [@(floor([[NSDate date] timeIntervalSince1970]*1000)) longValue];
+    }
+    
+    return self;
+}
+
 
 -(NSDictionary *)dictionaryValue{
     NSMutableDictionary *dictionary = [[NSMutableDictionary alloc] init];

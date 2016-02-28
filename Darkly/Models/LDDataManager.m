@@ -134,7 +134,7 @@ int const kUserCacheSize = 5;
         DEBUG_LOG(@"Creating event for feature:%@ with value:%d and defaultValue:%d", featureKey, keyValue, defaultKeyValue);
         LDClient *client = [LDClient sharedInstance];
         LDUserModel *currentUser = client.ldUser;
-        LDEventModel *featureEvent = [[LDEventModel alloc] featureEventWithKey: featureKey keyValue:keyValue defaultKeyValue:defaultKeyValue userValue:currentUser];
+        LDEventModel *featureEvent = [[LDEventModel alloc] initFeatureEventWithKey: featureKey keyValue:keyValue defaultKeyValue:defaultKeyValue userValue:currentUser];
         
         if (!eventDictionary) {
             // No Dictionary exists so create
@@ -152,7 +152,7 @@ int const kUserCacheSize = 5;
         DEBUG_LOG(@"Creating event for custom key:%@ and value:%@", eventKey, customDict);
         LDClient *client = [LDClient sharedInstance];
         LDUserModel *currentUser = client.ldUser;
-        LDEventModel *customEvent = [[LDEventModel alloc] customEventWithKey: eventKey  andDataDictionary: customDict userValue:currentUser];
+        LDEventModel *customEvent = [[LDEventModel alloc] initCustomEventWithKey: eventKey  andDataDictionary: customDict userValue:currentUser];
         
         if (!eventDictionary) {
             // No Dictionary exists so create

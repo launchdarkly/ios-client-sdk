@@ -29,9 +29,6 @@
     builder = [builder withKey:@"jeff@test.com"];
     LDUserModel *user = [builder build];
     
-    LDEventModel *event = [[LDEventModel alloc] init];
-    [event featureEventWithKey:@"blah" keyValue:NO defaultKeyValue:NO userValue:user];
-    
     ldClientMock = OCMClassMock([LDClient class]);
     OCMStub(ClassMethod([ldClientMock sharedInstance])).andReturn(ldClientMock);
     OCMStub([ldClientMock ldUser]).andReturn(user);
