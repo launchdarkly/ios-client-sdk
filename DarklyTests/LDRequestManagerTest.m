@@ -5,7 +5,6 @@
 #import "DarklyXCTestCase.h"
 #import "LDRequestManager.h"
 #import "LDDataManager.h"
-
 #import <OCMock.h>
 
 @interface LDRequestManagerTest : DarklyXCTestCase
