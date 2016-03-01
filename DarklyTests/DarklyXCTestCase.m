@@ -4,11 +4,14 @@
 
 #import "DarklyXCTestCase.h"
 #import "LDDataManager.h"
+#import <OHPathHelpers.h>
+#import <OCMock.h>
 
 @implementation DarklyXCTestCase
 
 - (void)setUp {
     [super setUp];
+
     [[NSUserDefaults standardUserDefaults] removeObjectForKey:kUserDictionaryStorageKey];
     [[NSUserDefaults standardUserDefaults] removeObjectForKey:kEventDictionaryStorageKey];
 }
