@@ -106,7 +106,10 @@ int const kUserCacheSize = 5;
         NSError *error;
         LDUser *user = [MTLManagedObjectAdapter modelOfClass:[LDUser class] fromManagedObject:userMo error: &error];
         
-        NSLog(@"Error is %@", [error debugDescription]);
+        if (error) {
+            DEBUG_LOG(@"Error is %@", [error debugDescription]);
+        }
+        
         user.updatedAt = [NSDate date];
         return user;
     }
