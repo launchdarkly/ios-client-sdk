@@ -42,12 +42,12 @@ static NSString * const kEventRequestCompletedNotification = @"event_request_com
 -(void)performFeatureFlagRequest:(NSString *)encodedUser
 {
     DEBUG_LOGX(@"RequestManager syncing config to server");
-    NSMutableURLRequest *request = [self featuresWithEncodedUserRequest:encodedUser];
 
     if (!configRequestInProgress) {
         if (apiKey) {
             if (encodedUser) {
                 configRequestInProgress = YES;
+                NSMutableURLRequest *request = [self featuresWithEncodedUserRequest:encodedUser];
                 AFHTTPRequestOperation *op = [[AFHTTPRequestOperation alloc] initWithRequest:request];
                 op.responseSerializer = [AFJSONResponseSerializer serializer];
 
@@ -135,12 +135,12 @@ static NSString * const kEventRequestCompletedNotification = @"event_request_com
 -(void)performEventRequest:(NSData *)jsonEventArray
 {
     DEBUG_LOGX(@"RequestManager syncing events to server");
-    NSMutableURLRequest *request = [self eventsRequestWithJsonEvents:jsonEventArray];
     
     if (!eventRequestInProgress) {
         if (apiKey) {
             if (jsonEventArray) {
                 eventRequestInProgress = YES;
+                NSMutableURLRequest *request = [self eventsRequestWithJsonEvents:jsonEventArray];
                 AFHTTPRequestOperation *op = [[AFHTTPRequestOperation alloc] initWithRequest:request];
                 op.responseSerializer = [AFJSONResponseSerializer serializer];
 
