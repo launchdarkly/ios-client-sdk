@@ -16,7 +16,7 @@
 
 @implementation LDClient
 
-@synthesize user, ldConfig;
+@synthesize ldUser, ldConfig;
 
 +(LDClient *)sharedInstance
 {
@@ -48,7 +48,7 @@
                 if (!inputUserBuilder) {
                     inputUserBuilder = [[LDUserBuilder alloc] init];
                 }
-                user = [inputUserBuilder build];
+                ldUser = [inputUserBuilder build];
 
                 LDClientManager *clientManager = [LDClientManager sharedInstance];
                 [clientManager syncWithServerForConfig];
@@ -72,7 +72,7 @@
     DEBUG_LOGX(@"LDClient updateUser method called");
     if (clientStarted) {
         if (builder) {
-            user = [LDUserBuilder compareNewBuilder:builder withUser:user];
+            ldUser = [LDUserBuilder compareNewBuilder:builder withUser:ldUser];
             LDClientManager *clientManager = [LDClientManager sharedInstance];
             [clientManager syncWithServerForConfig];
             return YES;
@@ -89,7 +89,7 @@
 - (LDUserBuilder *)currentUserBuilder {
     DEBUG_LOGX(@"LDClient currentUserBuilder method called");
     if (clientStarted) {
-        return [LDUserBuilder retrieveCurrentBuilder:user];
+        return [LDUserBuilder retrieveCurrentBuilder:ldUser];
     } else {
         DEBUG_LOGX(@"LDClient not started yet!");
         return nil;
@@ -99,8 +99,8 @@
 - (BOOL)toggle:(NSString *)featureName default:(BOOL)defaultValue {
     DEBUG_LOG(@"LDClient toggle method called for feature=%@ and defaultValue=%d", featureName, defaultValue);
     if (clientStarted) {
-        BOOL flagExists = [user doesFlagExist: featureName];
-        BOOL flagValue = [user isFlagOn: featureName];
+        BOOL flagExists = [ldUser doesFlagExist: featureName];
+        BOOL flagValue = [ldUser isFlagOn: featureName];
         BOOL returnValue = (flagExists ? flagValue : defaultValue);
         
         [[LDDataManager sharedManager] createFeatureEvent: featureName keyValue:returnValue defaultKeyValue:defaultValue];
