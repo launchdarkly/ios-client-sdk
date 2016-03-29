@@ -5,11 +5,11 @@
 #import <XCTest/XCTest.h>
 #import "LDUtil.h"
 
-@interface DarklyUtilTest : XCTestCase
+@interface LDUtilTest : XCTestCase
 
 @end
 
-@implementation DarklyUtilTest
+@implementation LDUtilTest
 
 - (void)setUp {
     [super setUp];

@@ -42,12 +42,12 @@ static NSString * const kEventRequestCompletedNotification = @"event_request_com
 -(void)performFeatureFlagRequest:(NSString *)encodedUser
 {
     DEBUG_LOGX(@"RequestManager syncing config to server");
-    NSMutableURLRequest *request = [self featuresWithEncodedUserRequest:encodedUser];
 
     if (!configRequestInProgress) {
         if (apiKey) {
             if (encodedUser) {
                 configRequestInProgress = YES;
+                NSMutableURLRequest *request = [self featuresWithEncodedUserRequest:encodedUser];
                 AFHTTPRequestOperation *op = [[AFHTTPRequestOperation alloc] initWithRequest:request];
                 op.responseSerializer = [AFJSONResponseSerializer serializer];
 
@@ -135,12 +135,12 @@ static NSString * const kEventRequestCompletedNotification = @"event_request_com
 -(void)performEventRequest:(NSData *)jsonEventArray
 {
     DEBUG_LOGX(@"RequestManager syncing events to server");
-    NSMutableURLRequest *request = [self eventsRequestWithJsonEvents:jsonEventArray];
     
     if (!eventRequestInProgress) {
         if (apiKey) {
             if (jsonEventArray) {
                 eventRequestInProgress = YES;
+                NSMutableURLRequest *request = [self eventsRequestWithJsonEvents:jsonEventArray];
                 AFHTTPRequestOperation *op = [[AFHTTPRequestOperation alloc] initWithRequest:request];
                 op.responseSerializer = [AFJSONResponseSerializer serializer];
 
@@ -148,7 +148,9 @@ static NSString * const kEventRequestCompletedNotification = @"event_request_com
                     // Call delegate method
                     dispatch_async(dispatch_get_main_queue(),^{
                         eventRequestInProgress = NO;
-                        [delegate processedEvents:YES jsonEventArray:jsonEventArray eventIntervalMillis:kDefaultFlushInterval*kMillisInSecs];
+                        LDClient *client = [LDClient sharedInstance];
+                        LDConfig *config = client.ldConfig;
+                        [delegate processedEvents:YES jsonEventArray:jsonEventArray eventIntervalMillis:[config.flushInterval intValue] * kMillisInSecs];
                     });
                 } failure:^(AFHTTPRequestOperation *operation, NSError *error) {
                     // Call delegate method

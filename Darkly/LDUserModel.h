@@ -1,12 +1,16 @@
 //
-//  Copyright © 2015 Catamorphic Co. All rights reserved.
+//  LDUserModel.h
+//  Darkly
+//
+//  Created by Jeffrey Byrnes on 1/18/16.
+//  Copyright © 2016 Darkly. All rights reserved.
 //
 
-#import <Mantle/Mantle.h>
-#import <MTLManagedObjectAdapter/MTLManagedObjectAdapter.h>
-#import "LDFlagConfig.h"
+#import <Foundation/Foundation.h>
 
-@interface LDUser : MTLModel <MTLJSONSerializing, MTLManagedObjectSerializing>
+@class LDFlagConfigModel;
+
+@interface LDUserModel : NSObject <NSCoding>
 @property (nullable, nonatomic, strong, setter=key:) NSString *key;
 @property (nullable, nonatomic, strong) NSString *ip;
 @property (nullable, nonatomic, strong) NSString *country;
@@ -16,13 +20,16 @@
 @property (nullable, nonatomic, strong) NSString *avatar;
 @property (nullable, nonatomic, strong) NSDictionary *custom;
 @property (nullable, nonatomic, strong) NSDate *updatedAt;
-@property (nullable, nonatomic, strong) LDFlagConfig *config;
+@property (nullable, nonatomic, strong) LDFlagConfigModel *config;
 
 @property (nonatomic, assign) BOOL anonymous;
 @property (nullable, nonatomic, strong) NSString *device;
 @property (nullable, nonatomic, strong) NSString *os;
 
+-(nonnull id)initWithDictionary:(nonnull NSDictionary *)dictionary;
+-(nonnull NSString *) convertToJson;
+-(nonnull NSDictionary *)dictionaryValue;
+
 -(BOOL) isFlagOn: (nonnull NSString * )keyName;
 -(BOOL) doesFlagExist: (nonnull NSString *)keyName;
-
 @end
