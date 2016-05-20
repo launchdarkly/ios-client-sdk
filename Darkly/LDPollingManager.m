@@ -178,9 +178,7 @@ static id sharedInstance = nil;
 #if !OS_OBJECT_USE_OBJC
         dispatch_release(self.configurationTimer);
 #endif
-       if(self.configurationTimer != nil)
-            self.configurationTimer = nil;
-  
+       
         pollConfigState = POLL_STOPPED;
     }
 }
@@ -302,7 +300,7 @@ static id sharedInstance = nil;
 #if !OS_OBJECT_USE_OBJC
         dispatch_release(self.eventTimer);
 #endif
-        self.eventTimer = NULL;
+        
         pollEventState = POLL_STOPPED;
     }
 }
