@@ -172,13 +172,15 @@ static id sharedInstance = nil;
     if (self.configurationTimer) {
         dispatch_source_cancel(self.configurationTimer);
 
-        if (pollConfigState == POLL_PAUSED)
+        if (pollConfigState == POLL_PAUSED || pollConfigState == POLL_SUSPENDED)
             dispatch_resume(self.configurationTimer);
 
 #if !OS_OBJECT_USE_OBJC
         dispatch_release(self.configurationTimer);
 #endif
-       
+        if(self.configurationTimer != nil)
+            self.configurationTimer = nil;
+        
         pollConfigState = POLL_STOPPED;
     }
 }
@@ -292,7 +294,7 @@ static id sharedInstance = nil;
     if (self.eventTimer) {
         dispatch_source_cancel(self.eventTimer);
 
-        if (pollEventState == POLL_PAUSED)
+        if (pollEventState == POLL_PAUSED || pollEventState == POLL_SUSPENDED)
         {
             dispatch_resume(self.eventTimer);
         }
@@ -300,7 +302,7 @@ static id sharedInstance = nil;
 #if !OS_OBJECT_USE_OBJC
         dispatch_release(self.eventTimer);
 #endif
-        
+        self.eventTimer = NULL;
         pollEventState = POLL_STOPPED;
     }
 }
