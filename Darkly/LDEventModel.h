@@ -17,13 +17,13 @@
 @property (nullable, nonatomic, strong) NSDictionary *data;
 @property (nullable, nonatomic, strong) LDUserModel *user;
 
-@property (nonatomic, assign) BOOL featureKeyValue;
-@property (nonatomic, assign) BOOL isDefault;
+@property (nonatomic, assign) NSObject *featureKeyValue;
+@property (nonatomic, assign) NSObject *isDefault;
 
 -(nonnull id)initWithDictionary:(nonnull NSDictionary *)dictionary;
 -(nonnull NSDictionary *)dictionaryValue;
 
--(nonnull instancetype)initFeatureEventWithKey:(nonnull NSString *)featureKey keyValue:(BOOL)keyValue defaultKeyValue:(BOOL)defaultKeyValue userValue:(nonnull LDUserModel *)userValue;
+-(nonnull instancetype)initFeatureEventWithKey:(nonnull NSString *)featureKey keyValue:(NSObject*)keyValue defaultKeyValue:(NSObject*)defaultKeyValue userValue:(nonnull LDUserModel *)userValue;
 -(nonnull instancetype)initCustomEventWithKey: (nonnull NSString *)featureKey
                          andDataDictionary: (nonnull NSDictionary *)customData userValue:(nonnull LDUserModel *)userValue;
 @end

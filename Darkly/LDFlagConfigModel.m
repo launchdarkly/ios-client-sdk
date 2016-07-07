@@ -46,16 +46,16 @@ static NSString * const kFeatureJsonValueName = @"value";
     return dictionary;
 }
 
--(BOOL) isFlagOn: ( NSString * __nonnull )keyName {
-    __block BOOL result = NO;
+-(NSObject*) flagValue: ( NSString * __nonnull )keyName {
+    NSObject *result = nil;
     
     NSDictionary *featureJson = [self.featuresJsonDictionary objectForKey: keyName];
     
     if (featureJson) {
         id aValue = [featureJson valueForKey:kFeatureJsonValueName];
-        if (![aValue isKindOfClass:[NSNull class]] && ![aValue isKindOfClass:[NSString class]]) {
+        if (![aValue isKindOfClass:[NSNull class]]) {
             @try {
-                result = [aValue boolValue];
+                result = aValue;
             }
             @catch (NSException *exception) {
                 DEBUG_LOG(@"Error parsing value for key: %@", keyName);
