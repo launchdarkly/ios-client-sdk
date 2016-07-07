@@ -15,7 +15,7 @@
 - (nonnull id)initWithDictionary:(nonnull NSDictionary *)dictionary;
 -(nonnull NSDictionary *)dictionaryValue;
 
--(BOOL) isFlagOn: ( NSString * __nonnull )keyName;
+-(NSObject*) flagValue: ( NSString * __nonnull )keyName;
 -(BOOL) doesFlagExist: ( NSString * __nonnull )keyName;
 
 @end

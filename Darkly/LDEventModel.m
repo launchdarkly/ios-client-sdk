@@ -43,8 +43,8 @@ static NSString * const kCustomEventName = @"custom";
         self.kind = [decoder decodeObjectForKey:kKindKey];
         self.creationDate = [decoder decodeIntegerForKey:kCreationDateKey];
         self.data = [decoder decodeObjectForKey:kDataKey];
-        self.featureKeyValue = [decoder decodeBoolForKey:kFeatureKeyValueKey];
-        self.isDefault = [decoder decodeBoolForKey:kIsDefaultKey];
+        self.featureKeyValue = [decoder decodeObjectForKey:kFeatureKeyValueKey];
+        self.isDefault = [decoder decodeObjectForKey:kIsDefaultKey];
         self.user = [decoder decodeObjectForKey:kUserKey];
     }
     return self;
@@ -64,7 +64,7 @@ static NSString * const kCustomEventName = @"custom";
     return self;
 }
 
--(instancetype)initFeatureEventWithKey:(nonnull NSString *)featureKey keyValue:(BOOL)keyValue defaultKeyValue:(BOOL)defaultKeyValue userValue:(LDUserModel *)userValue {
+-(instancetype)initFeatureEventWithKey:(nonnull NSString *)featureKey keyValue:(NSObject*)keyValue defaultKeyValue:(NSObject*)defaultKeyValue userValue:(LDUserModel *)userValue {
     if((self = [self init])) {
         self.key = featureKey;
         self.kind = kFeatureEventName;

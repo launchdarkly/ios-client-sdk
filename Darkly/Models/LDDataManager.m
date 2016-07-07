@@ -128,7 +128,7 @@ int const kUserCacheSize = 5;
     return retrievalDictionary;
 }
 
--(void) createFeatureEvent: (NSString *)featureKey keyValue:(BOOL)keyValue defaultKeyValue:(BOOL)defaultKeyValue {
+-(void) createFeatureEvent: (NSString *)featureKey keyValue:(NSObject*)keyValue defaultKeyValue:(NSObject*)defaultKeyValue {
     NSMutableDictionary *eventDictionary = [self retrieveEventDictionary];
     if(![self isAtEventCapacity:eventDictionary]) {
         DEBUG_LOG(@"Creating event for feature:%@ with value:%d and defaultValue:%d", featureKey, keyValue, defaultKeyValue);
