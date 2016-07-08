@@ -2,7 +2,6 @@
 //  Copyright © 2015 Catamorphic Co. All rights reserved.
 //
 
-
 #import "LDConfig.h"
 #import "LDUtil.h"
 
@@ -17,6 +16,7 @@
     NSString *baseUrl;
     NSNumber *capacity;
     NSNumber *connectionTimeout;
+    LDUserModel * userModel;
     NSNumber *flushInterval;
     BOOL debugEnabled;
 }
@@ -28,6 +28,12 @@
 - (LDConfigBuilder *)withApiKey:(NSString *)inputApiKey
 {
     apiKey = inputApiKey;
+    return self;
+}
+
+- (LDConfigBuilder *)withUserModel:(LDUserModel *)inputUserModel
+{
+    userModel = inputUserModel;
     return self;
 }
 
@@ -72,12 +78,18 @@
         DEBUG_LOGX(@"LDConfigBuilder requires an ApiKey");
         return nil;
     }
+    
+    NSData *userData = [NSKeyedArchiver archivedDataWithRootObject:userModel];
+    NSString *base64UserString = [userData base64EncodedStringWithOptions:0];
+    
     if (baseUrl) {
-        DEBUG_LOG(@"LDConfigBuilder building LDConfig with baseUrl: %@", baseUrl);
-        [config setBaseUrl:baseUrl];
+        NSString *userAppendedURL = [NSString stringWithFormat:@"%@/%@",baseUrl,base64UserString];
+        DEBUG_LOG(@"LDConfigBuilder building LDConfig with baseUrl: %@", userAppendedURL);
+        [config setBaseUrl:userAppendedURL];
     } else {
-        DEBUG_LOG(@"LDConfigBuilder building LDConfig with default baseUrl: %@", kBaseUrl);
-        [config setBaseUrl:kBaseUrl];
+        NSString *userAppendedURL = [NSString stringWithFormat:@"%@/%@",kBaseUrl,base64UserString];
+        DEBUG_LOG(@"LDConfigBuilder building LDConfig with default baseUrl: %@", userAppendedURL);
+        [config setBaseUrl:userAppendedURL];
     }
     if (capacity) {
         DEBUG_LOG(@"LDConfigBuilder building LDConfig with capacity: %@", capacity);

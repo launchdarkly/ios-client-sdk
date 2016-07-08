@@ -2,6 +2,8 @@
 //  Copyright © 2015 Catamorphic Co. All rights reserved.
 //
 
+@class LDUserModel;
+
 @interface LDConfig : NSObject {
     
 }
@@ -27,6 +29,14 @@
  * @return the configuration builder
  */
 - (LDConfigBuilder *)withApiKey:(NSString *)apiKey;
+/**
+ * Provide a userModel to the configuration builder. This is the userModel
+ * retrieved from the Launch Darkly account settings. (Required)
+ *
+ * @param inputUserModel    the userModel for the configuration
+ * @return the configuration builder
+ */
+- (LDConfigBuilder *)withUserModel:(LDUserModel *)inputUserModel;
 /**
  * Provide the baseUrl of the Launch Darkly server. This will allow you
  * to switch between production and staging environments. (Optional)

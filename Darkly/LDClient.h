@@ -4,6 +4,7 @@
 
 #import "LDConfig.h"
 #import "LDUserBuilder.h"
+#import "LDUtil.h"
 
 @class LDConfig;
 @class LDUserBuilder;
@@ -39,7 +40,7 @@
  * @param default   Default value for feature flag
  * @return the feature flag value
  */
-- (BOOL)toggleBool:(NSString *)featureName defaultValue:(BOOL)defaultValue;
+- (BOOL)toggle:(NSString *)featureKey defaultValue:(BOOL)defaultValue;
 /**
  * Retrieve a feature flag value. If the configuration for this feature
  * flag is retrieved from the server that value is returned, otherwise
@@ -49,7 +50,7 @@
  * @param default   Default value for feature flag
  * @return the feature flag value
  */
-- (NSNumber*)toggleNumber:(NSString *)featureName defaultValue:(NSNumber*)defaultValue;
+- (NSNumber*)numberVariation:(NSString *)featureKey defaultValue:(NSNumber*)defaultValue;
 /**
  * Retrieve a feature flag value. If the configuration for this feature
  * flag is retrieved from the server that value is returned, otherwise
@@ -59,27 +60,7 @@
  * @param default   Default value for feature flag
  * @return the feature flag value
  */
-- (NSString*)toggleString:(NSString *)featureName defaultValue:(NSString*)defaultValue;
-/**
- * Retrieve a feature flag value. If the configuration for this feature
- * flag is retrieved from the server that value is returned, otherwise
- * the defaultValue is returned.
- *
- * @param featureName   Name of feature flag
- * @param default   Default value for feature flag
- * @return the feature flag value
- */
-- (NSArray*)toggleArray:(NSString *)featureName defaultValue:(NSArray*)defaultValue;
-/**
- * Retrieve a feature flag value. If the configuration for this feature
- * flag is retrieved from the server that value is returned, otherwise
- * the defaultValue is returned.
- *
- * @param featureName   Name of feature flag
- * @param default   Default value for feature flag
- * @return the feature flag value
- */
-- (NSDictionary*)toggleDictionary:(NSString *)featureName defaultValue:(NSDictionary*)defaultValue;
+- (NSString*)stringVariation:(NSString *)featureKey defaultValue:(NSString*)defaultValue;
 /**
  * Track a custom event.
  *
