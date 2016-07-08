@@ -96,17 +96,17 @@
     }
 }
 
-- (BOOL)toggleBool:(NSString *)featureName defaultValue:(BOOL)defaultValue{
-    DEBUG_LOG(@"LDClient toggle method called for feature=%@ and defaultValue=%d", featureName, defaultValue);
+- (BOOL)toggle:(NSString *)featureKey defaultValue:(BOOL)defaultValue{
+    DEBUG_LOG(@"LDClient toggle method called for feature=%@ and defaultValue=%d", featureKey, defaultValue);
     if (clientStarted) {
-        BOOL flagExists = [ldUser doesFlagExist: featureName];
-        NSObject *flagValue = [ldUser flagValue: featureName];
+        BOOL flagExists = [ldUser doesFlagExist: featureKey];
+        NSObject *flagValue = [ldUser flagValue: featureKey];
         BOOL returnValue = defaultValue;
         if ([flagValue isKindOfClass:[NSNumber class]] && flagExists) {
             returnValue = [(NSNumber *)flagValue boolValue];
         }
         
-        [[LDDataManager sharedManager] createFeatureEvent: featureName keyValue:[NSNumber numberWithBool:returnValue] defaultKeyValue:[NSNumber numberWithBool:defaultValue]];
+        [[LDDataManager sharedManager] createFeatureEvent: featureKey keyValue:[NSNumber numberWithBool:returnValue] defaultKeyValue:[NSNumber numberWithBool:defaultValue]];
         return returnValue;
     } else {
         DEBUG_LOGX(@"LDClient not started yet!");
@@ -114,17 +114,17 @@
     return defaultValue;
 }
 
-- (NSNumber*)toggleNumber:(NSString *)featureName defaultValue:(NSNumber*)defaultValue{
-    DEBUG_LOG(@"LDClient toggle method called for feature=%@ and defaultValue=%d", featureName, defaultValue);
+- (NSNumber*)numberVariation:(NSString *)featureKey defaultValue:(NSNumber*)defaultValue{
+    DEBUG_LOG(@"LDClient toggle method called for feature=%@ and defaultValue=%d", featureKey, defaultValue);
     if (clientStarted) {
-        BOOL flagExists = [ldUser doesFlagExist: featureName];
-        NSObject *flagValue = [ldUser flagValue: featureName];
+        BOOL flagExists = [ldUser doesFlagExist: featureKey];
+        NSObject *flagValue = [ldUser flagValue: featureKey];
         NSNumber *returnValue = defaultValue;
         if ([flagValue isKindOfClass:[NSNumber class]] && flagExists) {
             returnValue = (NSNumber *)flagValue;
         }
         
-        [[LDDataManager sharedManager] createFeatureEvent: featureName keyValue:returnValue defaultKeyValue:defaultValue];
+        [[LDDataManager sharedManager] createFeatureEvent: featureKey keyValue:returnValue defaultKeyValue:defaultValue];
         return returnValue;
     } else {
         DEBUG_LOGX(@"LDClient not started yet!");
@@ -132,17 +132,17 @@
     return defaultValue;
 }
 
-- (NSString*)toggleString:(NSString *)featureName defaultValue:(NSString*)defaultValue{
-    DEBUG_LOG(@"LDClient toggle method called for feature=%@ and defaultValue=%d", featureName, defaultValue);
+- (NSString*)stringVariation:(NSString *)featureKey defaultValue:(NSString*)defaultValue{
+    DEBUG_LOG(@"LDClient toggle method called for feature=%@ and defaultValue=%d", featureKey, defaultValue);
     if (clientStarted) {
-        BOOL flagExists = [ldUser doesFlagExist: featureName];
-        NSObject *flagValue = [ldUser flagValue: featureName];
+        BOOL flagExists = [ldUser doesFlagExist: featureKey];
+        NSObject *flagValue = [ldUser flagValue: featureKey];
         NSString *returnValue = defaultValue;
         if ([flagValue isKindOfClass:[NSString class]] && flagExists) {
             returnValue = (NSString *)flagValue;
         }
         
-        [[LDDataManager sharedManager] createFeatureEvent: featureName keyValue:returnValue defaultKeyValue:defaultValue];
+        [[LDDataManager sharedManager] createFeatureEvent: featureKey keyValue:returnValue defaultKeyValue:defaultValue];
         return returnValue;
     } else {
         DEBUG_LOGX(@"LDClient not started yet!");
