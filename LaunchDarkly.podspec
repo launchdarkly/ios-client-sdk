@@ -16,7 +16,7 @@ Pod::Spec.new do |s|
   #
 
   s.name         = "LaunchDarkly"
-  s.version      = "0.4.2"
+  s.version      = "1.0.0"
   s.summary      = "iOS SDK for LaunchDarkly"
 
   s.description  = <<-DESC
@@ -74,7 +74,7 @@ Pod::Spec.new do |s|
   #  Supports git, hg, bzr, svn and HTTP.
   #
 
-  s.source       = { :git => "https://github.com/launchdarkly/ios-client.git", :tag => "0.4.2" }
+  s.source       = { :git => "https://github.com/launchdarkly/ios-client.git", :tag => "1.0.0" }
 
 
 
