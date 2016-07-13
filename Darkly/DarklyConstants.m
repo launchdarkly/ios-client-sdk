@@ -4,8 +4,8 @@
 
 #import "DarklyConstants.h"
 
-NSString * const kClientVersion = @"0.4.2";
-NSString * const kBaseUrl = @"https://app.launchdarkly.com/msdk/eval/users";
+NSString * const kClientVersion = @"1.0.0";
+NSString * const kBaseUrl = @"https://app.launchdarkly.com";
 NSString * const kNoApiKeyExceptionName = @"NoApiKeyDefinedException";
 NSString * const kNoApiKeyExceptionReason = @"A valid ApiKey must be provided";
 NSString * const kNilConfigExceptionName = @"NilConfigException";
@@ -16,8 +16,6 @@ NSString * const kClientAlreadyStartedExceptionName = @"ClientAlreadyStartedExce
 NSString * const kClientAlreadyStartedExceptionReason = @"The LDClient can only be started once";
 NSString * const kIphone = @"iPhone";
 NSString * const kIpad = @"iPad";
-NSString * const kUserDictionaryStorageKey = @"ldUserModelDictionary";
-NSString * const kEventDictionaryStorageKey = @"ldEventModelDictionary";
 int const kCapacity = 100;
 int const kConnectionTimeout = 10;
 int const kDefaultFlushInterval = 30;
