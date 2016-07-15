@@ -62,6 +62,26 @@
  */
 - (NSString*)stringVariation:(NSString *)featureKey defaultValue:(NSString*)defaultValue;
 /**
+ * Retrieve a feature flag value. If the configuration for this feature
+ * flag is retrieved from the server that value is returned, otherwise
+ * the defaultValue is returned.
+ *
+ * @param featureName   Name of feature flag
+ * @param default   Default value for feature flag
+ * @return the feature flag value
+ */
+- (NSArray*)arrayVariation:(NSString *)featureKey defaultValue:(NSArray*)defaultValue;
+/**
+ * Retrieve a feature flag value. If the configuration for this feature
+ * flag is retrieved from the server that value is returned, otherwise
+ * the defaultValue is returned.
+ *
+ * @param featureName   Name of feature flag
+ * @param default   Default value for feature flag
+ * @return the feature flag value
+ */
+- (NSDictionary*)dictionaryVariation:(NSString *)featureKey defaultValue:(NSDictionary*)defaultValue;
+/**
  * Track a custom event.
  *
  * @param eventName Name of the custom event
