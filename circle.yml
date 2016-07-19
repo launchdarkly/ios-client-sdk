@@ -1,3 +1,7 @@
 machine:
+  pre:
+    - brew remove ruby20
+    - brew install ruby
+    - gem install bundler
   xcode:
     version: 7.3
