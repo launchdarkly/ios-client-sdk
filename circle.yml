@@ -5,3 +5,25 @@ machine:
     - gem install bundler
   xcode:
     version: 7.3
+
+checkout:
+  post:
+    - git submodule sync --recursive
+    - git submodule update --recursive --init
+    - bundle install
+    - bundle exec pod install --project-directory=./
+
+test:
+  override:
+    - set -o pipefail &&
+      xcodebuild
+        CODE_SIGNING_REQUIRED=NO
+        CODE_SIGN_IDENTITY=
+        PROVISIONING_PROFILE=
+        -sdk iphonesimulator
+        -destination 'platform=iOS Simulator,OS=9.3,name=iPhone 6'
+        -workspace ./Darkly.xcworkspace
+        -scheme "Darkly"
+        clean build test |
+      tee $CIRCLE_ARTIFACTS/xcode_raw.log |
+      xcpretty --color --report junit --output $CIRCLE_TEST_REPORTS/xcode/results.xml
