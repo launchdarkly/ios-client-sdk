@@ -9,6 +9,8 @@ machine:
 
 checkout:
   post:
+    - git submodule sync --recursive
+    - git submodule update --recursive --init
     - bundle install
     - bundle exec pod install --project-directory=./
 
@@ -21,7 +23,7 @@ test:
         PROVISIONING_PROFILE=
         -sdk iphonesimulator
         -destination 'platform=iOS Simulator,OS=9.3,name=iPhone 6'
-        -workspace Darkly.xcworkspace
+        -workspace ./Darkly.xcworkspace
         -scheme "Darkly"
         clean build test |
       tee $CIRCLE_ARTIFACTS/xcode_raw.log |
