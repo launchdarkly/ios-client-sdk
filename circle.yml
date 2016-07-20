@@ -1,4 +1,5 @@
 #inspired by: https://discuss.circleci.com/t/error-while-installing-cocoapods-1-0/4973/5
+#TODO: get xcpretty working for better test output
 machine:
   pre:
     - brew remove ruby20
@@ -9,8 +10,6 @@ machine:
 
 checkout:
   post:
-    - git submodule sync --recursive
-    - git submodule update --recursive --init
     - bundle install
     - bundle exec pod install --project-directory=./
 
@@ -25,5 +24,4 @@ test:
         -destination 'platform=iOS Simulator,OS=9.3,name=iPhone 6'
         -workspace ./Darkly.xcworkspace
         -scheme "Darkly"
-        clean build test |
-      tee $CIRCLE_ARTIFACTS/xcode_raw.log
+        clean build test | tee $CIRCLE_ARTIFACTS/xcode_raw.log
