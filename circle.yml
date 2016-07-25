@@ -11,7 +11,7 @@ machine:
 checkout:
   post:
     - bundle install
-    - bundle exec pod install --project-directory=./
+    - bundle exec pod update --project-directory=./
 
 test:
   override:
