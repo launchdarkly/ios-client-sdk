@@ -6,6 +6,7 @@
 
 NSString * const kClientVersion = @"0.4.2";
 NSString * const kBaseUrl = @"https://app.launchdarkly.com/msdk/eval/users";
+NSString * const kStreamUrl = @"https://stream.launchdarkly.com/mping";
 NSString * const kNoApiKeyExceptionName = @"NoApiKeyDefinedException";
 NSString * const kNoApiKeyExceptionReason = @"A valid ApiKey must be provided";
 NSString * const kNilConfigExceptionName = @"NilConfigException";

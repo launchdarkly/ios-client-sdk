@@ -61,7 +61,7 @@
     LDConfigBuilder *builder = [[LDConfigBuilder alloc] init];
     [builder withApiKey:testApiKey];
     [[LDClient sharedInstance] start:builder userBuilder:nil];
-    XCTAssertTrue([[LDClient sharedInstance] toggle:@"test" default:YES]);
+    XCTAssertTrue([[LDClient sharedInstance] toggle:@"test" defaultValue:YES]);
 }
 
 - (void)testUserPersisted {
@@ -74,7 +74,7 @@
     [userBuilder withEmail:@"my@email.com"];
     
     [[LDClient sharedInstance] start:builder userBuilder:userBuilder];
-    XCTAssertTrue([[LDClient sharedInstance] toggle:@"test" default:YES]);
+    XCTAssertTrue([[LDClient sharedInstance] toggle:@"test" defaultValue:YES]);
     
     LDUserBuilder *anotherUserBuilder = [[LDUserBuilder alloc] init];
     [anotherUserBuilder withKey:@"myKey"];
@@ -96,9 +96,9 @@
     [builder withApiKey:testApiKey];
     OCMStub([self.dataManagerMock createFeatureEvent:[OCMArg any] keyValue:[OCMArg any] defaultKeyValue:[OCMArg any]]);
     [[LDClient sharedInstance] start:builder userBuilder:nil];
-    [[LDClient sharedInstance] toggle:toggleName default:toggleDefaultValue];
+    [[LDClient sharedInstance] toggle:toggleName defaultValue:toggleDefaultValue];
     
-    OCMVerify([self.dataManagerMock createFeatureEvent:toggleName keyValue:toggleDefaultValue defaultKeyValue:toggleDefaultValue]);
+    OCMVerify([self.dataManagerMock createFeatureEvent:toggleName keyValue:[NSNumber numberWithBool:toggleDefaultValue] defaultKeyValue:[NSNumber numberWithBool:toggleDefaultValue]]);
     [self.dataManagerMock stopMocking];
 }
 

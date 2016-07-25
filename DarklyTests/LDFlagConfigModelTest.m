@@ -33,9 +33,9 @@
 -(void)testIsFlagOnForKey {
     LDFlagConfigModel *config = [[LDFlagConfigModel alloc] initWithDictionary: self.json];
     
-    XCTAssertTrue([config isFlagOn: @"isABawler"]);
-    XCTAssertFalse([config isFlagOn: @"isConnected"]);
-    XCTAssertFalse([config isFlagOn: @"devices.hasipad"]);
+    XCTAssertTrue([config flagValue: @"isABawler"]);
+    XCTAssertFalse([config flagValue: @"isConnected"]);
+    XCTAssertFalse([(NSNumber *)[config flagValue: @"devices.hasipad"] boolValue]);
 }
 
 - (void)testDoesFlagExist {
