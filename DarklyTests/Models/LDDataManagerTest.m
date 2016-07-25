@@ -50,8 +50,8 @@
     LDClient *client = [LDClient sharedInstance];
     LDUserModel * theUser = client.ldUser;
     
-    BOOL ipaduserFlag = [theUser isFlagOn: @"ipaduser"];
-    BOOL iosuserFlag = [theUser isFlagOn: @"iosuser"];
+    BOOL ipaduserFlag = [theUser flagValue: @"ipaduser"];
+    BOOL iosuserFlag = [(NSNumber *)[theUser flagValue: @"iosuser"] boolValue];
     
     XCTAssertFalse(iosuserFlag);
     XCTAssertTrue(ipaduserFlag);
@@ -147,7 +147,7 @@
     [[LDDataManager sharedManager] createCustomEvent:@"aKey" withCustomValuesDictionary: @{@"carrot": @"cake"}];
     [[LDDataManager sharedManager] createCustomEvent:@"aKey" withCustomValuesDictionary: @{@"carrot": @"cake"}];
     [[LDDataManager sharedManager] createCustomEvent:@"aKey" withCustomValuesDictionary: @{@"carrot": @"cake"}];
-    [[LDDataManager sharedManager] createFeatureEvent: @"anotherKet" keyValue: YES defaultKeyValue: NO];
+    [[LDDataManager sharedManager] createFeatureEvent: @"anotherKet" keyValue: [NSNumber numberWithBool:YES] defaultKeyValue: [NSNumber numberWithBool:NO]];
     
     XCTAssertEqual([[[LDDataManager sharedManager] retrieveEventDictionary] count],2);
 }

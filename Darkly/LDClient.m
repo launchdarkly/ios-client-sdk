@@ -8,6 +8,8 @@
 #import "LDUtil.h"
 #import "LDDataManager.h"
 #import "LDPollingManager.h"
+#import "EventSource.h"
+#import "DarklyConstants.h"
 
 @interface LDClient() {
     BOOL clientStarted;
@@ -53,6 +55,13 @@
                 LDClientManager *clientManager = [LDClientManager sharedInstance];
                 [clientManager syncWithServerForConfig];
                 [clientManager startPolling];
+                
+                EventSource *source = [EventSource eventSourceWithURL:[NSURL URLWithString:kStreamUrl] apiKey:ldConfig.apiKey];
+                [source onMessage:^(Event *e) {
+                    [clientManager syncWithServerForEvents];
+                }];
+                
+                
                 return YES;
             } else {
                 DEBUG_LOGX(@"LDClient client requires a config to start");
