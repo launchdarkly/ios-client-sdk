@@ -1,5 +1,3 @@
-#inspired by: https://discuss.circleci.com/t/error-while-installing-cocoapods-1-0/4973/5
-#TODO: get xcpretty working for better test output
 machine:
   pre:
     - brew remove ruby20
@@ -24,3 +22,4 @@ test:
         -workspace ./Darkly.xcworkspace
         -scheme "Darkly"
         clean build test | tee $CIRCLE_ARTIFACTS/xcode_raw.log
+        
