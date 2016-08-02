@@ -57,8 +57,8 @@ static NSString * const kCustomEventName = @"custom";
         self.kind = [dictionary objectForKey: kKindKey];
         NSNumber *creationDateValue = [dictionary objectForKey:kCreationDateKey];
         self.creationDate = [creationDateValue longValue];
-        self.featureKeyValue = [dictionary objectForKey: kFeatureKeyValueServerKey];
-        self.isDefault = [dictionary objectForKey: kIsDefaultServerKey];
+        self.featureKeyValue = [[dictionary objectForKey: kFeatureKeyValueServerKey] boolValue];
+        self.isDefault = [[dictionary objectForKey: kIsDefaultServerKey] boolValue];
         self.user = [[LDUserModel alloc] initWithDictionary:[dictionary objectForKey:kUserKey]];
     }
     return self;
