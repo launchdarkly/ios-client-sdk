@@ -50,7 +50,7 @@
     LDClient *client = [LDClient sharedInstance];
     LDUserModel * theUser = client.ldUser;
     
-    BOOL ipaduserFlag = [theUser flagValue: @"ipaduser"];
+    BOOL ipaduserFlag = [(NSNumber *)[theUser flagValue: @"ipaduser"] boolValue];
     BOOL iosuserFlag = [(NSNumber *)[theUser flagValue: @"iosuser"] boolValue];
     
     XCTAssertFalse(iosuserFlag);
@@ -139,7 +139,7 @@
 -(void)testCreateEventAfterCapacityReached{
     LDConfigBuilder *builder = [[LDConfigBuilder alloc] init];
     builder = [builder withCapacity: 2];
-    builder = [builder withApiKey: @"AnApiKey"];
+    builder = [builder withMobileKey: @"AMobileKey"];
     LDConfig *config = [builder build];
     
     OCMStub([clientMock ldConfig]).andReturn(config);

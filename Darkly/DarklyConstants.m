@@ -7,8 +7,8 @@
 NSString * const kClientVersion = @"0.4.2";
 NSString * const kBaseUrl = @"https://app.launchdarkly.com/msdk/eval/users";
 NSString * const kStreamUrl = @"https://stream.launchdarkly.com/mping";
-NSString * const kNoApiKeyExceptionName = @"NoApiKeyDefinedException";
-NSString * const kNoApiKeyExceptionReason = @"A valid ApiKey must be provided";
+NSString * const kNoMobileKeyExceptionName = @"NoMobileKeyDefinedException";
+NSString * const kNoMobileKeyExceptionReason = @"A valid MobileKey must be provided";
 NSString * const kNilConfigExceptionName = @"NilConfigException";
 NSString * const kNilConfigExceptionReason = @"A valid LDConfig must be provided";
 NSString * const kClientNotStartedExceptionName = @"ClientNotStartedException";

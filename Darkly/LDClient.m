@@ -98,8 +98,8 @@
     }
 }
 
-- (BOOL)toggle:(NSString *)featureKey defaultValue:(BOOL)defaultValue{
-    DEBUG_LOG(@"LDClient toggle method called for feature=%@ and defaultValue=%d", featureKey, defaultValue);
+- (BOOL)boolVariation:(NSString *)featureKey defaultValue:(BOOL)defaultValue{
+    DEBUG_LOG(@"LDClient boolVariation method called for feature=%@ and defaultValue=%d", featureKey, defaultValue);
     if (clientStarted) {
         BOOL flagExists = [ldUser doesFlagExist: featureKey];
         NSObject *flagValue = [ldUser flagValue: featureKey];
@@ -117,7 +117,7 @@
 }
 
 - (NSNumber*)numberVariation:(NSString *)featureKey defaultValue:(NSNumber*)defaultValue{
-    DEBUG_LOG(@"LDClient toggle method called for feature=%@ and defaultValue=%@", featureKey, defaultValue);
+    DEBUG_LOG(@"LDClient numberVariation method called for feature=%@ and defaultValue=%@", featureKey, defaultValue);
     if (clientStarted) {
         BOOL flagExists = [ldUser doesFlagExist: featureKey];
         NSObject *flagValue = [ldUser flagValue: featureKey];
@@ -135,7 +135,7 @@
 }
 
 - (NSString*)stringVariation:(NSString *)featureKey defaultValue:(NSString*)defaultValue{
-    DEBUG_LOG(@"LDClient toggle method called for feature=%@ and defaultValue=%@", featureKey, defaultValue);
+    DEBUG_LOG(@"LDClient stringVariation method called for feature=%@ and defaultValue=%@", featureKey, defaultValue);
     if (clientStarted) {
         BOOL flagExists = [ldUser doesFlagExist: featureKey];
         NSObject *flagValue = [ldUser flagValue: featureKey];
@@ -153,7 +153,7 @@
 }
 
 - (NSArray*)arrayVariation:(NSString *)featureKey defaultValue:(NSArray*)defaultValue{
-    DEBUG_LOG(@"LDClient toggle method called for feature=%@ and defaultValue=%@", featureKey, defaultValue);
+    DEBUG_LOG(@"LDClient arrayVariation method called for feature=%@ and defaultValue=%@", featureKey, defaultValue);
     if (clientStarted) {
         BOOL flagExists = [ldUser doesFlagExist: featureKey];
         NSObject *flagValue = [ldUser flagValue: featureKey];
@@ -171,7 +171,7 @@
 }
 
 - (NSDictionary*)dictionaryVariation:(NSString *)featureKey defaultValue:(NSDictionary*)defaultValue{
-    DEBUG_LOG(@"LDClient toggle method called for feature=%@ and defaultValue=%@", featureKey, defaultValue);
+    DEBUG_LOG(@"LDClient dictionaryVariation method called for feature=%@ and defaultValue=%@", featureKey, defaultValue);
     if (clientStarted) {
         BOOL flagExists = [ldUser doesFlagExist: featureKey];
         NSObject *flagValue = [ldUser flagValue: featureKey];

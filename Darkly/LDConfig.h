@@ -8,7 +8,7 @@
     
 }
 
-@property (nonatomic) NSString* apiKey;
+@property (nonatomic) NSString* mobileKey;
 @property (nonatomic) NSString* baseUrl;
 @property (nonatomic) NSNumber* capacity;
 @property (nonatomic) NSNumber* connectionTimeout;
@@ -22,13 +22,13 @@
 }
 
 /**
- * Provide an apiKey to the configuration builder. This is the apiKey
+ * Provide an mobileKey to the configuration builder. This is the mobileKey
  * retrieved from the Launch Darkly account settings. (Required)
  *
- * @param apiKey    the apiKey for the configuration
+ * @param mobileKey    the mobileKey for the configuration
  * @return the configuration builder
  */
-- (LDConfigBuilder *)withApiKey:(NSString *)apiKey;
+- (LDConfigBuilder *)withMobileKey:(NSString *)mobileKey;
 /**
  * Provide a userModel to the configuration builder. This is the userModel
  * retrieved from the Launch Darkly account settings. (Required)
