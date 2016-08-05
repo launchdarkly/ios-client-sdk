@@ -17,7 +17,7 @@
 
 @implementation LDClient
 
-@synthesize ldUser, ldConfig, eventSource;
+@synthesize ldUser, ldConfig;
 
 +(LDClient *)sharedInstance
 {
@@ -54,11 +54,6 @@
                 LDClientManager *clientManager = [LDClientManager sharedInstance];
                 [clientManager syncWithServerForConfig];
                 [clientManager startPolling];
-                
-                eventSource = [EventSource eventSourceWithURL:[NSURL URLWithString:kStreamUrl] apiKey:ldConfig.apiKey];
-                [eventSource onMessage:^(Event *e) {
-                    [clientManager syncWithServerForEvents];
-                }];
                 
                 return YES;
             } else {

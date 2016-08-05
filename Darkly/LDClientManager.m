@@ -14,7 +14,7 @@
 
 @implementation LDClientManager
 
-@synthesize offlineEnabled;
+@synthesize offlineEnabled, eventSource;
 
 NSString *const kLDUserUpdatedNotification = @"Darkly.UserUpdatedNotification";
 NSString *const kLDBackgroundFetchInitiated = @"Darkly.BackgroundFetchInitiated";
@@ -42,6 +42,11 @@ NSString *const kLDBackgroundFetchInitiated = @"Darkly.BackgroundFetchInitiated"
     DEBUG_LOG(@"ClientManager startPolling method called with configurationTimerPollingInterval=%f and eventTimerPollingInterval=%f", pollingMgr.configurationTimerPollingIntervalMillis, pollingMgr.eventTimerPollingIntervalMillis);
     [pollingMgr startConfigPolling];
     [pollingMgr startEventPolling];
+    
+    eventSource = [EventSource eventSourceWithURL:[NSURL URLWithString:kStreamUrl] apiKey:config.apiKey];
+    [eventSource onMessage:^(Event *e) {
+        [self syncWithServerForEvents];
+    }];
 }
 
 
@@ -51,6 +56,8 @@ NSString *const kLDBackgroundFetchInitiated = @"Darkly.BackgroundFetchInitiated"
     
     [pollingMgr stopConfigPolling];
     [pollingMgr stopEventPolling];
+    
+    [eventSource close];
     
     [self flushEvents];
 }
@@ -62,6 +69,8 @@ NSString *const kLDBackgroundFetchInitiated = @"Darkly.BackgroundFetchInitiated"
     [pollingMgr suspendConfigPolling];
     [pollingMgr suspendEventPolling];
     
+    [eventSource close];
+    
     [self flushEvents];
 }
 
@@ -70,6 +79,10 @@ NSString *const kLDBackgroundFetchInitiated = @"Darkly.BackgroundFetchInitiated"
     LDPollingManager *pollingMgr = [LDPollingManager sharedInstance];
     [pollingMgr resumeConfigPolling];
     [pollingMgr resumeEventPolling];
+    
+    [eventSource onMessage:^(Event *e) {
+        [self syncWithServerForEvents];
+    }];
 }
 
 -(void)syncWithServerForEvents {
