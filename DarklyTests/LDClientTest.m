@@ -61,7 +61,8 @@
     LDConfigBuilder *builder = [[LDConfigBuilder alloc] init];
     [builder withApiKey:testApiKey];
     [[LDClient sharedInstance] start:builder userBuilder:nil];
-    XCTAssertTrue([[LDClient sharedInstance] toggle:@"test" defaultValue:YES]);
+    BOOL boolValue = [[LDClient sharedInstance] toggle:@"test" defaultValue:YES];
+    XCTAssertTrue(boolValue);
 }
 
 - (void)testUserPersisted {
