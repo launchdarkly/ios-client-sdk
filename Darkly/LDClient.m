@@ -8,7 +8,6 @@
 #import "LDUtil.h"
 #import "LDDataManager.h"
 #import "LDPollingManager.h"
-#import "EventSource.h"
 #import "DarklyConstants.h"
 
 @interface LDClient() {
@@ -18,7 +17,7 @@
 
 @implementation LDClient
 
-@synthesize ldUser, ldConfig;
+@synthesize ldUser, ldConfig, eventSource;
 
 +(LDClient *)sharedInstance
 {
@@ -56,11 +55,10 @@
                 [clientManager syncWithServerForConfig];
                 [clientManager startPolling];
                 
-                EventSource *source = [EventSource eventSourceWithURL:[NSURL URLWithString:kStreamUrl] apiKey:ldConfig.apiKey];
-                [source onMessage:^(Event *e) {
+                eventSource = [EventSource eventSourceWithURL:[NSURL URLWithString:kStreamUrl] apiKey:ldConfig.apiKey];
+                [eventSource onMessage:^(Event *e) {
                     [clientManager syncWithServerForEvents];
                 }];
-                
                 
                 return YES;
             } else {
