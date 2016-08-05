@@ -46,23 +46,23 @@ typedef void (^EventSourceEventHandler)(Event *event);
 ///
 /// @param URL The URL of the EventSource.
 /// @param timeoutInterval The request timeout interval in seconds. See <tt>NSURLRequest</tt> for more details. Default: 5 minutes.
-+ (instancetype)eventSourceWithURL:(NSURL *)URL apiKey:(NSString *)apiKey;
++ (instancetype)eventSourceWithURL:(NSURL *)URL mobileKey:(NSString *)mobileKey;
 
 /// Returns a new instance of EventSource with the specified URL.
 ///
 /// @param URL The URL of the EventSource.
-+ (instancetype)eventSourceWithURL:(NSURL *)URL apiKey:(NSString *)apiKey timeoutInterval:(NSTimeInterval)timeoutInterval;
++ (instancetype)eventSourceWithURL:(NSURL *)URL mobileKey:(NSString *)mobileKey timeoutInterval:(NSTimeInterval)timeoutInterval;
 
 /// Creates a new instance of EventSource with the specified URL.
 ///
 /// @param URL The URL of the EventSource.
-- (instancetype)initWithURL:(NSURL *)URL apiKey:(NSString *)apiKey;
+- (instancetype)initWithURL:(NSURL *)URL mobileKey:(NSString *)mobileKey;
 
 /// Creates a new instance of EventSource with the specified URL.
 ///
 /// @param URL The URL of the EventSource.
 /// @param timeoutInterval The request timeout interval in seconds. See <tt>NSURLRequest</tt> for more details. Default: 5 minutes.
-- (instancetype)initWithURL:(NSURL *)URL apiKey:(NSString *)apiKey timeoutInterval:(NSTimeInterval)timeoutInterval;
+- (instancetype)initWithURL:(NSURL *)URL mobileKey:(NSString *)mobileKey timeoutInterval:(NSTimeInterval)timeoutInterval;
 
 /// Registers an event handler for the Message event.
 ///

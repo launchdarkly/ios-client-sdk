@@ -16,7 +16,7 @@
     
 }
 
-@property (nonatomic) NSString* apiKey;
+@property (nonatomic) NSString* mobileKey;
 @property (nonatomic) NSString* baseUrl;
 @property (nonatomic) NSTimeInterval connectionTimeout;
 @property (nonatomic, weak) id <RequestManagerDelegate> delegate;

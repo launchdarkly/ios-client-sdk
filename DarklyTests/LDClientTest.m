@@ -40,42 +40,43 @@
 }
 
 - (void)testStartWithValidConfig {
-    NSString *testApiKey = @"testApiKey";
+    NSString *testMobileKey = @"testMobileKey";
     LDConfigBuilder *builder = [[LDConfigBuilder alloc] init];
-    [builder withApiKey:testApiKey];
+    [builder withMobileKey:testMobileKey];
     LDClient *client = [LDClient sharedInstance];
     BOOL didStart = [client start:builder userBuilder:nil];
     XCTAssertTrue(didStart);
 }
 
 - (void)testStartWithValidConfigMultipleTimes {
-    NSString *testApiKey = @"testApiKey";
+    NSString *testMobileKey = @"testMobileKey";
     LDConfigBuilder *builder = [[LDConfigBuilder alloc] init];
-    [builder withApiKey:testApiKey];
+    [builder withMobileKey:testMobileKey];
     XCTAssertTrue([[LDClient sharedInstance] start:builder userBuilder:nil]);
     XCTAssertFalse([[LDClient sharedInstance] start:builder userBuilder:nil]);
 }
 
-- (void)testToggleWithStart {
-    NSString *testApiKey = @"testApiKey";
+- (void)testBoolVariationWithStart {
+    NSString *testMobileKey = @"testMobileKey";
     LDConfigBuilder *builder = [[LDConfigBuilder alloc] init];
-    [builder withApiKey:testApiKey];
+    [builder withMobileKey:testMobileKey];
     [[LDClient sharedInstance] start:builder userBuilder:nil];
-    BOOL boolValue = [[LDClient sharedInstance] toggle:@"test" defaultValue:YES];
+    BOOL boolValue = [[LDClient sharedInstance] boolVariation:@"test" defaultValue:YES];
     XCTAssertTrue(boolValue);
 }
 
 - (void)testUserPersisted {
-    NSString *testApiKey = @"testApiKey";
+    NSString *testMobileKey = @"testMobileKey";
     LDConfigBuilder *builder = [[LDConfigBuilder alloc] init];
-    [builder withApiKey:testApiKey];
+    [builder withMobileKey:testMobileKey];
     
     LDUserBuilder *userBuilder = [[LDUserBuilder alloc] init];
     [userBuilder withKey:@"myKey"];
     [userBuilder withEmail:@"my@email.com"];
     
     [[LDClient sharedInstance] start:builder userBuilder:userBuilder];
-    XCTAssertTrue([[LDClient sharedInstance] toggle:@"test" defaultValue:YES]);
+    BOOL toggleValue = [[LDClient sharedInstance] boolVariation:@"test" defaultValue:YES];
+    XCTAssertTrue(toggleValue);
     
     LDUserBuilder *anotherUserBuilder = [[LDUserBuilder alloc] init];
     [anotherUserBuilder withKey:@"myKey"];
@@ -92,12 +93,12 @@
 -(void)testToggleCreatesEventWithCorrectArguments {
     NSString *toggleName = @"test";
     BOOL toggleDefaultValue = YES;
-    NSString *testApiKey = @"testApiKey";
+    NSString *testMobileKey = @"testMobileKey";
     LDConfigBuilder *builder = [[LDConfigBuilder alloc] init];
-    [builder withApiKey:testApiKey];
+    [builder withMobileKey:testMobileKey];
     OCMStub([self.dataManagerMock createFeatureEvent:[OCMArg any] keyValue:[OCMArg any] defaultKeyValue:[OCMArg any]]);
     [[LDClient sharedInstance] start:builder userBuilder:nil];
-    [[LDClient sharedInstance] toggle:toggleName defaultValue:toggleDefaultValue];
+    [[LDClient sharedInstance] boolVariation:toggleName defaultValue:toggleDefaultValue];
     
     OCMVerify([self.dataManagerMock createFeatureEvent:toggleName keyValue:[NSNumber numberWithBool:toggleDefaultValue] defaultKeyValue:[NSNumber numberWithBool:toggleDefaultValue]]);
     [self.dataManagerMock stopMocking];
@@ -109,9 +110,9 @@
 
 - (void)testTrackWithStart {
     NSDictionary *customData = @{@"key": @"value"};
-    NSString *testApiKey = @"testApiKey";
+    NSString *testMobileKey = @"testMobileKey";
     LDConfigBuilder *builder = [[LDConfigBuilder alloc] init];
-    [builder withApiKey:testApiKey];
+    [builder withMobileKey:testMobileKey];
     [[LDClient sharedInstance] start:builder userBuilder:nil];
     
     
@@ -129,9 +130,9 @@
 }
 
 - (void)testOfflineWithStart {
-    NSString *testApiKey = @"testApiKey";
+    NSString *testMobileKey = @"testMobileKey";
     LDConfigBuilder *builder = [[LDConfigBuilder alloc] init];
-    [builder withApiKey:testApiKey];
+    [builder withMobileKey:testMobileKey];
     [[LDClient sharedInstance] start:builder userBuilder:nil];
     XCTAssertTrue([[LDClient sharedInstance] offline]);
 }
@@ -142,9 +143,9 @@
 }
 
 - (void)testOnlineWithStart {
-    NSString *testApiKey = @"testApiKey";
+    NSString *testMobileKey = @"testMobileKey";
     LDConfigBuilder *builder = [[LDConfigBuilder alloc] init];
-    [builder withApiKey:testApiKey];
+    [builder withMobileKey:testMobileKey];
     [[LDClient sharedInstance] start:builder userBuilder:nil];
     XCTAssertTrue([[LDClient sharedInstance] online]);
 }
@@ -154,9 +155,9 @@
 }
 
 - (void)testFlushWithStart {
-    NSString *testApiKey = @"testApiKey";
+    NSString *testMobileKey = @"testMobileKey";
     LDConfigBuilder *builder = [[LDConfigBuilder alloc] init];
-    [builder withApiKey:testApiKey];
+    [builder withMobileKey:testMobileKey];
     [[LDClient sharedInstance] start:builder userBuilder:nil];
     XCTAssertTrue([[LDClient sharedInstance] flush]);
 }
@@ -166,9 +167,9 @@
 }
 
 -(void)testUpdateUserWithStart {
-    NSString *testApiKey = @"testApiKey";
+    NSString *testMobileKey = @"testMobileKey";
     LDConfigBuilder *configBuilder = [[LDConfigBuilder alloc] init];
-    [configBuilder withApiKey:testApiKey];
+    [configBuilder withMobileKey:testMobileKey];
     LDUserBuilder *userBuilder = [[LDUserBuilder alloc] init];
     
     LDClient *ldClient = [LDClient sharedInstance];
@@ -182,9 +183,9 @@
 }
 
 -(void)testCurrentUserBuilderWithStart {
-    NSString *testApiKey = @"testApiKey";
+    NSString *testMobileKey = @"testMobileKey";
     LDConfigBuilder *configBuilder = [[LDConfigBuilder alloc] init];
-    [configBuilder withApiKey:testApiKey];
+    [configBuilder withMobileKey:testMobileKey];
     LDUserBuilder *userBuilder = [[LDUserBuilder alloc] init];
     
     LDClient *ldClient = [LDClient sharedInstance];

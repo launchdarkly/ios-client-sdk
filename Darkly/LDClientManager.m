@@ -43,7 +43,7 @@ NSString *const kLDBackgroundFetchInitiated = @"Darkly.BackgroundFetchInitiated"
     [pollingMgr startConfigPolling];
     [pollingMgr startEventPolling];
     
-    eventSource = [EventSource eventSourceWithURL:[NSURL URLWithString:kStreamUrl] apiKey:config.apiKey];
+    eventSource = [EventSource eventSourceWithURL:[NSURL URLWithString:kStreamUrl] mobileKey:config.mobileKey];
     [eventSource onMessage:^(Event *e) {
         [self syncWithServerForEvents];
     }];

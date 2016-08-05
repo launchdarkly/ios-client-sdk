@@ -40,7 +40,7 @@
  * @param default   Default value for feature flag
  * @return the feature flag value
  */
-- (BOOL)toggle:(NSString *)featureKey defaultValue:(BOOL)defaultValue;
+- (BOOL)boolVariation:(NSString *)featureKey defaultValue:(BOOL)defaultValue;
 /**
  * Retrieve a feature flag value. If the configuration for this feature
  * flag is retrieved from the server that value is returned, otherwise

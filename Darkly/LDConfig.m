@@ -7,12 +7,12 @@
 
 @implementation LDConfig
 
-@synthesize apiKey, baseUrl, capacity, connectionTimeout, flushInterval, debugEnabled;
+@synthesize mobileKey, baseUrl, capacity, connectionTimeout, flushInterval, debugEnabled;
 
 @end
 
 @interface LDConfigBuilder() {
-    NSString *apiKey;
+    NSString *mobileKey;
     NSString *baseUrl;
     NSNumber *capacity;
     NSNumber *connectionTimeout;
@@ -25,9 +25,9 @@
 
 @implementation LDConfigBuilder
 
-- (LDConfigBuilder *)withApiKey:(NSString *)inputApiKey
+- (LDConfigBuilder *)withMobileKey:(NSString *)inputMobileKey
 {
-    apiKey = inputApiKey;
+    mobileKey = inputMobileKey;
     return self;
 }
 
@@ -71,11 +71,11 @@
 {
     DEBUG_LOGX(@"LDConfigBuilder build method called");
     LDConfig *config = [[LDConfig alloc] init];
-    if (apiKey) {
-        DEBUG_LOG(@"LDConfigBuilder building LDConfig with apiKey: %@", apiKey);
-        [config setApiKey:apiKey];
+    if (mobileKey) {
+        DEBUG_LOG(@"LDConfigBuilder building LDConfig with mobileKey: %@", mobileKey);
+        [config setMobileKey:mobileKey];
     } else {
-        DEBUG_LOGX(@"LDConfigBuilder requires an ApiKey");
+        DEBUG_LOGX(@"LDConfigBuilder requires an MobileKey");
         return nil;
     }
     
