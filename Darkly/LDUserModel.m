@@ -101,7 +101,7 @@ static NSString * const kOsKey = @"os";
         self.custom = [dictionary objectForKey: kCustomKey];
         self.device = [dictionary objectForKey: kDeviceKey];
         self.os = [dictionary objectForKey: kOsKey];
-        self.anonymous = [dictionary objectForKey: kAnonymousKey];
+        self.anonymous = [[dictionary objectForKey: kAnonymousKey] boolValue];
         self.config = [[LDFlagConfigModel alloc] initWithDictionary:[dictionary objectForKey:kConfigKey]];
         if ([dictionary objectForKey:kUpdatedAtKey]) {
             self.updatedAt = [dictionary objectForKey:kUpdatedAtKey];

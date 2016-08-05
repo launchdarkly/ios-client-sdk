@@ -31,8 +31,8 @@ static NSString * const kCustomEventName = @"custom";
     [encoder encodeObject:self.kind forKey:kKindKey];
     [encoder encodeInteger:self.creationDate forKey:kCreationDateKey];
     [encoder encodeObject:self.data forKey:kDataKey];
-    [encoder encodeBool:self.featureKeyValue forKey:kFeatureKeyValueKey];
-    [encoder encodeBool:self.isDefault forKey:kIsDefaultKey];
+    [encoder encodeBool:[self.featureKeyValue.mutableCopy boolValue] forKey:kFeatureKeyValueKey];
+    [encoder encodeBool:[self.isDefault.mutableCopy boolValue] forKey:kIsDefaultKey];
     [encoder encodeObject:self.user forKey:kUserKey];
 }
 
@@ -107,8 +107,8 @@ static NSString * const kCustomEventName = @"custom";
     self.kind ? [dictionary setObject:self.kind forKey: kKindKey] : nil;
     self.creationDate ? [dictionary setObject:[NSNumber numberWithInteger: self.creationDate] forKey: kCreationDateKey] : nil;
     self.data ? [dictionary setObject:self.data forKey: kDataKey] : nil;
-    self.featureKeyValue ? [dictionary setObject:[NSNumber numberWithBool: self.featureKeyValue] forKey: kFeatureKeyValueKey] : nil;
-    self.isDefault ? [dictionary setObject:[NSNumber numberWithBool: self.isDefault] forKey: kIsDefaultKey] : nil;
+    self.featureKeyValue ? [dictionary setObject:[NSNumber numberWithBool: [self.featureKeyValue.mutableCopy boolValue]] forKey: kFeatureKeyValueKey] : nil;
+    self.isDefault ? [dictionary setObject:[NSNumber numberWithBool: [self.isDefault.mutableCopy boolValue]] forKey: kIsDefaultKey] : nil;
     self.user ? [dictionary setObject:[self.user dictionaryValue] forKey: kUserKey] : nil;
     
     return dictionary;

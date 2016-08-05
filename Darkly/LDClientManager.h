@@ -5,6 +5,7 @@
 
 #import "LDRequestManager.h"
 #import <UIKit/UIKit.h>
+#import "EventSource.h"
 
 extern NSString *const kLDUserUpdatedNotification;
 extern NSString *const kLDBackgroundFetchInitiated;
@@ -13,6 +14,7 @@ extern NSString *const kLDBackgroundFetchInitiated;
 }
 
 @property (nonatomic) BOOL offlineEnabled;
+@property(nonatomic, strong, readonly) EventSource *eventSource;
 
 +(LDClientManager *)sharedInstance;
 

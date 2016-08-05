@@ -5,7 +5,6 @@
 #import "LDConfig.h"
 #import "LDUserBuilder.h"
 #import "LDUtil.h"
-#import "EventSource.h"
 
 @class LDConfig;
 @class LDUserBuilder;
@@ -20,7 +19,6 @@
 
 @property(nonatomic, strong, readonly) LDUserModel *ldUser;
 @property(nonatomic, strong, readonly) LDConfig *ldConfig;
-@property(nonatomic, strong, readonly) EventSource *eventSource;
 @property (nonatomic, weak) id<ClientDelegate> delegate;
 
 + (id)sharedInstance;

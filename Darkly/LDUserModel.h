@@ -30,10 +30,10 @@
 -(nonnull NSString *) convertToJson;
 -(nonnull NSDictionary *)dictionaryValue;
 
--(NSObject *) flagValue: ( NSString * __nonnull )keyName;
+-(NSObject * _Nullable) flagValue: ( NSString * __nonnull )keyName;
 -(BOOL) doesFlagExist: (nonnull NSString *)keyName;
 
-- (void)encodeWithCoder:(NSCoder *)aCoder;
-- (id)initWithCoder:(NSCoder *)aDecoder;
+- (void)encodeWithCoder:(NSCoder * _Nullable)aCoder;
+- (id _Nullable)initWithCoder:(NSCoder * _Nullable)aDecoder;
 
 @end
