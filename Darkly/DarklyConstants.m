@@ -5,7 +5,7 @@
 #import "DarklyConstants.h"
 
 NSString * const kClientVersion = @"0.4.2";
-NSString * const kBaseUrl = @"https://app.launchdarkly.com/msdk/eval/users";
+NSString * const kBaseUrl = @"https://mobile.launchdarkly.com";
 NSString * const kStreamUrl = @"https://stream.launchdarkly.com/mping";
 NSString * const kNoMobileKeyExceptionName = @"NoMobileKeyDefinedException";
 NSString * const kNoMobileKeyExceptionReason = @"A valid MobileKey must be provided";
