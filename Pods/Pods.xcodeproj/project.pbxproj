@@ -57,7 +57,6 @@
 		620D1C1787D9BC05B0E96C1EA18ECBD3 /* Compatibility.h in Headers */ = {isa = PBXBuildFile; fileRef = 35C6A9BF1D55D5E95BF0A3482E63FBAB /* Compatibility.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		651F3096B56BFF131C5F956001D7BAAB /* OCMArg.m in Sources */ = {isa = PBXBuildFile; fileRef = 9E062498420D0F5862142F0546416DFD /* OCMArg.m */; settings = {COMPILER_FLAGS = "-fno-objc-arc"; }; };
 		672FE514B7C1EB583AF6CEB2538025A7 /* OCMBoxedReturnValueProvider.m in Sources */ = {isa = PBXBuildFile; fileRef = E24452195A4BF326B674B4AE38C57AEE /* OCMBoxedReturnValueProvider.m */; settings = {COMPILER_FLAGS = "-fno-objc-arc"; }; };
-		6983F2B41D5BD64600F8AD10 /* EventSource.h in Sources */ = {isa = PBXBuildFile; fileRef = C8EF33964F847E2677878A931F6B9DB5 /* EventSource.h */; };
 		6983F2B51D5BD64600F8AD10 /* EventSource.m in Sources */ = {isa = PBXBuildFile; fileRef = 3D211F2A0C32C394FCA23C03869A9581 /* EventSource.m */; };
 		6CC4B79C1FEE1E7B3F2860ADA479D381 /* AFURLSessionManager.m in Sources */ = {isa = PBXBuildFile; fileRef = D9BE195BD10EA89CACEA01069FE4378D /* AFURLSessionManager.m */; };
 		6D2AD1DFA8F27BA0EBB3365A5AF7AC1B /* OCMExpectationRecorder.m in Sources */ = {isa = PBXBuildFile; fileRef = 865682DEBB725B864656282EE11ACBD9 /* OCMExpectationRecorder.m */; settings = {COMPILER_FLAGS = "-fno-objc-arc"; }; };
@@ -1061,7 +1060,6 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				6983F2B41D5BD64600F8AD10 /* EventSource.h in Sources */,
 				6983F2B51D5BD64600F8AD10 /* EventSource.m in Sources */,
 				876C2EF5FE318346CDCB4BFE25A9D5B2 /* AFHTTPRequestOperation.m in Sources */,
 				472A6BFCC6207D98F787649BDF44A1BE /* AFHTTPRequestOperationManager.m in Sources */,
