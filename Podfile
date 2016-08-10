@@ -3,6 +3,7 @@
 
 target 'Darkly' do
   pod 'AFNetworking', '~> 2.5'
+  pod 'EventSource', :git => 'https://github.com/launchdarkly/ios-eventsource.git'
 end
 
 target 'DarklyTests' do

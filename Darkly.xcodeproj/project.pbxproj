@@ -26,7 +26,6 @@
 		3AB1B71A1B89036A0006E970 /* LDRequestManagerTest.m in Sources */ = {isa = PBXBuildFile; fileRef = 3AB1B7191B89036A0006E970 /* LDRequestManagerTest.m */; };
 		3AC5D0DE1B8AA44A00417CBB /* NSDictionary+JSON.m in Sources */ = {isa = PBXBuildFile; fileRef = 3AC5D0DD1B8AA44A00417CBB /* NSDictionary+JSON.m */; };
 		3AD8ACB61B86B5E800922AA6 /* LDClientManager.m in Sources */ = {isa = PBXBuildFile; fileRef = 3AD8ACB51B86B5E700922AA6 /* LDClientManager.m */; };
-		6958B5501D415AD500C23DF8 /* EventSource.m in Sources */ = {isa = PBXBuildFile; fileRef = 6958B54F1D415AD500C23DF8 /* EventSource.m */; };
 		9D4CD7721BB923C700CBD687 /* CoreData.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = CCA68A121B7066480052BE63 /* CoreData.framework */; };
 		9D4CD7731BB925DB00CBD687 /* DarklyLibraryModels.bundle in Resources */ = {isa = PBXBuildFile; fileRef = 9D4CD76B1BB9236B00CBD687 /* DarklyLibraryModels.bundle */; };
 		9DEEE93B1B9766B100238073 /* libDarkly.a in Frameworks */ = {isa = PBXBuildFile; fileRef = CC36AA941B6D5FED008200F1 /* libDarkly.a */; };
@@ -120,9 +119,6 @@
 		3AC5D0DD1B8AA44A00417CBB /* NSDictionary+JSON.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "NSDictionary+JSON.m"; sourceTree = "<group>"; };
 		3AD8ACB41B86B5E700922AA6 /* LDClientManager.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = LDClientManager.h; sourceTree = "<group>"; };
 		3AD8ACB51B86B5E700922AA6 /* LDClientManager.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = LDClientManager.m; sourceTree = "<group>"; };
-		6958B54D1D415AD500C23DF8 /* EventSource-Prefix.pch */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "EventSource-Prefix.pch"; sourceTree = "<group>"; };
-		6958B54E1D415AD500C23DF8 /* EventSource.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = EventSource.h; sourceTree = "<group>"; };
-		6958B54F1D415AD500C23DF8 /* EventSource.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = EventSource.m; sourceTree = "<group>"; };
 		9D4CD76B1BB9236B00CBD687 /* DarklyLibraryModels.bundle */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = DarklyLibraryModels.bundle; sourceTree = BUILT_PRODUCTS_DIR; };
 		9D4CD76D1BB9236B00CBD687 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		9DEEE9431B976F8B00238073 /* libMantle.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libMantle.a; path = "Pods/../build/Debug-iphoneos/libMantle.a"; sourceTree = "<group>"; };
@@ -229,16 +225,6 @@
 			name = Frameworks;
 			sourceTree = "<group>";
 		};
-		6958B54C1D415AD500C23DF8 /* EventSource */ = {
-			isa = PBXGroup;
-			children = (
-				6958B54D1D415AD500C23DF8 /* EventSource-Prefix.pch */,
-				6958B54E1D415AD500C23DF8 /* EventSource.h */,
-				6958B54F1D415AD500C23DF8 /* EventSource.m */,
-			);
-			path = EventSource;
-			sourceTree = "<group>";
-		};
 		70112E112C52AC5B6384EF0C /* Pods */ = {
 			isa = PBXGroup;
 			children = (
@@ -310,7 +296,6 @@
 				3A70A78C1B7008B700984E23 /* LDConfig.m */,
 				ADE5294D1B8418B200761F3D /* LDUserBuilder.h */,
 				ADE5294E1B8418B200761F3D /* LDUserBuilder.m */,
-				6958B54C1D415AD500C23DF8 /* EventSource */,
 				CCA68A081B7065E50052BE63 /* Models */,
 				3A70A7911B702F4800984E23 /* Supporting Files */,
 				3AC5D0DC1B8AA44A00417CBB /* NSDictionary+JSON.h */,
@@ -692,7 +677,6 @@
 				3A9F23D11B82D19900D0EF2F /* LDRequestManager.m in Sources */,
 				3A5F93C01B6F10DB0093E419 /* LDUtil.m in Sources */,
 				CC467AB71B78323F0035C07E /* LDDataManager.m in Sources */,
-				6958B5501D415AD500C23DF8 /* EventSource.m in Sources */,
 				23DCFA9E1B95105A00F15531 /* LDPollingManager.m in Sources */,
 				3A0C4DE91C4D93B70059886B /* LDFlagConfigModel.m in Sources */,
 			);
