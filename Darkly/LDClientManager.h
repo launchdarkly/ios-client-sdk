@@ -5,7 +5,7 @@
 
 #import "LDRequestManager.h"
 #import <UIKit/UIKit.h>
-#import "EventSource.h"
+#import <EventSource/EventSource.h>
 
 extern NSString *const kLDUserUpdatedNotification;
 extern NSString *const kLDBackgroundFetchInitiated;
