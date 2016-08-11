@@ -7,13 +7,14 @@
 
 @implementation LDConfig
 
-@synthesize mobileKey, baseUrl, capacity, connectionTimeout, flushInterval, debugEnabled;
+@synthesize mobileKey, baseUrl, eventsUrl, capacity, connectionTimeout, flushInterval, debugEnabled;
 
 @end
 
 @interface LDConfigBuilder() {
     NSString *mobileKey;
     NSString *baseUrl;
+    NSString *eventsUrl;
     NSNumber *capacity;
     NSNumber *connectionTimeout;
     LDUserModel * userModel;
@@ -40,6 +41,11 @@
 - (LDConfigBuilder *)withBaseUrl:(NSString *)inputBaseUrl
 {
     baseUrl = inputBaseUrl;
+    return self;
+}
+
+-(LDConfigBuilder *)withEventsUrl:(NSString *)inputEventsUrl{
+    eventsUrl = inputEventsUrl;
     return self;
 }
 
@@ -90,6 +96,13 @@
         NSString *userAppendedURL = [NSString stringWithFormat:@"%@/%@",kBaseUrl,base64UserString];
         DEBUG_LOG(@"LDConfigBuilder building LDConfig with default baseUrl: %@", userAppendedURL);
         [config setBaseUrl:userAppendedURL];
+    }
+    if (eventsUrl) {
+        DEBUG_LOG(@"LDConfigBuilder building LDConfig with eventsUrl: %@", eventsUrl);
+        [config setCapacity:capacity];
+    } else {
+        DEBUG_LOG(@"LDConfigBuilder building LDConfig with default eventsUrl: %@", kEventsUrl);
+        [config setEventsUrl:kEventsUrl];
     }
     if (capacity) {
         DEBUG_LOG(@"LDConfigBuilder building LDConfig with capacity: %@", capacity);

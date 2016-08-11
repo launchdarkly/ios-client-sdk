@@ -56,7 +56,7 @@
     NSData *data = [[NSData alloc] initWithBase64EncodedString:@"" options: 0] ;
     
     [OHHTTPStubs stubRequestsPassingTest:^BOOL(NSURLRequest *request) {
-        return [request.URL.host isEqualToString:@"mobile.launchdarkly.com"];
+        return [request.URL.host isEqualToString:@"app.launchdarkly.com"];
     } withStubResponse:^OHHTTPStubsResponse*(NSURLRequest *request) {
         httpRequestAttempted = YES;
         [responseArrived fulfill];
@@ -100,7 +100,7 @@
     
     LDRequestManager *requestManager = [LDRequestManager sharedInstance];
     [requestManager setMobileKey:mobileKey];
-    [requestManager setBaseUrl:kBaseUrl];
+    [requestManager setEventsUrl:kEventsUrl];
     [requestManager setConnectionTimeout:10];
     
     [requestManager performEventRequest:eventData];
