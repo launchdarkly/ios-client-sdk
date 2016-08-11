@@ -10,6 +10,7 @@
 
 @property (nonatomic) NSString* mobileKey;
 @property (nonatomic) NSString* baseUrl;
+@property (nonatomic) NSString* eventsUrl;
 @property (nonatomic) NSNumber* capacity;
 @property (nonatomic) NSNumber* connectionTimeout;
 @property (nonatomic) NSNumber* flushInterval;
@@ -45,6 +46,14 @@
  * @return the configuration builder
  */
 - (LDConfigBuilder *)withBaseUrl:(NSString *)baseUrl;
+/**
+ * Provide the eventsUrl of the Launch Darkly server. This will allow you
+ * to switch between production and staging environments. (Optional)
+ *
+ * @param eventsUrl    the eventsUrl of the server
+ * @return the configuration builder
+ */
+- (LDConfigBuilder *)withEventsUrl:(NSString *)eventsUrl;
 /**
  * Provide the capacity for storing feature flag and custom events. Events
  * are persisted on the client and then synced to the server on a regular 

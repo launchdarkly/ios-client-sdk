@@ -8,7 +8,7 @@
 #import "LDClientManager.h"
 #import "LDConfig.h"
 
-static NSString * const kFeatureFlagUrl = @"/mobile/eval/users/";
+static NSString * const kFeatureFlagUrl = @"/msdk/eval/users/";
 static NSString * const kEventUrl = @"/mobile/events/bulk";
 static NSString * const kHeaderMobileKey = @"api_key ";
 static NSString * const kConfigRequestCompletedNotification = @"config_request_completed_notification";
@@ -16,7 +16,7 @@ static NSString * const kEventRequestCompletedNotification = @"event_request_com
 
 @implementation LDRequestManager
 
-@synthesize mobileKey, baseUrl, connectionTimeout, delegate, configRequestInProgress, eventRequestInProgress;
+@synthesize mobileKey, baseUrl, eventsUrl, connectionTimeout, delegate, configRequestInProgress, eventRequestInProgress;
 
 +(LDRequestManager *)sharedInstance
 {
@@ -29,6 +29,7 @@ static NSString * const kEventRequestCompletedNotification = @"event_request_com
         LDConfig *config = client.ldConfig;
         [sharedApiManager setMobileKey:config.mobileKey];
         [sharedApiManager setBaseUrl:config.baseUrl];
+        [sharedApiManager setEventsUrl:config.eventsUrl];
         [sharedApiManager setConnectionTimeout:[config.connectionTimeout doubleValue]];
     });
     return sharedApiManager;
@@ -186,7 +187,7 @@ static NSString * const kEventRequestCompletedNotification = @"event_request_com
 }
 
 -(NSMutableURLRequest *)eventsRequestWithJsonEvents: (NSData *)jsonEventArray  {
-    NSString *requestUrl = [baseUrl stringByAppendingString:kEventUrl];
+    NSString *requestUrl = [eventsUrl stringByAppendingString:kEventUrl];
     NSURL *URL = [NSURL URLWithString:requestUrl];
     NSMutableURLRequest *request = [NSMutableURLRequest requestWithURL:URL cachePolicy:NSURLRequestReloadIgnoringCacheData timeoutInterval:connectionTimeout];
     NSString *authKey = [kHeaderMobileKey stringByAppendingString:mobileKey];
