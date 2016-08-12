@@ -33,7 +33,4 @@
 -(NSObject * __nonnull) flagValue: ( NSString * __nonnull )keyName;
 -(BOOL) doesFlagExist: (nonnull NSString *)keyName;
 
-- (void)encodeWithCoder:(NSCoder * __nonnull)aCoder;
-- (id __nonnull)initWithCoder:(NSCoder * __nonnull)aDecoder;
-
 @end

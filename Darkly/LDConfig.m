@@ -17,7 +17,6 @@
     NSString *eventsUrl;
     NSNumber *capacity;
     NSNumber *connectionTimeout;
-    LDUserModel * userModel;
     NSNumber *flushInterval;
     BOOL debugEnabled;
 }
@@ -29,12 +28,6 @@
 - (LDConfigBuilder *)withMobileKey:(NSString *)inputMobileKey
 {
     mobileKey = inputMobileKey;
-    return self;
-}
-
-- (LDConfigBuilder *)withUserModel:(LDUserModel *)inputUserModel
-{
-    userModel = inputUserModel;
     return self;
 }
 
@@ -84,18 +77,13 @@
         DEBUG_LOGX(@"LDConfigBuilder requires an MobileKey");
         return nil;
     }
-    
-    NSData *userData = [NSKeyedArchiver archivedDataWithRootObject:userModel];
-    NSString *base64UserString = [userData base64EncodedStringWithOptions:0];
-    
+
     if (baseUrl) {
-        NSString *userAppendedURL = [NSString stringWithFormat:@"%@/%@",baseUrl,base64UserString];
-        DEBUG_LOG(@"LDConfigBuilder building LDConfig with baseUrl: %@", userAppendedURL);
-        [config setBaseUrl:userAppendedURL];
+        DEBUG_LOG(@"LDConfigBuilder building LDConfig with baseUrl: %@", baseUrl);
+        [config setBaseUrl:baseUrl];
     } else {
-        NSString *userAppendedURL = [NSString stringWithFormat:@"%@/%@",kBaseUrl,base64UserString];
-        DEBUG_LOG(@"LDConfigBuilder building LDConfig with default baseUrl: %@", userAppendedURL);
-        [config setBaseUrl:userAppendedURL];
+        DEBUG_LOG(@"LDConfigBuilder building LDConfig with default baseUrl: %@", kBaseUrl);
+        [config setBaseUrl:kBaseUrl];
     }
     if (eventsUrl) {
         DEBUG_LOG(@"LDConfigBuilder building LDConfig with eventsUrl: %@", eventsUrl);
