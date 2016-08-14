@@ -31,8 +31,6 @@
     [formatter setDateFormat:@"yyyy-MM-dd'T'HH:mm:ss.SSS'Z'"];
     [formatter setTimeZone:[NSTimeZone timeZoneWithAbbreviation:@"UTC"]];
 
-    NSDate *updatedAt = [formatter dateFromString: @"2015-01-06T18:48:22.69Z"];
-    
     NSString *filepath = [[NSBundle bundleForClass:[LDUserModelTest class]] pathForResource:@"feature_flags"
                                                                            ofType:@"json"];
     NSError *error = nil;
@@ -41,24 +39,26 @@
                                                                options:kNilOptions
                                                   error:&error];
     
-    NSDictionary *userDict = @{ @"key": @"aKey",
-                                @"ip": @"123.456.789",
-                                @"country": @"USA",
-                                @"firstName": @"John",
-                                @"lastName": @"Doe",
-                                @"email": @"jdub@g.com",
-                                @"avatar": @"foo",
-                                @"updatedAt": updatedAt,
-                                @"config": serverJson,
-                                @"custom": @{@"foo": @"Foo"},
-                                @"anonymous": @1,
-                                @"device": @"iPad",
-                                @"os": @"IOS 9.2.1"
-                                };
+    NSMutableDictionary *userDict = [[NSMutableDictionary alloc] initWithDictionary:@{ @"key": @"aKey",
+                                                                                       @"ip": @"123.456.789",
+                                                                                       @"country": @"USA",
+                                                                                       @"firstName": @"John",
+                                                                                       @"lastName": @"Doe",
+                                                                                       @"email": @"jdub@g.com",
+                                                                                       @"avatar": @"foo",
+                                                                                       @"config": serverJson,
+                                                                                       @"custom": @{@"foo": @"Foo"},
+                                                                                       @"anonymous": @1,
+                                                                                       @"device": @"iPad",
+                                                                                       @"os": @"IOS 9.2.1"
+                                                                                       }];
     LDUserModel *user = [[LDUserModel alloc] initWithDictionary:userDict];
     
     NSDictionary *userDict2 = [user dictionaryValue];
-        
+    
+    [userDict setObject:[[NSDictionary alloc] initWithObjects:@[@"iPad",@"IOS 9.2.1"] forKeys:@[@"device",@"os"]] forKey:@"custom"];
+    [userDict removeObjectsForKeys:@[@"device",@"os",@"config"]];
+    
     NSArray *allKeys = [[userDict allKeys] sortedArrayUsingSelector:@selector(caseInsensitiveCompare:)];
     NSArray *allKeys2 = [[userDict2 allKeys] sortedArrayUsingSelector:@selector(caseInsensitiveCompare:)];
     
@@ -84,7 +84,7 @@
     NSArray *originalKeys = [[serverJson objectForKey:@"items"] allKeys];
     NSArray *configKeys = [[config2 objectForKey:@"featuresJsonDictionary"] allKeys];
     
-    XCTAssertTrue([originalKeys isEqualToArray:configKeys]);
+    XCTAssertFalse([originalKeys isEqualToArray:configKeys]);
 
     NSLog(@"Stop");
 }

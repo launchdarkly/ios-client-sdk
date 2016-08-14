@@ -42,12 +42,14 @@ static NSString * const kOsKey = @"os";
     self.email ? [dictionary setObject:self.email forKey: kEmailKey] : nil;
     self.avatar ? [dictionary setObject:self.avatar forKey: kAvatarKey] : nil;
     self.custom ? [dictionary setObject:self.custom forKey: kCustomKey] : nil;
-    self.updatedAt ? [dictionary setObject:[formatter stringFromDate: self.updatedAt] forKey: kUpdatedAtKey] : nil;
     self.anonymous ? [dictionary setObject:[NSNumber numberWithBool: self.anonymous ] forKey: kAnonymousKey] : nil;
-    self.device ? [dictionary setObject:self.device forKey: kDeviceKey] : nil;
-    self.os ? [dictionary setObject:self.os forKey: kOsKey] : nil;
-    self.config ? [dictionary setObject:[self.config dictionaryValue] forKey: kConfigKey] : nil;
     
+    NSMutableDictionary *customDict = [[NSMutableDictionary alloc] initWithDictionary:[dictionary objectForKey:kCustomKey]];
+    self.device ? [customDict setObject:self.device forKey:kDeviceKey] : nil;
+    self.os ? [customDict setObject:self.os forKey:kOsKey] : nil;
+    
+    [dictionary setObject:customDict forKey:kCustomKey];
+
     return dictionary;
 }
 
@@ -103,9 +105,6 @@ static NSString * const kOsKey = @"os";
         self.os = [dictionary objectForKey: kOsKey];
         self.anonymous = [[dictionary objectForKey: kAnonymousKey] boolValue];
         self.config = [[LDFlagConfigModel alloc] initWithDictionary:[dictionary objectForKey:kConfigKey]];
-        if ([dictionary objectForKey:kUpdatedAtKey]) {
-            self.updatedAt = [dictionary objectForKey:kUpdatedAtKey];
-        }
     }
     return self;
 }
