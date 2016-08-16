@@ -26,8 +26,6 @@
 		3AB1B71A1B89036A0006E970 /* LDRequestManagerTest.m in Sources */ = {isa = PBXBuildFile; fileRef = 3AB1B7191B89036A0006E970 /* LDRequestManagerTest.m */; };
 		3AC5D0DE1B8AA44A00417CBB /* NSDictionary+JSON.m in Sources */ = {isa = PBXBuildFile; fileRef = 3AC5D0DD1B8AA44A00417CBB /* NSDictionary+JSON.m */; };
 		3AD8ACB61B86B5E800922AA6 /* LDClientManager.m in Sources */ = {isa = PBXBuildFile; fileRef = 3AD8ACB51B86B5E700922AA6 /* LDClientManager.m */; };
-		9D4CD7721BB923C700CBD687 /* CoreData.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = CCA68A121B7066480052BE63 /* CoreData.framework */; };
-		9D4CD7731BB925DB00CBD687 /* DarklyLibraryModels.bundle in Resources */ = {isa = PBXBuildFile; fileRef = 9D4CD76B1BB9236B00CBD687 /* DarklyLibraryModels.bundle */; };
 		9DEEE93B1B9766B100238073 /* libDarkly.a in Frameworks */ = {isa = PBXBuildFile; fileRef = CC36AA941B6D5FED008200F1 /* libDarkly.a */; };
 		AD10D39D1B7B5F6700DB30E7 /* LDDataManagerTest.m in Sources */ = {isa = PBXBuildFile; fileRef = AD10D39C1B7B5F6700DB30E7 /* LDDataManagerTest.m */; };
 		ADE5294F1B8418B200761F3D /* LDUserBuilder.m in Sources */ = {isa = PBXBuildFile; fileRef = ADE5294E1B8418B200761F3D /* LDUserBuilder.m */; };
@@ -78,9 +76,6 @@
 		2308CD42DB2A44820607CA7B /* Pods-DarklyTests.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-DarklyTests.debug.xcconfig"; path = "Pods/Target Support Files/Pods-DarklyTests/Pods-DarklyTests.debug.xcconfig"; sourceTree = "<group>"; };
 		231CBA291B9791340068BB8C /* libPods-DarklyTests.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = "libPods-DarklyTests.a"; path = "Pods/../build/Debug-iphoneos/libPods-DarklyTests.a"; sourceTree = "<group>"; };
 		231CBA2B1B97913B0068BB8C /* libPods-Darkly.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = "libPods-Darkly.a"; path = "Pods/../build/Debug-iphoneos/libPods-Darkly.a"; sourceTree = "<group>"; };
-		231CBA2D1B97914B0068BB8C /* libMantle.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libMantle.a; path = "Pods/../build/Debug-iphoneos/libMantle.a"; sourceTree = "<group>"; };
-		231CBA2F1B97923D0068BB8C /* libMantle.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libMantle.a; path = "Pods/../build/Debug-iphoneos/libMantle.a"; sourceTree = "<group>"; };
-		231CBA311B9792AC0068BB8C /* libMTLManagedObjectAdapter.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libMTLManagedObjectAdapter.a; path = "Pods/../build/Debug-iphoneos/libMTLManagedObjectAdapter.a"; sourceTree = "<group>"; };
 		231CBA331B9795610068BB8C /* libPods-Darkly.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = "libPods-Darkly.a"; path = "Pods/../build/Debug-iphoneos/libPods-Darkly.a"; sourceTree = "<group>"; };
 		231CBA351B97970E0068BB8C /* UIKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = UIKit.framework; path = System/Library/Frameworks/UIKit.framework; sourceTree = SDKROOT; };
 		231CBA371B97971A0068BB8C /* SystemConfiguration.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SystemConfiguration.framework; path = System/Library/Frameworks/SystemConfiguration.framework; sourceTree = SDKROOT; };
@@ -119,10 +114,6 @@
 		3AC5D0DD1B8AA44A00417CBB /* NSDictionary+JSON.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "NSDictionary+JSON.m"; sourceTree = "<group>"; };
 		3AD8ACB41B86B5E700922AA6 /* LDClientManager.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = LDClientManager.h; sourceTree = "<group>"; };
 		3AD8ACB51B86B5E700922AA6 /* LDClientManager.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = LDClientManager.m; sourceTree = "<group>"; };
-		9D4CD76B1BB9236B00CBD687 /* DarklyLibraryModels.bundle */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = DarklyLibraryModels.bundle; sourceTree = BUILT_PRODUCTS_DIR; };
-		9D4CD76D1BB9236B00CBD687 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
-		9DEEE9431B976F8B00238073 /* libMantle.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libMantle.a; path = "Pods/../build/Debug-iphoneos/libMantle.a"; sourceTree = "<group>"; };
-		9DEEE9451B976F8F00238073 /* libMTLManagedObjectAdapter.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libMTLManagedObjectAdapter.a; path = "Pods/../build/Debug-iphoneos/libMTLManagedObjectAdapter.a"; sourceTree = "<group>"; };
 		A17292C79DBE095E39CEB125 /* Pods-DarklyTests.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-DarklyTests.release.xcconfig"; path = "Pods/Target Support Files/Pods-DarklyTests/Pods-DarklyTests.release.xcconfig"; sourceTree = "<group>"; };
 		AD10D39C1B7B5F6700DB30E7 /* LDDataManagerTest.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = LDDataManagerTest.m; path = Models/LDDataManagerTest.m; sourceTree = "<group>"; };
 		ADE5294D1B8418B200761F3D /* LDUserBuilder.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = LDUserBuilder.h; sourceTree = "<group>"; };
@@ -137,7 +128,6 @@
 		CC467AB61B78323F0035C07E /* LDDataManager.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = LDDataManager.m; path = Models/LDDataManager.m; sourceTree = "<group>"; };
 		CC4E8F421B8ABB3500F2A19D /* LDEventModelTest.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = LDEventModelTest.m; path = Models/LDEventModelTest.m; sourceTree = "<group>"; };
 		CC4E8F451B8B3A7B00F2A19D /* LDUserModelTest.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = LDUserModelTest.m; path = Models/LDUserModelTest.m; sourceTree = "<group>"; };
-		CCA68A121B7066480052BE63 /* CoreData.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreData.framework; path = System/Library/Frameworks/CoreData.framework; sourceTree = SDKROOT; };
 		CCDDE16C1B74058200DFC04B /* LDFlagConfigModelTest.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = LDFlagConfigModelTest.m; sourceTree = "<group>"; };
 		CCDDE1731B7408F200DFC04B /* feature_flags.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = feature_flags.json; sourceTree = "<group>"; };
 		CCEF65FF1BAF41FB00103FD5 /* DarklyXCTestCase.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DarklyXCTestCase.h; sourceTree = "<group>"; };
@@ -160,14 +150,6 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
-		9D4CD7681BB9236B00CBD687 /* Frameworks */ = {
-			isa = PBXFrameworksBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-				9D4CD7721BB923C700CBD687 /* CoreData.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -211,14 +193,8 @@
 				231CBA371B97971A0068BB8C /* SystemConfiguration.framework */,
 				231CBA351B97970E0068BB8C /* UIKit.framework */,
 				231CBA331B9795610068BB8C /* libPods-Darkly.a */,
-				231CBA311B9792AC0068BB8C /* libMTLManagedObjectAdapter.a */,
-				231CBA2F1B97923D0068BB8C /* libMantle.a */,
-				231CBA2D1B97914B0068BB8C /* libMantle.a */,
 				231CBA2B1B97913B0068BB8C /* libPods-Darkly.a */,
 				231CBA291B9791340068BB8C /* libPods-DarklyTests.a */,
-				9DEEE9451B976F8F00238073 /* libMTLManagedObjectAdapter.a */,
-				9DEEE9431B976F8B00238073 /* libMantle.a */,
-				CCA68A121B7066480052BE63 /* CoreData.framework */,
 				D4123AB55EABA4FCD91AD877 /* libPods-Darkly.a */,
 				0A44BAF6AB27A088EB7A34F7 /* libPods-DarklyTests.a */,
 			);
@@ -234,14 +210,6 @@
 				A17292C79DBE095E39CEB125 /* Pods-DarklyTests.release.xcconfig */,
 			);
 			name = Pods;
-			sourceTree = "<group>";
-		};
-		9D4CD76C1BB9236B00CBD687 /* DarklyLibraryModels */ = {
-			isa = PBXGroup;
-			children = (
-				9D4CD76D1BB9236B00CBD687 /* Info.plist */,
-			);
-			path = DarklyLibraryModels;
 			sourceTree = "<group>";
 		};
 		AD7C652B1B80FD09004BECE2 /* Helpers */ = {
@@ -265,7 +233,6 @@
 			children = (
 				CC36AA961B6D5FED008200F1 /* Darkly */,
 				CC36AAA31B6D5FED008200F1 /* DarklyTests */,
-				9D4CD76C1BB9236B00CBD687 /* DarklyLibraryModels */,
 				CC36AA951B6D5FED008200F1 /* Products */,
 				3FF807BB26F04091D81CFC5F /* Frameworks */,
 				70112E112C52AC5B6384EF0C /* Pods */,
@@ -279,7 +246,6 @@
 				CC36AA9F1B6D5FED008200F1 /* DarklyTests.xctest */,
 				23AA1AB61B721E3E00FE6A00 /* QuickTest.app */,
 				23AA1AD11B721E3F00FE6A00 /* QuickTestTests.xctest */,
-				9D4CD76B1BB9236B00CBD687 /* DarklyLibraryModels.bundle */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -418,23 +384,6 @@
 			productReference = 23AA1AD11B721E3F00FE6A00 /* QuickTestTests.xctest */;
 			productType = "com.apple.product-type.bundle.unit-test";
 		};
-		9D4CD76A1BB9236B00CBD687 /* DarklyLibraryModels */ = {
-			isa = PBXNativeTarget;
-			buildConfigurationList = 9D4CD7701BB9236C00CBD687 /* Build configuration list for PBXNativeTarget "DarklyLibraryModels" */;
-			buildPhases = (
-				9D4CD7671BB9236B00CBD687 /* Sources */,
-				9D4CD7681BB9236B00CBD687 /* Frameworks */,
-				9D4CD7691BB9236B00CBD687 /* Resources */,
-			);
-			buildRules = (
-			);
-			dependencies = (
-			);
-			name = DarklyLibraryModels;
-			productName = DarklyLibraryModels;
-			productReference = 9D4CD76B1BB9236B00CBD687 /* DarklyLibraryModels.bundle */;
-			productType = "com.apple.product-type.bundle";
-		};
 		CC36AA931B6D5FED008200F1 /* Darkly */ = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = CC36AAA81B6D5FED008200F1 /* Build configuration list for PBXNativeTarget "Darkly" */;
@@ -458,12 +407,12 @@
 			isa = PBXNativeTarget;
 			buildConfigurationList = CC36AAAB1B6D5FED008200F1 /* Build configuration list for PBXNativeTarget "DarklyTests" */;
 			buildPhases = (
-				96134FFE78BA32B3575F8C95 /* 📦 Check Pods Manifest.lock */,
+				F55F2E12A21F8F8A162CEE76 /* [CP] Check Pods Manifest.lock */,
 				CC36AA9B1B6D5FED008200F1 /* Sources */,
 				CC36AA9C1B6D5FED008200F1 /* Frameworks */,
 				CC36AA9D1B6D5FED008200F1 /* Resources */,
-				C6C10E9CE14FDDCAE6813483 /* 📦 Embed Pods Frameworks */,
-				B8B72A4900817914ECB02D1C /* 📦 Copy Pods Resources */,
+				A2F8CB435977C2A3343BADE3 /* [CP] Embed Pods Frameworks */,
+				5BE33525769AB34DF8077A52 /* [CP] Copy Pods Resources */,
 			);
 			buildRules = (
 			);
@@ -491,9 +440,6 @@
 						CreatedOnToolsVersion = 6.4;
 						TestTargetID = 23AA1AB51B721E3E00FE6A00;
 					};
-					9D4CD76A1BB9236B00CBD687 = {
-						CreatedOnToolsVersion = 7.0;
-					};
 					CC36AA931B6D5FED008200F1 = {
 						CreatedOnToolsVersion = 6.4;
 					};
@@ -519,7 +465,6 @@
 				CC36AA9E1B6D5FED008200F1 /* DarklyTests */,
 				23AA1AB51B721E3E00FE6A00 /* QuickTest */,
 				23AA1AD01B721E3F00FE6A00 /* QuickTestTests */,
-				9D4CD76A1BB9236B00CBD687 /* DarklyLibraryModels */,
 			);
 		};
 /* End PBXProject section */
@@ -529,18 +474,10 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				9D4CD7731BB925DB00CBD687 /* DarklyLibraryModels.bundle in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 		23AA1ACF1B721E3F00FE6A00 /* Resources */ = {
-			isa = PBXResourcesBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
-		9D4CD7691BB9236B00CBD687 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -795,38 +732,6 @@
 			};
 			name = Release;
 		};
-		9D4CD76E1BB9236C00CBD687 /* Debug */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				COMBINE_HIDPI_IMAGES = YES;
-				DEBUG_INFORMATION_FORMAT = dwarf;
-				ENABLE_TESTABILITY = YES;
-				INFOPLIST_FILE = DarklyLibraryModels/Info.plist;
-				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Bundles";
-				MACOSX_DEPLOYMENT_TARGET = 10.10;
-				PRODUCT_BUNDLE_IDENTIFIER = com.launchdarkly.DarklyLibraryModels;
-				PRODUCT_NAME = "$(TARGET_NAME)";
-				SDKROOT = iphoneos;
-				SKIP_INSTALL = YES;
-				WRAPPER_EXTENSION = bundle;
-			};
-			name = Debug;
-		};
-		9D4CD76F1BB9236C00CBD687 /* Release */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				COMBINE_HIDPI_IMAGES = YES;
-				INFOPLIST_FILE = DarklyLibraryModels/Info.plist;
-				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Bundles";
-				MACOSX_DEPLOYMENT_TARGET = 10.10;
-				PRODUCT_BUNDLE_IDENTIFIER = com.launchdarkly.DarklyLibraryModels;
-				PRODUCT_NAME = "$(TARGET_NAME)";
-				SDKROOT = iphoneos;
-				SKIP_INSTALL = YES;
-				WRAPPER_EXTENSION = bundle;
-			};
-			name = Release;
-		};
 		CC36AAA61B6D5FED008200F1 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -1011,15 +916,6 @@
 			buildConfigurations = (
 				23AA1ADB1B721E3F00FE6A00 /* Debug */,
 				23AA1ADC1B721E3F00FE6A00 /* Release */,
-			);
-			defaultConfigurationIsVisible = 0;
-			defaultConfigurationName = Release;
-		};
-		9D4CD7701BB9236C00CBD687 /* Build configuration list for PBXNativeTarget "DarklyLibraryModels" */ = {
-			isa = XCConfigurationList;
-			buildConfigurations = (
-				9D4CD76E1BB9236C00CBD687 /* Debug */,
-				9D4CD76F1BB9236C00CBD687 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
