@@ -20,7 +20,7 @@ PODS:
   - AFNetworking/UIKit (2.6.3):
     - AFNetworking/NSURLConnection
     - AFNetworking/NSURLSession
-  - EventSource (1.0.2)
+  - DarklyEventSource (1.0.3)
   - OCMock (3.2.2)
   - OHHTTPStubs (4.7.1):
     - OHHTTPStubs/Default (= 4.7.1)
@@ -38,25 +38,25 @@ PODS:
 
 DEPENDENCIES:
   - AFNetworking (~> 2.5)
-  - EventSource (from `https://github.com/launchdarkly/ios-eventsource.git`)
+  - DarklyEventSource (from `https://github.com/launchdarkly/ios-eventsource.git`)
   - OCMock (~> 3.1)
   - OHHTTPStubs (~> 4.2)
 
 EXTERNAL SOURCES:
-  EventSource:
+  DarklyEventSource:
     :git: https://github.com/launchdarkly/ios-eventsource.git
 
 CHECKOUT OPTIONS:
-  EventSource:
-    :commit: 72460a065e70dc73f14390ab452fea81a32563e3
+  DarklyEventSource:
+    :commit: 75543bdf6083bb709a351e15bd9f9e61a9138fef
     :git: https://github.com/launchdarkly/ios-eventsource.git
 
 SPEC CHECKSUMS:
   AFNetworking: cb8d14a848e831097108418f5d49217339d4eb60
-  EventSource: f33e829e3816ea25c1bc871d1b5f37b229a654b3
+  DarklyEventSource: 7976194bcc6551f0a0c3b0edff31415054ebdc78
   OCMock: 18c9b7e67d4c2770e95bb77a9cc1ae0c91fe3835
   OHHTTPStubs: f7d1604d04d37d055460c0ef9af01bb249ded0fa
 
-PODFILE CHECKSUM: c369c9740dea13b56a8b955781f18181f3735e8b
+PODFILE CHECKSUM: bcaa74d20030df7887b90fd9fbce72cb011776c3
 
 COCOAPODS: 1.0.0

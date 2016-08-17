@@ -33,7 +33,7 @@ static NSString * const kFeatureJsonValueName = @"value";
 - (id)initWithDictionary:(NSDictionary *)dictionary {
     if((self = [super init])) {
         //Process json that comes down from server
-        self.featuresJsonDictionary = [dictionary objectForKey: kFeaturesJsonDictionaryServerKey];
+        self.featuresJsonDictionary = dictionary;
     }
     return self;
 }
@@ -49,10 +49,10 @@ static NSString * const kFeatureJsonValueName = @"value";
 -(NSObject*) flagValue: ( NSString * __nonnull )keyName {
     NSObject *result = nil;
     
-    NSDictionary *featureJson = [self.featuresJsonDictionary objectForKey: keyName];
+    NSDictionary *featureValue = [self.featuresJsonDictionary objectForKey: keyName];
     
-    if (featureJson) {
-        id aValue = [featureJson valueForKey:kFeatureJsonValueName];
+    if (featureValue) {
+        id aValue = featureValue;
         if (![aValue isKindOfClass:[NSNull class]]) {
             @try {
                 result = aValue;
