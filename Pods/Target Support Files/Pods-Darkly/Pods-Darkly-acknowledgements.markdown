@@ -24,7 +24,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 
 
-## EventSource
+## DarklyEventSource
 
 Copyright (c) 2013 Neil Cowburn (http://github.com/neilco/)
 
