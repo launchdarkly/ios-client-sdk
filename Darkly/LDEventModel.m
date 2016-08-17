@@ -13,7 +13,7 @@ static NSString * const kKeyKey = @"key";
 static NSString * const kKindKey = @"kind";
 static NSString * const kCreationDateKey = @"creationDate";
 static NSString * const kDataKey = @"data";
-static NSString * const kFeatureKeyValueKey = @"featureKeyValue";
+static NSString * const kFeatureKeyValueKey = @"value";
 static NSString * const kIsDefaultKey = @"isDefault";
 static NSString * const kUserKey = @"user";
 
@@ -107,8 +107,8 @@ static NSString * const kCustomEventName = @"custom";
     self.kind ? [dictionary setObject:self.kind forKey: kKindKey] : nil;
     self.creationDate ? [dictionary setObject:[NSNumber numberWithInteger: self.creationDate] forKey: kCreationDateKey] : nil;
     self.data ? [dictionary setObject:self.data forKey: kDataKey] : nil;
-    self.featureKeyValue ? [dictionary setObject:[NSNumber numberWithBool: self.featureKeyValue] forKey: kFeatureKeyValueKey] : nil;
-    self.isDefault ? [dictionary setObject:[NSNumber numberWithBool: self.isDefault] forKey: kIsDefaultKey] : nil;
+    [dictionary setObject:[NSNumber numberWithBool: self.featureKeyValue] forKey: kFeatureKeyValueKey];
+    [dictionary setObject:[NSNumber numberWithBool: self.isDefault] forKey: kIsDefaultServerKey];
     self.user ? [dictionary setObject:[self.user dictionaryValue] forKey: kUserKey] : nil;
     
     return dictionary;
