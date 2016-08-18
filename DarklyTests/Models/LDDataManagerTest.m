@@ -36,7 +36,7 @@
     OCMStub([clientMock ldUser]).andReturn(user);
     
     LDFlagConfigModel *config = [[LDFlagConfigModel alloc] init];
-    config.featuresJsonDictionary = [NSDictionary dictionaryWithObjects:@[@{@"value": @YES}, @{@"value": @NO}]
+    config.featuresJsonDictionary = [NSDictionary dictionaryWithObjects:@[@YES, @NO]
                                                                 forKeys: @[@"ipaduser", @"iosuser"]];
     user.config = config;
 }
