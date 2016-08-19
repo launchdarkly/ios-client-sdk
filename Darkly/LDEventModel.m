@@ -107,8 +107,8 @@ static NSString * const kCustomEventName = @"custom";
     self.kind ? [dictionary setObject:self.kind forKey: kKindKey] : nil;
     self.creationDate ? [dictionary setObject:[NSNumber numberWithInteger: self.creationDate] forKey: kCreationDateKey] : nil;
     self.data ? [dictionary setObject:self.data forKey: kDataKey] : nil;
-    self.featureKeyValue ? [dictionary setObject:[NSNumber numberWithBool: [(NSNumber *)self.featureKeyValue boolValue]] forKey: kFeatureKeyValueKey] : nil;
-    self.isDefault ? [dictionary setObject:[NSNumber numberWithBool: [(NSNumber *)self.isDefault boolValue]] forKey: kIsDefaultKey] : nil;
+    [dictionary setObject:[NSNumber numberWithBool: [(NSNumber *)self.featureKeyValue boolValue]] forKey: kFeatureKeyValueServerKey];
+    [dictionary setObject:[NSNumber numberWithBool: [(NSNumber *)self.isDefault boolValue]] forKey: kIsDefaultServerKey];
     self.user ? [dictionary setObject:[self.user dictionaryValue] forKey: kUserKey] : nil;
     
     return dictionary;
