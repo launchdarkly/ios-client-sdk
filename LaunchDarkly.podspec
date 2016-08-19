@@ -100,11 +100,6 @@ Pod::Spec.new do |s|
 
   # s.resource  = "icon.png"
   # s.resources = "Resources/*.png"
-   s.resource_bundles = {
-    'DarklyLibraryModels' => ['Darkly/*.xcdatamodeld']
-  }
-
-  s.resources = 'Darkly/*.xcdatamodeld'
 
   # s.preserve_paths = "FilesToSave", "MoreFilesToSave"
 
