@@ -2,7 +2,7 @@
 
 All notable changes to the LaunchDarkly Python SDK will be documented in this file. This project adheres to [Semantic Versioning](http://semver.org).
 
-## [1.1.1] - 2016-08-19
+## [1.1.0] - 2016-08-19
 ### Dependency update
 - Removed dependency on Core Data (no interfaces or behavior changed)
 
