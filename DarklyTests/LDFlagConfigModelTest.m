@@ -33,18 +33,18 @@
 -(void)testIsFlagOnForKey {
     LDFlagConfigModel *config = [[LDFlagConfigModel alloc] initWithDictionary: self.json];
     
-    XCTAssertTrue([config flagValue: @"isABawler"]);
-    XCTAssertFalse([config flagValue: @"isConnected"]);
-    XCTAssertFalse([(NSNumber *)[config flagValue: @"devices.hasipad"] boolValue]);
+    XCTAssertTrue([config configFlagValue: @"isABawler"]);
+    XCTAssertFalse([config configFlagValue: @"isConnected"]);
+    XCTAssertFalse([(NSNumber *)[config configFlagValue: @"devices.hasipad"] boolValue]);
 }
 
 - (void)testDoesFlagExist {
     LDFlagConfigModel *config = [[LDFlagConfigModel alloc] initWithDictionary: self.json];
 
-    XCTAssertTrue([config doesFlagExist: @"isABawler"]);
-    XCTAssertTrue([config doesFlagExist: @"isConnected"]);
-    XCTAssertTrue([config doesFlagExist: @"devices.hasipad"]);
-    XCTAssertFalse([config doesFlagExist: @"caramel"]);
+    XCTAssertTrue([config doesConfigFlagExist: @"isABawler"]);
+    XCTAssertTrue([config doesConfigFlagExist: @"isConnected"]);
+    XCTAssertTrue([config doesConfigFlagExist: @"devices.hasipad"]);
+    XCTAssertFalse([config doesConfigFlagExist: @"caramel"]);
 }
 
 @end

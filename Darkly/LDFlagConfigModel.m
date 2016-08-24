@@ -46,7 +46,7 @@ static NSString * const kFeatureJsonValueName = @"value";
     return dictionary;
 }
 
--(NSObject*) flagValue: ( NSString * __nonnull )keyName {
+-(NSObject*) configFlagValue: ( NSString * __nonnull )keyName {
     NSObject *result = nil;
     
     NSDictionary *featureValue = [self.featuresJsonDictionary objectForKey: keyName];
@@ -65,8 +65,9 @@ static NSString * const kFeatureJsonValueName = @"value";
     return result;
 }
 
--(BOOL) doesFlagExist: ( NSString * __nonnull )keyName {
-    return [[self.featuresJsonDictionary allKeys] containsObject: keyName];
+-(BOOL) doesConfigFlagExist: ( NSString * __nonnull )keyName {
+    BOOL value = [[self.featuresJsonDictionary allKeys] containsObject: keyName];
+    return value;
 }
 
 @end
