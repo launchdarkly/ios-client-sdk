@@ -26,7 +26,7 @@
     
     XCTAssertEqual(event.key, @"red");
     XCTAssertEqual(event.kind, @"feature");
-    XCTAssertFalse([(NSNumber *)event.featureKeyValue boolValue]);
+    XCTAssertFalse([(NSNumber *)event.value boolValue]);
     XCTAssertFalse([(NSNumber *)event.isDefault boolValue]);
 }
 

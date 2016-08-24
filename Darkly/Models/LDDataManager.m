@@ -65,6 +65,7 @@ int const kUserCacheSize = 5;
         userDictionary = [[NSMutableDictionary alloc] init];
         [userDictionary setObject:user forKey:user.key];
     }
+    [userDictionary setObject:user forKey:user.key];
     [self storeUserDictionary:userDictionary];
 }
 

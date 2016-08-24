@@ -17,7 +17,7 @@
 @property (nullable, nonatomic, strong) NSDictionary *data;
 @property (nullable, nonatomic, strong) LDUserModel *user;
 
-@property (nonatomic, assign) NSObject * __nonnull featureKeyValue;
+@property (nonatomic, assign) NSObject * __nonnull value;
 @property (nonatomic, assign) NSObject * __nonnull isDefault;
 
 -(nonnull id)initWithDictionary:(nonnull NSDictionary *)dictionary;

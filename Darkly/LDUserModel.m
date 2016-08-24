@@ -144,11 +144,12 @@ static NSString * const kOsKey = @"os";
 }
 
 -(NSObject *) flagValue: ( NSString * __nonnull )keyName {
-    return [self.config flagValue: keyName];
+    return [self.config configFlagValue: keyName];
 }
 
 -(BOOL) doesFlagExist: ( NSString * __nonnull )keyName {
-    return [self.config doesFlagExist: keyName];
+    BOOL value = [self.config doesConfigFlagExist: keyName];
+    return value;
 }
 
 @end
