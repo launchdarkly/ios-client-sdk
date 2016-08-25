@@ -61,7 +61,7 @@
     LDConfigBuilder *builder = [[LDConfigBuilder alloc] init];
     [builder withMobileKey:testMobileKey];
     [[LDClient sharedInstance] start:builder userBuilder:nil];
-    BOOL boolValue = [[LDClient sharedInstance] boolVariation:@"test" defaultValue:YES];
+    BOOL boolValue = [[LDClient sharedInstance] boolVariation:@"test" fallback:YES];
     XCTAssertTrue(boolValue);
 }
 
@@ -75,7 +75,7 @@
     [userBuilder withEmail:@"my@email.com"];
     
     [[LDClient sharedInstance] start:builder userBuilder:userBuilder];
-    BOOL toggleValue = [[LDClient sharedInstance] boolVariation:@"test" defaultValue:YES];
+    BOOL toggleValue = [[LDClient sharedInstance] boolVariation:@"test" fallback:YES];
     XCTAssertTrue(toggleValue);
     
     LDUserBuilder *anotherUserBuilder = [[LDUserBuilder alloc] init];
@@ -92,15 +92,15 @@
 
 -(void)testToggleCreatesEventWithCorrectArguments {
     NSString *toggleName = @"test";
-    BOOL toggleDefaultValue = YES;
+    BOOL fallbackValue = YES;
     NSString *testMobileKey = @"testMobileKey";
     LDConfigBuilder *builder = [[LDConfigBuilder alloc] init];
     [builder withMobileKey:testMobileKey];
     OCMStub([self.dataManagerMock createFeatureEvent:[OCMArg any] keyValue:[OCMArg any] defaultKeyValue:[OCMArg any]]);
     [[LDClient sharedInstance] start:builder userBuilder:nil];
-    [[LDClient sharedInstance] boolVariation:toggleName defaultValue:toggleDefaultValue];
+    [[LDClient sharedInstance] boolVariation:toggleName fallback:fallbackValue];
     
-    OCMVerify([self.dataManagerMock createFeatureEvent:toggleName keyValue:[NSNumber numberWithBool:toggleDefaultValue] defaultKeyValue:[NSNumber numberWithBool:toggleDefaultValue]]);
+    OCMVerify([self.dataManagerMock createFeatureEvent:toggleName keyValue:[NSNumber numberWithBool:fallbackValue] defaultKeyValue:[NSNumber numberWithBool:fallbackValue]]);
     [self.dataManagerMock stopMocking];
 }
 
