@@ -132,7 +132,7 @@ int const kUserCacheSize = 5;
 -(void) createFeatureEvent: (NSString *)featureKey keyValue:(NSObject*)keyValue defaultKeyValue:(NSObject*)defaultKeyValue {
     NSMutableDictionary *eventDictionary = [self retrieveEventDictionary];
     if(![self isAtEventCapacity:eventDictionary]) {
-        DEBUG_LOG(@"Creating event for feature:%@ with value:%@ and defaultValue:%@", featureKey, keyValue, defaultKeyValue);
+        DEBUG_LOG(@"Creating event for feature:%@ with value:%@ and fallback:%@", featureKey, keyValue, defaultKeyValue);
         LDClient *client = [LDClient sharedInstance];
         LDUserModel *currentUser = client.ldUser;
         LDEventModel *featureEvent = [[LDEventModel alloc] initFeatureEventWithKey: featureKey keyValue:keyValue defaultKeyValue:defaultKeyValue userValue:currentUser];

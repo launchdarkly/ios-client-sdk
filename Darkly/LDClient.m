@@ -98,94 +98,94 @@
     }
 }
 
-- (BOOL)boolVariation:(NSString *)featureKey defaultValue:(BOOL)defaultValue{
-    DEBUG_LOG(@"LDClient boolVariation method called for feature=%@ and defaultValue=%d", featureKey, defaultValue);
+- (BOOL)boolVariation:(NSString *)featureKey fallback:(BOOL)fallback{
+    DEBUG_LOG(@"LDClient boolVariation method called for feature=%@ and fallback=%d", featureKey, fallback);
     if (clientStarted) {
         BOOL flagExists = [ldUser doesFlagExist: featureKey];
         NSObject *flagValue = [ldUser flagValue: featureKey];
-        BOOL returnValue = defaultValue;
+        BOOL returnValue = fallback;
         if ([flagValue isKindOfClass:[NSNumber class]] && flagExists) {
             returnValue = [(NSNumber *)flagValue boolValue];
         }
         
-        [[LDDataManager sharedManager] createFeatureEvent: featureKey keyValue:[NSNumber numberWithBool:returnValue] defaultKeyValue:[NSNumber numberWithBool:defaultValue]];
+        [[LDDataManager sharedManager] createFeatureEvent: featureKey keyValue:[NSNumber numberWithBool:returnValue] defaultKeyValue:[NSNumber numberWithBool:fallback]];
         return returnValue;
     } else {
         DEBUG_LOGX(@"LDClient not started yet!");
     }
-    return defaultValue;
+    return fallback;
 }
 
-- (NSNumber*)numberVariation:(NSString *)featureKey defaultValue:(NSNumber*)defaultValue{
-    DEBUG_LOG(@"LDClient numberVariation method called for feature=%@ and defaultValue=%@", featureKey, defaultValue);
+- (NSNumber*)numberVariation:(NSString *)featureKey fallback:(NSNumber*)fallback{
+    DEBUG_LOG(@"LDClient numberVariation method called for feature=%@ and fallback=%@", featureKey, fallback);
     if (clientStarted) {
         BOOL flagExists = [ldUser doesFlagExist: featureKey];
         NSObject *flagValue = [ldUser flagValue: featureKey];
-        NSNumber *returnValue = defaultValue;
+        NSNumber *returnValue = fallback;
         if ([flagValue isKindOfClass:[NSNumber class]] && flagExists) {
             returnValue = (NSNumber *)flagValue;
         }
         
-        [[LDDataManager sharedManager] createFeatureEvent: featureKey keyValue:returnValue defaultKeyValue:defaultValue];
+        [[LDDataManager sharedManager] createFeatureEvent: featureKey keyValue:returnValue defaultKeyValue:fallback];
         return returnValue;
     } else {
         DEBUG_LOGX(@"LDClient not started yet!");
     }
-    return defaultValue;
+    return fallback;
 }
 
-- (NSString*)stringVariation:(NSString *)featureKey defaultValue:(NSString*)defaultValue{
-    DEBUG_LOG(@"LDClient stringVariation method called for feature=%@ and defaultValue=%@", featureKey, defaultValue);
+- (NSString*)stringVariation:(NSString *)featureKey fallback:(NSString*)fallback{
+    DEBUG_LOG(@"LDClient stringVariation method called for feature=%@ and fallback=%@", featureKey, fallback);
     if (clientStarted) {
         BOOL flagExists = [ldUser doesFlagExist: featureKey];
         NSObject *flagValue = [ldUser flagValue: featureKey];
-        NSString *returnValue = defaultValue;
+        NSString *returnValue = fallback;
         if ([flagValue isKindOfClass:[NSString class]] && flagExists) {
             returnValue = (NSString *)flagValue;
         }
         
-        [[LDDataManager sharedManager] createFeatureEvent: featureKey keyValue:returnValue defaultKeyValue:defaultValue];
+        [[LDDataManager sharedManager] createFeatureEvent: featureKey keyValue:returnValue defaultKeyValue:fallback];
         return returnValue;
     } else {
         DEBUG_LOGX(@"LDClient not started yet!");
     }
-    return defaultValue;
+    return fallback;
 }
 
-- (NSArray*)arrayVariation:(NSString *)featureKey defaultValue:(NSArray*)defaultValue{
-    DEBUG_LOG(@"LDClient arrayVariation method called for feature=%@ and defaultValue=%@", featureKey, defaultValue);
+- (NSArray*)arrayVariation:(NSString *)featureKey fallback:(NSArray*)fallback{
+    DEBUG_LOG(@"LDClient arrayVariation method called for feature=%@ and fallback=%@", featureKey, fallback);
     if (clientStarted) {
         BOOL flagExists = [ldUser doesFlagExist: featureKey];
         NSObject *flagValue = [ldUser flagValue: featureKey];
-        NSArray *returnValue = defaultValue;
+        NSArray *returnValue = fallback;
         if ([flagValue isKindOfClass:[NSString class]] && flagExists) {
             returnValue = (NSArray *)flagValue;
         }
         
-        [[LDDataManager sharedManager] createFeatureEvent: featureKey keyValue:returnValue defaultKeyValue:defaultValue];
+        [[LDDataManager sharedManager] createFeatureEvent: featureKey keyValue:returnValue defaultKeyValue:fallback];
         return returnValue;
     } else {
         DEBUG_LOGX(@"LDClient not started yet!");
     }
-    return defaultValue;
+    return fallback;
 }
 
-- (NSDictionary*)dictionaryVariation:(NSString *)featureKey defaultValue:(NSDictionary*)defaultValue{
-    DEBUG_LOG(@"LDClient dictionaryVariation method called for feature=%@ and defaultValue=%@", featureKey, defaultValue);
+- (NSDictionary*)dictionaryVariation:(NSString *)featureKey fallback:(NSDictionary*)fallback{
+    DEBUG_LOG(@"LDClient dictionaryVariation method called for feature=%@ and fallback=%@", featureKey, fallback);
     if (clientStarted) {
         BOOL flagExists = [ldUser doesFlagExist: featureKey];
         NSObject *flagValue = [ldUser flagValue: featureKey];
-        NSDictionary *returnValue = defaultValue;
+        NSDictionary *returnValue = fallback;
         if ([flagValue isKindOfClass:[NSString class]] && flagExists) {
             returnValue = (NSDictionary *)flagValue;
         }
         
-        [[LDDataManager sharedManager] createFeatureEvent: featureKey keyValue:returnValue defaultKeyValue:defaultValue];
+        [[LDDataManager sharedManager] createFeatureEvent: featureKey keyValue:returnValue defaultKeyValue:fallback];
         return returnValue;
     } else {
         DEBUG_LOGX(@"LDClient not started yet!");
     }
-    return defaultValue;
+    return fallback;
 }
 
 - (BOOL)track:(NSString *)eventName data:(NSDictionary *)dataDictionary
