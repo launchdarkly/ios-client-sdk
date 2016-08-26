@@ -16,7 +16,7 @@ Pod::Spec.new do |s|
   #
 
   s.name         = "LaunchDarkly"
-  s.version      = "1.1.0"
+  s.version      = "2.0"
   s.summary      = "iOS SDK for LaunchDarkly"
 
   s.description  = <<-DESC
@@ -74,8 +74,7 @@ Pod::Spec.new do |s|
   #  Supports git, hg, bzr, svn and HTTP.
   #
 
-  s.source       = { :git => "https://github.com/launchdarkly/ios-client.git", :tag => "1.1.0" }
-
+  s.source       = { :git => "https://github.com/launchdarkly/ios-client.git", :tag => "2.0" }
 
 
   # ――― Source Code ―――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――― #
@@ -132,6 +131,6 @@ Pod::Spec.new do |s|
     ss.dependency 'AFNetworking', '~> 2.5'
     ss.dependency 'Mantle', '~> 2.0'
     ss.dependency 'MTLManagedObjectAdapter', '~> 1.0'
-    ss.dependency 'DarklyEventSource'
+    ss.dependency 'DarklyEventSource', '~> 1.1.0'
   end
 end
