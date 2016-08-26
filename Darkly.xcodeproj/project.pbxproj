@@ -7,7 +7,6 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		0A6F75A5DAF1016B67C7FE7F /* libPods-DarklyTests.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 0A44BAF6AB27A088EB7A34F7 /* libPods-DarklyTests.a */; };
 		231CBA361B97970E0068BB8C /* UIKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 231CBA351B97970E0068BB8C /* UIKit.framework */; };
 		23DCFA9E1B95105A00F15531 /* LDPollingManager.m in Sources */ = {isa = PBXBuildFile; fileRef = 23DCFA9D1B95105A00F15531 /* LDPollingManager.m */; };
 		23E819541B8AA4A700010DD3 /* LDPollingManagerTest.m in Sources */ = {isa = PBXBuildFile; fileRef = 23E819531B8AA4A700010DD3 /* LDPollingManagerTest.m */; };
@@ -40,6 +39,7 @@
 		CCDDE16D1B74058200DFC04B /* LDFlagConfigModelTest.m in Sources */ = {isa = PBXBuildFile; fileRef = CCDDE16C1B74058200DFC04B /* LDFlagConfigModelTest.m */; };
 		CCDDE1741B7408F200DFC04B /* feature_flags.json in Resources */ = {isa = PBXBuildFile; fileRef = CCDDE1731B7408F200DFC04B /* feature_flags.json */; };
 		CCEF66011BAF41FB00103FD5 /* DarklyXCTestCase.m in Sources */ = {isa = PBXBuildFile; fileRef = CCEF66001BAF41FB00103FD5 /* DarklyXCTestCase.m */; };
+		DD1DFE6B210595516F9F0269 /* libPods-DarklyTests.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 0A44BAF6AB27A088EB7A34F7 /* libPods-DarklyTests.a */; };
 		E52B3EB8C8E800E2ED2BE540 /* libPods-Darkly.a in Frameworks */ = {isa = PBXBuildFile; fileRef = D4123AB55EABA4FCD91AD877 /* libPods-Darkly.a */; };
 /* End PBXBuildFile section */
 
@@ -75,7 +75,6 @@
 /* Begin PBXFileReference section */
 		0A44BAF6AB27A088EB7A34F7 /* libPods-DarklyTests.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-DarklyTests.a"; sourceTree = BUILT_PRODUCTS_DIR; };
 		0CF3D8B3D5EBA564267F784E /* Pods-Darkly.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Darkly.debug.xcconfig"; path = "Pods/Target Support Files/Pods-Darkly/Pods-Darkly.debug.xcconfig"; sourceTree = "<group>"; };
-		2308CD42DB2A44820607CA7B /* Pods-DarklyTests.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-DarklyTests.debug.xcconfig"; path = "Pods/Target Support Files/Pods-DarklyTests/Pods-DarklyTests.debug.xcconfig"; sourceTree = "<group>"; };
 		231CBA291B9791340068BB8C /* libPods-DarklyTests.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = "libPods-DarklyTests.a"; path = "Pods/../build/Debug-iphoneos/libPods-DarklyTests.a"; sourceTree = "<group>"; };
 		231CBA2B1B97913B0068BB8C /* libPods-Darkly.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = "libPods-Darkly.a"; path = "Pods/../build/Debug-iphoneos/libPods-Darkly.a"; sourceTree = "<group>"; };
 		231CBA2D1B97914B0068BB8C /* libMantle.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libMantle.a; path = "Pods/../build/Debug-iphoneos/libMantle.a"; sourceTree = "<group>"; };
@@ -123,11 +122,12 @@
 		9D4CD76D1BB9236B00CBD687 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		9DEEE9431B976F8B00238073 /* libMantle.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libMantle.a; path = "Pods/../build/Debug-iphoneos/libMantle.a"; sourceTree = "<group>"; };
 		9DEEE9451B976F8F00238073 /* libMTLManagedObjectAdapter.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libMTLManagedObjectAdapter.a; path = "Pods/../build/Debug-iphoneos/libMTLManagedObjectAdapter.a"; sourceTree = "<group>"; };
-		A17292C79DBE095E39CEB125 /* Pods-DarklyTests.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-DarklyTests.release.xcconfig"; path = "Pods/Target Support Files/Pods-DarklyTests/Pods-DarklyTests.release.xcconfig"; sourceTree = "<group>"; };
 		AD10D39C1B7B5F6700DB30E7 /* LDDataManagerTest.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = LDDataManagerTest.m; path = Models/LDDataManagerTest.m; sourceTree = "<group>"; };
 		ADE5294D1B8418B200761F3D /* LDUserBuilder.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = LDUserBuilder.h; sourceTree = "<group>"; };
 		ADE5294E1B8418B200761F3D /* LDUserBuilder.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = LDUserBuilder.m; sourceTree = "<group>"; };
 		ADE529501B84196000761F3D /* LDUserBuilderTest.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = LDUserBuilderTest.m; sourceTree = "<group>"; };
+		C615DF9896CE6BD822240299 /* Pods-DarklyTests.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-DarklyTests.release.xcconfig"; path = "Pods/Target Support Files/Pods-DarklyTests/Pods-DarklyTests.release.xcconfig"; sourceTree = "<group>"; };
+		C6F0D088F7387EEFF2BD1AC0 /* Pods-DarklyTests.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-DarklyTests.debug.xcconfig"; path = "Pods/Target Support Files/Pods-DarklyTests/Pods-DarklyTests.debug.xcconfig"; sourceTree = "<group>"; };
 		CC01CCE11BB07703006B4A36 /* NSArray+UnitTests.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = "NSArray+UnitTests.h"; path = "Categories/NSArray+UnitTests.h"; sourceTree = "<group>"; };
 		CC01CCE21BB07703006B4A36 /* NSArray+UnitTests.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = "NSArray+UnitTests.m"; path = "Categories/NSArray+UnitTests.m"; sourceTree = "<group>"; };
 		CC36AA941B6D5FED008200F1 /* libDarkly.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libDarkly.a; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -184,7 +184,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				CC36AAA01B6D5FED008200F1 /* libDarkly.a in Frameworks */,
-				0A6F75A5DAF1016B67C7FE7F /* libPods-DarklyTests.a in Frameworks */,
+				DD1DFE6B210595516F9F0269 /* libPods-DarklyTests.a in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -230,8 +230,8 @@
 			children = (
 				0CF3D8B3D5EBA564267F784E /* Pods-Darkly.debug.xcconfig */,
 				F19BA3C600D75D385DA50A51 /* Pods-Darkly.release.xcconfig */,
-				2308CD42DB2A44820607CA7B /* Pods-DarklyTests.debug.xcconfig */,
-				A17292C79DBE095E39CEB125 /* Pods-DarklyTests.release.xcconfig */,
+				C6F0D088F7387EEFF2BD1AC0 /* Pods-DarklyTests.debug.xcconfig */,
+				C615DF9896CE6BD822240299 /* Pods-DarklyTests.release.xcconfig */,
 			);
 			name = Pods;
 			sourceTree = "<group>";
@@ -458,12 +458,12 @@
 			isa = PBXNativeTarget;
 			buildConfigurationList = CC36AAAB1B6D5FED008200F1 /* Build configuration list for PBXNativeTarget "DarklyTests" */;
 			buildPhases = (
-				96134FFE78BA32B3575F8C95 /* 📦 Check Pods Manifest.lock */,
+				06097C7CDAEF984FCC39FD10 /* 📦 Check Pods Manifest.lock */,
 				CC36AA9B1B6D5FED008200F1 /* Sources */,
 				CC36AA9C1B6D5FED008200F1 /* Frameworks */,
 				CC36AA9D1B6D5FED008200F1 /* Resources */,
-				C6C10E9CE14FDDCAE6813483 /* 📦 Embed Pods Frameworks */,
-				B8B72A4900817914ECB02D1C /* 📦 Copy Pods Resources */,
+				8D4E98A0B0E27FE9A083F468 /* 📦 Embed Pods Frameworks */,
+				820EDF389EB7BC71BF9FD91D /* 📦 Copy Pods Resources */,
 			);
 			buildRules = (
 			);
@@ -563,6 +563,21 @@
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXShellScriptBuildPhase section */
+		06097C7CDAEF984FCC39FD10 /* 📦 Check Pods Manifest.lock */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputPaths = (
+			);
+			name = "📦 Check Pods Manifest.lock";
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "diff \"${PODS_ROOT}/../Podfile.lock\" \"${PODS_ROOT}/Manifest.lock\" > /dev/null\nif [[ $? != 0 ]] ; then\n    cat << EOM\nerror: The sandbox is not in sync with the Podfile.lock. Run 'pod install' or update your CocoaPods installation.\nEOM\n    exit 1\nfi\n";
+			showEnvVarsInLog = 0;
+		};
 		658A25874DD4EDD0E2CD2435 /* 📦 Copy Pods Resources */ = {
 			isa = PBXShellScriptBuildPhase;
 			buildActionMask = 2147483647;
@@ -576,6 +591,21 @@
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
 			shellScript = "\"${SRCROOT}/Pods/Target Support Files/Pods-Darkly/Pods-Darkly-resources.sh\"\n";
+			showEnvVarsInLog = 0;
+		};
+		820EDF389EB7BC71BF9FD91D /* 📦 Copy Pods Resources */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputPaths = (
+			);
+			name = "📦 Copy Pods Resources";
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "\"${SRCROOT}/Pods/Target Support Files/Pods-DarklyTests/Pods-DarklyTests-resources.sh\"\n";
 			showEnvVarsInLog = 0;
 		};
 		8D2649BFFDE572AD586F995D /* 📦 Check Pods Manifest.lock */ = {
@@ -593,37 +623,7 @@
 			shellScript = "diff \"${PODS_ROOT}/../Podfile.lock\" \"${PODS_ROOT}/Manifest.lock\" > /dev/null\nif [[ $? != 0 ]] ; then\n    cat << EOM\nerror: The sandbox is not in sync with the Podfile.lock. Run 'pod install' or update your CocoaPods installation.\nEOM\n    exit 1\nfi\n";
 			showEnvVarsInLog = 0;
 		};
-		96134FFE78BA32B3575F8C95 /* 📦 Check Pods Manifest.lock */ = {
-			isa = PBXShellScriptBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			inputPaths = (
-			);
-			name = "📦 Check Pods Manifest.lock";
-			outputPaths = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-			shellPath = /bin/sh;
-			shellScript = "diff \"${PODS_ROOT}/../Podfile.lock\" \"${PODS_ROOT}/Manifest.lock\" > /dev/null\nif [[ $? != 0 ]] ; then\n    cat << EOM\nerror: The sandbox is not in sync with the Podfile.lock. Run 'pod install' or update your CocoaPods installation.\nEOM\n    exit 1\nfi\n";
-			showEnvVarsInLog = 0;
-		};
-		B8B72A4900817914ECB02D1C /* 📦 Copy Pods Resources */ = {
-			isa = PBXShellScriptBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			inputPaths = (
-			);
-			name = "📦 Copy Pods Resources";
-			outputPaths = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-			shellPath = /bin/sh;
-			shellScript = "\"${SRCROOT}/Pods/Target Support Files/Pods-DarklyTests/Pods-DarklyTests-resources.sh\"\n";
-			showEnvVarsInLog = 0;
-		};
-		C6C10E9CE14FDDCAE6813483 /* 📦 Embed Pods Frameworks */ = {
+		8D4E98A0B0E27FE9A083F468 /* 📦 Embed Pods Frameworks */ = {
 			isa = PBXShellScriptBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -960,13 +960,10 @@
 		};
 		CC36AAAC1B6D5FED008200F1 /* Debug */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = 2308CD42DB2A44820607CA7B /* Pods-DarklyTests.debug.xcconfig */;
+			baseConfigurationReference = C6F0D088F7387EEFF2BD1AC0 /* Pods-DarklyTests.debug.xcconfig */;
 			buildSettings = {
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
-				FRAMEWORK_SEARCH_PATHS = (
-					"$(SDKROOT)/Developer/Library/Frameworks",
-					"$(inherited)",
-				);
+				FRAMEWORK_SEARCH_PATHS = "";
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = "Darkly/Darkly-Prefix.pch";
 				GCC_PREPROCESSOR_DEFINITIONS = (
@@ -981,13 +978,10 @@
 		};
 		CC36AAAD1B6D5FED008200F1 /* Release */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = A17292C79DBE095E39CEB125 /* Pods-DarklyTests.release.xcconfig */;
+			baseConfigurationReference = C615DF9896CE6BD822240299 /* Pods-DarklyTests.release.xcconfig */;
 			buildSettings = {
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
-				FRAMEWORK_SEARCH_PATHS = (
-					"$(SDKROOT)/Developer/Library/Frameworks",
-					"$(inherited)",
-				);
+				FRAMEWORK_SEARCH_PATHS = "";
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = "Darkly/Darkly-Prefix.pch";
 				INFOPLIST_FILE = DarklyTests/Info.plist;
