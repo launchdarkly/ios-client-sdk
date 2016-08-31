@@ -49,7 +49,7 @@
     [super tearDown];
 }
 
-- (void)testFeatureFlagRequestMakesHttpRequestWithApiKey {
+- (void)testFeatureFlagRequestMakesHttpRequestWithMobileKey {
     
     XCTestExpectation* responseArrived = [self expectationWithDescription:@"response of async request has arrived"];
     __block BOOL httpRequestAttempted = NO;
@@ -63,10 +63,10 @@
         return [OHHTTPStubsResponse responseWithData: data statusCode:200 headers:@{@"Content-Type":@"application/json"}];
     }];
     
-    NSString *apiKey = @"YOUR_MOBILE_KEY";
+    NSString *mobileKey = @"YOUR_MOBILE_KEY";
     NSString *encodedUserString = @"eyJrZXkiOiAiamVmZkB0ZXN0LmNvbSJ9";
     LDRequestManager *requestManager = [LDRequestManager sharedInstance];
-    [requestManager setApiKey:apiKey];
+    [requestManager setMobileKey:mobileKey];
     [requestManager setBaseUrl:kBaseUrl];
     [requestManager setConnectionTimeout:10];
 
@@ -80,27 +80,27 @@
     }];
 }
 
-- (void)testEventRequestMakesHttpRequestWithApiKey {
+- (void)testEventRequestMakesHttpRequestWithMobileKey {
     
     XCTestExpectation* responseArrived = [self expectationWithDescription:@"response of async request has arrived"];
     __block BOOL httpRequestAttempted = NO;
     NSData *data = [[NSData alloc] initWithBase64EncodedString:@"" options: 0] ;
     
     [OHHTTPStubs stubRequestsPassingTest:^BOOL(NSURLRequest *request) {
-        return [request.URL.host isEqualToString:@"app.launchdarkly.com"];
+        return [request.URL.host isEqualToString:@"mobile.launchdarkly.com"];
     } withStubResponse:^OHHTTPStubsResponse*(NSURLRequest *request) {
         httpRequestAttempted = YES;
         [responseArrived fulfill];
         return [OHHTTPStubsResponse responseWithData: data statusCode:200 headers:@{@"Content-Type":@"application/json"}];
     }];
     
-    NSString *apiKey = @"YOUR_MOBILE_KEY";
+    NSString *mobileKey = @"YOUR_MOBILE_KEY";
     NSString *jsonEventString = @"[{\"kind\": \"feature\", \"user\": {\"key\" : \"jeff@test.com\", \"custom\" : {\"groups\" : [\"microsoft\", \"google\"]}}, \"creationDate\": 1438468068, \"key\": \"isConnected\", \"value\": true, \"default\": false}]";
     NSData* eventData = [jsonEventString dataUsingEncoding:NSUTF8StringEncoding];
     
     LDRequestManager *requestManager = [LDRequestManager sharedInstance];
-    [requestManager setApiKey:apiKey];
-    [requestManager setBaseUrl:kBaseUrl];
+    [requestManager setMobileKey:mobileKey];
+    [requestManager setEventsUrl:kEventsUrl];
     [requestManager setConnectionTimeout:10];
     
     [requestManager performEventRequest:eventData];

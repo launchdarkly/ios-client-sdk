@@ -4,6 +4,7 @@
 
 #import "LDConfig.h"
 #import "LDUserBuilder.h"
+#import "LDUtil.h"
 
 @class LDConfig;
 @class LDUserBuilder;
@@ -33,13 +34,53 @@
 /**
  * Retrieve a feature flag value. If the configuration for this feature
  * flag is retrieved from the server that value is returned, otherwise
- * the defaultValue is returned.
+ * the fallback is returned.
  *
  * @param featureName   Name of feature flag
- * @param default   Default value for feature flag
+ * @param fallback   Fallback value for feature flag
  * @return the feature flag value
  */
-- (BOOL)toggle:(NSString *)featureName default:(BOOL)defaultValue;
+- (BOOL)boolVariation:(NSString *)featureKey fallback:(BOOL)fallback;
+/**
+ * Retrieve a feature flag value. If the configuration for this feature
+ * flag is retrieved from the server that value is returned, otherwise
+ * the fallback is returned.
+ *
+ * @param featureName   Name of feature flag
+ * @param fallback   Fallback value for feature flag
+ * @return the feature flag value
+ */
+- (NSNumber*)numberVariation:(NSString *)featureKey fallback:(NSNumber*)fallback;
+/**
+ * Retrieve a feature flag value. If the configuration for this feature
+ * flag is retrieved from the server that value is returned, otherwise
+ * the fallback is returned.
+ *
+ * @param featureName   Name of feature flag
+ * @param fallback   Fallback value for feature flag
+ * @return the feature flag value
+ */
+- (NSString*)stringVariation:(NSString *)featureKey fallback:(NSString*)fallback;
+/**
+ * Retrieve a feature flag value. If the configuration for this feature
+ * flag is retrieved from the server that value is returned, otherwise
+ * the fallback is returned.
+ *
+ * @param featureName   Name of feature flag
+ * @param fallback   Fallback value for feature flag
+ * @return the feature flag value
+ */
+- (NSArray*)arrayVariation:(NSString *)featureKey fallback:(NSArray*)fallback;
+/**
+ * Retrieve a feature flag value. If the configuration for this feature
+ * flag is retrieved from the server that value is returned, otherwise
+ * the fallback is returned.
+ *
+ * @param featureName   Name of feature flag
+ * @param fallback   Fallback value for feature flag
+ * @return the feature flag value
+ */
+- (NSDictionary*)dictionaryVariation:(NSString *)featureKey fallback:(NSDictionary*)fallback;
 /**
  * Track a custom event.
  *

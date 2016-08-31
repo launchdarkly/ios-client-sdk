@@ -30,6 +30,7 @@
 -(nonnull NSString *) convertToJson;
 -(nonnull NSDictionary *)dictionaryValue;
 
--(BOOL) isFlagOn: (nonnull NSString * )keyName;
+-(NSObject * __nonnull) flagValue: ( NSString * __nonnull )keyName;
 -(BOOL) doesFlagExist: (nonnull NSString *)keyName;
+
 @end

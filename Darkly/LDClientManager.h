@@ -4,13 +4,17 @@
 
 
 #import "LDRequestManager.h"
+#import <UIKit/UIKit.h>
+#import <DarklyEventSource/EventSource.h>
 
 extern NSString *const kLDUserUpdatedNotification;
+extern NSString *const kLDBackgroundFetchInitiated;
 
-@interface LDClientManager : NSObject  <RequestManagerDelegate> {
+@interface LDClientManager : NSObject  <RequestManagerDelegate, UIApplicationDelegate> {
 }
 
 @property (nonatomic) BOOL offlineEnabled;
+@property(nonatomic, strong, readonly) EventSource *eventSource;
 
 +(LDClientManager *)sharedInstance;
 

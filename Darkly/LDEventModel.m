@@ -31,8 +31,8 @@ static NSString * const kCustomEventName = @"custom";
     [encoder encodeObject:self.kind forKey:kKindKey];
     [encoder encodeInteger:self.creationDate forKey:kCreationDateKey];
     [encoder encodeObject:self.data forKey:kDataKey];
-    [encoder encodeBool:self.featureKeyValue forKey:kFeatureKeyValueKey];
-    [encoder encodeBool:self.isDefault forKey:kIsDefaultKey];
+    [encoder encodeObject:self.value forKey:kFeatureKeyValueKey];
+    [encoder encodeObject:self.isDefault forKey:kIsDefaultKey];
     [encoder encodeObject:self.user forKey:kUserKey];
 }
 
@@ -43,8 +43,8 @@ static NSString * const kCustomEventName = @"custom";
         self.kind = [decoder decodeObjectForKey:kKindKey];
         self.creationDate = [decoder decodeIntegerForKey:kCreationDateKey];
         self.data = [decoder decodeObjectForKey:kDataKey];
-        self.featureKeyValue = [decoder decodeBoolForKey:kFeatureKeyValueKey];
-        self.isDefault = [decoder decodeBoolForKey:kIsDefaultKey];
+        self.value = [decoder decodeObjectForKey:kFeatureKeyValueKey];
+        self.isDefault = [decoder decodeObjectForKey:kIsDefaultKey];
         self.user = [decoder decodeObjectForKey:kUserKey];
     }
     return self;
@@ -57,18 +57,18 @@ static NSString * const kCustomEventName = @"custom";
         self.kind = [dictionary objectForKey: kKindKey];
         NSNumber *creationDateValue = [dictionary objectForKey:kCreationDateKey];
         self.creationDate = [creationDateValue longValue];
-        self.featureKeyValue = [[dictionary objectForKey: kFeatureKeyValueServerKey] boolValue];
-        self.isDefault = [[dictionary objectForKey: kIsDefaultServerKey] boolValue];
+        self.value = [dictionary objectForKey: kFeatureKeyValueServerKey];
+        self.isDefault = [dictionary objectForKey: kIsDefaultServerKey];
         self.user = [[LDUserModel alloc] initWithDictionary:[dictionary objectForKey:kUserKey]];
     }
     return self;
 }
 
--(instancetype)initFeatureEventWithKey:(nonnull NSString *)featureKey keyValue:(BOOL)keyValue defaultKeyValue:(BOOL)defaultKeyValue userValue:(LDUserModel *)userValue {
+-(instancetype)initFeatureEventWithKey:(nonnull NSString *)featureKey keyValue:(NSObject*)keyValue defaultKeyValue:(NSObject*)defaultKeyValue userValue:(LDUserModel *)userValue {
     if((self = [self init])) {
         self.key = featureKey;
         self.kind = kFeatureEventName;
-        self.featureKeyValue = keyValue;
+        self.value = keyValue;
         self.isDefault = defaultKeyValue;
         self.user = userValue;
     }
@@ -107,8 +107,8 @@ static NSString * const kCustomEventName = @"custom";
     self.kind ? [dictionary setObject:self.kind forKey: kKindKey] : nil;
     self.creationDate ? [dictionary setObject:[NSNumber numberWithInteger: self.creationDate] forKey: kCreationDateKey] : nil;
     self.data ? [dictionary setObject:self.data forKey: kDataKey] : nil;
-    [dictionary setObject:[NSNumber numberWithBool: self.featureKeyValue] forKey: kFeatureKeyValueKey];
-    [dictionary setObject:[NSNumber numberWithBool: self.isDefault] forKey: kIsDefaultServerKey];
+    self.value ? [dictionary setObject:self.value forKey: kFeatureKeyValueServerKey] : nil;
+    self.isDefault ? [dictionary setObject:self.isDefault forKey: kIsDefaultServerKey] : nil;
     self.user ? [dictionary setObject:[self.user dictionaryValue] forKey: kUserKey] : nil;
     
     return dictionary;

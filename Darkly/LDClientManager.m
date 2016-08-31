@@ -14,9 +14,10 @@
 
 @implementation LDClientManager
 
-@synthesize offlineEnabled;
+@synthesize offlineEnabled, eventSource;
 
 NSString *const kLDUserUpdatedNotification = @"Darkly.UserUpdatedNotification";
+NSString *const kLDBackgroundFetchInitiated = @"Darkly.BackgroundFetchInitiated";
 
 +(LDClientManager *)sharedInstance {
     static LDClientManager *sharedApiManager = nil;
@@ -24,8 +25,9 @@ NSString *const kLDUserUpdatedNotification = @"Darkly.UserUpdatedNotification";
     dispatch_once(&onceToken, ^{
         sharedApiManager = [[self alloc] init];
         
-        [[NSNotificationCenter defaultCenter] addObserver:sharedApiManager selector:@selector(willEnterForeground) name:UIApplicationWillEnterForegroundNotification object:nil];
+        [[NSNotificationCenter defaultCenter] addObserver:sharedApiManager selector:@selector(willEnterForeground) name:UIApplicationDidBecomeActiveNotification object:nil];
         [[NSNotificationCenter defaultCenter] addObserver:sharedApiManager selector:@selector(willEnterBackground) name:UIApplicationWillResignActiveNotification object:nil];
+        [[NSNotificationCenter defaultCenter] addObserver:sharedApiManager selector:@selector(syncWithServerForEvents) name:kLDBackgroundFetchInitiated object:nil];
         
     });
     return sharedApiManager;
@@ -40,6 +42,12 @@ NSString *const kLDUserUpdatedNotification = @"Darkly.UserUpdatedNotification";
     DEBUG_LOG(@"ClientManager startPolling method called with configurationTimerPollingInterval=%f and eventTimerPollingInterval=%f", pollingMgr.configurationTimerPollingIntervalMillis, pollingMgr.eventTimerPollingIntervalMillis);
     [pollingMgr startConfigPolling];
     [pollingMgr startEventPolling];
+    
+    eventSource = [EventSource eventSourceWithURL:[NSURL URLWithString:kStreamUrl] mobileKey:config.mobileKey];
+    
+    [eventSource onMessage:^(Event *e) {
+        [self syncWithServerForConfig];
+    }];
 }
 
 
@@ -49,6 +57,8 @@ NSString *const kLDUserUpdatedNotification = @"Darkly.UserUpdatedNotification";
     
     [pollingMgr stopConfigPolling];
     [pollingMgr stopEventPolling];
+    
+    [eventSource close];
     
     [self flushEvents];
 }
@@ -60,6 +70,8 @@ NSString *const kLDUserUpdatedNotification = @"Darkly.UserUpdatedNotification";
     [pollingMgr suspendConfigPolling];
     [pollingMgr suspendEventPolling];
     
+    [eventSource close];
+    
     [self flushEvents];
 }
 
@@ -68,6 +80,13 @@ NSString *const kLDUserUpdatedNotification = @"Darkly.UserUpdatedNotification";
     LDPollingManager *pollingMgr = [LDPollingManager sharedInstance];
     [pollingMgr resumeConfigPolling];
     [pollingMgr resumeEventPolling];
+    
+    LDClient *client = [LDClient sharedInstance];
+    eventSource = [EventSource eventSourceWithURL:[NSURL URLWithString:kStreamUrl] mobileKey:client.ldConfig.mobileKey];
+    
+    [eventSource onMessage:^(Event *e) {
+        [self syncWithServerForConfig];
+    }];
 }
 
 -(void)syncWithServerForEvents {

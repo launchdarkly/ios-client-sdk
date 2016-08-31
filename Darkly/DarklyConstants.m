@@ -4,10 +4,12 @@
 
 #import "DarklyConstants.h"
 
-NSString * const kClientVersion = @"1.1.0";
+NSString * const kClientVersion = @"0.4.2";
 NSString * const kBaseUrl = @"https://app.launchdarkly.com";
-NSString * const kNoApiKeyExceptionName = @"NoApiKeyDefinedException";
-NSString * const kNoApiKeyExceptionReason = @"A valid ApiKey must be provided";
+NSString * const kEventsUrl = @"https://mobile.launchdarkly.com";
+NSString * const kStreamUrl = @"https://stream.launchdarkly.com/mping";
+NSString * const kNoMobileKeyExceptionName = @"NoMobileKeyDefinedException";
+NSString * const kNoMobileKeyExceptionReason = @"A valid MobileKey must be provided";
 NSString * const kNilConfigExceptionName = @"NilConfigException";
 NSString * const kNilConfigExceptionReason = @"A valid LDConfig must be provided";
 NSString * const kClientNotStartedExceptionName = @"ClientNotStartedException";

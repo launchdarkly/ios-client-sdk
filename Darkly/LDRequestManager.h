@@ -16,8 +16,9 @@
     
 }
 
-@property (nonatomic) NSString* apiKey;
+@property (nonatomic) NSString* mobileKey;
 @property (nonatomic) NSString* baseUrl;
+@property (nonatomic) NSString* eventsUrl;
 @property (nonatomic) NSTimeInterval connectionTimeout;
 @property (nonatomic, weak) id <RequestManagerDelegate> delegate;
 @property (nonatomic, assign) BOOL configRequestInProgress;

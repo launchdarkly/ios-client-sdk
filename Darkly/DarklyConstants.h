@@ -21,8 +21,10 @@ typedef enum {
 
 extern NSString * const kClientVersion;
 extern NSString * const kBaseUrl;
-extern NSString * const kNoApiKeyExceptionName;
-extern NSString * const kNoApiKeyExceptionReason;
+extern NSString * const kEventsUrl;
+extern NSString * const kStreamUrl;
+extern NSString * const kNoMobileKeyExceptionName;
+extern NSString * const kNoMobileKeyExceptionReason;
 extern NSString * const kNoEncodedUserExceptionName;
 extern NSString * const kNoEncodedUserExceptionReason;
 extern NSString * const kNilConfigExceptionName;

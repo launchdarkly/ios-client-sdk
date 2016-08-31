@@ -17,7 +17,7 @@ extern int const kUserCacheSize;
 -(NSMutableDictionary *)retrieveUserDictionary;
 -(NSMutableDictionary *)retrieveEventDictionary;
 -(LDUserModel *)findUserWithkey: (NSString *)key;
--(void) createFeatureEvent: (NSString *)featureKey keyValue:(BOOL)keyValue defaultKeyValue:(BOOL)defaultKeyValue;
+-(void) createFeatureEvent: (NSString *)featureKey keyValue:(NSObject*)keyValue defaultKeyValue:(NSObject*)defaultKeyValue;
 -(void) createCustomEvent: (NSString *)eventKey withCustomValuesDictionary: (NSDictionary *)customDict;
 -(void) purgeOldUser: (NSMutableDictionary *)dictionary;
 -(void) saveUser: (LDUserModel *) user;

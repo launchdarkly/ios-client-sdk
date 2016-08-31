@@ -33,7 +33,7 @@ static NSString * const kFeatureJsonValueName = @"value";
 - (id)initWithDictionary:(NSDictionary *)dictionary {
     if((self = [super init])) {
         //Process json that comes down from server
-        self.featuresJsonDictionary = [dictionary objectForKey: kFeaturesJsonDictionaryServerKey];
+        self.featuresJsonDictionary = dictionary;
     }
     return self;
 }
@@ -46,16 +46,16 @@ static NSString * const kFeatureJsonValueName = @"value";
     return dictionary;
 }
 
--(BOOL) isFlagOn: ( NSString * __nonnull )keyName {
-    __block BOOL result = NO;
+-(NSObject*) configFlagValue: ( NSString * __nonnull )keyName {
+    NSObject *result = nil;
     
-    NSDictionary *featureJson = [self.featuresJsonDictionary objectForKey: keyName];
+    NSDictionary *featureValue = [self.featuresJsonDictionary objectForKey: keyName];
     
-    if (featureJson) {
-        id aValue = [featureJson valueForKey:kFeatureJsonValueName];
-        if (![aValue isKindOfClass:[NSNull class]] && ![aValue isKindOfClass:[NSString class]]) {
+    if (featureValue) {
+        id aValue = featureValue;
+        if (![aValue isKindOfClass:[NSNull class]]) {
             @try {
-                result = [aValue boolValue];
+                result = aValue;
             }
             @catch (NSException *exception) {
                 DEBUG_LOG(@"Error parsing value for key: %@", keyName);
@@ -65,8 +65,9 @@ static NSString * const kFeatureJsonValueName = @"value";
     return result;
 }
 
--(BOOL) doesFlagExist: ( NSString * __nonnull )keyName {
-    return [[self.featuresJsonDictionary allKeys] containsObject: keyName];
+-(BOOL) doesConfigFlagExist: ( NSString * __nonnull )keyName {
+    BOOL value = [[self.featuresJsonDictionary allKeys] containsObject: keyName];
+    return value;
 }
 
 @end

@@ -8,15 +8,15 @@
 #import "LDClientManager.h"
 #import "LDConfig.h"
 
-static NSString * const kFeatureFlagUrl = @"/mobile/eval/users/";
+static NSString * const kFeatureFlagUrl = @"/msdk/eval/users/";
 static NSString * const kEventUrl = @"/mobile/events/bulk";
-static NSString * const kHeaderApiKey = @"api_key ";
+static NSString * const kHeaderMobileKey = @"api_key ";
 static NSString * const kConfigRequestCompletedNotification = @"config_request_completed_notification";
 static NSString * const kEventRequestCompletedNotification = @"event_request_completed_notification";
 
 @implementation LDRequestManager
 
-@synthesize apiKey, baseUrl, connectionTimeout, delegate, configRequestInProgress, eventRequestInProgress;
+@synthesize mobileKey, baseUrl, eventsUrl, connectionTimeout, delegate, configRequestInProgress, eventRequestInProgress;
 
 +(LDRequestManager *)sharedInstance
 {
@@ -27,8 +27,9 @@ static NSString * const kEventRequestCompletedNotification = @"event_request_com
         [sharedApiManager setDelegate:[LDClientManager sharedInstance]];
         LDClient *client = [LDClient sharedInstance];
         LDConfig *config = client.ldConfig;
-        [sharedApiManager setApiKey:config.apiKey];
+        [sharedApiManager setMobileKey:config.mobileKey];
         [sharedApiManager setBaseUrl:config.baseUrl];
+        [sharedApiManager setEventsUrl:config.eventsUrl];
         [sharedApiManager setConnectionTimeout:[config.connectionTimeout doubleValue]];
     });
     return sharedApiManager;
@@ -44,7 +45,7 @@ static NSString * const kEventRequestCompletedNotification = @"event_request_com
     DEBUG_LOGX(@"RequestManager syncing config to server");
 
     if (!configRequestInProgress) {
-        if (apiKey) {
+        if (mobileKey) {
             if (encodedUser) {
                 configRequestInProgress = YES;
                 NSMutableURLRequest *request = [self featuresWithEncodedUserRequest:encodedUser];
@@ -125,7 +126,7 @@ static NSString * const kEventRequestCompletedNotification = @"event_request_com
                 DEBUG_LOGX(@"RequestManager unable to sync config to server since no encodedUser");
             }
         } else {
-            DEBUG_LOGX(@"RequestManager unable to sync config to server since no apiKey");
+            DEBUG_LOGX(@"RequestManager unable to sync config to server since no mobileKey");
         }
     } else {
         DEBUG_LOGX(@"RequestManager already has a sync config in progress");
@@ -137,7 +138,7 @@ static NSString * const kEventRequestCompletedNotification = @"event_request_com
     DEBUG_LOGX(@"RequestManager syncing events to server");
     
     if (!eventRequestInProgress) {
-        if (apiKey) {
+        if (mobileKey) {
             if (jsonEventArray) {
                 eventRequestInProgress = YES;
                 NSMutableURLRequest *request = [self eventsRequestWithJsonEvents:jsonEventArray];
@@ -164,7 +165,7 @@ static NSString * const kEventRequestCompletedNotification = @"event_request_com
                 DEBUG_LOGX(@"RequestManager unable to sync events to server since no events");
             }
         } else {
-            DEBUG_LOGX(@"RequestManager unable to sync events to server since no apiKey");
+            DEBUG_LOGX(@"RequestManager unable to sync events to server since no mobileKey");
         }
     } else {
         DEBUG_LOGX(@"RequestManager already has a sync events in progress");
@@ -177,7 +178,7 @@ static NSString * const kEventRequestCompletedNotification = @"event_request_com
     requestUrl = [requestUrl stringByAppendingString:encodedUser];
     NSURL *URL = [NSURL URLWithString:requestUrl];
     NSMutableURLRequest *request = [NSMutableURLRequest requestWithURL:URL cachePolicy:NSURLRequestReloadIgnoringCacheData timeoutInterval:connectionTimeout];
-    NSString *authKey = [kHeaderApiKey stringByAppendingString:apiKey];
+    NSString *authKey = [kHeaderMobileKey stringByAppendingString:mobileKey];
     [request setValue:authKey forHTTPHeaderField:@"Authorization"];
     [request setValue:[@"iOS/" stringByAppendingString:kClientVersion] forHTTPHeaderField:@"User-Agent"];
     [request setHTTPMethod:@"GET"];
@@ -186,10 +187,10 @@ static NSString * const kEventRequestCompletedNotification = @"event_request_com
 }
 
 -(NSMutableURLRequest *)eventsRequestWithJsonEvents: (NSData *)jsonEventArray  {
-    NSString *requestUrl = [baseUrl stringByAppendingString:kEventUrl];
+    NSString *requestUrl = [eventsUrl stringByAppendingString:kEventUrl];
     NSURL *URL = [NSURL URLWithString:requestUrl];
     NSMutableURLRequest *request = [NSMutableURLRequest requestWithURL:URL cachePolicy:NSURLRequestReloadIgnoringCacheData timeoutInterval:connectionTimeout];
-    NSString *authKey = [kHeaderApiKey stringByAppendingString:apiKey];
+    NSString *authKey = [kHeaderMobileKey stringByAppendingString:mobileKey];
     
     [request setValue:authKey forHTTPHeaderField:@"Authorization"];
     [request setValue:[@"iOS/" stringByAppendingString:kClientVersion] forHTTPHeaderField:@"User-Agent"];

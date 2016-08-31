@@ -2,19 +2,19 @@
 //  Copyright © 2015 Catamorphic Co. All rights reserved.
 //
 
-
 #import "LDConfig.h"
 #import "LDUtil.h"
 
 @implementation LDConfig
 
-@synthesize apiKey, baseUrl, capacity, connectionTimeout, flushInterval, debugEnabled;
+@synthesize mobileKey, baseUrl, eventsUrl, capacity, connectionTimeout, flushInterval, debugEnabled;
 
 @end
 
 @interface LDConfigBuilder() {
-    NSString *apiKey;
+    NSString *mobileKey;
     NSString *baseUrl;
+    NSString *eventsUrl;
     NSNumber *capacity;
     NSNumber *connectionTimeout;
     NSNumber *flushInterval;
@@ -25,15 +25,20 @@
 
 @implementation LDConfigBuilder
 
-- (LDConfigBuilder *)withApiKey:(NSString *)inputApiKey
+- (LDConfigBuilder *)withMobileKey:(NSString *)inputMobileKey
 {
-    apiKey = inputApiKey;
+    mobileKey = inputMobileKey;
     return self;
 }
 
 - (LDConfigBuilder *)withBaseUrl:(NSString *)inputBaseUrl
 {
     baseUrl = inputBaseUrl;
+    return self;
+}
+
+-(LDConfigBuilder *)withEventsUrl:(NSString *)inputEventsUrl{
+    eventsUrl = inputEventsUrl;
     return self;
 }
 
@@ -65,19 +70,27 @@
 {
     DEBUG_LOGX(@"LDConfigBuilder build method called");
     LDConfig *config = [[LDConfig alloc] init];
-    if (apiKey) {
-        DEBUG_LOG(@"LDConfigBuilder building LDConfig with apiKey: %@", apiKey);
-        [config setApiKey:apiKey];
+    if (mobileKey) {
+        DEBUG_LOG(@"LDConfigBuilder building LDConfig with mobileKey: %@", mobileKey);
+        [config setMobileKey:mobileKey];
     } else {
-        DEBUG_LOGX(@"LDConfigBuilder requires an ApiKey");
+        DEBUG_LOGX(@"LDConfigBuilder requires an MobileKey");
         return nil;
     }
+
     if (baseUrl) {
         DEBUG_LOG(@"LDConfigBuilder building LDConfig with baseUrl: %@", baseUrl);
         [config setBaseUrl:baseUrl];
     } else {
         DEBUG_LOG(@"LDConfigBuilder building LDConfig with default baseUrl: %@", kBaseUrl);
         [config setBaseUrl:kBaseUrl];
+    }
+    if (eventsUrl) {
+        DEBUG_LOG(@"LDConfigBuilder building LDConfig with eventsUrl: %@", eventsUrl);
+        [config setCapacity:capacity];
+    } else {
+        DEBUG_LOG(@"LDConfigBuilder building LDConfig with default eventsUrl: %@", kEventsUrl);
+        [config setEventsUrl:kEventsUrl];
     }
     if (capacity) {
         DEBUG_LOG(@"LDConfigBuilder building LDConfig with capacity: %@", capacity);

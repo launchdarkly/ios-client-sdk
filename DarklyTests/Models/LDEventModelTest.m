@@ -22,12 +22,12 @@
 }
 
 - (void)testFeatureEventWithKeyCreatesEventWithDefaults {
-    LDEventModel *event = [[LDEventModel alloc] initFeatureEventWithKey:@"red" keyValue:NO defaultKeyValue:NO userValue:self.user ];
+    LDEventModel *event = [[LDEventModel alloc] initFeatureEventWithKey:@"red" keyValue:[NSNumber numberWithBool:NO] defaultKeyValue:[NSNumber numberWithBool:NO] userValue:self.user];
     
     XCTAssertEqual(event.key, @"red");
     XCTAssertEqual(event.kind, @"feature");
-    XCTAssertFalse(event.featureKeyValue);
-    XCTAssertFalse(event.isDefault);
+    XCTAssertFalse([(NSNumber *)event.value boolValue]);
+    XCTAssertFalse([(NSNumber *)event.isDefault boolValue]);
 }
 
 - (void)testCustomEventWithKeyCreatesEventWithDefaults {

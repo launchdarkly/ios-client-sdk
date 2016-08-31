@@ -65,6 +65,7 @@ int const kUserCacheSize = 5;
         userDictionary = [[NSMutableDictionary alloc] init];
         [userDictionary setObject:user forKey:user.key];
     }
+    [userDictionary setObject:user forKey:user.key];
     [self storeUserDictionary:userDictionary];
 }
 
@@ -128,10 +129,10 @@ int const kUserCacheSize = 5;
     return retrievalDictionary;
 }
 
--(void) createFeatureEvent: (NSString *)featureKey keyValue:(BOOL)keyValue defaultKeyValue:(BOOL)defaultKeyValue {
+-(void) createFeatureEvent: (NSString *)featureKey keyValue:(NSObject*)keyValue defaultKeyValue:(NSObject*)defaultKeyValue {
     NSMutableDictionary *eventDictionary = [self retrieveEventDictionary];
     if(![self isAtEventCapacity:eventDictionary]) {
-        DEBUG_LOG(@"Creating event for feature:%@ with value:%d and defaultValue:%d", featureKey, keyValue, defaultKeyValue);
+        DEBUG_LOG(@"Creating event for feature:%@ with value:%@ and fallback:%@", featureKey, keyValue, defaultKeyValue);
         LDClient *client = [LDClient sharedInstance];
         LDUserModel *currentUser = client.ldUser;
         LDEventModel *featureEvent = [[LDEventModel alloc] initFeatureEventWithKey: featureKey keyValue:keyValue defaultKeyValue:defaultKeyValue userValue:currentUser];

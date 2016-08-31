@@ -36,7 +36,7 @@
     OCMStub([clientMock ldUser]).andReturn(user);
     
     LDFlagConfigModel *config = [[LDFlagConfigModel alloc] init];
-    config.featuresJsonDictionary = [NSDictionary dictionaryWithObjects:@[@{@"value": @YES}, @{@"value": @NO}]
+    config.featuresJsonDictionary = [NSDictionary dictionaryWithObjects:@[@YES, @NO]
                                                                 forKeys: @[@"ipaduser", @"iosuser"]];
     user.config = config;
 }
@@ -50,8 +50,8 @@
     LDClient *client = [LDClient sharedInstance];
     LDUserModel * theUser = client.ldUser;
     
-    BOOL ipaduserFlag = [theUser isFlagOn: @"ipaduser"];
-    BOOL iosuserFlag = [theUser isFlagOn: @"iosuser"];
+    BOOL ipaduserFlag = [(NSNumber *)[theUser flagValue: @"ipaduser"] boolValue];
+    BOOL iosuserFlag = [(NSNumber *)[theUser flagValue: @"iosuser"] boolValue];
     
     XCTAssertFalse(iosuserFlag);
     XCTAssertTrue(ipaduserFlag);
@@ -60,7 +60,7 @@
 -(void)testAllEventsDictionaryArray {
     NSString *eventKey1 = @"foo";
     NSString *eventKey2 = @"fi";
-    [[LDDataManager sharedManager] createFeatureEvent:eventKey1 keyValue:NO defaultKeyValue:NO];
+    [[LDDataManager sharedManager] createFeatureEvent:eventKey1 keyValue:[NSNumber numberWithBool:NO] defaultKeyValue:[NSNumber numberWithBool:NO]];
     [[LDDataManager sharedManager] createCustomEvent:eventKey2 withCustomValuesDictionary:@{@"carrot": @"cake"}];
     
     NSArray *eventArray = [[LDDataManager sharedManager] allEventsDictionaryArray];
@@ -139,7 +139,7 @@
 -(void)testCreateEventAfterCapacityReached{
     LDConfigBuilder *builder = [[LDConfigBuilder alloc] init];
     builder = [builder withCapacity: 2];
-    builder = [builder withApiKey: @"AnApiKey"];
+    builder = [builder withMobileKey: @"AMobileKey"];
     LDConfig *config = [builder build];
     
     OCMStub([clientMock ldConfig]).andReturn(config);
@@ -147,7 +147,7 @@
     [[LDDataManager sharedManager] createCustomEvent:@"aKey" withCustomValuesDictionary: @{@"carrot": @"cake"}];
     [[LDDataManager sharedManager] createCustomEvent:@"aKey" withCustomValuesDictionary: @{@"carrot": @"cake"}];
     [[LDDataManager sharedManager] createCustomEvent:@"aKey" withCustomValuesDictionary: @{@"carrot": @"cake"}];
-    [[LDDataManager sharedManager] createFeatureEvent: @"anotherKet" keyValue: YES defaultKeyValue: NO];
+    [[LDDataManager sharedManager] createFeatureEvent: @"anotherKet" keyValue: [NSNumber numberWithBool:YES] defaultKeyValue: [NSNumber numberWithBool:NO]];
     
     XCTAssertEqual([[[LDDataManager sharedManager] retrieveEventDictionary] count],2);
 }
