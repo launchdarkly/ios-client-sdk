@@ -59,7 +59,7 @@ We run integration tests for all our SDKs using a centralized test harness. This
 Contributing
 ------------
 
-See [Contributing](https://github.com/launchdarkly/ruby-client/blob/master/CONTRIBUTING.md)
+See [Contributing](https://github.com/launchdarkly/ios-client/blob/master/CONTRIBUTING.md)
 
 About LaunchDarkly
 -----------
