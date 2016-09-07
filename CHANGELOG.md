@@ -9,6 +9,7 @@ All notable changes to the LaunchDarkly Python SDK will be documented in this fi
 - Added support for [background fetching](http://docs.launchdarkly.com/docs/ios-sdk-reference#background-fetch)
 
 ### Changed
+- In `LDClient`, `toggle` value is now called `boolVariation`
 - Changed 'default value' to 'fallback value' to represent the value returned if LaunchDarkly is unreachable and no previous settings are stored for the current user (no behavior changed)
 - Improved ability to store multiple unique user contexts per device
 - Improved support to ensure that a user receives the latest flag values even when the app is backgrounded or in airplane mode
