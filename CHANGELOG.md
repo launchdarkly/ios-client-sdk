@@ -2,6 +2,14 @@
 
 All notable changes to the LaunchDarkly Python SDK will be documented in this file. This project adheres to [Semantic Versioning](http://semver.org).
 
+## [2.0.0] - 2016-09-01
+### Multivariate and streaming support
+- Added support for multivariate feature flags, including strings, numbers, dictionaries, and arrays
+- Added support for streaming and real-time feature flag updates
+- Changed 'default value' to 'fallback value' to represent the value returned if LaunchDarkly is unreachable and no previous settings are stored for the current user (no behavior changed)
+- Improved ability to store multiple unique user contexts per device
+- Improved support to ensure that a user receives the latest flag values even when the app is backgrounded or in airplane mode
+
 ## [1.1.0] - 2016-08-19
 ### Dependency update
 - Removed dependency on Core Data (no interfaces or behavior changed)
