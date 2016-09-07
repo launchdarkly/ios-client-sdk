@@ -4,7 +4,12 @@ All notable changes to the LaunchDarkly Python SDK will be documented in this fi
 
 ## [2.0.0] - 2016-09-01
 ### Multivariate and streaming support
-- Added support for multivariate feature flags, including strings, numbers, dictionaries, and arrays
+- Added support for multivariate feature flags. The SDK now supports the following data types for feature flags:
+  - Bool
+  - String
+  - Number
+  - Dictionary
+  - Array
 - Added support for streaming and real-time feature flag updates
 - Changed 'default value' to 'fallback value' to represent the value returned if LaunchDarkly is unreachable and no previous settings are stored for the current user (no behavior changed)
 - Improved ability to store multiple unique user contexts per device
