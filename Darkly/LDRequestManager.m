@@ -48,21 +48,24 @@ static NSString * const kEventRequestCompletedNotification = @"event_request_com
         if (mobileKey) {
             if (encodedUser) {
                 configRequestInProgress = YES;
-                NSMutableURLRequest *request = [self featuresWithEncodedUserRequest:encodedUser];
-                AFHTTPRequestOperation *op = [[AFHTTPRequestOperation alloc] initWithRequest:request];
-                op.responseSerializer = [AFJSONResponseSerializer serializer];
-
-                [op setCompletionBlockWithSuccess:^(AFHTTPRequestOperation *operation, id responseObject) {
+                
+                AFHTTPSessionManager *manager = [AFHTTPSessionManager manager];
+                [self addFeatureRequestHeaders:manager];
+                
+                NSString *requestUrl = [baseUrl stringByAppendingString:kFeatureFlagUrl];
+                requestUrl = [requestUrl stringByAppendingString:encodedUser];
+                
+                [manager GET:requestUrl parameters:nil progress:nil success:^(NSURLSessionDataTask * _Nonnull task, id  _Nullable responseObject) {
                     dispatch_async(dispatch_get_main_queue(),^{
                         configRequestInProgress = NO;
-                        if (responseObject && [operation response]) {
-                            NSDictionary *headerDictionary = [[operation response] allHeaderFields];
+                        if (responseObject) {
+                            NSDictionary *headerDictionary = [responseObject allHeaderFields];
                             int configMaxAge = 0;
                             
                             // need to process the Expires header first because the
                             // max-age directive should override the Expires header, even if
                             // Expires header is more restrictive.
-
+                            
                             if ([headerDictionary valueForKey:@"Expires"] != nil)
                             {
                                 // response comes in as Expires: Tue, 15 May 2008 07:19:00 GMT
@@ -91,14 +94,14 @@ static NSString * const kEventRequestCompletedNotification = @"event_request_com
                                 // and max-age doesn't appear first.
                                 
                                 NSString *queryString =[headerDictionary valueForKey:@"Cache-Control"];
-                             
+                                
                                 NSMutableDictionary *cacheControlQueryStrings = [[NSMutableDictionary alloc] init];
                                 for (NSString *qs in [queryString componentsSeparatedByString:@" "]) {
                                     // Get the parameter name
                                     NSString *key = [[qs componentsSeparatedByString:@"="] objectAtIndex:0];
                                     // Get the parameter value
                                     NSString *value = [[qs componentsSeparatedByString:@"="] objectAtIndex:1];
- 
+                                    
                                     cacheControlQueryStrings[key] = value;
                                     
                                     if ([key isEqualToString:@"max-age"])
@@ -115,13 +118,13 @@ static NSString * const kEventRequestCompletedNotification = @"event_request_com
                             [delegate processedConfig:NO jsonConfigDictionary:nil configIntervalMillis:kMinimumPollingIntervalMillis];
                         }
                     });
-                } failure:^(AFHTTPRequestOperation *operation, NSError *error) {
+                } failure:^(NSURLSessionDataTask * _Nullable task, NSError * _Nonnull error) {
                     dispatch_async(dispatch_get_main_queue(),^{
                         configRequestInProgress = NO;
                         [delegate processedConfig:NO jsonConfigDictionary:nil configIntervalMillis:kMinimumPollingIntervalMillis];
                     });
                 }];
-                [op start];
+                
             } else {
                 DEBUG_LOGX(@"RequestManager unable to sync config to server since no encodedUser");
             }
@@ -141,11 +144,13 @@ static NSString * const kEventRequestCompletedNotification = @"event_request_com
         if (mobileKey) {
             if (jsonEventArray) {
                 eventRequestInProgress = YES;
-                NSMutableURLRequest *request = [self eventsRequestWithJsonEvents:jsonEventArray];
-                AFHTTPRequestOperation *op = [[AFHTTPRequestOperation alloc] initWithRequest:request];
-                op.responseSerializer = [AFJSONResponseSerializer serializer];
-
-                [op setCompletionBlockWithSuccess:^(AFHTTPRequestOperation *operation, id responseObject) {
+                
+                AFHTTPSessionManager *manager = [AFHTTPSessionManager manager];
+                [self addEventRequestHeaders:manager];
+                
+                NSString *requestUrl = [eventsUrl stringByAppendingString:kEventUrl];
+                
+                [manager POST:requestUrl parameters:jsonEventArray progress:nil success:^(NSURLSessionDataTask * _Nonnull task, id  _Nullable responseObject) {
                     // Call delegate method
                     dispatch_async(dispatch_get_main_queue(),^{
                         eventRequestInProgress = NO;
@@ -153,14 +158,13 @@ static NSString * const kEventRequestCompletedNotification = @"event_request_com
                         LDConfig *config = client.ldConfig;
                         [delegate processedEvents:YES jsonEventArray:jsonEventArray eventIntervalMillis:[config.flushInterval intValue] * kMillisInSecs];
                     });
-                } failure:^(AFHTTPRequestOperation *operation, NSError *error) {
+                } failure:^(NSURLSessionDataTask * _Nullable task, NSError * _Nonnull error) {
                     // Call delegate method
                     dispatch_async(dispatch_get_main_queue(),^{
                         eventRequestInProgress = NO;
                         [delegate processedEvents:NO jsonEventArray:jsonEventArray eventIntervalMillis:kMinimumPollingIntervalMillis];
                     });
                 }];
-                [op start];
             } else {
                 DEBUG_LOGX(@"RequestManager unable to sync events to server since no events");
             }
@@ -173,32 +177,20 @@ static NSString * const kEventRequestCompletedNotification = @"event_request_com
 }
 
 #pragma mark - requests
--(NSMutableURLRequest *)featuresWithEncodedUserRequest:(NSString *)encodedUser {
-    NSString *requestUrl = [baseUrl stringByAppendingString:kFeatureFlagUrl];
-    requestUrl = [requestUrl stringByAppendingString:encodedUser];
-    NSURL *URL = [NSURL URLWithString:requestUrl];
-    NSMutableURLRequest *request = [NSMutableURLRequest requestWithURL:URL cachePolicy:NSURLRequestReloadIgnoringCacheData timeoutInterval:connectionTimeout];
+-(void)addFeatureRequestHeaders:(AFHTTPSessionManager *)manager {
     NSString *authKey = [kHeaderMobileKey stringByAppendingString:mobileKey];
-    [request setValue:authKey forHTTPHeaderField:@"Authorization"];
-    [request setValue:[@"iOS/" stringByAppendingString:kClientVersion] forHTTPHeaderField:@"User-Agent"];
-    [request setHTTPMethod:@"GET"];
-    return request;
-
+    
+    [manager.requestSerializer setValue:authKey forHTTPHeaderField:@"Authorization"];
+    [manager.requestSerializer setValue:[@"iOS/" stringByAppendingString:kClientVersion] forHTTPHeaderField:@"User-Agent"];
 }
 
--(NSMutableURLRequest *)eventsRequestWithJsonEvents: (NSData *)jsonEventArray  {
-    NSString *requestUrl = [eventsUrl stringByAppendingString:kEventUrl];
-    NSURL *URL = [NSURL URLWithString:requestUrl];
-    NSMutableURLRequest *request = [NSMutableURLRequest requestWithURL:URL cachePolicy:NSURLRequestReloadIgnoringCacheData timeoutInterval:connectionTimeout];
+-(void)addEventRequestHeaders: (AFHTTPSessionManager *)manager  {
     NSString *authKey = [kHeaderMobileKey stringByAppendingString:mobileKey];
     
-    [request setValue:authKey forHTTPHeaderField:@"Authorization"];
-    [request setValue:[@"iOS/" stringByAppendingString:kClientVersion] forHTTPHeaderField:@"User-Agent"];
-    [request setValue: @"application/json" forHTTPHeaderField:@"Content-Type"];
-    [request setHTTPMethod:@"POST"];
-    [request setHTTPBody:jsonEventArray];
+    [manager.requestSerializer setValue:authKey forHTTPHeaderField:@"Authorization"];
+    [manager.requestSerializer setValue:[@"iOS/" stringByAppendingString:kClientVersion] forHTTPHeaderField:@"User-Agent"];
+    [manager.requestSerializer setValue: @"application/json" forHTTPHeaderField:@"Content-Type"];
     
-    return request;
 }
 
 @end
