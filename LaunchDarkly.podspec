@@ -131,6 +131,6 @@ Pod::Spec.new do |s|
     ss.dependency 'AFNetworking', '~> 2.5'
     ss.dependency 'Mantle', '~> 2.0'
     ss.dependency 'MTLManagedObjectAdapter', '~> 1.0'
-    ss.dependency 'DarklyEventSource', '~> 1.1.0'
+    ss.dependency 'DarklyEventSource', '~> 1.2.0'
   end
 end
