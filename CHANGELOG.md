@@ -2,6 +2,14 @@
 
 All notable changes to the LaunchDarkly Python SDK will be documented in this file. This project adheres to [Semantic Versioning](http://semver.org).
 
+## [2.0.2] - 2016-10-25
+### Changed
+- Updated to use AFNetworking 3.1
+- Minor code cleanup
+
+### Fixed
+- DarklyEventSource linker errors patched
+
 ## [2.0.0] - 2016-09-01
 ### Added
 - Support for multivariate feature flags.  New methods for multivariate flags: `stringVariation`, `numberVariation`, `arrayVariation`, and `dictionaryVariation` have been added to `LDClient`.
