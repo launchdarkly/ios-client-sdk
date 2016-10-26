@@ -197,12 +197,10 @@ int const kUserCacheSize = 5;
     }
 }
 
--(NSData*) allEventsJsonData {
+-(NSArray*) allEventsJsonArray {
     NSArray *allEvents = [self allEventsDictionaryArray];
     if (allEvents && [allEvents count]) {
-        NSError *writeError = nil;
-        NSData *jsonData = [NSJSONSerialization dataWithJSONObject:allEvents options:NSJSONWritingPrettyPrinted error:&writeError];
-        return jsonData;
+        return allEvents;
     } else {
         return nil;
     }

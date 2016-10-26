@@ -77,7 +77,7 @@ static NSString * const kEventRequestCompletedNotification = @"event_request_com
     }
 }
 
--(void)performEventRequest:(NSData *)jsonEventArray
+-(void)performEventRequest:(NSArray *)jsonEventArray
 {
     DEBUG_LOGX(@"RequestManager syncing events to server");
     
@@ -88,9 +88,7 @@ static NSString * const kEventRequestCompletedNotification = @"event_request_com
                 
                 AFHTTPSessionManager *manager = [AFHTTPSessionManager manager];
                 [self addEventRequestHeaders:manager];
-                
                 NSString *requestUrl = [eventsUrl stringByAppendingString:kEventUrl];
-                
                 [manager POST:requestUrl parameters:jsonEventArray progress:nil success:^(NSURLSessionDataTask * _Nonnull task, id  _Nullable responseObject) {
                     // Call delegate method
                     
@@ -127,9 +125,11 @@ static NSString * const kEventRequestCompletedNotification = @"event_request_com
 -(void)addEventRequestHeaders: (AFHTTPSessionManager *)manager  {
     NSString *authKey = [kHeaderMobileKey stringByAppendingString:mobileKey];
     
+    manager.requestSerializer = [AFJSONRequestSerializer serializer];
     [manager.requestSerializer setValue:authKey forHTTPHeaderField:@"Authorization"];
     [manager.requestSerializer setValue:[@"iOS/" stringByAppendingString:kClientVersion] forHTTPHeaderField:@"User-Agent"];
     [manager.requestSerializer setValue: @"application/json" forHTTPHeaderField:@"Content-Type"];
+    [manager.requestSerializer setValue:@"application/json" forHTTPHeaderField:@"Accept"];
     
 }
 
