@@ -98,12 +98,14 @@
     NSString *jsonEventString = @"[{\"kind\": \"feature\", \"user\": {\"key\" : \"jeff@test.com\", \"custom\" : {\"groups\" : [\"microsoft\", \"google\"]}}, \"creationDate\": 1438468068, \"key\": \"isConnected\", \"value\": true, \"default\": false}]";
     NSData* eventData = [jsonEventString dataUsingEncoding:NSUTF8StringEncoding];
     
+    NSArray *eventsArray = [NSJSONSerialization JSONObjectWithData:eventData options:kNilOptions error:nil];
+    
     LDRequestManager *requestManager = [LDRequestManager sharedInstance];
     [requestManager setMobileKey:mobileKey];
     [requestManager setEventsUrl:kEventsUrl];
     [requestManager setConnectionTimeout:10];
     
-    [requestManager performEventRequest:eventData];
+    [requestManager performEventRequest:eventsArray];
 
     [self waitForExpectationsWithTimeout:10 handler:^(NSError *error){
         // By the time we reach this code, the while loop has exited

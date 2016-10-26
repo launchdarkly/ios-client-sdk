@@ -20,7 +20,7 @@ extern NSString *const kLDBackgroundFetchInitiated;
 
 - (void)syncWithServerForEvents;
 - (void)syncWithServerForConfig;
-- (void)processedEvents:(BOOL)success jsonEventArray:(NSData *)jsonEventArray eventIntervalMillis:(int)eventIntervalMillis;
+- (void)processedEvents:(BOOL)success jsonEventArray:(NSArray *)jsonEventArray eventIntervalMillis:(int)eventIntervalMillis;
 - (void)processedConfig:(BOOL)success jsonConfigDictionary:(NSDictionary *)jsonConfigDictionary configIntervalMillis:(int)configIntervalMillis;
 - (void)startPolling;
 - (void)stopPolling;

@@ -77,9 +77,7 @@
     [[LDDataManager sharedManager] createCustomEvent:@"foo" withCustomValuesDictionary:nil];
     [[LDDataManager sharedManager] createCustomEvent:@"fi" withCustomValuesDictionary:nil];
     
-    NSData *eventData = [[LDDataManager sharedManager] allEventsJsonData];
-    
-    NSArray *eventsArray = [NSJSONSerialization JSONObjectWithData:eventData options:kNilOptions error:nil];
+    NSArray *eventsArray = [[LDDataManager sharedManager] allEventsJsonArray];
 
     NSMutableDictionary *eventDictionary = [[NSMutableDictionary alloc] init];
     for (NSDictionary *currentEventDictionary in eventsArray) {

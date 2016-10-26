@@ -77,7 +77,6 @@
         DEBUG_LOGX(@"LDConfigBuilder requires an MobileKey");
         return nil;
     }
-
     if (baseUrl) {
         DEBUG_LOG(@"LDConfigBuilder building LDConfig with baseUrl: %@", baseUrl);
         [config setBaseUrl:baseUrl];
@@ -87,7 +86,7 @@
     }
     if (eventsUrl) {
         DEBUG_LOG(@"LDConfigBuilder building LDConfig with eventsUrl: %@", eventsUrl);
-        [config setCapacity:capacity];
+        [config setEventsUrl:eventsUrl];
     } else {
         DEBUG_LOG(@"LDConfigBuilder building LDConfig with default eventsUrl: %@", kEventsUrl);
         [config setEventsUrl:kEventsUrl];

@@ -86,7 +86,7 @@
     LDClientManager *clientManager = [LDClientManager sharedInstance];
     [clientManager setOfflineEnabled:NO];
     
-    OCMStub([dataManagerMock allEventsJsonData]).andReturn(testData);
+    OCMStub([dataManagerMock allEventsJsonArray]).andReturn(testData);
     
     [clientManager syncWithServerForEvents];
     
@@ -109,7 +109,7 @@
 
 - (void)testSyncWithServerForEventsNotProcessedWhenOffline {
     NSData *testData = [[NSData alloc] init];
-    OCMStub([dataManagerMock allEventsJsonData]).andReturn(testData);
+    OCMStub([dataManagerMock allEventsJsonArray]).andReturn(testData);
     
     [[requestManagerMock reject] performEventRequest:[OCMArg isEqual:testData]];
     
@@ -154,13 +154,10 @@
 
 - (void)testProcessedEventsSuccessWithProcessedEvents {
     int eventIntervalMillis = 10;
-    LDEventModel *event = [[LDEventModel alloc] init];
-    [event initFeatureEventWithKey:@"blah" keyValue:[NSNumber numberWithBool:NO] defaultKeyValue:[NSNumber numberWithBool:NO] userValue:[[LDClient sharedInstance] ldUser]];
+    LDEventModel *event = [[LDEventModel alloc] initFeatureEventWithKey:@"blah" keyValue:[NSNumber numberWithBool:NO] defaultKeyValue:[NSNumber numberWithBool:NO] userValue:[[LDClient sharedInstance] ldUser]];
 
-    NSData *data = [NSJSONSerialization dataWithJSONObject:@[[event dictionaryValue]] options:NSJSONWritingPrettyPrinted error:nil];
-    
     LDClientManager *clientManager = [LDClientManager sharedInstance];
-    [clientManager processedEvents:YES jsonEventArray:data eventIntervalMillis:eventIntervalMillis];
+    [clientManager processedEvents:YES jsonEventArray:@[[event dictionaryValue]] eventIntervalMillis:eventIntervalMillis];
     
     OCMVerify([dataManagerMock deleteProcessedEvents:[OCMArg any]]);
 }
@@ -168,10 +165,8 @@
 - (void)testProcessedEventsSuccessWithoutProcessedEvents {
     int eventIntervalMillis = 10;
     
-    NSData *data = [NSJSONSerialization dataWithJSONObject:@[] options:NSJSONWritingPrettyPrinted error:nil];
-    
     LDClientManager *clientManager = [LDClientManager sharedInstance];
-    [clientManager processedEvents:YES jsonEventArray:data eventIntervalMillis:eventIntervalMillis];
+    [clientManager processedEvents:YES jsonEventArray:@[] eventIntervalMillis:eventIntervalMillis];
     
     [[dataManagerMock reject] deleteProcessedEvents:[OCMArg any]];
     

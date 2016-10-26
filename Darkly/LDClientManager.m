@@ -93,7 +93,7 @@ NSString *const kLDBackgroundFetchInitiated = @"Darkly.BackgroundFetchInitiated"
     if (!offlineEnabled) {
         DEBUG_LOGX(@"ClientManager syncing events with server");
         
-        NSData *eventJsonData = [[LDDataManager sharedManager] allEventsJsonData];
+        NSArray *eventJsonData = [[LDDataManager sharedManager] allEventsJsonArray];
         
         if (eventJsonData) {
             [[LDRequestManager sharedInstance] performEventRequest:eventJsonData];
@@ -131,14 +131,13 @@ NSString *const kLDBackgroundFetchInitiated = @"Darkly.BackgroundFetchInitiated"
     [self syncWithServerForEvents];
 }
 
-- (void)processedEvents:(BOOL)success jsonEventArray:(NSData *)jsonEventArray eventIntervalMillis:(int)eventIntervalMillis {
+- (void)processedEvents:(BOOL)success jsonEventArray:(NSArray *)jsonEventArray eventIntervalMillis:(int)eventIntervalMillis {
     // If Success
     if (success) {
         DEBUG_LOGX(@"ClientManager processedEvents method called after receiving successful response from server");
         // Audit cached events versus processed Events and only keep difference
-        NSArray *processedJsonArray = [NSJSONSerialization JSONObjectWithData:jsonEventArray options:NSJSONReadingMutableContainers error:nil];
-        if (processedJsonArray) {
-            [[LDDataManager sharedManager] deleteProcessedEvents: processedJsonArray];
+        if (jsonEventArray) {
+            [[LDDataManager sharedManager] deleteProcessedEvents: jsonEventArray];
         }
     } else {
         DEBUG_LOGX(@"ClientManager processedEvents method called after receiving failure response from server");

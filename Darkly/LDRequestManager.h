@@ -7,7 +7,7 @@
 
 @protocol RequestManagerDelegate <NSObject>
 
-- (void)processedEvents:(BOOL)success jsonEventArray:(NSData *)jsonEventArray eventIntervalMillis:(int)eventIntervalMillis;
+- (void)processedEvents:(BOOL)success jsonEventArray:(NSArray *)jsonEventArray eventIntervalMillis:(int)eventIntervalMillis;
 - (void)processedConfig:(BOOL)success jsonConfigDictionary:(NSDictionary *)jsonConfigDictionary configIntervalMillis:(int)configIntervalMillis;
 
 @end
@@ -28,6 +28,6 @@
 
 -(void)performFeatureFlagRequest:(NSString *)encodedUser;
 
--(void)performEventRequest:(NSData *)jsonEventArray;
+-(void)performEventRequest:(NSArray *)jsonEventArray;
 
 @end
