@@ -3,7 +3,6 @@
 //
 
 #import "LDRequestManager.h"
-#import "AFNetworking.h"
 #import "LDUtil.h"
 #import "LDClientManager.h"
 #import "LDConfig.h"
@@ -48,24 +47,36 @@ static NSString * const kEventRequestCompletedNotification = @"event_request_com
         if (mobileKey) {
             if (encodedUser) {
                 configRequestInProgress = YES;
-                
-                AFHTTPSessionManager *manager = [AFHTTPSessionManager manager];
-                [self addFeatureRequestHeaders:manager];
-                
+
+                NSURLSession *defaultSession = [NSURLSession sessionWithConfiguration:[NSURLSessionConfiguration defaultSessionConfiguration]];
                 NSString *requestUrl = [baseUrl stringByAppendingString:kFeatureFlagUrl];
+                
                 requestUrl = [requestUrl stringByAppendingString:encodedUser];
                 
-                [manager GET:requestUrl parameters:nil progress:nil success:^(NSURLSessionDataTask * _Nonnull task, id  _Nullable responseObject) {
+                NSMutableURLRequest *request = [NSMutableURLRequest requestWithURL:[NSURL URLWithString:requestUrl]];
+                
+                [request setHTTPMethod:@"GET"];
+                [self addFeatureRequestHeaders:request];
+                
+                NSURLSessionDataTask *dataTask = [defaultSession dataTaskWithRequest:request completionHandler:^(NSData * _Nullable data, NSURLResponse * _Nullable response, NSError * _Nullable error) {
+                    
                     configRequestInProgress = NO;
-                    if (responseObject) {
-                        [delegate processedConfig:YES jsonConfigDictionary:responseObject configIntervalMillis:kMinimumPollingIntervalMillis];
-                    } else {
+                    if (error) {
+                        NSError *jsonError;
+                        NSMutableDictionary * responseObject = [NSJSONSerialization JSONObjectWithData:data options:kNilOptions error:&jsonError];
+                        if (responseObject) {
+                            [delegate processedConfig:YES jsonConfigDictionary:responseObject configIntervalMillis:kMinimumPollingIntervalMillis];
+                        } else {
+                            [delegate processedConfig:NO jsonConfigDictionary:nil configIntervalMillis:kMinimumPollingIntervalMillis];
+                        }
+                    }
+                    else{
                         [delegate processedConfig:NO jsonConfigDictionary:nil configIntervalMillis:kMinimumPollingIntervalMillis];
                     }
-                } failure:^(NSURLSessionDataTask * _Nullable task, NSError * _Nonnull error) {
-                    configRequestInProgress = NO;
-                    [delegate processedConfig:NO jsonConfigDictionary:nil configIntervalMillis:kMinimumPollingIntervalMillis];
                 }];
+                
+                [dataTask resume];
+                
             } else {
                 DEBUG_LOGX(@"RequestManager unable to sync config to server since no encodedUser");
             }
@@ -85,24 +96,33 @@ static NSString * const kEventRequestCompletedNotification = @"event_request_com
         if (mobileKey) {
             if (jsonEventArray) {
                 eventRequestInProgress = YES;
-                
-                AFHTTPSessionManager *manager = [AFHTTPSessionManager manager];
-                [self addEventRequestHeaders:manager];
+            
+                NSURLSession *defaultSession = [NSURLSession sessionWithConfiguration:[NSURLSessionConfiguration defaultSessionConfiguration]];
                 NSString *requestUrl = [eventsUrl stringByAppendingString:kEventUrl];
-                [manager POST:requestUrl parameters:jsonEventArray progress:nil success:^(NSURLSessionDataTask * _Nonnull task, id  _Nullable responseObject) {
-                    // Call delegate method
-                    
+                
+                NSMutableURLRequest *request = [NSMutableURLRequest requestWithURL:[NSURL URLWithString:requestUrl]];
+                [self addEventRequestHeaders:request];
+                
+                NSError *error;
+                NSData *postData = [NSJSONSerialization dataWithJSONObject:jsonEventArray options:0 error:&error];
+                
+                [request setHTTPMethod:@"POST"];
+                [request setHTTPBody:postData];
+                
+                NSURLSessionDataTask *dataTask = [defaultSession dataTaskWithRequest:request completionHandler:^(NSData * _Nullable data, NSURLResponse * _Nullable response, NSError * _Nullable error) {
                     eventRequestInProgress = NO;
-                    LDClient *client = [LDClient sharedInstance];
-                    LDConfig *config = client.ldConfig;
-                    [delegate processedEvents:YES jsonEventArray:jsonEventArray eventIntervalMillis:[config.flushInterval intValue] * kMillisInSecs];
-                } failure:^(NSURLSessionDataTask * _Nullable task, NSError * _Nonnull error) {
-                    // Call delegate method
-                    
-                    eventRequestInProgress = NO;
-                    [delegate processedEvents:NO jsonEventArray:jsonEventArray eventIntervalMillis:kMinimumPollingIntervalMillis];
-                    
+                    if (!error) {
+                        LDClient *client = [LDClient sharedInstance];
+                        LDConfig *config = client.ldConfig;
+                        [delegate processedEvents:YES jsonEventArray:jsonEventArray eventIntervalMillis:[config.flushInterval intValue] * kMillisInSecs];
+                    }
+                    else{
+                        [delegate processedEvents:NO jsonEventArray:jsonEventArray eventIntervalMillis:kMinimumPollingIntervalMillis];
+                    }
                 }];
+                
+                [dataTask resume];
+                
             } else {
                 DEBUG_LOGX(@"RequestManager unable to sync events to server since no events");
             }
@@ -115,22 +135,20 @@ static NSString * const kEventRequestCompletedNotification = @"event_request_com
 }
 
 #pragma mark - requests
--(void)addFeatureRequestHeaders:(AFHTTPSessionManager *)manager {
+-(void)addFeatureRequestHeaders:(NSMutableURLRequest *)request{
     NSString *authKey = [kHeaderMobileKey stringByAppendingString:mobileKey];
     
-    [manager.requestSerializer setValue:authKey forHTTPHeaderField:@"Authorization"];
-    [manager.requestSerializer setValue:[@"iOS/" stringByAppendingString:kClientVersion] forHTTPHeaderField:@"User-Agent"];
+    [request addValue:authKey forHTTPHeaderField:@"Authorization"];
+    [request addValue:[@"iOS/" stringByAppendingString:kClientVersion] forHTTPHeaderField:@"User-Agent"];
 }
 
--(void)addEventRequestHeaders: (AFHTTPSessionManager *)manager  {
+-(void)addEventRequestHeaders: (NSMutableURLRequest *)request  {
     NSString *authKey = [kHeaderMobileKey stringByAppendingString:mobileKey];
     
-    manager.requestSerializer = [AFJSONRequestSerializer serializer];
-    [manager.requestSerializer setValue:authKey forHTTPHeaderField:@"Authorization"];
-    [manager.requestSerializer setValue:[@"iOS/" stringByAppendingString:kClientVersion] forHTTPHeaderField:@"User-Agent"];
-    [manager.requestSerializer setValue: @"application/json" forHTTPHeaderField:@"Content-Type"];
-    [manager.requestSerializer setValue:@"application/json" forHTTPHeaderField:@"Accept"];
-    
+    [request addValue:authKey forHTTPHeaderField:@"Authorization"];
+    [request addValue:[@"iOS/" stringByAppendingString:kClientVersion] forHTTPHeaderField:@"User-Agent"];
+    [request addValue: @"application/json" forHTTPHeaderField:@"Content-Type"];
+    [request addValue:@"application/json" forHTTPHeaderField:@"Accept"];
 }
 
 @end
