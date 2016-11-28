@@ -55,24 +55,26 @@ static NSString * const kEventRequestCompletedNotification = @"event_request_com
                 
                 NSMutableURLRequest *request = [NSMutableURLRequest requestWithURL:[NSURL URLWithString:requestUrl]];
                 
-                [request setHTTPMethod:@"GET"];
                 [self addFeatureRequestHeaders:request];
                 
                 NSURLSessionDataTask *dataTask = [defaultSession dataTaskWithRequest:request completionHandler:^(NSData * _Nullable data, NSURLResponse * _Nullable response, NSError * _Nullable error) {
-                    
-                    configRequestInProgress = NO;
-                    if (error) {
-                        NSError *jsonError;
-                        NSMutableDictionary * responseObject = [NSJSONSerialization JSONObjectWithData:data options:kNilOptions error:&jsonError];
-                        if (responseObject) {
-                            [delegate processedConfig:YES jsonConfigDictionary:responseObject configIntervalMillis:kMinimumPollingIntervalMillis];
-                        } else {
+                    dispatch_async(dispatch_get_main_queue(), ^{
+                        configRequestInProgress = NO;
+                        if (!error) {
+                            NSError *jsonError;
+                            NSMutableDictionary * responseObject = [NSJSONSerialization JSONObjectWithData:data options:kNilOptions error:&jsonError];
+                            if (responseObject) {
+                                [delegate processedConfig:YES jsonConfigDictionary:responseObject configIntervalMillis:kMinimumPollingIntervalMillis];
+                            } else {
+                                [delegate processedConfig:NO jsonConfigDictionary:nil configIntervalMillis:kMinimumPollingIntervalMillis];
+                            }
+                        }
+                        else{
                             [delegate processedConfig:NO jsonConfigDictionary:nil configIntervalMillis:kMinimumPollingIntervalMillis];
                         }
-                    }
-                    else{
-                        [delegate processedConfig:NO jsonConfigDictionary:nil configIntervalMillis:kMinimumPollingIntervalMillis];
-                    }
+                    });
+                    
+                    
                 }];
                 
                 [dataTask resume];
@@ -110,15 +112,17 @@ static NSString * const kEventRequestCompletedNotification = @"event_request_com
                 [request setHTTPBody:postData];
                 
                 NSURLSessionDataTask *dataTask = [defaultSession dataTaskWithRequest:request completionHandler:^(NSData * _Nullable data, NSURLResponse * _Nullable response, NSError * _Nullable error) {
-                    eventRequestInProgress = NO;
-                    if (!error) {
-                        LDClient *client = [LDClient sharedInstance];
-                        LDConfig *config = client.ldConfig;
-                        [delegate processedEvents:YES jsonEventArray:jsonEventArray eventIntervalMillis:[config.flushInterval intValue] * kMillisInSecs];
-                    }
-                    else{
-                        [delegate processedEvents:NO jsonEventArray:jsonEventArray eventIntervalMillis:kMinimumPollingIntervalMillis];
-                    }
+                    dispatch_async(dispatch_get_main_queue(), ^{
+                        eventRequestInProgress = NO;
+                        if (!error) {
+                            LDClient *client = [LDClient sharedInstance];
+                            LDConfig *config = client.ldConfig;
+                            [delegate processedEvents:YES jsonEventArray:jsonEventArray eventIntervalMillis:[config.flushInterval intValue] * kMillisInSecs];
+                        }
+                        else{
+                            [delegate processedEvents:NO jsonEventArray:jsonEventArray eventIntervalMillis:kMinimumPollingIntervalMillis];
+                        }
+                    });
                 }];
                 
                 [dataTask resume];
