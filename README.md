@@ -30,12 +30,13 @@ Your first feature flag
 1. Create a new feature flag on your dashboard
 
 2. In your application code, use the feature’s key to check whether the flag is on for each user:
+
         BOOL showFeature = [[LDClient sharedInstance] boolVariation:@"YOUR_FLAG_KEY" fallback:NO];
-            if (showFeature) {
+        if (showFeature) {
                 NSLog(@"Showing feature for %@", user.key);
-            } else {
+        } else {
                 NSLog(@"Not showing feature for user %@", user.key);
-            }
+        }
 
 Manage the feature on your dashboard — control who sees the feature without re-deploying your application!
 
