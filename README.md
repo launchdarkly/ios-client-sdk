@@ -12,21 +12,15 @@ Quick setup
 
         #import "LDClient.h"
 
-3. Instantiate a new LDClient with your mobile key:
+3. Instantiate a new LDClient with your mobile key and user:
 
         LDConfigBuilder *config = [[LDConfigBuilder alloc] init];
         [config withMobileKey:@"YOUR_MOBILE_KEY"];
     
-        [[LDClient sharedInstance] start:config];
-        
-4. Use a builder pattern to construct a user:
-
-        LDUserBuilder *builder = [[LDUserBuilder alloc] init];
-        builder = [builder withKey:@"aa0ceb"];
-
-        LDUserModel *user = [builder build];
-
-        [[LDClient sharedInstance] start:config userBuilder:builder];
+        LDUserBuilder *user = [[LDUserBuilder alloc] init];
+        user = [user withKey:@"aa0ceb"];
+    
+        [[LDClient sharedInstance] start:config userBuilder:user];
 
 (Be sure to use a mobile key from your environments. Never embed a standard SDK key into a mobile application.)
 
