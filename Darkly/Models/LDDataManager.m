@@ -123,6 +123,11 @@ NSMutableDictionary *eventDictionary;
             // No Dictionary exists so create
             eventDictionary = [[NSMutableDictionary alloc] init];
         }
+        
+        if ([eventDictionary objectForKey:[NSString stringWithFormat:@"%ld", (long)featureEvent.creationDate]] != nil) {
+            featureEvent.creationDate = featureEvent.creationDate + 1;
+        }
+        
         [eventDictionary setObject:featureEvent forKey:[NSString stringWithFormat:@"%ld", (long)featureEvent.creationDate]];
     } else
         DEBUG_LOG(@"Events have surpassed capacity. Discarding feature event %@", featureKey);
@@ -139,6 +144,11 @@ NSMutableDictionary *eventDictionary;
             // No Dictionary exists so create
             eventDictionary = [[NSMutableDictionary alloc] init];
         }
+        
+        if ([eventDictionary objectForKey:[NSString stringWithFormat:@"%ld", (long)customEvent.creationDate]] != nil) {
+            customEvent.creationDate = customEvent.creationDate + 1;
+        }
+        
         [eventDictionary setObject:customEvent forKey:[NSString stringWithFormat:@"%ld", (long)customEvent.creationDate]];
     } else
         DEBUG_LOG(@"Events have surpassed capacity. Discarding event %@ with dictionary %@", eventKey, customDict);
@@ -184,7 +194,6 @@ NSMutableDictionary *eventDictionary;
 
 -(void)flushEventsDictionary {
     [eventDictionary removeAllObjects];
-    eventDictionary = [[NSMutableDictionary alloc] init];
 }
 
 @end

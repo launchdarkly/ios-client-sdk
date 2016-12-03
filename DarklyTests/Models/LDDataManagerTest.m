@@ -59,6 +59,7 @@
 -(void)testAllEventsDictionaryArray {
     NSString *eventKey1 = @"foo";
     NSString *eventKey2 = @"fi";
+    
     [[LDDataManager sharedManager] createFeatureEvent:eventKey1 keyValue:[NSNumber numberWithBool:NO] defaultKeyValue:[NSNumber numberWithBool:NO]];
     [[LDDataManager sharedManager] createCustomEvent:eventKey2 withCustomValuesDictionary:@{@"carrot": @"cake"}];
     
