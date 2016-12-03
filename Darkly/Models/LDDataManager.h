@@ -22,5 +22,6 @@ extern int const kUserCacheSize;
 -(void) purgeOldUser: (NSMutableDictionary *)dictionary;
 -(void) saveUser: (LDUserModel *) user;
 -(void) deleteProcessedEvents: (NSArray *) processedJsonArray;
+-(void)flushEventsDictionary;
 
 @end

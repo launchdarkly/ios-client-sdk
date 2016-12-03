@@ -13,6 +13,7 @@
     [super setUp];
 
     [[NSUserDefaults standardUserDefaults] removeObjectForKey:kUserDictionaryStorageKey];
+    [[LDDataManager sharedManager] flushEventsDictionary];
 }
 
 - (void)tearDown {

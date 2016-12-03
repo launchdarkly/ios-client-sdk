@@ -30,7 +30,6 @@
     user.email = @"bob@gmail.com";
     user.updatedAt = [NSDate date];
     
-    
     LDClient *client = [LDClient sharedInstance];
     clientMock = OCMPartialMock(client);
     OCMStub([clientMock ldUser]).andReturn(user);
@@ -142,12 +141,14 @@
     
     OCMStub([clientMock ldConfig]).andReturn(config);
     
-    [[LDDataManager sharedManager] createCustomEvent:@"aKey" withCustomValuesDictionary: @{@"carrot": @"cake"}];
-    [[LDDataManager sharedManager] createCustomEvent:@"aKey" withCustomValuesDictionary: @{@"carrot": @"cake"}];
-    [[LDDataManager sharedManager] createCustomEvent:@"aKey" withCustomValuesDictionary: @{@"carrot": @"cake"}];
-    [[LDDataManager sharedManager] createFeatureEvent: @"anotherKet" keyValue: [NSNumber numberWithBool:YES] defaultKeyValue: [NSNumber numberWithBool:NO]];
+    LDDataManager *manager = [LDDataManager sharedManager];
     
-    XCTAssertEqual([[[LDDataManager sharedManager] retrieveEventDictionary] count],2);
+    [manager createCustomEvent:@"aKey" withCustomValuesDictionary: @{@"carrot": @"cake"}];
+    [manager createCustomEvent:@"aKey" withCustomValuesDictionary: @{@"carrot": @"cake"}];
+    [manager createCustomEvent:@"aKey" withCustomValuesDictionary: @{@"carrot": @"cake"}];
+    [manager createFeatureEvent: @"anotherKet" keyValue: [NSNumber numberWithBool:YES] defaultKeyValue: [NSNumber numberWithBool:NO]];
+    
+    XCTAssertEqual([[manager retrieveEventDictionary] count],2);
 }
 
 @end

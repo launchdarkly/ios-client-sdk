@@ -182,4 +182,9 @@ NSMutableDictionary *eventDictionary;
     }
 }
 
+-(void)flushEventsDictionary {
+    [eventDictionary removeAllObjects];
+    eventDictionary = [[NSMutableDictionary alloc] init];
+}
+
 @end
