@@ -8,6 +8,7 @@
 #import "LDUtil.h"
 
 int const kUserCacheSize = 5;
+NSMutableDictionary *eventDictionary;
 
 @implementation LDDataManager
 
@@ -16,6 +17,7 @@ int const kUserCacheSize = 5;
     static dispatch_once_t onceToken;
     dispatch_once(&onceToken, ^{
         sharedDataManager = [[self alloc] init];
+        eventDictionary = [[NSMutableDictionary alloc] init];
     });
     return sharedDataManager;
 }
@@ -93,18 +95,6 @@ int const kUserCacheSize = 5;
     [defaults synchronize];
 }
 
--(void)storeEventDictionary:(NSDictionary *)eventDictionary {
-    NSMutableDictionary *archiveDictionary = [[NSMutableDictionary alloc] init];
-    for (NSString *key in eventDictionary) {
-        NSData *eventEncodedObject = [NSKeyedArchiver archivedDataWithRootObject:(LDEventModel *)[eventDictionary objectForKey:key]];
-        [archiveDictionary setObject:eventEncodedObject forKey:key];
-    }
-    
-    NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
-    [defaults setObject:archiveDictionary forKey:kEventDictionaryStorageKey];
-    [defaults synchronize];
-}
-
 - (NSMutableDictionary *)retrieveUserDictionary {
     NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
     NSMutableDictionary *retrievalDictionary = [[NSMutableDictionary alloc] init];
@@ -119,18 +109,10 @@ int const kUserCacheSize = 5;
 #pragma mark - events
 
 - (NSMutableDictionary *)retrieveEventDictionary {
-    NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
-    NSMutableDictionary *retrievalDictionary = [[NSMutableDictionary alloc] init];
-    NSDictionary *encodedDictionary = [defaults objectForKey:kEventDictionaryStorageKey];
-    for (NSString *key in encodedDictionary) {
-        LDEventModel *decodedEvent = [NSKeyedUnarchiver unarchiveObjectWithData:(NSData *)[encodedDictionary objectForKey:key]];
-        [retrievalDictionary setObject:decodedEvent forKey:key];
-    }
-    return retrievalDictionary;
+    return eventDictionary;
 }
 
 -(void) createFeatureEvent: (NSString *)featureKey keyValue:(NSObject*)keyValue defaultKeyValue:(NSObject*)defaultKeyValue {
-    NSMutableDictionary *eventDictionary = [self retrieveEventDictionary];
     if(![self isAtEventCapacity:eventDictionary]) {
         DEBUG_LOG(@"Creating event for feature:%@ with value:%@ and fallback:%@", featureKey, keyValue, defaultKeyValue);
         LDClient *client = [LDClient sharedInstance];
@@ -142,13 +124,11 @@ int const kUserCacheSize = 5;
             eventDictionary = [[NSMutableDictionary alloc] init];
         }
         [eventDictionary setObject:featureEvent forKey:[NSString stringWithFormat:@"%ld", (long)featureEvent.creationDate]];
-        [self storeEventDictionary:eventDictionary];
     } else
         DEBUG_LOG(@"Events have surpassed capacity. Discarding feature event %@", featureKey);
 }
 
 -(void) createCustomEvent: (NSString *)eventKey withCustomValuesDictionary: (NSDictionary *)customDict {
-    NSMutableDictionary *eventDictionary = [self retrieveEventDictionary];
     if(![self isAtEventCapacity:eventDictionary]) {
         DEBUG_LOG(@"Creating event for custom key:%@ and value:%@", eventKey, customDict);
         LDClient *client = [LDClient sharedInstance];
@@ -160,7 +140,6 @@ int const kUserCacheSize = 5;
             eventDictionary = [[NSMutableDictionary alloc] init];
         }
         [eventDictionary setObject:customEvent forKey:[NSString stringWithFormat:@"%ld", (long)customEvent.creationDate]];
-        [self storeEventDictionary:eventDictionary];
     } else
         DEBUG_LOG(@"Events have surpassed capacity. Discarding event %@ with dictionary %@", eventKey, customDict);
 }
@@ -171,7 +150,6 @@ int const kUserCacheSize = 5;
 }
 
 -(void) deleteProcessedEvents: (NSArray *) processedJsonArray {
-    NSMutableDictionary *eventDictionary = [self retrieveEventDictionary];
     // Loop through processedEvents
     for (NSDictionary *processedEventDict in processedJsonArray) {
         LDEventModel *processedEvent = [[LDEventModel alloc] initWithDictionary:processedEventDict];
@@ -180,11 +158,9 @@ int const kUserCacheSize = 5;
             [eventDictionary removeObjectForKey:processedEventCreationDate];
         }
     }
-    [self storeEventDictionary:eventDictionary];
 }
 
 -(NSArray *)allEventsDictionaryArray {
-    NSMutableDictionary *eventDictionary = [self retrieveEventDictionary];
     if (eventDictionary && [eventDictionary count]) {
         NSMutableArray *eventArray = [[NSMutableArray alloc] init];
         for (NSString *key in eventDictionary) {

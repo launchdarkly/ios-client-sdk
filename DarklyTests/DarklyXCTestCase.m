@@ -13,7 +13,6 @@
     [super setUp];
 
     [[NSUserDefaults standardUserDefaults] removeObjectForKey:kUserDictionaryStorageKey];
-    [[NSUserDefaults standardUserDefaults] removeObjectForKey:kEventDictionaryStorageKey];
 }
 
 - (void)tearDown {

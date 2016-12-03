@@ -64,16 +64,15 @@ static NSString * const kEventRequestCompletedNotification = @"event_request_com
                             NSError *jsonError;
                             NSMutableDictionary * responseObject = [NSJSONSerialization JSONObjectWithData:data options:kNilOptions error:&jsonError];
                             if (responseObject) {
-                                [delegate processedConfig:YES jsonConfigDictionary:responseObject configIntervalMillis:kMinimumPollingIntervalMillis];
+                                [delegate processedConfig:YES jsonConfigDictionary:responseObject];
                             } else {
-                                [delegate processedConfig:NO jsonConfigDictionary:nil configIntervalMillis:kMinimumPollingIntervalMillis];
+                                [delegate processedConfig:NO jsonConfigDictionary:nil];
                             }
                         }
                         else{
-                            [delegate processedConfig:NO jsonConfigDictionary:nil configIntervalMillis:kMinimumPollingIntervalMillis];
+                            [delegate processedConfig:NO jsonConfigDictionary:nil];
                         }
                     });
-                    
                     
                 }];
                 

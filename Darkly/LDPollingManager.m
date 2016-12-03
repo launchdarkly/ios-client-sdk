@@ -10,15 +10,10 @@
 
 @implementation LDPollingManager
 
-
-@synthesize configurationTimer;
-@synthesize configurationTimerPollingIntervalMillis;
 @synthesize eventTimer;
 @synthesize eventTimerPollingIntervalMillis;
-@synthesize pollConfigState;
 @synthesize pollEventState;
 
-static NSUInteger configPollingCount=0;
 static NSUInteger eventPollingCount=0;
 
 static id sharedInstance = nil;
@@ -35,154 +30,25 @@ static id sharedInstance = nil;
 
 - (id)init {
     if ((self = [super init])) {
-        configPollingCount = 0;
         eventPollingCount = 0;
-        self.pollConfigState = POLL_STOPPED;
         self.pollEventState = POLL_STOPPED;
-        self.configurationTimerPollingIntervalMillis = kDefaultProdConfigCheckIntervalMillis;
         self.eventTimerPollingIntervalMillis = kDefaultFlushInterval*kMillisInSecs;
     }
     return self;
 }
 
 - (void)dealloc {
-    [self stopConfigPolling];
     [self stopEventPolling];
-    configPollingCount = 0;
     eventPollingCount = 0;
-    pollConfigState = POLL_STOPPED;
     pollEventState = POLL_STOPPED;
-}
-
-//Setter method
-- (void) setConfigurationTimerPollingIntervalMillis:(NSTimeInterval)cTimerPollingInterval {
-    configurationTimerPollingIntervalMillis = [self calculateConfigPollingIntervalMillis:cTimerPollingInterval];
-    if (pollConfigState != POLL_STOPPED && pollConfigState != POLL_SUSPENDED) {
-        // pause the config polling interval
-        DEBUG_LOGX(@"Pausing config Polling");
-        [self pauseConfigPolling];
-        
-        [self updateConfigPollingTimer];
-        DEBUG_LOGX(@"updated config Polling");
-        [self resumeConfigPolling];
-        DEBUG_LOGX(@"resuming config Polling");
-    }
-
-}
-
--(NSTimeInterval)calculateConfigPollingIntervalMillis:(NSTimeInterval)cTimerPollingInterval {
-    if (cTimerPollingInterval <= kMinimumPollingIntervalMillis) {
-        return [self retrieveDefaultConfigIntervalMillis];
-    } else {
-        return cTimerPollingInterval;
-    }
-}
-
-- (void)startConfigTimer {
-    DEBUG_LOGX(@"PollingManager starting initial config polling");
-    if ((!self.configurationTimer) && (self.configurationTimerPollingIntervalMillis > 0.0)) {
-        self.configurationTimer = dispatch_source_create(DISPATCH_SOURCE_TYPE_TIMER, 0, 0,  dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0));
-    }
-    if (self.configurationTimer) {
-        pollConfigState = POLL_RUNNING;
-        
-        dispatch_source_set_event_handler(self.configurationTimer, ^(void) {
-            [self configPoll];
-        });
-        
-        // should not be able to modify the configuration timer
-        [self updateConfigPollingTimer];
-        dispatch_resume(self.configurationTimer);
-    }
-}
-
-- (void)updateConfigPollingTimer {
-    if ((self.configurationTimer != NULL) && (self.configurationTimerPollingIntervalMillis > 0.0)) {
-        uint64_t interval = (uint64_t)(self.configurationTimerPollingIntervalMillis * NSEC_PER_MSEC);
-        dispatch_time_t startTime = dispatch_time(DISPATCH_TIME_NOW, interval);
-        dispatch_source_set_timer(self.configurationTimer, startTime, interval, 1.0);
-    }
-}
-
-- (void)configPoll {
-    
-    if (pollConfigState != POLL_STOPPED || pollConfigState != POLL_SUSPENDED)
-    {
-      DEBUG_LOGX(@"PollingManager config interval reached");
-      configPollingCount +=1;
-    
-      LDClientManager *clientManager = [LDClientManager sharedInstance];
-      [clientManager syncWithServerForConfig];
-    }
-}
-
-+ (NSUInteger)configPollingCount {
-    return configPollingCount;
 }
 
 + (NSUInteger)eventPollingCount {
     return eventPollingCount;
 }
 
-- (PollingState)configPollingState {
-    return pollConfigState;
-}
-
 - (PollingState)eventPollingState {
     return pollEventState;
-}
-
-- (void) startConfigPolling {
-    if (pollConfigState == POLL_STOPPED) {
-        DEBUG_LOGX(@"PollingManager starting config polling");
-        [self startConfigTimer];
-    }
-}
-
-- (void) pauseConfigPolling {
-    if (pollConfigState == POLL_RUNNING) {
-        DEBUG_LOGX(@"PollingManager pausing config polling");
-        dispatch_suspend(self.configurationTimer);
-        pollConfigState = POLL_PAUSED;
-    }
-}
-
-- (void) suspendConfigPolling {
-    if (pollConfigState == POLL_RUNNING) {
-        DEBUG_LOGX(@"PollingManager suspending config polling");
-        dispatch_suspend(self.configurationTimer);
-        pollConfigState = POLL_SUSPENDED;
-    }
-}
-
-- (void) resumeConfigPolling{
-    if (pollConfigState == POLL_PAUSED || pollConfigState == POLL_SUSPENDED) {
-        DEBUG_LOGX(@"PollingManager resuming config polling");
-        BOOL checkConfig = pollConfigState == POLL_SUSPENDED ? YES : NO;
-        dispatch_resume(self.configurationTimer);
-        pollConfigState = POLL_RUNNING;
-        if (checkConfig) {
-            [self configPoll];
-        }
-    }
-}
-
-- (void)stopConfigPolling {
-    DEBUG_LOGX(@"PollingManager stopping config polling");
-    if (self.configurationTimer) {
-        dispatch_source_cancel(self.configurationTimer);
-
-        if (pollConfigState == POLL_PAUSED || pollConfigState == POLL_SUSPENDED)
-            dispatch_resume(self.configurationTimer);
-
-#if !OS_OBJECT_USE_OBJC
-        dispatch_release(self.configurationTimer);
-#endif
-        if(self.configurationTimer != nil)
-            self.configurationTimer = nil;
-        
-        pollConfigState = POLL_STOPPED;
-    }
 }
 
 //Setter method
@@ -306,15 +172,6 @@ static id sharedInstance = nil;
         pollEventState = POLL_STOPPED;
     }
 }
-
-- (int)retrieveDefaultConfigIntervalMillis {
-    if ([[[LDClient sharedInstance] ldConfig] debugEnabled] == YES) {
-        return kDefaultDebugConfigCheckIntervalMillis;
-    } else {
-        return kDefaultProdConfigCheckIntervalMillis;
-    }
-}
-
 
 
 @end
