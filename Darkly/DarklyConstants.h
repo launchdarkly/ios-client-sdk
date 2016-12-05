@@ -17,8 +17,6 @@ typedef enum {
     DarklyLogLevelAll               //Highest level, outputs all events
 } DarklyLogLevel;
 
-
-
 extern NSString * const kClientVersion;
 extern NSString * const kBaseUrl;
 extern NSString * const kEventsUrl;

@@ -60,23 +60,4 @@
     XCTAssertTrue(actualValue == expectedValue);
 }
 
-/*
-- (void)waitForTimeInterval:(NSTimeInterval)delay
-{
-    XCTestExpectation *expectation = [self expectationWithDescription:@"wait"];
-    dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(delay * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
-        [expectation fulfill];
-    });
-    
-    [self waitForExpectationsWithTimeout:delay + 1 handler:nil];
-}
-
-- (void)testPerformanceExample {
-    // This is an example of a performance test case.
-    [self measureBlock:^{
-        // Put the code you want to measure the time of here.
-    }];
-}
- */
-
 @end
