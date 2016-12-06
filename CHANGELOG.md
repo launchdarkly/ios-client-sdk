@@ -2,6 +2,14 @@
 
 All notable changes to the LaunchDarkly Python SDK will be documented in this file. This project adheres to [Semantic Versioning](http://semver.org).
 
+## [2.1.0] - 2016-12-06
+### Changed
+- Removed AFNetworking
+- Code optimizations and cleanup
+
+### Fixed
+- Optimized events storage and polling algorithms
+
 ## [2.0.3] - 2016-10-26
 ### Changed
 - Updated to use AFNetworking 3.1
