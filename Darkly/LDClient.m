@@ -50,7 +50,7 @@
                     inputUserBuilder = [[LDUserBuilder alloc] init];
                 }
                 ldUser = [inputUserBuilder build];
-
+                
                 LDClientManager *clientManager = [LDClientManager sharedInstance];
                 [clientManager syncWithServerForConfig];
                 [clientManager startPolling];
@@ -100,6 +100,10 @@
 
 - (BOOL)boolVariation:(NSString *)featureKey fallback:(BOOL)fallback{
     DEBUG_LOG(@"LDClient boolVariation method called for feature=%@ and fallback=%d", featureKey, fallback);
+    if (![featureKey isMemberOfClass:[NSString class]]) {
+        NSLog(@"featureKey should be an NSString. Returning fallback value");
+        return fallback;
+    }
     if (clientStarted) {
         BOOL flagExists = [ldUser doesFlagExist: featureKey];
         NSObject *flagValue = [ldUser flagValue: featureKey];
@@ -118,6 +122,10 @@
 
 - (NSNumber*)numberVariation:(NSString *)featureKey fallback:(NSNumber*)fallback{
     DEBUG_LOG(@"LDClient numberVariation method called for feature=%@ and fallback=%@", featureKey, fallback);
+    if (![featureKey isMemberOfClass:[NSString class]]) {
+        NSLog(@"featureKey should be an NSString. Returning fallback value");
+        return fallback;
+    }
     if (clientStarted) {
         BOOL flagExists = [ldUser doesFlagExist: featureKey];
         NSObject *flagValue = [ldUser flagValue: featureKey];
@@ -136,6 +144,10 @@
 
 - (NSString*)stringVariation:(NSString *)featureKey fallback:(NSString*)fallback{
     DEBUG_LOG(@"LDClient stringVariation method called for feature=%@ and fallback=%@", featureKey, fallback);
+    if (![featureKey isMemberOfClass:[NSString class]]) {
+        NSLog(@"featureKey should be an NSString. Returning fallback value");
+        return fallback;
+    }
     if (clientStarted) {
         BOOL flagExists = [ldUser doesFlagExist: featureKey];
         NSObject *flagValue = [ldUser flagValue: featureKey];
@@ -154,6 +166,10 @@
 
 - (NSArray*)arrayVariation:(NSString *)featureKey fallback:(NSArray*)fallback{
     DEBUG_LOG(@"LDClient arrayVariation method called for feature=%@ and fallback=%@", featureKey, fallback);
+    if (![featureKey isMemberOfClass:[NSString class]]) {
+        NSLog(@"featureKey should be an NSString. Returning fallback value");
+        return fallback;
+    }
     if (clientStarted) {
         BOOL flagExists = [ldUser doesFlagExist: featureKey];
         NSObject *flagValue = [ldUser flagValue: featureKey];
@@ -172,6 +188,10 @@
 
 - (NSDictionary*)dictionaryVariation:(NSString *)featureKey fallback:(NSDictionary*)fallback{
     DEBUG_LOG(@"LDClient dictionaryVariation method called for feature=%@ and fallback=%@", featureKey, fallback);
+    if (![featureKey isMemberOfClass:[NSString class]]) {
+        NSLog(@"featureKey should be an NSString. Returning fallback value");
+        return fallback;
+    }
     if (clientStarted) {
         BOOL flagExists = [ldUser doesFlagExist: featureKey];
         NSObject *flagValue = [ldUser flagValue: featureKey];
@@ -193,7 +213,7 @@
     DEBUG_LOG(@"LDClient track method called for event=%@ and data=%@", eventName, dataDictionary);
     if (clientStarted) {
         [[LDDataManager sharedManager] createCustomEvent:eventName
-                            withCustomValuesDictionary: dataDictionary];
+                              withCustomValuesDictionary: dataDictionary];
         return YES;
     } else {
         DEBUG_LOGX(@"LDClient not started yet!");
@@ -257,7 +277,7 @@
 // Notification handler for ClientManager user updated
 -(void)configUpdated {
     if (self.delegate && [self.delegate respondsToSelector:@selector(userDidUpdate)]) {
-        [self.delegate userDidUpdate];        
+        [self.delegate userDidUpdate];
     }
 }
 

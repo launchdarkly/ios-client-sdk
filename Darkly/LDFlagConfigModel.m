@@ -66,8 +66,11 @@ static NSString * const kFeatureJsonValueName = @"value";
 }
 
 -(BOOL) doesConfigFlagExist: ( NSString * __nonnull )keyName {
-    BOOL value = [[self.featuresJsonDictionary allKeys] containsObject: keyName];
-    return value;
+    if (self.featuresJsonDictionary != nil) {
+        BOOL value = [[self.featuresJsonDictionary allKeys] containsObject: keyName];
+        return value;
+    }
+    return false;
 }
 
 @end
