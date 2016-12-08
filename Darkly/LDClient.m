@@ -100,7 +100,7 @@
 
 - (BOOL)boolVariation:(NSString *)featureKey fallback:(BOOL)fallback{
     DEBUG_LOG(@"LDClient boolVariation method called for feature=%@ and fallback=%d", featureKey, fallback);
-    if (![featureKey isMemberOfClass:[NSString class]]) {
+    if (![featureKey isKindOfClass:[NSString class]]) {
         NSLog(@"featureKey should be an NSString. Returning fallback value");
         return fallback;
     }
@@ -122,7 +122,7 @@
 
 - (NSNumber*)numberVariation:(NSString *)featureKey fallback:(NSNumber*)fallback{
     DEBUG_LOG(@"LDClient numberVariation method called for feature=%@ and fallback=%@", featureKey, fallback);
-    if (![featureKey isMemberOfClass:[NSString class]]) {
+    if (![featureKey isKindOfClass:[NSString class]]) {
         NSLog(@"featureKey should be an NSString. Returning fallback value");
         return fallback;
     }
@@ -144,7 +144,7 @@
 
 - (NSString*)stringVariation:(NSString *)featureKey fallback:(NSString*)fallback{
     DEBUG_LOG(@"LDClient stringVariation method called for feature=%@ and fallback=%@", featureKey, fallback);
-    if (![featureKey isMemberOfClass:[NSString class]]) {
+    if (![featureKey isKindOfClass:[NSString class]]) {
         NSLog(@"featureKey should be an NSString. Returning fallback value");
         return fallback;
     }
@@ -166,7 +166,7 @@
 
 - (NSArray*)arrayVariation:(NSString *)featureKey fallback:(NSArray*)fallback{
     DEBUG_LOG(@"LDClient arrayVariation method called for feature=%@ and fallback=%@", featureKey, fallback);
-    if (![featureKey isMemberOfClass:[NSString class]]) {
+    if (![featureKey isKindOfClass:[NSString class]]) {
         NSLog(@"featureKey should be an NSString. Returning fallback value");
         return fallback;
     }
@@ -188,7 +188,7 @@
 
 - (NSDictionary*)dictionaryVariation:(NSString *)featureKey fallback:(NSDictionary*)fallback{
     DEBUG_LOG(@"LDClient dictionaryVariation method called for feature=%@ and fallback=%@", featureKey, fallback);
-    if (![featureKey isMemberOfClass:[NSString class]]) {
+    if (![featureKey isKindOfClass:[NSString class]]) {
         NSLog(@"featureKey should be an NSString. Returning fallback value");
         return fallback;
     }
