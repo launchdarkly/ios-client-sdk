@@ -8,7 +8,13 @@
 #import "LDUtil.h"
 
 int const kUserCacheSize = 5;
-NSMutableDictionary *eventDictionary;
+
+@interface LDDataManager()
+
+@property (strong, nonatomic) NSMutableDictionary *eventDictionary;
+@property (strong, nonatomic) dispatch_queue_t  eventsQueue;
+
+@end
 
 @implementation LDDataManager
 
@@ -17,7 +23,8 @@ NSMutableDictionary *eventDictionary;
     static dispatch_once_t onceToken;
     dispatch_once(&onceToken, ^{
         sharedDataManager = [[self alloc] init];
-        eventDictionary = [[NSMutableDictionary alloc] init];
+        sharedDataManager.eventDictionary = [[NSMutableDictionary alloc] init];
+        sharedDataManager.eventsQueue = dispatch_queue_create("com.launchdarkly.events", DISPATCH_QUEUE_SERIAL);
     });
     return sharedDataManager;
 }
@@ -108,48 +115,45 @@ NSMutableDictionary *eventDictionary;
 
 #pragma mark - events
 
-- (NSMutableDictionary *)retrieveEventDictionary {
-    return eventDictionary;
-}
-
 -(void) createFeatureEvent: (NSString *)featureKey keyValue:(NSObject*)keyValue defaultKeyValue:(NSObject*)defaultKeyValue {
-    if(![self isAtEventCapacity:eventDictionary]) {
+    if(![self isAtEventCapacity:_eventDictionary]) {
         DEBUG_LOG(@"Creating event for feature:%@ with value:%@ and fallback:%@", featureKey, keyValue, defaultKeyValue);
         LDClient *client = [LDClient sharedInstance];
         LDUserModel *currentUser = client.ldUser;
         LDEventModel *featureEvent = [[LDEventModel alloc] initFeatureEventWithKey: featureKey keyValue:keyValue defaultKeyValue:defaultKeyValue userValue:currentUser];
         
-        if (!eventDictionary) {
+        if (!_eventDictionary) {
             // No Dictionary exists so create
-            eventDictionary = [[NSMutableDictionary alloc] init];
+            _eventDictionary = [[NSMutableDictionary alloc] init];
         }
-        
-        if ([eventDictionary objectForKey:[NSString stringWithFormat:@"%ld", (long)featureEvent.creationDate]] != nil) {
-            featureEvent.creationDate = featureEvent.creationDate + 1;
-        }
-        
-        [eventDictionary setObject:featureEvent forKey:[NSString stringWithFormat:@"%ld", (long)featureEvent.creationDate]];
+        dispatch_async(_eventsQueue, ^{
+            if ([_eventDictionary objectForKey:[NSString stringWithFormat:@"%ld", (long)featureEvent.creationDate]] != nil) {
+                featureEvent.creationDate = featureEvent.creationDate + 1;
+            }
+            [_eventDictionary setObject:featureEvent forKey:[NSString stringWithFormat:@"%ld", (long)featureEvent.creationDate]];
+        });
     } else
         DEBUG_LOG(@"Events have surpassed capacity. Discarding feature event %@", featureKey);
 }
 
 -(void) createCustomEvent: (NSString *)eventKey withCustomValuesDictionary: (NSDictionary *)customDict {
-    if(![self isAtEventCapacity:eventDictionary]) {
+    if(![self isAtEventCapacity:_eventDictionary]) {
         DEBUG_LOG(@"Creating event for custom key:%@ and value:%@", eventKey, customDict);
         LDClient *client = [LDClient sharedInstance];
         LDUserModel *currentUser = client.ldUser;
         LDEventModel *customEvent = [[LDEventModel alloc] initCustomEventWithKey: eventKey  andDataDictionary: customDict userValue:currentUser];
         
-        if (!eventDictionary) {
+        if (!_eventDictionary) {
             // No Dictionary exists so create
-            eventDictionary = [[NSMutableDictionary alloc] init];
+            _eventDictionary = [[NSMutableDictionary alloc] init];
         }
         
-        if ([eventDictionary objectForKey:[NSString stringWithFormat:@"%ld", (long)customEvent.creationDate]] != nil) {
-            customEvent.creationDate = customEvent.creationDate + 1;
-        }
-        
-        [eventDictionary setObject:customEvent forKey:[NSString stringWithFormat:@"%ld", (long)customEvent.creationDate]];
+        dispatch_async(_eventsQueue, ^{
+            if ([_eventDictionary objectForKey:[NSString stringWithFormat:@"%ld", (long)customEvent.creationDate]] != nil) {
+                customEvent.creationDate = customEvent.creationDate + 1;
+            }
+            [_eventDictionary setObject:customEvent forKey:[NSString stringWithFormat:@"%ld", (long)customEvent.creationDate]];
+        });
     } else
         DEBUG_LOG(@"Events have surpassed capacity. Discarding event %@ with dictionary %@", eventKey, customDict);
 }
@@ -164,17 +168,21 @@ NSMutableDictionary *eventDictionary;
     for (NSDictionary *processedEventDict in processedJsonArray) {
         LDEventModel *processedEvent = [[LDEventModel alloc] initWithDictionary:processedEventDict];
         NSString *processedEventCreationDate = [NSString stringWithFormat:@"%ld", (long)processedEvent.creationDate];
-        if ([eventDictionary objectForKey:processedEventCreationDate]) {
-            [eventDictionary removeObjectForKey:processedEventCreationDate];
-        }
+        
+        dispatch_async(_eventsQueue, ^{
+            if ([_eventDictionary objectForKey:processedEventCreationDate]) {
+                [_eventDictionary removeObjectForKey:processedEventCreationDate];
+            }
+        });
     }
 }
 
 -(NSArray *)allEventsDictionaryArray {
-    if (eventDictionary && [eventDictionary count]) {
+    NSMutableDictionary *dictionary = [self retrieveEventDictionary];
+    if (dictionary && [dictionary count]) {
         NSMutableArray *eventArray = [[NSMutableArray alloc] init];
-        for (NSString *key in eventDictionary) {
-            LDEventModel *currentEvent = [eventDictionary objectForKey:key];
+        for (NSString *key in dictionary) {
+            LDEventModel *currentEvent = [dictionary objectForKey:key];
             [eventArray addObject:[currentEvent dictionaryValue]];
         }
         return eventArray;
@@ -193,7 +201,13 @@ NSMutableDictionary *eventDictionary;
 }
 
 -(void)flushEventsDictionary {
-    [eventDictionary removeAllObjects];
+    dispatch_async(_eventsQueue, ^{
+        [_eventDictionary removeAllObjects];
+    });
+}
+
+- (NSMutableDictionary *)retrieveEventDictionary {
+    return [_eventDictionary mutableCopy];
 }
 
 @end
