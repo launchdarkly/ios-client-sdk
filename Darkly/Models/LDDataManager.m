@@ -11,8 +11,7 @@ int const kUserCacheSize = 5;
 
 @interface LDDataManager()
 
-@property (strong, nonatomic) NSMutableDictionary *eventDictionary;
-@property (strong, nonatomic) dispatch_queue_t  eventsQueue;
+@property (strong, nonatomic) NSMutableArray *eventsArray;
 
 @end
 
@@ -23,8 +22,7 @@ int const kUserCacheSize = 5;
     static dispatch_once_t onceToken;
     dispatch_once(&onceToken, ^{
         sharedDataManager = [[self alloc] init];
-        sharedDataManager.eventDictionary = [[NSMutableDictionary alloc] init];
-        sharedDataManager.eventsQueue = dispatch_queue_create("com.launchdarkly.events", DISPATCH_QUEUE_SERIAL);
+        sharedDataManager.eventsArray = [[NSMutableArray alloc] init];
     });
     return sharedDataManager;
 }
@@ -116,73 +114,53 @@ int const kUserCacheSize = 5;
 #pragma mark - events
 
 -(void) createFeatureEvent: (NSString *)featureKey keyValue:(NSObject*)keyValue defaultKeyValue:(NSObject*)defaultKeyValue {
-    if(![self isAtEventCapacity:_eventDictionary]) {
+    if(![self isAtEventCapacity:_eventsArray]) {
         DEBUG_LOG(@"Creating event for feature:%@ with value:%@ and fallback:%@", featureKey, keyValue, defaultKeyValue);
         LDClient *client = [LDClient sharedInstance];
         LDUserModel *currentUser = client.ldUser;
         LDEventModel *featureEvent = [[LDEventModel alloc] initFeatureEventWithKey: featureKey keyValue:keyValue defaultKeyValue:defaultKeyValue userValue:currentUser];
         
-        if (!_eventDictionary) {
+        if (!_eventsArray) {
             // No Dictionary exists so create
-            _eventDictionary = [[NSMutableDictionary alloc] init];
+            _eventsArray = [[NSMutableArray alloc] init];
         }
-        dispatch_async(_eventsQueue, ^{
-            if ([_eventDictionary objectForKey:[NSString stringWithFormat:@"%ld", (long)featureEvent.creationDate]] != nil) {
-                featureEvent.creationDate = featureEvent.creationDate + 1;
-            }
-            [_eventDictionary setObject:featureEvent forKey:[NSString stringWithFormat:@"%ld", (long)featureEvent.creationDate]];
-        });
+        [_eventsArray addObject:featureEvent];
     } else
         DEBUG_LOG(@"Events have surpassed capacity. Discarding feature event %@", featureKey);
 }
 
 -(void) createCustomEvent: (NSString *)eventKey withCustomValuesDictionary: (NSDictionary *)customDict {
-    if(![self isAtEventCapacity:_eventDictionary]) {
+    if(![self isAtEventCapacity:_eventsArray]) {
         DEBUG_LOG(@"Creating event for custom key:%@ and value:%@", eventKey, customDict);
         LDClient *client = [LDClient sharedInstance];
         LDUserModel *currentUser = client.ldUser;
         LDEventModel *customEvent = [[LDEventModel alloc] initCustomEventWithKey: eventKey  andDataDictionary: customDict userValue:currentUser];
         
-        if (!_eventDictionary) {
+        if (!_eventsArray) {
             // No Dictionary exists so create
-            _eventDictionary = [[NSMutableDictionary alloc] init];
+            _eventsArray = [[NSMutableArray alloc] init];
         }
-        
-        dispatch_async(_eventsQueue, ^{
-            if ([_eventDictionary objectForKey:[NSString stringWithFormat:@"%ld", (long)customEvent.creationDate]] != nil) {
-                customEvent.creationDate = customEvent.creationDate + 1;
-            }
-            [_eventDictionary setObject:customEvent forKey:[NSString stringWithFormat:@"%ld", (long)customEvent.creationDate]];
-        });
+        [_eventsArray addObject:customEvent];
     } else
         DEBUG_LOG(@"Events have surpassed capacity. Discarding event %@ with dictionary %@", eventKey, customDict);
 }
 
--(BOOL)isAtEventCapacity:(NSDictionary *)currentDictionary {
+-(BOOL)isAtEventCapacity:(NSArray *)currentArray {
     LDConfig *ldConfig = [[LDClient sharedInstance] ldConfig];
-    return ldConfig.capacity && currentDictionary && [NSNumber numberWithInteger:[currentDictionary count]] >= ldConfig.capacity;
+    return ldConfig.capacity && currentArray && [NSNumber numberWithInteger:[currentArray count]] >= ldConfig.capacity;
 }
 
 -(void) deleteProcessedEvents: (NSArray *) processedJsonArray {
     // Loop through processedEvents
-    for (NSDictionary *processedEventDict in processedJsonArray) {
-        LDEventModel *processedEvent = [[LDEventModel alloc] initWithDictionary:processedEventDict];
-        NSString *processedEventCreationDate = [NSString stringWithFormat:@"%ld", (long)processedEvent.creationDate];
-        
-        dispatch_async(_eventsQueue, ^{
-            if ([_eventDictionary objectForKey:processedEventCreationDate]) {
-                [_eventDictionary removeObjectForKey:processedEventCreationDate];
-            }
-        });
-    }
+    NSInteger count = [processedJsonArray count] > [_eventsArray count] ? [processedJsonArray count] : [_eventsArray count];
+    [_eventsArray removeObjectsInRange:NSMakeRange(0, count)];
 }
 
--(NSArray *)allEventsDictionaryArray {
-    NSMutableDictionary *dictionary = [self retrieveEventDictionary];
-    if (dictionary && [dictionary count]) {
+-(NSArray*) allEventsJsonArray {
+    NSMutableArray *array = [self retrieveEventsArray];
+    if (array && [array count]) {
         NSMutableArray *eventArray = [[NSMutableArray alloc] init];
-        for (NSString *key in dictionary) {
-            LDEventModel *currentEvent = [dictionary objectForKey:key];
+        for (LDEventModel *currentEvent in array) {
             [eventArray addObject:[currentEvent dictionaryValue]];
         }
         return eventArray;
@@ -191,23 +169,12 @@ int const kUserCacheSize = 5;
     }
 }
 
--(NSArray*) allEventsJsonArray {
-    NSArray *allEvents = [self allEventsDictionaryArray];
-    if (allEvents && [allEvents count]) {
-        return allEvents;
-    } else {
-        return nil;
-    }
-}
-
 -(void)flushEventsDictionary {
-    dispatch_async(_eventsQueue, ^{
-        [_eventDictionary removeAllObjects];
-    });
+    [_eventsArray removeAllObjects];
 }
 
-- (NSMutableDictionary *)retrieveEventDictionary {
-    return [_eventDictionary mutableCopy];
+- (NSMutableArray *)retrieveEventsArray {
+    return [_eventsArray mutableCopy];
 }
 
 @end

@@ -13,9 +13,8 @@ extern int const kUserCacheSize;
 +(LDDataManager *)sharedManager;
 
 -(NSArray*) allEventsJsonArray;
--(NSArray *)allEventsDictionaryArray;
 -(NSMutableDictionary *)retrieveUserDictionary;
--(NSMutableDictionary *)retrieveEventDictionary;
+-(NSMutableArray *)retrieveEventsArray;
 -(LDUserModel *)findUserWithkey: (NSString *)key;
 -(void) createFeatureEvent: (NSString *)featureKey keyValue:(NSObject*)keyValue defaultKeyValue:(NSObject*)defaultKeyValue;
 -(void) createCustomEvent: (NSString *)eventKey withCustomValuesDictionary: (NSDictionary *)customDict;
