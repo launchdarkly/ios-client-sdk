@@ -9,6 +9,7 @@ All notable changes to the LaunchDarkly Python SDK will be documented in this fi
 
 ### Fixed
 - Optimized events storage and polling algorithms
+- Events generated simultaneously at the same time appear sequentially on web console without events loss
 
 ## [2.0.3] - 2016-10-26
 ### Changed
