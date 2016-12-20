@@ -30,7 +30,6 @@
     user.email = @"bob@gmail.com";
     user.updatedAt = [NSDate date];
     
-    
     LDClient *client = [LDClient sharedInstance];
     clientMock = OCMPartialMock(client);
     OCMStub([clientMock ldUser]).andReturn(user);
@@ -60,10 +59,11 @@
 -(void)testAllEventsDictionaryArray {
     NSString *eventKey1 = @"foo";
     NSString *eventKey2 = @"fi";
+    
     [[LDDataManager sharedManager] createFeatureEvent:eventKey1 keyValue:[NSNumber numberWithBool:NO] defaultKeyValue:[NSNumber numberWithBool:NO]];
     [[LDDataManager sharedManager] createCustomEvent:eventKey2 withCustomValuesDictionary:@{@"carrot": @"cake"}];
     
-    NSArray *eventArray = [[LDDataManager sharedManager] allEventsDictionaryArray];
+    NSArray *eventArray = [[LDDataManager sharedManager] allEventsJsonArray];
     NSMutableArray *eventKeyArray = [[NSMutableArray alloc] init];
     for (NSDictionary *eventDictionary in eventArray) {
         [eventKeyArray addObject:[eventDictionary objectForKey:@"key"]];
@@ -142,12 +142,14 @@
     
     OCMStub([clientMock ldConfig]).andReturn(config);
     
-    [[LDDataManager sharedManager] createCustomEvent:@"aKey" withCustomValuesDictionary: @{@"carrot": @"cake"}];
-    [[LDDataManager sharedManager] createCustomEvent:@"aKey" withCustomValuesDictionary: @{@"carrot": @"cake"}];
-    [[LDDataManager sharedManager] createCustomEvent:@"aKey" withCustomValuesDictionary: @{@"carrot": @"cake"}];
-    [[LDDataManager sharedManager] createFeatureEvent: @"anotherKet" keyValue: [NSNumber numberWithBool:YES] defaultKeyValue: [NSNumber numberWithBool:NO]];
+    LDDataManager *manager = [LDDataManager sharedManager];
     
-    XCTAssertEqual([[[LDDataManager sharedManager] retrieveEventDictionary] count],2);
+    [manager createCustomEvent:@"aKey" withCustomValuesDictionary: @{@"carrot": @"cake"}];
+    [manager createCustomEvent:@"aKey" withCustomValuesDictionary: @{@"carrot": @"cake"}];
+    [manager createCustomEvent:@"aKey" withCustomValuesDictionary: @{@"carrot": @"cake"}];
+    [manager createFeatureEvent: @"anotherKet" keyValue: [NSNumber numberWithBool:YES] defaultKeyValue: [NSNumber numberWithBool:NO]];
+    
+    XCTAssertEqual([[manager retrieveEventsArray] count],2);
 }
 
 @end

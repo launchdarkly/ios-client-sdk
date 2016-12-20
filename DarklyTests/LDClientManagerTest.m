@@ -124,7 +124,6 @@
     LDClientManager *clientManager = [LDClientManager sharedInstance];
     [clientManager startPolling];
     
-    OCMVerify([pollingManagerMock startConfigPolling]);
     OCMVerify([pollingManagerMock startEventPolling]);
 }
 
@@ -132,7 +131,6 @@
     LDClientManager *clientManager = [LDClientManager sharedInstance];
     [clientManager stopPolling];
     
-    OCMVerify([pollingManagerMock stopConfigPolling]);
     OCMVerify([pollingManagerMock stopEventPolling]);
 }
 
@@ -140,7 +138,6 @@
     LDClientManager *clientManager = [LDClientManager sharedInstance];
     [clientManager willEnterBackground];
     
-    OCMVerify([pollingManagerMock suspendConfigPolling]);
     OCMVerify([pollingManagerMock suspendEventPolling]);
 }
 
@@ -148,7 +145,6 @@
     LDClientManager *clientManager = [LDClientManager sharedInstance];
     [clientManager willEnterForeground];
     
-    OCMVerify([pollingManagerMock resumeConfigPolling]);
     OCMVerify([pollingManagerMock resumeEventPolling]);
 }
 
@@ -185,21 +181,17 @@
 }
 
 - (void)testProcessedConfigSuccessWithUserConfig {
-    int configIntervalMillis = 10;
-    
     NSDictionary *testDictionary = @{@"key":@"value"};
     
     LDClientManager *clientManager = [LDClientManager sharedInstance];
-    [clientManager processedConfig:YES jsonConfigDictionary:testDictionary configIntervalMillis:configIntervalMillis];
+    [clientManager processedConfig:YES jsonConfigDictionary:testDictionary];
     
     OCMVerify([dataManagerMock saveUser:[OCMArg any]]);
 }
 
 - (void)testProcessedConfigSuccessWithoutUserConfig {
-    int configIntervalMillis = 10;
-    
     LDClientManager *clientManager = [LDClientManager sharedInstance];
-    [clientManager processedConfig:YES jsonConfigDictionary:nil configIntervalMillis:configIntervalMillis];
+    [clientManager processedConfig:YES jsonConfigDictionary:nil];
     
     [[dataManagerMock reject] saveUser:[OCMArg any]];
     
@@ -207,10 +199,8 @@
 }
 
 - (void)testProcessedConfigFailure {
-    int configIntervalMillis = 10;
-    
     LDClientManager *clientManager = [LDClientManager sharedInstance];
-    [clientManager processedConfig:NO jsonConfigDictionary:nil configIntervalMillis:configIntervalMillis];
+    [clientManager processedConfig:NO jsonConfigDictionary:nil];
     
     [[dataManagerMock reject] saveUser:[OCMArg any]];
     

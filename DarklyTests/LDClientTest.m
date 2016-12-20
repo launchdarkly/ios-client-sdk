@@ -198,7 +198,6 @@
     LDClient *ldClient = [LDClient sharedInstance];
     
     ldClient.delegate = self;
-    
     XCTAssertEqualObjects(self, ldClient.delegate);
 }
 

@@ -21,7 +21,7 @@
 @property(nonatomic, strong, readonly) LDConfig *ldConfig;
 @property (nonatomic, weak) id<ClientDelegate> delegate;
 
-+ (id)sharedInstance;
++ (LDClient *)sharedInstance;
 
 /**
  * Start the client with a valid configuration and user.

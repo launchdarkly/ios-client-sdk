@@ -39,8 +39,7 @@ NSString *const kLDBackgroundFetchInitiated = @"Darkly.BackgroundFetchInitiated"
     LDClient *client = [LDClient sharedInstance];
     LDConfig *config = client.ldConfig;
     pollingMgr.eventTimerPollingIntervalMillis = [config.flushInterval intValue] * kMillisInSecs;
-    DEBUG_LOG(@"ClientManager startPolling method called with configurationTimerPollingInterval=%f and eventTimerPollingInterval=%f", pollingMgr.configurationTimerPollingIntervalMillis, pollingMgr.eventTimerPollingIntervalMillis);
-    [pollingMgr startConfigPolling];
+    DEBUG_LOG(@"ClientManager startPolling method called with eventTimerPollingInterval=%f", pollingMgr.eventTimerPollingIntervalMillis);
     [pollingMgr startEventPolling];
     
     eventSource = [EventSource eventSourceWithURL:[NSURL URLWithString:kStreamUrl] mobileKey:config.mobileKey];
@@ -55,7 +54,6 @@ NSString *const kLDBackgroundFetchInitiated = @"Darkly.BackgroundFetchInitiated"
     DEBUG_LOGX(@"ClientManager stopPolling method called");
     LDPollingManager *pollingMgr = [LDPollingManager sharedInstance];
     
-    [pollingMgr stopConfigPolling];
     [pollingMgr stopEventPolling];
     
     [eventSource close];
@@ -67,7 +65,6 @@ NSString *const kLDBackgroundFetchInitiated = @"Darkly.BackgroundFetchInitiated"
     DEBUG_LOGX(@"ClientManager entering background");
     LDPollingManager *pollingMgr = [LDPollingManager sharedInstance];
     
-    [pollingMgr suspendConfigPolling];
     [pollingMgr suspendEventPolling];
     
     [eventSource close];
@@ -78,7 +75,6 @@ NSString *const kLDBackgroundFetchInitiated = @"Darkly.BackgroundFetchInitiated"
 - (void)willEnterForeground {
     DEBUG_LOGX(@"ClientManager entering foreground");
     LDPollingManager *pollingMgr = [LDPollingManager sharedInstance];
-    [pollingMgr resumeConfigPolling];
     [pollingMgr resumeEventPolling];
     
     LDClient *client = [LDClient sharedInstance];
@@ -147,7 +143,7 @@ NSString *const kLDBackgroundFetchInitiated = @"Darkly.BackgroundFetchInitiated"
     }
 }
 
-- (void)processedConfig:(BOOL)success jsonConfigDictionary:(NSDictionary *)jsonConfigDictionary configIntervalMillis:(int)configIntervalMillis {
+- (void)processedConfig:(BOOL)success jsonConfigDictionary:(NSDictionary *)jsonConfigDictionary {
     if (success) {
         DEBUG_LOGX(@"ClientManager processedConfig method called after receiving successful response from server");
         // If Success
@@ -160,19 +156,12 @@ NSString *const kLDBackgroundFetchInitiated = @"Darkly.BackgroundFetchInitiated"
             user.config = newConfig;
             // Save context
             [[LDDataManager sharedManager] saveUser:user];
-            // Update polling interval for Config for new config interval
-            LDPollingManager *pollingMgr = [LDPollingManager sharedInstance];
-            DEBUG_LOG(@"ClientManager setting config interval to: %d", configIntervalMillis);
-            pollingMgr.configurationTimerPollingIntervalMillis = configIntervalMillis;
             
             [[NSNotificationCenter defaultCenter] postNotificationName: kLDUserUpdatedNotification
                                                                 object: nil];
         }
     } else {
         DEBUG_LOGX(@"ClientManager processedConfig method called after receiving failure response from server");
-        LDPollingManager *pollingMgr = [LDPollingManager sharedInstance];
-        DEBUG_LOG(@"ClientManager setting config interval to: %d", configIntervalMillis);
-        pollingMgr.configurationTimerPollingIntervalMillis = configIntervalMillis;
     }
 }
 
