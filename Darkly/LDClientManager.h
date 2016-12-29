@@ -7,9 +7,6 @@
 #import <UIKit/UIKit.h>
 #import <DarklyEventSource/EventSource.h>
 
-extern NSString *const kLDUserUpdatedNotification;
-extern NSString *const kLDBackgroundFetchInitiated;
-
 @interface LDClientManager : NSObject  <RequestManagerDelegate, UIApplicationDelegate> {
 }
 

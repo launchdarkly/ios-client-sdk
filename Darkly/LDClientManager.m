@@ -16,9 +16,6 @@
 
 @synthesize offlineEnabled, eventSource;
 
-NSString *const kLDUserUpdatedNotification = @"Darkly.UserUpdatedNotification";
-NSString *const kLDBackgroundFetchInitiated = @"Darkly.BackgroundFetchInitiated";
-
 +(LDClientManager *)sharedInstance {
     static LDClientManager *sharedApiManager = nil;
     static dispatch_once_t onceToken;

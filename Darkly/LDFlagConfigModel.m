@@ -9,7 +9,7 @@
 #import "LDFlagConfigModel.h"
 #import "LDUtil.h"
 
-static NSString * const kFeaturesJsonDictionaryKey = @"featuresJsonDictionary";
+NSString * const kFeaturesJsonDictionaryKey = @"featuresJsonDictionary";
 
 static NSString * const kFeaturesJsonDictionaryServerKey = @"items";
 

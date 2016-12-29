@@ -13,6 +13,7 @@
 @protocol ClientDelegate <NSObject>
 @required
 -(void)userDidUpdate;
+-(void)featureFlagDidUpdate:(NSString *)key;
 @end
 
 @interface LDClient : NSObject

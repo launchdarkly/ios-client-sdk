@@ -6,8 +6,11 @@
 #import "LDDataManager.h"
 #import "LDEventModel.h"
 #import "LDUtil.h"
+#import "LDFlagConfigModel.h"
 
 int const kUserCacheSize = 5;
+
+static NSString * const kFlagKey = @"flagkey";
 
 @interface LDDataManager()
 
@@ -59,16 +62,19 @@ int const kUserCacheSize = 5;
         LDUserModel *resultUser = [userDictionary objectForKey:user.key];
         if (resultUser) {
             // User is found
+            [self compareConfigForUser:resultUser withNewUser:user];
             resultUser = user;
             resultUser.updatedAt = [NSDate date];
         } else {
             // User is not found so need to create and purge old users
+            [self compareConfigForUser:nil withNewUser:user];
             [self purgeOldUser: userDictionary];
             user.updatedAt = [NSDate date];
             [userDictionary setObject:user forKey:user.key];
         }
     } else {
         // No Dictionary exists so create
+        [self compareConfigForUser:nil withNewUser:user];
         userDictionary = [[NSMutableDictionary alloc] init];
         [userDictionary setObject:user forKey:user.key];
     }
@@ -86,6 +92,14 @@ int const kUserCacheSize = 5;
         }
     }
     return resultUser;
+}
+
+- (void)compareConfigForUser:(LDUserModel *)user withNewUser:(LDUserModel *)newUser {
+    for (NSString *key in [[newUser.config dictionaryValue] objectForKey:kFeaturesJsonDictionaryKey]) {
+        if(user == nil || ![[user.config configFlagValue:key] isEqual:[user.config configFlagValue:key]]) {
+            [[NSNotificationCenter defaultCenter] postNotificationName:kLDFlagConfigChangedNotification object:nil userInfo:key];
+        }
+    }
 }
 
 - (void)storeUserDictionary:(NSDictionary *)userDictionary {

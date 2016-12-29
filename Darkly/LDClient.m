@@ -26,8 +26,11 @@
     dispatch_once(&onceToken, ^{
         sharedLDClient = [[self alloc] init];
         [[NSNotificationCenter defaultCenter] addObserver: sharedLDClient
-                                                 selector:@selector(configUpdated)
+                                                 selector:@selector(userUpdated)
                                                      name: kLDUserUpdatedNotification object: nil];
+        [[NSNotificationCenter defaultCenter] addObserver: sharedLDClient
+                                                 selector:@selector(configFlagUpdated:)
+                                                     name:kLDFlagConfigChangedNotification object:nil];
     });
     return sharedLDClient;
 }
@@ -275,9 +278,17 @@
 }
 
 // Notification handler for ClientManager user updated
--(void)configUpdated {
+-(void)userUpdated {
     if (self.delegate && [self.delegate respondsToSelector:@selector(userDidUpdate)]) {
         [self.delegate userDidUpdate];
+    }
+}
+
+// Notification handler for DataManager config flag update
+-(void)configFlagUpdated:(NSNotification *)notification {
+    NSString *keyValue = notification.userInfo;
+    if (self.delegate && [self.delegate respondsToSelector:@selector(featureFlagDidUpdate:)]) {
+        [self.delegate featureFlagDidUpdate:keyValue];
     }
 }
 
