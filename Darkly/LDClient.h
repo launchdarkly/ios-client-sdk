@@ -11,7 +11,7 @@
 
 
 @protocol ClientDelegate <NSObject>
-@required
+@optional
 -(void)userDidUpdate;
 -(void)featureFlagDidUpdate:(NSString *)key;
 @end
