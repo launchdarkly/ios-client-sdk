@@ -16,9 +16,6 @@
 
 @synthesize offlineEnabled, eventSource;
 
-NSString *const kLDUserUpdatedNotification = @"Darkly.UserUpdatedNotification";
-NSString *const kLDBackgroundFetchInitiated = @"Darkly.BackgroundFetchInitiated";
-
 +(LDClientManager *)sharedInstance {
     static LDClientManager *sharedApiManager = nil;
     static dispatch_once_t onceToken;
@@ -27,7 +24,7 @@ NSString *const kLDBackgroundFetchInitiated = @"Darkly.BackgroundFetchInitiated"
         
         [[NSNotificationCenter defaultCenter] addObserver:sharedApiManager selector:@selector(willEnterForeground) name:UIApplicationDidBecomeActiveNotification object:nil];
         [[NSNotificationCenter defaultCenter] addObserver:sharedApiManager selector:@selector(willEnterBackground) name:UIApplicationWillResignActiveNotification object:nil];
-        [[NSNotificationCenter defaultCenter] addObserver:sharedApiManager selector:@selector(syncWithServerForEvents) name:kLDBackgroundFetchInitiated object:nil];
+        [[NSNotificationCenter defaultCenter] addObserver:sharedApiManager selector:@selector(syncWithServerForConfig) name:kLDBackgroundFetchInitiated object:nil];
         
     });
     return sharedApiManager;

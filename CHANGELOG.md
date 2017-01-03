@@ -2,6 +2,13 @@
 
 All notable changes to the LaunchDarkly Python SDK will be documented in this file. This project adheres to [Semantic Versioning](http://semver.org).
 
+## [2.1.1] - 2017-1-3
+### Added
+- Method to get notified with the flag key for which the value had changed
+
+### Fixed
+- Background fetch issues fixed
+
 ## [2.1.0] - 2016-12-19
 ### Changed
 - Removed AFNetworking

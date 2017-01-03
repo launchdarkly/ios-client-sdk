@@ -4,7 +4,7 @@
 
 #import "DarklyConstants.h"
 
-NSString * const kClientVersion = @"2.1.0";
+NSString * const kClientVersion = @"2.1.1";
 NSString * const kBaseUrl = @"https://app.launchdarkly.com";
 NSString * const kEventsUrl = @"https://mobile.launchdarkly.com";
 NSString * const kStreamUrl = @"https://stream.launchdarkly.com/mping";
@@ -19,6 +19,9 @@ NSString * const kClientAlreadyStartedExceptionReason = @"The LDClient can only 
 NSString * const kIphone = @"iPhone";
 NSString * const kIpad = @"iPad";
 NSString * const kUserDictionaryStorageKey = @"ldUserModelDictionary";
+NSString * const kLDUserUpdatedNotification = @"Darkly.UserUpdatedNotification";
+NSString * const kLDBackgroundFetchInitiated = @"Darkly.BackgroundFetchInitiated";
+NSString *const kLDFlagConfigChangedNotification = @"Darkly.FlagConfigChangedNotification";
 int const kCapacity = 100;
 int const kConnectionTimeout = 10;
 int const kDefaultFlushInterval = 30;
