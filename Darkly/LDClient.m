@@ -286,7 +286,7 @@
 
 // Notification handler for DataManager config flag update
 -(void)configFlagUpdated:(NSNotification *)notification {
-    NSString *keyValue = notification.userInfo;
+    NSString *keyValue = [notification.userInfo objectForKey:@"flagkey"];
     if (self.delegate && [self.delegate respondsToSelector:@selector(featureFlagDidUpdate:)]) {
         [self.delegate featureFlagDidUpdate:keyValue];
     }
