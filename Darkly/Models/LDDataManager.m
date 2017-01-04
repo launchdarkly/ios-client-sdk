@@ -97,7 +97,7 @@ static NSString * const kFlagKey = @"flagkey";
 - (void)compareConfigForUser:(LDUserModel *)user withNewUser:(LDUserModel *)newUser {
     for (NSString *key in [[newUser.config dictionaryValue] objectForKey:kFeaturesJsonDictionaryKey]) {
         if(user == nil || ![[newUser.config configFlagValue:key] isEqual:[user.config configFlagValue:key]]) {
-            [[NSNotificationCenter defaultCenter] postNotificationName:kLDFlagConfigChangedNotification object:nil userInfo:key];
+            [[NSNotificationCenter defaultCenter] postNotificationName:kLDFlagConfigChangedNotification object:nil userInfo:[NSDictionary dictionaryWithObject:key forKey:kFlagKey]];
         }
     }
 }

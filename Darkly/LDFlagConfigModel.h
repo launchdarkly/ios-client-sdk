@@ -10,7 +10,7 @@
 
 @interface LDFlagConfigModel : NSObject <NSCoding>
 
-extern NSString * const kFeaturesJsonDictionaryKey;
+extern NSString * _Nullable  const kFeaturesJsonDictionaryKey;
 
 @property (nullable, nonatomic, strong) NSDictionary *featuresJsonDictionary;
 
