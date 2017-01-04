@@ -1,4 +1,5 @@
 machine:
    xcode:
      version: 8.1
-pod lib lint
+post:
+	- pod lib lint
