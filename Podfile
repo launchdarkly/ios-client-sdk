@@ -2,7 +2,7 @@
 # platform :ios, '6.0'
 
 target 'Darkly' do
-  pod 'DarklyEventSource', :git => 'https://github.com/launchdarkly/ios-eventsource.git'
+    pod 'DarklyEventSource', :git => 'https://github.com/kdawgwilk/ios-eventsource.git', :branch => 'feature/add-support-for-tvos-watchos'
 end
 
 target 'DarklyTests' do

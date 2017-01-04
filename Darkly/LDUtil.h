@@ -2,8 +2,12 @@
 //  Copyright © 2015 Catamorphic Co. All rights reserved.
 //
 
+#if TARGET_OS_OSX
+    #import <AppKit/AppKit.h>
+#else
+    #import <UIKit/UIKit.h>
+#endif
 
-#import <UIKit/UIKit.h>
 #import "LDClient.h"
 #import "DarklyConstants.h"
 

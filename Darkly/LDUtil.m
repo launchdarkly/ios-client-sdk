@@ -22,18 +22,31 @@
 
 + (BOOL)isIPad
 {
+#if TARGET_OS_OSX
+    return NO;
+#else
     if ([[UIDevice currentDevice] respondsToSelector:@selector(userInterfaceIdiom)] &&
         [[UIDevice currentDevice] userInterfaceIdiom] == UIUserInterfaceIdiomPad)
     {
         return YES;
     }
     return NO;
+#endif
 }
 
 + (BOOL)isRetina
 {
+#if TARGET_OS_OSX
+    NSScreen *curScreen = [NSScreen mainScreen];
+    // Not sure exactly if this will work on macOS
+    if (curScreen.backingScaleFactor == 2.0) {
+        return YES;
+    } else {
+        return NO;
+    }
+#else
     UIScreen *curScreen = [UIScreen mainScreen];
-    
+
     if ([curScreen respondsToSelector:@selector(displayLinkWithTarget:selector:)] &&
         ([curScreen respondsToSelector:@selector(scale)])) {
         if (curScreen.scale == 2.0) {
@@ -44,6 +57,8 @@
     } else {
         return NO;
     }
+#endif
+
 }
 
 + (NSString *)getDeviceAsString
@@ -57,7 +72,11 @@
 
 + (NSString *)getSystemVersionAsString
 {
+#if TARGET_OS_OSX
+    return [[NSProcessInfo processInfo] operatingSystemVersionString];
+#else
     return [[UIDevice currentDevice] systemVersion];
+#endif
 }
 
 + (NSInteger)getSystemVersionAsAnInteger {
@@ -69,8 +88,16 @@
             // PRIVATE_LOG(@"Darkly: System version found already. [%d]", version);
             return version;
         }
+
+#if TARGET_OS_OSX
+        // This may not be the best way to do this on macOS because in the docs it says this:
+        //      "This string is not appropriate for parsing"
+        NSString* systemVersion = [[NSProcessInfo processInfo] operatingSystemVersionString];
+#else
+        NSString* systemVersion = [[UIDevice currentDevice] systemVersion];
+#endif
         
-        NSArray* digits = [[UIDevice currentDevice].systemVersion componentsSeparatedByString:@"."];
+        NSArray* digits = [systemVersion componentsSeparatedByString:@"."];
         NSEnumerator* enumer = [digits objectEnumerator];
         NSString* number;
         while (number = [enumer nextObject]) {

@@ -3,12 +3,20 @@
 //
 
 
+
 #import "LDRequestManager.h"
-#import <UIKit/UIKit.h>
 #import <DarklyEventSource/EventSource.h>
 
-@interface LDClientManager : NSObject  <RequestManagerDelegate, UIApplicationDelegate> {
-}
+#if TARGET_OS_OSX
+    #import <AppKit/AppKit.h>
+
+    @interface LDClientManager : NSObject  <RequestManagerDelegate, NSApplicationDelegate> {}
+#else
+    #import <UIKit/UIKit.h>
+
+    @interface LDClientManager : NSObject  <RequestManagerDelegate, UIApplicationDelegate> {}
+#endif
+
 
 @property (nonatomic) BOOL offlineEnabled;
 @property(nonatomic, strong, readonly) EventSource *eventSource;
