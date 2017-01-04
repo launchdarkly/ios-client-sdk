@@ -2,7 +2,7 @@
 
 All notable changes to the LaunchDarkly Python SDK will be documented in this file. This project adheres to [Semantic Versioning](http://semver.org).
 
-## [2.1.1] - 2017-1-3
+## [2.1.1] - 2017-01-04
 ### Added
 - Method to get notified with the flag key for which the value had changed
 
