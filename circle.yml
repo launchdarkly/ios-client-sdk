@@ -4,10 +4,4 @@ machine:
 
 test:
  post:
-  - pod lib lint
-
-deployment:
- release:
-  tag: /.*/
-   commands:
-    - pod trunk push
+  - pod spec lint
