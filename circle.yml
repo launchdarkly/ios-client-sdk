@@ -5,4 +5,4 @@ machine:
 test:
  post:
   - pod lib lint
-  - if [ $CIRCLE_BRANCH = 'master' ]; then pod spec lint;
+  - if [ "$CIRCLE_BRANCH" = 'master' ]; then pod spec lint; fi
