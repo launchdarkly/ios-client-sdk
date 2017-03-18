@@ -16,7 +16,7 @@ Pod::Spec.new do |s|
   #
 
   s.name         = "LaunchDarkly"
-  s.version      = "2.1.1"
+  s.version      = "2.1.2"
   s.summary      = "iOS SDK for LaunchDarkly"
 
   s.description  = <<-DESC
@@ -74,7 +74,7 @@ Pod::Spec.new do |s|
   #  Supports git, hg, bzr, svn and HTTP.
   #
 
-  s.source       = { :git => "https://github.com/launchdarkly/ios-client.git", :tag => "2.1.1" }
+  s.source       = { :git => "https://github.com/launchdarkly/ios-client.git", :tag => "2.1.2" }
 
 
   # ――― Source Code ―――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――― #
@@ -128,6 +128,6 @@ Pod::Spec.new do |s|
   # s.xcconfig = { "HEADER_SEARCH_PATHS" => "$(SDKROOT)/usr/include/libxml2" }
   # s.dependency "JSONKit", "~> 1.4"
   s.subspec 'Core' do |ss|
-    ss.dependency 'DarklyEventSource', '~> 1.2.0'
+    ss.dependency 'DarklyEventSource', '~> 1.3.1'
   end
 end
