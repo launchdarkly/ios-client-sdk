@@ -2,6 +2,13 @@
 
 All notable changes to the LaunchDarkly Python SDK will be documented in this file. This project adheres to [Semantic Versioning](http://semver.org).
 
+## [2.1.2] - 2017-03-20
+### Added
+- Backoff with jitter for connection establishment of eventsource
+
+### Fixed
+- Parity for `start` vs. `online` and `stopClient` vs. `offline`
+
 ## [2.1.1] - 2017-01-04
 ### Added
 - Method to get notified with the flag key for which the value had changed
