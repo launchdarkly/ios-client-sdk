@@ -1,6 +1,9 @@
 LaunchDarkly SDK for iOS
 ========================
 
+![CircleCI](https://circleci.com/gh/launchdarkly/ios-client.svg?branch=master)
+[![CocoaPods Compatible](https://img.shields.io/cocoapods/v/LaunchDarkly.svg)](https://img.shields.io/cocoapods/v/DarklyEventSource.svg)
+
 Quick setup
 -----------
 

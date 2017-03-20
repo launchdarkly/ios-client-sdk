@@ -55,6 +55,7 @@
                 ldUser = [inputUserBuilder build];
                 
                 LDClientManager *clientManager = [LDClientManager sharedInstance];
+                [clientManager setOfflineEnabled:NO];
                 [clientManager syncWithServerForConfig];
                 [clientManager startPolling];
                 
@@ -229,6 +230,7 @@
     DEBUG_LOGX(@"LDClient offline method called");
     if (clientStarted) {
         LDClientManager *clientManager = [LDClientManager sharedInstance];
+        [clientManager stopPolling];
         [clientManager setOfflineEnabled:YES];
         return YES;
     } else {
@@ -243,6 +245,7 @@
     if (clientStarted) {
         LDClientManager *clientManager = [LDClientManager sharedInstance];
         [clientManager setOfflineEnabled:NO];
+        [clientManager startPolling];
         [clientManager syncWithServerForConfig];
         return YES;
     } else {
