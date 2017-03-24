@@ -93,7 +93,7 @@
 - (void)customArray:(NSString *)inputKey value:(NSArray *)value;
 
 
--(void)build;
+-(LDUserModel *)build;
 
 + (LDUserModel *)compareNewBuilder:(LDUserBuilder *)iBuilder withUser:(LDUserModel *)iUser;
 + (LDUserBuilder *)currentBuilder:(LDUserModel *)iUser;

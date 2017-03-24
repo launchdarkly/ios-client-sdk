@@ -125,7 +125,7 @@
     }
 }
 
-- (void)build {
+- (LDUserModel *)build {
     DEBUG_LOGX(@"LDUserBuilder build method called");
     LDUserModel *user = nil;
     
@@ -195,6 +195,7 @@
     DEBUG_LOG(@"LDUserBuilder building User with anonymous: %d", self.isAnonymous);
 
     [[LDDataManager sharedManager] saveUser: user];
+    return user;
 }
 
 @end
