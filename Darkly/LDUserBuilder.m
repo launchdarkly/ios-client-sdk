@@ -98,7 +98,7 @@
     if (!self.customDictionary) {
         return;
     }
-    [customDict setObject:value forKey:inputKey];
+    self.customDictionary[inputKey] = value;
 }
 
 - (void)customArray:(NSString *)inputKey value:(NSArray *)value
@@ -118,12 +118,6 @@
     if ([resultArray count]) {
         [customDict setObject:resultArray forKey:inputKey];
     }
-    return self;
-}
-
-
-- (LDUserBuilder *)withAnonymous:(BOOL)inputAnonymous {
-    anonymous = inputAnonymous;
     return self;
 }
 
