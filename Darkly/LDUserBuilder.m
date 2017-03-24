@@ -138,9 +138,8 @@
 
         user = [[LDUserModel alloc] init];
         [user key:uniqueKey];
-        if (!anonymous) {
-            Boolean currentAnonymous = YES;
-            [user setAnonymous:currentAnonymous];
+        if (!isAnonymous) {
+            user.isAnonymous = YES;
         }
     }
     if (ip) {
