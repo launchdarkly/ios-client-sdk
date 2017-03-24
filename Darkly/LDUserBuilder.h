@@ -44,6 +44,12 @@
 @property (nonatomic, copy) NSString *avatar;
 
 /**
+ * The custom NSMutableDictionary data for the dictionary associated with
+ * the user. (Optional)
+ */
+@property (nonatomic, strong) NSMutableDictionary *customDictionary;
+
+/**
  * Provide whether the user is anonymous. Note, if a key is
  * auto-generated for the user, then anonymous is set to YES. Default
  * is NO. (Optional)
@@ -86,14 +92,6 @@
  */
 - (void)customArray:(NSString *)inputKey value:(NSArray *)value;
 
-/**
- * Provide custom NSMutableDictionary data for the dictionary associated with
- * the user. (Optional)
- *
- * @param inputKey    key for the data
- * @param value    value for the data
- */
-- (void)customDictionary:(NSMutableDictionary *)inputDictionary;
 
 -(void)build;
 
