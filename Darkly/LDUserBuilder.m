@@ -119,23 +119,23 @@
             [resultArray addObject:[NSNumber numberWithBool:NO]];
         }
     }
+
     if (resultArray.count) {
         self.customDictionary[inputKey] = resultArray;
     }
-    return self;
 }
 
 -(LDUserModel *)build {
     DEBUG_LOGX(@"LDUserBuilder build method called");
     LDUserModel *user = nil;
     
-    if (key) {
-        user = [[LDDataManager sharedManager] findUserWithkey:key];
+    if (self.key) {
+        user = [[LDDataManager sharedManager] findUserWithkey:self.key];
         if(!user) {
             user = [[LDUserModel alloc] init];
         }
-        [user key:key];
-        DEBUG_LOG(@"LDUserBuilder building User with key: %@", key);
+        [user key:self.key];
+        DEBUG_LOG(@"LDUserBuilder building User with key: %@", self.key);
     } else {
         NSString *uniqueKey;
 #if TARGET_OS_IOS || TARGET_OS_TV
@@ -155,43 +155,45 @@
 
         user = [[LDUserModel alloc] init];
         [user key:uniqueKey];
-        if (!isAnonymous) {
-            user.isAnonymous = YES;
+        if (!self.isAnonymous) {
+            user.anonymous = YES;
         }
     }
-    if (ip) {
-        DEBUG_LOG(@"LDUserBuilder building User with ip: %@", ip);
-        [user setIp:ip];
+    if (self.ip) {
+        DEBUG_LOG(@"LDUserBuilder building User with ip: %@", self.ip);
+        user.ip = self.ip;
     }
-    if (country) {
-        DEBUG_LOG(@"LDUserBuilder building User with country: %@", country);
-        [user setCountry:country];
+    if (self.country) {
+        DEBUG_LOG(@"LDUserBuilder building User with country: %@", self.country);
+        user.country = self.country;
     }
-    if (firstName) {
-        DEBUG_LOG(@"LDUserBuilder building User with firstName: %@", firstName);
-        [user setFirstName:firstName];
+    if (self.firstName) {
+        DEBUG_LOG(@"LDUserBuilder building User with firstName: %@", self.firstName);
+        user.firstName = self.firstName;
     }
-    if (lastName) {
-        DEBUG_LOG(@"LDUserBuilder building User with lastName: %@", lastName);
-        [user setLastName:lastName];
+    if (self.lastName) {
+        DEBUG_LOG(@"LDUserBuilder building User with lastName: %@", self.lastName);
+        user.lastName = self.lastName;
     }
-    if (email) {
-        DEBUG_LOG(@"LDUserBuilder building User with email: %@", email);
-        [user setEmail:email];
+    if (self.email) {
+        DEBUG_LOG(@"LDUserBuilder building User with email: %@", self.email);
+        user.email = self.email;
     }
-    if (avatar) {
-        DEBUG_LOG(@"LDUserBuilder building User with avatar: %@", avatar);
-        [user setAvatar:avatar];
+    if (self.avatar) {
+        DEBUG_LOG(@"LDUserBuilder building User with avatar: %@", self.avatar);
+        user.avatar = self.avatar;
     }
-    if ([customDict count]) {
-        DEBUG_LOG(@"LDUserBuilder building User with custom: %@", customDict);
-        [user setCustom:customDict];
+    if (self.customDictionary && self.customDictionary.count) {
+        DEBUG_LOG(@"LDUserBuilder building User with custom: %@", self.customDictionary);
+        user.custom = self.customDictionary;
     }
-    if (anonymous) {
-        Boolean currentAnonymous = anonymous;
-        [user setAnonymous:currentAnonymous];
+
+    // TODO: Figure out if this check is really needed. Should user's anonymous not be updated if 'self.isAnonymous = NO'?
+    if (self.isAnonymous) {
+        user.anonymous = self.isAnonymous;
     }
-    DEBUG_LOG(@"LDUserBuilder building User with anonymous: %d", anonymous);
+    DEBUG_LOG(@"LDUserBuilder building User with anonymous: %d", self.isAnonymous);
+
     [[LDDataManager sharedManager] saveUser: user];
     return user;
 }
