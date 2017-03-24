@@ -7,21 +7,9 @@
 #import "LDUtil.h"
 #import "LDDataManager.h"
 
-@interface LDUserBuilder() {
-    NSString *key;
-    NSString *ip;
-    NSString *country;
-    NSString *firstName;
-    NSString *lastName;
-    NSString *email;
-    NSString *avatar;
-    NSMutableDictionary *customDict;
-    BOOL anonymous;
-}
-
-@end
 
 @implementation LDUserBuilder
+
 
 + (LDUserModel *)compareNewBuilder:(LDUserBuilder *)iBuilder withUser:(LDUserModel *)iUser {
     if (iBuilder->key) {
@@ -88,67 +76,25 @@
     return self;
 }
 
-- (LDUserBuilder *)withKey:(NSString *)inputKey
-{
-    key = inputKey;
-    return self;
-}
-
-- (LDUserBuilder *)withIp:(NSString *)inputIp
-{
-    ip = inputIp;
-    return self;
-}
-
-- (LDUserBuilder *)withCountry:(NSString *)inputCountry
-{
-    country = inputCountry;
-    return self;
-}
-
-- (LDUserBuilder *)withFirstName:(NSString *)inputFirstName
-{
-    firstName = inputFirstName;
-    return self;
-}
-
-- (LDUserBuilder *)withLastName:(NSString *)inputLastName
-{
-    lastName = inputLastName;
-    return self;
-}
-
-- (LDUserBuilder *)withEmail:(NSString *)inputEmail
-{
-    email = inputEmail;
-    return self;
-}
-
-- (LDUserBuilder *)withAvatar:(NSString *)inputAvatar
-{
-    avatar = inputAvatar;
-    return self;
-}
-
-- (LDUserBuilder *)withCustomString:(NSString *)inputKey value:(NSString *)value
+- (void)customString:(NSString *)inputKey value:(NSString *)value
 {
     [customDict setObject:value forKey:inputKey];
     return self;
 }
 
-- (LDUserBuilder *)withCustomBool:(NSString *)inputKey value:(BOOL)value
+- (void)customBool:(NSString *)inputKey value:(BOOL)value
 {
     [customDict setObject:[NSNumber numberWithBool:value] forKey:inputKey];
     return self;
 }
 
-- (LDUserBuilder *)withCustomNumber:(NSString *)inputKey value:(NSNumber *)value
+- (void)customNumber:(NSString *)inputKey value:(NSNumber *)value
 {
     [customDict setObject:value forKey:inputKey];
     return self;
 }
 
-- (LDUserBuilder *)withCustomArray:(NSString *)inputKey value:(NSArray *)value
+- (void)customArray:(NSString *)inputKey value:(NSArray *)value
 {
     NSMutableArray *resultArray = [[NSMutableArray alloc] init];
     for (id myArrayElement in value) {
@@ -168,11 +114,6 @@
     return self;
 }
 
-- (LDUserBuilder *)withCustomDictionary:(NSMutableDictionary *)inputDictionary
-{
-    customDict = inputDictionary;
-    return self;
-}
 
 - (LDUserBuilder *)withAnonymous:(BOOL)inputAnonymous {
     anonymous = inputAnonymous;
