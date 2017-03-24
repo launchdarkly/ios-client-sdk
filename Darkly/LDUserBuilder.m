@@ -73,23 +73,31 @@
 
 - (id)init {
     self = [super init];
-    customDict = [[NSMutableDictionary alloc] init];
+    customDictionary = [[NSMutableDictionary alloc] init];
     return self;
 }
 
 - (void)customString:(NSString *)inputKey value:(NSString *)value
 {
-    if (!_customDictionary)
-    [customDict setObject:value forKey:inputKey];
+    if (!self.customDictionary) {
+        return;
+    }
+    self.customDictiionary[inputKey] = value;
 }
 
 - (void)customBool:(NSString *)inputKey value:(BOOL)value
 {
-    [customDict setObject:[NSNumber numberWithBool:value] forKey:inputKey];
+    if (!self.customDictionary) {
+        return;
+    }
+    self.customDictionary[inputKey] = [NSNumber numberWithBool:value];
 }
 
 - (void)customNumber:(NSString *)inputKey value:(NSNumber *)value
 {
+    if (!self.customDictionary) {
+        return;
+    }
     [customDict setObject:value forKey:inputKey];
 }
 
