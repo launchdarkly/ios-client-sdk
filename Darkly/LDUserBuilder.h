@@ -5,62 +5,50 @@
 
 #import "LDUserModel.h"
 
-@interface LDUserBuilder : NSObject {
-    
-}
-
-+ (LDUserModel *)compareNewBuilder:(LDUserBuilder *)iBuilder withUser:(LDUserModel *)iUser;
-+ (LDUserBuilder *)retrieveCurrentBuilder:(LDUserModel *)iUser;
+@interface LDUserBuilder : NSObject
 
 /**
- * Provide a key to the user builder to identify the user. If this key
+ * A key to the user builder to identify the user. If this key
  * is not provided, one will be auto-generated. (Optional)
- *
- * @param key    the key for the user
  */
-- (void)withKey:(NSString *)key;
+@property (nonatomic, copy) NSString *key;
 
 /**
- * Provide the ip address of the user. (Optional)
- *
- * @param ip    the ip of the user
+ * The IP address of the user. (Optional)
  */
-- (void)withIp:(NSString *)ip;
+@property (nonatomic, copy) NSString *ip;
 
 /**
- * Provide the country of the user. (Optional)
- *
- * @param country    the country of the user
+ * The country of the user. (Optional)
  */
-- (void)withCountry:(NSString *)country;
+@property (nonatomic, copy) NSString *country;
 
 /**
- * Provide the first name of the user. (Optional)
- *
- * @param firstName    the firstName of the user
+ * The first name of the user. (Optional)
  */
-- (void)withFirstName:(NSString *)firstName;
+@property (nonatomic, copy) NSString *firstName;
 
 /**
- * Provide the last name of the user. (Optional)
- *
- * @param lastName    the lastName of the user
+ * The last name of the user. (Optional)
  */
-- (void)withLastName:(NSString *)lastName;
+@property (nonatomic, copy) NSString *lastName;
 
 /**
- * Provide the email address of the user. (Optional)
- *
- * @param email    the email of the user
+ * The email address of the user. (Optional)
  */
-- (void)withEmail:(NSString *)email;
+@property (nonatomic, copy) NSString *email;
 
 /**
- * Provide the avatar of the user. (Optional)
- *
- * @param avatar    the avatar of the user
+ * The avatar of the user. (Optional)
  */
-- (void)withAvatar:(NSString *)avatar;
+@property (nonatomic, copy) NSString *avatar;
+
+/**
+ * Provide whether the user is anonymous. Note, if a key is
+ * auto-generated for the user, then anonymous is set to YES. Default
+ * is NO. (Optional)
+ */
+@property (nonatomic) BOOL isAnonymous;
 
 /**
  * Provide custom String data for the dictionary associated with
@@ -69,7 +57,7 @@
  * @param inputKey    key for the data
  * @param value    value for the data
  */
-- (void)withCustomString:(NSString *)inputKey value:(NSString *)value;
+- (void)customString:(NSString *)inputKey value:(NSString *)value;
 
 /**
  * Provide custom BOOL data for the dictionary associated with
@@ -78,7 +66,7 @@
  * @param inputKey    key for the data
  * @param value    value for the data
  */
-- (void)withCustomBool:(NSString *)inputKey value:(BOOL)value;
+- (void)customBool:(NSString *)inputKey value:(BOOL)value;
 
 /**
  * Provide custom NSNumber data for the dictionary associated with
@@ -87,7 +75,7 @@
  * @param inputKey    key for the data
  * @param value    value for the data
  */
-- (void)withCustomNumber:(NSString *)inputKey value:(NSNumber *)value;
+- (void)customNumber:(NSString *)inputKey value:(NSNumber *)value;
 
 /**
  * Provide custom NSArray data for the dictionary associated with
@@ -96,7 +84,7 @@
  * @param inputKey    key for the data
  * @param value    value for the data
  */
-- (void)withCustomArray:(NSString *)inputKey value:(NSArray *)value;
+- (void)customArray:(NSString *)inputKey value:(NSArray *)value;
 
 /**
  * Provide custom NSMutableDictionary data for the dictionary associated with
@@ -105,17 +93,12 @@
  * @param inputKey    key for the data
  * @param value    value for the data
  */
-- (void)withCustomDictionary:(NSMutableDictionary *)inputDictionary;
-
-/**
- * Provide whether the user is anonymous. Note, if a key is
- * auto-generated for the user, then anonymous is set to YES. Default
- * is NO. (Optional)
- *
- * @param anonymous    whether user is anonymous
- */
-- (void)withAnonymous:(BOOL)anonymous;
+- (void)customDictionary:(NSMutableDictionary *)inputDictionary;
 
 -(void)build;
+
++ (LDUserModel *)compareNewBuilder:(LDUserBuilder *)iBuilder withUser:(LDUserModel *)iUser;
++ (LDUserBuilder *)retrieveCurrentBuilder:(LDUserModel *)iUser;
+
 
 @end
