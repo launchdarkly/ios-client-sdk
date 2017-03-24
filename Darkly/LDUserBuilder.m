@@ -10,33 +10,32 @@
 
 @implementation LDUserBuilder
 
-
 + (LDUserModel *)compareNewBuilder:(LDUserBuilder *)iBuilder withUser:(LDUserModel *)iUser {
-    if (iBuilder->key) {
-        [iUser key:iBuilder->key];
+    if (iBuilder.key) {
+        [iUser key:iBuilder.key];
     }
-    if (iBuilder->ip || [iUser ip]) {
-        [iUser setIp:iBuilder->ip];
+    if (iBuilder.ip || [iUser ip]) {
+        [iUser setIp:iBuilder.ip];
+
+    if (iBuilder.country || [iUser country]) {
+        [iUser setCountry:iBuilder.country];
     }
-    if (iBuilder->country || [iUser country]) {
-        [iUser setCountry:iBuilder->country];
+    if (iBuilder.firstName || [iUser firstName]) {
+        [iUser setFirstName:iBuilder.firstName];
     }
-    if (iBuilder->firstName || [iUser firstName]) {
-        [iUser setFirstName:iBuilder->firstName];
+    if (iBuilder.lastName || [iUser lastName]) {
+        [iUser setLastName:iBuilder.lastName];
     }
-    if (iBuilder->lastName || [iUser lastName]) {
-        [iUser setLastName:iBuilder->lastName];
+    if (iBuilder.email || [iUser email]) {
+        [iUser setEmail:iBuilder.email];
     }
-    if (iBuilder->email || [iUser email]) {
-        [iUser setEmail:iBuilder->email];
+    if (iBuilder.avatar || [iUser avatar]) {
+        [iUser setAvatar:iBuilder.avatar];
     }
-    if (iBuilder->avatar || [iUser avatar]) {
-        [iUser setAvatar:iBuilder->avatar];
+    if ((iBuilder.customDictionary && iBuilder.customDictionary.count) || (iUser.custom && iUser.custom.count)) {
+        [iUser setCustom:iBuilder.customDictionary];
     }
-    if ((iBuilder->customDict && [iBuilder->customDict count]) || ([iUser custom] && [[iUser custom] count])) {
-        [iUser setCustom:iBuilder->customDict];
-    }
-    [iUser setAnonymous:iBuilder->anonymous];
+    [iUser setAnonymous:iBuilder.isAnonymous];
     return iUser;
 }
 
@@ -78,20 +77,18 @@
 
 - (void)customString:(NSString *)inputKey value:(NSString *)value
 {
+    if (!_customDictionary)
     [customDict setObject:value forKey:inputKey];
-    return self;
 }
 
 - (void)customBool:(NSString *)inputKey value:(BOOL)value
 {
     [customDict setObject:[NSNumber numberWithBool:value] forKey:inputKey];
-    return self;
 }
 
 - (void)customNumber:(NSString *)inputKey value:(NSNumber *)value
 {
     [customDict setObject:value forKey:inputKey];
-    return self;
 }
 
 - (void)customArray:(NSString *)inputKey value:(NSArray *)value
