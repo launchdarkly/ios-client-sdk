@@ -52,7 +52,7 @@
                 if (!inputUserBuilder) {
                     inputUserBuilder = [[LDUserBuilder alloc] init];
                 }
-                ldUser = [inputUserBuilder build];
+                [inputUserBuilder build];
                 
                 LDClientManager *clientManager = [LDClientManager sharedInstance];
                 [clientManager setOfflineEnabled:NO];
@@ -95,7 +95,7 @@
 - (LDUserBuilder *)currentUserBuilder {
     DEBUG_LOGX(@"LDClient currentUserBuilder method called");
     if (clientStarted) {
-        return [LDUserBuilder retrieveCurrentBuilder:ldUser];
+        return [LDUserBuilder currentBuilder:ldUser];
     } else {
         DEBUG_LOGX(@"LDClient not started yet!");
         return nil;
