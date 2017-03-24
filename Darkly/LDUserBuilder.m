@@ -66,14 +66,14 @@
     if (iUser.custom && iUser.custom.count) {
         userBuilder.customDictionary = [iUser.custom mutableCopy];
     }
-    userBuilder.isAnanymous = iUser.anonymous;
+    userBuilder.isAnonymous = iUser.anonymous;
 
     return userBuilder;
 }
 
 - (id)init {
     self = [super init];
-    customDictionary = [[NSMutableDictionary alloc] init];
+    _customDictionary = [[NSMutableDictionary alloc] init];
     return self;
 }
 
@@ -82,7 +82,7 @@
     if (!self.customDictionary) {
         return;
     }
-    self.customDictiionary[inputKey] = value;
+    self.customDictionary[inputKey] = value;
 }
 
 - (void)customBool:(NSString *)inputKey value:(BOOL)value
@@ -103,6 +103,10 @@
 
 - (void)customArray:(NSString *)inputKey value:(NSArray *)value
 {
+    if (!inputKey || !value) {
+        return;
+    }
+
     NSMutableArray *resultArray = [[NSMutableArray alloc] init];
     for (id myArrayElement in value) {
         if ([myArrayElement isKindOfClass:[NSString class]]) {
@@ -115,8 +119,8 @@
             [resultArray addObject:[NSNumber numberWithBool:NO]];
         }
     }
-    if ([resultArray count]) {
-        [customDict setObject:resultArray forKey:inputKey];
+    if (resultArray.count) {
+        self.customDictionary[inputKey] = resultArray;
     }
     return self;
 }
