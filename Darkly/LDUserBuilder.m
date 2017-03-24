@@ -7,35 +7,35 @@
 #import "LDUtil.h"
 #import "LDDataManager.h"
 
-
 @implementation LDUserBuilder
 
 + (LDUserModel *)compareNewBuilder:(LDUserBuilder *)iBuilder withUser:(LDUserModel *)iUser {
     if (iBuilder.key) {
-        [iUser key:iBuilder.key];
+        iUser.key = iBuilder.key;
     }
-    if (iBuilder.ip || [iUser ip]) {
-        [iUser setIp:iBuilder.ip];
-
-    if (iBuilder.country || [iUser country]) {
-        [iUser setCountry:iBuilder.country];
+    if (iBuilder.ip || iUser.ip) {
+        iUser.ip = iBuilder.ip;
     }
-    if (iBuilder.firstName || [iUser firstName]) {
-        [iUser setFirstName:iBuilder.firstName];
+    if (iBuilder.country || iUser.country) {
+        iUser.country = iBuilder.country;
     }
-    if (iBuilder.lastName || [iUser lastName]) {
-        [iUser setLastName:iBuilder.lastName];
+    if (iBuilder.firstName || iUser.firstName) {
+        iUser.firstName = iBuilder.firstName;
     }
-    if (iBuilder.email || [iUser email]) {
-        [iUser setEmail:iBuilder.email];
+    if (iBuilder.lastName || iUser.lastName) {
+        iUser.lastName = iBuilder.lastName;
     }
-    if (iBuilder.avatar || [iUser avatar]) {
-        [iUser setAvatar:iBuilder.avatar];
+    if (iBuilder.email || iUser.email) {
+        iUser.email = iBuilder.email;
+    }
+    if (iBuilder.avatar || iUser.avatar) {
+        iUser.avatar = iBuilder.avatar;
     }
     if ((iBuilder.customDictionary && iBuilder.customDictionary.count) || (iUser.custom && iUser.custom.count)) {
-        [iUser setCustom:iBuilder.customDictionary];
+        iUser.custom = iBuilder.customDictionary;
     }
-    [iUser setAnonymous:iBuilder.isAnonymous];
+    iUser.anonymous = iBuilder.isAnonymous;
+
     return iUser;
 }
 
@@ -63,10 +63,10 @@
     if (iUser.avatar) {
         userBuilder.avatar = iUser.avatar;
     }
-    if (iUser.customDictionary && iUser.customDictionary.count) {
-        userBuilder.customDictionary = [iUser.customDictionary mutableCopy];
+    if (iUser.custom && iUser.custom.count) {
+        userBuilder.customDictionary = [iUser.custom mutableCopy];
     }
-    userBuilder.isAnanymous = iUser.isAnonymous;
+    userBuilder.isAnanymous = iUser.anonymous;
 
     return userBuilder;
 }
