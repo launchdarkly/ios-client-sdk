@@ -39,33 +39,35 @@
     return iUser;
 }
 
-+ (LDUserBuilder *)retrieveCurrentBuilder:(LDUserModel *)iUser {
++ (LDUserBuilder *)currentBuilder:(LDUserModel *)iUser {
     LDUserBuilder *userBuilder = [[LDUserBuilder alloc] init];
-    if ([iUser key]) {
-        [userBuilder withKey:[iUser key]];
+
+    if (iUser.key) {
+        userBuilder.key = iUser.key;
     }
-    if ([iUser ip]) {
-        [userBuilder withIp:[iUser ip]];
+    if (iUser.ip) {
+        userBuilder.ip = iUser.ip;
     }
-    if ([iUser country]) {
-        [userBuilder withCountry:[iUser country]];
+    if (iUser.country) {
+        userBuilder.country = iUser.country;
     }
-    if ([iUser firstName]) {
-        [userBuilder withFirstName:[iUser firstName]];
+    if (iUser.firstName) {
+        userBuilder.firstName = iUser.firstName;
     }
-    if ([iUser lastName]) {
-        [userBuilder withLastName:[iUser lastName]];
+    if (iUser.lastName) {
+        userBuilder.lastName =  iUser.lastName;
     }
-    if ([iUser email]) {
-        [userBuilder withEmail:[iUser email]];
+    if (iUser.email) {
+        userBuilder.email = iUser.email;
     }
-    if ([iUser avatar]) {
-        [userBuilder withAvatar:[iUser avatar]];
+    if (iUser.avatar) {
+        userBuilder.avatar = iUser.avatar;
     }
-    if ([iUser custom] && [[iUser custom] count]) {
-        [userBuilder withCustomDictionary:[[iUser custom] mutableCopy]];
+    if (iUser.customDictionary && iUser.customDictionary.count) {
+        userBuilder.customDictionary = [iUser.customDictionary mutableCopy];
     }
-    [userBuilder withAnonymous:[iUser anonymous]];
+    userBuilder.isAnanymous = iUser.isAnonymous;
+
     return userBuilder;
 }
 

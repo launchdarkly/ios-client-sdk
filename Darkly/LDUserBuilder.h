@@ -96,7 +96,6 @@
 -(void)build;
 
 + (LDUserModel *)compareNewBuilder:(LDUserBuilder *)iBuilder withUser:(LDUserModel *)iUser;
-+ (LDUserBuilder *)retrieveCurrentBuilder:(LDUserModel *)iUser;
-
++ (LDUserBuilder *)currentBuilder:(LDUserModel *)iUser;
 
 @end
