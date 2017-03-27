@@ -119,7 +119,7 @@ static NSString * const kEventRequestCompletedNotification = @"event_request_com
                             [delegate processedEvents:YES jsonEventArray:jsonEventArray eventIntervalMillis:[config.flushInterval intValue] * kMillisInSecs];
                         }
                         else{
-                            [delegate processedEvents:NO jsonEventArray:jsonEventArray eventIntervalMillis:kMinimumPollingIntervalMillis];
+                            [delegate processedEvents:NO jsonEventArray:jsonEventArray eventIntervalMillis:kMinimumFlushIntervalMillis];
                         }
                     });
                 }];

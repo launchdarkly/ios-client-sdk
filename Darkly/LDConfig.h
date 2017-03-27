@@ -12,6 +12,8 @@
 @property (nonatomic) NSNumber* capacity;
 @property (nonatomic) NSNumber* connectionTimeout;
 @property (nonatomic) NSNumber* flushInterval;
+@property (nonatomic) NSNumber* pollingInterval;
+@property (nonatomic) BOOL streaming;
 @property (nonatomic) BOOL debugEnabled;
 
 @end
@@ -72,8 +74,24 @@
  */
 - (LDConfigBuilder *)withFlushInterval:(int)flushInterval;
 /**
+ * Set the polling interval (in seconds) for polling mode only. An interval
+ * less than 300 is set to the default (5 minutes).
+ *
+ * @param pollingInverval the polling interval in seconds
+ * @return the configuration builder
+ */
+- (LDConfigBuilder *)withPollingInterval:(int)pollingInterval;
+/**
+ * Enable streaming mode for flags. When stream is false, disable streaming and switch to polling mode. (Optional)
+ *
+ * @param streamingEnabled Whether streaming is enabled or not
+ * @return the configuration builder
+ */
+- (LDConfigBuilder *)withStreaming:(BOOL)streamingEnabled;
+/**
  * Enable debug mode to allow things such as logging. (Optional)
  *
+ * @param debugEnabled Whether debugging is enabled or not
  * @return the configuration builder
  */
 - (LDConfigBuilder *)withDebugEnabled:(BOOL)debugEnabled;

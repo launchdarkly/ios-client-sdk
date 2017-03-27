@@ -124,28 +124,28 @@
     LDClientManager *clientManager = [LDClientManager sharedInstance];
     [clientManager startPolling];
     
-    OCMVerify([pollingManagerMock startEventPolling]);
+    OCMVerify([pollingManagerMock startPolling]);
 }
 
 - (void)testStopPolling {
     LDClientManager *clientManager = [LDClientManager sharedInstance];
     [clientManager stopPolling];
     
-    OCMVerify([pollingManagerMock stopEventPolling]);
+    OCMVerify([pollingManagerMock stopPolling]);
 }
 
 - (void)testWillEnterBackground {
     LDClientManager *clientManager = [LDClientManager sharedInstance];
     [clientManager willEnterBackground];
     
-    OCMVerify([pollingManagerMock suspendEventPolling]);
+    OCMVerify([pollingManagerMock suspendPolling]);
 }
 
 - (void)testWillEnterForeground {
     LDClientManager *clientManager = [LDClientManager sharedInstance];
     [clientManager willEnterForeground];
     
-    OCMVerify([pollingManagerMock resumeEventPolling]);
+    OCMVerify([pollingManagerMock resumePolling]);
 }
 
 - (void)testProcessedEventsSuccessWithProcessedEvents {

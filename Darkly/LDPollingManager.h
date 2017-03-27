@@ -14,24 +14,24 @@ typedef enum {
 @interface LDPollingManager : NSObject
 {
 @protected
-    PollingState pollEventState;
+    PollingState pollingState;
 }
 
 
 + (id)sharedInstance;
-@property (nonatomic, assign) PollingState pollEventState;
+@property (nonatomic, assign) PollingState pollingState;
 
-@property (strong, nonatomic) dispatch_source_t eventTimer;
-@property (nonatomic) NSTimeInterval eventTimerPollingIntervalMillis;
+@property (strong, nonatomic) dispatch_source_t pollingTimer;
+@property (nonatomic) NSTimeInterval pollingIntervalMillis;
 
-+ (NSUInteger)eventPollingCount;
++ (NSUInteger)pollingCount;
 
 // event polling is passed in from the LDClient object. can be modified...
-- (void) startEventPolling;
-- (void) pauseEventPolling;
-- (void) suspendEventPolling;
-- (void) resumeEventPolling;
-- (void) stopEventPolling;
-- (PollingState)eventPollingState;
+- (void) startPolling;
+- (void) pausePolling;
+- (void) suspendPolling;
+- (void) resumePolling;
+- (void) stopPolling;
+- (PollingState)pollingState;
 
 @end
