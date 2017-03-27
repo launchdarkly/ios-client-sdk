@@ -4,6 +4,164 @@ LaunchDarkly SDK for iOS
 ![CircleCI](https://circleci.com/gh/launchdarkly/ios-client.svg?branch=master)
 [![CocoaPods Compatible](https://img.shields.io/cocoapods/v/LaunchDarkly.svg)](https://img.shields.io/cocoapods/v/DarklyEventSource.svg)
 
+Why did we fork this SDK?
+-----------
+We want to make this an even better client SDK and have a couple of suggestions to do so:
+
+### Software Engineering Best Practices
+There is a well-known heuristic called the [Law of Demeter](https://en.wikipedia.org/wiki/Law_of_Demeter) that says a module should not know about the innards of the objects it manipulates. This means that an object should not expose its internal structure through accessors because to do so is to expose, rather than to hide, its internal structure. The accessors in `LDUserBuilder` ignore this principle and return a reference to the object itself eg. 
+
+```
+- (LDUserBuilder *)withKey:(NSString *)key;
+- (LDUserBuilder *)withFirstName:(NSString *)firstName;
+- (LDUserBuilder *)withLastName:(NSString *)lastName;
+- (LDUserBuilder *)withEmail:(NSString *)email;
+...
+```
+
+The API suggests the following usage:
+
+```
+ // Objective-C
+ LDUserBuilder *user = [[LDUserBuilder alloc] init];
+ user = [user withKey:@"aa0ceb"];
+ user = [user withFirstName:@"Bob"];
+ user = [user withLastName:@"Jones"];
+ user = [user withEmail:@"bobjones@email.com"];
+ 
+ // Swift
+ var user = LDUserBuilder()
+ user = user.withKey("aa0ceb")
+ user = user.withFirstName("Bob")
+ user = user.withLastName("Jones")
+ user = user.withEmail("bobjones@email.com")
+```
+
+or worse yet:
+
+```
+ // Objective-C
+ LDUserBuilder *user = [[LDUserBuilder alloc] init];
+ user = [[[[user withKey:@"aa0ceb"] withFirstName:@"Bob"] withLastName:@"Jones" withEmail:@"bobjones@email.com"];
+ 
+ // Swift
+ var user = LDUserBuilder()
+ user = user.withKey("aa0ceb").withFirstName("Bob").withLastName("Jones").withEmail("bobjones@email.com")
+```
+
+This usage has multiple problems. These methods should not invoke methods on objects that are returned by any of the allowed functions. This kind of code is often called a [train wreck](https://www.amazon.com/Clean-Code-Handbook-Software-Craftsmanship/dp/0132350882) because it look like a bunch of coupled train cars. Chains of calls like this are generally considered to be sloppy style and should be avoided. It is usually best to split them up as follows:
+
+```
+- (void)setKey:(NSString *)key;
+- (void)setFirstName:(NSString *)firstName;
+- (void)setLastName:(NSString *)lastName;
+- (void)setEmail:(NSString *)email;
+
+ // Objective-C
+ LDUserBuilder *user = [[LDUserBuilder alloc] init];
+ [user setKey:@"aa0ceb"];
+ [user setFirstName:@"Bob"];
+ [user setLastName:@"Jones"];
+ [user setEmail:@"bobjones@email.com"];
+ 
+ // Swift
+ let user = LDUserBuilder()
+ user.setKey("aa0ceb")
+ user.setFirstName("Bob")
+ user.setLastName("Jones")
+ user.setEmail("bobjones@email.com")
+```
+
+Notice that in Swift, `user` can now be declared as a `let` constant instead of a `var` since we're no longer assigning to it.
+
+Better yet, these attributes can be declared as first-class properties. After all, the implementation barely sets the internal vars to the new values eg.
+
+```
+@property (nonatomic, copy, nullable) NSString *key;
+@property (nonatomic, copy, nullable) NSString *firstName;
+@property (nonatomic, copy, nullable) NSString *lastName;
+@property (nonatomic, copy, nullable) NSString *email;
+```
+
+This has the added benefit of the code matching the documentation ie. a property mentioned as being optional is `nullable`.
+
+
+### Cocoa Guidelines
+While the code works, in places it does not conform to Cocoa guidelines.
+
+* Objective-C no longer requires ivars to be declared separately eg. the below code is redundant:
+
+```
+@interface LDUserBuilder() {
+    NSString *key;
+    NSString *ip;
+    NSString *country;
+    NSString *firstName;
+    NSString *lastName;
+    NSString *email;
+    NSString *avatar;
+    NSMutableDictionary *customDict;
+    BOOL anonymous;
+}
+```
+
+as Objective-C runtime generates the ivars automatically.
+
+
+* Objective-C doesn't use the C-style pointer operator `->` eg. the below code is not Objective-C:
+
+```
+    if (iBuilder->key) {
+        [iUser key:iBuilder->key];
+    }
+```
+
+It should be re-written as:
+
+```
+    if ([iBuilder key]) {
+        [iUser key:[iBuilder key]];
+    }
+```
+ 
+Or better yet using the `.` operator:
+
+
+```
+    if (iBuilder.key) {
+        iUser.key = iBuilder.key;
+    }
+``` 
+
+* Cocoa naming guidelines discourage using `get`, `retrieve` etc as method names that return a property. The convention is to just use the property name eg.
+
+```
++ (LDUserBuilder *)retrieveCurrentBuilder:(LDUserModel *)iUser;
+```
+
+becomes:
+
+```
++ (LDUserBuilder *)currentBuilder:(LDUserModel *)iUser;
+```
+
+* Objective- 2.0 syntax to access dictionary and array elements eg.
+
+```
+[customDict setObject:value forKey:inputKey];
+```
+
+becomes:
+
+```
+self.customDictiionary[inputKey] = value;
+```
+
+We believe that with the suggested changes, the SDK will become more modern and reliable.
+
+
+
+
 Quick setup
 -----------
 
