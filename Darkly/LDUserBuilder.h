@@ -11,43 +11,43 @@
  * A key to the user builder to identify the user. If this key
  * is not provided, one will be auto-generated. (Optional)
  */
-@property (nonatomic, copy) NSString *key;
+@property (nonatomic, copy, nullable) NSString *key;
 
 /**
  * The IP address of the user. (Optional)
  */
-@property (nonatomic, copy) NSString *ip;
+@property (nonatomic, copy, nullable) NSString *ip;
 
 /**
  * The country of the user. (Optional)
  */
-@property (nonatomic, copy) NSString *country;
+@property (nonatomic, copy, nullable) NSString *country;
 
 /**
  * The first name of the user. (Optional)
  */
-@property (nonatomic, copy) NSString *firstName;
+@property (nonatomic, copy, nullable) NSString *firstName;
 
 /**
  * The last name of the user. (Optional)
  */
-@property (nonatomic, copy) NSString *lastName;
+@property (nonatomic, copy, nullable) NSString *lastName;
 
 /**
  * The email address of the user. (Optional)
  */
-@property (nonatomic, copy) NSString *email;
+@property (nonatomic, copy, nullable) NSString *email;
 
 /**
  * The avatar of the user. (Optional)
  */
-@property (nonatomic, copy) NSString *avatar;
+@property (nonatomic, copy, nullable) NSString *avatar;
 
 /**
  * The custom NSMutableDictionary data for the dictionary associated with
  * the user. (Optional)
  */
-@property (nonatomic, strong) NSMutableDictionary *customDictionary;
+@property (nonatomic, strong, nullable) NSMutableDictionary *customDictionary;
 
 /**
  * Provide whether the user is anonymous. Note, if a key is
@@ -63,7 +63,7 @@
  * @param inputKey    key for the data
  * @param value    value for the data
  */
-- (void)customString:(NSString *)inputKey value:(NSString *)value;
+- (void)customString:(nonnull NSString *)inputKey value:(nonnull NSString *)value;
 
 /**
  * Provide custom BOOL data for the dictionary associated with
@@ -72,7 +72,7 @@
  * @param inputKey    key for the data
  * @param value    value for the data
  */
-- (void)customBool:(NSString *)inputKey value:(BOOL)value;
+- (void)customBool:(nonnull NSString *)inputKey value:(BOOL)value;
 
 /**
  * Provide custom NSNumber data for the dictionary associated with
@@ -81,7 +81,7 @@
  * @param inputKey    key for the data
  * @param value    value for the data
  */
-- (void)customNumber:(NSString *)inputKey value:(NSNumber *)value;
+- (void)customNumber:(nonnull NSString *)inputKey value:(nonnull NSNumber *)value;
 
 /**
  * Provide custom NSArray data for the dictionary associated with
@@ -90,12 +90,12 @@
  * @param inputKey    key for the data
  * @param value    value for the data
  */
-- (void)customArray:(NSString *)inputKey value:(NSArray *)value;
+- (void)customArray:(nonnull NSString *)inputKey value:(nonnull NSArray *)value;
 
 
--(LDUserModel *)build;
+-(nonnull LDUserModel *)build;
 
-+ (LDUserModel *)compareNewBuilder:(LDUserBuilder *)iBuilder withUser:(LDUserModel *)iUser;
-+ (LDUserBuilder *)currentBuilder:(LDUserModel *)iUser;
++ (nonnull LDUserModel *)compareNewBuilder:(nonnull LDUserBuilder *)iBuilder withUser:(nonnull LDUserModel *)iUser;
++ (nonnull LDUserBuilder *)currentBuilder:(nonnull LDUserModel *)iUser;
 
 @end
