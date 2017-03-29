@@ -52,7 +52,7 @@
                 if (!inputUserBuilder) {
                     inputUserBuilder = [[LDUserBuilder alloc] init];
                 }
-                [inputUserBuilder build];
+                ldUser = [inputUserBuilder build];
                 
                 LDClientManager *clientManager = [LDClientManager sharedInstance];
                 [clientManager setOfflineEnabled:NO];

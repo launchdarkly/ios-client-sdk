@@ -194,7 +194,7 @@
     }
     DEBUG_LOG(@"LDUserBuilder building User with anonymous: %d", self.isAnonymous);
 
-    [[LDDataManager sharedManager] saveUser: user];
+    [[LDDataManager sharedManager] saveUser:user];
     return user;
 }
 
