@@ -29,7 +29,7 @@
 - (void)setUp {
     [super setUp];
     LDUserBuilder *userBuilder = [[LDUserBuilder alloc] init];
-    userBuilder = [userBuilder withKey:@"jeff@test.com"];
+    userBuilder.key = @"jeff@test.com";
     LDUserModel *user = [userBuilder build];
     
     LDConfigBuilder *configBuilder = [[LDConfigBuilder alloc] init];

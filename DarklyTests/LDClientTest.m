@@ -196,8 +196,8 @@
 
 - (void)testDelegateSet {
     LDClient *ldClient = [LDClient sharedInstance];
-    
-    ldClient.delegate = self;
+
+    ldClient.delegate = (id<ClientDelegate>)self;
     XCTAssertEqualObjects(self, ldClient.delegate);
 }
 
