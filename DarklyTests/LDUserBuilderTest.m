@@ -73,9 +73,9 @@
 - (void)testUserSetAnonymous {
     Boolean testAnonymous = YES;
     LDUserBuilder *builder = [[LDUserBuilder alloc] init];
-    builder = [builder withAnonymous:testAnonymous];
+    builder.isAnonymous = testAnonymous;
     LDUserModel *user = [builder build];
-    XCTAssertTrue([user anonymous]);
+    XCTAssertTrue(user.anonymous);
 }
 
 @end

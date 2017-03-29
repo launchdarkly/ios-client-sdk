@@ -71,15 +71,15 @@
     [builder withMobileKey:testMobileKey];
     
     LDUserBuilder *userBuilder = [[LDUserBuilder alloc] init];
-    [userBuilder withKey:@"myKey"];
-    [userBuilder withEmail:@"my@email.com"];
+    userBuilder.key = @"myKey";
+    userBuilder.email = @"my@email.com";
     
     [[LDClient sharedInstance] start:builder userBuilder:userBuilder];
     BOOL toggleValue = [[LDClient sharedInstance] boolVariation:@"test" fallback:YES];
     XCTAssertTrue(toggleValue);
     
     LDUserBuilder *anotherUserBuilder = [[LDUserBuilder alloc] init];
-    [anotherUserBuilder withKey:@"myKey"];
+    anotherUserBuilder.key = @"myKey";
 
     LDUserModel *user = [[LDClient sharedInstance] ldUser];
     OCMStub([self.dataManagerMock findUserWithkey:[OCMArg any]]).andReturn(user);
