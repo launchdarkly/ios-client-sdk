@@ -14,24 +14,36 @@ typedef enum {
 @interface LDPollingManager : NSObject
 {
 @protected
-    PollingState pollingState;
+    PollingState configPollingState;
+    PollingState eventPollingState;
 }
 
 
 + (id)sharedInstance;
-@property (nonatomic, assign) PollingState pollingState;
+@property (nonatomic, assign) PollingState configPollingState;
+@property (nonatomic, assign) PollingState eventPollingState;
 
-@property (strong, nonatomic) dispatch_source_t pollingTimer;
-@property (nonatomic) NSTimeInterval pollingIntervalMillis;
+@property (strong, nonatomic) dispatch_source_t configTimer;
+@property (nonatomic) NSTimeInterval configPollingIntervalMillis;
+@property (strong, nonatomic) dispatch_source_t eventTimer;
+@property (nonatomic) NSTimeInterval eventPollingIntervalMillis;
 
-+ (NSUInteger)pollingCount;
++ (NSUInteger)configPollingCount;
++ (NSUInteger)eventPollingCount;
+
+- (void) startConfigPolling;
+- (void) pauseConfigPolling;
+- (void) suspendConfigPolling;
+- (void) resumeConfigPolling;
+- (void) stopConfigPolling;
+- (PollingState)configPollingState;
 
 // event polling is passed in from the LDClient object. can be modified...
-- (void) startPolling;
-- (void) pausePolling;
-- (void) suspendPolling;
-- (void) resumePolling;
-- (void) stopPolling;
-- (PollingState)pollingState;
+- (void) startEventPolling;
+- (void) pauseEventPolling;
+- (void) suspendEventPolling;
+- (void) resumeEventPolling;
+- (void) stopEventPolling;
+- (PollingState)eventPollingState;
 
 @end

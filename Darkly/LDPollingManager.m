@@ -10,11 +10,15 @@
 
 @implementation LDPollingManager
 
-@synthesize pollingTimer;
-@synthesize pollingIntervalMillis;
-@synthesize pollingState;
+@synthesize eventTimer;
+@synthesize eventPollingIntervalMillis;
+@synthesize eventPollingState;
+@synthesize configTimer;
+@synthesize configPollingIntervalMillis;
+@synthesize configPollingState;
 
-static NSUInteger pollingCount=0;
+static NSUInteger configPollingCount=0;
+static NSUInteger eventPollingCount=0;
 
 static id sharedInstance = nil;
 
@@ -30,50 +34,162 @@ static id sharedInstance = nil;
 
 - (id)init {
     if ((self = [super init])) {
-        pollingCount = 0;
-        self.pollingState = POLL_STOPPED;
-        self.pollingIntervalMillis = kDefaultFlushInterval*kMillisInSecs;
+        configPollingCount = 0;
+        eventPollingCount = 0;
+        
+        self.configPollingState = POLL_STOPPED;
+        self.eventPollingState = POLL_STOPPED;
+        
+        self.configPollingIntervalMillis = kDefaultPollingInterval*kMillisInSecs;
+        self.eventPollingIntervalMillis = kDefaultFlushInterval*kMillisInSecs;
     }
     return self;
 }
 
 - (void)dealloc {
-    [self stopPolling];
-    pollingCount = 0;
-    pollingState = POLL_STOPPED;
+    [self stopConfigPolling];
+    [self stopEventPolling];
+    configPollingCount = 0;
+    eventPollingCount = 0;
+    
+    configPollingState = POLL_STOPPED;
+    eventPollingState = POLL_STOPPED;
 }
 
-+ (NSUInteger)pollingCount {
-    return pollingCount;
++ (NSUInteger)configPollingCount {
+    return configPollingCount;
 }
 
-- (PollingState)pollingState {
-    return pollingState;
+- (PollingState)configPollingState {
+    return configPollingState;
 }
 
-//Setter method
-- (void) setPollingIntervalMillis:(NSTimeInterval)eTimerPollingInterval {
-    pollingIntervalMillis = [self calculateEventPollingIntervalMillis:eTimerPollingInterval];
-    if (pollingState != POLL_STOPPED && pollingState != POLL_SUSPENDED) {
-        // pause the event polling interval
-        DEBUG_LOGX(@"Pausing event Polling");
-        [self pausePolling];
++ (NSUInteger)eventPollingCount {
+    return eventPollingCount;
+}
+
+- (PollingState)eventPollingState {
+    return eventPollingState;
+}
+
+#pragma mark - Config Polling methods
+
+- (void)startConfigPollTimer
+{
+    DEBUG_LOGX(@"PollingManager starting initial config polling");
+    if ((!self.configTimer) && (self.configPollingIntervalMillis > 0.0)) {
+        self.configTimer = dispatch_source_create(DISPATCH_SOURCE_TYPE_TIMER, 0, 0,  dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0));
+    }
+    if (self.configTimer) {
+        configPollingState = POLL_RUNNING;
         
-        if (eTimerPollingInterval == kMinimumFlushIntervalMillis && [[[LDClient sharedInstance] ldConfig] debugEnabled] == YES) {
-            [self poll];
+        dispatch_source_set_event_handler(self.configTimer, ^(void) {
+            [self configPoll];
+        });
+        
+        [self updateConfigPollingTimer];
+        dispatch_resume(self.configTimer);
+    }
+}
+
+- (void)configPoll {
+    if (configPollingState != POLL_STOPPED || configPollingState != POLL_SUSPENDED)
+    {
+        DEBUG_LOGX(@"PollingManager config interval reached");
+        configPollingCount +=1;
+        
+        LDClientManager *clientManager = [LDClientManager sharedInstance];
+        if (![[[LDClient sharedInstance] ldConfig] streaming]) {
+            [clientManager syncWithServerForConfig];
+        }
+    }
+}
+
+- (void)updateConfigPollingTimer {
+    if ((self.configTimer != NULL) && (self.configPollingIntervalMillis > 0.0)) {
+        uint64_t interval = (uint64_t)(self.configPollingIntervalMillis * NSEC_PER_MSEC);
+        dispatch_time_t startTime = dispatch_time(DISPATCH_TIME_NOW, interval);
+        dispatch_source_set_timer(self.configTimer, startTime, interval, 1.0);
+    }
+}
+
+- (void) startConfigPolling {
+    if (configPollingState == POLL_STOPPED) {
+        DEBUG_LOGX(@"PollingManager starting config polling");
+        [self startConfigPollTimer];
+    }
+}
+
+- (void) pauseConfigPolling {
+    if (configPollingState == POLL_RUNNING) {
+        DEBUG_LOGX(@"PollingManager pausing config polling");
+        dispatch_suspend(self.configTimer);
+        configPollingState = POLL_PAUSED;
+    }
+}
+
+- (void) suspendConfigPolling {
+    if (configPollingState == POLL_RUNNING) {
+        DEBUG_LOGX(@"PollingManager suspending config polling");
+        dispatch_suspend(self.configTimer);
+        configPollingState = POLL_SUSPENDED;
+    }
+}
+
+- (void) resumeConfigPolling{
+    if (configPollingState == POLL_PAUSED || configPollingState == POLL_SUSPENDED) {
+        DEBUG_LOGX(@"PollingManager resuming config polling");
+        BOOL checkconfig = configPollingState == POLL_SUSPENDED ? YES : NO;
+        dispatch_resume(self.configTimer);
+        configPollingState = POLL_RUNNING;
+        if (checkconfig) {
+            [self configPoll];
+        }
+    }
+}
+
+- (void)stopConfigPolling {
+    DEBUG_LOGX(@"PollingManager stopping config polling");
+    if (self.configTimer) {
+        dispatch_source_cancel(self.configTimer);
+        
+        if (configPollingState == POLL_PAUSED || configPollingState == POLL_SUSPENDED)
+        {
+            dispatch_resume(self.configTimer);
         }
         
-        [self updatePollingTimer];
+#if !OS_OBJECT_USE_OBJC
+        dispatch_release(self.pollingTimer);
+#endif
+        self.configTimer = NULL;
+        configPollingState = POLL_STOPPED;
+    }
+}
+
+#pragma mark - Event Polling methods
+//Setter method
+- (void) setEventPollingIntervalMillis:(NSTimeInterval)eTimerPollingInterval {
+    eventPollingIntervalMillis = [self calculateEventPollingIntervalMillis:eTimerPollingInterval];
+    if (eventPollingState != POLL_STOPPED && eventPollingState != POLL_SUSPENDED) {
+        // pause the event polling interval
+        DEBUG_LOGX(@"Pausing event Polling");
+        [self pauseEventPolling];
+        
+        if (eTimerPollingInterval == kMinimumFlushIntervalMillis && [[[LDClient sharedInstance] ldConfig] debugEnabled] == YES) {
+            [self eventPoll];
+        }
+        
+        [self updateEventPollingTimer];
         DEBUG_LOGX(@"updated event Polling");
-        [self resumePolling];
+        [self resumeEventPolling];
         DEBUG_LOGX(@"resuming event Polling");
     }
 }
 
 -(NSTimeInterval)calculateEventPollingIntervalMillis:(NSTimeInterval)eTimerPollingInterval {
     LDConfig *config = [[LDClient sharedInstance] ldConfig];
-    if (![config streaming] && [config pollingInterval]) {
-        return [[[[LDClient sharedInstance] ldConfig] pollingInterval] doubleValue]*kMillisInSecs;
+    if (![config streaming] && [[config flushInterval] intValue] == kDefaultFlushInterval) {
+        return [config.pollingInterval intValue] * kMillisInSecs;
     }
     if (eTimerPollingInterval <= kMinimumFlushIntervalMillis) {
         return kDefaultFlushInterval*kMillisInSecs;
@@ -83,97 +199,93 @@ static id sharedInstance = nil;
 }
 
 
-- (void)startPollTimer
+- (void)startEventPollTimer
 {
     DEBUG_LOGX(@"PollingManager starting initial event polling");
-    if ((!self.pollingTimer) && (self.pollingIntervalMillis > 0.0)) {
-        self.pollingTimer = dispatch_source_create(DISPATCH_SOURCE_TYPE_TIMER, 0, 0,  dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0));
+    if ((!self.eventTimer) && (self.eventPollingIntervalMillis > 0.0)) {
+        self.eventTimer = dispatch_source_create(DISPATCH_SOURCE_TYPE_TIMER, 0, 0,  dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0));
     }
-    if (self.pollingTimer) {
-        pollingState = POLL_RUNNING;
+    if (self.eventTimer) {
+        eventPollingState = POLL_RUNNING;
         
-        dispatch_source_set_event_handler(self.pollingTimer, ^(void) {
-            [self poll];
+        dispatch_source_set_event_handler(self.eventTimer, ^(void) {
+            [self eventPoll];
         });
         
-        [self updatePollingTimer];
-        dispatch_resume(self.pollingTimer);
+        [self updateEventPollingTimer];
+        dispatch_resume(self.eventTimer);
     }
 }
 
-- (void)poll {
-    if (pollingState != POLL_STOPPED || pollingState != POLL_SUSPENDED)
+- (void)eventPoll {
+    if (eventPollingState != POLL_STOPPED || eventPollingState != POLL_SUSPENDED)
     {
         DEBUG_LOGX(@"PollingManager event interval reached");
-        pollingCount +=1;
+        eventPollingCount +=1;
         
         LDClientManager *clientManager = [LDClientManager sharedInstance];
         [clientManager syncWithServerForEvents];
-        if (![[[LDClient sharedInstance] ldConfig] streaming]) {
-            [clientManager syncWithServerForConfig];
-        }
     }
 }
 
-- (void)updatePollingTimer {
-    if ((self.pollingTimer != NULL) && (self.pollingIntervalMillis > 0.0)) {
-        uint64_t interval = (uint64_t)(self.pollingIntervalMillis * NSEC_PER_MSEC);
+- (void)updateEventPollingTimer {
+    if ((self.eventTimer != NULL) && (self.eventPollingIntervalMillis > 0.0)) {
+        uint64_t interval = (uint64_t)(self.eventPollingIntervalMillis * NSEC_PER_MSEC);
         dispatch_time_t startTime = dispatch_time(DISPATCH_TIME_NOW, interval);
-        dispatch_source_set_timer(self.pollingTimer, startTime, interval, 1.0);
+        dispatch_source_set_timer(self.eventTimer, startTime, interval, 1.0);
     }
 }
 
-
-- (void) startPolling {
-    if (pollingState == POLL_STOPPED) {
+- (void) startEventPolling {
+    if (eventPollingState == POLL_STOPPED) {
         DEBUG_LOGX(@"PollingManager starting event polling");
-        [self startPollTimer];
+        [self startEventPollTimer];
     }
 }
 
-- (void) pausePolling {
-    if (pollingState == POLL_RUNNING) {
+- (void) pauseEventPolling {
+    if (eventPollingState == POLL_RUNNING) {
         DEBUG_LOGX(@"PollingManager pausing event polling");
-        dispatch_suspend(self.pollingTimer);
-        pollingState = POLL_PAUSED;
+        dispatch_suspend(self.eventTimer);
+        eventPollingState = POLL_PAUSED;
     }
 }
 
-- (void) suspendPolling {
-    if (pollingState == POLL_RUNNING) {
+- (void) suspendEventPolling {
+    if (eventPollingState == POLL_RUNNING) {
         DEBUG_LOGX(@"PollingManager suspending event polling");
-        dispatch_suspend(self.pollingTimer);
-        pollingState = POLL_SUSPENDED;
+        dispatch_suspend(self.eventTimer);
+        eventPollingState = POLL_SUSPENDED;
     }
 }
 
-- (void) resumePolling{
-    if (pollingState == POLL_PAUSED || pollingState == POLL_SUSPENDED) {
+- (void) resumeEventPolling{
+    if (eventPollingState == POLL_PAUSED || eventPollingState == POLL_SUSPENDED) {
         DEBUG_LOGX(@"PollingManager resuming event polling");
-        BOOL checkEvent = pollingState == POLL_SUSPENDED ? YES : NO;
-        dispatch_resume(self.pollingTimer);
-        pollingState = POLL_RUNNING;
+        BOOL checkEvent = eventPollingState == POLL_SUSPENDED ? YES : NO;
+        dispatch_resume(self.eventTimer);
+        eventPollingState = POLL_RUNNING;
         if (checkEvent) {
-            [self poll];
+            [self eventPoll];
         }
     }
 }
 
-- (void)stopPolling {
+- (void)stopEventPolling {
     DEBUG_LOGX(@"PollingManager stopping event polling");
-    if (self.pollingTimer) {
-        dispatch_source_cancel(self.pollingTimer);
+    if (self.eventTimer) {
+        dispatch_source_cancel(self.eventTimer);
 
-        if (pollingState == POLL_PAUSED || pollingState == POLL_SUSPENDED)
+        if (eventPollingState == POLL_PAUSED || eventPollingState == POLL_SUSPENDED)
         {
-            dispatch_resume(self.pollingTimer);
+            dispatch_resume(self.eventTimer);
         }
         
 #if !OS_OBJECT_USE_OBJC
         dispatch_release(self.pollingTimer);
 #endif
-        self.pollingTimer = NULL;
-        pollingState = POLL_STOPPED;
+        self.eventTimer = NULL;
+        eventPollingState = POLL_STOPPED;
     }
 }
 

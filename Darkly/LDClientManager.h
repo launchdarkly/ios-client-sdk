@@ -17,7 +17,7 @@
 
 - (void)syncWithServerForEvents;
 - (void)syncWithServerForConfig;
-- (void)processedEvents:(BOOL)success jsonEventArray:(NSArray *)jsonEventArray eventIntervalMillis:(int)eventIntervalMillis;
+- (void)processedEvents:(BOOL)success jsonEventArray:(NSArray *)jsonEventArray;
 - (void)processedConfig:(BOOL)success jsonConfigDictionary:(NSDictionary *)jsonConfigDictionary;
 - (void)startPolling;
 - (void)stopPolling;

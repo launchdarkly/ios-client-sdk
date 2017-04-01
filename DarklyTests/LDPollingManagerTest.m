@@ -39,25 +39,25 @@
 - (void)testEventPollingStates {
     // create the expectation with a nice descriptive message
     LDPollingManager *dnu =  [LDPollingManager sharedInstance];
-    dnu.pollingIntervalMillis = 5000; // for the purposes of the unit tests set it to 5 secs.
-    [dnu startPolling];
+    dnu.eventPollingIntervalMillis = 5000; // for the purposes of the unit tests set it to 5 secs.
+    [dnu startEventPolling];
     
     NSInteger expectedValue = POLL_RUNNING;
-    NSInteger actualValue = [dnu pollingState];
+    NSInteger actualValue = [dnu eventPollingState];
     
     XCTAssertTrue(actualValue == expectedValue);
     
-    [dnu pausePolling];
+    [dnu pauseEventPolling];
     
     expectedValue = POLL_PAUSED;
-    actualValue = [dnu pollingState];
+    actualValue = [dnu eventPollingState];
     
     XCTAssertTrue(actualValue == expectedValue);
     
-    [dnu stopPolling];
+    [dnu stopEventPolling];
     
     expectedValue = POLL_STOPPED;
-    actualValue = [dnu pollingState];
+    actualValue = [dnu eventPollingState];
     
     XCTAssertTrue(actualValue == expectedValue);
 }
@@ -70,17 +70,27 @@
     LDPollingManager *pollingManager =  [LDPollingManager sharedInstance];
     
     [client start:builder userBuilder:nil];
-    XCTAssertEqual(pollingManager.pollingIntervalMillis, kDefaultFlushInterval*kMillisInSecs);
+    XCTAssertEqual(pollingManager.eventPollingIntervalMillis, kDefaultFlushInterval*kMillisInSecs);
+    XCTAssertEqual([pollingManager configPollingState], POLL_STOPPED);
     [client stopClient];
     
     [builder withStreaming:NO];
     [client start:builder userBuilder:nil];
-    XCTAssertEqual(pollingManager.pollingIntervalMillis, kDefaultPollingInterval*kMillisInSecs);
+    XCTAssertEqual(pollingManager.eventPollingIntervalMillis, kDefaultPollingInterval*kMillisInSecs);
+    XCTAssertEqual(pollingManager.configPollingIntervalMillis, kDefaultPollingInterval*kMillisInSecs);
+    XCTAssertEqual([pollingManager configPollingState], POLL_RUNNING);
     [client stopClient];
     
     [builder withPollingInterval:50];
     [client start:builder userBuilder:nil];
-    XCTAssertEqual(pollingManager.pollingIntervalMillis, kMinimumPollingInterval*kMillisInSecs);
+    XCTAssertEqual(pollingManager.eventPollingIntervalMillis, kMinimumPollingInterval*kMillisInSecs);
+    XCTAssertEqual(pollingManager.configPollingIntervalMillis, kMinimumPollingInterval*kMillisInSecs);
+    [client stopClient];
+    
+    [builder withFlushInterval:50];
+    [client start:builder userBuilder:nil];
+    XCTAssertEqual(pollingManager.eventPollingIntervalMillis, 50*kMillisInSecs);
+    XCTAssertEqual(pollingManager.configPollingIntervalMillis, kMinimumPollingInterval*kMillisInSecs);
     [client stopClient];
 }
 

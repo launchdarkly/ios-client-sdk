@@ -113,14 +113,8 @@ static NSString * const kEventRequestCompletedNotification = @"event_request_com
                 NSURLSessionDataTask *dataTask = [defaultSession dataTaskWithRequest:request completionHandler:^(NSData * _Nullable data, NSURLResponse * _Nullable response, NSError * _Nullable error) {
                     dispatch_async(dispatch_get_main_queue(), ^{
                         eventRequestInProgress = NO;
-                        if (!error) {
-                            LDClient *client = [LDClient sharedInstance];
-                            LDConfig *config = client.ldConfig;
-                            [delegate processedEvents:YES jsonEventArray:jsonEventArray eventIntervalMillis:[config.flushInterval intValue] * kMillisInSecs];
-                        }
-                        else{
-                            [delegate processedEvents:NO jsonEventArray:jsonEventArray eventIntervalMillis:kMinimumFlushIntervalMillis];
-                        }
+                        BOOL processedEvents = !error ? YES : NO;
+                        [delegate processedEvents:processedEvents jsonEventArray:jsonEventArray];
                     });
                 }];
                 
