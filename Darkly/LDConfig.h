@@ -82,7 +82,7 @@
  */
 - (LDConfigBuilder *)withPollingInterval:(int)pollingInterval;
 /**
- * Enable streaming mode for flags. When streamingEnabled is false, disable streaming and switch to polling mode. (Optional)
+ * Enable streaming mode for flags. When streaming is false, disable streaming and switch to polling mode. (Optional)
  *
  * @param streamingEnabled Whether streaming is enabled or not
  * @return the configuration builder
