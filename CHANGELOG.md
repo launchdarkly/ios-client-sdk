@@ -2,7 +2,7 @@
 
 All notable changes to the LaunchDarkly Python SDK will be documented in this file. This project adheres to [Semantic Versioning](http://semver.org).
 
-## [2.2.0] - 2017-04-04
+## [2.2.0] - 2017-04-05
 ### Added
 - Ability to disable streaming and enable interval-based polling
 

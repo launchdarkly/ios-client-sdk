@@ -67,9 +67,9 @@
 - (LDConfigBuilder *)withConnectionTimeout:(int)connectionTimeout;
 /**
  * The interval at which events are synced to the server. The default
- * is 30 seconds. (Optional)
+ * is 30 seconds for streaming mode; in polling mode, the flush interval defaults to the polling interval. (Optional)
  *
- * @param flushInverval the flush interval in seconds
+ * @param flushInterval the flush interval in seconds
  * @return the configuration builder
  */
 - (LDConfigBuilder *)withFlushInterval:(int)flushInterval;
@@ -77,7 +77,7 @@
  * Set the polling interval (in seconds) for polling mode only. An interval
  * less than 300 is set to the default (5 minutes).
  *
- * @param pollingInverval the polling interval in seconds
+ * @param pollingInterval the polling interval in seconds
  * @return the configuration builder
  */
 - (LDConfigBuilder *)withPollingInterval:(int)pollingInterval;
