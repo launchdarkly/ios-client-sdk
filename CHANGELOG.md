@@ -6,6 +6,10 @@ All notable changes to the LaunchDarkly Python SDK will be documented in this fi
 ### Added
 - Ability to disable streaming and enable interval-based polling
 
+## [2.1.3] - 2017-04-05
+### Fixed
+- Uncaught exception `NSInvalidArgumentException` in `performEventRequest`
+
 ## [2.1.2] - 2017-03-20
 ### Added
 - Backoff with jitter for connection establishment of eventsource
