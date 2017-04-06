@@ -38,5 +38,7 @@ extern NSString *const kLDBackgroundFetchInitiated;
 extern int const kCapacity;
 extern int const kConnectionTimeout;
 extern int const kDefaultFlushInterval;
-extern int const kMinimumPollingIntervalMillis;
+extern int const kMinimumFlushIntervalMillis;
+extern int const kDefaultPollingInterval;
+extern int const kMinimumPollingInterval;
 extern int const kMillisInSecs;

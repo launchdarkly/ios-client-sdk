@@ -12,7 +12,7 @@
 
 #import <OCMock.h>
 
-@interface LDClientTest : DarklyXCTestCase
+@interface LDClientTest : DarklyXCTestCase <ClientDelegate>
 
 @end
 

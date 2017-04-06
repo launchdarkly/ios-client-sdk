@@ -7,7 +7,7 @@
 
 @implementation LDConfig
 
-@synthesize mobileKey, baseUrl, eventsUrl, capacity, connectionTimeout, flushInterval, debugEnabled;
+@synthesize mobileKey, baseUrl, eventsUrl, capacity, connectionTimeout, flushInterval, pollingInterval, streaming, debugEnabled;
 
 @end
 
@@ -18,12 +18,20 @@
     NSNumber *capacity;
     NSNumber *connectionTimeout;
     NSNumber *flushInterval;
+    NSNumber *pollingInterval;
+    BOOL streaming;
     BOOL debugEnabled;
 }
 
 @end
 
 @implementation LDConfigBuilder
+
+- (id)init {
+    self = [super init];
+    streaming = YES;
+    return self;
+}
 
 - (LDConfigBuilder *)withMobileKey:(NSString *)inputMobileKey
 {
@@ -57,6 +65,18 @@
 - (LDConfigBuilder *)withFlushInterval:(int)inputFlushInterval
 {
     flushInterval = [NSNumber numberWithInt:inputFlushInterval];
+    return self;
+}
+
+- (LDConfigBuilder *)withPollingInterval:(int)inputPollingInterval
+{
+    pollingInterval = [NSNumber numberWithInt:MAX(inputPollingInterval, kMinimumPollingInterval)];
+    return self;
+}
+
+- (LDConfigBuilder *)withStreaming:(BOOL)inputStreamingEnabled
+{
+    streaming = inputStreamingEnabled;
     return self;
 }
 
@@ -112,6 +132,17 @@
         DEBUG_LOG(@"LDConfigBuilder building LDConfig with default flush interval: %d", kDefaultFlushInterval);
         [config setFlushInterval:[NSNumber numberWithInt:kDefaultFlushInterval]];
     }
+    if (pollingInterval) {
+        DEBUG_LOG(@"LDConfigBuilder building LDConfig with polling interval: %@", pollingInterval);
+        [config setPollingInterval:pollingInterval];
+    } else {
+        DEBUG_LOG(@"LDConfigBuilder building LDConfig with default polling interval: %d", kDefaultPollingInterval);
+        [config setPollingInterval:[NSNumber numberWithInt:kDefaultPollingInterval]];
+    }
+    
+    DEBUG_LOG(@"LDConfigBuilder building LDConfig with streaming enabled: %d", streaming);
+    [config setStreaming:streaming];
+    
     if (debugEnabled) {
         DEBUG_LOG(@"LDConfigBuilder building LDConfig with debug enabled: %d", debugEnabled);
         [config setDebugEnabled:debugEnabled];
