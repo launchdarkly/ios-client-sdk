@@ -94,6 +94,39 @@
     XCTAssertFalse([config debugEnabled]);
 }
 
+- (void)testConfigOverridePollingInterval {
+    NSString *testMobileKey = @"testMobileKey";
+    LDConfigBuilder *builder = [[LDConfigBuilder alloc] init];
+    [builder withMobileKey:testMobileKey];
+    
+    LDConfig *config = [builder build];
+    XCTAssertEqualObjects([config mobileKey], testMobileKey);
+    XCTAssertEqualObjects([config pollingInterval], [NSNumber numberWithInt:kDefaultPollingInterval]);
+    XCTAssertFalse([config debugEnabled]);
+    
+    [builder withPollingInterval:5000];
+    config = [builder build];
+    XCTAssertEqualObjects([config pollingInterval], [NSNumber numberWithInt:5000]);
+    
+    [builder withPollingInterval:50];
+    config = [builder build];
+    XCTAssertEqualObjects([config pollingInterval], [NSNumber numberWithInt:kMinimumPollingInterval]);
+}
+
+- (void)testConfigOverrideStreaming {
+    NSString *testMobileKey = @"testMobileKey";
+    LDConfigBuilder *builder = [[LDConfigBuilder alloc] init];
+    [builder withMobileKey:testMobileKey];
+    
+    LDConfig *config = [builder build];
+    XCTAssertEqualObjects([config mobileKey], testMobileKey);
+    XCTAssertTrue([config streaming]);
+    
+    [builder withStreaming:NO];
+    config = [builder build];
+    XCTAssertFalse([config streaming]);
+}
+
 - (void)testConfigOverrideDebug {
     NSString *testMobileKey = @"testMobileKey";
     LDConfigBuilder *builder = [[LDConfigBuilder alloc] init];

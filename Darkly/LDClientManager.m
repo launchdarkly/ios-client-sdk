@@ -33,17 +33,22 @@
 - (void)startPolling {
     LDPollingManager *pollingMgr = [LDPollingManager sharedInstance];
     
-    LDClient *client = [LDClient sharedInstance];
-    LDConfig *config = client.ldConfig;
-    pollingMgr.eventTimerPollingIntervalMillis = [config.flushInterval intValue] * kMillisInSecs;
-    DEBUG_LOG(@"ClientManager startPolling method called with eventTimerPollingInterval=%f", pollingMgr.eventTimerPollingIntervalMillis);
+    LDConfig *config = [[LDClient sharedInstance] ldConfig];
+    pollingMgr.eventPollingIntervalMillis = [config.flushInterval intValue] * kMillisInSecs;
+    DEBUG_LOG(@"ClientManager startPolling method called with pollingInterval=%f", pollingMgr.eventPollingIntervalMillis);
     [pollingMgr startEventPolling];
     
-    eventSource = [EventSource eventSourceWithURL:[NSURL URLWithString:kStreamUrl] mobileKey:config.mobileKey];
-    
-    [eventSource onMessage:^(Event *e) {
-        [self syncWithServerForConfig];
-    }];
+    if ([config streaming]) {
+        eventSource = [EventSource eventSourceWithURL:[NSURL URLWithString:kStreamUrl] mobileKey:config.mobileKey];
+        
+        [eventSource onMessage:^(Event *e) {
+            [self syncWithServerForConfig];
+        }];
+    }
+    else{
+        pollingMgr.configPollingIntervalMillis = [config.pollingInterval intValue] * kMillisInSecs;
+        [pollingMgr startConfigPolling];
+    }
 }
 
 
@@ -53,7 +58,12 @@
     
     [pollingMgr stopEventPolling];
     
-    [eventSource close];
+    if ([[[LDClient sharedInstance] ldConfig] streaming]) {
+        [eventSource close];
+    }
+    else{
+        [pollingMgr stopConfigPolling];
+    }
     
     [self flushEvents];
 }
@@ -64,7 +74,12 @@
     
     [pollingMgr suspendEventPolling];
     
-    [eventSource close];
+    if ([[[LDClient sharedInstance] ldConfig] streaming]) {
+        [eventSource close];
+    }
+    else{
+        [pollingMgr suspendConfigPolling];
+    }
     
     [self flushEvents];
 }
@@ -75,11 +90,17 @@
     [pollingMgr resumeEventPolling];
     
     LDClient *client = [LDClient sharedInstance];
-    eventSource = [EventSource eventSourceWithURL:[NSURL URLWithString:kStreamUrl] mobileKey:client.ldConfig.mobileKey];
     
-    [eventSource onMessage:^(Event *e) {
-        [self syncWithServerForConfig];
-    }];
+    if ([[client ldConfig] streaming]) {
+        eventSource = [EventSource eventSourceWithURL:[NSURL URLWithString:kStreamUrl] mobileKey:client.ldConfig.mobileKey];
+        
+        [eventSource onMessage:^(Event *e) {
+            [self syncWithServerForConfig];
+        }];
+    }
+    else{
+        [pollingMgr resumeConfigPolling];
+    }
 }
 
 -(void)syncWithServerForEvents {
@@ -124,7 +145,7 @@
     [self syncWithServerForEvents];
 }
 
-- (void)processedEvents:(BOOL)success jsonEventArray:(NSArray *)jsonEventArray eventIntervalMillis:(int)eventIntervalMillis {
+- (void)processedEvents:(BOOL)success jsonEventArray:(NSArray *)jsonEventArray {
     // If Success
     if (success) {
         DEBUG_LOGX(@"ClientManager processedEvents method called after receiving successful response from server");
@@ -132,11 +153,6 @@
         if (jsonEventArray) {
             [[LDDataManager sharedManager] deleteProcessedEvents: jsonEventArray];
         }
-    } else {
-        DEBUG_LOGX(@"ClientManager processedEvents method called after receiving failure response from server");
-        LDPollingManager *pollingMgr = [LDPollingManager sharedInstance];
-        DEBUG_LOG(@"ClientManager setting event interval to: %d", eventIntervalMillis);
-        pollingMgr.eventTimerPollingIntervalMillis = eventIntervalMillis;
     }
 }
 

@@ -161,7 +161,7 @@ static NSString * const kFlagKey = @"flagkey";
 
 -(BOOL)isAtEventCapacity:(NSArray *)currentArray {
     LDConfig *ldConfig = [[LDClient sharedInstance] ldConfig];
-    return ldConfig.capacity && currentArray && [NSNumber numberWithInteger:[currentArray count]] >= ldConfig.capacity;
+    return ldConfig.capacity && currentArray && [currentArray count] >= [ldConfig.capacity integerValue];
 }
 
 -(void) deleteProcessedEvents: (NSArray *) processedJsonArray {

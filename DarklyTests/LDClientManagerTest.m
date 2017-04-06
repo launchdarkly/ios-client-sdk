@@ -149,20 +149,18 @@
 }
 
 - (void)testProcessedEventsSuccessWithProcessedEvents {
-    int eventIntervalMillis = 10;
     LDEventModel *event = [[LDEventModel alloc] initFeatureEventWithKey:@"blah" keyValue:[NSNumber numberWithBool:NO] defaultKeyValue:[NSNumber numberWithBool:NO] userValue:[[LDClient sharedInstance] ldUser]];
 
     LDClientManager *clientManager = [LDClientManager sharedInstance];
-    [clientManager processedEvents:YES jsonEventArray:@[[event dictionaryValue]] eventIntervalMillis:eventIntervalMillis];
+    [clientManager processedEvents:YES jsonEventArray:@[[event dictionaryValue]]];
     
     OCMVerify([dataManagerMock deleteProcessedEvents:[OCMArg any]]);
 }
 
 - (void)testProcessedEventsSuccessWithoutProcessedEvents {
-    int eventIntervalMillis = 10;
     
     LDClientManager *clientManager = [LDClientManager sharedInstance];
-    [clientManager processedEvents:YES jsonEventArray:@[] eventIntervalMillis:eventIntervalMillis];
+    [clientManager processedEvents:YES jsonEventArray:@[]];
     
     [[dataManagerMock reject] deleteProcessedEvents:[OCMArg any]];
     
@@ -170,10 +168,9 @@
 }
 
 - (void)testProcessedEventsFailure {
-    int eventIntervalMillis = 10;
     
     LDClientManager *clientManager = [LDClientManager sharedInstance];
-    [clientManager processedEvents:NO jsonEventArray:nil eventIntervalMillis:eventIntervalMillis];
+    [clientManager processedEvents:NO jsonEventArray:nil];
     
     [[dataManagerMock reject] deleteProcessedEvents:[OCMArg any]];
     
