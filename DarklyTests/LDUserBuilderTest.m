@@ -46,15 +46,15 @@
     NSString *testCustomValue = @"testCustomValue";
     Boolean testAnonymous = NO;
     LDUserBuilder *builder = [[LDUserBuilder alloc] init];
-    builder = [builder withKey:testKey];
-    builder = [builder withIp:testIp];
-    builder = [builder withCountry:testCountry];
-    builder = [builder withFirstName:testFirstName];
-    builder = [builder withLastName:testLastName];
-    builder = [builder withEmail:testEmail];
-    builder = [builder withAvatar:testAvatar];
-    builder = [builder withCustomString:testCustomKey value:testCustomValue];
-    builder = [builder withAnonymous:testAnonymous];    
+    builder.key = testKey;
+    builder.ip = testIp;
+    builder.country = testCountry;
+    builder.firstName = testFirstName;
+    builder.lastName = testLastName;
+    builder.email = testEmail;
+    builder.avatar = testAvatar;
+    builder.customDictionary[testCustomKey] = testCustomValue;
+    builder.isAnonymous = testAnonymous;
 
     LDUserModel *user = [builder build];
     XCTAssertEqualObjects([user key], testKey);
@@ -73,9 +73,9 @@
 - (void)testUserSetAnonymous {
     Boolean testAnonymous = YES;
     LDUserBuilder *builder = [[LDUserBuilder alloc] init];
-    builder = [builder withAnonymous:testAnonymous];
+    builder.isAnonymous = testAnonymous;
     LDUserModel *user = [builder build];
-    XCTAssertTrue([user anonymous]);
+    XCTAssertTrue(user.anonymous);
 }
 
 @end
