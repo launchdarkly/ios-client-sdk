@@ -7,7 +7,7 @@
 NSString * const kClientVersion = @"2.2.0";
 NSString * const kBaseUrl = @"https://app.launchdarkly.com";
 NSString * const kEventsUrl = @"https://mobile.launchdarkly.com";
-NSString * const kStreamUrl = @"https://stream.launchdarkly.com/mping";
+NSString * const kStreamUrl = @"https://clientstream.launchdarkly.com/mping";
 NSString * const kNoMobileKeyExceptionName = @"NoMobileKeyDefinedException";
 NSString * const kNoMobileKeyExceptionReason = @"A valid MobileKey must be provided";
 NSString * const kNilConfigExceptionName = @"NilConfigException";
