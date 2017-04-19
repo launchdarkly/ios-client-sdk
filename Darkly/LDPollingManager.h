@@ -2,6 +2,7 @@
 //  Copyright © 2015 Catamorphic Co. All rights reserved.
 //
 
+#import <Foundation/Foundation.h>
 
 typedef enum {
     POLL_STOPPED = 0,

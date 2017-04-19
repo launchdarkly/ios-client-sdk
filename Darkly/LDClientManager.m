@@ -2,7 +2,6 @@
 //  Copyright © 2015 Catamorphic Co. All rights reserved.
 //
 
-
 #import "LDClientManager.h"
 #import "LDPollingManager.h"
 #import "LDDataManager.h"
@@ -11,6 +10,13 @@
 #import "LDEventModel.h"
 #import "LDFlagConfigModel.h"
 #import "NSDictionary+JSON.h"
+#import "EventSource.h"
+
+@interface LDClientManager()
+
+@property(nonatomic, strong, readonly) EventSource *eventSource;
+
+@end
 
 @implementation LDClientManager
 
@@ -21,9 +27,13 @@
     static dispatch_once_t onceToken;
     dispatch_once(&onceToken, ^{
         sharedApiManager = [[self alloc] init];
-        
+#if TARGET_OS_IOS || TARGET_OS_TV
         [[NSNotificationCenter defaultCenter] addObserver:sharedApiManager selector:@selector(willEnterForeground) name:UIApplicationDidBecomeActiveNotification object:nil];
         [[NSNotificationCenter defaultCenter] addObserver:sharedApiManager selector:@selector(willEnterBackground) name:UIApplicationWillResignActiveNotification object:nil];
+#elif TARGET_OS_OSX
+        [[NSNotificationCenter defaultCenter] addObserver:sharedApiManager selector:@selector(willEnterForeground) name:NSApplicationDidBecomeActiveNotification object:nil];
+        [[NSNotificationCenter defaultCenter] addObserver:sharedApiManager selector:@selector(willEnterBackground) name:NSApplicationWillResignActiveNotification object:nil];
+#endif
         [[NSNotificationCenter defaultCenter] addObserver:sharedApiManager selector:@selector(syncWithServerForConfig) name:kLDBackgroundFetchInitiated object:nil];
         
     });

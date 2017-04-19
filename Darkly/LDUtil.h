@@ -2,10 +2,13 @@
 //  Copyright © 2015 Catamorphic Co. All rights reserved.
 //
 
-
-#import <UIKit/UIKit.h>
 #import "LDClient.h"
 #import "DarklyConstants.h"
+#if TARGET_OS_OSX
+#import <AppKit/AppKit.h>
+#else
+#import <UIKit/UIKit.h>
+#endif
 
 #define CRITICAL_LOGX(string) \
 if ([LDUtil logLevel] >= DarklyLogLevelCriticalOnly) { \
@@ -52,8 +55,6 @@ if (!(condition) && DEBUG) { \
 
 // <---- device info ----
 + (NSInteger)getSystemVersionAsAnInteger;
-+ (BOOL)isIPad;
-+ (BOOL)isRetina;
 + (NSString *)getDeviceAsString;
 + (NSString *)getSystemVersionAsString;
 

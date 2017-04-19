@@ -4,5 +4,5 @@ machine:
 
 test:
  post:
-  - pod lib lint
-  - if [ "$CIRCLE_BRANCH" = 'master' ]; then pod spec lint; fi
+  - pod lib lint --use-libraries 
+  - if [ "$CIRCLE_BRANCH" = 'master' ]; then pod spec lint --use-libraries; fi

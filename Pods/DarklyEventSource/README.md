@@ -1,7 +1,10 @@
 # EventSource
-**Server-Sent Events for iOS and Mac**
+**Server-Sent Events for iOS, watchOS, tvOS and Mac**
 
 ![Travis](https://travis-ci.org/neilco/EventSource.svg?branch=master)
+[![CocoaPods Compatible](https://img.shields.io/cocoapods/v/DarklyEventSource.svg)](https://img.shields.io/cocoapods/v/DarklyEventSource.svg)
+[![Carthage Compatible](https://img.shields.io/badge/Carthage-compatible-4BC51D.svg?style=flat)](https://github.com/Carthage/Carthage)
+[![Platform](https://img.shields.io/cocoapods/p/AFNetworking.svg?style=flat)](http://cocoadocs.org/docsets/AFNetworking)
 
 ## What does it do?
 
@@ -70,6 +73,54 @@ http.createServer(function (req, res) {
 ```
 
 The payload above doesn't include an `id` parameter, but if you include one it will be available in the `Event` object in your Cocoa code.
+
+## Installation
+EventSource supports multiple methods for installing the library in a project.
+
+### Installation with CocoaPods
+
+[CocoaPods](http://cocoapods.org) is a dependency manager for Objective-C, which automates and simplifies the process of using 3rd-party libraries like EventSource in your projects. You can install it with the following command:
+
+```bash
+$ gem install cocoapods
+```
+#### Podfile
+
+To integrate EventSource into your Xcode project using CocoaPods, specify it in your `Podfile`:
+
+```ruby
+source 'https://github.com/CocoaPods/Specs.git'
+platform :ios, '8.0'
+
+target 'TargetName' do
+pod 'DarklyEventSource', '~> 1.3.0'
+end
+```
+
+Then, run the following command:
+
+```bash
+$ pod install
+```
+
+### Installation with Carthage
+
+[Carthage](https://github.com/Carthage/Carthage) is a decentralized dependency manager that builds your dependencies and provides you with binary frameworks.
+
+You can install Carthage with [Homebrew](http://brew.sh/) using the following command:
+
+```bash
+$ brew update
+$ brew install carthage
+```
+
+To integrate EventSource into your Xcode project using Carthage, specify it in your `Cartfile`:
+
+```ogdl
+github "launchdarkly/ios-eventsource" ~> 1.3.0
+```
+
+Run `carthage` to build the framework and drag the built `EventSource.framework` into your Xcode project.
 
 ### Contact
 

@@ -24,8 +24,8 @@
 - (void)testFeatureEventWithKeyCreatesEventWithDefaults {
     LDEventModel *event = [[LDEventModel alloc] initFeatureEventWithKey:@"red" keyValue:[NSNumber numberWithBool:NO] defaultKeyValue:[NSNumber numberWithBool:NO] userValue:self.user];
     
-    XCTAssertEqual(event.key, @"red");
-    XCTAssertEqual(event.kind, @"feature");
+    XCTAssertEqualObjects(event.key, @"red");
+    XCTAssertEqualObjects(event.kind, @"feature");
     XCTAssertFalse([(NSNumber *)event.value boolValue]);
     XCTAssertFalse([(NSNumber *)event.isDefault boolValue]);
 }
@@ -35,8 +35,8 @@
     
     LDEventModel *event = [[LDEventModel alloc] initCustomEventWithKey:@"red" andDataDictionary:dictionary userValue:self.user];
                  
-    XCTAssertEqual(event.key, @"red");
-    XCTAssertEqual(event.kind, @"custom");
+    XCTAssertEqualObjects(event.key, @"red");
+    XCTAssertEqualObjects(event.kind, @"custom");
     XCTAssertEqual([event.data allValues].firstObject,
                    [dictionary allValues].firstObject);
 }
