@@ -102,8 +102,7 @@
  * Provide custom NSMutableDictionary data for the dictionary associated with
  * the user. (Optional)
  *
- * @param inputKey    key for the data
- * @param value    value for the data
+ * @param inputDictionary Dictionary to associated with the user
  * @return the user builder
  */
 - (LDUserBuilder *)withCustomDictionary:(NSMutableDictionary *)inputDictionary;

@@ -45,22 +45,26 @@ typedef void (^EventSourceEventHandler)(Event *event);
 /// Returns a new instance of EventSource with the specified URL.
 ///
 /// @param URL The URL of the EventSource.
-/// @param timeoutInterval The request timeout interval in seconds. See <tt>NSURLRequest</tt> for more details. Default: 5 minutes.
+/// @param mobileKey The mobile key to be included in the authorization header
 + (instancetype)eventSourceWithURL:(NSURL *)URL mobileKey:(NSString *)mobileKey;
 
 /// Returns a new instance of EventSource with the specified URL.
 ///
 /// @param URL The URL of the EventSource.
+/// @param mobileKey The mobile key to be included in the authorization header
+/// @param timeoutInterval The request timeout interval in seconds. See <tt>NSURLRequest</tt> for more details. Default: 5 minutes.
 + (instancetype)eventSourceWithURL:(NSURL *)URL mobileKey:(NSString *)mobileKey timeoutInterval:(NSTimeInterval)timeoutInterval;
 
 /// Creates a new instance of EventSource with the specified URL.
 ///
 /// @param URL The URL of the EventSource.
+/// @param mobileKey The mobile key to be included in the authorization header
 - (instancetype)initWithURL:(NSURL *)URL mobileKey:(NSString *)mobileKey;
 
 /// Creates a new instance of EventSource with the specified URL.
 ///
 /// @param URL The URL of the EventSource.
+/// @param mobileKey The mobile key to be included in the authorization header
 /// @param timeoutInterval The request timeout interval in seconds. See <tt>NSURLRequest</tt> for more details. Default: 5 minutes.
 - (instancetype)initWithURL:(NSURL *)URL mobileKey:(NSString *)mobileKey timeoutInterval:(NSTimeInterval)timeoutInterval;
 

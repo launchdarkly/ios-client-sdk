@@ -4,6 +4,7 @@
 
 #import "LDConfig.h"
 #import "DarklyXCTestCase.h"
+#import "DarklyConstants.h"
 
 @interface LDConfigTest : DarklyXCTestCase
 
