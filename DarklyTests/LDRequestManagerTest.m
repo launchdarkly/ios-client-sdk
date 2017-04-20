@@ -65,7 +65,7 @@
     
     NSString *mobileKey = @"YOUR_MOBILE_KEY";
     NSString *encodedUserString = @"eyJrZXkiOiAiamVmZkB0ZXN0LmNvbSJ9";
-    LDRequestManager *requestManager = [LDRequestManager sharedInstance];
+    LDRequestManager *requestManager = [[LDRequestManager alloc] init];
     [requestManager setMobileKey:mobileKey];
     [requestManager setBaseUrl:kBaseUrl];
     [requestManager setConnectionTimeout:10];
@@ -100,7 +100,7 @@
     
     NSArray *eventsArray = [NSJSONSerialization JSONObjectWithData:eventData options:kNilOptions error:nil];
     
-    LDRequestManager *requestManager = [LDRequestManager sharedInstance];
+    LDRequestManager *requestManager = [[LDRequestManager alloc] init];
     [requestManager setMobileKey:mobileKey];
     [requestManager setEventsUrl:kEventsUrl];
     [requestManager setConnectionTimeout:10];
