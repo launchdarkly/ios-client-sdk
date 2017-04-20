@@ -191,7 +191,20 @@
         [user key:key];
         DEBUG_LOG(@"LDUserBuilder building User with key: %@", key);
     } else {
-        NSString *uniqueKey = [[[UIDevice currentDevice] identifierForVendor] UUIDString];
+        NSString *uniqueKey;
+#if TARGET_OS_IOS || TARGET_OS_TV
+        uniqueKey = [[[UIDevice currentDevice] identifierForVendor] UUIDString];
+#else
+        if ([[NSUserDefaults standardUserDefaults] valueForKey:kDeviceIdentifierKey]) {
+            uniqueKey = [[NSUserDefaults standardUserDefaults] valueForKey:kDeviceIdentifierKey];
+        }
+        else{
+            uniqueKey = [[NSUUID UUID] UUIDString];
+            [[NSUserDefaults standardUserDefaults] setValue:uniqueKey forKey:kDeviceIdentifierKey];
+            [[NSUserDefaults standardUserDefaults] synchronize];
+        }
+        
+#endif
         DEBUG_LOG(@"LDUserBuilder building User with key: %@", uniqueKey);
 
         user = [[LDUserModel alloc] init];

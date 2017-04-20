@@ -2,6 +2,8 @@
 //  Copyright © 2015 Catamorphic Co. All rights reserved.
 //
 
+#import <Foundation/Foundation.h>
+
 @interface LDConfig : NSObject {
     
 }
@@ -75,7 +77,7 @@
 - (LDConfigBuilder *)withFlushInterval:(int)flushInterval;
 /**
  * Set the polling interval (in seconds) for polling mode only. An interval
- * less than 300 is set to the default (5 minutes).
+ * less than 60 is set to the minimum (1 minute). The default is 5 minutes. (Optional)
  *
  * @param pollingInterval the polling interval in seconds
  * @return the configuration builder

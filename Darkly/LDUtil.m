@@ -5,6 +5,9 @@
 
 #import "LDUtil.h"
 
+#if TARGET_OS_WATCH
+#import <WatchKit/WatchKit.h>
+#endif
 
 @implementation LDUtil
 
@@ -20,44 +23,41 @@
 #endif
 }
 
-+ (BOOL)isIPad
-{
-    if ([[UIDevice currentDevice] respondsToSelector:@selector(userInterfaceIdiom)] &&
-        [[UIDevice currentDevice] userInterfaceIdiom] == UIUserInterfaceIdiomPad)
-    {
-        return YES;
-    }
-    return NO;
-}
-
-+ (BOOL)isRetina
-{
-    UIScreen *curScreen = [UIScreen mainScreen];
-    
-    if ([curScreen respondsToSelector:@selector(displayLinkWithTarget:selector:)] &&
-        ([curScreen respondsToSelector:@selector(scale)])) {
-        if (curScreen.scale == 2.0) {
-            return YES;
-        } else {
-            return NO;
-        }
-    } else {
-        return NO;
-    }
-}
-
 + (NSString *)getDeviceAsString
 {
-    if ([self isIPad]) {
-        return kIpad;
-    } else {
-        return kIphone;
+#if TARGET_OS_IOS || TARGET_OS_TV
+    if ([[UIDevice currentDevice] respondsToSelector:@selector(userInterfaceIdiom)]) {
+        switch ([[UIDevice currentDevice] userInterfaceIdiom]) {
+            case UIUserInterfaceIdiomPhone:
+                return kIphone;
+            case UIUserInterfaceIdiomPad:
+                return kIpad;
+            case UIUserInterfaceIdiomTV:
+                return kAppleTV;
+            default:
+                break;
+        }
     }
+    return @"";
+    
+#elif TARGET_OS_WATCH
+    return kAppleWatch;
+#elif TARGET_OS_OSX
+    return kMacOS;
+#endif
+    return @"";
 }
 
 + (NSString *)getSystemVersionAsString
 {
+#if TARGET_OS_IOS || TARGET_OS_TV
     return [[UIDevice currentDevice] systemVersion];
+#elif TARGET_OS_WATCH
+    return [[WKInterfaceDevice currentDevice] systemVersion];
+#elif TARGET_OS_OSX
+    return [[NSProcessInfo processInfo] operatingSystemVersionString];
+#endif
+    return @"";
 }
 
 + (NSInteger)getSystemVersionAsAnInteger {
@@ -70,7 +70,7 @@
             return version;
         }
         
-        NSArray* digits = [[UIDevice currentDevice].systemVersion componentsSeparatedByString:@"."];
+        NSArray* digits = [[self getSystemVersionAsString] componentsSeparatedByString:@"."];
         NSEnumerator* enumer = [digits objectEnumerator];
         NSString* number;
         while (number = [enumer nextObject]) {

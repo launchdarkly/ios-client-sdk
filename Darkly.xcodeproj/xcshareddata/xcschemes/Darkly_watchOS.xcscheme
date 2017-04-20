@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Scheme
-   LastUpgradeVersion = "0800"
+   LastUpgradeVersion = "0830"
    version = "1.3">
    <BuildAction
       parallelizeBuildables = "YES"
@@ -14,9 +14,9 @@
             buildForAnalyzing = "YES">
             <BuildableReference
                BuildableIdentifier = "primary"
-               BlueprintIdentifier = "CC36AA931B6D5FED008200F1"
-               BuildableName = "libDarkly.a"
-               BlueprintName = "Darkly"
+               BlueprintIdentifier = "69BD7E0F1E6C79550056D70F"
+               BuildableName = "Darkly.framework"
+               BlueprintName = "Darkly_watchOS"
                ReferencedContainer = "container:Darkly.xcodeproj">
             </BuildableReference>
          </BuildActionEntry>
@@ -32,27 +32,19 @@
             skipped = "NO">
             <BuildableReference
                BuildableIdentifier = "primary"
-               BlueprintIdentifier = "CC36AA9E1B6D5FED008200F1"
+               BlueprintIdentifier = "690346C61E6872EA00E45133"
                BuildableName = "DarklyTests.xctest"
                BlueprintName = "DarklyTests"
                ReferencedContainer = "container:Darkly.xcodeproj">
             </BuildableReference>
-            <SkippedTests>
-               <Test
-                  Identifier = "LDPollingManagerTest">
-               </Test>
-               <Test
-                  Identifier = "LDRequestManagerTest">
-               </Test>
-            </SkippedTests>
          </TestableReference>
       </Testables>
       <MacroExpansion>
          <BuildableReference
             BuildableIdentifier = "primary"
-            BlueprintIdentifier = "CC36AA931B6D5FED008200F1"
-            BuildableName = "libDarkly.a"
-            BlueprintName = "Darkly"
+            BlueprintIdentifier = "69BD7E0F1E6C79550056D70F"
+            BuildableName = "Darkly.framework"
+            BlueprintName = "Darkly_watchOS"
             ReferencedContainer = "container:Darkly.xcodeproj">
          </BuildableReference>
       </MacroExpansion>
@@ -72,9 +64,9 @@
       <MacroExpansion>
          <BuildableReference
             BuildableIdentifier = "primary"
-            BlueprintIdentifier = "CC36AA931B6D5FED008200F1"
-            BuildableName = "libDarkly.a"
-            BlueprintName = "Darkly"
+            BlueprintIdentifier = "69BD7E0F1E6C79550056D70F"
+            BuildableName = "Darkly.framework"
+            BlueprintName = "Darkly_watchOS"
             ReferencedContainer = "container:Darkly.xcodeproj">
          </BuildableReference>
       </MacroExpansion>
@@ -90,9 +82,9 @@
       <MacroExpansion>
          <BuildableReference
             BuildableIdentifier = "primary"
-            BlueprintIdentifier = "CC36AA931B6D5FED008200F1"
-            BuildableName = "libDarkly.a"
-            BlueprintName = "Darkly"
+            BlueprintIdentifier = "69BD7E0F1E6C79550056D70F"
+            BuildableName = "Darkly.framework"
+            BlueprintName = "Darkly_watchOS"
             ReferencedContainer = "container:Darkly.xcodeproj">
          </BuildableReference>
       </MacroExpansion>

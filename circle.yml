@@ -1,8 +1,8 @@
 machine:
  xcode:
-  version: 8.1
+  version: 8.3
 
 test:
  post:
-  - pod lib lint
-  - if [ "$CIRCLE_BRANCH" = 'master' ]; then pod spec lint; fi
+  - pod lib lint --use-libraries 
+  - if [ "$CIRCLE_BRANCH" = 'master' ]; then pod spec lint --use-libraries; fi
