@@ -1,6 +1,23 @@
 # Change log
 
-All notable changes to the LaunchDarkly Python SDK will be documented in this file. This project adheres to [Semantic Versioning](http://semver.org).
+All notable changes to the LaunchDarkly iOS SDK will be documented in this file. This project adheres to [Semantic Versioning](http://semver.org).
+
+## [2.3.0] - 2017-04-20
+### Added
+- Support for tvOS 9.0+
+- Support for watchOS 2.0+
+- Support for macOS 10.10+
+- Umbrella header (`Darkly/Darkly.h`)
+
+### Changed
+- Library is now a dynamic framework in order to support the [Carthage](https://github.com/Carthage/Carthage) dependency manager
+- Minimum supported iOS version is now iOS 8.0+
+- Updated streaming host from `stream.launchdarkly.com` to `clientstream.launchdarkly.com`
+- Default (foreground) polling interval was reduced to 5 minutes
+- Minimum polling interval was reduced to 1 minute
+
+### Fixed
+- Potential range exception issue in event processing
 
 ## [2.2.0] - 2017-04-05
 ### Added
