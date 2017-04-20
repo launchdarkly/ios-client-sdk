@@ -26,7 +26,7 @@
     OCMStub([requestManagerMock performFeatureFlagRequest:[OCMArg isKindOfClass:[NSString class]]]);
 
     id requestManagerClassMock = OCMClassMock([LDRequestManager class]);
-    OCMStub(ClassMethod([requestManagerClassMock sharedInstance])).andReturn(requestManagerClassMock);
+    OCMStub(ClassMethod([requestManagerClassMock sharedInstance])).andReturn(requestManager);
  }
 
 - (void)tearDown {
