@@ -2,6 +2,10 @@
 
 All notable changes to the LaunchDarkly iOS SDK will be documented in this file. This project adheres to [Semantic Versioning](http://semver.org).
 
+## [2.3.1] - 2017-04-25
+### Fixed
+- Benign race conditions in LDRequestManager
+
 ## [2.3.0] - 2017-04-20
 ### Added
 - Support for tvOS 9.0+
