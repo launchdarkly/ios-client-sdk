@@ -17,9 +17,6 @@
 @synthesize configPollingIntervalMillis;
 @synthesize configPollingState;
 
-static NSUInteger configPollingCount=0;
-static NSUInteger eventPollingCount=0;
-
 static id sharedInstance = nil;
 
 + (instancetype)sharedInstance
@@ -34,9 +31,6 @@ static id sharedInstance = nil;
 
 - (id)init {
     if ((self = [super init])) {
-        configPollingCount = 0;
-        eventPollingCount = 0;
-        
         self.configPollingState = POLL_STOPPED;
         self.eventPollingState = POLL_STOPPED;
         
@@ -49,23 +43,13 @@ static id sharedInstance = nil;
 - (void)dealloc {
     [self stopConfigPolling];
     [self stopEventPolling];
-    configPollingCount = 0;
-    eventPollingCount = 0;
     
     configPollingState = POLL_STOPPED;
     eventPollingState = POLL_STOPPED;
 }
 
-+ (NSUInteger)configPollingCount {
-    return configPollingCount;
-}
-
 - (PollingState)configPollingState {
     return configPollingState;
-}
-
-+ (NSUInteger)eventPollingCount {
-    return eventPollingCount;
 }
 
 - (PollingState)eventPollingState {
@@ -96,7 +80,6 @@ static id sharedInstance = nil;
     if (configPollingState != POLL_STOPPED || configPollingState != POLL_SUSPENDED)
     {
         DEBUG_LOGX(@"PollingManager config interval reached");
-        configPollingCount +=1;
         
         LDClientManager *clientManager = [LDClientManager sharedInstance];
         if (![[[LDClient sharedInstance] ldConfig] streaming]) {
@@ -221,7 +204,6 @@ static id sharedInstance = nil;
     if (eventPollingState != POLL_STOPPED || eventPollingState != POLL_SUSPENDED)
     {
         DEBUG_LOGX(@"PollingManager event interval reached");
-        eventPollingCount +=1;
         
         LDClientManager *clientManager = [LDClientManager sharedInstance];
         [clientManager syncWithServerForEvents];

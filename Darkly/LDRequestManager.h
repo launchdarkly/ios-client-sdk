@@ -21,8 +21,6 @@
 @property (nonatomic) NSString* eventsUrl;
 @property (nonatomic) NSTimeInterval connectionTimeout;
 @property (nonatomic, weak) id <RequestManagerDelegate> delegate;
-@property (nonatomic, assign) BOOL configRequestInProgress;
-@property (nonatomic, assign) BOOL eventRequestInProgress;
 
 +(LDRequestManager *)sharedInstance;
 

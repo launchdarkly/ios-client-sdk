@@ -29,9 +29,6 @@ typedef enum {
 @property (strong, nonatomic) dispatch_source_t eventTimer;
 @property (nonatomic) NSTimeInterval eventPollingIntervalMillis;
 
-+ (NSUInteger)configPollingCount;
-+ (NSUInteger)eventPollingCount;
-
 - (void) startConfigPolling;
 - (void) pauseConfigPolling;
 - (void) suspendConfigPolling;
