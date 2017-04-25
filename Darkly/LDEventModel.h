@@ -13,7 +13,7 @@
 @interface LDEventModel : NSObject <NSCoding>
 @property (nullable, nonatomic, strong) NSString *key;
 @property (nullable, nonatomic, strong) NSString *kind;
-@property (nonatomic) NSInteger creationDate;
+@property (atomic, assign) NSInteger creationDate;
 @property (nullable, nonatomic, strong) NSDictionary *data;
 @property (nullable, nonatomic, strong) LDUserModel *user;
 

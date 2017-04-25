@@ -15,7 +15,7 @@ static NSString * const kEventRequestCompletedNotification = @"event_request_com
 
 @implementation LDRequestManager
 
-@synthesize mobileKey, baseUrl, eventsUrl, connectionTimeout, delegate, configRequestInProgress, eventRequestInProgress;
+@synthesize mobileKey, baseUrl, eventsUrl, connectionTimeout, delegate;
 
 +(LDRequestManager *)sharedInstance
 {
@@ -42,50 +42,48 @@ static NSString * const kEventRequestCompletedNotification = @"event_request_com
 -(void)performFeatureFlagRequest:(NSString *)encodedUser
 {
     DEBUG_LOGX(@"RequestManager syncing config to server");
-
-    if (!configRequestInProgress) {
-        if (mobileKey) {
-            if (encodedUser) {
-                configRequestInProgress = YES;
-
-                NSURLSession *defaultSession = [NSURLSession sessionWithConfiguration:[NSURLSessionConfiguration defaultSessionConfiguration]];
-                NSString *requestUrl = [baseUrl stringByAppendingString:kFeatureFlagUrl];
-                
-                requestUrl = [requestUrl stringByAppendingString:encodedUser];
-                
-                NSMutableURLRequest *request = [NSMutableURLRequest requestWithURL:[NSURL URLWithString:requestUrl]];
-                
-                [self addFeatureRequestHeaders:request];
-                
-                NSURLSessionDataTask *dataTask = [defaultSession dataTaskWithRequest:request completionHandler:^(NSData * _Nullable data, NSURLResponse * _Nullable response, NSError * _Nullable error) {
-                    dispatch_async(dispatch_get_main_queue(), ^{
-                        configRequestInProgress = NO;
-                        if (!error) {
-                            NSError *jsonError;
-                            NSMutableDictionary * responseObject = [NSJSONSerialization JSONObjectWithData:data options:kNilOptions error:&jsonError];
-                            if (responseObject) {
-                                [delegate processedConfig:YES jsonConfigDictionary:responseObject];
-                            } else {
-                                [delegate processedConfig:NO jsonConfigDictionary:nil];
-                            }
-                        }
-                        else{
+    
+    dispatch_semaphore_t semaphore = dispatch_semaphore_create(0);
+    
+    if (mobileKey) {
+        if (encodedUser) {
+            NSURLSession *defaultSession = [NSURLSession sessionWithConfiguration:[NSURLSessionConfiguration defaultSessionConfiguration]];
+            NSString *requestUrl = [baseUrl stringByAppendingString:kFeatureFlagUrl];
+            
+            requestUrl = [requestUrl stringByAppendingString:encodedUser];
+            
+            NSMutableURLRequest *request = [NSMutableURLRequest requestWithURL:[NSURL URLWithString:requestUrl]];
+            
+            [self addFeatureRequestHeaders:request];
+            
+            NSURLSessionDataTask *dataTask = [defaultSession dataTaskWithRequest:request completionHandler:^(NSData * _Nullable data, NSURLResponse * _Nullable response, NSError * _Nullable error) {
+                dispatch_semaphore_signal(semaphore);
+                dispatch_async(dispatch_get_main_queue(), ^{
+                    if (!error) {
+                        NSError *jsonError;
+                        NSMutableDictionary * responseObject = [NSJSONSerialization JSONObjectWithData:data options:kNilOptions error:&jsonError];
+                        if (responseObject) {
+                            [delegate processedConfig:YES jsonConfigDictionary:responseObject];
+                        } else {
                             [delegate processedConfig:NO jsonConfigDictionary:nil];
                         }
-                    });
-                    
-                }];
+                    }
+                    else{
+                        [delegate processedConfig:NO jsonConfigDictionary:nil];
+                    }
+                });
                 
-                [dataTask resume];
-                
-            } else {
-                DEBUG_LOGX(@"RequestManager unable to sync config to server since no encodedUser");
-            }
+            }];
+            
+            [dataTask resume];
+            
+            dispatch_semaphore_wait(semaphore, kConnectionTimeout);
+            
         } else {
-            DEBUG_LOGX(@"RequestManager unable to sync config to server since no mobileKey");
+            DEBUG_LOGX(@"RequestManager unable to sync config to server since no encodedUser");
         }
     } else {
-        DEBUG_LOGX(@"RequestManager already has a sync config in progress");
+        DEBUG_LOGX(@"RequestManager unable to sync config to server since no mobileKey");
     }
 }
 
@@ -93,41 +91,39 @@ static NSString * const kEventRequestCompletedNotification = @"event_request_com
 {
     DEBUG_LOGX(@"RequestManager syncing events to server");
     
-    if (!eventRequestInProgress) {
-        if (mobileKey) {
-            if (jsonEventArray) {
-                eventRequestInProgress = YES;
+    dispatch_semaphore_t semaphore = dispatch_semaphore_create(0);
+    
+    if (mobileKey) {
+        if (jsonEventArray) {
+            NSURLSession *defaultSession = [NSURLSession sessionWithConfiguration:[NSURLSessionConfiguration defaultSessionConfiguration]];
+            NSString *requestUrl = [eventsUrl stringByAppendingString:kEventUrl];
             
-                NSURLSession *defaultSession = [NSURLSession sessionWithConfiguration:[NSURLSessionConfiguration defaultSessionConfiguration]];
-                NSString *requestUrl = [eventsUrl stringByAppendingString:kEventUrl];
-                
-                NSMutableURLRequest *request = [NSMutableURLRequest requestWithURL:[NSURL URLWithString:requestUrl]];
-                [self addEventRequestHeaders:request];
-                
-                NSError *error;
-                NSData *postData = [NSJSONSerialization dataWithJSONObject:jsonEventArray options:0 error:&error];
-                
-                [request setHTTPMethod:@"POST"];
-                [request setHTTPBody:postData];
-                
-                NSURLSessionDataTask *dataTask = [defaultSession dataTaskWithRequest:request completionHandler:^(NSData * _Nullable data, NSURLResponse * _Nullable response, NSError * _Nullable error) {
-                    dispatch_async(dispatch_get_main_queue(), ^{
-                        eventRequestInProgress = NO;
-                        BOOL processedEvents = !error ? YES : NO;
-                        [delegate processedEvents:processedEvents jsonEventArray:jsonEventArray];
-                    });
-                }];
-                
-                [dataTask resume];
-                
-            } else {
-                DEBUG_LOGX(@"RequestManager unable to sync events to server since no events");
-            }
+            NSMutableURLRequest *request = [NSMutableURLRequest requestWithURL:[NSURL URLWithString:requestUrl]];
+            [self addEventRequestHeaders:request];
+            
+            NSError *error;
+            NSData *postData = [NSJSONSerialization dataWithJSONObject:jsonEventArray options:0 error:&error];
+            
+            [request setHTTPMethod:@"POST"];
+            [request setHTTPBody:postData];
+            
+            NSURLSessionDataTask *dataTask = [defaultSession dataTaskWithRequest:request completionHandler:^(NSData * _Nullable data, NSURLResponse * _Nullable response, NSError * _Nullable error) {
+                dispatch_semaphore_signal(semaphore);
+                dispatch_async(dispatch_get_main_queue(), ^{
+                    BOOL processedEvents = !error ? YES : NO;
+                    [delegate processedEvents:processedEvents jsonEventArray:jsonEventArray];
+                });
+            }];
+            
+            [dataTask resume];
+            
+            dispatch_semaphore_wait(semaphore, kConnectionTimeout);
+            
         } else {
-            DEBUG_LOGX(@"RequestManager unable to sync events to server since no mobileKey");
+            DEBUG_LOGX(@"RequestManager unable to sync events to server since no events");
         }
     } else {
-        DEBUG_LOGX(@"RequestManager already has a sync events in progress");
+        DEBUG_LOGX(@"RequestManager unable to sync events to server since no mobileKey");
     }
 }
 
