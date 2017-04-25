@@ -166,7 +166,7 @@ static NSString * const kFlagKey = @"flagkey";
 
 -(void) deleteProcessedEvents: (NSArray *) processedJsonArray {
     // Loop through processedEvents
-    NSInteger count = [processedJsonArray count] > [_eventsArray count] ? [processedJsonArray count] : [_eventsArray count];
+    NSInteger count = MIN([processedJsonArray count], [_eventsArray count]);
     [_eventsArray removeObjectsInRange:NSMakeRange(0, count)];
 }
 

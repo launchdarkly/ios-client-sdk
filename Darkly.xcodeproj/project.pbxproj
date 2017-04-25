@@ -80,8 +80,8 @@
 		69A87EAF1E74712800B88B23 /* LDUtil.m in Sources */ = {isa = PBXBuildFile; fileRef = 690346EE1E68990000E45133 /* LDUtil.m */; };
 		69A87EB01E74712800B88B23 /* NSDictionary+JSON.h in Headers */ = {isa = PBXBuildFile; fileRef = 690346F21E68990000E45133 /* NSDictionary+JSON.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		69A87EB11E74712800B88B23 /* NSDictionary+JSON.m in Sources */ = {isa = PBXBuildFile; fileRef = 690346F31E68990000E45133 /* NSDictionary+JSON.m */; };
+		69B205D31EA92ECD00487CA3 /* LDRequestManagerTest.m in Sources */ = {isa = PBXBuildFile; fileRef = 690347141E689B9F00E45133 /* LDRequestManagerTest.m */; };
 		69BAF40D1E9AAB4800747613 /* Darkly.h in Headers */ = {isa = PBXBuildFile; fileRef = 69BAF40B1E9AAB4800747613 /* Darkly.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		69BAF40E1E9AAB4800747613 /* Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = 69BAF40C1E9AAB4800747613 /* Info.plist */; };
 		69BD7E181E6C79910056D70F /* LDDataManager.h in Headers */ = {isa = PBXBuildFile; fileRef = 6903470F1E68994500E45133 /* LDDataManager.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		69BD7E191E6C79910056D70F /* LDDataManager.m in Sources */ = {isa = PBXBuildFile; fileRef = 690347101E68994500E45133 /* LDDataManager.m */; };
 		69BD7E1A1E6C79910056D70F /* Darkly-Prefix.pch in Headers */ = {isa = PBXBuildFile; fileRef = 690346D81E68990000E45133 /* Darkly-Prefix.pch */; settings = {ATTRIBUTES = (Public, ); }; };
@@ -109,7 +109,6 @@
 		69BD7E301E6C79910056D70F /* LDUtil.m in Sources */ = {isa = PBXBuildFile; fileRef = 690346EE1E68990000E45133 /* LDUtil.m */; };
 		69BD7E311E6C79910056D70F /* NSDictionary+JSON.h in Headers */ = {isa = PBXBuildFile; fileRef = 690346F21E68990000E45133 /* NSDictionary+JSON.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		69BD7E321E6C79910056D70F /* NSDictionary+JSON.m in Sources */ = {isa = PBXBuildFile; fileRef = 690346F31E68990000E45133 /* NSDictionary+JSON.m */; };
-		69E5275D1E6E948200E4B63B /* LDRequestManagerTest.m in Sources */ = {isa = PBXBuildFile; fileRef = 690347141E689B9F00E45133 /* LDRequestManagerTest.m */; };
 		69E5275E1E6E948F00E4B63B /* LDDataManagerTest.m in Sources */ = {isa = PBXBuildFile; fileRef = 690347161E689B9F00E45133 /* LDDataManagerTest.m */; };
 		69F3F6921E6BF7F600079A09 /* LDDataManager.m in Sources */ = {isa = PBXBuildFile; fileRef = 690347101E68994500E45133 /* LDDataManager.m */; };
 		69F3F6941E6BF80800079A09 /* LDDataManager.h in Headers */ = {isa = PBXBuildFile; fileRef = 6903470F1E68994500E45133 /* LDDataManager.h */; settings = {ATTRIBUTES = (Public, ); }; };
@@ -654,7 +653,6 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				69BAF40E1E9AAB4800747613 /* Info.plist in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -890,9 +888,9 @@
 				6903472E1E689B9F00E45133 /* LDClientManagerTest.m in Sources */,
 				69E5275E1E6E948F00E4B63B /* LDDataManagerTest.m in Sources */,
 				690347321E689B9F00E45133 /* DarklyXCTestCase.m in Sources */,
+				69B205D31EA92ECD00487CA3 /* LDRequestManagerTest.m in Sources */,
 				6903472D1E689B9F00E45133 /* LDUtilTest.m in Sources */,
 				690347311E689B9F00E45133 /* LDFlagConfigModelTest.m in Sources */,
-				69E5275D1E6E948200E4B63B /* LDRequestManagerTest.m in Sources */,
 				690347331E689B9F00E45133 /* NSArray+UnitTests.m in Sources */,
 				6903472C1E689B9F00E45133 /* LDClientTest.m in Sources */,
 			);
