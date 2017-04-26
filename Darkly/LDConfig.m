@@ -81,7 +81,7 @@
 - (void)setPollingInterval:(NSNumber *)pollingInterval {
     if (pollingInterval) {
         DEBUG_LOG(@"Set LDConfig polling interval: %@", pollingInterval);
-        _pollingInterval = pollingInterval;
+        _pollingInterval = [NSNumber numberWithInt:MAX(pollingInterval.intValue, kMinimumPollingInterval)];
     } else {
         DEBUG_LOG(@"Set LDConfig default polling interval: %d", kDefaultPollingInterval);
         _pollingInterval = [NSNumber numberWithInt:kDefaultPollingInterval];
