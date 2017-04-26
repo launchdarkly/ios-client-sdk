@@ -41,17 +41,15 @@
 
 - (void)testStartWithValidConfig {
     NSString *testMobileKey = @"testMobileKey";
-    LDConfigBuilder *builder = [[LDConfigBuilder alloc] init];
-    [builder withMobileKey:testMobileKey];
+    LDConfig *config = [[LDConfig alloc] initWithMobileKey:testMobileKey];
     LDClient *client = [LDClient sharedInstance];
-    BOOL didStart = [client start:builder userBuilder:nil];
+    BOOL didStart = [client start:config userBuilder:nil];
     XCTAssertTrue(didStart);
 }
 
 - (void)testStartWithValidConfigMultipleTimes {
     NSString *testMobileKey = @"testMobileKey";
-    LDConfigBuilder *builder = [[LDConfigBuilder alloc] init];
-    [builder withMobileKey:testMobileKey];
+    LDConfig *config = [[LDConfig alloc] initWithMobileKey:testMobileKey];
     XCTAssertTrue([[LDClient sharedInstance] start:builder userBuilder:nil]);
     XCTAssertFalse([[LDClient sharedInstance] start:builder userBuilder:nil]);
 }
