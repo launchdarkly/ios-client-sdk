@@ -97,16 +97,12 @@
 
 - (void)testConfigOverrideStreaming {
     NSString *testMobileKey = @"testMobileKey";
-    LDConfigBuilder *builder = [[LDConfigBuilder alloc] init];
-    [builder withMobileKey:testMobileKey];
+    LDConfig *config = [[LDConfig alloc] initWithMobileKey:testMobileKey];
+    XCTAssertEqualObjects(config.mobileKey, testMobileKey);
+    XCTAssertTrue(config.streaming);
     
-    LDConfig *config = [builder build];
-    XCTAssertEqualObjects([config mobileKey], testMobileKey);
-    XCTAssertTrue([config streaming]);
-    
-    [builder withStreaming:NO];
-    config = [builder build];
-    XCTAssertFalse([config streaming]);
+    config.streaming = NO;
+    XCTAssertFalse(config.streaming);
 }
 
 - (void)testConfigOverrideDebug {
