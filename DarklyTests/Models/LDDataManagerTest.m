@@ -134,12 +134,9 @@
     XCTAssertNotNil(fourthCreatedUser);
 }
 
--(void)testCreateEventAfterCapacityReached{
-    LDConfigBuilder *builder = [[LDConfigBuilder alloc] init];
-    builder = [builder withCapacity: 2];
-    builder = [builder withMobileKey: @"AMobileKey"];
-    LDConfig *config = [builder build];
-    
+-(void)testCreateEventAfterCapacityReached {
+    LDConfig *config = [[LDConfig alloc] initWithMobileKey:@"AMobileKey"];
+    config.capacity = [NSNumber numberWithInt:2];
     OCMStub([clientMock ldConfig]).andReturn(config);
     
     LDDataManager *manager = [LDDataManager sharedManager];
