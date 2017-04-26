@@ -35,11 +35,11 @@
     return sharedLDClient;
 }
 
-- (BOOL)start:(LDConfigBuilder *)inputConfigBuilder userBuilder:(LDUserBuilder *)inputUserBuilder {
+- (BOOL)start:(LDConfig *)inputConfig userBuilder:(LDUserBuilder *)inputUserBuilder {
     DEBUG_LOGX(@"LDClient start method called");
     if (!clientStarted) {
-        if (inputConfigBuilder) {
-            ldConfig = [inputConfigBuilder build];
+        if (inputConfig) {
+            ldConfig = inputConfig;
             if (ldConfig) {
                 DarklyLogLevel logLevel =  DarklyLogLevelCriticalOnly;
                 if ([ldConfig debugEnabled]) {
