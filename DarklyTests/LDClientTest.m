@@ -106,10 +106,8 @@
 - (void)testTrackWithStart {
     NSDictionary *customData = @{@"key": @"value"};
     NSString *testMobileKey = @"testMobileKey";
-    LDConfigBuilder *builder = [[LDConfigBuilder alloc] init];
-    [builder withMobileKey:testMobileKey];
-    [[LDClient sharedInstance] start:builder userBuilder:nil];
-    
+    LDConfig *config = [[LDConfig alloc] initWithMobileKey:testMobileKey];
+    [[LDClient sharedInstance] start:config userBuilder:nil];
     
     OCMStub([self.dataManagerMock createCustomEvent:[OCMArg isKindOfClass:[NSString class]]  withCustomValuesDictionary:[OCMArg isKindOfClass:[NSDictionary class]]]);
     
@@ -117,7 +115,6 @@
     
     OCMVerify([self.dataManagerMock createCustomEvent: @"test"
                            withCustomValuesDictionary: customData]);
-    
 }
 
 - (void)testOfflineWithoutStart {
