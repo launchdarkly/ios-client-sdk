@@ -4,21 +4,24 @@
 
 @interface LDConfig : NSObject
 
-@property (nonatomic, copy, nonnull) NSString* mobileKey;
+@property (nonatomic, readonly, nonnull) NSString* mobileKey;
 @property (nonatomic, copy, nullable) NSString* baseUrl;
 @property (nonatomic, copy, nullable) NSString* eventsUrl;
 @property (nonatomic, copy, nullable) NSNumber* capacity;
 @property (nonatomic, copy, nullable) NSNumber* connectionTimeout;
 @property (nonatomic, copy, nullable) NSNumber* flushInterval;
 @property (nonatomic, copy, nullable) NSNumber* pollingInterval;
-@property (nonatomic) BOOL streaming;
-@property (nonatomic) BOOL debugEnabled;
+
+- (instancetype _Nonnull)initWithMobileKey:(nonnull NSString *)mobileKey;
 
 @end
 
-@interface LDConfigBuilder : NSObject {
-    
-}
+@interface LDConfigBuilder : NSObject
+
+@property (nonatomic) BOOL streaming;
+@property (nonatomic) BOOL debugEnabled;
+
+- (instancetype _Nonnull)initWithConfig:(nonnull LDConfig *)config;
 
 /**
  * Provide an mobileKey to the configuration builder. This is the mobileKey
