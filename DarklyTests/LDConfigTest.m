@@ -21,11 +21,6 @@
     [super tearDown];
 }
 
-- (void)testConfigWithoutMobileKey {
-    LDConfigBuilder *builder = [[LDConfigBuilder alloc] init];
-    XCTAssertNil([builder build]);
-}
-
 - (void)testConfigDefaultValues {
     NSString *testMobileKey = @"testMobileKey";
     LDConfigBuilder *builder = [[LDConfigBuilder alloc] init];
