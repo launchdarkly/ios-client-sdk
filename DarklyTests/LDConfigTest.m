@@ -34,10 +34,8 @@
 - (void)testConfigOverrideBaseUrl {
     NSString *testMobileKey = @"testMobileKey";
     NSString *testBaseUrl = @"testBaseUrl";
-    LDConfigBuilder *builder = [[LDConfigBuilder alloc] init];
-    [builder withMobileKey:testMobileKey];
-    [builder withBaseUrl:testBaseUrl];
-    LDConfig *config = [builder build];
+    LDConfig *config = [[LDConfig alloc] initWithMobileKey:testMobileKey];
+    config.baseUrl = testBaseUrl;
     XCTAssertEqualObjects([config mobileKey], testMobileKey);
     XCTAssertEqualObjects([config capacity], [NSNumber numberWithInt:kCapacity]);
     XCTAssertEqualObjects([config connectionTimeout], [NSNumber numberWithInt:kConnectionTimeout]);
