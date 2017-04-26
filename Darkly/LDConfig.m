@@ -5,12 +5,6 @@
 #import "LDConfig.h"
 #import "LDUtil.h"
 
-@implementation LDConfig
-
-@synthesize mobileKey, baseUrl, eventsUrl, capacity, connectionTimeout, flushInterval, pollingInterval, streaming, debugEnabled;
-
-@end
-
 @interface LDConfigBuilder() {
     NSString *mobileKey;
     NSString *baseUrl;
