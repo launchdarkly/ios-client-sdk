@@ -46,10 +46,8 @@
 - (void)testConfigOverrideCapacity {
     NSString *testMobileKey = @"testMobileKey";
     int testCapacity = 20;
-    LDConfigBuilder *builder = [[LDConfigBuilder alloc] init];
-    [builder withMobileKey:testMobileKey];
-    [builder withCapacity:testCapacity];
-    LDConfig *config = [builder build];
+    LDConfig *config = [[LDConfig alloc] initWithMobileKey:testMobileKey];
+    config.capacity = [NSNumber numberWithInt:testCapacity];
     XCTAssertEqualObjects([config mobileKey], testMobileKey);
     XCTAssertEqualObjects([config capacity], [NSNumber numberWithInt:testCapacity]);
     XCTAssertEqualObjects([config connectionTimeout], [NSNumber numberWithInt:kConnectionTimeout]);
