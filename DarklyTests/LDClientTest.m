@@ -171,12 +171,11 @@
 
 -(void)testCurrentUserBuilderWithStart {
     NSString *testMobileKey = @"testMobileKey";
-    LDConfigBuilder *configBuilder = [[LDConfigBuilder alloc] init];
-    [configBuilder withMobileKey:testMobileKey];
+    LDConfig *config = [[LDConfig alloc] initWithMobileKey:testMobileKey];
     LDUserBuilder *userBuilder = [[LDUserBuilder alloc] init];
     
     LDClient *ldClient = [LDClient sharedInstance];
-    [ldClient start:configBuilder userBuilder:userBuilder];
+    [ldClient start:config userBuilder:userBuilder];
     
     XCTAssertNotNil([[LDClient sharedInstance] currentUserBuilder]);
 }
@@ -187,6 +186,5 @@
     ldClient.delegate = (id<ClientDelegate>)self;
     XCTAssertEqualObjects(self, ldClient.delegate);
 }
-
 
 @end
