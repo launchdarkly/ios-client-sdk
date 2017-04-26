@@ -64,14 +64,13 @@
 
 - (void)testUserPersisted {
     NSString *testMobileKey = @"testMobileKey";
-    LDConfigBuilder *builder = [[LDConfigBuilder alloc] init];
-    [builder withMobileKey:testMobileKey];
+    LDConfig *config = [[LDConfig alloc] initWithMobileKey:testMobileKey];
     
     LDUserBuilder *userBuilder = [[LDUserBuilder alloc] init];
     userBuilder.key = @"myKey";
     userBuilder.email = @"my@email.com";
     
-    [[LDClient sharedInstance] start:builder userBuilder:userBuilder];
+    [[LDClient sharedInstance] start:config userBuilder:userBuilder];
     BOOL toggleValue = [[LDClient sharedInstance] boolVariation:@"test" fallback:YES];
     XCTAssertTrue(toggleValue);
     
@@ -81,7 +80,7 @@
     LDUserModel *user = [[LDClient sharedInstance] ldUser];
     OCMStub([self.dataManagerMock findUserWithkey:[OCMArg any]]).andReturn(user);
 
-    [[LDClient sharedInstance] start:builder userBuilder:anotherUserBuilder];
+    [[LDClient sharedInstance] start:config userBuilder:anotherUserBuilder];
     user = [[LDClient sharedInstance] ldUser];
     
      XCTAssertEqual(user.email, @"my@email.com");
