@@ -156,12 +156,11 @@
 
 -(void)testUpdateUserWithStart {
     NSString *testMobileKey = @"testMobileKey";
-    LDConfigBuilder *configBuilder = [[LDConfigBuilder alloc] init];
-    [configBuilder withMobileKey:testMobileKey];
+    LDConfig *config = [[LDConfig alloc] initWithMobileKey:testMobileKey];
     LDUserBuilder *userBuilder = [[LDUserBuilder alloc] init];
     
     LDClient *ldClient = [LDClient sharedInstance];
-    [ldClient start:configBuilder userBuilder:userBuilder];
+    [ldClient start:config userBuilder:userBuilder];
     
     XCTAssertTrue([[LDClient sharedInstance] updateUser:[[LDUserBuilder alloc] init]]);
 }
