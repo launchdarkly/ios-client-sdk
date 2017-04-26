@@ -64,31 +64,30 @@
 
 - (void)testPollingInterval {
     NSString *testMobileKey = @"testMobileKey";
-    LDConfigBuilder *builder = [[LDConfigBuilder alloc] init];
-    [builder withMobileKey:testMobileKey];
+    LDConfig *config = [[LDConfig alloc] initWithMobileKey:testMobileKey];
     LDClient *client = [LDClient sharedInstance];
     LDPollingManager *pollingManager =  [LDPollingManager sharedInstance];
     
-    [client start:builder userBuilder:nil];
+    [client start:config userBuilder:nil];
     XCTAssertEqual(pollingManager.eventPollingIntervalMillis, kDefaultFlushInterval*kMillisInSecs);
     XCTAssertEqual([pollingManager configPollingState], POLL_STOPPED);
     [client stopClient];
-    
-    [builder withStreaming:NO];
-    [client start:builder userBuilder:nil];
+
+    config.streaming = NO;
+    [client start:config userBuilder:nil];
     XCTAssertEqual(pollingManager.eventPollingIntervalMillis, kDefaultPollingInterval*kMillisInSecs);
     XCTAssertEqual(pollingManager.configPollingIntervalMillis, kDefaultPollingInterval*kMillisInSecs);
     XCTAssertEqual([pollingManager configPollingState], POLL_RUNNING);
     [client stopClient];
-    
-    [builder withPollingInterval:50];
-    [client start:builder userBuilder:nil];
+
+    config.pollingInterval = [NSNumber numberWithInt:50];
+    [client start:config userBuilder:nil];
     XCTAssertEqual(pollingManager.eventPollingIntervalMillis, kMinimumPollingInterval*kMillisInSecs);
     XCTAssertEqual(pollingManager.configPollingIntervalMillis, kMinimumPollingInterval*kMillisInSecs);
     [client stopClient];
-    
-    [builder withFlushInterval:50];
-    [client start:builder userBuilder:nil];
+
+    config.flushInterval = [NSNumber numberWithInt:50];
+    [client start:config userBuilder:nil];
     XCTAssertEqual(pollingManager.eventPollingIntervalMillis, 50*kMillisInSecs);
     XCTAssertEqual(pollingManager.configPollingIntervalMillis, kMinimumPollingInterval*kMillisInSecs);
     [client stopClient];

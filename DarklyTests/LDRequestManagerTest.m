@@ -29,7 +29,7 @@
     LDUserBuilder *userBuilder = [[LDUserBuilder alloc] init];
     userBuilder.key = @"jeff@test.com";
     LDUserModel *user = [userBuilder build];
-    LDConfig *config = [[LDConfig alloc] initWithMobileKey:@""];
+    LDConfig *config = [[LDConfig alloc] initWithMobileKey:@"testMobileKey"];
     tempFlushInterval = 30;
     config.flushInterval = [NSNumber numberWithInt:tempFlushInterval];
 
