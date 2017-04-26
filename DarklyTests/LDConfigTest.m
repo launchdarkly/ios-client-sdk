@@ -58,10 +58,8 @@
 - (void)testConfigOverrideConnectionTimeout {
     NSString *testMobileKey = @"testMobileKey";
     int testConnectionTimeout = 15;
-    LDConfigBuilder *builder = [[LDConfigBuilder alloc] init];
-    [builder withMobileKey:testMobileKey];
-    [builder withConnectionTimeout:testConnectionTimeout];
-    LDConfig *config = [builder build];
+    LDConfig *config = [[LDConfig alloc] initWithMobileKey:testMobileKey];
+    config.connectionTimeout = [NSNumber numberWithInt:testConnectionTimeout];
     XCTAssertEqualObjects([config mobileKey], testMobileKey);
     XCTAssertEqualObjects([config capacity], [NSNumber numberWithInt:kCapacity]);
     XCTAssertEqualObjects([config connectionTimeout], [NSNumber numberWithInt:testConnectionTimeout]);
