@@ -27,11 +27,11 @@
 /**
  * Start the client with a valid configuration and user.
  *
- * @param inputConfigBuilder    Desired configuration for the client
- * @param inputUserBuilder  Desired user for the client
- * @return whether the client was able to be started
+ * @param inputConfig Desired configuration for the client.
+ * @param inputUserBuilder  Desired user for the client.
+ * @return whether the client was able to be started.
  */
-- (BOOL)start:(LDConfigBuilder *)inputConfigBuilder userBuilder:(LDUserBuilder *)inputUserBuilder;
+- (BOOL)start:(LDConfig *)inputConfig userBuilder:(LDUserBuilder *)inputUserBuilder;
 /**
  * Retrieve a feature flag value. If the configuration for this feature
  * flag is retrieved from the server that value is returned, otherwise
