@@ -68,17 +68,3 @@
 - (instancetype _Nonnull)initWithMobileKey:(nonnull NSString *)mobileKey;
 
 @end
-
-@interface LDConfigBuilder : NSObject
-
-/**
- Initializes an LDConfigBuilder object with the provided LDConfig object.
-
- @param config LDConfig containing necessary information to initalize the builder.
- @return An instance of LDConfigBuilder.
- */
-- (instancetype _Nonnull)initWithConfig:(nonnull LDConfig *)config;
-
--(LDConfig * _Nonnull)build;
-
-@end
