@@ -65,6 +65,8 @@
  @param mobileKey The mobileKey retrieved from the Launch Darkly account settings.
  @return An instance of LDConfig object.
  */
-- (instancetype _Nonnull)initWithMobileKey:(nonnull NSString *)mobileKey;
+- (instancetype _Nonnull)initWithMobileKey:(nonnull NSString *)mobileKey NS_DESIGNATED_INITIALIZER;
+
+- (instancetype _Nonnull )init NS_UNAVAILABLE;
 
 @end
