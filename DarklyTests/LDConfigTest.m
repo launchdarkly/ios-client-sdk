@@ -81,10 +81,7 @@
 
 - (void)testConfigOverridePollingInterval {
     NSString *testMobileKey = @"testMobileKey";
-    LDConfigBuilder *builder = [[LDConfigBuilder alloc] init];
-    [builder withMobileKey:testMobileKey];
-    
-    LDConfig *config = [builder build];
+    LDConfig *config = [[LDConfig alloc] initWithMobileKey:testMobileKey];
     XCTAssertEqualObjects([config mobileKey], testMobileKey);
     XCTAssertEqualObjects([config pollingInterval], [NSNumber numberWithInt:kDefaultPollingInterval]);
     XCTAssertFalse([config debugEnabled]);
