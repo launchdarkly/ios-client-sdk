@@ -85,13 +85,13 @@
     XCTAssertEqualObjects([config mobileKey], testMobileKey);
     XCTAssertEqualObjects([config pollingInterval], [NSNumber numberWithInt:kDefaultPollingInterval]);
     XCTAssertFalse([config debugEnabled]);
-    
-    [builder withPollingInterval:5000];
-    config = [builder build];
-    XCTAssertEqualObjects([config pollingInterval], [NSNumber numberWithInt:5000]);
-    
-    [builder withPollingInterval:50];
-    config = [builder build];
+
+    NSNumber *pollingInterval = [NSNumber numberWithInt:5000];
+    config.pollingInterval = pollingInterval;
+    XCTAssertEqualObjects(config.pollingInterval, pollingInterval);
+
+    pollingInterval = [NSNumber numberWithInt:50];
+    config.pollingInterval = pollingInterval;
     XCTAssertEqualObjects([config pollingInterval], [NSNumber numberWithInt:kMinimumPollingInterval]);
 }
 
