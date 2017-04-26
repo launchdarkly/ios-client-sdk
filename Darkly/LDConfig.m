@@ -18,6 +18,12 @@
 
     self.mobileKey = mobileKey;
     self.streaming = YES;
+    self.capacity = [NSNumber numberWithInt:kCapacity];
+    self.connectionTimeout = [NSNumber numberWithInt:kConnectionTimeout];
+    self.flushInterval = [NSNumber numberWithInt:kDefaultFlushInterval];
+    self.pollingInterval = [NSNumber numberWithInt:kDefaultPollingInterval];
+    self.baseUrl = kBaseUrl;
+    self.eventsUrl = kEventsUrl;
 
     return self;
 }
