@@ -70,10 +70,8 @@
 - (void)testConfigOverrideFlushInterval {
     NSString *testMobileKey = @"testMobileKey";
     int testFlushInterval = 5;
-    LDConfigBuilder *builder = [[LDConfigBuilder alloc] init];
-    [builder withMobileKey:testMobileKey];
-    [builder withFlushInterval:testFlushInterval];
-    LDConfig *config = [builder build];
+    LDConfig *config = [[LDConfig alloc] initWithMobileKey:testMobileKey];
+    config.flushInterval = [NSNumber numberWithInt:testFlushInterval];
     XCTAssertEqualObjects([config mobileKey], testMobileKey);
     XCTAssertEqualObjects([config capacity], [NSNumber numberWithInt:kCapacity]);
     XCTAssertEqualObjects([config connectionTimeout], [NSNumber numberWithInt:kConnectionTimeout]);
