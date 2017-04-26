@@ -50,17 +50,6 @@
 @property (nonatomic, copy, nullable) NSNumber* pollingInterval;
 
 /**
- Initializes an LDConfig object with the provided mobile key.
- @param mobileKey The mobileKey retrieved from the Launch Darkly account settings.
- @return An instance of LDConfig object.
- */
-- (instancetype _Nonnull)initWithMobileKey:(nonnull NSString *)mobileKey;
-
-@end
-
-@interface LDConfigBuilder : NSObject
-
-/**
  Flag that enables streaming mode. When streaming is false, disable streaming
  and switch to polling mode.
  */
@@ -70,6 +59,17 @@
  Flat that enables debug mode to allow things such as logging.
  */
 @property (nonatomic) BOOL debugEnabled;
+
+/**
+ Initializes an LDConfig object with the provided mobile key.
+ @param mobileKey The mobileKey retrieved from the Launch Darkly account settings.
+ @return An instance of LDConfig object.
+ */
+- (instancetype _Nonnull)initWithMobileKey:(nonnull NSString *)mobileKey;
+
+@end
+
+@interface LDConfigBuilder : NSObject
 
 /**
  Initializes an LDConfigBuilder object with the provided LDConfig object.
