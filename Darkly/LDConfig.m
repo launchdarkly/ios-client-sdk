@@ -5,21 +5,40 @@
 #import "LDConfig.h"
 #import "LDUtil.h"
 
-@interface LDConfigBuilder() {
-    NSString *mobileKey;
-    NSString *baseUrl;
-    NSString *eventsUrl;
-    NSNumber *capacity;
-    NSNumber *connectionTimeout;
-    NSNumber *flushInterval;
-    NSNumber *pollingInterval;
-    BOOL streaming;
-    BOOL debugEnabled;
+@interface LDConfig()
+@property (nonatomic, copy, nonnull) NSString* mobileKey;
+@end
+
+@implementation LDConfig
+
+- (instancetype)initWithMobileKey:(NSString *)mobileKey {
+    if (!(self = [super init])) {
+        return nil;
+    }
+
+    self.mobileKey = mobileKey;
+
+    return self;
 }
 
 @end
 
+@interface LDConfigBuilder()
+@property (nonnull, strong) LDConfig *config;
+@end
+
 @implementation LDConfigBuilder
+
+- (instancetype)initWithConfig:(LDConfig *)config {
+    if (!(self = [super init])) {
+        return nil;
+    }
+
+    self.config = config;
+    self.streaming = YES;
+
+    return self;
+}
 
 - (id)init {
     self = [super init];
