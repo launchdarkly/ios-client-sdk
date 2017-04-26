@@ -90,10 +90,9 @@
     NSString *toggleName = @"test";
     BOOL fallbackValue = YES;
     NSString *testMobileKey = @"testMobileKey";
-    LDConfigBuilder *builder = [[LDConfigBuilder alloc] init];
-    [builder withMobileKey:testMobileKey];
+    LDConfig *config = [[LDConfig alloc] initWithMobileKey:testMobileKey];
     OCMStub([self.dataManagerMock createFeatureEvent:[OCMArg any] keyValue:[OCMArg any] defaultKeyValue:[OCMArg any]]);
-    [[LDClient sharedInstance] start:builder userBuilder:nil];
+    [[LDClient sharedInstance] start:config userBuilder:nil];
     [[LDClient sharedInstance] boolVariation:toggleName fallback:fallbackValue];
     
     OCMVerify([self.dataManagerMock createFeatureEvent:toggleName keyValue:[NSNumber numberWithBool:fallbackValue] defaultKeyValue:[NSNumber numberWithBool:fallbackValue]]);
