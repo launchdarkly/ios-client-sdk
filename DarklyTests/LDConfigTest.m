@@ -23,9 +23,7 @@
 
 - (void)testConfigDefaultValues {
     NSString *testMobileKey = @"testMobileKey";
-    LDConfigBuilder *builder = [[LDConfigBuilder alloc] init];
-    [builder withMobileKey:testMobileKey];
-    LDConfig *config = [builder build];
+    LDConfig *config = [[LDConfig alloc] initWithMobileKey:testMobileKey];
     XCTAssertEqualObjects([config mobileKey], testMobileKey);
     XCTAssertEqualObjects([config capacity], [NSNumber numberWithInt:kCapacity]);
     XCTAssertEqualObjects([config connectionTimeout], [NSNumber numberWithInt:kConnectionTimeout]);
