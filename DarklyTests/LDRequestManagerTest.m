@@ -29,12 +29,10 @@
     LDUserBuilder *userBuilder = [[LDUserBuilder alloc] init];
     userBuilder.key = @"jeff@test.com";
     LDUserModel *user = [userBuilder build];
-    
-    LDConfigBuilder *configBuilder = [[LDConfigBuilder alloc] init];
+    LDConfig *config = [[LDConfig alloc] initWithMobileKey:@""];
     tempFlushInterval = 30;
-    configBuilder = [configBuilder withFlushInterval:tempFlushInterval];
-    LDConfig *config = [configBuilder build];
-    
+    config.flushInterval = [NSNumber numberWithInt:tempFlushInterval];
+
     ldClientMock = OCMClassMock([LDClient class]);
     OCMStub(ClassMethod([ldClientMock sharedInstance])).andReturn(ldClientMock);
     OCMStub([ldClientMock ldUser]).andReturn(user);
