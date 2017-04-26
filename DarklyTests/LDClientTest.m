@@ -134,9 +134,8 @@
 
 - (void)testOnlineWithStart {
     NSString *testMobileKey = @"testMobileKey";
-    LDConfigBuilder *builder = [[LDConfigBuilder alloc] init];
-    [builder withMobileKey:testMobileKey];
-    [[LDClient sharedInstance] start:builder userBuilder:nil];
+    LDConfig *config = [[LDConfig alloc] initWithMobileKey:testMobileKey];
+    [[LDClient sharedInstance] start:config userBuilder:nil];
     XCTAssertTrue([[LDClient sharedInstance] online]);
 }
 
