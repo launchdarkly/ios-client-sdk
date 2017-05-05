@@ -77,7 +77,7 @@ static NSString * const kEventRequestCompletedNotification = @"event_request_com
             
             [dataTask resume];
             
-            dispatch_semaphore_wait(semaphore, kConnectionTimeout);
+            dispatch_semaphore_wait(semaphore, DISPATCH_TIME_FOREVER);
             
         } else {
             DEBUG_LOGX(@"RequestManager unable to sync config to server since no encodedUser");
@@ -117,7 +117,7 @@ static NSString * const kEventRequestCompletedNotification = @"event_request_com
             
             [dataTask resume];
             
-            dispatch_semaphore_wait(semaphore, kConnectionTimeout);
+            dispatch_semaphore_wait(semaphore, DISPATCH_TIME_FOREVER);
             
         } else {
             DEBUG_LOGX(@"RequestManager unable to sync events to server since no events");
