@@ -105,3 +105,65 @@
 }
 
 @end
+
+
+@implementation LDConfigBuilder
+
+- (id)init {
+    self = [super init];
+    self.config = [[LDConfig alloc] initWithMobileKey:@""];
+    return self;
+}
+
+-(LDConfigBuilder *)withMobileKey:(NSString *)mobileKey {
+    _config.mobileKey = mobileKey;
+    return self;
+}
+
+-(LDConfigBuilder *)withBaseUrl:(NSString *)baseUrl {
+    _config.baseUrl = baseUrl;
+    return self;
+}
+
+-(LDConfigBuilder *)withEventsUrl:(NSString *)eventsUrl {
+    _config.eventsUrl = eventsUrl;
+    return self;
+}
+
+-(LDConfigBuilder *)withCapacity:(int)capacity {
+    _config.capacity = [NSNumber numberWithInt:capacity];
+    return self;
+}
+
+-(LDConfigBuilder *)withConnectionTimeout:(int)connectionTimeout {
+    _config.connectionTimeout = [NSNumber numberWithInt:connectionTimeout];;
+    return self;
+}
+
+- (LDConfigBuilder *)withFlushInterval:(int)flushInterval {
+    _config.flushInterval = [NSNumber numberWithInt:flushInterval];
+    return self;
+}
+
+- (LDConfigBuilder *)withPollingInterval:(int)pollingInterval {
+    _config.pollingInterval = [NSNumber numberWithInt:pollingInterval];
+    return self;
+}
+
+-(LDConfigBuilder *)withStreaming:(BOOL)streamingEnabled {
+    _config.streaming = streamingEnabled;
+    return self;
+}
+
+- (LDConfigBuilder *)withDebugEnabled:(BOOL)debugEnabled {
+    _config.debugEnabled = debugEnabled;
+    return self;
+}
+
+-(LDConfig *)build {
+    return _config;
+}
+
+@end
+
+

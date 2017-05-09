@@ -39,6 +39,10 @@
     return iUser;
 }
 
++(LDUserBuilder *)retrieveCurrentBuilder:(LDUserModel *)iUser {
+    return [LDUserBuilder currentBuilder:iUser];
+}
+
 + (LDUserBuilder *)currentBuilder:(LDUserModel *)iUser {
     LDUserBuilder *userBuilder = [[LDUserBuilder alloc] init];
 
@@ -196,6 +200,97 @@
 
     [[LDDataManager sharedManager] saveUser:user];
     return user;
+}
+
+- (LDUserBuilder *)withKey:(NSString *)inputKey
+{
+    _key = inputKey;
+    return self;
+}
+
+- (LDUserBuilder *)withIp:(NSString *)inputIp
+{
+    _ip = inputIp;
+    return self;
+}
+
+- (LDUserBuilder *)withCountry:(NSString *)inputCountry
+{
+    _country = inputCountry;
+    return self;
+}
+
+- (LDUserBuilder *)withFirstName:(NSString *)inputFirstName
+{
+    _firstName = inputFirstName;
+    return self;
+}
+
+- (LDUserBuilder *)withLastName:(NSString *)inputLastName
+{
+    _lastName = inputLastName;
+    return self;
+}
+
+- (LDUserBuilder *)withEmail:(NSString *)inputEmail
+{
+    _email = inputEmail;
+    return self;
+}
+
+- (LDUserBuilder *)withAvatar:(NSString *)inputAvatar
+{
+    _avatar = inputAvatar;
+    return self;
+}
+
+- (LDUserBuilder *)withCustomString:(NSString *)inputKey value:(NSString *)value
+{
+    [_customDictionary setObject:value forKey:inputKey];
+    return self;
+}
+
+- (LDUserBuilder *)withCustomBool:(NSString *)inputKey value:(BOOL)value
+{
+    [_customDictionary setObject:[NSNumber numberWithBool:value] forKey:inputKey];
+    return self;
+}
+
+- (LDUserBuilder *)withCustomNumber:(NSString *)inputKey value:(NSNumber *)value
+{
+    [_customDictionary setObject:value forKey:inputKey];
+    return self;
+}
+
+- (LDUserBuilder *)withCustomArray:(NSString *)inputKey value:(NSArray *)value
+{
+    NSMutableArray *resultArray = [[NSMutableArray alloc] init];
+    for (id myArrayElement in value) {
+        if ([myArrayElement isKindOfClass:[NSString class]]) {
+            [resultArray addObject:myArrayElement];
+        } else if ([myArrayElement isKindOfClass:[NSNumber class]]) {
+            [resultArray addObject:myArrayElement];
+        } else if (myArrayElement) {
+            [resultArray addObject:[NSNumber numberWithBool:YES]];
+        } else {
+            [resultArray addObject:[NSNumber numberWithBool:NO]];
+        }
+    }
+    if ([resultArray count]) {
+        [_customDictionary setObject:resultArray forKey:inputKey];
+    }
+    return self;
+}
+
+- (LDUserBuilder *)withCustomDictionary:(NSMutableDictionary *)inputDictionary
+{
+    _customDictionary = inputDictionary;
+    return self;
+}
+
+- (LDUserBuilder *)withAnonymous:(BOOL)inputAnonymous {
+    _isAnonymous = inputAnonymous;
+    return self;
 }
 
 @end

@@ -32,6 +32,21 @@
     XCTAssertFalse([config debugEnabled]);
 }
 
+- (void)testConfigBuilderDefaultValues {
+    NSString *testMobileKey = @"testMobileKey";
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdeprecated-declarations"
+    LDConfigBuilder *builder = [[LDConfigBuilder alloc] init];
+    [builder withMobileKey:testMobileKey];
+#pragma clang diagnostic pop
+    LDConfig *config = [builder build];
+    XCTAssertEqualObjects([config mobileKey], testMobileKey);
+    XCTAssertEqualObjects([config capacity], [NSNumber numberWithInt:kCapacity]);
+    XCTAssertEqualObjects([config connectionTimeout], [NSNumber numberWithInt:kConnectionTimeout]);
+    XCTAssertEqualObjects([config flushInterval], [NSNumber numberWithInt:kDefaultFlushInterval]);
+    XCTAssertFalse([config debugEnabled]);
+}
+
 - (void)testConfigOverrideBaseUrl {
     NSString *testMobileKey = @"testMobileKey";
     NSString *testBaseUrl = @"testBaseUrl";

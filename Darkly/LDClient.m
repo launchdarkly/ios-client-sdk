@@ -35,7 +35,11 @@
     return sharedLDClient;
 }
 
-- (BOOL)start:(LDConfig *)inputConfig userBuilder:(LDUserBuilder *)inputUserBuilder {
+-(BOOL)start:(LDConfigBuilder *)inputConfigBuilder userBuilder:(LDUserBuilder *)inputUserBuilder {
+    return [self start:[inputConfigBuilder build] withUserBuilder:inputUserBuilder];
+}
+
+- (BOOL)start:(LDConfig *)inputConfig withUserBuilder:(LDUserBuilder *)inputUserBuilder {
     DEBUG_LOGX(@"LDClient start method called");
     if (!clientStarted) {
         if (inputConfig) {

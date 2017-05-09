@@ -68,26 +68,26 @@
     LDClient *client = [LDClient sharedInstance];
     LDPollingManager *pollingManager =  [LDPollingManager sharedInstance];
     
-    [client start:config userBuilder:nil];
+    [client start:config withUserBuilder:nil];
     XCTAssertEqual(pollingManager.eventPollingIntervalMillis, kDefaultFlushInterval*kMillisInSecs);
     XCTAssertEqual([pollingManager configPollingState], POLL_STOPPED);
     [client stopClient];
 
     config.streaming = NO;
-    [client start:config userBuilder:nil];
+    [client start:config withUserBuilder:nil];
     XCTAssertEqual(pollingManager.eventPollingIntervalMillis, kDefaultPollingInterval*kMillisInSecs);
     XCTAssertEqual(pollingManager.configPollingIntervalMillis, kDefaultPollingInterval*kMillisInSecs);
     XCTAssertEqual([pollingManager configPollingState], POLL_RUNNING);
     [client stopClient];
 
     config.pollingInterval = [NSNumber numberWithInt:50];
-    [client start:config userBuilder:nil];
+    [client start:config withUserBuilder:nil];
     XCTAssertEqual(pollingManager.eventPollingIntervalMillis, kMinimumPollingInterval*kMillisInSecs);
     XCTAssertEqual(pollingManager.configPollingIntervalMillis, kMinimumPollingInterval*kMillisInSecs);
     [client stopClient];
 
     config.flushInterval = [NSNumber numberWithInt:50];
-    [client start:config userBuilder:nil];
+    [client start:config withUserBuilder:nil];
     XCTAssertEqual(pollingManager.eventPollingIntervalMillis, 50*kMillisInSecs);
     XCTAssertEqual(pollingManager.configPollingIntervalMillis, kMinimumPollingInterval*kMillisInSecs);
     [client stopClient];
