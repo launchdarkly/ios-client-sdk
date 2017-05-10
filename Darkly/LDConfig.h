@@ -7,25 +7,25 @@
 @interface LDConfig : NSObject
 
 /**
- This is the mobileKey retrieved from the Launch Darkly account settings.
+ This is the mobile key retrieved from the LaunchDarkly account settings.
  */
 @property (nonatomic, readonly, nonnull) NSString* mobileKey;
 
 /**
- The baseUrl of the Launch Darkly server. This will allow you to
- switch between production and staging environments.
+ The base URL of the LaunchDarkly service, should you need to override
+ the default.
  */
 @property (nonatomic, copy, nullable) NSString* baseUrl;
 
 /**
- The eventsUrl of the Launch Darkly server. This will allow you
- to switch between production and staging environments.
+ The events URL of the LaunchDarkly service, should you need to override
+ the default.
  */
 @property (nonatomic, copy, nullable) NSString* eventsUrl;
 
 /**
  The capacity for storing feature flag and custom events. Events
- are persisted on the client and then synced to the server on a regular
+ are persisted on the client and then sent to the server on a regular
  basis. If there is ever a prolonged period of time between the last server
  sync, the capacity defined here will determine at what points the events
  are ignored and no longer stored. The default is 100.
@@ -33,7 +33,7 @@
 @property (nonatomic, copy, nullable) NSNumber* capacity;
 
 /**
- The connection timeout to be used when syncing to the Launch Darkly
+ The connection timeout to be used when syncing to the LaunchDarkly
  server. The default is 10 seconds.
  */
 @property (nonatomic, copy, nullable) NSNumber* connectionTimeout;
@@ -58,13 +58,13 @@
 @property (nonatomic) BOOL streaming;
 
 /**
- Flat that enables debug mode to allow things such as logging.
+ Flag that enables debug mode to allow things such as logging.
  */
 @property (nonatomic) BOOL debugEnabled;
 
 /**
  Initializes an LDConfig object with the provided mobile key.
- @param mobileKey The mobileKey retrieved from the Launch Darkly account settings.
+ @param mobileKey The mobileKey retrieved from the LaunchDarkly account settings.
  @return An instance of LDConfig object.
  */
 - (instancetype _Nonnull)initWithMobileKey:(nonnull NSString *)mobileKey NS_DESIGNATED_INITIALIZER;
@@ -82,14 +82,14 @@ __deprecated_msg("Use LDConfig instead")
 
 /**
  * Provide an mobileKey to the configuration builder. This is the mobileKey
- * retrieved from the Launch Darkly account settings. (Required)
+ * retrieved from the LaunchDarkly account settings. (Required)
  *
  * @param mobileKey    the mobileKey for the configuration
  * @return the configuration builder
  */
 - (LDConfigBuilder *_Nonnull)withMobileKey:(NSString *_Nonnull)mobileKey __deprecated_msg("Use `setMobileKey:` on an LDConfig object");
 /**
- * Provide the baseUrl of the Launch Darkly server. This will allow you
+ * Provide the baseUrl of the LaunchDarkly server. This will allow you
  * to switch between production and staging environments. (Optional)
  *
  * @param baseUrl    the baseUrl of the server
@@ -97,7 +97,7 @@ __deprecated_msg("Use LDConfig instead")
  */
 - (LDConfigBuilder *_Nonnull)withBaseUrl:(NSString *_Nullable)baseUrl __deprecated_msg("Use `setBaseUrl:` on an LDConfig object");
 /**
- * Provide the eventsUrl of the Launch Darkly server. This will allow you
+ * Provide the eventsUrl of the LaunchDarkly server. This will allow you
  * to switch between production and staging environments. (Optional)
  *
  * @param eventsUrl    the eventsUrl of the server
@@ -116,7 +116,7 @@ __deprecated_msg("Use LDConfig instead")
  */
 - (LDConfigBuilder *_Nonnull)withCapacity:(int)capacity __deprecated_msg("Use `setCapacity:` on an LDConfig object");
 /**
- * The connection timeout to be used when syncing to the Launch Darkly
+ * The connection timeout to be used when syncing to the LaunchDarkly
  * server. The default is 10 seconds. (Optional)
  *
  * @param connectionTimeout timeout for network connections in seconds

@@ -57,7 +57,6 @@
     if (capacity) {
         DEBUG_LOG(@"Set LDConfig capacity: %@", capacity);
         _capacity = capacity;
-
     } else {
         DEBUG_LOG(@"Set LDConfig default capacity: %d", kCapacity);
         _capacity = [NSNumber numberWithInt:kCapacity];
