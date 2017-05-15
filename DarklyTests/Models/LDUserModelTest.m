@@ -58,7 +58,7 @@
     NSDictionary *userDict2 = [user dictionaryValue];
     
     [userDict setObject:[[NSDictionary alloc] initWithObjects:@[@"iPad",@"IOS 9.2.1"] forKeys:@[@"device",@"os"]] forKey:@"custom"];
-    [userDict removeObjectsForKeys:@[@"device",@"os",@"config"]];
+    [userDict removeObjectsForKeys:@[@"device",@"os"]];
     
     NSArray *allKeys = [[userDict allKeys] sortedArrayUsingSelector:@selector(caseInsensitiveCompare:)];
     NSArray *allKeys2 = [[userDict2 allKeys] sortedArrayUsingSelector:@selector(caseInsensitiveCompare:)];
