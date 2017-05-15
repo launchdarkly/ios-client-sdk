@@ -49,10 +49,14 @@ static NSString * const kFlagKey = @"flagkey";
                     removalDate = currentUser.updatedAt;
                 }
             } else {
-                [dictionary removeObjectForKey:removalKey];
+                if (removalKey) {
+                    [dictionary removeObjectForKey:removalKey];
+                }
             }
         }
-        [dictionary removeObjectForKey:removalKey];
+        if (removalKey) {
+            [dictionary removeObjectForKey:removalKey];
+        }
     }
 }
 
@@ -105,10 +109,8 @@ static NSString * const kFlagKey = @"flagkey";
 - (void)storeUserDictionary:(NSDictionary *)userDictionary {
     NSMutableDictionary *archiveDictionary = [[NSMutableDictionary alloc] init];
     for (NSString *key in userDictionary) {
-        NSData *userEncodedObject = [NSKeyedArchiver archivedDataWithRootObject:(LDUserModel *)[userDictionary objectForKey:key]];
-        [archiveDictionary setObject:userEncodedObject forKey:key];
+        [archiveDictionary setObject:[[userDictionary objectForKey:key] dictionaryValue] forKey:key];
     }
-    
     NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
     [defaults setObject:archiveDictionary forKey:kUserDictionaryStorageKey];
     [defaults synchronize];
@@ -116,10 +118,10 @@ static NSString * const kFlagKey = @"flagkey";
 
 - (NSMutableDictionary *)retrieveUserDictionary {
     NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
-    NSMutableDictionary *retrievalDictionary = [[NSMutableDictionary alloc] init];
     NSDictionary *encodedDictionary = [defaults objectForKey:kUserDictionaryStorageKey];
+    NSMutableDictionary *retrievalDictionary = [[NSMutableDictionary alloc] initWithDictionary:encodedDictionary];
     for (NSString *key in encodedDictionary) {
-        LDUserModel *decodedUser = [NSKeyedUnarchiver unarchiveObjectWithData:(NSData *)[encodedDictionary objectForKey:key]];
+        LDUserModel *decodedUser = [[LDUserModel alloc] initWithDictionary:[encodedDictionary objectForKey:key]];
         [retrievalDictionary setObject:decodedUser forKey:key];
     }
     return retrievalDictionary;

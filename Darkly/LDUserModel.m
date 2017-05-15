@@ -49,6 +49,8 @@ static NSString * const kOsKey = @"os";
     self.os ? [customDict setObject:self.os forKey:kOsKey] : nil;
     
     [dictionary setObject:customDict forKey:kCustomKey];
+    
+    self.config.featuresJsonDictionary ? [dictionary setObject:[[self.config dictionaryValue] objectForKey:kFeaturesJsonDictionaryKey] forKey:kConfigKey] : nil;
 
     return dictionary;
 }
