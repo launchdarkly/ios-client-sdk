@@ -109,8 +109,10 @@ static NSString * const kOsKey = @"os";
         self.lastName = [dictionary objectForKey: kLastNameKey];
         self.avatar = [dictionary objectForKey: kAvatarKey];
         self.custom = [dictionary objectForKey: kCustomKey];
-        self.device = [dictionary objectForKey: kDeviceKey];
-        self.os = [dictionary objectForKey: kOsKey];
+        if (self.custom) {
+            self.device = [self.custom objectForKey: kDeviceKey];
+            self.os = [self.custom objectForKey: kOsKey];
+        }
         self.anonymous = [[dictionary objectForKey: kAnonymousKey] boolValue];
         self.updatedAt = [formatter dateFromString:[dictionary objectForKey:kUpdatedAtKey]];
         self.config = [[LDFlagConfigModel alloc] initWithDictionary:[dictionary objectForKey:kConfigKey]];
