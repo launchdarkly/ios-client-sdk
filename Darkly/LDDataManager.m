@@ -121,7 +121,13 @@ static NSString * const kFlagKey = @"flagkey";
     NSDictionary *encodedDictionary = [defaults objectForKey:kUserDictionaryStorageKey];
     NSMutableDictionary *retrievalDictionary = [[NSMutableDictionary alloc] initWithDictionary:encodedDictionary];
     for (NSString *key in encodedDictionary) {
-        LDUserModel *decodedUser = [[LDUserModel alloc] initWithDictionary:[encodedDictionary objectForKey:key]];
+        LDUserModel *decodedUser;
+        if ([[encodedDictionary objectForKey:key] isKindOfClass:[NSData class]]) {
+            decodedUser = [NSKeyedUnarchiver unarchiveObjectWithData:(NSData *)[encodedDictionary objectForKey:key]];
+        }
+        else{
+            decodedUser = [[LDUserModel alloc] initWithDictionary:[encodedDictionary objectForKey:key]];
+        }
         [retrievalDictionary setObject:decodedUser forKey:key];
     }
     return retrievalDictionary;
