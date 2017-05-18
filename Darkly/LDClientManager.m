@@ -49,7 +49,7 @@
     [pollingMgr startEventPolling];
     
     if ([config streaming]) {
-        eventSource = [EventSource eventSourceWithURL:[NSURL URLWithString:kStreamUrl] mobileKey:config.mobileKey];
+        eventSource = [EventSource eventSourceWithURL:[NSURL URLWithString:kStreamUrl] mobileKey:config.mobileKey timeoutInterval:[config.connectionTimeout doubleValue]];
         
         [eventSource onMessage:^(Event *e) {
             [self syncWithServerForConfig];

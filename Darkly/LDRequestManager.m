@@ -53,6 +53,7 @@ static NSString * const kEventRequestCompletedNotification = @"event_request_com
             requestUrl = [requestUrl stringByAppendingString:encodedUser];
             
             NSMutableURLRequest *request = [NSMutableURLRequest requestWithURL:[NSURL URLWithString:requestUrl]];
+            [request setTimeoutInterval:self.connectionTimeout];
             
             [self addFeatureRequestHeaders:request];
             
@@ -99,6 +100,7 @@ static NSString * const kEventRequestCompletedNotification = @"event_request_com
             NSString *requestUrl = [eventsUrl stringByAppendingString:kEventUrl];
             
             NSMutableURLRequest *request = [NSMutableURLRequest requestWithURL:[NSURL URLWithString:requestUrl]];
+            [request setTimeoutInterval:self.connectionTimeout];
             [self addEventRequestHeaders:request];
             
             NSError *error;
