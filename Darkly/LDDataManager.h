@@ -20,6 +20,7 @@ extern int const kUserCacheSize;
 -(void) createCustomEvent: (NSString *)eventKey withCustomValuesDictionary: (NSDictionary *)customDict;
 -(void) purgeOldUser: (NSMutableDictionary *)dictionary;
 -(void) saveUser: (LDUserModel *) user;
+-(void) saveUserDeprecated:(LDUserModel *)user __deprecated_msg("Use saveUser: instead");
 -(void) deleteProcessedEvents: (NSArray *) processedJsonArray;
 -(void)flushEventsDictionary;
 

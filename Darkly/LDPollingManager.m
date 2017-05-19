@@ -48,14 +48,6 @@ static id sharedInstance = nil;
     eventPollingState = POLL_STOPPED;
 }
 
-- (PollingState)configPollingState {
-    return configPollingState;
-}
-
-- (PollingState)eventPollingState {
-    return eventPollingState;
-}
-
 #pragma mark - Config Polling methods
 
 - (void)startConfigPollTimer
