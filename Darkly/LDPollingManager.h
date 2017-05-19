@@ -21,8 +21,8 @@ typedef enum {
 
 
 + (id)sharedInstance;
-@property (nonatomic, assign) PollingState configPollingState;
-@property (nonatomic, assign) PollingState eventPollingState;
+@property (atomic, assign) PollingState configPollingState;
+@property (atomic, assign) PollingState eventPollingState;
 
 @property (strong, nonatomic) dispatch_source_t configTimer;
 @property (nonatomic) NSTimeInterval configPollingIntervalMillis;

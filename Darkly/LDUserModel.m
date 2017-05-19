@@ -43,12 +43,15 @@ static NSString * const kOsKey = @"os";
     self.avatar ? [dictionary setObject:self.avatar forKey: kAvatarKey] : nil;
     self.custom ? [dictionary setObject:self.custom forKey: kCustomKey] : nil;
     self.anonymous ? [dictionary setObject:[NSNumber numberWithBool: self.anonymous ] forKey: kAnonymousKey] : nil;
+    self.updatedAt ? [dictionary setObject:[formatter stringFromDate:self.updatedAt] forKey:kUpdatedAtKey] : nil;
 
     NSMutableDictionary *customDict = [[NSMutableDictionary alloc] initWithDictionary:[dictionary objectForKey:kCustomKey]];
     self.device ? [customDict setObject:self.device forKey:kDeviceKey] : nil;
     self.os ? [customDict setObject:self.os forKey:kOsKey] : nil;
     
     [dictionary setObject:customDict forKey:kCustomKey];
+    
+    self.config.featuresJsonDictionary ? [dictionary setObject:[[self.config dictionaryValue] objectForKey:kFeaturesJsonDictionaryKey] forKey:kConfigKey] : nil;
 
     return dictionary;
 }
@@ -93,6 +96,11 @@ static NSString * const kOsKey = @"os";
 - (id)initWithDictionary:(NSDictionary *)dictionary {
     if((self = [self init])) {
         //Process json that comes down from server
+        
+        NSDateFormatter *formatter = [[NSDateFormatter alloc] init];
+        [formatter setDateFormat:@"yyyy-MM-dd'T'HH:mm:ss.SSS'Z'"];
+        [formatter setTimeZone:[NSTimeZone timeZoneWithAbbreviation:@"UTC"]];
+        
         self.key = [dictionary objectForKey: kKeyKey];
         self.ip = [dictionary objectForKey: kIpKey];
         self.country = [dictionary objectForKey: kCountryKey];
@@ -101,9 +109,12 @@ static NSString * const kOsKey = @"os";
         self.lastName = [dictionary objectForKey: kLastNameKey];
         self.avatar = [dictionary objectForKey: kAvatarKey];
         self.custom = [dictionary objectForKey: kCustomKey];
-        self.device = [dictionary objectForKey: kDeviceKey];
-        self.os = [dictionary objectForKey: kOsKey];
+        if (self.custom) {
+            self.device = [self.custom objectForKey: kDeviceKey];
+            self.os = [self.custom objectForKey: kOsKey];
+        }
         self.anonymous = [[dictionary objectForKey: kAnonymousKey] boolValue];
+        self.updatedAt = [formatter dateFromString:[dictionary objectForKey:kUpdatedAtKey]];
         self.config = [[LDFlagConfigModel alloc] initWithDictionary:[dictionary objectForKey:kConfigKey]];
     }
     return self;
