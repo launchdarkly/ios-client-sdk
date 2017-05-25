@@ -41,8 +41,20 @@ static NSString * const kFeatureJsonValueName = @"value";
 -(NSDictionary *)dictionaryValue{
     NSMutableDictionary *dictionary = [[NSMutableDictionary alloc] init];
     
-    self.featuresJsonDictionary ? [dictionary setObject:self.featuresJsonDictionary forKey: kFeaturesJsonDictionaryKey] : nil;
-    
+    self.featuresJsonDictionary ? [dictionary setObject:[self.featuresJsonDictionary mutableCopy] forKey: kFeaturesJsonDictionaryKey] : nil;
+    return [self removeNilValues:dictionary];
+}
+
+- (NSMutableDictionary *)removeNilValues:(NSMutableDictionary *)dictionary {
+    for (NSString *key in [dictionary allKeys]) {
+        id comparisonObject = [dictionary objectForKey:key];
+        if ([comparisonObject isKindOfClass:[NSDictionary class]]) {
+            [self removeNilValues:(NSMutableDictionary*)comparisonObject];
+        } else {
+            if ((NSString*)comparisonObject == (id)[NSNull null])
+                [dictionary removeObjectForKey:key];
+        }
+    }
     return dictionary;
 }
 
