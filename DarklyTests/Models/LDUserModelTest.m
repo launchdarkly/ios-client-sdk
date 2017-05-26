@@ -91,7 +91,14 @@
     NSLog(@"Stop");
 }
 
--(void)testUserBackwardsCompatibility {
+- (void)testUserSave {
+    NSString *filepath = [[NSBundle bundleForClass:[LDUserModelTest class]] pathForResource:@"feature_flags"
+                                                                                     ofType:@"json"];
+    NSError *error = nil;
+    NSData *data = [NSData dataWithContentsOfFile:filepath];
+    NSDictionary *serverJson = [NSJSONSerialization JSONObjectWithData:data
+                                                               options:kNilOptions
+                                                                 error:&error];
     
     NSMutableDictionary *userDict = [[NSMutableDictionary alloc] initWithDictionary:@{ @"key": @"aKey",
                                                                                        @"ip": @"123.456.789",
@@ -100,6 +107,36 @@
                                                                                        @"lastName": @"Doe",
                                                                                        @"email": @"jdub@g.com",
                                                                                        @"avatar": @"foo",
+                                                                                       @"config": serverJson,
+                                                                                       @"custom": @{@"foo": @"Foo"},
+                                                                                       @"anonymous": @1,
+                                                                                       @"device": @"iPad",
+                                                                                       @"os": @"IOS 9.2.1"
+                                                                                       }];
+    
+    LDUserModel *user = [[LDUserModel alloc] initWithDictionary:userDict];
+    [[LDDataManager sharedManager] saveUser:user];
+
+}
+
+-(void)testUserBackwardsCompatibility {
+    
+    NSString *filepath = [[NSBundle bundleForClass:[LDUserModelTest class]] pathForResource:@"feature_flags"
+                                                                                     ofType:@"json"];
+    NSError *error = nil;
+    NSData *data = [NSData dataWithContentsOfFile:filepath];
+    NSDictionary *serverJson = [NSJSONSerialization JSONObjectWithData:data
+                                                               options:kNilOptions
+                                                                 error:&error];
+    
+    NSMutableDictionary *userDict = [[NSMutableDictionary alloc] initWithDictionary:@{ @"key": @"aKey",
+                                                                                       @"ip": @"123.456.789",
+                                                                                       @"country": @"USA",
+                                                                                       @"firstName": @"John",
+                                                                                       @"lastName": @"Doe",
+                                                                                       @"email": @"jdub@g.com",
+                                                                                       @"avatar": @"foo",
+                                                                                       @"config": serverJson,
                                                                                        @"custom": @{@"foo": @"Foo"},
                                                                                        @"anonymous": @1,
                                                                                        @"device": @"iPad",
