@@ -45,4 +45,6 @@ extern int const kDefaultFlushInterval;
 extern int const kMinimumFlushIntervalMillis;
 extern int const kDefaultPollingInterval;
 extern int const kMinimumPollingInterval;
+extern int const kDefaultBackgroundFetchInterval;
+extern int const kMinimumBackgroundFetchInterval;
 extern int const kMillisInSecs;

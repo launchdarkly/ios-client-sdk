@@ -15,6 +15,7 @@
 @property (nonatomic) NSNumber* connectionTimeout;
 @property (nonatomic) NSNumber* flushInterval;
 @property (nonatomic) NSNumber* pollingInterval;
+@property (nonatomic) NSNumber* backgroundFetchInterval;
 @property (nonatomic) BOOL streaming;
 @property (nonatomic) BOOL debugEnabled;
 
@@ -83,6 +84,14 @@
  * @return the configuration builder
  */
 - (LDConfigBuilder *)withPollingInterval:(int)pollingInterval;
+/**
+ * Set the background fetch interval (in seconds) for background fetch. An interval
+ * less than 900 is set to the minimum (15 minutes). The default is 60 minutes. (Optional)
+ *
+ * @param backgroundFetchInterval the background fetch interval in seconds
+ * @return the configuration builder
+ */
+- (LDConfigBuilder *)withBackgroundFetchInterval:(int)backgroundFetchInterval;
 /**
  * Enable streaming mode for flags. When streaming is false, disable streaming and switch to polling mode. (Optional)
  *
