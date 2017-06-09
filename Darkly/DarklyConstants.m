@@ -32,4 +32,6 @@ int const kDefaultFlushInterval = 30;
 int const kMinimumFlushIntervalMillis = 0;
 int const kDefaultPollingInterval = 300;
 int const kMinimumPollingInterval = 60;
+int const kDefaultBackgroundFetchInterval = 3600;
+int const kMinimumBackgroundFetchInterval = 900;
 int const kMillisInSecs = 1000;
