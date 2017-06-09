@@ -12,7 +12,7 @@ extern int const kUserCacheSize;
 
 +(LDDataManager *)sharedManager;
 
--(NSArray*) allEventsJsonArray;
+-(void) allEventsJsonArray:(void (^)(NSArray *array))completion;
 -(NSMutableDictionary *)retrieveUserDictionary;
 -(NSMutableArray *)retrieveEventsArray;
 -(LDUserModel *)findUserWithkey: (NSString *)key;

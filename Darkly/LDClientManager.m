@@ -129,13 +129,14 @@
     if (!offlineEnabled) {
         DEBUG_LOGX(@"ClientManager syncing events with server");
         
-        NSArray *eventJsonData = [[LDDataManager sharedManager] allEventsJsonArray];
+        [[LDDataManager sharedManager] allEventsJsonArray:^(NSArray *array) {
+            if (array) {
+                [[LDRequestManager sharedInstance] performEventRequest:array];
+            } else {
+                DEBUG_LOGX(@"ClientManager has no events so won't sync events with server");
+            }
+        }];
         
-        if (eventJsonData) {
-            [[LDRequestManager sharedInstance] performEventRequest:eventJsonData];
-        } else {
-            DEBUG_LOGX(@"ClientManager has no events so won't sync events with server");
-        }
     } else {
         DEBUG_LOGX(@"ClientManager is in offline mode so won't sync events with server");
     }
