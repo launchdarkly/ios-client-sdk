@@ -2,7 +2,7 @@
 
 All notable changes to the LaunchDarkly iOS SDK will be documented in this file. This project adheres to [Semantic Versioning](http://semver.org).
 
-## [2.4.0] - 2017-06-09
+## [2.4.0] - 2017-06-13
 ### Added
 - The client's background fetch interval can be configured using `withBackgroundFetchInterval`.
 
