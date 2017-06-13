@@ -76,11 +76,8 @@
         [expectation fulfill];
     }];
     
-    [self waitForExpectationsWithTimeout:10 handler:^(NSError * _Nullable error) {
-        if (error != nil) {
-            NSLog(@"Error: %@", error.localizedDescription);
-        }
-    }];
+    [self waitForExpectations:@[expectation] timeout:10];
+    
 }
 
 -(void)testAllEventsJsonData {
@@ -100,11 +97,8 @@
         [expectation fulfill];
     }];
     
-    [self waitForExpectationsWithTimeout:10 handler:^(NSError * _Nullable error) {
-        if (error != nil) {
-            NSLog(@"Error: %@", error.localizedDescription);
-        }
-    }];
+    [self waitForExpectations:@[expectation] timeout:10];
+    
 }
 
 
@@ -160,6 +154,8 @@
     builder = [builder withMobileKey: @"AMobileKey"];
     LDConfig *config = [builder build];
     
+    XCTestExpectation *expectation = [self expectationWithDescription:@"All events dictionary expectation"];
+    
     OCMStub([clientMock ldConfig]).andReturn(config);
     
     LDDataManager *manager = [LDDataManager sharedManager];
@@ -169,7 +165,13 @@
     [manager createCustomEvent:@"aKey" withCustomValuesDictionary: @{@"carrot": @"cake"}];
     [manager createFeatureEvent: @"anotherKet" keyValue: [NSNumber numberWithBool:YES] defaultKeyValue: [NSNumber numberWithBool:NO]];
     
-    XCTAssertEqual([[manager retrieveEventsArray] count],2);
+    [manager allEventsJsonArray:^(NSArray *array) {
+        XCTAssertEqual([array count],2);
+        [expectation fulfill];
+    }];
+
+    [self waitForExpectations:@[expectation] timeout:10];
+    
 }
 
 @end
