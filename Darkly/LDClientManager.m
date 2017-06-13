@@ -15,6 +15,7 @@
 @interface LDClientManager()
 
 @property(nonatomic, strong, readonly) EventSource *eventSource;
+@property(nonatomic, strong) NSDate *backgroundTime;
 
 @end
 
@@ -34,7 +35,7 @@
         [[NSNotificationCenter defaultCenter] addObserver:sharedApiManager selector:@selector(willEnterForeground) name:NSApplicationDidBecomeActiveNotification object:nil];
         [[NSNotificationCenter defaultCenter] addObserver:sharedApiManager selector:@selector(willEnterBackground) name:NSApplicationWillResignActiveNotification object:nil];
 #endif
-        [[NSNotificationCenter defaultCenter] addObserver:sharedApiManager selector:@selector(syncWithServerForConfig) name:kLDBackgroundFetchInitiated object:nil];
+        [[NSNotificationCenter defaultCenter] addObserver:sharedApiManager selector:@selector(backgroundFetchInitiated) name:kLDBackgroundFetchInitiated object:nil];
         
     });
     return sharedApiManager;
@@ -92,6 +93,9 @@
     }
     
     [self flushEvents];
+    
+    self.backgroundTime = [NSDate date];
+    
 }
 
 - (void)willEnterForeground {
@@ -113,17 +117,26 @@
     }
 }
 
+- (void)backgroundFetchInitiated {
+    NSTimeInterval time = [[NSDate date] timeIntervalSinceDate:self.backgroundTime];
+    LDConfig *config = [[LDClient sharedInstance] ldConfig];
+    if (time >= [config.backgroundFetchInterval doubleValue]) {
+        [self syncWithServerForConfig];
+    }
+}
+
 -(void)syncWithServerForEvents {
     if (!offlineEnabled) {
         DEBUG_LOGX(@"ClientManager syncing events with server");
         
-        NSArray *eventJsonData = [[LDDataManager sharedManager] allEventsJsonArray];
+        [[LDDataManager sharedManager] allEventsJsonArray:^(NSArray *array) {
+            if (array) {
+                [[LDRequestManager sharedInstance] performEventRequest:array];
+            } else {
+                DEBUG_LOGX(@"ClientManager has no events so won't sync events with server");
+            }
+        }];
         
-        if (eventJsonData) {
-            [[LDRequestManager sharedInstance] performEventRequest:eventJsonData];
-        } else {
-            DEBUG_LOGX(@"ClientManager has no events so won't sync events with server");
-        }
     } else {
         DEBUG_LOGX(@"ClientManager is in offline mode so won't sync events with server");
     }

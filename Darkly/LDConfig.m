@@ -19,6 +19,7 @@
     NSNumber *connectionTimeout;
     NSNumber *flushInterval;
     NSNumber *pollingInterval;
+    NSNumber *backgroundFetchInterval;
     BOOL streaming;
     BOOL debugEnabled;
 }
@@ -71,6 +72,11 @@
 - (LDConfigBuilder *)withPollingInterval:(int)inputPollingInterval
 {
     pollingInterval = [NSNumber numberWithInt:MAX(inputPollingInterval, kMinimumPollingInterval)];
+    return self;
+}
+
+- (LDConfigBuilder *)withBackgroundFetchInterval:(int)inputBackgroundFetchInterval {
+    backgroundFetchInterval = [NSNumber numberWithInt:MAX(inputBackgroundFetchInterval, kMinimumBackgroundFetchInterval)];
     return self;
 }
 
@@ -138,6 +144,13 @@
     } else {
         DEBUG_LOG(@"LDConfigBuilder building LDConfig with default polling interval: %d", kDefaultPollingInterval);
         [config setPollingInterval:[NSNumber numberWithInt:kDefaultPollingInterval]];
+    }
+    if (backgroundFetchInterval) {
+        DEBUG_LOG(@"LDConfigBuilder building LDConfig with background fetch interval: %@", backgroundFetchInterval);
+        [config setBackgroundFetchInterval:backgroundFetchInterval];
+    } else {
+        DEBUG_LOG(@"LDConfigBuilder building LDConfig with default background fetch interval: %d", kDefaultBackgroundFetchInterval);
+        [config setBackgroundFetchInterval:[NSNumber numberWithInt:kDefaultBackgroundFetchInterval]];
     }
     
     DEBUG_LOG(@"LDConfigBuilder building LDConfig with streaming enabled: %d", streaming);

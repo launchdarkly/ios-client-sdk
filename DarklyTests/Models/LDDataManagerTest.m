@@ -63,28 +63,42 @@
     [[LDDataManager sharedManager] createFeatureEvent:eventKey1 keyValue:[NSNumber numberWithBool:NO] defaultKeyValue:[NSNumber numberWithBool:NO]];
     [[LDDataManager sharedManager] createCustomEvent:eventKey2 withCustomValuesDictionary:@{@"carrot": @"cake"}];
     
-    NSArray *eventArray = [[LDDataManager sharedManager] allEventsJsonArray];
-    NSMutableArray *eventKeyArray = [[NSMutableArray alloc] init];
-    for (NSDictionary *eventDictionary in eventArray) {
-        [eventKeyArray addObject:[eventDictionary objectForKey:@"key"]];
-    }
-
-    XCTAssertTrue([eventKeyArray containsObject:eventKey1]);
-    XCTAssertTrue([eventKeyArray containsObject:eventKey2]);
+    XCTestExpectation *expectation = [self expectationWithDescription:@"All events dictionary expectation"];
+    
+    [[LDDataManager sharedManager] allEventsJsonArray:^(NSArray *array) {
+        NSMutableArray *eventKeyArray = [[NSMutableArray alloc] init];
+        for (NSDictionary *eventDictionary in array) {
+            [eventKeyArray addObject:[eventDictionary objectForKey:@"key"]];
+        }
+        
+        XCTAssertTrue([eventKeyArray containsObject:eventKey1]);
+        XCTAssertTrue([eventKeyArray containsObject:eventKey2]);
+        [expectation fulfill];
+    }];
+    
+    [self waitForExpectations:@[expectation] timeout:10];
+    
 }
 
 -(void)testAllEventsJsonData {
     [[LDDataManager sharedManager] createCustomEvent:@"foo" withCustomValuesDictionary:nil];
     [[LDDataManager sharedManager] createCustomEvent:@"fi" withCustomValuesDictionary:nil];
     
-    NSArray *eventsArray = [[LDDataManager sharedManager] allEventsJsonArray];
-
-    NSMutableDictionary *eventDictionary = [[NSMutableDictionary alloc] init];
-    for (NSDictionary *currentEventDictionary in eventsArray) {
-        [eventDictionary setObject:[[LDEventModel alloc] initWithDictionary:currentEventDictionary] forKey:[currentEventDictionary objectForKey:@"key"]];
-    }
+    XCTestExpectation *expectation = [self expectationWithDescription:@"All events json data expectation"];
     
-    XCTAssertEqual([eventDictionary count], 2);
+    [[LDDataManager sharedManager] allEventsJsonArray:^(NSArray *array) {
+        
+        NSMutableDictionary *eventDictionary = [[NSMutableDictionary alloc] init];
+        for (NSDictionary *currentEventDictionary in array) {
+            [eventDictionary setObject:[[LDEventModel alloc] initWithDictionary:currentEventDictionary] forKey:[currentEventDictionary objectForKey:@"key"]];
+        }
+        
+        XCTAssertEqual([eventDictionary count], 2);
+        [expectation fulfill];
+    }];
+    
+    [self waitForExpectations:@[expectation] timeout:10];
+    
 }
 
 
@@ -140,6 +154,8 @@
     builder = [builder withMobileKey: @"AMobileKey"];
     LDConfig *config = [builder build];
     
+    XCTestExpectation *expectation = [self expectationWithDescription:@"All events dictionary expectation"];
+    
     OCMStub([clientMock ldConfig]).andReturn(config);
     
     LDDataManager *manager = [LDDataManager sharedManager];
@@ -149,7 +165,13 @@
     [manager createCustomEvent:@"aKey" withCustomValuesDictionary: @{@"carrot": @"cake"}];
     [manager createFeatureEvent: @"anotherKet" keyValue: [NSNumber numberWithBool:YES] defaultKeyValue: [NSNumber numberWithBool:NO]];
     
-    XCTAssertEqual([[manager retrieveEventsArray] count],2);
+    [manager allEventsJsonArray:^(NSArray *array) {
+        XCTAssertEqual([array count],2);
+        [expectation fulfill];
+    }];
+
+    [self waitForExpectations:@[expectation] timeout:10];
+    
 }
 
 @end
