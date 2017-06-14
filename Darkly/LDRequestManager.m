@@ -47,7 +47,7 @@ static NSString * const kEventRequestCompletedNotification = @"event_request_com
     
     if (mobileKey) {
         if (encodedUser) {
-            NSURLSession *defaultSession = [NSURLSession sessionWithConfiguration:[NSURLSessionConfiguration defaultSessionConfiguration]];
+            NSURLSession *defaultSession = [NSURLSession sharedSession];
             NSString *requestUrl = [baseUrl stringByAppendingString:kFeatureFlagUrl];
             
             requestUrl = [requestUrl stringByAppendingString:encodedUser];
@@ -96,7 +96,7 @@ static NSString * const kEventRequestCompletedNotification = @"event_request_com
     
     if (mobileKey) {
         if (jsonEventArray) {
-            NSURLSession *defaultSession = [NSURLSession sessionWithConfiguration:[NSURLSessionConfiguration defaultSessionConfiguration]];
+            NSURLSession *defaultSession = [NSURLSession sharedSession];
             NSString *requestUrl = [eventsUrl stringByAppendingString:kEventUrl];
             
             NSMutableURLRequest *request = [NSMutableURLRequest requestWithURL:[NSURL URLWithString:requestUrl]];
