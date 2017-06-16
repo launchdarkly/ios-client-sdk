@@ -50,7 +50,8 @@
     [pollingMgr startEventPolling];
     
     if ([config streaming]) {
-        eventSource = [EventSource eventSourceWithURL:[NSURL URLWithString:kStreamUrl] mobileKey:config.mobileKey timeoutInterval:[config.connectionTimeout doubleValue]];
+        
+        eventSource = [EventSource eventSourceWithURL:[NSURL URLWithString:kStreamUrl] httpHeaders:[self httpHeadersForEventSource] timeoutInterval:[config.connectionTimeout doubleValue]];
         
         [eventSource onMessage:^(Event *e) {
             [self syncWithServerForConfig];
@@ -106,7 +107,7 @@
     LDClient *client = [LDClient sharedInstance];
     
     if ([[client ldConfig] streaming]) {
-        eventSource = [EventSource eventSourceWithURL:[NSURL URLWithString:kStreamUrl] mobileKey:client.ldConfig.mobileKey];
+        eventSource = [EventSource eventSourceWithURL:[NSURL URLWithString:kStreamUrl] httpHeaders:[self httpHeadersForEventSource]];
         
         [eventSource onMessage:^(Event *e) {
             [self syncWithServerForConfig];
@@ -199,6 +200,16 @@
     } else {
         DEBUG_LOGX(@"ClientManager processedConfig method called after receiving failure response from server");
     }
+}
+    
+- (NSDictionary *)httpHeadersForEventSource {
+    NSMutableDictionary *headers = [[NSMutableDictionary alloc] init];
+    
+    NSString *authKey = [kHeaderMobileKey stringByAppendingString:[[[LDClient sharedInstance] ldConfig] mobileKey]];
+    
+    [headers setObject:authKey forKey:@"Authorization"];
+    [headers setObject:[@"iOS/" stringByAppendingString:kClientVersion] forKey:@"User-Agent"];
+    return headers;
 }
 
 @end
