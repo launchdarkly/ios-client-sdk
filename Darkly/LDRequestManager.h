@@ -16,6 +16,7 @@
     
 }
 
+extern NSString * const kHeaderMobileKey;
 @property (nonatomic) NSString* mobileKey;
 @property (nonatomic) NSString* baseUrl;
 @property (nonatomic) NSString* eventsUrl;

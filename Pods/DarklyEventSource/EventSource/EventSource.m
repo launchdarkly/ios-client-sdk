@@ -37,7 +37,7 @@ static NSString *const ESEventRetryKey = @"retry";
 @property (nonatomic, assign) NSTimeInterval timeoutInterval;
 @property (nonatomic, assign) NSTimeInterval retryInterval;
 @property (nonatomic, assign) NSInteger retryAttempt;
-@property (nonatomic, strong) NSString *mobileKey;
+@property (readonly, nonatomic, strong) NSDictionary <NSString *, NSString *> *httpRequestHeaders;
 @property (nonatomic, strong) id lastEventID;
 
 - (void)_open;
@@ -47,22 +47,22 @@ static NSString *const ESEventRetryKey = @"retry";
 
 @implementation EventSource
 
-+ (instancetype)eventSourceWithURL:(NSURL *)URL mobileKey:(NSString *)mobileKey
++ (instancetype)eventSourceWithURL:(NSURL *)URL httpHeaders:(NSDictionary<NSString*, NSString *>*) headers
 {
-    return [[EventSource alloc] initWithURL:URL mobileKey:mobileKey];
+    return [[EventSource alloc] initWithURL:URL httpHeaders:headers];
 }
 
-+ (instancetype)eventSourceWithURL:(NSURL *)URL mobileKey:(NSString *)mobileKey timeoutInterval:(NSTimeInterval)timeoutInterval
++ (instancetype)eventSourceWithURL:(NSURL *)URL httpHeaders:(NSDictionary<NSString*, NSString *>*) headers timeoutInterval:(NSTimeInterval)timeoutInterval
 {
-    return [[EventSource alloc] initWithURL:URL mobileKey:mobileKey timeoutInterval:timeoutInterval];
+    return [[EventSource alloc] initWithURL:URL httpHeaders:headers timeoutInterval:timeoutInterval];
 }
 
-- (instancetype)initWithURL:(NSURL *)URL mobileKey:(NSString *)mobileKey
+- (instancetype)initWithURL:(NSURL *)URL httpHeaders:(NSDictionary<NSString*, NSString *>*) headers
 {
-    return [self initWithURL:URL mobileKey:mobileKey timeoutInterval:ES_DEFAULT_TIMEOUT];
+    return [self initWithURL:URL httpHeaders:headers timeoutInterval:ES_DEFAULT_TIMEOUT];
 }
 
-- (instancetype)initWithURL:(NSURL *)URL mobileKey:(NSString *)mobileKey timeoutInterval:(NSTimeInterval)timeoutInterval
+- (instancetype)initWithURL:(NSURL *)URL httpHeaders:(NSDictionary<NSString*, NSString *>*) headers timeoutInterval:(NSTimeInterval)timeoutInterval
 {
     self = [super init];
     if (self) {
@@ -71,7 +71,7 @@ static NSString *const ESEventRetryKey = @"retry";
         _timeoutInterval = timeoutInterval;
         _retryInterval = ES_RETRY_INTERVAL;
         _retryAttempt = 0;
-        _mobileKey = mobileKey;
+        _httpRequestHeaders = headers;
         messageQueue = dispatch_queue_create("co.cwbrn.eventsource-queue", DISPATCH_QUEUE_SERIAL);
         connectionQueue = dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_HIGH, 0);
         
@@ -217,7 +217,11 @@ didReceiveResponse:(NSURLResponse *)response completionHandler:(void (^)(NSURLSe
 {
     wasClosed = NO;
     NSMutableURLRequest *request = [NSMutableURLRequest requestWithURL:self.eventURL cachePolicy:NSURLRequestReloadIgnoringCacheData timeoutInterval:self.timeoutInterval];
-    [request addValue:[NSString stringWithFormat:@"api_key %@",self.mobileKey] forHTTPHeaderField:@"Authorization"];
+    if (self.httpRequestHeaders) {
+        for (NSString * key in self.httpRequestHeaders.allKeys){
+            [request setValue:self.httpRequestHeaders[key] forHTTPHeaderField:key];
+        }
+    }
     if (self.lastEventID) {
         [request setValue:self.lastEventID forHTTPHeaderField:@"Last-Event-ID"];
     }
