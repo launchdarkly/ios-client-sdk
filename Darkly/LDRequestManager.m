@@ -9,7 +9,7 @@
 
 static NSString * const kFeatureFlagUrl = @"/msdk/eval/users/";
 static NSString * const kEventUrl = @"/mobile/events/bulk";
-static NSString * const kHeaderMobileKey = @"api_key ";
+NSString * const kHeaderMobileKey = @"api_key ";
 static NSString * const kConfigRequestCompletedNotification = @"config_request_completed_notification";
 static NSString * const kEventRequestCompletedNotification = @"event_request_completed_notification";
 
