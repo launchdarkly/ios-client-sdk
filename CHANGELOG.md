@@ -2,6 +2,10 @@
 
 All notable changes to the LaunchDarkly iOS SDK will be documented in this file. This project adheres to [Semantic Versioning](http://semver.org).
 
+## [2.4.2] - 2017-06-20
+### Fixed
+- Race condition in `LDPollingManager` identified by Thread Sanitizer
+
 ## [2.4.1] - 2017-06-15
 ### Fixed
 - Memory leak with `NSURLSession` in `EventSource`. Thanks @jimmaye!
