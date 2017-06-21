@@ -69,6 +69,7 @@ static id sharedInstance = nil;
 }
 
 - (void)configPoll {
+    @synchronized (self) {
     if (configPollingState != POLL_STOPPED || configPollingState != POLL_SUSPENDED)
     {
         DEBUG_LOGX(@"PollingManager config interval reached");
@@ -77,6 +78,7 @@ static id sharedInstance = nil;
         if (![[[LDClient sharedInstance] ldConfig] streaming]) {
             [clientManager syncWithServerForConfig];
         }
+    }
     }
 }
 
@@ -116,7 +118,9 @@ static id sharedInstance = nil;
         DEBUG_LOGX(@"PollingManager resuming config polling");
         BOOL checkconfig = configPollingState == POLL_SUSPENDED ? YES : NO;
         dispatch_resume(self.configTimer);
-        configPollingState = POLL_RUNNING;
+        @synchronized (self) {
+            configPollingState = POLL_RUNNING;
+        }
         if (checkconfig) {
             [self configPoll];
         }
@@ -193,12 +197,14 @@ static id sharedInstance = nil;
 }
 
 - (void)eventPoll {
-    if (eventPollingState != POLL_STOPPED || eventPollingState != POLL_SUSPENDED)
-    {
-        DEBUG_LOGX(@"PollingManager event interval reached");
-        
-        LDClientManager *clientManager = [LDClientManager sharedInstance];
-        [clientManager syncWithServerForEvents];
+    @synchronized (self) {
+        if (eventPollingState != POLL_STOPPED || eventPollingState != POLL_SUSPENDED)
+        {
+            DEBUG_LOGX(@"PollingManager event interval reached");
+            
+            LDClientManager *clientManager = [LDClientManager sharedInstance];
+            [clientManager syncWithServerForEvents];
+        }
     }
 }
 
@@ -238,7 +244,9 @@ static id sharedInstance = nil;
         DEBUG_LOGX(@"PollingManager resuming event polling");
         BOOL checkEvent = eventPollingState == POLL_SUSPENDED ? YES : NO;
         dispatch_resume(self.eventTimer);
+        @synchronized (self) {
         eventPollingState = POLL_RUNNING;
+        }
         if (checkEvent) {
             [self eventPoll];
         }
