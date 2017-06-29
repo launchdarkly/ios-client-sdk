@@ -13,7 +13,7 @@
 static NSString * const kKeyKey = @"key";
 static NSString * const kIpKey = @"ip";
 static NSString * const kCountryKey = @"country";
-static NSString * const kNameKey = @"firstName";
+static NSString * const kNameKey = @"name";
 static NSString * const kFirstNameKey = @"firstName";
 static NSString * const kLastNameKey = @"lastName";
 static NSString * const kEmailKey = @"email";
