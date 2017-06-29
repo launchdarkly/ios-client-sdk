@@ -14,6 +14,7 @@
 @property (nullable, nonatomic, strong, setter=key:) NSString *key;
 @property (nullable, nonatomic, strong) NSString *ip;
 @property (nullable, nonatomic, strong) NSString *country;
+@property (nullable, nonatomic, strong) NSString *name;
 @property (nullable, nonatomic, strong) NSString *firstName;
 @property (nullable, nonatomic, strong) NSString *lastName;
 @property (nullable, nonatomic, strong) NSString *email;
