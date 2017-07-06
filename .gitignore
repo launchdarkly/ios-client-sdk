@@ -23,3 +23,5 @@ DerivedData
 
 # Vim files
 *.swp
+Pods
+Carthage
