@@ -129,7 +129,7 @@
 }
 
 - (NSNumber*)numberVariation:(NSString *)featureKey fallback:(NSNumber*)fallback{
-    DEBUG_LOG(@"LDClient numberVariation method called for feature=%@ and fallback=%f", featureKey, fallback);
+    DEBUG_LOG(@"LDClient numberVariation method called for feature=%@ and fallback=%@", featureKey, fallback);
     if (![featureKey isKindOfClass:[NSString class]]) {
         NSLog(@"featureKey should be an NSString. Returning fallback value");
         return fallback;
