@@ -11,6 +11,7 @@
     NSString *key;
     NSString *ip;
     NSString *country;
+    NSString *name;
     NSString *firstName;
     NSString *lastName;
     NSString *email;
@@ -32,6 +33,9 @@
     }
     if (iBuilder->country || [iUser country]) {
         [iUser setCountry:iBuilder->country];
+    }
+    if (iBuilder->name || [iUser name]) {
+        [iUser setName:iBuilder->name];
     }
     if (iBuilder->firstName || [iUser firstName]) {
         [iUser setFirstName:iBuilder->firstName];
@@ -62,6 +66,9 @@
     }
     if ([iUser country]) {
         [userBuilder withCountry:[iUser country]];
+    }
+    if ([iUser name]) {
+        [userBuilder withName:[iUser name]];
     }
     if ([iUser firstName]) {
         [userBuilder withFirstName:[iUser firstName]];
@@ -103,6 +110,12 @@
 - (LDUserBuilder *)withCountry:(NSString *)inputCountry
 {
     country = inputCountry;
+    return self;
+}
+
+- (LDUserBuilder *)withName:(NSString *)inputName
+{
+    name = inputName;
     return self;
 }
 
@@ -221,6 +234,10 @@
     if (country) {
         DEBUG_LOG(@"LDUserBuilder building User with country: %@", country);
         [user setCountry:country];
+    }
+    if (name) {
+        DEBUG_LOG(@"LDUserBuilder building User with name: %@", name);
+        [user setName:name];
     }
     if (firstName) {
         DEBUG_LOG(@"LDUserBuilder building User with firstName: %@", firstName);
