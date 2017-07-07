@@ -138,16 +138,8 @@
         BOOL flagExists = [ldUser doesFlagExist: featureKey];
         id flagValue = [ldUser flagValue: featureKey];
         NSNumber *returnValue = fallback;
-        if (flagExists) {
-            if ([flagValue isKindOfClass:[NSNumber class]]) {
-                returnValue = flagValue;
-            } else if ([flagValue isKindOfClass:[NSString class]]) {
-                NSScanner *numberScanner = [NSScanner scannerWithString:flagValue];
-                double result;
-                if ([numberScanner scanDouble:&result]) {
-                    returnValue = [NSNumber numberWithDouble:result];
-                }
-            }
+        if ([flagValue isKindOfClass:[NSNumber class]] && flagExists) {
+            returnValue = flagValue;
         }
         
         [[LDDataManager sharedManager] createFeatureEvent: featureKey keyValue:returnValue defaultKeyValue:fallback];
@@ -168,16 +160,8 @@
         BOOL flagExists = [ldUser doesFlagExist: featureKey];
         id flagValue = [ldUser flagValue: featureKey];
         double returnValue = fallback;
-        if (flagExists) {
-            if ([flagValue isKindOfClass:[NSNumber class]]) {
-                returnValue = [flagValue doubleValue];
-            } else if ([flagValue isKindOfClass:[NSString class]]) {
-                NSScanner *numberScanner = [NSScanner scannerWithString:flagValue];
-                double result;
-                if ([numberScanner scanDouble:&result]) {
-                    returnValue = result;
-                }
-            }
+        if ([flagValue isKindOfClass:[NSNumber class]] && flagExists) {
+            returnValue = [flagValue doubleValue];
         }
         
         [[LDDataManager sharedManager] createFeatureEvent: featureKey keyValue:[NSNumber numberWithDouble:returnValue] defaultKeyValue:[NSNumber numberWithDouble:fallback]];
