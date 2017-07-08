@@ -19,6 +19,9 @@
     if (iBuilder.country || iUser.country) {
         iUser.country = iBuilder.country;
     }
+    if (iBuilder.name || iUser.name) {
+        iUser.name = iBuilder.name;
+    }
     if (iBuilder.firstName || iUser.firstName) {
         iUser.firstName = iBuilder.firstName;
     }
@@ -55,8 +58,8 @@
     if (iUser.country) {
         userBuilder.country = iUser.country;
     }
-    if (iUser.firstName) {
-        userBuilder.firstName = iUser.firstName;
+    if (iUser.name) {
+        userBuilder.name = iUser.name;
     }
     if (iUser.lastName) {
         userBuilder.lastName =  iUser.lastName;
@@ -171,6 +174,10 @@
         DEBUG_LOG(@"LDUserBuilder building User with country: %@", self.country);
         user.country = self.country;
     }
+    if (self.name) {
+        DEBUG_LOG(@"LDUserBuilder building User with name: %@", self.name);
+        user.name = self.name;        
+    }
     if (self.firstName) {
         DEBUG_LOG(@"LDUserBuilder building User with firstName: %@", self.firstName);
         user.firstName = self.firstName;
@@ -217,6 +224,12 @@
 - (LDUserBuilder *)withCountry:(NSString *)inputCountry
 {
     _country = inputCountry;
+    return self;
+}
+
+- (LDUserBuilder *)withName:(NSString *)inputName
+{
+    _name = inputName;
     return self;
 }
 

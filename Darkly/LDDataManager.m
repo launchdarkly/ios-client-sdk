@@ -14,11 +14,13 @@ static NSString * const kFlagKey = @"flagkey";
 
 @interface LDDataManager()
 
-@property (strong, nonatomic) NSMutableArray *eventsArray;
+@property (strong, atomic) NSMutableArray *eventsArray;
 
 @end
 
 @implementation LDDataManager
+
+dispatch_queue_t eventsQueue;
 
 + (id)sharedManager {
     static LDDataManager *sharedDataManager = nil;
@@ -26,6 +28,7 @@ static NSString * const kFlagKey = @"flagkey";
     dispatch_once(&onceToken, ^{
         sharedDataManager = [[self alloc] init];
         sharedDataManager.eventsArray = [[NSMutableArray alloc] init];
+        eventsQueue = dispatch_queue_create("com.launchdarkly.EventQueue", NULL);
     });
     return sharedDataManager;
 }
@@ -33,30 +36,24 @@ static NSString * const kFlagKey = @"flagkey";
 #pragma mark - users
 -(void) purgeOldUser: (NSMutableDictionary *)dictionary {
     if (dictionary && [dictionary count] >= kUserCacheSize) {
-        NSString *removalKey;
-        NSDate *removalDate;
-        for (id key in dictionary) {
-            LDUserModel *currentUser = [dictionary objectForKey:key];
-            if (currentUser) {
-                if (removalKey) {
-                    NSComparisonResult result = [removalDate compare:currentUser.updatedAt];
-                    if (result==NSOrderedDescending) {
-                        removalKey = currentUser.key;
-                        removalDate = currentUser.updatedAt;
-                    }
-                } else {
-                    removalKey = currentUser.key;
-                    removalDate = currentUser.updatedAt;
-                }
-            } else {
-                [dictionary removeObjectForKey:removalKey];
-            }
-        }
-        [dictionary removeObjectForKey:removalKey];
+        
+        NSArray *sortedKeys = [dictionary keysSortedByValueUsingComparator: ^(LDUserModel *user1, LDUserModel *user2) {
+            return [user1.updatedAt compare:user2.updatedAt];
+        }];
+        
+        [dictionary removeObjectForKey:sortedKeys.firstObject];
     }
 }
 
 -(void) saveUser: (LDUserModel *) user {
+    [self saveUser:user asDict:YES];
+}
+
+-(void) saveUserDeprecated:(LDUserModel *)user {
+    [self saveUser:user asDict:NO];
+}
+
+-(void) saveUser:(LDUserModel *)user asDict:(BOOL)asDict {
     NSMutableDictionary *userDictionary = [self retrieveUserDictionary];
     if (userDictionary) {
         LDUserModel *resultUser = [userDictionary objectForKey:user.key];
@@ -79,7 +76,13 @@ static NSString * const kFlagKey = @"flagkey";
         [userDictionary setObject:user forKey:user.key];
     }
     [userDictionary setObject:user forKey:user.key];
-    [self storeUserDictionary:userDictionary];
+    if (asDict) {
+        [self storeUserDictionary:userDictionary];
+    }
+    else{
+        [self deprecatedStoreUserDictionary:userDictionary];
+    }
+    
 }
 
 -(LDUserModel *)findUserWithkey: (NSString *)key {
@@ -105,6 +108,16 @@ static NSString * const kFlagKey = @"flagkey";
 - (void)storeUserDictionary:(NSDictionary *)userDictionary {
     NSMutableDictionary *archiveDictionary = [[NSMutableDictionary alloc] init];
     for (NSString *key in userDictionary) {
+        [archiveDictionary setObject:[[userDictionary objectForKey:key] dictionaryValue] forKey:key];
+    }
+    NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
+    [defaults setObject:archiveDictionary forKey:kUserDictionaryStorageKey];
+    [defaults synchronize];
+}
+
+- (void)deprecatedStoreUserDictionary:(NSDictionary *)userDictionary {
+    NSMutableDictionary *archiveDictionary = [[NSMutableDictionary alloc] init];
+    for (NSString *key in userDictionary) {
         NSData *userEncodedObject = [NSKeyedArchiver archivedDataWithRootObject:(LDUserModel *)[userDictionary objectForKey:key]];
         [archiveDictionary setObject:userEncodedObject forKey:key];
     }
@@ -116,10 +129,16 @@ static NSString * const kFlagKey = @"flagkey";
 
 - (NSMutableDictionary *)retrieveUserDictionary {
     NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
-    NSMutableDictionary *retrievalDictionary = [[NSMutableDictionary alloc] init];
     NSDictionary *encodedDictionary = [defaults objectForKey:kUserDictionaryStorageKey];
+    NSMutableDictionary *retrievalDictionary = [[NSMutableDictionary alloc] initWithDictionary:encodedDictionary];
     for (NSString *key in encodedDictionary) {
-        LDUserModel *decodedUser = [NSKeyedUnarchiver unarchiveObjectWithData:(NSData *)[encodedDictionary objectForKey:key]];
+        LDUserModel *decodedUser;
+        if ([[encodedDictionary objectForKey:key] isKindOfClass:[NSData class]]) {
+            decodedUser = [NSKeyedUnarchiver unarchiveObjectWithData:(NSData *)[encodedDictionary objectForKey:key]];
+        }
+        else{
+            decodedUser = [[LDUserModel alloc] initWithDictionary:[encodedDictionary objectForKey:key]];
+        }
         [retrievalDictionary setObject:decodedUser forKey:key];
     }
     return retrievalDictionary;
@@ -138,7 +157,9 @@ static NSString * const kFlagKey = @"flagkey";
             // No Dictionary exists so create
             _eventsArray = [[NSMutableArray alloc] init];
         }
-        [_eventsArray addObject:featureEvent];
+        dispatch_async(eventsQueue, ^{
+            [_eventsArray addObject:featureEvent];
+        });
     } else
         DEBUG_LOG(@"Events have surpassed capacity. Discarding feature event %@", featureKey);
 }
@@ -154,7 +175,9 @@ static NSString * const kFlagKey = @"flagkey";
             // No Dictionary exists so create
             _eventsArray = [[NSMutableArray alloc] init];
         }
-        [_eventsArray addObject:customEvent];
+        dispatch_async(eventsQueue, ^{
+            [_eventsArray addObject:customEvent];
+        });
     } else
         DEBUG_LOG(@"Events have surpassed capacity. Discarding event %@ with dictionary %@", eventKey, customDict);
 }
@@ -166,21 +189,26 @@ static NSString * const kFlagKey = @"flagkey";
 
 -(void) deleteProcessedEvents: (NSArray *) processedJsonArray {
     // Loop through processedEvents
-    NSInteger count = MIN([processedJsonArray count], [_eventsArray count]);
-    [_eventsArray removeObjectsInRange:NSMakeRange(0, count)];
+    dispatch_async(eventsQueue, ^{
+        NSInteger count = MIN([processedJsonArray count], [_eventsArray count]);
+        [_eventsArray removeObjectsInRange:NSMakeRange(0, count)];
+    });
 }
-
--(NSArray*) allEventsJsonArray {
-    NSMutableArray *array = [self retrieveEventsArray];
-    if (array && [array count]) {
-        NSMutableArray *eventArray = [[NSMutableArray alloc] init];
-        for (LDEventModel *currentEvent in array) {
-            [eventArray addObject:[currentEvent dictionaryValue]];
+-(void) allEventsJsonArray:(void (^)(NSArray *array))completion {
+    dispatch_async(eventsQueue, ^{
+        NSMutableArray *array = [self retrieveEventsArray];
+        if (array && [array count]) {
+            
+            NSMutableArray *eventArray = [[NSMutableArray alloc] init];
+            for (LDEventModel *currentEvent in array) {
+                [eventArray addObject:[currentEvent dictionaryValue]];
+            }
+            
+            completion(eventArray);
+        } else {
+            completion(nil);
         }
-        return eventArray;
-    } else {
-        return nil;
-    }
+    });
 }
 
 -(void)flushEventsDictionary {
@@ -188,7 +216,7 @@ static NSString * const kFlagKey = @"flagkey";
 }
 
 - (NSMutableArray *)retrieveEventsArray {
-    return [_eventsArray mutableCopy];
+    return [[NSMutableArray alloc] initWithArray:self.eventsArray];
 }
 
 @end

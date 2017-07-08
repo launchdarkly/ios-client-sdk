@@ -52,6 +52,12 @@
 @property (nonatomic, copy, nullable) NSNumber* pollingInterval;
 
 /**
+ * The background fetch interval (in seconds) for background fetch. An interval
+ * less than 900 is set to the minimum (15 minutes). The default is 60 minutes. (Optional)
+ */
+@property (nonatomic, copy, nullable) NSNumber* backgroundFetchInterval;
+
+/**
  Flag that enables streaming mode. When streaming is false, disable streaming
  and switch to polling mode.
  */
@@ -139,6 +145,14 @@ __deprecated_msg("Use LDConfig instead")
  * @return the configuration builder
  */
 - (LDConfigBuilder *_Nonnull)withPollingInterval:(int)pollingInterval __deprecated_msg("Use `setPollingInterval:` on an LDConfig object");
+/**
+ * Set the background fetch interval (in seconds) for background fetch. An interval
+ * less than 900 is set to the minimum (15 minutes). The default is 60 minutes. (Optional)
+ *
+ * @param backgroundFetchInterval the background fetch interval in seconds
+ * @return the configuration builder
+ */
+- (LDConfigBuilder *_Nonnull)withBackgroundFetchInterval:(int)backgroundFetchInterval __deprecated_msg("Use `setBackgroundFetchInterval:` on an LDConfig object");
 /**
  * Enable streaming mode for flags. When streaming is false, disable streaming and switch to polling mode. (Optional)
  *

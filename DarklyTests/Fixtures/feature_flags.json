@@ -1,1 +1,17 @@
-{"_links":{"self":{"href":"/api/eval/users/eyJrZXkiOiAiamVmZkB0ZXN0LmNvbSJ9","type":"application/json"}},"devices.hasipad":false, "isConnected":null, "isAString":"test", "isAArray":[0,1,2], "isAObject":{"key": 0}, "isANumber":0, "isABawler":true}
+{
+    "_links":
+    {
+            "href":"/api/eval/users/eyJrZXkiOiAiamVmZkB0ZXN0LmNvbSJ9",
+            "type":"application/json"
+    },
+    "devices.hasipad":false,
+    "isConnected":null,
+    "isAString":"test",
+    "isAArray":[0,1,2],
+    "isAObject":
+    {
+        "key": 0
+    },
+    "isANumber":0,
+    "isABawler":true
+}

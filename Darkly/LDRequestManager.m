@@ -9,7 +9,7 @@
 
 static NSString * const kFeatureFlagUrl = @"/msdk/eval/users/";
 static NSString * const kEventUrl = @"/mobile/events/bulk";
-static NSString * const kHeaderMobileKey = @"api_key ";
+NSString * const kHeaderMobileKey = @"api_key ";
 static NSString * const kConfigRequestCompletedNotification = @"config_request_completed_notification";
 static NSString * const kEventRequestCompletedNotification = @"event_request_completed_notification";
 
@@ -47,12 +47,13 @@ static NSString * const kEventRequestCompletedNotification = @"event_request_com
     
     if (mobileKey) {
         if (encodedUser) {
-            NSURLSession *defaultSession = [NSURLSession sessionWithConfiguration:[NSURLSessionConfiguration defaultSessionConfiguration]];
+            NSURLSession *defaultSession = [NSURLSession sharedSession];
             NSString *requestUrl = [baseUrl stringByAppendingString:kFeatureFlagUrl];
             
             requestUrl = [requestUrl stringByAppendingString:encodedUser];
             
             NSMutableURLRequest *request = [NSMutableURLRequest requestWithURL:[NSURL URLWithString:requestUrl]];
+            [request setTimeoutInterval:self.connectionTimeout];
             
             [self addFeatureRequestHeaders:request];
             
@@ -77,7 +78,7 @@ static NSString * const kEventRequestCompletedNotification = @"event_request_com
             
             [dataTask resume];
             
-            dispatch_semaphore_wait(semaphore, kConnectionTimeout);
+            dispatch_semaphore_wait(semaphore, DISPATCH_TIME_FOREVER);
             
         } else {
             DEBUG_LOGX(@"RequestManager unable to sync config to server since no encodedUser");
@@ -95,10 +96,11 @@ static NSString * const kEventRequestCompletedNotification = @"event_request_com
     
     if (mobileKey) {
         if (jsonEventArray) {
-            NSURLSession *defaultSession = [NSURLSession sessionWithConfiguration:[NSURLSessionConfiguration defaultSessionConfiguration]];
+            NSURLSession *defaultSession = [NSURLSession sharedSession];
             NSString *requestUrl = [eventsUrl stringByAppendingString:kEventUrl];
             
             NSMutableURLRequest *request = [NSMutableURLRequest requestWithURL:[NSURL URLWithString:requestUrl]];
+            [request setTimeoutInterval:self.connectionTimeout];
             [self addEventRequestHeaders:request];
             
             NSError *error;
@@ -117,7 +119,7 @@ static NSString * const kEventRequestCompletedNotification = @"event_request_com
             
             [dataTask resume];
             
-            dispatch_semaphore_wait(semaphore, kConnectionTimeout);
+            dispatch_semaphore_wait(semaphore, DISPATCH_TIME_FOREVER);
             
         } else {
             DEBUG_LOGX(@"RequestManager unable to sync events to server since no events");

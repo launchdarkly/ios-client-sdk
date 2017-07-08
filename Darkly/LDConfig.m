@@ -93,6 +93,16 @@
     }
 }
 
+- (void)setBackgroundFetchInterval:(NSNumber *)backgroundFetchInterval {
+    if (backgroundFetchInterval) {
+        DEBUG_LOG(@"Set LDConfig background fetch interval: %@", backgroundFetchInterval);
+        _backgroundFetchInterval = backgroundFetchInterval;
+    } else {
+        DEBUG_LOG(@"Set LDConfig default background fetch interval: %d", kDefaultPollingInterval);
+        _backgroundFetchInterval = [NSNumber numberWithInt:kDefaultBackgroundFetchInterval];
+    }
+}
+
 - (void)setStreaming:(BOOL)streaming {
     _streaming = streaming;
     DEBUG_LOG(@"Set LDConfig streaming enabled: %d", streaming);
@@ -149,13 +159,18 @@
     return self;
 }
 
--(LDConfigBuilder *)withStreaming:(BOOL)streamingEnabled {
-    _config.streaming = streamingEnabled;
+- (LDConfigBuilder *)withBackgroundFetchInterval:(int)inputBackgroundFetchInterval {
+    _config.backgroundFetchInterval = [NSNumber numberWithInt:MAX(inputBackgroundFetchInterval, kMinimumBackgroundFetchInterval)];
     return self;
 }
 
 - (LDConfigBuilder *)withDebugEnabled:(BOOL)debugEnabled {
     _config.debugEnabled = debugEnabled;
+    return self;
+}
+
+-(LDConfigBuilder *)withStreaming:(BOOL)streamingEnabled {
+    _config.streaming = streamingEnabled;
     return self;
 }
 

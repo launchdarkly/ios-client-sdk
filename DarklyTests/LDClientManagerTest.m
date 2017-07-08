@@ -84,11 +84,15 @@
     LDClientManager *clientManager = [LDClientManager sharedInstance];
     [clientManager setOfflineEnabled:NO];
     
-    OCMStub([dataManagerMock allEventsJsonArray]).andReturn(testData);
+    [dataManagerMock allEventsJsonArray:^(NSArray *array) {
+        OCMStub(array).andReturn(testData);
+        
+        [clientManager syncWithServerForEvents];
+        
+        OCMVerify([requestManagerMock performEventRequest:[OCMArg isEqual:testData]]);
+    }];
     
-    [clientManager syncWithServerForEvents];
     
-    OCMVerify([requestManagerMock performEventRequest:[OCMArg isEqual:testData]]);
     
 }
 
@@ -107,15 +111,20 @@
 
 - (void)testSyncWithServerForEventsNotProcessedWhenOffline {
     NSData *testData = [[NSData alloc] init];
-    OCMStub([dataManagerMock allEventsJsonArray]).andReturn(testData);
     
-    [[requestManagerMock reject] performEventRequest:[OCMArg isEqual:testData]];
+    [dataManagerMock allEventsJsonArray:^(NSArray *array) {
+        OCMStub(array).andReturn(testData);
+        
+        [[requestManagerMock reject] performEventRequest:[OCMArg isEqual:testData]];
+        
+        LDClientManager *clientManager = [LDClientManager sharedInstance];
+        [clientManager setOfflineEnabled:YES];
+        [clientManager syncWithServerForEvents];
+        
+        [requestManagerMock verify];
+    }];
     
-    LDClientManager *clientManager = [LDClientManager sharedInstance];
-    [clientManager setOfflineEnabled:YES];    
-    [clientManager syncWithServerForEvents];
     
-    [requestManagerMock verify];
 }
 
 - (void)testStartPolling {

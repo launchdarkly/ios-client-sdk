@@ -24,6 +24,11 @@
 @property (nonatomic, copy, nullable) NSString *country;
 
 /**
+ * The full name of the user. (Optional)
+ */
+@property (nonatomic, copy, nullable) NSString *name;
+
+/**
  * The first name of the user. (Optional)
  */
 @property (nonatomic, copy, nullable) NSString *firstName;
@@ -122,6 +127,14 @@
  * @return the user builder
  */
 - (nonnull LDUserBuilder *)withCountry:(nullable NSString *)country __deprecated_msg("Pass value directly to `country` instead");
+/**
+ * Provide the name of the user. (Optional)
+ *
+ * @param name    the name of the user
+ * @return the user builder
+ */
+- (nonnull LDUserBuilder *)withName:(nullable NSString *)name __deprecated_msg("Pass value directly to `name` instead");
+
 /**
  * Provide the first name of the user. (Optional)
  *

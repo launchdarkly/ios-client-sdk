@@ -2,6 +2,40 @@
 
 All notable changes to the LaunchDarkly iOS SDK will be documented in this file. This project adheres to [Semantic Versioning](http://semver.org).
 
+## [2.4.2] - 2017-06-20
+### Fixed
+- Race condition in `LDPollingManager` identified by Thread Sanitizer
+
+## [2.4.1] - 2017-06-15
+### Fixed
+- Memory leak with `NSURLSession` in `EventSource`. Thanks @jimmaye!
+
+## [2.4.0] - 2017-06-13
+### Added
+- The client's background fetch interval can be configured using `withBackgroundFetchInterval`.
+
+### Changed
+- By default, the client allows one background fetch per 60 minutes.
+
+### Fixed
+- Memory leak with `NSURLSession` in `LDRequestManager`. Thanks @jimmaye!
+- Race condition when the client is used in multiple threads
+
+## [2.3.3] - 2017-05-25
+### Changed
+- Feature flag persistence is now more efficient
+
+### Fixed
+- Client crashes if a feature flag is off and no off-variation is specified
+
+## [2.3.2] - 2017-05-18
+### Changed
+- The default connection timeout is now actually 10 seconds, down from the system default of 60 seconds. Use `withConnectionTimeout` to change the setting.
+
+### Fixed
+- Potential race conditions when HTTP requests exceed 10 seconds
+- HTTP requests now honor the configured connection timeout
+
 ## [2.3.1] - 2017-04-25
 ### Fixed
 - Benign race conditions in LDRequestManager

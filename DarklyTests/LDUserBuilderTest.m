@@ -38,6 +38,7 @@
     NSString *testKey = @"testKey";
     NSString *testIp = @"testIp";
     NSString *testCountry = @"testCountry";
+    NSString *testName = @"testName";
     NSString *testFirstName = @"testFirstName";
     NSString *testLastName = @"testLastName";
     NSString *testEmail = @"testEmail";
@@ -49,6 +50,7 @@
     builder.key = testKey;
     builder.ip = testIp;
     builder.country = testCountry;
+    builder.name = testName;
     builder.firstName = testFirstName;
     builder.lastName = testLastName;
     builder.email = testEmail;
@@ -60,6 +62,7 @@
     XCTAssertEqualObjects([user key], testKey);
     XCTAssertEqualObjects([user ip], testIp);
     XCTAssertEqualObjects([user country], testCountry);
+    XCTAssertEqualObjects([user name], testName);
     XCTAssertEqualObjects([user firstName], testFirstName);
     XCTAssertEqualObjects([user lastName], testLastName);
     XCTAssertEqualObjects([user email], testEmail);
