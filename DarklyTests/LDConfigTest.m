@@ -22,15 +22,23 @@
     [super tearDown];
 }
 
-- (void)testConfigWithoutMobileKey {
-    LDConfigBuilder *builder = [[LDConfigBuilder alloc] init];
-    XCTAssertNil([builder build]);
-}
-
 - (void)testConfigDefaultValues {
     NSString *testMobileKey = @"testMobileKey";
+    LDConfig *config = [[LDConfig alloc] initWithMobileKey:testMobileKey];
+    XCTAssertEqualObjects([config mobileKey], testMobileKey);
+    XCTAssertEqualObjects([config capacity], [NSNumber numberWithInt:kCapacity]);
+    XCTAssertEqualObjects([config connectionTimeout], [NSNumber numberWithInt:kConnectionTimeout]);
+    XCTAssertEqualObjects([config flushInterval], [NSNumber numberWithInt:kDefaultFlushInterval]);
+    XCTAssertFalse([config debugEnabled]);
+}
+
+- (void)testConfigBuilderDefaultValues {
+    NSString *testMobileKey = @"testMobileKey";
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdeprecated-declarations"
     LDConfigBuilder *builder = [[LDConfigBuilder alloc] init];
     [builder withMobileKey:testMobileKey];
+#pragma clang diagnostic pop
     LDConfig *config = [builder build];
     XCTAssertEqualObjects([config mobileKey], testMobileKey);
     XCTAssertEqualObjects([config capacity], [NSNumber numberWithInt:kCapacity]);
@@ -42,10 +50,8 @@
 - (void)testConfigOverrideBaseUrl {
     NSString *testMobileKey = @"testMobileKey";
     NSString *testBaseUrl = @"testBaseUrl";
-    LDConfigBuilder *builder = [[LDConfigBuilder alloc] init];
-    [builder withMobileKey:testMobileKey];
-    [builder withBaseUrl:testBaseUrl];
-    LDConfig *config = [builder build];
+    LDConfig *config = [[LDConfig alloc] initWithMobileKey:testMobileKey];
+    config.baseUrl = testBaseUrl;
     XCTAssertEqualObjects([config mobileKey], testMobileKey);
     XCTAssertEqualObjects([config capacity], [NSNumber numberWithInt:kCapacity]);
     XCTAssertEqualObjects([config connectionTimeout], [NSNumber numberWithInt:kConnectionTimeout]);
@@ -56,10 +62,8 @@
 - (void)testConfigOverrideCapacity {
     NSString *testMobileKey = @"testMobileKey";
     int testCapacity = 20;
-    LDConfigBuilder *builder = [[LDConfigBuilder alloc] init];
-    [builder withMobileKey:testMobileKey];
-    [builder withCapacity:testCapacity];
-    LDConfig *config = [builder build];
+    LDConfig *config = [[LDConfig alloc] initWithMobileKey:testMobileKey];
+    config.capacity = [NSNumber numberWithInt:testCapacity];
     XCTAssertEqualObjects([config mobileKey], testMobileKey);
     XCTAssertEqualObjects([config capacity], [NSNumber numberWithInt:testCapacity]);
     XCTAssertEqualObjects([config connectionTimeout], [NSNumber numberWithInt:kConnectionTimeout]);
@@ -70,10 +74,8 @@
 - (void)testConfigOverrideConnectionTimeout {
     NSString *testMobileKey = @"testMobileKey";
     int testConnectionTimeout = 15;
-    LDConfigBuilder *builder = [[LDConfigBuilder alloc] init];
-    [builder withMobileKey:testMobileKey];
-    [builder withConnectionTimeout:testConnectionTimeout];
-    LDConfig *config = [builder build];
+    LDConfig *config = [[LDConfig alloc] initWithMobileKey:testMobileKey];
+    config.connectionTimeout = [NSNumber numberWithInt:testConnectionTimeout];
     XCTAssertEqualObjects([config mobileKey], testMobileKey);
     XCTAssertEqualObjects([config capacity], [NSNumber numberWithInt:kCapacity]);
     XCTAssertEqualObjects([config connectionTimeout], [NSNumber numberWithInt:testConnectionTimeout]);
@@ -84,10 +86,8 @@
 - (void)testConfigOverrideFlushInterval {
     NSString *testMobileKey = @"testMobileKey";
     int testFlushInterval = 5;
-    LDConfigBuilder *builder = [[LDConfigBuilder alloc] init];
-    [builder withMobileKey:testMobileKey];
-    [builder withFlushInterval:testFlushInterval];
-    LDConfig *config = [builder build];
+    LDConfig *config = [[LDConfig alloc] initWithMobileKey:testMobileKey];
+    config.flushInterval = [NSNumber numberWithInt:testFlushInterval];
     XCTAssertEqualObjects([config mobileKey], testMobileKey);
     XCTAssertEqualObjects([config capacity], [NSNumber numberWithInt:kCapacity]);
     XCTAssertEqualObjects([config connectionTimeout], [NSNumber numberWithInt:kConnectionTimeout]);
@@ -97,43 +97,34 @@
 
 - (void)testConfigOverridePollingInterval {
     NSString *testMobileKey = @"testMobileKey";
-    LDConfigBuilder *builder = [[LDConfigBuilder alloc] init];
-    [builder withMobileKey:testMobileKey];
-    
-    LDConfig *config = [builder build];
+    LDConfig *config = [[LDConfig alloc] initWithMobileKey:testMobileKey];
     XCTAssertEqualObjects([config mobileKey], testMobileKey);
     XCTAssertEqualObjects([config pollingInterval], [NSNumber numberWithInt:kDefaultPollingInterval]);
     XCTAssertFalse([config debugEnabled]);
-    
-    [builder withPollingInterval:5000];
-    config = [builder build];
-    XCTAssertEqualObjects([config pollingInterval], [NSNumber numberWithInt:5000]);
-    
-    [builder withPollingInterval:50];
-    config = [builder build];
+
+    NSNumber *pollingInterval = [NSNumber numberWithInt:5000];
+    config.pollingInterval = pollingInterval;
+    XCTAssertEqualObjects(config.pollingInterval, pollingInterval);
+
+    pollingInterval = [NSNumber numberWithInt:50];
+    config.pollingInterval = pollingInterval;
     XCTAssertEqualObjects([config pollingInterval], [NSNumber numberWithInt:kMinimumPollingInterval]);
 }
 
 - (void)testConfigOverrideStreaming {
     NSString *testMobileKey = @"testMobileKey";
-    LDConfigBuilder *builder = [[LDConfigBuilder alloc] init];
-    [builder withMobileKey:testMobileKey];
+    LDConfig *config = [[LDConfig alloc] initWithMobileKey:testMobileKey];
+    XCTAssertEqualObjects(config.mobileKey, testMobileKey);
+    XCTAssertTrue(config.streaming);
     
-    LDConfig *config = [builder build];
-    XCTAssertEqualObjects([config mobileKey], testMobileKey);
-    XCTAssertTrue([config streaming]);
-    
-    [builder withStreaming:NO];
-    config = [builder build];
-    XCTAssertFalse([config streaming]);
+    config.streaming = NO;
+    XCTAssertFalse(config.streaming);
 }
 
 - (void)testConfigOverrideDebug {
     NSString *testMobileKey = @"testMobileKey";
-    LDConfigBuilder *builder = [[LDConfigBuilder alloc] init];
-    [builder withMobileKey:testMobileKey];
-    [builder withDebugEnabled:YES];
-    LDConfig *config = [builder build];
+    LDConfig *config = [[LDConfig alloc] initWithMobileKey:testMobileKey];
+    config.debugEnabled = YES;
     XCTAssertEqualObjects([config mobileKey], testMobileKey);
     XCTAssertEqualObjects([config capacity], [NSNumber numberWithInt:kCapacity]);
     XCTAssertEqualObjects([config connectionTimeout], [NSNumber numberWithInt:kConnectionTimeout]);

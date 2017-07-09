@@ -5,162 +5,180 @@
 #import "LDConfig.h"
 #import "LDUtil.h"
 
-@implementation LDConfig
-
-@synthesize mobileKey, baseUrl, eventsUrl, capacity, connectionTimeout, flushInterval, pollingInterval, streaming, debugEnabled;
-
+@interface LDConfig()
+@property (nonatomic, copy, nonnull) NSString* mobileKey;
 @end
 
-@interface LDConfigBuilder() {
-    NSString *mobileKey;
-    NSString *baseUrl;
-    NSString *eventsUrl;
-    NSNumber *capacity;
-    NSNumber *connectionTimeout;
-    NSNumber *flushInterval;
-    NSNumber *pollingInterval;
-    NSNumber *backgroundFetchInterval;
-    BOOL streaming;
-    BOOL debugEnabled;
+@implementation LDConfig
+
+- (instancetype)initWithMobileKey:(NSString *)mobileKey {
+    if (!(self = [super init])) {
+        return nil;
+    }
+
+    self.mobileKey = mobileKey;
+    self.streaming = YES;
+    self.capacity = [NSNumber numberWithInt:kCapacity];
+    self.connectionTimeout = [NSNumber numberWithInt:kConnectionTimeout];
+    self.flushInterval = [NSNumber numberWithInt:kDefaultFlushInterval];
+    self.pollingInterval = [NSNumber numberWithInt:kDefaultPollingInterval];
+    self.backgroundFetchInterval = [NSNumber numberWithInt:kDefaultBackgroundFetchInterval];
+    self.baseUrl = kBaseUrl;
+    self.eventsUrl = kEventsUrl;
+
+    return self;
+}
+
+- (void)setMobileKey:(NSString *)mobileKey {
+    _mobileKey = [mobileKey copy];
+    DEBUG_LOG(@"Set LDConfig mobileKey: %@", mobileKey);
+}
+
+- (void)setBaseUrl:(NSString *)baseUrl {
+    if (baseUrl) {
+        DEBUG_LOG(@"Set LDConfig baseUrl: %@", baseUrl);
+        _baseUrl = [baseUrl copy];
+    } else {
+        DEBUG_LOG(@"Set LDConfig default baseUrl: %@", kBaseUrl);
+        _baseUrl = kBaseUrl;
+    }
+}
+
+- (void)setEventsUrl:(NSString *)eventsUrl {
+    if (eventsUrl) {
+        DEBUG_LOG(@"Set LDConfig eventsUrl: %@", eventsUrl);
+        _eventsUrl = [eventsUrl copy];
+    } else {
+        DEBUG_LOG(@"Set LDConfig default eventsUrl: %@", kEventsUrl);
+        _eventsUrl = kEventsUrl;
+    }
+}
+
+- (void)setCapacity:(NSNumber *)capacity {
+    if (capacity) {
+        DEBUG_LOG(@"Set LDConfig capacity: %@", capacity);
+        _capacity = capacity;
+    } else {
+        DEBUG_LOG(@"Set LDConfig default capacity: %d", kCapacity);
+        _capacity = [NSNumber numberWithInt:kCapacity];
+    }
+}
+
+- (void)setConnectionTimeout:(NSNumber *)connectionTimeout {
+    if (connectionTimeout) {
+        DEBUG_LOG(@"Set LDConfig timeout: %@", connectionTimeout);
+        _connectionTimeout = connectionTimeout;
+    } else {
+        DEBUG_LOG(@"Set LDConfig default timeout: %d", kConnectionTimeout);
+        _connectionTimeout = [NSNumber numberWithInt:kConnectionTimeout];
+    }
+}
+
+- (void)setFlushInterval:(NSNumber *)flushInterval {
+    if (flushInterval) {
+        DEBUG_LOG(@"Set LDConfig flush interval: %@", flushInterval);
+        _flushInterval = flushInterval;
+    } else {
+        DEBUG_LOG(@"Set LDConfig default flush interval: %d", kDefaultFlushInterval);
+        _flushInterval = [NSNumber numberWithInt:kDefaultFlushInterval];
+    }
+}
+
+- (void)setPollingInterval:(NSNumber *)pollingInterval {
+    if (pollingInterval) {
+        DEBUG_LOG(@"Set LDConfig polling interval: %@", pollingInterval);
+        _pollingInterval = [NSNumber numberWithInt:MAX(pollingInterval.intValue, kMinimumPollingInterval)];
+    } else {
+        DEBUG_LOG(@"Set LDConfig default polling interval: %d", kDefaultPollingInterval);
+        _pollingInterval = [NSNumber numberWithInt:kDefaultPollingInterval];
+    }
+}
+
+- (void)setBackgroundFetchInterval:(NSNumber *)backgroundFetchInterval {
+    if (backgroundFetchInterval) {
+        DEBUG_LOG(@"Set LDConfig background fetch interval: %@", backgroundFetchInterval);
+        _backgroundFetchInterval = backgroundFetchInterval;
+    } else {
+        DEBUG_LOG(@"Set LDConfig default background fetch interval: %d", kDefaultPollingInterval);
+        _backgroundFetchInterval = [NSNumber numberWithInt:kDefaultBackgroundFetchInterval];
+    }
+}
+
+- (void)setStreaming:(BOOL)streaming {
+    _streaming = streaming;
+    DEBUG_LOG(@"Set LDConfig streaming enabled: %d", streaming);
+}
+
+- (void)setDebugEnabled:(BOOL)debugEnabled {
+    _debugEnabled = debugEnabled;
+    DEBUG_LOG(@"Set LDConfig debug enabled: %d", debugEnabled);
 }
 
 @end
+
 
 @implementation LDConfigBuilder
 
 - (id)init {
     self = [super init];
-    streaming = YES;
+    self.config = [[LDConfig alloc] initWithMobileKey:@""];
     return self;
 }
 
-- (LDConfigBuilder *)withMobileKey:(NSString *)inputMobileKey
-{
-    mobileKey = inputMobileKey;
+-(LDConfigBuilder *)withMobileKey:(NSString *)mobileKey {
+    _config.mobileKey = mobileKey;
     return self;
 }
 
-- (LDConfigBuilder *)withBaseUrl:(NSString *)inputBaseUrl
-{
-    baseUrl = inputBaseUrl;
+-(LDConfigBuilder *)withBaseUrl:(NSString *)baseUrl {
+    _config.baseUrl = baseUrl;
     return self;
 }
 
--(LDConfigBuilder *)withEventsUrl:(NSString *)inputEventsUrl{
-    eventsUrl = inputEventsUrl;
+-(LDConfigBuilder *)withEventsUrl:(NSString *)eventsUrl {
+    _config.eventsUrl = eventsUrl;
     return self;
 }
 
-- (LDConfigBuilder *)withCapacity:(int)inputCapacity
-{
-    capacity = [NSNumber numberWithInt:inputCapacity];
+-(LDConfigBuilder *)withCapacity:(int)capacity {
+    _config.capacity = [NSNumber numberWithInt:capacity];
     return self;
 }
 
-- (LDConfigBuilder *)withConnectionTimeout:(int)inputConnectionTimeout
-{
-    connectionTimeout = [NSNumber numberWithInt:inputConnectionTimeout];
+-(LDConfigBuilder *)withConnectionTimeout:(int)connectionTimeout {
+    _config.connectionTimeout = [NSNumber numberWithInt:connectionTimeout];;
     return self;
 }
 
-- (LDConfigBuilder *)withFlushInterval:(int)inputFlushInterval
-{
-    flushInterval = [NSNumber numberWithInt:inputFlushInterval];
+- (LDConfigBuilder *)withFlushInterval:(int)flushInterval {
+    _config.flushInterval = [NSNumber numberWithInt:flushInterval];
     return self;
 }
 
-- (LDConfigBuilder *)withPollingInterval:(int)inputPollingInterval
-{
-    pollingInterval = [NSNumber numberWithInt:MAX(inputPollingInterval, kMinimumPollingInterval)];
+- (LDConfigBuilder *)withPollingInterval:(int)pollingInterval {
+    _config.pollingInterval = [NSNumber numberWithInt:pollingInterval];
     return self;
 }
 
 - (LDConfigBuilder *)withBackgroundFetchInterval:(int)inputBackgroundFetchInterval {
-    backgroundFetchInterval = [NSNumber numberWithInt:MAX(inputBackgroundFetchInterval, kMinimumBackgroundFetchInterval)];
+    _config.backgroundFetchInterval = [NSNumber numberWithInt:MAX(inputBackgroundFetchInterval, kMinimumBackgroundFetchInterval)];
     return self;
 }
 
-- (LDConfigBuilder *)withStreaming:(BOOL)inputStreamingEnabled
-{
-    streaming = inputStreamingEnabled;
+- (LDConfigBuilder *)withDebugEnabled:(BOOL)debugEnabled {
+    _config.debugEnabled = debugEnabled;
     return self;
 }
 
-- (LDConfigBuilder *)withDebugEnabled:(BOOL)inputDebugEnabled
-{
-    debugEnabled = inputDebugEnabled;
+-(LDConfigBuilder *)withStreaming:(BOOL)streamingEnabled {
+    _config.streaming = streamingEnabled;
     return self;
 }
 
--(LDConfig *)build
-{
-    DEBUG_LOGX(@"LDConfigBuilder build method called");
-    LDConfig *config = [[LDConfig alloc] init];
-    if (mobileKey) {
-        DEBUG_LOG(@"LDConfigBuilder building LDConfig with mobileKey: %@", mobileKey);
-        [config setMobileKey:mobileKey];
-    } else {
-        DEBUG_LOGX(@"LDConfigBuilder requires an MobileKey");
-        return nil;
-    }
-    if (baseUrl) {
-        DEBUG_LOG(@"LDConfigBuilder building LDConfig with baseUrl: %@", baseUrl);
-        [config setBaseUrl:baseUrl];
-    } else {
-        DEBUG_LOG(@"LDConfigBuilder building LDConfig with default baseUrl: %@", kBaseUrl);
-        [config setBaseUrl:kBaseUrl];
-    }
-    if (eventsUrl) {
-        DEBUG_LOG(@"LDConfigBuilder building LDConfig with eventsUrl: %@", eventsUrl);
-        [config setEventsUrl:eventsUrl];
-    } else {
-        DEBUG_LOG(@"LDConfigBuilder building LDConfig with default eventsUrl: %@", kEventsUrl);
-        [config setEventsUrl:kEventsUrl];
-    }
-    if (capacity) {
-        DEBUG_LOG(@"LDConfigBuilder building LDConfig with capacity: %@", capacity);
-        [config setCapacity:capacity];
-    } else {
-        DEBUG_LOG(@"LDConfigBuilder building LDConfig with default capacity: %d", kCapacity);
-        [config setCapacity:[NSNumber numberWithInt:kCapacity]];
-    }
-    if (connectionTimeout) {
-        DEBUG_LOG(@"LDConfigBuilder building LDConfig with timeout: %@", connectionTimeout);
-        [config setConnectionTimeout:connectionTimeout];
-    } else {
-        DEBUG_LOG(@"LDConfigBuilder building LDConfig with default timeout: %d", kConnectionTimeout);
-        [config setConnectionTimeout:[NSNumber numberWithInt:kConnectionTimeout]];
-    }
-    if (flushInterval) {
-        DEBUG_LOG(@"LDConfigBuilder building LDConfig with flush interval: %@", flushInterval);
-        [config setFlushInterval:flushInterval];
-    } else {
-        DEBUG_LOG(@"LDConfigBuilder building LDConfig with default flush interval: %d", kDefaultFlushInterval);
-        [config setFlushInterval:[NSNumber numberWithInt:kDefaultFlushInterval]];
-    }
-    if (pollingInterval) {
-        DEBUG_LOG(@"LDConfigBuilder building LDConfig with polling interval: %@", pollingInterval);
-        [config setPollingInterval:pollingInterval];
-    } else {
-        DEBUG_LOG(@"LDConfigBuilder building LDConfig with default polling interval: %d", kDefaultPollingInterval);
-        [config setPollingInterval:[NSNumber numberWithInt:kDefaultPollingInterval]];
-    }
-    if (backgroundFetchInterval) {
-        DEBUG_LOG(@"LDConfigBuilder building LDConfig with background fetch interval: %@", backgroundFetchInterval);
-        [config setBackgroundFetchInterval:backgroundFetchInterval];
-    } else {
-        DEBUG_LOG(@"LDConfigBuilder building LDConfig with default background fetch interval: %d", kDefaultBackgroundFetchInterval);
-        [config setBackgroundFetchInterval:[NSNumber numberWithInt:kDefaultBackgroundFetchInterval]];
-    }
-    
-    DEBUG_LOG(@"LDConfigBuilder building LDConfig with streaming enabled: %d", streaming);
-    [config setStreaming:streaming];
-    
-    if (debugEnabled) {
-        DEBUG_LOG(@"LDConfigBuilder building LDConfig with debug enabled: %d", debugEnabled);
-        [config setDebugEnabled:debugEnabled];
-    }
-    return config;
+-(LDConfig *)build {
+    return _config;
 }
 
 @end
+
+
