@@ -28,26 +28,7 @@
       selectedLauncherIdentifier = "Xcode.DebuggerFoundation.Launcher.LLDB"
       shouldUseLaunchSchemeArgsEnv = "YES">
       <Testables>
-         <TestableReference
-            skipped = "NO">
-            <BuildableReference
-               BuildableIdentifier = "primary"
-               BlueprintIdentifier = "690346C61E6872EA00E45133"
-               BuildableName = "DarklyTests.xctest"
-               BlueprintName = "DarklyTests"
-               ReferencedContainer = "container:Darkly.xcodeproj">
-            </BuildableReference>
-         </TestableReference>
       </Testables>
-      <MacroExpansion>
-         <BuildableReference
-            BuildableIdentifier = "primary"
-            BlueprintIdentifier = "69F3F67A1E6BF7C000079A09"
-            BuildableName = "Darkly.framework"
-            BlueprintName = "Darkly_tvOS"
-            ReferencedContainer = "container:Darkly.xcodeproj">
-         </BuildableReference>
-      </MacroExpansion>
       <AdditionalOptions>
       </AdditionalOptions>
    </TestAction>
