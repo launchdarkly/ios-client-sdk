@@ -61,8 +61,11 @@
     if (iUser.name) {
         userBuilder.name = iUser.name;
     }
+    if (iUser.firstName) {
+        userBuilder.firstName = iUser.firstName;
+    }
     if (iUser.lastName) {
-        userBuilder.lastName =  iUser.lastName;
+        userBuilder.lastName = iUser.lastName;
     }
     if (iUser.email) {
         userBuilder.email = iUser.email;
