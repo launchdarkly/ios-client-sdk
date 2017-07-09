@@ -22,6 +22,7 @@
     self.connectionTimeout = [NSNumber numberWithInt:kConnectionTimeout];
     self.flushInterval = [NSNumber numberWithInt:kDefaultFlushInterval];
     self.pollingInterval = [NSNumber numberWithInt:kDefaultPollingInterval];
+    self.backgroundFetchInterval = [NSNumber numberWithInt:kDefaultBackgroundFetchInterval];
     self.baseUrl = kBaseUrl;
     self.eventsUrl = kEventsUrl;
 
