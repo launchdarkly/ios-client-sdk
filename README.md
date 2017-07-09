@@ -27,7 +27,7 @@ source 'https://github.com/CocoaPods/Specs.git'
 platform :ios, '8.0'
 
 target 'TargetName' do
-pod 'LaunchDarkly', '~> 2.4.2'
+pod 'LaunchDarkly', '~> 2.5.0'
 end
 ```
 
@@ -51,7 +51,7 @@ $ brew install carthage
 To integrate LaunchDarkly into your Xcode project using Carthage, specify it in your `Cartfile`:
 
 ```ogdl
-github "launchdarkly/ios-client" ~> 2.4.2
+github "launchdarkly/ios-client" ~> 2.5.0
 ```
 
 Run `carthage` to build the framework and drag the built `Darkly.framework` into your Xcode project.
@@ -69,13 +69,12 @@ Quick setup
 
 3. Instantiate a new LDClient with your mobile key and user:
 
-        LDConfigBuilder *config = [[LDConfigBuilder alloc] init];
-        [config withMobileKey:@"YOUR_MOBILE_KEY"];
-    
+        LDConfig *config = [[LDConfig alloc] initWithMobileKey: @"YOUR_MOBILE_KEY"];
+
         LDUserBuilder *user = [[LDUserBuilder alloc] init];
-        user = [user withKey:@"aa0ceb"];
-    
-        [[LDClient sharedInstance] start:config userBuilder:user];
+        user.key = @"aa0ceb";
+
+        [[LDClient sharedInstance] start:config withUserBuilder:user];
 
 (Be sure to use a mobile key from your environments. Never embed a standard SDK key into a mobile application.)
 
