@@ -58,22 +58,22 @@ static NSString * const kEventRequestCompletedNotification = @"event_request_com
             [self addFeatureRequestHeaders:request];
             
             NSURLSessionDataTask *dataTask = [defaultSession dataTaskWithRequest:request completionHandler:^(NSData * _Nullable data, NSURLResponse * _Nullable response, NSError * _Nullable error) {
+                // This comes in on a background thread, there's no reason to do any additional processing of
+                // the data on the main thread -- just the notification of the delegate on the main thread.
+                BOOL configProcessed = NO;
+                NSDictionary *responseDict = nil;
+                if (!error) {
+                    NSError *jsonError;
+                    NSDictionary * responseObject = [NSJSONSerialization JSONObjectWithData:data options:kNilOptions error:&jsonError];
+                    if (responseObject) {
+                        configProcessed = YES;
+                        responseDict = responseObject;
+                    }
+                }
                 dispatch_semaphore_signal(semaphore);
                 dispatch_async(dispatch_get_main_queue(), ^{
-                    if (!error) {
-                        NSError *jsonError;
-                        NSMutableDictionary * responseObject = [NSJSONSerialization JSONObjectWithData:data options:kNilOptions error:&jsonError];
-                        if (responseObject) {
-                            [delegate processedConfig:YES jsonConfigDictionary:responseObject];
-                        } else {
-                            [delegate processedConfig:NO jsonConfigDictionary:nil];
-                        }
-                    }
-                    else{
-                        [delegate processedConfig:NO jsonConfigDictionary:nil];
-                    }
+                    [delegate processedConfig:configProcessed jsonConfigDictionary:responseDict];
                 });
-                
             }];
             
             [dataTask resume];

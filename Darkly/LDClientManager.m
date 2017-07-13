@@ -50,12 +50,7 @@
     [pollingMgr startEventPolling];
     
     if ([config streaming]) {
-        
-        eventSource = [EventSource eventSourceWithURL:[NSURL URLWithString:kStreamUrl] httpHeaders:[self httpHeadersForEventSource] timeoutInterval:[config.connectionTimeout doubleValue]];
-        
-        [eventSource onMessage:^(Event *e) {
-            [self syncWithServerForConfig];
-        }];
+        [self startEventSourceIfNecessary];
     }
     else{
         pollingMgr.configPollingIntervalMillis = [config.pollingInterval intValue] * kMillisInSecs;
@@ -71,7 +66,7 @@
     [pollingMgr stopEventPolling];
     
     if ([[[LDClient sharedInstance] ldConfig] streaming]) {
-        [eventSource close];
+        [self stopEventSource];
     }
     else{
         [pollingMgr stopConfigPolling];
@@ -87,7 +82,7 @@
     [pollingMgr suspendEventPolling];
     
     if ([[[LDClient sharedInstance] ldConfig] streaming]) {
-        [eventSource close];
+        [self stopEventSource];
     }
     else{
         [pollingMgr suspendConfigPolling];
@@ -107,11 +102,7 @@
     LDClient *client = [LDClient sharedInstance];
     
     if ([[client ldConfig] streaming]) {
-        eventSource = [EventSource eventSourceWithURL:[NSURL URLWithString:kStreamUrl] httpHeaders:[self httpHeadersForEventSource]];
-        
-        [eventSource onMessage:^(Event *e) {
-            [self syncWithServerForConfig];
-        }];
+        [self startEventSourceIfNecessary];
     }
     else{
         [pollingMgr resumeConfigPolling];
@@ -123,6 +114,27 @@
     LDConfig *config = [[LDClient sharedInstance] ldConfig];
     if (time >= [config.backgroundFetchInterval doubleValue]) {
         [self syncWithServerForConfig];
+    }
+}
+
+- (void)startEventSourceIfNecessary {
+    @synchronized (self) {
+        if (!eventSource) {
+            // The event source should *never* timeout, since it is a long-lived connection that could be
+            // idle for long periods of time.
+            eventSource = [EventSource eventSourceWithURL:[NSURL URLWithString:kStreamUrl] httpHeaders:[self httpHeadersForEventSource] timeoutInterval:[[NSDate distantFuture] timeIntervalSinceNow]];
+            
+            [eventSource onMessage:^(Event *e) {
+                [self syncWithServerForConfig];
+            }];
+        }
+    }
+}
+
+- (void)stopEventSource {
+    @synchronized (self) {
+        [eventSource close];
+        eventSource = nil;
     }
 }
 

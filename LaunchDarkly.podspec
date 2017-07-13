@@ -32,4 +32,12 @@ Pod::Spec.new do |s|
   s.subspec 'Core' do |ss|
     ss.dependency 'DarklyEventSource', '~> 2.0.0'
   end
+  
+  s.subspec 'Test' do |ss|
+    ss.dependency 'Core'
+    ss.dependency 'OCMock', '~> 3.1'
+    ss.dependency 'OHHTTPStubs', '~> 4.2'
+  end
+  
+  s.default_subspec = 'Core'
 end
