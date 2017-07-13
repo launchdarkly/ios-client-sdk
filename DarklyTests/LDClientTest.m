@@ -36,10 +36,35 @@
 }
 
 - (void)testStartWithoutConfig {
-    XCTAssertFalse([[LDClient sharedInstance] start:nil userBuilder:nil]);
+    XCTAssertFalse([[LDClient sharedInstance] start:nil withUserBuilder:nil]);
 }
 
 - (void)testStartWithValidConfig {
+    NSString *testMobileKey = @"testMobileKey";
+    LDConfig *config = [[LDConfig alloc] initWithMobileKey:testMobileKey];
+    LDClient *client = [LDClient sharedInstance];
+    BOOL didStart = [client start:config withUserBuilder:nil];
+    XCTAssertTrue(didStart);
+}
+
+- (void)testStartWithValidConfigMultipleTimes {
+    NSString *testMobileKey = @"testMobileKey";
+    LDConfig *config = [[LDConfig alloc] initWithMobileKey:testMobileKey];
+    XCTAssertTrue([[LDClient sharedInstance] start:config withUserBuilder:nil]);
+    XCTAssertFalse([[LDClient sharedInstance] start:config withUserBuilder:nil]);
+}
+
+- (void)testBoolVariationWithStart {
+    NSString *testMobileKey = @"testMobileKey";
+    LDConfig *config = [[LDConfig alloc] initWithMobileKey:testMobileKey];
+    [[LDClient sharedInstance] start:config withUserBuilder:nil];
+    BOOL boolValue = [[LDClient sharedInstance] boolVariation:@"test" fallback:YES];
+    XCTAssertTrue(boolValue);
+}
+
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdeprecated-declarations"
+- (void)testDeprecatedStartWithValidConfig {
     NSString *testMobileKey = @"testMobileKey";
     LDConfigBuilder *builder = [[LDConfigBuilder alloc] init];
     [builder withMobileKey:testMobileKey];
@@ -48,7 +73,7 @@
     XCTAssertTrue(didStart);
 }
 
-- (void)testStartWithValidConfigMultipleTimes {
+- (void)testDeprecatedStartWithValidConfigMultipleTimes {
     NSString *testMobileKey = @"testMobileKey";
     LDConfigBuilder *builder = [[LDConfigBuilder alloc] init];
     [builder withMobileKey:testMobileKey];
@@ -56,7 +81,7 @@
     XCTAssertFalse([[LDClient sharedInstance] start:builder userBuilder:nil]);
 }
 
-- (void)testBoolVariationWithStart {
+- (void)testDeprecatedBoolVariationWithStart {
     NSString *testMobileKey = @"testMobileKey";
     LDConfigBuilder *builder = [[LDConfigBuilder alloc] init];
     [builder withMobileKey:testMobileKey];
@@ -64,27 +89,27 @@
     BOOL boolValue = [[LDClient sharedInstance] boolVariation:@"test" fallback:YES];
     XCTAssertTrue(boolValue);
 }
+#pragma clang diagnostic pop
 
 - (void)testUserPersisted {
     NSString *testMobileKey = @"testMobileKey";
-    LDConfigBuilder *builder = [[LDConfigBuilder alloc] init];
-    [builder withMobileKey:testMobileKey];
+    LDConfig *config = [[LDConfig alloc] initWithMobileKey:testMobileKey];
     
     LDUserBuilder *userBuilder = [[LDUserBuilder alloc] init];
-    [userBuilder withKey:@"myKey"];
-    [userBuilder withEmail:@"my@email.com"];
+    userBuilder.key = @"myKey";
+    userBuilder.email = @"my@email.com";
     
-    [[LDClient sharedInstance] start:builder userBuilder:userBuilder];
+    [[LDClient sharedInstance] start:config withUserBuilder:userBuilder];
     BOOL toggleValue = [[LDClient sharedInstance] boolVariation:@"test" fallback:YES];
     XCTAssertTrue(toggleValue);
     
     LDUserBuilder *anotherUserBuilder = [[LDUserBuilder alloc] init];
-    [anotherUserBuilder withKey:@"myKey"];
+    anotherUserBuilder.key = @"myKey";
 
     LDUserModel *user = [[LDClient sharedInstance] ldUser];
     OCMStub([self.dataManagerMock findUserWithkey:[OCMArg any]]).andReturn(user);
 
-    [[LDClient sharedInstance] start:builder userBuilder:anotherUserBuilder];
+    [[LDClient sharedInstance] start:config withUserBuilder:anotherUserBuilder];
     user = [[LDClient sharedInstance] ldUser];
     
      XCTAssertEqual(user.email, @"my@email.com");
@@ -94,10 +119,9 @@
     NSString *toggleName = @"test";
     BOOL fallbackValue = YES;
     NSString *testMobileKey = @"testMobileKey";
-    LDConfigBuilder *builder = [[LDConfigBuilder alloc] init];
-    [builder withMobileKey:testMobileKey];
+    LDConfig *config = [[LDConfig alloc] initWithMobileKey:testMobileKey];
     OCMStub([self.dataManagerMock createFeatureEvent:[OCMArg any] keyValue:[OCMArg any] defaultKeyValue:[OCMArg any]]);
-    [[LDClient sharedInstance] start:builder userBuilder:nil];
+    [[LDClient sharedInstance] start:config withUserBuilder:nil];
     [[LDClient sharedInstance] boolVariation:toggleName fallback:fallbackValue];
     
     OCMVerify([self.dataManagerMock createFeatureEvent:toggleName keyValue:[NSNumber numberWithBool:fallbackValue] defaultKeyValue:[NSNumber numberWithBool:fallbackValue]]);
@@ -111,10 +135,8 @@
 - (void)testTrackWithStart {
     NSDictionary *customData = @{@"key": @"value"};
     NSString *testMobileKey = @"testMobileKey";
-    LDConfigBuilder *builder = [[LDConfigBuilder alloc] init];
-    [builder withMobileKey:testMobileKey];
-    [[LDClient sharedInstance] start:builder userBuilder:nil];
-    
+    LDConfig *config = [[LDConfig alloc] initWithMobileKey:testMobileKey];
+    [[LDClient sharedInstance] start:config withUserBuilder:nil];
     
     OCMStub([self.dataManagerMock createCustomEvent:[OCMArg isKindOfClass:[NSString class]]  withCustomValuesDictionary:[OCMArg isKindOfClass:[NSDictionary class]]]);
     
@@ -122,7 +144,6 @@
     
     OCMVerify([self.dataManagerMock createCustomEvent: @"test"
                            withCustomValuesDictionary: customData]);
-    
 }
 
 - (void)testOfflineWithoutStart {
@@ -131,12 +152,10 @@
 
 - (void)testOfflineWithStart {
     NSString *testMobileKey = @"testMobileKey";
-    LDConfigBuilder *builder = [[LDConfigBuilder alloc] init];
-    [builder withMobileKey:testMobileKey];
-    [[LDClient sharedInstance] start:builder userBuilder:nil];
+    LDConfig *config = [[LDConfig alloc] initWithMobileKey:testMobileKey];
+    [[LDClient sharedInstance] start:config withUserBuilder:nil];
     XCTAssertTrue([[LDClient sharedInstance] offline]);
 }
-
 
 - (void)testOnlineWithoutStart {
     XCTAssertFalse([[LDClient sharedInstance] online]);
@@ -144,9 +163,8 @@
 
 - (void)testOnlineWithStart {
     NSString *testMobileKey = @"testMobileKey";
-    LDConfigBuilder *builder = [[LDConfigBuilder alloc] init];
-    [builder withMobileKey:testMobileKey];
-    [[LDClient sharedInstance] start:builder userBuilder:nil];
+    LDConfig *config = [[LDConfig alloc] initWithMobileKey:testMobileKey];
+    [[LDClient sharedInstance] start:config withUserBuilder:nil];
     XCTAssertTrue([[LDClient sharedInstance] online]);
 }
 
@@ -156,9 +174,8 @@
 
 - (void)testFlushWithStart {
     NSString *testMobileKey = @"testMobileKey";
-    LDConfigBuilder *builder = [[LDConfigBuilder alloc] init];
-    [builder withMobileKey:testMobileKey];
-    [[LDClient sharedInstance] start:builder userBuilder:nil];
+    LDConfig *config = [[LDConfig alloc] initWithMobileKey:testMobileKey];
+    [[LDClient sharedInstance] start:config withUserBuilder:nil];
     XCTAssertTrue([[LDClient sharedInstance] flush]);
 }
 
@@ -168,12 +185,11 @@
 
 -(void)testUpdateUserWithStart {
     NSString *testMobileKey = @"testMobileKey";
-    LDConfigBuilder *configBuilder = [[LDConfigBuilder alloc] init];
-    [configBuilder withMobileKey:testMobileKey];
+    LDConfig *config = [[LDConfig alloc] initWithMobileKey:testMobileKey];
     LDUserBuilder *userBuilder = [[LDUserBuilder alloc] init];
     
     LDClient *ldClient = [LDClient sharedInstance];
-    [ldClient start:configBuilder userBuilder:userBuilder];
+    [ldClient start:config withUserBuilder:userBuilder];
     
     XCTAssertTrue([[LDClient sharedInstance] updateUser:[[LDUserBuilder alloc] init]]);
 }
@@ -184,22 +200,20 @@
 
 -(void)testCurrentUserBuilderWithStart {
     NSString *testMobileKey = @"testMobileKey";
-    LDConfigBuilder *configBuilder = [[LDConfigBuilder alloc] init];
-    [configBuilder withMobileKey:testMobileKey];
+    LDConfig *config = [[LDConfig alloc] initWithMobileKey:testMobileKey];
     LDUserBuilder *userBuilder = [[LDUserBuilder alloc] init];
     
     LDClient *ldClient = [LDClient sharedInstance];
-    [ldClient start:configBuilder userBuilder:userBuilder];
+    [ldClient start:config withUserBuilder:userBuilder];
     
     XCTAssertNotNil([[LDClient sharedInstance] currentUserBuilder]);
 }
 
 - (void)testDelegateSet {
     LDClient *ldClient = [LDClient sharedInstance];
-    
-    ldClient.delegate = self;
+
+    ldClient.delegate = (id<ClientDelegate>)self;
     XCTAssertEqualObjects(self, ldClient.delegate);
 }
-
 
 @end

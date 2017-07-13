@@ -27,14 +27,12 @@
     [super setUp];
     // Put setup code here. This method is called before the invocation of each test method in the class.
     LDUserBuilder *userBuilder = [[LDUserBuilder alloc] init];
-    userBuilder = [userBuilder withKey:@"jeff@test.com"];
+    userBuilder.key = @"jeff@test.com";
     LDUserModel *user = [userBuilder build];
-    
-    LDConfigBuilder *configBuilder = [[LDConfigBuilder alloc] init];
+    LDConfig *config = [[LDConfig alloc] initWithMobileKey:@"testMobileKey"];
     tempFlushInterval = 30;
-    configBuilder = [configBuilder withFlushInterval:tempFlushInterval];
-    LDConfig *config = [configBuilder build];
-    
+    config.flushInterval = [NSNumber numberWithInt:tempFlushInterval];
+
     ldClientMock = OCMClassMock([LDClient class]);
     OCMStub(ClassMethod([ldClientMock sharedInstance])).andReturn(ldClientMock);
     OCMStub([ldClientMock ldUser]).andReturn(user);

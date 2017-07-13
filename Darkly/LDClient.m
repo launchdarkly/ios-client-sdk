@@ -35,11 +35,15 @@
     return sharedLDClient;
 }
 
-- (BOOL)start:(LDConfigBuilder *)inputConfigBuilder userBuilder:(LDUserBuilder *)inputUserBuilder {
+-(BOOL)start:(LDConfigBuilder *)inputConfigBuilder userBuilder:(LDUserBuilder *)inputUserBuilder {
+    return [self start:[inputConfigBuilder build] withUserBuilder:inputUserBuilder];
+}
+
+- (BOOL)start:(LDConfig *)inputConfig withUserBuilder:(LDUserBuilder *)inputUserBuilder {
     DEBUG_LOGX(@"LDClient start method called");
     if (!clientStarted) {
-        if (inputConfigBuilder) {
-            ldConfig = [inputConfigBuilder build];
+        if (inputConfig) {
+            ldConfig = inputConfig;
             if (ldConfig) {
                 DarklyLogLevel logLevel =  DarklyLogLevelCriticalOnly;
                 if ([ldConfig debugEnabled]) {
@@ -95,7 +99,7 @@
 - (LDUserBuilder *)currentUserBuilder {
     DEBUG_LOGX(@"LDClient currentUserBuilder method called");
     if (clientStarted) {
-        return [LDUserBuilder retrieveCurrentBuilder:ldUser];
+        return [LDUserBuilder currentBuilder:ldUser];
     } else {
         DEBUG_LOGX(@"LDClient not started yet!");
         return nil;

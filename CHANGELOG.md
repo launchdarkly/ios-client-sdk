@@ -2,6 +2,17 @@
 
 All notable changes to the LaunchDarkly iOS SDK will be documented in this file. This project adheres to [Semantic Versioning](http://semver.org).
 
+## [2.5.0] - 2017-07-09
+### Added
+- The `name` property in `LDUserBuilder`, for setting a full name. This property complements the existing `firstName` and `lastName` properties.
+
+### Changed
+- `LDConfig` has been refactored to replace the Builder pattern expected with `LDConfigBuilder`. Thanks @petrucci34!
+
+### Deprecated
+- `LDConfigBuilder` has been deprecated and will be removed in the 3.0 release.
+- The `withXXX` methods of `LDUserBuilder` have been deprecated in favor of properties. These methods will be removed in the 3.0 release.
+
 ## [2.4.2] - 2017-06-20
 ### Fixed
 - Race condition in `LDPollingManager` identified by Thread Sanitizer

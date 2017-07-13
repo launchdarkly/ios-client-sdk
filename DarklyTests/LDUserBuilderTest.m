@@ -38,6 +38,7 @@
     NSString *testKey = @"testKey";
     NSString *testIp = @"testIp";
     NSString *testCountry = @"testCountry";
+    NSString *testName = @"testName";
     NSString *testFirstName = @"testFirstName";
     NSString *testLastName = @"testLastName";
     NSString *testEmail = @"testEmail";
@@ -46,20 +47,22 @@
     NSString *testCustomValue = @"testCustomValue";
     Boolean testAnonymous = NO;
     LDUserBuilder *builder = [[LDUserBuilder alloc] init];
-    builder = [builder withKey:testKey];
-    builder = [builder withIp:testIp];
-    builder = [builder withCountry:testCountry];
-    builder = [builder withFirstName:testFirstName];
-    builder = [builder withLastName:testLastName];
-    builder = [builder withEmail:testEmail];
-    builder = [builder withAvatar:testAvatar];
-    builder = [builder withCustomString:testCustomKey value:testCustomValue];
-    builder = [builder withAnonymous:testAnonymous];    
+    builder.key = testKey;
+    builder.ip = testIp;
+    builder.country = testCountry;
+    builder.name = testName;
+    builder.firstName = testFirstName;
+    builder.lastName = testLastName;
+    builder.email = testEmail;
+    builder.avatar = testAvatar;
+    builder.customDictionary[testCustomKey] = testCustomValue;
+    builder.isAnonymous = testAnonymous;
 
     LDUserModel *user = [builder build];
     XCTAssertEqualObjects([user key], testKey);
     XCTAssertEqualObjects([user ip], testIp);
     XCTAssertEqualObjects([user country], testCountry);
+    XCTAssertEqualObjects([user name], testName);
     XCTAssertEqualObjects([user firstName], testFirstName);
     XCTAssertEqualObjects([user lastName], testLastName);
     XCTAssertEqualObjects([user email], testEmail);
@@ -73,9 +76,9 @@
 - (void)testUserSetAnonymous {
     Boolean testAnonymous = YES;
     LDUserBuilder *builder = [[LDUserBuilder alloc] init];
-    builder = [builder withAnonymous:testAnonymous];
+    builder.isAnonymous = testAnonymous;
     LDUserModel *user = [builder build];
-    XCTAssertTrue([user anonymous]);
+    XCTAssertTrue(user.anonymous);
 }
 
 @end

@@ -7,149 +7,116 @@
 #import "LDUtil.h"
 #import "LDDataManager.h"
 
-@interface LDUserBuilder() {
-    NSString *key;
-    NSString *ip;
-    NSString *country;
-    NSString *firstName;
-    NSString *lastName;
-    NSString *email;
-    NSString *avatar;
-    NSMutableDictionary *customDict;
-    BOOL anonymous;
-}
-
-@end
-
 @implementation LDUserBuilder
 
 + (LDUserModel *)compareNewBuilder:(LDUserBuilder *)iBuilder withUser:(LDUserModel *)iUser {
-    if (iBuilder->key) {
-        [iUser key:iBuilder->key];
+    if (iBuilder.key) {
+        iUser.key = iBuilder.key;
     }
-    if (iBuilder->ip || [iUser ip]) {
-        [iUser setIp:iBuilder->ip];
+    if (iBuilder.ip || iUser.ip) {
+        iUser.ip = iBuilder.ip;
     }
-    if (iBuilder->country || [iUser country]) {
-        [iUser setCountry:iBuilder->country];
+    if (iBuilder.country || iUser.country) {
+        iUser.country = iBuilder.country;
     }
-    if (iBuilder->firstName || [iUser firstName]) {
-        [iUser setFirstName:iBuilder->firstName];
+    if (iBuilder.name || iUser.name) {
+        iUser.name = iBuilder.name;
     }
-    if (iBuilder->lastName || [iUser lastName]) {
-        [iUser setLastName:iBuilder->lastName];
+    if (iBuilder.firstName || iUser.firstName) {
+        iUser.firstName = iBuilder.firstName;
     }
-    if (iBuilder->email || [iUser email]) {
-        [iUser setEmail:iBuilder->email];
+    if (iBuilder.lastName || iUser.lastName) {
+        iUser.lastName = iBuilder.lastName;
     }
-    if (iBuilder->avatar || [iUser avatar]) {
-        [iUser setAvatar:iBuilder->avatar];
+    if (iBuilder.email || iUser.email) {
+        iUser.email = iBuilder.email;
     }
-    if ((iBuilder->customDict && [iBuilder->customDict count]) || ([iUser custom] && [[iUser custom] count])) {
-        [iUser setCustom:iBuilder->customDict];
+    if (iBuilder.avatar || iUser.avatar) {
+        iUser.avatar = iBuilder.avatar;
     }
-    [iUser setAnonymous:iBuilder->anonymous];
+    if ((iBuilder.customDictionary && iBuilder.customDictionary.count) || (iUser.custom && iUser.custom.count)) {
+        iUser.custom = iBuilder.customDictionary;
+    }
+    iUser.anonymous = iBuilder.isAnonymous;
+
     return iUser;
 }
 
-+ (LDUserBuilder *)retrieveCurrentBuilder:(LDUserModel *)iUser {
++(LDUserBuilder *)retrieveCurrentBuilder:(LDUserModel *)iUser {
+    return [LDUserBuilder currentBuilder:iUser];
+}
+
++ (LDUserBuilder *)currentBuilder:(LDUserModel *)iUser {
     LDUserBuilder *userBuilder = [[LDUserBuilder alloc] init];
-    if ([iUser key]) {
-        [userBuilder withKey:[iUser key]];
+
+    if (iUser.key) {
+        userBuilder.key = iUser.key;
     }
-    if ([iUser ip]) {
-        [userBuilder withIp:[iUser ip]];
+    if (iUser.ip) {
+        userBuilder.ip = iUser.ip;
     }
-    if ([iUser country]) {
-        [userBuilder withCountry:[iUser country]];
+    if (iUser.country) {
+        userBuilder.country = iUser.country;
     }
-    if ([iUser firstName]) {
-        [userBuilder withFirstName:[iUser firstName]];
+    if (iUser.name) {
+        userBuilder.name = iUser.name;
     }
-    if ([iUser lastName]) {
-        [userBuilder withLastName:[iUser lastName]];
+    if (iUser.firstName) {
+        userBuilder.firstName = iUser.firstName;
     }
-    if ([iUser email]) {
-        [userBuilder withEmail:[iUser email]];
+    if (iUser.lastName) {
+        userBuilder.lastName = iUser.lastName;
     }
-    if ([iUser avatar]) {
-        [userBuilder withAvatar:[iUser avatar]];
+    if (iUser.email) {
+        userBuilder.email = iUser.email;
     }
-    if ([iUser custom] && [[iUser custom] count]) {
-        [userBuilder withCustomDictionary:[[iUser custom] mutableCopy]];
+    if (iUser.avatar) {
+        userBuilder.avatar = iUser.avatar;
     }
-    [userBuilder withAnonymous:[iUser anonymous]];
+    if (iUser.custom && iUser.custom.count) {
+        userBuilder.customDictionary = [iUser.custom mutableCopy];
+    }
+    userBuilder.isAnonymous = iUser.anonymous;
+
     return userBuilder;
 }
 
 - (id)init {
     self = [super init];
-    customDict = [[NSMutableDictionary alloc] init];
+    _customDictionary = [[NSMutableDictionary alloc] init];
     return self;
 }
 
-- (LDUserBuilder *)withKey:(NSString *)inputKey
+- (void)customString:(NSString *)inputKey value:(NSString *)value
 {
-    key = inputKey;
-    return self;
+    if (!self.customDictionary) {
+        return;
+    }
+    self.customDictionary[inputKey] = value;
 }
 
-- (LDUserBuilder *)withIp:(NSString *)inputIp
+- (void)customBool:(NSString *)inputKey value:(BOOL)value
 {
-    ip = inputIp;
-    return self;
+    if (!self.customDictionary) {
+        return;
+    }
+    self.customDictionary[inputKey] = [NSNumber numberWithBool:value];
 }
 
-- (LDUserBuilder *)withCountry:(NSString *)inputCountry
+- (void)customNumber:(NSString *)inputKey value:(NSNumber *)value
 {
-    country = inputCountry;
-    return self;
+    if (!self.customDictionary) {
+        return;
+    }
+    self.customDictionary[inputKey] = value;
 }
 
-- (LDUserBuilder *)withFirstName:(NSString *)inputFirstName
+- (void)customArray:(NSString *)inputKey value:(NSArray *)value
 {
-    firstName = inputFirstName;
-    return self;
-}
+    if (!inputKey || !value) {
+        return;
+    }
 
-- (LDUserBuilder *)withLastName:(NSString *)inputLastName
-{
-    lastName = inputLastName;
-    return self;
-}
-
-- (LDUserBuilder *)withEmail:(NSString *)inputEmail
-{
-    email = inputEmail;
-    return self;
-}
-
-- (LDUserBuilder *)withAvatar:(NSString *)inputAvatar
-{
-    avatar = inputAvatar;
-    return self;
-}
-
-- (LDUserBuilder *)withCustomString:(NSString *)inputKey value:(NSString *)value
-{
-    [customDict setObject:value forKey:inputKey];
-    return self;
-}
-
-- (LDUserBuilder *)withCustomBool:(NSString *)inputKey value:(BOOL)value
-{
-    [customDict setObject:[NSNumber numberWithBool:value] forKey:inputKey];
-    return self;
-}
-
-- (LDUserBuilder *)withCustomNumber:(NSString *)inputKey value:(NSNumber *)value
-{
-    [customDict setObject:value forKey:inputKey];
-    return self;
-}
-
-- (LDUserBuilder *)withCustomArray:(NSString *)inputKey value:(NSArray *)value
-{
     NSMutableArray *resultArray = [[NSMutableArray alloc] init];
     for (id myArrayElement in value) {
         if ([myArrayElement isKindOfClass:[NSString class]]) {
@@ -162,34 +129,23 @@
             [resultArray addObject:[NSNumber numberWithBool:NO]];
         }
     }
-    if ([resultArray count]) {
-        [customDict setObject:resultArray forKey:inputKey];
+
+    if (resultArray.count) {
+        self.customDictionary[inputKey] = resultArray;
     }
-    return self;
 }
 
-- (LDUserBuilder *)withCustomDictionary:(NSMutableDictionary *)inputDictionary
-{
-    customDict = inputDictionary;
-    return self;
-}
-
-- (LDUserBuilder *)withAnonymous:(BOOL)inputAnonymous {
-    anonymous = inputAnonymous;
-    return self;
-}
-
--(LDUserModel *)build {
+- (LDUserModel *)build {
     DEBUG_LOGX(@"LDUserBuilder build method called");
     LDUserModel *user = nil;
     
-    if (key) {
-        user = [[LDDataManager sharedManager] findUserWithkey:key];
+    if (self.key) {
+        user = [[LDDataManager sharedManager] findUserWithkey:self.key];
         if(!user) {
             user = [[LDUserModel alloc] init];
         }
-        [user key:key];
-        DEBUG_LOG(@"LDUserBuilder building User with key: %@", key);
+        [user key:self.key];
+        DEBUG_LOG(@"LDUserBuilder building User with key: %@", self.key);
     } else {
         NSString *uniqueKey;
 #if TARGET_OS_IOS || TARGET_OS_TV
@@ -209,46 +165,148 @@
 
         user = [[LDUserModel alloc] init];
         [user key:uniqueKey];
-        if (!anonymous) {
-            Boolean currentAnonymous = YES;
-            [user setAnonymous:currentAnonymous];
+        if (!self.isAnonymous) {
+            user.anonymous = YES;
         }
     }
-    if (ip) {
-        DEBUG_LOG(@"LDUserBuilder building User with ip: %@", ip);
-        [user setIp:ip];
+    if (self.ip) {
+        DEBUG_LOG(@"LDUserBuilder building User with ip: %@", self.ip);
+        user.ip = self.ip;
     }
-    if (country) {
-        DEBUG_LOG(@"LDUserBuilder building User with country: %@", country);
-        [user setCountry:country];
+    if (self.country) {
+        DEBUG_LOG(@"LDUserBuilder building User with country: %@", self.country);
+        user.country = self.country;
     }
-    if (firstName) {
-        DEBUG_LOG(@"LDUserBuilder building User with firstName: %@", firstName);
-        [user setFirstName:firstName];
+    if (self.name) {
+        DEBUG_LOG(@"LDUserBuilder building User with name: %@", self.name);
+        user.name = self.name;        
     }
-    if (lastName) {
-        DEBUG_LOG(@"LDUserBuilder building User with lastName: %@", lastName);
-        [user setLastName:lastName];
+    if (self.firstName) {
+        DEBUG_LOG(@"LDUserBuilder building User with firstName: %@", self.firstName);
+        user.firstName = self.firstName;
     }
-    if (email) {
-        DEBUG_LOG(@"LDUserBuilder building User with email: %@", email);
-        [user setEmail:email];
+    if (self.lastName) {
+        DEBUG_LOG(@"LDUserBuilder building User with lastName: %@", self.lastName);
+        user.lastName = self.lastName;
     }
-    if (avatar) {
-        DEBUG_LOG(@"LDUserBuilder building User with avatar: %@", avatar);
-        [user setAvatar:avatar];
+    if (self.email) {
+        DEBUG_LOG(@"LDUserBuilder building User with email: %@", self.email);
+        user.email = self.email;
     }
-    if ([customDict count]) {
-        DEBUG_LOG(@"LDUserBuilder building User with custom: %@", customDict);
-        [user setCustom:customDict];
+    if (self.avatar) {
+        DEBUG_LOG(@"LDUserBuilder building User with avatar: %@", self.avatar);
+        user.avatar = self.avatar;
     }
-    if (anonymous) {
-        Boolean currentAnonymous = anonymous;
-        [user setAnonymous:currentAnonymous];
+    if (self.customDictionary && self.customDictionary.count) {
+        DEBUG_LOG(@"LDUserBuilder building User with custom: %@", self.customDictionary);
+        user.custom = self.customDictionary;
     }
-    DEBUG_LOG(@"LDUserBuilder building User with anonymous: %d", anonymous);
-    [[LDDataManager sharedManager] saveUser: user];
+
+    // TODO: Figure out if this check is really needed. Should user's anonymous not be updated if 'self.isAnonymous = NO'?
+    if (self.isAnonymous) {
+        user.anonymous = self.isAnonymous;
+    }
+    DEBUG_LOG(@"LDUserBuilder building User with anonymous: %d", self.isAnonymous);
+
+    [[LDDataManager sharedManager] saveUser:user];
     return user;
+}
+
+- (LDUserBuilder *)withKey:(NSString *)inputKey
+{
+    _key = inputKey;
+    return self;
+}
+
+- (LDUserBuilder *)withIp:(NSString *)inputIp
+{
+    _ip = inputIp;
+    return self;
+}
+
+- (LDUserBuilder *)withCountry:(NSString *)inputCountry
+{
+    _country = inputCountry;
+    return self;
+}
+
+- (LDUserBuilder *)withName:(NSString *)inputName
+{
+    _name = inputName;
+    return self;
+}
+
+- (LDUserBuilder *)withFirstName:(NSString *)inputFirstName
+{
+    _firstName = inputFirstName;
+    return self;
+}
+
+- (LDUserBuilder *)withLastName:(NSString *)inputLastName
+{
+    _lastName = inputLastName;
+    return self;
+}
+
+- (LDUserBuilder *)withEmail:(NSString *)inputEmail
+{
+    _email = inputEmail;
+    return self;
+}
+
+- (LDUserBuilder *)withAvatar:(NSString *)inputAvatar
+{
+    _avatar = inputAvatar;
+    return self;
+}
+
+- (LDUserBuilder *)withCustomString:(NSString *)inputKey value:(NSString *)value
+{
+    [_customDictionary setObject:value forKey:inputKey];
+    return self;
+}
+
+- (LDUserBuilder *)withCustomBool:(NSString *)inputKey value:(BOOL)value
+{
+    [_customDictionary setObject:[NSNumber numberWithBool:value] forKey:inputKey];
+    return self;
+}
+
+- (LDUserBuilder *)withCustomNumber:(NSString *)inputKey value:(NSNumber *)value
+{
+    [_customDictionary setObject:value forKey:inputKey];
+    return self;
+}
+
+- (LDUserBuilder *)withCustomArray:(NSString *)inputKey value:(NSArray *)value
+{
+    NSMutableArray *resultArray = [[NSMutableArray alloc] init];
+    for (id myArrayElement in value) {
+        if ([myArrayElement isKindOfClass:[NSString class]]) {
+            [resultArray addObject:myArrayElement];
+        } else if ([myArrayElement isKindOfClass:[NSNumber class]]) {
+            [resultArray addObject:myArrayElement];
+        } else if (myArrayElement) {
+            [resultArray addObject:[NSNumber numberWithBool:YES]];
+        } else {
+            [resultArray addObject:[NSNumber numberWithBool:NO]];
+        }
+    }
+    if ([resultArray count]) {
+        [_customDictionary setObject:resultArray forKey:inputKey];
+    }
+    return self;
+}
+
+- (LDUserBuilder *)withCustomDictionary:(NSMutableDictionary *)inputDictionary
+{
+    _customDictionary = inputDictionary;
+    return self;
+}
+
+- (LDUserBuilder *)withAnonymous:(BOOL)inputAnonymous {
+    _isAnonymous = inputAnonymous;
+    return self;
 }
 
 @end
