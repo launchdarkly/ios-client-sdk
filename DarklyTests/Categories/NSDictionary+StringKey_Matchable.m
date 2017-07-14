@@ -21,8 +21,11 @@
         id value = self[key];
         if ([value isKindOfClass:[NSString class]]) {
             NSString *stringValue = (NSString*)value;
-            NSString *otherStringValue = (NSString*)otherDictionary[key];
-            if ([stringValue isEqualToString:otherStringValue]) { continue; }
+            id otherValue = otherDictionary[key];
+            if ([otherValue isKindOfClass:[NSString class]]) {
+                NSString *otherStringValue = (NSString*)otherValue;
+                if ([stringValue isEqualToString:otherStringValue]) { continue; }
+            }
             [differingKeys addObject:key];
         }
         else if ([value isKindOfClass:[NSNumber class]]) {
