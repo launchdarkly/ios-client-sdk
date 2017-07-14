@@ -5,6 +5,7 @@
 #import <XCTest/XCTest.h>
 #import "LDUserModel.h"
 #import "LDDataManager.h"
+#import "NSDictionary+StringKey_Matchable.h"
 
 @interface LDUserModelTest : XCTestCase
 @end
@@ -88,8 +89,6 @@
     NSArray *configKeys = [[config2 objectForKey:@"featuresJsonDictionary"] allKeys];
     
     XCTAssertFalse([originalKeys isEqualToArray:configKeys]);
-    
-    NSLog(@"Stop");
 }
 
 - (void)testUserSave {
@@ -101,24 +100,34 @@
                                                                options:kNilOptions
                                                                  error:&error];
     
-    NSMutableDictionary *userDict = [[NSMutableDictionary alloc] initWithDictionary:@{ @"key": @"aKey",
-                                                                                       @"ip": @"123.456.789",
-                                                                                       @"country": @"USA",
-                                                                                       @"name": @"John Doe",
-                                                                                       @"firstName": @"John",
-                                                                                       @"lastName": @"Doe",
-                                                                                       @"email": @"jdub@g.com",
-                                                                                       @"avatar": @"foo",
-                                                                                       @"config": serverJson,
-                                                                                       @"custom": @{@"foo": @"Foo"},
-                                                                                       @"anonymous": @1,
-                                                                                       @"device": @"iPad",
-                                                                                       @"os": @"IOS 9.2.1"
-                                                                                       }];
+    NSMutableDictionary *customDictionary = [NSMutableDictionary dictionaryWithDictionary:@{@"foo": @"Foo",
+                                                                                            @"device": @"iPad",
+                                                                                            @"os": @"IOS 9.2.1"}];
+    
+    NSString *userKey = [[NSUUID UUID] UUIDString];
+    NSMutableDictionary *userDict = [NSMutableDictionary dictionaryWithDictionary: @{ @"key": userKey,
+                                                                                      @"ip": @"123.456.789",
+                                                                                      @"country": @"USA",
+                                                                                      @"firstName": @"John",
+                                                                                      @"lastName": @"Doe",
+                                                                                      @"email": @"jdub@g.com",
+                                                                                      @"avatar": @"foo",
+                                                                                      @"config": serverJson,
+                                                                                      @"custom": [customDictionary copy],
+                                                                                      @"anonymous": @1
+                                                                                      }];
     
     LDUserModel *user = [[LDUserModel alloc] initWithDictionary:userDict];
     [[LDDataManager sharedManager] saveUser:user];
-
+    
+    //Verify LDUserModel isEqual is behaving as expected...important for forward compatability
+    [customDictionary setObject:@"ios 10.3" forKey:@"os"];
+    [userDict setObject:[customDictionary copy] forKey:@"custom"];
+    LDUserModel *changedUser = [[LDUserModel alloc] initWithDictionary:userDict];
+    XCTAssertFalse([user isEqual:changedUser]);
+    
+    LDUserModel *retrievedUser = [[LDDataManager sharedManager] findUserWithkey:userKey];
+    XCTAssertTrue([user isEqual:retrievedUser]);
 }
 
 -(void)testUserBackwardsCompatibility {
@@ -131,7 +140,12 @@
                                                                options:kNilOptions
                                                                  error:&error];
     
-    NSMutableDictionary *userDict = [[NSMutableDictionary alloc] initWithDictionary:@{ @"key": @"aKey",
+    NSMutableDictionary *customDictionary = [NSMutableDictionary dictionaryWithDictionary:@{@"foo": @"Foo",
+                                                                                            @"device": @"iPad",
+                                                                                            @"os": @"IOS 9.2.1"}];
+
+    NSString *userKey = [[NSUUID UUID] UUIDString];
+    NSMutableDictionary *userDict = [[NSMutableDictionary alloc] initWithDictionary:@{ @"key": userKey,
                                                                                        @"ip": @"123.456.789",
                                                                                        @"country": @"USA",
                                                                                        @"name": @"John Doe",
@@ -140,10 +154,9 @@
                                                                                        @"email": @"jdub@g.com",
                                                                                        @"avatar": @"foo",
                                                                                        @"config": serverJson,
-                                                                                       @"custom": @{@"foo": @"Foo"},
+                                                                                       @"custom": [customDictionary copy],
                                                                                        @"anonymous": @1,
-                                                                                       @"device": @"iPad",
-                                                                                       @"os": @"IOS 9.2.1"
+                                                                                       @"device": @"iPad"
                                                                                        }];
     
     LDUserModel *user = [[LDUserModel alloc] initWithDictionary:userDict];
@@ -151,8 +164,34 @@
 #pragma clang diagnostic ignored "-Wdeprecated-declarations"
     [[LDDataManager sharedManager] saveUserDeprecated:user];
 #pragma clang diagnostic pop
-    [[LDDataManager sharedManager] saveUser:user];
     
+    //Verify LDUserModel isEqual is behaving as expected...important for forward compatability
+    [customDictionary setObject:@"ios 10.3" forKey:@"os"];
+    [userDict setObject:[customDictionary copy] forKey:@"custom"];
+    LDUserModel *changedUser = [[LDUserModel alloc] initWithDictionary:userDict];
+    XCTAssertFalse([user isEqual:changedUser]);
+    
+    LDUserModel *retrievedUser = [[LDDataManager sharedManager] findUserWithkey:userKey];
+    XCTAssertTrue([user isEqual:retrievedUser]);
 }
 
+@end
+
+@implementation LDUserModel (Equatable)
+-(BOOL) isEqual:(id)object {
+    LDUserModel *otherUser = (LDUserModel*)object;
+    if (otherUser == nil) {
+        return NO;
+    }
+    NSDictionary *dictionary = [self dictionaryValue];
+    NSDictionary *otherDictionary = [otherUser dictionaryValue];
+    NSArray *differingKeys = [dictionary keysWithDifferentValuesIn: otherDictionary];
+    //Ignore updatedAt
+    if ([differingKeys containsObject:@"updatedAt"]) {
+        NSMutableArray *differingKeysIgnoringSelectKeys = [[NSMutableArray alloc] initWithArray:[dictionary keysWithDifferentValuesIn: otherDictionary]];
+        [differingKeysIgnoringSelectKeys removeObject:@"updatedAt"];
+        differingKeys = [differingKeysIgnoringSelectKeys copy];
+    }
+    return (differingKeys == nil || [differingKeys count] == 0);
+ }
 @end

@@ -168,4 +168,8 @@ static NSString * const kOsKey = @"os";
     return value;
 }
 
+-(NSString*) description {
+    return [self.dictionaryValue description];
+}
+
 @end
