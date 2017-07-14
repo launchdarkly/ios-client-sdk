@@ -136,13 +136,6 @@
 - (nonnull LDUserBuilder *)withName:(nullable NSString *)name __deprecated_msg("Pass value directly to `name` instead");
 
 /**
- * Provide the name of the user. (Optional)
- *
- * @param name    the name of the user
- * @return the user builder
- */
-- (LDUserBuilder *)withName:(NSString *)name;
-/**
  * Provide the first name of the user. (Optional)
  *
  * @param firstName    the firstName of the user
