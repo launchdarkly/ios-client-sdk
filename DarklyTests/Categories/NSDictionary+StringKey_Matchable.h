@@ -9,6 +9,6 @@
 #import <Foundation/Foundation.h>
 
 @interface NSDictionary(StringKey_Matchable)
--(NSArray*)keysWithDifferentValuesIn:(id)object;
+-(NSArray*)keysWithDifferentValuesIn:(id)object ignoringKeys:(NSArray*)ignoreKeys;
 @end
 

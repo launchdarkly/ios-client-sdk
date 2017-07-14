@@ -5,7 +5,7 @@
 #import <XCTest/XCTest.h>
 #import "LDUserModel.h"
 #import "LDDataManager.h"
-#import "NSDictionary+StringKey_Matchable.h"
+#import "LDUserModel+Equatable.h"
 
 @interface LDUserModelTest : XCTestCase
 @end
@@ -121,13 +121,13 @@
     [[LDDataManager sharedManager] saveUser:user];
     
     //Verify LDUserModel isEqual is behaving as expected...important for forward compatability
-    [customDictionary setObject:@"ios 10.3" forKey:@"os"];
-    [userDict setObject:[customDictionary copy] forKey:@"custom"];
+    customDictionary[@"os"] = @"ios 10.3";
+    userDict[@"custom"] = [customDictionary copy];
     LDUserModel *changedUser = [[LDUserModel alloc] initWithDictionary:userDict];
-    XCTAssertFalse([user isEqual:changedUser]);
+    XCTAssertFalse([user isEqual:changedUser ignoringProperties:@[@"updatedAt"]]);
     
     LDUserModel *retrievedUser = [[LDDataManager sharedManager] findUserWithkey:userKey];
-    XCTAssertTrue([user isEqual:retrievedUser]);
+    XCTAssertTrue([user isEqual:retrievedUser ignoringProperties:@[@"updatedAt"]]);
 }
 
 -(void)testUserBackwardsCompatibility {
@@ -166,32 +166,13 @@
 #pragma clang diagnostic pop
     
     //Verify LDUserModel isEqual is behaving as expected...important for forward compatability
-    [customDictionary setObject:@"ios 10.3" forKey:@"os"];
-    [userDict setObject:[customDictionary copy] forKey:@"custom"];
+    customDictionary[@"os"] = @"ios 10.3";
+    userDict[@"custom"] = [customDictionary copy];
     LDUserModel *changedUser = [[LDUserModel alloc] initWithDictionary:userDict];
-    XCTAssertFalse([user isEqual:changedUser]);
+    XCTAssertFalse([user isEqual:changedUser ignoringProperties:@[@"updatedAt"]]);
     
     LDUserModel *retrievedUser = [[LDDataManager sharedManager] findUserWithkey:userKey];
-    XCTAssertTrue([user isEqual:retrievedUser]);
+    XCTAssertTrue([user isEqual:retrievedUser ignoringProperties:@[@"updatedAt"]]);
 }
 
-@end
-
-@implementation LDUserModel (Equatable)
--(BOOL) isEqual:(id)object {
-    LDUserModel *otherUser = (LDUserModel*)object;
-    if (otherUser == nil) {
-        return NO;
-    }
-    NSDictionary *dictionary = [self dictionaryValue];
-    NSDictionary *otherDictionary = [otherUser dictionaryValue];
-    NSArray *differingKeys = [dictionary keysWithDifferentValuesIn: otherDictionary];
-    //Ignore updatedAt
-    if ([differingKeys containsObject:@"updatedAt"]) {
-        NSMutableArray *differingKeysIgnoringSelectKeys = [[NSMutableArray alloc] initWithArray:[dictionary keysWithDifferentValuesIn: otherDictionary]];
-        [differingKeysIgnoringSelectKeys removeObject:@"updatedAt"];
-        differingKeys = [differingKeysIgnoringSelectKeys copy];
-    }
-    return (differingKeys == nil || [differingKeys count] == 0);
- }
 @end
