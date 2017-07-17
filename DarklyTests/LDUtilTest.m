@@ -36,16 +36,29 @@
 }
 
 - (void)testBase64UrlEncodeString {
-    NSString *input = @"{\"key\": \"test@test.com\", \"ip\": \"192.168.0.1\", \"custom\": {\"customer_ranking\": 10004}}";
-    NSString *desired = @"eyJrZXkiOiAidGVzdEB0ZXN0LmNvbSIsICJpcCI6ICIxOTIuMTY4LjAuMSIsICJjdXN0b20iOiB7ImN1c3RvbWVyX3JhbmtpbmciOiAxMDAwNH19";
-    NSString *output = [LDUtil base64UrlEncodeString:input];
-    XCTAssertEqualObjects(desired, output);
+    [[self unencodedStrings] enumerateObjectsUsingBlock:^(NSString * _Nonnull input, NSUInteger index, BOOL * _Nonnull stop) {
+        XCTAssertTrue([[self base64UrlEncodedStrings][index] isEqualToString:[LDUtil base64UrlEncodeString: input]]);
+    }];
 }
 
 - (void)testBase64UrlDecodeString {
-    NSString *input = @"eyJrZXkiOiAidGVzdEB0ZXN0LmNvbSIsICJpcCI6ICIxOTIuMTY4LjAuMSIsICJjdXN0b20iOiB7ImN1c3RvbWVyX3JhbmtpbmciOiAxMDAwNH19";
-    NSString *desired = @"{\"key\": \"test@test.com\", \"ip\": \"192.168.0.1\", \"custom\": {\"customer_ranking\": 10004}}";
-    NSString *output = [LDUtil base64UrlDecodeString:input];
-    XCTAssertEqualObjects(desired, output);
+    [[self base64UrlEncodedStrings] enumerateObjectsUsingBlock:^(NSString * _Nonnull input, NSUInteger index, BOOL * _Nonnull stop) {
+        XCTAssertTrue([[self unencodedStrings][index] isEqualToString:[LDUtil base64UrlDecodeString: input]]);
+    }];
 }
+
+- (NSArray<NSString *> *)unencodedStrings {
+    return @[@",\"city\":\"台北市 (Taipei)\"",
+             @" \"city\" : \"屏東縣 (Pingtung)\",",
+             @" \"city\" : \"Oakland\","
+             ];
+}
+
+- (NSArray<NSString *> *)base64UrlEncodedStrings {
+    return @[@"LCJjaXR5Ijoi5Y-w5YyX5biCIChUYWlwZWkpIg==",
+             @"ICJjaXR5IiA6ICLlsY_mnbHnuKMgKFBpbmd0dW5nKSIs",
+             @"ICJjaXR5IiA6ICJPYWtsYW5kIiw="
+             ];
+}
+
 @end
