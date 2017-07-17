@@ -117,6 +117,16 @@ static DarklyLogLevel gLogLevel = DarklyLogLevelCriticalOnly;
     return decodedString;
 }
 
++ (NSString *)base64UrlEncodeString:(NSString *)unencodedString
+{
+    return [[[LDUtil base64EncodeString:unencodedString] stringByReplacingOccurrencesOfString:@"+" withString:@"-"] stringByReplacingOccurrencesOfString:@"/" withString:@"_"];
+}
+
++ (NSString *)base64UrlDecodeString:(NSString *)encodedString
+{
+    return [LDUtil base64DecodeString: [[encodedString stringByReplacingOccurrencesOfString:@"_" withString:@"/"] stringByReplacingOccurrencesOfString:@"-" withString:@"+"]];
+}
+
 + (void)throwException:(NSString *)name reason:(NSString *)reason
 {
     NSException *e = [NSException

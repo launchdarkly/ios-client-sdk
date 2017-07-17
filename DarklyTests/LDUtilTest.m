@@ -35,4 +35,17 @@
     XCTAssertEqualObjects(desired, output);
 }
 
+- (void)testBase64UrlEncodeString {
+    NSString *input = @"{\"key\": \"test@test.com\", \"ip\": \"192.168.0.1\", \"custom\": {\"customer_ranking\": 10004}}";
+    NSString *desired = @"eyJrZXkiOiAidGVzdEB0ZXN0LmNvbSIsICJpcCI6ICIxOTIuMTY4LjAuMSIsICJjdXN0b20iOiB7ImN1c3RvbWVyX3JhbmtpbmciOiAxMDAwNH19";
+    NSString *output = [LDUtil base64UrlEncodeString:input];
+    XCTAssertEqualObjects(desired, output);
+}
+
+- (void)testBase64UrlDecodeString {
+    NSString *input = @"eyJrZXkiOiAidGVzdEB0ZXN0LmNvbSIsICJpcCI6ICIxOTIuMTY4LjAuMSIsICJjdXN0b20iOiB7ImN1c3RvbWVyX3JhbmtpbmciOiAxMDAwNH19";
+    NSString *desired = @"{\"key\": \"test@test.com\", \"ip\": \"192.168.0.1\", \"custom\": {\"customer_ranking\": 10004}}";
+    NSString *output = [LDUtil base64UrlDecodeString:input];
+    XCTAssertEqualObjects(desired, output);
+}
 @end
