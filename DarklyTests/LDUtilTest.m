@@ -47,6 +47,7 @@
     }];
 }
 
+//This list of strings was chosen so that the encoded values would contain a combination of the encoding specific characters and 0 to 2 padding characters
 - (NSArray<NSString *> *)unencodedStrings {
     return @[@",\"city\":\"台北市 (Taipei)\"",
              @" \"city\" : \"屏東縣 (Pingtung)\",",
