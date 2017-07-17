@@ -236,12 +236,6 @@
     return self;
 }
 
-- (LDUserBuilder *)withName:(NSString *)inputName
-{
-    name = inputName;
-    return self;
-}
-
 - (LDUserBuilder *)withFirstName:(NSString *)inputFirstName
 {
     _firstName = inputFirstName;
