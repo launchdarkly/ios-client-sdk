@@ -152,7 +152,7 @@
         if (currentUser) {
             NSString *jsonString = [currentUser convertToJson];
             if (jsonString) {
-                NSString *encodedUser = [LDUtil base64EncodeString:jsonString];
+                NSString *encodedUser = [LDUtil base64UrlEncodeString:jsonString];
                 [[LDRequestManager sharedInstance] performFeatureFlagRequest:encodedUser];
             } else {
                 DEBUG_LOGX(@"ClientManager is not able to convert user to json");
