@@ -159,6 +159,8 @@
 		8369477E1F1FF80A0047697C /* dictionaryConfigIsADictionary-KeyB.json in Resources */ = {isa = PBXBuildFile; fileRef = 836947771F1FF80A0047697C /* dictionaryConfigIsADictionary-KeyB.json */; };
 		8369477F1F1FF80A0047697C /* dictionaryConfigIsADictionary-KeyC-keyDValueDiffers.json in Resources */ = {isa = PBXBuildFile; fileRef = 836947781F1FF80A0047697C /* dictionaryConfigIsADictionary-KeyC-keyDValueDiffers.json */; };
 		836947801F1FF80A0047697C /* dictionaryConfigIsADictionary-KeyC.json in Resources */ = {isa = PBXBuildFile; fileRef = 836947791F1FF80A0047697C /* dictionaryConfigIsADictionary-KeyC.json */; };
+		836947831F20125F0047697C /* ldClientManagerTestConfigA.json in Resources */ = {isa = PBXBuildFile; fileRef = 836947811F20125F0047697C /* ldClientManagerTestConfigA.json */; };
+		836947841F20125F0047697C /* ldClientManagerTestConfigB.json in Resources */ = {isa = PBXBuildFile; fileRef = 836947821F20125F0047697C /* ldClientManagerTestConfigB.json */; };
 		BFAEEF645115F1F7FAB4C79D /* libPods-Darkly_osx.a in Frameworks */ = {isa = PBXBuildFile; fileRef = C59BD281845EC949FED485E0 /* libPods-Darkly_osx.a */; };
 		D0676DBF15A7B57BFC2505F6 /* libPods-DarklyTests.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 29E40506FC1C68667E74CDC9 /* libPods-DarklyTests.a */; };
 /* End PBXBuildFile section */
@@ -255,6 +257,8 @@
 		836947771F1FF80A0047697C /* dictionaryConfigIsADictionary-KeyB.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = "dictionaryConfigIsADictionary-KeyB.json"; sourceTree = "<group>"; };
 		836947781F1FF80A0047697C /* dictionaryConfigIsADictionary-KeyC-keyDValueDiffers.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = "dictionaryConfigIsADictionary-KeyC-keyDValueDiffers.json"; sourceTree = "<group>"; };
 		836947791F1FF80A0047697C /* dictionaryConfigIsADictionary-KeyC.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = "dictionaryConfigIsADictionary-KeyC.json"; sourceTree = "<group>"; };
+		836947811F20125F0047697C /* ldClientManagerTestConfigA.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = ldClientManagerTestConfigA.json; sourceTree = "<group>"; };
+		836947821F20125F0047697C /* ldClientManagerTestConfigB.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = ldClientManagerTestConfigB.json; sourceTree = "<group>"; };
 		8FD52A39AA4B4463CE25C809 /* libPods-Darkly_watchOS.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-Darkly_watchOS.a"; sourceTree = BUILT_PRODUCTS_DIR; };
 		9561B36D8DDA8283B3A20C24 /* Pods-Darkly_osx.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Darkly_osx.release.xcconfig"; path = "Pods/Target Support Files/Pods-Darkly_osx/Pods-Darkly_osx.release.xcconfig"; sourceTree = "<group>"; };
 		AE2313537C4DC7348E7403C2 /* Pods-Darkly_osx.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Darkly_osx.debug.xcconfig"; path = "Pods/Target Support Files/Pods-Darkly_osx/Pods-Darkly_osx.debug.xcconfig"; sourceTree = "<group>"; };
@@ -437,6 +441,8 @@
 				836947771F1FF80A0047697C /* dictionaryConfigIsADictionary-KeyB.json */,
 				836947781F1FF80A0047697C /* dictionaryConfigIsADictionary-KeyC-keyDValueDiffers.json */,
 				836947791F1FF80A0047697C /* dictionaryConfigIsADictionary-KeyC.json */,
+				836947811F20125F0047697C /* ldClientManagerTestConfigA.json */,
+				836947821F20125F0047697C /* ldClientManagerTestConfigB.json */,
 			);
 			path = Fixtures;
 			sourceTree = "<group>";
@@ -732,6 +738,7 @@
 			files = (
 				8369477D1F1FF80A0047697C /* dictionaryConfigIsADictionary-KeyB-124.json in Resources */,
 				836947801F1FF80A0047697C /* dictionaryConfigIsADictionary-KeyC.json in Resources */,
+				836947841F20125F0047697C /* ldClientManagerTestConfigB.json in Resources */,
 				836947711F1FF45B0047697C /* arrayConfigIsAnArray-Empty.json in Resources */,
 				8369476A1F1FF0A00047697C /* stringConfigIsAStringA-someString.json in Resources */,
 				836947691F1FF0A00047697C /* stringConfigIsAString-someStringA.json in Resources */,
@@ -740,6 +747,7 @@
 				6903472F1E689B9F00E45133 /* feature_flags.json in Resources */,
 				836947631F1FEEB40047697C /* numberConfigIsANumber-2.json in Resources */,
 				8369475C1F1FED400047697C /* boolConfigIsABool-false.json in Resources */,
+				836947831F20125F0047697C /* ldClientManagerTestConfigA.json in Resources */,
 				836947721F1FF45B0047697C /* arrayConfigIsAnArrayA-123.json in Resources */,
 				8369477C1F1FF80A0047697C /* dictionaryConfigIsADictionary-KeyA.json in Resources */,
 				8369475E1F1FED400047697C /* boolConfigIsABool2-true.json in Resources */,

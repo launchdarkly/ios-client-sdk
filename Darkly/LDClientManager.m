@@ -186,7 +186,7 @@
         // If Success
         LDFlagConfigModel *newConfig = [[LDFlagConfigModel alloc] initWithDictionary:jsonConfigDictionary];
         
-        if (newConfig) {
+        if (newConfig && ![[LDClient sharedInstance].ldUser.config isEqualToConfig:newConfig]) {
             // Overwrite Config with new config
             LDClient *client = [LDClient sharedInstance];
             LDUserModel *user = client.ldUser;
