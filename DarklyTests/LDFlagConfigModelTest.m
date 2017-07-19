@@ -48,7 +48,9 @@
     XCTAssertFalse([boolConfigIsABool_true isEqualToConfig:nil]);
     XCTAssertTrue([boolConfigIsABool_true isEqualToConfig:boolConfigIsABool_true]);
     XCTAssertTrue([boolConfigIsABool_true isEqualToConfig:boolConfigIsABool_trueCopy]);
+    XCTAssertNotNil(boolConfigIsABool_false);
     XCTAssertFalse([boolConfigIsABool_true isEqualToConfig:boolConfigIsABool_false]);
+    XCTAssertNotNil(boolConfigIsABool2_true);
     XCTAssertFalse([boolConfigIsABool_true isEqualToConfig:boolConfigIsABool2_true]);
     
     //number value json
@@ -60,7 +62,9 @@
     XCTAssertFalse([numberConfigIsANumber_1 isEqualToConfig:nil]);
     XCTAssertTrue([numberConfigIsANumber_1 isEqualToConfig:numberConfigIsANumber_1]);
     XCTAssertTrue([numberConfigIsANumber_1 isEqualToConfig:numberConfigIsANumber_1Copy]);
+    XCTAssertNotNil(numberConfigIsANumber_2);
     XCTAssertFalse([numberConfigIsANumber_1 isEqualToConfig:numberConfigIsANumber_2]);
+    XCTAssertNotNil(numberConfigIsANumber2_1);
     XCTAssertFalse([numberConfigIsANumber_1 isEqualToConfig:numberConfigIsANumber2_1]);
     
     //string value json
@@ -72,7 +76,9 @@
     XCTAssertFalse([stringConfigIsAString_someString isEqualToConfig:nil]);
     XCTAssertTrue([stringConfigIsAString_someString isEqualToConfig:stringConfigIsAString_someString]);
     XCTAssertTrue([stringConfigIsAString_someString isEqualToConfig:stringConfigIsAString_someStringCopy]);
+    XCTAssertNotNil(stringConfigIsAString_someStringA);
     XCTAssertFalse([stringConfigIsAString_someString isEqualToConfig:stringConfigIsAString_someStringA]);
+    XCTAssertNotNil(stringConfigIsAStringA_someString);
     XCTAssertFalse([stringConfigIsAString_someString isEqualToConfig:stringConfigIsAStringA_someString]);
     
     //array value json
@@ -85,8 +91,11 @@
     XCTAssertFalse([arrayConfigIsAnArray_123 isEqualToConfig:nil]);
     XCTAssertTrue([arrayConfigIsAnArray_123 isEqualToConfig:arrayConfigIsAnArray_123]);
     XCTAssertTrue([arrayConfigIsAnArray_123 isEqualToConfig:arrayConfigIsAnArray_123Copy]);
+    XCTAssertNotNil(arrayConfigIsAnArray_Empty);
     XCTAssertFalse([arrayConfigIsAnArray_123 isEqualToConfig:arrayConfigIsAnArray_Empty]);
+    XCTAssertNotNil(arrayConfigIsAnArray_1);
     XCTAssertFalse([arrayConfigIsAnArray_123 isEqualToConfig:arrayConfigIsAnArray_1]);
+    XCTAssertNotNil(arrayConfigIsAnArrayA_123);
     XCTAssertFalse([arrayConfigIsAnArray_123 isEqualToConfig:arrayConfigIsAnArrayA_123]);
     
     //dictionary value json
@@ -102,11 +111,17 @@
     XCTAssertFalse([dictionaryConfigIsADictionary_3Key isEqualToConfig:nil]);
     XCTAssertTrue([dictionaryConfigIsADictionary_3Key isEqualToConfig:dictionaryConfigIsADictionary_3Key]);
     XCTAssertTrue([dictionaryConfigIsADictionary_3Key isEqualToConfig:dictionaryConfigIsADictionary_3KeyCopy]);
+    XCTAssertNotNil(dictionaryConfigIsADictionary_Empty);
     XCTAssertFalse([dictionaryConfigIsADictionary_3Key isEqualToConfig:dictionaryConfigIsADictionary_Empty]);
+    XCTAssertNotNil(dictionaryConfigIsADictionary_KeyA);
     XCTAssertFalse([dictionaryConfigIsADictionary_3Key isEqualToConfig:dictionaryConfigIsADictionary_KeyA]);
+    XCTAssertNotNil(dictionaryConfigIsADictionary_KeyB);
     XCTAssertFalse([dictionaryConfigIsADictionary_3Key isEqualToConfig:dictionaryConfigIsADictionary_KeyB]);
+    XCTAssertNotNil(dictionaryConfigIsADictionary_KeyB_124);
     XCTAssertFalse([dictionaryConfigIsADictionary_3Key isEqualToConfig:dictionaryConfigIsADictionary_KeyB_124]);
+    XCTAssertNotNil(dictionaryConfigIsADictionary_KeyC);
     XCTAssertFalse([dictionaryConfigIsADictionary_3Key isEqualToConfig:dictionaryConfigIsADictionary_KeyC]);
+    XCTAssertNotNil(dictionaryConfigIsADictionary_KeyC_keyDValueDiffers);
     XCTAssertFalse([dictionaryConfigIsADictionary_3Key isEqualToConfig:dictionaryConfigIsADictionary_KeyC_keyDValueDiffers]);
 }
 
