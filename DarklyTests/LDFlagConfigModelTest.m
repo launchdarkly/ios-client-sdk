@@ -38,8 +38,7 @@
     XCTAssertFalse([config doesConfigFlagExist: @"caramel"]);
 }
 
-- (void)testIsEqualToConfig {
-    //bool value json
+- (void)testIsEqualToConfigBoolValues {
     LDFlagConfigModel *boolConfigIsABool_true = [[LDFlagConfigModel alloc] initWithDictionary:[self dictionaryFromJsonFileNamed:@"boolConfigIsABool-true"]];
     LDFlagConfigModel *boolConfigIsABool_trueCopy = [[LDFlagConfigModel alloc] initWithDictionary:[self dictionaryFromJsonFileNamed:@"boolConfigIsABool-true"]];
     LDFlagConfigModel *boolConfigIsABool_false = [[LDFlagConfigModel alloc] initWithDictionary:[self dictionaryFromJsonFileNamed:@"boolConfigIsABool-false"]];
@@ -53,7 +52,9 @@
     XCTAssertNotNil(boolConfigIsABool2_true);
     XCTAssertFalse([boolConfigIsABool_true isEqualToConfig:boolConfigIsABool2_true]);
     
-    //number value json
+}
+
+- (void)testIsEqualToConfigNumberValues {
     LDFlagConfigModel *numberConfigIsANumber_1 = [[LDFlagConfigModel alloc] initWithDictionary:[self dictionaryFromJsonFileNamed:@"numberConfigIsANumber-1"]];
     LDFlagConfigModel *numberConfigIsANumber_1Copy = [[LDFlagConfigModel alloc] initWithDictionary:[self dictionaryFromJsonFileNamed:@"numberConfigIsANumber-1"]];
     LDFlagConfigModel *numberConfigIsANumber_2 = [[LDFlagConfigModel alloc] initWithDictionary:[self dictionaryFromJsonFileNamed:@"numberConfigIsANumber-2"]];
@@ -66,8 +67,9 @@
     XCTAssertFalse([numberConfigIsANumber_1 isEqualToConfig:numberConfigIsANumber_2]);
     XCTAssertNotNil(numberConfigIsANumber2_1);
     XCTAssertFalse([numberConfigIsANumber_1 isEqualToConfig:numberConfigIsANumber2_1]);
-    
-    //string value json
+}
+
+- (void)testIsEqualToConfigStringValues {
     LDFlagConfigModel *stringConfigIsAString_someString = [[LDFlagConfigModel alloc] initWithDictionary:[self dictionaryFromJsonFileNamed:@"stringConfigIsAString-someString"]];
     LDFlagConfigModel *stringConfigIsAString_someStringCopy = [[LDFlagConfigModel alloc] initWithDictionary:[self dictionaryFromJsonFileNamed:@"stringConfigIsAString-someString"]];
     LDFlagConfigModel *stringConfigIsAString_someStringA = [[LDFlagConfigModel alloc] initWithDictionary:[self dictionaryFromJsonFileNamed:@"stringConfigIsAString-someStringA"]];
@@ -80,8 +82,9 @@
     XCTAssertFalse([stringConfigIsAString_someString isEqualToConfig:stringConfigIsAString_someStringA]);
     XCTAssertNotNil(stringConfigIsAStringA_someString);
     XCTAssertFalse([stringConfigIsAString_someString isEqualToConfig:stringConfigIsAStringA_someString]);
-    
-    //array value json
+}
+
+- (void)testIsEqualToConfigArrayValues {
     LDFlagConfigModel *arrayConfigIsAnArray_123 = [[LDFlagConfigModel alloc] initWithDictionary:[self dictionaryFromJsonFileNamed:@"arrayConfigIsAnArray-123"]];
     LDFlagConfigModel *arrayConfigIsAnArray_123Copy = [[LDFlagConfigModel alloc] initWithDictionary:[self dictionaryFromJsonFileNamed:@"arrayConfigIsAnArray-123"]];
     LDFlagConfigModel *arrayConfigIsAnArray_Empty = [[LDFlagConfigModel alloc] initWithDictionary:[self dictionaryFromJsonFileNamed:@"arrayConfigIsAnArray-Empty"]];
@@ -97,8 +100,9 @@
     XCTAssertFalse([arrayConfigIsAnArray_123 isEqualToConfig:arrayConfigIsAnArray_1]);
     XCTAssertNotNil(arrayConfigIsAnArrayA_123);
     XCTAssertFalse([arrayConfigIsAnArray_123 isEqualToConfig:arrayConfigIsAnArrayA_123]);
-    
-    //dictionary value json
+}
+
+- (void)testIsEqualToConfigDictionaryValues {
     LDFlagConfigModel *dictionaryConfigIsADictionary_3Key = [[LDFlagConfigModel alloc] initWithDictionary:[self dictionaryFromJsonFileNamed:@"dictionaryConfigIsADictionary-3Key"]];
     LDFlagConfigModel *dictionaryConfigIsADictionary_3KeyCopy = [[LDFlagConfigModel alloc] initWithDictionary:[self dictionaryFromJsonFileNamed:@"dictionaryConfigIsADictionary-3Key"]];
     LDFlagConfigModel *dictionaryConfigIsADictionary_Empty = [[LDFlagConfigModel alloc] initWithDictionary:[self dictionaryFromJsonFileNamed:@"dictionaryConfigIsADictionary-Empty"]];
