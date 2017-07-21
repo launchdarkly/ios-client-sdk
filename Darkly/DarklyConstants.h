@@ -38,6 +38,7 @@ extern NSString * const kUserDictionaryStorageKey;
 extern NSString * const kDeviceIdentifierKey;
 extern NSString *const kLDUserUpdatedNotification;
 extern NSString *const kLDFlagConfigChangedNotification;
+extern NSString *const kLDServerConnectionUnavailable;
 extern NSString *const kLDBackgroundFetchInitiated;
 extern int const kCapacity;
 extern int const kConnectionTimeout;
