@@ -26,6 +26,7 @@ NSString * const kDeviceIdentifierKey = @"ldDeviceIdentifier";
 NSString * const kLDUserUpdatedNotification = @"Darkly.UserUpdatedNotification";
 NSString * const kLDBackgroundFetchInitiated = @"Darkly.BackgroundFetchInitiated";
 NSString *const kLDFlagConfigChangedNotification = @"Darkly.FlagConfigChangedNotification";
+NSString *const kLDServerConnectionUnavailable = @"Darkly.ServerConnectionUnavailable";
 int const kCapacity = 100;
 int const kConnectionTimeout = 10;
 int const kDefaultFlushInterval = 30;
