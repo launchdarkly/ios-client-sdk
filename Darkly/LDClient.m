@@ -29,6 +29,9 @@
                                                  selector:@selector(userUpdated)
                                                      name: kLDUserUpdatedNotification object: nil];
         [[NSNotificationCenter defaultCenter] addObserver: sharedLDClient
+                                                 selector:@selector(serverUnavailable)
+                                                     name:kLDServerConnectionUnavailable object:nil];
+        [[NSNotificationCenter defaultCenter] addObserver: sharedLDClient
                                                  selector:@selector(configFlagUpdated:)
                                                      name:kLDFlagConfigChangedNotification object:nil];
     });
@@ -288,6 +291,13 @@
 -(void)userUpdated {
     if (self.delegate && [self.delegate respondsToSelector:@selector(userDidUpdate)]) {
         [self.delegate userDidUpdate];
+    }
+}
+
+// Notification handler for ClientManager server connection failed
+-(void)serverUnavailable {
+    if (self.delegate && [self.delegate respondsToSelector:@selector(serverConnectionUnavailable)]) {
+        [self.delegate serverConnectionUnavailable];
     }
 }
 

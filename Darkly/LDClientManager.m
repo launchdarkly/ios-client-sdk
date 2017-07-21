@@ -199,6 +199,8 @@
         }
     } else {
         DEBUG_LOGX(@"ClientManager processedConfig method called after receiving failure response from server");
+        [[NSNotificationCenter defaultCenter] postNotificationName: kLDServerConnectionUnavailable
+                                                            object: nil];
     }
 }
     

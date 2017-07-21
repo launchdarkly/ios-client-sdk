@@ -14,6 +14,7 @@
 @optional
 -(void)userDidUpdate;
 -(void)featureFlagDidUpdate:(NSString *)key;
+-(void)serverConnectionUnavailable;
 @end
 
 @interface LDClient : NSObject
