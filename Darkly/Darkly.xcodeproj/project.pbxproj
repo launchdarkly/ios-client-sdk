@@ -10,6 +10,14 @@
 		8354EFCC1F22491C00C05156 /* Darkly.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 8354EFC21F22491C00C05156 /* Darkly.framework */; };
 		8354EFD11F22491C00C05156 /* DarklyTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8354EFD01F22491C00C05156 /* DarklyTests.swift */; };
 		8354EFD31F22491C00C05156 /* Darkly.h in Headers */ = {isa = PBXBuildFile; fileRef = 8354EFC51F22491C00C05156 /* Darkly.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		8354EFE01F26380700C05156 /* LDClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8354EFDC1F26380700C05156 /* LDClient.swift */; };
+		8354EFE11F26380700C05156 /* LDClientConfig.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8354EFDD1F26380700C05156 /* LDClientConfig.swift */; };
+		8354EFE21F26380700C05156 /* LDEvent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8354EFDE1F26380700C05156 /* LDEvent.swift */; };
+		8354EFE31F26380700C05156 /* LDUser.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8354EFDF1F26380700C05156 /* LDUser.swift */; };
+		8354EFE51F263DAC00C05156 /* LDFeatureFlag.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8354EFE41F263DAC00C05156 /* LDFeatureFlag.swift */; };
+		83FEF8DB1F2666DA001CF12C /* LDUserManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 83FEF8DA1F2666DA001CF12C /* LDUserManager.swift */; };
+		83FEF8DD1F266742001CF12C /* LDFlagManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 83FEF8DC1F266742001CF12C /* LDFlagManager.swift */; };
+		83FEF8DF1F2667E4001CF12C /* LDEventManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 83FEF8DE1F2667E4001CF12C /* LDEventManager.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -29,6 +37,14 @@
 		8354EFCB1F22491C00C05156 /* DarklyTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = DarklyTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		8354EFD01F22491C00C05156 /* DarklyTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DarklyTests.swift; sourceTree = "<group>"; };
 		8354EFD21F22491C00C05156 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		8354EFDC1F26380700C05156 /* LDClient.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = LDClient.swift; sourceTree = "<group>"; };
+		8354EFDD1F26380700C05156 /* LDClientConfig.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = LDClientConfig.swift; sourceTree = "<group>"; };
+		8354EFDE1F26380700C05156 /* LDEvent.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = LDEvent.swift; sourceTree = "<group>"; };
+		8354EFDF1F26380700C05156 /* LDUser.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = LDUser.swift; sourceTree = "<group>"; };
+		8354EFE41F263DAC00C05156 /* LDFeatureFlag.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = LDFeatureFlag.swift; sourceTree = "<group>"; };
+		83FEF8DA1F2666DA001CF12C /* LDUserManager.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = LDUserManager.swift; sourceTree = "<group>"; };
+		83FEF8DC1F266742001CF12C /* LDFlagManager.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = LDFlagManager.swift; sourceTree = "<group>"; };
+		83FEF8DE1F2667E4001CF12C /* LDEventManager.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = LDEventManager.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -73,6 +89,10 @@
 			children = (
 				8354EFC51F22491C00C05156 /* Darkly.h */,
 				8354EFC61F22491C00C05156 /* Info.plist */,
+				8354EFDD1F26380700C05156 /* LDClientConfig.swift */,
+				8354EFDC1F26380700C05156 /* LDClient.swift */,
+				8354EFE61F263E4200C05156 /* Models */,
+				83FEF8D91F2666BF001CF12C /* Managers */,
 			);
 			path = Darkly;
 			sourceTree = "<group>";
@@ -84,6 +104,26 @@
 				8354EFD21F22491C00C05156 /* Info.plist */,
 			);
 			path = DarklyTests;
+			sourceTree = "<group>";
+		};
+		8354EFE61F263E4200C05156 /* Models */ = {
+			isa = PBXGroup;
+			children = (
+				8354EFDF1F26380700C05156 /* LDUser.swift */,
+				8354EFE41F263DAC00C05156 /* LDFeatureFlag.swift */,
+				8354EFDE1F26380700C05156 /* LDEvent.swift */,
+			);
+			name = Models;
+			sourceTree = "<group>";
+		};
+		83FEF8D91F2666BF001CF12C /* Managers */ = {
+			isa = PBXGroup;
+			children = (
+				83FEF8DA1F2666DA001CF12C /* LDUserManager.swift */,
+				83FEF8DC1F266742001CF12C /* LDFlagManager.swift */,
+				83FEF8DE1F2667E4001CF12C /* LDEventManager.swift */,
+			);
+			name = Managers;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -148,6 +188,7 @@
 				TargetAttributes = {
 					8354EFC11F22491C00C05156 = {
 						CreatedOnToolsVersion = 8.3.3;
+						LastSwiftMigration = 0830;
 						ProvisioningStyle = Automatic;
 					};
 					8354EFCA1F22491C00C05156 = {
@@ -196,6 +237,14 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				83FEF8DD1F266742001CF12C /* LDFlagManager.swift in Sources */,
+				8354EFE51F263DAC00C05156 /* LDFeatureFlag.swift in Sources */,
+				8354EFE21F26380700C05156 /* LDEvent.swift in Sources */,
+				8354EFE11F26380700C05156 /* LDClientConfig.swift in Sources */,
+				83FEF8DF1F2667E4001CF12C /* LDEventManager.swift in Sources */,
+				8354EFE31F26380700C05156 /* LDUser.swift in Sources */,
+				83FEF8DB1F2666DA001CF12C /* LDUserManager.swift in Sources */,
+				8354EFE01F26380700C05156 /* LDClient.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -323,6 +372,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES;
+				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_IDENTITY = "";
 				DEFINES_MODULE = YES;
 				DYLIB_COMPATIBILITY_VERSION = 1;
@@ -337,6 +387,7 @@
 				PRODUCT_BUNDLE_IDENTIFIER = com.launchdarkly.Darkly;
 				PRODUCT_NAME = Darkly;
 				SKIP_INSTALL = YES;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 				SWIFT_VERSION = 3.0;
 			};
 			name = Debug;
@@ -345,6 +396,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES;
+				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_IDENTITY = "";
 				DEFINES_MODULE = YES;
 				DYLIB_COMPATIBILITY_VERSION = 1;
@@ -366,6 +418,7 @@
 		8354EFDA1F22491C00C05156 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
 				INFOPLIST_FILE = DarklyTests/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";
 				PRODUCT_BUNDLE_IDENTIFIER = com.launchdarkly.DarklyTests;
@@ -377,6 +430,7 @@
 		8354EFDB1F22491C00C05156 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
 				INFOPLIST_FILE = DarklyTests/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";
 				PRODUCT_BUNDLE_IDENTIFIER = com.launchdarkly.DarklyTests;

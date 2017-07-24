@@ -15,7 +15,7 @@
             <BuildableReference
                BuildableIdentifier = "primary"
                BlueprintIdentifier = "8354EFC11F22491C00C05156"
-               BuildableName = "Darkly_iOS.framework"
+               BuildableName = "Darkly.framework"
                BlueprintName = "Darkly_iOS"
                ReferencedContainer = "container:Darkly.xcodeproj">
             </BuildableReference>
@@ -46,7 +46,7 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "8354EFC11F22491C00C05156"
-            BuildableName = "Darkly_iOS.framework"
+            BuildableName = "Darkly.framework"
             BlueprintName = "Darkly_iOS"
             ReferencedContainer = "container:Darkly.xcodeproj">
          </BuildableReference>
@@ -64,7 +64,7 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "8354EFC11F22491C00C05156"
-            BuildableName = "Darkly_iOS.framework"
+            BuildableName = "Darkly.framework"
             BlueprintName = "Darkly_iOS"
             ReferencedContainer = "container:Darkly.xcodeproj">
          </BuildableReference>
