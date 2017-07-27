@@ -43,7 +43,7 @@ static NSString * const kFeatureJsonValueName = @"value";
     NSMutableDictionary *dictionary = [[NSMutableDictionary alloc] init];
     
     self.featuresJsonDictionary ? [dictionary setObject:[self.featuresJsonDictionary mutableCopy] forKey: kFeaturesJsonDictionaryKey] : nil;
-    return [[dictionary removeNilValues] copy];
+    return [[dictionary removeNullValues] copy];
 }
 
 -(NSObject*) configFlagValue: ( NSString * __nonnull )keyName {

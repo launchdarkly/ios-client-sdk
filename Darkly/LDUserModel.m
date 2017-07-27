@@ -32,7 +32,7 @@ static NSString * const kOsKey = @"os";
     return [self dictionaryValueWithConfig:YES];
 }
 
--(NSDictionary *)dictionaryValueWithConfig:(BOOL)withConfig {
+-(NSDictionary *)dictionaryValueWithConfig:(BOOL)includeConfig {
     NSMutableDictionary *dictionary = [[NSMutableDictionary alloc] init];
     
     NSDateFormatter *formatter = [[NSDateFormatter alloc] init];
@@ -57,7 +57,9 @@ static NSString * const kOsKey = @"os";
     
     [dictionary setObject:customDict forKey:kCustomKey];
     
-    self.config.featuresJsonDictionary ? [dictionary setObject:[[self.config dictionaryValue] objectForKey:kFeaturesJsonDictionaryKey] forKey:kConfigKey] : nil;
+    if (includeConfig && self.config.featuresJsonDictionary) {
+        [dictionary setObject:[[self.config dictionaryValue] objectForKey:kFeaturesJsonDictionaryKey] forKey:kConfigKey];
+    }
     
     return dictionary;
 }
@@ -157,7 +159,7 @@ static NSString * const kOsKey = @"os";
 - (nonnull NSString *) convertToJson {
     NSError *writeError = nil;
     
-    NSData *jsonData = [NSJSONSerialization dataWithJSONObject:[self dictionaryValue] options:0 error:&writeError];
+    NSData *jsonData = [NSJSONSerialization dataWithJSONObject:[self dictionaryValueWithConfig:NO] options:0 error:&writeError];
     NSString *result = [[NSString alloc] initWithData:jsonData encoding:NSUTF8StringEncoding];
     
     return result;

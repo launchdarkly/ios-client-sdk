@@ -6,6 +6,7 @@
 #import "LDUserModel.h"
 #import "LDDataManager.h"
 #import "LDUserModel+Equatable.h"
+#import "LDUserModel+JsonDecodeable.h"
 #import "NSMutableDictionary+NullRemovable.h"
 #import "NSString+RemoveWhitespace.h"
 
@@ -67,9 +68,16 @@
 -(void)testConvertToJson {
     NSMutableDictionary *userDict = [self userDictionaryWithUserKey:@"aKey" userName:@"John_Doe" customDictionary:@{@"foo": @"Foo"}];   //Keep whitespace out of strings!!
     LDUserModel *user = [[LDUserModel alloc] initWithDictionary:userDict];
+    [self validateUserModelIsEqualBehaviorUsingUserDictionary:userDict];
     NSString *jsonUser = [user convertToJson];
+
+    //jsonUser contains no whitespace
     NSString *strippedJsonUser = [jsonUser stringByRemovingWhitespace];
     XCTAssertTrue([jsonUser isEqualToString:strippedJsonUser]);
+    
+    //jsonUser converts to the same user minus config
+    NSArray<NSString*> *ignoredProperties = @[@"config", @"updatedAt"];
+    XCTAssertTrue([user isEqual:[LDUserModel userFrom:jsonUser] ignoringProperties:ignoredProperties]);
 }
 
 - (void)testUserSave {
@@ -100,9 +108,9 @@
 }
 
 #pragma mark - Helpers
-///Trims out nil values, and config
+///Trims out null values, and config
 -(NSDictionary*)targetUserDictionaryFrom:(NSDictionary*)userDictionary withConfig:(BOOL)withConfig {
-    NSMutableDictionary *target = [[NSMutableDictionary dictionaryWithDictionary:userDictionary] removeNilValues];
+    NSMutableDictionary *target = [[NSMutableDictionary dictionaryWithDictionary:userDictionary] removeNullValues];
     
     //Remove config if needed
     target[@"config"] = withConfig ? target[@"config"] : nil;

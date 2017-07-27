@@ -146,6 +146,7 @@
 		832C78891F296F3400E334A2 /* NSMutableDictionary+NullRemovable.m in Sources */ = {isa = PBXBuildFile; fileRef = 832C78821F296F3400E334A2 /* NSMutableDictionary+NullRemovable.m */; };
 		832C788A1F296F3400E334A2 /* NSMutableDictionary+NullRemovable.m in Sources */ = {isa = PBXBuildFile; fileRef = 832C78821F296F3400E334A2 /* NSMutableDictionary+NullRemovable.m */; };
 		832C788D1F2977B800E334A2 /* NSString+RemoveWhitespace.m in Sources */ = {isa = PBXBuildFile; fileRef = 832C788C1F2977B800E334A2 /* NSString+RemoveWhitespace.m */; };
+		832C78901F2A8DF600E334A2 /* LDUserModel+JsonDecodeable.m in Sources */ = {isa = PBXBuildFile; fileRef = 832C788F1F2A8DF600E334A2 /* LDUserModel+JsonDecodeable.m */; };
 		8349F51E1F19352300B1F3DB /* NSDictionary+StringKey_Matchable.m in Sources */ = {isa = PBXBuildFile; fileRef = 8349F51D1F19352300B1F3DB /* NSDictionary+StringKey_Matchable.m */; };
 		8349F5211F195BCF00B1F3DB /* LDUserModel+Equatable.m in Sources */ = {isa = PBXBuildFile; fileRef = 8349F5201F195BCF00B1F3DB /* LDUserModel+Equatable.m */; };
 		8369475C1F1FED400047697C /* boolConfigIsABool-false.json in Resources */ = {isa = PBXBuildFile; fileRef = 836947591F1FED400047697C /* boolConfigIsABool-false.json */; };
@@ -246,6 +247,8 @@
 		832C78821F296F3400E334A2 /* NSMutableDictionary+NullRemovable.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "NSMutableDictionary+NullRemovable.m"; sourceTree = "<group>"; };
 		832C788B1F2977B800E334A2 /* NSString+RemoveWhitespace.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = "NSString+RemoveWhitespace.h"; path = "../../Darkly/NSString+RemoveWhitespace.h"; sourceTree = "<group>"; };
 		832C788C1F2977B800E334A2 /* NSString+RemoveWhitespace.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = "NSString+RemoveWhitespace.m"; path = "../../Darkly/NSString+RemoveWhitespace.m"; sourceTree = "<group>"; };
+		832C788E1F2A8DF600E334A2 /* LDUserModel+JsonDecodeable.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "LDUserModel+JsonDecodeable.h"; sourceTree = "<group>"; };
+		832C788F1F2A8DF600E334A2 /* LDUserModel+JsonDecodeable.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "LDUserModel+JsonDecodeable.m"; sourceTree = "<group>"; };
 		8349F51B1F1934A000B1F3DB /* NSDictionary+StringKey_Matchable.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "NSDictionary+StringKey_Matchable.h"; sourceTree = "<group>"; };
 		8349F51D1F19352300B1F3DB /* NSDictionary+StringKey_Matchable.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "NSDictionary+StringKey_Matchable.m"; sourceTree = "<group>"; };
 		8349F51F1F195BCF00B1F3DB /* LDUserModel+Equatable.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "LDUserModel+Equatable.h"; sourceTree = "<group>"; };
@@ -473,6 +476,8 @@
 				832C788C1F2977B800E334A2 /* NSString+RemoveWhitespace.m */,
 				8349F51F1F195BCF00B1F3DB /* LDUserModel+Equatable.h */,
 				8349F5201F195BCF00B1F3DB /* LDUserModel+Equatable.m */,
+				832C788E1F2A8DF600E334A2 /* LDUserModel+JsonDecodeable.h */,
+				832C788F1F2A8DF600E334A2 /* LDUserModel+JsonDecodeable.m */,
 			);
 			path = Categories;
 			sourceTree = "<group>";
@@ -1016,6 +1021,7 @@
 				690347311E689B9F00E45133 /* LDFlagConfigModelTest.m in Sources */,
 				690347331E689B9F00E45133 /* NSArray+UnitTests.m in Sources */,
 				6903472C1E689B9F00E45133 /* LDClientTest.m in Sources */,
+				832C78901F2A8DF600E334A2 /* LDUserModel+JsonDecodeable.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

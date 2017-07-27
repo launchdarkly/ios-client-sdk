@@ -9,15 +9,15 @@
 #import "NSMutableDictionary+NullRemovable.h"
 
 @implementation NSMutableDictionary (NullRemovable)
-- (NSMutableDictionary *)removeNilValues {
+- (NSMutableDictionary *)removeNullValues {
     for (NSString *key in [self allKeys]) {
         id comparisonObject = [self objectForKey:key];
         if ([comparisonObject isKindOfClass:[NSDictionary class]]) {
-            NSDictionary *comparisonDictionary = [[NSMutableDictionary dictionaryWithDictionary:(NSDictionary*)comparisonObject] removeNilValues];
+            NSDictionary *comparisonDictionary = [[NSMutableDictionary dictionaryWithDictionary:(NSDictionary*)comparisonObject] removeNullValues];
             self[key] = comparisonDictionary;
         }
         else {
-            if ((NSString*)comparisonObject == (id)[NSNull null]) {
+            if (comparisonObject == [NSNull null]) {
                 [self removeObjectForKey:key];
             }
         }

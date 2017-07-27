@@ -9,5 +9,5 @@
 #import <Foundation/Foundation.h>
 
 @interface NSMutableDictionary (NullRemovable)
--(NSMutableDictionary *)removeNilValues;
+-(NSMutableDictionary *)removeNullValues;
 @end
