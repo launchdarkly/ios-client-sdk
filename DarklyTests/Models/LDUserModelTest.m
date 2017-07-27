@@ -6,6 +6,8 @@
 #import "LDUserModel.h"
 #import "LDDataManager.h"
 #import "LDUserModel+Equatable.h"
+#import "NSMutableDictionary+NullRemovable.h"
+#import "NSString+RemoveWhitespace.h"
 
 @interface LDUserModelTest : XCTestCase
 @end
@@ -29,109 +31,98 @@
 }
 
 -(void)testDictionaryValue {
-    NSDateFormatter *formatter = [[NSDateFormatter alloc] init];
-    [formatter setDateFormat:@"yyyy-MM-dd'T'HH:mm:ss.SSS'Z'"];
-    [formatter setTimeZone:[NSTimeZone timeZoneWithAbbreviation:@"UTC"]];
-    
-    NSString *filepath = [[NSBundle bundleForClass:[LDUserModelTest class]] pathForResource:@"feature_flags"
-                                                                                     ofType:@"json"];
-    NSError *error = nil;
-    NSData *data = [NSData dataWithContentsOfFile:filepath];
-    NSDictionary *serverJson = [NSJSONSerialization JSONObjectWithData:data
-                                                               options:kNilOptions
-                                                                 error:&error];
-    
-    NSMutableDictionary *userDict = [[NSMutableDictionary alloc] initWithDictionary:@{ @"key": @"aKey",
-                                                                                       @"ip": @"123.456.789",
-                                                                                       @"country": @"USA",
-                                                                                       @"name": @"John Doe",
-                                                                                       @"firstName": @"John",
-                                                                                       @"lastName": @"Doe",
-                                                                                       @"email": @"jdub@g.com",
-                                                                                       @"avatar": @"foo",
-                                                                                       @"config": serverJson,
-                                                                                       @"custom": @{@"foo": @"Foo"},
-                                                                                       @"anonymous": @1,
-                                                                                       @"device": @"iPad",
-                                                                                       @"os": @"IOS 9.2.1"
-                                                                                       }];
-    
+    NSMutableDictionary *userDict = [self userDictionaryWithUserKey:@"aKey" userName:@"John Doe" customDictionary:[self customDictionary]];
     LDUserModel *user = [[LDUserModel alloc] initWithDictionary:userDict];
+    NSDictionary *targetUserDictionary = [self targetUserDictionaryFrom:userDict withConfig:YES];
     
-    NSDictionary *userDict2 = [user dictionaryValue];
+    NSDictionary *dictionaryFromUser = [user dictionaryValue];
     
-    [userDict setObject:[[NSDictionary alloc] initWithObjects:@[@"iPad",@"IOS 9.2.1"] forKeys:@[@"device",@"os"]] forKey:@"custom"];
-    [userDict removeObjectsForKeys:@[@"device",@"os"]];
+    XCTAssertTrue([targetUserDictionary isEqualToDictionary:dictionaryFromUser]);
+}
+
+-(void)testDictionaryValueWithConfig_Yes {
+    NSMutableDictionary *userDict = [self userDictionaryWithUserKey:@"aKey" userName:@"John Doe" customDictionary:[self customDictionary]];
+    LDUserModel *user = [[LDUserModel alloc] initWithDictionary:userDict];
+    NSDictionary *targetUserDictionary = [self targetUserDictionaryFrom:userDict withConfig:YES];
     
-    NSArray *allKeys = [[userDict allKeys] sortedArrayUsingSelector:@selector(caseInsensitiveCompare:)];
-    NSArray *allKeys2 = [[userDict2 allKeys] sortedArrayUsingSelector:@selector(caseInsensitiveCompare:)];
+    NSDictionary *dictionaryFromUser = [user dictionaryValueWithConfig:YES];
     
-    XCTAssertTrue([allKeys isEqualToArray:allKeys2]);
+    XCTAssertNotNil([dictionaryFromUser objectForKey: @"config"]);
     
-    for (id userValue in [userDict allValues]) {
-        BOOL hasValue = [[userDict2 allValues] containsObject: userValue];
-        
-        if ([userValue isKindOfClass: [NSString class]])
-            XCTAssertTrue(hasValue);
-    }
+    XCTAssertTrue([targetUserDictionary isEqualToDictionary:dictionaryFromUser]);
+}
+
+-(void)testDictionaryValueWithConfig_No {
+    NSMutableDictionary *userDict = [self userDictionaryWithUserKey:@"aKey" userName:@"John Doe" customDictionary:[self customDictionary]];
+    LDUserModel *user = [[LDUserModel alloc] initWithDictionary:userDict];
+    NSDictionary *targetUserDictionary = [self targetUserDictionaryFrom:userDict withConfig:NO];
     
-    NSDictionary *customValue = [userDict2 objectForKey:@"custom"];
-    XCTAssertTrue([[customValue allKeys] containsObject: @"foo"]);
-    XCTAssertTrue([[customValue allValues] containsObject: @"Foo"]);
+    NSDictionary *dictionaryFromUser = [user dictionaryValueWithConfig:NO];
     
-    NSDate *updateAtDate = [formatter dateFromString:[userDict2 objectForKey:@"updatedAt"]];
+    XCTAssertNil([dictionaryFromUser objectForKey: @"config"]);
     
-    XCTAssertEqual([updateAtDate compare:[userDict objectForKey:@"updatedAt"]], NSOrderedSame);
-    
-    NSDictionary *config2 = [userDict2 objectForKey: @"config"];
-    
-    NSArray *originalKeys = [[serverJson objectForKey:@"items"] allKeys];
-    NSArray *configKeys = [[config2 objectForKey:@"featuresJsonDictionary"] allKeys];
-    
-    XCTAssertFalse([originalKeys isEqualToArray:configKeys]);
+    XCTAssertTrue([targetUserDictionary isEqualToDictionary:dictionaryFromUser]);
+}
+
+-(void)testConvertToJson {
+    NSMutableDictionary *userDict = [self userDictionaryWithUserKey:@"aKey" userName:@"John_Doe" customDictionary:@{@"foo": @"Foo"}];   //Keep whitespace out of strings!!
+    LDUserModel *user = [[LDUserModel alloc] initWithDictionary:userDict];
+    NSString *jsonUser = [user convertToJson];
+    NSString *strippedJsonUser = [jsonUser stringByRemovingWhitespace];
+    XCTAssertTrue([jsonUser isEqualToString:strippedJsonUser]);
 }
 
 - (void)testUserSave {
-    NSString *filepath = [[NSBundle bundleForClass:[LDUserModelTest class]] pathForResource:@"feature_flags"
-                                                                                     ofType:@"json"];
-    NSError *error = nil;
-    NSData *data = [NSData dataWithContentsOfFile:filepath];
-    NSDictionary *serverJson = [NSJSONSerialization JSONObjectWithData:data
-                                                               options:kNilOptions
-                                                                 error:&error];
-    
-    NSMutableDictionary *customDictionary = [NSMutableDictionary dictionaryWithDictionary:@{@"foo": @"Foo",
-                                                                                            @"device": @"iPad",
-                                                                                            @"os": @"IOS 9.2.1"}];
-    
     NSString *userKey = [[NSUUID UUID] UUIDString];
-    NSMutableDictionary *userDict = [NSMutableDictionary dictionaryWithDictionary: @{ @"key": userKey,
-                                                                                      @"ip": @"123.456.789",
-                                                                                      @"country": @"USA",
-                                                                                      @"firstName": @"John",
-                                                                                      @"lastName": @"Doe",
-                                                                                      @"email": @"jdub@g.com",
-                                                                                      @"avatar": @"foo",
-                                                                                      @"config": serverJson,
-                                                                                      @"custom": [customDictionary copy],
-                                                                                      @"anonymous": @1
-                                                                                      }];
-    
+    NSMutableDictionary *userDict = [self userDictionaryWithUserKey:userKey userName:@"John Doe" customDictionary:[self customDictionary]];
+    [self validateUserModelIsEqualBehaviorUsingUserDictionary:userDict];
     LDUserModel *user = [[LDUserModel alloc] initWithDictionary:userDict];
-    [[LDDataManager sharedManager] saveUser:user];
     
-    //Verify LDUserModel isEqual is behaving as expected...important for forward compatability
-    customDictionary[@"os"] = @"ios 10.3";
-    userDict[@"custom"] = [customDictionary copy];
-    LDUserModel *changedUser = [[LDUserModel alloc] initWithDictionary:userDict];
-    XCTAssertFalse([user isEqual:changedUser ignoringProperties:@[@"updatedAt"]]);
+    [[LDDataManager sharedManager] saveUser:user];
     
     LDUserModel *retrievedUser = [[LDDataManager sharedManager] findUserWithkey:userKey];
     XCTAssertTrue([user isEqual:retrievedUser ignoringProperties:@[@"updatedAt"]]);
 }
 
 -(void)testUserBackwardsCompatibility {
+    NSString *userKey = [[NSUUID UUID] UUIDString];
+    NSMutableDictionary *userDict = [self userDictionaryWithUserKey:userKey userName:@"John Doe" customDictionary:[self customDictionary]];
+    LDUserModel *user = [[LDUserModel alloc] initWithDictionary:userDict];
+    [self validateUserModelIsEqualBehaviorUsingUserDictionary:userDict];
+
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdeprecated-declarations"
+    [[LDDataManager sharedManager] saveUserDeprecated:user];
+#pragma clang diagnostic pop
     
+    LDUserModel *retrievedUser = [[LDDataManager sharedManager] findUserWithkey:userKey];
+    XCTAssertTrue([user isEqual:retrievedUser ignoringProperties:@[@"updatedAt"]]);
+}
+
+#pragma mark - Helpers
+///Trims out nil values, and config
+-(NSDictionary*)targetUserDictionaryFrom:(NSDictionary*)userDictionary withConfig:(BOOL)withConfig {
+    NSMutableDictionary *target = [[NSMutableDictionary dictionaryWithDictionary:userDictionary] removeNilValues];
+    
+    //Remove config if needed
+    target[@"config"] = withConfig ? target[@"config"] : nil;
+    
+    return [target copy];
+}
+
+//Verify LDUserModel isEqual is behaving as expected...important for forward compatability
+-(void)validateUserModelIsEqualBehaviorUsingUserDictionary:(NSMutableDictionary*)userDictionary {
+    LDUserModel *user = [[LDUserModel alloc] initWithDictionary:userDictionary];
+    
+    //Change the user dictionary & validate the users differ
+    NSMutableDictionary *customDictionary = [NSMutableDictionary dictionaryWithDictionary:userDictionary[@"custom"]];
+    customDictionary[@"os"] = @"ios 10.3";
+    userDictionary[@"custom"] = [customDictionary copy];
+    LDUserModel *changedUser = [[LDUserModel alloc] initWithDictionary:userDictionary];
+    XCTAssertFalse([user isEqual:changedUser ignoringProperties:@[@"updatedAt"]]);
+}
+
+-(NSDictionary*)serverJson {
     NSString *filepath = [[NSBundle bundleForClass:[LDUserModelTest class]] pathForResource:@"feature_flags"
                                                                                      ofType:@"json"];
     NSError *error = nil;
@@ -139,40 +130,28 @@
     NSDictionary *serverJson = [NSJSONSerialization JSONObjectWithData:data
                                                                options:kNilOptions
                                                                  error:&error];
-    
-    NSMutableDictionary *customDictionary = [NSMutableDictionary dictionaryWithDictionary:@{@"foo": @"Foo",
-                                                                                            @"device": @"iPad",
-                                                                                            @"os": @"IOS 9.2.1"}];
+    return serverJson;
+}
 
-    NSString *userKey = [[NSUUID UUID] UUIDString];
-    NSMutableDictionary *userDict = [[NSMutableDictionary alloc] initWithDictionary:@{ @"key": userKey,
-                                                                                       @"ip": @"123.456.789",
-                                                                                       @"country": @"USA",
-                                                                                       @"name": @"John Doe",
-                                                                                       @"firstName": @"John",
-                                                                                       @"lastName": @"Doe",
-                                                                                       @"email": @"jdub@g.com",
-                                                                                       @"avatar": @"foo",
-                                                                                       @"config": serverJson,
-                                                                                       @"custom": [customDictionary copy],
-                                                                                       @"anonymous": @1,
-                                                                                       @"device": @"iPad"
-                                                                                       }];
-    
-    LDUserModel *user = [[LDUserModel alloc] initWithDictionary:userDict];
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wdeprecated-declarations"
-    [[LDDataManager sharedManager] saveUserDeprecated:user];
-#pragma clang diagnostic pop
-    
-    //Verify LDUserModel isEqual is behaving as expected...important for forward compatability
-    customDictionary[@"os"] = @"ios 10.3";
-    userDict[@"custom"] = [customDictionary copy];
-    LDUserModel *changedUser = [[LDUserModel alloc] initWithDictionary:userDict];
-    XCTAssertFalse([user isEqual:changedUser ignoringProperties:@[@"updatedAt"]]);
-    
-    LDUserModel *retrievedUser = [[LDDataManager sharedManager] findUserWithkey:userKey];
-    XCTAssertTrue([user isEqual:retrievedUser ignoringProperties:@[@"updatedAt"]]);
+-(NSMutableDictionary*)customDictionary {
+    return [NSMutableDictionary dictionaryWithDictionary:@{@"foo": @"Foo",
+                                                           @"device": @"iPad",
+                                                           @"os": @"IOS 9.2.1"}];
+}
+
+-(NSMutableDictionary*)userDictionaryWithUserKey:(NSString*)userKey userName:(NSString*)userName customDictionary:(NSDictionary*)customDictionary {
+    return [[NSMutableDictionary alloc] initWithDictionary:@{ @"key": userKey,
+                                                              @"ip": @"123.456.789",
+                                                              @"country": @"USA",
+                                                              @"name": userName,
+                                                              @"firstName": @"John",
+                                                              @"lastName": @"Doe",
+                                                              @"email": @"jdub@g.com",
+                                                              @"avatar": @"foo",
+                                                              @"config": [self serverJson],
+                                                              @"custom": [customDictionary copy],
+                                                              @"anonymous": @1
+                                                              }];
 }
 
 @end
