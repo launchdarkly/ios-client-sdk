@@ -10,11 +10,11 @@
 #import "LDEventModel.h"
 #import "LDFlagConfigModel.h"
 #import "NSDictionary+JSON.h"
-#import "EventSource.h"
+#import "LDEventSource.h"
 
 @interface LDClientManager()
 
-@property(nonatomic, strong, readonly) EventSource *eventSource;
+@property(nonatomic, strong, readonly) LDEventSource *eventSource;
 @property(nonatomic, strong) NSDate *backgroundTime;
 
 @end
@@ -51,9 +51,9 @@
     
     if ([config streaming]) {
         
-        eventSource = [EventSource eventSourceWithURL:[NSURL URLWithString:kStreamUrl] httpHeaders:[self httpHeadersForEventSource] timeoutInterval:[config.connectionTimeout doubleValue]];
+        eventSource = [LDEventSource eventSourceWithURL:[NSURL URLWithString:kStreamUrl] httpHeaders:[self httpHeadersForEventSource] timeoutInterval:[config.connectionTimeout doubleValue]];
         
-        [eventSource onMessage:^(Event *e) {
+        [eventSource onMessage:^(LDEvent *e) {
             [self syncWithServerForConfig];
         }];
     }
@@ -107,9 +107,9 @@
     LDClient *client = [LDClient sharedInstance];
     
     if ([[client ldConfig] streaming]) {
-        eventSource = [EventSource eventSourceWithURL:[NSURL URLWithString:kStreamUrl] httpHeaders:[self httpHeadersForEventSource]];
+        eventSource = [LDEventSource eventSourceWithURL:[NSURL URLWithString:kStreamUrl] httpHeaders:[self httpHeadersForEventSource]];
         
-        [eventSource onMessage:^(Event *e) {
+        [eventSource onMessage:^(LDEvent *e) {
             [self syncWithServerForConfig];
         }];
     }
