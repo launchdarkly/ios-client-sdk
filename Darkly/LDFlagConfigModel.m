@@ -73,4 +73,8 @@ static NSString * const kFeatureJsonValueName = @"value";
     return false;
 }
 
+-(BOOL)isEqualToConfig:(nullable LDFlagConfigModel *)otherConfig {
+    return [self.featuresJsonDictionary isEqualToDictionary:otherConfig.featuresJsonDictionary];
+}
+
 @end

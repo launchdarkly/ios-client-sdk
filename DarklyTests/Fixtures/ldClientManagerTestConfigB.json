@@ -1,0 +1,11 @@
+{
+	"ddeefe": false,
+	"main-slider": false,
+	"new-feature": true,
+	"new-gallery": {
+		"foo": 2
+	},
+	"one-click-checkout": false,
+	"shopping-cart": 20,
+	"social-icon-toggle": false
+}
