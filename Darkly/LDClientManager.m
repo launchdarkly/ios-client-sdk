@@ -186,7 +186,7 @@
         // If Success
         LDFlagConfigModel *newConfig = [[LDFlagConfigModel alloc] initWithDictionary:jsonConfigDictionary];
         
-        if (newConfig) {
+        if (newConfig && ![[LDClient sharedInstance].ldUser.config isEqualToConfig:newConfig]) {
             // Overwrite Config with new config
             LDClient *client = [LDClient sharedInstance];
             LDUserModel *user = client.ldUser;
@@ -196,6 +196,7 @@
             
             [[NSNotificationCenter defaultCenter] postNotificationName: kLDUserUpdatedNotification
                                                                 object: nil];
+            DEBUG_LOGX(@"ClientManager posted Darkly.UserUpdatedNotification following user config update");
         }
     } else {
         DEBUG_LOGX(@"ClientManager processedConfig method called after receiving failure response from server");
