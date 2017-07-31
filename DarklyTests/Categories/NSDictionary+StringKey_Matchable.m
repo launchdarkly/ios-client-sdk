@@ -15,8 +15,13 @@
     if (![object isKindOfClass:[NSDictionary class]]) { return [self allKeys]; }    //Different classes
     
     NSDictionary *otherDictionary = (NSDictionary*)object;
-    NSMutableArray *differingKeys = [[NSMutableArray alloc] init];
-    for (NSString* key in [self allKeys]) {
+    NSMutableSet *differingKeys = [[NSMutableSet alloc] init];
+    
+    NSMutableSet *allKeys = [NSMutableSet setWithArray:[self allKeys]];
+    [allKeys addObjectsFromArray:[otherDictionary allKeys]];
+    
+    //Compare key values
+    for (NSString* key in [allKeys copy]) {
         if ([ignoreKeys containsObject:key]) { continue; }
         id value = self[key];
         if ([value isKindOfClass:[NSString class]]) {
@@ -57,7 +62,7 @@
         }
     }
     
-    return differingKeys;
+    return [differingKeys allObjects];
 }
 
 //Unwraps keys with "key.subkey" format and returns an array of subkeys

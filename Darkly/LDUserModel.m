@@ -28,7 +28,11 @@ static NSString * const kOsKey = @"os";
 
 @implementation LDUserModel
 
--(NSDictionary *)dictionaryValue{
+-(NSDictionary *)dictionaryValue {
+    return [self dictionaryValueWithConfig:YES];
+}
+
+-(NSDictionary *)dictionaryValueWithConfig:(BOOL)includeConfig {
     NSMutableDictionary *dictionary = [[NSMutableDictionary alloc] init];
     
     NSDateFormatter *formatter = [[NSDateFormatter alloc] init];
@@ -46,15 +50,17 @@ static NSString * const kOsKey = @"os";
     self.custom ? [dictionary setObject:self.custom forKey: kCustomKey] : nil;
     self.anonymous ? [dictionary setObject:[NSNumber numberWithBool: self.anonymous ] forKey: kAnonymousKey] : nil;
     self.updatedAt ? [dictionary setObject:[formatter stringFromDate:self.updatedAt] forKey:kUpdatedAtKey] : nil;
-
+    
     NSMutableDictionary *customDict = [[NSMutableDictionary alloc] initWithDictionary:[dictionary objectForKey:kCustomKey]];
     self.device ? [customDict setObject:self.device forKey:kDeviceKey] : nil;
     self.os ? [customDict setObject:self.os forKey:kOsKey] : nil;
     
     [dictionary setObject:customDict forKey:kCustomKey];
     
-    self.config.featuresJsonDictionary ? [dictionary setObject:[[self.config dictionaryValue] objectForKey:kFeaturesJsonDictionaryKey] forKey:kConfigKey] : nil;
-
+    if (includeConfig && self.config.featuresJsonDictionary) {
+        [dictionary setObject:[[self.config dictionaryValue] objectForKey:kFeaturesJsonDictionaryKey] forKey:kConfigKey];
+    }
+    
     return dictionary;
 }
 
@@ -153,7 +159,7 @@ static NSString * const kOsKey = @"os";
 - (nonnull NSString *) convertToJson {
     NSError *writeError = nil;
     
-    NSData *jsonData = [NSJSONSerialization dataWithJSONObject:[self dictionaryValue] options:NSJSONWritingPrettyPrinted error:&writeError];
+    NSData *jsonData = [NSJSONSerialization dataWithJSONObject:[self dictionaryValueWithConfig:NO] options:0 error:&writeError];
     NSString *result = [[NSString alloc] initWithData:jsonData encoding:NSUTF8StringEncoding];
     
     return result;
