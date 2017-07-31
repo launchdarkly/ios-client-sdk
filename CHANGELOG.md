@@ -2,6 +2,14 @@
 
 All notable changes to the LaunchDarkly iOS SDK will be documented in this file. This project adheres to [Semantic Versioning](http://semver.org).
 
+## [2.5.1] - 2017-07-31
+### Fixed
+- Replaced base64 user encoding with base64url encoding
+- userUpdatedNotification from being posted at every feature flag response
+- Prevent adding an event to the event store after store capacity reached
+- Resolve potential name conflicts with EventSource
+- Remove user config and extraneous elements from user encoding in feature flag requests
+
 ## [2.5.0] - 2017-07-09
 ### Added
 - The `name` property in `LDUserBuilder`, for setting a full name. This property complements the existing `firstName` and `lastName` properties.
