@@ -13,7 +13,8 @@
 #if (COCOAPODS == 1)
 #import <DarklyEventSource/LDEventSource.h>
 #else
-#import <LDEventSource/LDEventSource.h>
+#import "LDEventSource.h"
+#import "LDEventSource.m"
 #endif
 
 @interface LDClientManager()
