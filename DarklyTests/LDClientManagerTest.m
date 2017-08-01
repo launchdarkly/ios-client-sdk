@@ -91,9 +91,6 @@
         
         OCMVerify([requestManagerMock performEventRequest:[OCMArg isEqual:testData]]);
     }];
-    
-    
-    
 }
 
 - (void)testDoNotSyncWithServerForEventsWhenEventsDoNotExist {
@@ -106,7 +103,6 @@
     [clientManager syncWithServerForEvents];
     
     [requestManagerMock verify];
-    
 }
 
 - (void)testSyncWithServerForEventsNotProcessedWhenOffline {
@@ -123,8 +119,6 @@
         
         [requestManagerMock verify];
     }];
-    
-    
 }
 
 - (void)testStartPolling {
@@ -210,5 +204,42 @@
     
     [dataManagerMock verify];
 }
+
+- (void)testProcessedConfigSuccessWithUserSameUserConfig {
+    LDFlagConfigModel *startingConfig = [[LDFlagConfigModel alloc] initWithDictionary:[self dictionaryFromJsonFileNamed:@"ldClientManagerTestConfigA"]];
+    XCTAssertNotNil(startingConfig);
+
+    LDUserModel *clientUser = [[LDClient sharedInstance] ldUser];
+    clientUser.config = startingConfig;
+    
+    [[LDClientManager sharedInstance] processedConfig:YES jsonConfigDictionary:startingConfig.featuresJsonDictionary];
+    XCTAssertTrue(clientUser.config == startingConfig);     //Should be the same object, unchanged
+}
+
+- (void)testProcessedConfigSuccessWithUserDifferentUserConfig {
+    LDFlagConfigModel *startingConfig = [[LDFlagConfigModel alloc] initWithDictionary:[self dictionaryFromJsonFileNamed:@"ldClientManagerTestConfigA"]];
+    XCTAssertNotNil(startingConfig);
+
+    LDUserModel *clientUser = [[LDClient sharedInstance] ldUser];
+    clientUser.config = startingConfig;
+    
+    LDFlagConfigModel *endingConfig = [[LDFlagConfigModel alloc] initWithDictionary:[self dictionaryFromJsonFileNamed:@"ldClientManagerTestConfigB"]];
+    XCTAssertNotNil(endingConfig);
+
+    [[LDClientManager sharedInstance] processedConfig:YES jsonConfigDictionary:endingConfig.featuresJsonDictionary];
+    XCTAssertFalse(clientUser.config == startingConfig);     //Should not be the same object
+    XCTAssertTrue([clientUser.config isEqualToConfig:endingConfig]);
+}
+
+- (NSDictionary*)dictionaryFromJsonFileNamed:(NSString *)fileName {
+    NSString *filepath = [[NSBundle bundleForClass:[self class]] pathForResource:fileName
+                                                                          ofType:@"json"];
+    NSError *error = nil;
+    NSData *data = [NSData dataWithContentsOfFile:filepath];
+    return [NSJSONSerialization JSONObjectWithData:data
+                                           options:kNilOptions
+                                             error:&error];
+}
+
 
 @end

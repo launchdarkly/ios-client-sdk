@@ -20,4 +20,5 @@ extern NSString * _Nullable  const kFeaturesJsonDictionaryKey;
 -(nonnull NSObject*) configFlagValue: ( NSString * __nonnull )keyName;
 -(BOOL) doesConfigFlagExist: ( NSString * __nonnull )keyName;
 
+-(BOOL)isEqualToConfig:(nullable LDFlagConfigModel *)otherConfig;
 @end

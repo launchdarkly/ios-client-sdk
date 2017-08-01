@@ -10,11 +10,15 @@
 #import "LDEventModel.h"
 #import "LDFlagConfigModel.h"
 #import "NSDictionary+JSON.h"
-#import <EventSource/EventSource.h>
+#if (COCOAPODS == 1)
+#import <DarklyEventSource/LDEventSource.h>
+#else
+#import <LDEventSource/LDEventSource.h>
+#endif
 
 @interface LDClientManager()
 
-@property(nonatomic, strong, readonly) EventSource *eventSource;
+@property(nonatomic, strong, readonly) LDEventSource *eventSource;
 @property(nonatomic, strong) NSDate *backgroundTime;
 
 @end
@@ -122,9 +126,9 @@
         if (!eventSource) {
             // The event source should *never* timeout, since it is a long-lived connection that could be
             // idle for long periods of time.
-            eventSource = [EventSource eventSourceWithURL:[NSURL URLWithString:kStreamUrl] httpHeaders:[self httpHeadersForEventSource] timeoutInterval:[[NSDate distantFuture] timeIntervalSinceNow]];
+            eventSource = [LDEventSource eventSourceWithURL:[NSURL URLWithString:kStreamUrl] httpHeaders:[self httpHeadersForEventSource]];
             
-            [eventSource onMessage:^(Event *e) {
+            [eventSource onMessage:^(LDEvent *e) {
                 [self syncWithServerForConfig];
             }];
         }
@@ -164,7 +168,7 @@
         if (currentUser) {
             NSString *jsonString = [currentUser convertToJson];
             if (jsonString) {
-                NSString *encodedUser = [LDUtil base64EncodeString:jsonString];
+                NSString *encodedUser = [LDUtil base64UrlEncodeString:jsonString];
                 [[LDRequestManager sharedInstance] performFeatureFlagRequest:encodedUser];
             } else {
                 DEBUG_LOGX(@"ClientManager is not able to convert user to json");
@@ -198,7 +202,7 @@
         // If Success
         LDFlagConfigModel *newConfig = [[LDFlagConfigModel alloc] initWithDictionary:jsonConfigDictionary];
         
-        if (newConfig) {
+        if (newConfig && ![[LDClient sharedInstance].ldUser.config isEqualToConfig:newConfig]) {
             // Overwrite Config with new config
             LDClient *client = [LDClient sharedInstance];
             LDUserModel *user = client.ldUser;
@@ -208,6 +212,7 @@
             
             [[NSNotificationCenter defaultCenter] postNotificationName: kLDUserUpdatedNotification
                                                                 object: nil];
+            DEBUG_LOGX(@"ClientManager posted Darkly.UserUpdatedNotification following user config update");
         }
     } else {
         DEBUG_LOGX(@"ClientManager processedConfig method called after receiving failure response from server");

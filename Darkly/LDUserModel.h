@@ -30,6 +30,7 @@
 -(nonnull id)initWithDictionary:(nonnull NSDictionary *)dictionary;
 -(nonnull NSString *) convertToJson;
 -(nonnull NSDictionary *)dictionaryValue;
+-(nonnull NSDictionary *)dictionaryValueWithConfig:(BOOL)withConfig;
 
 -(NSObject * __nonnull) flagValue: ( NSString * __nonnull )keyName;
 -(BOOL) doesFlagExist: (nonnull NSString *)keyName;

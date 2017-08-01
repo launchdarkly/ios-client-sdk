@@ -17,6 +17,7 @@ DerivedData
 .idea/
 *.hmap
 *.xccheckout
+*.xcscmblueprint
 
 # Git
 *.orig
