@@ -178,20 +178,19 @@
         NSLog(@"featureKey should be an NSString. Returning fallback value");
         return fallback;
     }
-    if (clientStarted) {
-        BOOL flagExists = [ldUser doesFlagExist: featureKey];
-        NSObject *flagValue = [ldUser flagValue: featureKey];
-        NSArray *returnValue = fallback;
-        if ([flagValue isKindOfClass:[NSString class]] && flagExists) {
-            returnValue = (NSArray *)flagValue;
-        }
-        
-        [[LDDataManager sharedManager] createFeatureEvent: featureKey keyValue:returnValue defaultKeyValue:fallback];
-        return returnValue;
-    } else {
+    if (!clientStarted) {
         DEBUG_LOGX(@"LDClient not started yet!");
+        return fallback;
     }
-    return fallback;
+    BOOL flagExists = [ldUser doesFlagExist: featureKey];
+    NSObject *flagValue = [ldUser flagValue: featureKey];
+    NSArray *returnValue = fallback;
+    if (flagExists && [flagValue isKindOfClass:[NSArray class]]) {
+        returnValue = (NSArray *)flagValue;
+    }
+    
+    [[LDDataManager sharedManager] createFeatureEvent: featureKey keyValue:returnValue defaultKeyValue:fallback];
+    return returnValue;
 }
 
 - (NSDictionary*)dictionaryVariation:(NSString *)featureKey fallback:(NSDictionary*)fallback{
@@ -200,20 +199,19 @@
         NSLog(@"featureKey should be an NSString. Returning fallback value");
         return fallback;
     }
-    if (clientStarted) {
-        BOOL flagExists = [ldUser doesFlagExist: featureKey];
-        NSObject *flagValue = [ldUser flagValue: featureKey];
-        NSDictionary *returnValue = fallback;
-        if ([flagValue isKindOfClass:[NSString class]] && flagExists) {
-            returnValue = (NSDictionary *)flagValue;
-        }
-        
-        [[LDDataManager sharedManager] createFeatureEvent: featureKey keyValue:returnValue defaultKeyValue:fallback];
-        return returnValue;
-    } else {
+    if (!clientStarted) {
         DEBUG_LOGX(@"LDClient not started yet!");
+        return fallback;
     }
-    return fallback;
+    BOOL flagExists = [ldUser doesFlagExist: featureKey];
+    NSObject *flagValue = [ldUser flagValue: featureKey];
+    NSDictionary *returnValue = fallback;
+    if (flagExists && [flagValue isKindOfClass:[NSDictionary class]]) {
+        returnValue = (NSDictionary *)flagValue;
+    }
+    
+    [[LDDataManager sharedManager] createFeatureEvent: featureKey keyValue:returnValue defaultKeyValue:fallback];
+    return returnValue;
 }
 
 - (BOOL)track:(NSString *)eventName data:(NSDictionary *)dataDictionary
