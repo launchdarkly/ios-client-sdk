@@ -137,6 +137,8 @@
 		69F3F6AB1E6BF82C00079A09 /* NSDictionary+JSON.h in Headers */ = {isa = PBXBuildFile; fileRef = 690346F21E68990000E45133 /* NSDictionary+JSON.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		69F3F6AC1E6BF82C00079A09 /* NSDictionary+JSON.m in Sources */ = {isa = PBXBuildFile; fileRef = 690346F31E68990000E45133 /* NSDictionary+JSON.m */; };
 		69F3F6AE1E6BF84B00079A09 /* Darkly-Prefix.pch in Headers */ = {isa = PBXBuildFile; fileRef = 690346D81E68990000E45133 /* Darkly-Prefix.pch */; settings = {ATTRIBUTES = (Public, ); }; };
+		83258A401F3244D0008C2133 /* LDUserBuilder+Testable.m in Sources */ = {isa = PBXBuildFile; fileRef = 83258A3F1F3244D0008C2133 /* LDUserBuilder+Testable.m */; };
+		83258A421F32721A008C2133 /* emptyConfig.json in Resources */ = {isa = PBXBuildFile; fileRef = 83258A411F32721A008C2133 /* emptyConfig.json */; };
 		832C78831F296F3400E334A2 /* NSMutableDictionary+NullRemovable.h in Headers */ = {isa = PBXBuildFile; fileRef = 832C78811F296F3400E334A2 /* NSMutableDictionary+NullRemovable.h */; };
 		832C78841F296F3400E334A2 /* NSMutableDictionary+NullRemovable.h in Headers */ = {isa = PBXBuildFile; fileRef = 832C78811F296F3400E334A2 /* NSMutableDictionary+NullRemovable.h */; };
 		832C78851F296F3400E334A2 /* NSMutableDictionary+NullRemovable.h in Headers */ = {isa = PBXBuildFile; fileRef = 832C78811F296F3400E334A2 /* NSMutableDictionary+NullRemovable.h */; };
@@ -243,6 +245,9 @@
 		69BD7E101E6C79550056D70F /* Darkly.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Darkly.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		69F3F67B1E6BF7C000079A09 /* Darkly.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Darkly.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		802467EF0B1BE213E518DE86 /* Pods-Darkly_watchOS.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Darkly_watchOS.debug.xcconfig"; path = "Pods/Target Support Files/Pods-Darkly_watchOS/Pods-Darkly_watchOS.debug.xcconfig"; sourceTree = "<group>"; };
+		83258A3E1F3244D0008C2133 /* LDUserBuilder+Testable.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "LDUserBuilder+Testable.h"; sourceTree = "<group>"; };
+		83258A3F1F3244D0008C2133 /* LDUserBuilder+Testable.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "LDUserBuilder+Testable.m"; sourceTree = "<group>"; };
+		83258A411F32721A008C2133 /* emptyConfig.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = emptyConfig.json; sourceTree = "<group>"; };
 		832C78811F296F3400E334A2 /* NSMutableDictionary+NullRemovable.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "NSMutableDictionary+NullRemovable.h"; sourceTree = "<group>"; };
 		832C78821F296F3400E334A2 /* NSMutableDictionary+NullRemovable.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "NSMutableDictionary+NullRemovable.m"; sourceTree = "<group>"; };
 		832C788B1F2977B800E334A2 /* NSString+RemoveWhitespace.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = "NSString+RemoveWhitespace.h"; path = "../../Darkly/NSString+RemoveWhitespace.h"; sourceTree = "<group>"; };
@@ -439,6 +444,7 @@
 			isa = PBXGroup;
 			children = (
 				6903471E1E689B9F00E45133 /* feature_flags.json */,
+				83258A411F32721A008C2133 /* emptyConfig.json */,
 				836947591F1FED400047697C /* boolConfigIsABool-false.json */,
 				8369475A1F1FED400047697C /* boolConfigIsABool-true.json */,
 				8369475B1F1FED400047697C /* boolConfigIsABool2-true.json */,
@@ -478,6 +484,8 @@
 				8349F5201F195BCF00B1F3DB /* LDUserModel+Equatable.m */,
 				832C788E1F2A8DF600E334A2 /* LDUserModel+JsonDecodeable.h */,
 				832C788F1F2A8DF600E334A2 /* LDUserModel+JsonDecodeable.m */,
+				83258A3E1F3244D0008C2133 /* LDUserBuilder+Testable.h */,
+				83258A3F1F3244D0008C2133 /* LDUserBuilder+Testable.m */,
 			);
 			path = Categories;
 			sourceTree = "<group>";
@@ -767,6 +775,7 @@
 				836947841F20125F0047697C /* ldClientManagerTestConfigB.json in Resources */,
 				836947711F1FF45B0047697C /* arrayConfigIsAnArray-Empty.json in Resources */,
 				8369476A1F1FF0A00047697C /* stringConfigIsAStringA-someString.json in Resources */,
+				83258A421F32721A008C2133 /* emptyConfig.json in Resources */,
 				836947691F1FF0A00047697C /* stringConfigIsAString-someStringA.json in Resources */,
 				8369477A1F1FF80A0047697C /* dictionaryConfigIsADictionary-3Key.json in Resources */,
 				836947621F1FEEB40047697C /* numberConfigIsANumber-1.json in Resources */,
@@ -1019,6 +1028,7 @@
 				69B205D31EA92ECD00487CA3 /* LDRequestManagerTest.m in Sources */,
 				6903472D1E689B9F00E45133 /* LDUtilTest.m in Sources */,
 				690347311E689B9F00E45133 /* LDFlagConfigModelTest.m in Sources */,
+				83258A401F3244D0008C2133 /* LDUserBuilder+Testable.m in Sources */,
 				690347331E689B9F00E45133 /* NSArray+UnitTests.m in Sources */,
 				6903472C1E689B9F00E45133 /* LDClientTest.m in Sources */,
 				832C78901F2A8DF600E334A2 /* LDUserModel+JsonDecodeable.m in Sources */,

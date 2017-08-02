@@ -9,23 +9,41 @@
 #import "LDFlagConfigModel.h"
 #import "LDUserBuilder.h"
 #import "LDPollingManager.h"
+#import "LDUserBuilder+Testable.h"
 
 #import <OCMock.h>
+#import <OHHTTPStubs/OHHTTPStubs.h>
 
 @interface LDClientTest : DarklyXCTestCase <ClientDelegate>
-
+@property (nonatomic, copy) NSString *testMobileKey;
+@property (nonatomic, strong) XCTestExpectation *userConfigUpdatedNotificationExpectation;
+@property (nonatomic, strong) LDUserBuilder *userBuilder;
+@property (nonatomic, strong) LDConfig *clientConfig;
+@property (nonatomic, assign) BOOL configureUser;
+@property (nonatomic, copy) NSString *targetKey;
 @end
+
+NSString *const kFallbackString = @"fallbackString";
+NSString *const kTargetValueString = @"someString";
 
 @implementation LDClientTest
 
 - (void)setUp {
     [super setUp];
     // Put setup code here. This method is called before the invocation of each test method in the class.
+    self.testMobileKey = @"testMobileKey";
 }
 
 - (void)tearDown {
-    // Put teardown code here. This method is called after the invocation of each test method in the class.
     [[LDClient sharedInstance] stopClient];
+    self.testMobileKey = nil;
+    [OHHTTPStubs removeAllStubs];
+    self.userConfigUpdatedNotificationExpectation = nil;
+    self.userBuilder = nil;
+    self.clientConfig = nil;
+    self.configureUser = NO;
+    self.targetKey = nil;
+    [[NSNotificationCenter defaultCenter] removeObserver:self];
     [super tearDown];
 }
 
@@ -40,51 +58,243 @@
 }
 
 - (void)testStartWithValidConfig {
-    NSString *testMobileKey = @"testMobileKey";
-    LDConfig *config = [[LDConfig alloc] initWithMobileKey:testMobileKey];
+    LDConfig *config = [[LDConfig alloc] initWithMobileKey:self.testMobileKey];
     LDClient *client = [LDClient sharedInstance];
     BOOL didStart = [client start:config withUserBuilder:nil];
     XCTAssertTrue(didStart);
 }
 
 - (void)testStartWithValidConfigMultipleTimes {
-    NSString *testMobileKey = @"testMobileKey";
-    LDConfig *config = [[LDConfig alloc] initWithMobileKey:testMobileKey];
+    LDConfig *config = [[LDConfig alloc] initWithMobileKey:self.testMobileKey];
     XCTAssertTrue([[LDClient sharedInstance] start:config withUserBuilder:nil]);
     XCTAssertFalse([[LDClient sharedInstance] start:config withUserBuilder:nil]);
 }
 
 - (void)testBoolVariationWithStart {
-    NSString *testMobileKey = @"testMobileKey";
-    LDConfig *config = [[LDConfig alloc] initWithMobileKey:testMobileKey];
+    LDConfig *config = [[LDConfig alloc] initWithMobileKey:self.testMobileKey];
     [[LDClient sharedInstance] start:config withUserBuilder:nil];
     BOOL boolValue = [[LDClient sharedInstance] boolVariation:@"test" fallback:YES];
     XCTAssertTrue(boolValue);
 }
 
+- (void)testBoolVariationWithoutConfig {
+    [self variationSetupForTestName:__func__ jsonFileName:@"boolConfigIsABool-true" configureUser:NO targetKey:@"isABool"];
+    
+    [self waitForExpectationsWithTimeout:10 handler:^(NSError *error){
+        XCTAssertNil([LDClient sharedInstance].ldUser.config);
+        XCTAssertTrue([[LDClient sharedInstance] boolVariation:self.targetKey fallback:YES]);
+    }];
+}
+
+- (void)testBoolVariationWithConfig {
+    [self variationSetupForTestName:__func__ jsonFileName:@"boolConfigIsABool-true" configureUser:YES targetKey:@"isABool"];
+    
+    [self waitForExpectationsWithTimeout:10 handler:^(NSError *error){
+        XCTAssertTrue([[LDClient sharedInstance] boolVariation:self.targetKey fallback:NO]);
+    }];
+}
+
+- (void)testBoolVariationFallback {
+    [self variationSetupForTestName:__func__ jsonFileName:@"boolConfigIsABool-true" configureUser:YES targetKey:@"isNotABool"];
+    
+    [self waitForExpectationsWithTimeout:10 handler:^(NSError *error){
+        XCTAssertFalse([[[[LDClient sharedInstance] ldUser].config.featuresJsonDictionary allKeys] containsObject:self.targetKey]);
+        XCTAssertTrue([[LDClient sharedInstance] boolVariation:self.targetKey fallback:YES]);
+    }];
+}
+
+- (void)testStringVariationWithoutConfig {
+    [self variationSetupForTestName:__func__ jsonFileName:@"stringConfigIsAString-someString" configureUser:NO targetKey:@"isAString"];
+    
+    [self waitForExpectationsWithTimeout:10 handler:^(NSError *error){
+        XCTAssertNil([LDClient sharedInstance].ldUser.config);
+        XCTAssertTrue([[[LDClient sharedInstance] stringVariation:self.targetKey fallback:kFallbackString] isEqualToString:kFallbackString]);
+    }];
+}
+
+- (void)testStringVariationWithConfig {
+    [self variationSetupForTestName:__func__ jsonFileName:@"stringConfigIsAString-someString" configureUser:YES targetKey:@"isAString"];
+    
+    [self waitForExpectationsWithTimeout:10 handler:^(NSError *error){
+        XCTAssertTrue([[[LDClient sharedInstance] stringVariation:self.targetKey fallback:kFallbackString] isEqualToString:kTargetValueString]);
+    }];
+}
+
+- (void)testStringVariationFallback {
+    [self variationSetupForTestName:__func__ jsonFileName:@"stringConfigIsAString-someString" configureUser:YES targetKey:@"isNotAString"];
+    
+    [self waitForExpectationsWithTimeout:10 handler:^(NSError *error){
+        XCTAssertFalse([[[[LDClient sharedInstance] ldUser].config.featuresJsonDictionary allKeys] containsObject:self.targetKey]);
+        XCTAssertTrue([[[LDClient sharedInstance] stringVariation:self.targetKey fallback:kFallbackString] isEqualToString:kFallbackString]);
+    }];
+}
+
+- (void)testNumberVariationWithoutConfig {
+    [self variationSetupForTestName:__func__ jsonFileName:@"numberConfigIsANumber-2" configureUser:NO targetKey:@"isANumber"];
+    
+    [self waitForExpectationsWithTimeout:10 handler:^(NSError *error){
+        XCTAssertNil([LDClient sharedInstance].ldUser.config);
+        XCTAssertTrue([[[LDClient sharedInstance] numberVariation:self.targetKey fallback:@5] intValue] == 5);
+    }];
+}
+
+- (void)testNumberVariationWithConfig {
+    [self variationSetupForTestName:__func__ jsonFileName:@"numberConfigIsANumber-2" configureUser:YES targetKey:@"isANumber"];
+    
+    [self waitForExpectationsWithTimeout:10 handler:^(NSError *error){
+        XCTAssertTrue([[[LDClient sharedInstance] numberVariation:self.targetKey fallback:@5] intValue] == 2);
+    }];
+}
+
+- (void)testNumberVariationFallback {
+    [self variationSetupForTestName:__func__ jsonFileName:@"numberConfigIsANumber-2" configureUser:YES targetKey:@"isNotANumber"];
+    
+    [self waitForExpectationsWithTimeout:10 handler:^(NSError *error){
+        XCTAssertFalse([[[[LDClient sharedInstance] ldUser].config.featuresJsonDictionary allKeys] containsObject:self.targetKey]);
+        XCTAssertTrue([[[LDClient sharedInstance] numberVariation:self.targetKey fallback:@5] intValue] == 5);
+    }];
+}
+
+- (void)testArrayVariationWithoutConfig {
+    [self variationSetupForTestName:__func__ jsonFileName:@"arrayConfigIsAnArray-123" configureUser:NO targetKey:@"isAnArray"];
+    NSArray *fallbackArray = @[@1, @2];
+    
+    [self waitForExpectationsWithTimeout:10 handler:^(NSError *error){
+        XCTAssertNil([LDClient sharedInstance].ldUser.config);
+        XCTAssertTrue([[LDClient sharedInstance] arrayVariation:self.targetKey fallback:fallbackArray] == fallbackArray);   //object equality!!
+    }];
+}
+
+- (void)testArrayVariationWithConfig {
+    NSString *jsonFileName = @"arrayConfigIsAnArray-123";
+    [self variationSetupForTestName:__func__ jsonFileName:jsonFileName configureUser:YES targetKey:@"isAnArray"];
+    NSArray *fallbackArray = @[@1, @2];
+    NSArray *targetArray = [self objectFromJsonFileNamed:jsonFileName key:self.targetKey];
+    XCTAssertFalse([targetArray isEqualToArray:fallbackArray]);
+    
+    [self waitForExpectationsWithTimeout:10 handler:^(NSError *error){
+        NSArray *arrayValue = [[LDClient sharedInstance] arrayVariation:self.targetKey fallback:fallbackArray];
+        XCTAssertTrue([arrayValue isEqualToArray:targetArray]);
+    }];
+}
+
+- (void)testArrayVariationFallback {
+    [self variationSetupForTestName:__func__ jsonFileName:@"arrayConfigIsAnArray-123" configureUser:YES targetKey:@"isNotAnArray"];
+    NSArray *fallbackArray = @[@1, @2];
+    
+    [self waitForExpectationsWithTimeout:10 handler:^(NSError *error){
+        XCTAssertFalse([[[[LDClient sharedInstance] ldUser].config.featuresJsonDictionary allKeys] containsObject:self.targetKey]);
+        NSArray *arrayValue = [[LDClient sharedInstance] arrayVariation:self.targetKey fallback:fallbackArray];
+        XCTAssertTrue(arrayValue == fallbackArray);
+    }];
+}
+
+- (void)testDictionaryVariationWithoutConfig {
+    [self variationSetupForTestName:__func__ jsonFileName:@"dictionaryConfigIsADictionary-3Key" configureUser:NO targetKey:@"isADictionary"];
+    NSDictionary *fallback = @{@"key1": @"value1", @"key2": @[@1, @2]};
+    
+    [self waitForExpectationsWithTimeout:10 handler:^(NSError *error){
+        XCTAssertNil([LDClient sharedInstance].ldUser.config);
+        XCTAssertTrue([[LDClient sharedInstance] dictionaryVariation:self.targetKey fallback:fallback] == fallback);
+    }];
+}
+
+- (void)testDictionaryVariationWithConfig {
+    NSString *jsonFileName = @"dictionaryConfigIsADictionary-3Key";
+    [self variationSetupForTestName:__func__ jsonFileName:jsonFileName configureUser:YES targetKey:@"isADictionary"];
+    NSDictionary *fallback = @{@"key1": @"value1", @"key2": @[@1, @2]};
+    NSDictionary *target = [self objectFromJsonFileNamed:jsonFileName key:self.targetKey];
+    XCTAssertFalse([target isEqualToDictionary:fallback]);
+    
+    [self waitForExpectationsWithTimeout:10 handler:^(NSError *error){
+        XCTAssertTrue([[[LDClient sharedInstance] dictionaryVariation:self.targetKey fallback:fallback] isEqualToDictionary:target]);
+    }];
+}
+
+- (void)testDictionaryVariationFallback {
+    [self variationSetupForTestName:__func__ jsonFileName:@"dictionaryConfigIsADictionary-3Key" configureUser:YES targetKey:@"isNotADictionary"];
+    NSDictionary *fallback = @{@"key1": @"value1", @"key2": @[@1, @2]};
+    
+    [self waitForExpectationsWithTimeout:10 handler:^(NSError *error){
+        XCTAssertFalse([[[[LDClient sharedInstance] ldUser].config.featuresJsonDictionary allKeys] containsObject:self.targetKey]);
+        XCTAssertTrue([[LDClient sharedInstance] dictionaryVariation:self.targetKey fallback:fallback] == fallback);
+    }];
+}
+
+- (void)variationSetupForTestName:(const char *)testName jsonFileName:(NSString*)jsonFileName configureUser:(BOOL)configureUser targetKey:(NSString*)targetKey {
+    NSString *stubName = [NSString stringWithFormat:@"%s.%@.flagResponseStub", testName, NSStringFromClass([self class])];
+    self.userBuilder = [LDUserBuilder userBuilderWithKey:[[NSUUID UUID] UUIDString]];
+    self.clientConfig = [[LDConfig alloc] initWithMobileKey:self.testMobileKey];
+    self.targetKey = targetKey;
+    self.configureUser = configureUser;
+    
+    NSString *filepath = [[NSBundle bundleForClass:[LDClientTest class]] pathForResource: configureUser ? jsonFileName : @"emptyConfig"
+                                                                                  ofType:@"json"];
+    NSData *configData = [NSData dataWithContentsOfFile:filepath];
+    XCTAssertTrue([configData length] > 0);
+    
+    XCTestExpectation *configResponseArrived = [self expectationWithDescription:@"response of async request has arrived"];
+    [OHHTTPStubs stubRequestsPassingTest:^BOOL(NSURLRequest *request) {
+        return [request.URL.host isEqualToString:@"app.launchdarkly.com"];
+    } withStubResponse:^OHHTTPStubsResponse*(NSURLRequest *request) {
+        [configResponseArrived fulfill];
+        return [OHHTTPStubsResponse responseWithData: configData statusCode:200 headers:@{@"Content-Type":@"application/json"}];
+    }].name = stubName;
+    NSArray<id<OHHTTPStubsDescriptor>> *matchingStubs = [[OHHTTPStubs allStubs] filteredArrayUsingPredicate: [NSPredicate predicateWithBlock:^BOOL(id  _Nullable evaluatedObject, NSDictionary<NSString *,id> * _Nullable bindings) {
+        id<OHHTTPStubsDescriptor> evaluatedStub = (id<OHHTTPStubsDescriptor>)evaluatedObject;
+        return [evaluatedStub.name isEqualToString:stubName];
+    }]];
+    XCTAssertTrue([matchingStubs count] == 1);
+    
+    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(handleUserUpdatedNotification:) name:kLDUserUpdatedNotification object:nil];
+    self.userConfigUpdatedNotificationExpectation = [self expectationForNotification:kLDUserUpdatedNotification object:self handler:nil];
+    
+    BOOL clientStarted = [[LDClient sharedInstance] start:self.clientConfig withUserBuilder:self.userBuilder];
+    XCTAssertTrue(clientStarted);
+}
+
+- (void)handleUserUpdatedNotification:(NSNotification*)notification {
+    if ([NSThread isMainThread] == NO) {
+        dispatch_sync(dispatch_get_main_queue(), ^{
+            [self handleUserUpdatedNotification:notification];
+            return;
+        });
+    }
+    if (self.configureUser == NO) {
+        [LDClient sharedInstance].ldUser.config = nil;
+    }
+    [self.userConfigUpdatedNotificationExpectation fulfill];
+}
+
+- (id)objectFromJsonFileNamed:(NSString*)jsonFileName key:(NSString*)key {
+    NSString *filepath = [[NSBundle bundleForClass:[LDClientTest class]] pathForResource: jsonFileName
+                                                                                  ofType:@"json"];
+    NSData *configData = [NSData dataWithContentsOfFile:filepath];
+    NSError *error;
+    NSDictionary *jsonDictionary = [NSJSONSerialization JSONObjectWithData:configData options:0 error:&error];
+    return jsonDictionary[key];
+}
+
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wdeprecated-declarations"
 - (void)testDeprecatedStartWithValidConfig {
-    NSString *testMobileKey = @"testMobileKey";
     LDConfigBuilder *builder = [[LDConfigBuilder alloc] init];
-    [builder withMobileKey:testMobileKey];
+    [builder withMobileKey:self.testMobileKey];
     LDClient *client = [LDClient sharedInstance];
     BOOL didStart = [client start:builder userBuilder:nil];
     XCTAssertTrue(didStart);
 }
 
 - (void)testDeprecatedStartWithValidConfigMultipleTimes {
-    NSString *testMobileKey = @"testMobileKey";
     LDConfigBuilder *builder = [[LDConfigBuilder alloc] init];
-    [builder withMobileKey:testMobileKey];
+    [builder withMobileKey:self.testMobileKey];
     XCTAssertTrue([[LDClient sharedInstance] start:builder userBuilder:nil]);
     XCTAssertFalse([[LDClient sharedInstance] start:builder userBuilder:nil]);
 }
 
 - (void)testDeprecatedBoolVariationWithStart {
-    NSString *testMobileKey = @"testMobileKey";
     LDConfigBuilder *builder = [[LDConfigBuilder alloc] init];
-    [builder withMobileKey:testMobileKey];
+    [builder withMobileKey:self.testMobileKey];
     [[LDClient sharedInstance] start:builder userBuilder:nil];
     BOOL boolValue = [[LDClient sharedInstance] boolVariation:@"test" fallback:YES];
     XCTAssertTrue(boolValue);
@@ -92,8 +302,7 @@
 #pragma clang diagnostic pop
 
 - (void)testUserPersisted {
-    NSString *testMobileKey = @"testMobileKey";
-    LDConfig *config = [[LDConfig alloc] initWithMobileKey:testMobileKey];
+    LDConfig *config = [[LDConfig alloc] initWithMobileKey:self.testMobileKey];
     
     LDUserBuilder *userBuilder = [[LDUserBuilder alloc] init];
     userBuilder.key = @"myKey";
@@ -118,8 +327,7 @@
 -(void)testToggleCreatesEventWithCorrectArguments {
     NSString *toggleName = @"test";
     BOOL fallbackValue = YES;
-    NSString *testMobileKey = @"testMobileKey";
-    LDConfig *config = [[LDConfig alloc] initWithMobileKey:testMobileKey];
+    LDConfig *config = [[LDConfig alloc] initWithMobileKey:self.testMobileKey];
     OCMStub([self.dataManagerMock createFeatureEvent:[OCMArg any] keyValue:[OCMArg any] defaultKeyValue:[OCMArg any]]);
     [[LDClient sharedInstance] start:config withUserBuilder:nil];
     [[LDClient sharedInstance] boolVariation:toggleName fallback:fallbackValue];
@@ -134,8 +342,7 @@
 
 - (void)testTrackWithStart {
     NSDictionary *customData = @{@"key": @"value"};
-    NSString *testMobileKey = @"testMobileKey";
-    LDConfig *config = [[LDConfig alloc] initWithMobileKey:testMobileKey];
+    LDConfig *config = [[LDConfig alloc] initWithMobileKey:self.testMobileKey];
     [[LDClient sharedInstance] start:config withUserBuilder:nil];
     
     OCMStub([self.dataManagerMock createCustomEvent:[OCMArg isKindOfClass:[NSString class]]  withCustomValuesDictionary:[OCMArg isKindOfClass:[NSDictionary class]]]);
@@ -151,8 +358,7 @@
 }
 
 - (void)testOfflineWithStart {
-    NSString *testMobileKey = @"testMobileKey";
-    LDConfig *config = [[LDConfig alloc] initWithMobileKey:testMobileKey];
+    LDConfig *config = [[LDConfig alloc] initWithMobileKey:self.testMobileKey];
     [[LDClient sharedInstance] start:config withUserBuilder:nil];
     XCTAssertTrue([[LDClient sharedInstance] offline]);
 }
@@ -162,8 +368,7 @@
 }
 
 - (void)testOnlineWithStart {
-    NSString *testMobileKey = @"testMobileKey";
-    LDConfig *config = [[LDConfig alloc] initWithMobileKey:testMobileKey];
+    LDConfig *config = [[LDConfig alloc] initWithMobileKey:self.testMobileKey];
     [[LDClient sharedInstance] start:config withUserBuilder:nil];
     XCTAssertTrue([[LDClient sharedInstance] online]);
 }
@@ -173,8 +378,7 @@
 }
 
 - (void)testFlushWithStart {
-    NSString *testMobileKey = @"testMobileKey";
-    LDConfig *config = [[LDConfig alloc] initWithMobileKey:testMobileKey];
+    LDConfig *config = [[LDConfig alloc] initWithMobileKey:self.testMobileKey];
     [[LDClient sharedInstance] start:config withUserBuilder:nil];
     XCTAssertTrue([[LDClient sharedInstance] flush]);
 }
@@ -184,8 +388,7 @@
 }
 
 -(void)testUpdateUserWithStart {
-    NSString *testMobileKey = @"testMobileKey";
-    LDConfig *config = [[LDConfig alloc] initWithMobileKey:testMobileKey];
+    LDConfig *config = [[LDConfig alloc] initWithMobileKey:self.testMobileKey];
     LDUserBuilder *userBuilder = [[LDUserBuilder alloc] init];
     
     LDClient *ldClient = [LDClient sharedInstance];
@@ -199,8 +402,7 @@
 }
 
 -(void)testCurrentUserBuilderWithStart {
-    NSString *testMobileKey = @"testMobileKey";
-    LDConfig *config = [[LDConfig alloc] initWithMobileKey:testMobileKey];
+    LDConfig *config = [[LDConfig alloc] initWithMobileKey:self.testMobileKey];
     LDUserBuilder *userBuilder = [[LDUserBuilder alloc] init];
     
     LDClient *ldClient = [LDClient sharedInstance];
@@ -215,5 +417,4 @@
     ldClient.delegate = (id<ClientDelegate>)self;
     XCTAssertEqualObjects(self, ldClient.delegate);
 }
-
 @end
