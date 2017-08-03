@@ -29,6 +29,9 @@
                                                  selector:@selector(userUpdated)
                                                      name: kLDUserUpdatedNotification object: nil];
         [[NSNotificationCenter defaultCenter] addObserver: sharedLDClient
+                                                 selector:@selector(serverUnavailable)
+                                                     name:kLDServerConnectionUnavailableNotification object:nil];
+        [[NSNotificationCenter defaultCenter] addObserver: sharedLDClient
                                                  selector:@selector(configFlagUpdated:)
                                                      name:kLDFlagConfigChangedNotification object:nil];
     });
@@ -305,17 +308,32 @@
 
 // Notification handler for ClientManager user updated
 -(void)userUpdated {
-    if (self.delegate && [self.delegate respondsToSelector:@selector(userDidUpdate)]) {
-        [self.delegate userDidUpdate];
+    if (![NSThread isMainThread]) {
+        [self performSelectorOnMainThread:NSSelectorFromString([NSString stringWithCString:__func__ encoding:NSUTF8StringEncoding]) withObject:nil waitUntilDone:YES];
+        return;
     }
+    if (![self.delegate respondsToSelector:@selector(userDidUpdate)]) { return; }
+    [self.delegate userDidUpdate];
+}
+
+// Notification handler for ClientManager server connection failed
+-(void)serverUnavailable {
+    if (![NSThread isMainThread]) {
+        [self performSelectorOnMainThread:NSSelectorFromString([NSString stringWithCString:__func__ encoding:NSUTF8StringEncoding]) withObject:nil waitUntilDone:YES];
+        return;
+    }
+    if (![self.delegate respondsToSelector:@selector(serverConnectionUnavailable)]) { return; }
+    [self.delegate serverConnectionUnavailable];
 }
 
 // Notification handler for DataManager config flag update
 -(void)configFlagUpdated:(NSNotification *)notification {
-    NSString *keyValue = [notification.userInfo objectForKey:@"flagkey"];
-    if (self.delegate && [self.delegate respondsToSelector:@selector(featureFlagDidUpdate:)]) {
-        [self.delegate featureFlagDidUpdate:keyValue];
+    if (![NSThread isMainThread]) {
+        [self performSelectorOnMainThread:NSSelectorFromString([NSString stringWithCString:__func__ encoding:NSUTF8StringEncoding]) withObject:notification waitUntilDone:YES];
+        return;
     }
+    if (![self.delegate respondsToSelector:@selector(featureFlagDidUpdate:)]) { return; }
+    [self.delegate featureFlagDidUpdate:[notification.userInfo objectForKey:@"flagkey"]];
 }
 
 -(void)dealloc {
