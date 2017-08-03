@@ -250,60 +250,6 @@ NSString *const kTargetValueString = @"someString";
     }];
 }
 
-- (void)variationSetupForTestName:(const char *)testName jsonFileName:(NSString*)jsonFileName configureUser:(BOOL)configureUser targetKey:(NSString*)targetKey {
-    NSString *stubName = [NSString stringWithFormat:@"%s.%@.flagResponseStub", testName, NSStringFromClass([self class])];
-    self.userBuilder = [LDUserBuilder userBuilderWithKey:[[NSUUID UUID] UUIDString]];
-    self.clientConfig = [[LDConfig alloc] initWithMobileKey:self.testMobileKey];
-    self.targetKey = targetKey;
-    self.configureUser = configureUser;
-    
-    NSString *filepath = [[NSBundle bundleForClass:[LDClientTest class]] pathForResource: configureUser ? jsonFileName : @"emptyConfig"
-                                                                                  ofType:@"json"];
-    NSData *configData = [NSData dataWithContentsOfFile:filepath];
-    XCTAssertTrue([configData length] > 0);
-    
-    XCTestExpectation *configResponseArrived = [self expectationWithDescription:@"response of async request has arrived"];
-    [OHHTTPStubs stubRequestsPassingTest:^BOOL(NSURLRequest *request) {
-        return [request.URL.host isEqualToString:@"app.launchdarkly.com"];
-    } withStubResponse:^OHHTTPStubsResponse*(NSURLRequest *request) {
-        [configResponseArrived fulfill];
-        return [OHHTTPStubsResponse responseWithData: configData statusCode:200 headers:@{@"Content-Type":@"application/json"}];
-    }].name = stubName;
-    NSArray<id<OHHTTPStubsDescriptor>> *matchingStubs = [[OHHTTPStubs allStubs] filteredArrayUsingPredicate: [NSPredicate predicateWithBlock:^BOOL(id  _Nullable evaluatedObject, NSDictionary<NSString *,id> * _Nullable bindings) {
-        id<OHHTTPStubsDescriptor> evaluatedStub = (id<OHHTTPStubsDescriptor>)evaluatedObject;
-        return [evaluatedStub.name isEqualToString:stubName];
-    }]];
-    XCTAssertTrue([matchingStubs count] == 1);
-    
-    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(handleUserUpdatedNotification:) name:kLDUserUpdatedNotification object:nil];
-    self.userConfigUpdatedNotificationExpectation = [self expectationForNotification:kLDUserUpdatedNotification object:self handler:nil];
-    
-    BOOL clientStarted = [[LDClient sharedInstance] start:self.clientConfig withUserBuilder:self.userBuilder];
-    XCTAssertTrue(clientStarted);
-}
-
-- (void)handleUserUpdatedNotification:(NSNotification*)notification {
-    if ([NSThread isMainThread] == NO) {
-        dispatch_sync(dispatch_get_main_queue(), ^{
-            [self handleUserUpdatedNotification:notification];
-            return;
-        });
-    }
-    if (self.configureUser == NO) {
-        [LDClient sharedInstance].ldUser.config = nil;
-    }
-    [self.userConfigUpdatedNotificationExpectation fulfill];
-}
-
-- (id)objectFromJsonFileNamed:(NSString*)jsonFileName key:(NSString*)key {
-    NSString *filepath = [[NSBundle bundleForClass:[LDClientTest class]] pathForResource: jsonFileName
-                                                                                  ofType:@"json"];
-    NSData *configData = [NSData dataWithContentsOfFile:filepath];
-    NSError *error;
-    NSDictionary *jsonDictionary = [NSJSONSerialization JSONObjectWithData:configData options:0 error:&error];
-    return jsonDictionary[key];
-}
-
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wdeprecated-declarations"
 - (void)testDeprecatedStartWithValidConfig {
@@ -445,5 +391,60 @@ NSString *const kTargetValueString = @"someString";
 
     ldClient.delegate = (id<ClientDelegate>)self;
     XCTAssertEqualObjects(self, ldClient.delegate);
+}
+
+#pragma mark - Helpers
+- (void)variationSetupForTestName:(const char *)testName jsonFileName:(NSString*)jsonFileName configureUser:(BOOL)configureUser targetKey:(NSString*)targetKey {
+    NSString *stubName = [NSString stringWithFormat:@"%s.%@.flagResponseStub", testName, NSStringFromClass([self class])];
+    self.userBuilder = [LDUserBuilder userBuilderWithKey:[[NSUUID UUID] UUIDString]];
+    self.clientConfig = [[LDConfig alloc] initWithMobileKey:self.testMobileKey];
+    self.targetKey = targetKey;
+    self.configureUser = configureUser;
+    
+    NSString *filepath = [[NSBundle bundleForClass:[LDClientTest class]] pathForResource: configureUser ? jsonFileName : @"emptyConfig"
+                                                                                  ofType:@"json"];
+    NSData *configData = [NSData dataWithContentsOfFile:filepath];
+    XCTAssertTrue([configData length] > 0);
+    
+    XCTestExpectation *configResponseArrived = [self expectationWithDescription:@"response of async request has arrived"];
+    [OHHTTPStubs stubRequestsPassingTest:^BOOL(NSURLRequest *request) {
+        return [request.URL.host isEqualToString:@"app.launchdarkly.com"];
+    } withStubResponse:^OHHTTPStubsResponse*(NSURLRequest *request) {
+        [configResponseArrived fulfill];
+        return [OHHTTPStubsResponse responseWithData: configData statusCode:200 headers:@{@"Content-Type":@"application/json"}];
+    }].name = stubName;
+    NSArray<id<OHHTTPStubsDescriptor>> *matchingStubs = [[OHHTTPStubs allStubs] filteredArrayUsingPredicate: [NSPredicate predicateWithBlock:^BOOL(id  _Nullable evaluatedObject, NSDictionary<NSString *,id> * _Nullable bindings) {
+        id<OHHTTPStubsDescriptor> evaluatedStub = (id<OHHTTPStubsDescriptor>)evaluatedObject;
+        return [evaluatedStub.name isEqualToString:stubName];
+    }]];
+    XCTAssertTrue([matchingStubs count] == 1);
+    
+    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(handleUserUpdatedNotification:) name:kLDUserUpdatedNotification object:nil];
+    self.userConfigUpdatedNotificationExpectation = [self expectationForNotification:kLDUserUpdatedNotification object:self handler:nil];
+    
+    BOOL clientStarted = [[LDClient sharedInstance] start:self.clientConfig withUserBuilder:self.userBuilder];
+    XCTAssertTrue(clientStarted);
+}
+
+- (void)handleUserUpdatedNotification:(NSNotification*)notification {
+    if ([NSThread isMainThread] == NO) {
+        dispatch_sync(dispatch_get_main_queue(), ^{
+            [self handleUserUpdatedNotification:notification];
+            return;
+        });
+    }
+    if (self.configureUser == NO) {
+        [LDClient sharedInstance].ldUser.config = nil;
+    }
+    [self.userConfigUpdatedNotificationExpectation fulfill];
+}
+
+- (id)objectFromJsonFileNamed:(NSString*)jsonFileName key:(NSString*)key {
+    NSString *filepath = [[NSBundle bundleForClass:[LDClientTest class]] pathForResource: jsonFileName
+                                                                                  ofType:@"json"];
+    NSData *configData = [NSData dataWithContentsOfFile:filepath];
+    NSError *error;
+    NSDictionary *jsonDictionary = [NSJSONSerialization JSONObjectWithData:configData options:0 error:&error];
+    return jsonDictionary[key];
 }
 @end

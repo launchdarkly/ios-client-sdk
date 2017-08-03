@@ -66,7 +66,7 @@
     [pollingMgr stopEventPolling];
     
     if ([[[LDClient sharedInstance] ldConfig] streaming]) {
-        [eventSource close];
+        [self stopEventSource];
     }
     else{
         [pollingMgr stopConfigPolling];
@@ -82,7 +82,7 @@
     [pollingMgr suspendEventPolling];
     
     if ([[[LDClient sharedInstance] ldConfig] streaming]) {
-        [eventSource close];
+        [self stopEventSource];
     }
     else{
         [pollingMgr suspendConfigPolling];
@@ -110,12 +110,25 @@
 }
 
 - (void)configureEventSource {
-    eventSource = [LDEventSource eventSourceWithURL:[NSURL URLWithString:kStreamUrl] httpHeaders:[self httpHeadersForEventSource]];
-    
-    [eventSource onMessage:^(LDEvent *event) {
-        if (![event.event isEqualToString:@"ping"]) { return; }
-        [self syncWithServerForConfig];
-    }];
+    @synchronized (self) {
+        if (eventSource) {
+            DEBUG_LOGX(@"ClientManager aborting event source creation - event source running");
+            return;
+        }
+        eventSource = [LDEventSource eventSourceWithURL:[NSURL URLWithString:kStreamUrl] httpHeaders:[self httpHeadersForEventSource]];
+        
+        [eventSource onMessage:^(LDEvent *event) {
+            if (![event.event isEqualToString:@"ping"]) { return; }
+            [self syncWithServerForConfig];
+        }];
+    }
+}
+
+- (void)stopEventSource {
+    @synchronized (self) {
+        [eventSource close];
+        eventSource = nil;
+    }
 }
 
 - (void)backgroundFetchInitiated {
