@@ -139,6 +139,7 @@
 		69F3F6AE1E6BF84B00079A09 /* Darkly-Prefix.pch in Headers */ = {isa = PBXBuildFile; fileRef = 690346D81E68990000E45133 /* Darkly-Prefix.pch */; settings = {ATTRIBUTES = (Public, ); }; };
 		83258A401F3244D0008C2133 /* LDUserBuilder+Testable.m in Sources */ = {isa = PBXBuildFile; fileRef = 83258A3F1F3244D0008C2133 /* LDUserBuilder+Testable.m */; };
 		83258A421F32721A008C2133 /* emptyConfig.json in Resources */ = {isa = PBXBuildFile; fileRef = 83258A411F32721A008C2133 /* emptyConfig.json */; };
+		83258A441F329EFB008C2133 /* doubleConfigIsADouble-Pi.json in Resources */ = {isa = PBXBuildFile; fileRef = 83258A431F329EFB008C2133 /* doubleConfigIsADouble-Pi.json */; };
 		832C78831F296F3400E334A2 /* NSMutableDictionary+NullRemovable.h in Headers */ = {isa = PBXBuildFile; fileRef = 832C78811F296F3400E334A2 /* NSMutableDictionary+NullRemovable.h */; };
 		832C78841F296F3400E334A2 /* NSMutableDictionary+NullRemovable.h in Headers */ = {isa = PBXBuildFile; fileRef = 832C78811F296F3400E334A2 /* NSMutableDictionary+NullRemovable.h */; };
 		832C78851F296F3400E334A2 /* NSMutableDictionary+NullRemovable.h in Headers */ = {isa = PBXBuildFile; fileRef = 832C78811F296F3400E334A2 /* NSMutableDictionary+NullRemovable.h */; };
@@ -248,6 +249,7 @@
 		83258A3E1F3244D0008C2133 /* LDUserBuilder+Testable.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "LDUserBuilder+Testable.h"; sourceTree = "<group>"; };
 		83258A3F1F3244D0008C2133 /* LDUserBuilder+Testable.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "LDUserBuilder+Testable.m"; sourceTree = "<group>"; };
 		83258A411F32721A008C2133 /* emptyConfig.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = emptyConfig.json; sourceTree = "<group>"; };
+		83258A431F329EFB008C2133 /* doubleConfigIsADouble-Pi.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = "doubleConfigIsADouble-Pi.json"; sourceTree = "<group>"; };
 		832C78811F296F3400E334A2 /* NSMutableDictionary+NullRemovable.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "NSMutableDictionary+NullRemovable.h"; sourceTree = "<group>"; };
 		832C78821F296F3400E334A2 /* NSMutableDictionary+NullRemovable.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "NSMutableDictionary+NullRemovable.m"; sourceTree = "<group>"; };
 		832C788B1F2977B800E334A2 /* NSString+RemoveWhitespace.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = "NSString+RemoveWhitespace.h"; path = "../../Darkly/NSString+RemoveWhitespace.h"; sourceTree = "<group>"; };
@@ -448,6 +450,7 @@
 				836947591F1FED400047697C /* boolConfigIsABool-false.json */,
 				8369475A1F1FED400047697C /* boolConfigIsABool-true.json */,
 				8369475B1F1FED400047697C /* boolConfigIsABool2-true.json */,
+				83258A431F329EFB008C2133 /* doubleConfigIsADouble-Pi.json */,
 				8369475F1F1FEEB40047697C /* numberConfigIsANumber-1.json */,
 				836947601F1FEEB40047697C /* numberConfigIsANumber-2.json */,
 				836947611F1FEEB40047697C /* numberConfigIsANumber2-1.json */,
@@ -786,6 +789,7 @@
 				836947721F1FF45B0047697C /* arrayConfigIsAnArrayA-123.json in Resources */,
 				8369477C1F1FF80A0047697C /* dictionaryConfigIsADictionary-KeyA.json in Resources */,
 				8369475E1F1FED400047697C /* boolConfigIsABool2-true.json in Resources */,
+				83258A441F329EFB008C2133 /* doubleConfigIsADouble-Pi.json in Resources */,
 				836947641F1FEEB40047697C /* numberConfigIsANumber2-1.json in Resources */,
 				8369477B1F1FF80A0047697C /* dictionaryConfigIsADictionary-Empty.json in Resources */,
 				836947681F1FF0A00047697C /* stringConfigIsAString-someString.json in Resources */,

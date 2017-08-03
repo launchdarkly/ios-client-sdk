@@ -150,6 +150,27 @@
     return fallback;
 }
 
+- (double)doubleVariation:(NSString *)featureKey fallback:(double)fallback {
+    DEBUG_LOG(@"LDClient numberVariation method called for feature=%@ and fallback=%f", featureKey, fallback);
+    if (![featureKey isKindOfClass:[NSString class]]) {
+        NSLog(@"featureKey should be an NSString. Returning fallback value");
+        return fallback;
+    }
+    if (!clientStarted) {
+        DEBUG_LOGX(@"LDClient not started yet!");
+        return fallback;
+    }
+    BOOL flagExists = [ldUser doesFlagExist: featureKey];
+    NSObject *flagValue = [ldUser flagValue: featureKey];
+    double returnValue = fallback;
+    if (flagExists && [flagValue isKindOfClass:[NSNumber class]]) {
+        returnValue = [((NSNumber *)flagValue) doubleValue];
+    }
+    
+    [[LDDataManager sharedManager] createFeatureEvent: featureKey keyValue:[NSNumber numberWithDouble:returnValue] defaultKeyValue:[NSNumber numberWithDouble:fallback]];
+    return returnValue;
+}
+
 - (NSString*)stringVariation:(NSString *)featureKey fallback:(NSString*)fallback{
     DEBUG_LOG(@"LDClient stringVariation method called for feature=%@ and fallback=%@", featureKey, fallback);
     if (![featureKey isKindOfClass:[NSString class]]) {
