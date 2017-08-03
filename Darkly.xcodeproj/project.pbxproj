@@ -137,6 +137,7 @@
 		69F3F6AB1E6BF82C00079A09 /* NSDictionary+JSON.h in Headers */ = {isa = PBXBuildFile; fileRef = 690346F21E68990000E45133 /* NSDictionary+JSON.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		69F3F6AC1E6BF82C00079A09 /* NSDictionary+JSON.m in Sources */ = {isa = PBXBuildFile; fileRef = 690346F31E68990000E45133 /* NSDictionary+JSON.m */; };
 		69F3F6AE1E6BF84B00079A09 /* Darkly-Prefix.pch in Headers */ = {isa = PBXBuildFile; fileRef = 690346D81E68990000E45133 /* Darkly-Prefix.pch */; settings = {ATTRIBUTES = (Public, ); }; };
+		83258A3D1F323049008C2133 /* LDClientManager+EventSource.m in Sources */ = {isa = PBXBuildFile; fileRef = 83258A3C1F323049008C2133 /* LDClientManager+EventSource.m */; };
 		83258A401F3244D0008C2133 /* LDUserBuilder+Testable.m in Sources */ = {isa = PBXBuildFile; fileRef = 83258A3F1F3244D0008C2133 /* LDUserBuilder+Testable.m */; };
 		83258A421F32721A008C2133 /* emptyConfig.json in Resources */ = {isa = PBXBuildFile; fileRef = 83258A411F32721A008C2133 /* emptyConfig.json */; };
 		83258A441F329EFB008C2133 /* doubleConfigIsADouble-Pi.json in Resources */ = {isa = PBXBuildFile; fileRef = 83258A431F329EFB008C2133 /* doubleConfigIsADouble-Pi.json */; };
@@ -246,6 +247,8 @@
 		69BD7E101E6C79550056D70F /* Darkly.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Darkly.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		69F3F67B1E6BF7C000079A09 /* Darkly.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Darkly.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		802467EF0B1BE213E518DE86 /* Pods-Darkly_watchOS.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Darkly_watchOS.debug.xcconfig"; path = "Pods/Target Support Files/Pods-Darkly_watchOS/Pods-Darkly_watchOS.debug.xcconfig"; sourceTree = "<group>"; };
+		83258A3B1F323049008C2133 /* LDClientManager+EventSource.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "LDClientManager+EventSource.h"; sourceTree = "<group>"; };
+		83258A3C1F323049008C2133 /* LDClientManager+EventSource.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "LDClientManager+EventSource.m"; sourceTree = "<group>"; };
 		83258A3E1F3244D0008C2133 /* LDUserBuilder+Testable.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "LDUserBuilder+Testable.h"; sourceTree = "<group>"; };
 		83258A3F1F3244D0008C2133 /* LDUserBuilder+Testable.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "LDUserBuilder+Testable.m"; sourceTree = "<group>"; };
 		83258A411F32721A008C2133 /* emptyConfig.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = emptyConfig.json; sourceTree = "<group>"; };
@@ -487,6 +490,8 @@
 				8349F5201F195BCF00B1F3DB /* LDUserModel+Equatable.m */,
 				832C788E1F2A8DF600E334A2 /* LDUserModel+JsonDecodeable.h */,
 				832C788F1F2A8DF600E334A2 /* LDUserModel+JsonDecodeable.m */,
+				83258A3B1F323049008C2133 /* LDClientManager+EventSource.h */,
+				83258A3C1F323049008C2133 /* LDClientManager+EventSource.m */,
 				83258A3E1F3244D0008C2133 /* LDUserBuilder+Testable.h */,
 				83258A3F1F3244D0008C2133 /* LDUserBuilder+Testable.m */,
 			);
@@ -1026,6 +1031,7 @@
 				6903472A1E689B9F00E45133 /* LDUserModelTest.m in Sources */,
 				8349F5211F195BCF00B1F3DB /* LDUserModel+Equatable.m in Sources */,
 				6903472B1E689B9F00E45133 /* LDPollingManagerTest.m in Sources */,
+				83258A3D1F323049008C2133 /* LDClientManager+EventSource.m in Sources */,
 				6903472E1E689B9F00E45133 /* LDClientManagerTest.m in Sources */,
 				69E5275E1E6E948F00E4B63B /* LDDataManagerTest.m in Sources */,
 				690347321E689B9F00E45133 /* DarklyXCTestCase.m in Sources */,
