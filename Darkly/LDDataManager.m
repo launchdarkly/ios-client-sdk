@@ -149,37 +149,35 @@ dispatch_queue_t eventsQueue;
 -(void) createFeatureEvent: (NSString *)featureKey keyValue:(NSObject*)keyValue defaultKeyValue:(NSObject*)defaultKeyValue {
     if(![self isAtEventCapacity:_eventsArray]) {
         DEBUG_LOG(@"Creating event for feature:%@ with value:%@ and fallback:%@", featureKey, keyValue, defaultKeyValue);
-        LDClient *client = [LDClient sharedInstance];
-        LDUserModel *currentUser = client.ldUser;
-        LDEventModel *featureEvent = [[LDEventModel alloc] initFeatureEventWithKey: featureKey keyValue:keyValue defaultKeyValue:defaultKeyValue userValue:currentUser];
-        
-        if (!_eventsArray) {
-            // No Dictionary exists so create
-            _eventsArray = [[NSMutableArray alloc] init];
-        }
-        dispatch_async(eventsQueue, ^{
-            [_eventsArray addObject:featureEvent];
-        });
-    } else
+        [self addEvent:[[LDEventModel alloc] initFeatureEventWithKey: featureKey keyValue:keyValue defaultKeyValue:defaultKeyValue userValue:[LDClient sharedInstance].ldUser]];
+    }
+    else {
         DEBUG_LOG(@"Events have surpassed capacity. Discarding feature event %@", featureKey);
+    }
 }
 
 -(void) createCustomEvent: (NSString *)eventKey withCustomValuesDictionary: (NSDictionary *)customDict {
     if(![self isAtEventCapacity:_eventsArray]) {
         DEBUG_LOG(@"Creating event for custom key:%@ and value:%@", eventKey, customDict);
-        LDClient *client = [LDClient sharedInstance];
-        LDUserModel *currentUser = client.ldUser;
-        LDEventModel *customEvent = [[LDEventModel alloc] initCustomEventWithKey: eventKey  andDataDictionary: customDict userValue:currentUser];
-        
+        [self addEvent:[[LDEventModel alloc] initCustomEventWithKey: eventKey  andDataDictionary: customDict userValue:[LDClient sharedInstance].ldUser]];
+    }
+    else {
+        DEBUG_LOG(@"Events have surpassed capacity. Discarding event %@ with dictionary %@", eventKey, customDict);
+    }
+}
+
+-(void)addEvent:(LDEventModel*)event {
+    dispatch_async(eventsQueue, ^{
         if (!_eventsArray) {
-            // No Dictionary exists so create
             _eventsArray = [[NSMutableArray alloc] init];
         }
-        dispatch_async(eventsQueue, ^{
-            [_eventsArray addObject:customEvent];
-        });
-    } else
-        DEBUG_LOG(@"Events have surpassed capacity. Discarding event %@ with dictionary %@", eventKey, customDict);
+        if(![self isAtEventCapacity:_eventsArray]) {
+            [_eventsArray addObject:event];
+        }
+        else {
+            DEBUG_LOG(@"Events have surpassed capacity. Discarding event %@", event.key);
+        }
+    });
 }
 
 -(BOOL)isAtEventCapacity:(NSArray *)currentArray {

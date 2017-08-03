@@ -35,4 +35,31 @@
     XCTAssertEqualObjects(desired, output);
 }
 
+- (void)testBase64UrlEncodeString {
+    [[self unencodedStrings] enumerateObjectsUsingBlock:^(NSString * _Nonnull input, NSUInteger index, BOOL * _Nonnull stop) {
+        XCTAssertTrue([[self base64UrlEncodedStrings][index] isEqualToString:[LDUtil base64UrlEncodeString: input]]);
+    }];
+}
+
+- (void)testBase64UrlDecodeString {
+    [[self base64UrlEncodedStrings] enumerateObjectsUsingBlock:^(NSString * _Nonnull input, NSUInteger index, BOOL * _Nonnull stop) {
+        XCTAssertTrue([[self unencodedStrings][index] isEqualToString:[LDUtil base64UrlDecodeString: input]]);
+    }];
+}
+
+//This list of strings was chosen so that the encoded values would contain a combination of the encoding specific characters and 0 to 2 padding characters
+- (NSArray<NSString *> *)unencodedStrings {
+    return @[@",\"city\":\"台北市 (Taipei)\"",
+             @" \"city\" : \"屏東縣 (Pingtung)\",",
+             @" \"city\" : \"Oakland\","
+             ];
+}
+
+- (NSArray<NSString *> *)base64UrlEncodedStrings {
+    return @[@"LCJjaXR5Ijoi5Y-w5YyX5biCIChUYWlwZWkpIg==",
+             @"ICJjaXR5IiA6ICLlsY_mnbHnuKMgKFBpbmd0dW5nKSIs",
+             @"ICJjaXR5IiA6ICJPYWtsYW5kIiw="
+             ];
+}
+
 @end

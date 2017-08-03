@@ -2,6 +2,14 @@
 
 All notable changes to the LaunchDarkly iOS SDK will be documented in this file. This project adheres to [Semantic Versioning](http://semver.org).
 
+## [2.5.1] - 2017-08-03
+### Fixed
+- Feature flag requests for users with non-ASCII data are now encoded correctly
+- `UserUpdatedNotification` posts only when the feature flag configuration changes for the user
+- Events are no longer added to the event store when capacity is reached
+- Resolve potential symbol conflicts with EventSource
+- Feature flag request payloads are much smaller
+
 ## [2.5.0] - 2017-07-09
 ### Added
 - The `name` property in `LDUserBuilder`, for setting a full name. This property complements the existing `firstName` and `lastName` properties.

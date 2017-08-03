@@ -1,6 +1,6 @@
 //
-//  EventSource.h
-//  EventSource
+//  LDEventSource.h
+//  LDEventSource
 //
 //  Created by Neil on 25/07/2013.
 //  Copyright (c) 2013 Neil Cowburn. All rights reserved.
@@ -12,12 +12,12 @@ typedef enum {
     kEventStateConnecting = 0,
     kEventStateOpen = 1,
     kEventStateClosed = 2,
-} EventState;
+} LDEventState;
 
 // ---------------------------------------------------------------------------------------------------------------------
 
 /// Describes an Event received from an EventSource
-@interface Event : NSObject
+@interface LDEvent : NSObject
 
 /// The Event ID
 @property (nonatomic, strong) id id;
@@ -27,7 +27,7 @@ typedef enum {
 @property (nonatomic, strong) NSString *data;
 
 /// The current state of the connection to the EventSource
-@property (nonatomic, assign) EventState readyState;
+@property (nonatomic, assign) LDEventState readyState;
 /// Provides details of any errors with the connection to the EventSource
 @property (nonatomic, strong) NSError *error;
 
@@ -35,12 +35,12 @@ typedef enum {
 
 // ---------------------------------------------------------------------------------------------------------------------
 
-typedef void (^EventSourceEventHandler)(Event *event);
+typedef void (^LDEventSourceEventHandler)(LDEvent *event);
 
 // ---------------------------------------------------------------------------------------------------------------------
 
 /// Connect to and receive Server-Sent Events (SSEs).
-@interface EventSource : NSObject
+@interface LDEventSource : NSObject
 
 /// Returns a new instance of EventSource with the specified URL.
 ///
@@ -71,25 +71,25 @@ typedef void (^EventSourceEventHandler)(Event *event);
 /// Registers an event handler for the Message event.
 ///
 /// @param handler The handler for the Message event.
-- (void)onMessage:(EventSourceEventHandler)handler;
+- (void)onMessage:(LDEventSourceEventHandler)handler;
 
 /// Registers an event handler for the Error event.
 ///
 /// @param handler The handler for the Error event.
-- (void)onError:(EventSourceEventHandler)handler;
+- (void)onError:(LDEventSourceEventHandler)handler;
 
 /// Registers an event handler for the Open event.
 ///
 /// @param handler The handler for the Open event.
-- (void)onOpen:(EventSourceEventHandler)handler;
+- (void)onOpen:(LDEventSourceEventHandler)handler;
 
-- (void)onReadyStateChanged:(EventSourceEventHandler)handler;
+- (void)onReadyStateChanged:(LDEventSourceEventHandler)handler;
 
 /// Registers an event handler for a named event.
 ///
 /// @param eventName The name of the event you registered.
 /// @param handler The handler for the Message event.
-- (void)addEventListener:(NSString *)eventName handler:(EventSourceEventHandler)handler;
+- (void)addEventListener:(NSString *)eventName handler:(LDEventSourceEventHandler)handler;
 
 /// Closes the connection to the EventSource.
 - (void)close;
