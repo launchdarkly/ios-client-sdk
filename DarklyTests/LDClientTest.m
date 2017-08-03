@@ -155,6 +155,35 @@ NSString *const kTargetValueString = @"someString";
     }];
 }
 
+- (void)testDoubleVariationWithoutConfig {
+    [self variationSetupForTestName:__func__ jsonFileName:@"doubleConfigIsADouble-Pi" configureUser:NO targetKey:@"isADouble"];
+    
+    [self waitForExpectationsWithTimeout:10 handler:^(NSError *error){
+        XCTAssertNil([LDClient sharedInstance].ldUser.config);
+        XCTAssertTrue([[LDClient sharedInstance] doubleVariation:self.targetKey fallback:2.71828] == 2.71828);
+    }];
+}
+
+- (void)testDoubleVariationWithConfig {
+    NSString *jsonFileName = @"doubleConfigIsADouble-Pi";
+    [self variationSetupForTestName:__func__ jsonFileName:jsonFileName configureUser:YES targetKey:@"isADouble"];
+    double target = [[self objectFromJsonFileNamed:jsonFileName key:self.targetKey] doubleValue];
+    
+    [self waitForExpectationsWithTimeout:10 handler:^(NSError *error){
+        XCTAssertTrue([[LDClient sharedInstance] doubleVariation:self.targetKey fallback:2.71828] == target);
+    }];
+}
+
+- (void)testDoubleVariationFallback {
+    NSString *jsonFileName = @"doubleConfigIsADouble-Pi";
+    [self variationSetupForTestName:__func__ jsonFileName:jsonFileName configureUser:YES targetKey:@"isNotADouble"];
+    
+    [self waitForExpectationsWithTimeout:10 handler:^(NSError *error){
+        XCTAssertFalse([[[[LDClient sharedInstance] ldUser].config.featuresJsonDictionary allKeys] containsObject:self.targetKey]);
+        XCTAssertTrue([[LDClient sharedInstance] doubleVariation:self.targetKey fallback:2.71828] == 2.71828);
+    }];
+}
+
 - (void)testArrayVariationWithoutConfig {
     [self variationSetupForTestName:__func__ jsonFileName:@"arrayConfigIsAnArray-123" configureUser:NO targetKey:@"isAnArray"];
     NSArray *fallbackArray = @[@1, @2];
