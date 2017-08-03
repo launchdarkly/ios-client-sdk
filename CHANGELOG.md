@@ -2,13 +2,13 @@
 
 All notable changes to the LaunchDarkly iOS SDK will be documented in this file. This project adheres to [Semantic Versioning](http://semver.org).
 
-## [2.5.1] - 2017-07-31
+## [2.5.1] - 2017-08-03
 ### Fixed
-- Replaced base64 user encoding with base64url encoding
-- userUpdatedNotification from being posted at every feature flag response
-- Prevent adding an event to the event store after store capacity reached
-- Resolve potential name conflicts with EventSource
-- Remove user config and extraneous elements from user encoding in feature flag requests
+- Feature flag requests for users with non-ASCII data are now encoded correctly
+- `UserUpdatedNotification` posts only when the feature flag configuration changes for the user
+- Events are no longer added to the event store when capacity is reached
+- Resolve potential symbol conflicts with EventSource
+- Feature flag request payloads are much smaller
 
 ## [2.5.0] - 2017-07-09
 ### Added
