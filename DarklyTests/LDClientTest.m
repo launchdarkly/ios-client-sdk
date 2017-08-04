@@ -14,6 +14,39 @@
 #import <OCMock.h>
 #import <OHHTTPStubs/OHHTTPStubs.h>
 
+typedef void(^MockLDClientDelegateCallbackBlock)();
+
+@interface MockLDClientDelegate : NSObject <ClientDelegate>
+@property (nonatomic, assign) int userDidUpdateCallCount;
+@property (nonatomic, assign) int serverConnectionUnavailableCallCount;
+@property (nonatomic, strong) MockLDClientDelegateCallbackBlock userDidUpdateCallback;
+@property (nonatomic, strong) MockLDClientDelegateCallbackBlock serverUnavailableCallback;
+@end
+
+@implementation MockLDClientDelegate
+-(instancetype)init {
+    self = [super init];
+    self.serverConnectionUnavailableCallCount = 0;
+    
+    return self;
+}
+
+-(void)userDidUpdate {
+    self.userDidUpdateCallCount = [self processCallbackWithCount:self.userDidUpdateCallCount block:self.userDidUpdateCallback];
+}
+
+-(void)serverConnectionUnavailable {
+    self.serverConnectionUnavailableCallCount = [self processCallbackWithCount:self.serverConnectionUnavailableCallCount block:self.serverUnavailableCallback];
+}
+
+-(int)processCallbackWithCount:(int)callbackCount block:(MockLDClientDelegateCallbackBlock)callbackBlock {
+    callbackCount += 1;
+    if (!callbackBlock) { return callbackCount; }
+    callbackBlock();
+    return callbackCount;
+}
+@end
+
 @interface LDClientTest : DarklyXCTestCase <ClientDelegate>
 @property (nonatomic, copy) NSString *testMobileKey;
 @property (nonatomic, strong) XCTestExpectation *userConfigUpdatedNotificationExpectation;
@@ -393,9 +426,63 @@ NSString *const kTargetValueString = @"someString";
     XCTAssertEqualObjects(self, ldClient.delegate);
 }
 
+- (void)testServerUnavailableCalled {
+    OHHTTPStubsResponse *flagResponse = [OHHTTPStubsResponse responseWithError:[NSError errorWithDomain:NSURLErrorDomain code:kCFURLErrorNotConnectedToInternet userInfo:nil]];
+    XCTestExpectation *configResponseArrived = [self stubResponse:flagResponse forHost:@"app.launchdarkly.com" fulfillsExpectation:NO testName:__func__];
+
+    MockLDClientDelegate *delegateMock = [[MockLDClientDelegate alloc] init];
+    //NOTE: There is an issue with the LDClient that's causing the error processing code to be called multiple times. This makes the test pass.
+    //An issue has been raised to resolve multiple calls: https://github.com/launchdarkly/ios-client-private/issues/42
+    //TODO: Once the issue has been cleared, this code that limits the callback execution should be removed
+    __block int callbackBlockExecutionCount = 0;
+    delegateMock.serverUnavailableCallback = ^{
+        callbackBlockExecutionCount += 1;
+        if (callbackBlockExecutionCount > 1) { return; }
+        [configResponseArrived fulfill];
+    };
+    
+    LDConfig *config = [[LDConfig alloc] initWithMobileKey:self.testMobileKey];
+    
+    LDUserBuilder *user = [[LDUserBuilder alloc] init];
+    user.key = [[NSUUID UUID] UUIDString];
+
+    [[LDClient sharedInstance] setDelegate:delegateMock];
+    [[LDClient sharedInstance] start:config withUserBuilder:user];
+    
+    [self waitForExpectationsWithTimeout:10 handler:^(NSError * _Nullable error) {
+        XCTAssertTrue(delegateMock.serverConnectionUnavailableCallCount > 0);
+    }];
+}
+
+- (void)testServerUnavailableNotCalled {
+    NSString *filepath = [[NSBundle bundleForClass:[LDClientTest class]] pathForResource: @"feature_flags"
+                                                                                  ofType:@"json"];
+    NSData *configData = [NSData dataWithContentsOfFile:filepath];
+    XCTAssertTrue([configData length] > 0);
+    OHHTTPStubsResponse *flagResponse = [OHHTTPStubsResponse responseWithData: configData statusCode:200 headers:@{@"Content-Type":@"application/json"}];
+    XCTestExpectation *configResponseArrived = [self stubResponse:flagResponse forHost:@"app.launchdarkly.com" fulfillsExpectation:NO testName:__func__];
+
+    MockLDClientDelegate *delegateMock = [[MockLDClientDelegate alloc] init];
+    delegateMock.userDidUpdateCallback = ^{
+        [configResponseArrived fulfill];
+    };
+    
+    LDConfig *config = [[LDConfig alloc] initWithMobileKey:self.testMobileKey];
+    
+    LDUserBuilder *user = [[LDUserBuilder alloc] init];
+    user.key = [[NSUUID UUID] UUIDString];
+    
+    [[LDClient sharedInstance] setDelegate:delegateMock];
+    [[LDClient sharedInstance] start:config withUserBuilder:user];
+
+    [self waitForExpectationsWithTimeout:10 handler:^(NSError * _Nullable error) {
+        XCTAssertTrue(delegateMock.serverConnectionUnavailableCallCount == 0);
+        XCTAssertTrue(delegateMock.userDidUpdateCallCount > 0);
+    }];
+}
+
 #pragma mark - Helpers
 - (void)variationSetupForTestName:(const char *)testName jsonFileName:(NSString*)jsonFileName configureUser:(BOOL)configureUser targetKey:(NSString*)targetKey {
-    NSString *stubName = [NSString stringWithFormat:@"%s.%@.flagResponseStub", testName, NSStringFromClass([self class])];
     self.userBuilder = [LDUserBuilder userBuilderWithKey:[[NSUUID UUID] UUIDString]];
     self.clientConfig = [[LDConfig alloc] initWithMobileKey:self.testMobileKey];
     self.targetKey = targetKey;
@@ -405,19 +492,8 @@ NSString *const kTargetValueString = @"someString";
                                                                                   ofType:@"json"];
     NSData *configData = [NSData dataWithContentsOfFile:filepath];
     XCTAssertTrue([configData length] > 0);
-    
-    XCTestExpectation *configResponseArrived = [self expectationWithDescription:@"response of async request has arrived"];
-    [OHHTTPStubs stubRequestsPassingTest:^BOOL(NSURLRequest *request) {
-        return [request.URL.host isEqualToString:@"app.launchdarkly.com"];
-    } withStubResponse:^OHHTTPStubsResponse*(NSURLRequest *request) {
-        [configResponseArrived fulfill];
-        return [OHHTTPStubsResponse responseWithData: configData statusCode:200 headers:@{@"Content-Type":@"application/json"}];
-    }].name = stubName;
-    NSArray<id<OHHTTPStubsDescriptor>> *matchingStubs = [[OHHTTPStubs allStubs] filteredArrayUsingPredicate: [NSPredicate predicateWithBlock:^BOOL(id  _Nullable evaluatedObject, NSDictionary<NSString *,id> * _Nullable bindings) {
-        id<OHHTTPStubsDescriptor> evaluatedStub = (id<OHHTTPStubsDescriptor>)evaluatedObject;
-        return [evaluatedStub.name isEqualToString:stubName];
-    }]];
-    XCTAssertTrue([matchingStubs count] == 1);
+    OHHTTPStubsResponse *flagResponse = [OHHTTPStubsResponse responseWithData: configData statusCode:200 headers:@{@"Content-Type":@"application/json"}];
+    [self stubResponse:flagResponse forHost:@"app.launchdarkly.com" fulfillsExpectation:YES testName:testName];
     
     [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(handleUserUpdatedNotification:) name:kLDUserUpdatedNotification object:nil];
     self.userConfigUpdatedNotificationExpectation = [self expectationForNotification:kLDUserUpdatedNotification object:self handler:nil];
@@ -426,12 +502,33 @@ NSString *const kTargetValueString = @"someString";
     XCTAssertTrue(clientStarted);
 }
 
+- (NSString*)stubNameForTestName:(const char *)testName stubName:(NSString*)stubName {
+    return [NSString stringWithFormat:@"%s.%@.%@", testName, NSStringFromClass([self class]), stubName];
+}
+
+- (XCTestExpectation*)stubResponse:(OHHTTPStubsResponse*)response forHost:(NSString*)host fulfillsExpectation:(BOOL)fulfillsExpectation testName:(const char *)testName {
+    NSString *stubName = [self stubNameForTestName:testName stubName:@"flagResponseStub"];
+    XCTestExpectation *configResponseArrived = [self expectationWithDescription:[NSString stringWithFormat:@"%s - response of async request has arrived", testName]];
+    [OHHTTPStubs stubRequestsPassingTest:^BOOL(NSURLRequest *request) {
+        return [request.URL.host isEqualToString:host];
+    } withStubResponse:^OHHTTPStubsResponse*(NSURLRequest *request) {
+        if (fulfillsExpectation) {
+            [configResponseArrived fulfill];
+        }
+        return response;
+    }].name = stubName;
+    NSArray<id<OHHTTPStubsDescriptor>> *matchingStubs = [[OHHTTPStubs allStubs] filteredArrayUsingPredicate: [NSPredicate predicateWithBlock:^BOOL(id  _Nullable evaluatedObject, NSDictionary<NSString *,id> * _Nullable bindings) {
+        id<OHHTTPStubsDescriptor> evaluatedStub = (id<OHHTTPStubsDescriptor>)evaluatedObject;
+        return [evaluatedStub.name isEqualToString:stubName];
+    }]];
+    XCTAssertTrue([matchingStubs count] == 1);
+    return configResponseArrived;
+}
+
 - (void)handleUserUpdatedNotification:(NSNotification*)notification {
-    if ([NSThread isMainThread] == NO) {
-        dispatch_sync(dispatch_get_main_queue(), ^{
-            [self handleUserUpdatedNotification:notification];
-            return;
-        });
+    if (![NSThread isMainThread]) {
+        [self performSelectorOnMainThread:NSSelectorFromString([NSString stringWithCString:__func__ encoding:NSUTF8StringEncoding]) withObject:notification waitUntilDone:YES];
+        return;
     }
     if (self.configureUser == NO) {
         [LDClient sharedInstance].ldUser.config = nil;
