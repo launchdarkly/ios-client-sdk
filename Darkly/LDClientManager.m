@@ -50,12 +50,7 @@
     [pollingMgr startEventPolling];
     
     if ([config streaming]) {
-        
-        eventSource = [LDEventSource eventSourceWithURL:[NSURL URLWithString:kStreamUrl] httpHeaders:[self httpHeadersForEventSource] timeoutInterval:[config.connectionTimeout doubleValue]];
-        
-        [eventSource onMessage:^(LDEvent *e) {
-            [self syncWithServerForConfig];
-        }];
+        [self configureEventSource];
     }
     else{
         pollingMgr.configPollingIntervalMillis = [config.pollingInterval intValue] * kMillisInSecs;
@@ -107,15 +102,20 @@
     LDClient *client = [LDClient sharedInstance];
     
     if ([[client ldConfig] streaming]) {
-        eventSource = [LDEventSource eventSourceWithURL:[NSURL URLWithString:kStreamUrl] httpHeaders:[self httpHeadersForEventSource]];
-        
-        [eventSource onMessage:^(LDEvent *e) {
-            [self syncWithServerForConfig];
-        }];
+        [self configureEventSource];
     }
     else{
         [pollingMgr resumeConfigPolling];
     }
+}
+
+- (void)configureEventSource {
+    eventSource = [LDEventSource eventSourceWithURL:[NSURL URLWithString:kStreamUrl] httpHeaders:[self httpHeadersForEventSource]];
+    
+    [eventSource onMessage:^(LDEvent *event) {
+        if (![event.event isEqualToString:@"ping"]) { return; }
+        [self syncWithServerForConfig];
+    }];
 }
 
 - (void)backgroundFetchInitiated {
