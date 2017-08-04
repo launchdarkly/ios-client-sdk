@@ -204,7 +204,6 @@
     DEBUG_LOGX(@"ClientManager processedConfig method called after receiving successful response from server");
 
     LDFlagConfigModel *newConfig = [[LDFlagConfigModel alloc] initWithDictionary:jsonConfigDictionary];
-
     if (!newConfig || [[LDClient sharedInstance].ldUser.config isEqualToConfig:newConfig]) { return; }  //Bail out if no new config, or the new config equals the existing config
     
     LDUserModel *user = [LDClient sharedInstance].ldUser;

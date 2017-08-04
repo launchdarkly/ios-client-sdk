@@ -164,7 +164,7 @@
         return fallback;
     }
     BOOL flagExists = [ldUser doesFlagExist: featureKey];
-    NSObject *flagValue = [ldUser flagValue: featureKey];
+    id flagValue = [ldUser flagValue: featureKey];
     double returnValue = fallback;
     if (flagExists && [flagValue isKindOfClass:[NSNumber class]]) {
         returnValue = [((NSNumber *)flagValue) doubleValue];
@@ -207,7 +207,7 @@
         return fallback;
     }
     BOOL flagExists = [ldUser doesFlagExist: featureKey];
-    NSObject *flagValue = [ldUser flagValue: featureKey];
+    id flagValue = [ldUser flagValue: featureKey];
     NSArray *returnValue = fallback;
     if (flagExists && [flagValue isKindOfClass:[NSArray class]]) {
         returnValue = (NSArray *)flagValue;
@@ -228,7 +228,7 @@
         return fallback;
     }
     BOOL flagExists = [ldUser doesFlagExist: featureKey];
-    NSObject *flagValue = [ldUser flagValue: featureKey];
+    id flagValue = [ldUser flagValue: featureKey];
     NSDictionary *returnValue = fallback;
     if (flagExists && [flagValue isKindOfClass:[NSDictionary class]]) {
         returnValue = (NSDictionary *)flagValue;
