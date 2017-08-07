@@ -10,11 +10,11 @@
 #import "LDEventModel.h"
 #import "LDFlagConfigModel.h"
 #import "NSDictionary+JSON.h"
-#import "EventSource.h"
+#import "LDEventSource.h"
 
 @interface LDClientManager()
 
-@property(nonatomic, strong, readonly) EventSource *eventSource;
+@property(nonatomic, strong, readonly) LDEventSource *eventSource;
 @property(nonatomic, strong) NSDate *backgroundTime;
 
 @end
@@ -50,7 +50,7 @@
     [pollingMgr startEventPolling];
     
     if ([config streaming]) {
-        [self startEventSourceIfNecessary];
+        [self configureEventSource];
     }
     else{
         pollingMgr.configPollingIntervalMillis = [config.pollingInterval intValue] * kMillisInSecs;
@@ -102,10 +102,24 @@
     LDClient *client = [LDClient sharedInstance];
     
     if ([[client ldConfig] streaming]) {
-        [self startEventSourceIfNecessary];
+        [self configureEventSource];
     }
     else{
         [pollingMgr resumeConfigPolling];
+    }
+}
+
+- (void)configureEventSource {
+    @synchronized (self) {
+        // If we already have an event source, there's nothing to do.
+        if (!eventSource) {
+            eventSource = [LDEventSource eventSourceWithURL:[NSURL URLWithString:kStreamUrl] httpHeaders:[self httpHeadersForEventSource]];
+            
+            [eventSource onMessage:^(LDEvent *event) {
+                if (![event.event isEqualToString:@"ping"]) { return; }
+                [self syncWithServerForConfig];
+            }];
+        }
     }
 }
 
@@ -114,20 +128,6 @@
     LDConfig *config = [[LDClient sharedInstance] ldConfig];
     if (time >= [config.backgroundFetchInterval doubleValue]) {
         [self syncWithServerForConfig];
-    }
-}
-
-- (void)startEventSourceIfNecessary {
-    @synchronized (self) {
-        if (!eventSource) {
-            // The event source should *never* timeout, since it is a long-lived connection that could be
-            // idle for long periods of time.
-            eventSource = [EventSource eventSourceWithURL:[NSURL URLWithString:kStreamUrl] httpHeaders:[self httpHeadersForEventSource] timeoutInterval:[[NSDate distantFuture] timeIntervalSinceNow]];
-            
-            [eventSource onMessage:^(Event *e) {
-                [self syncWithServerForConfig];
-            }];
-        }
     }
 }
 
@@ -164,7 +164,7 @@
         if (currentUser) {
             NSString *jsonString = [currentUser convertToJson];
             if (jsonString) {
-                NSString *encodedUser = [LDUtil base64EncodeString:jsonString];
+                NSString *encodedUser = [LDUtil base64UrlEncodeString:jsonString];
                 [[LDRequestManager sharedInstance] performFeatureFlagRequest:encodedUser];
             } else {
                 DEBUG_LOGX(@"ClientManager is not able to convert user to json");
@@ -198,7 +198,7 @@
         // If Success
         LDFlagConfigModel *newConfig = [[LDFlagConfigModel alloc] initWithDictionary:jsonConfigDictionary];
         
-        if (newConfig) {
+        if (newConfig && ![[LDClient sharedInstance].ldUser.config isEqualToConfig:newConfig]) {
             // Overwrite Config with new config
             LDClient *client = [LDClient sharedInstance];
             LDUserModel *user = client.ldUser;
@@ -208,6 +208,7 @@
             
             [[NSNotificationCenter defaultCenter] postNotificationName: kLDUserUpdatedNotification
                                                                 object: nil];
+            DEBUG_LOGX(@"ClientManager posted Darkly.UserUpdatedNotification following user config update");
         }
     } else {
         DEBUG_LOGX(@"ClientManager processedConfig method called after receiving failure response from server");

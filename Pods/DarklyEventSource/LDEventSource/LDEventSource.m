@@ -1,12 +1,12 @@
 //
-//  EventSource.m
-//  EventSource
+//  LDEventSource.m
+//  LDEventSource
 //
 //  Created by Neil on 25/07/2013.
 //  Copyright (c) 2013 Neil Cowburn. All rights reserved.
 //
 
-#import "EventSource.h"
+#import "LDEventSource.h"
 #import <CoreGraphics/CGBase.h>
 
 static CGFloat const ES_RETRY_INTERVAL = 1.0;
@@ -14,17 +14,17 @@ static CGFloat const ES_DEFAULT_TIMEOUT = 300.0;
 static CGFloat const ES_MAX_RECONNECT_TIME = 180.0;
 
 static NSString *const ESKeyValueDelimiter = @":";
-static NSString *const ESEventSeparatorLFLF = @"\n\n";
-static NSString *const ESEventSeparatorCRCR = @"\r\r";
-static NSString *const ESEventSeparatorCRLFCRLF = @"\r\n\r\n";
-static NSString *const ESEventKeyValuePairSeparator = @"\n";
+static NSString *const LDEventSeparatorLFLF = @"\n\n";
+static NSString *const LDEventSeparatorCRCR = @"\r\r";
+static NSString *const LDEventSeparatorCRLFCRLF = @"\r\n\r\n";
+static NSString *const LDEventKeyValuePairSeparator = @"\n";
 
-static NSString *const ESEventDataKey = @"data";
-static NSString *const ESEventIDKey = @"id";
-static NSString *const ESEventEventKey = @"event";
-static NSString *const ESEventRetryKey = @"retry";
+static NSString *const LDEventDataKey = @"data";
+static NSString *const LDEventIDKey = @"id";
+static NSString *const LDEventEventKey = @"event";
+static NSString *const LDEventRetryKey = @"retry";
 
-@interface EventSource () <NSURLSessionDataDelegate> {
+@interface LDEventSource () <NSURLSessionDataDelegate> {
     BOOL wasClosed;
     dispatch_queue_t messageQueue;
     dispatch_queue_t connectionQueue;
@@ -41,20 +41,20 @@ static NSString *const ESEventRetryKey = @"retry";
 @property (nonatomic, strong) id lastEventID;
 
 - (void)_open;
-- (void)_dispatchEvent:(Event *)e;
+- (void)_dispatchEvent:(LDEvent *)e;
 
 @end
 
-@implementation EventSource
+@implementation LDEventSource
 
 + (instancetype)eventSourceWithURL:(NSURL *)URL httpHeaders:(NSDictionary<NSString*, NSString *>*) headers
 {
-    return [[EventSource alloc] initWithURL:URL httpHeaders:headers];
+    return [[LDEventSource alloc] initWithURL:URL httpHeaders:headers];
 }
 
 + (instancetype)eventSourceWithURL:(NSURL *)URL httpHeaders:(NSDictionary<NSString*, NSString *>*) headers timeoutInterval:(NSTimeInterval)timeoutInterval
 {
-    return [[EventSource alloc] initWithURL:URL httpHeaders:headers timeoutInterval:timeoutInterval];
+    return [[LDEventSource alloc] initWithURL:URL httpHeaders:headers timeoutInterval:timeoutInterval];
 }
 
 - (instancetype)initWithURL:(NSURL *)URL httpHeaders:(NSDictionary<NSString*, NSString *>*) headers
@@ -72,7 +72,7 @@ static NSString *const ESEventRetryKey = @"retry";
         _retryInterval = ES_RETRY_INTERVAL;
         _retryAttempt = 0;
         _httpRequestHeaders = headers;
-        messageQueue = dispatch_queue_create("co.cwbrn.eventsource-queue", DISPATCH_QUEUE_SERIAL);
+        messageQueue = dispatch_queue_create("co.cwbrn.ldeventsource-queue", DISPATCH_QUEUE_SERIAL);
         connectionQueue = dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_HIGH, 0);
         
         dispatch_time_t popTime = dispatch_time(DISPATCH_TIME_NOW, (int64_t)(_retryInterval * NSEC_PER_SEC));
@@ -83,7 +83,7 @@ static NSString *const ESEventRetryKey = @"retry";
     return self;
 }
 
-- (void)addEventListener:(NSString *)eventName handler:(EventSourceEventHandler)handler
+- (void)addEventListener:(NSString *)eventName handler:(LDEventSourceEventHandler)handler
 {
     if (self.listeners[eventName] == nil) {
         [self.listeners setObject:[NSMutableArray array] forKey:eventName];
@@ -92,22 +92,22 @@ static NSString *const ESEventRetryKey = @"retry";
     [self.listeners[eventName] addObject:handler];
 }
 
-- (void)onMessage:(EventSourceEventHandler)handler
+- (void)onMessage:(LDEventSourceEventHandler)handler
 {
     [self addEventListener:MessageEvent handler:handler];
 }
 
-- (void)onError:(EventSourceEventHandler)handler
+- (void)onError:(LDEventSourceEventHandler)handler
 {
     [self addEventListener:ErrorEvent handler:handler];
 }
 
-- (void)onOpen:(EventSourceEventHandler)handler
+- (void)onOpen:(LDEventSourceEventHandler)handler
 {
     [self addEventListener:OpenEvent handler:handler];
 }
 
-- (void)onReadyStateChanged:(EventSourceEventHandler)handler
+- (void)onReadyStateChanged:(LDEventSourceEventHandler)handler
 {
     [self addEventListener:ReadyStateEvent handler:handler];
 }
@@ -125,7 +125,7 @@ didReceiveResponse:(NSURLResponse *)response completionHandler:(void (^)(NSURLSe
     NSHTTPURLResponse *httpResponse = (NSHTTPURLResponse *)response;
     if (httpResponse.statusCode == 200) {
         // Opened
-        Event *e = [Event new];
+        LDEvent *e = [LDEvent new];
         e.readyState = kEventStateOpen;
         
         _retryAttempt = 0;
@@ -143,7 +143,7 @@ didReceiveResponse:(NSURLResponse *)response completionHandler:(void (^)(NSURLSe
     NSString *eventString = [[NSString alloc] initWithData:data encoding:NSUTF8StringEncoding];
     NSArray *lines = [eventString componentsSeparatedByCharactersInSet:[NSCharacterSet newlineCharacterSet]];
     
-    Event *event = [Event new];
+    LDEvent *event = [LDEvent new];
     event.readyState = kEventStateOpen;
     
     for (NSString *line in lines) {
@@ -156,7 +156,7 @@ didReceiveResponse:(NSURLResponse *)response completionHandler:(void (^)(NSURLSe
                 [self _dispatchEvent:event];
             });
             
-            event = [Event new];
+            event = [LDEvent new];
             event.readyState = kEventStateOpen;
             continue;
         }
@@ -171,18 +171,18 @@ didReceiveResponse:(NSURLResponse *)response completionHandler:(void (^)(NSURLSe
             [scanner scanUpToCharactersFromSet:[NSCharacterSet newlineCharacterSet] intoString:&value];
             
             if (key && value) {
-                if ([key isEqualToString:ESEventEventKey]) {
+                if ([key isEqualToString:LDEventEventKey]) {
                     event.event = value;
-                } else if ([key isEqualToString:ESEventDataKey]) {
+                } else if ([key isEqualToString:LDEventDataKey]) {
                     if (event.data != nil) {
                         event.data = [event.data stringByAppendingFormat:@"\n%@", value];
                     } else {
                         event.data = value;
                     }
-                } else if ([key isEqualToString:ESEventIDKey]) {
+                } else if ([key isEqualToString:LDEventIDKey]) {
                     event.id = value;
                     self.lastEventID = event.id;
-                } else if ([key isEqualToString:ESEventRetryKey]) {
+                } else if ([key isEqualToString:LDEventRetryKey]) {
                     self.retryInterval = [value doubleValue];
                 }
             }
@@ -198,7 +198,7 @@ didReceiveResponse:(NSURLResponse *)response completionHandler:(void (^)(NSURLSe
         return;
     }
     
-    Event *e = [Event new];
+    LDEvent *e = [LDEvent new];
     e.readyState = kEventStateClosed;
     e.error = error ?: [NSError errorWithDomain:@""
                                            code:e.readyState
@@ -236,7 +236,7 @@ didReceiveResponse:(NSURLResponse *)response completionHandler:(void (^)(NSURLSe
     self.eventSourceTask = [self.session dataTaskWithRequest:request];
     [self.eventSourceTask resume];
     
-    Event *e = [Event new];
+    LDEvent *e = [LDEvent new];
     e.readyState = kEventStateConnecting;
     
     [self _dispatchEvent:e type:ReadyStateEvent];
@@ -246,17 +246,17 @@ didReceiveResponse:(NSURLResponse *)response completionHandler:(void (^)(NSURLSe
     }
 }
 
-- (void)_dispatchEvent:(Event *)event type:(NSString * const)type
+- (void)_dispatchEvent:(LDEvent *)event type:(NSString * const)type
 {
     NSArray *errorHandlers = self.listeners[type];
-    for (EventSourceEventHandler handler in errorHandlers) {
+    for (LDEventSourceEventHandler handler in errorHandlers) {
         dispatch_async(connectionQueue, ^{
             handler(event);
         });
     }
 }
 
-- (void)_dispatchEvent:(Event *)event
+- (void)_dispatchEvent:(LDEvent *)event
 {
     [self _dispatchEvent:event type:MessageEvent];
     
@@ -273,7 +273,7 @@ didReceiveResponse:(NSURLResponse *)response completionHandler:(void (^)(NSURLSe
 @end
 
 
-@implementation Event
+@implementation LDEvent
 
 - (NSString *)description
 {

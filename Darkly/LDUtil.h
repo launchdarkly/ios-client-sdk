@@ -64,6 +64,8 @@ if (!(condition) && DEBUG) { \
 
 + (NSString *)base64EncodeString:(NSString *)unencodedString;
 + (NSString *)base64DecodeString:(NSString *)encodedString;
++ (NSString *)base64UrlEncodeString:(NSString *)unencodedString;
++ (NSString *)base64UrlDecodeString:(NSString *)encodedString;
 + (void)throwException:(NSString *)name reason:(NSString *)reason;
 
 @end

@@ -1,0 +1,3 @@
+{
+    "isADictionary":{"keyA":true,"keyB":[1,2,3],"keyC":{"keyD":"someStringValue"}}
+}
