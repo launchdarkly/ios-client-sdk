@@ -53,6 +53,7 @@
         [self configureEventSource];
     }
     else{
+        [self syncWithServerForConfig];
         pollingMgr.configPollingIntervalMillis = [config.pollingInterval intValue] * kMillisInSecs;
         [pollingMgr startConfigPolling];
     }

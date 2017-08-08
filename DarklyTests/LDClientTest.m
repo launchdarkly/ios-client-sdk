@@ -410,13 +410,7 @@ NSString *const kTestMobileKey = @"testMobileKey";
 
     //Configure the mock delegate to fulfill the flag request expectation
     MockLDClientDelegate *delegateMock = [[MockLDClientDelegate alloc] init];
-    //NOTE: There is an issue with the LDClient that's causing the error processing code to be called multiple times. This makes the test pass.
-    //An issue has been raised to resolve multiple calls: https://github.com/launchdarkly/ios-client-private/issues/42
-    //TODO: Once the issue has been cleared, this code that limits the callback execution should be removed
-    __block int callbackBlockExecutionCount = 0;
     delegateMock.serverUnavailableCallback = ^{
-        callbackBlockExecutionCount += 1;
-        if (callbackBlockExecutionCount > 1) { return; }
         [configResponseArrived fulfill];
     };
     
@@ -464,7 +458,7 @@ NSString *const kTestMobileKey = @"testMobileKey";
     
     BOOL clientStarted = [[LDClient sharedInstance] start:clientConfig withUserBuilder:userBuilder];
     XCTAssertTrue(clientStarted);
-    
+    [[LDClientManager sharedInstance] syncWithServerForConfig];
     [self waitForExpectationsWithTimeout:10 handler:testBlock];
 }
 
@@ -497,6 +491,7 @@ NSString *const kTestMobileKey = @"testMobileKey";
     
     [[LDClient sharedInstance] setDelegate:mockDelegate];
     [[LDClient sharedInstance] start:config withUserBuilder:user];
+    [[LDClientManager sharedInstance] syncWithServerForConfig];
     
     [self waitForExpectationsWithTimeout:10 handler:testBlock];
 }
