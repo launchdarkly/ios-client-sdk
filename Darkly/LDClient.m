@@ -45,41 +45,27 @@
 
 - (BOOL)start:(LDConfig *)inputConfig withUserBuilder:(LDUserBuilder *)inputUserBuilder {
     DEBUG_LOGX(@"LDClient start method called");
-    if (!clientStarted) {
-        if (inputConfig) {
-            ldConfig = inputConfig;
-            if (ldConfig) {
-                DarklyLogLevel logLevel =  DarklyLogLevelCriticalOnly;
-                if ([ldConfig debugEnabled]) {
-                    logLevel = DarklyLogLevelDebug;
-                }
-                [LDUtil setLogLevel:logLevel];
-                
-                clientStarted = YES;
-                DEBUG_LOGX(@"LDClient started");
-                if (!inputUserBuilder) {
-                    inputUserBuilder = [[LDUserBuilder alloc] init];
-                }
-                ldUser = [inputUserBuilder build];
-                
-                LDClientManager *clientManager = [LDClientManager sharedInstance];
-                [clientManager setOfflineEnabled:NO];
-                [clientManager syncWithServerForConfig];
-                [clientManager startPolling];
-                
-                return YES;
-            } else {
-                DEBUG_LOGX(@"LDClient client requires a config to start");
-                return NO;
-            }
-        } else {
-            DEBUG_LOGX(@"LDClient client requires a config to start");
-            return NO;
-        }
-    } else {
+    if (clientStarted) {
         DEBUG_LOGX(@"LDClient client already started");
         return NO;
     }
+    if (!inputConfig) {
+        DEBUG_LOGX(@"LDClient client requires a config to start");
+        return NO;
+    }
+    ldConfig = inputConfig;
+
+    [LDUtil setLogLevel:[ldConfig debugEnabled] ? DarklyLogLevelDebug : DarklyLogLevelCriticalOnly];
+    
+    clientStarted = YES;
+    DEBUG_LOGX(@"LDClient started");
+    inputUserBuilder = inputUserBuilder ?: [[LDUserBuilder alloc] init];
+    ldUser = [inputUserBuilder build];
+    
+    [LDClientManager sharedInstance].offlineEnabled = NO;
+    [[LDClientManager sharedInstance] startPolling];
+    
+    return YES;
 }
 
 - (BOOL)updateUser:(LDUserBuilder *)builder {
@@ -273,7 +259,6 @@
         LDClientManager *clientManager = [LDClientManager sharedInstance];
         [clientManager setOfflineEnabled:NO];
         [clientManager startPolling];
-        [clientManager syncWithServerForConfig];
         return YES;
     } else {
         DEBUG_LOGX(@"LDClient not started yet!");
