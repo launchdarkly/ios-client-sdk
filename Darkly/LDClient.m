@@ -9,6 +9,7 @@
 #import "LDDataManager.h"
 #import "LDPollingManager.h"
 #import "DarklyConstants.h"
+#import "NSThread+MainExecutable.h"
 
 @interface LDClient() {
     BOOL clientStarted;
@@ -154,7 +155,7 @@
 }
 
 - (double)doubleVariation:(NSString *)featureKey fallback:(double)fallback {
-    DEBUG_LOG(@"LDClient numberVariation method called for feature=%@ and fallback=%f", featureKey, fallback);
+    DEBUG_LOG(@"LDClient doubleVariation method called for feature=%@ and fallback=%f", featureKey, fallback);
     if (![featureKey isKindOfClass:[NSString class]]) {
         NSLog(@"featureKey should be an NSString. Returning fallback value");
         return fallback;
@@ -170,7 +171,7 @@
         returnValue = [((NSNumber *)flagValue) doubleValue];
     }
     
-    [[LDDataManager sharedManager] createFeatureEvent: featureKey keyValue:[NSNumber numberWithDouble:returnValue] defaultKeyValue:[NSNumber numberWithDouble:fallback]];
+    [[LDDataManager sharedManager] createFeatureEvent:featureKey keyValue:[NSNumber numberWithDouble:returnValue] defaultKeyValue:[NSNumber numberWithDouble:fallback]];
     return returnValue;
 }
 
@@ -308,32 +309,26 @@
 
 // Notification handler for ClientManager user updated
 -(void)userUpdated {
-    if (![NSThread isMainThread]) {
-        [self performSelectorOnMainThread:NSSelectorFromString([NSString stringWithCString:__func__ encoding:NSUTF8StringEncoding]) withObject:nil waitUntilDone:YES];
-        return;
-    }
     if (![self.delegate respondsToSelector:@selector(userDidUpdate)]) { return; }
-    [self.delegate userDidUpdate];
+    [NSThread performOnMainThread:^{
+        [self.delegate userDidUpdate];
+    }];
 }
 
 // Notification handler for ClientManager server connection failed
 -(void)serverUnavailable {
-    if (![NSThread isMainThread]) {
-        [self performSelectorOnMainThread:NSSelectorFromString([NSString stringWithCString:__func__ encoding:NSUTF8StringEncoding]) withObject:nil waitUntilDone:YES];
-        return;
-    }
     if (![self.delegate respondsToSelector:@selector(serverConnectionUnavailable)]) { return; }
-    [self.delegate serverConnectionUnavailable];
+    [NSThread performOnMainThread:^{
+        [self.delegate serverConnectionUnavailable];
+    }];
 }
 
 // Notification handler for DataManager config flag update
 -(void)configFlagUpdated:(NSNotification *)notification {
-    if (![NSThread isMainThread]) {
-        [self performSelectorOnMainThread:NSSelectorFromString([NSString stringWithCString:__func__ encoding:NSUTF8StringEncoding]) withObject:notification waitUntilDone:YES];
-        return;
-    }
     if (![self.delegate respondsToSelector:@selector(featureFlagDidUpdate:)]) { return; }
-    [self.delegate featureFlagDidUpdate:[notification.userInfo objectForKey:@"flagkey"]];
+    [NSThread performOnMainThread:^{
+        [self.delegate featureFlagDidUpdate:[notification.userInfo objectForKey:@"flagkey"]];
+    }];
 }
 
 -(void)dealloc {
