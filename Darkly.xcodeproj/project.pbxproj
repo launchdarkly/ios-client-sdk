@@ -137,6 +137,10 @@
 		69F3F6AB1E6BF82C00079A09 /* NSDictionary+JSON.h in Headers */ = {isa = PBXBuildFile; fileRef = 690346F21E68990000E45133 /* NSDictionary+JSON.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		69F3F6AC1E6BF82C00079A09 /* NSDictionary+JSON.m in Sources */ = {isa = PBXBuildFile; fileRef = 690346F31E68990000E45133 /* NSDictionary+JSON.m */; };
 		69F3F6AE1E6BF84B00079A09 /* Darkly-Prefix.pch in Headers */ = {isa = PBXBuildFile; fileRef = 690346D81E68990000E45133 /* Darkly-Prefix.pch */; settings = {ATTRIBUTES = (Public, ); }; };
+		83258A3D1F323049008C2133 /* LDClientManager+EventSource.m in Sources */ = {isa = PBXBuildFile; fileRef = 83258A3C1F323049008C2133 /* LDClientManager+EventSource.m */; };
+		83258A401F3244D0008C2133 /* LDUserBuilder+Testable.m in Sources */ = {isa = PBXBuildFile; fileRef = 83258A3F1F3244D0008C2133 /* LDUserBuilder+Testable.m */; };
+		83258A421F32721A008C2133 /* emptyConfig.json in Resources */ = {isa = PBXBuildFile; fileRef = 83258A411F32721A008C2133 /* emptyConfig.json */; };
+		83258A441F329EFB008C2133 /* doubleConfigIsADouble-Pi.json in Resources */ = {isa = PBXBuildFile; fileRef = 83258A431F329EFB008C2133 /* doubleConfigIsADouble-Pi.json */; };
 		832C78831F296F3400E334A2 /* NSMutableDictionary+NullRemovable.h in Headers */ = {isa = PBXBuildFile; fileRef = 832C78811F296F3400E334A2 /* NSMutableDictionary+NullRemovable.h */; };
 		832C78841F296F3400E334A2 /* NSMutableDictionary+NullRemovable.h in Headers */ = {isa = PBXBuildFile; fileRef = 832C78811F296F3400E334A2 /* NSMutableDictionary+NullRemovable.h */; };
 		832C78851F296F3400E334A2 /* NSMutableDictionary+NullRemovable.h in Headers */ = {isa = PBXBuildFile; fileRef = 832C78811F296F3400E334A2 /* NSMutableDictionary+NullRemovable.h */; };
@@ -147,6 +151,14 @@
 		832C788A1F296F3400E334A2 /* NSMutableDictionary+NullRemovable.m in Sources */ = {isa = PBXBuildFile; fileRef = 832C78821F296F3400E334A2 /* NSMutableDictionary+NullRemovable.m */; };
 		832C788D1F2977B800E334A2 /* NSString+RemoveWhitespace.m in Sources */ = {isa = PBXBuildFile; fileRef = 832C788C1F2977B800E334A2 /* NSString+RemoveWhitespace.m */; };
 		832C78901F2A8DF600E334A2 /* LDUserModel+JsonDecodeable.m in Sources */ = {isa = PBXBuildFile; fileRef = 832C788F1F2A8DF600E334A2 /* LDUserModel+JsonDecodeable.m */; };
+		833D08CB1F3B97EB00BEED83 /* NSThread+MainExecutable.h in Headers */ = {isa = PBXBuildFile; fileRef = 833D08C91F3B97EB00BEED83 /* NSThread+MainExecutable.h */; };
+		833D08CC1F3B97EB00BEED83 /* NSThread+MainExecutable.h in Headers */ = {isa = PBXBuildFile; fileRef = 833D08C91F3B97EB00BEED83 /* NSThread+MainExecutable.h */; };
+		833D08CD1F3B97EB00BEED83 /* NSThread+MainExecutable.h in Headers */ = {isa = PBXBuildFile; fileRef = 833D08C91F3B97EB00BEED83 /* NSThread+MainExecutable.h */; };
+		833D08CE1F3B97EB00BEED83 /* NSThread+MainExecutable.h in Headers */ = {isa = PBXBuildFile; fileRef = 833D08C91F3B97EB00BEED83 /* NSThread+MainExecutable.h */; };
+		833D08CF1F3B97EB00BEED83 /* NSThread+MainExecutable.m in Sources */ = {isa = PBXBuildFile; fileRef = 833D08CA1F3B97EB00BEED83 /* NSThread+MainExecutable.m */; };
+		833D08D01F3B97EB00BEED83 /* NSThread+MainExecutable.m in Sources */ = {isa = PBXBuildFile; fileRef = 833D08CA1F3B97EB00BEED83 /* NSThread+MainExecutable.m */; };
+		833D08D11F3B97EB00BEED83 /* NSThread+MainExecutable.m in Sources */ = {isa = PBXBuildFile; fileRef = 833D08CA1F3B97EB00BEED83 /* NSThread+MainExecutable.m */; };
+		833D08D21F3B97EB00BEED83 /* NSThread+MainExecutable.m in Sources */ = {isa = PBXBuildFile; fileRef = 833D08CA1F3B97EB00BEED83 /* NSThread+MainExecutable.m */; };
 		8349F51E1F19352300B1F3DB /* NSDictionary+StringKey_Matchable.m in Sources */ = {isa = PBXBuildFile; fileRef = 8349F51D1F19352300B1F3DB /* NSDictionary+StringKey_Matchable.m */; };
 		8349F5211F195BCF00B1F3DB /* LDUserModel+Equatable.m in Sources */ = {isa = PBXBuildFile; fileRef = 8349F5201F195BCF00B1F3DB /* LDUserModel+Equatable.m */; };
 		8369475C1F1FED400047697C /* boolConfigIsABool-false.json in Resources */ = {isa = PBXBuildFile; fileRef = 836947591F1FED400047697C /* boolConfigIsABool-false.json */; };
@@ -243,12 +255,20 @@
 		69BD7E101E6C79550056D70F /* Darkly.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Darkly.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		69F3F67B1E6BF7C000079A09 /* Darkly.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Darkly.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		802467EF0B1BE213E518DE86 /* Pods-Darkly_watchOS.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Darkly_watchOS.debug.xcconfig"; path = "Pods/Target Support Files/Pods-Darkly_watchOS/Pods-Darkly_watchOS.debug.xcconfig"; sourceTree = "<group>"; };
+		83258A3B1F323049008C2133 /* LDClientManager+EventSource.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "LDClientManager+EventSource.h"; sourceTree = "<group>"; };
+		83258A3C1F323049008C2133 /* LDClientManager+EventSource.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "LDClientManager+EventSource.m"; sourceTree = "<group>"; };
+		83258A3E1F3244D0008C2133 /* LDUserBuilder+Testable.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "LDUserBuilder+Testable.h"; sourceTree = "<group>"; };
+		83258A3F1F3244D0008C2133 /* LDUserBuilder+Testable.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "LDUserBuilder+Testable.m"; sourceTree = "<group>"; };
+		83258A411F32721A008C2133 /* emptyConfig.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = emptyConfig.json; sourceTree = "<group>"; };
+		83258A431F329EFB008C2133 /* doubleConfigIsADouble-Pi.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = "doubleConfigIsADouble-Pi.json"; sourceTree = "<group>"; };
 		832C78811F296F3400E334A2 /* NSMutableDictionary+NullRemovable.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "NSMutableDictionary+NullRemovable.h"; sourceTree = "<group>"; };
 		832C78821F296F3400E334A2 /* NSMutableDictionary+NullRemovable.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "NSMutableDictionary+NullRemovable.m"; sourceTree = "<group>"; };
 		832C788B1F2977B800E334A2 /* NSString+RemoveWhitespace.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = "NSString+RemoveWhitespace.h"; path = "../../Darkly/NSString+RemoveWhitespace.h"; sourceTree = "<group>"; };
 		832C788C1F2977B800E334A2 /* NSString+RemoveWhitespace.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = "NSString+RemoveWhitespace.m"; path = "../../Darkly/NSString+RemoveWhitespace.m"; sourceTree = "<group>"; };
 		832C788E1F2A8DF600E334A2 /* LDUserModel+JsonDecodeable.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "LDUserModel+JsonDecodeable.h"; sourceTree = "<group>"; };
 		832C788F1F2A8DF600E334A2 /* LDUserModel+JsonDecodeable.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "LDUserModel+JsonDecodeable.m"; sourceTree = "<group>"; };
+		833D08C91F3B97EB00BEED83 /* NSThread+MainExecutable.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "NSThread+MainExecutable.h"; sourceTree = "<group>"; };
+		833D08CA1F3B97EB00BEED83 /* NSThread+MainExecutable.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "NSThread+MainExecutable.m"; sourceTree = "<group>"; };
 		8349F51B1F1934A000B1F3DB /* NSDictionary+StringKey_Matchable.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "NSDictionary+StringKey_Matchable.h"; sourceTree = "<group>"; };
 		8349F51D1F19352300B1F3DB /* NSDictionary+StringKey_Matchable.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "NSDictionary+StringKey_Matchable.m"; sourceTree = "<group>"; };
 		8349F51F1F195BCF00B1F3DB /* LDUserModel+Equatable.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "LDUserModel+Equatable.h"; sourceTree = "<group>"; };
@@ -395,10 +415,7 @@
 				690346EC1E68990000E45133 /* LDUserModel.m */,
 				690346ED1E68990000E45133 /* LDUtil.h */,
 				690346EE1E68990000E45133 /* LDUtil.m */,
-				690346F21E68990000E45133 /* NSDictionary+JSON.h */,
-				690346F31E68990000E45133 /* NSDictionary+JSON.m */,
-				832C78811F296F3400E334A2 /* NSMutableDictionary+NullRemovable.h */,
-				832C78821F296F3400E334A2 /* NSMutableDictionary+NullRemovable.m */,
+				833D08D31F3B9C4400BEED83 /* Categories */,
 				69BAF40C1E9AAB4800747613 /* Info.plist */,
 			);
 			path = Darkly;
@@ -439,9 +456,11 @@
 			isa = PBXGroup;
 			children = (
 				6903471E1E689B9F00E45133 /* feature_flags.json */,
+				83258A411F32721A008C2133 /* emptyConfig.json */,
 				836947591F1FED400047697C /* boolConfigIsABool-false.json */,
 				8369475A1F1FED400047697C /* boolConfigIsABool-true.json */,
 				8369475B1F1FED400047697C /* boolConfigIsABool2-true.json */,
+				83258A431F329EFB008C2133 /* doubleConfigIsADouble-Pi.json */,
 				8369475F1F1FEEB40047697C /* numberConfigIsANumber-1.json */,
 				836947601F1FEEB40047697C /* numberConfigIsANumber-2.json */,
 				836947611F1FEEB40047697C /* numberConfigIsANumber2-1.json */,
@@ -478,8 +497,25 @@
 				8349F5201F195BCF00B1F3DB /* LDUserModel+Equatable.m */,
 				832C788E1F2A8DF600E334A2 /* LDUserModel+JsonDecodeable.h */,
 				832C788F1F2A8DF600E334A2 /* LDUserModel+JsonDecodeable.m */,
+				83258A3B1F323049008C2133 /* LDClientManager+EventSource.h */,
+				83258A3C1F323049008C2133 /* LDClientManager+EventSource.m */,
+				83258A3E1F3244D0008C2133 /* LDUserBuilder+Testable.h */,
+				83258A3F1F3244D0008C2133 /* LDUserBuilder+Testable.m */,
 			);
 			path = Categories;
+			sourceTree = "<group>";
+		};
+		833D08D31F3B9C4400BEED83 /* Categories */ = {
+			isa = PBXGroup;
+			children = (
+				690346F21E68990000E45133 /* NSDictionary+JSON.h */,
+				690346F31E68990000E45133 /* NSDictionary+JSON.m */,
+				832C78811F296F3400E334A2 /* NSMutableDictionary+NullRemovable.h */,
+				832C78821F296F3400E334A2 /* NSMutableDictionary+NullRemovable.m */,
+				833D08C91F3B97EB00BEED83 /* NSThread+MainExecutable.h */,
+				833D08CA1F3B97EB00BEED83 /* NSThread+MainExecutable.m */,
+			);
+			name = Categories;
 			sourceTree = "<group>";
 		};
 		FDBF21187E2D69170ACC6811 /* Pods */ = {
@@ -520,6 +556,7 @@
 				690347091E68990000E45133 /* LDUtil.h in Headers */,
 				69BAF40D1E9AAB4800747613 /* Darkly.h in Headers */,
 				690346F71E68990000E45133 /* LDClient.h in Headers */,
+				833D08CB1F3B97EB00BEED83 /* NSThread+MainExecutable.h in Headers */,
 				690347071E68990000E45133 /* LDUserModel.h in Headers */,
 				832C78831F296F3400E334A2 /* NSMutableDictionary+NullRemovable.h in Headers */,
 			);
@@ -543,6 +580,7 @@
 				69A87EAE1E74712800B88B23 /* LDUtil.h in Headers */,
 				69071F801EA2A7CC00497F93 /* Darkly.h in Headers */,
 				69A87E9C1E74712800B88B23 /* LDClient.h in Headers */,
+				833D08CE1F3B97EB00BEED83 /* NSThread+MainExecutable.h in Headers */,
 				69A87EAC1E74712800B88B23 /* LDUserModel.h in Headers */,
 				832C78861F296F3400E334A2 /* NSMutableDictionary+NullRemovable.h in Headers */,
 			);
@@ -566,6 +604,7 @@
 				69BD7E2F1E6C79910056D70F /* LDUtil.h in Headers */,
 				69071F7F1EA2A7CB00497F93 /* Darkly.h in Headers */,
 				69BD7E1D1E6C79910056D70F /* LDClient.h in Headers */,
+				833D08CD1F3B97EB00BEED83 /* NSThread+MainExecutable.h in Headers */,
 				69BD7E2D1E6C79910056D70F /* LDUserModel.h in Headers */,
 				832C78851F296F3400E334A2 /* NSMutableDictionary+NullRemovable.h in Headers */,
 			);
@@ -589,6 +628,7 @@
 				69F3F6AB1E6BF82C00079A09 /* NSDictionary+JSON.h in Headers */,
 				69071F7E1EA2A7CA00497F93 /* Darkly.h in Headers */,
 				69F3F6A31E6BF82C00079A09 /* LDRequestManager.h in Headers */,
+				833D08CC1F3B97EB00BEED83 /* NSThread+MainExecutable.h in Headers */,
 				69F3F69D1E6BF82C00079A09 /* LDEventModel.h in Headers */,
 				832C78841F296F3400E334A2 /* NSMutableDictionary+NullRemovable.h in Headers */,
 			);
@@ -767,6 +807,7 @@
 				836947841F20125F0047697C /* ldClientManagerTestConfigB.json in Resources */,
 				836947711F1FF45B0047697C /* arrayConfigIsAnArray-Empty.json in Resources */,
 				8369476A1F1FF0A00047697C /* stringConfigIsAStringA-someString.json in Resources */,
+				83258A421F32721A008C2133 /* emptyConfig.json in Resources */,
 				836947691F1FF0A00047697C /* stringConfigIsAString-someStringA.json in Resources */,
 				8369477A1F1FF80A0047697C /* dictionaryConfigIsADictionary-3Key.json in Resources */,
 				836947621F1FEEB40047697C /* numberConfigIsANumber-1.json in Resources */,
@@ -777,6 +818,7 @@
 				836947721F1FF45B0047697C /* arrayConfigIsAnArrayA-123.json in Resources */,
 				8369477C1F1FF80A0047697C /* dictionaryConfigIsADictionary-KeyA.json in Resources */,
 				8369475E1F1FED400047697C /* boolConfigIsABool2-true.json in Resources */,
+				83258A441F329EFB008C2133 /* doubleConfigIsADouble-Pi.json in Resources */,
 				836947641F1FEEB40047697C /* numberConfigIsANumber2-1.json in Resources */,
 				8369477B1F1FF80A0047697C /* dictionaryConfigIsADictionary-Empty.json in Resources */,
 				836947681F1FF0A00047697C /* stringConfigIsAString-someString.json in Resources */,
@@ -988,6 +1030,7 @@
 				690347121E68994500E45133 /* LDDataManager.m in Sources */,
 				832C78871F296F3400E334A2 /* NSMutableDictionary+NullRemovable.m in Sources */,
 				690347041E68990000E45133 /* LDRequestManager.m in Sources */,
+				833D08CF1F3B97EB00BEED83 /* NSThread+MainExecutable.m in Sources */,
 				690346FA1E68990000E45133 /* LDClientManager.m in Sources */,
 				690346F81E68990000E45133 /* LDClient.m in Sources */,
 				690346F61E68990000E45133 /* DarklyConstants.m in Sources */,
@@ -1013,12 +1056,14 @@
 				6903472A1E689B9F00E45133 /* LDUserModelTest.m in Sources */,
 				8349F5211F195BCF00B1F3DB /* LDUserModel+Equatable.m in Sources */,
 				6903472B1E689B9F00E45133 /* LDPollingManagerTest.m in Sources */,
+				83258A3D1F323049008C2133 /* LDClientManager+EventSource.m in Sources */,
 				6903472E1E689B9F00E45133 /* LDClientManagerTest.m in Sources */,
 				69E5275E1E6E948F00E4B63B /* LDDataManagerTest.m in Sources */,
 				690347321E689B9F00E45133 /* DarklyXCTestCase.m in Sources */,
 				69B205D31EA92ECD00487CA3 /* LDRequestManagerTest.m in Sources */,
 				6903472D1E689B9F00E45133 /* LDUtilTest.m in Sources */,
 				690347311E689B9F00E45133 /* LDFlagConfigModelTest.m in Sources */,
+				83258A401F3244D0008C2133 /* LDUserBuilder+Testable.m in Sources */,
 				690347331E689B9F00E45133 /* NSArray+UnitTests.m in Sources */,
 				6903472C1E689B9F00E45133 /* LDClientTest.m in Sources */,
 				832C78901F2A8DF600E334A2 /* LDUserModel+JsonDecodeable.m in Sources */,
@@ -1033,6 +1078,7 @@
 				69A87E9D1E74712800B88B23 /* LDClient.m in Sources */,
 				832C788A1F296F3400E334A2 /* NSMutableDictionary+NullRemovable.m in Sources */,
 				69A87E9B1E74712800B88B23 /* DarklyConstants.m in Sources */,
+				833D08D21F3B97EB00BEED83 /* NSThread+MainExecutable.m in Sources */,
 				69A87EA11E74712800B88B23 /* LDConfig.m in Sources */,
 				69A87EA51E74712800B88B23 /* LDFlagConfigModel.m in Sources */,
 				69A87EB11E74712800B88B23 /* NSDictionary+JSON.m in Sources */,
@@ -1054,6 +1100,7 @@
 				69BD7E1E1E6C79910056D70F /* LDClient.m in Sources */,
 				832C78891F296F3400E334A2 /* NSMutableDictionary+NullRemovable.m in Sources */,
 				69BD7E1C1E6C79910056D70F /* DarklyConstants.m in Sources */,
+				833D08D11F3B97EB00BEED83 /* NSThread+MainExecutable.m in Sources */,
 				69BD7E221E6C79910056D70F /* LDConfig.m in Sources */,
 				69BD7E261E6C79910056D70F /* LDFlagConfigModel.m in Sources */,
 				69BD7E321E6C79910056D70F /* NSDictionary+JSON.m in Sources */,
@@ -1075,6 +1122,7 @@
 				69F3F6981E6BF82C00079A09 /* LDClient.m in Sources */,
 				832C78881F296F3400E334A2 /* NSMutableDictionary+NullRemovable.m in Sources */,
 				69F3F6961E6BF82100079A09 /* DarklyConstants.m in Sources */,
+				833D08D01F3B97EB00BEED83 /* NSThread+MainExecutable.m in Sources */,
 				69F3F69C1E6BF82C00079A09 /* LDConfig.m in Sources */,
 				69F3F6A01E6BF82C00079A09 /* LDFlagConfigModel.m in Sources */,
 				69F3F6AC1E6BF82C00079A09 /* NSDictionary+JSON.m in Sources */,
