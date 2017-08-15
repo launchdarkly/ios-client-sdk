@@ -49,3 +49,6 @@ extern int const kMinimumPollingInterval;
 extern int const kDefaultBackgroundFetchInterval;
 extern int const kMinimumBackgroundFetchInterval;
 extern int const kMillisInSecs;
+extern NSInteger const kHTTPStatusCodeBadRequest;
+extern NSInteger const kHTTPStatusCodeMethodNotAllowed;
+extern NSInteger const kHTTPStatusCodeNotImplemented;

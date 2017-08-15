@@ -158,25 +158,17 @@
 }
 
 -(void)syncWithServerForConfig {
-    if (!offlineEnabled) {
-        DEBUG_LOGX(@"ClientManager syncing config with server");
-        LDClient *client = [LDClient sharedInstance];
-        LDUserModel *currentUser = client.ldUser;
-        
-        if (currentUser) {
-            NSString *jsonString = [currentUser convertToJson];
-            if (jsonString) {
-                NSString *encodedUser = [LDUtil base64UrlEncodeString:jsonString];
-                [[LDRequestManager sharedInstance] performFeatureFlagRequest:encodedUser];
-            } else {
-                DEBUG_LOGX(@"ClientManager is not able to convert user to json");
-            }
-        } else {
-            DEBUG_LOGX(@"ClientManager has no user so won't sync config with server");
-        }
-    } else {
+    if (offlineEnabled) {
         DEBUG_LOGX(@"ClientManager is in offline mode so won't sync config with server");
+        return;
     }
+    
+    if (![LDClient sharedInstance].ldUser) {
+        DEBUG_LOGX(@"ClientManager has no user so won't sync config with server");
+        return;
+    }
+
+    [[LDRequestManager sharedInstance] performFeatureFlagRequest:[LDClient sharedInstance].ldUser];
 }
 
 - (void)flushEvents {
