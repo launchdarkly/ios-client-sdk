@@ -8,7 +8,7 @@
 
 import Foundation
 
-public class LDUser {   //TODO: Open instead? Should sdk allow subclassing, or just composition?
+public struct LDUser {   //Public access means an app will have to compose its user type with an LDUser. The compiler will not allow subclassing.
     
     fileprivate struct Constants {
         static let keyDevice = "device"
@@ -24,12 +24,12 @@ public class LDUser {   //TODO: Open instead? Should sdk allow subclassing, or j
     public var email: String?
     public var avatar: String?
     public var custom: [String: AnyObject]?   //Java sdk only allows string keys, so while this is different than the ios-client, it seems reasonable
-    private(set) var lastUpdated: Date  //internal access within the sdk, settable only within LDUser
     public var isAnonymous: Bool
     public var device: String?
     public var os: String?
     
-    var featureFlag: LDFeatureFlag?   //internal access, settable only within the sdk
+    internal private(set) var lastUpdated: Date
+    internal var featureFlags = [String: LDFeatureFlag<LDFlagType>]()
     
     public init(key: String = UUID().uuidString,
                 name: String? = nil,
@@ -75,11 +75,16 @@ public class LDUser {   //TODO: Open instead? Should sdk allow subclassing, or j
         return false
     }
     
-    public func flagValue(key: String) -> Any? {
+    public func flagValue(key: String) -> LDFlaggable? {
         return nil
     }
     
-    public class var anonymous: LDUser {
+    //Converts user.featureFlags into a flag dictionary
+    public var allFlags: [String: LDFlaggable] {
+        return [:]
+    }
+    
+    public static var anonymous: LDUser {
         return LDUser(isAnonymous: true)
     }
 }

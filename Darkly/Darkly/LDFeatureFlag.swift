@@ -8,6 +8,22 @@
 
 import Foundation
 
-class LDFeatureFlag {   //sdk internal only, not publically accessible
+public enum LDFlagValueSource {
+    case cache, server
+}
+
+struct LDFeatureFlag<T: LDFlaggable> {
     
+    let key: String
+    var value: T?
+    private(set) var source: LDFlagValueSource?
+    
+    init?(key: String) {
+        guard !key.isEmpty else { return nil }
+        self.key = key
+    }
+    
+    func variation(fallback: T) -> T {
+        return value ?? fallback
+    }
 }

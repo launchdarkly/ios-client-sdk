@@ -8,160 +8,197 @@
 
 import Foundation
 
-public enum LDClientRunMode {
+enum LDClientRunMode {
     case foreground, background
 }
 
-public protocol LDClientDelegate: class {
-    func featureFlagsUpdated(updatedKeys: [String])
-}
-
-public typealias LDFlagUpdateHandler = ((_ updatedKeys: [String]) -> Void)
-
-//Get configuration object from LDClient that has current settings
-//LDClient should accept new config object: that stops, reconfigure, then start
-//Review Android SDK, match where possible
 public class LDClient {
-    struct Constants {
-        fileprivate static let notificationKeyUserUpdated = "Darkly.UserUpdatedNotification"
-    }
+    public var isOnline: Bool   ///Controls whether client contacts launch darkly for feature flags and events. When offline, client only collects events.
     
-    public static let featureFlagUpdatedNotificationName = Notification.Name(Constants.notificationKeyUserUpdated)
-    
-    private(set) var isStarted: Bool = false                    //TODO: this feels like it could be sdk internal...the LDClient should respond to app exit notifications and the client app shouldn't have to set this
-    public var isOnline: Bool = true                            //TODO: this feels like it should be the only client app control. Sequence LDClient.shared.start(config: user:), then offline / online as needed. start() puts LDClient online
-    public var backgroundMode: LDClientRunMode = .foreground    //TODO: this feels like it should be sdk internal...the LDClient should respond to fg/bg notifications and the client app shouldn't have to set this
-    
-    public static let shared = LDClient()
-    
-    private(set) var configuration: LDClientConfig?    //sdk readable, only settable thru either start(config: user:) or change(config:); public access only via copyConfiguration()
-    public private(set) var user: LDUser?               //Java sdk doesn't have the concept of a user included with the LDClient...it's passed in for eval requests
-    
-    private let userManager = LDUserManager()
-    private let flagManager = LDFlagManager()
-    private let eventManager = LDEventManager()
+    public let config: LDConfig
+    public private(set) var user: LDUser
     
     // MARK: - Public
-    ///Copy of the client's current configuration, client app can change without affecting the LDClient
-    ///nil if the client has not been started
-    ///Call change(configuration:) once you have changed to the desired configuration
-    public func copyConfiguration() -> LDClientConfig? {
-        return configuration?.copy()
-    }
     
-    ///Updates the client to the new configuration. If there are no differences between the current configuration and the new configuration, does nothing
-    ///If the LDClient is online, this method takes the LDClient offline, updates the configuration, and puts the LDClient back online. The user is unchanged.
-    ///If the LDClient is offline, this method only updates the configuration leaving the LDClient offline.
-    public func change(config: LDClientConfig) {
-        
+    ///Launches the LDClient using the passed in mobile key, config, & user
+    ///Uses the default config and a new user if those parameters are not included
+    public init(mobileKey: String, config: LDConfig = LDConfig(), user: LDUser? = nil) {
+        self.mobileKey = mobileKey
+        self.config = config
+        let latestUser = userCache.retrieveLatest()
+        self.user = user ?? latestUser ?? LDUser()  //Use the passed in user, and then the latestUser, and finally a newly created user
+        self.isOnline = config.launchOnline //TODO: This may not be correct...might have to be false until we get other things setup, and then try to go online if launchOnline is true
+        self.flagSynchronizer = LDFlagSynchronizer(config: self.config, user: self.user)
+        self.eventReporter = LDEventReporter(config: self.config)
     }
-    
+
     ///Updates the client to the new user. If there are no differences between the current user and the new user, does nothing
     ///If the LDClient is online, updates the user and requests feature flags from the server
-    ///If the LDClient of offline, updates the user only. If a cached user is available, uses the cached feature flags until the LDClient is put online. If no cached user is available, any feature flag requests will result in the fallback until the LDClient is put online.
-    ///NOTE: If the LDClient is online, there may be a brief delay before an update to the feature flags is available, depending upon network conditions. Prior to receiving a feature flag update, LDClient will return cached feature flags if they are available. If no cached feature flags are available, the LDClient will return fallback values.
-    public func change(user: LDUser) {
+    ///If the LDClient is offline, updates the user only. If a cached user is available, uses the cached feature flags until the LDClient is put online. If no cached user is available, any feature flag requests will result in the fallback until the LDClient is put online.
+    ///NOTE: If the LDClient is online, there may be a brief delay before an update to the feature flags is available, depending upon network conditions. Prior to receiving a feature flag update, LDClient will return cached feature flags if they are available. If no cached feature flags are available, the LDClient will return fallback values. 
+    ///If a client app wants to be notified when the LDClient receives the updated user flags, pass in a completion closure. The LDClient will call the closure once after the first feature flag update from the LD server, passing in the value of allFeatureFlags. The closure will NOT be called when a cached user's flags have been retrieved. If the client is offline, the closure will not be called until the app sets the client online and the client has received the first flag update from the LD server.
+    ///Usage:
+    ///     client.change(user: newUser) { (allFlags) in
+    ///         //do something with allFlags, which contains the first flag update from the LD server
+    ///     }
+    ///If a client app doesn't want to be notified, omit the completion closure:
+    ///     client.change(user: newUser)
+    public func change(user: LDUser, completion:(([String: LDFlaggable]) -> ())? = nil) {
         
     }
     
-    //We discussed start/stop & online/offline. Arun doesn't see much benefit in both definitions, and it has been confusing to clients
-    //started (or running) & online means: collecting events, syncing events, monitoring flags (polling or sse)
-    //started (or running) & offline means: collecting events
-    //stopped means: no activity
-    public func start(config: LDClientConfig, user: LDUser = LDUser.anonymous) {
-        
-    }
-    
-    ///Call this method when done prior to being done
-    //TODO: If we can register to receive notification when the app is shutting down, and run this, then a client app wont have to
-    public func stop() {
-        
-    }
-    
-    public func trackEvent(key: String, data: [AnyHashable: Any]) {
+    /* Event tracking
+     Conceptual model
+     The LDClient appears to keep an event dictionary that it transmits periodically to LD. An app sends an event and optional data by calling trackEvent(key:, data:) supplying at least the key.
+    */
+    ///Adds an event to the LDClient event store. LDClient periodically transmits events to LD based on the frequency set in LDConfig.eventFlushIntervalMillis.
+    ///Usage:   client.trackEvent(key: "app-event-key", data: appEventData)
+    ///Once an app has called trackEvent(), the app cannot remove the event from the event store.
+    ///If the client is offline, the client stores the event until the app takes the client online, and the client has transmitted the event.
+    public func trackEvent(key: String, data: [AnyHashable: Any]? = nil) {
 
     }
     
-    public func flushEvents() {
-        
-    }
-    
-    /* Threading
-     We discussed a potential threading model that might be used.
-     LDClient runs on the main thread.
-     FF value requests are handled in whatever thread the client app makes the request
-     FF sse/polling & update requests run in a LDClient launched bg thread instantiated at creation
-     Event processing runs in a LDClient launched bg thread instantiated at creation
-    */
-    
-    // MARK: - Feature Flag Updates
-    /* Notification
-     There are potentially 3 models LDClient could use to notify client apps when FF changes occur
-     A. Notifications. LDClient posts a notification via NotificationCenter. Listeners then request flags from LDClient.
-     B. Closures. LDClient registers closures to execute on FF change.
-     C. Delegation. LDClient calls delegate method on FF change.
-     
-     Each has merit, and perhaps for flexibility, we should implement all 3. That gives client apps max flexibility for code style.
-     
-     Regardless of the method, a set of flag keys indicating the changed flags should be sent. The client app can then use the changed flag keys to decide whether to request an update from the LDClient. Note: I don't think the updated flag value should be included. While that forces the client app to request the update from the LDClient, it also preserves the LDClient as the source of truth for the system...
-     LDClient should only invoke the notification method when it is running.
-    */
-    ///Client apps may listen for LDClient.featureFlagUpdatedNotificationName notifications
-    
-    ///Client apps may set a closure to be called when feature flags are updated. If the handler is set when start(config: user:) is called, LDClient will execute the handler on receipt of the flags from the server (not when flags are retrieved from the cache, if available)
-    //TODO: Should LDClient accept multiple handlers? (The idea would be to then hide this and provide a method setFeatureFlagUpdate(handler: forKey:)
-    public var featureFlagsUpdatedHandler: LDFlagUpdateHandler?
-    
-    ///Client apps may set a delegate which LDClient will call when feature flags are updated. If the delegate is set when start(config: user:) is called, LDClient will call featureFlagsUpdated(updatedKeys:) on receipt of the flags from the server (not when flags are retrieved from the cache, if available)
-    public weak var delegate: LDClientDelegate?
+    // MARK: Feature Flag values
     
     /* FF Value Requests
-     Arun prefers to maintain the naming convention <type>Variation(key:)-><type> for the flag getters. These names are used in the other SDKs.
-     The LDClient should also provide an allFlags method -> [String: Any]
-     Internally, the LDClient should maintain a [String: Any] for flags. Flag requests should respond using this structure.
-     Additionally, some metadata about the flag dictionary should be maintained about it's source (server, cache)
-     At start, the LDClient should load the cached user's flags and ask the flag processor to request an update and start monitoring (sse/poll)
-     What should the LDClient do if it is instantiated but not started, and a client app requests a flag value?
+     Conceptual Model
+     The LDClient is the focal point for flag value requests. It should appear to the app that the client contains a store of [key: value] pairs where the keys are all strings and the values any of the supported LD flag types (Bool, number (int, float), String, Array, Dictionary). The LDFlaggable protocol defines the LD supported flag types.
+     When asked for allFeatureFlags, the LDClient should provide a [String: LDFlaggable] with keys & values. Nil values should not appear in this dictionary...it would be the same as if the key weren't there.
+     When asked for a variation value, the LDClient provides either the LDFlaggable value, or a (LDFlaggable, LDVariationSource) that reports the value and value source.
+     
+     At launch, the LDClient should ask the LDUserCache to load the cached user's flags (if any) and then ask the flag synchronizer to start synchronizing (via streaming / polling)
     */
     
-    // MARK: - Feature Flag values
-    public var allFeatureFlags: [String: Any] {
-        return [:]
+    ///Usage: let flags = client.allFeatureFlags
+    public var allFeatureFlags: [String: LDFlaggable] {
+        return user.allFlags
     }
 
-    public func boolVariation(key: String, fallback: Bool) -> Bool {
+    ///Usage
+    /// flagValue = client.variation("flag-key", fallback: false)
+    public func variation<T>(_ forKey: String, fallback: T) -> T where T: LDFlaggable {
         return fallback
+    }
+
+    ///Usage
+    /// (flagValue, flagValueSource) = client.variation("flag-key", fallback: false)
+    public func variation<T>(_ forKey: String, fallback: T) -> (T, LDVariationSource) where T: LDFlaggable {
+        return (fallback, .fallback)
     }
     
-    public func numberVariation(key: String, fallback: NSNumber) -> NSNumber {
-        return fallback
+    // MARK: Feature Flag Updates
+    
+    /* FF Change Notification
+     Conceptual Model
+     LDClient keeps a list of two types of closure observers, either Individual Flag observers or All Flag observers. LDClient executes Individual Flag observers when it detects a change to that flag being observed. LDClient executes All Flag observers when it detects a change to any flag for the current LDUser. The closure has a LDChangedFlag input parameter that communicates the flag's old & new value. Individual Flag observers will have an LDChangedFlag passed into the parameter directly. All Flags observers will have a dictionary of [String: LDChangeFlag] that use the flag key as the dictionary key.
+     An app registers an Individual Flag observer using observe(key:, owner:, observer:), or an All Flags observer using observeAll(owner:, observer:). An app can register multiple closures for each type by calling these methods multiple times. When the value of a flag changes, LDClient calls each registered closure 1 time.
+     LDClient will automatically remove observer closures that cannot be executed. This means an app does not need to stop observing flags, the LDClient will remove the observer the next time the LDClient would have executed the observer. An app can stop observers explicitly using one of several stopObserving methods. An app can stop Individual Flag observers using stopObserving(key:, owner:), or All Flags observers using stopObservingAll(owner:). An app may also choose to stop all observers (of either type, Individual Flag or All Flags) for a given owner using stopObserver(owner:). Finally, an app can store the LDFlagObserverToken returned by the observe(key:, owner:, observer:) and observeAll(owner:, observer:) methods and then use stopObserving(token:) to stop any single observer closure. This gives an app the ability to have very precise control over the observers registered.
+    */
+    
+    ///Usage
+    ///     let observerToken = client.observe("flag-key", owner: self, observer: { (changedFlag) in
+    ///         if let oldValue = changedFlag.oldValue {
+    ///             //do something with the oldValue
+    ///         }
+    ///         if let newValue = changedFlag.newValue {
+    ///             //do something with the newValue
+    ///         }
+    ///          //client's change observing code here
+    ///     }
+    /// If you do not want to capture the observerToken, you can call client.observe() without embedding it into an assignment
+    ///     client.observe("flag-key", owner: self, observer: { (changedFlag) in ...
+    @discardableResult
+    public func observe(_ key: String, owner: LDFlagChangeOwner, observer: @escaping LDFlagChangeObserver) -> LDFlagObserverToken {
+        return ""
     }
     
-    public func stringVariation(key: String, fallback: String) -> String {
-        return fallback
+    ///Usage
+    ///     let observerToken = client.observeAll(owner: self, observer: { (changedFlags) in
+    ///         //There will be an LDChangedFlag entry for each changed flag. The closure will only be called once regardless of how many flags changed.
+    ///         if let someChangedFlag = changedFlags["some-flag-key"] {
+    ///             //do something with someChangedFlag
+    ///         }
+    ///         //client's change observing code here
+    ///     }
+    /// changedFlags is a [String: LDChangedFlag] with this structure [<flagKey>: LDChangedFlag]
+    /// If you do not want to capture the observerToken, you can call client.observeAll() without embedding it into an assignment
+    ///     client.observeAll(owner: self, observer: { (changedFlag) in ...
+    @discardableResult
+    public func observeAll(owner: LDFlagChangeOwner, observer: @escaping LDFlagCollectionChangeObserver) -> LDFlagObserverToken {
+        return ""
+    }
+    
+    ///Removes all Individual Flag observers registered using observe() for the flag key from owner. Does not affect All Flags observers.
+    public func stopObserving(_ key: String, owner: LDFlagChangeOwner) {
+        
+    }
+    
+    ///Removes all All Flags observers registered using observeAll(). Does not affect Individual Flag observers.
+    ///To unregister all observers for a given owner, use stopObserving(owner:)
+    public func stopObservingAll(owner: LDFlagChangeOwner) {
+        
     }
 
-    public func arrayVariation(key: String, fallback: [Any]) -> [Any] {
-        return fallback
+    ///Removes all observers (both Individual Flag and All Flags) for the given owner
+    public func stopObserving(owner: LDFlagChangeOwner) {
+        
     }
-
-    public func dictionaryVariation(key: String, fallback: [String: Any]) -> [String: Any] {
-        return fallback
+    
+    ///Removes the observer with the LDClient assigned token
+    public func stopObserving(token: LDFlagObserverToken) {
+        
     }
+    
+    // MARK: - Internal
 
     // MARK: - Private
-    
-    private init() { }  //Disable default constructor
-    
-    private func startPolling() {
-        guard isOnline else { return }
-    }
-    
-    private func stopPolling() {
+    private let mobileKey: String
 
+    private var backgroundMode: LDClientRunMode = .foreground
+
+    private let userCache = LDUserCache()
+    private let flagSynchronizer: LDFlagSynchronizer
+    private let flagChangeNotifier = LDFlagChangeNotifier()
+    private let eventReporter: LDEventReporter
+    
+    // MARK: - Test code
+    private func test() {
+        let flags = self.allFeatureFlags
+        print(flags)
+        
+        let (testBool, boolSource) = self.variation("bool-flag-key", fallback: false)
+        print(testBool, boolSource)
+        
+        let observerToken = observe("bool-flag-key", owner: self) { (changedFlag) in
+            if let oldValue = changedFlag.oldValue {
+                //do something with the oldValue
+                print(oldValue)
+            }
+            if let newValue = changedFlag.newValue {
+                //do something with the newValue
+                print(newValue)
+            }
+        }
+        print(observerToken)
+        
+        let boolChange = LDChangedFlag<Bool>(key:"boolKey", oldValue: nil, newValue: true)
+        let oldBoolValue = boolChange.oldValue
+        let newBoolValue = boolChange.newValue
+        print(oldBoolValue ?? "<nil>", newBoolValue ?? "<nil>")
+        
+        observeAll(owner: self) { (changedFlags) in
+            if let someChangedFlag = changedFlags["some-flag-key"] {
+                //do something with someChangedFlag
+                print(someChangedFlag)
+            }
+        }
+        
+        let newUser = LDUser()
+        change(user: newUser) { (allFlags) in
+            //do something with allFlags
+        }
     }
     
-    private func requestFlagsFromServer(for user: LDUser) { }
-    
-    private func sendEventsToServer(events: [LDEvent]) { }
+
 }
