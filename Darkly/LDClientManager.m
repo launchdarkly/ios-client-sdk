@@ -209,6 +209,9 @@
             [[NSNotificationCenter defaultCenter] postNotificationName: kLDUserUpdatedNotification
                                                                 object: nil];
             DEBUG_LOGX(@"ClientManager posted Darkly.UserUpdatedNotification following user config update");
+        } else {
+            [[NSNotificationCenter defaultCenter] postNotificationName:kLDUserNoChangeNotification
+                                                                object:nil];
         }
     } else {
         DEBUG_LOGX(@"ClientManager processedConfig method called after receiving failure response from server");
