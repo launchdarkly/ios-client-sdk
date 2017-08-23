@@ -85,7 +85,7 @@ static id sharedInstance = nil;
 - (void)updateConfigPollingTimer {
     if ((self.configTimer != NULL) && (self.configPollingIntervalMillis > 0.0)) {
         uint64_t interval = (uint64_t)(self.configPollingIntervalMillis * NSEC_PER_MSEC);
-        dispatch_time_t startTime = dispatch_time(DISPATCH_TIME_NOW, interval);
+        dispatch_time_t startTime = dispatch_time(DISPATCH_TIME_NOW, 0);
         dispatch_source_set_timer(self.configTimer, startTime, interval, 1.0);
     }
 }
