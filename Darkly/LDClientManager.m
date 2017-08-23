@@ -66,7 +66,7 @@
     [pollingMgr stopEventPolling];
     
     if ([[[LDClient sharedInstance] ldConfig] streaming]) {
-        [eventSource close];
+        [self stopEventSource];
     }
     else{
         [pollingMgr stopConfigPolling];
@@ -82,7 +82,7 @@
     [pollingMgr suspendEventPolling];
     
     if ([[[LDClient sharedInstance] ldConfig] streaming]) {
-        [eventSource close];
+        [self stopEventSource];
     }
     else{
         [pollingMgr suspendConfigPolling];
@@ -110,12 +110,17 @@
 }
 
 - (void)configureEventSource {
-    eventSource = [LDEventSource eventSourceWithURL:[NSURL URLWithString:kStreamUrl] httpHeaders:[self httpHeadersForEventSource]];
-    
-    [eventSource onMessage:^(LDEvent *event) {
-        if (![event.event isEqualToString:@"ping"]) { return; }
-        [self syncWithServerForConfig];
-    }];
+    @synchronized (self) {
+        // If we already have an event source, there's nothing to do.
+        if (!eventSource) {
+            eventSource = [LDEventSource eventSourceWithURL:[NSURL URLWithString:kStreamUrl] httpHeaders:[self httpHeadersForEventSource]];
+            
+            [eventSource onMessage:^(LDEvent *event) {
+                if (![event.event isEqualToString:@"ping"]) { return; }
+                [self syncWithServerForConfig];
+            }];
+        }
+    }
 }
 
 - (void)backgroundFetchInitiated {
@@ -123,6 +128,13 @@
     LDConfig *config = [[LDClient sharedInstance] ldConfig];
     if (time >= [config.backgroundFetchInterval doubleValue]) {
         [self syncWithServerForConfig];
+    }
+}
+
+- (void)stopEventSource {
+    @synchronized (self) {
+        [eventSource close];
+        eventSource = nil;
     }
 }
 
@@ -197,9 +209,14 @@
             [[NSNotificationCenter defaultCenter] postNotificationName: kLDUserUpdatedNotification
                                                                 object: nil];
             DEBUG_LOGX(@"ClientManager posted Darkly.UserUpdatedNotification following user config update");
+        } else {
+            [[NSNotificationCenter defaultCenter] postNotificationName:kLDUserNoChangeNotification
+                                                                object:nil];
         }
     } else {
         DEBUG_LOGX(@"ClientManager processedConfig method called after receiving failure response from server");
+        [[NSNotificationCenter defaultCenter] postNotificationName: kLDServerConnectionUnavailable
+                                                            object: nil];
     }
 }
     

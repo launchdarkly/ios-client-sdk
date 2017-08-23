@@ -14,6 +14,7 @@
 @optional
 -(void)userDidUpdate;
 -(void)featureFlagDidUpdate:(NSString *)key;
+-(void)serverConnectionUnavailable;
 @end
 
 @interface LDClient : NSObject
@@ -59,7 +60,17 @@
  * @param fallback   Fallback value for feature flag
  * @return the feature flag value
  */
-- (NSNumber*)numberVariation:(NSString *)featureKey fallback:(NSNumber*)fallback;
+- (NSNumber*)numberVariation:(NSString *)featureKey fallback:(NSNumber*)fallback __deprecated_msg("Use doubleVariation:fallback: instead");
+/**
+ * Retrieve a feature flag value. If the configuration for this feature
+ * flag is retrieved from the server that value is returned, otherwise
+ * the fallback is returned.
+ *
+ * @param featureKey   Key of feature flag
+ * @param fallback   Fallback value for feature flag
+ * @return the feature flag value
+ */
+- (double)doubleVariation:(NSString *)featureKey fallback:(double)fallback;
 /**
  * Retrieve a feature flag value. If the configuration for this feature
  * flag is retrieved from the server that value is returned, otherwise
