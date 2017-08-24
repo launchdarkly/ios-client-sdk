@@ -11,6 +11,7 @@
 #import "LDDataManager.h"
 #import "LDPollingManager.h"
 #import "LDEventModel.h"
+#import "LDClientManager+EventSource.h"
 
 @interface LDClientManagerTest : DarklyXCTestCase
 @property (nonatomic) id requestManagerMock;
@@ -56,6 +57,49 @@
     [requestManagerMock stopMocking];
     [dataManagerMock stopMocking];
     [pollingManagerMock stopMocking];
+}
+
+- (void)testEventSourceCreatedOnStartPolling {
+    [[LDClientManager sharedInstance] startPolling];
+    XCTAssertNotNil([[LDClientManager sharedInstance] eventSource]);
+}
+
+- (void)testEventSourceRemainsConstantAcrossStartPollingCalls {
+    int numTries = 5;
+    [[LDClientManager sharedInstance] startPolling];
+    LDEventSource *eventSource = [[LDClientManager sharedInstance] eventSource];
+    XCTAssertNotNil(eventSource);
+    for (int i = 0; i < numTries; i++) {
+        [[LDClientManager sharedInstance] startPolling];
+        XCTAssert(eventSource == [[LDClientManager sharedInstance] eventSource]);
+    }
+}
+
+- (void)testEventSourceRemovedOnStopPolling {
+    [[LDClientManager sharedInstance] startPolling];
+    XCTAssertNotNil([[LDClientManager sharedInstance] eventSource]);
+    [[LDClientManager sharedInstance] stopPolling];
+    XCTAssertNil([[LDClientManager sharedInstance] eventSource]);
+}
+
+- (void)testEventSourceCreatedOnWillEnterForeground {
+    [[LDClientManager sharedInstance] startPolling];
+    XCTAssertNotNil([[LDClientManager sharedInstance] eventSource]);
+    [[LDClientManager sharedInstance] willEnterBackground];
+    XCTAssertNil([[LDClientManager sharedInstance] eventSource]);
+    [[LDClientManager sharedInstance] willEnterForeground];
+    XCTAssertNotNil([[LDClientManager sharedInstance] eventSource]);
+}
+
+- (void)testEventSourceRemainsConstantAcrossWillEnterForegroundCalls {
+    int numTries = 5;
+    [[LDClientManager sharedInstance] startPolling];
+    LDEventSource *eventSource = [[LDClientManager sharedInstance] eventSource];
+    XCTAssertNotNil(eventSource);
+    for (int i = 0; i < numTries; i++) {
+        [[LDClientManager sharedInstance] willEnterForeground];
+        XCTAssert(eventSource == [[LDClientManager sharedInstance] eventSource]);
+    }
 }
 
 - (void)testSyncWithServerForConfigWhenUserExists {
