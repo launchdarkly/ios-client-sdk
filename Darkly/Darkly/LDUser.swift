@@ -23,13 +23,13 @@ public struct LDUser {   //Public access means an app will have to compose its u
     public var ip: String?
     public var email: String?
     public var avatar: String?
-    public var custom: [String: AnyObject]?   //Java sdk only allows string keys, so while this is different than the ios-client, it seems reasonable
+    public var custom: [String: Any]?
     public var isAnonymous: Bool
     public var device: String?
     public var os: String?
     
     internal private(set) var lastUpdated: Date
-    internal var featureFlags = [String: LDFeatureFlag<LDFlagType>]()
+    internal var featureFlags = [String: LDFeatureFlag<LDFlagType>]()   //TODO: Should these be here, somewhere else, or their own object?
     
     public init(key: String = UUID().uuidString,
                 name: String? = nil,
@@ -57,8 +57,7 @@ public struct LDUser {   //Public access means an app will have to compose its u
     }
     
     public init(json: [String: AnyObject]) {
-        //warning: implement
-        key = UUID().uuidString
+        key = UUID().uuidString     //TODO: default key composite using the same items as in Android / Java sdks
         isAnonymous = true
         lastUpdated = Date()
     }
@@ -80,7 +79,7 @@ public struct LDUser {   //Public access means an app will have to compose its u
     }
     
     //Converts user.featureFlags into a flag dictionary
-    public var allFlags: [String: LDFlaggable] {
+    internal var allFlags: [String: LDFlaggable] {
         return [:]
     }
     

@@ -14,7 +14,7 @@ class LDEventReporter {
     }
     
     private let config: LDConfig
-    private let requestQueue = DispatchQueue(label: Constants.eventQueueLabel, qos: .userInitiated)
+    private let eventQueue = DispatchQueue(label: Constants.eventQueueLabel, qos: .userInitiated)
     var isOnline: Bool {
         didSet {
             

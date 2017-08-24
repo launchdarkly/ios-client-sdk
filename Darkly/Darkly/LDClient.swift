@@ -14,8 +14,9 @@ enum LDClientRunMode {
 
 public class LDClient {
     public var isOnline: Bool   ///Controls whether client contacts launch darkly for feature flags and events. When offline, client only collects events.
+    //TODO: Singleton
     
-    public let config: LDConfig
+    public private(set) var config: LDConfig
     public private(set) var user: LDUser
     
     // MARK: - Public
@@ -44,6 +45,11 @@ public class LDClient {
     ///If a client app doesn't want to be notified, omit the completion closure:
     ///     client.change(user: newUser)
     public func change(user: LDUser, completion:(([String: LDFlaggable]) -> ())? = nil) {
+        
+    }
+    
+    //TODO: With a singleton, provide the ability to reconfigure
+    public func change(config: LDConfig) {
         
     }
     
@@ -146,6 +152,7 @@ public class LDClient {
     }
     
     ///Removes the observer with the LDClient assigned token
+    //TODO: Is there a "more established" way of managing observers than passing tokens
     public func stopObserving(token: LDFlagObserverToken) {
         
     }
