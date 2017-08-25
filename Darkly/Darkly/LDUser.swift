@@ -31,7 +31,7 @@ public struct LDUser {   //Public access means an app will have to compose its u
     internal private(set) var lastUpdated: Date
     internal var featureFlags = [String: LDFeatureFlag<LDFlagType>]()   //TODO: Should these be here, somewhere else, or their own object?
     
-    public init(key: String = UUID().uuidString,
+    public init(key: String? = nil,
                 name: String? = nil,
                 firstName: String? = nil,
                 lastName: String? = nil,
@@ -41,7 +41,7 @@ public struct LDUser {   //Public access means an app will have to compose its u
                 email: String? = nil,
                 avatar: String? = nil,
                 custom: [String: AnyObject]? = nil) {
-        self.key = key
+        self.key = key ?? LDUser.defaultKey
         self.name = name
         self.firstName = firstName
         self.lastName = lastName
@@ -85,6 +85,12 @@ public struct LDUser {   //Public access means an app will have to compose its u
     
     public static var anonymous: LDUser {
         return LDUser(isAnonymous: true)
+    }
+    
+    //For iOS & tvOS, this should be UIDevice.current.identifierForVendor.UUIDString
+    //For macOS & watchOS, this should be a UUID that the sdk creates and stores so that the value returned here should be always the same
+    private static var defaultKey: String {
+        return UIDevice.current.identifierForVendor?.uuidString ?? UUID().uuidString    //TODO: Instead of a new UUID here, add a UUID that is retained and used for any LDUser created without a key. That feels like an extension on UserDefaults.
     }
 }
 
