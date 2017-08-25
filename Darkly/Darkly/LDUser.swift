@@ -57,7 +57,7 @@ public struct LDUser {   //Public access means an app will have to compose its u
     }
     
     public init(json: [String: AnyObject]) {
-        key = UUID().uuidString     //TODO: default key composite using the same items as in Android / Java sdks
+        key = UUID().uuidString
         isAnonymous = true
         lastUpdated = Date()
     }
@@ -91,6 +91,7 @@ public struct LDUser {   //Public access means an app will have to compose its u
     //For macOS & watchOS, this should be a UUID that the sdk creates and stores so that the value returned here should be always the same
     private static var defaultKey: String {
         return UIDevice.current.identifierForVendor?.uuidString ?? UUID().uuidString    //TODO: Instead of a new UUID here, add a UUID that is retained and used for any LDUser created without a key. That feels like an extension on UserDefaults.
+        //TODO: Apple docs says `identifierForVendor` might be nil early in the startup sequence. They recommend trying again later. That will prove a little difficult since the sdk doesn't control when it's instantiated.
     }
 }
 

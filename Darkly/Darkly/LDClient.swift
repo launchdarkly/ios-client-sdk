@@ -109,13 +109,13 @@ public class LDClient {
     
     /* FF Change Notification
      Conceptual Model
-     LDClient keeps a list of two types of closure observers, either Individual Flag observers or All Flag observers. LDClient executes Individual Flag observers when it detects a change to that flag being observed. LDClient executes All Flag observers when it detects a change to any flag for the current LDUser. The closure has a LDChangedFlag input parameter that communicates the flag's old & new value. Individual Flag observers will have an LDChangedFlag passed into the parameter directly. All Flags observers will have a dictionary of [String: LDChangeFlag] that use the flag key as the dictionary key.
+     LDClient keeps a list of two types of closure observers, either Individual Flag observers or All Flags observers. LDClient executes Individual Flag observers when it detects a change to that flag being observed. LDClient executes All Flags observers when it detects a change to any flag for the current LDUser. The closure has a LDChangedFlag input parameter that communicates the flag's old & new value. Individual Flag observers will have an LDChangedFlag passed into the parameter directly. All Flags observers will have a dictionary of [String: LDChangeFlag] that use the flag key as the dictionary key.
      An app registers an Individual Flag observer using observe(key:, owner:, observer:), or an All Flags observer using observeAll(owner:, observer:). An app can register multiple closures for each type by calling these methods multiple times. When the value of a flag changes, LDClient calls each registered closure 1 time.
-     LDClient will automatically remove observer closures that cannot be executed. This means an app does not need to stop observing flags, the LDClient will remove the observer the next time the LDClient would have executed the observer. An app can stop observers explicitly using one of several stopObserving methods. An app can stop Individual Flag observers using stopObserving(key:, owner:), or All Flags observers using stopObservingAll(owner:). An app may also choose to stop all observers (of either type, Individual Flag or All Flags) for a given owner using stopObserver(owner:). Finally, an app can store the LDFlagObserverToken returned by the observe(key:, owner:, observer:) and observeAll(owner:, observer:) methods and then use stopObserving(token:) to stop any single observer closure. This gives an app the ability to have very precise control over the observers registered.
+     LDClient will automatically remove observer closures that cannot be executed. This means an app does not need to stop observing flags, the LDClient will remove the observer after it has gone out of scope. An app can stop observers explicitly using stopObserver(owner:).
     */
     
     ///Usage
-    ///     let observerToken = LDClient.shared.observe("flag-key", owner: self, observer: { (changedFlag) in
+    ///     LDClient.shared.observe("flag-key", owner: self, observer: { (changedFlag) in
     ///         if let oldValue = changedFlag.oldValue {
     ///             //do something with the oldValue
     ///         }
@@ -124,15 +124,12 @@ public class LDClient {
     ///         }
     ///          //client's change observing code here
     ///     }
-    /// If you do not want to capture the observerToken, you can call LDClient.shared.observe() without embedding it into an assignment
-    ///     LDClient.shared.observe("flag-key", owner: self, observer: { (changedFlag) in ...
-    @discardableResult
-    public func observe(_ key: String, owner: LDFlagChangeOwner, observer: @escaping LDFlagChangeObserver) -> LDFlagObserverToken {
-        return ""
+    public func observe(_ key: String, owner: LDFlagChangeOwner, observer: @escaping LDFlagChangeObserver) {
+
     }
     
     ///Usage
-    ///     let observerToken = LDClient.shared.observeAll(owner: self, observer: { (changedFlags) in
+    ///     LDClient.shared.observeAll(owner: self, observer: { (changedFlags) in
     ///         //There will be an LDChangedFlag entry for each changed flag. The closure will only be called once regardless of how many flags changed.
     ///         if let someChangedFlag = changedFlags["some-flag-key"] {
     ///             //do something with someChangedFlag
@@ -140,32 +137,12 @@ public class LDClient {
     ///         //client's change observing code here
     ///     }
     /// changedFlags is a [String: LDChangedFlag] with this structure [<flagKey>: LDChangedFlag]
-    /// If you do not want to capture the observerToken, you can call LDClient.shared.observeAll() without embedding it into an assignment
-    ///     LDClient.shared.observeAll(owner: self, observer: { (changedFlag) in ...
-    @discardableResult
-    public func observeAll(owner: LDFlagChangeOwner, observer: @escaping LDFlagCollectionChangeObserver) -> LDFlagObserverToken {
-        return ""
-    }
-    
-    ///Removes all Individual Flag observers registered using observe() for the flag key from owner. Does not affect All Flags observers.
-    public func stopObserving(_ key: String, owner: LDFlagChangeOwner) {
-        
-    }
-    
-    ///Removes all All Flags observers registered using observeAll(). Does not affect Individual Flag observers.
-    ///To unregister all observers for a given owner, use stopObserving(owner:)
-    public func stopObservingAll(owner: LDFlagChangeOwner) {
-        
-    }
+    public func observeAll(owner: LDFlagChangeOwner, observer: @escaping LDFlagCollectionChangeObserver) {
 
+    }
+    
     ///Removes all observers (both Individual Flag and All Flags) for the given owner
     public func stopObserving(owner: LDFlagChangeOwner) {
-        
-    }
-    
-    ///Removes the observer with the LDClient assigned token
-    //TODO: Is there a "more established" way of managing observers than passing tokens
-    public func stopObserving(token: LDFlagObserverToken) {
         
     }
     
