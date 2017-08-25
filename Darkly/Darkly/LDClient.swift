@@ -57,7 +57,10 @@ public class LDClient {
         
     }
     
-    //TODO: With a singleton, provide the ability to reconfigure
+    ///Changes the LDClient config.
+    ///If the config is unchanged, this does nothing. If the client is online, it takes the client offline, reconfigures, and then brings the client online again.
+    ///Usage:   LDClient.shared.change(config: newConfig)
+    ///You can make config changes by getting the config from the client, adjusting settings, and then calling change(config:)
     public func change(config: LDConfig) {
         
     }
