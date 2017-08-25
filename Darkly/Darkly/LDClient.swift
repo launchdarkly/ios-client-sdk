@@ -13,24 +13,33 @@ enum LDClientRunMode {
 }
 
 public class LDClient {
-    public var isOnline: Bool   ///Controls whether client contacts launch darkly for feature flags and events. When offline, client only collects events.
-    //TODO: Singleton
+    public static let shared = LDClient()
     
-    public private(set) var config: LDConfig
-    public private(set) var user: LDUser
+    public var isOnline = false   ///Controls whether client contacts launch darkly for feature flags and events. When offline, client only collects events.
+    
+    public private(set) var config = LDConfig()
+    public private(set) var user = LDUser()
     
     // MARK: - Public
     
     ///Launches the LDClient using the passed in mobile key, config, & user
     ///Uses the default config and a new user if those parameters are not included
-    public init(mobileKey: String, config: LDConfig = LDConfig(), user: LDUser? = nil) {
+    ///Usage:
+    ///     LDClient.shared.start(mobileKey: appMobileKey, config: appConfig, user: appUser)
+    ///Call this one time before you want to capture feature flags. The LDClient will not go online until you call this method.
+    public func start(mobileKey: String, config: LDConfig = LDConfig(), user: LDUser? = nil) {
+        if isOnline {
+            isOnline = false
+        }
+        
         self.mobileKey = mobileKey
         self.config = config
         let latestUser = userCache.retrieveLatest()
-        self.user = user ?? latestUser ?? LDUser()  //Use the passed in user, and then the latestUser, and finally a newly created user
-        self.isOnline = config.launchOnline //TODO: This may not be correct...might have to be false until we get other things setup, and then try to go online if launchOnline is true
+        self.user = user ?? latestUser ?? LDUser()
         self.flagSynchronizer = LDFlagSynchronizer(config: self.config, user: self.user)
         self.eventReporter = LDEventReporter(config: self.config)
+
+        self.isOnline = config.launchOnline
     }
 
     ///Updates the client to the new user. If there are no differences between the current user and the new user, does nothing
@@ -39,11 +48,11 @@ public class LDClient {
     ///NOTE: If the LDClient is online, there may be a brief delay before an update to the feature flags is available, depending upon network conditions. Prior to receiving a feature flag update, LDClient will return cached feature flags if they are available. If no cached feature flags are available, the LDClient will return fallback values. 
     ///If a client app wants to be notified when the LDClient receives the updated user flags, pass in a completion closure. The LDClient will call the closure once after the first feature flag update from the LD server, passing in the value of allFeatureFlags. The closure will NOT be called when a cached user's flags have been retrieved. If the client is offline, the closure will not be called until the app sets the client online and the client has received the first flag update from the LD server.
     ///Usage:
-    ///     client.change(user: newUser) { (allFlags) in
+    ///     LDClient.shared.change(user: newUser) { (allFlags) in
     ///         //do something with allFlags, which contains the first flag update from the LD server
     ///     }
     ///If a client app doesn't want to be notified, omit the completion closure:
-    ///     client.change(user: newUser)
+    ///     LDClient.shared.change(user: newUser)
     public func change(user: LDUser, completion:(([String: LDFlaggable]) -> ())? = nil) {
         
     }
@@ -58,7 +67,7 @@ public class LDClient {
      The LDClient appears to keep an event dictionary that it transmits periodically to LD. An app sends an event and optional data by calling trackEvent(key:, data:) supplying at least the key.
     */
     ///Adds an event to the LDClient event store. LDClient periodically transmits events to LD based on the frequency set in LDConfig.eventFlushIntervalMillis.
-    ///Usage:   client.trackEvent(key: "app-event-key", data: appEventData)
+    ///Usage:   LDClient.shared.trackEvent(key: "app-event-key", data: appEventData)
     ///Once an app has called trackEvent(), the app cannot remove the event from the event store.
     ///If the client is offline, the client stores the event until the app takes the client online, and the client has transmitted the event.
     public func trackEvent(key: String, data: [AnyHashable: Any]? = nil) {
@@ -76,19 +85,19 @@ public class LDClient {
      At launch, the LDClient should ask the LDUserCache to load the cached user's flags (if any) and then ask the flag synchronizer to start synchronizing (via streaming / polling)
     */
     
-    ///Usage: let flags = client.allFeatureFlags
+    ///Usage: let flags = LDClient.shared.allFeatureFlags
     public var allFeatureFlags: [String: LDFlaggable] {
         return user.allFlags
     }
 
     ///Usage
-    /// flagValue = client.variation("flag-key", fallback: false)
+    /// flagValue = LDClient.shared.variation("flag-key", fallback: false)
     public func variation<T>(_ forKey: String, fallback: T) -> T where T: LDFlaggable {
         return fallback
     }
 
     ///Usage
-    /// (flagValue, flagValueSource) = client.variation("flag-key", fallback: false)
+    /// (flagValue, flagValueSource) = LDClient.shared.variation("flag-key", fallback: false)
     public func variation<T>(_ forKey: String, fallback: T) -> (T, LDVariationSource) where T: LDFlaggable {
         return (fallback, .fallback)
     }
@@ -103,7 +112,7 @@ public class LDClient {
     */
     
     ///Usage
-    ///     let observerToken = client.observe("flag-key", owner: self, observer: { (changedFlag) in
+    ///     let observerToken = LDClient.shared.observe("flag-key", owner: self, observer: { (changedFlag) in
     ///         if let oldValue = changedFlag.oldValue {
     ///             //do something with the oldValue
     ///         }
@@ -112,15 +121,15 @@ public class LDClient {
     ///         }
     ///          //client's change observing code here
     ///     }
-    /// If you do not want to capture the observerToken, you can call client.observe() without embedding it into an assignment
-    ///     client.observe("flag-key", owner: self, observer: { (changedFlag) in ...
+    /// If you do not want to capture the observerToken, you can call LDClient.shared.observe() without embedding it into an assignment
+    ///     LDClient.shared.observe("flag-key", owner: self, observer: { (changedFlag) in ...
     @discardableResult
     public func observe(_ key: String, owner: LDFlagChangeOwner, observer: @escaping LDFlagChangeObserver) -> LDFlagObserverToken {
         return ""
     }
     
     ///Usage
-    ///     let observerToken = client.observeAll(owner: self, observer: { (changedFlags) in
+    ///     let observerToken = LDClient.shared.observeAll(owner: self, observer: { (changedFlags) in
     ///         //There will be an LDChangedFlag entry for each changed flag. The closure will only be called once regardless of how many flags changed.
     ///         if let someChangedFlag = changedFlags["some-flag-key"] {
     ///             //do something with someChangedFlag
@@ -128,8 +137,8 @@ public class LDClient {
     ///         //client's change observing code here
     ///     }
     /// changedFlags is a [String: LDChangedFlag] with this structure [<flagKey>: LDChangedFlag]
-    /// If you do not want to capture the observerToken, you can call client.observeAll() without embedding it into an assignment
-    ///     client.observeAll(owner: self, observer: { (changedFlag) in ...
+    /// If you do not want to capture the observerToken, you can call LDClient.shared.observeAll() without embedding it into an assignment
+    ///     LDClient.shared.observeAll(owner: self, observer: { (changedFlag) in ...
     @discardableResult
     public func observeAll(owner: LDFlagChangeOwner, observer: @escaping LDFlagCollectionChangeObserver) -> LDFlagObserverToken {
         return ""
@@ -160,52 +169,18 @@ public class LDClient {
     // MARK: - Internal
 
     // MARK: - Private
-    private let mobileKey: String
+    private var mobileKey = ""
 
     private var backgroundMode: LDClientRunMode = .foreground
 
     private let userCache = LDUserCache()
-    private let flagSynchronizer: LDFlagSynchronizer
+    private var flagSynchronizer: LDFlagSynchronizer
     private let flagChangeNotifier = LDFlagChangeNotifier()
-    private let eventReporter: LDEventReporter
+    private var eventReporter: LDEventReporter
     
-    // MARK: - Test code
-    private func test() {
-        let flags = self.allFeatureFlags
-        print(flags)
-        
-        let (testBool, boolSource) = self.variation("bool-flag-key", fallback: false)
-        print(testBool, boolSource)
-        
-        let observerToken = observe("bool-flag-key", owner: self) { (changedFlag) in
-            if let oldValue = changedFlag.oldValue {
-                //do something with the oldValue
-                print(oldValue)
-            }
-            if let newValue = changedFlag.newValue {
-                //do something with the newValue
-                print(newValue)
-            }
-        }
-        print(observerToken)
-        
-        let boolChange = LDChangedFlag<Bool>(key:"boolKey", oldValue: nil, newValue: true)
-        let oldBoolValue = boolChange.oldValue
-        let newBoolValue = boolChange.newValue
-        print(oldBoolValue ?? "<nil>", newBoolValue ?? "<nil>")
-        
-        observeAll(owner: self) { (changedFlags) in
-            if let someChangedFlag = changedFlags["some-flag-key"] {
-                //do something with someChangedFlag
-                print(someChangedFlag)
-            }
-        }
-        
-        let newUser = LDUser()
-        change(user: newUser) { (allFlags) in
-            //do something with allFlags
-        }
+    private init() {
+        config.launchOnline = false //prevents supporting players from trying to contact the LD server
+        self.flagSynchronizer = LDFlagSynchronizer(config: config, user: user)  //dummy object replaced by start call
+        self.eventReporter = LDEventReporter(config: config)    //dummy object replaced by start call
     }
-    
-
 }
