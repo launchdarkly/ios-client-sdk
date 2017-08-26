@@ -1,7 +1,7 @@
 Pod::Spec.new do |s|
 
   s.name         = "LaunchDarkly"
-  s.version      = ""
+  s.version      = "3.0.0.1"
   s.summary      = "iOS SDK for LaunchDarkly"
 
   s.description  = <<-DESC
@@ -12,24 +12,26 @@ Pod::Spec.new do |s|
                    * Grant access to certain features based on user attributes, like payment plan (eg: users on the ‘gold’ plan get access to more features than users in the ‘silver’ plan). Disable parts of your application to facilitate maintenance, without taking everything offline.
                    DESC
 
-  s.homepage     = "https://github.com/launchdarkly/ios-client-swift-private"
+#  s.homepage     = "https://github.com/launchdarkly/ios-client-swift"	//TODO: Once we release, point this to the public home page
+  s.homepage     = "https://github.com/launchdarkly/ios-client"
 
   s.license      = { :type => "Apache License, Version 2.0", :file => "LICENSE.txt" }
 
   s.author             = { "LaunchDarkly" => "team@launchdarkly.com" }
 
   s.ios.deployment_target     = "8.0"
-  s.watchos.deployment_target = "2.0"
-  s.tvos.deployment_target    = "9.0"
-  s.osx.deployment_target     = '10.10'
+#  s.watchos.deployment_target = "2.0"		//TODO: Uncomment when setting up the watchOS target
+#  s.tvos.deployment_target    = "9.0"		//TODO: Uncomment when setting up the tvOS target
+#  s.osx.deployment_target     = "10.10"	//TODO: Uncomment when setting up the macOS target
 
+#	//TODO: Add the tag when ready
   s.source       = { :git => "https://github.com/launchdarkly/ios-client-swift-private.git" }
 
-  s.source_files  = "Darkly/*.{h,m,swift}"
+  s.source_files  = "Darkly/Darkly/*.{h,m,swift}"
 
   s.requires_arc = true
 
   s.subspec 'Core' do |ss|
-    ss.dependency 'DarklyEventSource', '~> 2.0.0'
+    ss.dependency 'DarklyEventSource', '~> 3.0.0'
   end
 end

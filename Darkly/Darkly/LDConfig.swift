@@ -68,4 +68,6 @@ public struct LDConfig {
     
     ///LD defined minima
     public let min = Minima()
+    
+    public init() { }   //Even though the struct is public, the default constructor is internal
 }

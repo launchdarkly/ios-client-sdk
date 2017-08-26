@@ -11,5 +11,7 @@ import Foundation
 public struct LDChangedFlag<T> where T: LDFlaggable {
     public let key: String
     public let oldValue: T?
+    public let oldValueSource: LDFlagValueSource?
     public let newValue: T?
+    public let newValueSource: LDFlagValueSource?
 }

@@ -94,14 +94,15 @@ public class LDClient {
     }
 
     ///Usage
-    /// flagValue = LDClient.shared.variation("flag-key", fallback: false)
+    /// let flagValue: Bool = LDClient.shared.variation("flag-key", fallback: false)
+    ///In some cases it may not be required to explicitly define the flagValue type.
     public func variation<T>(_ forKey: String, fallback: T) -> T where T: LDFlaggable {
         return fallback
     }
 
     ///Usage
-    /// (flagValue, flagValueSource) = LDClient.shared.variation("flag-key", fallback: false)
-    public func variation<T>(_ forKey: String, fallback: T) -> (T, LDVariationSource) where T: LDFlaggable {
+    /// let (flagValue, flagValueSource) = LDClient.shared.variation("flag-key", fallback: false)
+    public func variation<T>(_ forKey: String, fallback: T) -> (T, LDFlagValueSource) where T: LDFlaggable {
         return (fallback, .fallback)
     }
     
@@ -115,7 +116,7 @@ public class LDClient {
     */
     
     ///Usage
-    ///     LDClient.shared.observe("flag-key", owner: self, observer: { (changedFlag) in
+    ///     LDClient.shared.observe("flag-key", owner: self, observer: { [weak self] (changedFlag) in
     ///         if let oldValue = changedFlag.oldValue {
     ///             //do something with the oldValue
     ///         }
@@ -124,7 +125,8 @@ public class LDClient {
     ///         }
     ///          //client's change observing code here
     ///     }
-    public func observe(_ key: String, owner: LDFlagChangeOwner, observer: @escaping LDFlagChangeObserver) {
+    ///LDClient keeps a weak reference to the owner. Apps should keep only weak references to self in observers to avoid memory leaks
+    public func observe<T>(_ key: String, owner: LDFlagChangeOwner, observer: @escaping LDFlagChangeObserver<T>) where T: LDFlaggable {
 
     }
     

@@ -19,9 +19,9 @@ public class LDFlagType: LDFlaggable { }
 
 public typealias LDFlagChangeOwner = AnyObject
 public typealias LDFlagKeyList = [String]
-public typealias LDFlagChangeObserver = (LDChangedFlag<LDFlagType>) -> ()
+public typealias LDFlagChangeObserver<T> = (LDChangedFlag<T>) -> () where T: LDFlaggable
 public typealias LDFlagCollectionChangeObserver = ([String:LDChangedFlag<LDFlagType>]) -> ()
 
-public enum LDVariationSource {
-    case cache, server, fallback
+public enum LDFlagValueSource {
+    case server, cache, fallback
 }

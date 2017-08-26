@@ -8,10 +8,6 @@
 
 import Foundation
 
-public enum LDFlagValueSource {
-    case cache, server
-}
-
 struct LDFeatureFlag<T: LDFlaggable> {
     
     let key: String
