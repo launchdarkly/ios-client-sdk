@@ -2,17 +2,17 @@
 
 All notable changes to the LaunchDarkly iOS SDK will be documented in this file. This project adheres to [Semantic Versioning](http://semver.org).
 
-## [2.6.0] - 2017-08-24
+## [2.6.0] - 2017-08-25
 ### Added
-- doubleVariation method that provides double value feature flags
-- serverConnectionUnavailable ClientDelegate method called when the LDClient recieves an error response to a feature flag request
+- `doubleVariation` method for `double` value feature flags, as an alternative to `numberVariation`. Thanks @atlassian-gaustin!
+- `serverConnectionUnavailable` ClientDelegate method called when the LDClient receives an error response to a feature flag request. Thanks @atlassian-gaustin!
 
 ### Changed
-- Prevent creating an EventSource when an EventSource is already running
-- Move Feature Flag response processing to the request thread, and once complete returning the result on the main thread
+- Prevent creating an EventSource when an EventSource is already running. Thanks @atlassian-gaustin!
+- Move feature flag response processing to the request thread, and once complete return the result on the main thread. Thanks @atlassian-gaustin!
 
 ### Fixed
-- Array and Dictionary flags now return the array or dictionary when available from the server instead of always returning fallback values
+- Array and Dictionary flags now return the array or dictionary when available from the server instead of always returning fallback values. Thanks @atlassian-gaustin!
 - Streaming no longer generates multiple feature flag requests on return to the foreground
 
 ## [2.5.1] - 2017-08-03
