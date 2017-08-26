@@ -9,6 +9,7 @@
 #import "LDDataManager.h"
 #import "LDPollingManager.h"
 #import "DarklyConstants.h"
+#import "NSThread+MainExecutable.h"
 
 @interface LDClient() {
     BOOL clientStarted;
@@ -29,6 +30,9 @@
                                                  selector:@selector(userUpdated)
                                                      name: kLDUserUpdatedNotification object: nil];
         [[NSNotificationCenter defaultCenter] addObserver: sharedLDClient
+                                                 selector:@selector(serverUnavailable)
+                                                     name:kLDServerConnectionUnavailableNotification object:nil];
+        [[NSNotificationCenter defaultCenter] addObserver: sharedLDClient
                                                  selector:@selector(configFlagUpdated:)
                                                      name:kLDFlagConfigChangedNotification object:nil];
     });
@@ -41,41 +45,27 @@
 
 - (BOOL)start:(LDConfig *)inputConfig withUserBuilder:(LDUserBuilder *)inputUserBuilder {
     DEBUG_LOGX(@"LDClient start method called");
-    if (!clientStarted) {
-        if (inputConfig) {
-            ldConfig = inputConfig;
-            if (ldConfig) {
-                DarklyLogLevel logLevel =  DarklyLogLevelCriticalOnly;
-                if ([ldConfig debugEnabled]) {
-                    logLevel = DarklyLogLevelDebug;
-                }
-                [LDUtil setLogLevel:logLevel];
-                
-                clientStarted = YES;
-                DEBUG_LOGX(@"LDClient started");
-                if (!inputUserBuilder) {
-                    inputUserBuilder = [[LDUserBuilder alloc] init];
-                }
-                ldUser = [inputUserBuilder build];
-                
-                LDClientManager *clientManager = [LDClientManager sharedInstance];
-                [clientManager setOfflineEnabled:NO];
-                [clientManager syncWithServerForConfig];
-                [clientManager startPolling];
-                
-                return YES;
-            } else {
-                DEBUG_LOGX(@"LDClient client requires a config to start");
-                return NO;
-            }
-        } else {
-            DEBUG_LOGX(@"LDClient client requires a config to start");
-            return NO;
-        }
-    } else {
+    if (clientStarted) {
         DEBUG_LOGX(@"LDClient client already started");
         return NO;
     }
+    if (!inputConfig) {
+        DEBUG_LOGX(@"LDClient client requires a config to start");
+        return NO;
+    }
+    ldConfig = inputConfig;
+
+    [LDUtil setLogLevel:[ldConfig debugEnabled] ? DarklyLogLevelDebug : DarklyLogLevelCriticalOnly];
+    
+    clientStarted = YES;
+    DEBUG_LOGX(@"LDClient started");
+    inputUserBuilder = inputUserBuilder ?: [[LDUserBuilder alloc] init];
+    ldUser = [inputUserBuilder build];
+    
+    [LDClientManager sharedInstance].offlineEnabled = NO;
+    [[LDClientManager sharedInstance] startPolling];
+    
+    return YES;
 }
 
 - (BOOL)updateUser:(LDUserBuilder *)builder {
@@ -150,6 +140,27 @@
     return fallback;
 }
 
+- (double)doubleVariation:(NSString *)featureKey fallback:(double)fallback {
+    DEBUG_LOG(@"LDClient doubleVariation method called for feature=%@ and fallback=%f", featureKey, fallback);
+    if (![featureKey isKindOfClass:[NSString class]]) {
+        NSLog(@"featureKey should be an NSString. Returning fallback value");
+        return fallback;
+    }
+    if (!clientStarted) {
+        DEBUG_LOGX(@"LDClient not started yet!");
+        return fallback;
+    }
+    BOOL flagExists = [ldUser doesFlagExist: featureKey];
+    id flagValue = [ldUser flagValue: featureKey];
+    double returnValue = fallback;
+    if (flagExists && [flagValue isKindOfClass:[NSNumber class]]) {
+        returnValue = [((NSNumber *)flagValue) doubleValue];
+    }
+    
+    [[LDDataManager sharedManager] createFeatureEvent:featureKey keyValue:[NSNumber numberWithDouble:returnValue] defaultKeyValue:[NSNumber numberWithDouble:fallback]];
+    return returnValue;
+}
+
 - (NSString*)stringVariation:(NSString *)featureKey fallback:(NSString*)fallback{
     DEBUG_LOG(@"LDClient stringVariation method called for feature=%@ and fallback=%@", featureKey, fallback);
     if (![featureKey isKindOfClass:[NSString class]]) {
@@ -178,20 +189,19 @@
         NSLog(@"featureKey should be an NSString. Returning fallback value");
         return fallback;
     }
-    if (clientStarted) {
-        BOOL flagExists = [ldUser doesFlagExist: featureKey];
-        NSObject *flagValue = [ldUser flagValue: featureKey];
-        NSArray *returnValue = fallback;
-        if ([flagValue isKindOfClass:[NSString class]] && flagExists) {
-            returnValue = (NSArray *)flagValue;
-        }
-        
-        [[LDDataManager sharedManager] createFeatureEvent: featureKey keyValue:returnValue defaultKeyValue:fallback];
-        return returnValue;
-    } else {
+    if (!clientStarted) {
         DEBUG_LOGX(@"LDClient not started yet!");
+        return fallback;
     }
-    return fallback;
+    BOOL flagExists = [ldUser doesFlagExist: featureKey];
+    id flagValue = [ldUser flagValue: featureKey];
+    NSArray *returnValue = fallback;
+    if (flagExists && [flagValue isKindOfClass:[NSArray class]]) {
+        returnValue = (NSArray *)flagValue;
+    }
+    
+    [[LDDataManager sharedManager] createFeatureEvent: featureKey keyValue:returnValue defaultKeyValue:fallback];
+    return returnValue;
 }
 
 - (NSDictionary*)dictionaryVariation:(NSString *)featureKey fallback:(NSDictionary*)fallback{
@@ -200,20 +210,19 @@
         NSLog(@"featureKey should be an NSString. Returning fallback value");
         return fallback;
     }
-    if (clientStarted) {
-        BOOL flagExists = [ldUser doesFlagExist: featureKey];
-        NSObject *flagValue = [ldUser flagValue: featureKey];
-        NSDictionary *returnValue = fallback;
-        if ([flagValue isKindOfClass:[NSString class]] && flagExists) {
-            returnValue = (NSDictionary *)flagValue;
-        }
-        
-        [[LDDataManager sharedManager] createFeatureEvent: featureKey keyValue:returnValue defaultKeyValue:fallback];
-        return returnValue;
-    } else {
+    if (!clientStarted) {
         DEBUG_LOGX(@"LDClient not started yet!");
+        return fallback;
     }
-    return fallback;
+    BOOL flagExists = [ldUser doesFlagExist: featureKey];
+    id flagValue = [ldUser flagValue: featureKey];
+    NSDictionary *returnValue = fallback;
+    if (flagExists && [flagValue isKindOfClass:[NSDictionary class]]) {
+        returnValue = (NSDictionary *)flagValue;
+    }
+    
+    [[LDDataManager sharedManager] createFeatureEvent: featureKey keyValue:returnValue defaultKeyValue:fallback];
+    return returnValue;
 }
 
 - (BOOL)track:(NSString *)eventName data:(NSDictionary *)dataDictionary
@@ -250,7 +259,6 @@
         LDClientManager *clientManager = [LDClientManager sharedInstance];
         [clientManager setOfflineEnabled:NO];
         [clientManager startPolling];
-        [clientManager syncWithServerForConfig];
         return YES;
     } else {
         DEBUG_LOGX(@"LDClient not started yet!");
@@ -286,17 +294,26 @@
 
 // Notification handler for ClientManager user updated
 -(void)userUpdated {
-    if (self.delegate && [self.delegate respondsToSelector:@selector(userDidUpdate)]) {
+    if (![self.delegate respondsToSelector:@selector(userDidUpdate)]) { return; }
+    [NSThread performOnMainThread:^{
         [self.delegate userDidUpdate];
-    }
+    }];
+}
+
+// Notification handler for ClientManager server connection failed
+-(void)serverUnavailable {
+    if (![self.delegate respondsToSelector:@selector(serverConnectionUnavailable)]) { return; }
+    [NSThread performOnMainThread:^{
+        [self.delegate serverConnectionUnavailable];
+    }];
 }
 
 // Notification handler for DataManager config flag update
 -(void)configFlagUpdated:(NSNotification *)notification {
-    NSString *keyValue = [notification.userInfo objectForKey:@"flagkey"];
-    if (self.delegate && [self.delegate respondsToSelector:@selector(featureFlagDidUpdate:)]) {
-        [self.delegate featureFlagDidUpdate:keyValue];
-    }
+    if (![self.delegate respondsToSelector:@selector(featureFlagDidUpdate:)]) { return; }
+    [NSThread performOnMainThread:^{
+        [self.delegate featureFlagDidUpdate:[notification.userInfo objectForKey:@"flagkey"]];
+    }];
 }
 
 -(void)dealloc {
