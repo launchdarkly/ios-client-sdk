@@ -18,8 +18,10 @@ typedef void(^MockLDClientDelegateCallbackBlock)();
 
 @interface MockLDClientDelegate : NSObject <ClientDelegate>
 @property (nonatomic, assign) NSInteger userDidUpdateCallCount;
+@property (nonatomic, assign) NSInteger userUnchangedCallCount;
 @property (nonatomic, assign) NSInteger serverConnectionUnavailableCallCount;
 @property (nonatomic, strong) MockLDClientDelegateCallbackBlock userDidUpdateCallback;
+@property (nonatomic, strong) MockLDClientDelegateCallbackBlock userUnchangedCallback;
 @property (nonatomic, strong) MockLDClientDelegateCallbackBlock serverUnavailableCallback;
 @end
 
@@ -33,6 +35,10 @@ typedef void(^MockLDClientDelegateCallbackBlock)();
 
 -(void)userDidUpdate {
     self.userDidUpdateCallCount = [self processCallbackWithCount:self.userDidUpdateCallCount block:self.userDidUpdateCallback];
+}
+
+-(void)userUnchanged {
+    self.userUnchangedCallCount = [self processCallbackWithCount:self.userUnchangedCallCount block:self.userUnchangedCallback];
 }
 
 -(void)serverConnectionUnavailable {

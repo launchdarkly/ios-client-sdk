@@ -112,14 +112,9 @@
 
 - (void)configureEventSource {
     @synchronized (self) {
-        // If we already have an event source, there's nothing to do.
         if (eventSource) {
             DEBUG_LOGX(@"ClientManager aborting event source creation - event source running");
-            
-            [eventSource onMessage:^(LDEvent *event) {
-                if (![event.event isEqualToString:@"ping"]) { return; }
             return;
-            }];
         }
         eventSource = [LDEventSource eventSourceWithURL:[NSURL URLWithString:kStreamUrl] httpHeaders:[self httpHeadersForEventSource]];
         
@@ -142,13 +137,6 @@
     LDConfig *config = [[LDClient sharedInstance] ldConfig];
     if (time >= [config.backgroundFetchInterval doubleValue]) {
         [self syncWithServerForConfig];
-    }
-}
-
-- (void)stopEventSource {
-    @synchronized (self) {
-        [eventSource close];
-        eventSource = nil;
     }
 }
 
@@ -217,7 +205,13 @@
     DEBUG_LOGX(@"ClientManager processedConfig method called after receiving successful response from server");
 
     LDFlagConfigModel *newConfig = [[LDFlagConfigModel alloc] initWithDictionary:jsonConfigDictionary];
-    if (!newConfig || [[LDClient sharedInstance].ldUser.config isEqualToConfig:newConfig]) { return; }  //Bail out if no new config, or the new config equals the existing config
+    if (!newConfig || [[LDClient sharedInstance].ldUser.config isEqualToConfig:newConfig]) {
+        //Notify interested clients and bail out if no new config, or the new config equals the existing config
+        [[NSNotificationCenter defaultCenter] postNotificationName: kLDUserNoChangeNotification
+                                                            object: nil];
+        DEBUG_LOGX(@"ClientManager posted Darkly.UserNoChangeNotification following user config update");
+        return;
+    }
     
     LDUserModel *user = [LDClient sharedInstance].ldUser;
     user.config = newConfig;

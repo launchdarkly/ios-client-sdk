@@ -30,6 +30,9 @@
                                                  selector:@selector(userUpdated)
                                                      name: kLDUserUpdatedNotification object: nil];
         [[NSNotificationCenter defaultCenter] addObserver: sharedLDClient
+                                                 selector:@selector(userUnchanged)
+                                                     name: kLDUserNoChangeNotification object: nil];
+        [[NSNotificationCenter defaultCenter] addObserver: sharedLDClient
                                                  selector:@selector(serverUnavailable)
                                                      name:kLDServerConnectionUnavailableNotification object:nil];
         [[NSNotificationCenter defaultCenter] addObserver: sharedLDClient
@@ -104,10 +107,10 @@
     }
     if (clientStarted) {
         BOOL flagExists = [ldUser doesFlagExist: featureKey];
-        id flagValue = [ldUser flagValue: featureKey];
+        NSObject *flagValue = [ldUser flagValue: featureKey];
         BOOL returnValue = fallback;
         if ([flagValue isKindOfClass:[NSNumber class]] && flagExists) {
-            returnValue = [flagValue boolValue];
+            returnValue = [(NSNumber *)flagValue boolValue];
         }
         
         [[LDDataManager sharedManager] createFeatureEvent: featureKey keyValue:[NSNumber numberWithBool:returnValue] defaultKeyValue:[NSNumber numberWithBool:fallback]];
@@ -126,10 +129,10 @@
     }
     if (clientStarted) {
         BOOL flagExists = [ldUser doesFlagExist: featureKey];
-        id flagValue = [ldUser flagValue: featureKey];
+        NSObject *flagValue = [ldUser flagValue: featureKey];
         NSNumber *returnValue = fallback;
         if ([flagValue isKindOfClass:[NSNumber class]] && flagExists) {
-            returnValue = flagValue;
+            returnValue = (NSNumber *)flagValue;
         }
         
         [[LDDataManager sharedManager] createFeatureEvent: featureKey keyValue:returnValue defaultKeyValue:fallback];
@@ -147,16 +150,6 @@
         return fallback;
     }
     if (!clientStarted) {
-        BOOL flagExists = [ldUser doesFlagExist: featureKey];
-        id flagValue = [ldUser flagValue: featureKey];
-        double returnValue = fallback;
-        if ([flagValue isKindOfClass:[NSNumber class]] && flagExists) {
-            returnValue = [flagValue doubleValue];
-        }
-        
-        [[LDDataManager sharedManager] createFeatureEvent: featureKey keyValue:[NSNumber numberWithDouble:returnValue] defaultKeyValue:[NSNumber numberWithDouble:fallback]];
-        return returnValue;
-    } else {
         DEBUG_LOGX(@"LDClient not started yet!");
         return fallback;
     }
@@ -179,10 +172,10 @@
     }
     if (clientStarted) {
         BOOL flagExists = [ldUser doesFlagExist: featureKey];
-        id flagValue = [ldUser flagValue: featureKey];
+        NSObject *flagValue = [ldUser flagValue: featureKey];
         NSString *returnValue = fallback;
         if ([flagValue isKindOfClass:[NSString class]] && flagExists) {
-            returnValue = flagValue;
+            returnValue = (NSString *)flagValue;
         }
         
         [[LDDataManager sharedManager] createFeatureEvent: featureKey keyValue:returnValue defaultKeyValue:fallback];
@@ -307,6 +300,14 @@
     if (![self.delegate respondsToSelector:@selector(userDidUpdate)]) { return; }
     [NSThread performOnMainThread:^{
         [self.delegate userDidUpdate];
+    }];
+}
+
+// Notification handler for ClientManager user unchanged
+-(void)userUnchanged {
+    if (![self.delegate respondsToSelector:@selector(userUnchanged)]) { return; }
+    [NSThread performOnMainThread:^{
+        [self.delegate userUnchanged];
     }];
 }
 
