@@ -1,7 +1,7 @@
 Pod::Spec.new do |s|
 
   s.name         = "LaunchDarkly"
-  s.version      = "3.0.0.1"
+  s.version      = "3.0.0.2"
   s.summary      = "iOS SDK for LaunchDarkly"
 
   s.description  = <<-DESC
@@ -20,14 +20,13 @@ Pod::Spec.new do |s|
   s.author             = { "LaunchDarkly" => "team@launchdarkly.com" }
 
   s.ios.deployment_target     = "8.0"
-#  s.watchos.deployment_target = "2.0"		//TODO: Uncomment when setting up the watchOS target
-#  s.tvos.deployment_target    = "9.0"		//TODO: Uncomment when setting up the tvOS target
-#  s.osx.deployment_target     = "10.10"	//TODO: Uncomment when setting up the macOS target
+#  s.watchos.deployment_target = "2.0"		#TODO: Uncomment when setting up the watchOS target
+#  s.tvos.deployment_target    = "9.0"		#TODO: Uncomment when setting up the tvOS target
+#  s.osx.deployment_target     = "10.10"	#TODO: Uncomment when setting up the macOS target
 
-#	//TODO: Add the tag when ready
-  s.source       = { :git => "https://github.com/launchdarkly/ios-client-swift-private.git" }
+  s.source       = { :git => "https://github.com/launchdarkly/ios-client-swift-private.git" }	#TODO: Add the tag when ready
 
-  s.source_files  = "Darkly/Darkly/*.{h,m,swift}"
+  s.source_files  = "Darkly/Darkly/**/*.{h,m,swift}"
 
   s.requires_arc = true
 
