@@ -53,6 +53,7 @@
         [self configureEventSource];
     }
     else{
+        [self syncWithServerForConfig];
         pollingMgr.configPollingIntervalMillis = [config.pollingInterval intValue] * kMillisInSecs;
         [pollingMgr startConfigPolling];
     }
@@ -112,14 +113,27 @@
 - (void)configureEventSource {
     @synchronized (self) {
         // If we already have an event source, there's nothing to do.
-        if (!eventSource) {
-            eventSource = [LDEventSource eventSourceWithURL:[NSURL URLWithString:kStreamUrl] httpHeaders:[self httpHeadersForEventSource]];
+        if (eventSource) {
+            DEBUG_LOGX(@"ClientManager aborting event source creation - event source running");
             
             [eventSource onMessage:^(LDEvent *event) {
                 if (![event.event isEqualToString:@"ping"]) { return; }
-                [self syncWithServerForConfig];
+            return;
             }];
         }
+        eventSource = [LDEventSource eventSourceWithURL:[NSURL URLWithString:kStreamUrl] httpHeaders:[self httpHeadersForEventSource]];
+        
+        [eventSource onMessage:^(LDEvent *event) {
+            if (![event.event isEqualToString:@"ping"]) { return; }
+            [self syncWithServerForConfig];
+        }];
+    }
+}
+
+- (void)stopEventSource {
+    @synchronized (self) {
+        [eventSource close];
+        eventSource = nil;
     }
 }
 
@@ -193,33 +207,27 @@
 }
 
 - (void)processedConfig:(BOOL)success jsonConfigDictionary:(NSDictionary *)jsonConfigDictionary {
-    if (success) {
-        DEBUG_LOGX(@"ClientManager processedConfig method called after receiving successful response from server");
-        // If Success
-        LDFlagConfigModel *newConfig = [[LDFlagConfigModel alloc] initWithDictionary:jsonConfigDictionary];
-        
-        if (newConfig && ![[LDClient sharedInstance].ldUser.config isEqualToConfig:newConfig]) {
-            // Overwrite Config with new config
-            LDClient *client = [LDClient sharedInstance];
-            LDUserModel *user = client.ldUser;
-            user.config = newConfig;
-            // Save context
-            [[LDDataManager sharedManager] saveUser:user];
-            
-            [[NSNotificationCenter defaultCenter] postNotificationName: kLDUserUpdatedNotification
-                                                                object: nil];
-            DEBUG_LOGX(@"ClientManager posted Darkly.UserUpdatedNotification following user config update");
-        } else {
-            [[NSNotificationCenter defaultCenter] postNotificationName:kLDUserNoChangeNotification
-                                                                object:nil];
-        }
-    } else {
+    if (!success) {
         DEBUG_LOGX(@"ClientManager processedConfig method called after receiving failure response from server");
-        [[NSNotificationCenter defaultCenter] postNotificationName: kLDServerConnectionUnavailable
+        [[NSNotificationCenter defaultCenter] postNotificationName: kLDServerConnectionUnavailableNotification
                                                             object: nil];
+        return;
     }
-}
     
+    DEBUG_LOGX(@"ClientManager processedConfig method called after receiving successful response from server");
+
+    LDFlagConfigModel *newConfig = [[LDFlagConfigModel alloc] initWithDictionary:jsonConfigDictionary];
+    if (!newConfig || [[LDClient sharedInstance].ldUser.config isEqualToConfig:newConfig]) { return; }  //Bail out if no new config, or the new config equals the existing config
+    
+    LDUserModel *user = [LDClient sharedInstance].ldUser;
+    user.config = newConfig;
+    [[LDDataManager sharedManager] saveUser:user];  // Save context
+    
+    [[NSNotificationCenter defaultCenter] postNotificationName: kLDUserUpdatedNotification
+                                                        object: nil];
+    DEBUG_LOGX(@"ClientManager posted Darkly.UserUpdatedNotification following user config update");
+}
+
 - (NSDictionary *)httpHeadersForEventSource {
     NSMutableDictionary *headers = [[NSMutableDictionary alloc] init];
     

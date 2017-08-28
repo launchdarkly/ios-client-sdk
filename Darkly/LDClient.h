@@ -80,6 +80,16 @@
  * @param fallback   Fallback value for feature flag
  * @return the feature flag value
  */
+- (double)doubleVariation:(NSString *)featureKey fallback:(double)fallback;
+/**
+ * Retrieve a feature flag value. If the configuration for this feature
+ * flag is retrieved from the server that value is returned, otherwise
+ * the fallback is returned.
+ *
+ * @param featureKey   Key of feature flag
+ * @param fallback   Fallback value for feature flag
+ * @return the feature flag value
+ */
 - (NSString*)stringVariation:(NSString *)featureKey fallback:(NSString*)fallback;
 /**
  * Retrieve a feature flag value. If the configuration for this feature

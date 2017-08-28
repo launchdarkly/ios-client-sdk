@@ -116,13 +116,9 @@ static id sharedInstance = nil;
 - (void) resumeConfigPolling{
     if (configPollingState == POLL_PAUSED || configPollingState == POLL_SUSPENDED) {
         DEBUG_LOGX(@"PollingManager resuming config polling");
-        BOOL checkconfig = configPollingState == POLL_SUSPENDED ? YES : NO;
-        dispatch_resume(self.configTimer);
+        dispatch_resume(self.configTimer);  //If the configTimer would have fired while paused/suspended, it triggers a flag request
         @synchronized (self) {
             configPollingState = POLL_RUNNING;
-        }
-        if (checkconfig) {
-            [self configPoll];
         }
     }
 }
