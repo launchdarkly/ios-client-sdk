@@ -8,20 +8,7 @@
 
 import Foundation
 
-public protocol LDFlaggable { }
-extension Bool: LDFlaggable { }
-extension Int: LDFlaggable { }
-extension Float: LDFlaggable { }
-extension String: LDFlaggable { }
-extension Array: LDFlaggable { }
-extension Dictionary: LDFlaggable { }
-public class LDFlagType: LDFlaggable { }
-
 public typealias LDFlagChangeOwner = AnyObject
 public typealias LDFlagKeyList = [String]
-public typealias LDFlagChangeObserver<T> = (LDChangedFlag<T>) -> () where T: LDFlaggable
-public typealias LDFlagCollectionChangeObserver = ([String:LDChangedFlag<LDFlagType>]) -> ()
-
-public enum LDFlagValueSource {
-    case server, cache, fallback
-}
+public typealias LDFlagChangeObserver = (LDChangedFlag) -> ()
+public typealias LDFlagCollectionChangeObserver = ([String: LDChangedFlag]) -> ()

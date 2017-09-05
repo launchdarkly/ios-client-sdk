@@ -29,7 +29,7 @@ public struct LDUser {   //Public access means an app will have to compose its u
     public var os: String?
     
     internal private(set) var lastUpdated: Date
-    internal var featureFlags = [String: LDFeatureFlag<LDFlagType>]()   //TODO: Should these be here, somewhere else, or their own object?
+    internal var featureFlags = [String: LDFeatureFlag]()   //TODO: Should these be here, somewhere else, or their own object?
     
     public init(key: String? = nil,
                 name: String? = nil,
@@ -74,12 +74,12 @@ public struct LDUser {   //Public access means an app will have to compose its u
         return false
     }
     
-    public func flagValue(key: String) -> LDFlaggable? {
+    public func flagValue(key: String) -> LDFlagValue? {
         return nil
     }
     
     //Converts user.featureFlags into a flag dictionary
-    internal var allFlags: [String: LDFlaggable] {
+    internal var allFlags: [String: LDFlagValue] {
         return [:]
     }
     

@@ -8,10 +8,10 @@
 
 import Foundation
 
-struct LDFeatureFlag<T: LDFlaggable> {
+struct LDFeatureFlag {
     
     let key: String
-    var value: T?
+    var value: LDFlagValue?
     private(set) var source: LDFlagValueSource?
     
     init?(key: String) {
@@ -19,7 +19,7 @@ struct LDFeatureFlag<T: LDFlaggable> {
         self.key = key
     }
     
-    func variation(fallback: T) -> T {
+    func variation(fallback: LDFlagValue) -> LDFlagValue {
         return value ?? fallback
     }
 }

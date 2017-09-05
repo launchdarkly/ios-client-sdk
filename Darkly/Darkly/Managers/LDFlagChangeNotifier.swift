@@ -11,7 +11,7 @@ import Foundation
 class LDFlagChangeNotifier {
     private var observers = [LDFlagObserver]()
     
-    func addObserver(_ observer: @escaping LDFlagChangeObserver<LDFlagType>) {
+    func addObserver(_ observer: @escaping LDFlagChangeObserver) {
         
     }
     
@@ -30,7 +30,7 @@ class LDFlagChangeNotifier {
         
     }
     
-    func notifyObservers(changedFlags: [LDChangedFlag<LDFlagType>]) {
+    func notifyObservers(changedFlags: [LDChangedFlag]) {
         
     }
     

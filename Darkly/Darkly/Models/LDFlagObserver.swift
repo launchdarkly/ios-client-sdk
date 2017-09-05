@@ -11,5 +11,5 @@ import Foundation
 struct LDFlagObserver {
     weak private(set) var owner: LDFlagChangeOwner?
     let flagKeys: LDFlagKeyList
-    let handler: LDFlagChangeObserver<LDFlagType>
+    let handler: LDFlagChangeObserver
 }
