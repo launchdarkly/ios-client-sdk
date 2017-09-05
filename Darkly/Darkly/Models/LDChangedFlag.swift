@@ -15,7 +15,7 @@ public struct LDChangedFlag {
     public let newValue: LDFlagValue?
     public let newValueSource: LDFlagValueSource?
     
-    init(key: String, oldValue: LDFlagValueConvertible?, oldValueSource: LDFlagValueSource?, newValue: LDFlagValueConvertible?, newValueSource: LDFlagValueSource?) {
+    public init(key: String, oldValue: LDFlagValueConvertible?, oldValueSource: LDFlagValueSource?, newValue: LDFlagValueConvertible?, newValueSource: LDFlagValueSource?) {
         self.key = key
         self.oldValue = oldValue?.toLDFlagValue()
         self.oldValueSource = oldValueSource

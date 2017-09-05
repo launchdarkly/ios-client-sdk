@@ -9,7 +9,7 @@
 import Foundation
 
 //Protocol to convert base LDFlagType into an LDFlagValue
-protocol LDFlagValueConvertible {
+public protocol LDFlagValueConvertible {
     func toLDFlagValue() -> LDFlagValue
 }
 
@@ -17,7 +17,7 @@ protocol LDFlagValueConvertible {
 
 //let boolFlag: LDFlagValue = true.toLDFlagValue()
 extension Bool: LDFlagValueConvertible {
-    func toLDFlagValue() -> LDFlagValue {
+    public func toLDFlagValue() -> LDFlagValue {
         return .bool(self)
     }
 }
@@ -25,7 +25,7 @@ extension Bool: LDFlagValueConvertible {
 // MARK: - Int
 
 extension Int: LDFlagValueConvertible {
-    func toLDFlagValue() -> LDFlagValue {
+    public func toLDFlagValue() -> LDFlagValue {
         return .int(self)
     }
 }
@@ -33,7 +33,7 @@ extension Int: LDFlagValueConvertible {
 // MARK: - Double
 
 extension Double: LDFlagValueConvertible {
-    func toLDFlagValue() -> LDFlagValue {
+    public func toLDFlagValue() -> LDFlagValue {
         return .double(self)
     }
 }
@@ -41,7 +41,7 @@ extension Double: LDFlagValueConvertible {
 // MARK: - String
 
 extension String: LDFlagValueConvertible {
-    func toLDFlagValue() -> LDFlagValue {
+    public func toLDFlagValue() -> LDFlagValue {
         return .string(self)
     }
 }
@@ -49,14 +49,14 @@ extension String: LDFlagValueConvertible {
 // MARK: - Array
 
 extension Array where Element: LDFlagValueConvertible {
-    func toLDFlagValue() -> LDFlagValue {
+    public func toLDFlagValue() -> LDFlagValue {
         let flagValues = self.map { (element) in element.toLDFlagValue() }
         return .array(flagValues)
     }
 }
 
 extension Array: LDFlagValueConvertible {
-    func toLDFlagValue() -> LDFlagValue {
+    public func toLDFlagValue() -> LDFlagValue {
         guard let flags = self as? [LDFlagValueConvertible] else {
             return .null
         }
@@ -68,7 +68,7 @@ extension Array: LDFlagValueConvertible {
 // MARK: - Dictionary
 
 extension Dictionary where Value: LDFlagValueConvertible {
-    func toLDFlagValue() -> LDFlagValue {
+    public func toLDFlagValue() -> LDFlagValue {
         var flagValues = [String: LDFlagValue]()
         for (key, value) in self {
             flagValues[String(describing: key)] = value.toLDFlagValue()
@@ -83,7 +83,7 @@ extension Dictionary: LDFlagValueConvertible {
         return .dictionary(flagValues)
     }
     
-    static func convertToFlagValues(_ dictionary: [String: LDFlagValueConvertible]?) -> [String: LDFlagValue]? {
+    internal static func convertToFlagValues(_ dictionary: [String: LDFlagValueConvertible]?) -> [String: LDFlagValue]? {
         guard let dictionary = dictionary else { return nil }
         var flagValues = [String: LDFlagValue]()
         for (key, value) in dictionary {

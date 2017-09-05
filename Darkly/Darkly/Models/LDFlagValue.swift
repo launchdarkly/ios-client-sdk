@@ -93,7 +93,7 @@ extension LDFlagValue: ExpressibleByArrayLiteral {
 }
 
 extension LDFlagValue {
-    var flagValueArray: [LDFlagValue]? {
+    public var flagValueArray: [LDFlagValue]? {
         guard case let .array(array) = self else { return nil }
         return array
     }
@@ -123,7 +123,7 @@ extension LDFlagValue: ExpressibleByDictionaryLiteral {
 }
 
 extension LDFlagValue {
-    var flagValueDictionary: [String: LDFlagValue]? {
+    public var flagValueDictionary: [String: LDFlagValue]? {
         guard case let .dictionary(value) = self else { return nil }
         return value
     }
