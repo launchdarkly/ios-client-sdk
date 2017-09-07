@@ -10,5 +10,5 @@ import Foundation
 
 public typealias LDFlagChangeOwner = AnyObject
 public typealias LDFlagKeyList = [String]
-public typealias LDFlagChangeObserver = (LDChangedFlag) -> ()
-public typealias LDFlagCollectionChangeObserver = ([String: LDChangedFlag]) -> ()
+public typealias LDFlagChangeObserver = (LDChangedFlag) -> Void
+public typealias LDFlagCollectionChangeObserver = ([String: LDChangedFlag]) -> Void

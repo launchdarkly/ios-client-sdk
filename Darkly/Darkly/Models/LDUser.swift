@@ -20,12 +20,14 @@ public struct LDUser {   //Public access means an app will have to compose its u
     public var firstName: String?
     public var lastName: String?
     public var country: String?
+    // swiftlint:disable:next identifier_name
     public var ip: String?
     public var email: String?
     public var avatar: String?
     public var custom: [String: Any]?
     public var isAnonymous: Bool
     public var device: String?
+    // swiftlint:disable:next identifier_name
     public var os: String?
     
     internal private(set) var lastUpdated: Date
@@ -37,6 +39,7 @@ public struct LDUser {   //Public access means an app will have to compose its u
                 lastName: String? = nil,
                 isAnonymous: Bool = false,
                 country: String? = nil,
+                // swiftlint:disable:next identifier_name
                 ip: String? = nil,
                 email: String? = nil,
                 avatar: String? = nil,
@@ -96,7 +99,7 @@ public struct LDUser {   //Public access means an app will have to compose its u
 }
 
 extension LDUser: Equatable {
-    public static func ==(lhs: LDUser, rhs: LDUser) -> Bool {
+    public static func == (lhs: LDUser, rhs: LDUser) -> Bool {
         return lhs.key == rhs.key
     }
 }

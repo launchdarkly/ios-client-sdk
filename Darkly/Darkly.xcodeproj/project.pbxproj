@@ -173,6 +173,7 @@
 			isa = PBXNativeTarget;
 			buildConfigurationList = 8354EFD61F22491C00C05156 /* Build configuration list for PBXNativeTarget "Darkly_iOS" */;
 			buildPhases = (
+				835E1CFE1F61AC0600184DB4 /* ShellScript */,
 				8354EFBD1F22491C00C05156 /* Sources */,
 				8354EFBE1F22491C00C05156 /* Frameworks */,
 				8354EFBF1F22491C00C05156 /* Headers */,
@@ -260,6 +261,22 @@
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXResourcesBuildPhase section */
+
+/* Begin PBXShellScriptBuildPhase section */
+		835E1CFE1F61AC0600184DB4 /* ShellScript */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputPaths = (
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "if which swiftlint >/dev/null; then\nswiftlint\nelse\necho \"warning: SwiftLint not installed, download from https://github.com/realm/SwiftLint\"\nfi";
+		};
+/* End PBXShellScriptBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
 		8354EFBD1F22491C00C05156 /* Sources */ = {

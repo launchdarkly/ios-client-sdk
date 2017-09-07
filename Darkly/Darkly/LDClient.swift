@@ -53,7 +53,7 @@ public class LDClient {
     ///     }
     ///If a client app doesn't want to be notified, omit the completion closure:
     ///     LDClient.shared.change(user: newUser)
-    public func change(user: LDUser, completion:(([String: LDFlagValue]) -> ())? = nil) {
+    public func change(user: LDUser, completion: (([String: LDFlagValue]) -> Void)? = nil) {
         
     }
     
@@ -89,19 +89,19 @@ public class LDClient {
     */
     
     ///Usage: let flags = LDClient.shared.allFeatureFlags
-    public var allFeatureFlags: [String: LDFlagValue] {
-        return user.allFlags
+    public var allFeatureFlags: [String: LDFlagBaseTypeConvertible] {
+        return LDFlagValue(user.allFlags).baseDictionary ?? [:]
     }
 
     ///Usage
-    /// let flagValue: Bool = LDClient.shared.variation("flag-key", fallback: false)
-    public func variation(_ forKey: String, fallback: LDFlagValue) -> LDFlagValue {
+    /// let boolFeatureFlagValue = LDClient.shared.variation(forKey: "bool-flag-key", fallback: false) //boolFeatureFlagValue is a Bool
+    public func variation<T: LDFlagValueConvertible>(forKey key: String, fallback: T) -> T {
         return fallback
     }
 
     ///Usage
-    /// let (flagValue, flagValueSource) = LDClient.shared.variation("flag-key", fallback: false)
-    public func variation(_ forKey: String, fallback: LDFlagValue) -> (LDFlagValue, LDFlagValueSource) {
+    /// let (boolFeatureFlagValue, boolFeatureFlagSource) = LDClient.shared.variationAndSource(forKey: "bool-flag-key", fallback: false)    //boolFeatureFlagValue is a Bool
+    public func variationAndSource<T: LDFlagValueConvertible>(forKey key: String, fallback: T) -> (T, LDFlagValueSource) {
         return (fallback, .fallback)
     }
     
@@ -116,11 +116,11 @@ public class LDClient {
     
     ///Usage
     ///     LDClient.shared.observe("flag-key", owner: self, observer: { [weak self] (changedFlag) in
-    ///         if let oldValue = changedFlag.oldValue {
-    ///             //do something with the oldValue
+    ///         if let oldValue = Bool(changedFlag.oldValue) {
+    ///             //do something with the oldValue. oldValue & newValue have constructors that take an LDFlagValue for any of the LD supported types
     ///         }
-    ///         if let newValue = changedFlag.newValue {
-    ///             //do something with the newValue
+    ///         if let newValue = changedFlag.newValue?.baseValue as? Bool {
+    ///             //do something with the newValue. oldValue & newValue can be converted to their base value and cast to their LD supported type
     ///         }
     ///          //client's change observing code here
     ///     }

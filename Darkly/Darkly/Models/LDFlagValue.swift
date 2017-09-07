@@ -14,6 +14,7 @@ public enum LDFlagValueSource {
 
 public enum LDFlagValue {
     case bool(Bool)
+    // swiftlint:disable:next identifier_name
     case int(Int)
     case double(Double)
     case string(String)
@@ -24,8 +25,6 @@ public enum LDFlagValue {
 
 // MARK: - Bool
 
-///LDFlagValue(true)
-///let boolFlag: LDFlagValue = true
 extension LDFlagValue: ExpressibleByBooleanLiteral {
     public init(_ value: Bool) {
         self = .bool(value)
