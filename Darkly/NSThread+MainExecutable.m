@@ -9,7 +9,7 @@
 #import "NSThread+MainExecutable.h"
 
 @implementation NSThread (MainExecutable)
-+ (void)performOnMainThread:(void(^)())executionBlock {
++ (void)performOnMainThread:(void(^)(void))executionBlock {
     if (!executionBlock) { return; }
     if (![NSThread isMainThread]) {
         [self performSelectorOnMainThread:@selector(performOnMainThread:) withObject:executionBlock waitUntilDone:YES];

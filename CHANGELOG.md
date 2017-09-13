@@ -2,6 +2,10 @@
 
 All notable changes to the LaunchDarkly iOS SDK will be documented in this file. This project adheres to [Semantic Versioning](http://semver.org).
 
+## [2.7.0] - 2017-09-13
+### Changed
+- Updated for Xcode 9 support
+
 ## [2.6.1] - 2017-09-21
 ### Added
 -`streamUrl` property on `LDConfig` to allow customizing the Server Sent Events engine in streaming mode.
