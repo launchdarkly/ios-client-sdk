@@ -9,5 +9,5 @@
 #import <Foundation/Foundation.h>
 
 @interface NSThread (MainExecutable)
-+ (void)performOnMainThread:(void(^)())executionBlock;
++ (void)performOnMainThread:(void(^)(void))executionBlock;
 @end
