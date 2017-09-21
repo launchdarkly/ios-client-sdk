@@ -24,6 +24,12 @@
 @property (nonatomic, copy, nullable) NSString* eventsUrl;
 
 /**
+ The event source stream URL to the LaunchDarkly event source, should you need to override
+ the default.
+ */
+@property (nonatomic, copy, nullable) NSString* streamUrl;
+
+/**
  The capacity for storing feature flag and custom events. Events
  are persisted on the client and then sent to the server on a regular
  basis. If there is ever a prolonged period of time between the last server

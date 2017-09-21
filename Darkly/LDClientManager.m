@@ -116,7 +116,7 @@
             DEBUG_LOGX(@"ClientManager aborting event source creation - event source running");
             return;
         }
-        eventSource = [LDEventSource eventSourceWithURL:[NSURL URLWithString:kStreamUrl] httpHeaders:[self httpHeadersForEventSource]];
+        eventSource = [LDEventSource eventSourceWithURL:[NSURL URLWithString:[LDClient sharedInstance].ldConfig.streamUrl] httpHeaders:[self httpHeadersForEventSource]];
         
         [eventSource onMessage:^(LDEvent *event) {
             if (![event.event isEqualToString:@"ping"]) { return; }

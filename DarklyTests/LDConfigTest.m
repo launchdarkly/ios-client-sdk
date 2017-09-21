@@ -59,6 +59,14 @@
     XCTAssertFalse([config debugEnabled]);
 }
 
+- (void)testConfigOverrideStreamUrl {
+    NSString *dummyStreamUrl = @"https://clientstream.launchdarkly.com/dummySSEUrl";
+    LDConfig *config = [[LDConfig alloc] initWithMobileKey:@"testMobileKey"];
+    XCTAssertEqual(config.streamUrl, kStreamUrl);
+    config.streamUrl = dummyStreamUrl;
+    XCTAssertEqual(config.streamUrl, dummyStreamUrl);
+}
+
 - (void)testConfigOverrideCapacity {
     NSString *testMobileKey = @"testMobileKey";
     int testCapacity = 20;
