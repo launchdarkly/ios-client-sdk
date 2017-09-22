@@ -25,6 +25,7 @@
     self.backgroundFetchInterval = [NSNumber numberWithInt:kDefaultBackgroundFetchInterval];
     self.baseUrl = kBaseUrl;
     self.eventsUrl = kEventsUrl;
+    self.streamUrl = kStreamUrl;
 
     return self;
 }
