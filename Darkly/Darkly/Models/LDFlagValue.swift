@@ -20,7 +20,7 @@ public enum LDFlagValue {
     case string(String)
     case array([LDFlagValue])
     case dictionary([String: LDFlagValue])
-    case null
+    case null   //TODO: try to get rid of this
 }
 
 // MARK: - Bool

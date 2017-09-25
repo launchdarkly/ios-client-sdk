@@ -43,7 +43,7 @@ public struct LDUser {   //Public access means an app will have to compose its u
                 ip: String? = nil,
                 email: String? = nil,
                 avatar: String? = nil,
-                custom: [String: AnyObject]? = nil) {
+                custom: [String: Any]? = nil) {
         self.key = key ?? LDUser.defaultKey
         self.name = name
         self.firstName = firstName

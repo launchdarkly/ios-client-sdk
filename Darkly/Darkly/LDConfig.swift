@@ -34,8 +34,8 @@ public struct LDConfig {
     }
     
     public struct Minima {
-        public static let backgroundPollIntervalMillis = 900_000   ///The minimum background polling interval in milliseconds. Value: 15 minutes
-        public static let pollingIntervalMillis = 60_000   ///The minimum polling interval in milliseconds. Value: 1 minute
+        public let backgroundPollIntervalMillis = 900_000   ///The minimum background polling interval in milliseconds. Value: 15 minutes
+        public let pollingIntervalMillis = 60_000   ///The minimum polling interval in milliseconds. Value: 1 minute
     }
     
     public var baseUrl: URL = Defaults.baseUrl                ///You probably don't need to set this unless instructed by LaunchDarkly.

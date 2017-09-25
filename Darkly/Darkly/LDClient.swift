@@ -46,14 +46,15 @@ public class LDClient {
     ///If the LDClient is online, updates the user and requests feature flags from the server
     ///If the LDClient is offline, updates the user only. If a cached user is available, uses the cached feature flags until the LDClient is put online. If no cached user is available, any feature flag requests will result in the fallback until the LDClient is put online.
     ///NOTE: If the LDClient is online, there may be a brief delay before an update to the feature flags is available, depending upon network conditions. Prior to receiving a feature flag update, LDClient will return cached feature flags if they are available. If no cached feature flags are available, the LDClient will return fallback values. 
-    ///If a client app wants to be notified when the LDClient receives the updated user flags, pass in a completion closure. The LDClient will call the closure once after the first feature flag update from the LD server, passing in the value of allFeatureFlags. The closure will NOT be called when a cached user's flags have been retrieved. If the client is offline, the closure will not be called until the app sets the client online and the client has received the first flag update from the LD server.
+    ///If a client app wants to be notified when the LDClient receives the updated user flags, pass in a completion closure. The LDClient will call the closure once after the first feature flag update from the LD server. The closure will NOT be called when a cached user's flags have been retrieved. If the client is offline, the closure will not be called until the app sets the client online and the client has received the first flag update from the LD server.
     ///Usage:
-    ///     LDClient.shared.change(user: newUser) { (allFlags) in
-    ///         //do something with allFlags, which contains the first flag update from the LD server
+    ///     LDClient.shared.change(user: newUser) { [weak self] in
+    ///         //client app code responding to the arrival of flags...
+    ///         //self?.reload()
     ///     }
     ///If a client app doesn't want to be notified, omit the completion closure:
     ///     LDClient.shared.change(user: newUser)
-    public func change(user: LDUser, completion: (([String: LDFlagValue]) -> Void)? = nil) {
+    public func change(user: LDUser, completion: (() -> Void)? = nil) {
         
     }
     
@@ -82,17 +83,11 @@ public class LDClient {
     /* FF Value Requests
      Conceptual Model
      The LDClient is the focal point for flag value requests. It should appear to the app that the client contains a store of [key: value] pairs where the keys are all strings and the values any of the supported LD flag types (Bool, number (int, float), String, Array, Dictionary). The LDFlaggable protocol defines the LD supported flag types.
-     When asked for allFeatureFlags, the LDClient should provide a [String: LDFlaggable] with keys & values. Nil values should not appear in this dictionary...it would be the same as if the key weren't there.
      When asked for a variation value, the LDClient provides either the LDFlaggable value, or a (LDFlaggable, LDVariationSource) that reports the value and value source.
      
      At launch, the LDClient should ask the LDUserCache to load the cached user's flags (if any) and then ask the flag synchronizer to start synchronizing (via streaming / polling)
     */
     
-    ///Usage: let flags = LDClient.shared.allFeatureFlags
-    public var allFeatureFlags: [String: LDFlagBaseTypeConvertible] {
-        return LDFlagValue(user.allFlags).baseDictionary ?? [:]
-    }
-
     ///Usage
     /// let boolFeatureFlagValue = LDClient.shared.variation(forKey: "bool-flag-key", fallback: false) //boolFeatureFlagValue is a Bool
     public func variation<T: LDFlagValueConvertible>(forKey key: String, fallback: T) -> T {

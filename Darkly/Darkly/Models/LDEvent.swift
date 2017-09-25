@@ -16,10 +16,10 @@ class LDEvent { //sdk internal, not publically accessible
     let key: String
     let kind: LDEventType
     let creationDate: Date
-    let data: [String: AnyObject]?
+    let data: [String: Any]?
     let user: LDUser?
-    let value: AnyObject?
-    let defaultValue: AnyObject?
+    let value: Any?
+    let defaultValue: Any?
     
     init(key: String = UUID().uuidString, kind: LDEventType = .custom, data: [String: AnyObject]? = nil, value: AnyObject? = nil, defaultValue: AnyObject? = nil, user: LDUser? = nil) {
         self.key = key
