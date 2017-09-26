@@ -2,7 +2,7 @@
 
 All notable changes to the LaunchDarkly iOS SDK will be documented in this file. This project adheres to [Semantic Versioning](http://semver.org).
 
-## [2.7.0] - 2017-09-13
+## [2.7.0] - 2017-09-25
 ### Changed
 - Updated for Xcode 9 support
 
