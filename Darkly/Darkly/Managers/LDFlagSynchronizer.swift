@@ -8,53 +8,173 @@
 
 import Foundation
 import Dispatch
+import DarklyEventSource
 
-//Responsible for SSE / Polling setup and server flag request & handling
 class LDFlagSynchronizer {
-    struct Constants {
-        static let requestQueueLabel = "com.launchdarkly.flagRequestQueue"
+    enum Event: String {
+        //swiftlint:disable:next identifier_name
+        case ping, put, patch, delete
     }
     
-    let config: LDConfig
-    let user: LDUser
-    let requestQueue = DispatchQueue(label: Constants.requestQueueLabel, qos: .userInitiated)
+    private let mobileKey: String
+    private let config: LDConfig
+    private let user: LDUser
+    private let service: DarklyServiceProvider
+    private let flagStore: LDFlagMaintaining
+    private var eventSource: DarklyStreamingProvider?
+    private weak var flagRequestTimer: Timer?
+    
     var streamingMode: LDStreamingMode {
         didSet {
-            
+            configureCommunications()
         }
     }
     
     var isOnline: Bool {
         didSet {
-            
+            configureCommunications()
         }
     }
     
-    init(config: LDConfig, user: LDUser) {
+    var streamingActive: Bool { return eventSource != nil }
+    var pollingActive: Bool { return flagRequestTimer != nil }
+    
+    init(mobileKey: String, config: LDConfig, user: LDUser, service: DarklyServiceProvider, store: LDFlagMaintaining) {
+        self.mobileKey = mobileKey
         self.config = config
         self.user = user
+        self.service = service
+        self.flagStore = store
         
         self.isOnline = config.launchOnline
         self.streamingMode = config.streamingMode
+
+        configureCommunications()
     }
     
-    private func startEventSource() {
+    private func configureCommunications() {
+        if isOnline {
+            switch streamingMode {
+            case .streaming:
+                stopPolling()
+                startEventSource()
+            case .polling:
+                stopEventSource()
+                startPolling()
+            }
+        } else {
+            stopEventSource()
+            stopPolling()
+        }
+    }
     
+    // MARK: Streaming
+    
+    private func startEventSource() {
+        guard isOnline,
+            streamingMode == .streaming,
+            !streamingActive
+        else { return }
+        eventSource = service.createEventSource()  //The LDConfig.connectionTimeout should NOT be set here. Heartbeat is sent every 3m. ES default timeout is 5m. This is an async operation.
+        //LDEventSource waits 1s before attempting the connection, providing time to set handlers.
+        //LDEventSource reacts to connection errors by closing the connection and establishing a new one after an exponentially increasing wait. That makes it self healing.
+        //While we could keep the LDEventSource state, there's not much we can do to help it connect. If it can't connect, it's likely we won't be able to poll the server either...so it seems best to just do nothing and let it heal itself.
+        eventSource?.onMessageEvent { [weak self] (event) in
+            self?.process(event)
+        }
     }
     
     private func stopEventSource() {
-        
+        guard streamingActive else { return }
+        eventSource?.close() //This is an async operation.
+        eventSource = nil
     }
     
+    private func process(_ event: LDEvent?) {
+        guard streamingActive,
+            let event = event
+        else { return }    //Since eventSource.close() is async, this prevents responding to events after .close() is called, but before it's actually closed
+        //NOTE: It is possible that an LDEventSource was replaced and the event reported here is from the previous eventSource. However there is no information about the eventSource in the LDEvent to do anything about it.
+
+        switch event.event {
+        case Event.ping.rawValue: makeFlagRequest()
+        //TODO: Add put, patch, & delete
+        default: break
+        }
+    }
+    
+    // MARK: Polling
+    
     private func startPolling() {
-        
+        guard isOnline,
+            streamingMode == .polling,
+            !pollingActive
+            else { return }
+        if #available(iOS 10.0, *) {
+            flagRequestTimer = Timer.scheduledTimer(withTimeInterval: config.flagPollInterval, repeats: true) { [weak self] (_) in self?.processTimer() }
+        } else {
+            // the run loop retains the timer, so eventReportTimer is weak to avoid a retain cycle. Setting the timer to a strong reference is important so that the timer doesn't get nil'd before it's added to the run loop.
+            let timer = Timer(timeInterval: config.flagPollInterval, target: self, selector: #selector(processTimer), userInfo: nil, repeats: true)
+            flagRequestTimer = timer
+            RunLoop.current.add(timer, forMode: .defaultRunLoopMode)
+        }
+        makeFlagRequest()
     }
     
     private func stopPolling() {
-        
+        guard pollingActive else { return }
+        flagRequestTimer?.invalidate()
+        flagRequestTimer = nil
     }
     
+    @objc private func processTimer() {
+        makeFlagRequest()
+    }
+    
+    // MARK: Flag Request
+    
     private func makeFlagRequest() {
+        service.getFeatureFlags(user: user) { serviceResponse in
+            self.processFlagResponse(serviceResponse: serviceResponse)
+        }
+    }
+
+    private func processFlagResponse(serviceResponse: ServiceResponse) {
+        guard serviceResponse.error == nil else {
+            report(serviceResponse.error)
+            return
+        }
+        guard let httpResponse = serviceResponse.urlResponse as? HTTPURLResponse,
+            httpResponse.statusCode == 200
+        else {
+            report(serviceResponse.urlResponse)
+            return
+        }
+        guard let data = serviceResponse.data,
+            let flagJson = try? JSONSerialization.jsonObject(with: data, options: .allowFragments),
+            let flags = flagJson as? [String: Any]
+        else {
+            reportDataError()
+            return
+        }
         
+        flagStore.replaceStore(newFlags: flags, source: .server)
+    }
+    
+    private func report(_ error: Error?) {
+        //TODO: Implement when error reporting architecture is established
+    }
+    
+    private func report(_ response: URLResponse?) {
+        //TODO: Implement when error reporting architecture is established
+    }
+    
+    private func reportDataError() {
+        //TODO: Implement when error reporting architecture is established
+    }
+    
+    deinit {
+        stopEventSource()
+        stopPolling()
     }
 }

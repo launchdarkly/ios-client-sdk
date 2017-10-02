@@ -19,6 +19,10 @@ public class ObjcLDChangedFlag: NSObject {
     @objc public var key: String { return changedFlag.key }
     
     fileprivate init(_ changedFlag: LDChangedFlag) { self.changedFlag = changedFlag }
+    
+    fileprivate func sourceString(forSource source: LDFlagValueSource?, typeMismatch: Bool) -> String {
+        return typeMismatch ? ObjcLDChangedFlag.typeMismatch : LDFlagValueSource.toString(source)
+    }
 }
 
 ///Wraps the changed bool values of a flag-key. If the flag is not actually a Bool, old & new value default to false and old & new valueSource returns 'type mismatch'

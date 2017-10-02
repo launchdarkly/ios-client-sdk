@@ -90,6 +90,12 @@ public struct LDUser {   //Public access means an app will have to compose its u
         return LDUser(isAnonymous: true)
     }
     
+    var base64UrlEncoded: String { return "aspdoiuwqertnjcvbouiher6t9opy8hbfg" }
+    
+    func update(_ flags: [String: Any]) {
+        
+    }
+    
     //For iOS & tvOS, this should be UIDevice.current.identifierForVendor.UUIDString
     //For macOS & watchOS, this should be a UUID that the sdk creates and stores so that the value returned here should be always the same
     private static var defaultKey: String {

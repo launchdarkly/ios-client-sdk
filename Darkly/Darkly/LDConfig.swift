@@ -14,6 +14,10 @@ public enum LDStreamingMode {
 
 public struct LDConfig {
     
+    fileprivate struct Constants {
+        static let millisPerSecond: Double = 1000
+    }
+    
     fileprivate struct Defaults {
         static let baseUrl = URL(string: "https://app.launchdarkly.com")!
         static let eventsUrl = URL(string: "https://mobile.launchdarkly.com")!
@@ -48,10 +52,13 @@ public struct LDConfig {
     //Time configuration
     ///The timeout in milliseconds when connecting to LaunchDarkly. Default: 10 seconds
     public var connectionTimeoutMillis: Int = Defaults.connectionTimeoutMillis
+    var connectionTimeout: TimeInterval { return Double(connectionTimeoutMillis) / Constants.millisPerSecond }
     ///The maximum amount of time in milliseconds to wait in between sending analytics events to LaunchDarkly.
     public var eventFlushIntervalMillis: Int = Defaults.eventFlushIntervalMillis
+    var eventFlushInterval: TimeInterval { return Double(eventFlushIntervalMillis) / Constants.millisPerSecond }
     ///The interval between feature flag updates. Only relevant when not streaming Default: 5 minutes. Minimum: 1 minute
     public var pollIntervalMillis: Int = Defaults.pollIntervalMillis
+    var flagPollInterval: TimeInterval { return Double(pollIntervalMillis) / Constants.millisPerSecond }
     ///The interval in milliseconds that we will poll for flag updates when your app is in the background. Default: 1 hour. Minimum: 15 minutes
     public var backgroundPollIntervalMillis: Int = Defaults.backgroundPollIntervalMillis
     

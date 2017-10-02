@@ -34,7 +34,8 @@ extension LDFlagValue {
 extension Bool: LDFlagBaseTypeConvertible {
     public init?(_ flag: LDFlagValue?) {
         guard let flag = flag,
-            case let .bool(bool) = flag else { return nil }
+            case let .bool(bool) = flag
+        else { return nil }
         self = bool
     }
 }
@@ -45,7 +46,8 @@ extension Int: LDFlagBaseTypeConvertible {
     public init?(_ flag: LDFlagValue?) {
         //TODO: Assess whether we need to initialize with a double or string too
         guard let flag = flag,
-            case let .int(value) = flag else { return nil }
+            case let .int(value) = flag
+        else { return nil }
         self = value
     }
 }
@@ -56,7 +58,8 @@ extension Double: LDFlagBaseTypeConvertible {
     public init?(_ flag: LDFlagValue?) {
         //TODO: Assess whether we need to initialize with an int or string too
         guard let flag = flag,
-            case let .double(value) = flag else { return nil }
+            case let .double(value) = flag
+        else { return nil }
         self = value
     }
 }
@@ -66,7 +69,8 @@ extension Double: LDFlagBaseTypeConvertible {
 extension String: LDFlagBaseTypeConvertible {
     public init?(_ flag: LDFlagValue?) {
         guard let flag = flag,
-            case let .string(value) = flag else { return nil }
+            case let .string(value) = flag
+        else { return nil }
         self = value
     }
 }

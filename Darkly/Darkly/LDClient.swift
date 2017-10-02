@@ -19,6 +19,8 @@ public class LDClient {
     
     public private(set) var config = LDConfig()
     public private(set) var user = LDUser()
+    private var service: DarklyServiceProvider
+    private var flagStore = LDFlagStore()
     
     // MARK: - Public
     
@@ -28,16 +30,22 @@ public class LDClient {
     ///     LDClient.shared.start(mobileKey: appMobileKey, config: appConfig, user: appUser)
     ///Call this one time before you want to capture feature flags. The LDClient will not go online until you call this method.
     public func start(mobileKey: String, config: LDConfig = LDConfig(), user: LDUser? = nil) {
+        self.start(mobileKey: mobileKey, config: config, user: user, service: DarklyService(mobileKey: mobileKey, config: config))
+    }
+    
+    //Provides the start capability, but optionally allows a service to be passed in to support automated testing
+    func start(mobileKey: String, config: LDConfig = LDConfig(), user: LDUser? = nil, service: DarklyServiceProvider? = nil) {
         if isOnline {
             isOnline = false
         }
         
         self.mobileKey = mobileKey
         self.config = config
-        let latestUser = userCache.retrieveLatest()
-        self.user = user ?? latestUser ?? LDUser()
-        self.flagSynchronizer = LDFlagSynchronizer(config: self.config, user: self.user)
-        self.eventReporter = LDEventReporter(config: self.config)
+        self.user = user ?? userCache.retrieveLatest() ?? self.user
+        self.flagStore = LDFlagStore(user: self.user)
+        self.service = service ?? self.service  //only sets if a new service is provided
+        self.flagSynchronizer = LDFlagSynchronizer(mobileKey: mobileKey, config: self.config, user: self.user, service: self.service, store: flagStore)
+        self.eventReporter = LDEventReporter(mobileKey: mobileKey, config: self.config, service: self.service)
 
         self.isOnline = config.launchOnline
     }
@@ -156,7 +164,8 @@ public class LDClient {
     
     private init() {
         config.launchOnline = false //prevents supporting players from trying to contact the LD server
-        self.flagSynchronizer = LDFlagSynchronizer(config: config, user: user)  //dummy object replaced by start call
-        self.eventReporter = LDEventReporter(config: config)    //dummy object replaced by start call
+        self.service = DarklyService(mobileKey: "", config: config) //dummy object replaced by start call
+        self.flagSynchronizer = LDFlagSynchronizer(mobileKey: mobileKey, config: config, user: user, service: service, store: flagStore)  //dummy object replaced by start call
+        self.eventReporter = LDEventReporter(mobileKey: "", config: config, service: self.service)    //dummy object replaced by start call
     }
 }

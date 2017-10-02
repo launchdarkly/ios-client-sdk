@@ -8,6 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		831CE0641F7EEAA800A13A3A /* LDFlagStoreMock.swift in Sources */ = {isa = PBXBuildFile; fileRef = 831CE0631F7EEAA800A13A3A /* LDFlagStoreMock.swift */; };
+		831CE0661F853A1700A13A3A /* Match.swift in Sources */ = {isa = PBXBuildFile; fileRef = 831CE0651F853A1700A13A3A /* Match.swift */; };
 		831D8B6D1F6B1F7B00ED65E8 /* ObjcLDVariationValue.swift in Sources */ = {isa = PBXBuildFile; fileRef = 831D8B6C1F6B1F7B00ED65E8 /* ObjcLDVariationValue.swift */; };
 		831D8B6F1F71532300ED65E8 /* HTTPHeaders.swift in Sources */ = {isa = PBXBuildFile; fileRef = 831D8B6E1F71532300ED65E8 /* HTTPHeaders.swift */; };
 		831D8B721F71D3E700ED65E8 /* DarklyService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 831D8B711F71D3E700ED65E8 /* DarklyService.swift */; };
@@ -60,6 +61,7 @@
 		6D78FF715370FB95F6F5E9CA /* Pods-Darkly_iOS.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Darkly_iOS.release.xcconfig"; path = "Pods/Target Support Files/Pods-Darkly_iOS/Pods-Darkly_iOS.release.xcconfig"; sourceTree = "<group>"; };
 		7B043E1A9DC44E730A3F3730 /* Pods-DarklyTests.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-DarklyTests.release.xcconfig"; path = "Pods/Target Support Files/Pods-DarklyTests/Pods-DarklyTests.release.xcconfig"; sourceTree = "<group>"; };
 		831CE0631F7EEAA800A13A3A /* LDFlagStoreMock.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LDFlagStoreMock.swift; sourceTree = "<group>"; };
+		831CE0651F853A1700A13A3A /* Match.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Match.swift; sourceTree = "<group>"; };
 		831D8B6C1F6B1F7B00ED65E8 /* ObjcLDVariationValue.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ObjcLDVariationValue.swift; sourceTree = "<group>"; };
 		831D8B6E1F71532300ED65E8 /* HTTPHeaders.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HTTPHeaders.swift; sourceTree = "<group>"; };
 		831D8B711F71D3E700ED65E8 /* DarklyService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DarklyService.swift; sourceTree = "<group>"; };
@@ -72,7 +74,6 @@
 		8354EFC21F22491C00C05156 /* Darkly.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Darkly.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		8354EFC51F22491C00C05156 /* Darkly.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Darkly.h; sourceTree = "<group>"; };
 		8354EFCB1F22491C00C05156 /* DarklyTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = DarklyTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
-		8354EFD01F22491C00C05156 /* DarklyTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DarklyTests.swift; sourceTree = "<group>"; };
 		8354EFD21F22491C00C05156 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		8354EFDC1F26380700C05156 /* LDClient.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = LDClient.swift; sourceTree = "<group>"; };
 		8354EFDD1F26380700C05156 /* LDConfig.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = LDConfig.swift; sourceTree = "<group>"; };
@@ -129,6 +130,14 @@
 				C76BA8CBE4E870F6803A8FE8 /* Pods_Darkly_iOS.framework */,
 			);
 			name = Frameworks;
+			sourceTree = "<group>";
+		};
+		831CE0671F853CB700A13A3A /* Matcher */ = {
+			isa = PBXGroup;
+			children = (
+				831CE0651F853A1700A13A3A /* Match.swift */,
+			);
+			path = Matcher;
 			sourceTree = "<group>";
 		};
 		831D8B701F71D3A600ED65E8 /* Networking */ = {
@@ -200,7 +209,7 @@
 				83CFE7CF1F7AD89D0010544E /* Mocks */,
 				831D8B751F72A48900ED65E8 /* Managers */,
 				83396BC71F7C3688000E256E /* Networking */,
-				8354EFD01F22491C00C05156 /* DarklyTests.swift */,
+				831CE0671F853CB700A13A3A /* Matcher */,
 				8354EFD21F22491C00C05156 /* Info.plist */,
 			);
 			name = DarklyTests;
@@ -534,6 +543,7 @@
 			files = (
 				83CFE7CE1F7AD81D0010544E /* LDEventReporterSpec.swift in Sources */,
 				831CE0641F7EEAA800A13A3A /* LDFlagStoreMock.swift in Sources */,
+				831CE0661F853A1700A13A3A /* Match.swift in Sources */,
 				83396BC91F7C3711000E256E /* DarklyServiceSpec.swift in Sources */,
 				83CFE7D11F7AD8DC0010544E /* DarklyServiceMock.swift in Sources */,
 				832307AA1F7ECA630029815A /* LDConfigStub.swift in Sources */,
