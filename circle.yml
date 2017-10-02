@@ -1,0 +1,21 @@
+machine:
+ xcode:
+  version: 9.0
+
+test:
+ override:
+    - set -o pipefail &&
+      xcodebuild
+        CODE_SIGNING_REQUIRED=NO
+        CODE_SIGN_IDENTITY=
+        PROVISIONING_PROFILE=
+        -sdk iphonesimulator
+        -destination 'platform=iOS Simulator,OS=11.0,name=iPhone 8'
+        -workspace Darkly.xcworkspace
+        -scheme "Darkly_iOS"
+        clean build test |
+      tee $CIRCLE_ARTIFACTS/xcode_raw.log |
+      xcpretty --color --report junit --output $CIRCLE_TEST_REPORTS/xcode/results.xml
+ post:
+#  - pod lib lint --use-libraries 
+#  - if [ "$CIRCLE_BRANCH" = 'master' ]; then pod spec lint --use-libraries; fi
