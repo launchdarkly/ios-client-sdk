@@ -1,5 +1,0 @@
-framework module Darkly {
-    umbrella header "Darkly.h"
-    export *
-    module * { export * }
-}
