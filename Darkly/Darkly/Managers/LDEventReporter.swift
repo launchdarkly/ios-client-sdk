@@ -22,12 +22,12 @@ class LDEventReporter {
 
     private let mobileKey: String
     private let service: DarklyServiceProvider
-    private(set) var eventStore = [LDarklyEvent]()
+    private(set) var eventStore = [LDEvent]()
     
     private weak var eventReportTimer: Timer?
     var isReportingActive: Bool { return eventReportTimer != nil }
 
-    init(mobileKey: String, config: LDConfig, events: [LDarklyEvent]? = nil, service: DarklyServiceProvider) {
+    init(mobileKey: String, config: LDConfig, events: [LDEvent]? = nil, service: DarklyServiceProvider) {
         self.mobileKey = mobileKey
         self.config = config
         self.service = service
@@ -40,7 +40,7 @@ class LDEventReporter {
         if isOnline { startReporting() }
     }
 
-    func record(_ event: LDarklyEvent) {
+    func record(_ event: LDEvent) {
         eventQueue.async {
             guard !self.isEventStoreFull else { return }
             self.eventStore.append(event)
@@ -74,7 +74,7 @@ class LDEventReporter {
         }
     }
     
-    private func processEventResponse(reportedEvents: [LDarklyEvent], serviceResponse: ServiceResponse) {
+    private func processEventResponse(reportedEvents: [LDEvent], serviceResponse: ServiceResponse) {
         guard serviceResponse.error == nil else {
             report(serviceResponse.error)
             return
@@ -96,10 +96,10 @@ class LDEventReporter {
         //TODO: Implement when error reporting architecture is established
     }
     
-    private func updateEventStore(reportedEvents: [LDarklyEvent]) {
+    private func updateEventStore(reportedEvents: [LDEvent]) {
         eventQueue.async {
             var updatedEvents = reportedEvents
-            updatedEvents.forEach { (reportedEvent) in updatedEvents.removeEvent(reportedEvent) }
+            updatedEvents.forEach { (reportedEvent) in updatedEvents.remove(reportedEvent) }
             self.eventStore = updatedEvents
         }
     }

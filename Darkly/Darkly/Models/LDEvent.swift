@@ -12,66 +12,73 @@ enum LDEventType: String {
     case feature, identify, custom
 }
 
-//TODO: There is a name conflict with LDEventSource, which has a LDEvent
-struct LDarklyEvent { //sdk internal, not publically accessible
+struct LDEvent { //sdk internal, not publically accessible
+    enum CodingKeys: String, CodingKey {
+        case key, kind, creationDate, user, value, defaultValue = "default", data
+    }
+
     let key: String
     let kind: LDEventType
     let creationDate: Date
-    let data: [String: Any]?
-    let user: LDUser?
-    let value: Any?
-    let defaultValue: Any?
-    
-    init(key: String = UUID().uuidString, kind: LDEventType = .custom, data: [String: Any]? = nil, value: Any? = nil, defaultValue: Any? = nil, user: LDUser? = nil) {
+    let user: LDUser
+    let value: LDFlagValue?
+    let defaultValue: LDFlagValue?
+    let data: [String: Encodable]?
+
+    init(key: String, kind: LDEventType = .custom, user: LDUser, value: LDFlagValue? = nil, defaultValue: LDFlagValue? = nil, data: [String: Encodable]? = nil) {
         self.key = key
         self.kind = kind
         self.creationDate = Date()
-        self.data = data
         self.user = user
         self.value = value
         self.defaultValue = defaultValue
+        self.data = data
     }
-    
-    static func featureEvent(key: String, value: Any, defaultValue: Any, user: LDUser) -> LDarklyEvent {
-        return LDarklyEvent(key: key, kind: .feature, value: value, defaultValue: defaultValue, user: user)
+
+    static func featureEvent(key: String, user: LDUser, value: LDFlagValue, defaultValue: LDFlagValue) -> LDEvent {
+        return LDEvent(key: key, kind: .feature, user: user, value: value, defaultValue: defaultValue)
     }
-    
-    static func customEvent(key: String, data: [String: Any], user: LDUser) -> LDarklyEvent {
-        return LDarklyEvent(key: key, kind: .feature, data: data, user: user)
+
+    static func customEvent(key: String, user: LDUser, data: [String: Encodable]? = nil) -> LDEvent {
+        return LDEvent(key: key, kind: .custom, user: user, data: data)
     }
-    
-    static func identifyEvent() -> LDarklyEvent {
-        return LDarklyEvent()
+
+    static func identifyEvent(key: String, user: LDUser) -> LDEvent {
+        return LDEvent(key: key, kind: .identify, user: user)
+    }
+
+    var jsonDictionary: [String: Encodable] {
+        var json = [String: Encodable]()
+        json[CodingKeys.key.rawValue] = key
+        json[CodingKeys.kind.rawValue] = kind.rawValue
+        json[CodingKeys.creationDate.rawValue] = creationDate.millisSince1970
+        json[CodingKeys.user.rawValue] = user.jsonDictionaryWithoutConfig
+        json[CodingKeys.value.rawValue] = value?.baseValue
+        json[CodingKeys.defaultValue.rawValue] = defaultValue?.baseValue
+        json[CodingKeys.data.rawValue] = data
+
+        return json
+    }
+
+    var jsonData: Data? {
+        return jsonDictionary.jsonData
     }
 }
 
-extension Int {
-    init(date: Date) {
-        self = Int(floor(date.timeIntervalSince1970 * 1000))
+extension Array where Element == LDEvent {
+    var jsonArray: [[String: Encodable]] { return self.map { (event) in event.jsonDictionary } }
+
+    var jsonData: Data? {
+        guard JSONSerialization.isValidJSONObject(self) else { return nil }
+        return try? JSONSerialization.data(withJSONObject: self.jsonArray, options: [])
     }
-}
 
-extension Dictionary where Key: StringProtocol {
-    init(event: LDarklyEvent) {
-        self = [:]
-    }
-}
-
-extension LDarklyEvent: Equatable {
-    static func == (lhs: LDarklyEvent, rhs: LDarklyEvent) -> Bool { return lhs.key == rhs.key }
-}
-
-protocol LDEventProtocol {
-    var ldEvent: LDarklyEvent { get }
-}
-
-extension LDarklyEvent: LDEventProtocol {
-    var ldEvent: LDarklyEvent { return self }
-}
-
-extension Array where Element: LDEventProtocol {
-    mutating func removeEvent(_ event: LDarklyEvent) {
-        guard let index = self.index(where: {(element) in element.ldEvent == event}) else { return }
+    mutating func remove(_ event: LDEvent) {
+        guard let index = self.index(where: {(element) in element == event}) else { return }
         self.remove(at: index)
     }
+}
+
+extension LDEvent: Equatable {
+    static func == (lhs: LDEvent, rhs: LDEvent) -> Bool { return lhs.key == rhs.key && lhs.creationDate == rhs.creationDate }
 }

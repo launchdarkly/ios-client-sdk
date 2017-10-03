@@ -50,8 +50,8 @@ final class DarklyServiceSpec: QuickSpec {
                     self.subject.getFeatureFlags(user: self.user, completion: nil)
                 }
             }
-            it("makes valid request") {
-                self.verifyFlagRequest(flagRequest, serviceMock: serviceMock)
+           it("makes valid request") {
+                expect({ self.verifyFlagRequest(flagRequest, serviceMock: serviceMock) }).to(succeed())
             }
             context("success") {
                 var responses: ServiceResponses
@@ -65,7 +65,7 @@ final class DarklyServiceSpec: QuickSpec {
                     }
                 }
                 it("calls completion with data, response, and no error") {
-                    self.verifyCompletion(hasData: true, hasResponse: true, hasError: false, serviceResponses: responses)
+                    expect({ self.verifyCompletion(hasData: true, hasResponse: true, hasError: false, serviceResponses: responses) }).to(succeed())
                 }
             }
             context("failure") {
@@ -80,7 +80,7 @@ final class DarklyServiceSpec: QuickSpec {
                     }
                 }
                 it("calls completion with error and no data or response") {
-                    self.verifyCompletion(hasData: false, hasResponse: false, hasError: true, serviceResponses: responses)
+                    expect({ self.verifyCompletion(hasData: false, hasResponse: false, hasError: true, serviceResponses: responses) }).to(succeed())
                 }
             }
             context("empty mobile key") {
@@ -96,11 +96,12 @@ final class DarklyServiceSpec: QuickSpec {
                 }
                 it("does not make a request") {
                     expect(flagsRequested) == false
-                    self.verifyCompletion(hasData: false, hasResponse: false, hasError: false, serviceResponses: responses)
+                    expect({ self.verifyCompletion(hasData: false, hasResponse: false, hasError: false, serviceResponses: responses) }).to(succeed())
                 }
             }
         }
 
+        //TODO: This test allows an actual network request to escape while running all tests. Search & destroy
         describe("createEventSource") {
             var streamRequest: URLRequest?
             var serviceMock: DarklyServiceMock!
@@ -116,13 +117,13 @@ final class DarklyServiceSpec: QuickSpec {
                 }
             }
             it("creates an event source and makes valid request") {
-                self.verifyStreamRequest(streamRequest, serviceMock: serviceMock)
+                expect({ self.verifyStreamRequest(streamRequest, serviceMock: serviceMock) }).to(succeed())
             }
         }
 
         describe("publishEvents") {
             var eventRequest: URLRequest?
-            let mockEvents = LDarklyEvent.stubEvents(Constants.eventCount, user: self.user)
+            let mockEvents = LDEvent.stubEvents(Constants.eventCount, user: self.user)
             var serviceMock: DarklyServiceMock!
             beforeEach {
                 serviceMock = DarklyServiceMock(config: self.config)
@@ -135,7 +136,7 @@ final class DarklyServiceSpec: QuickSpec {
                 }
             }
             it("makes valid request") {
-                self.verifyEventRequest(eventRequest, serviceMock: serviceMock)
+                expect({ self.verifyEventRequest(eventRequest, serviceMock: serviceMock) }).to(succeed())
             }
             context("success") {
                 var responses: ServiceResponses
@@ -149,7 +150,7 @@ final class DarklyServiceSpec: QuickSpec {
                     }
                 }
                 it("calls completion with data, response, and no error") {
-                    self.verifyCompletion(hasData: true, hasResponse: true, hasError: false, serviceResponses: responses)
+                    expect({ self.verifyCompletion(hasData: true, hasResponse: true, hasError: false, serviceResponses: responses) }).to(succeed())
                 }
             }
             context("failure") {
@@ -164,7 +165,7 @@ final class DarklyServiceSpec: QuickSpec {
                     }
                 }
                 it("calls completion with error and no data or response") {
-                    self.verifyCompletion(hasData: false, hasResponse: false, hasError: true, serviceResponses: responses)
+                    expect({ self.verifyCompletion(hasData: false, hasResponse: false, hasError: true, serviceResponses: responses) }).to(succeed())
                 }
             }
             context("empty mobile key") {
@@ -180,13 +181,13 @@ final class DarklyServiceSpec: QuickSpec {
                 }
                 it("does not make a request") {
                     expect(eventsPublished) == false
-                    self.verifyCompletion(hasData: false, hasResponse: false, hasError: false, serviceResponses: responses)
+                    expect({ self.verifyCompletion(hasData: false, hasResponse: false, hasError: false, serviceResponses: responses) }).to(succeed())
                 }
             }
             context("empty event list") {
                 var responses: ServiceResponses = (nil, nil, nil)
                 var eventsPublished = false
-                let emptyEventList: [LDarklyEvent] = []
+                let emptyEventList: [Darkly.LDEvent] = []
                 beforeEach {
                     self.subject = DarklyService(mobileKey: Constants.emptyMobileKey, config: self.config)
                     serviceMock.stubEventRequest(success: true)
@@ -197,7 +198,7 @@ final class DarklyServiceSpec: QuickSpec {
                 }
                 it("does not make a request") {
                     expect(eventsPublished) == false
-                    self.verifyCompletion(hasData: false, hasResponse: false, hasError: false, serviceResponses: responses)
+                    expect({ self.verifyCompletion(hasData: false, hasResponse: false, hasError: false, serviceResponses: responses) }).to(succeed())
                 }
             }
         }
@@ -209,48 +210,102 @@ final class DarklyServiceSpec: QuickSpec {
     
     // MARK: Feature Flags
     
-    private func verifyFlagRequest(_ flagRequest: URLRequest?, serviceMock: DarklyServiceMock) {
-        expect(flagRequest?.url?.host) == serviceMock.flagHost
-        expect(flagRequest?.url?.path) == "/\(DarklyService.Constants.flagRequestPath)/\(user.base64UrlEncoded)"
-        verifyHeaders([HTTPHeaders.Constants.authorization, HTTPHeaders.Constants.userAgent], headers: flagRequest?.allHTTPHeaderFields, httpHeaders: subject.httpHeaders)
+    private func verifyFlagRequest(_ flagRequest: URLRequest?, serviceMock: DarklyServiceMock) -> ToSucceedResult {
+        var messages = [String]()
+
+        if let requestHost = flagRequest?.url?.host, requestHost != serviceMock.flagHost { messages.append("host is \(requestHost)") }
+        guard let encodedUser = user.jsonDictionaryWithoutConfig.base64UrlEncodedString, !encodedUser.isEmpty
+        else {
+            messages.append("base 64 URL encoded user is nil or empty")
+            return .failed(reason: messages.joined(separator: ", "))
+        }
+        if let requestPath = flagRequest?.url?.path, requestPath !=  "/\(DarklyService.Constants.flagRequestPath)/\(encodedUser)" { messages.append("path is \(requestPath)") }
+        messages.append(contentsOf: verifyHeaders([HTTPHeaders.Constants.authorization, HTTPHeaders.Constants.userAgent], headers: flagRequest?.allHTTPHeaderFields, httpHeaders: subject.httpHeaders))
+
+        return messages.isEmpty ? .succeeded : .failed(reason: messages.joined(separator: ", "))
     }
     
     // MARK: Streaming
     
-    private func verifyStreamRequest(_ streamRequest: URLRequest?, serviceMock: DarklyServiceMock) {
-        expect(streamRequest?.url?.host) == serviceMock.streamHost
-        expect(streamRequest?.url?.path) == "/\(DarklyService.Constants.streamRequestPath)"
-        verifyHeaders([HTTPHeaders.Constants.authorization, HTTPHeaders.Constants.userAgent], headers: streamRequest?.allHTTPHeaderFields, httpHeaders: subject.httpHeaders)
+    private func verifyStreamRequest(_ streamRequest: URLRequest?, serviceMock: DarklyServiceMock) -> ToSucceedResult {
+        var messages = [String]()
+
+        if let requestHost = streamRequest?.url?.host, requestHost != serviceMock.streamHost { messages.append("host is \(requestHost)") }
+        if let requestPath = streamRequest?.url?.path, requestPath !=  "/\(DarklyService.Constants.streamRequestPath)" { messages.append("path is \(requestPath)") }
+        messages.append(contentsOf: verifyHeaders([HTTPHeaders.Constants.authorization, HTTPHeaders.Constants.userAgent], headers: streamRequest?.allHTTPHeaderFields, httpHeaders: subject.httpHeaders))
+
+        return messages.isEmpty ? .succeeded : .failed(reason: messages.joined(separator: ", "))
     }
     
     // MARK: Publish Events
     
-    private func verifyEventRequest(_ eventRequest: URLRequest?, serviceMock: DarklyServiceMock) {
-        expect(eventRequest?.url?.host) == serviceMock.eventHost
-        expect(eventRequest?.url?.path) == "/\(DarklyService.Constants.eventRequestPath)"
-        verifyHeaders([HTTPHeaders.Constants.authorization, HTTPHeaders.Constants.userAgent, HTTPHeaders.Constants.contentType, HTTPHeaders.Constants.accept], headers: eventRequest?.allHTTPHeaderFields, httpHeaders: subject.httpHeaders)
+    private func verifyEventRequest(_ eventRequest: URLRequest?, serviceMock: DarklyServiceMock) -> ToSucceedResult {
+        var messages = [String]()
+
+        guard let eventRequest = eventRequest
+        else {
+            messages.append("eventRequest is missing")
+            return .failed(reason: messages.joined(separator: ", "))
+        }
+
+        if let requestHost = eventRequest.url?.host, requestHost != serviceMock.eventHost { messages.append("host is \(requestHost)") }
+        if let requestPath = eventRequest.url?.path, requestPath !=  "/\(DarklyService.Constants.eventRequestPath)" { messages.append("path is \(requestPath)") }
+        messages.append(contentsOf: verifyHeaders([HTTPHeaders.Constants.authorization, HTTPHeaders.Constants.userAgent, HTTPHeaders.Constants.contentType, HTTPHeaders.Constants.accept],
+                                                  headers: eventRequest.allHTTPHeaderFields, httpHeaders: subject.httpHeaders))
+
+        return messages.isEmpty ? .succeeded : .failed(reason: messages.joined(separator: ", "))
     }
     
     // MARK: Headers
-    private func verifyHeaders(_ keys: [String], headers: [String: String]?, httpHeaders: HTTPHeaders) {
-        expect(headers).toNot(beNil())
-        guard let headers = headers else { return }
+    private func verifyHeaders(_ keys: [String], headers: [String: String]?, httpHeaders: HTTPHeaders) -> [String] {
+        var messages = [String]()
+
+        guard let headers = headers
+        else {
+            messages.append("headers is nil")
+            return messages
+        }
+
         for key in keys {
-            switch key {
-            case HTTPHeaders.Constants.authorization: expect(headers[key]) == httpHeaders.authKey
-            case HTTPHeaders.Constants.userAgent: expect(headers[key]) == httpHeaders.userAgent
-            case HTTPHeaders.Constants.contentType, HTTPHeaders.Constants.accept: expect(headers[key]) == HTTPHeaders.Constants.applicationJson
-            default: expect(key) == ""
+            if let header = headers[key] {
+                switch key {
+                case HTTPHeaders.Constants.authorization: if header != httpHeaders.authKey { messages.append("\(key) equals \(header)") }
+                case HTTPHeaders.Constants.userAgent: if header != httpHeaders.userAgent { messages.append("\(key) equals \(header)") }
+                case HTTPHeaders.Constants.contentType, HTTPHeaders.Constants.accept: if header != HTTPHeaders.Constants.applicationJson { messages.append("\(key) equals \(header)") }
+                default: messages.append("unexpected header \(key)")
+                }
+            } else {
+                messages.append("\(key) is missing")
             }
         }
+
+        return messages
     }
     
     // MARK: Completion
     
-    private func verifyCompletion(hasData: Bool, hasResponse: Bool, hasError: Bool, serviceResponses: ServiceResponses) {
-        hasData ? expect(serviceResponses.data).toNot(beNil()) : expect(serviceResponses.data).to(beNil())
-        hasResponse ? expect(serviceResponses.urlResponse).toNot(beNil()) : expect(serviceResponses.urlResponse).to(beNil())
+    private func verifyCompletion(hasData: Bool, hasResponse: Bool, hasError: Bool, serviceResponses: ServiceResponses) -> ToSucceedResult {
+        var messages = [String]()
+
+        if hasData {
+            if serviceResponses.data == nil { messages.append("data is missing") }
+        } else {
+            if serviceResponses.data != nil { messages.append("data is present") }
+        }
+        if hasResponse {
+            if serviceResponses.urlResponse == nil { messages.append("urlResponse is missing") }
+        } else {
+            if serviceResponses.urlResponse != nil { messages.append("urlResponse is present") }
+        }
         hasError ? expect(serviceResponses.error).toNot(beNil()) : expect(serviceResponses.error).to(beNil())
+        if hasError {
+            if serviceResponses.error == nil { messages.append("error is missing") }
+        } else {
+            if serviceResponses.error != nil { messages.append("error is present") }
+        }
+
+        return messages.isEmpty ? .succeeded : .failed(reason: messages.joined(separator: ", "))
+
     }
     
 }

@@ -23,7 +23,7 @@ final class LDEventReporterSpec: QuickSpec {
     var config: LDConfig!
     var user: LDUser!
     var mockService: DarklyServiceMock!
-    var mockEvents: [LDarklyEvent]!
+    var mockEvents: [LDEvent]!
 
     private func setupReporter(online: Bool, withEvents eventCount: Int = 0, eventFlushMillis: Int? = nil) {
         config = LDConfig.stub
@@ -33,7 +33,7 @@ final class LDEventReporterSpec: QuickSpec {
         
         user = LDUser()
         
-        mockEvents = LDarklyEvent.stubEvents(eventCount, user: user)
+        mockEvents = LDEvent.stubEvents(eventCount, user: user)
         
         subject = LDEventReporter(mobileKey: mockMobileKey, config: config, events: mockEvents, service: mockService)
     }
@@ -140,13 +140,13 @@ final class LDEventReporterSpec: QuickSpec {
                 }
             }
             context("event store full") {
-                var extraEvent: LDarklyEvent!
+                var extraEvent: LDEvent!
                 beforeEach {
                     self.setupReporter(online: false, withEvents: Constants.eventCapacity)
 
                     expect({ self.reporterState(isOnline: false, isReporting: false, reportTries: 0, recordedEvents: self.mockEvents) }).to(match())
 
-                    extraEvent = LDarklyEvent.stub(for: self.user)
+                    extraEvent = LDEvent.stub(for: .identify, with: self.user)
                     self.subject.record(extraEvent)
                 }
                 it("doesn't record any more events") {
@@ -272,13 +272,13 @@ final class LDEventReporterSpec: QuickSpec {
     
     private func recordEvents(_ eventCount: Int) {
         while self.mockEvents.count < eventCount {
-            let event = LDarklyEvent.stub(for: self.user)
+            let event = LDEvent.stub(for: LDEvent.eventType(for: mockEvents.count), with: self.user)
             self.mockEvents.append(event)
             self.subject.record(event)
         }
     }
     
-    private func reporterState(isOnline: Bool, isReporting: Bool, reportTries: Int, recordedEvents: [LDarklyEvent]? = nil, publishedEvents: [LDarklyEvent]? = nil) -> ToMatchResult {
+    private func reporterState(isOnline: Bool, isReporting: Bool, reportTries: Int, recordedEvents: [LDEvent]? = nil, publishedEvents: [LDEvent]? = nil) -> ToMatchResult {
         var messages = [String]()
         if self.subject.isOnline != isOnline { messages.append("isOnline equals \(self.subject.isOnline)") }
         if self.subject.isReportingActive != isReporting { messages.append("isReportingActive equals \(self.subject.isReportingActive)") }
@@ -297,19 +297,26 @@ final class LDEventReporterSpec: QuickSpec {
     }
 }
 
-extension LDarklyEvent {
-    static func stub(for user: LDUser) -> LDarklyEvent {
-        switch LDEventType.random {
-        case .feature: return LDarklyEvent.featureEvent(key: UUID().uuidString, value: UUID(), defaultValue: 0, user: user)
-        case .identify: return LDarklyEvent.identifyEvent()
-        case .custom: return LDarklyEvent.customEvent(key: UUID().uuidString, data: ["custom": UUID()], user: user)
+extension LDEvent {
+    static func stub(for eventType: LDEventType, with user: LDUser) -> LDEvent {
+        switch eventType {
+        case .feature: return LDEvent.featureEvent(key: UUID().uuidString, user: user, value: true, defaultValue: false)
+        case .identify: return LDEvent.identifyEvent(key: UUID().uuidString, user: user)
+        case .custom: return LDEvent.customEvent(key: UUID().uuidString, user: user, data: ["custom": UUID().uuidString])
         }
     }
     
-    static func stubEvents(_ eventCount: Int, user: LDUser) -> [LDarklyEvent] {
-        var mockEvents = [LDarklyEvent]()
-        while mockEvents.count < eventCount { mockEvents.append(LDarklyEvent.stub(for: user)) }
+    static func stubEvents(_ eventCount: Int, user: LDUser) -> [LDEvent] {
+        var mockEvents = [LDEvent]()
+        while mockEvents.count < eventCount {
+            mockEvents.append(LDEvent.stub(for: LDEvent.eventType(for: mockEvents.count), with: user))
+        }
         return mockEvents
+    }
+
+    static func eventType(for count: Int) -> LDEventType {
+        let types: [LDEventType] = [.feature, .identify, .custom]
+        return types[count % types.count]
     }
 }
 

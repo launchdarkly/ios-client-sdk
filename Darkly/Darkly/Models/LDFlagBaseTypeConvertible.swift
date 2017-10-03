@@ -96,15 +96,6 @@ extension LDFlagValue {
 
 // MARK: - Dictionary
 
-extension Dictionary {
-    init(_ pairs: [Element]) {
-        self.init()
-        for (key, value) in pairs {
-            self[key] = value
-        }
-    }
-}
-
 extension LDFlagValue {
     public func toBaseTypeDictionary<Value: LDFlagBaseTypeConvertible>() -> [String: Value]? {
         return baseDictionary as? [String: Value]

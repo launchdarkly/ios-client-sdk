@@ -9,46 +9,95 @@
 import Foundation
 
 protocol LDFlagMaintaining {
+    func replaceStore(newFlags: [String: Any]?, source: LDFlagValueSource, completion:(() -> Void)?)  //put
+    func replaceStore(newFlags: [String: Any]?, source: LDFlagValueSource)
+
+    func updateStore(newFlags: [String: Any], source: LDFlagValueSource, completion:(() -> Void)?)    //patch
     func updateStore(newFlags: [String: Any], source: LDFlagValueSource)
-    func replaceStore(newFlags: [String: Any], source: LDFlagValueSource)
+
+    func deleteFlag(name: String, completion:(() -> Void)?)                                           //delete
     func deleteFlag(name: String)
 }
 
+extension LDFlagMaintaining {
+    func replaceStore(newFlags: [String: Any]?, source: LDFlagValueSource) {
+        replaceStore(newFlags: newFlags, source: source, completion: nil)
+    }
+
+    func updateStore(newFlags: [String: Any], source: LDFlagValueSource) {
+        updateStore(newFlags: newFlags, source: source, completion: nil)
+    }
+
+    func deleteFlag(name: String) {
+        deleteFlag(name: name, completion: nil)
+    }
+}
+
 final class LDFlagStore: LDFlagMaintaining {
+    enum EncodingError: Error {
+        case notEncodable
+    }
 
     struct Constants {
         fileprivate static let flagQueueLabel = "com.launchdarkly.flagStore.flagQueue"
     }
     
-    private var featureFlags: [String: LDFeatureFlag]
+    private var featureFlags: [String: Any] = [:]
+    private var flagValueSource = LDFlagValueSource.fallback
     private var flagQueue = DispatchQueue(label: Constants.flagQueueLabel)
-    var user: LDUser
-    
-    init() {
-        featureFlags = [:]
-        user = LDUser()
-    }
-    
-    init(user: LDUser) {
-        featureFlags = [:]
-        self.user = user
-    }
-    
-    func updateStore(newFlags: [String: Any], source: LDFlagValueSource) {
-        flagQueue.async {
 
+    ///Replaces all feature flags with new flags. Pass nil to reset to an empty flag store
+    func replaceStore(newFlags: [String: Any]?, source: LDFlagValueSource, completion:(() -> Void)? = nil) {
+        flagQueue.async {
+            self.featureFlags = newFlags ?? [:]
+            self.flagValueSource = source
+            if let completion = completion {
+                DispatchQueue.main.async {
+                    completion()
+                }
+            }
         }
     }
-    
-    func replaceStore(newFlags: [String: Any], source: LDFlagValueSource) {
-        flagQueue.async {
 
+    ///Not implemented. Implement when patch is implemented in streaming event server
+    func updateStore(newFlags: [String: Any], source: LDFlagValueSource, completion:(() -> Void)?) {
+        flagQueue.async {
+            if let completion = completion {
+                DispatchQueue.main.async {
+                    completion()
+                }
+            }
         }
     }
     
-    func deleteFlag(name: String) {
+    ///Not implemented. Implement when delete is implemented in streaming event server
+    func deleteFlag(name: String, completion:(() -> Void)?) {
         flagQueue.async {
-            
+            if let completion = completion {
+                DispatchQueue.main.async {
+                    completion()
+                }
+            }
         }
+    }
+
+    func toJsonDictionary() throws -> [String: Encodable] {
+        guard let jsonFlags = featureFlags.encodable else { throw EncodingError.notEncodable }
+        return  jsonFlags
+    }
+
+    func variation<T: LDFlagValueConvertible>(forKey key: String, fallback: T) -> T {
+        let (flagValue, _) = variationAndSource(forKey: key, fallback: fallback)
+        return flagValue
+    }
+
+    public func variationAndSource<T: LDFlagValueConvertible>(forKey key: String, fallback: T) -> (T, LDFlagValueSource) {
+        var source = LDFlagValueSource.fallback
+        var flagValue = fallback
+        if let foundValue = featureFlags[key] as? T {
+            flagValue = foundValue
+            source = flagValueSource
+        }
+        return (flagValue, source)
     }
 }

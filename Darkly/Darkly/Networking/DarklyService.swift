@@ -15,7 +15,7 @@ typealias ServiceCompletionHandler = (ServiceResponse) -> Void
 protocol DarklyServiceProvider: class {
     func getFeatureFlags(user: LDUser, completion: ServiceCompletionHandler?)
     func createEventSource() -> DarklyStreamingProvider
-    func publishEvents(_ events: [LDarklyEvent], completion: ServiceCompletionHandler?)
+    func publishEvents(_ events: [LDEvent], completion: ServiceCompletionHandler?)
 }
 
 protocol DarklyStreamingProvider: class {
@@ -55,22 +55,26 @@ final class DarklyService: DarklyServiceProvider {
     // MARK: Feature Flags
     
     func getFeatureFlags(user: LDUser, completion: ServiceCompletionHandler?) {
-        guard !mobileKey.isEmpty else { return }
-        let dataTask = self.session.dataTask(with: flagRequest(user: user)) { (data, response, error) in
+        guard !mobileKey.isEmpty,
+            let flagRequest = flagRequest(user: user)
+        else { return }
+        let dataTask = self.session.dataTask(with: flagRequest) { (data, response, error) in
             completion?((data, response, error))
         }
         dataTask.resume()
     }
     
-    private func flagRequest(user: LDUser) -> URLRequest {
-        var request = URLRequest(url: flagRequestUrl(user: user), cachePolicy: .useProtocolCachePolicy, timeoutInterval: config.connectionTimeout)
+    private func flagRequest(user: LDUser) -> URLRequest? {
+        guard let flagRequestUrl = flagRequestUrl(user: user) else { return nil }
+        var request = URLRequest(url: flagRequestUrl, cachePolicy: .useProtocolCachePolicy, timeoutInterval: config.connectionTimeout)
         request.appendHeaders(httpHeaders.flagRequestHeaders)
         
         return request
     }
     
-    private func flagRequestUrl(user: LDUser) -> URL {
-        return config.baseUrl.appendingPathComponent(Constants.flagRequestPath).appendingPathComponent(user.base64UrlEncoded)
+    private func flagRequestUrl(user: LDUser) -> URL? {
+        guard let encodedUser = user.jsonDictionaryWithoutConfig.base64UrlEncodedString else { return nil }
+        return config.baseUrl.appendingPathComponent(Constants.flagRequestPath).appendingPathComponent(encodedUser)
     }
     
     // MARK: Streaming
@@ -83,7 +87,7 @@ final class DarklyService: DarklyServiceProvider {
     
     // MARK: Publish Events
     
-    func publishEvents(_ events: [LDarklyEvent], completion: ServiceCompletionHandler?) {
+    func publishEvents(_ events: [LDEvent], completion: ServiceCompletionHandler?) {
         guard !mobileKey.isEmpty,
             !events.isEmpty
         else { return }
@@ -93,12 +97,11 @@ final class DarklyService: DarklyServiceProvider {
         dataTask.resume()
     }
     
-    private func eventRequest(events: [LDarklyEvent]) -> URLRequest {
+    private func eventRequest(events: [LDEvent]) -> URLRequest {
         var request = URLRequest(url: eventUrl, cachePolicy: .useProtocolCachePolicy, timeoutInterval: config.connectionTimeout)
         request.appendHeaders(httpHeaders.eventRequestHeaders)
         request.httpMethod = Constants.httpMethodPost
-        let jsonEvents = events.map { (event) -> [String: Any] in Dictionary(event: event) }
-        request.httpBody = try? JSONSerialization.data(withJSONObject: jsonEvents, options: [])
+        request.httpBody = events.jsonData
 
         return request
     }

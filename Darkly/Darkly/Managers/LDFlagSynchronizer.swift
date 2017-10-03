@@ -90,7 +90,7 @@ class LDFlagSynchronizer {
         eventSource = nil
     }
     
-    private func process(_ event: LDEvent?) {
+    private func process(_ event: DarklyEventSource.LDEvent?) {
         guard streamingActive,
             let event = event
         else { return }    //Since eventSource.close() is async, this prevents responding to events after .close() is called, but before it's actually closed
@@ -151,8 +151,7 @@ class LDFlagSynchronizer {
             return
         }
         guard let data = serviceResponse.data,
-            let flagJson = try? JSONSerialization.jsonObject(with: data, options: .allowFragments),
-            let flags = flagJson as? [String: Any]
+            let flags = try? JSONSerialization.jsonDictionary(with: data, options: .allowFragments)
         else {
             reportDataError()
             return

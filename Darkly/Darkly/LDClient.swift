@@ -42,7 +42,7 @@ public class LDClient {
         self.mobileKey = mobileKey
         self.config = config
         self.user = user ?? userCache.retrieveLatest() ?? self.user
-        self.flagStore = LDFlagStore(user: self.user)
+        self.user.flagStore = self.flagStore
         self.service = service ?? self.service  //only sets if a new service is provided
         self.flagSynchronizer = LDFlagSynchronizer(mobileKey: mobileKey, config: self.config, user: self.user, service: self.service, store: flagStore)
         self.eventReporter = LDEventReporter(mobileKey: mobileKey, config: self.config, service: self.service)

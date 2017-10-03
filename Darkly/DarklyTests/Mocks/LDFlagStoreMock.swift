@@ -8,19 +8,21 @@
 
 @testable import Darkly
 
+//TODO: Replace with sourcery mock
 final class LDFlagStoreMock: LDFlagMaintaining {
-    func updateStore(newFlags: [String : Any], source: LDFlagValueSource) {
-
-    }
-
     var replaceStoreCallCount = 0
-    var replaceStoreCallParameters: (newFlags: [String: Any], source: LDFlagValueSource)?
-    func replaceStore(newFlags: [String : Any], source: LDFlagValueSource) {
+    var replaceStoreCallParameters: (newFlags: [String: Any]?, source: LDFlagValueSource, completion: (() -> Void)?)?
+    func replaceStore(newFlags: [String : Any]?, source: LDFlagValueSource, completion: (() -> Void)?) {
         replaceStoreCallCount += 1
-        replaceStoreCallParameters = (newFlags, source)
+        replaceStoreCallParameters = (newFlags, source, completion)
+        completion?()
     }
 
-    func deleteFlag(name: String) {
+    func updateStore(newFlags: [String : Any], source: LDFlagValueSource, completion: (() -> Void)?) {
+
+    }
+
+    func deleteFlag(name: String, completion: (() -> Void)?) {
 
     }
 

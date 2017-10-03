@@ -13,8 +13,35 @@ import OHHTTPStubs
 
 final class DarklyServiceMock: DarklyServiceProvider {
 
+    struct FlagKeys {
+        static let bool = "bool-flag"
+        //swiftlint:disable:next identifier_name
+        static let int = "int-flag"
+        static let double = "double-flag"
+        static let string = "string-flag"
+        static let array = "array-flag"
+        static let dictionary = "dictionary-flag"
+    }
+
+    struct FlagValues {
+        static let bool = true
+        //swiftlint:disable:next identifier_name
+        static let int = 7
+        static let double = 3.14159
+        static let string = "string value"
+        static let array = [1, 2, 3]
+        static let dictionary: [String: Any] = ["sub-flag-a": false, "sub-flag-b": 3, "sub-flag-c": 2.71828]
+    }
+
     struct Constants {
-        static let jsonFlags: [String: Any] = ["bool-flag": true, "int-flag": 7, "double-flag": 3.14159, "string-flag": "string value", "array-flag": [1, 2, 3], "dictionary-flag": ["sub-flag-a": false, "sub-flag-b": 3, "sub-flag-c": 2.71828]]
+        static let jsonFlags: [String: Any] = [
+            FlagKeys.bool: FlagValues.bool,
+            FlagKeys.int: FlagValues.int,
+            FlagKeys.double: FlagValues.double,
+            FlagKeys.string: FlagValues.string,
+            FlagKeys.array: FlagValues.array,
+            FlagKeys.dictionary: FlagValues.dictionary
+        ]
         static let streamData = "event: ping\ndata:\n".data(using: .utf8)!
         static let error = NSError(domain: NSURLErrorDomain, code: Int(CFNetworkErrors.cfurlErrorResourceUnavailable.rawValue), userInfo: nil)
 
@@ -58,8 +85,8 @@ final class DarklyServiceMock: DarklyServiceProvider {
     
     var stubbedEventResponse: ServiceResponse?
     var publishEventsCallCount = 0
-    var publishedEvents: [LDarklyEvent]?
-    func publishEvents(_ events: [LDarklyEvent], completion: ServiceCompletionHandler?) {
+    var publishedEvents: [LDEvent]?
+    func publishEvents(_ events: [LDEvent], completion: ServiceCompletionHandler?) {
         publishEventsCallCount += 1
         publishedEvents = events
         completion?(stubbedEventResponse ?? (nil, nil, nil))

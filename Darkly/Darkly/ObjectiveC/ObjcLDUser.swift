@@ -30,7 +30,7 @@ public final class ObjcLDUser: NSObject {
 
     @objc public var customArray: [String: Any]? {
         get { return user.custom }
-        set { user.custom = newValue }
+        set { user.custom = newValue?.encodable }
     }
     
     @objc public override init() { user = LDUser() }

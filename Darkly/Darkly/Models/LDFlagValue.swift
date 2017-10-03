@@ -127,3 +127,44 @@ extension LDFlagValue {
         return value
     }
 }
+
+extension LDFlagValue: Equatable {
+    public static func == (lhs: LDFlagValue, rhs: LDFlagValue) -> Bool {
+        switch (lhs, rhs) {
+        case let (.bool(leftValue), .bool(rightValue)): return leftValue == rightValue
+        case let (.int(leftValue), .int(rightValue)): return leftValue == rightValue
+        case let (.double(leftValue), .double(rightValue)): return leftValue == rightValue
+        case let (.string(leftValue), .string(rightValue)): return leftValue == rightValue
+        case let (.array(leftValue), .array(rightValue)): return leftValue == rightValue
+        case let (.dictionary(leftValue), .dictionary(rightValue)): return leftValue == rightValue
+        default: return false
+        }
+    }
+}
+
+extension Array where Element == LDFlagValue {
+    public static func == (lhs: [LDFlagValue], rhs: [LDFlagValue]) -> Bool {
+        guard lhs.count == rhs.count else { return false }
+        //the idea for this came from https://stackoverflow.com/questions/39161168/how-to-compare-two-array-of-objects
+        return zip(lhs, rhs).enumerated().filter { (item) -> Bool in
+            let (_, (left, right)) = item
+            return left != right
+        }.isEmpty
+    }
+
+    public func isEqual(to other: [LDFlagValue]) -> Bool {
+        return self == other
+    }
+}
+
+extension Dictionary where Key == String, Value == LDFlagValue {
+    public static func == (lhs: [String: LDFlagValue], rhs: [String: LDFlagValue]) -> Bool {
+        guard lhs.count == rhs.count else { return false }
+        let leftKeys = lhs.keys.sorted()
+        let rightKeys = rhs.keys.sorted()
+        guard leftKeys == rightKeys else { return false }
+        let leftValues = leftKeys.map { (key) -> LDFlagValue in return lhs[key] ?? .null }
+        let rightValues = rightKeys.map { (key) -> LDFlagValue in return rhs[key] ?? .null }
+        return leftValues == rightValues
+    }
+}

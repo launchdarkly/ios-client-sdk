@@ -19,12 +19,12 @@ final class LDEventSourceMock: DarklyStreamingProvider {
 
     func sendPing() {
         guard let messageHandler = onMessageHandler else { return }
-        messageHandler(LDEvent.stubPingEvent())
+        messageHandler(DarklyEventSource.LDEvent.stubPingEvent())
     }
 
     func sendHeartbeat() {
         guard let messageHandler = onMessageHandler else { return }
-        messageHandler(LDEvent.stubHeartbeatEvent())
+        messageHandler(DarklyEventSource.LDEvent.stubHeartbeatEvent())
     }
 
     func sendNullEvent() {
@@ -38,16 +38,16 @@ final class LDEventSourceMock: DarklyStreamingProvider {
     }
 }
 
-extension LDEvent {
-    class func stubPingEvent() -> LDEvent {
-        let event = LDEvent()
+extension DarklyEventSource.LDEvent {
+    class func stubPingEvent() -> DarklyEventSource.LDEvent {
+        let event = DarklyEventSource.LDEvent()
         event.event = "ping"
         event.data = ""
         event.readyState = kEventStateOpen
         return event
     }
-    class func stubHeartbeatEvent() -> LDEvent {
-        let event = LDEvent()
+    class func stubHeartbeatEvent() -> DarklyEventSource.LDEvent {
+        let event = DarklyEventSource.LDEvent()
         event.event = ":"
         event.data = ""
         event.readyState = kEventStateOpen
