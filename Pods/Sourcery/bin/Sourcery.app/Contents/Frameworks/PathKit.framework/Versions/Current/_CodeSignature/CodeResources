@@ -6,7 +6,7 @@
 	<dict>
 		<key>Resources/Info.plist</key>
 		<data>
-		0YmpO9gcR+1A5Dqgx5UqR2pDGVs=
+		15uvq1TLHIxEUsCeUbrx+XTA1p0=
 		</data>
 	</dict>
 	<key>files2</key>
@@ -15,11 +15,11 @@
 		<dict>
 			<key>hash</key>
 			<data>
-			YjOFRc0CuVQCBOwKMIfA02UQ3n4=
+			B+13bgoLRdU08Nk1hxWuO5kCroc=
 			</data>
 			<key>hash2</key>
 			<data>
-			um2DblenFuzq69SSzT/tG1yzjMpBU+qr32AXFsvSyDU=
+			Q5HZi+em6F9j610TeYKOsN7XfEdeIkF1U8Fgwb65xLA=
 			</data>
 		</dict>
 		<key>Headers/PathKit-umbrella.h</key>
@@ -37,44 +37,44 @@
 		<dict>
 			<key>hash</key>
 			<data>
-			pLwKCWz9J0gfk42WplTdRU0LppI=
+			s5YV8d/XLImGhodKH0k9YKcimp8=
 			</data>
 			<key>hash2</key>
 			<data>
-			zHNX7ZJ0p+DYVslF0TG+R28Dq+2FUdu6DWH7OBpVy80=
+			SaIsj3+nJrUkV0oi8yaAhlpkq5xqP/uvrXKWTMyuab4=
 			</data>
 		</dict>
 		<key>Modules/PathKit.swiftmodule/x86_64.swiftmodule</key>
 		<dict>
 			<key>hash</key>
 			<data>
-			nkzTCybV0cGpLpPfkSLTl55g/Co=
+			o6dQVvJsMJ7nSIZcwJnQvQpBpMM=
 			</data>
 			<key>hash2</key>
 			<data>
-			ZdLUoZUrxPj1BmzVfbZ6khnZ0pHKiPzvuV1MVVNmm54=
+			EQI2kDt+z2kNv930Cp0wpsBP6mKXPwntIHdPbwuYXP8=
 			</data>
 		</dict>
 		<key>Modules/module.modulemap</key>
 		<dict>
 			<key>hash</key>
 			<data>
-			RN1bHSFqr2gaCVdts5YoqrTFgu8=
+			mqVSR77zT0TiEun3zpy/LY9wy+g=
 			</data>
 			<key>hash2</key>
 			<data>
-			vdjgkqfvx65x4gmrHukwXh5fAk8c55MUvePCU3/FPAY=
+			BxuY8vvm+XdDqjvnlb9IVm56cZ68t9/UMRC861IKjpE=
 			</data>
 		</dict>
 		<key>Resources/Info.plist</key>
 		<dict>
 			<key>hash</key>
 			<data>
-			0YmpO9gcR+1A5Dqgx5UqR2pDGVs=
+			15uvq1TLHIxEUsCeUbrx+XTA1p0=
 			</data>
 			<key>hash2</key>
 			<data>
-			wsdcsCyO2NUvPZvrcKRzRFnMG3ywf3uMj9cU0fSo1/M=
+			vZknXqlMC3dtNbe2TSmHAIN9qoT3gptbg+gxxTEpl/4=
 			</data>
 		</dict>
 	</dict>

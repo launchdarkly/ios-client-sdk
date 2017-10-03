@@ -6,7 +6,7 @@
 	<dict>
 		<key>Resources/Info.plist</key>
 		<data>
-		QZQZAQHUybhkq5dnFdi0HxuSC54=
+		SfeOl3R4XDXrV3qs+h8wblnetd8=
 		</data>
 	</dict>
 	<key>files2</key>
@@ -15,11 +15,11 @@
 		<dict>
 			<key>hash</key>
 			<data>
-			YjOFRc0CuVQCBOwKMIfA02UQ3n4=
+			jVX8cZHLzGu+sA4d43A+5Eqw8wk=
 			</data>
 			<key>hash2</key>
 			<data>
-			um2DblenFuzq69SSzT/tG1yzjMpBU+qr32AXFsvSyDU=
+			YrHoy5WaZ8WUgiGiaBPsjUXPXPmZ6DZ4+7DpGX6vaW0=
 			</data>
 		</dict>
 		<key>Headers/XcodeEdit-umbrella.h</key>
@@ -37,44 +37,44 @@
 		<dict>
 			<key>hash</key>
 			<data>
-			U0rFBMv0U/4rvlEuKpRvpR8rZO0=
+			FzkCPGUdW0pH0V0pKz+M6Yd0ZAo=
 			</data>
 			<key>hash2</key>
 			<data>
-			Mrx5rl1ckMmkeN9mJA/Cl23JwqSbjRR0SGJt7LbOVsk=
+			3XWn9+s6Zg5VgiNRnRrFMEa7VfjcuMmT5En6/kSpIKs=
 			</data>
 		</dict>
 		<key>Modules/XcodeEdit.swiftmodule/x86_64.swiftmodule</key>
 		<dict>
 			<key>hash</key>
 			<data>
-			IDaeVPcKmE++5+Zo3oejJN53Q4k=
+			kn4jDx9t9u3G2s1XNKDFArNgzOo=
 			</data>
 			<key>hash2</key>
 			<data>
-			RiHF0E3TJYr+1CFMWY1xlTPWywlWxGrlrECZ4NS5yqA=
+			i8+6vtGT7Q5pTPZMEEra5ZgB2xWgAjo7M2Uoma93zAQ=
 			</data>
 		</dict>
 		<key>Modules/module.modulemap</key>
 		<dict>
 			<key>hash</key>
 			<data>
-			ZP3abb1YL0FcHHe6Rr9Aj+ESoN8=
+			FIV6bIe9PqVjipxzUJDd1zdZsLY=
 			</data>
 			<key>hash2</key>
 			<data>
-			5DXysFNUEhKw1dSMxv6k+vDYaADfK4qy8k278tJeOu4=
+			CnVsaEbW3SAw4bdLqZB53fpV9F06nGA+Tp0CTwF01B4=
 			</data>
 		</dict>
 		<key>Resources/Info.plist</key>
 		<dict>
 			<key>hash</key>
 			<data>
-			QZQZAQHUybhkq5dnFdi0HxuSC54=
+			SfeOl3R4XDXrV3qs+h8wblnetd8=
 			</data>
 			<key>hash2</key>
 			<data>
-			F7O2zcMDAsT5gKB2B1sbIwfLLc2fZem6iQsb7ise8e4=
+			CgQ0gjYYf+wkLdLzQnThbY3ZZJWF+2Lb/spFpUO0eAo=
 			</data>
 		</dict>
 	</dict>

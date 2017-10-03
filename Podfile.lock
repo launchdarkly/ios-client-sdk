@@ -1,6 +1,6 @@
 PODS:
   - DarklyEventSource (3.0.0)
-  - Nimble (7.0.1)
+  - Nimble (7.0.2)
   - OHHTTPStubs/Core (6.0.0)
   - OHHTTPStubs/Default (6.0.0):
     - OHHTTPStubs/Core
@@ -14,8 +14,8 @@ PODS:
   - OHHTTPStubs/OHPathHelpers (6.0.0)
   - OHHTTPStubs/Swift (6.0.0):
     - OHHTTPStubs/Default
-  - Quick (1.1.0)
-  - Sourcery (0.8.0)
+  - Quick (1.2.0)
+  - Sourcery (0.9.0)
 
 DEPENDENCIES:
   - DarklyEventSource
@@ -26,10 +26,10 @@ DEPENDENCIES:
 
 SPEC CHECKSUMS:
   DarklyEventSource: e8ddf05b2098da7fd3acc60dc14e230df4fce311
-  Nimble: 657d000e11df8aebe27cdaf9d244de7f30ed87f7
+  Nimble: bfe1f814edabba69ff145cb1283e04ed636a67f2
   OHHTTPStubs: 752f9b11fd810a15162d50f11c06ff94f8e012eb
-  Quick: dafc587e21eed9f4cab3249b9f9015b0b7a7f71d
-  Sourcery: c5c099c4786fed4c24febd5edb25a8ea1b45b40d
+  Quick: 58d203b1c5e27fff7229c4c1ae445ad7069a7a08
+  Sourcery: e3829460a1fa0bcd3b689e6087a89cc063cd2289
 
 PODFILE CHECKSUM: e19bae02c46733e579e32f6e0126b02fb8207475
 

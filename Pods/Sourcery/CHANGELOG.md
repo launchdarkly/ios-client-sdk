@@ -2,6 +2,27 @@
 
 ---
 
+## 0.9.0
+
+### New Features
+
+- Added support for file paths in `config` parameter
+- Added `isDeinitializer` property for methods
+- Improved config file validation and error reporting
+- Various improvements for `AutoMockable` template:
+  - support methods with reserved keywords name
+  - support methods that throws
+  - improved generated declarations names
+
+### Bug fixes
+
+- Fixed single file generation not skipping writing the file when there is no generated content
+
+### Internal changes
+
+- Updated dependencies for Swift 4
+- Update internal ruby dependencies
+
 ## 0.8.0
 
 ### New Features
