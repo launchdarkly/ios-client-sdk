@@ -72,6 +72,7 @@
 /**
  Flag that enables REPORT HTTP method for feature flag requests. When useReport is false,
  feature flag requests use the GET HTTP method. The default is NO.
+ Do not use unless advised by LaunchDarkly.
  */
 @property (nonatomic, assign) BOOL useReport;
 
