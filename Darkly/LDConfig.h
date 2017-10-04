@@ -70,6 +70,13 @@
 @property (nonatomic) BOOL streaming;
 
 /**
+ Flag that enables REPORT HTTP method for feature flag requests. When useReport is false,
+ feature flag requests use the GET HTTP method. The default is NO.
+ Do not use unless advised by LaunchDarkly.
+ */
+@property (nonatomic, assign) BOOL useReport;
+
+/**
  Flag that enables debug mode to allow things such as logging.
  */
 @property (nonatomic) BOOL debugEnabled;
@@ -80,6 +87,7 @@
  @return An instance of LDConfig object.
  */
 - (instancetype _Nonnull)initWithMobileKey:(nonnull NSString *)mobileKey NS_DESIGNATED_INITIALIZER;
+- (BOOL)isFlagRetryStatusCode:(NSInteger)statusCode;
 
 - (instancetype _Nonnull )init NS_UNAVAILABLE;
 

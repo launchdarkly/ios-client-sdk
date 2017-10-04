@@ -29,16 +29,12 @@
 
 - (void)setUp {
     [super setUp];
+    
     LDUserBuilder *userBuilder = [[LDUserBuilder alloc] init];
-    userBuilder.key = @"jeff@test.com";
-    LDUserModel *user = [userBuilder build];
-    LDConfig *config = [[LDConfig alloc] initWithMobileKey:@""];
-    config.flushInterval = [NSNumber numberWithInt:30];
+    userBuilder.key = [[NSUUID UUID] UUIDString];
+    userBuilder.email = @"jeff@test.com";
 
-    ldClientMock = OCMClassMock([LDClient class]);
-    OCMStub(ClassMethod([ldClientMock sharedInstance])).andReturn(ldClientMock);
-    OCMStub([ldClientMock ldUser]).andReturn(user);
-    OCMStub([ldClientMock ldConfig]).andReturn(config);
+    ldClientMock = [self mockClientWithUser:[userBuilder build]];
     
     requestManagerMock = OCMClassMock([LDRequestManager class]);
     OCMStub(ClassMethod([requestManagerMock sharedInstance])).andReturn(requestManagerMock);
@@ -102,25 +98,36 @@
     }
 }
 
-- (void)testSyncWithServerForConfigWhenUserExists {
+- (void)testSyncWithServerForConfigWhenUserExistsAndOnline {
+    [[requestManagerMock expect] performFeatureFlagRequest:[ldClientMock ldUser]];
+    
     LDClientManager *clientManager = [LDClientManager sharedInstance];
     [clientManager setOfflineEnabled:NO];
     
     [clientManager syncWithServerForConfig];
 
-    OCMVerify([requestManagerMock performFeatureFlagRequest:[OCMArg isKindOfClass:[NSString class]]]);
+    [requestManagerMock verify];
 }
 
-- (void)testDoNotSyncWithServerForConfigWhenUserDoesNotExists {
-    NSData *testData = nil;
+- (void)testSyncWithServerForConfigWhenUserDoesNotExist {
+    [self mockClientWithUser:nil];
+    XCTAssertNil([LDClient sharedInstance].ldUser);
+    
+    [[requestManagerMock reject] performFeatureFlagRequest:[OCMArg any]];
+
     LDClientManager *clientManager = [LDClientManager sharedInstance];
     [clientManager setOfflineEnabled:NO];
     
-    [[requestManagerMock reject] performEventRequest:[OCMArg isEqual:testData]];
+    [clientManager syncWithServerForConfig];
+}
+
+- (void)testSyncWithServerForConfigWhenOffline {
+    [[requestManagerMock reject] performFeatureFlagRequest:[OCMArg any]];
+
+    LDClientManager *clientManager = [LDClientManager sharedInstance];
+    [clientManager setOfflineEnabled:YES];
     
     [clientManager syncWithServerForConfig];
-    
-    [requestManagerMock verify];
 }
 
 - (void)testSyncWithServerForEventsWhenEventsExist {
@@ -275,6 +282,8 @@
     XCTAssertTrue([clientUser.config isEqualToConfig:endingConfig]);
 }
 
+#pragma mark - Helpers
+
 - (NSDictionary*)dictionaryFromJsonFileNamed:(NSString *)fileName {
     NSString *filepath = [[NSBundle bundleForClass:[self class]] pathForResource:fileName
                                                                           ofType:@"json"];
@@ -285,5 +294,18 @@
                                              error:&error];
 }
 
+- (id)mockClientWithUser:(LDUserModel*)user {
+    id mockClient = OCMClassMock([LDClient class]);
+    OCMStub(ClassMethod([mockClient sharedInstance])).andReturn(mockClient);
+    OCMStub([mockClient ldUser]).andReturn(user);
+    XCTAssertEqual([LDClient sharedInstance].ldUser, user);
+    
+    LDConfig *config = [[LDConfig alloc] initWithMobileKey:@"testMobileKey"];
+    config.flushInterval = [NSNumber numberWithInt:30];
+    OCMStub([mockClient ldConfig]).andReturn(config);
+    XCTAssertEqual([LDClient sharedInstance].ldConfig, config);
+    
+    return mockClient;
+}
 
 @end

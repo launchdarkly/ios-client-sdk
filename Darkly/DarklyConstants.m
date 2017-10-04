@@ -36,3 +36,6 @@ int const kMinimumPollingInterval = 60;
 int const kDefaultBackgroundFetchInterval = 3600;
 int const kMinimumBackgroundFetchInterval = 900;
 int const kMillisInSecs = 1000;
+NSInteger const kHTTPStatusCodeBadRequest = 400;
+NSInteger const kHTTPStatusCodeMethodNotAllowed = 405;
+NSInteger const kHTTPStatusCodeNotImplemented = 501;
