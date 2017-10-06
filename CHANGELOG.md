@@ -2,6 +2,10 @@
 
 All notable changes to the LaunchDarkly iOS SDK will be documented in this file. This project adheres to [Semantic Versioning](http://semver.org).
 
+## [2.8.0] - 2017-10-06
+### Added
+- `useReport` property on `LDConfig` to allow switching the request verb from `GET` to `REPORT`. Do not use unless advised by LaunchDarkly.
+
 ## [2.7.0] - 2017-09-13
 ### Changed
 - Updated for Xcode 9 support
