@@ -9,7 +9,7 @@
 #import "LDFlagConfigModel.h"
 #import "LDEventModel.h"
 #import "LDClient.h"
-#import <OCMock.h>
+#import "OCMock.h"
 #import "NSArray+UnitTests.h"
 
 @interface LDDataManagerTest : DarklyXCTestCase

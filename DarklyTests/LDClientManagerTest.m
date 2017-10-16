@@ -6,7 +6,7 @@
 #import "LDClientManager.h"
 #import "LDUserBuilder.h"
 #import "LDClient.h"
-#import <OCMock.h>
+#import "OCMock.h"
 #import "LDRequestManager.h"
 #import "LDDataManager.h"
 #import "LDPollingManager.h"

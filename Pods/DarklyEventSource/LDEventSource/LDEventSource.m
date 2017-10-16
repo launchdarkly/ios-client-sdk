@@ -23,6 +23,9 @@ static NSString *const LDEventDataKey = @"data";
 static NSString *const LDEventIDKey = @"id";
 static NSString *const LDEventEventKey = @"event";
 static NSString *const LDEventRetryKey = @"retry";
+NSString *const LDEventSourceErrorDomain = @"LDEventSourceErrorDomain";
+
+static NSInteger const HTTPStatusCodeUnauthorized = 401;
 
 @interface LDEventSource () <NSURLSessionDataDelegate> {
     BOOL wasClosed;
@@ -200,17 +203,41 @@ didReceiveResponse:(NSURLResponse *)response completionHandler:(void (^)(NSURLSe
     
     LDEvent *e = [LDEvent new];
     e.readyState = kEventStateClosed;
-    e.error = error ?: [NSError errorWithDomain:@""
-                                           code:e.readyState
-                                       userInfo:@{ NSLocalizedDescriptionKey: @"Connection with the event source was closed." }];
+    e.error = [self eventErrorForTask:task errorCode:e.readyState underlyingError:error];
     
     [self _dispatchEvent:e type:ReadyStateEvent];
     [self _dispatchEvent:e type:ErrorEvent];
     
-    dispatch_time_t popTime = dispatch_time(DISPATCH_TIME_NOW, (int64_t)([self increaseIntervalWithBackoff] * NSEC_PER_SEC));
-    dispatch_after(popTime, connectionQueue, ^(void){
-        [self _open];
-    });
+    if (![self responseIsUnauthorizedForTask:task]) {
+        dispatch_time_t popTime = dispatch_time(DISPATCH_TIME_NOW, (int64_t)([self increaseIntervalWithBackoff] * NSEC_PER_SEC));
+        dispatch_after(popTime, connectionQueue, ^(void){
+            [self _open];
+        });
+    }
+}
+
+- (NSError*)eventErrorForTask:(nonnull NSURLSessionTask *)task errorCode:(NSInteger)errorCode underlyingError:(nullable NSError *)underlyingError
+{
+    NSError *defaultError = underlyingError ?: [NSError errorWithDomain:@""
+                                                       code:errorCode
+                                                   userInfo:@{ NSLocalizedDescriptionKey: @"Connection with the event source was closed." }];
+
+    if (![self responseIsUnauthorizedForTask:task]) { return defaultError; }
+
+    NSMutableDictionary *userInfo = [NSMutableDictionary dictionaryWithDictionary:@{NSLocalizedDescriptionKey: @"Connection refused by the server."}];
+    if (underlyingError) { userInfo[NSUnderlyingErrorKey] = underlyingError; }
+    NSError *eventError = [NSError errorWithDomain:LDEventSourceErrorDomain
+                                              code:-HTTPStatusCodeUnauthorized
+                                          userInfo:userInfo.copy];
+
+    return eventError;
+}
+
+- (BOOL)responseIsUnauthorizedForTask:(nonnull NSURLSessionTask *)task
+{
+    if (![task.response isKindOfClass:[NSHTTPURLResponse class]]) { return NO; }
+    NSHTTPURLResponse *response = (NSHTTPURLResponse *)task.response;
+    return response && response.statusCode == HTTPStatusCodeUnauthorized;
 }
 
 - (void)_open

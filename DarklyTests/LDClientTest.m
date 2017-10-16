@@ -11,7 +11,7 @@
 #import "LDPollingManager.h"
 #import "LDUserBuilder+Testable.h"
 
-#import <OCMock.h>
+#import "OCMock.h"
 #import <OHHTTPStubs/OHHTTPStubs.h>
 
 typedef void(^MockLDClientDelegateCallbackBlock)(void);
