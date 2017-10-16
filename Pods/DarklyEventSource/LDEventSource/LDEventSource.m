@@ -75,7 +75,7 @@ static NSInteger const HTTPStatusCodeUnauthorized = 401;
         _retryInterval = ES_RETRY_INTERVAL;
         _retryAttempt = 0;
         _httpRequestHeaders = headers;
-        messageQueue = dispatch_queue_create("co.cwbrn.ldeventsource-queue", DISPATCH_QUEUE_SERIAL);
+        messageQueue = dispatch_queue_create("com.launchdarkly.eventsource-queue", DISPATCH_QUEUE_SERIAL);
         connectionQueue = dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_HIGH, 0);
         
         dispatch_time_t popTime = dispatch_time(DISPATCH_TIME_NOW, (int64_t)(_retryInterval * NSEC_PER_SEC));

@@ -11,6 +11,7 @@
 #import "LDFlagConfigModel.h"
 #import "NSDictionary+JSON.h"
 #import "LDEventSource.h"
+#import "LDEvent+Unauthorized.h"
 
 @interface LDClientManager()
 
@@ -19,9 +20,11 @@
 
 @end
 
-@implementation LDClientManager
+@implementation LDClientManager {
+    BOOL _online;
+}
 
-@synthesize offlineEnabled, eventSource;
+@synthesize eventSource;
 
 +(LDClientManager *)sharedInstance {
     static LDClientManager *sharedApiManager = nil;
@@ -41,12 +44,24 @@
     return sharedApiManager;
 }
 
+- (void)setOnline:(BOOL)online {
+    _online = online;
+    _online ? [self startPolling] : [self stopPolling];
+}
+
+- (BOOL)isOnline {
+    return _online;
+}
+
 - (void)startPolling {
+    if (!self.isOnline) {
+        DEBUG_LOGX(@"ClientManager startPolling aborted - manager is offline");
+        return;
+    }
+
     LDPollingManager *pollingMgr = [LDPollingManager sharedInstance];
-    
     LDConfig *config = [[LDClient sharedInstance] ldConfig];
-    pollingMgr.eventPollingIntervalMillis = [config.flushInterval intValue] * kMillisInSecs;
-    DEBUG_LOG(@"ClientManager startPolling method called with pollingInterval=%f", pollingMgr.eventPollingIntervalMillis);
+
     [pollingMgr startEventPolling];
     
     if ([config streaming]) {
@@ -54,7 +69,6 @@
     }
     else{
         [self syncWithServerForConfig];
-        pollingMgr.configPollingIntervalMillis = [config.pollingInterval intValue] * kMillisInSecs;
         [pollingMgr startConfigPolling];
     }
 }
@@ -112,6 +126,11 @@
 
 - (void)configureEventSource {
     @synchronized (self) {
+        if (!self.isOnline) {
+            DEBUG_LOGX(@"ClientManager configureEventSource aborted - manager is offline");
+            return;
+        }
+
         if (eventSource) {
             DEBUG_LOGX(@"ClientManager aborting event source creation - event source running");
             return;
@@ -122,7 +141,16 @@
             if (![event.event isEqualToString:@"ping"]) { return; }
             [self syncWithServerForConfig];
         }];
+
+        [eventSource onError:^(LDEvent *event) {
+            if (![event isUnauthorizedEvent]) { return; }
+            [self postClientUnauthorizedNotification];
+        }];
     }
+}
+
+- (void)postClientUnauthorizedNotification {
+    [[NSNotificationCenter defaultCenter] postNotificationName:kLDClientUnauthorizedNotification object:nil];
 }
 
 - (void)stopEventSource {
@@ -141,24 +169,24 @@
 }
 
 -(void)syncWithServerForEvents {
-    if (!offlineEnabled) {
-        DEBUG_LOGX(@"ClientManager syncing events with server");
-        
-        [[LDDataManager sharedManager] allEventsJsonArray:^(NSArray *array) {
-            if (array) {
-                [[LDRequestManager sharedInstance] performEventRequest:array];
-            } else {
-                DEBUG_LOGX(@"ClientManager has no events so won't sync events with server");
-            }
-        }];
-        
-    } else {
+    if (!self.isOnline) {
         DEBUG_LOGX(@"ClientManager is in offline mode so won't sync events with server");
+        return;
     }
+
+    DEBUG_LOGX(@"ClientManager syncing events with server");
+
+    [[LDDataManager sharedManager] allEventsJsonArray:^(NSArray *array) {
+        if (array) {
+            [[LDRequestManager sharedInstance] performEventRequest:array];
+        } else {
+            DEBUG_LOGX(@"ClientManager has no events so won't sync events with server");
+        }
+    }];
 }
 
 -(void)syncWithServerForConfig {
-    if (offlineEnabled) {
+    if (!self.isOnline) {
         DEBUG_LOGX(@"ClientManager is in offline mode so won't sync config with server");
         return;
     }
@@ -172,6 +200,10 @@
 }
 
 - (void)flushEvents {
+    if (!self.isOnline) {
+        DEBUG_LOGX(@"ClientManager flushEvents aborted - manager is offline");
+        return;
+    }
     [self syncWithServerForEvents];
 }
 
