@@ -13,8 +13,11 @@
 #import "LDEventModel.h"
 #import "LDClientManager+EventSource.h"
 #import "LDEvent+Testable.h"
+#import "LDFlagConfigModel+Testable.h"
 
 NSString *const mockMobileKey = @"mockMobileKey";
+NSString *const kFeaturesJsonDictionary = @"featuresJsonDictionary";
+NSString *const kBoolFlagKey = @"isABawler";
 
 @interface LDClientManagerTest : DarklyXCTestCase
 @property (nonatomic) id requestManagerMock;
@@ -42,8 +45,8 @@ NSString *const mockMobileKey = @"mockMobileKey";
 
     ldClientMock = [self mockClientWithUser:user];
     OCMStub(ClassMethod([ldClientMock sharedInstance])).andReturn(ldClientMock);
-    OCMStub([ldClientMock ldConfig]).andReturn(config);
-    OCMStub([ldClientMock ldUser]).andReturn(user);
+    [[[ldClientMock expect] andReturn: config] ldConfig];
+    [[[ldClientMock expect] andReturn: user] ldUser];
 
     requestManagerMock = OCMClassMock([LDRequestManager class]);
     OCMStub(ClassMethod([requestManagerMock sharedInstance])).andReturn(requestManagerMock);
@@ -280,13 +283,52 @@ NSString *const mockMobileKey = @"mockMobileKey";
     [dataManagerMock verify];
 }
 
-- (void)testProcessedConfigSuccessWithUserConfig {
-    NSDictionary *testDictionary = @{@"key":@"value"};
-    
-    LDClientManager *clientManager = [LDClientManager sharedInstance];
-    [clientManager processedConfig:YES jsonConfigDictionary:testDictionary];
+- (void)testProcessedConfigSuccessWithUserConfigChanged {
+    id mockUserUpdatedObserver = OCMObserverMock();
+    [[NSNotificationCenter defaultCenter] addMockObserver:mockUserUpdatedObserver name:kLDUserUpdatedNotification object:nil];
+    [[mockUserUpdatedObserver expect] notificationWithName:kLDUserUpdatedNotification object:[OCMArg any]];
+
+    id mockUserNoChangeObserver = OCMObserverMock();    //expect this NOT to be posted
+    [[NSNotificationCenter defaultCenter] addMockObserver:mockUserNoChangeObserver name:kLDUserNoChangeNotification object:nil];
+
+    LDFlagConfigModel *flagConfig = [LDFlagConfigModel flagConfigFromJsonFileNamed:@"feature_flags"];
+
+    LDUserModel *user = [ldClientMock ldUser];
+    user.config = flagConfig;
+    [[[ldClientMock expect] andReturn:user] ldUser];
+
+    NSMutableDictionary *updatedFlags = [NSMutableDictionary dictionaryWithDictionary:flagConfig.featuresJsonDictionary];
+    XCTAssertNotNil(updatedFlags[kBoolFlagKey]);
+    updatedFlags[kBoolFlagKey] = @(![updatedFlags[kBoolFlagKey] boolValue]);
+
+    [[LDClientManager sharedInstance] processedConfig:YES jsonConfigDictionary:[updatedFlags copy]];
     
     OCMVerify([dataManagerMock saveUser:[OCMArg any]]);
+    OCMVerifyAll(mockUserUpdatedObserver);
+    OCMVerifyAll(mockUserNoChangeObserver);
+}
+
+- (void)testProcessedConfigSuccessWithUserConfigUnchanged {
+    id mockUserUpdatedObserver = OCMObserverMock(); //expect this NOT to be posted
+    [[NSNotificationCenter defaultCenter] addMockObserver:mockUserUpdatedObserver name:kLDUserUpdatedNotification object:nil];
+
+    id mockUserNoChangeObserver = OCMObserverMock();
+    [[NSNotificationCenter defaultCenter] addMockObserver:mockUserNoChangeObserver name:kLDUserNoChangeNotification object:nil];
+    [[mockUserNoChangeObserver expect] notificationWithName:kLDUserNoChangeNotification object:[OCMArg any]];
+
+    [[dataManagerMock reject] saveUser:[OCMArg any]];
+
+    LDFlagConfigModel *flagConfig = [LDFlagConfigModel flagConfigFromJsonFileNamed:@"feature_flags"];
+
+    LDUserModel *user = [ldClientMock ldUser];
+    user.config = flagConfig;
+    [[[ldClientMock expect] andReturn:user] ldUser];
+
+    [[LDClientManager sharedInstance] processedConfig:YES jsonConfigDictionary:[flagConfig.featuresJsonDictionary copy]];
+
+    OCMVerifyAll(dataManagerMock);
+    OCMVerifyAll(mockUserUpdatedObserver);
+    OCMVerifyAll(mockUserNoChangeObserver);
 }
 
 - (void)testProcessedConfigSuccessWithoutUserConfig {
@@ -308,7 +350,7 @@ NSString *const mockMobileKey = @"mockMobileKey";
 }
 
 - (void)testProcessedConfigSuccessWithUserSameUserConfig {
-    LDFlagConfigModel *startingConfig = [[LDFlagConfigModel alloc] initWithDictionary:[self dictionaryFromJsonFileNamed:@"ldClientManagerTestConfigA"]];
+    LDFlagConfigModel *startingConfig = [LDFlagConfigModel flagConfigFromJsonFileNamed:@"ldClientManagerTestConfigA"];
     XCTAssertNotNil(startingConfig);
 
     LDUserModel *clientUser = [[LDClient sharedInstance] ldUser];
@@ -319,13 +361,13 @@ NSString *const mockMobileKey = @"mockMobileKey";
 }
 
 - (void)testProcessedConfigSuccessWithUserDifferentUserConfig {
-    LDFlagConfigModel *startingConfig = [[LDFlagConfigModel alloc] initWithDictionary:[self dictionaryFromJsonFileNamed:@"ldClientManagerTestConfigA"]];
+    LDFlagConfigModel *startingConfig = [LDFlagConfigModel flagConfigFromJsonFileNamed:@"ldClientManagerTestConfigA"];
     XCTAssertNotNil(startingConfig);
 
     LDUserModel *clientUser = [[LDClient sharedInstance] ldUser];
     clientUser.config = startingConfig;
     
-    LDFlagConfigModel *endingConfig = [[LDFlagConfigModel alloc] initWithDictionary:[self dictionaryFromJsonFileNamed:@"ldClientManagerTestConfigB"]];
+    LDFlagConfigModel *endingConfig = [LDFlagConfigModel flagConfigFromJsonFileNamed:@"ldClientManagerTestConfigB"];
     XCTAssertNotNil(endingConfig);
 
     [[LDClientManager sharedInstance] processedConfig:YES jsonConfigDictionary:endingConfig.featuresJsonDictionary];
@@ -427,16 +469,6 @@ NSString *const mockMobileKey = @"mockMobileKey";
 }
 
 #pragma mark - Helpers
-
-- (NSDictionary*)dictionaryFromJsonFileNamed:(NSString *)fileName {
-    NSString *filepath = [[NSBundle bundleForClass:[self class]] pathForResource:fileName
-                                                                          ofType:@"json"];
-    NSError *error = nil;
-    NSData *data = [NSData dataWithContentsOfFile:filepath];
-    return [NSJSONSerialization JSONObjectWithData:data
-                                           options:kNilOptions
-                                             error:&error];
-}
 
 - (id)mockClientWithUser:(LDUserModel*)user {
     id mockClient = OCMClassMock([LDClient class]);

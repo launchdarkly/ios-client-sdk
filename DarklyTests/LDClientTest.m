@@ -7,6 +7,7 @@
 #import "LDDataManager.h"
 #import "LDUserModel.h"
 #import "LDFlagConfigModel.h"
+#import "LDFlagConfigModel+Testable.h"
 #import "LDUserBuilder.h"
 #import "LDPollingManager.h"
 #import "LDUserBuilder+Testable.h"
@@ -146,7 +147,7 @@ NSString *const kTestMobileKey = @"testMobileKey";
     LDConfig *clientConfig = [[LDConfig alloc] initWithMobileKey:kTestMobileKey];
     LDUserBuilder *userBuilder = [LDUserBuilder userBuilderWithKey:[[NSUUID UUID] UUIDString]];
 
-    LDFlagConfigModel *flags = [self flagsFromFileName:@"boolConfigIsABool-true"];
+    LDFlagConfigModel *flags = [LDFlagConfigModel flagConfigFromJsonFileNamed:@"boolConfigIsABool-true"];
 
     BOOL clientStarted = [[LDClient sharedInstance] start:clientConfig withUserBuilder:userBuilder];
     XCTAssertTrue(clientStarted);
@@ -163,7 +164,7 @@ NSString *const kTestMobileKey = @"testMobileKey";
     LDConfig *clientConfig = [[LDConfig alloc] initWithMobileKey:kTestMobileKey];
     LDUserBuilder *userBuilder = [LDUserBuilder userBuilderWithKey:[[NSUUID UUID] UUIDString]];
 
-    LDFlagConfigModel *flags = [self flagsFromFileName:@"boolConfigIsABool-false"];
+    LDFlagConfigModel *flags = [LDFlagConfigModel flagConfigFromJsonFileNamed:@"boolConfigIsABool-false"];
 
     BOOL clientStarted = [[LDClient sharedInstance] start:clientConfig withUserBuilder:userBuilder];
     XCTAssertTrue(clientStarted);
@@ -189,7 +190,7 @@ NSString *const kTestMobileKey = @"testMobileKey";
     LDConfig *clientConfig = [[LDConfig alloc] initWithMobileKey:kTestMobileKey];
     LDUserBuilder *userBuilder = [LDUserBuilder userBuilderWithKey:[[NSUUID UUID] UUIDString]];
 
-    LDFlagConfigModel *flags = [self flagsFromFileName:@"stringConfigIsAString-someString"];
+    LDFlagConfigModel *flags = [LDFlagConfigModel flagConfigFromJsonFileNamed:@"stringConfigIsAString-someString"];
 
     BOOL clientStarted = [[LDClient sharedInstance] start:clientConfig withUserBuilder:userBuilder];
     XCTAssertTrue(clientStarted);
@@ -204,7 +205,7 @@ NSString *const kTestMobileKey = @"testMobileKey";
     LDConfig *clientConfig = [[LDConfig alloc] initWithMobileKey:kTestMobileKey];
     LDUserBuilder *userBuilder = [LDUserBuilder userBuilderWithKey:[[NSUUID UUID] UUIDString]];
 
-    LDFlagConfigModel *flags = [self flagsFromFileName:@"stringConfigIsAString-someString"];
+    LDFlagConfigModel *flags = [LDFlagConfigModel flagConfigFromJsonFileNamed:@"stringConfigIsAString-someString"];
 
     BOOL clientStarted = [[LDClient sharedInstance] start:clientConfig withUserBuilder:userBuilder];
     XCTAssertTrue(clientStarted);
@@ -229,7 +230,7 @@ NSString *const kTestMobileKey = @"testMobileKey";
     LDConfig *clientConfig = [[LDConfig alloc] initWithMobileKey:kTestMobileKey];
     LDUserBuilder *userBuilder = [LDUserBuilder userBuilderWithKey:[[NSUUID UUID] UUIDString]];
 
-    LDFlagConfigModel *flags = [self flagsFromFileName:@"numberConfigIsANumber-2"];
+    LDFlagConfigModel *flags = [LDFlagConfigModel flagConfigFromJsonFileNamed:@"numberConfigIsANumber-2"];
 
     BOOL clientStarted = [[LDClient sharedInstance] start:clientConfig withUserBuilder:userBuilder];
     XCTAssertTrue(clientStarted);
@@ -244,7 +245,7 @@ NSString *const kTestMobileKey = @"testMobileKey";
     LDConfig *clientConfig = [[LDConfig alloc] initWithMobileKey:kTestMobileKey];
     LDUserBuilder *userBuilder = [LDUserBuilder userBuilderWithKey:[[NSUUID UUID] UUIDString]];
 
-    LDFlagConfigModel *flags = [self flagsFromFileName:@"numberConfigIsANumber-2"];
+    LDFlagConfigModel *flags = [LDFlagConfigModel flagConfigFromJsonFileNamed:@"numberConfigIsANumber-2"];
 
     BOOL clientStarted = [[LDClient sharedInstance] start:clientConfig withUserBuilder:userBuilder];
     XCTAssertTrue(clientStarted);
@@ -273,7 +274,7 @@ NSString *const kTestMobileKey = @"testMobileKey";
     LDConfig *clientConfig = [[LDConfig alloc] initWithMobileKey:kTestMobileKey];
     LDUserBuilder *userBuilder = [LDUserBuilder userBuilderWithKey:[[NSUUID UUID] UUIDString]];
 
-    LDFlagConfigModel *flags = [self flagsFromFileName:jsonFileName];
+    LDFlagConfigModel *flags = [LDFlagConfigModel flagConfigFromJsonFileNamed:jsonFileName];
 
     BOOL clientStarted = [[LDClient sharedInstance] start:clientConfig withUserBuilder:userBuilder];
     XCTAssertTrue(clientStarted);
@@ -289,7 +290,7 @@ NSString *const kTestMobileKey = @"testMobileKey";
     LDConfig *clientConfig = [[LDConfig alloc] initWithMobileKey:kTestMobileKey];
     LDUserBuilder *userBuilder = [LDUserBuilder userBuilderWithKey:[[NSUUID UUID] UUIDString]];
 
-    LDFlagConfigModel *flags = [self flagsFromFileName:@"doubleConfigIsADouble-Pi"];
+    LDFlagConfigModel *flags = [LDFlagConfigModel flagConfigFromJsonFileNamed:@"doubleConfigIsADouble-Pi"];
 
     BOOL clientStarted = [[LDClient sharedInstance] start:clientConfig withUserBuilder:userBuilder];
     XCTAssertTrue(clientStarted);
@@ -323,7 +324,7 @@ NSString *const kTestMobileKey = @"testMobileKey";
     LDConfig *clientConfig = [[LDConfig alloc] initWithMobileKey:kTestMobileKey];
     LDUserBuilder *userBuilder = [LDUserBuilder userBuilderWithKey:[[NSUUID UUID] UUIDString]];
 
-    LDFlagConfigModel *flags = [self flagsFromFileName:jsonFileName];
+    LDFlagConfigModel *flags = [LDFlagConfigModel flagConfigFromJsonFileNamed:jsonFileName];
 
     BOOL clientStarted = [[LDClient sharedInstance] start:clientConfig withUserBuilder:userBuilder];
     XCTAssertTrue(clientStarted);
@@ -341,7 +342,7 @@ NSString *const kTestMobileKey = @"testMobileKey";
     LDConfig *clientConfig = [[LDConfig alloc] initWithMobileKey:kTestMobileKey];
     LDUserBuilder *userBuilder = [LDUserBuilder userBuilderWithKey:[[NSUUID UUID] UUIDString]];
 
-    LDFlagConfigModel *flags = [self flagsFromFileName:@"arrayConfigIsAnArray-123"];
+    LDFlagConfigModel *flags = [LDFlagConfigModel flagConfigFromJsonFileNamed:@"arrayConfigIsAnArray-123"];
 
     BOOL clientStarted = [[LDClient sharedInstance] start:clientConfig withUserBuilder:userBuilder];
     XCTAssertTrue(clientStarted);
@@ -376,7 +377,7 @@ NSString *const kTestMobileKey = @"testMobileKey";
     LDConfig *clientConfig = [[LDConfig alloc] initWithMobileKey:kTestMobileKey];
     LDUserBuilder *userBuilder = [LDUserBuilder userBuilderWithKey:[[NSUUID UUID] UUIDString]];
 
-    LDFlagConfigModel *flags = [self flagsFromFileName:jsonFileName];
+    LDFlagConfigModel *flags = [LDFlagConfigModel flagConfigFromJsonFileNamed:jsonFileName];
 
     BOOL clientStarted = [[LDClient sharedInstance] start:clientConfig withUserBuilder:userBuilder];
     XCTAssertTrue(clientStarted);
@@ -393,7 +394,7 @@ NSString *const kTestMobileKey = @"testMobileKey";
     LDConfig *clientConfig = [[LDConfig alloc] initWithMobileKey:kTestMobileKey];
     LDUserBuilder *userBuilder = [LDUserBuilder userBuilderWithKey:[[NSUUID UUID] UUIDString]];
 
-    LDFlagConfigModel *flags = [self flagsFromFileName:@"dictionaryConfigIsADictionary-3Key"];
+    LDFlagConfigModel *flags = [LDFlagConfigModel flagConfigFromJsonFileNamed:@"dictionaryConfigIsADictionary-3Key"];
 
     BOOL clientStarted = [[LDClient sharedInstance] start:clientConfig withUserBuilder:userBuilder];
     XCTAssertTrue(clientStarted);
@@ -610,16 +611,25 @@ NSString *const kTestMobileKey = @"testMobileKey";
     [self.mockLDClientManager verify];
 }
 
-#pragma mark - Helpers
-- (LDFlagConfigModel*)flagsFromFileName:(NSString*)jsonFileName {
-    NSString *filepath = [[NSBundle bundleForClass:[LDClientTest class]] pathForResource: jsonFileName ofType:@"json"];
-    NSData *configData = [NSData dataWithContentsOfFile:filepath];
-    XCTAssertTrue([configData length] > 0);
+- (void)testUserUpdatedCalled {
+    MockLDClientDelegate *delegateMock = [[MockLDClientDelegate alloc] init];
+    [LDClient sharedInstance].delegate = delegateMock;
 
-    NSDictionary *configDict = [NSJSONSerialization JSONObjectWithData:configData options:kNilOptions error:nil];
-    return [[LDFlagConfigModel alloc] initWithDictionary:configDict];
+    [[NSNotificationCenter defaultCenter] postNotificationName:kLDUserUpdatedNotification object:nil];
+
+    XCTAssertTrue(delegateMock.userDidUpdateCallCount == 1);
 }
 
+- (void)testUserUnchangedCalled {
+    MockLDClientDelegate *delegateMock = [[MockLDClientDelegate alloc] init];
+    [LDClient sharedInstance].delegate = delegateMock;
+
+    [[NSNotificationCenter defaultCenter] postNotificationName:kLDUserNoChangeNotification object:nil];
+
+    XCTAssertTrue(delegateMock.userUnchangedCallCount == 1);
+}
+
+#pragma mark - Helpers
 - (id)objectFromJsonFileNamed:(NSString*)jsonFileName key:(NSString*)key {
     NSString *filepath = [[NSBundle bundleForClass:[LDClientTest class]] pathForResource: jsonFileName
                                                                                   ofType:@"json"];

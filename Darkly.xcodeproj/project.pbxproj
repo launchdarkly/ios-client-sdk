@@ -202,6 +202,7 @@
 		83EF67871F979B4100403126 /* LDEvent+Unauthorized.m in Sources */ = {isa = PBXBuildFile; fileRef = 83EF67801F979B4100403126 /* LDEvent+Unauthorized.m */; };
 		83EF67881F979B4100403126 /* LDEvent+Unauthorized.m in Sources */ = {isa = PBXBuildFile; fileRef = 83EF67801F979B4100403126 /* LDEvent+Unauthorized.m */; };
 		83EF67901F99365600403126 /* LDClient+Testable.m in Sources */ = {isa = PBXBuildFile; fileRef = 83EF678F1F99365600403126 /* LDClient+Testable.m */; };
+		83EF678D1F98FC9200403126 /* LDFlagConfigModel+Testable.m in Sources */ = {isa = PBXBuildFile; fileRef = 83EF678C1F98FC9200403126 /* LDFlagConfigModel+Testable.m */; };
 		83F5B4751F91560300174DF7 /* LDDataManager+Testable.m in Sources */ = {isa = PBXBuildFile; fileRef = 83F5B4741F91560300174DF7 /* LDDataManager+Testable.m */; };
 		83F5B4781F95096A00174DF7 /* NSHTTPURLResponse+Unauthorized.h in Headers */ = {isa = PBXBuildFile; fileRef = 83F5B4761F95096A00174DF7 /* NSHTTPURLResponse+Unauthorized.h */; };
 		83F5B4791F95096A00174DF7 /* NSHTTPURLResponse+Unauthorized.h in Headers */ = {isa = PBXBuildFile; fileRef = 83F5B4761F95096A00174DF7 /* NSHTTPURLResponse+Unauthorized.h */; };
@@ -335,6 +336,8 @@
 		83EF67801F979B4100403126 /* LDEvent+Unauthorized.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "LDEvent+Unauthorized.m"; sourceTree = "<group>"; };
 		83EF678E1F99365600403126 /* LDClient+Testable.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "LDClient+Testable.h"; sourceTree = "<group>"; };
 		83EF678F1F99365600403126 /* LDClient+Testable.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "LDClient+Testable.m"; sourceTree = "<group>"; };
+		83EF678B1F98FC9200403126 /* LDFlagConfigModel+Testable.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "LDFlagConfigModel+Testable.h"; sourceTree = "<group>"; };
+		83EF678C1F98FC9200403126 /* LDFlagConfigModel+Testable.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "LDFlagConfigModel+Testable.m"; sourceTree = "<group>"; };
 		83F5B4731F91560300174DF7 /* LDDataManager+Testable.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "LDDataManager+Testable.h"; sourceTree = "<group>"; };
 		83F5B4741F91560300174DF7 /* LDDataManager+Testable.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "LDDataManager+Testable.m"; sourceTree = "<group>"; };
 		83F5B4761F95096A00174DF7 /* NSHTTPURLResponse+Unauthorized.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "NSHTTPURLResponse+Unauthorized.h"; sourceTree = "<group>"; };
@@ -551,6 +554,8 @@
 				83F5B4741F91560300174DF7 /* LDDataManager+Testable.m */,
 				83EF678E1F99365600403126 /* LDClient+Testable.h */,
 				83EF678F1F99365600403126 /* LDClient+Testable.m */,
+				83EF678B1F98FC9200403126 /* LDFlagConfigModel+Testable.h */,
+				83EF678C1F98FC9200403126 /* LDFlagConfigModel+Testable.m */,
 			);
 			path = Categories;
 			sourceTree = "<group>";
@@ -1141,6 +1146,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				83EF678D1F98FC9200403126 /* LDFlagConfigModel+Testable.m in Sources */,
 				8349F51E1F19352300B1F3DB /* NSDictionary+StringKey_Matchable.m in Sources */,
 				690347291E689B9F00E45133 /* LDEventModelTest.m in Sources */,
 				690347301E689B9F00E45133 /* LDConfigTest.m in Sources */,
