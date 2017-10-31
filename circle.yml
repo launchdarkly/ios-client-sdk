@@ -1,3 +1,10 @@
+# Keep this at the top to reduce noise in chatrooms when we mess up circleci setup
+experimental:
+  notify:
+    branches:
+      only:
+        - master
+        
 machine:
  xcode:
   version: 8.3
