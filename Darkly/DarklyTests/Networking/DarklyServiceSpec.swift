@@ -30,10 +30,8 @@ final class DarklyServiceSpec: QuickSpec {
     
     // swiftlint:disable:next function_body_length
     override func spec() {
-        beforeSuite {
-            self.config = LDConfig.stub
-        }
         beforeEach {
+            self.config = LDConfig.stub
             self.subject = DarklyService(mobileKey: self.mockMobileKey, config: self.config)
         }
         
@@ -101,10 +99,10 @@ final class DarklyServiceSpec: QuickSpec {
             }
         }
 
-        //TODO: This test allows an actual network request to escape while running all tests. Search & destroy
         describe("createEventSource") {
             var streamRequest: URLRequest?
             var serviceMock: DarklyServiceMock!
+            var eventSource: DarklyStreamingProvider!
             beforeEach {
                 serviceMock = DarklyServiceMock(config: self.config)
                 // The LDEventSource constructor waits ~1s and then triggers a request to open the streaming connection. Adding the timeout gives it time to make the request.
@@ -113,11 +111,15 @@ final class DarklyServiceSpec: QuickSpec {
                         streamRequest = request
                         done()
                     }
-                    _ = self.subject.createEventSource()
+
+                    eventSource = self.subject.createEventSource()
                 }
             }
             it("creates an event source and makes valid request") {
                 expect({ self.verifyStreamRequest(streamRequest, serviceMock: serviceMock) }).to(succeed())
+            }
+            afterEach {
+                eventSource.close()
             }
         }
 
