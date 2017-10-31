@@ -24,6 +24,12 @@
 @property (nonatomic, copy, nullable) NSString* eventsUrl;
 
 /**
+ The event source stream URL to the LaunchDarkly event source, should you need to override
+ the default.
+ */
+@property (nonatomic, copy, nullable) NSString* streamUrl;
+
+/**
  The capacity for storing feature flag and custom events. Events
  are persisted on the client and then sent to the server on a regular
  basis. If there is ever a prolonged period of time between the last server
@@ -64,6 +70,13 @@
 @property (nonatomic) BOOL streaming;
 
 /**
+ Flag that enables REPORT HTTP method for feature flag requests. When useReport is false,
+ feature flag requests use the GET HTTP method. The default is NO.
+ Do not use unless advised by LaunchDarkly.
+ */
+@property (nonatomic, assign) BOOL useReport;
+
+/**
  Flag that enables debug mode to allow things such as logging.
  */
 @property (nonatomic) BOOL debugEnabled;
@@ -74,6 +87,7 @@
  @return An instance of LDConfig object.
  */
 - (instancetype _Nonnull)initWithMobileKey:(nonnull NSString *)mobileKey NS_DESIGNATED_INITIALIZER;
+- (BOOL)isFlagRetryStatusCode:(NSInteger)statusCode;
 
 - (instancetype _Nonnull )init NS_UNAVAILABLE;
 

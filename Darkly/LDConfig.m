@@ -7,6 +7,7 @@
 
 @interface LDConfig()
 @property (nonatomic, copy, nonnull) NSString* mobileKey;
+@property (nonatomic, strong, nonnull) NSArray<NSNumber*> *flagRetryStatusCodes;
 @end
 
 @implementation LDConfig
@@ -25,6 +26,12 @@
     self.backgroundFetchInterval = [NSNumber numberWithInt:kDefaultBackgroundFetchInterval];
     self.baseUrl = kBaseUrl;
     self.eventsUrl = kEventsUrl;
+    self.streamUrl = kStreamUrl;
+//    self.flagRetryStatusCodes = @[@(kHTTPStatusCodeMethodNotAllowed),
+//                                  @(kHTTPStatusCodeBadRequest),
+//                                  @(kHTTPStatusCodeNotImplemented)];
+    self.flagRetryStatusCodes = @[];    //Temporarily, leave these codes empty to disable the REPORT fallback using GET capability
+    self.useReport = NO;
 
     return self;
 }
@@ -112,6 +119,10 @@
 - (void)setDebugEnabled:(BOOL)debugEnabled {
     _debugEnabled = debugEnabled;
     DEBUG_LOG(@"Set LDConfig debug enabled: %d", debugEnabled);
+}
+
+- (BOOL)isFlagRetryStatusCode:(NSInteger)statusCode {
+    return [self.flagRetryStatusCodes containsObject:@(statusCode)];
 }
 
 @end
