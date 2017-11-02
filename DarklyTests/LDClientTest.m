@@ -467,6 +467,7 @@ NSString *const kTestMobileKey = @"testMobileKey";
     
     NSUserDefaults *userDefaults = [NSUserDefaults standardUserDefaults];
     NSDictionary *originalDictionary = [userDefaults objectForKey:kUserDictionaryStorageKey];
+    if (!originalDictionary) { originalDictionary = [NSDictionary dictionary]; }
     NSMutableDictionary *encodedDictionary = [originalDictionary mutableCopy];
     [encodedDictionary setObject:[NSKeyedArchiver archivedDataWithRootObject:currentUser] forKey:userKey];
     [userDefaults setObject:encodedDictionary forKey:kUserDictionaryStorageKey];
