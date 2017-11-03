@@ -5,6 +5,7 @@
 import {{ argument }}
 {% endfor %}
 {% if argument.app %}@testable import {{ argument.app }}{% endif %}
+
 {# Protocol Mocks #}
 {% for type in types.protocols %}
 {% if type.annotations.AutoMockable %}
@@ -44,6 +45,7 @@ final class {{ type.name }}Mock: {{ type.name }} {
 {# Class Mocks #}
 {% for type in types.classes %}
 {% if type.annotations.AutoMockable %}
+    final class {{ type.name }}Mock: {% if type.annotations.MockBaseClass %}{{ type.annotations.MockBaseClass }}, {% endif %}{{ type.name }} {
 
 // MARK: - {{ type.name}}Mock
 final class {{ type.name }}Mock: {% if type.annotations.MockBaseClass %}{{ type.annotations.MockBaseClass }}, {% endif %}{{ type.name }} {
@@ -57,11 +59,13 @@ final class {{ type.name }}Mock: {% if type.annotations.MockBaseClass %}{{ type.
     }
 {% endif %}
 {% endfor %}
+
 {% if type.annotations.MockInitializerBody %}
 public init() {
 {{ type.annotations.MockInitializerBody }}
 }
 {% endif %}
+
 {% for method in type.allMethods|!annotated:"NoMock" %}
 {% if not method.shortName == "init" and not method.accessLevel == "private" and not method.accessLevel == "fileprivate" %}
 // MARK: - {{ method.annotations.StubName|default:method.callName }}
