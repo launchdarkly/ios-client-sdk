@@ -8,26 +8,33 @@
 
 import Foundation
 
+//sourcery: AutoMockable
 protocol LDFlagMaintaining {
-    func replaceStore(newFlags: [String: Any]?, source: LDFlagValueSource, completion:(() -> Void)?)  //put
+    func replaceStore(newFlags: [String: Any]?, source: LDFlagValueSource, completion:(() -> Void)?)
+    //sourcery: NoMock
     func replaceStore(newFlags: [String: Any]?, source: LDFlagValueSource)
 
-    func updateStore(newFlags: [String: Any], source: LDFlagValueSource, completion:(() -> Void)?)    //patch
+    func updateStore(newFlags: [String: Any], source: LDFlagValueSource, completion:(() -> Void)?)
+    //sourcery: NoMock
     func updateStore(newFlags: [String: Any], source: LDFlagValueSource)
 
-    func deleteFlag(name: String, completion:(() -> Void)?)                                           //delete
+    func deleteFlag(name: String, completion:(() -> Void)?)
+    //sourcery: NoMock
     func deleteFlag(name: String)
 }
 
 extension LDFlagMaintaining {
+    //sourcery: NoMock
     func replaceStore(newFlags: [String: Any]?, source: LDFlagValueSource) {
         replaceStore(newFlags: newFlags, source: source, completion: nil)
     }
 
+    //sourcery: NoMock
     func updateStore(newFlags: [String: Any], source: LDFlagValueSource) {
         updateStore(newFlags: newFlags, source: source, completion: nil)
     }
 
+    //sourcery: NoMock
     func deleteFlag(name: String) {
         deleteFlag(name: name, completion: nil)
     }

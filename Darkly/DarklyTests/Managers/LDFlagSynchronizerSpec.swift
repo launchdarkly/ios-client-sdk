@@ -19,13 +19,13 @@ final class LDFlagSynchronizerSpec: QuickSpec {
     var config: LDConfig!
     var mockUser: LDUser!
     var mockService: DarklyServiceMock!
-    var mockStore: LDFlagStoreMock!
+    var mockStore: LDFlagMaintainingMock!
     override func spec() {
         beforeEach {
             self.config = LDConfig.stub
             self.mockUser = LDUser()
             self.mockService = DarklyServiceMock()
-            self.mockStore = LDFlagStoreMock()
+            self.mockStore = LDFlagMaintainingMock()
         }
         describe("init") {
             context("configured offline-streaming") {
@@ -231,7 +231,7 @@ final class LDFlagSynchronizerSpec: QuickSpec {
                     it("requests flags & updates flag store") {
                         expect({ self.synchronizerState(synchronizerOnline: true, streamingMode: .streaming, flagRequests: 1, streamCreated: true, streamClosed: false) }).to(match())
                         expect(self.mockStore.replaceStoreCallCount) == 1
-                        expect(self.mockStore.replaceStoreCallParameters?.newFlags).toNot(beNil())
+                        expect(self.mockStore.replaceStoreReceivedArguments?.newFlags).toNot(beNil())
                     }
                 }
                 context("bad data") {
@@ -245,7 +245,7 @@ final class LDFlagSynchronizerSpec: QuickSpec {
                     it("requests flags & does not update flag store") {
                         expect({ self.synchronizerState(synchronizerOnline: true, streamingMode: .streaming, flagRequests: 1, streamCreated: true, streamClosed: false) }).to(match())
                         expect(self.mockStore.replaceStoreCallCount) == 0
-                        expect(self.mockStore.replaceStoreCallParameters?.newFlags).to(beNil())
+                        expect(self.mockStore.replaceStoreReceivedArguments?.newFlags).to(beNil())
                     }
                 }
                 context("failure response") {
@@ -259,7 +259,7 @@ final class LDFlagSynchronizerSpec: QuickSpec {
                     it("requests flags & does not update flag store") {
                         expect({ self.synchronizerState(synchronizerOnline: true, streamingMode: .streaming, flagRequests: 1, streamCreated: true, streamClosed: false) }).to(match())
                         expect(self.mockStore.replaceStoreCallCount) == 0
-                        expect(self.mockStore.replaceStoreCallParameters?.newFlags).to(beNil())
+                        expect(self.mockStore.replaceStoreReceivedArguments?.newFlags).to(beNil())
                     }
                 }
                 context("failure error") {
@@ -273,7 +273,7 @@ final class LDFlagSynchronizerSpec: QuickSpec {
                     it("requests flags & does not update flag store") {
                         expect({ self.synchronizerState(synchronizerOnline: true, streamingMode: .streaming, flagRequests: 1, streamCreated: true, streamClosed: false) }).to(match())
                         expect(self.mockStore.replaceStoreCallCount) == 0
-                        expect(self.mockStore.replaceStoreCallParameters?.newFlags).to(beNil())
+                        expect(self.mockStore.replaceStoreReceivedArguments?.newFlags).to(beNil())
                     }
                 }
             }

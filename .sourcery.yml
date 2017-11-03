@@ -1,0 +1,9 @@
+sources:
+  - Darkly/
+templates:
+  - SourceryTemplates/
+output: Darkly/GeneratedCode/
+
+args:
+  app: Darkly
+  imports: 

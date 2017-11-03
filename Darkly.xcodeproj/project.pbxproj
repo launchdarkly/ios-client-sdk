@@ -7,7 +7,6 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		831CE0641F7EEAA800A13A3A /* LDFlagStoreMock.swift in Sources */ = {isa = PBXBuildFile; fileRef = 831CE0631F7EEAA800A13A3A /* LDFlagStoreMock.swift */; };
 		831CE0661F853A1700A13A3A /* Match.swift in Sources */ = {isa = PBXBuildFile; fileRef = 831CE0651F853A1700A13A3A /* Match.swift */; };
 		831D8B6D1F6B1F7B00ED65E8 /* ObjcLDVariationValue.swift in Sources */ = {isa = PBXBuildFile; fileRef = 831D8B6C1F6B1F7B00ED65E8 /* ObjcLDVariationValue.swift */; };
 		831D8B6F1F71532300ED65E8 /* HTTPHeaders.swift in Sources */ = {isa = PBXBuildFile; fileRef = 831D8B6E1F71532300ED65E8 /* HTTPHeaders.swift */; };
@@ -17,6 +16,7 @@
 		832307A81F7DA61B0029815A /* LDEventSourceMock.swift in Sources */ = {isa = PBXBuildFile; fileRef = 832307A71F7DA61B0029815A /* LDEventSourceMock.swift */; };
 		832307AA1F7ECA630029815A /* LDConfigStub.swift in Sources */ = {isa = PBXBuildFile; fileRef = 832307A91F7ECA630029815A /* LDConfigStub.swift */; };
 		83396BC91F7C3711000E256E /* DarklyServiceSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = 83396BC81F7C3711000E256E /* DarklyServiceSpec.swift */; };
+		83411A5F1FABDA8700E5CF39 /* mocks.generated.swift in Sources */ = {isa = PBXBuildFile; fileRef = 83411A5D1FABDA8700E5CF39 /* mocks.generated.swift */; };
 		8354EFCC1F22491C00C05156 /* Darkly.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 8354EFC21F22491C00C05156 /* Darkly.framework */; };
 		8354EFD31F22491C00C05156 /* Darkly.h in Headers */ = {isa = PBXBuildFile; fileRef = 8354EFC51F22491C00C05156 /* Darkly.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		8354EFE01F26380700C05156 /* LDClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8354EFDC1F26380700C05156 /* LDClient.swift */; };
@@ -71,7 +71,6 @@
 		2FB66451DF5343970E572BB7 /* Pods-Darkly_iOS.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Darkly_iOS.debug.xcconfig"; path = "Pods/Target Support Files/Pods-Darkly_iOS/Pods-Darkly_iOS.debug.xcconfig"; sourceTree = "<group>"; };
 		6D78FF715370FB95F6F5E9CA /* Pods-Darkly_iOS.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Darkly_iOS.release.xcconfig"; path = "Pods/Target Support Files/Pods-Darkly_iOS/Pods-Darkly_iOS.release.xcconfig"; sourceTree = "<group>"; };
 		7B043E1A9DC44E730A3F3730 /* Pods-DarklyTests.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-DarklyTests.release.xcconfig"; path = "Pods/Target Support Files/Pods-DarklyTests/Pods-DarklyTests.release.xcconfig"; sourceTree = "<group>"; };
-		831CE0631F7EEAA800A13A3A /* LDFlagStoreMock.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LDFlagStoreMock.swift; sourceTree = "<group>"; };
 		831CE0651F853A1700A13A3A /* Match.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Match.swift; sourceTree = "<group>"; };
 		831D8B6C1F6B1F7B00ED65E8 /* ObjcLDVariationValue.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ObjcLDVariationValue.swift; sourceTree = "<group>"; };
 		831D8B6E1F71532300ED65E8 /* HTTPHeaders.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HTTPHeaders.swift; sourceTree = "<group>"; };
@@ -82,6 +81,7 @@
 		832307A71F7DA61B0029815A /* LDEventSourceMock.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LDEventSourceMock.swift; sourceTree = "<group>"; };
 		832307A91F7ECA630029815A /* LDConfigStub.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LDConfigStub.swift; sourceTree = "<group>"; };
 		83396BC81F7C3711000E256E /* DarklyServiceSpec.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DarklyServiceSpec.swift; sourceTree = "<group>"; };
+		83411A5D1FABDA8700E5CF39 /* mocks.generated.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = mocks.generated.swift; path = Darkly/GeneratedCode/mocks.generated.swift; sourceTree = SOURCE_ROOT; };
 		8354EFC21F22491C00C05156 /* Darkly.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Darkly.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		8354EFC51F22491C00C05156 /* Darkly.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Darkly.h; sourceTree = "<group>"; };
 		8354EFCB1F22491C00C05156 /* DarklyTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = DarklyTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -190,11 +190,20 @@
 			path = Networking;
 			sourceTree = "<group>";
 		};
+		83411A5C1FABDA5E00E5CF39 /* GeneratedCode */ = {
+			isa = PBXGroup;
+			children = (
+				83411A5D1FABDA8700E5CF39 /* mocks.generated.swift */,
+			);
+			path = GeneratedCode;
+			sourceTree = "<group>";
+		};
 		8354EFB81F22491C00C05156 = {
 			isa = PBXGroup;
 			children = (
 				8354EFC41F22491C00C05156 /* Darkly */,
 				8354EFCF1F22491C00C05156 /* DarklyTests */,
+				83411A5C1FABDA5E00E5CF39 /* GeneratedCode */,
 				8354EFC31F22491C00C05156 /* Products */,
 				8CFDD6922FA984B49AEFD2D5 /* Pods */,
 				3384F0CC93C5C19D2A6C5E66 /* Frameworks */,
@@ -283,7 +292,6 @@
 				83CFE7D01F7AD8DC0010544E /* DarklyServiceMock.swift */,
 				832307A71F7DA61B0029815A /* LDEventSourceMock.swift */,
 				832307A91F7ECA630029815A /* LDConfigStub.swift */,
-				831CE0631F7EEAA800A13A3A /* LDFlagStoreMock.swift */,
 				83EF67941F994BAD00403126 /* LDUserMock.swift */,
 			);
 			path = Mocks;
@@ -375,6 +383,7 @@
 			buildConfigurationList = 8354EFD91F22491C00C05156 /* Build configuration list for PBXNativeTarget "DarklyTests" */;
 			buildPhases = (
 				F0E460976E8B26DB5FE1462E /* [CP] Check Pods Manifest.lock */,
+				83411A561FABCA2200E5CF39 /* ShellScript */,
 				8354EFC71F22491C00C05156 /* Sources */,
 				8354EFC81F22491C00C05156 /* Frameworks */,
 				8354EFC91F22491C00C05156 /* Resources */,
@@ -449,6 +458,19 @@
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXShellScriptBuildPhase section */
+		83411A561FABCA2200E5CF39 /* ShellScript */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputPaths = (
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "\"$PODS_ROOT/Sourcery/bin/sourcery\"";
+		};
 		835E1CFE1F61AC0600184DB4 /* ShellScript */ = {
 			isa = PBXShellScriptBuildPhase;
 			buildActionMask = 2147483647;
@@ -598,7 +620,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				83CFE7CE1F7AD81D0010544E /* LDEventReporterSpec.swift in Sources */,
-				831CE0641F7EEAA800A13A3A /* LDFlagStoreMock.swift in Sources */,
+				83411A5F1FABDA8700E5CF39 /* mocks.generated.swift in Sources */,
 				831CE0661F853A1700A13A3A /* Match.swift in Sources */,
 				83DDBF001FA2589900E428B6 /* LDFlagStoreSpec.swift in Sources */,
 				83396BC91F7C3711000E256E /* DarklyServiceSpec.swift in Sources */,
