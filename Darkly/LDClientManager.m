@@ -197,7 +197,13 @@
     DEBUG_LOGX(@"ClientManager processedConfig method called after receiving successful response from server");
 
     LDFlagConfigModel *newConfig = [[LDFlagConfigModel alloc] initWithDictionary:jsonConfigDictionary];
-    if (!newConfig || [[LDClient sharedInstance].ldUser.config isEqualToConfig:newConfig]) { return; }  //Bail out if no new config, or the new config equals the existing config
+    if (!newConfig || [[LDClient sharedInstance].ldUser.config isEqualToConfig:newConfig]) {
+        //Notify interested clients and bail out if no new config, or the new config equals the existing config
+        [[NSNotificationCenter defaultCenter] postNotificationName: kLDUserNoChangeNotification
+                                                            object: nil];
+        DEBUG_LOGX(@"ClientManager posted Darkly.UserNoChangeNotification following user config update");
+        return;
+    }
     
     LDUserModel *user = [LDClient sharedInstance].ldUser;
     user.config = newConfig;

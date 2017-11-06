@@ -14,6 +14,8 @@ typedef enum {
     kEventStateClosed = 2,
 } LDEventState;
 
+extern NSString *const LDEventSourceErrorDomain;
+
 // ---------------------------------------------------------------------------------------------------------------------
 
 /// Describes an Event received from an EventSource

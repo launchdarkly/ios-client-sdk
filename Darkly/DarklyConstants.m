@@ -24,6 +24,7 @@ NSString * const kMacOS = @"macOS";
 NSString * const kUserDictionaryStorageKey = @"ldUserModelDictionary";
 NSString * const kDeviceIdentifierKey = @"ldDeviceIdentifier";
 NSString * const kLDUserUpdatedNotification = @"Darkly.UserUpdatedNotification";
+NSString * const kLDUserNoChangeNotification = @"Darkly.UserNoChangeNotification";
 NSString * const kLDBackgroundFetchInitiated = @"Darkly.BackgroundFetchInitiated";
 NSString * const kLDFlagConfigChangedNotification = @"Darkly.FlagConfigChangedNotification";
 NSString * const kLDServerConnectionUnavailableNotification = @"Darkly.ServerConnectionUnavailableNotification";

@@ -30,6 +30,9 @@
                                                  selector:@selector(userUpdated)
                                                      name: kLDUserUpdatedNotification object: nil];
         [[NSNotificationCenter defaultCenter] addObserver: sharedLDClient
+                                                 selector:@selector(userUnchanged)
+                                                     name: kLDUserNoChangeNotification object: nil];
+        [[NSNotificationCenter defaultCenter] addObserver: sharedLDClient
                                                  selector:@selector(serverUnavailable)
                                                      name:kLDServerConnectionUnavailableNotification object:nil];
         [[NSNotificationCenter defaultCenter] addObserver: sharedLDClient
@@ -297,6 +300,14 @@
     if (![self.delegate respondsToSelector:@selector(userDidUpdate)]) { return; }
     [NSThread performOnMainThread:^{
         [self.delegate userDidUpdate];
+    }];
+}
+
+// Notification handler for ClientManager user unchanged
+-(void)userUnchanged {
+    if (![self.delegate respondsToSelector:@selector(userUnchanged)]) { return; }
+    [NSThread performOnMainThread:^{
+        [self.delegate userUnchanged];
     }];
 }
 

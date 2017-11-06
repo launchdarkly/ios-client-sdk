@@ -6,8 +6,10 @@ experimental:
         - master
         
 machine:
+ pre:
+   - pod --version
  xcode:
-  version: 8.3
+  version: 9.0.1
 
 test:
  post:
