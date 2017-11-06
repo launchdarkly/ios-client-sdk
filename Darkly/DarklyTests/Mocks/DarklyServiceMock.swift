@@ -76,9 +76,9 @@ final class DarklyServiceMock: DarklyServiceProvider {
         completion?(stubbedFlagResponse ?? (nil, nil, nil))
     }
     
-    var createdEventSource: LDEventSourceMock?
+    var createdEventSource: DarklyStreamingProviderMock?
     func createEventSource() -> DarklyStreamingProvider {
-        let source = LDEventSourceMock()
+        let source = DarklyStreamingProviderMock()
         createdEventSource = source
         return source
     }

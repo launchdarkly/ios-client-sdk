@@ -9,32 +9,20 @@
 import DarklyEventSource
 @testable import Darkly
 
-final class LDEventSourceMock: DarklyStreamingProvider {
-    var onMessageCallCount = 0
-    var onMessageHandler: LDEventSourceEventHandler?
-    func onMessageEvent(_ handler: LDEventSourceEventHandler?) {
-        onMessageCallCount += 1
-        onMessageHandler = handler
-    }
-
+extension DarklyStreamingProviderMock {
     func sendPing() {
-        guard let messageHandler = onMessageHandler else { return }
+        guard let messageHandler = onMessageEventReceivedHandler else { return }
         messageHandler(DarklyEventSource.LDEvent.stubPingEvent())
     }
 
     func sendHeartbeat() {
-        guard let messageHandler = onMessageHandler else { return }
+        guard let messageHandler = onMessageEventReceivedHandler else { return }
         messageHandler(DarklyEventSource.LDEvent.stubHeartbeatEvent())
     }
 
     func sendNullEvent() {
-        guard let messageHandler = onMessageHandler else { return }
+        guard let messageHandler = onMessageEventReceivedHandler else { return }
         messageHandler(nil)
-    }
-
-    var closeCallCount = 0
-    func close() {
-        closeCallCount += 1
     }
 }
 
@@ -46,6 +34,7 @@ extension DarklyEventSource.LDEvent {
         event.readyState = kEventStateOpen
         return event
     }
+    
     class func stubHeartbeatEvent() -> DarklyEventSource.LDEvent {
         let event = DarklyEventSource.LDEvent()
         event.event = ":"

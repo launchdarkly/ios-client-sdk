@@ -7,3 +7,4 @@ output: Darkly/GeneratedCode/
 args:
   app: Darkly
   imports: 
+  - DarklyEventSource

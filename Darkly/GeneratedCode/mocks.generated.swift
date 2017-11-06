@@ -4,8 +4,26 @@
 //swiftlint:disable vertical_whitespace
 
 
+import DarklyEventSource
 @testable import Darkly
 
+// MARK: - DarklyStreamingProviderMock
+final class DarklyStreamingProviderMock: DarklyStreamingProvider {
+
+    // MARK: onMessageEvent
+    var onMessageEventCallCount = 0
+    var onMessageEventReceivedHandler: LDEventSourceEventHandler?
+    func onMessageEvent(_ handler: LDEventSourceEventHandler?) {
+        onMessageEventCallCount += 1
+        onMessageEventReceivedHandler = handler
+    }
+
+    // MARK: close
+    var closeCallCount = 0
+    func close() {
+        closeCallCount += 1
+    }
+}
 // MARK: - LDFlagMaintainingMock
 final class LDFlagMaintainingMock: LDFlagMaintaining {
 

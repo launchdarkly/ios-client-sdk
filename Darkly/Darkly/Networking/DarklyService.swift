@@ -18,6 +18,7 @@ protocol DarklyServiceProvider: class {
     func publishEvents(_ events: [LDEvent], completion: ServiceCompletionHandler?)
 }
 
+//sourcery: AutoMockable
 protocol DarklyStreamingProvider: class {
     func onMessageEvent(_ handler: LDEventSourceEventHandler?)
     func close()
