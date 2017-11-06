@@ -25,21 +25,20 @@
 
 + (NSString *)getDeviceAsString
 {
-#if TARGET_OS_IOS || TARGET_OS_TV
+#if TARGET_OS_IOS
     if ([[UIDevice currentDevice] respondsToSelector:@selector(userInterfaceIdiom)]) {
         switch ([[UIDevice currentDevice] userInterfaceIdiom]) {
             case UIUserInterfaceIdiomPhone:
                 return kIphone;
             case UIUserInterfaceIdiomPad:
                 return kIpad;
-            case UIUserInterfaceIdiomTV:
-                return kAppleTV;
             default:
                 break;
         }
     }
     return @"";
-    
+#elif TARGET_OS_TV
+    return kAppleTV;    //UIUserInterfaceIdiomTV is available from iOS 9, and so TODO: When iOS 8 is no longer supported, refactor to use UIUserInterfaceIdiomTV in the switch above
 #elif TARGET_OS_WATCH
     return kAppleWatch;
 #elif TARGET_OS_OSX

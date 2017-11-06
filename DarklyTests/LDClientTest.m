@@ -14,7 +14,7 @@
 #import <OCMock.h>
 #import <OHHTTPStubs/OHHTTPStubs.h>
 
-typedef void(^MockLDClientDelegateCallbackBlock)();
+typedef void(^MockLDClientDelegateCallbackBlock)(void);
 
 @interface MockLDClientDelegate : NSObject <ClientDelegate>
 @property (nonatomic, assign) NSInteger userDidUpdateCallCount;
@@ -110,35 +110,35 @@ NSString *const kTestMobileKey = @"testMobileKey";
 }
 
 - (void)testBoolVariationWithoutConfig {
-    [self verifyVariationWithMockResponseFromJSONFile:@"boolConfigIsABool-true" configureUser:NO test:^{
+    [self verifyVariationWithMockResponseFromJSONFile:@"boolConfigIsABool-true" configureUser:NO test:^(NSError *error){
         XCTAssertNil([LDClient sharedInstance].ldUser.config);
         XCTAssertTrue([[LDClient sharedInstance] boolVariation:@"isABool" fallback:YES]);
     }];
 }
 
 - (void)testBoolVariationWithConfig {
-    [self verifyVariationWithMockResponseFromJSONFile:@"boolConfigIsABool-true" configureUser:YES test:^{
+    [self verifyVariationWithMockResponseFromJSONFile:@"boolConfigIsABool-true" configureUser:YES test:^(NSError *error){
         XCTAssertTrue([[LDClient sharedInstance] boolVariation:@"isABool" fallback:NO]);
     }];
 }
 
 - (void)testBoolVariationFallback {
     NSString *targetKey = @"isNotABool";
-    [self verifyVariationWithMockResponseFromJSONFile:@"boolConfigIsABool-true" configureUser:YES test:^{
+    [self verifyVariationWithMockResponseFromJSONFile:@"boolConfigIsABool-true" configureUser:YES test:^(NSError *error){
         XCTAssertFalse([[[[LDClient sharedInstance] ldUser].config.featuresJsonDictionary allKeys] containsObject:targetKey]);
         XCTAssertTrue([[LDClient sharedInstance] boolVariation:targetKey fallback:YES]);
     }];
 }
 
 - (void)testStringVariationWithoutConfig {
-    [self verifyVariationWithMockResponseFromJSONFile:@"stringConfigIsAString-someString" configureUser:NO test:^{
+    [self verifyVariationWithMockResponseFromJSONFile:@"stringConfigIsAString-someString" configureUser:NO test:^(NSError *error){
         XCTAssertNil([LDClient sharedInstance].ldUser.config);
         XCTAssertTrue([[[LDClient sharedInstance] stringVariation:@"isAString" fallback:kFallbackString] isEqualToString:kFallbackString]);
     }];
 }
 
 - (void)testStringVariationWithConfig {
-    [self verifyVariationWithMockResponseFromJSONFile:@"stringConfigIsAString-someString" configureUser:YES test:^{
+    [self verifyVariationWithMockResponseFromJSONFile:@"stringConfigIsAString-someString" configureUser:YES test:^(NSError *error){
         XCTAssertTrue([[[LDClient sharedInstance] stringVariation:@"isAString" fallback:kFallbackString] isEqualToString:kTargetValueString]);
     }];
 }
@@ -146,21 +146,21 @@ NSString *const kTestMobileKey = @"testMobileKey";
 - (void)testStringVariationFallback {
     NSString *targetKey = @"isNotAString";
     
-    [self verifyVariationWithMockResponseFromJSONFile:@"stringConfigIsAString-someString" configureUser:YES test:^{
+    [self verifyVariationWithMockResponseFromJSONFile:@"stringConfigIsAString-someString" configureUser:YES test:^(NSError *error){
         XCTAssertFalse([[[[LDClient sharedInstance] ldUser].config.featuresJsonDictionary allKeys] containsObject:targetKey]);
         XCTAssertTrue([[[LDClient sharedInstance] stringVariation:targetKey fallback:kFallbackString] isEqualToString:kFallbackString]);
     }];
 }
 
 - (void)testNumberVariationWithoutConfig {
-    [self verifyVariationWithMockResponseFromJSONFile:@"numberConfigIsANumber-2" configureUser:NO test:^{
+    [self verifyVariationWithMockResponseFromJSONFile:@"numberConfigIsANumber-2" configureUser:NO test:^(NSError *error){
         XCTAssertNil([LDClient sharedInstance].ldUser.config);
         XCTAssertTrue([[[LDClient sharedInstance] numberVariation:@"isANumber" fallback:@5] intValue] == 5);
     }];
 }
 
 - (void)testNumberVariationWithConfig {
-    [self verifyVariationWithMockResponseFromJSONFile:@"numberConfigIsANumber-2" configureUser:YES test:^{
+    [self verifyVariationWithMockResponseFromJSONFile:@"numberConfigIsANumber-2" configureUser:YES test:^(NSError *error){
         XCTAssertTrue([[[LDClient sharedInstance] numberVariation:@"isANumber" fallback:@5] intValue] == 2);
     }];
 }
@@ -168,14 +168,14 @@ NSString *const kTestMobileKey = @"testMobileKey";
 - (void)testNumberVariationFallback {
     NSString *targetKey = @"isNotANumber";
     
-    [self verifyVariationWithMockResponseFromJSONFile:@"numberConfigIsANumber-2" configureUser:YES test:^{
+    [self verifyVariationWithMockResponseFromJSONFile:@"numberConfigIsANumber-2" configureUser:YES test:^(NSError *error){
         XCTAssertFalse([[[[LDClient sharedInstance] ldUser].config.featuresJsonDictionary allKeys] containsObject:targetKey]);
         XCTAssertTrue([[[LDClient sharedInstance] numberVariation:targetKey fallback:@5] intValue] == 5);
     }];
 }
 
 - (void)testDoubleVariationWithoutConfig {
-    [self verifyVariationWithMockResponseFromJSONFile:@"doubleConfigIsADouble-Pi" configureUser:NO test:^{
+    [self verifyVariationWithMockResponseFromJSONFile:@"doubleConfigIsADouble-Pi" configureUser:NO test:^(NSError *error){
         XCTAssertNil([LDClient sharedInstance].ldUser.config);
         XCTAssertTrue([[LDClient sharedInstance] doubleVariation:@"isADouble" fallback:2.71828] == 2.71828);
     }];
@@ -186,7 +186,7 @@ NSString *const kTestMobileKey = @"testMobileKey";
     NSString *jsonFileName = @"doubleConfigIsADouble-Pi";
     double target = [[self objectFromJsonFileNamed:jsonFileName key:targetKey] doubleValue];
     
-    [self verifyVariationWithMockResponseFromJSONFile:jsonFileName configureUser:YES test:^{
+    [self verifyVariationWithMockResponseFromJSONFile:jsonFileName configureUser:YES test:^(NSError *error){
         XCTAssertTrue([[LDClient sharedInstance] doubleVariation:targetKey fallback:2.71828] == target);
     }];
 }
@@ -194,7 +194,7 @@ NSString *const kTestMobileKey = @"testMobileKey";
 - (void)testDoubleVariationFallback {
     NSString *targetKey = @"isNotADouble";
     
-    [self verifyVariationWithMockResponseFromJSONFile:@"doubleConfigIsADouble-Pi" configureUser:YES test:^{
+    [self verifyVariationWithMockResponseFromJSONFile:@"doubleConfigIsADouble-Pi" configureUser:YES test:^(NSError *error){
         XCTAssertFalse([[[[LDClient sharedInstance] ldUser].config.featuresJsonDictionary allKeys] containsObject:targetKey]);
         XCTAssertTrue([[LDClient sharedInstance] doubleVariation:targetKey fallback:2.71828] == 2.71828);
     }];
@@ -203,7 +203,7 @@ NSString *const kTestMobileKey = @"testMobileKey";
 - (void)testArrayVariationWithoutConfig {
     NSArray *fallbackArray = @[@1, @2];
     
-    [self verifyVariationWithMockResponseFromJSONFile:@"arrayConfigIsAnArray-123" configureUser:NO test:^{
+    [self verifyVariationWithMockResponseFromJSONFile:@"arrayConfigIsAnArray-123" configureUser:NO test:^(NSError *error){
         XCTAssertNil([LDClient sharedInstance].ldUser.config);
         XCTAssertTrue([[LDClient sharedInstance] arrayVariation:@"isAnArray" fallback:fallbackArray] == fallbackArray);   //object equality!!
     }];
@@ -217,7 +217,7 @@ NSString *const kTestMobileKey = @"testMobileKey";
     NSArray *targetArray = [self objectFromJsonFileNamed:jsonFileName key:targetKey];
     XCTAssertFalse([targetArray isEqualToArray:fallbackArray]);
     
-    [self verifyVariationWithMockResponseFromJSONFile:jsonFileName configureUser:YES test:^{
+    [self verifyVariationWithMockResponseFromJSONFile:jsonFileName configureUser:YES test:^(NSError *error){
         NSArray *arrayValue = [[LDClient sharedInstance] arrayVariation:targetKey fallback:fallbackArray];
         XCTAssertTrue([arrayValue isEqualToArray:targetArray]);
     }];
@@ -227,7 +227,7 @@ NSString *const kTestMobileKey = @"testMobileKey";
     NSString *targetKey = @"isNotAnArray";
     NSArray *fallbackArray = @[@1, @2];
     
-    [self verifyVariationWithMockResponseFromJSONFile:@"arrayConfigIsAnArray-123" configureUser:YES test:^{
+    [self verifyVariationWithMockResponseFromJSONFile:@"arrayConfigIsAnArray-123" configureUser:YES test:^(NSError *error){
         XCTAssertFalse([[[[LDClient sharedInstance] ldUser].config.featuresJsonDictionary allKeys] containsObject:targetKey]);
         NSArray *arrayValue = [[LDClient sharedInstance] arrayVariation:targetKey fallback:fallbackArray];
         XCTAssertTrue(arrayValue == fallbackArray);
@@ -236,7 +236,7 @@ NSString *const kTestMobileKey = @"testMobileKey";
 
 - (void)testDictionaryVariationWithoutConfig {
     NSDictionary *fallback = @{@"key1": @"value1", @"key2": @[@1, @2]};
-    [self verifyVariationWithMockResponseFromJSONFile:@"dictionaryConfigIsADictionary-3Key" configureUser:NO test:^{
+    [self verifyVariationWithMockResponseFromJSONFile:@"dictionaryConfigIsADictionary-3Key" configureUser:NO test:^(NSError *error){
         XCTAssertNil([LDClient sharedInstance].ldUser.config);
         XCTAssertTrue([[LDClient sharedInstance] dictionaryVariation:@"isADictionary" fallback:fallback] == fallback);
     }];
@@ -259,7 +259,7 @@ NSString *const kTestMobileKey = @"testMobileKey";
     NSString *targetKey = @"isNotADictionary";
     NSDictionary *fallback = @{@"key1": @"value1", @"key2": @[@1, @2]};
     
-    [self verifyVariationWithMockResponseFromJSONFile:@"dictionaryConfigIsADictionary-3Key" configureUser:YES test:^{
+    [self verifyVariationWithMockResponseFromJSONFile:@"dictionaryConfigIsADictionary-3Key" configureUser:YES test:^(NSError *error){
         XCTAssertFalse([[[[LDClient sharedInstance] ldUser].config.featuresJsonDictionary allKeys] containsObject:targetKey]);
         XCTAssertTrue([[LDClient sharedInstance] dictionaryVariation:targetKey fallback:fallback] == fallback);
     }];
@@ -420,7 +420,7 @@ NSString *const kTestMobileKey = @"testMobileKey";
     };
     
     //Configure the client with the mock delegate and start the client. The client requests flags and gets the mocked error flag response. The client should call the mock delegate's error callback.
-    [self verifyDelegateCallbackWithMockDelegate:delegateMock test:^{
+    [self verifyDelegateCallbackWithMockDelegate:delegateMock test:^(NSError *error){
         //TODO: The issue above affects this test, which should check that the count == 1. When the issue is fixed, change this test
         XCTAssertTrue(delegateMock.serverConnectionUnavailableCallCount > 0);
     }];
@@ -439,7 +439,7 @@ NSString *const kTestMobileKey = @"testMobileKey";
         [configResponseArrived fulfill];
     };
     
-    [self verifyDelegateCallbackWithMockDelegate:delegateMock test:^{
+    [self verifyDelegateCallbackWithMockDelegate:delegateMock test:^(NSError *error){
         XCTAssertTrue(delegateMock.serverConnectionUnavailableCallCount == 0);
         XCTAssertTrue(delegateMock.userDidUpdateCallCount == 1);
         XCTAssertTrue(delegateMock.userUnchangedCallCount == 0);
@@ -467,11 +467,12 @@ NSString *const kTestMobileKey = @"testMobileKey";
     
     NSUserDefaults *userDefaults = [NSUserDefaults standardUserDefaults];
     NSDictionary *originalDictionary = [userDefaults objectForKey:kUserDictionaryStorageKey];
+    if (!originalDictionary) { originalDictionary = [NSDictionary dictionary]; }
     NSMutableDictionary *encodedDictionary = [originalDictionary mutableCopy];
     [encodedDictionary setObject:[NSKeyedArchiver archivedDataWithRootObject:currentUser] forKey:userKey];
     [userDefaults setObject:encodedDictionary forKey:kUserDictionaryStorageKey];
 
-    [self verifyDelegateCallbackWithMockDelegate:delegateMock userKey:userKey test:^{
+    [self verifyDelegateCallbackWithMockDelegate:delegateMock userKey:userKey test:^(NSError *error){
         // TODO: A previous test's "serverConnectionUnavailable" delegate callback is leaking.
         // (verified by renaming this test to run early in the test process, since tests are
         // run in alphabetical order within a test suite/file). Until that is fixed, we cannot
@@ -485,7 +486,7 @@ NSString *const kTestMobileKey = @"testMobileKey";
 }
 
 #pragma mark - Helpers
-- (void)verifyVariationWithMockResponseFromJSONFile:(NSString*)jsonFileName configureUser:(BOOL)configureUser test:(void(^)())testBlock {
+- (void)verifyVariationWithMockResponseFromJSONFile:(NSString*)jsonFileName configureUser:(BOOL)configureUser test:(void(^)(NSError * __nullable error))testBlock {
     LDUserBuilder *userBuilder = [LDUserBuilder userBuilderWithKey:[[NSUUID UUID] UUIDString]];
     LDConfig *clientConfig = [[LDConfig alloc] initWithMobileKey:kTestMobileKey];
     self.configureUser = configureUser;
@@ -527,11 +528,11 @@ NSString *const kTestMobileKey = @"testMobileKey";
     return configResponseArrived;
 }
 
-- (void)verifyDelegateCallbackWithMockDelegate:(MockLDClientDelegate*)mockDelegate test:(void (^)())testBlock {
+- (void)verifyDelegateCallbackWithMockDelegate:(MockLDClientDelegate*)mockDelegate test:(void (^)(NSError * __nullable error))testBlock {
     [self verifyDelegateCallbackWithMockDelegate:mockDelegate userKey:nil test:testBlock];
 }
 
-- (void)verifyDelegateCallbackWithMockDelegate:(MockLDClientDelegate*)mockDelegate userKey:(NSString *)userKey test:(void (^)())testBlock {
+- (void)verifyDelegateCallbackWithMockDelegate:(MockLDClientDelegate*)mockDelegate userKey:(NSString *)userKey test:(void (^)(NSError * __nullable error))testBlock {
     LDConfig *config = [[LDConfig alloc] initWithMobileKey:kTestMobileKey];
     
     LDUserBuilder *user = [[LDUserBuilder alloc] init];
