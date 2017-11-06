@@ -11,6 +11,7 @@
 #import "LDClient.h"
 #import "OCMock.h"
 #import "NSArray+UnitTests.h"
+#import "LDDataManager+Testable.h"
 
 @interface LDDataManagerTest : DarklyXCTestCase
 @property (nonatomic) id clientMock;
@@ -30,18 +31,19 @@
     user.email = @"bob@gmail.com";
     user.updatedAt = [NSDate date];
     
-    LDClient *client = [LDClient sharedInstance];
-    clientMock = OCMPartialMock(client);
-    OCMStub([clientMock ldUser]).andReturn(user);
-    
     LDFlagConfigModel *config = [[LDFlagConfigModel alloc] init];
     config.featuresJsonDictionary = [NSDictionary dictionaryWithObjects:@[@YES, @NO]
                                                                 forKeys: @[@"ipaduser", @"iosuser"]];
     user.config = config;
+
+    clientMock = OCMClassMock([LDClient class]);
+    OCMStub(ClassMethod([clientMock sharedInstance])).andReturn(clientMock);
+    OCMStub([clientMock ldUser]).andReturn(user);
 }
 
 - (void)tearDown {
     [clientMock stopMocking];
+    clientMock = nil;
     [super tearDown];
 }
 
@@ -156,6 +158,7 @@
     OCMStub([clientMock ldConfig]).andReturn(config);
     
     LDDataManager *manager = [LDDataManager sharedManager];
+    [manager.eventsArray removeAllObjects];
     
     [manager createCustomEvent:@"aKey" withCustomValuesDictionary: @{@"carrot": @"cake"}];
     [manager createCustomEvent:@"aKey" withCustomValuesDictionary: @{@"carrot": @"cake"}];

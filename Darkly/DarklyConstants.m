@@ -4,7 +4,7 @@
 
 #import "DarklyConstants.h"
 
-NSString * const kClientVersion = @"2.8.0";
+NSString * const kClientVersion = @"2.9.0";
 NSString * const kBaseUrl = @"https://app.launchdarkly.com";
 NSString * const kEventsUrl = @"https://mobile.launchdarkly.com";
 NSString * const kStreamUrl = @"https://clientstream.launchdarkly.com/mping";
@@ -28,6 +28,7 @@ NSString * const kLDUserNoChangeNotification = @"Darkly.UserNoChangeNotification
 NSString * const kLDBackgroundFetchInitiated = @"Darkly.BackgroundFetchInitiated";
 NSString * const kLDFlagConfigChangedNotification = @"Darkly.FlagConfigChangedNotification";
 NSString * const kLDServerConnectionUnavailableNotification = @"Darkly.ServerConnectionUnavailableNotification";
+NSString * const kLDClientUnauthorizedNotification = @"Darkly.LDClientUnauthorizedNotification";
 int const kCapacity = 100;
 int const kConnectionTimeout = 10;
 int const kDefaultFlushInterval = 30;
@@ -38,5 +39,7 @@ int const kDefaultBackgroundFetchInterval = 3600;
 int const kMinimumBackgroundFetchInterval = 900;
 int const kMillisInSecs = 1000;
 NSInteger const kHTTPStatusCodeBadRequest = 400;
+NSInteger const kHTTPStatusCodeUnauthorized = 401;
 NSInteger const kHTTPStatusCodeMethodNotAllowed = 405;
 NSInteger const kHTTPStatusCodeNotImplemented = 501;
+NSInteger const kErrorCodeUnauthorized = -kHTTPStatusCodeUnauthorized;
