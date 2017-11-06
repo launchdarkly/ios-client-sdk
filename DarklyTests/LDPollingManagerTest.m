@@ -8,7 +8,7 @@
 #import "LDRequestManager.h"
 #import "LDConfig.h"
 #import "LDClient.h"
-#import <OCMock.h>
+#import "OCMock.h"
 
 @interface LDPollingManagerTest : DarklyXCTestCase
 @property (nonatomic) id requestManagerMock;

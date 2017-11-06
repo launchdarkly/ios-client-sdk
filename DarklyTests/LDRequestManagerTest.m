@@ -2,7 +2,7 @@
 //  Copyright © 2015 Catamorphic Co. All rights reserved.
 //
 
-#import <OCMock.h>
+#import "OCMock.h"
 #import <OHHTTPStubs/OHHTTPStubs.h>
 
 #import "DarklyXCTestCase.h"
