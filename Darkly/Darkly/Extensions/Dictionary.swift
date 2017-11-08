@@ -8,7 +8,7 @@
 
 import Foundation
 
-extension Dictionary where Key == String, Value == Encodable {
+extension Dictionary where Key == String {
     var jsonString: String? {
         guard let encodedDictionary = jsonData
             else { return nil }
@@ -20,34 +20,33 @@ extension Dictionary where Key == String, Value == Encodable {
         return try? JSONSerialization.data(withJSONObject: self, options: [])
     }
 
-    public static func == (lhs: [String: Encodable], rhs: [String: Encodable]) -> Bool {
-        return lhs.jsonString == rhs.jsonString
+    public static func == (lhs: [String: Any], rhs: [String: Any]) -> Bool {
+        return lhs.isEqual(to: rhs)
+    }
+
+    public func isEqual(to other: [String: Any]) -> Bool {
+        guard self.count == other.count else { return false }
+        guard self.keys.sorted() == other.keys.sorted() else { return false }
+        for key in self.keys {
+            if self[key] == nil && other[key] == nil { continue }
+            guard let value = self[key], let otherValue = other[key] else { return false }
+            if !Dictionary.isEqual(value, to: otherValue) { return false }
+        }
+        return true
     }
 
     var base64UrlEncodedString: String? { return jsonData?.base64UrlEncodedString }
 }
 
-extension Dictionary where Key == String {
-    var encodable: [String: Encodable]? {
-        let keyValuePairs = mapValues { (value) -> Encodable? in
-            try? Dictionary.toEncodable(value)
-        }.flatMap { (key, value) -> (String, Encodable)? in
-            guard let value = value else { return nil }
-            return (key, value)
-        }
-        guard self.count == keyValuePairs.count else { return nil }
-        let filteredPairs = keyValuePairs.filter { (pair) -> Bool in
-            let (_, value) = pair
-            guard let stringValue = value as? String else { return true }
-            return stringValue != String.nullValueString
-        }
-        return Dictionary.dictionary(from: filteredPairs)
+extension Optional where Wrapped == [String: Any] {
+    public static func == (lhs: [String: Any]?, rhs: [String: Any]?) -> Bool {
+        guard let lhs = lhs else { return rhs == nil }
+        guard let rhs = rhs else { return false }
+        return lhs.isEqual(to: rhs)
     }
 
-    static func dictionary(from keyValuePairs: [(String, Encodable)]) -> [String: Encodable] {
-        var converted = [String: Encodable]()
-        keyValuePairs.forEach { (key, value) in converted[key] = value }
-        return converted
+    public static func != (lhs: [String: Any]?, rhs: [String: Any]?) -> Bool {
+        return !(lhs == rhs)
     }
 }
 

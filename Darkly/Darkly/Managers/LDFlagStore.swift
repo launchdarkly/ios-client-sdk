@@ -41,15 +41,11 @@ extension LDFlagMaintaining {
 }
 
 final class LDFlagStore: LDFlagMaintaining {
-    enum EncodingError: Error {
-        case notEncodable
-    }
-
     struct Constants {
         fileprivate static let flagQueueLabel = "com.launchdarkly.flagStore.flagQueue"
     }
     
-    private var featureFlags: [String: Any] = [:]
+    private(set) var featureFlags: [String: Any] = [:]
     private var flagValueSource = LDFlagValueSource.fallback
     private var flagQueue = DispatchQueue(label: Constants.flagQueueLabel)
 
@@ -86,11 +82,6 @@ final class LDFlagStore: LDFlagMaintaining {
                 }
             }
         }
-    }
-
-    func toJsonDictionary() throws -> [String: Encodable] {
-        guard let jsonFlags = featureFlags.encodable else { throw EncodingError.notEncodable }
-        return  jsonFlags
     }
 
     func variation<T: LDFlagValueConvertible>(forKey key: String, fallback: T) -> T {

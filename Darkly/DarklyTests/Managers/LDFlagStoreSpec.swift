@@ -46,7 +46,7 @@ final class LDFlagStoreSpec: QuickSpec {
                     expect(arrayFlagSource == LDFlagValueSource.cache).to(beTrue())
 
                     let (dictionaryValue, dictionaryFlagSource) = subject.variationAndSource(forKey: DarklyServiceMock.FlagKeys.dictionary, fallback: FallbackValues.dictionary)
-                    expect(dictionaryValue.encodable?.jsonString == DarklyServiceMock.FlagValues.dictionary.encodable?.jsonString).to(beTrue())
+                    expect(dictionaryValue == DarklyServiceMock.FlagValues.dictionary).to(beTrue())
                     expect(dictionaryFlagSource == LDFlagValueSource.cache).to(beTrue())
                 }
             }
@@ -71,47 +71,6 @@ final class LDFlagStoreSpec: QuickSpec {
                 }
             }
         }
-        describe("toJsonDictionary") {
-            context("with flag values") {
-                beforeEach {
-                    subject = LDFlagStore()
-
-                    waitUntil(timeout: 1) { done in
-                        subject.replaceStore(newFlags: DarklyServiceMock.Constants.jsonFlags, source: .cache) {
-                            done()
-                        }
-                    }
-                }
-                it("creates a json dictionary") {
-                    let jsonDictionary = try? subject.toJsonDictionary()
-                    expect(jsonDictionary).toNot(beNil())
-                    expect(jsonDictionary?[DarklyServiceMock.FlagKeys.bool] as? Bool) == DarklyServiceMock.FlagValues.bool
-                }
-            }
-            context("with an invalid value") {
-                beforeEach {
-                    subject = LDFlagStore()
-                    let invalidFlags: [String: Any] = [DarklyServiceMock.FlagKeys.bool: DarklyServiceMock.FlagValues.bool, "dateKey": Date()]
-
-                    waitUntil(timeout: 1) { done in
-                        subject.replaceStore(newFlags: invalidFlags, source: .cache) {
-                            done()
-                        }
-                    }
-                }
-                it("throws an exception") {
-                    expect { try subject.toJsonDictionary() }.to(throwError(LDFlagStore.EncodingError.notEncodable))
-                }
-            }
-            context("without flag values") {
-                beforeEach {
-                    subject = LDFlagStore()
-                }
-                it("creates an empty json dictionary") {
-                    expect(try? subject.toJsonDictionary().count) == 0
-                }
-            }
-        }
         describe("variationAndSource") {
             context("when flags exist") {
                 beforeEach {
@@ -133,7 +92,7 @@ final class LDFlagStoreSpec: QuickSpec {
                     expect(arrayFlagSource == LDFlagValueSource.server).to(beTrue())
 
                     let (dictionaryValue, dictionaryFlagSource) = subject.variationAndSource(forKey: DarklyServiceMock.FlagKeys.dictionary, fallback: FallbackValues.dictionary)
-                    expect(dictionaryValue.encodable?.jsonString == DarklyServiceMock.FlagValues.dictionary.encodable?.jsonString).to(beTrue())
+                    expect(dictionaryValue == DarklyServiceMock.FlagValues.dictionary).to(beTrue())
                     expect(dictionaryFlagSource == LDFlagValueSource.server).to(beTrue())
                 }
             }
@@ -152,7 +111,7 @@ final class LDFlagStoreSpec: QuickSpec {
                     expect(arrayFlagSource == LDFlagValueSource.fallback).to(beTrue())
 
                     let (dictionaryValue, dictionaryFlagSource) = subject.variationAndSource(forKey: DarklyServiceMock.FlagKeys.dictionary, fallback: FallbackValues.dictionary)
-                    expect(dictionaryValue.encodable?.jsonString == FallbackValues.dictionary.encodable?.jsonString).to(beTrue())
+                    expect(dictionaryValue == FallbackValues.dictionary).to(beTrue())
                     expect(dictionaryFlagSource == LDFlagValueSource.fallback).to(beTrue())
                 }
             }
@@ -177,7 +136,7 @@ final class LDFlagStoreSpec: QuickSpec {
                     expect(arrayValue == DarklyServiceMock.FlagValues.array).to(beTrue())
 
                     let dictionaryValue = subject.variation(forKey: DarklyServiceMock.FlagKeys.dictionary, fallback: FallbackValues.dictionary)
-                    expect(dictionaryValue.encodable?.jsonString == DarklyServiceMock.FlagValues.dictionary.encodable?.jsonString).to(beTrue())
+                    expect(dictionaryValue == DarklyServiceMock.FlagValues.dictionary).to(beTrue())
                 }
             }
             context("when flags do not exist") {
@@ -194,7 +153,7 @@ final class LDFlagStoreSpec: QuickSpec {
                     expect(arrayValue == FallbackValues.array).to(beTrue())
 
                     let dictionaryValue = subject.variation(forKey: DarklyServiceMock.FlagKeys.dictionary, fallback: FallbackValues.dictionary)
-                    expect(dictionaryValue.encodable?.jsonString == FallbackValues.dictionary.encodable?.jsonString).to(beTrue())
+                    expect(dictionaryValue == FallbackValues.dictionary).to(beTrue())
                 }
             }
         }

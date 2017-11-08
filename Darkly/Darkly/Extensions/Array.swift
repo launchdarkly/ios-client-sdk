@@ -9,12 +9,9 @@
 import Foundation
 
 extension Array {
-    var encodable: [Encodable]? {
-        let converted = flatMap { (element) -> Encodable? in try? Array.toEncodable(element) }
-        guard self.count == converted.count else { return nil }
-        return converted.filter { (element) in
-            guard let stringValue = element as? String else { return true }
-            return stringValue != String.nullValueString
-        }
+    public func isEqual(to other: [Any]) -> Bool {
+        guard self.count == other.count else { return false }
+        for index in 0..<self.count where !Array.isEqual(self[index], to: other[index]) { return false }
+        return true
     }
 }

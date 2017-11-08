@@ -9,20 +9,19 @@
 import Foundation
 
 extension Collection {
-    static func toEncodable(_ value: Any) throws -> Encodable? {
-        switch value {
-        case let boolValue as Bool: return boolValue
-        case let intValue as Int: return intValue
-        case let doubleValue as Double: return doubleValue
-        case let stringValue as String: return stringValue
-        case let arrayValue as [Any]: return arrayValue.encodable
-        case let dictionaryValue as [String: Any]: return dictionaryValue.encodable
-        case _ as NSNull: return String.nullValueString
-        default: throw JSONSerialization.JSONError.notADictionary
+    //swiftlint:disable:next cyclomatic_complexity
+    public static func isEqual(_ value: Any, to other: Any) -> Bool {
+        switch (value, other) {
+        case (let value as Bool, let other as Bool): if value != other { return false }
+        case (let value as Int, let other as Int): if value != other { return false }
+        case (let value as Int, let other as Double): if Double(value) != other { return false }
+        case (let value as Double, let other as Double): if value != other { return false }
+        case (let value as Double, let other as Int): if value != Double(other) { return false }
+        case (let value as String, let other as String): if value != other { return false }
+        case (let value as [Any], let other as [Any]): if !value.isEqual(to: other) { return false }
+        case (let value as [String: Any], let other as [String: Any]): if !value.isEqual(to: other) { return false }
+        default: return false
         }
+        return true
     }
-}
-
-extension String {
-    static var nullValueString: String { return "Collection.Encodable.toEncodable.nullValue" }
 }

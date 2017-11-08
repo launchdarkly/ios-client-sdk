@@ -20,19 +20,21 @@ extension LDUser {
         static let ipAddress = "stubUserIPAddress"
         static let email = "stubUser@email.com"
         static let avatar = "stubUserAvatar"
-        static let custom: [String: Encodable] = ["customKeyA": "stubUserCustomValueA", "customKeyB": true, "customKeyC": 1027, "customKeyD": 2.71828, "customKeyE": [0, 1, 2], "customKeyF": ["1": 1, "2": 2, "3": 3], "device": "stubUserDevice", "os": "stubUserOs"]
+        static let custom: [String: Any] = ["customKeyA": "stubUserCustomValueA", "customKeyB": true, "customKeyC": 1027, "customKeyD": 2.71828, "customKeyE": [0, 1, 2], "customKeyF": ["1": 1, "2": 2, "3": 3], "device": "stubUserDevice", "os": "stubUserOs"]
     }
 
     static func stub(key: String? = nil) -> LDUser {
-        return LDUser(key: key ?? Constants.key,
-                      name: Constants.name,
-                      firstName: Constants.firstName,
-                      lastName: Constants.lastName,
-                      isAnonymous: Constants.isAnonymous,
-                      country: Constants.country,
-                      ipAddress: Constants.ipAddress,
-                      email: Constants.email,
-                      avatar: Constants.avatar,
-                      custom: Constants.custom)
+        let user = LDUser(key: key ?? UUID().uuidString,
+                          name: Constants.name,
+                          firstName: Constants.firstName,
+                          lastName: Constants.lastName,
+                          country: Constants.country,
+                          ipAddress: Constants.ipAddress,
+                          email: Constants.email,
+                          avatar: Constants.avatar,
+                          custom: Constants.custom,
+                          isAnonymous: Constants.isAnonymous)
+        user.flagStore.replaceStore(newFlags: DarklyServiceMock.Constants.jsonFlags, source: .cache)
+        return user
     }
 }

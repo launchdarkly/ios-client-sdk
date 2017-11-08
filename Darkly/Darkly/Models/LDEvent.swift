@@ -23,9 +23,9 @@ struct LDEvent { //sdk internal, not publically accessible
     let user: LDUser
     let value: LDFlagValue?
     let defaultValue: LDFlagValue?
-    let data: [String: Encodable]?
+    let data: [String: Any]?
 
-    init(key: String, kind: LDEventType = .custom, user: LDUser, value: LDFlagValue? = nil, defaultValue: LDFlagValue? = nil, data: [String: Encodable]? = nil) {
+    init(key: String, kind: LDEventType = .custom, user: LDUser, value: LDFlagValue? = nil, defaultValue: LDFlagValue? = nil, data: [String: Any]? = nil) {
         self.key = key
         self.kind = kind
         self.creationDate = Date()
@@ -39,7 +39,7 @@ struct LDEvent { //sdk internal, not publically accessible
         return LDEvent(key: key, kind: .feature, user: user, value: value, defaultValue: defaultValue)
     }
 
-    static func customEvent(key: String, user: LDUser, data: [String: Encodable]? = nil) -> LDEvent {
+    static func customEvent(key: String, user: LDUser, data: [String: Any]? = nil) -> LDEvent {
         return LDEvent(key: key, kind: .custom, user: user, data: data)
     }
 
@@ -47,8 +47,8 @@ struct LDEvent { //sdk internal, not publically accessible
         return LDEvent(key: key, kind: .identify, user: user)
     }
 
-    var jsonDictionary: [String: Encodable] {
-        var json = [String: Encodable]()
+    var jsonDictionary: [String: Any] {
+        var json = [String: Any]()
         json[CodingKeys.key.rawValue] = key
         json[CodingKeys.kind.rawValue] = kind.rawValue
         json[CodingKeys.creationDate.rawValue] = creationDate.millisSince1970
@@ -66,7 +66,7 @@ struct LDEvent { //sdk internal, not publically accessible
 }
 
 extension Array where Element == LDEvent {
-    var jsonArray: [[String: Encodable]] { return self.map { (event) in event.jsonDictionary } }
+    var jsonArray: [[String: Any]] { return self.map { (event) in event.jsonDictionary } }
 
     var jsonData: Data? {
         guard JSONSerialization.isValidJSONObject(self) else { return nil }

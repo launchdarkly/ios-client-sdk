@@ -32,7 +32,7 @@ final class LDUserSpec: QuickSpec {
         describe("init") {
             context("called with optional elements") {
                 beforeEach {
-                    subject = LDUser(key: mockKey, name: mockName, firstName: mockFirstName, lastName: mockLastName, isAnonymous: mockIsAnonymous, country: mockCountry, ipAddress: mockIPAddress, email: mockEmail, avatar: mockAvatar, custom: mockCustom)
+                    subject = LDUser(key: mockKey, name: mockName, firstName: mockFirstName, lastName: mockLastName, country: mockCountry, ipAddress: mockIPAddress, email: mockEmail, avatar: mockAvatar, custom: mockCustom, isAnonymous: mockIsAnonymous)
                 }
                 it("creates a LDUser with optional elements") {
                     expect(subject.key) == mockKey
@@ -82,7 +82,7 @@ final class LDUserSpec: QuickSpec {
             context("called with config") {
                 context("and optional elements") {
                     beforeEach {
-                        originalUser = LDUser(key: mockKey, name: mockName, firstName: mockFirstName, lastName: mockLastName, isAnonymous: mockIsAnonymous, country: mockCountry, ipAddress: mockIPAddress, email: mockEmail, avatar: mockAvatar, custom: mockCustom)
+                        originalUser = LDUser(key: mockKey, name: mockName, firstName: mockFirstName, lastName: mockLastName, country: mockCountry, ipAddress: mockIPAddress, email: mockEmail, avatar: mockAvatar, custom: mockCustom, isAnonymous: mockIsAnonymous)
                         var jsonDictionary = originalUser.jsonDictionaryWithConfig
                         jsonDictionary[LDUser.CodingKeys.lastUpdated.rawValue] = mockLastUpdated
                         subject = LDUser(jsonDictionary: jsonDictionary)
@@ -109,13 +109,7 @@ final class LDUserSpec: QuickSpec {
                         expect(subject.operatingSystem) == originalUser.operatingSystem
                         expect(subject.lastUpdated) == DateFormatter.ldUserFormatter.date(from: mockLastUpdated)
 
-                        do {
-                            let flagStore = try subject.flagStore.toJsonDictionary()
-                            let originalFlagStore = try originalUser.flagStore.toJsonDictionary()
-                            expect(flagStore == originalFlagStore).to(beTrue())
-                        } catch {
-                            XCTFail("Exception thrown converting flag stores to json")
-                        }
+                        expect(subject.flagStore.featureFlags == originalUser.flagStore.featureFlags).to(beTrue())
                     }
                 }
                 context("but without optional elements") {
@@ -142,20 +136,14 @@ final class LDUserSpec: QuickSpec {
                         expect(subject.operatingSystem).to(beNil())
                         expect(subject.custom).to(beNil())
 
-                        do {
-                            let flagStore = try subject.flagStore.toJsonDictionary()
-                            let originalFlagStore = try originalUser.flagStore.toJsonDictionary()
-                            expect(flagStore == originalFlagStore).to(beTrue())
-                        } catch {
-                            XCTFail("Exception thrown converting flag stores to json")
-                        }
+                        expect(subject.flagStore.featureFlags == originalUser.flagStore.featureFlags).to(beTrue())
                     }
                 }
             }
             context("called without config") {
                 context("but with optional elements") {
                     beforeEach {
-                        originalUser = LDUser(key: mockKey, name: mockName, firstName: mockFirstName, lastName: mockLastName, isAnonymous: mockIsAnonymous, country: mockCountry, ipAddress: mockIPAddress, email: mockEmail, avatar: mockAvatar, custom: mockCustom)
+                        originalUser = LDUser(key: mockKey, name: mockName, firstName: mockFirstName, lastName: mockLastName, country: mockCountry, ipAddress: mockIPAddress, email: mockEmail, avatar: mockAvatar, custom: mockCustom, isAnonymous: mockIsAnonymous)
                         var jsonDictionary = originalUser.jsonDictionaryWithoutConfig
                         jsonDictionary[LDUser.CodingKeys.lastUpdated.rawValue] = mockLastUpdated
                         subject = LDUser(jsonDictionary: jsonDictionary)
@@ -182,12 +170,7 @@ final class LDUserSpec: QuickSpec {
                         expect(subject.operatingSystem) == originalUser.operatingSystem
                         expect(subject.lastUpdated) == DateFormatter.ldUserFormatter.date(from: mockLastUpdated)
 
-                        do {
-                            let flagStore = try subject.flagStore.toJsonDictionary()
-                            expect(flagStore.isEmpty).to(beTrue())
-                        } catch {
-                            XCTFail("Exception thrown converting flag store to json")
-                        }
+                        expect(subject.flagStore.featureFlags.isEmpty).to(beTrue())
                     }
                 }
                 context("or optional elements") {
@@ -213,12 +196,7 @@ final class LDUserSpec: QuickSpec {
                         expect(subject.operatingSystem).to(beNil())
                         expect(subject.custom).to(beNil())
 
-                        do {
-                            let flagStore = try subject.flagStore.toJsonDictionary()
-                            expect(flagStore.isEmpty).to(beTrue())
-                        } catch {
-                            XCTFail("Exception thrown converting flag store to json")
-                        }
+                        expect(subject.flagStore.featureFlags.isEmpty).to(beTrue())
                     }
                 }
                 context("and with an empty dictionary") {
@@ -242,12 +220,7 @@ final class LDUserSpec: QuickSpec {
                         expect(subject.operatingSystem).to(beNil())
                         expect(subject.custom).to(beNil())
 
-                        do {
-                            let flagStore = try subject.flagStore.toJsonDictionary()
-                            expect(flagStore.isEmpty).to(beTrue())
-                        } catch {
-                            XCTFail("Exception thrown converting flag store to json")
-                        }
+                        expect(subject.flagStore.featureFlags.isEmpty).to(beTrue())
                     }
                 }
                 context("but with an incorrect last updated format") {
@@ -273,23 +246,18 @@ final class LDUserSpec: QuickSpec {
                         expect(subject.operatingSystem).to(beNil())
                         expect(subject.custom).to(beNil())
 
-                        do {
-                            let flagStore = try subject.flagStore.toJsonDictionary()
-                            expect(flagStore.isEmpty).to(beTrue())
-                        } catch {
-                            XCTFail("Exception thrown converting flag store to json")
-                        }
+                        expect(subject.flagStore.featureFlags.isEmpty).to(beTrue())
                     }
                 }
             }
         }
 
         describe("jsonDictionary") {
-            var jsonDictionary: [String: Encodable]!
+            var jsonDictionary: [String: Any]!
             context("called with config") {
                 context("and optional elements") {
                     beforeEach {
-                        subject = LDUser(key: mockKey, name: mockName, firstName: mockFirstName, lastName: mockLastName, isAnonymous: mockIsAnonymous, country: mockCountry, ipAddress: mockIPAddress, email: mockEmail, avatar: mockAvatar, custom: mockCustom)
+                        subject = LDUser(key: mockKey, name: mockName, firstName: mockFirstName, lastName: mockLastName, country: mockCountry, ipAddress: mockIPAddress, email: mockEmail, avatar: mockAvatar, custom: mockCustom, isAnonymous: mockIsAnonymous)
                         jsonDictionary = subject.jsonDictionaryWithConfig
                     }
                     it("creates a json dictionary describing the user with optional elements and feature flags") {
@@ -303,8 +271,8 @@ final class LDUserSpec: QuickSpec {
                         expect(jsonDictionary[LDUser.CodingKeys.email.rawValue] as? String) == subject.email
                         expect(jsonDictionary[LDUser.CodingKeys.avatar.rawValue] as? String) == subject.avatar
                         if let subjectCustom = subject.custom {
-                            expect(jsonDictionary[LDUser.CodingKeys.custom.rawValue] as? [String: Encodable]).toNot(beNil())
-                            if let jsonCustom = jsonDictionary[LDUser.CodingKeys.custom.rawValue] as? [String: Encodable] {
+                            expect(jsonDictionary[LDUser.CodingKeys.custom.rawValue] as? [String: Any]).toNot(beNil())
+                            if let jsonCustom = jsonDictionary[LDUser.CodingKeys.custom.rawValue] as? [String: Any] {
                                 expect(jsonCustom == subjectCustom).to(beTrue())
                                 if let subjectDevice = subject.device {
                                     expect(jsonCustom[LDUser.CodingKeys.device.rawValue] as? String) == subjectDevice
@@ -316,15 +284,8 @@ final class LDUserSpec: QuickSpec {
                         }
 
                         expect(jsonDictionary[LDUser.CodingKeys.lastUpdated.rawValue] as? String).toNot(beNil())
-                        expect(jsonDictionary[LDUser.CodingKeys.config.rawValue] as? [String: Encodable]).toNot(beNil())
-                        if let jsonConfig = jsonDictionary[LDUser.CodingKeys.config.rawValue] as? [String: Encodable] {
-                            do {
-                                let flagStore = try subject.flagStore.toJsonDictionary()
-                                expect(jsonConfig == flagStore).to(beTrue())
-                            } catch {
-                                XCTFail("Exception thrown converting flag store to json")
-                            }
-                        }
+                        expect(jsonDictionary[LDUser.CodingKeys.config.rawValue] as? [String: Any]).toNot(beNil())
+                        expect(jsonDictionary[LDUser.CodingKeys.config.rawValue] as? [String: Any] == subject.flagStore.featureFlags).to(beTrue())
                     }
                 }
                 context("but without optional elements") {
@@ -346,22 +307,15 @@ final class LDUserSpec: QuickSpec {
                         expect(jsonDictionary[LDUser.CodingKeys.avatar.rawValue]).to(beNil())
                         expect(jsonDictionary[LDUser.CodingKeys.custom.rawValue]).to(beNil())
 
-                        expect(jsonDictionary[LDUser.CodingKeys.config.rawValue] as? [String: Encodable]).toNot(beNil())
-                        if let jsonConfig = jsonDictionary[LDUser.CodingKeys.config.rawValue] as? [String: Encodable] {
-                            do {
-                                let flagStore = try subject.flagStore.toJsonDictionary()
-                                expect(jsonConfig == flagStore).to(beTrue())
-                            } catch {
-                                XCTFail("Exception thrown converting flag store to json")
-                            }
-                        }
+                        expect(jsonDictionary[LDUser.CodingKeys.config.rawValue] as? [String: Any]).toNot(beNil())
+                        expect(jsonDictionary[LDUser.CodingKeys.config.rawValue] as? [String: Any] == subject.flagStore.featureFlags).to(beTrue())
                     }
                 }
             }
             context("called without config") {
                 context("and with optional elements") {
                     beforeEach {
-                        subject = LDUser(key: mockKey, name: mockName, firstName: mockFirstName, lastName: mockLastName, isAnonymous: mockIsAnonymous, country: mockCountry, ipAddress: mockIPAddress, email: mockEmail, avatar: mockAvatar, custom: mockCustom)
+                        subject = LDUser(key: mockKey, name: mockName, firstName: mockFirstName, lastName: mockLastName, country: mockCountry, ipAddress: mockIPAddress, email: mockEmail, avatar: mockAvatar, custom: mockCustom, isAnonymous: mockIsAnonymous)
                         jsonDictionary = subject.jsonDictionaryWithoutConfig
                     }
                     it("creates a json dictionary describing the user with optional elements") {
@@ -375,8 +329,8 @@ final class LDUserSpec: QuickSpec {
                         expect(jsonDictionary[LDUser.CodingKeys.email.rawValue] as? String) == subject.email
                         expect(jsonDictionary[LDUser.CodingKeys.avatar.rawValue] as? String) == subject.avatar
                         if let subjectCustom = subject.custom {
-                            expect(jsonDictionary[LDUser.CodingKeys.custom.rawValue] as? [String: Encodable]).toNot(beNil())
-                            if let jsonCustom = jsonDictionary[LDUser.CodingKeys.custom.rawValue] as? [String: Encodable] {
+                            expect(jsonDictionary[LDUser.CodingKeys.custom.rawValue] as? [String: Any]).toNot(beNil())
+                            if let jsonCustom = jsonDictionary[LDUser.CodingKeys.custom.rawValue] as? [String: Any] {
                                 expect(jsonCustom == subjectCustom).to(beTrue())
                                 if let subjectDevice = subject.device {
                                     expect(jsonCustom[LDUser.CodingKeys.device.rawValue] as? String) == subjectDevice
@@ -422,7 +376,7 @@ final class LDUserSpec: QuickSpec {
             context("when the other user has optional elements") {
                 beforeEach {
                     originalUser = LDUser(isAnonymous: true)
-                    otherUser = LDUser(key: mockKey, name: mockName, firstName: mockFirstName, lastName: mockLastName, isAnonymous: mockIsAnonymous, country: mockCountry, ipAddress: mockIPAddress, email: mockEmail, avatar: mockAvatar, custom: mockCustom)
+                    otherUser = LDUser(key: mockKey, name: mockName, firstName: mockFirstName, lastName: mockLastName, country: mockCountry, ipAddress: mockIPAddress, email: mockEmail, avatar: mockAvatar, custom: mockCustom, isAnonymous: mockIsAnonymous)
 
                     subject = originalUser.merge(with: otherUser)
                 }
@@ -449,7 +403,7 @@ final class LDUserSpec: QuickSpec {
             }
             context("when the original user has optional elements") {
                 beforeEach {
-                    originalUser = LDUser(key: mockKey, name: mockName, firstName: mockFirstName, lastName: mockLastName, isAnonymous: mockIsAnonymous, country: mockCountry, ipAddress: mockIPAddress, email: mockEmail, avatar: mockAvatar, custom: mockCustom)
+                    originalUser = LDUser(key: mockKey, name: mockName, firstName: mockFirstName, lastName: mockLastName, country: mockCountry, ipAddress: mockIPAddress, email: mockEmail, avatar: mockAvatar, custom: mockCustom, isAnonymous: mockIsAnonymous)
                     otherUser = LDUser(isAnonymous: true)
 
                     subject = originalUser.merge(with: otherUser)
@@ -485,7 +439,7 @@ extension LDUser {
         public static let operatingSystem = "some user os"
     }
 
-    static func stubCustomData() -> [String: Encodable] {
+    static func stubCustomData() -> [String: Any] {
         var stubData = Dictionary.stub()
         stubData[LDUser.CodingKeys.device.rawValue] = Values.device
         stubData[LDUser.CodingKeys.operatingSystem.rawValue] = Values.operatingSystem
@@ -494,7 +448,7 @@ extension LDUser {
     }
 }
 
-extension Dictionary where Key == String, Value == Encodable {
+extension Dictionary where Key == String, Value == Any {
     struct Keys {
         public static let bool = "bool"
         //swiftlint:disable:next identifier_name
@@ -512,12 +466,12 @@ extension Dictionary where Key == String, Value == Encodable {
         public static let double = 2.71828
         public static let string = "some string value"
         public static let array = [0, 1, 2]
-        public static let anyArray: Encodable = [true, 10, 3.14159, "a string", [0, 1], ["keyA": true]]
-        public static let dictionary: [String: Encodable] = ["boolKey": true, "intKey": 17, "doubleKey": -0.25487, "stringKey": "some embedded string", "arrayKey": [0, 1, 2, 3, 4, 5], "dictionaryKey": ["embeddedDictionaryKey": "phew, that's a pain"]]
+        public static let anyArray: [Any] = [true, 10, 3.14159, "a string", [0, 1], ["keyA": true]]
+        public static let dictionary: [String: Any] = ["boolKey": true, "intKey": 17, "doubleKey": -0.25487, "stringKey": "some embedded string", "arrayKey": [0, 1, 2, 3, 4, 5], "dictionaryKey": ["embeddedDictionaryKey": "phew, that's a pain"]]
 
     }
-    static func stub() -> [String: Encodable] {
-        var stub = [String: Encodable]()
+    static func stub() -> [String: Any] {
+        var stub = [String: Any]()
         stub[Keys.bool] = Values.bool
         stub[Keys.int] = Values.int
         stub[Keys.double] = Values.double

@@ -164,6 +164,7 @@ public class LDClient {
     
     private init() {
         config.launchOnline = false //prevents supporting players from trying to contact the LD server
+        LDUserWrapper.configureKeyedArchiversToHandleVersion2_3_0AndOlderUserCacheFormat()
         self.service = DarklyService(mobileKey: "", config: config) //dummy object replaced by start call
         self.flagSynchronizer = LDFlagSynchronizer(mobileKey: mobileKey, config: config, user: user, service: service, store: flagStore)  //dummy object replaced by start call
         self.eventReporter = LDEventReporter(mobileKey: "", config: config, service: self.service)    //dummy object replaced by start call
