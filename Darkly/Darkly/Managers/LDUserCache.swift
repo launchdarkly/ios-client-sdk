@@ -36,8 +36,7 @@ final class LDUserCache {
     func retrieveLatest() -> LDUser? {
         let users = cachedUsers
         guard !users.isEmpty else { return nil }
-        let sortedPairs = users.sorted(by: { (pair1, pair2) -> Bool in pair1.value.lastUpdated > pair2.value.lastUpdated })
-        return sortedPairs.first?.value
+        return users.max(by: { (pair1, pair2) -> Bool in pair1.value.lastUpdated < pair2.value.lastUpdated })?.value
     }
 
     private var cachedUsers: [String: LDUser] {
@@ -77,8 +76,8 @@ extension LDUser {
 extension Dictionary where Key == String, Value == LDUser {
     fileprivate mutating func removeOldest() {
         guard !self.isEmpty else { return }
-        let sortedPairs = self.sorted(by: { (pair1, pair2) -> Bool in pair1.value.lastUpdated < pair2.value.lastUpdated })
-        self.removeValue(forKey: sortedPairs[0].key)
+        guard let oldestPair = self.max(by: { (pair1, pair2) -> Bool in pair1.value.lastUpdated > pair2.value.lastUpdated }) else { return }
+        self.removeValue(forKey: oldestPair.key)
     }
 }
 

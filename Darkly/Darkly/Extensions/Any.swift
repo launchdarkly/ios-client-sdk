@@ -1,14 +1,16 @@
 //
-//  Collection.swift
+//  Any.swift
 //  Darkly_iOS
 //
-//  Created by Mark Pokorny on 10/26/17. +JMJ
+//  Created by Mark Pokorny on 11/9/17. +JMJ
 //  Copyright © 2017 LaunchDarkly. All rights reserved.
 //
 
 import Foundation
 
-extension Collection {
+struct AnyComparer {
+    private init() { }
+    
     //swiftlint:disable:next cyclomatic_complexity
     public static func isEqual(_ value: Any, to other: Any) -> Bool {
         switch (value, other) {

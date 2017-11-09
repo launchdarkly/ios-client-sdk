@@ -30,7 +30,7 @@ extension Dictionary where Key == String {
         for key in self.keys {
             if self[key] == nil && other[key] == nil { continue }
             guard let value = self[key], let otherValue = other[key] else { return false }
-            if !Dictionary.isEqual(value, to: otherValue) { return false }
+            if !AnyComparer.isEqual(value, to: otherValue) { return false }
         }
         return true
     }

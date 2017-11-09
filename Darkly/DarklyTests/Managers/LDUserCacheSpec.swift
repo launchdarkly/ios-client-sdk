@@ -71,16 +71,26 @@ final class LDUserCacheSpec: QuickSpec {
         }
 
         describe("retrieveLatest") {
-            var latestUser: LDUser!
             var retrievedUser: LDUser?
-            beforeEach {
-                let userStubs = subject.stubAndStoreUsers(count: 3)
-                latestUser = userStubs.last
+            context("when there are cached users") {
+                var latestUser: LDUser!
+                beforeEach {
+                    let userStubs = subject.stubAndStoreUsers(count: 3)
+                    latestUser = userStubs.last
 
-                retrievedUser = subject.retrieveLatest()
+                    retrievedUser = subject.retrieveLatest()
+                }
+                it("retrieves the user with the latest last updated time") {
+                    expect({ retrievedUser?.matches(user: latestUser) ?? .failed(reason: "failed to retrieve user") }).to(match())
+                }
             }
-            it("retrieves the user with the latest last updated time") {
-                expect({ retrievedUser?.matches(user: latestUser) ?? .failed(reason: "failed to retrieve user") }).to(match())
+            context("when there are no cached users") {
+                beforeEach {
+                    retrievedUser = subject.retrieveLatest()
+                }
+                it("returns nil") {
+                    expect(retrievedUser).to(beNil())
+                }
             }
         }
 
