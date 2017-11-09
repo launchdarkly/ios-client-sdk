@@ -16,26 +16,28 @@ final class LDEventReporterSpec: QuickSpec {
         static let eventCapacity = 3
         static let eventFlushIntervalMillis = 10_000
         static let eventFlushInterval500Millis = 500
+        static let mockMobileKey = "mockMobileKey"
+
     }
     
     var subject: LDEventReporter!
-    let mockMobileKey = "mockMobileKey"
-    var config: LDConfig!
     var user: LDUser!
     var mockService: DarklyServiceMock!
     var mockEvents: [LDEvent]!
 
-    private func setupReporter(online: Bool, withEvents eventCount: Int = 0, eventFlushMillis: Int? = nil) {
-        config = LDConfig.stub
+    private func setupReporter(withEvents eventCount: Int = 0, eventFlushMillis: Int? = nil) {
+        var config = LDConfig.stub
         config.eventCapacity = Constants.eventCapacity
         config.eventFlushIntervalMillis = eventFlushMillis ?? Constants.eventFlushIntervalMillis
-        config.launchOnline = online
-        
+
         user = LDUser()
         
-        mockEvents = LDEvent.stubEvents(eventCount, user: user)
-        
-        subject = LDEventReporter(mobileKey: mockMobileKey, config: config, events: mockEvents, service: mockService)
+        subject = LDEventReporter(mobileKey: Constants.mockMobileKey, config: config, service: mockService)
+        waitUntil { done in
+            self.recordEvents(eventCount) {
+                done()
+            }
+        }
     }
     
     //swiftlint:disable:next function_body_length
@@ -43,46 +45,24 @@ final class LDEventReporterSpec: QuickSpec {
         beforeEach {
             self.mockService = DarklyServiceMock()
             self.mockService.stubEventResponse(success: true)
+            self.mockEvents = []
         }
         describe("init") {
-            context("online - no events") {
+            context("without events") {
                 beforeEach {
-                    self.setupReporter(online: true)
-                }
-                it("starts online without reporting events") {
-                    expect({ self.reporterState(isOnline: true, isReporting: true, reportTries: 0) }).to(match())
-                }
-            }
-            context("online - events") {
-                beforeEach {
-                    self.setupReporter(online: true, withEvents: Constants.eventCapacity)
-                }
-                it("starts online and reports events") {
-                    expect({ self.reporterState(isOnline: true, isReporting: true, reportTries: 1) }).to(match())
-                }
-            }
-            context("offline - no events") {
-                beforeEach {
-                    self.setupReporter(online: false)
+                    self.setupReporter()
                 }
                 it("starts offline without reporting events") {
                     expect({ self.reporterState(isOnline: false, isReporting: false, reportTries: 0) }).to(match())
                 }
             }
-            context("offline - events") {
-                beforeEach {
-                    self.setupReporter(online: false, withEvents: Constants.eventCapacity)
-                }
-                it("starts offline without reporting events") {
-                    expect({ self.reporterState(isOnline: false, isReporting: false, reportTries: 0, recordedEvents: self.mockEvents) }).to(match())
-                }
-            }
         }
+
         describe("isOnline") {
             context("online to offline") {
                 beforeEach {
-                    self.setupReporter(online: true)
-                    expect({ self.reporterState(isOnline: true, isReporting: true, reportTries: 0) }).to(match())
+                    self.setupReporter()
+                    self.subject.isOnline = true
 
                     self.subject.isOnline = false
                 }
@@ -91,21 +71,31 @@ final class LDEventReporterSpec: QuickSpec {
                 }
             }
             context("offline to online") {
-                beforeEach {
-                    self.setupReporter(online: false, withEvents: Constants.eventCapacity)
-                    expect({ self.reporterState(isOnline: false, isReporting: false, reportTries: 0, recordedEvents: self.mockEvents) }).to(match())
+                context("with events") {
+                    beforeEach {
+                        self.setupReporter(withEvents: Constants.eventCapacity)
 
-                    self.subject.isOnline = true
+                        self.subject.isOnline = true
+                    }
+                    it("goes online and starts reporting") {
+                        expect({ self.reporterState(isOnline: true, isReporting: true, reportTries: 1, publishedEvents: self.mockEvents) }).to(match())
+                        expect(self.subject.eventStore.isEmpty).toEventually(beTrue())  //event processing is asynchronous
+                    }
                 }
-                it("goes online and starts reporting") {
-                    expect({ self.reporterState(isOnline: true, isReporting: true, reportTries: 1, publishedEvents: self.mockEvents) }).to(match())
-                    expect(self.subject.eventStore.isEmpty).toEventually(beTrue())  //event processing is asynchronous
+                context("without events") {
+                    beforeEach {
+                        self.setupReporter()
+                        self.subject.isOnline = true
+                    }
+                    it("goes online and starts reporting") {
+                        expect({ self.reporterState(isOnline: true, isReporting: true, reportTries: 0) }).to(match())
+                    }
                 }
             }
             context("online to online") {
                 beforeEach {
-                    self.setupReporter(online: true)
-                    expect({ self.reporterState(isOnline: true, isReporting: true, reportTries: 0) }).to(match())
+                    self.setupReporter()
+                    self.subject.isOnline = true
 
                     self.subject.isOnline = true
                 }
@@ -115,8 +105,7 @@ final class LDEventReporterSpec: QuickSpec {
             }
             context("offline to offline") {
                 beforeEach {
-                    self.setupReporter(online: false, withEvents: Constants.eventCapacity)
-                    expect({ self.reporterState(isOnline: false, isReporting: false, reportTries: 0, recordedEvents: self.mockEvents) }).to(match())
+                    self.setupReporter(withEvents: Constants.eventCapacity)
 
                     self.subject.isOnline = false
                 }
@@ -126,27 +115,57 @@ final class LDEventReporterSpec: QuickSpec {
             }
         }
 
+        describe("change config") {
+            var config: LDConfig!
+            beforeEach {
+                self.setupReporter()
+                config = LDConfig.stub
+                config.streamingMode = .polling //using this to verify the config was changed...could be any value different from the setup
+            }
+            context("while offline") {
+                beforeEach {
+                    self.subject.config = config
+                }
+                it("changes the config") {
+                    expect({ self.reporterState(isOnline: false, isReporting: false, reportTries: 0) }).to(match())
+                    expect(self.subject.config.streamingMode) == config.streamingMode
+                }
+            }
+            context("while online") {
+                beforeEach {
+                    self.subject.isOnline = true
+
+                    self.subject.config = config
+                }
+                it("takes the reporter offline and changes the config") {
+                    expect({ self.reporterState(isOnline: false, isReporting: false, reportTries: 0) }).to(match())
+                    expect(self.subject.config.streamingMode) == config.streamingMode
+                }
+            }
+        }
+
         describe("recordEvent") {
             context("event store empty") {
                 beforeEach {
-                    self.setupReporter(online: false)   //side-effect is mockEvents is also reset...do this before creating events
-                    expect({ self.reporterState(isOnline: false, isReporting: false, reportTries: 0) }).to(match())
+                    self.setupReporter()   //side-effect is mockEvents is also reset...do this before creating events
 
-                    self.recordEvents(Constants.eventCapacity)
+                    waitUntil { done in
+                        self.recordEvents(Constants.eventCapacity) {
+                            done()
+                        }
+                    }
                 }
                 it("records events up to event capacity") {
                     expect({ self.reporterState(isOnline: false, isReporting: false, reportTries: 0) }).to(match())
-                    expect(self.subject.eventStore).toEventually(equal(self.mockEvents))    //recordEvent is asynchronous
+                    expect(self.subject.eventStore).to(equal(self.mockEvents))
                 }
             }
             context("event store full") {
                 var extraEvent: LDEvent!
                 beforeEach {
-                    self.setupReporter(online: false, withEvents: Constants.eventCapacity)
-
-                    expect({ self.reporterState(isOnline: false, isReporting: false, reportTries: 0, recordedEvents: self.mockEvents) }).to(match())
-
+                    self.setupReporter(withEvents: Constants.eventCapacity)
                     extraEvent = LDEvent.stub(for: .identify, with: self.user)
+
                     self.subject.record(extraEvent)
                 }
                 it("doesn't record any more events") {
@@ -161,12 +180,14 @@ final class LDEventReporterSpec: QuickSpec {
                 context("success") {
                     beforeEach {
                         //The LDEventReporter will try to report events if it's started online with events. By starting online without events, then adding them, we "beat the timer" by reporting them right away
-                        self.setupReporter(online: true)
-                        expect({ self.reporterState(isOnline: true, isReporting: true, reportTries: 0) }).to(match())
+                        self.setupReporter()
+                        self.subject.isOnline = true
 
-                        self.recordEvents(Constants.eventCapacity)
-                        expect({ self.reporterState(isOnline: true, isReporting: true, reportTries: 0) }).to(match())
-                        expect(self.subject.eventStore).toEventually(equal(self.mockEvents))    //recordEvent is async
+                        waitUntil { done in
+                            self.recordEvents(Constants.eventCapacity) {
+                                done()
+                            }
+                        }
 
                         self.subject.reportEvents()
                     }
@@ -178,12 +199,14 @@ final class LDEventReporterSpec: QuickSpec {
                 context("failure") {
                     beforeEach {
                         self.mockService.stubEventResponse(success: false)
-                        self.setupReporter(online: true)
-                        expect({ self.reporterState(isOnline: true, isReporting: true, reportTries: 0) }).to(match())
+                        self.setupReporter()
+                        self.subject.isOnline = true
 
-                        self.recordEvents(Constants.eventCapacity)
-                        expect({ self.reporterState(isOnline: true, isReporting: true, reportTries: 0) }).to(match())
-                        expect(self.subject.eventStore).toEventually(equal(self.mockEvents))    //recordEvent is async
+                        waitUntil { done in
+                            self.recordEvents(Constants.eventCapacity) {
+                                done()
+                            }
+                        }
 
                         self.subject.reportEvents()
                     }
@@ -194,12 +217,14 @@ final class LDEventReporterSpec: QuickSpec {
                 context("failure - response only") {
                     beforeEach {
                         self.mockService.stubEventResponse(success: false, responseOnly: true)
-                        self.setupReporter(online: true)
-                        expect({ self.reporterState(isOnline: true, isReporting: true, reportTries: 0) }).to(match())
+                        self.setupReporter()
+                        self.subject.isOnline = true
 
-                        self.recordEvents(Constants.eventCapacity)
-                        expect({ self.reporterState(isOnline: true, isReporting: true, reportTries: 0) }).to(match())
-                        expect(self.subject.eventStore).toEventually(equal(self.mockEvents))    //recordEvent is async
+                        waitUntil { done in
+                            self.recordEvents(Constants.eventCapacity) {
+                                done()
+                            }
+                        }
 
                         self.subject.reportEvents()
                     }
@@ -210,12 +235,14 @@ final class LDEventReporterSpec: QuickSpec {
                 context("failure - error only") {
                     beforeEach {
                         self.mockService.stubEventResponse(success: false, errorOnly: true)
-                        self.setupReporter(online: true)
-                        expect({ self.reporterState(isOnline: true, isReporting: true, reportTries: 0) }).to(match())
+                        self.setupReporter()
+                        self.subject.isOnline = true
 
-                        self.recordEvents(Constants.eventCapacity)
-                        expect({ self.reporterState(isOnline: true, isReporting: true, reportTries: 0) }).to(match())
-                        expect(self.subject.eventStore).toEventually(equal(self.mockEvents))    //recordEvent is async
+                        waitUntil { done in
+                            self.recordEvents(Constants.eventCapacity) {
+                                done()
+                            }
+                        }
 
                         self.subject.reportEvents()
                     }
@@ -226,8 +253,7 @@ final class LDEventReporterSpec: QuickSpec {
             }
             context("offline") {
                 beforeEach {
-                    self.setupReporter(online: false, withEvents: Constants.eventCapacity)
-                    expect({ self.reporterState(isOnline: false, isReporting: false, reportTries: 0, recordedEvents: self.mockEvents) }).to(match())
+                    self.setupReporter(withEvents: Constants.eventCapacity)
 
                     self.subject.reportEvents()
                 }
@@ -240,12 +266,14 @@ final class LDEventReporterSpec: QuickSpec {
         describe("report timer fires") {
             context("with events") {
                 beforeEach {
-                    self.setupReporter(online: true, eventFlushMillis: Constants.eventFlushInterval500Millis)
-                    expect({ self.reporterState(isOnline: true, isReporting: true, reportTries: 0) }).to(match())
+                    self.setupReporter(eventFlushMillis: Constants.eventFlushInterval500Millis)
+                    self.subject.isOnline = true
 
-                    self.recordEvents(Constants.eventCapacity)
-                    expect({ self.reporterState(isOnline: true, isReporting: true, reportTries: 0) }).to(match())
-                    expect(self.subject.eventStore).toEventually(equal(self.mockEvents))    //recordEvent is async
+                    waitUntil { done in
+                        self.recordEvents(Constants.eventCapacity) {
+                            done()
+                        }
+                    }
                 }
                 it("reports events") {
                     expect(self.mockService.publishEventsCallCount).toEventually(equal(1))
@@ -255,8 +283,8 @@ final class LDEventReporterSpec: QuickSpec {
             }
             context("without events") {
                 beforeEach {
-                    self.setupReporter(online: true, eventFlushMillis: Constants.eventFlushInterval500Millis)
-                    expect({ self.reporterState(isOnline: true, isReporting: true, reportTries: 0, recordedEvents: []) }).to(match())
+                    self.setupReporter(eventFlushMillis: Constants.eventFlushInterval500Millis)
+                    self.subject.isOnline = true
                 }
                 it("doesn't report events") {
                     waitUntil { (done) in
@@ -270,11 +298,15 @@ final class LDEventReporterSpec: QuickSpec {
         }
     }
     
-    private func recordEvents(_ eventCount: Int) {
-        while self.mockEvents.count < eventCount {
+    private func recordEvents(_ eventCount: Int, completion: (() -> Void)? = nil) {
+        guard eventCount > 0 else {
+            completion?()
+            return
+        }
+        while mockEvents.count < eventCount {
             let event = LDEvent.stub(for: LDEvent.eventType(for: mockEvents.count), with: self.user)
-            self.mockEvents.append(event)
-            self.subject.record(event)
+            mockEvents.append(event)
+            subject.record(event, completion: mockEvents.count == eventCount ? completion : nil)
         }
     }
     

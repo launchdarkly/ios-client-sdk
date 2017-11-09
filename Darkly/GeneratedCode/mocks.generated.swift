@@ -24,8 +24,51 @@ final class DarklyStreamingProviderMock: DarklyStreamingProvider {
         closeCallCount += 1
     }
 }
+
+// MARK: - LDEventReportingMock
+final class LDEventReportingMock: LDEventReporting {
+
+    // MARK: config
+    var configSetCount = 0
+    var config: LDConfig = LDConfig.stub {
+        didSet { configSetCount += 1 }
+    }
+
+    // MARK: isOnline
+    var isOnlineSetCount = 0
+    var isOnline: Bool = false {
+        didSet { isOnlineSetCount += 1 }
+    }
+
+    // MARK: isReportingActive
+    var isReportingActiveSetCount = 0
+    var isReportingActive: Bool = false {
+        didSet { isReportingActiveSetCount += 1 }
+    }
+
+    // MARK: record
+    var recordCallCount = 0
+    var recordReceivedArguments: (event: Darkly.LDEvent, completion: (() -> Void)?)?
+    func record(_ event: Darkly.LDEvent, completion: (() -> Void)?) {
+        recordCallCount += 1
+        recordReceivedArguments = (event: event, completion: completion)
+    }
+
+    // MARK: reportEvents
+    var reportEventsCallCount = 0
+    func reportEvents() {
+        reportEventsCallCount += 1
+    }
+}
+
 // MARK: - LDFlagMaintainingMock
 final class LDFlagMaintainingMock: LDFlagMaintaining {
+
+    // MARK: featureFlags
+    var featureFlagsSetCount = 0
+    var featureFlags: [String: Any] = [:] {
+        didSet { featureFlagsSetCount += 1 }
+    }
 
     // MARK: replaceStore
     var replaceStoreCallCount = 0
@@ -49,5 +92,27 @@ final class LDFlagMaintainingMock: LDFlagMaintaining {
     func deleteFlag(name: String, completion: (() -> Void)?) {
         deleteFlagCallCount += 1
         deleteFlagReceivedArguments = (name: name, completion: completion)
+    }
+}
+
+// MARK: - LDFlagSynchronizingMock
+final class LDFlagSynchronizingMock: LDFlagSynchronizing {
+
+    // MARK: streamingMode
+    var streamingModeSetCount = 0
+    var streamingMode: LDStreamingMode = .streaming {
+        didSet { streamingModeSetCount += 1 }
+    }
+
+    // MARK: isOnline
+    var isOnlineSetCount = 0
+    var isOnline: Bool = false {
+        didSet { isOnlineSetCount += 1 }
+    }
+
+    // MARK: pollingInterval
+    var pollingIntervalSetCount = 0
+    var pollingInterval: TimeInterval = 0 {
+        didSet { pollingIntervalSetCount += 1 }
     }
 }

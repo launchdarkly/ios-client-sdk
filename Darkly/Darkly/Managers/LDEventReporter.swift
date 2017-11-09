@@ -8,15 +8,31 @@
 
 import Foundation
 
-class LDEventReporter {
+//sourcery: AutoMockable
+protocol LDEventReporting {
+    //sourcery: DefaultMockValue = LDConfig.stub
+    var config: LDConfig { get set }
+    //sourcery: DefaultMockValue = false
+    var isOnline: Bool { get set }
+    //sourcery: DefaultMockValue = false
+    var isReportingActive: Bool { get }
+    func record(_ event: LDEvent, completion:(() -> Void)?)
+    func reportEvents()
+}
+
+class LDEventReporter: LDEventReporting {
     fileprivate struct Constants {
         static let eventQueueLabel = "com.launchdarkly.eventSyncQueue"
         static let statusCodeAccepted = 202
     }
     
-    private let config: LDConfig
+    var config: LDConfig {
+        didSet {
+            isOnline = false
+        }
+    }
     private let eventQueue = DispatchQueue(label: Constants.eventQueueLabel, qos: .userInitiated)
-    var isOnline: Bool {
+    var isOnline: Bool = false {
         didSet { isOnline ? startReporting() : stopReporting() }
     }
 
@@ -27,21 +43,21 @@ class LDEventReporter {
     private weak var eventReportTimer: Timer?
     var isReportingActive: Bool { return eventReportTimer != nil }
 
-    init(mobileKey: String, config: LDConfig, events: [LDEvent]? = nil, service: DarklyServiceProvider) {
+    init(mobileKey: String, config: LDConfig, service: DarklyServiceProvider) {
         self.mobileKey = mobileKey
         self.config = config
         self.service = service
-
-        if let events = events, !events.isEmpty {
-            eventStore.append(contentsOf: events)
-        }
-        
-        self.isOnline = config.launchOnline
-        if isOnline { startReporting() }
     }
 
-    func record(_ event: LDEvent) {
+    func record(_ event: LDEvent, completion:(() -> Void)? = nil) {
         eventQueue.async {
+            if let completion = completion {
+                defer {
+                    DispatchQueue.main.async {
+                        completion()
+                    }
+                }
+            }
             guard !self.isEventStoreFull else { return }
             self.eventStore.append(event)
         }
@@ -57,6 +73,7 @@ class LDEventReporter {
             eventReportTimer = timer
             RunLoop.current.add(timer, forMode: .defaultRunLoopMode)
         }
+        //TODO: Do we need to resume the eventQueue too?
         reportEvents()
     }
     
@@ -64,6 +81,7 @@ class LDEventReporter {
         guard isReportingActive else { return }
         eventReportTimer?.invalidate()
         eventReportTimer = nil
+        //TODO: Do we need to suspend the eventQueue too?
     }
     
     @objc func reportEvents() {

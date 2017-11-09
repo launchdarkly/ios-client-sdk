@@ -84,8 +84,15 @@ extension Dictionary where Key == String, Value == LDUser {
 #if TESTING
 extension LDUserCache {
     func clearAllUsersForTesting() {
-        UserDefaults.standard.set(nil, forKey: Keys.cachedUsers)
+        UserDefaults.standard.removeObject(forKey: Keys.cachedUsers)
         UserDefaults.standard.synchronize()
+        guard !cachedUsers.isEmpty else { return }
+        //Sometimes removing Keys.cachedUsers doesn't actually work to clear the users for the test, so adding this gives another chance to get the users cleared for testing
+        UserDefaults.standard.set([:], forKey: Keys.cachedUsers)
+        UserDefaults.standard.synchronize()
+        guard !cachedUsers.isEmpty else { return }
+        //If we get here, not much else to do...the test will likely fail, but this will log that the users didn't get cleared
+        print("LDUserCache.clearAllUsersForTesting failed to clear the user cache")
     }
 
     func storeUserAsDataForTesting(user: LDUser) {

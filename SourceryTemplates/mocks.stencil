@@ -5,23 +5,33 @@
 import {{ argument }}
 {% endfor %}
 {% if argument.app %}@testable import {{ argument.app }}{% endif %}
-
 {# Protocol Mocks #}
 {% for type in types.protocols %}
 {% if type.annotations.AutoMockable %}
+
 // MARK: - {{ type.name}}Mock
 final class {{ type.name }}Mock: {{ type.name }} {
+{% for variable in type.allVariables|!annotated:"NoMock" %}
+{% if variable.writeAccess != "private" or variable.writeAccess != "fileprivate" %}
+
+    // MARK: {{ variable.name }}
+    var {{ variable.name }}SetCount = 0
+    var {{ variable.name }}: {{ variable.typeName }}{% if not variable.isOptional %}{% if variable.isArray %} = []{% endif %}{% if variable.isDictionary %} = [:]{% endif %}{% if variable|annotated:"DefaultMockValue" %} = {{ variable.annotations.DefaultMockValue }}{% endif %}{% endif %} {
+        didSet { {{ variable.name }}SetCount += 1 }
+    }
+{% endif %}
+{% endfor %}
 {% for method in type.allMethods|!annotated:"NoMock" %}
 
     // MARK: {{ method.annotations.StubName|default:method.callName }}
 {% if not method.shortName == "init" %}    var {{ method.annotations.StubName|default:method.callName }}CallCount = 0{% endif %}
 {% if method.throws %}    var {{ method.annotations.StubName|default:method.callName }}ShouldThrow: Error?{% endif %}
 {% if method.parameters.count > 3 %}    //swiftlint:disable:next large_tuple {% endif %}
-{% if method.parameters.count == 1 %}    var {{ method.annotations.StubName|default:method.callName }}Received{% for param in method.parameters %}{{ param.name|upperFirst }}: {{ param.typeName.unwrappedTypeName }}?{% endfor %}
-{% else %}{% if not method.parameters.count == 0 %}    var {{ method.annotations.StubName|default:method.callName }}ReceivedArguments: ({% for param in method.parameters %}{{ param.name }}: {% if param.typeAttributes.escaping %}{{ param.unwrappedTypeName }}{% else %}{{ param.typeName }}{% endif %}{% if not forloop.last %}, {% endif %}{% endfor %})?{% endif %}
+{% if method.parameters.count == 1 %}    var {{ method.annotations.StubName|default:method.callName }}Received{% for param in method.parameters %}{{ param.name|upperFirst }}: {% if param.typeName.unwrappedTypeName == "LDEvent" %}Darkly.{% endif %}{{ param.typeName.unwrappedTypeName }}?{% endfor %}
+{% else %}{% if not method.parameters.count == 0 %}    var {{ method.annotations.StubName|default:method.callName }}ReceivedArguments: ({% for param in method.parameters %}{{ param.name }}: {% if param.typeAttributes.escaping %}{{ param.unwrappedTypeName }}{% else %}{% if param.typeName.unwrappedTypeName == "LDEvent" %}Darkly.{% endif %}{{ param.typeName }}{% endif %}{% if not forloop.last %}, {% endif %}{% endfor %})?{% endif %}
 {% endif %}
 {% if not method.returnTypeName.isVoid and not method.shortName == "init" %}    var {{ method.annotations.StubName|default:method.callName }}ReturnValue: {{ method.returnTypeName }}{% if method.annotations.DefaultReturnValue %} = {{ method.annotations.DefaultReturnValue }}{% else %}!{% endif %}{% endif %}
-    func {{ method.shortName }}({% for param in method.parameters %}{% if param.argumentLabel == nil %}_{% else %}{{ param.argumentLabel }}{% endif %}{% if not param.argumentLabel == param.name %} {{ param.name }}{% endif %}: {{ param.typeName }}{% if not forloop.last %}, {% endif %}{% endfor %}){% if method.throws %} throws{% endif %}{% if not method.returnTypeName.isVoid %} -> {{ method.returnTypeName }}{% endif %} {
+    func {{ method.shortName }}({% for param in method.parameters %}{% if param.argumentLabel == nil %}_{% else %}{{ param.argumentLabel }}{% endif %}{% if not param.argumentLabel == param.name %} {{ param.name }}{% endif %}: {% if param.typeName.unwrappedTypeName == "LDEvent" %}Darkly.{% endif %}{{ param.typeName }}{% if not forloop.last %}, {% endif %}{% endfor %}){% if method.throws %} throws{% endif %}{% if not method.returnTypeName.isVoid %} -> {{ method.returnTypeName }}{% endif %} {
 {% if not method.shortName == "init" %}        {{ method.annotations.StubName|default:method.callName }}CallCount += 1{% endif %}
 {%if method.parameters.count == 1 %}        {{ method.annotations.StubName|default:method.callName }}Received{% for param in method.parameters %}{{ param.name|upperFirst }} = {{ param.name }}{% endfor %}{% else %}{% if not method.parameters.count == 0 %}        {{ method.annotations.StubName|default:method.callName }}ReceivedArguments = ({% for param in method.parameters %}{{ param.name }}: {{ param.name }}{% if not forloop.last%}, {% endif %}{% endfor %}){% endif %}{% if not method.returnTypeName.isVoid %}{% endif %}{% endif %}
     }
@@ -34,23 +44,24 @@ final class {{ type.name }}Mock: {{ type.name }} {
 {# Class Mocks #}
 {% for type in types.classes %}
 {% if type.annotations.AutoMockable %}
-    final class {{ type.name }}Mock: {% if type.annotations.MockBaseClass %}{{ type.annotations.MockBaseClass }}, {% endif %}{{ type.name }} {
 
+// MARK: - {{ type.name}}Mock
+final class {{ type.name }}Mock: {% if type.annotations.MockBaseClass %}{{ type.annotations.MockBaseClass }}, {% endif %}{{ type.name }} {
 {% for variable in type.allVariables|!annotated:"NoMock" %}
 {% if variable.writeAccess == "public" or variable.writeAccess == "internal" %}
-public var {{ variable.name }}SetCount = 0
-public override var {{ variable.name }}: {{ variable.typeName }}{% if not variable.isOptional %}{% if variable.isArray %} = []{% endif %}{% if variable.isDictionary %} = [:]{% endif %}{% if variable|annotated:"DefaultMockValue" %} = {{ variable.annotations.DefaultMockValue }}{% endif %}{% endif %} {
-didSet { {{ variable.name }}SetCount += 1 }
-}
+
+    // MARK: {{ variable.name }}
+    public var {{ variable.name }}SetCount = 0
+    public override var {{ variable.name }}: {{ variable.typeName }}{% if not variable.isOptional %}{% if variable.isArray %} = []{% endif %}{% if variable.isDictionary %} = [:]{% endif %}{% if variable|annotated:"DefaultMockValue" %} = {{ variable.annotations.DefaultMockValue }}{% endif %}{% endif %} {
+        didSet { {{ variable.name }}SetCount += 1 }
+    }
 {% endif %}
 {% endfor %}
-
 {% if type.annotations.MockInitializerBody %}
 public init() {
 {{ type.annotations.MockInitializerBody }}
 }
 {% endif %}
-
 {% for method in type.allMethods|!annotated:"NoMock" %}
 {% if not method.shortName == "init" and not method.accessLevel == "private" and not method.accessLevel == "fileprivate" %}
 // MARK: - {{ method.annotations.StubName|default:method.callName }}
@@ -68,6 +79,5 @@ public override func {{ method.annotations.StubName|default:method.callName }}({
 {% endif %} {# Checking for init and access level #}
 {% endfor %}
 }
-
 {% endif %}
 {% endfor %}

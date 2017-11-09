@@ -14,8 +14,12 @@ import DarklyEventSource
 
 //swiftlint:disable function_body_length
 final class LDFlagSynchronizerSpec: QuickSpec {
+    struct Constants {
+        fileprivate static let mockMobileKey = "mockMobileKey"
+        fileprivate static let pollingInterval: TimeInterval = 1
+    }
+
     var subject: LDFlagSynchronizer!
-    let mockMobileKey = "mockMobileKey"
     var config: LDConfig!
     var mockUser: LDUser!
     var mockService: DarklyServiceMock!
@@ -26,40 +30,12 @@ final class LDFlagSynchronizerSpec: QuickSpec {
             self.mockUser = LDUser()
             self.mockService = DarklyServiceMock()
             self.mockStore = LDFlagMaintainingMock()
+            self.subject = LDFlagSynchronizer(mobileKey: Constants.mockMobileKey, pollingInterval: Constants.pollingInterval, user: self.mockUser, service: self.mockService, store: self.mockStore)
         }
         describe("init") {
-            context("configured offline-streaming") {
-                beforeEach {
-                    self.createSynchronizer(online: false, streamingMode: .streaming)
-
-                }
-                it("starts up offline") {
-                    expect({ self.synchronizerState(synchronizerOnline: false, streamingMode: .streaming, flagRequests: 0, streamCreated: false) }).to(match())
-                }
-            }
-            context("configured offline-polling") {
-                beforeEach {
-                    self.createSynchronizer(online: false, streamingMode: .polling)
-                }
-                it("starts up offline") {
-                    expect({ self.synchronizerState(synchronizerOnline: false, streamingMode: .polling, flagRequests: 0, streamCreated: false) }).to(match())
-                }
-            }
-            context("configured online-streaming") {
-                beforeEach {
-                    self.createSynchronizer(online: true, streamingMode: .streaming)
-                }
-                it("starts up online streaming") {
-                    expect({ self.synchronizerState(synchronizerOnline: true, streamingMode: .streaming, flagRequests: 0, streamCreated: true, streamClosed: false) }).to(match())
-                }
-            }
-            context("configured online-polling") {
-                beforeEach {
-                    self.createSynchronizer(online: true, streamingMode: .polling)
-                }
-                it("starts up online polling") {
-                    expect({ self.synchronizerState(synchronizerOnline: true, streamingMode: .polling, flagRequests: 1, streamCreated: false) }).to(match())
-                }
+            it("starts up streaming offline") {
+                expect({ self.synchronizerState(synchronizerOnline: false, streamingMode: .streaming, flagRequests: 0, streamCreated: false) }).to(match())
+                expect(self.subject.pollingInterval) == Constants.pollingInterval
             }
         }
         
@@ -67,8 +43,7 @@ final class LDFlagSynchronizerSpec: QuickSpec {
             context("online to offline") {
                 context("streaming") {
                     beforeEach {
-                        self.createSynchronizer(online: true, streamingMode: .streaming)
-                        expect({ self.synchronizerState(synchronizerOnline: true, streamingMode: .streaming, flagRequests: 0, streamCreated: true, streamClosed: false) }).to(match())
+                        self.subject.isOnline = true
 
                         self.subject.isOnline = false
                     }
@@ -78,8 +53,8 @@ final class LDFlagSynchronizerSpec: QuickSpec {
                 }
                 context("polling") {
                     beforeEach {
-                        self.createSynchronizer(online: true, streamingMode: .polling)
-                        expect({ self.synchronizerState(synchronizerOnline: true, streamingMode: .polling, flagRequests: 1, streamCreated: false) }).to(match())
+                        self.subject.streamingMode = .polling
+                        self.subject.isOnline = true
 
                         self.subject.isOnline = false
                     }
@@ -91,20 +66,16 @@ final class LDFlagSynchronizerSpec: QuickSpec {
             context("offline to online") {
                 context("streaming") {
                     beforeEach {
-                        self.createSynchronizer(online: false, streamingMode: .streaming)
-                        expect({ self.synchronizerState(synchronizerOnline: false, streamingMode: .streaming, flagRequests: 0, streamCreated: false) }).to(match())
-
                         self.subject.isOnline = true
                     }
                     it("starts streaming") {
-                        //streaming expects a ping on successful connection that triggers a flag request
+                        //streaming expects a ping on successful connection that triggers a flag request. No ping means no flag requests
                         expect({ self.synchronizerState(synchronizerOnline: true, streamingMode: .streaming, flagRequests: 0, streamCreated: true, streamClosed: false) }).to(match())
                     }
                 }
                 context("polling") {
                     beforeEach {
-                        self.createSynchronizer(online: false, streamingMode: .polling)
-                        expect({ self.synchronizerState(synchronizerOnline: false, streamingMode: .polling, flagRequests: 0, streamCreated: false) }).to(match())
+                        self.subject.streamingMode = .polling
 
                         self.subject.isOnline = true
                     }
@@ -117,8 +88,7 @@ final class LDFlagSynchronizerSpec: QuickSpec {
             context("online to online") {
                 context("streaming") {
                     beforeEach {
-                        self.createSynchronizer(online: true, streamingMode: .streaming)
-                        expect({ self.synchronizerState(synchronizerOnline: true, streamingMode: .streaming, flagRequests: 0, streamCreated: true, streamClosed: false) }).to(match())
+                        self.subject.isOnline = true
 
                         self.subject.isOnline = true
                     }
@@ -128,8 +98,8 @@ final class LDFlagSynchronizerSpec: QuickSpec {
                 }
                 context("polling") {
                     beforeEach {
-                        self.createSynchronizer(online: true, streamingMode: .polling)
-                        expect({ self.synchronizerState(synchronizerOnline: true, streamingMode: .polling, flagRequests: 1, streamCreated: false) }).to(match())
+                        self.subject.streamingMode = .polling
+                        self.subject.isOnline = true
 
                         self.subject.isOnline = true
                     }
@@ -142,9 +112,6 @@ final class LDFlagSynchronizerSpec: QuickSpec {
             context("offline to offline") {
                 context("streaming") {
                     beforeEach {
-                        self.createSynchronizer(online: false, streamingMode: .streaming)
-                        expect({ self.synchronizerState(synchronizerOnline: false, streamingMode: .streaming, flagRequests: 0, streamCreated: false) }).to(match())
-
                         self.subject.isOnline = false
                     }
                     it("does not start streaming") {
@@ -153,8 +120,7 @@ final class LDFlagSynchronizerSpec: QuickSpec {
                 }
                 context("polling") {
                     beforeEach {
-                        self.createSynchronizer(online: false, streamingMode: .polling)
-                        expect({ self.synchronizerState(synchronizerOnline: false, streamingMode: .polling, flagRequests: 0, streamCreated: false) }).to(match())
+                        self.subject.streamingMode = .polling
 
                         self.subject.isOnline = false
                     }
@@ -169,8 +135,7 @@ final class LDFlagSynchronizerSpec: QuickSpec {
             context("streaming to polling") {
                 context("online") {
                     beforeEach {
-                        self.createSynchronizer(online: true, streamingMode: .streaming)
-                        expect({ self.synchronizerState(synchronizerOnline: true, streamingMode: .streaming, flagRequests: 0, streamCreated: true, streamClosed: false) }).to(match())
+                        self.subject.isOnline = true
 
                         self.subject.streamingMode = .polling
                     }
@@ -181,9 +146,6 @@ final class LDFlagSynchronizerSpec: QuickSpec {
                 }
                 context("offline") {
                     beforeEach {
-                        self.createSynchronizer(online: false, streamingMode: .streaming)
-                        expect({ self.synchronizerState(synchronizerOnline: false, streamingMode: .streaming, flagRequests: 0, streamCreated: false) }).to(match())
-
                         self.subject.streamingMode = .polling
                     }
                     it("remains offline & changes to polling mode") {
@@ -194,8 +156,8 @@ final class LDFlagSynchronizerSpec: QuickSpec {
             context("polling to streaming") {
                 context("online") {
                     beforeEach {
-                        self.createSynchronizer(online: true, streamingMode: .polling)
-                        expect({ self.synchronizerState(synchronizerOnline: true, streamingMode: .polling, flagRequests: 1, streamCreated: false) }).to(match())
+                        self.subject.streamingMode = .polling
+                        self.subject.isOnline = true
 
                         self.subject.streamingMode = .streaming
                     }
@@ -206,8 +168,7 @@ final class LDFlagSynchronizerSpec: QuickSpec {
                 }
                 context("offline") {
                     beforeEach {
-                        self.createSynchronizer(online: false, streamingMode: .polling)
-                        expect({ self.synchronizerState(synchronizerOnline: false, streamingMode: .polling, flagRequests: 0, streamCreated: false) }).to(match())
+                        self.subject.streamingMode = .polling
 
                         self.subject.streamingMode = .streaming
                     }
@@ -223,8 +184,7 @@ final class LDFlagSynchronizerSpec: QuickSpec {
                 context("success") {
                     beforeEach {
                         self.mockService.stubFlagResponse(success: true)
-                        self.createSynchronizer(online: true, streamingMode: .streaming)
-                        expect({ self.synchronizerState(synchronizerOnline: true, streamingMode: .streaming, flagRequests: 0, streamCreated: true, streamClosed: false) }).to(match())
+                        self.subject.isOnline = true
 
                         self.mockService.createdEventSource?.sendPing()
                     }
@@ -237,8 +197,7 @@ final class LDFlagSynchronizerSpec: QuickSpec {
                 context("bad data") {
                     beforeEach {
                         self.mockService.stubFlagResponse(success: true, badData: true)
-                        self.createSynchronizer(online: true, streamingMode: .streaming)
-                        expect({ self.synchronizerState(synchronizerOnline: true, streamingMode: .streaming, flagRequests: 0, streamCreated: true, streamClosed: false) }).to(match())
+                        self.subject.isOnline = true
 
                         self.mockService.createdEventSource?.sendPing()
                     }
@@ -251,8 +210,7 @@ final class LDFlagSynchronizerSpec: QuickSpec {
                 context("failure response") {
                     beforeEach {
                         self.mockService.stubFlagResponse(success: false, responseOnly: true)
-                        self.createSynchronizer(online: true, streamingMode: .streaming)
-                        expect({ self.synchronizerState(synchronizerOnline: true, streamingMode: .streaming, flagRequests: 0, streamCreated: true, streamClosed: false) }).to(match())
+                        self.subject.isOnline = true
 
                         self.mockService.createdEventSource?.sendPing()
                     }
@@ -265,8 +223,7 @@ final class LDFlagSynchronizerSpec: QuickSpec {
                 context("failure error") {
                     beforeEach {
                         self.mockService.stubFlagResponse(success: false, errorOnly: true)
-                        self.createSynchronizer(online: true, streamingMode: .streaming)
-                        expect({ self.synchronizerState(synchronizerOnline: true, streamingMode: .streaming, flagRequests: 0, streamCreated: true, streamClosed: false) }).to(match())
+                        self.subject.isOnline = true
 
                         self.mockService.createdEventSource?.sendPing()
                     }
@@ -280,8 +237,7 @@ final class LDFlagSynchronizerSpec: QuickSpec {
             context("heartbeat") {
                 beforeEach {
                     self.mockService.stubFlagRequest(success: true)
-                    self.createSynchronizer(online: true, streamingMode: .streaming)
-                    expect({ self.synchronizerState(synchronizerOnline: true, streamingMode: .streaming, flagRequests: 0, streamCreated: true, streamClosed: false) }).to(match())
+                    self.subject.isOnline = true
 
                     self.mockService.createdEventSource?.sendHeartbeat()
                 }
@@ -292,8 +248,7 @@ final class LDFlagSynchronizerSpec: QuickSpec {
             context("null event") {
                 beforeEach {
                     self.mockService.stubFlagRequest(success: true)
-                    self.createSynchronizer(online: true, streamingMode: .streaming)
-                    expect({ self.synchronizerState(synchronizerOnline: true, streamingMode: .streaming, flagRequests: 0, streamCreated: true, streamClosed: false) }).to(match())
+                    self.subject.isOnline = true
 
                     self.mockService.createdEventSource?.sendNullEvent()
                 }
@@ -305,8 +260,8 @@ final class LDFlagSynchronizerSpec: QuickSpec {
 
         describe("polling timer fires") {
             beforeEach {
-                self.createSynchronizer(online: true, streamingMode: .polling)
-                expect({ self.synchronizerState(synchronizerOnline: true, streamingMode: .polling, flagRequests: 1, streamCreated: false) }).to(match())
+                self.subject.streamingMode = .polling
+                self.subject.isOnline = true
             }
             it("makes a flag request") {
                 expect(self.mockService.getFeatureFlagsCallCount).toEventually(equal(2), timeout: 2)
@@ -321,23 +276,17 @@ final class LDFlagSynchronizerSpec: QuickSpec {
     private func isStreamingActive(online: Bool, streamingMode: LDStreamingMode) -> Bool { return online && (streamingMode == .streaming) }
     private func isPollingActive(online: Bool, streamingMode: LDStreamingMode) -> Bool { return online && (streamingMode == .polling) }
 
-    private func createSynchronizer(online: Bool, streamingMode: LDStreamingMode) {
-        self.config.launchOnline = online
-        self.config.streamingMode = streamingMode
-        self.subject = LDFlagSynchronizer(mobileKey: self.mockMobileKey, config: self.config, user: self.mockUser, service: self.mockService, store: self.mockStore)
-    }
-    
     private func synchronizerState(synchronizerOnline isOnline: Bool, streamingMode: LDStreamingMode, flagRequests: Int, streamCreated: Bool, streamClosed: Bool? = nil) -> ToMatchResult {
         var messages = [String]()
 
         //synchronizer state
-        if self.subject.isOnline != isOnline { messages.append("isOnline equals \(self.subject.isOnline)") }
-        if self.subject.streamingMode != streamingMode { messages.append("streamingMode equals \(self.subject.streamingMode)") }
-        if self.subject.streamingActive != isStreamingActive(online: isOnline, streamingMode: streamingMode) { messages.append("streamingActive equals \(self.subject.streamingActive)") }
-        if self.subject.pollingActive != isPollingActive(online: isOnline, streamingMode: streamingMode) { messages.append("pollingActive equals \(self.subject.pollingActive)") }
+        if subject.isOnline != isOnline { messages.append("isOnline equals \(subject.isOnline)") }
+        if subject.streamingMode != streamingMode { messages.append("streamingMode equals \(subject.streamingMode)") }
+        if subject.streamingActive != isStreamingActive(online: isOnline, streamingMode: streamingMode) { messages.append("streamingActive equals \(subject.streamingActive)") }
+        if subject.pollingActive != isPollingActive(online: isOnline, streamingMode: streamingMode) { messages.append("pollingActive equals \(subject.pollingActive)") }
 
         //flag requests
-        if self.mockService.getFeatureFlagsCallCount != flagRequests { messages.append("flag requests equals \(self.mockService.getFeatureFlagsCallCount)") }
+        if mockService.getFeatureFlagsCallCount != flagRequests { messages.append("flag requests equals \(mockService.getFeatureFlagsCallCount)") }
 
         messages.append(contentsOf: eventSourceStateVerificationMessages(streamCreated: streamCreated, streamClosed: streamClosed))
 
@@ -349,7 +298,7 @@ final class LDFlagSynchronizerSpec: QuickSpec {
         //event source
         switch streamCreated {
         case true:
-            if let eventSource = self.mockService.createdEventSource {
+            if let eventSource = mockService.createdEventSource {
                 if let streamClosed = streamClosed {
                     if eventSource.closeCallCount != (streamClosed ? 1 : 0) { messages.append("stream closed call count equals \(eventSource.closeCallCount)") }
                 }
@@ -357,7 +306,7 @@ final class LDFlagSynchronizerSpec: QuickSpec {
                 messages.append("event stream not created")
             }
         case false:
-            if self.mockService.createdEventSource != nil { messages.append("mock service created event source is not nil") }
+            if mockService.createdEventSource != nil { messages.append("mock service created event source is not nil") }
             if streamClosed != nil { messages.append("stream closed is not nil (this is an incorrect test)") }
         }
         return messages

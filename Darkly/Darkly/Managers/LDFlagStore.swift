@@ -10,6 +10,7 @@ import Foundation
 
 //sourcery: AutoMockable
 protocol LDFlagMaintaining {
+    var featureFlags: [String: Any] { get }
     func replaceStore(newFlags: [String: Any]?, source: LDFlagValueSource, completion:(() -> Void)?)
     //sourcery: NoMock
     func replaceStore(newFlags: [String: Any]?, source: LDFlagValueSource)

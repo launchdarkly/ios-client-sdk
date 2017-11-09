@@ -10,45 +10,53 @@ import Foundation
 import Dispatch
 import DarklyEventSource
 
-class LDFlagSynchronizer {
+//sourcery: AutoMockable
+protocol LDFlagSynchronizing {
+    //sourcery: DefaultMockValue = .streaming
+    var streamingMode: LDStreamingMode { get set }
+    //sourcery: DefaultMockValue = false
+    var isOnline: Bool { get set }
+    //sourcery: DefaultMockValue = 0.0
+    var pollingInterval: TimeInterval { get }
+}
+
+class LDFlagSynchronizer: LDFlagSynchronizing {
     enum Event: String {
         //swiftlint:disable:next identifier_name
         case ping, put, patch, delete
     }
     
     private let mobileKey: String
-    private let config: LDConfig
     private let user: LDUser
     private let service: DarklyServiceProvider
     private let flagStore: LDFlagMaintaining
     private var eventSource: DarklyStreamingProvider?
     private weak var flagRequestTimer: Timer?
     
-    var streamingMode: LDStreamingMode {
+    var streamingMode: LDStreamingMode = .streaming {
         didSet {
             configureCommunications()
         }
     }
     
-    var isOnline: Bool {
+    var isOnline: Bool = false {
         didSet {
             configureCommunications()
         }
     }
+
+    let pollingInterval: TimeInterval
     
     var streamingActive: Bool { return eventSource != nil }
     var pollingActive: Bool { return flagRequestTimer != nil }
     
-    init(mobileKey: String, config: LDConfig, user: LDUser, service: DarklyServiceProvider, store: LDFlagMaintaining) {
+    init(mobileKey: String, pollingInterval: TimeInterval, user: LDUser, service: DarklyServiceProvider, store: LDFlagMaintaining) {
         self.mobileKey = mobileKey
-        self.config = config
+        self.pollingInterval = pollingInterval
         self.user = user
         self.service = service
         self.flagStore = store
         
-        self.isOnline = config.launchOnline
-        self.streamingMode = config.streamingMode
-
         configureCommunications()
     }
     
@@ -111,10 +119,10 @@ class LDFlagSynchronizer {
             !pollingActive
             else { return }
         if #available(iOS 10.0, *) {
-            flagRequestTimer = Timer.scheduledTimer(withTimeInterval: config.flagPollInterval, repeats: true) { [weak self] (_) in self?.processTimer() }
+            flagRequestTimer = Timer.scheduledTimer(withTimeInterval: pollingInterval, repeats: true) { [weak self] (_) in self?.processTimer() }
         } else {
             // the run loop retains the timer, so eventReportTimer is weak to avoid a retain cycle. Setting the timer to a strong reference is important so that the timer doesn't get nil'd before it's added to the run loop.
-            let timer = Timer(timeInterval: config.flagPollInterval, target: self, selector: #selector(processTimer), userInfo: nil, repeats: true)
+            let timer = Timer(timeInterval: pollingInterval, target: self, selector: #selector(processTimer), userInfo: nil, repeats: true)
             flagRequestTimer = timer
             RunLoop.current.add(timer, forMode: .defaultRunLoopMode)
         }
@@ -172,6 +180,7 @@ class LDFlagSynchronizer {
         //TODO: Implement when error reporting architecture is established
     }
     
+    //sourcery: NoMock
     deinit {
         stopEventSource()
         stopPolling()

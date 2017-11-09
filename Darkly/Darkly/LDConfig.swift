@@ -52,22 +52,23 @@ public struct LDConfig {
     //Time configuration
     ///The timeout in milliseconds when connecting to LaunchDarkly. Default: 10 seconds
     public var connectionTimeoutMillis: Int = Defaults.connectionTimeoutMillis
-    var connectionTimeout: TimeInterval { return Double(connectionTimeoutMillis) / Constants.millisPerSecond }
-    ///The maximum amount of time in milliseconds to wait in between sending analytics events to LaunchDarkly.
+    var connectionTimeout: TimeInterval { return connectionTimeoutMillis.timeInterval }
+    ///The minimum amount of time in milliseconds to wait in between sending analytics events to LaunchDarkly.
     public var eventFlushIntervalMillis: Int = Defaults.eventFlushIntervalMillis
-    var eventFlushInterval: TimeInterval { return Double(eventFlushIntervalMillis) / Constants.millisPerSecond }
+    var eventFlushInterval: TimeInterval { return eventFlushIntervalMillis.timeInterval }
     ///The interval between feature flag updates. Only relevant when not streaming Default: 5 minutes. Minimum: 1 minute
     public var pollIntervalMillis: Int = Defaults.pollIntervalMillis
-    var flagPollInterval: TimeInterval { return Double(pollIntervalMillis) / Constants.millisPerSecond }
+    var flagPollInterval: TimeInterval { return pollIntervalMillis.timeInterval }
     ///The interval in milliseconds that we will poll for flag updates when your app is in the background. Default: 1 hour. Minimum: 15 minutes
     public var backgroundPollIntervalMillis: Int = Defaults.backgroundPollIntervalMillis
-    
+    var backgroundFlagPollInterval: TimeInterval { return backgroundPollIntervalMillis.timeInterval }
+
     ///Enables real-time streaming flag updates. When set to .polling, an efficient polling mechanism is used. Default: .streaming
     public var streamingMode: LDStreamingMode = Defaults.streaming
     ///Enables feature flag updates when your app is in the background. Default: true
     public var enableBackgroundUpdates: Bool = Defaults.enableBackgroundUpdates
-    ///Determines whether LDClient will be online / offline at launch. If offline at launch, set the client online to receive flag updates. Default: true
-    public var launchOnline: Bool = Defaults.online
+    ///Determines whether LDClient will be online / offline at start. If offline at start, set the client online to receive flag updates. Default: true
+    public var startOnline: Bool = Defaults.online
     ///Enables additional logging for development. Default: false
     public var isDebugMode: Bool = Defaults.debugMode
     
@@ -75,4 +76,29 @@ public struct LDConfig {
     public let minima = Minima()
     
     public init() { }   //Even though the struct is public, the default constructor is internal
+
+    func flagPollingInterval(runMode: LDClientRunMode) -> TimeInterval {
+        let pollingIntervalMillis = runMode == .foreground ? max(pollIntervalMillis, minima.pollingIntervalMillis) : max(backgroundPollIntervalMillis, minima.backgroundPollIntervalMillis)
+        return pollingIntervalMillis.timeInterval
+    }
+}
+
+extension Int {
+    var timeInterval: TimeInterval { return TimeInterval(self) / LDConfig.Constants.millisPerSecond }
+}
+
+extension LDConfig: Equatable {
+    public static func == (lhs: LDConfig, rhs: LDConfig) -> Bool {
+        return lhs.baseUrl == rhs.baseUrl
+            && lhs.eventsUrl == rhs.eventsUrl
+            && lhs.streamUrl == rhs.streamUrl
+            && lhs.connectionTimeoutMillis == rhs.connectionTimeoutMillis
+            && lhs.eventFlushIntervalMillis == rhs.eventFlushIntervalMillis
+            && lhs.pollIntervalMillis == rhs.pollIntervalMillis
+            && lhs.backgroundPollIntervalMillis == rhs.backgroundPollIntervalMillis
+            && lhs.streamingMode == rhs.streamingMode
+            && lhs.enableBackgroundUpdates == rhs.enableBackgroundUpdates
+            && lhs.startOnline == rhs.startOnline
+            && lhs.isDebugMode == rhs.isDebugMode
+    }
 }

@@ -16,6 +16,7 @@ protocol DarklyServiceProvider: class {
     func getFeatureFlags(user: LDUser, completion: ServiceCompletionHandler?)
     func createEventSource() -> DarklyStreamingProvider
     func publishEvents(_ events: [LDEvent], completion: ServiceCompletionHandler?)
+    var config: LDConfig { get }
 }
 
 //sourcery: AutoMockable
@@ -41,7 +42,7 @@ final class DarklyService: DarklyServiceProvider {
     }
     
     private let mobileKey: String
-    private let config: LDConfig
+    let config: LDConfig
     let httpHeaders: HTTPHeaders
     private var session: URLSession
 

@@ -28,7 +28,7 @@ public struct LDUser {
     public var operatingSystem: String?
     
     internal fileprivate(set) var lastUpdated: Date
-    internal var flagStore = LDFlagStore()
+    internal var flagStore: LDFlagMaintaining = LDFlagStore()
     
     public init(key: String? = nil,
                 name: String? = nil,
