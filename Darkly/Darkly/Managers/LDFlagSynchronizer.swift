@@ -31,6 +31,7 @@ class LDFlagSynchronizer: LDFlagSynchronizing {
     private let flagStore: LDFlagMaintaining
     private var eventSource: DarklyStreamingProvider?
     private weak var flagRequestTimer: Timer?
+    private var flagRequestCompletion: (() -> Void)?
     
     let streamingMode: LDStreamingMode
     
@@ -136,13 +137,23 @@ class LDFlagSynchronizer: LDFlagSynchronizing {
     
     // MARK: Flag Request
     
+    //TODO: When the flag response callback engine is implemented, refactor this to pass it the completion closure
+    func requestFlags(completion: (() -> Void)? = nil) {
+        flagRequestCompletion = completion
+        makeFlagRequest()
+    }
+
     private func makeFlagRequest() {
+        guard isOnline else { return }
         service.getFeatureFlags(completion: { serviceResponse in
             self.processFlagResponse(serviceResponse: serviceResponse)
         })
     }
 
     private func processFlagResponse(serviceResponse: ServiceResponse) {
+        defer {
+            flagRequestCompletion = nil
+        }
         guard serviceResponse.error == nil else {
             report(serviceResponse.error)
             return
@@ -161,6 +172,7 @@ class LDFlagSynchronizer: LDFlagSynchronizing {
         }
         
         flagStore.replaceStore(newFlags: flags, source: .server)
+        flagRequestCompletion?()
     }
     
     private func report(_ error: Error?) {

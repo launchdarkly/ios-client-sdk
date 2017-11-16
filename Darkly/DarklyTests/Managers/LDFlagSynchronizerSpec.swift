@@ -17,6 +17,7 @@ final class LDFlagSynchronizerSpec: QuickSpec {
     struct Constants {
         fileprivate static let mockMobileKey = "mockMobileKey"
         fileprivate static let pollingInterval: TimeInterval = 1
+        fileprivate static let waitMillis: Int = 500
     }
 
     var subject: LDFlagSynchronizer!
@@ -217,6 +218,39 @@ final class LDFlagSynchronizerSpec: QuickSpec {
             }
             it("makes a flag request") {
                 expect(self.mockService.getFeatureFlagsCallCount).toEventually(equal(2), timeout: 2)
+            }
+        }
+
+        describe("request flags") {
+            context("when online") {
+                beforeEach {
+                    self.mockService.stubFlagResponse(success: true)
+                    self.subject.isOnline = true
+
+                    waitUntil { done in
+                        self.subject.requestFlags(completion: {
+                            done()
+                        })
+                    }
+                }
+                it("makes a flag request") {
+                    expect({ self.synchronizerState(synchronizerOnline: true, streamingMode: .streaming, flagRequests: 1, streamCreated: true, streamClosed: false) }).to(match())
+                }
+            }
+            context("when offline") {
+                beforeEach {
+                    self.mockService.stubFlagResponse(success: true)
+
+                    self.subject.requestFlags()
+                }
+                it("does not make a flag request") {
+                    waitUntil { done in
+                        DispatchQueue.main.asyncAfter(deadline: DispatchTime.now() + DispatchTimeInterval.milliseconds(Constants.waitMillis)) {
+                            expect({ self.synchronizerState(synchronizerOnline: false, streamingMode: .streaming, flagRequests: 0, streamCreated: false) }).to(match())
+                            done()
+                        }
+                    }
+                }
             }
         }
 
