@@ -32,7 +32,7 @@ final class DarklyServiceSpec: QuickSpec {
     override func spec() {
         beforeEach {
             self.config = LDConfig.stub
-            self.subject = DarklyService(mobileKey: self.mockMobileKey, config: self.config)
+            self.subject = DarklyService(mobileKey: self.mockMobileKey, config: self.config, user: self.user)
         }
         
         describe("getFeatureFlags") {
@@ -45,7 +45,7 @@ final class DarklyServiceSpec: QuickSpec {
                         flagRequest = request
                         done()
                     }
-                    self.subject.getFeatureFlags(user: self.user, completion: nil)
+                    self.subject.getFeatureFlags(completion: nil)
                 }
             }
            it("makes valid request") {
@@ -56,10 +56,10 @@ final class DarklyServiceSpec: QuickSpec {
                 beforeEach {
                     waitUntil { done in
                         serviceMock.stubFlagRequest(success: true)
-                        self.subject.getFeatureFlags(user: self.user) { (data, response, error) in
+                        self.subject.getFeatureFlags(completion: { (data, response, error) in
                             responses = (data, response, error)
                             done()
-                        }
+                        })
                     }
                 }
                 it("calls completion with data, response, and no error") {
@@ -71,10 +71,10 @@ final class DarklyServiceSpec: QuickSpec {
                 beforeEach {
                     waitUntil { done in
                         serviceMock.stubFlagRequest(success: false)
-                        self.subject.getFeatureFlags(user: self.user) { (data, response, error) in
+                        self.subject.getFeatureFlags(completion: { (data, response, error) in
                             responses = (data, response, error)
                             done()
-                        }
+                        })
                     }
                 }
                 it("calls completion with error and no data or response") {
@@ -85,12 +85,12 @@ final class DarklyServiceSpec: QuickSpec {
                 var responses: ServiceResponses = (nil, nil, nil)
                 var flagsRequested = false
                 beforeEach {
-                    self.subject = DarklyService(mobileKey: Constants.emptyMobileKey, config: self.config)
+                    self.subject = DarklyService(mobileKey: Constants.emptyMobileKey, config: self.config, user: self.user)
                     serviceMock.stubFlagRequest(success: true)
-                    self.subject.getFeatureFlags(user: self.user) { (data, response, error) in
+                    self.subject.getFeatureFlags(completion: { (data, response, error) in
                         responses = (data, response, error)
                         flagsRequested = true
-                    }
+                    })
                 }
                 it("does not make a request") {
                     expect(flagsRequested) == false
@@ -174,7 +174,7 @@ final class DarklyServiceSpec: QuickSpec {
                 var responses: ServiceResponses = (nil, nil, nil)
                 var eventsPublished = false
                 beforeEach {
-                    self.subject = DarklyService(mobileKey: Constants.emptyMobileKey, config: self.config)
+                    self.subject = DarklyService(mobileKey: Constants.emptyMobileKey, config: self.config, user: self.user)
                     serviceMock.stubEventRequest(success: true)
                     self.subject.publishEvents(mockEvents) { (data, response, error) in
                         responses = (data, response, error)
@@ -191,7 +191,7 @@ final class DarklyServiceSpec: QuickSpec {
                 var eventsPublished = false
                 let emptyEventList: [Darkly.LDEvent] = []
                 beforeEach {
-                    self.subject = DarklyService(mobileKey: Constants.emptyMobileKey, config: self.config)
+                    self.subject = DarklyService(mobileKey: Constants.emptyMobileKey, config: self.config, user: self.user)
                     serviceMock.stubEventRequest(success: true)
                     self.subject.publishEvents(emptyEventList) { (data, response, error) in
                         responses = (data, response, error)

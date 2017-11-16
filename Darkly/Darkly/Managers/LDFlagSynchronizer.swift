@@ -13,7 +13,7 @@ import DarklyEventSource
 //sourcery: AutoMockable
 protocol LDFlagSynchronizing {
     //sourcery: DefaultMockValue = .streaming
-    var streamingMode: LDStreamingMode { get set }
+    var streamingMode: LDStreamingMode { get }
     //sourcery: DefaultMockValue = false
     var isOnline: Bool { get set }
     //sourcery: DefaultMockValue = 0.0
@@ -27,17 +27,12 @@ class LDFlagSynchronizer: LDFlagSynchronizing {
     }
     
     private let mobileKey: String
-    private let user: LDUser
     private let service: DarklyServiceProvider
     private let flagStore: LDFlagMaintaining
     private var eventSource: DarklyStreamingProvider?
     private weak var flagRequestTimer: Timer?
     
-    var streamingMode: LDStreamingMode = .streaming {
-        didSet {
-            configureCommunications()
-        }
-    }
+    let streamingMode: LDStreamingMode
     
     var isOnline: Bool = false {
         didSet {
@@ -50,10 +45,10 @@ class LDFlagSynchronizer: LDFlagSynchronizing {
     var streamingActive: Bool { return eventSource != nil }
     var pollingActive: Bool { return flagRequestTimer != nil }
     
-    init(mobileKey: String, pollingInterval: TimeInterval, user: LDUser, service: DarklyServiceProvider, store: LDFlagMaintaining) {
+    init(mobileKey: String, streamingMode: LDStreamingMode, pollingInterval: TimeInterval, service: DarklyServiceProvider, store: LDFlagMaintaining) {
         self.mobileKey = mobileKey
+        self.streamingMode = streamingMode
         self.pollingInterval = pollingInterval
-        self.user = user
         self.service = service
         self.flagStore = store
         
@@ -142,9 +137,9 @@ class LDFlagSynchronizer: LDFlagSynchronizing {
     // MARK: Flag Request
     
     private func makeFlagRequest() {
-        service.getFeatureFlags(user: user) { serviceResponse in
+        service.getFeatureFlags(completion: { serviceResponse in
             self.processFlagResponse(serviceResponse: serviceResponse)
-        }
+        })
     }
 
     private func processFlagResponse(serviceResponse: ServiceResponse) {

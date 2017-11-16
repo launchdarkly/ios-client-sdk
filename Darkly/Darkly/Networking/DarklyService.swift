@@ -13,7 +13,7 @@ typealias ServiceResponse = (data: Data?, urlResponse: URLResponse?, error: Erro
 typealias ServiceCompletionHandler = (ServiceResponse) -> Void
 
 protocol DarklyServiceProvider: class {
-    func getFeatureFlags(user: LDUser, completion: ServiceCompletionHandler?)
+    func getFeatureFlags(completion: ServiceCompletionHandler?)
     func createEventSource() -> DarklyStreamingProvider
     func publishEvents(_ events: [LDEvent], completion: ServiceCompletionHandler?)
     var config: LDConfig { get }
@@ -43,12 +43,14 @@ final class DarklyService: DarklyServiceProvider {
     
     private let mobileKey: String
     let config: LDConfig
+    let user: LDUser
     let httpHeaders: HTTPHeaders
     private var session: URLSession
 
-    init(mobileKey: String, config: LDConfig) {
+    init(mobileKey: String, config: LDConfig, user: LDUser) {
         self.mobileKey = mobileKey
         self.config = config
+        self.user = user
         self.httpHeaders = HTTPHeaders(mobileKey: mobileKey)
 
         self.session = URLSession(configuration: URLSessionConfiguration.default)
@@ -56,9 +58,9 @@ final class DarklyService: DarklyServiceProvider {
     
     // MARK: Feature Flags
     
-    func getFeatureFlags(user: LDUser, completion: ServiceCompletionHandler?) {
+    func getFeatureFlags(completion: ServiceCompletionHandler?) {
         guard !mobileKey.isEmpty,
-            let flagRequest = flagRequest(user: user)
+            let flagRequest = flagRequest
         else { return }
         let dataTask = self.session.dataTask(with: flagRequest) { (data, response, error) in
             completion?((data, response, error))
@@ -66,15 +68,15 @@ final class DarklyService: DarklyServiceProvider {
         dataTask.resume()
     }
     
-    private func flagRequest(user: LDUser) -> URLRequest? {
-        guard let flagRequestUrl = flagRequestUrl(user: user) else { return nil }
+    private var flagRequest: URLRequest? {
+        guard let flagRequestUrl = flagRequestUrl else { return nil }
         var request = URLRequest(url: flagRequestUrl, cachePolicy: .useProtocolCachePolicy, timeoutInterval: config.connectionTimeout)
         request.appendHeaders(httpHeaders.flagRequestHeaders)
         
         return request
     }
     
-    private func flagRequestUrl(user: LDUser) -> URL? {
+    private var flagRequestUrl: URL? {
         guard let encodedUser = user.jsonDictionaryWithoutConfig.base64UrlEncodedString else { return nil }
         return config.baseUrl.appendingPathComponent(Constants.flagRequestPath).appendingPathComponent(encodedUser)
     }

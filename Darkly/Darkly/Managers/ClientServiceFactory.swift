@@ -9,19 +9,19 @@
 import Foundation
 
 protocol ClientServiceCreating {
-    func makeDarklyServiceProvider(mobileKey: String, config: LDConfig) -> DarklyServiceProvider
-    func makeFlagSynchronizer(mobileKey: String, pollingInterval: TimeInterval, user: LDUser, service: DarklyServiceProvider, store: LDFlagMaintaining) -> LDFlagSynchronizing
+    func makeDarklyServiceProvider(mobileKey: String, config: LDConfig, user: LDUser) -> DarklyServiceProvider
+    func makeFlagSynchronizer(mobileKey: String, streamingMode: LDStreamingMode, pollingInterval: TimeInterval, service: DarklyServiceProvider, store: LDFlagMaintaining) -> LDFlagSynchronizing
     func makeEventReporter(mobileKey: String, config: LDConfig, service: DarklyServiceProvider) -> LDEventReporting
     func makeFlagStore() -> LDFlagMaintaining
 }
 
 struct ClientServiceFactory: ClientServiceCreating {
-    func makeDarklyServiceProvider(mobileKey: String, config: LDConfig) -> DarklyServiceProvider {
-        return DarklyService(mobileKey: mobileKey, config: config)
+    func makeDarklyServiceProvider(mobileKey: String, config: LDConfig, user: LDUser) -> DarklyServiceProvider {
+        return DarklyService(mobileKey: mobileKey, config: config, user: user)
     }
 
-    func makeFlagSynchronizer(mobileKey: String, pollingInterval: TimeInterval, user: LDUser, service: DarklyServiceProvider, store: LDFlagMaintaining) -> LDFlagSynchronizing {
-        return LDFlagSynchronizer(mobileKey: mobileKey, pollingInterval: pollingInterval, user: user, service: service, store: store)
+    func makeFlagSynchronizer(mobileKey: String, streamingMode: LDStreamingMode, pollingInterval: TimeInterval, service: DarklyServiceProvider, store: LDFlagMaintaining) -> LDFlagSynchronizing {
+        return LDFlagSynchronizer(mobileKey: mobileKey, streamingMode: streamingMode, pollingInterval: pollingInterval, service: service, store: store)
     }
 
     func makeEventReporter(mobileKey: String, config: LDConfig, service: DarklyServiceProvider) -> LDEventReporting {

@@ -64,14 +64,16 @@ final class DarklyServiceMock: DarklyServiceProvider {
     }
 
     var config: LDConfig
+    var user: LDUser
 
-    init(config: LDConfig = LDConfig.stub) {
+    init(config: LDConfig = LDConfig.stub, user: LDUser = LDUser.stub()) {
         self.config = config
+        self.user = user
     }
     
     var stubbedFlagResponse: ServiceResponse?
     var getFeatureFlagsCallCount = 0
-    func getFeatureFlags(user: LDUser, completion: ServiceCompletionHandler?) {
+    func getFeatureFlags(completion: ServiceCompletionHandler?) {
         getFeatureFlagsCallCount += 1
         completion?(stubbedFlagResponse ?? (nil, nil, nil))
     }

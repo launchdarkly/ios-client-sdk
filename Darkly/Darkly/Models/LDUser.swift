@@ -117,9 +117,9 @@ public struct LDUser {
         mergedUser.email = otherUser.email.isNilOrEmpty ? mergedUser.email : otherUser.email
         mergedUser.avatar = otherUser.avatar.isNilOrEmpty ? mergedUser.avatar : otherUser.avatar
         mergedUser.custom = otherUser.custom.isNilOrEmpty ? mergedUser.custom : otherUser.custom
+        mergedUser.isAnonymous = otherUser.isAnonymous
         mergedUser.device = otherUser.device.isNilOrEmpty ? mergedUser.device : otherUser.device
         mergedUser.operatingSystem = otherUser.operatingSystem.isNilOrEmpty ? mergedUser.operatingSystem : otherUser.operatingSystem
-        mergedUser.isAnonymous = otherUser.isAnonymous
         mergedUser.lastUpdated = Date()
 
         return mergedUser
