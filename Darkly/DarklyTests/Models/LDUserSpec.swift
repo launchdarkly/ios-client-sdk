@@ -13,6 +13,10 @@ import Nimble
 //swiftlint:disable:next type_body_length
 final class LDUserSpec: QuickSpec {
 
+    struct Constants {
+        fileprivate static let userCount = 3
+    }
+
     //swiftlint:disable:next function_body_length cyclomatic_complexity
     override func spec() {
         let mockKey = UUID().uuidString
@@ -72,6 +76,20 @@ final class LDUserSpec: QuickSpec {
                     expect(subject.device).to(beNil())
                     expect(subject.operatingSystem).to(beNil())
                     expect(subject.custom).to(beNil())
+                }
+            }
+            context("called without a key multiple times") {
+                var users = [LDUser]()
+                beforeEach {
+                    while users.count < Constants.userCount {
+                        users.append(LDUser())
+                    }
+                }
+                it("creates each LDUser with the default key and isAnonymous set") {
+                    users.forEach { (user) in
+                        expect(user.key) == LDUser.defaultKey
+                        expect(user.isAnonymous) == true
+                    }
                 }
             }
         }

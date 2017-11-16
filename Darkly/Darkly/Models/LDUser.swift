@@ -39,8 +39,9 @@ public struct LDUser {
                 email: String? = nil,
                 avatar: String? = nil,
                 custom: [String: Any]? = nil,
-                isAnonymous: Bool = false) {
-        self.key = key ?? LDUser.defaultKey
+                isAnonymous: Bool? = nil) {
+        let selectedKey = key ?? LDUser.defaultKey
+        self.key = selectedKey
         self.name = name
         self.firstName = firstName
         self.lastName = lastName
@@ -49,7 +50,7 @@ public struct LDUser {
         self.email = email
         self.avatar = avatar
         self.custom = custom
-        self.isAnonymous = isAnonymous
+        self.isAnonymous = isAnonymous ?? (selectedKey == LDUser.defaultKey)
         self.device = custom?[CodingKeys.device.rawValue] as? String
         self.operatingSystem = custom?[CodingKeys.operatingSystem.rawValue] as? String
         lastUpdated = Date()
@@ -127,9 +128,27 @@ public struct LDUser {
 
     //For iOS & tvOS, this should be UIDevice.current.identifierForVendor.UUIDString
     //For macOS & watchOS, this should be a UUID that the sdk creates and stores so that the value returned here should be always the same
-    private static var defaultKey: String {
-        return UIDevice.current.identifierForVendor?.uuidString ?? UUID().uuidString    //TODO: Instead of a new UUID here, add a UUID that is retained and used for any LDUser created without a key. That feels like an extension on UserDefaults.
-        //TODO: Apple docs says `identifierForVendor` might be nil early in the startup sequence. They recommend trying again later. That will prove a little difficult since the sdk doesn't control when it's instantiated.
+    static var defaultKey: String {
+        #if os(iOS) || os(tvOS)
+            return UIDevice.current.identifierForVendor?.uuidString ?? UserDefaults.standard.installationKey
+        #else
+            return UserDefaults.standard.installationKey
+        #endif
+    }
+}
+
+extension UserDefaults {
+    struct Keys {
+        fileprivate static let deviceIdentifier = "ldDeviceIdentifier"
+    }
+
+    var installationKey: String {
+        if let key = self.string(forKey: Keys.deviceIdentifier) { return key }
+
+        let key = UUID().uuidString
+        self.set(key, forKey: Keys.deviceIdentifier)
+        self.synchronize()
+        return key
     }
 }
 
