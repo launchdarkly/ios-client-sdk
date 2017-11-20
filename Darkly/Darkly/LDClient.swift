@@ -48,7 +48,7 @@ public class LDClient {
         isOnline = false
 
         self.mobileKey = mobileKey
-        change(config: config, user: user ?? userCache.retrieveLatest() ?? self.user)   //TODO: When implementing Client Management - User, make sure all 3 of these are tested
+        change(config: config, user: user ?? self.user)   //TODO: When implementing Client Management - User, make sure all 3 of these are tested
 
         self.isOnline = wasStarted || (!wasStarted && self.config.startOnline)
     }
@@ -129,7 +129,7 @@ public class LDClient {
      The LDClient is the focal point for flag value requests. It should appear to the app that the client contains a store of [key: value] pairs where the keys are all strings and the values any of the supported LD flag types (Bool, number (int, float), String, Array, Dictionary). The LDFlaggable protocol defines the LD supported flag types.
      When asked for a variation value, the LDClient provides either the LDFlaggable value, or a (LDFlaggable, LDVariationSource) that reports the value and value source.
      
-     At launch, the LDClient should ask the LDUserCache to load the cached user's flags (if any) and then ask the flag synchronizer to start synchronizing (via streaming / polling)
+     At launch, the LDClient should ask the LDFlagCache to load the cached user's flags (if any) and then ask the flag synchronizer to start synchronizing (via streaming / polling)
     */
     
     ///Usage
@@ -192,14 +192,16 @@ public class LDClient {
 
     private(set) var runMode: LDClientRunMode = .foreground
 
-    private let userCache = LDUserCache()
+    private let flagCache = LDFlagCache()
     private(set) var flagSynchronizer: LDFlagSynchronizing
     private let flagChangeNotifier = LDFlagChangeNotifier()
     private(set) var eventReporter: LDEventReporting
     
     private init() {
         config.startOnline = false //prevents supporting players from trying to contact the LD server
+
         LDUserWrapper.configureKeyedArchiversToHandleVersion2_3_0AndOlderUserCacheFormat()
+        flagCache.convertUserCacheToFlagCache()
         flagStore = serviceFactory.makeFlagStore()
 
         //dummy objects replaced by start call

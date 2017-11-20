@@ -103,11 +103,7 @@ extension LDFlagValue {
     
     public var baseDictionary: [String: LDFlagBaseTypeConvertible]? {
         guard let flagValues = flagValueDictionary else { return nil }
-        let pairs = flagValues.flatMap { (element: (key: String, value: LDFlagValue)) -> (String, LDFlagBaseTypeConvertible)? in
-            guard let baseValue = element.value.baseValue else { return nil }
-            return (element.key, baseValue)
-        }
-        return Dictionary(pairs)
+        return flagValues.flatMapValues { (dictionaryValue) in dictionaryValue.baseValue }
     }
 }
 
