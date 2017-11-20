@@ -15,19 +15,42 @@ enum LDClientRunMode {
 public class LDClient {
     public static let shared = LDClient()
     
-    ///Controls whether client contacts launch darkly for feature flags and events. When offline, client only collects events.
     private var _isOnline = false {
         didSet {
             flagSynchronizer.isOnline = isOnline
             eventReporter.isOnline = isOnline
         }
     }
+
+    ///Controls whether client contacts launch darkly for feature flags and events. When offline, client only collects events.
     public var isOnline: Bool {
         set { _isOnline = hasStarted && newValue && (runMode != .background || config.enableBackgroundUpdates)}
         get { return _isOnline }
     }
     
-    public private(set) var config = LDConfig()
+    ///Takes the client offline and reconfigures using the new config. If the client was online, it brings the client online again.
+    ///Make config changes by getting the config from the client, adjusting values, and then setting the new config
+    ///If the config is unchanged, returns immediately.
+    ///Usage:
+    ///     LDClient.shared.config = newConfig
+    public var config = LDConfig() {
+        didSet {
+            guard config != oldValue else { return }
+
+            let wasOnline = isOnline
+            isOnline = false
+
+            service = serviceFactory.makeDarklyServiceProvider(mobileKey: mobileKey, config: config, user: user)
+            eventReporter.config = config
+            flagSynchronizer = serviceFactory.makeFlagSynchronizer(mobileKey: mobileKey,
+                                                                   streamingMode: effectiveStreamingMode(runMode: runMode),
+                                                                   pollingInterval: config.flagPollingInterval(runMode: effectiveRunMode),
+                                                                   service: service,
+                                                                   store: flagStore)
+
+            self.isOnline = wasOnline
+        }
+    }
     public private(set) var user = LDUser()
     private(set) var service: DarklyServiceProvider
     private(set) var flagStore: LDFlagMaintaining
@@ -48,58 +71,9 @@ public class LDClient {
         isOnline = false
 
         self.mobileKey = mobileKey
-        change(config: config, user: user ?? self.user)   //TODO: When implementing Client Management - User, make sure all 3 of these are tested
+        self.config = config ?? self.config
 
         self.isOnline = wasStarted || (!wasStarted && self.config.startOnline)
-    }
-
-    ///Changes the LDClient config and user.
-    ///Takes the client offline and reconfigures using the new config & user. If the client was online, it brings the client online again.
-    ///If the user was previously cached, uses the cached feature flags until the LDClient receives flags from the server. Otherwise, feature flag requests will result in the fallback value.
-    ///NOTE: Even if the LDClient is online, there will be a brief delay before an update to the feature flags is available.
-    ///If a client app wants to be notified when the LDClient receives the updated user flags, pass in a completion closure. The LDClient will call the closure once after the first feature flag update from the LD server. The closure will NOT be called when a cached user's flags have been retrieved. If the client is offline, the closure will not be called until the app sets the client online and the client has received the first flag update from the LD server.
-    ///If the config and user are both unchanged or omitted, this does nothing (not even calling the completion closure).
-    ///Usage:
-    ///     LDClient.shared.change(config: newConfig, user: newUser) { [weak self] in
-    ///         //client app code responding to the arrival of flags...
-    ///         //self?.reload()
-    ///     }
-    ///If a client app doesn't want to be notified, omit the completion closure:
-    ///     LDClient.shared.change(config: newConfig, user: newUser)
-    ///You can make config and/or user changes by getting the config and/or user from the client, adjusting values, and then calling change(config:, user:)
-    public func change(config: LDConfig? = nil, user: LDUser? = nil, completion: (() -> Void)? = nil) {
-        guard config != nil || user != nil else { return }
-        let targetConfig = config ?? self.config
-        let targetUser = user ?? self.user
-        //TODO: Implement this as part of ClientManagement - User. The idea is that if there was a passed in user whose key matches self.user, then merge the passed in user with self.user, and if the result is a user with different values, execute the change body.
-//        if let user = user, user.key == self.user.key {
-//            targetUser = self.user.merge(with: user)
-//        }
-        guard targetConfig != self.config || targetUser != self.user else { return }
-
-        let wasOnline = isOnline
-        isOnline = false
-
-        if targetConfig != self.config {
-            self.config = targetConfig
-            service = serviceFactory.makeDarklyServiceProvider(mobileKey: mobileKey, config: self.config, user: self.user)
-            eventReporter.config = self.config
-        }
-
-        if targetUser != self.user {
-            flagStore = serviceFactory.makeFlagStore()
-        }
-        self.user = targetUser
-        self.user.flagStore = flagStore
-        flagSynchronizer = serviceFactory.makeFlagSynchronizer(mobileKey: mobileKey,
-                                                               streamingMode: effectiveStreamingMode(runMode: runMode),
-                                                               pollingInterval: self.config.flagPollingInterval(runMode: effectiveRunMode),
-                                                               service: service,
-                                                               store: flagStore)
-
-        self.isOnline = wasOnline
-
-        //TODO: When the notification engine is installed, call the completion closure when the user's flags are updated the first time
     }
 
     private func effectiveStreamingMode(runMode: LDClientRunMode) -> LDStreamingMode {

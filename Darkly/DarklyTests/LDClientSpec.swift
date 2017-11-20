@@ -113,7 +113,7 @@ final class LDClientSpec: QuickSpec {
             }
         }
 
-        describe("change config and user") {
+        describe("set config") {
             var flagSynchronizerMock: LDFlagSynchronizingMock!
             var eventReporterMock: LDEventReportingMock!
             var setIsOnlineCount: (flagSync: Int, event: Int) = (0, 0)
@@ -121,32 +121,15 @@ final class LDClientSpec: QuickSpec {
                 flagSynchronizerMock = subject.flagSynchronizer as? LDFlagSynchronizingMock
                 eventReporterMock = subject.eventReporter as? LDEventReportingMock
             }
-            context("when config and user values are the same") {
+            context("when config values are the same") {
                 beforeEach {
                     subject.start(mobileKey: Constants.mockMobileKey, config: config, user: user)
                     setIsOnlineCount = (flagSynchronizerMock.isOnlineSetCount, eventReporterMock.isOnlineSetCount)
 
-                    subject.change(config: config, user: user)
+                    subject.config = config
                 }
-                it("retains the config and user values") {
+                it("retains the config") {
                     expect(subject.config) == config
-                    expect(subject.user) == user
-                }
-                it("doesn't try to change service object isOnline state") {
-                    expect(flagSynchronizerMock.isOnlineSetCount) == setIsOnlineCount.flagSync
-                    expect(eventReporterMock.isOnlineSetCount) == setIsOnlineCount.event
-                }
-            }
-            context("when config and user values are nil") {
-                beforeEach {
-                    subject.start(mobileKey: Constants.mockMobileKey, config: config, user: user)
-                    setIsOnlineCount = (flagSynchronizerMock.isOnlineSetCount, eventReporterMock.isOnlineSetCount)
-
-                    subject.change(config: nil, user: nil)
-                }
-                it("retains the config and user values") {
-                    expect(subject.config) == config
-                    expect(subject.user) == user
                 }
                 it("doesn't try to change service object isOnline state") {
                     expect(flagSynchronizerMock.isOnlineSetCount) == setIsOnlineCount.flagSync
@@ -159,11 +142,12 @@ final class LDClientSpec: QuickSpec {
                     beforeEach {
                         subject.start(mobileKey: Constants.mockMobileKey, config: config, user: user)
                         newConfig = config
+                        //change some values and check they're propagated to supporting objects
                         newConfig.baseUrl = Constants.alternateMockUrl
                         newConfig.pollIntervalMillis += 1
                         newConfig.eventFlushIntervalMillis += 1
 
-                        subject.change(config: newConfig)
+                        subject.config = newConfig
                     }
                     it("changes to the new config values") {
                         expect(subject.config) == newConfig
@@ -178,11 +162,12 @@ final class LDClientSpec: QuickSpec {
                         subject = LDClient(serviceFactory: ClientServiceMockFactory(), runMode: .background)
                         subject.start(mobileKey: Constants.mockMobileKey, config: config, user: user)
                         newConfig = config
+                        //change some values and check they're propagated to supporting objects
                         newConfig.baseUrl = Constants.alternateMockUrl
                         newConfig.backgroundPollIntervalMillis += 1
                         newConfig.eventFlushIntervalMillis += 1
 
-                        subject.change(config: newConfig)
+                        subject.config = newConfig
                     }
                     it("changes to the new config values") {
                         expect(subject.config) == newConfig
@@ -190,21 +175,6 @@ final class LDClientSpec: QuickSpec {
                         expect(subject.flagSynchronizer.streamingMode) == LDStreamingMode.polling
                         expect(subject.flagSynchronizer.pollingInterval) == newConfig.flagPollingInterval(runMode: subject.runMode)
                         expect(subject.eventReporter.config) == newConfig
-                    }
-                }
-            }
-            context("when user values differ") {
-                var newUser: LDUser!
-                context("different user") {
-                    beforeEach {
-                        subject.start(mobileKey: Constants.mockMobileKey, config: config, user: user)
-                        newUser = LDUser.stub()
-
-                        subject.change(user: newUser)
-                    }
-                    it("retains the config and updates the user") {
-                        expect(subject.config) == config
-                        expect(subject.user) == newUser
                     }
                 }
             }

@@ -28,8 +28,8 @@ public final class ObjcLDClient: NSObject {
         LDClient.shared.start(mobileKey: mobileKey, user: userObject?.user)
     }
     
-    @objc(changeConfig: user: completion:) public func change(config: ObjcLDConfig, user: ObjcLDUser, completion: (() -> Void)? = nil) {
-        LDClient.shared.change(config: config.config, user: user.user, completion: completion)
+    @objc(setConfig:) public func setConfig(_ config: ObjcLDConfig) {
+        LDClient.shared.config = config.config
     }
     
     @objc public func trackEvent(key: String, data: [AnyHashable: Any]? = nil) {
