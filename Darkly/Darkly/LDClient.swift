@@ -115,6 +115,15 @@ public class LDClient {
     private var effectiveRunMode: LDClientRunMode {
         return config.enableBackgroundUpdates ? runMode : .foreground
     }
+
+    ///Stops the LDClient. Stopping the client means take the client offline and stop recording events.
+    ///Usage:
+    ///     LDClient.shared.stop()
+    ///After the client has stopped, variation requests will be answered with the last received feature flags.
+    public func stop() {
+        isOnline = false
+        hasStarted = false
+    }
     
     /* Event tracking
      Conceptual model
@@ -124,8 +133,10 @@ public class LDClient {
     ///Usage:   LDClient.shared.trackEvent(key: "app-event-key", data: appEventData)
     ///Once an app has called trackEvent(), the app cannot remove the event from the event store.
     ///If the client is offline, the client stores the event until the app takes the client online, and the client has transmitted the event.
-    public func trackEvent(key: String, data: [AnyHashable: Any]? = nil) {
-
+    public func trackEvent(key: String, data: [String: Any]? = nil) {
+        guard hasStarted else { return }
+        let event = LDEvent.customEvent(key: key, user: user, data: data)
+        eventReporter.record(event)
     }
     
     // MARK: Feature Flag values
@@ -204,8 +215,6 @@ public class LDClient {
     private(set) var eventReporter: LDEventReporting
     
     private init() {
-        config.startOnline = false //prevents supporting players from trying to contact the LD server
-
         LDUserWrapper.configureKeyedArchiversToHandleVersion2_3_0AndOlderUserCacheFormat()
         flagCache.convertUserCacheToFlagCache()
 
@@ -215,7 +224,7 @@ public class LDClient {
         eventReporter = serviceFactory.makeEventReporter(mobileKey: "", config: config, service: service)
     }
 
-    convenience init(serviceFactory: ClientServiceCreating, runMode: LDClientRunMode = .foreground) {
+    private convenience init(serviceFactory: ClientServiceCreating, runMode: LDClientRunMode) {
         self.init()
         self.runMode = runMode
         self.serviceFactory = serviceFactory
@@ -226,3 +235,11 @@ public class LDClient {
         eventReporter = serviceFactory.makeEventReporter(mobileKey: "", config: config, service: service)
     }
 }
+
+#if DEBUG
+    extension LDClient {
+        class func makeClient(with serviceFactory: ClientServiceCreating, runMode: LDClientRunMode = .foreground) -> LDClient {
+            return LDClient(serviceFactory: serviceFactory, runMode: runMode)
+        }
+    }
+#endif

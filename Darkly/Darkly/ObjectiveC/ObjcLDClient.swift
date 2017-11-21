@@ -32,7 +32,15 @@ public final class ObjcLDClient: NSObject {
         LDClient.shared.config = config.config
     }
     
-    @objc public func trackEvent(key: String, data: [AnyHashable: Any]? = nil) {
+    @objc(setUser:) public func setUser(_ user: ObjcLDUser) {
+        LDClient.shared.user = user.user
+    }
+
+    @objc public func stop() {
+        LDClient.shared.stop()
+    }
+
+    @objc public func trackEvent(key: String, data: [String: Any]? = nil) {
         LDClient.shared.trackEvent(key: key, data: data)
     }
     

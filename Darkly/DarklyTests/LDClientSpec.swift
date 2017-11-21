@@ -22,7 +22,7 @@ final class LDClientSpec: QuickSpec {
         var config: LDConfig!
 
         beforeEach {
-            subject = LDClient(serviceFactory: ClientServiceMockFactory())
+            subject = LDClient.makeClient(with: ClientServiceMockFactory())
 
             config = LDConfig.stub
             config.startOnline = false
@@ -82,7 +82,7 @@ final class LDClientSpec: QuickSpec {
             }
             context("when configured to allow background updates and running in background mode") {
                 beforeEach {
-                    subject = LDClient(serviceFactory: ClientServiceMockFactory(), runMode: .background)
+                    subject = LDClient.makeClient(with: ClientServiceMockFactory(), runMode: .background)
                     config.startOnline = true
 
                     subject.start(mobileKey: Constants.mockMobileKey, config: config, user: user)
@@ -108,7 +108,7 @@ final class LDClientSpec: QuickSpec {
             }
             context("when configured to not allow background updates and running in background mode") {
                 beforeEach {
-                    subject = LDClient(serviceFactory: ClientServiceMockFactory(), runMode: .background)
+                    subject = LDClient.makeClient(with: ClientServiceMockFactory(), runMode: .background)
                     config.startOnline = true
                     config.enableBackgroundUpdates = false
 
@@ -303,7 +303,7 @@ final class LDClientSpec: QuickSpec {
                 }
                 context("with run mode set to background") {
                     beforeEach {
-                        subject = LDClient(serviceFactory: ClientServiceMockFactory(), runMode: .background)
+                        subject = LDClient.makeClient(with: ClientServiceMockFactory(), runMode: .background)
                         subject.start(mobileKey: Constants.mockMobileKey, config: config, user: user)
                         newConfig = config
                         //change some values and check they're propagated to supporting objects
@@ -490,7 +490,7 @@ final class LDClientSpec: QuickSpec {
             }
             context("when the client runs in the background") {
                 beforeEach {
-                    subject = LDClient(serviceFactory: ClientServiceMockFactory(), runMode: .background)
+                    subject = LDClient.makeClient(with: ClientServiceMockFactory(), runMode: .background)
                 }
                 context("while configured to enable background updates") {
                     beforeEach {
@@ -526,6 +526,125 @@ final class LDClientSpec: QuickSpec {
                             expect(subject.eventReporter.isOnline) == subject.isOnline
                         }
                     }
+                }
+            }
+        }
+
+        describe("stop") {
+            var mockEventReporter: LDEventReportingMock!
+            var event: LDEvent!
+            var priorRecordedEvents: Int!
+            beforeEach {
+                mockEventReporter = subject.eventReporter as? LDEventReportingMock
+            }
+            context("when started") {
+                beforeEach {
+                    event = LDEvent.stub(for: .custom, with: user)
+                    priorRecordedEvents = 0
+                }
+                context("and online") {
+                    beforeEach {
+                        config.startOnline = true
+                        subject.start(mobileKey: Constants.mockMobileKey, config: config, user: user)
+                        priorRecordedEvents = mockEventReporter.recordCallCount
+
+                        subject.stop()
+                    }
+                    it("takes the client offline") {
+                        expect(subject.isOnline) == false
+                    }
+                    it("stops recording events") {
+                        subject.trackEvent(key: event.key)
+                        expect(mockEventReporter.recordCallCount) == priorRecordedEvents
+                    }
+                }
+                context("and offline") {
+                    beforeEach {
+                        config.startOnline = false
+                        subject.start(mobileKey: Constants.mockMobileKey, config: config, user: user)
+                        priorRecordedEvents = mockEventReporter.recordCallCount
+
+                        subject.stop()
+                    }
+                    it("leaves the client offline") {
+                        expect(subject.isOnline) == false
+                    }
+                    it("stops recording events") {
+                        subject.trackEvent(key: event.key)
+                        expect(mockEventReporter.recordCallCount) == priorRecordedEvents
+                    }
+                }
+            }
+            context("when not yet started") {
+                beforeEach {
+                    subject.stop()
+                }
+                it("leaves the client offline") {
+                    expect(subject.isOnline) == false
+                }
+                it("does not record events") {
+                    subject.trackEvent(key: event.key)
+                    expect(mockEventReporter.recordCallCount) == 0
+                }
+            }
+            context("when already stopped") {
+                beforeEach {
+                    config.startOnline = false
+                    subject.start(mobileKey: Constants.mockMobileKey, config: config, user: user)
+                    subject.stop()
+                    priorRecordedEvents = mockEventReporter.recordCallCount
+
+                    subject.stop()
+                }
+                it("leaves the client offline") {
+                    expect(subject.isOnline) == false
+                }
+                it("stops recording events") {
+                    subject.trackEvent(key: event.key)
+                    expect(mockEventReporter.recordCallCount) == priorRecordedEvents
+                }
+            }
+        }
+
+        describe("track event") {
+            var mockEventReporter: LDEventReportingMock!
+            var event: LDEvent!
+            beforeEach {
+                event = LDEvent.stub(for: .custom, with: user)
+                mockEventReporter = subject.eventReporter as? LDEventReportingMock
+            }
+            context("when client was started") {
+                beforeEach {
+                    subject.start(mobileKey: Constants.mockMobileKey, config: config, user: user)
+
+                    subject.trackEvent(key: event.key, data: event.data)
+                }
+                it("records a custom event") {
+                    expect(mockEventReporter.recordReceivedArguments?.event.key) == event.key
+                    expect(mockEventReporter.recordReceivedArguments?.event.user) == event.user
+                    expect(mockEventReporter.recordReceivedArguments?.event.data).toNot(beNil())
+                    expect(mockEventReporter.recordReceivedArguments?.event.data == event.data).to(beTrue())
+                }
+            }
+            context("when client was not started") {
+                beforeEach {
+                    subject.trackEvent(key: event.key, data: event.data)
+                }
+                it("does not record any events") {
+                    expect(mockEventReporter.recordCallCount) == 0
+                }
+            }
+            context("when client was stopped") {
+                var priorRecordedEvents: Int!
+                beforeEach {
+                    subject.start(mobileKey: Constants.mockMobileKey, config: config, user: user)
+                    subject.stop()
+                    priorRecordedEvents = mockEventReporter.recordCallCount
+
+                    subject.trackEvent(key: event.key, data: event.data)
+                }
+                it("does not record any more events") {
+                    expect(mockEventReporter.recordCallCount) == priorRecordedEvents
                 }
             }
         }
