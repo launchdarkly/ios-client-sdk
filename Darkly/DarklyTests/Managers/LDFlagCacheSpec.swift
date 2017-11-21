@@ -12,7 +12,6 @@ import Foundation
 @testable import Darkly
 
 final class LDFlagCacheSpec: QuickSpec {
-    //swiftlint:disable:next function_body_length
     override func spec() {
         var subject: LDFlagCache!
         beforeEach {
@@ -199,7 +198,6 @@ extension Dictionary where Key == String, Value == LDUser {
 }
 
 extension LDUser {
-    //swiftlint:disable:next cyclomatic_complexity
     fileprivate func matches(user otherUser: LDUser) -> ToMatchResult {
         var messages = [String]()
         if key != otherUser.key { messages.append("key equals \(key)") }

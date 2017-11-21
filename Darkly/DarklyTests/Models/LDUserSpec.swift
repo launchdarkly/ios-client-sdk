@@ -10,14 +10,12 @@ import Quick
 import Nimble
 @testable import Darkly
 
-//swiftlint:disable:next type_body_length
 final class LDUserSpec: QuickSpec {
 
     struct Constants {
         fileprivate static let userCount = 3
     }
 
-    //swiftlint:disable:next function_body_length cyclomatic_complexity
     override func spec() {
         let mockKey = UUID().uuidString
         let mockName = "mock.LDUser.name"
@@ -469,7 +467,6 @@ extension LDUser {
 extension Dictionary where Key == String, Value == Any {
     struct Keys {
         public static let bool = "bool"
-        //swiftlint:disable:next identifier_name
         public static let int = "int"
         public static let double = "double"
         public static let string = "string"
@@ -479,7 +476,6 @@ extension Dictionary where Key == String, Value == Any {
     }
     struct Values {
         public static let bool = true
-        //swiftlint:disable:next identifier_name
         public static let int = 8675309
         public static let double = 2.71828
         public static let string = "some string value"

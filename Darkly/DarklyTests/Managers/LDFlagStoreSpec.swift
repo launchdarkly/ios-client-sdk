@@ -14,7 +14,6 @@ final class LDFlagStoreSpec: QuickSpec {
 
     struct FallbackValues {
         static let bool = false
-        //swiftlint:disable:next identifier_name
         static let int = 3
         static let double = 2.71828
         static let string = "fallback string"
@@ -22,7 +21,6 @@ final class LDFlagStoreSpec: QuickSpec {
         static let dictionary: [String: Any] = [DarklyServiceMock.FlagKeys.string: DarklyServiceMock.FlagValues.string]
     }
 
-    //swiftlint:disable:next function_body_length
     override func spec() {
         var subject: LDFlagStore!
         describe("replaceStore") {

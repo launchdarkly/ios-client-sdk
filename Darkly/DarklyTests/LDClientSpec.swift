@@ -16,7 +16,6 @@ final class LDClientSpec: QuickSpec {
         fileprivate static let alternateMockUrl = URL(string: "https://dummy.alternate.com")!
     }
 
-    //swiftlint:disable function_body_length
     override func spec() {
         var subject: LDClient!
         var user: LDUser!

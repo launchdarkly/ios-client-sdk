@@ -11,7 +11,6 @@ import Nimble
 @testable import Darkly
 
 final class LDEventSpec: QuickSpec {
-    //swiftlint:disable:next function_body_length cyclomatic_complexity
     override func spec() {
         let key = "mockEventKey"
         let kind = LDEventType.feature

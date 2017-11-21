@@ -40,7 +40,6 @@ final class LDEventReporterSpec: QuickSpec {
         }
     }
     
-    //swiftlint:disable:next function_body_length
     override func spec() {
         beforeEach {
             self.mockService = DarklyServiceMock()

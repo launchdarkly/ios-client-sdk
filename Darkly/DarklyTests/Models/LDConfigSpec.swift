@@ -15,7 +15,6 @@ final class LDConfigSpec: QuickSpec {
         fileprivate static let alternateMockUrl = URL(string: "https://dummy.alternate.com")!
     }
 
-    //swiftlint:disable:next function_body_length
     override func spec() {
         var subject: LDConfig!
 

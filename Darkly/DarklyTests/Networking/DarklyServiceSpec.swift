@@ -28,7 +28,6 @@ final class DarklyServiceSpec: QuickSpec {
     var config: LDConfig!
     var subject: DarklyService!
     
-    // swiftlint:disable:next function_body_length
     override func spec() {
         beforeEach {
             self.config = LDConfig.stub
