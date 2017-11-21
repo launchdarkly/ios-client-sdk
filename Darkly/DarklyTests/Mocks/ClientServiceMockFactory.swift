@@ -9,12 +9,13 @@
 @testable import Darkly
 
 struct ClientServiceMockFactory: ClientServiceCreating {
-    func makeDarklyServiceProvider(mobileKey: String, config: LDConfig, user: LDUser) -> DarklyServiceProvider { return DarklyServiceMock(config: config) }
+    func makeDarklyServiceProvider(mobileKey: String, config: LDConfig, user: LDUser) -> DarklyServiceProvider { return DarklyServiceMock(config: config, user: user) }
 
     func makeFlagSynchronizer(mobileKey: String, streamingMode: LDStreamingMode, pollingInterval: TimeInterval, service: DarklyServiceProvider, store: LDFlagMaintaining) -> LDFlagSynchronizing {
         let synchronizerMock = LDFlagSynchronizingMock()
         synchronizerMock.streamingMode = streamingMode
         synchronizerMock.pollingInterval = pollingInterval
+        synchronizerMock.service = service
         return synchronizerMock
     }
 
@@ -22,9 +23,5 @@ struct ClientServiceMockFactory: ClientServiceCreating {
         let reporterMock = LDEventReportingMock()
         reporterMock.config = config
         return reporterMock
-    }
-
-    func makeFlagStore() -> LDFlagMaintaining {
-        return LDFlagMaintainingMock()
     }
 }

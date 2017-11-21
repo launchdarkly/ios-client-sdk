@@ -17,6 +17,7 @@ protocol DarklyServiceProvider: class {
     func createEventSource() -> DarklyStreamingProvider
     func publishEvents(_ events: [LDEvent], completion: ServiceCompletionHandler?)
     var config: LDConfig { get }
+    var user: LDUser { get }
 }
 
 //sourcery: AutoMockable

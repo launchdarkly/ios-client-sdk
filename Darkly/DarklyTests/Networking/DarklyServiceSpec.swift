@@ -23,7 +23,7 @@ final class DarklyServiceSpec: QuickSpec {
     }
     
     let mockMobileKey = "mockMobileKey"
-    let user = LDUser()
+    let user = LDUser.stub()
 
     var config: LDConfig!
     var subject: DarklyService!

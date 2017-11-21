@@ -46,10 +46,16 @@ final class LDEventReportingMock: LDEventReporting {
         didSet { isReportingActiveSetCount += 1 }
     }
 
+    // MARK: service
+    var serviceSetCount = 0
+    var service: DarklyServiceProvider = DarklyServiceMock() {
+        didSet { serviceSetCount += 1 }
+    }
+
     // MARK: record
     var recordCallCount = 0
-    var recordReceivedArguments: (event: Darkly.LDEvent, completion: (() -> Void)?)?
-    func record(_ event: Darkly.LDEvent, completion: (() -> Void)?) {
+    var recordReceivedArguments: (event: Darkly.LDEvent, completion: CompletionClosure?)?
+    func record(_ event: Darkly.LDEvent, completion: CompletionClosure?) {
         recordCallCount += 1
         recordReceivedArguments = (event: event, completion: completion)
     }
@@ -70,26 +76,32 @@ final class LDFlagMaintainingMock: LDFlagMaintaining {
         didSet { featureFlagsSetCount += 1 }
     }
 
+    // MARK: flagValueSource
+    var flagValueSourceSetCount = 0
+    var flagValueSource: LDFlagValueSource = .cache {
+        didSet { flagValueSourceSetCount += 1 }
+    }
+
     // MARK: replaceStore
     var replaceStoreCallCount = 0
-    var replaceStoreReceivedArguments: (newFlags: [String: Any]?, source: LDFlagValueSource, completion: (() -> Void)?)?
-    func replaceStore(newFlags: [String: Any]?, source: LDFlagValueSource, completion: (() -> Void)?) {
+    var replaceStoreReceivedArguments: (newFlags: [String: Any]?, source: LDFlagValueSource, completion: CompletionClosure?)?
+    func replaceStore(newFlags: [String: Any]?, source: LDFlagValueSource, completion: CompletionClosure?) {
         replaceStoreCallCount += 1
         replaceStoreReceivedArguments = (newFlags: newFlags, source: source, completion: completion)
     }
 
     // MARK: updateStore
     var updateStoreCallCount = 0
-    var updateStoreReceivedArguments: (newFlags: [String: Any], source: LDFlagValueSource, completion: (() -> Void)?)?
-    func updateStore(newFlags: [String: Any], source: LDFlagValueSource, completion: (() -> Void)?) {
+    var updateStoreReceivedArguments: (newFlags: [String: Any], source: LDFlagValueSource, completion: CompletionClosure?)?
+    func updateStore(newFlags: [String: Any], source: LDFlagValueSource, completion: CompletionClosure?) {
         updateStoreCallCount += 1
         updateStoreReceivedArguments = (newFlags: newFlags, source: source, completion: completion)
     }
 
     // MARK: deleteFlag
     var deleteFlagCallCount = 0
-    var deleteFlagReceivedArguments: (name: String, completion: (() -> Void)?)?
-    func deleteFlag(name: String, completion: (() -> Void)?) {
+    var deleteFlagReceivedArguments: (name: String, completion: CompletionClosure?)?
+    func deleteFlag(name: String, completion: CompletionClosure?) {
         deleteFlagCallCount += 1
         deleteFlagReceivedArguments = (name: name, completion: completion)
     }
@@ -114,5 +126,11 @@ final class LDFlagSynchronizingMock: LDFlagSynchronizing {
     var pollingIntervalSetCount = 0
     var pollingInterval: TimeInterval = 0 {
         didSet { pollingIntervalSetCount += 1 }
+    }
+
+    // MARK: service
+    var serviceSetCount = 0
+    var service: DarklyServiceProvider = DarklyServiceMock() {
+        didSet { serviceSetCount += 1 }
     }
 }

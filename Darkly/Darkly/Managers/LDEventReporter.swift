@@ -16,8 +16,20 @@ protocol LDEventReporting {
     var isOnline: Bool { get set }
     //sourcery: DefaultMockValue = false
     var isReportingActive: Bool { get }
-    func record(_ event: LDEvent, completion:(() -> Void)?)
+    //sourcery: DefaultMockValue = DarklyServiceMock()
+    var service: DarklyServiceProvider { get set }
+    func record(_ event: LDEvent, completion: CompletionClosure?)
+    //sourcery: NoMock
+    func record(_ event: LDEvent)
+
     func reportEvents()
+}
+
+extension LDEventReporting {
+    //sourcery: NoMock
+    func record(_ event: LDEvent) {
+        record(event, completion: nil)
+    }
 }
 
 class LDEventReporter: LDEventReporting {
@@ -37,7 +49,7 @@ class LDEventReporter: LDEventReporting {
     }
 
     private let mobileKey: String
-    private let service: DarklyServiceProvider
+    var service: DarklyServiceProvider
     private(set) var eventStore = [LDEvent]()
     
     private weak var eventReportTimer: Timer?
@@ -49,7 +61,7 @@ class LDEventReporter: LDEventReporting {
         self.service = service
     }
 
-    func record(_ event: LDEvent, completion:(() -> Void)? = nil) {
+    func record(_ event: LDEvent, completion: CompletionClosure? = nil) {
         eventQueue.async {
             if let completion = completion {
                 defer {

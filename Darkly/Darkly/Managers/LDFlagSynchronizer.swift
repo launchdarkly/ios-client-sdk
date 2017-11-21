@@ -10,6 +10,8 @@ import Foundation
 import Dispatch
 import DarklyEventSource
 
+typealias CompletionClosure = (() -> Void)
+
 //sourcery: AutoMockable
 protocol LDFlagSynchronizing {
     //sourcery: DefaultMockValue = .streaming
@@ -18,6 +20,8 @@ protocol LDFlagSynchronizing {
     var isOnline: Bool { get set }
     //sourcery: DefaultMockValue = 0.0
     var pollingInterval: TimeInterval { get }
+    //sourcery: DefaultMockValue = DarklyServiceMock()
+    var service: DarklyServiceProvider { get }
 }
 
 class LDFlagSynchronizer: LDFlagSynchronizing {
@@ -27,12 +31,11 @@ class LDFlagSynchronizer: LDFlagSynchronizing {
     }
     
     private let mobileKey: String
-    private let service: DarklyServiceProvider
+    let service: DarklyServiceProvider
     private let flagStore: LDFlagMaintaining
     private var eventSource: DarklyStreamingProvider?
     private weak var flagRequestTimer: Timer?
-    private var flagRequestCompletion: (() -> Void)?
-    
+
     let streamingMode: LDStreamingMode
     
     var isOnline: Bool = false {
@@ -137,12 +140,6 @@ class LDFlagSynchronizer: LDFlagSynchronizing {
     
     // MARK: Flag Request
     
-    //TODO: When the flag response callback engine is implemented, refactor this to pass it the completion closure
-    func requestFlags(completion: (() -> Void)? = nil) {
-        flagRequestCompletion = completion
-        makeFlagRequest()
-    }
-
     private func makeFlagRequest() {
         guard isOnline else { return }
         service.getFeatureFlags(completion: { serviceResponse in
@@ -151,9 +148,6 @@ class LDFlagSynchronizer: LDFlagSynchronizing {
     }
 
     private func processFlagResponse(serviceResponse: ServiceResponse) {
-        defer {
-            flagRequestCompletion = nil
-        }
         guard serviceResponse.error == nil else {
             report(serviceResponse.error)
             return
@@ -172,7 +166,6 @@ class LDFlagSynchronizer: LDFlagSynchronizing {
         }
         
         flagStore.replaceStore(newFlags: flags, source: .server)
-        flagRequestCompletion?()
     }
     
     private func report(_ error: Error?) {

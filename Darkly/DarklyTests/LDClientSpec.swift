@@ -137,6 +137,9 @@ final class LDClientSpec: QuickSpec {
                 }
             }
             context("when config values differ") {
+                beforeEach {
+                    config.startOnline = true
+                }
                 var newConfig: LDConfig!
                 context("with run mode set to foreground") {
                     beforeEach {
@@ -155,6 +158,9 @@ final class LDClientSpec: QuickSpec {
                         expect(subject.flagSynchronizer.streamingMode) == newConfig.streamingMode
                         expect(subject.flagSynchronizer.pollingInterval) == newConfig.flagPollingInterval(runMode: subject.runMode)
                         expect(subject.eventReporter.config) == newConfig
+                    }
+                    it("leaves the client online") {
+                        expect(subject.isOnline) == true
                     }
                 }
                 context("with run mode set to background") {
@@ -176,6 +182,130 @@ final class LDClientSpec: QuickSpec {
                         expect(subject.flagSynchronizer.pollingInterval) == newConfig.flagPollingInterval(runMode: subject.runMode)
                         expect(subject.eventReporter.config) == newConfig
                     }
+                    it("leaves the client online") {
+                        expect(subject.isOnline) == true
+                    }
+                }
+            }
+            context("when the client is offline") {
+                var newConfig: LDConfig!
+                beforeEach {
+                    config.startOnline = false
+                    subject.start(mobileKey: Constants.mockMobileKey, config: config, user: user)
+
+                    newConfig = config
+                    //change some values and check they're propagated to supporting objects
+                    newConfig.baseUrl = Constants.alternateMockUrl
+                    newConfig.pollIntervalMillis += 1
+                    newConfig.eventFlushIntervalMillis += 1
+
+                    subject.config = newConfig
+                }
+                it("changes to the new config values") {
+                    expect(subject.config) == newConfig
+                    expect(subject.service.config) == newConfig
+                    expect(subject.flagSynchronizer.streamingMode) == newConfig.streamingMode
+                    expect(subject.flagSynchronizer.pollingInterval) == newConfig.flagPollingInterval(runMode: subject.runMode)
+                    expect(subject.eventReporter.config) == newConfig
+                }
+                it("leaves the client offline") {
+                    expect(subject.isOnline) == false
+                }
+            }
+            context("when the client is not started") {
+                var newConfig: LDConfig!
+                beforeEach {
+                    newConfig = subject.config
+                    //change some values and check they're propagated to supporting objects
+                    newConfig.baseUrl = Constants.alternateMockUrl
+                    newConfig.pollIntervalMillis += 1
+                    newConfig.eventFlushIntervalMillis += 1
+
+                    subject.config = newConfig
+                }
+                it("changes to the new config values") {
+                    expect(subject.config) == newConfig
+                    expect(subject.service.config) == newConfig
+                    expect(subject.flagSynchronizer.streamingMode) == newConfig.streamingMode
+                    expect(subject.flagSynchronizer.pollingInterval) == newConfig.flagPollingInterval(runMode: subject.runMode)
+                    expect(subject.eventReporter.config) == newConfig
+                }
+                it("leaves the client offline") {
+                    expect(subject.isOnline) == false
+                }
+            }
+        }
+
+        describe("set user") {
+            var newUser: LDUser!
+            var mockEventStore: LDEventReportingMock!
+            context("when the client is online") {
+                beforeEach {
+                    config.startOnline = true
+                    subject.start(mobileKey: Constants.mockMobileKey, config: config, user: user)
+
+                    newUser = LDUser.stub()
+                    subject.user = newUser
+                }
+                it("changes to the new user") {
+                    expect(subject.user) == newUser
+                    expect(subject.service.user) == newUser
+                    expect(subject.flagSynchronizer.service) === subject.service
+                    expect(subject.eventReporter.service) === subject.service
+                }
+                it("leaves the client online") {
+                    expect(subject.isOnline) == true
+                    expect(subject.eventReporter.isOnline) == true
+                    expect(subject.flagSynchronizer.isOnline) == true
+                }
+                it("records an identify event") {
+                    mockEventStore = subject.eventReporter as? LDEventReportingMock
+                    expect(mockEventStore.recordReceivedArguments?.event.kind == .identify).to(beTrue())
+                }
+            }
+            context("when the client is offline") {
+                beforeEach {
+                    config.startOnline = false
+                    subject.start(mobileKey: Constants.mockMobileKey, config: config, user: user)
+
+                    newUser = LDUser.stub()
+                    subject.user = newUser
+                }
+                it("changes to the new user") {
+                    expect(subject.user) == newUser
+                    expect(subject.service.user) == newUser
+                    expect(subject.flagSynchronizer.service) === subject.service
+                    expect(subject.eventReporter.service) === subject.service
+                }
+                it("leaves the client offline") {
+                    expect(subject.isOnline) == false
+                    expect(subject.eventReporter.isOnline) == false
+                    expect(subject.flagSynchronizer.isOnline) == false
+                }
+                it("records an identify event") {
+                    mockEventStore = subject.eventReporter as? LDEventReportingMock
+                    expect(mockEventStore.recordReceivedArguments?.event.kind == .identify).to(beTrue())
+                }
+            }
+            context("when the client is not started") {
+                beforeEach {
+                    newUser = LDUser.stub()
+                    subject.user = newUser
+                }
+                it("changes to the new user") {
+                    expect(subject.user) == newUser
+                    expect(subject.service.user) == newUser
+                    expect(subject.flagSynchronizer.service) === subject.service
+                    expect(subject.eventReporter.service) === subject.service
+                }
+                it("leaves the client offline") {
+                    expect(subject.isOnline) == false
+                    expect(subject.eventReporter.isOnline) == false
+                    expect(subject.flagSynchronizer.isOnline) == false
+                }
+                it("does not record any event") {
+                    mockEventStore = subject.eventReporter as? LDEventReportingMock
+                    expect(mockEventStore.recordCallCount) == 0
                 }
             }
         }

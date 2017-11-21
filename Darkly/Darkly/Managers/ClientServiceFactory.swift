@@ -12,7 +12,6 @@ protocol ClientServiceCreating {
     func makeDarklyServiceProvider(mobileKey: String, config: LDConfig, user: LDUser) -> DarklyServiceProvider
     func makeFlagSynchronizer(mobileKey: String, streamingMode: LDStreamingMode, pollingInterval: TimeInterval, service: DarklyServiceProvider, store: LDFlagMaintaining) -> LDFlagSynchronizing
     func makeEventReporter(mobileKey: String, config: LDConfig, service: DarklyServiceProvider) -> LDEventReporting
-    func makeFlagStore() -> LDFlagMaintaining
 }
 
 struct ClientServiceFactory: ClientServiceCreating {
@@ -26,9 +25,5 @@ struct ClientServiceFactory: ClientServiceCreating {
 
     func makeEventReporter(mobileKey: String, config: LDConfig, service: DarklyServiceProvider) -> LDEventReporting {
         return LDEventReporter(mobileKey: mobileKey, config: config, service: service)
-    }
-
-    func makeFlagStore() -> LDFlagMaintaining {
-        return LDFlagStore()
     }
 }

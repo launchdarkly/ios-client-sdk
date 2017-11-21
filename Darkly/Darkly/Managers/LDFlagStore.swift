@@ -11,15 +11,17 @@ import Foundation
 //sourcery: AutoMockable
 protocol LDFlagMaintaining {
     var featureFlags: [String: Any] { get }
-    func replaceStore(newFlags: [String: Any]?, source: LDFlagValueSource, completion:(() -> Void)?)
+    //sourcery: DefaultMockValue = .cache
+    var flagValueSource: LDFlagValueSource { get }
+    func replaceStore(newFlags: [String: Any]?, source: LDFlagValueSource, completion: CompletionClosure?)
     //sourcery: NoMock
     func replaceStore(newFlags: [String: Any]?, source: LDFlagValueSource)
 
-    func updateStore(newFlags: [String: Any], source: LDFlagValueSource, completion:(() -> Void)?)
+    func updateStore(newFlags: [String: Any], source: LDFlagValueSource, completion: CompletionClosure?)
     //sourcery: NoMock
     func updateStore(newFlags: [String: Any], source: LDFlagValueSource)
 
-    func deleteFlag(name: String, completion:(() -> Void)?)
+    func deleteFlag(name: String, completion: CompletionClosure?)
     //sourcery: NoMock
     func deleteFlag(name: String)
 }
@@ -47,11 +49,11 @@ final class LDFlagStore: LDFlagMaintaining {
     }
     
     private(set) var featureFlags: [String: Any] = [:]
-    private var flagValueSource = LDFlagValueSource.fallback
+    private(set) var flagValueSource = LDFlagValueSource.fallback
     private var flagQueue = DispatchQueue(label: Constants.flagQueueLabel)
 
     ///Replaces all feature flags with new flags. Pass nil to reset to an empty flag store
-    func replaceStore(newFlags: [String: Any]?, source: LDFlagValueSource, completion:(() -> Void)? = nil) {
+    func replaceStore(newFlags: [String: Any]?, source: LDFlagValueSource, completion: CompletionClosure? = nil) {
         flagQueue.async {
             self.featureFlags = newFlags ?? [:]
             self.flagValueSource = source
@@ -64,7 +66,7 @@ final class LDFlagStore: LDFlagMaintaining {
     }
 
     ///Not implemented. Implement when patch is implemented in streaming event server
-    func updateStore(newFlags: [String: Any], source: LDFlagValueSource, completion:(() -> Void)?) {
+    func updateStore(newFlags: [String: Any], source: LDFlagValueSource, completion: CompletionClosure?) {
         flagQueue.async {
             if let completion = completion {
                 DispatchQueue.main.async {
@@ -75,7 +77,7 @@ final class LDFlagStore: LDFlagMaintaining {
     }
     
     ///Not implemented. Implement when delete is implemented in streaming event server
-    func deleteFlag(name: String, completion:(() -> Void)?) {
+    func deleteFlag(name: String, completion: CompletionClosure?) {
         flagQueue.async {
             if let completion = completion {
                 DispatchQueue.main.async {

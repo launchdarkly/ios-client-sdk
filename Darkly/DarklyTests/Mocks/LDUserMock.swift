@@ -24,7 +24,7 @@ extension LDUser {
     }
 
     static func stub(key: String? = nil) -> LDUser {
-        let user = LDUser(key: key ?? UUID().uuidString,
+        var user = LDUser(key: key ?? UUID().uuidString,
                           name: Constants.name,
                           firstName: Constants.firstName,
                           lastName: Constants.lastName,
@@ -34,7 +34,7 @@ extension LDUser {
                           avatar: Constants.avatar,
                           custom: Constants.custom,
                           isAnonymous: Constants.isAnonymous)
-        user.flagStore.replaceStore(newFlags: DarklyServiceMock.Constants.jsonFlags, source: .cache)
+        user.flagStore = LDFlagMaintainingMock(flags: DarklyServiceMock.Constants.jsonFlags)
         return user
     }
 }

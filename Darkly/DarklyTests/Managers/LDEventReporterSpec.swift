@@ -30,7 +30,7 @@ final class LDEventReporterSpec: QuickSpec {
         config.eventCapacity = Constants.eventCapacity
         config.eventFlushIntervalMillis = eventFlushMillis ?? Constants.eventFlushIntervalMillis
 
-        user = LDUser()
+        user = LDUser.stub()
         
         subject = LDEventReporter(mobileKey: Constants.mockMobileKey, config: config, service: mockService)
         waitUntil { done in
@@ -298,7 +298,7 @@ final class LDEventReporterSpec: QuickSpec {
         }
     }
     
-    private func recordEvents(_ eventCount: Int, completion: (() -> Void)? = nil) {
+    private func recordEvents(_ eventCount: Int, completion: CompletionClosure? = nil) {
         guard eventCount > 0 else {
             completion?()
             return
