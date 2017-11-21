@@ -209,6 +209,17 @@ final class LDFlagSynchronizerSpec: QuickSpec {
                     expect({ self.synchronizerState(synchronizerOnline: true, streamingMode: .streaming, flagRequests: 0, streamCreated: true, streamClosed: false) }).to(match())
                 }
             }
+            context("open event") {
+                beforeEach {
+                    self.mockService.stubFlagRequest(success: true)
+                    self.subject.isOnline = true
+
+                    self.mockService.createdEventSource?.sendOpenEvent()
+                }
+                it("does not request flags") {
+                    expect({ self.synchronizerState(synchronizerOnline: true, streamingMode: .streaming, flagRequests: 0, streamCreated: true, streamClosed: false) }).to(match())
+                }
+            }
         }
 
         describe("polling timer fires") {

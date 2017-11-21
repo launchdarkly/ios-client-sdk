@@ -101,11 +101,11 @@ class LDFlagSynchronizer: LDFlagSynchronizing {
     
     private func process(_ event: DarklyEventSource.LDEvent?) {
         guard streamingActive,
-            let event = event
+            let event = event?.event
         else { return }    //Since eventSource.close() is async, this prevents responding to events after .close() is called, but before it's actually closed
         //NOTE: It is possible that an LDEventSource was replaced and the event reported here is from the previous eventSource. However there is no information about the eventSource in the LDEvent to do anything about it.
 
-        switch event.event {
+        switch event {
         case Event.ping.rawValue: makeFlagRequest()
         //TODO: Add put, patch, & delete
         default: break

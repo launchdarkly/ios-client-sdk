@@ -24,6 +24,11 @@ extension DarklyStreamingProviderMock {
         guard let messageHandler = onMessageEventReceivedHandler else { return }
         messageHandler(nil)
     }
+
+    func sendOpenEvent() {
+        guard let messageHandler = onMessageEventReceivedHandler else { return }
+        messageHandler(DarklyEventSource.LDEvent.stubOpenEvent())
+    }
 }
 
 extension DarklyEventSource.LDEvent {
@@ -39,6 +44,15 @@ extension DarklyEventSource.LDEvent {
         let event = DarklyEventSource.LDEvent()
         event.event = ":"
         event.data = ""
+        event.readyState = kEventStateOpen
+        return event
+    }
+
+    class func stubOpenEvent() -> DarklyEventSource.LDEvent {
+        let event = DarklyEventSource.LDEvent()
+        event.id = nil
+        event.event = nil
+        event.data = nil
         event.readyState = kEventStateOpen
         return event
     }
