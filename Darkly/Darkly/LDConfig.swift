@@ -21,7 +21,7 @@ public struct LDConfig {
     fileprivate struct Defaults {
         static let baseUrl = URL(string: "https://app.launchdarkly.com")!
         static let eventsUrl = URL(string: "https://mobile.launchdarkly.com")!
-        static let streamUrl = URL(string: "https://clientstream.launchdarkly.com/mping")!  //Android SDK has this, ios has it hard-coded
+        static let streamUrl = URL(string: "https://clientstream.launchdarkly.com")!  //Android SDK has this, ios has it hard-coded
         
         static let eventCapacity = 100
         
