@@ -88,21 +88,24 @@ public class LDClient {
     // MARK: - Public
     
     ///Starts the LDClient using the passed in mobile key, config, & user
-    ///Uses the default config and a new user if those parameters are not included
+    ///Starting the LDClient means setting the config & user, taking the client online if config.startOnline is true (the default setting), and starting event recording
+    ///Uses the previously set config and user if those parameters are not included. If a config or user was not previously set, uses a default config or user
     ///Usage:
     ///     LDClient.shared.start(mobileKey: appMobileKey, config: appConfig, user: appUser)
     ///Call this before you want to capture feature flags. The LDClient will not go online until you call this method.
-    ///Subsequent calls to this method cause the LDClient to go offline, reconfigure using the new config & user (if supplied), and then go online
+    ///Subsequent calls to this method cause the LDClient to go offline, reconfigure using the new config & user (if supplied), and then go online if it was online when start was called
     public func start(mobileKey: String, config: LDConfig? = nil, user: LDUser? = nil) {
         let wasStarted = hasStarted
+        let wasOnline = isOnline
         hasStarted = true
 
         isOnline = false
 
         self.mobileKey = mobileKey
         self.config = config ?? self.config
+        self.user = user ?? self.user
 
-        self.isOnline = wasStarted || (!wasStarted && self.config.startOnline)
+        self.isOnline = (wasStarted && wasOnline) || (!wasStarted && self.config.startOnline)
     }
 
     private func effectiveStreamingMode(runMode: LDClientRunMode) -> LDStreamingMode {

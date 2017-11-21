@@ -35,7 +35,6 @@ final class LDClientSpec: QuickSpec {
         describe("start") {
             context("when configured to start online") {
                 beforeEach {
-                    subject = LDClient(serviceFactory: ClientServiceMockFactory())
                     config.startOnline = true
 
                     subject.start(mobileKey: Constants.mockMobileKey, config: config, user: user)
@@ -51,6 +50,12 @@ final class LDClientSpec: QuickSpec {
                     expect(subject.flagSynchronizer.streamingMode) == config.streamingMode
                     expect(subject.flagSynchronizer.pollingInterval) == config.flagPollingInterval(runMode: subject.runMode)
                     expect(subject.eventReporter.config) == config
+                }
+                it("saves the user") {
+                    expect(subject.user) == user
+                    expect(subject.service.user) == user
+                    expect(subject.flagSynchronizer.service) === subject.service
+                    expect(subject.eventReporter.service) === subject.service
                 }
             }
             context("when configured to start offline") {
@@ -68,6 +73,12 @@ final class LDClientSpec: QuickSpec {
                     expect(subject.flagSynchronizer.streamingMode) == config.streamingMode
                     expect(subject.flagSynchronizer.pollingInterval) == config.flagPollingInterval(runMode: subject.runMode)
                     expect(subject.eventReporter.config) == config
+                }
+                it("saves the user") {
+                    expect(subject.user) == user
+                    expect(subject.service.user) == user
+                    expect(subject.flagSynchronizer.service) === subject.service
+                    expect(subject.eventReporter.service) === subject.service
                 }
             }
             context("when configured to allow background updates and running in background mode") {
@@ -89,6 +100,12 @@ final class LDClientSpec: QuickSpec {
                     expect(subject.flagSynchronizer.pollingInterval) == config.flagPollingInterval(runMode: .background)
                     expect(subject.eventReporter.config) == config
                 }
+                it("saves the user") {
+                    expect(subject.user) == user
+                    expect(subject.service.user) == user
+                    expect(subject.flagSynchronizer.service) === subject.service
+                    expect(subject.eventReporter.service) === subject.service
+                }
             }
             context("when configured to not allow background updates and running in background mode") {
                 beforeEach {
@@ -109,6 +126,128 @@ final class LDClientSpec: QuickSpec {
                     expect(subject.flagSynchronizer.streamingMode) == LDStreamingMode.polling
                     expect(subject.flagSynchronizer.pollingInterval) == config.flagPollingInterval(runMode: .foreground)
                     expect(subject.eventReporter.config) == config
+                }
+                it("saves the user") {
+                    expect(subject.user) == user
+                    expect(subject.service.user) == user
+                    expect(subject.flagSynchronizer.service) === subject.service
+                    expect(subject.eventReporter.service) === subject.service
+                }
+            }
+            context("when called more than once") {
+                var newConfig: LDConfig!
+                var newUser: LDUser!
+                context("while online") {
+                    beforeEach {
+                        config.startOnline = true
+                        subject.start(mobileKey: Constants.mockMobileKey, config: config, user: user)
+
+                        newConfig = subject.config
+                        newConfig.baseUrl = Constants.alternateMockUrl
+
+                        newUser = LDUser.stub()
+
+                        subject.start(mobileKey: Constants.mockMobileKey, config: newConfig, user: newUser)
+                    }
+                    it("takes the client and service objects online") {
+                        expect(subject.isOnline) == true
+                        expect(subject.flagSynchronizer.isOnline) == subject.isOnline
+                        expect(subject.eventReporter.isOnline) == subject.isOnline
+                    }
+                    it("saves the config") {
+                        expect(subject.config) == newConfig
+                        expect(subject.service.config) == newConfig
+                        expect(subject.eventReporter.config) == newConfig
+                    }
+                    it("saves the user") {
+                        expect(subject.user) == newUser
+                        expect(subject.service.user) == newUser
+                        expect(subject.flagSynchronizer.service) === subject.service
+                        expect(subject.eventReporter.service) === subject.service
+                    }
+                }
+                context("while offline") {
+                    beforeEach {
+                        config.startOnline = false
+                        subject.start(mobileKey: Constants.mockMobileKey, config: config, user: user)
+
+                        newConfig = subject.config
+                        newConfig.baseUrl = Constants.alternateMockUrl
+
+                        newUser = LDUser.stub()
+
+                        subject.start(mobileKey: Constants.mockMobileKey, config: newConfig, user: newUser)
+                    }
+                    it("leaves the client and service objects offline") {
+                        expect(subject.isOnline) == false
+                        expect(subject.flagSynchronizer.isOnline) == subject.isOnline
+                        expect(subject.eventReporter.isOnline) == subject.isOnline
+                    }
+                    it("saves the config") {
+                        expect(subject.config) == newConfig
+                        expect(subject.service.config) == newConfig
+                        expect(subject.eventReporter.config) == newConfig
+                    }
+                    it("saves the user") {
+                        expect(subject.user) == newUser
+                        expect(subject.service.user) == newUser
+                        expect(subject.flagSynchronizer.service) === subject.service
+                        expect(subject.eventReporter.service) === subject.service
+                    }
+                }
+            }
+            context("when called without config or user") {
+                context("after setting config and user") {
+                    beforeEach {
+                        subject.config = config
+                        subject.user = user
+                        subject.start(mobileKey: Constants.mockMobileKey)
+                    }
+                    it("saves the config") {
+                        expect(subject.config) == config
+                        expect(subject.service.config) == config
+                        expect(subject.eventReporter.config) == config
+                    }
+                    it("saves the user") {
+                        expect(subject.user) == user
+                        expect(subject.service.user) == user
+                        expect(subject.flagSynchronizer.service) === subject.service
+                        expect(subject.eventReporter.service) === subject.service
+                    }
+                }
+                context("without setting config or user") {
+                    beforeEach {
+                        subject.start(mobileKey: Constants.mockMobileKey)
+                        config = subject.config
+                        user = subject.user
+                    }
+                    it("saves the config") {
+                        expect(subject.config) == config
+                        expect(subject.service.config) == config
+                        expect(subject.eventReporter.config) == config
+                    }
+                    it("saves the user") {
+                        expect(subject.user) == user
+                        expect(subject.service.user) == user
+                        expect(subject.flagSynchronizer.service) === subject.service
+                        expect(subject.eventReporter.service) === subject.service
+                    }
+                }
+            }
+            context("when called with cached flags for the user") {
+                var flags: [String: Any]!
+                var mockFlagStore: LDFlagMaintainingMock!
+                beforeEach {
+                    user = LDFlagCache().stubAndStoreUsers(count: 1).first
+                    flags = user.flagStore.featureFlags
+                    mockFlagStore = user.flagStore as? LDFlagMaintainingMock
+                    mockFlagStore?.replaceStore(newFlags: [:], source: .cache)
+
+                    config.startOnline = false
+                    subject.start(mobileKey: Constants.mockMobileKey, config: config, user: user)
+                }
+                it("restores user flags from cache") {
+                    expect(mockFlagStore.replaceStoreReceivedArguments?.newFlags == flags).to(beTrue())
                 }
             }
         }
