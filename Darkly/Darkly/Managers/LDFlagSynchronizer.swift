@@ -49,6 +49,8 @@ class LDFlagSynchronizer: LDFlagSynchronizing {
     var streamingActive: Bool { return eventSource != nil }
     var pollingActive: Bool { return flagRequestTimer != nil }
     
+    //TODO: flag synchronizer doesn't need the mobile key, remove it
+    //TODO: Flag synchronizer needs to cache flags on flag response. Provide a user instead of a flag store.
     init(mobileKey: String, streamingMode: LDStreamingMode, pollingInterval: TimeInterval, service: DarklyServiceProvider, store: LDFlagMaintaining) {
         self.mobileKey = mobileKey
         self.streamingMode = streamingMode
@@ -166,6 +168,7 @@ class LDFlagSynchronizer: LDFlagSynchronizing {
         }
         
         flagStore.replaceStore(newFlags: flags, source: .server)
+        //TODO: Cache the new flags
     }
     
     private func report(_ error: Error?) {

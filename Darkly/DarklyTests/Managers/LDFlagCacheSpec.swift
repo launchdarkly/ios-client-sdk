@@ -88,7 +88,7 @@ final class LDFlagCacheSpec: QuickSpec {
 
         describe("retrieveLatest") {
             var retrievedFlags: [String: Any]?
-            context("when there are no cached users") {
+            context("when there are no cached flags") {
                 beforeEach {
                     subject = LDFlagCache()
                     subject.clearAllUsersForTesting()
@@ -98,10 +98,10 @@ final class LDFlagCacheSpec: QuickSpec {
                     expect(retrievedFlags).to(beNil())
                 }
             }
-            context("when there are cached users") {
+            context("when there are cached flags") {
                 var latestFlags: [String: Any]?
                 beforeEach {
-                    let userStubs = subject.stubAndStoreUsers(count: 3)
+                    let userStubs = subject.stubAndStoreUserFlags(count: 3)
                     latestFlags = userStubs.last?.flagStore.featureFlags
 
                     retrievedFlags = subject.retrieveLatest()
@@ -117,9 +117,9 @@ final class LDFlagCacheSpec: QuickSpec {
                 var userStubs: [LDUser]!
                 var retrievedFlags: [String: Any]?
                 beforeEach {
-                    userStubs = subject.stubAndStoreUsers(count: subject.maxCachedValues + 1)
+                    userStubs = subject.stubAndStoreUserFlags(count: subject.maxCachedValues + 1)
                 }
-                it("stores the flags and removes the oldest user from the cache") {
+                it("stores the flags and removes the oldest flags from the cache") {
                     for index in 0..<userStubs.count {
                         retrievedFlags = subject.retrieveFlags(for: userStubs[index])
                         if index == 0 {
@@ -136,7 +136,7 @@ final class LDFlagCacheSpec: QuickSpec {
 }
 
 extension LDFlagCache {
-    func stubAndStoreUsers(count: Int) -> [LDUser] {
+    func stubAndStoreUserFlags(count: Int) -> [LDUser] {
         var userStubs = [LDUser]()
         while userStubs.count < count {
             let newUser = LDUser.stub()
@@ -194,27 +194,5 @@ extension Dictionary where Key == String, Value == LDUser {
         guard !self.isEmpty else { return }
         guard let oldestPair = self.max(by: { (pair1, pair2) -> Bool in pair1.value.lastUpdated > pair2.value.lastUpdated }) else { return }
         self.removeValue(forKey: oldestPair.key)
-    }
-}
-
-extension LDUser {
-    fileprivate func matches(user otherUser: LDUser) -> ToMatchResult {
-        var messages = [String]()
-        if key != otherUser.key { messages.append("key equals \(key)") }
-        if name != otherUser.name { messages.append("name equals \(name ?? "<nil>")") }
-        if firstName != otherUser.firstName { messages.append("firstName equals \(firstName ?? "<nil>")") }
-        if lastName != otherUser.lastName { messages.append("lastName equals \(lastName ?? "<nil>")") }
-        if isAnonymous != otherUser.isAnonymous { messages.append("isAnonymous equals \(isAnonymous)") }
-        if country != otherUser.country { messages.append("country equals \(country ?? "<nil>")") }
-        if ipAddress != otherUser.ipAddress { messages.append("ipAddress equals \(ipAddress ?? "<nil>")") }
-        if email != otherUser.email { messages.append("email equals \(email ?? "<nil>")") }
-        if avatar != otherUser.avatar { messages.append("avatar equals \(avatar ?? "<nil>")") }
-        if custom != otherUser.custom { messages.append("custom equals \(custom?.description ?? "<nil>")") }
-        if device != otherUser.device { messages.append("device equals \(device ?? "<nil>")") }
-        if operatingSystem != otherUser.operatingSystem { messages.append("operatingSystem equals \(operatingSystem ?? "<nil>")") }
-        if lastUpdated.jsonDate != otherUser.lastUpdated.jsonDate { messages.append("lastUpdated equals \(lastUpdated.jsonDate)") }
-        if flagStore.featureFlags != otherUser.flagStore.featureFlags { messages.append("featureFlags equals \(flagStore.featureFlags)") }
-
-        return messages.isEmpty ? .matched : .failed(reason: messages.joined(separator: ", "))
     }
 }
