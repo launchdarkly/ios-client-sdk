@@ -106,26 +106,6 @@ public struct LDUser {
         return json
     }
 
-    public func merge(with otherUser: LDUser) -> LDUser {
-        var mergedUser = self
-
-        mergedUser.key = otherUser.key
-        mergedUser.name = otherUser.name.isNilOrEmpty ? mergedUser.name : otherUser.name
-        mergedUser.firstName = otherUser.firstName.isNilOrEmpty ? mergedUser.firstName : otherUser.firstName
-        mergedUser.lastName = otherUser.lastName.isNilOrEmpty ? mergedUser.lastName : otherUser.lastName
-        mergedUser.country = otherUser.country.isNilOrEmpty ? mergedUser.country : otherUser.country
-        mergedUser.ipAddress = otherUser.ipAddress.isNilOrEmpty ? mergedUser.ipAddress : otherUser.ipAddress
-        mergedUser.email = otherUser.email.isNilOrEmpty ? mergedUser.email : otherUser.email
-        mergedUser.avatar = otherUser.avatar.isNilOrEmpty ? mergedUser.avatar : otherUser.avatar
-        mergedUser.custom = otherUser.custom.isNilOrEmpty ? mergedUser.custom : otherUser.custom
-        mergedUser.isAnonymous = otherUser.isAnonymous
-        mergedUser.device = otherUser.device.isNilOrEmpty ? mergedUser.device : otherUser.device
-        mergedUser.operatingSystem = otherUser.operatingSystem.isNilOrEmpty ? mergedUser.operatingSystem : otherUser.operatingSystem
-        mergedUser.lastUpdated = Date()
-
-        return mergedUser
-    }
-
     //For iOS & tvOS, this should be UIDevice.current.identifierForVendor.UUIDString
     //For macOS & watchOS, this should be a UUID that the sdk creates and stores so that the value returned here should be always the same
     static var defaultKey: String {

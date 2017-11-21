@@ -385,67 +385,6 @@ final class LDUserSpec: QuickSpec {
                 }
             }
         }
-
-        describe("merge with user") {
-            var originalUser: LDUser!
-            var otherUser: LDUser!
-            context("when the other user has optional elements") {
-                beforeEach {
-                    originalUser = LDUser(isAnonymous: true)
-                    otherUser = LDUser(key: mockKey, name: mockName, firstName: mockFirstName, lastName: mockLastName, country: mockCountry, ipAddress: mockIPAddress, email: mockEmail, avatar: mockAvatar, custom: mockCustom, isAnonymous: mockIsAnonymous)
-
-                    subject = originalUser.merge(with: otherUser)
-                }
-                it("merges the other user together with the original user into a new user") {
-                    expect(subject.key) == mockKey
-                    expect(subject.name) == mockName
-                    expect(subject.firstName) == mockFirstName
-                    expect(subject.lastName) == mockLastName
-                    expect(subject.isAnonymous) == mockIsAnonymous
-                    expect(subject.country) == mockCountry
-                    expect(subject.ipAddress) == mockIPAddress
-                    expect(subject.email) == mockEmail
-                    expect(subject.avatar) == mockAvatar
-                    expect(subject.device) == mockDevice
-                    expect(subject.operatingSystem) == mockOS
-                    expect(subject.custom).toNot(beNil())
-                    if let subjectCustom = subject.custom {
-                        expect(subjectCustom == mockCustom).to(beTrue())
-                    }
-                    expect(subject.lastUpdated).toNot(beNil())
-                    expect(subject.lastUpdated) != originalUser.lastUpdated
-                    expect(subject.lastUpdated) != otherUser.lastUpdated
-                }
-            }
-            context("when the original user has optional elements") {
-                beforeEach {
-                    originalUser = LDUser(key: mockKey, name: mockName, firstName: mockFirstName, lastName: mockLastName, country: mockCountry, ipAddress: mockIPAddress, email: mockEmail, avatar: mockAvatar, custom: mockCustom, isAnonymous: mockIsAnonymous)
-                    otherUser = LDUser(isAnonymous: true)
-
-                    subject = originalUser.merge(with: otherUser)
-                }
-                it("merges the other user together with the original user into a new user") {
-                    expect(subject.key) == otherUser.key
-                    expect(subject.name) == mockName
-                    expect(subject.firstName) == mockFirstName
-                    expect(subject.lastName) == mockLastName
-                    expect(subject.isAnonymous) == otherUser.isAnonymous
-                    expect(subject.country) == mockCountry
-                    expect(subject.ipAddress) == mockIPAddress
-                    expect(subject.email) == mockEmail
-                    expect(subject.avatar) == mockAvatar
-                    expect(subject.device) == mockDevice
-                    expect(subject.operatingSystem) == mockOS
-                    expect(subject.custom).toNot(beNil())
-                    if let subjectCustom = subject.custom {
-                        expect(subjectCustom == mockCustom).to(beTrue())
-                    }
-                    expect(subject.lastUpdated).toNot(beNil())
-                    expect(subject.lastUpdated) != originalUser.lastUpdated
-                    expect(subject.lastUpdated) != otherUser.lastUpdated
-                }
-            }
-        }
     }
 }
 
