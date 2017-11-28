@@ -7,7 +7,7 @@
 #import "LDUserModel.h"
 #import "LDDataManager.h"
 #import "DarklyXCTestCase.h"
-#import <OCMock.h>
+#import "OCMock.h"
 
 @interface LDUserBuilderTest : DarklyXCTestCase
 

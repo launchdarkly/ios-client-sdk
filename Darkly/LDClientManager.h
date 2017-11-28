@@ -21,7 +21,7 @@
 }
 #endif
 
-@property (nonatomic) BOOL offlineEnabled;
+@property (nonatomic, assign, getter=isOnline) BOOL online;
 
 +(LDClientManager *)sharedInstance;
 

@@ -4,8 +4,8 @@
 
 #import "DarklyXCTestCase.h"
 #import "LDDataManager.h"
-#import <OHPathHelpers.h>
-#import <OCMock.h>
+#import "OHPathHelpers.h"
+#import "OCMock.h"
 
 @implementation DarklyXCTestCase
 
@@ -13,7 +13,6 @@
     [super setUp];
 
     [[NSUserDefaults standardUserDefaults] removeObjectForKey:kUserDictionaryStorageKey];
-    [[LDDataManager sharedManager] flushEventsDictionary];
 }
 
 - (void)tearDown {

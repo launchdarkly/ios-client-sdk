@@ -11,14 +11,13 @@
 #import "DarklyConstants.h"
 #import "NSThread+MainExecutable.h"
 
-@interface LDClient() {
-    BOOL clientStarted;
-}
+@interface LDClient()
+@property(nonatomic, strong) LDUserModel *ldUser;
+@property(nonatomic, strong) LDConfig *ldConfig;
+@property (nonatomic, assign) BOOL clientStarted;
 @end
 
 @implementation LDClient
-
-@synthesize ldUser, ldConfig;
 
 +(LDClient *)sharedInstance
 {
@@ -38,6 +37,9 @@
         [[NSNotificationCenter defaultCenter] addObserver: sharedLDClient
                                                  selector:@selector(configFlagUpdated:)
                                                      name:kLDFlagConfigChangedNotification object:nil];
+        [[NSNotificationCenter defaultCenter] addObserver: sharedLDClient
+                                                 selector:@selector(handleClientUnauthorizedNotification)
+                                                     name:kLDClientUnauthorizedNotification object:nil];
     });
     return sharedLDClient;
 }
@@ -48,7 +50,7 @@
 
 - (BOOL)start:(LDConfig *)inputConfig withUserBuilder:(LDUserBuilder *)inputUserBuilder {
     DEBUG_LOGX(@"LDClient start method called");
-    if (clientStarted) {
+    if (self.clientStarted) {
         DEBUG_LOGX(@"LDClient client already started");
         return NO;
     }
@@ -56,26 +58,25 @@
         DEBUG_LOGX(@"LDClient client requires a config to start");
         return NO;
     }
-    ldConfig = inputConfig;
+    self.ldConfig = inputConfig;
 
-    [LDUtil setLogLevel:[ldConfig debugEnabled] ? DarklyLogLevelDebug : DarklyLogLevelCriticalOnly];
+    [LDUtil setLogLevel:[self.ldConfig debugEnabled] ? DarklyLogLevelDebug : DarklyLogLevelCriticalOnly];
     
-    clientStarted = YES;
+    self.clientStarted = YES;
     DEBUG_LOGX(@"LDClient started");
     inputUserBuilder = inputUserBuilder ?: [[LDUserBuilder alloc] init];
-    ldUser = [inputUserBuilder build];
+    self.ldUser = [inputUserBuilder build];
     
-    [LDClientManager sharedInstance].offlineEnabled = NO;
-    [[LDClientManager sharedInstance] startPolling];
+    [LDClientManager sharedInstance].online = YES;
     
     return YES;
 }
 
 - (BOOL)updateUser:(LDUserBuilder *)builder {
     DEBUG_LOGX(@"LDClient updateUser method called");
-    if (clientStarted) {
+    if (self.clientStarted) {
         if (builder) {
-            ldUser = [LDUserBuilder compareNewBuilder:builder withUser:ldUser];
+            self.ldUser = [LDUserBuilder compareNewBuilder:builder withUser:self.ldUser];
             LDClientManager *clientManager = [LDClientManager sharedInstance];
             [clientManager syncWithServerForConfig];
             return YES;
@@ -91,8 +92,8 @@
 
 - (LDUserBuilder *)currentUserBuilder {
     DEBUG_LOGX(@"LDClient currentUserBuilder method called");
-    if (clientStarted) {
-        return [LDUserBuilder currentBuilder:ldUser];
+    if (self.clientStarted) {
+        return [LDUserBuilder currentBuilder:self.ldUser];
     } else {
         DEBUG_LOGX(@"LDClient not started yet!");
         return nil;
@@ -105,9 +106,9 @@
         NSLog(@"featureKey should be an NSString. Returning fallback value");
         return fallback;
     }
-    if (clientStarted) {
-        BOOL flagExists = [ldUser doesFlagExist: featureKey];
-        NSObject *flagValue = [ldUser flagValue: featureKey];
+    if (self.clientStarted) {
+        BOOL flagExists = [self.ldUser doesFlagExist: featureKey];
+        NSObject *flagValue = [self.ldUser flagValue: featureKey];
         BOOL returnValue = fallback;
         if ([flagValue isKindOfClass:[NSNumber class]] && flagExists) {
             returnValue = [(NSNumber *)flagValue boolValue];
@@ -127,9 +128,9 @@
         NSLog(@"featureKey should be an NSString. Returning fallback value");
         return fallback;
     }
-    if (clientStarted) {
-        BOOL flagExists = [ldUser doesFlagExist: featureKey];
-        NSObject *flagValue = [ldUser flagValue: featureKey];
+    if (self.clientStarted) {
+        BOOL flagExists = [self.ldUser doesFlagExist: featureKey];
+        NSObject *flagValue = [self.ldUser flagValue: featureKey];
         NSNumber *returnValue = fallback;
         if ([flagValue isKindOfClass:[NSNumber class]] && flagExists) {
             returnValue = (NSNumber *)flagValue;
@@ -149,12 +150,12 @@
         NSLog(@"featureKey should be an NSString. Returning fallback value");
         return fallback;
     }
-    if (!clientStarted) {
+    if (!self.clientStarted) {
         DEBUG_LOGX(@"LDClient not started yet!");
         return fallback;
     }
-    BOOL flagExists = [ldUser doesFlagExist: featureKey];
-    id flagValue = [ldUser flagValue: featureKey];
+    BOOL flagExists = [self.ldUser doesFlagExist: featureKey];
+    id flagValue = [self.ldUser flagValue: featureKey];
     double returnValue = fallback;
     if (flagExists && [flagValue isKindOfClass:[NSNumber class]]) {
         returnValue = [((NSNumber *)flagValue) doubleValue];
@@ -170,9 +171,9 @@
         NSLog(@"featureKey should be an NSString. Returning fallback value");
         return fallback;
     }
-    if (clientStarted) {
-        BOOL flagExists = [ldUser doesFlagExist: featureKey];
-        NSObject *flagValue = [ldUser flagValue: featureKey];
+    if (self.clientStarted) {
+        BOOL flagExists = [self.ldUser doesFlagExist: featureKey];
+        NSObject *flagValue = [self.ldUser flagValue: featureKey];
         NSString *returnValue = fallback;
         if ([flagValue isKindOfClass:[NSString class]] && flagExists) {
             returnValue = (NSString *)flagValue;
@@ -192,12 +193,12 @@
         NSLog(@"featureKey should be an NSString. Returning fallback value");
         return fallback;
     }
-    if (!clientStarted) {
+    if (!self.clientStarted) {
         DEBUG_LOGX(@"LDClient not started yet!");
         return fallback;
     }
-    BOOL flagExists = [ldUser doesFlagExist: featureKey];
-    id flagValue = [ldUser flagValue: featureKey];
+    BOOL flagExists = [self.ldUser doesFlagExist: featureKey];
+    id flagValue = [self.ldUser flagValue: featureKey];
     NSArray *returnValue = fallback;
     if (flagExists && [flagValue isKindOfClass:[NSArray class]]) {
         returnValue = (NSArray *)flagValue;
@@ -213,12 +214,12 @@
         NSLog(@"featureKey should be an NSString. Returning fallback value");
         return fallback;
     }
-    if (!clientStarted) {
+    if (!self.clientStarted) {
         DEBUG_LOGX(@"LDClient not started yet!");
         return fallback;
     }
-    BOOL flagExists = [ldUser doesFlagExist: featureKey];
-    id flagValue = [ldUser flagValue: featureKey];
+    BOOL flagExists = [self.ldUser doesFlagExist: featureKey];
+    id flagValue = [self.ldUser flagValue: featureKey];
     NSDictionary *returnValue = fallback;
     if (flagExists && [flagValue isKindOfClass:[NSDictionary class]]) {
         returnValue = (NSDictionary *)flagValue;
@@ -231,7 +232,7 @@
 - (BOOL)track:(NSString *)eventName data:(NSDictionary *)dataDictionary
 {
     DEBUG_LOG(@"LDClient track method called for event=%@ and data=%@", eventName, dataDictionary);
-    if (clientStarted) {
+    if (self.clientStarted) {
         [[LDDataManager sharedManager] createCustomEvent:eventName
                               withCustomValuesDictionary: dataDictionary];
         return YES;
@@ -244,10 +245,9 @@
 - (BOOL)offline
 {
     DEBUG_LOGX(@"LDClient offline method called");
-    if (clientStarted) {
+    if (self.clientStarted) {
         LDClientManager *clientManager = [LDClientManager sharedInstance];
-        [clientManager stopPolling];
-        [clientManager setOfflineEnabled:YES];
+        [clientManager setOnline:NO];
         return YES;
     } else {
         DEBUG_LOGX(@"LDClient not started yet!");
@@ -258,10 +258,9 @@
 - (BOOL)online
 {
     DEBUG_LOGX(@"LDClient online method called");
-    if (clientStarted) {
+    if (self.clientStarted) {
         LDClientManager *clientManager = [LDClientManager sharedInstance];
-        [clientManager setOfflineEnabled:NO];
-        [clientManager startPolling];
+        [clientManager setOnline:YES];
         return YES;
     } else {
         DEBUG_LOGX(@"LDClient not started yet!");
@@ -271,7 +270,7 @@
 
 - (BOOL)flush {
     DEBUG_LOGX(@"LDClient flush method called");
-    if (clientStarted) {
+    if (self.clientStarted) {
         LDClientManager *clientManager = [LDClientManager sharedInstance];
         [clientManager flushEvents];
         return YES;
@@ -283,16 +282,14 @@
 
 - (BOOL)stopClient {
     DEBUG_LOGX(@"LDClient stop method called");
-    if (clientStarted) {
-        LDClientManager *clientManager = [LDClientManager sharedInstance];
-        [clientManager stopPolling];
-        
-        clientStarted = NO;
-        return YES;
-    } else {
+    if (!self.clientStarted) {
         DEBUG_LOGX(@"LDClient not started yet!");
         return NO;
     }
+
+    [self offline];
+    self.clientStarted = NO;
+    return YES;
 }
 
 // Notification handler for ClientManager user updated
@@ -324,6 +321,14 @@
     if (![self.delegate respondsToSelector:@selector(featureFlagDidUpdate:)]) { return; }
     [NSThread performOnMainThread:^{
         [self.delegate featureFlagDidUpdate:[notification.userInfo objectForKey:@"flagkey"]];
+    }];
+}
+
+//Notification handler for Client Unauthorized notification
+-(void)handleClientUnauthorizedNotification {
+    [NSThread performOnMainThread:^{
+        DEBUG_LOGX(@"LDClient received Client Unauthorized notification. Taking LDClient offline.");
+        [self offline];
     }];
 }
 

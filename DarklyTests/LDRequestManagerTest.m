@@ -2,7 +2,7 @@
 //  Copyright © 2015 Catamorphic Co. All rights reserved.
 //
 
-#import <OCMock.h>
+#import "OCMock.h"
 #import <OHHTTPStubs/OHHTTPStubs.h>
 
 #import "DarklyXCTestCase.h"
@@ -21,6 +21,8 @@ static NSString *const emptyJson = @"{ }";
 static NSString *const flagRequestHost = @"app.launchdarkly.com";
 static NSString *const eventRequestHost = @"mobile.launchdarkly.com";
 static const int httpStatusCodeOk = 200;
+static const int httpStatusCodeUnauthorized = 401;
+static const int httpStatusCodeInternalServerError = 500;
 
 @interface LDRequestManagerTest : DarklyXCTestCase
 @property (nonatomic) id clientManagerMock;
@@ -28,21 +30,27 @@ static const int httpStatusCodeOk = 200;
 @end
 
 @implementation LDRequestManagerTest
-@synthesize clientManagerMock;
-@synthesize ldClientMock;
 
 - (void)setUp {
     [super setUp];
+    [OHHTTPStubs removeAllStubs];
+
+    self.ldClientMock = [self mockClientWithUser:[self mockUser] config:[self testConfig]];
     
-    ldClientMock = [self mockClientWithUser:[self mockUser] config:[self testConfig]];
-    
-    clientManagerMock = OCMClassMock([LDClientManager class]);
+    id clientManagerMock = OCMClassMock([LDClientManager class]);
     OCMStub(ClassMethod([clientManagerMock sharedInstance])).andReturn(clientManagerMock);
+    OCMStub([clientManagerMock isOnline]).andReturn(YES);
+    self.clientManagerMock = clientManagerMock;
+
 }
 
 - (void)tearDown {
     // Put teardown code here. This method is called after the invocation of each test method in the class.
     [super tearDown];
+    [self.ldClientMock stopMocking];
+    self.ldClientMock = nil;
+    [self.clientManagerMock stopMocking];
+    self.clientManagerMock = nil;
     [LDRequestManager sharedInstance].delegate = nil;
     [OHHTTPStubs removeAllStubs];
 }
@@ -50,7 +58,7 @@ static const int httpStatusCodeOk = 200;
 - (void)testPerformFeatureFlagRequestMakesGetRequestAndCallsDelegateOnSuccess {
     XCTestExpectation *getRequestMade = [self expectationWithDescription:@"feature flag GET request made"];
     
-    __block id requestManagerDelegateMock = [OCMockObject niceMockForProtocol:@protocol(RequestManagerDelegate)];
+    id requestManagerDelegateMock = [OCMockObject niceMockForProtocol:@protocol(RequestManagerDelegate)];
     [[requestManagerDelegateMock expect] processedConfig:YES jsonConfigDictionary:[OCMArg isKindOfClass:[NSDictionary class]]];
     [LDRequestManager sharedInstance].delegate = requestManagerDelegateMock;
 
@@ -233,7 +241,7 @@ static const int httpStatusCodeOk = 200;
         }].name = reportStubName;
         
         [OHHTTPStubs stubRequestsPassingTest:^BOOL(NSURLRequest *request) {
-            return [request.URL.host isEqualToString:flagRequestHost] && [request.HTTPMethod isEqualToString:httpMethodGet];
+            return [kBaseUrl containsString:request.URL.host] && [request.HTTPMethod isEqualToString:httpMethodGet];
         } withStubResponse:^OHHTTPStubsResponse*(NSURLRequest *request) {
             XCTFail(@"Request Manager made GET flag request in response to a non-fallback status code");
             return [OHHTTPStubsResponse responseWithData: [self emptyJsonData] statusCode:httpStatusCodeOk headers:[self headerForStatusCode:httpStatusCodeOk]];
@@ -261,36 +269,67 @@ static const int httpStatusCodeOk = 200;
     }
 }
 
-- (void)testPerformFeatureFlagRequestWithoutMobileKey {
-    //This test is a little unfair because the LDConfig can't be created without a mobile key, and it's not settable.
-    //However the LDRequestManager mobileKey IS settable, and so a client could remove a key after the LDRequestManager is instantiated.
-    //The client would probably be trying to break the sdk in that case, so testing it seems appropriate
-    [LDRequestManager sharedInstance].mobileKey = nil;
-    XCTAssertNil([LDRequestManager sharedInstance].mobileKey);
-    
-    [self mockFlagResponse];
-    
-    [OHHTTPStubs onStubActivation:^(NSURLRequest * _Nonnull request, id<OHHTTPStubsDescriptor>  _Nonnull stub) {
-        if ([request.URL.host isEqualToString:kBaseUrl]) {
-            XCTFail(@"performFeatureFlagRequest should not make a flag request without a mobile key");
-        }
-    }];
-    
-    [[LDRequestManager sharedInstance] performFeatureFlagRequest:[LDClient sharedInstance].ldUser];
-}
-
 - (void)testPerformFeatureFlagRequestWithoutUser {
     [self mockClientWithUser:nil config:[self testConfig]];
     
     [self mockFlagResponse];
     
     [OHHTTPStubs onStubActivation:^(NSURLRequest * _Nonnull request, id<OHHTTPStubsDescriptor>  _Nonnull stub) {
-        if ([request.URL.host isEqualToString:kBaseUrl]) {
+        if ([kBaseUrl containsString:request.URL.host]) {
             XCTFail(@"performFeatureFlagRequest should not make a flag request without a user");
         }
     }];
     
     [[LDRequestManager sharedInstance] performFeatureFlagRequest:nil];
+}
+
+- (void)testPerformFeatureFlagRequestOffline {
+    self.clientManagerMock = OCMClassMock([LDClientManager class]);
+    OCMStub(ClassMethod([self.clientManagerMock sharedInstance])).andReturn(self.clientManagerMock);
+    OCMStub([self.clientManagerMock isOnline]).andReturn(NO);
+
+    [self mockFlagResponse];
+
+    [OHHTTPStubs onStubActivation:^(NSURLRequest * _Nonnull request, id<OHHTTPStubsDescriptor>  _Nonnull stub) {
+        if ([kBaseUrl containsString:request.URL.host]) {
+            XCTFail(@"performFeatureFlagRequest should not make a flag request while offline");
+        }
+    }];
+
+    [[LDRequestManager sharedInstance] performFeatureFlagRequest:[LDClient sharedInstance].ldUser];
+}
+
+- (void)testFlagRequestPostsClientUnauthorizedNotificationOnUnauthorizedResponse {
+    XCTestExpectation *clientUnauthorizedExpection = [self expectationForNotification:kLDClientUnauthorizedNotification object:nil handler:nil];
+
+    [OHHTTPStubs removeAllStubs];
+    [OHHTTPStubs stubRequestsPassingTest:^BOOL(NSURLRequest *request) {
+        return [kBaseUrl containsString:request.URL.host];
+    } withStubResponse:^OHHTTPStubsResponse*(NSURLRequest *request) {
+        return [OHHTTPStubsResponse responseWithData:[NSData data] statusCode:httpStatusCodeUnauthorized headers:[self headerForStatusCode:httpStatusCodeUnauthorized]];
+    }];
+    XCTAssertTrue([OHHTTPStubs allStubs].count == 1);
+
+    [[LDRequestManager sharedInstance] performFeatureFlagRequest:[LDClient sharedInstance].ldUser];
+
+    [self waitForExpectations:@[clientUnauthorizedExpection] timeout:10.0];
+}
+
+- (void)testFlagRequestDoesNotPostClientUnauthorizedNotificationOnErrorResponse {
+    id clientUnauthorizedObserver = OCMObserverMock();
+    [[NSNotificationCenter defaultCenter] addMockObserver:clientUnauthorizedObserver name:kLDClientUnauthorizedNotification object:nil];
+    //it's not obvious, but by not setting expect on the mock observer, the observer will fail when verify is called IF it has received the notification
+
+    [OHHTTPStubs stubRequestsPassingTest:^BOOL(NSURLRequest *request) {
+        return [kBaseUrl containsString:request.URL.host];
+    } withStubResponse:^OHHTTPStubsResponse*(NSURLRequest *request) {
+        return [OHHTTPStubsResponse responseWithData:[NSData data] statusCode:httpStatusCodeInternalServerError headers:[self headerForStatusCode:httpStatusCodeInternalServerError]];
+    }];
+
+    [[LDRequestManager sharedInstance] performFeatureFlagRequest:[LDClient sharedInstance].ldUser];
+
+    [clientUnauthorizedObserver verify];
+    [[NSNotificationCenter defaultCenter] removeObserver:clientUnauthorizedObserver];
 }
 
 - (void)testEventRequestMakesHttpRequestWithMobileKey {
@@ -307,12 +346,7 @@ static const int httpStatusCodeOk = 200;
         return [OHHTTPStubsResponse responseWithData: data statusCode:httpStatusCodeOk headers:[self headerForStatusCode:httpStatusCodeOk]];
     }];
     
-    NSString *jsonEventString = @"[{\"kind\": \"feature\", \"user\": {\"key\" : \"jeff@test.com\", \"custom\" : {\"groups\" : [\"microsoft\", \"google\"]}}, \"creationDate\": 1438468068, \"key\": \"isConnected\", \"value\": true, \"default\": false}]";
-    NSData* eventData = [jsonEventString dataUsingEncoding:NSUTF8StringEncoding];
-    
-    NSArray *eventsArray = [NSJSONSerialization JSONObjectWithData:eventData options:kNilOptions error:nil];
-    
-    [[LDRequestManager sharedInstance] performEventRequest:eventsArray];
+    [[LDRequestManager sharedInstance] performEventRequest:[self stubEvents]];
 
     [self waitForExpectationsWithTimeout:10 handler:^(NSError *error){
         // By the time we reach this code, the while loop has exited
@@ -320,6 +354,58 @@ static const int httpStatusCodeOk = 200;
         XCTAssertTrue(httpRequestAttempted);
         [OHHTTPStubs removeAllStubs];
     }];
+}
+
+- (void)testPerformEventRequestOffline {
+    id clientManagerMock = OCMClassMock([LDClientManager class]);
+    OCMStub(ClassMethod([clientManagerMock sharedInstance])).andReturn(clientManagerMock);
+    OCMStub([clientManagerMock isOnline]).andReturn(NO);
+    self.clientManagerMock = clientManagerMock;
+
+    NSData *data = [[NSData alloc] initWithBase64EncodedString:@"" options: 0];
+    [OHHTTPStubs stubRequestsPassingTest:^BOOL(NSURLRequest *request) {
+        return [kEventsUrl containsString:request.URL.host];
+    } withStubResponse:^OHHTTPStubsResponse*(NSURLRequest *request) {
+        return [OHHTTPStubsResponse responseWithData: data statusCode:httpStatusCodeOk headers:[self headerForStatusCode:httpStatusCodeOk]];
+    }];
+    [OHHTTPStubs onStubActivation:^(NSURLRequest * _Nonnull request, id<OHHTTPStubsDescriptor>  _Nonnull stub) {
+        if ([kEventsUrl containsString:request.URL.host]) {
+            XCTFail(@"performEventRequest should not make a flag request while offline");
+        }
+    }];
+
+    [[LDRequestManager sharedInstance] performEventRequest:[self stubEvents]];
+}
+
+- (void)testEventRequestPostsClientUnauthorizedNotificationOnUnauthorizedResponse {
+    XCTestExpectation *clientUnauthorizedExpection = [self expectationForNotification:kLDClientUnauthorizedNotification object:nil handler:nil];
+
+    [OHHTTPStubs stubRequestsPassingTest:^BOOL(NSURLRequest *request) {
+        return [kEventsUrl containsString:request.URL.host];
+    } withStubResponse:^OHHTTPStubsResponse*(NSURLRequest *request) {
+        return [OHHTTPStubsResponse responseWithData:[NSData data] statusCode:httpStatusCodeUnauthorized headers:[self headerForStatusCode:httpStatusCodeUnauthorized]];
+    }];
+
+    [[LDRequestManager sharedInstance] performEventRequest:[self stubEvents]];
+
+    [self waitForExpectations:@[clientUnauthorizedExpection] timeout:10.0];
+}
+
+- (void)testEventRequestDoesNotPostClientUnauthorizedNotificationOnErrorResponse {
+    id clientUnauthorizedObserver = OCMObserverMock();
+    [[NSNotificationCenter defaultCenter] addMockObserver:clientUnauthorizedObserver name:kLDClientUnauthorizedNotification object:nil];
+    //it's not obvious, but by not setting expect on the mock observer, the observer will fail when verify is called IF it has received the notification
+
+    [OHHTTPStubs stubRequestsPassingTest:^BOOL(NSURLRequest *request) {
+        return [kEventsUrl containsString:request.URL.host];
+    } withStubResponse:^OHHTTPStubsResponse*(NSURLRequest *request) {
+        return [OHHTTPStubsResponse responseWithData:[NSData data] statusCode:httpStatusCodeInternalServerError headers:[self headerForStatusCode:httpStatusCodeInternalServerError]];
+    }];
+
+    [[LDRequestManager sharedInstance] performEventRequest:[self stubEvents]];
+
+    [clientUnauthorizedObserver verify];
+    [[NSNotificationCenter defaultCenter] removeObserver:clientUnauthorizedObserver];
 }
 
 #pragma mark - Helpers
@@ -353,11 +439,11 @@ static const int httpStatusCodeOk = 200;
 }
 
 - (LDUserModel*)mockUser {
-    LDUserBuilder *userBuilder = [[LDUserBuilder alloc] init];
-    userBuilder.key = [[NSUUID UUID] UUIDString];
-    userBuilder.email = @"jeff@test.com";
+    LDUserModel *user = [[LDUserModel alloc] init];
+    user.key = [[NSUUID UUID] UUIDString];
+    user.email = @"jeff@test.com";
     
-    return [userBuilder build];
+    return user;
 }
 
 - (LDConfig*)testConfig {
@@ -383,6 +469,12 @@ static const int httpStatusCodeOk = 200;
 
 - (NSArray<NSNumber*>*)selectedNoFallbackStatusCodes {
     return @[@304, @307, @401, @404, @412, @500];
+}
+
+- (NSArray*)stubEvents {
+    NSString *jsonEventString = @"[{\"kind\": \"feature\", \"user\": {\"key\" : \"jeff@test.com\", \"custom\" : {\"groups\" : [\"microsoft\", \"google\"]}}, \"creationDate\": 1438468068, \"key\": \"isConnected\", \"value\": true, \"default\": false}]";
+    NSData* eventData = [jsonEventString dataUsingEncoding:NSUTF8StringEncoding];
+    return [NSJSONSerialization JSONObjectWithData:eventData options:kNilOptions error:nil];
 }
 
 @end

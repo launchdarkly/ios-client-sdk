@@ -91,6 +91,11 @@ static id sharedInstance = nil;
 }
 
 - (void) startConfigPolling {
+    self.configPollingIntervalMillis = [[LDClient sharedInstance].ldConfig.pollingInterval intValue] * kMillisInSecs;
+    if (![LDClientManager sharedInstance].isOnline) {
+        DEBUG_LOGX(@"PollingManager aborting start config polling - client offline");
+        return;
+    }
     if (configPollingState == POLL_STOPPED) {
         DEBUG_LOGX(@"PollingManager starting config polling");
         [self startConfigPollTimer];
@@ -114,12 +119,20 @@ static id sharedInstance = nil;
 }
 
 - (void) resumeConfigPolling{
-    if (configPollingState == POLL_PAUSED || configPollingState == POLL_SUSPENDED) {
-        DEBUG_LOGX(@"PollingManager resuming config polling");
-        dispatch_resume(self.configTimer);  //If the configTimer would have fired while paused/suspended, it triggers a flag request
-        @synchronized (self) {
-            configPollingState = POLL_RUNNING;
-        }
+    if (configPollingState != POLL_PAUSED && configPollingState != POLL_SUSPENDED) {
+        DEBUG_LOGX(@"PollingManager aborting resume config polling - poll not paused or suspended");
+        return;
+    }
+
+    if (![LDClientManager sharedInstance].isOnline) {
+        DEBUG_LOGX(@"PollingManager aborting resume config polling - client offline");
+        return;
+    }
+
+    DEBUG_LOGX(@"PollingManager resuming config polling");
+    dispatch_resume(self.configTimer);  //If the configTimer would have fired while paused/suspended, it triggers a flag request
+    @synchronized (self) {
+        configPollingState = POLL_RUNNING;
     }
 }
 
@@ -213,8 +226,13 @@ static id sharedInstance = nil;
 }
 
 - (void) startEventPolling {
+    self.eventPollingIntervalMillis = [[[LDClient sharedInstance] ldConfig].flushInterval intValue] * kMillisInSecs;
+    if (![LDClientManager sharedInstance].isOnline) {
+        DEBUG_LOGX(@"PollingManager aborting start event polling - client offline");
+        return;
+    }
     if (eventPollingState == POLL_STOPPED) {
-        DEBUG_LOGX(@"PollingManager starting event polling");
+        DEBUG_LOG(@"PollingManager starting event polling with pollingInterval=%f", self.eventPollingIntervalMillis);
         [self startEventPollTimer];
     }
 }
@@ -236,16 +254,24 @@ static id sharedInstance = nil;
 }
 
 - (void) resumeEventPolling{
-    if (eventPollingState == POLL_PAUSED || eventPollingState == POLL_SUSPENDED) {
-        DEBUG_LOGX(@"PollingManager resuming event polling");
-        BOOL checkEvent = eventPollingState == POLL_SUSPENDED ? YES : NO;
-        dispatch_resume(self.eventTimer);
-        @synchronized (self) {
+    if (eventPollingState != POLL_PAUSED && eventPollingState != POLL_SUSPENDED) {
+        DEBUG_LOGX(@"PollingManager aborting resume event polling - poll is neither paused nor started");
+        return;
+    }
+
+    if (![LDClientManager sharedInstance].isOnline) {
+        DEBUG_LOGX(@"PollingManager aborting resume event polling - client offline");
+        return;
+    }
+    
+    DEBUG_LOGX(@"PollingManager resuming event polling");
+    BOOL checkEvent = eventPollingState == POLL_SUSPENDED ? YES : NO;
+    dispatch_resume(self.eventTimer);
+    @synchronized (self) {
         eventPollingState = POLL_RUNNING;
-        }
-        if (checkEvent) {
-            [self eventPoll];
-        }
+    }
+    if (checkEvent) {
+        [self eventPoll];
     }
 }
 

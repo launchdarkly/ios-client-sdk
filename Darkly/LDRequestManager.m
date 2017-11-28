@@ -6,6 +6,7 @@
 #import "LDUtil.h"
 #import "LDClientManager.h"
 #import "LDConfig.h"
+#import "NSURLResponse+Unauthorized.h"
 
 static NSString * const kFeatureFlagGetUrl = @"/msdk/eval/users/";
 static NSString * const kFeatureFlagReportUrl = @"/msdk/eval/user";
@@ -18,18 +19,15 @@ static NSString * const kEventRequestCompletedNotification = @"event_request_com
 
 @synthesize mobileKey, baseUrl, eventsUrl, connectionTimeout, delegate;
 
+dispatch_queue_t notificationQueue;
+
 +(LDRequestManager *)sharedInstance {
     static LDRequestManager *sharedApiManager = nil;
     static dispatch_once_t onceToken;
     dispatch_once(&onceToken, ^{
         sharedApiManager = [[self alloc] init];
         [sharedApiManager setDelegate:[LDClientManager sharedInstance]];
-        LDClient *client = [LDClient sharedInstance];
-        LDConfig *config = client.ldConfig;
-        [sharedApiManager setMobileKey:config.mobileKey];
-        [sharedApiManager setBaseUrl:config.baseUrl];
-        [sharedApiManager setEventsUrl:config.eventsUrl];
-        [sharedApiManager setConnectionTimeout:[config.connectionTimeout doubleValue]];
+        notificationQueue = dispatch_queue_create("com.launchdarkly.LDRequestManager.NotificationQueue", NULL);
     });
     return sharedApiManager;
 }
@@ -38,8 +36,16 @@ static NSString * const kEventRequestCompletedNotification = @"event_request_com
     [[NSNotificationCenter defaultCenter] removeObserver:self];
 }
 
+-(void)configure:(LDConfig*)config {
+    self.mobileKey = config.mobileKey;
+    self.baseUrl = config.baseUrl;
+    self.eventsUrl = config.eventsUrl;
+    self.connectionTimeout = [config.connectionTimeout doubleValue];
+}
+
 -(void)performFeatureFlagRequest:(LDUserModel *)user
 {
+    [self configure:[LDClient sharedInstance].ldConfig];
     if (!mobileKey) {
         DEBUG_LOGX(@"RequestManager unable to sync config to server since no mobileKey");
         return;
@@ -47,6 +53,11 @@ static NSString * const kEventRequestCompletedNotification = @"event_request_com
     
     if (!user) {
         DEBUG_LOGX(@"RequestManager unable to sync config to server since no user");
+        return;
+    }
+
+    if (![LDClientManager sharedInstance].isOnline) {
+        DEBUG_LOGX(@"RequestManager aborting sync config - client is offline");
         return;
     }
     
@@ -107,6 +118,13 @@ static NSString * const kEventRequestCompletedNotification = @"event_request_com
     dispatch_semaphore_t semaphore = dispatch_semaphore_create(0);
 
     NSURLSessionDataTask *dataTask = [defaultSession dataTaskWithRequest:request completionHandler:^(NSData * _Nullable data, NSURLResponse * _Nullable response, NSError * _Nullable error) {
+        if ([response isUnauthorizedHTTPResponse]) {
+            //Calling postNotification on the task completion handler thread causes the LDRequestManager to hang in some situations. Dispatching the postNotification onto the notificationQueue avoids that hang.
+            dispatch_async(notificationQueue, ^{
+                [[NSNotificationCenter defaultCenter] postNotificationName:kLDClientUnauthorizedNotification object:nil];
+            });
+        }
+
         if (completionHandler) {
             completionHandler(data, response, error);
         }
@@ -119,43 +137,57 @@ static NSString * const kEventRequestCompletedNotification = @"event_request_com
 }
 
 -(void)performEventRequest:(NSArray *)jsonEventArray {
+    [self configure:[LDClient sharedInstance].ldConfig];
+    if (!mobileKey) {
+        DEBUG_LOGX(@"RequestManager unable to sync events to server since no mobileKey");
+        return;
+    }
+
+    if (!jsonEventArray || jsonEventArray.count == 0) {
+        DEBUG_LOGX(@"RequestManager unable to sync events to server since no events");
+        return;
+    }
+
+    if (![LDClientManager sharedInstance].isOnline) {
+        DEBUG_LOGX(@"RequestManager aborting sync events - client is offline");
+        return;
+    }
+
     DEBUG_LOGX(@"RequestManager syncing events to server");
     
     dispatch_semaphore_t semaphore = dispatch_semaphore_create(0);
     
-    if (mobileKey) {
-        if (jsonEventArray) {
-            NSURLSession *defaultSession = [NSURLSession sharedSession];
-            NSString *requestUrl = [eventsUrl stringByAppendingString:kEventUrl];
-            
-            NSMutableURLRequest *request = [NSMutableURLRequest requestWithURL:[NSURL URLWithString:requestUrl]];
-            [request setTimeoutInterval:self.connectionTimeout];
-            [self addEventRequestHeaders:request];
-            
-            NSError *error;
-            NSData *postData = [NSJSONSerialization dataWithJSONObject:jsonEventArray options:0 error:&error];
-            
-            [request setHTTPMethod:@"POST"];
-            [request setHTTPBody:postData];
-            
-            NSURLSessionDataTask *dataTask = [defaultSession dataTaskWithRequest:request completionHandler:^(NSData * _Nullable data, NSURLResponse * _Nullable response, NSError * _Nullable error) {
-                dispatch_semaphore_signal(semaphore);
-                dispatch_async(dispatch_get_main_queue(), ^{
-                    BOOL processedEvents = !error ? YES : NO;
-                    [delegate processedEvents:processedEvents jsonEventArray:jsonEventArray];
-                });
-            }];
-            
-            [dataTask resume];
-            
-            dispatch_semaphore_wait(semaphore, DISPATCH_TIME_FOREVER);
-            
-        } else {
-            DEBUG_LOGX(@"RequestManager unable to sync events to server since no events");
+    NSURLSession *defaultSession = [NSURLSession sharedSession];
+    NSString *requestUrl = [eventsUrl stringByAppendingString:kEventUrl];
+
+    NSMutableURLRequest *request = [NSMutableURLRequest requestWithURL:[NSURL URLWithString:requestUrl]];
+    [request setTimeoutInterval:self.connectionTimeout];
+    [self addEventRequestHeaders:request];
+
+    NSError *error;
+    NSData *postData = [NSJSONSerialization dataWithJSONObject:jsonEventArray options:0 error:&error];
+
+    [request setHTTPMethod:@"POST"];
+    [request setHTTPBody:postData];
+
+    NSURLSessionDataTask *dataTask = [defaultSession dataTaskWithRequest:request completionHandler:^(NSData * _Nullable data, NSURLResponse * _Nullable response, NSError * _Nullable error) {
+        if ([response isUnauthorizedHTTPResponse]) {
+            //Calling postNotification on the task completion handler thread causes the LDRequestManager to hang in some situations. Dispatching the postNotification onto the notificationQueue avoids that hang.
+            dispatch_async(notificationQueue, ^{
+                [[NSNotificationCenter defaultCenter] postNotificationName:kLDClientUnauthorizedNotification object:nil];
+            });
         }
-    } else {
-        DEBUG_LOGX(@"RequestManager unable to sync events to server since no mobileKey");
-    }
+
+        dispatch_semaphore_signal(semaphore);
+        dispatch_async(dispatch_get_main_queue(), ^{
+            BOOL processedEvents = !error;
+            [delegate processedEvents:processedEvents jsonEventArray:jsonEventArray];
+        });
+    }];
+
+    [dataTask resume];
+
+    dispatch_semaphore_wait(semaphore, DISPATCH_TIME_FOREVER);
 }
 
 #pragma mark - requests
