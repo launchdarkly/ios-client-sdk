@@ -184,6 +184,12 @@ final class LDFlagSynchronizingMock: LDFlagSynchronizing {
     var service: DarklyServiceProvider = DarklyServiceMock() {
         didSet { serviceSetCount += 1 }
     }
+
+    // MARK: onSync
+    var onSyncSetCount = 0
+    var onSync: FlagsReceivedClosure? {
+        didSet { onSyncSetCount += 1 }
+    }
 }
 
 // MARK: - UserFlagCachingMock

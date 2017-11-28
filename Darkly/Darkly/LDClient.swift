@@ -44,7 +44,8 @@ public class LDClient {
             flagSynchronizer = serviceFactory.makeFlagSynchronizer(streamingMode: effectiveStreamingMode(runMode: runMode),
                                                                    pollingInterval: config.flagPollingInterval(runMode: effectiveRunMode),
                                                                    service: service,
-                                                                   store: user.flagStore)
+                                                                   store: user.flagStore,
+                                                                   onSync: { (newFlags) in self.onSync(with: newFlags) })
 
             self.isOnline = wasOnline
         }
@@ -67,7 +68,8 @@ public class LDClient {
             flagSynchronizer = serviceFactory.makeFlagSynchronizer(streamingMode: effectiveStreamingMode(runMode: runMode),
                                                                    pollingInterval: config.flagPollingInterval(runMode: effectiveRunMode),
                                                                    service: service,
-                                                                   store: user.flagStore)
+                                                                   store: user.flagStore,
+                                                                   onSync: { (newFlags) in self.onSync(with: newFlags) })
             if hasStarted {
                 eventReporter.record(LDEvent.identifyEvent(key: UUID().uuidString, user: user))
             }
@@ -201,6 +203,10 @@ public class LDClient {
     public func stopObserving(owner: LDFlagChangeOwner) {
         
     }
+
+    private func onSync(with newFlags: [String: Any]) {
+        user.flagStore.replaceStore(newFlags: newFlags, source: .server)
+    }
     
     // MARK: - Private
     private var serviceFactory: ClientServiceCreating = ClientServiceFactory()
@@ -220,7 +226,7 @@ public class LDClient {
 
         //dummy objects replaced by start call
         service = serviceFactory.makeDarklyServiceProvider(mobileKey: "", config: config, user: user)
-        flagSynchronizer = serviceFactory.makeFlagSynchronizer(streamingMode: .polling, pollingInterval: config.flagPollInterval, service: service, store: user.flagStore)
+        flagSynchronizer = serviceFactory.makeFlagSynchronizer(streamingMode: .polling, pollingInterval: config.flagPollInterval, service: service, store: user.flagStore, onSync: nil)
         eventReporter = serviceFactory.makeEventReporter(mobileKey: "", config: config, service: service)
     }
 
@@ -232,7 +238,7 @@ public class LDClient {
         //dummy objects replaced by start call
         flagCache = serviceFactory.makeUserFlagCache()
         service = serviceFactory.makeDarklyServiceProvider(mobileKey: "", config: config, user: user)
-        flagSynchronizer = serviceFactory.makeFlagSynchronizer(streamingMode: .polling, pollingInterval: config.flagPollInterval, service: service, store: user.flagStore)
+        flagSynchronizer = serviceFactory.makeFlagSynchronizer(streamingMode: .polling, pollingInterval: config.flagPollInterval, service: service, store: user.flagStore, onSync: nil)
         eventReporter = serviceFactory.makeEventReporter(mobileKey: "", config: config, service: service)
     }
 }

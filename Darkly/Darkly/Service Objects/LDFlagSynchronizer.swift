@@ -11,6 +11,7 @@ import Dispatch
 import DarklyEventSource
 
 typealias CompletionClosure = (() -> Void)
+typealias FlagsReceivedClosure = (([String: Any]) -> Void)
 
 //sourcery: AutoMockable
 protocol LDFlagSynchronizing {
@@ -22,6 +23,8 @@ protocol LDFlagSynchronizing {
     var pollingInterval: TimeInterval { get }
     //sourcery: DefaultMockValue = DarklyServiceMock()
     var service: DarklyServiceProvider { get }
+    //sourcery: DefaultMockValue = nil
+    var onSync: FlagsReceivedClosure? { get }
 }
 
 class LDFlagSynchronizer: LDFlagSynchronizing {
@@ -34,6 +37,8 @@ class LDFlagSynchronizer: LDFlagSynchronizing {
     private let flagStore: LDFlagMaintaining
     private var eventSource: DarklyStreamingProvider?
     private weak var flagRequestTimer: Timer?
+    private let flagsReceived: FlagsReceivedClosure?
+    var onSync: FlagsReceivedClosure? { return flagsReceived }
 
     let streamingMode: LDStreamingMode
     
@@ -50,11 +55,12 @@ class LDFlagSynchronizer: LDFlagSynchronizing {
     
     //TODO: flag synchronizer doesn't need the mobile key, remove it
     //TODO: Flag synchronizer needs to cache flags on flag response. Provide a user instead of a flag store.
-    init(streamingMode: LDStreamingMode, pollingInterval: TimeInterval, service: DarklyServiceProvider, store: LDFlagMaintaining) {
+    init(streamingMode: LDStreamingMode, pollingInterval: TimeInterval, service: DarklyServiceProvider, store: LDFlagMaintaining, onSync: FlagsReceivedClosure?) {
         self.streamingMode = streamingMode
         self.pollingInterval = pollingInterval
         self.service = service
         self.flagStore = store
+        flagsReceived = onSync
         
         configureCommunications()
     }
@@ -164,9 +170,8 @@ class LDFlagSynchronizer: LDFlagSynchronizing {
             reportDataError()
             return
         }
-        
-        flagStore.replaceStore(newFlags: flags, source: .server) {
-            //TODO: When creating the notification enginer, add something here or pass nil into the closure parameter
+        DispatchQueue.main.async {
+            self.flagsReceived?(flags)
         }
     }
     
