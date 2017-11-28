@@ -30,7 +30,6 @@ class LDFlagSynchronizer: LDFlagSynchronizing {
         case ping, put, patch, delete
     }
     
-    private let mobileKey: String
     let service: DarklyServiceProvider
     private let flagStore: LDFlagMaintaining
     private var eventSource: DarklyStreamingProvider?
@@ -51,8 +50,7 @@ class LDFlagSynchronizer: LDFlagSynchronizing {
     
     //TODO: flag synchronizer doesn't need the mobile key, remove it
     //TODO: Flag synchronizer needs to cache flags on flag response. Provide a user instead of a flag store.
-    init(mobileKey: String, streamingMode: LDStreamingMode, pollingInterval: TimeInterval, service: DarklyServiceProvider, store: LDFlagMaintaining) {
-        self.mobileKey = mobileKey
+    init(streamingMode: LDStreamingMode, pollingInterval: TimeInterval, service: DarklyServiceProvider, store: LDFlagMaintaining) {
         self.streamingMode = streamingMode
         self.pollingInterval = pollingInterval
         self.service = service

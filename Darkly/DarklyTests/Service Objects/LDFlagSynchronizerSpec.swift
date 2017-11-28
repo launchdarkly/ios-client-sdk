@@ -30,7 +30,7 @@ final class LDFlagSynchronizerSpec: QuickSpec {
             self.mockUser = LDUser.stub()
             self.mockService = DarklyServiceMock()
             self.mockStore = LDFlagMaintainingMock()
-            self.subject = LDFlagSynchronizer(mobileKey: Constants.mockMobileKey, streamingMode: .streaming, pollingInterval: Constants.pollingInterval, service: self.mockService, store: self.mockStore)
+            self.subject = LDFlagSynchronizer(streamingMode: .streaming, pollingInterval: Constants.pollingInterval, service: self.mockService, store: self.mockStore)
         }
         describe("init") {
             it("starts up streaming offline") {
@@ -53,7 +53,7 @@ final class LDFlagSynchronizerSpec: QuickSpec {
                 }
                 context("polling") {
                     beforeEach {
-                        self.subject = LDFlagSynchronizer(mobileKey: Constants.mockMobileKey, streamingMode: .polling, pollingInterval: Constants.pollingInterval, service: self.mockService, store: self.mockStore)
+                        self.subject = LDFlagSynchronizer(streamingMode: .polling, pollingInterval: Constants.pollingInterval, service: self.mockService, store: self.mockStore)
                         self.subject.isOnline = true
 
                         self.subject.isOnline = false
@@ -75,7 +75,7 @@ final class LDFlagSynchronizerSpec: QuickSpec {
                 }
                 context("polling") {
                     beforeEach {
-                        self.subject = LDFlagSynchronizer(mobileKey: Constants.mockMobileKey, streamingMode: .polling, pollingInterval: Constants.pollingInterval, service: self.mockService, store: self.mockStore)
+                        self.subject = LDFlagSynchronizer(streamingMode: .polling, pollingInterval: Constants.pollingInterval, service: self.mockService, store: self.mockStore)
 
                         self.subject.isOnline = true
                     }
@@ -98,7 +98,7 @@ final class LDFlagSynchronizerSpec: QuickSpec {
                 }
                 context("polling") {
                     beforeEach {
-                        self.subject = LDFlagSynchronizer(mobileKey: Constants.mockMobileKey, streamingMode: .polling, pollingInterval: Constants.pollingInterval, service: self.mockService, store: self.mockStore)
+                        self.subject = LDFlagSynchronizer(streamingMode: .polling, pollingInterval: Constants.pollingInterval, service: self.mockService, store: self.mockStore)
                         self.subject.isOnline = true
 
                         self.subject.isOnline = true
@@ -120,7 +120,7 @@ final class LDFlagSynchronizerSpec: QuickSpec {
                 }
                 context("polling") {
                     beforeEach {
-                        self.subject = LDFlagSynchronizer(mobileKey: Constants.mockMobileKey, streamingMode: .polling, pollingInterval: Constants.pollingInterval, service: self.mockService, store: self.mockStore)
+                        self.subject = LDFlagSynchronizer(streamingMode: .polling, pollingInterval: Constants.pollingInterval, service: self.mockService, store: self.mockStore)
 
                         self.subject.isOnline = false
                     }
@@ -223,7 +223,7 @@ final class LDFlagSynchronizerSpec: QuickSpec {
 
         describe("polling timer fires") {
             beforeEach {
-                self.subject = LDFlagSynchronizer(mobileKey: Constants.mockMobileKey, streamingMode: .polling, pollingInterval: Constants.pollingInterval, service: self.mockService, store: self.mockStore)
+                self.subject = LDFlagSynchronizer(streamingMode: .polling, pollingInterval: Constants.pollingInterval, service: self.mockService, store: self.mockStore)
                 self.subject.isOnline = true
             }
             it("makes a flag request") {

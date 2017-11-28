@@ -20,7 +20,7 @@ public final class DictionarySpec: QuickSpec {
             other = DarklyServiceMock.Constants.jsonFlags
         }
 
-        fdescribe("symmetric difference") {
+        describe("symmetric difference") {
             context("when dictionaries are equal") {
                 it("returns an empty array") {
                     expect(subject.symmetricDifference(other)) == []

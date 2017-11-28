@@ -46,7 +46,7 @@ struct ClientServiceMockFactory: ClientServiceCreating {
         return DarklyServiceMock(config: config, user: user)
     }
 
-    func makeFlagSynchronizer(mobileKey: String, streamingMode: LDStreamingMode, pollingInterval: TimeInterval, service: DarklyServiceProvider, store: LDFlagMaintaining) -> LDFlagSynchronizing {
+    func makeFlagSynchronizer(streamingMode: LDStreamingMode, pollingInterval: TimeInterval, service: DarklyServiceProvider, store: LDFlagMaintaining) -> LDFlagSynchronizing {
         let synchronizerMock = LDFlagSynchronizingMock()
         synchronizerMock.streamingMode = streamingMode
         synchronizerMock.pollingInterval = pollingInterval
