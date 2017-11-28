@@ -22,7 +22,7 @@ private struct CachedFlags {
     }
 
     init(user: LDUser) {
-        self = CachedFlags(flags: user.flagStore.featureFlags, lastUpdated: user.lastUpdated)
+        self.init(flags: user.flagStore.featureFlags, lastUpdated: user.lastUpdated)
     }
 
     var dictionaryValue: [String: Any] {
@@ -89,7 +89,6 @@ final class LDFlagCache {
         var flags = flags
         while flags.count > maxCachedValues { flags.removeOldest() }
         UserDefaults.standard.set(flags.mapValues { (userFlags) in userFlags.dictionaryValue }, forKey: Keys.cachedFlags)
-        UserDefaults.standard.synchronize()
     }
 
     // MARK: - User caching
@@ -107,7 +106,6 @@ final class LDFlagCache {
         UserDefaults.standard.removeObject(forKey: Keys.cachedUsers)
         let flagCache = userCache.mapValues { (user) in CachedFlags(user: user).dictionaryValue }
         UserDefaults.standard.set(flagCache, forKey: Keys.cachedFlags)
-        UserDefaults.standard.synchronize()
     }
 }
 

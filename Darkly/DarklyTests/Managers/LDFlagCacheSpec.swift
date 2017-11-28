@@ -148,11 +148,9 @@ extension LDFlagCache {
 
     func clearAllUsersForTesting() {
         UserDefaults.standard.removeObject(forKey: LDFlagCache.userCacheKey)
-        UserDefaults.standard.synchronize()
         guard !cachedUsersForTesting.isEmpty else { return }
         //Sometimes removing Keys.cachedUsers doesn't actually work to clear the users for the test, so adding this gives another chance to get the users cleared for testing
         UserDefaults.standard.set([:], forKey: LDFlagCache.userCacheKey)
-        UserDefaults.standard.synchronize()
         guard !cachedUsersForTesting.isEmpty else { return }
         //If we get here, not much else to do...the test will likely fail, but this will log that the users didn't get cleared
         print("LDFlagCache.clearAllUsersForTesting failed to clear the user cache")
@@ -160,7 +158,6 @@ extension LDFlagCache {
 
     func clearAllFlagsForTesting() {
         UserDefaults.standard.removeObject(forKey: LDFlagCache.flagCacheKey)
-        UserDefaults.standard.synchronize()
     }
 
     func storeUserAsDictionaryForTesting(user: LDUser) {
@@ -169,7 +166,6 @@ extension LDFlagCache {
         var userDictionaries: [String: Any] = users.mapValues { (user) in user.jsonDictionaryWithConfig }
         userDictionaries[user.key] = user.jsonDictionaryWithConfig
         UserDefaults.standard.set(userDictionaries, forKey: LDFlagCache.userCacheKey)
-        UserDefaults.standard.synchronize()
     }
 
     func storeUserAsDataForTesting(user: LDUser) {
@@ -178,14 +174,6 @@ extension LDFlagCache {
         var usersWithData: [String: Any] = users.mapValues { (user) in user.jsonDictionaryWithConfig }
         usersWithData[user.key] = NSKeyedArchiver.archivedData(withRootObject: LDUserWrapper(user: user))
         UserDefaults.standard.set(usersWithData, forKey: LDFlagCache.userCacheKey)
-        UserDefaults.standard.synchronize()
-    }
-
-    func cache(usersForTesting users: [String: LDUser]) {
-        var users = users
-        while users.count > maxCachedValues { users.removeOldest() }
-        UserDefaults.standard.set(users.mapValues { (user) in user.jsonDictionaryWithConfig }, forKey: LDFlagCache.userCacheKey)
-        UserDefaults.standard.synchronize()
     }
 }
 

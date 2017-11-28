@@ -127,7 +127,6 @@ extension UserDefaults {
 
         let key = UUID().uuidString
         self.set(key, forKey: Keys.deviceIdentifier)
-        self.synchronize()
         return key
     }
 }

@@ -51,7 +51,8 @@ public class LDClient {
         }
     }
     
-    ///Takes the client offline and configures for the new user. If the client was online, it brings the client online again.
+    ///The LDUser set into the LDClient controls the set of feature flags returned by the LD server, and ties event tracking to the user.
+    ///Setting the user takes the client offline and configures for the new user. If the client was online, it brings the client online again.
     ///Make user changes by getting the user from the client, adjusting values, and then setting the new user
     ///Usage:
     ///     LDClient.shared.user = newUser
