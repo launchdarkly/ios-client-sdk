@@ -138,14 +138,16 @@
 - (LDUserModel *)build {
     DEBUG_LOGX(@"LDUserBuilder build method called");
     LDUserModel *user = nil;
-    
+
     if (self.key) {
         user = [[LDDataManager sharedManager] findUserWithkey:self.key];
         if(!user) {
             user = [[LDUserModel alloc] init];
         }
-        [user key:self.key];
         DEBUG_LOG(@"LDUserBuilder building User with key: %@", self.key);
+        DEBUG_LOG(@"LDUserBuilder building User with anonymous: %d", self.isAnonymous);
+        [user key:self.key];
+        user.anonymous = self.isAnonymous;
     } else {
         NSString *uniqueKey;
 #if TARGET_OS_IOS || TARGET_OS_TV
@@ -159,15 +161,13 @@
             [[NSUserDefaults standardUserDefaults] setValue:uniqueKey forKey:kDeviceIdentifierKey];
             [[NSUserDefaults standardUserDefaults] synchronize];
         }
-        
+
 #endif
         DEBUG_LOG(@"LDUserBuilder building User with key: %@", uniqueKey);
 
         user = [[LDUserModel alloc] init];
         [user key:uniqueKey];
-        if (!self.isAnonymous) {
-            user.anonymous = YES;
-        }
+        user.anonymous = YES;
     }
     if (self.ip) {
         DEBUG_LOG(@"LDUserBuilder building User with ip: %@", self.ip);
@@ -179,7 +179,7 @@
     }
     if (self.name) {
         DEBUG_LOG(@"LDUserBuilder building User with name: %@", self.name);
-        user.name = self.name;        
+        user.name = self.name;
     }
     if (self.firstName) {
         DEBUG_LOG(@"LDUserBuilder building User with firstName: %@", self.firstName);
@@ -201,12 +201,6 @@
         DEBUG_LOG(@"LDUserBuilder building User with custom: %@", self.customDictionary);
         user.custom = self.customDictionary;
     }
-
-    // TODO: Figure out if this check is really needed. Should user's anonymous not be updated if 'self.isAnonymous = NO'?
-    if (self.isAnonymous) {
-        user.anonymous = self.isAnonymous;
-    }
-    DEBUG_LOG(@"LDUserBuilder building User with anonymous: %d", self.isAnonymous);
 
     [[LDDataManager sharedManager] saveUser:user];
     return user;
