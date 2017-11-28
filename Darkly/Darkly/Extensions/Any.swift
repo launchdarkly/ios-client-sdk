@@ -28,4 +28,9 @@ struct AnyComparer {
         }
         return true
     }
+
+    public static func isEqual(_ value: Any?, to other: Any?) -> Bool {
+        guard let value = value, let other = other else { return false }
+        return isEqual(value, to:other)
+    }
 }

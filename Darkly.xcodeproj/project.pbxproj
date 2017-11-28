@@ -45,6 +45,7 @@
 		83B6C4B61F4DE7630055351C /* LDCommon.swift in Sources */ = {isa = PBXBuildFile; fileRef = 83B6C4B51F4DE7630055351C /* LDCommon.swift */; };
 		83CFE7CE1F7AD81D0010544E /* LDEventReporterSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = 83CFE7CD1F7AD81D0010544E /* LDEventReporterSpec.swift */; };
 		83CFE7D11F7AD8DC0010544E /* DarklyServiceMock.swift in Sources */ = {isa = PBXBuildFile; fileRef = 83CFE7D01F7AD8DC0010544E /* DarklyServiceMock.swift */; };
+		83D17EAA1FCDA18C00B2823C /* DictionarySpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = 83D17EA91FCDA18C00B2823C /* DictionarySpec.swift */; };
 		83D559741FD87CC9002D10C8 /* KeyedValueCache.swift in Sources */ = {isa = PBXBuildFile; fileRef = 83D559731FD87CC9002D10C8 /* KeyedValueCache.swift */; };
 		83D559761FD87D67002D10C8 /* UserFlags.swift in Sources */ = {isa = PBXBuildFile; fileRef = 83D559751FD87D67002D10C8 /* UserFlags.swift */; };
 		83D559781FD87DAC002D10C8 /* FlagCollectionCache.swift in Sources */ = {isa = PBXBuildFile; fileRef = 83D559771FD87DAC002D10C8 /* FlagCollectionCache.swift */; };
@@ -126,6 +127,7 @@
 		83B6C4B51F4DE7630055351C /* LDCommon.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = LDCommon.swift; sourceTree = "<group>"; };
 		83CFE7CD1F7AD81D0010544E /* LDEventReporterSpec.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LDEventReporterSpec.swift; sourceTree = "<group>"; };
 		83CFE7D01F7AD8DC0010544E /* DarklyServiceMock.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DarklyServiceMock.swift; sourceTree = "<group>"; };
+		83D17EA91FCDA18C00B2823C /* DictionarySpec.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DictionarySpec.swift; sourceTree = "<group>"; };
 		83D559731FD87CC9002D10C8 /* KeyedValueCache.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeyedValueCache.swift; sourceTree = "<group>"; };
 		83D559751FD87D67002D10C8 /* UserFlags.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserFlags.swift; sourceTree = "<group>"; };
 		83D559771FD87DAC002D10C8 /* FlagCollectionCache.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FlagCollectionCache.swift; sourceTree = "<group>"; };
@@ -277,6 +279,7 @@
 				83CFE7CF1F7AD89D0010544E /* Mocks */,
 				831D8B751F72A48900ED65E8 /* Service Objects */,
 				83396BC71F7C3688000E256E /* Networking */,
+				83D17EA81FCDA16300B2823C /* Extensions */,
 				831CE0671F853CB700A13A3A /* Matcher */,
 				8354EFD21F22491C00C05156 /* Info.plist */,
 			);
@@ -332,6 +335,14 @@
 				8335299D1FC37727001166F8 /* LDFlagMaintainingMock.swift */,
 			);
 			path = Mocks;
+			sourceTree = "<group>";
+		};
+		83D17EA81FCDA16300B2823C /* Extensions */ = {
+			isa = PBXGroup;
+			children = (
+				83D17EA91FCDA18C00B2823C /* DictionarySpec.swift */,
+			);
+			path = Extensions;
 			sourceTree = "<group>";
 		};
 		83E2E2071F9FF9A0007514E9 /* Extensions */ = {
@@ -678,6 +689,7 @@
 				8342DAE51FB10C4800564D1F /* UserFlagCacheSpec.swift in Sources */,
 				838F96741FB9F024009CFC45 /* LDClientSpec.swift in Sources */,
 				83E2E2061F9E7AC7007514E9 /* LDUserSpec.swift in Sources */,
+				83D17EAA1FCDA18C00B2823C /* DictionarySpec.swift in Sources */,
 				83EF67951F994BAD00403126 /* LDUserMock.swift in Sources */,
 				83D5597C1FD9BED7002D10C8 /* FlagCollectionCacheSpec.swift in Sources */,
 				83F0A5641FB5F33800550A95 /* LDConfigSpec.swift in Sources */,

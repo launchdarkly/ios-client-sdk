@@ -24,15 +24,21 @@ extension Dictionary where Key == String {
         return lhs.isEqual(to: rhs)
     }
 
-    public func isEqual(to other: [String: Any]) -> Bool {
+    func isEqual(to other: [String: Any]) -> Bool {
         guard self.count == other.count else { return false }
         guard self.keys.sorted() == other.keys.sorted() else { return false }
         for key in self.keys {
-            if self[key] == nil && other[key] == nil { continue }
-            guard let value = self[key], let otherValue = other[key] else { return false }
-            if !AnyComparer.isEqual(value, to: otherValue) { return false }
+            if !AnyComparer.isEqual(self[key], to: other[key]) { return false }
         }
         return true
+    }
+
+    func symmetricDifference(_ other: [String: Any]) -> [String] {
+        let leftKeys: Set<String> = Set(self.keys)
+        let rightKeys: Set<String> = Set(other.keys)
+        let differingKeys = leftKeys.symmetricDifference(rightKeys)
+        let matchingKeys = leftKeys.intersection(rightKeys)
+        return differingKeys.union(matchingKeys.filter { (key) -> Bool in !AnyComparer.isEqual(self[key], to: other[key]) }).sorted()
     }
 
     var base64UrlEncodedString: String? { return jsonData?.base64UrlEncodedString }
