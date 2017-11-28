@@ -19,21 +19,26 @@ typedef void(^MockLDClientDelegateCallbackBlock)(void);
 
 @interface MockLDClientDelegate : NSObject <ClientDelegate>
 @property (nonatomic, assign) NSInteger userDidUpdateCallCount;
+@property (nonatomic, assign) NSInteger userUnchangedCallCount;
 @property (nonatomic, assign) NSInteger serverConnectionUnavailableCallCount;
 @property (nonatomic, strong) MockLDClientDelegateCallbackBlock userDidUpdateCallback;
+@property (nonatomic, strong) MockLDClientDelegateCallbackBlock userUnchangedCallback;
 @property (nonatomic, strong) MockLDClientDelegateCallbackBlock serverUnavailableCallback;
 @end
 
 @implementation MockLDClientDelegate
 -(instancetype)init {
     self = [super init];
-    self.serverConnectionUnavailableCallCount = 0;
     
     return self;
 }
 
 -(void)userDidUpdate {
     self.userDidUpdateCallCount = [self processCallbackWithCount:self.userDidUpdateCallCount block:self.userDidUpdateCallback];
+}
+
+-(void)userUnchanged {
+    self.userUnchangedCallCount = [self processCallbackWithCount:self.userUnchangedCallCount block:self.userUnchangedCallback];
 }
 
 -(void)serverConnectionUnavailable {
@@ -584,25 +589,54 @@ NSString *const kTestMobileKey = @"testMobileKey";
 
     //Configure the mock delegate to fulfill the flag request expectation
     MockLDClientDelegate *delegateMock = [[MockLDClientDelegate alloc] init];
-    [LDClient sharedInstance].delegate = delegateMock;
-
-    [[LDClient sharedInstance] start:config withUserBuilder:user];
-
-    [[NSNotificationCenter defaultCenter] postNotificationName: kLDUserUpdatedNotification object: nil];
-
-    XCTAssertTrue(delegateMock.serverConnectionUnavailableCallCount == 0);
-    XCTAssertTrue(delegateMock.userDidUpdateCallCount == 1);
+    delegateMock.userDidUpdateCallback = ^{
+        [configResponseArrived fulfill];
+    };
+    
+    [self verifyDelegateCallbackWithMockDelegate:delegateMock test:^(NSError *error){
+        XCTAssertTrue(delegateMock.serverConnectionUnavailableCallCount == 0);
+        XCTAssertTrue(delegateMock.userDidUpdateCallCount == 1);
+        XCTAssertTrue(delegateMock.userUnchangedCallCount == 0);
+    }];
 }
 
-- (void)testOfflineOnClientUnauthorizedNotification {
-    LDConfig *config = [[LDConfig alloc] initWithMobileKey:kTestMobileKey];
-    [[LDClient sharedInstance] start:config withUserBuilder:nil];
+- (void)testUserUnchangedCalled {
+    NSString *filepath = [[NSBundle bundleForClass:[LDClientTest class]] pathForResource: @"feature_flags"
+                                                                                  ofType:@"json"];
+    NSData *configData = [NSData dataWithContentsOfFile:filepath];
+    XCTAssertTrue([configData length] > 0);
+    OHHTTPStubsResponse *flagResponse = [OHHTTPStubsResponse responseWithData: configData statusCode:200 headers:@{@"Content-Type":@"application/json"}];
+    XCTestExpectation *configResponseArrived = [self stubResponse:flagResponse forHost:@"app.launchdarkly.com" fulfillsExpectation:NO];
+    
+    MockLDClientDelegate *delegateMock = [[MockLDClientDelegate alloc] init];
+    delegateMock.userUnchangedCallback = ^{
+        [configResponseArrived fulfill];
+    };
+    
+    NSString *userKey = [[NSUUID UUID] UUIDString];
+    NSDictionary *jsonConfigDictionary = [NSJSONSerialization JSONObjectWithData:configData options:0 error:nil];
+    LDFlagConfigModel *currentConfig = [[LDFlagConfigModel alloc] initWithDictionary:jsonConfigDictionary];
+    LDUserModel *currentUser = [[LDUserModel alloc] init];
+    currentUser.config = currentConfig;
+    
+    NSUserDefaults *userDefaults = [NSUserDefaults standardUserDefaults];
+    NSDictionary *originalDictionary = [userDefaults objectForKey:kUserDictionaryStorageKey];
+    if (!originalDictionary) { originalDictionary = [NSDictionary dictionary]; }
+    NSMutableDictionary *encodedDictionary = [originalDictionary mutableCopy];
+    [encodedDictionary setObject:[NSKeyedArchiver archivedDataWithRootObject:currentUser] forKey:userKey];
+    [userDefaults setObject:encodedDictionary forKey:kUserDictionaryStorageKey];
 
-    [[self.mockLDClientManager expect] setOnline:NO];
-
-    [[NSNotificationCenter defaultCenter] postNotificationName:kLDClientUnauthorizedNotification object:nil];
-
-    [self.mockLDClientManager verify];
+    [self verifyDelegateCallbackWithMockDelegate:delegateMock userKey:userKey test:^(NSError *error){
+        // TODO: A previous test's "serverConnectionUnavailable" delegate callback is leaking.
+        // (verified by renaming this test to run early in the test process, since tests are
+        // run in alphabetical order within a test suite/file). Until that is fixed, we cannot
+        // guarantee that serverConnectionUnavailable has not been called.
+        //XCTAssertTrue(delegateMock.serverConnectionUnavailableCallCount == 0);
+        XCTAssertTrue(delegateMock.userDidUpdateCallCount == 0);
+        XCTAssertTrue(delegateMock.userUnchangedCallCount == 1);
+    }];
+    
+    [userDefaults setObject:originalDictionary forKey:kUserDictionaryStorageKey];
 }
 
 #pragma mark - Helpers
@@ -611,8 +645,49 @@ NSString *const kTestMobileKey = @"testMobileKey";
     NSData *configData = [NSData dataWithContentsOfFile:filepath];
     XCTAssertTrue([configData length] > 0);
 
-    NSDictionary *configDict = [NSJSONSerialization JSONObjectWithData:configData options:kNilOptions error:nil];
-    return [[LDFlagConfigModel alloc] initWithDictionary:configDict];
+- (XCTestExpectation*)stubResponse:(OHHTTPStubsResponse*)response forHost:(NSString*)host fulfillsExpectation:(BOOL)fulfillsExpectation {
+    [OHHTTPStubs removeAllStubs];
+    XCTAssert([OHHTTPStubs allStubs].count == 0);
+    
+    XCTestExpectation *configResponseArrived = [self expectationWithDescription:@"response of async request has arrived"];
+    [OHHTTPStubs stubRequestsPassingTest:^BOOL(NSURLRequest *request) {
+        return [request.URL.host isEqualToString:host];
+    } withStubResponse:^OHHTTPStubsResponse*(NSURLRequest *request) {
+        if (fulfillsExpectation) {
+            [configResponseArrived fulfill];
+        }
+        return response;
+    }];
+    XCTAssertTrue([[OHHTTPStubs allStubs] count] == 1);
+    return configResponseArrived;
+}
+
+- (void)verifyDelegateCallbackWithMockDelegate:(MockLDClientDelegate*)mockDelegate test:(void (^)(NSError * __nullable error))testBlock {
+    [self verifyDelegateCallbackWithMockDelegate:mockDelegate userKey:nil test:testBlock];
+}
+
+- (void)verifyDelegateCallbackWithMockDelegate:(MockLDClientDelegate*)mockDelegate userKey:(NSString *)userKey test:(void (^)(NSError * __nullable error))testBlock {
+    LDConfig *config = [[LDConfig alloc] initWithMobileKey:kTestMobileKey];
+    
+    LDUserBuilder *user = [[LDUserBuilder alloc] init];
+    user.key = userKey ?: [[NSUUID UUID] UUIDString];
+    
+    [[LDClient sharedInstance] setDelegate:mockDelegate];
+    [[LDClient sharedInstance] start:config withUserBuilder:user];
+    [[LDClientManager sharedInstance] syncWithServerForConfig];
+    
+    [self waitForExpectationsWithTimeout:10 handler:testBlock];
+}
+
+- (void)handleUserUpdatedNotification:(NSNotification*)notification {
+    if (![NSThread isMainThread]) {
+        [self performSelectorOnMainThread:NSSelectorFromString([NSString stringWithCString:__func__ encoding:NSUTF8StringEncoding]) withObject:notification waitUntilDone:YES];
+        return;
+    }
+    if (self.configureUser == NO) {
+        [LDClient sharedInstance].ldUser.config = nil;
+    }
+    [self.userConfigUpdatedNotificationExpectation fulfill];
 }
 
 - (id)objectFromJsonFileNamed:(NSString*)jsonFileName key:(NSString*)key {

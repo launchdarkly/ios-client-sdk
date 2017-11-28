@@ -17,7 +17,7 @@
 @interface LDClientManager : NSObject  <RequestManagerDelegate, NSApplicationDelegate> {
 }
 #else
-@interface LDClientManager : NSObject  <RequestManagerDelegate, UIApplicationDelegate> {
+@interface LDClientManager : NSObject  <RequestManagerDelegate> {
 }
 #endif
 

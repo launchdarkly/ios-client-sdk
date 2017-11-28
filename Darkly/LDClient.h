@@ -13,6 +13,7 @@
 @protocol ClientDelegate <NSObject>
 @optional
 -(void)userDidUpdate;
+-(void)userUnchanged;
 -(void)featureFlagDidUpdate:(NSString *)key;
 -(void)serverConnectionUnavailable;
 @end
