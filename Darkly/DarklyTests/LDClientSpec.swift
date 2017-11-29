@@ -237,7 +237,7 @@ final class LDClientSpec: QuickSpec {
                 var flags: [String: Any]!
                 var mockFlagStore: LDFlagMaintainingMock!
                 beforeEach {
-                    user = LDFlagCache().stubAndStoreUserFlags(count: 1).first
+                    user = subject.flagCache.keyedValueStoreMock!.stubAndStoreUserFlags(count: 1).first
                     flags = user.flagStore.featureFlags
                     mockFlagStore = user.flagStore as? LDFlagMaintainingMock
                     mockFlagStore?.replaceStore(newFlags: [:], source: .cache)

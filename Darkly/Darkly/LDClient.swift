@@ -210,12 +210,13 @@ public class LDClient {
 
     private(set) var runMode: LDClientRunMode = .foreground
 
-    private let flagCache = LDFlagCache()
+    private(set) var flagCache: LDFlagCache
     private(set) var flagSynchronizer: LDFlagSynchronizing
     private let flagChangeNotifier = LDFlagChangeNotifier()
     private(set) var eventReporter: LDEventReporting
     
     private init() {
+        flagCache = serviceFactory.makeFlagCache()
         LDUserWrapper.configureKeyedArchiversToHandleVersion2_3_0AndOlderUserCacheFormat()
         flagCache.convertUserCacheToFlagCache()
 
@@ -231,6 +232,7 @@ public class LDClient {
         self.serviceFactory = serviceFactory
 
         //dummy objects replaced by start call
+        flagCache = serviceFactory.makeFlagCache()
         service = serviceFactory.makeDarklyServiceProvider(mobileKey: "", config: config, user: user)
         flagSynchronizer = serviceFactory.makeFlagSynchronizer(mobileKey: mobileKey, streamingMode: .polling, pollingInterval: config.flagPollInterval, service: service, store: user.flagStore)
         eventReporter = serviceFactory.makeEventReporter(mobileKey: "", config: config, service: service)

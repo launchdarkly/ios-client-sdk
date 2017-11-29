@@ -9,12 +9,22 @@
 import Foundation
 
 protocol ClientServiceCreating {
+    func makeFlagCache(maxCachedValues: Int) -> LDFlagCache
+    func makeFlagCache() -> LDFlagCache
     func makeDarklyServiceProvider(mobileKey: String, config: LDConfig, user: LDUser) -> DarklyServiceProvider
     func makeFlagSynchronizer(mobileKey: String, streamingMode: LDStreamingMode, pollingInterval: TimeInterval, service: DarklyServiceProvider, store: LDFlagMaintaining) -> LDFlagSynchronizing
     func makeEventReporter(mobileKey: String, config: LDConfig, service: DarklyServiceProvider) -> LDEventReporting
 }
 
 struct ClientServiceFactory: ClientServiceCreating {
+    func makeFlagCache(maxCachedValues: Int) -> LDFlagCache {
+        return LDFlagCache(maxCachedValues: maxCachedValues)
+    }
+
+    func makeFlagCache() -> LDFlagCache {
+        return LDFlagCache()
+    }
+
     func makeDarklyServiceProvider(mobileKey: String, config: LDConfig, user: LDUser) -> DarklyServiceProvider {
         return DarklyService(mobileKey: mobileKey, config: config, user: user)
     }

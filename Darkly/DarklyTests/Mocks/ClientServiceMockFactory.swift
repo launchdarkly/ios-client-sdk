@@ -9,7 +9,17 @@
 @testable import Darkly
 
 struct ClientServiceMockFactory: ClientServiceCreating {
-    func makeDarklyServiceProvider(mobileKey: String, config: LDConfig, user: LDUser) -> DarklyServiceProvider { return DarklyServiceMock(config: config, user: user) }
+    func makeFlagCache(maxCachedValues: Int) -> LDFlagCache {
+        return LDFlagCache(maxCachedValues: maxCachedValues, keyedValueStore: KeyedValueStoringMock())
+    }
+
+    func makeFlagCache() -> LDFlagCache {
+        return LDFlagCache(keyedValueStore: KeyedValueStoringMock())
+    }
+
+    func makeDarklyServiceProvider(mobileKey: String, config: LDConfig, user: LDUser) -> DarklyServiceProvider {
+        return DarklyServiceMock(config: config, user: user)
+    }
 
     func makeFlagSynchronizer(mobileKey: String, streamingMode: LDStreamingMode, pollingInterval: TimeInterval, service: DarklyServiceProvider, store: LDFlagMaintaining) -> LDFlagSynchronizing {
         let synchronizerMock = LDFlagSynchronizingMock()

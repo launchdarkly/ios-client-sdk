@@ -8,7 +8,17 @@
 
 import Foundation
 
-private struct CachedFlags {
+//sourcery: AutoMockable
+protocol KeyedValueStoring {
+    func set(_ value: Any?, forKey: String)
+    //sourcery: DefaultReturnValue = nil
+    func dictionary(forKey: String) -> [String : Any]?
+    func removeObject(forKey: String)
+}
+
+extension UserDefaults: KeyedValueStoring { }
+
+struct CachedFlags {
     enum CodingKeys: String, CodingKey {
         case flags, lastUpdated
     }
@@ -32,7 +42,7 @@ private struct CachedFlags {
     init?(dictionary: [String: Any]) {
         guard let flags = dictionary[CodingKeys.flags.rawValue] as? [String: Any],
             let lastUpdated = dictionary[CodingKeys.lastUpdated.rawValue] as? Date
-            else { return nil }
+        else { return nil }
         self = CachedFlags(flags: flags, lastUpdated: lastUpdated)
     }
 
@@ -56,9 +66,11 @@ final class LDFlagCache {
     }
 
     let maxCachedValues: Int
+    private let keyedValueStore: KeyedValueStoring
 
-    init(maxCachedValues: Int = Constants.maxCachedValues) {
+    init(maxCachedValues: Int = Constants.maxCachedValues, keyedValueStore: KeyedValueStoring = UserDefaults.standard) {
         self.maxCachedValues = maxCachedValues
+        self.keyedValueStore = keyedValueStore
     }
 
     func storeFlags(for user: LDUser) {
@@ -79,7 +91,7 @@ final class LDFlagCache {
     }
 
     private var cachedFlags: [String: CachedFlags] {
-        guard let flagCache = UserDefaults.standard.dictionary(forKey: Keys.cachedFlags)
+        guard let flagCache = keyedValueStore.dictionary(forKey: Keys.cachedFlags)
             else { return [:] }
 
         return flagCache.flatMapValues { flagDictionary in CachedFlags(object: flagDictionary) }
@@ -88,13 +100,13 @@ final class LDFlagCache {
     private func cache(flags: [String: CachedFlags]) {
         var flags = flags
         while flags.count > maxCachedValues { flags.removeOldest() }
-        UserDefaults.standard.set(flags.mapValues { (userFlags) in userFlags.dictionaryValue }, forKey: Keys.cachedFlags)
+        keyedValueStore.set(flags.mapValues { (userFlags) in userFlags.dictionaryValue }, forKey: Keys.cachedFlags)
     }
 
     // MARK: - User caching
 
     private var cachedUsers: [String: LDUser] {
-        guard let userCache = UserDefaults.standard.dictionary(forKey: Keys.cachedUsers)
+        guard let userCache = keyedValueStore.dictionary(forKey: Keys.cachedUsers)
         else { return [:] }
 
         return Dictionary(uniqueKeysWithValues: userCache.map { (keyObjectPair) in (keyObjectPair.key, LDUser(userObject: keyObjectPair.value, usingKeyIfMissing: keyObjectPair.key)) })
@@ -103,9 +115,9 @@ final class LDFlagCache {
     func convertUserCacheToFlagCache() {
         let userCache = cachedUsers
         guard !userCache.isEmpty else { return }
-        UserDefaults.standard.removeObject(forKey: Keys.cachedUsers)
+        keyedValueStore.removeObject(forKey: Keys.cachedUsers)
         let flagCache = userCache.mapValues { (user) in CachedFlags(user: user).dictionaryValue }
-        UserDefaults.standard.set(flagCache, forKey: Keys.cachedFlags)
+        keyedValueStore.set(flagCache, forKey: Keys.cachedFlags)
     }
 }
 
@@ -115,8 +127,7 @@ extension LDUser {
     }
 
     private init?(dictionaryObject: Any) {
-        guard let userDictionary = dictionaryObject as? [String: Any]
-        else { return nil }
+        guard let userDictionary = dictionaryObject as? [String: Any] else { return nil }
         self = LDUser(jsonDictionary: userDictionary)
     }
 
@@ -139,8 +150,7 @@ extension Dictionary where Key == String, Value == CachedFlags {
 // MARK: - Test Support
 #if DEBUG
     extension LDFlagCache {
-        var cachedUsersForTesting: [String: LDUser] { return cachedUsers }
-        static var userCacheKey: String { return Keys.cachedUsers }
+        var keyedValueStoreForTesting: KeyedValueStoring { return keyedValueStore }
         static var flagCacheKey: String { return Keys.cachedFlags }
     }
 #endif

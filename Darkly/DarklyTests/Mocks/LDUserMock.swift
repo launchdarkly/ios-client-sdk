@@ -34,7 +34,13 @@ extension LDUser {
                           avatar: Constants.avatar,
                           custom: Constants.custom,
                           isAnonymous: Constants.isAnonymous)
-        user.flagStore = LDFlagMaintainingMock(flags: DarklyServiceMock.Constants.jsonFlags)
+        user.flagStore = LDFlagMaintainingMock(flags: user.stubFlags())
         return user
+    }
+
+    private func stubFlags() -> [String: Any] {
+        var flags = DarklyServiceMock.Constants.jsonFlags
+        flags["userKey"] = key
+        return flags
     }
 }

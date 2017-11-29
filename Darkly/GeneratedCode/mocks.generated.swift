@@ -1,8 +1,6 @@
 // Generated using Sourcery 0.9.0 — https://github.com/krzysztofzablocki/Sourcery
 // DO NOT EDIT
 
-//swiftlint:disable vertical_whitespace
-
 
 import DarklyEventSource
 @testable import Darkly
@@ -22,6 +20,36 @@ final class DarklyStreamingProviderMock: DarklyStreamingProvider {
     var closeCallCount = 0
     func close() {
         closeCallCount += 1
+    }
+}
+
+// MARK: - KeyedValueStoringMock
+final class KeyedValueStoringMock: KeyedValueStoring {
+
+    // MARK: set
+    var setCallCount = 0
+    var setReceivedArguments: (value: Any?, forKey: String)?
+    func set(_ value: Any?, forKey: String) {
+        setCallCount += 1
+        setReceivedArguments = (value: value, forKey: forKey)
+    }
+
+    // MARK: dictionary
+    var dictionaryCallCount = 0
+    var dictionaryReceivedForKey: String?
+    var dictionaryReturnValue: [String : Any]? = nil
+    func dictionary(forKey: String) -> [String : Any]? {
+        dictionaryCallCount += 1
+        dictionaryReceivedForKey = forKey
+        return dictionaryReturnValue
+    }
+
+    // MARK: removeObject
+    var removeObjectCallCount = 0
+    var removeObjectReceivedForKey: String?
+    func removeObject(forKey: String) {
+        removeObjectCallCount += 1
+        removeObjectReceivedForKey = forKey
     }
 }
 

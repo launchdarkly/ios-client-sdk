@@ -14,39 +14,18 @@ import Foundation
 final class LDFlagCacheSpec: QuickSpec {
     override func spec() {
         var subject: LDFlagCache!
+        var mockStore: KeyedValueStoringMock!
         beforeEach {
-            subject = LDFlagCache()
-            subject.clearAllFlagsForTesting()
-            subject.clearAllUsersForTesting()
+            mockStore = KeyedValueStoringMock()
+            subject = LDFlagCache(keyedValueStore: mockStore)
         }
 
-        describe("init") {
-            context("with max cached values") {
-                var maxCachedValues: Int!
-                beforeEach {
-                    maxCachedValues = LDFlagCache.Constants.maxCachedValues + 1
-
-                    subject = LDFlagCache(maxCachedValues: maxCachedValues)
-                }
-                it("creates a user cache with max cached values set to the parameter value") {
-                    expect(subject.maxCachedValues) == maxCachedValues
-                }
-            }
-            context("without max cached values") {
-                beforeEach {
-                    subject = LDFlagCache()
-                }
-                it("creates a user cache with max cached values set to the default value") {
-                    expect(subject.maxCachedValues) == LDFlagCache.Constants.maxCachedValues
-                }
-            }
-        }
-
-        describe("store and retrieve flags") {
+        describe("store and retrieve flags using user defaults") {
             var userStub: LDUser!
             var retrievedFlags: [String: Any]?
             beforeEach {
                 userStub = LDUser.stub()
+                subject = LDFlagCache(keyedValueStore: UserDefaults.standard)
                 subject.storeFlags(for: userStub)
 
                 retrievedFlags = subject.retrieveFlags(for: userStub)
@@ -54,35 +33,41 @@ final class LDFlagCacheSpec: QuickSpec {
             it("retrieves flags that have matching key") {
                 expect(retrievedFlags == userStub.flagStore.featureFlags).to(beTrue())
             }
-        }
-
-        describe("store user as dictionary and retrieve flags") {
-            var userStub: LDUser!
-            var retrievedFlags: [String: Any]?
-            beforeEach {
-                userStub = LDUser.stub()
-                subject.storeUserAsDictionaryForTesting(user: userStub)
-                subject.convertUserCacheToFlagCache()
-
-                retrievedFlags = subject.retrieveFlags(for: userStub)
-            }
-            it("retrieves flags that have matching key") {
-                expect(retrievedFlags == userStub.flagStore.featureFlags).to(beTrue())
+            afterEach {
+                subject.keyedValueStoreForTesting.removeObject(forKey: LDFlagCache.flagCacheKey)
             }
         }
 
-        describe("store user as data and retrieve flags") {
+        describe("convert user cache to flag cache") {
             var userStub: LDUser!
-            var retrievedFlags: [String: Any]?
             beforeEach {
                 userStub = LDUser.stub()
-                subject.storeUserAsDataForTesting(user: userStub)
-                subject.convertUserCacheToFlagCache()
-
-                retrievedFlags = subject.retrieveFlags(for: userStub)
             }
-            it("retrieves flags that have matching key") {
-                expect(retrievedFlags == userStub.flagStore.featureFlags).to(beTrue())
+            context("when the user is stored as a dictionary") {
+                beforeEach {
+                    mockStore.storeUserAsDictionary(user: userStub)
+
+                    subject.convertUserCacheToFlagCache()
+                }
+                it("stores the user's flags") {
+                    expect(mockStore.lastUpdated(for: userStub)).toNot(beNil())
+                    expect(mockStore.flags(for: userStub)).toNot(beNil())
+                    guard let userFlags = mockStore.flags(for: userStub) else { return }
+                    expect(userFlags == userStub!.flagStore.featureFlags).to(beTrue())
+                }
+            }
+            context("when the user is stored as data") {
+                beforeEach {
+                    mockStore.storeUserAsData(user: userStub)
+
+                    subject.convertUserCacheToFlagCache()
+                }
+                it("stores the user's flags") {
+                    expect(mockStore.lastUpdated(for: userStub)).toNot(beNil())
+                    expect(mockStore.flags(for: userStub)).toNot(beNil())
+                    guard let userFlags = mockStore.flags(for: userStub) else { return }
+                    expect(userFlags == userStub!.flagStore.featureFlags).to(beTrue())
+                }
             }
         }
 
@@ -90,8 +75,6 @@ final class LDFlagCacheSpec: QuickSpec {
             var retrievedFlags: [String: Any]?
             context("when there are no cached flags") {
                 beforeEach {
-                    subject = LDFlagCache()
-                    subject.clearAllUsersForTesting()
                     retrievedFlags = subject.retrieveLatest()
                 }
                 it("returns nil") {
@@ -101,7 +84,7 @@ final class LDFlagCacheSpec: QuickSpec {
             context("when there are cached flags") {
                 var latestFlags: [String: Any]?
                 beforeEach {
-                    let userStubs = subject.stubAndStoreUserFlags(count: 3)
+                    let userStubs = mockStore.stubAndStoreUserFlags(count: 3)
                     latestFlags = userStubs.last?.flagStore.featureFlags
 
                     retrievedFlags = subject.retrieveLatest()
@@ -112,14 +95,14 @@ final class LDFlagCacheSpec: QuickSpec {
             }
         }
 
-        describe("store flags") {
-            context("when max flags already stored") {
+        describe("retrieve flags") {
+            context("when flag store is full and an older flag set has been removed") {
                 var userStubs: [LDUser]!
                 var retrievedFlags: [String: Any]?
                 beforeEach {
-                    userStubs = subject.stubAndStoreUserFlags(count: subject.maxCachedValues + 1)
+                    userStubs = [LDUser.stub()] + mockStore.stubAndStoreUserFlags(count: subject.maxCachedValues)
                 }
-                it("stores the flags and removes the oldest flags from the cache") {
+                it("retrieves the flags present in the flag store") {
                     for index in 0..<userStubs.count {
                         retrievedFlags = subject.retrieveFlags(for: userStubs[index])
                         if index == 0 {
@@ -132,48 +115,72 @@ final class LDFlagCacheSpec: QuickSpec {
                 }
             }
         }
+
+        describe("store flags") {
+            context("when the flag store is full") {
+                var userStubs: [LDUser]!
+                var storedFlags: [String: Any]?
+                beforeEach {
+                    userStubs = mockStore.stubAndStoreUserFlags(count: subject.maxCachedValues) + [LDUser.stub()]
+
+                    subject.storeFlags(for: userStubs.last!)
+                }
+                it("retrieves the flags present in the flag store") {
+                    for index in 0..<userStubs.count {
+                        storedFlags = mockStore.flags(for: userStubs![index])
+                        if index == 0 {
+                            expect(storedFlags).to(beNil())
+                        }
+                        else {
+                            expect(storedFlags == userStubs[index].flagStore.featureFlags).to(beTrue())
+                        }
+                    }
+                }
+            }
+        }
     }
 }
 
 extension LDFlagCache {
+    var keyedValueStoreMock: KeyedValueStoringMock? { return keyedValueStoreForTesting as? KeyedValueStoringMock }
+}
+
+extension KeyedValueStoringMock {
     func stubAndStoreUserFlags(count: Int) -> [LDUser] {
         var userStubs = [LDUser]()
-        while userStubs.count < count {
-            let newUser = LDUser.stub()
-            userStubs.append(newUser)
-            storeFlags(for: newUser)
-        }
+        //swiftlint:disable:next empty_count
+        guard count > 0 else { return userStubs }
+        while userStubs.count < count { userStubs.append(LDUser.stub()) }
+        var cachedFlags = [String: Any]()
+        userStubs.forEach { (user) in cachedFlags[user.key] = CachedFlags(user: user).dictionaryValue }
+        dictionaryReturnValue = cachedFlags
         return userStubs
     }
 
-    func clearAllUsersForTesting() {
-        UserDefaults.standard.removeObject(forKey: LDFlagCache.userCacheKey)
-        guard !cachedUsersForTesting.isEmpty else { return }
-        //Sometimes removing Keys.cachedUsers doesn't actually work to clear the users for the test, so adding this gives another chance to get the users cleared for testing
-        UserDefaults.standard.set([:], forKey: LDFlagCache.userCacheKey)
-        guard !cachedUsersForTesting.isEmpty else { return }
-        //If we get here, not much else to do...the test will likely fail, but this will log that the users didn't get cleared
-        print("LDFlagCache.clearAllUsersForTesting failed to clear the user cache")
+    func storeUserAsDictionary(user: LDUser) {
+        let userDictionaries = [user.key: user.jsonDictionaryWithConfig]
+        dictionaryReturnValue = userDictionaries
     }
 
-    func clearAllFlagsForTesting() {
-        UserDefaults.standard.removeObject(forKey: LDFlagCache.flagCacheKey)
+    func storeUserAsData(user: LDUser) {
+        let userData = [user.key: NSKeyedArchiver.archivedData(withRootObject: LDUserWrapper(user: user))]
+        dictionaryReturnValue = userData
     }
 
-    func storeUserAsDictionaryForTesting(user: LDUser) {
-        var users = cachedUsersForTesting
-        while users.count > maxCachedValues { users.removeOldest() }
-        var userDictionaries: [String: Any] = users.mapValues { (user) in user.jsonDictionaryWithConfig }
-        userDictionaries[user.key] = user.jsonDictionaryWithConfig
-        UserDefaults.standard.set(userDictionaries, forKey: LDFlagCache.userCacheKey)
+    func lastUpdated(for user: LDUser) -> Date? {
+        return cachedFlags(for: user)?.lastUpdated
     }
 
-    func storeUserAsDataForTesting(user: LDUser) {
-        var users = cachedUsersForTesting
-        while users.count > maxCachedValues { users.removeOldest() }
-        var usersWithData: [String: Any] = users.mapValues { (user) in user.jsonDictionaryWithConfig }
-        usersWithData[user.key] = NSKeyedArchiver.archivedData(withRootObject: LDUserWrapper(user: user))
-        UserDefaults.standard.set(usersWithData, forKey: LDFlagCache.userCacheKey)
+    func flags(for user: LDUser) -> [String: Any]? {
+        return cachedFlags(for: user)?.flags
+    }
+
+    private func cachedFlags(for user: LDUser) -> CachedFlags? {
+        guard let receivedArguments = setReceivedArguments, receivedArguments.forKey == LDFlagCache.flagCacheKey,
+            let flagStore = receivedArguments.value as? [String: Any],
+            let userFlagDictionary = flagStore[user.key] as? [String: Any]
+        else { return nil }
+        return CachedFlags(dictionary: userFlagDictionary)
     }
 }
 

@@ -1,6 +1,3 @@
-//swiftlint:disable vertical_whitespace
-
-
 {% for argument in argument.imports %}
 import {{ argument }}
 {% endfor %}
@@ -27,7 +24,6 @@ final class {{ type.name }}Mock: {{ type.name }} {
     // MARK: {{ method.annotations.StubName|default:method.callName }}
 {% if not method.shortName == "init" %}    var {{ method.annotations.StubName|default:method.callName }}CallCount = 0{% endif %}
 {% if method.throws %}    var {{ method.annotations.StubName|default:method.callName }}ShouldThrow: Error?{% endif %}
-{% if method.parameters.count > 3 %}    //swiftlint:disable:next large_tuple {% endif %}
 {% if method.parameters.count == 1 %}    var {{ method.annotations.StubName|default:method.callName }}Received{% for param in method.parameters %}{{ param.name|upperFirst }}: {% if param.typeName.unwrappedTypeName == "LDEvent" %}Darkly.{% endif %}{{ param.typeName.unwrappedTypeName }}?{% endfor %}
 {% else %}{% if not method.parameters.count == 0 %}    var {{ method.annotations.StubName|default:method.callName }}ReceivedArguments: ({% for param in method.parameters %}{{ param.name }}: {% if param.typeAttributes.escaping %}{{ param.unwrappedTypeName }}{% else %}{% if param.typeName.unwrappedTypeName == "LDEvent" %}Darkly.{% endif %}{{ param.typeName }}{% endif %}{% if not forloop.last %}, {% endif %}{% endfor %})?{% endif %}
 {% endif %}
@@ -35,9 +31,9 @@ final class {{ type.name }}Mock: {{ type.name }} {
     func {{ method.shortName }}({% for param in method.parameters %}{% if param.argumentLabel == nil %}_{% else %}{{ param.argumentLabel }}{% endif %}{% if not param.argumentLabel == param.name %} {{ param.name }}{% endif %}: {% if param.typeName.unwrappedTypeName == "LDEvent" %}Darkly.{% endif %}{{ param.typeName }}{% if not forloop.last %}, {% endif %}{% endfor %}){% if method.throws %} throws{% endif %}{% if not method.returnTypeName.isVoid %} -> {{ method.returnTypeName }}{% endif %} {
 {% if not method.shortName == "init" %}        {{ method.annotations.StubName|default:method.callName }}CallCount += 1{% endif %}
 {%if method.parameters.count == 1 %}        {{ method.annotations.StubName|default:method.callName }}Received{% for param in method.parameters %}{{ param.name|upperFirst }} = {{ param.name }}{% endfor %}{% else %}{% if not method.parameters.count == 0 %}        {{ method.annotations.StubName|default:method.callName }}ReceivedArguments = ({% for param in method.parameters %}{{ param.name }}: {{ param.name }}{% if not forloop.last%}, {% endif %}{% endfor %}){% endif %}{% if not method.returnTypeName.isVoid %}{% endif %}{% endif %}
-    }
 {% if method.throws %}        if let {{ method.annotations.StubName|default:method.callName }}ShouldThrow = {{ method.annotations.StubName|default:method.callName }}ShouldThrow { throw {{ method.annotations.StubName|default:method.callName }}ShouldThrow }{% endif %}
 {% if not method.returnTypeName.isVoid and not method.shortName == "init" %}        return {{ method.annotations.StubName|default:method.callName }}ReturnValue{% endif %}
+    }
 {% endfor %}
 }
 {% endif %}
@@ -71,7 +67,6 @@ public init() {
 // MARK: - {{ method.annotations.StubName|default:method.callName }}
 public var {{ method.annotations.StubName|default:method.callName }}CallCount = 0
 {% if method.throws %}public var {{ method.annotations.StubName|default:method.callName }}ShouldThrow: Error?{% endif %}
-{% if method.parameters.count > 2 %}// swiftlint:disable:next large_tuple {% endif %}
 {% if method.parameters.count == 1 %}public var {{ method.annotations.StubName|default:method.callName }}Received{% for param in method.parameters %}{{ param.name|upperFirst }}: {{ param.typeName.unwrappedTypeName }}?{% endfor %}{% else %}{% if not method.parameters.count == 0 %}var {{ method.annotations.StubName|default:method.callName }}ReceivedArguments: ({% for param in method.parameters %}{{ param.name }}: {% if param.typeAttributes.escaping %}{{ param.unwrappedTypeName }}{% else %}{{ param.typeName }}{% endif %}{% if not forloop.last %}, {% endif %}{% endfor %})?{% endif %}{% endif %}
 {% if not method.returnTypeName.isVoid %}public var {{ method.annotations.StubName|default:method.callName }}ReturnValue: {{ method.returnTypeName }}!{% endif %}
 public override func {{ method.annotations.StubName|default:method.callName }}({% for param in method.parameters %}{% if param.argumentLabel == nil %}_{% else %}{{ param.argumentLabel }}{% endif %}{% if not param.argumentLabel == param.name %} {{ param.name }}{% endif %}: {{ param.typeName }}{% if not forloop.last %}, {% endif %}{% endfor %}){% if method.throws %} throws{% endif %}{% if not method.returnTypeName.isVoid %} -> {{ method.returnTypeName }}{% endif %} {
