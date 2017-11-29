@@ -6,36 +6,48 @@
 #import "LDClientManager.h"
 #import "LDUserBuilder.h"
 #import "LDClient.h"
-#import <OCMock.h>
+#import "OCMock.h"
 #import "LDRequestManager.h"
 #import "LDDataManager.h"
 #import "LDPollingManager.h"
 #import "LDEventModel.h"
 #import "LDClientManager+EventSource.h"
+#import "LDEvent+Testable.h"
+#import "LDFlagConfigModel+Testable.h"
+
+NSString *const mockMobileKey = @"mockMobileKey";
+NSString *const kFeaturesJsonDictionary = @"featuresJsonDictionary";
+NSString *const kBoolFlagKey = @"isABawler";
 
 @interface LDClientManagerTest : DarklyXCTestCase
 @property (nonatomic) id requestManagerMock;
 @property (nonatomic) id ldClientMock;
 @property (nonatomic) id dataManagerMock;
 @property (nonatomic) id pollingManagerMock;
+@property (nonatomic) id eventSourceMock;
 @end
-
 
 @implementation LDClientManagerTest
 @synthesize requestManagerMock;
 @synthesize ldClientMock;
 @synthesize dataManagerMock;
 @synthesize pollingManagerMock;
+@synthesize eventSourceMock;
 
 - (void)setUp {
     [super setUp];
     
-    LDUserBuilder *userBuilder = [[LDUserBuilder alloc] init];
-    userBuilder.key = [[NSUUID UUID] UUIDString];
-    userBuilder.email = @"jeff@test.com";
+    LDUserModel *user = [[LDUserModel alloc] init];
+    user.key = [[NSUUID UUID] UUIDString];
+    user.email = @"jeff@test.com";
 
-    ldClientMock = [self mockClientWithUser:[userBuilder build]];
-    
+    LDConfig *config = [[LDConfig alloc] initWithMobileKey:mockMobileKey];
+
+    ldClientMock = [self mockClientWithUser:user];
+    OCMStub(ClassMethod([ldClientMock sharedInstance])).andReturn(ldClientMock);
+    [[[ldClientMock expect] andReturn: config] ldConfig];
+    [[[ldClientMock expect] andReturn: user] ldUser];
+
     requestManagerMock = OCMClassMock([LDRequestManager class]);
     OCMStub(ClassMethod([requestManagerMock sharedInstance])).andReturn(requestManagerMock);
     
@@ -44,57 +56,87 @@
     
     pollingManagerMock = OCMClassMock([LDPollingManager class]);
     OCMStub(ClassMethod([pollingManagerMock sharedInstance])).andReturn(pollingManagerMock);
+
+    eventSourceMock = OCMClassMock([LDEventSource class]);
+    OCMStub(ClassMethod([eventSourceMock eventSourceWithURL:[OCMArg any] httpHeaders:[OCMArg any]])).andReturn(eventSourceMock);
 }
 
 - (void)tearDown {
-    // Put teardown code here. This method is called after the invocation of each test method in the class.
-    [super tearDown];
+    [LDClientManager sharedInstance].online = NO;
     [ldClientMock stopMocking];
     [requestManagerMock stopMocking];
     [dataManagerMock stopMocking];
     [pollingManagerMock stopMocking];
+    [eventSourceMock stopMocking];
+    ldClientMock = nil;
+    requestManagerMock = nil;
+    dataManagerMock = nil;
+    pollingManagerMock = nil;
+    eventSourceMock = nil;
+    [super tearDown];
 }
 
-- (void)testEventSourceCreatedOnStartPolling {
-    [[LDClientManager sharedInstance] startPolling];
-    XCTAssertNotNil([[LDClientManager sharedInstance] eventSource]);
+- (void)testEventSourceCreatedOnStartPollingWhileOnline {
+    LDClientManager *clientManager = [LDClientManager sharedInstance];
+    clientManager.online = YES;
+    [clientManager startPolling];
+    XCTAssertNotNil(clientManager.eventSource);
+}
+
+- (void)testEventSourceNotCreatedOnStartPollingWhileOffline {
+    LDClientManager *clientManager = [LDClientManager sharedInstance];
+    clientManager.online = NO;
+    [clientManager startPolling];
+    XCTAssertNil(clientManager.eventSource);
 }
 
 - (void)testEventSourceRemainsConstantAcrossStartPollingCalls {
     int numTries = 5;
-    [[LDClientManager sharedInstance] startPolling];
-    LDEventSource *eventSource = [[LDClientManager sharedInstance] eventSource];
+    LDClientManager *clientManager = [LDClientManager sharedInstance];
+    clientManager.online = YES;
+    [clientManager startPolling];
+    LDEventSource *eventSource = clientManager.eventSource;
     XCTAssertNotNil(eventSource);
+
     for (int i = 0; i < numTries; i++) {
-        [[LDClientManager sharedInstance] startPolling];
-        XCTAssert(eventSource == [[LDClientManager sharedInstance] eventSource]);
+        [clientManager startPolling];
+        XCTAssert(eventSource == clientManager.eventSource);
     }
 }
 
 - (void)testEventSourceRemovedOnStopPolling {
-    [[LDClientManager sharedInstance] startPolling];
-    XCTAssertNotNil([[LDClientManager sharedInstance] eventSource]);
-    [[LDClientManager sharedInstance] stopPolling];
-    XCTAssertNil([[LDClientManager sharedInstance] eventSource]);
+    LDClientManager *clientManager = [LDClientManager sharedInstance];
+    clientManager.online = YES;
+    [clientManager startPolling];
+    XCTAssertNotNil(clientManager.eventSource);
+
+    [clientManager stopPolling];
+    XCTAssertNil(clientManager.eventSource);
 }
 
 - (void)testEventSourceCreatedOnWillEnterForeground {
-    [[LDClientManager sharedInstance] startPolling];
-    XCTAssertNotNil([[LDClientManager sharedInstance] eventSource]);
-    [[LDClientManager sharedInstance] willEnterBackground];
-    XCTAssertNil([[LDClientManager sharedInstance] eventSource]);
-    [[LDClientManager sharedInstance] willEnterForeground];
-    XCTAssertNotNil([[LDClientManager sharedInstance] eventSource]);
+    LDClientManager *clientManager = [LDClientManager sharedInstance];
+    clientManager.online = YES;
+    [clientManager startPolling];
+    XCTAssertNotNil(clientManager.eventSource);
+
+    [clientManager willEnterBackground];
+    XCTAssertNil(clientManager.eventSource);
+    [clientManager willEnterForeground];
+    XCTAssertNotNil(clientManager.eventSource);
 }
 
 - (void)testEventSourceRemainsConstantAcrossWillEnterForegroundCalls {
     int numTries = 5;
-    [[LDClientManager sharedInstance] startPolling];
+    LDClientManager *clientManager = [LDClientManager sharedInstance];
+    clientManager.online = YES;
+    [clientManager startPolling];
+    XCTAssertNotNil(clientManager.eventSource);
+
     LDEventSource *eventSource = [[LDClientManager sharedInstance] eventSource];
-    XCTAssertNotNil(eventSource);
     for (int i = 0; i < numTries; i++) {
-        [[LDClientManager sharedInstance] willEnterForeground];
-        XCTAssert(eventSource == [[LDClientManager sharedInstance] eventSource]);
+        [clientManager willEnterForeground];
+        XCTAssert(eventSource == clientManager.eventSource);
     }
 }
 
@@ -102,7 +144,7 @@
     [[requestManagerMock expect] performFeatureFlagRequest:[ldClientMock ldUser]];
     
     LDClientManager *clientManager = [LDClientManager sharedInstance];
-    [clientManager setOfflineEnabled:NO];
+    [clientManager setOnline:YES];
     
     [clientManager syncWithServerForConfig];
 
@@ -116,8 +158,8 @@
     [[requestManagerMock reject] performFeatureFlagRequest:[OCMArg any]];
 
     LDClientManager *clientManager = [LDClientManager sharedInstance];
-    [clientManager setOfflineEnabled:NO];
-    
+    [clientManager setOnline:YES];
+
     [clientManager syncWithServerForConfig];
 }
 
@@ -125,16 +167,16 @@
     [[requestManagerMock reject] performFeatureFlagRequest:[OCMArg any]];
 
     LDClientManager *clientManager = [LDClientManager sharedInstance];
-    [clientManager setOfflineEnabled:YES];
-    
+    [clientManager setOnline:NO];
+
     [clientManager syncWithServerForConfig];
 }
 
 - (void)testSyncWithServerForEventsWhenEventsExist {
     NSData *testData = [[NSData alloc] init];
     LDClientManager *clientManager = [LDClientManager sharedInstance];
-    [clientManager setOfflineEnabled:NO];
-    
+    [clientManager setOnline:YES];
+
     [dataManagerMock allEventsJsonArray:^(NSArray *array) {
         OCMStub(array).andReturn(testData);
         
@@ -147,8 +189,8 @@
 - (void)testDoNotSyncWithServerForEventsWhenEventsDoNotExist {
     NSData *testData = nil;
     LDClientManager *clientManager = [LDClientManager sharedInstance];
-    [clientManager setOfflineEnabled:NO];
-    
+    [clientManager setOnline:YES];
+
     [[requestManagerMock reject] performEventRequest:[OCMArg isEqual:testData]];
     
     [clientManager syncWithServerForEvents];
@@ -165,18 +207,29 @@
         [[requestManagerMock reject] performEventRequest:[OCMArg isEqual:testData]];
         
         LDClientManager *clientManager = [LDClientManager sharedInstance];
-        [clientManager setOfflineEnabled:YES];
+        [clientManager setOnline:NO];
         [clientManager syncWithServerForEvents];
         
         [requestManagerMock verify];
     }];
 }
 
-- (void)testStartPolling {
+- (void)testStartPollingOnline {
     LDClientManager *clientManager = [LDClientManager sharedInstance];
+    clientManager.online = YES;
     [clientManager startPolling];
     
     OCMVerify([pollingManagerMock startEventPolling]);
+    OCMVerify([eventSourceMock onMessage:[OCMArg isNotNil]]);
+}
+
+- (void)testStartPollingOffline {
+    LDClientManager *clientManager = [LDClientManager sharedInstance];
+    clientManager.online = NO;
+    [clientManager startPolling];
+
+    OCMReject([pollingManagerMock startEventPolling]);
+    XCTAssertNil(clientManager.eventSource);
 }
 
 - (void)testStopPolling {
@@ -184,6 +237,7 @@
     [clientManager stopPolling];
     
     OCMVerify([pollingManagerMock stopEventPolling]);
+    XCTAssertNil([clientManager eventSource]);
 }
 
 - (void)testWillEnterBackground {
@@ -229,13 +283,52 @@
     [dataManagerMock verify];
 }
 
-- (void)testProcessedConfigSuccessWithUserConfig {
-    NSDictionary *testDictionary = @{@"key":@"value"};
-    
-    LDClientManager *clientManager = [LDClientManager sharedInstance];
-    [clientManager processedConfig:YES jsonConfigDictionary:testDictionary];
+- (void)testProcessedConfigSuccessWithUserConfigChanged {
+    id mockUserUpdatedObserver = OCMObserverMock();
+    [[NSNotificationCenter defaultCenter] addMockObserver:mockUserUpdatedObserver name:kLDUserUpdatedNotification object:nil];
+    [[mockUserUpdatedObserver expect] notificationWithName:kLDUserUpdatedNotification object:[OCMArg any]];
+
+    id mockUserNoChangeObserver = OCMObserverMock();    //expect this NOT to be posted
+    [[NSNotificationCenter defaultCenter] addMockObserver:mockUserNoChangeObserver name:kLDUserNoChangeNotification object:nil];
+
+    LDFlagConfigModel *flagConfig = [LDFlagConfigModel flagConfigFromJsonFileNamed:@"feature_flags"];
+
+    LDUserModel *user = [ldClientMock ldUser];
+    user.config = flagConfig;
+    [[[ldClientMock expect] andReturn:user] ldUser];
+
+    NSMutableDictionary *updatedFlags = [NSMutableDictionary dictionaryWithDictionary:flagConfig.featuresJsonDictionary];
+    XCTAssertNotNil(updatedFlags[kBoolFlagKey]);
+    updatedFlags[kBoolFlagKey] = @(![updatedFlags[kBoolFlagKey] boolValue]);
+
+    [[LDClientManager sharedInstance] processedConfig:YES jsonConfigDictionary:[updatedFlags copy]];
     
     OCMVerify([dataManagerMock saveUser:[OCMArg any]]);
+    OCMVerifyAll(mockUserUpdatedObserver);
+    OCMVerifyAll(mockUserNoChangeObserver);
+}
+
+- (void)testProcessedConfigSuccessWithUserConfigUnchanged {
+    id mockUserUpdatedObserver = OCMObserverMock(); //expect this NOT to be posted
+    [[NSNotificationCenter defaultCenter] addMockObserver:mockUserUpdatedObserver name:kLDUserUpdatedNotification object:nil];
+
+    id mockUserNoChangeObserver = OCMObserverMock();
+    [[NSNotificationCenter defaultCenter] addMockObserver:mockUserNoChangeObserver name:kLDUserNoChangeNotification object:nil];
+    [[mockUserNoChangeObserver expect] notificationWithName:kLDUserNoChangeNotification object:[OCMArg any]];
+
+    [[dataManagerMock reject] saveUser:[OCMArg any]];
+
+    LDFlagConfigModel *flagConfig = [LDFlagConfigModel flagConfigFromJsonFileNamed:@"feature_flags"];
+
+    LDUserModel *user = [ldClientMock ldUser];
+    user.config = flagConfig;
+    [[[ldClientMock expect] andReturn:user] ldUser];
+
+    [[LDClientManager sharedInstance] processedConfig:YES jsonConfigDictionary:[flagConfig.featuresJsonDictionary copy]];
+
+    OCMVerifyAll(dataManagerMock);
+    OCMVerifyAll(mockUserUpdatedObserver);
+    OCMVerifyAll(mockUserNoChangeObserver);
 }
 
 - (void)testProcessedConfigSuccessWithoutUserConfig {
@@ -257,7 +350,7 @@
 }
 
 - (void)testProcessedConfigSuccessWithUserSameUserConfig {
-    LDFlagConfigModel *startingConfig = [[LDFlagConfigModel alloc] initWithDictionary:[self dictionaryFromJsonFileNamed:@"ldClientManagerTestConfigA"]];
+    LDFlagConfigModel *startingConfig = [LDFlagConfigModel flagConfigFromJsonFileNamed:@"ldClientManagerTestConfigA"];
     XCTAssertNotNil(startingConfig);
 
     LDUserModel *clientUser = [[LDClient sharedInstance] ldUser];
@@ -268,13 +361,13 @@
 }
 
 - (void)testProcessedConfigSuccessWithUserDifferentUserConfig {
-    LDFlagConfigModel *startingConfig = [[LDFlagConfigModel alloc] initWithDictionary:[self dictionaryFromJsonFileNamed:@"ldClientManagerTestConfigA"]];
+    LDFlagConfigModel *startingConfig = [LDFlagConfigModel flagConfigFromJsonFileNamed:@"ldClientManagerTestConfigA"];
     XCTAssertNotNil(startingConfig);
 
     LDUserModel *clientUser = [[LDClient sharedInstance] ldUser];
     clientUser.config = startingConfig;
     
-    LDFlagConfigModel *endingConfig = [[LDFlagConfigModel alloc] initWithDictionary:[self dictionaryFromJsonFileNamed:@"ldClientManagerTestConfigB"]];
+    LDFlagConfigModel *endingConfig = [LDFlagConfigModel flagConfigFromJsonFileNamed:@"ldClientManagerTestConfigB"];
     XCTAssertNotNil(endingConfig);
 
     [[LDClientManager sharedInstance] processedConfig:YES jsonConfigDictionary:endingConfig.featuresJsonDictionary];
@@ -282,17 +375,100 @@
     XCTAssertTrue([clientUser.config isEqualToConfig:endingConfig]);
 }
 
-#pragma mark - Helpers
+- (void)testSetOnlineYes {
+    LDClientManager *clientManager = [LDClientManager sharedInstance];
+    clientManager.online = YES;
 
-- (NSDictionary*)dictionaryFromJsonFileNamed:(NSString *)fileName {
-    NSString *filepath = [[NSBundle bundleForClass:[self class]] pathForResource:fileName
-                                                                          ofType:@"json"];
-    NSError *error = nil;
-    NSData *data = [NSData dataWithContentsOfFile:filepath];
-    return [NSJSONSerialization JSONObjectWithData:data
-                                           options:kNilOptions
-                                             error:&error];
+    OCMVerify([pollingManagerMock startEventPolling]);
+    OCMVerify([eventSourceMock onMessage:[OCMArg any]]);
 }
+
+- (void)testSetOnlineNo {
+    LDClientManager *clientManager = [LDClientManager sharedInstance];
+    clientManager.online = YES;
+    clientManager.online = NO;
+
+    OCMVerify([pollingManagerMock stopEventPolling]);
+    XCTAssertNil([clientManager eventSource]);
+}
+
+- (void)testFlushEventsWhenOnline {
+    NSData *testData = [[NSData alloc] init];
+    LDClientManager *clientManager = [LDClientManager sharedInstance];
+    clientManager.online = YES;
+
+    [dataManagerMock allEventsJsonArray:^(NSArray *array) {
+        OCMStub(array).andReturn(testData);
+
+        [clientManager flushEvents];
+
+        OCMVerify([requestManagerMock performEventRequest:[OCMArg isEqual:testData]]);
+    }];
+}
+
+- (void)testFlushEventsWhenOffline {
+    NSData *testData = [[NSData alloc] init];
+    LDClientManager *clientManager = [LDClientManager sharedInstance];
+    clientManager.online = NO;
+
+    [dataManagerMock allEventsJsonArray:^(NSArray *array) {
+        OCMStub(array).andReturn(testData);
+
+        [clientManager flushEvents];
+
+        OCMReject([requestManagerMock performEventRequest:[OCMArg isEqual:testData]]);
+    }];
+}
+
+- (void)testClientUnauthorizedPosted {
+    id clientUnauthorizedObserver = OCMObserverMock();
+    [[NSNotificationCenter defaultCenter] addMockObserver:clientUnauthorizedObserver name:kLDClientUnauthorizedNotification object:nil];
+    [[clientUnauthorizedObserver expect] notificationWithName: kLDClientUnauthorizedNotification object:[OCMArg any]];
+
+    __block LDEventSourceEventHandler errorHandler;
+    OCMStub([eventSourceMock onError:[OCMArg checkWithBlock:^BOOL(id obj) {
+        errorHandler = (LDEventSourceEventHandler)obj;
+        return YES;
+    }]]);
+
+    LDClientManager *clientManager = [LDClientManager sharedInstance];
+    clientManager.online = YES;
+
+    XCTAssertNotNil(errorHandler);
+    if (!errorHandler) { return; }
+    errorHandler([LDEvent stubUnauthorizedEvent]);
+
+    [[NSNotificationCenter defaultCenter] removeObserver:clientUnauthorizedObserver];
+    [clientUnauthorizedObserver verify];
+
+    clientManager.online = NO;  //Although LDClientManager.online = NO is in tearDown, setting it here allows following tests to not fail on errorHandler != nil
+}
+
+- (void)testClientUnauthorizedNotPosted {
+    id clientUnauthorizedObserver = OCMObserverMock();
+    [[NSNotificationCenter defaultCenter] addMockObserver:clientUnauthorizedObserver name:kLDClientUnauthorizedNotification object:nil];
+    //it's not obvious, but by not setting expect on the mock observer, the observer will fail when verify is called IF it has received the notification
+
+    __block LDEventSourceEventHandler errorHandler;
+    OCMStub([eventSourceMock onError:[OCMArg checkWithBlock:^BOOL(id obj) {
+        errorHandler = (LDEventSourceEventHandler)obj;
+        return YES;
+    }]]);
+
+    LDClientManager *clientManager = [LDClientManager sharedInstance];
+    clientManager.online = YES;
+
+    XCTAssertNotNil(errorHandler);
+    if (!errorHandler) { return; }
+    errorHandler([LDEvent stubErrorEvent]);
+
+    [[NSNotificationCenter defaultCenter] removeObserver:clientUnauthorizedObserver];
+    [clientUnauthorizedObserver verify];
+
+    clientManager.online = NO;  //Although LDClientManager.online = NO is in tearDown, setting it here allows following tests to not fail on errorHandler != nil
+}
+
+#pragma mark - Helpers
 
 - (id)mockClientWithUser:(LDUserModel*)user {
     id mockClient = OCMClassMock([LDClient class]);

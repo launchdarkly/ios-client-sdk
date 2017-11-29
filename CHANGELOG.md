@@ -2,6 +2,22 @@
 
 All notable changes to the LaunchDarkly iOS SDK will be documented in this file. This project adheres to [Semantic Versioning](http://semver.org).
 
+## [2.9.0] - 2017-11-28
+### Changed
+- `LDClientManager` no longer extends `UIApplicationDelegate`. The framework is now marked as extension-safe. Thanks @atlassian-gaustin!
+
+### Added
+- Detect 401 Unauthorized response on flag & event requests, and take the client offline when detected.
+- Detect LDEventSource report of 401 Unauthorized response on connection requests, and take the client offline when detected.
+- LDClient delegate method `userUnchanged` called when the client receives a feature flag update that does not change any flag keys or values.  Thanks @atlassian-gaustin!
+- Xcode 9 support
+
+### Fixed
+- LDPollingManager now reads the config set at the time of the startPolling message and configures polling timers accordingly.
+- LDRequestManager now reads the config set at the time of the performRequest message to configure the API request.
+- Removes duplicate LDEventSource libraries linked warning
+- `updateUser` now updates the `LDUser` `anonymous` property when using a default user key.
+
 ## [2.8.0] - 2017-10-13
 ### Added
 - `useReport` property on `LDConfig` to allow switching the request verb from `GET` to `REPORT`. Do not use unless advised by LaunchDarkly.
