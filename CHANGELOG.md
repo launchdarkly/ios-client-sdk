@@ -10,7 +10,6 @@ All notable changes to the LaunchDarkly iOS SDK will be documented in this file.
 - Detect 401 Unauthorized response on flag & event requests, and take the client offline when detected.
 - Detect LDEventSource report of 401 Unauthorized response on connection requests, and take the client offline when detected.
 - LDClient delegate method `userUnchanged` called when the client receives a feature flag update that does not change any flag keys or values.  Thanks @atlassian-gaustin!
-
 - Xcode 9 support
 
 ### Fixed
