@@ -15,7 +15,6 @@ final class DarklyServiceMock: DarklyServiceProvider {
 
     struct FlagKeys {
         static let bool = "bool-flag"
-        //swiftlint:disable:next identifier_name
         static let int = "int-flag"
         static let double = "double-flag"
         static let string = "string-flag"
@@ -25,7 +24,6 @@ final class DarklyServiceMock: DarklyServiceProvider {
 
     struct FlagValues {
         static let bool = true
-        //swiftlint:disable:next identifier_name
         static let int = 7
         static let double = 3.14159
         static let string = "string value"

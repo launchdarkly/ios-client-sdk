@@ -12,7 +12,6 @@ import OHHTTPStubs
 import DarklyEventSource
 @testable import Darkly
 
-//swiftlint:disable function_body_length
 final class LDFlagSynchronizerSpec: QuickSpec {
     struct Constants {
         fileprivate static let mockMobileKey = "mockMobileKey"
