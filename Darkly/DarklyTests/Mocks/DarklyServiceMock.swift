@@ -104,9 +104,8 @@ extension DarklyServiceMock {
 
     ///Use when testing requires the mock service to actually make a flag request
     func stubFlagRequest(success: Bool, onActivation activate: ((URLRequest, OHHTTPStubsDescriptor, OHHTTPStubsResponse) -> Void)? = nil) {
-        // swiftlint:disable:next opening_brace
-        let stubResponse: OHHTTPStubsResponseBlock = success ? { (_) in OHHTTPStubsResponse(jsonObject: Constants.jsonFlags, statusCode: Constants.statusCodeOk, headers: nil) } :
-        { (_) in OHHTTPStubsResponse(error: Constants.error) }
+        let stubResponse: OHHTTPStubsResponseBlock = success ? { (_) in OHHTTPStubsResponse(jsonObject: Constants.jsonFlags, statusCode: Constants.statusCodeOk, headers: nil) }
+            : { (_) in OHHTTPStubsResponse(error: Constants.error) }
         stubRequest(passingTest: flagRequestStubTest, stub: stubResponse, name: Constants.stubNameFlag, onActivation: activate)
     }
 
@@ -137,9 +136,8 @@ extension DarklyServiceMock {
 
     ///Use when testing requires the mock service to actually make an event source connection request
     func stubStreamRequest(success: Bool, onActivation activate: ((URLRequest, OHHTTPStubsDescriptor, OHHTTPStubsResponse) -> Void)? = nil) {
-        // swiftlint:disable:next opening_brace
-        let stubResponse: OHHTTPStubsResponseBlock = success ? { (_) in OHHTTPStubsResponse(data: Constants.streamData, statusCode: Constants.statusCodeOk, headers: nil) } :
-        { (_) in OHHTTPStubsResponse(error: Constants.error) }
+        let stubResponse: OHHTTPStubsResponseBlock = success ? { (_) in OHHTTPStubsResponse(data: Constants.streamData, statusCode: Constants.statusCodeOk, headers: nil) }
+            : { (_) in OHHTTPStubsResponse(error: Constants.error) }
         stubRequest(passingTest: streamRequestStubTest, stub: stubResponse, name: Constants.stubNameStream, onActivation: activate)
     }
 
@@ -150,9 +148,8 @@ extension DarklyServiceMock {
 
     ///Use when testing requires the mock service to actually make an event request
     func stubEventRequest(success: Bool, onActivation activate: ((URLRequest, OHHTTPStubsDescriptor, OHHTTPStubsResponse) -> Void)? = nil) {
-        // swiftlint:disable:next opening_brace
-        let stubResponse: OHHTTPStubsResponseBlock = success ? { (_) in OHHTTPStubsResponse(data: Data(), statusCode: Constants.statusCodeAccept, headers: nil) } :
-        { (_) in OHHTTPStubsResponse(error: Constants.error) }
+        let stubResponse: OHHTTPStubsResponseBlock = success ? { (_) in OHHTTPStubsResponse(data: Data(), statusCode: Constants.statusCodeAccept, headers: nil) }
+            : { (_) in OHHTTPStubsResponse(error: Constants.error) }
         stubRequest(passingTest: eventRequestStubTest, stub: stubResponse, name: Constants.stubNameEvent, onActivation: activate)
     }
 

@@ -3,6 +3,7 @@ workspace 'Darkly.xcworkspace'
 target 'Darkly_iOS' do
     platform :ios, '8.0'
     pod 'DarklyEventSource'
+    pod 'SwiftLint'
 end
 
 #target 'Darkly_tvOS' do

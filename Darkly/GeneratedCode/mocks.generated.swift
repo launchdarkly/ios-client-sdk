@@ -37,8 +37,8 @@ final class KeyedValueStoringMock: KeyedValueStoring {
     // MARK: dictionary
     var dictionaryCallCount = 0
     var dictionaryReceivedForKey: String?
-    var dictionaryReturnValue: [String : Any]? = nil
-    func dictionary(forKey: String) -> [String : Any]? {
+    var dictionaryReturnValue: [String: Any]? = nil
+    func dictionary(forKey: String) -> [String: Any]? {
         dictionaryCallCount += 1
         dictionaryReceivedForKey = forKey
         return dictionaryReturnValue
