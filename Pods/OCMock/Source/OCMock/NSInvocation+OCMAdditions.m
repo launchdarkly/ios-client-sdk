@@ -15,9 +15,20 @@
  */
 
 #import <objc/runtime.h>
+#import <Availability.h>
+#import <TargetConditionals.h>
 #import "NSInvocation+OCMAdditions.h"
 #import "OCMFunctionsPrivate.h"
 #import "NSMethodSignature+OCMAdditions.h"
+
+
+#if (TARGET_OS_OSX && (!defined(__MAC_10_10) || __MAC_OS_X_VERSION_MIN_REQUIRED < __MAC_10_10)) || \
+    (TARGET_OS_IPHONE && (!defined(__IPHONE_8_0) || __IPHONE_OS_VERSION_MIN_REQUIRED < __IPHONE_8_0))
+static BOOL OCMObjectIsClass(id object) {
+  return class_isMetaClass(object_getClass(object));
+}
+#define object_isClass OCMObjectIsClass
+#endif
 
 
 @implementation NSInvocation(OCMAdditions)
@@ -118,7 +129,7 @@ static NSString *const OCMRetainedObjectArgumentsKey = @"OCMRetainedObjectArgume
 - (void)setArgumentWithObject:(id)arg atIndex:(NSInteger)idx
 {
 	const char *typeEncoding = [[self methodSignature] getArgumentTypeAtIndex:idx];
-	if((arg == nil) || [arg isKindOfClass:[NSNull class]])
+	if((arg == nil) || ([arg respondsToSelector:@selector(isKindOfClass:)] && [arg isKindOfClass:[NSNull class]]))
 	{
 		if(typeEncoding[0] == '^')
 		{
