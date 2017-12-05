@@ -126,6 +126,8 @@
         if((cls == object_getClass([NSObject class])) || (cls == [NSObject class]) || (cls == object_getClass(cls)))
             return;
         NSString *className = NSStringFromClass(cls);
+        if([className isEqualToString:@"NSManagedObject"])
+            return;
         NSString *selName = NSStringFromSelector(sel);
         if(([className hasPrefix:@"NS"] || [className hasPrefix:@"UI"]) &&
            ([selName hasPrefix:@"_"] || [selName hasSuffix:@"_"]))
@@ -230,11 +232,11 @@
 
 #pragma mark  -
 
-/**
+/*
  taken from:
  `class-dump -f isNS /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator7.0.sdk/System/Library/Frameworks/CoreFoundation.framework`
  
- @interface NSObject (__NSIsKinds)
+ @ interface NSObject (__NSIsKinds)
  - (_Bool)isNSValue__;
  - (_Bool)isNSTimeZone__;
  - (_Bool)isNSString__;

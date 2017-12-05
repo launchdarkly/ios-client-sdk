@@ -10,6 +10,7 @@
 #endif
 #endif
 
+#import "DarklyEventSource.h"
 #import "LDEventSource.h"
 
 FOUNDATION_EXPORT double DarklyEventSourceVersionNumber;

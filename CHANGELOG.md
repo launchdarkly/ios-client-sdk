@@ -2,6 +2,10 @@
 
 All notable changes to the LaunchDarkly iOS SDK will be documented in this file. This project adheres to [Semantic Versioning](http://semver.org).
 
+## [2.9.1] - 2017-12-05
+### Fixed
+- Carthage builds no longer crash due to a missing DarklyEventSource library.
+
 ## [2.9.0] - 2017-11-29
 ### Changed
 - `LDClientManager` no longer extends `UIApplicationDelegate`. The framework is now marked as extension-safe. Thanks @atlassian-gaustin!

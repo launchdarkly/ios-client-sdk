@@ -1,6 +1,6 @@
 {
   "name": "DarklyEventSource",
-  "version": "3.1.0",
+  "version": "3.1.1",
   "summary": "HTML5 Server-Sent Events in your Cocoa app.",
   "homepage": "https://github.com/launchdarkly/ios-eventsource",
   "license": "MIT (see LICENSE.txt)",
@@ -9,7 +9,7 @@
   },
   "source": {
     "git": "https://github.com/launchdarkly/ios-eventsource.git",
-    "tag": "3.1.0"
+    "tag": "v3.1.1"
   },
   "source_files": [
     "LDEventSource",
@@ -17,7 +17,7 @@
   ],
   "platforms": {
     "ios": "8.0",
-    "osx": "10.7",
+    "osx": "10.10",
     "watchos": "2.0",
     "tvos": "9.0"
   },
