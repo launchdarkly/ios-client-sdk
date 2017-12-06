@@ -9,20 +9,40 @@
 import Foundation
 
 protocol ClientServiceCreating {
-    func makeFlagCache(maxCachedValues: Int) -> LDFlagCache
-    func makeFlagCache() -> LDFlagCache
+    func makeKeyedValueCache() -> KeyedValueCaching
+    func makeCacheConverter() -> UserCacheConverting
+    func makeCacheConverter(store: KeyedValueCaching) -> UserCacheConverting
+    func makeFlagCollectionCache(keyStore: KeyedValueCaching) -> FlagCollectionCaching
+    func makeUserFlagCache() -> UserFlagCaching
+    func makeUserFlagCache(flagCollectionStore: FlagCollectionCaching) -> UserFlagCaching
     func makeDarklyServiceProvider(mobileKey: String, config: LDConfig, user: LDUser) -> DarklyServiceProvider
     func makeFlagSynchronizer(mobileKey: String, streamingMode: LDStreamingMode, pollingInterval: TimeInterval, service: DarklyServiceProvider, store: LDFlagMaintaining) -> LDFlagSynchronizing
     func makeEventReporter(mobileKey: String, config: LDConfig, service: DarklyServiceProvider) -> LDEventReporting
 }
 
 struct ClientServiceFactory: ClientServiceCreating {
-    func makeFlagCache(maxCachedValues: Int) -> LDFlagCache {
-        return LDFlagCache(maxCachedValues: maxCachedValues)
+    func makeKeyedValueCache() -> KeyedValueCaching {
+        return UserDefaults.standard
     }
 
-    func makeFlagCache() -> LDFlagCache {
-        return LDFlagCache()
+    func makeCacheConverter() -> UserCacheConverting {
+        return UserCacheConverter(store: makeKeyedValueCache())
+    }
+
+    func makeCacheConverter(store: KeyedValueCaching) -> UserCacheConverting {
+        return UserCacheConverter(store: store)
+    }
+
+    func makeFlagCollectionCache(keyStore: KeyedValueCaching) -> FlagCollectionCaching {
+        return FlagCollectionCache(keyStore: keyStore)
+    }
+
+    func makeUserFlagCache() -> UserFlagCaching {
+        return UserFlagCache(flagCollectionStore: makeFlagCollectionCache(keyStore: makeKeyedValueCache()))
+    }
+
+    func makeUserFlagCache(flagCollectionStore: FlagCollectionCaching) -> UserFlagCaching {
+        return UserFlagCache(flagCollectionStore: flagCollectionStore)
     }
 
     func makeDarklyServiceProvider(mobileKey: String, config: LDConfig, user: LDUser) -> DarklyServiceProvider {
