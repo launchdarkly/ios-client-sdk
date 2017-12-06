@@ -53,6 +53,7 @@ import Foundation
 
 */
 
+//sourcery: AutoMockable
 protocol UserFlagCaching {
     func cacheFlags(for user: LDUser)
     func retrieveFlags(for user: LDUser) -> [String: Any]?

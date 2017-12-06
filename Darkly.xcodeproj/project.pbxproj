@@ -18,7 +18,7 @@
 		8335299E1FC37727001166F8 /* LDFlagMaintainingMock.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8335299D1FC37727001166F8 /* LDFlagMaintainingMock.swift */; };
 		83396BC91F7C3711000E256E /* DarklyServiceSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = 83396BC81F7C3711000E256E /* DarklyServiceSpec.swift */; };
 		83411A5F1FABDA8700E5CF39 /* mocks.generated.swift in Sources */ = {isa = PBXBuildFile; fileRef = 83411A5D1FABDA8700E5CF39 /* mocks.generated.swift */; };
-		8342DAE51FB10C4800564D1F /* LDFlagCacheSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8342DAE41FB10C4800564D1F /* LDFlagCacheSpec.swift */; };
+		8342DAE51FB10C4800564D1F /* UserFlagCacheSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8342DAE41FB10C4800564D1F /* UserFlagCacheSpec.swift */; };
 		8354EFCC1F22491C00C05156 /* Darkly.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 8354EFC21F22491C00C05156 /* Darkly.framework */; };
 		8354EFD31F22491C00C05156 /* Darkly.h in Headers */ = {isa = PBXBuildFile; fileRef = 8354EFC51F22491C00C05156 /* Darkly.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		8354EFE01F26380700C05156 /* LDClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8354EFDC1F26380700C05156 /* LDClient.swift */; };
@@ -95,7 +95,7 @@
 		8335299D1FC37727001166F8 /* LDFlagMaintainingMock.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LDFlagMaintainingMock.swift; sourceTree = "<group>"; };
 		83396BC81F7C3711000E256E /* DarklyServiceSpec.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DarklyServiceSpec.swift; sourceTree = "<group>"; };
 		83411A5D1FABDA8700E5CF39 /* mocks.generated.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = mocks.generated.swift; path = Darkly/GeneratedCode/mocks.generated.swift; sourceTree = SOURCE_ROOT; };
-		8342DAE41FB10C4800564D1F /* LDFlagCacheSpec.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LDFlagCacheSpec.swift; sourceTree = "<group>"; };
+		8342DAE41FB10C4800564D1F /* UserFlagCacheSpec.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserFlagCacheSpec.swift; sourceTree = "<group>"; };
 		8354EFC21F22491C00C05156 /* Darkly.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Darkly.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		8354EFC51F22491C00C05156 /* Darkly.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Darkly.h; sourceTree = "<group>"; };
 		8354EFCB1F22491C00C05156 /* DarklyTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = DarklyTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -193,15 +193,15 @@
 			path = Networking;
 			sourceTree = "<group>";
 		};
-		831D8B751F72A48900ED65E8 /* Managers */ = {
+		831D8B751F72A48900ED65E8 /* Service Objects */ = {
 			isa = PBXGroup;
 			children = (
 				831D8B761F72A4B400ED65E8 /* LDFlagSynchronizerSpec.swift */,
 				83CFE7CD1F7AD81D0010544E /* LDEventReporterSpec.swift */,
 				83DDBEFF1FA2589900E428B6 /* LDFlagStoreSpec.swift */,
-				8342DAE41FB10C4800564D1F /* LDFlagCacheSpec.swift */,
+				8342DAE41FB10C4800564D1F /* UserFlagCacheSpec.swift */,
 			);
-			path = Managers;
+			path = "Service Objects";
 			sourceTree = "<group>";
 		};
 		83396BC71F7C3688000E256E /* Networking */ = {
@@ -265,7 +265,7 @@
 				838F96731FB9F024009CFC45 /* LDClientSpec.swift */,
 				83EF67911F9945CE00403126 /* Models */,
 				83CFE7CF1F7AD89D0010544E /* Mocks */,
-				831D8B751F72A48900ED65E8 /* Managers */,
+				831D8B751F72A48900ED65E8 /* Service Objects */,
 				83396BC71F7C3688000E256E /* Networking */,
 				831CE0671F853CB700A13A3A /* Matcher */,
 				8354EFD21F22491C00C05156 /* Info.plist */,
@@ -664,7 +664,7 @@
 				83DDBF001FA2589900E428B6 /* LDFlagStoreSpec.swift in Sources */,
 				83396BC91F7C3711000E256E /* DarklyServiceSpec.swift in Sources */,
 				83EF67931F9945E800403126 /* LDEventSpec.swift in Sources */,
-				8342DAE51FB10C4800564D1F /* LDFlagCacheSpec.swift in Sources */,
+				8342DAE51FB10C4800564D1F /* UserFlagCacheSpec.swift in Sources */,
 				838F96741FB9F024009CFC45 /* LDClientSpec.swift in Sources */,
 				83E2E2061F9E7AC7007514E9 /* LDUserSpec.swift in Sources */,
 				83EF67951F994BAD00403126 /* LDUserMock.swift in Sources */,

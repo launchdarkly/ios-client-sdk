@@ -23,8 +23,28 @@ final class DarklyStreamingProviderMock: DarklyStreamingProvider {
     }
 }
 
-// MARK: - KeyedValueStoringMock
-final class KeyedValueStoringMock: KeyedValueStoring {
+// MARK: - FlagCollectionCachingMock
+final class FlagCollectionCachingMock: FlagCollectionCaching {
+
+    // MARK: retrieveFlags
+    var retrieveFlagsCallCount = 0
+    var retrieveFlagsReturnValue: [String: UserFlags]!
+    func retrieveFlags() -> [String: UserFlags] {
+        retrieveFlagsCallCount += 1
+        return retrieveFlagsReturnValue
+    }
+
+    // MARK: storeFlags
+    var storeFlagsCallCount = 0
+    var storeFlagsReceivedFlags: [String: UserFlags]?
+    func storeFlags(_ flags: [String: UserFlags]) {
+        storeFlagsCallCount += 1
+        storeFlagsReceivedFlags = flags
+    }
+}
+
+// MARK: - KeyedValueCachingMock
+final class KeyedValueCachingMock: KeyedValueCaching {
 
     // MARK: set
     var setCallCount = 0
@@ -160,5 +180,27 @@ final class LDFlagSynchronizingMock: LDFlagSynchronizing {
     var serviceSetCount = 0
     var service: DarklyServiceProvider = DarklyServiceMock() {
         didSet { serviceSetCount += 1 }
+    }
+}
+
+// MARK: - UserFlagCachingMock
+final class UserFlagCachingMock: UserFlagCaching {
+
+    // MARK: cacheFlags
+    var cacheFlagsCallCount = 0
+    var cacheFlagsReceivedUser: LDUser?
+    func cacheFlags(for user: LDUser) {
+        cacheFlagsCallCount += 1
+        cacheFlagsReceivedUser = user
+    }
+
+    // MARK: retrieveFlags
+    var retrieveFlagsCallCount = 0
+    var retrieveFlagsReceivedUser: LDUser?
+    var retrieveFlagsReturnValue: [String: Any]?!
+    func retrieveFlags(for user: LDUser) -> [String: Any]? {
+        retrieveFlagsCallCount += 1
+        retrieveFlagsReceivedUser = user
+        return retrieveFlagsReturnValue
     }
 }

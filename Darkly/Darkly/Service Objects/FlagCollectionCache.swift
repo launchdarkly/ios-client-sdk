@@ -8,6 +8,7 @@
 
 import Foundation
 
+//sourcery: AutoMockable
 protocol FlagCollectionCaching {
     //Responsibility: store & retrieve flag collection using KeyedValueStoring
     //controls the number of user flag sets stored in the flag collection

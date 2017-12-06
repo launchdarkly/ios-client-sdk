@@ -9,12 +9,36 @@
 @testable import Darkly
 
 struct ClientServiceMockFactory: ClientServiceCreating {
-    func makeFlagCache(maxCachedValues: Int) -> LDFlagCache {
-        return LDFlagCache(maxCachedValues: maxCachedValues, keyedValueStore: KeyedValueStoringMock())
+    func makeKeyedValueCache() -> KeyedValueCaching {
+        return KeyedValueCachingMock()
     }
 
-    func makeFlagCache() -> LDFlagCache {
-        return LDFlagCache(keyedValueStore: KeyedValueStoringMock())
+    func makeCacheConverter() -> UserCacheConverting {
+        return UserCacheConverter(store: KeyedValueCachingMock())
+    }
+
+    func makeCacheConverter(store: KeyedValueCaching) -> UserCacheConverting {
+        return UserCacheConverter(store: store)
+    }
+
+    func makeFlagCollectionCache(keyStore: KeyedValueCaching) -> FlagCollectionCaching {
+        return FlagCollectionCachingMock()
+    }
+
+    func makeUserFlagCache() -> UserFlagCaching {
+        return UserFlagCachingMock()
+    }
+
+    func makeUserFlagCache(flagCollectionStore: FlagCollectionCaching) -> UserFlagCaching {
+        return UserFlagCachingMock()
+    }
+
+    func makeFlagCache(maxCachedValues: Int) -> UserFlagCache {
+        return UserFlagCache(flagCollectionStore: FlagCollectionCachingMock())
+    }
+
+    func makeFlagCache() -> UserFlagCache {
+        return UserFlagCache(flagCollectionStore: FlagCollectionCachingMock())
     }
 
     func makeDarklyServiceProvider(mobileKey: String, config: LDConfig, user: LDUser) -> DarklyServiceProvider {
