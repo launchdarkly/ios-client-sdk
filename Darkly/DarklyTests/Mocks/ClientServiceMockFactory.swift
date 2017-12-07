@@ -25,12 +25,13 @@ struct ClientServiceMockFactory: ClientServiceCreating {
         return FlagCollectionCachingMock()
     }
 
+    var userFlagCache = UserFlagCachingMock()
     func makeUserFlagCache() -> UserFlagCaching {
-        return UserFlagCachingMock()
+        return userFlagCache
     }
 
     func makeUserFlagCache(flagCollectionStore: FlagCollectionCaching) -> UserFlagCaching {
-        return UserFlagCachingMock()
+        return userFlagCache
     }
 
     func makeFlagCache(maxCachedValues: Int) -> UserFlagCache {

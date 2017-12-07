@@ -45,6 +45,12 @@ struct UserFlags {
     }
 }
 
+extension UserFlags: Equatable {
+    static func == (lhs: UserFlags, rhs: UserFlags) -> Bool {
+        return lhs.flags == rhs.flags && lhs.lastUpdated == rhs.lastUpdated
+    }
+}
+
 extension Dictionary where Key == String, Value == UserFlags {
     fileprivate mutating func removeOldest() {
         guard !self.isEmpty else { return }

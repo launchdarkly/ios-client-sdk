@@ -62,8 +62,8 @@ public class LDClient {
             isOnline = false
 
             service = serviceFactory.makeDarklyServiceProvider(mobileKey: mobileKey, config: config, user: user)
-            if let cachedFlags = flagCache.retrieveFlags(for: user), !cachedFlags.isEmpty {
-                user.flagStore.replaceStore(newFlags: cachedFlags, source: .cache)
+            if let cachedFlags = flagCache.retrieveFlags(for: user), !cachedFlags.flags.isEmpty {
+                user.flagStore.replaceStore(newFlags: cachedFlags.flags, source: .cache)
             }
             flagSynchronizer = serviceFactory.makeFlagSynchronizer(mobileKey: mobileKey,
                                                                    streamingMode: effectiveStreamingMode(runMode: runMode),

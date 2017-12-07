@@ -28,7 +28,7 @@ final class FlagCollectionCachingMock: FlagCollectionCaching {
 
     // MARK: retrieveFlags
     var retrieveFlagsCallCount = 0
-    var retrieveFlagsReturnValue: [String: UserFlags]!
+    var retrieveFlagsReturnValue: [String: UserFlags] = [:]
     func retrieveFlags() -> [String: UserFlags] {
         retrieveFlagsCallCount += 1
         return retrieveFlagsReturnValue
@@ -197,8 +197,8 @@ final class UserFlagCachingMock: UserFlagCaching {
     // MARK: retrieveFlags
     var retrieveFlagsCallCount = 0
     var retrieveFlagsReceivedUser: LDUser?
-    var retrieveFlagsReturnValue: [String: Any]?!
-    func retrieveFlags(for user: LDUser) -> [String: Any]? {
+    var retrieveFlagsReturnValue: UserFlags? = nil
+    func retrieveFlags(for user: LDUser) -> UserFlags? {
         retrieveFlagsCallCount += 1
         retrieveFlagsReceivedUser = user
         return retrieveFlagsReturnValue

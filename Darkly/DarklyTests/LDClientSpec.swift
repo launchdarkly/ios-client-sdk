@@ -234,19 +234,51 @@ final class LDClientSpec: QuickSpec {
                 }
             }
             context("when called with cached flags for the user") {
-                var flags: [String: Any]!
+                var serviceFactory: ClientServiceMockFactory!
+                var flags: UserFlags!
+                var mockUserFlagCache: UserFlagCachingMock!
                 var mockFlagStore: LDFlagMaintainingMock!
                 beforeEach {
-//                    user = subject.flagCache.keyedValueStoreMock!.stubAndStoreUserFlags(count: 1).first
-                    flags = user.flagStore.featureFlags
+                    serviceFactory = ClientServiceMockFactory()
+                    mockUserFlagCache = serviceFactory.userFlagCache
+                    flags = UserFlags(user: user)
+                    mockUserFlagCache.retrieveFlagsReturnValue = flags
+                    subject = LDClient.makeClient(with: serviceFactory)
                     mockFlagStore = user.flagStore as? LDFlagMaintainingMock
-                    mockFlagStore?.replaceStore(newFlags: [:], source: .cache)
+                    mockFlagStore.featureFlags = [:]
 
                     config.startOnline = false
                     subject.start(mobileKey: Constants.mockMobileKey, config: config, user: user)
                 }
+                it("checks the user flag cache for the user") {
+                    expect(mockUserFlagCache.retrieveFlagsCallCount) == 1
+                    expect(mockUserFlagCache.retrieveFlagsReceivedUser) == user
+                }
                 it("restores user flags from cache") {
-                    expect(mockFlagStore.replaceStoreReceivedArguments?.newFlags == flags).to(beTrue())
+                    expect(mockFlagStore.replaceStoreReceivedArguments?.newFlags.isNilOrEmpty).toNot(beTrue())
+                    expect(mockFlagStore.replaceStoreReceivedArguments?.newFlags == flags.flags).to(beTrue())
+                }
+            }
+            context("when called without cached flags for the user") {
+                var serviceFactory: ClientServiceMockFactory!
+                var mockUserFlagCache: UserFlagCachingMock!
+                var mockFlagStore: LDFlagMaintainingMock!
+                beforeEach {
+                    serviceFactory = ClientServiceMockFactory()
+                    mockUserFlagCache = serviceFactory.userFlagCache
+                    subject = LDClient.makeClient(with: serviceFactory)
+                    mockFlagStore = user.flagStore as? LDFlagMaintainingMock
+                    mockFlagStore.featureFlags = [:]
+
+                    config.startOnline = false
+                    subject.start(mobileKey: Constants.mockMobileKey, config: config, user: user)
+                }
+                it("checks the user flag cache for the user") {
+                    expect(mockUserFlagCache.retrieveFlagsCallCount) == 1
+                    expect(mockUserFlagCache.retrieveFlagsReceivedUser) == user
+                }
+                it("does not restore user flags from cache") {
+                    expect(mockFlagStore.replaceStoreCallCount) == 0
                 }
             }
         }

@@ -12,6 +12,7 @@ import Foundation
 protocol FlagCollectionCaching {
     //Responsibility: store & retrieve flag collection using KeyedValueStoring
     //controls the number of user flag sets stored in the flag collection
+    //sourcery: DefaultReturnValue = [:]
     func retrieveFlags() -> [String: UserFlags]
     func storeFlags(_ flags: [String: UserFlags])
 }

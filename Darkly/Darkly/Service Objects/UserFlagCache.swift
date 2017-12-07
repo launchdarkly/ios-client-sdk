@@ -56,7 +56,8 @@ import Foundation
 //sourcery: AutoMockable
 protocol UserFlagCaching {
     func cacheFlags(for user: LDUser)
-    func retrieveFlags(for user: LDUser) -> [String: Any]?
+    //sourcery: DefaultReturnValue = nil
+    func retrieveFlags(for user: LDUser) -> UserFlags?
 }
 
 final class UserFlagCache: UserFlagCaching {
@@ -81,8 +82,8 @@ final class UserFlagCache: UserFlagCaching {
         cache(flags: flags)
     }
     
-    func retrieveFlags(for user: LDUser) -> [String: Any]? {
-        return cachedFlags[user.key]?.flags
+    func retrieveFlags(for user: LDUser) -> UserFlags? {
+        return cachedFlags[user.key]
     }
     
     //TODO: Should this retrieve a tuple (userKey, flags)?
@@ -97,13 +98,14 @@ final class UserFlagCache: UserFlagCaching {
 //            else { return [:] }
 //
 //        return flagCache.flatMapValues { flagDictionary in CachedFlags(object: flagDictionary) }
-        return [:]
+        return flagCollectionStore.retrieveFlags()
     }
 
     private func cache(flags: [String: UserFlags]) {
 //        var flags = flags
 //        while flags.count > maxCachedValues { flags.removeOldest() }
 //        keyedValueStore.set(flags.mapValues { (userFlags) in userFlags.dictionaryValue }, forKey: Keys.cachedFlags)
+        flagCollectionStore.storeFlags(flags)
     }
 
     // MARK: - User caching
