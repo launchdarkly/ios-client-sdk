@@ -43,4 +43,23 @@ extension LDUser {
         flags["userKey"] = key
         return flags
     }
+
+    static func stubUsers(_ count: Int) -> [LDUser] {
+        var userStubs = [LDUser]()
+        while userStubs.count < count { userStubs.append(LDUser.stub()) }
+        return userStubs
+    }
+}
+
+extension Array where Element == LDUser {
+    var userFlags: [String: UserFlags] {
+        var flags = [String: UserFlags]()
+        self.forEach { (user) in flags[user.key] = UserFlags(user: user) }
+        return flags
+    }
+
+    var userFlagDictionaries: [String: Any] {
+        let flags = userFlags
+        return flags.mapValues { (userFlags) in userFlags.dictionaryValue }
+    }
 }

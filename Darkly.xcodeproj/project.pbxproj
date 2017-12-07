@@ -48,6 +48,7 @@
 		83D559761FD87D67002D10C8 /* UserFlags.swift in Sources */ = {isa = PBXBuildFile; fileRef = 83D559751FD87D67002D10C8 /* UserFlags.swift */; };
 		83D559781FD87DAC002D10C8 /* FlagCollectionCache.swift in Sources */ = {isa = PBXBuildFile; fileRef = 83D559771FD87DAC002D10C8 /* FlagCollectionCache.swift */; };
 		83D5597A1FD87E6B002D10C8 /* UserCacheConverter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 83D559791FD87E6B002D10C8 /* UserCacheConverter.swift */; };
+		83D5597C1FD9BED7002D10C8 /* FlagCollectionCacheSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = 83D5597B1FD9BED7002D10C8 /* FlagCollectionCacheSpec.swift */; };
 		83DDBEF61FA24A7E00E428B6 /* Data.swift in Sources */ = {isa = PBXBuildFile; fileRef = 83DDBEF51FA24A7E00E428B6 /* Data.swift */; };
 		83DDBEFA1FA24AFB00E428B6 /* Array.swift in Sources */ = {isa = PBXBuildFile; fileRef = 83DDBEF91FA24AFB00E428B6 /* Array.swift */; };
 		83DDBEFC1FA24B2700E428B6 /* JSONSerialization.swift in Sources */ = {isa = PBXBuildFile; fileRef = 83DDBEFB1FA24B2700E428B6 /* JSONSerialization.swift */; };
@@ -126,6 +127,7 @@
 		83D559751FD87D67002D10C8 /* UserFlags.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserFlags.swift; sourceTree = "<group>"; };
 		83D559771FD87DAC002D10C8 /* FlagCollectionCache.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FlagCollectionCache.swift; sourceTree = "<group>"; };
 		83D559791FD87E6B002D10C8 /* UserCacheConverter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserCacheConverter.swift; sourceTree = "<group>"; };
+		83D5597B1FD9BED7002D10C8 /* FlagCollectionCacheSpec.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FlagCollectionCacheSpec.swift; sourceTree = "<group>"; };
 		83DDBEF51FA24A7E00E428B6 /* Data.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Data.swift; sourceTree = "<group>"; };
 		83DDBEF91FA24AFB00E428B6 /* Array.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Array.swift; sourceTree = "<group>"; };
 		83DDBEFB1FA24B2700E428B6 /* JSONSerialization.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JSONSerialization.swift; sourceTree = "<group>"; };
@@ -200,6 +202,7 @@
 				83CFE7CD1F7AD81D0010544E /* LDEventReporterSpec.swift */,
 				83DDBEFF1FA2589900E428B6 /* LDFlagStoreSpec.swift */,
 				8342DAE41FB10C4800564D1F /* UserFlagCacheSpec.swift */,
+				83D5597B1FD9BED7002D10C8 /* FlagCollectionCacheSpec.swift */,
 			);
 			path = "Service Objects";
 			sourceTree = "<group>";
@@ -218,7 +221,8 @@
 			children = (
 				83411A5D1FABDA8700E5CF39 /* mocks.generated.swift */,
 			);
-			path = GeneratedCode;
+			name = GeneratedCode;
+			path = Darkly/GeneratedCode;
 			sourceTree = "<group>";
 		};
 		8354EFB81F22491C00C05156 = {
@@ -668,6 +672,7 @@
 				838F96741FB9F024009CFC45 /* LDClientSpec.swift in Sources */,
 				83E2E2061F9E7AC7007514E9 /* LDUserSpec.swift in Sources */,
 				83EF67951F994BAD00403126 /* LDUserMock.swift in Sources */,
+				83D5597C1FD9BED7002D10C8 /* FlagCollectionCacheSpec.swift in Sources */,
 				83F0A5641FB5F33800550A95 /* LDConfigSpec.swift in Sources */,
 				83CFE7D11F7AD8DC0010544E /* DarklyServiceMock.swift in Sources */,
 				832307AA1F7ECA630029815A /* LDConfigStub.swift in Sources */,

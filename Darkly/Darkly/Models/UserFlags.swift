@@ -50,11 +50,3 @@ extension UserFlags: Equatable {
         return lhs.flags == rhs.flags && lhs.lastUpdated == rhs.lastUpdated
     }
 }
-
-extension Dictionary where Key == String, Value == UserFlags {
-    fileprivate mutating func removeOldest() {
-        guard !self.isEmpty else { return }
-        guard let oldestPair = self.max(by: { (pair1, pair2) -> Bool in pair1.value.lastUpdated > pair2.value.lastUpdated }) else { return }
-        self.removeValue(forKey: oldestPair.key)
-    }
-}

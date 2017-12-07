@@ -124,24 +124,6 @@ final class UserFlagCacheSpec: QuickSpec {
                     expect(mockFlagCollectionStore.retrieveFlagsCallCount) == 1
                 }
             }
-//            context("when flag store is full and an older flag set has been removed") {
-//                var userStubs: [LDUser]!
-//                var retrievedFlags: [String: Any]?
-//                beforeEach {
-//                    userStubs = [LDUser.stub()] + mockStore.stubAndStoreUserFlags(count: subject.maxCachedValues)
-//                }
-//                it("retrieves the flags present in the flag store") {
-//                    for index in 0..<userStubs.count {
-//                        retrievedFlags = subject.retrieveFlags(for: userStubs[index])
-//                        if index == 0 {
-//                            expect(retrievedFlags).to(beNil())
-//                        }
-//                        else {
-//                            expect(retrievedFlags == userStubs[index].flagStore.featureFlags).to(beTrue())
-//                        }
-//                    }
-//                }
-//            }
         }
 
         describe("store flags") {

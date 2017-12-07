@@ -22,6 +22,7 @@ struct AnyComparer {
         case (let value as String, let other as String): if value != other { return false }
         case (let value as [Any], let other as [Any]): if !value.isEqual(to: other) { return false }
         case (let value as [String: Any], let other as [String: Any]): if !value.isEqual(to: other) { return false }
+        case (let value as Date, let other as Date): if value != other { return false }
         default: return false
         }
         return true

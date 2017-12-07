@@ -19,7 +19,11 @@ protocol FlagCollectionCaching {
 
 final class FlagCollectionCache: FlagCollectionCaching {
     struct Constants {
-        public static let maxCachedValues = 5
+        static let maxCachedValues = 5
+    }
+
+    struct Keys {
+        fileprivate static let cachedFlags = "Darkly.FlagCacheDictionary"
     }
 
     private let keyStore: KeyedValueCaching
@@ -31,10 +35,36 @@ final class FlagCollectionCache: FlagCollectionCaching {
     }
 
     func retrieveFlags() -> [String: UserFlags] {
-        return [:]
+        return cachedUserFlags ?? [:]
     }
 
     func storeFlags(_ flags: [String: UserFlags]) {
+        var flags = flags
+        while flags.count > maxCachedValues { flags.removeOldest() }
+        keyStore.set(flags.flagDictionaries, forKey: Keys.cachedFlags)
+    }
 
+    private var cachedFlagDictionaries: [String: Any]? { return keyStore.dictionary(forKey: Keys.cachedFlags) }
+    private var cachedUserFlags: [String: UserFlags]? {
+        return cachedFlagDictionaries?.flatMapValues { (flagDictionary) in return UserFlags(object: flagDictionary) }
     }
 }
+
+extension Dictionary where Key == String, Value == UserFlags {
+    fileprivate mutating func removeOldest() {
+        guard !self.isEmpty else { return }
+        guard let oldestPair = self.max(by: { (pair1, pair2) -> Bool in pair1.value.lastUpdated > pair2.value.lastUpdated }) else { return }
+        self.removeValue(forKey: oldestPair.key)
+    }
+
+    fileprivate var flagDictionaries: [String: Any] {
+        return self.mapValues { (userFlags) in userFlags.dictionaryValue }
+    }
+}
+
+// MARK: - Test Support
+#if DEBUG
+    extension FlagCollectionCache {
+        static var flagCacheKey: String { return Keys.cachedFlags }
+    }
+#endif

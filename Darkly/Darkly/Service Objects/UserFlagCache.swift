@@ -102,9 +102,6 @@ final class UserFlagCache: UserFlagCaching {
     }
 
     private func cache(flags: [String: UserFlags]) {
-//        var flags = flags
-//        while flags.count > maxCachedValues { flags.removeOldest() }
-//        keyedValueStore.set(flags.mapValues { (userFlags) in userFlags.dictionaryValue }, forKey: Keys.cachedFlags)
         flagCollectionStore.storeFlags(flags)
     }
 
