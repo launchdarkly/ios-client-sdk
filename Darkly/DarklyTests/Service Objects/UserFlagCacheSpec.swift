@@ -21,24 +21,6 @@ final class UserFlagCacheSpec: QuickSpec {
             subject = UserFlagCache(flagCollectionStore: mockFlagCollectionStore)
         }
 
-//        describe("store and retrieve flags using user defaults") {
-//            var userStub: LDUser!
-//            var retrievedFlags: [String: Any]?
-//            beforeEach {
-//                userStub = LDUser.stub()
-//                subject = UserFlagCache(flagCollectionStore: mockFlagCollectionStore)
-//                subject.cacheFlags(for: userStub)
-//
-//                retrievedFlags = subject.retrieveFlags(for: userStub)
-//            }
-//            it("retrieves flags that have matching key") {
-//                expect(retrievedFlags == userStub.flagStore.featureFlags).to(beTrue())
-//            }
-//            afterEach {
-//                subject.keyedValueStoreForTesting.removeObject(forKey: LDFlagCache.flagCacheKey)
-//            }
-//        }
-
 //        describe("convert user cache to flag cache") {
 //            var userStub: LDUser!
 //            beforeEach {
@@ -167,33 +149,9 @@ final class UserFlagCacheSpec: QuickSpec {
                     expect(storedFlags) == changedUserFlags
                 }
             }
-//            context("when the flag store is full") {
-//                var userStubs: [LDUser]!
-//                var storedFlags: [String: Any]?
-//                beforeEach {
-//                    userStubs = mockStore.stubAndStoreUserFlags(count: subject.maxCachedValues) + [LDUser.stub()]
-//
-//                    subject.storeFlags(for: userStubs.last!)
-//                }
-//                it("retrieves the flags present in the flag store") {
-//                    for index in 0..<userStubs.count {
-//                        storedFlags = mockStore.flags(for: userStubs![index])
-//                        if index == 0 {
-//                            expect(storedFlags).to(beNil())
-//                        }
-//                        else {
-//                            expect(storedFlags == userStubs[index].flagStore.featureFlags).to(beTrue())
-//                        }
-//                    }
-//                }
-//            }
         }
     }
 }
-
-//extension UserFlagCache {
-//    var keyedValueStoreMock: KeyedValueStoringMock? { return keyedValueStoreForTesting as? KeyedValueStoringMock }
-//}
 
 extension FlagCollectionCachingMock {
     func stubAndStoreUserFlags(count: Int) -> [LDUser] {
