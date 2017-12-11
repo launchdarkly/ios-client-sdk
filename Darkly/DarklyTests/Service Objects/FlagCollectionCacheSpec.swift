@@ -103,8 +103,8 @@ final class FlagCollectionCacheSpec: QuickSpec {
         describe("store flags") {
             var userStubs: [LDUser]!
             var userFlags: [String: UserFlags]!
-            var userFlagDictionaries: [String: Any]!
             context("when the keystore doesn't contain the cached flag key") {
+                var userFlagDictionaries: [String: Any]!
                 beforeEach {
                     userStubs = LDUser.stubUsers(subject.maxCachedValues)
                     userFlags = userStubs.userFlags
@@ -121,6 +121,7 @@ final class FlagCollectionCacheSpec: QuickSpec {
                 }
             }
             context("when no flags exist in the keystore") {
+                var userFlagDictionaries: [String: Any]!
                 beforeEach {
                     userStubs = LDUser.stubUsers(subject.maxCachedValues)
                     userFlags = userStubs.userFlags
@@ -139,6 +140,7 @@ final class FlagCollectionCacheSpec: QuickSpec {
                 }
             }
             context("when 1 user's flags exist in the keystore") {
+                var userFlagDictionaries: [String: Any]!
                 beforeEach {
                     userStubs = mockKeyStore.stubAndStoreUserFlags(count: 1) + LDUser.stubUsers(1)
                     userFlags = userStubs.userFlags
@@ -155,6 +157,7 @@ final class FlagCollectionCacheSpec: QuickSpec {
                 }
             }
             context("when maxCachedValues-1 flags exist in the keystore") {
+                var userFlagDictionaries: [String: Any]!
                 beforeEach {
                     userStubs = mockKeyStore.stubAndStoreUserFlags(count: subject.maxCachedValues - 1) + LDUser.stubUsers(1)
                     userFlags = userStubs.userFlags
@@ -171,6 +174,7 @@ final class FlagCollectionCacheSpec: QuickSpec {
                 }
             }
             context("when maxCachedValues flags exist in the keystore") {
+                var userFlagDictionaries: [String: Any]!
                 beforeEach {
                     userStubs = mockKeyStore.stubAndStoreUserFlags(count: subject.maxCachedValues) + LDUser.stubUsers(1)
                     userFlags = userStubs.userFlags

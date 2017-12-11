@@ -21,39 +21,6 @@ final class UserFlagCacheSpec: QuickSpec {
             subject = UserFlagCache(flagCollectionStore: mockFlagCollectionStore)
         }
 
-//        describe("convert user cache to flag cache") {
-//            var userStub: LDUser!
-//            beforeEach {
-//                userStub = LDUser.stub()
-//            }
-//            context("when the user is stored as a dictionary") {
-//                beforeEach {
-//                    mockStore.storeUserAsDictionary(user: userStub)
-//
-//                    subject.convertUserCacheToFlagCache()
-//                }
-//                it("stores the user's flags") {
-//                    expect(mockStore.lastUpdated(for: userStub)).toNot(beNil())
-//                    expect(mockStore.flags(for: userStub)).toNot(beNil())
-//                    guard let userFlags = mockStore.flags(for: userStub) else { return }
-//                    expect(userFlags == userStub!.flagStore.featureFlags).to(beTrue())
-//                }
-//            }
-//            context("when the user is stored as data") {
-//                beforeEach {
-//                    mockStore.storeUserAsData(user: userStub)
-//
-//                    subject.convertUserCacheToFlagCache()
-//                }
-//                it("stores the user's flags") {
-//                    expect(mockStore.lastUpdated(for: userStub)).toNot(beNil())
-//                    expect(mockStore.flags(for: userStub)).toNot(beNil())
-//                    guard let userFlags = mockStore.flags(for: userStub) else { return }
-//                    expect(userFlags == userStub!.flagStore.featureFlags).to(beTrue())
-//                }
-//            }
-//        }
-
 //        describe("retrieveLatest") {
 //            var retrievedFlags: [String: Any]?
 //            context("when there are no cached flags") {
@@ -165,35 +132,6 @@ extension FlagCollectionCachingMock {
         return userStubs
     }
 }
-
-//extension KeyedValueStoringMock {
-//
-//    func storeUserAsDictionary(user: LDUser) {
-//        let userDictionaries = [user.key: user.jsonDictionaryWithConfig]
-//        dictionaryReturnValue = userDictionaries
-//    }
-//
-//    func storeUserAsData(user: LDUser) {
-//        let userData = [user.key: NSKeyedArchiver.archivedData(withRootObject: LDUserWrapper(user: user))]
-//        dictionaryReturnValue = userData
-//    }
-//
-//    func lastUpdated(for user: LDUser) -> Date? {
-//        return cachedFlags(for: user)?.lastUpdated
-//    }
-//
-//    func flags(for user: LDUser) -> [String: Any]? {
-//        return cachedFlags(for: user)?.flags
-//    }
-//
-//    private func cachedFlags(for user: LDUser) -> UserFlags? {
-//        guard let receivedArguments = setReceivedArguments, receivedArguments.forKey == UserFlagCache.flagCacheKey,
-//            let flagStore = receivedArguments.value as? [String: Any],
-//            let userFlagDictionary = flagStore[user.key] as? [String: Any]
-//        else { return nil }
-//        return UserFlags(dictionary: userFlagDictionary)
-//    }
-//}
 
 extension Dictionary where Key == String, Value == LDUser {
     fileprivate mutating func removeOldest() {

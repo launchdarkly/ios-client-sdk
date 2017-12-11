@@ -11,7 +11,7 @@ import Foundation
 protocol ClientServiceCreating {
     func makeKeyedValueCache() -> KeyedValueCaching
     func makeCacheConverter() -> UserCacheConverting
-    func makeCacheConverter(store: KeyedValueCaching) -> UserCacheConverting
+    func makeCacheConverter(keyStore: KeyedValueCaching) -> UserCacheConverting
     func makeFlagCollectionCache(keyStore: KeyedValueCaching) -> FlagCollectionCaching
     func makeUserFlagCache() -> UserFlagCaching
     func makeUserFlagCache(flagCollectionStore: FlagCollectionCaching) -> UserFlagCaching
@@ -26,11 +26,11 @@ struct ClientServiceFactory: ClientServiceCreating {
     }
 
     func makeCacheConverter() -> UserCacheConverting {
-        return UserCacheConverter(store: makeKeyedValueCache())
+        return makeCacheConverter(keyStore: makeKeyedValueCache())
     }
 
-    func makeCacheConverter(store: KeyedValueCaching) -> UserCacheConverting {
-        return UserCacheConverter(store: store)
+    func makeCacheConverter(keyStore: KeyedValueCaching) -> UserCacheConverting {
+        return UserCacheConverter(keyStore: keyStore, flagCollectionCache: makeFlagCollectionCache(keyStore: keyStore))
     }
 
     func makeFlagCollectionCache(keyStore: KeyedValueCaching) -> FlagCollectionCaching {

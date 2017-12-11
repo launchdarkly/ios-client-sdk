@@ -13,18 +13,30 @@ protocol UserCacheConverting {
 }
 
 final class UserCacheConverter: UserCacheConverting {
-    private let store: KeyedValueCaching
+    struct Keys {
+        static let cachedUsers = "ldUserModelDictionary"
+    }
 
-    init(store: KeyedValueCaching) {
-        self.store = store
+    private let keyStore: KeyedValueCaching
+    private let flagCollectionCache: FlagCollectionCaching
+
+    init(keyStore: KeyedValueCaching, flagCollectionCache: FlagCollectionCaching) {
+        self.keyStore = keyStore
+        self.flagCollectionCache = flagCollectionCache
     }
 
     func convertUserCacheToFlagCache() {
-        //        let userCache = cachedUsers
-        //        guard !userCache.isEmpty else { return }
-        //        keyedValueStore.removeObject(forKey: Keys.cachedUsers)
-        //        let flagCache = userCache.mapValues { (user) in CachedFlags(user: user).dictionaryValue }
-        //        keyedValueStore.set(flagCache, forKey: Keys.cachedFlags)
+        guard let userCache = cachedUsers, !userCache.isEmpty else { return }
+        keyStore.removeObject(forKey: Keys.cachedUsers)
+
+        let userFlags = userCache.mapValues { (user) in UserFlags(user: user) }
+        flagCollectionCache.storeFlags(userFlags)
+    }
+
+    private var cachedUserDictionaries: [String: Any]? { return keyStore.dictionary(forKey: Keys.cachedUsers) }
+    private var cachedUsers: [String: LDUser]? {
+        guard let userCache = cachedUserDictionaries else { return nil }
+        return Dictionary(uniqueKeysWithValues: userCache.map { (keyObjectPair) in (keyObjectPair.key, LDUser(userObject: keyObjectPair.value, usingKeyIfMissing: keyObjectPair.key)) })
     }
 }
 

@@ -14,11 +14,11 @@ struct ClientServiceMockFactory: ClientServiceCreating {
     }
 
     func makeCacheConverter() -> UserCacheConverting {
-        return UserCacheConverter(store: KeyedValueCachingMock())
+        return makeCacheConverter(keyStore: KeyedValueCachingMock())
     }
 
-    func makeCacheConverter(store: KeyedValueCaching) -> UserCacheConverting {
-        return UserCacheConverter(store: store)
+    func makeCacheConverter(keyStore: KeyedValueCaching) -> UserCacheConverting {
+        return UserCacheConverter(keyStore: keyStore, flagCollectionCache: FlagCollectionCachingMock())
     }
 
     func makeFlagCollectionCache(keyStore: KeyedValueCaching) -> FlagCollectionCaching {

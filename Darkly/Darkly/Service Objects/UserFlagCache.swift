@@ -66,7 +66,6 @@ final class UserFlagCache: UserFlagCaching {
     }
 
     struct Keys {
-        fileprivate static let cachedUsers = "ldUserModelDictionary"
         fileprivate static let cachedFlags = "LDFlagCacheDictionary"
     }
 
@@ -93,41 +92,16 @@ final class UserFlagCache: UserFlagCaching {
 //        return flags.max(by: { (pair1, pair2) -> Bool in pair1.value.lastUpdated < pair2.value.lastUpdated })?.value.flags
 //    }
 
-    private var cachedFlags: [String: UserFlags] {
-//        guard let flagCache = keyedValueStore.dictionary(forKey: Keys.cachedFlags)
-//            else { return [:] }
-//
-//        return flagCache.flatMapValues { flagDictionary in CachedFlags(object: flagDictionary) }
-        return flagCollectionStore.retrieveFlags()
-    }
+    private var cachedFlags: [String: UserFlags] { return flagCollectionStore.retrieveFlags() }
 
     private func cache(flags: [String: UserFlags]) {
         flagCollectionStore.storeFlags(flags)
-    }
-
-    // MARK: - User caching
-
-    private var cachedUsers: [String: LDUser] {
-//        guard let userCache = keyedValueStore.dictionary(forKey: Keys.cachedUsers)
-//        else { return [:] }
-//
-//        return Dictionary(uniqueKeysWithValues: userCache.map { (keyObjectPair) in (keyObjectPair.key, LDUser(userObject: keyObjectPair.value, usingKeyIfMissing: keyObjectPair.key)) })
-        return [:]
-    }
-
-    func convertUserCacheToFlagCache() {
-//        let userCache = cachedUsers
-//        guard !userCache.isEmpty else { return }
-//        keyedValueStore.removeObject(forKey: Keys.cachedUsers)
-//        let flagCache = userCache.mapValues { (user) in CachedFlags(user: user).dictionaryValue }
-//        keyedValueStore.set(flagCache, forKey: Keys.cachedFlags)
     }
 }
 
 // MARK: - Test Support
 #if DEBUG
     extension UserFlagCache {
-//        var keyedValueStoreForTesting: KeyedValueStoring { return keyedValueStore }
         static var flagCacheKey: String { return Keys.cachedFlags }
     }
 #endif

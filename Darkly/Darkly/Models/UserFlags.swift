@@ -47,6 +47,10 @@ struct UserFlags {
 
 extension UserFlags: Equatable {
     static func == (lhs: UserFlags, rhs: UserFlags) -> Bool {
-        return lhs.flags == rhs.flags && lhs.lastUpdated == rhs.lastUpdated
+        return lhs.flags == rhs.flags && (lhs.lastUpdated == rhs.lastUpdated || lhs.lastUpdated.isJsonEquivalent(to: rhs.lastUpdated))
     }
+}
+
+extension Date {
+    func isJsonEquivalent(to other: Date) -> Bool { return jsonEquivalentDate == other.jsonEquivalentDate }
 }

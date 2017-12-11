@@ -52,6 +52,13 @@ final class LDFlagStore: LDFlagMaintaining {
     private(set) var flagValueSource = LDFlagValueSource.fallback
     private var flagQueue = DispatchQueue(label: Constants.flagQueueLabel)
 
+    init() { }
+
+    init(featureFlags: [String: Any]?, flagValueSource: LDFlagValueSource = .fallback) {
+        self.featureFlags = featureFlags ?? [:]
+        self.flagValueSource = flagValueSource
+    }
+
     ///Replaces all feature flags with new flags. Pass nil to reset to an empty flag store
     func replaceStore(newFlags: [String: Any]?, source: LDFlagValueSource, completion: CompletionClosure? = nil) {
         flagQueue.async {

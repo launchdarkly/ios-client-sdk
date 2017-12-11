@@ -73,7 +73,7 @@ public struct LDUser {
         device = custom?[CodingKeys.device.rawValue] as? String
         operatingSystem = custom?[CodingKeys.operatingSystem.rawValue] as? String
 
-        flagStore.replaceStore(newFlags: jsonDictionary[CodingKeys.config.rawValue] as? [String: Any], source: .cache)
+        flagStore = LDFlagStore(featureFlags: jsonDictionary[CodingKeys.config.rawValue] as? [String: Any], flagValueSource: .cache)
     }
     
     public var jsonDictionaryWithConfig: [String: Any] {
@@ -148,6 +148,10 @@ extension DateFormatter {
 
 extension Date {
     var jsonDate: String { return DateFormatter.ldUserFormatter.string(from: self) }
+
+    //When a date is converted to JSON, the resulting string is not as precise as the original date (only to the nearest .001s)
+    //By converting the date to json, then back into a date, the result can be compared with any date re-inflated from json
+    var jsonEquivalentDate: Date { return jsonDate.userDate }
 }
 
 extension String {
