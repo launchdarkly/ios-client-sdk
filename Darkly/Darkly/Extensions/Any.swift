@@ -31,6 +31,6 @@ struct AnyComparer {
 
     public static func isEqual(_ value: Any?, to other: Any?) -> Bool {
         guard let value = value, let other = other else { return false }
-        return isEqual(value, to:other)
+        return isEqual(value, to: other)
     }
 }

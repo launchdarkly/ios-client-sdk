@@ -205,7 +205,9 @@ public class LDClient {
     }
 
     private func onSync(with newFlags: [String: Any]) {
-        user.flagStore.replaceStore(newFlags: newFlags, source: .server)
+        user.flagStore.replaceStore(newFlags: newFlags, source: .server) {
+            //TODO: When notification engine is installed, add code here to support, or pass nil for the closure
+        }
     }
     
     // MARK: - Private
