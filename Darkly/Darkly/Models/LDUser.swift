@@ -206,7 +206,7 @@ extension LDUserWrapper: NSCoding {
         user.lastUpdated = decoder.decodeObject(forKey: LDUser.CodingKeys.lastUpdated.rawValue) as? Date ?? Date()
         let wrappedFlags = decoder.decodeObject(forKey: LDUser.CodingKeys.config.rawValue) as? [String: Any]
         let flags = wrappedFlags?[Keys.featureFlags] as? [String: Any]
-        user.flagStore.replaceStore(newFlags: flags, source: .cache)
+        user.flagStore = LDFlagStore(featureFlags: flags, flagValueSource: .cache)
         self.init(user: user)
     }
 

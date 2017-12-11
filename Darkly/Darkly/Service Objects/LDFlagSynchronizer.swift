@@ -167,8 +167,9 @@ class LDFlagSynchronizer: LDFlagSynchronizing {
             return
         }
         
-        flagStore.replaceStore(newFlags: flags, source: .server)
-        //TODO: Cache the new flags
+        flagStore.replaceStore(newFlags: flags, source: .server) {
+            //TODO: When creating the notification enginer, add something here or pass nil into the closure parameter
+        }
     }
     
     private func report(_ error: Error?) {

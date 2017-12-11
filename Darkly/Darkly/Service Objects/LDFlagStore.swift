@@ -14,33 +14,8 @@ protocol LDFlagMaintaining {
     //sourcery: DefaultMockValue = .cache
     var flagValueSource: LDFlagValueSource { get }
     func replaceStore(newFlags: [String: Any]?, source: LDFlagValueSource, completion: CompletionClosure?)
-    //sourcery: NoMock
-    func replaceStore(newFlags: [String: Any]?, source: LDFlagValueSource)
-
     func updateStore(newFlags: [String: Any], source: LDFlagValueSource, completion: CompletionClosure?)
-    //sourcery: NoMock
-    func updateStore(newFlags: [String: Any], source: LDFlagValueSource)
-
     func deleteFlag(name: String, completion: CompletionClosure?)
-    //sourcery: NoMock
-    func deleteFlag(name: String)
-}
-
-extension LDFlagMaintaining {
-    //sourcery: NoMock
-    func replaceStore(newFlags: [String: Any]?, source: LDFlagValueSource) {
-        replaceStore(newFlags: newFlags, source: source, completion: nil)
-    }
-
-    //sourcery: NoMock
-    func updateStore(newFlags: [String: Any], source: LDFlagValueSource) {
-        updateStore(newFlags: newFlags, source: source, completion: nil)
-    }
-
-    //sourcery: NoMock
-    func deleteFlag(name: String) {
-        deleteFlag(name: name, completion: nil)
-    }
 }
 
 final class LDFlagStore: LDFlagMaintaining {
@@ -60,7 +35,7 @@ final class LDFlagStore: LDFlagMaintaining {
     }
 
     ///Replaces all feature flags with new flags. Pass nil to reset to an empty flag store
-    func replaceStore(newFlags: [String: Any]?, source: LDFlagValueSource, completion: CompletionClosure? = nil) {
+    func replaceStore(newFlags: [String: Any]?, source: LDFlagValueSource, completion: CompletionClosure?) {
         flagQueue.async {
             self.featureFlags = newFlags ?? [:]
             self.flagValueSource = source
