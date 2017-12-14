@@ -15,16 +15,8 @@ typealias FlagsReceivedClosure = (([String: Any]) -> Void)
 
 //sourcery: AutoMockable
 protocol LDFlagSynchronizing {
-    //sourcery: DefaultMockValue = .streaming
-    var streamingMode: LDStreamingMode { get }
     //sourcery: DefaultMockValue = false
     var isOnline: Bool { get set }
-    //sourcery: DefaultMockValue = 0.0
-    var pollingInterval: TimeInterval { get }
-    //sourcery: DefaultMockValue = DarklyServiceMock()
-    var service: DarklyServiceProvider { get }
-    //sourcery: DefaultMockValue = nil
-    var onSync: FlagsReceivedClosure? { get }
 }
 
 class LDFlagSynchronizer: LDFlagSynchronizing {

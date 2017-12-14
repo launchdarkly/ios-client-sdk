@@ -46,13 +46,12 @@ struct ClientServiceMockFactory: ClientServiceCreating {
         return DarklyServiceMock(config: config, user: user)
     }
 
-    func makeFlagSynchronizer(streamingMode: LDStreamingMode, pollingInterval: TimeInterval, service: DarklyServiceProvider, store: LDFlagMaintaining, onSync: FlagsReceivedClosure?) -> LDFlagSynchronizing {
-        let synchronizerMock = LDFlagSynchronizingMock()
-        synchronizerMock.streamingMode = streamingMode
-        synchronizerMock.pollingInterval = pollingInterval
-        synchronizerMock.service = service
-        synchronizerMock.onSync = onSync
-        return synchronizerMock
+    var makeFlagSynchronizerCallCount = 0
+    var makeFlagSynchronizerReceivedParameters: (streamingMode: LDStreamingMode, pollingInterval: TimeInterval, service: DarklyServiceProvider)? = nil
+    mutating func makeFlagSynchronizer(streamingMode: LDStreamingMode, pollingInterval: TimeInterval, service: DarklyServiceProvider, store: LDFlagMaintaining, onSync: FlagsReceivedClosure?) -> LDFlagSynchronizing {
+        makeFlagSynchronizerCallCount += 1
+        makeFlagSynchronizerReceivedParameters = (streamingMode, pollingInterval, service)
+        return LDFlagSynchronizingMock()
     }
 
     func makeEventReporter(mobileKey: String, config: LDConfig, service: DarklyServiceProvider) -> LDEventReporting {

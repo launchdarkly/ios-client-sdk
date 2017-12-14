@@ -211,7 +211,7 @@ public class LDClient {
     }
     
     // MARK: - Private
-    private var serviceFactory: ClientServiceCreating = ClientServiceFactory()
+    private(set) var serviceFactory: ClientServiceCreating = ClientServiceFactory()
     private var mobileKey = ""
 
     private(set) var runMode: LDClientRunMode = .foreground
@@ -240,7 +240,7 @@ public class LDClient {
         //dummy objects replaced by start call
         flagCache = serviceFactory.makeUserFlagCache()
         service = serviceFactory.makeDarklyServiceProvider(mobileKey: "", config: config, user: user)
-        flagSynchronizer = serviceFactory.makeFlagSynchronizer(streamingMode: .polling, pollingInterval: config.flagPollInterval, service: service, store: user.flagStore, onSync: nil)
+        flagSynchronizer = self.serviceFactory.makeFlagSynchronizer(streamingMode: .polling, pollingInterval: config.flagPollInterval, service: service, store: user.flagStore, onSync: nil)
         eventReporter = serviceFactory.makeEventReporter(mobileKey: "", config: config, service: service)
     }
 }

@@ -16,7 +16,7 @@ protocol ClientServiceCreating {
     func makeUserFlagCache() -> UserFlagCaching
     func makeUserFlagCache(flagCollectionStore: FlagCollectionCaching) -> UserFlagCaching
     func makeDarklyServiceProvider(mobileKey: String, config: LDConfig, user: LDUser) -> DarklyServiceProvider
-    func makeFlagSynchronizer(streamingMode: LDStreamingMode, pollingInterval: TimeInterval, service: DarklyServiceProvider, store: LDFlagMaintaining, onSync: FlagsReceivedClosure?) -> LDFlagSynchronizing
+    mutating func makeFlagSynchronizer(streamingMode: LDStreamingMode, pollingInterval: TimeInterval, service: DarklyServiceProvider, store: LDFlagMaintaining, onSync: FlagsReceivedClosure?) -> LDFlagSynchronizing
     func makeEventReporter(mobileKey: String, config: LDConfig, service: DarklyServiceProvider) -> LDEventReporting
 }
 

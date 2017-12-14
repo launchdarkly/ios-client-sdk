@@ -91,12 +91,6 @@ final class LDEventReportingMock: LDEventReporting {
         didSet { isOnlineSetCount += 1 }
     }
 
-    // MARK: isReportingActive
-    var isReportingActiveSetCount = 0
-    var isReportingActive: Bool = false {
-        didSet { isReportingActiveSetCount += 1 }
-    }
-
     // MARK: service
     var serviceSetCount = 0
     var service: DarklyServiceProvider = DarklyServiceMock() {
@@ -161,34 +155,10 @@ final class LDFlagMaintainingMock: LDFlagMaintaining {
 // MARK: - LDFlagSynchronizingMock
 final class LDFlagSynchronizingMock: LDFlagSynchronizing {
 
-    // MARK: streamingMode
-    var streamingModeSetCount = 0
-    var streamingMode: LDStreamingMode = .streaming {
-        didSet { streamingModeSetCount += 1 }
-    }
-
     // MARK: isOnline
     var isOnlineSetCount = 0
     var isOnline: Bool = false {
         didSet { isOnlineSetCount += 1 }
-    }
-
-    // MARK: pollingInterval
-    var pollingIntervalSetCount = 0
-    var pollingInterval: TimeInterval = 0 {
-        didSet { pollingIntervalSetCount += 1 }
-    }
-
-    // MARK: service
-    var serviceSetCount = 0
-    var service: DarklyServiceProvider = DarklyServiceMock() {
-        didSet { serviceSetCount += 1 }
-    }
-
-    // MARK: onSync
-    var onSyncSetCount = 0
-    var onSync: FlagsReceivedClosure? {
-        didSet { onSyncSetCount += 1 }
     }
 }
 
