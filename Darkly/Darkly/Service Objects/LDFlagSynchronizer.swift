@@ -10,15 +10,25 @@ import Foundation
 import Dispatch
 import DarklyEventSource
 
-typealias CompletionClosure = (() -> Void)
-typealias FlagsReceivedClosure = (([String: Any]) -> Void)
-typealias SynchronizingErrorClosure = ((SynchronizingError) -> Void)
-
 //sourcery: AutoMockable
 protocol LDFlagSynchronizing {
     //sourcery: DefaultMockValue = false
     var isOnline: Bool { get set }
 }
+
+enum SynchronizingError: Error {
+    case request(Error)
+    case response(URLResponse?)
+    case data(Data?)
+}
+
+enum SyncResult {
+    case success([String: Any])
+    case error(SynchronizingError)
+}
+
+typealias CompletionClosure = (() -> Void)
+typealias SyncCompleteClosure = ((SyncResult) -> Void)
 
 class LDFlagSynchronizer: LDFlagSynchronizing {
     enum Event: String {
@@ -29,8 +39,7 @@ class LDFlagSynchronizer: LDFlagSynchronizing {
     let service: DarklyServiceProvider
     private var eventSource: DarklyStreamingProvider?
     private weak var flagRequestTimer: Timer?
-    var onSync: FlagsReceivedClosure?
-    var onError: SynchronizingErrorClosure?
+    var onSyncComplete: SyncCompleteClosure?
 
     let streamingMode: LDStreamingMode
     
@@ -45,13 +54,12 @@ class LDFlagSynchronizer: LDFlagSynchronizing {
     var streamingActive: Bool { return eventSource != nil }
     var pollingActive: Bool { return flagRequestTimer != nil }
     
-    init(streamingMode: LDStreamingMode, pollingInterval: TimeInterval, service: DarklyServiceProvider, onSync: FlagsReceivedClosure?, onError: SynchronizingErrorClosure?) {
+    init(streamingMode: LDStreamingMode, pollingInterval: TimeInterval, service: DarklyServiceProvider, onSyncComplete: SyncCompleteClosure?) {
         self.streamingMode = streamingMode
         self.pollingInterval = pollingInterval
         self.service = service
-        self.onSync = onSync
-        self.onError = onError
-        
+        self.onSyncComplete = onSyncComplete
+
         configureCommunications()
     }
     
@@ -160,30 +168,30 @@ class LDFlagSynchronizer: LDFlagSynchronizing {
             reportDataError(serviceResponse.data)
             return
         }
-        guard let onSync = self.onSync else { return }
+        guard let onSyncComplete = self.onSyncComplete else { return }
         DispatchQueue.main.async {
-            onSync(flags)
+            onSyncComplete(.success(flags))
         }
     }
     
     private func report(_ error: Error) {
-        guard let onError = self.onError else { return }
+        guard let onSyncComplete = self.onSyncComplete else { return }
         DispatchQueue.main.async {
-            onError(.request(error))
+            onSyncComplete(.error(.request(error)))
         }
     }
     
     private func report(_ response: URLResponse?) {
-        guard let onError = self.onError else { return }
+        guard let onSyncComplete = self.onSyncComplete else { return }
         DispatchQueue.main.async {
-            onError(.response(response))
+            onSyncComplete(.error(.response(response)))
         }
     }
     
     private func reportDataError(_ data: Data?) {
-        guard let onError = self.onError else { return }
+        guard let onSyncComplete = self.onSyncComplete else { return }
         DispatchQueue.main.async {
-            onError(.data(data))
+            onSyncComplete(.error(.data(data)))
         }
     }
     
@@ -192,10 +200,4 @@ class LDFlagSynchronizer: LDFlagSynchronizing {
         stopEventSource()
         stopPolling()
     }
-}
-
-enum SynchronizingError: Error {
-    case request(Error)
-    case response(URLResponse?)
-    case data(Data?)
 }
