@@ -31,7 +31,7 @@ final class LDFlagSynchronizerSpec: QuickSpec {
             config = LDConfig.stub
             mockUser = LDUser.stub()
             self.mockService = DarklyServiceMock()
-            self.subject = LDFlagSynchronizer(streamingMode: .streaming, pollingInterval: Constants.pollingInterval, service: self.mockService, onSync: nil)
+            self.subject = LDFlagSynchronizer(streamingMode: .streaming, pollingInterval: Constants.pollingInterval, service: self.mockService, onSync: nil, onError: nil)
         }
         describe("init") {
             it("starts up streaming offline") {
@@ -54,7 +54,7 @@ final class LDFlagSynchronizerSpec: QuickSpec {
                 }
                 context("polling") {
                     beforeEach {
-                        self.subject = LDFlagSynchronizer(streamingMode: .polling, pollingInterval: Constants.pollingInterval, service: self.mockService, onSync: nil)
+                        self.subject = LDFlagSynchronizer(streamingMode: .polling, pollingInterval: Constants.pollingInterval, service: self.mockService, onSync: nil, onError: nil)
                         self.subject.isOnline = true
 
                         self.subject.isOnline = false
@@ -76,7 +76,7 @@ final class LDFlagSynchronizerSpec: QuickSpec {
                 }
                 context("polling") {
                     beforeEach {
-                        self.subject = LDFlagSynchronizer(streamingMode: .polling, pollingInterval: Constants.pollingInterval, service: self.mockService, onSync: nil)
+                        self.subject = LDFlagSynchronizer(streamingMode: .polling, pollingInterval: Constants.pollingInterval, service: self.mockService, onSync: nil, onError: nil)
 
                         self.subject.isOnline = true
                     }
@@ -99,7 +99,7 @@ final class LDFlagSynchronizerSpec: QuickSpec {
                 }
                 context("polling") {
                     beforeEach {
-                        self.subject = LDFlagSynchronizer(streamingMode: .polling, pollingInterval: Constants.pollingInterval, service: self.mockService, onSync: nil)
+                        self.subject = LDFlagSynchronizer(streamingMode: .polling, pollingInterval: Constants.pollingInterval, service: self.mockService, onSync: nil, onError: nil)
                         self.subject.isOnline = true
 
                         self.subject.isOnline = true
@@ -121,7 +121,7 @@ final class LDFlagSynchronizerSpec: QuickSpec {
                 }
                 context("polling") {
                     beforeEach {
-                        self.subject = LDFlagSynchronizer(streamingMode: .polling, pollingInterval: Constants.pollingInterval, service: self.mockService, onSync: nil)
+                        self.subject = LDFlagSynchronizer(streamingMode: .polling, pollingInterval: Constants.pollingInterval, service: self.mockService, onSync: nil, onError: nil)
 
                         self.subject.isOnline = false
                     }
@@ -142,7 +142,7 @@ final class LDFlagSynchronizerSpec: QuickSpec {
                             self.subject = LDFlagSynchronizer(streamingMode: .streaming, pollingInterval: Constants.pollingInterval, service: self.mockService, onSync: { flags in
                                 newFlags = flags
                                 done()
-                            })
+                            }, onError: nil)
                             self.subject.isOnline = true
 
                             self.mockService.createdEventSource?.sendPing()
@@ -154,40 +154,64 @@ final class LDFlagSynchronizerSpec: QuickSpec {
                     }
                 }
                 context("bad data") {
+                    var synchronizingError: SynchronizingError?
                     beforeEach {
                         self.mockService.stubFlagResponse(success: true, badData: true)
-                        self.subject.isOnline = true
+                        waitUntil { done in
+                            self.subject = LDFlagSynchronizer(streamingMode: .streaming, pollingInterval: Constants.pollingInterval, service: self.mockService, onSync: nil, onError: { (error) in
+                                synchronizingError = error
+                                done()
+                            })
+                            self.subject.isOnline = true
 
-                        self.mockService.createdEventSource?.sendPing()
+                            self.mockService.createdEventSource?.sendPing()
+                        }
                     }
-                    it("requests flags & does not update flag store") {
+                    it("requests flags, does not update flag store, and calls the onError closure with a data error") {
                         expect({ self.synchronizerState(synchronizerOnline: true, streamingMode: .streaming, flagRequests: 1, streamCreated: true, streamClosed: false) }).to(match())
+                        expect(synchronizingError == .data(DarklyServiceMock.Constants.errorData)).to(beTrue())
                         expect(mockStore.replaceStoreCallCount) == 0
                         expect(mockStore.replaceStoreReceivedArguments?.newFlags).to(beNil())
                     }
                 }
                 context("failure response") {
+                    var synchronizingError: SynchronizingError?
                     beforeEach {
                         self.mockService.stubFlagResponse(success: false, responseOnly: true)
-                        self.subject.isOnline = true
+                        waitUntil { done in
+                            self.subject = LDFlagSynchronizer(streamingMode: .streaming, pollingInterval: Constants.pollingInterval, service: self.mockService, onSync: nil, onError: { (error) in
+                                synchronizingError = error
+                                done()
+                            })
+                            self.subject.isOnline = true
 
-                        self.mockService.createdEventSource?.sendPing()
+                            self.mockService.createdEventSource?.sendPing()
+                        }
                     }
                     it("requests flags & does not update flag store") {
                         expect({ self.synchronizerState(synchronizerOnline: true, streamingMode: .streaming, flagRequests: 1, streamCreated: true, streamClosed: false) }).to(match())
+                        expect(synchronizingError == .response(self.mockService.errorFlagHTTPURLResponse)).to(beTrue())
                         expect(mockStore.replaceStoreCallCount) == 0
                         expect(mockStore.replaceStoreReceivedArguments?.newFlags).to(beNil())
                     }
                 }
                 context("failure error") {
+                    var synchronizingError: SynchronizingError?
                     beforeEach {
                         self.mockService.stubFlagResponse(success: false, errorOnly: true)
-                        self.subject.isOnline = true
+                        waitUntil { done in
+                            self.subject = LDFlagSynchronizer(streamingMode: .streaming, pollingInterval: Constants.pollingInterval, service: self.mockService, onSync: nil, onError: { (error) in
+                                synchronizingError = error
+                                done()
+                            })
+                            self.subject.isOnline = true
 
-                        self.mockService.createdEventSource?.sendPing()
+                            self.mockService.createdEventSource?.sendPing()
+                        }
                     }
                     it("requests flags & does not update flag store") {
                         expect({ self.synchronizerState(synchronizerOnline: true, streamingMode: .streaming, flagRequests: 1, streamCreated: true, streamClosed: false) }).to(match())
+                        expect(synchronizingError == .request(DarklyServiceMock.Constants.error)).to(beTrue())
                         expect(mockStore.replaceStoreCallCount) == 0
                         expect(mockStore.replaceStoreReceivedArguments?.newFlags).to(beNil())
                     }
@@ -230,7 +254,7 @@ final class LDFlagSynchronizerSpec: QuickSpec {
 
         describe("polling timer fires") {
             beforeEach {
-                self.subject = LDFlagSynchronizer(streamingMode: .polling, pollingInterval: Constants.pollingInterval, service: self.mockService, onSync: nil)
+                self.subject = LDFlagSynchronizer(streamingMode: .polling, pollingInterval: Constants.pollingInterval, service: self.mockService, onSync: nil, onError: nil)
                 self.subject.isOnline = true
             }
             it("makes a flag request") {
@@ -280,5 +304,35 @@ final class LDFlagSynchronizerSpec: QuickSpec {
             if streamClosed != nil { messages.append("stream closed is not nil (this is an incorrect test)") }
         }
         return messages
+    }
+}
+
+extension SynchronizingError {
+    static func == (lhs: SynchronizingError, rhs: SynchronizingError) -> Bool {
+        switch (lhs, rhs) {
+        case let (.data(left), .data(right)): return left == right
+        case let (.response(left), .response(right)):
+            guard let leftResponse = left as? HTTPURLResponse, let rightResponse = right as? HTTPURLResponse else {
+                return left == nil && right == nil
+            }
+            return leftResponse.url == rightResponse.url && leftResponse.statusCode == rightResponse.statusCode
+        case let (.request(left), .request(right)):
+            let leftError = left as NSError
+            let rightError = right as NSError
+            return leftError.domain == rightError.domain && leftError.code == rightError.code
+        default: return false
+        }
+    }
+}
+
+extension Optional where Wrapped == SynchronizingError {
+    static func == (lhs: SynchronizingError?, rhs: SynchronizingError?) -> Bool {
+        switch (lhs, rhs) {
+        case let (.some(left), .some(right)):
+            return left == right
+        case (.none, .none):
+            return true
+        default: return false
+        }
     }
 }

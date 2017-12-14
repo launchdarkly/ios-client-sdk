@@ -762,5 +762,7 @@ final class LDClientSpec: QuickSpec {
         }
 
         //TODO: When implementing background mode, verify switching background modes affects the service objects
+
+        //TODO: When the notification engine is installed, verify that an update to feature flags results in a notification of flags changed
     }
 }

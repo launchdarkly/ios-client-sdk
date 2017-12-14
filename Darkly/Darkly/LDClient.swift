@@ -44,7 +44,8 @@ public class LDClient {
             flagSynchronizer = serviceFactory.makeFlagSynchronizer(streamingMode: effectiveStreamingMode(runMode: runMode),
                                                                    pollingInterval: config.flagPollingInterval(runMode: effectiveRunMode),
                                                                    service: service,
-                                                                   onSync: { (newFlags) in self.onSync(with: newFlags) })
+                                                                   onSync: { (newFlags) in self.onSync(with: newFlags) },
+                                                                   onError: { (synchronizingError) in self.onError(synchronizingError) })
 
             self.isOnline = wasOnline
         }
@@ -67,7 +68,8 @@ public class LDClient {
             flagSynchronizer = serviceFactory.makeFlagSynchronizer(streamingMode: effectiveStreamingMode(runMode: runMode),
                                                                    pollingInterval: config.flagPollingInterval(runMode: effectiveRunMode),
                                                                    service: service,
-                                                                   onSync: { (newFlags) in self.onSync(with: newFlags) })
+                                                                   onSync: { (newFlags) in self.onSync(with: newFlags) },
+                                                                   onError: { (synchronizingError) in self.onError(synchronizingError) })
             if hasStarted {
                 eventReporter.record(LDEvent.identifyEvent(key: UUID().uuidString, user: user))
             }
@@ -205,7 +207,12 @@ public class LDClient {
     private func onSync(with newFlags: [String: Any]) {
         user.flagStore.replaceStore(newFlags: newFlags, source: .server) {
             //TODO: When notification engine is installed, add code here to support, or pass nil for the closure
+            //TODO: Don't forget the case where newFlags is unchanged from the existing flags
         }
+    }
+
+    private func onError(_ error: SynchronizingError) {
+        //TODO: When notification engine is installed, add code here to report the error...not sure if we really want the client app to know about / handle sdk communication errors
     }
     
     // MARK: - Private
@@ -226,7 +233,7 @@ public class LDClient {
 
         //dummy objects replaced by start call
         service = serviceFactory.makeDarklyServiceProvider(mobileKey: "", config: config, user: user)
-        flagSynchronizer = serviceFactory.makeFlagSynchronizer(streamingMode: .polling, pollingInterval: config.flagPollInterval, service: service, onSync: nil)
+        flagSynchronizer = serviceFactory.makeFlagSynchronizer(streamingMode: .polling, pollingInterval: config.flagPollInterval, service: service, onSync: nil, onError: nil)
         eventReporter = serviceFactory.makeEventReporter(mobileKey: "", config: config, service: service)
     }
 
@@ -238,7 +245,7 @@ public class LDClient {
         //dummy objects replaced by start call
         flagCache = serviceFactory.makeUserFlagCache()
         service = serviceFactory.makeDarklyServiceProvider(mobileKey: "", config: config, user: user)
-        flagSynchronizer = self.serviceFactory.makeFlagSynchronizer(streamingMode: .polling, pollingInterval: config.flagPollInterval, service: service, onSync: nil)
+        flagSynchronizer = self.serviceFactory.makeFlagSynchronizer(streamingMode: .polling, pollingInterval: config.flagPollInterval, service: service, onSync: nil, onError: nil)
         eventReporter = serviceFactory.makeEventReporter(mobileKey: "", config: config, service: service)
     }
 }

@@ -48,7 +48,7 @@ struct ClientServiceMockFactory: ClientServiceCreating {
 
     var makeFlagSynchronizerCallCount = 0
     var makeFlagSynchronizerReceivedParameters: (streamingMode: LDStreamingMode, pollingInterval: TimeInterval, service: DarklyServiceProvider)? = nil
-    mutating func makeFlagSynchronizer(streamingMode: LDStreamingMode, pollingInterval: TimeInterval, service: DarklyServiceProvider, onSync: FlagsReceivedClosure?) -> LDFlagSynchronizing {
+    mutating func makeFlagSynchronizer(streamingMode: LDStreamingMode, pollingInterval: TimeInterval, service: DarklyServiceProvider, onSync: FlagsReceivedClosure?, onError: SynchronizingErrorClosure?) -> LDFlagSynchronizing {
         makeFlagSynchronizerCallCount += 1
         makeFlagSynchronizerReceivedParameters = (streamingMode, pollingInterval, service)
         return LDFlagSynchronizingMock()

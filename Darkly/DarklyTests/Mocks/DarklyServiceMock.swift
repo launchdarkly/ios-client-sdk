@@ -42,6 +42,7 @@ final class DarklyServiceMock: DarklyServiceProvider {
         ]
         static let streamData = "event: ping\ndata:\n".data(using: .utf8)!
         static let error = NSError(domain: NSURLErrorDomain, code: Int(CFNetworkErrors.cfurlErrorResourceUnavailable.rawValue), userInfo: nil)
+        static let errorData = "Bad json data".data(using: .utf8)!
 
         static let schemeHttps = "https"
         static let httpVersion = "1.1"
@@ -113,19 +114,19 @@ extension DarklyServiceMock {
             let flagData = try? JSONSerialization.data(withJSONObject: Constants.jsonFlags, options: [])
             let response = HTTPURLResponse(url: config.baseUrl, statusCode: Int(Constants.statusCodeOk), httpVersion: Constants.httpVersion, headerFields: nil)
             stubbedFlagResponse = (flagData, response, nil)
-            if badData { stubbedFlagResponse = (nil, response, nil) }
+            if badData { stubbedFlagResponse = (Constants.errorData, response, nil) }
             return
         }
-        let response = HTTPURLResponse(url: config.baseUrl, statusCode: Constants.statusCodeInternalServerError, httpVersion: Constants.httpVersion, headerFields: nil)
 
         if responseOnly {
-            stubbedFlagResponse = (nil, response, nil)
+            stubbedFlagResponse = (nil, errorFlagHTTPURLResponse, nil)
         } else if errorOnly {
             stubbedFlagResponse = (nil, nil, Constants.error)
         } else {
-            stubbedFlagResponse = (nil, response, Constants.error)
+            stubbedFlagResponse = (nil, errorFlagHTTPURLResponse, Constants.error)
         }
     }
+    var errorFlagHTTPURLResponse: HTTPURLResponse! { return HTTPURLResponse(url: config.baseUrl, statusCode: Constants.statusCodeInternalServerError, httpVersion: Constants.httpVersion, headerFields: nil) }
 
     // MARK: Stream
 
@@ -154,20 +155,20 @@ extension DarklyServiceMock {
     ///Use when testing requires the mock service to provide a service response to the event request callback
     func stubEventResponse(success: Bool, responseOnly: Bool = false, errorOnly: Bool = false) {
         if success {
-            let response = HTTPURLResponse(url: config.baseUrl, statusCode: Int(Constants.statusCodeAccept), httpVersion: Constants.httpVersion, headerFields: nil)
+            let response = HTTPURLResponse(url: config.eventsUrl, statusCode: Int(Constants.statusCodeAccept), httpVersion: Constants.httpVersion, headerFields: nil)
             stubbedEventResponse = (nil, response, nil)
             return
         }
-        let response = HTTPURLResponse(url: config.baseUrl, statusCode: Constants.statusCodeInternalServerError, httpVersion: Constants.httpVersion, headerFields: nil)
 
         if responseOnly {
-            stubbedEventResponse = (nil, response, nil)
+            stubbedEventResponse = (nil, errorEventHTTPURLResponse, nil)
         } else if errorOnly {
             stubbedEventResponse = (nil, nil, Constants.error)
         } else {
-            stubbedEventResponse = (nil, response, Constants.error)
+            stubbedEventResponse = (nil, errorEventHTTPURLResponse, Constants.error)
         }
     }
+    var errorEventHTTPURLResponse: HTTPURLResponse! { return HTTPURLResponse(url: config.eventsUrl, statusCode: Constants.statusCodeInternalServerError, httpVersion: Constants.httpVersion, headerFields: nil) }
 
     // MARK: Stub
 

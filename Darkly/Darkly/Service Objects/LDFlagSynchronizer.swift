@@ -12,6 +12,7 @@ import DarklyEventSource
 
 typealias CompletionClosure = (() -> Void)
 typealias FlagsReceivedClosure = (([String: Any]) -> Void)
+typealias SynchronizingErrorClosure = ((SynchronizingError) -> Void)
 
 //sourcery: AutoMockable
 protocol LDFlagSynchronizing {
@@ -28,8 +29,8 @@ class LDFlagSynchronizer: LDFlagSynchronizing {
     let service: DarklyServiceProvider
     private var eventSource: DarklyStreamingProvider?
     private weak var flagRequestTimer: Timer?
-    private let flagsReceived: FlagsReceivedClosure?
-    var onSync: FlagsReceivedClosure? { return flagsReceived }
+    var onSync: FlagsReceivedClosure?
+    var onError: SynchronizingErrorClosure?
 
     let streamingMode: LDStreamingMode
     
@@ -44,11 +45,12 @@ class LDFlagSynchronizer: LDFlagSynchronizing {
     var streamingActive: Bool { return eventSource != nil }
     var pollingActive: Bool { return flagRequestTimer != nil }
     
-    init(streamingMode: LDStreamingMode, pollingInterval: TimeInterval, service: DarklyServiceProvider, onSync: FlagsReceivedClosure?) {
+    init(streamingMode: LDStreamingMode, pollingInterval: TimeInterval, service: DarklyServiceProvider, onSync: FlagsReceivedClosure?, onError: SynchronizingErrorClosure?) {
         self.streamingMode = streamingMode
         self.pollingInterval = pollingInterval
         self.service = service
-        flagsReceived = onSync
+        self.onSync = onSync
+        self.onError = onError
         
         configureCommunications()
     }
@@ -142,8 +144,8 @@ class LDFlagSynchronizer: LDFlagSynchronizing {
     }
 
     private func processFlagResponse(serviceResponse: ServiceResponse) {
-        guard serviceResponse.error == nil else {
-            report(serviceResponse.error)
+        if let serviceResponseError = serviceResponse.error {
+            report(serviceResponseError)
             return
         }
         guard let httpResponse = serviceResponse.urlResponse as? HTTPURLResponse,
@@ -155,24 +157,34 @@ class LDFlagSynchronizer: LDFlagSynchronizing {
         guard let data = serviceResponse.data,
             let flags = try? JSONSerialization.jsonDictionary(with: data, options: .allowFragments)
         else {
-            reportDataError()
+            reportDataError(serviceResponse.data)
             return
         }
+        guard let onSync = self.onSync else { return }
         DispatchQueue.main.async {
-            self.flagsReceived?(flags)
+            onSync(flags)
         }
     }
     
-    private func report(_ error: Error?) {
-        //TODO: Implement when error reporting architecture is established
+    private func report(_ error: Error) {
+        guard let onError = self.onError else { return }
+        DispatchQueue.main.async {
+            onError(.request(error))
+        }
     }
     
     private func report(_ response: URLResponse?) {
-        //TODO: Implement when error reporting architecture is established
+        guard let onError = self.onError else { return }
+        DispatchQueue.main.async {
+            onError(.response(response))
+        }
     }
     
-    private func reportDataError() {
-        //TODO: Implement when error reporting architecture is established
+    private func reportDataError(_ data: Data?) {
+        guard let onError = self.onError else { return }
+        DispatchQueue.main.async {
+            onError(.data(data))
+        }
     }
     
     //sourcery: NoMock
@@ -180,4 +192,10 @@ class LDFlagSynchronizer: LDFlagSynchronizing {
         stopEventSource()
         stopPolling()
     }
+}
+
+enum SynchronizingError: Error {
+    case request(Error)
+    case response(URLResponse?)
+    case data(Data?)
 }
