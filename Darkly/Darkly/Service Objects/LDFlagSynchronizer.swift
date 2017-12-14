@@ -26,7 +26,6 @@ class LDFlagSynchronizer: LDFlagSynchronizing {
     }
     
     let service: DarklyServiceProvider
-    private let flagStore: LDFlagMaintaining
     private var eventSource: DarklyStreamingProvider?
     private weak var flagRequestTimer: Timer?
     private let flagsReceived: FlagsReceivedClosure?
@@ -45,13 +44,10 @@ class LDFlagSynchronizer: LDFlagSynchronizing {
     var streamingActive: Bool { return eventSource != nil }
     var pollingActive: Bool { return flagRequestTimer != nil }
     
-    //TODO: flag synchronizer doesn't need the mobile key, remove it
-    //TODO: Flag synchronizer needs to cache flags on flag response. Provide a user instead of a flag store.
-    init(streamingMode: LDStreamingMode, pollingInterval: TimeInterval, service: DarklyServiceProvider, store: LDFlagMaintaining, onSync: FlagsReceivedClosure?) {
+    init(streamingMode: LDStreamingMode, pollingInterval: TimeInterval, service: DarklyServiceProvider, onSync: FlagsReceivedClosure?) {
         self.streamingMode = streamingMode
         self.pollingInterval = pollingInterval
         self.service = service
-        self.flagStore = store
         flagsReceived = onSync
         
         configureCommunications()
