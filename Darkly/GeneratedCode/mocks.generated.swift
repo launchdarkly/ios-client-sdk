@@ -26,6 +26,34 @@ final class DarklyStreamingProviderMock: DarklyStreamingProvider {
     }
 }
 
+// MARK: - FlagChangeNotifyingMock
+final class FlagChangeNotifyingMock: FlagChangeNotifying {
+
+    // MARK: addObserver
+    var addObserverCallCount = 0
+    var addObserverReceivedObserver: LDFlagChangeObserver?
+    func addObserver(_ observer: @escaping LDFlagChangeObserver) {
+        addObserverCallCount += 1
+        addObserverReceivedObserver = observer
+    }
+
+    // MARK: removeObserver
+    var removeObserverCallCount = 0
+    var removeObserverReceivedArguments: (keys: LDFlagKeyList, owner: LDFlagChangeOwner)?
+    func removeObserver(_ keys: LDFlagKeyList, owner: LDFlagChangeOwner) {
+        removeObserverCallCount += 1
+        removeObserverReceivedArguments = (keys: keys, owner: owner)
+    }
+
+    // MARK: notifyObservers
+    var notifyObserversCallCount = 0
+    var notifyObserversReceivedArguments: (changedFlags: LDFlagKeyList, user: LDUser, oldFlags: [String: Any])?
+    func notifyObservers(changedFlags: LDFlagKeyList, user: LDUser, oldFlags: [String: Any]) {
+        notifyObserversCallCount += 1
+        notifyObserversReceivedArguments = (changedFlags: changedFlags, user: user, oldFlags: oldFlags)
+    }
+}
+
 // MARK: - FlagCollectionCachingMock
 final class FlagCollectionCachingMock: FlagCollectionCaching {
 

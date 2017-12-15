@@ -33,7 +33,6 @@ extension LDEventReporting {
 class LDEventReporter: LDEventReporting {
     fileprivate struct Constants {
         static let eventQueueLabel = "com.launchdarkly.eventSyncQueue"
-        static let statusCodeAccepted = 202
     }
     
     var config: LDConfig {
@@ -108,7 +107,7 @@ class LDEventReporter: LDEventReporting {
             return
         }
         guard let httpResponse = serviceResponse.urlResponse as? HTTPURLResponse,
-            httpResponse.statusCode == Constants.statusCodeAccepted
+            httpResponse.statusCode == HTTPURLResponse.StatusCodes.accepted
         else {
             report(serviceResponse.urlResponse)
             return

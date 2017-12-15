@@ -13,7 +13,7 @@ import Nimble
 final class LDEventSpec: QuickSpec {
     override func spec() {
         let key = "mockEventKey"
-        let kind = LDEventType.feature
+        let kind = LDEventType.featureRequest
         let userStub = LDUser.stub()
         let value = LDFlagValue(true)
         let defaultValue = LDFlagValue(false)
@@ -52,11 +52,11 @@ final class LDEventSpec: QuickSpec {
         }
         describe("featureEvent") {
             beforeEach {
-                subject = LDEvent.featureEvent(key: key, user: userStub, value: value, defaultValue: defaultValue)
+                subject = LDEvent.featureRequestEvent(key: key, user: userStub, value: value, defaultValue: defaultValue)
             }
             it("creates a feature event with matching data") {
                 expect(subject.key) == key
-                expect(subject.kind) == LDEventType.feature
+                expect(subject.kind) == LDEventType.featureRequest
                 expect(subject.creationDate).toNot(beNil())
                 expect(subject.user) == userStub
                 expect(subject.value) == value
@@ -249,7 +249,7 @@ final class LDEventSpec: QuickSpec {
             context("when only the keys match") {
                 let eventKey = UUID().uuidString
                 beforeEach {
-                    event1 = LDEvent(key: eventKey, kind: .feature, user: LDUser.stub(key: UUID().uuidString), value: true, defaultValue: false)
+                    event1 = LDEvent(key: eventKey, kind: .featureRequest, user: LDUser.stub(key: UUID().uuidString), value: true, defaultValue: false)
                     event2 = LDEvent(key: eventKey, kind: .custom, user: LDUser.stub(key: UUID().uuidString), data: data)
                 }
                 it("returns false") {
@@ -267,7 +267,7 @@ final class LDEventSpec: QuickSpec {
             }
             context("on different events") {
                 beforeEach {
-                    event1 = LDEvent(key: UUID().uuidString, kind: .feature, user: userStub, value: value, defaultValue: defaultValue, data: data)
+                    event1 = LDEvent(key: UUID().uuidString, kind: .featureRequest, user: userStub, value: value, defaultValue: defaultValue, data: data)
                     event2 = LDEvent(key: UUID().uuidString, kind: .identify, user: LDUser.stub(key: UUID().uuidString))
                 }
                 it("returns false") {

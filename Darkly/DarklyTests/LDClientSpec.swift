@@ -14,6 +14,9 @@ final class LDClientSpec: QuickSpec {
     struct Constants {
         fileprivate static let mockMobileKey = "mockMobileKey"
         fileprivate static let alternateMockUrl = URL(string: "https://dummy.alternate.com")!
+
+        fileprivate static let newFlagKey = "LDClientSpec.newFlagKey"
+        fileprivate static let newFlagValue = "LDClientSpec.newFlagValue"
     }
 
     override func spec() {
@@ -757,6 +760,204 @@ final class LDClientSpec: QuickSpec {
                 }
                 it("does not record any more events") {
                     expect(mockEventReporter.recordCallCount) == priorRecordedEvents
+                }
+            }
+        }
+
+        describe("on sync complete") {
+            var mockFlagStore: LDFlagMaintainingMock! { return user.flagStore as? LDFlagMaintainingMock }
+            var mockFlagCache: UserFlagCachingMock! { return subject.flagCache as? UserFlagCachingMock }
+            var mockChangeNotifier: FlagChangeNotifyingMock! { return subject.flagChangeNotifier as? FlagChangeNotifyingMock }
+            var onSyncComplete: SyncCompleteClosure! { return mockFactory.onSyncComplete }
+            var replaceStoreComplete: CompletionClosure! { return mockFlagStore.replaceStoreReceivedArguments?.completion }
+            var oldFlags: [String: Any]!
+            var newFlags: [String: Any]!
+            beforeEach {
+                config.startOnline = true
+            }
+            context("flags have different values") {
+                beforeEach {
+                    oldFlags = user.flagStore.featureFlags
+                    newFlags = user.flagStore.featureFlags
+                    newFlags[DarklyServiceMock.FlagKeys.bool] = !DarklyServiceMock.FlagValues.bool
+
+                    subject.start(mobileKey: Constants.mockMobileKey, config: config, user: user)
+
+                    onSyncComplete(.success(newFlags))
+                    if mockFlagStore.replaceStoreCallCount > 0 { replaceStoreComplete() }
+                }
+                it("updates the flag store") {
+                    expect(mockFlagStore.replaceStoreCallCount) == 1
+                    expect(mockFlagStore.replaceStoreReceivedArguments?.newFlags == newFlags).to(beTrue())
+                }
+                it("caches the new flags") {
+                    expect(mockFlagCache.cacheFlagsCallCount) == 1
+                    expect(mockFlagCache.cacheFlagsReceivedUser) == user
+                }
+                it("informs the flag change notifier of the changed flags") {
+                    expect(mockChangeNotifier.notifyObserversCallCount) == 1
+                    expect(mockChangeNotifier.notifyObserversReceivedArguments?.changedFlags.isEmpty).toNot(beTrue())
+                    expect(mockChangeNotifier.notifyObserversReceivedArguments?.changedFlags) == oldFlags.symmetricDifference(newFlags)
+                    expect(mockChangeNotifier.notifyObserversReceivedArguments?.user) == user
+                    expect(mockChangeNotifier.notifyObserversReceivedArguments?.oldFlags == oldFlags).to(beTrue())
+                }
+            }
+            context("a flag was added") {
+                beforeEach {
+                    oldFlags = user.flagStore.featureFlags
+                    newFlags = user.flagStore.featureFlags
+                    newFlags[Constants.newFlagKey] = Constants.newFlagValue
+
+                    subject.start(mobileKey: Constants.mockMobileKey, config: config, user: user)
+
+                    onSyncComplete(.success(newFlags))
+                    if mockFlagStore.replaceStoreCallCount > 0 { replaceStoreComplete() }
+                }
+                it("updates the flag store") {
+                    expect(mockFlagStore.replaceStoreCallCount) == 1
+                    expect(mockFlagStore.replaceStoreReceivedArguments?.newFlags == newFlags).to(beTrue())
+                }
+                it("caches the new flags") {
+                    expect(mockFlagCache.cacheFlagsCallCount) == 1
+                    expect(mockFlagCache.cacheFlagsReceivedUser) == user
+                }
+                it("informs the flag change notifier of the changed flags") {
+                    expect(mockChangeNotifier.notifyObserversCallCount) == 1
+                    expect(mockChangeNotifier.notifyObserversReceivedArguments?.changedFlags.isEmpty).toNot(beTrue())
+                    expect(mockChangeNotifier.notifyObserversReceivedArguments?.changedFlags) == oldFlags.symmetricDifference(newFlags)
+                    expect(mockChangeNotifier.notifyObserversReceivedArguments?.user) == user
+                    expect(mockChangeNotifier.notifyObserversReceivedArguments?.oldFlags == oldFlags).to(beTrue())
+                }
+            }
+            context("a flag was removed") {
+                beforeEach {
+                    oldFlags = user.flagStore.featureFlags
+                    newFlags = user.flagStore.featureFlags
+                    newFlags.removeValue(forKey: DarklyServiceMock.FlagKeys.dictionary)
+
+                    subject.start(mobileKey: Constants.mockMobileKey, config: config, user: user)
+
+                    onSyncComplete(.success(newFlags))
+                    if mockFlagStore.replaceStoreCallCount > 0 { replaceStoreComplete() }
+                }
+                it("updates the flag store") {
+                    expect(mockFlagStore.replaceStoreCallCount) == 1
+                    expect(mockFlagStore.replaceStoreReceivedArguments?.newFlags == newFlags).to(beTrue())
+                }
+                it("caches the new flags") {
+                    expect(mockFlagCache.cacheFlagsCallCount) == 1
+                    expect(mockFlagCache.cacheFlagsReceivedUser) == user
+                }
+                it("informs the flag change notifier of the changed flags") {
+                    expect(mockChangeNotifier.notifyObserversCallCount) == 1
+                    expect(mockChangeNotifier.notifyObserversReceivedArguments?.changedFlags.isEmpty).toNot(beTrue())
+                    expect(mockChangeNotifier.notifyObserversReceivedArguments?.changedFlags) == oldFlags.symmetricDifference(newFlags)
+                    expect(mockChangeNotifier.notifyObserversReceivedArguments?.user) == user
+                    expect(mockChangeNotifier.notifyObserversReceivedArguments?.oldFlags == oldFlags).to(beTrue())
+                }
+            }
+            context("there were no changes to the flags") {
+                beforeEach {
+                    oldFlags = user.flagStore.featureFlags
+                    newFlags = user.flagStore.featureFlags
+
+                    subject.start(mobileKey: Constants.mockMobileKey, config: config, user: user)
+
+                    onSyncComplete(.success(newFlags))
+                    if mockFlagStore.replaceStoreCallCount > 0 { replaceStoreComplete() }
+                }
+                it("does not update the flag store") {
+                    expect(mockFlagStore.replaceStoreCallCount) == 0
+                }
+                it("does not cache the new flags") {
+                    expect(mockFlagCache.cacheFlagsCallCount) == 0
+                }
+                it("calls the flags unchanged closure") {
+                    expect(mockChangeNotifier.notifyObserversCallCount) == 0
+                }
+            }
+            context("there was a client unauthorized error") {
+                var serverUnavailableCalled: Bool! = false
+                beforeEach {
+                    waitUntil { done in
+                        subject.onServerUnavailable = {
+                            serverUnavailableCalled = true
+                            done()
+                        }
+
+                        subject.start(mobileKey: Constants.mockMobileKey, config: config, user: user)
+
+                        onSyncComplete(.error(.response(HTTPURLResponse(url: config.baseUrl, statusCode: HTTPURLResponse.StatusCodes.unauthorized, httpVersion: DarklyServiceMock.Constants.httpVersion, headerFields: nil))))
+                    }
+                }
+                it("takes the client offline") {
+                    expect(subject.isOnline) == false
+                }
+                it("calls the server unavailable closure") {
+                    expect(serverUnavailableCalled) == true
+                }
+            }
+            context("there was an internal server error") {
+                var serverUnavailableCalled: Bool! = false
+                beforeEach {
+                    waitUntil { done in
+                        subject.onServerUnavailable = {
+                            serverUnavailableCalled = true
+                            done()
+                        }
+
+                        subject.start(mobileKey: Constants.mockMobileKey, config: config, user: user)
+
+                        onSyncComplete(.error(.response(HTTPURLResponse(url: config.baseUrl, statusCode: HTTPURLResponse.StatusCodes.internalServerError, httpVersion: DarklyServiceMock.Constants.httpVersion, headerFields: nil))))
+                    }
+                }
+                it("does not take the client offline") {
+                    expect(subject.isOnline) == true
+                }
+                it("calls the server unavailable closure") {
+                    expect(serverUnavailableCalled) == true
+                }
+            }
+            context("there was a request error") {
+                var serverUnavailableCalled: Bool! = false
+                beforeEach {
+                    waitUntil { done in
+                        subject.onServerUnavailable = {
+                            serverUnavailableCalled = true
+                            done()
+                        }
+
+                        subject.start(mobileKey: Constants.mockMobileKey, config: config, user: user)
+
+                        onSyncComplete(.error(.request(DarklyServiceMock.Constants.error)))
+                    }
+                }
+                it("does not take the client offline") {
+                    expect(subject.isOnline) == true
+                }
+                it("calls the server unavailable closure") {
+                    expect(serverUnavailableCalled) == true
+                }
+            }
+            context("there was a data error") {
+                var serverUnavailableCalled: Bool! = false
+                beforeEach {
+                    waitUntil { done in
+                        subject.onServerUnavailable = {
+                            serverUnavailableCalled = true
+                            done()
+                        }
+
+                        subject.start(mobileKey: Constants.mockMobileKey, config: config, user: user)
+
+                        onSyncComplete(.error(.data(DarklyServiceMock.Constants.errorData)))
+                    }
+                }
+                it("does not take the client offline") {
+                    expect(subject.isOnline) == true
+                }
+                it("calls the server unavailable closure") {
+                    expect(serverUnavailableCalled) == true
                 }
             }
         }

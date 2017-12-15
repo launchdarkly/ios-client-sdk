@@ -331,7 +331,7 @@ final class LDEventReporterSpec: QuickSpec {
 extension LDEvent {
     static func stub(for eventType: LDEventType, with user: LDUser) -> LDEvent {
         switch eventType {
-        case .feature: return LDEvent.featureEvent(key: UUID().uuidString, user: user, value: true, defaultValue: false)
+        case .featureRequest: return LDEvent.featureRequestEvent(key: UUID().uuidString, user: user, value: true, defaultValue: false)
         case .identify: return LDEvent.identifyEvent(key: UUID().uuidString, user: user)
         case .custom: return LDEvent.customEvent(key: UUID().uuidString, user: user, data: ["custom": UUID().uuidString])
         }
@@ -346,14 +346,14 @@ extension LDEvent {
     }
 
     static func eventType(for count: Int) -> LDEventType {
-        let types: [LDEventType] = [.feature, .identify, .custom]
+        let types: [LDEventType] = [.featureRequest, .identify, .custom]
         return types[count % types.count]
     }
 }
 
 extension LDEventType {
     static var random: LDEventType {
-        let types: [LDEventType] = [.feature, .identify, .custom]
+        let types: [LDEventType] = [.featureRequest, .identify, .custom]
         let index = Int(arc4random_uniform(2))
         return types[index]
     }

@@ -47,10 +47,6 @@ final class DarklyServiceMock: DarklyServiceProvider {
         static let schemeHttps = "https"
         static let httpVersion = "1.1"
 
-        static let statusCodeOk: Int32 = 200
-        static let statusCodeAccept: Int32 = 202
-        static let statusCodeInternalServerError = 500
-
         static let mockBaseUrl = URL(string: "https://dummy.base.com")!
         static let mockEventsUrl = URL(string: "https://dummy.events.com")!
         static let mockStreamUrl = URL(string: "https://dummy.stream.com")!
@@ -103,7 +99,7 @@ extension DarklyServiceMock {
 
     ///Use when testing requires the mock service to actually make a flag request
     func stubFlagRequest(success: Bool, onActivation activate: ((URLRequest, OHHTTPStubsDescriptor, OHHTTPStubsResponse) -> Void)? = nil) {
-        let stubResponse: OHHTTPStubsResponseBlock = success ? { (_) in OHHTTPStubsResponse(jsonObject: Constants.jsonFlags, statusCode: Constants.statusCodeOk, headers: nil) }
+        let stubResponse: OHHTTPStubsResponseBlock = success ? { (_) in OHHTTPStubsResponse(jsonObject: Constants.jsonFlags, statusCode: Int32(HTTPURLResponse.StatusCodes.ok), headers: nil) }
             : { (_) in OHHTTPStubsResponse(error: Constants.error) }
         stubRequest(passingTest: flagRequestStubTest, stub: stubResponse, name: Constants.stubNameFlag, onActivation: activate)
     }
@@ -112,7 +108,7 @@ extension DarklyServiceMock {
     func stubFlagResponse(success: Bool, badData: Bool = false, responseOnly: Bool = false, errorOnly: Bool = false) {
         if success {
             let flagData = try? JSONSerialization.data(withJSONObject: Constants.jsonFlags, options: [])
-            let response = HTTPURLResponse(url: config.baseUrl, statusCode: Int(Constants.statusCodeOk), httpVersion: Constants.httpVersion, headerFields: nil)
+            let response = HTTPURLResponse(url: config.baseUrl, statusCode: HTTPURLResponse.StatusCodes.ok, httpVersion: Constants.httpVersion, headerFields: nil)
             stubbedFlagResponse = (flagData, response, nil)
             if badData { stubbedFlagResponse = (Constants.errorData, response, nil) }
             return
@@ -126,7 +122,7 @@ extension DarklyServiceMock {
             stubbedFlagResponse = (nil, errorFlagHTTPURLResponse, Constants.error)
         }
     }
-    var errorFlagHTTPURLResponse: HTTPURLResponse! { return HTTPURLResponse(url: config.baseUrl, statusCode: Constants.statusCodeInternalServerError, httpVersion: Constants.httpVersion, headerFields: nil) }
+    var errorFlagHTTPURLResponse: HTTPURLResponse! { return HTTPURLResponse(url: config.baseUrl, statusCode: HTTPURLResponse.StatusCodes.internalServerError, httpVersion: Constants.httpVersion, headerFields: nil) }
 
     // MARK: Stream
 
@@ -135,7 +131,7 @@ extension DarklyServiceMock {
 
     ///Use when testing requires the mock service to actually make an event source connection request
     func stubStreamRequest(success: Bool, onActivation activate: ((URLRequest, OHHTTPStubsDescriptor, OHHTTPStubsResponse) -> Void)? = nil) {
-        let stubResponse: OHHTTPStubsResponseBlock = success ? { (_) in OHHTTPStubsResponse(data: Constants.streamData, statusCode: Constants.statusCodeOk, headers: nil) }
+        let stubResponse: OHHTTPStubsResponseBlock = success ? { (_) in OHHTTPStubsResponse(data: Constants.streamData, statusCode: Int32(HTTPURLResponse.StatusCodes.ok), headers: nil) }
             : { (_) in OHHTTPStubsResponse(error: Constants.error) }
         stubRequest(passingTest: streamRequestStubTest, stub: stubResponse, name: Constants.stubNameStream, onActivation: activate)
     }
@@ -147,7 +143,7 @@ extension DarklyServiceMock {
 
     ///Use when testing requires the mock service to actually make an event request
     func stubEventRequest(success: Bool, onActivation activate: ((URLRequest, OHHTTPStubsDescriptor, OHHTTPStubsResponse) -> Void)? = nil) {
-        let stubResponse: OHHTTPStubsResponseBlock = success ? { (_) in OHHTTPStubsResponse(data: Data(), statusCode: Constants.statusCodeAccept, headers: nil) }
+        let stubResponse: OHHTTPStubsResponseBlock = success ? { (_) in OHHTTPStubsResponse(data: Data(), statusCode: Int32(HTTPURLResponse.StatusCodes.accepted), headers: nil) }
             : { (_) in OHHTTPStubsResponse(error: Constants.error) }
         stubRequest(passingTest: eventRequestStubTest, stub: stubResponse, name: Constants.stubNameEvent, onActivation: activate)
     }
@@ -155,7 +151,7 @@ extension DarklyServiceMock {
     ///Use when testing requires the mock service to provide a service response to the event request callback
     func stubEventResponse(success: Bool, responseOnly: Bool = false, errorOnly: Bool = false) {
         if success {
-            let response = HTTPURLResponse(url: config.eventsUrl, statusCode: Int(Constants.statusCodeAccept), httpVersion: Constants.httpVersion, headerFields: nil)
+            let response = HTTPURLResponse(url: config.eventsUrl, statusCode: HTTPURLResponse.StatusCodes.accepted, httpVersion: Constants.httpVersion, headerFields: nil)
             stubbedEventResponse = (nil, response, nil)
             return
         }
@@ -168,7 +164,7 @@ extension DarklyServiceMock {
             stubbedEventResponse = (nil, errorEventHTTPURLResponse, Constants.error)
         }
     }
-    var errorEventHTTPURLResponse: HTTPURLResponse! { return HTTPURLResponse(url: config.eventsUrl, statusCode: Constants.statusCodeInternalServerError, httpVersion: Constants.httpVersion, headerFields: nil) }
+    var errorEventHTTPURLResponse: HTTPURLResponse! { return HTTPURLResponse(url: config.eventsUrl, statusCode: HTTPURLResponse.StatusCodes.accepted, httpVersion: Constants.httpVersion, headerFields: nil) }
 
     // MARK: Stub
 

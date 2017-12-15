@@ -17,6 +17,7 @@ protocol ClientServiceCreating {
     func makeUserFlagCache(flagCollectionStore: FlagCollectionCaching) -> UserFlagCaching
     func makeDarklyServiceProvider(mobileKey: String, config: LDConfig, user: LDUser) -> DarklyServiceProvider
     mutating func makeFlagSynchronizer(streamingMode: LDStreamingMode, pollingInterval: TimeInterval, service: DarklyServiceProvider, onSyncComplete: SyncCompleteClosure?) -> LDFlagSynchronizing
+    func makeFlagChangeNotifier() -> FlagChangeNotifying
     func makeEventReporter(mobileKey: String, config: LDConfig, service: DarklyServiceProvider) -> LDEventReporting
 }
 
@@ -51,6 +52,10 @@ struct ClientServiceFactory: ClientServiceCreating {
 
     func makeFlagSynchronizer(streamingMode: LDStreamingMode, pollingInterval: TimeInterval, service: DarklyServiceProvider, onSyncComplete: SyncCompleteClosure?) -> LDFlagSynchronizing {
         return LDFlagSynchronizer(streamingMode: streamingMode, pollingInterval: pollingInterval, service: service, onSyncComplete: onSyncComplete)
+    }
+
+    func makeFlagChangeNotifier() -> FlagChangeNotifying {
+        return LDFlagChangeNotifier()
     }
 
     func makeEventReporter(mobileKey: String, config: LDConfig, service: DarklyServiceProvider) -> LDEventReporting {

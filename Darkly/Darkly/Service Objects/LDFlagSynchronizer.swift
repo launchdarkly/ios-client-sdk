@@ -20,6 +20,13 @@ enum SynchronizingError: Error {
     case request(Error)
     case response(URLResponse?)
     case data(Data?)
+
+    var isClientUnauthorized: Bool {
+        guard case let .response(urlResponse) = self,
+            let httpResponse = urlResponse as? HTTPURLResponse
+        else { return false }
+        return httpResponse.statusCode == HTTPURLResponse.StatusCodes.unauthorized
+    }
 }
 
 enum SyncResult {
@@ -157,7 +164,7 @@ class LDFlagSynchronizer: LDFlagSynchronizing {
             return
         }
         guard let httpResponse = serviceResponse.urlResponse as? HTTPURLResponse,
-            httpResponse.statusCode == 200
+            httpResponse.statusCode == HTTPURLResponse.StatusCodes.ok
         else {
             report(serviceResponse.urlResponse)
             return

@@ -8,7 +8,18 @@
 
 import Foundation
 
-class LDFlagChangeNotifier {
+//sourcery: AutoMockable
+protocol FlagChangeNotifying {
+    func addObserver(_ observer: @escaping LDFlagChangeObserver)
+    //sourcery: NoMock
+    func removeObserver(_ key: String, owner: LDFlagChangeOwner)
+    func removeObserver(_ keys: LDFlagKeyList, owner: LDFlagChangeOwner)
+    //sourcery: NoMock
+    func removeObserver(owner: LDFlagChangeOwner)
+    func notifyObservers(changedFlags: LDFlagKeyList, user: LDUser, oldFlags: [String: Any])
+}
+
+class LDFlagChangeNotifier: FlagChangeNotifying {
     private var observers = [LDFlagObserver]()
     
     func addObserver(_ observer: @escaping LDFlagChangeObserver) {
@@ -30,7 +41,7 @@ class LDFlagChangeNotifier {
         
     }
     
-    func notifyObservers(changedFlags: [LDChangedFlag]) {
+    func notifyObservers(changedFlags: LDFlagKeyList, user: LDUser, oldFlags: [String: Any]) {
         
     }
     

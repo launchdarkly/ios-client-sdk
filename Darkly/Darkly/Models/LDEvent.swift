@@ -9,7 +9,7 @@
 import Foundation
 
 enum LDEventType: String {
-    case feature, identify, custom
+    case featureRequest, identify, custom
 }
 
 struct LDEvent { //sdk internal, not publically accessible
@@ -35,8 +35,8 @@ struct LDEvent { //sdk internal, not publically accessible
         self.data = data
     }
 
-    static func featureEvent(key: String, user: LDUser, value: LDFlagValue, defaultValue: LDFlagValue) -> LDEvent {
-        return LDEvent(key: key, kind: .feature, user: user, value: value, defaultValue: defaultValue)
+    static func featureRequestEvent(key: String, user: LDUser, value: LDFlagValue, defaultValue: LDFlagValue) -> LDEvent {
+        return LDEvent(key: key, kind: .featureRequest, user: user, value: value, defaultValue: defaultValue)
     }
 
     static func customEvent(key: String, user: LDUser, data: [String: Any]? = nil) -> LDEvent {

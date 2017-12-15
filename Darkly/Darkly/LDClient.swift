@@ -202,16 +202,35 @@ public class LDClient {
         
     }
 
+    ///Called if the returned flags are unchanged
+    public var onFlagsUnchanged: (() -> Void)? = nil
+
+    ///Called if the client is unable to contact the server
+    public var onServerUnavailable: (() -> Void)? = nil
+
     private func onSyncComplete(result: SyncResult) {
         switch result {
         case let .success(newFlags):
-            user.flagStore.replaceStore(newFlags: newFlags, source: .server) {
-                //TODO: When notification engine is installed, add code here to support, or pass nil for the closure
-                //TODO: Don't forget the case where newFlags is unchanged from the existing flags
+            let oldFlags = user.flagStore.featureFlags
+            let changedFlagKeys = oldFlags.symmetricDifference(newFlags)
+            if changedFlagKeys.isEmpty {
+                if let onFlagsUnchanged = onFlagsUnchanged {
+                    onFlagsUnchanged()
+                }
+                return
             }
-        case .error:
-            //TODO: When notification engine is installed, add code here to report the error...not sure if we really want the client app to know about / handle sdk communication errors
-            return
+            user.flagStore.replaceStore(newFlags: newFlags, source: .server) {
+                self.flagCache.cacheFlags(for: self.user)
+                self.flagChangeNotifier.notifyObservers(changedFlags: changedFlagKeys, user: self.user, oldFlags: oldFlags)
+            }
+        case let .error(synchronizingError):
+            if synchronizingError.isClientUnauthorized {
+                isOnline = false
+            }
+            guard let onServerUnavailable = onServerUnavailable else { return }
+            DispatchQueue.main.async {
+                onServerUnavailable()
+            }
         }
     }
 
@@ -223,13 +242,14 @@ public class LDClient {
 
     private(set) var flagCache: UserFlagCaching
     private(set) var flagSynchronizer: LDFlagSynchronizing
-    private let flagChangeNotifier = LDFlagChangeNotifier()
+    private(set) var flagChangeNotifier: FlagChangeNotifying
     private(set) var eventReporter: LDEventReporting
     
     private init() {
         flagCache = serviceFactory.makeUserFlagCache()
         LDUserWrapper.configureKeyedArchiversToHandleVersion2_3_0AndOlderUserCacheFormat()
         serviceFactory.makeCacheConverter().convertUserCacheToFlagCache()
+        flagChangeNotifier = serviceFactory.makeFlagChangeNotifier()
 
         //dummy objects replaced by start call
         service = serviceFactory.makeDarklyServiceProvider(mobileKey: "", config: config, user: user)
@@ -241,6 +261,7 @@ public class LDClient {
         self.init()
         self.runMode = runMode
         self.serviceFactory = serviceFactory
+        flagChangeNotifier = serviceFactory.makeFlagChangeNotifier()
 
         //dummy objects replaced by start call
         flagCache = serviceFactory.makeUserFlagCache()
