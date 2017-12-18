@@ -19,7 +19,7 @@ public enum LDFlagValue {
     case double(Double)
     case string(String)
     case array([LDFlagValue])
-    case dictionary([String: LDFlagValue])
+    case dictionary([LDFlagKey: LDFlagValue])
     case null   //TODO: try to get rid of this
 }
 
@@ -101,7 +101,7 @@ extension LDFlagValue {
 // MARK: - Dictionary
 
 extension LDFlagValue: ExpressibleByDictionaryLiteral {
-    public typealias Key = String
+    public typealias Key = LDFlagKey
     public typealias Value = LDFlagValue
     
     public init<Dictionary: Sequence>(_ keyValuePairs: Dictionary) where Dictionary.Iterator.Element == (Key, Value) {
@@ -122,7 +122,7 @@ extension LDFlagValue: ExpressibleByDictionaryLiteral {
 }
 
 extension LDFlagValue {
-    public var flagValueDictionary: [String: LDFlagValue]? {
+    public var flagValueDictionary: [LDFlagKey: LDFlagValue]? {
         guard case let .dictionary(value) = self else { return nil }
         return value
     }
@@ -157,8 +157,8 @@ extension Array where Element == LDFlagValue {
     }
 }
 
-extension Dictionary where Key == String, Value == LDFlagValue {
-    public static func == (lhs: [String: LDFlagValue], rhs: [String: LDFlagValue]) -> Bool {
+extension Dictionary where Key == LDFlagKey, Value == LDFlagValue {
+    public static func == (lhs: [LDFlagKey: LDFlagValue], rhs: [LDFlagKey: LDFlagValue]) -> Bool {
         guard lhs.count == rhs.count else { return false }
         let leftKeys = lhs.keys.sorted()
         let rightKeys = rhs.keys.sorted()

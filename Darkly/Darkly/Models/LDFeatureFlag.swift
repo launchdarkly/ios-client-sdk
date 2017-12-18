@@ -10,11 +10,11 @@ import Foundation
 
 struct LDFeatureFlag {
     
-    let key: String
+    let key: LDFlagKey
     var value: LDFlagValue?
     private(set) var source: LDFlagValueSource?
     
-    init?(key: String) {
+    init?(key: LDFlagKey) {
         guard !key.isEmpty else { return nil }
         self.key = key
     }

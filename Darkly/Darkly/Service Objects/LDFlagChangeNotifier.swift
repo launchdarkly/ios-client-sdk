@@ -10,29 +10,29 @@ import Foundation
 
 //sourcery: AutoMockable
 protocol FlagChangeNotifying {
-    func addObserver(_ observer: @escaping LDFlagChangeObserver)
+    func addObserver(_ observer: LDFlagObserver)
     //sourcery: NoMock
-    func removeObserver(_ key: String, owner: LDFlagChangeOwner)
-    func removeObserver(_ keys: LDFlagKeyList, owner: LDFlagChangeOwner)
+    func removeObserver(_ key: LDFlagKey, owner: LDFlagChangeOwner)
+    func removeObserver(_ keys: [LDFlagKey], owner: LDFlagChangeOwner)
     //sourcery: NoMock
     func removeObserver(owner: LDFlagChangeOwner)
-    func notifyObservers(changedFlags: LDFlagKeyList, user: LDUser, oldFlags: [String: Any])
+    func notifyObservers(changedFlags: [LDFlagKey], user: LDUser, oldFlags: [LDFlagKey: Any])
 }
 
 class LDFlagChangeNotifier: FlagChangeNotifying {
     private var observers = [LDFlagObserver]()
     
-    func addObserver(_ observer: @escaping LDFlagChangeObserver) {
+    func addObserver(_ observer: LDFlagObserver) {
         
     }
     
     ///Removes any change handling closures for flag.key from owner
-    func removeObserver(_ key: String, owner: LDFlagChangeOwner) {
+    func removeObserver(_ key: LDFlagKey, owner: LDFlagChangeOwner) {
         
     }
     
     ///Removes any change handling closures for flag keys from owner
-    func removeObserver(_ keys: LDFlagKeyList, owner: LDFlagChangeOwner) {
+    func removeObserver(_ keys: [LDFlagKey], owner: LDFlagChangeOwner) {
         
     }
     
@@ -41,7 +41,7 @@ class LDFlagChangeNotifier: FlagChangeNotifying {
         
     }
     
-    func notifyObservers(changedFlags: LDFlagKeyList, user: LDUser, oldFlags: [String: Any]) {
+    func notifyObservers(changedFlags: [LDFlagKey], user: LDUser, oldFlags: [LDFlagKey: Any]) {
         
     }
     

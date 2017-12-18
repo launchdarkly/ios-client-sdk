@@ -9,11 +9,11 @@
 import Foundation
 
 public typealias LDFlagChangeOwner = AnyObject
-public typealias LDFlagKeyList = [String]
+public typealias LDFlagKey = String
 public typealias LDFlagChangeObserver = (LDChangedFlag) -> Void
 public typealias LDFlagCollectionChangeObserver = ([String: LDChangedFlag]) -> Void
 
-extension Array where Element == String {
+extension LDFlagKey {
     private static var anyKeyIdentifier: String { return "Darkly.FlagKeyList.Any" }
-    static var anyKey: LDFlagKeyList { return [anyKeyIdentifier] }
+    static var anyKey: [LDFlagKey] { return [anyKeyIdentifier] }
 }

@@ -31,24 +31,24 @@ final class FlagChangeNotifyingMock: FlagChangeNotifying {
 
     // MARK: addObserver
     var addObserverCallCount = 0
-    var addObserverReceivedObserver: LDFlagChangeObserver?
-    func addObserver(_ observer: @escaping LDFlagChangeObserver) {
+    var addObserverReceivedObserver: LDFlagObserver?
+    func addObserver(_ observer: LDFlagObserver) {
         addObserverCallCount += 1
         addObserverReceivedObserver = observer
     }
 
     // MARK: removeObserver
     var removeObserverCallCount = 0
-    var removeObserverReceivedArguments: (keys: LDFlagKeyList, owner: LDFlagChangeOwner)?
-    func removeObserver(_ keys: LDFlagKeyList, owner: LDFlagChangeOwner) {
+    var removeObserverReceivedArguments: (keys: [LDFlagKey], owner: LDFlagChangeOwner)?
+    func removeObserver(_ keys: [LDFlagKey], owner: LDFlagChangeOwner) {
         removeObserverCallCount += 1
         removeObserverReceivedArguments = (keys: keys, owner: owner)
     }
 
     // MARK: notifyObservers
     var notifyObserversCallCount = 0
-    var notifyObserversReceivedArguments: (changedFlags: LDFlagKeyList, user: LDUser, oldFlags: [String: Any])?
-    func notifyObservers(changedFlags: LDFlagKeyList, user: LDUser, oldFlags: [String: Any]) {
+    var notifyObserversReceivedArguments: (changedFlags: [LDFlagKey], user: LDUser, oldFlags: [LDFlagKey: Any])?
+    func notifyObservers(changedFlags: [LDFlagKey], user: LDUser, oldFlags: [LDFlagKey: Any]) {
         notifyObserversCallCount += 1
         notifyObserversReceivedArguments = (changedFlags: changedFlags, user: user, oldFlags: oldFlags)
     }
@@ -145,7 +145,7 @@ final class LDFlagMaintainingMock: LDFlagMaintaining {
 
     // MARK: featureFlags
     var featureFlagsSetCount = 0
-    var featureFlags: [String: Any] = [:] {
+    var featureFlags: [LDFlagKey: Any] = [:] {
         didSet { featureFlagsSetCount += 1 }
     }
 
@@ -157,24 +157,24 @@ final class LDFlagMaintainingMock: LDFlagMaintaining {
 
     // MARK: replaceStore
     var replaceStoreCallCount = 0
-    var replaceStoreReceivedArguments: (newFlags: [String: Any]?, source: LDFlagValueSource, completion: CompletionClosure?)?
-    func replaceStore(newFlags: [String: Any]?, source: LDFlagValueSource, completion: CompletionClosure?) {
+    var replaceStoreReceivedArguments: (newFlags: [LDFlagKey: Any]?, source: LDFlagValueSource, completion: CompletionClosure?)?
+    func replaceStore(newFlags: [LDFlagKey: Any]?, source: LDFlagValueSource, completion: CompletionClosure?) {
         replaceStoreCallCount += 1
         replaceStoreReceivedArguments = (newFlags: newFlags, source: source, completion: completion)
     }
 
     // MARK: updateStore
     var updateStoreCallCount = 0
-    var updateStoreReceivedArguments: (newFlags: [String: Any], source: LDFlagValueSource, completion: CompletionClosure?)?
-    func updateStore(newFlags: [String: Any], source: LDFlagValueSource, completion: CompletionClosure?) {
+    var updateStoreReceivedArguments: (newFlags: [LDFlagKey: Any], source: LDFlagValueSource, completion: CompletionClosure?)?
+    func updateStore(newFlags: [LDFlagKey: Any], source: LDFlagValueSource, completion: CompletionClosure?) {
         updateStoreCallCount += 1
         updateStoreReceivedArguments = (newFlags: newFlags, source: source, completion: completion)
     }
 
     // MARK: deleteFlag
     var deleteFlagCallCount = 0
-    var deleteFlagReceivedArguments: (name: String, completion: CompletionClosure?)?
-    func deleteFlag(name: String, completion: CompletionClosure?) {
+    var deleteFlagReceivedArguments: (name: LDFlagKey, completion: CompletionClosure?)?
+    func deleteFlag(name: LDFlagKey, completion: CompletionClosure?) {
         deleteFlagCallCount += 1
         deleteFlagReceivedArguments = (name: name, completion: completion)
     }

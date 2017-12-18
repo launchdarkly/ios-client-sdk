@@ -16,15 +16,3 @@ final class LDFlagChangeNotifyingSpec: QuickSpec {
 
     }
 }
-
-extension FlagChangeNotifyingMock {
-    func removeObserver(_ key: String, owner: LDFlagChangeOwner) {
-        removeObserverCallCount += 1
-        removeObserverReceivedArguments = ([key], owner)
-    }
-
-    func removeObserver(owner: LDFlagChangeOwner) {
-        removeObserverCallCount += 1
-        removeObserverReceivedArguments = ([], owner)
-    }
-}

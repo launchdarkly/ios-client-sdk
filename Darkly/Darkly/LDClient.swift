@@ -150,13 +150,13 @@ public class LDClient {
     
     ///Usage
     /// let boolFeatureFlagValue = LDClient.shared.variation(forKey: "bool-flag-key", fallback: false) //boolFeatureFlagValue is a Bool
-    public func variation<T: LDFlagValueConvertible>(forKey key: String, fallback: T) -> T {
+    public func variation<T: LDFlagValueConvertible>(forKey key: LDFlagKey, fallback: T) -> T {
         return user.flagStore.variation(forKey: key, fallback: fallback)
     }
 
     ///Usage
     /// let (boolFeatureFlagValue, boolFeatureFlagSource) = LDClient.shared.variationAndSource(forKey: "bool-flag-key", fallback: false)    //boolFeatureFlagValue is a Bool
-    public func variationAndSource<T: LDFlagValueConvertible>(forKey key: String, fallback: T) -> (T, LDFlagValueSource) {
+    public func variationAndSource<T: LDFlagValueConvertible>(forKey key: LDFlagKey, fallback: T) -> (T, LDFlagValueSource) {
         return user.flagStore.variationAndSource(forKey: key, fallback: fallback)
     }
     
@@ -164,7 +164,7 @@ public class LDClient {
     
     /* FF Change Notification
      Conceptual Model
-     LDClient keeps a list of two types of closure observers, either Individual Flag observers or All Flags observers. LDClient executes Individual Flag observers when it detects a change to that flag being observed. LDClient executes All Flags observers when it detects a change to any flag for the current LDUser. The closure has a LDChangedFlag input parameter that communicates the flag's old & new value. Individual Flag observers will have an LDChangedFlag passed into the parameter directly. All Flags observers will have a dictionary of [String: LDChangeFlag] that use the flag key as the dictionary key.
+     LDClient keeps a list of two types of closure observers, either Individual Flag observers or All Flags observers. LDClient executes Individual Flag observers when it detects a change to that flag being observed. LDClient executes All Flags observers when it detects a change to any flag for the current LDUser. The closure has a LDChangedFlag input parameter that communicates the flag's old & new value. Individual Flag observers will have an LDChangedFlag passed into the parameter directly. All Flags observers will have a dictionary of [LDFlagKey: LDChangeFlag] that use the flag key as the dictionary key.
      An app registers an Individual Flag observer using observe(key:, owner:, observer:), or an All Flags observer using observeAll(owner:, observer:). An app can register multiple closures for each type by calling these methods multiple times. When the value of a flag changes, LDClient calls each registered closure 1 time.
      LDClient will automatically remove observer closures that cannot be executed. This means an app does not need to stop observing flags, the LDClient will remove the observer after it has gone out of scope. An app can stop observers explicitly using stopObserver(owner:).
     */
@@ -177,11 +177,10 @@ public class LDClient {
     ///         if let newValue = changedFlag.newValue?.baseValue as? Bool {
     ///             //do something with the newValue. oldValue & newValue can be converted to their base value and cast to their LD supported type
     ///         }
-    ///          //client's change observing code here
     ///     }
     ///LDClient keeps a weak reference to the owner. Apps should keep only weak references to self in observers to avoid memory leaks
-    public func observe(_ key: String, owner: LDFlagChangeOwner, observer: @escaping LDFlagChangeObserver) {
-
+    public func observe(_ key: LDFlagKey, owner: LDFlagChangeOwner, observer: @escaping LDFlagChangeObserver) {
+        flagChangeNotifier.addObserver(LDFlagObserver(key: key, owner: owner, changeObserver: observer))
     }
     
     ///Usage
@@ -190,16 +189,15 @@ public class LDClient {
     ///         if let someChangedFlag = changedFlags["some-flag-key"] {
     ///             //do something with someChangedFlag
     ///         }
-    ///         //client's change observing code here
     ///     }
-    /// changedFlags is a [String: LDChangedFlag] with this structure [<flagKey>: LDChangedFlag]
+    /// changedFlags is a [LDFlagKey: LDChangedFlag]
     public func observeAll(owner: LDFlagChangeOwner, observer: @escaping LDFlagCollectionChangeObserver) {
-
+        flagChangeNotifier.addObserver(LDFlagObserver(keys: LDFlagKey.anyKey, owner: owner, collectionChangeObserver: observer))
     }
     
     ///Removes all observers (both Individual Flag and All Flags) for the given owner
     public func stopObserving(owner: LDFlagChangeOwner) {
-        
+        flagChangeNotifier.removeObserver(owner: owner)
     }
 
     ///Called if the returned flags are unchanged

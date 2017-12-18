@@ -69,7 +69,7 @@ extension Array: LDFlagValueConvertible {
 
 extension Dictionary where Value: LDFlagValueConvertible {
     public func toLDFlagValue() -> LDFlagValue {
-        var flagValues = [String: LDFlagValue]()
+        var flagValues = [LDFlagKey: LDFlagValue]()
         for (key, value) in self {
             flagValues[String(describing: key)] = value.toLDFlagValue()
         }
@@ -79,13 +79,13 @@ extension Dictionary where Value: LDFlagValueConvertible {
 
 extension Dictionary: LDFlagValueConvertible {
     public func toLDFlagValue() -> LDFlagValue {
-        guard let flagValues = Dictionary.convertToFlagValues(self as? [String: LDFlagValueConvertible]) else { return .null }
+        guard let flagValues = Dictionary.convertToFlagValues(self as? [LDFlagKey: LDFlagValueConvertible]) else { return .null }
         return .dictionary(flagValues)
     }
     
-    internal static func convertToFlagValues(_ dictionary: [String: LDFlagValueConvertible]?) -> [String: LDFlagValue]? {
+    internal static func convertToFlagValues(_ dictionary: [LDFlagKey: LDFlagValueConvertible]?) -> [LDFlagKey: LDFlagValue]? {
         guard let dictionary = dictionary else { return nil }
-        var flagValues = [String: LDFlagValue]()
+        var flagValues = [LDFlagKey: LDFlagValue]()
         for (key, value) in dictionary {
             flagValues[String(describing: key)] = value.toLDFlagValue()
         }

@@ -97,8 +97,8 @@ extension LDFlagValue {
 // MARK: - Dictionary
 
 extension LDFlagValue {
-    public func toBaseTypeDictionary<Value: LDFlagBaseTypeConvertible>() -> [String: Value]? {
-        return baseDictionary as? [String: Value]
+    public func toBaseTypeDictionary<Value: LDFlagBaseTypeConvertible>() -> [LDFlagKey: Value]? {
+        return baseDictionary as? [LDFlagKey: Value]
     }
     
     public var baseDictionary: [String: LDFlagBaseTypeConvertible]? {

@@ -9,13 +9,13 @@
 import Foundation
 
 public struct LDChangedFlag {
-    public let key: String
+    public let key: LDFlagKey
     public let oldValue: LDFlagValue?
     public let oldValueSource: LDFlagValueSource?
     public let newValue: LDFlagValue?
     public let newValueSource: LDFlagValueSource?
     
-    public init(key: String, oldValue: LDFlagValueConvertible?, oldValueSource: LDFlagValueSource?, newValue: LDFlagValueConvertible?, newValueSource: LDFlagValueSource?) {
+    public init(key: LDFlagKey, oldValue: LDFlagValueConvertible?, oldValueSource: LDFlagValueSource?, newValue: LDFlagValueConvertible?, newValueSource: LDFlagValueSource?) {
         self.key = key
         self.oldValue = oldValue?.toLDFlagValue()
         self.oldValueSource = oldValueSource

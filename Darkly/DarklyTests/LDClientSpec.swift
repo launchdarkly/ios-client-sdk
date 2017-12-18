@@ -886,6 +886,70 @@ final class LDClientSpec: QuickSpec {
             }
         }
 
+        describe("observe") {
+            var mockChangeNotifier: FlagChangeNotifyingMock! { return subject.flagChangeNotifier as? FlagChangeNotifyingMock }
+            var changedFlag: LDChangedFlag!
+            var receivedChangedFlag: LDChangedFlag!
+
+            beforeEach {
+                subject.start(mobileKey: Constants.mockMobileKey, config: config, user: user)
+                changedFlag = LDChangedFlag(key: DarklyServiceMock.FlagKeys.bool, oldValue: false, oldValueSource: .cache, newValue: true, newValueSource: .server)
+
+                subject.observe(DarklyServiceMock.FlagKeys.bool, owner: self, observer: { (change) in
+                    receivedChangedFlag = change
+                })
+            }
+            it("registers a single flag observer") {
+                expect(mockChangeNotifier.addObserverCallCount) == 1
+                expect(mockChangeNotifier.addObserverReceivedObserver).toNot(beNil())
+                guard let flagObserver = mockChangeNotifier.addObserverReceivedObserver else { return }
+                expect(flagObserver.flagKeys) == [DarklyServiceMock.FlagKeys.bool]
+                expect(flagObserver.owner) === self
+                expect(flagObserver.flagChangeObserver).toNot(beNil())
+                guard let flagChangeObserver = flagObserver.flagChangeObserver else { return }
+                flagChangeObserver(changedFlag)
+                expect(receivedChangedFlag.key) == changedFlag.key
+            }
+        }
+
+        describe("observeAll") {
+            var mockChangeNotifier: FlagChangeNotifyingMock! { return subject.flagChangeNotifier as? FlagChangeNotifyingMock }
+            var changedFlags: [String: LDChangedFlag]!
+            var receivedChangedFlags: [String: LDChangedFlag]!
+            beforeEach {
+                subject.start(mobileKey: Constants.mockMobileKey, config: config, user: user)
+                changedFlags = [DarklyServiceMock.FlagKeys.bool: LDChangedFlag(key: DarklyServiceMock.FlagKeys.bool, oldValue: false, oldValueSource: .cache, newValue: true, newValueSource: .server)]
+
+                subject.observeAll(owner: self, observer: { (changes) in
+                    receivedChangedFlags = changes
+                })
+            }
+            it("registers a collection flag observer") {
+                expect(mockChangeNotifier.addObserverCallCount) == 1
+                expect(mockChangeNotifier.addObserverReceivedObserver).toNot(beNil())
+                guard let flagObserver = mockChangeNotifier.addObserverReceivedObserver else { return }
+                expect(flagObserver.flagKeys) == LDFlagKey.anyKey
+                expect(flagObserver.owner) === self
+                expect(flagObserver.flagCollectionChangeObserver).toNot(beNil())
+                guard let flagCollectionChangeObserver = flagObserver.flagCollectionChangeObserver else { return }
+                flagCollectionChangeObserver(changedFlags)
+                expect(receivedChangedFlags.keys == changedFlags.keys).to(beTrue())
+            }
+        }
+
+        describe("stopObserving") {
+            var mockChangeNotifier: FlagChangeNotifyingMock! { return subject.flagChangeNotifier as? FlagChangeNotifyingMock }
+            beforeEach {
+                subject.start(mobileKey: Constants.mockMobileKey, config: config, user: user)
+
+                subject.stopObserving(owner: self)
+            }
+            it("unregisters the owner") {
+                expect(mockChangeNotifier.removeObserverCallCount) == 1
+                expect(mockChangeNotifier.removeObserverReceivedArguments?.owner) === self
+            }
+        }
+
         describe("on sync complete") {
             var mockFlagStore: LDFlagMaintainingMock! { return user.flagStore as? LDFlagMaintainingMock }
             var mockFlagCache: UserFlagCachingMock! { return subject.flagCache as? UserFlagCachingMock }

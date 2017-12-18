@@ -10,17 +10,17 @@ import Foundation
 
 //sourcery: AutoMockable
 protocol LDFlagMaintaining {
-    var featureFlags: [String: Any] { get }
+    var featureFlags: [LDFlagKey: Any] { get }
     //sourcery: DefaultMockValue = .cache
     var flagValueSource: LDFlagValueSource { get }
-    func replaceStore(newFlags: [String: Any]?, source: LDFlagValueSource, completion: CompletionClosure?)
-    func updateStore(newFlags: [String: Any], source: LDFlagValueSource, completion: CompletionClosure?)
-    func deleteFlag(name: String, completion: CompletionClosure?)
+    func replaceStore(newFlags: [LDFlagKey: Any]?, source: LDFlagValueSource, completion: CompletionClosure?)
+    func updateStore(newFlags: [LDFlagKey: Any], source: LDFlagValueSource, completion: CompletionClosure?)
+    func deleteFlag(name: LDFlagKey, completion: CompletionClosure?)
 
     //sourcery: NoMock
-    func variation<T: LDFlagValueConvertible>(forKey key: String, fallback: T) -> T
+    func variation<T: LDFlagValueConvertible>(forKey key: LDFlagKey, fallback: T) -> T
     //sourcery: NoMock
-    func variationAndSource<T: LDFlagValueConvertible>(forKey key: String, fallback: T) -> (T, LDFlagValueSource)
+    func variationAndSource<T: LDFlagValueConvertible>(forKey key: LDFlagKey, fallback: T) -> (T, LDFlagValueSource)
 }
 
 final class LDFlagStore: LDFlagMaintaining {
@@ -28,19 +28,19 @@ final class LDFlagStore: LDFlagMaintaining {
         fileprivate static let flagQueueLabel = "com.launchdarkly.flagStore.flagQueue"
     }
     
-    private(set) var featureFlags: [String: Any] = [:]
+    private(set) var featureFlags: [LDFlagKey: Any] = [:]
     private(set) var flagValueSource = LDFlagValueSource.fallback
     private var flagQueue = DispatchQueue(label: Constants.flagQueueLabel)
 
     init() { }
 
-    init(featureFlags: [String: Any]?, flagValueSource: LDFlagValueSource = .fallback) {
+    init(featureFlags: [LDFlagKey: Any]?, flagValueSource: LDFlagValueSource = .fallback) {
         self.featureFlags = featureFlags ?? [:]
         self.flagValueSource = flagValueSource
     }
 
     ///Replaces all feature flags with new flags. Pass nil to reset to an empty flag store
-    func replaceStore(newFlags: [String: Any]?, source: LDFlagValueSource, completion: CompletionClosure?) {
+    func replaceStore(newFlags: [LDFlagKey: Any]?, source: LDFlagValueSource, completion: CompletionClosure?) {
         flagQueue.async {
             self.featureFlags = newFlags ?? [:]
             self.flagValueSource = source
@@ -53,7 +53,7 @@ final class LDFlagStore: LDFlagMaintaining {
     }
 
     ///Not implemented. Implement when patch is implemented in streaming event server
-    func updateStore(newFlags: [String: Any], source: LDFlagValueSource, completion: CompletionClosure?) {
+    func updateStore(newFlags: [LDFlagKey: Any], source: LDFlagValueSource, completion: CompletionClosure?) {
         flagQueue.async {
             if let completion = completion {
                 DispatchQueue.main.async {
@@ -64,7 +64,7 @@ final class LDFlagStore: LDFlagMaintaining {
     }
     
     ///Not implemented. Implement when delete is implemented in streaming event server
-    func deleteFlag(name: String, completion: CompletionClosure?) {
+    func deleteFlag(name: LDFlagKey, completion: CompletionClosure?) {
         flagQueue.async {
             if let completion = completion {
                 DispatchQueue.main.async {
@@ -74,12 +74,12 @@ final class LDFlagStore: LDFlagMaintaining {
         }
     }
 
-    func variation<T: LDFlagValueConvertible>(forKey key: String, fallback: T) -> T {
+    func variation<T: LDFlagValueConvertible>(forKey key: LDFlagKey, fallback: T) -> T {
         let (flagValue, _) = variationAndSource(forKey: key, fallback: fallback)
         return flagValue
     }
 
-    func variationAndSource<T: LDFlagValueConvertible>(forKey key: String, fallback: T) -> (T, LDFlagValueSource) {
+    func variationAndSource<T: LDFlagValueConvertible>(forKey key: LDFlagKey, fallback: T) -> (T, LDFlagValueSource) {
         var source = LDFlagValueSource.fallback
         var flagValue = fallback
         if let foundValue = featureFlags[key] as? T {
