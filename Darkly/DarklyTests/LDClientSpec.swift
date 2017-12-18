@@ -19,6 +19,24 @@ final class LDClientSpec: QuickSpec {
         fileprivate static let newFlagValue = "LDClientSpec.newFlagValue"
     }
 
+    struct BadFlagKeys {
+        static let bool = "bool-flag-bad"
+        static let int = "int-flag-bad"
+        static let double = "double-flag-bad"
+        static let string = "string-flag-bad"
+        static let array = "array-flag-bad"
+        static let dictionary = "dictionary-flag-bad"
+    }
+
+    struct DefaultFlagValues {
+        static let bool = false
+        static let int = 5
+        static let double = 2.71828
+        static let string = "default string value"
+        static let array = [-1, -2]
+        static let dictionary: [String: Any] = ["sub-flag-x": true, "sub-flag-y": 1, "sub-flag-z": 42.42]
+    }
+
     override func spec() {
         var subject: LDClient!
         var user: LDUser!
@@ -760,6 +778,110 @@ final class LDClientSpec: QuickSpec {
                 }
                 it("does not record any more events") {
                     expect(mockEventReporter.recordCallCount) == priorRecordedEvents
+                }
+            }
+        }
+
+        describe("variation") {
+            var boolValue: Bool!
+            var intValue: Int!
+            var doubleValue: Double!
+            var stringValue: String!
+            var arrayValue: [Int]!
+            var dictionaryValue: [String: Any]!
+
+            context("flag store contains the requested value") {
+                beforeEach {
+                    subject.start(mobileKey: Constants.mockMobileKey, config: config, user: user)
+
+                    boolValue = subject.variation(forKey: DarklyServiceMock.FlagKeys.bool, fallback: DefaultFlagValues.bool)
+                    intValue = subject.variation(forKey: DarklyServiceMock.FlagKeys.int, fallback: DefaultFlagValues.int)
+                    doubleValue = subject.variation(forKey: DarklyServiceMock.FlagKeys.double, fallback: DefaultFlagValues.double)
+                    stringValue = subject.variation(forKey: DarklyServiceMock.FlagKeys.string, fallback: DefaultFlagValues.string)
+                    arrayValue = subject.variation(forKey: DarklyServiceMock.FlagKeys.array, fallback: DefaultFlagValues.array)
+                    dictionaryValue = subject.variation(forKey: DarklyServiceMock.FlagKeys.dictionary, fallback: DefaultFlagValues.dictionary)
+                }
+                it("returns the flag value") {
+                    expect(boolValue) == DarklyServiceMock.FlagValues.bool
+                    expect(intValue) == DarklyServiceMock.FlagValues.int
+                    expect(doubleValue) == DarklyServiceMock.FlagValues.double
+                    expect(stringValue) == DarklyServiceMock.FlagValues.string
+                    expect(arrayValue == DarklyServiceMock.FlagValues.array).to(beTrue())
+                    expect(dictionaryValue == DarklyServiceMock.FlagValues.dictionary).to(beTrue())
+                }
+            }
+            context("flag store does not contain the requested value") {
+                beforeEach {
+                    subject.start(mobileKey: Constants.mockMobileKey, config: config, user: user)
+
+                    boolValue = subject.variation(forKey: BadFlagKeys.bool, fallback: DefaultFlagValues.bool)
+                    intValue = subject.variation(forKey: BadFlagKeys.int, fallback: DefaultFlagValues.int)
+                    doubleValue = subject.variation(forKey: BadFlagKeys.double, fallback: DefaultFlagValues.double)
+                    stringValue = subject.variation(forKey: BadFlagKeys.string, fallback: DefaultFlagValues.string)
+                    arrayValue = subject.variation(forKey: BadFlagKeys.array, fallback: DefaultFlagValues.array)
+                    dictionaryValue = subject.variation(forKey: BadFlagKeys.dictionary, fallback: DefaultFlagValues.dictionary)
+                }
+                it("returns the fallback value") {
+                    expect(boolValue) == DefaultFlagValues.bool
+                    expect(intValue) == DefaultFlagValues.int
+                    expect(doubleValue) == DefaultFlagValues.double
+                    expect(stringValue) == DefaultFlagValues.string
+                    expect(arrayValue == DefaultFlagValues.array).to(beTrue())
+                    expect(dictionaryValue == DefaultFlagValues.dictionary).to(beTrue())
+                }
+            }
+        }
+
+        describe("variation and source") {
+            var boolValue: (value: Bool, source: LDFlagValueSource)!
+            var intValue: (value: Int, source: LDFlagValueSource)!
+            var doubleValue: (value: Double, source: LDFlagValueSource)!
+            var stringValue: (value: String, source: LDFlagValueSource)!
+            var arrayValue: (value: [Int], source: LDFlagValueSource)!
+            var dictionaryValue: (value: [String: Any], source: LDFlagValueSource)!
+
+            context("flag store contains the requested value") {
+                beforeEach {
+                    subject.start(mobileKey: Constants.mockMobileKey, config: config, user: user)
+
+                    boolValue = subject.variationAndSource(forKey: DarklyServiceMock.FlagKeys.bool, fallback: DefaultFlagValues.bool)
+                    intValue = subject.variationAndSource(forKey: DarklyServiceMock.FlagKeys.int, fallback: DefaultFlagValues.int)
+                    doubleValue = subject.variationAndSource(forKey: DarklyServiceMock.FlagKeys.double, fallback: DefaultFlagValues.double)
+                    stringValue = subject.variationAndSource(forKey: DarklyServiceMock.FlagKeys.string, fallback: DefaultFlagValues.string)
+                    arrayValue = subject.variationAndSource(forKey: DarklyServiceMock.FlagKeys.array, fallback: DefaultFlagValues.array)
+                    dictionaryValue = subject.variationAndSource(forKey: DarklyServiceMock.FlagKeys.dictionary, fallback: DefaultFlagValues.dictionary)
+                }
+                it("returns the flag value and source") {
+                    expect(boolValue == (DarklyServiceMock.FlagValues.bool, LDFlagValueSource.server)).to(beTrue())
+                    expect(intValue == (DarklyServiceMock.FlagValues.int, LDFlagValueSource.server)).to(beTrue())
+                    expect(doubleValue == (DarklyServiceMock.FlagValues.double, LDFlagValueSource.server)).to(beTrue())
+                    expect(stringValue == (DarklyServiceMock.FlagValues.string, LDFlagValueSource.server)).to(beTrue())
+                    expect(arrayValue.value == DarklyServiceMock.FlagValues.array).to(beTrue())
+                    expect(arrayValue.source) == LDFlagValueSource.server
+                    expect(dictionaryValue.value == DarklyServiceMock.FlagValues.dictionary).to(beTrue())
+                    expect(dictionaryValue.source) == LDFlagValueSource.server
+                }
+            }
+            context("flag store does not contain the requested value") {
+                beforeEach {
+                    subject.start(mobileKey: Constants.mockMobileKey, config: config, user: user)
+
+                    boolValue = subject.variationAndSource(forKey: BadFlagKeys.bool, fallback: DefaultFlagValues.bool)
+                    intValue = subject.variationAndSource(forKey: BadFlagKeys.int, fallback: DefaultFlagValues.int)
+                    doubleValue = subject.variationAndSource(forKey: BadFlagKeys.double, fallback: DefaultFlagValues.double)
+                    stringValue = subject.variationAndSource(forKey: BadFlagKeys.string, fallback: DefaultFlagValues.string)
+                    arrayValue = subject.variationAndSource(forKey: BadFlagKeys.array, fallback: DefaultFlagValues.array)
+                    dictionaryValue = subject.variationAndSource(forKey: BadFlagKeys.dictionary, fallback: DefaultFlagValues.dictionary)
+                }
+                it("returns the fallback value and fallback source") {
+                    expect(boolValue == (DefaultFlagValues.bool, LDFlagValueSource.fallback)).to(beTrue())
+                    expect(intValue == (DefaultFlagValues.int, LDFlagValueSource.fallback)).to(beTrue())
+                    expect(doubleValue == (DefaultFlagValues.double, LDFlagValueSource.fallback)).to(beTrue())
+                    expect(stringValue == (DefaultFlagValues.string, LDFlagValueSource.fallback)).to(beTrue())
+                    expect(arrayValue.value == DefaultFlagValues.array).to(beTrue())
+                    expect(arrayValue.source) == LDFlagValueSource.fallback
+                    expect(dictionaryValue.value == DefaultFlagValues.dictionary).to(beTrue())
+                    expect(dictionaryValue.source) == LDFlagValueSource.fallback
                 }
             }
         }

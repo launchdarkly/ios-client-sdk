@@ -151,13 +151,13 @@ public class LDClient {
     ///Usage
     /// let boolFeatureFlagValue = LDClient.shared.variation(forKey: "bool-flag-key", fallback: false) //boolFeatureFlagValue is a Bool
     public func variation<T: LDFlagValueConvertible>(forKey key: String, fallback: T) -> T {
-        return fallback
+        return user.flagStore.variation(forKey: key, fallback: fallback)
     }
 
     ///Usage
     /// let (boolFeatureFlagValue, boolFeatureFlagSource) = LDClient.shared.variationAndSource(forKey: "bool-flag-key", fallback: false)    //boolFeatureFlagValue is a Bool
     public func variationAndSource<T: LDFlagValueConvertible>(forKey key: String, fallback: T) -> (T, LDFlagValueSource) {
-        return (fallback, .fallback)
+        return user.flagStore.variationAndSource(forKey: key, fallback: fallback)
     }
     
     // MARK: Feature Flag Updates

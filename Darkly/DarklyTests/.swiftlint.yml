@@ -4,6 +4,7 @@ disabled_rules: # rule identifiers to exclude from running
   - cyclomatic_complexity
   - identifier_name
   - force_cast
+  - file_length
 
 opt_in_rules: # some rules are only opt-in
   # Find all the available rules by running:

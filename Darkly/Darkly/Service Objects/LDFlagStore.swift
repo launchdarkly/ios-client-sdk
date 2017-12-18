@@ -16,6 +16,11 @@ protocol LDFlagMaintaining {
     func replaceStore(newFlags: [String: Any]?, source: LDFlagValueSource, completion: CompletionClosure?)
     func updateStore(newFlags: [String: Any], source: LDFlagValueSource, completion: CompletionClosure?)
     func deleteFlag(name: String, completion: CompletionClosure?)
+
+    //sourcery: NoMock
+    func variation<T: LDFlagValueConvertible>(forKey key: String, fallback: T) -> T
+    //sourcery: NoMock
+    func variationAndSource<T: LDFlagValueConvertible>(forKey key: String, fallback: T) -> (T, LDFlagValueSource)
 }
 
 final class LDFlagStore: LDFlagMaintaining {
@@ -74,7 +79,7 @@ final class LDFlagStore: LDFlagMaintaining {
         return flagValue
     }
 
-    public func variationAndSource<T: LDFlagValueConvertible>(forKey key: String, fallback: T) -> (T, LDFlagValueSource) {
+    func variationAndSource<T: LDFlagValueConvertible>(forKey key: String, fallback: T) -> (T, LDFlagValueSource) {
         var source = LDFlagValueSource.fallback
         var flagValue = fallback
         if let foundValue = featureFlags[key] as? T {
