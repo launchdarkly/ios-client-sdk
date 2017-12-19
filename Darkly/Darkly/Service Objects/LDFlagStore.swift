@@ -80,11 +80,10 @@ final class LDFlagStore: LDFlagMaintaining {
     }
 
     func variationAndSource<T: LDFlagValueConvertible>(forKey key: LDFlagKey, fallback: T) -> (T, LDFlagValueSource) {
-        var source = LDFlagValueSource.fallback
-        var flagValue = fallback
+        var (flagValue, source) = (fallback, LDFlagValueSource.fallback)
         if let foundValue = featureFlags[key] as? T {
-            flagValue = foundValue
-            source = flagValueSource
+            //TODO: For collections, it's very easy to pass in a fallback value that the compiler infers to be a type that the developer did not intend. When implementing the logging card, consider splitting up  looking for the key from converting to the type, and logging a detailed message about the expected type requested vs. the type found. The goal is to lead the client app developer to the fact that the fallback was returned because the flag value couldn't be converted to the requested type. For collections it might be that the compiler inferred a different type from the fallback value than the developer intended.
+            (flagValue, source) = (foundValue, flagValueSource)
         }
         return (flagValue, source)
     }
