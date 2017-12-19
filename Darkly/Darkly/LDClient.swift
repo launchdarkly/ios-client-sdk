@@ -149,13 +149,49 @@ public class LDClient {
     */
     
     ///Usage
+    ///
     /// let boolFeatureFlagValue = LDClient.shared.variation(forKey: "bool-flag-key", fallback: false) //boolFeatureFlagValue is a Bool
+    ///
+    /// Pay close attention to the type of the fallback value for collections. If the fallback collection type is more restrictive than the feature flag, the sdk will return the fallback even though the
+    /// feature flag is present because it cannot convert the feature flag into the type requested via the fallback value.
+    ///
+    /// For example, if the feature flag has the type [LDFlagKey: Any], but the fallback has the type [LDFlagKey: Int], the sdk will not be able to convert the flags into the requested type,
+    /// and will return the fallback value.
+    ///
+    /// To avoid this, make sure the fallback type matches the expected feature flag type. Either specify the fallback value type to be the feature flag type, or cast the fallback value to the feature
+    /// flag type prior to making the variation request
+    ///
+    /// In the above example, either specify that the fallback value's type is [LDFlagKey: Any]:
+    ///
+    ///     let fallbackValue: [LDFlagKey: Any] = ["a": 1, "b": 2]
+    ///
+    /// or cast the fallback value into the feature flag type prior to calling variation:
+    ///
+    ///     let dictionaryFlagValue = LDClient.shared.variation(forKey: "dictionary-key", fallback: ["a": 1, "b": 2] as [LDFlagKey: Any])
     public func variation<T: LDFlagValueConvertible>(forKey key: LDFlagKey, fallback: T) -> T {
         return user.flagStore.variation(forKey: key, fallback: fallback)
     }
 
     ///Usage
+    ///
     /// let (boolFeatureFlagValue, boolFeatureFlagSource) = LDClient.shared.variationAndSource(forKey: "bool-flag-key", fallback: false)    //boolFeatureFlagValue is a Bool
+    ///
+    /// Pay close attention to the type of the fallback value for collections. If the fallback collection type is more restrictive than the feature flag, the sdk will return the fallback even though the
+    /// feature flag is present because it cannot convert the feature flag into the type requested via the fallback value.
+    ///
+    /// For example, if the feature flag has the type [LDFlagKey: Any], but the fallback has the type [LDFlagKey: Int], the sdk will not be able to convert the flags into the requested type,
+    /// and will return the fallback value.
+    ///
+    /// To avoid this, make sure the fallback type matches the expected feature flag type. Either specify the fallback value type to be the feature flag type, or cast the fallback value to the feature
+    /// flag type prior to making the variation request
+    ///
+    /// In the above example, either specify that the fallback value's type is [LDFlagKey: Any]:
+    ///
+    ///     let fallbackValue: [LDFlagKey: Any] = ["a": 1, "b": 2]
+    ///
+    /// or cast the fallback value into the feature flag type prior to calling variation:
+    ///
+    ///     let (dictionaryFlagValue, dictionaryFeatureFlagSource) = LDClient.shared.variationAndSource(forKey: "dictionary-key", fallback: ["a": 1, "b": 2] as [LDFlagKey: Any])
     public func variationAndSource<T: LDFlagValueConvertible>(forKey key: LDFlagKey, fallback: T) -> (T, LDFlagValueSource) {
         return user.flagStore.variationAndSource(forKey: key, fallback: fallback)
     }
