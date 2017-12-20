@@ -10,20 +10,20 @@
 #import "LDFlagConfigModel.h"
 #import "LDUtil.h"
 
-static NSString * const kKeyKey = @"key";
-static NSString * const kIpKey = @"ip";
-static NSString * const kCountryKey = @"country";
-static NSString * const kNameKey = @"name";
-static NSString * const kFirstNameKey = @"firstName";
-static NSString * const kLastNameKey = @"lastName";
-static NSString * const kEmailKey = @"email";
-static NSString * const kAvatarKey = @"avatar";
-static NSString * const kCustomKey = @"custom";
-static NSString * const kUpdatedAtKey = @"updatedAt";
-static NSString * const kConfigKey = @"config";
-static NSString * const kAnonymousKey = @"anonymous";
-static NSString * const kDeviceKey = @"device";
-static NSString * const kOsKey = @"os";
+static NSString * const kUserPropertyNameKey = @"key";
+static NSString * const kUserPropertyNameIp = @"ip";
+static NSString * const kUserPropertyNameCountry = @"country";
+static NSString * const kUserPropertyNameName = @"name";
+static NSString * const kUserPropertyNameFirstName = @"firstName";
+static NSString * const kUserPropertyNameLastName = @"lastName";
+static NSString * const kUserPropertyNameEmail = @"email";
+static NSString * const kUserPropertyNameAvatar = @"avatar";
+static NSString * const kUserPropertyNameCustom = @"custom";
+static NSString * const kUserPropertyNameUpdatedAt = @"updatedAt";
+static NSString * const kUserPropertyNameConfig = @"config";
+static NSString * const kUserPropertyNameAnonymous = @"anonymous";
+static NSString * const kUserPropertyNameDevice = @"device";
+static NSString * const kUserPropertyNameOs = @"os";
 
 
 @implementation LDUserModel
@@ -39,26 +39,26 @@ static NSString * const kOsKey = @"os";
     [formatter setDateFormat:@"yyyy-MM-dd'T'HH:mm:ss.SSS'Z'"];
     [formatter setTimeZone:[NSTimeZone timeZoneWithAbbreviation:@"UTC"]];
     
-    self.key ? [dictionary setObject:self.key forKey: kKeyKey] : nil;
-    self.ip ? [dictionary setObject:self.ip forKey: kIpKey] : nil;
-    self.country ? [dictionary setObject:self.country forKey: kCountryKey] : nil;
-    self.name ? [dictionary setObject:self.name forKey: kNameKey] : nil;
-    self.firstName ? [dictionary setObject:self.firstName forKey: kFirstNameKey] : nil;
-    self.lastName ? [dictionary setObject:self.lastName forKey: kLastNameKey] : nil;
-    self.email ? [dictionary setObject:self.email forKey: kEmailKey] : nil;
-    self.avatar ? [dictionary setObject:self.avatar forKey: kAvatarKey] : nil;
-    self.custom ? [dictionary setObject:self.custom forKey: kCustomKey] : nil;
-    self.anonymous ? [dictionary setObject:[NSNumber numberWithBool: self.anonymous ] forKey: kAnonymousKey] : nil;
-    self.updatedAt ? [dictionary setObject:[formatter stringFromDate:self.updatedAt] forKey:kUpdatedAtKey] : nil;
+    self.key ? [dictionary setObject:self.key forKey: kUserPropertyNameKey] : nil;
+    self.ip ? [dictionary setObject:self.ip forKey: kUserPropertyNameIp] : nil;
+    self.country ? [dictionary setObject:self.country forKey: kUserPropertyNameCountry] : nil;
+    self.name ? [dictionary setObject:self.name forKey: kUserPropertyNameName] : nil;
+    self.firstName ? [dictionary setObject:self.firstName forKey: kUserPropertyNameFirstName] : nil;
+    self.lastName ? [dictionary setObject:self.lastName forKey: kUserPropertyNameLastName] : nil;
+    self.email ? [dictionary setObject:self.email forKey: kUserPropertyNameEmail] : nil;
+    self.avatar ? [dictionary setObject:self.avatar forKey: kUserPropertyNameAvatar] : nil;
+    self.custom ? [dictionary setObject:self.custom forKey: kUserPropertyNameCustom] : nil;
+    self.anonymous ? [dictionary setObject:[NSNumber numberWithBool: self.anonymous ] forKey: kUserPropertyNameAnonymous] : nil;
+    self.updatedAt ? [dictionary setObject:[formatter stringFromDate:self.updatedAt] forKey:kUserPropertyNameUpdatedAt] : nil;
     
-    NSMutableDictionary *customDict = [[NSMutableDictionary alloc] initWithDictionary:[dictionary objectForKey:kCustomKey]];
-    self.device ? [customDict setObject:self.device forKey:kDeviceKey] : nil;
-    self.os ? [customDict setObject:self.os forKey:kOsKey] : nil;
+    NSMutableDictionary *customDict = [[NSMutableDictionary alloc] initWithDictionary:[dictionary objectForKey:kUserPropertyNameCustom]];
+    self.device ? [customDict setObject:self.device forKey:kUserPropertyNameDevice] : nil;
+    self.os ? [customDict setObject:self.os forKey:kUserPropertyNameOs] : nil;
     
-    [dictionary setObject:customDict forKey:kCustomKey];
+    [dictionary setObject:customDict forKey:kUserPropertyNameCustom];
     
     if (includeConfig && self.config.featuresJsonDictionary) {
-        [dictionary setObject:[[self.config dictionaryValue] objectForKey:kFeaturesJsonDictionaryKey] forKey:kConfigKey];
+        [dictionary setObject:[[self.config dictionaryValue] objectForKey:kFeaturesJsonDictionaryKey] forKey:kUserPropertyNameConfig];
     }
     
     return dictionary;
@@ -66,39 +66,39 @@ static NSString * const kOsKey = @"os";
 
 - (void)encodeWithCoder:(NSCoder *)encoder {
     //Encode properties, other class variables, etc
-    [encoder encodeObject:self.key forKey:kKeyKey];
-    [encoder encodeObject:self.ip forKey:kIpKey];
-    [encoder encodeObject:self.country forKey:kCountryKey];
-    [encoder encodeObject:self.name forKey:kNameKey];
-    [encoder encodeObject:self.firstName forKey:kFirstNameKey];
-    [encoder encodeObject:self.lastName forKey:kLastNameKey];
-    [encoder encodeObject:self.email forKey:kEmailKey];
-    [encoder encodeObject:self.avatar forKey:kAvatarKey];
-    [encoder encodeObject:self.custom forKey:kCustomKey];
-    [encoder encodeObject:self.updatedAt forKey:kUpdatedAtKey];
-    [encoder encodeObject:self.config forKey:kConfigKey];
-    [encoder encodeBool:self.anonymous forKey:kAnonymousKey];
-    [encoder encodeObject:self.device forKey:kDeviceKey];
-    [encoder encodeObject:self.os forKey:kOsKey];
+    [encoder encodeObject:self.key forKey:kUserPropertyNameKey];
+    [encoder encodeObject:self.ip forKey:kUserPropertyNameIp];
+    [encoder encodeObject:self.country forKey:kUserPropertyNameCountry];
+    [encoder encodeObject:self.name forKey:kUserPropertyNameName];
+    [encoder encodeObject:self.firstName forKey:kUserPropertyNameFirstName];
+    [encoder encodeObject:self.lastName forKey:kUserPropertyNameLastName];
+    [encoder encodeObject:self.email forKey:kUserPropertyNameEmail];
+    [encoder encodeObject:self.avatar forKey:kUserPropertyNameAvatar];
+    [encoder encodeObject:self.custom forKey:kUserPropertyNameCustom];
+    [encoder encodeObject:self.updatedAt forKey:kUserPropertyNameUpdatedAt];
+    [encoder encodeObject:self.config forKey:kUserPropertyNameConfig];
+    [encoder encodeBool:self.anonymous forKey:kUserPropertyNameAnonymous];
+    [encoder encodeObject:self.device forKey:kUserPropertyNameDevice];
+    [encoder encodeObject:self.os forKey:kUserPropertyNameOs];
 }
 
 - (id)initWithCoder:(NSCoder *)decoder {
     if((self = [super init])) {
         //Decode properties, other class vars
-        self.key = [decoder decodeObjectForKey:kKeyKey];
-        self.ip = [decoder decodeObjectForKey:kIpKey];
-        self.country = [decoder decodeObjectForKey:kCountryKey];
-        self.name = [decoder decodeObjectForKey:kNameKey];
-        self.firstName = [decoder decodeObjectForKey:kFirstNameKey];
-        self.lastName = [decoder decodeObjectForKey:kLastNameKey];
-        self.email = [decoder decodeObjectForKey:kEmailKey];
-        self.avatar = [decoder decodeObjectForKey:kAvatarKey];
-        self.custom = [decoder decodeObjectForKey:kCustomKey];
-        self.updatedAt = [decoder decodeObjectForKey:kUpdatedAtKey];
-        self.config = [decoder decodeObjectForKey:kConfigKey];
-        self.anonymous = [decoder decodeBoolForKey:kAnonymousKey];
-        self.device = [decoder decodeObjectForKey:kDeviceKey];
-        self.os = [decoder decodeObjectForKey:kOsKey];
+        self.key = [decoder decodeObjectForKey:kUserPropertyNameKey];
+        self.ip = [decoder decodeObjectForKey:kUserPropertyNameIp];
+        self.country = [decoder decodeObjectForKey:kUserPropertyNameCountry];
+        self.name = [decoder decodeObjectForKey:kUserPropertyNameName];
+        self.firstName = [decoder decodeObjectForKey:kUserPropertyNameFirstName];
+        self.lastName = [decoder decodeObjectForKey:kUserPropertyNameLastName];
+        self.email = [decoder decodeObjectForKey:kUserPropertyNameEmail];
+        self.avatar = [decoder decodeObjectForKey:kUserPropertyNameAvatar];
+        self.custom = [decoder decodeObjectForKey:kUserPropertyNameCustom];
+        self.updatedAt = [decoder decodeObjectForKey:kUserPropertyNameUpdatedAt];
+        self.config = [decoder decodeObjectForKey:kUserPropertyNameConfig];
+        self.anonymous = [decoder decodeBoolForKey:kUserPropertyNameAnonymous];
+        self.device = [decoder decodeObjectForKey:kUserPropertyNameDevice];
+        self.os = [decoder decodeObjectForKey:kUserPropertyNameOs];
     }
     return self;
 }
@@ -111,22 +111,22 @@ static NSString * const kOsKey = @"os";
         [formatter setDateFormat:@"yyyy-MM-dd'T'HH:mm:ss.SSS'Z'"];
         [formatter setTimeZone:[NSTimeZone timeZoneWithAbbreviation:@"UTC"]];
         
-        self.key = [dictionary objectForKey: kKeyKey];
-        self.ip = [dictionary objectForKey: kIpKey];
-        self.country = [dictionary objectForKey: kCountryKey];
-        self.email = [dictionary objectForKey: kEmailKey];
-        self.name = [dictionary objectForKey: kNameKey];
-        self.firstName = [dictionary objectForKey: kFirstNameKey];
-        self.lastName = [dictionary objectForKey: kLastNameKey];
-        self.avatar = [dictionary objectForKey: kAvatarKey];
-        self.custom = [dictionary objectForKey: kCustomKey];
+        self.key = [dictionary objectForKey: kUserPropertyNameKey];
+        self.ip = [dictionary objectForKey: kUserPropertyNameIp];
+        self.country = [dictionary objectForKey: kUserPropertyNameCountry];
+        self.email = [dictionary objectForKey: kUserPropertyNameEmail];
+        self.name = [dictionary objectForKey: kUserPropertyNameName];
+        self.firstName = [dictionary objectForKey: kUserPropertyNameFirstName];
+        self.lastName = [dictionary objectForKey: kUserPropertyNameLastName];
+        self.avatar = [dictionary objectForKey: kUserPropertyNameAvatar];
+        self.custom = [dictionary objectForKey: kUserPropertyNameCustom];
         if (self.custom) {
-            self.device = [self.custom objectForKey: kDeviceKey];
-            self.os = [self.custom objectForKey: kOsKey];
+            self.device = [self.custom objectForKey: kUserPropertyNameDevice];
+            self.os = [self.custom objectForKey: kUserPropertyNameOs];
         }
-        self.anonymous = [[dictionary objectForKey: kAnonymousKey] boolValue];
-        self.updatedAt = [formatter dateFromString:[dictionary objectForKey:kUpdatedAtKey]];
-        self.config = [[LDFlagConfigModel alloc] initWithDictionary:[dictionary objectForKey:kConfigKey]];
+        self.anonymous = [[dictionary objectForKey: kUserPropertyNameAnonymous] boolValue];
+        self.updatedAt = [formatter dateFromString:[dictionary objectForKey:kUserPropertyNameUpdatedAt]];
+        self.config = [[LDFlagConfigModel alloc] initWithDictionary:[dictionary objectForKey:kUserPropertyNameConfig]];
     }
     return self;
 }

@@ -10,6 +10,18 @@
 
 @class LDFlagConfigModel;
 
+static NSString * __nonnull const kUserPropertyNameIp;
+static NSString * __nonnull const kUserPropertyNameCountry;
+static NSString * __nonnull const kUserPropertyNameName;
+static NSString * __nonnull const kUserPropertyNameFirstName;
+static NSString * __nonnull const kUserPropertyNameLastName;
+static NSString * __nonnull const kUserPropertyNameEmail;
+static NSString * __nonnull const kUserPropertyNameAvatar;
+static NSString * __nonnull const kUserPropertyNameCustom;
+static NSString * __nonnull const kUserPropertyNameDevice;
+static NSString * __nonnull const kUserPropertyNameOs;
+
+
 @interface LDUserModel : NSObject <NSCoding>
 @property (nullable, nonatomic, strong, setter=key:) NSString *key;
 @property (nullable, nonatomic, strong) NSString *ip;
