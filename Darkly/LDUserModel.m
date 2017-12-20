@@ -178,4 +178,8 @@ static NSString * const kUserPropertyNameOs = @"os";
     return [self.dictionaryValue description];
 }
 
++(NSSet<NSString *> * __nonnull) allUserPropertyNames {
+    return [NSSet setWithArray:@[kUserPropertyNameIp, kUserPropertyNameCountry, kUserPropertyNameName, kUserPropertyNameFirstName, kUserPropertyNameLastName, kUserPropertyNameEmail, kUserPropertyNameAvatar, kUserPropertyNameCustom, kUserPropertyNameDevice, kUserPropertyNameOs]];
+}
+
 @end

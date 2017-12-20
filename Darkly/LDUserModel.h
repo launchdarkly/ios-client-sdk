@@ -21,7 +21,6 @@ static NSString * __nonnull const kUserPropertyNameCustom;
 static NSString * __nonnull const kUserPropertyNameDevice;
 static NSString * __nonnull const kUserPropertyNameOs;
 
-
 @interface LDUserModel : NSObject <NSCoding>
 @property (nullable, nonatomic, strong, setter=key:) NSString *key;
 @property (nullable, nonatomic, strong) NSString *ip;
@@ -46,5 +45,7 @@ static NSString * __nonnull const kUserPropertyNameOs;
 
 -(NSObject * __nonnull) flagValue: ( NSString * __nonnull )keyName;
 -(BOOL) doesFlagExist: (nonnull NSString *)keyName;
+
++(NSSet<NSString *> * __nonnull) allUserPropertyNames;
 
 @end
