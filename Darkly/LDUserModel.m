@@ -9,21 +9,23 @@
 #import "LDUserModel.h"
 #import "LDFlagConfigModel.h"
 #import "LDUtil.h"
+#import "NSDateFormatter+LDUserModel.h"
 
-static NSString * const kUserPropertyNameKey = @"key";
-static NSString * const kUserPropertyNameIp = @"ip";
-static NSString * const kUserPropertyNameCountry = @"country";
-static NSString * const kUserPropertyNameName = @"name";
-static NSString * const kUserPropertyNameFirstName = @"firstName";
-static NSString * const kUserPropertyNameLastName = @"lastName";
-static NSString * const kUserPropertyNameEmail = @"email";
-static NSString * const kUserPropertyNameAvatar = @"avatar";
-static NSString * const kUserPropertyNameCustom = @"custom";
-static NSString * const kUserPropertyNameUpdatedAt = @"updatedAt";
-static NSString * const kUserPropertyNameConfig = @"config";
-static NSString * const kUserPropertyNameAnonymous = @"anonymous";
-static NSString * const kUserPropertyNameDevice = @"device";
-static NSString * const kUserPropertyNameOs = @"os";
+NSString * const kUserPropertyNameKey = @"key";
+NSString * const kUserPropertyNameIp = @"ip";
+NSString * const kUserPropertyNameCountry = @"country";
+NSString * const kUserPropertyNameName = @"name";
+NSString * const kUserPropertyNameFirstName = @"firstName";
+NSString * const kUserPropertyNameLastName = @"lastName";
+NSString * const kUserPropertyNameEmail = @"email";
+NSString * const kUserPropertyNameAvatar = @"avatar";
+NSString * const kUserPropertyNameCustom = @"custom";
+NSString * const kUserPropertyNameUpdatedAt = @"updatedAt";
+NSString * const kUserPropertyNameConfig = @"config";
+NSString * const kUserPropertyNameAnonymous = @"anonymous";
+NSString * const kUserPropertyNameDevice = @"device";
+NSString * const kUserPropertyNameOs = @"os";
+NSString * const kUserPropertyNamePrivateAttributes = @"privateAttrs";
 
 
 @implementation LDUserModel
@@ -34,11 +36,7 @@ static NSString * const kUserPropertyNameOs = @"os";
 
 -(NSDictionary *)dictionaryValueWithConfig:(BOOL)includeConfig {
     NSMutableDictionary *dictionary = [[NSMutableDictionary alloc] init];
-    
-    NSDateFormatter *formatter = [[NSDateFormatter alloc] init];
-    [formatter setDateFormat:@"yyyy-MM-dd'T'HH:mm:ss.SSS'Z'"];
-    [formatter setTimeZone:[NSTimeZone timeZoneWithAbbreviation:@"UTC"]];
-    
+
     self.key ? [dictionary setObject:self.key forKey: kUserPropertyNameKey] : nil;
     self.ip ? [dictionary setObject:self.ip forKey: kUserPropertyNameIp] : nil;
     self.country ? [dictionary setObject:self.country forKey: kUserPropertyNameCountry] : nil;
@@ -49,18 +47,47 @@ static NSString * const kUserPropertyNameOs = @"os";
     self.avatar ? [dictionary setObject:self.avatar forKey: kUserPropertyNameAvatar] : nil;
     self.custom ? [dictionary setObject:self.custom forKey: kUserPropertyNameCustom] : nil;
     self.anonymous ? [dictionary setObject:[NSNumber numberWithBool: self.anonymous ] forKey: kUserPropertyNameAnonymous] : nil;
-    self.updatedAt ? [dictionary setObject:[formatter stringFromDate:self.updatedAt] forKey:kUserPropertyNameUpdatedAt] : nil;
-    
+    self.updatedAt ? [dictionary setObject:[[NSDateFormatter userDateFormatter] stringFromDate:self.updatedAt] forKey:kUserPropertyNameUpdatedAt] : nil;
+
     NSMutableDictionary *customDict = [[NSMutableDictionary alloc] initWithDictionary:[dictionary objectForKey:kUserPropertyNameCustom]];
     self.device ? [customDict setObject:self.device forKey:kUserPropertyNameDevice] : nil;
     self.os ? [customDict setObject:self.os forKey:kUserPropertyNameOs] : nil;
-    
+
     [dictionary setObject:customDict forKey:kUserPropertyNameCustom];
-    
+
     if (includeConfig && self.config.featuresJsonDictionary) {
         [dictionary setObject:[[self.config dictionaryValue] objectForKey:kFeaturesJsonDictionaryKey] forKey:kUserPropertyNameConfig];
     }
-    
+
+    return dictionary;
+}
+
+-(NSDictionary *)dictionaryValueWithFlags:(BOOL)includeFlags includePrivateProperties:(BOOL)includePrivate privateProperties:(NSArray<NSString *> *)privateProperties {
+    NSMutableDictionary *dictionary = [[NSMutableDictionary alloc] init];
+
+    self.key ? [dictionary setObject:self.key forKey: kUserPropertyNameKey] : nil;
+    self.ip && (includePrivate || ![privateProperties containsObject:kUserPropertyNameIp]) ? [dictionary setObject:self.ip forKey: kUserPropertyNameIp] : nil;
+    self.country && (includePrivate || ![privateProperties containsObject:kUserPropertyNameCountry]) ? [dictionary setObject:self.country forKey: kUserPropertyNameCountry] : nil;
+    self.name && (includePrivate || ![privateProperties containsObject:kUserPropertyNameName]) ? [dictionary setObject:self.name forKey: kUserPropertyNameName] : nil;
+    self.firstName && (includePrivate || ![privateProperties containsObject:kUserPropertyNameFirstName]) ? [dictionary setObject:self.firstName forKey: kUserPropertyNameFirstName] : nil;
+    self.lastName && (includePrivate || ![privateProperties containsObject:kUserPropertyNameLastName]) ? [dictionary setObject:self.lastName forKey: kUserPropertyNameLastName] : nil;
+    self.email && (includePrivate || ![privateProperties containsObject:kUserPropertyNameEmail]) ? [dictionary setObject:self.email forKey: kUserPropertyNameEmail] : nil;
+    self.avatar && (includePrivate || ![privateProperties containsObject:kUserPropertyNameAvatar]) ? [dictionary setObject:self.avatar forKey: kUserPropertyNameAvatar] : nil;
+    self.anonymous ? [dictionary setObject:[NSNumber numberWithBool: self.anonymous ] forKey: kUserPropertyNameAnonymous] : nil;
+    self.updatedAt ? [dictionary setObject:[[NSDateFormatter userDateFormatter] stringFromDate:self.updatedAt] forKey:kUserPropertyNameUpdatedAt] : nil;
+
+    NSMutableDictionary *customDict = [[NSMutableDictionary alloc] initWithDictionary:self.custom];
+    self.device && (includePrivate || ![privateProperties containsObject:kUserPropertyNameDevice]) ? [customDict setObject:self.device forKey:kUserPropertyNameDevice] : nil;
+    self.os && (includePrivate || ![privateProperties containsObject:kUserPropertyNameOs]) ? [customDict setObject:self.os forKey:kUserPropertyNameOs] : nil;
+    if (!includePrivate) { [customDict removeObjectsForKeys:privateProperties]; }
+    customDict.count > 0  && (includePrivate || ![privateProperties containsObject:kUserPropertyNameCustom]) ? [dictionary setObject:customDict forKey: kUserPropertyNameCustom] : nil;
+
+    privateProperties.count > 0 && !includePrivate ? [dictionary setObject:privateProperties forKey:kUserPropertyNamePrivateAttributes] : nil;
+
+    if (includeFlags && self.config.featuresJsonDictionary) {
+        [dictionary setObject:[[self.config dictionaryValue] objectForKey:kFeaturesJsonDictionaryKey] forKey:kUserPropertyNameConfig];
+    }
+
     return dictionary;
 }
 
@@ -107,10 +134,6 @@ static NSString * const kUserPropertyNameOs = @"os";
     if((self = [self init])) {
         //Process json that comes down from server
         
-        NSDateFormatter *formatter = [[NSDateFormatter alloc] init];
-        [formatter setDateFormat:@"yyyy-MM-dd'T'HH:mm:ss.SSS'Z'"];
-        [formatter setTimeZone:[NSTimeZone timeZoneWithAbbreviation:@"UTC"]];
-        
         self.key = [dictionary objectForKey: kUserPropertyNameKey];
         self.ip = [dictionary objectForKey: kUserPropertyNameIp];
         self.country = [dictionary objectForKey: kUserPropertyNameCountry];
@@ -125,7 +148,7 @@ static NSString * const kUserPropertyNameOs = @"os";
             self.os = [self.custom objectForKey: kUserPropertyNameOs];
         }
         self.anonymous = [[dictionary objectForKey: kUserPropertyNameAnonymous] boolValue];
-        self.updatedAt = [formatter dateFromString:[dictionary objectForKey:kUserPropertyNameUpdatedAt]];
+        self.updatedAt = [[NSDateFormatter userDateFormatter] dateFromString:[dictionary objectForKey:kUserPropertyNameUpdatedAt]];
         self.config = [[LDFlagConfigModel alloc] initWithDictionary:[dictionary objectForKey:kUserPropertyNameConfig]];
     }
     return self;
@@ -178,8 +201,8 @@ static NSString * const kUserPropertyNameOs = @"os";
     return [self.dictionaryValue description];
 }
 
-+(NSSet<NSString *> * __nonnull) allUserPropertyNames {
-    return [NSSet setWithArray:@[kUserPropertyNameIp, kUserPropertyNameCountry, kUserPropertyNameName, kUserPropertyNameFirstName, kUserPropertyNameLastName, kUserPropertyNameEmail, kUserPropertyNameAvatar, kUserPropertyNameCustom, kUserPropertyNameDevice, kUserPropertyNameOs]];
++(NSArray<NSString *> * __nonnull) allUserPropertyNames {
+    return @[kUserPropertyNameIp, kUserPropertyNameCountry, kUserPropertyNameName, kUserPropertyNameFirstName, kUserPropertyNameLastName, kUserPropertyNameEmail, kUserPropertyNameAvatar, kUserPropertyNameCustom, kUserPropertyNameDevice, kUserPropertyNameOs];
 }
 
 @end

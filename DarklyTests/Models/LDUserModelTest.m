@@ -5,6 +5,8 @@
 #import <XCTest/XCTest.h>
 #import "LDUserModel.h"
 #import "LDDataManager.h"
+#import "LDUserModel.h"
+#import "LDUserModel+Stub.h"
 #import "LDUserModel+Equatable.h"
 #import "LDUserModel+JsonDecodeable.h"
 #import "NSMutableDictionary+NullRemovable.h"
@@ -31,38 +33,108 @@
     XCTAssertNotNil(user.updatedAt);
 }
 
--(void)testDictionaryValue {
-    NSMutableDictionary *userDict = [self userDictionaryWithUserKey:@"aKey" userName:@"John Doe" customDictionary:[self customDictionary]];
-    LDUserModel *user = [[LDUserModel alloc] initWithDictionary:userDict];
-    NSDictionary *targetUserDictionary = [self targetUserDictionaryFrom:userDict withConfig:YES];
-    
-    NSDictionary *dictionaryFromUser = [user dictionaryValue];
-    
-    XCTAssertTrue([targetUserDictionary isEqualToDictionary:dictionaryFromUser]);
+-(void)testDictionaryValueWithFlags_Yes_AndPrivateProperties_Yes {
+    LDUserModel *userStub = [LDUserModel stubWithKey:[[NSUUID UUID] UUIDString]];
+    NSMutableArray *allProperties = [NSMutableArray arrayWithArray:[LDUserModel allUserPropertyNames]];
+    [allProperties addObjectsFromArray:userStub.custom.allKeys];
+    LDConfig *config = [[LDConfig alloc] initWithMobileKey:@"customMobileKey"];
+    NSDictionary *testDictionary;
+
+    for (NSString *propertyName in allProperties) {
+        config.privatePropertyNames = @[propertyName];
+        testDictionary = [userStub dictionaryValueWithFlags:YES includePrivateProperties:YES privateProperties:config.privatePropertyNames];
+        XCTAssertTrue([userStub matchesDictionary:testDictionary includeConfig:YES includePrivateProperties:YES privatePropertyNames:config.privatePropertyNames]);
+    }
+
+    config.privatePropertyNames = allProperties;
+    testDictionary = [userStub dictionaryValueWithFlags:YES includePrivateProperties:YES privateProperties:config.privatePropertyNames];
+    XCTAssertTrue([userStub matchesDictionary:testDictionary includeConfig:YES includePrivateProperties:YES privatePropertyNames:config.privatePropertyNames]);
+
+    config.privatePropertyNames = nil;
+    testDictionary = [userStub dictionaryValueWithFlags:YES includePrivateProperties:YES privateProperties:config.privatePropertyNames];
+    XCTAssertTrue([userStub matchesDictionary:testDictionary includeConfig:YES includePrivateProperties:YES privatePropertyNames:config.privatePropertyNames]);
+
+    config.privatePropertyNames = @[];
+    testDictionary = [userStub dictionaryValueWithFlags:YES includePrivateProperties:YES privateProperties:config.privatePropertyNames];
+    XCTAssertTrue([userStub matchesDictionary:testDictionary includeConfig:YES includePrivateProperties:YES privatePropertyNames:config.privatePropertyNames]);
 }
 
--(void)testDictionaryValueWithConfig_Yes {
-    NSMutableDictionary *userDict = [self userDictionaryWithUserKey:@"aKey" userName:@"John Doe" customDictionary:[self customDictionary]];
-    LDUserModel *user = [[LDUserModel alloc] initWithDictionary:userDict];
-    NSDictionary *targetUserDictionary = [self targetUserDictionaryFrom:userDict withConfig:YES];
-    
-    NSDictionary *dictionaryFromUser = [user dictionaryValueWithConfig:YES];
-    
-    XCTAssertNotNil([dictionaryFromUser objectForKey: @"config"]);
-    
-    XCTAssertTrue([targetUserDictionary isEqualToDictionary:dictionaryFromUser]);
+-(void)testDictionaryValueWithFlags_Yes_AndPrivateProperties_No {
+    LDUserModel *userStub = [LDUserModel stubWithKey:[[NSUUID UUID] UUIDString]];
+    NSMutableArray *allProperties = [NSMutableArray arrayWithArray:[LDUserModel allUserPropertyNames]];
+    [allProperties addObjectsFromArray:userStub.custom.allKeys];
+    LDConfig *config = [[LDConfig alloc] initWithMobileKey:@"customMobileKey"];
+    NSDictionary *testDictionary;
+
+    for (NSString *propertyName in allProperties) {
+        config.privatePropertyNames = @[propertyName];
+        testDictionary = [userStub dictionaryValueWithFlags:YES includePrivateProperties:NO privateProperties:config.privatePropertyNames];
+        XCTAssertTrue([userStub matchesDictionary:testDictionary includeConfig:YES includePrivateProperties:NO privatePropertyNames:config.privatePropertyNames]);
+    }
+
+    config.privatePropertyNames = allProperties;
+    testDictionary = [userStub dictionaryValueWithFlags:YES includePrivateProperties:NO privateProperties:config.privatePropertyNames];
+    XCTAssertTrue([userStub matchesDictionary:testDictionary includeConfig:YES includePrivateProperties:NO privatePropertyNames:config.privatePropertyNames]);
+
+    config.privatePropertyNames = nil;
+    testDictionary = [userStub dictionaryValueWithFlags:YES includePrivateProperties:NO privateProperties:config.privatePropertyNames];
+    XCTAssertTrue([userStub matchesDictionary:testDictionary includeConfig:YES includePrivateProperties:NO privatePropertyNames:config.privatePropertyNames]);
+
+    config.privatePropertyNames = @[];
+    testDictionary = [userStub dictionaryValueWithFlags:YES includePrivateProperties:NO privateProperties:config.privatePropertyNames];
+    XCTAssertTrue([userStub matchesDictionary:testDictionary includeConfig:YES includePrivateProperties:NO privatePropertyNames:config.privatePropertyNames]);
 }
 
--(void)testDictionaryValueWithConfig_No {
-    NSMutableDictionary *userDict = [self userDictionaryWithUserKey:@"aKey" userName:@"John Doe" customDictionary:[self customDictionary]];
-    LDUserModel *user = [[LDUserModel alloc] initWithDictionary:userDict];
-    NSDictionary *targetUserDictionary = [self targetUserDictionaryFrom:userDict withConfig:NO];
-    
-    NSDictionary *dictionaryFromUser = [user dictionaryValueWithConfig:NO];
-    
-    XCTAssertNil([dictionaryFromUser objectForKey: @"config"]);
-    
-    XCTAssertTrue([targetUserDictionary isEqualToDictionary:dictionaryFromUser]);
+-(void)testDictionaryValueWithFlags_No_AndPrivateProperties_Yes {
+    LDUserModel *userStub = [LDUserModel stubWithKey:[[NSUUID UUID] UUIDString]];
+    NSMutableArray *allProperties = [NSMutableArray arrayWithArray:[LDUserModel allUserPropertyNames]];
+    [allProperties addObjectsFromArray:userStub.custom.allKeys];
+    LDConfig *config = [[LDConfig alloc] initWithMobileKey:@"customMobileKey"];
+    NSDictionary *testDictionary;
+
+    for (NSString *propertyName in allProperties) {
+        config.privatePropertyNames = @[propertyName];
+        testDictionary = [userStub dictionaryValueWithFlags:NO includePrivateProperties:YES privateProperties:config.privatePropertyNames];
+        XCTAssertTrue([userStub matchesDictionary:testDictionary includeConfig:NO includePrivateProperties:YES privatePropertyNames:config.privatePropertyNames]);
+    }
+
+    config.privatePropertyNames = allProperties;
+    testDictionary = [userStub dictionaryValueWithFlags:NO includePrivateProperties:YES privateProperties:config.privatePropertyNames];
+    XCTAssertTrue([userStub matchesDictionary:testDictionary includeConfig:NO includePrivateProperties:YES privatePropertyNames:config.privatePropertyNames]);
+
+    config.privatePropertyNames = nil;
+    testDictionary = [userStub dictionaryValueWithFlags:NO includePrivateProperties:YES privateProperties:config.privatePropertyNames];
+    XCTAssertTrue([userStub matchesDictionary:testDictionary includeConfig:NO includePrivateProperties:YES privatePropertyNames:config.privatePropertyNames]);
+
+    config.privatePropertyNames = @[];
+    testDictionary = [userStub dictionaryValueWithFlags:NO includePrivateProperties:YES privateProperties:config.privatePropertyNames];
+    XCTAssertTrue([userStub matchesDictionary:testDictionary includeConfig:NO includePrivateProperties:YES privatePropertyNames:config.privatePropertyNames]);
+}
+
+-(void)testDictionaryValueWithFlags_No_AndPrivateProperties_No {
+    LDUserModel *userStub = [LDUserModel stubWithKey:[[NSUUID UUID] UUIDString]];
+    NSMutableArray *allProperties = [NSMutableArray arrayWithArray:[LDUserModel allUserPropertyNames]];
+    [allProperties addObjectsFromArray:userStub.custom.allKeys];
+    LDConfig *config = [[LDConfig alloc] initWithMobileKey:@"customMobileKey"];
+    NSDictionary *testDictionary;
+
+    for (NSString *propertyName in allProperties) {
+        config.privatePropertyNames = @[propertyName];
+        testDictionary = [userStub dictionaryValueWithFlags:NO includePrivateProperties:NO privateProperties:config.privatePropertyNames];
+        XCTAssertTrue([userStub matchesDictionary:testDictionary includeConfig:NO includePrivateProperties:NO privatePropertyNames:config.privatePropertyNames]);
+    }
+
+    config.privatePropertyNames = allProperties;
+    testDictionary = [userStub dictionaryValueWithFlags:NO includePrivateProperties:NO privateProperties:config.privatePropertyNames];
+    XCTAssertTrue([userStub matchesDictionary:testDictionary includeConfig:NO includePrivateProperties:NO privatePropertyNames:config.privatePropertyNames]);
+
+    config.privatePropertyNames = nil;
+    testDictionary = [userStub dictionaryValueWithFlags:NO includePrivateProperties:NO privateProperties:config.privatePropertyNames];
+    XCTAssertTrue([userStub matchesDictionary:testDictionary includeConfig:NO includePrivateProperties:NO privatePropertyNames:config.privatePropertyNames]);
+
+    config.privatePropertyNames = @[];
+    testDictionary = [userStub dictionaryValueWithFlags:NO includePrivateProperties:NO privateProperties:config.privatePropertyNames];
+    XCTAssertTrue([userStub matchesDictionary:testDictionary includeConfig:NO includePrivateProperties:NO privatePropertyNames:config.privatePropertyNames]);
 }
 
 -(void)testConvertToJson {
@@ -161,5 +233,4 @@
                                                               @"anonymous": @1
                                                               }];
 }
-
 @end

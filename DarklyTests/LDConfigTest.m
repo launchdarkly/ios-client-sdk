@@ -124,6 +124,14 @@ NSString * const LDConfigTestMobileKey = @"testMobileKey";
     XCTAssertFalse(config.streaming);
 }
 
+- (void)testConfigSetPrivatePropertyNames {
+    LDConfig *config = [[LDConfig alloc] initWithMobileKey:LDConfigTestMobileKey];
+    XCTAssertNil(config.privatePropertyNames);
+
+    config.privatePropertyNames = LDUserModel.allUserPropertyNames;
+    XCTAssertEqualObjects(config.privatePropertyNames, LDUserModel.allUserPropertyNames);
+}
+
 - (void)testConfigOverrideDebug {
     LDConfig *config = [[LDConfig alloc] initWithMobileKey:LDConfigTestMobileKey];
     config.debugEnabled = YES;
@@ -146,6 +154,20 @@ NSString * const LDConfigTestMobileKey = @"testMobileKey";
 
     for (NSNumber *statusCode in [statusCodeResults allKeys]) {
         XCTAssertTrue([config isFlagRetryStatusCode:[statusCode integerValue]] == [statusCodeResults[statusCode] boolValue]);
+    }
+}
+
+- (void)testIsPrivateName {
+    LDConfig *config = [[LDConfig alloc] initWithMobileKey:LDConfigTestMobileKey];
+    for (NSString *propertyName in LDUserModel.allUserPropertyNames) {
+        XCTAssertFalse([config isPrivatePropertyName:propertyName]);
+    }
+
+    NSMutableArray<NSString *> *privatePropertyNames = [NSMutableArray arrayWithArray:LDUserModel.allUserPropertyNames];
+    [privatePropertyNames addObjectsFromArray:@[@"custom-name", @"my-own-name", @"heresAnother", @"yetAnother", @"theLastOne"]];
+    config.privatePropertyNames = privatePropertyNames;
+    for (NSString *propertyName in privatePropertyNames) {
+        XCTAssertTrue([config isPrivatePropertyName:propertyName]);
     }
 }
 

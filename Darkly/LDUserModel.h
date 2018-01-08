@@ -7,19 +7,20 @@
 //
 
 #import <Foundation/Foundation.h>
+#import "LDConfig.h"
 
 @class LDFlagConfigModel;
 
-static NSString * __nonnull const kUserPropertyNameIp;
-static NSString * __nonnull const kUserPropertyNameCountry;
-static NSString * __nonnull const kUserPropertyNameName;
-static NSString * __nonnull const kUserPropertyNameFirstName;
-static NSString * __nonnull const kUserPropertyNameLastName;
-static NSString * __nonnull const kUserPropertyNameEmail;
-static NSString * __nonnull const kUserPropertyNameAvatar;
-static NSString * __nonnull const kUserPropertyNameCustom;
-static NSString * __nonnull const kUserPropertyNameDevice;
-static NSString * __nonnull const kUserPropertyNameOs;
+extern NSString * __nonnull const kUserPropertyNameIp;
+extern NSString * __nonnull const kUserPropertyNameCountry;
+extern NSString * __nonnull const kUserPropertyNameName;
+extern NSString * __nonnull const kUserPropertyNameFirstName;
+extern NSString * __nonnull const kUserPropertyNameLastName;
+extern NSString * __nonnull const kUserPropertyNameEmail;
+extern NSString * __nonnull const kUserPropertyNameAvatar;
+extern NSString * __nonnull const kUserPropertyNameCustom;
+extern NSString * __nonnull const kUserPropertyNameDevice;
+extern NSString * __nonnull const kUserPropertyNameOs;
 
 @interface LDUserModel : NSObject <NSCoding>
 @property (nullable, nonatomic, strong, setter=key:) NSString *key;
@@ -41,11 +42,12 @@ static NSString * __nonnull const kUserPropertyNameOs;
 -(nonnull id)initWithDictionary:(nonnull NSDictionary *)dictionary;
 -(nonnull NSString *) convertToJson;
 -(nonnull NSDictionary *)dictionaryValue;
--(nonnull NSDictionary *)dictionaryValueWithConfig:(BOOL)withConfig;
+-(nonnull NSDictionary *)dictionaryValueWithConfig:(BOOL)includeConfig;
+-(nonnull NSDictionary *)dictionaryValueWithFlags:(BOOL)includeFlags includePrivateProperties:(BOOL)includePrivate privateProperties:(nullable NSArray<NSString *> *)privateProperties;
 
 -(NSObject * __nonnull) flagValue: ( NSString * __nonnull )keyName;
 -(BOOL) doesFlagExist: (nonnull NSString *)keyName;
 
-+(NSSet<NSString *> * __nonnull) allUserPropertyNames;
++(NSArray<NSString *> * __nonnull) allUserPropertyNames;
 
 @end

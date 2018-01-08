@@ -70,6 +70,14 @@
 @property (nonatomic) BOOL streaming;
 
 /**
+ List of user property names and top level custom dictionary keys to treat as private for event reporting.
+ Private property values will not be included in events reported to Launch Darkly, but the property name will still
+ be sent. All user properties can be declared private except key and anonymous. Access the user property names that
+ can be declared private through the identifiers included in LDUserModel.h. The default  is nil.
+ */
+@property (nonatomic, strong, nullable) NSArray<NSString *>* privatePropertyNames;
+
+/**
  Flag that enables REPORT HTTP method for feature flag requests. When useReport is false,
  feature flag requests use the GET HTTP method. The default is NO.
  Do not use unless advised by LaunchDarkly.
@@ -88,6 +96,11 @@
  */
 - (instancetype _Nonnull)initWithMobileKey:(nonnull NSString *)mobileKey NS_DESIGNATED_INITIALIZER;
 - (BOOL)isFlagRetryStatusCode:(NSInteger)statusCode;
+
+/**
+ @return true when the name appears in privatePropertyNames
+ */
+- (BOOL)isPrivatePropertyName:(nonnull NSString*)propertyName;
 
 - (instancetype _Nonnull )init NS_UNAVAILABLE;
 
