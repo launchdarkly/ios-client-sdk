@@ -11,16 +11,16 @@
 
 @class LDFlagConfigModel;
 
-extern NSString * __nonnull const kUserPropertyNameIp;
-extern NSString * __nonnull const kUserPropertyNameCountry;
-extern NSString * __nonnull const kUserPropertyNameName;
-extern NSString * __nonnull const kUserPropertyNameFirstName;
-extern NSString * __nonnull const kUserPropertyNameLastName;
-extern NSString * __nonnull const kUserPropertyNameEmail;
-extern NSString * __nonnull const kUserPropertyNameAvatar;
-extern NSString * __nonnull const kUserPropertyNameCustom;
-extern NSString * __nonnull const kUserPropertyNameDevice;
-extern NSString * __nonnull const kUserPropertyNameOs;
+extern NSString * __nonnull const kUserAttributeIp;
+extern NSString * __nonnull const kUserAttributeCountry;
+extern NSString * __nonnull const kUserAttributeName;
+extern NSString * __nonnull const kUserAttributeFirstName;
+extern NSString * __nonnull const kUserAttributeLastName;
+extern NSString * __nonnull const kUserAttributeEmail;
+extern NSString * __nonnull const kUserAttributeAvatar;
+extern NSString * __nonnull const kUserAttributeCustom;
+extern NSString * __nonnull const kUserAttributeDevice;
+extern NSString * __nonnull const kUserAttributeOs;
 
 @interface LDUserModel : NSObject <NSCoding>
 @property (nullable, nonatomic, strong, setter=key:) NSString *key;
@@ -43,11 +43,11 @@ extern NSString * __nonnull const kUserPropertyNameOs;
 -(nonnull NSString *) convertToJson;
 -(nonnull NSDictionary *)dictionaryValue;
 -(nonnull NSDictionary *)dictionaryValueWithConfig:(BOOL)includeConfig;
--(nonnull NSDictionary *)dictionaryValueWithFlags:(BOOL)includeFlags includePrivateProperties:(BOOL)includePrivate privateProperties:(nullable NSArray<NSString *> *)privateProperties;
+-(nonnull NSDictionary *)dictionaryValueWithFlags:(BOOL)includeFlags includePrivateAttributes:(BOOL)includePrivate privateAttributes:(nullable NSArray<NSString *> *)privateProperties;
 
 -(NSObject * __nonnull) flagValue: ( NSString * __nonnull )keyName;
 -(BOOL) doesFlagExist: (nonnull NSString *)keyName;
 
-+(NSArray<NSString *> * __nonnull) allUserPropertyNames;
++(NSArray<NSString *> * __nonnull) allUserAttributes;
 
 @end

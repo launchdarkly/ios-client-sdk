@@ -8,13 +8,13 @@
 
 #import <Darkly/Darkly.h>
 
-extern NSString * const kUserPropertyNameKey;
-extern NSString * const kUserPropertyNameUpdatedAt;
-extern NSString * const kUserPropertyNameConfig;
-extern NSString * const kUserPropertyNameAnonymous;
-extern NSString * const kUserPropertyNamePrivateAttributes;
+extern NSString * const kUserAttributeKey;
+extern NSString * const kUserAttributeUpdatedAt;
+extern NSString * const kUserAttributeConfig;
+extern NSString * const kUserAttributeAnonymous;
+extern NSString * const kUserAttributePrivateAttributes;
 
 @interface LDUserModel (Equatable)
--(BOOL) isEqual:(id)object ignoringProperties:(NSArray<NSString*>*)ignoredProperties;
--(BOOL)matchesDictionary:(NSDictionary *)dictionary includeConfig:(BOOL)includeConfig includePrivateProperties:(BOOL)includePrivate privatePropertyNames:(NSArray<NSString*> *)privateProperties;
+-(BOOL) isEqual:(id)object ignoringAttributes:(NSArray<NSString*>*)ignoredAttributes;
+-(BOOL)matchesDictionary:(NSDictionary *)dictionary includeFlags:(BOOL)includeConfig includePrivateAttributes:(BOOL)includePrivate privateAttributes:(NSArray<NSString*> *)privateAttributes;
 @end

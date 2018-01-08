@@ -11,109 +11,109 @@
 #import "NSDateFormatter+LDUserModel.h"
 
 @implementation LDUserModel (Equatable)
--(BOOL) isEqual:(id)object ignoringProperties:(NSArray<NSString*>*)ignoredProperties {
+-(BOOL) isEqual:(id)object ignoringAttributes:(NSArray<NSString*>*)ignoredAttributes {
     LDUserModel *otherUser = (LDUserModel*)object;
     if (otherUser == nil) {
         return NO;
     }
     NSDictionary *dictionary = [self dictionaryValue];
     NSDictionary *otherDictionary = [otherUser dictionaryValue];
-    NSArray *differingKeys = [dictionary keysWithDifferentValuesIn: otherDictionary ignoringKeys: ignoredProperties];
+    NSArray *differingKeys = [dictionary keysWithDifferentValuesIn: otherDictionary ignoringKeys: ignoredAttributes];
     return (differingKeys == nil || [differingKeys count] == 0);
 }
 
--(BOOL)matchesDictionary:(NSDictionary *)dictionary includeConfig:(BOOL)includeConfig includePrivateProperties:(BOOL)includePrivate privatePropertyNames:(NSArray<NSString*> *)privateProperties {
+-(BOOL)matchesDictionary:(NSDictionary *)dictionary includeFlags:(BOOL)includeConfig includePrivateAttributes:(BOOL)includePrivate privateAttributes:(NSArray<NSString*> *)privateAttributes {
     NSString *matchingFailureReason = @"Dictionary value does not match LDUserModel property: %@";
     NSString *containsFailureReason = @"Dictionary contains private property: %@";
 
-    if (![self.key isEqualToString:dictionary[kUserPropertyNameKey]]) {
-        NSLog(matchingFailureReason, kUserPropertyNameKey);
+    if (![self.key isEqualToString:dictionary[kUserAttributeKey]]) {
+        NSLog(matchingFailureReason, kUserAttributeKey);
         return NO;
     }
 
-    NSArray<NSString *> *stringProperties = @[kUserPropertyNameIp, kUserPropertyNameCountry, kUserPropertyNameName, kUserPropertyNameFirstName, kUserPropertyNameLastName, kUserPropertyNameEmail, kUserPropertyNameAvatar];
-    for (NSString *propertyName in stringProperties) {
-        if (!includePrivate && [privateProperties containsObject:propertyName]) {
-            if (dictionary[propertyName] != nil) {
-                NSLog(@"Dictionary contains property %@", propertyName);
+    NSArray<NSString *> *stringAttributes = @[kUserAttributeIp, kUserAttributeCountry, kUserAttributeName, kUserAttributeFirstName, kUserAttributeLastName, kUserAttributeEmail, kUserAttributeAvatar];
+    for (NSString *attribute in stringAttributes) {
+        if (!includePrivate && [privateAttributes containsObject:attribute]) {
+            if (dictionary[attribute] != nil) {
+                NSLog(@"Dictionary contains property %@", attribute);
                 return NO;
             }
             continue;
         }
-        if (![[self propertyForName:propertyName] isEqualToString:dictionary[propertyName]]) {
-            NSLog(matchingFailureReason, propertyName);
+        if (![[self propertyForAttribute:attribute] isEqualToString:dictionary[attribute]]) {
+            NSLog(matchingFailureReason, attribute);
             return NO;
         }
     }
 
-    if (![[[NSDateFormatter userDateFormatter] stringFromDate:self.updatedAt] isEqualToString:dictionary[kUserPropertyNameUpdatedAt]]) {
-        NSLog(matchingFailureReason, kUserPropertyNameUpdatedAt);
+    if (![[[NSDateFormatter userDateFormatter] stringFromDate:self.updatedAt] isEqualToString:dictionary[kUserAttributeUpdatedAt]]) {
+        NSLog(matchingFailureReason, kUserAttributeUpdatedAt);
         return NO;
     }
 
-    if (!includePrivate && [privateProperties containsObject:kUserPropertyNameCustom]) {
-        if (dictionary[kUserPropertyNameCustom] != nil) {
-            NSLog(containsFailureReason, kUserPropertyNameCustom);
+    if (!includePrivate && [privateAttributes containsObject:kUserAttributeCustom]) {
+        if (dictionary[kUserAttributeCustom] != nil) {
+            NSLog(containsFailureReason, kUserAttributeCustom);
             return NO;
         }
     } else {
-        NSDictionary *customDictionary = dictionary[kUserPropertyNameCustom];
+        NSDictionary *customDictionary = dictionary[kUserAttributeCustom];
 
-        for (NSString *propertyName in self.custom.allKeys) {
-            if (!includePrivate && [privateProperties containsObject:propertyName]) {
-                if (customDictionary[propertyName] != nil) {
-                    NSLog(containsFailureReason, propertyName);
+        for (NSString *customAttribute in self.custom.allKeys) {
+            if (!includePrivate && [privateAttributes containsObject:customAttribute]) {
+                if (customDictionary[customAttribute] != nil) {
+                    NSLog(containsFailureReason, customAttribute);
                     return NO;
                 }
                 continue;
             }
 
             //NOTE: The stubbed custom dictionary only contains string values...
-            if ([self.custom[propertyName] isKindOfClass:[NSString class]] && ![self.custom[propertyName] isEqualToString:customDictionary[propertyName]]) {
-                NSLog(containsFailureReason, propertyName);
+            if ([self.custom[customAttribute] isKindOfClass:[NSString class]] && ![self.custom[customAttribute] isEqualToString:customDictionary[customAttribute]]) {
+                NSLog(containsFailureReason, customAttribute);
                 return NO;
             }
-            if (![self.custom[propertyName] isKindOfClass:[NSString class]]) { NSLog(@"WARNING: Non-string type contained in LDUserModel.custom at the key %@", propertyName); }
+            if (![self.custom[customAttribute] isKindOfClass:[NSString class]]) { NSLog(@"WARNING: Non-string type contained in LDUserModel.custom at the key %@", customAttribute); }
         }
 
-        NSArray<NSString *> *customStringProperties = @[kUserPropertyNameDevice, kUserPropertyNameOs];
-        for (NSString *propertyName in customStringProperties) {
-            if ([self propertyForName:propertyName] == nil) { continue; }
-            if (!includePrivate && [privateProperties containsObject:propertyName]) {
-                if (customDictionary[propertyName] != nil) {
-                    NSLog(containsFailureReason, propertyName);
+        NSArray<NSString *> *customStringAttributes = @[kUserAttributeDevice, kUserAttributeOs];
+        for (NSString *attribute in customStringAttributes) {
+            if ([self propertyForAttribute:attribute] == nil) { continue; }
+            if (!includePrivate && [privateAttributes containsObject:attribute]) {
+                if (customDictionary[attribute] != nil) {
+                    NSLog(containsFailureReason, attribute);
                     return NO;
                 }
                 continue;
             }
-            if (![[self propertyForName:propertyName] isEqualToString:customDictionary[propertyName]]) {
-                NSLog(matchingFailureReason, propertyName);
+            if (![[self propertyForAttribute:attribute] isEqualToString:customDictionary[attribute]]) {
+                NSLog(matchingFailureReason, attribute);
                 return NO;
             }
         }
     }
 
-    if (self.anonymous != [dictionary[kUserPropertyNameAnonymous] boolValue]) {
-        NSLog(matchingFailureReason, kUserPropertyNameAnonymous);
+    if (self.anonymous != [dictionary[kUserAttributeAnonymous] boolValue]) {
+        NSLog(matchingFailureReason, kUserAttributeAnonymous);
         return NO;
     }
 
-    if (includeConfig && ![self.config.featuresJsonDictionary isEqual:dictionary[kUserPropertyNameConfig]]) {
-        NSLog(matchingFailureReason, kUserPropertyNameConfig);
+    if (includeConfig && ![self.config.featuresJsonDictionary isEqual:dictionary[kUserAttributeConfig]]) {
+        NSLog(matchingFailureReason, kUserAttributeConfig);
         return NO;
     }
 
-    if (!includePrivate && privateProperties.count && ![dictionary[kUserPropertyNamePrivateAttributes] isEqual:privateProperties]) {
-        NSLog(matchingFailureReason, kUserPropertyNamePrivateAttributes);
+    if (!includePrivate && privateAttributes.count && ![dictionary[kUserAttributePrivateAttributes] isEqual:privateAttributes]) {
+        NSLog(matchingFailureReason, kUserAttributePrivateAttributes);
         return NO;
     }
 
     return YES;
 }
 
--(id)propertyForName:(NSString*)name {
-    NSDictionary *propertyMap = @{kUserPropertyNameKey: self.key, kUserPropertyNameIp: self.ip, kUserPropertyNameCountry: self.country, kUserPropertyNameName: self.name, kUserPropertyNameFirstName: self.firstName, kUserPropertyNameLastName: self.lastName, kUserPropertyNameEmail: self.email, kUserPropertyNameAvatar: self.avatar, kUserPropertyNameCustom: self.custom, kUserPropertyNameUpdatedAt: self.updatedAt, kUserPropertyNameConfig: self.config, kUserPropertyNameAnonymous: @(self.anonymous), kUserPropertyNameDevice: self.device, kUserPropertyNameOs: self.os};
+-(id)propertyForAttribute:(NSString*)attribute {
+    NSDictionary *propertyMap = @{kUserAttributeKey: self.key, kUserAttributeIp: self.ip, kUserAttributeCountry: self.country, kUserAttributeName: self.name, kUserAttributeFirstName: self.firstName, kUserAttributeLastName: self.lastName, kUserAttributeEmail: self.email, kUserAttributeAvatar: self.avatar, kUserAttributeCustom: self.custom, kUserAttributeUpdatedAt: self.updatedAt, kUserAttributeConfig: self.config, kUserAttributeAnonymous: @(self.anonymous), kUserAttributeDevice: self.device, kUserAttributeOs: self.os};
 
-    return propertyMap[name];
+    return propertyMap[attribute];
 }
 @end

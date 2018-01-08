@@ -124,12 +124,12 @@ NSString * const LDConfigTestMobileKey = @"testMobileKey";
     XCTAssertFalse(config.streaming);
 }
 
-- (void)testConfigSetPrivatePropertyNames {
+- (void)testConfigSetPrivateAttributes {
     LDConfig *config = [[LDConfig alloc] initWithMobileKey:LDConfigTestMobileKey];
-    XCTAssertNil(config.privatePropertyNames);
+    XCTAssertNil(config.privateAttributes);
 
-    config.privatePropertyNames = LDUserModel.allUserPropertyNames;
-    XCTAssertEqualObjects(config.privatePropertyNames, LDUserModel.allUserPropertyNames);
+    config.privateAttributes = LDUserModel.allUserAttributes;
+    XCTAssertEqualObjects(config.privateAttributes, LDUserModel.allUserAttributes);
 }
 
 - (void)testConfigOverrideDebug {
@@ -159,15 +159,15 @@ NSString * const LDConfigTestMobileKey = @"testMobileKey";
 
 - (void)testIsPrivateName {
     LDConfig *config = [[LDConfig alloc] initWithMobileKey:LDConfigTestMobileKey];
-    for (NSString *propertyName in LDUserModel.allUserPropertyNames) {
-        XCTAssertFalse([config isPrivatePropertyName:propertyName]);
+    for (NSString *attribute in LDUserModel.allUserAttributes) {
+        XCTAssertFalse([config isPrivateAttribute:attribute]);
     }
 
-    NSMutableArray<NSString *> *privatePropertyNames = [NSMutableArray arrayWithArray:LDUserModel.allUserPropertyNames];
-    [privatePropertyNames addObjectsFromArray:@[@"custom-name", @"my-own-name", @"heresAnother", @"yetAnother", @"theLastOne"]];
-    config.privatePropertyNames = privatePropertyNames;
-    for (NSString *propertyName in privatePropertyNames) {
-        XCTAssertTrue([config isPrivatePropertyName:propertyName]);
+    NSMutableArray<NSString *> *privateAttributes = [NSMutableArray arrayWithArray:LDUserModel.allUserAttributes];
+    [privateAttributes addObjectsFromArray:@[@"custom-name", @"my-own-name", @"heresAnother", @"yetAnother", @"theLastOne"]];
+    config.privateAttributes = privateAttributes;
+    for (NSString *attribute in privateAttributes) {
+        XCTAssertTrue([config isPrivateAttribute:attribute]);
     }
 }
 

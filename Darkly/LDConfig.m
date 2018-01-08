@@ -116,9 +116,9 @@
     DEBUG_LOG(@"Set LDConfig streaming enabled: %d", streaming);
 }
 
-- (void)setPrivatePropertyNames:(NSArray<NSString *>*)privatePropertyNames {
-    _privatePropertyNames = privatePropertyNames;
-    DEBUG_LOG(@"Set LDConfig privatePropertyNames set: %@", privatePropertyNames.description);
+- (void)setPrivateAttributes:(NSArray<NSString *>*)privateAttributes {
+    _privateAttributes = privateAttributes;
+    DEBUG_LOG(@"Set LDConfig privateAttributes set: %@", privateAttributes.description);
 }
 
 - (void)setDebugEnabled:(BOOL)debugEnabled {
@@ -130,8 +130,8 @@
     return [self.flagRetryStatusCodes containsObject:@(statusCode)];
 }
 
-- (BOOL)isPrivatePropertyName:(NSString *)propertyName {
-    return [self.privatePropertyNames containsObject:propertyName];
+- (BOOL)isPrivateAttribute:(NSString *)attribute {
+    return [self.privateAttributes containsObject:attribute];
 }
 
 @end
