@@ -42,20 +42,20 @@
 
     for (NSString *attribute in allAttributes) {
         config.privateAttributes = @[attribute];
-        testDictionary = [userStub dictionaryValueWithFlags:YES includePrivateAttributes:YES privateAttributes:config.privateAttributes];
+        testDictionary = [userStub dictionaryValueWithFlags:YES includePrivateAttributes:YES privateAttributesFromConfig:config.privateAttributes];
         XCTAssertTrue([userStub matchesDictionary:testDictionary includeFlags:YES includePrivateAttributes:YES privateAttributes:config.privateAttributes]);
     }
 
     config.privateAttributes = allAttributes;
-    testDictionary = [userStub dictionaryValueWithFlags:YES includePrivateAttributes:YES privateAttributes:config.privateAttributes];
+    testDictionary = [userStub dictionaryValueWithFlags:YES includePrivateAttributes:YES privateAttributesFromConfig:config.privateAttributes];
     XCTAssertTrue([userStub matchesDictionary:testDictionary includeFlags:YES includePrivateAttributes:YES privateAttributes:config.privateAttributes]);
 
     config.privateAttributes = nil;
-    testDictionary = [userStub dictionaryValueWithFlags:YES includePrivateAttributes:YES privateAttributes:config.privateAttributes];
+    testDictionary = [userStub dictionaryValueWithFlags:YES includePrivateAttributes:YES privateAttributesFromConfig:config.privateAttributes];
     XCTAssertTrue([userStub matchesDictionary:testDictionary includeFlags:YES includePrivateAttributes:YES privateAttributes:config.privateAttributes]);
 
     config.privateAttributes = @[];
-    testDictionary = [userStub dictionaryValueWithFlags:YES includePrivateAttributes:YES privateAttributes:config.privateAttributes];
+    testDictionary = [userStub dictionaryValueWithFlags:YES includePrivateAttributes:YES privateAttributesFromConfig:config.privateAttributes];
     XCTAssertTrue([userStub matchesDictionary:testDictionary includeFlags:YES includePrivateAttributes:YES privateAttributes:config.privateAttributes]);
 }
 
@@ -68,20 +68,20 @@
 
     for (NSString *attribute in allAttributes) {
         config.privateAttributes = @[attribute];
-        testDictionary = [userStub dictionaryValueWithFlags:YES includePrivateAttributes:NO privateAttributes:config.privateAttributes];
+        testDictionary = [userStub dictionaryValueWithFlags:YES includePrivateAttributes:NO privateAttributesFromConfig:config.privateAttributes];
         XCTAssertTrue([userStub matchesDictionary:testDictionary includeFlags:YES includePrivateAttributes:NO privateAttributes:config.privateAttributes]);
     }
 
     config.privateAttributes = allAttributes;
-    testDictionary = [userStub dictionaryValueWithFlags:YES includePrivateAttributes:NO privateAttributes:config.privateAttributes];
+    testDictionary = [userStub dictionaryValueWithFlags:YES includePrivateAttributes:NO privateAttributesFromConfig:config.privateAttributes];
     XCTAssertTrue([userStub matchesDictionary:testDictionary includeFlags:YES includePrivateAttributes:NO privateAttributes:config.privateAttributes]);
 
     config.privateAttributes = nil;
-    testDictionary = [userStub dictionaryValueWithFlags:YES includePrivateAttributes:NO privateAttributes:config.privateAttributes];
+    testDictionary = [userStub dictionaryValueWithFlags:YES includePrivateAttributes:NO privateAttributesFromConfig:config.privateAttributes];
     XCTAssertTrue([userStub matchesDictionary:testDictionary includeFlags:YES includePrivateAttributes:NO privateAttributes:config.privateAttributes]);
 
     config.privateAttributes = @[];
-    testDictionary = [userStub dictionaryValueWithFlags:YES includePrivateAttributes:NO privateAttributes:config.privateAttributes];
+    testDictionary = [userStub dictionaryValueWithFlags:YES includePrivateAttributes:NO privateAttributesFromConfig:config.privateAttributes];
     XCTAssertTrue([userStub matchesDictionary:testDictionary includeFlags:YES includePrivateAttributes:NO privateAttributes:config.privateAttributes]);
 }
 
@@ -94,20 +94,20 @@
 
     for (NSString *attribute in allAttributes) {
         config.privateAttributes = @[attribute];
-        testDictionary = [userStub dictionaryValueWithFlags:NO includePrivateAttributes:YES privateAttributes:config.privateAttributes];
+        testDictionary = [userStub dictionaryValueWithFlags:NO includePrivateAttributes:YES privateAttributesFromConfig:config.privateAttributes];
         XCTAssertTrue([userStub matchesDictionary:testDictionary includeFlags:NO includePrivateAttributes:YES privateAttributes:config.privateAttributes]);
     }
 
     config.privateAttributes = allAttributes;
-    testDictionary = [userStub dictionaryValueWithFlags:NO includePrivateAttributes:YES privateAttributes:config.privateAttributes];
+    testDictionary = [userStub dictionaryValueWithFlags:NO includePrivateAttributes:YES privateAttributesFromConfig:config.privateAttributes];
     XCTAssertTrue([userStub matchesDictionary:testDictionary includeFlags:NO includePrivateAttributes:YES privateAttributes:config.privateAttributes]);
 
     config.privateAttributes = nil;
-    testDictionary = [userStub dictionaryValueWithFlags:NO includePrivateAttributes:YES privateAttributes:config.privateAttributes];
+    testDictionary = [userStub dictionaryValueWithFlags:NO includePrivateAttributes:YES privateAttributesFromConfig:config.privateAttributes];
     XCTAssertTrue([userStub matchesDictionary:testDictionary includeFlags:NO includePrivateAttributes:YES privateAttributes:config.privateAttributes]);
 
     config.privateAttributes = @[];
-    testDictionary = [userStub dictionaryValueWithFlags:NO includePrivateAttributes:YES privateAttributes:config.privateAttributes];
+    testDictionary = [userStub dictionaryValueWithFlags:NO includePrivateAttributes:YES privateAttributesFromConfig:config.privateAttributes];
     XCTAssertTrue([userStub matchesDictionary:testDictionary includeFlags:NO includePrivateAttributes:YES privateAttributes:config.privateAttributes]);
 }
 
@@ -120,20 +120,20 @@
 
     for (NSString *attribute in allAttributes) {
         config.privateAttributes = @[attribute];
-        testDictionary = [userStub dictionaryValueWithFlags:NO includePrivateAttributes:NO privateAttributes:config.privateAttributes];
+        testDictionary = [userStub dictionaryValueWithFlags:NO includePrivateAttributes:NO privateAttributesFromConfig:config.privateAttributes];
         XCTAssertTrue([userStub matchesDictionary:testDictionary includeFlags:NO includePrivateAttributes:NO privateAttributes:config.privateAttributes]);
     }
 
     config.privateAttributes = allAttributes;
-    testDictionary = [userStub dictionaryValueWithFlags:NO includePrivateAttributes:NO privateAttributes:config.privateAttributes];
+    testDictionary = [userStub dictionaryValueWithFlags:NO includePrivateAttributes:NO privateAttributesFromConfig:config.privateAttributes];
     XCTAssertTrue([userStub matchesDictionary:testDictionary includeFlags:NO includePrivateAttributes:NO privateAttributes:config.privateAttributes]);
 
     config.privateAttributes = nil;
-    testDictionary = [userStub dictionaryValueWithFlags:NO includePrivateAttributes:NO privateAttributes:config.privateAttributes];
+    testDictionary = [userStub dictionaryValueWithFlags:NO includePrivateAttributes:NO privateAttributesFromConfig:config.privateAttributes];
     XCTAssertTrue([userStub matchesDictionary:testDictionary includeFlags:NO includePrivateAttributes:NO privateAttributes:config.privateAttributes]);
 
     config.privateAttributes = @[];
-    testDictionary = [userStub dictionaryValueWithFlags:NO includePrivateAttributes:NO privateAttributes:config.privateAttributes];
+    testDictionary = [userStub dictionaryValueWithFlags:NO includePrivateAttributes:NO privateAttributesFromConfig:config.privateAttributes];
     XCTAssertTrue([userStub matchesDictionary:testDictionary includeFlags:NO includePrivateAttributes:NO privateAttributes:config.privateAttributes]);
 }
 

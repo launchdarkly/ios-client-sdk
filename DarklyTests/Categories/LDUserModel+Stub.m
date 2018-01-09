@@ -41,7 +41,8 @@ NSString * const userModelStubCustomValue = @"userModelStubCustomValue";
 }
 
 +(NSDictionary*)customStub {
-    //If you add new values that are non-string type, you might need to add the type to LDUserModel+Equatable method testDictionaryValueWithConfig_Yes_AndPrivateProperties_Yes_usingConfigWithNames to handle the new type.
+    //If you add new values that are non-string type, you might need to add the type to
+    //-[LDUserModel+Equatable matchesDictionary: includeFlags: includePrivateAttributes: privateAttributes:] to handle the new type.
     return @{userModelStubCustomKey: userModelStubCustomValue};
 }
 @end
