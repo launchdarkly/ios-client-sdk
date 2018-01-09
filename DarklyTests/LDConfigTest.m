@@ -157,18 +157,4 @@ NSString * const LDConfigTestMobileKey = @"testMobileKey";
     }
 }
 
-- (void)testIsPrivateName {
-    LDConfig *config = [[LDConfig alloc] initWithMobileKey:LDConfigTestMobileKey];
-    for (NSString *attribute in LDUserModel.allUserAttributes) {
-        XCTAssertFalse([config isPrivateAttribute:attribute]);
-    }
-
-    NSMutableArray<NSString *> *privateAttributes = [NSMutableArray arrayWithArray:LDUserModel.allUserAttributes];
-    [privateAttributes addObjectsFromArray:@[@"custom-name", @"my-own-name", @"heresAnother", @"yetAnother", @"theLastOne"]];
-    config.privateAttributes = privateAttributes;
-    for (NSString *attribute in privateAttributes) {
-        XCTAssertTrue([config isPrivateAttribute:attribute]);
-    }
-}
-
 @end

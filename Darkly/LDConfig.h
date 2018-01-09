@@ -97,11 +97,6 @@
 - (instancetype _Nonnull)initWithMobileKey:(nonnull NSString *)mobileKey NS_DESIGNATED_INITIALIZER;
 - (BOOL)isFlagRetryStatusCode:(NSInteger)statusCode;
 
-/**
- @return true when the attribute appears in privateAttributes
- */
-- (BOOL)isPrivateAttribute:(nonnull NSString*)attribute;
-
 - (instancetype _Nonnull )init NS_UNAVAILABLE;
 
 @end

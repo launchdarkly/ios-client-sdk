@@ -130,10 +130,6 @@
     return [self.flagRetryStatusCodes containsObject:@(statusCode)];
 }
 
-- (BOOL)isPrivateAttribute:(NSString *)attribute {
-    return [self.privateAttributes containsObject:attribute];
-}
-
 @end
 
 
