@@ -126,10 +126,10 @@ NSString * const LDConfigTestMobileKey = @"testMobileKey";
 
 - (void)testConfigSetPrivateAttributes {
     LDConfig *config = [[LDConfig alloc] initWithMobileKey:LDConfigTestMobileKey];
-    XCTAssertNil(config.privateAttributes);
+    XCTAssertNil(config.privateUserAttributes);
 
-    config.privateAttributes = LDUserModel.allUserAttributes;
-    XCTAssertEqualObjects(config.privateAttributes, LDUserModel.allUserAttributes);
+    config.privateUserAttributes = LDUserModel.allUserAttributes;
+    XCTAssertEqualObjects(config.privateUserAttributes, LDUserModel.allUserAttributes);
 }
 
 - (void)testConfigOverrideDebug {

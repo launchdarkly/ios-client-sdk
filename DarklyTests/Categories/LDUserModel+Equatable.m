@@ -7,6 +7,7 @@
 //
 
 #import "LDUserModel+Equatable.h"
+#import "LDUserModel+Testable.h"
 #import "NSDictionary+StringKey_Matchable.h"
 #import "NSDateFormatter+LDUserModel.h"
 
@@ -16,8 +17,8 @@
     if (otherUser == nil) {
         return NO;
     }
-    NSDictionary *dictionary = [self dictionaryValue];
-    NSDictionary *otherDictionary = [otherUser dictionaryValue];
+    NSDictionary *dictionary = [self dictionaryValueWithFlags:YES includePrivateAttributes:YES privateAttributesFromConfig:nil includePrivateAttributeList:YES];
+    NSDictionary *otherDictionary = [otherUser dictionaryValueWithFlags:YES includePrivateAttributes:YES privateAttributesFromConfig:nil includePrivateAttributeList:YES];
     NSArray *differingKeys = [dictionary keysWithDifferentValuesIn: otherDictionary ignoringKeys: ignoredAttributes];
     return (differingKeys == nil || [differingKeys count] == 0);
 }

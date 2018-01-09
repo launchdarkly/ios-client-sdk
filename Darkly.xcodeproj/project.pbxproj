@@ -192,6 +192,7 @@
 		83889B1C1F8F28AB00A4EF69 /* NSURLResponse+Unauthorized.m in Sources */ = {isa = PBXBuildFile; fileRef = 83889B161F8F28AB00A4EF69 /* NSURLResponse+Unauthorized.m */; };
 		83889B1D1F8F28AB00A4EF69 /* NSURLResponse+Unauthorized.m in Sources */ = {isa = PBXBuildFile; fileRef = 83889B161F8F28AB00A4EF69 /* NSURLResponse+Unauthorized.m */; };
 		83889B1E1F8F28AB00A4EF69 /* NSURLResponse+Unauthorized.m in Sources */ = {isa = PBXBuildFile; fileRef = 83889B161F8F28AB00A4EF69 /* NSURLResponse+Unauthorized.m */; };
+		839956E820053081009707D1 /* LDUserModel+Testable.m in Sources */ = {isa = PBXBuildFile; fileRef = 839956E720053081009707D1 /* LDUserModel+Testable.m */; };
 		839D6D271FD1B57B000BE6BD /* DarklyEventSource.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 839D6D261FD1B57B000BE6BD /* DarklyEventSource.framework */; };
 		839D6D291FD1B58E000BE6BD /* DarklyEventSource.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 839D6D281FD1B58E000BE6BD /* DarklyEventSource.framework */; };
 		83B8C24C1FEB1CD20082B8A9 /* LDUserModel+Stub.m in Sources */ = {isa = PBXBuildFile; fileRef = 83B8C24B1FEB1CD20082B8A9 /* LDUserModel+Stub.m */; };
@@ -348,6 +349,8 @@
 		83889B131F8E93A100A4EF69 /* LDEvent+Testable.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "LDEvent+Testable.m"; sourceTree = "<group>"; };
 		83889B151F8F28AB00A4EF69 /* NSURLResponse+Unauthorized.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "NSURLResponse+Unauthorized.h"; sourceTree = "<group>"; };
 		83889B161F8F28AB00A4EF69 /* NSURLResponse+Unauthorized.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "NSURLResponse+Unauthorized.m"; sourceTree = "<group>"; };
+		839956E620053081009707D1 /* LDUserModel+Testable.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "LDUserModel+Testable.h"; sourceTree = "<group>"; };
+		839956E720053081009707D1 /* LDUserModel+Testable.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "LDUserModel+Testable.m"; sourceTree = "<group>"; };
 		839D6D261FD1B57B000BE6BD /* DarklyEventSource.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = DarklyEventSource.framework; path = Carthage/Build/watchOS/DarklyEventSource.framework; sourceTree = "<group>"; };
 		839D6D281FD1B58E000BE6BD /* DarklyEventSource.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = DarklyEventSource.framework; path = Carthage/Build/tvOS/DarklyEventSource.framework; sourceTree = "<group>"; };
 		83B8C24A1FEB1CD20082B8A9 /* LDUserModel+Stub.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "LDUserModel+Stub.h"; sourceTree = "<group>"; };
@@ -586,6 +589,8 @@
 				832C788C1F2977B800E334A2 /* NSString+RemoveWhitespace.m */,
 				83B8C24A1FEB1CD20082B8A9 /* LDUserModel+Stub.h */,
 				83B8C24B1FEB1CD20082B8A9 /* LDUserModel+Stub.m */,
+				839956E620053081009707D1 /* LDUserModel+Testable.h */,
+				839956E720053081009707D1 /* LDUserModel+Testable.m */,
 				8349F51F1F195BCF00B1F3DB /* LDUserModel+Equatable.h */,
 				8349F5201F195BCF00B1F3DB /* LDUserModel+Equatable.m */,
 				832C788E1F2A8DF600E334A2 /* LDUserModel+JsonDecodeable.h */,
@@ -1198,6 +1203,7 @@
 			files = (
 				83EF678D1F98FC9200403126 /* LDFlagConfigModel+Testable.m in Sources */,
 				8349F51E1F19352300B1F3DB /* NSDictionary+StringKey_Matchable.m in Sources */,
+				839956E820053081009707D1 /* LDUserModel+Testable.m in Sources */,
 				690347291E689B9F00E45133 /* LDEventModelTest.m in Sources */,
 				690347301E689B9F00E45133 /* LDConfigTest.m in Sources */,
 				690347261E689B9F00E45133 /* LDUserBuilderTest.m in Sources */,

@@ -32,6 +32,7 @@
     XCTAssertTrue([user anonymous]);
     XCTAssertNotNil([user device]);
     XCTAssertNotNil([user os]);
+    XCTAssertNil([user privateAttributes]);
 }
 
 - (void)testUserWithInputValues {
@@ -79,6 +80,19 @@
     builder.isAnonymous = testAnonymous;
     LDUserModel *user = [builder build];
     XCTAssertTrue(user.anonymous);
+}
+
+- (void)testSetPrivateAttributes {
+    LDUserBuilder *builder = [[LDUserBuilder alloc] init];
+    for (NSString *attribute in [LDUserModel allUserAttributes]) {
+        builder.privateAttributes = @[attribute];
+        LDUserModel *user = [builder build];
+        XCTAssertEqualObjects(user.privateAttributes, @[attribute]);
+    }
+
+    builder.privateAttributes = [LDUserModel allUserAttributes];
+    LDUserModel *user = [builder build];
+    XCTAssertEqualObjects(user.privateAttributes, [LDUserModel allUserAttributes]);
 }
 
 @end

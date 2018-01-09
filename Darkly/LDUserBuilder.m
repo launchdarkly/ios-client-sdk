@@ -38,6 +38,9 @@
         iUser.custom = iBuilder.customDictionary;
     }
     iUser.anonymous = iBuilder.isAnonymous;
+    if (iBuilder.privateAttributes || iUser.privateAttributes) {
+        iUser.privateAttributes = iBuilder.privateAttributes;
+    }
 
     return iUser;
 }
@@ -77,6 +80,9 @@
         userBuilder.customDictionary = [iUser.custom mutableCopy];
     }
     userBuilder.isAnonymous = iUser.anonymous;
+    if (iUser.privateAttributes) {
+        userBuilder.privateAttributes = iUser.privateAttributes;
+    }
 
     return userBuilder;
 }
@@ -200,6 +206,10 @@
     if (self.customDictionary && self.customDictionary.count) {
         DEBUG_LOG(@"LDUserBuilder building User with custom: %@", self.customDictionary);
         user.custom = self.customDictionary;
+    }
+    if (self.privateAttributes) {
+        DEBUG_LOG(@"LDUserBuilder building User with private attributes: %@", [self.privateAttributes description]);
+        user.privateAttributes = self.privateAttributes;
     }
 
     [[LDDataManager sharedManager] saveUser:user];

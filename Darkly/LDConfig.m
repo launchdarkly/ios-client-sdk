@@ -116,8 +116,8 @@
     DEBUG_LOG(@"Set LDConfig streaming enabled: %d", streaming);
 }
 
-- (void)setPrivateAttributes:(NSArray<NSString *>*)privateAttributes {
-    _privateAttributes = privateAttributes;
+- (void)setPrivateUserAttributes:(NSArray<NSString *>*)privateAttributes {
+    _privateUserAttributes = privateAttributes;
     DEBUG_LOG(@"Set LDConfig privateAttributes set: %@", privateAttributes.description);
 }
 

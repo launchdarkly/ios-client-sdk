@@ -73,9 +73,11 @@
  List of user attributes and top level custom dictionary keys to treat as private for event reporting.
  Private attribute values will not be included in events reported to Launch Darkly, but the attribute name will still
  be sent. All user attributes can be declared private except key and anonymous. Access the user attribute names that
- can be declared private through the identifiers included in LDUserModel.h. The default  is nil.
+ can be declared private through the identifiers included in LDUserModel.h. To declare all user attributes private, set
+ privateUserAttributes to [LDUserModel allUserAttributes]. By setting the attribute private in config,
+ the attribute will be treated private for all users. The default  is nil.
  */
-@property (nonatomic, strong, nullable) NSArray<NSString *>* privateAttributes;
+@property (nonatomic, strong, nullable) NSArray<NSString *>* privateUserAttributes;
 
 /**
  Flag that enables REPORT HTTP method for feature flag requests. When useReport is false,

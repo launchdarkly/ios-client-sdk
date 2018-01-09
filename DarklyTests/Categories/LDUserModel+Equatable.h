@@ -15,6 +15,6 @@ extern NSString * const kUserAttributeAnonymous;
 extern NSString * const kUserAttributePrivateAttributes;
 
 @interface LDUserModel (Equatable)
--(BOOL) isEqual:(id)object ignoringAttributes:(NSArray<NSString*>*)ignoredAttributes;
+-(BOOL)isEqual:(id)object ignoringAttributes:(NSArray<NSString*>*)ignoredAttributes;
 -(BOOL)matchesDictionary:(NSDictionary *)dictionary includeFlags:(BOOL)includeConfig includePrivateAttributes:(BOOL)includePrivate privateAttributes:(NSArray<NSString*> *)privateAttributes;
 @end
