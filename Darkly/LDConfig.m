@@ -32,6 +32,7 @@
 //                                  @(kHTTPStatusCodeNotImplemented)];
     self.flagRetryStatusCodes = @[];    //Temporarily, leave these codes empty to disable the REPORT fallback using GET capability
     self.useReport = NO;
+    self.allUserAttributesPrivate = NO;
 
     return self;
 }

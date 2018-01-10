@@ -37,6 +37,7 @@ NSString * const kUserAttributePrivateAttributes = @"privateAttrs";
 -(NSDictionary *)dictionaryValueWithFlagConfig:(BOOL)includeFlags includePrivateAttributes:(BOOL)includePrivate config:(LDConfig*)config {
     NSMutableArray<NSString *> *combinedPrivateAttributes = [NSMutableArray arrayWithArray:self.privateAttributes];
     [combinedPrivateAttributes addObjectsFromArray:config.privateUserAttributes];
+    if (config.allUserAttributesPrivate) { combinedPrivateAttributes = [[LDUserModel allUserAttributes] mutableCopy]; }
 
     NSMutableDictionary *dictionary = [[NSMutableDictionary alloc] init];
     NSMutableSet *redactedPrivateAttributes = [NSMutableSet set];
