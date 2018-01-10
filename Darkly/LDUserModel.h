@@ -19,8 +19,6 @@ extern NSString * __nonnull const kUserAttributeLastName;
 extern NSString * __nonnull const kUserAttributeEmail;
 extern NSString * __nonnull const kUserAttributeAvatar;
 extern NSString * __nonnull const kUserAttributeCustom;
-extern NSString * __nonnull const kUserAttributeDevice;
-extern NSString * __nonnull const kUserAttributeOs;
 
 @interface LDUserModel : NSObject <NSCoding>
 @property (nullable, nonatomic, strong, setter=key:) NSString *key;

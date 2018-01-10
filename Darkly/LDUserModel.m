@@ -67,25 +67,51 @@ NSString * const kUserAttributePrivateAttributes = @"privateAttrs";
     [combinedPrivateAttributes addObjectsFromArray:configPrivateAttributes];
 
     NSMutableDictionary *dictionary = [[NSMutableDictionary alloc] init];
+    NSMutableSet *redactedPrivateAttributes = [NSMutableSet set];
 
-    self.key ? [dictionary setObject:self.key forKey: kUserAttributeKey] : nil;
-    self.ip && (includePrivate || ![combinedPrivateAttributes containsObject:kUserAttributeIp]) ? [dictionary setObject:self.ip forKey: kUserAttributeIp] : nil;
-    self.country && (includePrivate || ![combinedPrivateAttributes containsObject:kUserAttributeCountry]) ? [dictionary setObject:self.country forKey: kUserAttributeCountry] : nil;
-    self.name && (includePrivate || ![combinedPrivateAttributes containsObject:kUserAttributeName]) ? [dictionary setObject:self.name forKey: kUserAttributeName] : nil;
-    self.firstName && (includePrivate || ![combinedPrivateAttributes containsObject:kUserAttributeFirstName]) ? [dictionary setObject:self.firstName forKey: kUserAttributeFirstName] : nil;
-    self.lastName && (includePrivate || ![combinedPrivateAttributes containsObject:kUserAttributeLastName]) ? [dictionary setObject:self.lastName forKey: kUserAttributeLastName] : nil;
-    self.email && (includePrivate || ![combinedPrivateAttributes containsObject:kUserAttributeEmail]) ? [dictionary setObject:self.email forKey: kUserAttributeEmail] : nil;
-    self.avatar && (includePrivate || ![combinedPrivateAttributes containsObject:kUserAttributeAvatar]) ? [dictionary setObject:self.avatar forKey: kUserAttributeAvatar] : nil;
-    self.anonymous ? [dictionary setObject:[NSNumber numberWithBool: self.anonymous ] forKey: kUserAttributeAnonymous] : nil;
-    self.updatedAt ? [dictionary setObject:[[NSDateFormatter userDateFormatter] stringFromDate:self.updatedAt] forKey:kUserAttributeUpdatedAt] : nil;
+    if (self.key) { [dictionary setObject:self.key forKey: kUserAttributeKey]; }
+    if (self.ip && (includePrivate || ![combinedPrivateAttributes containsObject:kUserAttributeIp])) { [dictionary setObject:self.ip forKey: kUserAttributeIp]; }
+    if (self.country && (includePrivate || ![combinedPrivateAttributes containsObject:kUserAttributeCountry])) { [dictionary setObject:self.country forKey: kUserAttributeCountry]; }
+    if (self.name && (includePrivate || ![combinedPrivateAttributes containsObject:kUserAttributeName])) { [dictionary setObject:self.name forKey: kUserAttributeName]; }
+    if (self.firstName && (includePrivate || ![combinedPrivateAttributes containsObject:kUserAttributeFirstName])) { [dictionary setObject:self.firstName forKey: kUserAttributeFirstName]; }
+    if (self.lastName && (includePrivate || ![combinedPrivateAttributes containsObject:kUserAttributeLastName])) { [dictionary setObject:self.lastName forKey: kUserAttributeLastName]; }
+    if (self.email && (includePrivate || ![combinedPrivateAttributes containsObject:kUserAttributeEmail])) { [dictionary setObject:self.email forKey: kUserAttributeEmail]; }
+    if (self.avatar && (includePrivate || ![combinedPrivateAttributes containsObject:kUserAttributeAvatar])) { [dictionary setObject:self.avatar forKey: kUserAttributeAvatar]; }
+    if (self.anonymous) { [dictionary setObject:@(self.anonymous) forKey: kUserAttributeAnonymous]; }
+    if (self.updatedAt) { [dictionary setObject:[[NSDateFormatter userDateFormatter] stringFromDate:self.updatedAt] forKey:kUserAttributeUpdatedAt]; }
 
     NSMutableDictionary *customDict = [[NSMutableDictionary alloc] initWithDictionary:self.custom];
-    self.device && (includePrivate || ![combinedPrivateAttributes containsObject:kUserAttributeDevice]) ? [customDict setObject:self.device forKey:kUserAttributeDevice] : nil;
-    self.os && (includePrivate || ![combinedPrivateAttributes containsObject:kUserAttributeOs]) ? [customDict setObject:self.os forKey:kUserAttributeOs] : nil;
-    if (!includePrivate) { [customDict removeObjectsForKeys:combinedPrivateAttributes]; }
-    customDict.count > 0  && (includePrivate || ![combinedPrivateAttributes containsObject:kUserAttributeCustom]) ? [dictionary setObject:customDict forKey: kUserAttributeCustom] : nil;
+    if (!includePrivate) {
+        if (customDict.count > 0 && [combinedPrivateAttributes containsObject:kUserAttributeCustom]) {
+            [customDict removeAllObjects];
+            [redactedPrivateAttributes addObject:kUserAttributeCustom];
+        } else {
+            for (NSString *customKey in [self.custom allKeys]) {
+                if (self.custom[customKey] && [combinedPrivateAttributes containsObject:customKey]) {
+                    [customDict removeObjectForKey:customKey];
+                    [redactedPrivateAttributes addObject:customKey];
+                }
+            }
+        }
+    }
 
-    combinedPrivateAttributes.count > 0 && !includePrivate ? [dictionary setObject:combinedPrivateAttributes forKey:kUserAttributePrivateAttributes] : nil;
+    self.device ? [customDict setObject:self.device forKey:kUserAttributeDevice] : nil;
+    self.os ? [customDict setObject:self.os forKey:kUserAttributeOs] : nil;
+    if (customDict.count > 0) {
+        [dictionary setObject:customDict forKey: kUserAttributeCustom];
+    }
+
+    if (!includePrivate) {
+        if (self.ip && [combinedPrivateAttributes containsObject:kUserAttributeIp]) { [redactedPrivateAttributes addObject:kUserAttributeIp]; }
+        if (self.country && [combinedPrivateAttributes containsObject:kUserAttributeCountry]) { [redactedPrivateAttributes addObject:kUserAttributeCountry]; }
+        if (self.name && [combinedPrivateAttributes containsObject:kUserAttributeName]) { [redactedPrivateAttributes addObject:kUserAttributeName]; }
+        if (self.firstName && [combinedPrivateAttributes containsObject:kUserAttributeFirstName]) { [redactedPrivateAttributes addObject:kUserAttributeFirstName]; }
+        if (self.lastName && [combinedPrivateAttributes containsObject:kUserAttributeLastName]) { [redactedPrivateAttributes addObject:kUserAttributeLastName]; }
+        if (self.email && [combinedPrivateAttributes containsObject:kUserAttributeEmail]) { [redactedPrivateAttributes addObject:kUserAttributeEmail]; }
+        if (self.avatar && [combinedPrivateAttributes containsObject:kUserAttributeAvatar]) { [redactedPrivateAttributes addObject:kUserAttributeAvatar]; }
+
+        if (redactedPrivateAttributes.count > 0) { [dictionary setObject:[redactedPrivateAttributes allObjects]  forKey:kUserAttributePrivateAttributes]; }
+    }
 
     if (includeFlags && self.config.featuresJsonDictionary) {
         [dictionary setObject:[[self.config dictionaryValue] objectForKey:kFeaturesJsonDictionaryKey] forKey:kUserAttributeConfig];
@@ -208,7 +234,7 @@ NSString * const kUserAttributePrivateAttributes = @"privateAttrs";
 }
 
 +(NSArray<NSString *> * __nonnull) allUserAttributes {
-    return @[kUserAttributeIp, kUserAttributeCountry, kUserAttributeName, kUserAttributeFirstName, kUserAttributeLastName, kUserAttributeEmail, kUserAttributeAvatar, kUserAttributeCustom, kUserAttributeDevice, kUserAttributeOs];
+    return @[kUserAttributeIp, kUserAttributeCountry, kUserAttributeName, kUserAttributeFirstName, kUserAttributeLastName, kUserAttributeEmail, kUserAttributeAvatar, kUserAttributeCustom];
 }
 
 @end

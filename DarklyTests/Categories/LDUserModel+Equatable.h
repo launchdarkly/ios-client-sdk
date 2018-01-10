@@ -13,6 +13,8 @@ extern NSString * const kUserAttributeUpdatedAt;
 extern NSString * const kUserAttributeConfig;
 extern NSString * const kUserAttributeAnonymous;
 extern NSString * const kUserAttributePrivateAttributes;
+extern NSString * const kUserAttributeDevice;
+extern NSString * const kUserAttributeOs;
 
 @interface LDUserModel (Equatable)
 -(BOOL)isEqual:(id)object ignoringAttributes:(NSArray<NSString*>*)ignoredAttributes;

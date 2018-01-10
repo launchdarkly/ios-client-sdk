@@ -39,6 +39,7 @@
     LDUserModel *userStub = [LDUserModel stubWithKey:[[NSUUID UUID] UUIDString]];
     NSMutableArray *allAttributes = [NSMutableArray arrayWithArray:[LDUserModel allUserAttributes]];
     [allAttributes addObjectsFromArray:userStub.custom.allKeys];
+
     LDConfig *config = [[LDConfig alloc] initWithMobileKey:@"customMobileKey"];
     NSDictionary *testDictionary;
 
@@ -57,12 +58,12 @@
     config.privateUserAttributes = allAttributes;
     userStub.privateAttributes = nil;
     testDictionary = [userStub dictionaryValueWithFlags:YES includePrivateAttributes:YES privateAttributesFromConfig:config.privateUserAttributes];
-    XCTAssertTrue([userStub matchesDictionary:testDictionary includeFlags:YES includePrivateAttributes:YES privateAttributes:allAttributes]);
+    XCTAssertTrue([userStub matchesDictionary:testDictionary includeFlags:YES includePrivateAttributes:YES privateAttributes:[LDUserModel allUserAttributes]]);
 
     config.privateUserAttributes = nil;
     userStub.privateAttributes = allAttributes;
     testDictionary = [userStub dictionaryValueWithFlags:YES includePrivateAttributes:YES privateAttributesFromConfig:config.privateUserAttributes];
-    XCTAssertTrue([userStub matchesDictionary:testDictionary includeFlags:YES includePrivateAttributes:YES privateAttributes:allAttributes]);
+    XCTAssertTrue([userStub matchesDictionary:testDictionary includeFlags:YES includePrivateAttributes:YES privateAttributes:[LDUserModel allUserAttributes]]);
 
     config.privateUserAttributes = nil;
     userStub.privateAttributes = nil;
@@ -78,6 +79,35 @@
     userStub.privateAttributes = @[];
     testDictionary = [userStub dictionaryValueWithFlags:YES includePrivateAttributes:YES privateAttributesFromConfig:config.privateUserAttributes];
     XCTAssertTrue([userStub matchesDictionary:testDictionary includeFlags:YES includePrivateAttributes:YES privateAttributes:@[]]);
+
+    LDUserModel *emptyUser = [[LDUserModel alloc] init];
+    emptyUser.key = [[NSUUID UUID] UUIDString];
+    emptyUser.privateAttributes = [LDUserModel allUserAttributes];
+    for (NSString *attribute in [LDUserModel allUserAttributes]) {
+        config.privateUserAttributes = nil;
+        emptyUser.privateAttributes = @[attribute];
+        testDictionary = [emptyUser dictionaryValueWithFlags:YES includePrivateAttributes:YES privateAttributesFromConfig:config.privateUserAttributes];
+        XCTAssertTrue([emptyUser matchesDictionary:testDictionary includeFlags:YES includePrivateAttributes:YES privateAttributes:@[attribute]]);
+    }
+
+    //Custom dictionary test cases
+    LDUserModel *testUser = [[LDUserModel alloc] init];
+    testUser.key = [[NSUUID UUID] UUIDString];
+    testUser.device = userModelStubDevice;
+    testUser.os = userModelStubOs;
+    testUser.custom = nil;
+    config.privateUserAttributes = nil;
+    testUser.privateAttributes = @[kUserAttributeCustom];
+    testDictionary = [testUser dictionaryValueWithFlags:YES includePrivateAttributes:YES privateAttributesFromConfig:config.privateUserAttributes];
+    XCTAssertTrue([testUser matchesDictionary:testDictionary includeFlags:YES includePrivateAttributes:YES privateAttributes:@[kUserAttributeCustom]]);
+
+    testUser = [[LDUserModel alloc] init];
+    testUser.key = [[NSUUID UUID] UUIDString];
+    testUser.custom = [LDUserModel customStub];
+    config.privateUserAttributes = nil;
+    testUser.privateAttributes = @[kUserAttributeCustom];
+    testDictionary = [testUser dictionaryValueWithFlags:YES includePrivateAttributes:YES privateAttributesFromConfig:config.privateUserAttributes];
+    XCTAssertTrue([testUser matchesDictionary:testDictionary includeFlags:YES includePrivateAttributes:YES privateAttributes:@[kUserAttributeCustom]]);
 }
 
 -(void)testDictionaryValueWithFlags_Yes_AndPrivateProperties_No {
@@ -103,12 +133,12 @@
     config.privateUserAttributes = allAttributes;
     userStub.privateAttributes = nil;
     testDictionary = [userStub dictionaryValueWithFlags:YES includePrivateAttributes:NO privateAttributesFromConfig:config.privateUserAttributes];
-    XCTAssertTrue([userStub matchesDictionary:testDictionary includeFlags:YES includePrivateAttributes:NO privateAttributes:allAttributes]);
+    XCTAssertTrue([userStub matchesDictionary:testDictionary includeFlags:YES includePrivateAttributes:NO privateAttributes:[LDUserModel allUserAttributes]]);
 
     config.privateUserAttributes = nil;
     userStub.privateAttributes = allAttributes;
     testDictionary = [userStub dictionaryValueWithFlags:YES includePrivateAttributes:NO privateAttributesFromConfig:config.privateUserAttributes];
-    XCTAssertTrue([userStub matchesDictionary:testDictionary includeFlags:YES includePrivateAttributes:NO privateAttributes:allAttributes]);
+    XCTAssertTrue([userStub matchesDictionary:testDictionary includeFlags:YES includePrivateAttributes:NO privateAttributes:[LDUserModel allUserAttributes]]);
 
     config.privateUserAttributes = nil;
     userStub.privateAttributes = nil;
@@ -124,6 +154,35 @@
     userStub.privateAttributes = @[];
     testDictionary = [userStub dictionaryValueWithFlags:YES includePrivateAttributes:NO privateAttributesFromConfig:config.privateUserAttributes];
     XCTAssertTrue([userStub matchesDictionary:testDictionary includeFlags:YES includePrivateAttributes:NO privateAttributes:@[]]);
+
+    LDUserModel *emptyUser = [[LDUserModel alloc] init];
+    emptyUser.key = [[NSUUID UUID] UUIDString];
+    emptyUser.privateAttributes = [LDUserModel allUserAttributes];
+    for (NSString *attribute in [LDUserModel allUserAttributes]) {
+        config.privateUserAttributes = nil;
+        emptyUser.privateAttributes = @[attribute];
+        testDictionary = [emptyUser dictionaryValueWithFlags:YES includePrivateAttributes:NO privateAttributesFromConfig:config.privateUserAttributes];
+        XCTAssertTrue([emptyUser matchesDictionary:testDictionary includeFlags:YES includePrivateAttributes:NO privateAttributes:@[attribute]]);
+    }
+
+    //Custom dictionary test cases
+    LDUserModel *testUser = [[LDUserModel alloc] init];
+    testUser.key = [[NSUUID UUID] UUIDString];
+    testUser.device = userModelStubDevice;
+    testUser.os = userModelStubOs;
+    testUser.custom = nil;
+    config.privateUserAttributes = nil;
+    testUser.privateAttributes = @[kUserAttributeCustom];
+    testDictionary = [testUser dictionaryValueWithFlags:YES includePrivateAttributes:NO privateAttributesFromConfig:config.privateUserAttributes];
+    XCTAssertTrue([testUser matchesDictionary:testDictionary includeFlags:YES includePrivateAttributes:NO privateAttributes:@[kUserAttributeCustom]]);
+
+    testUser = [[LDUserModel alloc] init];
+    testUser.key = [[NSUUID UUID] UUIDString];
+    testUser.custom = [LDUserModel customStub];
+    config.privateUserAttributes = nil;
+    testUser.privateAttributes = @[kUserAttributeCustom];
+    testDictionary = [testUser dictionaryValueWithFlags:YES includePrivateAttributes:NO privateAttributesFromConfig:config.privateUserAttributes];
+    XCTAssertTrue([testUser matchesDictionary:testDictionary includeFlags:YES includePrivateAttributes:NO privateAttributes:@[kUserAttributeCustom]]);
 }
 
 -(void)testDictionaryValueWithFlags_No_AndPrivateProperties_Yes {
@@ -149,12 +208,12 @@
     config.privateUserAttributes = allAttributes;
     userStub.privateAttributes = nil;
     testDictionary = [userStub dictionaryValueWithFlags:NO includePrivateAttributes:YES privateAttributesFromConfig:config.privateUserAttributes];
-    XCTAssertTrue([userStub matchesDictionary:testDictionary includeFlags:NO includePrivateAttributes:YES privateAttributes:allAttributes]);
+    XCTAssertTrue([userStub matchesDictionary:testDictionary includeFlags:NO includePrivateAttributes:YES privateAttributes:[LDUserModel allUserAttributes]]);
 
     config.privateUserAttributes = nil;
     userStub.privateAttributes = allAttributes;
     testDictionary = [userStub dictionaryValueWithFlags:NO includePrivateAttributes:YES privateAttributesFromConfig:config.privateUserAttributes];
-    XCTAssertTrue([userStub matchesDictionary:testDictionary includeFlags:NO includePrivateAttributes:YES privateAttributes:allAttributes]);
+    XCTAssertTrue([userStub matchesDictionary:testDictionary includeFlags:NO includePrivateAttributes:YES privateAttributes:[LDUserModel allUserAttributes]]);
 
     config.privateUserAttributes = nil;
     userStub.privateAttributes = nil;
@@ -170,6 +229,35 @@
     userStub.privateAttributes = @[];
     testDictionary = [userStub dictionaryValueWithFlags:NO includePrivateAttributes:YES privateAttributesFromConfig:config.privateUserAttributes];
     XCTAssertTrue([userStub matchesDictionary:testDictionary includeFlags:NO includePrivateAttributes:YES privateAttributes:@[]]);
+
+    LDUserModel *emptyUser = [[LDUserModel alloc] init];
+    emptyUser.key = [[NSUUID UUID] UUIDString];
+    emptyUser.privateAttributes = [LDUserModel allUserAttributes];
+    for (NSString *attribute in [LDUserModel allUserAttributes]) {
+        config.privateUserAttributes = nil;
+        emptyUser.privateAttributes = @[attribute];
+        testDictionary = [emptyUser dictionaryValueWithFlags:NO includePrivateAttributes:YES privateAttributesFromConfig:config.privateUserAttributes];
+        XCTAssertTrue([emptyUser matchesDictionary:testDictionary includeFlags:NO includePrivateAttributes:YES privateAttributes:@[attribute]]);
+    }
+
+    //Custom dictionary test cases
+    LDUserModel *testUser = [[LDUserModel alloc] init];
+    testUser.key = [[NSUUID UUID] UUIDString];
+    testUser.device = userModelStubDevice;
+    testUser.os = userModelStubOs;
+    testUser.custom = nil;
+    config.privateUserAttributes = nil;
+    testUser.privateAttributes = @[kUserAttributeCustom];
+    testDictionary = [testUser dictionaryValueWithFlags:NO includePrivateAttributes:YES privateAttributesFromConfig:config.privateUserAttributes];
+    XCTAssertTrue([testUser matchesDictionary:testDictionary includeFlags:NO includePrivateAttributes:YES privateAttributes:@[kUserAttributeCustom]]);
+
+    testUser = [[LDUserModel alloc] init];
+    testUser.key = [[NSUUID UUID] UUIDString];
+    testUser.custom = [LDUserModel customStub];
+    config.privateUserAttributes = nil;
+    testUser.privateAttributes = @[kUserAttributeCustom];
+    testDictionary = [testUser dictionaryValueWithFlags:NO includePrivateAttributes:YES privateAttributesFromConfig:config.privateUserAttributes];
+    XCTAssertTrue([testUser matchesDictionary:testDictionary includeFlags:NO includePrivateAttributes:YES privateAttributes:@[kUserAttributeCustom]]);
 }
 
 -(void)testDictionaryValueWithFlags_No_AndPrivateProperties_No {
@@ -195,12 +283,12 @@
     config.privateUserAttributes = allAttributes;
     userStub.privateAttributes = nil;
     testDictionary = [userStub dictionaryValueWithFlags:NO includePrivateAttributes:NO privateAttributesFromConfig:config.privateUserAttributes];
-    XCTAssertTrue([userStub matchesDictionary:testDictionary includeFlags:NO includePrivateAttributes:NO privateAttributes:allAttributes]);
+    XCTAssertTrue([userStub matchesDictionary:testDictionary includeFlags:NO includePrivateAttributes:NO privateAttributes:[LDUserModel allUserAttributes]]);
 
     config.privateUserAttributes = nil;
     userStub.privateAttributes = allAttributes;
     testDictionary = [userStub dictionaryValueWithFlags:NO includePrivateAttributes:NO privateAttributesFromConfig:config.privateUserAttributes];
-    XCTAssertTrue([userStub matchesDictionary:testDictionary includeFlags:NO includePrivateAttributes:NO privateAttributes:allAttributes]);
+    XCTAssertTrue([userStub matchesDictionary:testDictionary includeFlags:NO includePrivateAttributes:NO privateAttributes:[LDUserModel allUserAttributes]]);
 
     config.privateUserAttributes = nil;
     userStub.privateAttributes = nil;
@@ -216,6 +304,35 @@
     userStub.privateAttributes = @[];
     testDictionary = [userStub dictionaryValueWithFlags:NO includePrivateAttributes:NO privateAttributesFromConfig:config.privateUserAttributes];
     XCTAssertTrue([userStub matchesDictionary:testDictionary includeFlags:NO includePrivateAttributes:NO privateAttributes:@[]]);
+
+    LDUserModel *emptyUser = [[LDUserModel alloc] init];
+    emptyUser.key = [[NSUUID UUID] UUIDString];
+    emptyUser.privateAttributes = [LDUserModel allUserAttributes];
+    for (NSString *attribute in [LDUserModel allUserAttributes]) {
+        config.privateUserAttributes = nil;
+        emptyUser.privateAttributes = @[attribute];
+        testDictionary = [emptyUser dictionaryValueWithFlags:NO includePrivateAttributes:NO privateAttributesFromConfig:config.privateUserAttributes];
+        XCTAssertTrue([emptyUser matchesDictionary:testDictionary includeFlags:NO includePrivateAttributes:NO privateAttributes:@[attribute]]);
+    }
+
+    //Custom dictionary test cases
+    LDUserModel *testUser = [[LDUserModel alloc] init];
+    testUser.key = [[NSUUID UUID] UUIDString];
+    testUser.device = userModelStubDevice;
+    testUser.os = userModelStubOs;
+    testUser.custom = nil;
+    config.privateUserAttributes = nil;
+    testUser.privateAttributes = @[kUserAttributeCustom];
+    testDictionary = [testUser dictionaryValueWithFlags:NO includePrivateAttributes:NO privateAttributesFromConfig:config.privateUserAttributes];
+    XCTAssertTrue([testUser matchesDictionary:testDictionary includeFlags:NO includePrivateAttributes:NO privateAttributes:@[kUserAttributeCustom]]);
+
+    testUser = [[LDUserModel alloc] init];
+    testUser.key = [[NSUUID UUID] UUIDString];
+    testUser.custom = [LDUserModel customStub];
+    config.privateUserAttributes = nil;
+    testUser.privateAttributes = @[kUserAttributeCustom];
+    testDictionary = [testUser dictionaryValueWithFlags:NO includePrivateAttributes:NO privateAttributesFromConfig:config.privateUserAttributes];
+    XCTAssertTrue([testUser matchesDictionary:testDictionary includeFlags:NO includePrivateAttributes:NO privateAttributes:@[kUserAttributeCustom]]);
 }
 
 -(void)testEncodeAndDecode {
