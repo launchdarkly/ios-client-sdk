@@ -176,9 +176,9 @@
 
     DEBUG_LOGX(@"ClientManager syncing events with server");
 
-    [[LDDataManager sharedManager] allEventsJsonArray:^(NSArray *array) {
-        if (array) {
-            [[LDRequestManager sharedInstance] performEventRequest:array];
+    [[LDDataManager sharedManager] allEventDictionaries:^(NSArray *eventDictionaries) {
+        if (eventDictionaries) {
+            [[LDRequestManager sharedInstance] performEventRequest:eventDictionaries];
         } else {
             DEBUG_LOGX(@"ClientManager has no events so won't sync events with server");
         }

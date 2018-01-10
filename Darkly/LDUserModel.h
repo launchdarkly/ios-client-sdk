@@ -39,10 +39,8 @@ extern NSString * __nonnull const kUserAttributeCustom;
 @property (nullable, nonatomic, strong) NSString *os;
 
 -(nonnull id)initWithDictionary:(nonnull NSDictionary *)dictionary;
--(nonnull NSString *) convertToJson;        //TODO: deprecate
--(nonnull NSDictionary *)dictionaryValue;   //TODO: deprecate
--(nonnull NSDictionary *)dictionaryValueWithConfig:(BOOL)includeConfig;     //TODO: deprecate
--(nonnull NSDictionary *)dictionaryValueWithFlags:(BOOL)includeFlags includePrivateAttributes:(BOOL)includePrivate privateAttributesFromConfig:(nullable NSArray<NSString *> *)configPrivateAttributes;
+-(nonnull NSDictionary *)dictionaryValueWithFlagConfig:(BOOL)includeFlags includePrivateAttributes:(BOOL)includePrivate;
+-(nonnull NSDictionary *)dictionaryValueWithFlagConfig:(BOOL)includeFlags includePrivateAttributes:(BOOL)includePrivate privateAttributesFromConfig:(nullable NSArray<NSString *> *)configPrivateAttributes;
 
 -(NSObject * __nonnull) flagValue: ( NSString * __nonnull )keyName;
 -(BOOL) doesFlagExist: (nonnull NSString *)keyName;

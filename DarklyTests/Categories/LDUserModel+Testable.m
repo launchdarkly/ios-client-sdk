@@ -11,7 +11,7 @@
 
 @implementation LDUserModel (Testable)
 -(NSDictionary *)dictionaryValueWithFlags:(BOOL)includeFlags includePrivateAttributes:(BOOL)includePrivate privateAttributesFromConfig:(NSArray<NSString *> *)configPrivateAttributes includePrivateAttributeList:(BOOL)includePrivateList {
-    NSMutableDictionary *dictionary = [NSMutableDictionary dictionaryWithDictionary:[self dictionaryValueWithFlags:includeFlags includePrivateAttributes:includePrivate privateAttributesFromConfig:configPrivateAttributes]];
+    NSMutableDictionary *dictionary = [NSMutableDictionary dictionaryWithDictionary:[self dictionaryValueWithFlagConfig:includeFlags includePrivateAttributes:includePrivate privateAttributesFromConfig:configPrivateAttributes]];
     dictionary[kUserAttributePrivateAttributes] = includePrivateList ? self.privateAttributes : nil;
     return dictionary;
 }

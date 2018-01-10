@@ -108,7 +108,8 @@ dispatch_queue_t eventsQueue;
 - (void)storeUserDictionary:(NSDictionary *)userDictionary {
     NSMutableDictionary *archiveDictionary = [[NSMutableDictionary alloc] init];
     for (NSString *key in userDictionary) {
-        [archiveDictionary setObject:[[userDictionary objectForKey:key] dictionaryValue] forKey:key];
+        if (![[userDictionary objectForKey:key] isKindOfClass:[LDUserModel class]]) { continue; }
+        [archiveDictionary setObject:[[userDictionary objectForKey:key] dictionaryValueWithFlagConfig:YES includePrivateAttributes:YES] forKey:key];
     }
     NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
     [defaults setObject:archiveDictionary forKey:kUserDictionaryStorageKey];
@@ -146,36 +147,36 @@ dispatch_queue_t eventsQueue;
 
 #pragma mark - events
 
--(void) createFeatureEvent: (NSString *)featureKey keyValue:(NSObject*)keyValue defaultKeyValue:(NSObject*)defaultKeyValue {
+-(void) createFeatureEvent: (NSString *)featureKey keyValue:(NSObject*)keyValue defaultKeyValue:(NSObject*)defaultKeyValue user:(LDUserModel*)user config:(LDConfig*)config {
     if(![self isAtEventCapacity:_eventsArray]) {
         DEBUG_LOG(@"Creating event for feature:%@ with value:%@ and fallback:%@", featureKey, keyValue, defaultKeyValue);
-        [self addEvent:[[LDEventModel alloc] initFeatureEventWithKey: featureKey keyValue:keyValue defaultKeyValue:defaultKeyValue userValue:[LDClient sharedInstance].ldUser]];
+        [self addEventDictionary:[[[LDEventModel alloc] initFeatureEventWithKey:featureKey keyValue:keyValue defaultKeyValue:defaultKeyValue userValue:user] dictionaryValueUsingConfig:config]];
     }
     else {
         DEBUG_LOG(@"Events have surpassed capacity. Discarding feature event %@", featureKey);
     }
 }
 
--(void) createCustomEvent: (NSString *)eventKey withCustomValuesDictionary: (NSDictionary *)customDict {
+-(void) createCustomEvent: (NSString *)eventKey withCustomValuesDictionary: (NSDictionary *)customDict user:(LDUserModel*)user config:(LDConfig*)config {
     if(![self isAtEventCapacity:_eventsArray]) {
         DEBUG_LOG(@"Creating event for custom key:%@ and value:%@", eventKey, customDict);
-        [self addEvent:[[LDEventModel alloc] initCustomEventWithKey: eventKey  andDataDictionary: customDict userValue:[LDClient sharedInstance].ldUser]];
+        [self addEventDictionary:[[[LDEventModel alloc] initCustomEventWithKey:eventKey andDataDictionary: customDict userValue:user] dictionaryValueUsingConfig:config]];
     }
     else {
         DEBUG_LOG(@"Events have surpassed capacity. Discarding event %@ with dictionary %@", eventKey, customDict);
     }
 }
 
--(void)addEvent:(LDEventModel*)event {
+-(void)addEventDictionary:(NSDictionary*)eventDictionary {
     dispatch_async(eventsQueue, ^{
         if (!_eventsArray) {
             _eventsArray = [[NSMutableArray alloc] init];
         }
         if(![self isAtEventCapacity:_eventsArray]) {
-            [_eventsArray addObject:event];
+            [_eventsArray addObject:eventDictionary];
         }
         else {
-            DEBUG_LOG(@"Events have surpassed capacity. Discarding event %@", event.key);
+            DEBUG_LOG(@"Events have surpassed capacity. Discarding event %@", eventDictionary[@"key"]);
         }
     });
 }
@@ -192,17 +193,12 @@ dispatch_queue_t eventsQueue;
         [_eventsArray removeObjectsInRange:NSMakeRange(0, count)];
     });
 }
--(void) allEventsJsonArray:(void (^)(NSArray *array))completion {
+
+-(void) allEventDictionaries:(void (^)(NSArray *))completion {
     dispatch_async(eventsQueue, ^{
-        NSMutableArray *array = [self retrieveEventsArray];
-        if (array && [array count]) {
-            
-            NSMutableArray *eventArray = [[NSMutableArray alloc] init];
-            for (LDEventModel *currentEvent in array) {
-                [eventArray addObject:[currentEvent dictionaryValue]];
-            }
-            
-            completion(eventArray);
+        NSMutableArray *eventDictionaries = [self retrieveEventsArray];
+        if (eventDictionaries && [eventDictionaries count]) {
+            completion(eventDictionaries);
         } else {
             completion(nil);
         }

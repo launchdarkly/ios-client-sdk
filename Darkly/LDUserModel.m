@@ -30,39 +30,11 @@ NSString * const kUserAttributePrivateAttributes = @"privateAttrs";
 
 @implementation LDUserModel
 
--(NSDictionary *)dictionaryValue {
-    return [self dictionaryValueWithConfig:YES];
+-(NSDictionary *)dictionaryValueWithFlagConfig:(BOOL)includeFlags includePrivateAttributes:(BOOL)includePrivate {
+    return [self dictionaryValueWithFlagConfig:includeFlags includePrivateAttributes:includePrivate privateAttributesFromConfig:nil];
 }
 
--(NSDictionary *)dictionaryValueWithConfig:(BOOL)includeConfig {
-    NSMutableDictionary *dictionary = [[NSMutableDictionary alloc] init];
-
-    self.key ? [dictionary setObject:self.key forKey: kUserAttributeKey] : nil;
-    self.ip ? [dictionary setObject:self.ip forKey: kUserAttributeIp] : nil;
-    self.country ? [dictionary setObject:self.country forKey: kUserAttributeCountry] : nil;
-    self.name ? [dictionary setObject:self.name forKey: kUserAttributeName] : nil;
-    self.firstName ? [dictionary setObject:self.firstName forKey: kUserAttributeFirstName] : nil;
-    self.lastName ? [dictionary setObject:self.lastName forKey: kUserAttributeLastName] : nil;
-    self.email ? [dictionary setObject:self.email forKey: kUserAttributeEmail] : nil;
-    self.avatar ? [dictionary setObject:self.avatar forKey: kUserAttributeAvatar] : nil;
-    self.custom ? [dictionary setObject:self.custom forKey: kUserAttributeCustom] : nil;
-    self.anonymous ? [dictionary setObject:[NSNumber numberWithBool: self.anonymous ] forKey: kUserAttributeAnonymous] : nil;
-    self.updatedAt ? [dictionary setObject:[[NSDateFormatter userDateFormatter] stringFromDate:self.updatedAt] forKey:kUserAttributeUpdatedAt] : nil;
-
-    NSMutableDictionary *customDict = [[NSMutableDictionary alloc] initWithDictionary:[dictionary objectForKey:kUserAttributeCustom]];
-    self.device ? [customDict setObject:self.device forKey:kUserAttributeDevice] : nil;
-    self.os ? [customDict setObject:self.os forKey:kUserAttributeOs] : nil;
-
-    [dictionary setObject:customDict forKey:kUserAttributeCustom];
-
-    if (includeConfig && self.config.featuresJsonDictionary) {
-        [dictionary setObject:[[self.config dictionaryValue] objectForKey:kFeaturesJsonDictionaryKey] forKey:kUserAttributeConfig];
-    }
-
-    return dictionary;
-}
-
--(NSDictionary *)dictionaryValueWithFlags:(BOOL)includeFlags includePrivateAttributes:(BOOL)includePrivate privateAttributesFromConfig:(NSArray<NSString *> *)configPrivateAttributes {
+-(NSDictionary *)dictionaryValueWithFlagConfig:(BOOL)includeFlags includePrivateAttributes:(BOOL)includePrivate privateAttributesFromConfig:(NSArray<NSString *> *)configPrivateAttributes {
     NSMutableArray<NSString *> *combinedPrivateAttributes = [NSMutableArray arrayWithArray:self.privateAttributes];
     [combinedPrivateAttributes addObjectsFromArray:configPrivateAttributes];
 
@@ -211,15 +183,6 @@ NSString * const kUserAttributePrivateAttributes = @"privateAttrs";
     return self;
 }
 
-- (nonnull NSString *) convertToJson {
-    NSError *writeError = nil;
-    
-    NSData *jsonData = [NSJSONSerialization dataWithJSONObject:[self dictionaryValueWithConfig:NO] options:0 error:&writeError];
-    NSString *result = [[NSString alloc] initWithData:jsonData encoding:NSUTF8StringEncoding];
-    
-    return result;
-}
-
 -(NSObject *) flagValue: ( NSString * __nonnull )keyName {
     return [self.config configFlagValue: keyName];
 }
@@ -230,7 +193,7 @@ NSString * const kUserAttributePrivateAttributes = @"privateAttrs";
 }
 
 -(NSString*) description {
-    return [[self dictionaryValueWithFlags:YES includePrivateAttributes:YES privateAttributesFromConfig:nil] description];
+    return [[self dictionaryValueWithFlagConfig:YES includePrivateAttributes:YES] description];
 }
 
 +(NSArray<NSString *> * __nonnull) allUserAttributes {
