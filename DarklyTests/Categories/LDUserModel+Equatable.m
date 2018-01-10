@@ -17,8 +17,8 @@
     if (otherUser == nil) {
         return NO;
     }
-    NSDictionary *dictionary = [self dictionaryValueWithFlags:YES includePrivateAttributes:YES privateAttributesFromConfig:nil includePrivateAttributeList:YES];
-    NSDictionary *otherDictionary = [otherUser dictionaryValueWithFlags:YES includePrivateAttributes:YES privateAttributesFromConfig:nil includePrivateAttributeList:YES];
+    NSDictionary *dictionary = [self dictionaryValueWithFlags:YES includePrivateAttributes:YES config:nil includePrivateAttributeList:YES];
+    NSDictionary *otherDictionary = [otherUser dictionaryValueWithFlags:YES includePrivateAttributes:YES config:nil includePrivateAttributeList:YES];
     NSArray *differingKeys = [dictionary keysWithDifferentValuesIn: otherDictionary ignoringKeys: ignoredAttributes];
     return (differingKeys == nil || [differingKeys count] == 0);
 }

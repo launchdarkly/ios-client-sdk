@@ -30,13 +30,13 @@ NSString * const kUserAttributePrivateAttributes = @"privateAttrs";
 
 @implementation LDUserModel
 
--(NSDictionary *)dictionaryValueWithFlagConfig:(BOOL)includeFlags includePrivateAttributes:(BOOL)includePrivate {
-    return [self dictionaryValueWithFlagConfig:includeFlags includePrivateAttributes:includePrivate privateAttributesFromConfig:nil];
+-(NSDictionary *)dictionaryValueWithPrivateAttributesAndFlagConfig:(BOOL)includeFlags {
+    return [self dictionaryValueWithFlagConfig:includeFlags includePrivateAttributes:YES config:nil];
 }
 
--(NSDictionary *)dictionaryValueWithFlagConfig:(BOOL)includeFlags includePrivateAttributes:(BOOL)includePrivate privateAttributesFromConfig:(NSArray<NSString *> *)configPrivateAttributes {
+-(NSDictionary *)dictionaryValueWithFlagConfig:(BOOL)includeFlags includePrivateAttributes:(BOOL)includePrivate config:(LDConfig*)config {
     NSMutableArray<NSString *> *combinedPrivateAttributes = [NSMutableArray arrayWithArray:self.privateAttributes];
-    [combinedPrivateAttributes addObjectsFromArray:configPrivateAttributes];
+    [combinedPrivateAttributes addObjectsFromArray:config.privateUserAttributes];
 
     NSMutableDictionary *dictionary = [[NSMutableDictionary alloc] init];
     NSMutableSet *redactedPrivateAttributes = [NSMutableSet set];
@@ -193,7 +193,7 @@ NSString * const kUserAttributePrivateAttributes = @"privateAttrs";
 }
 
 -(NSString*) description {
-    return [[self dictionaryValueWithFlagConfig:YES includePrivateAttributes:YES] description];
+    return [[self dictionaryValueWithPrivateAttributesAndFlagConfig:YES] description];
 }
 
 +(NSArray<NSString *> * __nonnull) allUserAttributes {

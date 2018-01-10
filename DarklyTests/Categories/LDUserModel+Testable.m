@@ -10,8 +10,8 @@
 #import "LDUserModel+Equatable.h"
 
 @implementation LDUserModel (Testable)
--(NSDictionary *)dictionaryValueWithFlags:(BOOL)includeFlags includePrivateAttributes:(BOOL)includePrivate privateAttributesFromConfig:(NSArray<NSString *> *)configPrivateAttributes includePrivateAttributeList:(BOOL)includePrivateList {
-    NSMutableDictionary *dictionary = [NSMutableDictionary dictionaryWithDictionary:[self dictionaryValueWithFlagConfig:includeFlags includePrivateAttributes:includePrivate privateAttributesFromConfig:configPrivateAttributes]];
+-(NSDictionary *)dictionaryValueWithFlags:(BOOL)includeFlags includePrivateAttributes:(BOOL)includePrivate config:(LDConfig*)config includePrivateAttributeList:(BOOL)includePrivateList {
+    NSMutableDictionary *dictionary = [NSMutableDictionary dictionaryWithDictionary:[self dictionaryValueWithFlagConfig:includeFlags includePrivateAttributes:includePrivate config:config]];
     dictionary[kUserAttributePrivateAttributes] = includePrivateList ? self.privateAttributes : nil;
     return dictionary;
 }

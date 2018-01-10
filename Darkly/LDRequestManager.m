@@ -197,7 +197,7 @@ dispatch_queue_t notificationQueue;
         DEBUG_LOGX(@"RequestManager unable to sync config to server since no user");
         return nil;
     }
-    NSString *userJson = [[user dictionaryValueWithFlagConfig:NO includePrivateAttributes:YES] jsonString];
+    NSString *userJson = [[user dictionaryValueWithPrivateAttributesAndFlagConfig:NO] jsonString];
     if (!userJson) {
         DEBUG_LOGX(@"RequestManager could not convert user to json, aborting sync config to server");
         return nil;
@@ -218,7 +218,7 @@ dispatch_queue_t notificationQueue;
         DEBUG_LOGX(@"RequestManager unable to sync config to server since no user");
         return nil;
     }
-    NSString *userJson = [[user dictionaryValueWithFlagConfig:NO includePrivateAttributes:YES] jsonString];
+    NSString *userJson = [[user dictionaryValueWithPrivateAttributesAndFlagConfig:NO] jsonString];
     if (!userJson) {
         DEBUG_LOGX(@"RequestManager could not convert user to json, aborting sync config to server");
         return nil;

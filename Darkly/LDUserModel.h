@@ -39,8 +39,8 @@ extern NSString * __nonnull const kUserAttributeCustom;
 @property (nullable, nonatomic, strong) NSString *os;
 
 -(nonnull id)initWithDictionary:(nonnull NSDictionary *)dictionary;
--(nonnull NSDictionary *)dictionaryValueWithFlagConfig:(BOOL)includeFlags includePrivateAttributes:(BOOL)includePrivate;
--(nonnull NSDictionary *)dictionaryValueWithFlagConfig:(BOOL)includeFlags includePrivateAttributes:(BOOL)includePrivate privateAttributesFromConfig:(nullable NSArray<NSString *> *)configPrivateAttributes;
+-(nonnull NSDictionary *)dictionaryValueWithPrivateAttributesAndFlagConfig:(BOOL)includeFlags;
+-(nonnull NSDictionary *)dictionaryValueWithFlagConfig:(BOOL)includeFlags includePrivateAttributes:(BOOL)includePrivate config:(nullable LDConfig*)config;
 
 -(NSObject * __nonnull) flagValue: ( NSString * __nonnull )keyName;
 -(BOOL) doesFlagExist: (nonnull NSString *)keyName;

@@ -109,7 +109,7 @@ dispatch_queue_t eventsQueue;
     NSMutableDictionary *archiveDictionary = [[NSMutableDictionary alloc] init];
     for (NSString *key in userDictionary) {
         if (![[userDictionary objectForKey:key] isKindOfClass:[LDUserModel class]]) { continue; }
-        [archiveDictionary setObject:[[userDictionary objectForKey:key] dictionaryValueWithFlagConfig:YES includePrivateAttributes:YES] forKey:key];
+        [archiveDictionary setObject:[[userDictionary objectForKey:key] dictionaryValueWithPrivateAttributesAndFlagConfig:YES] forKey:key];
     }
     NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
     [defaults setObject:archiveDictionary forKey:kUserDictionaryStorageKey];
