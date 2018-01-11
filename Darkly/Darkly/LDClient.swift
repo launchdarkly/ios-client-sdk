@@ -44,7 +44,7 @@ public class LDClient {
             flagSynchronizer = serviceFactory.makeFlagSynchronizer(streamingMode: effectiveStreamingMode(runMode: runMode),
                                                                    pollingInterval: config.flagPollingInterval(runMode: effectiveRunMode),
                                                                    service: service,
-                                                                   onSyncComplete: { (syncResult) in self.onSyncComplete(result: syncResult) })
+                                                                   onSyncComplete: self.onSyncComplete)
 
             self.isOnline = wasOnline
         }
@@ -67,7 +67,7 @@ public class LDClient {
             flagSynchronizer = serviceFactory.makeFlagSynchronizer(streamingMode: effectiveStreamingMode(runMode: runMode),
                                                                    pollingInterval: config.flagPollingInterval(runMode: effectiveRunMode),
                                                                    service: service,
-                                                                   onSyncComplete: { (syncResult) in self.onSyncComplete(result: syncResult) })
+                                                                   onSyncComplete: self.onSyncComplete)
             if hasStarted {
                 eventReporter.record(LDEvent.identifyEvent(key: UUID().uuidString, user: user))
             }

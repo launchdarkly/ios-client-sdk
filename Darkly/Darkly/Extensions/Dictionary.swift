@@ -38,7 +38,8 @@ extension Dictionary where Key == String {
         let rightKeys: Set<String> = Set(other.keys)
         let differingKeys = leftKeys.symmetricDifference(rightKeys)
         let matchingKeys = leftKeys.intersection(rightKeys)
-        return differingKeys.union(matchingKeys.filter { (key) -> Bool in !AnyComparer.isEqual(self[key], to: other[key]) }).sorted()
+        let matchingKeysWithDifferentValues = matchingKeys.filter { (key) -> Bool in !AnyComparer.isEqual(self[key], to: other[key]) }
+        return differingKeys.union(matchingKeysWithDifferentValues).sorted()
     }
 
     var base64UrlEncodedString: String? { return jsonData?.base64UrlEncodedString }

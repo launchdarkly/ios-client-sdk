@@ -42,7 +42,7 @@ public final class DictionarySpec: QuickSpec {
                     expect(subject.symmetricDifference(other)) == other.keys.sorted()
                 }
             }
-            context("when subject has a different key") {
+            context("when subject has an added key") {
                 let addedKey = "addedKey"
                 beforeEach {
                     subject[addedKey] = true
@@ -51,7 +51,7 @@ public final class DictionarySpec: QuickSpec {
                     expect(subject.symmetricDifference(other)) == [addedKey]
                 }
             }
-            context("when other has a different key") {
+            context("when other has an added key") {
                 let addedKey = "addedKey"
                 beforeEach {
                     other[addedKey] = true
