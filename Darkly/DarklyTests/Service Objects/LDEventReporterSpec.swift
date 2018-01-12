@@ -227,6 +227,7 @@ final class LDEventReporterSpec: QuickSpec {
 
                         self.subject.reportEvents()
                     }
+                    //TODO: This test intermittently fails. It seems to fail when run with all tests, and not when run individually. Maybe a timing issue?
                     it("reports events") {
                         expect({ self.reporterState(isOnline: true, isReporting: true, reportTries: 1, recordedEvents: self.mockEvents, publishedEvents: self.mockEvents) }).to(match())
                     }

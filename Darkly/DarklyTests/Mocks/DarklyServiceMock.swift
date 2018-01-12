@@ -32,7 +32,7 @@ final class DarklyServiceMock: DarklyServiceProvider {
     }
 
     struct Constants {
-        static let jsonFlags: [String: Any] = [
+        static let featureFlags: [String: Any] = [
             FlagKeys.bool: FlagValues.bool,
             FlagKeys.int: FlagValues.int,
             FlagKeys.double: FlagValues.double,
@@ -99,7 +99,7 @@ extension DarklyServiceMock {
 
     ///Use when testing requires the mock service to actually make a flag request
     func stubFlagRequest(success: Bool, onActivation activate: ((URLRequest, OHHTTPStubsDescriptor, OHHTTPStubsResponse) -> Void)? = nil) {
-        let stubResponse: OHHTTPStubsResponseBlock = success ? { (_) in OHHTTPStubsResponse(jsonObject: Constants.jsonFlags, statusCode: Int32(HTTPURLResponse.StatusCodes.ok), headers: nil) }
+        let stubResponse: OHHTTPStubsResponseBlock = success ? { (_) in OHHTTPStubsResponse(jsonObject: Constants.featureFlags, statusCode: Int32(HTTPURLResponse.StatusCodes.ok), headers: nil) }
             : { (_) in OHHTTPStubsResponse(error: Constants.error) }
         stubRequest(passingTest: flagRequestStubTest, stub: stubResponse, name: Constants.stubNameFlag, onActivation: activate)
     }
@@ -107,7 +107,7 @@ extension DarklyServiceMock {
     ///Use when testing requires the mock service to provide a service response to the flag request callback
     func stubFlagResponse(success: Bool, badData: Bool = false, responseOnly: Bool = false, errorOnly: Bool = false) {
         if success {
-            let flagData = try? JSONSerialization.data(withJSONObject: Constants.jsonFlags, options: [])
+            let flagData = try? JSONSerialization.data(withJSONObject: Constants.featureFlags, options: [])
             let response = HTTPURLResponse(url: config.baseUrl, statusCode: HTTPURLResponse.StatusCodes.ok, httpVersion: Constants.httpVersion, headerFields: nil)
             stubbedFlagResponse = (flagData, response, nil)
             if badData { stubbedFlagResponse = (Constants.errorData, response, nil) }

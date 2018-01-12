@@ -93,25 +93,25 @@ final class LDEventSpec: QuickSpec {
                 expect(subject.data).to(beNil())
             }
         }
-        describe("jsonDictionary") {
-            var jsonDictionary: [String: Any]!
+        describe("dictionaryValue") {
+            var eventDictionary: [String: Any]!
             context("with optional items") {
                 beforeEach {
                     subject = LDEvent(key: key, kind: kind, user: userStub, value: value, defaultValue: defaultValue, data: data)
-                    jsonDictionary = subject.jsonDictionary
+                    eventDictionary = subject.dictionaryValue
                 }
-                it("creates a json dictionary with matching elements") {
-                    expect(jsonDictionary[LDEvent.CodingKeys.key.rawValue] as? String) == key
-                    expect(jsonDictionary[LDEvent.CodingKeys.kind.rawValue] as? String) == kind.rawValue
-                    expect(jsonDictionary[LDEvent.CodingKeys.creationDate.rawValue] as? Int) == subject.creationDate.millisSince1970
-                    expect(jsonDictionary[LDEvent.CodingKeys.user.rawValue] as? [String: Any]).toNot(beNil())
-                    if let encodedUser = jsonDictionary[LDEvent.CodingKeys.user.rawValue] as? [String: Any] {
-                        expect(encodedUser == userStub.jsonDictionaryWithoutConfig).to(beTrue())
+                it("creates a dictionary with matching elements") {
+                    expect(eventDictionary[LDEvent.CodingKeys.key.rawValue] as? String) == key
+                    expect(eventDictionary[LDEvent.CodingKeys.kind.rawValue] as? String) == kind.rawValue
+                    expect(eventDictionary[LDEvent.CodingKeys.creationDate.rawValue] as? Int) == subject.creationDate.millisSince1970
+                    expect(eventDictionary[LDEvent.CodingKeys.user.rawValue] as? [String: Any]).toNot(beNil())
+                    if let encodedUser = eventDictionary[LDEvent.CodingKeys.user.rawValue] as? [String: Any] {
+                        expect(encodedUser == userStub.dictionaryValueWithoutConfig).to(beTrue())
                     }
-                    expect(jsonDictionary[LDEvent.CodingKeys.value.rawValue] as? Bool) == Bool(value)
-                    expect(jsonDictionary[LDEvent.CodingKeys.defaultValue.rawValue] as? Bool) == Bool(defaultValue)
-                    expect(jsonDictionary[LDEvent.CodingKeys.data.rawValue] as? [String: Any]).toNot(beNil())
-                    if let encodedData = jsonDictionary[LDEvent.CodingKeys.data.rawValue] as? [String: Any] {
+                    expect(eventDictionary[LDEvent.CodingKeys.value.rawValue] as? Bool) == Bool(value)
+                    expect(eventDictionary[LDEvent.CodingKeys.defaultValue.rawValue] as? Bool) == Bool(defaultValue)
+                    expect(eventDictionary[LDEvent.CodingKeys.data.rawValue] as? [String: Any]).toNot(beNil())
+                    if let encodedData = eventDictionary[LDEvent.CodingKeys.data.rawValue] as? [String: Any] {
                         expect(encodedData == data).to(beTrue())
                     }
                 }
@@ -119,39 +119,39 @@ final class LDEventSpec: QuickSpec {
             context("without optional items") {
                 beforeEach {
                     subject = LDEvent(key: key, kind: kind, user: userStub)
-                    jsonDictionary = subject.jsonDictionary
+                    eventDictionary = subject.dictionaryValue
                 }
-                it("creates a json dictionary with matching elements omitting null values") {
-                    expect(jsonDictionary[LDEvent.CodingKeys.key.rawValue] as? String) == key
-                    expect(jsonDictionary[LDEvent.CodingKeys.kind.rawValue] as? String) == kind.rawValue
-                    expect(jsonDictionary[LDEvent.CodingKeys.creationDate.rawValue] as? Int) == subject.creationDate.millisSince1970
-                    expect(jsonDictionary[LDEvent.CodingKeys.user.rawValue] as? [String: Any]).toNot(beNil())
-                    if let encodedUser = jsonDictionary[LDEvent.CodingKeys.user.rawValue] as? [String: Any] {
-                        expect(encodedUser == userStub.jsonDictionaryWithoutConfig).to(beTrue())
+                it("creates a dictionary with matching elements omitting null values") {
+                    expect(eventDictionary[LDEvent.CodingKeys.key.rawValue] as? String) == key
+                    expect(eventDictionary[LDEvent.CodingKeys.kind.rawValue] as? String) == kind.rawValue
+                    expect(eventDictionary[LDEvent.CodingKeys.creationDate.rawValue] as? Int) == subject.creationDate.millisSince1970
+                    expect(eventDictionary[LDEvent.CodingKeys.user.rawValue] as? [String: Any]).toNot(beNil())
+                    if let encodedUser = eventDictionary[LDEvent.CodingKeys.user.rawValue] as? [String: Any] {
+                        expect(encodedUser == userStub.dictionaryValueWithoutConfig).to(beTrue())
                     }
-                    expect(jsonDictionary[LDEvent.CodingKeys.value.rawValue]).to(beNil())
-                    expect(jsonDictionary[LDEvent.CodingKeys.defaultValue.rawValue]).to(beNil())
-                    expect(jsonDictionary[LDEvent.CodingKeys.data.rawValue]).to(beNil())
+                    expect(eventDictionary[LDEvent.CodingKeys.value.rawValue]).to(beNil())
+                    expect(eventDictionary[LDEvent.CodingKeys.defaultValue.rawValue]).to(beNil())
+                    expect(eventDictionary[LDEvent.CodingKeys.data.rawValue]).to(beNil())
                 }
             }
         }
-        describe("jsonArray") {
+        describe("dictionaryValues") {
             let events = LDEvent.stubEvents(3, user: userStub)
-            var jsonArray: [[String: Any]]!
+            var eventDictionaries: [[String: Any]]!
             beforeEach {
-                jsonArray = events.jsonArray
+                eventDictionaries = events.dictionaryValues
             }
-            it("creates an array of json dictionaries with matching elements") {
-                expect(jsonArray.count) == events.count
+            it("creates an array of event dictionaries with matching elements") {
+                expect(eventDictionaries.count) == events.count
                 events.forEach { (event) in
-                    let encodedEvent = jsonArray.filter { (jsonEvent) -> Bool in event.key == jsonEvent[LDEvent.CodingKeys.key.rawValue] as? String }.first
+                    let encodedEvent = eventDictionaries.filter { (eventDictionary) -> Bool in event.key == eventDictionary[LDEvent.CodingKeys.key.rawValue] as? String }.first
                     expect(encodedEvent).toNot(beNil())
                     guard let foundEvent = encodedEvent else { return }
                     expect(foundEvent[LDEvent.CodingKeys.kind.rawValue] as? String) == event.kind.rawValue
                     expect(foundEvent[LDEvent.CodingKeys.creationDate.rawValue] as? Int) == event.creationDate.millisSince1970
                     expect(foundEvent[LDEvent.CodingKeys.user.rawValue] as? [String: Any]).toNot(beNil())
                     if let encodedUser = foundEvent[LDEvent.CodingKeys.user.rawValue] as? [String: Any] {
-                        expect(encodedUser == userStub.jsonDictionaryWithoutConfig).to(beTrue())
+                        expect(encodedUser == userStub.dictionaryValueWithoutConfig).to(beTrue())
                     }
                     if let eventValue = event.value {
                         expect(foundEvent[LDEvent.CodingKeys.value.rawValue] as? Bool) == Bool(eventValue)

@@ -39,7 +39,7 @@ extension LDUser {
     }
 
     private func stubFlags() -> [String: Any] {
-        var flags = DarklyServiceMock.Constants.jsonFlags
+        var flags = DarklyServiceMock.Constants.featureFlags
         flags["userKey"] = key
         return flags
     }

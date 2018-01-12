@@ -47,30 +47,26 @@ struct LDEvent { //sdk internal, not publically accessible
         return LDEvent(key: key, kind: .identify, user: user)
     }
 
-    var jsonDictionary: [String: Any] {
-        var json = [String: Any]()
-        json[CodingKeys.key.rawValue] = key
-        json[CodingKeys.kind.rawValue] = kind.rawValue
-        json[CodingKeys.creationDate.rawValue] = creationDate.millisSince1970
-        json[CodingKeys.user.rawValue] = user.jsonDictionaryWithoutConfig
-        json[CodingKeys.value.rawValue] = value?.baseValue
-        json[CodingKeys.defaultValue.rawValue] = defaultValue?.baseValue
-        json[CodingKeys.data.rawValue] = data
+    var dictionaryValue: [String: Any] {
+        var eventDictionary = [String: Any]()
+        eventDictionary[CodingKeys.key.rawValue] = key
+        eventDictionary[CodingKeys.kind.rawValue] = kind.rawValue
+        eventDictionary[CodingKeys.creationDate.rawValue] = creationDate.millisSince1970
+        eventDictionary[CodingKeys.user.rawValue] = user.dictionaryValueWithoutConfig
+        eventDictionary[CodingKeys.value.rawValue] = value?.baseValue
+        eventDictionary[CodingKeys.defaultValue.rawValue] = defaultValue?.baseValue
+        eventDictionary[CodingKeys.data.rawValue] = data
 
-        return json
-    }
-
-    var jsonData: Data? {
-        return jsonDictionary.jsonData
+        return eventDictionary
     }
 }
 
 extension Array where Element == LDEvent {
-    var jsonArray: [[String: Any]] { return self.map { (event) in event.jsonDictionary } }
+    var dictionaryValues: [[String: Any]] { return self.map { (event) in event.dictionaryValue } }
 
     var jsonData: Data? {
         guard JSONSerialization.isValidJSONObject(self) else { return nil }
-        return try? JSONSerialization.data(withJSONObject: self.jsonArray, options: [])
+        return try? JSONSerialization.data(withJSONObject: self.dictionaryValues, options: [])
     }
 
     mutating func remove(_ event: LDEvent) {

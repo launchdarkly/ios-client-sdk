@@ -56,54 +56,54 @@ public struct LDUser {
         lastUpdated = Date()
     }
     
-    public init(jsonDictionary: [String: Any]) {
-        key = jsonDictionary[CodingKeys.key.rawValue] as? String ?? LDUser.defaultKey
-        isAnonymous = jsonDictionary[CodingKeys.isAnonymous.rawValue] as? Bool ?? false
-        lastUpdated = (jsonDictionary[CodingKeys.lastUpdated.rawValue] as? String)?.userDate ?? Date()
+    public init(userDictionary: [String: Any]) {
+        key = userDictionary[CodingKeys.key.rawValue] as? String ?? LDUser.defaultKey
+        isAnonymous = userDictionary[CodingKeys.isAnonymous.rawValue] as? Bool ?? false
+        lastUpdated = (userDictionary[CodingKeys.lastUpdated.rawValue] as? String)?.dateValue ?? Date()
 
-        name = jsonDictionary[CodingKeys.name.rawValue] as? String
-        firstName = jsonDictionary[CodingKeys.firstName.rawValue] as? String
-        lastName = jsonDictionary[CodingKeys.lastName.rawValue] as? String
-        country = jsonDictionary[CodingKeys.country.rawValue] as? String
-        ipAddress = jsonDictionary[CodingKeys.ipAddress.rawValue] as? String
-        email = jsonDictionary[CodingKeys.email.rawValue] as? String
-        avatar = jsonDictionary[CodingKeys.avatar.rawValue] as? String
+        name = userDictionary[CodingKeys.name.rawValue] as? String
+        firstName = userDictionary[CodingKeys.firstName.rawValue] as? String
+        lastName = userDictionary[CodingKeys.lastName.rawValue] as? String
+        country = userDictionary[CodingKeys.country.rawValue] as? String
+        ipAddress = userDictionary[CodingKeys.ipAddress.rawValue] as? String
+        email = userDictionary[CodingKeys.email.rawValue] as? String
+        avatar = userDictionary[CodingKeys.avatar.rawValue] as? String
 
-        custom = jsonDictionary[CodingKeys.custom.rawValue] as? [String: Any]
+        custom = userDictionary[CodingKeys.custom.rawValue] as? [String: Any]
         device = custom?[CodingKeys.device.rawValue] as? String
         operatingSystem = custom?[CodingKeys.operatingSystem.rawValue] as? String
 
-        flagStore = LDFlagStore(featureFlags: jsonDictionary[CodingKeys.config.rawValue] as? [String: Any], flagValueSource: .cache)
+        flagStore = LDFlagStore(featureFlags: userDictionary[CodingKeys.config.rawValue] as? [String: Any], flagValueSource: .cache)
     }
     
-    public var jsonDictionaryWithConfig: [String: Any] {
-        var json = jsonDictionaryWithoutConfig
-        json[CodingKeys.config.rawValue] = flagStore.featureFlags
-        return json
+    public var dictionaryValueWithConfig: [String: Any] {
+        var dictionaryValue = dictionaryValueWithoutConfig
+        dictionaryValue[CodingKeys.config.rawValue] = flagStore.featureFlags
+        return dictionaryValue
     }
 
-    public var jsonDictionaryWithoutConfig: [String: Any] {
-        var json = [String: Any]()
-        json[CodingKeys.key.rawValue] = key
-        json[CodingKeys.name.rawValue] = name
-        json[CodingKeys.firstName.rawValue] = firstName
-        json[CodingKeys.lastName.rawValue] = lastName
-        json[CodingKeys.country.rawValue] = country
-        json[CodingKeys.ipAddress.rawValue] = ipAddress
-        json[CodingKeys.email.rawValue] = email
-        json[CodingKeys.avatar.rawValue] = avatar
+    public var dictionaryValueWithoutConfig: [String: Any] {
+        var dictionaryValue = [String: Any]()
+        dictionaryValue[CodingKeys.key.rawValue] = key
+        dictionaryValue[CodingKeys.name.rawValue] = name
+        dictionaryValue[CodingKeys.firstName.rawValue] = firstName
+        dictionaryValue[CodingKeys.lastName.rawValue] = lastName
+        dictionaryValue[CodingKeys.country.rawValue] = country
+        dictionaryValue[CodingKeys.ipAddress.rawValue] = ipAddress
+        dictionaryValue[CodingKeys.email.rawValue] = email
+        dictionaryValue[CodingKeys.avatar.rawValue] = avatar
 
         var encodedCustom = custom ?? [String: Any]()
         encodedCustom[CodingKeys.device.rawValue] = device
         encodedCustom[CodingKeys.operatingSystem.rawValue] = operatingSystem
         if !encodedCustom.isEmpty {
-            json[CodingKeys.custom.rawValue] = custom
+            dictionaryValue[CodingKeys.custom.rawValue] = custom
         }
 
-        json[CodingKeys.isAnonymous.rawValue] = isAnonymous
-        json[CodingKeys.lastUpdated.rawValue] = DateFormatter.ldUserFormatter.string(from: lastUpdated)
+        dictionaryValue[CodingKeys.isAnonymous.rawValue] = isAnonymous
+        dictionaryValue[CodingKeys.lastUpdated.rawValue] = DateFormatter.ldDateFormatter.string(from: lastUpdated)
 
-        return json
+        return dictionaryValue
     }
 
     //For iOS & tvOS, this should be UIDevice.current.identifierForVendor.UUIDString
@@ -138,7 +138,7 @@ extension LDUser: Equatable {
 }
 
 extension DateFormatter {
-    class var ldUserFormatter: DateFormatter {
+    class var ldDateFormatter: DateFormatter {
         let formatter = DateFormatter()
         formatter.dateFormat = "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'"
         formatter.timeZone = TimeZone(identifier: "UTC")
@@ -147,15 +147,15 @@ extension DateFormatter {
 }
 
 extension Date {
-    var jsonDate: String { return DateFormatter.ldUserFormatter.string(from: self) }
+    var stringValue: String { return DateFormatter.ldDateFormatter.string(from: self) }
 
     //When a date is converted to JSON, the resulting string is not as precise as the original date (only to the nearest .001s)
     //By converting the date to json, then back into a date, the result can be compared with any date re-inflated from json
-    var jsonEquivalentDate: Date { return jsonDate.userDate }
+    var stringEquivalentDate: Date { return stringValue.dateValue }
 }
 
 extension String {
-    var userDate: Date { return DateFormatter.ldUserFormatter.date(from: self) ?? Date() }
+    var dateValue: Date { return DateFormatter.ldDateFormatter.date(from: self) ?? Date() }
 }
 
 @objc final class LDUserWrapper: NSObject {

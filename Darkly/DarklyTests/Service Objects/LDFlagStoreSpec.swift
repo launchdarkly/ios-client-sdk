@@ -36,10 +36,10 @@ final class LDFlagStoreSpec: QuickSpec {
             }
             context("with an initial flag store") {
                 beforeEach {
-                    subject = LDFlagStore(featureFlags: DarklyServiceMock.Constants.jsonFlags, flagValueSource: .cache)
+                    subject = LDFlagStore(featureFlags: DarklyServiceMock.Constants.featureFlags, flagValueSource: .cache)
                 }
                 it("has the feature flags") {
-                    expect(subject.featureFlags == DarklyServiceMock.Constants.jsonFlags).to(beTrue())
+                    expect(subject.featureFlags == DarklyServiceMock.Constants.featureFlags).to(beTrue())
                     expect(subject.flagValueSource == .cache).to(beTrue())
                 }
             }
@@ -50,13 +50,13 @@ final class LDFlagStoreSpec: QuickSpec {
                 beforeEach {
                     subject = LDFlagStore()
                     waitUntil(timeout: 1) { done in
-                        subject.replaceStore(newFlags: DarklyServiceMock.Constants.jsonFlags, source: .cache) {
+                        subject.replaceStore(newFlags: DarklyServiceMock.Constants.featureFlags, source: .cache) {
                             done()
                         }
                     }
                 }
                 it("causes LDFlagStore to replace the flag values and source") {
-                    expect(subject.featureFlags == DarklyServiceMock.Constants.jsonFlags).to(beTrue())
+                    expect(subject.featureFlags == DarklyServiceMock.Constants.featureFlags).to(beTrue())
                     expect(subject.flagValueSource == .cache).to(beTrue())
                 }
             }
@@ -65,7 +65,7 @@ final class LDFlagStoreSpec: QuickSpec {
                     subject = LDFlagStore()
 
                     waitUntil(timeout: 1) { done in
-                        subject.replaceStore(newFlags: DarklyServiceMock.Constants.jsonFlags, source: .cache) {
+                        subject.replaceStore(newFlags: DarklyServiceMock.Constants.featureFlags, source: .cache) {
                             done()
                         }
                     }
@@ -86,7 +86,7 @@ final class LDFlagStoreSpec: QuickSpec {
                 beforeEach {
                     subject = LDFlagStore()
                     waitUntil(timeout: 1) { done in
-                        subject.replaceStore(newFlags: DarklyServiceMock.Constants.jsonFlags, source: .server) {
+                        subject.replaceStore(newFlags: DarklyServiceMock.Constants.featureFlags, source: .server) {
                             done()
                         }
                     }
@@ -131,7 +131,7 @@ final class LDFlagStoreSpec: QuickSpec {
                 beforeEach {
                     subject = LDFlagStore()
                     waitUntil(timeout: 1) { done in
-                        subject.replaceStore(newFlags: DarklyServiceMock.Constants.jsonFlags, source: .server) {
+                        subject.replaceStore(newFlags: DarklyServiceMock.Constants.featureFlags, source: .server) {
                             done()
                         }
                     }

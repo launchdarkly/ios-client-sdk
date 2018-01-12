@@ -78,7 +78,7 @@ final class DarklyService: DarklyServiceProvider {
     }
     
     private var flagRequestUrl: URL? {
-        guard let encodedUser = user.jsonDictionaryWithoutConfig.base64UrlEncodedString else { return nil }
+        guard let encodedUser = user.dictionaryValueWithoutConfig.base64UrlEncodedString else { return nil }
         return config.baseUrl.appendingPathComponent(Constants.flagRequestPath).appendingPathComponent(encodedUser)
     }
     

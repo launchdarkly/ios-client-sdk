@@ -215,7 +215,7 @@ final class DarklyServiceSpec: QuickSpec {
         var messages = [String]()
 
         if let requestHost = flagRequest?.url?.host, requestHost != serviceMock.flagHost { messages.append("host is \(requestHost)") }
-        guard let encodedUser = user.jsonDictionaryWithoutConfig.base64UrlEncodedString, !encodedUser.isEmpty
+        guard let encodedUser = user.dictionaryValueWithoutConfig.base64UrlEncodedString, !encodedUser.isEmpty
         else {
             messages.append("base 64 URL encoded user is nil or empty")
             return .failed(reason: messages.joined(separator: ", "))

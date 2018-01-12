@@ -47,7 +47,7 @@ extension LDUser {
 
     private init?(dictionaryObject: Any) {
         guard let userDictionary = dictionaryObject as? [String: Any] else { return nil }
-        self = LDUser(jsonDictionary: userDictionary)
+        self = LDUser(userDictionary: userDictionary)
     }
 
     private init?(dataObject: Any) {

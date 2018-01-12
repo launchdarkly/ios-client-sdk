@@ -16,8 +16,8 @@ public final class DictionarySpec: QuickSpec {
         var subject: [String: Any]!
         var other: [String: Any]!
         beforeEach {
-            subject = DarklyServiceMock.Constants.jsonFlags
-            other = DarklyServiceMock.Constants.jsonFlags
+            subject = DarklyServiceMock.Constants.featureFlags
+            other = DarklyServiceMock.Constants.featureFlags
         }
 
         describe("symmetric difference") {

@@ -92,16 +92,16 @@ final class LDUserSpec: QuickSpec {
             }
         }
 
-        describe("init from jsonDictionary") {
+        describe("init from dictionary") {
             var originalUser: LDUser!
             let mockLastUpdated = "2017-10-24T17:51:49.142Z"
             context("called with config") {
                 context("and optional elements") {
                     beforeEach {
                         originalUser = LDUser(key: mockKey, name: mockName, firstName: mockFirstName, lastName: mockLastName, country: mockCountry, ipAddress: mockIPAddress, email: mockEmail, avatar: mockAvatar, custom: mockCustom, isAnonymous: mockIsAnonymous)
-                        var jsonDictionary = originalUser.jsonDictionaryWithConfig
-                        jsonDictionary[LDUser.CodingKeys.lastUpdated.rawValue] = mockLastUpdated
-                        subject = LDUser(jsonDictionary: jsonDictionary)
+                        var userDictionary = originalUser.dictionaryValueWithConfig
+                        userDictionary[LDUser.CodingKeys.lastUpdated.rawValue] = mockLastUpdated
+                        subject = LDUser(userDictionary: userDictionary)
                     }
                     it("creates a user with optional elements and feature flags") {
                         expect(subject.key) == originalUser.key
@@ -123,7 +123,7 @@ final class LDUserSpec: QuickSpec {
 
                         expect(subject.device) == originalUser.device
                         expect(subject.operatingSystem) == originalUser.operatingSystem
-                        expect(subject.lastUpdated) == DateFormatter.ldUserFormatter.date(from: mockLastUpdated)
+                        expect(subject.lastUpdated) == DateFormatter.ldDateFormatter.date(from: mockLastUpdated)
 
                         expect(subject.flagStore.featureFlags == originalUser.flagStore.featureFlags).to(beTrue())
                     }
@@ -131,15 +131,15 @@ final class LDUserSpec: QuickSpec {
                 context("but without optional elements") {
                     beforeEach {
                         originalUser = LDUser(isAnonymous: true)
-                        var jsonDictionary = originalUser.jsonDictionaryWithConfig
-                        jsonDictionary[LDUser.CodingKeys.lastUpdated.rawValue] = mockLastUpdated
-                        subject = LDUser(jsonDictionary: jsonDictionary)
+                        var userDictionary = originalUser.dictionaryValueWithConfig
+                        userDictionary[LDUser.CodingKeys.lastUpdated.rawValue] = mockLastUpdated
+                        subject = LDUser(userDictionary: userDictionary)
 
                     }
                     it("creates a user without optional elements and with feature flags") {
                         expect(subject.key) == originalUser.key
                         expect(subject.isAnonymous) == originalUser.isAnonymous
-                        expect(subject.lastUpdated) == DateFormatter.ldUserFormatter.date(from: mockLastUpdated)
+                        expect(subject.lastUpdated) == DateFormatter.ldDateFormatter.date(from: mockLastUpdated)
 
                         expect(subject.name).to(beNil())
                         expect(subject.firstName).to(beNil())
@@ -160,9 +160,9 @@ final class LDUserSpec: QuickSpec {
                 context("but with optional elements") {
                     beforeEach {
                         originalUser = LDUser(key: mockKey, name: mockName, firstName: mockFirstName, lastName: mockLastName, country: mockCountry, ipAddress: mockIPAddress, email: mockEmail, avatar: mockAvatar, custom: mockCustom, isAnonymous: mockIsAnonymous)
-                        var jsonDictionary = originalUser.jsonDictionaryWithoutConfig
-                        jsonDictionary[LDUser.CodingKeys.lastUpdated.rawValue] = mockLastUpdated
-                        subject = LDUser(jsonDictionary: jsonDictionary)
+                        var userDictionary = originalUser.dictionaryValueWithoutConfig
+                        userDictionary[LDUser.CodingKeys.lastUpdated.rawValue] = mockLastUpdated
+                        subject = LDUser(userDictionary: userDictionary)
                     }
                     it("creates a user with optional elements") {
                         expect(subject.key) == originalUser.key
@@ -184,7 +184,7 @@ final class LDUserSpec: QuickSpec {
 
                         expect(subject.device) == originalUser.device
                         expect(subject.operatingSystem) == originalUser.operatingSystem
-                        expect(subject.lastUpdated) == DateFormatter.ldUserFormatter.date(from: mockLastUpdated)
+                        expect(subject.lastUpdated) == DateFormatter.ldDateFormatter.date(from: mockLastUpdated)
 
                         expect(subject.flagStore.featureFlags.isEmpty).to(beTrue())
                     }
@@ -192,14 +192,14 @@ final class LDUserSpec: QuickSpec {
                 context("or optional elements") {
                     beforeEach {
                         originalUser = LDUser(isAnonymous: true)
-                        var jsonDictionary = originalUser.jsonDictionaryWithoutConfig
-                        jsonDictionary[LDUser.CodingKeys.lastUpdated.rawValue] = mockLastUpdated
-                        subject = LDUser(jsonDictionary: jsonDictionary)
+                        var userDictionary = originalUser.dictionaryValueWithoutConfig
+                        userDictionary[LDUser.CodingKeys.lastUpdated.rawValue] = mockLastUpdated
+                        subject = LDUser(userDictionary: userDictionary)
                     }
                     it("creates a user without optional elements or feature flags") {
                         expect(subject.key) == originalUser.key
                         expect(subject.isAnonymous) == originalUser.isAnonymous
-                        expect(subject.lastUpdated) == DateFormatter.ldUserFormatter.date(from: mockLastUpdated)
+                        expect(subject.lastUpdated) == DateFormatter.ldDateFormatter.date(from: mockLastUpdated)
 
                         expect(subject.name).to(beNil())
                         expect(subject.firstName).to(beNil())
@@ -217,7 +217,7 @@ final class LDUserSpec: QuickSpec {
                 }
                 context("and with an empty dictionary") {
                     beforeEach {
-                        subject = LDUser(jsonDictionary: [:])
+                        subject = LDUser(userDictionary: [:])
                     }
                     it("creates a user without optional elements or feature flags") {
                         expect(subject.key).toNot(beNil())
@@ -242,14 +242,14 @@ final class LDUserSpec: QuickSpec {
                 context("but with an incorrect last updated format") {
                     let invalidLastUpdated = "2017-10-24T17:51:49Z"
                     beforeEach {
-                        subject = LDUser(jsonDictionary: [LDUser.CodingKeys.lastUpdated.rawValue: invalidLastUpdated])
+                        subject = LDUser(userDictionary: [LDUser.CodingKeys.lastUpdated.rawValue: invalidLastUpdated])
                     }
                     it("creates a user without optional elements or feature flags") {
                         expect(subject.key).toNot(beNil())
                         expect(subject.key.isEmpty).to(beFalse())
                         expect(subject.isAnonymous) == false
                         expect(subject.lastUpdated).toNot(beNil())
-                        expect(DateFormatter.ldUserFormatter.string(from: subject.lastUpdated)) != invalidLastUpdated
+                        expect(DateFormatter.ldDateFormatter.string(from: subject.lastUpdated)) != invalidLastUpdated
 
                         expect(subject.name).to(beNil())
                         expect(subject.firstName).to(beNil())
@@ -268,63 +268,63 @@ final class LDUserSpec: QuickSpec {
             }
         }
 
-        describe("jsonDictionary") {
-            var jsonDictionary: [String: Any]!
+        describe("dictionaryValue") {
+            var userDictionary: [String: Any]!
             context("called with config") {
                 context("and optional elements") {
                     beforeEach {
                         subject = LDUser(key: mockKey, name: mockName, firstName: mockFirstName, lastName: mockLastName, country: mockCountry, ipAddress: mockIPAddress, email: mockEmail, avatar: mockAvatar, custom: mockCustom, isAnonymous: mockIsAnonymous)
-                        jsonDictionary = subject.jsonDictionaryWithConfig
+                        userDictionary = subject.dictionaryValueWithConfig
                     }
-                    it("creates a json dictionary describing the user with optional elements and feature flags") {
-                        expect(jsonDictionary[LDUser.CodingKeys.key.rawValue] as? String) == subject.key
-                        expect(jsonDictionary[LDUser.CodingKeys.name.rawValue] as? String) == subject.name
-                        expect(jsonDictionary[LDUser.CodingKeys.firstName.rawValue] as? String) == subject.firstName
-                        expect(jsonDictionary[LDUser.CodingKeys.lastName.rawValue] as? String) == subject.lastName
-                        expect(jsonDictionary[LDUser.CodingKeys.isAnonymous.rawValue] as? Bool) == subject.isAnonymous
-                        expect(jsonDictionary[LDUser.CodingKeys.country.rawValue] as? String) == subject.country
-                        expect(jsonDictionary[LDUser.CodingKeys.ipAddress.rawValue] as? String) == subject.ipAddress
-                        expect(jsonDictionary[LDUser.CodingKeys.email.rawValue] as? String) == subject.email
-                        expect(jsonDictionary[LDUser.CodingKeys.avatar.rawValue] as? String) == subject.avatar
+                    it("creates a dictionary describing the user with optional elements and feature flags") {
+                        expect(userDictionary[LDUser.CodingKeys.key.rawValue] as? String) == subject.key
+                        expect(userDictionary[LDUser.CodingKeys.name.rawValue] as? String) == subject.name
+                        expect(userDictionary[LDUser.CodingKeys.firstName.rawValue] as? String) == subject.firstName
+                        expect(userDictionary[LDUser.CodingKeys.lastName.rawValue] as? String) == subject.lastName
+                        expect(userDictionary[LDUser.CodingKeys.isAnonymous.rawValue] as? Bool) == subject.isAnonymous
+                        expect(userDictionary[LDUser.CodingKeys.country.rawValue] as? String) == subject.country
+                        expect(userDictionary[LDUser.CodingKeys.ipAddress.rawValue] as? String) == subject.ipAddress
+                        expect(userDictionary[LDUser.CodingKeys.email.rawValue] as? String) == subject.email
+                        expect(userDictionary[LDUser.CodingKeys.avatar.rawValue] as? String) == subject.avatar
                         if let subjectCustom = subject.custom {
-                            expect(jsonDictionary[LDUser.CodingKeys.custom.rawValue] as? [String: Any]).toNot(beNil())
-                            if let jsonCustom = jsonDictionary[LDUser.CodingKeys.custom.rawValue] as? [String: Any] {
-                                expect(jsonCustom == subjectCustom).to(beTrue())
+                            expect(userDictionary[LDUser.CodingKeys.custom.rawValue] as? [String: Any]).toNot(beNil())
+                            if let customDictionary = userDictionary[LDUser.CodingKeys.custom.rawValue] as? [String: Any] {
+                                expect(customDictionary == subjectCustom).to(beTrue())
                                 if let subjectDevice = subject.device {
-                                    expect(jsonCustom[LDUser.CodingKeys.device.rawValue] as? String) == subjectDevice
+                                    expect(customDictionary[LDUser.CodingKeys.device.rawValue] as? String) == subjectDevice
                                 }
                                 if let subjectOS = subject.operatingSystem {
-                                    expect(jsonCustom[LDUser.CodingKeys.operatingSystem.rawValue] as? String) == subjectOS
+                                    expect(customDictionary[LDUser.CodingKeys.operatingSystem.rawValue] as? String) == subjectOS
                                 }
                             }
                         }
 
-                        expect(jsonDictionary[LDUser.CodingKeys.lastUpdated.rawValue] as? String).toNot(beNil())
-                        expect(jsonDictionary[LDUser.CodingKeys.config.rawValue] as? [String: Any]).toNot(beNil())
-                        expect(jsonDictionary[LDUser.CodingKeys.config.rawValue] as? [String: Any] == subject.flagStore.featureFlags).to(beTrue())
+                        expect(userDictionary[LDUser.CodingKeys.lastUpdated.rawValue] as? String).toNot(beNil())
+                        expect(userDictionary[LDUser.CodingKeys.config.rawValue] as? [String: Any]).toNot(beNil())
+                        expect(userDictionary[LDUser.CodingKeys.config.rawValue] as? [String: Any] == subject.flagStore.featureFlags).to(beTrue())
                     }
                 }
                 context("but without optional elements") {
                     beforeEach {
                         subject = LDUser(isAnonymous: true)
-                        jsonDictionary = subject.jsonDictionaryWithConfig
+                        userDictionary = subject.dictionaryValueWithConfig
                     }
-                    it("creates a json dictionary describing the user without optional elements and feature flags") {
-                        expect(jsonDictionary[LDUser.CodingKeys.key.rawValue] as? String) == subject.key
-                        expect(jsonDictionary[LDUser.CodingKeys.isAnonymous.rawValue] as? Bool) == subject.isAnonymous
-                        expect(jsonDictionary[LDUser.CodingKeys.lastUpdated.rawValue] as? String).toNot(beNil())
+                    it("creates a dictionary describing the user without optional elements and feature flags") {
+                        expect(userDictionary[LDUser.CodingKeys.key.rawValue] as? String) == subject.key
+                        expect(userDictionary[LDUser.CodingKeys.isAnonymous.rawValue] as? Bool) == subject.isAnonymous
+                        expect(userDictionary[LDUser.CodingKeys.lastUpdated.rawValue] as? String).toNot(beNil())
 
-                        expect(jsonDictionary[LDUser.CodingKeys.name.rawValue]).to(beNil())
-                        expect(jsonDictionary[LDUser.CodingKeys.firstName.rawValue]).to(beNil())
-                        expect(jsonDictionary[LDUser.CodingKeys.lastName.rawValue]).to(beNil())
-                        expect(jsonDictionary[LDUser.CodingKeys.country.rawValue]).to(beNil())
-                        expect(jsonDictionary[LDUser.CodingKeys.ipAddress.rawValue]).to(beNil())
-                        expect(jsonDictionary[LDUser.CodingKeys.email.rawValue]).to(beNil())
-                        expect(jsonDictionary[LDUser.CodingKeys.avatar.rawValue]).to(beNil())
-                        expect(jsonDictionary[LDUser.CodingKeys.custom.rawValue]).to(beNil())
+                        expect(userDictionary[LDUser.CodingKeys.name.rawValue]).to(beNil())
+                        expect(userDictionary[LDUser.CodingKeys.firstName.rawValue]).to(beNil())
+                        expect(userDictionary[LDUser.CodingKeys.lastName.rawValue]).to(beNil())
+                        expect(userDictionary[LDUser.CodingKeys.country.rawValue]).to(beNil())
+                        expect(userDictionary[LDUser.CodingKeys.ipAddress.rawValue]).to(beNil())
+                        expect(userDictionary[LDUser.CodingKeys.email.rawValue]).to(beNil())
+                        expect(userDictionary[LDUser.CodingKeys.avatar.rawValue]).to(beNil())
+                        expect(userDictionary[LDUser.CodingKeys.custom.rawValue]).to(beNil())
 
-                        expect(jsonDictionary[LDUser.CodingKeys.config.rawValue] as? [String: Any]).toNot(beNil())
-                        expect(jsonDictionary[LDUser.CodingKeys.config.rawValue] as? [String: Any] == subject.flagStore.featureFlags).to(beTrue())
+                        expect(userDictionary[LDUser.CodingKeys.config.rawValue] as? [String: Any]).toNot(beNil())
+                        expect(userDictionary[LDUser.CodingKeys.config.rawValue] as? [String: Any] == subject.flagStore.featureFlags).to(beTrue())
                     }
                 }
             }
@@ -332,55 +332,55 @@ final class LDUserSpec: QuickSpec {
                 context("and with optional elements") {
                     beforeEach {
                         subject = LDUser(key: mockKey, name: mockName, firstName: mockFirstName, lastName: mockLastName, country: mockCountry, ipAddress: mockIPAddress, email: mockEmail, avatar: mockAvatar, custom: mockCustom, isAnonymous: mockIsAnonymous)
-                        jsonDictionary = subject.jsonDictionaryWithoutConfig
+                        userDictionary = subject.dictionaryValueWithoutConfig
                     }
-                    it("creates a json dictionary describing the user with optional elements") {
-                        expect(jsonDictionary[LDUser.CodingKeys.key.rawValue] as? String) == subject.key
-                        expect(jsonDictionary[LDUser.CodingKeys.name.rawValue] as? String) == subject.name
-                        expect(jsonDictionary[LDUser.CodingKeys.firstName.rawValue] as? String) == subject.firstName
-                        expect(jsonDictionary[LDUser.CodingKeys.lastName.rawValue] as? String) == subject.lastName
-                        expect(jsonDictionary[LDUser.CodingKeys.isAnonymous.rawValue] as? Bool) == subject.isAnonymous
-                        expect(jsonDictionary[LDUser.CodingKeys.country.rawValue] as? String) == subject.country
-                        expect(jsonDictionary[LDUser.CodingKeys.ipAddress.rawValue] as? String) == subject.ipAddress
-                        expect(jsonDictionary[LDUser.CodingKeys.email.rawValue] as? String) == subject.email
-                        expect(jsonDictionary[LDUser.CodingKeys.avatar.rawValue] as? String) == subject.avatar
+                    it("creates a dictionary describing the user with optional elements") {
+                        expect(userDictionary[LDUser.CodingKeys.key.rawValue] as? String) == subject.key
+                        expect(userDictionary[LDUser.CodingKeys.name.rawValue] as? String) == subject.name
+                        expect(userDictionary[LDUser.CodingKeys.firstName.rawValue] as? String) == subject.firstName
+                        expect(userDictionary[LDUser.CodingKeys.lastName.rawValue] as? String) == subject.lastName
+                        expect(userDictionary[LDUser.CodingKeys.isAnonymous.rawValue] as? Bool) == subject.isAnonymous
+                        expect(userDictionary[LDUser.CodingKeys.country.rawValue] as? String) == subject.country
+                        expect(userDictionary[LDUser.CodingKeys.ipAddress.rawValue] as? String) == subject.ipAddress
+                        expect(userDictionary[LDUser.CodingKeys.email.rawValue] as? String) == subject.email
+                        expect(userDictionary[LDUser.CodingKeys.avatar.rawValue] as? String) == subject.avatar
                         if let subjectCustom = subject.custom {
-                            expect(jsonDictionary[LDUser.CodingKeys.custom.rawValue] as? [String: Any]).toNot(beNil())
-                            if let jsonCustom = jsonDictionary[LDUser.CodingKeys.custom.rawValue] as? [String: Any] {
-                                expect(jsonCustom == subjectCustom).to(beTrue())
+                            expect(userDictionary[LDUser.CodingKeys.custom.rawValue] as? [String: Any]).toNot(beNil())
+                            if let customDictionary = userDictionary[LDUser.CodingKeys.custom.rawValue] as? [String: Any] {
+                                expect(customDictionary == subjectCustom).to(beTrue())
                                 if let subjectDevice = subject.device {
-                                    expect(jsonCustom[LDUser.CodingKeys.device.rawValue] as? String) == subjectDevice
+                                    expect(customDictionary[LDUser.CodingKeys.device.rawValue] as? String) == subjectDevice
                                 }
                                 if let subjectOS = subject.operatingSystem {
-                                    expect(jsonCustom[LDUser.CodingKeys.operatingSystem.rawValue] as? String) == subjectOS
+                                    expect(customDictionary[LDUser.CodingKeys.operatingSystem.rawValue] as? String) == subjectOS
                                 }
                             }
                         }
 
-                        expect(jsonDictionary[LDUser.CodingKeys.lastUpdated.rawValue] as? String).toNot(beNil())
-                        expect(jsonDictionary[LDUser.CodingKeys.config.rawValue]).to(beNil())
+                        expect(userDictionary[LDUser.CodingKeys.lastUpdated.rawValue] as? String).toNot(beNil())
+                        expect(userDictionary[LDUser.CodingKeys.config.rawValue]).to(beNil())
                     }
                 }
                 context("or optional elements") {
                     beforeEach {
                         subject = LDUser(isAnonymous: true)
-                        jsonDictionary = subject.jsonDictionaryWithoutConfig
+                        userDictionary = subject.dictionaryValueWithoutConfig
                     }
-                    it("creates a json dictionary describing the user without optional elements and feature flags") {
-                        expect(jsonDictionary[LDUser.CodingKeys.key.rawValue] as? String) == subject.key
-                        expect(jsonDictionary[LDUser.CodingKeys.isAnonymous.rawValue] as? Bool) == subject.isAnonymous
-                        expect(jsonDictionary[LDUser.CodingKeys.lastUpdated.rawValue] as? String).toNot(beNil())
+                    it("creates a dictionary describing the user without optional elements and feature flags") {
+                        expect(userDictionary[LDUser.CodingKeys.key.rawValue] as? String) == subject.key
+                        expect(userDictionary[LDUser.CodingKeys.isAnonymous.rawValue] as? Bool) == subject.isAnonymous
+                        expect(userDictionary[LDUser.CodingKeys.lastUpdated.rawValue] as? String).toNot(beNil())
 
-                        expect(jsonDictionary[LDUser.CodingKeys.name.rawValue]).to(beNil())
-                        expect(jsonDictionary[LDUser.CodingKeys.firstName.rawValue]).to(beNil())
-                        expect(jsonDictionary[LDUser.CodingKeys.lastName.rawValue]).to(beNil())
-                        expect(jsonDictionary[LDUser.CodingKeys.country.rawValue]).to(beNil())
-                        expect(jsonDictionary[LDUser.CodingKeys.ipAddress.rawValue]).to(beNil())
-                        expect(jsonDictionary[LDUser.CodingKeys.email.rawValue]).to(beNil())
-                        expect(jsonDictionary[LDUser.CodingKeys.avatar.rawValue]).to(beNil())
-                        expect(jsonDictionary[LDUser.CodingKeys.custom.rawValue]).to(beNil())
+                        expect(userDictionary[LDUser.CodingKeys.name.rawValue]).to(beNil())
+                        expect(userDictionary[LDUser.CodingKeys.firstName.rawValue]).to(beNil())
+                        expect(userDictionary[LDUser.CodingKeys.lastName.rawValue]).to(beNil())
+                        expect(userDictionary[LDUser.CodingKeys.country.rawValue]).to(beNil())
+                        expect(userDictionary[LDUser.CodingKeys.ipAddress.rawValue]).to(beNil())
+                        expect(userDictionary[LDUser.CodingKeys.email.rawValue]).to(beNil())
+                        expect(userDictionary[LDUser.CodingKeys.avatar.rawValue]).to(beNil())
+                        expect(userDictionary[LDUser.CodingKeys.custom.rawValue]).to(beNil())
 
-                        expect(jsonDictionary[LDUser.CodingKeys.config.rawValue]).to(beNil())
+                        expect(userDictionary[LDUser.CodingKeys.config.rawValue]).to(beNil())
                     }
                 }
             }
