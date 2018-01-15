@@ -202,6 +202,27 @@ final class LDConfigSpec: QuickSpec {
                     expect(subject) != otherConfig
                 }
             }
+            context("when allUserAttributesPrivate differs") {
+                beforeEach {
+                    otherConfig = subject
+                    otherConfig.allUserAttributesPrivate = !subject.allUserAttributesPrivate
+                }
+                it("returns false") {
+                    expect(subject) != otherConfig
+                }
+            }
+            context("when privateUserAttributes differ") {
+                beforeEach {
+                    subject.privateUserAttributes = LDUser.privatizableAttributes
+                    otherConfig = subject
+                }
+                it("returns false") {
+                    LDUser.privatizableAttributes.forEach { (attribute) in
+                        otherConfig.privateUserAttributes = LDUser.privatizableAttributes.filter { $0 != attribute }
+                        expect(subject) != otherConfig
+                    }
+                }
+            }
         }
     }
 }

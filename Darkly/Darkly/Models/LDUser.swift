@@ -11,7 +11,11 @@ import Foundation
 public struct LDUser {
     
     enum CodingKeys: String, CodingKey {
-        case key, name, firstName, lastName, country, ipAddress = "ip", email, avatar, custom, isAnonymous = "anonymous", device, operatingSystem = "os", lastUpdated = "updatedAt", config
+        case key, name, firstName, lastName, country, ipAddress = "ip", email, avatar, custom, isAnonymous = "anonymous", device, operatingSystem = "os", lastUpdated = "updatedAt", config, privateAttributes = "privateAttrs"
+    }
+
+    public static var privatizableAttributes: [String] {
+        return [CodingKeys.name.rawValue, CodingKeys.firstName.rawValue, CodingKeys.lastName.rawValue, CodingKeys.country.rawValue, CodingKeys.ipAddress.rawValue, CodingKeys.email.rawValue, CodingKeys.avatar.rawValue, CodingKeys.custom.rawValue]
     }
 
     public var key: String
@@ -26,6 +30,7 @@ public struct LDUser {
     public var isAnonymous: Bool
     public var device: String?
     public var operatingSystem: String?
+    public var privateAttributes: [String]?
     
     internal fileprivate(set) var lastUpdated: Date
     internal var flagStore: LDFlagMaintaining = LDFlagStore()
@@ -39,7 +44,8 @@ public struct LDUser {
                 email: String? = nil,
                 avatar: String? = nil,
                 custom: [String: Any]? = nil,
-                isAnonymous: Bool? = nil) {
+                isAnonymous: Bool? = nil,
+                privateAttributes: [String]? = nil) {
         let selectedKey = key ?? LDUser.defaultKey
         self.key = selectedKey
         self.name = name
@@ -51,8 +57,10 @@ public struct LDUser {
         self.avatar = avatar
         self.custom = custom
         self.isAnonymous = isAnonymous ?? (selectedKey == LDUser.defaultKey)
+        //TODO: Device & OS should be set automatically if not presented in the custom dictionary
         self.device = custom?[CodingKeys.device.rawValue] as? String
         self.operatingSystem = custom?[CodingKeys.operatingSystem.rawValue] as? String
+        self.privateAttributes = privateAttributes
         lastUpdated = Date()
     }
     
@@ -68,6 +76,7 @@ public struct LDUser {
         ipAddress = userDictionary[CodingKeys.ipAddress.rawValue] as? String
         email = userDictionary[CodingKeys.email.rawValue] as? String
         avatar = userDictionary[CodingKeys.avatar.rawValue] as? String
+        privateAttributes = userDictionary[CodingKeys.privateAttributes.rawValue] as? [String]
 
         custom = userDictionary[CodingKeys.custom.rawValue] as? [String: Any]
         device = custom?[CodingKeys.device.rawValue] as? String
@@ -92,6 +101,7 @@ public struct LDUser {
         dictionaryValue[CodingKeys.ipAddress.rawValue] = ipAddress
         dictionaryValue[CodingKeys.email.rawValue] = email
         dictionaryValue[CodingKeys.avatar.rawValue] = avatar
+        dictionaryValue[CodingKeys.privateAttributes.rawValue] = privateAttributes
 
         var encodedCustom = custom ?? [String: Any]()
         encodedCustom[CodingKeys.device.rawValue] = device
@@ -186,6 +196,7 @@ extension LDUserWrapper: NSCoding {
         encoder.encode(wrapped.device, forKey: LDUser.CodingKeys.device.rawValue)
         encoder.encode(wrapped.operatingSystem, forKey: LDUser.CodingKeys.operatingSystem.rawValue)
         encoder.encode(wrapped.lastUpdated, forKey: LDUser.CodingKeys.lastUpdated.rawValue)
+        encoder.encode(wrapped.privateAttributes, forKey: LDUser.CodingKeys.privateAttributes.rawValue)
         encoder.encode([Keys.featureFlags: wrapped.flagStore.featureFlags], forKey: LDUser.CodingKeys.config.rawValue)
     }
 
@@ -199,7 +210,8 @@ extension LDUserWrapper: NSCoding {
                           email: decoder.decodeObject(forKey: LDUser.CodingKeys.email.rawValue) as? String,
                           avatar: decoder.decodeObject(forKey: LDUser.CodingKeys.avatar.rawValue) as? String,
                           custom: decoder.decodeObject(forKey: LDUser.CodingKeys.custom.rawValue) as? [String: Any],
-                          isAnonymous: decoder.decodeBool(forKey: LDUser.CodingKeys.isAnonymous.rawValue)
+                          isAnonymous: decoder.decodeBool(forKey: LDUser.CodingKeys.isAnonymous.rawValue),
+                          privateAttributes: decoder.decodeObject(forKey: LDUser.CodingKeys.privateAttributes.rawValue) as? [String]
         )
         user.device = decoder.decodeObject(forKey: LDUser.CodingKeys.device.rawValue) as? String
         user.operatingSystem = decoder.decodeObject(forKey: LDUser.CodingKeys.operatingSystem.rawValue) as? String

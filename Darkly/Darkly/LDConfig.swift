@@ -69,6 +69,13 @@ public struct LDConfig {
     public var enableBackgroundUpdates: Bool = Defaults.enableBackgroundUpdates
     ///Determines whether LDClient will be online / offline at start. If offline at start, set the client online to receive flag updates. Default: true
     public var startOnline: Bool = Defaults.online
+
+    //Private Attributes
+    ///Treat all user attributes as private for event reporting for all users. When set, ignores values in either LDConfig.privateUserAttributes or LDUser.privateAttributes. Default: false
+    public var allUserAttributesPrivate: Bool = false
+    ///List of user attributes and top level custom dictionary keys to treat as private for event reporting for all users. Private attribute values will not be included in events reported to Launch Darkly, but the attribute name will still be sent. All user attributes can be declared private except key, anonymous, device, & os. Access the user attribute names that can be declared private through the identifiers included in LDUser.swift. To declare all user attributes private, either set privateUserAttributes to LDUser.allUserAttributes or raise LDConfig.allUserAttributesPrivate. Default: nil
+    public var privateUserAttributes: [String]? = nil
+
     ///Enables additional logging for development. Default: false
     public var isDebugMode: Bool = Defaults.debugMode
     
@@ -100,5 +107,8 @@ extension LDConfig: Equatable {
             && lhs.enableBackgroundUpdates == rhs.enableBackgroundUpdates
             && lhs.startOnline == rhs.startOnline
             && lhs.isDebugMode == rhs.isDebugMode
+            && lhs.allUserAttributesPrivate == rhs.allUserAttributesPrivate
+            && (lhs.privateUserAttributes == nil && rhs.privateUserAttributes == nil
+                || (lhs.privateUserAttributes != nil && rhs.privateUserAttributes != nil && lhs.privateUserAttributes! == rhs.privateUserAttributes!))
     }
 }
