@@ -74,7 +74,7 @@ final class UserCacheConverterSpec: QuickSpec {
 
 extension KeyedValueCachingMock {
     func storeUserAsDictionary(user: LDUser) {
-        let userDictionaries = [user.key: user.dictionaryValueWithConfig]
+        let userDictionaries = [user.key: user.dictionaryValueWithAllAttributes(includeFlagConfig: true)]
         dictionaryReturnValue = userDictionaries
     }
 

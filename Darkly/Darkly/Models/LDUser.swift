@@ -84,37 +84,6 @@ public struct LDUser {
 
         flagStore = LDFlagStore(featureFlags: userDictionary[CodingKeys.config.rawValue] as? [String: Any], flagValueSource: .cache)
     }
-    
-    public var dictionaryValueWithConfig: [String: Any] {
-        var dictionaryValue = dictionaryValueWithoutConfig
-        dictionaryValue[CodingKeys.config.rawValue] = flagStore.featureFlags
-        return dictionaryValue
-    }
-
-    public var dictionaryValueWithoutConfig: [String: Any] {
-        var dictionaryValue = [String: Any]()
-        dictionaryValue[CodingKeys.key.rawValue] = key
-        dictionaryValue[CodingKeys.name.rawValue] = name
-        dictionaryValue[CodingKeys.firstName.rawValue] = firstName
-        dictionaryValue[CodingKeys.lastName.rawValue] = lastName
-        dictionaryValue[CodingKeys.country.rawValue] = country
-        dictionaryValue[CodingKeys.ipAddress.rawValue] = ipAddress
-        dictionaryValue[CodingKeys.email.rawValue] = email
-        dictionaryValue[CodingKeys.avatar.rawValue] = avatar
-        dictionaryValue[CodingKeys.privateAttributes.rawValue] = privateAttributes
-
-        var encodedCustom = custom ?? [String: Any]()
-        encodedCustom[CodingKeys.device.rawValue] = device
-        encodedCustom[CodingKeys.operatingSystem.rawValue] = operatingSystem
-        if !encodedCustom.isEmpty {
-            dictionaryValue[CodingKeys.custom.rawValue] = custom
-        }
-
-        dictionaryValue[CodingKeys.isAnonymous.rawValue] = isAnonymous
-        dictionaryValue[CodingKeys.lastUpdated.rawValue] = DateFormatter.ldDateFormatter.string(from: lastUpdated)
-
-        return dictionaryValue
-    }
 
     public func dictionaryValue(includeFlagConfig: Bool, includePrivateAttributes includePrivate: Bool, config: LDConfig) -> [String: Any] {
         var dictionary = [String: Any]()
