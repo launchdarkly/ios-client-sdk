@@ -17,40 +17,28 @@ final class LDUserSpec: QuickSpec {
     }
 
     override func spec() {
-        let mockKey = UUID().uuidString
-        let mockName = "mock.LDUser.name"
-        let mockFirstName = "mock.LDUser.firstName"
-        let mockLastName = "mock.LDUser.lastName"
-        let mockCountry = "mock.LDUser.country"
-        let mockIPAddress = "mock.LDUser.ipAddress"
-        let mockEmail = "mock.LDUser.email@dummy.com"
-        let mockAvatar = "mock.LDUser.avatar"
-        let mockCustom = LDUser.stubCustomData()
-        let mockDevice = LDUser.Values.device
-        let mockOS = LDUser.Values.operatingSystem
-        let mockIsAnonymous = false
 
         var subject: LDUser!
         describe("init") {
             context("called with optional elements") {
                 beforeEach {
-                    subject = LDUser(key: mockKey, name: mockName, firstName: mockFirstName, lastName: mockLastName, country: mockCountry, ipAddress: mockIPAddress, email: mockEmail, avatar: mockAvatar, custom: mockCustom, isAnonymous: mockIsAnonymous, privateAttributes: LDUser.privatizableAttributes)
+                    subject = LDUser(key: LDUser.StubConstants.key, name: LDUser.StubConstants.name, firstName: LDUser.StubConstants.firstName, lastName: LDUser.StubConstants.lastName, country: LDUser.StubConstants.country, ipAddress: LDUser.StubConstants.ipAddress, email: LDUser.StubConstants.email, avatar: LDUser.StubConstants.avatar, custom: LDUser.StubConstants.custom, isAnonymous: LDUser.StubConstants.isAnonymous, privateAttributes: LDUser.privatizableAttributes)
                 }
                 it("creates a LDUser with optional elements") {
-                    expect(subject.key) == mockKey
-                    expect(subject.name) == mockName
-                    expect(subject.firstName) == mockFirstName
-                    expect(subject.lastName) == mockLastName
-                    expect(subject.isAnonymous) == mockIsAnonymous
-                    expect(subject.country) == mockCountry
-                    expect(subject.ipAddress) == mockIPAddress
-                    expect(subject.email) == mockEmail
-                    expect(subject.avatar) == mockAvatar
-                    expect(subject.device) == mockDevice
-                    expect(subject.operatingSystem) == mockOS
+                    expect(subject.key) == LDUser.StubConstants.key
+                    expect(subject.name) == LDUser.StubConstants.name
+                    expect(subject.firstName) == LDUser.StubConstants.firstName
+                    expect(subject.lastName) == LDUser.StubConstants.lastName
+                    expect(subject.isAnonymous) == LDUser.StubConstants.isAnonymous
+                    expect(subject.country) == LDUser.StubConstants.country
+                    expect(subject.ipAddress) == LDUser.StubConstants.ipAddress
+                    expect(subject.email) == LDUser.StubConstants.email
+                    expect(subject.avatar) == LDUser.StubConstants.avatar
+                    expect(subject.device) == LDUser.StubConstants.device
+                    expect(subject.operatingSystem) == LDUser.StubConstants.operatingSystem
                     expect(subject.custom).toNot(beNil())
                     if let subjectCustom = subject.custom {
-                        expect(subjectCustom == mockCustom).to(beTrue())
+                        expect(subjectCustom == LDUser.StubConstants.custom).to(beTrue())
                     }
                     expect(subject.lastUpdated).toNot(beNil())
                     expect(subject.privateAttributes).toNot(beNil())
@@ -103,7 +91,8 @@ final class LDUserSpec: QuickSpec {
             context("called with config") {
                 context("and optional elements") {
                     beforeEach {
-                        originalUser = LDUser(key: mockKey, name: mockName, firstName: mockFirstName, lastName: mockLastName, country: mockCountry, ipAddress: mockIPAddress, email: mockEmail, avatar: mockAvatar, custom: mockCustom, isAnonymous: mockIsAnonymous, privateAttributes: LDUser.privatizableAttributes)
+                        originalUser = LDUser.stub()
+                        originalUser.privateAttributes = LDUser.privatizableAttributes
                         var userDictionary = originalUser.dictionaryValueWithConfig
                         userDictionary[LDUser.CodingKeys.lastUpdated.rawValue] = mockLastUpdated
                         subject = LDUser(userDictionary: userDictionary)
@@ -170,7 +159,8 @@ final class LDUserSpec: QuickSpec {
             context("called without config") {
                 context("but with optional elements") {
                     beforeEach {
-                        originalUser = LDUser(key: mockKey, name: mockName, firstName: mockFirstName, lastName: mockLastName, country: mockCountry, ipAddress: mockIPAddress, email: mockEmail, avatar: mockAvatar, custom: mockCustom, isAnonymous: mockIsAnonymous, privateAttributes: LDUser.privatizableAttributes)
+                        originalUser = LDUser.stub()
+                        originalUser.privateAttributes = LDUser.privatizableAttributes
                         var userDictionary = originalUser.dictionaryValueWithoutConfig
                         userDictionary[LDUser.CodingKeys.lastUpdated.rawValue] = mockLastUpdated
                         subject = LDUser(userDictionary: userDictionary)
@@ -288,11 +278,746 @@ final class LDUserSpec: QuickSpec {
         }
 
         describe("dictionaryValue") {
+            var config: LDConfig!
             var userDictionary: [String: Any]!
-            context("called with config") {
-                context("and optional elements") {
+            var privateAttributes: [String]!
+            context("called with flag config") {
+                context("including private attributes") {
+                    context("with individual private attributes") {
+                        context("contained in the config") {
+                            beforeEach {
+                                config = LDConfig()
+                                subject = LDUser.stub()
+                                privateAttributes = LDUser.privatizableAttributes + subject.custom!.keys.filter { (customAttribute) in
+                                    //User stub includes a custom dictionary with device & operating system, which are not privatizable
+                                    customAttribute != LDUser.CodingKeys.device.rawValue && customAttribute != LDUser.CodingKeys.operatingSystem.rawValue
+                                }
+                            }
+                            it("creates a matching dictionary") {
+                                privateAttributes.forEach { (attribute) in
+                                    config.privateUserAttributes = [attribute]
+                                    userDictionary = subject.dictionaryValue(includeFlagConfig: true, includePrivateAttributes: true, config: config)
+                                    expect({ subject.matches(userDictionary: userDictionary, includeFlagConfig: true, includePrivateAttributes: true, privateAttributes: [attribute]) }).to(match())
+                                }
+                            }
+                        }
+                        context("contained in the user") {
+                            context("on a populated user") {
+                                beforeEach {
+                                    config = LDConfig()
+                                    subject = LDUser.stub()
+                                    privateAttributes = LDUser.privatizableAttributes + subject.custom!.keys.filter { (customAttribute) in
+                                        //User stub includes a custom dictionary with device & operating system, which are not privatizable
+                                        customAttribute != LDUser.CodingKeys.device.rawValue && customAttribute != LDUser.CodingKeys.operatingSystem.rawValue
+                                    }
+                                }
+                                it("creates a matching dictionary") {
+                                    privateAttributes.forEach { (attribute) in
+                                        subject.privateAttributes = [attribute]
+                                        userDictionary = subject.dictionaryValue(includeFlagConfig: true, includePrivateAttributes: true, config: config)
+                                        expect({ subject.matches(userDictionary: userDictionary, includeFlagConfig: true, includePrivateAttributes: true, privateAttributes: [attribute]) }).to(match())
+                                    }
+                                }
+                            }
+                            context("on an empty user") {
+                                beforeEach {
+                                    config = LDConfig()
+                                    subject = LDUser()
+                                    privateAttributes = LDUser.privatizableAttributes
+                                }
+                                it("creates a matching dictionary") {
+                                    privateAttributes.forEach { (attribute) in
+                                        subject.privateAttributes = [attribute]
+                                        userDictionary = subject.dictionaryValue(includeFlagConfig: true, includePrivateAttributes: true, config: config)
+                                        expect({ subject.matches(userDictionary: userDictionary, includeFlagConfig: true, includePrivateAttributes: true, privateAttributes: [attribute]) }).to(match())
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    context("with all private attributes") {
+                        context("using the config flag") {
+                            beforeEach {
+                                config = LDConfig()
+                                config.allUserAttributesPrivate = true
+                                subject = LDUser.stub()
+
+                                userDictionary = subject.dictionaryValue(includeFlagConfig: true, includePrivateAttributes: true, config: config)
+                            }
+                            it("creates a matching dictionary") {
+                                expect({ subject.matches(userDictionary: userDictionary, includeFlagConfig: true, includePrivateAttributes: true, privateAttributes: LDUser.privatizableAttributes) }).to(match())
+                            }
+                        }
+                        context("contained in the config") {
+                            beforeEach {
+                                config = LDConfig()
+                                config.privateUserAttributes = LDUser.privatizableAttributes
+                                subject = LDUser.stub()
+
+                                userDictionary = subject.dictionaryValue(includeFlagConfig: true, includePrivateAttributes: true, config: config)
+                            }
+                            it("creates a matching dictionary") {
+                                expect({ subject.matches(userDictionary: userDictionary, includeFlagConfig: true, includePrivateAttributes: true, privateAttributes: LDUser.privatizableAttributes) }).to(match())
+                            }
+                        }
+                        context("contained in the user") {
+                            beforeEach {
+                                config = LDConfig()
+                                subject = LDUser.stub()
+                                subject.privateAttributes = LDUser.privatizableAttributes
+
+                                userDictionary = subject.dictionaryValue(includeFlagConfig: true, includePrivateAttributes: true, config: config)
+                            }
+                            it("creates a matching dictionary") {
+                                expect({ subject.matches(userDictionary: userDictionary, includeFlagConfig: true, includePrivateAttributes: true, privateAttributes: LDUser.privatizableAttributes) }).to(match())
+                            }
+                        }
+                    }
+                    context("with no private attributes") {
+                        context("by setting private attributes to nil") {
+                            beforeEach {
+                                config = LDConfig()
+                                subject = LDUser.stub()
+
+                                userDictionary = subject.dictionaryValue(includeFlagConfig: true, includePrivateAttributes: true, config: config)
+                            }
+                            it("creates a matching dictionary") {
+                                expect({ subject.matches(userDictionary: userDictionary, includeFlagConfig: true, includePrivateAttributes: true, privateAttributes: []) }).to(match())
+                            }
+                        }
+                        context("by setting config private attributes to empty") {
+                            beforeEach {
+                                config = LDConfig()
+                                config.privateUserAttributes = []
+                                subject = LDUser.stub()
+
+                                userDictionary = subject.dictionaryValue(includeFlagConfig: true, includePrivateAttributes: true, config: config)
+                            }
+                            it("creates a matching dictionary") {
+                                expect({ subject.matches(userDictionary: userDictionary, includeFlagConfig: true, includePrivateAttributes: true, privateAttributes: []) }).to(match())
+                            }
+                        }
+                        context("by setting user private attributes to empty") {
+                            beforeEach {
+                                config = LDConfig()
+                                subject = LDUser.stub()
+                                subject.privateAttributes = []
+
+                                userDictionary = subject.dictionaryValue(includeFlagConfig: true, includePrivateAttributes: true, config: config)
+                            }
+                            it("creates a matching dictionary") {
+                                expect({ subject.matches(userDictionary: userDictionary, includeFlagConfig: true, includePrivateAttributes: true, privateAttributes: []) }).to(match())
+                            }
+                        }
+                    }
+                    context("with only custom as the private attribute") {
+                        context("on a user with no custom dictionary") {
+                            context("with a device and os") {
+                                beforeEach {
+                                    config = LDConfig()
+                                    subject = LDUser.stub()
+                                    subject.custom = nil
+                                    subject.privateAttributes = [LDUser.CodingKeys.custom.rawValue]
+
+                                    userDictionary = subject.dictionaryValue(includeFlagConfig: true, includePrivateAttributes: true, config: config)
+                                }
+                                it("creates a matching dictionary") {
+                                    expect({ subject.matches(userDictionary: userDictionary, includeFlagConfig: true, includePrivateAttributes: true, privateAttributes: [LDUser.CodingKeys.custom.rawValue]) }).to(match())
+                                }
+                            }
+                            context("without a device and os") {
+                                beforeEach {
+                                    config = LDConfig()
+                                    subject = LDUser.stub()
+                                    subject.custom = nil
+                                    subject.operatingSystem = nil
+                                    subject.device = nil
+                                    subject.privateAttributes = [LDUser.CodingKeys.custom.rawValue]
+
+                                    userDictionary = subject.dictionaryValue(includeFlagConfig: true, includePrivateAttributes: true, config: config)
+                                }
+                                it("creates a matching dictionary") {
+                                    expect({ subject.matches(userDictionary: userDictionary, includeFlagConfig: true, includePrivateAttributes: true, privateAttributes: [LDUser.CodingKeys.custom.rawValue]) }).to(match())
+                                }
+                            }
+                        }
+                        context("on a user with a custom dictionary") {
+                            context("without a device and os") {
+                                beforeEach {
+                                    config = LDConfig()
+                                    subject = LDUser.stub() //The user stub puts device & operating system in both the user attributes and the custom dictionary
+                                    var custom = subject.custom
+                                    custom?.removeValue(forKey: LDUser.CodingKeys.device.rawValue)
+                                    custom?.removeValue(forKey: LDUser.CodingKeys.operatingSystem.rawValue)
+                                    subject.custom = custom
+                                    subject.device = nil
+                                    subject.operatingSystem = nil
+                                    subject.privateAttributes = [LDUser.CodingKeys.custom.rawValue]
+
+                                    userDictionary = subject.dictionaryValue(includeFlagConfig: true, includePrivateAttributes: true, config: config)
+                                }
+                                it("creates a matching dictionary") {
+                                    expect({ subject.matches(userDictionary: userDictionary, includeFlagConfig: true, includePrivateAttributes: true, privateAttributes: [LDUser.CodingKeys.custom.rawValue]) }).to(match())
+                                }
+                            }
+                        }
+                    }
+                }
+                context("excluding private attributes") {
+                    context("with individual private attributes") {
+                        context("contained in the config") {
+                            beforeEach {
+                                config = LDConfig()
+                                subject = LDUser.stub()
+                                privateAttributes = LDUser.privatizableAttributes + subject.custom!.keys.filter { (customAttribute) in
+                                    //User stub includes a custom dictionary with device & operating system, which are not privatizable
+                                    customAttribute != LDUser.CodingKeys.device.rawValue && customAttribute != LDUser.CodingKeys.operatingSystem.rawValue
+                                }
+                            }
+                            it("creates a matching dictionary") {
+                                privateAttributes.forEach { (attribute) in
+                                    config.privateUserAttributes = [attribute]
+                                    userDictionary = subject.dictionaryValue(includeFlagConfig: true, includePrivateAttributes: false, config: config)
+                                    expect({ subject.matches(userDictionary: userDictionary, includeFlagConfig: true, includePrivateAttributes: false, privateAttributes: [attribute]) }).to(match())
+                                }
+                            }
+                        }
+                        context("contained in the user") {
+                            context("on a populated user") {
+                                beforeEach {
+                                    config = LDConfig()
+                                    subject = LDUser.stub()
+                                    privateAttributes = LDUser.privatizableAttributes + subject.custom!.keys.filter { (customAttribute) in
+                                        //User stub includes a custom dictionary with device & operating system, which are not privatizable
+                                        customAttribute != LDUser.CodingKeys.device.rawValue && customAttribute != LDUser.CodingKeys.operatingSystem.rawValue
+                                    }
+                                }
+                                it("creates a matching dictionary") {
+                                    privateAttributes.forEach { (attribute) in
+                                        config.privateUserAttributes = [attribute]
+                                        userDictionary = subject.dictionaryValue(includeFlagConfig: true, includePrivateAttributes: false, config: config)
+                                        expect({ subject.matches(userDictionary: userDictionary, includeFlagConfig: true, includePrivateAttributes: false, privateAttributes: [attribute]) }).to(match())
+                                    }
+                                }
+                            }
+                            context("on an empty user") {
+                                beforeEach {
+                                    config = LDConfig()
+                                    subject = LDUser()
+                                    privateAttributes = LDUser.privatizableAttributes
+                                }
+                                it("creates a matching dictionary") {
+                                    privateAttributes.forEach { (attribute) in
+                                        subject.privateAttributes = [attribute]
+                                        userDictionary = subject.dictionaryValue(includeFlagConfig: true, includePrivateAttributes: false, config: config)
+                                        expect({ subject.matches(userDictionary: userDictionary, includeFlagConfig: true, includePrivateAttributes: false, privateAttributes: [attribute]) }).to(match())
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    context("with all private attributes") {
+                        context("using the config flag") {
+                            beforeEach {
+                                config = LDConfig()
+                                config.allUserAttributesPrivate = true
+                                subject = LDUser.stub()
+
+                                userDictionary = subject.dictionaryValue(includeFlagConfig: true, includePrivateAttributes: false, config: config)
+                            }
+                            it("creates a matching dictionary") {
+                                expect({ subject.matches(userDictionary: userDictionary, includeFlagConfig: true, includePrivateAttributes: false, privateAttributes: LDUser.privatizableAttributes) }).to(match())
+                            }
+                        }
+                        context("contained in the config") {
+                            beforeEach {
+                                config = LDConfig()
+                                config.privateUserAttributes = LDUser.privatizableAttributes
+                                subject = LDUser.stub()
+
+                                userDictionary = subject.dictionaryValue(includeFlagConfig: true, includePrivateAttributes: false, config: config)
+                            }
+                            it("creates a matching dictionary") {
+                                expect({ subject.matches(userDictionary: userDictionary, includeFlagConfig: true, includePrivateAttributes: false, privateAttributes: LDUser.privatizableAttributes) }).to(match())
+                            }
+                        }
+                        context("contained in the user") {
+                            beforeEach {
+                                config = LDConfig()
+                                subject = LDUser.stub()
+                                subject.privateAttributes = LDUser.privatizableAttributes
+
+                                userDictionary = subject.dictionaryValue(includeFlagConfig: true, includePrivateAttributes: false, config: config)
+                            }
+                            it("creates a matching dictionary") {
+                                expect({ subject.matches(userDictionary: userDictionary, includeFlagConfig: true, includePrivateAttributes: false, privateAttributes: LDUser.privatizableAttributes) }).to(match())
+                            }
+                        }
+                    }
+                    context("with no private attributes") {
+                        context("by setting private attributes to nil") {
+                            beforeEach {
+                                config = LDConfig()
+                                subject = LDUser.stub()
+
+                                userDictionary = subject.dictionaryValue(includeFlagConfig: true, includePrivateAttributes: false, config: config)
+                            }
+                            it("creates a matching dictionary") {
+                                expect({ subject.matches(userDictionary: userDictionary, includeFlagConfig: true, includePrivateAttributes: false, privateAttributes: []) }).to(match())
+                            }
+                        }
+                        context("by setting config private attributes to empty") {
+                            beforeEach {
+                                config = LDConfig()
+                                config.privateUserAttributes = []
+                                subject = LDUser.stub()
+
+                                userDictionary = subject.dictionaryValue(includeFlagConfig: true, includePrivateAttributes: false, config: config)
+                            }
+                            it("creates a matching dictionary") {
+                                expect({ subject.matches(userDictionary: userDictionary, includeFlagConfig: true, includePrivateAttributes: false, privateAttributes: []) }).to(match())
+                            }
+                        }
+                        context("by setting user private attributes to empty") {
+                            beforeEach {
+                                config = LDConfig()
+                                subject = LDUser.stub()
+                                subject.privateAttributes = []
+
+                                userDictionary = subject.dictionaryValue(includeFlagConfig: true, includePrivateAttributes: false, config: config)
+                            }
+                            it("creates a matching dictionary") {
+                                expect({ subject.matches(userDictionary: userDictionary, includeFlagConfig: true, includePrivateAttributes: false, privateAttributes: []) }).to(match())
+                            }
+                        }
+                    }
+                    context("with only custom as the private attribute") {
+                        context("on a user with no custom dictionary") {
+                            context("with a device and os") {
+                                beforeEach {
+                                    config = LDConfig()
+                                    subject = LDUser.stub()
+                                    subject.custom = nil
+                                    subject.privateAttributes = [LDUser.CodingKeys.custom.rawValue]
+
+                                    userDictionary = subject.dictionaryValue(includeFlagConfig: true, includePrivateAttributes: false, config: config)
+                                }
+                                it("creates a matching dictionary") {
+                                    expect({ subject.matches(userDictionary: userDictionary, includeFlagConfig: true, includePrivateAttributes: false, privateAttributes: [LDUser.CodingKeys.custom.rawValue]) }).to(match())
+                                }
+                            }
+                            context("without a device and os") {
+                                beforeEach {
+                                    config = LDConfig()
+                                    subject = LDUser.stub()
+                                    subject.custom = nil
+                                    subject.operatingSystem = nil
+                                    subject.device = nil
+                                    subject.privateAttributes = [LDUser.CodingKeys.custom.rawValue]
+
+                                    userDictionary = subject.dictionaryValue(includeFlagConfig: true, includePrivateAttributes: false, config: config)
+                                }
+                                it("creates a matching dictionary") {
+                                    expect({ subject.matches(userDictionary: userDictionary, includeFlagConfig: true, includePrivateAttributes: false, privateAttributes: [LDUser.CodingKeys.custom.rawValue]) }).to(match())
+                                }
+                            }
+                        }
+                        context("on a user with a custom dictionary") {
+                            context("without a device and os") {
+                                beforeEach {
+                                    config = LDConfig()
+                                    subject = LDUser.stub() //The user stub puts device & operating system in both the user attributes and the custom dictionary
+                                    var custom = subject.custom
+                                    custom?.removeValue(forKey: LDUser.CodingKeys.device.rawValue)
+                                    custom?.removeValue(forKey: LDUser.CodingKeys.operatingSystem.rawValue)
+                                    subject.custom = custom
+                                    subject.device = nil
+                                    subject.operatingSystem = nil
+                                    subject.privateAttributes = [LDUser.CodingKeys.custom.rawValue]
+
+                                    userDictionary = subject.dictionaryValue(includeFlagConfig: true, includePrivateAttributes: false, config: config)
+                                }
+                                it("creates a matching dictionary") {
+                                    expect({ subject.matches(userDictionary: userDictionary, includeFlagConfig: true, includePrivateAttributes: false, privateAttributes: [LDUser.CodingKeys.custom.rawValue]) }).to(match())
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            context("called without flag config") {
+                context("including private attributes") {
+                    context("with individual private attributes") {
+                        context("contained in the config") {
+                            beforeEach {
+                                config = LDConfig()
+                                subject = LDUser.stub()
+                                privateAttributes = LDUser.privatizableAttributes + subject.custom!.keys.filter { (customAttribute) in
+                                    //User stub includes a custom dictionary with device & operating system, which are not privatizable
+                                    customAttribute != LDUser.CodingKeys.device.rawValue && customAttribute != LDUser.CodingKeys.operatingSystem.rawValue
+                                }
+                            }
+                            it("creates a matching dictionary") {
+                                privateAttributes.forEach { (attribute) in
+                                    config.privateUserAttributes = [attribute]
+                                    userDictionary = subject.dictionaryValue(includeFlagConfig: false, includePrivateAttributes: true, config: config)
+                                    expect({ subject.matches(userDictionary: userDictionary, includeFlagConfig: false, includePrivateAttributes: true, privateAttributes: [attribute]) }).to(match())
+                                }
+                            }
+                        }
+                        context("contained in the user") {
+                            context("on a populated user") {
+                                beforeEach {
+                                    config = LDConfig()
+                                    subject = LDUser.stub()
+                                    privateAttributes = LDUser.privatizableAttributes + subject.custom!.keys.filter { (customAttribute) in
+                                        //User stub includes a custom dictionary with device & operating system, which are not privatizable
+                                        customAttribute != LDUser.CodingKeys.device.rawValue && customAttribute != LDUser.CodingKeys.operatingSystem.rawValue
+                                    }
+                                }
+                                it("creates a matching dictionary") {
+                                    privateAttributes.forEach { (attribute) in
+                                        subject.privateAttributes = [attribute]
+                                        userDictionary = subject.dictionaryValue(includeFlagConfig: false, includePrivateAttributes: true, config: config)
+                                        expect({ subject.matches(userDictionary: userDictionary, includeFlagConfig: false, includePrivateAttributes: true, privateAttributes: [attribute]) }).to(match())
+                                    }
+                                }
+                            }
+                            context("on an empty user") {
+                                beforeEach {
+                                    config = LDConfig()
+                                    subject = LDUser()
+                                    privateAttributes = LDUser.privatizableAttributes
+                                }
+                                it("creates a matching dictionary") {
+                                    privateAttributes.forEach { (attribute) in
+                                        subject.privateAttributes = [attribute]
+                                        userDictionary = subject.dictionaryValue(includeFlagConfig: false, includePrivateAttributes: true, config: config)
+                                        expect({ subject.matches(userDictionary: userDictionary, includeFlagConfig: false, includePrivateAttributes: true, privateAttributes: [attribute]) }).to(match())
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    context("with all private attributes") {
+                        context("using the config flag") {
+                            beforeEach {
+                                config = LDConfig()
+                                config.allUserAttributesPrivate = true
+                                subject = LDUser.stub()
+
+                                userDictionary = subject.dictionaryValue(includeFlagConfig: false, includePrivateAttributes: true, config: config)
+                            }
+                            it("creates a matching dictionary") {
+                                expect({ subject.matches(userDictionary: userDictionary, includeFlagConfig: false, includePrivateAttributes: true, privateAttributes: LDUser.privatizableAttributes) }).to(match())
+                            }
+                        }
+                        context("contained in the config") {
+                            beforeEach {
+                                config = LDConfig()
+                                config.privateUserAttributes = LDUser.privatizableAttributes
+                                subject = LDUser.stub()
+
+                                userDictionary = subject.dictionaryValue(includeFlagConfig: false, includePrivateAttributes: true, config: config)
+                            }
+                            it("creates a matching dictionary") {
+                                expect({ subject.matches(userDictionary: userDictionary, includeFlagConfig: false, includePrivateAttributes: true, privateAttributes: LDUser.privatizableAttributes) }).to(match())
+                            }
+                        }
+                        context("contained in the user") {
+                            beforeEach {
+                                config = LDConfig()
+                                subject = LDUser.stub()
+                                subject.privateAttributes = LDUser.privatizableAttributes
+
+                                userDictionary = subject.dictionaryValue(includeFlagConfig: false, includePrivateAttributes: true, config: config)
+                            }
+                            it("creates a matching dictionary") {
+                                expect({ subject.matches(userDictionary: userDictionary, includeFlagConfig: false, includePrivateAttributes: true, privateAttributes: LDUser.privatizableAttributes) }).to(match())
+                            }
+                        }
+                    }
+                    context("with no private attributes") {
+                        context("by setting private attributes to nil") {
+                            beforeEach {
+                                config = LDConfig()
+                                subject = LDUser.stub()
+
+                                userDictionary = subject.dictionaryValue(includeFlagConfig: false, includePrivateAttributes: true, config: config)
+                            }
+                            it("creates a matching dictionary") {
+                                expect({ subject.matches(userDictionary: userDictionary, includeFlagConfig: false, includePrivateAttributes: true, privateAttributes: []) }).to(match())
+                            }
+                        }
+                        context("by setting config private attributes to empty") {
+                            beforeEach {
+                                config = LDConfig()
+                                config.privateUserAttributes = []
+                                subject = LDUser.stub()
+
+                                userDictionary = subject.dictionaryValue(includeFlagConfig: false, includePrivateAttributes: true, config: config)
+                            }
+                            it("creates a matching dictionary") {
+                                expect({ subject.matches(userDictionary: userDictionary, includeFlagConfig: false, includePrivateAttributes: true, privateAttributes: []) }).to(match())
+                            }
+                        }
+                        context("by setting user private attributes to empty") {
+                            beforeEach {
+                                config = LDConfig()
+                                subject = LDUser.stub()
+                                subject.privateAttributes = []
+
+                                userDictionary = subject.dictionaryValue(includeFlagConfig: false, includePrivateAttributes: true, config: config)
+                            }
+                            it("creates a matching dictionary") {
+                                expect({ subject.matches(userDictionary: userDictionary, includeFlagConfig: false, includePrivateAttributes: true, privateAttributes: []) }).to(match())
+                            }
+                        }
+                    }
+                    context("with only custom as the private attribute") {
+                        context("on a user with no custom dictionary") {
+                            context("with a device and os") {
+                                beforeEach {
+                                    config = LDConfig()
+                                    subject = LDUser.stub()
+                                    subject.custom = nil
+                                    subject.privateAttributes = [LDUser.CodingKeys.custom.rawValue]
+
+                                    userDictionary = subject.dictionaryValue(includeFlagConfig: false, includePrivateAttributes: true, config: config)
+                                }
+                                it("creates a matching dictionary") {
+                                    expect({ subject.matches(userDictionary: userDictionary, includeFlagConfig: false, includePrivateAttributes: true, privateAttributes: [LDUser.CodingKeys.custom.rawValue]) }).to(match())
+                                }
+                            }
+                            context("without a device and os") {
+                                beforeEach {
+                                    config = LDConfig()
+                                    subject = LDUser.stub()
+                                    subject.custom = nil
+                                    subject.operatingSystem = nil
+                                    subject.device = nil
+                                    subject.privateAttributes = [LDUser.CodingKeys.custom.rawValue]
+
+                                    userDictionary = subject.dictionaryValue(includeFlagConfig: false, includePrivateAttributes: true, config: config)
+                                }
+                                it("creates a matching dictionary") {
+                                    expect({ subject.matches(userDictionary: userDictionary, includeFlagConfig: false, includePrivateAttributes: true, privateAttributes: [LDUser.CodingKeys.custom.rawValue]) }).to(match())
+                                }
+                            }
+                        }
+                        context("on a user with a custom dictionary") {
+                            context("without a device and os") {
+                                beforeEach {
+                                    config = LDConfig()
+                                    subject = LDUser.stub() //The user stub puts device & operating system in both the user attributes and the custom dictionary
+                                    var custom = subject.custom
+                                    custom?.removeValue(forKey: LDUser.CodingKeys.device.rawValue)
+                                    custom?.removeValue(forKey: LDUser.CodingKeys.operatingSystem.rawValue)
+                                    subject.custom = custom
+                                    subject.device = nil
+                                    subject.operatingSystem = nil
+                                    subject.privateAttributes = [LDUser.CodingKeys.custom.rawValue]
+
+                                    userDictionary = subject.dictionaryValue(includeFlagConfig: false, includePrivateAttributes: true, config: config)
+                                }
+                                it("creates a matching dictionary") {
+                                    expect({ subject.matches(userDictionary: userDictionary, includeFlagConfig: false, includePrivateAttributes: true, privateAttributes: [LDUser.CodingKeys.custom.rawValue]) }).to(match())
+                                }
+                            }
+                        }
+                    }
+                }
+                context("excluding private attributes") {
+                    context("with individual private attributes") {
+                        context("contained in the config") {
+                            beforeEach {
+                                config = LDConfig()
+                                subject = LDUser.stub()
+                                privateAttributes = LDUser.privatizableAttributes + subject.custom!.keys.filter { (customAttribute) in
+                                    //User stub includes a custom dictionary with device & operating system, which are not privatizable
+                                    customAttribute != LDUser.CodingKeys.device.rawValue && customAttribute != LDUser.CodingKeys.operatingSystem.rawValue
+                                }
+                            }
+                            it("creates a matching dictionary") {
+                                privateAttributes.forEach { (attribute) in
+                                    config.privateUserAttributes = [attribute]
+                                    userDictionary = subject.dictionaryValue(includeFlagConfig: false, includePrivateAttributes: false, config: config)
+                                    expect({ subject.matches(userDictionary: userDictionary, includeFlagConfig: false, includePrivateAttributes: false, privateAttributes: [attribute]) }).to(match())
+                                }
+                            }
+                        }
+                        context("contained in the user") {
+                            context("on a populated user") {
+                                beforeEach {
+                                    config = LDConfig()
+                                    subject = LDUser.stub()
+                                    privateAttributes = LDUser.privatizableAttributes + subject.custom!.keys.filter { (customAttribute) in
+                                        //User stub includes a custom dictionary with device & operating system, which are not privatizable
+                                        customAttribute != LDUser.CodingKeys.device.rawValue && customAttribute != LDUser.CodingKeys.operatingSystem.rawValue
+                                    }
+                                }
+                                it("creates a matching dictionary") {
+                                    privateAttributes.forEach { (attribute) in
+                                        config.privateUserAttributes = [attribute]
+                                        userDictionary = subject.dictionaryValue(includeFlagConfig: false, includePrivateAttributes: false, config: config)
+                                        expect({ subject.matches(userDictionary: userDictionary, includeFlagConfig: false, includePrivateAttributes: false, privateAttributes: [attribute]) }).to(match())
+                                    }
+                                }
+                            }
+                            context("on an empty user") {
+                                beforeEach {
+                                    config = LDConfig()
+                                    subject = LDUser()
+                                    privateAttributes = LDUser.privatizableAttributes
+                                }
+                                it("creates a matching dictionary") {
+                                    privateAttributes.forEach { (attribute) in
+                                        subject.privateAttributes = [attribute]
+                                        userDictionary = subject.dictionaryValue(includeFlagConfig: false, includePrivateAttributes: false, config: config)
+                                        expect({ subject.matches(userDictionary: userDictionary, includeFlagConfig: false, includePrivateAttributes: false, privateAttributes: [attribute]) }).to(match())
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    context("with all private attributes") {
+                        context("using the config flag") {
+                            beforeEach {
+                                config = LDConfig()
+                                config.allUserAttributesPrivate = true
+                                subject = LDUser.stub()
+
+                                userDictionary = subject.dictionaryValue(includeFlagConfig: false, includePrivateAttributes: false, config: config)
+                            }
+                            it("creates a matching dictionary") {
+                                expect({ subject.matches(userDictionary: userDictionary, includeFlagConfig: false, includePrivateAttributes: false, privateAttributes: LDUser.privatizableAttributes) }).to(match())
+                            }
+                        }
+                        context("contained in the config") {
+                            beforeEach {
+                                config = LDConfig()
+                                config.privateUserAttributes = LDUser.privatizableAttributes
+                                subject = LDUser.stub()
+
+                                userDictionary = subject.dictionaryValue(includeFlagConfig: false, includePrivateAttributes: false, config: config)
+                            }
+                            it("creates a matching dictionary") {
+                                expect({ subject.matches(userDictionary: userDictionary, includeFlagConfig: false, includePrivateAttributes: false, privateAttributes: LDUser.privatizableAttributes) }).to(match())
+                            }
+                        }
+                        context("contained in the user") {
+                            beforeEach {
+                                config = LDConfig()
+                                subject = LDUser.stub()
+                                subject.privateAttributes = LDUser.privatizableAttributes
+
+                                userDictionary = subject.dictionaryValue(includeFlagConfig: false, includePrivateAttributes: false, config: config)
+                            }
+                            it("creates a matching dictionary") {
+                                expect({ subject.matches(userDictionary: userDictionary, includeFlagConfig: false, includePrivateAttributes: false, privateAttributes: LDUser.privatizableAttributes) }).to(match())
+                            }
+                        }
+                    }
+                    context("with no private attributes") {
+                        context("by setting private attributes to nil") {
+                            beforeEach {
+                                config = LDConfig()
+                                subject = LDUser.stub()
+
+                                userDictionary = subject.dictionaryValue(includeFlagConfig: false, includePrivateAttributes: false, config: config)
+                            }
+                            it("creates a matching dictionary") {
+                                expect({ subject.matches(userDictionary: userDictionary, includeFlagConfig: false, includePrivateAttributes: false, privateAttributes: []) }).to(match())
+                            }
+                        }
+                        context("by setting config private attributes to empty") {
+                            beforeEach {
+                                config = LDConfig()
+                                config.privateUserAttributes = []
+                                subject = LDUser.stub()
+
+                                userDictionary = subject.dictionaryValue(includeFlagConfig: false, includePrivateAttributes: false, config: config)
+                            }
+                            it("creates a matching dictionary") {
+                                expect({ subject.matches(userDictionary: userDictionary, includeFlagConfig: false, includePrivateAttributes: false, privateAttributes: []) }).to(match())
+                            }
+                        }
+                        context("by setting user private attributes to empty") {
+                            beforeEach {
+                                config = LDConfig()
+                                subject = LDUser.stub()
+                                subject.privateAttributes = []
+
+                                userDictionary = subject.dictionaryValue(includeFlagConfig: false, includePrivateAttributes: false, config: config)
+                            }
+                            it("creates a matching dictionary") {
+                                expect({ subject.matches(userDictionary: userDictionary, includeFlagConfig: false, includePrivateAttributes: false, privateAttributes: []) }).to(match())
+                            }
+                        }
+                    }
+                    context("with only custom as the private attribute") {
+                        context("on a user with no custom dictionary") {
+                            context("with a device and os") {
+                                beforeEach {
+                                    config = LDConfig()
+                                    subject = LDUser.stub()
+                                    subject.custom = nil
+                                    subject.privateAttributes = [LDUser.CodingKeys.custom.rawValue]
+
+                                    userDictionary = subject.dictionaryValue(includeFlagConfig: false, includePrivateAttributes: false, config: config)
+                                }
+                                it("creates a matching dictionary") {
+                                    expect({ subject.matches(userDictionary: userDictionary, includeFlagConfig: false, includePrivateAttributes: false, privateAttributes: [LDUser.CodingKeys.custom.rawValue]) }).to(match())
+                                }
+                            }
+                            context("without a device and os") {
+                                beforeEach {
+                                    config = LDConfig()
+                                    subject = LDUser.stub()
+                                    subject.custom = nil
+                                    subject.operatingSystem = nil
+                                    subject.device = nil
+                                    subject.privateAttributes = [LDUser.CodingKeys.custom.rawValue]
+
+                                    userDictionary = subject.dictionaryValue(includeFlagConfig: false, includePrivateAttributes: false, config: config)
+                                }
+                                it("creates a matching dictionary") {
+                                    expect({ subject.matches(userDictionary: userDictionary, includeFlagConfig: false, includePrivateAttributes: false, privateAttributes: [LDUser.CodingKeys.custom.rawValue]) }).to(match())
+                                }
+                            }
+                        }
+                        context("on a user with a custom dictionary") {
+                            context("without a device and os") {
+                                beforeEach {
+                                    config = LDConfig()
+                                    subject = LDUser.stub() //The user stub puts device & operating system in both the user attributes and the custom dictionary
+                                    var custom = subject.custom
+                                    custom?.removeValue(forKey: LDUser.CodingKeys.device.rawValue)
+                                    custom?.removeValue(forKey: LDUser.CodingKeys.operatingSystem.rawValue)
+                                    subject.custom = custom
+                                    subject.device = nil
+                                    subject.operatingSystem = nil
+                                    subject.privateAttributes = [LDUser.CodingKeys.custom.rawValue]
+
+                                    userDictionary = subject.dictionaryValue(includeFlagConfig: false, includePrivateAttributes: false, config: config)
+                                }
+                                it("creates a matching dictionary") {
+                                    expect({ subject.matches(userDictionary: userDictionary, includeFlagConfig: false, includePrivateAttributes: false, privateAttributes: [LDUser.CodingKeys.custom.rawValue]) }).to(match())
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        describe("dictionaryValue old tests") {
+            var userDictionary: [String: Any]!
+            context("called with flag config") {
+                context("on a user with optional elements") {
                     beforeEach {
-                        subject = LDUser(key: mockKey, name: mockName, firstName: mockFirstName, lastName: mockLastName, country: mockCountry, ipAddress: mockIPAddress, email: mockEmail, avatar: mockAvatar, custom: mockCustom, isAnonymous: mockIsAnonymous, privateAttributes: LDUser.privatizableAttributes)
+                        subject = LDUser.stub()
+                        subject.privateAttributes = LDUser.privatizableAttributes
                         userDictionary = subject.dictionaryValueWithConfig
                     }
                     it("creates a dictionary describing the user with optional elements and feature flags") {
@@ -328,7 +1053,7 @@ final class LDUserSpec: QuickSpec {
                         expect(userDictionary[LDUser.CodingKeys.config.rawValue] as? [String: Any] == subject.flagStore.featureFlags).to(beTrue())
                     }
                 }
-                context("but without optional elements") {
+                context("on a user without optional elements") {
                     beforeEach {
                         subject = LDUser(isAnonymous: true)
                         userDictionary = subject.dictionaryValueWithConfig
@@ -356,7 +1081,7 @@ final class LDUserSpec: QuickSpec {
             context("called without config") {
                 context("and with optional elements") {
                     beforeEach {
-                        subject = LDUser(key: mockKey, name: mockName, firstName: mockFirstName, lastName: mockLastName, country: mockCountry, ipAddress: mockIPAddress, email: mockEmail, avatar: mockAvatar, custom: mockCustom, isAnonymous: mockIsAnonymous, privateAttributes: LDUser.privatizableAttributes)
+                        subject = LDUser(key: LDUser.StubConstants.key, name: LDUser.StubConstants.name, firstName: LDUser.StubConstants.firstName, lastName: LDUser.StubConstants.lastName, country: LDUser.StubConstants.country, ipAddress: LDUser.StubConstants.ipAddress, email: LDUser.StubConstants.email, avatar: LDUser.StubConstants.avatar, custom: LDUser.StubConstants.custom, isAnonymous: LDUser.StubConstants.isAnonymous, privateAttributes: LDUser.privatizableAttributes)
                         userDictionary = subject.dictionaryValueWithoutConfig
                     }
                     it("creates a dictionary describing the user with optional elements") {
@@ -420,17 +1145,152 @@ final class LDUserSpec: QuickSpec {
 }
 
 extension LDUser {
-    struct Values {
-        public static let device = "some user device"
-        public static let operatingSystem = "some user os"
+    struct MatcherMessages {
+        static let valuesDontMatch = "dictionary does not match attribute "
+        static let dictionaryShouldNotContain = "dictionary contains attribute "
+        static let dictionaryShouldContain = "dictionary does not contain attribute "
+        static let attributeListShouldNotContain = "private attributes list contains attribute "
+        static let attributeListShouldContain = "private attributes list does not contain attribute "
     }
 
-    static func stubCustomData() -> [String: Any] {
-        var stubData = Dictionary.stub()
-        stubData[LDUser.CodingKeys.device.rawValue] = Values.device
-        stubData[LDUser.CodingKeys.operatingSystem.rawValue] = Values.operatingSystem
+    fileprivate func matches(userDictionary: [String: Any], includeFlagConfig: Bool, includePrivateAttributes includePrivate: Bool, privateAttributes: [String]) -> ToMatchResult {
+        var messages = [String]()
 
-        return stubData
+        //required attributes
+        if let message = matchMessage(value: key, dictionary: userDictionary, attribute: CodingKeys.key.rawValue, includePrivate: true, privateAttributes: []) {
+            messages.append(message)
+        }
+        let lastUpdatedString = DateFormatter.ldDateFormatter.string(from: lastUpdated)
+        if let message = matchMessage(value: lastUpdatedString, dictionary: userDictionary, attribute: CodingKeys.lastUpdated.rawValue, includePrivate: includePrivate, privateAttributes: privateAttributes) {
+            messages.append(message)
+        }
+        if let message = matchMessage(value: isAnonymous, dictionary: userDictionary, attribute: CodingKeys.isAnonymous.rawValue, includePrivate: includePrivate, privateAttributes: privateAttributes) {
+            messages.append(message)
+        }
+
+        //optional attributes
+        if let message = matchMessage(value: name, dictionary: userDictionary, attribute: CodingKeys.name.rawValue, includePrivate: includePrivate, privateAttributes: privateAttributes) {
+            messages.append(message)
+        }
+        if let message = matchMessage(value: firstName, dictionary: userDictionary, attribute: CodingKeys.firstName.rawValue, includePrivate: includePrivate, privateAttributes: privateAttributes) {
+            messages.append(message)
+        }
+        if let message = matchMessage(value: lastName, dictionary: userDictionary, attribute: CodingKeys.lastName.rawValue, includePrivate: includePrivate, privateAttributes: privateAttributes) {
+            messages.append(message)
+        }
+        if let message = matchMessage(value: country, dictionary: userDictionary, attribute: CodingKeys.country.rawValue, includePrivate: includePrivate, privateAttributes: privateAttributes) {
+            messages.append(message)
+        }
+        if let message = matchMessage(value: ipAddress, dictionary: userDictionary, attribute: CodingKeys.ipAddress.rawValue, includePrivate: includePrivate, privateAttributes: privateAttributes) {
+            messages.append(message)
+        }
+        if let message = matchMessage(value: email, dictionary: userDictionary, attribute: CodingKeys.email.rawValue, includePrivate: includePrivate, privateAttributes: privateAttributes) {
+            messages.append(message)
+        }
+        if let message = matchMessage(value: avatar, dictionary: userDictionary, attribute: CodingKeys.avatar.rawValue, includePrivate: includePrivate, privateAttributes: privateAttributes) {
+            messages.append(message)
+        }
+
+        //custom
+        if let message = matchMessage(customElements: (custom, device, operatingSystem), dictionary: userDictionary, includePrivate: includePrivate, privateAttributes: privateAttributes) {
+            messages.append(message)
+        }
+
+        //flag config
+        if let message = matchMessage(flagConfig: flagStore.featureFlags, dictionary: userDictionary, includeFlagConfig: includeFlagConfig) {
+            messages.append(message)
+        }
+
+        return messages.isEmpty ? .matched : .failed(reason: messages.joined(separator: ", "))
+    }
+
+    private func matchMessage(value: Any?, dictionary: [String: Any], attribute: String, includePrivate: Bool, privateAttributes: [String]) -> String? {
+        if !includePrivate {
+            if privateAttributes.contains(attribute) {
+                if dictionary[attribute] != nil { return MatcherMessages.dictionaryShouldNotContain + attribute }
+            } else {
+                if !AnyComparer.isEqualAllowNil(value, to: dictionary[attribute]) { return MatcherMessages.valuesDontMatch + attribute }
+            }
+            if let redactedAttributes = dictionary[CodingKeys.privateAttributes.rawValue] as? [String] {
+                if value == nil && redactedAttributes.contains(attribute) { return MatcherMessages.attributeListShouldNotContain + attribute }
+                if value != nil && !redactedAttributes.contains(attribute) { return MatcherMessages.attributeListShouldContain + attribute }
+            }
+        } else {
+            if !AnyComparer.isEqualAllowNil(value, to: dictionary[attribute]) { return MatcherMessages.valuesDontMatch + attribute }
+        }
+
+        return nil
+    }
+
+    private func matchMessage(flagConfig: [LDFlagKey: Any], dictionary: [String: Any], includeFlagConfig: Bool) -> String? {
+        if includeFlagConfig {
+            if let dictionaryConfig = dictionary[CodingKeys.config.rawValue] as? [LDFlagKey: Any] {
+                if flagConfig != dictionaryConfig { return MatcherMessages.valuesDontMatch + CodingKeys.config.rawValue }
+            } else {
+                return MatcherMessages.dictionaryShouldContain + CodingKeys.config.rawValue
+            }
+        } else {
+            if dictionary[CodingKeys.config.rawValue] != nil { return MatcherMessages.dictionaryShouldNotContain + CodingKeys.config.rawValue }
+        }
+
+        return nil
+    }
+
+    private func matchMessage(customElements: (custom: [String: Any]?, device: String?, operatingSystem: String?), dictionary: [String: Any], includePrivate: Bool, privateAttributes: [String]) -> String? {
+        let custom = customElements.custom
+        let device = customElements.device
+        let operatingSystem = customElements.operatingSystem
+        let redactedAttributes = dictionary[CodingKeys.privateAttributes.rawValue] as? [String]
+
+        if !includePrivate && privateAttributes.contains(CodingKeys.custom.rawValue) {
+            if var customDictionary = dictionary[CodingKeys.custom.rawValue] as? [String: Any] {
+                if let message = matchMessage(value: device, dictionary: customDictionary, attribute: CodingKeys.device.rawValue, includePrivate: true, privateAttributes: []) { return message }
+                customDictionary.removeValue(forKey: CodingKeys.device.rawValue)
+                if let message = matchMessage(value: operatingSystem, dictionary: customDictionary, attribute: CodingKeys.operatingSystem.rawValue, includePrivate: true, privateAttributes: []) { return message }
+                customDictionary.removeValue(forKey: CodingKeys.operatingSystem.rawValue)
+                if !customDictionary.isEmpty { return MatcherMessages.dictionaryShouldNotContain + CodingKeys.custom.rawValue }
+            }
+            if var custom = custom, let redactedAttributes = redactedAttributes {
+                custom.removeValue(forKey: CodingKeys.device.rawValue)
+                custom.removeValue(forKey: CodingKeys.operatingSystem.rawValue)
+                if !custom.isEmpty && !redactedAttributes.contains(CodingKeys.custom.rawValue) { return MatcherMessages.attributeListShouldContain + CodingKeys.custom.rawValue }
+                if custom.isEmpty && redactedAttributes.contains(CodingKeys.custom.rawValue) { return MatcherMessages.attributeListShouldNotContain + CodingKeys.custom.rawValue }
+            }
+        } else {
+            if let custom = custom {
+                guard let customDictionary = dictionary[CodingKeys.custom.rawValue] as? [String: Any] else { return MatcherMessages.dictionaryShouldContain + CodingKeys.custom.rawValue }
+                for customAttribute in custom.keys {
+                    if !includePrivate && privateAttributes.contains(customAttribute) {
+                        guard customDictionary[customAttribute] == nil else { return MatcherMessages.dictionaryShouldNotContain + customAttribute }
+                        if let redactedAttributes = redactedAttributes {
+                            if custom[customAttribute] == nil && redactedAttributes.contains(customAttribute) { return MatcherMessages.attributeListShouldNotContain + customAttribute }
+                            if custom[customAttribute] != nil && !redactedAttributes.contains(customAttribute) { return MatcherMessages.attributeListShouldContain + customAttribute }
+                        }
+                    } else {
+                        if !AnyComparer.isEqualAllowNil(custom[customAttribute], to: customDictionary[customAttribute]) { return MatcherMessages.valuesDontMatch + customAttribute }
+                    }
+                }
+                if let message = matchMessage(value: device, dictionary: customDictionary, attribute: CodingKeys.device.rawValue, includePrivate: true, privateAttributes: []) { return message }
+                if let message = matchMessage(value: operatingSystem, dictionary: customDictionary, attribute: CodingKeys.operatingSystem.rawValue, includePrivate: true, privateAttributes: []) { return message }
+            } else {
+                if device != nil || operatingSystem != nil {
+                    guard let customDictionary = dictionary[CodingKeys.custom.rawValue] as? [String: Any] else { return MatcherMessages.dictionaryShouldContain + CodingKeys.custom.rawValue }
+                    if let message = matchMessage(value: device, dictionary: customDictionary, attribute: CodingKeys.device.rawValue, includePrivate: true, privateAttributes: []) { return message }
+                    if let message = matchMessage(value: operatingSystem, dictionary: customDictionary, attribute: CodingKeys.operatingSystem.rawValue, includePrivate: true, privateAttributes: []) { return message }
+                } else {
+                    if dictionary[CodingKeys.custom.rawValue] != nil { return MatcherMessages.dictionaryShouldNotContain + CodingKeys.custom.rawValue }
+                }
+            }
+        }
+
+        return nil
+    }
+}
+
+extension AnyComparer {
+    static func isEqualAllowNil(_ value: Any?, to other: Any?) -> Bool {
+        if value == nil && other == nil { return true }
+        return isEqual(value, to: other)
     }
 }
 

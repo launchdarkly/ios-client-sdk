@@ -116,6 +116,85 @@ public struct LDUser {
         return dictionaryValue
     }
 
+    public func dictionaryValue(includeFlagConfig: Bool, includePrivateAttributes includePrivate: Bool, config: LDConfig) -> [String: Any] {
+        var dictionary = [String: Any]()
+        var redactedAttributes = [String]()
+        let combinedPrivateAttributes = config.allUserAttributesPrivate ? LDUser.privatizableAttributes : (privateAttributes ?? []) + (config.privateUserAttributes ?? [])
+
+        dictionary[CodingKeys.key.rawValue] = key
+
+        (dictionary, redactedAttributes) = store(value: name, in: dictionary, for: CodingKeys.name.rawValue, includePrivate: includePrivate, privateAttributes: combinedPrivateAttributes, redactedAttributes: redactedAttributes)
+        (dictionary, redactedAttributes) = store(value: firstName, in: dictionary, for: CodingKeys.firstName.rawValue, includePrivate: includePrivate, privateAttributes: combinedPrivateAttributes, redactedAttributes: redactedAttributes)
+        (dictionary, redactedAttributes) = store(value: lastName, in: dictionary, for: CodingKeys.lastName.rawValue, includePrivate: includePrivate, privateAttributes: combinedPrivateAttributes, redactedAttributes: redactedAttributes)
+        (dictionary, redactedAttributes) = store(value: country, in: dictionary, for: CodingKeys.country.rawValue, includePrivate: includePrivate, privateAttributes: combinedPrivateAttributes, redactedAttributes: redactedAttributes)
+        (dictionary, redactedAttributes) = store(value: email, in: dictionary, for: CodingKeys.email.rawValue, includePrivate: includePrivate, privateAttributes: combinedPrivateAttributes, redactedAttributes: redactedAttributes)
+        (dictionary, redactedAttributes) = store(value: ipAddress, in: dictionary, for: CodingKeys.ipAddress.rawValue, includePrivate: includePrivate, privateAttributes: combinedPrivateAttributes, redactedAttributes: redactedAttributes)
+        (dictionary, redactedAttributes) = store(value: avatar, in: dictionary, for: CodingKeys.avatar.rawValue, includePrivate: includePrivate, privateAttributes: combinedPrivateAttributes, redactedAttributes: redactedAttributes)
+
+        let customDictionary: [String: Any]?
+        (customDictionary, redactedAttributes) = self.customDictionary(from: (custom, device, operatingSystem), includePrivate: includePrivate, privateAttributes: combinedPrivateAttributes, redactedAttributes: redactedAttributes)
+        dictionary[CodingKeys.custom.rawValue] = customDictionary
+
+        if !includePrivate && !redactedAttributes.isEmpty {
+            let redactedAttributeSet: Set<String> = Set(redactedAttributes)
+            dictionary[CodingKeys.privateAttributes.rawValue] = redactedAttributeSet.sorted
+        }
+
+        dictionary[CodingKeys.isAnonymous.rawValue] = isAnonymous
+        dictionary[CodingKeys.lastUpdated.rawValue] = DateFormatter.ldDateFormatter.string(from: lastUpdated)
+
+        if includeFlagConfig {
+            dictionary[CodingKeys.config.rawValue] = flagStore.featureFlags
+        }
+
+        return dictionary
+    }
+
+    //swiftlint:disable:next function_parameter_count
+    private func store(value: Any?, in dictionary: [String: Any], for attribute: String, includePrivate: Bool, privateAttributes: [String], redactedAttributes: [String]) -> ([String: Any], [String]) {
+        guard let value = value else { return (dictionary, redactedAttributes) }
+        if !includePrivate && privateAttributes.contains(attribute) {
+            var redactedAttributes = redactedAttributes
+            redactedAttributes.append(attribute)
+            return (dictionary, redactedAttributes)
+        }
+        var dictionary = dictionary
+        dictionary[attribute] = value
+        return (dictionary, redactedAttributes)
+    }
+
+    private func customDictionary(from customElements: (custom: [String: Any]?, device: String?, operatingSystem: String?), includePrivate: Bool, privateAttributes: [String], redactedAttributes: [String]) -> ([String: Any]?, [String]) {
+        var customDictionary = [String: Any]()
+        var redactedAttributes = redactedAttributes
+        let device = customElements.device
+        let operatingSystem = customElements.operatingSystem
+
+        if !includePrivate && privateAttributes.contains(CodingKeys.custom.rawValue) {
+            if var custom = customElements.custom, !custom.isEmpty {
+                custom.removeValue(forKey: CodingKeys.device.rawValue)
+                custom.removeValue(forKey: CodingKeys.operatingSystem.rawValue)
+                if !custom.isEmpty {
+                    redactedAttributes.append(CodingKeys.custom.rawValue)
+                }
+            }
+        } else {
+            if let custom = customElements.custom, !custom.isEmpty {
+                custom.keys.forEach { (customAttribute) in
+                    if !includePrivate && privateAttributes.contains(customAttribute) && custom[customAttribute] != nil {
+                        redactedAttributes.append(customAttribute)
+                    } else {
+                        customDictionary[customAttribute] = custom[customAttribute]
+                    }
+                }
+            }
+        }
+
+        customDictionary[CodingKeys.device.rawValue] = device
+        customDictionary[CodingKeys.operatingSystem.rawValue] = operatingSystem
+
+        return (customDictionary.isEmpty ? nil : customDictionary, redactedAttributes)
+    }
+
     //For iOS & tvOS, this should be UIDevice.current.identifierForVendor.UUIDString
     //For macOS & watchOS, this should be a UUID that the sdk creates and stores so that the value returned here should be always the same
     static var defaultKey: String {
