@@ -12,7 +12,6 @@ import OHHTTPStubs
 @testable import Darkly
 
 final class DarklyServiceMock: DarklyServiceProvider {
-
     struct FlagKeys {
         static let bool = "bool-flag"
         static let int = "int-flag"
@@ -81,11 +80,12 @@ final class DarklyServiceMock: DarklyServiceProvider {
     }
     
     var stubbedEventResponse: ServiceResponse?
-    var publishEventsCallCount = 0
-    var publishedEvents: [LDEvent]?
-    func publishEvents(_ events: [LDEvent], completion: ServiceCompletionHandler?) {
-        publishEventsCallCount += 1
-        publishedEvents = events
+    var publishEventDictionariesCallCount = 0
+    var publishedEventDictionaries: [[String: Any]]?
+    var publishedEventDictionaryKeys: [String]? { return publishedEventDictionaries?.flatMap { (eventDictionary) in eventDictionary[LDEvent.CodingKeys.key.rawValue] as? String } }
+    func publishEventDictionaries(_ eventDictionaries: [[String: Any]], completion: ServiceCompletionHandler?) {
+        publishEventDictionariesCallCount += 1
+        publishedEventDictionaries = eventDictionaries
         completion?(stubbedEventResponse ?? (nil, nil, nil))
     }
 }
@@ -164,7 +164,7 @@ extension DarklyServiceMock {
             stubbedEventResponse = (nil, errorEventHTTPURLResponse, Constants.error)
         }
     }
-    var errorEventHTTPURLResponse: HTTPURLResponse! { return HTTPURLResponse(url: config.eventsUrl, statusCode: HTTPURLResponse.StatusCodes.accepted, httpVersion: Constants.httpVersion, headerFields: nil) }
+    var errorEventHTTPURLResponse: HTTPURLResponse! { return HTTPURLResponse(url: config.eventsUrl, statusCode: HTTPURLResponse.StatusCodes.internalServerError, httpVersion: Constants.httpVersion, headerFields: nil) }
 
     // MARK: Stub
 

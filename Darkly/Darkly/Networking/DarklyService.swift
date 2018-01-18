@@ -15,7 +15,7 @@ typealias ServiceCompletionHandler = (ServiceResponse) -> Void
 protocol DarklyServiceProvider: class {
     func getFeatureFlags(completion: ServiceCompletionHandler?)
     func createEventSource() -> DarklyStreamingProvider
-    func publishEvents(_ events: [LDEvent], completion: ServiceCompletionHandler?)
+    func publishEventDictionaries(_ eventDictionaries: [[String: Any]], completion: ServiceCompletionHandler?)
     var config: LDConfig { get }
     var user: LDUser { get }
 }
@@ -92,21 +92,21 @@ final class DarklyService: DarklyServiceProvider {
     
     // MARK: Publish Events
     
-    func publishEvents(_ events: [LDEvent], completion: ServiceCompletionHandler?) {
+    func publishEventDictionaries(_ eventDictionaries: [[String: Any]], completion: ServiceCompletionHandler?) {
         guard !mobileKey.isEmpty,
-            !events.isEmpty
+            !eventDictionaries.isEmpty
         else { return }
-        let dataTask = self.session.dataTask(with: eventRequest(events: events)) { (data, response, error) in
+        let dataTask = self.session.dataTask(with: eventRequest(eventDictionaries: eventDictionaries)) { (data, response, error) in
             completion?((data, response, error))
         }
         dataTask.resume()
     }
     
-    private func eventRequest(events: [LDEvent]) -> URLRequest {
+    private func eventRequest(eventDictionaries: [[String: Any]]) -> URLRequest {
         var request = URLRequest(url: eventUrl, cachePolicy: .useProtocolCachePolicy, timeoutInterval: config.connectionTimeout)
         request.appendHeaders(httpHeaders.eventRequestHeaders)
         request.httpMethod = Constants.httpMethodPost
-        request.httpBody = events.jsonData
+        request.httpBody = eventDictionaries.jsonData
 
         return request
     }

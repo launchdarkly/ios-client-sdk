@@ -47,12 +47,12 @@ struct LDEvent { //sdk internal, not publically accessible
         return LDEvent(key: key, kind: .identify, user: user)
     }
 
-    var dictionaryValue: [String: Any] {
+    func dictionaryValue(config: LDConfig) -> [String: Any] {
         var eventDictionary = [String: Any]()
         eventDictionary[CodingKeys.key.rawValue] = key
         eventDictionary[CodingKeys.kind.rawValue] = kind.rawValue
         eventDictionary[CodingKeys.creationDate.rawValue] = creationDate.millisSince1970
-        eventDictionary[CodingKeys.user.rawValue] = user.dictionaryValue(includeFlagConfig: true, includePrivateAttributes: false, config: LDConfig())  //TODO: Get the config!!
+        eventDictionary[CodingKeys.user.rawValue] = user.dictionaryValue(includeFlagConfig: true, includePrivateAttributes: false, config: config)
         eventDictionary[CodingKeys.value.rawValue] = value?.baseValue
         eventDictionary[CodingKeys.defaultValue.rawValue] = defaultValue?.baseValue
         eventDictionary[CodingKeys.data.rawValue] = data
@@ -62,16 +62,31 @@ struct LDEvent { //sdk internal, not publically accessible
 }
 
 extension Array where Element == LDEvent {
-    var dictionaryValues: [[String: Any]] { return self.map { (event) in event.dictionaryValue } }
+    func dictionaryValues(config: LDConfig) -> [[String: Any]] {
+        return self.map { (event) in event.dictionaryValue(config: config) }
+    }
+}
 
+extension Array where Element == [String: Any] {
     var jsonData: Data? {
         guard JSONSerialization.isValidJSONObject(self) else { return nil }
-        return try? JSONSerialization.data(withJSONObject: self.dictionaryValues, options: [])
+        return try? JSONSerialization.data(withJSONObject: self, options: [])
     }
 
-    mutating func remove(_ event: LDEvent) {
-        guard let index = self.index(where: {(element) in element == event}) else { return }
-        self.remove(at: index)
+    func contains(eventDictionary: [String: Any]) -> Bool {
+        return !self.filter { (testDictionary) in testDictionary.matches(eventDictionary: eventDictionary) }.isEmpty
+    }
+}
+
+extension Dictionary where Key == String, Value == Any {
+    var eventKey: String? { return self[LDEvent.CodingKeys.key.rawValue] as? String }
+    var eventCreationDateMillis: Int? { return self[LDEvent.CodingKeys.creationDate.rawValue] as? Int }
+
+    func matches(eventDictionary other: [String: Any]) -> Bool {
+        guard let key = eventKey, let creationDateMillis = eventCreationDateMillis,
+            let otherKey = other.eventKey, let otherCreationDateMillis = other.eventCreationDateMillis
+        else { return false }
+        return key == otherKey && creationDateMillis == otherCreationDateMillis
     }
 }
 

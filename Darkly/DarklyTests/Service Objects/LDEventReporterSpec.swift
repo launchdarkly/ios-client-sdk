@@ -17,7 +17,6 @@ final class LDEventReporterSpec: QuickSpec {
         static let eventFlushIntervalMillis = 10_000
         static let eventFlushInterval500Millis = 500
         static let mockMobileKey = "mockMobileKey"
-
     }
     
     var subject: LDEventReporter!
@@ -156,7 +155,9 @@ final class LDEventReporterSpec: QuickSpec {
                 }
                 it("records events up to event capacity") {
                     expect({ self.reporterState(isOnline: false, isReporting: false, reportTries: 0) }).to(match())
-                    expect(self.subject.eventStore).to(equal(self.mockEvents))
+                    let eventStoreKeys = self.subject.eventStore.flatMap { (eventDictionary) in eventDictionary[LDEvent.CodingKeys.key.rawValue] as? String }
+                    let mockEventKeys = self.mockEvents.map { (event) in event.key }
+                    expect(eventStoreKeys) == mockEventKeys
                 }
             }
             context("event store full") {
@@ -169,7 +170,8 @@ final class LDEventReporterSpec: QuickSpec {
                 }
                 it("doesn't record any more events") {
                     expect({ self.reporterState(isOnline: false, isReporting: false, reportTries: 0, recordedEvents: self.mockEvents) }).to(match())
-                    expect(self.subject.eventStore.contains(extraEvent)) == false
+                    let eventStoreKeys = self.subject.eventStore.flatMap { (eventDictionary) in eventDictionary[LDEvent.CodingKeys.key.rawValue] as? String }
+                    expect(eventStoreKeys.contains(extraEvent.key)) == false
                 }
             }
         }
@@ -227,7 +229,6 @@ final class LDEventReporterSpec: QuickSpec {
 
                         self.subject.reportEvents()
                     }
-                    //TODO: This test intermittently fails. It seems to fail when run with all tests, and not when run individually. Maybe a timing issue?
                     it("reports events") {
                         expect({ self.reporterState(isOnline: true, isReporting: true, reportTries: 1, recordedEvents: self.mockEvents, publishedEvents: self.mockEvents) }).to(match())
                     }
@@ -276,8 +277,9 @@ final class LDEventReporterSpec: QuickSpec {
                     }
                 }
                 it("reports events") {
-                    expect(self.mockService.publishEventsCallCount).toEventually(equal(1))
-                    expect(self.mockService.publishedEvents).toEventually(equal(self.mockEvents))
+                    expect(self.mockService.publishEventDictionariesCallCount).toEventually(equal(1))
+                    expect(self.mockService.publishedEventDictionaries?.count).toEventually(equal(self.mockEvents.count))
+                    expect(self.mockService.publishedEventDictionaryKeys).toEventually(equal(self.mockEvents.map { (event) in event.key }))
                     expect(self.subject.eventStore.isEmpty).toEventually(beTrue())
                 }
             }
@@ -289,7 +291,7 @@ final class LDEventReporterSpec: QuickSpec {
                 it("doesn't report events") {
                     waitUntil { (done) in
                         DispatchQueue.main.asyncAfter(deadline: DispatchTime.now() + DispatchTimeInterval.milliseconds(Constants.eventFlushInterval500Millis)) {
-                            expect(self.mockService.publishEventsCallCount) == 0
+                            expect(self.mockService.publishEventDictionariesCallCount) == 0
                             done()
                         }
                     }
@@ -314,13 +316,15 @@ final class LDEventReporterSpec: QuickSpec {
         var messages = [String]()
         if self.subject.isOnline != isOnline { messages.append("isOnline equals \(self.subject.isOnline)") }
         if self.subject.isReportingActive != isReporting { messages.append("isReportingActive equals \(self.subject.isReportingActive)") }
-        if self.mockService.publishEventsCallCount != reportTries { messages.append("reportTries equals \(self.mockService.publishEventsCallCount)") }
+        if self.mockService.publishEventDictionariesCallCount != reportTries { messages.append("reportTries equals \(self.mockService.publishEventDictionariesCallCount)") }
         if let recordedEvents = recordedEvents {
-            if self.subject.eventStore != recordedEvents { messages.append("recorded events don't match") }
+            if !self.subject.eventStore.matches(events: recordedEvents) {
+                messages.append("recorded events don't match" + (self.subject.eventStore.count != recordedEvents.count ? " (count mismatch eventStore=\(self.subject.eventStore.count) recordedEvents=\(recordedEvents.count)" : "") )
+            }
         }
         if let publishedEvents = publishedEvents {
-            if let serviceEvents = self.mockService.publishedEvents {
-                if serviceEvents != publishedEvents { messages.append("published events don't match") }
+            if let serviceEventDictionaries = self.mockService.publishedEventDictionaries {
+                if !serviceEventDictionaries.matches(events: publishedEvents) { messages.append("published events don't match" + (serviceEventDictionaries.count != publishedEvents.count ? " (count mismatch servicePublishedEvents=\(serviceEventDictionaries.count) publishedEvents=\(publishedEvents.count)" : "") ) }
             } else {
                 messages.append("published events is nil")
             }
@@ -339,16 +343,29 @@ extension LDEvent {
     }
     
     static func stubEvents(_ eventCount: Int, user: LDUser) -> [LDEvent] {
-        var mockEvents = [LDEvent]()
-        while mockEvents.count < eventCount {
-            mockEvents.append(LDEvent.stub(for: LDEvent.eventType(for: mockEvents.count), with: user))
+        var eventStubs = [LDEvent]()
+        while eventStubs.count < eventCount {
+            eventStubs.append(LDEvent.stub(for: LDEvent.eventType(for: eventStubs.count), with: user))
         }
-        return mockEvents
+        return eventStubs
     }
 
     static func eventType(for count: Int) -> LDEventType {
         let types: [LDEventType] = [.featureRequest, .identify, .custom]
         return types[count % types.count]
+    }
+
+    static func stubEventDictionaries(_ eventCount: Int, user: LDUser, config: LDConfig) -> [[String: Any]] {
+        let eventStubs = stubEvents(eventCount, user: user)
+        return eventStubs.map { (event) in event.dictionaryValue(config: config) }
+    }
+
+    func matches(eventDictionary: [String: Any]?) -> Bool {
+        guard let eventDictionary = eventDictionary,
+            let eventDictionaryKey = eventDictionary.eventKey,
+            let eventDictionaryCreationDateMillis = eventDictionary.eventCreationDateMillis
+            else { return false }
+        return key == eventDictionaryKey && creationDate.millisSince1970 == eventDictionaryCreationDateMillis
     }
 }
 
@@ -357,5 +374,25 @@ extension LDEventType {
         let types: [LDEventType] = [.featureRequest, .identify, .custom]
         let index = Int(arc4random_uniform(2))
         return types[index]
+    }
+}
+
+extension Array where Element == LDEvent {
+    func matches(eventDictionaries: [[String: Any]]) -> Bool {
+        guard self.count == eventDictionaries.count else { return false }
+        for index in self.indices {
+            if !self[index].matches(eventDictionary: eventDictionaries[index]) { return false }
+        }
+        return true
+    }
+}
+
+extension Array where Element == [String: Any] {
+    func matches(events: [LDEvent]) -> Bool {
+        guard self.count == events.count else { return false }
+        for index in self.indices {
+            if !events[index].matches(eventDictionary: self[index]) { return false }
+        }
+        return true
     }
 }

@@ -11,9 +11,14 @@ import Nimble
 @testable import Darkly
 
 final class LDEventSpec: QuickSpec {
+    struct Constants {
+        static let eventCapacity = 3
+    }
+
     override func spec() {
         let key = "mockEventKey"
         let kind = LDEventType.featureRequest
+        let config = LDConfig.stub
         let userStub = LDUser.stub()
         let value = LDFlagValue(true)
         let defaultValue = LDFlagValue(false)
@@ -98,7 +103,7 @@ final class LDEventSpec: QuickSpec {
             context("with optional items") {
                 beforeEach {
                     subject = LDEvent(key: key, kind: kind, user: userStub, value: value, defaultValue: defaultValue, data: data)
-                    eventDictionary = subject.dictionaryValue
+                    eventDictionary = subject.dictionaryValue(config: config)
                 }
                 it("creates a dictionary with matching elements") {
                     expect(eventDictionary[LDEvent.CodingKeys.key.rawValue] as? String) == key
@@ -119,7 +124,7 @@ final class LDEventSpec: QuickSpec {
             context("without optional items") {
                 beforeEach {
                     subject = LDEvent(key: key, kind: kind, user: userStub)
-                    eventDictionary = subject.dictionaryValue
+                    eventDictionary = subject.dictionaryValue(config: config)
                 }
                 it("creates a dictionary with matching elements omitting null values") {
                     expect(eventDictionary[LDEvent.CodingKeys.key.rawValue] as? String) == key
@@ -139,7 +144,7 @@ final class LDEventSpec: QuickSpec {
             let events = LDEvent.stubEvents(3, user: userStub)
             var eventDictionaries: [[String: Any]]!
             beforeEach {
-                eventDictionaries = events.dictionaryValues
+                eventDictionaries = events.dictionaryValues(config: config)
             }
             it("creates an array of event dictionaries with matching elements") {
                 expect(eventDictionaries.count) == events.count
@@ -174,66 +179,172 @@ final class LDEventSpec: QuickSpec {
                 }
             }
         }
-        describe("removeEvent") {
-            let eventCount = 3
-            var events: [LDEvent]!
-            var eventToRemove: LDEvent!
-            var remainingKeys: [String]!
-            context("called on the first event") {
-                beforeEach {
-                    events = LDEvent.stubEvents(eventCount, user: userStub)
-                    eventToRemove = events[events.startIndex]
-                    remainingKeys = events.map { (event) in event.key }
-                    if let removeIndex = remainingKeys.index(of: eventToRemove.key) {
-                        remainingKeys.remove(at: removeIndex)
-                    }
 
-                    events.remove(eventToRemove)
+        describe("array contains eventDictionary") {
+            var eventDictionaries: [[String: Any]]!
+            var targetDictionary: [String: Any]!
+            beforeEach {
+                eventDictionaries = LDEvent.stubEventDictionaries(Constants.eventCapacity, user: userStub, config: config)
+            }
+            context("when the event dictionary is in the array") {
+                context("at the first item") {
+                    beforeEach {
+                        targetDictionary = eventDictionaries.first
+                    }
+                    it("returns true") {
+                        expect(eventDictionaries.contains(eventDictionary: targetDictionary)) == true
+                    }
                 }
-                it("removes the first event") {
-                    expect(events.contains(eventToRemove)).to(beFalse())
-                    remainingKeys.forEach { (key) in
-                        expect(events.filter { (event) -> Bool in event.key == key }.count == 1).to(beTrue())
+                context("at a middle item") {
+                    beforeEach {
+                        targetDictionary = eventDictionaries[eventDictionaries.startIndex.advanced(by: 1)]
+                    }
+                    it("returns true") {
+                        expect(eventDictionaries.contains(eventDictionary: targetDictionary)) == true
+                    }
+                }
+                context("at the last item") {
+                    beforeEach {
+                        targetDictionary = eventDictionaries.last
+                    }
+                    it("returns true") {
+                        expect(eventDictionaries.contains(eventDictionary: targetDictionary)) == true
                     }
                 }
             }
-            context("called on a middle event") {
+            context("when the event dictionary is not in the array") {
                 beforeEach {
-                    events = LDEvent.stubEvents(eventCount, user: userStub)
-                    eventToRemove = events[events.startIndex.advanced(by: 1)]
-                    remainingKeys = events.map { (event) in event.key }
-                    if let removeIndex = remainingKeys.index(of: eventToRemove.key) {
-                        remainingKeys.remove(at: removeIndex)
-                    }
-
-                    events.remove(eventToRemove)
+                    targetDictionary = LDEvent.stub(for: .featureRequest, with: userStub).dictionaryValue(config: config)
                 }
-                it("removes the middle event") {
-                    expect(events.contains(eventToRemove)).to(beFalse())
-                    remainingKeys.forEach { (key) in
-                        expect(events.filter { (event) -> Bool in event.key == key }.count == 1).to(beTrue())
-                    }
+                it("returns false") {
+                    expect(eventDictionaries.contains(eventDictionary: targetDictionary)) == false
                 }
             }
-            context("called on the last event") {
+            context("when the target dictionary is not an event dictionary") {
                 beforeEach {
-                    events = LDEvent.stubEvents(eventCount, user: userStub)
-                    eventToRemove = events[events.endIndex.advanced(by: -1)]    //endIndex is just beyond the last element
-                    remainingKeys = events.map { (event) in event.key }
-                    if let removeIndex = remainingKeys.index(of: eventToRemove.key) {
-                        remainingKeys.remove(at: removeIndex)
-                    }
-
-                    events.remove(eventToRemove)
+                    targetDictionary = userStub.dictionaryValue(includeFlagConfig: false, includePrivateAttributes: true, config: config)
                 }
-                it("removes the last event") {
-                    expect(events.contains(eventToRemove)).to(beFalse())
-                    remainingKeys.forEach { (key) in
-                        expect(events.filter { (event) -> Bool in event.key == key }.count == 1).to(beTrue())
-                    }
+                it("returns false") {
+                    expect(eventDictionaries.contains(eventDictionary: targetDictionary)) == false
+                }
+            }
+            context("when the array doesn't contain event dictionaries") {
+                beforeEach {
+                    eventDictionaries = LDUser.stubUsers(Constants.eventCapacity).map { (user) in user.dictionaryValue(includeFlagConfig: false, includePrivateAttributes: true, config: config) }
+                    targetDictionary = LDEvent.stub(for: .identify, with: userStub).dictionaryValue(config: config)
+                }
+                it("returns false") {
+                    expect(eventDictionaries.contains(eventDictionary: targetDictionary)) == false
                 }
             }
         }
+
+        describe("event dictionary eventKey") {
+            var event: LDEvent!
+            var eventDictionary: [String: Any]!
+            beforeEach {
+                event = LDEvent.stub(for: .custom, with: userStub)
+                eventDictionary = event.dictionaryValue(config: config)
+            }
+            context("when the dictionary contains a key") {
+                it("returns the key") {
+                    expect(eventDictionary.eventKey) == event.key
+                }
+            }
+            context("when the dictionary does not contain a key") {
+                beforeEach {
+                    eventDictionary.removeValue(forKey: LDEvent.CodingKeys.key.rawValue)
+                }
+                it("returns nil") {
+                    expect(eventDictionary.eventKey).to(beNil())
+                }
+            }
+        }
+
+        describe("event dictionary eventCreationDateMillis") {
+            var event: LDEvent!
+            var eventDictionary: [String: Any]!
+            beforeEach {
+                event = LDEvent.stub(for: .custom, with: userStub)
+                eventDictionary = event.dictionaryValue(config: config)
+            }
+            context("when the dictionary contains a creation date") {
+                it("returns the key") {
+                    expect(eventDictionary.eventCreationDateMillis) == event.creationDate.millisSince1970
+                }
+            }
+            context("when the dictionary does not contain a creation date") {
+                beforeEach {
+                    eventDictionary.removeValue(forKey: LDEvent.CodingKeys.creationDate.rawValue)
+                }
+                it("returns nil") {
+                    expect(eventDictionary.eventCreationDateMillis).to(beNil())
+                }
+            }
+        }
+
+        describe("event dictionary matches other event dictionary") {
+            var eventDictionary: [String: Any]!
+            var otherDictionary: [String: Any]!
+            beforeEach {
+                eventDictionary = LDEvent.stub(for: .custom, with: userStub).dictionaryValue(config: config)
+                otherDictionary = eventDictionary
+            }
+            context("when keys and creationDateMillis are equal") {
+                it("returns true") {
+                    expect(eventDictionary.matches(eventDictionary: otherDictionary)) == true
+                }
+            }
+            context("when keys differ") {
+                beforeEach {
+                    otherDictionary[LDEvent.CodingKeys.key.rawValue] = otherDictionary.eventKey! + "dummy"
+                }
+                it("returns false") {
+                    expect(eventDictionary.matches(eventDictionary: otherDictionary)) == false
+                }
+            }
+            context("when creationDateMillis differ") {
+                beforeEach {
+                    otherDictionary[LDEvent.CodingKeys.creationDate.rawValue] = otherDictionary.eventCreationDateMillis! + 1
+                }
+                it("returns false") {
+                    expect(eventDictionary.matches(eventDictionary: otherDictionary)) == false
+                }
+            }
+            context("when dictionary key is nil") {
+                beforeEach {
+                    eventDictionary.removeValue(forKey: LDEvent.CodingKeys.key.rawValue)
+                }
+                it("returns false") {
+                    expect(eventDictionary.matches(eventDictionary: otherDictionary)) == false
+                }
+            }
+            context("when other dictionary key is nil") {
+                beforeEach {
+                    otherDictionary.removeValue(forKey: LDEvent.CodingKeys.key.rawValue)
+                }
+                it("returns false") {
+                    expect(eventDictionary.matches(eventDictionary: otherDictionary)) == false
+                }
+            }
+            context("when dictionary creationDateMillis is nil") {
+                beforeEach {
+                    eventDictionary.removeValue(forKey: LDEvent.CodingKeys.creationDate.rawValue)
+                }
+                it("returns false") {
+                    expect(eventDictionary.matches(eventDictionary: otherDictionary)) == false
+                }
+            }
+            context("when other dictionary creationDateMillis is nil") {
+                beforeEach {
+                    otherDictionary.removeValue(forKey: LDEvent.CodingKeys.creationDate.rawValue)
+                }
+                it("returns false") {
+                    expect(eventDictionary.matches(eventDictionary: otherDictionary)) == false
+                }
+            }
+        }
+
         describe("equals") {
             var event1: LDEvent!
             var event2: LDEvent!

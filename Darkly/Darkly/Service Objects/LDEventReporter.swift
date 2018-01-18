@@ -47,7 +47,7 @@ class LDEventReporter: LDEventReporting {
 
     private let mobileKey: String
     var service: DarklyServiceProvider
-    private(set) var eventStore = [LDEvent]()
+    private(set) var eventStore = [[String: Any]]()
     
     private weak var eventReportTimer: Timer?
     var isReportingActive: Bool { return eventReportTimer != nil }
@@ -60,15 +60,13 @@ class LDEventReporter: LDEventReporting {
 
     func record(_ event: LDEvent, completion: CompletionClosure? = nil) {
         eventQueue.async {
-            if let completion = completion {
-                defer {
-                    DispatchQueue.main.async {
-                        completion()
-                    }
+            defer {
+                DispatchQueue.main.async {
+                    completion?()
                 }
             }
             guard !self.isEventStoreFull else { return }
-            self.eventStore.append(event)
+            self.eventStore.append(event.dictionaryValue(config: self.config))
         }
     }
     
@@ -95,13 +93,13 @@ class LDEventReporter: LDEventReporting {
     
     @objc func reportEvents() {
         guard isOnline && !eventStore.isEmpty else { return }
-        let reportedEvents = eventStore //this is async, so keep what we're reporting at this time for later use
-        service.publishEvents(eventStore) { serviceResponse in
-            self.processEventResponse(reportedEvents: reportedEvents, serviceResponse: serviceResponse)
+        let reportedEventDictionaries = eventStore //this is async, so keep what we're reporting at this time for later use
+        service.publishEventDictionaries(eventStore) { serviceResponse in
+            self.processEventResponse(reportedEventDictionaries: reportedEventDictionaries, serviceResponse: serviceResponse)
         }
     }
     
-    private func processEventResponse(reportedEvents: [LDEvent], serviceResponse: ServiceResponse) {
+    private func processEventResponse(reportedEventDictionaries: [[String: Any]], serviceResponse: ServiceResponse) {
         guard serviceResponse.error == nil else {
             report(serviceResponse.error)
             return
@@ -112,7 +110,7 @@ class LDEventReporter: LDEventReporting {
             report(serviceResponse.urlResponse)
             return
         }
-        updateEventStore(reportedEvents: reportedEvents)
+        updateEventStore(reportedEventDictionaries: reportedEventDictionaries)
     }
     
     private func report(_ error: Error?) {
@@ -123,11 +121,10 @@ class LDEventReporter: LDEventReporting {
         //TODO: Implement when error reporting architecture is established
     }
     
-    private func updateEventStore(reportedEvents: [LDEvent]) {
+    private func updateEventStore(reportedEventDictionaries: [[String: Any]]) {
         eventQueue.async {
-            var updatedEvents = reportedEvents
-            updatedEvents.forEach { (reportedEvent) in updatedEvents.remove(reportedEvent) }
-            self.eventStore = updatedEvents
+            let remainingEventDictionaries = self.eventStore.filter { (eventDictionary) in !reportedEventDictionaries.contains(eventDictionary: eventDictionary) }
+            self.eventStore = remainingEventDictionaries
         }
     }
     

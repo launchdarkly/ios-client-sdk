@@ -25,12 +25,11 @@ final class DarklyServiceSpec: QuickSpec {
     let mockMobileKey = "mockMobileKey"
     let user = LDUser.stub()
 
-    var config: LDConfig!
+    var config = LDConfig.stub
     var subject: DarklyService!
     
     override func spec() {
         beforeEach {
-            self.config = LDConfig.stub
             self.subject = DarklyService(mobileKey: self.mockMobileKey, config: self.config, user: self.user)
         }
         
@@ -122,9 +121,9 @@ final class DarklyServiceSpec: QuickSpec {
             }
         }
 
-        describe("publishEvents") {
+        describe("publishEventDictionariess") {
             var eventRequest: URLRequest?
-            let mockEvents = LDEvent.stubEvents(Constants.eventCount, user: self.user)
+            let mockEventDictionaries = LDEvent.stubEventDictionaries(Constants.eventCount, user: self.user, config: self.config)
             var serviceMock: DarklyServiceMock!
             beforeEach {
                 serviceMock = DarklyServiceMock(config: self.config)
@@ -133,7 +132,7 @@ final class DarklyServiceSpec: QuickSpec {
                         eventRequest = request
                         done()
                     }
-                    self.subject.publishEvents(mockEvents, completion: nil)
+                    self.subject.publishEventDictionaries(mockEventDictionaries, completion: nil)
                 }
             }
             it("makes valid request") {
@@ -144,7 +143,7 @@ final class DarklyServiceSpec: QuickSpec {
                 beforeEach {
                     waitUntil { done in
                         serviceMock.stubEventRequest(success: true)
-                        self.subject.publishEvents(mockEvents) { (data, response, error) in
+                        self.subject.publishEventDictionaries(mockEventDictionaries) { (data, response, error) in
                             responses = (data, response, error)
                             done()
                         }
@@ -159,7 +158,7 @@ final class DarklyServiceSpec: QuickSpec {
                 beforeEach {
                     waitUntil { done in
                         serviceMock.stubEventRequest(success: false)
-                        self.subject.publishEvents(mockEvents) { (data, response, error) in
+                        self.subject.publishEventDictionaries(mockEventDictionaries) { (data, response, error) in
                             responses = (data, response, error)
                             done()
                         }
@@ -175,7 +174,7 @@ final class DarklyServiceSpec: QuickSpec {
                 beforeEach {
                     self.subject = DarklyService(mobileKey: Constants.emptyMobileKey, config: self.config, user: self.user)
                     serviceMock.stubEventRequest(success: true)
-                    self.subject.publishEvents(mockEvents) { (data, response, error) in
+                    self.subject.publishEventDictionaries(mockEventDictionaries) { (data, response, error) in
                         responses = (data, response, error)
                         eventsPublished = true
                     }
@@ -188,11 +187,11 @@ final class DarklyServiceSpec: QuickSpec {
             context("empty event list") {
                 var responses: ServiceResponses = (nil, nil, nil)
                 var eventsPublished = false
-                let emptyEventList: [Darkly.LDEvent] = []
+                let emptyEventDictionaryList: [[String: Any]] = []
                 beforeEach {
                     self.subject = DarklyService(mobileKey: Constants.emptyMobileKey, config: self.config, user: self.user)
                     serviceMock.stubEventRequest(success: true)
-                    self.subject.publishEvents(emptyEventList) { (data, response, error) in
+                    self.subject.publishEventDictionaries(emptyEventDictionaryList) { (data, response, error) in
                         responses = (data, response, error)
                         eventsPublished = true
                     }
