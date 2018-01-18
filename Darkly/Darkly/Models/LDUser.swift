@@ -85,7 +85,7 @@ public struct LDUser {
         flagStore = LDFlagStore(featureFlags: userDictionary[CodingKeys.config.rawValue] as? [String: Any], flagValueSource: .cache)
     }
 
-    public func dictionaryValue(includeFlagConfig: Bool, includePrivateAttributes includePrivate: Bool, config: LDConfig) -> [String: Any] {
+    func dictionaryValue(includeFlagConfig: Bool, includePrivateAttributes includePrivate: Bool, config: LDConfig) -> [String: Any] {
         var dictionary = [String: Any]()
         var redactedAttributes = [String]()
         let combinedPrivateAttributes = config.allUserAttributesPrivate ? LDUser.privatizableAttributes : (privateAttributes ?? []) + (config.privateUserAttributes ?? [])
