@@ -106,7 +106,7 @@ public struct LDUser {
 
         if !includePrivate && !redactedAttributes.isEmpty {
             let redactedAttributeSet: Set<String> = Set(redactedAttributes)
-            dictionary[CodingKeys.privateAttributes.rawValue] = redactedAttributeSet.sorted
+            dictionary[CodingKeys.privateAttributes.rawValue] = redactedAttributeSet.sorted()
         }
 
         dictionary[CodingKeys.isAnonymous.rawValue] = isAnonymous

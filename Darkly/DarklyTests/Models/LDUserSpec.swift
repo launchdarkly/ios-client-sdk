@@ -1066,6 +1066,11 @@ extension LDUser {
             messages.append(message)
         }
 
+        //private attributes
+        if includePrivate && userDictionary[CodingKeys.privateAttributes.rawValue] != nil {
+            messages.append(MatcherMessages.dictionaryShouldNotContain + CodingKeys.privateAttributes.rawValue)
+        }
+
         //flag config
         if let message = matchMessage(flagConfig: flagStore.featureFlags, dictionary: userDictionary, includeFlagConfig: includeFlagConfig) {
             messages.append(message)
@@ -1078,12 +1083,15 @@ extension LDUser {
         if !includePrivate {
             if privateAttributes.contains(attribute) {
                 if dictionary[attribute] != nil { return MatcherMessages.dictionaryShouldNotContain + attribute }
+                if let redactedAttributes = dictionary[CodingKeys.privateAttributes.rawValue] as? [String] {
+                    if value == nil && redactedAttributes.contains(attribute) { return MatcherMessages.attributeListShouldNotContain + attribute }
+                    if value != nil && !redactedAttributes.contains(attribute) { return MatcherMessages.attributeListShouldContain + attribute }
+                }
             } else {
                 if !AnyComparer.isEqualAllowNil(value, to: dictionary[attribute]) { return MatcherMessages.valuesDontMatch + attribute }
-            }
-            if let redactedAttributes = dictionary[CodingKeys.privateAttributes.rawValue] as? [String] {
-                if value == nil && redactedAttributes.contains(attribute) { return MatcherMessages.attributeListShouldNotContain + attribute }
-                if value != nil && !redactedAttributes.contains(attribute) { return MatcherMessages.attributeListShouldContain + attribute }
+                if let redactedAttributes = dictionary[CodingKeys.privateAttributes.rawValue] as? [String] {
+                    if redactedAttributes.contains(attribute) { return MatcherMessages.attributeListShouldNotContain + attribute }
+                }
             }
         } else {
             if !AnyComparer.isEqualAllowNil(value, to: dictionary[attribute]) { return MatcherMessages.valuesDontMatch + attribute }
