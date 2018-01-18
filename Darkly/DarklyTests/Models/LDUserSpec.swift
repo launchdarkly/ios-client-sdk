@@ -63,8 +63,8 @@ final class LDUserSpec: QuickSpec {
                     expect(subject.ipAddress).to(beNil())
                     expect(subject.email).to(beNil())
                     expect(subject.avatar).to(beNil())
-                    expect(subject.device).to(beNil())
-                    expect(subject.operatingSystem).to(beNil())
+                    expect(subject.device).toNot(beNil())
+                    expect(subject.operatingSystem).toNot(beNil())
                     expect(subject.custom).to(beNil())
                     expect(subject.privateAttributes).to(beNil())
                 }
@@ -147,9 +147,14 @@ final class LDUserSpec: QuickSpec {
                         expect(subject.ipAddress).to(beNil())
                         expect(subject.email).to(beNil())
                         expect(subject.avatar).to(beNil())
-                        expect(subject.device).to(beNil())
-                        expect(subject.operatingSystem).to(beNil())
-                        expect(subject.custom).to(beNil())
+                        expect(subject.device).toNot(beNil())
+                        expect(subject.operatingSystem).toNot(beNil())
+                        expect(subject.custom).toNot(beNil())
+                        expect(subject.custom).toNot(beNil())
+                        if var customDictionary = subject.custom {
+                            customDictionary = customDictionary.filter { (key, _) in key != LDUser.CodingKeys.device.rawValue && key != LDUser.CodingKeys.operatingSystem.rawValue }
+                            expect(customDictionary.isEmpty) == true
+                        }
                         expect(subject.privateAttributes).to(beNil())
 
                         expect(subject.flagStore.featureFlags == originalUser.flagStore.featureFlags).to(beTrue())
@@ -215,9 +220,13 @@ final class LDUserSpec: QuickSpec {
                         expect(subject.ipAddress).to(beNil())
                         expect(subject.email).to(beNil())
                         expect(subject.avatar).to(beNil())
-                        expect(subject.device).to(beNil())
-                        expect(subject.operatingSystem).to(beNil())
-                        expect(subject.custom).to(beNil())
+                        expect(subject.device).toNot(beNil())
+                        expect(subject.operatingSystem).toNot(beNil())
+                        expect(subject.custom).toNot(beNil())
+                        if var customDictionary = subject.custom {
+                            customDictionary = customDictionary.filter { (key, _) in key != LDUser.CodingKeys.device.rawValue && key != LDUser.CodingKeys.operatingSystem.rawValue }
+                            expect(customDictionary.isEmpty) == true
+                        }
                         expect(subject.privateAttributes).to(beNil())
 
                         expect(subject.flagStore.featureFlags.isEmpty).to(beTrue())
