@@ -1552,9 +1552,7 @@ final class LDUserSpec: QuickSpec {
 extension LDUser {
     static var requiredAttributes: [String] { return [CodingKeys.key.rawValue, CodingKeys.lastUpdated.rawValue, CodingKeys.isAnonymous.rawValue] }
     static var optionalAttributes: [String] { return [CodingKeys.name.rawValue, CodingKeys.firstName.rawValue, CodingKeys.lastName.rawValue, CodingKeys.country.rawValue, CodingKeys.ipAddress.rawValue, CodingKeys.email.rawValue, CodingKeys.avatar.rawValue] }
-    static var sdkSetAttributes: [String] { return [CodingKeys.device.rawValue, CodingKeys.operatingSystem.rawValue] }
     var customAttributes: [String]? { return custom?.keys.filter { (key) in !LDUser.sdkSetAttributes.contains(key) } }
-    var customWithoutSdkSetAttributes: [String: Any]? { return custom?.filter { (key, _) in !LDUser.sdkSetAttributes.contains(key) } }
 
     struct MatcherMessages {
         static let valuesDontMatch = "dictionary does not match attribute "
@@ -1562,27 +1560,6 @@ extension LDUser {
         static let dictionaryShouldContain = "dictionary does not contain attribute "
         static let attributeListShouldNotContain = "private attributes list contains attribute "
         static let attributeListShouldContain = "private attributes list does not contain attribute "
-    }
-
-    func value(for attribute: String) -> Any? {
-        switch attribute {
-        case CodingKeys.key.rawValue: return key
-        case CodingKeys.lastUpdated.rawValue: return lastUpdated
-        case CodingKeys.isAnonymous.rawValue: return isAnonymous
-        case CodingKeys.name.rawValue: return name
-        case CodingKeys.firstName.rawValue: return firstName
-        case CodingKeys.lastName.rawValue: return lastName
-        case CodingKeys.country.rawValue: return country
-        case CodingKeys.ipAddress.rawValue: return ipAddress
-        case CodingKeys.email.rawValue: return email
-        case CodingKeys.avatar.rawValue: return avatar
-        case CodingKeys.custom.rawValue: return custom
-        case CodingKeys.device.rawValue: return device
-        case CodingKeys.operatingSystem.rawValue: return operatingSystem
-        case CodingKeys.config.rawValue: return flagStore.featureFlags
-        case CodingKeys.privateAttributes.rawValue: return privateAttributes
-        default: return nil
-        }
     }
 
     fileprivate func requiredAttributeKeyValuePairsMatch(userDictionary: [String: Any]) -> ToMatchResult {
@@ -1788,7 +1765,7 @@ extension LDUser {
     }
 
     private func messageIfValueDoesntMatch(value: Any?, in dictionary: [String: Any], for attribute: String) -> String? {
-        if !AnyComparer.isEqualAllowNil(value, to: dictionary[attribute]) { return MatcherMessages.valuesDontMatch + attribute }
+        if !AnyComparer.isEqual(value, to: dictionary[attribute], considerNilEqual: true) { return MatcherMessages.valuesDontMatch + attribute }
         return nil
     }
 
@@ -1823,8 +1800,8 @@ extension LDUser {
 }
 
 extension AnyComparer {
-    static func isEqualAllowNil(_ value: Any?, to other: Any?) -> Bool {
-        if value == nil && other == nil { return true }
+    static func isEqual(_ value: Any?, to other: Any?, considerNilEqual: Bool = false) -> Bool {
+        if value == nil && other == nil { return considerNilEqual }
         return isEqual(value, to: other)
     }
 }

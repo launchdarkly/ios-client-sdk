@@ -17,6 +17,7 @@ public struct LDUser {
     public static var privatizableAttributes: [String] {
         return [CodingKeys.name.rawValue, CodingKeys.firstName.rawValue, CodingKeys.lastName.rawValue, CodingKeys.country.rawValue, CodingKeys.ipAddress.rawValue, CodingKeys.email.rawValue, CodingKeys.avatar.rawValue, CodingKeys.custom.rawValue]
     }
+    static var sdkSetAttributes: [String] { return [CodingKeys.device.rawValue, CodingKeys.operatingSystem.rawValue] }
 
     public var key: String
     public var name: String?
@@ -84,6 +85,29 @@ public struct LDUser {
         flagStore = LDFlagStore(featureFlags: userDictionary[CodingKeys.config.rawValue] as? [String: Any], flagValueSource: .cache)
     }
 
+    //swiftlint:disable:next cyclomatic_complexity
+    func value(for attribute: String) -> Any? {
+        switch attribute {
+        case CodingKeys.key.rawValue: return key
+        case CodingKeys.lastUpdated.rawValue: return lastUpdated
+        case CodingKeys.isAnonymous.rawValue: return isAnonymous
+        case CodingKeys.name.rawValue: return name
+        case CodingKeys.firstName.rawValue: return firstName
+        case CodingKeys.lastName.rawValue: return lastName
+        case CodingKeys.country.rawValue: return country
+        case CodingKeys.ipAddress.rawValue: return ipAddress
+        case CodingKeys.email.rawValue: return email
+        case CodingKeys.avatar.rawValue: return avatar
+        case CodingKeys.custom.rawValue: return custom
+        case CodingKeys.device.rawValue: return device
+        case CodingKeys.operatingSystem.rawValue: return operatingSystem
+        case CodingKeys.config.rawValue: return flagStore.featureFlags
+        case CodingKeys.privateAttributes.rawValue: return privateAttributes
+        default: return nil
+        }
+    }
+    var customWithoutSdkSetAttributes: [String: Any]? { return custom?.filter { (key, _) in !LDUser.sdkSetAttributes.contains(key) } }
+
     func dictionaryValue(includeFlagConfig: Bool, includePrivateAttributes includePrivate: Bool, config: LDConfig) -> [String: Any] {
         var dictionary = [String: Any]()
         var redactedAttributes = [String]()
@@ -91,17 +115,33 @@ public struct LDUser {
 
         dictionary[CodingKeys.key.rawValue] = key
 
-        (dictionary, redactedAttributes) = store(value: name, in: dictionary, for: CodingKeys.name.rawValue, includePrivate: includePrivate, privateAttributes: combinedPrivateAttributes, redactedAttributes: redactedAttributes)
-        (dictionary, redactedAttributes) = store(value: firstName, in: dictionary, for: CodingKeys.firstName.rawValue, includePrivate: includePrivate, privateAttributes: combinedPrivateAttributes, redactedAttributes: redactedAttributes)
-        (dictionary, redactedAttributes) = store(value: lastName, in: dictionary, for: CodingKeys.lastName.rawValue, includePrivate: includePrivate, privateAttributes: combinedPrivateAttributes, redactedAttributes: redactedAttributes)
-        (dictionary, redactedAttributes) = store(value: country, in: dictionary, for: CodingKeys.country.rawValue, includePrivate: includePrivate, privateAttributes: combinedPrivateAttributes, redactedAttributes: redactedAttributes)
-        (dictionary, redactedAttributes) = store(value: email, in: dictionary, for: CodingKeys.email.rawValue, includePrivate: includePrivate, privateAttributes: combinedPrivateAttributes, redactedAttributes: redactedAttributes)
-        (dictionary, redactedAttributes) = store(value: ipAddress, in: dictionary, for: CodingKeys.ipAddress.rawValue, includePrivate: includePrivate, privateAttributes: combinedPrivateAttributes, redactedAttributes: redactedAttributes)
-        (dictionary, redactedAttributes) = store(value: avatar, in: dictionary, for: CodingKeys.avatar.rawValue, includePrivate: includePrivate, privateAttributes: combinedPrivateAttributes, redactedAttributes: redactedAttributes)
+        let optionalAttributes = LDUser.privatizableAttributes.filter { (attribute) in attribute != CodingKeys.custom.rawValue }
+        optionalAttributes.forEach { (attribute) in
+            let value = self.value(for: attribute)
+            if !includePrivate && combinedPrivateAttributes.isPrivate(attribute) && value != nil {
+                redactedAttributes.append(attribute)
+            } else {
+                dictionary[attribute] = value
+            }
+        }
 
-        let customDictionary: [String: Any]?
-        (customDictionary, redactedAttributes) = self.customDictionary(from: (custom, device, operatingSystem), includePrivate: includePrivate, privateAttributes: combinedPrivateAttributes, redactedAttributes: redactedAttributes)
-        dictionary[CodingKeys.custom.rawValue] = customDictionary
+        var customDictionary = [String: Any]()
+        if !includePrivate && combinedPrivateAttributes.isPrivate(CodingKeys.custom.rawValue) && !customWithoutSdkSetAttributes.isNilOrEmpty {
+            redactedAttributes.append(CodingKeys.custom.rawValue)
+        } else {
+            if let custom = customWithoutSdkSetAttributes, !custom.isEmpty {
+                custom.keys.forEach { (customAttribute) in
+                    if !includePrivate && combinedPrivateAttributes.isPrivate(customAttribute) && custom[customAttribute] != nil {
+                        redactedAttributes.append(customAttribute)
+                    } else {
+                        customDictionary[customAttribute] = custom[customAttribute]
+                    }
+                }
+            }
+        }
+        customDictionary[CodingKeys.device.rawValue] = device
+        customDictionary[CodingKeys.operatingSystem.rawValue] = operatingSystem
+        dictionary[CodingKeys.custom.rawValue] = customDictionary.isEmpty ? nil : customDictionary
 
         if !includePrivate && !redactedAttributes.isEmpty {
             let redactedAttributeSet: Set<String> = Set(redactedAttributes)
@@ -116,51 +156,6 @@ public struct LDUser {
         }
 
         return dictionary
-    }
-
-    //swiftlint:disable:next function_parameter_count
-    private func store(value: Any?, in dictionary: [String: Any], for attribute: String, includePrivate: Bool, privateAttributes: [String], redactedAttributes: [String]) -> ([String: Any], [String]) {
-        guard let value = value else { return (dictionary, redactedAttributes) }
-        if !includePrivate && privateAttributes.contains(attribute) {
-            var redactedAttributes = redactedAttributes
-            redactedAttributes.append(attribute)
-            return (dictionary, redactedAttributes)
-        }
-        var dictionary = dictionary
-        dictionary[attribute] = value
-        return (dictionary, redactedAttributes)
-    }
-
-    private func customDictionary(from customElements: (custom: [String: Any]?, device: String?, operatingSystem: String?), includePrivate: Bool, privateAttributes: [String], redactedAttributes: [String]) -> ([String: Any]?, [String]) {
-        var customDictionary = [String: Any]()
-        var redactedAttributes = redactedAttributes
-        let device = customElements.device
-        let operatingSystem = customElements.operatingSystem
-
-        if !includePrivate && privateAttributes.contains(CodingKeys.custom.rawValue) {
-            if var custom = customElements.custom, !custom.isEmpty {
-                custom.removeValue(forKey: CodingKeys.device.rawValue)
-                custom.removeValue(forKey: CodingKeys.operatingSystem.rawValue)
-                if !custom.isEmpty {
-                    redactedAttributes.append(CodingKeys.custom.rawValue)
-                }
-            }
-        } else {
-            if let custom = customElements.custom, !custom.isEmpty {
-                custom.keys.forEach { (customAttribute) in
-                    if !includePrivate && privateAttributes.contains(customAttribute) && custom[customAttribute] != nil {
-                        redactedAttributes.append(customAttribute)
-                    } else {
-                        customDictionary[customAttribute] = custom[customAttribute]
-                    }
-                }
-            }
-        }
-
-        customDictionary[CodingKeys.device.rawValue] = device
-        customDictionary[CodingKeys.operatingSystem.rawValue] = operatingSystem
-
-        return (customDictionary.isEmpty ? nil : customDictionary, redactedAttributes)
     }
 
     //For iOS & tvOS, this should be UIDevice.current.identifierForVendor.UUIDString
@@ -213,6 +208,12 @@ extension Date {
 
 extension String {
     var dateValue: Date { return DateFormatter.ldDateFormatter.date(from: self) ?? Date() }
+}
+
+extension Array where Element == String {
+    fileprivate func isPrivate(_ attribute: String) -> Bool {
+        return contains(attribute)
+    }
 }
 
 @objc final class LDUserWrapper: NSObject {
