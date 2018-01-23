@@ -57,7 +57,6 @@ public struct LDUser {
         self.avatar = avatar
         self.custom = custom
         self.isAnonymous = isAnonymous ?? (selectedKey == LDUser.defaultKey)
-        //TODO: Device & OS should be set automatically if not presented in the custom dictionary
         self.device = custom?[CodingKeys.device.rawValue] as? String ?? UIDevice.current.model
         self.operatingSystem = custom?[CodingKeys.operatingSystem.rawValue] as? String ?? UIDevice.current.systemVersion
         self.privateAttributes = privateAttributes
