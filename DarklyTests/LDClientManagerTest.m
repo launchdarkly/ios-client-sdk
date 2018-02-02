@@ -177,7 +177,7 @@ NSString *const kBoolFlagKey = @"isABawler";
     LDClientManager *clientManager = [LDClientManager sharedInstance];
     [clientManager setOnline:YES];
 
-    [dataManagerMock allEventsJsonArray:^(NSArray *array) {
+    [dataManagerMock allEventDictionaries:^(NSArray *array) {
         OCMStub(array).andReturn(testData);
         
         [clientManager syncWithServerForEvents];
@@ -201,7 +201,7 @@ NSString *const kBoolFlagKey = @"isABawler";
 - (void)testSyncWithServerForEventsNotProcessedWhenOffline {
     NSData *testData = [[NSData alloc] init];
     
-    [dataManagerMock allEventsJsonArray:^(NSArray *array) {
+    [dataManagerMock allEventDictionaries:^(NSArray *array) {
         OCMStub(array).andReturn(testData);
         
         [[requestManagerMock reject] performEventRequest:[OCMArg isEqual:testData]];
@@ -256,9 +256,10 @@ NSString *const kBoolFlagKey = @"isABawler";
 
 - (void)testProcessedEventsSuccessWithProcessedEvents {
     LDEventModel *event = [[LDEventModel alloc] initFeatureEventWithKey:@"blah" keyValue:[NSNumber numberWithBool:NO] defaultKeyValue:[NSNumber numberWithBool:NO] userValue:[[LDClient sharedInstance] ldUser]];
+    LDConfig *config = [[LDConfig alloc] initWithMobileKey:@"testMobileKey"];
 
     LDClientManager *clientManager = [LDClientManager sharedInstance];
-    [clientManager processedEvents:YES jsonEventArray:@[[event dictionaryValue]]];
+    [clientManager processedEvents:YES jsonEventArray:@[[event dictionaryValueUsingConfig:config]]];
     
     OCMVerify([dataManagerMock deleteProcessedEvents:[OCMArg any]]);
 }
@@ -397,7 +398,7 @@ NSString *const kBoolFlagKey = @"isABawler";
     LDClientManager *clientManager = [LDClientManager sharedInstance];
     clientManager.online = YES;
 
-    [dataManagerMock allEventsJsonArray:^(NSArray *array) {
+    [dataManagerMock allEventDictionaries:^(NSArray *array) {
         OCMStub(array).andReturn(testData);
 
         [clientManager flushEvents];
@@ -411,7 +412,7 @@ NSString *const kBoolFlagKey = @"isABawler";
     LDClientManager *clientManager = [LDClientManager sharedInstance];
     clientManager.online = NO;
 
-    [dataManagerMock allEventsJsonArray:^(NSArray *array) {
+    [dataManagerMock allEventDictionaries:^(NSArray *array) {
         OCMStub(array).andReturn(testData);
 
         [clientManager flushEvents];

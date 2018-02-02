@@ -9,6 +9,7 @@
 #import <Foundation/Foundation.h>
 
 @class LDUserModel;
+@class LDConfig;
 
 @interface LDEventModel : NSObject <NSCoding>
 @property (nullable, nonatomic, strong) NSString *key;
@@ -21,7 +22,7 @@
 @property (nonnull, nonatomic, strong) NSObject *isDefault;
 
 -(nonnull id)initWithDictionary:(nonnull NSDictionary *)dictionary;
--(nonnull NSDictionary *)dictionaryValue;
+-(nonnull NSDictionary *)dictionaryValueUsingConfig:(nonnull LDConfig*)config;
 
 -(nonnull instancetype)initFeatureEventWithKey:(nonnull NSString *)featureKey keyValue:(NSObject * _Nullable)keyValue defaultKeyValue:(NSObject * _Nullable)defaultKeyValue userValue:(nonnull LDUserModel *)userValue;
 -(nonnull instancetype)initCustomEventWithKey: (nonnull NSString *)featureKey

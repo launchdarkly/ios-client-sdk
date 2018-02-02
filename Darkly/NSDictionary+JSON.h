@@ -5,5 +5,5 @@
 #import <Foundation/Foundation.h>
 
 @interface NSDictionary (BVJSONString)
--(NSString*) ld_jsonString;
+-(nullable NSString*) jsonString;
 @end

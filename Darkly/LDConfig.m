@@ -32,6 +32,7 @@
 //                                  @(kHTTPStatusCodeNotImplemented)];
     self.flagRetryStatusCodes = @[];    //Temporarily, leave these codes empty to disable the REPORT fallback using GET capability
     self.useReport = NO;
+    self.allUserAttributesPrivate = NO;
 
     return self;
 }
@@ -114,6 +115,11 @@
 - (void)setStreaming:(BOOL)streaming {
     _streaming = streaming;
     DEBUG_LOG(@"Set LDConfig streaming enabled: %d", streaming);
+}
+
+- (void)setPrivateUserAttributes:(NSArray<NSString *>*)privateAttributes {
+    _privateUserAttributes = privateAttributes;
+    DEBUG_LOG(@"Set LDConfig privateAttributes set: %@", privateAttributes.description);
 }
 
 - (void)setDebugEnabled:(BOOL)debugEnabled {
