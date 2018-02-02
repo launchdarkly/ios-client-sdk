@@ -114,7 +114,7 @@
             returnValue = [(NSNumber *)flagValue boolValue];
         }
         
-        [[LDDataManager sharedManager] createFeatureEvent: featureKey keyValue:[NSNumber numberWithBool:returnValue] defaultKeyValue:[NSNumber numberWithBool:fallback]];
+        [[LDDataManager sharedManager] createFeatureEvent: featureKey keyValue:[NSNumber numberWithBool:returnValue] defaultKeyValue:[NSNumber numberWithBool:fallback] user:self.ldUser config:self.ldConfig];
         return returnValue;
     } else {
         DEBUG_LOGX(@"LDClient not started yet!");
@@ -136,7 +136,7 @@
             returnValue = (NSNumber *)flagValue;
         }
         
-        [[LDDataManager sharedManager] createFeatureEvent: featureKey keyValue:returnValue defaultKeyValue:fallback];
+        [[LDDataManager sharedManager] createFeatureEvent: featureKey keyValue:returnValue defaultKeyValue:fallback user:self.ldUser config:self.ldConfig];
         return returnValue;
     } else {
         DEBUG_LOGX(@"LDClient not started yet!");
@@ -161,7 +161,7 @@
         returnValue = [((NSNumber *)flagValue) doubleValue];
     }
     
-    [[LDDataManager sharedManager] createFeatureEvent:featureKey keyValue:[NSNumber numberWithDouble:returnValue] defaultKeyValue:[NSNumber numberWithDouble:fallback]];
+    [[LDDataManager sharedManager] createFeatureEvent:featureKey keyValue:[NSNumber numberWithDouble:returnValue] defaultKeyValue:[NSNumber numberWithDouble:fallback] user:self.ldUser config:self.ldConfig];
     return returnValue;
 }
 
@@ -179,7 +179,7 @@
             returnValue = (NSString *)flagValue;
         }
         
-        [[LDDataManager sharedManager] createFeatureEvent: featureKey keyValue:returnValue defaultKeyValue:fallback];
+        [[LDDataManager sharedManager] createFeatureEvent: featureKey keyValue:returnValue defaultKeyValue:fallback user:self.ldUser config:self.ldConfig];
         return returnValue;
     } else {
         DEBUG_LOGX(@"LDClient not started yet!");
@@ -204,7 +204,7 @@
         returnValue = (NSArray *)flagValue;
     }
     
-    [[LDDataManager sharedManager] createFeatureEvent: featureKey keyValue:returnValue defaultKeyValue:fallback];
+    [[LDDataManager sharedManager] createFeatureEvent: featureKey keyValue:returnValue defaultKeyValue:fallback user:self.ldUser config:self.ldConfig];
     return returnValue;
 }
 
@@ -225,7 +225,7 @@
         returnValue = (NSDictionary *)flagValue;
     }
     
-    [[LDDataManager sharedManager] createFeatureEvent: featureKey keyValue:returnValue defaultKeyValue:fallback];
+    [[LDDataManager sharedManager] createFeatureEvent: featureKey keyValue:returnValue defaultKeyValue:fallback user:self.ldUser config:self.ldConfig];
     return returnValue;
 }
 
@@ -233,8 +233,7 @@
 {
     DEBUG_LOG(@"LDClient track method called for event=%@ and data=%@", eventName, dataDictionary);
     if (self.clientStarted) {
-        [[LDDataManager sharedManager] createCustomEvent:eventName
-                              withCustomValuesDictionary: dataDictionary];
+        [[LDDataManager sharedManager] createCustomEvent:eventName withCustomValuesDictionary: dataDictionary user:self.ldUser config:self.ldConfig];
         return YES;
     } else {
         DEBUG_LOGX(@"LDClient not started yet!");

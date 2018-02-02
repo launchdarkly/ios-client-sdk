@@ -100,7 +100,7 @@ static NSString * const kCustomEventName = @"custom";
 }
 
 
--(NSDictionary *)dictionaryValue{
+-(NSDictionary *)dictionaryValueUsingConfig:(LDConfig*)config {
     NSMutableDictionary *dictionary = [[NSMutableDictionary alloc] init];
     
     self.key ? [dictionary setObject:self.key forKey: kKeyKey] : nil;
@@ -109,7 +109,7 @@ static NSString * const kCustomEventName = @"custom";
     self.data ? [dictionary setObject:self.data forKey: kDataKey] : nil;
     self.value ? [dictionary setObject:self.value forKey: kFeatureKeyValueServerKey] : nil;
     self.isDefault ? [dictionary setObject:self.isDefault forKey: kIsDefaultServerKey] : nil;
-    self.user ? [dictionary setObject:[self.user dictionaryValue] forKey: kUserKey] : nil;
+    self.user ? [dictionary setObject:[self.user dictionaryValueWithFlagConfig:YES includePrivateAttributes:NO config:config] forKey: kUserKey] : nil;
     
     return dictionary;
 }

@@ -458,11 +458,11 @@ NSString *const kTestMobileKey = @"testMobileKey";
     NSString *toggleName = @"test";
     BOOL fallbackValue = YES;
     LDConfig *config = [[LDConfig alloc] initWithMobileKey:kTestMobileKey];
-    OCMStub([self.dataManagerMock createFeatureEvent:[OCMArg any] keyValue:[OCMArg any] defaultKeyValue:[OCMArg any]]);
+    OCMStub([self.dataManagerMock createFeatureEvent:[OCMArg any] keyValue:[OCMArg any] defaultKeyValue:[OCMArg any] user:[OCMArg any] config:[OCMArg any]]);
     [[LDClient sharedInstance] start:config withUserBuilder:nil];
     [[LDClient sharedInstance] boolVariation:toggleName fallback:fallbackValue];
     
-    OCMVerify([self.dataManagerMock createFeatureEvent:toggleName keyValue:[NSNumber numberWithBool:fallbackValue] defaultKeyValue:[NSNumber numberWithBool:fallbackValue]]);
+    OCMVerify([self.dataManagerMock createFeatureEvent:toggleName keyValue:[NSNumber numberWithBool:fallbackValue] defaultKeyValue:[NSNumber numberWithBool:fallbackValue] user:[OCMArg isKindOfClass:[LDUserModel class]] config:config]);
     [self.dataManagerMock stopMocking];
 }
 
@@ -475,12 +475,11 @@ NSString *const kTestMobileKey = @"testMobileKey";
     LDConfig *config = [[LDConfig alloc] initWithMobileKey:kTestMobileKey];
     [[LDClient sharedInstance] start:config withUserBuilder:nil];
     
-    OCMStub([self.dataManagerMock createCustomEvent:[OCMArg isKindOfClass:[NSString class]]  withCustomValuesDictionary:[OCMArg isKindOfClass:[NSDictionary class]]]);
+    OCMStub([self.dataManagerMock createCustomEvent:[OCMArg isKindOfClass:[NSString class]]  withCustomValuesDictionary:[OCMArg isKindOfClass:[NSDictionary class]] user:[OCMArg any] config:[OCMArg any]]);
     
     XCTAssertTrue([[LDClient sharedInstance] track:@"test" data:customData]);
     
-    OCMVerify([self.dataManagerMock createCustomEvent: @"test"
-                           withCustomValuesDictionary: customData]);
+    OCMVerify([self.dataManagerMock createCustomEvent: @"test" withCustomValuesDictionary: customData user:[OCMArg isKindOfClass:[LDUserModel class]] config:config]);
 }
 
 - (void)testOfflineWithoutStart {

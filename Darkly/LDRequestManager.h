@@ -24,6 +24,6 @@ extern NSString * const kHeaderMobileKey;
 
 -(void)performFeatureFlagRequest:(LDUserModel *)user;
 
--(void)performEventRequest:(NSArray *)jsonEventArray;
+-(void)performEventRequest:(NSArray *)eventDictionaries;
 
 @end

@@ -7,6 +7,7 @@
 #import "LDClientManager.h"
 #import "LDConfig.h"
 #import "NSURLResponse+Unauthorized.h"
+#import "NSDictionary+JSON.h"
 
 static NSString * const kFeatureFlagGetUrl = @"/msdk/eval/users/";
 static NSString * const kFeatureFlagReportUrl = @"/msdk/eval/user";
@@ -136,14 +137,14 @@ dispatch_queue_t notificationQueue;
     dispatch_semaphore_wait(semaphore, DISPATCH_TIME_FOREVER);
 }
 
--(void)performEventRequest:(NSArray *)jsonEventArray {
+-(void)performEventRequest:(NSArray *)eventDictionaries {
     [self configure:[LDClient sharedInstance].ldConfig];
     if (!mobileKey) {
         DEBUG_LOGX(@"RequestManager unable to sync events to server since no mobileKey");
         return;
     }
 
-    if (!jsonEventArray || jsonEventArray.count == 0) {
+    if (!eventDictionaries || eventDictionaries.count == 0) {
         DEBUG_LOGX(@"RequestManager unable to sync events to server since no events");
         return;
     }
@@ -165,7 +166,7 @@ dispatch_queue_t notificationQueue;
     [self addEventRequestHeaders:request];
 
     NSError *error;
-    NSData *postData = [NSJSONSerialization dataWithJSONObject:jsonEventArray options:0 error:&error];
+    NSData *postData = [NSJSONSerialization dataWithJSONObject:eventDictionaries options:0 error:&error];
 
     [request setHTTPMethod:@"POST"];
     [request setHTTPBody:postData];
@@ -181,7 +182,7 @@ dispatch_queue_t notificationQueue;
         dispatch_semaphore_signal(semaphore);
         dispatch_async(dispatch_get_main_queue(), ^{
             BOOL processedEvents = !error;
-            [delegate processedEvents:processedEvents jsonEventArray:jsonEventArray];
+            [delegate processedEvents:processedEvents jsonEventArray:eventDictionaries];
         });
     }];
 
@@ -196,7 +197,7 @@ dispatch_queue_t notificationQueue;
         DEBUG_LOGX(@"RequestManager unable to sync config to server since no user");
         return nil;
     }
-    NSString *userJson = [user convertToJson];
+    NSString *userJson = [[user dictionaryValueWithPrivateAttributesAndFlagConfig:NO] jsonString];
     if (!userJson) {
         DEBUG_LOGX(@"RequestManager could not convert user to json, aborting sync config to server");
         return nil;
@@ -217,7 +218,7 @@ dispatch_queue_t notificationQueue;
         DEBUG_LOGX(@"RequestManager unable to sync config to server since no user");
         return nil;
     }
-    NSString *userJson = [user convertToJson];
+    NSString *userJson = [[user dictionaryValueWithPrivateAttributesAndFlagConfig:NO] jsonString];
     if (!userJson) {
         DEBUG_LOGX(@"RequestManager could not convert user to json, aborting sync config to server");
         return nil;

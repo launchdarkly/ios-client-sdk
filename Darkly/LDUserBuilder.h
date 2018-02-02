@@ -62,6 +62,16 @@
 @property (nonatomic) BOOL isAnonymous;
 
 /**
+ * List of user attributes and top level custom dictionary keys to treat as private for event reporting.
+ * Private attribute values will not be included in events reported to LaunchDarkly, but the attribute name will still
+ * be sent. All user attributes can be declared private except `key` and `anonymous`. Access the user attribute names that
+ * can be declared private through the identifiers included in `LDUserModel.h`. To declare all user attributes private, set
+ * `privateAttributes` to `[LDUserModel allUserAttributes]`. By setting the attribute private in the user,
+ * the attribute will be treated private for this user only. The default is nil. (Optional)
+ */
+@property (nonatomic, strong, nullable) NSArray<NSString *>* privateAttributes;
+
+/**
  * Provide custom String data for the dictionary associated with
  * the user. (Optional)
  *
@@ -97,13 +107,12 @@
  */
 - (void)customArray:(nonnull NSString *)inputKey value:(nonnull NSArray *)value;
 
-
 -(nonnull LDUserModel *)build;
 
 + (nonnull LDUserModel *)compareNewBuilder:(nonnull LDUserBuilder *)iBuilder withUser:(nonnull LDUserModel *)iUser;
 + (nonnull LDUserBuilder *)currentBuilder:(nonnull LDUserModel *)iUser;
 
-+ (nonnull LDUserBuilder *)retrieveCurrentBuilder:(nonnull LDUserModel *)iUser __deprecated_msg("User `currentBuilder:` instead");
++ (nonnull LDUserBuilder *)retrieveCurrentBuilder:(nonnull LDUserModel *)iUser __deprecated_msg("Use `currentBuilder:` instead");
 
 /**
  * Provide a key to the user builder to identify the user. If this key
