@@ -5,6 +5,10 @@
 #import <XCTest/XCTest.h>
 #import "LDEventModel.h"
 #import "LDUserModel.h"
+#import "LDUserModel+Stub.h"
+
+NSString * const kUserKeyUser = @"user";
+NSString * const kUserKeyConfig = @"config";
 
 @interface LDEventModelTest : XCTestCase
 @property LDUserModel *user;
@@ -39,6 +43,17 @@
     XCTAssertEqualObjects(event.kind, @"custom");
     XCTAssertEqual([event.data allValues].firstObject,
                    [dictionary allValues].firstObject);
+}
+
+-(void)testEventDictionaryOmitsUserFlagConfig {
+    LDConfig *config = [[LDConfig alloc] initWithMobileKey:@"eventDictionaryTestMobileKey"];
+    self.user = [LDUserModel stubWithKey:[[NSUUID UUID] UUIDString]];
+    LDEventModel *eventStub = [[LDEventModel alloc] initCustomEventWithKey:@"eventStubKey" andDataDictionary:@{} userValue:self.user];
+    NSDictionary *subject = [eventStub dictionaryValueUsingConfig:config][kUserKeyUser];
+
+    XCTAssertNotNil(subject);
+    XCTAssertTrue(subject.allKeys.count > 0);
+    XCTAssertFalse([subject.allKeys containsObject:kUserKeyConfig]);
 }
 
 @end

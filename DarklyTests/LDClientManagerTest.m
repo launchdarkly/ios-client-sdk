@@ -14,6 +14,8 @@
 #import "LDClientManager+EventSource.h"
 #import "LDEvent+Testable.h"
 #import "LDFlagConfigModel+Testable.h"
+#import "NSJSONSerialization+Testable.h"
+#import "LDUserModel+Equatable.h"
 
 NSString *const mockMobileKey = @"mockMobileKey";
 NSString *const kFeaturesJsonDictionary = @"featuresJsonDictionary";
@@ -426,6 +428,10 @@ NSString *const kBoolFlagKey = @"isABawler";
     [[NSNotificationCenter defaultCenter] addMockObserver:clientUnauthorizedObserver name:kLDClientUnauthorizedNotification object:nil];
     [[clientUnauthorizedObserver expect] notificationWithName: kLDClientUnauthorizedNotification object:[OCMArg any]];
 
+    id serverUnavailableObserver = OCMObserverMock();
+    [[NSNotificationCenter defaultCenter] addMockObserver:serverUnavailableObserver name:kLDServerConnectionUnavailableNotification object:nil];
+    [[serverUnavailableObserver expect] notificationWithName: kLDServerConnectionUnavailableNotification object:[OCMArg any]];
+
     __block LDEventSourceEventHandler errorHandler;
     OCMStub([eventSourceMock onError:[OCMArg checkWithBlock:^BOOL(id obj) {
         errorHandler = (LDEventSourceEventHandler)obj;
@@ -441,6 +447,8 @@ NSString *const kBoolFlagKey = @"isABawler";
 
     [[NSNotificationCenter defaultCenter] removeObserver:clientUnauthorizedObserver];
     [clientUnauthorizedObserver verify];
+    [[NSNotificationCenter defaultCenter] removeObserver:serverUnavailableObserver];
+    [serverUnavailableObserver verify];
 
     clientManager.online = NO;  //Although LDClientManager.online = NO is in tearDown, setting it here allows following tests to not fail on errorHandler != nil
 }
@@ -449,6 +457,10 @@ NSString *const kBoolFlagKey = @"isABawler";
     id clientUnauthorizedObserver = OCMObserverMock();
     [[NSNotificationCenter defaultCenter] addMockObserver:clientUnauthorizedObserver name:kLDClientUnauthorizedNotification object:nil];
     //it's not obvious, but by not setting expect on the mock observer, the observer will fail when verify is called IF it has received the notification
+
+    id serverUnavailableObserver = OCMObserverMock();
+    [[NSNotificationCenter defaultCenter] addMockObserver:serverUnavailableObserver name:kLDServerConnectionUnavailableNotification object:nil];
+    [[serverUnavailableObserver expect] notificationWithName: kLDServerConnectionUnavailableNotification object:[OCMArg any]];
 
     __block LDEventSourceEventHandler errorHandler;
     OCMStub([eventSourceMock onError:[OCMArg checkWithBlock:^BOOL(id obj) {
@@ -465,8 +477,102 @@ NSString *const kBoolFlagKey = @"isABawler";
 
     [[NSNotificationCenter defaultCenter] removeObserver:clientUnauthorizedObserver];
     [clientUnauthorizedObserver verify];
+    [[NSNotificationCenter defaultCenter] removeObserver:serverUnavailableObserver];
+    [serverUnavailableObserver verify];
 
     clientManager.online = NO;  //Although LDClientManager.online = NO is in tearDown, setting it here allows following tests to not fail on errorHandler != nil
+}
+
+-(void)testProcessedConfig_success_flagsChanged {
+    NSDictionary *flagConfigDictionary = [NSJSONSerialization jsonObjectFromFileNamed:@"feature_flags"];
+    LDFlagConfigModel *targetFlagConfig = [[LDFlagConfigModel alloc] initWithDictionary:flagConfigDictionary];
+
+    id userUpdatedObserver = OCMObserverMock();
+    [[NSNotificationCenter defaultCenter] addMockObserver:userUpdatedObserver name:kLDUserUpdatedNotification object:nil];
+    [[userUpdatedObserver expect] notificationWithName:kLDUserUpdatedNotification object:[OCMArg any]];
+
+    id userNoChangeObserver = OCMObserverMock();
+    [[NSNotificationCenter defaultCenter] addMockObserver:userNoChangeObserver name:kLDUserNoChangeNotification object:nil];
+
+    id connectionUnavailableObserver = OCMObserverMock();
+    [[NSNotificationCenter defaultCenter] addMockObserver:connectionUnavailableObserver name:kLDServerConnectionUnavailableNotification object:nil];
+
+    LDUserModel *user = [LDClient sharedInstance].ldUser;
+
+    __block LDUserModel *savedUser;
+    [[self.dataManagerMock expect] saveUser:[OCMArg checkWithBlock:^BOOL(id obj) {
+        if (![obj isKindOfClass:[LDUserModel class]]) { return NO; }
+        savedUser = obj;
+        return YES;
+    }]];
+
+    LDClientManager *clientManager = [LDClientManager sharedInstance];
+    [clientManager processedConfig:YES jsonConfigDictionary:flagConfigDictionary];
+
+    XCTAssertTrue([user.config isEqualToConfig:targetFlagConfig]);
+    XCTAssertNotNil(savedUser);
+    XCTAssertTrue([savedUser isEqual:user ignoringAttributes:@[kUserAttributeConfig]]);
+    XCTAssertTrue([savedUser.config isEqualToConfig:targetFlagConfig]);
+
+    [userUpdatedObserver verify];
+    [userNoChangeObserver verify];
+    [connectionUnavailableObserver verify];
+}
+
+-(void)testProcessedConfig_success_flagsUnchanged {
+    NSDictionary *flagConfigDictionary = [NSJSONSerialization jsonObjectFromFileNamed:@"feature_flags"];
+    LDFlagConfigModel *targetFlagConfig = [[LDFlagConfigModel alloc] initWithDictionary:flagConfigDictionary];
+
+    id userUpdatedObserver = OCMObserverMock();
+    [[NSNotificationCenter defaultCenter] addMockObserver:userUpdatedObserver name:kLDUserUpdatedNotification object:nil];
+
+    id userNoChangeObserver = OCMObserverMock();
+    [[NSNotificationCenter defaultCenter] addMockObserver:userNoChangeObserver name:kLDUserNoChangeNotification object:nil];
+    [[userNoChangeObserver expect] notificationWithName:kLDUserNoChangeNotification object:[OCMArg any]];
+
+    id connectionUnavailableObserver = OCMObserverMock();
+    [[NSNotificationCenter defaultCenter] addMockObserver:connectionUnavailableObserver name:kLDServerConnectionUnavailableNotification object:nil];
+
+    LDUserModel *user = [LDClient sharedInstance].ldUser;
+    user.config = targetFlagConfig;
+
+    [[self.dataManagerMock reject] saveUser:[OCMArg any]];
+
+    LDClientManager *clientManager = [LDClientManager sharedInstance];
+    [clientManager processedConfig:YES jsonConfigDictionary:flagConfigDictionary];
+
+    XCTAssertTrue([user.config isEqualToConfig:targetFlagConfig]);
+
+    [userUpdatedObserver verify];
+    [userNoChangeObserver verify];
+    [connectionUnavailableObserver verify];
+}
+
+-(void)testProcessedConfig_failure {
+    NSDictionary *flagConfigDictionary = [NSJSONSerialization jsonObjectFromFileNamed:@"feature_flags"];
+
+    id userUpdatedObserver = OCMObserverMock();
+    [[NSNotificationCenter defaultCenter] addMockObserver:userUpdatedObserver name:kLDUserUpdatedNotification object:nil];
+
+    id userNoChangeObserver = OCMObserverMock();
+    [[NSNotificationCenter defaultCenter] addMockObserver:userNoChangeObserver name:kLDUserNoChangeNotification object:nil];
+
+    id connectionUnavailableObserver = OCMObserverMock();
+    [[NSNotificationCenter defaultCenter] addMockObserver:connectionUnavailableObserver name:kLDServerConnectionUnavailableNotification object:nil];
+    [[connectionUnavailableObserver expect] notificationWithName:kLDServerConnectionUnavailableNotification object:[OCMArg any]];
+
+    LDUserModel *user = [LDClient sharedInstance].ldUser;
+
+    [[self.dataManagerMock reject] saveUser:[OCMArg any]];
+
+    LDClientManager *clientManager = [LDClientManager sharedInstance];
+    [clientManager processedConfig:NO jsonConfigDictionary:flagConfigDictionary];
+
+    XCTAssertNil(user.config);
+
+    [userUpdatedObserver verify];
+    [userNoChangeObserver verify];
+    [connectionUnavailableObserver verify];
 }
 
 #pragma mark - Helpers
