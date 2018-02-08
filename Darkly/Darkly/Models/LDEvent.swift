@@ -52,7 +52,7 @@ struct LDEvent { //sdk internal, not publically accessible
         eventDictionary[CodingKeys.key.rawValue] = key
         eventDictionary[CodingKeys.kind.rawValue] = kind.rawValue
         eventDictionary[CodingKeys.creationDate.rawValue] = creationDate.millisSince1970
-        eventDictionary[CodingKeys.user.rawValue] = user.dictionaryValue(includeFlagConfig: true, includePrivateAttributes: false, config: config)
+        eventDictionary[CodingKeys.user.rawValue] = user.dictionaryValue(includeFlagConfig: false, includePrivateAttributes: false, config: config)
         eventDictionary[CodingKeys.value.rawValue] = value?.baseValue
         eventDictionary[CodingKeys.defaultValue.rawValue] = defaultValue?.baseValue
         eventDictionary[CodingKeys.data.rawValue] = data

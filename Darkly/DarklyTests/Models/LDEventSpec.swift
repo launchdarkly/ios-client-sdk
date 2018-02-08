@@ -111,7 +111,7 @@ final class LDEventSpec: QuickSpec {
                     expect(eventDictionary[LDEvent.CodingKeys.creationDate.rawValue] as? Int) == subject.creationDate.millisSince1970
                     expect(eventDictionary[LDEvent.CodingKeys.user.rawValue] as? [String: Any]).toNot(beNil())
                     if let encodedUser = eventDictionary[LDEvent.CodingKeys.user.rawValue] as? [String: Any] {
-                        expect(encodedUser == userStub.dictionaryValueWithAllAttributes(includeFlagConfig: true)).to(beTrue())
+                        expect(encodedUser == userStub.dictionaryValueWithAllAttributes(includeFlagConfig: false)).to(beTrue())
                     }
                     expect(eventDictionary[LDEvent.CodingKeys.value.rawValue] as? Bool) == Bool(value)
                     expect(eventDictionary[LDEvent.CodingKeys.defaultValue.rawValue] as? Bool) == Bool(defaultValue)
@@ -132,7 +132,7 @@ final class LDEventSpec: QuickSpec {
                     expect(eventDictionary[LDEvent.CodingKeys.creationDate.rawValue] as? Int) == subject.creationDate.millisSince1970
                     expect(eventDictionary[LDEvent.CodingKeys.user.rawValue] as? [String: Any]).toNot(beNil())
                     if let encodedUser = eventDictionary[LDEvent.CodingKeys.user.rawValue] as? [String: Any] {
-                        expect(encodedUser == userStub.dictionaryValueWithAllAttributes(includeFlagConfig: true)).to(beTrue())
+                        expect(encodedUser == userStub.dictionaryValueWithAllAttributes(includeFlagConfig: false)).to(beTrue())
                     }
                     expect(eventDictionary[LDEvent.CodingKeys.value.rawValue]).to(beNil())
                     expect(eventDictionary[LDEvent.CodingKeys.defaultValue.rawValue]).to(beNil())
@@ -156,7 +156,7 @@ final class LDEventSpec: QuickSpec {
                     expect(foundEvent[LDEvent.CodingKeys.creationDate.rawValue] as? Int) == event.creationDate.millisSince1970
                     expect(foundEvent[LDEvent.CodingKeys.user.rawValue] as? [String: Any]).toNot(beNil())
                     if let encodedUser = foundEvent[LDEvent.CodingKeys.user.rawValue] as? [String: Any] {
-                        expect(encodedUser == userStub.dictionaryValueWithAllAttributes(includeFlagConfig: true)).to(beTrue())
+                        expect(encodedUser == userStub.dictionaryValueWithAllAttributes(includeFlagConfig: false)).to(beTrue())
                     }
                     if let eventValue = event.value {
                         expect(foundEvent[LDEvent.CodingKeys.value.rawValue] as? Bool) == Bool(eventValue)
