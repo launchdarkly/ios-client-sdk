@@ -72,6 +72,11 @@ public final class ObjcLDConfig: NSObject {
         set { config.privateUserAttributes = newValue }
     }
 
+    @objc public var useReport: Bool {
+        get { return config.useReport }
+        set { config.useReport = newValue }
+    }
+
     @objc public var debugMode: Bool {
         get { return config.isDebugMode }
         set { config.isDebugMode = newValue }

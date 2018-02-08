@@ -13,7 +13,12 @@ extension HTTPURLResponse {
         //swiftlint:disable:next identifier_name
         static let ok = 200
         static let accepted = 202
+        static let badRequest = 400
         static let unauthorized = 401
+        static let methodNotAllowed = 405
         static let internalServerError = 500
+        static let notImplemented = 501
+
+        static let all = [ok, accepted, badRequest, unauthorized, methodNotAllowed, internalServerError, notImplemented]
     }
 }

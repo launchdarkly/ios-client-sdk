@@ -76,6 +76,11 @@ public struct LDConfig {
     ///List of user attributes and top level custom dictionary keys to treat as private for event reporting for all users. Private attribute values will not be included in events reported to Launch Darkly, but the attribute name will still be sent. All user attributes can be declared private except key, anonymous, device, & os. Access the user attribute names that can be declared private through the identifiers included in LDUser.swift. To declare all user attributes private, either set privateUserAttributes to LDUser.allUserAttributes or raise LDConfig.allUserAttributesPrivate. Default: nil
     public var privateUserAttributes: [String]? = nil
 
+    //Flag Requests using REPORT method
+    /// Flag that enables REPORT HTTP method for feature flag requests. When useReport is false, feature flag requests use the GET HTTP method. Do not use unless advised by LaunchDarkly. Default: false
+    public var useReport: Bool = false
+    private static let flagRetryStatusCodes = [HTTPURLResponse.StatusCodes.methodNotAllowed, HTTPURLResponse.StatusCodes.badRequest, HTTPURLResponse.StatusCodes.notImplemented]
+
     ///Enables additional logging for development. Default: false
     public var isDebugMode: Bool = Defaults.debugMode
     
@@ -87,6 +92,10 @@ public struct LDConfig {
     func flagPollingInterval(runMode: LDClientRunMode) -> TimeInterval {
         let pollingIntervalMillis = runMode == .foreground ? max(pollIntervalMillis, minima.pollingIntervalMillis) : max(backgroundPollIntervalMillis, minima.backgroundPollIntervalMillis)
         return pollingIntervalMillis.timeInterval
+    }
+
+    func isReportRetryStatusCode(_ statusCode: Int) -> Bool {
+        return LDConfig.flagRetryStatusCodes.contains(statusCode)
     }
 }
 
@@ -106,9 +115,16 @@ extension LDConfig: Equatable {
             && lhs.streamingMode == rhs.streamingMode
             && lhs.enableBackgroundUpdates == rhs.enableBackgroundUpdates
             && lhs.startOnline == rhs.startOnline
-            && lhs.isDebugMode == rhs.isDebugMode
             && lhs.allUserAttributesPrivate == rhs.allUserAttributesPrivate
             && (lhs.privateUserAttributes == nil && rhs.privateUserAttributes == nil
                 || (lhs.privateUserAttributes != nil && rhs.privateUserAttributes != nil && lhs.privateUserAttributes! == rhs.privateUserAttributes!))
+            && lhs.useReport == rhs.useReport
+            && lhs.isDebugMode == rhs.isDebugMode
     }
 }
+
+#if DEBUG
+    extension LDConfig {
+        static let reportRetryStatusCodes = LDConfig.flagRetryStatusCodes
+    }
+#endif
