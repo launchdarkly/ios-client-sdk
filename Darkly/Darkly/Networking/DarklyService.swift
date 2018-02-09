@@ -39,7 +39,6 @@ final class DarklyService: DarklyServiceProvider {
         static let flagRequestPath = "msdk/eval/users"
         static let streamRequestPath = "mping"
         static let eventRequestPath = "mobile/events/bulk"
-        static let httpMethodPost = "POST"
     }
     
     private let mobileKey: String
@@ -105,7 +104,7 @@ final class DarklyService: DarklyServiceProvider {
     private func eventRequest(eventDictionaries: [[String: Any]]) -> URLRequest {
         var request = URLRequest(url: eventUrl, cachePolicy: .useProtocolCachePolicy, timeoutInterval: config.connectionTimeout)
         request.appendHeaders(httpHeaders.eventRequestHeaders)
-        request.httpMethod = Constants.httpMethodPost
+        request.httpMethod = URLRequest.Methods.post
         request.httpBody = eventDictionaries.jsonData
 
         return request

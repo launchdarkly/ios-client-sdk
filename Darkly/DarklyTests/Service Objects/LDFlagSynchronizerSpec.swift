@@ -219,7 +219,7 @@ final class LDFlagSynchronizerSpec: QuickSpec {
             }
             context("heartbeat") {
                 beforeEach {
-                    self.mockService.stubFlagRequest(success: true)
+                    self.mockService.stubFlagRequest(success: true, useReport: false)
                     self.subject.isOnline = true
 
                     self.mockService.createdEventSource?.sendHeartbeat()
@@ -230,7 +230,7 @@ final class LDFlagSynchronizerSpec: QuickSpec {
             }
             context("null event") {
                 beforeEach {
-                    self.mockService.stubFlagRequest(success: true)
+                    self.mockService.stubFlagRequest(success: true, useReport: false)
                     self.subject.isOnline = true
 
                     self.mockService.createdEventSource?.sendNullEvent()
@@ -241,7 +241,7 @@ final class LDFlagSynchronizerSpec: QuickSpec {
             }
             context("open event") {
                 beforeEach {
-                    self.mockService.stubFlagRequest(success: true)
+                    self.mockService.stubFlagRequest(success: true, useReport: false)
                     self.subject.isOnline = true
 
                     self.mockService.createdEventSource?.sendOpenEvent()

@@ -95,13 +95,15 @@ extension DarklyServiceMock {
     // MARK: Flag Request
 
     var flagHost: String? { return config.baseUrl.host }
-    var flagRequestStubTest: OHHTTPStubsTestBlock { return isScheme(Constants.schemeHttps) && isHost(flagHost!) && isMethodGET() }
+    var flagRequestStubTest: OHHTTPStubsTestBlock { return isScheme(Constants.schemeHttps) && isHost(flagHost!) }
+    var getFlagRequestStubTest: OHHTTPStubsTestBlock { return flagRequestStubTest && isMethodGET() }
+    var reportFlagRequestStubTest: OHHTTPStubsTestBlock { return flagRequestStubTest && isMethodREPORT() }
 
     ///Use when testing requires the mock service to actually make a flag request
-    func stubFlagRequest(success: Bool, onActivation activate: ((URLRequest, OHHTTPStubsDescriptor, OHHTTPStubsResponse) -> Void)? = nil) {
+    func stubFlagRequest(success: Bool, useReport: Bool, onActivation activate: ((URLRequest, OHHTTPStubsDescriptor, OHHTTPStubsResponse) -> Void)? = nil) {
         let stubResponse: OHHTTPStubsResponseBlock = success ? { (_) in OHHTTPStubsResponse(jsonObject: Constants.featureFlags, statusCode: Int32(HTTPURLResponse.StatusCodes.ok), headers: nil) }
             : { (_) in OHHTTPStubsResponse(error: Constants.error) }
-        stubRequest(passingTest: flagRequestStubTest, stub: stubResponse, name: Constants.stubNameFlag, onActivation: activate)
+        stubRequest(passingTest: useReport ? reportFlagRequestStubTest : getFlagRequestStubTest, stub: stubResponse, name: Constants.stubNameFlag, onActivation: activate)
     }
 
     ///Use when testing requires the mock service to provide a service response to the flag request callback
@@ -181,4 +183,14 @@ extension OHHTTPStubs {
     class func stub(named name: String) -> OHHTTPStubsDescriptor? {
         return (OHHTTPStubs.allStubs() as? [OHHTTPStubsDescriptor])?.filter { (stub) in stub.name == name }.first
     }
+}
+
+/**
+ * Matcher testing that the `NSURLRequest` is using the **REPORT** `HTTPMethod`
+ *
+ * - Returns: a matcher (OHHTTPStubsTestBlock) that succeeds only if the request
+ *            is using the GET method
+ */
+public func isMethodREPORT() -> OHHTTPStubsTestBlock {
+    return { $0.httpMethod == URLRequest.Methods.report }
 }

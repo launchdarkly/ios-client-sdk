@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		830BF933202D188E006DF9B1 /* HTTPURLRequest.swift in Sources */ = {isa = PBXBuildFile; fileRef = 830BF932202D188E006DF9B1 /* HTTPURLRequest.swift */; };
 		831CE0661F853A1700A13A3A /* Match.swift in Sources */ = {isa = PBXBuildFile; fileRef = 831CE0651F853A1700A13A3A /* Match.swift */; };
 		831D8B6D1F6B1F7B00ED65E8 /* ObjcLDVariationValue.swift in Sources */ = {isa = PBXBuildFile; fileRef = 831D8B6C1F6B1F7B00ED65E8 /* ObjcLDVariationValue.swift */; };
 		831D8B6F1F71532300ED65E8 /* HTTPHeaders.swift in Sources */ = {isa = PBXBuildFile; fileRef = 831D8B6E1F71532300ED65E8 /* HTTPHeaders.swift */; };
@@ -90,6 +91,7 @@
 		65D790D08CD84FD874B9A5D8 /* Pods-DarklyTests.testing.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-DarklyTests.testing.xcconfig"; path = "Pods/Target Support Files/Pods-DarklyTests/Pods-DarklyTests.testing.xcconfig"; sourceTree = "<group>"; };
 		6D78FF715370FB95F6F5E9CA /* Pods-Darkly_iOS.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Darkly_iOS.release.xcconfig"; path = "Pods/Target Support Files/Pods-Darkly_iOS/Pods-Darkly_iOS.release.xcconfig"; sourceTree = "<group>"; };
 		7B043E1A9DC44E730A3F3730 /* Pods-DarklyTests.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-DarklyTests.release.xcconfig"; path = "Pods/Target Support Files/Pods-DarklyTests/Pods-DarklyTests.release.xcconfig"; sourceTree = "<group>"; };
+		830BF932202D188E006DF9B1 /* HTTPURLRequest.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HTTPURLRequest.swift; sourceTree = "<group>"; };
 		831CE0651F853A1700A13A3A /* Match.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Match.swift; sourceTree = "<group>"; };
 		831D8B6C1F6B1F7B00ED65E8 /* ObjcLDVariationValue.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ObjcLDVariationValue.swift; sourceTree = "<group>"; };
 		831D8B6E1F71532300ED65E8 /* HTTPHeaders.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HTTPHeaders.swift; sourceTree = "<group>"; };
@@ -204,6 +206,7 @@
 				831D8B6E1F71532300ED65E8 /* HTTPHeaders.swift */,
 				831D8B711F71D3E700ED65E8 /* DarklyService.swift */,
 				83B8C2461FE4071F0082B8A9 /* HTTPURLResponse.swift */,
+				830BF932202D188E006DF9B1 /* HTTPURLRequest.swift */,
 			);
 			path = Networking;
 			sourceTree = "<group>";
@@ -650,6 +653,7 @@
 				83FEF8DD1F266742001CF12C /* LDFlagSynchronizer.swift in Sources */,
 				83E2E2091F9FF9E1007514E9 /* Optional.swift in Sources */,
 				835E1D471F68B3EC00184DB4 /* ObjcLDFlagValue.swift in Sources */,
+				830BF933202D188E006DF9B1 /* HTTPURLRequest.swift in Sources */,
 				8354EFE51F263DAC00C05156 /* LDFeatureFlag.swift in Sources */,
 				83A2D6241F51CD7A00EA3BD4 /* LDUser.swift in Sources */,
 				8354EFE21F26380700C05156 /* LDEvent.swift in Sources */,
