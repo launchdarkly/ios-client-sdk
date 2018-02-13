@@ -63,7 +63,9 @@ final class DarklyService: DarklyServiceProvider {
             let flagRequest = flagRequest
         else { return }
         let dataTask = self.session.dataTask(with: flagRequest) { (data, response, error) in
-            completion?((data, response, error))
+            DispatchQueue.main.async {
+                completion?((data, response, error))
+            }
         }
         dataTask.resume()
     }
@@ -104,7 +106,7 @@ final class DarklyService: DarklyServiceProvider {
     private func eventRequest(eventDictionaries: [[String: Any]]) -> URLRequest {
         var request = URLRequest(url: eventUrl, cachePolicy: .useProtocolCachePolicy, timeoutInterval: config.connectionTimeout)
         request.appendHeaders(httpHeaders.eventRequestHeaders)
-        request.httpMethod = URLRequest.Methods.post
+        request.httpMethod = URLRequest.HTTPMethods.post
         request.httpBody = eventDictionaries.jsonData
 
         return request

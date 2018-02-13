@@ -18,7 +18,5 @@ extension HTTPURLResponse {
         static let methodNotAllowed = 405
         static let internalServerError = 500
         static let notImplemented = 501
-
-        static let all = [ok, accepted, badRequest, unauthorized, methodNotAllowed, internalServerError, notImplemented]
     }
 }

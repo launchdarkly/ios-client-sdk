@@ -25,12 +25,14 @@ final class DarklyServiceSpec: QuickSpec {
 
     struct TestContext {
         let user = LDUser.stub()
-        let config = LDConfig.stub
+        var config: LDConfig!
         let mockEventDictionaries: [[String: Any]]?
         var serviceMock: DarklyServiceMock!
         var subject: DarklyService!
 
-        init(mobileKey: String, includeMockEventDictionaries: Bool = false) {
+        init(mobileKey: String, useReport: Bool, includeMockEventDictionaries: Bool = false) {
+            config = LDConfig.stub
+            config.useReport = useReport
             mockEventDictionaries = includeMockEventDictionaries ? LDEvent.stubEventDictionaries(Constants.eventCount, user: user, config: config) : nil
             serviceMock = DarklyServiceMock(config: config)
             subject = DarklyService(mobileKey: mobileKey, config: config, user: user)
@@ -51,72 +53,169 @@ final class DarklyServiceSpec: QuickSpec {
         var testContext: TestContext!
 
         describe("getFeatureFlags") {
-            var flagRequest: URLRequest?
+            var responses: ServiceResponses?
+            var getRequestCount = 0
+            var reportRequestCount = 0
             beforeEach {
-                flagRequest = nil
-                testContext = TestContext(mobileKey: Constants.mockMobileKey)
+                responses = nil
+                getRequestCount = 0
+                reportRequestCount = 0
             }
-            context("success") {
-                var responses: ServiceResponses
+
+            context("using GET method") {
                 beforeEach {
-                    waitUntil { done in
-                        testContext.serviceMock.stubFlagRequest(success: true, useReport: false) { (request, _, _) in
-                            flagRequest = request
+                    testContext = TestContext(mobileKey: Constants.mockMobileKey, useReport: false)
+                }
+                context("success") {
+                    beforeEach {
+                        waitUntil { done in
+                            testContext.serviceMock.stubFlagRequest(statusCode: HTTPURLResponse.StatusCodes.ok, useReport: true) { (_, _, _) in
+                                reportRequestCount += 1
+                            }
+                            testContext.serviceMock.stubFlagRequest(statusCode: HTTPURLResponse.StatusCodes.ok, useReport: false) { (_, _, _) in
+                                getRequestCount += 1
+                            }
+                            testContext.subject.getFeatureFlags(completion: { (data, response, error) in
+                                responses = (data, response, error)
+                                done()
+                            })
+                        }
+                    }
+                    it("makes exactly one valid GET request") {
+                        expect(getRequestCount) == 1
+                        expect(reportRequestCount) == 0
+                    }
+                    it("calls completion with data, response, and no error") {
+                        expect(responses).toNot(beNil())
+                        expect(responses?.data).toNot(beNil())
+                        expect(responses?.data == DarklyServiceMock.Constants.featureFlags.jsonData).to(beTrue())
+                        expect(responses?.urlResponse?.httpStatusCode) == HTTPURLResponse.StatusCodes.ok
+                        expect(responses?.error).to(beNil())
+                    }
+                }
+                context("failure") {
+                    beforeEach {
+                        waitUntil { done in
+                            testContext.serviceMock.stubFlagRequest(statusCode: HTTPURLResponse.StatusCodes.internalServerError, useReport: true) { (_, _, _) in
+                                reportRequestCount += 1
+                            }
+                            testContext.serviceMock.stubFlagRequest(statusCode: HTTPURLResponse.StatusCodes.internalServerError, useReport: false) { (_, _, _) in
+                                getRequestCount += 1
+                            }
+                            testContext.subject.getFeatureFlags(completion: { (data, response, error) in
+                                responses = (data, response, error)
+                                done()
+                            })
+                        }
+                    }
+                    it("makes exactly one valid request") {
+                        expect(getRequestCount) == 1
+                        expect(reportRequestCount) == 0
+                    }
+                    it("calls completion with error and no data or response") {
+                        expect(responses).toNot(beNil())
+                        expect(responses?.data).toNot(beNil())
+                        expect(responses?.data).to(beEmpty())
+                        expect(responses?.urlResponse?.httpStatusCode) == HTTPURLResponse.StatusCodes.internalServerError
+                        expect(responses?.error).to(beNil())
+                    }
+                }
+                context("empty mobile key") {
+                    beforeEach {
+                        testContext = TestContext(mobileKey: Constants.emptyMobileKey, useReport: false)
+                        testContext.serviceMock.stubFlagRequest(statusCode: HTTPURLResponse.StatusCodes.ok, useReport: true) { (_, _, _) in
+                            reportRequestCount += 1
+                        }
+                        testContext.serviceMock.stubFlagRequest(statusCode: HTTPURLResponse.StatusCodes.ok, useReport: false) { (_, _, _) in
+                            getRequestCount += 1
                         }
                         testContext.subject.getFeatureFlags(completion: { (data, response, error) in
                             responses = (data, response, error)
-                            done()
                         })
                     }
-                }
-                it("makes a valid request") {
-                    expect(flagRequest).toNot(beNil())
-                }
-                it("calls completion with data, response, and no error") {
-                    expect(responses.data).toNot(beNil())
-                    expect(responses.urlResponse).toNot(beNil())
-                    expect(responses.error).to(beNil())
+                    it("does not make a request") {
+                        expect(getRequestCount) == 0
+                        expect(reportRequestCount) == 0
+                        expect(responses).to(beNil())
+                    }
                 }
             }
-            context("failure") {
-                var responses: ServiceResponses
+            context("using REPORT method") {
                 beforeEach {
-                    waitUntil { done in
-                        testContext.serviceMock.stubFlagRequest(success: false, useReport: false) { (request, _, _) in
-                            flagRequest = request
+                    testContext = TestContext(mobileKey: Constants.mockMobileKey, useReport: true)
+                }
+                context("success") {
+                    beforeEach {
+                        waitUntil { done in
+                            testContext.serviceMock.stubFlagRequest(statusCode: HTTPURLResponse.StatusCodes.ok, useReport: false) { (_, _, _) in
+                                getRequestCount += 1
+                            }
+                            testContext.serviceMock.stubFlagRequest(statusCode: HTTPURLResponse.StatusCodes.ok, useReport: true) { (_, _, _) in
+                                reportRequestCount += 1
+                            }
+                            testContext.subject.getFeatureFlags(completion: { (data, response, error) in
+                                responses = (data, response, error)
+                                done()
+                            })
+                        }
+                    }
+                    it("makes exactly one valid REPORT request") {
+                        expect(getRequestCount) == 0
+                        expect(reportRequestCount) == 1
+                    }
+                    it("calls completion with data, response, and no error") {
+                        expect(responses).toNot(beNil())
+                        expect(responses?.data).toNot(beNil())
+                        expect(responses?.data == DarklyServiceMock.Constants.featureFlags.jsonData).to(beTrue())
+                        expect(responses?.urlResponse?.httpStatusCode) == HTTPURLResponse.StatusCodes.ok
+                        expect(responses?.error).to(beNil())
+                    }
+                }
+                context("failure") {
+                    beforeEach {
+                        waitUntil { done in
+                            testContext.serviceMock.stubFlagRequest(statusCode: HTTPURLResponse.StatusCodes.internalServerError, useReport: true) { (_, _, _) in
+                                reportRequestCount += 1
+                            }
+                            testContext.serviceMock.stubFlagRequest(statusCode: HTTPURLResponse.StatusCodes.internalServerError, useReport: false) { (_, _, _) in
+                                getRequestCount += 1
+                            }
+                            testContext.subject.getFeatureFlags(completion: { (data, response, error) in
+                                responses = (data, response, error)
+                                done()
+                            })
+                        }
+                    }
+                    it("makes exactly one valid request") {
+                        expect(getRequestCount) == 0
+                        expect(reportRequestCount) == 1
+                    }
+                    it("calls completion with error and no data or response") {
+                        expect(responses).toNot(beNil())
+                        expect(responses?.data).toNot(beNil())
+                        expect(responses?.data).to(beEmpty())
+                        expect(responses?.urlResponse?.httpStatusCode) == HTTPURLResponse.StatusCodes.internalServerError
+                        expect(responses?.error).to(beNil())
+                    }
+                }
+                context("empty mobile key") {
+                    beforeEach {
+                        testContext = TestContext(mobileKey: Constants.emptyMobileKey, useReport: true)
+                        testContext.serviceMock.stubFlagRequest(statusCode: HTTPURLResponse.StatusCodes.ok, useReport: false) { (_, _, _) in
+                            getRequestCount += 1
+                        }
+                        testContext.serviceMock.stubFlagRequest(statusCode: HTTPURLResponse.StatusCodes.ok, useReport: true) { (_, _, _) in
+                            reportRequestCount += 1
                         }
                         testContext.subject.getFeatureFlags(completion: { (data, response, error) in
                             responses = (data, response, error)
-                            done()
                         })
                     }
-                }
-                it("makes a valid request") {
-                    expect(flagRequest).toNot(beNil())
-                }
-                it("calls completion with error and no data or response") {
-                    expect(responses.data).to(beNil())
-                    expect(responses.urlResponse).to(beNil())
-                    expect(responses.error).toNot(beNil())
-                }
-            }
-            context("empty mobile key") {
-                var responses: ServiceResponses
-                var flagsRequested = false
-                beforeEach {
-                    testContext = TestContext(mobileKey: Constants.emptyMobileKey)
-                    testContext.serviceMock.stubFlagRequest(success: true, useReport: false) { (request, _, _) in
-                        flagRequest = request
+                    it("does not make a request") {
+                        expect(getRequestCount) == 0
+                        expect(reportRequestCount) == 0
+                        expect(responses).to(beNil())
                     }
-                    testContext.subject.getFeatureFlags(completion: { (data, response, error) in
-                        responses = (data, response, error)
-                        flagsRequested = true
-                    })
-                }
-                it("does not make a request") {
-                    expect(flagRequest).to(beNil())
-                    expect(flagsRequested) == false
-                    expect(responses).to(beNil())
                 }
             }
         }
@@ -129,7 +228,7 @@ final class DarklyServiceSpec: QuickSpec {
             var streamRequest: URLRequest?
             var eventSource: DarklyStreamingProvider!
             beforeEach {
-                testContext = TestContext(mobileKey: Constants.mockMobileKey)
+                testContext = TestContext(mobileKey: Constants.mockMobileKey, useReport: false)
                 // The LDEventSource constructor waits ~1s and then triggers a request to open the streaming connection. Adding the timeout gives it time to make the request.
                 waitUntil(timeout: 3) { done in
                     testContext.serviceMock.stubStreamRequest(success: true) { (request, _, _) in
@@ -158,7 +257,7 @@ final class DarklyServiceSpec: QuickSpec {
 
             beforeEach {
                 eventRequest = nil
-                testContext = TestContext(mobileKey: Constants.mockMobileKey, includeMockEventDictionaries: true)
+                testContext = TestContext(mobileKey: Constants.mockMobileKey, useReport: false, includeMockEventDictionaries: true)
             }
             context("success") {
                 var responses: ServiceResponses
@@ -208,7 +307,7 @@ final class DarklyServiceSpec: QuickSpec {
                 var responses: ServiceResponses
                 var eventsPublished = false
                 beforeEach {
-                    testContext = TestContext(mobileKey: Constants.emptyMobileKey, includeMockEventDictionaries: true)
+                    testContext = TestContext(mobileKey: Constants.emptyMobileKey, useReport: true)
                     testContext.serviceMock.stubEventRequest(success: true) { (request, _, _) in
                         eventRequest = request
                     }
@@ -228,7 +327,7 @@ final class DarklyServiceSpec: QuickSpec {
                 var eventsPublished = false
                 let emptyEventDictionaryList: [[String: Any]] = []
                 beforeEach {
-                    testContext = TestContext(mobileKey: Constants.emptyMobileKey, includeMockEventDictionaries: true)
+                    testContext = TestContext(mobileKey: Constants.emptyMobileKey, useReport: true)
                     testContext.serviceMock.stubEventRequest(success: true) { (request, _, _) in
                         eventRequest = request
                     }

@@ -9,7 +9,9 @@
 import Foundation
 
 extension URLRequest {
-    struct Methods {
+    struct HTTPMethods {
+        //swiftlint:disable:next identifier_name
+        static let get = "GET"
         static let post = "POST"
         static let report = "REPORT"
     }

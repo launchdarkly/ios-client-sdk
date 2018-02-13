@@ -44,9 +44,9 @@ public class LDClient {
             flagSynchronizer = serviceFactory.makeFlagSynchronizer(streamingMode: effectiveStreamingMode(runMode: runMode),
                                                                    pollingInterval: config.flagPollingInterval(runMode: effectiveRunMode),
                                                                    service: service,
-                                                                   onSyncComplete: self.onSyncComplete)
+                                                                   onSyncComplete: onSyncComplete)
 
-            self.isOnline = wasOnline
+            isOnline = wasOnline
         }
     }
     
@@ -67,7 +67,7 @@ public class LDClient {
             flagSynchronizer = serviceFactory.makeFlagSynchronizer(streamingMode: effectiveStreamingMode(runMode: runMode),
                                                                    pollingInterval: config.flagPollingInterval(runMode: effectiveRunMode),
                                                                    service: service,
-                                                                   onSyncComplete: self.onSyncComplete)
+                                                                   onSyncComplete: onSyncComplete)
             if hasStarted {
                 eventReporter.record(LDEvent.identifyEvent(key: UUID().uuidString, user: user))
             }
@@ -78,6 +78,8 @@ public class LDClient {
 
     private(set) var service: DarklyServiceProvider {
         didSet {
+            //TODO: Refactor to create a new flagSynchronizer here too, then remove from the 4 places that's done in this class
+            //2 of those are in initializers. They set different modes, but I think it should be ok to use the same settings there since it should start offline.
             eventReporter.config = config
             eventReporter.service = service
         }

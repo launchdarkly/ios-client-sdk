@@ -52,13 +52,15 @@ final class DarklyServiceMock: DarklyServiceProvider {
 
         static let requestPathStream = "/mping"
 
-        static let stubNameFlag = "Flag Stub"
-        static let stubNameStream = "Stream Stub"
-        static let stubNameEvent = "Event Stub"
+        static let stubNameFlag = "Flag Request Stub"
+        static let stubNameStream = "Stream Connect Stub"
+        static let stubNameEvent = "Event Report Stub"
     }
 
     var config: LDConfig
     var user: LDUser
+
+    var activationBlocks = [(testBlock: OHHTTPStubsTestBlock, callback: ((URLRequest, OHHTTPStubsDescriptor, OHHTTPStubsResponse) -> Void))]()
 
     init(config: LDConfig = LDConfig.stub, user: LDUser = LDUser.stub()) {
         self.config = config
@@ -100,13 +102,12 @@ extension DarklyServiceMock {
     var reportFlagRequestStubTest: OHHTTPStubsTestBlock { return flagRequestStubTest && isMethodREPORT() }
 
     ///Use when testing requires the mock service to actually make a flag request
-    func stubFlagRequest(success: Bool, useReport: Bool, onActivation activate: ((URLRequest, OHHTTPStubsDescriptor, OHHTTPStubsResponse) -> Void)? = nil) {
-        let stubResponse: OHHTTPStubsResponseBlock = success ? { (_) in OHHTTPStubsResponse(jsonObject: Constants.featureFlags, statusCode: Int32(HTTPURLResponse.StatusCodes.ok), headers: nil) }
-            : { (_) in OHHTTPStubsResponse(error: Constants.error) }
-        stubRequest(passingTest: useReport ? reportFlagRequestStubTest : getFlagRequestStubTest, stub: stubResponse, name: Constants.stubNameFlag, onActivation: activate)
+    func stubFlagRequest(statusCode: Int, useReport: Bool, onActivation activate: ((URLRequest, OHHTTPStubsDescriptor, OHHTTPStubsResponse) -> Void)? = nil) {
+        let stubResponse: OHHTTPStubsResponseBlock = { (_) in OHHTTPStubsResponse(data: statusCode == HTTPURLResponse.StatusCodes.ok ? Constants.featureFlags.jsonData! : Data(), statusCode: Int32(statusCode), headers: nil)}
+        stubRequest(passingTest: useReport ? reportFlagRequestStubTest : getFlagRequestStubTest, stub: stubResponse, name: flagStubName(statusCode: statusCode, useReport: useReport), onActivation: activate)
     }
 
-    ///Use when testing requires the mock service to provide a service response to the flag request callback
+    ///Use when testing requires the mock service to simulate a service response to the flag request callback
     func stubFlagResponse(success: Bool, badData: Bool = false, responseOnly: Bool = false, errorOnly: Bool = false) {
         if success {
             let flagData = try? JSONSerialization.data(withJSONObject: Constants.featureFlags, options: [])
@@ -125,6 +126,10 @@ extension DarklyServiceMock {
         }
     }
     var errorFlagHTTPURLResponse: HTTPURLResponse! { return HTTPURLResponse(url: config.baseUrl, statusCode: HTTPURLResponse.StatusCodes.internalServerError, httpVersion: Constants.httpVersion, headerFields: nil) }
+
+    func flagStubName(statusCode: Int, useReport: Bool) -> String {
+        return "\(Constants.stubNameFlag) using method \(useReport ? URLRequest.HTTPMethods.report : URLRequest.HTTPMethods.get) with response status code \(statusCode)"
+    }
 
     // MARK: Stream
 
@@ -174,8 +179,16 @@ extension DarklyServiceMock {
 
     private func stubRequest(passingTest test: @escaping OHHTTPStubsTestBlock, stub: @escaping OHHTTPStubsResponseBlock, name: String, onActivation activation: ((URLRequest, OHHTTPStubsDescriptor, OHHTTPStubsResponse) -> Void)? = nil) {
         OHHTTPStubs.stubRequests(passingTest: test, withStubResponse: stub).name = name
-        OHHTTPStubs.onStubActivation(activation)
-        expect(OHHTTPStubs.stub(named: name)).toNot(beNil())
+        if let activation = activation { activationBlocks.append((test, activation)) }
+        OHHTTPStubs.onStubActivation(onActivation)
+    }
+
+    private func onActivation(request: URLRequest, stubDescriptor: OHHTTPStubsDescriptor, stubResponse: OHHTTPStubsResponse) {
+        for activationBlock in activationBlocks.reversed() {
+            if !activationBlock.testBlock(request) { continue }
+            activationBlock.callback(request, stubDescriptor, stubResponse)
+            return
+        }
     }
 }
 
@@ -189,8 +202,8 @@ extension OHHTTPStubs {
  * Matcher testing that the `NSURLRequest` is using the **REPORT** `HTTPMethod`
  *
  * - Returns: a matcher (OHHTTPStubsTestBlock) that succeeds only if the request
- *            is using the GET method
+ *            is using the REPORT method
  */
 public func isMethodREPORT() -> OHHTTPStubsTestBlock {
-    return { $0.httpMethod == URLRequest.Methods.report }
+    return { request in request.httpMethod == URLRequest.HTTPMethods.report }
 }
