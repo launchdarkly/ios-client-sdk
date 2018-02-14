@@ -156,14 +156,12 @@ class LDFlagSynchronizer: LDFlagSynchronizing {
     private func makeFlagRequest() {
         guard isOnline else { return }
         service.getFeatureFlags(useReport: useReport, completion: { serviceResponse in
-            var serviceResponse = serviceResponse
-            defer {
-                self.processFlagResponse(serviceResponse: serviceResponse)
-            }
             if self.shouldRetryFlagRequest(useReport: self.useReport, statusCode: (serviceResponse.urlResponse as? HTTPURLResponse)?.statusCode) {
                 self.service.getFeatureFlags(useReport: false, completion: { (retryServiceResponse) in
-                    serviceResponse = retryServiceResponse
+                    self.processFlagResponse(serviceResponse: retryServiceResponse)
                 })
+            } else {
+                self.processFlagResponse(serviceResponse: serviceResponse)
             }
         })
     }
