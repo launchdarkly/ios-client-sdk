@@ -16,7 +16,7 @@ protocol ClientServiceCreating {
     func makeUserFlagCache() -> UserFlagCaching
     func makeUserFlagCache(flagCollectionStore: FlagCollectionCaching) -> UserFlagCaching
     func makeDarklyServiceProvider(mobileKey: String, config: LDConfig, user: LDUser) -> DarklyServiceProvider
-    mutating func makeFlagSynchronizer(streamingMode: LDStreamingMode, pollingInterval: TimeInterval, service: DarklyServiceProvider, onSyncComplete: SyncCompleteClosure?) -> LDFlagSynchronizing
+    mutating func makeFlagSynchronizer(streamingMode: LDStreamingMode, pollingInterval: TimeInterval, useReport: Bool, service: DarklyServiceProvider, onSyncComplete: SyncCompleteClosure?) -> LDFlagSynchronizing
     func makeFlagChangeNotifier() -> FlagChangeNotifying
     func makeEventReporter(mobileKey: String, config: LDConfig, service: DarklyServiceProvider) -> LDEventReporting
 }
@@ -50,8 +50,8 @@ struct ClientServiceFactory: ClientServiceCreating {
         return DarklyService(mobileKey: mobileKey, config: config, user: user)
     }
 
-    func makeFlagSynchronizer(streamingMode: LDStreamingMode, pollingInterval: TimeInterval, service: DarklyServiceProvider, onSyncComplete: SyncCompleteClosure?) -> LDFlagSynchronizing {
-        return LDFlagSynchronizer(streamingMode: streamingMode, pollingInterval: pollingInterval, service: service, onSyncComplete: onSyncComplete)
+    func makeFlagSynchronizer(streamingMode: LDStreamingMode, pollingInterval: TimeInterval, useReport: Bool, service: DarklyServiceProvider, onSyncComplete: SyncCompleteClosure?) -> LDFlagSynchronizing {
+        return LDFlagSynchronizer(streamingMode: streamingMode, pollingInterval: pollingInterval, useReport: useReport, service: service, onSyncComplete: onSyncComplete)
     }
 
     func makeFlagChangeNotifier() -> FlagChangeNotifying {

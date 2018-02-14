@@ -256,12 +256,6 @@ final class LDConfigSpec: QuickSpec {
     }
 
     func isReportRetryStatusCodeSpec() {
-        var testContext: TestContext!
-
-        beforeEach {
-            testContext = TestContext()
-        }
-
         describe("isReportRetryStatusCode") {
             var testStatusCodes: [Int]!
             context("when status code is a retry status code") {
@@ -270,7 +264,7 @@ final class LDConfigSpec: QuickSpec {
                 }
                 it("returns true") {
                     testStatusCodes.forEach { (testCode) in
-                        expect(testContext.subject.isReportRetryStatusCode(testCode)) == true
+                        expect(LDConfig.isReportRetryStatusCode(testCode)) == true
                     }
                 }
             }
@@ -280,7 +274,7 @@ final class LDConfigSpec: QuickSpec {
                 }
                 it("returns false") {
                     testStatusCodes.forEach { (testCode) in
-                        expect(testContext.subject.isReportRetryStatusCode(testCode)) == false
+                        expect(LDConfig.isReportRetryStatusCode(testCode)) == false
                     }
                 }
             }

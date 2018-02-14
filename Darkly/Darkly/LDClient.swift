@@ -43,6 +43,7 @@ public class LDClient {
             service = serviceFactory.makeDarklyServiceProvider(mobileKey: mobileKey, config: config, user: user)
             flagSynchronizer = serviceFactory.makeFlagSynchronizer(streamingMode: effectiveStreamingMode(runMode: runMode),
                                                                    pollingInterval: config.flagPollingInterval(runMode: effectiveRunMode),
+                                                                   useReport: config.useReport,
                                                                    service: service,
                                                                    onSyncComplete: onSyncComplete)
 
@@ -66,6 +67,7 @@ public class LDClient {
             }
             flagSynchronizer = serviceFactory.makeFlagSynchronizer(streamingMode: effectiveStreamingMode(runMode: runMode),
                                                                    pollingInterval: config.flagPollingInterval(runMode: effectiveRunMode),
+                                                                   useReport: config.useReport,
                                                                    service: service,
                                                                    onSyncComplete: onSyncComplete)
             if hasStarted {
@@ -289,7 +291,7 @@ public class LDClient {
 
         //dummy objects replaced by start call
         service = serviceFactory.makeDarklyServiceProvider(mobileKey: "", config: config, user: user)
-        flagSynchronizer = serviceFactory.makeFlagSynchronizer(streamingMode: .polling, pollingInterval: config.flagPollInterval, service: service, onSyncComplete: nil)
+        flagSynchronizer = serviceFactory.makeFlagSynchronizer(streamingMode: .polling, pollingInterval: config.flagPollInterval, useReport: config.useReport, service: service, onSyncComplete: nil)
         eventReporter = serviceFactory.makeEventReporter(mobileKey: "", config: config, service: service)
     }
 
@@ -302,7 +304,7 @@ public class LDClient {
         //dummy objects replaced by start call
         flagCache = serviceFactory.makeUserFlagCache()
         service = serviceFactory.makeDarklyServiceProvider(mobileKey: "", config: config, user: user)
-        flagSynchronizer = self.serviceFactory.makeFlagSynchronizer(streamingMode: .polling, pollingInterval: config.flagPollInterval, service: service, onSyncComplete: nil)
+        flagSynchronizer = self.serviceFactory.makeFlagSynchronizer(streamingMode: .polling, pollingInterval: config.flagPollInterval, useReport: config.useReport, service: service, onSyncComplete: nil)
         eventReporter = serviceFactory.makeEventReporter(mobileKey: "", config: config, service: service)
     }
 }

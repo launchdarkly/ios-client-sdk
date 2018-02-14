@@ -68,11 +68,11 @@ final class DarklyServiceMock: DarklyServiceProvider {
     }
     
     var stubbedFlagResponse: ServiceResponse?
-    var getFeatureFlagsUseReportCalledValue: Bool? = nil
+    var getFeatureFlagsUseReportCalledValue = [Bool]()
     var getFeatureFlagsCallCount = 0
     func getFeatureFlags(useReport: Bool, completion: ServiceCompletionHandler?) {
         getFeatureFlagsCallCount += 1
-        getFeatureFlagsUseReportCalledValue = useReport
+        getFeatureFlagsUseReportCalledValue.append(useReport)
         completion?(stubbedFlagResponse ?? (nil, nil, nil))
     }
     
@@ -110,24 +110,23 @@ extension DarklyServiceMock {
     }
 
     ///Use when testing requires the mock service to simulate a service response to the flag request callback
-    func stubFlagResponse(success: Bool, badData: Bool = false, responseOnly: Bool = false, errorOnly: Bool = false) {
-        if success {
+    func stubFlagResponse(statusCode: Int, badData: Bool = false, responseOnly: Bool = false, errorOnly: Bool = false) {
+        let response = HTTPURLResponse(url: config.baseUrl, statusCode: statusCode, httpVersion: Constants.httpVersion, headerFields: nil)
+        if statusCode == HTTPURLResponse.StatusCodes.ok {
             let flagData = try? JSONSerialization.data(withJSONObject: Constants.featureFlags, options: [])
-            let response = HTTPURLResponse(url: config.baseUrl, statusCode: HTTPURLResponse.StatusCodes.ok, httpVersion: Constants.httpVersion, headerFields: nil)
             stubbedFlagResponse = (flagData, response, nil)
             if badData { stubbedFlagResponse = (Constants.errorData, response, nil) }
             return
         }
 
         if responseOnly {
-            stubbedFlagResponse = (nil, errorFlagHTTPURLResponse, nil)
+            stubbedFlagResponse = (nil, response, nil)
         } else if errorOnly {
             stubbedFlagResponse = (nil, nil, Constants.error)
         } else {
-            stubbedFlagResponse = (nil, errorFlagHTTPURLResponse, Constants.error)
+            stubbedFlagResponse = (nil, response, Constants.error)
         }
     }
-    var errorFlagHTTPURLResponse: HTTPURLResponse! { return HTTPURLResponse(url: config.baseUrl, statusCode: HTTPURLResponse.StatusCodes.internalServerError, httpVersion: Constants.httpVersion, headerFields: nil) }
 
     func flagStubName(statusCode: Int, useReport: Bool) -> String {
         return "\(Constants.stubNameFlag) using method \(useReport ? URLRequest.HTTPMethods.report : URLRequest.HTTPMethods.get) with response status code \(statusCode)"

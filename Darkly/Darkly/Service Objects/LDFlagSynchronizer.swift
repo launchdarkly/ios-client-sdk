@@ -57,13 +57,15 @@ class LDFlagSynchronizer: LDFlagSynchronizing {
     }
 
     let pollingInterval: TimeInterval
+    let useReport: Bool
     
     var streamingActive: Bool { return eventSource != nil }
     var pollingActive: Bool { return flagRequestTimer != nil }
     
-    init(streamingMode: LDStreamingMode, pollingInterval: TimeInterval, service: DarklyServiceProvider, onSyncComplete: SyncCompleteClosure?) {
+    init(streamingMode: LDStreamingMode, pollingInterval: TimeInterval, useReport: Bool, service: DarklyServiceProvider, onSyncComplete: SyncCompleteClosure?) {
         self.streamingMode = streamingMode
         self.pollingInterval = pollingInterval
+        self.useReport = useReport
         self.service = service
         self.onSyncComplete = onSyncComplete
 
@@ -153,9 +155,22 @@ class LDFlagSynchronizer: LDFlagSynchronizing {
     
     private func makeFlagRequest() {
         guard isOnline else { return }
-        service.getFeatureFlags(useReport: false, completion: { serviceResponse in
-            self.processFlagResponse(serviceResponse: serviceResponse)
+        service.getFeatureFlags(useReport: useReport, completion: { serviceResponse in
+            var serviceResponse = serviceResponse
+            defer {
+                self.processFlagResponse(serviceResponse: serviceResponse)
+            }
+            if self.shouldRetryFlagRequest(useReport: self.useReport, statusCode: (serviceResponse.urlResponse as? HTTPURLResponse)?.statusCode) {
+                self.service.getFeatureFlags(useReport: false, completion: { (retryServiceResponse) in
+                    serviceResponse = retryServiceResponse
+                })
+            }
         })
+    }
+
+    private func shouldRetryFlagRequest(useReport: Bool, statusCode: Int?) -> Bool {
+        guard let statusCode = statusCode else { return false }
+        return useReport && LDConfig.isReportRetryStatusCode(statusCode)
     }
 
     private func processFlagResponse(serviceResponse: ServiceResponse) {

@@ -94,7 +94,7 @@ public struct LDConfig {
         return pollingIntervalMillis.timeInterval
     }
 
-    func isReportRetryStatusCode(_ statusCode: Int) -> Bool {
+    static func isReportRetryStatusCode(_ statusCode: Int) -> Bool {
         return LDConfig.flagRetryStatusCodes.contains(statusCode)
     }
 }
