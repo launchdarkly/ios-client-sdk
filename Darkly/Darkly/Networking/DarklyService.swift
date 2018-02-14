@@ -13,7 +13,7 @@ typealias ServiceResponse = (data: Data?, urlResponse: URLResponse?, error: Erro
 typealias ServiceCompletionHandler = (ServiceResponse) -> Void
 
 protocol DarklyServiceProvider: class {
-    func getFeatureFlags(completion: ServiceCompletionHandler?)
+    func getFeatureFlags(useReport: Bool, completion: ServiceCompletionHandler?)
     func createEventSource() -> DarklyStreamingProvider
     func publishEventDictionaries(_ eventDictionaries: [[String: Any]], completion: ServiceCompletionHandler?)
     var config: LDConfig { get }
@@ -36,7 +36,8 @@ extension LDEventSource: DarklyStreamingProvider {
 final class DarklyService: DarklyServiceProvider {
     
     struct Constants {
-        static let flagRequestPath = "msdk/eval/users"
+        static let getFlagRequestPath = "msdk/eval/users"
+        static let reportFlagRequestPath = "msdk/eval/user"
         static let streamRequestPath = "mping"
         static let eventRequestPath = "mobile/events/bulk"
     }
@@ -58,9 +59,9 @@ final class DarklyService: DarklyServiceProvider {
     
     // MARK: Feature Flags
     
-    func getFeatureFlags(completion: ServiceCompletionHandler?) {
+    func getFeatureFlags(useReport: Bool, completion: ServiceCompletionHandler?) {
         guard !mobileKey.isEmpty,
-            let flagRequest = flagRequest
+            let flagRequest = flagRequest(useReport: useReport)
         else { return }
         let dataTask = self.session.dataTask(with: flagRequest) { (data, response, error) in
             DispatchQueue.main.async {
@@ -70,17 +71,25 @@ final class DarklyService: DarklyServiceProvider {
         dataTask.resume()
     }
     
-    private var flagRequest: URLRequest? {
-        guard let flagRequestUrl = flagRequestUrl else { return nil }
+    private func flagRequest(useReport: Bool) -> URLRequest? {
+        guard let flagRequestUrl = flagRequestUrl(useReport: useReport) else { return nil }
         var request = URLRequest(url: flagRequestUrl, cachePolicy: .useProtocolCachePolicy, timeoutInterval: config.connectionTimeout)
         request.appendHeaders(httpHeaders.flagRequestHeaders)
-        
+        if useReport {
+            guard let userData = user.dictionaryValue(includeFlagConfig: false, includePrivateAttributes: true, config: config).jsonData else { return nil }
+            request.httpMethod = URLRequest.HTTPMethods.report
+            request.httpBody = userData
+        }
+       
         return request
     }
     
-    private var flagRequestUrl: URL? {
+    private func flagRequestUrl(useReport: Bool) -> URL? {
+        if useReport {
+            return config.baseUrl.appendingPathComponent(Constants.reportFlagRequestPath)
+        }
         guard let encodedUser = user.dictionaryValue(includeFlagConfig: false, includePrivateAttributes: true, config: config).base64UrlEncodedString else { return nil }
-        return config.baseUrl.appendingPathComponent(Constants.flagRequestPath).appendingPathComponent(encodedUser)
+        return config.baseUrl.appendingPathComponent(Constants.getFlagRequestPath).appendingPathComponent(encodedUser)
     }
     
     // MARK: Streaming

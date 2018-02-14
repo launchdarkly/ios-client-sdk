@@ -75,7 +75,7 @@ final class DarklyServiceSpec: QuickSpec {
                             testContext.serviceMock.stubFlagRequest(statusCode: HTTPURLResponse.StatusCodes.ok, useReport: false) { (_, _, _) in
                                 getRequestCount += 1
                             }
-                            testContext.subject.getFeatureFlags(completion: { (data, response, error) in
+                            testContext.subject.getFeatureFlags(useReport: false, completion: { (data, response, error) in
                                 responses = (data, response, error)
                                 done()
                             })
@@ -102,7 +102,7 @@ final class DarklyServiceSpec: QuickSpec {
                             testContext.serviceMock.stubFlagRequest(statusCode: HTTPURLResponse.StatusCodes.internalServerError, useReport: false) { (_, _, _) in
                                 getRequestCount += 1
                             }
-                            testContext.subject.getFeatureFlags(completion: { (data, response, error) in
+                            testContext.subject.getFeatureFlags(useReport: false, completion: { (data, response, error) in
                                 responses = (data, response, error)
                                 done()
                             })
@@ -129,7 +129,7 @@ final class DarklyServiceSpec: QuickSpec {
                         testContext.serviceMock.stubFlagRequest(statusCode: HTTPURLResponse.StatusCodes.ok, useReport: false) { (_, _, _) in
                             getRequestCount += 1
                         }
-                        testContext.subject.getFeatureFlags(completion: { (data, response, error) in
+                        testContext.subject.getFeatureFlags(useReport: false, completion: { (data, response, error) in
                             responses = (data, response, error)
                         })
                     }
@@ -153,7 +153,7 @@ final class DarklyServiceSpec: QuickSpec {
                             testContext.serviceMock.stubFlagRequest(statusCode: HTTPURLResponse.StatusCodes.ok, useReport: true) { (_, _, _) in
                                 reportRequestCount += 1
                             }
-                            testContext.subject.getFeatureFlags(completion: { (data, response, error) in
+                            testContext.subject.getFeatureFlags(useReport: true, completion: { (data, response, error) in
                                 responses = (data, response, error)
                                 done()
                             })
@@ -180,7 +180,7 @@ final class DarklyServiceSpec: QuickSpec {
                             testContext.serviceMock.stubFlagRequest(statusCode: HTTPURLResponse.StatusCodes.internalServerError, useReport: false) { (_, _, _) in
                                 getRequestCount += 1
                             }
-                            testContext.subject.getFeatureFlags(completion: { (data, response, error) in
+                            testContext.subject.getFeatureFlags(useReport: true, completion: { (data, response, error) in
                                 responses = (data, response, error)
                                 done()
                             })
@@ -207,7 +207,7 @@ final class DarklyServiceSpec: QuickSpec {
                         testContext.serviceMock.stubFlagRequest(statusCode: HTTPURLResponse.StatusCodes.ok, useReport: true) { (_, _, _) in
                             reportRequestCount += 1
                         }
-                        testContext.subject.getFeatureFlags(completion: { (data, response, error) in
+                        testContext.subject.getFeatureFlags(useReport: true, completion: { (data, response, error) in
                             responses = (data, response, error)
                         })
                     }
@@ -307,7 +307,7 @@ final class DarklyServiceSpec: QuickSpec {
                 var responses: ServiceResponses
                 var eventsPublished = false
                 beforeEach {
-                    testContext = TestContext(mobileKey: Constants.emptyMobileKey, useReport: true)
+                    testContext = TestContext(mobileKey: Constants.emptyMobileKey, useReport: false, includeMockEventDictionaries: true)
                     testContext.serviceMock.stubEventRequest(success: true) { (request, _, _) in
                         eventRequest = request
                     }
@@ -327,7 +327,7 @@ final class DarklyServiceSpec: QuickSpec {
                 var eventsPublished = false
                 let emptyEventDictionaryList: [[String: Any]] = []
                 beforeEach {
-                    testContext = TestContext(mobileKey: Constants.emptyMobileKey, useReport: true)
+                    testContext = TestContext(mobileKey: Constants.emptyMobileKey, useReport: false, includeMockEventDictionaries: true)
                     testContext.serviceMock.stubEventRequest(success: true) { (request, _, _) in
                         eventRequest = request
                     }

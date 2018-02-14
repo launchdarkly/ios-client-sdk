@@ -68,9 +68,11 @@ final class DarklyServiceMock: DarklyServiceProvider {
     }
     
     var stubbedFlagResponse: ServiceResponse?
+    var getFeatureFlagsUseReportCalledValue: Bool? = nil
     var getFeatureFlagsCallCount = 0
-    func getFeatureFlags(completion: ServiceCompletionHandler?) {
+    func getFeatureFlags(useReport: Bool, completion: ServiceCompletionHandler?) {
         getFeatureFlagsCallCount += 1
+        getFeatureFlagsUseReportCalledValue = useReport
         completion?(stubbedFlagResponse ?? (nil, nil, nil))
     }
     

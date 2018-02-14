@@ -153,7 +153,7 @@ class LDFlagSynchronizer: LDFlagSynchronizing {
     
     private func makeFlagRequest() {
         guard isOnline else { return }
-        service.getFeatureFlags(completion: { serviceResponse in
+        service.getFeatureFlags(useReport: false, completion: { serviceResponse in
             self.processFlagResponse(serviceResponse: serviceResponse)
         })
     }
