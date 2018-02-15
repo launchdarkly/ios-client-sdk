@@ -1,6 +1,6 @@
 machine:
  xcode:
-  version: 9.0.1
+  version: 9.2
 
 test:
  override:
