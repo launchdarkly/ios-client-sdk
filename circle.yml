@@ -9,7 +9,7 @@ machine:
  pre:
    - pod --version
  xcode:
-  version: 9.1
+  version: 9.2
 
 test:
  post:

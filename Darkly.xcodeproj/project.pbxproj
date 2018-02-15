@@ -135,6 +135,7 @@
 		69F3F6AB1E6BF82C00079A09 /* NSDictionary+JSON.h in Headers */ = {isa = PBXBuildFile; fileRef = 690346F21E68990000E45133 /* NSDictionary+JSON.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		69F3F6AC1E6BF82C00079A09 /* NSDictionary+JSON.m in Sources */ = {isa = PBXBuildFile; fileRef = 690346F31E68990000E45133 /* NSDictionary+JSON.m */; };
 		69F3F6AE1E6BF84B00079A09 /* Darkly-Prefix.pch in Headers */ = {isa = PBXBuildFile; fileRef = 690346D81E68990000E45133 /* Darkly-Prefix.pch */; settings = {ATTRIBUTES = (Public, ); }; };
+		830BF931202A8855006DF9B1 /* NSJSONSerialization+Testable.m in Sources */ = {isa = PBXBuildFile; fileRef = 830BF930202A8855006DF9B1 /* NSJSONSerialization+Testable.m */; };
 		83258A3D1F323049008C2133 /* LDClientManager+EventSource.m in Sources */ = {isa = PBXBuildFile; fileRef = 83258A3C1F323049008C2133 /* LDClientManager+EventSource.m */; };
 		83258A401F3244D0008C2133 /* LDUserBuilder+Testable.m in Sources */ = {isa = PBXBuildFile; fileRef = 83258A3F1F3244D0008C2133 /* LDUserBuilder+Testable.m */; };
 		83258A421F32721A008C2133 /* emptyConfig.json in Resources */ = {isa = PBXBuildFile; fileRef = 83258A411F32721A008C2133 /* emptyConfig.json */; };
@@ -302,6 +303,8 @@
 		69BD7E101E6C79550056D70F /* Darkly.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Darkly.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		69F3F67B1E6BF7C000079A09 /* Darkly.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Darkly.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		7587BE78E11BC6EC851CA413 /* Pods-Darkly_osx.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Darkly_osx.debug.xcconfig"; path = "Pods/Target Support Files/Pods-Darkly_osx/Pods-Darkly_osx.debug.xcconfig"; sourceTree = "<group>"; };
+		830BF92F202A8854006DF9B1 /* NSJSONSerialization+Testable.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "NSJSONSerialization+Testable.h"; sourceTree = "<group>"; };
+		830BF930202A8855006DF9B1 /* NSJSONSerialization+Testable.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "NSJSONSerialization+Testable.m"; sourceTree = "<group>"; };
 		83258A3B1F323049008C2133 /* LDClientManager+EventSource.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "LDClientManager+EventSource.h"; sourceTree = "<group>"; };
 		83258A3C1F323049008C2133 /* LDClientManager+EventSource.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "LDClientManager+EventSource.m"; sourceTree = "<group>"; };
 		83258A3E1F3244D0008C2133 /* LDUserBuilder+Testable.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "LDUserBuilder+Testable.h"; sourceTree = "<group>"; };
@@ -609,6 +612,8 @@
 				83EF678F1F99365600403126 /* LDClient+Testable.m */,
 				83EF678B1F98FC9200403126 /* LDFlagConfigModel+Testable.h */,
 				83EF678C1F98FC9200403126 /* LDFlagConfigModel+Testable.m */,
+				830BF92F202A8854006DF9B1 /* NSJSONSerialization+Testable.h */,
+				830BF930202A8855006DF9B1 /* NSJSONSerialization+Testable.m */,
 			);
 			path = Categories;
 			sourceTree = "<group>";
@@ -1226,6 +1231,7 @@
 				83B8C24C1FEB1CD20082B8A9 /* LDUserModel+Stub.m in Sources */,
 				832C78901F2A8DF600E334A2 /* LDUserModel+JsonDecodeable.m in Sources */,
 				8358F25A1F4202A300ECE1AF /* LDConfig+Testable.m in Sources */,
+				830BF931202A8855006DF9B1 /* NSJSONSerialization+Testable.m in Sources */,
 				83F5B4751F91560300174DF7 /* LDDataManager+Testable.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

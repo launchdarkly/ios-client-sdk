@@ -143,14 +143,11 @@
         }];
 
         [eventSource onError:^(LDEvent *event) {
+            [[NSNotificationCenter defaultCenter] postNotificationName:kLDServerConnectionUnavailableNotification object:nil];
             if (![event isUnauthorizedEvent]) { return; }
-            [self postClientUnauthorizedNotification];
+            [[NSNotificationCenter defaultCenter] postNotificationName:kLDClientUnauthorizedNotification object:nil];
         }];
     }
-}
-
-- (void)postClientUnauthorizedNotification {
-    [[NSNotificationCenter defaultCenter] postNotificationName:kLDClientUnauthorizedNotification object:nil];
 }
 
 - (void)stopEventSource {

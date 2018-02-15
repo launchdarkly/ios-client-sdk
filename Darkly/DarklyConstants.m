@@ -4,7 +4,7 @@
 
 #import "DarklyConstants.h"
 
-NSString * const kClientVersion = @"2.10.0";
+NSString * const kClientVersion = @"2.10.1";
 NSString * const kBaseUrl = @"https://app.launchdarkly.com";
 NSString * const kEventsUrl = @"https://mobile.launchdarkly.com";
 NSString * const kStreamUrl = @"https://clientstream.launchdarkly.com/mping";
@@ -34,7 +34,7 @@ int const kConnectionTimeout = 10;
 int const kDefaultFlushInterval = 30;
 int const kMinimumFlushIntervalMillis = 0;
 int const kDefaultPollingInterval = 300;
-int const kMinimumPollingInterval = 60;
+int const kMinimumPollingInterval = 300;
 int const kDefaultBackgroundFetchInterval = 3600;
 int const kMinimumBackgroundFetchInterval = 900;
 int const kMillisInSecs = 1000;
