@@ -171,7 +171,7 @@ __deprecated_msg("Use LDConfig instead")
 - (LDConfigBuilder *_Nonnull)withFlushInterval:(int)flushInterval __deprecated_msg("Use `setFlushInterval:` on an LDConfig object");
 /**
  * Set the polling interval (in seconds) for polling mode only. An interval
- * less than 60 is set to the minimum (1 minute). The default is 5 minutes. (Optional)
+ * less than 300 is set to the minimum (5 minutes). The default is 5 minutes. (Optional)
  *
  * @param pollingInterval the polling interval in seconds
  * @return the configuration builder
