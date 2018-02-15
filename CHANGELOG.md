@@ -2,7 +2,10 @@
 
 All notable changes to the LaunchDarkly iOS SDK will be documented in this file. This project adheres to [Semantic Versioning](http://semver.org).
 
-## [2.10.1] - 2018-02-14
+## [2.10.1] - 2018-02-15
+### Changed
+- The minimum polling interval is now 5 minutes.
+
 ### Fixed
 - Removes user flag config values from event reports
 - Improves SSE connection error handling
