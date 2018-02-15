@@ -39,7 +39,6 @@ typealias SyncCompleteClosure = ((SyncResult) -> Void)
 
 class LDFlagSynchronizer: LDFlagSynchronizing {
     enum Event: String {
-        //swiftlint:disable:next identifier_name
         case ping, put, patch, delete
     }
     
