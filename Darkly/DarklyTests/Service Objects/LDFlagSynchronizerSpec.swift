@@ -286,11 +286,13 @@ final class LDFlagSynchronizerSpec: QuickSpec {
                     }
                 }
                 context("failure response") {
-                    var synchronizingError: SynchronizingError?
+                    var urlResponse: URLResponse?
                     beforeEach {
                         waitUntil { done in
                             testContext = TestContext(streamingMode: .streaming, useReport: false, onSyncComplete: { (result) in
-                                if case let .error(syncError) = result { synchronizingError = syncError }
+                                if case let .error(syncError) = result, case .response(let syncErrorResponse) = syncError {
+                                    urlResponse = syncErrorResponse
+                                }
                                 done()
                             })
                             testContext.serviceMock.stubFlagResponse(statusCode: HTTPURLResponse.StatusCodes.internalServerError, responseOnly: true)
@@ -301,11 +303,9 @@ final class LDFlagSynchronizerSpec: QuickSpec {
                     }
                     it("requests flags & does not update flag store") {
                         expect({ testContext.synchronizerState(synchronizerOnline: true, streamingMode: .streaming, flagRequests: 1, streamCreated: true, streamClosed: false) }).to(match())
-                        expect(synchronizingError).toNot(beNil())
-                        if let synchronizingError = synchronizingError {
-                            if case .response(let urlResponse) = synchronizingError {
-                                expect(urlResponse?.httpStatusCode) == HTTPURLResponse.StatusCodes.internalServerError
-                            }
+                        expect(urlResponse).toNot(beNil())
+                        if let urlResponse = urlResponse {
+                            expect(urlResponse.httpStatusCode) == HTTPURLResponse.StatusCodes.internalServerError
                         }
                         expect(testContext.flagStoreMock.replaceStoreCallCount) == 0
                         expect(testContext.flagStoreMock.replaceStoreReceivedArguments?.newFlags).to(beNil())
