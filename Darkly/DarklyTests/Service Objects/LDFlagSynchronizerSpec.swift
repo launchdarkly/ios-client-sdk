@@ -249,10 +249,10 @@ final class LDFlagSynchronizerSpec: QuickSpec {
                     var newFlags: [String: Any]?
                     beforeEach {
                         waitUntil { done in
-                            testContext = TestContext(streamingMode: .streaming, useReport: false) { result in
+                            testContext = TestContext(streamingMode: .streaming, useReport: false, onSyncComplete: { result in
                                 if case let .success(flags) = result { newFlags = flags }
                                 done()
-                            }
+                            })
                             testContext.serviceMock.stubFlagResponse(statusCode: HTTPURLResponse.StatusCodes.ok)
                             testContext.subject.isOnline = true
 
@@ -268,10 +268,10 @@ final class LDFlagSynchronizerSpec: QuickSpec {
                     var synchronizingError: SynchronizingError?
                     beforeEach {
                         waitUntil { done in
-                            testContext = TestContext(streamingMode: .streaming, useReport: false) { (result) in
+                            testContext = TestContext(streamingMode: .streaming, useReport: false, onSyncComplete: { (result) in
                                 if case let .error(syncError) = result { synchronizingError = syncError }
                                 done()
-                            }
+                            })
                             testContext.serviceMock.stubFlagResponse(statusCode: HTTPURLResponse.StatusCodes.ok, badData: true)
                             testContext.subject.isOnline = true
 
@@ -289,10 +289,10 @@ final class LDFlagSynchronizerSpec: QuickSpec {
                     var synchronizingError: SynchronizingError?
                     beforeEach {
                         waitUntil { done in
-                            testContext = TestContext(streamingMode: .streaming, useReport: false) { (result) in
+                            testContext = TestContext(streamingMode: .streaming, useReport: false, onSyncComplete: { (result) in
                                 if case let .error(syncError) = result { synchronizingError = syncError }
                                 done()
-                            }
+                            })
                             testContext.serviceMock.stubFlagResponse(statusCode: HTTPURLResponse.StatusCodes.internalServerError, responseOnly: true)
                             testContext.subject.isOnline = true
 
@@ -315,10 +315,10 @@ final class LDFlagSynchronizerSpec: QuickSpec {
                     var synchronizingError: SynchronizingError?
                     beforeEach {
                         waitUntil { done in
-                            testContext = TestContext(streamingMode: .streaming, useReport: false) { (result) in
+                            testContext = TestContext(streamingMode: .streaming, useReport: false, onSyncComplete: { (result) in
                                 if case let .error(syncError) = result { synchronizingError = syncError }
                                 done()
-                            }
+                            })
                             testContext.serviceMock.stubFlagResponse(statusCode: HTTPURLResponse.StatusCodes.internalServerError, errorOnly: true)
                             testContext.subject.isOnline = true
 
@@ -395,9 +395,9 @@ final class LDFlagSynchronizerSpec: QuickSpec {
                 context("success") {
                     beforeEach {
                         waitUntil { done in
-                            testContext = TestContext(streamingMode: .streaming, useReport: false) { _ in
+                            testContext = TestContext(streamingMode: .streaming, useReport: false, onSyncComplete: { _ in
                                 done()
-                            }
+                            })
                             testContext.serviceMock.stubFlagResponse(statusCode: HTTPURLResponse.StatusCodes.ok)
                             testContext.subject.isOnline = true
 
@@ -414,9 +414,9 @@ final class LDFlagSynchronizerSpec: QuickSpec {
                         it("requests flags using a get request exactly one time") {
                             for statusCode in HTTPURLResponse.StatusCodes.nonRetry {
                                 waitUntil { done in
-                                    testContext = TestContext(streamingMode: .streaming, useReport: false) { _ in
+                                    testContext = TestContext(streamingMode: .streaming, useReport: false, onSyncComplete: { _ in
                                         done()
-                                    }
+                                    })
                                     testContext.serviceMock.stubFlagResponse(statusCode: statusCode)
                                     testContext.subject.isOnline = true
 
@@ -432,9 +432,9 @@ final class LDFlagSynchronizerSpec: QuickSpec {
                         it("requests flags using a get request exactly one time") {
                             for statusCode in HTTPURLResponse.StatusCodes.retry {
                                 waitUntil { done in
-                                    testContext = TestContext(streamingMode: .streaming, useReport: false) { _ in
+                                    testContext = TestContext(streamingMode: .streaming, useReport: false, onSyncComplete: { _ in
                                         done()
-                                    }
+                                    })
                                     testContext.serviceMock.stubFlagResponse(statusCode: statusCode)
                                     testContext.subject.isOnline = true
 
@@ -452,9 +452,9 @@ final class LDFlagSynchronizerSpec: QuickSpec {
                 context("success") {
                     beforeEach {
                         waitUntil { done in
-                            testContext = TestContext(streamingMode: .streaming, useReport: true) { _ in
+                            testContext = TestContext(streamingMode: .streaming, useReport: true, onSyncComplete: { _ in
                                 done()
-                            }
+                            })
                             testContext.serviceMock.stubFlagResponse(statusCode: HTTPURLResponse.StatusCodes.ok)
                             testContext.subject.isOnline = true
 
@@ -471,9 +471,9 @@ final class LDFlagSynchronizerSpec: QuickSpec {
                         it("requests flags using a get request exactly one time") {
                             for statusCode in HTTPURLResponse.StatusCodes.nonRetry {
                                 waitUntil { done in
-                                    testContext = TestContext(streamingMode: .streaming, useReport: true) { _ in
+                                    testContext = TestContext(streamingMode: .streaming, useReport: true, onSyncComplete: { _ in
                                         done()
-                                    }
+                                    })
                                     testContext.serviceMock.stubFlagResponse(statusCode: statusCode)
                                     testContext.subject.isOnline = true
 
@@ -489,9 +489,9 @@ final class LDFlagSynchronizerSpec: QuickSpec {
                         it("requests flags using a report request exactly one time, followed by a get request exactly one time") {
                             for statusCode in HTTPURLResponse.StatusCodes.retry {
                                 waitUntil { done in
-                                    testContext = TestContext(streamingMode: .streaming, useReport: true) { _ in
+                                    testContext = TestContext(streamingMode: .streaming, useReport: true, onSyncComplete: { _ in
                                         done()
-                                    }
+                                    })
                                     testContext.serviceMock.stubFlagResponse(statusCode: statusCode)
                                     testContext.subject.isOnline = true
 
