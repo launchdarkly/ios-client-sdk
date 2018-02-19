@@ -2,7 +2,7 @@ use_frameworks!
 workspace 'Darkly.xcworkspace'
 target 'Darkly_iOS' do
     platform :ios, '8.0'
-    pod 'DarklyEventSource'
+    pod 'DarklyEventSource', '~> 3.2'
     pod 'SwiftLint'
 end
 

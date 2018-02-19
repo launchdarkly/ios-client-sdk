@@ -38,7 +38,7 @@ EventSource *source = [EventSource eventSourceWithURL:serverURL];
 
 #### Listening for Connection State Changes
 
-Additionally, there are `onOpen:`,  `onError:`, and `onReadyStateChanged:` methods to receive connection state events. 
+Additionally, there are `onOpen:`, `onMessage`, `onError:`, and `onReadyStateChanged:` methods to receive connection state events.
 
 ```objc
 NSURL *serverURL = [NSURL URLWithString:@"http://127.0.0.1:8000/"];
@@ -93,7 +93,7 @@ source 'https://github.com/CocoaPods/Specs.git'
 platform :ios, '8.0'
 
 target 'TargetName' do
-pod 'DarklyEventSource', '~> 2.0.0'
+pod 'DarklyEventSource'
 end
 ```
 
@@ -117,7 +117,7 @@ $ brew install carthage
 To integrate EventSource into your Xcode project using Carthage, specify it in your `Cartfile`:
 
 ```ogdl
-github "launchdarkly/ios-eventsource" ~> 2.0.0
+github "launchdarkly/ios-eventsource"
 ```
 
 Run `carthage` to build the framework and drag the built `EventSource.framework` into your Xcode project.
