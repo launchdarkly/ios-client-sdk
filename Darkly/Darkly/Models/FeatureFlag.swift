@@ -1,5 +1,5 @@
 //
-//  LDFeatureFlag.swift
+//  FeatureFlag.swift
 //  Darkly
 //
 //  Created by Mark Pokorny on 7/24/17. +JMJ
@@ -8,7 +8,7 @@
 
 import Foundation
 
-struct LDFeatureFlag {
+struct FeatureFlag {
     
     let key: LDFlagKey
     var value: LDFlagValue?
