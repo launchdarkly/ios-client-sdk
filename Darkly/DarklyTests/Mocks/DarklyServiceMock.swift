@@ -31,7 +31,21 @@ final class DarklyServiceMock: DarklyServiceProvider {
         static let dictionary: [String: Any] = ["sub-flag-a": false, "sub-flag-b": 3, "sub-flag-c": 2.71828]
         static let null = NSNull()
 
-        static var all: [Any] { return [bool, int, double, string, array, dictionary, null] }
+        static var all: [Any] { return [bool, null, int, double, string, array, dictionary, null] }
+
+        static func alternate<T>(value: T) -> T {
+            switch value {
+            case let value as Bool: return !value as! T
+            case let value as Int: return value + 1 as! T
+            case let value as Double: return value + 1.0 as! T
+            case let value as String: return value + "-" as! T
+            case var value as [Any]: return value.append(4) as! T
+            case var value as [String: Any]:
+                value["new-flag"] = "new-value"
+                return value as! T
+            default: return value
+            }
+        }
     }
 
     struct Constants {

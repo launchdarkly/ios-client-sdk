@@ -49,11 +49,10 @@ final class FeatureFlagSpec: QuickSpec {
             }
             context("value and version exists") {
                 var version = 0
-                beforeEach {
-                    version += 1
-                }
+
                 it("creates a feature flag with the value and version") {
                     DarklyServiceMock.FlagValues.all.forEach { (value) in
+                        version += 1
                         testContext = TestContext(value: value, version: version)
 
                         if value is NSNull {
@@ -71,11 +70,10 @@ final class FeatureFlagSpec: QuickSpec {
         describe("init with dictionary") {
             context("when value and version exists in the dictionary") {
                 var version = 0
-                beforeEach {
-                    version += 1
-                }
+
                 it("creates a feature flag with the value and version") {
                     DarklyServiceMock.FlagValues.all.forEach { (value) in
+                        version += 1
                         testContext = TestContext(dictionary: [FeatureFlag.CodingKeys.value.rawValue: value, FeatureFlag.CodingKeys.version.rawValue: version])
 
                         if value is NSNull {
@@ -143,11 +141,10 @@ final class FeatureFlagSpec: QuickSpec {
             }
             context("value and version dictionary") {
                 var version = 0
-                beforeEach {
-                    version += 1
-                }
+
                 it("creates a feature flag with the value and version") {
                     DarklyServiceMock.FlagValues.all.forEach { (value) in
+                        version += 1
                         testContext = TestContext(object: [FeatureFlag.CodingKeys.value.rawValue: value, FeatureFlag.CodingKeys.version.rawValue: version])
 
                         if value is NSNull {
@@ -181,11 +178,10 @@ final class FeatureFlagSpec: QuickSpec {
             context("dont exciseNil") {
                 context("with versions") {
                     var version = 0
-                    beforeEach {
-                        version += 1
-                    }
+
                     it("creates a dictionary with the value and version including nil value representations") {
                         DarklyServiceMock.FlagValues.all.forEach { (value) in
+                            version += 1
                             testContext = TestContext(value: value, version: version)
                             subjectDictionary = testContext.subject?.dictionaryValue(exciseNil: false)
 
@@ -220,11 +216,10 @@ final class FeatureFlagSpec: QuickSpec {
             context("exciseNil") {
                 context("with versions") {
                     var version = 0
-                    beforeEach {
-                        version += 1
-                    }
+
                     it("creates a dictionary with the value and version excluding nil values") {
                         DarklyServiceMock.FlagValues.all.forEach { (value) in
+                            version += 1
                             testContext = TestContext(value: value, version: version)
                             subjectDictionary = testContext.subject?.dictionaryValue(exciseNil: true)
 
@@ -271,11 +266,10 @@ final class FeatureFlagSpec: QuickSpec {
             var reinflatedFlag: FeatureFlag?
             context("with versions") {
                 var version = 0
-                beforeEach {
-                    version += 1
-                }
+
                 it("creates a feature flag with the same values as the original") {
                     DarklyServiceMock.FlagValues.all.forEach { (value) in
+                        version += 1
                         testContext = TestContext(value: value, version: version)
                         reinflatedFlag = FeatureFlag(dictionary: testContext.subject?.dictionaryValue(exciseNil: false))
 
@@ -311,29 +305,18 @@ final class FeatureFlagSpec: QuickSpec {
         describe("isEqualTo") {
             var version = 0
             var otherFlag: FeatureFlag!
-            beforeEach {
-                version += 1
-            }
+
             context("when value and version exists") {
                 it("compares value and version") {
                     DarklyServiceMock.FlagValues.all.forEach { (value) in
+                        version += 1
                         testContext = TestContext(value: value, version: version)
                         otherFlag = testContext.subject!
 
                         expect(testContext.subject!.isEqual(to: otherFlag)).to(beTrue())
 
                         if !(value is NSNull) {
-                            switch value {
-                            case let value as Bool: otherFlag = FeatureFlag(value: !value, version: version)
-                            case let value as Int: otherFlag = FeatureFlag(value: value + 1, version: version)
-                            case let value as Double: otherFlag = FeatureFlag(value: value + 1, version: version)
-                            case let value as String: otherFlag = FeatureFlag(value: value + "-", version: version)
-                            case var value as [Any]: otherFlag = FeatureFlag(value: value.append(4), version: version)
-                            case var value as [String: Any]:
-                                value["new-flag"] = "new-value"
-                                otherFlag = FeatureFlag(value: value, version: version)
-                            default: break
-                            }
+                            otherFlag = FeatureFlag(value: DarklyServiceMock.FlagValues.alternate(value: value) as Any, version: version)
                             expect(testContext.subject!.isEqual(to: otherFlag)).to(beFalse())
                         }
 
@@ -351,17 +334,7 @@ final class FeatureFlagSpec: QuickSpec {
                         expect(testContext.subject!.isEqual(to: otherFlag)).to(beTrue())
 
                         if !(value is NSNull) {
-                            switch value {
-                            case let value as Bool: otherFlag = FeatureFlag(value: !value, version: nil)
-                            case let value as Int: otherFlag = FeatureFlag(value: value + 1, version: nil)
-                            case let value as Double: otherFlag = FeatureFlag(value: value + 1, version: nil)
-                            case let value as String: otherFlag = FeatureFlag(value: value + "-", version: nil)
-                            case var value as [Any]: otherFlag = FeatureFlag(value: value.append(4), version: nil)
-                            case var value as [String: Any]:
-                                value["new-flag"] = "new-value"
-                                otherFlag = FeatureFlag(value: value, version: nil)
-                            default: break
-                            }
+                            otherFlag = FeatureFlag(value: DarklyServiceMock.FlagValues.alternate(value: value) as Any, version: version)
                             expect(testContext.subject!.isEqual(to: otherFlag)).to(beFalse())
                         }
 
