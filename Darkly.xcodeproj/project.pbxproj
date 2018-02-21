@@ -16,6 +16,7 @@
 		832307A61F7D8D720029815A /* URLRequestSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = 832307A51F7D8D720029815A /* URLRequestSpec.swift */; };
 		832307A81F7DA61B0029815A /* LDEventSourceMock.swift in Sources */ = {isa = PBXBuildFile; fileRef = 832307A71F7DA61B0029815A /* LDEventSourceMock.swift */; };
 		832307AA1F7ECA630029815A /* LDConfigStub.swift in Sources */ = {isa = PBXBuildFile; fileRef = 832307A91F7ECA630029815A /* LDConfigStub.swift */; };
+		832EA061203D03B700A93C0E /* AnySpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = 832EA060203D03B700A93C0E /* AnySpec.swift */; };
 		8335299E1FC37727001166F8 /* LDFlagMaintainingMock.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8335299D1FC37727001166F8 /* LDFlagMaintainingMock.swift */; };
 		83396BC91F7C3711000E256E /* DarklyServiceSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = 83396BC81F7C3711000E256E /* DarklyServiceSpec.swift */; };
 		83411A5F1FABDA8700E5CF39 /* mocks.generated.swift in Sources */ = {isa = PBXBuildFile; fileRef = 83411A5D1FABDA8700E5CF39 /* mocks.generated.swift */; };
@@ -104,6 +105,7 @@
 		832307A51F7D8D720029815A /* URLRequestSpec.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = URLRequestSpec.swift; sourceTree = "<group>"; };
 		832307A71F7DA61B0029815A /* LDEventSourceMock.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LDEventSourceMock.swift; sourceTree = "<group>"; };
 		832307A91F7ECA630029815A /* LDConfigStub.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LDConfigStub.swift; sourceTree = "<group>"; };
+		832EA060203D03B700A93C0E /* AnySpec.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnySpec.swift; sourceTree = "<group>"; };
 		8335299D1FC37727001166F8 /* LDFlagMaintainingMock.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LDFlagMaintainingMock.swift; sourceTree = "<group>"; };
 		83396BC81F7C3711000E256E /* DarklyServiceSpec.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DarklyServiceSpec.swift; sourceTree = "<group>"; };
 		83411A5D1FABDA8700E5CF39 /* mocks.generated.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = mocks.generated.swift; path = Darkly/GeneratedCode/mocks.generated.swift; sourceTree = SOURCE_ROOT; };
@@ -361,6 +363,7 @@
 			isa = PBXGroup;
 			children = (
 				83D17EA91FCDA18C00B2823C /* DictionarySpec.swift */,
+				832EA060203D03B700A93C0E /* AnySpec.swift */,
 			);
 			path = Extensions;
 			sourceTree = "<group>";
@@ -721,6 +724,7 @@
 				83D5597C1FD9BED7002D10C8 /* FlagCollectionCacheSpec.swift in Sources */,
 				83F0A5641FB5F33800550A95 /* LDConfigSpec.swift in Sources */,
 				83CFE7D11F7AD8DC0010544E /* DarklyServiceMock.swift in Sources */,
+				832EA061203D03B700A93C0E /* AnySpec.swift in Sources */,
 				832307AA1F7ECA630029815A /* LDConfigStub.swift in Sources */,
 				83B8C2451FE360CF0082B8A9 /* LDFlagChangeNotifyingSpec.swift in Sources */,
 				8335299E1FC37727001166F8 /* LDFlagMaintainingMock.swift in Sources */,

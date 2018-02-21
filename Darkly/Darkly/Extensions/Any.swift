@@ -11,6 +11,7 @@ import Foundation
 struct AnyComparer {
     private init() { }
     
+    //If editing this method to add classes here, update AnySpec with tests that verify the comparison for that class
     //swiftlint:disable:next cyclomatic_complexity
     public static func isEqual(_ value: Any, to other: Any) -> Bool {
         switch (value, other) {
@@ -31,8 +32,8 @@ struct AnyComparer {
     }
 
     public static func isEqual(_ value: Any?, to other: Any?) -> Bool {
-        guard let value = value, let other = other else { return false }
-        return isEqual(value, to: other)
+        guard let nonNilValue = value, let nonNilOther = other else { return value == nil && other == nil }
+        return isEqual(nonNilValue, to: nonNilOther)
     }
 
     public static func isEqual(_ value: Any, to other: Any?) -> Bool {
