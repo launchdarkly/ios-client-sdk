@@ -136,6 +136,7 @@ extension LDFlagValue: Equatable {
         case let (.string(leftValue), .string(rightValue)): return leftValue == rightValue
         case let (.array(leftValue), .array(rightValue)): return leftValue == rightValue
         case let (.dictionary(leftValue), .dictionary(rightValue)): return leftValue == rightValue
+        case (.null, .null): return true
         default: return false
         }
     }

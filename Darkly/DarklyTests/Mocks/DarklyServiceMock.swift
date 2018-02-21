@@ -19,6 +19,7 @@ final class DarklyServiceMock: DarklyServiceProvider {
         static let string = "string-flag"
         static let array = "array-flag"
         static let dictionary = "dictionary-flag"
+        static let null = "null-flag"
     }
 
     struct FlagValues {
@@ -28,6 +29,9 @@ final class DarklyServiceMock: DarklyServiceProvider {
         static let string = "string value"
         static let array = [1, 2, 3]
         static let dictionary: [String: Any] = ["sub-flag-a": false, "sub-flag-b": 3, "sub-flag-c": 2.71828]
+        static let null = NSNull()
+
+        static var all: [Any] { return [bool, int, double, string, array, dictionary, null] }
     }
 
     struct Constants {
@@ -39,6 +43,12 @@ final class DarklyServiceMock: DarklyServiceProvider {
             FlagKeys.array: FlagValues.array,
             FlagKeys.dictionary: FlagValues.dictionary
         ]
+        static var featureFlagsWithNull: [String: Any] {
+            var flags = DarklyServiceMock.Constants.featureFlags
+            flags[DarklyServiceMock.FlagKeys.null] = DarklyServiceMock.FlagValues.null
+            return flags
+        }
+
         static let streamData = "event: ping\ndata:\n".data(using: .utf8)!
         static let error = NSError(domain: NSURLErrorDomain, code: Int(CFNetworkErrors.cfurlErrorResourceUnavailable.rawValue), userInfo: nil)
         static let errorData = "Bad json data".data(using: .utf8)!

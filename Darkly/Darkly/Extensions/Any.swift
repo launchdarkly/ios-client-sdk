@@ -24,6 +24,7 @@ struct AnyComparer {
         case (let value as [String: Any], let other as [String: Any]): if !value.isEqual(to: other) { return false }
         case (let value as Date, let other as Date): if value != other { return false }
         case (let value as UserFlags, let other as UserFlags): if value != other { return false }
+        case (_ as NSNull, _ as NSNull): return true
         default: return false
         }
         return true
@@ -31,6 +32,16 @@ struct AnyComparer {
 
     public static func isEqual(_ value: Any?, to other: Any?) -> Bool {
         guard let value = value, let other = other else { return false }
+        return isEqual(value, to: other)
+    }
+
+    public static func isEqual(_ value: Any, to other: Any?) -> Bool {
+        guard let other = other else { return false }
+        return isEqual(value, to: other)
+    }
+
+    public static func isEqual(_ value: Any?, to other: Any) -> Bool {
+        guard let value = value else { return false }
         return isEqual(value, to: other)
     }
 }

@@ -79,6 +79,7 @@ extension Dictionary where Value: LDFlagValueConvertible {
 
 extension Dictionary: LDFlagValueConvertible {
     public func toLDFlagValue() -> LDFlagValue {
+        if let flagValueDictionary = self as? [LDFlagKey: LDFlagValue] { return .dictionary(flagValueDictionary) }
         guard let flagValues = Dictionary.convertToFlagValues(self as? [LDFlagKey: LDFlagValueConvertible]) else { return .null }
         return .dictionary(flagValues)
     }
@@ -90,5 +91,33 @@ extension Dictionary: LDFlagValueConvertible {
             flagValues[String(describing: key)] = value.toLDFlagValue()
         }
         return flagValues
+    }
+}
+
+extension NSNull: LDFlagValueConvertible {
+    public func toLDFlagValue() -> LDFlagValue {
+        return .null
+    }
+}
+
+extension LDFlagValueConvertible {
+    func isEqual(to other: LDFlagValueConvertible) -> Bool {
+        switch (self.toLDFlagValue(), other.toLDFlagValue()) {
+        case (.bool(let value), .bool(let otherValue)): return value == otherValue
+        case (.int(let value), .int(let otherValue)): return value == otherValue
+        case (.double(let value), .double(let otherValue)): return value == otherValue
+        case (.string(let value), .string(let otherValue)): return value == otherValue
+        case (.array(let value), .array(let otherValue)): return value == otherValue
+        case (.dictionary(let value), .dictionary(let otherValue)): return value == otherValue 
+        case (.null, .null): return true
+        default: return false
+        }
+    }
+}
+
+extension Optional where Wrapped == LDFlagValueConvertible {
+    func isEqual(to other: LDFlagValueConvertible?) -> Bool {
+        guard case .some(let value) = self, case .some(let otherValue) = other else { return false }
+        return value.isEqual(to: otherValue)
     }
 }

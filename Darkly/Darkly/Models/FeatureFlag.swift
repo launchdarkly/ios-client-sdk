@@ -9,17 +9,73 @@
 import Foundation
 
 struct FeatureFlag {
-    
-    let key: LDFlagKey
-    var value: LDFlagValue?
-    private(set) var source: LDFlagValueSource?
-    
-    init?(key: LDFlagKey) {
-        guard !key.isEmpty else { return nil }
-        self.key = key
+
+    enum CodingKeys: String, CodingKey {
+        case value, version
+    }
+
+    struct Constants {
+        static let nilVersionPlaceholder = -1
     }
     
-    func variation(fallback: LDFlagValue) -> LDFlagValue {
-        return value ?? fallback
+    let value: Any?
+    let version: Int?
+
+    init(value: Any?, version: Int?) {
+        self.value = value is NSNull ? nil : value
+        self.version = version
+    }
+
+    init?(dictionary: [String: Any]?) {
+        guard let dictionary = dictionary else { return nil }
+        let selectedKeys = dictionary.keys.filter { (key) in [CodingKeys.value.rawValue, CodingKeys.version.rawValue].contains(key) }
+        if selectedKeys.contains(CodingKeys.value.rawValue) && selectedKeys.contains(CodingKeys.version.rawValue) {
+            self.init(value: dictionary[CodingKeys.value.rawValue], version: dictionary[CodingKeys.version.rawValue] as? Int)
+            return
+        }
+        guard selectedKeys.isEmpty else { return nil }
+        self.init(value: dictionary, version: nil)
+    }
+
+    init?(object: Any?) {
+        if let object = object as? [String: Any] {
+            self.init(dictionary: object)
+            return
+        }
+        if let object = object {
+            self.init(value: object, version: nil)
+            return
+        }
+        return nil
+    }
+
+    func dictionaryValue(exciseNil: Bool) -> [String: Any]? {
+        if exciseNil && value == nil { return nil }
+        var dict = [String: Any]()
+        var nilExcisedValue = value
+        if exciseNil, let dictionaryValue = value as? [LDFlagKey: Any] {
+            nilExcisedValue = dictionaryValue.filter { (_, value) -> Bool in
+                if value is NSNull { return false }
+                return true
+            }
+        }
+        dict[CodingKeys.value.rawValue] = nilExcisedValue ?? NSNull()
+        dict[CodingKeys.version.rawValue] = version ?? (exciseNil ? Constants.nilVersionPlaceholder : NSNull())
+        return dict
+    }
+
+    func isEqual(to other: FeatureFlag?) -> Bool {
+        guard let other = other else { return false }
+        if value == nil {
+            if other.value != nil { return false }
+        } else {
+            if !AnyComparer.isEqual(value, to: other.value) { return false }
+        }
+        if version == nil {
+            if other.version != nil { return false }
+        } else {
+            if version != other.version { return false }
+        }
+        return true
     }
 }
