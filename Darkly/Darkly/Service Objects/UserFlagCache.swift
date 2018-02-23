@@ -57,7 +57,7 @@ import Foundation
 protocol UserFlagCaching {
     func cacheFlags(for user: LDUser)
     //sourcery: DefaultReturnValue = nil
-    func retrieveFlags(for user: LDUser) -> UserFlags?
+    func retrieveFlags(for user: LDUser) -> CacheableUserFlags?
 }
 
 final class UserFlagCache: UserFlagCaching {
@@ -77,11 +77,11 @@ final class UserFlagCache: UserFlagCaching {
 
     func cacheFlags(for user: LDUser) {
         var flags = cachedFlags
-        flags[user.key] = UserFlags(user: user)
+        flags[user.key] = CacheableUserFlags(user: user)
         cache(flags: flags)
     }
     
-    func retrieveFlags(for user: LDUser) -> UserFlags? {
+    func retrieveFlags(for user: LDUser) -> CacheableUserFlags? {
         return cachedFlags[user.key]
     }
     
@@ -92,9 +92,9 @@ final class UserFlagCache: UserFlagCaching {
 //        return flags.max(by: { (pair1, pair2) -> Bool in pair1.value.lastUpdated < pair2.value.lastUpdated })?.value.flags
 //    }
 
-    private var cachedFlags: [String: UserFlags] { return flagCollectionStore.retrieveFlags() }
+    private var cachedFlags: [String: CacheableUserFlags] { return flagCollectionStore.retrieveFlags() }
 
-    private func cache(flags: [String: UserFlags]) {
+    private func cache(flags: [String: CacheableUserFlags]) {
         flagCollectionStore.storeFlags(flags)
     }
 }

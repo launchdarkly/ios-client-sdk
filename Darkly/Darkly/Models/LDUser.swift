@@ -82,7 +82,7 @@ public struct LDUser {
         device = custom?[CodingKeys.device.rawValue] as? String
         operatingSystem = custom?[CodingKeys.operatingSystem.rawValue] as? String
 
-        flagStore = LDFlagStore(featureFlags: userDictionary[CodingKeys.config.rawValue] as? [String: Any], flagValueSource: .cache)
+        flagStore = LDFlagStore(featureFlagDictionary: userDictionary[CodingKeys.config.rawValue] as? [String: Any], flagValueSource: .cache)
     }
 
     //swiftlint:disable:next cyclomatic_complexity
@@ -245,7 +245,7 @@ extension LDUserWrapper: NSCoding {
         encoder.encode(wrapped.operatingSystem, forKey: LDUser.CodingKeys.operatingSystem.rawValue)
         encoder.encode(wrapped.lastUpdated, forKey: LDUser.CodingKeys.lastUpdated.rawValue)
         encoder.encode(wrapped.privateAttributes, forKey: LDUser.CodingKeys.privateAttributes.rawValue)
-        encoder.encode([Keys.featureFlags: wrapped.flagStore.featureFlags], forKey: LDUser.CodingKeys.config.rawValue)
+        encoder.encode([Keys.featureFlags: wrapped.flagStore.featureFlags.dictionaryValue(exciseNil: true)], forKey: LDUser.CodingKeys.config.rawValue)
     }
 
     public convenience init?(coder decoder: NSCoder) {
@@ -265,8 +265,7 @@ extension LDUserWrapper: NSCoding {
         user.operatingSystem = decoder.decodeObject(forKey: LDUser.CodingKeys.operatingSystem.rawValue) as? String
         user.lastUpdated = decoder.decodeObject(forKey: LDUser.CodingKeys.lastUpdated.rawValue) as? Date ?? Date()
         let wrappedFlags = decoder.decodeObject(forKey: LDUser.CodingKeys.config.rawValue) as? [String: Any]
-        let flags = wrappedFlags?[Keys.featureFlags] as? [String: Any]
-        user.flagStore = LDFlagStore(featureFlags: flags, flagValueSource: .cache)
+        user.flagStore = LDFlagStore(featureFlagDictionary: wrappedFlags?[Keys.featureFlags] as? [String: Any], flagValueSource: .cache)
         self.init(user: user)
     }
 

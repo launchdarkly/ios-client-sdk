@@ -13,8 +13,8 @@ protocol FlagCollectionCaching {
     //Responsibility: store & retrieve flag collection using KeyedValueStoring
     //controls the number of user flag sets stored in the flag collection
     //sourcery: DefaultReturnValue = [:]
-    func retrieveFlags() -> [String: UserFlags]
-    func storeFlags(_ flags: [String: UserFlags])
+    func retrieveFlags() -> [String: CacheableUserFlags]
+    func storeFlags(_ flags: [String: CacheableUserFlags])
 }
 
 final class FlagCollectionCache: FlagCollectionCaching {
@@ -34,23 +34,23 @@ final class FlagCollectionCache: FlagCollectionCaching {
         self.maxCachedValues = maxCachedValues
     }
 
-    func retrieveFlags() -> [String: UserFlags] {
+    func retrieveFlags() -> [String: CacheableUserFlags] {
         return cachedUserFlags ?? [:]
     }
 
-    func storeFlags(_ flags: [String: UserFlags]) {
+    func storeFlags(_ flags: [String: CacheableUserFlags]) {
         var flags = flags
         while flags.count > maxCachedValues { flags.removeOldest() }
         keyStore.set(flags.flagDictionaries, forKey: Keys.cachedFlags)
     }
 
     private var cachedFlagDictionaries: [String: Any]? { return keyStore.dictionary(forKey: Keys.cachedFlags) }
-    private var cachedUserFlags: [String: UserFlags]? {
-        return cachedFlagDictionaries?.flatMapValues { (flagDictionary) in return UserFlags(object: flagDictionary) }
+    private var cachedUserFlags: [String: CacheableUserFlags]? {
+        return cachedFlagDictionaries?.flatMapValues { (flagDictionary) in return CacheableUserFlags(object: flagDictionary) }
     }
 }
 
-extension Dictionary where Key == String, Value == UserFlags {
+extension Dictionary where Key == String, Value == CacheableUserFlags {
     fileprivate mutating func removeOldest() {
         guard !self.isEmpty else { return }
         guard let oldestPair = self.max(by: { (pair1, pair2) -> Bool in pair1.value.lastUpdated > pair2.value.lastUpdated }) else { return }

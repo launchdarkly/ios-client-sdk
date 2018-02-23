@@ -59,16 +59,16 @@ final class FlagCollectionCachingMock: FlagCollectionCaching {
 
     // MARK: retrieveFlags
     var retrieveFlagsCallCount = 0
-    var retrieveFlagsReturnValue: [String: UserFlags] = [:]
-    func retrieveFlags() -> [String: UserFlags] {
+    var retrieveFlagsReturnValue: [String: CacheableUserFlags] = [:]
+    func retrieveFlags() -> [String: CacheableUserFlags] {
         retrieveFlagsCallCount += 1
         return retrieveFlagsReturnValue
     }
 
     // MARK: storeFlags
     var storeFlagsCallCount = 0
-    var storeFlagsReceivedFlags: [String: UserFlags]?
-    func storeFlags(_ flags: [String: UserFlags]) {
+    var storeFlagsReceivedFlags: [String: CacheableUserFlags]?
+    func storeFlags(_ flags: [String: CacheableUserFlags]) {
         storeFlagsCallCount += 1
         storeFlagsReceivedFlags = flags
     }
@@ -145,7 +145,7 @@ final class LDFlagMaintainingMock: LDFlagMaintaining {
 
     // MARK: featureFlags
     var featureFlagsSetCount = 0
-    var featureFlags: [LDFlagKey: Any] = [:] {
+    var featureFlags: [LDFlagKey: FeatureFlag] = [:] {
         didSet { featureFlagsSetCount += 1 }
     }
 
@@ -204,8 +204,8 @@ final class UserFlagCachingMock: UserFlagCaching {
     // MARK: retrieveFlags
     var retrieveFlagsCallCount = 0
     var retrieveFlagsReceivedUser: LDUser?
-    var retrieveFlagsReturnValue: UserFlags? = nil
-    func retrieveFlags(for user: LDUser) -> UserFlags? {
+    var retrieveFlagsReturnValue: CacheableUserFlags? = nil
+    func retrieveFlags(for user: LDUser) -> CacheableUserFlags? {
         retrieveFlagsCallCount += 1
         retrieveFlagsReceivedUser = user
         return retrieveFlagsReturnValue

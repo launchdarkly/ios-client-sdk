@@ -20,6 +20,8 @@ final class DarklyServiceMock: DarklyServiceProvider {
         static let array = "array-flag"
         static let dictionary = "dictionary-flag"
         static let null = "null-flag"
+
+        static var all: [LDFlagKey] { return [bool, int, double, string, array, dictionary, null] }
     }
 
     struct FlagValues {
@@ -31,7 +33,7 @@ final class DarklyServiceMock: DarklyServiceProvider {
         static let dictionary: [String: Any] = ["sub-flag-a": false, "sub-flag-b": 3, "sub-flag-c": 2.71828]
         static let null = NSNull()
 
-        static var all: [Any] { return [bool, null, int, double, string, array, dictionary, null] }
+        static var all: [Any] { return [bool, int, double, string, array, dictionary, null] }
 
         static func alternate<T>(value: T) -> T {
             switch value {
@@ -39,7 +41,9 @@ final class DarklyServiceMock: DarklyServiceProvider {
             case let value as Int: return value + 1 as! T
             case let value as Double: return value + 1.0 as! T
             case let value as String: return value + "-" as! T
-            case var value as [Any]: return value.append(4) as! T
+            case var value as [Any]:
+                value.append(4)
+                return value as! T  //Not sure why, but this crashes if you combine append the value into the return
             case var value as [String: Any]:
                 value["new-flag"] = "new-value"
                 return value as! T
@@ -49,17 +53,18 @@ final class DarklyServiceMock: DarklyServiceProvider {
     }
 
     struct Constants {
-        static let featureFlags: [String: Any] = [
-            FlagKeys.bool: FlagValues.bool,
-            FlagKeys.int: FlagValues.int,
-            FlagKeys.double: FlagValues.double,
-            FlagKeys.string: FlagValues.string,
-            FlagKeys.array: FlagValues.array,
-            FlagKeys.dictionary: FlagValues.dictionary
+        static let version = 2
+        static let featureFlags: [String: FeatureFlag] = [
+            FlagKeys.bool: FeatureFlag(value: FlagValues.bool, version: version),
+            FlagKeys.int: FeatureFlag(value: FlagValues.int, version: version),
+            FlagKeys.double: FeatureFlag(value: FlagValues.double, version: version),
+            FlagKeys.string: FeatureFlag(value: FlagValues.string, version: version),
+            FlagKeys.array: FeatureFlag(value: FlagValues.array, version: version),
+            FlagKeys.dictionary: FeatureFlag(value: FlagValues.dictionary, version: version)
         ]
-        static var featureFlagsWithNull: [String: Any] {
+        static var featureFlagsWithNull: [String: FeatureFlag] {
             var flags = DarklyServiceMock.Constants.featureFlags
-            flags[DarklyServiceMock.FlagKeys.null] = DarklyServiceMock.FlagValues.null
+            flags[DarklyServiceMock.FlagKeys.null] = FeatureFlag(value: DarklyServiceMock.FlagValues.null, version: version)
             return flags
         }
 
@@ -129,7 +134,7 @@ extension DarklyServiceMock {
 
     ///Use when testing requires the mock service to actually make a flag request
     func stubFlagRequest(statusCode: Int, useReport: Bool, onActivation activate: ((URLRequest, OHHTTPStubsDescriptor, OHHTTPStubsResponse) -> Void)? = nil) {
-        let stubResponse: OHHTTPStubsResponseBlock = { (_) in OHHTTPStubsResponse(data: statusCode == HTTPURLResponse.StatusCodes.ok ? Constants.featureFlags.jsonData! : Data(), statusCode: Int32(statusCode), headers: nil)}
+        let stubResponse: OHHTTPStubsResponseBlock = { (_) in OHHTTPStubsResponse(data: statusCode == HTTPURLResponse.StatusCodes.ok ? Constants.featureFlags.dictionaryValue(exciseNil: false).jsonData! : Data(), statusCode: Int32(statusCode), headers: nil)}
         stubRequest(passingTest: useReport ? reportFlagRequestStubTest : getFlagRequestStubTest, stub: stubResponse, name: flagStubName(statusCode: statusCode, useReport: useReport), onActivation: activate)
     }
 
@@ -137,7 +142,7 @@ extension DarklyServiceMock {
     func stubFlagResponse(statusCode: Int, badData: Bool = false, responseOnly: Bool = false, errorOnly: Bool = false) {
         let response = HTTPURLResponse(url: config.baseUrl, statusCode: statusCode, httpVersion: Constants.httpVersion, headerFields: nil)
         if statusCode == HTTPURLResponse.StatusCodes.ok {
-            let flagData = try? JSONSerialization.data(withJSONObject: Constants.featureFlags, options: [])
+            let flagData = try? JSONSerialization.data(withJSONObject: Constants.featureFlags.dictionaryValue(exciseNil: false), options: [])
             stubbedFlagResponse = (flagData, response, nil)
             if badData { stubbedFlagResponse = (Constants.errorData, response, nil) }
             return

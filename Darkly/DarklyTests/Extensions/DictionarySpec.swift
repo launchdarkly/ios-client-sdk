@@ -16,8 +16,8 @@ public final class DictionarySpec: QuickSpec {
         var subject: [String: Any]!
         var other: [String: Any]!
         beforeEach {
-            subject = DarklyServiceMock.Constants.featureFlags
-            other = DarklyServiceMock.Constants.featureFlags
+            subject = [String: Any].stub()
+            other = [String: Any].stub()
         }
 
         describe("symmetric difference") {
@@ -128,5 +128,48 @@ public final class DictionarySpec: QuickSpec {
                 }
             }
         }
+    }
+}
+
+fileprivate extension Dictionary {
+    struct Keys {
+        static var bool: String { return "bool-key" }
+        static var int: String { return "int-key" }
+        static var double: String { return "double-key" }
+        static var string: String { return "string-key" }
+        static var array: String { return "array-key" }
+        static var dictionary: String { return "dictionary-key" }
+        static var null: String { return "null-key" }
+
+        static var all: [Any] { return [bool, int, double, string, array, dictionary, null] }
+    }
+
+    struct Values {
+        static var bool: Bool { return true }
+        static var int: Int { return 7 }
+        static var double: Double { return 3.14159 }
+        static var string: String { return "string value" }
+        static var array: [Int] { return [1, 2, 3] }
+        static var dictionary: [String: Any] { return ["sub-flag-a": false, "sub-flag-b": 3, "sub-flag-c": 2.71828] }
+        static var null: NSNull { return NSNull() }
+
+        static var all: [Any] { return [bool, int, double, string, array, dictionary, null] }
+    }
+
+    static func stub() -> [String: Any] {
+        return [Keys.bool: Values.bool,
+                Keys.int: Values.int,
+                Keys.double: Values.double,
+                Keys.string: Values.string,
+                Keys.array: Values.array,
+                Keys.dictionary: Values.dictionary]
+    }
+}
+
+extension Dictionary where Key == String, Value == Any {
+    func appendNull() -> [String: Any] {
+        var dictWithNull = self
+        dictWithNull[Keys.null] = Values.null
+        return dictWithNull
     }
 }

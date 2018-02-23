@@ -10,6 +10,7 @@ import Foundation
 
 public typealias LDFlagChangeOwner = AnyObject
 public typealias LDFlagKey = String
+typealias UserKey = String
 public typealias LDFlagChangeObserver = (LDChangedFlag) -> Void
 public typealias LDFlagCollectionChangeObserver = ([String: LDChangedFlag]) -> Void
 

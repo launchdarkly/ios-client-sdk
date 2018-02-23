@@ -43,6 +43,15 @@ final class LDFlagStoreSpec: QuickSpec {
                     expect(subject.flagValueSource == .cache).to(beTrue())
                 }
             }
+            context("with an initial flag dictionary") {
+                beforeEach {
+                    subject = LDFlagStore(featureFlagDictionary: DarklyServiceMock.Constants.featureFlags.dictionaryValue(exciseNil: false), flagValueSource: .cache)
+                }
+                it("has the feature flags") {
+                    expect(subject.featureFlags == DarklyServiceMock.Constants.featureFlags).to(beTrue())
+                    expect(subject.flagValueSource == .cache).to(beTrue())
+                }
+            }
         }
 
         describe("replaceStore") {
@@ -60,15 +69,23 @@ final class LDFlagStoreSpec: QuickSpec {
                     expect(subject.flagValueSource == .cache).to(beTrue())
                 }
             }
-            context("with nil flag values") {
+            context("with new flag value dictionary") {
                 beforeEach {
                     subject = LDFlagStore()
-
                     waitUntil(timeout: 1) { done in
-                        subject.replaceStore(newFlags: DarklyServiceMock.Constants.featureFlags, source: .cache) {
+                        subject.replaceStore(newFlags: DarklyServiceMock.Constants.featureFlags.dictionaryValue(exciseNil: false), source: .cache) {
                             done()
                         }
                     }
+                }
+                it("causes LDFlagStore to replace the flag values and source") {
+                    expect(subject.featureFlags == DarklyServiceMock.Constants.featureFlags).to(beTrue())
+                    expect(subject.flagValueSource == .cache).to(beTrue())
+                }
+            }
+            context("with nil flag values") {
+                beforeEach {
+                    subject = LDFlagStore(featureFlags: DarklyServiceMock.Constants.featureFlags, flagValueSource: .cache)
 
                     waitUntil(timeout: 1) { done in
                         subject.replaceStore(newFlags: nil, source: .server) {
@@ -77,19 +94,15 @@ final class LDFlagStoreSpec: QuickSpec {
                     }
                 }
                 it("causes LDFlagStore to empty the flag values and replace the source") {
-                    expect(subject.variationAndSource(forKey: DarklyServiceMock.FlagKeys.bool, fallback: FallbackValues.bool) == (FallbackValues.bool, LDFlagValueSource.fallback)).to(beTrue())
+                    expect(subject.featureFlags.isEmpty).to(beTrue())
                 }
             }
         }
+
         describe("variationAndSource") {
             context("when flags exist") {
                 beforeEach {
-                    subject = LDFlagStore()
-                    waitUntil(timeout: 1) { done in
-                        subject.replaceStore(newFlags: DarklyServiceMock.Constants.featureFlags, source: .server) {
-                            done()
-                        }
-                    }
+                    subject = LDFlagStore(featureFlags: DarklyServiceMock.Constants.featureFlags, flagValueSource: .server)
                 }
                 it("causes the LDFlagStore to provide the flag value and source") {
                     expect(subject.variationAndSource(forKey: DarklyServiceMock.FlagKeys.bool, fallback: FallbackValues.bool) == (DarklyServiceMock.FlagValues.bool, LDFlagValueSource.server)).to(beTrue())
@@ -129,12 +142,7 @@ final class LDFlagStoreSpec: QuickSpec {
         describe("variation") {
             context("when flags exist") {
                 beforeEach {
-                    subject = LDFlagStore()
-                    waitUntil(timeout: 1) { done in
-                        subject.replaceStore(newFlags: DarklyServiceMock.Constants.featureFlags, source: .server) {
-                            done()
-                        }
-                    }
+                    subject = LDFlagStore(featureFlags: DarklyServiceMock.Constants.featureFlags, flagValueSource: .cache)
                 }
                 it("causes the LDFlagStore to provide the flag value") {
                     expect(subject.variation(forKey: DarklyServiceMock.FlagKeys.bool, fallback: FallbackValues.bool) == DarklyServiceMock.FlagValues.bool).to(beTrue())

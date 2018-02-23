@@ -10,7 +10,7 @@ import Foundation
 
 //sourcery: AutoMockable
 protocol LDFlagMaintaining {
-    var featureFlags: [LDFlagKey: Any] { get }
+    var featureFlags: [LDFlagKey: FeatureFlag] { get }
     //sourcery: DefaultMockValue = .cache
     var flagValueSource: LDFlagValueSource { get }
     func replaceStore(newFlags: [LDFlagKey: Any]?, source: LDFlagValueSource, completion: CompletionClosure?)
@@ -28,21 +28,25 @@ final class LDFlagStore: LDFlagMaintaining {
         fileprivate static let flagQueueLabel = "com.launchdarkly.flagStore.flagQueue"
     }
     
-    private(set) var featureFlags: [LDFlagKey: Any] = [:]
+    private(set) var featureFlags: [LDFlagKey: FeatureFlag] = [:]
     private(set) var flagValueSource = LDFlagValueSource.fallback
     private var flagQueue = DispatchQueue(label: Constants.flagQueueLabel)
 
     init() { }
 
-    init(featureFlags: [LDFlagKey: Any]?, flagValueSource: LDFlagValueSource = .fallback) {
+    init(featureFlags: [LDFlagKey: FeatureFlag]?, flagValueSource: LDFlagValueSource = .fallback) {
         self.featureFlags = featureFlags ?? [:]
         self.flagValueSource = flagValueSource
+    }
+
+    convenience init(featureFlagDictionary: [LDFlagKey: Any]?, flagValueSource: LDFlagValueSource = .fallback) {
+        self.init(featureFlags: featureFlagDictionary?.flagCollection, flagValueSource: flagValueSource)
     }
 
     ///Replaces all feature flags with new flags. Pass nil to reset to an empty flag store
     func replaceStore(newFlags: [LDFlagKey: Any]?, source: LDFlagValueSource, completion: CompletionClosure?) {
         flagQueue.async {
-            self.featureFlags = newFlags ?? [:]
+            self.featureFlags = newFlags?.flagCollection ?? [:]
             self.flagValueSource = source
             if let completion = completion {
                 DispatchQueue.main.async {
@@ -81,7 +85,7 @@ final class LDFlagStore: LDFlagMaintaining {
 
     func variationAndSource<T: LDFlagValueConvertible>(forKey key: LDFlagKey, fallback: T) -> (T, LDFlagValueSource) {
         var (flagValue, source) = (fallback, LDFlagValueSource.fallback)
-        if let foundValue = featureFlags[key] as? T {
+        if let foundValue = featureFlags[key]?.value as? T {
             //TODO: For collections, it's very easy to pass in a fallback value that the compiler infers to be a type that the developer did not intend. When implementing the logging card, consider splitting up  looking for the key from converting to the type, and logging a detailed message about the expected type requested vs. the type found. The goal is to lead the client app developer to the fact that the fallback was returned because the flag value couldn't be converted to the requested type. For collections it might be that the compiler inferred a different type from the fallback value than the developer intended.
             (flagValue, source) = (foundValue, flagValueSource)
         }

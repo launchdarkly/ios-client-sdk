@@ -28,12 +28,10 @@ struct FeatureFlag {
 
     init?(dictionary: [String: Any]?) {
         guard let dictionary = dictionary else { return nil }
-        let selectedKeys = dictionary.keys.filter { (key) in [CodingKeys.value.rawValue, CodingKeys.version.rawValue].contains(key) }
-        if selectedKeys.contains(CodingKeys.value.rawValue) && selectedKeys.contains(CodingKeys.version.rawValue) {
+        if dictionary.keys.sorted() == [CodingKeys.value.rawValue, CodingKeys.version.rawValue] {
             self.init(value: dictionary[CodingKeys.value.rawValue], version: dictionary[CodingKeys.version.rawValue] as? Int)
             return
         }
-        guard selectedKeys.isEmpty else { return nil }
         self.init(value: dictionary, version: nil)
     }
 
@@ -51,7 +49,7 @@ struct FeatureFlag {
 
     func dictionaryValue(exciseNil: Bool) -> [String: Any]? {
         if exciseNil && value == nil { return nil }
-        var dict = [String: Any]()
+        var dictionaryValue = [String: Any]()
         var nilExcisedValue = value
         if exciseNil, let dictionaryValue = value as? [LDFlagKey: Any] {
             nilExcisedValue = dictionaryValue.filter { (_, value) -> Bool in
@@ -59,23 +57,39 @@ struct FeatureFlag {
                 return true
             }
         }
-        dict[CodingKeys.value.rawValue] = nilExcisedValue ?? NSNull()
-        dict[CodingKeys.version.rawValue] = version ?? (exciseNil ? Constants.nilVersionPlaceholder : NSNull())
-        return dict
+        dictionaryValue[CodingKeys.value.rawValue] = nilExcisedValue ?? NSNull()
+        dictionaryValue[CodingKeys.version.rawValue] = version ?? (exciseNil ? Constants.nilVersionPlaceholder : NSNull())
+        return dictionaryValue
     }
+}
 
-    func isEqual(to other: FeatureFlag?) -> Bool {
-        guard let other = other else { return false }
-        if value == nil {
-            if other.value != nil { return false }
+extension FeatureFlag: Equatable {
+    public static func == (lhs: FeatureFlag, rhs: FeatureFlag) -> Bool {
+        if lhs.value == nil {
+            if rhs.value != nil { return false }
         } else {
-            if !AnyComparer.isEqual(value, to: other.value) { return false }
+            if !AnyComparer.isEqual(lhs.value, to: rhs.value) { return false }
         }
-        if version == nil {
-            if other.version != nil { return false }
+        if lhs.version == nil {
+            if rhs.version != nil { return false }
         } else {
-            if version != other.version { return false }
+            if lhs.version != rhs.version { return false }
         }
         return true
+    }
+}
+
+extension Dictionary where Key == String, Value == FeatureFlag {
+    func dictionaryValue(exciseNil: Bool) -> [String: Any] {
+        return self.flatMapValues { (featureFlag) in featureFlag.dictionaryValue(exciseNil: exciseNil) }
+    }
+}
+
+extension Dictionary where Key == String, Value == Any {
+    var flagCollection: [LDFlagKey: FeatureFlag]? {
+        guard !(self is [LDFlagKey: FeatureFlag]) else { return self as? [LDFlagKey: FeatureFlag] }
+        let flagCollection = flatMapValues { (flagValue) in return FeatureFlag(object: flagValue) }
+        guard flagCollection.count == self.count else { return nil }
+        return flagCollection
     }
 }

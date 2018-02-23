@@ -24,7 +24,7 @@ final class AnySpec: QuickSpec {
         static let array = [1, 2, 3, 5, 7, 11]
         static let dictionary: [String: Any] = ["bool-key": true, "int-key": -72, "double-key": 1.414, "string-key": "a not so interesting string", "any-array-key": [true, 2, "hello-kitty"], "int-array-key": [1, 2, 3], "dictionary-key": ["keyA": true, "keyB": -1, "keyC": "howdy"]]
         static let date = Date()
-        static let userFlags = UserFlags(flags: DarklyServiceMock.Constants.featureFlags, lastUpdated: Date())
+        static let userFlags = CacheableUserFlags.stub()
         static let null = NSNull()
 
         static let all: [Any] = [bool, int, double, string, array, dictionary, date, userFlags, null]
@@ -38,7 +38,7 @@ final class AnySpec: QuickSpec {
         static let array = [1, 2, 3, 5, 7]
         static let dictionary: [String: Any] = ["bool-key": false, "int-key": -72, "double-key": 1.414, "string-key": "a not so interesting string", "any-array-key": [true, 2, "hello-kitty"], "int-array-key": [1, 2, 3], "dictionary-key": ["keyA": true, "keyB": -1, "keyC": "howdy"]]
         static let date = Date().addingTimeInterval(-1.0)
-        static let userFlags = UserFlags(flags: DarklyServiceMock.Constants.featureFlags, lastUpdated: Date().addingTimeInterval(1.0))
+        static let userFlags = CacheableUserFlags(flags: DarklyServiceMock.Constants.featureFlags, lastUpdated: Date().addingTimeInterval(1.0))
         static let null = NSNull()
 
         static let all: [Any] = [bool, int, double, string, array, dictionary, date, userFlags, null]

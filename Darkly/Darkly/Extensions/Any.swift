@@ -24,8 +24,8 @@ struct AnyComparer {
         case (let value as [Any], let other as [Any]): if !value.isEqual(to: other) { return false }
         case (let value as [String: Any], let other as [String: Any]): if !value.isEqual(to: other) { return false }
         case (let value as Date, let other as Date): if value != other { return false }
-        case (let value as UserFlags, let other as UserFlags): if value != other { return false }
-        case (let value as FeatureFlag, let other as FeatureFlag): if !value.isEqual(to: other) { return false }
+        case (let value as CacheableUserFlags, let other as CacheableUserFlags): if value != other { return false }
+        case (let value as FeatureFlag, let other as FeatureFlag): if value != other { return false }
         case (_ as NSNull, _ as NSNull): return true
         default: return false
         }

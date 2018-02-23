@@ -39,8 +39,8 @@ final class FlagCollectionCacheSpec: QuickSpec {
 
         describe("retrieve flags") {
             var userStubs: [LDUser]!
-            var userFlags: [String: UserFlags]!
-            var returnedFlags: [String: UserFlags]!
+            var userFlags: [String: CacheableUserFlags]!
+            var returnedFlags: [String: CacheableUserFlags]!
             context("when the keystore doesn't contain the cached flag key") {
                 beforeEach {
                     returnedFlags = subject.retrieveFlags()
@@ -102,7 +102,7 @@ final class FlagCollectionCacheSpec: QuickSpec {
 
         describe("store flags") {
             var userStubs: [LDUser]!
-            var userFlags: [String: UserFlags]!
+            var userFlags: [String: CacheableUserFlags]!
             context("when the keystore doesn't contain the cached flag key") {
                 var userFlagDictionaries: [String: Any]!
                 beforeEach {
@@ -200,7 +200,7 @@ extension KeyedValueCachingMock {
     func stubAndStoreUserFlags(count: Int) -> [LDUser] {
         let userStubs = LDUser.stubUsers(count)
         var cachedFlags = [String: [String: Any]]()
-        userStubs.forEach { (user) in cachedFlags[user.key] = UserFlags(user: user).dictionaryValue }
+        userStubs.forEach { (user) in cachedFlags[user.key] = CacheableUserFlags(user: user).dictionaryValue }
         dictionaryReturnValue = cachedFlags
         return userStubs
     }

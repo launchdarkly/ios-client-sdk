@@ -25,11 +25,11 @@ final class UserCacheConverterSpec: QuickSpec {
 
         describe("convert user cache to flag cache") {
             var userStub: LDUser!
-            var flagDictionary: [String: UserFlags]!
+            var flagDictionary: [String: CacheableUserFlags]!
 
             beforeEach {
                 userStub = LDUser.stub()
-                flagDictionary = [userStub.key: UserFlags(user: userStub)]
+                flagDictionary = [userStub.key: CacheableUserFlags(user: userStub)]
             }
 
             context("when the user is stored as a dictionary") {

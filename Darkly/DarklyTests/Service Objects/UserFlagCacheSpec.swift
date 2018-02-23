@@ -48,11 +48,11 @@ final class UserFlagCacheSpec: QuickSpec {
         describe("retrieve flags") {
             context("when the user flags exist in the flag collection store") {
                 var mockUser: LDUser!
-                var mockUserFlags: UserFlags!
-                var retrievedFlags: UserFlags?
+                var mockUserFlags: CacheableUserFlags!
+                var retrievedFlags: CacheableUserFlags?
                 beforeEach {
                     mockUser = LDUser.stub()
-                    mockUserFlags = UserFlags(user: mockUser)
+                    mockUserFlags = CacheableUserFlags(user: mockUser)
                     mockFlagCollectionStore.retrieveFlagsReturnValue = [mockUser.key: mockUserFlags]
 
                     retrievedFlags = subject.retrieveFlags(for: mockUser)
@@ -63,7 +63,7 @@ final class UserFlagCacheSpec: QuickSpec {
             }
             context("when the user flags do not exist in the flag collection store") {
                 var mockUser: LDUser!
-                var retrievedFlags: UserFlags?
+                var retrievedFlags: CacheableUserFlags?
                 beforeEach {
                     mockUser = LDUser.stub()
                     retrievedFlags = subject.retrieveFlags(for: mockUser)
@@ -77,11 +77,11 @@ final class UserFlagCacheSpec: QuickSpec {
 
         describe("store flags") {
             var mockUser: LDUser!
-            var userFlags: UserFlags!
+            var userFlags: CacheableUserFlags!
             context("when the user flags are not already stored") {
                 beforeEach {
                     mockUser = LDUser.stub()
-                    userFlags = UserFlags(user: mockUser)
+                    userFlags = CacheableUserFlags(user: mockUser)
 
                     subject.cacheFlags(for: mockUser)
                 }
@@ -95,16 +95,16 @@ final class UserFlagCacheSpec: QuickSpec {
             }
             context("when the user flags are already stored") {
                 var mockFlagStore: LDFlagMaintainingMock!
-                var changedFlags: [String: Any]!
-                var changedUserFlags: UserFlags!
+                var changedFlags: [LDFlagKey: FeatureFlag]!
+                var changedUserFlags: CacheableUserFlags!
                 beforeEach {
                     mockUser = mockFlagCollectionStore.stubAndStoreUserFlags(count: 1).first!
                     mockFlagStore = mockUser.flagStore as? LDFlagMaintainingMock
 
                     changedFlags = mockFlagStore.featureFlags
-                    changedFlags["newKey"] = true
+                    changedFlags["newKey"] = FeatureFlag(value: true, version: 1)
                     mockFlagStore.featureFlags = changedFlags!
-                    changedUserFlags = UserFlags(user: mockUser)
+                    changedUserFlags = CacheableUserFlags(user: mockUser)
 
                     subject.cacheFlags(for: mockUser)
                 }
@@ -126,8 +126,8 @@ extension FlagCollectionCachingMock {
         //swiftlint:disable:next empty_count
         guard count > 0 else { return userStubs }
         while userStubs.count < count { userStubs.append(LDUser.stub()) }
-        var cachedFlags = [String: UserFlags]()
-        userStubs.forEach { (user) in cachedFlags[user.key] = UserFlags(user: user) }
+        var cachedFlags = [String: CacheableUserFlags]()
+        userStubs.forEach { (user) in cachedFlags[user.key] = CacheableUserFlags(user: user) }
         retrieveFlagsReturnValue = cachedFlags
         return userStubs
     }

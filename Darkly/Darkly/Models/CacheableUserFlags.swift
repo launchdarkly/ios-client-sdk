@@ -1,5 +1,5 @@
 //
-//  UserFlags.swift
+//  CacheableUserFlags.swift
 //  Darkly_iOS
 //
 //  Created by Mark Pokorny on 12/6/17. +JMJ
@@ -8,15 +8,15 @@
 
 import Foundation
 
-struct UserFlags {
+struct CacheableUserFlags {
     enum CodingKeys: String, CodingKey {
         case flags, lastUpdated
     }
 
-    let flags: [String: Any]
+    let flags: [String: FeatureFlag]
     let lastUpdated: Date
 
-    init(flags: [String: Any], lastUpdated: Date) {
+    init(flags: [String: FeatureFlag], lastUpdated: Date) {
         self.flags = flags
         self.lastUpdated = lastUpdated
     }
@@ -26,27 +26,27 @@ struct UserFlags {
     }
 
     var dictionaryValue: [String: Any] {
-        return [CodingKeys.flags.rawValue: flags, CodingKeys.lastUpdated.rawValue: lastUpdated]
+        return [CodingKeys.flags.rawValue: flags.dictionaryValue(exciseNil: true), CodingKeys.lastUpdated.rawValue: lastUpdated.stringValue]
     }
 
     init?(dictionary: [String: Any]) {
-        guard let flags = dictionary[CodingKeys.flags.rawValue] as? [String: Any],
-            let lastUpdated = dictionary[CodingKeys.lastUpdated.rawValue] as? Date
+        guard let flags = (dictionary[CodingKeys.flags.rawValue] as? [String: Any])?.flagCollection
             else { return nil }
-        self = UserFlags(flags: flags, lastUpdated: lastUpdated)
+
+        self.init(flags: flags, lastUpdated: (dictionary[CodingKeys.lastUpdated.rawValue] as? String)?.dateValue ?? Date())
     }
 
     init?(object: Any) {
         guard let dictionary = object as? [String: Any],
-            let flags = UserFlags(dictionary: dictionary)
+            let flags = CacheableUserFlags(dictionary: dictionary)
             else { return nil }
 
         self = flags
     }
 }
 
-extension UserFlags: Equatable {
-    static func == (lhs: UserFlags, rhs: UserFlags) -> Bool {
+extension CacheableUserFlags: Equatable {
+    static func == (lhs: CacheableUserFlags, rhs: CacheableUserFlags) -> Bool {
         return lhs.flags == rhs.flags && (lhs.lastUpdated == rhs.lastUpdated || lhs.lastUpdated.isStringEquivalent(to: rhs.lastUpdated))
     }
 }

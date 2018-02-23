@@ -29,7 +29,7 @@ final class UserCacheConverter: UserCacheConverting {
         guard let userCache = cachedUsers, !userCache.isEmpty else { return }
         keyStore.removeObject(forKey: Keys.cachedUsers)
 
-        let userFlags = userCache.mapValues { (user) in UserFlags(user: user) }
+        let userFlags = userCache.mapValues { (user) in CacheableUserFlags(user: user) }
         flagCollectionCache.storeFlags(userFlags)
     }
 

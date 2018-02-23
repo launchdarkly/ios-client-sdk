@@ -246,11 +246,11 @@ final class LDFlagSynchronizerSpec: QuickSpec {
         describe("streaming events") {
             context("ping") {
                 context("success") {
-                    var newFlags: [String: Any]?
+                    var newFlags: [String: FeatureFlag]?
                     beforeEach {
                         waitUntil { done in
                             testContext = TestContext(streamingMode: .streaming, useReport: false, onSyncComplete: { result in
-                                if case let .success(flags) = result { newFlags = flags }
+                                if case let .success(flags) = result { newFlags = flags.flagCollection }
                                 done()
                             })
                             testContext.serviceMock.stubFlagResponse(statusCode: HTTPURLResponse.StatusCodes.ok)

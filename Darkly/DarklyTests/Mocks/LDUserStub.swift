@@ -40,9 +40,9 @@ extension LDUser {
         return user
     }
 
-    private func stubFlags() -> [String: Any] {
+    private func stubFlags() -> [String: FeatureFlag] {
         var flags = DarklyServiceMock.Constants.featureFlags
-        flags["userKey"] = key
+        flags["userKey"] = FeatureFlag(value: key, version: 2)
         return flags
     }
 
@@ -54,14 +54,14 @@ extension LDUser {
 }
 
 extension Array where Element == LDUser {
-    var userFlags: [String: UserFlags] {
-        var flags = [String: UserFlags]()
-        self.forEach { (user) in flags[user.key] = UserFlags(user: user) }
+    var userFlags: [UserKey: CacheableUserFlags] {
+        var flags = [UserKey: CacheableUserFlags]()
+        self.forEach { (user) in flags[user.key] = CacheableUserFlags(user: user) }
         return flags
     }
 
-    var userFlagDictionaries: [String: Any] {
+    var userFlagDictionaries: [UserKey: Any] {
         let flags = userFlags
-        return flags.mapValues { (userFlags) in userFlags.dictionaryValue }
+        return flags.mapValues { (cacheableUserFlags) in cacheableUserFlags.dictionaryValue }
     }
 }
