@@ -231,7 +231,7 @@ final class DarklyServiceSpec: QuickSpec {
                 testContext = TestContext(mobileKey: Constants.mockMobileKey, useReport: false)
                 // The LDEventSource constructor waits ~1s and then triggers a request to open the streaming connection. Adding the timeout gives it time to make the request.
                 waitUntil(timeout: 3) { done in
-                    testContext.serviceMock.stubStreamRequest(success: true) { (request, _, _) in
+                    testContext.serviceMock.stubStreamRequest(useReport: false, success: true) { (request, _, _) in
                         streamRequest = request
                         done()
                     }

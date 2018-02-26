@@ -53,7 +53,7 @@ final class DarklyServiceMock: DarklyServiceProvider {
     }
 
     struct Constants {
-        static let streamData = "event: ping\ndata:\n".data(using: .utf8)!
+        static let streamData = "event: put\ndata:\(featureFlags(includeNullValue: false, includeVersions: true).dictionaryValue(exciseNil: false).jsonString!)".data(using: .utf8)!
         static let error = NSError(domain: NSURLErrorDomain, code: Int(CFNetworkErrors.cfurlErrorResourceUnavailable.rawValue), userInfo: nil)
         static let errorData = "Bad json data".data(using: .utf8)!
 
@@ -167,13 +167,16 @@ extension DarklyServiceMock {
     // MARK: Stream
 
     var streamHost: String? { return config.streamUrl.host }
-    var streamRequestStubTest: OHHTTPStubsTestBlock { return isScheme(Constants.schemeHttps) && isHost(streamHost!) && isMethodGET() }
+    var getStreamRequestStubTest: OHHTTPStubsTestBlock { return isScheme(Constants.schemeHttps) && isHost(streamHost!) && isMethodGET() }
+    var reportStreamRequestStubTest: OHHTTPStubsTestBlock { return isScheme(Constants.schemeHttps) && isHost(streamHost!) && isMethodREPORT() }
 
     ///Use when testing requires the mock service to actually make an event source connection request
-    func stubStreamRequest(success: Bool, onActivation activate: ((URLRequest, OHHTTPStubsDescriptor, OHHTTPStubsResponse) -> Void)? = nil) {
-        let stubResponse: OHHTTPStubsResponseBlock = success ? { (_) in OHHTTPStubsResponse(data: Constants.streamData, statusCode: Int32(HTTPURLResponse.StatusCodes.ok), headers: nil) }
-            : { (_) in OHHTTPStubsResponse(error: Constants.error) }
-        stubRequest(passingTest: streamRequestStubTest, stub: stubResponse, name: Constants.stubNameStream, onActivation: activate)
+    func stubStreamRequest(useReport: Bool, success: Bool, onActivation activate: ((URLRequest, OHHTTPStubsDescriptor, OHHTTPStubsResponse) -> Void)? = nil) {
+        var stubResponse: OHHTTPStubsResponseBlock = { (_) in OHHTTPStubsResponse(error: Constants.error) }
+        if success {
+            stubResponse = { (_) in OHHTTPStubsResponse(data: Constants.streamData, statusCode: Int32(HTTPURLResponse.StatusCodes.ok), headers: nil) }
+        }
+        stubRequest(passingTest: useReport ? reportStreamRequestStubTest : getStreamRequestStubTest, stub: stubResponse, name: Constants.stubNameStream, onActivation: activate)
     }
 
     // MARK: Publish Event
