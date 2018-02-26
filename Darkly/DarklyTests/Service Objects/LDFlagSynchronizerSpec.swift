@@ -22,7 +22,7 @@ final class LDFlagSynchronizerSpec: QuickSpec {
     struct TestContext {
         var config: LDConfig!
         var user: LDUser!
-        var flagStoreMock: LDFlagMaintainingMock! { return user.flagStore as? LDFlagMaintainingMock }
+        var flagStoreMock: FlagMaintainingMock! { return user.flagStore as? FlagMaintainingMock }
         var serviceMock: DarklyServiceMock!
         var subject: LDFlagSynchronizer!
 

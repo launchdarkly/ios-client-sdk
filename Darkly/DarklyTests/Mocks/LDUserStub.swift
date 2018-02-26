@@ -36,7 +36,7 @@ extension LDUser {
                           avatar: StubConstants.avatar,
                           custom: StubConstants.custom,
                           isAnonymous: StubConstants.isAnonymous)
-        user.flagStore = LDFlagMaintainingMock(flags: user.stubFlags())
+        user.flagStore = FlagMaintainingMock(flags: user.stubFlags())
         return user
     }
 

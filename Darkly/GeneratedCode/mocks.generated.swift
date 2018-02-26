@@ -74,6 +74,46 @@ final class FlagCollectionCachingMock: FlagCollectionCaching {
     }
 }
 
+// MARK: - FlagMaintainingMock
+final class FlagMaintainingMock: FlagMaintaining {
+
+    // MARK: featureFlags
+    var featureFlagsSetCount = 0
+    var featureFlags: [LDFlagKey: FeatureFlag] = [:] {
+        didSet { featureFlagsSetCount += 1 }
+    }
+
+    // MARK: flagValueSource
+    var flagValueSourceSetCount = 0
+    var flagValueSource: LDFlagValueSource = .cache {
+        didSet { flagValueSourceSetCount += 1 }
+    }
+
+    // MARK: replaceStore
+    var replaceStoreCallCount = 0
+    var replaceStoreReceivedArguments: (newFlags: [LDFlagKey: Any]?, source: LDFlagValueSource, completion: CompletionClosure?)?
+    func replaceStore(newFlags: [LDFlagKey: Any]?, source: LDFlagValueSource, completion: CompletionClosure?) {
+        replaceStoreCallCount += 1
+        replaceStoreReceivedArguments = (newFlags: newFlags, source: source, completion: completion)
+    }
+
+    // MARK: updateStore
+    var updateStoreCallCount = 0
+    var updateStoreReceivedArguments: (newFlags: [LDFlagKey: Any], source: LDFlagValueSource, completion: CompletionClosure?)?
+    func updateStore(newFlags: [LDFlagKey: Any], source: LDFlagValueSource, completion: CompletionClosure?) {
+        updateStoreCallCount += 1
+        updateStoreReceivedArguments = (newFlags: newFlags, source: source, completion: completion)
+    }
+
+    // MARK: deleteFlag
+    var deleteFlagCallCount = 0
+    var deleteFlagReceivedArguments: (name: LDFlagKey, completion: CompletionClosure?)?
+    func deleteFlag(name: LDFlagKey, completion: CompletionClosure?) {
+        deleteFlagCallCount += 1
+        deleteFlagReceivedArguments = (name: name, completion: completion)
+    }
+}
+
 // MARK: - KeyedValueCachingMock
 final class KeyedValueCachingMock: KeyedValueCaching {
 
@@ -137,46 +177,6 @@ final class LDEventReportingMock: LDEventReporting {
     var reportEventsCallCount = 0
     func reportEvents() {
         reportEventsCallCount += 1
-    }
-}
-
-// MARK: - LDFlagMaintainingMock
-final class LDFlagMaintainingMock: LDFlagMaintaining {
-
-    // MARK: featureFlags
-    var featureFlagsSetCount = 0
-    var featureFlags: [LDFlagKey: FeatureFlag] = [:] {
-        didSet { featureFlagsSetCount += 1 }
-    }
-
-    // MARK: flagValueSource
-    var flagValueSourceSetCount = 0
-    var flagValueSource: LDFlagValueSource = .cache {
-        didSet { flagValueSourceSetCount += 1 }
-    }
-
-    // MARK: replaceStore
-    var replaceStoreCallCount = 0
-    var replaceStoreReceivedArguments: (newFlags: [LDFlagKey: Any]?, source: LDFlagValueSource, completion: CompletionClosure?)?
-    func replaceStore(newFlags: [LDFlagKey: Any]?, source: LDFlagValueSource, completion: CompletionClosure?) {
-        replaceStoreCallCount += 1
-        replaceStoreReceivedArguments = (newFlags: newFlags, source: source, completion: completion)
-    }
-
-    // MARK: updateStore
-    var updateStoreCallCount = 0
-    var updateStoreReceivedArguments: (newFlags: [LDFlagKey: Any], source: LDFlagValueSource, completion: CompletionClosure?)?
-    func updateStore(newFlags: [LDFlagKey: Any], source: LDFlagValueSource, completion: CompletionClosure?) {
-        updateStoreCallCount += 1
-        updateStoreReceivedArguments = (newFlags: newFlags, source: source, completion: completion)
-    }
-
-    // MARK: deleteFlag
-    var deleteFlagCallCount = 0
-    var deleteFlagReceivedArguments: (name: LDFlagKey, completion: CompletionClosure?)?
-    func deleteFlag(name: LDFlagKey, completion: CompletionClosure?) {
-        deleteFlagCallCount += 1
-        deleteFlagReceivedArguments = (name: name, completion: completion)
     }
 }
 

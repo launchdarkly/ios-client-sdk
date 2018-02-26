@@ -9,7 +9,7 @@
 import Foundation
 
 //sourcery: AutoMockable
-protocol LDFlagMaintaining {
+protocol FlagMaintaining {
     var featureFlags: [LDFlagKey: FeatureFlag] { get }
     //sourcery: DefaultMockValue = .cache
     var flagValueSource: LDFlagValueSource { get }
@@ -23,7 +23,7 @@ protocol LDFlagMaintaining {
     func variationAndSource<T: LDFlagValueConvertible>(forKey key: LDFlagKey, fallback: T) -> (T, LDFlagValueSource)
 }
 
-final class LDFlagStore: LDFlagMaintaining {
+final class FlagStore: FlagMaintaining {
     struct Constants {
         fileprivate static let flagQueueLabel = "com.launchdarkly.flagStore.flagQueue"
     }

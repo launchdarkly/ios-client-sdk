@@ -315,14 +315,14 @@ final class LDClientSpec: QuickSpec {
                 var serviceFactory: ClientServiceMockFactory!
                 var flags: CacheableUserFlags!
                 var mockUserFlagCache: UserFlagCachingMock!
-                var mockFlagStore: LDFlagMaintainingMock!
+                var mockFlagStore: FlagMaintainingMock!
                 beforeEach {
                     serviceFactory = ClientServiceMockFactory()
                     mockUserFlagCache = serviceFactory.userFlagCache
                     flags = CacheableUserFlags(user: user)
                     mockUserFlagCache.retrieveFlagsReturnValue = flags
                     subject = LDClient.makeClient(with: serviceFactory)
-                    mockFlagStore = user.flagStore as? LDFlagMaintainingMock
+                    mockFlagStore = user.flagStore as? FlagMaintainingMock
                     mockFlagStore.featureFlags = [:]
 
                     config.startOnline = false
@@ -340,12 +340,12 @@ final class LDClientSpec: QuickSpec {
             context("when called without cached flags for the user") {
                 var serviceFactory: ClientServiceMockFactory!
                 var mockUserFlagCache: UserFlagCachingMock!
-                var mockFlagStore: LDFlagMaintainingMock!
+                var mockFlagStore: FlagMaintainingMock!
                 beforeEach {
                     serviceFactory = ClientServiceMockFactory()
                     mockUserFlagCache = serviceFactory.userFlagCache
                     subject = LDClient.makeClient(with: serviceFactory)
-                    mockFlagStore = user.flagStore as? LDFlagMaintainingMock
+                    mockFlagStore = user.flagStore as? FlagMaintainingMock
                     mockFlagStore.featureFlags = [:]
 
                     config.startOnline = false
@@ -918,7 +918,7 @@ final class LDClientSpec: QuickSpec {
         }
 
         describe("on sync complete") {
-            var mockFlagStore: LDFlagMaintainingMock! { return user.flagStore as? LDFlagMaintainingMock }
+            var mockFlagStore: FlagMaintainingMock! { return user.flagStore as? FlagMaintainingMock }
             var mockFlagCache: UserFlagCachingMock! { return subject.flagCache as? UserFlagCachingMock }
             var mockChangeNotifier: FlagChangeNotifyingMock! { return subject.flagChangeNotifier as? FlagChangeNotifyingMock }
             var onSyncComplete: SyncCompleteClosure! { return mockFactory.onSyncComplete }

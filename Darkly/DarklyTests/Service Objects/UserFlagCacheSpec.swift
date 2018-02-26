@@ -94,12 +94,12 @@ final class UserFlagCacheSpec: QuickSpec {
                 }
             }
             context("when the user flags are already stored") {
-                var mockFlagStore: LDFlagMaintainingMock!
+                var mockFlagStore: FlagMaintainingMock!
                 var changedFlags: [LDFlagKey: FeatureFlag]!
                 var changedUserFlags: CacheableUserFlags!
                 beforeEach {
                     mockUser = mockFlagCollectionStore.stubAndStoreUserFlags(count: 1).first!
-                    mockFlagStore = mockUser.flagStore as? LDFlagMaintainingMock
+                    mockFlagStore = mockUser.flagStore as? FlagMaintainingMock
 
                     changedFlags = mockFlagStore.featureFlags
                     changedFlags["newKey"] = FeatureFlag(value: true, version: 1)

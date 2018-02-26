@@ -34,7 +34,7 @@ public struct LDUser {
     public var privateAttributes: [String]?
     
     internal fileprivate(set) var lastUpdated: Date
-    internal var flagStore: LDFlagMaintaining = LDFlagStore()
+    internal var flagStore: FlagMaintaining = FlagStore()
     
     public init(key: String? = nil,
                 name: String? = nil,
@@ -82,7 +82,7 @@ public struct LDUser {
         device = custom?[CodingKeys.device.rawValue] as? String
         operatingSystem = custom?[CodingKeys.operatingSystem.rawValue] as? String
 
-        flagStore = LDFlagStore(featureFlagDictionary: userDictionary[CodingKeys.config.rawValue] as? [String: Any], flagValueSource: .cache)
+        flagStore = FlagStore(featureFlagDictionary: userDictionary[CodingKeys.config.rawValue] as? [String: Any], flagValueSource: .cache)
     }
 
     //swiftlint:disable:next cyclomatic_complexity
@@ -265,7 +265,7 @@ extension LDUserWrapper: NSCoding {
         user.operatingSystem = decoder.decodeObject(forKey: LDUser.CodingKeys.operatingSystem.rawValue) as? String
         user.lastUpdated = decoder.decodeObject(forKey: LDUser.CodingKeys.lastUpdated.rawValue) as? Date ?? Date()
         let wrappedFlags = decoder.decodeObject(forKey: LDUser.CodingKeys.config.rawValue) as? [String: Any]
-        user.flagStore = LDFlagStore(featureFlagDictionary: wrappedFlags?[Keys.featureFlags] as? [String: Any], flagValueSource: .cache)
+        user.flagStore = FlagStore(featureFlagDictionary: wrappedFlags?[Keys.featureFlags] as? [String: Any], flagValueSource: .cache)
         self.init(user: user)
     }
 

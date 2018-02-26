@@ -1,5 +1,5 @@
 //
-//  LDFlagMaintainingMock.swift
+//  FlagMaintainingMock.swift
 //  DarklyTests
 //
 //  Created by Mark Pokorny on 11/20/17. +JMJ
@@ -9,7 +9,7 @@
 import Foundation
 @testable import Darkly
 
-extension LDFlagMaintainingMock {
+extension FlagMaintainingMock {
     convenience init(flags: [LDFlagKey: FeatureFlag]) {
         self.init()
         featureFlags = flags
