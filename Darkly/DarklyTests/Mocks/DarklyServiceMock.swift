@@ -54,19 +54,6 @@ final class DarklyServiceMock: DarklyServiceProvider {
 
     struct Constants {
         static let version = 2
-        static let featureFlags: [String: FeatureFlag] = [
-            FlagKeys.bool: FeatureFlag(value: FlagValues.bool, version: version),
-            FlagKeys.int: FeatureFlag(value: FlagValues.int, version: version),
-            FlagKeys.double: FeatureFlag(value: FlagValues.double, version: version),
-            FlagKeys.string: FeatureFlag(value: FlagValues.string, version: version),
-            FlagKeys.array: FeatureFlag(value: FlagValues.array, version: version),
-            FlagKeys.dictionary: FeatureFlag(value: FlagValues.dictionary, version: version)
-        ]
-        static var featureFlagsWithNull: [String: FeatureFlag] {
-            var flags = DarklyServiceMock.Constants.featureFlags
-            flags[DarklyServiceMock.FlagKeys.null] = FeatureFlag(value: DarklyServiceMock.FlagValues.null, version: version)
-            return flags
-        }
 
         static let streamData = "event: ping\ndata:\n".data(using: .utf8)!
         static let error = NSError(domain: NSURLErrorDomain, code: Int(CFNetworkErrors.cfurlErrorResourceUnavailable.rawValue), userInfo: nil)
@@ -150,7 +137,8 @@ extension DarklyServiceMock {
 
     ///Use when testing requires the mock service to actually make a flag request
     func stubFlagRequest(statusCode: Int, useReport: Bool, onActivation activate: ((URLRequest, OHHTTPStubsDescriptor, OHHTTPStubsResponse) -> Void)? = nil) {
-        let stubResponse: OHHTTPStubsResponseBlock = { (_) in OHHTTPStubsResponse(data: statusCode == HTTPURLResponse.StatusCodes.ok ? Constants.featureFlags.dictionaryValue(exciseNil: false).jsonData! : Data(), statusCode: Int32(statusCode), headers: nil)}
+        let responseData = statusCode == HTTPURLResponse.StatusCodes.ok ? Constants.featureFlags(includeNullValue: false, includeVersions: true).dictionaryValue(exciseNil: false).jsonData! : Data()
+        let stubResponse: OHHTTPStubsResponseBlock = { (_) in OHHTTPStubsResponse(data: responseData, statusCode: Int32(statusCode), headers: nil)}
         stubRequest(passingTest: useReport ? reportFlagRequestStubTest : getFlagRequestStubTest, stub: stubResponse, name: flagStubName(statusCode: statusCode, useReport: useReport), onActivation: activate)
     }
 
@@ -158,7 +146,7 @@ extension DarklyServiceMock {
     func stubFlagResponse(statusCode: Int, badData: Bool = false, responseOnly: Bool = false, errorOnly: Bool = false) {
         let response = HTTPURLResponse(url: config.baseUrl, statusCode: statusCode, httpVersion: Constants.httpVersion, headerFields: nil)
         if statusCode == HTTPURLResponse.StatusCodes.ok {
-            let flagData = try? JSONSerialization.data(withJSONObject: Constants.featureFlags.dictionaryValue(exciseNil: false), options: [])
+            let flagData = try? JSONSerialization.data(withJSONObject: Constants.featureFlags(includeNullValue: false, includeVersions: true).dictionaryValue(exciseNil: false), options: [])
             stubbedFlagResponse = (flagData, response, nil)
             if badData { stubbedFlagResponse = (Constants.errorData, response, nil) }
             return

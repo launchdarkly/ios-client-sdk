@@ -28,10 +28,10 @@ final class CacheableUserFlagsSpec: QuickSpec {
 
         describe("init with flags and date") {
             beforeEach {
-                subject = CacheableUserFlags(flags: DarklyServiceMock.Constants.featureFlags, lastUpdated: Constants.lastUpdatedDate)
+                subject = CacheableUserFlags(flags: DarklyServiceMock.Constants.featureFlags(includeNullValue: false, includeVersions: true), lastUpdated: Constants.lastUpdatedDate)
             }
             it("creates a matching CacheableUserFlags") {
-                expect(AnyComparer.isEqual(subject?.flags, to: DarklyServiceMock.Constants.featureFlags)).to(beTrue())
+                expect(AnyComparer.isEqual(subject?.flags, to: DarklyServiceMock.Constants.featureFlags(includeNullValue: false, includeVersions: true))).to(beTrue())
                 expect(subject?.lastUpdated) == Constants.lastUpdatedDate
             }
         }
@@ -56,12 +56,13 @@ final class CacheableUserFlagsSpec: QuickSpec {
             context("with flags and lastUpdated") {
                 context("matching types") {
                     beforeEach {
-                        flagDictionary = [CacheableUserFlags.CodingKeys.flags.rawValue: DarklyServiceMock.Constants.featureFlags.dictionaryValue(exciseNil: false), CacheableUserFlags.CodingKeys.lastUpdated.rawValue: Constants.lastUpdatedString]
+                        flagDictionary = [CacheableUserFlags.CodingKeys.flags.rawValue: DarklyServiceMock.Constants.featureFlags(includeNullValue: false, includeVersions: true).dictionaryValue(exciseNil: false),
+                                          CacheableUserFlags.CodingKeys.lastUpdated.rawValue: Constants.lastUpdatedString]
                         subject = CacheableUserFlags(dictionary: flagDictionary)
                     }
                     it("creates a matching CacheableUserFlags") {
                         expect(subject).toNot(beNil())
-                        expect(AnyComparer.isEqual(subject?.flags, to: DarklyServiceMock.Constants.featureFlags)).to(beTrue())
+                        expect(AnyComparer.isEqual(subject?.flags, to: DarklyServiceMock.Constants.featureFlags(includeNullValue: false, includeVersions: true))).to(beTrue())
                         expect(subject?.lastUpdated) == Constants.lastUpdatedDate
                     }
                 }
@@ -76,11 +77,12 @@ final class CacheableUserFlagsSpec: QuickSpec {
                 }
                 context("date type mismatch") {
                     beforeEach {
-                        flagDictionary = [CacheableUserFlags.CodingKeys.flags.rawValue: DarklyServiceMock.Constants.featureFlags, CacheableUserFlags.CodingKeys.lastUpdated.rawValue: Constants.lastUpdatedDate]
+                        flagDictionary = [CacheableUserFlags.CodingKeys.flags.rawValue: DarklyServiceMock.Constants.featureFlags(includeNullValue: false, includeVersions: true),
+                                          CacheableUserFlags.CodingKeys.lastUpdated.rawValue: Constants.lastUpdatedDate]
                         subject = CacheableUserFlags(dictionary: flagDictionary)
                     }
                     it("creates a matching CacheableUserFlags with the current date") {
-                        expect(AnyComparer.isEqual(subject?.flags, to: DarklyServiceMock.Constants.featureFlags)).to(beTrue())
+                        expect(AnyComparer.isEqual(subject?.flags, to: DarklyServiceMock.Constants.featureFlags(includeNullValue: false, includeVersions: true))).to(beTrue())
                         expect(subject?.lastUpdated.timeIntervalSinceNow) > -0.1   //The exact date won't be right, so this is close enough
                     }
                 }
@@ -96,11 +98,11 @@ final class CacheableUserFlagsSpec: QuickSpec {
             }
             context("without lastUpdated") {
                 beforeEach {
-                    flagDictionary = [CacheableUserFlags.CodingKeys.flags.rawValue: DarklyServiceMock.Constants.featureFlags]
+                    flagDictionary = [CacheableUserFlags.CodingKeys.flags.rawValue: DarklyServiceMock.Constants.featureFlags(includeNullValue: false, includeVersions: true)]
                     subject = CacheableUserFlags(dictionary: flagDictionary)
                 }
                 it("creates a matching CacheableUserFlags with the current date") {
-                    expect(AnyComparer.isEqual(subject?.flags, to: DarklyServiceMock.Constants.featureFlags)).to(beTrue())
+                    expect(AnyComparer.isEqual(subject?.flags, to: DarklyServiceMock.Constants.featureFlags(includeNullValue: false, includeVersions: true))).to(beTrue())
                     expect(subject?.lastUpdated.timeIntervalSinceNow) > -0.1   //The exact date won't be right, so this is close enough
                 }
             }
@@ -111,12 +113,13 @@ final class CacheableUserFlagsSpec: QuickSpec {
 
             context("object is a dictionary") {
                 beforeEach {
-                    object = [CacheableUserFlags.CodingKeys.flags.rawValue: DarklyServiceMock.Constants.featureFlags.dictionaryValue(exciseNil: false), CacheableUserFlags.CodingKeys.lastUpdated.rawValue: Constants.lastUpdatedString]
+                    object = [CacheableUserFlags.CodingKeys.flags.rawValue: DarklyServiceMock.Constants.featureFlags(includeNullValue: false, includeVersions: true).dictionaryValue(exciseNil: false),
+                              CacheableUserFlags.CodingKeys.lastUpdated.rawValue: Constants.lastUpdatedString]
                     subject = CacheableUserFlags(object: object)
                 }
                 it("creates a matching CacheableUserFlags") {
                     expect(subject).toNot(beNil())
-                    expect(AnyComparer.isEqual(subject?.flags, to: DarklyServiceMock.Constants.featureFlags)).to(beTrue())
+                    expect(AnyComparer.isEqual(subject?.flags, to: DarklyServiceMock.Constants.featureFlags(includeNullValue: false, includeVersions: true))).to(beTrue())
                     expect(subject?.lastUpdated) == Constants.lastUpdatedDate
                 }
             }
@@ -187,8 +190,8 @@ final class CacheableUserFlagsSpec: QuickSpec {
         describe("equals") {
             context("when flags and lastUpdated match") {
                 beforeEach {
-                    subject = CacheableUserFlags(flags: DarklyServiceMock.Constants.featureFlags, lastUpdated: Constants.lastUpdatedDate)
-                    other = CacheableUserFlags(flags: DarklyServiceMock.Constants.featureFlags, lastUpdated: Constants.lastUpdatedDate)
+                    subject = CacheableUserFlags(flags: DarklyServiceMock.Constants.featureFlags(includeNullValue: false, includeVersions: true), lastUpdated: Constants.lastUpdatedDate)
+                    other = CacheableUserFlags(flags: DarklyServiceMock.Constants.featureFlags(includeNullValue: false, includeVersions: true), lastUpdated: Constants.lastUpdatedDate)
                 }
                 it("returns true") {
                     expect(subject) == other
@@ -196,8 +199,8 @@ final class CacheableUserFlagsSpec: QuickSpec {
             }
             context("when flags do not match") {
                 beforeEach {
-                    subject = CacheableUserFlags(flags: DarklyServiceMock.Constants.featureFlagsWithNull, lastUpdated: Constants.lastUpdatedDate)
-                    other = CacheableUserFlags(flags: DarklyServiceMock.Constants.featureFlags, lastUpdated: Constants.lastUpdatedDate)
+                    subject = CacheableUserFlags(flags: DarklyServiceMock.Constants.featureFlags(includeNullValue: true, includeVersions: true), lastUpdated: Constants.lastUpdatedDate)
+                    other = CacheableUserFlags(flags: DarklyServiceMock.Constants.featureFlags(includeNullValue: false, includeVersions: true), lastUpdated: Constants.lastUpdatedDate)
                 }
                 it("returns false") {
                     expect(subject) != other
@@ -205,8 +208,8 @@ final class CacheableUserFlagsSpec: QuickSpec {
             }
             context("when last updates does not match") {
                 beforeEach {
-                    subject = CacheableUserFlags(flags: DarklyServiceMock.Constants.featureFlags, lastUpdated: Constants.lastUpdatedDate)
-                    other = CacheableUserFlags(flags: DarklyServiceMock.Constants.featureFlags, lastUpdated: Date())
+                    subject = CacheableUserFlags(flags: DarklyServiceMock.Constants.featureFlags(includeNullValue: false, includeVersions: true), lastUpdated: Constants.lastUpdatedDate)
+                    other = CacheableUserFlags(flags: DarklyServiceMock.Constants.featureFlags(includeNullValue: false, includeVersions: true), lastUpdated: Date())
                 }
                 it("returns false") {
                     expect(subject) != other

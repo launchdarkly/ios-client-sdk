@@ -367,7 +367,7 @@ final class FeatureFlagSpec: QuickSpec {
             context("when not excising nil values") {
                 context("with value and version") {
                     beforeEach {
-                        featureFlags = DarklyServiceMock.Constants.featureFlagsWithNull
+                        featureFlags = DarklyServiceMock.Constants.featureFlags(includeNullValue: true, includeVersions: true)
                         subject = featureFlags.dictionaryValue(exciseNil: false)
                     }
                     it("creates a matching dictionary that includes nil representations") {
@@ -404,7 +404,7 @@ final class FeatureFlagSpec: QuickSpec {
             context("when excising nil values") {
                 context("with value and version") {
                     beforeEach {
-                        featureFlags = DarklyServiceMock.Constants.featureFlagsWithNull
+                        featureFlags = DarklyServiceMock.Constants.featureFlags(includeNullValue: true, includeVersions: true)
                         subject = featureFlags.dictionaryValue(exciseNil: true)
                     }
                     it("creates a matching dictionary that excludes nil representations") {
@@ -449,7 +449,7 @@ final class FeatureFlagSpec: QuickSpec {
                     subject = flagDictionary.flagCollection
                 }
                 it("creates a matching FeatureFlag dictionary with values and versions") {
-                    DarklyServiceMock.Constants.featureFlagsWithNull.forEach { (keyValuePair) in
+                    DarklyServiceMock.Constants.featureFlags(includeNullValue: true, includeVersions: true).forEach { (keyValuePair) in
                         let (key, featureFlag) = keyValuePair
                         if featureFlag.value == nil {
                             expect(subject?[key]?.value).to(beNil())
@@ -466,7 +466,7 @@ final class FeatureFlagSpec: QuickSpec {
                     subject = flagDictionary.flagCollection
                 }
                 it("creates a matching FeatureFlag dictionary with values and nil versions") {
-                    DarklyServiceMock.Constants.featureFlagsWithNull.forEach { (keyValuePair) in
+                    DarklyServiceMock.Constants.featureFlags(includeNullValue: true, includeVersions: true).forEach { (keyValuePair) in
                         let (key, featureFlag) = keyValuePair
                         if featureFlag.value == nil {
                             expect(subject?.keys.contains(key)).to(beFalse())
@@ -497,7 +497,7 @@ final class FeatureFlagSpec: QuickSpec {
             }
             context("dictionary already has FeatureFlag values") {
                 beforeEach {
-                    flagDictionary = DarklyServiceMock.Constants.featureFlagsWithNull
+                    flagDictionary = DarklyServiceMock.Constants.featureFlags(includeNullValue: true, includeVersions: true)
                     subject = flagDictionary.flagCollection
                 }
                 it("returns the existing FeatureFlag dictionary") {
@@ -508,6 +508,6 @@ final class FeatureFlagSpec: QuickSpec {
     }
 
     func flagDictionary(versions: Bool, exciseNil: Bool) -> [String: Any] {
-        return DarklyServiceMock.Constants.featureFlagsWithNull.flatMapValues {(featureFlag) in versions ? featureFlag : FeatureFlag(value: featureFlag.value, version: nil) }.dictionaryValue(exciseNil: exciseNil)
+        return DarklyServiceMock.Constants.featureFlags(includeNullValue: true, includeVersions: true).flatMapValues {(featureFlag) in versions ? featureFlag : FeatureFlag(value: featureFlag.value, version: nil) }.dictionaryValue(exciseNil: exciseNil)
     }
 }

@@ -261,7 +261,7 @@ final class LDFlagSynchronizerSpec: QuickSpec {
                     }
                     it("requests flags & calls the onSync closure with the new flags") {
                         expect({ testContext.synchronizerState(synchronizerOnline: true, streamingMode: .streaming, flagRequests: 1, streamCreated: true, streamClosed: false) }).to(match())
-                        expect(newFlags == DarklyServiceMock.Constants.featureFlags).to(beTrue())
+                        expect(newFlags == DarklyServiceMock.Constants.featureFlags(includeNullValue: false, includeVersions: true)).to(beTrue())
                     }
                 }
                 context("bad data") {

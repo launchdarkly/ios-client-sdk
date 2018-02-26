@@ -41,7 +41,7 @@ extension LDUser {
     }
 
     private func stubFlags() -> [String: FeatureFlag] {
-        var flags = DarklyServiceMock.Constants.featureFlags
+        var flags = DarklyServiceMock.Constants.featureFlags(includeNullValue: false, includeVersions: true)
         flags["userKey"] = FeatureFlag(value: key, version: 2)
         return flags
     }
