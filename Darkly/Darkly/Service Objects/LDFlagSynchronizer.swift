@@ -37,11 +37,13 @@ enum SyncResult {
 typealias CompletionClosure = (() -> Void)
 typealias SyncCompleteClosure = ((SyncResult) -> Void)
 
-class LDFlagSynchronizer: LDFlagSynchronizing {
-    enum Event: String {
-        case ping, put, patch, delete
+extension DarklyEventSource.LDEvent {
+    enum EventType: String {
+        case heartbeat = ":", ping, put, patch, delete
     }
-    
+}
+
+class LDFlagSynchronizer: LDFlagSynchronizing {
     let service: DarklyServiceProvider
     private var eventSource: DarklyStreamingProvider?
     private weak var flagRequestTimer: Timer?
@@ -116,7 +118,7 @@ class LDFlagSynchronizer: LDFlagSynchronizing {
         //NOTE: It is possible that an LDEventSource was replaced and the event reported here is from the previous eventSource. However there is no information about the eventSource in the LDEvent to do anything about it.
 
         switch event {
-        case Event.ping.rawValue: makeFlagRequest()
+        case DarklyEventSource.LDEvent.EventType.ping.rawValue: makeFlagRequest()
         //TODO: Add put, patch, & delete
         default: break
         }

@@ -11,30 +11,43 @@ import DarklyEventSource
 
 extension DarklyStreamingProviderMock {
     func sendPing() {
-        guard let messageHandler = onMessageEventReceivedHandler else { return }
-        messageHandler(DarklyEventSource.LDEvent.stubPingEvent())
+        sendEvent(DarklyEventSource.LDEvent.stubPingEvent())
     }
 
     func sendHeartbeat() {
-        guard let messageHandler = onMessageEventReceivedHandler else { return }
-        messageHandler(DarklyEventSource.LDEvent.stubHeartbeatEvent())
+        sendEvent(DarklyEventSource.LDEvent.stubHeartbeatEvent())
     }
 
     func sendNullEvent() {
-        guard let messageHandler = onMessageEventReceivedHandler else { return }
-        messageHandler(nil)
+        sendEvent(nil)
     }
 
     func sendOpenEvent() {
+        sendEvent(DarklyEventSource.LDEvent.stubOpenEvent())
+    }
+
+    func sendPut() {
+        sendEvent(DarklyEventSource.LDEvent.stubPutEvent())
+    }
+
+    func sendPatch() {
+        sendEvent(DarklyEventSource.LDEvent.stubPatchEvent())
+    }
+
+    func sendDelete() {
+        sendEvent(DarklyEventSource.LDEvent.stubDeleteEvent())
+    }
+
+    func sendEvent(_ event: DarklyEventSource.LDEvent?) {
         guard let messageHandler = onMessageEventReceivedHandler else { return }
-        messageHandler(DarklyEventSource.LDEvent.stubOpenEvent())
+        messageHandler(event)
     }
 }
 
 extension DarklyEventSource.LDEvent {
     class func stubPingEvent() -> DarklyEventSource.LDEvent {
         let event = DarklyEventSource.LDEvent()
-        event.event = "ping"
+        event.event = EventType.ping.rawValue
         event.data = ""
         event.readyState = kEventStateOpen
         return event
@@ -42,7 +55,7 @@ extension DarklyEventSource.LDEvent {
     
     class func stubHeartbeatEvent() -> DarklyEventSource.LDEvent {
         let event = DarklyEventSource.LDEvent()
-        event.event = ":"
+        event.event = EventType.heartbeat.rawValue
         event.data = ""
         event.readyState = kEventStateOpen
         return event
@@ -56,4 +69,29 @@ extension DarklyEventSource.LDEvent {
         event.readyState = kEventStateOpen
         return event
     }
+
+    class func stubPutEvent() -> DarklyEventSource.LDEvent {
+        let event = DarklyEventSource.LDEvent()
+        event.event = EventType.put.rawValue
+        event.data = DarklyServiceMock.Constants.featureFlags(includeNullValue: false, includeVersions: true).dictionaryValue(exciseNil: false).jsonString!
+        event.readyState = kEventStateOpen
+        return event
+    }
+
+    class func stubPatchEvent() -> DarklyEventSource.LDEvent {
+        let event = DarklyEventSource.LDEvent()
+        event.event = EventType.patch.rawValue
+        event.data = FlagMaintainingMock.stubPatchDictionary(key: DarklyServiceMock.FlagKeys.int, value: DarklyServiceMock.FlagValues.int + 1, version: DarklyServiceMock.Constants.version + 1).jsonString!
+        event.readyState = kEventStateOpen
+        return event
+    }
+
+    class func stubDeleteEvent() -> DarklyEventSource.LDEvent {
+        let event = DarklyEventSource.LDEvent()
+        event.event = EventType.delete.rawValue
+        event.data = FlagMaintainingMock.stubDeleteDictionary(key: DarklyServiceMock.FlagKeys.int, version: DarklyServiceMock.Constants.version + 1).jsonString!
+        event.readyState = kEventStateOpen
+        return event
+    }
+
 }
