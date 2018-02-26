@@ -1,5 +1,5 @@
 //
-//  LDFlagStoreSpec.swift
+//  FlagStoreSpec.swift
 //  DarklyTests
 //
 //  Created by Mark Pokorny on 10/26/17. +JMJ
@@ -10,7 +10,7 @@ import Quick
 import Nimble
 @testable import Darkly
 
-final class LDFlagStoreSpec: QuickSpec {
+final class FlagStoreSpec: QuickSpec {
 
     struct FlagKeys {
         static let newInt = "new-int-flag"
@@ -34,6 +34,10 @@ final class LDFlagStoreSpec: QuickSpec {
         var updateDictionaryValue: Any? { return updateDictionary?[FeatureFlag.CodingKeys.value.rawValue] }
         var updateDictionaryVersion: Int? { return updateDictionary?[FeatureFlag.CodingKeys.version.rawValue] as? Int }
 
+        var deleteDictionary: [String: Any]?
+        var deleteDictionaryKey: LDFlagKey? { return deleteDictionary?[FlagStore.Keys.flagKey] as? LDFlagKey }
+        var deleteDictionaryVersion: Int? { return deleteDictionary?[FeatureFlag.CodingKeys.version.rawValue] as? Int }
+
         init() {
             subject = FlagStore(featureFlags: DarklyServiceMock.Constants.featureFlags(includeNullValue: true, includeVersions: true), flagValueSource: .server)
             originalFeatureFlags = subject.featureFlags
@@ -44,6 +48,7 @@ final class LDFlagStoreSpec: QuickSpec {
         initSpec()
         replaceStoreSpec()
         updateStoreSpec()
+        deleteFlagSpec()
         variationAndSourceSpec()
         variationSpec()
     }
@@ -102,7 +107,7 @@ final class LDFlagStoreSpec: QuickSpec {
                         }
                     }
                 }
-                it("causes LDFlagStore to replace the flag values and source") {
+                it("causes FlagStore to replace the flag values and source") {
                     expect(subject.featureFlags == DarklyServiceMock.Constants.featureFlags(includeNullValue: false, includeVersions: true)).to(beTrue())
                     expect(subject.flagValueSource == .cache).to(beTrue())
                 }
@@ -116,7 +121,7 @@ final class LDFlagStoreSpec: QuickSpec {
                         }
                     }
                 }
-                it("causes LDFlagStore to replace the flag values and source") {
+                it("causes FlagStore to replace the flag values and source") {
                     expect(subject.featureFlags == DarklyServiceMock.Constants.featureFlags(includeNullValue: false, includeVersions: true)).to(beTrue())
                     expect(subject.flagValueSource == .cache).to(beTrue())
                 }
@@ -131,7 +136,7 @@ final class LDFlagStoreSpec: QuickSpec {
                         }
                     }
                 }
-                it("causes LDFlagStore to empty the flag values and replace the source") {
+                it("causes FlagStore to empty the flag values and replace the source") {
                     expect(subject.featureFlags.isEmpty).to(beTrue())
                 }
             }
@@ -146,7 +151,7 @@ final class LDFlagStoreSpec: QuickSpec {
             }
             context("when feature flag does not already exist") {
                 beforeEach {
-                    testContext.updateDictionary = FlagMaintainingMock.stubUpdate(key: FlagKeys.newInt, value: DarklyServiceMock.FlagValues.alternate(value: DarklyServiceMock.FlagValues.int), version: DarklyServiceMock.Constants.version)
+                    testContext.updateDictionary = FlagMaintainingMock.stubPatchDictionary(key: FlagKeys.newInt, value: DarklyServiceMock.FlagValues.alternate(value: DarklyServiceMock.FlagValues.int), version: DarklyServiceMock.Constants.version)
 
                     waitUntil { done in
                         testContext.subject.updateStore(updateDictionary: testContext.updateDictionary!, source: .server, completion: {
@@ -163,7 +168,7 @@ final class LDFlagStoreSpec: QuickSpec {
             context("when the feature flag exists") {
                 context("and the update version > existing version") {
                     beforeEach {
-                        testContext.updateDictionary = FlagMaintainingMock.stubUpdate(key: DarklyServiceMock.FlagKeys.int,
+                        testContext.updateDictionary = FlagMaintainingMock.stubPatchDictionary(key: DarklyServiceMock.FlagKeys.int,
                                                                                       value: DarklyServiceMock.FlagValues.alternate(value: DarklyServiceMock.FlagValues.int),
                                                                                       version: DarklyServiceMock.Constants.version + 1)
 
@@ -181,7 +186,7 @@ final class LDFlagStoreSpec: QuickSpec {
                 }
                 context("and the new value is null") {
                     beforeEach {
-                        testContext.updateDictionary = FlagMaintainingMock.stubUpdate(key: DarklyServiceMock.FlagKeys.int, value: NSNull(), version: DarklyServiceMock.Constants.version + 1)
+                        testContext.updateDictionary = FlagMaintainingMock.stubPatchDictionary(key: DarklyServiceMock.FlagKeys.int, value: NSNull(), version: DarklyServiceMock.Constants.version + 1)
 
                         waitUntil { done in
                             testContext.subject.updateStore(updateDictionary: testContext.updateDictionary!, source: .server, completion: {
@@ -197,7 +202,7 @@ final class LDFlagStoreSpec: QuickSpec {
                 }
                 context("and the update version == existing version") {
                     beforeEach {
-                        testContext.updateDictionary = FlagMaintainingMock.stubUpdate(key: DarklyServiceMock.FlagKeys.int,
+                        testContext.updateDictionary = FlagMaintainingMock.stubPatchDictionary(key: DarklyServiceMock.FlagKeys.int,
                                                                                       value: DarklyServiceMock.FlagValues.alternate(value: DarklyServiceMock.FlagValues.int),
                                                                                       version: DarklyServiceMock.Constants.version)
 
@@ -213,7 +218,7 @@ final class LDFlagStoreSpec: QuickSpec {
                 }
                 context("and the update version < existing version") {
                     beforeEach {
-                        testContext.updateDictionary = FlagMaintainingMock.stubUpdate(key: DarklyServiceMock.FlagKeys.int,
+                        testContext.updateDictionary = FlagMaintainingMock.stubPatchDictionary(key: DarklyServiceMock.FlagKeys.int,
                                                                                       value: DarklyServiceMock.FlagValues.alternate(value: DarklyServiceMock.FlagValues.int),
                                                                                       version: DarklyServiceMock.Constants.version - 1)
 
@@ -230,7 +235,7 @@ final class LDFlagStoreSpec: QuickSpec {
             }
             context("when the update dictionary is missing the key") {
                 beforeEach {
-                    testContext.updateDictionary = FlagMaintainingMock.stubUpdate(key: nil, value: DarklyServiceMock.FlagValues.alternate(value: DarklyServiceMock.FlagValues.int), version: DarklyServiceMock.Constants.version + 1)
+                    testContext.updateDictionary = FlagMaintainingMock.stubPatchDictionary(key: nil, value: DarklyServiceMock.FlagValues.alternate(value: DarklyServiceMock.FlagValues.int), version: DarklyServiceMock.Constants.version + 1)
 
                     waitUntil { done in
                         testContext.subject.updateStore(updateDictionary: testContext.updateDictionary!, source: .server, completion: {
@@ -244,7 +249,7 @@ final class LDFlagStoreSpec: QuickSpec {
             }
             context("when the update dictionary is missing the value") {
                 beforeEach {
-                    testContext.updateDictionary = FlagMaintainingMock.stubUpdate(key: DarklyServiceMock.FlagKeys.int, value: nil, version: DarklyServiceMock.Constants.version + 1)
+                    testContext.updateDictionary = FlagMaintainingMock.stubPatchDictionary(key: DarklyServiceMock.FlagKeys.int, value: nil, version: DarklyServiceMock.Constants.version + 1)
 
                     waitUntil { done in
                         testContext.subject.updateStore(updateDictionary: testContext.updateDictionary!, source: .server, completion: {
@@ -258,7 +263,7 @@ final class LDFlagStoreSpec: QuickSpec {
             }
             context("when the update dictionary is missing the version") {
                 beforeEach {
-                    testContext.updateDictionary = FlagMaintainingMock.stubUpdate(key: DarklyServiceMock.FlagKeys.int, value: DarklyServiceMock.FlagValues.alternate(value: DarklyServiceMock.FlagValues.int), version: nil)
+                    testContext.updateDictionary = FlagMaintainingMock.stubPatchDictionary(key: DarklyServiceMock.FlagKeys.int, value: DarklyServiceMock.FlagValues.alternate(value: DarklyServiceMock.FlagValues.int), version: nil)
 
                     waitUntil { done in
                         testContext.subject.updateStore(updateDictionary: testContext.updateDictionary!, source: .server, completion: {
@@ -273,6 +278,101 @@ final class LDFlagStoreSpec: QuickSpec {
         }
     }
 
+    func deleteFlagSpec() {
+        var testContext: TestContext!
+        describe("deleteFlag") {
+            beforeEach {
+                testContext = TestContext()
+            }
+            context("when the flag exists") {
+                context("and the new version > existing version") {
+                    beforeEach {
+                        testContext.deleteDictionary = FlagMaintainingMock.stubDeleteDictionary(key: DarklyServiceMock.FlagKeys.int, version: DarklyServiceMock.Constants.version + 1)
+
+                        waitUntil { done in
+                            testContext.subject.deleteFlag(deleteDictionary: testContext.deleteDictionary!, completion: {
+                                done()
+                            })
+                        }
+                    }
+                    it("removes the feature flag from the store") {
+                        expect(testContext.subject.featureFlags[DarklyServiceMock.FlagKeys.int]).to(beNil())
+                    }
+                }
+                context("and the new version == existing version") {
+                    beforeEach {
+                        testContext.deleteDictionary = FlagMaintainingMock.stubDeleteDictionary(key: DarklyServiceMock.FlagKeys.int, version: DarklyServiceMock.Constants.version)
+
+                        waitUntil { done in
+                            testContext.subject.deleteFlag(deleteDictionary: testContext.deleteDictionary!, completion: {
+                                done()
+                            })
+                        }
+                    }
+                    it("makes no changes to the flag store") {
+                        expect(testContext.subject.featureFlags) == testContext.originalFeatureFlags
+                    }
+                }
+                context("and the new version < existing version") {
+                    beforeEach {
+                        testContext.deleteDictionary = FlagMaintainingMock.stubDeleteDictionary(key: DarklyServiceMock.FlagKeys.int, version: DarklyServiceMock.Constants.version - 1)
+
+                        waitUntil { done in
+                            testContext.subject.deleteFlag(deleteDictionary: testContext.deleteDictionary!, completion: {
+                                done()
+                            })
+                        }
+                    }
+                    it("makes no changes to the flag store") {
+                        expect(testContext.subject.featureFlags) == testContext.originalFeatureFlags
+                    }
+                }
+            }
+            context("when the flag doesn't exist") {
+                beforeEach {
+                    testContext.deleteDictionary = FlagMaintainingMock.stubDeleteDictionary(key: FlagKeys.newInt, version: DarklyServiceMock.Constants.version + 1)
+
+                    waitUntil { done in
+                        testContext.subject.deleteFlag(deleteDictionary: testContext.deleteDictionary!, completion: {
+                            done()
+                        })
+                    }
+                }
+                it("makes no changes to the flag store") {
+                    expect(testContext.subject.featureFlags) == testContext.originalFeatureFlags
+                }
+            }
+            context("when delete dictionary is missing the key") {
+                beforeEach {
+                    testContext.deleteDictionary = FlagMaintainingMock.stubDeleteDictionary(key: nil, version: DarklyServiceMock.Constants.version + 1)
+
+                    waitUntil { done in
+                        testContext.subject.deleteFlag(deleteDictionary: testContext.deleteDictionary!, completion: {
+                            done()
+                        })
+                    }
+                }
+                it("makes no changes to the flag store") {
+                    expect(testContext.subject.featureFlags) == testContext.originalFeatureFlags
+                }
+            }
+            context("when delete dictionary is missing the version") {
+                beforeEach {
+                    testContext.deleteDictionary = FlagMaintainingMock.stubDeleteDictionary(key: DarklyServiceMock.FlagKeys.int, version: nil)
+
+                    waitUntil { done in
+                        testContext.subject.deleteFlag(deleteDictionary: testContext.deleteDictionary!, completion: {
+                            done()
+                        })
+                    }
+                }
+                it("makes no changes to the flag store") {
+                    expect(testContext.subject.featureFlags) == testContext.originalFeatureFlags
+                }
+            }
+        }
+    }
+
     func variationAndSourceSpec() {
         var subject: FlagStore!
         describe("variationAndSource") {
@@ -280,7 +380,7 @@ final class LDFlagStoreSpec: QuickSpec {
                 beforeEach {
                     subject = FlagStore(featureFlags: DarklyServiceMock.Constants.featureFlags(includeNullValue: true, includeVersions: true), flagValueSource: .server)
                 }
-                it("causes the LDFlagStore to provide the flag value and source") {
+                it("causes the FlagStore to provide the flag value and source") {
                     expect(subject.variationAndSource(forKey: DarklyServiceMock.FlagKeys.bool, fallback: FallbackValues.bool) == (DarklyServiceMock.FlagValues.bool, LDFlagValueSource.server)).to(beTrue())
                     expect(subject.variationAndSource(forKey: DarklyServiceMock.FlagKeys.int, fallback: FallbackValues.int) == (DarklyServiceMock.FlagValues.int, LDFlagValueSource.server)).to(beTrue())
                     expect(subject.variationAndSource(forKey: DarklyServiceMock.FlagKeys.double, fallback: FallbackValues.double) == (DarklyServiceMock.FlagValues.double, LDFlagValueSource.server)).to(beTrue())
@@ -303,7 +403,7 @@ final class LDFlagStoreSpec: QuickSpec {
                 beforeEach {
                     subject = FlagStore()
                 }
-                it("causes the LDFlagStore to provide the fallback flag value and source") {
+                it("causes the FlagStore to provide the fallback flag value and source") {
                     expect(subject.variationAndSource(forKey: DarklyServiceMock.FlagKeys.bool, fallback: FallbackValues.bool) == (FallbackValues.bool, LDFlagValueSource.fallback)).to(beTrue())
                     expect(subject.variationAndSource(forKey: DarklyServiceMock.FlagKeys.int, fallback: FallbackValues.int) == (FallbackValues.int, LDFlagValueSource.fallback)).to(beTrue())
                     expect(subject.variationAndSource(forKey: DarklyServiceMock.FlagKeys.double, fallback: FallbackValues.double) == (FallbackValues.double, LDFlagValueSource.fallback)).to(beTrue())
@@ -328,7 +428,7 @@ final class LDFlagStoreSpec: QuickSpec {
                 beforeEach {
                     subject = FlagStore(featureFlags: DarklyServiceMock.Constants.featureFlags(includeNullValue: true, includeVersions: true), flagValueSource: .cache)
                 }
-                it("causes the LDFlagStore to provide the flag value") {
+                it("causes the FlagStore to provide the flag value") {
                     expect(subject.variation(forKey: DarklyServiceMock.FlagKeys.bool, fallback: FallbackValues.bool) == DarklyServiceMock.FlagValues.bool).to(beTrue())
                     expect(subject.variation(forKey: DarklyServiceMock.FlagKeys.int, fallback: FallbackValues.int) == DarklyServiceMock.FlagValues.int).to(beTrue())
                     expect(subject.variation(forKey: DarklyServiceMock.FlagKeys.double, fallback: FallbackValues.double) == DarklyServiceMock.FlagValues.double).to(beTrue())
@@ -345,7 +445,7 @@ final class LDFlagStoreSpec: QuickSpec {
                 beforeEach {
                     subject = FlagStore()
                 }
-                it("causes the LDFlagStore to provide the fallback flag value") {
+                it("causes the FlagStore to provide the fallback flag value") {
                     expect(subject.variation(forKey: DarklyServiceMock.FlagKeys.bool, fallback: FallbackValues.bool) == FallbackValues.bool).to(beTrue())
                     expect(subject.variation(forKey: DarklyServiceMock.FlagKeys.int, fallback: FallbackValues.int) == FallbackValues.int).to(beTrue())
                     expect(subject.variation(forKey: DarklyServiceMock.FlagKeys.double, fallback: FallbackValues.double) == FallbackValues.double).to(beTrue())

@@ -1,5 +1,5 @@
 //
-//  LDFlagStore.swift
+//  FlagStore.swift
 //  Darkly_iOS
 //
 //  Created by Mark Pokorny on 9/20/17. JMJ
@@ -15,7 +15,7 @@ protocol FlagMaintaining {
     var flagValueSource: LDFlagValueSource { get }
     func replaceStore(newFlags: [LDFlagKey: Any]?, source: LDFlagValueSource, completion: CompletionClosure?)
     func updateStore(updateDictionary: [String: Any], source: LDFlagValueSource, completion: CompletionClosure?)
-    func deleteFlag(name: LDFlagKey, completion: CompletionClosure?)
+    func deleteFlag(deleteDictionary: [String: Any], completion: CompletionClosure?)
 
     //sourcery: NoMock
     func variation<T: LDFlagValueConvertible>(forKey key: LDFlagKey, fallback: T) -> T
@@ -79,20 +79,28 @@ final class FlagStore: FlagMaintaining {
             guard updateDictionary.keys.sorted() == [Keys.flagKey, FeatureFlag.CodingKeys.value.rawValue, FeatureFlag.CodingKeys.version.rawValue],
                 let flagKey = updateDictionary[Keys.flagKey] as? String,
                 let newValue = updateDictionary[FeatureFlag.CodingKeys.value.rawValue],
-                let newVersion = updateDictionary[FeatureFlag.CodingKeys.version.rawValue] as? Int, self.isValidVersion(for: flagKey, newVersion: newVersion)
+                let newVersion = updateDictionary[FeatureFlag.CodingKeys.version.rawValue] as? Int,
+                self.isValidVersion(for: flagKey, newVersion: newVersion)
             else { return }
             self.featureFlags[flagKey] = FeatureFlag(value: newValue, version: newVersion)
         }
     }
     
-    ///Not implemented. Implement when delete is implemented in streaming event server
-    func deleteFlag(name: LDFlagKey, completion: CompletionClosure?) {
+    func deleteFlag(deleteDictionary: [String: Any], completion: CompletionClosure?) {
         flagQueue.async {
-            if let completion = completion {
-                DispatchQueue.main.async {
-                    completion()
+            defer {
+                if let completion = completion {
+                    DispatchQueue.main.async {
+                        completion()
+                    }
                 }
             }
+            guard deleteDictionary.keys.sorted() == [Keys.flagKey, FeatureFlag.CodingKeys.version.rawValue],
+                let flagKey = deleteDictionary[Keys.flagKey] as? String,
+                let newVersion = deleteDictionary[FeatureFlag.CodingKeys.version.rawValue] as? Int,
+                self.isValidVersion(for: flagKey, newVersion: newVersion)
+                else { return }
+            self.featureFlags.removeValue(forKey: flagKey)
         }
     }
 

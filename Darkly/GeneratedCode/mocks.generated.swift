@@ -107,10 +107,10 @@ final class FlagMaintainingMock: FlagMaintaining {
 
     // MARK: deleteFlag
     var deleteFlagCallCount = 0
-    var deleteFlagReceivedArguments: (name: LDFlagKey, completion: CompletionClosure?)?
-    func deleteFlag(name: LDFlagKey, completion: CompletionClosure?) {
+    var deleteFlagReceivedArguments: (deleteDictionary: [String: Any], completion: CompletionClosure?)?
+    func deleteFlag(deleteDictionary: [String: Any], completion: CompletionClosure?) {
         deleteFlagCallCount += 1
-        deleteFlagReceivedArguments = (name: name, completion: completion)
+        deleteFlagReceivedArguments = (deleteDictionary: deleteDictionary, completion: completion)
     }
 }
 

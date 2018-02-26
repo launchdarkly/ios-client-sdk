@@ -25,11 +25,18 @@ extension FlagMaintainingMock {
         return (value, .server)
     }
 
-    static func stubUpdate(key: LDFlagKey?, value: Any?, version: Int?) -> [String: Any] {
+    static func stubPatchDictionary(key: LDFlagKey?, value: Any?, version: Int?) -> [String: Any] {
         var updateDictionary = [String: Any]()
         if let key = key { updateDictionary[FlagStore.Keys.flagKey] = key }
         if let value = value { updateDictionary[FeatureFlag.CodingKeys.value.rawValue] = value }
         if let version = version { updateDictionary[FeatureFlag.CodingKeys.version.rawValue] = version }
         return updateDictionary
+    }
+
+    static func stubDeleteDictionary(key: LDFlagKey?, version: Int?) -> [String: Any] {
+        var deleteDictionary = [String: Any]()
+        if let key = key { deleteDictionary[FlagStore.Keys.flagKey] = key }
+        if let version = version { deleteDictionary[FeatureFlag.CodingKeys.version.rawValue] = version }
+        return deleteDictionary
     }
 }
