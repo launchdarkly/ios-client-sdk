@@ -84,6 +84,22 @@ final class DarklyServiceMock: DarklyServiceProvider {
         static let stubNameFlag = "Flag Request Stub"
         static let stubNameStream = "Stream Connect Stub"
         static let stubNameEvent = "Event Report Stub"
+
+        static func featureFlags(includeNullValue: Bool, includeVersions: Bool) -> [LDFlagKey: FeatureFlag] {
+            let version: Int? = includeVersions ? Constants.version : nil
+            var featureFlags: [LDFlagKey: FeatureFlag] = [
+            FlagKeys.bool: FeatureFlag(value: FlagValues.bool, version: version),
+            FlagKeys.int: FeatureFlag(value: FlagValues.int, version: version),
+            FlagKeys.double: FeatureFlag(value: FlagValues.double, version: version),
+            FlagKeys.string: FeatureFlag(value: FlagValues.string, version: version),
+            FlagKeys.array: FeatureFlag(value: FlagValues.array, version: version),
+            FlagKeys.dictionary: FeatureFlag(value: FlagValues.dictionary, version: version)
+            ]
+            if includeNullValue {
+                featureFlags[DarklyServiceMock.FlagKeys.null] = FeatureFlag(value: DarklyServiceMock.FlagValues.null, version: version)
+            }
+            return featureFlags
+        }
     }
 
     var config: LDConfig

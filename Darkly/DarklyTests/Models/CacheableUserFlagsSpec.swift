@@ -133,29 +133,49 @@ final class CacheableUserFlagsSpec: QuickSpec {
     }
 
     func dictionaryValueSpec() {
+        var featureFlags: [LDFlagKey: FeatureFlag]!
         var subject: CacheableUserFlags!
         var subjectDictionary: [String: Any]!
-        var subjectDictionaryFlags: [LDFlagKey: FeatureFlag]? { return (subjectDictionary[CacheableUserFlags.CodingKeys.flags.rawValue] as? [String: Any])?.flagCollection }
+        var subjectDictionaryFlags: [String: Any]? { return subjectDictionary[CacheableUserFlags.CodingKeys.flags.rawValue] as? [String: Any] }
+        var subjectDictionaryFeatureFlags: [LDFlagKey: FeatureFlag]? { return subjectDictionaryFlags?.flagCollection }
         var subjectDictionaryLastUpdated: String? { return subjectDictionary[CacheableUserFlags.CodingKeys.lastUpdated.rawValue] as? String }
         describe("dictionaryValue") {
-            context("flags do not contain null values") {
+            context("when flags do not contain null values") {
                 beforeEach {
-                    subject = CacheableUserFlags(flags: DarklyServiceMock.Constants.featureFlags, lastUpdated: Constants.lastUpdatedDate)
+                    featureFlags = DarklyServiceMock.Constants.featureFlags(includeNullValue: false, includeVersions: true)
+                    subject = CacheableUserFlags(flags: featureFlags, lastUpdated: Constants.lastUpdatedDate)
                     subjectDictionary = subject.dictionaryValue
                 }
-                it("creates a dictionary matching dictionary without null values") {
-                    expect(subjectDictionaryFlags) == DarklyServiceMock.Constants.featureFlags
+                it("creates a matching dictionary") {
+                    expect(subjectDictionaryFeatureFlags) == featureFlags
                     expect(subjectDictionaryLastUpdated) == Constants.lastUpdatedString
                 }
             }
-            context("flags contain null values") {
+            context("when flags contain null values") {
                 beforeEach {
-                    subject = CacheableUserFlags(flags: DarklyServiceMock.Constants.featureFlagsWithNull, lastUpdated: Constants.lastUpdatedDate)
+                    subject = CacheableUserFlags(flags: DarklyServiceMock.Constants.featureFlags(includeNullValue: true, includeVersions: true), lastUpdated: Constants.lastUpdatedDate)
                     subjectDictionary = subject.dictionaryValue
                 }
-                it("creates a dictionary matching dictionary without null values") {
-                    expect(subjectDictionaryFlags) == DarklyServiceMock.Constants.featureFlags
+                it("creates a matching dictionary without null values") {
+                    expect(subjectDictionaryFeatureFlags) == DarklyServiceMock.Constants.featureFlags(includeNullValue: false, includeVersions: true)
                     expect(subjectDictionaryLastUpdated) == Constants.lastUpdatedString
+                }
+            }
+            context("when flags contain null versions") {
+                var flagDictionary: [String: Any]?
+                var flagDictionaryValue: Any? { return flagDictionary?[FeatureFlag.CodingKeys.value.rawValue] }
+                var flagDictionaryVersion: Int? { return flagDictionary?[FeatureFlag.CodingKeys.version.rawValue] as? Int }
+                beforeEach {
+                    featureFlags = DarklyServiceMock.Constants.featureFlags(includeNullValue: false, includeVersions: false)
+                    subject = CacheableUserFlags(flags: featureFlags, lastUpdated: Constants.lastUpdatedDate)
+                    subjectDictionary = subject.dictionaryValue
+                }
+                it("creates a matching dictionary with version placeholders") {
+                    featureFlags.keys.forEach { (key) in
+                        flagDictionary = subjectDictionaryFlags?[key] as? [String: Any]
+                        expect(AnyComparer.isEqual(flagDictionaryValue, to: featureFlags[key]?.value)).to(beTrue())
+                        expect(flagDictionaryVersion) == FeatureFlag.Constants.nilVersionPlaceholder
+                    }
                 }
             }
         }
