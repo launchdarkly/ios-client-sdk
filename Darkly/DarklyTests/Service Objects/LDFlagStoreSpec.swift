@@ -22,8 +22,14 @@ final class LDFlagStoreSpec: QuickSpec {
     }
 
     override func spec() {
-        var subject: LDFlagStore!
+        initSpec()
+        replaceStoreSpec()
+        variationAndSourceSpec()
+        variationSpec()
+    }
 
+    func initSpec() {
+        var subject: LDFlagStore!
         describe("init") {
             context("without an initial flag store") {
                 beforeEach {
@@ -36,24 +42,36 @@ final class LDFlagStoreSpec: QuickSpec {
             }
             context("with an initial flag store") {
                 beforeEach {
-                    subject = LDFlagStore(featureFlags: DarklyServiceMock.Constants.featureFlags(includeNullValue: false, includeVersions: true), flagValueSource: .cache)
+                    subject = LDFlagStore(featureFlags: DarklyServiceMock.Constants.featureFlags(includeNullValue: true, includeVersions: true), flagValueSource: .cache)
                 }
-                it("has the feature flags") {
-                    expect(subject.featureFlags == DarklyServiceMock.Constants.featureFlags(includeNullValue: false, includeVersions: true)).to(beTrue())
+                it("has matching feature flags") {
+                    expect(subject.featureFlags == DarklyServiceMock.Constants.featureFlags(includeNullValue: true, includeVersions: true)).to(beTrue())
+                    expect(subject.flagValueSource == .cache).to(beTrue())
+                }
+            }
+            context("with an initial flag store without versions") {
+                beforeEach {
+                    subject = LDFlagStore(featureFlags: DarklyServiceMock.Constants.featureFlags(includeNullValue: true, includeVersions: false), flagValueSource: .cache)
+                }
+                it("has matching feature flags") {
+                    expect(subject.featureFlags == DarklyServiceMock.Constants.featureFlags(includeNullValue: true, includeVersions: false)).to(beTrue())
                     expect(subject.flagValueSource == .cache).to(beTrue())
                 }
             }
             context("with an initial flag dictionary") {
                 beforeEach {
-                    subject = LDFlagStore(featureFlagDictionary: DarklyServiceMock.Constants.featureFlags(includeNullValue: false, includeVersions: true).dictionaryValue(exciseNil: false), flagValueSource: .cache)
+                    subject = LDFlagStore(featureFlagDictionary: DarklyServiceMock.Constants.featureFlags(includeNullValue: true, includeVersions: true).dictionaryValue(exciseNil: false), flagValueSource: .cache)
                 }
                 it("has the feature flags") {
-                    expect(subject.featureFlags == DarklyServiceMock.Constants.featureFlags(includeNullValue: false, includeVersions: true)).to(beTrue())
+                    expect(subject.featureFlags == DarklyServiceMock.Constants.featureFlags(includeNullValue: true, includeVersions: true)).to(beTrue())
                     expect(subject.flagValueSource == .cache).to(beTrue())
                 }
             }
         }
+    }
 
+    func replaceStoreSpec() {
+        var subject: LDFlagStore!
         describe("replaceStore") {
             context("with new flag values") {
                 beforeEach {
@@ -98,11 +116,14 @@ final class LDFlagStoreSpec: QuickSpec {
                 }
             }
         }
+    }
 
+    func variationAndSourceSpec() {
+        var subject: LDFlagStore!
         describe("variationAndSource") {
             context("when flags exist") {
                 beforeEach {
-                    subject = LDFlagStore(featureFlags: DarklyServiceMock.Constants.featureFlags(includeNullValue: false, includeVersions: true), flagValueSource: .server)
+                    subject = LDFlagStore(featureFlags: DarklyServiceMock.Constants.featureFlags(includeNullValue: true, includeVersions: true), flagValueSource: .server)
                 }
                 it("causes the LDFlagStore to provide the flag value and source") {
                     expect(subject.variationAndSource(forKey: DarklyServiceMock.FlagKeys.bool, fallback: FallbackValues.bool) == (DarklyServiceMock.FlagValues.bool, LDFlagValueSource.server)).to(beTrue())
@@ -117,6 +138,10 @@ final class LDFlagStoreSpec: QuickSpec {
                     let (dictionaryValue, dictionaryFlagSource) = subject.variationAndSource(forKey: DarklyServiceMock.FlagKeys.dictionary, fallback: FallbackValues.dictionary)
                     expect(dictionaryValue == DarklyServiceMock.FlagValues.dictionary).to(beTrue())
                     expect(dictionaryFlagSource == LDFlagValueSource.server).to(beTrue())
+
+                    let (nullValue, nullFlagSource) = subject.variationAndSource(forKey: DarklyServiceMock.FlagKeys.null, fallback: FallbackValues.int)
+                    expect(nullValue == FallbackValues.int).to(beTrue())
+                    expect(nullFlagSource == LDFlagValueSource.fallback).to(beTrue())
                 }
             }
             context("when flags do not exist") {
@@ -139,10 +164,14 @@ final class LDFlagStoreSpec: QuickSpec {
                 }
             }
         }
+    }
+
+    func variationSpec() {
+        var subject: LDFlagStore!
         describe("variation") {
             context("when flags exist") {
                 beforeEach {
-                    subject = LDFlagStore(featureFlags: DarklyServiceMock.Constants.featureFlags(includeNullValue: false, includeVersions: true), flagValueSource: .cache)
+                    subject = LDFlagStore(featureFlags: DarklyServiceMock.Constants.featureFlags(includeNullValue: true, includeVersions: true), flagValueSource: .cache)
                 }
                 it("causes the LDFlagStore to provide the flag value") {
                     expect(subject.variation(forKey: DarklyServiceMock.FlagKeys.bool, fallback: FallbackValues.bool) == DarklyServiceMock.FlagValues.bool).to(beTrue())
@@ -172,6 +201,9 @@ final class LDFlagStoreSpec: QuickSpec {
 
                     let dictionaryValue = subject.variation(forKey: DarklyServiceMock.FlagKeys.dictionary, fallback: FallbackValues.dictionary)
                     expect(dictionaryValue == FallbackValues.dictionary).to(beTrue())
+
+                    let nullValue = subject.variation(forKey: DarklyServiceMock.FlagKeys.null, fallback: FallbackValues.int)
+                    expect(nullValue == FallbackValues.int).to(beTrue())
                 }
             }
         }
