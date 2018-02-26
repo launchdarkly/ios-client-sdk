@@ -99,10 +99,10 @@ final class FlagMaintainingMock: FlagMaintaining {
 
     // MARK: updateStore
     var updateStoreCallCount = 0
-    var updateStoreReceivedArguments: (newFlags: [LDFlagKey: Any], source: LDFlagValueSource, completion: CompletionClosure?)?
-    func updateStore(newFlags: [LDFlagKey: Any], source: LDFlagValueSource, completion: CompletionClosure?) {
+    var updateStoreReceivedArguments: (updateDictionary: [String: Any], source: LDFlagValueSource, completion: CompletionClosure?)?
+    func updateStore(updateDictionary: [String: Any], source: LDFlagValueSource, completion: CompletionClosure?) {
         updateStoreCallCount += 1
-        updateStoreReceivedArguments = (newFlags: newFlags, source: source, completion: completion)
+        updateStoreReceivedArguments = (updateDictionary: updateDictionary, source: source, completion: completion)
     }
 
     // MARK: deleteFlag

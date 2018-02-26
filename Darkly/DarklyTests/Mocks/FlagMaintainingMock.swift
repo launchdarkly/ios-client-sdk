@@ -24,4 +24,12 @@ extension FlagMaintainingMock {
         guard let value = featureFlags[key]?.value as? T else { return (fallback, .fallback) }
         return (value, .server)
     }
+
+    static func stubUpdate(key: LDFlagKey?, value: Any?, version: Int?) -> [String: Any] {
+        var updateDictionary = [String: Any]()
+        if let key = key { updateDictionary[FlagStore.Keys.flagKey] = key }
+        if let value = value { updateDictionary[FeatureFlag.CodingKeys.value.rawValue] = value }
+        if let version = version { updateDictionary[FeatureFlag.CodingKeys.version.rawValue] = version }
+        return updateDictionary
+    }
 }

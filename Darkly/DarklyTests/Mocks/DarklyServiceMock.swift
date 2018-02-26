@@ -53,8 +53,6 @@ final class DarklyServiceMock: DarklyServiceProvider {
     }
 
     struct Constants {
-        static let version = 2
-
         static let streamData = "event: ping\ndata:\n".data(using: .utf8)!
         static let error = NSError(domain: NSURLErrorDomain, code: Int(CFNetworkErrors.cfurlErrorResourceUnavailable.rawValue), userInfo: nil)
         static let errorData = "Bad json data".data(using: .utf8)!
@@ -72,6 +70,7 @@ final class DarklyServiceMock: DarklyServiceProvider {
         static let stubNameStream = "Stream Connect Stub"
         static let stubNameEvent = "Event Report Stub"
 
+        static let version = 2
         static func featureFlags(includeNullValue: Bool, includeVersions: Bool) -> [LDFlagKey: FeatureFlag] {
             let version: Int? = includeVersions ? Constants.version : nil
             var featureFlags: [LDFlagKey: FeatureFlag] = [

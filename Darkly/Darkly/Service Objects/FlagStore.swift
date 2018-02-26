@@ -14,7 +14,7 @@ protocol FlagMaintaining {
     //sourcery: DefaultMockValue = .cache
     var flagValueSource: LDFlagValueSource { get }
     func replaceStore(newFlags: [LDFlagKey: Any]?, source: LDFlagValueSource, completion: CompletionClosure?)
-    func updateStore(newFlags: [LDFlagKey: Any], source: LDFlagValueSource, completion: CompletionClosure?)
+    func updateStore(updateDictionary: [String: Any], source: LDFlagValueSource, completion: CompletionClosure?)
     func deleteFlag(name: LDFlagKey, completion: CompletionClosure?)
 
     //sourcery: NoMock
@@ -28,6 +28,10 @@ final class FlagStore: FlagMaintaining {
         fileprivate static let flagQueueLabel = "com.launchdarkly.flagStore.flagQueue"
     }
     
+    struct Keys {
+        static let flagKey = "key"
+    }
+
     private(set) var featureFlags: [LDFlagKey: FeatureFlag] = [:]
     private(set) var flagValueSource = LDFlagValueSource.fallback
     private var flagQueue = DispatchQueue(label: Constants.flagQueueLabel)
@@ -56,14 +60,28 @@ final class FlagStore: FlagMaintaining {
         }
     }
 
-    ///Not implemented. Implement when patch is implemented in streaming event server
-    func updateStore(newFlags: [LDFlagKey: Any], source: LDFlagValueSource, completion: CompletionClosure?) {
+    ///updateDictionary should have the form
+    /* {
+            "key": <flag-key>,
+            "value": <new-flag-value>,
+            "version": <new-flag-version>
+        }
+    */
+    func updateStore(updateDictionary: [String: Any], source: LDFlagValueSource, completion: CompletionClosure?) {
         flagQueue.async {
-            if let completion = completion {
-                DispatchQueue.main.async {
-                    completion()
+            defer {
+                if let completion = completion {
+                    DispatchQueue.main.async {
+                        completion()
+                    }
                 }
             }
+            guard updateDictionary.keys.sorted() == [Keys.flagKey, FeatureFlag.CodingKeys.value.rawValue, FeatureFlag.CodingKeys.version.rawValue],
+                let flagKey = updateDictionary[Keys.flagKey] as? String,
+                let newValue = updateDictionary[FeatureFlag.CodingKeys.value.rawValue],
+                let newVersion = updateDictionary[FeatureFlag.CodingKeys.version.rawValue] as? Int, self.isValidVersion(for: flagKey, newVersion: newVersion)
+            else { return }
+            self.featureFlags[flagKey] = FeatureFlag(value: newValue, version: newVersion)
         }
     }
     
@@ -76,6 +94,11 @@ final class FlagStore: FlagMaintaining {
                 }
             }
         }
+    }
+
+    private func isValidVersion(for flagKey: LDFlagKey, newVersion: Int) -> Bool {
+        guard let featureFlag = featureFlags[flagKey], let existingVersion = featureFlag.version else { return true }  //new flags ignore version, ignore missing version too
+        return newVersion > existingVersion
     }
 
     func variation<T: LDFlagValueConvertible>(forKey key: LDFlagKey, fallback: T) -> T {
