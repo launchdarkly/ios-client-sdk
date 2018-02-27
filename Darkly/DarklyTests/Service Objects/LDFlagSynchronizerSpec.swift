@@ -8,7 +8,6 @@
 
 import Quick
 import Nimble
-import OHHTTPStubs
 import DarklyEventSource
 @testable import Darkly
 
@@ -79,10 +78,6 @@ final class LDFlagSynchronizerSpec: QuickSpec {
         streamingEventSpec()
         pollingTimerFiresSpec()
         flagRequestSpec()
-
-        afterEach {
-            OHHTTPStubs.removeAllStubs()
-        }
     }
 
     func initSpec() {
