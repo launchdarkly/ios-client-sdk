@@ -7,6 +7,7 @@
 //
 
 import Foundation
+import DarklyEventSource
 
 protocol ClientServiceCreating {
     func makeKeyedValueCache() -> KeyedValueCaching
@@ -19,6 +20,8 @@ protocol ClientServiceCreating {
     mutating func makeFlagSynchronizer(streamingMode: LDStreamingMode, pollingInterval: TimeInterval, useReport: Bool, service: DarklyServiceProvider, onSyncComplete: SyncCompleteClosure?) -> LDFlagSynchronizing
     func makeFlagChangeNotifier() -> FlagChangeNotifying
     func makeEventReporter(mobileKey: String, config: LDConfig, service: DarklyServiceProvider) -> LDEventReporting
+    mutating func makeStreamingProvider(url: URL, httpHeaders: [String: String]) -> DarklyStreamingProvider
+    mutating func makeStreamingProvider(url: URL, httpHeaders: [String: String], connectMethod: String?, connectBody: Data?) -> DarklyStreamingProvider
 }
 
 struct ClientServiceFactory: ClientServiceCreating {
@@ -47,7 +50,7 @@ struct ClientServiceFactory: ClientServiceCreating {
     }
 
     func makeDarklyServiceProvider(mobileKey: String, config: LDConfig, user: LDUser) -> DarklyServiceProvider {
-        return DarklyService(mobileKey: mobileKey, config: config, user: user)
+        return DarklyService(mobileKey: mobileKey, config: config, user: user, serviceFactory: self)
     }
 
     func makeFlagSynchronizer(streamingMode: LDStreamingMode, pollingInterval: TimeInterval, useReport: Bool, service: DarklyServiceProvider, onSyncComplete: SyncCompleteClosure?) -> LDFlagSynchronizing {
@@ -60,5 +63,13 @@ struct ClientServiceFactory: ClientServiceCreating {
 
     func makeEventReporter(mobileKey: String, config: LDConfig, service: DarklyServiceProvider) -> LDEventReporting {
         return LDEventReporter(mobileKey: mobileKey, config: config, service: service)
+    }
+
+    func makeStreamingProvider(url: URL, httpHeaders: [String: String]) -> DarklyStreamingProvider {
+        return LDEventSource(url: url, httpHeaders: httpHeaders)
+    }
+
+    func makeStreamingProvider(url: URL, httpHeaders: [String: String], connectMethod: String?, connectBody: Data?) -> DarklyStreamingProvider {
+        return LDEventSource(url: url, httpHeaders: httpHeaders, connectMethod: connectMethod, connectBody: connectBody)
     }
 }

@@ -57,12 +57,14 @@ final class DarklyService: DarklyServiceProvider {
     let config: LDConfig
     let user: LDUser
     let httpHeaders: HTTPHeaders
+    private (set) var serviceFactory: ClientServiceCreating
     private var session: URLSession
 
-    init(mobileKey: String, config: LDConfig, user: LDUser) {
+    init(mobileKey: String, config: LDConfig, user: LDUser, serviceFactory: ClientServiceCreating) {
         self.mobileKey = mobileKey
         self.config = config
         self.user = user
+        self.serviceFactory = serviceFactory
         self.httpHeaders = HTTPHeaders(mobileKey: mobileKey)
 
         self.session = URLSession(configuration: URLSessionConfiguration.default)
@@ -107,12 +109,13 @@ final class DarklyService: DarklyServiceProvider {
     
     func createEventSource(useReport: Bool) -> DarklyStreamingProvider {
         if useReport {
-            return LDEventSource(url: reportStreamRequestUrl,
-                                 httpHeaders: httpHeaders.eventSourceHeaders,
-                                 connectMethod: DarklyService.HTTPRequestMethod.report,
-                                 connectBody: user.dictionaryValue(includeFlagConfig: false, includePrivateAttributes: true, config: config).jsonData)
+            return serviceFactory.makeStreamingProvider(url: reportStreamRequestUrl,
+                                                        httpHeaders: httpHeaders.eventSourceHeaders,
+                                                        connectMethod: DarklyService.HTTPRequestMethod.report,
+                                                        connectBody: user.dictionaryValue(includeFlagConfig: false, includePrivateAttributes: true, config: config).jsonData)
+
         }
-        return LDEventSource(url: getStreamRequestUrl, httpHeaders: httpHeaders.eventSourceHeaders)
+        return serviceFactory.makeStreamingProvider(url: getStreamRequestUrl, httpHeaders: httpHeaders.eventSourceHeaders)
     }
 
     private var getStreamRequestUrl: URL {

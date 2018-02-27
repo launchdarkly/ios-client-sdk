@@ -65,4 +65,18 @@ struct ClientServiceMockFactory: ClientServiceCreating {
         reporterMock.config = config
         return reporterMock
     }
+
+    var makeStreamingProviderCallCount = 0
+    var makeStreamingProviderReceivedArguments: (url: URL, httpHeaders: [String: String], connectMethod: String?, connectBody: Data?)?
+    mutating func makeStreamingProvider(url: URL, httpHeaders: [String: String]) -> DarklyStreamingProvider {
+        makeStreamingProviderCallCount += 1
+        makeStreamingProviderReceivedArguments = (url, httpHeaders, nil, nil)
+        return DarklyStreamingProviderMock()
+    }
+
+    mutating func makeStreamingProvider(url: URL, httpHeaders: [String: String], connectMethod: String?, connectBody: Data?) -> DarklyStreamingProvider {
+        makeStreamingProviderCallCount += 1
+        makeStreamingProviderReceivedArguments = (url, httpHeaders, connectMethod, connectBody)
+        return DarklyStreamingProviderMock()
+    }
 }
