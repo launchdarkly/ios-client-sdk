@@ -108,7 +108,11 @@ final class DarklyServiceMock: DarklyServiceProvider {
     }
     
     var createdEventSource: DarklyStreamingProviderMock?
-    func createEventSource() -> DarklyStreamingProvider {
+    var createEventSourceCallCount = 0
+    var createEventSourceReceivedUseReport: Bool?
+    func createEventSource(useReport: Bool) -> DarklyStreamingProvider {
+        createEventSourceCallCount += 1
+        createEventSourceReceivedUseReport = useReport
         let source = DarklyStreamingProviderMock()
         createdEventSource = source
         return source

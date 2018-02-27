@@ -14,7 +14,7 @@ typealias ServiceCompletionHandler = (ServiceResponse) -> Void
 
 protocol DarklyServiceProvider: class {
     func getFeatureFlags(useReport: Bool, completion: ServiceCompletionHandler?)
-    func createEventSource() -> DarklyStreamingProvider
+    func createEventSource(useReport: Bool) -> DarklyStreamingProvider
     func publishEventDictionaries(_ eventDictionaries: [[String: Any]], completion: ServiceCompletionHandler?)
     var config: LDConfig { get }
     var user: LDUser { get }
@@ -35,11 +35,22 @@ extension LDEventSource: DarklyStreamingProvider {
 
 final class DarklyService: DarklyServiceProvider {
     
-    struct Constants {
-        static let getFlagRequestPath = "msdk/eval/users"
-        static let reportFlagRequestPath = "msdk/eval/user"
-        static let streamRequestPath = "mping"
-        static let eventRequestPath = "mobile/events/bulk"
+    struct EventRequestPath {
+        static let bulk = "mobile/events/bulk"
+    }
+
+    struct FlagRequestPath {
+        static let get = "msdk/eval/users"
+        static let report = "msdk/eval/user"
+    }
+
+    struct StreamRequestPath {
+        static let meval = "meval"
+    }
+
+    struct HTTPRequestMethod {
+        static let get = "GET"
+        static let report = "REPORT"
     }
     
     private let mobileKey: String
@@ -86,20 +97,30 @@ final class DarklyService: DarklyServiceProvider {
     
     private func flagRequestUrl(useReport: Bool) -> URL? {
         if useReport {
-            return config.baseUrl.appendingPathComponent(Constants.reportFlagRequestPath)
+            return config.baseUrl.appendingPathComponent(FlagRequestPath.report)
         }
         guard let encodedUser = user.dictionaryValue(includeFlagConfig: false, includePrivateAttributes: true, config: config).base64UrlEncodedString else { return nil }
-        return config.baseUrl.appendingPathComponent(Constants.getFlagRequestPath).appendingPathComponent(encodedUser)
+        return config.baseUrl.appendingPathComponent(FlagRequestPath.get).appendingPathComponent(encodedUser)
     }
     
     // MARK: Streaming
     
-    func createEventSource() -> DarklyStreamingProvider {
-        return LDEventSource(url: streamRequestUrl, httpHeaders: httpHeaders.eventSourceHeaders)
+    func createEventSource(useReport: Bool) -> DarklyStreamingProvider {
+        if useReport {
+            return LDEventSource(url: reportStreamRequestUrl,
+                                 httpHeaders: httpHeaders.eventSourceHeaders,
+                                 connectMethod: DarklyService.HTTPRequestMethod.report,
+                                 connectBody: user.dictionaryValue(includeFlagConfig: false, includePrivateAttributes: true, config: config).jsonData)
+        }
+        return LDEventSource(url: getStreamRequestUrl, httpHeaders: httpHeaders.eventSourceHeaders)
     }
 
-    private var streamRequestUrl: URL { return config.streamUrl.appendingPathComponent(Constants.streamRequestPath) }
-    
+    private var getStreamRequestUrl: URL {
+        return config.streamUrl.appendingPathComponent(StreamRequestPath.meval)
+            .appendingPathComponent(user.dictionaryValue(includeFlagConfig: false, includePrivateAttributes: true, config: config).base64UrlEncodedString ?? "")
+    }
+    private var reportStreamRequestUrl: URL { return config.streamUrl.appendingPathComponent(StreamRequestPath.meval) }
+
     // MARK: Publish Events
     
     func publishEventDictionaries(_ eventDictionaries: [[String: Any]], completion: ServiceCompletionHandler?) {
@@ -121,7 +142,7 @@ final class DarklyService: DarklyServiceProvider {
         return request
     }
     
-    private var eventUrl: URL { return config.eventsUrl.appendingPathComponent(Constants.eventRequestPath) }
+    private var eventUrl: URL { return config.eventsUrl.appendingPathComponent(EventRequestPath.bulk) }
 }
 
 extension URLRequest {

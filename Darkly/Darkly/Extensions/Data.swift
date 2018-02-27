@@ -9,7 +9,7 @@
 import Foundation
 
 extension Data {
-    var base64UrlEncodedString: String? {
+    var base64UrlEncodedString: String {
         return base64EncodedString().replacingOccurrences(of: "+", with: "-").replacingOccurrences(of: "/", with: "_")
     }
 }

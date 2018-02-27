@@ -227,24 +227,69 @@ final class DarklyServiceSpec: QuickSpec {
         describe("createEventSource") {
             var streamRequest: URLRequest?
             var eventSource: DarklyStreamingProvider!
-            beforeEach {
-                testContext = TestContext(mobileKey: Constants.mockMobileKey, useReport: false)
-                // The LDEventSource constructor waits ~1s and then triggers a request to open the streaming connection. Adding the timeout gives it time to make the request.
-                waitUntil(timeout: 3) { done in
-                    testContext.serviceMock.stubStreamRequest(useReport: false, success: true) { (request, _, _) in
-                        streamRequest = request
-                        done()
-                    }
+            context("when using GET method to connect") {
+                beforeEach {
+                    testContext = TestContext(mobileKey: Constants.mockMobileKey, useReport: false)
+                    // The LDEventSource constructor waits ~1s and then triggers a request to open the streaming connection. Adding the timeout gives it time to make the request.
+                    waitUntil(timeout: 3) { done in
+                        testContext.serviceMock.stubStreamRequest(useReport: false, success: true) { (request, _, _) in
+                            streamRequest = request
+                            OHHTTPStubs.removeAllStubs()
+                            done()
+                        }
 
-                    eventSource = testContext.subject.createEventSource()
+                        eventSource = testContext.subject.createEventSource(useReport: false)
+                    }
+                }
+                it("creates an event source that makes valid GET request") {
+                    expect(eventSource).toNot(beNil())
+                    expect(streamRequest?.httpMethod) == DarklyService.HTTPRequestMethod.get
+                    expect(streamRequest?.httpBody).to(beNil())
+                    expect(streamRequest?.httpBodyStream).to(beNil())
+                    expect(streamRequest?.url).toNot(beNil())
+                    guard let requestUrl = streamRequest?.url else { return }
+                    expect(requestUrl.host) == testContext.config.streamUrl.host
+                    expect(requestUrl.pathComponents.contains(DarklyService.StreamRequestPath.meval)).to(beTrue())
+                    expect(requestUrl.pathComponents.contains(DarklyService.StreamRequestPath.mping)).to(beFalse())
+                    expect(requestUrl.lastPathComponent) == testContext.user.dictionaryValueWithAllAttributes(includeFlagConfig: false).base64UrlEncodedString
+                }
+                afterEach {
+                    eventSource.close()
                 }
             }
-            it("creates an event source and makes valid request") {
-                expect(eventSource).toNot(beNil())
-                expect(streamRequest).toNot(beNil())
-            }
-            afterEach {
-                eventSource.close()
+            context("when using REPORT method to connect") {
+                beforeEach {
+                    testContext = TestContext(mobileKey: Constants.mockMobileKey, useReport: true)
+                    // The LDEventSource constructor waits ~1s and then triggers a request to open the streaming connection. Adding the timeout gives it time to make the request.
+                    waitUntil(timeout: 3) { done in
+                        testContext.serviceMock.stubStreamRequest(useReport: true, success: true) { (request, _, _) in
+                            streamRequest = request
+                            OHHTTPStubs.removeAllStubs()
+                            done()
+                        }
+
+                        eventSource = testContext.subject.createEventSource(useReport: true)
+                    }
+                }
+                it("creates an event source that makes valid REPORT request") {
+                    expect(eventSource).toNot(beNil())
+                    expect(streamRequest?.httpMethod) == DarklyService.HTTPRequestMethod.report
+                    //NOTE: Apple's url loading system might be replacing httpBody with httpBodyStream, so by the time its captured, httpBody is nil and httpBodyStream is set.
+                    //See https://stackoverflow.com/questions/36061918/how-can-i-get-data-out-of-nsurlrequest-config-object/37095907#37095907
+                    if streamRequest?.httpBody != nil {
+                        expect(streamRequest?.httpBody) == testContext.user.dictionaryValueWithAllAttributes(includeFlagConfig: false).jsonData
+                    } else {
+                        expect(streamRequest?.httpBodyStream).toNot(beNil())
+                    }
+                    expect(streamRequest?.url).toNot(beNil())
+                    guard let requestUrl = streamRequest?.url else { return }
+                    expect(requestUrl.host) == testContext.config.streamUrl.host
+                    expect(requestUrl.pathComponents.contains(DarklyService.StreamRequestPath.mping)).to(beFalse())
+                    expect(requestUrl.lastPathComponent) == DarklyService.StreamRequestPath.meval
+                }
+                afterEach {
+                    eventSource.close()
+                }
             }
         }
     }
@@ -344,4 +389,8 @@ final class DarklyServiceSpec: QuickSpec {
             }
         }
     }
+}
+
+extension DarklyService.StreamRequestPath {
+    static let mping = "mping"
 }
