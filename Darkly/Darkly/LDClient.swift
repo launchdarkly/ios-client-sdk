@@ -248,7 +248,7 @@ public class LDClient {
 
     private func onSyncComplete(result: SyncResult) {
         switch result {
-        case let .success(newFlags):
+        case let .success(newFlags, _):
             let oldFlags = user.flagStore.featureFlags
             let changedFlagKeys = oldFlags.symmetricDifference(newFlags)
             if changedFlagKeys.isEmpty {

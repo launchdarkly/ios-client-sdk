@@ -34,7 +34,7 @@ enum SynchronizingError: Error {
 }
 
 enum SyncResult {
-    case success([String: Any])
+    case success([String: Any], DarklyEventSource.LDEvent.EventType?)
     case error(SynchronizingError)
 }
 
@@ -200,7 +200,7 @@ class LDFlagSynchronizer: LDFlagSynchronizing {
         }
         guard let onSyncComplete = self.onSyncComplete else { return }
         DispatchQueue.main.async {
-            onSyncComplete(.success(flags))
+            onSyncComplete(.success(flags, self.streamingActive ? .ping : nil))
         }
     }
     

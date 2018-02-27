@@ -250,7 +250,7 @@ final class LDFlagSynchronizerSpec: QuickSpec {
                     beforeEach {
                         waitUntil { done in
                             testContext = TestContext(streamingMode: .streaming, useReport: false, onSyncComplete: { result in
-                                if case let .success(flags) = result { newFlags = flags.flagCollection }
+                                if case .success(let flags, _) = result { newFlags = flags.flagCollection }
                                 done()
                             })
                             testContext.serviceMock.stubFlagResponse(statusCode: HTTPURLResponse.StatusCodes.ok)

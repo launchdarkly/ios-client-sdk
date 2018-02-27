@@ -936,7 +936,7 @@ final class LDClientSpec: QuickSpec {
 
                     subject.start(mobileKey: Constants.mockMobileKey, config: config, user: user)
 
-                    onSyncComplete(.success(newFlags))
+                    onSyncComplete(.success(newFlags, nil))
                     if mockFlagStore.replaceStoreCallCount > 0 { replaceStoreComplete() }
                 }
                 it("updates the flag store") {
@@ -963,7 +963,7 @@ final class LDClientSpec: QuickSpec {
 
                     subject.start(mobileKey: Constants.mockMobileKey, config: config, user: user)
 
-                    onSyncComplete(.success(newFlags))
+                    onSyncComplete(.success(newFlags, nil))
                     if mockFlagStore.replaceStoreCallCount > 0 { replaceStoreComplete() }
                 }
                 it("updates the flag store") {
@@ -990,7 +990,7 @@ final class LDClientSpec: QuickSpec {
 
                     subject.start(mobileKey: Constants.mockMobileKey, config: config, user: user)
 
-                    onSyncComplete(.success(newFlags))
+                    onSyncComplete(.success(newFlags, nil))
                     if mockFlagStore.replaceStoreCallCount > 0 { replaceStoreComplete() }
                 }
                 it("updates the flag store") {
@@ -1016,7 +1016,7 @@ final class LDClientSpec: QuickSpec {
 
                     subject.start(mobileKey: Constants.mockMobileKey, config: config, user: user)
 
-                    onSyncComplete(.success(newFlags))
+                    onSyncComplete(.success(newFlags, nil))
                     if mockFlagStore.replaceStoreCallCount > 0 { replaceStoreComplete() }
                 }
                 it("does not update the flag store") {
