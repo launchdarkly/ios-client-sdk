@@ -20,6 +20,7 @@
 		832EA063203DEA6600A93C0E /* CacheableUserFlagsSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = 832EA062203DEA6600A93C0E /* CacheableUserFlagsSpec.swift */; };
 		832EA065203E066B00A93C0E /* CacheableUserFlagsStub.swift in Sources */ = {isa = PBXBuildFile; fileRef = 832EA064203E066B00A93C0E /* CacheableUserFlagsStub.swift */; };
 		8335299E1FC37727001166F8 /* FlagMaintainingMock.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8335299D1FC37727001166F8 /* FlagMaintainingMock.swift */; };
+		83383A5120460DD30024D975 /* SynchronizingErrorSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = 83383A5020460DD30024D975 /* SynchronizingErrorSpec.swift */; };
 		83396BC91F7C3711000E256E /* DarklyServiceSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = 83396BC81F7C3711000E256E /* DarklyServiceSpec.swift */; };
 		83411A5F1FABDA8700E5CF39 /* mocks.generated.swift in Sources */ = {isa = PBXBuildFile; fileRef = 83411A5D1FABDA8700E5CF39 /* mocks.generated.swift */; };
 		8342DAE51FB10C4800564D1F /* UserFlagCacheSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8342DAE41FB10C4800564D1F /* UserFlagCacheSpec.swift */; };
@@ -111,6 +112,7 @@
 		832EA062203DEA6600A93C0E /* CacheableUserFlagsSpec.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CacheableUserFlagsSpec.swift; sourceTree = "<group>"; };
 		832EA064203E066B00A93C0E /* CacheableUserFlagsStub.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CacheableUserFlagsStub.swift; sourceTree = "<group>"; };
 		8335299D1FC37727001166F8 /* FlagMaintainingMock.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FlagMaintainingMock.swift; sourceTree = "<group>"; };
+		83383A5020460DD30024D975 /* SynchronizingErrorSpec.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SynchronizingErrorSpec.swift; sourceTree = "<group>"; };
 		83396BC81F7C3711000E256E /* DarklyServiceSpec.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DarklyServiceSpec.swift; sourceTree = "<group>"; };
 		83411A5D1FABDA8700E5CF39 /* mocks.generated.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = mocks.generated.swift; path = Darkly/GeneratedCode/mocks.generated.swift; sourceTree = SOURCE_ROOT; };
 		8342DAE41FB10C4800564D1F /* UserFlagCacheSpec.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserFlagCacheSpec.swift; sourceTree = "<group>"; };
@@ -234,6 +236,7 @@
 				83D5597D1FDA01F9002D10C8 /* KeyedValueCacheSpec.swift */,
 				838F31BE1FDA096A006919FD /* UserCacheConverterSpec.swift */,
 				83B8C2441FE360CF0082B8A9 /* LDFlagChangeNotifyingSpec.swift */,
+				83383A5020460DD30024D975 /* SynchronizingErrorSpec.swift */,
 			);
 			path = "Service Objects";
 			sourceTree = "<group>";
@@ -736,6 +739,7 @@
 				832307AA1F7ECA630029815A /* LDConfigStub.swift in Sources */,
 				83B8C2451FE360CF0082B8A9 /* LDFlagChangeNotifyingSpec.swift in Sources */,
 				8335299E1FC37727001166F8 /* FlagMaintainingMock.swift in Sources */,
+				83383A5120460DD30024D975 /* SynchronizingErrorSpec.swift in Sources */,
 				838F31BF1FDA096A006919FD /* UserCacheConverterSpec.swift in Sources */,
 				838AB53F1F72A7D5006F03F5 /* LDFlagSynchronizerSpec.swift in Sources */,
 				832307A61F7D8D720029815A /* URLRequestSpec.swift in Sources */,

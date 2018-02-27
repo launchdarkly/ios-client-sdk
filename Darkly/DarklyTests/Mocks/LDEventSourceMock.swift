@@ -94,4 +94,17 @@ extension DarklyEventSource.LDEvent {
         return event
     }
 
+    class func stubUnauthorizedEvent() -> DarklyEventSource.LDEvent {
+        let event = DarklyEventSource.LDEvent()
+        event.error = NSError(domain: DarklyEventSource.LDEventSourceErrorDomain, code: -HTTPURLResponse.StatusCodes.unauthorized, userInfo: nil)
+        event.readyState = kEventStateClosed
+        return event
+    }
+
+    class func stubErrorEvent() -> DarklyEventSource.LDEvent {
+        let event = DarklyEventSource.LDEvent()
+        event.error = NSError(domain: "", code: HTTPURLResponse.StatusCodes.internalServerError, userInfo: nil)
+        event.readyState = kEventStateClosed
+        return event
+    }
 }

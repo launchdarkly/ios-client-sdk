@@ -20,12 +20,16 @@ enum SynchronizingError: Error {
     case request(Error)
     case response(URLResponse?)
     case data(Data?)
+    case event(DarklyEventSource.LDEvent)
 
     var isClientUnauthorized: Bool {
-        guard case let .response(urlResponse) = self,
-            let httpResponse = urlResponse as? HTTPURLResponse
-        else { return false }
-        return httpResponse.statusCode == HTTPURLResponse.StatusCodes.unauthorized
+        switch self {
+        case .response(let urlResponse):
+            guard let httpResponse = urlResponse as? HTTPURLResponse else { return false }
+            return httpResponse.statusCode == HTTPURLResponse.StatusCodes.unauthorized
+        case .event(let event): return event.isUnauthorized
+        default: return false
+        }
     }
 }
 
@@ -40,6 +44,11 @@ typealias SyncCompleteClosure = ((SyncResult) -> Void)
 extension DarklyEventSource.LDEvent {
     enum EventType: String {
         case heartbeat = ":", ping, put, patch, delete
+    }
+
+    var isUnauthorized: Bool {
+        let error = self.error as NSError
+        return error.domain == DarklyEventSource.LDEventSourceErrorDomain && error.code == -HTTPURLResponse.StatusCodes.unauthorized
     }
 }
 
