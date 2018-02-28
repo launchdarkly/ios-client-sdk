@@ -35,7 +35,7 @@ extension DarklyStreamingProviderMock {
     }
 
     func sendDelete() {
-        sendEvent(DarklyEventSource.LDEvent.stubDeleteEvent())
+        sendEvent(DarklyEventSource.LDEvent.stubDeleteEvent(data: FlagMaintainingMock.stubDeleteDictionary(key: DarklyServiceMock.FlagKeys.int, version: DarklyServiceMock.Constants.version + 1).jsonString))
     }
 
     func sendEvent(_ event: DarklyEventSource.LDEvent?) {
@@ -86,10 +86,10 @@ extension DarklyEventSource.LDEvent {
         return event
     }
 
-    class func stubDeleteEvent() -> DarklyEventSource.LDEvent {
+    class func stubDeleteEvent(data: String?) -> DarklyEventSource.LDEvent {
         let event = DarklyEventSource.LDEvent()
         event.event = EventType.delete.rawValue
-        event.data = FlagMaintainingMock.stubDeleteDictionary(key: DarklyServiceMock.FlagKeys.int, version: DarklyServiceMock.Constants.version + 1).jsonString!
+        event.data = data
         event.readyState = kEventStateOpen
         return event
     }
