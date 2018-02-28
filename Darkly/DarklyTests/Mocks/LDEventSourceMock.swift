@@ -31,7 +31,7 @@ extension DarklyStreamingProviderMock {
     }
 
     func sendPatch() {
-        sendEvent(DarklyEventSource.LDEvent.stubPatchEvent())
+        sendEvent(DarklyEventSource.LDEvent.stubPatchEvent(data: FlagMaintainingMock.stubPatchDictionary(key: DarklyServiceMock.FlagKeys.int, value: DarklyServiceMock.FlagValues.int + 1, version: DarklyServiceMock.Constants.version + 1).jsonString))
     }
 
     func sendDelete() {
@@ -78,10 +78,10 @@ extension DarklyEventSource.LDEvent {
         return event
     }
 
-    class func stubPatchEvent() -> DarklyEventSource.LDEvent {
+    class func stubPatchEvent(data: String?) -> DarklyEventSource.LDEvent {
         let event = DarklyEventSource.LDEvent()
         event.event = EventType.patch.rawValue
-        event.data = FlagMaintainingMock.stubPatchDictionary(key: DarklyServiceMock.FlagKeys.int, value: DarklyServiceMock.FlagValues.int + 1, version: DarklyServiceMock.Constants.version + 1).jsonString!
+        event.data = data
         event.readyState = kEventStateOpen
         return event
     }

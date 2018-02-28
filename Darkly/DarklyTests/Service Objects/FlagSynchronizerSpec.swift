@@ -248,6 +248,7 @@ final class FlagSynchronizerSpec: QuickSpec {
         describe("streaming events") {
             streamingPingEventSpec()
             streamingPutEventSpec()
+            streamingPatchEventSpec()
 
             context("error event") {
                 var syncErrorEvent: DarklyEventSource.LDEvent?
@@ -471,6 +472,73 @@ final class FlagSynchronizerSpec: QuickSpec {
                         testContext.subject.isOnline = true
 
                         testContext.eventSourceMock?.sendEvent(DarklyEventSource.LDEvent.stubPutEvent(data: nil))
+                    }
+                }
+                it("does not request flags and calls onSyncComplete with a data error") {
+                    expect({ testContext.synchronizerState(synchronizerOnline: true, streamingMode: .streaming, flagRequests: 0, streamCreated: true, streamClosed: false) }).to(match())
+                    expect(syncError == .data(nil)).to(beTrue())
+                }
+            }
+        }
+    }
+
+    func streamingPatchEventSpec() {
+        var testContext: TestContext!
+
+        beforeEach {
+            testContext = TestContext(streamingMode: .streaming, useReport: false)
+        }
+
+        context("patch") {
+            context("success") {
+                var flagDictionary: [String: Any]?
+                var streamingEvent: DarklyEventSource.LDEvent.EventType?
+                beforeEach {
+                    waitUntil { done in
+                        testContext = TestContext(streamingMode: .streaming, useReport: false, onSyncComplete: { result in
+                            if case .success(let patch, let streamEvent) = result { (flagDictionary, streamingEvent) = (patch, streamEvent) }
+                            done()
+                        })
+                        testContext.subject.isOnline = true
+
+                        testContext.eventSourceMock?.sendPatch()
+                    }
+                }
+                it("does not request flags and calls onSyncComplete with new flags and put event type") {
+                    expect({ testContext.synchronizerState(synchronizerOnline: true, streamingMode: .streaming, flagRequests: 0, streamCreated: true, streamClosed: false) }).to(match())
+                    expect(flagDictionary == FlagMaintainingMock.stubPatchDictionary(key: DarklyServiceMock.FlagKeys.int, value: DarklyServiceMock.FlagValues.int + 1, version: DarklyServiceMock.Constants.version + 1)).to(beTrue())
+                    expect(streamingEvent) == .patch
+                }
+            }
+            context("bad data") {
+                var syncError: SynchronizingError?
+                beforeEach {
+                    waitUntil { done in
+                        testContext = TestContext(streamingMode: .streaming, useReport: false, onSyncComplete: { result in
+                            if case .error(let error) = result { syncError = error }
+                            done()
+                        })
+                        testContext.subject.isOnline = true
+
+                        testContext.eventSourceMock?.sendEvent(DarklyEventSource.LDEvent.stubPatchEvent(data: DarklyServiceMock.Constants.jsonErrorString))
+                    }
+                }
+                it("does not request flags and calls onSyncComplete with a data error") {
+                    expect({ testContext.synchronizerState(synchronizerOnline: true, streamingMode: .streaming, flagRequests: 0, streamCreated: true, streamClosed: false) }).to(match())
+                    expect(syncError == .data(DarklyServiceMock.Constants.errorData)).to(beTrue())
+                }
+            }
+            context("missing data") {
+                var syncError: SynchronizingError?
+                beforeEach {
+                    waitUntil { done in
+                        testContext = TestContext(streamingMode: .streaming, useReport: false, onSyncComplete: { result in
+                            if case .error(let error) = result { syncError = error }
+                            done()
+                        })
+                        testContext.subject.isOnline = true
+
+                        testContext.eventSourceMock?.sendEvent(DarklyEventSource.LDEvent.stubPatchEvent(data: nil))
                     }
                 }
                 it("does not request flags and calls onSyncComplete with a data error") {

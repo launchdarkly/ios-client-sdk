@@ -137,7 +137,8 @@ class FlagSynchronizer: LDFlagSynchronizing {
         switch eventDescription {
         case DarklyEventSource.LDEvent.EventType.ping.rawValue: makeFlagRequest()
         case DarklyEventSource.LDEvent.EventType.put.rawValue: process(event, eventType: .put)
-        //TODO: Add patch, & delete
+        case DarklyEventSource.LDEvent.EventType.patch.rawValue: process(event, eventType: .patch)
+        case DarklyEventSource.LDEvent.EventType.delete.rawValue: process(event, eventType: .delete)
         default: break
         }
     }
