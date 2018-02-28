@@ -252,9 +252,7 @@ public class LDClient {
             let oldFlags = user.flagStore.featureFlags
             let changedFlagKeys = oldFlags.symmetricDifference(newFlags)
             if changedFlagKeys.isEmpty {
-                if let onFlagsUnchanged = onFlagsUnchanged {
-                    onFlagsUnchanged()
-                }
+                executeCallback(onFlagsUnchanged)
                 return
             }
             user.flagStore.replaceStore(newFlags: newFlags, source: .server) {
@@ -265,10 +263,14 @@ public class LDClient {
             if synchronizingError.isClientUnauthorized {
                 isOnline = false
             }
-            guard let onServerUnavailable = onServerUnavailable else { return }
-            DispatchQueue.main.async {
-                onServerUnavailable()
-            }
+            executeCallback(onServerUnavailable)
+        }
+    }
+
+    private func executeCallback(_ callback: (() -> Void)?) {
+        guard let callback = callback else { return }
+        DispatchQueue.main.async {
+            callback()
         }
     }
 
