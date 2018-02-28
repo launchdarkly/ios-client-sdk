@@ -27,7 +27,7 @@ extension DarklyStreamingProviderMock {
     }
 
     func sendPut() {
-        sendEvent(DarklyEventSource.LDEvent.stubPutEvent())
+        sendEvent(DarklyEventSource.LDEvent.stubPutEvent(data: DarklyServiceMock.Constants.featureFlags(includeNullValue: false, includeVersions: true).dictionaryValue(exciseNil: false).jsonString))
     }
 
     func sendPatch() {
@@ -70,10 +70,10 @@ extension DarklyEventSource.LDEvent {
         return event
     }
 
-    class func stubPutEvent() -> DarklyEventSource.LDEvent {
+    class func stubPutEvent(data: String?) -> DarklyEventSource.LDEvent {
         let event = DarklyEventSource.LDEvent()
         event.event = EventType.put.rawValue
-        event.data = DarklyServiceMock.Constants.featureFlags(includeNullValue: false, includeVersions: true).dictionaryValue(exciseNil: false).jsonString!
+        event.data = data
         event.readyState = kEventStateOpen
         return event
     }

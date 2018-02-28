@@ -130,18 +130,26 @@ class FlagSynchronizer: LDFlagSynchronizing {
         //NOTE: It is possible that an LDEventSource was replaced and the event reported here is from the previous eventSource. However there is no information about the eventSource in the LDEvent to do anything about it.
         guard let eventDescription = event.event, !eventDescription.isEmpty
         else {
-            guard let onSyncComplete = self.onSyncComplete else { return }
-            DispatchQueue.main.async {
-                onSyncComplete(.error(.event(event)))
-            }
+            reportEventError(event)
             return
         }
 
         switch eventDescription {
         case DarklyEventSource.LDEvent.EventType.ping.rawValue: makeFlagRequest()
-        //TODO: Add put, patch, & delete
+        case DarklyEventSource.LDEvent.EventType.put.rawValue: process(event, eventType: .put)
+        //TODO: Add patch, & delete
         default: break
         }
+    }
+
+    private func process(_ event: DarklyEventSource.LDEvent, eventType: DarklyEventSource.LDEvent.EventType) {
+        guard let data = event.data?.data(using: .utf8),
+            let flagDictionary = try? JSONSerialization.jsonDictionary(with: data, options: .allowFragments)
+        else {
+            reportDataError(event.data?.data(using: .utf8))
+            return
+        }
+        reportSuccess(flagDictionary: flagDictionary, eventType: eventType)
     }
     
     // MARK: Polling
@@ -209,9 +217,13 @@ class FlagSynchronizer: LDFlagSynchronizing {
             reportDataError(serviceResponse.data)
             return
         }
+        reportSuccess(flagDictionary: flags, eventType: self.streamingActive ? .ping : nil)
+    }
+
+    private func reportSuccess(flagDictionary: [String: Any], eventType: DarklyEventSource.LDEvent.EventType?) {
         guard let onSyncComplete = self.onSyncComplete else { return }
         DispatchQueue.main.async {
-            onSyncComplete(.success(flags, self.streamingActive ? .ping : nil))
+            onSyncComplete(.success(flagDictionary, self.streamingActive ? eventType : nil))
         }
     }
     
@@ -233,6 +245,13 @@ class FlagSynchronizer: LDFlagSynchronizing {
         guard let onSyncComplete = self.onSyncComplete else { return }
         DispatchQueue.main.async {
             onSyncComplete(.error(.data(data)))
+        }
+    }
+
+    private func reportEventError(_ event: DarklyEventSource.LDEvent) {
+        guard let onSyncComplete = self.onSyncComplete else { return }
+        DispatchQueue.main.async {
+            onSyncComplete(.error(.event(event)))
         }
     }
     

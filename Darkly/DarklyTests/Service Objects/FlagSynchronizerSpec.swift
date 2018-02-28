@@ -246,97 +246,9 @@ final class FlagSynchronizerSpec: QuickSpec {
         }
 
         describe("streaming events") {
-            context("ping") {
-                context("success") {
-                    var newFlags: [String: FeatureFlag]?
-                    var streamingEvent: DarklyEventSource.LDEvent.EventType?
-                    beforeEach {
-                        waitUntil { done in
-                            testContext = TestContext(streamingMode: .streaming, useReport: false, onSyncComplete: { result in
-                                if case .success(let flags, let streamEvent) = result { (newFlags, streamingEvent) = (flags.flagCollection, streamEvent) }
-                                done()
-                            })
-                            testContext.serviceMock.stubFlagResponse(statusCode: HTTPURLResponse.StatusCodes.ok)
-                            testContext.subject.isOnline = true
+            streamingPingEventSpec()
+            streamingPutEventSpec()
 
-                            testContext.eventSourceMock?.sendPing()
-                        }
-                    }
-                    it("requests flags & calls the onSync closure with the new flags and streaming event") {
-                        expect({ testContext.synchronizerState(synchronizerOnline: true, streamingMode: .streaming, flagRequests: 1, streamCreated: true, streamClosed: false) }).to(match())
-                        expect(newFlags == DarklyServiceMock.Constants.featureFlags(includeNullValue: false, includeVersions: true)).to(beTrue())
-                        expect(streamingEvent) == .ping
-                    }
-                }
-                context("bad data") {
-                    var synchronizingError: SynchronizingError?
-                    beforeEach {
-                        waitUntil { done in
-                            testContext = TestContext(streamingMode: .streaming, useReport: false, onSyncComplete: { (result) in
-                                if case let .error(syncError) = result { synchronizingError = syncError }
-                                done()
-                            })
-                            testContext.serviceMock.stubFlagResponse(statusCode: HTTPURLResponse.StatusCodes.ok, badData: true)
-                            testContext.subject.isOnline = true
-
-                            testContext.eventSourceMock?.sendPing()
-                        }
-                    }
-                    it("requests flags, does not update flag store, and calls the onError closure with a data error") {
-                        expect({ testContext.synchronizerState(synchronizerOnline: true, streamingMode: .streaming, flagRequests: 1, streamCreated: true, streamClosed: false) }).to(match())
-                        expect(synchronizingError == .data(DarklyServiceMock.Constants.errorData)).to(beTrue())
-                        expect(testContext.flagStoreMock.replaceStoreCallCount) == 0
-                        expect(testContext.flagStoreMock.replaceStoreReceivedArguments?.newFlags).to(beNil())
-                    }
-                }
-                context("failure response") {
-                    var urlResponse: URLResponse?
-                    beforeEach {
-                        waitUntil { done in
-                            testContext = TestContext(streamingMode: .streaming, useReport: false, onSyncComplete: { (result) in
-                                if case let .error(syncError) = result, case .response(let syncErrorResponse) = syncError {
-                                    urlResponse = syncErrorResponse
-                                }
-                                done()
-                            })
-                            testContext.serviceMock.stubFlagResponse(statusCode: HTTPURLResponse.StatusCodes.internalServerError, responseOnly: true)
-                            testContext.subject.isOnline = true
-
-                            testContext.eventSourceMock?.sendPing()
-                        }
-                    }
-                    it("requests flags & does not update flag store") {
-                        expect({ testContext.synchronizerState(synchronizerOnline: true, streamingMode: .streaming, flagRequests: 1, streamCreated: true, streamClosed: false) }).to(match())
-                        expect(urlResponse).toNot(beNil())
-                        if let urlResponse = urlResponse {
-                            expect(urlResponse.httpStatusCode) == HTTPURLResponse.StatusCodes.internalServerError
-                        }
-                        expect(testContext.flagStoreMock.replaceStoreCallCount) == 0
-                        expect(testContext.flagStoreMock.replaceStoreReceivedArguments?.newFlags).to(beNil())
-                    }
-                }
-                context("failure error") {
-                    var synchronizingError: SynchronizingError?
-                    beforeEach {
-                        waitUntil { done in
-                            testContext = TestContext(streamingMode: .streaming, useReport: false, onSyncComplete: { (result) in
-                                if case let .error(syncError) = result { synchronizingError = syncError }
-                                done()
-                            })
-                            testContext.serviceMock.stubFlagResponse(statusCode: HTTPURLResponse.StatusCodes.internalServerError, errorOnly: true)
-                            testContext.subject.isOnline = true
-
-                            testContext.eventSourceMock?.sendPing()
-                        }
-                    }
-                    it("requests flags & does not update flag store") {
-                        expect({ testContext.synchronizerState(synchronizerOnline: true, streamingMode: .streaming, flagRequests: 1, streamCreated: true, streamClosed: false) }).to(match())
-                        expect(synchronizingError == .request(DarklyServiceMock.Constants.error)).to(beTrue())
-                        expect(testContext.flagStoreMock.replaceStoreCallCount) == 0
-                        expect(testContext.flagStoreMock.replaceStoreReceivedArguments?.newFlags).to(beNil())
-                    }
-                }
-            }
             context("error event") {
                 var syncErrorEvent: DarklyEventSource.LDEvent?
                 beforeEach {
@@ -403,6 +315,167 @@ final class FlagSynchronizerSpec: QuickSpec {
                 }
                 it("does not request flags") {
                     expect({ testContext.synchronizerState(synchronizerOnline: true, streamingMode: .streaming, flagRequests: 0, streamCreated: true, streamClosed: false) }).to(match())
+                }
+            }
+        }
+    }
+
+    func streamingPingEventSpec() {
+        var testContext: TestContext!
+
+        beforeEach {
+            testContext = TestContext(streamingMode: .streaming, useReport: false)
+        }
+
+        context("ping") {
+            context("success") {
+                var newFlags: [String: FeatureFlag]?
+                var streamingEvent: DarklyEventSource.LDEvent.EventType?
+                beforeEach {
+                    waitUntil { done in
+                        testContext = TestContext(streamingMode: .streaming, useReport: false, onSyncComplete: { result in
+                            if case .success(let flags, let streamEvent) = result { (newFlags, streamingEvent) = (flags.flagCollection, streamEvent) }
+                            done()
+                        })
+                        testContext.serviceMock.stubFlagResponse(statusCode: HTTPURLResponse.StatusCodes.ok)
+                        testContext.subject.isOnline = true
+
+                        testContext.eventSourceMock?.sendPing()
+                    }
+                }
+                it("requests flags and calls onSyncComplete with the new flags and streaming event") {
+                    expect({ testContext.synchronizerState(synchronizerOnline: true, streamingMode: .streaming, flagRequests: 1, streamCreated: true, streamClosed: false) }).to(match())
+                    expect(newFlags == DarklyServiceMock.Constants.featureFlags(includeNullValue: false, includeVersions: true)).to(beTrue())
+                    expect(streamingEvent) == .ping
+                }
+            }
+            context("bad data") {
+                var synchronizingError: SynchronizingError?
+                beforeEach {
+                    waitUntil { done in
+                        testContext = TestContext(streamingMode: .streaming, useReport: false, onSyncComplete: { (result) in
+                            if case let .error(syncError) = result { synchronizingError = syncError }
+                            done()
+                        })
+                        testContext.serviceMock.stubFlagResponse(statusCode: HTTPURLResponse.StatusCodes.ok, badData: true)
+                        testContext.subject.isOnline = true
+
+                        testContext.eventSourceMock?.sendPing()
+                    }
+                }
+                it("requests flags and calls onSyncComplete with a data error") {
+                    expect({ testContext.synchronizerState(synchronizerOnline: true, streamingMode: .streaming, flagRequests: 1, streamCreated: true, streamClosed: false) }).to(match())
+                    expect(synchronizingError == .data(DarklyServiceMock.Constants.errorData)).to(beTrue())
+                }
+            }
+            context("failure response") {
+                var urlResponse: URLResponse?
+                beforeEach {
+                    waitUntil { done in
+                        testContext = TestContext(streamingMode: .streaming, useReport: false, onSyncComplete: { (result) in
+                            if case let .error(syncError) = result, case .response(let syncErrorResponse) = syncError {
+                                urlResponse = syncErrorResponse
+                            }
+                            done()
+                        })
+                        testContext.serviceMock.stubFlagResponse(statusCode: HTTPURLResponse.StatusCodes.internalServerError, responseOnly: true)
+                        testContext.subject.isOnline = true
+
+                        testContext.eventSourceMock?.sendPing()
+                    }
+                }
+                it("requests flags and calls onSyncComplete with a response error") {
+                    expect({ testContext.synchronizerState(synchronizerOnline: true, streamingMode: .streaming, flagRequests: 1, streamCreated: true, streamClosed: false) }).to(match())
+                    expect(urlResponse).toNot(beNil())
+                    if let urlResponse = urlResponse {
+                        expect(urlResponse.httpStatusCode) == HTTPURLResponse.StatusCodes.internalServerError
+                    }
+                }
+            }
+            context("failure error") {
+                var synchronizingError: SynchronizingError?
+                beforeEach {
+                    waitUntil { done in
+                        testContext = TestContext(streamingMode: .streaming, useReport: false, onSyncComplete: { (result) in
+                            if case let .error(syncError) = result { synchronizingError = syncError }
+                            done()
+                        })
+                        testContext.serviceMock.stubFlagResponse(statusCode: HTTPURLResponse.StatusCodes.internalServerError, errorOnly: true)
+                        testContext.subject.isOnline = true
+
+                        testContext.eventSourceMock?.sendPing()
+                    }
+                }
+                it("requests flags and calls onSyncComplete with a request error") {
+                    expect({ testContext.synchronizerState(synchronizerOnline: true, streamingMode: .streaming, flagRequests: 1, streamCreated: true, streamClosed: false) }).to(match())
+                    expect(synchronizingError == .request(DarklyServiceMock.Constants.error)).to(beTrue())
+                }
+            }
+        }
+    }
+
+    func streamingPutEventSpec() {
+        var testContext: TestContext!
+
+        beforeEach {
+            testContext = TestContext(streamingMode: .streaming, useReport: false)
+        }
+
+        context("put") {
+            context("success") {
+                var newFlags: [String: FeatureFlag]?
+                var streamingEvent: DarklyEventSource.LDEvent.EventType?
+                beforeEach {
+                    waitUntil { done in
+                        testContext = TestContext(streamingMode: .streaming, useReport: false, onSyncComplete: { result in
+                            if case .success(let flags, let streamEvent) = result { (newFlags, streamingEvent) = (flags.flagCollection, streamEvent) }
+                            done()
+                        })
+                        testContext.subject.isOnline = true
+
+                        testContext.eventSourceMock?.sendPut()
+                    }
+                }
+                it("does not request flags and calls onSyncComplete with new flags and put event type") {
+                    expect({ testContext.synchronizerState(synchronizerOnline: true, streamingMode: .streaming, flagRequests: 0, streamCreated: true, streamClosed: false) }).to(match())
+                    expect(newFlags == DarklyServiceMock.Constants.featureFlags(includeNullValue: false, includeVersions: true)).to(beTrue())
+                    expect(streamingEvent) == .put
+                }
+            }
+            context("bad data") {
+                var syncError: SynchronizingError?
+                beforeEach {
+                    waitUntil { done in
+                        testContext = TestContext(streamingMode: .streaming, useReport: false, onSyncComplete: { result in
+                            if case .error(let error) = result { syncError = error }
+                            done()
+                        })
+                        testContext.subject.isOnline = true
+
+                        testContext.eventSourceMock?.sendEvent(DarklyEventSource.LDEvent.stubPutEvent(data: DarklyServiceMock.Constants.jsonErrorString))
+                    }
+                }
+                it("does not request flags and calls onSyncComplete with a data error") {
+                    expect({ testContext.synchronizerState(synchronizerOnline: true, streamingMode: .streaming, flagRequests: 0, streamCreated: true, streamClosed: false) }).to(match())
+                    expect(syncError == .data(DarklyServiceMock.Constants.errorData)).to(beTrue())
+                }
+            }
+            context("missing data") {
+                var syncError: SynchronizingError?
+                beforeEach {
+                    waitUntil { done in
+                        testContext = TestContext(streamingMode: .streaming, useReport: false, onSyncComplete: { result in
+                            if case .error(let error) = result { syncError = error }
+                            done()
+                        })
+                        testContext.subject.isOnline = true
+
+                        testContext.eventSourceMock?.sendEvent(DarklyEventSource.LDEvent.stubPutEvent(data: nil))
+                    }
+                }
+                it("does not request flags and calls onSyncComplete with a data error") {
+                    expect({ testContext.synchronizerState(synchronizerOnline: true, streamingMode: .streaming, flagRequests: 0, streamCreated: true, streamClosed: false) }).to(match())
+                    expect(syncError == .data(nil)).to(beTrue())
                 }
             }
         }

@@ -55,7 +55,8 @@ final class DarklyServiceMock: DarklyServiceProvider {
     struct Constants {
         static let streamData = "event: put\ndata:\(featureFlags(includeNullValue: false, includeVersions: true).dictionaryValue(exciseNil: false).jsonString!)".data(using: .utf8)!
         static let error = NSError(domain: NSURLErrorDomain, code: Int(CFNetworkErrors.cfurlErrorResourceUnavailable.rawValue), userInfo: nil)
-        static let errorData = "Bad json data".data(using: .utf8)!
+        static let jsonErrorString = "Bad json data"
+        static let errorData = jsonErrorString.data(using: .utf8)!
 
         static let schemeHttps = "https"
         static let httpVersion = "1.1"
