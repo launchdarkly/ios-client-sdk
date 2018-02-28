@@ -8,6 +8,7 @@
 
 import Quick
 import Nimble
+import DarklyEventSource
 @testable import Darkly
 
 final class LDClientSpec: QuickSpec {
@@ -712,7 +713,7 @@ final class LDClientSpec: QuickSpec {
         }
 
         describe("stop") {
-            var event: LDEvent!
+            var event: Darkly.LDEvent!
             var priorRecordedEvents: Int!
             beforeEach {
                 event = LDEvent.stub(for: .custom, with: testContext.user)
@@ -794,7 +795,7 @@ final class LDClientSpec: QuickSpec {
         }
 
         describe("track event") {
-            var event: LDEvent!
+            var event: Darkly.LDEvent!
             beforeEach {
                 event = LDEvent.stub(for: .custom, with: testContext.user)
             }
@@ -993,12 +994,26 @@ final class LDClientSpec: QuickSpec {
     }
 
     func onSyncCompleteSuccessSpec() {
+        context("polling") {
+            onSyncCompleteSuccess(streamingMode: .polling)
+        }
+        context("streaming ping") {
+            onSyncCompleteSuccess(streamingMode: .streaming, eventType: .ping)
+        }
+        context("streaming put") {
+            onSyncCompleteSuccess(streamingMode: .streaming, eventType: .put)
+        }
+    }
+
+    func onSyncCompleteSuccess(streamingMode: LDStreamingMode, eventType: DarklyEventSource.LDEvent.EventType? = nil) {
         var testContext: TestContext!
         var oldFlags: [String: Any]!
         var newFlags: [String: Any]!
+        var eventType: DarklyEventSource.LDEvent.EventType?
 
         beforeEach {
             testContext = TestContext(startOnline: true)
+            eventType = streamingMode == .streaming ? eventType : nil
         }
 
         context("flags have different values") {
@@ -1009,7 +1024,7 @@ final class LDClientSpec: QuickSpec {
 
                 testContext.subject.start(mobileKey: Constants.mockMobileKey, config: testContext.config, user: testContext.user)
 
-                testContext.onSyncComplete?(.success(newFlags, nil))
+                testContext.onSyncComplete?(.success(newFlags, eventType))
                 if testContext.flagStoreMock.replaceStoreCallCount > 0 { testContext.replaceStoreComplete?() }
             }
             it("updates the flag store") {
@@ -1036,7 +1051,7 @@ final class LDClientSpec: QuickSpec {
 
                 testContext.subject.start(mobileKey: Constants.mockMobileKey, config: testContext.config, user: testContext.user)
 
-                testContext.onSyncComplete?(.success(newFlags, nil))
+                testContext.onSyncComplete?(.success(newFlags, eventType))
                 if testContext.flagStoreMock.replaceStoreCallCount > 0 { testContext.replaceStoreComplete?() }
             }
             it("updates the flag store") {
@@ -1063,7 +1078,7 @@ final class LDClientSpec: QuickSpec {
 
                 testContext.subject.start(mobileKey: Constants.mockMobileKey, config: testContext.config, user: testContext.user)
 
-                testContext.onSyncComplete?(.success(newFlags, nil))
+                testContext.onSyncComplete?(.success(newFlags, eventType))
                 if testContext.flagStoreMock.replaceStoreCallCount > 0 { testContext.replaceStoreComplete?() }
             }
             it("updates the flag store") {
@@ -1089,7 +1104,7 @@ final class LDClientSpec: QuickSpec {
 
                 testContext.subject.start(mobileKey: Constants.mockMobileKey, config: testContext.config, user: testContext.user)
 
-                testContext.onSyncComplete?(.success(newFlags, nil))
+                testContext.onSyncComplete?(.success(newFlags, eventType))
                 if testContext.flagStoreMock.replaceStoreCallCount > 0 { testContext.replaceStoreComplete?() }
             }
             it("does not update the flag store") {
@@ -1100,27 +1115,6 @@ final class LDClientSpec: QuickSpec {
             }
             it("calls the flags unchanged closure") {
                 expect(testContext.changeNotifierMock.notifyObserversCallCount) == 0
-            }
-        }
-        context("there was a client unauthorized error") {
-            var serverUnavailableCalled: Bool! = false
-            beforeEach {
-                waitUntil { done in
-                    testContext.subject.onServerUnavailable = {
-                        serverUnavailableCalled = true
-                        done()
-                    }
-
-                    testContext.subject.start(mobileKey: Constants.mockMobileKey, config: testContext.config, user: testContext.user)
-
-                    testContext.onSyncComplete?(.error(.response(HTTPURLResponse(url: testContext.config.baseUrl, statusCode: HTTPURLResponse.StatusCodes.unauthorized, httpVersion: DarklyServiceMock.Constants.httpVersion, headerFields: nil))))
-                }
-            }
-            it("takes the client offline") {
-                expect(testContext.subject.isOnline) == false
-            }
-            it("calls the server unavailable closure") {
-                expect(serverUnavailableCalled) == true
             }
         }
     }
@@ -1190,6 +1184,27 @@ final class LDClientSpec: QuickSpec {
             }
             it("does not take the client offline") {
                 expect(testContext.subject.isOnline) == true
+            }
+            it("calls the server unavailable closure") {
+                expect(serverUnavailableCalled) == true
+            }
+        }
+        context("there was a client unauthorized error") {
+            var serverUnavailableCalled: Bool! = false
+            beforeEach {
+                waitUntil { done in
+                    testContext.subject.onServerUnavailable = {
+                        serverUnavailableCalled = true
+                        done()
+                    }
+
+                    testContext.subject.start(mobileKey: Constants.mockMobileKey, config: testContext.config, user: testContext.user)
+
+                    testContext.onSyncComplete?(.error(.response(HTTPURLResponse(url: testContext.config.baseUrl, statusCode: HTTPURLResponse.StatusCodes.unauthorized, httpVersion: DarklyServiceMock.Constants.httpVersion, headerFields: nil))))
+                }
+            }
+            it("takes the client offline") {
+                expect(testContext.subject.isOnline) == false
             }
             it("calls the server unavailable closure") {
                 expect(serverUnavailableCalled) == true
