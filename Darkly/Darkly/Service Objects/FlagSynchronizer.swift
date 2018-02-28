@@ -1,5 +1,5 @@
 //
-//  LDFlagSynchronizer.swift
+//  FlagSynchronizer.swift
 //  Darkly
 //
 //  Created by Mark Pokorny on 7/24/17. +JMJ
@@ -52,7 +52,7 @@ extension DarklyEventSource.LDEvent {
     }
 }
 
-class LDFlagSynchronizer: LDFlagSynchronizing {
+class FlagSynchronizer: LDFlagSynchronizing {
     let service: DarklyServiceProvider
     private var eventSource: DarklyStreamingProvider?
     private weak var flagRequestTimer: Timer?
@@ -112,6 +112,9 @@ class LDFlagSynchronizer: LDFlagSynchronizing {
         eventSource?.onMessageEvent { [weak self] (event) in
             self?.process(event)
         }
+        eventSource?.onErrorEvent { [weak self] (event) in
+            self?.process(event)
+        }
     }
     
     private func stopEventSource() {
@@ -122,11 +125,19 @@ class LDFlagSynchronizer: LDFlagSynchronizing {
     
     private func process(_ event: DarklyEventSource.LDEvent?) {
         guard streamingActive,
-            let event = event?.event
+            let event = event
         else { return }    //Since eventSource.close() is async, this prevents responding to events after .close() is called, but before it's actually closed
         //NOTE: It is possible that an LDEventSource was replaced and the event reported here is from the previous eventSource. However there is no information about the eventSource in the LDEvent to do anything about it.
+        guard let eventDescription = event.event, !eventDescription.isEmpty
+        else {
+            guard let onSyncComplete = self.onSyncComplete else { return }
+            DispatchQueue.main.async {
+                onSyncComplete(.error(.event(event)))
+            }
+            return
+        }
 
-        switch event {
+        switch eventDescription {
         case DarklyEventSource.LDEvent.EventType.ping.rawValue: makeFlagRequest()
         //TODO: Add put, patch, & delete
         default: break

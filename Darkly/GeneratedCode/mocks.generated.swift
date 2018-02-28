@@ -19,6 +19,14 @@ final class DarklyStreamingProviderMock: DarklyStreamingProvider {
         onMessageEventReceivedHandler = handler
     }
 
+    // MARK: onErrorEvent
+    var onErrorEventCallCount = 0
+    var onErrorEventReceivedHandler: LDEventSourceEventHandler?
+    func onErrorEvent(_ handler: LDEventSourceEventHandler?) {
+        onErrorEventCallCount += 1
+        onErrorEventReceivedHandler = handler
+    }
+
     // MARK: close
     var closeCallCount = 0
     func close() {

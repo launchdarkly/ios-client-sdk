@@ -23,6 +23,7 @@ protocol DarklyServiceProvider: class {
 //sourcery: AutoMockable
 protocol DarklyStreamingProvider: class {
     func onMessageEvent(_ handler: LDEventSourceEventHandler?)
+    func onErrorEvent(_ handler: LDEventSourceEventHandler?)
     func close()
 }
 
@@ -30,6 +31,11 @@ extension LDEventSource: DarklyStreamingProvider {
     func onMessageEvent(_ handler: LDEventSourceEventHandler?) {
         guard let handler = handler else { return }
         self.onMessage(handler)
+    }
+
+    func onErrorEvent(_ handler: LDEventSourceEventHandler?) {
+        guard let handler = handler else { return }
+        self.onError(handler)
     }
 }
 
