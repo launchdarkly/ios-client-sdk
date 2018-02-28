@@ -40,7 +40,17 @@ final class LDClientSpec: QuickSpec {
     struct TestContext {
         var config: LDConfig!
         var user: LDUser!
-        var mockFactory: ClientServiceMockFactory! { return subject.serviceFactory as? ClientServiceMockFactory }
+        var serviceFactoryMock: ClientServiceMockFactory! { return subject.serviceFactory as? ClientServiceMockFactory }
+        var flagCacheMock: UserFlagCachingMock! { return serviceFactoryMock.userFlagCache }
+        var flagStoreMock: FlagMaintainingMock! { return user.flagStore as? FlagMaintainingMock }
+        var flagSynchronizerMock: LDFlagSynchronizingMock! { return subject.flagSynchronizer as? LDFlagSynchronizingMock }
+        var eventReporterMock: LDEventReportingMock! { return subject.eventReporter as? LDEventReportingMock }
+        var changeNotifierMock: FlagChangeNotifyingMock! { return subject.flagChangeNotifier as? FlagChangeNotifyingMock }
+        var flagObserver: LDFlagObserver? { return changeNotifierMock.addObserverReceivedObserver }
+        var flagChangeObserver: LDFlagChangeObserver? { return flagObserver?.flagChangeObserver }
+        var flagCollectionChangeObserver: LDFlagCollectionChangeObserver? { return flagObserver?.flagCollectionChangeObserver }
+        var onSyncComplete: SyncCompleteClosure? { return serviceFactoryMock.onSyncComplete }
+        var replaceStoreComplete: CompletionClosure? { return flagStoreMock.replaceStoreReceivedArguments?.completion }
         var subject: LDClient!
 
         init(startOnline: Bool = false, runMode: LDClientRunMode = .foreground) {
@@ -76,8 +86,8 @@ final class LDClientSpec: QuickSpec {
                 it("saves the config") {
                     expect(testContext.subject.config) == testContext.config
                     expect(testContext.subject.service.config) == testContext.config
-                    expect(testContext.mockFactory.makeFlagSynchronizerReceivedParameters).toNot(beNil())
-                    if let makeFlagSynchronizerReceivedParameters = testContext.mockFactory.makeFlagSynchronizerReceivedParameters {
+                    expect(testContext.serviceFactoryMock.makeFlagSynchronizerReceivedParameters).toNot(beNil())
+                    if let makeFlagSynchronizerReceivedParameters = testContext.serviceFactoryMock.makeFlagSynchronizerReceivedParameters {
                         expect(makeFlagSynchronizerReceivedParameters.streamingMode) == testContext.config.streamingMode
                         expect(makeFlagSynchronizerReceivedParameters.pollingInterval) == testContext.config.flagPollingInterval(runMode: testContext.subject.runMode)
                     }
@@ -86,8 +96,8 @@ final class LDClientSpec: QuickSpec {
                 it("saves the user") {
                     expect(testContext.subject.user) == testContext.user
                     expect(testContext.subject.service.user) == testContext.user
-                    expect(testContext.mockFactory.makeFlagSynchronizerReceivedParameters).toNot(beNil())
-                    if let makeFlagSynchronizerReceivedParameters = testContext.mockFactory.makeFlagSynchronizerReceivedParameters {
+                    expect(testContext.serviceFactoryMock.makeFlagSynchronizerReceivedParameters).toNot(beNil())
+                    if let makeFlagSynchronizerReceivedParameters = testContext.serviceFactoryMock.makeFlagSynchronizerReceivedParameters {
                         expect(makeFlagSynchronizerReceivedParameters.service) === testContext.subject.service
                     }
                     expect(testContext.subject.eventReporter.service.user) == testContext.user
@@ -105,8 +115,8 @@ final class LDClientSpec: QuickSpec {
                 it("saves the config") {
                     expect(testContext.subject.config) == testContext.config
                     expect(testContext.subject.service.config) == testContext.config
-                    expect(testContext.mockFactory.makeFlagSynchronizerReceivedParameters).toNot(beNil())
-                    if let makeFlagSynchronizerReceivedParameters = testContext.mockFactory.makeFlagSynchronizerReceivedParameters {
+                    expect(testContext.serviceFactoryMock.makeFlagSynchronizerReceivedParameters).toNot(beNil())
+                    if let makeFlagSynchronizerReceivedParameters = testContext.serviceFactoryMock.makeFlagSynchronizerReceivedParameters {
                         expect(makeFlagSynchronizerReceivedParameters.streamingMode) == testContext.config.streamingMode
                         expect(makeFlagSynchronizerReceivedParameters.pollingInterval) == testContext.config.flagPollingInterval(runMode: testContext.subject.runMode)
                     }
@@ -115,8 +125,8 @@ final class LDClientSpec: QuickSpec {
                 it("saves the user") {
                     expect(testContext.subject.user) == testContext.user
                     expect(testContext.subject.service.user) == testContext.user
-                    expect(testContext.mockFactory.makeFlagSynchronizerReceivedParameters).toNot(beNil())
-                    if let makeFlagSynchronizerReceivedParameters = testContext.mockFactory.makeFlagSynchronizerReceivedParameters {
+                    expect(testContext.serviceFactoryMock.makeFlagSynchronizerReceivedParameters).toNot(beNil())
+                    if let makeFlagSynchronizerReceivedParameters = testContext.serviceFactoryMock.makeFlagSynchronizerReceivedParameters {
                         expect(makeFlagSynchronizerReceivedParameters.service) === testContext.subject.service
                     }
                     expect(testContext.subject.eventReporter.service.user) == testContext.user
@@ -136,8 +146,8 @@ final class LDClientSpec: QuickSpec {
                 it("saves the config") {
                     expect(testContext.subject.config) == testContext.config
                     expect(testContext.subject.service.config) == testContext.config
-                    expect(testContext.mockFactory.makeFlagSynchronizerReceivedParameters).toNot(beNil())
-                    if let makeFlagSynchronizerReceivedParameters = testContext.mockFactory.makeFlagSynchronizerReceivedParameters {
+                    expect(testContext.serviceFactoryMock.makeFlagSynchronizerReceivedParameters).toNot(beNil())
+                    if let makeFlagSynchronizerReceivedParameters = testContext.serviceFactoryMock.makeFlagSynchronizerReceivedParameters {
                         expect(makeFlagSynchronizerReceivedParameters.streamingMode) == LDStreamingMode.polling
                         expect(makeFlagSynchronizerReceivedParameters.pollingInterval) == testContext.config.flagPollingInterval(runMode: .background)
                     }
@@ -146,8 +156,8 @@ final class LDClientSpec: QuickSpec {
                 it("saves the user") {
                     expect(testContext.subject.user) == testContext.user
                     expect(testContext.subject.service.user) == testContext.user
-                    expect(testContext.mockFactory.makeFlagSynchronizerReceivedParameters).toNot(beNil())
-                    if let makeFlagSynchronizerReceivedParameters = testContext.mockFactory.makeFlagSynchronizerReceivedParameters {
+                    expect(testContext.serviceFactoryMock.makeFlagSynchronizerReceivedParameters).toNot(beNil())
+                    if let makeFlagSynchronizerReceivedParameters = testContext.serviceFactoryMock.makeFlagSynchronizerReceivedParameters {
                         expect(makeFlagSynchronizerReceivedParameters.service) === testContext.subject.service
                     }
                     expect(testContext.subject.eventReporter.service.user) == testContext.user
@@ -168,8 +178,8 @@ final class LDClientSpec: QuickSpec {
                 it("saves the config") {
                     expect(testContext.subject.config) == testContext.config
                     expect(testContext.subject.service.config) == testContext.config
-                    expect(testContext.mockFactory.makeFlagSynchronizerReceivedParameters).toNot(beNil())
-                    if let makeFlagSynchronizerReceivedParameters = testContext.mockFactory.makeFlagSynchronizerReceivedParameters {
+                    expect(testContext.serviceFactoryMock.makeFlagSynchronizerReceivedParameters).toNot(beNil())
+                    if let makeFlagSynchronizerReceivedParameters = testContext.serviceFactoryMock.makeFlagSynchronizerReceivedParameters {
                         expect(makeFlagSynchronizerReceivedParameters.streamingMode) == LDStreamingMode.polling
                         expect(makeFlagSynchronizerReceivedParameters.pollingInterval) == testContext.config.flagPollingInterval(runMode: .foreground)
                     }
@@ -178,8 +188,8 @@ final class LDClientSpec: QuickSpec {
                 it("saves the user") {
                     expect(testContext.subject.user) == testContext.user
                     expect(testContext.subject.service.user) == testContext.user
-                    expect(testContext.mockFactory.makeFlagSynchronizerReceivedParameters).toNot(beNil())
-                    if let makeFlagSynchronizerReceivedParameters = testContext.mockFactory.makeFlagSynchronizerReceivedParameters {
+                    expect(testContext.serviceFactoryMock.makeFlagSynchronizerReceivedParameters).toNot(beNil())
+                    if let makeFlagSynchronizerReceivedParameters = testContext.serviceFactoryMock.makeFlagSynchronizerReceivedParameters {
                         expect(makeFlagSynchronizerReceivedParameters.service.user) == testContext.user
                     }
                     expect(testContext.subject.eventReporter.service.user) == testContext.user
@@ -208,8 +218,8 @@ final class LDClientSpec: QuickSpec {
                     it("saves the config") {
                         expect(testContext.subject.config) == newConfig
                         expect(testContext.subject.service.config) == newConfig
-                        expect(testContext.mockFactory.makeFlagSynchronizerReceivedParameters).toNot(beNil())
-                        if let makeFlagSynchronizerReceivedParameters = testContext.mockFactory.makeFlagSynchronizerReceivedParameters {
+                        expect(testContext.serviceFactoryMock.makeFlagSynchronizerReceivedParameters).toNot(beNil())
+                        if let makeFlagSynchronizerReceivedParameters = testContext.serviceFactoryMock.makeFlagSynchronizerReceivedParameters {
                             expect(makeFlagSynchronizerReceivedParameters.streamingMode) == newConfig.streamingMode
                             expect(makeFlagSynchronizerReceivedParameters.pollingInterval) == newConfig.flagPollingInterval(runMode: testContext.subject.runMode)
                         }
@@ -218,8 +228,8 @@ final class LDClientSpec: QuickSpec {
                     it("saves the user") {
                         expect(testContext.subject.user) == newUser
                         expect(testContext.subject.service.user) == newUser
-                        expect(testContext.mockFactory.makeFlagSynchronizerReceivedParameters).toNot(beNil())
-                        if let makeFlagSynchronizerReceivedParameters = testContext.mockFactory.makeFlagSynchronizerReceivedParameters {
+                        expect(testContext.serviceFactoryMock.makeFlagSynchronizerReceivedParameters).toNot(beNil())
+                        if let makeFlagSynchronizerReceivedParameters = testContext.serviceFactoryMock.makeFlagSynchronizerReceivedParameters {
                             expect(makeFlagSynchronizerReceivedParameters.service.user) == newUser
                         }
                         expect(testContext.subject.eventReporter.service.user) == newUser
@@ -245,8 +255,8 @@ final class LDClientSpec: QuickSpec {
                     it("saves the config") {
                         expect(testContext.subject.config) == newConfig
                         expect(testContext.subject.service.config) == newConfig
-                        expect(testContext.mockFactory.makeFlagSynchronizerReceivedParameters).toNot(beNil())
-                        if let makeFlagSynchronizerReceivedParameters = testContext.mockFactory.makeFlagSynchronizerReceivedParameters {
+                        expect(testContext.serviceFactoryMock.makeFlagSynchronizerReceivedParameters).toNot(beNil())
+                        if let makeFlagSynchronizerReceivedParameters = testContext.serviceFactoryMock.makeFlagSynchronizerReceivedParameters {
                             expect(makeFlagSynchronizerReceivedParameters.streamingMode) == newConfig.streamingMode
                             expect(makeFlagSynchronizerReceivedParameters.pollingInterval) == newConfig.flagPollingInterval(runMode: testContext.subject.runMode)
                         }
@@ -255,8 +265,8 @@ final class LDClientSpec: QuickSpec {
                     it("saves the user") {
                         expect(testContext.subject.user) == newUser
                         expect(testContext.subject.service.user) == newUser
-                        expect(testContext.mockFactory.makeFlagSynchronizerReceivedParameters).toNot(beNil())
-                        if let makeFlagSynchronizerReceivedParameters = testContext.mockFactory.makeFlagSynchronizerReceivedParameters {
+                        expect(testContext.serviceFactoryMock.makeFlagSynchronizerReceivedParameters).toNot(beNil())
+                        if let makeFlagSynchronizerReceivedParameters = testContext.serviceFactoryMock.makeFlagSynchronizerReceivedParameters {
                             expect(makeFlagSynchronizerReceivedParameters.service.user) == newUser
                         }
                         expect(testContext.subject.eventReporter.service.user) == newUser
@@ -273,8 +283,8 @@ final class LDClientSpec: QuickSpec {
                     it("saves the config") {
                         expect(testContext.subject.config) == testContext.config
                         expect(testContext.subject.service.config) == testContext.config
-                        expect(testContext.mockFactory.makeFlagSynchronizerReceivedParameters).toNot(beNil())
-                        if let makeFlagSynchronizerReceivedParameters = testContext.mockFactory.makeFlagSynchronizerReceivedParameters {
+                        expect(testContext.serviceFactoryMock.makeFlagSynchronizerReceivedParameters).toNot(beNil())
+                        if let makeFlagSynchronizerReceivedParameters = testContext.serviceFactoryMock.makeFlagSynchronizerReceivedParameters {
                             expect(makeFlagSynchronizerReceivedParameters.streamingMode) == testContext.config.streamingMode
                             expect(makeFlagSynchronizerReceivedParameters.pollingInterval) == testContext.config.flagPollingInterval(runMode: testContext.subject.runMode)
                         }
@@ -283,8 +293,8 @@ final class LDClientSpec: QuickSpec {
                     it("saves the user") {
                         expect(testContext.subject.user) == testContext.user
                         expect(testContext.subject.service.user) == testContext.user
-                        expect(testContext.mockFactory.makeFlagSynchronizerReceivedParameters).toNot(beNil())
-                        if let makeFlagSynchronizerReceivedParameters = testContext.mockFactory.makeFlagSynchronizerReceivedParameters {
+                        expect(testContext.serviceFactoryMock.makeFlagSynchronizerReceivedParameters).toNot(beNil())
+                        if let makeFlagSynchronizerReceivedParameters = testContext.serviceFactoryMock.makeFlagSynchronizerReceivedParameters {
                             expect(makeFlagSynchronizerReceivedParameters.service.user) == testContext.user
                         }
                         expect(testContext.subject.eventReporter.service.user) == testContext.user
@@ -299,8 +309,8 @@ final class LDClientSpec: QuickSpec {
                     it("saves the config") {
                         expect(testContext.subject.config) == testContext.config
                         expect(testContext.subject.service.config) == testContext.config
-                        expect(testContext.mockFactory.makeFlagSynchronizerReceivedParameters).toNot(beNil())
-                        if let makeFlagSynchronizerReceivedParameters = testContext.mockFactory.makeFlagSynchronizerReceivedParameters {
+                        expect(testContext.serviceFactoryMock.makeFlagSynchronizerReceivedParameters).toNot(beNil())
+                        if let makeFlagSynchronizerReceivedParameters = testContext.serviceFactoryMock.makeFlagSynchronizerReceivedParameters {
                             expect(makeFlagSynchronizerReceivedParameters.streamingMode) == testContext.config.streamingMode
                             expect(makeFlagSynchronizerReceivedParameters.pollingInterval) == testContext.config.flagPollingInterval(runMode: testContext.subject.runMode)
                         }
@@ -309,8 +319,8 @@ final class LDClientSpec: QuickSpec {
                     it("saves the user") {
                         expect(testContext.subject.user) == testContext.user
                         expect(testContext.subject.service.user) == testContext.user
-                        expect(testContext.mockFactory.makeFlagSynchronizerReceivedParameters).toNot(beNil())
-                        if let makeFlagSynchronizerReceivedParameters = testContext.mockFactory.makeFlagSynchronizerReceivedParameters {
+                        expect(testContext.serviceFactoryMock.makeFlagSynchronizerReceivedParameters).toNot(beNil())
+                        if let makeFlagSynchronizerReceivedParameters = testContext.serviceFactoryMock.makeFlagSynchronizerReceivedParameters {
                             expect(makeFlagSynchronizerReceivedParameters.service.user) == testContext.user
                         }
                         expect(testContext.subject.eventReporter.service.user) == testContext.user
@@ -318,63 +328,46 @@ final class LDClientSpec: QuickSpec {
                 }
             }
             context("when called with cached flags for the user") {
-                var serviceFactory: ClientServiceMockFactory!
-                var flags: CacheableUserFlags!
-                var mockUserFlagCache: UserFlagCachingMock!
-                var mockFlagStore: FlagMaintainingMock!
+                var retrievedFlags: [LDFlagKey: FeatureFlag]!
                 beforeEach {
-                    serviceFactory = ClientServiceMockFactory()
-                    mockUserFlagCache = serviceFactory.userFlagCache
-                    flags = CacheableUserFlags(user: testContext.user)
-                    mockUserFlagCache.retrieveFlagsReturnValue = flags
-                    testContext.subject = LDClient.makeClient(with: serviceFactory)
-                    mockFlagStore = testContext.user.flagStore as? FlagMaintainingMock
-                    mockFlagStore.featureFlags = [:]
+                    testContext.flagCacheMock.retrieveFlagsReturnValue = CacheableUserFlags(user: testContext.user)
+                    retrievedFlags = testContext.flagCacheMock.retrieveFlagsReturnValue!.flags
+                    testContext.flagStoreMock.featureFlags = [:]
 
                     testContext.config.startOnline = false
                     testContext.subject.start(mobileKey: Constants.mockMobileKey, config: testContext.config, user: testContext.user)
                 }
                 it("checks the user flag cache for the user") {
-                    expect(mockUserFlagCache.retrieveFlagsCallCount) == 1
-                    expect(mockUserFlagCache.retrieveFlagsReceivedUser) == testContext.user
+                    expect(testContext.flagCacheMock.retrieveFlagsCallCount) == 1
+                    expect(testContext.flagCacheMock.retrieveFlagsReceivedUser) == testContext.user
                 }
                 it("restores user flags from cache") {
-                    expect(mockFlagStore.replaceStoreReceivedArguments?.newFlags.isNilOrEmpty).toNot(beTrue())
-                    expect(mockFlagStore.replaceStoreReceivedArguments?.newFlags == flags.flags).to(beTrue())
+                    expect(testContext.flagStoreMock.replaceStoreReceivedArguments?.newFlags == retrievedFlags).to(beTrue())
                 }
             }
             context("when called without cached flags for the user") {
-                var serviceFactory: ClientServiceMockFactory!
-                var mockUserFlagCache: UserFlagCachingMock!
-                var mockFlagStore: FlagMaintainingMock!
                 beforeEach {
-                    serviceFactory = ClientServiceMockFactory()
-                    mockUserFlagCache = serviceFactory.userFlagCache
-                    testContext.subject = LDClient.makeClient(with: serviceFactory)
-                    mockFlagStore = testContext.user.flagStore as? FlagMaintainingMock
-                    mockFlagStore.featureFlags = [:]
+                    testContext.flagStoreMock.featureFlags = [:]
 
                     testContext.config.startOnline = false
                     testContext.subject.start(mobileKey: Constants.mockMobileKey, config: testContext.config, user: testContext.user)
                 }
                 it("checks the user flag cache for the user") {
-                    expect(mockUserFlagCache.retrieveFlagsCallCount) == 1
-                    expect(mockUserFlagCache.retrieveFlagsReceivedUser) == testContext.user
+                    expect(testContext.flagCacheMock.retrieveFlagsCallCount) == 1
+                    expect(testContext.flagCacheMock.retrieveFlagsReceivedUser) == testContext.user
                 }
                 it("does not restore user flags from cache") {
-                    expect(mockFlagStore.replaceStoreCallCount) == 0
+                    expect(testContext.flagStoreMock.replaceStoreCallCount) == 0
                 }
             }
         }
 
         describe("set config") {
-            var flagSynchronizerMock: LDFlagSynchronizingMock! { return testContext.subject.flagSynchronizer as? LDFlagSynchronizingMock }
-            var eventReporterMock: LDEventReportingMock! { return testContext.subject.eventReporter as? LDEventReportingMock }
             var setIsOnlineCount: (flagSync: Int, event: Int) = (0, 0)
             context("when config values are the same") {
                 beforeEach {
                     testContext.subject.start(mobileKey: Constants.mockMobileKey, config: testContext.config, user: testContext.user)
-                    setIsOnlineCount = (flagSynchronizerMock.isOnlineSetCount, eventReporterMock.isOnlineSetCount)
+                    setIsOnlineCount = (testContext.flagSynchronizerMock.isOnlineSetCount, testContext.eventReporterMock.isOnlineSetCount)
 
                     testContext.subject.config = testContext.config
                 }
@@ -382,8 +375,8 @@ final class LDClientSpec: QuickSpec {
                     expect(testContext.subject.config) == testContext.config
                 }
                 it("doesn't try to change service object isOnline state") {
-                    expect(flagSynchronizerMock.isOnlineSetCount) == setIsOnlineCount.flagSync
-                    expect(eventReporterMock.isOnlineSetCount) == setIsOnlineCount.event
+                    expect(testContext.flagSynchronizerMock.isOnlineSetCount) == setIsOnlineCount.flagSync
+                    expect(testContext.eventReporterMock.isOnlineSetCount) == setIsOnlineCount.event
                 }
             }
             context("when config values differ") {
@@ -406,8 +399,8 @@ final class LDClientSpec: QuickSpec {
                     it("changes to the new config values") {
                         expect(testContext.subject.config) == newConfig
                         expect(testContext.subject.service.config) == newConfig
-                        expect(testContext.mockFactory.makeFlagSynchronizerReceivedParameters).toNot(beNil())
-                        if let makeFlagSynchronizerReceivedParameters = testContext.mockFactory.makeFlagSynchronizerReceivedParameters {
+                        expect(testContext.serviceFactoryMock.makeFlagSynchronizerReceivedParameters).toNot(beNil())
+                        if let makeFlagSynchronizerReceivedParameters = testContext.serviceFactoryMock.makeFlagSynchronizerReceivedParameters {
                             expect(makeFlagSynchronizerReceivedParameters.streamingMode) == newConfig.streamingMode
                             expect(makeFlagSynchronizerReceivedParameters.pollingInterval) == newConfig.flagPollingInterval(runMode: testContext.subject.runMode)
                         }
@@ -415,8 +408,8 @@ final class LDClientSpec: QuickSpec {
                     }
                     it("leaves the client online") {
                         expect(testContext.subject.isOnline) == true
-                        expect(flagSynchronizerMock.isOnline) == testContext.subject.isOnline
-                        expect(eventReporterMock.isOnline) == testContext.subject.isOnline
+                        expect(testContext.flagSynchronizerMock.isOnline) == testContext.subject.isOnline
+                        expect(testContext.eventReporterMock.isOnline) == testContext.subject.isOnline
                     }
                 }
                 context("with run mode set to background") {
@@ -429,8 +422,8 @@ final class LDClientSpec: QuickSpec {
                     it("changes to the new config values") {
                         expect(testContext.subject.config) == newConfig
                         expect(testContext.subject.service.config) == newConfig
-                        expect(testContext.mockFactory.makeFlagSynchronizerReceivedParameters).toNot(beNil())
-                        if let makeFlagSynchronizerReceivedParameters = testContext.mockFactory.makeFlagSynchronizerReceivedParameters {
+                        expect(testContext.serviceFactoryMock.makeFlagSynchronizerReceivedParameters).toNot(beNil())
+                        if let makeFlagSynchronizerReceivedParameters = testContext.serviceFactoryMock.makeFlagSynchronizerReceivedParameters {
                             expect(makeFlagSynchronizerReceivedParameters.streamingMode) == LDStreamingMode.polling
                             expect(makeFlagSynchronizerReceivedParameters.pollingInterval) == newConfig.flagPollingInterval(runMode: testContext.subject.runMode)
                         }
@@ -438,8 +431,8 @@ final class LDClientSpec: QuickSpec {
                     }
                     it("leaves the client online") {
                         expect(testContext.subject.isOnline) == true
-                        expect(flagSynchronizerMock.isOnline) == testContext.subject.isOnline
-                        expect(eventReporterMock.isOnline) == testContext.subject.isOnline
+                        expect(testContext.flagSynchronizerMock.isOnline) == testContext.subject.isOnline
+                        expect(testContext.eventReporterMock.isOnline) == testContext.subject.isOnline
                     }
                 }
             }
@@ -460,8 +453,8 @@ final class LDClientSpec: QuickSpec {
                 it("changes to the new config values") {
                     expect(testContext.subject.config) == newConfig
                     expect(testContext.subject.service.config) == newConfig
-                    expect(testContext.mockFactory.makeFlagSynchronizerReceivedParameters).toNot(beNil())
-                    if let makeFlagSynchronizerReceivedParameters = testContext.mockFactory.makeFlagSynchronizerReceivedParameters {
+                    expect(testContext.serviceFactoryMock.makeFlagSynchronizerReceivedParameters).toNot(beNil())
+                    if let makeFlagSynchronizerReceivedParameters = testContext.serviceFactoryMock.makeFlagSynchronizerReceivedParameters {
                         expect(makeFlagSynchronizerReceivedParameters.streamingMode) == newConfig.streamingMode
                         expect(makeFlagSynchronizerReceivedParameters.pollingInterval) == newConfig.flagPollingInterval(runMode: testContext.subject.runMode)
                     }
@@ -469,8 +462,8 @@ final class LDClientSpec: QuickSpec {
                 }
                 it("leaves the client offline") {
                     expect(testContext.subject.isOnline) == false
-                    expect(flagSynchronizerMock.isOnline) == testContext.subject.isOnline
-                    expect(eventReporterMock.isOnline) == testContext.subject.isOnline
+                    expect(testContext.flagSynchronizerMock.isOnline) == testContext.subject.isOnline
+                    expect(testContext.eventReporterMock.isOnline) == testContext.subject.isOnline
                 }
             }
             context("when the client is not started") {
@@ -487,8 +480,8 @@ final class LDClientSpec: QuickSpec {
                 it("changes to the new config values") {
                     expect(testContext.subject.config) == newConfig
                     expect(testContext.subject.service.config) == newConfig
-                    expect(testContext.mockFactory.makeFlagSynchronizerReceivedParameters).toNot(beNil())
-                    if let makeFlagSynchronizerReceivedParameters = testContext.mockFactory.makeFlagSynchronizerReceivedParameters {
+                    expect(testContext.serviceFactoryMock.makeFlagSynchronizerReceivedParameters).toNot(beNil())
+                    if let makeFlagSynchronizerReceivedParameters = testContext.serviceFactoryMock.makeFlagSynchronizerReceivedParameters {
                         expect(makeFlagSynchronizerReceivedParameters.streamingMode) == newConfig.streamingMode
                         expect(makeFlagSynchronizerReceivedParameters.pollingInterval) == newConfig.flagPollingInterval(runMode: testContext.subject.runMode)
                     }
@@ -496,15 +489,14 @@ final class LDClientSpec: QuickSpec {
                 }
                 it("leaves the client offline") {
                     expect(testContext.subject.isOnline) == false
-                    expect(flagSynchronizerMock.isOnline) == testContext.subject.isOnline
-                    expect(eventReporterMock.isOnline) == testContext.subject.isOnline
+                    expect(testContext.flagSynchronizerMock.isOnline) == testContext.subject.isOnline
+                    expect(testContext.eventReporterMock.isOnline) == testContext.subject.isOnline
                 }
             }
         }
 
         describe("set user") {
             var newUser: LDUser!
-            var mockEventStore: LDEventReportingMock! { return testContext.subject.eventReporter as? LDEventReportingMock }
             context("when the client is online") {
                 beforeEach {
                     testContext.config.startOnline = true
@@ -516,8 +508,8 @@ final class LDClientSpec: QuickSpec {
                 it("changes to the new user") {
                     expect(testContext.subject.user) == newUser
                     expect(testContext.subject.service.user) == newUser
-                    expect(testContext.mockFactory.makeFlagSynchronizerReceivedParameters).toNot(beNil())
-                    if let makeFlagSynchronizerReceivedParameters = testContext.mockFactory.makeFlagSynchronizerReceivedParameters {
+                    expect(testContext.serviceFactoryMock.makeFlagSynchronizerReceivedParameters).toNot(beNil())
+                    if let makeFlagSynchronizerReceivedParameters = testContext.serviceFactoryMock.makeFlagSynchronizerReceivedParameters {
                         expect(makeFlagSynchronizerReceivedParameters.service.user) == newUser
                     }
                     expect(testContext.subject.eventReporter.service.user) == newUser
@@ -528,7 +520,7 @@ final class LDClientSpec: QuickSpec {
                     expect(testContext.subject.flagSynchronizer.isOnline) == true
                 }
                 it("records an identify event") {
-                    expect(mockEventStore.recordReceivedArguments?.event.kind == .identify).to(beTrue())
+                    expect(testContext.eventReporterMock.recordReceivedArguments?.event.kind == .identify).to(beTrue())
                 }
             }
             context("when the client is offline") {
@@ -542,8 +534,8 @@ final class LDClientSpec: QuickSpec {
                 it("changes to the new user") {
                     expect(testContext.subject.user) == newUser
                     expect(testContext.subject.service.user) == newUser
-                    expect(testContext.mockFactory.makeFlagSynchronizerReceivedParameters).toNot(beNil())
-                    if let makeFlagSynchronizerReceivedParameters = testContext.mockFactory.makeFlagSynchronizerReceivedParameters {
+                    expect(testContext.serviceFactoryMock.makeFlagSynchronizerReceivedParameters).toNot(beNil())
+                    if let makeFlagSynchronizerReceivedParameters = testContext.serviceFactoryMock.makeFlagSynchronizerReceivedParameters {
                         expect(makeFlagSynchronizerReceivedParameters.service.user) == newUser
                     }
                     expect(testContext.subject.eventReporter.service.user) == newUser
@@ -554,7 +546,7 @@ final class LDClientSpec: QuickSpec {
                     expect(testContext.subject.flagSynchronizer.isOnline) == false
                 }
                 it("records an identify event") {
-                    expect(mockEventStore.recordReceivedArguments?.event.kind == .identify).to(beTrue())
+                    expect(testContext.eventReporterMock.recordReceivedArguments?.event.kind == .identify).to(beTrue())
                 }
             }
             context("when the client is not started") {
@@ -565,8 +557,8 @@ final class LDClientSpec: QuickSpec {
                 it("changes to the new user") {
                     expect(testContext.subject.user) == newUser
                     expect(testContext.subject.service.user) == newUser
-                    expect(testContext.mockFactory.makeFlagSynchronizerReceivedParameters).toNot(beNil())
-                    if let makeFlagSynchronizerReceivedParameters = testContext.mockFactory.makeFlagSynchronizerReceivedParameters {
+                    expect(testContext.serviceFactoryMock.makeFlagSynchronizerReceivedParameters).toNot(beNil())
+                    if let makeFlagSynchronizerReceivedParameters = testContext.serviceFactoryMock.makeFlagSynchronizerReceivedParameters {
                         expect(makeFlagSynchronizerReceivedParameters.service.user) == newUser
                     }
                     expect(testContext.subject.eventReporter.service.user) == newUser
@@ -577,7 +569,7 @@ final class LDClientSpec: QuickSpec {
                     expect(testContext.subject.flagSynchronizer.isOnline) == false
                 }
                 it("does not record any event") {
-                    expect(mockEventStore.recordCallCount) == 0
+                    expect(testContext.eventReporterMock.recordCallCount) == 0
                 }
             }
         }
@@ -637,8 +629,8 @@ final class LDClientSpec: QuickSpec {
                         it("takes the client and service objects online") {
                             expect(testContext.subject.isOnline) == true
                             expect(testContext.subject.flagSynchronizer.isOnline) == testContext.subject.isOnline
-                            expect(testContext.mockFactory.makeFlagSynchronizerReceivedParameters).toNot(beNil())
-                            if let makeFlagSynchronizerReceivedParameters = testContext.mockFactory.makeFlagSynchronizerReceivedParameters {
+                            expect(testContext.serviceFactoryMock.makeFlagSynchronizerReceivedParameters).toNot(beNil())
+                            if let makeFlagSynchronizerReceivedParameters = testContext.serviceFactoryMock.makeFlagSynchronizerReceivedParameters {
                                 expect(makeFlagSynchronizerReceivedParameters.streamingMode) == LDStreamingMode.polling
                                 expect(makeFlagSynchronizerReceivedParameters.pollingInterval) == testContext.config.flagPollingInterval(runMode: testContext.subject.runMode)
                             }
@@ -658,8 +650,8 @@ final class LDClientSpec: QuickSpec {
                         it("leaves the client and service objects offline") {
                             expect(testContext.subject.isOnline) == false
                             expect(testContext.subject.flagSynchronizer.isOnline) == testContext.subject.isOnline
-                            expect(testContext.mockFactory.makeFlagSynchronizerReceivedParameters).toNot(beNil())
-                            if let makeFlagSynchronizerReceivedParameters = testContext.mockFactory.makeFlagSynchronizerReceivedParameters {
+                            expect(testContext.serviceFactoryMock.makeFlagSynchronizerReceivedParameters).toNot(beNil())
+                            if let makeFlagSynchronizerReceivedParameters = testContext.serviceFactoryMock.makeFlagSynchronizerReceivedParameters {
                                 expect(makeFlagSynchronizerReceivedParameters.streamingMode) == LDStreamingMode.polling
                                 expect(makeFlagSynchronizerReceivedParameters.pollingInterval) == testContext.config.flagPollingInterval(runMode: .foreground)
                             }
@@ -672,7 +664,6 @@ final class LDClientSpec: QuickSpec {
         }
 
         describe("stop") {
-            var mockEventReporter: LDEventReportingMock! { return testContext.subject.eventReporter as? LDEventReportingMock }
             var event: LDEvent!
             var priorRecordedEvents: Int!
             beforeEach {
@@ -686,7 +677,7 @@ final class LDClientSpec: QuickSpec {
                     beforeEach {
                         testContext.config.startOnline = true
                         testContext.subject.start(mobileKey: Constants.mockMobileKey, config: testContext.config, user: testContext.user)
-                        priorRecordedEvents = mockEventReporter.recordCallCount
+                        priorRecordedEvents = testContext.eventReporterMock.recordCallCount
 
                         testContext.subject.stop()
                     }
@@ -695,14 +686,14 @@ final class LDClientSpec: QuickSpec {
                     }
                     it("stops recording events") {
                         testContext.subject.trackEvent(key: event.key)
-                        expect(mockEventReporter.recordCallCount) == priorRecordedEvents
+                        expect(testContext.eventReporterMock.recordCallCount) == priorRecordedEvents
                     }
                 }
                 context("and offline") {
                     beforeEach {
                         testContext.config.startOnline = false
                         testContext.subject.start(mobileKey: Constants.mockMobileKey, config: testContext.config, user: testContext.user)
-                        priorRecordedEvents = mockEventReporter.recordCallCount
+                        priorRecordedEvents = testContext.eventReporterMock.recordCallCount
 
                         testContext.subject.stop()
                     }
@@ -711,7 +702,7 @@ final class LDClientSpec: QuickSpec {
                     }
                     it("stops recording events") {
                         testContext.subject.trackEvent(key: event.key)
-                        expect(mockEventReporter.recordCallCount) == priorRecordedEvents
+                        expect(testContext.eventReporterMock.recordCallCount) == priorRecordedEvents
                     }
                 }
             }
@@ -724,7 +715,7 @@ final class LDClientSpec: QuickSpec {
                 }
                 it("does not record events") {
                     testContext.subject.trackEvent(key: event.key)
-                    expect(mockEventReporter.recordCallCount) == 0
+                    expect(testContext.eventReporterMock.recordCallCount) == 0
                 }
             }
             context("when already stopped") {
@@ -732,7 +723,7 @@ final class LDClientSpec: QuickSpec {
                     testContext.config.startOnline = false
                     testContext.subject.start(mobileKey: Constants.mockMobileKey, config: testContext.config, user: testContext.user)
                     testContext.subject.stop()
-                    priorRecordedEvents = mockEventReporter.recordCallCount
+                    priorRecordedEvents = testContext.eventReporterMock.recordCallCount
 
                     testContext.subject.stop()
                 }
@@ -741,13 +732,12 @@ final class LDClientSpec: QuickSpec {
                 }
                 it("stops recording events") {
                     testContext.subject.trackEvent(key: event.key)
-                    expect(mockEventReporter.recordCallCount) == priorRecordedEvents
+                    expect(testContext.eventReporterMock.recordCallCount) == priorRecordedEvents
                 }
             }
         }
 
         describe("track event") {
-            var mockEventReporter: LDEventReportingMock! { return  testContext.subject.eventReporter as? LDEventReportingMock }
             var event: LDEvent!
             beforeEach {
                 event = LDEvent.stub(for: .custom, with: testContext.user)
@@ -759,10 +749,10 @@ final class LDClientSpec: QuickSpec {
                     testContext.subject.trackEvent(key: event.key, data: event.data)
                 }
                 it("records a custom event") {
-                    expect(mockEventReporter.recordReceivedArguments?.event.key) == event.key
-                    expect(mockEventReporter.recordReceivedArguments?.event.user) == event.user
-                    expect(mockEventReporter.recordReceivedArguments?.event.data).toNot(beNil())
-                    expect(mockEventReporter.recordReceivedArguments?.event.data == event.data).to(beTrue())
+                    expect(testContext.eventReporterMock.recordReceivedArguments?.event.key) == event.key
+                    expect(testContext.eventReporterMock.recordReceivedArguments?.event.user) == event.user
+                    expect(testContext.eventReporterMock.recordReceivedArguments?.event.data).toNot(beNil())
+                    expect(testContext.eventReporterMock.recordReceivedArguments?.event.data == event.data).to(beTrue())
                 }
             }
             context("when client was not started") {
@@ -770,7 +760,7 @@ final class LDClientSpec: QuickSpec {
                     testContext.subject.trackEvent(key: event.key, data: event.data)
                 }
                 it("does not record any events") {
-                    expect(mockEventReporter.recordCallCount) == 0
+                    expect(testContext.eventReporterMock.recordCallCount) == 0
                 }
             }
             context("when client was stopped") {
@@ -778,12 +768,12 @@ final class LDClientSpec: QuickSpec {
                 beforeEach {
                     testContext.subject.start(mobileKey: Constants.mockMobileKey, config: testContext.config, user: testContext.user)
                     testContext.subject.stop()
-                    priorRecordedEvents = mockEventReporter.recordCallCount
+                    priorRecordedEvents = testContext.eventReporterMock.recordCallCount
 
                     testContext.subject.trackEvent(key: event.key, data: event.data)
                 }
                 it("does not record any more events") {
-                    expect(mockEventReporter.recordCallCount) == priorRecordedEvents
+                    expect(testContext.eventReporterMock.recordCallCount) == priorRecordedEvents
                 }
             }
         }
@@ -860,7 +850,6 @@ final class LDClientSpec: QuickSpec {
         }
 
         describe("observe") {
-            var mockChangeNotifier: FlagChangeNotifyingMock! { return testContext.subject.flagChangeNotifier as? FlagChangeNotifyingMock }
             var changedFlag: LDChangedFlag!
             var receivedChangedFlag: LDChangedFlag!
 
@@ -873,20 +862,16 @@ final class LDClientSpec: QuickSpec {
                 })
             }
             it("registers a single flag observer") {
-                expect(mockChangeNotifier.addObserverCallCount) == 1
-                expect(mockChangeNotifier.addObserverReceivedObserver).toNot(beNil())
-                guard let flagObserver = mockChangeNotifier.addObserverReceivedObserver else { return }
-                expect(flagObserver.flagKeys) == [DarklyServiceMock.FlagKeys.bool]
-                expect(flagObserver.owner) === self
-                expect(flagObserver.flagChangeObserver).toNot(beNil())
-                guard let flagChangeObserver = flagObserver.flagChangeObserver else { return }
-                flagChangeObserver(changedFlag)
+                expect(testContext.changeNotifierMock.addObserverCallCount) == 1
+                expect(testContext.changeNotifierMock.addObserverReceivedObserver).toNot(beNil())
+                expect(testContext.flagObserver?.flagKeys) == [DarklyServiceMock.FlagKeys.bool]
+                expect(testContext.flagObserver?.owner) === self
+                testContext.flagChangeObserver?(changedFlag)
                 expect(receivedChangedFlag.key) == changedFlag.key
             }
         }
 
         describe("observeAll") {
-            var mockChangeNotifier: FlagChangeNotifyingMock! { return testContext.subject.flagChangeNotifier as? FlagChangeNotifyingMock }
             var changedFlags: [String: LDChangedFlag]!
             var receivedChangedFlags: [String: LDChangedFlag]!
             beforeEach {
@@ -898,37 +883,28 @@ final class LDClientSpec: QuickSpec {
                 })
             }
             it("registers a collection flag observer") {
-                expect(mockChangeNotifier.addObserverCallCount) == 1
-                expect(mockChangeNotifier.addObserverReceivedObserver).toNot(beNil())
-                guard let flagObserver = mockChangeNotifier.addObserverReceivedObserver else { return }
-                expect(flagObserver.flagKeys) == LDFlagKey.anyKey
-                expect(flagObserver.owner) === self
-                expect(flagObserver.flagCollectionChangeObserver).toNot(beNil())
-                guard let flagCollectionChangeObserver = flagObserver.flagCollectionChangeObserver else { return }
-                flagCollectionChangeObserver(changedFlags)
+                expect(testContext.changeNotifierMock.addObserverCallCount) == 1
+                expect(testContext.flagObserver?.flagKeys) == LDFlagKey.anyKey
+                expect(testContext.flagObserver?.owner) === self
+                expect(testContext.flagObserver?.flagCollectionChangeObserver).toNot(beNil())
+                testContext.flagCollectionChangeObserver?(changedFlags)
                 expect(receivedChangedFlags.keys == changedFlags.keys).to(beTrue())
             }
         }
 
         describe("stopObserving") {
-            var mockChangeNotifier: FlagChangeNotifyingMock! { return testContext.subject.flagChangeNotifier as? FlagChangeNotifyingMock }
             beforeEach {
                 testContext.subject.start(mobileKey: Constants.mockMobileKey, config: testContext.config, user: testContext.user)
 
                 testContext.subject.stopObserving(owner: self)
             }
             it("unregisters the owner") {
-                expect(mockChangeNotifier.removeObserverCallCount) == 1
-                expect(mockChangeNotifier.removeObserverReceivedArguments?.owner) === self
+                expect(testContext.changeNotifierMock.removeObserverCallCount) == 1
+                expect(testContext.changeNotifierMock.removeObserverReceivedArguments?.owner) === self
             }
         }
 
         describe("on sync complete") {
-            var mockFlagStore: FlagMaintainingMock! { return testContext.user.flagStore as? FlagMaintainingMock }
-            var mockFlagCache: UserFlagCachingMock! { return testContext.subject.flagCache as? UserFlagCachingMock }
-            var mockChangeNotifier: FlagChangeNotifyingMock! { return testContext.subject.flagChangeNotifier as? FlagChangeNotifyingMock }
-            var onSyncComplete: SyncCompleteClosure! { return testContext.mockFactory.onSyncComplete }
-            var replaceStoreComplete: CompletionClosure! { return mockFlagStore.replaceStoreReceivedArguments?.completion }
             var oldFlags: [String: Any]!
             var newFlags: [String: Any]!
             beforeEach {
@@ -942,23 +918,23 @@ final class LDClientSpec: QuickSpec {
 
                     testContext.subject.start(mobileKey: Constants.mockMobileKey, config: testContext.config, user: testContext.user)
 
-                    onSyncComplete(.success(newFlags, nil))
-                    if mockFlagStore.replaceStoreCallCount > 0 { replaceStoreComplete() }
+                    testContext.onSyncComplete?(.success(newFlags, nil))
+                    if testContext.flagStoreMock.replaceStoreCallCount > 0 { testContext.replaceStoreComplete?() }
                 }
                 it("updates the flag store") {
-                    expect(mockFlagStore.replaceStoreCallCount) == 1
-                    expect(mockFlagStore.replaceStoreReceivedArguments?.newFlags == newFlags).to(beTrue())
+                    expect(testContext.flagStoreMock.replaceStoreCallCount) == 1
+                    expect(testContext.flagStoreMock.replaceStoreReceivedArguments?.newFlags == newFlags).to(beTrue())
                 }
                 it("caches the new flags") {
-                    expect(mockFlagCache.cacheFlagsCallCount) == 1
-                    expect(mockFlagCache.cacheFlagsReceivedUser) == testContext.user
+                    expect(testContext.flagCacheMock.cacheFlagsCallCount) == 1
+                    expect(testContext.flagCacheMock.cacheFlagsReceivedUser) == testContext.user
                 }
                 it("informs the flag change notifier of the changed flags") {
-                    expect(mockChangeNotifier.notifyObserversCallCount) == 1
-                    expect(mockChangeNotifier.notifyObserversReceivedArguments?.changedFlags.isEmpty).toNot(beTrue())
-                    expect(mockChangeNotifier.notifyObserversReceivedArguments?.changedFlags) == oldFlags.symmetricDifference(newFlags)
-                    expect(mockChangeNotifier.notifyObserversReceivedArguments?.user) == testContext.user
-                    expect(mockChangeNotifier.notifyObserversReceivedArguments?.oldFlags == oldFlags).to(beTrue())
+                    expect(testContext.changeNotifierMock.notifyObserversCallCount) == 1
+                    expect(testContext.changeNotifierMock.notifyObserversReceivedArguments?.changedFlags.isEmpty).toNot(beTrue())
+                    expect(testContext.changeNotifierMock.notifyObserversReceivedArguments?.changedFlags) == oldFlags.symmetricDifference(newFlags)
+                    expect(testContext.changeNotifierMock.notifyObserversReceivedArguments?.user) == testContext.user
+                    expect(testContext.changeNotifierMock.notifyObserversReceivedArguments?.oldFlags == oldFlags).to(beTrue())
                 }
             }
             context("a flag was added") {
@@ -969,23 +945,23 @@ final class LDClientSpec: QuickSpec {
 
                     testContext.subject.start(mobileKey: Constants.mockMobileKey, config: testContext.config, user: testContext.user)
 
-                    onSyncComplete(.success(newFlags, nil))
-                    if mockFlagStore.replaceStoreCallCount > 0 { replaceStoreComplete() }
+                    testContext.onSyncComplete?(.success(newFlags, nil))
+                    if testContext.flagStoreMock.replaceStoreCallCount > 0 { testContext.replaceStoreComplete?() }
                 }
                 it("updates the flag store") {
-                    expect(mockFlagStore.replaceStoreCallCount) == 1
-                    expect(mockFlagStore.replaceStoreReceivedArguments?.newFlags == newFlags).to(beTrue())
+                    expect(testContext.flagStoreMock.replaceStoreCallCount) == 1
+                    expect(testContext.flagStoreMock.replaceStoreReceivedArguments?.newFlags == newFlags).to(beTrue())
                 }
                 it("caches the new flags") {
-                    expect(mockFlagCache.cacheFlagsCallCount) == 1
-                    expect(mockFlagCache.cacheFlagsReceivedUser) == testContext.user
+                    expect(testContext.flagCacheMock.cacheFlagsCallCount) == 1
+                    expect(testContext.flagCacheMock.cacheFlagsReceivedUser) == testContext.user
                 }
                 it("informs the flag change notifier of the changed flags") {
-                    expect(mockChangeNotifier.notifyObserversCallCount) == 1
-                    expect(mockChangeNotifier.notifyObserversReceivedArguments?.changedFlags.isEmpty).toNot(beTrue())
-                    expect(mockChangeNotifier.notifyObserversReceivedArguments?.changedFlags) == oldFlags.symmetricDifference(newFlags)
-                    expect(mockChangeNotifier.notifyObserversReceivedArguments?.user) == testContext.user
-                    expect(mockChangeNotifier.notifyObserversReceivedArguments?.oldFlags == oldFlags).to(beTrue())
+                    expect(testContext.changeNotifierMock.notifyObserversCallCount) == 1
+                    expect(testContext.changeNotifierMock.notifyObserversReceivedArguments?.changedFlags.isEmpty).toNot(beTrue())
+                    expect(testContext.changeNotifierMock.notifyObserversReceivedArguments?.changedFlags) == oldFlags.symmetricDifference(newFlags)
+                    expect(testContext.changeNotifierMock.notifyObserversReceivedArguments?.user) == testContext.user
+                    expect(testContext.changeNotifierMock.notifyObserversReceivedArguments?.oldFlags == oldFlags).to(beTrue())
                 }
             }
             context("a flag was removed") {
@@ -996,23 +972,23 @@ final class LDClientSpec: QuickSpec {
 
                     testContext.subject.start(mobileKey: Constants.mockMobileKey, config: testContext.config, user: testContext.user)
 
-                    onSyncComplete(.success(newFlags, nil))
-                    if mockFlagStore.replaceStoreCallCount > 0 { replaceStoreComplete() }
+                    testContext.onSyncComplete?(.success(newFlags, nil))
+                    if testContext.flagStoreMock.replaceStoreCallCount > 0 { testContext.replaceStoreComplete?() }
                 }
                 it("updates the flag store") {
-                    expect(mockFlagStore.replaceStoreCallCount) == 1
-                    expect(mockFlagStore.replaceStoreReceivedArguments?.newFlags == newFlags).to(beTrue())
+                    expect(testContext.flagStoreMock.replaceStoreCallCount) == 1
+                    expect(testContext.flagStoreMock.replaceStoreReceivedArguments?.newFlags == newFlags).to(beTrue())
                 }
                 it("caches the new flags") {
-                    expect(mockFlagCache.cacheFlagsCallCount) == 1
-                    expect(mockFlagCache.cacheFlagsReceivedUser) == testContext.user
+                    expect(testContext.flagCacheMock.cacheFlagsCallCount) == 1
+                    expect(testContext.flagCacheMock.cacheFlagsReceivedUser) == testContext.user
                 }
                 it("informs the flag change notifier of the changed flags") {
-                    expect(mockChangeNotifier.notifyObserversCallCount) == 1
-                    expect(mockChangeNotifier.notifyObserversReceivedArguments?.changedFlags.isEmpty).toNot(beTrue())
-                    expect(mockChangeNotifier.notifyObserversReceivedArguments?.changedFlags) == oldFlags.symmetricDifference(newFlags)
-                    expect(mockChangeNotifier.notifyObserversReceivedArguments?.user) == testContext.user
-                    expect(mockChangeNotifier.notifyObserversReceivedArguments?.oldFlags == oldFlags).to(beTrue())
+                    expect(testContext.changeNotifierMock.notifyObserversCallCount) == 1
+                    expect(testContext.changeNotifierMock.notifyObserversReceivedArguments?.changedFlags.isEmpty).toNot(beTrue())
+                    expect(testContext.changeNotifierMock.notifyObserversReceivedArguments?.changedFlags) == oldFlags.symmetricDifference(newFlags)
+                    expect(testContext.changeNotifierMock.notifyObserversReceivedArguments?.user) == testContext.user
+                    expect(testContext.changeNotifierMock.notifyObserversReceivedArguments?.oldFlags == oldFlags).to(beTrue())
                 }
             }
             context("there were no changes to the flags") {
@@ -1022,17 +998,17 @@ final class LDClientSpec: QuickSpec {
 
                     testContext.subject.start(mobileKey: Constants.mockMobileKey, config: testContext.config, user: testContext.user)
 
-                    onSyncComplete(.success(newFlags, nil))
-                    if mockFlagStore.replaceStoreCallCount > 0 { replaceStoreComplete() }
+                    testContext.onSyncComplete?(.success(newFlags, nil))
+                    if testContext.flagStoreMock.replaceStoreCallCount > 0 { testContext.replaceStoreComplete?() }
                 }
                 it("does not update the flag store") {
-                    expect(mockFlagStore.replaceStoreCallCount) == 0
+                    expect(testContext.flagStoreMock.replaceStoreCallCount) == 0
                 }
                 it("does not cache the new flags") {
-                    expect(mockFlagCache.cacheFlagsCallCount) == 0
+                    expect(testContext.flagCacheMock.cacheFlagsCallCount) == 0
                 }
                 it("calls the flags unchanged closure") {
-                    expect(mockChangeNotifier.notifyObserversCallCount) == 0
+                    expect(testContext.changeNotifierMock.notifyObserversCallCount) == 0
                 }
             }
             context("there was a client unauthorized error") {
@@ -1046,7 +1022,7 @@ final class LDClientSpec: QuickSpec {
 
                         testContext.subject.start(mobileKey: Constants.mockMobileKey, config: testContext.config, user: testContext.user)
 
-                        onSyncComplete(.error(.response(HTTPURLResponse(url: testContext.config.baseUrl, statusCode: HTTPURLResponse.StatusCodes.unauthorized, httpVersion: DarklyServiceMock.Constants.httpVersion, headerFields: nil))))
+                        testContext.onSyncComplete?(.error(.response(HTTPURLResponse(url: testContext.config.baseUrl, statusCode: HTTPURLResponse.StatusCodes.unauthorized, httpVersion: DarklyServiceMock.Constants.httpVersion, headerFields: nil))))
                     }
                 }
                 it("takes the client offline") {
@@ -1067,7 +1043,7 @@ final class LDClientSpec: QuickSpec {
 
                         testContext.subject.start(mobileKey: Constants.mockMobileKey, config: testContext.config, user: testContext.user)
 
-                        onSyncComplete(.error(.response(HTTPURLResponse(url: testContext.config.baseUrl, statusCode: HTTPURLResponse.StatusCodes.internalServerError, httpVersion: DarklyServiceMock.Constants.httpVersion, headerFields: nil))))
+                        testContext.onSyncComplete?(.error(.response(HTTPURLResponse(url: testContext.config.baseUrl, statusCode: HTTPURLResponse.StatusCodes.internalServerError, httpVersion: DarklyServiceMock.Constants.httpVersion, headerFields: nil))))
                     }
                 }
                 it("does not take the client offline") {
@@ -1088,7 +1064,7 @@ final class LDClientSpec: QuickSpec {
 
                         testContext.subject.start(mobileKey: Constants.mockMobileKey, config: testContext.config, user: testContext.user)
 
-                        onSyncComplete(.error(.request(DarklyServiceMock.Constants.error)))
+                        testContext.onSyncComplete?(.error(.request(DarklyServiceMock.Constants.error)))
                     }
                 }
                 it("does not take the client offline") {
@@ -1109,7 +1085,7 @@ final class LDClientSpec: QuickSpec {
 
                         testContext.subject.start(mobileKey: Constants.mockMobileKey, config: testContext.config, user: testContext.user)
 
-                        onSyncComplete(.error(.data(DarklyServiceMock.Constants.errorData)))
+                        testContext.onSyncComplete?(.error(.data(DarklyServiceMock.Constants.errorData)))
                     }
                 }
                 it("does not take the client offline") {
