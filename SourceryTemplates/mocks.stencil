@@ -12,13 +12,14 @@ import {{ argument }}
 
 // MARK: - {{ type.name}}Mock
 final class {{ type.name }}Mock: {{ type.name }} {
+    var callback: ((String) -> Void)?
 {% for variable in type.allVariables|!annotated:"NoMock" %}
 {% if variable.writeAccess != "private" or variable.writeAccess != "fileprivate" %}
 
     // MARK: {{ variable.name }}
     var {{ variable.name }}SetCount = 0
     var {{ variable.name }}: {{ variable.typeName }}{% if not variable.isOptional %}{% if variable.isArray %} = []{% endif %}{% if variable.isDictionary %} = [:]{% endif %}{% if variable|annotated:"DefaultMockValue" %} = {{ variable.annotations.DefaultMockValue }}{% endif %}{% endif %} {
-        didSet { {{ variable.name }}SetCount += 1 }
+        didSet { {{ variable.name }}SetCount += 1; callback?("\(#function)") }
     }
 {% endif %}
 {% endfor %}
@@ -37,6 +38,7 @@ final class {{ type.name }}Mock: {{ type.name }} {
 {%if method.parameters.count == 1 %}        {{ method.annotations.StubName|default:method.callName }}Received{% for param in method.parameters %}{{ param.name|upperFirst }} = {{ param.name }}{% endfor %}{% else %}{% if not method.parameters.count == 0 %}        {{ method.annotations.StubName|default:method.callName }}ReceivedArguments = ({% for param in method.parameters %}{{ param.name }}: {{ param.name }}{% if not forloop.last%}, {% endif %}{% endfor %}){% endif %}{% if not method.returnTypeName.isVoid %}{% endif %}{% endif %}
 {% if method.throws %}        if let {{ method.annotations.StubName|default:method.callName }}ShouldThrow = {{ method.annotations.StubName|default:method.callName }}ShouldThrow { throw {{ method.annotations.StubName|default:method.callName }}ShouldThrow }{% endif %}
 {% if not method.returnTypeName.isVoid and not method.shortName == "init" %}        return {{ method.annotations.StubName|default:method.callName }}ReturnValue{% endif %}
+        callback?("\(#function)")
     }
 {% endfor %}
 }
@@ -49,13 +51,14 @@ final class {{ type.name }}Mock: {{ type.name }} {
 
 // MARK: - {{ type.name}}Mock
 final class {{ type.name }}Mock: {% if type.annotations.MockBaseClass %}{{ type.annotations.MockBaseClass }}, {% endif %}{{ type.name }} {
+    var callback: ((String) -> Void)?
 {% for variable in type.allVariables|!annotated:"NoMock" %}
 {% if variable.writeAccess == "public" or variable.writeAccess == "internal" %}
 
     // MARK: {{ variable.name }}
     public var {{ variable.name }}SetCount = 0
     public override var {{ variable.name }}: {{ variable.typeName }}{% if not variable.isOptional %}{% if variable.isArray %} = []{% endif %}{% if variable.isDictionary %} = [:]{% endif %}{% if variable|annotated:"DefaultMockValue" %} = {{ variable.annotations.DefaultMockValue }}{% endif %}{% endif %} {
-        didSet { {{ variable.name }}SetCount += 1 }
+        didSet { {{ variable.name }}SetCount += 1; callback?("\(#function)") }
     }
 {% endif %}
 {% endfor %}
@@ -79,7 +82,8 @@ public override func {{ method.annotations.StubName|default:method.callName }}({
 {%if method.parameters.count == 1 %}{{ method.annotations.StubName|default:method.callName }}Received{% for param in method.parameters %}{{ param.name|upperFirst }} = {{ param.name }}{% endfor %}{% else %}{% if not method.parameters.count == 0 %}{{ method.annotations.StubName|default:method.callName }}ReceivedArguments = ({% for param in method.parameters %}{{ param.name }}: {{ param.name }}{% if not forloop.last%}, {% endif %}{% endfor %}){% endif %}{% if not method.returnTypeName.isVoid %}{% endif %}{% endif %}
 {% if method.throws %}if let {{ method.annotations.StubName|default:method.callName }}ShouldThrow = {{ method.annotations.StubName|default:method.callName }}ShouldThrow { throw {{ method.annotations.StubName|default:method.callName }}ShouldThrow }{% endif %}
 {% if not method.returnTypeName.isVoid %}return {{ method.annotations.StubName|default:method.callName }}ReturnValue{% endif %}
-}
+        callback?("\(#function)")
+    }
 {% endif %} {# Checking for init and access level #}
 {% endfor %}
 }

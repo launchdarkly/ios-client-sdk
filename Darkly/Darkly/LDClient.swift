@@ -248,23 +248,35 @@ public class LDClient {
 
     private func onSyncComplete(result: SyncResult) {
         switch result {
-        case let .success(newFlags, _):
+        case let .success(flagDictionary, streamingEvent):
             let oldFlags = user.flagStore.featureFlags
-            let changedFlagKeys = oldFlags.symmetricDifference(newFlags)
-            if changedFlagKeys.isEmpty {
-                executeCallback(onFlagsUnchanged)
-                return
-            }
-            user.flagStore.replaceStore(newFlags: newFlags, source: .server) {
-                self.flagCache.cacheFlags(for: self.user)
-                self.flagChangeNotifier.notifyObservers(changedFlags: changedFlagKeys, user: self.user, oldFlags: oldFlags)
+            switch streamingEvent {
+            case nil, .ping?, .put?:
+                user.flagStore.replaceStore(newFlags: flagDictionary, source: .server) {
+                    self.flagCache.cacheFlags(for: self.user)
+                    self.reportChanges(oldFlags: oldFlags, user: self.user, changeNotifier: self.flagChangeNotifier)
+                }
+            case .patch?:
+                user.flagStore.updateStore(updateDictionary: flagDictionary, source: .server) {
+                    self.flagCache.cacheFlags(for: self.user)
+                    self.reportChanges(oldFlags: oldFlags, user: self.user, changeNotifier: self.flagChangeNotifier)
+                }
+            case .delete?: break
+            default: break
             }
         case let .error(synchronizingError):
-            if synchronizingError.isClientUnauthorized {
-                isOnline = false
-            }
+            if synchronizingError.isClientUnauthorized { isOnline = false }
             executeCallback(onServerUnavailable)
         }
+    }
+
+    private func reportChanges(oldFlags: [LDFlagKey: FeatureFlag], user: LDUser, changeNotifier: FlagChangeNotifying) {
+        let changedFlagKeys = oldFlags.symmetricDifference(user.flagStore.featureFlags)
+        if changedFlagKeys.isEmpty {
+            executeCallback(onFlagsUnchanged)
+            return
+        }
+        changeNotifier.notifyObservers(changedFlags: changedFlagKeys, user: user, oldFlags: oldFlags)
     }
 
     private func executeCallback(_ callback: (() -> Void)?) {
