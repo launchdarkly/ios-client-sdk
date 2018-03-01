@@ -41,6 +41,9 @@ final class LDClientSpec: QuickSpec {
     struct TestContext {
         var config: LDConfig!
         var user: LDUser!
+        var subject: LDClient!
+        var onFlagsUnchangedCallCount = 0
+        // mock getters based on setting up the user & subject
         var serviceFactoryMock: ClientServiceMockFactory! { return subject.serviceFactory as? ClientServiceMockFactory }
         var flagCacheMock: UserFlagCachingMock! { return serviceFactoryMock.userFlagCache }
         var flagStoreMock: FlagMaintainingMock! { return user.flagStore as? FlagMaintainingMock }
@@ -54,8 +57,6 @@ final class LDClientSpec: QuickSpec {
         var replaceStoreComplete: CompletionClosure? { return flagStoreMock.replaceStoreReceivedArguments?.completion }
         var updateStoreComplete: CompletionClosure? { return flagStoreMock.updateStoreReceivedArguments?.completion }
         var deleteFlagComplete: CompletionClosure? { return flagStoreMock.deleteFlagReceivedArguments?.completion }
-        var subject: LDClient!
-        var onFlagsUnchangedCallCount = 0
 
         init(startOnline: Bool = false, runMode: LDClientRunMode = .foreground) {
             config = LDConfig.stub
@@ -71,18 +72,12 @@ final class LDClientSpec: QuickSpec {
         ///Pass nil to leave the flags unchanged
         func setFlagStoreCallbackToMimicRealFlagStore(newFlags: [LDFlagKey: FeatureFlag]? = nil) {
             flagStoreMock.callback = { (methodName) in
-                if methodName.starts(with: "replaceStore") {
-                    self.flagStoreMock!.featureFlags = newFlags ?? self.flagStoreMock!.featureFlags
-                    return
-                }
-                if methodName.starts(with: "updateStore") {
-                    self.flagStoreMock!.featureFlags = newFlags ?? self.flagStoreMock!.featureFlags
-                    return
-                }
-                if methodName.starts(with: "deleteFlag") {
-                    self.flagStoreMock!.featureFlags = newFlags ?? self.flagStoreMock!.featureFlags
-                    return
-                }
+                guard methodName.starts(with: "replaceStore")
+                    || methodName.starts(with: "updateStore")
+                    || methodName.starts(with: "deleteFlag")
+                else { return }
+
+                self.flagStoreMock!.featureFlags = newFlags ?? self.flagStoreMock!.featureFlags
             }
         }
     }
@@ -1033,6 +1028,8 @@ final class LDClientSpec: QuickSpec {
         }
     }
 
+    /* The concept of the onSyncCompleteSuccess tests is to configure the flags & mocks to simulate the intended change, prep the callbacks to trigger done() to end the async wait, and then call onSyncComplete with the parameters for the area under test. onSyncComplete will call a flagStore method which has an async closure, and so the test has to trigger that closure to get the correct code to execute in onSyncComplete. Once the async flagStore closure runs for the appropriate update method, the result can be measured in the mocks. While setting up each test is slightly different, measuring the result is largely the same, except in the case where no flag changes result, when the onFlagsUnchangedClosure should execute.
+     */
     func onSyncCompleteSuccessReplacingFlagsSpec(streamingMode: LDStreamingMode, eventType: DarklyEventSource.LDEvent.EventType? = nil) {
         var testContext: TestContext!
         var oldFlags: [LDFlagKey: FeatureFlag]!
