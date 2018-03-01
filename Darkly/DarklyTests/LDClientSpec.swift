@@ -53,6 +53,7 @@ final class LDClientSpec: QuickSpec {
         var onSyncComplete: SyncCompleteClosure? { return serviceFactoryMock.onSyncComplete }
         var replaceStoreComplete: CompletionClosure? { return flagStoreMock.replaceStoreReceivedArguments?.completion }
         var updateStoreComplete: CompletionClosure? { return flagStoreMock.updateStoreReceivedArguments?.completion }
+        var deleteFlagComplete: CompletionClosure? { return flagStoreMock.deleteFlagReceivedArguments?.completion }
         var subject: LDClient!
         var onFlagsUnchangedCallCount = 0
 
@@ -75,6 +76,10 @@ final class LDClientSpec: QuickSpec {
                     return
                 }
                 if methodName.starts(with: "updateStore") {
+                    self.flagStoreMock!.featureFlags = newFlags ?? self.flagStoreMock!.featureFlags
+                    return
+                }
+                if methodName.starts(with: "deleteFlag") {
                     self.flagStoreMock!.featureFlags = newFlags ?? self.flagStoreMock!.featureFlags
                     return
                 }
@@ -1023,6 +1028,9 @@ final class LDClientSpec: QuickSpec {
         context("streaming patch") {
             onSyncCompleteStreamingPatchSpec()
         }
+        context("streaming delete") {
+            onSyncCompleteDeleteFlagSpec()
+        }
     }
 
     func onSyncCompleteSuccessReplacingFlagsSpec(streamingMode: LDStreamingMode, eventType: DarklyEventSource.LDEvent.EventType? = nil) {
@@ -1272,6 +1280,96 @@ final class LDClientSpec: QuickSpec {
             it("updates the flag store") {
                 expect(testContext.flagStoreMock.updateStoreCallCount) == 1
                 expect(testContext.flagStoreMock.updateStoreReceivedArguments?.updateDictionary == flagUpdateDictionary).to(beTrue())
+            }
+            it("caches the updated flags") {
+                expect(testContext.flagCacheMock.cacheFlagsCallCount) == 1
+                expect(testContext.flagCacheMock.cacheFlagsReceivedUser) == testContext.user
+            }
+            it("calls the flags unchanged closure") {
+                expect(testContext.changeNotifierMock.notifyObserversCallCount) == 0
+                expect(testContext.onFlagsUnchangedCallCount) == 1
+            }
+        }
+    }
+
+    func onSyncCompleteDeleteFlagSpec() {
+        var testContext: TestContext!
+        var flagUpdateDictionary: [String: Any]!
+        var oldFlags: [LDFlagKey: FeatureFlag]!
+        var newFlags: [LDFlagKey: Any]!
+
+        beforeEach {
+            testContext = TestContext(startOnline: true)
+        }
+
+        context("delete changes flags") {
+            beforeEach {
+                oldFlags = testContext.flagStoreMock.featureFlags
+                flagUpdateDictionary = FlagMaintainingMock.stubDeleteDictionary(key: DarklyServiceMock.FlagKeys.int, version: DarklyServiceMock.Constants.version + 1)
+                newFlags = oldFlags.dictionaryValue(exciseNil: false)
+                newFlags.removeValue(forKey: DarklyServiceMock.FlagKeys.int)
+                testContext.setFlagStoreCallbackToMimicRealFlagStore(newFlags: newFlags.flagCollection!)
+
+                waitUntil { done in
+                    testContext.subject.onFlagsUnchanged = {
+                        testContext.onFlagsUnchangedCallCount += 1
+                        done()
+                    }
+                    testContext.changeNotifierMock.callback = { (methodName) in
+                        guard methodName.starts(with: "notifyObservers") else { return }
+                        done()
+                    }
+
+                    testContext.subject.start(mobileKey: Constants.mockMobileKey, config: testContext.config, user: testContext.user)
+
+                    testContext.onSyncComplete?(.success(flagUpdateDictionary, .delete))
+                    if testContext.flagStoreMock.deleteFlagCallCount > 0 { testContext.deleteFlagComplete?() }
+                }
+            }
+
+            it("updates the flag store") {
+                expect(testContext.flagStoreMock.deleteFlagCallCount) == 1
+                expect(testContext.flagStoreMock.deleteFlagReceivedArguments?.deleteDictionary == flagUpdateDictionary).to(beTrue())
+            }
+            it("caches the updated flags") {
+                expect(testContext.flagCacheMock.cacheFlagsCallCount) == 1
+                expect(testContext.flagCacheMock.cacheFlagsReceivedUser) == testContext.user
+            }
+            it("informs the flag change notifier of the changed flag") {
+                expect(testContext.changeNotifierMock.notifyObserversCallCount) == 1
+                expect(testContext.changeNotifierMock.notifyObserversReceivedArguments?.changedFlags.isEmpty).toNot(beTrue())
+                expect(testContext.changeNotifierMock.notifyObserversReceivedArguments?.changedFlags) == oldFlags.symmetricDifference(newFlags.flagCollection!)
+                expect(testContext.changeNotifierMock.notifyObserversReceivedArguments?.user) == testContext.user
+                expect(testContext.changeNotifierMock.notifyObserversReceivedArguments?.oldFlags == oldFlags).to(beTrue())
+                expect(testContext.onFlagsUnchangedCallCount) == 0
+            }
+        }
+        context("delete does not change flags") {
+            beforeEach {
+                oldFlags = testContext.flagStoreMock.featureFlags
+                flagUpdateDictionary = FlagMaintainingMock.stubDeleteDictionary(key: DarklyServiceMock.FlagKeys.int, version: DarklyServiceMock.Constants.version)
+                newFlags = oldFlags.dictionaryValue(exciseNil: false)
+
+                waitUntil { done in
+                    testContext.subject.onFlagsUnchanged = {
+                        testContext.onFlagsUnchangedCallCount += 1
+                        done()
+                    }
+                    testContext.changeNotifierMock.callback = { (methodName) in
+                        guard methodName.starts(with: "notifyObservers") else { return }
+                        done()
+                    }
+
+                    testContext.subject.start(mobileKey: Constants.mockMobileKey, config: testContext.config, user: testContext.user)
+
+                    testContext.onSyncComplete?(.success(flagUpdateDictionary, .delete))
+                    if testContext.flagStoreMock.deleteFlagCallCount > 0 { testContext.deleteFlagComplete?() }
+                }
+            }
+
+            it("updates the flag store") {
+                expect(testContext.flagStoreMock.deleteFlagCallCount) == 1
+                expect(testContext.flagStoreMock.deleteFlagReceivedArguments?.deleteDictionary == flagUpdateDictionary).to(beTrue())
             }
             it("caches the updated flags") {
                 expect(testContext.flagCacheMock.cacheFlagsCallCount) == 1

@@ -253,21 +253,27 @@ public class LDClient {
             switch streamingEvent {
             case nil, .ping?, .put?:
                 user.flagStore.replaceStore(newFlags: flagDictionary, source: .server) {
-                    self.flagCache.cacheFlags(for: self.user)
-                    self.reportChanges(oldFlags: oldFlags, user: self.user, changeNotifier: self.flagChangeNotifier)
+                    self.updateCacheAndReportChanges(oldFlags: oldFlags, user: self.user, changeNotifier: self.flagChangeNotifier)
                 }
             case .patch?:
                 user.flagStore.updateStore(updateDictionary: flagDictionary, source: .server) {
-                    self.flagCache.cacheFlags(for: self.user)
-                    self.reportChanges(oldFlags: oldFlags, user: self.user, changeNotifier: self.flagChangeNotifier)
+                    self.updateCacheAndReportChanges(oldFlags: oldFlags, user: self.user, changeNotifier: self.flagChangeNotifier)
                 }
-            case .delete?: break
+            case .delete?:
+                user.flagStore.deleteFlag(deleteDictionary: flagDictionary) {
+                    self.updateCacheAndReportChanges(oldFlags: oldFlags, user: self.user, changeNotifier: self.flagChangeNotifier)
+                }
             default: break
             }
         case let .error(synchronizingError):
             if synchronizingError.isClientUnauthorized { isOnline = false }
             executeCallback(onServerUnavailable)
         }
+    }
+
+    private func updateCacheAndReportChanges(oldFlags: [LDFlagKey: FeatureFlag], user: LDUser, changeNotifier: FlagChangeNotifying) {
+        flagCache.cacheFlags(for: user)
+        reportChanges(oldFlags: oldFlags, user: user, changeNotifier: flagChangeNotifier)
     }
 
     private func reportChanges(oldFlags: [LDFlagKey: FeatureFlag], user: LDUser, changeNotifier: FlagChangeNotifying) {
