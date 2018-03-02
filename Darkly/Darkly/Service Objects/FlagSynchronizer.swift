@@ -47,8 +47,8 @@ extension DarklyEventSource.LDEvent {
     }
 
     var isUnauthorized: Bool {
-        let error = self.error as NSError
-        return error.domain == DarklyEventSource.LDEventSourceErrorDomain && error.code == -HTTPURLResponse.StatusCodes.unauthorized
+        let error = self.error as NSError?
+        return error?.domain == DarklyEventSource.LDEventSourceErrorDomain && error?.code == -HTTPURLResponse.StatusCodes.unauthorized
     }
 }
 

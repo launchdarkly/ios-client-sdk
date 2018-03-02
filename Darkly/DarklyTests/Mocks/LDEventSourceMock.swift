@@ -22,10 +22,6 @@ extension DarklyStreamingProviderMock {
         sendEvent(nil)
     }
 
-    func sendOpenEvent() {
-        sendEvent(DarklyEventSource.LDEvent.stubOpenEvent())
-    }
-
     func sendPut() {
         sendEvent(DarklyEventSource.LDEvent.stubPutEvent(data: DarklyServiceMock.Constants.featureFlags(includeNullValue: false, includeVersions: true).dictionaryValue(exciseNil: false).jsonString))
     }
@@ -57,15 +53,6 @@ extension DarklyEventSource.LDEvent {
         let event = DarklyEventSource.LDEvent()
         event.event = EventType.heartbeat.rawValue
         event.data = ""
-        event.readyState = kEventStateOpen
-        return event
-    }
-
-    class func stubOpenEvent() -> DarklyEventSource.LDEvent {
-        let event = DarklyEventSource.LDEvent()
-        event.id = nil
-        event.event = nil
-        event.data = nil
         event.readyState = kEventStateOpen
         return event
     }
@@ -105,6 +92,19 @@ extension DarklyEventSource.LDEvent {
         let event = DarklyEventSource.LDEvent()
         event.error = NSError(domain: "", code: HTTPURLResponse.StatusCodes.internalServerError, userInfo: nil)
         event.readyState = kEventStateClosed
+        return event
+    }
+
+    class func stubNonNSErrorEvent() -> DarklyEventSource.LDEvent {
+        let event = DarklyEventSource.LDEvent()
+        event.error = DummyError()
+        event.readyState = kEventStateClosed
+        return event
+    }
+
+    class func stubReadyStateEvent(eventState: DarklyEventSource.LDEventState) -> DarklyEventSource.LDEvent {
+        let event = DarklyEventSource.LDEvent()
+        event.readyState = eventState
         return event
     }
 }

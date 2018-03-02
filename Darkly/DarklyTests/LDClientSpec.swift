@@ -1470,5 +1470,26 @@ final class LDClientSpec: QuickSpec {
                 expect(serverUnavailableCalled) == true
             }
         }
+        context("there was a non-NSError error") {
+            var serverUnavailableCalled: Bool! = false
+            beforeEach {
+                waitUntil { done in
+                    testContext.subject.onServerUnavailable = {
+                        serverUnavailableCalled = true
+                        done()
+                    }
+
+                    testContext.subject.start(mobileKey: Constants.mockMobileKey, config: testContext.config, user: testContext.user)
+
+                    testContext.onSyncComplete?(.error(.event(DarklyEventSource.LDEvent.stubNonNSErrorEvent())))
+                }
+            }
+            it("does not take the client offline") {
+                expect(testContext.subject.isOnline) == true
+            }
+            it("calls the server unavailable closure") {
+                expect(serverUnavailableCalled) == true
+            }
+        }
     }
 }
