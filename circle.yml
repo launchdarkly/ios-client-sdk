@@ -10,7 +10,7 @@ test:
         CODE_SIGN_IDENTITY=
         PROVISIONING_PROFILE=
         -sdk iphonesimulator
-        -destination 'platform=iOS Simulator,OS=11.0.1,name=iPhone 8'
+        -destination 'platform=iOS Simulator,OS=11.2,name=iPhone 8'
         -workspace Darkly.xcworkspace
         -scheme "Darkly_iOS"
         clean build test |
