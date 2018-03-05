@@ -5,6 +5,7 @@
 import DarklyEventSource
 @testable import Darkly
 
+
 // MARK: - DarklyStreamingProviderMock
 final class DarklyStreamingProviderMock: DarklyStreamingProvider {
 
