@@ -56,7 +56,7 @@ public struct LDConfig {
     ///The minimum amount of time in milliseconds to wait in between sending analytics events to LaunchDarkly.
     public var eventFlushIntervalMillis: Int = Defaults.eventFlushIntervalMillis
     var eventFlushInterval: TimeInterval { return eventFlushIntervalMillis.timeInterval }
-    ///The interval between feature flag updates. Only relevant when not streaming Default: 5 minutes. Minimum: 1 minute
+    ///The interval between feature flag updates. Only relevant when not streaming Default: 5 minutes. Minimum: 5 minutes
     public var pollIntervalMillis: Int = Defaults.pollIntervalMillis
     var flagPollInterval: TimeInterval { return pollIntervalMillis.timeInterval }
     ///The interval in milliseconds that we will poll for flag updates when your app is in the background. Default: 1 hour. Minimum: 15 minutes
