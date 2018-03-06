@@ -17,3 +17,9 @@ extension LDFlagKey {
     private static var anyKeyIdentifier: String { return "Darkly.FlagKeyList.Any" }
     static var anyKey: [LDFlagKey] { return [anyKeyIdentifier] }
 }
+
+#if DEBUG
+var isDebug: Bool { return true }
+#else
+var isDebug: Bool { return false }
+#endif
