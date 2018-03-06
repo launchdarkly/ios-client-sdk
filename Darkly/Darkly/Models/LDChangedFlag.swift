@@ -10,16 +10,16 @@ import Foundation
 
 public struct LDChangedFlag {
     public let key: LDFlagKey
-    public let oldValue: LDFlagValue?
+    public let oldValue: Any?
     public let oldValueSource: LDFlagValueSource?
-    public let newValue: LDFlagValue?
+    public let newValue: Any?
     public let newValueSource: LDFlagValueSource?
     
-    public init(key: LDFlagKey, oldValue: LDFlagValueConvertible?, oldValueSource: LDFlagValueSource?, newValue: LDFlagValueConvertible?, newValueSource: LDFlagValueSource?) {
+    public init(key: LDFlagKey, oldValue: Any?, oldValueSource: LDFlagValueSource?, newValue: Any?, newValueSource: LDFlagValueSource?) {
         self.key = key
-        self.oldValue = oldValue?.toLDFlagValue()
+        self.oldValue = oldValue
         self.oldValueSource = oldValueSource
-        self.newValue = newValue?.toLDFlagValue()
+        self.newValue = newValue
         self.newValueSource = newValueSource
     }
 }
