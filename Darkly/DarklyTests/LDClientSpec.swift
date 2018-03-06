@@ -50,7 +50,7 @@ final class LDClientSpec: QuickSpec {
         var flagSynchronizerMock: LDFlagSynchronizingMock! { return subject.flagSynchronizer as? LDFlagSynchronizingMock }
         var eventReporterMock: LDEventReportingMock! { return subject.eventReporter as? LDEventReportingMock }
         var changeNotifierMock: FlagChangeNotifyingMock! { return subject.flagChangeNotifier as? FlagChangeNotifyingMock }
-        var flagObserver: FlagObserver? { return changeNotifierMock.addObserverReceivedObserver }
+        var flagObserver: FlagChangeObserver? { return changeNotifierMock.addObserverReceivedObserver }
         var flagChangeObserver: LDFlagChangeHandler? { return flagObserver?.flagChangeHandler }
         var flagCollectionChangeObserver: LDFlagCollectionChangeHandler? { return flagObserver?.flagCollectionChangeHandler }
         var onSyncComplete: SyncCompleteClosure? { return serviceFactoryMock.onSyncComplete }

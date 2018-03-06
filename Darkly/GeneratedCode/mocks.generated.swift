@@ -46,8 +46,8 @@ final class FlagChangeNotifyingMock: FlagChangeNotifying {
     // MARK: addObserver
     var addObserverCallCount = 0
     var addObserverCallback: (() -> Void)?
-    var addObserverReceivedObserver: FlagObserver?
-    func addObserver(_ observer: FlagObserver) {
+    var addObserverReceivedObserver: FlagChangeObserver?
+    func addObserver(_ observer: FlagChangeObserver) {
         addObserverCallCount += 1
         addObserverReceivedObserver = observer
         addObserverCallback?()

@@ -8,7 +8,7 @@
 
 import Foundation
 
-struct FlagObserver {
+struct FlagChangeObserver {
     weak private(set) var owner: LDFlagChangeOwner?
     let flagKeys: [LDFlagKey]
     let flagChangeHandler: LDFlagChangeHandler?
@@ -26,5 +26,11 @@ struct FlagObserver {
         self.owner = owner
         self.flagChangeHandler = nil
         self.flagCollectionChangeHandler = collectionChangeObserver
+    }
+}
+
+extension FlagChangeObserver: Equatable {
+    public static func == (lhs: FlagChangeObserver, rhs: FlagChangeObserver) -> Bool {
+        return lhs.flagKeys == rhs.flagKeys && lhs.owner === rhs.owner
     }
 }
