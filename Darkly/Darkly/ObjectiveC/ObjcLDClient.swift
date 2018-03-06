@@ -46,79 +46,86 @@ public final class ObjcLDClient: NSObject {
     
     // MARK: Feature Flag values
 
-    @objc public func boolVariation(forKey key: String, fallback: Bool) -> Bool {
+    @objc public func boolVariation(forKey key: LDFlagKey, fallback: Bool) -> Bool {
         return LDClient.shared.variation(forKey: key, fallback: fallback)
     }
     
-    @objc public func integerVariation(forKey key: String, fallback: Int) -> Int {
+    @objc public func integerVariation(forKey key: LDFlagKey, fallback: Int) -> Int {
         return LDClient.shared.variation(forKey: key, fallback: fallback)
     }
 
-    @objc public func doubleVariation(forKey key: String, fallback: Double) -> Double {
+    @objc public func doubleVariation(forKey key: LDFlagKey, fallback: Double) -> Double {
         return LDClient.shared.variation(forKey: key, fallback: fallback)
     }
 
-    @objc public func stringVariation(forKey key: String, fallback: String) -> String {
+    @objc public func stringVariation(forKey key: LDFlagKey, fallback: String) -> String {
         return LDClient.shared.variation(forKey: key, fallback: fallback)
     }
 
-    @objc public func arrayVariation(forKey key: String, fallback: [Any]) -> [Any] {
+    @objc public func arrayVariation(forKey key: LDFlagKey, fallback: [Any]) -> [Any] {
         return LDClient.shared.variation(forKey: key, fallback: fallback)
     }
     
-    @objc public func dictionaryVariation(forKey key: String, fallback: [String: Any]) -> [String: Any] {
+    @objc public func dictionaryVariation(forKey key: LDFlagKey, fallback: [String: Any]) -> [String: Any] {
         return LDClient.shared.variation(forKey: key, fallback: fallback)
     }
     
-    @objc public func boolVariationAndSource(forKey key: String, fallback: Bool) -> ObjcLDBoolVariationValue {
+    @objc public func boolVariationAndSource(forKey key: LDFlagKey, fallback: Bool) -> ObjcLDBoolVariationValue {
         return ObjcLDBoolVariationValue(LDClient.shared.variationAndSource(forKey: key, fallback: fallback))
     }
 
-    @objc public func integerVariationAndSource(forKey key: String, fallback: Int) -> ObjcLDIntegerVariationValue {
+    @objc public func integerVariationAndSource(forKey key: LDFlagKey, fallback: Int) -> ObjcLDIntegerVariationValue {
         return ObjcLDIntegerVariationValue(LDClient.shared.variationAndSource(forKey: key, fallback: fallback))
     }
     
-    @objc public func doubleVariationAndSource(forKey key: String, fallback: Double) -> ObjcLDDoubleVariationValue {
+    @objc public func doubleVariationAndSource(forKey key: LDFlagKey, fallback: Double) -> ObjcLDDoubleVariationValue {
         return ObjcLDDoubleVariationValue(LDClient.shared.variationAndSource(forKey: key, fallback: fallback))
     }
     
-    @objc public func stringVariationAndSource(forKey key: String, fallback: String) -> ObjcLDStringVariationValue {
+    @objc public func stringVariationAndSource(forKey key: LDFlagKey, fallback: String) -> ObjcLDStringVariationValue {
         return ObjcLDStringVariationValue(LDClient.shared.variationAndSource(forKey: key, fallback: fallback))
     }
     
-    @objc public func arrayVariationAndSource(forKey key: String, fallback: [Any]) -> ObjcLDArrayVariationValue {
+    @objc public func arrayVariationAndSource(forKey key: LDFlagKey, fallback: [Any]) -> ObjcLDArrayVariationValue {
         return ObjcLDArrayVariationValue(LDClient.shared.variationAndSource(forKey: key, fallback: fallback))
     }
 
-    @objc public func dictionaryVariationAndSource(forKey key: String, fallback: [String: Any]) -> ObjcLDDictionaryVariationValue {
+    @objc public func dictionaryVariationAndSource(forKey key: LDFlagKey, fallback: [String: Any]) -> ObjcLDDictionaryVariationValue {
         return ObjcLDDictionaryVariationValue(LDClient.shared.variationAndSource(forKey: key, fallback: fallback))
     }
     
-    @objc public func observeBool(_ key: String, owner: LDFlagChangeOwner, observer: @escaping (ObjcLDBoolChangedFlag) -> Void) {
+    @objc public func observeBool(_ key: LDFlagKey, owner: LDFlagChangeOwner, observer: @escaping (ObjcLDBoolChangedFlag) -> Void) {
         LDClient.shared.observe(key, owner: owner) { (changedFlag) in observer(ObjcLDBoolChangedFlag(changedFlag)) }
     }
 
-    @objc public func observeInteger(_ key: String, owner: LDFlagChangeOwner, observer: @escaping (ObjcLDIntegerChangedFlag) -> Void) {
+    @objc public func observeInteger(_ key: LDFlagKey, owner: LDFlagChangeOwner, observer: @escaping (ObjcLDIntegerChangedFlag) -> Void) {
         LDClient.shared.observe(key, owner: owner) { (changedFlag) in observer(ObjcLDIntegerChangedFlag(changedFlag)) }
     }
     
-    @objc public func observeDouble(_ key: String, owner: LDFlagChangeOwner, observer: @escaping (ObjcLDDoubleChangedFlag) -> Void) {
+    @objc public func observeDouble(_ key: LDFlagKey, owner: LDFlagChangeOwner, observer: @escaping (ObjcLDDoubleChangedFlag) -> Void) {
         LDClient.shared.observe(key, owner: owner) { (changedFlag) in observer(ObjcLDDoubleChangedFlag(changedFlag)) }
     }
     
-    @objc public func observeString(_ key: String, owner: LDFlagChangeOwner, observer: @escaping (ObjcLDStringChangedFlag) -> Void) {
+    @objc public func observeString(_ key: LDFlagKey, owner: LDFlagChangeOwner, observer: @escaping (ObjcLDStringChangedFlag) -> Void) {
         LDClient.shared.observe(key, owner: owner) { (changedFlag) in observer(ObjcLDStringChangedFlag(changedFlag)) }
     }
     
-    @objc public func observeArray(_ key: String, owner: LDFlagChangeOwner, observer: @escaping (ObjcLDArrayChangedFlag) -> Void) {
+    @objc public func observeArray(_ key: LDFlagKey, owner: LDFlagChangeOwner, observer: @escaping (ObjcLDArrayChangedFlag) -> Void) {
         LDClient.shared.observe(key, owner: owner) { (changedFlag) in observer(ObjcLDArrayChangedFlag(changedFlag)) }
     }
     
-    @objc public func observeDictionary(_ key: String, owner: LDFlagChangeOwner, observer: @escaping (ObjcLDDictionaryChangedFlag) -> Void) {
+    @objc public func observeDictionary(_ key: LDFlagKey, owner: LDFlagChangeOwner, observer: @escaping (ObjcLDDictionaryChangedFlag) -> Void) {
         LDClient.shared.observe(key, owner: owner) { (changedFlag) in observer(ObjcLDDictionaryChangedFlag(changedFlag)) }
     }
     
-    @objc public func observeAllKeys(owner: LDFlagChangeOwner, observer: @escaping ([String: ObjcLDChangedFlag]) -> Void) {
+    @objc public func observeKeys(_ keys: [LDFlagKey], owner: LDFlagChangeOwner, observer: @escaping ([LDFlagKey: ObjcLDChangedFlag]) -> Void) {
+        LDClient.shared.observe(keys, owner: owner) { (changedFlags) in
+            let objcChangedFlags = changedFlags.mapValues { (changedFlag) -> ObjcLDChangedFlag in changedFlag.objcChangedFlag }
+            observer(objcChangedFlags)
+        }
+    }
+
+    @objc public func observeAllKeys(owner: LDFlagChangeOwner, observer: @escaping ([LDFlagKey: ObjcLDChangedFlag]) -> Void) {
         LDClient.shared.observeAll(owner: owner) { (changedFlags) in
             let objcChangedFlags = changedFlags.mapValues { (changedFlag) -> ObjcLDChangedFlag in changedFlag.objcChangedFlag }
             observer(objcChangedFlags)

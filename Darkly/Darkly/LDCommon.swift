@@ -11,8 +11,8 @@ import Foundation
 public typealias LDFlagChangeOwner = AnyObject
 public typealias LDFlagKey = String
 typealias UserKey = String
-public typealias LDFlagChangeObserver = (LDChangedFlag) -> Void
-public typealias LDFlagCollectionChangeObserver = ([String: LDChangedFlag]) -> Void
+public typealias LDFlagChangeHandler = (LDChangedFlag) -> Void
+public typealias LDFlagCollectionChangeHandler = ([LDFlagKey: LDChangedFlag]) -> Void
 
 extension LDFlagKey {
     private static var anyKeyIdentifier: String { return "Darkly.FlagKeyList.Any" }

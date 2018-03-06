@@ -219,20 +219,32 @@ public class LDClient {
     ///         }
     ///     }
     ///LDClient keeps a weak reference to the owner. Apps should keep only weak references to self in observers to avoid memory leaks
-    public func observe(_ key: LDFlagKey, owner: LDFlagChangeOwner, observer: @escaping LDFlagChangeObserver) {
-        flagChangeNotifier.addObserver(LDFlagObserver(key: key, owner: owner, changeObserver: observer))
+    public func observe(_ key: LDFlagKey, owner: LDFlagChangeOwner, observer: @escaping LDFlagChangeHandler) {
+        flagChangeNotifier.addObserver(FlagObserver(key: key, owner: owner, changeObserver: observer))
     }
     
     ///Usage
-    ///     LDClient.shared.observeAll(owner: self, observer: { (changedFlags) in
-    ///         //There will be an LDChangedFlag entry for each changed flag. The closure will only be called once regardless of how many flags changed.
+    ///     LDClient.shared.observe(flagKeys, owner: self, observer: { (changedFlags) in
+    ///         //There will be an LDChangedFlag entry in changedFlags for each changed flag. The closure will only be called once regardless of how many flags changed.
     ///         if let someChangedFlag = changedFlags["some-flag-key"] {
     ///             //do something with someChangedFlag
     ///         }
     ///     }
     /// changedFlags is a [LDFlagKey: LDChangedFlag]
-    public func observeAll(owner: LDFlagChangeOwner, observer: @escaping LDFlagCollectionChangeObserver) {
-        flagChangeNotifier.addObserver(LDFlagObserver(keys: LDFlagKey.anyKey, owner: owner, collectionChangeObserver: observer))
+    public func observe(_ keys: [LDFlagKey], owner: LDFlagChangeOwner, observer: @escaping LDFlagCollectionChangeHandler) {
+        flagChangeNotifier.addObserver(FlagObserver(keys: keys, owner: owner, collectionChangeObserver: observer))
+    }
+
+    ///Usage
+    ///     LDClient.shared.observeAll(owner: self, observer: { (changedFlags) in
+    ///         //There will be an LDChangedFlag entry in changedFlags for each changed flag. The closure will only be called once regardless of how many flags changed.
+    ///         if let someChangedFlag = changedFlags["some-flag-key"] {
+    ///             //do something with someChangedFlag
+    ///         }
+    ///     }
+    /// changedFlags is a [LDFlagKey: LDChangedFlag]
+    public func observeAll(owner: LDFlagChangeOwner, observer: @escaping LDFlagCollectionChangeHandler) {
+        flagChangeNotifier.addObserver(FlagObserver(keys: LDFlagKey.anyKey, owner: owner, collectionChangeObserver: observer))
     }
     
     ///Removes all observers (both Individual Flag and All Flags) for the given owner

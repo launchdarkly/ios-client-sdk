@@ -39,9 +39,9 @@ final class LDClientSpec: QuickSpec {
     }
 
     struct TestContext {
-        var config: LDConfig!
-        var user: LDUser!
         var subject: LDClient!
+        var user: LDUser!
+        var config: LDConfig!
         var onFlagsUnchangedCallCount = 0
         // mock getters based on setting up the user & subject
         var serviceFactoryMock: ClientServiceMockFactory! { return subject.serviceFactory as? ClientServiceMockFactory }
@@ -50,9 +50,9 @@ final class LDClientSpec: QuickSpec {
         var flagSynchronizerMock: LDFlagSynchronizingMock! { return subject.flagSynchronizer as? LDFlagSynchronizingMock }
         var eventReporterMock: LDEventReportingMock! { return subject.eventReporter as? LDEventReportingMock }
         var changeNotifierMock: FlagChangeNotifyingMock! { return subject.flagChangeNotifier as? FlagChangeNotifyingMock }
-        var flagObserver: LDFlagObserver? { return changeNotifierMock.addObserverReceivedObserver }
-        var flagChangeObserver: LDFlagChangeObserver? { return flagObserver?.flagChangeObserver }
-        var flagCollectionChangeObserver: LDFlagCollectionChangeObserver? { return flagObserver?.flagCollectionChangeObserver }
+        var flagObserver: FlagObserver? { return changeNotifierMock.addObserverReceivedObserver }
+        var flagChangeObserver: LDFlagChangeHandler? { return flagObserver?.flagChangeHandler }
+        var flagCollectionChangeObserver: LDFlagCollectionChangeHandler? { return flagObserver?.flagCollectionChangeHandler }
         var onSyncComplete: SyncCompleteClosure? { return serviceFactoryMock.onSyncComplete }
         var replaceStoreComplete: CompletionClosure? { return flagStoreMock.replaceStoreReceivedArguments?.completion }
         var updateStoreComplete: CompletionClosure? { return flagStoreMock.updateStoreReceivedArguments?.completion }
@@ -950,7 +950,7 @@ final class LDClientSpec: QuickSpec {
 
         describe("observe") {
             var changedFlag: LDChangedFlag!
-            var receivedChangedFlag: LDChangedFlag!
+            var receivedChangedFlag: LDChangedFlag?
 
             beforeEach {
                 testContext.subject.start(mobileKey: Constants.mockMobileKey, config: testContext.config, user: testContext.user)
@@ -966,13 +966,13 @@ final class LDClientSpec: QuickSpec {
                 expect(testContext.flagObserver?.flagKeys) == [DarklyServiceMock.FlagKeys.bool]
                 expect(testContext.flagObserver?.owner) === self
                 testContext.flagChangeObserver?(changedFlag)
-                expect(receivedChangedFlag.key) == changedFlag.key
+                expect(receivedChangedFlag?.key) == changedFlag.key
             }
         }
 
         describe("observeAll") {
-            var changedFlags: [String: LDChangedFlag]!
-            var receivedChangedFlags: [String: LDChangedFlag]!
+            var changedFlags: [LDFlagKey: LDChangedFlag]!
+            var receivedChangedFlags: [LDFlagKey: LDChangedFlag]?
             beforeEach {
                 testContext.subject.start(mobileKey: Constants.mockMobileKey, config: testContext.config, user: testContext.user)
                 changedFlags = [DarklyServiceMock.FlagKeys.bool: LDChangedFlag(key: DarklyServiceMock.FlagKeys.bool, oldValue: false, oldValueSource: .cache, newValue: true, newValueSource: .server)]
@@ -985,9 +985,9 @@ final class LDClientSpec: QuickSpec {
                 expect(testContext.changeNotifierMock.addObserverCallCount) == 1
                 expect(testContext.flagObserver?.flagKeys) == LDFlagKey.anyKey
                 expect(testContext.flagObserver?.owner) === self
-                expect(testContext.flagObserver?.flagCollectionChangeObserver).toNot(beNil())
+                expect(testContext.flagObserver?.flagCollectionChangeHandler).toNot(beNil())
                 testContext.flagCollectionChangeObserver?(changedFlags)
-                expect(receivedChangedFlags.keys == changedFlags.keys).to(beTrue())
+                expect(receivedChangedFlags?.keys == changedFlags.keys).to(beTrue())
             }
         }
 
