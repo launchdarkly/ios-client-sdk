@@ -21,7 +21,7 @@ protocol FlagChangeNotifying {
     func notifyObservers(changedFlags: [LDFlagKey], user: LDUser, oldFlags: [LDFlagKey: Any])
 }
 
-class FlagChangeNotifier: FlagChangeNotifying {
+final class FlagChangeNotifier: FlagChangeNotifying {
     private var observers = [FlagChangeObserver]()
     var flagsUnchangedObserver: FlagsUnchangedObserver?
     
@@ -31,7 +31,7 @@ class FlagChangeNotifier: FlagChangeNotifying {
     
     ///Removes any change handling closures for flag.key from owner
     func removeObserver(_ key: LDFlagKey, owner: LDFlagChangeOwner) {
-        
+        observers = observers.filter { (observer) in !(observer.flagKeys == [key] && observer.owner === owner) }
     }
     
     ///Removes any change handling closures for flag keys from owner

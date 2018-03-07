@@ -12,8 +12,13 @@ import Foundation
 @testable import Darkly
 
 final class FlagChangeNotifierSpec: QuickSpec {
+    enum ObserverType {
+        case singleKey, multipleKey, any
+    }
+
     struct TestContext {
         var subject: FlagChangeNotifier!
+        var originalObservers = [FlagChangeObserver]()
         var strongOwners = [LDFlagChangeOwner?]()
         var weakOwners = [LDFlagChangeOwner?]()
         var changedFlag: LDChangedFlag?
@@ -21,18 +26,20 @@ final class FlagChangeNotifierSpec: QuickSpec {
         var changedFlags: [LDFlagKey: LDChangedFlag]?
         var customFlagCollectionChangeHandler: LDFlagCollectionChangeHandler?
 
-        init(observers observerCount: Int = 0) {
+        init(observers observerCount: Int = 0, observerType: ObserverType = .any, repeatFirstObserver: Bool = false) {
             subject = FlagChangeNotifier()
             guard observerCount > 0 else { return }
             var observers = [FlagChangeObserver]()
             while observers.count < observerCount {
-                if observers.count % 2 == 0 {
+                if observerType == .singleKey || (observerType == .any && observers.count % 2 == 0) {
                     observers.append(FlagChangeObserver(key: DarklyServiceMock.FlagKeys.bool, owner: stubOwner(), flagChangeHandler: flagChangeHandler))
                 } else {
                     observers.append(FlagChangeObserver(keys: DarklyServiceMock.FlagKeys.all, owner: stubOwner(), flagCollectionChangeHandler: flagCollectionChangeHandler))
                 }
             }
+            if repeatFirstObserver { observers[observerCount - 1] = observers.first! }
             subject = FlagChangeNotifier(observers: observers)
+            originalObservers = subject.flagObservers
         }
 
         mutating func stubOwner() -> FlagChangeHandlerOwnerMock {
@@ -59,19 +66,17 @@ final class FlagChangeNotifierSpec: QuickSpec {
 
     override func spec() {
         addObserverSpec()
+        removeObserverSpec()
     }
 
     private func addObserverSpec() {
         var testContext: TestContext!
 
-        beforeEach {
-            testContext = TestContext()
-        }
-
         describe("add observer") {
             var observer: FlagChangeObserver!
             context("when no observers exist") {
                 beforeEach {
+                    testContext = TestContext()
                     observer = FlagChangeObserver(key: DarklyServiceMock.FlagKeys.bool, owner: testContext.stubOwner(), flagChangeHandler: testContext.flagChangeHandler)
                     testContext.subject.add(observer)
                 }
@@ -88,6 +93,97 @@ final class FlagChangeNotifierSpec: QuickSpec {
                 it("adds the observer") {
                     expect(testContext.subject.flagObservers.count) == Constants.observerCount + 1
                     expect(testContext.subject.flagObservers.last) == observer
+                }
+            }
+        }
+    }
+
+    private func removeObserverSpec() {
+        describe("remove observer") {
+            removeObserverForKeySpec()
+        }
+    }
+
+    private func removeObserverForKeySpec() {
+        var testContext: TestContext!
+
+        context("with a single flag key") {
+            var targetObserver: FlagChangeObserver!
+            context("when several observers exist") {
+                beforeEach {
+                    testContext = TestContext(observers: Constants.observerCount, observerType: .singleKey)
+                    targetObserver = testContext.subject.flagObservers[Constants.observerCount - 2] //Take the middle one
+
+                    testContext.subject.removeObserver(targetObserver.flagKeys.first!, owner: targetObserver.owner!)
+                }
+                it("removes the observer") {
+                    expect(testContext.subject.flagObservers.count) == Constants.observerCount - 1
+                    expect(testContext.subject.flagObservers.contains(targetObserver)).to(beFalse())
+                }
+            }
+            context("when 1 observer exists") {
+                beforeEach {
+                    testContext = TestContext(observers: 1, observerType: .singleKey)
+                    targetObserver = testContext.subject.flagObservers.first!
+
+                    testContext.subject.removeObserver(targetObserver.flagKeys.first!, owner: targetObserver.owner!)
+                }
+                it("removes the observer") {
+                    expect(testContext.subject.flagObservers.isEmpty).to(beTrue())
+                }
+            }
+            context("when the target observer doesnt exist") {
+                var owner: FlagChangeHandlerOwnerMock!
+                context("because the target has a different key") {
+                    beforeEach {
+                        testContext = TestContext(observers: Constants.observerCount, observerType: .singleKey)
+                        owner = testContext.subject.flagObservers.first!.owner as! FlagChangeHandlerOwnerMock
+                        targetObserver = FlagChangeObserver(key: DarklyServiceMock.FlagKeys.int, owner: owner, flagChangeHandler: testContext.flagChangeHandler)
+
+                        testContext.subject.removeObserver(targetObserver.flagKeys.first!, owner: targetObserver.owner!)
+                    }
+                    it("leaves the observers unchanged") {
+                        expect(testContext.subject.flagObservers.count) == Constants.observerCount
+                        expect(testContext.subject.flagObservers) == testContext.originalObservers
+                    }
+                }
+                context("because the target has a different owner") {
+                    beforeEach {
+                        testContext = TestContext(observers: Constants.observerCount, observerType: .singleKey)
+                        owner = FlagChangeHandlerOwnerMock()
+                        targetObserver = FlagChangeObserver(key: DarklyServiceMock.FlagKeys.bool, owner: owner, flagChangeHandler: testContext.flagChangeHandler)
+
+                        testContext.subject.removeObserver(targetObserver.flagKeys.first!, owner: targetObserver.owner!)
+                    }
+                    it("leaves the observers unchanged") {
+                        expect(testContext.subject.flagObservers.count) == Constants.observerCount
+                        expect(testContext.subject.flagObservers) == testContext.originalObservers
+                    }
+                }
+                context("because the target has a different key and owner") {
+                    beforeEach {
+                        testContext = TestContext(observers: Constants.observerCount, observerType: .singleKey)
+                        owner = FlagChangeHandlerOwnerMock()
+                        targetObserver = FlagChangeObserver(key: DarklyServiceMock.FlagKeys.int, owner: owner, flagChangeHandler: testContext.flagChangeHandler)
+
+                        testContext.subject.removeObserver(targetObserver.flagKeys.first!, owner: targetObserver.owner!)
+                    }
+                    it("leaves the observers unchanged") {
+                        expect(testContext.subject.flagObservers.count) == Constants.observerCount
+                        expect(testContext.subject.flagObservers) == testContext.originalObservers
+                    }
+                }
+            }
+            context("when multiple target observers exist") {
+                beforeEach {
+                    testContext = TestContext(observers: Constants.observerCount + 1, observerType: .singleKey, repeatFirstObserver: true)
+                    targetObserver = testContext.subject.flagObservers.first!
+
+                    testContext.subject.removeObserver(targetObserver.flagKeys.first!, owner: targetObserver.owner!)
+                }
+                it("removes the observers") {
+                    expect(testContext.subject.flagObservers.count) == Constants.observerCount - 1
+                    expect(testContext.subject.flagObservers.contains(targetObserver)).to(beFalse())
                 }
             }
         }
