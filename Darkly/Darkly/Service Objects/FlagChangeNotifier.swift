@@ -31,12 +31,12 @@ final class FlagChangeNotifier: FlagChangeNotifying {
     
     ///Removes any change handling closures for flag.key from owner
     func removeObserver(_ key: LDFlagKey, owner: LDFlagChangeOwner) {
-        observers = observers.filter { (observer) in !(observer.flagKeys == [key] && observer.owner === owner) }
+        removeObserver([key], owner: owner)
     }
     
     ///Removes any change handling closures for flag keys from owner
     func removeObserver(_ keys: [LDFlagKey], owner: LDFlagChangeOwner) {
-        
+        observers = observers.filter { (observer) in !(observer.flagKeys == keys && observer.owner === owner) }
     }
     
     ///Removes all change handling closures from owner
