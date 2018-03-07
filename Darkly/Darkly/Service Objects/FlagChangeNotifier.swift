@@ -1,5 +1,5 @@
 //
-//  LDFlagChangeNotifier.swift
+//  FlagChangeNotifier.swift
 //  Darkly
 //
 //  Created by Mark Pokorny on 8/18/17. +JMJ
@@ -21,7 +21,7 @@ protocol FlagChangeNotifying {
     func notifyObservers(changedFlags: [LDFlagKey], user: LDUser, oldFlags: [LDFlagKey: Any])
 }
 
-class LDFlagChangeNotifier: FlagChangeNotifying {
+class FlagChangeNotifier: FlagChangeNotifying {
     private var observers = [FlagChangeObserver]()
     var flagsUnchangedObserver: FlagsUnchangedObserver?
     

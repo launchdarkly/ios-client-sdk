@@ -58,7 +58,7 @@ struct ClientServiceFactory: ClientServiceCreating {
     }
 
     func makeFlagChangeNotifier() -> FlagChangeNotifying {
-        return LDFlagChangeNotifier()
+        return FlagChangeNotifier()
     }
 
     func makeEventReporter(mobileKey: String, config: LDConfig, service: DarklyServiceProvider) -> LDEventReporting {

@@ -43,6 +43,16 @@ final class DarklyStreamingProviderMock: DarklyStreamingProvider {
 // MARK: - FlagChangeNotifyingMock
 final class FlagChangeNotifyingMock: FlagChangeNotifying {
 
+    // MARK: flagsUnchangedObserver
+    var flagsUnchangedObserverSetCount = 0
+    var setFlagsUnchangedObserverCallback: (() -> Void)?
+    var flagsUnchangedObserver: FlagsUnchangedObserver? {
+        didSet {
+            flagsUnchangedObserverSetCount += 1
+            setFlagsUnchangedObserverCallback?()
+        }
+    }
+
     // MARK: addObserver
     var addObserverCallCount = 0
     var addObserverCallback: (() -> Void)?

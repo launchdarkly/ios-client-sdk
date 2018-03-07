@@ -1,5 +1,5 @@
 //
-//  LDFlagChangeNotifyingSpec.swift
+//  FlagChangeNotifierSpec.swift
 //  DarklyTests
 //
 //  Created by Mark Pokorny on 12/14/17. +JMJ
@@ -11,7 +11,7 @@ import Nimble
 import Foundation
 @testable import Darkly
 
-final class LDFlagChangeNotifyingSpec: QuickSpec {
+final class FlagChangeNotifierSpec: QuickSpec {
     override func spec() {
 
     }
