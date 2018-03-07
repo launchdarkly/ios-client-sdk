@@ -41,7 +41,8 @@ final class FlagChangeNotifier: FlagChangeNotifying {
     
     ///Removes all change handling closures from owner
     func removeObserver(owner: LDFlagChangeOwner) {
-        
+        observers = observers.filter { (observer) in observer.owner !== owner }
+        if flagsUnchangedObserver?.owner === owner { flagsUnchangedObserver = nil }
     }
     
     func notifyObservers(changedFlags: [LDFlagKey], user: LDUser, oldFlags: [LDFlagKey: Any]) {

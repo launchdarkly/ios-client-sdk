@@ -25,6 +25,7 @@ final class FlagChangeNotifierSpec: QuickSpec {
         var customFlagChangeHandler: LDFlagChangeHandler?
         var changedFlags: [LDFlagKey: LDChangedFlag]?
         var customFlagCollectionChangeHandler: LDFlagCollectionChangeHandler?
+        var customFlagsUnchangedHandler: LDFlagsUnchangedHandler?
 
         init(observers observerCount: Int = 0, observerType: ObserverType = .any, repeatFirstObserver: Bool = false) {
             subject = FlagChangeNotifier()
@@ -40,6 +41,7 @@ final class FlagChangeNotifierSpec: QuickSpec {
             if repeatFirstObserver { observers[observerCount - 1] = observers.first! }
             subject = FlagChangeNotifier(observers: observers)
             originalObservers = subject.flagObservers
+            subject.flagsUnchangedObserver = FlagsUnchangedObserver(owner: observers.first!.owner!, flagsUnchangedHandler: flagsUnchangedHandler)
         }
 
         mutating func stubOwner() -> FlagChangeHandlerOwnerMock {
@@ -57,6 +59,10 @@ final class FlagChangeNotifierSpec: QuickSpec {
 
         func flagCollectionChangeHandler(changedFlags: [LDFlagKey: LDChangedFlag]) {
             customFlagCollectionChangeHandler?(changedFlags)
+        }
+
+        func flagsUnchangedHandler() {
+            customFlagsUnchangedHandler?()
         }
     }
 
@@ -102,6 +108,7 @@ final class FlagChangeNotifierSpec: QuickSpec {
         describe("remove observer") {
             removeObserverForKeySpec()
             removeObserverForKeysSpec()
+            removeObserverForOwnerSpec()
         }
     }
 
@@ -274,6 +281,66 @@ final class FlagChangeNotifierSpec: QuickSpec {
                 it("removes the observer") {
                     expect(testContext.subject.flagObservers.count) == Constants.observerCount - 1
                     expect(testContext.subject.flagObservers.contains(targetObserver)).to(beFalse())
+                }
+            }
+        }
+    }
+
+    private func removeObserverForOwnerSpec() {
+        var testContext: TestContext!
+        var targetObserver: FlagChangeObserver!
+        var targetOwner: FlagChangeHandlerOwnerMock!
+
+        context("with owner") {
+            context("when several observers exist") {
+                beforeEach {
+                    testContext = TestContext(observers: Constants.observerCount)
+                    targetObserver = testContext.subject.flagObservers[Constants.observerCount - 2]  //Take the middle one
+
+                    testContext.subject.removeObserver(owner: targetObserver.owner!)
+                }
+                it("removes the observer") {
+                    expect(testContext.subject.flagObservers.count) == Constants.observerCount - 1
+                    expect(testContext.subject.flagObservers.contains(targetObserver)).to(beFalse())
+                    expect(testContext.subject.flagsUnchangedObserver).toNot(beNil())
+                }
+            }
+            context("when 1 observer exists") {
+                beforeEach {
+                    testContext = TestContext(observers: 1)
+                    targetObserver = testContext.subject.flagObservers.first!
+
+                    testContext.subject.removeObserver(owner: targetObserver.owner!)
+                }
+                it("removes the observer") {
+                    expect(testContext.subject.flagObservers.isEmpty).to(beTrue())
+                    expect(testContext.subject.flagsUnchangedObserver).to(beNil())
+                }
+            }
+            context("when the target observer doesnt exist") {
+                beforeEach {
+                    testContext = TestContext(observers: Constants.observerCount)
+                    targetOwner = FlagChangeHandlerOwnerMock()
+
+                    testContext.subject.removeObserver(owner: targetOwner!)
+                }
+                it("leaves the observers unchanged") {
+                    expect(testContext.subject.flagObservers.count) == Constants.observerCount
+                    expect(testContext.subject.flagObservers) == testContext.originalObservers
+                    expect(testContext.subject.flagsUnchangedObserver).toNot(beNil())
+                }
+            }
+            context("when multiple target observers exist") {
+                beforeEach {
+                    testContext = TestContext(observers: Constants.observerCount + 1, repeatFirstObserver: true)
+                    targetObserver = testContext.subject.flagObservers.first!
+
+                    testContext.subject.removeObserver(owner: targetObserver.owner!)
+                }
+                it("removes the observer") {
+                    expect(testContext.subject.flagObservers.count) == Constants.observerCount - 1
+                    expect(testContext.subject.flagObservers.contains(targetObserver)).to(beFalse())
+                    expect(testContext.subject.flagsUnchangedObserver).to(beNil())
                 }
             }
         }
