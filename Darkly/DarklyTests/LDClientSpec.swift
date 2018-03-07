@@ -1073,8 +1073,6 @@ final class LDClientSpec: QuickSpec {
             }
             it("informs the flag change notifier of the changed flags") {
                 expect(testContext.changeNotifierMock.notifyObserversCallCount) == 1
-                expect(testContext.changeNotifierMock.notifyObserversReceivedArguments?.changedFlags.isEmpty).toNot(beTrue())
-                expect(testContext.changeNotifierMock.notifyObserversReceivedArguments?.changedFlags) == oldFlags.symmetricDifference(newFlags.flagCollection!)
                 expect(testContext.changeNotifierMock.notifyObserversReceivedArguments?.user) == testContext.user
                 expect(testContext.changeNotifierMock.notifyObserversReceivedArguments?.oldFlags == oldFlags).to(beTrue())
                 expect(testContext.onFlagsUnchangedCallCount) == 0
@@ -1110,8 +1108,6 @@ final class LDClientSpec: QuickSpec {
             }
             it("informs the flag change notifier of the changed flags") {
                 expect(testContext.changeNotifierMock.notifyObserversCallCount) == 1
-                expect(testContext.changeNotifierMock.notifyObserversReceivedArguments?.changedFlags.isEmpty).toNot(beTrue())
-                expect(testContext.changeNotifierMock.notifyObserversReceivedArguments?.changedFlags) == oldFlags.symmetricDifference(newFlags.flagCollection!)
                 expect(testContext.changeNotifierMock.notifyObserversReceivedArguments?.user) == testContext.user
                 expect(testContext.changeNotifierMock.notifyObserversReceivedArguments?.oldFlags == oldFlags).to(beTrue())
                 expect(testContext.onFlagsUnchangedCallCount) == 0
@@ -1147,8 +1143,6 @@ final class LDClientSpec: QuickSpec {
             }
             it("informs the flag change notifier of the changed flags") {
                 expect(testContext.changeNotifierMock.notifyObserversCallCount) == 1
-                expect(testContext.changeNotifierMock.notifyObserversReceivedArguments?.changedFlags.isEmpty).toNot(beTrue())
-                expect(testContext.changeNotifierMock.notifyObserversReceivedArguments?.changedFlags) == oldFlags.symmetricDifference(newFlags.flagCollection!)
                 expect(testContext.changeNotifierMock.notifyObserversReceivedArguments?.user) == testContext.user
                 expect(testContext.changeNotifierMock.notifyObserversReceivedArguments?.oldFlags == oldFlags).to(beTrue())
                 expect(testContext.onFlagsUnchangedCallCount) == 0
@@ -1230,8 +1224,6 @@ final class LDClientSpec: QuickSpec {
             }
             it("informs the flag change notifier of the changed flag") {
                 expect(testContext.changeNotifierMock.notifyObserversCallCount) == 1
-                expect(testContext.changeNotifierMock.notifyObserversReceivedArguments?.changedFlags.isEmpty).toNot(beTrue())
-                expect(testContext.changeNotifierMock.notifyObserversReceivedArguments?.changedFlags) == oldFlags.symmetricDifference(newFlags.flagCollection!)
                 expect(testContext.changeNotifierMock.notifyObserversReceivedArguments?.user) == testContext.user
                 expect(testContext.changeNotifierMock.notifyObserversReceivedArguments?.oldFlags == oldFlags).to(beTrue())
                 expect(testContext.onFlagsUnchangedCallCount) == 0
@@ -1314,8 +1306,6 @@ final class LDClientSpec: QuickSpec {
             }
             it("informs the flag change notifier of the changed flag") {
                 expect(testContext.changeNotifierMock.notifyObserversCallCount) == 1
-                expect(testContext.changeNotifierMock.notifyObserversReceivedArguments?.changedFlags.isEmpty).toNot(beTrue())
-                expect(testContext.changeNotifierMock.notifyObserversReceivedArguments?.changedFlags) == oldFlags.symmetricDifference(newFlags.flagCollection!)
                 expect(testContext.changeNotifierMock.notifyObserversReceivedArguments?.user) == testContext.user
                 expect(testContext.changeNotifierMock.notifyObserversReceivedArguments?.oldFlags == oldFlags).to(beTrue())
                 expect(testContext.onFlagsUnchangedCallCount) == 0

@@ -18,7 +18,7 @@ protocol FlagChangeNotifying {
     func removeObserver(_ keys: [LDFlagKey], owner: LDFlagChangeOwner)
     //sourcery: NoMock
     func removeObserver(owner: LDFlagChangeOwner)
-    func notifyObservers(changedFlags: [LDFlagKey], user: LDUser, oldFlags: [LDFlagKey: Any])
+    func notifyObservers(user: LDUser, oldFlags: [LDFlagKey: Any])
 }
 
 final class FlagChangeNotifier: FlagChangeNotifying {
@@ -45,7 +45,7 @@ final class FlagChangeNotifier: FlagChangeNotifying {
         if flagsUnchangedObserver?.owner === owner { flagsUnchangedObserver = nil }
     }
     
-    func notifyObservers(changedFlags: [LDFlagKey], user: LDUser, oldFlags: [LDFlagKey: Any]) {
+    func notifyObservers(user: LDUser, oldFlags: [LDFlagKey: Any]) {
         
     }
     

@@ -299,7 +299,7 @@ public class LDClient {
             executeCallback(onFlagsUnchanged)
             return
         }
-        changeNotifier.notifyObservers(changedFlags: changedFlagKeys, user: user, oldFlags: oldFlags)
+        changeNotifier.notifyObservers(user: user, oldFlags: oldFlags)
     }
 
     private func executeCallback(_ callback: (() -> Void)?) {
