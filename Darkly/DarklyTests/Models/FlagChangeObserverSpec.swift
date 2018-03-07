@@ -29,7 +29,7 @@ final class FlagChangeObserverSpec: QuickSpec {
             }
             context("when observers are the same item") {
                 beforeEach {
-                    leftObserver = FlagChangeObserver(key: DarklyServiceMock.FlagKeys.bool, owner: ownerMock, changeObserver: { (changedFlag) in })
+                    leftObserver = FlagChangeObserver(key: DarklyServiceMock.FlagKeys.bool, owner: ownerMock, flagChangeHandler: { (changedFlag) in })
                 }
                 it("returns true") {
                     expect(leftObserver) == leftObserver
@@ -37,8 +37,8 @@ final class FlagChangeObserverSpec: QuickSpec {
             }
             context("when observers have the same key and owner") {
                 beforeEach {
-                    leftObserver = FlagChangeObserver(key: DarklyServiceMock.FlagKeys.bool, owner: ownerMock, changeObserver: { (changedFlag) in })
-                    rightObserver = FlagChangeObserver(key: DarklyServiceMock.FlagKeys.bool, owner: ownerMock, changeObserver: { (changedFlag) in })
+                    leftObserver = FlagChangeObserver(key: DarklyServiceMock.FlagKeys.bool, owner: ownerMock, flagChangeHandler: { (changedFlag) in })
+                    rightObserver = FlagChangeObserver(key: DarklyServiceMock.FlagKeys.bool, owner: ownerMock, flagChangeHandler: { (changedFlag) in })
                 }
                 it("returns true") {
                     expect(leftObserver) == rightObserver
@@ -46,8 +46,8 @@ final class FlagChangeObserverSpec: QuickSpec {
             }
             context("when observers has a different key and the same owner") {
                 beforeEach {
-                    leftObserver = FlagChangeObserver(key: DarklyServiceMock.FlagKeys.bool, owner: ownerMock, changeObserver: { (changedFlag) in })
-                    rightObserver = FlagChangeObserver(key: DarklyServiceMock.FlagKeys.int, owner: ownerMock, changeObserver: { (changedFlag) in })
+                    leftObserver = FlagChangeObserver(key: DarklyServiceMock.FlagKeys.bool, owner: ownerMock, flagChangeHandler: { (changedFlag) in })
+                    rightObserver = FlagChangeObserver(key: DarklyServiceMock.FlagKeys.int, owner: ownerMock, flagChangeHandler: { (changedFlag) in })
                 }
                 it("returns false") {
                     expect(leftObserver) != rightObserver
@@ -55,8 +55,8 @@ final class FlagChangeObserverSpec: QuickSpec {
             }
             context("when observers have the same key and different owner") {
                 beforeEach {
-                    leftObserver = FlagChangeObserver(key: DarklyServiceMock.FlagKeys.bool, owner: ownerMock, changeObserver: { (changedFlag) in })
-                    rightObserver = FlagChangeObserver(key: DarklyServiceMock.FlagKeys.bool, owner: otherOwnerMock, changeObserver: { (changedFlag) in })
+                    leftObserver = FlagChangeObserver(key: DarklyServiceMock.FlagKeys.bool, owner: ownerMock, flagChangeHandler: { (changedFlag) in })
+                    rightObserver = FlagChangeObserver(key: DarklyServiceMock.FlagKeys.bool, owner: otherOwnerMock, flagChangeHandler: { (changedFlag) in })
                 }
                 it("returns false") {
                     expect(leftObserver) != rightObserver
@@ -64,8 +64,8 @@ final class FlagChangeObserverSpec: QuickSpec {
             }
             context("when observers have the same keys and owner") {
                 beforeEach {
-                    leftObserver = FlagChangeObserver(keys: DarklyServiceMock.FlagKeys.all, owner: ownerMock, collectionChangeObserver: { (changedFlags) in })
-                    rightObserver = FlagChangeObserver(keys: DarklyServiceMock.FlagKeys.all, owner: ownerMock, collectionChangeObserver: { (changedFlags) in })
+                    leftObserver = FlagChangeObserver(keys: DarklyServiceMock.FlagKeys.all, owner: ownerMock, flagCollectionChangeHandler: { (changedFlags) in })
+                    rightObserver = FlagChangeObserver(keys: DarklyServiceMock.FlagKeys.all, owner: ownerMock, flagCollectionChangeHandler: { (changedFlags) in })
                 }
                 it("returns true") {
                     expect(leftObserver) == rightObserver
@@ -73,8 +73,8 @@ final class FlagChangeObserverSpec: QuickSpec {
             }
             context("when observers have different keys and the same owner") {
                 beforeEach {
-                    leftObserver = FlagChangeObserver(keys: DarklyServiceMock.FlagKeys.all, owner: ownerMock, collectionChangeObserver: { (changedFlags) in })
-                    rightObserver = FlagChangeObserver(keys: [DarklyServiceMock.FlagKeys.bool], owner: ownerMock, collectionChangeObserver: { (changedFlags) in })
+                    leftObserver = FlagChangeObserver(keys: DarklyServiceMock.FlagKeys.all, owner: ownerMock, flagCollectionChangeHandler: { (changedFlags) in })
+                    rightObserver = FlagChangeObserver(keys: [DarklyServiceMock.FlagKeys.bool], owner: ownerMock, flagCollectionChangeHandler: { (changedFlags) in })
                 }
                 it("returns false") {
                     expect(leftObserver) != rightObserver
@@ -82,8 +82,8 @@ final class FlagChangeObserverSpec: QuickSpec {
             }
             context("when observers have the same keys and a different owner") {
                 beforeEach {
-                    leftObserver = FlagChangeObserver(keys: DarklyServiceMock.FlagKeys.all, owner: ownerMock, collectionChangeObserver: { (changedFlags) in })
-                    rightObserver = FlagChangeObserver(keys: DarklyServiceMock.FlagKeys.all, owner: otherOwnerMock, collectionChangeObserver: { (changedFlags) in })
+                    leftObserver = FlagChangeObserver(keys: DarklyServiceMock.FlagKeys.all, owner: ownerMock, flagCollectionChangeHandler: { (changedFlags) in })
+                    rightObserver = FlagChangeObserver(keys: DarklyServiceMock.FlagKeys.all, owner: otherOwnerMock, flagCollectionChangeHandler: { (changedFlags) in })
                 }
                 it("returns false") {
                     expect(leftObserver) != rightObserver

@@ -14,18 +14,18 @@ struct FlagChangeObserver {
     let flagChangeHandler: LDFlagChangeHandler?
     let flagCollectionChangeHandler: LDFlagCollectionChangeHandler?
 
-    init(key: LDFlagKey, owner: LDFlagChangeOwner, changeObserver: @escaping LDFlagChangeHandler) {
+    init(key: LDFlagKey, owner: LDFlagChangeOwner, flagChangeHandler: @escaping LDFlagChangeHandler) {
         self.flagKeys = [key]
         self.owner = owner
-        self.flagChangeHandler = changeObserver
+        self.flagChangeHandler = flagChangeHandler
         self.flagCollectionChangeHandler = nil
     }
 
-    init(keys: [LDFlagKey], owner: LDFlagChangeOwner, collectionChangeObserver: @escaping LDFlagCollectionChangeHandler) {
+    init(keys: [LDFlagKey], owner: LDFlagChangeOwner, flagCollectionChangeHandler: @escaping LDFlagCollectionChangeHandler) {
         self.flagKeys = keys
         self.owner = owner
         self.flagChangeHandler = nil
-        self.flagCollectionChangeHandler = collectionChangeObserver
+        self.flagCollectionChangeHandler = flagCollectionChangeHandler
     }
 }
 

@@ -12,7 +12,7 @@ import Foundation
 //sourcery: AutoMockable
 protocol FlagChangeNotifying {
     var flagsUnchangedObserver: FlagsUnchangedObserver? { get set }
-    func addObserver(_ observer: FlagChangeObserver)
+    func add(_ observer: FlagChangeObserver)
     //sourcery: NoMock
     func removeObserver(_ key: LDFlagKey, owner: LDFlagChangeOwner)
     func removeObserver(_ keys: [LDFlagKey], owner: LDFlagChangeOwner)
@@ -25,8 +25,8 @@ class FlagChangeNotifier: FlagChangeNotifying {
     private var observers = [FlagChangeObserver]()
     var flagsUnchangedObserver: FlagsUnchangedObserver?
     
-    func addObserver(_ observer: FlagChangeObserver) {
-        
+    func add(_ observer: FlagChangeObserver) {
+        observers.append(observer)
     }
     
     ///Removes any change handling closures for flag.key from owner
@@ -52,3 +52,15 @@ class FlagChangeNotifier: FlagChangeNotifying {
         
     }
 }
+
+//Test support
+#if DEBUG
+    extension FlagChangeNotifier {
+        var flagObservers: [FlagChangeObserver] { return observers }
+
+        convenience init(observers: [FlagChangeObserver]) {
+            self.init()
+            self.observers = observers
+        }
+    }
+#endif

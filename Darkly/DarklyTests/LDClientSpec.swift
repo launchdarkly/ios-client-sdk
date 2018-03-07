@@ -50,7 +50,7 @@ final class LDClientSpec: QuickSpec {
         var flagSynchronizerMock: LDFlagSynchronizingMock! { return subject.flagSynchronizer as? LDFlagSynchronizingMock }
         var eventReporterMock: LDEventReportingMock! { return subject.eventReporter as? LDEventReportingMock }
         var changeNotifierMock: FlagChangeNotifyingMock! { return subject.flagChangeNotifier as? FlagChangeNotifyingMock }
-        var flagObserver: FlagChangeObserver? { return changeNotifierMock.addObserverReceivedObserver }
+        var flagObserver: FlagChangeObserver? { return changeNotifierMock.addReceivedObserver }
         var flagChangeObserver: LDFlagChangeHandler? { return flagObserver?.flagChangeHandler }
         var flagCollectionChangeObserver: LDFlagCollectionChangeHandler? { return flagObserver?.flagCollectionChangeHandler }
         var onSyncComplete: SyncCompleteClosure? { return serviceFactoryMock.onSyncComplete }
@@ -961,8 +961,8 @@ final class LDClientSpec: QuickSpec {
                 })
             }
             it("registers a single flag observer") {
-                expect(testContext.changeNotifierMock.addObserverCallCount) == 1
-                expect(testContext.changeNotifierMock.addObserverReceivedObserver).toNot(beNil())
+                expect(testContext.changeNotifierMock.addCallCount) == 1
+                expect(testContext.changeNotifierMock.addReceivedObserver).toNot(beNil())
                 expect(testContext.flagObserver?.flagKeys) == [DarklyServiceMock.FlagKeys.bool]
                 expect(testContext.flagObserver?.owner) === self
                 testContext.flagChangeObserver?(changedFlag)
@@ -982,7 +982,7 @@ final class LDClientSpec: QuickSpec {
                 })
             }
             it("registers a collection flag observer") {
-                expect(testContext.changeNotifierMock.addObserverCallCount) == 1
+                expect(testContext.changeNotifierMock.addCallCount) == 1
                 expect(testContext.flagObserver?.flagKeys) == LDFlagKey.anyKey
                 expect(testContext.flagObserver?.owner) === self
                 expect(testContext.flagObserver?.flagCollectionChangeHandler).toNot(beNil())

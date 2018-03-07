@@ -220,7 +220,7 @@ public class LDClient {
     ///     }
     ///LDClient keeps a weak reference to the owner. Apps should keep only weak references to self in observers to avoid memory leaks
     public func observe(_ key: LDFlagKey, owner: LDFlagChangeOwner, observer: @escaping LDFlagChangeHandler) {
-        flagChangeNotifier.addObserver(FlagChangeObserver(key: key, owner: owner, changeObserver: observer))
+        flagChangeNotifier.add(FlagChangeObserver(key: key, owner: owner, flagChangeHandler: observer))
     }
     
     ///Usage
@@ -232,7 +232,7 @@ public class LDClient {
     ///     }
     /// changedFlags is a [LDFlagKey: LDChangedFlag]
     public func observe(_ keys: [LDFlagKey], owner: LDFlagChangeOwner, observer: @escaping LDFlagCollectionChangeHandler) {
-        flagChangeNotifier.addObserver(FlagChangeObserver(keys: keys, owner: owner, collectionChangeObserver: observer))
+        flagChangeNotifier.add(FlagChangeObserver(keys: keys, owner: owner, flagCollectionChangeHandler: observer))
     }
 
     ///Usage
@@ -244,7 +244,7 @@ public class LDClient {
     ///     }
     /// changedFlags is a [LDFlagKey: LDChangedFlag]
     public func observeAll(owner: LDFlagChangeOwner, observer: @escaping LDFlagCollectionChangeHandler) {
-        flagChangeNotifier.addObserver(FlagChangeObserver(keys: LDFlagKey.anyKey, owner: owner, collectionChangeObserver: observer))
+        flagChangeNotifier.add(FlagChangeObserver(keys: LDFlagKey.anyKey, owner: owner, flagCollectionChangeHandler: observer))
     }
     
     ///Sets a handler called when a flag update leaves the flags unchanged from their previous values.
