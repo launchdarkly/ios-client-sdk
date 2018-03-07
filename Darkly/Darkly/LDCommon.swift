@@ -13,6 +13,7 @@ public typealias LDFlagKey = String
 typealias UserKey = String
 public typealias LDFlagChangeHandler = (LDChangedFlag) -> Void
 public typealias LDFlagCollectionChangeHandler = ([LDFlagKey: LDChangedFlag]) -> Void
+public typealias LDFlagsUnchangedHandler = () -> Void
 
 extension LDFlagKey {
     private static var anyKeyIdentifier: String { return "Darkly.FlagKeyList.Any" }

@@ -247,7 +247,12 @@ public class LDClient {
         flagChangeNotifier.addObserver(FlagChangeObserver(keys: LDFlagKey.anyKey, owner: owner, collectionChangeObserver: observer))
     }
     
-    ///Removes all observers (both Individual Flag and All Flags) for the given owner
+    ///Sets a handler called when a flag update leaves the flags unchanged from their previous values.
+    public func observeFlagsUnchanged(owner: LDFlagChangeOwner, handler: @escaping LDFlagsUnchangedHandler) {
+        flagChangeNotifier.flagsUnchangedObserver = FlagsUnchangedObserver(owner: owner, flagsUnchangedHandler: handler)
+    }
+
+    ///Removes all observers for the given owner, including the flagsUnchangedObserver
     public func stopObserving(owner: LDFlagChangeOwner) {
         flagChangeNotifier.removeObserver(owner: owner)
     }

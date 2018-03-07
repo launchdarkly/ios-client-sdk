@@ -11,6 +11,7 @@ import Foundation
 //TODO: Change this to add a flags unchanged closure that gets called when notifyObservers is called with no flags changed. Have the LDClient set the closure when it creates the change notifier, or when the closure is set by the client app. That contains the change notifier's responsibility better
 //sourcery: AutoMockable
 protocol FlagChangeNotifying {
+    var flagsUnchangedObserver: FlagsUnchangedObserver? { get set }
     func addObserver(_ observer: FlagChangeObserver)
     //sourcery: NoMock
     func removeObserver(_ key: LDFlagKey, owner: LDFlagChangeOwner)
@@ -22,6 +23,7 @@ protocol FlagChangeNotifying {
 
 class LDFlagChangeNotifier: FlagChangeNotifying {
     private var observers = [FlagChangeObserver]()
+    var flagsUnchangedObserver: FlagsUnchangedObserver?
     
     func addObserver(_ observer: FlagChangeObserver) {
         
