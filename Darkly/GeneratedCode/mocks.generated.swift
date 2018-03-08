@@ -10,238 +10,272 @@ import DarklyEventSource
 
 // MARK: - DarklyStreamingProviderMock
 final class DarklyStreamingProviderMock: DarklyStreamingProvider {
-    var callback: ((String) -> Void)?
 
     // MARK: onMessageEvent
     var onMessageEventCallCount = 0
+    var onMessageEventCallback: (() -> Void)?
     var onMessageEventReceivedHandler: LDEventSourceEventHandler?
     func onMessageEvent(_ handler: LDEventSourceEventHandler?) {
         onMessageEventCallCount += 1
         onMessageEventReceivedHandler = handler
-        callback?("\(#function)")
+        onMessageEventCallback?()
     }
 
     // MARK: onErrorEvent
     var onErrorEventCallCount = 0
+    var onErrorEventCallback: (() -> Void)?
     var onErrorEventReceivedHandler: LDEventSourceEventHandler?
     func onErrorEvent(_ handler: LDEventSourceEventHandler?) {
         onErrorEventCallCount += 1
         onErrorEventReceivedHandler = handler
-        callback?("\(#function)")
+        onErrorEventCallback?()
     }
 
     // MARK: close
     var closeCallCount = 0
+    var closeCallback: (() -> Void)?
     func close() {
         closeCallCount += 1
-        callback?("\(#function)")
+        closeCallback?()
     }
 }
 
 // MARK: - FlagChangeNotifyingMock
 final class FlagChangeNotifyingMock: FlagChangeNotifying {
-    var callback: ((String) -> Void)?
 
     // MARK: addObserver
     var addObserverCallCount = 0
+    var addObserverCallback: (() -> Void)?
     var addObserverReceivedObserver: LDFlagObserver?
     func addObserver(_ observer: LDFlagObserver) {
         addObserverCallCount += 1
         addObserverReceivedObserver = observer
-        callback?("\(#function)")
+        addObserverCallback?()
     }
 
     // MARK: removeObserver
     var removeObserverCallCount = 0
+    var removeObserverCallback: (() -> Void)?
     var removeObserverReceivedArguments: (keys: [LDFlagKey], owner: LDFlagChangeOwner)?
     func removeObserver(_ keys: [LDFlagKey], owner: LDFlagChangeOwner) {
         removeObserverCallCount += 1
         removeObserverReceivedArguments = (keys: keys, owner: owner)
-        callback?("\(#function)")
+        removeObserverCallback?()
     }
 
     // MARK: notifyObservers
     var notifyObserversCallCount = 0
+    var notifyObserversCallback: (() -> Void)?
     var notifyObserversReceivedArguments: (changedFlags: [LDFlagKey], user: LDUser, oldFlags: [LDFlagKey: Any])?
     func notifyObservers(changedFlags: [LDFlagKey], user: LDUser, oldFlags: [LDFlagKey: Any]) {
         notifyObserversCallCount += 1
         notifyObserversReceivedArguments = (changedFlags: changedFlags, user: user, oldFlags: oldFlags)
-        callback?("\(#function)")
+        notifyObserversCallback?()
     }
 }
 
 // MARK: - FlagCollectionCachingMock
 final class FlagCollectionCachingMock: FlagCollectionCaching {
-    var callback: ((String) -> Void)?
 
     // MARK: retrieveFlags
     var retrieveFlagsCallCount = 0
+    var retrieveFlagsCallback: (() -> Void)?
     var retrieveFlagsReturnValue: [String: CacheableUserFlags] = [:]
     func retrieveFlags() -> [String: CacheableUserFlags] {
         retrieveFlagsCallCount += 1
         return retrieveFlagsReturnValue
-        callback?("\(#function)")
+        retrieveFlagsCallback?()
     }
 
     // MARK: storeFlags
     var storeFlagsCallCount = 0
+    var storeFlagsCallback: (() -> Void)?
     var storeFlagsReceivedFlags: [String: CacheableUserFlags]?
     func storeFlags(_ flags: [String: CacheableUserFlags]) {
         storeFlagsCallCount += 1
         storeFlagsReceivedFlags = flags
-        callback?("\(#function)")
+        storeFlagsCallback?()
     }
 }
 
 // MARK: - FlagMaintainingMock
 final class FlagMaintainingMock: FlagMaintaining {
-    var callback: ((String) -> Void)?
 
     // MARK: featureFlags
     var featureFlagsSetCount = 0
+    var setFeatureFlagsCallback: (() -> Void)?
     var featureFlags: [LDFlagKey: FeatureFlag] = [:] {
-        didSet { featureFlagsSetCount += 1; callback?("\(#function)") }
+        didSet {
+            featureFlagsSetCount += 1
+            setFeatureFlagsCallback?()
+        }
     }
 
     // MARK: flagValueSource
     var flagValueSourceSetCount = 0
+    var setFlagValueSourceCallback: (() -> Void)?
     var flagValueSource: LDFlagValueSource = .cache {
-        didSet { flagValueSourceSetCount += 1; callback?("\(#function)") }
+        didSet {
+            flagValueSourceSetCount += 1
+            setFlagValueSourceCallback?()
+        }
     }
 
     // MARK: replaceStore
     var replaceStoreCallCount = 0
+    var replaceStoreCallback: (() -> Void)?
     var replaceStoreReceivedArguments: (newFlags: [LDFlagKey: Any]?, source: LDFlagValueSource, completion: CompletionClosure?)?
     func replaceStore(newFlags: [LDFlagKey: Any]?, source: LDFlagValueSource, completion: CompletionClosure?) {
         replaceStoreCallCount += 1
         replaceStoreReceivedArguments = (newFlags: newFlags, source: source, completion: completion)
-        callback?("\(#function)")
+        replaceStoreCallback?()
     }
 
     // MARK: updateStore
     var updateStoreCallCount = 0
+    var updateStoreCallback: (() -> Void)?
     var updateStoreReceivedArguments: (updateDictionary: [String: Any], source: LDFlagValueSource, completion: CompletionClosure?)?
     func updateStore(updateDictionary: [String: Any], source: LDFlagValueSource, completion: CompletionClosure?) {
         updateStoreCallCount += 1
         updateStoreReceivedArguments = (updateDictionary: updateDictionary, source: source, completion: completion)
-        callback?("\(#function)")
+        updateStoreCallback?()
     }
 
     // MARK: deleteFlag
     var deleteFlagCallCount = 0
+    var deleteFlagCallback: (() -> Void)?
     var deleteFlagReceivedArguments: (deleteDictionary: [String: Any], completion: CompletionClosure?)?
     func deleteFlag(deleteDictionary: [String: Any], completion: CompletionClosure?) {
         deleteFlagCallCount += 1
         deleteFlagReceivedArguments = (deleteDictionary: deleteDictionary, completion: completion)
-        callback?("\(#function)")
+        deleteFlagCallback?()
     }
 }
 
 // MARK: - KeyedValueCachingMock
 final class KeyedValueCachingMock: KeyedValueCaching {
-    var callback: ((String) -> Void)?
 
     // MARK: set
     var setCallCount = 0
+    var setCallback: (() -> Void)?
     var setReceivedArguments: (value: Any?, forKey: String)?
     func set(_ value: Any?, forKey: String) {
         setCallCount += 1
         setReceivedArguments = (value: value, forKey: forKey)
-        callback?("\(#function)")
+        setCallback?()
     }
 
     // MARK: dictionary
     var dictionaryCallCount = 0
+    var dictionaryCallback: (() -> Void)?
     var dictionaryReceivedForKey: String?
     var dictionaryReturnValue: [String: Any]? = nil
     func dictionary(forKey: String) -> [String: Any]? {
         dictionaryCallCount += 1
         dictionaryReceivedForKey = forKey
         return dictionaryReturnValue
-        callback?("\(#function)")
+        dictionaryCallback?()
     }
 
     // MARK: removeObject
     var removeObjectCallCount = 0
+    var removeObjectCallback: (() -> Void)?
     var removeObjectReceivedForKey: String?
     func removeObject(forKey: String) {
         removeObjectCallCount += 1
         removeObjectReceivedForKey = forKey
-        callback?("\(#function)")
+        removeObjectCallback?()
     }
 }
 
 // MARK: - LDEventReportingMock
 final class LDEventReportingMock: LDEventReporting {
-    var callback: ((String) -> Void)?
 
     // MARK: config
     var configSetCount = 0
+    var setConfigCallback: (() -> Void)?
     var config: LDConfig = LDConfig.stub {
-        didSet { configSetCount += 1; callback?("\(#function)") }
+        didSet {
+            configSetCount += 1
+            setConfigCallback?()
+        }
     }
 
     // MARK: isOnline
     var isOnlineSetCount = 0
+    var setIsOnlineCallback: (() -> Void)?
     var isOnline: Bool = false {
-        didSet { isOnlineSetCount += 1; callback?("\(#function)") }
+        didSet {
+            isOnlineSetCount += 1
+            setIsOnlineCallback?()
+        }
     }
 
     // MARK: service
     var serviceSetCount = 0
+    var setServiceCallback: (() -> Void)?
     var service: DarklyServiceProvider = DarklyServiceMock() {
-        didSet { serviceSetCount += 1; callback?("\(#function)") }
+        didSet {
+            serviceSetCount += 1
+            setServiceCallback?()
+        }
     }
 
     // MARK: record
     var recordCallCount = 0
+    var recordCallback: (() -> Void)?
     var recordReceivedArguments: (event: Darkly.LDEvent, completion: CompletionClosure?)?
     func record(_ event: Darkly.LDEvent, completion: CompletionClosure?) {
         recordCallCount += 1
         recordReceivedArguments = (event: event, completion: completion)
-        callback?("\(#function)")
+        recordCallback?()
     }
 
     // MARK: reportEvents
     var reportEventsCallCount = 0
+    var reportEventsCallback: (() -> Void)?
     func reportEvents() {
         reportEventsCallCount += 1
-        callback?("\(#function)")
+        reportEventsCallback?()
     }
 }
 
 // MARK: - LDFlagSynchronizingMock
 final class LDFlagSynchronizingMock: LDFlagSynchronizing {
-    var callback: ((String) -> Void)?
 
     // MARK: isOnline
     var isOnlineSetCount = 0
+    var setIsOnlineCallback: (() -> Void)?
     var isOnline: Bool = false {
-        didSet { isOnlineSetCount += 1; callback?("\(#function)") }
+        didSet {
+            isOnlineSetCount += 1
+            setIsOnlineCallback?()
+        }
     }
 }
 
 // MARK: - UserFlagCachingMock
 final class UserFlagCachingMock: UserFlagCaching {
-    var callback: ((String) -> Void)?
 
     // MARK: cacheFlags
     var cacheFlagsCallCount = 0
+    var cacheFlagsCallback: (() -> Void)?
     var cacheFlagsReceivedUser: LDUser?
     func cacheFlags(for user: LDUser) {
         cacheFlagsCallCount += 1
         cacheFlagsReceivedUser = user
-        callback?("\(#function)")
+        cacheFlagsCallback?()
     }
 
     // MARK: retrieveFlags
     var retrieveFlagsCallCount = 0
+    var retrieveFlagsCallback: (() -> Void)?
     var retrieveFlagsReceivedUser: LDUser?
     var retrieveFlagsReturnValue: CacheableUserFlags? = nil
     func retrieveFlags(for user: LDUser) -> CacheableUserFlags? {
         retrieveFlagsCallCount += 1
         retrieveFlagsReceivedUser = user
         return retrieveFlagsReturnValue
-        callback?("\(#function)")
+        retrieveFlagsCallback?()
     }
 }

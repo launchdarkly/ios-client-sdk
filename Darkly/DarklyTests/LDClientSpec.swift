@@ -71,12 +71,13 @@ final class LDClientSpec: QuickSpec {
 
         ///Pass nil to leave the flags unchanged
         func setFlagStoreCallbackToMimicRealFlagStore(newFlags: [LDFlagKey: FeatureFlag]? = nil) {
-            flagStoreMock.callback = { (methodName) in
-                guard methodName.starts(with: "replaceStore")
-                    || methodName.starts(with: "updateStore")
-                    || methodName.starts(with: "deleteFlag")
-                else { return }
-
+            flagStoreMock.replaceStoreCallback = {
+                self.flagStoreMock!.featureFlags = newFlags ?? self.flagStoreMock!.featureFlags
+            }
+            flagStoreMock.updateStoreCallback = {
+                self.flagStoreMock!.featureFlags = newFlags ?? self.flagStoreMock!.featureFlags
+            }
+            flagStoreMock.deleteFlagCallback = {
                 self.flagStoreMock!.featureFlags = newFlags ?? self.flagStoreMock!.featureFlags
             }
         }
@@ -1054,8 +1055,7 @@ final class LDClientSpec: QuickSpec {
                         testContext.onFlagsUnchangedCallCount += 1
                         done()
                     }
-                    testContext.changeNotifierMock.callback = { (methodName) in
-                        guard methodName.starts(with: "notifyObservers") else { return }
+                    testContext.changeNotifierMock.notifyObserversCallback = {
                         done()
                     }
 
@@ -1094,8 +1094,7 @@ final class LDClientSpec: QuickSpec {
                         testContext.onFlagsUnchangedCallCount += 1
                         done()
                     }
-                    testContext.changeNotifierMock.callback = { (methodName) in
-                        guard methodName.starts(with: "notifyObservers") else { return }
+                    testContext.changeNotifierMock.notifyObserversCallback = {
                         done()
                     }
 
@@ -1134,8 +1133,7 @@ final class LDClientSpec: QuickSpec {
                         testContext.onFlagsUnchangedCallCount += 1
                         done()
                     }
-                    testContext.changeNotifierMock.callback = { (methodName) in
-                        guard methodName.starts(with: "notifyObservers") else { return }
+                    testContext.changeNotifierMock.notifyObserversCallback = {
                         done()
                     }
 
@@ -1172,8 +1170,7 @@ final class LDClientSpec: QuickSpec {
                         testContext.onFlagsUnchangedCallCount += 1
                         done()
                     }
-                    testContext.changeNotifierMock.callback = { (methodName) in
-                        guard methodName.starts(with: "notifyObservers") else { return }
+                    testContext.changeNotifierMock.notifyObserversCallback = {
                         done()
                     }
 
@@ -1222,8 +1219,7 @@ final class LDClientSpec: QuickSpec {
                         testContext.onFlagsUnchangedCallCount += 1
                         done()
                     }
-                    testContext.changeNotifierMock.callback = { (methodName) in
-                        guard methodName.starts(with: "notifyObservers") else { return }
+                    testContext.changeNotifierMock.notifyObserversCallback = {
                         done()
                     }
 
@@ -1262,8 +1258,7 @@ final class LDClientSpec: QuickSpec {
                         testContext.onFlagsUnchangedCallCount += 1
                         done()
                     }
-                    testContext.changeNotifierMock.callback = { (methodName) in
-                        guard methodName.starts(with: "notifyObservers") else { return }
+                    testContext.changeNotifierMock.notifyObserversCallback = {
                         done()
                     }
 
@@ -1312,8 +1307,7 @@ final class LDClientSpec: QuickSpec {
                         testContext.onFlagsUnchangedCallCount += 1
                         done()
                     }
-                    testContext.changeNotifierMock.callback = { (methodName) in
-                        guard methodName.starts(with: "notifyObservers") else { return }
+                    testContext.changeNotifierMock.notifyObserversCallback = {
                         done()
                     }
 
@@ -1352,8 +1346,7 @@ final class LDClientSpec: QuickSpec {
                         testContext.onFlagsUnchangedCallCount += 1
                         done()
                     }
-                    testContext.changeNotifierMock.callback = { (methodName) in
-                        guard methodName.starts(with: "notifyObservers") else { return }
+                    testContext.changeNotifierMock.notifyObserversCallback = {
                         done()
                     }
 
