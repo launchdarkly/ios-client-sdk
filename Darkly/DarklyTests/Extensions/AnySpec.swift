@@ -28,6 +28,7 @@ final class AnySpec: QuickSpec {
         static let null = NSNull()
 
         static let all: [Any] = [bool, int, double, string, array, dictionary, date, userFlags, null]
+        static let allThatCanBeInequal: [Any] = [bool, int, double, string, array, dictionary, date, userFlags]
     }
 
     struct AltValues {
@@ -42,6 +43,7 @@ final class AnySpec: QuickSpec {
         static let null = NSNull()
 
         static let all: [Any] = [bool, int, double, string, array, dictionary, date, userFlags, null]
+        static let allThatCanBeInequal: [Any] = [bool, int, double, string, array, dictionary, date, userFlags]
     }
 
     override func spec() {
@@ -65,12 +67,9 @@ final class AnySpec: QuickSpec {
             }
             context("when values dont match") {
                 it("returns false") {
-                    zip(Values.all, AltValues.all).forEach { (value, altValue) in
+                    zip(Values.allThatCanBeInequal, AltValues.allThatCanBeInequal).forEach { (value, altValue) in
                         other = altValue
-
-                        if !(value is NSNull) {
-                            expect(AnyComparer.isEqual(value, to: other)).to(beFalse())
-                        }
+                        expect(AnyComparer.isEqual(value, to: other)).to(beFalse())
                     }
                 }
             }
