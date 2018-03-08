@@ -33,9 +33,7 @@ final class LDEventReporterSpec: QuickSpec {
         
         subject = LDEventReporter(mobileKey: Constants.mockMobileKey, config: config, service: mockService)
         waitUntil { done in
-            self.recordEvents(eventCount) {
-                done()
-            }
+            self.recordEvents(eventCount, completion: done)
         }
     }
     
@@ -148,9 +146,7 @@ final class LDEventReporterSpec: QuickSpec {
                     self.setupReporter()   //side-effect is mockEvents is also reset...do this before creating events
 
                     waitUntil { done in
-                        self.recordEvents(Constants.eventCapacity) {
-                            done()
-                        }
+                        self.recordEvents(Constants.eventCapacity, completion: done)
                     }
                 }
                 it("records events up to event capacity") {
@@ -185,9 +181,7 @@ final class LDEventReporterSpec: QuickSpec {
                         self.subject.isOnline = true
 
                         waitUntil { done in
-                            self.recordEvents(Constants.eventCapacity) {
-                                done()
-                            }
+                            self.recordEvents(Constants.eventCapacity, completion: done)
                         }
 
                         self.subject.reportEvents()
@@ -204,9 +198,7 @@ final class LDEventReporterSpec: QuickSpec {
                         self.subject.isOnline = true
 
                         waitUntil { done in
-                            self.recordEvents(Constants.eventCapacity) {
-                                done()
-                            }
+                            self.recordEvents(Constants.eventCapacity, completion: done)
                         }
 
                         self.subject.reportEvents()
@@ -222,9 +214,7 @@ final class LDEventReporterSpec: QuickSpec {
                         self.subject.isOnline = true
 
                         waitUntil { done in
-                            self.recordEvents(Constants.eventCapacity) {
-                                done()
-                            }
+                            self.recordEvents(Constants.eventCapacity, completion: done)
                         }
 
                         self.subject.reportEvents()
@@ -240,9 +230,7 @@ final class LDEventReporterSpec: QuickSpec {
                         self.subject.isOnline = true
 
                         waitUntil { done in
-                            self.recordEvents(Constants.eventCapacity) {
-                                done()
-                            }
+                            self.recordEvents(Constants.eventCapacity, completion: done)
                         }
 
                         self.subject.reportEvents()
@@ -271,9 +259,7 @@ final class LDEventReporterSpec: QuickSpec {
                     self.subject.isOnline = true
 
                     waitUntil { done in
-                        self.recordEvents(Constants.eventCapacity) {
-                            done()
-                        }
+                        self.recordEvents(Constants.eventCapacity, completion: done)
                     }
                 }
                 it("reports events") {

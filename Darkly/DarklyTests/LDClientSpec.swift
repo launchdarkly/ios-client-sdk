@@ -1055,9 +1055,7 @@ final class LDClientSpec: QuickSpec {
                         testContext.onFlagsUnchangedCallCount += 1
                         done()
                     }
-                    testContext.changeNotifierMock.notifyObserversCallback = {
-                        done()
-                    }
+                    testContext.changeNotifierMock.notifyObserversCallback = done
 
                     testContext.subject.start(mobileKey: Constants.mockMobileKey, config: testContext.config, user: testContext.user)
 
@@ -1094,9 +1092,7 @@ final class LDClientSpec: QuickSpec {
                         testContext.onFlagsUnchangedCallCount += 1
                         done()
                     }
-                    testContext.changeNotifierMock.notifyObserversCallback = {
-                        done()
-                    }
+                    testContext.changeNotifierMock.notifyObserversCallback = done
 
                     testContext.subject.start(mobileKey: Constants.mockMobileKey, config: testContext.config, user: testContext.user)
 
@@ -1133,9 +1129,7 @@ final class LDClientSpec: QuickSpec {
                         testContext.onFlagsUnchangedCallCount += 1
                         done()
                     }
-                    testContext.changeNotifierMock.notifyObserversCallback = {
-                        done()
-                    }
+                    testContext.changeNotifierMock.notifyObserversCallback = done
 
                     testContext.subject.start(mobileKey: Constants.mockMobileKey, config: testContext.config, user: testContext.user)
 
@@ -1170,9 +1164,7 @@ final class LDClientSpec: QuickSpec {
                         testContext.onFlagsUnchangedCallCount += 1
                         done()
                     }
-                    testContext.changeNotifierMock.notifyObserversCallback = {
-                        done()
-                    }
+                    testContext.changeNotifierMock.notifyObserversCallback = done
 
                     testContext.subject.start(mobileKey: Constants.mockMobileKey, config: testContext.config, user: testContext.user)
 
@@ -1219,9 +1211,7 @@ final class LDClientSpec: QuickSpec {
                         testContext.onFlagsUnchangedCallCount += 1
                         done()
                     }
-                    testContext.changeNotifierMock.notifyObserversCallback = {
-                        done()
-                    }
+                    testContext.changeNotifierMock.notifyObserversCallback = done
 
                     testContext.subject.start(mobileKey: Constants.mockMobileKey, config: testContext.config, user: testContext.user)
 
@@ -1258,9 +1248,7 @@ final class LDClientSpec: QuickSpec {
                         testContext.onFlagsUnchangedCallCount += 1
                         done()
                     }
-                    testContext.changeNotifierMock.notifyObserversCallback = {
-                        done()
-                    }
+                    testContext.changeNotifierMock.notifyObserversCallback = done
 
                     testContext.subject.start(mobileKey: Constants.mockMobileKey, config: testContext.config, user: testContext.user)
 
@@ -1307,9 +1295,7 @@ final class LDClientSpec: QuickSpec {
                         testContext.onFlagsUnchangedCallCount += 1
                         done()
                     }
-                    testContext.changeNotifierMock.notifyObserversCallback = {
-                        done()
-                    }
+                    testContext.changeNotifierMock.notifyObserversCallback = done
 
                     testContext.subject.start(mobileKey: Constants.mockMobileKey, config: testContext.config, user: testContext.user)
 
@@ -1346,9 +1332,7 @@ final class LDClientSpec: QuickSpec {
                         testContext.onFlagsUnchangedCallCount += 1
                         done()
                     }
-                    testContext.changeNotifierMock.notifyObserversCallback = {
-                        done()
-                    }
+                    testContext.changeNotifierMock.notifyObserversCallback = done
 
                     testContext.subject.start(mobileKey: Constants.mockMobileKey, config: testContext.config, user: testContext.user)
 

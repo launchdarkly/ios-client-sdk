@@ -102,9 +102,7 @@ final class FlagStoreSpec: QuickSpec {
                 beforeEach {
                     subject = FlagStore()
                     waitUntil(timeout: 1) { done in
-                        subject.replaceStore(newFlags: DarklyServiceMock.Constants.featureFlags(includeNullValue: false, includeVersions: true), source: .cache) {
-                            done()
-                        }
+                        subject.replaceStore(newFlags: DarklyServiceMock.Constants.featureFlags(includeNullValue: false, includeVersions: true), source: .cache, completion: done)
                     }
                 }
                 it("causes FlagStore to replace the flag values and source") {
@@ -116,9 +114,7 @@ final class FlagStoreSpec: QuickSpec {
                 beforeEach {
                     subject = FlagStore()
                     waitUntil(timeout: 1) { done in
-                        subject.replaceStore(newFlags: DarklyServiceMock.Constants.featureFlags(includeNullValue: false, includeVersions: true).dictionaryValue(exciseNil: false), source: .cache) {
-                            done()
-                        }
+                        subject.replaceStore(newFlags: DarklyServiceMock.Constants.featureFlags(includeNullValue: false, includeVersions: true).dictionaryValue(exciseNil: false), source: .cache, completion: done)
                     }
                 }
                 it("causes FlagStore to replace the flag values and source") {
@@ -131,9 +127,7 @@ final class FlagStoreSpec: QuickSpec {
                     subject = FlagStore(featureFlags: DarklyServiceMock.Constants.featureFlags(includeNullValue: false, includeVersions: true), flagValueSource: .cache)
 
                     waitUntil(timeout: 1) { done in
-                        subject.replaceStore(newFlags: nil, source: .server) {
-                            done()
-                        }
+                        subject.replaceStore(newFlags: nil, source: .server, completion: done)
                     }
                 }
                 it("causes FlagStore to empty the flag values and replace the source") {
@@ -154,9 +148,7 @@ final class FlagStoreSpec: QuickSpec {
                     testContext.updateDictionary = FlagMaintainingMock.stubPatchDictionary(key: FlagKeys.newInt, value: DarklyServiceMock.FlagValues.alternate(value: DarklyServiceMock.FlagValues.int), version: DarklyServiceMock.Constants.version)
 
                     waitUntil { done in
-                        testContext.subject.updateStore(updateDictionary: testContext.updateDictionary!, source: .server, completion: {
-                            done()
-                        })
+                        testContext.subject.updateStore(updateDictionary: testContext.updateDictionary!, source: .server, completion: done)
                     }
                 }
                 it("adds the new flag to the store") {
@@ -173,9 +165,7 @@ final class FlagStoreSpec: QuickSpec {
                                                                                       version: DarklyServiceMock.Constants.version + 1)
 
                         waitUntil { done in
-                            testContext.subject.updateStore(updateDictionary: testContext.updateDictionary!, source: .server, completion: {
-                                done()
-                            })
+                            testContext.subject.updateStore(updateDictionary: testContext.updateDictionary!, source: .server, completion: done)
                         }
                     }
                     it("updates the feature flag to the update value") {
@@ -189,9 +179,7 @@ final class FlagStoreSpec: QuickSpec {
                         testContext.updateDictionary = FlagMaintainingMock.stubPatchDictionary(key: DarklyServiceMock.FlagKeys.int, value: NSNull(), version: DarklyServiceMock.Constants.version + 1)
 
                         waitUntil { done in
-                            testContext.subject.updateStore(updateDictionary: testContext.updateDictionary!, source: .server, completion: {
-                                done()
-                            })
+                            testContext.subject.updateStore(updateDictionary: testContext.updateDictionary!, source: .server, completion: done)
                         }
                     }
                     it("updates the feature flag to the update value") {
@@ -207,9 +195,7 @@ final class FlagStoreSpec: QuickSpec {
                                                                                       version: DarklyServiceMock.Constants.version)
 
                         waitUntil { done in
-                            testContext.subject.updateStore(updateDictionary: testContext.updateDictionary!, source: .server, completion: {
-                                done()
-                            })
+                            testContext.subject.updateStore(updateDictionary: testContext.updateDictionary!, source: .server, completion: done)
                         }
                     }
                     it("does not change the feature flag value") {
@@ -223,9 +209,7 @@ final class FlagStoreSpec: QuickSpec {
                                                                                       version: DarklyServiceMock.Constants.version - 1)
 
                         waitUntil { done in
-                            testContext.subject.updateStore(updateDictionary: testContext.updateDictionary!, source: .server, completion: {
-                                done()
-                            })
+                            testContext.subject.updateStore(updateDictionary: testContext.updateDictionary!, source: .server, completion: done)
                         }
                     }
                     it("does not change the feature flag value") {
@@ -238,9 +222,7 @@ final class FlagStoreSpec: QuickSpec {
                     testContext.updateDictionary = FlagMaintainingMock.stubPatchDictionary(key: nil, value: DarklyServiceMock.FlagValues.alternate(value: DarklyServiceMock.FlagValues.int), version: DarklyServiceMock.Constants.version + 1)
 
                     waitUntil { done in
-                        testContext.subject.updateStore(updateDictionary: testContext.updateDictionary!, source: .server, completion: {
-                            done()
-                        })
+                        testContext.subject.updateStore(updateDictionary: testContext.updateDictionary!, source: .server, completion: done)
                     }
                 }
                 it("makes no changes") {
@@ -252,9 +234,7 @@ final class FlagStoreSpec: QuickSpec {
                     testContext.updateDictionary = FlagMaintainingMock.stubPatchDictionary(key: DarklyServiceMock.FlagKeys.int, value: nil, version: DarklyServiceMock.Constants.version + 1)
 
                     waitUntil { done in
-                        testContext.subject.updateStore(updateDictionary: testContext.updateDictionary!, source: .server, completion: {
-                            done()
-                        })
+                        testContext.subject.updateStore(updateDictionary: testContext.updateDictionary!, source: .server, completion: done)
                     }
                 }
                 it("makes no changes") {
@@ -266,9 +246,7 @@ final class FlagStoreSpec: QuickSpec {
                     testContext.updateDictionary = FlagMaintainingMock.stubPatchDictionary(key: DarklyServiceMock.FlagKeys.int, value: DarklyServiceMock.FlagValues.alternate(value: DarklyServiceMock.FlagValues.int), version: nil)
 
                     waitUntil { done in
-                        testContext.subject.updateStore(updateDictionary: testContext.updateDictionary!, source: .server, completion: {
-                            done()
-                        })
+                        testContext.subject.updateStore(updateDictionary: testContext.updateDictionary!, source: .server, completion: done)
                     }
                 }
                 it("makes no changes") {
@@ -290,9 +268,7 @@ final class FlagStoreSpec: QuickSpec {
                         testContext.deleteDictionary = FlagMaintainingMock.stubDeleteDictionary(key: DarklyServiceMock.FlagKeys.int, version: DarklyServiceMock.Constants.version + 1)
 
                         waitUntil { done in
-                            testContext.subject.deleteFlag(deleteDictionary: testContext.deleteDictionary!, completion: {
-                                done()
-                            })
+                            testContext.subject.deleteFlag(deleteDictionary: testContext.deleteDictionary!, completion: done)
                         }
                     }
                     it("removes the feature flag from the store") {
@@ -304,9 +280,7 @@ final class FlagStoreSpec: QuickSpec {
                         testContext.deleteDictionary = FlagMaintainingMock.stubDeleteDictionary(key: DarklyServiceMock.FlagKeys.int, version: DarklyServiceMock.Constants.version)
 
                         waitUntil { done in
-                            testContext.subject.deleteFlag(deleteDictionary: testContext.deleteDictionary!, completion: {
-                                done()
-                            })
+                            testContext.subject.deleteFlag(deleteDictionary: testContext.deleteDictionary!, completion: done)
                         }
                     }
                     it("makes no changes to the flag store") {
@@ -318,9 +292,7 @@ final class FlagStoreSpec: QuickSpec {
                         testContext.deleteDictionary = FlagMaintainingMock.stubDeleteDictionary(key: DarklyServiceMock.FlagKeys.int, version: DarklyServiceMock.Constants.version - 1)
 
                         waitUntil { done in
-                            testContext.subject.deleteFlag(deleteDictionary: testContext.deleteDictionary!, completion: {
-                                done()
-                            })
+                            testContext.subject.deleteFlag(deleteDictionary: testContext.deleteDictionary!, completion: done)
                         }
                     }
                     it("makes no changes to the flag store") {
@@ -333,9 +305,7 @@ final class FlagStoreSpec: QuickSpec {
                     testContext.deleteDictionary = FlagMaintainingMock.stubDeleteDictionary(key: FlagKeys.newInt, version: DarklyServiceMock.Constants.version + 1)
 
                     waitUntil { done in
-                        testContext.subject.deleteFlag(deleteDictionary: testContext.deleteDictionary!, completion: {
-                            done()
-                        })
+                        testContext.subject.deleteFlag(deleteDictionary: testContext.deleteDictionary!, completion: done)
                     }
                 }
                 it("makes no changes to the flag store") {
@@ -347,9 +317,7 @@ final class FlagStoreSpec: QuickSpec {
                     testContext.deleteDictionary = FlagMaintainingMock.stubDeleteDictionary(key: nil, version: DarklyServiceMock.Constants.version + 1)
 
                     waitUntil { done in
-                        testContext.subject.deleteFlag(deleteDictionary: testContext.deleteDictionary!, completion: {
-                            done()
-                        })
+                        testContext.subject.deleteFlag(deleteDictionary: testContext.deleteDictionary!, completion: done)
                     }
                 }
                 it("makes no changes to the flag store") {
@@ -361,9 +329,7 @@ final class FlagStoreSpec: QuickSpec {
                     testContext.deleteDictionary = FlagMaintainingMock.stubDeleteDictionary(key: DarklyServiceMock.FlagKeys.int, version: nil)
 
                     waitUntil { done in
-                        testContext.subject.deleteFlag(deleteDictionary: testContext.deleteDictionary!, completion: {
-                            done()
-                        })
+                        testContext.subject.deleteFlag(deleteDictionary: testContext.deleteDictionary!, completion: done)
                     }
                 }
                 it("makes no changes to the flag store") {
