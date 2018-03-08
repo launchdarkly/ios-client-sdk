@@ -130,7 +130,7 @@ class FlagSynchronizer: LDFlagSynchronizing {
         //NOTE: It is possible that an LDEventSource was replaced and the event reported here is from the previous eventSource. However there is no information about the eventSource in the LDEvent to do anything about it.
         guard let eventDescription = event.event, !eventDescription.isEmpty
         else {
-            reportEventError(event)
+            if event.error != nil { reportEventError(event) }
             return
         }
 
