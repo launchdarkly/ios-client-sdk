@@ -22,6 +22,7 @@ final class DarklyServiceMock: DarklyServiceProvider {
         static let null = "null-flag"
 
         static var all: [LDFlagKey] { return [bool, int, double, string, array, dictionary, null] }
+        static var allThatCanBeInequal: [LDFlagKey] { return [bool, int, double, string, array, dictionary] }
     }
 
     struct FlagValues {
@@ -34,8 +35,9 @@ final class DarklyServiceMock: DarklyServiceProvider {
         static let null = NSNull()
 
         static var all: [Any] { return [bool, int, double, string, array, dictionary, null] }
+        static var allThatCanBeInequal: [Any] { return [bool, int, double, string, array, dictionary] }
 
-        static func alternate<T>(value: T) -> T {
+        static func alternate<T>(_ value: T) -> T {
             switch value {
             case let value as Bool: return !value as! T
             case let value as Int: return value + 1 as! T
@@ -72,15 +74,15 @@ final class DarklyServiceMock: DarklyServiceProvider {
         static let stubNameEvent = "Event Report Stub"
 
         static let version = 2
-        static func featureFlags(includeNullValue: Bool, includeVersions: Bool) -> [LDFlagKey: FeatureFlag] {
+        static func featureFlags(includeNullValue: Bool, includeVersions: Bool, alternateValuesForKeys: [LDFlagKey] = []) -> [LDFlagKey: FeatureFlag] {
             let version: Int? = includeVersions ? Constants.version : nil
             var featureFlags: [LDFlagKey: FeatureFlag] = [
-            FlagKeys.bool: FeatureFlag(value: FlagValues.bool, version: version),
-            FlagKeys.int: FeatureFlag(value: FlagValues.int, version: version),
-            FlagKeys.double: FeatureFlag(value: FlagValues.double, version: version),
-            FlagKeys.string: FeatureFlag(value: FlagValues.string, version: version),
-            FlagKeys.array: FeatureFlag(value: FlagValues.array, version: version),
-            FlagKeys.dictionary: FeatureFlag(value: FlagValues.dictionary, version: version)
+                FlagKeys.bool: FeatureFlag(value: alternateValuesForKeys.contains(FlagKeys.bool) ? FlagValues.alternate(FlagValues.bool): FlagValues.bool, version: version),
+                FlagKeys.int: FeatureFlag(value: alternateValuesForKeys.contains(FlagKeys.int) ? FlagValues.alternate(FlagValues.int): FlagValues.int, version: version),
+                FlagKeys.double: FeatureFlag(value: alternateValuesForKeys.contains(FlagKeys.double) ? FlagValues.alternate(FlagValues.double): FlagValues.double, version: version),
+                FlagKeys.string: FeatureFlag(value: alternateValuesForKeys.contains(FlagKeys.string) ? FlagValues.alternate(FlagValues.string): FlagValues.string, version: version),
+                FlagKeys.array: FeatureFlag(value: alternateValuesForKeys.contains(FlagKeys.array) ? FlagValues.alternate(FlagValues.array): FlagValues.array, version: version),
+                FlagKeys.dictionary: FeatureFlag(value: alternateValuesForKeys.contains(FlagKeys.dictionary) ? FlagValues.alternate(FlagValues.dictionary): FlagValues.dictionary, version: version)
             ]
             if includeNullValue {
                 featureFlags[DarklyServiceMock.FlagKeys.null] = FeatureFlag(value: DarklyServiceMock.FlagValues.null, version: version)

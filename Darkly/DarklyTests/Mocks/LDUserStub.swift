@@ -25,7 +25,7 @@ extension LDUser {
         static let custom: [String: Any] = ["stub.user.custom.keyA": "stub.user.custom.valueA", "stub.user.custom.keyB": true, "stub.user.custom.keyC": 1027, "stub.user.custom.keyD": 2.71828, "stub.user.custom.keyE": [0, 1, 2], "stub.user.custom.keyF": ["1": 1, "2": 2, "3": 3], CodingKeys.device.rawValue: StubConstants.device, CodingKeys.operatingSystem.rawValue: StubConstants.operatingSystem]
     }
 
-    static func stub(key: String? = nil) -> LDUser {
+    static func stub(key: String? = nil, includeNullValue: Bool = false, includeVersions: Bool = true) -> LDUser {
         var user = LDUser(key: key ?? UUID().uuidString,
                           name: StubConstants.name,
                           firstName: StubConstants.firstName,
@@ -36,12 +36,12 @@ extension LDUser {
                           avatar: StubConstants.avatar,
                           custom: StubConstants.custom,
                           isAnonymous: StubConstants.isAnonymous)
-        user.flagStore = FlagMaintainingMock(flags: user.stubFlags())
+        user.flagStore = FlagMaintainingMock(flags: user.stubFlags(includeNullValue: includeNullValue, includeVersions: includeVersions))
         return user
     }
 
-    private func stubFlags() -> [String: FeatureFlag] {
-        var flags = DarklyServiceMock.Constants.featureFlags(includeNullValue: false, includeVersions: true)
+    private func stubFlags(includeNullValue: Bool, includeVersions: Bool) -> [String: FeatureFlag] {
+        var flags = DarklyServiceMock.Constants.featureFlags(includeNullValue: includeNullValue, includeVersions: includeVersions)
         flags["userKey"] = FeatureFlag(value: key, version: 2)
         return flags
     }

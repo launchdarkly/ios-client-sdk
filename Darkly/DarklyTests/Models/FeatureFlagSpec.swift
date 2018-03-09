@@ -12,10 +12,12 @@ import Nimble
 @testable import Darkly
 
 final class FeatureFlagSpec: QuickSpec {
+
     override func spec() {
         initSpec()
         dictionaryValueSpec()
         equalsSpec()
+        matchesValueSpec()
         collectionSpec()
     }
 
@@ -293,10 +295,10 @@ final class FeatureFlagSpec: QuickSpec {
 
     func equalsSpec() {
         var subject: FeatureFlag?
+        var version = 0
+        var otherFlag: FeatureFlag?
 
         describe("equals") {
-            var version = 0
-            var otherFlag: FeatureFlag?
 
             context("when value and version exists") {
                 it("compares value and version") {
@@ -308,7 +310,7 @@ final class FeatureFlagSpec: QuickSpec {
                         expect(subject) == otherFlag
 
                         if !(value is NSNull) {
-                            otherFlag = FeatureFlag(value: DarklyServiceMock.FlagValues.alternate(value: value) as Any, version: version)
+                            otherFlag = FeatureFlag(value: DarklyServiceMock.FlagValues.alternate(value) as Any, version: version)
                             expect(subject) != otherFlag
                         }
 
@@ -326,12 +328,58 @@ final class FeatureFlagSpec: QuickSpec {
                         expect(subject) == otherFlag
 
                         if !(value is NSNull) {
-                            otherFlag = FeatureFlag(value: DarklyServiceMock.FlagValues.alternate(value: value) as Any, version: version)
+                            otherFlag = FeatureFlag(value: DarklyServiceMock.FlagValues.alternate(value) as Any, version: version)
                             expect(subject) != otherFlag
                         }
 
                         otherFlag = FeatureFlag(value: value, version: DarklyServiceMock.Constants.version)
                         expect(subject) != otherFlag
+                    }
+                }
+            }
+        }
+    }
+
+    func matchesValueSpec() {
+        var subject: FeatureFlag?
+        var version = 0
+        var otherFlag: FeatureFlag?
+
+        describe("matchesValue") {
+            context("when value and version exists") {
+                it("compares value only") {
+                    DarklyServiceMock.FlagValues.all.forEach { (value) in
+                        version += 1
+                        subject = FeatureFlag(value: value, version: version)
+                        otherFlag = subject
+
+                        expect(subject!.matchesValue(otherFlag!)).to(beTrue())
+
+                        if !(value is NSNull) {
+                            otherFlag = FeatureFlag(value: DarklyServiceMock.FlagValues.alternate(value) as Any, version: version)
+                            expect(subject!.matchesValue(otherFlag!)).to(beFalse())
+                        }
+
+                        otherFlag = FeatureFlag(value: value, version: version + 1)
+                        expect(subject!.matchesValue(otherFlag!)).to(beTrue())
+                    }
+                }
+            }
+            context("when value only exists") {
+                it("compares value and check version is nil") {
+                    DarklyServiceMock.FlagValues.all.forEach { (value) in
+                        subject = FeatureFlag(value: value, version: nil)
+                        otherFlag = subject
+
+                        expect(subject!.matchesValue(otherFlag!)).to(beTrue())
+
+                        if !(value is NSNull) {
+                            otherFlag = FeatureFlag(value: DarklyServiceMock.FlagValues.alternate(value) as Any, version: version)
+                            expect(subject!.matchesValue(otherFlag!)).to(beFalse())
+                        }
+
+                        otherFlag = FeatureFlag(value: value, version: DarklyServiceMock.Constants.version)
+                        expect(subject!.matchesValue(otherFlag!)).to(beTrue())
                     }
                 }
             }

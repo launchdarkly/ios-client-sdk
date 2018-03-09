@@ -145,7 +145,9 @@ final class FlagStoreSpec: QuickSpec {
             }
             context("when feature flag does not already exist") {
                 beforeEach {
-                    testContext.updateDictionary = FlagMaintainingMock.stubPatchDictionary(key: FlagKeys.newInt, value: DarklyServiceMock.FlagValues.alternate(value: DarklyServiceMock.FlagValues.int), version: DarklyServiceMock.Constants.version)
+                    testContext.updateDictionary = FlagMaintainingMock.stubPatchDictionary(key: FlagKeys.newInt,
+                                                                                           value: DarklyServiceMock.FlagValues.alternate(DarklyServiceMock.FlagValues.int),
+                                                                                           version: DarklyServiceMock.Constants.version)
 
                     waitUntil { done in
                         testContext.subject.updateStore(updateDictionary: testContext.updateDictionary!, source: .server, completion: done)
@@ -161,7 +163,7 @@ final class FlagStoreSpec: QuickSpec {
                 context("and the update version > existing version") {
                     beforeEach {
                         testContext.updateDictionary = FlagMaintainingMock.stubPatchDictionary(key: DarklyServiceMock.FlagKeys.int,
-                                                                                      value: DarklyServiceMock.FlagValues.alternate(value: DarklyServiceMock.FlagValues.int),
+                                                                                      value: DarklyServiceMock.FlagValues.alternate(DarklyServiceMock.FlagValues.int),
                                                                                       version: DarklyServiceMock.Constants.version + 1)
 
                         waitUntil { done in
@@ -191,7 +193,7 @@ final class FlagStoreSpec: QuickSpec {
                 context("and the update version == existing version") {
                     beforeEach {
                         testContext.updateDictionary = FlagMaintainingMock.stubPatchDictionary(key: DarklyServiceMock.FlagKeys.int,
-                                                                                      value: DarklyServiceMock.FlagValues.alternate(value: DarklyServiceMock.FlagValues.int),
+                                                                                      value: DarklyServiceMock.FlagValues.alternate(DarklyServiceMock.FlagValues.int),
                                                                                       version: DarklyServiceMock.Constants.version)
 
                         waitUntil { done in
@@ -205,7 +207,7 @@ final class FlagStoreSpec: QuickSpec {
                 context("and the update version < existing version") {
                     beforeEach {
                         testContext.updateDictionary = FlagMaintainingMock.stubPatchDictionary(key: DarklyServiceMock.FlagKeys.int,
-                                                                                      value: DarklyServiceMock.FlagValues.alternate(value: DarklyServiceMock.FlagValues.int),
+                                                                                      value: DarklyServiceMock.FlagValues.alternate(DarklyServiceMock.FlagValues.int),
                                                                                       version: DarklyServiceMock.Constants.version - 1)
 
                         waitUntil { done in
@@ -219,7 +221,9 @@ final class FlagStoreSpec: QuickSpec {
             }
             context("when the update dictionary is missing the key") {
                 beforeEach {
-                    testContext.updateDictionary = FlagMaintainingMock.stubPatchDictionary(key: nil, value: DarklyServiceMock.FlagValues.alternate(value: DarklyServiceMock.FlagValues.int), version: DarklyServiceMock.Constants.version + 1)
+                    testContext.updateDictionary = FlagMaintainingMock.stubPatchDictionary(key: nil,
+                                                                                           value: DarklyServiceMock.FlagValues.alternate(DarklyServiceMock.FlagValues.int),
+                                                                                           version: DarklyServiceMock.Constants.version + 1)
 
                     waitUntil { done in
                         testContext.subject.updateStore(updateDictionary: testContext.updateDictionary!, source: .server, completion: done)
@@ -243,7 +247,9 @@ final class FlagStoreSpec: QuickSpec {
             }
             context("when the update dictionary is missing the version") {
                 beforeEach {
-                    testContext.updateDictionary = FlagMaintainingMock.stubPatchDictionary(key: DarklyServiceMock.FlagKeys.int, value: DarklyServiceMock.FlagValues.alternate(value: DarklyServiceMock.FlagValues.int), version: nil)
+                    testContext.updateDictionary = FlagMaintainingMock.stubPatchDictionary(key: DarklyServiceMock.FlagKeys.int,
+                                                                                           value: DarklyServiceMock.FlagValues.alternate(DarklyServiceMock.FlagValues.int),
+                                                                                           version: nil)
 
                     waitUntil { done in
                         testContext.subject.updateStore(updateDictionary: testContext.updateDictionary!, source: .server, completion: done)

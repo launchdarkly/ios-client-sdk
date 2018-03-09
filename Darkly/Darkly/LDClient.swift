@@ -267,18 +267,19 @@ public class LDClient {
         switch result {
         case let .success(flagDictionary, streamingEvent):
             let oldFlags = user.flagStore.featureFlags
+            let oldFlagSource = user.flagStore.flagValueSource
             switch streamingEvent {
             case nil, .ping?, .put?:
                 user.flagStore.replaceStore(newFlags: flagDictionary, source: .server) {
-                    self.updateCacheAndReportChanges(oldFlags: oldFlags, user: self.user, changeNotifier: self.flagChangeNotifier)
+                    self.updateCacheAndReportChanges(flagCache: self.flagCache, changeNotifier: self.flagChangeNotifier, user: self.user, oldFlags: oldFlags, oldFlagSource: oldFlagSource)
                 }
             case .patch?:
                 user.flagStore.updateStore(updateDictionary: flagDictionary, source: .server) {
-                    self.updateCacheAndReportChanges(oldFlags: oldFlags, user: self.user, changeNotifier: self.flagChangeNotifier)
+                    self.updateCacheAndReportChanges(flagCache: self.flagCache, changeNotifier: self.flagChangeNotifier, user: self.user, oldFlags: oldFlags, oldFlagSource: oldFlagSource)
                 }
             case .delete?:
                 user.flagStore.deleteFlag(deleteDictionary: flagDictionary) {
-                    self.updateCacheAndReportChanges(oldFlags: oldFlags, user: self.user, changeNotifier: self.flagChangeNotifier)
+                    self.updateCacheAndReportChanges(flagCache: self.flagCache, changeNotifier: self.flagChangeNotifier, user: self.user, oldFlags: oldFlags, oldFlagSource: oldFlagSource)
                 }
             default: break
             }
@@ -288,18 +289,18 @@ public class LDClient {
         }
     }
 
-    private func updateCacheAndReportChanges(oldFlags: [LDFlagKey: FeatureFlag], user: LDUser, changeNotifier: FlagChangeNotifying) {
+    private func updateCacheAndReportChanges(flagCache: UserFlagCaching, changeNotifier: FlagChangeNotifying, user: LDUser, oldFlags: [LDFlagKey: FeatureFlag], oldFlagSource: LDFlagValueSource) {
         flagCache.cacheFlags(for: user)
-        reportChanges(oldFlags: oldFlags, user: user, changeNotifier: flagChangeNotifier)
+        reportChanges(changeNotifier: flagChangeNotifier, user: user, oldFlags: oldFlags, oldFlagSource: oldFlagSource)
     }
 
-    private func reportChanges(oldFlags: [LDFlagKey: FeatureFlag], user: LDUser, changeNotifier: FlagChangeNotifying) {
+    private func reportChanges(changeNotifier: FlagChangeNotifying, user: LDUser, oldFlags: [LDFlagKey: FeatureFlag], oldFlagSource: LDFlagValueSource) {
         let changedFlagKeys = oldFlags.symmetricDifference(user.flagStore.featureFlags)
         if changedFlagKeys.isEmpty {
             executeCallback(onFlagsUnchanged)
             return
         }
-        changeNotifier.notifyObservers(user: user, oldFlags: oldFlags)
+        changeNotifier.notifyObservers(user: user, oldFlags: oldFlags, oldFlagSource: oldFlagSource)
     }
 
     private func executeCallback(_ callback: (() -> Void)?) {

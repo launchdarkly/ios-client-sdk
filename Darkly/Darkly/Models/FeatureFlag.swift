@@ -79,6 +79,13 @@ extension FeatureFlag: Equatable {
     }
 }
 
+extension FeatureFlag {
+    func matchesValue(_ other: FeatureFlag) -> Bool {
+        guard value != nil else { return other.value == nil }
+        return AnyComparer.isEqual(self.value, to: other.value)
+    }
+}
+
 extension Dictionary where Key == String, Value == FeatureFlag {
     func dictionaryValue(exciseNil: Bool) -> [String: Any] {
         return self.flatMapValues { (featureFlag) in featureFlag.dictionaryValue(exciseNil: exciseNil) }

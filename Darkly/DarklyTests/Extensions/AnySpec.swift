@@ -114,7 +114,7 @@ final class AnySpec: QuickSpec {
                                 guard !(value is NSNull) else { return }
                                 version += 1
                                 featureFlag = FeatureFlag(value: value, version: version)
-                                otherFlag = FeatureFlag(value: DarklyServiceMock.FlagValues.alternate(value: value) as Any, version: version)
+                                otherFlag = FeatureFlag(value: DarklyServiceMock.FlagValues.alternate(value) as Any, version: version)
 
                                 expect(AnyComparer.isEqual(featureFlag, to: otherFlag)).to(beFalse())
                             }
@@ -138,7 +138,7 @@ final class AnySpec: QuickSpec {
                             DarklyServiceMock.FlagValues.all.forEach { (value) in
                                 guard !(value is NSNull) else { return }
                                 featureFlag = FeatureFlag(value: value, version: nil)
-                                otherFlag = FeatureFlag(value: DarklyServiceMock.FlagValues.alternate(value: value) as Any, version: nil)
+                                otherFlag = FeatureFlag(value: DarklyServiceMock.FlagValues.alternate(value) as Any, version: nil)
 
                                 expect(AnyComparer.isEqual(featureFlag, to: otherFlag)).to(beFalse())
                             }
