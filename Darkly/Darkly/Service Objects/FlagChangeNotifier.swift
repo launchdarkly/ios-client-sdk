@@ -68,7 +68,7 @@ final class FlagChangeNotifier: FlagChangeNotifying {
                                            newValueSource: user.flagStore.flagValueSource))
         })
         selectedObservers.forEach { (observer) in
-            let filteredChangedFlags = changedFlags.filter({ (flagKey, _) -> Bool in observer.flagKeys.contains(flagKey) })
+            let filteredChangedFlags = changedFlags.filter({ (flagKey, _) -> Bool in observer.flagKeys == LDFlagKey.anyKey || observer.flagKeys.contains(flagKey) })
             if let changeHandler = observer.flagCollectionChangeHandler {
                 DispatchQueue.main.async {
                     changeHandler(filteredChangedFlags)
@@ -109,7 +109,7 @@ extension Array where Element == LDFlagKey {
 
 extension Array where Element == FlagChangeObserver {
     func watching(_ flagKeys: [LDFlagKey]) -> [FlagChangeObserver] {
-        return filter { (observer) in observer.flagKeys.containsAny(flagKeys) }
+        return filter { (observer) in observer.flagKeys == LDFlagKey.anyKey || observer.flagKeys.containsAny(flagKeys) }
     }
 }
 

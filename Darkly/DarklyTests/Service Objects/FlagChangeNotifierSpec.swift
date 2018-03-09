@@ -392,7 +392,8 @@ final class FlagChangeNotifierSpec: QuickSpec {
     private func notifyObserverSpec() {
         describe("notify observers") {
             notifyObserversWithSingleFlagObserverSpec()
-            notifyObserversWithMultipleFlagObserverSpec()
+            notifyObserversWithMultipleFlagsObserverSpec()
+            notifyObserversWithAllFlagsObserverSpec()
         }
     }
 
@@ -497,7 +498,7 @@ final class FlagChangeNotifierSpec: QuickSpec {
         }
     }
 
-    private func notifyObserversWithMultipleFlagObserverSpec() {
+    private func notifyObserversWithMultipleFlagsObserverSpec() {
         var testContext: TestContext!
         var targetChangedFlags: [LDFlagKey: LDChangedFlag]?
         var oldFlags: [LDFlagKey: FeatureFlag]!
@@ -607,6 +608,145 @@ final class FlagChangeNotifierSpec: QuickSpec {
                 context("and unchanged flags") {
                     beforeEach {
                         testContext = TestContext(keys: DarklyServiceMock.FlagKeys.all,
+                                                  flagCollectionChangeHandler: { (changedFlags) in
+                                                    testContext.flagCollectionChangeHandlerCallCount += 1
+                                                    testContext.changedFlags = changedFlags
+                        },
+                                                  flagsUnchangedHandler: {
+                                                    testContext.flagsUnchangedHandlerCallCount += 1
+                        })
+                        oldFlags = testContext.user.flagStore.featureFlags
+                        testContext.owners[testContext.flagsUnchangedOwnerKey!] = nil
+
+                        waitUntil { done in
+                            testContext.subject.notifyObservers(user: testContext.user, oldFlags: oldFlags, oldFlagSource: .server, completion: done)
+                        }
+                    }
+                    it("does nothing") {
+                        expect(testContext.flagCollectionChangeHandlerCallCount) == 0
+                        expect(testContext.flagsUnchangedHandlerCallCount) == 0
+                    }
+                }
+            }
+        }
+    }
+
+    private func notifyObserversWithAllFlagsObserverSpec() {
+        var testContext: TestContext!
+        var targetChangedFlags: [LDFlagKey: LDChangedFlag]?
+        var oldFlags: [LDFlagKey: FeatureFlag]!
+
+        context("with all flags observers") {
+            context("that are active") {
+                context("and different single flags") {
+                    it("activates the change handler") {
+                        DarklyServiceMock.FlagKeys.allThatCanBeInequal.forEach { (key) in
+                            testContext = TestContext(keys: LDFlagKey.anyKey,
+                                                      flagCollectionChangeHandler: { (changedFlags) in
+                                                        testContext.flagCollectionChangeHandlerCallCount += 1
+                                                        testContext.changedFlags = changedFlags
+                            },
+                                                      flagsUnchangedHandler: {
+                                                        testContext.flagsUnchangedHandlerCallCount += 1
+                            })
+                            oldFlags = DarklyServiceMock.Constants.featureFlags(includeNullValue: true, includeVersions: true, alternateValuesForKeys: [key])
+                            targetChangedFlags = [key: LDChangedFlag.stub(key: key, oldFlags: oldFlags, newFlags: testContext.user.flagStore.featureFlags)]
+                            targetChangedFlags![LDUser.StubConstants.userKey] = LDChangedFlag.stub(key: LDUser.StubConstants.userKey,
+                                                                                                   oldFlags: oldFlags,
+                                                                                                   newFlags: testContext.user.flagStore.featureFlags)
+
+                            waitUntil { done in
+                                testContext.subject.notifyObservers(user: testContext.user, oldFlags: oldFlags, oldFlagSource: .server, completion: done)
+                            }
+
+                            expect(testContext.flagCollectionChangeHandlerCallCount) == 1
+                            expect(testContext.changedFlags) == targetChangedFlags
+                            expect(testContext.flagsUnchangedHandlerCallCount) == 0
+                        }
+                    }
+                }
+                context("and different multiple flags") {
+                    beforeEach {
+                        testContext = TestContext(keys: LDFlagKey.anyKey,
+                                                  flagCollectionChangeHandler: { (changedFlags) in
+                                                    testContext.flagCollectionChangeHandlerCallCount += 1
+                                                    testContext.changedFlags = changedFlags
+                        },
+                                                  flagsUnchangedHandler: {
+                                                    testContext.flagsUnchangedHandlerCallCount += 1
+                        })
+                        let changedFlagKeys = [DarklyServiceMock.FlagKeys.bool, DarklyServiceMock.FlagKeys.int, DarklyServiceMock.FlagKeys.double]
+                        oldFlags = DarklyServiceMock.Constants.featureFlags(includeNullValue: true,
+                                                                            includeVersions: true,
+                                                                            alternateValuesForKeys: changedFlagKeys)
+                        targetChangedFlags = [LDFlagKey: LDChangedFlag](uniqueKeysWithValues: changedFlagKeys.map { (flagKey) in
+                            return (flagKey, LDChangedFlag.stub(key: flagKey, oldFlags: oldFlags, newFlags: testContext.user.flagStore.featureFlags))
+                        })
+                        targetChangedFlags![LDUser.StubConstants.userKey] = LDChangedFlag.stub(key: LDUser.StubConstants.userKey,
+                                                                                               oldFlags: oldFlags,
+                                                                                               newFlags: testContext.user.flagStore.featureFlags)
+
+                        waitUntil { done in
+                            testContext.subject.notifyObservers(user: testContext.user, oldFlags: oldFlags, oldFlagSource: .server, completion: done)
+                        }
+                    }
+                    it("activates the change handler") {
+                        expect(testContext.flagCollectionChangeHandlerCallCount) == 1
+                        expect(testContext.changedFlags) == targetChangedFlags
+                        expect(testContext.flagsUnchangedHandlerCallCount) == 0
+                    }
+                }
+                context("and unchanged flags") {
+                    beforeEach {
+                        testContext = TestContext(keys: LDFlagKey.anyKey,
+                                                  flagCollectionChangeHandler: { (changedFlags) in
+                                                    testContext.flagCollectionChangeHandlerCallCount += 1
+                                                    testContext.changedFlags = changedFlags
+                        },
+                                                  flagsUnchangedHandler: {
+                                                    testContext.flagsUnchangedHandlerCallCount += 1
+                        })
+                        oldFlags = testContext.user.flagStore.featureFlags
+
+                        waitUntil { done in
+                            testContext.subject.notifyObservers(user: testContext.user, oldFlags: oldFlags, oldFlagSource: .server, completion: done)
+                        }
+                    }
+                    it("activates the flags unchanged handler") {
+                        expect(testContext.flagCollectionChangeHandlerCallCount) == 0
+                        expect(testContext.flagsUnchangedHandlerCallCount) == 1
+                    }
+                }
+            }
+            context("that are inactive") {
+                context("and different flags") {
+                    beforeEach {
+                        testContext = TestContext(keys: LDFlagKey.anyKey,
+                                                  flagCollectionChangeHandler: { (changedFlags) in
+                                                    testContext.flagCollectionChangeHandlerCallCount += 1
+                                                    testContext.changedFlags = changedFlags
+                        },
+                                                  flagsUnchangedHandler: {
+                                                    testContext.flagsUnchangedHandlerCallCount += 1
+                        })
+                        let changedFlagKeys = [DarklyServiceMock.FlagKeys.bool, DarklyServiceMock.FlagKeys.int, DarklyServiceMock.FlagKeys.double]
+                        oldFlags = DarklyServiceMock.Constants.featureFlags(includeNullValue: true,
+                                                                            includeVersions: true,
+                                                                            alternateValuesForKeys: changedFlagKeys)
+                        testContext.owners[LDFlagKey.anyKey.observerKey] = nil
+
+                        waitUntil { done in
+                            testContext.subject.notifyObservers(user: testContext.user, oldFlags: oldFlags, oldFlagSource: .server, completion: done)
+                        }
+                    }
+                    it("does nothing") {
+                        expect(testContext.flagCollectionChangeHandlerCallCount) == 0
+                        expect(testContext.flagsUnchangedHandlerCallCount) == 0
+                    }
+                }
+                context("and unchanged flags") {
+                    beforeEach {
+                        testContext = TestContext(keys: LDFlagKey.anyKey,
                                                   flagCollectionChangeHandler: { (changedFlags) in
                                                     testContext.flagCollectionChangeHandlerCallCount += 1
                                                     testContext.changedFlags = changedFlags

@@ -16,7 +16,7 @@ public typealias LDFlagCollectionChangeHandler = ([LDFlagKey: LDChangedFlag]) ->
 public typealias LDFlagsUnchangedHandler = () -> Void
 
 extension LDFlagKey {
-    private static var anyKeyIdentifier: String { return "Darkly.FlagKeyList.Any" }
+    private static var anyKeyIdentifier: LDFlagKey { return "Darkly.FlagKeyList.Any" }
     static var anyKey: [LDFlagKey] { return [anyKeyIdentifier] }
 }
 
