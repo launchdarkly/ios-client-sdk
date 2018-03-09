@@ -79,6 +79,8 @@ final class FlagChangeNotifier: FlagChangeNotifying {
     private func removeOldObservers() {
         let newObservers = observers.filter { (observer) in observer.owner != nil }
         observers = newObservers
+        guard flagsUnchangedObserver?.owner == nil else { return }
+        flagsUnchangedObserver = nil
     }
 
     private func findChangedFlagKeys(oldFlags: [LDFlagKey: FeatureFlag], newFlags: [LDFlagKey: FeatureFlag]) -> [LDFlagKey] {
