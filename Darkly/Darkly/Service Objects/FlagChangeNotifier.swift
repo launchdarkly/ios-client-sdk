@@ -8,7 +8,6 @@
 
 import Foundation
 
-//TODO: Change this to add a flags unchanged closure that gets called when notifyObservers is called with no flags changed. Have the LDClient set the closure when it creates the change notifier, or when the closure is set by the client app. That contains the change notifier's responsibility better
 //sourcery: AutoMockable
 protocol FlagChangeNotifying {
     var flagsUnchangedObserver: FlagsUnchangedObserver? { get set }
@@ -50,7 +49,11 @@ final class FlagChangeNotifier: FlagChangeNotifying {
 
         let changedFlagKeys = findChangedFlagKeys(oldFlags: oldFlags, newFlags: user.flagStore.featureFlags)
         guard !changedFlagKeys.isEmpty else {
-            if let flagsUnchangedHandler = flagsUnchangedObserver?.flagsUnchangedHandler { flagsUnchangedHandler() }
+            if let flagsUnchangedHandler = flagsUnchangedObserver?.flagsUnchangedHandler {
+                DispatchQueue.main.async {
+                    flagsUnchangedHandler()
+                }
+            }
             return
         }
 
@@ -66,12 +69,18 @@ final class FlagChangeNotifier: FlagChangeNotifying {
         })
         selectedObservers.forEach { (observer) in
             let filteredChangedFlags = changedFlags.filter({ (flagKey, _) -> Bool in observer.flagKeys.contains(flagKey) })
-            if observer.flagCollectionChangeHandler != nil {
-                observer.flagCollectionChangeHandler?(filteredChangedFlags)
+            if let changeHandler = observer.flagCollectionChangeHandler {
+                DispatchQueue.main.async {
+                    changeHandler(filteredChangedFlags)
+                }
                 return
             }
             filteredChangedFlags.forEach({ (_, changedFlag) in
-                observer.flagChangeHandler?(changedFlag)
+                if let changeHandler = observer.flagChangeHandler {
+                    DispatchQueue.main.async {
+                        changeHandler(changedFlag)
+                    }
+                }
             })
         }
     }
