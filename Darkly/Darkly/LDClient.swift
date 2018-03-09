@@ -257,9 +257,6 @@ public class LDClient {
         flagChangeNotifier.removeObserver(owner: owner)
     }
 
-    ///Called if the returned flags are unchanged
-    public var onFlagsUnchanged: (() -> Void)? = nil
-
     ///Called if the client is unable to contact the server
     public var onServerUnavailable: (() -> Void)? = nil
 
@@ -291,15 +288,6 @@ public class LDClient {
 
     private func updateCacheAndReportChanges(flagCache: UserFlagCaching, changeNotifier: FlagChangeNotifying, user: LDUser, oldFlags: [LDFlagKey: FeatureFlag], oldFlagSource: LDFlagValueSource) {
         flagCache.cacheFlags(for: user)
-        reportChanges(changeNotifier: flagChangeNotifier, user: user, oldFlags: oldFlags, oldFlagSource: oldFlagSource)
-    }
-
-    private func reportChanges(changeNotifier: FlagChangeNotifying, user: LDUser, oldFlags: [LDFlagKey: FeatureFlag], oldFlagSource: LDFlagValueSource) {
-        let changedFlagKeys = oldFlags.symmetricDifference(user.flagStore.featureFlags)
-        if changedFlagKeys.isEmpty {
-            executeCallback(onFlagsUnchanged)
-            return
-        }
         changeNotifier.notifyObservers(user: user, oldFlags: oldFlags, oldFlagSource: oldFlagSource)
     }
 

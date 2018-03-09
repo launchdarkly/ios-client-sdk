@@ -42,7 +42,6 @@ final class LDClientSpec: QuickSpec {
         var subject: LDClient!
         var user: LDUser!
         var config: LDConfig!
-        var onFlagsUnchangedCallCount = 0
         // mock getters based on setting up the user & subject
         var serviceFactoryMock: ClientServiceMockFactory! { return subject.serviceFactory as? ClientServiceMockFactory }
         var flagCacheMock: UserFlagCachingMock! { return serviceFactoryMock.userFlagCache }
@@ -66,6 +65,9 @@ final class LDClientSpec: QuickSpec {
         var replaceStoreComplete: CompletionClosure? { return flagStoreMock.replaceStoreReceivedArguments?.completion }
         var updateStoreComplete: CompletionClosure? { return flagStoreMock.updateStoreReceivedArguments?.completion }
         var deleteFlagComplete: CompletionClosure? { return flagStoreMock.deleteFlagReceivedArguments?.completion }
+        // user flags
+        var oldFlags: [LDFlagKey: FeatureFlag]!
+        var oldFlagSource: LDFlagValueSource!
 
         init(startOnline: Bool = false, runMode: LDClientRunMode = .foreground) {
             config = LDConfig.stub
@@ -73,6 +75,8 @@ final class LDClientSpec: QuickSpec {
             config.eventFlushIntervalMillis = 300_000   //5 min...don't want this to trigger
 
             user = LDUser.stub()
+            oldFlags = user.flagStore.featureFlags
+            oldFlagSource = user.flagStore.flagValueSource
 
             subject = LDClient.makeClient(with: ClientServiceMockFactory(), runMode: runMode)
             self.setFlagStoreCallbackToMimicRealFlagStore()
@@ -1037,11 +1041,10 @@ final class LDClientSpec: QuickSpec {
         }
     }
 
-    /* The concept of the onSyncCompleteSuccess tests is to configure the flags & mocks to simulate the intended change, prep the callbacks to trigger done() to end the async wait, and then call onSyncComplete with the parameters for the area under test. onSyncComplete will call a flagStore method which has an async closure, and so the test has to trigger that closure to get the correct code to execute in onSyncComplete. Once the async flagStore closure runs for the appropriate update method, the result can be measured in the mocks. While setting up each test is slightly different, measuring the result is largely the same, except in the case where no flag changes result, when the onFlagsUnchangedClosure should execute.
+    /* The concept of the onSyncCompleteSuccess tests is to configure the flags & mocks to simulate the intended change, prep the callbacks to trigger done() to end the async wait, and then call onSyncComplete with the parameters for the area under test. onSyncComplete will call a flagStore method which has an async closure, and so the test has to trigger that closure to get the correct code to execute in onSyncComplete. Once the async flagStore closure runs for the appropriate update method, the result can be measured in the mocks. While setting up each test is slightly different, measuring the result is largely the same.
      */
     func onSyncCompleteSuccessReplacingFlagsSpec(streamingMode: LDStreamingMode, eventType: DarklyEventSource.LDEvent.EventType? = nil) {
         var testContext: TestContext!
-        var oldFlags: [LDFlagKey: FeatureFlag]!
         var newFlags: [LDFlagKey: Any]!
         var eventType: DarklyEventSource.LDEvent.EventType?
 
@@ -1052,17 +1055,12 @@ final class LDClientSpec: QuickSpec {
 
         context("flags have different values") {
             beforeEach {
-                oldFlags = testContext.user.flagStore.featureFlags
                 let newBoolFeatureFlag = FeatureFlag(value: !DarklyServiceMock.FlagValues.bool, version: DarklyServiceMock.Constants.version + 1)
                 newFlags = testContext.user.flagStore.featureFlags.dictionaryValue(exciseNil: false)
                 newFlags[DarklyServiceMock.FlagKeys.bool] = newBoolFeatureFlag.dictionaryValue(exciseNil: false)
                 testContext.setFlagStoreCallbackToMimicRealFlagStore(newFlags: newFlags.flagCollection!)
 
                 waitUntil { done in
-                    testContext.subject.onFlagsUnchanged = {
-                        testContext.onFlagsUnchangedCallCount += 1
-                        done()
-                    }
                     testContext.changeNotifierMock.notifyObserversCallback = done
 
                     testContext.subject.start(mobileKey: Constants.mockMobileKey, config: testContext.config, user: testContext.user)
@@ -1082,22 +1080,17 @@ final class LDClientSpec: QuickSpec {
             it("informs the flag change notifier of the changed flags") {
                 expect(testContext.changeNotifierMock.notifyObserversCallCount) == 1
                 expect(testContext.changeNotifierMock.notifyObserversReceivedArguments?.user) == testContext.user
-                expect(testContext.changeNotifierMock.notifyObserversReceivedArguments?.oldFlags == oldFlags).to(beTrue())
-                expect(testContext.onFlagsUnchangedCallCount) == 0
+                expect(testContext.changeNotifierMock.notifyObserversReceivedArguments?.oldFlags == testContext.oldFlags).to(beTrue())
+                expect(testContext.changeNotifierMock.notifyObserversReceivedArguments?.oldFlagSource) == testContext.oldFlagSource
             }
         }
         context("a flag was added") {
             beforeEach {
-                oldFlags = testContext.user.flagStore.featureFlags
                 newFlags = testContext.user.flagStore.featureFlags.dictionaryValue(exciseNil: false)
                 newFlags[Constants.newFlagKey] = FeatureFlag(value: Constants.newFlagValue, version: 1).dictionaryValue(exciseNil: false)
                 testContext.setFlagStoreCallbackToMimicRealFlagStore(newFlags: newFlags.flagCollection!)
 
                 waitUntil { done in
-                    testContext.subject.onFlagsUnchanged = {
-                        testContext.onFlagsUnchangedCallCount += 1
-                        done()
-                    }
                     testContext.changeNotifierMock.notifyObserversCallback = done
 
                     testContext.subject.start(mobileKey: Constants.mockMobileKey, config: testContext.config, user: testContext.user)
@@ -1117,22 +1110,17 @@ final class LDClientSpec: QuickSpec {
             it("informs the flag change notifier of the changed flags") {
                 expect(testContext.changeNotifierMock.notifyObserversCallCount) == 1
                 expect(testContext.changeNotifierMock.notifyObserversReceivedArguments?.user) == testContext.user
-                expect(testContext.changeNotifierMock.notifyObserversReceivedArguments?.oldFlags == oldFlags).to(beTrue())
-                expect(testContext.onFlagsUnchangedCallCount) == 0
+                expect(testContext.changeNotifierMock.notifyObserversReceivedArguments?.oldFlags == testContext.oldFlags).to(beTrue())
+                expect(testContext.changeNotifierMock.notifyObserversReceivedArguments?.oldFlagSource) == testContext.oldFlagSource
             }
         }
         context("a flag was removed") {
             beforeEach {
-                oldFlags = testContext.user.flagStore.featureFlags
                 newFlags = testContext.user.flagStore.featureFlags.dictionaryValue(exciseNil: false)
                 newFlags.removeValue(forKey: DarklyServiceMock.FlagKeys.dictionary)
                 testContext.setFlagStoreCallbackToMimicRealFlagStore(newFlags: newFlags.flagCollection!)
 
                 waitUntil { done in
-                    testContext.subject.onFlagsUnchanged = {
-                        testContext.onFlagsUnchangedCallCount += 1
-                        done()
-                    }
                     testContext.changeNotifierMock.notifyObserversCallback = done
 
                     testContext.subject.start(mobileKey: Constants.mockMobileKey, config: testContext.config, user: testContext.user)
@@ -1152,20 +1140,15 @@ final class LDClientSpec: QuickSpec {
             it("informs the flag change notifier of the changed flags") {
                 expect(testContext.changeNotifierMock.notifyObserversCallCount) == 1
                 expect(testContext.changeNotifierMock.notifyObserversReceivedArguments?.user) == testContext.user
-                expect(testContext.changeNotifierMock.notifyObserversReceivedArguments?.oldFlags == oldFlags).to(beTrue())
-                expect(testContext.onFlagsUnchangedCallCount) == 0
+                expect(testContext.changeNotifierMock.notifyObserversReceivedArguments?.oldFlags == testContext.oldFlags).to(beTrue())
+                expect(testContext.changeNotifierMock.notifyObserversReceivedArguments?.oldFlagSource) == testContext.oldFlagSource
             }
         }
         context("there were no changes to the flags") {
             beforeEach {
-                oldFlags = testContext.user.flagStore.featureFlags
                 newFlags = testContext.user.flagStore.featureFlags.dictionaryValue(exciseNil: false)
 
                 waitUntil { done in
-                    testContext.subject.onFlagsUnchanged = {
-                        testContext.onFlagsUnchangedCallCount += 1
-                        done()
-                    }
                     testContext.changeNotifierMock.notifyObserversCallback = done
 
                     testContext.subject.start(mobileKey: Constants.mockMobileKey, config: testContext.config, user: testContext.user)
@@ -1182,9 +1165,11 @@ final class LDClientSpec: QuickSpec {
                 expect(testContext.flagCacheMock.cacheFlagsCallCount) == 1
                 expect(testContext.flagCacheMock.cacheFlagsReceivedUser) == testContext.user
             }
-            it("calls the flags unchanged closure") {
-                expect(testContext.changeNotifierMock.notifyObserversCallCount) == 0
-                expect(testContext.onFlagsUnchangedCallCount) == 1
+            it("informs the flag change notifier of the unchanged flags") {
+                expect(testContext.changeNotifierMock.notifyObserversCallCount) == 1
+                expect(testContext.changeNotifierMock.notifyObserversReceivedArguments?.user) == testContext.user
+                expect(testContext.changeNotifierMock.notifyObserversReceivedArguments?.oldFlags == testContext.oldFlags).to(beTrue())
+                expect(testContext.changeNotifierMock.notifyObserversReceivedArguments?.oldFlagSource) == testContext.oldFlagSource
             }
         }
     }
@@ -1211,10 +1196,6 @@ final class LDClientSpec: QuickSpec {
                 testContext.setFlagStoreCallbackToMimicRealFlagStore(newFlags: newFlags.flagCollection!)
 
                 waitUntil { done in
-                    testContext.subject.onFlagsUnchanged = {
-                        testContext.onFlagsUnchangedCallCount += 1
-                        done()
-                    }
                     testContext.changeNotifierMock.notifyObserversCallback = done
 
                     testContext.subject.start(mobileKey: Constants.mockMobileKey, config: testContext.config, user: testContext.user)
@@ -1236,7 +1217,7 @@ final class LDClientSpec: QuickSpec {
                 expect(testContext.changeNotifierMock.notifyObserversCallCount) == 1
                 expect(testContext.changeNotifierMock.notifyObserversReceivedArguments?.user) == testContext.user
                 expect(testContext.changeNotifierMock.notifyObserversReceivedArguments?.oldFlags == oldFlags).to(beTrue())
-                expect(testContext.onFlagsUnchangedCallCount) == 0
+                expect(testContext.changeNotifierMock.notifyObserversReceivedArguments?.oldFlagSource) == testContext.oldFlagSource
             }
         }
         context("update does not change flags") {
@@ -1248,10 +1229,6 @@ final class LDClientSpec: QuickSpec {
                 newFlags = oldFlags.dictionaryValue(exciseNil: false)
 
                 waitUntil { done in
-                    testContext.subject.onFlagsUnchanged = {
-                        testContext.onFlagsUnchangedCallCount += 1
-                        done()
-                    }
                     testContext.changeNotifierMock.notifyObserversCallback = done
 
                     testContext.subject.start(mobileKey: Constants.mockMobileKey, config: testContext.config, user: testContext.user)
@@ -1269,9 +1246,11 @@ final class LDClientSpec: QuickSpec {
                 expect(testContext.flagCacheMock.cacheFlagsCallCount) == 1
                 expect(testContext.flagCacheMock.cacheFlagsReceivedUser) == testContext.user
             }
-            it("calls the flags unchanged closure") {
-                expect(testContext.changeNotifierMock.notifyObserversCallCount) == 0
-                expect(testContext.onFlagsUnchangedCallCount) == 1
+            it("informs the flag change notifier of the unchanged flag") {
+                expect(testContext.changeNotifierMock.notifyObserversCallCount) == 1
+                expect(testContext.changeNotifierMock.notifyObserversReceivedArguments?.user) == testContext.user
+                expect(testContext.changeNotifierMock.notifyObserversReceivedArguments?.oldFlags == oldFlags).to(beTrue())
+                expect(testContext.changeNotifierMock.notifyObserversReceivedArguments?.oldFlagSource) == testContext.oldFlagSource
             }
         }
     }
@@ -1295,10 +1274,6 @@ final class LDClientSpec: QuickSpec {
                 testContext.setFlagStoreCallbackToMimicRealFlagStore(newFlags: newFlags.flagCollection!)
 
                 waitUntil { done in
-                    testContext.subject.onFlagsUnchanged = {
-                        testContext.onFlagsUnchangedCallCount += 1
-                        done()
-                    }
                     testContext.changeNotifierMock.notifyObserversCallback = done
 
                     testContext.subject.start(mobileKey: Constants.mockMobileKey, config: testContext.config, user: testContext.user)
@@ -1320,7 +1295,7 @@ final class LDClientSpec: QuickSpec {
                 expect(testContext.changeNotifierMock.notifyObserversCallCount) == 1
                 expect(testContext.changeNotifierMock.notifyObserversReceivedArguments?.user) == testContext.user
                 expect(testContext.changeNotifierMock.notifyObserversReceivedArguments?.oldFlags == oldFlags).to(beTrue())
-                expect(testContext.onFlagsUnchangedCallCount) == 0
+                expect(testContext.changeNotifierMock.notifyObserversReceivedArguments?.oldFlagSource) == testContext.oldFlagSource
             }
         }
         context("delete does not change flags") {
@@ -1330,10 +1305,6 @@ final class LDClientSpec: QuickSpec {
                 newFlags = oldFlags.dictionaryValue(exciseNil: false)
 
                 waitUntil { done in
-                    testContext.subject.onFlagsUnchanged = {
-                        testContext.onFlagsUnchangedCallCount += 1
-                        done()
-                    }
                     testContext.changeNotifierMock.notifyObserversCallback = done
 
                     testContext.subject.start(mobileKey: Constants.mockMobileKey, config: testContext.config, user: testContext.user)
@@ -1351,9 +1322,11 @@ final class LDClientSpec: QuickSpec {
                 expect(testContext.flagCacheMock.cacheFlagsCallCount) == 1
                 expect(testContext.flagCacheMock.cacheFlagsReceivedUser) == testContext.user
             }
-            it("calls the flags unchanged closure") {
-                expect(testContext.changeNotifierMock.notifyObserversCallCount) == 0
-                expect(testContext.onFlagsUnchangedCallCount) == 1
+            it("informs the flag change notifier of the unchanged flag") {
+                expect(testContext.changeNotifierMock.notifyObserversCallCount) == 1
+                expect(testContext.changeNotifierMock.notifyObserversReceivedArguments?.user) == testContext.user
+                expect(testContext.changeNotifierMock.notifyObserversReceivedArguments?.oldFlags == oldFlags).to(beTrue())
+                expect(testContext.changeNotifierMock.notifyObserversReceivedArguments?.oldFlagSource) == testContext.oldFlagSource
             }
         }
     }
