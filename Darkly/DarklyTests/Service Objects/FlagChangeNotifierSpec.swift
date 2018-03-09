@@ -640,8 +640,8 @@ fileprivate extension DarklyServiceMock.FlagValues {
 }
 
 fileprivate extension LDChangedFlag {
-    static func stub(key: LDFlagKey, oldFlags: [LDFlagKey: Any], newFlags: [LDFlagKey: Any]) -> LDChangedFlag {
-        return LDChangedFlag(key: key, oldValue: oldFlags[key], oldValueSource: .server, newValue: newFlags[key], newValueSource: .server)
+    static func stub(key: LDFlagKey, oldFlags: [LDFlagKey: FeatureFlag], newFlags: [LDFlagKey: FeatureFlag]) -> LDChangedFlag {
+        return LDChangedFlag(key: key, oldValue: oldFlags[key]?.value, oldValueSource: .server, newValue: newFlags[key]?.value, newValueSource: .server)
     }
 }
 

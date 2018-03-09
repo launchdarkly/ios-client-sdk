@@ -62,9 +62,9 @@ final class FlagChangeNotifier: FlagChangeNotifying {
 
         let changedFlags = [LDFlagKey: LDChangedFlag](uniqueKeysWithValues: changedFlagKeys.map { (flagKey) in
             return (flagKey, LDChangedFlag(key: flagKey,
-                                           oldValue: oldFlags[flagKey],
+                                           oldValue: oldFlags[flagKey]?.value,
                                            oldValueSource: oldFlagSource,
-                                           newValue: user.flagStore.featureFlags[flagKey],
+                                           newValue: user.flagStore.featureFlags[flagKey]?.value,
                                            newValueSource: user.flagStore.flagValueSource))
         })
         selectedObservers.forEach { (observer) in
