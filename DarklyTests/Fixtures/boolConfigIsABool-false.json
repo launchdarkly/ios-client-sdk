@@ -1,3 +1,6 @@
 {
-    "isABool":false
+    "isABool": {
+        "value": false,
+        "version": 3
+    }
 }

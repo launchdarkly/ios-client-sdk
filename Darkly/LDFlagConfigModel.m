@@ -11,70 +11,115 @@
 #import "NSMutableDictionary+NullRemovable.h"
 
 NSString * const kFeaturesJsonDictionaryKey = @"featuresJsonDictionary";
+NSString * const kLDFlagConfigJsonDictionaryKeyKey = @"key";
 
-static NSString * const kFeaturesJsonDictionaryServerKey = @"items";
-
-static NSString * const kFeatureJsonValueName = @"value";
+extern NSString * const kLDFlagConfigJsonDictionaryKeyValue;
+extern NSString * const kLDFlagConfigJsonDictionaryKeyVersion;
+extern const NSInteger kLDFlagConfigVersionDoesNotExist;
 
 @implementation LDFlagConfigModel
 
 - (void)encodeWithCoder:(NSCoder *)encoder {
-    //Encode properties, other class variables, etc
     [encoder encodeObject:self.featuresJsonDictionary forKey:kFeaturesJsonDictionaryKey];
 }
 
 - (id)initWithCoder:(NSCoder *)decoder {
-    if((self = [super init])) {
-        //Decode properties, other class vars
-        self.featuresJsonDictionary = [decoder decodeObjectForKey:kFeaturesJsonDictionaryKey];
-    }
+    if (!(self = [super init])) { return nil; }
+    _featuresJsonDictionary = [decoder decodeObjectForKey:kFeaturesJsonDictionaryKey];
     return self;
 }
 
 - (id)initWithDictionary:(NSDictionary *)dictionary {
-    if((self = [super init])) {
-        //Process json that comes down from server
-        self.featuresJsonDictionary = dictionary;
+    if (!(self = [super init])) { return nil; }
+
+    NSMutableDictionary *flagConfigValues = [NSMutableDictionary dictionaryWithCapacity:dictionary.count];
+
+    for (NSString *key in [dictionary.allKeys copy]) {
+        flagConfigValues[key] = [LDFlagConfigValue flagConfigValueWithObject:dictionary[key]];
     }
+
+    _featuresJsonDictionary = [NSDictionary dictionaryWithDictionary:[flagConfigValues copy]];
+
     return self;
 }
 
--(NSDictionary *)dictionaryValue{
-    NSMutableDictionary *dictionary = [[NSMutableDictionary alloc] init];
-    
-    self.featuresJsonDictionary ? [dictionary setObject:[self.featuresJsonDictionary mutableCopy] forKey: kFeaturesJsonDictionaryKey] : nil;
-    return [[dictionary removeNullValues] copy];
+-(NSDictionary *)dictionaryValue {
+    return [self dictionaryValueIncludeNulls:YES];
 }
 
--(NSObject*) configFlagValue: ( NSString * __nonnull )keyName {
-    NSObject *result = nil;
-    
-    NSDictionary *featureValue = [self.featuresJsonDictionary objectForKey: keyName];
-    
-    if (featureValue) {
-        id aValue = featureValue;
-        if (![aValue isKindOfClass:[NSNull class]]) {
-            @try {
-                result = aValue;
-            }
-            @catch (NSException *exception) {
-                DEBUG_LOG(@"Error parsing value for key: %@", keyName);
-            }
-        }
+-(NSDictionary*)dictionaryValueIncludeNulls:(BOOL)includeNulls {
+    if (!self.featuresJsonDictionary) return nil;
+
+    NSMutableDictionary *flagConfigDictionaryValues = [NSMutableDictionary dictionaryWithCapacity:self.featuresJsonDictionary.count];
+    for (NSString *key in [self.featuresJsonDictionary.allKeys copy]) {
+        if (!includeNulls && [self.featuresJsonDictionary[key].value isKindOfClass:[NSNull class]]) { continue; }
+        flagConfigDictionaryValues[key] = [self.featuresJsonDictionary[key] dictionaryValue];
     }
-    return result;
-}
-
--(BOOL) doesConfigFlagExist: ( NSString * __nonnull )keyName {
-    if (self.featuresJsonDictionary != nil) {
-        BOOL value = [[self.featuresJsonDictionary allKeys] containsObject: keyName];
-        return value;
+    if (!includeNulls) {
+        [flagConfigDictionaryValues removeNullValues];  //Redact nulls out of values that are dictionaries
     }
-    return false;
+
+    return [NSDictionary dictionaryWithDictionary:[flagConfigDictionaryValues copy]];
 }
 
--(BOOL)isEqualToConfig:(nullable LDFlagConfigModel *)otherConfig {
+-(id)configFlagValue:(NSString*)keyName {
+    LDFlagConfigValue *featureValue = self.featuresJsonDictionary[keyName];
+    if (!featureValue || [featureValue.value isKindOfClass:[NSNull class]]) { return nil; }
+    
+    return featureValue.value;
+}
+
+-(NSInteger)configFlagVersion:(NSString*)keyName {
+    LDFlagConfigValue *featureValue = self.featuresJsonDictionary[keyName];
+    if (!featureValue) { return kLDFlagConfigVersionDoesNotExist; }
+
+    return featureValue.version;
+}
+
+-(BOOL)doesConfigFlagExist:(NSString*)keyName {
+    if (!self.featuresJsonDictionary) { return NO; }
+
+    return [[self.featuresJsonDictionary allKeys] containsObject: keyName];
+}
+
+-(void)addOrReplaceFromDictionary:(NSDictionary*)patch {
+    NSString *flagKey = patch[kLDFlagConfigJsonDictionaryKeyKey];
+    if (flagKey.length == 0) { return; }
+
+    id flagValue = patch[kLDFlagConfigJsonDictionaryKeyValue];
+    if (!flagValue) { return; }
+
+    id flagVersionObject = patch[kLDFlagConfigJsonDictionaryKeyVersion];
+    if (!flagVersionObject || ![flagVersionObject isKindOfClass:[NSNumber class]]) { return; }
+    NSInteger flagVersion = [(NSNumber*)flagVersionObject integerValue];
+    if ([self doesConfigFlagExist:flagKey] && flagVersion <= [self configFlagVersion:flagKey]) { return; }
+
+    NSMutableDictionary *updatedFlagConfig = [NSMutableDictionary dictionaryWithDictionary:self.featuresJsonDictionary];
+    updatedFlagConfig[flagKey] = [LDFlagConfigValue flagConfigValueWithObject:@{kLDFlagConfigJsonDictionaryKeyValue:flagValue, kLDFlagConfigJsonDictionaryKeyVersion:@(flagVersion)}];
+    self.featuresJsonDictionary = [updatedFlagConfig copy];
+}
+
+-(void)deleteFromDictionary:(nullable NSDictionary*)delete {
+    NSString *flagKey = delete[kLDFlagConfigJsonDictionaryKeyKey];
+    if (flagKey.length == 0) { return; }
+
+    id flagVersionObject = delete[kLDFlagConfigJsonDictionaryKeyVersion];
+    if (!flagVersionObject || ![flagVersionObject isKindOfClass:[NSNumber class]]) { return; }
+    NSInteger flagVersion = [(NSNumber*)flagVersionObject integerValue];
+    if ([self doesConfigFlagExist:flagKey] && flagVersion <= [self configFlagVersion:flagKey]) { return; }
+
+    NSMutableDictionary *updatedFlagConfig = [NSMutableDictionary dictionaryWithDictionary:self.featuresJsonDictionary];
+    updatedFlagConfig[flagKey] = nil;
+
+    self.featuresJsonDictionary = [updatedFlagConfig copy];
+}
+
+-(BOOL)isEqualToConfig:(LDFlagConfigModel *)otherConfig {
     return [self.featuresJsonDictionary isEqualToDictionary:otherConfig.featuresJsonDictionary];
+}
+
+-(BOOL)hasFeaturesEqualToDictionary:(NSDictionary*)otherDictionary {
+    return [[self dictionaryValue] isEqualToDictionary:otherDictionary];
 }
 
 @end

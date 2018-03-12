@@ -41,6 +41,8 @@ static NSInteger const HTTPStatusCodeUnauthorized = 401;
 @property (nonatomic, assign) NSTimeInterval retryInterval;
 @property (nonatomic, assign) NSInteger retryAttempt;
 @property (readonly, nonatomic, strong) NSDictionary <NSString *, NSString *> *httpRequestHeaders;
+@property (nonatomic, strong) NSString *connectMethod;
+@property (nonatomic, strong) NSData *connectBody;
 @property (nonatomic, strong) id lastEventID;
 
 - (void)_open;
@@ -55,17 +57,27 @@ static NSInteger const HTTPStatusCodeUnauthorized = 401;
     return [[LDEventSource alloc] initWithURL:URL httpHeaders:headers];
 }
 
-+ (instancetype)eventSourceWithURL:(NSURL *)URL httpHeaders:(NSDictionary<NSString*, NSString *>*) headers timeoutInterval:(NSTimeInterval)timeoutInterval
++ (instancetype)eventSourceWithURL:(NSURL *)URL httpHeaders:(NSDictionary<NSString*, NSString *>*)headers connectMethod:(NSString*)connectMethod connectBody:(NSData*)connectBody
 {
-    return [[LDEventSource alloc] initWithURL:URL httpHeaders:headers timeoutInterval:timeoutInterval];
+    return [[LDEventSource alloc] initWithURL:URL httpHeaders:headers timeoutInterval:ES_DEFAULT_TIMEOUT connectMethod:connectMethod connectBody:connectBody];
+}
+
++ (instancetype)eventSourceWithURL:(NSURL *)URL httpHeaders:(NSDictionary<NSString*, NSString *>*)headers timeoutInterval:(NSTimeInterval)timeoutInterval connectMethod:(NSString*)connectMethod connectBody:(NSData*)connectBody
+{
+    return [[LDEventSource alloc] initWithURL:URL httpHeaders:headers timeoutInterval:timeoutInterval connectMethod:connectMethod connectBody:connectBody];
 }
 
 - (instancetype)initWithURL:(NSURL *)URL httpHeaders:(NSDictionary<NSString*, NSString *>*) headers
 {
-    return [self initWithURL:URL httpHeaders:headers timeoutInterval:ES_DEFAULT_TIMEOUT];
+    return [self initWithURL:URL httpHeaders:headers timeoutInterval:ES_DEFAULT_TIMEOUT connectMethod:@"GET" connectBody:nil];
 }
 
-- (instancetype)initWithURL:(NSURL *)URL httpHeaders:(NSDictionary<NSString*, NSString *>*) headers timeoutInterval:(NSTimeInterval)timeoutInterval
+- (instancetype)initWithURL:(NSURL *)URL httpHeaders:(NSDictionary<NSString*, NSString *>*) headers connectMethod:(NSString*)connectMethod connectBody:(NSData*)connectBody
+{
+    return [self initWithURL:URL httpHeaders:headers timeoutInterval:ES_DEFAULT_TIMEOUT connectMethod:connectMethod connectBody:connectBody];
+}
+
+- (instancetype)initWithURL:(NSURL *)URL httpHeaders:(NSDictionary<NSString*, NSString *>*) headers timeoutInterval:(NSTimeInterval)timeoutInterval connectMethod:(NSString*)connectMethod connectBody:(NSData*)connectBody
 {
     self = [super init];
     if (self) {
@@ -75,6 +87,8 @@ static NSInteger const HTTPStatusCodeUnauthorized = 401;
         _retryInterval = ES_RETRY_INTERVAL;
         _retryAttempt = 0;
         _httpRequestHeaders = headers;
+        _connectMethod = connectMethod;
+        _connectBody = connectBody;
         messageQueue = dispatch_queue_create("com.launchdarkly.eventsource-queue", DISPATCH_QUEUE_SERIAL);
         connectionQueue = dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_HIGH, 0);
         
@@ -251,6 +265,14 @@ didReceiveResponse:(NSURLResponse *)response completionHandler:(void (^)(NSURLSe
     }
     if (self.lastEventID) {
         [request setValue:self.lastEventID forHTTPHeaderField:@"Last-Event-ID"];
+    }
+
+    if (self.connectMethod.length > 0) {
+        request.HTTPMethod = self.connectMethod;
+    }
+
+    if (self.connectBody.length > 0) {
+        request.HTTPBody = self.connectBody;
     }
     
     if (self.session) {

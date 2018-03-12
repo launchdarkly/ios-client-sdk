@@ -205,7 +205,7 @@ dispatch_queue_t notificationQueue;
     
     NSString *requestUrl = [baseUrl stringByAppendingString:kFeatureFlagReportUrl];
     NSMutableURLRequest *request = [NSMutableURLRequest requestWithURL:[NSURL URLWithString:requestUrl]];
-    request.HTTPMethod = @"REPORT";
+    request.HTTPMethod = kHTTPMethodReport;
     request.HTTPBody = [userJson dataUsingEncoding:NSUTF8StringEncoding];
     [request setTimeoutInterval:self.connectionTimeout];
     [self addFeatureRequestHeaders:request];

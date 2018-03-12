@@ -35,7 +35,7 @@ NSString * const userModelStubCustomValue = @"userModelStubCustomValue";
     stub.email = userModelStubEmail;
     stub.avatar = userModelStubAvatar;
     stub.custom = [LDUserModel customStub];
-    stub.config = [LDFlagConfigModel flagConfigFromJsonFileNamed:@"userStubFlags"];
+    stub.config = [LDFlagConfigModel flagConfigFromJsonFileNamed:@"featureFlags-excludeNulls-withVersions"];
 
     return stub;
 }

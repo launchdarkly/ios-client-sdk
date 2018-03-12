@@ -1,0 +1,10 @@
+{
+    "iosuser": {
+        "value": false,
+        "version": 2
+    },
+    "ipaduser": {
+        "value": true,
+        "version": 2
+    }
+}

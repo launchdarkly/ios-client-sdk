@@ -8,18 +8,32 @@
 
 #import "LDFlagConfigModel.h"
 #import "LDFlagConfigModel+Testable.h"
+#import "NSJSONSerialization+Testable.h"
+
+extern NSString * _Nonnull  const kLDFlagConfigJsonDictionaryKeyVersion;
 
 @implementation LDFlagConfigModel(Testable)
 +(instancetype)flagConfigFromJsonFileNamed:(NSString *)fileName {
-    NSString *filepath;
-    for (NSBundle *bundle in [[NSBundle allBundles] copy]) {
-        filepath = [bundle pathForResource:fileName ofType:@"json"];
-        if (filepath) { break; }
-    }
-    if (!filepath) { return nil; }
-    NSData *data = [NSData dataWithContentsOfFile:filepath];
-    if (!data) { return nil; }
-    NSDictionary *jsonDictionary = [NSJSONSerialization JSONObjectWithData:data options:kNilOptions error:nil];
-    return [[LDFlagConfigModel alloc] initWithDictionary:jsonDictionary];
+    return [[LDFlagConfigModel alloc] initWithDictionary:[NSJSONSerialization jsonObjectFromFileNamed:fileName]];
+}
+
++(NSDictionary*)patchFromJsonFileNamed:(NSString *)fileName useVersion:(NSInteger)version {
+    NSMutableDictionary *patch = [NSMutableDictionary dictionaryWithDictionary:[NSJSONSerialization jsonObjectFromFileNamed:fileName]];
+    patch[kLDFlagConfigJsonDictionaryKeyVersion] = @(version);
+    return patch;
+}
+
++(NSDictionary*)patchFromJsonFileNamed:(NSString *)fileName omitKey:(NSString*)key {
+    NSMutableDictionary *patch = [NSMutableDictionary dictionaryWithDictionary:[NSJSONSerialization jsonObjectFromFileNamed:fileName]];
+    patch[key] = nil;
+    return patch;
+}
+
++(NSDictionary*)deleteFromJsonFileNamed:(NSString *)fileName useVersion:(NSInteger)version {
+    return [LDFlagConfigModel patchFromJsonFileNamed:fileName useVersion:version];
+}
+
++(NSDictionary*)deleteFromJsonFileNamed:(NSString *)fileName omitKey:(NSString*)key {
+    return [LDFlagConfigModel patchFromJsonFileNamed:fileName omitKey:key];
 }
 @end

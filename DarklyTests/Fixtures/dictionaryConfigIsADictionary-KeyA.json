@@ -1,3 +1,8 @@
 {
-    "isADictionary":{"keyA":true}
+    "isADictionary": {
+        "value": {
+            "keyA": true
+        },
+        "version": 5
+    }
 }

@@ -12,6 +12,7 @@
 #import "LDUserModel+JsonDecodeable.h"
 #import "NSMutableDictionary+NullRemovable.h"
 #import "NSString+RemoveWhitespace.h"
+#import "NSJSONSerialization+Testable.h"
 
 @interface LDUserModelTest : XCTestCase
 @end
@@ -490,14 +491,7 @@
 }
 
 -(NSDictionary*)serverJson {
-    NSString *filepath = [[NSBundle bundleForClass:[LDUserModelTest class]] pathForResource:@"feature_flags"
-                                                                                     ofType:@"json"];
-    NSError *error = nil;
-    NSData *data = [NSData dataWithContentsOfFile:filepath];
-    NSDictionary *serverJson = [NSJSONSerialization JSONObjectWithData:data
-                                                               options:kNilOptions
-                                                                 error:&error];
-    return serverJson;
+    return [NSJSONSerialization jsonObjectFromFileNamed:@"featureFlags-withVersions"];
 }
 
 -(NSMutableDictionary*)customDictionary {

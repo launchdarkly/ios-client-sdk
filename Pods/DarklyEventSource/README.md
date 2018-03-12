@@ -38,7 +38,7 @@ EventSource *source = [EventSource eventSourceWithURL:serverURL];
 
 #### Listening for Connection State Changes
 
-Additionally, there are `onOpen:`,  `onError:`, and `onReadyStateChanged:` methods to receive connection state events. 
+Additionally, there are `onOpen:`, `onMessage`, `onError:`, and `onReadyStateChanged:` methods to receive connection state events.
 
 ```objc
 NSURL *serverURL = [NSURL URLWithString:@"http://127.0.0.1:8000/"];

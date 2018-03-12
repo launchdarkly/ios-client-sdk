@@ -1,3 +1,10 @@
 {
-    "isADictionary":{"keyC":{"keyD":"someStringValueA"}}
+    "isADictionary": {
+        "value": {
+            "keyC": {
+                "keyD": "someStringValueA"
+            }
+        },
+        "version": 5
+    }
 }

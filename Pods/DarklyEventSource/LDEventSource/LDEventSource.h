@@ -54,8 +54,18 @@ typedef void (^LDEventSourceEventHandler)(LDEvent *event);
 ///
 /// @param URL The URL of the EventSource.
 /// @param headers The http headers to be included
+/// @param connectMethod The http method to use to connect to the EventSource. Default: GET
+/// @param connectBody The http body to use to connect to the EventSource. Default: nil
++ (instancetype)eventSourceWithURL:(NSURL *)URL httpHeaders:(NSDictionary<NSString*, NSString *>*)headers connectMethod:(NSString*)connectMethod connectBody:(NSData*)connectBody;
+
+/// Returns a new instance of EventSource with the specified URL.
+///
+/// @param URL The URL of the EventSource.
+/// @param headers The http headers to be included
 /// @param timeoutInterval The request timeout interval in seconds. See <tt>NSURLRequest</tt> for more details. Default: 5 minutes.
-+ (instancetype)eventSourceWithURL:(NSURL *)URL httpHeaders:(NSDictionary<NSString*, NSString *>*) headers timeoutInterval:(NSTimeInterval)timeoutInterval;
+/// @param connectMethod The http method to use to connect to the EventSource. Default: GET
+/// @param connectBody The http body to use to connect to the EventSource. Default: nil
++ (instancetype)eventSourceWithURL:(NSURL *)URL httpHeaders:(NSDictionary<NSString*, NSString *>*)headers timeoutInterval:(NSTimeInterval)timeoutInterval connectMethod:(NSString*)connectMethod connectBody:(NSData*)connectBody;
 
 /// Creates a new instance of EventSource with the specified URL.
 ///
@@ -67,8 +77,18 @@ typedef void (^LDEventSourceEventHandler)(LDEvent *event);
 ///
 /// @param URL The URL of the EventSource.
 /// @param headers The http headers to be included
+/// @param connectMethod The http method to use to connect to the EventSource. Default: GET
+/// @param connectBody The http body to use to connect to the EventSource. Default: nil
+- (instancetype)initWithURL:(NSURL *)URL httpHeaders:(NSDictionary<NSString*, NSString *>*) headers connectMethod:(NSString*)connectMethod connectBody:(NSData*)connectBody;
+
+/// Creates a new instance of EventSource with the specified URL.
+///
+/// @param URL The URL of the EventSource.
+/// @param headers The http headers to be included
 /// @param timeoutInterval The request timeout interval in seconds. See <tt>NSURLRequest</tt> for more details. Default: 5 minutes.
-- (instancetype)initWithURL:(NSURL *)URL httpHeaders:(NSDictionary<NSString*, NSString *>*) headers timeoutInterval:(NSTimeInterval)timeoutInterval;
+/// @param connectMethod The http method to use to connect to the EventSource. Default: GET
+/// @param connectBody The http body to use to connect to the EventSource. Default: nil
+- (instancetype)initWithURL:(NSURL *)URL httpHeaders:(NSDictionary<NSString*, NSString *>*) headers timeoutInterval:(NSTimeInterval)timeoutInterval connectMethod:(NSString*)connectMethod connectBody:(NSData*)connectBody;
 
 /// Registers an event handler for the Message event.
 ///

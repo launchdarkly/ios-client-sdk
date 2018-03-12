@@ -1,3 +1,8 @@
 {
-    "isADictionary":{"keyB”:[1,2,4]}
+    "isADictionary": {
+        "value": {
+            "keyB": [1, 2, 4]
+        },
+        "version": 5
+    }
 }

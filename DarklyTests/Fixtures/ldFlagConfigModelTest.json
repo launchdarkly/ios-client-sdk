@@ -1,0 +1,14 @@
+{
+    "version1Flag": {
+        "value": false,
+        "version": 1
+    },
+    "version2Flag": {
+        "value": "version2",
+        "version": 2
+    },
+    "version3Flag": {
+        "value": 3,
+        "version": 3
+    }
+}

@@ -7,18 +7,23 @@
 //
 
 #import <Foundation/Foundation.h>
+#import "LDFlagConfigValue.h"
 
 @interface LDFlagConfigModel : NSObject <NSCoding>
 
-extern NSString * _Nullable  const kFeaturesJsonDictionaryKey;
+@property (nullable, nonatomic, strong) NSDictionary<NSString*, LDFlagConfigValue*> *featuresJsonDictionary;
 
-@property (nullable, nonatomic, strong) NSDictionary *featuresJsonDictionary;
+-(nullable id)initWithDictionary:(nullable NSDictionary*)dictionary;
+-(nullable NSDictionary*)dictionaryValue;
+-(nullable NSDictionary*)dictionaryValueIncludeNulls:(BOOL)includeNulls;
 
-- (nonnull id)initWithDictionary:(nonnull NSDictionary *)dictionary;
--(nonnull NSDictionary *)dictionaryValue;
+-(BOOL)doesConfigFlagExist:(nonnull NSString*)keyName;
+-(nullable id)configFlagValue:(nonnull NSString*)keyName;
+-(NSInteger)configFlagVersion:(nonnull NSString*)keyName;
 
--(nonnull NSObject*) configFlagValue: ( NSString * __nonnull )keyName;
--(BOOL) doesConfigFlagExist: ( NSString * __nonnull )keyName;
+-(void)addOrReplaceFromDictionary:(nullable NSDictionary*)patch;
+-(void)deleteFromDictionary:(nullable NSDictionary*)delete;
 
--(BOOL)isEqualToConfig:(nullable LDFlagConfigModel *)otherConfig;
+-(BOOL)isEqualToConfig:(nullable LDFlagConfigModel*)otherConfig;
+-(BOOL)hasFeaturesEqualToDictionary:(nullable NSDictionary*)otherDictionary;
 @end

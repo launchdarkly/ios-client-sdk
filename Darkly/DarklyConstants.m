@@ -7,7 +7,7 @@
 NSString * const kClientVersion = @"2.10.1";
 NSString * const kBaseUrl = @"https://app.launchdarkly.com";
 NSString * const kEventsUrl = @"https://mobile.launchdarkly.com";
-NSString * const kStreamUrl = @"https://clientstream.launchdarkly.com/mping";
+NSString * const kStreamUrl = @"https://clientstream.launchdarkly.com";
 NSString * const kNoMobileKeyExceptionName = @"NoMobileKeyDefinedException";
 NSString * const kNoMobileKeyExceptionReason = @"A valid MobileKey must be provided";
 NSString * const kNilConfigExceptionName = @"NilConfigException";
@@ -29,6 +29,7 @@ NSString * const kLDBackgroundFetchInitiated = @"Darkly.BackgroundFetchInitiated
 NSString * const kLDFlagConfigChangedNotification = @"Darkly.FlagConfigChangedNotification";
 NSString * const kLDServerConnectionUnavailableNotification = @"Darkly.ServerConnectionUnavailableNotification";
 NSString * const kLDClientUnauthorizedNotification = @"Darkly.LDClientUnauthorizedNotification";
+NSString * const kHTTPMethodReport = @"REPORT";
 int const kCapacity = 100;
 int const kConnectionTimeout = 10;
 int const kDefaultFlushInterval = 30;

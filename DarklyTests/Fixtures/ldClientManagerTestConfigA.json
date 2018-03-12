@@ -1,11 +1,32 @@
 {
-	"ddeefe": false,
-	"main-slider": false,
-	"new-feature": false,
-	"new-gallery": {
-		"foo": 2
-	},
-	"one-click-checkout": false,
-	"shopping-cart": 20,
-	"social-icon-toggle": false
+    "ddeefe": {
+        "value": false,
+        "version": 3
+    },
+    "main-slider": {
+        "value": false,
+        "version": 3
+    },
+    "new-feature": {
+        "value": false,
+        "version": 3
+    },
+    "new-gallery": {
+        "value": {
+            "foo": 2
+        },
+        "version": 3
+    },
+    "one-click-checkout": {
+        "value": false,
+        "version": 3
+    },
+    "shopping-cart": {
+        "value": 20,
+        "version": 3
+    },
+    "social-icon-toggle": {
+        "value": false,
+        "version": 3
+    }
 }
