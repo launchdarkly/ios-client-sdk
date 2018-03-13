@@ -18,7 +18,7 @@ final class FlagChangeNotifierSpec: QuickSpec {
 
     struct TestContext {
         var subject: FlagChangeNotifier!
-        var originalObservers = [FlagChangeObserver]()
+        var originalFlagChangeObservers = [FlagChangeObserver]()
         var owners = [String: LDFlagChangeOwner?]()
         var changedFlag: LDChangedFlag?
         var flagChangeHandlerCallCount = 0
@@ -35,23 +35,28 @@ final class FlagChangeNotifierSpec: QuickSpec {
         init(observers observerCount: Int = 0, observerType: ObserverType = .any, repeatFirstObserver: Bool = false) {
             subject = FlagChangeNotifier()
             guard observerCount > 0 else { return }
-            var observers = [FlagChangeObserver]()
-            while observers.count < observerCount {
-                if observerType == .singleKey || (observerType == .any && observers.count % 2 == 0) {
-                    observers.append(FlagChangeObserver(key: DarklyServiceMock.FlagKeys.bool,
+            var flagChangeObservers = [FlagChangeObserver]()
+            while flagChangeObservers.count < observerCount {
+                if observerType == .singleKey || (observerType == .any && flagChangeObservers.count % 2 == 0) {
+                    flagChangeObservers.append(FlagChangeObserver(key: DarklyServiceMock.FlagKeys.bool,
                                                         owner: stubOwner(key: DarklyServiceMock.FlagKeys.bool),
                                                         flagChangeHandler: flagChangeHandler))
                 } else {
-                    observers.append(FlagChangeObserver(keys: DarklyServiceMock.FlagKeys.all,
+                    flagChangeObservers.append(FlagChangeObserver(keys: DarklyServiceMock.FlagKeys.all,
                                                         owner: stubOwner(keys: DarklyServiceMock.FlagKeys.all),
                                                         flagCollectionChangeHandler: flagCollectionChangeHandler))
                 }
             }
-            if repeatFirstObserver { observers[observerCount - 1] = observers.first! }
-            subject = FlagChangeNotifier(observers: observers)
-            originalObservers = subject.flagObservers
-            flagsUnchangedOwnerKey = observers.first!.flagKeys.observerKey
-            subject.flagsUnchangedObserver = FlagsUnchangedObserver(owner: observers.first!.owner!, flagsUnchangedHandler: flagsUnchangedHandler)
+            if repeatFirstObserver { flagChangeObservers[observerCount - 1] = flagChangeObservers.first! }
+            flagsUnchangedOwnerKey = flagChangeObservers.first!.flagKeys.observerKey
+
+            var flagsUnchangedObservers = [FlagsUnchangedObserver]()
+            //use the flag change observer owners to own the flagsUnchangedObservers
+            flagChangeObservers.forEach { (flagChangeObserver) in
+                flagsUnchangedObservers.append(FlagsUnchangedObserver(owner: flagChangeObserver.owner!, flagsUnchangedHandler: flagsUnchangedHandler))
+            }
+            subject = FlagChangeNotifier(flagChangeObservers: flagChangeObservers, flagsUnchangedObservers: flagsUnchangedObservers)
+            originalFlagChangeObservers = subject.flagObservers
         }
 
         //Use this initializer when stubbing observers that should execute a LDFlagChangeHandler during the test
@@ -59,14 +64,20 @@ final class FlagChangeNotifierSpec: QuickSpec {
             flagStoreMock.flagValueSource = .server
             subject = FlagChangeNotifier()
             guard !keys.isEmpty else { return }
-            var observers = [FlagChangeObserver]()
+            var flagChangeObservers = [FlagChangeObserver]()
             keys.forEach { (key) in
-                observers.append(FlagChangeObserver(key: key, owner: self.stubOwner(key: key), flagChangeHandler: flagChangeHandler))
+                flagChangeObservers.append(FlagChangeObserver(key: key,
+                                                    owner: self.stubOwner(key: key),
+                                                    flagChangeHandler: flagChangeHandler))
             }
-            subject = FlagChangeNotifier(observers: observers)
-            originalObservers = subject.flagObservers
-            flagsUnchangedOwnerKey = observers.first!.flagKeys.observerKey
-            subject.flagsUnchangedObserver = FlagsUnchangedObserver(owner: observers.first!.owner!, flagsUnchangedHandler: flagsUnchangedHandler)
+            flagsUnchangedOwnerKey = flagChangeObservers.first!.flagKeys.observerKey
+            var flagsUnchangedObservers = [FlagsUnchangedObserver]()
+            //use the flag change observer owners to own the flagsUnchangedObservers
+            flagChangeObservers.forEach { (flagChangeObserver) in
+                flagsUnchangedObservers.append(FlagsUnchangedObserver(owner: flagChangeObserver.owner!, flagsUnchangedHandler: flagsUnchangedHandler))
+            }
+            subject = FlagChangeNotifier(flagChangeObservers: flagChangeObservers, flagsUnchangedObservers: flagsUnchangedObservers)
+            originalFlagChangeObservers = subject.flagObservers
         }
 
         //Use this initializer when stubbing observers that should execute a LDFlagCollectionChangeHandler during the test
@@ -78,10 +89,10 @@ final class FlagChangeNotifierSpec: QuickSpec {
             var observers = [FlagChangeObserver]()
             observers.append(FlagChangeObserver(keys: keys, owner: self.stubOwner(keys: keys), flagCollectionChangeHandler: flagCollectionChangeHandler))
             observers.append(FlagChangeObserver(keys: alternateFlagKeys, owner: self.stubOwner(keys: alternateFlagKeys), flagCollectionChangeHandler: flagCollectionChangeHandler))
-            subject = FlagChangeNotifier(observers: observers)
-            originalObservers = subject.flagObservers
             flagsUnchangedOwnerKey = observers.first!.flagKeys.observerKey
-            subject.flagsUnchangedObserver = FlagsUnchangedObserver(owner: observers.first!.owner!, flagsUnchangedHandler: flagsUnchangedHandler)
+            let flagsUnchangedObservers = [FlagsUnchangedObserver(owner: observers.first!.owner!, flagsUnchangedHandler: flagsUnchangedHandler)]
+            subject = FlagChangeNotifier(flagChangeObservers: observers, flagsUnchangedObservers: flagsUnchangedObservers)
+            originalFlagChangeObservers = subject.flagObservers
         }
 
         mutating func stubOwner(key: String) -> FlagChangeHandlerOwnerMock {
@@ -117,7 +128,7 @@ final class FlagChangeNotifierSpec: QuickSpec {
     private func addObserverSpec() {
         var testContext: TestContext!
 
-        describe("add observer") {
+        describe("add flag change observer") {
             var observer: FlagChangeObserver!
             context("when no observers exist") {
                 beforeEach {
@@ -125,9 +136,10 @@ final class FlagChangeNotifierSpec: QuickSpec {
                     observer = FlagChangeObserver(key: DarklyServiceMock.FlagKeys.bool,
                                                   owner: testContext.stubOwner(key: DarklyServiceMock.FlagKeys.bool),
                                                   flagChangeHandler: testContext.flagChangeHandler)
-                    testContext.subject.add(observer)
+                    testContext.subject.addFlagChangeObserver(observer)
                 }
                 it("adds the observer") {
+                    expect(testContext.subject.flagObservers.count) == 1
                     expect(testContext.subject.flagObservers.first) == observer
                 }
             }
@@ -137,11 +149,38 @@ final class FlagChangeNotifierSpec: QuickSpec {
                     observer = FlagChangeObserver(key: DarklyServiceMock.FlagKeys.bool,
                                                   owner: testContext.stubOwner(key: DarklyServiceMock.FlagKeys.bool),
                                                   flagChangeHandler: testContext.flagChangeHandler)
-                    testContext.subject.add(observer)
+                    testContext.subject.addFlagChangeObserver(observer)
                 }
                 it("adds the observer") {
                     expect(testContext.subject.flagObservers.count) == Constants.observerCount + 1
                     expect(testContext.subject.flagObservers.last) == observer
+                }
+            }
+        }
+        describe("add flags unchanged observer") {
+            var observer: FlagsUnchangedObserver!
+            context("when no observers exist") {
+                beforeEach {
+                    testContext = TestContext()
+                    observer = FlagsUnchangedObserver(owner: testContext.stubOwner(key: DarklyServiceMock.FlagKeys.bool),
+                                                      flagsUnchangedHandler: testContext.flagsUnchangedHandler)
+                    testContext.subject.addFlagsUnchangedObserver(observer)
+                }
+                it("adds the observer") {
+                    expect(testContext.subject.noChangeObservers.count) == 1
+                    expect(testContext.subject.noChangeObservers.first?.owner) === observer.owner
+                }
+            }
+            context("when observers exist") {
+                beforeEach {
+                    testContext = TestContext(observers: Constants.observerCount)
+                    observer = FlagsUnchangedObserver(owner: testContext.stubOwner(key: DarklyServiceMock.FlagKeys.bool),
+                                                      flagsUnchangedHandler: testContext.flagsUnchangedHandler)
+                    testContext.subject.addFlagsUnchangedObserver(observer)
+                }
+                it("adds the observer") {
+                    expect(testContext.subject.noChangeObservers.count) == Constants.observerCount + 1
+                    expect(testContext.subject.noChangeObservers.last?.owner) === observer.owner
                 }
             }
         }
@@ -195,7 +234,7 @@ final class FlagChangeNotifierSpec: QuickSpec {
                     }
                     it("leaves the observers unchanged") {
                         expect(testContext.subject.flagObservers.count) == Constants.observerCount
-                        expect(testContext.subject.flagObservers) == testContext.originalObservers
+                        expect(testContext.subject.flagObservers) == testContext.originalFlagChangeObservers
                     }
                 }
                 context("because the target has a different owner") {
@@ -208,7 +247,7 @@ final class FlagChangeNotifierSpec: QuickSpec {
                     }
                     it("leaves the observers unchanged") {
                         expect(testContext.subject.flagObservers.count) == Constants.observerCount
-                        expect(testContext.subject.flagObservers) == testContext.originalObservers
+                        expect(testContext.subject.flagObservers) == testContext.originalFlagChangeObservers
                     }
                 }
                 context("because the target has a different key and owner") {
@@ -221,7 +260,7 @@ final class FlagChangeNotifierSpec: QuickSpec {
                     }
                     it("leaves the observers unchanged") {
                         expect(testContext.subject.flagObservers.count) == Constants.observerCount
-                        expect(testContext.subject.flagObservers) == testContext.originalObservers
+                        expect(testContext.subject.flagObservers) == testContext.originalFlagChangeObservers
                     }
                 }
             }
@@ -282,7 +321,7 @@ final class FlagChangeNotifierSpec: QuickSpec {
                     }
                     it("leaves the observers unchanged") {
                         expect(testContext.subject.flagObservers.count) == Constants.observerCount
-                        expect(testContext.subject.flagObservers) == testContext.originalObservers
+                        expect(testContext.subject.flagObservers) == testContext.originalFlagChangeObservers
                     }
                 }
                 context("because the target has a different owner") {
@@ -295,7 +334,7 @@ final class FlagChangeNotifierSpec: QuickSpec {
                     }
                     it("leaves the observers unchanged") {
                         expect(testContext.subject.flagObservers.count) == Constants.observerCount
-                        expect(testContext.subject.flagObservers) == testContext.originalObservers
+                        expect(testContext.subject.flagObservers) == testContext.originalFlagChangeObservers
                     }
                 }
                 context("because the target has different keys and owner") {
@@ -310,7 +349,7 @@ final class FlagChangeNotifierSpec: QuickSpec {
                     }
                     it("leaves the observers unchanged") {
                         expect(testContext.subject.flagObservers.count) == Constants.observerCount
-                        expect(testContext.subject.flagObservers) == testContext.originalObservers
+                        expect(testContext.subject.flagObservers) == testContext.originalFlagChangeObservers
                     }
                 }
             }
@@ -345,7 +384,7 @@ final class FlagChangeNotifierSpec: QuickSpec {
                 it("removes the observer") {
                     expect(testContext.subject.flagObservers.count) == Constants.observerCount - 1
                     expect(testContext.subject.flagObservers.contains(targetObserver)).to(beFalse())
-                    expect(testContext.subject.flagsUnchangedObserver).toNot(beNil())
+                    expect(testContext.subject.noChangeObservers.count) == Constants.observerCount - 1
                 }
             }
             context("when 1 observer exists") {
@@ -357,7 +396,7 @@ final class FlagChangeNotifierSpec: QuickSpec {
                 }
                 it("removes the observer") {
                     expect(testContext.subject.flagObservers.isEmpty).to(beTrue())
-                    expect(testContext.subject.flagsUnchangedObserver).to(beNil())
+                    expect(testContext.subject.noChangeObservers.isEmpty).to(beTrue())
                 }
             }
             context("when the target observer doesnt exist") {
@@ -369,8 +408,8 @@ final class FlagChangeNotifierSpec: QuickSpec {
                 }
                 it("leaves the observers unchanged") {
                     expect(testContext.subject.flagObservers.count) == Constants.observerCount
-                    expect(testContext.subject.flagObservers) == testContext.originalObservers
-                    expect(testContext.subject.flagsUnchangedObserver).toNot(beNil())
+                    expect(testContext.subject.flagObservers) == testContext.originalFlagChangeObservers
+                    expect(testContext.subject.noChangeObservers.count) == Constants.observerCount
                 }
             }
             context("when multiple target observers exist") {
@@ -383,7 +422,7 @@ final class FlagChangeNotifierSpec: QuickSpec {
                 it("removes the observer") {
                     expect(testContext.subject.flagObservers.count) == Constants.observerCount - 1
                     expect(testContext.subject.flagObservers.contains(targetObserver)).to(beFalse())
-                    expect(testContext.subject.flagsUnchangedObserver).to(beNil())
+                    expect(testContext.subject.noChangeObservers.count) == Constants.observerCount - 1
                 }
             }
         }
@@ -445,7 +484,7 @@ final class FlagChangeNotifierSpec: QuickSpec {
                     }
                     it("activates the flags unchanged handler") {
                         expect(testContext.flagChangeHandlerCallCount) == 0
-                        expect(testContext.flagsUnchangedHandlerCallCount) == 1
+                        expect(testContext.flagsUnchangedHandlerCallCount) == DarklyServiceMock.FlagKeys.all.count
                     }
                 }
             }
@@ -491,7 +530,7 @@ final class FlagChangeNotifierSpec: QuickSpec {
                     }
                     it("does nothing") {
                         expect(testContext.flagChangeHandlerCallCount) == 0
-                        expect(testContext.flagsUnchangedHandlerCallCount) == 0
+                        expect(testContext.flagsUnchangedHandlerCallCount) == DarklyServiceMock.FlagKeys.all.count - 1
                     }
                 }
             }

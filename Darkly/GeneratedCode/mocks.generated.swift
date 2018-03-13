@@ -43,24 +43,24 @@ final class DarklyStreamingProviderMock: DarklyStreamingProvider {
 // MARK: - FlagChangeNotifyingMock
 final class FlagChangeNotifyingMock: FlagChangeNotifying {
 
-    // MARK: flagsUnchangedObserver
-    var flagsUnchangedObserverSetCount = 0
-    var setFlagsUnchangedObserverCallback: (() -> Void)?
-    var flagsUnchangedObserver: FlagsUnchangedObserver? {
-        didSet {
-            flagsUnchangedObserverSetCount += 1
-            setFlagsUnchangedObserverCallback?()
-        }
+    // MARK: addFlagChangeObserver
+    var addFlagChangeObserverCallCount = 0
+    var addFlagChangeObserverCallback: (() -> Void)?
+    var addFlagChangeObserverReceivedObserver: FlagChangeObserver?
+    func addFlagChangeObserver(_ observer: FlagChangeObserver) {
+        addFlagChangeObserverCallCount += 1
+        addFlagChangeObserverReceivedObserver = observer
+        addFlagChangeObserverCallback?()
     }
 
-    // MARK: add
-    var addCallCount = 0
-    var addCallback: (() -> Void)?
-    var addReceivedObserver: FlagChangeObserver?
-    func add(_ observer: FlagChangeObserver) {
-        addCallCount += 1
-        addReceivedObserver = observer
-        addCallback?()
+    // MARK: addFlagsUnchangedObserver
+    var addFlagsUnchangedObserverCallCount = 0
+    var addFlagsUnchangedObserverCallback: (() -> Void)?
+    var addFlagsUnchangedObserverReceivedObserver: FlagsUnchangedObserver?
+    func addFlagsUnchangedObserver(_ observer: FlagsUnchangedObserver) {
+        addFlagsUnchangedObserverCallCount += 1
+        addFlagsUnchangedObserverReceivedObserver = observer
+        addFlagsUnchangedObserverCallback?()
     }
 
     // MARK: removeObserver

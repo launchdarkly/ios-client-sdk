@@ -220,7 +220,7 @@ public class LDClient {
     ///     }
     ///LDClient keeps a weak reference to the owner. Apps should keep only weak references to self in observers to avoid memory leaks
     public func observe(_ key: LDFlagKey, owner: LDFlagChangeOwner, observer: @escaping LDFlagChangeHandler) {
-        flagChangeNotifier.add(FlagChangeObserver(key: key, owner: owner, flagChangeHandler: observer))
+        flagChangeNotifier.addFlagChangeObserver(FlagChangeObserver(key: key, owner: owner, flagChangeHandler: observer))
     }
     
     ///Usage
@@ -232,7 +232,7 @@ public class LDClient {
     ///     }
     /// changedFlags is a [LDFlagKey: LDChangedFlag]
     public func observe(_ keys: [LDFlagKey], owner: LDFlagChangeOwner, observer: @escaping LDFlagCollectionChangeHandler) {
-        flagChangeNotifier.add(FlagChangeObserver(keys: keys, owner: owner, flagCollectionChangeHandler: observer))
+        flagChangeNotifier.addFlagChangeObserver(FlagChangeObserver(keys: keys, owner: owner, flagCollectionChangeHandler: observer))
     }
 
     ///Usage
@@ -244,12 +244,12 @@ public class LDClient {
     ///     }
     /// changedFlags is a [LDFlagKey: LDChangedFlag]
     public func observeAll(owner: LDFlagChangeOwner, observer: @escaping LDFlagCollectionChangeHandler) {
-        flagChangeNotifier.add(FlagChangeObserver(keys: LDFlagKey.anyKey, owner: owner, flagCollectionChangeHandler: observer))
+        flagChangeNotifier.addFlagChangeObserver(FlagChangeObserver(keys: LDFlagKey.anyKey, owner: owner, flagCollectionChangeHandler: observer))
     }
     
     ///Sets a handler called when a flag update leaves the flags unchanged from their previous values.
     public func observeFlagsUnchanged(owner: LDFlagChangeOwner, handler: @escaping LDFlagsUnchangedHandler) {
-        flagChangeNotifier.flagsUnchangedObserver = FlagsUnchangedObserver(owner: owner, flagsUnchangedHandler: handler)
+        flagChangeNotifier.addFlagsUnchangedObserver(FlagsUnchangedObserver(owner: owner, flagsUnchangedHandler: handler))
     }
 
     ///Removes all observers for the given owner, including the flagsUnchangedObserver

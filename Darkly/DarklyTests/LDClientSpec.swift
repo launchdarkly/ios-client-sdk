@@ -54,11 +54,11 @@ final class LDClientSpec: QuickSpec {
         var makeFlagSynchronizerPollingInterval: TimeInterval? { return serviceFactoryMock.makeFlagSynchronizerReceivedParameters?.pollingInterval }
         var makeFlagSynchronizerService: DarklyServiceProvider? { return serviceFactoryMock.makeFlagSynchronizerReceivedParameters?.service }
         // flag observing getters
-        var flagChangeObserver: FlagChangeObserver? { return changeNotifierMock.addReceivedObserver }
+        var flagChangeObserver: FlagChangeObserver? { return changeNotifierMock.addFlagChangeObserverReceivedObserver }
         var flagChangeHandler: LDFlagChangeHandler? { return flagChangeObserver?.flagChangeHandler }
         var flagCollectionChangeHandler: LDFlagCollectionChangeHandler? { return flagChangeObserver?.flagCollectionChangeHandler }
         var flagsUnchangedCallCount = 0
-        var flagsUnchangedObserver: FlagsUnchangedObserver? { return changeNotifierMock?.flagsUnchangedObserver }
+        var flagsUnchangedObserver: FlagsUnchangedObserver? { return changeNotifierMock?.addFlagsUnchangedObserverReceivedObserver }
         var flagsUnchangedHandler: LDFlagsUnchangedHandler? { return flagsUnchangedObserver?.flagsUnchangedHandler }
         var onSyncComplete: SyncCompleteClosure? { return serviceFactoryMock.onSyncComplete }
         // flag maintaining mock accessors
@@ -926,8 +926,7 @@ final class LDClientSpec: QuickSpec {
                 })
             }
             it("registers a single flag observer") {
-                expect(testContext.changeNotifierMock.addCallCount) == 1
-                expect(testContext.changeNotifierMock.addReceivedObserver).toNot(beNil())
+                expect(testContext.changeNotifierMock.addFlagChangeObserverCallCount) == 1
                 expect(testContext.flagChangeObserver?.flagKeys) == [DarklyServiceMock.FlagKeys.bool]
                 expect(testContext.flagChangeObserver?.owner) === self
                 testContext.flagChangeHandler?(changedFlag)
@@ -952,8 +951,7 @@ final class LDClientSpec: QuickSpec {
                 })
             }
             it("registers a multiple flag observer") {
-                expect(testContext.changeNotifierMock.addCallCount) == 1
-                expect(testContext.changeNotifierMock.addReceivedObserver).toNot(beNil())
+                expect(testContext.changeNotifierMock.addFlagChangeObserverCallCount) == 1
                 expect(testContext.flagChangeObserver?.flagKeys) == [DarklyServiceMock.FlagKeys.bool]
                 expect(testContext.flagChangeObserver?.owner) === self
                 testContext.flagCollectionChangeHandler?(changedFlags)
@@ -977,7 +975,7 @@ final class LDClientSpec: QuickSpec {
                 })
             }
             it("registers a collection flag observer") {
-                expect(testContext.changeNotifierMock.addCallCount) == 1
+                expect(testContext.changeNotifierMock.addFlagChangeObserverCallCount) == 1
                 expect(testContext.flagChangeObserver?.flagKeys) == LDFlagKey.anyKey
                 expect(testContext.flagChangeObserver?.owner) === self
                 expect(testContext.flagChangeObserver?.flagCollectionChangeHandler).toNot(beNil())
@@ -994,8 +992,8 @@ final class LDClientSpec: QuickSpec {
                     testContext.flagsUnchangedCallCount += 1
                 })
             }
-            it("registers a collection flag observer") {
-                expect(testContext.changeNotifierMock.flagsUnchangedObserverSetCount) == 1
+            it("registers a flags unchanged observer") {
+                expect(testContext.changeNotifierMock.addFlagsUnchangedObserverCallCount) == 1
                 expect(testContext.flagsUnchangedObserver?.owner) === self
                 expect(testContext.flagsUnchangedHandler).toNot(beNil())
                 testContext.flagsUnchangedHandler?()
