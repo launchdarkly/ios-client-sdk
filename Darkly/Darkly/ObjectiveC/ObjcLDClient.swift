@@ -94,42 +94,46 @@ public final class ObjcLDClient: NSObject {
         return ObjcLDDictionaryVariationValue(LDClient.shared.variationAndSource(forKey: key, fallback: fallback))
     }
     
-    @objc public func observeBool(_ key: LDFlagKey, owner: LDFlagChangeOwner, observer: @escaping (ObjcLDBoolChangedFlag) -> Void) {
-        LDClient.shared.observe(key, owner: owner) { (changedFlag) in observer(ObjcLDBoolChangedFlag(changedFlag)) }
+    @objc public func observeBool(_ key: LDFlagKey, owner: LDFlagChangeOwner, handler: @escaping (ObjcLDBoolChangedFlag) -> Void) {
+        LDClient.shared.observe(key, owner: owner) { (changedFlag) in handler(ObjcLDBoolChangedFlag(changedFlag)) }
     }
 
-    @objc public func observeInteger(_ key: LDFlagKey, owner: LDFlagChangeOwner, observer: @escaping (ObjcLDIntegerChangedFlag) -> Void) {
-        LDClient.shared.observe(key, owner: owner) { (changedFlag) in observer(ObjcLDIntegerChangedFlag(changedFlag)) }
+    @objc public func observeInteger(_ key: LDFlagKey, owner: LDFlagChangeOwner, handler: @escaping (ObjcLDIntegerChangedFlag) -> Void) {
+        LDClient.shared.observe(key, owner: owner) { (changedFlag) in handler(ObjcLDIntegerChangedFlag(changedFlag)) }
     }
     
-    @objc public func observeDouble(_ key: LDFlagKey, owner: LDFlagChangeOwner, observer: @escaping (ObjcLDDoubleChangedFlag) -> Void) {
-        LDClient.shared.observe(key, owner: owner) { (changedFlag) in observer(ObjcLDDoubleChangedFlag(changedFlag)) }
+    @objc public func observeDouble(_ key: LDFlagKey, owner: LDFlagChangeOwner, handler: @escaping (ObjcLDDoubleChangedFlag) -> Void) {
+        LDClient.shared.observe(key, owner: owner) { (changedFlag) in handler(ObjcLDDoubleChangedFlag(changedFlag)) }
     }
     
-    @objc public func observeString(_ key: LDFlagKey, owner: LDFlagChangeOwner, observer: @escaping (ObjcLDStringChangedFlag) -> Void) {
-        LDClient.shared.observe(key, owner: owner) { (changedFlag) in observer(ObjcLDStringChangedFlag(changedFlag)) }
+    @objc public func observeString(_ key: LDFlagKey, owner: LDFlagChangeOwner, handler: @escaping (ObjcLDStringChangedFlag) -> Void) {
+        LDClient.shared.observe(key, owner: owner) { (changedFlag) in handler(ObjcLDStringChangedFlag(changedFlag)) }
     }
     
-    @objc public func observeArray(_ key: LDFlagKey, owner: LDFlagChangeOwner, observer: @escaping (ObjcLDArrayChangedFlag) -> Void) {
-        LDClient.shared.observe(key, owner: owner) { (changedFlag) in observer(ObjcLDArrayChangedFlag(changedFlag)) }
+    @objc public func observeArray(_ key: LDFlagKey, owner: LDFlagChangeOwner, handler: @escaping (ObjcLDArrayChangedFlag) -> Void) {
+        LDClient.shared.observe(key, owner: owner) { (changedFlag) in handler(ObjcLDArrayChangedFlag(changedFlag)) }
     }
     
-    @objc public func observeDictionary(_ key: LDFlagKey, owner: LDFlagChangeOwner, observer: @escaping (ObjcLDDictionaryChangedFlag) -> Void) {
-        LDClient.shared.observe(key, owner: owner) { (changedFlag) in observer(ObjcLDDictionaryChangedFlag(changedFlag)) }
+    @objc public func observeDictionary(_ key: LDFlagKey, owner: LDFlagChangeOwner, handler: @escaping (ObjcLDDictionaryChangedFlag) -> Void) {
+        LDClient.shared.observe(key, owner: owner) { (changedFlag) in handler(ObjcLDDictionaryChangedFlag(changedFlag)) }
     }
     
-    @objc public func observeKeys(_ keys: [LDFlagKey], owner: LDFlagChangeOwner, observer: @escaping ([LDFlagKey: ObjcLDChangedFlag]) -> Void) {
+    @objc public func observeKeys(_ keys: [LDFlagKey], owner: LDFlagChangeOwner, handler: @escaping ([LDFlagKey: ObjcLDChangedFlag]) -> Void) {
         LDClient.shared.observe(keys, owner: owner) { (changedFlags) in
             let objcChangedFlags = changedFlags.mapValues { (changedFlag) -> ObjcLDChangedFlag in changedFlag.objcChangedFlag }
-            observer(objcChangedFlags)
+            handler(objcChangedFlags)
         }
     }
 
-    @objc public func observeAllKeys(owner: LDFlagChangeOwner, observer: @escaping ([LDFlagKey: ObjcLDChangedFlag]) -> Void) {
+    @objc public func observeAllKeys(owner: LDFlagChangeOwner, handler: @escaping ([LDFlagKey: ObjcLDChangedFlag]) -> Void) {
         LDClient.shared.observeAll(owner: owner) { (changedFlags) in
             let objcChangedFlags = changedFlags.mapValues { (changedFlag) -> ObjcLDChangedFlag in changedFlag.objcChangedFlag }
-            observer(objcChangedFlags)
+            handler(objcChangedFlags)
         }
+    }
+
+    @objc public func observeFlagsUnchanged(owner: LDFlagChangeOwner, handler: @escaping LDFlagsUnchangedHandler) {
+        LDClient.shared.observeFlagsUnchanged(owner: owner, handler: handler)
     }
     
     private override init() {
