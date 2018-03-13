@@ -2,6 +2,10 @@
 
 All notable changes to the LaunchDarkly iOS SDK will be documented in this file. This project adheres to [Semantic Versioning](http://semver.org).
 
+## [2.11.0] - 2018-03-19
+### Added
+- Support for `put`, `patch`, and `delete` streaming events
+
 ## [2.10.1] - 2018-02-15
 ### Changed
 - The minimum polling interval is now 5 minutes.
