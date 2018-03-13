@@ -2,9 +2,12 @@
 
 All notable changes to the LaunchDarkly iOS SDK will be documented in this file. This project adheres to [Semantic Versioning](http://semver.org).
 
-## [2.11.0] - 2018-03-19
+## [2.11.0] - 2018-03-XX
 ### Added
-- Support for `put`, `patch`, and `delete` streaming events
+- Support for enhanced feature streams, facilitating reduced SDK initialization times.
+
+### Changed
+- The `streamUrl` property on `LDConfig` now expects a path-less base URI.
 
 ## [2.10.1] - 2018-02-15
 ### Changed
