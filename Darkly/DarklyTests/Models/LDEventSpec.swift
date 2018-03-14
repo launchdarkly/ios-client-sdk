@@ -57,7 +57,7 @@ final class LDEventSpec: QuickSpec {
         }
         describe("featureEvent") {
             beforeEach {
-                subject = LDEvent.featureRequestEvent(key: key, user: userStub, value: value, defaultValue: defaultValue)
+                subject = LDEvent.flagRequestEvent(key: key, user: userStub, value: value, defaultValue: defaultValue)
             }
             it("creates a feature event with matching data") {
                 expect(subject.key) == key
@@ -86,10 +86,10 @@ final class LDEventSpec: QuickSpec {
         }
         describe("identifyEvent") {
             beforeEach {
-                subject = LDEvent.identifyEvent(key: key, user: userStub)
+                subject = LDEvent.identifyEvent(user: userStub)
             }
             it("creates an identify event with matching data") {
-                expect(subject.key) == key
+                expect(subject.key) == userStub.key
                 expect(subject.kind) == LDEventType.identify
                 expect(subject.creationDate).toNot(beNil())
                 expect(subject.user) == userStub

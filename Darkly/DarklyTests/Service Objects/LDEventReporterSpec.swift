@@ -160,7 +160,7 @@ final class LDEventReporterSpec: QuickSpec {
                 var extraEvent: LDEvent!
                 beforeEach {
                     self.setupReporter(withEvents: Constants.eventCapacity)
-                    extraEvent = LDEvent.stub(for: .identify, with: self.user)
+                    extraEvent = LDEvent.stub(for: .featureRequest, with: self.user)
 
                     self.subject.record(extraEvent)
                 }
@@ -328,8 +328,8 @@ final class LDEventReporterSpec: QuickSpec {
 extension LDEvent {
     static func stub(for eventType: LDEventType, with user: LDUser) -> LDEvent {
         switch eventType {
-        case .featureRequest: return LDEvent.featureRequestEvent(key: UUID().uuidString, user: user, value: true, defaultValue: false)
-        case .identify: return LDEvent.identifyEvent(key: UUID().uuidString, user: user)
+        case .featureRequest: return LDEvent.flagRequestEvent(key: UUID().uuidString, user: user, value: true, defaultValue: false)
+        case .identify: return LDEvent.identifyEvent(user: user)
         case .custom: return LDEvent.customEvent(key: UUID().uuidString, user: user, data: ["custom": UUID().uuidString])
         }
     }

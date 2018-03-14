@@ -35,7 +35,7 @@ struct LDEvent { //sdk internal, not publically accessible
         self.data = data
     }
 
-    static func featureRequestEvent(key: String, user: LDUser, value: Any?, defaultValue: Any?) -> LDEvent {
+    static func flagRequestEvent(key: String, user: LDUser, value: Any?, defaultValue: Any?) -> LDEvent {
         return LDEvent(key: key, kind: .featureRequest, user: user, value: value, defaultValue: defaultValue)
     }
 
@@ -43,8 +43,8 @@ struct LDEvent { //sdk internal, not publically accessible
         return LDEvent(key: key, kind: .custom, user: user, data: data)
     }
 
-    static func identifyEvent(key: String, user: LDUser) -> LDEvent {
-        return LDEvent(key: key, kind: .identify, user: user)
+    static func identifyEvent(user: LDUser) -> LDEvent {
+        return LDEvent(key: user.key, kind: .identify, user: user)
     }
 
     func dictionaryValue(config: LDConfig) -> [String: Any] {

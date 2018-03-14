@@ -71,7 +71,7 @@ public class LDClient {
                                                                    service: service,
                                                                    onSyncComplete: onSyncComplete)
             if hasStarted {
-                eventReporter.record(LDEvent.identifyEvent(key: UUID().uuidString, user: user))
+                eventReporter.record(LDEvent.identifyEvent(user: user))
             }
 
             isOnline = wasOnline
