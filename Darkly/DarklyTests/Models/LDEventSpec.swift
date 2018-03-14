@@ -20,8 +20,8 @@ final class LDEventSpec: QuickSpec {
         let kind = LDEventType.featureRequest
         let config = LDConfig.stub
         let userStub = LDUser.stub()
-        let value = LDFlagValue(true)
-        let defaultValue = LDFlagValue(false)
+        let value = true
+        let defaultValue = false
         let data: [String: Any] = ["stubDataKey": "stubDataValue"]
         var subject: LDEvent!
         describe("init") {
@@ -34,8 +34,8 @@ final class LDEventSpec: QuickSpec {
                     expect(subject.kind) == kind
                     expect(subject.creationDate).toNot(beNil())
                     expect(subject.user) == userStub
-                    expect(subject.value) == value
-                    expect(subject.defaultValue) == defaultValue
+                    expect(AnyComparer.isEqual(subject.value, to: value)).to(beTrue())
+                    expect(AnyComparer.isEqual(subject.defaultValue, to: defaultValue)).to(beTrue())
                     expect(subject.data).toNot(beNil())
                     expect(subject.data == data).to(beTrue())
                 }
@@ -64,8 +64,8 @@ final class LDEventSpec: QuickSpec {
                 expect(subject.kind) == LDEventType.featureRequest
                 expect(subject.creationDate).toNot(beNil())
                 expect(subject.user) == userStub
-                expect(subject.value) == value
-                expect(subject.defaultValue) == defaultValue
+                expect(AnyComparer.isEqual(subject.value, to: value)).to(beTrue())
+                expect(AnyComparer.isEqual(subject.defaultValue, to: defaultValue)).to(beTrue())
                 expect(subject.data).to(beNil())
             }
         }
@@ -159,12 +159,12 @@ final class LDEventSpec: QuickSpec {
                         expect(encodedUser == userStub.dictionaryValueWithAllAttributes(includeFlagConfig: false)).to(beTrue())
                     }
                     if let eventValue = event.value {
-                        expect(foundEvent[LDEvent.CodingKeys.value.rawValue] as? Bool) == Bool(eventValue)
+                        expect(foundEvent[LDEvent.CodingKeys.value.rawValue] as? Bool) == eventValue as? Bool
                     } else {
                         expect(foundEvent[LDEvent.CodingKeys.value.rawValue]).to(beNil())
                     }
                     if let eventDefaultValue = event.defaultValue {
-                        expect(foundEvent[LDEvent.CodingKeys.defaultValue.rawValue] as? Bool) == Bool(eventDefaultValue)
+                        expect(foundEvent[LDEvent.CodingKeys.defaultValue.rawValue] as? Bool) == eventDefaultValue as? Bool
                     } else {
                         expect(foundEvent[LDEvent.CodingKeys.defaultValue.rawValue]).to(beNil())
                     }

@@ -21,11 +21,11 @@ struct LDEvent { //sdk internal, not publically accessible
     let kind: LDEventType
     let creationDate: Date
     let user: LDUser
-    let value: LDFlagValue?
-    let defaultValue: LDFlagValue?
+    let value: Any?
+    let defaultValue: Any?
     let data: [String: Any]?
 
-    init(key: String, kind: LDEventType = .custom, user: LDUser, value: LDFlagValue? = nil, defaultValue: LDFlagValue? = nil, data: [String: Any]? = nil) {
+    init(key: String, kind: LDEventType = .custom, user: LDUser, value: Any? = nil, defaultValue: Any? = nil, data: [String: Any]? = nil) {
         self.key = key
         self.kind = kind
         self.creationDate = Date()
@@ -35,7 +35,7 @@ struct LDEvent { //sdk internal, not publically accessible
         self.data = data
     }
 
-    static func featureRequestEvent(key: String, user: LDUser, value: LDFlagValue, defaultValue: LDFlagValue) -> LDEvent {
+    static func featureRequestEvent(key: String, user: LDUser, value: Any?, defaultValue: Any?) -> LDEvent {
         return LDEvent(key: key, kind: .featureRequest, user: user, value: value, defaultValue: defaultValue)
     }
 
@@ -53,8 +53,8 @@ struct LDEvent { //sdk internal, not publically accessible
         eventDictionary[CodingKeys.kind.rawValue] = kind.rawValue
         eventDictionary[CodingKeys.creationDate.rawValue] = creationDate.millisSince1970
         eventDictionary[CodingKeys.user.rawValue] = user.dictionaryValue(includeFlagConfig: false, includePrivateAttributes: false, config: config)
-        eventDictionary[CodingKeys.value.rawValue] = value?.baseValue
-        eventDictionary[CodingKeys.defaultValue.rawValue] = defaultValue?.baseValue
+        eventDictionary[CodingKeys.value.rawValue] = value
+        eventDictionary[CodingKeys.defaultValue.rawValue] = defaultValue
         eventDictionary[CodingKeys.data.rawValue] = data
 
         return eventDictionary
