@@ -17,7 +17,7 @@ final class LDEventSpec: QuickSpec {
 
     override func spec() {
         let key = "mockEventKey"
-        let kind = LDEventType.featureRequest
+        let kind = LDEventType.flagRequest
         let config = LDConfig.stub
         let userStub = LDUser.stub()
         let value = true
@@ -55,13 +55,13 @@ final class LDEventSpec: QuickSpec {
                 }
             }
         }
-        describe("featureEvent") {
+        describe("flagRequestEvent") {
             beforeEach {
                 subject = LDEvent.flagRequestEvent(key: key, user: userStub, value: value, defaultValue: defaultValue)
             }
-            it("creates a feature event with matching data") {
+            it("creates a flag request event with matching data") {
                 expect(subject.key) == key
-                expect(subject.kind) == LDEventType.featureRequest
+                expect(subject.kind) == LDEventType.flagRequest
                 expect(subject.creationDate).toNot(beNil())
                 expect(subject.user) == userStub
                 expect(AnyComparer.isEqual(subject.value, to: value)).to(beTrue())
@@ -215,7 +215,7 @@ final class LDEventSpec: QuickSpec {
             }
             context("when the event dictionary is not in the array") {
                 beforeEach {
-                    targetDictionary = LDEvent.stub(for: .featureRequest, with: userStub).dictionaryValue(config: config)
+                    targetDictionary = LDEvent.stub(for: .flagRequest, with: userStub).dictionaryValue(config: config)
                 }
                 it("returns false") {
                     expect(eventDictionaries.contains(eventDictionary: targetDictionary)) == false
@@ -363,7 +363,7 @@ final class LDEventSpec: QuickSpec {
             context("when only the keys match") {
                 let eventKey = UUID().uuidString
                 beforeEach {
-                    event1 = LDEvent(key: eventKey, kind: .featureRequest, user: LDUser.stub(key: UUID().uuidString), value: true, defaultValue: false)
+                    event1 = LDEvent(key: eventKey, kind: .flagRequest, user: LDUser.stub(key: UUID().uuidString), value: true, defaultValue: false)
                     event2 = LDEvent(key: eventKey, kind: .custom, user: LDUser.stub(key: UUID().uuidString), data: data)
                 }
                 it("returns false") {
@@ -381,7 +381,7 @@ final class LDEventSpec: QuickSpec {
             }
             context("on different events") {
                 beforeEach {
-                    event1 = LDEvent(key: UUID().uuidString, kind: .featureRequest, user: userStub, value: value, defaultValue: defaultValue, data: data)
+                    event1 = LDEvent(key: UUID().uuidString, kind: .flagRequest, user: userStub, value: value, defaultValue: defaultValue, data: data)
                     event2 = LDEvent(key: UUID().uuidString, kind: .identify, user: LDUser.stub(key: UUID().uuidString))
                 }
                 it("returns false") {
