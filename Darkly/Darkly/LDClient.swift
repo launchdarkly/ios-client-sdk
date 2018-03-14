@@ -173,7 +173,10 @@ public class LDClient {
     ///
     ///     let dictionaryFlagValue = LDClient.shared.variation(forKey: "dictionary-key", fallback: ["a": 1, "b": 2] as [LDFlagKey: Any])
     public func variation<T: LDFlagValueConvertible>(forKey key: LDFlagKey, fallback: T) -> T {
-        return user.flagStore.variation(forKey: key, fallback: fallback)
+        guard hasStarted else { return fallback }
+        let value = user.flagStore.variation(forKey: key, fallback: fallback)
+        eventReporter.record(LDEvent.flagRequestEvent(key: key, user: user, value: value, defaultValue: fallback))
+        return value
     }
 
     ///Usage
@@ -197,7 +200,10 @@ public class LDClient {
     ///
     ///     let (dictionaryFlagValue, dictionaryFeatureFlagSource) = LDClient.shared.variationAndSource(forKey: "dictionary-key", fallback: ["a": 1, "b": 2] as [LDFlagKey: Any])
     public func variationAndSource<T: LDFlagValueConvertible>(forKey key: LDFlagKey, fallback: T) -> (T, LDFlagValueSource) {
-        return user.flagStore.variationAndSource(forKey: key, fallback: fallback)
+        guard hasStarted else { return (fallback, .fallback) }
+        let (value, source) = user.flagStore.variationAndSource(forKey: key, fallback: fallback)
+        eventReporter.record(LDEvent.flagRequestEvent(key: key, user: user, value: value, defaultValue: fallback))
+        return (value, source)
     }
     
     // MARK: Feature Flag Updates
