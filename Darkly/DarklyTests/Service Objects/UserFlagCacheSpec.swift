@@ -21,30 +21,6 @@ final class UserFlagCacheSpec: QuickSpec {
             subject = UserFlagCache(flagCollectionStore: mockFlagCollectionStore)
         }
 
-//        describe("retrieveLatest") {
-//            var retrievedFlags: [String: Any]?
-//            context("when there are no cached flags") {
-//                beforeEach {
-//                    retrievedFlags = subject.retrieveLatest()
-//                }
-//                it("returns nil") {
-//                    expect(retrievedFlags).to(beNil())
-//                }
-//            }
-//            context("when there are cached flags") {
-//                var latestFlags: [String: Any]?
-//                beforeEach {
-//                    let userStubs = mockStore.stubAndStoreUserFlags(count: 3)
-//                    latestFlags = userStubs.last?.flagStore.featureFlags
-//
-//                    retrievedFlags = subject.retrieveLatest()
-//                }
-//                it("retrieves the flags with the latest last updated time") {
-//                    expect(retrievedFlags == latestFlags).to(beTrue())
-//                }
-//            }
-//        }
-
         describe("retrieve flags") {
             context("when the user flags exist in the flag collection store") {
                 var mockUser: LDUser!

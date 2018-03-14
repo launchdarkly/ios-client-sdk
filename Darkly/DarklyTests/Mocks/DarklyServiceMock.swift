@@ -77,12 +77,18 @@ final class DarklyServiceMock: DarklyServiceProvider {
         static func featureFlags(includeNullValue: Bool, includeVersions: Bool, alternateValuesForKeys: [LDFlagKey] = []) -> [LDFlagKey: FeatureFlag] {
             let version: Int? = includeVersions ? Constants.version : nil
             var featureFlags: [LDFlagKey: FeatureFlag] = [
-                FlagKeys.bool: FeatureFlag(value: alternateValuesForKeys.contains(FlagKeys.bool) ? FlagValues.alternate(FlagValues.bool): FlagValues.bool, version: version),
-                FlagKeys.int: FeatureFlag(value: alternateValuesForKeys.contains(FlagKeys.int) ? FlagValues.alternate(FlagValues.int): FlagValues.int, version: version),
-                FlagKeys.double: FeatureFlag(value: alternateValuesForKeys.contains(FlagKeys.double) ? FlagValues.alternate(FlagValues.double): FlagValues.double, version: version),
-                FlagKeys.string: FeatureFlag(value: alternateValuesForKeys.contains(FlagKeys.string) ? FlagValues.alternate(FlagValues.string): FlagValues.string, version: version),
-                FlagKeys.array: FeatureFlag(value: alternateValuesForKeys.contains(FlagKeys.array) ? FlagValues.alternate(FlagValues.array): FlagValues.array, version: version),
-                FlagKeys.dictionary: FeatureFlag(value: alternateValuesForKeys.contains(FlagKeys.dictionary) ? FlagValues.alternate(FlagValues.dictionary): FlagValues.dictionary, version: version)
+                FlagKeys.bool: FeatureFlag(value: alternateValuesForKeys.contains(FlagKeys.bool) ? FlagValues.alternate(FlagValues.bool) : FlagValues.bool,
+                                           version: version),
+                FlagKeys.int: FeatureFlag(value: alternateValuesForKeys.contains(FlagKeys.int) ? FlagValues.alternate(FlagValues.int) : FlagValues.int,
+                                          version: version),
+                FlagKeys.double: FeatureFlag(value: alternateValuesForKeys.contains(FlagKeys.double) ? FlagValues.alternate(FlagValues.double) : FlagValues.double,
+                                             version: version),
+                FlagKeys.string: FeatureFlag(value: alternateValuesForKeys.contains(FlagKeys.string) ? FlagValues.alternate(FlagValues.string) : FlagValues.string,
+                                             version: version),
+                FlagKeys.array: FeatureFlag(value: alternateValuesForKeys.contains(FlagKeys.array) ? FlagValues.alternate(FlagValues.array) : FlagValues.array,
+                                            version: version),
+                FlagKeys.dictionary: FeatureFlag(value: alternateValuesForKeys.contains(FlagKeys.dictionary) ? FlagValues.alternate(FlagValues.dictionary) : FlagValues.dictionary,
+                                                 version: version)
             ]
             if includeNullValue {
                 featureFlags[DarklyServiceMock.FlagKeys.null] = FeatureFlag(value: DarklyServiceMock.FlagValues.null, version: version)
@@ -143,16 +149,21 @@ extension DarklyServiceMock {
 
     ///Use when testing requires the mock service to actually make a flag request
     func stubFlagRequest(statusCode: Int, useReport: Bool, onActivation activate: ((URLRequest, OHHTTPStubsDescriptor, OHHTTPStubsResponse) -> Void)? = nil) {
-        let responseData = statusCode == HTTPURLResponse.StatusCodes.ok ? Constants.featureFlags(includeNullValue: false, includeVersions: true).dictionaryValue(exciseNil: false).jsonData! : Data()
+        let responseData = statusCode == HTTPURLResponse.StatusCodes.ok ? Constants.featureFlags(includeNullValue: false, includeVersions: true)
+            .dictionaryValue(exciseNil: false).jsonData!
+            : Data()
         let stubResponse: OHHTTPStubsResponseBlock = { (_) in OHHTTPStubsResponse(data: responseData, statusCode: Int32(statusCode), headers: nil)}
-        stubRequest(passingTest: useReport ? reportFlagRequestStubTest : getFlagRequestStubTest, stub: stubResponse, name: flagStubName(statusCode: statusCode, useReport: useReport), onActivation: activate)
+        stubRequest(passingTest: useReport ? reportFlagRequestStubTest : getFlagRequestStubTest,
+                    stub: stubResponse,
+                    name: flagStubName(statusCode: statusCode, useReport: useReport), onActivation: activate)
     }
 
     ///Use when testing requires the mock service to simulate a service response to the flag request callback
     func stubFlagResponse(statusCode: Int, badData: Bool = false, responseOnly: Bool = false, errorOnly: Bool = false) {
         let response = HTTPURLResponse(url: config.baseUrl, statusCode: statusCode, httpVersion: Constants.httpVersion, headerFields: nil)
         if statusCode == HTTPURLResponse.StatusCodes.ok {
-            let flagData = try? JSONSerialization.data(withJSONObject: Constants.featureFlags(includeNullValue: false, includeVersions: true).dictionaryValue(exciseNil: false), options: [])
+            let flagData = try? JSONSerialization.data(withJSONObject: Constants.featureFlags(includeNullValue: false, includeVersions: true).dictionaryValue(exciseNil: false),
+                                                       options: [])
             stubbedFlagResponse = (flagData, response, nil)
             if badData { stubbedFlagResponse = (Constants.errorData, response, nil) }
             return
@@ -214,13 +225,19 @@ extension DarklyServiceMock {
             stubbedEventResponse = (nil, errorEventHTTPURLResponse, Constants.error)
         }
     }
-    var errorEventHTTPURLResponse: HTTPURLResponse! { return HTTPURLResponse(url: config.eventsUrl, statusCode: HTTPURLResponse.StatusCodes.internalServerError, httpVersion: Constants.httpVersion, headerFields: nil) }
+    var errorEventHTTPURLResponse: HTTPURLResponse! { return HTTPURLResponse(url: config.eventsUrl,
+                                                                             statusCode: HTTPURLResponse.StatusCodes.internalServerError,
+                                                                             httpVersion: Constants.httpVersion,
+                                                                             headerFields: nil) }
 
     // MARK: Stub
 
     var anyRequestStubTest: OHHTTPStubsTestBlock { return {_ in return true } }
 
-    private func stubRequest(passingTest test: @escaping OHHTTPStubsTestBlock, stub: @escaping OHHTTPStubsResponseBlock, name: String, onActivation activation: ((URLRequest, OHHTTPStubsDescriptor, OHHTTPStubsResponse) -> Void)? = nil) {
+    private func stubRequest(passingTest test: @escaping OHHTTPStubsTestBlock,
+                             stub: @escaping OHHTTPStubsResponseBlock,
+                             name: String,
+                             onActivation activation: ((URLRequest, OHHTTPStubsDescriptor, OHHTTPStubsResponse) -> Void)? = nil) {
         OHHTTPStubs.stubRequests(passingTest: test, withStubResponse: stub).name = name
         if let activation = activation { activationBlocks.append((test, activation)) }
         OHHTTPStubs.onStubActivation(onActivation)

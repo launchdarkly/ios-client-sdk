@@ -87,8 +87,12 @@ final class FlagChangeNotifierSpec: QuickSpec {
             subject = FlagChangeNotifier()
             guard !keys.isEmpty else { return }
             var observers = [FlagChangeObserver]()
-            observers.append(FlagChangeObserver(keys: keys, owner: self.stubOwner(keys: keys), flagCollectionChangeHandler: flagCollectionChangeHandler))
-            observers.append(FlagChangeObserver(keys: alternateFlagKeys, owner: self.stubOwner(keys: alternateFlagKeys), flagCollectionChangeHandler: flagCollectionChangeHandler))
+            observers.append(FlagChangeObserver(keys: keys,
+                                                owner: self.stubOwner(keys: keys),
+                                                flagCollectionChangeHandler: flagCollectionChangeHandler))
+            observers.append(FlagChangeObserver(keys: alternateFlagKeys,
+                                                owner: self.stubOwner(keys: alternateFlagKeys),
+                                                flagCollectionChangeHandler: flagCollectionChangeHandler))
             flagsUnchangedOwnerKey = observers.first!.flagKeys.observerKey
             let flagsUnchangedObservers = [FlagsUnchangedObserver(owner: observers.first!.owner!, flagsUnchangedHandler: flagsUnchangedHandler)]
             subject = FlagChangeNotifier(flagChangeObservers: observers, flagsUnchangedObservers: flagsUnchangedObservers)
@@ -328,7 +332,9 @@ final class FlagChangeNotifierSpec: QuickSpec {
                     beforeEach {
                         testContext = TestContext(observers: Constants.observerCount, observerType: .multipleKey)
                         owner = FlagChangeHandlerOwnerMock()
-                        targetObserver = FlagChangeObserver(keys: DarklyServiceMock.FlagKeys.all, owner: owner, flagCollectionChangeHandler: testContext.flagCollectionChangeHandler)
+                        targetObserver = FlagChangeObserver(keys: DarklyServiceMock.FlagKeys.all,
+                                                            owner: owner,
+                                                            flagCollectionChangeHandler: testContext.flagCollectionChangeHandler)
 
                         testContext.subject.removeObserver(targetObserver.flagKeys, owner: targetObserver.owner!)
                     }

@@ -305,12 +305,18 @@ final class LDEventReporterSpec: QuickSpec {
         if self.mockService.publishEventDictionariesCallCount != reportTries { messages.append("reportTries equals \(self.mockService.publishEventDictionariesCallCount)") }
         if let recordedEvents = recordedEvents {
             if !self.subject.eventStore.matches(events: recordedEvents) {
-                messages.append("recorded events don't match" + (self.subject.eventStore.count != recordedEvents.count ? " (count mismatch eventStore=\(self.subject.eventStore.count) recordedEvents=\(recordedEvents.count)" : "") )
+                messages.append("recorded events don't match"
+                    + (self.subject.eventStore.count != recordedEvents.count ? " (count mismatch eventStore=\(self.subject.eventStore.count) recordedEvents=\(recordedEvents.count)"
+                        : "") )
             }
         }
         if let publishedEvents = publishedEvents {
             if let serviceEventDictionaries = self.mockService.publishedEventDictionaries {
-                if !serviceEventDictionaries.matches(events: publishedEvents) { messages.append("published events don't match" + (serviceEventDictionaries.count != publishedEvents.count ? " (count mismatch servicePublishedEvents=\(serviceEventDictionaries.count) publishedEvents=\(publishedEvents.count)" : "") ) }
+                if !serviceEventDictionaries.matches(events: publishedEvents) {
+                    messages.append("published events don't match"
+                        + (serviceEventDictionaries.count != publishedEvents.count
+                            ? " (count mismatch servicePublishedEvents=\(serviceEventDictionaries.count) publishedEvents=\(publishedEvents.count)"
+                            : "") ) }
             } else {
                 messages.append("published events is nil")
             }

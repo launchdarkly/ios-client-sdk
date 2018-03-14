@@ -23,15 +23,20 @@ extension DarklyStreamingProviderMock {
     }
 
     func sendPut() {
-        sendEvent(DarklyEventSource.LDEvent.stubPutEvent(data: DarklyServiceMock.Constants.featureFlags(includeNullValue: false, includeVersions: true).dictionaryValue(exciseNil: false).jsonString))
+        sendEvent(DarklyEventSource.LDEvent.stubPutEvent(data: DarklyServiceMock.Constants.featureFlags(includeNullValue: false, includeVersions: true)
+            .dictionaryValue(exciseNil: false)
+            .jsonString))
     }
 
     func sendPatch() {
-        sendEvent(DarklyEventSource.LDEvent.stubPatchEvent(data: FlagMaintainingMock.stubPatchDictionary(key: DarklyServiceMock.FlagKeys.int, value: DarklyServiceMock.FlagValues.int + 1, version: DarklyServiceMock.Constants.version + 1).jsonString))
+        sendEvent(DarklyEventSource.LDEvent.stubPatchEvent(data: FlagMaintainingMock.stubPatchDictionary(key: DarklyServiceMock.FlagKeys.int,
+                                                                                                         value: DarklyServiceMock.FlagValues.int + 1,
+                                                                                                         version: DarklyServiceMock.Constants.version + 1).jsonString))
     }
 
     func sendDelete() {
-        sendEvent(DarklyEventSource.LDEvent.stubDeleteEvent(data: FlagMaintainingMock.stubDeleteDictionary(key: DarklyServiceMock.FlagKeys.int, version: DarklyServiceMock.Constants.version + 1).jsonString))
+        sendEvent(DarklyEventSource.LDEvent.stubDeleteEvent(data: FlagMaintainingMock.stubDeleteDictionary(key: DarklyServiceMock.FlagKeys.int,
+                                                                                                           version: DarklyServiceMock.Constants.version + 1).jsonString))
     }
 
     func sendEvent(_ event: DarklyEventSource.LDEvent?) {

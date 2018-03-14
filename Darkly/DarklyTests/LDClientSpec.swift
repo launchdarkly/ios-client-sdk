@@ -921,7 +921,7 @@ final class LDClientSpec: QuickSpec {
                 testContext.subject.start(mobileKey: Constants.mockMobileKey, config: testContext.config, user: testContext.user)
                 changedFlag = LDChangedFlag(key: DarklyServiceMock.FlagKeys.bool, oldValue: false, oldValueSource: .cache, newValue: true, newValueSource: .server)
 
-                testContext.subject.observe(DarklyServiceMock.FlagKeys.bool, owner: self, observer: { (change) in
+                testContext.subject.observe(DarklyServiceMock.FlagKeys.bool, owner: self, handler: { (change) in
                     receivedChangedFlag = change
                 })
             }
@@ -946,7 +946,7 @@ final class LDClientSpec: QuickSpec {
                                                                                newValue: true,
                                                                                newValueSource: .server)]
 
-                testContext.subject.observe([DarklyServiceMock.FlagKeys.bool], owner: self, observer: { (changes) in
+                testContext.subject.observe([DarklyServiceMock.FlagKeys.bool], owner: self, handler: { (changes) in
                     receivedChangedFlags = changes
                 })
             }
@@ -970,7 +970,7 @@ final class LDClientSpec: QuickSpec {
                                                                                newValue: true,
                                                                                newValueSource: .server)]
 
-                testContext.subject.observeAll(owner: self, observer: { (changes) in
+                testContext.subject.observeAll(owner: self, handler: { (changes) in
                     receivedChangedFlags = changes
                 })
             }

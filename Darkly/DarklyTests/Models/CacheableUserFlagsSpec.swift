@@ -56,7 +56,8 @@ final class CacheableUserFlagsSpec: QuickSpec {
             context("with flags and lastUpdated") {
                 context("matching types") {
                     beforeEach {
-                        flagDictionary = [CacheableUserFlags.CodingKeys.flags.rawValue: DarklyServiceMock.Constants.featureFlags(includeNullValue: false, includeVersions: true).dictionaryValue(exciseNil: false),
+                        flagDictionary = [CacheableUserFlags.CodingKeys.flags.rawValue: DarklyServiceMock.Constants.featureFlags(includeNullValue: false, includeVersions: true)
+                            .dictionaryValue(exciseNil: false),
                                           CacheableUserFlags.CodingKeys.lastUpdated.rawValue: Constants.lastUpdatedString]
                         subject = CacheableUserFlags(dictionary: flagDictionary)
                     }
@@ -68,7 +69,8 @@ final class CacheableUserFlagsSpec: QuickSpec {
                 }
                 context("flag type mismatch") {
                     beforeEach {
-                        flagDictionary = [CacheableUserFlags.CodingKeys.flags.rawValue: Constants.lastUpdatedString, CacheableUserFlags.CodingKeys.lastUpdated.rawValue: Constants.lastUpdatedString]
+                        flagDictionary = [CacheableUserFlags.CodingKeys.flags.rawValue: Constants.lastUpdatedString,
+                                          CacheableUserFlags.CodingKeys.lastUpdated.rawValue: Constants.lastUpdatedString]
                         subject = CacheableUserFlags(dictionary: flagDictionary)
                     }
                     it("returns nil") {
@@ -113,7 +115,8 @@ final class CacheableUserFlagsSpec: QuickSpec {
 
             context("object is a dictionary") {
                 beforeEach {
-                    object = [CacheableUserFlags.CodingKeys.flags.rawValue: DarklyServiceMock.Constants.featureFlags(includeNullValue: false, includeVersions: true).dictionaryValue(exciseNil: false),
+                    object = [CacheableUserFlags.CodingKeys.flags.rawValue: DarklyServiceMock.Constants.featureFlags(includeNullValue: false, includeVersions: true)
+                        .dictionaryValue(exciseNil: false),
                               CacheableUserFlags.CodingKeys.lastUpdated.rawValue: Constants.lastUpdatedString]
                     subject = CacheableUserFlags(object: object)
                 }

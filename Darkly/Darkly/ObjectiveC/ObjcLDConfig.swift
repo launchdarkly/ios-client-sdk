@@ -92,9 +92,3 @@ public final class ObjcLDConfig: NSObject {
         return config == other.config
     }
 }
-
-protocol Settable { }
-
-extension Settable {
-    
-}

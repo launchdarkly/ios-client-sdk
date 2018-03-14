@@ -111,7 +111,8 @@ public struct LDUser {
     func dictionaryValue(includeFlagConfig: Bool, includePrivateAttributes includePrivate: Bool, config: LDConfig) -> [String: Any] {
         var dictionary = [String: Any]()
         var redactedAttributes = [String]()
-        let combinedPrivateAttributes = config.allUserAttributesPrivate ? LDUser.privatizableAttributes : (privateAttributes ?? []) + (config.privateUserAttributes ?? [])
+        let combinedPrivateAttributes = config.allUserAttributesPrivate ? LDUser.privatizableAttributes
+            : (privateAttributes ?? []) + (config.privateUserAttributes ?? [])
 
         dictionary[CodingKeys.key.rawValue] = key
 

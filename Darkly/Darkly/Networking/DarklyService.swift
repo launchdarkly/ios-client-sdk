@@ -95,7 +95,8 @@ final class DarklyService: DarklyServiceProvider {
         var request = URLRequest(url: flagRequestUrl, cachePolicy: .useProtocolCachePolicy, timeoutInterval: config.connectionTimeout)
         request.appendHeaders(httpHeaders.flagRequestHeaders)
         if useReport {
-            guard let userData = user.dictionaryValue(includeFlagConfig: false, includePrivateAttributes: true, config: config).jsonData else { return nil }
+            guard let userData = user.dictionaryValue(includeFlagConfig: false, includePrivateAttributes: true, config: config).jsonData
+            else { return nil }
             request.httpMethod = URLRequest.HTTPMethods.report
             request.httpBody = userData
         }
@@ -107,7 +108,10 @@ final class DarklyService: DarklyServiceProvider {
         if useReport {
             return config.baseUrl.appendingPathComponent(FlagRequestPath.report)
         }
-        guard let encodedUser = user.dictionaryValue(includeFlagConfig: false, includePrivateAttributes: true, config: config).base64UrlEncodedString else { return nil }
+        guard let encodedUser = user
+            .dictionaryValue(includeFlagConfig: false, includePrivateAttributes: true, config: config)
+            .base64UrlEncodedString
+        else { return nil }
         return config.baseUrl.appendingPathComponent(FlagRequestPath.get).appendingPathComponent(encodedUser)
     }
     
@@ -118,7 +122,9 @@ final class DarklyService: DarklyServiceProvider {
             return serviceFactory.makeStreamingProvider(url: reportStreamRequestUrl,
                                                         httpHeaders: httpHeaders.eventSourceHeaders,
                                                         connectMethod: DarklyService.HTTPRequestMethod.report,
-                                                        connectBody: user.dictionaryValue(includeFlagConfig: false, includePrivateAttributes: true, config: config).jsonData)
+                                                        connectBody: user
+                                                            .dictionaryValue(includeFlagConfig: false, includePrivateAttributes: true, config: config)
+                                                            .jsonData)
 
         }
         return serviceFactory.makeStreamingProvider(url: getStreamRequestUrl, httpHeaders: httpHeaders.eventSourceHeaders)
@@ -126,7 +132,9 @@ final class DarklyService: DarklyServiceProvider {
 
     private var getStreamRequestUrl: URL {
         return config.streamUrl.appendingPathComponent(StreamRequestPath.meval)
-            .appendingPathComponent(user.dictionaryValue(includeFlagConfig: false, includePrivateAttributes: true, config: config).base64UrlEncodedString ?? "")
+            .appendingPathComponent(user
+                .dictionaryValue(includeFlagConfig: false, includePrivateAttributes: true, config: config)
+                .base64UrlEncodedString ?? "")
     }
     private var reportStreamRequestUrl: URL { return config.streamUrl.appendingPathComponent(StreamRequestPath.meval) }
 

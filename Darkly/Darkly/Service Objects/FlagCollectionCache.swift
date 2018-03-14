@@ -46,14 +46,17 @@ final class FlagCollectionCache: FlagCollectionCaching {
 
     private var cachedFlagDictionaries: [String: Any]? { return keyStore.dictionary(forKey: Keys.cachedFlags) }
     private var cachedUserFlags: [String: CacheableUserFlags]? {
-        return cachedFlagDictionaries?.flatMapValues { (flagDictionary) in return CacheableUserFlags(object: flagDictionary) }
+        return cachedFlagDictionaries?.flatMapValues { (flagDictionary) in
+            return CacheableUserFlags(object: flagDictionary)
+        }
     }
 }
 
 extension Dictionary where Key == String, Value == CacheableUserFlags {
     fileprivate mutating func removeOldest() {
         guard !self.isEmpty else { return }
-        guard let oldestPair = self.max(by: { (pair1, pair2) -> Bool in pair1.value.lastUpdated > pair2.value.lastUpdated }) else { return }
+        guard let oldestPair = self.max(by: { (pair1, pair2) -> Bool in pair1.value.lastUpdated > pair2.value.lastUpdated })
+        else { return }
         self.removeValue(forKey: oldestPair.key)
     }
 

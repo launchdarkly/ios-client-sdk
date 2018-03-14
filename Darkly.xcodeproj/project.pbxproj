@@ -76,7 +76,7 @@
 		83EF678A1F97CFEC00403126 /* Dictionary.swift in Sources */ = {isa = PBXBuildFile; fileRef = 83EF67891F97CFEC00403126 /* Dictionary.swift */; };
 		83EF67931F9945E800403126 /* LDEventSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = 83EF67921F9945E800403126 /* LDEventSpec.swift */; };
 		83EF67951F994BAD00403126 /* LDUserStub.swift in Sources */ = {isa = PBXBuildFile; fileRef = 83EF67941F994BAD00403126 /* LDUserStub.swift */; };
-		83F0A5621FB4D66600550A95 /* Any.swift in Sources */ = {isa = PBXBuildFile; fileRef = 83F0A5611FB4D66600550A95 /* Any.swift */; };
+		83F0A5621FB4D66600550A95 /* AnyComparer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 83F0A5611FB4D66600550A95 /* AnyComparer.swift */; };
 		83F0A5641FB5F33800550A95 /* LDConfigSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = 83F0A5631FB5F33800550A95 /* LDConfigSpec.swift */; };
 		83FEF8DB1F2666DA001CF12C /* UserFlagCache.swift in Sources */ = {isa = PBXBuildFile; fileRef = 83FEF8DA1F2666DA001CF12C /* UserFlagCache.swift */; };
 		83FEF8DD1F266742001CF12C /* FlagSynchronizer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 83FEF8DC1F266742001CF12C /* FlagSynchronizer.swift */; };
@@ -172,7 +172,7 @@
 		83EF67891F97CFEC00403126 /* Dictionary.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Dictionary.swift; sourceTree = "<group>"; };
 		83EF67921F9945E800403126 /* LDEventSpec.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LDEventSpec.swift; sourceTree = "<group>"; };
 		83EF67941F994BAD00403126 /* LDUserStub.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LDUserStub.swift; sourceTree = "<group>"; };
-		83F0A5611FB4D66600550A95 /* Any.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Any.swift; sourceTree = "<group>"; };
+		83F0A5611FB4D66600550A95 /* AnyComparer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnyComparer.swift; sourceTree = "<group>"; };
 		83F0A5631FB5F33800550A95 /* LDConfigSpec.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LDConfigSpec.swift; sourceTree = "<group>"; };
 		83FEF8DA1F2666DA001CF12C /* UserFlagCache.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = UserFlagCache.swift; sourceTree = "<group>"; };
 		83FEF8DC1F266742001CF12C /* FlagSynchronizer.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = FlagSynchronizer.swift; sourceTree = "<group>"; };
@@ -392,7 +392,7 @@
 				83DDBEF91FA24AFB00E428B6 /* Array.swift */,
 				83DDBEFB1FA24B2700E428B6 /* JSONSerialization.swift */,
 				83DDBEFD1FA24F9600E428B6 /* Date.swift */,
-				83F0A5611FB4D66600550A95 /* Any.swift */,
+				83F0A5611FB4D66600550A95 /* AnyComparer.swift */,
 			);
 			path = Extensions;
 			sourceTree = "<group>";
@@ -694,7 +694,7 @@
 				8358F25E1F474E5900ECE1AF /* LDChangedFlag.swift in Sources */,
 				83D559741FD87CC9002D10C8 /* KeyedValueCache.swift in Sources */,
 				8354EFE11F26380700C05156 /* LDConfig.swift in Sources */,
-				83F0A5621FB4D66600550A95 /* Any.swift in Sources */,
+				83F0A5621FB4D66600550A95 /* AnyComparer.swift in Sources */,
 				831D8B741F72994600ED65E8 /* FlagStore.swift in Sources */,
 				8358F2601F476AD800ECE1AF /* FlagChangeNotifier.swift in Sources */,
 				838838451F5EFBAF0023D11B /* LDFlagValueConvertible.swift in Sources */,

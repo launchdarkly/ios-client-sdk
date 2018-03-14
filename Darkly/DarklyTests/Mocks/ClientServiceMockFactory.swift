@@ -49,7 +49,11 @@ struct ClientServiceMockFactory: ClientServiceCreating {
     var makeFlagSynchronizerCallCount = 0
     var makeFlagSynchronizerReceivedParameters: (streamingMode: LDStreamingMode, pollingInterval: TimeInterval, useReport: Bool, service: DarklyServiceProvider)? = nil
     var onSyncComplete: SyncCompleteClosure? = nil
-    mutating func makeFlagSynchronizer(streamingMode: LDStreamingMode, pollingInterval: TimeInterval, useReport: Bool, service: DarklyServiceProvider, onSyncComplete: SyncCompleteClosure?) -> LDFlagSynchronizing {
+    mutating func makeFlagSynchronizer(streamingMode: LDStreamingMode,
+                                       pollingInterval: TimeInterval,
+                                       useReport: Bool,
+                                       service: DarklyServiceProvider,
+                                       onSyncComplete: SyncCompleteClosure?) -> LDFlagSynchronizing {
         makeFlagSynchronizerCallCount += 1
         makeFlagSynchronizerReceivedParameters = (streamingMode, pollingInterval, useReport, service)
         self.onSyncComplete = onSyncComplete

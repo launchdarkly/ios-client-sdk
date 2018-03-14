@@ -149,7 +149,8 @@ final class LDEventSpec: QuickSpec {
             it("creates an array of event dictionaries with matching elements") {
                 expect(eventDictionaries.count) == events.count
                 events.forEach { (event) in
-                    let encodedEvent = eventDictionaries.filter { (eventDictionary) -> Bool in event.key == eventDictionary[LDEvent.CodingKeys.key.rawValue] as? String }.first
+                    let encodedEvent = eventDictionaries.filter { (eventDictionary) -> Bool in event.key == eventDictionary[LDEvent.CodingKeys.key.rawValue] as? String }
+                        .first
                     expect(encodedEvent).toNot(beNil())
                     guard let foundEvent = encodedEvent else { return }
                     expect(foundEvent[LDEvent.CodingKeys.kind.rawValue] as? String) == event.kind.rawValue
@@ -230,7 +231,9 @@ final class LDEventSpec: QuickSpec {
             }
             context("when the array doesn't contain event dictionaries") {
                 beforeEach {
-                    eventDictionaries = LDUser.stubUsers(Constants.eventCapacity).map { (user) in user.dictionaryValue(includeFlagConfig: false, includePrivateAttributes: true, config: config) }
+                    eventDictionaries = LDUser.stubUsers(Constants.eventCapacity).map { (user) in
+                        user.dictionaryValue(includeFlagConfig: false, includePrivateAttributes: true, config: config)
+                    }
                     targetDictionary = LDEvent.stub(for: .identify, with: userStub).dictionaryValue(config: config)
                 }
                 it("returns false") {

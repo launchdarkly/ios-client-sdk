@@ -22,7 +22,9 @@ final class LDUserSpec: QuickSpec {
         describe("init") {
             context("called with optional elements") {
                 beforeEach {
-                    subject = LDUser(key: LDUser.StubConstants.key, name: LDUser.StubConstants.name, firstName: LDUser.StubConstants.firstName, lastName: LDUser.StubConstants.lastName, country: LDUser.StubConstants.country, ipAddress: LDUser.StubConstants.ipAddress, email: LDUser.StubConstants.email, avatar: LDUser.StubConstants.avatar, custom: LDUser.StubConstants.custom, isAnonymous: LDUser.StubConstants.isAnonymous, privateAttributes: LDUser.privatizableAttributes)
+                    subject = LDUser(key: LDUser.StubConstants.key, name: LDUser.StubConstants.name, firstName: LDUser.StubConstants.firstName, lastName: LDUser.StubConstants.lastName,
+                                     country: LDUser.StubConstants.country, ipAddress: LDUser.StubConstants.ipAddress, email: LDUser.StubConstants.email, avatar: LDUser.StubConstants.avatar,
+                                     custom: LDUser.StubConstants.custom, isAnonymous: LDUser.StubConstants.isAnonymous, privateAttributes: LDUser.privatizableAttributes)
                 }
                 it("creates a LDUser with optional elements") {
                     expect(subject.key) == LDUser.StubConstants.key
@@ -313,7 +315,8 @@ final class LDUserSpec: QuickSpec {
                                     expect(userDictionary.redactedAttributes).to(beNil())
 
                                     //creates a dictionary with or without a matching flag config
-                                    includeFlagConfig ? expect({ subject.flagConfigMatches(userDictionary: userDictionary) }).to(match()) : expect(userDictionary.flagConfig).to(beNil())
+                                    includeFlagConfig ? expect({ subject.flagConfigMatches(userDictionary: userDictionary) }).to(match())
+                                        : expect(userDictionary.flagConfig).to(beNil())
                                 }
                             }
                         }
@@ -341,7 +344,8 @@ final class LDUserSpec: QuickSpec {
                                         expect(userDictionary.redactedAttributes).to(beNil())
 
                                         //creates a dictionary with or without a matching flag config
-                                        includeFlagConfig ? expect({ subject.flagConfigMatches(userDictionary: userDictionary) }).to(match()) : expect(userDictionary.flagConfig).to(beNil())
+                                        includeFlagConfig ? expect({ subject.flagConfigMatches(userDictionary: userDictionary) }).to(match())
+                                            : expect(userDictionary.flagConfig).to(beNil())
                                     }
                                 }
                             }
@@ -368,7 +372,8 @@ final class LDUserSpec: QuickSpec {
                                         expect(userDictionary.redactedAttributes).to(beNil())
 
                                         //creates a dictionary with or without a matching flag config
-                                        includeFlagConfig ? expect({ subject.flagConfigMatches(userDictionary: userDictionary) }).to(match()) : expect(userDictionary.flagConfig).to(beNil())
+                                        includeFlagConfig ? expect({ subject.flagConfigMatches(userDictionary: userDictionary) }).to(match())
+                                            : expect(userDictionary.flagConfig).to(beNil())
                                     }
                                 }
                             }
@@ -403,7 +408,8 @@ final class LDUserSpec: QuickSpec {
                             [true, false].forEach { (includeFlagConfig) in
                                 userDictionary = subject.dictionaryValue(includeFlagConfig: includeFlagConfig, includePrivateAttributes: true, config: config)
 
-                                includeFlagConfig ? expect({ subject.flagConfigMatches(userDictionary: userDictionary) }).to(match()) : expect(userDictionary.flagConfig).to(beNil())
+                                includeFlagConfig ? expect({ subject.flagConfigMatches(userDictionary: userDictionary) }).to(match())
+                                    : expect(userDictionary.flagConfig).to(beNil())
                             }
                         }
                     }
@@ -434,7 +440,8 @@ final class LDUserSpec: QuickSpec {
                             [true, false].forEach { (includeFlagConfig) in
                                 userDictionary = subject.dictionaryValue(includeFlagConfig: includeFlagConfig, includePrivateAttributes: true, config: config)
 
-                                includeFlagConfig ? expect({ subject.flagConfigMatches(userDictionary: userDictionary) }).to(match()) : expect(userDictionary.flagConfig).to(beNil())
+                                includeFlagConfig ? expect({ subject.flagConfigMatches(userDictionary: userDictionary) }).to(match())
+                                    : expect(userDictionary.flagConfig).to(beNil())
                             }
                         }
                     }
@@ -465,7 +472,8 @@ final class LDUserSpec: QuickSpec {
                             [true, false].forEach { (includeFlagConfig) in
                                 userDictionary = subject.dictionaryValue(includeFlagConfig: includeFlagConfig, includePrivateAttributes: true, config: config)
 
-                                includeFlagConfig ? expect({ subject.flagConfigMatches(userDictionary: userDictionary) }).to(match()) : expect(userDictionary.flagConfig).to(beNil())
+                                includeFlagConfig ? expect({ subject.flagConfigMatches(userDictionary: userDictionary) }).to(match())
+                                    : expect(userDictionary.flagConfig).to(beNil())
                             }
                         }
                     }
@@ -497,7 +505,8 @@ final class LDUserSpec: QuickSpec {
                             [true, false].forEach { (includeFlagConfig) in
                                 userDictionary = subject.dictionaryValue(includeFlagConfig: includeFlagConfig, includePrivateAttributes: true, config: config)
 
-                                includeFlagConfig ? expect({ subject.flagConfigMatches(userDictionary: userDictionary) }).to(match()) : expect(userDictionary.flagConfig).to(beNil())
+                                includeFlagConfig ? expect({ subject.flagConfigMatches(userDictionary: userDictionary) }).to(match())
+                                    : expect(userDictionary.flagConfig).to(beNil())
                             }
                         }
                     }
@@ -558,7 +567,8 @@ final class LDUserSpec: QuickSpec {
                             [true, false].forEach { (includeFlagConfig) in
                                 userDictionary = subject.dictionaryValue(includeFlagConfig: includeFlagConfig, includePrivateAttributes: true, config: config)
 
-                                includeFlagConfig ? expect({ subject.flagConfigMatches(userDictionary: userDictionary) }).to(match()) : expect(userDictionary.flagConfig).to(beNil())
+                                includeFlagConfig ? expect({ subject.flagConfigMatches(userDictionary: userDictionary) }).to(match())
+                                    : expect(userDictionary.flagConfig).to(beNil())
                             }
                         }
                     }
@@ -593,7 +603,8 @@ final class LDUserSpec: QuickSpec {
                                 [true, false].forEach { (includeFlagConfig) in
                                     userDictionary = subject.dictionaryValue(includeFlagConfig: includeFlagConfig, includePrivateAttributes: true, config: config)
 
-                                    includeFlagConfig ? expect({ subject.flagConfigMatches(userDictionary: userDictionary) }).to(match()) : expect(userDictionary.flagConfig).to(beNil())
+                                    includeFlagConfig ? expect({ subject.flagConfigMatches(userDictionary: userDictionary) }).to(match())
+                                        : expect(userDictionary.flagConfig).to(beNil())
                                 }
                             }
                         }
@@ -632,7 +643,8 @@ final class LDUserSpec: QuickSpec {
                                 [true, false].forEach { (includeFlagConfig) in
                                     userDictionary = subject.dictionaryValue(includeFlagConfig: includeFlagConfig, includePrivateAttributes: true, config: config)
 
-                                    includeFlagConfig ? expect({ subject.flagConfigMatches(userDictionary: userDictionary) }).to(match()) : expect(userDictionary.flagConfig).to(beNil())
+                                    includeFlagConfig ? expect({ subject.flagConfigMatches(userDictionary: userDictionary) }).to(match())
+                                        : expect(userDictionary.flagConfig).to(beNil())
                                 }
                             }
                         }
@@ -668,7 +680,8 @@ final class LDUserSpec: QuickSpec {
                                 [true, false].forEach { (includeFlagConfig) in
                                     userDictionary = subject.dictionaryValue(includeFlagConfig: includeFlagConfig, includePrivateAttributes: true, config: config)
 
-                                    includeFlagConfig ? expect({ subject.flagConfigMatches(userDictionary: userDictionary) }).to(match()) : expect(userDictionary.flagConfig).to(beNil())
+                                    includeFlagConfig ? expect({ subject.flagConfigMatches(userDictionary: userDictionary) }).to(match())
+                                        : expect(userDictionary.flagConfig).to(beNil())
                                 }
                             }
                         }
@@ -699,8 +712,10 @@ final class LDUserSpec: QuickSpec {
                                     expect({ subject.optionalAttributePrivateKeysDontExist(userDictionary: userDictionary, privateAttributes: privateAttributesForTest) }).to(match())
 
                                     //creates a dictionary with redacted attributes
-                                    expect({ subject.optionalAttributePrivateKeysAppearInPrivateAttrsWhenRedacted(userDictionary: userDictionary, privateAttributes: privateAttributesForTest) }).to(match())
-                                    expect({ subject.optionalAttributePublicOrMissingKeysDontAppearInPrivateAttrs(userDictionary: userDictionary, privateAttributes: privateAttributesForTest) }).to(match())
+                                    expect({ subject.optionalAttributePrivateKeysAppearInPrivateAttrsWhenRedacted(userDictionary: userDictionary,
+                                                                                                                  privateAttributes: privateAttributesForTest) }).to(match())
+                                    expect({ subject.optionalAttributePublicOrMissingKeysDontAppearInPrivateAttrs(userDictionary: userDictionary,
+                                                                                                                  privateAttributes: privateAttributesForTest) }).to(match())
 
                                     //creates a custom dictionary with matching key value pairs, without private keys, and with redacted attributes
                                     if privateAttributesForTest.contains(LDUser.CodingKeys.custom.rawValue) {
@@ -710,12 +725,15 @@ final class LDUserSpec: QuickSpec {
                                         expect({ subject.customDictionaryPublicKeyValuePairsMatch(userDictionary: userDictionary, privateAttributes: privateAttributesForTest) }).to(match())
                                         expect({ subject.customDictionaryPrivateKeysDontExist(userDictionary: userDictionary, privateAttributes: privateAttributesForTest) }).to(match())
 
-                                        expect({ subject.customPrivateKeysAppearInPrivateAttrsWhenRedacted(userDictionary: userDictionary, privateAttributes: privateAttributesForTest) }).to(match())
-                                        expect({ subject.customPublicOrMissingKeysDontAppearInPrivateAttrs(userDictionary: userDictionary, privateAttributes: privateAttributesForTest) }).to(match())
+                                        expect({ subject.customPrivateKeysAppearInPrivateAttrsWhenRedacted(userDictionary: userDictionary,
+                                                                                                           privateAttributes: privateAttributesForTest) }).to(match())
+                                        expect({ subject.customPublicOrMissingKeysDontAppearInPrivateAttrs(userDictionary: userDictionary,
+                                                                                                           privateAttributes: privateAttributesForTest) }).to(match())
                                     }
 
                                     //creates a dictionary with or without matching flag config
-                                    includeFlagConfig ? expect({ subject.flagConfigMatches(userDictionary: userDictionary) }).to(match()) : expect(userDictionary.flagConfig).to(beNil())
+                                    includeFlagConfig ? expect({ subject.flagConfigMatches(userDictionary: userDictionary) }).to(match())
+                                        : expect(userDictionary.flagConfig).to(beNil())
                                 }
                             }
                         }
@@ -743,23 +761,30 @@ final class LDUserSpec: QuickSpec {
                                         expect({ subject.optionalAttributePrivateKeysDontExist(userDictionary: userDictionary, privateAttributes: privateAttributesForTest) }).to(match())
 
                                         //creates a dictionary with redacted attributes
-                                        expect({ subject.optionalAttributePrivateKeysAppearInPrivateAttrsWhenRedacted(userDictionary: userDictionary, privateAttributes: privateAttributesForTest) }).to(match())
-                                        expect({ subject.optionalAttributePublicOrMissingKeysDontAppearInPrivateAttrs(userDictionary: userDictionary, privateAttributes: privateAttributesForTest) }).to(match())
+                                        expect({ subject.optionalAttributePrivateKeysAppearInPrivateAttrsWhenRedacted(userDictionary: userDictionary,
+                                                                                                                      privateAttributes: privateAttributesForTest) }).to(match())
+                                        expect({ subject.optionalAttributePublicOrMissingKeysDontAppearInPrivateAttrs(userDictionary: userDictionary,
+                                                                                                                      privateAttributes: privateAttributesForTest) }).to(match())
 
                                         //creates a custom dictionary with matching key value pairs, without private keys, and with redacted attributes
                                         if privateAttributesForTest.contains(LDUser.CodingKeys.custom.rawValue) {
                                             expect({ subject.customDictionaryContainsOnlySdkSetAttributes(userDictionary: userDictionary) }).to(match())
                                             expect(subject.privateAttrsContainsCustom(userDictionary: userDictionary)).to(beTrue())
                                         } else {
-                                            expect({ subject.customDictionaryPublicKeyValuePairsMatch(userDictionary: userDictionary, privateAttributes: privateAttributesForTest) }).to(match())
-                                            expect({ subject.customDictionaryPrivateKeysDontExist(userDictionary: userDictionary, privateAttributes: privateAttributesForTest) }).to(match())
+                                            expect({ subject.customDictionaryPublicKeyValuePairsMatch(userDictionary: userDictionary,
+                                                                                                      privateAttributes: privateAttributesForTest) }).to(match())
+                                            expect({ subject.customDictionaryPrivateKeysDontExist(userDictionary: userDictionary,
+                                                                                                  privateAttributes: privateAttributesForTest) }).to(match())
 
-                                            expect({ subject.customPrivateKeysAppearInPrivateAttrsWhenRedacted(userDictionary: userDictionary, privateAttributes: privateAttributesForTest) }).to(match())
-                                            expect({ subject.customPublicOrMissingKeysDontAppearInPrivateAttrs(userDictionary: userDictionary, privateAttributes: privateAttributesForTest) }).to(match())
+                                            expect({ subject.customPrivateKeysAppearInPrivateAttrsWhenRedacted(userDictionary: userDictionary,
+                                                                                                               privateAttributes: privateAttributesForTest) }).to(match())
+                                            expect({ subject.customPublicOrMissingKeysDontAppearInPrivateAttrs(userDictionary: userDictionary,
+                                                                                                               privateAttributes: privateAttributesForTest) }).to(match())
                                         }
 
                                         //creates a dictionary with or without matching flag config
-                                        includeFlagConfig ? expect({ subject.flagConfigMatches(userDictionary: userDictionary) }).to(match()) : expect(userDictionary.flagConfig).to(beNil())
+                                        includeFlagConfig ? expect({ subject.flagConfigMatches(userDictionary: userDictionary) }).to(match())
+                                            : expect(userDictionary.flagConfig).to(beNil())
                                     }
                                 }
                             }
@@ -789,7 +814,8 @@ final class LDUserSpec: QuickSpec {
                                         expect(userDictionary.redactedAttributes).to(beNil())
 
                                         //creates a dictionary with or without matching flag config
-                                        includeFlagConfig ? expect({ subject.flagConfigMatches(userDictionary: userDictionary) }).to(match()) : expect(userDictionary.flagConfig).to(beNil())
+                                        includeFlagConfig ? expect({ subject.flagConfigMatches(userDictionary: userDictionary) }).to(match())
+                                            : expect(userDictionary.flagConfig).to(beNil())
                                     }
                                 }
                             }
@@ -824,8 +850,10 @@ final class LDUserSpec: QuickSpec {
                             [true, false].forEach { (includeFlagConfig) in
                                 userDictionary = subject.dictionaryValue(includeFlagConfig: includeFlagConfig, includePrivateAttributes: false, config: config)
 
-                                expect({ subject.optionalAttributePrivateKeysAppearInPrivateAttrsWhenRedacted(userDictionary: userDictionary, privateAttributes: LDUser.privatizableAttributes) }).to(match())
-                                expect({ subject.optionalAttributePublicOrMissingKeysDontAppearInPrivateAttrs(userDictionary: userDictionary, privateAttributes: LDUser.privatizableAttributes) }).to(match())
+                                expect({ subject.optionalAttributePrivateKeysAppearInPrivateAttrsWhenRedacted(userDictionary: userDictionary,
+                                                                                                              privateAttributes: LDUser.privatizableAttributes) }).to(match())
+                                expect({ subject.optionalAttributePublicOrMissingKeysDontAppearInPrivateAttrs(userDictionary: userDictionary,
+                                                                                                              privateAttributes: LDUser.privatizableAttributes) }).to(match())
                                 expect(subject.privateAttrsContainsCustom(userDictionary: userDictionary)).to(beTrue())
                             }
                         }
@@ -833,7 +861,8 @@ final class LDUserSpec: QuickSpec {
                             [true, false].forEach { (includeFlagConfig) in
                                 userDictionary = subject.dictionaryValue(includeFlagConfig: includeFlagConfig, includePrivateAttributes: false, config: config)
 
-                                includeFlagConfig ? expect({ subject.flagConfigMatches(userDictionary: userDictionary) }).to(match()) : expect(userDictionary.flagConfig).to(beNil())
+                                includeFlagConfig ? expect({ subject.flagConfigMatches(userDictionary: userDictionary) }).to(match())
+                                    : expect(userDictionary.flagConfig).to(beNil())
                             }
                         }
                     }
@@ -864,8 +893,10 @@ final class LDUserSpec: QuickSpec {
                             [true, false].forEach { (includeFlagConfig) in
                                 userDictionary = subject.dictionaryValue(includeFlagConfig: includeFlagConfig, includePrivateAttributes: false, config: config)
 
-                                expect({ subject.optionalAttributePrivateKeysAppearInPrivateAttrsWhenRedacted(userDictionary: userDictionary, privateAttributes: LDUser.privatizableAttributes) }).to(match())
-                                expect({ subject.optionalAttributePublicOrMissingKeysDontAppearInPrivateAttrs(userDictionary: userDictionary, privateAttributes: LDUser.privatizableAttributes) }).to(match())
+                                expect({ subject.optionalAttributePrivateKeysAppearInPrivateAttrsWhenRedacted(userDictionary: userDictionary,
+                                                                                                              privateAttributes: LDUser.privatizableAttributes) }).to(match())
+                                expect({ subject.optionalAttributePublicOrMissingKeysDontAppearInPrivateAttrs(userDictionary: userDictionary,
+                                                                                                              privateAttributes: LDUser.privatizableAttributes) }).to(match())
                                 expect(subject.privateAttrsContainsCustom(userDictionary: userDictionary)).to(beTrue())
                             }
                         }
@@ -873,7 +904,8 @@ final class LDUserSpec: QuickSpec {
                             [true, false].forEach { (includeFlagConfig) in
                                 userDictionary = subject.dictionaryValue(includeFlagConfig: includeFlagConfig, includePrivateAttributes: false, config: config)
 
-                                includeFlagConfig ? expect({ subject.flagConfigMatches(userDictionary: userDictionary) }).to(match()) : expect(userDictionary.flagConfig).to(beNil())
+                                includeFlagConfig ? expect({ subject.flagConfigMatches(userDictionary: userDictionary) }).to(match())
+                                    : expect(userDictionary.flagConfig).to(beNil())
                             }
                         }
                     }
@@ -904,8 +936,10 @@ final class LDUserSpec: QuickSpec {
                             [true, false].forEach { (includeFlagConfig) in
                                 userDictionary = subject.dictionaryValue(includeFlagConfig: includeFlagConfig, includePrivateAttributes: false, config: config)
 
-                                expect({ subject.optionalAttributePrivateKeysAppearInPrivateAttrsWhenRedacted(userDictionary: userDictionary, privateAttributes: LDUser.privatizableAttributes) }).to(match())
-                                expect({ subject.optionalAttributePublicOrMissingKeysDontAppearInPrivateAttrs(userDictionary: userDictionary, privateAttributes: LDUser.privatizableAttributes) }).to(match())
+                                expect({ subject.optionalAttributePrivateKeysAppearInPrivateAttrsWhenRedacted(userDictionary: userDictionary,
+                                                                                                              privateAttributes: LDUser.privatizableAttributes) }).to(match())
+                                expect({ subject.optionalAttributePublicOrMissingKeysDontAppearInPrivateAttrs(userDictionary: userDictionary,
+                                                                                                              privateAttributes: LDUser.privatizableAttributes) }).to(match())
                                 expect(subject.privateAttrsContainsCustom(userDictionary: userDictionary)).to(beTrue())
                             }
                         }
@@ -945,7 +979,8 @@ final class LDUserSpec: QuickSpec {
                             [true, false].forEach { (includeFlagConfig) in
                                 userDictionary = subject.dictionaryValue(includeFlagConfig: includeFlagConfig, includePrivateAttributes: false, config: config)
 
-                                includeFlagConfig ? expect({ subject.flagConfigMatches(userDictionary: userDictionary) }).to(match()) : expect(userDictionary.flagConfig).to(beNil())
+                                includeFlagConfig ? expect({ subject.flagConfigMatches(userDictionary: userDictionary) }).to(match())
+                                    : expect(userDictionary.flagConfig).to(beNil())
                             }
                         }
                     }
@@ -976,7 +1011,8 @@ final class LDUserSpec: QuickSpec {
                             [true, false].forEach { (includeFlagConfig) in
                                 userDictionary = subject.dictionaryValue(includeFlagConfig: includeFlagConfig, includePrivateAttributes: false, config: config)
 
-                                includeFlagConfig ? expect({ subject.flagConfigMatches(userDictionary: userDictionary) }).to(match()) : expect(userDictionary.flagConfig).to(beNil())
+                                includeFlagConfig ? expect({ subject.flagConfigMatches(userDictionary: userDictionary) }).to(match())
+                                    : expect(userDictionary.flagConfig).to(beNil())
                             }
                         }
                     }
@@ -1007,7 +1043,8 @@ final class LDUserSpec: QuickSpec {
                             [true, false].forEach { (includeFlagConfig) in
                                 userDictionary = subject.dictionaryValue(includeFlagConfig: includeFlagConfig, includePrivateAttributes: false, config: config)
 
-                                includeFlagConfig ? expect({ subject.flagConfigMatches(userDictionary: userDictionary) }).to(match()) : expect(userDictionary.flagConfig).to(beNil())
+                                includeFlagConfig ? expect({ subject.flagConfigMatches(userDictionary: userDictionary) }).to(match())
+                                    : expect(userDictionary.flagConfig).to(beNil())
                             }
                         }
                     }
@@ -1042,7 +1079,8 @@ final class LDUserSpec: QuickSpec {
                                 [true, false].forEach { (includeFlagConfig) in
                                     userDictionary = subject.dictionaryValue(includeFlagConfig: includeFlagConfig, includePrivateAttributes: false, config: config)
 
-                                    includeFlagConfig ? expect({ subject.flagConfigMatches(userDictionary: userDictionary) }).to(match()) : expect(userDictionary.flagConfig).to(beNil())
+                                    includeFlagConfig ? expect({ subject.flagConfigMatches(userDictionary: userDictionary) }).to(match())
+                                        : expect(userDictionary.flagConfig).to(beNil())
                                 }
                             }
                         }
@@ -1081,7 +1119,8 @@ final class LDUserSpec: QuickSpec {
                                 [true, false].forEach { (includeFlagConfig) in
                                     userDictionary = subject.dictionaryValue(includeFlagConfig: includeFlagConfig, includePrivateAttributes: false, config: config)
 
-                                    includeFlagConfig ? expect({ subject.flagConfigMatches(userDictionary: userDictionary) }).to(match()) : expect(userDictionary.flagConfig).to(beNil())
+                                    includeFlagConfig ? expect({ subject.flagConfigMatches(userDictionary: userDictionary) }).to(match())
+                                        : expect(userDictionary.flagConfig).to(beNil())
                                 }
                             }
                         }
@@ -1123,7 +1162,8 @@ final class LDUserSpec: QuickSpec {
                                 [true, false].forEach { (includeFlagConfig) in
                                     userDictionary = subject.dictionaryValue(includeFlagConfig: includeFlagConfig, includePrivateAttributes: false, config: config)
 
-                                    includeFlagConfig ? expect({ subject.flagConfigMatches(userDictionary: userDictionary) }).to(match()) : expect(userDictionary.flagConfig).to(beNil())
+                                    includeFlagConfig ? expect({ subject.flagConfigMatches(userDictionary: userDictionary) }).to(match())
+                                        : expect(userDictionary.flagConfig).to(beNil())
                                 }
                             }
                         }
@@ -1237,7 +1277,8 @@ extension LDUser {
     }
 
     fileprivate func sdkSetAttributesKeyValuePairsMatch(userDictionary: [String: Any]) -> ToMatchResult {
-        guard let customDictionary = userDictionary.customDictionary(includeSdkSetAttributes: true) else { return .failed(reason: MatcherMessages.dictionaryShouldContain + CodingKeys.custom.rawValue) }
+        guard let customDictionary = userDictionary.customDictionary(includeSdkSetAttributes: true)
+        else { return .failed(reason: MatcherMessages.dictionaryShouldContain + CodingKeys.custom.rawValue) }
 
         var messages = [String]()
 
@@ -1262,7 +1303,8 @@ extension LDUser {
     }
 
     fileprivate func customDictionaryContainsOnlySdkSetAttributes(userDictionary: [String: Any]) -> ToMatchResult {
-        guard let customDictionary = userDictionary.customDictionary(includeSdkSetAttributes: false) else { return .failed(reason: MatcherMessages.dictionaryShouldContain + CodingKeys.custom.rawValue) }
+        guard let customDictionary = userDictionary.customDictionary(includeSdkSetAttributes: false)
+        else { return .failed(reason: MatcherMessages.dictionaryShouldContain + CodingKeys.custom.rawValue) }
 
         if !customDictionary.isEmpty { return .failed(reason: MatcherMessages.dictionaryShouldNotContain + CodingKeys.custom.rawValue) }
 
@@ -1280,8 +1322,11 @@ extension LDUser {
     }
 
     fileprivate func customDictionaryPublicKeyValuePairsMatch(userDictionary: [String: Any], privateAttributes: [String]) -> ToMatchResult {
-        guard let custom = custom else { return userDictionary.customDictionary(includeSdkSetAttributes: false).isNilOrEmpty ? .matched : .failed(reason: MatcherMessages.dictionaryShouldNotContain + CodingKeys.custom.rawValue) }
-        guard let customDictionary = userDictionary.customDictionary(includeSdkSetAttributes: false) else { return .failed(reason: MatcherMessages.dictionaryShouldContain + CodingKeys.custom.rawValue) }
+        guard let custom = custom
+        else { return userDictionary.customDictionary(includeSdkSetAttributes: false).isNilOrEmpty ? .matched
+            : .failed(reason: MatcherMessages.dictionaryShouldNotContain + CodingKeys.custom.rawValue) }
+        guard let customDictionary = userDictionary.customDictionary(includeSdkSetAttributes: false)
+        else { return .failed(reason: MatcherMessages.dictionaryShouldContain + CodingKeys.custom.rawValue) }
 
         var messages = [String]()
 
@@ -1296,7 +1341,8 @@ extension LDUser {
     }
 
     fileprivate func customDictionaryPrivateKeysDontExist(userDictionary: [String: Any], privateAttributes: [String]) -> ToMatchResult {
-        guard let customDictionary = userDictionary.customDictionary(includeSdkSetAttributes: false) else { return .failed(reason: MatcherMessages.dictionaryShouldContain + CodingKeys.custom.rawValue) }
+        guard let customDictionary = userDictionary.customDictionary(includeSdkSetAttributes: false)
+        else { return .failed(reason: MatcherMessages.dictionaryShouldContain + CodingKeys.custom.rawValue) }
 
         var messages = [String]()
 
@@ -1310,7 +1356,9 @@ extension LDUser {
     }
 
     fileprivate func customPrivateKeysAppearInPrivateAttrsWhenRedacted(userDictionary: [String: Any], privateAttributes: [String]) -> ToMatchResult {
-        guard let custom = custom else { return userDictionary.customDictionary(includeSdkSetAttributes: false).isNilOrEmpty ? .matched : .failed(reason: MatcherMessages.dictionaryShouldNotContain + CodingKeys.custom.rawValue) }
+        guard let custom = custom
+        else { return userDictionary.customDictionary(includeSdkSetAttributes: false).isNilOrEmpty ? .matched
+            : .failed(reason: MatcherMessages.dictionaryShouldNotContain + CodingKeys.custom.rawValue) }
 
         var messages = [String]()
 
@@ -1324,7 +1372,9 @@ extension LDUser {
     }
 
     fileprivate func customPublicOrMissingKeysDontAppearInPrivateAttrs(userDictionary: [String: Any], privateAttributes: [String]) -> ToMatchResult {
-        guard let custom = custom else { return userDictionary.customDictionary(includeSdkSetAttributes: false).isNilOrEmpty ? .matched : .failed(reason: MatcherMessages.dictionaryShouldNotContain + CodingKeys.custom.rawValue) }
+        guard let custom = custom
+        else { return userDictionary.customDictionary(includeSdkSetAttributes: false).isNilOrEmpty ? .matched
+            : .failed(reason: MatcherMessages.dictionaryShouldNotContain + CodingKeys.custom.rawValue) }
 
         var messages = [String]()
 
@@ -1339,7 +1389,8 @@ extension LDUser {
 
     fileprivate func flagConfigMatches(userDictionary: [String: Any]) -> ToMatchResult {
         let flagConfig = flagStore.featureFlags
-        guard let flagConfigDictionary = userDictionary.flagConfig else { return .failed(reason: MatcherMessages.dictionaryShouldContain + CodingKeys.config.rawValue) }
+        guard let flagConfigDictionary = userDictionary.flagConfig
+        else { return .failed(reason: MatcherMessages.dictionaryShouldContain + CodingKeys.config.rawValue) }
         if flagConfig != flagConfigDictionary { return .failed(reason: MatcherMessages.valuesDontMatch + CodingKeys.config.rawValue)}
         return .matched
     }

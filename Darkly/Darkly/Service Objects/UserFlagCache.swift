@@ -8,51 +8,6 @@
 
 import Foundation
 
-/*
-
- protocol UserStorage {
-     func storeUsr(user: User)
-     var allUsers: [User] { get }
- }
-
- class DefaultUserStorage: UserStorage {
-     let defaults: UserDefaults
-     init(defaults = UserDefaults.shared) { ... }
- }
-
- beforeEach {
-     user = .stub()
-     store(user: user)
-     result = allUsers.filter { $0.key == user.key }
- }
-
- expect(user).to(equal(result))
-
- class FlagCache {
- let storage: UserStorage
- }
-
- expect(storageMock.storeUserCallCount).to(equal(1))
- expect(storageMock.storeUserRecivedUser).to(equal(user))
-
- typealias FlagDicationar = [String: Any]
- prptoocol FlagMigrator {
-     func translateLocalDataToCurrentFormat() -> FlagDictionary
- }
-
- class DataMigrator: FlagMigrator {
-     /// implement that method in such a way that it ....
- }
-
- beforeEach {
-     let data = ....
-      let result = FlagMigator().migrate(data)
- }
-
- expect(result).to(equal(someKnownOutput))
-
-*/
-
 //sourcery: AutoMockable
 protocol UserFlagCaching {
     func cacheFlags(for user: LDUser)
@@ -85,13 +40,6 @@ final class UserFlagCache: UserFlagCaching {
         return cachedFlags[user.key]
     }
     
-    //TODO: Should this retrieve a tuple (userKey, flags)?
-//    func retrieveLatest() -> [String: Any]? {
-//        let flags = cachedFlags
-//        guard !flags.isEmpty else { return nil }
-//        return flags.max(by: { (pair1, pair2) -> Bool in pair1.value.lastUpdated < pair2.value.lastUpdated })?.value.flags
-//    }
-
     private var cachedFlags: [String: CacheableUserFlags] { return flagCollectionStore.retrieveFlags() }
 
     private func cache(flags: [String: CacheableUserFlags]) {

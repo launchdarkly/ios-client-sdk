@@ -36,7 +36,9 @@ final class UserCacheConverter: UserCacheConverting {
     private var cachedUserDictionaries: [String: Any]? { return keyStore.dictionary(forKey: Keys.cachedUsers) }
     private var cachedUsers: [String: LDUser]? {
         guard let userCache = cachedUserDictionaries else { return nil }
-        return Dictionary(uniqueKeysWithValues: userCache.map { (keyObjectPair) in (keyObjectPair.key, LDUser(userObject: keyObjectPair.value, usingKeyIfMissing: keyObjectPair.key)) })
+        return Dictionary(uniqueKeysWithValues: userCache.map { (keyObjectPair) in
+            (keyObjectPair.key, LDUser(userObject: keyObjectPair.value, usingKeyIfMissing: keyObjectPair.key))
+        })
     }
 }
 

@@ -204,9 +204,12 @@ public class LDClient {
     
     /* FF Change Notification
      Conceptual Model
-     LDClient keeps a list of two types of closure observers, either Individual Flag observers or All Flags observers. LDClient executes Individual Flag observers when it detects a change to that flag being observed. LDClient executes All Flags observers when it detects a change to any flag for the current LDUser. The closure has a LDChangedFlag input parameter that communicates the flag's old & new value. Individual Flag observers will have an LDChangedFlag passed into the parameter directly. All Flags observers will have a dictionary of [LDFlagKey: LDChangeFlag] that use the flag key as the dictionary key.
-     An app registers an Individual Flag observer using observe(key:, owner:, observer:), or an All Flags observer using observeAll(owner:, observer:). An app can register multiple closures for each type by calling these methods multiple times. When the value of a flag changes, LDClient calls each registered closure 1 time.
-     LDClient will automatically remove observer closures that cannot be executed. This means an app does not need to stop observing flags, the LDClient will remove the observer after it has gone out of scope. An app can stop observers explicitly using stopObserver(owner:).
+     LDClient keeps a list of two types of closure observers, either Flag Change Observers or Flags Unchanged Observers.
+     There are 3 types of Flag Change Observers, Individual Flag Change Observers, Flag Collection Change Observers, and All Flags Change Observers. LDClient executes Individual Flag observers when it detects a change to a single flag being observed. LDClient executes Flag Collection Change Observers one time when it detects a change to any flag in the observed flag collection. LDClient executes All Flags observers one time when it detects a change to any flag. The Individual Flag Change Observer has closure that takes a LDChangedFlag input parameter which communicates the flag's old & new value. Flag Collection and All Flags Observers will have a closure that takes a dictionary of [LDFlagKey: LDChangeFlag] that communicates all of the changed flags.
+     An app registers an Individual Flag observer using observe(key:, owner:, handler:). An app registers a Flag Collection Observer using observe(keys: owner: handler), An app registers an All Flags observer using observeAll(owner:, handler:). An app can register multiple closures for each type by calling these methods multiple times. When the value of a flag changes, LDClient calls each registered closure 1 time.
+     Flags Unchanged Observers allow the LDClient to communicate to the app when it receives flags from the LD server that doesn't change any values from what the LDClient had already. For example, at launch the LDClient restores cached flag values before requesting flags from the LD server. If there has been no change to the flag values, the LDClient will execute the Flags Unchanged Observers that the app has registered. An app registers a Flags Unchanged Observer using observeFlagsUnchanged(owner: handler:).
+     LDClient will automatically remove observers when the owner is nil. This means an app does not need to stop observing flags, the LDClient will remove the observer after it has gone out of scope. An app can stop observers explicitly using stopObserver(owner:).
+     LDClient executes observers on the main thread.
     */
     
     ///Usage
@@ -219,8 +222,8 @@ public class LDClient {
     ///         }
     ///     }
     ///LDClient keeps a weak reference to the owner. Apps should keep only weak references to self in observers to avoid memory leaks
-    public func observe(_ key: LDFlagKey, owner: LDFlagChangeOwner, observer: @escaping LDFlagChangeHandler) {
-        flagChangeNotifier.addFlagChangeObserver(FlagChangeObserver(key: key, owner: owner, flagChangeHandler: observer))
+    public func observe(_ key: LDFlagKey, owner: LDFlagChangeOwner, handler: @escaping LDFlagChangeHandler) {
+        flagChangeNotifier.addFlagChangeObserver(FlagChangeObserver(key: key, owner: owner, flagChangeHandler: handler))
     }
     
     ///Usage
@@ -231,8 +234,8 @@ public class LDClient {
     ///         }
     ///     }
     /// changedFlags is a [LDFlagKey: LDChangedFlag]
-    public func observe(_ keys: [LDFlagKey], owner: LDFlagChangeOwner, observer: @escaping LDFlagCollectionChangeHandler) {
-        flagChangeNotifier.addFlagChangeObserver(FlagChangeObserver(keys: keys, owner: owner, flagCollectionChangeHandler: observer))
+    public func observe(_ keys: [LDFlagKey], owner: LDFlagChangeOwner, handler: @escaping LDFlagCollectionChangeHandler) {
+        flagChangeNotifier.addFlagChangeObserver(FlagChangeObserver(keys: keys, owner: owner, flagCollectionChangeHandler: handler))
     }
 
     ///Usage
@@ -243,8 +246,8 @@ public class LDClient {
     ///         }
     ///     }
     /// changedFlags is a [LDFlagKey: LDChangedFlag]
-    public func observeAll(owner: LDFlagChangeOwner, observer: @escaping LDFlagCollectionChangeHandler) {
-        flagChangeNotifier.addFlagChangeObserver(FlagChangeObserver(keys: LDFlagKey.anyKey, owner: owner, flagCollectionChangeHandler: observer))
+    public func observeAll(owner: LDFlagChangeOwner, handler: @escaping LDFlagCollectionChangeHandler) {
+        flagChangeNotifier.addFlagChangeObserver(FlagChangeObserver(keys: LDFlagKey.anyKey, owner: owner, flagCollectionChangeHandler: handler))
     }
     
     ///Sets a handler called when a flag update leaves the flags unchanged from their previous values.
@@ -317,7 +320,11 @@ public class LDClient {
 
         //dummy objects replaced by start call
         service = serviceFactory.makeDarklyServiceProvider(mobileKey: "", config: config, user: user)
-        flagSynchronizer = serviceFactory.makeFlagSynchronizer(streamingMode: .polling, pollingInterval: config.flagPollInterval, useReport: config.useReport, service: service, onSyncComplete: nil)
+        flagSynchronizer = serviceFactory.makeFlagSynchronizer(streamingMode: .polling,
+                                                               pollingInterval: config.flagPollInterval,
+                                                               useReport: config.useReport,
+                                                               service: service,
+                                                               onSyncComplete: nil)
         eventReporter = serviceFactory.makeEventReporter(mobileKey: "", config: config, service: service)
     }
 
@@ -330,7 +337,11 @@ public class LDClient {
         //dummy objects replaced by start call
         flagCache = serviceFactory.makeUserFlagCache()
         service = serviceFactory.makeDarklyServiceProvider(mobileKey: "", config: config, user: user)
-        flagSynchronizer = self.serviceFactory.makeFlagSynchronizer(streamingMode: .polling, pollingInterval: config.flagPollInterval, useReport: config.useReport, service: service, onSyncComplete: nil)
+        flagSynchronizer = self.serviceFactory.makeFlagSynchronizer(streamingMode: .polling,
+                                                                    pollingInterval: config.flagPollInterval,
+                                                                    useReport: config.useReport,
+                                                                    service: service,
+                                                                    onSyncComplete: nil)
         eventReporter = serviceFactory.makeEventReporter(mobileKey: "", config: config, service: service)
     }
 }

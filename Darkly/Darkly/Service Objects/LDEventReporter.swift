@@ -80,7 +80,6 @@ class LDEventReporter: LDEventReporting {
             eventReportTimer = timer
             RunLoop.current.add(timer, forMode: .defaultRunLoopMode)
         }
-        //TODO: Do we need to resume the eventQueue too?
         reportEvents()
     }
     
@@ -88,7 +87,6 @@ class LDEventReporter: LDEventReporting {
         guard isReportingActive else { return }
         eventReportTimer?.invalidate()
         eventReportTimer = nil
-        //TODO: Do we need to suspend the eventQueue too?
     }
     
     @objc func reportEvents() {

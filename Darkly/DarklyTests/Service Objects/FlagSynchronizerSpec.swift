@@ -38,7 +38,11 @@ final class FlagSynchronizerSpec: QuickSpec {
         private func isStreamingActive(online: Bool, streamingMode: LDStreamingMode) -> Bool { return online && (streamingMode == .streaming) }
         private func isPollingActive(online: Bool, streamingMode: LDStreamingMode) -> Bool { return online && (streamingMode == .polling) }
 
-        fileprivate func synchronizerState(synchronizerOnline isOnline: Bool, streamingMode: LDStreamingMode, flagRequests: Int, streamCreated: Bool, streamClosed: Bool? = nil) -> ToMatchResult {
+        fileprivate func synchronizerState(synchronizerOnline isOnline: Bool,
+                                           streamingMode: LDStreamingMode,
+                                           flagRequests: Int,
+                                           streamCreated: Bool,
+                                           streamClosed: Bool? = nil) -> ToMatchResult {
             var messages = [String]()
 
             //synchronizer state
