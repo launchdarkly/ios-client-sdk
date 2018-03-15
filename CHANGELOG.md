@@ -2,7 +2,7 @@
 
 All notable changes to the LaunchDarkly iOS SDK will be documented in this file. This project adheres to [Semantic Versioning](http://semver.org).
 
-## [2.11.0] - 2018-03-XX
+## [2.11.0] - 2018-03-15
 ### Added
 - Support for enhanced feature streams, facilitating reduced SDK initialization times.
 
