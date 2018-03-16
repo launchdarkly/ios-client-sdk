@@ -70,6 +70,6 @@ protocol TypeIdentifying { }
 extension TypeIdentifying {
     var typeName: String { return String(describing: type(of: self)) }
     func typeName(and method: String) -> String {
-        return typeName + "." + method
+        return typeName + "." + method + " "
     }
 }

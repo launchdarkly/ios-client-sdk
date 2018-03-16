@@ -24,7 +24,12 @@ public class LDClient {
 
     ///Controls whether client contacts launch darkly for feature flags and events. When offline, client only collects events.
     public var isOnline: Bool {
-        set { _isOnline = hasStarted && newValue && (runMode != .background || config.enableBackgroundUpdates)}
+        set {
+            if newValue && !hasStarted { Log.debug(typeName(and: #function) + "set isOnline to false: LDClient has not been started") }
+            if newValue && runMode == .background && !config.enableBackgroundUpdates { Log.debug(typeName(and: #function) + "set isOnline to false: LDConfig does not enable background updates") }
+            _isOnline = hasStarted && newValue && (runMode != .background || config.enableBackgroundUpdates)
+            if newValue == _isOnline { Log.debug(typeName(and: #function) + ": \(_isOnline)") }
+        }
         get { return _isOnline }
     }
     
@@ -35,8 +40,13 @@ public class LDClient {
     ///     LDClient.shared.config = newConfig
     public var config = LDConfig() {
         didSet {
-            guard config != oldValue else { return }
+            guard config != oldValue else {
+                Log.debug(typeName(and: #function) + "aborted: new config matches old config")
+                return
+            }
 
+            Log.level = isDebug && config.isDebugMode ? .debug : .error
+            Log.debug(typeName(and: #function) + "new config set")
             let wasOnline = isOnline
             isOnline = false
 
@@ -58,6 +68,7 @@ public class LDClient {
     ///     LDClient.shared.user = newUser
     public var user = LDUser() {
         didSet {
+            Log.debug(typeName(and: #function) + "new user set with key: " + user.key )
             let wasOnline = isOnline
             isOnline = false
 
@@ -80,6 +91,7 @@ public class LDClient {
 
     private(set) var service: DarklyServiceProvider {
         didSet {
+            Log.debug(typeName(and: #function) + "new service set")
             //TODO: Refactor to create a new flagSynchronizer here too, then remove from the 4 places that's done in this class
             //2 of those are in initializers. They set different modes, but I think it should be ok to use the same settings there since it should start offline.
             eventReporter.config = config
@@ -98,6 +110,7 @@ public class LDClient {
     ///Call this before you want to capture feature flags. The LDClient will not go online until you call this method.
     ///Subsequent calls to this method cause the LDClient to go offline, reconfigure using the new config & user (if supplied), and then go online if it was online when start was called
     public func start(mobileKey: String, config: LDConfig? = nil, user: LDUser? = nil) {
+        Log.debug(typeName(and: #function) + "starting")
         let wasStarted = hasStarted
         let wasOnline = isOnline
         hasStarted = true
@@ -109,14 +122,19 @@ public class LDClient {
         self.user = user ?? self.user
 
         self.isOnline = (wasStarted && wasOnline) || (!wasStarted && self.config.startOnline)
+        Log.debug(typeName(and: #function) + "started")
     }
 
     private func effectiveStreamingMode(runMode: LDClientRunMode) -> LDStreamingMode {
-        return runMode == .foreground && self.config.streamingMode == .streaming ? .streaming : .polling
+        let streamingMode: LDStreamingMode = runMode == .foreground && self.config.streamingMode == .streaming ? .streaming : .polling
+        Log.debug(typeName(and: #function) + ": \(streamingMode)")
+        return streamingMode
     }
 
     private var effectiveRunMode: LDClientRunMode {
-        return config.enableBackgroundUpdates ? runMode : .foreground
+        let effectiveMode = config.enableBackgroundUpdates ? runMode : .foreground
+        Log.debug(typeName(and: #function) + ": \(effectiveMode)")
+        return effectiveMode
     }
 
     ///Stops the LDClient. Stopping the client means take the client offline and stop recording events.
@@ -124,8 +142,10 @@ public class LDClient {
     ///     LDClient.shared.stop()
     ///After the client has stopped, variation requests will be answered with the last received feature flags.
     public func stop() {
+        Log.debug(typeName(and: #function) + "stopping")
         isOnline = false
         hasStarted = false
+        Log.debug(typeName(and: #function) + "stopped")
     }
     
     /* Event tracking
@@ -137,8 +157,12 @@ public class LDClient {
     ///Once an app has called trackEvent(), the app cannot remove the event from the event store.
     ///If the client is offline, the client stores the event until the app takes the client online, and the client has transmitted the event.
     public func trackEvent(key: String, data: [String: Any]? = nil) {
-        guard hasStarted else { return }
+        guard hasStarted else {
+            Log.debug(typeName(and: #function) + "aborted: LDClient not started")
+            return
+        }
         let event = LDEvent.customEvent(key: key, user: user, data: data)
+        Log.debug(typeName(and: #function) + "event: \(event), data: \(String(describing: data))")
         eventReporter.record(event)
     }
     
@@ -174,8 +198,9 @@ public class LDClient {
     ///     let dictionaryFlagValue = LDClient.shared.variation(forKey: "dictionary-key", fallback: ["a": 1, "b": 2] as [LDFlagKey: Any])
     public func variation<T: LDFlagValueConvertible>(forKey key: LDFlagKey, fallback: T) -> T {
         guard hasStarted else { return fallback }
+        Log.debug(typeName(and: #function) + "flagKey: \(key), fallback: \(fallback)")
         let value = user.flagStore.variation(forKey: key, fallback: fallback)
-        eventReporter.record(LDEvent.flagRequestEvent(key: key, user: user, value: value, defaultValue: fallback))
+eventReporter.record(LDEvent.flagRequestEvent(key: key, user: user, value: value, defaultValue: fallback))
         return value
     }
 
@@ -201,6 +226,7 @@ public class LDClient {
     ///     let (dictionaryFlagValue, dictionaryFeatureFlagSource) = LDClient.shared.variationAndSource(forKey: "dictionary-key", fallback: ["a": 1, "b": 2] as [LDFlagKey: Any])
     public func variationAndSource<T: LDFlagValueConvertible>(forKey key: LDFlagKey, fallback: T) -> (T, LDFlagValueSource) {
         guard hasStarted else { return (fallback, .fallback) }
+        Log.debug(typeName(and: #function) + "flagKey: \(key), fallback: \(fallback)")
         let (value, source) = user.flagStore.variationAndSource(forKey: key, fallback: fallback)
         eventReporter.record(LDEvent.flagRequestEvent(key: key, user: user, value: value, defaultValue: fallback))
         return (value, source)
@@ -229,6 +255,7 @@ public class LDClient {
     ///     }
     ///LDClient keeps a weak reference to the owner. Apps should keep only weak references to self in observers to avoid memory leaks
     public func observe(_ key: LDFlagKey, owner: LDFlagChangeOwner, handler: @escaping LDFlagChangeHandler) {
+        Log.debug(typeName(and: #function) + "flagKey: \(key)")
         flagChangeNotifier.addFlagChangeObserver(FlagChangeObserver(key: key, owner: owner, flagChangeHandler: handler))
     }
     
@@ -253,6 +280,7 @@ public class LDClient {
     ///     }
     /// changedFlags is a [LDFlagKey: LDChangedFlag]
     public func observeAll(owner: LDFlagChangeOwner, handler: @escaping LDFlagCollectionChangeHandler) {
+        Log.debug(typeName(and: #function))
         flagChangeNotifier.addFlagChangeObserver(FlagChangeObserver(keys: LDFlagKey.anyKey, owner: owner, flagCollectionChangeHandler: handler))
     }
     
@@ -267,9 +295,14 @@ public class LDClient {
     }
 
     ///Called if the client is unable to contact the server
-    public var onServerUnavailable: (() -> Void)? = nil
+    public var onServerUnavailable: (() -> Void)? = nil {
+        didSet {
+            Log.debug(typeName(and: #function) + (onServerUnavailable == nil ? "<nil>" : "set"))
+        }
+    }
 
     private func onSyncComplete(result: SyncResult) {
+        Log.debug(typeName(and: #function) + "result: \(result)")
         switch result {
         case let .success(flagDictionary, streamingEvent):
             let oldFlags = user.flagStore.featureFlags
@@ -290,7 +323,10 @@ public class LDClient {
             default: break
             }
         case let .error(synchronizingError):
-            if synchronizingError.isClientUnauthorized { isOnline = false }
+            if synchronizingError.isClientUnauthorized {
+                Log.error(typeName(and: #function) + "LDClient is unauthorized")
+                isOnline = false
+            }
             executeCallback(onServerUnavailable)
         }
     }
@@ -351,6 +387,8 @@ public class LDClient {
         eventReporter = serviceFactory.makeEventReporter(mobileKey: "", config: config, service: service)
     }
 }
+
+extension LDClient: TypeIdentifying { }
 
 #if DEBUG
     extension LDClient {
