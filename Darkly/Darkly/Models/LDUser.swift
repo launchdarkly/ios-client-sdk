@@ -62,6 +62,7 @@ public struct LDUser {
         self.operatingSystem = custom?[CodingKeys.operatingSystem.rawValue] as? String ?? UIDevice.current.systemVersion
         self.privateAttributes = privateAttributes
         lastUpdated = Date()
+        Log.debug(typeName(and: #function) + "user: \(self)")
     }
     
     public init(userDictionary: [String: Any]) {
@@ -83,6 +84,7 @@ public struct LDUser {
         operatingSystem = custom?[CodingKeys.operatingSystem.rawValue] as? String
 
         flagStore = FlagStore(featureFlagDictionary: userDictionary[CodingKeys.config.rawValue] as? [String: Any], flagValueSource: .cache)
+        Log.debug(typeName(and: #function) + "user: \(self)")
     }
 
     //swiftlint:disable:next cyclomatic_complexity
@@ -275,3 +277,5 @@ extension LDUserWrapper: NSCoding {
         NSKeyedArchiver.setClassName("LDUserModel", for: LDUserWrapper.self)
     }
 }
+
+extension LDUser: TypeIdentifying { }

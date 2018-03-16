@@ -91,11 +91,14 @@ public struct LDConfig {
 
     func flagPollingInterval(runMode: LDClientRunMode) -> TimeInterval {
         let pollingIntervalMillis = runMode == .foreground ? max(pollIntervalMillis, minima.pollingIntervalMillis) : max(backgroundPollIntervalMillis, minima.backgroundPollIntervalMillis)
+        Log.debug(typeName(and: #function) + ": \(pollingIntervalMillis.timeInterval)")
         return pollingIntervalMillis.timeInterval
     }
 
     static func isReportRetryStatusCode(_ statusCode: Int) -> Bool {
-        return LDConfig.flagRetryStatusCodes.contains(statusCode)
+        let isRetryStatusCode = LDConfig.flagRetryStatusCodes.contains(statusCode)
+        Log.debug(LDConfig.typeName(and: #function, appending: ": ") + "\(isRetryStatusCode)")
+        return isRetryStatusCode
     }
 }
 
@@ -122,6 +125,8 @@ extension LDConfig: Equatable {
             && lhs.isDebugMode == rhs.isDebugMode
     }
 }
+
+extension LDConfig: TypeIdentifying { }
 
 #if DEBUG
     extension LDConfig {

@@ -37,23 +37,25 @@ class LDEventReporter: LDEventReporting {
     
     var config: LDConfig {
         didSet {
+            Log.debug(typeName(and: #function, appending: ": ") + "\(config)")
             isOnline = false
         }
     }
     private let eventQueue = DispatchQueue(label: Constants.eventQueueLabel, qos: .userInitiated)
     var isOnline: Bool = false {
-        didSet { isOnline ? startReporting() : stopReporting() }
+        didSet {
+            Log.debug(typeName(and: #function, appending: ": ") + "\(isOnline)")
+            isOnline ? startReporting() : stopReporting()
+        }
     }
 
-    private let mobileKey: String
     var service: DarklyServiceProvider
     private(set) var eventStore = [[String: Any]]()
     
     private weak var eventReportTimer: Timer?
     var isReportingActive: Bool { return eventReportTimer != nil }
 
-    init(mobileKey: String, config: LDConfig, service: DarklyServiceProvider) {
-        self.mobileKey = mobileKey
+    init(config: LDConfig, service: DarklyServiceProvider) {
         self.config = config
         self.service = service
     }
@@ -65,7 +67,11 @@ class LDEventReporter: LDEventReporting {
                     completion?()
                 }
             }
-            guard !self.isEventStoreFull else { return }
+            guard !self.isEventStoreFull
+            else {
+                Log.debug(self.typeName(and: #function) + "aborted: event store is full")
+                return
+            }
             self.eventStore.append(event.dictionaryValue(config: self.config))
         }
     }
@@ -90,7 +96,12 @@ class LDEventReporter: LDEventReporting {
     }
     
     @objc func reportEvents() {
-        guard isOnline && !eventStore.isEmpty else { return }
+        guard isOnline && !eventStore.isEmpty else {
+            if !isOnline { Log.debug(typeName(and: #function) + "aborted: offline") }
+            else if eventStore.isEmpty { Log.debug(typeName(and: #function) + "aborted: event store is empty") }
+            return
+        }
+        Log.debug(typeName(and: #function, appending: ": ") + "starting")
         let reportedEventDictionaries = eventStore //this is async, so keep what we're reporting at this time for later use
         service.publishEventDictionaries(eventStore) { serviceResponse in
             self.processEventResponse(reportedEventDictionaries: reportedEventDictionaries, serviceResponse: serviceResponse)
@@ -112,10 +123,12 @@ class LDEventReporter: LDEventReporting {
     }
     
     private func report(_ error: Error?) {
+        Log.debug(typeName + ".reportEvents() " + "error: \(String(describing: error))")
         //TODO: Implement when error reporting architecture is established
     }
     
     private func report(_ response: URLResponse?) {
+        Log.debug(typeName + ".reportEvents() " + "response: \(String(describing: response))")
         //TODO: Implement when error reporting architecture is established
     }
     
@@ -123,8 +136,11 @@ class LDEventReporter: LDEventReporting {
         eventQueue.async {
             let remainingEventDictionaries = self.eventStore.filter { (eventDictionary) in !reportedEventDictionaries.contains(eventDictionary: eventDictionary) }
             self.eventStore = remainingEventDictionaries
+            Log.debug(self.typeName + ".reportEvents() " + "completed")
         }
     }
     
     private var isEventStoreFull: Bool { return eventStore.count >= config.eventCapacity}
 }
+
+extension LDEventReporter: TypeIdentifying { }

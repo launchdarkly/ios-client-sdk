@@ -39,6 +39,7 @@ final class FlagStore: FlagMaintaining {
     init() { }
 
     init(featureFlags: [LDFlagKey: FeatureFlag]?, flagValueSource: LDFlagValueSource = .fallback) {
+        Log.debug(typeName(and: #function) + "featureFlags: \(String(describing: featureFlags)) " + "flagValueSource: \(flagValueSource)")
         self.featureFlags = featureFlags ?? [:]
         self.flagValueSource = flagValueSource
     }
@@ -49,6 +50,7 @@ final class FlagStore: FlagMaintaining {
 
     ///Replaces all feature flags with new flags. Pass nil to reset to an empty flag store
     func replaceStore(newFlags: [LDFlagKey: Any]?, source: LDFlagValueSource, completion: CompletionClosure?) {
+        Log.debug(typeName(and: #function) + "newFlags: \(String(describing: newFlags)) " + "source: \(source)")
         flagQueue.async {
             self.featureFlags = newFlags?.flagCollection ?? [:]
             self.flagValueSource = source
@@ -79,10 +81,22 @@ final class FlagStore: FlagMaintaining {
             guard updateDictionary.keys.sorted() == [Keys.flagKey, FeatureFlag.CodingKeys.value.rawValue, FeatureFlag.CodingKeys.version.rawValue],
                 let flagKey = updateDictionary[Keys.flagKey] as? String,
                 let newValue = updateDictionary[FeatureFlag.CodingKeys.value.rawValue],
-                let newVersion = updateDictionary[FeatureFlag.CodingKeys.version.rawValue] as? Int,
-                self.isValidVersion(for: flagKey, newVersion: newVersion)
-            else { return }
-            self.featureFlags[flagKey] = FeatureFlag(value: newValue, version: newVersion)
+                let newVersion = updateDictionary[FeatureFlag.CodingKeys.version.rawValue] as? Int
+            else {
+                Log.debug(self.typeName(and: #function) + "aborted: malformed update dictionary. updateDictionary: \(String(describing: updateDictionary))")
+                return
+            }
+            guard self.isValidVersion(for: flagKey, newVersion: newVersion)
+            else {
+                Log.debug(self.typeName(and: #function) + "aborted: invalid version. updateDictionary: \(String(describing: updateDictionary)) "
+                    + "existing flag: \(String(describing: self.featureFlags[flagKey]))")
+                return
+            }
+
+            let newFlag = FeatureFlag(value: newValue, version: newVersion)
+            Log.debug(self.typeName(and: #function) + "succeeded. new flag: \(newFlag) " + "prior flag: \(String(describing: self.featureFlags[flagKey]))")
+            self.featureFlags[flagKey] = newFlag
+
         }
     }
     
@@ -97,9 +111,18 @@ final class FlagStore: FlagMaintaining {
             }
             guard deleteDictionary.keys.sorted() == [Keys.flagKey, FeatureFlag.CodingKeys.version.rawValue],
                 let flagKey = deleteDictionary[Keys.flagKey] as? String,
-                let newVersion = deleteDictionary[FeatureFlag.CodingKeys.version.rawValue] as? Int,
-                self.isValidVersion(for: flagKey, newVersion: newVersion)
-                else { return }
+                let newVersion = deleteDictionary[FeatureFlag.CodingKeys.version.rawValue] as? Int
+            else {
+                Log.debug(self.typeName(and: #function) + "aborted: malformed delete dictionary. deleteDictionary: \(String(describing: deleteDictionary))")
+                return
+            }
+            guard self.isValidVersion(for: flagKey, newVersion: newVersion)
+            else {
+                Log.debug(self.typeName(and: #function) + "aborted: invalid version. deleteDictionary: \(String(describing: deleteDictionary)) "
+                    + "existing flag: \(String(describing: self.featureFlags[flagKey]))")
+                return
+            }
+
             self.featureFlags.removeValue(forKey: flagKey)
         }
     }
@@ -123,3 +146,5 @@ final class FlagStore: FlagMaintaining {
         return (flagValue, source)
     }
 }
+
+extension FlagStore: TypeIdentifying { }

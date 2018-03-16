@@ -31,13 +31,16 @@ final class UserFlagCache: UserFlagCaching {
     }
 
     func cacheFlags(for user: LDUser) {
+        Log.debug(typeName(and: #function) + "user key: " + user.key)
         var flags = cachedFlags
         flags[user.key] = CacheableUserFlags(user: user)
         cache(flags: flags)
     }
     
     func retrieveFlags(for user: LDUser) -> CacheableUserFlags? {
-        return cachedFlags[user.key]
+        let userFlags = cachedFlags[user.key]
+        Log.debug(typeName(and: #function) + "user key: " + user.key + " - " + (userFlags == nil ? "not found" : "found"))
+        return userFlags
     }
     
     private var cachedFlags: [String: CacheableUserFlags] { return flagCollectionStore.retrieveFlags() }
@@ -46,6 +49,8 @@ final class UserFlagCache: UserFlagCaching {
         flagCollectionStore.storeFlags(flags)
     }
 }
+
+extension UserFlagCache: TypeIdentifying { }
 
 // MARK: - Test Support
 #if DEBUG

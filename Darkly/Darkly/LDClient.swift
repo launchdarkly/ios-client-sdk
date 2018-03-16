@@ -25,10 +25,10 @@ public class LDClient {
     ///Controls whether client contacts launch darkly for feature flags and events. When offline, client only collects events.
     public var isOnline: Bool {
         set {
-            if newValue && !hasStarted { Log.debug(typeName(and: #function) + "set isOnline to false: LDClient has not been started") }
-            if newValue && runMode == .background && !config.enableBackgroundUpdates { Log.debug(typeName(and: #function) + "set isOnline to false: LDConfig does not enable background updates") }
+            if newValue && !hasStarted { Log.debug(typeName(and: #function) + "= false: LDClient has not been started") }
+            if newValue && runMode == .background && !config.enableBackgroundUpdates { Log.debug(typeName(and: #function) + "= false: LDConfig background updates not enabled") }
             _isOnline = hasStarted && newValue && (runMode != .background || config.enableBackgroundUpdates)
-            if newValue == _isOnline { Log.debug(typeName(and: #function) + ": \(_isOnline)") }
+            if newValue == _isOnline { Log.debug(typeName(and: #function, appending: ": ") + "\(_isOnline)") }
         }
         get { return _isOnline }
     }
@@ -110,7 +110,7 @@ public class LDClient {
     ///Call this before you want to capture feature flags. The LDClient will not go online until you call this method.
     ///Subsequent calls to this method cause the LDClient to go offline, reconfigure using the new config & user (if supplied), and then go online if it was online when start was called
     public func start(mobileKey: String, config: LDConfig? = nil, user: LDUser? = nil) {
-        Log.debug(typeName(and: #function) + "starting")
+        Log.debug(typeName(and: #function, appending: ": ") + "starting")
         let wasStarted = hasStarted
         let wasOnline = isOnline
         hasStarted = true
@@ -122,18 +122,18 @@ public class LDClient {
         self.user = user ?? self.user
 
         self.isOnline = (wasStarted && wasOnline) || (!wasStarted && self.config.startOnline)
-        Log.debug(typeName(and: #function) + "started")
+        Log.debug(typeName(and: #function, appending: ": ") + "started")
     }
 
     private func effectiveStreamingMode(runMode: LDClientRunMode) -> LDStreamingMode {
         let streamingMode: LDStreamingMode = runMode == .foreground && self.config.streamingMode == .streaming ? .streaming : .polling
-        Log.debug(typeName(and: #function) + ": \(streamingMode)")
+        Log.debug(typeName(and: #function, appending: ": ") + "\(streamingMode)")
         return streamingMode
     }
 
     private var effectiveRunMode: LDClientRunMode {
         let effectiveMode = config.enableBackgroundUpdates ? runMode : .foreground
-        Log.debug(typeName(and: #function) + ": \(effectiveMode)")
+        Log.debug(typeName(and: #function, appending: ": ") + "\(effectiveMode)")
         return effectiveMode
     }
 
@@ -142,10 +142,10 @@ public class LDClient {
     ///     LDClient.shared.stop()
     ///After the client has stopped, variation requests will be answered with the last received feature flags.
     public func stop() {
-        Log.debug(typeName(and: #function) + "stopping")
+        Log.debug(typeName(and: #function, appending: ": ") + "stopping")
         isOnline = false
         hasStarted = false
-        Log.debug(typeName(and: #function) + "stopped")
+        Log.debug(typeName(and: #function, appending: ": ") + "stopped")
     }
     
     /* Event tracking
@@ -292,12 +292,13 @@ eventReporter.record(LDEvent.flagRequestEvent(key: key, user: user, value: value
     ///Removes all observers for the given owner, including the flagsUnchangedObserver
     public func stopObserving(owner: LDFlagChangeOwner) {
         flagChangeNotifier.removeObserver(owner: owner)
-    }
+        Log.debug(typeName(and: #function, appending: ": "))    //TODO: + (onFlagsUnchanged == nil ? "<nil>" : "set"))
+        }
 
     ///Called if the client is unable to contact the server
     public var onServerUnavailable: (() -> Void)? = nil {
         didSet {
-            Log.debug(typeName(and: #function) + (onServerUnavailable == nil ? "<nil>" : "set"))
+            Log.debug(typeName(and: #function, appending: ": ") + (onServerUnavailable == nil ? "<nil>" : "set"))
         }
     }
 
@@ -367,7 +368,7 @@ eventReporter.record(LDEvent.flagRequestEvent(key: key, user: user, value: value
                                                                useReport: config.useReport,
                                                                service: service,
                                                                onSyncComplete: nil)
-        eventReporter = serviceFactory.makeEventReporter(mobileKey: "", config: config, service: service)
+        eventReporter = serviceFactory.makeEventReporter(config: config, service: service)
     }
 
     private convenience init(serviceFactory: ClientServiceCreating, runMode: LDClientRunMode) {
@@ -384,7 +385,7 @@ eventReporter.record(LDEvent.flagRequestEvent(key: key, user: user, value: value
                                                                     useReport: config.useReport,
                                                                     service: service,
                                                                     onSyncComplete: nil)
-        eventReporter = serviceFactory.makeEventReporter(mobileKey: "", config: config, service: service)
+        eventReporter = serviceFactory.makeEventReporter(config: config, service: service)
     }
 }
 

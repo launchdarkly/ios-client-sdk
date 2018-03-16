@@ -55,8 +55,8 @@ final class FlagCollectionCache: FlagCollectionCaching {
 extension Dictionary where Key == String, Value == CacheableUserFlags {
     fileprivate mutating func removeOldest() {
         guard !self.isEmpty else { return }
-        guard let oldestPair = self.max(by: { (pair1, pair2) -> Bool in pair1.value.lastUpdated > pair2.value.lastUpdated })
-        else { return }
+        guard let oldestPair = self.max(by: { (pair1, pair2) -> Bool in pair1.value.lastUpdated > pair2.value.lastUpdated }) else { return }
+        Log.debug("FlagCollectionCache.storeFlags(flags:) " + "cache is full, removing: " + oldestPair.key)
         self.removeValue(forKey: oldestPair.key)
     }
 
@@ -64,6 +64,8 @@ extension Dictionary where Key == String, Value == CacheableUserFlags {
         return self.mapValues { (userFlags) in userFlags.dictionaryValue }
     }
 }
+
+extension FlagCollectionCache: TypeIdentifying { }
 
 // MARK: - Test Support
 #if DEBUG

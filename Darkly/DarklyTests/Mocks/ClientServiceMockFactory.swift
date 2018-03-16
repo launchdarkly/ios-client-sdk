@@ -64,7 +64,7 @@ struct ClientServiceMockFactory: ClientServiceCreating {
         return FlagChangeNotifyingMock()
     }
 
-    func makeEventReporter(mobileKey: String, config: LDConfig, service: DarklyServiceProvider) -> LDEventReporting {
+    func makeEventReporter(config: LDConfig, service: DarklyServiceProvider) -> LDEventReporting {
         let reporterMock = LDEventReportingMock()
         reporterMock.config = config
         return reporterMock

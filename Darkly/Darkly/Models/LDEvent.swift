@@ -36,14 +36,17 @@ struct LDEvent { //sdk internal, not publically accessible
     }
 
     static func flagRequestEvent(key: String, user: LDUser, value: Any?, defaultValue: Any?) -> LDEvent {
+        Log.debug(typeName(and: #function) + "key: " + key + " value: \(String(describing: value)) " + "fallback: \(String(describing: defaultValue))")
         return LDEvent(key: key, kind: .flagRequest, user: user, value: value, defaultValue: defaultValue)
     }
 
     static func customEvent(key: String, user: LDUser, data: [String: Any]? = nil) -> LDEvent {
+        Log.debug(typeName(and: #function) + "key: " + key + " data: \(String(describing: data))")
         return LDEvent(key: key, kind: .custom, user: user, data: data)
     }
 
     static func identifyEvent(user: LDUser) -> LDEvent {
+        Log.debug(typeName(and: #function) + "key: " + user.key)
         return LDEvent(key: user.key, kind: .identify, user: user)
     }
 
@@ -93,3 +96,5 @@ extension Dictionary where Key == String, Value == Any {
 extension LDEvent: Equatable {
     static func == (lhs: LDEvent, rhs: LDEvent) -> Bool { return lhs.key == rhs.key && lhs.creationDate == rhs.creationDate }
 }
+
+extension LDEvent: TypeIdentifying { }

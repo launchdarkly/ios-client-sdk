@@ -16,7 +16,6 @@ final class LDEventReporterSpec: QuickSpec {
         static let eventCapacity = 3
         static let eventFlushIntervalMillis = 10_000
         static let eventFlushInterval500Millis = 500
-        static let mockMobileKey = "mockMobileKey"
     }
     
     var subject: LDEventReporter!
@@ -31,7 +30,7 @@ final class LDEventReporterSpec: QuickSpec {
 
         user = LDUser.stub()
         
-        subject = LDEventReporter(mobileKey: Constants.mockMobileKey, config: config, service: mockService)
+        subject = LDEventReporter(config: config, service: mockService)
         waitUntil { done in
             self.recordEvents(eventCount, completion: done)
         }

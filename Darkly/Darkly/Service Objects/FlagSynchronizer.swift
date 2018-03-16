@@ -62,6 +62,7 @@ class FlagSynchronizer: LDFlagSynchronizing {
     
     var isOnline: Bool = false {
         didSet {
+            Log.debug(typeName(and: #function, appending: ": ") + "\(isOnline)")
             configureCommunications()
         }
     }
@@ -73,6 +74,7 @@ class FlagSynchronizer: LDFlagSynchronizing {
     var pollingActive: Bool { return flagRequestTimer != nil }
     
     init(streamingMode: LDStreamingMode, pollingInterval: TimeInterval, useReport: Bool, service: DarklyServiceProvider, onSyncComplete: SyncCompleteClosure?) {
+        Log.debug(FlagSynchronizer.typeName(and: #function) + "streamingMode: \(streamingMode) " + "pollingInterval: \(pollingInterval) " + "useReport: \(useReport)")
         self.streamingMode = streamingMode
         self.pollingInterval = pollingInterval
         self.useReport = useReport
@@ -105,6 +107,7 @@ class FlagSynchronizer: LDFlagSynchronizing {
             streamingMode == .streaming,
             !streamingActive
         else { return }
+        Log.debug(typeName(and: #function))
         eventSource = service.createEventSource(useReport: useReport)  //The LDConfig.connectionTimeout should NOT be set here. Heartbeat is sent every 3m. ES default timeout is 5m. This is an async operation.
         //LDEventSource waits 1s before attempting the connection, providing time to set handlers.
         //LDEventSource reacts to connection errors by closing the connection and establishing a new one after an exponentially increasing wait. That makes it self healing.
@@ -119,6 +122,7 @@ class FlagSynchronizer: LDFlagSynchronizing {
     
     private func stopEventSource() {
         guard streamingActive else { return }
+        Log.debug(typeName(and: #function))
         eventSource?.close() //This is an async operation.
         eventSource = nil
     }
@@ -184,9 +188,14 @@ class FlagSynchronizer: LDFlagSynchronizing {
     // MARK: Flag Request
     
     private func makeFlagRequest() {
-        guard isOnline else { return }
+        guard isOnline else {
+            Log.debug(typeName(and: #function) + "aborted: offline")
+            return
+        }
+        Log.debug(typeName(and: #function, appending: ": ") + "starting")
         service.getFeatureFlags(useReport: useReport, completion: { serviceResponse in
             if self.shouldRetryFlagRequest(useReport: self.useReport, statusCode: (serviceResponse.urlResponse as? HTTPURLResponse)?.statusCode) {
+                Log.debug(self.typeName(and: #function, appending: ": ") + "retrying via GET")
                 self.service.getFeatureFlags(useReport: false, completion: { (retryServiceResponse) in
                     self.processFlagResponse(serviceResponse: retryServiceResponse)
                 })
@@ -222,6 +231,7 @@ class FlagSynchronizer: LDFlagSynchronizing {
     }
 
     private func reportSuccess(flagDictionary: [String: Any], eventType: DarklyEventSource.LDEvent.EventType?) {
+        Log.debug(typeName(and: #function) + "flagDictionary: \(flagDictionary)" + (eventType == nil ? "" : "eventType: \(String(describing: eventType))"))
         guard let onSyncComplete = self.onSyncComplete else { return }
         DispatchQueue.main.async {
             onSyncComplete(.success(flagDictionary, self.streamingActive ? eventType : nil))
@@ -229,6 +239,7 @@ class FlagSynchronizer: LDFlagSynchronizing {
     }
     
     private func report(_ error: Error) {
+        Log.debug(typeName(and: #function) + "error: \(error)")
         guard let onSyncComplete = self.onSyncComplete else { return }
         DispatchQueue.main.async {
             onSyncComplete(.error(.request(error)))
@@ -236,6 +247,7 @@ class FlagSynchronizer: LDFlagSynchronizing {
     }
     
     private func report(_ response: URLResponse?) {
+        Log.debug(typeName(and: #function) + "response: \(String(describing: response))")
         guard let onSyncComplete = self.onSyncComplete else { return }
         DispatchQueue.main.async {
             onSyncComplete(.error(.response(response)))
@@ -243,6 +255,7 @@ class FlagSynchronizer: LDFlagSynchronizing {
     }
     
     private func reportDataError(_ data: Data?) {
+        Log.debug(typeName(and: #function) + "data: \(String(describing: data))")
         guard let onSyncComplete = self.onSyncComplete else { return }
         DispatchQueue.main.async {
             onSyncComplete(.error(.data(data)))
@@ -250,6 +263,7 @@ class FlagSynchronizer: LDFlagSynchronizing {
     }
 
     private func reportEventError(_ event: DarklyEventSource.LDEvent) {
+        Log.debug(typeName(and: #function) + "event: \(event)")
         guard let onSyncComplete = self.onSyncComplete else { return }
         DispatchQueue.main.async {
             onSyncComplete(.error(.event(event)))
@@ -262,3 +276,5 @@ class FlagSynchronizer: LDFlagSynchronizing {
         stopPolling()
     }
 }
+
+extension FlagSynchronizer: TypeIdentifying { }
