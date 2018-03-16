@@ -63,7 +63,7 @@
 }
 
 - (void)setCapacity:(NSNumber *)capacity {
-    if (capacity) {
+    if (capacity != nil) {
         DEBUG_LOG(@"Set LDConfig capacity: %@", capacity);
         _capacity = capacity;
     } else {
@@ -73,7 +73,7 @@
 }
 
 - (void)setConnectionTimeout:(NSNumber *)connectionTimeout {
-    if (connectionTimeout) {
+    if (connectionTimeout != nil) {
         DEBUG_LOG(@"Set LDConfig timeout: %@", connectionTimeout);
         _connectionTimeout = connectionTimeout;
     } else {
@@ -83,7 +83,7 @@
 }
 
 - (void)setFlushInterval:(NSNumber *)flushInterval {
-    if (flushInterval) {
+    if (flushInterval != nil) {
         DEBUG_LOG(@"Set LDConfig flush interval: %@", flushInterval);
         _flushInterval = flushInterval;
     } else {
@@ -93,7 +93,7 @@
 }
 
 - (void)setPollingInterval:(NSNumber *)pollingInterval {
-    if (pollingInterval) {
+    if (pollingInterval != nil) {
         DEBUG_LOG(@"Set LDConfig polling interval: %@", pollingInterval);
         _pollingInterval = [NSNumber numberWithInt:MAX(pollingInterval.intValue, kMinimumPollingInterval)];
     } else {
@@ -103,7 +103,7 @@
 }
 
 - (void)setBackgroundFetchInterval:(NSNumber *)backgroundFetchInterval {
-    if (backgroundFetchInterval) {
+    if (backgroundFetchInterval != nil) {
         DEBUG_LOG(@"Set LDConfig background fetch interval: %@", backgroundFetchInterval);
         _backgroundFetchInterval = backgroundFetchInterval;
     } else {

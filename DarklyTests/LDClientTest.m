@@ -12,11 +12,14 @@
 #import "LDPollingManager.h"
 #import "LDUserBuilder+Testable.h"
 #import "LDClient+Testable.h"
+#import "NSJSONSerialization+Testable.h"
 
 #import "OCMock.h"
 #import <OHHTTPStubs/OHHTTPStubs.h>
 
 typedef void(^MockLDClientDelegateCallbackBlock)(void);
+
+extern NSString * _Nonnull  const kLDFlagConfigJsonDictionaryKeyValue;
 
 @interface MockLDClientDelegate : NSObject <ClientDelegate>
 @property (nonatomic, assign) NSInteger userDidUpdateCallCount;
@@ -147,7 +150,7 @@ NSString *const kTestMobileKey = @"testMobileKey";
     LDConfig *clientConfig = [[LDConfig alloc] initWithMobileKey:kTestMobileKey];
     LDUserBuilder *userBuilder = [LDUserBuilder userBuilderWithKey:[[NSUUID UUID] UUIDString]];
 
-    LDFlagConfigModel *flags = [LDFlagConfigModel flagConfigFromJsonFileNamed:@"boolConfigIsABool-true"];
+    LDFlagConfigModel *flags = [LDFlagConfigModel flagConfigFromJsonFileNamed:@"boolConfigIsABool-true-withVersion"];
 
     BOOL clientStarted = [[LDClient sharedInstance] start:clientConfig withUserBuilder:userBuilder];
     XCTAssertTrue(clientStarted);
@@ -190,7 +193,7 @@ NSString *const kTestMobileKey = @"testMobileKey";
     LDConfig *clientConfig = [[LDConfig alloc] initWithMobileKey:kTestMobileKey];
     LDUserBuilder *userBuilder = [LDUserBuilder userBuilderWithKey:[[NSUUID UUID] UUIDString]];
 
-    LDFlagConfigModel *flags = [LDFlagConfigModel flagConfigFromJsonFileNamed:@"stringConfigIsAString-someString"];
+    LDFlagConfigModel *flags = [LDFlagConfigModel flagConfigFromJsonFileNamed:@"stringConfigIsAString-someString-withVersion"];
 
     BOOL clientStarted = [[LDClient sharedInstance] start:clientConfig withUserBuilder:userBuilder];
     XCTAssertTrue(clientStarted);
@@ -205,7 +208,7 @@ NSString *const kTestMobileKey = @"testMobileKey";
     LDConfig *clientConfig = [[LDConfig alloc] initWithMobileKey:kTestMobileKey];
     LDUserBuilder *userBuilder = [LDUserBuilder userBuilderWithKey:[[NSUUID UUID] UUIDString]];
 
-    LDFlagConfigModel *flags = [LDFlagConfigModel flagConfigFromJsonFileNamed:@"stringConfigIsAString-someString"];
+    LDFlagConfigModel *flags = [LDFlagConfigModel flagConfigFromJsonFileNamed:@"stringConfigIsAString-someString-withVersion"];
 
     BOOL clientStarted = [[LDClient sharedInstance] start:clientConfig withUserBuilder:userBuilder];
     XCTAssertTrue(clientStarted);
@@ -230,7 +233,7 @@ NSString *const kTestMobileKey = @"testMobileKey";
     LDConfig *clientConfig = [[LDConfig alloc] initWithMobileKey:kTestMobileKey];
     LDUserBuilder *userBuilder = [LDUserBuilder userBuilderWithKey:[[NSUUID UUID] UUIDString]];
 
-    LDFlagConfigModel *flags = [LDFlagConfigModel flagConfigFromJsonFileNamed:@"numberConfigIsANumber-2"];
+    LDFlagConfigModel *flags = [LDFlagConfigModel flagConfigFromJsonFileNamed:@"numberConfigIsANumber-2-withVersion"];
 
     BOOL clientStarted = [[LDClient sharedInstance] start:clientConfig withUserBuilder:userBuilder];
     XCTAssertTrue(clientStarted);
@@ -245,7 +248,7 @@ NSString *const kTestMobileKey = @"testMobileKey";
     LDConfig *clientConfig = [[LDConfig alloc] initWithMobileKey:kTestMobileKey];
     LDUserBuilder *userBuilder = [LDUserBuilder userBuilderWithKey:[[NSUUID UUID] UUIDString]];
 
-    LDFlagConfigModel *flags = [LDFlagConfigModel flagConfigFromJsonFileNamed:@"numberConfigIsANumber-2"];
+    LDFlagConfigModel *flags = [LDFlagConfigModel flagConfigFromJsonFileNamed:@"numberConfigIsANumber-2-withVersion"];
 
     BOOL clientStarted = [[LDClient sharedInstance] start:clientConfig withUserBuilder:userBuilder];
     XCTAssertTrue(clientStarted);
@@ -268,8 +271,8 @@ NSString *const kTestMobileKey = @"testMobileKey";
 
 - (void)testDoubleVariationWithConfig {
     NSString *targetKey = @"isADouble";
-    NSString *jsonFileName = @"doubleConfigIsADouble-Pi";
-    double target = [[self objectFromJsonFileNamed:jsonFileName key:targetKey] doubleValue];
+    NSString *jsonFileName = @"doubleConfigIsADouble-Pi-withVersion";
+    double target = [[self valueFromJsonFileNamed:jsonFileName key:targetKey] doubleValue];
     
     LDConfig *clientConfig = [[LDConfig alloc] initWithMobileKey:kTestMobileKey];
     LDUserBuilder *userBuilder = [LDUserBuilder userBuilderWithKey:[[NSUUID UUID] UUIDString]];
@@ -290,7 +293,7 @@ NSString *const kTestMobileKey = @"testMobileKey";
     LDConfig *clientConfig = [[LDConfig alloc] initWithMobileKey:kTestMobileKey];
     LDUserBuilder *userBuilder = [LDUserBuilder userBuilderWithKey:[[NSUUID UUID] UUIDString]];
 
-    LDFlagConfigModel *flags = [LDFlagConfigModel flagConfigFromJsonFileNamed:@"doubleConfigIsADouble-Pi"];
+    LDFlagConfigModel *flags = [LDFlagConfigModel flagConfigFromJsonFileNamed:@"doubleConfigIsADouble-Pi-withVersion"];
 
     BOOL clientStarted = [[LDClient sharedInstance] start:clientConfig withUserBuilder:userBuilder];
     XCTAssertTrue(clientStarted);
@@ -315,10 +318,10 @@ NSString *const kTestMobileKey = @"testMobileKey";
 
 - (void)testArrayVariationWithConfig {
     NSString *targetKey = @"isAnArray";
-    NSString *jsonFileName = @"arrayConfigIsAnArray-123";
+    NSString *jsonFileName = @"arrayConfigIsAnArray-123-withVersion";
 
     NSArray *fallbackArray = @[@1, @2];
-    NSArray *targetArray = [self objectFromJsonFileNamed:jsonFileName key:targetKey];
+    NSArray *targetArray = [self valueFromJsonFileNamed:jsonFileName key:targetKey];
     XCTAssertFalse([targetArray isEqualToArray:fallbackArray]);
 
     LDConfig *clientConfig = [[LDConfig alloc] initWithMobileKey:kTestMobileKey];
@@ -342,7 +345,7 @@ NSString *const kTestMobileKey = @"testMobileKey";
     LDConfig *clientConfig = [[LDConfig alloc] initWithMobileKey:kTestMobileKey];
     LDUserBuilder *userBuilder = [LDUserBuilder userBuilderWithKey:[[NSUUID UUID] UUIDString]];
 
-    LDFlagConfigModel *flags = [LDFlagConfigModel flagConfigFromJsonFileNamed:@"arrayConfigIsAnArray-123"];
+    LDFlagConfigModel *flags = [LDFlagConfigModel flagConfigFromJsonFileNamed:@"arrayConfigIsAnArray-123-withVersion"];
 
     BOOL clientStarted = [[LDClient sharedInstance] start:clientConfig withUserBuilder:userBuilder];
     XCTAssertTrue(clientStarted);
@@ -368,10 +371,10 @@ NSString *const kTestMobileKey = @"testMobileKey";
 
 - (void)testDictionaryVariationWithConfig {
     NSString *targetKey = @"isADictionary";
-    NSString *jsonFileName = @"dictionaryConfigIsADictionary-3Key";
+    NSString *jsonFileName = @"dictionaryConfigIsADictionary-3Key-withVersion";
 
     NSDictionary *fallback = @{@"key1": @"value1", @"key2": @[@1, @2]};
-    NSDictionary *target = [self objectFromJsonFileNamed:jsonFileName key:targetKey];
+    NSDictionary *target = [self valueFromJsonFileNamed:jsonFileName key:targetKey];
     XCTAssertFalse([target isEqualToDictionary:fallback]);
 
     LDConfig *clientConfig = [[LDConfig alloc] initWithMobileKey:kTestMobileKey];
@@ -394,7 +397,7 @@ NSString *const kTestMobileKey = @"testMobileKey";
     LDConfig *clientConfig = [[LDConfig alloc] initWithMobileKey:kTestMobileKey];
     LDUserBuilder *userBuilder = [LDUserBuilder userBuilderWithKey:[[NSUUID UUID] UUIDString]];
 
-    LDFlagConfigModel *flags = [LDFlagConfigModel flagConfigFromJsonFileNamed:@"dictionaryConfigIsADictionary-3Key"];
+    LDFlagConfigModel *flags = [LDFlagConfigModel flagConfigFromJsonFileNamed:@"dictionaryConfigIsADictionary-3Key-withVersion"];
 
     BOOL clientStarted = [[LDClient sharedInstance] start:clientConfig withUserBuilder:userBuilder];
     XCTAssertTrue(clientStarted);
@@ -630,11 +633,11 @@ NSString *const kTestMobileKey = @"testMobileKey";
 
 #pragma mark - Helpers
 - (id)objectFromJsonFileNamed:(NSString*)jsonFileName key:(NSString*)key {
-    NSString *filepath = [[NSBundle bundleForClass:[LDClientTest class]] pathForResource: jsonFileName
-                                                                                  ofType:@"json"];
-    NSData *configData = [NSData dataWithContentsOfFile:filepath];
-    NSError *error;
-    NSDictionary *jsonDictionary = [NSJSONSerialization JSONObjectWithData:configData options:0 error:&error];
+    NSDictionary *jsonDictionary = [NSJSONSerialization jsonObjectFromFileNamed:jsonFileName];
     return jsonDictionary[key];
+}
+
+- (id)valueFromJsonFileNamed:(NSString*)jsonFileName key:(NSString*)key {
+    return [self objectFromJsonFileNamed:jsonFileName key:key][kLDFlagConfigJsonDictionaryKeyValue];
 }
 @end

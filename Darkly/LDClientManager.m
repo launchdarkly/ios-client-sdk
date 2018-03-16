@@ -12,6 +12,9 @@
 #import "NSDictionary+JSON.h"
 #import <DarklyEventSource/LDEventSource.h>
 #import "LDEvent+Unauthorized.h"
+#import "LDEvent+EventTypes.h"
+
+NSString * const kLDClientManagerStreamMethod = @"meval";
 
 @interface LDClientManager()
 
@@ -135,11 +138,14 @@
             DEBUG_LOGX(@"ClientManager aborting event source creation - event source running");
             return;
         }
-        eventSource = [LDEventSource eventSourceWithURL:[NSURL URLWithString:[LDClient sharedInstance].ldConfig.streamUrl] httpHeaders:[self httpHeadersForEventSource]];
-        
+
+        eventSource = [self eventSourceForUser:[LDClient sharedInstance].ldUser config:[LDClient sharedInstance].ldConfig httpHeaders:[self httpHeadersForEventSource]];
+
         [eventSource onMessage:^(LDEvent *event) {
-            if (![event.event isEqualToString:@"ping"]) { return; }
-            [self syncWithServerForConfig];
+            [self handlePingEvent:event];
+            [self handlePutEvent:event];
+            [self handlePatchEvent:event];
+            [self handleDeleteEvent:event];
         }];
 
         [eventSource onError:^(LDEvent *event) {
@@ -148,6 +154,126 @@
             [[NSNotificationCenter defaultCenter] postNotificationName:kLDClientUnauthorizedNotification object:nil];
         }];
     }
+}
+
+- (LDEventSource*)eventSourceForUser:(LDUserModel*)user config:(LDConfig*)config httpHeaders:(NSDictionary*)httpHeaders {
+    LDEventSource *eventSource;
+    if (config.useReport) {
+        eventSource = [LDEventSource eventSourceWithURL:[self eventSourceUrlForUser:user config:config]
+                                            httpHeaders:httpHeaders
+                                          connectMethod:kHTTPMethodReport
+                                            connectBody:[[[user dictionaryValueWithPrivateAttributesAndFlagConfig:NO] jsonString] dataUsingEncoding:NSUTF8StringEncoding]];
+    } else {
+        eventSource = [LDEventSource eventSourceWithURL:[self eventSourceUrlForUser:user config:config] httpHeaders:httpHeaders connectMethod:nil connectBody:nil];
+    }
+    return eventSource;
+}
+
+- (NSURL*)eventSourceUrlForUser:(LDUserModel *)user config:(LDConfig*)config {
+    NSString *eventStreamUrl = [config.streamUrl stringByAppendingPathComponent:kLDClientManagerStreamMethod];
+    if (!config.useReport) {
+        NSString *encodedUser = [LDUtil base64UrlEncodeString:[[user dictionaryValueWithPrivateAttributesAndFlagConfig:NO] jsonString]];
+        eventStreamUrl = [eventStreamUrl stringByAppendingPathComponent:encodedUser];
+    }
+    return [NSURL URLWithString:eventStreamUrl];
+}
+
+- (void)handlePingEvent:(LDEvent*)event {
+    if (![event.event isEqualToString:kLDEventTypePing]) { return; }
+    [self syncWithServerForConfig];
+}
+
+- (void)handlePutEvent:(LDEvent*)event {
+    if (![event.event isEqualToString:kLDEventTypePut]) { return; }
+    if (event.data.length == 0) {
+        DEBUG_LOGX(@"ClientManager aborted handlePutEvent - event contains no data");
+        [[NSNotificationCenter defaultCenter] postNotificationName:kLDUserNoChangeNotification object:nil];
+        return;
+    }
+    NSDictionary *newConfigDictionary = [NSJSONSerialization JSONObjectWithData:[event.data dataUsingEncoding:NSUTF8StringEncoding] options:kNilOptions error:nil];
+    if (!newConfigDictionary) {
+        DEBUG_LOGX(@"ClientManager aborted handlePutEvent - event contains json data could not be read");
+        [[NSNotificationCenter defaultCenter] postNotificationName:kLDUserNoChangeNotification object:nil];
+        return;
+    }
+
+    LDFlagConfigModel *newConfig = [[LDFlagConfigModel alloc] initWithDictionary:newConfigDictionary];
+    LDUserModel *user = [[LDClient sharedInstance] ldUser];
+
+    if ([user.config isEqualToConfig:newConfig]) {
+        DEBUG_LOGX(@"ClientManager handlePutEvent resulted in no change to the flag config");
+        [[NSNotificationCenter defaultCenter] postNotificationName:kLDUserNoChangeNotification object:nil];
+        return;
+    }
+
+    user.config = newConfig;
+    [[LDDataManager sharedManager] saveUser:user];
+    [[NSNotificationCenter defaultCenter] postNotificationName:kLDUserUpdatedNotification object:nil];
+    DEBUG_LOGX(@"ClientManager posted Darkly.UserUpdatedNotification following user config update from SSE put event");
+}
+
+- (void)handlePatchEvent:(LDEvent*)event {
+    if (![event.event isEqualToString:kLDEventTypePatch]) { return; }
+    if (event.data.length == 0) {
+        DEBUG_LOGX(@"ClientManager aborted handlePatchEvent - event contains no data");
+        [[NSNotificationCenter defaultCenter] postNotificationName:kLDUserNoChangeNotification object:nil];
+        return;
+    }
+    NSDictionary *patchDictionary = [NSJSONSerialization JSONObjectWithData:[event.data dataUsingEncoding:NSUTF8StringEncoding] options:kNilOptions error:nil];
+    if (!patchDictionary) {
+        DEBUG_LOGX(@"ClientManager aborted handlePatchEvent - event json data could not be read");
+        [[NSNotificationCenter defaultCenter] postNotificationName:kLDUserNoChangeNotification object:nil];
+        return;
+    }
+
+    LDUserModel *user = [[LDClient sharedInstance] ldUser];
+    NSDictionary *originalFlagConfig = user.config.featuresJsonDictionary;
+
+    [user.config addOrReplaceFromDictionary:patchDictionary];
+
+    if ([user.config hasFeaturesEqualToDictionary:originalFlagConfig]) {
+        DEBUG_LOGX(@"ClientManager handlePatchEvent resulted in no change to the flag config");
+        [[NSNotificationCenter defaultCenter] postNotificationName:kLDUserNoChangeNotification object:nil];
+        return;
+    }
+
+    [[LDDataManager sharedManager] saveUser:user];
+    [[NSNotificationCenter defaultCenter] postNotificationName:kLDUserUpdatedNotification object:nil];
+    DEBUG_LOGX(@"ClientManager posted Darkly.UserUpdatedNotification following user config update from SSE patch event");
+}
+
+- (void)handleDeleteEvent:(LDEvent*)event {
+    if (![event.event isEqualToString:kLDEventTypeDelete]) { return; }
+    if (event.data.length == 0) {
+        DEBUG_LOGX(@"ClientManager aborted handleDeleteEvent - event contains no data");
+        [[NSNotificationCenter defaultCenter] postNotificationName:kLDUserNoChangeNotification object:nil];
+        return;
+    }
+    NSDictionary *deleteDictionary = [NSJSONSerialization JSONObjectWithData:[event.data dataUsingEncoding:NSUTF8StringEncoding] options:kNilOptions error:nil];
+    if (!deleteDictionary) {
+        DEBUG_LOGX(@"ClientManager aborted handleDeleteEvent - event json data could not be read");
+        [[NSNotificationCenter defaultCenter] postNotificationName:kLDUserNoChangeNotification object:nil];
+        return;
+    }
+
+    LDUserModel *user = [[LDClient sharedInstance] ldUser];
+    NSDictionary *originalFlagConfig = user.config.featuresJsonDictionary;
+
+    [user.config deleteFromDictionary:deleteDictionary];
+
+    if ([user.config hasFeaturesEqualToDictionary:originalFlagConfig]) {
+        DEBUG_LOGX(@"ClientManager handleDeleteEvent resulted in no change to the flag config");
+        [[NSNotificationCenter defaultCenter] postNotificationName:kLDUserNoChangeNotification object:nil];
+        return;
+    }
+
+    [[LDDataManager sharedManager] saveUser:user];
+    [[NSNotificationCenter defaultCenter] postNotificationName:kLDUserUpdatedNotification object:nil];
+    DEBUG_LOGX(@"ClientManager posted Darkly.UserUpdatedNotification following user config update from SSE delete event");
+}
+
+- (void)postClientUnauthorizedNotification {
+    [[NSNotificationCenter defaultCenter] postNotificationName:kLDClientUnauthorizedNotification object:nil];
 }
 
 - (void)stopEventSource {

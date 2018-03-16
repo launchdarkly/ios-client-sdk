@@ -42,6 +42,7 @@ extern NSString *const kLDFlagConfigChangedNotification;
 extern NSString *const kLDServerConnectionUnavailableNotification;
 extern NSString *const kLDClientUnauthorizedNotification;
 extern NSString *const kLDBackgroundFetchInitiated;
+extern NSString *const kHTTPMethodReport;
 extern int const kCapacity;
 extern int const kConnectionTimeout;
 extern int const kDefaultFlushInterval;

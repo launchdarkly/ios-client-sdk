@@ -1,3 +1,6 @@
 {
-    "isAStringA":"someString"
+    "isAStringA": {
+        "value": "someString",
+        "version": 3
+    }
 }

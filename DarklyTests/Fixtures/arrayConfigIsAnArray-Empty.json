@@ -1,3 +1,6 @@
 {
-    "isAnArray":[]
+    "isAnArray": {
+        "value": [],
+        "version": 3
+    }
 }

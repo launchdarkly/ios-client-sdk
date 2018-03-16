@@ -7,6 +7,7 @@
 #import "LDDataManager.h"
 #import "LDUserModel.h"
 #import "LDFlagConfigModel.h"
+#import "LDFlagConfigModel+Testable.h"
 #import "LDEventModel.h"
 #import "LDClient.h"
 #import "OCMock.h"
@@ -31,9 +32,7 @@
     user.email = @"bob@gmail.com";
     user.updatedAt = [NSDate date];
     
-    LDFlagConfigModel *config = [[LDFlagConfigModel alloc] init];
-    config.featuresJsonDictionary = [NSDictionary dictionaryWithObjects:@[@YES, @NO]
-                                                                forKeys: @[@"ipaduser", @"iosuser"]];
+    LDFlagConfigModel *config = [LDFlagConfigModel flagConfigFromJsonFileNamed:@"ldDataManagerTestConfig"];
     user.config = config;
 
     clientMock = OCMClassMock([LDClient class]);

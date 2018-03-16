@@ -14,7 +14,6 @@
 #import "LDConfig+Testable.h"
 #import "LDClient.h"
 
-static NSString *const httpMethodReport = @"REPORT";
 static NSString *const httpMethodGet = @"GET";
 static NSString *const testMobileKey = @"testMobileKey";
 static NSString *const emptyJson = @"{ }";
@@ -144,7 +143,7 @@ static const int httpStatusCodeInternalServerError = 500;
     LDConfig *config = [[LDConfig alloc] initWithMobileKey:testMobileKey];
     config.useReport = YES;
     
-    [self mockClientWithUser:[self mockUser] config:config];
+    self.ldClientMock = [self mockClientWithUser:[self mockUser] config:config];
     
     __block id requestManagerDelegateMock = [OCMockObject niceMockForProtocol:@protocol(RequestManagerDelegate)];
     [[requestManagerDelegateMock expect] processedConfig:YES jsonConfigDictionary:[OCMArg isKindOfClass:[NSDictionary class]]];
@@ -154,14 +153,14 @@ static const int httpStatusCodeInternalServerError = 500;
     __weak XCTestExpectation *responseArrived = [self expectationWithDescription:@"feature flag response arrived"];
     
     [OHHTTPStubs stubRequestsPassingTest:^BOOL(NSURLRequest *request) {
-        return [request.URL.host isEqualToString:flagRequestHost] && [request.HTTPMethod isEqualToString:httpMethodReport];
+        return [request.URL.host isEqualToString:flagRequestHost] && [request.HTTPMethod isEqualToString:kHTTPMethodReport];
     } withStubResponse:^OHHTTPStubsResponse*(NSURLRequest *request) {
         [reportRequestMade fulfill];
         return [OHHTTPStubsResponse responseWithData: [self successJsonData] statusCode:httpStatusCodeOk headers:[self headerForStatusCode:httpStatusCodeOk]];
     }];
     
     [OHHTTPStubs onStubActivation:^(NSURLRequest * _Nonnull request, id<OHHTTPStubsDescriptor>  _Nonnull stub) {
-        XCTAssertTrue([request.HTTPMethod isEqualToString:httpMethodReport]);
+        XCTAssertTrue([request.HTTPMethod isEqualToString:kHTTPMethodReport]);
         [responseArrived fulfill];
     }];
     
@@ -185,7 +184,7 @@ static const int httpStatusCodeInternalServerError = 500;
     [LDRequestManager sharedInstance].delegate = requestManagerDelegateMock;
 
     [OHHTTPStubs stubRequestsPassingTest:^BOOL(NSURLRequest *request) {
-        return [request.URL.host isEqualToString:flagRequestHost] && [request.HTTPMethod isEqualToString:httpMethodReport];
+        return [request.URL.host isEqualToString:flagRequestHost] && [request.HTTPMethod isEqualToString:kHTTPMethodReport];
     } withStubResponse:^OHHTTPStubsResponse*(NSURLRequest *request) {
         [reportRequestMade fulfill];
         return [OHHTTPStubsResponse responseWithData: [self invalidJsonData] statusCode:httpStatusCodeOk headers:[self headerForStatusCode:httpStatusCodeOk]];
@@ -202,7 +201,7 @@ static const int httpStatusCodeInternalServerError = 500;
     LDConfig *config = [[LDConfig alloc] initWithMobileKey:testMobileKey];
     config.useReport = YES;
     
-    [self mockClientWithUser:[self mockUser] config:config];
+    self.ldClientMock = [self mockClientWithUser:[self mockUser] config:config];
     
     NSArray<NSNumber*> *fallbackStatusCodes = [config flagRetryStatusCodes];
     XCTAssertNotNil(fallbackStatusCodes);
@@ -221,7 +220,7 @@ static const int httpStatusCodeInternalServerError = 500;
         [LDRequestManager sharedInstance].delegate = requestManagerDelegateMock;
 
         [OHHTTPStubs stubRequestsPassingTest:^BOOL(NSURLRequest *request) {
-            return [request.URL.host isEqualToString:flagRequestHost] && [request.HTTPMethod isEqualToString:httpMethodReport];
+            return [request.URL.host isEqualToString:flagRequestHost] && [request.HTTPMethod isEqualToString:kHTTPMethodReport];
         } withStubResponse:^OHHTTPStubsResponse*(NSURLRequest *request) {
             [reportRequestMade fulfill];
             return [OHHTTPStubsResponse responseWithData: [NSData data] statusCode:[fallbackStatusCode intValue] headers:[self headerForStatusCode:[fallbackStatusCode intValue]]];
@@ -268,7 +267,7 @@ static const int httpStatusCodeInternalServerError = 500;
         LDConfig *config = [[LDConfig alloc] initWithMobileKey:testMobileKey];
         config.useReport = YES;
         
-        [self mockClientWithUser:[self mockUser] config:config];
+        self.ldClientMock = [self mockClientWithUser:[self mockUser] config:config];
 
         NSString *reportStubName = @"report stub";
         NSString *getStubName = @"get stub";
@@ -281,7 +280,7 @@ static const int httpStatusCodeInternalServerError = 500;
         [LDRequestManager sharedInstance].delegate = requestManagerDelegateMock;
 
         [OHHTTPStubs stubRequestsPassingTest:^BOOL(NSURLRequest *request) {
-            return [request.URL.host isEqualToString:flagRequestHost] && [request.HTTPMethod isEqualToString:httpMethodReport];
+            return [request.URL.host isEqualToString:flagRequestHost] && [request.HTTPMethod isEqualToString:kHTTPMethodReport];
         } withStubResponse:^OHHTTPStubsResponse*(NSURLRequest *request) {
             [reportRequestMade fulfill];
             return [OHHTTPStubsResponse responseWithData: [NSData data] statusCode:[fallbackStatusCode intValue] headers:[self headerForStatusCode:[fallbackStatusCode intValue]]];
@@ -317,7 +316,7 @@ static const int httpStatusCodeInternalServerError = 500;
 }
 
 - (void)testPerformFeatureFlagRequestWithoutUser {
-    [self mockClientWithUser:nil config:[self testConfig]];
+    self.ldClientMock = [self mockClientWithUser:nil config:[self testConfig]];
     
     [self mockFlagResponse];
     

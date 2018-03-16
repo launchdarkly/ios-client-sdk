@@ -120,7 +120,7 @@
 
     NSDictionary *dictionaryConfig = dictionary[kUserAttributeConfig];
     if (includeConfig) {
-        NSDictionary *config = self.config.featuresJsonDictionary;
+        NSDictionary *config = [self.config dictionaryValueIncludeNulls:NO];
         if ( (config && ![config isEqual:dictionaryConfig]) || (!config && dictionaryConfig) ) {
             NSLog(matchingFailureReason, kUserAttributeConfig);
             return NO;
