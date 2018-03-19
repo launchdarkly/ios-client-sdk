@@ -58,7 +58,11 @@ final class FlagChangeNotifier: FlagChangeNotifying {
 
         let changedFlagKeys = findChangedFlagKeys(oldFlags: oldFlags, newFlags: user.flagStore.featureFlags)
         guard !changedFlagKeys.isEmpty else {
-            Log.debug(typeName(and: #function) + "notifying observers that flags are unchanged.")
+            var logMessage = "notifying observers that flags are unchanged."
+            if flagsUnchangedObservers.isEmpty {
+                logMessage = "aborted. Flags unchanged and no flagsUnchanged observers set."
+            }
+            Log.debug(typeName(and: #function) + logMessage)
             flagsUnchangedObservers.forEach { (flagsUnchangedObserver) in
                 if let flagsUnchangedHandler = flagsUnchangedObserver.flagsUnchangedHandler {
                     DispatchQueue.main.async {

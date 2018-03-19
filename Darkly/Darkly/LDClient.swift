@@ -26,8 +26,8 @@ public class LDClient {
     public var isOnline: Bool {
         set {
             var reason = ""
-            if newValue && !hasStarted { reason = " LDClient has not been started." }
-            if newValue && runMode == .background && !config.enableBackgroundUpdates { reason += " LDConfig background updates not enabled." }
+            if newValue && !hasStarted { reason = "LDClient not started." }
+            if reason.isEmpty && newValue && runMode == .background && !config.enableBackgroundUpdates { reason = "LDConfig background updates not enabled." }
             _isOnline = hasStarted && newValue && (runMode != .background || config.enableBackgroundUpdates)
             if newValue == _isOnline { Log.debug(typeName(and: #function, appending: ": ") + "\(_isOnline)" + reason) }
         }
@@ -42,7 +42,7 @@ public class LDClient {
     public var config = LDConfig() {
         didSet {
             guard config != oldValue else {
-                Log.debug(typeName(and: #function) + "aborted: new config matches old config")
+                Log.debug(typeName(and: #function) + "aborted. New config matches old config")
                 return
             }
 
@@ -143,10 +143,10 @@ public class LDClient {
     ///     LDClient.shared.stop()
     ///After the client has stopped, variation requests will be answered with the last received feature flags.
     public func stop() {
-        Log.debug(typeName(and: #function, appending: ": ") + "stopping")
+        Log.debug(typeName(and: #function, appending: "- ") + "stopping")
         isOnline = false
         hasStarted = false
-        Log.debug(typeName(and: #function, appending: ": ") + "stopped")
+        Log.debug(typeName(and: #function, appending: "- ") + "stopped")
     }
     
     /* Event tracking
@@ -159,7 +159,7 @@ public class LDClient {
     ///If the client is offline, the client stores the event until the app takes the client online, and the client has transmitted the event.
     public func trackEvent(key: String, data: [String: Any]? = nil) {
         guard hasStarted else {
-            Log.debug(typeName(and: #function) + "aborted: LDClient not started")
+            Log.debug(typeName(and: #function) + "aborted. LDClient not started")
             return
         }
         let event = LDEvent.customEvent(key: key, user: user, data: data)

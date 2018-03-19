@@ -83,12 +83,12 @@ final class FlagStore: FlagMaintaining {
                 let newValue = updateDictionary[FeatureFlag.CodingKeys.value.rawValue],
                 let newVersion = updateDictionary[FeatureFlag.CodingKeys.version.rawValue] as? Int
             else {
-                Log.debug(self.typeName(and: #function) + "aborted: malformed update dictionary. updateDictionary: \(String(describing: updateDictionary))")
+                Log.debug(self.typeName(and: #function) + "aborted. Malformed update dictionary. updateDictionary: \(String(describing: updateDictionary))")
                 return
             }
             guard self.isValidVersion(for: flagKey, newVersion: newVersion)
             else {
-                Log.debug(self.typeName(and: #function) + "aborted: invalid version. updateDictionary: \(String(describing: updateDictionary)) "
+                Log.debug(self.typeName(and: #function) + "aborted. Invalid version. updateDictionary: \(String(describing: updateDictionary)) "
                     + "existing flag: \(String(describing: self.featureFlags[flagKey]))")
                 return
             }

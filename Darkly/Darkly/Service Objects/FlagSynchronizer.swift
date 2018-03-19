@@ -219,19 +219,20 @@ class FlagSynchronizer: LDFlagSynchronizing {
     
     private func makeFlagRequest() {
         guard isOnline else {
-            Log.debug(typeName(and: #function) + "aborted: offline")
+            Log.debug(typeName(and: #function) + "aborted. Flag Synchronizer is offline.")
             return
         }
-        Log.debug(typeName(and: #function, appending: ": ") + "starting")
+        Log.debug(typeName(and: #function, appending: "- ") + "starting")
         service.getFeatureFlags(useReport: useReport, completion: { serviceResponse in
             if self.shouldRetryFlagRequest(useReport: self.useReport, statusCode: (serviceResponse.urlResponse as? HTTPURLResponse)?.statusCode) {
-                Log.debug(self.typeName(and: #function, appending: ": ") + "retrying via GET")
+                Log.debug(self.typeName(and: #function, appending: "- ") + "retrying via GET")
                 self.service.getFeatureFlags(useReport: false, completion: { (retryServiceResponse) in
                     self.processFlagResponse(serviceResponse: retryServiceResponse)
                 })
             } else {
                 self.processFlagResponse(serviceResponse: serviceResponse)
             }
+            Log.debug(self.typeName(and: #function, appending: "- ") + "complete")
         })
     }
 

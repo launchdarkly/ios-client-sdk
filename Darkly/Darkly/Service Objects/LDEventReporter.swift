@@ -69,7 +69,7 @@ class LDEventReporter: LDEventReporting {
             }
             guard !self.isEventStoreFull
             else {
-                Log.debug(self.typeName(and: #function) + "aborted: event store is full")
+                Log.debug(self.typeName(and: #function) + "aborted. Event store is full")
                 return
             }
             self.eventStore.append(event.dictionaryValue(config: self.config))
@@ -97,11 +97,11 @@ class LDEventReporter: LDEventReporting {
     
     @objc func reportEvents() {
         guard isOnline && !eventStore.isEmpty else {
-            if !isOnline { Log.debug(typeName(and: #function) + "aborted: offline") }
-            else if eventStore.isEmpty { Log.debug(typeName(and: #function) + "aborted: event store is empty") }
+            if !isOnline { Log.debug(typeName(and: #function) + "aborted. EventReporter is offline") }
+            else if eventStore.isEmpty { Log.debug(typeName(and: #function) + "aborted. Event store is empty") }
             return
         }
-        Log.debug(typeName(and: #function, appending: ": ") + "starting")
+        Log.debug(typeName(and: #function, appending: "- ") + "starting")
         let reportedEventDictionaries = eventStore //this is async, so keep what we're reporting at this time for later use
         service.publishEventDictionaries(eventStore) { serviceResponse in
             self.processEventResponse(reportedEventDictionaries: reportedEventDictionaries, serviceResponse: serviceResponse)
