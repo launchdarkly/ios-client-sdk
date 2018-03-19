@@ -106,7 +106,14 @@ class FlagSynchronizer: LDFlagSynchronizing {
         guard isOnline,
             streamingMode == .streaming,
             !streamingActive
-        else { return }
+        else {
+            var reason = ""
+            if !isOnline { reason = "Flag Synchronizer is offline." }
+            if reason.isEmpty && streamingMode != .streaming { reason = "Flag synchronizer is not set for streaming." }
+            if reason.isEmpty && streamingActive { reason  = "Clientstream already connected." }
+            Log.debug(typeName(and: #function) + "aborted. " + reason)
+            return
+        }
         Log.debug(typeName(and: #function))
         eventSource = service.createEventSource(useReport: useReport)  //The LDConfig.connectionTimeout should NOT be set here. Heartbeat is sent every 3m. ES default timeout is 5m. This is an async operation.
         //LDEventSource waits 1s before attempting the connection, providing time to set handlers.
@@ -121,7 +128,10 @@ class FlagSynchronizer: LDFlagSynchronizing {
     }
     
     private func stopEventSource() {
-        guard streamingActive else { return }
+        guard streamingActive else {
+            Log.debug(typeName(and: #function) + "aborted. Clientstream is not connected.")
+            return
+        }
         Log.debug(typeName(and: #function))
         eventSource?.close() //This is an async operation.
         eventSource = nil
@@ -130,14 +140,22 @@ class FlagSynchronizer: LDFlagSynchronizing {
     private func process(_ event: DarklyEventSource.LDEvent?) {
         guard streamingActive,
             let event = event
-        else { return }    //Since eventSource.close() is async, this prevents responding to events after .close() is called, but before it's actually closed
+        else {
+            var reason = ""
+            if !streamingActive { reason = "Clientstream is not active." }
+            else { reason = "Event is nil." }
+            Log.debug(typeName(and: #function) + "aborted. " + reason)
+            return
+        }    //Since eventSource.close() is async, this prevents responding to events after .close() is called, but before it's actually closed
         //NOTE: It is possible that an LDEventSource was replaced and the event reported here is from the previous eventSource. However there is no information about the eventSource in the LDEvent to do anything about it.
         guard let eventDescription = event.event, !eventDescription.isEmpty
         else {
+            Log.debug(typeName(and: #function) + "aborted. Event Description is empty.")
             if event.error != nil { reportEventError(event) }
             return
         }
 
+        Log.debug(typeName(and: #function) + "event: \(event)")
         switch eventDescription {
         case DarklyEventSource.LDEvent.EventType.ping.rawValue: makeFlagRequest()
         case DarklyEventSource.LDEvent.EventType.put.rawValue: process(event, eventType: .put)
@@ -163,7 +181,15 @@ class FlagSynchronizer: LDFlagSynchronizing {
         guard isOnline,
             streamingMode == .polling,
             !pollingActive
-            else { return }
+            else {
+                var reason = ""
+                if !isOnline { reason = "Flag Synchronizer is offline." }
+                if reason.isEmpty && streamingMode != .polling { reason = "Flag synchronizer is not set for polling." }
+                if reason.isEmpty && pollingActive { reason  = "Polling already active." }
+                Log.debug(typeName(and: #function) + "aborted. " + reason)
+                return
+        }
+        Log.debug(typeName(and: #function))
         if #available(iOS 10.0, *) {
             flagRequestTimer = Timer.scheduledTimer(withTimeInterval: pollingInterval, repeats: true) { [weak self] (_) in self?.processTimer() }
         } else {
@@ -176,7 +202,11 @@ class FlagSynchronizer: LDFlagSynchronizing {
     }
     
     private func stopPolling() {
-        guard pollingActive else { return }
+        guard pollingActive else {
+            Log.debug(typeName(and: #function) + "aborted. Polling already inactive.")
+            return
+        }
+        Log.debug(typeName(and: #function))
         flagRequestTimer?.invalidate()
         flagRequestTimer = nil
     }

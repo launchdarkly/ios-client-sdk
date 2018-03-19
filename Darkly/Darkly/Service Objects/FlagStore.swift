@@ -62,8 +62,8 @@ final class FlagStore: FlagMaintaining {
         }
     }
 
-    ///updateDictionary should have the form
-    /* {
+    /* updateDictionary should have the form:
+       {
             "key": <flag-key>,
             "value": <new-flag-value>,
             "version": <new-flag-version>
@@ -100,6 +100,12 @@ final class FlagStore: FlagMaintaining {
         }
     }
     
+    /* deleteDictionary should have the form:
+        {
+            "key": <flag-key>,
+            "version": <new-flag-version>
+        }
+     */
     func deleteFlag(deleteDictionary: [String: Any], completion: CompletionClosure?) {
         flagQueue.async {
             defer {
@@ -113,12 +119,12 @@ final class FlagStore: FlagMaintaining {
                 let flagKey = deleteDictionary[Keys.flagKey] as? String,
                 let newVersion = deleteDictionary[FeatureFlag.CodingKeys.version.rawValue] as? Int
             else {
-                Log.debug(self.typeName(and: #function) + "aborted: malformed delete dictionary. deleteDictionary: \(String(describing: deleteDictionary))")
+                Log.debug(self.typeName(and: #function) + "aborted. Malformed delete dictionary. deleteDictionary: \(String(describing: deleteDictionary))")
                 return
             }
             guard self.isValidVersion(for: flagKey, newVersion: newVersion)
             else {
-                Log.debug(self.typeName(and: #function) + "aborted: invalid version. deleteDictionary: \(String(describing: deleteDictionary)) "
+                Log.debug(self.typeName(and: #function) + "aborted. Invalid version. deleteDictionary: \(String(describing: deleteDictionary)) "
                     + "existing flag: \(String(describing: self.featureFlags[flagKey]))")
                 return
             }

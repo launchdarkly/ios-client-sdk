@@ -25,25 +25,30 @@ final class FlagChangeNotifier: FlagChangeNotifying {
     private var flagsUnchangedObservers = [FlagsUnchangedObserver]()
     
     func addFlagChangeObserver(_ observer: FlagChangeObserver) {
+        Log.debug(typeName(and: #function) + "observer: \(observer)")
         flagChangeObservers.append(observer)
     }
     
     func addFlagsUnchangedObserver(_ observer: FlagsUnchangedObserver) {
+        Log.debug(typeName(and: #function) + "observer: \(observer)")
         flagsUnchangedObservers.append(observer)
     }
 
     ///Removes any change handling closures for flag.key from owner
     func removeObserver(_ key: LDFlagKey, owner: LDFlagChangeOwner) {
+        Log.debug(typeName(and: #function) + "key: \(key) owner: \(owner)")
         removeObserver([key], owner: owner)
     }
     
     ///Removes any change handling closures for flag keys from owner
     func removeObserver(_ keys: [LDFlagKey], owner: LDFlagChangeOwner) {
+        Log.debug(typeName(and: #function) + "keys: \(keys) owner: \(owner)")
         flagChangeObservers = flagChangeObservers.filter { (observer) in !(observer.flagKeys == keys && observer.owner === owner) }
     }
     
     ///Removes all change handling closures from owner
     func removeObserver(owner: LDFlagChangeOwner) {
+        Log.debug(typeName(and: #function) + "owner: \(owner)")
         flagChangeObservers = flagChangeObservers.filter { (observer) in observer.owner !== owner }
         flagsUnchangedObservers = flagsUnchangedObservers.filter { (observer) in observer.owner !== owner }
     }
@@ -53,6 +58,7 @@ final class FlagChangeNotifier: FlagChangeNotifying {
 
         let changedFlagKeys = findChangedFlagKeys(oldFlags: oldFlags, newFlags: user.flagStore.featureFlags)
         guard !changedFlagKeys.isEmpty else {
+            Log.debug(typeName(and: #function) + "notifying observers that flags are unchanged.")
             flagsUnchangedObservers.forEach { (flagsUnchangedObserver) in
                 if let flagsUnchangedHandler = flagsUnchangedObserver.flagsUnchangedHandler {
                     DispatchQueue.main.async {
@@ -64,7 +70,11 @@ final class FlagChangeNotifier: FlagChangeNotifying {
         }
 
         let selectedObservers = flagChangeObservers.watching(changedFlagKeys)
-        guard !selectedObservers.isEmpty else { return }
+        guard !selectedObservers.isEmpty
+        else {
+            Log.debug(typeName(and: #function) + "aborted. No observers watching changed flags.")
+            return
+        }
 
         let changedFlags = [LDFlagKey: LDChangedFlag](uniqueKeysWithValues: changedFlagKeys.map { (flagKey) in
             return (flagKey, LDChangedFlag(key: flagKey,
@@ -73,6 +83,7 @@ final class FlagChangeNotifier: FlagChangeNotifying {
                                            newValue: user.flagStore.featureFlags[flagKey]?.value,
                                            newValueSource: user.flagStore.flagValueSource))
         })
+        Log.debug(typeName(and: #function) + "notifying observers for changes to flags: \(changedFlags.keys.joined(separator: ", ")).")
         selectedObservers.forEach { (observer) in
             let filteredChangedFlags = changedFlags.filter({ (flagKey, _) -> Bool in observer.flagKeys == LDFlagKey.anyKey || observer.flagKeys.contains(flagKey) })
             if let changeHandler = observer.flagCollectionChangeHandler {
@@ -92,6 +103,7 @@ final class FlagChangeNotifier: FlagChangeNotifying {
     }
     
     private func removeOldObservers() {
+        Log.debug(typeName(and: #function))
         let newFlagChangeObservers = flagChangeObservers.filter { (observer) in observer.owner != nil }
         flagChangeObservers = newFlagChangeObservers
         let newFlagsUnchangedObservers = flagsUnchangedObservers.filter { (observer) in observer.owner != nil }
@@ -119,6 +131,7 @@ extension Array where Element == FlagChangeObserver {
     }
 }
 
+extension FlagChangeNotifier: TypeIdentifying { }
 //Test support
 #if DEBUG
     extension FlagChangeNotifier {

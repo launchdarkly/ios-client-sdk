@@ -25,10 +25,11 @@ public class LDClient {
     ///Controls whether client contacts launch darkly for feature flags and events. When offline, client only collects events.
     public var isOnline: Bool {
         set {
-            if newValue && !hasStarted { Log.debug(typeName(and: #function) + "= false: LDClient has not been started") }
-            if newValue && runMode == .background && !config.enableBackgroundUpdates { Log.debug(typeName(and: #function) + "= false: LDConfig background updates not enabled") }
+            var reason = ""
+            if newValue && !hasStarted { reason = " LDClient has not been started." }
+            if newValue && runMode == .background && !config.enableBackgroundUpdates { reason += " LDConfig background updates not enabled." }
             _isOnline = hasStarted && newValue && (runMode != .background || config.enableBackgroundUpdates)
-            if newValue == _isOnline { Log.debug(typeName(and: #function, appending: ": ") + "\(_isOnline)") }
+            if newValue == _isOnline { Log.debug(typeName(and: #function, appending: ": ") + "\(_isOnline)" + reason) }
         }
         get { return _isOnline }
     }
@@ -197,10 +198,14 @@ public class LDClient {
     ///
     ///     let dictionaryFlagValue = LDClient.shared.variation(forKey: "dictionary-key", fallback: ["a": 1, "b": 2] as [LDFlagKey: Any])
     public func variation<T: LDFlagValueConvertible>(forKey key: LDFlagKey, fallback: T) -> T {
-        guard hasStarted else { return fallback }
-        Log.debug(typeName(and: #function) + "flagKey: \(key), fallback: \(fallback)")
+        guard hasStarted
+        else {
+            Log.debug(typeName(and: #function) + "returning fallback: \(fallback)." + " LDClient not started.")
+            return fallback
+        }
         let value = user.flagStore.variation(forKey: key, fallback: fallback)
-eventReporter.record(LDEvent.flagRequestEvent(key: key, user: user, value: value, defaultValue: fallback))
+        Log.debug(typeName(and: #function) + "flagKey: \(key), value: \(value), fallback: \(fallback)")
+        eventReporter.record(LDEvent.flagRequestEvent(key: key, user: user, value: value, defaultValue: fallback))
         return value
     }
 
@@ -225,9 +230,13 @@ eventReporter.record(LDEvent.flagRequestEvent(key: key, user: user, value: value
     ///
     ///     let (dictionaryFlagValue, dictionaryFeatureFlagSource) = LDClient.shared.variationAndSource(forKey: "dictionary-key", fallback: ["a": 1, "b": 2] as [LDFlagKey: Any])
     public func variationAndSource<T: LDFlagValueConvertible>(forKey key: LDFlagKey, fallback: T) -> (T, LDFlagValueSource) {
-        guard hasStarted else { return (fallback, .fallback) }
-        Log.debug(typeName(and: #function) + "flagKey: \(key), fallback: \(fallback)")
+        guard hasStarted
+        else {
+            Log.debug(typeName(and: #function) + "returning fallback: \(fallback), source: \(LDFlagValueSource.fallback)." + " LDClient not started.")
+            return (fallback, .fallback)
+        }
         let (value, source) = user.flagStore.variationAndSource(forKey: key, fallback: fallback)
+        Log.debug(typeName(and: #function) + "flagKey: \(key), value: \(value), fallback: \(fallback), source: \(source)")
         eventReporter.record(LDEvent.flagRequestEvent(key: key, user: user, value: value, defaultValue: fallback))
         return (value, source)
     }
@@ -255,7 +264,7 @@ eventReporter.record(LDEvent.flagRequestEvent(key: key, user: user, value: value
     ///     }
     ///LDClient keeps a weak reference to the owner. Apps should keep only weak references to self in observers to avoid memory leaks
     public func observe(_ key: LDFlagKey, owner: LDFlagChangeOwner, handler: @escaping LDFlagChangeHandler) {
-        Log.debug(typeName(and: #function) + "flagKey: \(key)")
+        Log.debug(typeName(and: #function) + "flagKey: \(key)" + " owner: \(String(describing: owner))")
         flagChangeNotifier.addFlagChangeObserver(FlagChangeObserver(key: key, owner: owner, flagChangeHandler: handler))
     }
     
@@ -268,6 +277,7 @@ eventReporter.record(LDEvent.flagRequestEvent(key: key, user: user, value: value
     ///     }
     /// changedFlags is a [LDFlagKey: LDChangedFlag]
     public func observe(_ keys: [LDFlagKey], owner: LDFlagChangeOwner, handler: @escaping LDFlagCollectionChangeHandler) {
+        Log.debug(typeName(and: #function) + "flagKeys: \(keys)" + " owner: \(String(describing: owner))")
         flagChangeNotifier.addFlagChangeObserver(FlagChangeObserver(keys: keys, owner: owner, flagCollectionChangeHandler: handler))
     }
 
@@ -280,20 +290,21 @@ eventReporter.record(LDEvent.flagRequestEvent(key: key, user: user, value: value
     ///     }
     /// changedFlags is a [LDFlagKey: LDChangedFlag]
     public func observeAll(owner: LDFlagChangeOwner, handler: @escaping LDFlagCollectionChangeHandler) {
-        Log.debug(typeName(and: #function))
+        Log.debug(typeName(and: #function) + " owner: \(String(describing: owner))")
         flagChangeNotifier.addFlagChangeObserver(FlagChangeObserver(keys: LDFlagKey.anyKey, owner: owner, flagCollectionChangeHandler: handler))
     }
     
     ///Sets a handler called when a flag update leaves the flags unchanged from their previous values.
     public func observeFlagsUnchanged(owner: LDFlagChangeOwner, handler: @escaping LDFlagsUnchangedHandler) {
+        Log.debug(typeName(and: #function) + " owner: \(String(describing: owner))")
         flagChangeNotifier.addFlagsUnchangedObserver(FlagsUnchangedObserver(owner: owner, flagsUnchangedHandler: handler))
     }
 
     ///Removes all observers for the given owner, including the flagsUnchangedObserver
     public func stopObserving(owner: LDFlagChangeOwner) {
+        Log.debug(typeName(and: #function) + " owner: \(String(describing: owner))")
         flagChangeNotifier.removeObserver(owner: owner)
-        Log.debug(typeName(and: #function, appending: ": "))    //TODO: + (onFlagsUnchanged == nil ? "<nil>" : "set"))
-        }
+    }
 
     ///Called if the client is unable to contact the server
     public var onServerUnavailable: (() -> Void)? = nil {
@@ -325,7 +336,7 @@ eventReporter.record(LDEvent.flagRequestEvent(key: key, user: user, value: value
             }
         case let .error(synchronizingError):
             if synchronizingError.isClientUnauthorized {
-                Log.error(typeName(and: #function) + "LDClient is unauthorized")
+                Log.debug(typeName(and: #function) + "LDClient is unauthorized")
                 isOnline = false
             }
             executeCallback(onServerUnavailable)
