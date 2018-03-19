@@ -46,7 +46,7 @@ public class LDClient {
                 return
             }
 
-            Log.level = isDebug && config.isDebugMode ? .debug : .error
+            Log.level = isDebug && config.isDebugMode ? .debug : .silence
             Log.debug(typeName(and: #function) + "new config set")
             let wasOnline = isOnline
             isOnline = false

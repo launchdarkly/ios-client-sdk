@@ -14,17 +14,9 @@ protocol Logger {
 
 struct Log {
 
-    /**
-     The available levels that can be logged by the Logger.
-
-     - Debug - is good for dumping variable values and runtime details and is typically only turned on for dev builds
-     - Warning - is good for logging application problems that aren't fatal or affect users
-     - Error - is good for logging application errors that are fatal or impact users
-     */
     enum Level: Int {
         case debug
-        case warning
-        case error
+        case silence
     }
 
     struct BasicLogger: Logger {
@@ -34,33 +26,19 @@ struct Log {
             switch level {
             case .debug:
                 prefix = "DEBUG"
-            case .warning:
-                prefix = "WARN"
-            case .error:
-                prefix = "ERROR"
+            case .silence:
+                prefix = ""
             }
             NSLog("%@", "\(prefix): \(message)")
         }
     }
 
-    static var level = Level.error
+    static var level = Level.silence
     static var logger: Logger = BasicLogger()
 
     static func debug(_ msg: @autoclosure () -> String) {
         if level.rawValue <= Level.debug.rawValue {
             logger.log(.debug, message: msg())
-        }
-    }
-
-    static func warn(_ msg: @autoclosure () -> String) {
-        if level.rawValue <= Level.warning.rawValue {
-            logger.log(.warning, message: msg())
-        }
-    }
-
-    static func error(_ msg: @autoclosure () -> String) {
-        if level.rawValue <= Level.error.rawValue {
-            logger.log(.error, message: msg())
         }
     }
 }
