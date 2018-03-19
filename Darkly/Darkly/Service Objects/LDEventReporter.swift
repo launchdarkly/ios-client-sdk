@@ -101,7 +101,7 @@ class LDEventReporter: LDEventReporting {
             else if eventStore.isEmpty { Log.debug(typeName(and: #function) + "aborted. Event store is empty") }
             return
         }
-        Log.debug(typeName(and: #function, appending: "- ") + "starting")
+        Log.debug(typeName(and: #function, appending: " - ") + "starting")
         let reportedEventDictionaries = eventStore //this is async, so keep what we're reporting at this time for later use
         service.publishEventDictionaries(eventStore) { serviceResponse in
             self.processEventResponse(reportedEventDictionaries: reportedEventDictionaries, serviceResponse: serviceResponse)
@@ -136,7 +136,7 @@ class LDEventReporter: LDEventReporting {
         eventQueue.async {
             let remainingEventDictionaries = self.eventStore.filter { (eventDictionary) in !reportedEventDictionaries.contains(eventDictionary: eventDictionary) }
             self.eventStore = remainingEventDictionaries
-            Log.debug(self.typeName + ".reportEvents() " + "completed")
+            Log.debug(self.typeName + ".reportEvents() - completed")
         }
     }
     

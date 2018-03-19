@@ -39,7 +39,7 @@ final class UserFlagCache: UserFlagCaching {
     
     func retrieveFlags(for user: LDUser) -> CacheableUserFlags? {
         let userFlags = cachedFlags[user.key]
-        Log.debug(typeName(and: #function) + "user key: " + user.key + " - " + (userFlags == nil ? "not found" : "found"))
+        Log.debug(typeName(and: #function) + (userFlags == nil ? "not found" : "found") + ". user key: " + user.key)
         return userFlags
     }
     

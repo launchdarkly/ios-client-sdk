@@ -39,7 +39,7 @@ final class FlagStore: FlagMaintaining {
     init() { }
 
     init(featureFlags: [LDFlagKey: FeatureFlag]?, flagValueSource: LDFlagValueSource = .fallback) {
-        Log.debug(typeName(and: #function) + "featureFlags: \(String(describing: featureFlags)) " + "flagValueSource: \(flagValueSource)")
+        Log.debug(typeName(and: #function) + "featureFlags: \(String(describing: featureFlags)), " + "flagValueSource: \(flagValueSource)")
         self.featureFlags = featureFlags ?? [:]
         self.flagValueSource = flagValueSource
     }
@@ -50,7 +50,7 @@ final class FlagStore: FlagMaintaining {
 
     ///Replaces all feature flags with new flags. Pass nil to reset to an empty flag store
     func replaceStore(newFlags: [LDFlagKey: Any]?, source: LDFlagValueSource, completion: CompletionClosure?) {
-        Log.debug(typeName(and: #function) + "newFlags: \(String(describing: newFlags)) " + "source: \(source)")
+        Log.debug(typeName(and: #function) + "newFlags: \(String(describing: newFlags)), " + "source: \(source)")
         flagQueue.async {
             self.featureFlags = newFlags?.flagCollection ?? [:]
             self.flagValueSource = source
@@ -94,7 +94,7 @@ final class FlagStore: FlagMaintaining {
             }
 
             let newFlag = FeatureFlag(value: newValue, version: newVersion)
-            Log.debug(self.typeName(and: #function) + "succeeded. new flag: \(newFlag) " + "prior flag: \(String(describing: self.featureFlags[flagKey]))")
+            Log.debug(self.typeName(and: #function) + "succeeded. new flag: \(newFlag), " + "prior flag: \(String(describing: self.featureFlags[flagKey]))")
             self.featureFlags[flagKey] = newFlag
 
         }
@@ -129,6 +129,7 @@ final class FlagStore: FlagMaintaining {
                 return
             }
 
+            Log.debug(self.typeName(and: #function) + "deleted flag with key: " + flagKey)
             self.featureFlags.removeValue(forKey: flagKey)
         }
     }

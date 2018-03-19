@@ -74,7 +74,7 @@ class FlagSynchronizer: LDFlagSynchronizing {
     var pollingActive: Bool { return flagRequestTimer != nil }
     
     init(streamingMode: LDStreamingMode, pollingInterval: TimeInterval, useReport: Bool, service: DarklyServiceProvider, onSyncComplete: SyncCompleteClosure?) {
-        Log.debug(FlagSynchronizer.typeName(and: #function) + "streamingMode: \(streamingMode) " + "pollingInterval: \(pollingInterval) " + "useReport: \(useReport)")
+        Log.debug(FlagSynchronizer.typeName(and: #function) + "streamingMode: \(streamingMode), " + "pollingInterval: \(pollingInterval), " + "useReport: \(useReport)")
         self.streamingMode = streamingMode
         self.pollingInterval = pollingInterval
         self.useReport = useReport
@@ -222,17 +222,17 @@ class FlagSynchronizer: LDFlagSynchronizing {
             Log.debug(typeName(and: #function) + "aborted. Flag Synchronizer is offline.")
             return
         }
-        Log.debug(typeName(and: #function, appending: "- ") + "starting")
+        Log.debug(typeName(and: #function, appending: " - ") + "starting")
         service.getFeatureFlags(useReport: useReport, completion: { serviceResponse in
             if self.shouldRetryFlagRequest(useReport: self.useReport, statusCode: (serviceResponse.urlResponse as? HTTPURLResponse)?.statusCode) {
-                Log.debug(self.typeName(and: #function, appending: "- ") + "retrying via GET")
+                Log.debug(self.typeName(and: #function, appending: " - ") + "retrying via GET")
                 self.service.getFeatureFlags(useReport: false, completion: { (retryServiceResponse) in
                     self.processFlagResponse(serviceResponse: retryServiceResponse)
                 })
             } else {
                 self.processFlagResponse(serviceResponse: serviceResponse)
             }
-            Log.debug(self.typeName(and: #function, appending: "- ") + "complete")
+            Log.debug(self.typeName(and: #function, appending: " - ") + "complete")
         })
     }
 
@@ -262,7 +262,7 @@ class FlagSynchronizer: LDFlagSynchronizing {
     }
 
     private func reportSuccess(flagDictionary: [String: Any], eventType: DarklyEventSource.LDEvent.EventType?) {
-        Log.debug(typeName(and: #function) + "flagDictionary: \(flagDictionary)" + (eventType == nil ? "" : "eventType: \(String(describing: eventType))"))
+        Log.debug(typeName(and: #function) + "flagDictionary: \(flagDictionary)" + (eventType == nil ? "" : ", eventType: \(String(describing: eventType))"))
         guard let onSyncComplete = self.onSyncComplete else { return }
         DispatchQueue.main.async {
             onSyncComplete(.success(flagDictionary, self.streamingActive ? eventType : nil))

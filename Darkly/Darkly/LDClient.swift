@@ -264,7 +264,7 @@ public class LDClient {
     ///     }
     ///LDClient keeps a weak reference to the owner. Apps should keep only weak references to self in observers to avoid memory leaks
     public func observe(_ key: LDFlagKey, owner: LDFlagChangeOwner, handler: @escaping LDFlagChangeHandler) {
-        Log.debug(typeName(and: #function) + "flagKey: \(key)" + " owner: \(String(describing: owner))")
+        Log.debug(typeName(and: #function) + "flagKey: \(key), owner: \(String(describing: owner))")
         flagChangeNotifier.addFlagChangeObserver(FlagChangeObserver(key: key, owner: owner, flagChangeHandler: handler))
     }
     
@@ -277,7 +277,7 @@ public class LDClient {
     ///     }
     /// changedFlags is a [LDFlagKey: LDChangedFlag]
     public func observe(_ keys: [LDFlagKey], owner: LDFlagChangeOwner, handler: @escaping LDFlagCollectionChangeHandler) {
-        Log.debug(typeName(and: #function) + "flagKeys: \(keys)" + " owner: \(String(describing: owner))")
+        Log.debug(typeName(and: #function) + "flagKeys: \(keys), owner: \(String(describing: owner))")
         flagChangeNotifier.addFlagChangeObserver(FlagChangeObserver(keys: keys, owner: owner, flagCollectionChangeHandler: handler))
     }
 
