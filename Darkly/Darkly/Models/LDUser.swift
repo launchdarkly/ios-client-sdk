@@ -88,7 +88,7 @@ public struct LDUser {
     }
 
     //swiftlint:disable:next cyclomatic_complexity
-    func value(for attribute: String) -> Any? {
+    private func value(for attribute: String) -> Any? {
         switch attribute {
         case CodingKeys.key.rawValue: return key
         case CodingKeys.lastUpdated.rawValue: return lastUpdated
@@ -279,3 +279,11 @@ extension LDUserWrapper: NSCoding {
 }
 
 extension LDUser: TypeIdentifying { }
+
+#if DEBUG
+    extension LDUser {
+        func value(forAttribute attribute: String) -> Any? {
+            return value(for: attribute)
+        }
+    }
+#endif

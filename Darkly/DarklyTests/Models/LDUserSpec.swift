@@ -1193,7 +1193,7 @@ extension LDUser {
         LDUser.requiredAttributes.forEach { (attribute) in
             if let message = messageIfMissingValue(in: userDictionary, for: attribute) { messages.append(message) }
 
-            let value = attribute == CodingKeys.lastUpdated.rawValue ? DateFormatter.ldDateFormatter.string(from: lastUpdated) : self.value(for: attribute)
+            let value = attribute == CodingKeys.lastUpdated.rawValue ? DateFormatter.ldDateFormatter.string(from: lastUpdated) : self.value(forAttribute: attribute)
             if let message = messageIfValueDoesntMatch(value: value, in: userDictionary, for: attribute) { messages.append(message) }
         }
 
@@ -1205,7 +1205,7 @@ extension LDUser {
 
         LDUser.optionalAttributes.forEach { (attribute) in
             if !privateAttributes.contains(attribute) {
-                if let message = messageIfValueDoesntMatch(value: value(for: attribute), in: userDictionary, for: attribute) { messages.append(message) }
+                if let message = messageIfValueDoesntMatch(value: value(forAttribute: attribute), in: userDictionary, for: attribute) { messages.append(message) }
             }
         }
 
@@ -1228,7 +1228,7 @@ extension LDUser {
         var messages = [String]()
 
         LDUser.optionalAttributes.forEach { (attribute) in
-            if value(for: attribute) == nil {
+            if value(forAttribute: attribute) == nil {
                 if let message = messageIfAttributeExists(in: userDictionary, for: attribute) { messages.append(message) }
             }
         }
@@ -1242,7 +1242,7 @@ extension LDUser {
         let redactedAttributes = userDictionary.redactedAttributes
 
         LDUser.optionalAttributes.forEach { (attribute) in
-            if value(for: attribute) != nil && privateAttributes.contains(attribute) {
+            if value(forAttribute: attribute) != nil && privateAttributes.contains(attribute) {
                 if let message = messageIfRedactedAttributeDoesNotExist(in: redactedAttributes, for: attribute) { messages.append(message) }
             }
         }
@@ -1268,7 +1268,7 @@ extension LDUser {
         let redactedAttributes = userDictionary.redactedAttributes
 
         LDUser.optionalAttributes.forEach { (attribute) in
-            if value(for: attribute) == nil || !privateAttributes.contains(attribute) {
+            if value(forAttribute: attribute) == nil || !privateAttributes.contains(attribute) {
                 if let message = messageIfPublicOrMissingAttributeIsRedacted(in: redactedAttributes, for: attribute) { messages.append(message) }
             }
         }
@@ -1284,7 +1284,7 @@ extension LDUser {
 
         LDUser.sdkSetAttributes.forEach { (attribute) in
             if let message = messageIfMissingValue(in: customDictionary, for: attribute) { messages.append(message) }
-            if let message = messageIfValueDoesntMatch(value: value(for: attribute), in: customDictionary, for: attribute) { messages.append(message) }
+            if let message = messageIfValueDoesntMatch(value: value(forAttribute: attribute), in: customDictionary, for: attribute) { messages.append(message) }
         }
 
         return messages.isEmpty ? .matched : .failed(reason: messages.joined(separator: ", "))
