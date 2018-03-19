@@ -25,7 +25,7 @@ struct Log {
 
             switch level {
             case .debug:
-                prefix = "DEBUG"
+                prefix = "LaunchDarkly"
             case .silence:
                 prefix = ""
             }

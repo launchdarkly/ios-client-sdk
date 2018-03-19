@@ -91,7 +91,7 @@ public struct LDConfig {
 
     func flagPollingInterval(runMode: LDClientRunMode) -> TimeInterval {
         let pollingIntervalMillis = runMode == .foreground ? max(pollIntervalMillis, minima.pollingIntervalMillis) : max(backgroundPollIntervalMillis, minima.backgroundPollIntervalMillis)
-        Log.debug(typeName(and: #function) + ": \(pollingIntervalMillis.timeInterval)")
+        Log.debug(typeName(and: #function, appending: ": ") + "\(pollingIntervalMillis.timeInterval)")
         return pollingIntervalMillis.timeInterval
     }
 
