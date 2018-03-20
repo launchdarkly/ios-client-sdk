@@ -26,12 +26,12 @@ public struct LDConfig {
         static let eventCapacity = 100
 
         static let connectionTimeoutMillis = 10_000
-        static let eventFlushIntervalMillis = 30_000    //Android SDK uses 5_000
+        static let eventFlushIntervalMillis = 30_000
         static let pollIntervalMillis = 300_000
-        static let backgroundPollIntervalMillis = 3_600_000  //Android SDK uses 15m min, 1h default
+        static let backgroundPollIntervalMillis = 3_600_000
 
         static let streaming = LDStreamingMode.streaming
-        static let enableBackgroundUpdates = true   //Android sdk has this config item
+        static let enableBackgroundUpdates = false
         static let online = true
 
         static let debugMode = false
@@ -65,8 +65,14 @@ public struct LDConfig {
 
     ///Enables real-time streaming flag updates. When set to .polling, an efficient polling mechanism is used. Default: .streaming
     public var streamingMode: LDStreamingMode = Defaults.streaming
-    ///Enables feature flag updates when your app is in the background. Default: true
-    public var enableBackgroundUpdates: Bool = Defaults.enableBackgroundUpdates
+
+    private var enableBgUpdates: Bool = Defaults.enableBackgroundUpdates
+    ///Enables feature flag updates when your app is in the background. Disabled, future use only. Default: false
+    public var enableBackgroundUpdates: Bool {
+        set { enableBgUpdates = newValue && isDebug }
+        get { return enableBgUpdates }
+    }
+    
     ///Determines whether LDClient will be online / offline at start. If offline at start, set the client online to receive flag updates. Default: true
     public var startOnline: Bool = Defaults.online
 
