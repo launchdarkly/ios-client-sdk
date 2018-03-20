@@ -80,6 +80,10 @@ final class LDClientSpec: QuickSpec {
             oldFlagSource = user.flagStore.flagValueSource
 
             subject = LDClient.makeClient(with: ClientServiceMockFactory(), runMode: runMode)
+            subject.config = config
+            subject.user = user
+
+            self.flagCacheMock.reset()
             self.setFlagStoreCallbackToMimicRealFlagStore()
         }
 
@@ -108,11 +112,10 @@ final class LDClientSpec: QuickSpec {
         variationAndSourceSpec()
         observeSpec()
         onSyncCompleteSpec()
-
-        //TODO: When implementing background mode, verify switching background modes affects the service objects
+        runModeSpec()
     }
 
-    func startSpec() {
+    private func startSpec() {
         var testContext: TestContext!
 
         beforeEach {
@@ -424,7 +427,7 @@ final class LDClientSpec: QuickSpec {
         }
     }
 
-    func setConfigSpec() {
+    private func setConfigSpec() {
         var testContext: TestContext!
 
         beforeEach {
@@ -553,7 +556,7 @@ final class LDClientSpec: QuickSpec {
         }
     }
 
-    func setUserSpec() {
+    private func setUserSpec() {
         var testContext: TestContext!
 
         beforeEach {
@@ -631,7 +634,7 @@ final class LDClientSpec: QuickSpec {
         }
     }
 
-    func changeIsOnlineSpec() {
+    private func changeIsOnlineSpec() {
         var testContext: TestContext!
 
         beforeEach {
@@ -722,7 +725,7 @@ final class LDClientSpec: QuickSpec {
         }
     }
 
-    func stopSpec() {
+    private func stopSpec() {
         var testContext: TestContext!
 
         beforeEach {
@@ -804,7 +807,7 @@ final class LDClientSpec: QuickSpec {
         }
     }
 
-    func trackEventSpec() {
+    private func trackEventSpec() {
         var testContext: TestContext!
 
         beforeEach {
@@ -853,7 +856,7 @@ final class LDClientSpec: QuickSpec {
         }
     }
 
-    func variationSpec() {
+    private func variationSpec() {
         var testContext: TestContext!
 
         beforeEach {
@@ -924,7 +927,7 @@ final class LDClientSpec: QuickSpec {
         }
     }
 
-    func variationAndSourceSpec() {
+    private func variationAndSourceSpec() {
         var testContext: TestContext!
 
         beforeEach {
@@ -1012,7 +1015,7 @@ final class LDClientSpec: QuickSpec {
         }
     }
 
-    func observeSpec() {
+    private func observeSpec() {
         var testContext: TestContext!
 
         beforeEach {
@@ -1120,14 +1123,14 @@ final class LDClientSpec: QuickSpec {
         }
     }
 
-    func onSyncCompleteSpec() {
+    private func onSyncCompleteSpec() {
         describe("on sync complete") {
             onSyncCompleteSuccessSpec()
             onSyncCompleteErrorSpec()
         }
     }
 
-    func onSyncCompleteSuccessSpec() {
+    private func onSyncCompleteSuccessSpec() {
         context("polling") {
             onSyncCompleteSuccessReplacingFlagsSpec(streamingMode: .polling)
         }
@@ -1147,7 +1150,7 @@ final class LDClientSpec: QuickSpec {
 
     /* The concept of the onSyncCompleteSuccess tests is to configure the flags & mocks to simulate the intended change, prep the callbacks to trigger done() to end the async wait, and then call onSyncComplete with the parameters for the area under test. onSyncComplete will call a flagStore method which has an async closure, and so the test has to trigger that closure to get the correct code to execute in onSyncComplete. Once the async flagStore closure runs for the appropriate update method, the result can be measured in the mocks. While setting up each test is slightly different, measuring the result is largely the same.
      */
-    func onSyncCompleteSuccessReplacingFlagsSpec(streamingMode: LDStreamingMode, eventType: DarklyEventSource.LDEvent.EventType? = nil) {
+    private func onSyncCompleteSuccessReplacingFlagsSpec(streamingMode: LDStreamingMode, eventType: DarklyEventSource.LDEvent.EventType? = nil) {
         var testContext: TestContext!
         var newFlags: [LDFlagKey: Any]!
         var eventType: DarklyEventSource.LDEvent.EventType?
@@ -1553,5 +1556,113 @@ final class LDClientSpec: QuickSpec {
                 expect(serverUnavailableCalled) == true
             }
         }
+    }
+
+    private func runModeSpec() {
+        var testContext: TestContext!
+
+        describe("didEnterBackground notification") {
+            context("after starting client") {
+                context("when online") {
+                    beforeEach {
+                        testContext = TestContext(startOnline: true, runMode: .foreground)
+                        testContext.subject.start(mobileKey: Constants.mockMobileKey)
+
+                        NotificationCenter.default.post(name: .UIApplicationDidEnterBackground, object: self)
+                    }
+                    it("takes the sdk offline and reports events") {
+                        expect(testContext.subject.isOnline) == true
+                        expect(testContext.subject.runMode) == LDClientRunMode.background
+                        expect(testContext.eventReporterMock.reportEventsCallCount) == 1
+                        expect(testContext.eventReporterMock.isOnline) == false
+                        expect(testContext.flagSynchronizerMock.isOnline) == false
+                    }
+                }
+                context("when offline") {
+                    beforeEach {
+                        testContext = TestContext(startOnline: false, runMode: .foreground)
+                        testContext.subject.start(mobileKey: Constants.mockMobileKey)
+
+                        NotificationCenter.default.post(name: .UIApplicationDidEnterBackground, object: self)
+                    }
+                    it("leaves the sdk offline and reports events") {
+                        expect(testContext.subject.isOnline) == false
+                        expect(testContext.subject.runMode) == LDClientRunMode.background
+                        expect(testContext.eventReporterMock.reportEventsCallCount) == 1    //LDClient expects the EventReporter to ignore the report() request when offline
+                        expect(testContext.eventReporterMock.isOnline) == false
+                        expect(testContext.flagSynchronizerMock.isOnline) == false
+                    }
+                }
+            }
+            context("before starting client") {
+                beforeEach {
+                    testContext = TestContext(startOnline: true, runMode: .foreground)
+
+                    NotificationCenter.default.post(name: .UIApplicationDidEnterBackground, object: self)
+                }
+                it("leaves the sdk offline and reports events") {
+                    expect(testContext.subject.isOnline) == false
+                    expect(testContext.subject.runMode) == LDClientRunMode.background
+                    expect(testContext.eventReporterMock.reportEventsCallCount) == 1    //LDClient expects the EventReporter to ignore the report() request when offline
+                    expect(testContext.eventReporterMock.isOnline) == false
+                    expect(testContext.flagSynchronizerMock.isOnline) == false
+                }
+            }
+        }
+
+        describe("willEnterForeground notification") {
+            context("after starting client") {
+                context("when online at background notification") {
+                    beforeEach {
+                        testContext = TestContext(startOnline: true, runMode: .background)
+                        testContext.subject.start(mobileKey: Constants.mockMobileKey)
+
+                        NotificationCenter.default.post(name: .UIApplicationWillEnterForeground, object: self)
+                    }
+                    it("takes the sdk online") {
+                        expect(testContext.subject.isOnline) == true
+                        expect(testContext.subject.runMode) == LDClientRunMode.foreground
+                        expect(testContext.eventReporterMock.isOnline) == true
+                        expect(testContext.flagSynchronizerMock.isOnline) == true
+                    }
+                }
+                context("when offline at background notification") {
+                    beforeEach {
+                        testContext = TestContext(startOnline: false, runMode: .background)
+                        testContext.subject.start(mobileKey: Constants.mockMobileKey)
+
+                        NotificationCenter.default.post(name: .UIApplicationWillEnterForeground, object: self)
+                    }
+                    it("leaves the sdk offline") {
+                        expect(testContext.subject.isOnline) == false
+                        expect(testContext.subject.runMode) == LDClientRunMode.foreground
+                        expect(testContext.eventReporterMock.isOnline) == false
+                        expect(testContext.flagSynchronizerMock.isOnline) == false
+                    }
+                }
+            }
+        }
+        context("before starting client") {
+            beforeEach {
+                testContext = TestContext(startOnline: true, runMode: .background)
+
+                NotificationCenter.default.post(name: .UIApplicationWillEnterForeground, object: self)
+            }
+            it("leaves the sdk offline") {
+                expect(testContext.subject.isOnline) == false
+                expect(testContext.subject.runMode) == LDClientRunMode.foreground
+                expect(testContext.eventReporterMock.isOnline) == false
+                expect(testContext.flagSynchronizerMock.isOnline) == false
+            }
+        }
+    }
+}
+
+extension UserFlagCachingMock {
+    func reset() {
+        cacheFlagsCallCount = 0
+        cacheFlagsReceivedUser = nil
+        retrieveFlagsCallCount = 0
+        retrieveFlagsReceivedUser = nil
     }
 }

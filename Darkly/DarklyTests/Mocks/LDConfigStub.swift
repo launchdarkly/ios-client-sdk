@@ -17,6 +17,8 @@ extension LDConfig {
 
         config.pollIntervalMillis = 1000
 
+        config.enableBackgroundUpdates = true
+
         return config
     }
 }

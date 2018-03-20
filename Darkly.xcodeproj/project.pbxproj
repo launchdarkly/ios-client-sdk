@@ -9,6 +9,7 @@
 /* Begin PBXBuildFile section */
 		830BF933202D188E006DF9B1 /* HTTPURLRequest.swift in Sources */ = {isa = PBXBuildFile; fileRef = 830BF932202D188E006DF9B1 /* HTTPURLRequest.swift */; };
 		831CE0661F853A1700A13A3A /* Match.swift in Sources */ = {isa = PBXBuildFile; fileRef = 831CE0651F853A1700A13A3A /* Match.swift */; };
+		831D2AAF2061AAA000B4AC3C /* Thread.swift in Sources */ = {isa = PBXBuildFile; fileRef = 831D2AAE2061AAA000B4AC3C /* Thread.swift */; };
 		831D8B6D1F6B1F7B00ED65E8 /* ObjcLDVariationValue.swift in Sources */ = {isa = PBXBuildFile; fileRef = 831D8B6C1F6B1F7B00ED65E8 /* ObjcLDVariationValue.swift */; };
 		831D8B6F1F71532300ED65E8 /* HTTPHeaders.swift in Sources */ = {isa = PBXBuildFile; fileRef = 831D8B6E1F71532300ED65E8 /* HTTPHeaders.swift */; };
 		831D8B721F71D3E700ED65E8 /* DarklyService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 831D8B711F71D3E700ED65E8 /* DarklyService.swift */; };
@@ -103,6 +104,7 @@
 		7B043E1A9DC44E730A3F3730 /* Pods-DarklyTests.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-DarklyTests.release.xcconfig"; path = "Pods/Target Support Files/Pods-DarklyTests/Pods-DarklyTests.release.xcconfig"; sourceTree = "<group>"; };
 		830BF932202D188E006DF9B1 /* HTTPURLRequest.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HTTPURLRequest.swift; sourceTree = "<group>"; };
 		831CE0651F853A1700A13A3A /* Match.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Match.swift; sourceTree = "<group>"; };
+		831D2AAE2061AAA000B4AC3C /* Thread.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Thread.swift; sourceTree = "<group>"; };
 		831D8B6C1F6B1F7B00ED65E8 /* ObjcLDVariationValue.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ObjcLDVariationValue.swift; sourceTree = "<group>"; };
 		831D8B6E1F71532300ED65E8 /* HTTPHeaders.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HTTPHeaders.swift; sourceTree = "<group>"; };
 		831D8B711F71D3E700ED65E8 /* DarklyService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DarklyService.swift; sourceTree = "<group>"; };
@@ -393,6 +395,7 @@
 				83DDBEFB1FA24B2700E428B6 /* JSONSerialization.swift */,
 				83DDBEFD1FA24F9600E428B6 /* Date.swift */,
 				83F0A5611FB4D66600550A95 /* AnyComparer.swift */,
+				831D2AAE2061AAA000B4AC3C /* Thread.swift */,
 			);
 			path = Extensions;
 			sourceTree = "<group>";
@@ -702,6 +705,7 @@
 				838838431F5EFB9C0023D11B /* LDFlagBaseTypeConvertible.swift in Sources */,
 				835E1D411F63450A00184DB4 /* ObjcLDUser.swift in Sources */,
 				83FEF8DF1F2667E4001CF12C /* LDEventReporter.swift in Sources */,
+				831D2AAF2061AAA000B4AC3C /* Thread.swift in Sources */,
 				83FEF8DB1F2666DA001CF12C /* UserFlagCache.swift in Sources */,
 				83B9A082204F6022000C3F17 /* FlagsUnchangedObserver.swift in Sources */,
 				8354EFE01F26380700C05156 /* LDClient.swift in Sources */,

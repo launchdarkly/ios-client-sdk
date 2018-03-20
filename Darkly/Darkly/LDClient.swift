@@ -355,6 +355,26 @@ public class LDClient {
         }
     }
 
+    // MARK: - Foreground / Background notification
+    @objc private func didEnterBackground() {
+        Log.debug(typeName(and: #function))
+        Thread.performOnMain {
+            runMode = .background
+            eventReporter.reportEvents()
+            eventReporter.isOnline = false
+            flagSynchronizer.isOnline = false
+        }
+    }
+
+    @objc private func willEnterForeground() {
+        Log.debug(typeName(and: #function))
+        Thread.performOnMain {
+            runMode = .foreground
+            eventReporter.isOnline = isOnline
+            flagSynchronizer.isOnline = isOnline
+        }
+    }
+
     // MARK: - Private
     private(set) var serviceFactory: ClientServiceCreating = ClientServiceFactory()
     private var mobileKey = ""
@@ -380,6 +400,9 @@ public class LDClient {
                                                                service: service,
                                                                onSyncComplete: nil)
         eventReporter = serviceFactory.makeEventReporter(config: config, service: service)
+
+        NotificationCenter.default.addObserver(self, selector: #selector(didEnterBackground), name: .UIApplicationDidEnterBackground, object: nil)
+        NotificationCenter.default.addObserver(self, selector: #selector(willEnterForeground), name: .UIApplicationWillEnterForeground, object: nil)
     }
 
     private convenience init(serviceFactory: ClientServiceCreating, runMode: LDClientRunMode) {
