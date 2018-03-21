@@ -17,6 +17,8 @@ public final class ObjcLDBoolVariationValue: NSObject {
         self.value = variationValue.value
         self.source = ObjcLDFlagValueSource(variationValue.source)
     }
+
+    @objc var sourceString: String { return source.stringValue }
 }
 
 @objc (LDIntegerVariationValue)
@@ -28,6 +30,8 @@ public final class ObjcLDIntegerVariationValue: NSObject {
         self.value = variationValue.value
         self.source = ObjcLDFlagValueSource(variationValue.source)
     }
+
+    @objc var sourceString: String { return source.stringValue }
 }
 
 @objc (LDDoubleVariationValue)
@@ -39,6 +43,8 @@ public final class ObjcLDDoubleVariationValue: NSObject {
         self.value = variationValue.value
         self.source = ObjcLDFlagValueSource(variationValue.source)
     }
+
+    @objc var sourceString: String { return source.stringValue }
 }
 
 @objc (LDStringVariationValue)
@@ -50,6 +56,8 @@ public final class ObjcLDStringVariationValue: NSObject {
         self.value = variationValue.value
         self.source = ObjcLDFlagValueSource(variationValue.source)
     }
+
+    @objc var sourceString: String { return source.stringValue }
 }
 
 @objc (LDArrayVariationValue)
@@ -61,6 +69,8 @@ public final class ObjcLDArrayVariationValue: NSObject {
         self.value = variationValue.value
         self.source = ObjcLDFlagValueSource(variationValue.source)
     }
+
+    @objc var sourceString: String { return source.stringValue }
 }
 
 @objc (LDDictionaryVariationValue)
@@ -72,4 +82,6 @@ public final class ObjcLDDictionaryVariationValue: NSObject {
         self.value = variationValue.value
         self.source = ObjcLDFlagValueSource(variationValue.source)
     }
+
+    @objc var sourceString: String { return source.stringValue }
 }

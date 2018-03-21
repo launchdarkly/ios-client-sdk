@@ -53,6 +53,16 @@ public enum ObjcLDFlagValueSource: Int {
         }
         self = .nilSource
     }
+
+    var stringValue: String {
+        switch self {
+        case .nilSource: return "<nil>"
+        case .server: return "server"
+        case .cache: return "cache"
+        case .fallback: return "fallback"
+        case .typeMismatch: return "type mismatch"
+        }
+    }
 }
 
 extension NSString {
