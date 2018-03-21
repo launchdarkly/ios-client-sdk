@@ -1,0 +1,6 @@
+framework module DarklyEventSource {
+  umbrella header "DarklyEventSource-iOS-umbrella.h"
+
+  export *
+  module * { export * }
+}

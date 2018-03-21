@@ -401,8 +401,10 @@ public class LDClient {
                                                                onSyncComplete: nil)
         eventReporter = serviceFactory.makeEventReporter(config: config, service: service)
 
+#if os(iOS)
         NotificationCenter.default.addObserver(self, selector: #selector(didEnterBackground), name: .UIApplicationDidEnterBackground, object: nil)
         NotificationCenter.default.addObserver(self, selector: #selector(willEnterForeground), name: .UIApplicationWillEnterForeground, object: nil)
+#endif
     }
 
     private convenience init(serviceFactory: ClientServiceCreating, runMode: LDClientRunMode) {

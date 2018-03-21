@@ -1,7 +1,7 @@
 Pod::Spec.new do |ld|
 
   ld.name         = "LaunchDarkly"
-  ld.version      = "3.0.0.13"
+  ld.version      = "3.0.0.14"
   ld.summary      = "iOS SDK for LaunchDarkly"
 
   ld.description  = <<-DESC
@@ -20,7 +20,7 @@ Pod::Spec.new do |ld|
   ld.author             = { "LaunchDarkly" => "team@launchdarkly.com" }
 
   ld.ios.deployment_target     = "8.0"
-#  ld.watchos.deployment_target = "2.0"		#TODO: Uncomment when setting up the watchOS target
+  ld.watchos.deployment_target = "2.0"
 #  ld.tvos.deployment_target    = "9.0"		#TODO: Uncomment when setting up the tvOS target
 #  ld.osx.deployment_target     = "10.10"	#TODO: Uncomment when setting up the macOS target
 

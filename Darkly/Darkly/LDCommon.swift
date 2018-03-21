@@ -7,6 +7,7 @@
 //
 
 import Foundation
+import WatchKit
 
 public typealias LDFlagChangeOwner = AnyObject
 public typealias LDFlagKey = String
@@ -24,4 +25,12 @@ extension LDFlagKey {
 var isDebug: Bool { return true }
 #else
 var isDebug: Bool { return false }
+#endif
+
+#if os(iOS)
+var deviceModel: String { return UIDevice.current.model }
+var systemVersion: String { return UIDevice.current.systemVersion }
+#elseif os(watchOS)
+var deviceModel: String { return WKInterfaceDevice.current().model }
+var systemVersion: String { return WKInterfaceDevice.current().systemVersion }
 #endif

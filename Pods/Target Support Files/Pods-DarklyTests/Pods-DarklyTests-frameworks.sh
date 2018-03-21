@@ -137,13 +137,13 @@ if [[ "$CONFIGURATION" == "Debug" ]]; then
   install_framework "${BUILT_PRODUCTS_DIR}/Nimble/Nimble.framework"
   install_framework "${BUILT_PRODUCTS_DIR}/OHHTTPStubs/OHHTTPStubs.framework"
   install_framework "${BUILT_PRODUCTS_DIR}/Quick/Quick.framework"
-  install_framework "${BUILT_PRODUCTS_DIR}/DarklyEventSource/DarklyEventSource.framework"
+  install_framework "${BUILT_PRODUCTS_DIR}/DarklyEventSource-iOS/DarklyEventSource.framework"
 fi
 if [[ "$CONFIGURATION" == "Release" ]]; then
   install_framework "${BUILT_PRODUCTS_DIR}/Nimble/Nimble.framework"
   install_framework "${BUILT_PRODUCTS_DIR}/OHHTTPStubs/OHHTTPStubs.framework"
   install_framework "${BUILT_PRODUCTS_DIR}/Quick/Quick.framework"
-  install_framework "${BUILT_PRODUCTS_DIR}/DarklyEventSource/DarklyEventSource.framework"
+  install_framework "${BUILT_PRODUCTS_DIR}/DarklyEventSource-iOS/DarklyEventSource.framework"
 fi
 if [ "${COCOAPODS_PARALLEL_CODE_SIGN}" == "true" ]; then
   wait

@@ -58,8 +58,8 @@ public struct LDUser {
         self.avatar = avatar
         self.custom = custom
         self.isAnonymous = isAnonymous ?? (selectedKey == LDUser.defaultKey)
-        self.device = custom?[CodingKeys.device.rawValue] as? String ?? UIDevice.current.model
-        self.operatingSystem = custom?[CodingKeys.operatingSystem.rawValue] as? String ?? UIDevice.current.systemVersion
+        self.device = custom?[CodingKeys.device.rawValue] as? String ?? deviceModel
+        self.operatingSystem = custom?[CodingKeys.operatingSystem.rawValue] as? String ?? systemVersion
         self.privateAttributes = privateAttributes
         lastUpdated = Date()
         Log.debug(typeName(and: #function) + "user: \(self)")

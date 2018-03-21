@@ -11,10 +11,10 @@ end
 #    pod 'DarklyEventSource', '~> 3.0.0'
 #end
 
-#target 'Darkly_watchOS' do
-#    platform :watchos, '2.0'
-#    pod 'DarklyEventSource', '~> 3.0.0'
-#end
+target 'Darkly_watchOS' do
+    platform :watchos, '2.0'
+    pod 'DarklyEventSource', '~> 3.2'
+end
 
 #target 'Darkly_osx' do
 #    platform :osx, '10.10'
