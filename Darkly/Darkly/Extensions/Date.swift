@@ -9,5 +9,5 @@
 import Foundation
 
 extension Date {
-    var millisSince1970: Int { return Int(floor(self.timeIntervalSince1970 * 1000)) }
+    var millisSince1970: Int64 { return Int64(floor(self.timeIntervalSince1970 * 1000)) }
 }

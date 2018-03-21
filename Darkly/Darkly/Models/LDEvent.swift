@@ -83,7 +83,7 @@ extension Array where Element == [String: Any] {
 
 extension Dictionary where Key == String, Value == Any {
     var eventKey: String? { return self[LDEvent.CodingKeys.key.rawValue] as? String }
-    var eventCreationDateMillis: Int? { return self[LDEvent.CodingKeys.creationDate.rawValue] as? Int }
+    var eventCreationDateMillis: Int64? { return self[LDEvent.CodingKeys.creationDate.rawValue] as? Int64 }
 
     func matches(eventDictionary other: [String: Any]) -> Bool {
         guard let key = eventKey, let creationDateMillis = eventCreationDateMillis,
