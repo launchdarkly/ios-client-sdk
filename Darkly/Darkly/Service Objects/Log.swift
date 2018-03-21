@@ -16,7 +16,7 @@ struct Log {
 
     enum Level: Int {
         case debug
-        case silence
+        case noLogging
     }
 
     struct BasicLogger: Logger {
@@ -26,14 +26,14 @@ struct Log {
             switch level {
             case .debug:
                 prefix = "LaunchDarkly"
-            case .silence:
+            case .noLogging:
                 prefix = ""
             }
             NSLog("%@", "\(prefix): \(message)")
         }
     }
 
-    static var level = Level.silence
+    static var level = Level.noLogging
     static var logger: Logger = BasicLogger()
 
     static func debug(_ msg: @autoclosure () -> String) {
