@@ -30,7 +30,9 @@ var isDebug: Bool { return false }
 #if os(iOS)
 var deviceModel: String { return UIDevice.current.model }
 var systemVersion: String { return UIDevice.current.systemVersion }
+var agentOS: String { return "iOS" }
 #elseif os(watchOS)
 var deviceModel: String { return WKInterfaceDevice.current().model }
 var systemVersion: String { return WKInterfaceDevice.current().systemVersion }
+var agentOS: String { return "watchOS" }
 #endif

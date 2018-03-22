@@ -27,7 +27,7 @@ struct HTTPHeaders {
     }
     
     var authKey: String { return "\(Constants.apiKey) \(mobileKey)" }
-    var userAgent: String { return "iOS/\(Constants.sdkVersion)" }
+    var userAgent: String { return "\(agentOS)/\(Constants.sdkVersion)" }
     
     var eventSourceHeaders: [String: String] { return [Constants.authorization: authKey, Constants.userAgent: userAgent] }
     var flagRequestHeaders: [String: String] { return [Constants.authorization: authKey, Constants.userAgent: userAgent] }
