@@ -13,7 +13,7 @@ extension Thread {
         guard Thread.isMainThread
         else {
             DispatchQueue.main.sync {
-                Thread.performOnMain(executionClosure)
+                executionClosure()
             }
             return
         }
