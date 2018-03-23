@@ -7,7 +7,7 @@ All notable changes to the LaunchDarkly iOS SDK will be documented in this file.
 - Support for enhanced feature streams, facilitating reduced SDK initialization times.
 
 ### Changed
-- The `streamUrl` property on `LDConfig` now expects a path-less base URI.
+- The `streamUrl` property on `LDConfig` now expects a path-less base URI. The default is now `"https://clientstream.launchdarkly.com"`. If you override the default, you may need to modify the property value.
 
 ## [2.10.1] - 2018-02-15
 ### Changed
