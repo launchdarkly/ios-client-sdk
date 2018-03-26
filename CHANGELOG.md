@@ -2,7 +2,7 @@
 
 All notable changes to the LaunchDarkly iOS SDK will be documented in this file. This project adheres to [Semantic Versioning](http://semver.org).
 
-## [2.11.1] - 2018-03-27
+## [2.11.1] - 2018-03-26
 ### Changed
 - Changes the minimum required `DarklyEventSource` to version `3.2.0` in the CocoaPods podspec
 
