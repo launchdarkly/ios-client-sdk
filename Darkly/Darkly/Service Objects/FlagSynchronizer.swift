@@ -190,7 +190,7 @@ class FlagSynchronizer: LDFlagSynchronizing {
                 return
         }
         Log.debug(typeName(and: #function))
-        if #available(iOS 10.0, watchOS 3.0, *) {
+        if #available(iOS 10.0, watchOS 3.0, macOS 10.12, *) {
             flagRequestTimer = Timer.scheduledTimer(withTimeInterval: pollingInterval, repeats: true) { [weak self] (_) in self?.processTimer() }
         } else {
             // the run loop retains the timer, so eventReportTimer is weak to avoid a retain cycle. Setting the timer to a strong reference is important so that the timer doesn't get nil'd before it's added to the run loop.

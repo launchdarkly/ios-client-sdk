@@ -1,7 +1,7 @@
 Pod::Spec.new do |ld|
 
   ld.name         = "LaunchDarkly"
-  ld.version      = "3.0.0.14f"
+  ld.version      = "3.0.0.15"
   ld.summary      = "iOS SDK for LaunchDarkly"
 
   ld.description  = <<-DESC
@@ -22,7 +22,7 @@ Pod::Spec.new do |ld|
   ld.ios.deployment_target     = "8.0"
   ld.watchos.deployment_target = "2.0"
 #  ld.tvos.deployment_target    = "9.0"		#TODO: Uncomment when setting up the tvOS target
-#  ld.osx.deployment_target     = "10.10"	#TODO: Uncomment when setting up the macOS target
+  ld.osx.deployment_target     = "10.10"
 
   ld.source       = { :git => "https://github.com/launchdarkly/ios-client-swift-private.git" }	#TODO: Add the tag when ready
 

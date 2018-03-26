@@ -416,6 +416,9 @@ public class LDClient {
 #if os(iOS)
         NotificationCenter.default.addObserver(self, selector: #selector(didEnterBackground), name: .UIApplicationDidEnterBackground, object: nil)
         NotificationCenter.default.addObserver(self, selector: #selector(willEnterForeground), name: .UIApplicationWillEnterForeground, object: nil)
+#elseif os(OSX)
+        NotificationCenter.default.addObserver(self, selector: #selector(didEnterBackground), name: NSApplication.didBecomeActiveNotification, object: nil)
+        NotificationCenter.default.addObserver(self, selector: #selector(willEnterForeground), name: NSApplication.willResignActiveNotification, object: nil)
 #endif
     }
 
