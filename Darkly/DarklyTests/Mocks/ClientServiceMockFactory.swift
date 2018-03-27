@@ -83,4 +83,9 @@ struct ClientServiceMockFactory: ClientServiceCreating {
         makeStreamingProviderReceivedArguments = (url, httpHeaders, connectMethod, connectBody)
         return DarklyStreamingProviderMock()
     }
+
+    var makeEnvironmentReporterReturnValue: EnvironmentReportingMock = EnvironmentReportingMock()
+    func makeEnvironmentReporter() -> EnvironmentReporting {
+        return makeEnvironmentReporterReturnValue
+    }
 }

@@ -26,6 +26,7 @@ protocol ClientServiceCreating {
     func makeEventReporter(config: LDConfig, service: DarklyServiceProvider) -> LDEventReporting
     mutating func makeStreamingProvider(url: URL, httpHeaders: [String: String]) -> DarklyStreamingProvider
     mutating func makeStreamingProvider(url: URL, httpHeaders: [String: String], connectMethod: String?, connectBody: Data?) -> DarklyStreamingProvider
+    func makeEnvironmentReporter() -> EnvironmentReporting
 }
 
 struct ClientServiceFactory: ClientServiceCreating {
@@ -79,5 +80,9 @@ struct ClientServiceFactory: ClientServiceCreating {
 
     func makeStreamingProvider(url: URL, httpHeaders: [String: String], connectMethod: String?, connectBody: Data?) -> DarklyStreamingProvider {
         return LDEventSource(url: url, httpHeaders: httpHeaders, connectMethod: connectMethod, connectBody: connectBody)
+    }
+
+    func makeEnvironmentReporter() -> EnvironmentReporting {
+        return EnvironmentReporter()
     }
 }

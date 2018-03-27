@@ -8,6 +8,9 @@
 
 /* Begin PBXBuildFile section */
 		830BF933202D188E006DF9B1 /* HTTPURLRequest.swift in Sources */ = {isa = PBXBuildFile; fileRef = 830BF932202D188E006DF9B1 /* HTTPURLRequest.swift */; };
+		831425AF206ABB5300F2EF36 /* EnvironmentReportingMock.swift in Sources */ = {isa = PBXBuildFile; fileRef = 831425AE206ABB5300F2EF36 /* EnvironmentReportingMock.swift */; };
+		831425B1206B030100F2EF36 /* EnvironmentReporter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 831425B0206B030100F2EF36 /* EnvironmentReporter.swift */; };
+		831425B2206B030100F2EF36 /* EnvironmentReporter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 831425B0206B030100F2EF36 /* EnvironmentReporter.swift */; };
 		831CE0661F853A1700A13A3A /* Match.swift in Sources */ = {isa = PBXBuildFile; fileRef = 831CE0651F853A1700A13A3A /* Match.swift */; };
 		831D2AAF2061AAA000B4AC3C /* Thread.swift in Sources */ = {isa = PBXBuildFile; fileRef = 831D2AAE2061AAA000B4AC3C /* Thread.swift */; };
 		831D8B6D1F6B1F7B00ED65E8 /* ObjcLDVariationValue.swift in Sources */ = {isa = PBXBuildFile; fileRef = 831D8B6C1F6B1F7B00ED65E8 /* ObjcLDVariationValue.swift */; };
@@ -147,6 +150,8 @@
 		6D78FF715370FB95F6F5E9CA /* Pods-Darkly_iOS.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Darkly_iOS.release.xcconfig"; path = "Pods/Target Support Files/Pods-Darkly_iOS/Pods-Darkly_iOS.release.xcconfig"; sourceTree = "<group>"; };
 		7B043E1A9DC44E730A3F3730 /* Pods-DarklyTests.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-DarklyTests.release.xcconfig"; path = "Pods/Target Support Files/Pods-DarklyTests/Pods-DarklyTests.release.xcconfig"; sourceTree = "<group>"; };
 		830BF932202D188E006DF9B1 /* HTTPURLRequest.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HTTPURLRequest.swift; sourceTree = "<group>"; };
+		831425AE206ABB5300F2EF36 /* EnvironmentReportingMock.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EnvironmentReportingMock.swift; sourceTree = "<group>"; };
+		831425B0206B030100F2EF36 /* EnvironmentReporter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EnvironmentReporter.swift; sourceTree = "<group>"; };
 		831CE0651F853A1700A13A3A /* Match.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Match.swift; sourceTree = "<group>"; };
 		831D2AAE2061AAA000B4AC3C /* Thread.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Thread.swift; sourceTree = "<group>"; };
 		831D8B6C1F6B1F7B00ED65E8 /* ObjcLDVariationValue.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ObjcLDVariationValue.swift; sourceTree = "<group>"; };
@@ -441,6 +446,7 @@
 				8335299D1FC37727001166F8 /* FlagMaintainingMock.swift */,
 				83B8C2481FE84D4F0082B8A9 /* FlagChangeNotifyingMock.swift */,
 				832EA064203E066B00A93C0E /* CacheableUserFlagsStub.swift */,
+				831425AE206ABB5300F2EF36 /* EnvironmentReportingMock.swift */,
 			);
 			path = Mocks;
 			sourceTree = "<group>";
@@ -503,6 +509,7 @@
 		83FEF8D91F2666BF001CF12C /* Service Objects */ = {
 			isa = PBXGroup;
 			children = (
+				831425B0206B030100F2EF36 /* EnvironmentReporter.swift */,
 				838F96771FBA504A009CFC45 /* ClientServiceFactory.swift */,
 				83D559731FD87CC9002D10C8 /* KeyedValueCache.swift */,
 				83FEF8DA1F2666DA001CF12C /* UserFlagCache.swift */,
@@ -871,6 +878,7 @@
 				83FEF8DB1F2666DA001CF12C /* UserFlagCache.swift in Sources */,
 				83B9A082204F6022000C3F17 /* FlagsUnchangedObserver.swift in Sources */,
 				8354EFE01F26380700C05156 /* LDClient.swift in Sources */,
+				831425B1206B030100F2EF36 /* EnvironmentReporter.swift in Sources */,
 				83B6C4B61F4DE7630055351C /* LDCommon.swift in Sources */,
 				83EF678A1F97CFEC00403126 /* Dictionary.swift in Sources */,
 				83D5597A1FD87E6B002D10C8 /* UserCacheConverter.swift in Sources */,
@@ -919,6 +927,7 @@
 				83383A5120460DD30024D975 /* SynchronizingErrorSpec.swift in Sources */,
 				838F31BF1FDA096A006919FD /* UserCacheConverterSpec.swift in Sources */,
 				83B9A080204F56F4000C3F17 /* FlagChangeObserverSpec.swift in Sources */,
+				831425AF206ABB5300F2EF36 /* EnvironmentReportingMock.swift in Sources */,
 				838AB53F1F72A7D5006F03F5 /* FlagSynchronizerSpec.swift in Sources */,
 				832307A61F7D8D720029815A /* URLRequestSpec.swift in Sources */,
 				832307A81F7DA61B0029815A /* LDEventSourceMock.swift in Sources */,
@@ -958,6 +967,7 @@
 				83D9EC8E2062DEAB004D7FA6 /* HTTPURLResponse.swift in Sources */,
 				83D9EC8F2062DEAB004D7FA6 /* HTTPURLRequest.swift in Sources */,
 				83D9EC902062DEAB004D7FA6 /* Dictionary.swift in Sources */,
+				831425B2206B030100F2EF36 /* EnvironmentReporter.swift in Sources */,
 				83D9EC912062DEAB004D7FA6 /* Optional.swift in Sources */,
 				83D9EC922062DEAB004D7FA6 /* Data.swift in Sources */,
 				83D9EC932062DEAB004D7FA6 /* Array.swift in Sources */,

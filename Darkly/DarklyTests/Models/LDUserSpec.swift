@@ -21,37 +21,75 @@ final class LDUserSpec: QuickSpec {
         var subject: LDUser!
         describe("init") {
             context("called with optional elements") {
-                beforeEach {
-                    subject = LDUser(key: LDUser.StubConstants.key, name: LDUser.StubConstants.name, firstName: LDUser.StubConstants.firstName, lastName: LDUser.StubConstants.lastName,
-                                     country: LDUser.StubConstants.country, ipAddress: LDUser.StubConstants.ipAddress, email: LDUser.StubConstants.email, avatar: LDUser.StubConstants.avatar,
-                                     custom: LDUser.StubConstants.custom, isAnonymous: LDUser.StubConstants.isAnonymous, privateAttributes: LDUser.privatizableAttributes)
-                }
-                it("creates a LDUser with optional elements") {
-                    expect(subject.key) == LDUser.StubConstants.key
-                    expect(subject.name) == LDUser.StubConstants.name
-                    expect(subject.firstName) == LDUser.StubConstants.firstName
-                    expect(subject.lastName) == LDUser.StubConstants.lastName
-                    expect(subject.isAnonymous) == LDUser.StubConstants.isAnonymous
-                    expect(subject.country) == LDUser.StubConstants.country
-                    expect(subject.ipAddress) == LDUser.StubConstants.ipAddress
-                    expect(subject.email) == LDUser.StubConstants.email
-                    expect(subject.avatar) == LDUser.StubConstants.avatar
-                    expect(subject.device) == LDUser.StubConstants.device
-                    expect(subject.operatingSystem) == LDUser.StubConstants.operatingSystem
-                    expect(subject.custom).toNot(beNil())
-                    if let subjectCustom = subject.custom {
-                        expect(subjectCustom == LDUser.StubConstants.custom).to(beTrue())
+                context("including system values") {
+                    beforeEach {
+                        subject = LDUser(key: LDUser.StubConstants.key, name: LDUser.StubConstants.name, firstName: LDUser.StubConstants.firstName, lastName: LDUser.StubConstants.lastName,
+                                         country: LDUser.StubConstants.country, ipAddress: LDUser.StubConstants.ipAddress, email: LDUser.StubConstants.email, avatar: LDUser.StubConstants.avatar,
+                                         custom: LDUser.StubConstants.custom(includeSystemValues: true), isAnonymous: LDUser.StubConstants.isAnonymous,
+                                         privateAttributes: LDUser.privatizableAttributes)
                     }
-                    expect(subject.lastUpdated).toNot(beNil())
-                    expect(subject.privateAttributes).toNot(beNil())
-                    if let privateAttributes = subject.privateAttributes {
-                        expect(privateAttributes) == LDUser.privatizableAttributes
+                    it("creates a LDUser with optional elements") {
+                        expect(subject.key) == LDUser.StubConstants.key
+                        expect(subject.name) == LDUser.StubConstants.name
+                        expect(subject.firstName) == LDUser.StubConstants.firstName
+                        expect(subject.lastName) == LDUser.StubConstants.lastName
+                        expect(subject.isAnonymous) == LDUser.StubConstants.isAnonymous
+                        expect(subject.country) == LDUser.StubConstants.country
+                        expect(subject.ipAddress) == LDUser.StubConstants.ipAddress
+                        expect(subject.email) == LDUser.StubConstants.email
+                        expect(subject.avatar) == LDUser.StubConstants.avatar
+                        expect(subject.device) == LDUser.StubConstants.device
+                        expect(subject.operatingSystem) == LDUser.StubConstants.operatingSystem
+                        expect(subject.custom).toNot(beNil())
+                        if let subjectCustom = subject.custom {
+                            expect(subjectCustom == LDUser.StubConstants.custom(includeSystemValues: true)).to(beTrue())
+                        }
+                        expect(subject.lastUpdated).toNot(beNil())
+                        expect(subject.privateAttributes).toNot(beNil())
+                        if let privateAttributes = subject.privateAttributes {
+                            expect(privateAttributes) == LDUser.privatizableAttributes
+                        }
+                    }
+                }
+                context("excluding system values") {
+                    beforeEach {
+                        subject = LDUser(key: LDUser.StubConstants.key, name: LDUser.StubConstants.name, firstName: LDUser.StubConstants.firstName, lastName: LDUser.StubConstants.lastName,
+                                         country: LDUser.StubConstants.country, ipAddress: LDUser.StubConstants.ipAddress, email: LDUser.StubConstants.email, avatar: LDUser.StubConstants.avatar,
+                                         custom: LDUser.StubConstants.custom(includeSystemValues: false), device: LDUser.StubConstants.device, operatingSystem: LDUser.StubConstants.operatingSystem,
+                                         isAnonymous: LDUser.StubConstants.isAnonymous, privateAttributes: LDUser.privatizableAttributes)
+                    }
+                    it("creates a LDUser with optional elements") {
+                        expect(subject.key) == LDUser.StubConstants.key
+                        expect(subject.name) == LDUser.StubConstants.name
+                        expect(subject.firstName) == LDUser.StubConstants.firstName
+                        expect(subject.lastName) == LDUser.StubConstants.lastName
+                        expect(subject.isAnonymous) == LDUser.StubConstants.isAnonymous
+                        expect(subject.country) == LDUser.StubConstants.country
+                        expect(subject.ipAddress) == LDUser.StubConstants.ipAddress
+                        expect(subject.email) == LDUser.StubConstants.email
+                        expect(subject.avatar) == LDUser.StubConstants.avatar
+                        expect(subject.device) == LDUser.StubConstants.device
+                        expect(subject.operatingSystem) == LDUser.StubConstants.operatingSystem
+                        expect(subject.custom).toNot(beNil())
+                        if let subjectCustom = subject.custom {
+                            expect(subjectCustom == LDUser.StubConstants.custom(includeSystemValues: false)).to(beTrue())
+                        }
+                        expect(subject.lastUpdated).toNot(beNil())
+                        expect(subject.privateAttributes).toNot(beNil())
+                        if let privateAttributes = subject.privateAttributes {
+                            expect(privateAttributes) == LDUser.privatizableAttributes
+                        }
                     }
                 }
             }
             context("called without optional elements") {
+                var device: String!
+                var operatingSystem: String!
                 beforeEach {
                     subject = LDUser(isAnonymous: true)
+                    let environmentReporter = EnvironmentReporter()
+                    device = environmentReporter.deviceModel
+                    operatingSystem = environmentReporter.systemVersion
                 }
                 it("creates a LDUser without optional elements") {
                     expect(subject.key).toNot(beNil())
@@ -65,8 +103,8 @@ final class LDUserSpec: QuickSpec {
                     expect(subject.ipAddress).to(beNil())
                     expect(subject.email).to(beNil())
                     expect(subject.avatar).to(beNil())
-                    expect(subject.device).toNot(beNil())
-                    expect(subject.operatingSystem).toNot(beNil())
+                    expect(subject.device) == device
+                    expect(subject.operatingSystem) == operatingSystem
                     expect(subject.custom).to(beNil())
                     expect(subject.privateAttributes).to(beNil())
                 }
@@ -94,7 +132,7 @@ final class LDUserSpec: QuickSpec {
                 context("and optional elements") {
                     beforeEach {
                         originalUser = LDUser.stub()
-                        var userDictionary = originalUser.dictionaryValue(includeFlagConfig: true, includePrivateAttributes: true, config: LDConfig())
+                        var userDictionary = originalUser.dictionaryValue(includeFlagConfig: true, includePrivateAttributes: true, config: LDConfig.stub)
                         userDictionary[LDUser.CodingKeys.lastUpdated.rawValue] = mockLastUpdated
                         userDictionary[LDUser.CodingKeys.privateAttributes.rawValue] = LDUser.privatizableAttributes
                         subject = LDUser(userDictionary: userDictionary)
@@ -287,6 +325,36 @@ final class LDUserSpec: QuickSpec {
             }
         }
 
+        describe("initWithEnvironmentReporter") {
+            var subject: LDUser!
+            var environmentReporter: EnvironmentReportingMock!
+            beforeEach {
+                environmentReporter = EnvironmentReportingMock()
+                subject = LDUser(environmentReporter: environmentReporter)
+            }
+            it("creates a user with system values matching the environment reporter") {
+                expect(subject.key).toNot(beNil())
+                expect(subject.key.isEmpty).to(beFalse())
+                expect(subject.isAnonymous) == true
+                expect(subject.lastUpdated).toNot(beNil())
+                
+                expect(subject.name).to(beNil())
+                expect(subject.firstName).to(beNil())
+                expect(subject.lastName).to(beNil())
+                expect(subject.country).to(beNil())
+                expect(subject.ipAddress).to(beNil())
+                expect(subject.email).to(beNil())
+                expect(subject.avatar).to(beNil())
+                expect(subject.device) == environmentReporter.deviceModel
+                expect(subject.operatingSystem) == environmentReporter.systemVersion
+                
+                expect(subject.custom).to(beNil())
+                expect(subject.privateAttributes).to(beNil())
+                
+                expect(subject.flagStore.featureFlags.isEmpty).to(beTrue())
+            }
+        }
+
         describe("dictionaryValue") {
             var config: LDConfig!
             var userDictionary: [String: Any]!
@@ -295,7 +363,7 @@ final class LDUserSpec: QuickSpec {
                 context("with individual private attributes") {
                     context("contained in the config") {
                         beforeEach {
-                            config = LDConfig()
+                            config = LDConfig.stub
                             subject = LDUser.stub()
                             privateAttributes = LDUser.privatizableAttributes + subject.customAttributes!
                         }
@@ -324,7 +392,7 @@ final class LDUserSpec: QuickSpec {
                     context("contained in the user") {
                         context("on a populated user") {
                             beforeEach {
-                                config = LDConfig()
+                                config = LDConfig.stub
                                 subject = LDUser.stub()
                                 privateAttributes = LDUser.privatizableAttributes + subject.customAttributes!
                             }
@@ -352,7 +420,7 @@ final class LDUserSpec: QuickSpec {
                         }
                         context("on an empty user") {
                             beforeEach {
-                                config = LDConfig()
+                                config = LDConfig.stub
                                 subject = LDUser()
                                 privateAttributes = LDUser.privatizableAttributes
                             }
@@ -383,7 +451,7 @@ final class LDUserSpec: QuickSpec {
                 context("with all private attributes") {
                     context("using the config flag") {
                         beforeEach {
-                            config = LDConfig()
+                            config = LDConfig.stub
                             config.allUserAttributesPrivate = true
                             subject = LDUser.stub()
                         }
@@ -415,7 +483,7 @@ final class LDUserSpec: QuickSpec {
                     }
                     context("contained in the config") {
                         beforeEach {
-                            config = LDConfig()
+                            config = LDConfig.stub
                             config.privateUserAttributes = LDUser.privatizableAttributes
                             subject = LDUser.stub()
                         }
@@ -447,7 +515,7 @@ final class LDUserSpec: QuickSpec {
                     }
                     context("contained in the user") {
                         beforeEach {
-                            config = LDConfig()
+                            config = LDConfig.stub
                             subject = LDUser.stub()
                             subject.privateAttributes = LDUser.privatizableAttributes
                         }
@@ -481,7 +549,7 @@ final class LDUserSpec: QuickSpec {
                 context("with no private attributes") {
                     context("by setting private attributes to nil") {
                         beforeEach {
-                            config = LDConfig()
+                            config = LDConfig.stub
                             subject = LDUser.stub()
                         }
                         it("creates a dictionary with matching key value pairs") {
@@ -512,7 +580,7 @@ final class LDUserSpec: QuickSpec {
                     }
                     context("by setting config private attributes to empty") {
                         beforeEach {
-                            config = LDConfig()
+                            config = LDConfig.stub
                             config.privateUserAttributes = []
                             subject = LDUser.stub()
                         }
@@ -543,7 +611,7 @@ final class LDUserSpec: QuickSpec {
                     }
                     context("by setting user private attributes to empty") {
                         beforeEach {
-                            config = LDConfig()
+                            config = LDConfig.stub
                             subject = LDUser.stub()
                             subject.privateAttributes = []
                         }
@@ -577,7 +645,7 @@ final class LDUserSpec: QuickSpec {
                     context("on a user with no custom dictionary") {
                         context("with a device and os") {
                             beforeEach {
-                                config = LDConfig()
+                                config = LDConfig.stub
                                 subject = LDUser.stub()
                                 subject.custom = nil
                                 subject.privateAttributes = [LDUser.CodingKeys.custom.rawValue]
@@ -610,7 +678,7 @@ final class LDUserSpec: QuickSpec {
                         }
                         context("without a device and os") {
                             beforeEach {
-                                config = LDConfig()
+                                config = LDConfig.stub
                                 subject = LDUser.stub()
                                 subject.custom = nil
                                 subject.operatingSystem = nil
@@ -652,7 +720,7 @@ final class LDUserSpec: QuickSpec {
                     context("on a user with a custom dictionary") {
                         context("without a device and os") {
                             beforeEach {
-                                config = LDConfig()
+                                config = LDConfig.stub
                                 subject = LDUser.stub() //The user stub puts device & operating system in both the user attributes and the custom dictionary
                                 subject.custom = subject.customWithoutSdkSetAttributes
                                 subject.device = nil
@@ -692,7 +760,7 @@ final class LDUserSpec: QuickSpec {
                 context("with individual private attributes") {
                     context("contained in the config") {
                         beforeEach {
-                            config = LDConfig()
+                            config = LDConfig.stub
                             subject = LDUser.stub()
                             privateAttributes = LDUser.privatizableAttributes + subject.customAttributes!
                         }
@@ -741,7 +809,7 @@ final class LDUserSpec: QuickSpec {
                     context("contained in the user") {
                         context("on a populated user") {
                             beforeEach {
-                                config = LDConfig()
+                                config = LDConfig.stub
                                 subject = LDUser.stub()
                                 privateAttributes = LDUser.privatizableAttributes + subject.customAttributes!
                             }
@@ -791,7 +859,7 @@ final class LDUserSpec: QuickSpec {
                         }
                         context("on an empty user") {
                             beforeEach {
-                                config = LDConfig()
+                                config = LDConfig.stub
                                 subject = LDUser()
                                 privateAttributes = LDUser.privatizableAttributes
                             }
@@ -825,7 +893,7 @@ final class LDUserSpec: QuickSpec {
                 context("with all private attributes") {
                     context("using the config flag") {
                         beforeEach {
-                            config = LDConfig()
+                            config = LDConfig.stub
                             config.allUserAttributesPrivate = true
                             subject = LDUser.stub()
                         }
@@ -868,7 +936,7 @@ final class LDUserSpec: QuickSpec {
                     }
                     context("contained in the config") {
                         beforeEach {
-                            config = LDConfig()
+                            config = LDConfig.stub
                             config.privateUserAttributes = LDUser.privatizableAttributes
                             subject = LDUser.stub()
                         }
@@ -911,7 +979,7 @@ final class LDUserSpec: QuickSpec {
                     }
                     context("contained in the user") {
                         beforeEach {
-                            config = LDConfig()
+                            config = LDConfig.stub
                             subject = LDUser.stub()
                             subject.privateAttributes = LDUser.privatizableAttributes
                         }
@@ -955,7 +1023,7 @@ final class LDUserSpec: QuickSpec {
                 context("with no private attributes") {
                     context("by setting private attributes to nil") {
                         beforeEach {
-                            config = LDConfig()
+                            config = LDConfig.stub
                             subject = LDUser.stub()
                         }
                         it("creates a dictionary with matching key value pairs") {
@@ -986,7 +1054,7 @@ final class LDUserSpec: QuickSpec {
                     }
                     context("by setting config private attributes to empty") {
                         beforeEach {
-                            config = LDConfig()
+                            config = LDConfig.stub
                             config.privateUserAttributes = []
                             subject = LDUser.stub()
                         }
@@ -1018,7 +1086,7 @@ final class LDUserSpec: QuickSpec {
                     }
                     context("by setting user private attributes to empty") {
                         beforeEach {
-                            config = LDConfig()
+                            config = LDConfig.stub
                             subject = LDUser.stub()
                             subject.privateAttributes = []
                         }
@@ -1053,7 +1121,7 @@ final class LDUserSpec: QuickSpec {
                     context("on a user with no custom dictionary") {
                         context("with a device and os") {
                             beforeEach {
-                                config = LDConfig()
+                                config = LDConfig.stub
                                 subject = LDUser.stub()
                                 subject.custom = nil
                                 subject.privateAttributes = [LDUser.CodingKeys.custom.rawValue]
@@ -1086,7 +1154,7 @@ final class LDUserSpec: QuickSpec {
                         }
                         context("without a device and os") {
                             beforeEach {
-                                config = LDConfig()
+                                config = LDConfig.stub
                                 subject = LDUser.stub()
                                 subject.custom = nil
                                 subject.operatingSystem = nil
@@ -1128,7 +1196,7 @@ final class LDUserSpec: QuickSpec {
                     context("on a user with a custom dictionary") {
                         context("without a device and os") {
                             beforeEach {
-                                config = LDConfig()
+                                config = LDConfig.stub
                                 subject = LDUser.stub() //The user stub puts device & operating system in both the user attributes and the custom dictionary
                                 subject.custom = subject.customWithoutSdkSetAttributes
                                 subject.device = nil
@@ -1429,7 +1497,7 @@ extension LDUser {
     }
 
     public func dictionaryValueWithAllAttributes(includeFlagConfig: Bool) -> [String: Any] {
-        var dictionary = dictionaryValue(includeFlagConfig: includeFlagConfig, includePrivateAttributes: true, config: LDConfig())
+        var dictionary = dictionaryValue(includeFlagConfig: includeFlagConfig, includePrivateAttributes: true, config: LDConfig.stub)
         dictionary[CodingKeys.privateAttributes.rawValue] = privateAttributes
         return dictionary
     }

@@ -39,7 +39,11 @@ public struct LDConfig {
 
     public struct Minima {
         public let backgroundPollIntervalMillis = 900_000   ///The minimum background polling interval in milliseconds. Value: 15 minutes
-        public let pollingIntervalMillis = isDebug ? 60_000 : 300_000   ///The minimum polling interval in milliseconds. Value: 5 minutes
+        public let pollingIntervalMillis: Int   ///The minimum polling interval in milliseconds. Value: 5 minutes
+
+        init(environmentReporter: EnvironmentReporting) {
+            self.pollingIntervalMillis = environmentReporter.isDebugBuild ? 60_000 : 300_000
+        }
     }
 
     public var baseUrl: URL = Defaults.baseUrl                ///You probably don't need to set this unless instructed by LaunchDarkly.
@@ -65,13 +69,15 @@ public struct LDConfig {
 
     ///Enables real-time streaming flag updates. When set to .polling, an efficient polling mechanism is used. Default: .streaming
     public var streamingMode: LDStreamingMode = Defaults.streaming
+    private(set) var allowStreamingMode: Bool
 
     private var enableBgUpdates: Bool = Defaults.enableBackgroundUpdates
     ///Enables feature flag updates when your app is in the background. Disabled, future use only. Default: false
     public var enableBackgroundUpdates: Bool {
-        set { enableBgUpdates = newValue && isDebug }
+        set { enableBgUpdates = newValue && allowBackgroundUpdates }
         get { return enableBgUpdates }
     }
+    private(set) var allowBackgroundUpdates: Bool
     
     ///Determines whether LDClient will be online / offline at start. If offline at start, set the client online to receive flag updates. Default: true
     public var startOnline: Bool = Defaults.online
@@ -91,9 +97,17 @@ public struct LDConfig {
     public var isDebugMode: Bool = Defaults.debugMode
 
     ///LD defined minima
-    public let minima = Minima()
+    public let minima: Minima
 
-    public init() { }   //Even though the struct is public, the default constructor is internal
+    init(environmentReporter: EnvironmentReporting) {
+        minima = Minima(environmentReporter: environmentReporter)
+        allowStreamingMode = environmentReporter.operatingSystem != .watchOS
+        allowBackgroundUpdates = environmentReporter.isDebugBuild
+    }
+
+    public init() {
+        self.init(environmentReporter: EnvironmentReporter())
+    }
 
     func flagPollingInterval(runMode: LDClientRunMode) -> TimeInterval {
         let pollingIntervalMillis = runMode == .foreground ? max(pollIntervalMillis, minima.pollingIntervalMillis) : max(backgroundPollIntervalMillis, minima.backgroundPollIntervalMillis)

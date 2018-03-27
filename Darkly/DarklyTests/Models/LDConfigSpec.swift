@@ -17,9 +17,13 @@ final class LDConfigSpec: QuickSpec {
 
     struct TestContext {
         var subject: LDConfig!
+        var environmentReporter: EnvironmentReportingMock!
 
-        init(useStub: Bool = false) {
-            subject = useStub ? LDConfig.stub : LDConfig()
+        init(useStub: Bool = false, operatingSystem: OperatingSystem? = nil, isDebugBuild: Bool? = nil) {
+            self.environmentReporter = EnvironmentReportingMock()
+            if let operatingSystem = operatingSystem { self.environmentReporter.operatingSystem = operatingSystem }
+            if let isDebugBuild = isDebugBuild { self.environmentReporter.isDebugBuild = isDebugBuild }
+            subject = useStub ? LDConfig.stub(environmentReporter: self.environmentReporter) : LDConfig(environmentReporter: self.environmentReporter)
         }
     }
 
@@ -27,6 +31,8 @@ final class LDConfigSpec: QuickSpec {
         flagPollingIntervalSpec()
         equalsSpec()
         isReportRetryStatusCodeSpec()
+        allowStreamingModeSpec()
+        allowBackgroundUpdatesSpec()
     }
 
     func flagPollingIntervalSpec() {
@@ -276,6 +282,55 @@ final class LDConfigSpec: QuickSpec {
                     testStatusCodes.forEach { (testCode) in
                         expect(LDConfig.isReportRetryStatusCode(testCode)) == false
                     }
+                }
+            }
+        }
+    }
+
+    private func allowStreamingModeSpec() {
+        var testContext: TestContext!
+
+        describe("allowStreamingMode") {
+            context("on iOS devices") {
+                beforeEach {
+                    testContext = TestContext(useStub: true, operatingSystem: .iOS)
+                }
+                it("allows streaming mode") {
+                    expect(testContext.subject.allowStreamingMode) == true
+                }
+            }
+            context("on watchOS devices") {
+                beforeEach {
+                    testContext = TestContext(useStub: true, operatingSystem: .watchOS)
+                }
+                it("allows streaming mode") {
+                    expect(testContext.subject.allowStreamingMode) == false
+                }
+            }
+            //TODO: When adding mac & tv support, add tests covering those OS's too
+        }
+    }
+
+    private func allowBackgroundUpdatesSpec() {
+        var testContext: TestContext!
+
+        describe("enableBackgroundUpdates") {
+            context("when using a debug build") {
+                beforeEach {
+                    testContext = TestContext(useStub: true, isDebugBuild: true)
+                    testContext.subject.enableBackgroundUpdates = true
+                }
+                it("enables background updates") {
+                    expect(testContext.subject.enableBackgroundUpdates) == true
+                }
+            }
+            context("when using a production build") {
+                beforeEach {
+                    testContext = TestContext(useStub: true, isDebugBuild: false)
+                    testContext.subject.enableBackgroundUpdates = true
+                }
+                it("does not enable background updates") {
+                    expect(testContext.subject.enableBackgroundUpdates) == false
                 }
             }
         }

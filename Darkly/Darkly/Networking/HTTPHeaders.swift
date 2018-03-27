@@ -21,9 +21,11 @@ struct HTTPHeaders {
     }
     
     let mobileKey: String
+    let systemName: String
     
-    init(mobileKey: String) {
+    init(mobileKey: String, environmentReporter: EnvironmentReporting) {
         self.mobileKey = mobileKey
+        self.systemName = environmentReporter.systemName
     }
     
     var authKey: String { return "\(Constants.apiKey) \(mobileKey)" }

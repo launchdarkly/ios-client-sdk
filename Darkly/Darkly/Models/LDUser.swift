@@ -45,6 +45,8 @@ public struct LDUser {
                 email: String? = nil,
                 avatar: String? = nil,
                 custom: [String: Any]? = nil,
+                device: String? = nil,
+                operatingSystem: String? = nil,
                 isAnonymous: Bool? = nil,
                 privateAttributes: [String]? = nil) {
         let selectedKey = key ?? LDUser.defaultKey
@@ -58,8 +60,9 @@ public struct LDUser {
         self.avatar = avatar
         self.custom = custom
         self.isAnonymous = isAnonymous ?? (selectedKey == LDUser.defaultKey)
-        self.device = custom?[CodingKeys.device.rawValue] as? String ?? deviceModel
-        self.operatingSystem = custom?[CodingKeys.operatingSystem.rawValue] as? String ?? systemVersion
+        let environmentReporter = EnvironmentReporter()
+        self.device = device ?? custom?[CodingKeys.device.rawValue] as? String ?? environmentReporter.deviceModel
+        self.operatingSystem = operatingSystem ?? custom?[CodingKeys.operatingSystem.rawValue] as? String ?? environmentReporter.systemVersion
         self.privateAttributes = privateAttributes
         lastUpdated = Date()
         Log.debug(typeName(and: #function) + "user: \(self)")
@@ -85,6 +88,10 @@ public struct LDUser {
 
         flagStore = FlagStore(featureFlagDictionary: userDictionary[CodingKeys.config.rawValue] as? [String: Any], flagValueSource: .cache)
         Log.debug(typeName(and: #function) + "user: \(self)")
+    }
+
+    init(environmentReporter: EnvironmentReporting) {
+        self.init(device: environmentReporter.deviceModel, operatingSystem: environmentReporter.systemVersion)
     }
 
     //swiftlint:disable:next cyclomatic_complexity

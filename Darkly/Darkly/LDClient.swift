@@ -39,14 +39,14 @@ public class LDClient {
     ///If the config is unchanged, returns immediately.
     ///Usage:
     ///     LDClient.shared.config = newConfig
-    public var config = LDConfig() {
+    public var config: LDConfig {
         didSet {
             guard config != oldValue else {
                 Log.debug(typeName(and: #function) + "aborted. New config matches old config")
                 return
             }
 
-            Log.level = isDebug && config.isDebugMode ? .debug : .noLogging
+            Log.level = environmentReporter.isDebugBuild && config.isDebugMode ? .debug : .noLogging
             Log.debug(typeName(and: #function) + "new config set")
             let wasOnline = isOnline
             isOnline = false
@@ -67,7 +67,7 @@ public class LDClient {
     ///Make user changes by getting the user from the client, adjusting values, and then setting the new user
     ///Usage:
     ///     LDClient.shared.user = newUser
-    public var user = LDUser() {
+    public var user: LDUser {
         didSet {
             Log.debug(typeName(and: #function) + "new user set with key: " + user.key )
             let wasOnline = isOnline
@@ -127,7 +127,7 @@ public class LDClient {
     }
 
     private func effectiveStreamingMode(runMode: LDClientRunMode) -> LDStreamingMode {
-        let streamingMode: LDStreamingMode = runMode == .foreground && self.config.streamingMode == .streaming ? .streaming : .polling
+        let streamingMode: LDStreamingMode = runMode == .foreground && config.streamingMode == .streaming && config.allowStreamingMode ? .streaming : .polling
         Log.debug(typeName(and: #function, appending: ": ") + "\(streamingMode)")
         return streamingMode
     }
@@ -385,14 +385,18 @@ public class LDClient {
     private(set) var flagSynchronizer: LDFlagSynchronizing
     private(set) var flagChangeNotifier: FlagChangeNotifying
     private(set) var eventReporter: LDEventReporting
-    
+    private(set) var environmentReporter: EnvironmentReporting
+
     private init() {
+        environmentReporter = serviceFactory.makeEnvironmentReporter()
+        user = LDUser(environmentReporter: environmentReporter)
         flagCache = serviceFactory.makeUserFlagCache()
         LDUserWrapper.configureKeyedArchiversToHandleVersion2_3_0AndOlderUserCacheFormat()
         serviceFactory.makeCacheConverter().convertUserCacheToFlagCache()
         flagChangeNotifier = serviceFactory.makeFlagChangeNotifier()
 
         //dummy objects replaced by start call
+        config = LDConfig(environmentReporter: environmentReporter)
         service = serviceFactory.makeDarklyServiceProvider(mobileKey: "", config: config, user: user)
         flagSynchronizer = serviceFactory.makeFlagSynchronizer(streamingMode: .polling,
                                                                pollingInterval: config.flagPollInterval,
@@ -411,9 +415,12 @@ public class LDClient {
         self.init()
         self.runMode = runMode
         self.serviceFactory = serviceFactory
+        environmentReporter = serviceFactory.makeEnvironmentReporter()
+        user = LDUser(environmentReporter: environmentReporter)
         flagChangeNotifier = serviceFactory.makeFlagChangeNotifier()
 
         //dummy objects replaced by start call
+        config = LDConfig(environmentReporter: environmentReporter)
         flagCache = serviceFactory.makeUserFlagCache()
         service = serviceFactory.makeDarklyServiceProvider(mobileKey: "", config: config, user: user)
         flagSynchronizer = self.serviceFactory.makeFlagSynchronizer(streamingMode: .polling,

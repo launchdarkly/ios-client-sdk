@@ -23,17 +23,24 @@ extension LDUser {
         static let avatar = "stub.user.avatar"
         static let device = "stub.user.custom.device"
         static let operatingSystem = "stub.user.custom.operatingSystem"
-        static let custom: [String: Any] = ["stub.user.custom.keyA": "stub.user.custom.valueA",
-                                            "stub.user.custom.keyB": true,
-                                            "stub.user.custom.keyC": 1027,
-                                            "stub.user.custom.keyD": 2.71828,
-                                            "stub.user.custom.keyE": [0, 1, 2],
-                                            "stub.user.custom.keyF": ["1": 1, "2": 2, "3": 3],
-                                            CodingKeys.device.rawValue: StubConstants.device,
-                                            CodingKeys.operatingSystem.rawValue: StubConstants.operatingSystem]
+        private static let custom: [String: Any] = ["stub.user.custom.keyA": "stub.user.custom.valueA",
+                                                    "stub.user.custom.keyB": true,
+                                                    "stub.user.custom.keyC": 1027,
+                                                    "stub.user.custom.keyD": 2.71828,
+                                                    "stub.user.custom.keyE": [0, 1, 2],
+                                                    "stub.user.custom.keyF": ["1": 1, "2": 2, "3": 3]]
+
+        static func custom(includeSystemValues: Bool) -> [String: Any] {
+            var custom = StubConstants.custom
+            if includeSystemValues {
+                custom[CodingKeys.device.rawValue] = StubConstants.device
+                custom[CodingKeys.operatingSystem.rawValue] = StubConstants.operatingSystem
+            }
+            return custom
+        }
     }
 
-    static func stub(key: String? = nil, includeNullValue: Bool = false, includeVersions: Bool = true) -> LDUser {
+    static func stub(key: String? = nil, includeNullValue: Bool = false, includeVersions: Bool = true, environmentReporter: EnvironmentReportingMock? = nil) -> LDUser {
         var user = LDUser(key: key ?? UUID().uuidString,
                           name: StubConstants.name,
                           firstName: StubConstants.firstName,
@@ -42,7 +49,9 @@ extension LDUser {
                           ipAddress: StubConstants.ipAddress,
                           email: StubConstants.email,
                           avatar: StubConstants.avatar,
-                          custom: StubConstants.custom,
+                          custom: StubConstants.custom(includeSystemValues: true),
+                          device: environmentReporter?.deviceModel,
+                          operatingSystem: environmentReporter?.systemVersion,
                           isAnonymous: StubConstants.isAnonymous)
         user.flagStore = FlagMaintainingMock(flags: user.stubFlags(includeNullValue: includeNullValue, includeVersions: includeVersions))
         return user

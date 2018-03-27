@@ -31,22 +31,38 @@ final class DarklyServiceSpec: QuickSpec {
         var serviceFactoryMock: ClientServiceMockFactory? { return subject.serviceFactory as? ClientServiceMockFactory }
         var subject: DarklyService!
 
-        init(mobileKey: String, useReport: Bool, includeMockEventDictionaries: Bool = false) {
+        init(mobileKey: String, useReport: Bool, includeMockEventDictionaries: Bool = false, operatingSystemName: String? = nil) {
+            let serviceFactoryMock = ClientServiceMockFactory()
+            if let operatingSystemName = operatingSystemName { serviceFactoryMock.makeEnvironmentReporterReturnValue.systemName = operatingSystemName }
             config = LDConfig.stub
             config.useReport = useReport
             mockEventDictionaries = includeMockEventDictionaries ? LDEvent.stubEventDictionaries(Constants.eventCount, user: user, config: config) : nil
             serviceMock = DarklyServiceMock(config: config)
-            subject = DarklyService(mobileKey: mobileKey, config: config, user: user, serviceFactory: ClientServiceMockFactory())
+            subject = DarklyService(mobileKey: mobileKey, config: config, user: user, serviceFactory: serviceFactoryMock)
         }
     }
     
     override func spec() {
+        httpHeaderSpec()
         getFeatureFlagsSpec()
         createEventSourceSpec()
         publishEventDictionariesSpec()
 
         afterEach {
             OHHTTPStubs.removeAllStubs()
+        }
+    }
+
+    private func httpHeaderSpec() {
+        var testContext: TestContext!
+
+        describe("init httpHeader") {
+            beforeEach {
+                testContext = TestContext(mobileKey: Constants.mockMobileKey, useReport: false, operatingSystemName: EnvironmentReportingMock.Constants.systemName)
+            }
+            it("creates a header with the specified user agent") {
+                expect(testContext.subject.httpHeaders.userAgent.hasPrefix(EnvironmentReportingMock.Constants.systemName)).to(beTrue())
+            }
         }
     }
 

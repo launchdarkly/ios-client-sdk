@@ -49,6 +49,7 @@ final class LDClientSpec: QuickSpec {
         var flagSynchronizerMock: LDFlagSynchronizingMock! { return subject.flagSynchronizer as? LDFlagSynchronizingMock }
         var eventReporterMock: LDEventReportingMock! { return subject.eventReporter as? LDEventReportingMock }
         var changeNotifierMock: FlagChangeNotifyingMock! { return subject.flagChangeNotifier as? FlagChangeNotifyingMock }
+        var environmentReporterMock: EnvironmentReportingMock! { return subject.environmentReporter as? EnvironmentReportingMock }
         // makeFlagSynchronizer getters
         var makeFlagSynchronizerStreamingMode: LDStreamingMode? { return serviceFactoryMock.makeFlagSynchronizerReceivedParameters?.streamingMode }
         var makeFlagSynchronizerPollingInterval: TimeInterval? { return serviceFactoryMock.makeFlagSynchronizerReceivedParameters?.pollingInterval }
@@ -70,8 +71,11 @@ final class LDClientSpec: QuickSpec {
         var oldFlags: [LDFlagKey: FeatureFlag]!
         var oldFlagSource: LDFlagValueSource!
 
-        init(startOnline: Bool = false, runMode: LDClientRunMode = .foreground) {
-            config = LDConfig.stub
+        init(startOnline: Bool = false, runMode: LDClientRunMode = .foreground, operatingSystem: OperatingSystem? = nil) {
+            let clientServiceFactory = ClientServiceMockFactory()
+            if let operatingSystem = operatingSystem { clientServiceFactory.makeEnvironmentReporterReturnValue.operatingSystem = operatingSystem }
+
+            config = LDConfig.stub(environmentReporter: clientServiceFactory.makeEnvironmentReporterReturnValue)
             config.startOnline = startOnline
             config.eventFlushIntervalMillis = 300_000   //5 min...don't want this to trigger
 
@@ -79,7 +83,7 @@ final class LDClientSpec: QuickSpec {
             oldFlags = user.flagStore.featureFlags
             oldFlagSource = user.flagStore.flagValueSource
 
-            subject = LDClient.makeClient(with: ClientServiceMockFactory(), runMode: runMode)
+            subject = LDClient.makeClient(with: clientServiceFactory, runMode: runMode)
             subject.config = config
             subject.user = user
 
@@ -113,6 +117,7 @@ final class LDClientSpec: QuickSpec {
         observeSpec()
         onSyncCompleteSpec()
         runModeSpec()
+        streamingModeSpec()
     }
 
     private func startSpec() {
@@ -1654,6 +1659,30 @@ final class LDClientSpec: QuickSpec {
                 expect(testContext.eventReporterMock.isOnline) == false
                 expect(testContext.flagSynchronizerMock.isOnline) == false
             }
+        }
+    }
+
+    private func streamingModeSpec() {
+        var testContext: TestContext!
+
+        describe("flag synchronizer streaming mode") {
+            context("when running on iOS") {
+                beforeEach {
+                    testContext = TestContext(startOnline: true, runMode: .foreground, operatingSystem: .iOS)
+                }
+                it("sets the flag synchronizer to streaming mode") {
+                    expect(testContext.makeFlagSynchronizerStreamingMode) == LDStreamingMode.streaming
+                }
+            }
+            context("when running on watchOS") {
+                beforeEach {
+                    testContext = TestContext(startOnline: true, runMode: .foreground, operatingSystem: .watchOS)
+                }
+                it("sets the flag synchronizer to streaming mode") {
+                    expect(testContext.makeFlagSynchronizerStreamingMode) == LDStreamingMode.polling
+                }
+            }
+            //TODO: When adding mac & tv support, add tests to verify the streaming mode
         }
     }
 }

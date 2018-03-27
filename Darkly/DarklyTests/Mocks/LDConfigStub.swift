@@ -9,8 +9,10 @@
 @testable import Darkly
 
 extension LDConfig {
-    static var stub: LDConfig {
-        var config = LDConfig()
+    static var stub: LDConfig { return stub(environmentReporter: EnvironmentReportingMock()) }
+
+    static func stub(environmentReporter: EnvironmentReportingMock) -> LDConfig {
+        var config = LDConfig(environmentReporter: environmentReporter)
         config.baseUrl = DarklyServiceMock.Constants.mockBaseUrl
         config.eventsUrl = DarklyServiceMock.Constants.mockEventsUrl
         config.streamUrl = DarklyServiceMock.Constants.mockStreamUrl

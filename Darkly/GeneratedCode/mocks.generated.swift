@@ -40,6 +40,60 @@ final class DarklyStreamingProviderMock: DarklyStreamingProvider {
     }
 }
 
+// MARK: - EnvironmentReportingMock
+final class EnvironmentReportingMock: EnvironmentReporting {
+
+    // MARK: isDebugBuild
+    var isDebugBuildSetCount = 0
+    var setIsDebugBuildCallback: (() -> Void)?
+    var isDebugBuild: Bool = true {
+        didSet {
+            isDebugBuildSetCount += 1
+            setIsDebugBuildCallback?()
+        }
+    }
+
+    // MARK: deviceModel
+    var deviceModelSetCount = 0
+    var setDeviceModelCallback: (() -> Void)?
+    var deviceModel: String = Constants.deviceModel {
+        didSet {
+            deviceModelSetCount += 1
+            setDeviceModelCallback?()
+        }
+    }
+
+    // MARK: systemVersion
+    var systemVersionSetCount = 0
+    var setSystemVersionCallback: (() -> Void)?
+    var systemVersion: String = Constants.systemVersion {
+        didSet {
+            systemVersionSetCount += 1
+            setSystemVersionCallback?()
+        }
+    }
+
+    // MARK: systemName
+    var systemNameSetCount = 0
+    var setSystemNameCallback: (() -> Void)?
+    var systemName: String = Constants.systemName {
+        didSet {
+            systemNameSetCount += 1
+            setSystemNameCallback?()
+        }
+    }
+
+    // MARK: operatingSystem
+    var operatingSystemSetCount = 0
+    var setOperatingSystemCallback: (() -> Void)?
+    var operatingSystem: OperatingSystem = .iOS {
+        didSet {
+            operatingSystemSetCount += 1
+            setOperatingSystemCallback?()
+        }
+    }
+}
+
 // MARK: - FlagChangeNotifyingMock
 final class FlagChangeNotifyingMock: FlagChangeNotifying {
 
