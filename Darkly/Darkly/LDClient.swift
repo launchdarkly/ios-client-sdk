@@ -413,13 +413,12 @@ public class LDClient {
                                                                onSyncComplete: nil)
         eventReporter = serviceFactory.makeEventReporter(config: config, service: service)
 
-#if os(iOS)
-        NotificationCenter.default.addObserver(self, selector: #selector(didEnterBackground), name: .UIApplicationDidEnterBackground, object: nil)
-        NotificationCenter.default.addObserver(self, selector: #selector(willEnterForeground), name: .UIApplicationWillEnterForeground, object: nil)
-#elseif os(OSX)
-        NotificationCenter.default.addObserver(self, selector: #selector(didEnterBackground), name: NSApplication.didBecomeActiveNotification, object: nil)
-        NotificationCenter.default.addObserver(self, selector: #selector(willEnterForeground), name: NSApplication.willResignActiveNotification, object: nil)
-#endif
+        if let backgroundNotification = environmentReporter.backgroundNotification {
+            NotificationCenter.default.addObserver(self, selector: #selector(didEnterBackground), name: backgroundNotification, object: nil)
+        }
+        if let foregroundNotification = environmentReporter.foregroundNotification {
+            NotificationCenter.default.addObserver(self, selector: #selector(willEnterForeground), name: foregroundNotification, object: nil)
+        }
     }
 
     private convenience init(serviceFactory: ClientServiceCreating, runMode: LDClientRunMode) {

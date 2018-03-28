@@ -92,6 +92,26 @@ final class EnvironmentReportingMock: EnvironmentReporting {
             setOperatingSystemCallback?()
         }
     }
+
+    // MARK: backgroundNotification
+    var backgroundNotificationSetCount = 0
+    var setBackgroundNotificationCallback: (() -> Void)?
+    var backgroundNotification: Notification.Name? {
+        didSet {
+            backgroundNotificationSetCount += 1
+            setBackgroundNotificationCallback?()
+        }
+    }
+
+    // MARK: foregroundNotification
+    var foregroundNotificationSetCount = 0
+    var setForegroundNotificationCallback: (() -> Void)?
+    var foregroundNotification: Notification.Name? {
+        didSet {
+            foregroundNotificationSetCount += 1
+            setForegroundNotificationCallback?()
+        }
+    }
 }
 
 // MARK: - FlagChangeNotifyingMock
