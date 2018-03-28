@@ -33,7 +33,9 @@ final class DarklyServiceSpec: QuickSpec {
 
         init(mobileKey: String, useReport: Bool, includeMockEventDictionaries: Bool = false, operatingSystemName: String? = nil) {
             let serviceFactoryMock = ClientServiceMockFactory()
-            if let operatingSystemName = operatingSystemName { serviceFactoryMock.makeEnvironmentReporterReturnValue.systemName = operatingSystemName }
+            if let operatingSystemName = operatingSystemName {
+                serviceFactoryMock.makeEnvironmentReporterReturnValue.systemName = operatingSystemName
+            }
             config = LDConfig.stub
             config.useReport = useReport
             mockEventDictionaries = includeMockEventDictionaries ? LDEvent.stubEventDictionaries(Constants.eventCount, user: user, config: config) : nil

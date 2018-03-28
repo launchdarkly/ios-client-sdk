@@ -303,7 +303,7 @@ final class LDConfigSpec: QuickSpec {
                 beforeEach {
                     testContext = TestContext(useStub: true, operatingSystem: .watchOS)
                 }
-                it("allows streaming mode") {
+                it("disallows streaming mode") {
                     expect(testContext.subject.allowStreamingMode) == false
                 }
             }
