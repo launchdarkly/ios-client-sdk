@@ -83,16 +83,13 @@ final class LDUserSpec: QuickSpec {
                 }
             }
             context("called without optional elements") {
-                var device: String!
-                var operatingSystem: String!
+                var environmentReporter: EnvironmentReporter!
                 beforeEach {
-                    subject = LDUser(isAnonymous: true)
-                    let environmentReporter = EnvironmentReporter()
-                    device = environmentReporter.deviceModel
-                    operatingSystem = environmentReporter.systemVersion
+                    subject = LDUser()
+                    environmentReporter = EnvironmentReporter()
                 }
                 it("creates a LDUser without optional elements") {
-                    expect(subject.key).toNot(beNil())
+                    expect(subject.key) == LDUser.defaultKey(environmentReporter: environmentReporter)
                     expect(subject.isAnonymous) == true
                     expect(subject.lastUpdated).toNot(beNil())
 
@@ -103,8 +100,8 @@ final class LDUserSpec: QuickSpec {
                     expect(subject.ipAddress).to(beNil())
                     expect(subject.email).to(beNil())
                     expect(subject.avatar).to(beNil())
-                    expect(subject.device) == device
-                    expect(subject.operatingSystem) == operatingSystem
+                    expect(subject.device) == environmentReporter.deviceModel
+                    expect(subject.operatingSystem) == environmentReporter.systemVersion
                     expect(subject.custom).to(beNil())
                     expect(subject.privateAttributes).to(beNil())
                 }
@@ -117,8 +114,9 @@ final class LDUserSpec: QuickSpec {
                     }
                 }
                 it("creates each LDUser with the default key and isAnonymous set") {
+                    let environmentReporter = EnvironmentReporter()
                     users.forEach { (user) in
-                        expect(user.key) == LDUser.defaultKey
+                        expect(user.key) == LDUser.defaultKey(environmentReporter: environmentReporter)
                         expect(user.isAnonymous) == true
                     }
                 }
@@ -333,8 +331,7 @@ final class LDUserSpec: QuickSpec {
                 subject = LDUser(environmentReporter: environmentReporter)
             }
             it("creates a user with system values matching the environment reporter") {
-                expect(subject.key).toNot(beNil())
-                expect(subject.key.isEmpty).to(beFalse())
+                expect(subject.key) == LDUser.defaultKey(environmentReporter: environmentReporter)
                 expect(subject.isAnonymous) == true
                 expect(subject.lastUpdated).toNot(beNil())
                 

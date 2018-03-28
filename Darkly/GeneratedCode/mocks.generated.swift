@@ -112,6 +112,16 @@ final class EnvironmentReportingMock: EnvironmentReporting {
             setForegroundNotificationCallback?()
         }
     }
+
+    // MARK: vendorUUID
+    var vendorUUIDSetCount = 0
+    var setVendorUUIDCallback: (() -> Void)?
+    var vendorUUID: String? {
+        didSet {
+            vendorUUIDSetCount += 1
+            setVendorUUIDCallback?()
+        }
+    }
 }
 
 // MARK: - FlagChangeNotifyingMock

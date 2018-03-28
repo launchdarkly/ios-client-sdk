@@ -32,6 +32,8 @@ protocol EnvironmentReporting {
     var backgroundNotification: Notification.Name? { get }
     //sourcery: DefaultMockValue = .UIApplicationWillEnterForeground
     var foregroundNotification: Notification.Name? { get }
+    //sourcery: DefaultMockValue = Constants.vendorUUID
+    var vendorUUID: String? { get }
 }
 
 struct EnvironmentReporter: EnvironmentReporting {
@@ -48,6 +50,7 @@ struct EnvironmentReporter: EnvironmentReporting {
     var operatingSystem: OperatingSystem { return .iOS }
     var backgroundNotification: Notification.Name? { return .UIApplicationDidEnterBackground }
     var foregroundNotification: Notification.Name? { return .UIApplicationWillEnterForeground }
+    var vendorUUID: String? { return UIDevice.current.identifierForVendor?.uuidString }
     #elseif os(watchOS)
     var deviceModel: String { return WKInterfaceDevice.current().model }
     var systemVersion: String { return WKInterfaceDevice.current().systemVersion }
@@ -55,6 +58,7 @@ struct EnvironmentReporter: EnvironmentReporting {
     var operatingSystem: OperatingSystem { return .watchOS }
     var backgroundNotification: Notification.Name? { return nil }
     var foregroundNotification: Notification.Name? { return nil }
+    var vendorUUID: String? { return nil }
     #elseif os(OSX)
     var deviceModel: String { return "mac" }
     var systemVersion: String { return ProcessInfo.processInfo.operatingSystemVersion.compactVersionString }
@@ -62,8 +66,10 @@ struct EnvironmentReporter: EnvironmentReporting {
     var operatingSystem: OperatingSystem { return .macOS }
     var backgroundNotification: Notification.Name? { return NSApplication.willResignActiveNotification }
     var foregroundNotification: Notification.Name? { return NSApplication.didBecomeActiveNotification }
+    var vendorUUID: String? { return nil }
     #endif
     //TODO: when adding tv support, add case
+//    var vendorUUID: String? { return UIDevice.current.identifierForVendor?.uuidString }   //TODO: this should be in the tvOS case too
 }
 
 #if os(OSX)

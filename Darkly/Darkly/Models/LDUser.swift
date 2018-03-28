@@ -49,7 +49,8 @@ public struct LDUser {
                 operatingSystem: String? = nil,
                 isAnonymous: Bool? = nil,
                 privateAttributes: [String]? = nil) {
-        let selectedKey = key ?? LDUser.defaultKey
+        let environmentReporter = EnvironmentReporter()
+        let selectedKey = key ?? LDUser.defaultKey(environmentReporter: environmentReporter)
         self.key = selectedKey
         self.name = name
         self.firstName = firstName
@@ -59,8 +60,7 @@ public struct LDUser {
         self.email = email
         self.avatar = avatar
         self.custom = custom
-        self.isAnonymous = isAnonymous ?? (selectedKey == LDUser.defaultKey)
-        let environmentReporter = EnvironmentReporter()
+        self.isAnonymous = isAnonymous ?? (selectedKey == LDUser.defaultKey(environmentReporter: environmentReporter))
         self.device = device ?? custom?[CodingKeys.device.rawValue] as? String ?? environmentReporter.deviceModel
         self.operatingSystem = operatingSystem ?? custom?[CodingKeys.operatingSystem.rawValue] as? String ?? environmentReporter.systemVersion
         self.privateAttributes = privateAttributes
@@ -69,7 +69,7 @@ public struct LDUser {
     }
     
     public init(userDictionary: [String: Any]) {
-        key = userDictionary[CodingKeys.key.rawValue] as? String ?? LDUser.defaultKey
+        key = userDictionary[CodingKeys.key.rawValue] as? String ?? LDUser.defaultKey(environmentReporter: EnvironmentReporter())
         isAnonymous = userDictionary[CodingKeys.isAnonymous.rawValue] as? Bool ?? false
         lastUpdated = (userDictionary[CodingKeys.lastUpdated.rawValue] as? String)?.dateValue ?? Date()
 
@@ -91,7 +91,7 @@ public struct LDUser {
     }
 
     init(environmentReporter: EnvironmentReporting) {
-        self.init(device: environmentReporter.deviceModel, operatingSystem: environmentReporter.systemVersion)
+        self.init(key: LDUser.defaultKey(environmentReporter: environmentReporter), device: environmentReporter.deviceModel, operatingSystem: environmentReporter.systemVersion, isAnonymous: true)
     }
 
     //swiftlint:disable:next cyclomatic_complexity
@@ -170,12 +170,8 @@ public struct LDUser {
 
     //For iOS & tvOS, this should be UIDevice.current.identifierForVendor.UUIDString
     //For macOS & watchOS, this should be a UUID that the sdk creates and stores so that the value returned here should be always the same
-    static var defaultKey: String {
-        #if os(iOS) || os(tvOS)
-            return UIDevice.current.identifierForVendor?.uuidString ?? UserDefaults.standard.installationKey
-        #else
-            return UserDefaults.standard.installationKey
-        #endif
+    static func defaultKey(environmentReporter: EnvironmentReporting) -> String {
+        return environmentReporter.vendorUUID ?? UserDefaults.standard.installationKey
     }
 }
 
