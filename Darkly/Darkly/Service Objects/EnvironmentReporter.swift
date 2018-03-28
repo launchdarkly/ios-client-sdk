@@ -10,7 +10,7 @@ import Foundation
 import WatchKit
 
 enum OperatingSystem: String {
-    case iOS, watchOS   //TODO: when adding mac & tv support, add cases
+    case iOS, watchOS, macOS   //TODO: when adding tv support, add case
 }
 
 //sourcery: AutoMockable
@@ -44,6 +44,17 @@ struct EnvironmentReporter: EnvironmentReporting {
     var systemVersion: String { return WKInterfaceDevice.current().systemVersion }
     var systemName: String { return WKInterfaceDevice.current().systemName }
     var operatingSystem: OperatingSystem { return .watchOS }
-    //TODO: when adding mac & tv support, add cases
+    #elseif os(OSX)
+    var deviceModel: String { return "mac" }
+    var systemVersion: String { return ProcessInfo.processInfo.operatingSystemVersion.compactVersionString }
+    var systemName: String { return "macOS" }
+    var operatingSystem: OperatingSystem { return .macOS }
     #endif
+    //TODO: when adding tv support, add case
 }
+
+#if os(OSX)
+extension OperatingSystemVersion {
+    var compactVersionString: String { return "\(majorVersion).\(minorVersion).\(patchVersion)" }
+}
+#endif
