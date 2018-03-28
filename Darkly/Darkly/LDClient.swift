@@ -127,8 +127,14 @@ public class LDClient {
     }
 
     private func effectiveStreamingMode(runMode: LDClientRunMode) -> LDStreamingMode {
+        var reason = ""
         let streamingMode: LDStreamingMode = runMode == .foreground && config.streamingMode == .streaming && config.allowStreamingMode ? .streaming : .polling
-        Log.debug(typeName(and: #function, appending: ": ") + "\(streamingMode)")
+        if config.streamingMode == .streaming && runMode != .foreground { reason = " LDClient is in background mode." }
+        if reason.isEmpty && config.streamingMode == .streaming && !config.allowStreamingMode {
+            reason = " LDConfig disallowed streaming mode. "
+            reason += environmentReporter.operatingSystem == .watchOS ? "Streaming is not allowed on watchOS." : "Unknown reason."
+        }
+        Log.debug(typeName(and: #function, appending: ": ") + "\(streamingMode)\(reason)")
         return streamingMode
     }
 
