@@ -346,6 +346,26 @@ final class LDFlagSynchronizingMock: LDFlagSynchronizing {
             setIsOnlineCallback?()
         }
     }
+
+    // MARK: streamingMode
+    var streamingModeSetCount = 0
+    var setStreamingModeCallback: (() -> Void)?
+    var streamingMode: LDStreamingMode = .streaming {
+        didSet {
+            streamingModeSetCount += 1
+            setStreamingModeCallback?()
+        }
+    }
+
+    // MARK: pollingInterval
+    var pollingIntervalSetCount = 0
+    var setPollingIntervalCallback: (() -> Void)?
+    var pollingInterval: TimeInterval = 60_000 {
+        didSet {
+            pollingIntervalSetCount += 1
+            setPollingIntervalCallback?()
+        }
+    }
 }
 
 // MARK: - UserFlagCachingMock

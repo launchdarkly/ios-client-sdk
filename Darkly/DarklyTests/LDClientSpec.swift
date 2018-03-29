@@ -71,12 +71,19 @@ final class LDClientSpec: QuickSpec {
         var oldFlags: [LDFlagKey: FeatureFlag]!
         var oldFlagSource: LDFlagValueSource!
 
-        init(startOnline: Bool = false, runMode: LDClientRunMode = .foreground, operatingSystem: OperatingSystem? = nil) {
+        init(startOnline: Bool = false,
+             streamingMode: LDStreamingMode = .streaming,
+             enableBackgroundUpdates: Bool = true,
+             runMode: LDClientRunMode = .foreground,
+             operatingSystem: OperatingSystem? = nil) {
+
             let clientServiceFactory = ClientServiceMockFactory()
             if let operatingSystem = operatingSystem { clientServiceFactory.makeEnvironmentReporterReturnValue.operatingSystem = operatingSystem }
 
             config = LDConfig.stub(environmentReporter: clientServiceFactory.makeEnvironmentReporterReturnValue)
             config.startOnline = startOnline
+            config.streamingMode = streamingMode
+            config.enableBackgroundUpdates = enableBackgroundUpdates
             config.eventFlushIntervalMillis = 300_000   //5 min...don't want this to trigger
 
             user = LDUser.stub()
@@ -241,7 +248,7 @@ final class LDClientSpec: QuickSpec {
                     expect(testContext.subject.config) == testContext.config
                     expect(testContext.subject.service.config) == testContext.config
                     expect(testContext.makeFlagSynchronizerStreamingMode) == LDStreamingMode.polling
-                    expect(testContext.makeFlagSynchronizerPollingInterval) == testContext.config.flagPollingInterval(runMode: .foreground)
+                    expect(testContext.makeFlagSynchronizerPollingInterval) == testContext.config.flagPollingInterval(runMode: .background)
                     expect(testContext.subject.eventReporter.config) == testContext.config
                 }
                 it("saves the user") {
@@ -720,7 +727,7 @@ final class LDClientSpec: QuickSpec {
                             expect(testContext.subject.isOnline) == false
                             expect(testContext.subject.flagSynchronizer.isOnline) == testContext.subject.isOnline
                             expect(testContext.makeFlagSynchronizerStreamingMode) == LDStreamingMode.polling
-                            expect(testContext.makeFlagSynchronizerPollingInterval) == testContext.config.flagPollingInterval(runMode: .foreground)
+                            expect(testContext.makeFlagSynchronizerPollingInterval) == testContext.config.flagPollingInterval(runMode: .background)
 
                             expect(testContext.subject.eventReporter.isOnline) == testContext.subject.isOnline
                         }
@@ -1646,18 +1653,251 @@ final class LDClientSpec: QuickSpec {
                     }
                 }
             }
-        }
-        context("before starting client") {
-            beforeEach {
-                testContext = TestContext(startOnline: true, runMode: .background)
+            context("before starting client") {
+                beforeEach {
+                    testContext = TestContext(startOnline: true, runMode: .background)
 
-                NotificationCenter.default.post(name: .UIApplicationWillEnterForeground, object: self)
+                    NotificationCenter.default.post(name: .UIApplicationWillEnterForeground, object: self)
+                }
+                it("leaves the sdk offline") {
+                    expect(testContext.subject.isOnline) == false
+                    expect(testContext.subject.runMode) == LDClientRunMode.foreground
+                    expect(testContext.eventReporterMock.isOnline) == false
+                    expect(testContext.flagSynchronizerMock.isOnline) == false
+                }
             }
-            it("leaves the sdk offline") {
-                expect(testContext.subject.isOnline) == false
-                expect(testContext.subject.runMode) == LDClientRunMode.foreground
-                expect(testContext.eventReporterMock.isOnline) == false
-                expect(testContext.flagSynchronizerMock.isOnline) == false
+        }
+
+        describe("change run mode on macOS") {
+            context("while online") {
+                context("and running in the foreground") {
+                    context("set background") {
+                        context("with background updates enabled") {
+                            beforeEach {
+                                testContext = TestContext(startOnline: true, enableBackgroundUpdates: true, runMode: .foreground, operatingSystem: .macOS)
+                                testContext.subject.start(mobileKey: Constants.mockMobileKey)
+
+                                testContext.subject.setRunMode(.background)
+                            }
+                            it("takes the event reporter offline") {
+                                expect(testContext.eventReporterMock.isOnline) == false
+                            }
+                            it("sets the flag synchronizer for background polling online") {
+                                expect(testContext.flagSynchronizerMock.isOnline) == true
+                                expect(testContext.flagSynchronizerMock.streamingMode) == LDStreamingMode.polling
+                                expect(testContext.flagSynchronizerMock.pollingInterval) == testContext.config.flagPollingInterval(runMode: .background)
+                            }
+                        }
+                        context("with background updates disabled") {
+                            beforeEach {
+                                testContext = TestContext(startOnline: true, enableBackgroundUpdates: false, runMode: .foreground, operatingSystem: .macOS)
+                                testContext.subject.start(mobileKey: Constants.mockMobileKey)
+
+                                testContext.subject.setRunMode(.background)
+                            }
+                            it("takes the event reporter offline") {
+                                expect(testContext.eventReporterMock.isOnline) == false
+                            }
+                            it("sets the flag synchronizer for background polling offline") {
+                                expect(testContext.flagSynchronizerMock.isOnline) == false
+                                expect(testContext.flagSynchronizerMock.streamingMode) == LDStreamingMode.polling
+                                expect(testContext.flagSynchronizerMock.pollingInterval) == testContext.config.flagPollingInterval(runMode: .background)
+                            }
+                        }
+                    }
+                    context("set foreground") {
+                        var eventReporterIsOnlineSetCount: Int!
+                        var flagSynchronizerIsOnlineSetCount: Int!
+                        var makeFlagSynchronizerCallCount: Int!
+                        beforeEach {
+                            testContext = TestContext(startOnline: true, runMode: .foreground, operatingSystem: .macOS)
+                            testContext.subject.start(mobileKey: Constants.mockMobileKey)
+                            eventReporterIsOnlineSetCount = testContext.eventReporterMock.isOnlineSetCount
+                            flagSynchronizerIsOnlineSetCount = testContext.flagSynchronizerMock.isOnlineSetCount
+                            makeFlagSynchronizerCallCount = testContext.serviceFactoryMock.makeFlagSynchronizerCallCount
+
+                            testContext.subject.setRunMode(.foreground)
+                        }
+                        it("makes no changes") {
+                            expect(testContext.eventReporterMock.isOnline) == true
+                            expect(testContext.eventReporterMock.isOnlineSetCount) == eventReporterIsOnlineSetCount
+                            expect(testContext.flagSynchronizerMock.isOnline) == true
+                            expect(testContext.flagSynchronizerMock.isOnlineSetCount) == flagSynchronizerIsOnlineSetCount
+                            expect(testContext.serviceFactoryMock.makeFlagSynchronizerCallCount) == makeFlagSynchronizerCallCount
+                        }
+                    }
+                }
+                context("and running in the background") {
+                    context("set background") {
+                        var eventReporterIsOnlineSetCount: Int!
+                        var flagSynchronizerIsOnlineSetCount: Int!
+                        var makeFlagSynchronizerCallCount: Int!
+                        beforeEach {
+                            testContext = TestContext(startOnline: true, enableBackgroundUpdates: true, runMode: .background, operatingSystem: .macOS)
+                            testContext.subject.start(mobileKey: Constants.mockMobileKey)
+                            eventReporterIsOnlineSetCount = testContext.eventReporterMock.isOnlineSetCount
+                            flagSynchronizerIsOnlineSetCount = testContext.flagSynchronizerMock.isOnlineSetCount
+                            makeFlagSynchronizerCallCount = testContext.serviceFactoryMock.makeFlagSynchronizerCallCount
+
+                            testContext.subject.setRunMode(.background)
+                        }
+                        it("makes no changes") {
+                            expect(testContext.eventReporterMock.isOnline) == true
+                            expect(testContext.eventReporterMock.isOnlineSetCount) == eventReporterIsOnlineSetCount
+                            expect(testContext.flagSynchronizerMock.isOnline) == true
+                            expect(testContext.flagSynchronizerMock.isOnlineSetCount) == flagSynchronizerIsOnlineSetCount
+                            expect(testContext.serviceFactoryMock.makeFlagSynchronizerCallCount) == makeFlagSynchronizerCallCount
+                        }
+                    }
+                    context("set foreground") {
+                        context("streaming mode") {
+                            beforeEach {
+                                testContext = TestContext(startOnline: true, streamingMode: .streaming, runMode: .background, operatingSystem: .macOS)
+                                testContext.subject.start(mobileKey: Constants.mockMobileKey)
+
+                                testContext.subject.setRunMode(.foreground)
+                            }
+                            it("takes the event reporter online") {
+                                expect(testContext.eventReporterMock.isOnline) == true
+                            }
+                            it("sets the flag synchronizer for foreground streaming online") {
+                                expect(testContext.flagSynchronizerMock.isOnline) == true
+                                expect(testContext.flagSynchronizerMock.streamingMode) == LDStreamingMode.streaming
+                            }
+                        }
+                        context("polling mode") {
+                            beforeEach {
+                                testContext = TestContext(startOnline: true, streamingMode: .polling, runMode: .background, operatingSystem: .macOS)
+                                testContext.subject.start(mobileKey: Constants.mockMobileKey)
+
+                                testContext.subject.setRunMode(.foreground)
+                            }
+                            it("takes the event reporter online") {
+                                expect(testContext.eventReporterMock.isOnline) == true
+                            }
+                            it("sets the flag synchronizer for foreground polling online") {
+                                expect(testContext.flagSynchronizerMock.isOnline) == true
+                                expect(testContext.flagSynchronizerMock.streamingMode) == LDStreamingMode.polling
+                                expect(testContext.flagSynchronizerMock.pollingInterval) == testContext.config.flagPollingInterval(runMode: .foreground)
+                            }
+                        }
+                    }
+                }
+            }
+            context("while offline") {
+                context("and running in the foreground") {
+                    context("set background") {
+                        context("with background updates enabled") {
+                            beforeEach {
+                                testContext = TestContext(startOnline: false, enableBackgroundUpdates: true, runMode: .foreground, operatingSystem: .macOS)
+                                testContext.subject.start(mobileKey: Constants.mockMobileKey)
+
+                                testContext.subject.setRunMode(.background)
+                            }
+                            it("leaves the event reporter offline") {
+                                expect(testContext.eventReporterMock.isOnline) == false
+                            }
+                            it("configures the flag synchronizer for background polling offline") {
+                                expect(testContext.flagSynchronizerMock.isOnline) == false
+                                expect(testContext.flagSynchronizerMock.streamingMode) == LDStreamingMode.polling
+                                expect(testContext.flagSynchronizerMock.pollingInterval) == testContext.config.flagPollingInterval(runMode: .background)
+                            }
+                        }
+                        context("with background updates disabled") {
+                            beforeEach {
+                                testContext = TestContext(startOnline: false, enableBackgroundUpdates: false, runMode: .foreground, operatingSystem: .macOS)
+                                testContext.subject.start(mobileKey: Constants.mockMobileKey)
+
+                                testContext.subject.setRunMode(.background)
+                            }
+                            it("leaves the event reporter offline") {
+                                expect(testContext.eventReporterMock.isOnline) == false
+                            }
+                            it("configures the flag synchronizer for background polling offline") {
+                                expect(testContext.flagSynchronizerMock.isOnline) == false
+                                expect(testContext.flagSynchronizerMock.streamingMode) == LDStreamingMode.polling
+                                expect(testContext.flagSynchronizerMock.pollingInterval) == testContext.config.flagPollingInterval(runMode: .background)
+                            }
+                        }
+                    }
+                    context("set foreground") {
+                        var eventReporterIsOnlineSetCount: Int!
+                        var flagSynchronizerIsOnlineSetCount: Int!
+                        var makeFlagSynchronizerCallCount: Int!
+                        beforeEach {
+                            testContext = TestContext(startOnline: false, runMode: .foreground, operatingSystem: .macOS)
+                            testContext.subject.start(mobileKey: Constants.mockMobileKey)
+                            eventReporterIsOnlineSetCount = testContext.eventReporterMock.isOnlineSetCount
+                            flagSynchronizerIsOnlineSetCount = testContext.flagSynchronizerMock.isOnlineSetCount
+                            makeFlagSynchronizerCallCount = testContext.serviceFactoryMock.makeFlagSynchronizerCallCount
+
+                            testContext.subject.setRunMode(.foreground)
+                        }
+                        it("makes no changes") {
+                            expect(testContext.eventReporterMock.isOnline) == false
+                            expect(testContext.eventReporterMock.isOnlineSetCount) == eventReporterIsOnlineSetCount
+                            expect(testContext.flagSynchronizerMock.isOnline) == false
+                            expect(testContext.flagSynchronizerMock.isOnlineSetCount) == flagSynchronizerIsOnlineSetCount
+                            expect(testContext.serviceFactoryMock.makeFlagSynchronizerCallCount) == makeFlagSynchronizerCallCount
+                        }
+                    }
+                }
+                context("and running in the background") {
+                    context("set background") {
+                        var eventReporterIsOnlineSetCount: Int!
+                        var flagSynchronizerIsOnlineSetCount: Int!
+                        var makeFlagSynchronizerCallCount: Int!
+                        beforeEach {
+                            testContext = TestContext(startOnline: false, runMode: .background, operatingSystem: .macOS)
+                            testContext.subject.start(mobileKey: Constants.mockMobileKey)
+                            eventReporterIsOnlineSetCount = testContext.eventReporterMock.isOnlineSetCount
+                            flagSynchronizerIsOnlineSetCount = testContext.flagSynchronizerMock.isOnlineSetCount
+                            makeFlagSynchronizerCallCount = testContext.serviceFactoryMock.makeFlagSynchronizerCallCount
+
+                            testContext.subject.setRunMode(.background)
+                        }
+                        it("makes no changes") {
+                            expect(testContext.eventReporterMock.isOnline) == false
+                            expect(testContext.eventReporterMock.isOnlineSetCount) == eventReporterIsOnlineSetCount
+                            expect(testContext.flagSynchronizerMock.isOnline) == false
+                            expect(testContext.flagSynchronizerMock.isOnlineSetCount) == flagSynchronizerIsOnlineSetCount
+                            expect(testContext.serviceFactoryMock.makeFlagSynchronizerCallCount) == makeFlagSynchronizerCallCount
+                        }
+                    }
+                    context("set foreground") {
+                        context("streaming mode") {
+                            beforeEach {
+                                testContext = TestContext(startOnline: false, streamingMode: .streaming, runMode: .background, operatingSystem: .macOS)
+                                testContext.subject.start(mobileKey: Constants.mockMobileKey)
+
+                                testContext.subject.setRunMode(.foreground)
+                            }
+                            it("leaves the event reporter offline") {
+                                expect(testContext.eventReporterMock.isOnline) == false
+                            }
+                            it("configures the flag synchronizer for foreground streaming offline") {
+                                expect(testContext.flagSynchronizerMock.isOnline) == false
+                                expect(testContext.flagSynchronizerMock.streamingMode) == LDStreamingMode.streaming
+                            }
+                        }
+                        context("polling mode") {
+                            beforeEach {
+                                testContext = TestContext(startOnline: false, streamingMode: .polling, runMode: .background, operatingSystem: .macOS)
+                                testContext.subject.start(mobileKey: Constants.mockMobileKey)
+
+                                testContext.subject.setRunMode(.foreground)
+                            }
+                            it("leaves the event reporter offline") {
+                                expect(testContext.eventReporterMock.isOnline) == false
+                            }
+                            it("configures the flag synchronizer for foreground polling offline") {
+                                expect(testContext.flagSynchronizerMock.isOnline) == false
+                                expect(testContext.flagSynchronizerMock.streamingMode) == LDStreamingMode.polling
+                                expect(testContext.flagSynchronizerMock.pollingInterval) == testContext.config.flagPollingInterval(runMode: .foreground)
+                            }
+                        }
+                    }
+                }
             }
         }
     }

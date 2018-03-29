@@ -57,7 +57,11 @@ struct ClientServiceMockFactory: ClientServiceCreating {
         makeFlagSynchronizerCallCount += 1
         makeFlagSynchronizerReceivedParameters = (streamingMode, pollingInterval, useReport, service)
         self.onSyncComplete = onSyncComplete
-        return LDFlagSynchronizingMock()
+
+        let flagSynchronizingMock = LDFlagSynchronizingMock()
+        flagSynchronizingMock.streamingMode = streamingMode
+        flagSynchronizingMock.pollingInterval = pollingInterval
+        return flagSynchronizingMock
     }
 
     func makeFlagChangeNotifier() -> FlagChangeNotifying {

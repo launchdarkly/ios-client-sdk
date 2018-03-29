@@ -52,11 +52,7 @@ public class LDClient {
             isOnline = false
 
             service = serviceFactory.makeDarklyServiceProvider(mobileKey: mobileKey, config: config, user: user)
-            flagSynchronizer = serviceFactory.makeFlagSynchronizer(streamingMode: effectiveStreamingMode(runMode: runMode),
-                                                                   pollingInterval: config.flagPollingInterval(runMode: effectiveRunMode),
-                                                                   useReport: config.useReport,
-                                                                   service: service,
-                                                                   onSyncComplete: onSyncComplete)
+            eventReporter.config = config
 
             isOnline = wasOnline
         }
@@ -73,15 +69,11 @@ public class LDClient {
             let wasOnline = isOnline
             isOnline = false
 
-            service = serviceFactory.makeDarklyServiceProvider(mobileKey: mobileKey, config: config, user: user)
             if let cachedFlags = flagCache.retrieveFlags(for: user), !cachedFlags.flags.isEmpty {
                 user.flagStore.replaceStore(newFlags: cachedFlags.flags, source: .cache, completion: nil)
             }
-            flagSynchronizer = serviceFactory.makeFlagSynchronizer(streamingMode: effectiveStreamingMode(runMode: runMode),
-                                                                   pollingInterval: config.flagPollingInterval(runMode: effectiveRunMode),
-                                                                   useReport: config.useReport,
-                                                                   service: service,
-                                                                   onSyncComplete: onSyncComplete)
+            service = serviceFactory.makeDarklyServiceProvider(mobileKey: mobileKey, config: config, user: user)
+
             if hasStarted {
                 eventReporter.record(LDEvent.identifyEvent(user: user))
             }
@@ -93,10 +85,12 @@ public class LDClient {
     private(set) var service: DarklyServiceProvider {
         didSet {
             Log.debug(typeName(and: #function) + "new service set")
-            //TODO: Refactor to create a new flagSynchronizer here too, then remove from the 4 places that's done in this class
-            //2 of those are in initializers. They set different modes, but I think it should be ok to use the same settings there since it should start offline.
-            eventReporter.config = config
             eventReporter.service = service
+            flagSynchronizer = serviceFactory.makeFlagSynchronizer(streamingMode: effectiveStreamingMode(runMode: runMode),
+                                                                   pollingInterval: config.flagPollingInterval(runMode: runMode),
+                                                                   useReport: config.useReport,
+                                                                   service: service,
+                                                                   onSyncComplete: onSyncComplete)
         }
     }
 
@@ -122,7 +116,7 @@ public class LDClient {
         self.config = config ?? self.config
         self.user = user ?? self.user
 
-        self.isOnline = (wasStarted && wasOnline) || (!wasStarted && self.config.startOnline)
+        isOnline = (wasStarted && wasOnline) || (!wasStarted && self.config.startOnline)
         Log.debug(typeName(and: #function, appending: ": ") + "started")
     }
 
@@ -138,12 +132,6 @@ public class LDClient {
         }
         Log.debug(typeName(and: #function, appending: ": ") + "\(streamingMode)\(reason)")
         return streamingMode
-    }
-
-    private var effectiveRunMode: LDClientRunMode {
-        let effectiveMode = config.enableBackgroundUpdates ? runMode : .foreground
-        Log.debug(typeName(and: #function, appending: ": ") + "\(effectiveMode)")
-        return effectiveMode
     }
 
     ///Stops the LDClient. Stopping the client means take the client offline and stop recording events.
@@ -368,9 +356,6 @@ public class LDClient {
         Log.debug(typeName(and: #function))
         Thread.performOnMain {
             runMode = .background
-            eventReporter.reportEvents()
-            eventReporter.isOnline = false
-            flagSynchronizer.isOnline = false
         }
     }
 
@@ -378,8 +363,6 @@ public class LDClient {
         Log.debug(typeName(and: #function))
         Thread.performOnMain {
             runMode = .foreground
-            eventReporter.isOnline = isOnline
-            flagSynchronizer.isOnline = isOnline
         }
     }
 
@@ -387,7 +370,39 @@ public class LDClient {
     private(set) var serviceFactory: ClientServiceCreating = ClientServiceFactory()
     private var mobileKey = ""
 
-    private(set) var runMode: LDClientRunMode = .foreground
+    private(set) var runMode: LDClientRunMode = .foreground {
+        didSet {
+            guard runMode != oldValue
+            else {
+                Log.debug(typeName(and: #function) + " aborted. Old runMode equals new runMode.")
+                return
+            }
+            Log.debug(typeName(and: #function, appending: ": ") + "\(runMode)")
+            if runMode == .background {
+                eventReporter.reportEvents()
+            }
+            eventReporter.isOnline = isOnline && runMode == .foreground
+
+            let willSetSynchronizerOnline = isOnline && (runMode == .foreground || allowBackgroundFlagUpdates )
+            //The only time the flag synchronizer configuration WILL match is if the client sets flag polling with the polling interval set to the background polling interval.
+            //if it does match, keeping the synchronizer precludes an extra flag request
+            if !flagSynchronizerConfigMatchesConfigAndRunMode {
+                flagSynchronizer.isOnline = false
+                flagSynchronizer = serviceFactory.makeFlagSynchronizer(streamingMode: effectiveStreamingMode(runMode: runMode),
+                                                                       pollingInterval: config.flagPollingInterval(runMode: runMode),
+                                                                       useReport: config.useReport,
+                                                                       service: service,
+                                                                       onSyncComplete: onSyncComplete)
+            }
+            flagSynchronizer.isOnline = willSetSynchronizerOnline
+        }
+    }
+    private var flagSynchronizerConfigMatchesConfigAndRunMode: Bool {
+        return flagSynchronizer.streamingMode == effectiveStreamingMode(runMode: runMode)
+            && (flagSynchronizer.streamingMode == .streaming
+                || flagSynchronizer.streamingMode == .polling && flagSynchronizer.pollingInterval == config.flagPollingInterval(runMode: runMode))
+    }
+    private var allowBackgroundFlagUpdates: Bool { return config.enableBackgroundUpdates && environmentReporter.operatingSystem == .macOS }
 
     private(set) var flagCache: UserFlagCaching
     private(set) var flagSynchronizer: LDFlagSynchronizing
@@ -433,11 +448,6 @@ public class LDClient {
         config = LDConfig(environmentReporter: environmentReporter)
         flagCache = serviceFactory.makeUserFlagCache()
         service = serviceFactory.makeDarklyServiceProvider(mobileKey: "", config: config, user: user)
-        flagSynchronizer = self.serviceFactory.makeFlagSynchronizer(streamingMode: .polling,
-                                                                    pollingInterval: config.flagPollInterval,
-                                                                    useReport: config.useReport,
-                                                                    service: service,
-                                                                    onSyncComplete: nil)
         eventReporter = serviceFactory.makeEventReporter(config: config, service: service)
     }
 }
@@ -448,6 +458,10 @@ extension LDClient: TypeIdentifying { }
     extension LDClient {
         class func makeClient(with serviceFactory: ClientServiceCreating, runMode: LDClientRunMode = .foreground) -> LDClient {
             return LDClient(serviceFactory: serviceFactory, runMode: runMode)
+        }
+
+        func setRunMode(_ runMode: LDClientRunMode) {
+            self.runMode = runMode
         }
     }
 #endif

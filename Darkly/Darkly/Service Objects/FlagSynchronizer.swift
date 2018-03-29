@@ -14,6 +14,10 @@ import DarklyEventSource
 protocol LDFlagSynchronizing {
     //sourcery: DefaultMockValue = false
     var isOnline: Bool { get set }
+    //sourcery: DefaultMockValue = .streaming
+    var streamingMode: LDStreamingMode { get }
+    //sourcery: DefaultMockValue = 60_000
+    var pollingInterval: TimeInterval { get }
 }
 
 enum SynchronizingError: Error {
