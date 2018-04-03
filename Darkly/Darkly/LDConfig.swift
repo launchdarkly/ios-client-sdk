@@ -38,11 +38,12 @@ public struct LDConfig {
     }
 
     public struct Minima {
-        public let backgroundPollIntervalMillis = 900_000   ///The minimum background polling interval in milliseconds. Value: 15 minutes
+        public let backgroundPollIntervalMillis: Int    ///The minimum background polling interval in milliseconds. Value: 15 minutes
         public let pollingIntervalMillis: Int   ///The minimum polling interval in milliseconds. Value: 5 minutes
 
         init(environmentReporter: EnvironmentReporting) {
             self.pollingIntervalMillis = environmentReporter.isDebugBuild ? 60_000 : 300_000
+            self.backgroundPollIntervalMillis = environmentReporter.isDebugBuild ? 60_000 : 900_000
         }
     }
 
@@ -72,7 +73,7 @@ public struct LDConfig {
     private(set) var allowStreamingMode: Bool
 
     private var enableBgUpdates: Bool = Defaults.enableBackgroundUpdates
-    ///Enables feature flag updates when your app is in the background. Disabled, future use only. Default: false
+    ///Enables feature flag updates when your app is in the background. Allowed on macOS only. Default: false
     public var enableBackgroundUpdates: Bool {
         set { enableBgUpdates = newValue && allowBackgroundUpdates }
         get { return enableBgUpdates }
