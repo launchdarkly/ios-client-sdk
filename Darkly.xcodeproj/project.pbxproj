@@ -649,6 +649,7 @@
 			buildConfigurationList = 831EF34220655D700001C643 /* Build configuration list for PBXNativeTarget "Darkly_macOS" */;
 			buildPhases = (
 				5CCA91C79606251A09C01C57 /* [CP] Check Pods Manifest.lock */,
+				830C2AC2207416A5001D645D /* ShellScript */,
 				831EF33620655D700001C643 /* Sources */,
 				831EF33720655D700001C643 /* Frameworks */,
 				831EF33820655D700001C643 /* Headers */,
@@ -712,6 +713,7 @@
 			buildConfigurationList = 83D9EC702062DBB7004D7FA6 /* Build configuration list for PBXNativeTarget "Darkly_watchOS" */;
 			buildPhases = (
 				F438EA421B0F0DDCF587D333 /* [CP] Check Pods Manifest.lock */,
+				830C2AC120741687001D645D /* ShellScript */,
 				83D9EC662062DBB7004D7FA6 /* Sources */,
 				83D9EC672062DBB7004D7FA6 /* Frameworks */,
 				83D9EC682062DBB7004D7FA6 /* Headers */,
@@ -826,6 +828,32 @@
 			shellPath = /bin/sh;
 			shellScript = "diff \"${PODS_PODFILE_DIR_PATH}/Podfile.lock\" \"${PODS_ROOT}/Manifest.lock\" > /dev/null\nif [ $? != 0 ] ; then\n    # print error to STDERR\n    echo \"error: The sandbox is not in sync with the Podfile.lock. Run 'pod install' or update your CocoaPods installation.\" >&2\n    exit 1\nfi\n# This output is used by Xcode 'outputs' to avoid re-running this script phase.\necho \"SUCCESS\" > \"${SCRIPT_OUTPUT_FILE_0}\"\n";
 			showEnvVarsInLog = 0;
+		};
+		830C2AC120741687001D645D /* ShellScript */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputPaths = (
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "${PODS_ROOT}/SwiftLint/swiftlint";
+		};
+		830C2AC2207416A5001D645D /* ShellScript */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputPaths = (
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "${PODS_ROOT}/SwiftLint/swiftlint";
 		};
 		83411A561FABCA2200E5CF39 /* ShellScript */ = {
 			isa = PBXShellScriptBuildPhase;
