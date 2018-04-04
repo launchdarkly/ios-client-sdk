@@ -11,7 +11,7 @@
 
 static CGFloat const ES_RETRY_INTERVAL = 1.0;
 static CGFloat const ES_DEFAULT_TIMEOUT = 300.0;
-static CGFloat const ES_MAX_RECONNECT_TIME = 180.0;
+static CGFloat const ES_MAX_RECONNECT_TIME = 3600.0;
 
 static NSString *const ESKeyValueDelimiter = @":";
 static NSString *const LDEventSeparatorLFLF = @"\n\n";
