@@ -10,4 +10,5 @@
 
 @implementation LDClient(Testable)
 @dynamic clientStarted;
+@dynamic throttler;
 @end

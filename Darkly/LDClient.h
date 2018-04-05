@@ -20,6 +20,7 @@
 
 @interface LDClient : NSObject
 
+@property (nonatomic, assign, readonly) BOOL isOnline;
 @property(nonatomic, strong, readonly) LDUserModel *ldUser;
 @property(nonatomic, strong, readonly) LDConfig *ldConfig;
 @property (nonatomic, weak) id<ClientDelegate> delegate;
@@ -125,17 +126,9 @@
  */
 - (LDUserBuilder *)currentUserBuilder;
 /**
- * Set the client to offline mode. No events will be synced to server.
- *
- * @return whether offline mode was successfully updated.
+ * Set the client to online/offline mode. When online events will be synced to server. (Default)
  */
-- (BOOL)offline;
-/**
- * Set the client to online mode. Events will be synced to server. (Default)
- *
- * @return whether online mode was successfully updated.
- */
-- (BOOL)online;
+- (void)setOnline:(BOOL)isOnline;
 /**
  * Sync all events to the server. Events are synced to the server on a
  * regular basis, however this will force all stored events from the client

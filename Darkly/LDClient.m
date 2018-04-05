@@ -10,11 +10,14 @@
 #import "LDPollingManager.h"
 #import "DarklyConstants.h"
 #import "NSThread+MainExecutable.h"
+#import "LDThrottler.h"
 
 @interface LDClient()
+@property (nonatomic, assign) BOOL isOnline;
 @property(nonatomic, strong) LDUserModel *ldUser;
 @property(nonatomic, strong) LDConfig *ldConfig;
 @property (nonatomic, assign) BOOL clientStarted;
+@property (nonatomic, strong) LDThrottler *throttler;
 @end
 
 @implementation LDClient
@@ -25,6 +28,7 @@
     static dispatch_once_t onceToken;
     dispatch_once(&onceToken, ^{
         sharedLDClient = [[self alloc] init];
+        sharedLDClient.throttler = [[LDThrottler alloc] initWithMaxDelayInterval:kMaxThrottlingDelayInterval];
         [[NSNotificationCenter defaultCenter] addObserver: sharedLDClient
                                                  selector:@selector(userUpdated)
                                                      name: kLDUserUpdatedNotification object: nil];
@@ -67,7 +71,7 @@
     inputUserBuilder = inputUserBuilder ?: [[LDUserBuilder alloc] init];
     self.ldUser = [inputUserBuilder build];
     
-    [LDClientManager sharedInstance].online = YES;
+    [self setOnline:YES];
     
     return YES;
 }
@@ -241,30 +245,25 @@
     }
 }
 
-- (BOOL)offline
-{
-    DEBUG_LOGX(@"LDClient offline method called");
-    if (self.clientStarted) {
-        LDClientManager *clientManager = [LDClientManager sharedInstance];
-        [clientManager setOnline:NO];
-        return YES;
-    } else {
+-(void)setOnline:(BOOL)isOnline {
+    if (!self.clientStarted) {
         DEBUG_LOGX(@"LDClient not started yet!");
-        return NO;
+        return;
     }
-}
-
-- (BOOL)online
-{
-    DEBUG_LOGX(@"LDClient online method called");
-    if (self.clientStarted) {
-        LDClientManager *clientManager = [LDClientManager sharedInstance];
-        [clientManager setOnline:YES];
-        return YES;
-    } else {
-        DEBUG_LOGX(@"LDClient not started yet!");
-        return NO;
+    if (isOnline == self.isOnline) {
+        DEBUG_LOG(@"LDClient setOnline aborted. LDClient is already %@", isOnline ? @"online" : @"offline");
+        return;
     }
+    DEBUG_LOG(@"LDClient setOnline: %@ called", isOnline ? @"YES" : @"NO");
+    if (!isOnline) {
+        self.isOnline = NO;
+        [[LDClientManager sharedInstance] setOnline:NO];
+        return;
+    }
+    [self.throttler runThrottled:^{
+        self.isOnline = YES;
+        [[LDClientManager sharedInstance] setOnline:YES];
+    }];
 }
 
 - (BOOL)flush {
@@ -286,7 +285,7 @@
         return NO;
     }
 
-    [self offline];
+    [self setOnline:NO];
     self.clientStarted = NO;
     return YES;
 }
@@ -327,7 +326,7 @@
 -(void)handleClientUnauthorizedNotification {
     [NSThread performOnMainThread:^{
         DEBUG_LOGX(@"LDClient received Client Unauthorized notification. Taking LDClient offline.");
-        [self offline];
+        [self setOnline:NO];
     }];
 }
 

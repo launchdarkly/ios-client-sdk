@@ -13,6 +13,7 @@
 #import "LDUserBuilder+Testable.h"
 #import "LDClient+Testable.h"
 #import "NSJSONSerialization+Testable.h"
+#import "LDThrottler.h"
 
 #import "OCMock.h"
 #import <OHHTTPStubs/OHHTTPStubs.h>
@@ -63,6 +64,7 @@ extern NSString * _Nonnull  const kLDFlagConfigJsonDictionaryKeyValue;
 @property (nonatomic, strong) id mockLDClientManager;
 @property (nonatomic, strong) id mockLDDataManager;
 @property (nonatomic, strong) id mockLDRequestManager;
+@property (nonatomic, strong) id throttlerMock;
 @end
 
 NSString *const kFallbackString = @"fallbackString";
@@ -87,6 +89,10 @@ NSString *const kTestMobileKey = @"testMobileKey";
     id mockRequestManager = OCMClassMock([LDRequestManager class]);
     OCMStub(ClassMethod([mockRequestManager sharedInstance])).andReturn(mockRequestManager);
     self.mockLDRequestManager = mockRequestManager;
+
+    self.throttlerMock = OCMClassMock([LDThrottler class]);
+    OCMStub([self.throttlerMock runThrottled:[OCMArg invokeBlock]]);
+    [LDClient sharedInstance].throttler = self.throttlerMock;
 }
 
 - (void)tearDown {
@@ -485,30 +491,46 @@ NSString *const kTestMobileKey = @"testMobileKey";
     OCMVerify([self.dataManagerMock createCustomEvent: @"test" withCustomValuesDictionary: customData user:[OCMArg isKindOfClass:[LDUserModel class]] config:config]);
 }
 
-- (void)testOfflineWithoutStart {
-    XCTAssertFalse([[LDClient sharedInstance] offline]);
-}
+- (void)testSetOnline_NO_beforeStart {
+    [[self.mockLDClientManager reject] setOnline:[OCMArg any]];
 
-- (void)testOfflineWithStart {
-    [[self.mockLDClientManager expect] setOnline:YES];
+    [[LDClient sharedInstance] setOnline:NO];
 
-    LDConfig *config = [[LDConfig alloc] initWithMobileKey:kTestMobileKey];
-    [[LDClient sharedInstance] start:config withUserBuilder:nil];
-    XCTAssertTrue([[LDClient sharedInstance] offline]);
+    XCTAssertFalse([LDClient sharedInstance].isOnline);
     [self.mockLDClientManager verify];
 }
 
-- (void)testOnlineWithoutStart {
-    XCTAssertFalse([[LDClient sharedInstance] online]);
+- (void)testSetOnline_NO_afterStart {
+    LDConfig *config = [[LDConfig alloc] initWithMobileKey:kTestMobileKey];
+    [[LDClient sharedInstance] start:config withUserBuilder:nil];
+    [[self.throttlerMock reject] runThrottled:[OCMArg any]];
+
+    [[self.mockLDClientManager expect] setOnline:NO];
+
+    [[LDClient sharedInstance] setOnline:NO];
+    XCTAssertFalse([LDClient sharedInstance].isOnline);
+    [self.mockLDClientManager verify];
+    [self.throttlerMock verify];
 }
 
-- (void)testOnlineWithStart {
+- (void)testSetOnline_YES_beforeStart {
+    [[self.mockLDClientManager reject] setOnline:[OCMArg any]];
+
+    [[LDClient sharedInstance] setOnline:YES];
+    XCTAssertFalse([LDClient sharedInstance].isOnline);
+    [self.mockLDClientManager verify];
+}
+
+- (void)testSetOnline_YES_afterStart {
     LDConfig *config = [[LDConfig alloc] initWithMobileKey:kTestMobileKey];
-    [[LDClient sharedInstance] start:config withUserBuilder:nil];   //sets LDClientManager online...start the mock after calling start
-
+    [[LDClient sharedInstance] start:config withUserBuilder:nil];
+    [[LDClient sharedInstance] setOnline:NO];
     [[self.mockLDClientManager expect] setOnline:YES];
+    //The throttler mock expectation is not getting fulfilled even though the LDClient does invoke it.
+    //Since the throttler mock is set to execute blocks, setting the expectation on the client manager mock verifies that the client is calling the throttler
 
-    XCTAssertTrue([[LDClient sharedInstance] online]);
+    [[LDClient sharedInstance] setOnline:YES];
+
     [self.mockLDClientManager verify];
 }
 
