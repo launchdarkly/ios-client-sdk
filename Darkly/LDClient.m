@@ -258,6 +258,7 @@
         }
         return;
     }
+    self.willGoOnlineAfterDelay = goOnline;
     if (goOnline == self.isOnline) {
         DEBUG_LOG(@"LDClient setOnline:%@ aborted. LDClient is already %@", goOnline ? @"YES" : @"NO", goOnline ? @"online" : @"offline");
         if (completion) {
@@ -266,7 +267,6 @@
         return;
     }
     
-    self.willGoOnlineAfterDelay = goOnline;
     if (!goOnline) {
         DEBUG_LOGX(@"LDClient setOnline:NO called");
         [self _setOnline:NO completion:completion];
