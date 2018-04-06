@@ -134,6 +134,7 @@ static NSInteger const HTTPStatusCodeUnauthorized = 401;
     wasClosed = YES;
     [self.eventSourceTask cancel];
     [self.session finishTasksAndInvalidate];
+    [self.listeners removeAllObjects];
 }
 
 - (void)URLSession:(NSURLSession *)session dataTask:(NSURLSessionDataTask *)dataTask
