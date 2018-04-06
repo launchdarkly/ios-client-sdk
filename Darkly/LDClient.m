@@ -18,6 +18,7 @@
 @property(nonatomic, strong) LDConfig *ldConfig;
 @property (nonatomic, assign) BOOL clientStarted;
 @property (nonatomic, strong) LDThrottler *throttler;
+@property (nonatomic, assign) BOOL willGoOnlineAfterDelay;
 @end
 
 @implementation LDClient
@@ -258,19 +259,28 @@
         return;
     }
     if (goOnline == self.isOnline) {
-        DEBUG_LOG(@"LDClient setOnline aborted. LDClient is already %@", goOnline ? @"online" : @"offline");
+        DEBUG_LOG(@"LDClient setOnline:%@ aborted. LDClient is already %@", goOnline ? @"YES" : @"NO", goOnline ? @"online" : @"offline");
         if (completion) {
             completion();
         }
         return;
     }
     
-    DEBUG_LOG(@"LDClient setOnline: %@ called", goOnline ? @"YES" : @"NO");
+    self.willGoOnlineAfterDelay = goOnline;
     if (!goOnline) {
+        DEBUG_LOGX(@"LDClient setOnline:NO called");
         [self _setOnline:NO completion:completion];
         return;
     }
     [self.throttler runThrottled:^{
+        if (!self.willGoOnlineAfterDelay) {
+            DEBUG_LOGX(@"LDClient setOnline:YES aborted. Client last received an offline request when the throttling timer expired.");
+            if (completion) {
+                completion();
+            }
+            return;
+        }
+        DEBUG_LOGX(@"LDClient setOnline:YES called");
         [self _setOnline:YES completion:completion];
     }];
 }
