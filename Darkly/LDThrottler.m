@@ -37,7 +37,7 @@ const NSTimeInterval minDelayInterval = 1.0;
     if (self.delayInterval == self.maxDelayInterval) {
         self.runAttempts += 1;
         self.runBlock = runBlock;
-        DEBUG_LOG(@"LDThrottler delay interval at max. Allowing delay timer to expire. Run Attempts: %ld", self.runAttempts);
+        DEBUG_LOG(@"LDThrottler delay interval at max. Allowing delay timer to expire. Run Attempts: %ld", (unsigned long)self.runAttempts);
         return;
     }
 
@@ -57,7 +57,7 @@ const NSTimeInterval minDelayInterval = 1.0;
     self.delayInterval = [self delayIntervalForRunAttempts:self.runAttempts];
     self.delayTimer = [self delayTimerWithDelayInterval:self.delayInterval];
     if (self.runAttempts > 1) {
-        DEBUG_LOG(@"LDThrottler throttling run block. Run Attempts: %ld Delay: %0.2f", self.runAttempts, self.delayInterval);
+        DEBUG_LOG(@"LDThrottler throttling run block. Run Attempts: %ld Delay: %0.2f", (unsigned long)self.runAttempts, self.delayInterval);
     }
 }
 
