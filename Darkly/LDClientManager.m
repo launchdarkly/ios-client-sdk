@@ -280,6 +280,7 @@ NSString * const kLDClientManagerStreamMethod = @"meval";
 
 - (void)stopEventSource {
     @synchronized (self) {
+        DEBUG_LOGX(@"ClientManager stopping event source.");
         [eventSource close];
         eventSource = nil;
     }
