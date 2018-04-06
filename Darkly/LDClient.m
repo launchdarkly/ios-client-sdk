@@ -245,25 +245,42 @@
     }
 }
 
--(void)setOnline:(BOOL)isOnline {
+-(void)setOnline:(BOOL)goOnline {
+    [self setOnline:goOnline completion:nil];
+}
+
+-(void)setOnline:(BOOL)goOnline completion:(void(^)(void))completion {
     if (!self.clientStarted) {
         DEBUG_LOGX(@"LDClient not started yet!");
+        if (completion) {
+            completion();
+        }
         return;
     }
-    if (isOnline == self.isOnline) {
-        DEBUG_LOG(@"LDClient setOnline aborted. LDClient is already %@", isOnline ? @"online" : @"offline");
+    if (goOnline == self.isOnline) {
+        DEBUG_LOG(@"LDClient setOnline aborted. LDClient is already %@", goOnline ? @"online" : @"offline");
+        if (completion) {
+            completion();
+        }
         return;
     }
-    DEBUG_LOG(@"LDClient setOnline: %@ called", isOnline ? @"YES" : @"NO");
-    if (!isOnline) {
-        self.isOnline = NO;
-        [[LDClientManager sharedInstance] setOnline:NO];
+    
+    DEBUG_LOG(@"LDClient setOnline: %@ called", goOnline ? @"YES" : @"NO");
+    if (!goOnline) {
+        [self _setOnline:NO completion:completion];
         return;
     }
     [self.throttler runThrottled:^{
-        self.isOnline = YES;
-        [[LDClientManager sharedInstance] setOnline:YES];
+        [self _setOnline:YES completion:completion];
     }];
+}
+
+-(void)_setOnline:(BOOL)isOnline completion:(void(^)(void))completion {
+    self.isOnline = isOnline;
+    [[LDClientManager sharedInstance] setOnline:isOnline];
+    if (completion) {
+        completion();
+    }
 }
 
 - (BOOL)flush {

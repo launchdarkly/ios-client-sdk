@@ -127,8 +127,17 @@
 - (LDUserBuilder *)currentUserBuilder;
 /**
  * Set the client to online/offline mode. When online events will be synced to server. (Default)
+ *
+ * @param goOnline    Desired online/offline mode for the client
  */
-- (void)setOnline:(BOOL)isOnline;
+- (void)setOnline:(BOOL)goOnline;
+/**
+ * Set the client to online/offline mode. When online events will be synced to server. (Default)
+ *
+ * @param goOnline    Desired online/offline mode for the client
+ * @param completion    Completion block called when setOnline completes
+ */
+- (void)setOnline:(BOOL)goOnline completion:(void(^)(void))completion;
 /**
  * Sync all events to the server. Events are synced to the server on a
  * regular basis, however this will force all stored events from the client

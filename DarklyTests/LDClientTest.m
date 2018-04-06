@@ -493,32 +493,45 @@ NSString *const kTestMobileKey = @"testMobileKey";
 
 - (void)testSetOnline_NO_beforeStart {
     [[self.mockLDClientManager reject] setOnline:[OCMArg any]];
+    __block NSInteger completionCallCount = 0;
 
-    [[LDClient sharedInstance] setOnline:NO];
+    [[LDClient sharedInstance] setOnline:NO completion: ^{
+        completionCallCount += 1;
+    }];
 
     XCTAssertFalse([LDClient sharedInstance].isOnline);
     [self.mockLDClientManager verify];
+    XCTAssertEqual(completionCallCount, 1);
 }
 
 - (void)testSetOnline_NO_afterStart {
     LDConfig *config = [[LDConfig alloc] initWithMobileKey:kTestMobileKey];
     [[LDClient sharedInstance] start:config withUserBuilder:nil];
     [[self.throttlerMock reject] runThrottled:[OCMArg any]];
-
     [[self.mockLDClientManager expect] setOnline:NO];
+    __block NSInteger completionCallCount = 0;
 
-    [[LDClient sharedInstance] setOnline:NO];
+    [[LDClient sharedInstance] setOnline:NO completion: ^{
+        completionCallCount += 1;
+    }];
+
     XCTAssertFalse([LDClient sharedInstance].isOnline);
     [self.mockLDClientManager verify];
     [self.throttlerMock verify];
+    XCTAssertEqual(completionCallCount, 1);
 }
 
 - (void)testSetOnline_YES_beforeStart {
     [[self.mockLDClientManager reject] setOnline:[OCMArg any]];
+    __block NSInteger completionCallCount = 0;
 
-    [[LDClient sharedInstance] setOnline:YES];
+    [[LDClient sharedInstance] setOnline:YES completion: ^{
+        completionCallCount += 1;
+    }];
+
     XCTAssertFalse([LDClient sharedInstance].isOnline);
     [self.mockLDClientManager verify];
+    XCTAssertEqual(completionCallCount, 1);
 }
 
 - (void)testSetOnline_YES_afterStart {
@@ -526,12 +539,16 @@ NSString *const kTestMobileKey = @"testMobileKey";
     [[LDClient sharedInstance] start:config withUserBuilder:nil];
     [[LDClient sharedInstance] setOnline:NO];
     [[self.mockLDClientManager expect] setOnline:YES];
+    __block NSInteger completionCallCount = 0;
     //The throttler mock expectation is not getting fulfilled even though the LDClient does invoke it.
     //Since the throttler mock is set to execute blocks, setting the expectation on the client manager mock verifies that the client is calling the throttler
 
-    [[LDClient sharedInstance] setOnline:YES];
+    [[LDClient sharedInstance] setOnline:YES completion: ^{
+        completionCallCount += 1;
+    }];
 
     [self.mockLDClientManager verify];
+    XCTAssertEqual(completionCallCount, 1);
 }
 
 - (void)testFlushWithoutStart {
