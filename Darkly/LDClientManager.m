@@ -141,11 +141,13 @@ NSString * const kLDClientManagerStreamMethod = @"meval";
 
         eventSource = [self eventSourceForUser:[LDClient sharedInstance].ldUser config:[LDClient sharedInstance].ldConfig httpHeaders:[self httpHeadersForEventSource]];
 
+        __weak typeof(self) weakSelf = self;
         [eventSource onMessage:^(LDEvent *event) {
-            [self handlePingEvent:event];
-            [self handlePutEvent:event];
-            [self handlePatchEvent:event];
-            [self handleDeleteEvent:event];
+            __strong typeof(weakSelf) strongSelf = weakSelf;
+            [strongSelf handlePingEvent:event];
+            [strongSelf handlePutEvent:event];
+            [strongSelf handlePatchEvent:event];
+            [strongSelf handleDeleteEvent:event];
         }];
 
         [eventSource onError:^(LDEvent *event) {
