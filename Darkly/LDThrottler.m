@@ -8,6 +8,7 @@
 
 #import "LDThrottler.h"
 #import "DarklyConstants.h"
+#import "LDUtil.h"
 
 const NSTimeInterval minDelayInterval = 1.0;
 
@@ -26,6 +27,7 @@ const NSTimeInterval minDelayInterval = 1.0;
     if (!(self = [super init])) { return nil; }
 
     self.maxDelayInterval = maxDelayInterval > 0 && maxDelayInterval <= kMaxThrottlingDelayInterval ? maxDelayInterval : kMaxThrottlingDelayInterval;
+    DEBUG_LOG(@"LDThrottler created with max delay: %0.2f", self.maxDelayInterval);
 
     return self;
 }
@@ -35,6 +37,7 @@ const NSTimeInterval minDelayInterval = 1.0;
     if (self.delayInterval == self.maxDelayInterval) {
         self.runAttempts += 1;
         self.runBlock = runBlock;
+        DEBUG_LOG(@"LDThrottler delay interval at max. Allowing delay timer to expire. Run Attempts: %ld", self.runAttempts);
         return;
     }
 
@@ -44,6 +47,7 @@ const NSTimeInterval minDelayInterval = 1.0;
         }
     }
     if (self.runAttempts == 0) {
+        DEBUG_LOGX(@"LDThrottler executing run block on first attempt.");
         runBlock();
     } else {
         self.runBlock = runBlock;
@@ -52,6 +56,9 @@ const NSTimeInterval minDelayInterval = 1.0;
     self.runAttempts += 1;
     self.delayInterval = [self delayIntervalForRunAttempts:self.runAttempts];
     self.delayTimer = [self delayTimerWithDelayInterval:self.delayInterval];
+    if (self.runAttempts > 1) {
+        DEBUG_LOG(@"LDThrottler throttling run block. Run Attempts: %ld Delay: %0.2f", self.runAttempts, self.delayInterval);
+    }
 }
 
 -(NSTimeInterval)delayIntervalForRunAttempts:(NSUInteger)runAttempts {
@@ -76,6 +83,7 @@ const NSTimeInterval minDelayInterval = 1.0;
 -(void)timerFired {
     @synchronized(self) {
         if (self.runAttempts > 1 && self.runBlock) {
+            DEBUG_LOGX(@"LDThrottler delay timer fired, executing run block.");
             self.runBlock();
         }
 
