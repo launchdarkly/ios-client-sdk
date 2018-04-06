@@ -27,7 +27,7 @@ const NSTimeInterval minDelayInterval = 1.0;
     if (!(self = [super init])) { return nil; }
 
     self.maxDelayInterval = maxDelayInterval > 0 && maxDelayInterval <= kMaxThrottlingDelayInterval ? maxDelayInterval : kMaxThrottlingDelayInterval;
-    DEBUG_LOG(@"LDThrottler created with max delay: %0.2f", self.maxDelayInterval);
+    DEBUG_LOG(@"Throttler created with max delay: %0.2f", self.maxDelayInterval);
 
     return self;
 }
@@ -37,7 +37,7 @@ const NSTimeInterval minDelayInterval = 1.0;
     if (self.delayInterval == self.maxDelayInterval) {
         self.runAttempts += 1;
         self.runBlock = runBlock;
-        DEBUG_LOG(@"LDThrottler delay interval at max. Allowing delay timer to expire. Run Attempts: %ld", (unsigned long)self.runAttempts);
+        DEBUG_LOG(@"Throttler delay interval at max. Allowing delay timer to expire. Run Attempts: %ld", (unsigned long)self.runAttempts);
         return;
     }
 
@@ -47,7 +47,7 @@ const NSTimeInterval minDelayInterval = 1.0;
         }
     }
     if (self.runAttempts == 0) {
-        DEBUG_LOGX(@"LDThrottler executing run block on first attempt.");
+        DEBUG_LOGX(@"Throttler executing run block on first attempt.");
         runBlock();
     } else {
         self.runBlock = runBlock;
@@ -57,7 +57,7 @@ const NSTimeInterval minDelayInterval = 1.0;
     self.delayInterval = [self delayIntervalForRunAttempts:self.runAttempts];
     self.delayTimer = [self delayTimerWithDelayInterval:self.delayInterval];
     if (self.runAttempts > 1) {
-        DEBUG_LOG(@"LDThrottler throttling run block. Run Attempts: %ld Delay: %0.2f", (unsigned long)self.runAttempts, self.delayInterval);
+        DEBUG_LOG(@"Throttler throttling run block. Run Attempts: %ld Delay: %0.2f", (unsigned long)self.runAttempts, self.delayInterval);
     }
 }
 
@@ -83,7 +83,7 @@ const NSTimeInterval minDelayInterval = 1.0;
 -(void)timerFired {
     @synchronized(self) {
         if (self.runAttempts > 1 && self.runBlock) {
-            DEBUG_LOGX(@"LDThrottler delay timer fired, executing run block.");
+            DEBUG_LOGX(@"Throttler delay timer fired, executing run block.");
             self.runBlock();
         }
 
