@@ -10,6 +10,9 @@ All notable changes to the LaunchDarkly iOS SDK will be documented in this file.
 - `LDClient` `isOnline` readonly property that reports the online/offline status.
 - `LDClient` `setOnline` method to set the online/offline status. `setOnline` may operate asynchronously, so the client calls an optional completion block when the requested operation completes.
 
+### Changed
+- Fixed potential memory leak with clientstream.
+
 ## [2.11.2] - 2018-04-06
 ### Changed
 - Changes the minimum required `DarklyEventSource` to version `3.2.1` in the CocoaPods podspec
