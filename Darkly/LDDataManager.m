@@ -150,7 +150,7 @@ dispatch_queue_t eventsQueue;
 -(void) createFeatureEvent: (NSString *)featureKey keyValue:(NSObject*)keyValue defaultKeyValue:(NSObject*)defaultKeyValue user:(LDUserModel*)user config:(LDConfig*)config {
     if(![self isAtEventCapacity:_eventsArray]) {
         DEBUG_LOG(@"Creating event for feature:%@ with value:%@ and fallback:%@", featureKey, keyValue, defaultKeyValue);
-        [self addEventDictionary:[[[LDEventModel alloc] initFeatureEventWithKey:featureKey keyValue:keyValue defaultKeyValue:defaultKeyValue userValue:user] dictionaryValueUsingConfig:config]];
+        [self addEventDictionary:[[[LDEventModel alloc] initFeatureEventWithKey:featureKey keyValue:keyValue defaultKeyValue:defaultKeyValue userValue:user inlineUser:config.inlineUserInEvents] dictionaryValueUsingConfig:config]];
     }
     else {
         DEBUG_LOG(@"Events have surpassed capacity. Discarding feature event %@", featureKey);
@@ -160,7 +160,7 @@ dispatch_queue_t eventsQueue;
 -(void) createCustomEvent: (NSString *)eventKey withCustomValuesDictionary: (NSDictionary *)customDict user:(LDUserModel*)user config:(LDConfig*)config {
     if(![self isAtEventCapacity:_eventsArray]) {
         DEBUG_LOG(@"Creating event for custom key:%@ and value:%@", eventKey, customDict);
-        [self addEventDictionary:[[[LDEventModel alloc] initCustomEventWithKey:eventKey andDataDictionary: customDict userValue:user] dictionaryValueUsingConfig:config]];
+        [self addEventDictionary:[[[LDEventModel alloc] initCustomEventWithKey:eventKey andDataDictionary: customDict userValue:user inlineUser:config.inlineUserInEvents] dictionaryValueUsingConfig:config]];
     }
     else {
         DEBUG_LOG(@"Events have surpassed capacity. Discarding event %@ with dictionary %@", eventKey, customDict);

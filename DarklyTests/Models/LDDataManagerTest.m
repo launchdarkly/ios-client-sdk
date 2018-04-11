@@ -27,6 +27,7 @@
 - (void)setUp {
     [super setUp];
     user = [[LDUserModel alloc] init];
+    user.key = [[NSUUID UUID] UUIDString];
     user.firstName = @"Bob";
     user.lastName = @"Giffy";
     user.email = @"bob@gmail.com";
@@ -92,7 +93,7 @@
         
         NSMutableDictionary *events = [[NSMutableDictionary alloc] init];
         for (NSDictionary *eventDictionary in eventDictionaries) {
-            XCTAssertTrue([eventDictionary[@"user"] isKindOfClass:[NSDictionary class]]);
+            XCTAssertTrue([eventDictionary[@"userKey"] isEqualToString:self.user.key]);
             [events setObject:[[LDEventModel alloc] initWithDictionary:eventDictionary] forKey:[eventDictionary objectForKey:@"key"]];
         }
         
