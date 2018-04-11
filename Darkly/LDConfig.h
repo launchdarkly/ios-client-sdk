@@ -95,6 +95,13 @@
 @property (nonatomic, assign) BOOL useReport;
 
 /**
+ Flag that tells the SDK to include the user attributes in analytics event reports. When set to YES, event reports will
+ contain the user attributes, except attributes marked as private. When set to NO, event reports will contain the user's key
+ only, reducing the size of event reports. The default is NO.
+ */
+@property (nonatomic, assign) BOOL inlineUserInEvents;
+
+/**
  Flag that enables debug mode to allow things such as logging.
  */
 @property (nonatomic) BOOL debugEnabled;

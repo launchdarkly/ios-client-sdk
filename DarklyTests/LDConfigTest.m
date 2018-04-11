@@ -31,6 +31,7 @@ NSString * const LDConfigTestMobileKey = @"testMobileKey";
     XCTAssertEqualObjects([config capacity], [NSNumber numberWithInt:kCapacity]);
     XCTAssertEqualObjects([config connectionTimeout], [NSNumber numberWithInt:kConnectionTimeout]);
     XCTAssertEqualObjects([config flushInterval], [NSNumber numberWithInt:kDefaultFlushInterval]);
+    XCTAssertFalse([config inlineUserInEvents]);
     XCTAssertFalse([config debugEnabled]);
 }
 
@@ -130,6 +131,13 @@ NSString * const LDConfigTestMobileKey = @"testMobileKey";
 
     config.privateUserAttributes = LDUserModel.allUserAttributes;
     XCTAssertEqualObjects(config.privateUserAttributes, LDUserModel.allUserAttributes);
+}
+
+- (void)testConfigSetInlineUserInEvents {
+    LDConfig *config = [[LDConfig alloc] initWithMobileKey:LDConfigTestMobileKey];
+    config.inlineUserInEvents = YES;
+
+    XCTAssertTrue(config.inlineUserInEvents);
 }
 
 - (void)testConfigOverrideDebug {

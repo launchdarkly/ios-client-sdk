@@ -127,6 +127,11 @@
     DEBUG_LOG(@"Set LDConfig debug enabled: %d", debugEnabled);
 }
 
+- (void)setInlineUserInEvents:(BOOL)inlineUserInEvents {
+    _inlineUserInEvents = inlineUserInEvents;
+    DEBUG_LOG(@"Set LDConfig inlineUserInEvents: %d", inlineUserInEvents);
+}
+
 - (BOOL)isFlagRetryStatusCode:(NSInteger)statusCode {
     return [self.flagRetryStatusCodes containsObject:@(statusCode)];
 }
