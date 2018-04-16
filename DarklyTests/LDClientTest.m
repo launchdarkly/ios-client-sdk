@@ -119,23 +119,43 @@ NSString *const kTestMobileKey = @"testMobileKey";
 }
 
 - (void)testStartWithoutConfig {
+    [[self.mockLDDataManager reject] createIdentifyEventWithUser:[OCMArg any] config:[OCMArg any]];
     XCTAssertFalse([[LDClient sharedInstance] start:nil withUserBuilder:nil]);
+    [self.mockLDDataManager verify];
 }
 
 - (void)testStartWithValidConfig {
     LDConfig *config = [[LDConfig alloc] initWithMobileKey:kTestMobileKey];
     LDUserBuilder *userBuilder = [[LDUserBuilder alloc] init];
     userBuilder.key = [[NSUUID UUID] UUIDString];
+    [[self.mockLDDataManager expect] createIdentifyEventWithUser:[OCMArg checkWithBlock:^BOOL(id obj) {
+        if (![obj isKindOfClass:[LDUserModel class]]) { return NO; }
+        return [((LDUserModel*)obj).key isEqualToString:userBuilder.key];
+    }] config:[OCMArg checkWithBlock:^BOOL(id obj) {
+        if (![obj isKindOfClass:[LDConfig class]]) { return NO; }
+        return [((LDConfig*)obj).mobileKey isEqualToString:config.mobileKey];
+    }]];
 
     BOOL didStart = [[LDClient sharedInstance] start:config withUserBuilder:userBuilder];
     XCTAssertTrue(didStart);
+    [self.mockLDDataManager verify];
 }
 
 - (void)testStartWithValidConfigMultipleTimes {
     LDConfig *config = [[LDConfig alloc] initWithMobileKey:kTestMobileKey];
     LDUserBuilder *userBuilder = [[LDUserBuilder alloc] init];
     userBuilder.key = [[NSUUID UUID] UUIDString];
-
+    __block NSInteger createIdentifyEventCallCount = 0;
+    [[self.mockLDDataManager expect] createIdentifyEventWithUser:[OCMArg checkWithBlock:^BOOL(id obj) {
+        if (createIdentifyEventCallCount > 0) { return NO; }    //Make sure the client only records one identify event
+        if (![obj isKindOfClass:[LDUserModel class]]) { return NO; }
+        if (![((LDUserModel*)obj).key isEqualToString:userBuilder.key]) { return NO; }
+        createIdentifyEventCallCount += 1;
+        return [((LDUserModel*)obj).key isEqualToString:userBuilder.key];
+    }] config:[OCMArg checkWithBlock:^BOOL(id obj) {
+        if (![obj isKindOfClass:[LDConfig class]]) { return NO; }
+        return [((LDConfig*)obj).mobileKey isEqualToString:config.mobileKey];
+    }]];
     XCTAssertTrue([[LDClient sharedInstance] start:config withUserBuilder:userBuilder]);
     XCTAssertFalse([[LDClient sharedInstance] start:config withUserBuilder:userBuilder]);
 
@@ -580,8 +600,10 @@ NSString *const kTestMobileKey = @"testMobileKey";
 
 - (void)testUpdateUserWithoutStart {
     [[self.mockLDClientManager reject] updateUser];
+    [[self.mockLDDataManager reject] createIdentifyEventWithUser:[OCMArg any] config:[OCMArg any]];
     XCTAssertFalse([[LDClient sharedInstance] updateUser:[[LDUserBuilder alloc] init]]);
     [self.mockLDClientManager verify];
+    [self.mockLDDataManager verify];
 }
 
 -(void)testUpdateUserWithStart {
@@ -589,11 +611,19 @@ NSString *const kTestMobileKey = @"testMobileKey";
     [[self.mockLDClientManager expect] updateUser];
     LDUserBuilder *userBuilder = [[LDUserBuilder alloc] init];
     userBuilder.key = [[NSUUID UUID] UUIDString];
+    [[self.mockLDDataManager expect] createIdentifyEventWithUser:[OCMArg checkWithBlock:^BOOL(id obj) {
+        if (![obj isKindOfClass:[LDUserModel class]]) { return NO; }
+        return [((LDUserModel*)obj).key isEqualToString:userBuilder.key];
+    }] config:[OCMArg checkWithBlock:^BOOL(id obj) {
+        if (![obj isKindOfClass:[LDConfig class]]) { return NO; }
+        return [((LDConfig*)obj).mobileKey isEqualToString:config.mobileKey];
+    }]];
     [[LDClient sharedInstance] start:config withUserBuilder:nil];
 
     XCTAssertTrue([[LDClient sharedInstance] updateUser:userBuilder]);
 
     [self.mockLDClientManager verify];
+    [self.mockLDDataManager verify];
 }
 
 - (void)testCurrentUserBuilderWithoutStart {

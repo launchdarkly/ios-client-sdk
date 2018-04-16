@@ -49,6 +49,11 @@
     return sharedLDClient;
 }
 
+-(void)setLdUser:(LDUserModel*)user {
+    _ldUser = user;
+    [[LDDataManager sharedManager] createIdentifyEventWithUser:_ldUser config:self.ldConfig];
+}
+
 -(BOOL)start:(LDConfigBuilder *)inputConfigBuilder userBuilder:(LDUserBuilder *)inputUserBuilder {
     return [self start:[inputConfigBuilder build] withUserBuilder:inputUserBuilder];
 }
