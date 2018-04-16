@@ -251,6 +251,7 @@
 		83B6FC23207E60B6002DBA7B /* NSDate+ReferencedDate.m in Sources */ = {isa = PBXBuildFile; fileRef = 83B6FC1C207E60B6002DBA7B /* NSDate+ReferencedDate.m */; };
 		83B6FC24207E60B6002DBA7B /* NSDate+ReferencedDate.m in Sources */ = {isa = PBXBuildFile; fileRef = 83B6FC1C207E60B6002DBA7B /* NSDate+ReferencedDate.m */; };
 		83B6FC28207E7462002DBA7B /* LDEventModel+Equatable.m in Sources */ = {isa = PBXBuildFile; fileRef = 83B6FC27207E7462002DBA7B /* LDEventModel+Equatable.m */; };
+		83B6FC2B208127B2002DBA7B /* LDEventModel+Testable.m in Sources */ = {isa = PBXBuildFile; fileRef = 83B6FC2A208127B2002DBA7B /* LDEventModel+Testable.m */; };
 		83B8C24C1FEB1CD20082B8A9 /* LDUserModel+Stub.m in Sources */ = {isa = PBXBuildFile; fileRef = 83B8C24B1FEB1CD20082B8A9 /* LDUserModel+Stub.m */; };
 		83B8C24F1FEC19500082B8A9 /* NSDateFormatter+LDUserModel.h in Headers */ = {isa = PBXBuildFile; fileRef = 83B8C24D1FEC19500082B8A9 /* NSDateFormatter+LDUserModel.h */; };
 		83B8C2501FEC19500082B8A9 /* NSDateFormatter+LDUserModel.h in Headers */ = {isa = PBXBuildFile; fileRef = 83B8C24D1FEC19500082B8A9 /* NSDateFormatter+LDUserModel.h */; };
@@ -451,6 +452,8 @@
 		83B6FC1C207E60B6002DBA7B /* NSDate+ReferencedDate.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "NSDate+ReferencedDate.m"; sourceTree = "<group>"; };
 		83B6FC26207E7462002DBA7B /* LDEventModel+Equatable.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "LDEventModel+Equatable.h"; sourceTree = "<group>"; };
 		83B6FC27207E7462002DBA7B /* LDEventModel+Equatable.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "LDEventModel+Equatable.m"; sourceTree = "<group>"; };
+		83B6FC29208127B2002DBA7B /* LDEventModel+Testable.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "LDEventModel+Testable.h"; sourceTree = "<group>"; };
+		83B6FC2A208127B2002DBA7B /* LDEventModel+Testable.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "LDEventModel+Testable.m"; sourceTree = "<group>"; };
 		83B8C24A1FEB1CD20082B8A9 /* LDUserModel+Stub.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "LDUserModel+Stub.h"; sourceTree = "<group>"; };
 		83B8C24B1FEB1CD20082B8A9 /* LDUserModel+Stub.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "LDUserModel+Stub.m"; sourceTree = "<group>"; };
 		83B8C24D1FEC19500082B8A9 /* NSDateFormatter+LDUserModel.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "NSDateFormatter+LDUserModel.h"; sourceTree = "<group>"; };
@@ -761,6 +764,8 @@
 				830C2AD120768697001D645D /* LDThrottler+Testable.m */,
 				83B6FC26207E7462002DBA7B /* LDEventModel+Equatable.h */,
 				83B6FC27207E7462002DBA7B /* LDEventModel+Equatable.m */,
+				83B6FC29208127B2002DBA7B /* LDEventModel+Testable.h */,
+				83B6FC2A208127B2002DBA7B /* LDEventModel+Testable.m */,
 			);
 			path = Categories;
 			sourceTree = "<group>";
@@ -1406,6 +1411,7 @@
 			files = (
 				83EF678D1F98FC9200403126 /* LDFlagConfigModel+Testable.m in Sources */,
 				8349F51E1F19352300B1F3DB /* NSDictionary+StringKey_Matchable.m in Sources */,
+				83B6FC2B208127B2002DBA7B /* LDEventModel+Testable.m in Sources */,
 				839956E820053081009707D1 /* LDUserModel+Testable.m in Sources */,
 				690347291E689B9F00E45133 /* LDEventModelTest.m in Sources */,
 				830C2ACF20757CE9001D645D /* LDThrottlerTest.m in Sources */,

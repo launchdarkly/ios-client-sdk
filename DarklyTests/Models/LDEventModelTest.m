@@ -10,13 +10,13 @@
 #import "LDUserModel+Stub.h"
 #import "NSDate+ReferencedDate.h"
 
-extern NSString * const kKeyUser;
-extern NSString * const kKeyUserKey;
+extern NSString * const kEventModelKeyUser;
+extern NSString * const kEventModelKeyUserKey;
 extern NSString * const kUserAttributeConfig;
 
-extern NSString * const kEventNameFeature;
-extern NSString * const kEventNameCustom;
-extern NSString * const kEventNameIdentify;
+extern NSString * const kEventModelKindFeature;
+extern NSString * const kEventModelKindCustom;
+extern NSString * const kEventModelKindIdentify;
 
 NSString * const testMobileKey = @"EventModelTest.testMobileKey";
 
@@ -44,7 +44,7 @@ NSString * const testMobileKey = @"EventModelTest.testMobileKey";
         LDEventModel *event = [LDEventModel featureEventWithKey:@"red" keyValue:value defaultKeyValue:value userValue:self.user inlineUser:boolValue];
 
         XCTAssertEqualObjects(event.key, @"red");
-        XCTAssertEqualObjects(event.kind, kEventNameFeature);
+        XCTAssertEqualObjects(event.kind, kEventModelKindFeature);
         XCTAssertEqualObjects(event.value, value);
         XCTAssertEqualObjects(event.defaultValue, value);
         XCTAssertTrue([event.user isEqual:self.user ignoringAttributes:@[]]);
@@ -62,7 +62,7 @@ NSString * const testMobileKey = @"EventModelTest.testMobileKey";
         LDEventModel *event = [LDEventModel customEventWithKey:@"red" andDataDictionary:dictionary userValue:self.user inlineUser:boolValue];
 
         XCTAssertEqualObjects(event.key, @"red");
-        XCTAssertEqualObjects(event.kind, kEventNameCustom);
+        XCTAssertEqualObjects(event.kind, kEventModelKindCustom);
         XCTAssertEqualObjects(event.data, dictionary);
         XCTAssertTrue([event.user isEqual:self.user ignoringAttributes:@[]]);
         XCTAssertEqual(event.inlineUser, boolValue);
@@ -74,7 +74,7 @@ NSString * const testMobileKey = @"EventModelTest.testMobileKey";
     NSInteger referenceMillis = [[NSDate date] millisSince1970];
     LDEventModel *event = [LDEventModel identifyEventWithUser:self.user];
 
-    XCTAssertEqualObjects(event.kind, kEventNameIdentify);
+    XCTAssertEqualObjects(event.kind, kEventModelKindIdentify);
     XCTAssertTrue([event.user isEqual:self.user ignoringAttributes:@[]]);
     XCTAssertEqual(event.inlineUser, YES);
     XCTAssertTrue(event.creationDate >= referenceMillis);
@@ -109,9 +109,9 @@ NSString * const testMobileKey = @"EventModelTest.testMobileKey";
         LDEventModel *originalEvent = [self eventForKind:eventKind inlineUser:YES];
         NSDictionary *eventDictionary = [originalEvent dictionaryValueUsingConfig:config];
 
-        XCTAssertNotNil(eventDictionary[kKeyUser]);
-        XCTAssertNil(eventDictionary[kKeyUserKey]);
-        LDUserModel *restoredUser = [[LDUserModel alloc] initWithDictionary:eventDictionary[kKeyUser]];
+        XCTAssertNotNil(eventDictionary[kEventModelKeyUser]);
+        XCTAssertNil(eventDictionary[kEventModelKeyUserKey]);
+        LDUserModel *restoredUser = [[LDUserModel alloc] initWithDictionary:eventDictionary[kEventModelKeyUser]];
         XCTAssertTrue([originalEvent.user isEqual:restoredUser ignoringAttributes:@[kUserAttributeConfig]]);
     }
 }
@@ -122,14 +122,14 @@ NSString * const testMobileKey = @"EventModelTest.testMobileKey";
         LDEventModel *originalEvent = [self eventForKind:eventKind inlineUser:NO];
         NSDictionary *eventDictionary = [originalEvent dictionaryValueUsingConfig:config];
 
-        if (![eventKind isEqualToString:kEventNameIdentify]) {
-            XCTAssertNil(eventDictionary[kKeyUser]);
-            XCTAssertNotNil(eventDictionary[kKeyUserKey]);
-            XCTAssertTrue([originalEvent.user.key isEqualToString:eventDictionary[kKeyUserKey]]);
+        if (![eventKind isEqualToString:kEventModelKindIdentify]) {
+            XCTAssertNil(eventDictionary[kEventModelKeyUser]);
+            XCTAssertNotNil(eventDictionary[kEventModelKeyUserKey]);
+            XCTAssertTrue([originalEvent.user.key isEqualToString:eventDictionary[kEventModelKeyUserKey]]);
         } else {    //identify events always inline the user
-            XCTAssertNotNil(eventDictionary[kKeyUser]);
-            XCTAssertNil(eventDictionary[kKeyUserKey]);
-            LDUserModel *restoredUser = [[LDUserModel alloc] initWithDictionary:eventDictionary[kKeyUser]];
+            XCTAssertNotNil(eventDictionary[kEventModelKeyUser]);
+            XCTAssertNil(eventDictionary[kEventModelKeyUserKey]);
+            LDUserModel *restoredUser = [[LDUserModel alloc] initWithDictionary:eventDictionary[kEventModelKeyUser]];
             XCTAssertTrue([originalEvent.user isEqual:restoredUser ignoringAttributes:@[kUserAttributeConfig]]);
         }
     }
@@ -139,7 +139,7 @@ NSString * const testMobileKey = @"EventModelTest.testMobileKey";
     LDConfig *config = [[LDConfig alloc] initWithMobileKey:testMobileKey];
     self.user = [LDUserModel stubWithKey:[[NSUUID UUID] UUIDString]];
     LDEventModel *eventStub = [[LDEventModel alloc] initCustomEventWithKey:@"eventStubKey" andDataDictionary:@{} userValue:self.user inlineUser:YES];
-    NSDictionary *subject = [eventStub dictionaryValueUsingConfig:config][kKeyUser];
+    NSDictionary *subject = [eventStub dictionaryValueUsingConfig:config][kEventModelKeyUser];
 
     XCTAssertNotNil(subject);
     XCTAssertTrue(subject.allKeys.count > 0);
@@ -148,13 +148,13 @@ NSString * const testMobileKey = @"EventModelTest.testMobileKey";
 
 #pragma mark Helpers
 -(LDEventModel*)eventForKind:(NSString*)kind inlineUser:(BOOL)inlineUser {
-    if ([kind isEqualToString:kEventNameFeature]) {
+    if ([kind isEqualToString:kEventModelKindFeature]) {
         return [LDEventModel featureEventWithKey:[[NSUUID UUID] UUIDString] keyValue:@7 defaultKeyValue:@3 userValue:self.user inlineUser:inlineUser];
     }
-    if ([kind isEqualToString:kEventNameCustom]) {
+    if ([kind isEqualToString:kEventModelKindCustom]) {
         return [LDEventModel customEventWithKey:[[NSUUID UUID] UUIDString] andDataDictionary:@{@"red": @"is not blue"} userValue:self.user inlineUser:inlineUser];
     }
-    if ([kind isEqualToString:kEventNameIdentify]) {
+    if ([kind isEqualToString:kEventModelKindIdentify]) {
         return [LDEventModel identifyEventWithUser:self.user];
     }
 
@@ -162,7 +162,7 @@ NSString * const testMobileKey = @"EventModelTest.testMobileKey";
 }
 
 -(NSArray<NSString*>*)eventKinds {
-    return @[kEventNameFeature, kEventNameCustom, kEventNameIdentify];
+    return @[kEventModelKindFeature, kEventModelKindCustom, kEventModelKindIdentify];
 }
 
 @end

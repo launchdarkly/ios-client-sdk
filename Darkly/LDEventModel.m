@@ -10,48 +10,48 @@
 #import "LDUserModel.h"
 #import "NSDate+ReferencedDate.h"
 
-NSString * const kKeyKey = @"key";
-NSString * const kKeyKind = @"kind";
-NSString * const kKeyCreationDate = @"creationDate";
-NSString * const kKeyData = @"data";
-NSString * const kKeyValue = @"value";
-NSString * const kKeyIsDefault = @"isDefault";
-NSString * const kKeyDefault = @"default";
-NSString * const kKeyUser = @"user";
-NSString * const kKeyUserKey = @"userKey";
-NSString * const kKeyInlineUser = @"inlineUser";
+NSString * const kEventModelKeyKey = @"key";
+NSString * const kEventModelKeyKind = @"kind";
+NSString * const kEventModelKeyCreationDate = @"creationDate";
+NSString * const kEventModelKeyData = @"data";
+NSString * const kEventModelKeyValue = @"value";
+NSString * const kEventModelKeyIsDefault = @"isDefault";
+NSString * const kEventModelKeyDefault = @"default";
+NSString * const kEventModelKeyUser = @"user";
+NSString * const kEventModelKeyUserKey = @"userKey";
+NSString * const kEventModelKeyInlineUser = @"inlineUser";
 
-NSString * const kEventNameFeature = @"feature";
-NSString * const kEventNameCustom = @"custom";
-NSString * const kEventNameIdentify = @"identify";
+NSString * const kEventModelKindFeature = @"feature";
+NSString * const kEventModelKindCustom = @"custom";
+NSString * const kEventModelKindIdentify = @"identify";
 
 @implementation LDEventModel
 
 - (void)encodeWithCoder:(NSCoder *)encoder {
-    [encoder encodeObject:self.key forKey:kKeyKey];
-    [encoder encodeObject:self.kind forKey:kKeyKind];
-    [encoder encodeInteger:self.creationDate forKey:kKeyCreationDate];
-    [encoder encodeObject:self.data forKey:kKeyData];
-    [encoder encodeObject:self.value forKey:kKeyValue];
-    [encoder encodeObject:self.defaultValue forKey:kKeyDefault];
-    [encoder encodeObject:self.user forKey:kKeyUser];
-    [encoder encodeBool:self.inlineUser forKey:kKeyInlineUser];
+    [encoder encodeObject:self.key forKey:kEventModelKeyKey];
+    [encoder encodeObject:self.kind forKey:kEventModelKeyKind];
+    [encoder encodeInteger:self.creationDate forKey:kEventModelKeyCreationDate];
+    [encoder encodeObject:self.data forKey:kEventModelKeyData];
+    [encoder encodeObject:self.value forKey:kEventModelKeyValue];
+    [encoder encodeObject:self.defaultValue forKey:kEventModelKeyDefault];
+    [encoder encodeObject:self.user forKey:kEventModelKeyUser];
+    [encoder encodeBool:self.inlineUser forKey:kEventModelKeyInlineUser];
 }
 
 - (id)initWithCoder:(NSCoder *)decoder {
     if(!(self = [super init])) { return nil; }
 
-    self.key = [decoder decodeObjectForKey:kKeyKey];
-    self.kind = [decoder decodeObjectForKey:kKeyKind];
-    self.creationDate = [decoder decodeIntegerForKey:kKeyCreationDate];
-    self.data = [decoder decodeObjectForKey:kKeyData];
-    self.value = [decoder decodeObjectForKey:kKeyValue];
-    self.defaultValue = [decoder decodeObjectForKey:kKeyDefault];
+    self.key = [decoder decodeObjectForKey:kEventModelKeyKey];
+    self.kind = [decoder decodeObjectForKey:kEventModelKeyKind];
+    self.creationDate = [decoder decodeIntegerForKey:kEventModelKeyCreationDate];
+    self.data = [decoder decodeObjectForKey:kEventModelKeyData];
+    self.value = [decoder decodeObjectForKey:kEventModelKeyValue];
+    self.defaultValue = [decoder decodeObjectForKey:kEventModelKeyDefault];
     if (!self.defaultValue) {
-        self.defaultValue = [decoder decodeObjectForKey:kKeyIsDefault];
+        self.defaultValue = [decoder decodeObjectForKey:kEventModelKeyIsDefault];
     }
-    self.user = [decoder decodeObjectForKey:kKeyUser];
-    self.inlineUser = [decoder decodeBoolForKey:kKeyInlineUser];
+    self.user = [decoder decodeObjectForKey:kEventModelKeyUser];
+    self.inlineUser = [decoder decodeBoolForKey:kEventModelKeyInlineUser];
 
     return self;
 }
@@ -60,15 +60,15 @@ NSString * const kEventNameIdentify = @"identify";
     if(!(self = [super init])) { return nil; }
 
     //Process json that comes down from server
-    self.key = [dictionary objectForKey: kKeyKey];
-    self.kind = [dictionary objectForKey: kKeyKind];
-    NSNumber *creationDateValue = [dictionary objectForKey:kKeyCreationDate];
+    self.key = [dictionary objectForKey: kEventModelKeyKey];
+    self.kind = [dictionary objectForKey: kEventModelKeyKind];
+    NSNumber *creationDateValue = [dictionary objectForKey:kEventModelKeyCreationDate];
     self.creationDate = [creationDateValue longValue];
-    self.value = [dictionary objectForKey: kKeyValue];
-    self.defaultValue = [dictionary objectForKey: kKeyDefault];
-    self.data = [dictionary objectForKey:kKeyData];
-    self.user = [[LDUserModel alloc] initWithDictionary:[dictionary objectForKey:kKeyUser]];
-    self.inlineUser = [[dictionary objectForKey:kKeyInlineUser] boolValue];
+    self.value = [dictionary objectForKey: kEventModelKeyValue];
+    self.defaultValue = [dictionary objectForKey: kEventModelKeyDefault];
+    self.data = [dictionary objectForKey:kEventModelKeyData];
+    self.user = [[LDUserModel alloc] initWithDictionary:[dictionary objectForKey:kEventModelKeyUser]];
+    self.inlineUser = [[dictionary objectForKey:kEventModelKeyInlineUser] boolValue];
 
     return self;
 }
@@ -89,7 +89,7 @@ NSString * const kEventNameIdentify = @"identify";
     if (!(self = [self init])) { return nil; }
 
     self.key = featureKey;
-    self.kind = kEventNameFeature;
+    self.kind = kEventModelKindFeature;
     self.value = keyValue;
     self.defaultValue = defaultKeyValue;
     self.user = userValue;
@@ -112,7 +112,7 @@ NSString * const kEventNameIdentify = @"identify";
     if(!(self = [self init])) { return nil; }
 
     self.key = featureKey;
-    self.kind = kEventNameCustom;
+    self.kind = kEventModelKindCustom;
     self.data = customData;
     self.user = userValue;
     self.inlineUser = inlineUser;
@@ -128,7 +128,7 @@ NSString * const kEventNameIdentify = @"identify";
     if(!(self = [self init])) { return nil; }
 
     self.key = user.key;
-    self.kind = kEventNameIdentify;
+    self.kind = kEventModelKindIdentify;
     self.user = user;
     self.inlineUser = YES;
 
@@ -150,18 +150,18 @@ NSString * const kEventNameIdentify = @"identify";
 -(NSDictionary *)dictionaryValueUsingConfig:(LDConfig*)config {
     NSMutableDictionary *dictionary = [[NSMutableDictionary alloc] init];
     
-    self.key ? [dictionary setObject:self.key forKey: kKeyKey] : nil;
-    self.kind ? [dictionary setObject:self.kind forKey: kKeyKind] : nil;
-    self.creationDate ? [dictionary setObject:[NSNumber numberWithInteger: self.creationDate] forKey: kKeyCreationDate] : nil;
-    self.data ? [dictionary setObject:self.data forKey: kKeyData] : nil;
-    self.value ? [dictionary setObject:self.value forKey: kKeyValue] : nil;
-    self.defaultValue ? [dictionary setObject:self.defaultValue forKey: kKeyDefault] : nil;
-    if (self.inlineUser || [self.kind isEqualToString:kEventNameIdentify]) {
-        self.user ? [dictionary setObject:[self.user dictionaryValueWithFlagConfig:NO includePrivateAttributes:NO config:config] forKey: kKeyUser] : nil;
+    self.key ? [dictionary setObject:self.key forKey: kEventModelKeyKey] : nil;
+    self.kind ? [dictionary setObject:self.kind forKey: kEventModelKeyKind] : nil;
+    self.creationDate ? [dictionary setObject:[NSNumber numberWithInteger: self.creationDate] forKey: kEventModelKeyCreationDate] : nil;
+    self.data ? [dictionary setObject:self.data forKey: kEventModelKeyData] : nil;
+    self.value ? [dictionary setObject:self.value forKey: kEventModelKeyValue] : nil;
+    self.defaultValue ? [dictionary setObject:self.defaultValue forKey: kEventModelKeyDefault] : nil;
+    if (self.inlineUser || [self.kind isEqualToString:kEventModelKindIdentify]) {
+        self.user ? [dictionary setObject:[self.user dictionaryValueWithFlagConfig:NO includePrivateAttributes:NO config:config] forKey: kEventModelKeyUser] : nil;
     } else {
-        self.user ? dictionary[kKeyUserKey] = self.user.key : nil;
+        self.user ? dictionary[kEventModelKeyUserKey] = self.user.key : nil;
     }
-    dictionary[kKeyInlineUser] = @(self.inlineUser);
+    dictionary[kEventModelKeyInlineUser] = @(self.inlineUser);
 
     return dictionary;
 }

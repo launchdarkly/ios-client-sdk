@@ -9,10 +9,14 @@
 #import "LDFlagConfigModel.h"
 #import "LDFlagConfigModel+Testable.h"
 #import "LDEventModel.h"
+#import "LDEventModel+Testable.h"
+#import "LDEventModel+Equatable.h"
 #import "LDClient.h"
 #import "OCMock.h"
 #import "NSArray+UnitTests.h"
 #import "LDDataManager+Testable.h"
+
+extern NSString * const kEventModelKeyKind;
 
 @interface LDDataManagerTest : DarklyXCTestCase
 @property (nonatomic) id clientMock;
@@ -33,8 +37,8 @@
     user.email = @"bob@gmail.com";
     user.updatedAt = [NSDate date];
     
-    LDFlagConfigModel *config = [LDFlagConfigModel flagConfigFromJsonFileNamed:@"ldDataManagerTestConfig"];
-    user.config = config;
+    LDFlagConfigModel *flagConfig = [LDFlagConfigModel flagConfigFromJsonFileNamed:@"ldDataManagerTestConfig"];
+    user.config = flagConfig;
 
     clientMock = OCMClassMock([LDClient class]);
     OCMStub(ClassMethod([clientMock sharedInstance])).andReturn(clientMock);
@@ -44,6 +48,7 @@
 - (void)tearDown {
     [clientMock stopMocking];
     clientMock = nil;
+    [[LDDataManager sharedManager] flushEventsDictionary];
     [super tearDown];
 }
 
@@ -59,26 +64,33 @@
 }
 
 -(void)testAllEventsDictionaryArray {
-    NSString *eventKey1 = @"foo";
-    NSString *eventKey2 = @"fi";
     LDConfig *config = [[LDConfig alloc] initWithMobileKey:@"stubMobileKey"];
-    [[LDDataManager sharedManager] createFeatureEvent:eventKey1 keyValue:[NSNumber numberWithBool:NO] defaultKeyValue:[NSNumber numberWithBool:NO] user:self.user config:config];
-    [[LDDataManager sharedManager] createCustomEvent:eventKey2 withCustomValuesDictionary:@{@"carrot": @"cake"}  user:self.user config:config];
-    
+    LDEventModel *featureEvent = [LDEventModel stubEventWithKind:kEventModelKindFeature user:self.user config:config];
+    [[LDDataManager sharedManager] createFeatureEvent:featureEvent.key keyValue:featureEvent.value defaultKeyValue:featureEvent.defaultValue user:self.user config:config];
+    LDEventModel *customEvent = [LDEventModel stubEventWithKind:kEventModelKindCustom user:self.user config:config];
+    [[LDDataManager sharedManager] createCustomEvent:customEvent.key withCustomValuesDictionary:customEvent.data user:self.user config:config];
+//    LDEventModel *identifyEvent = [LDEventModel stubEventWithKind:kEventNameIdentify user:self.user config:config];
+    NSArray<LDEventModel*> *eventStubs = @[featureEvent, customEvent];
+
     XCTestExpectation *expectation = [self expectationWithDescription:@"All events dictionary expectation"];
     
     [[LDDataManager sharedManager] allEventDictionaries:^(NSArray *eventDictionaries) {
-        NSMutableArray *eventKeys = [[NSMutableArray alloc] init];
         for (NSDictionary *eventDictionary in eventDictionaries) {
-            [eventKeys addObject:[eventDictionary objectForKey:@"key"]];
+            NSPredicate *matchingEventPredicate = [NSPredicate predicateWithBlock:^BOOL(id  _Nullable evaluatedObject, NSDictionary<NSString *,id> * _Nullable bindings) {
+                LDEventModel *evaluatedEvent = evaluatedObject;
+                return [eventDictionary[kEventModelKeyKind] isEqualToString:evaluatedEvent.kind];
+            }];
+            LDEventModel *matchingEvent = [[eventStubs filteredArrayUsingPredicate:matchingEventPredicate] firstObject];
+
+            XCTAssertNotNil(matchingEvent);
+            if (!matchingEvent) { continue; }
+            XCTAssertTrue([matchingEvent hasPropertiesMatchingDictionary:eventDictionary]);
         }
         
-        XCTAssertTrue([eventKeys containsObject:eventKey1]);
-        XCTAssertTrue([eventKeys containsObject:eventKey2]);
         [expectation fulfill];
     }];
     
-    [self waitForExpectations:@[expectation] timeout:10];
+    [self waitForExpectations:@[expectation] timeout:1];
     
 }
 

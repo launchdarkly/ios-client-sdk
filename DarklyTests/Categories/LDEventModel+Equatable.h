@@ -10,4 +10,5 @@
 
 @interface LDEventModel(Equatable)
 -(BOOL)isEqual:(id)object;
+-(BOOL)hasPropertiesMatchingDictionary:(NSDictionary*)dictionary;
 @end
