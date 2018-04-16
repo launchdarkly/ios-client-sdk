@@ -93,8 +93,9 @@ static NSInteger const HTTPStatusCodeUnauthorized = 401;
         connectionQueue = dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_HIGH, 0);
         
         dispatch_time_t popTime = dispatch_time(DISPATCH_TIME_NOW, (int64_t)(_retryInterval * NSEC_PER_SEC));
+        __weak typeof(self) weakSelf = self;
         dispatch_after(popTime, connectionQueue, ^(void){
-            [self _open];
+            [weakSelf _open];
         });
     }
     return self;
@@ -170,8 +171,9 @@ didReceiveResponse:(NSURLResponse *)response completionHandler:(void (^)(NSURLSe
         }
         
         if (!line || line.length == 0) {
+            __weak typeof(self) weakSelf = self;
             dispatch_async(messageQueue, ^{
-                [self _dispatchEvent:event];
+                [weakSelf _dispatchEvent:event];
             });
             
             event = [LDEvent new];
@@ -225,8 +227,9 @@ didReceiveResponse:(NSURLResponse *)response completionHandler:(void (^)(NSURLSe
     
     if (![self responseIsUnauthorizedForTask:task]) {
         dispatch_time_t popTime = dispatch_time(DISPATCH_TIME_NOW, (int64_t)([self increaseIntervalWithBackoff] * NSEC_PER_SEC));
+        __weak typeof(self) weakSelf = self;
         dispatch_after(popTime, connectionQueue, ^(void){
-            [self _open];
+            [weakSelf _open];
         });
     }
 }
