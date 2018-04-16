@@ -39,11 +39,17 @@ extern NSString * const kEventModelKeyInlineUser;
     if (![self.kind isEqualToString:otherEvent.kind]) {
         [mismatchedFields addObject:kEventModelKeyKind];
     }
-    if (![self.user isEqual:otherEvent.user ignoringAttributes:@[kUserAttributeConfig]]) {
-        [mismatchedFields addObject:kEventModelKeyUser];
-    }
     if (self.inlineUser != otherEvent.inlineUser) {
         [mismatchedFields addObject:kEventModelKeyInlineUser];
+    }
+    if (self.inlineUser) {
+        if (![self.user isEqual:otherEvent.user ignoringAttributes:@[kUserAttributeConfig]]) {
+            [mismatchedFields addObject:kEventModelKeyUser];
+        }
+    } else {
+        if (![self.user.key isEqualToString:otherEvent.user.key]) {
+            [mismatchedFields addObject:kEventModelKeyUserKey];
+        }
     }
     if (self.creationDate != otherEvent.creationDate) {
         [mismatchedFields addObject:kEventModelKeyCreationDate];

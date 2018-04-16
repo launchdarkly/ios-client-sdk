@@ -67,8 +67,13 @@ NSString * const kEventModelKindIdentify = @"identify";
     self.value = [dictionary objectForKey: kEventModelKeyValue];
     self.defaultValue = [dictionary objectForKey: kEventModelKeyDefault];
     self.data = [dictionary objectForKey:kEventModelKeyData];
-    self.user = [[LDUserModel alloc] initWithDictionary:[dictionary objectForKey:kEventModelKeyUser]];
-    self.inlineUser = [[dictionary objectForKey:kEventModelKeyInlineUser] boolValue];
+    self.inlineUser = [dictionary.allKeys containsObject:kEventModelKeyUser];
+    if (self.inlineUser) {
+        self.user = [[LDUserModel alloc] initWithDictionary:[dictionary objectForKey:kEventModelKeyUser]];
+    } else {
+        self.user = [[LDUserModel alloc] init];
+        self.user.key = dictionary[kEventModelKeyUserKey];
+    }
 
     return self;
 }
@@ -161,7 +166,6 @@ NSString * const kEventModelKindIdentify = @"identify";
     } else {
         self.user ? dictionary[kEventModelKeyUserKey] = self.user.key : nil;
     }
-    dictionary[kEventModelKeyInlineUser] = @(self.inlineUser);
 
     return dictionary;
 }

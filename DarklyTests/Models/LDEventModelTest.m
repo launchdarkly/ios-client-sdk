@@ -12,6 +12,8 @@
 
 extern NSString * const kEventModelKeyUser;
 extern NSString * const kEventModelKeyUserKey;
+extern NSString * const kEventModelKeyInlineUser;
+
 extern NSString * const kUserAttributeConfig;
 
 extern NSString * const kEventModelKindFeature;
@@ -113,6 +115,7 @@ NSString * const testMobileKey = @"EventModelTest.testMobileKey";
         XCTAssertNil(eventDictionary[kEventModelKeyUserKey]);
         LDUserModel *restoredUser = [[LDUserModel alloc] initWithDictionary:eventDictionary[kEventModelKeyUser]];
         XCTAssertTrue([originalEvent.user isEqual:restoredUser ignoringAttributes:@[kUserAttributeConfig]]);
+        XCTAssertNil(eventDictionary[kEventModelKeyInlineUser]);
     }
 }
 
@@ -132,6 +135,7 @@ NSString * const testMobileKey = @"EventModelTest.testMobileKey";
             LDUserModel *restoredUser = [[LDUserModel alloc] initWithDictionary:eventDictionary[kEventModelKeyUser]];
             XCTAssertTrue([originalEvent.user isEqual:restoredUser ignoringAttributes:@[kUserAttributeConfig]]);
         }
+        XCTAssertNil(eventDictionary[kEventModelKeyInlineUser]);
     }
 }
 
