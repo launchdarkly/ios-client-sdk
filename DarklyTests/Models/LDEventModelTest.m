@@ -41,7 +41,7 @@ NSString * const testMobileKey = @"EventModelTest.testMobileKey";
     for (NSNumber *value in boolValues) {
         BOOL boolValue = [value boolValue];
         NSInteger referenceMillis = [[NSDate date] millisSince1970];
-        LDEventModel *event = [LDEventModel featureEventWithKey:@"red" keyValue:value defaultKeyValue:value userValue:self.user inlineUser:boolValue];
+        LDEventModel *event = [LDEventModel featureEventWithFlagKey:@"red" flagValue:value defaultFlagValue:value userValue:self.user inlineUser:boolValue];
 
         XCTAssertEqualObjects(event.key, @"red");
         XCTAssertEqualObjects(event.kind, kEventModelKindFeature);
@@ -59,7 +59,7 @@ NSString * const testMobileKey = @"EventModelTest.testMobileKey";
     for (NSNumber *value in boolValues) {
         BOOL boolValue = [value boolValue];
         NSInteger referenceMillis = [[NSDate date] millisSince1970];
-        LDEventModel *event = [LDEventModel customEventWithKey:@"red" andDataDictionary:dictionary userValue:self.user inlineUser:boolValue];
+        LDEventModel *event = [LDEventModel customEventWithKey:@"red" customData:dictionary userValue:self.user inlineUser:boolValue];
 
         XCTAssertEqualObjects(event.key, @"red");
         XCTAssertEqualObjects(event.kind, kEventModelKindCustom);
@@ -138,7 +138,7 @@ NSString * const testMobileKey = @"EventModelTest.testMobileKey";
 -(void)testEventDictionaryOmitsUserFlagConfig {
     LDConfig *config = [[LDConfig alloc] initWithMobileKey:testMobileKey];
     self.user = [LDUserModel stubWithKey:[[NSUUID UUID] UUIDString]];
-    LDEventModel *eventStub = [[LDEventModel alloc] initCustomEventWithKey:@"eventStubKey" andDataDictionary:@{} userValue:self.user inlineUser:YES];
+    LDEventModel *eventStub = [[LDEventModel alloc] initCustomEventWithKey:@"eventStubKey" customData:@{} userValue:self.user inlineUser:YES];
     NSDictionary *subject = [eventStub dictionaryValueUsingConfig:config][kEventModelKeyUser];
 
     XCTAssertNotNil(subject);
@@ -149,10 +149,10 @@ NSString * const testMobileKey = @"EventModelTest.testMobileKey";
 #pragma mark Helpers
 -(LDEventModel*)eventForKind:(NSString*)kind inlineUser:(BOOL)inlineUser {
     if ([kind isEqualToString:kEventModelKindFeature]) {
-        return [LDEventModel featureEventWithKey:[[NSUUID UUID] UUIDString] keyValue:@7 defaultKeyValue:@3 userValue:self.user inlineUser:inlineUser];
+        return [LDEventModel featureEventWithFlagKey:[[NSUUID UUID] UUIDString] flagValue:@7 defaultFlagValue:@3 userValue:self.user inlineUser:inlineUser];
     }
     if ([kind isEqualToString:kEventModelKindCustom]) {
-        return [LDEventModel customEventWithKey:[[NSUUID UUID] UUIDString] andDataDictionary:@{@"red": @"is not blue"} userValue:self.user inlineUser:inlineUser];
+        return [LDEventModel customEventWithKey:[[NSUUID UUID] UUIDString] customData:@{@"red": @"is not blue"} userValue:self.user inlineUser:inlineUser];
     }
     if ([kind isEqualToString:kEventModelKindIdentify]) {
         return [LDEventModel identifyEventWithUser:self.user];

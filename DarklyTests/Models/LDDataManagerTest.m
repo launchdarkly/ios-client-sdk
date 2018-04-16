@@ -66,11 +66,12 @@ extern NSString * const kEventModelKeyKind;
 -(void)testAllEventsDictionaryArray {
     LDConfig *config = [[LDConfig alloc] initWithMobileKey:@"stubMobileKey"];
     LDEventModel *featureEvent = [LDEventModel stubEventWithKind:kEventModelKindFeature user:self.user config:config];
-    [[LDDataManager sharedManager] createFeatureEvent:featureEvent.key keyValue:featureEvent.value defaultKeyValue:featureEvent.defaultValue user:self.user config:config];
+    [[LDDataManager sharedManager] createFeatureEventWithFlagKey:featureEvent.key flagValue:featureEvent.value defaultFlagValue:featureEvent.defaultValue user:self.user config:config];
     LDEventModel *customEvent = [LDEventModel stubEventWithKind:kEventModelKindCustom user:self.user config:config];
-    [[LDDataManager sharedManager] createCustomEvent:customEvent.key withCustomValuesDictionary:customEvent.data user:self.user config:config];
-//    LDEventModel *identifyEvent = [LDEventModel stubEventWithKind:kEventNameIdentify user:self.user config:config];
-    NSArray<LDEventModel*> *eventStubs = @[featureEvent, customEvent];
+    [[LDDataManager sharedManager] createCustomEventWithKey:customEvent.key customData:customEvent.data user:self.user config:config];
+    LDEventModel *identifyEvent = [LDEventModel stubEventWithKind:kEventModelKindIdentify user:self.user config:config];
+    [[LDDataManager sharedManager] createIdentifyEventWithUser:self.user config:config];
+    NSArray<LDEventModel*> *eventStubs = @[featureEvent, customEvent, identifyEvent];
 
     XCTestExpectation *expectation = [self expectationWithDescription:@"All events dictionary expectation"];
     
@@ -96,8 +97,8 @@ extern NSString * const kEventModelKeyKind;
 
 -(void)testAllEventDictionaries {
     LDConfig *config = [[LDConfig alloc] initWithMobileKey:@"stubMobileKey"];
-    [[LDDataManager sharedManager] createCustomEvent:@"foo" withCustomValuesDictionary:nil user:self.user config:config];
-    [[LDDataManager sharedManager] createCustomEvent:@"fi" withCustomValuesDictionary:nil user:self.user config:config];
+    [[LDDataManager sharedManager] createCustomEventWithKey:@"foo" customData:nil user:self.user config:config];
+    [[LDDataManager sharedManager] createCustomEventWithKey:@"fi" customData:nil user:self.user config:config];
     
     XCTestExpectation *expectation = [self expectationWithDescription:@"All events json data expectation"];
     
@@ -174,10 +175,10 @@ extern NSString * const kEventModelKeyKind;
     LDDataManager *manager = [LDDataManager sharedManager];
     [manager.eventsArray removeAllObjects];
     
-    [manager createCustomEvent:@"aKey" withCustomValuesDictionary: @{@"carrot": @"cake"} user:self.user config:config];
-    [manager createCustomEvent:@"aKey" withCustomValuesDictionary: @{@"carrot": @"cake"} user:self.user config:config];
-    [manager createCustomEvent:@"aKey" withCustomValuesDictionary: @{@"carrot": @"cake"} user:self.user config:config];
-    [manager createFeatureEvent: @"anotherKet" keyValue: [NSNumber numberWithBool:YES] defaultKeyValue: [NSNumber numberWithBool:NO] user:self.user config:config];
+    [manager createCustomEventWithKey:@"aKey" customData: @{@"carrot": @"cake"} user:self.user config:config];
+    [manager createCustomEventWithKey:@"aKey" customData: @{@"carrot": @"cake"} user:self.user config:config];
+    [manager createCustomEventWithKey:@"aKey" customData: @{@"carrot": @"cake"} user:self.user config:config];
+    [manager createFeatureEventWithFlagKey: @"anotherKet" flagValue: [NSNumber numberWithBool:YES] defaultFlagValue: [NSNumber numberWithBool:NO] user:self.user config:config];
     
     [manager allEventDictionaries:^(NSArray *array) {
         XCTAssertEqual([array count],2);

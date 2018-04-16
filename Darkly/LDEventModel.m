@@ -73,41 +73,41 @@ NSString * const kEventModelKindIdentify = @"identify";
     return self;
 }
 
-+(nullable instancetype)featureEventWithKey:(nonnull NSString *)featureKey
-                                   keyValue:(NSObject * _Nullable)keyValue
-                            defaultKeyValue:(NSObject * _Nullable)defaultKeyValue
-                                  userValue:(nonnull LDUserModel *)userValue
-                                 inlineUser:(BOOL)inlineUser {
-    return [[LDEventModel alloc] initFeatureEventWithKey:featureKey keyValue:keyValue defaultKeyValue:defaultKeyValue userValue:userValue inlineUser:inlineUser];
++(nullable instancetype)featureEventWithFlagKey:(nonnull NSString*)flagKey
+                                      flagValue:(NSObject* _Nullable)flagValue
+                               defaultFlagValue:(NSObject* _Nullable)defaultFlagValue
+                                      userValue:(nonnull LDUserModel*)userValue
+                                     inlineUser:(BOOL)inlineUser {
+    return [[LDEventModel alloc] initFeatureEventWithFlagKey:flagKey flagValue:flagValue defaultFlagValue:defaultFlagValue userValue:userValue inlineUser:inlineUser];
 }
 
--(instancetype)initFeatureEventWithKey:(nonnull NSString *)featureKey
-                              keyValue:(NSObject*)keyValue
-                       defaultKeyValue:(NSObject*)defaultKeyValue
-                             userValue:(LDUserModel *)userValue
-                            inlineUser:(BOOL)inlineUser {
+-(instancetype)initFeatureEventWithFlagKey:(nonnull NSString*)flagKey
+                                 flagValue:(NSObject*)flagValue
+                          defaultFlagValue:(NSObject*)defaultFlagValue
+                                 userValue:(LDUserModel*)userValue
+                                inlineUser:(BOOL)inlineUser {
     if (!(self = [self init])) { return nil; }
 
-    self.key = featureKey;
+    self.key = flagKey;
     self.kind = kEventModelKindFeature;
-    self.value = keyValue;
-    self.defaultValue = defaultKeyValue;
+    self.value = flagValue;
+    self.defaultValue = defaultFlagValue;
     self.user = userValue;
     self.inlineUser = inlineUser;
 
     return self;
 }
 
-+(instancetype)customEventWithKey: (NSString *)featureKey
-                andDataDictionary: (NSDictionary *)customData
-                        userValue:(LDUserModel *)userValue
++(instancetype)customEventWithKey:(NSString*)featureKey
+                       customData:(NSDictionary*)customData
+                        userValue:(LDUserModel*)userValue
                        inlineUser:(BOOL)inlineUser {
-    return [[LDEventModel alloc] initCustomEventWithKey:featureKey andDataDictionary:customData userValue:userValue inlineUser:inlineUser];
+    return [[LDEventModel alloc] initCustomEventWithKey:featureKey customData:customData userValue:userValue inlineUser:inlineUser];
 }
 
--(instancetype)initCustomEventWithKey: (NSString *)featureKey
-                    andDataDictionary: (NSDictionary *)customData
-                            userValue:(LDUserModel *)userValue
+-(instancetype)initCustomEventWithKey:(NSString*)featureKey
+                           customData:(NSDictionary*)customData
+                            userValue:(LDUserModel*)userValue
                            inlineUser:(BOOL)inlineUser {
     if(!(self = [self init])) { return nil; }
 

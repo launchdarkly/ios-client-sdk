@@ -390,7 +390,7 @@ NSString *const kBoolFlagKey = @"isABawler";
 
 - (void)testProcessedEventsSuccessWithProcessedEvents {
     LDConfig *config = [[LDConfig alloc] initWithMobileKey:@"testMobileKey"];
-    LDEventModel *event = [[LDEventModel alloc] initFeatureEventWithKey:@"blah" keyValue:[NSNumber numberWithBool:NO] defaultKeyValue:[NSNumber numberWithBool:NO] userValue:[[LDClient sharedInstance] ldUser] inlineUser:config.inlineUserInEvents];
+    LDEventModel *event = [[LDEventModel alloc] initFeatureEventWithFlagKey:@"blah" flagValue:[NSNumber numberWithBool:NO] defaultFlagValue:[NSNumber numberWithBool:NO] userValue:[[LDClient sharedInstance] ldUser] inlineUser:config.inlineUserInEvents];
 
     LDClientManager *clientManager = [LDClientManager sharedInstance];
     [clientManager processedEvents:YES jsonEventArray:@[[event dictionaryValueUsingConfig:config]]];

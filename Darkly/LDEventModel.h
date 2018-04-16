@@ -25,25 +25,25 @@
 -(nonnull id)initWithDictionary:(nonnull NSDictionary*)dictionary;
 -(nonnull NSDictionary *)dictionaryValueUsingConfig:(nonnull LDConfig*)config;
 
-+(nullable instancetype)featureEventWithKey:(nonnull NSString *)featureKey
-                                   keyValue:(NSObject* _Nullable)keyValue
-                            defaultKeyValue:(NSObject* _Nullable)defaultKeyValue
-                                  userValue:(nonnull LDUserModel *)userValue
-                                 inlineUser:(BOOL)inlineUser;
-
--(nullable instancetype)initFeatureEventWithKey:(nonnull NSString *)featureKey
-                                       keyValue:(NSObject* _Nullable)keyValue
-                                defaultKeyValue:(NSObject* _Nullable)defaultKeyValue
-                                      userValue:(nonnull LDUserModel*)userValue
++(nullable instancetype)featureEventWithFlagKey:(nonnull NSString *)flagKey
+                                      flagValue:(NSObject* _Nullable)flagValue
+                               defaultFlagValue:(NSObject* _Nullable)defaultflagValue
+                                      userValue:(nonnull LDUserModel *)userValue
                                      inlineUser:(BOOL)inlineUser;
 
+-(nullable instancetype)initFeatureEventWithFlagKey:(nonnull NSString *)flagKey
+                                          flagValue:(NSObject* _Nullable)flagValue
+                                   defaultFlagValue:(NSObject* _Nullable)defaultFlagValue
+                                          userValue:(nonnull LDUserModel*)userValue
+                                         inlineUser:(BOOL)inlineUser;
+
 +(nullable instancetype)customEventWithKey:(nonnull NSString*)featureKey
-                         andDataDictionary:(nonnull NSDictionary*)customData
+                                customData:(nonnull NSDictionary*)customData
                                  userValue:(nonnull LDUserModel*)userValue
                                 inlineUser:(BOOL)inlineUser;
 
 -(nullable instancetype)initCustomEventWithKey:(nonnull NSString*)featureKey
-                             andDataDictionary:(nonnull NSDictionary*)customData
+                                    customData:(nonnull NSDictionary*)customData
                                      userValue:(nonnull LDUserModel*)userValue
                                     inlineUser:(BOOL)inlineUser;
 
