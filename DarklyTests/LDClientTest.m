@@ -604,6 +604,7 @@ NSString *const kTestMobileKey = @"testMobileKey";
     XCTAssertFalse([[LDClient sharedInstance] updateUser:[[LDUserBuilder alloc] init]]);
     [self.mockLDClientManager verify];
     [self.mockLDDataManager verify];
+    [self.mockLDClientManager verify];
 }
 
 -(void)testUpdateUserWithStart {
