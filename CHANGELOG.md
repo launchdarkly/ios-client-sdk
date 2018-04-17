@@ -2,6 +2,11 @@
 
 All notable changes to the LaunchDarkly iOS SDK will be documented in this file. This project adheres to [Semantic Versioning](http://semver.org).
 
+## [2.12.0] - 2018-04-30
+### Fixed
+- Calling `updateUser` on LDClient while streaming no longer causes the SDK to request feature flags. The SDK now disconnects from the `clientstream` and reconnects with the updated user.
+- Calling `updateUser` on LDClient while polling now resets the polling timer after making a feature flag request.
+
 ## [2.11.2] - 2018-04-06
 ### Changed
 - Changes the minimum required `DarklyEventSource` to version `3.2.1` in the CocoaPods podspec
