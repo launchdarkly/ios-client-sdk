@@ -317,6 +317,63 @@ NSString *const kBoolFlagKey = @"isABawler";
     XCTAssertNil([clientManager eventSource]);
 }
 
+- (void)testUpdateUser_offline_streaming {
+    LDConfig *config = [[LDConfig alloc] initWithMobileKey:mockMobileKey];
+    config.streaming = YES;
+    [[self.eventSourceMock reject] eventSourceWithURL:[OCMArg any] httpHeaders:[OCMArg any] connectMethod:[OCMArg any] connectBody:[OCMArg any]];
+    [[self.pollingManagerMock reject] startConfigPolling];
+
+    [[LDClientManager sharedInstance] updateUser];
+
+    [self.eventSourceMock verify];
+    [self.pollingManagerMock verify];
+}
+
+- (void)testUpdateUser_offline_polling {
+    LDConfig *config = [[LDConfig alloc] initWithMobileKey:mockMobileKey];
+    config.streaming = NO;
+    [[self.eventSourceMock reject] eventSourceWithURL:[OCMArg any] httpHeaders:[OCMArg any] connectMethod:[OCMArg any] connectBody:[OCMArg any]];
+    [[self.pollingManagerMock reject] startConfigPolling];
+
+    [[LDClientManager sharedInstance] updateUser];
+
+    [self.eventSourceMock verify];
+    [self.pollingManagerMock verify];
+}
+
+- (void)testUpdateUser_online_streaming {
+    LDConfig *config = [LDClient sharedInstance].ldConfig;
+    config.streaming = YES;
+    [[LDClientManager sharedInstance] setOnline:YES];
+    //The eventSourceMock registered the eventSourceWithURL call from the setOnline call above. Replace it so it can measure the updateUser response
+    [self.eventSourceMock stopMocking];
+    self.eventSourceMock = OCMClassMock([LDEventSource class]);
+    OCMStub(ClassMethod([self.eventSourceMock eventSourceWithURL:[OCMArg any] httpHeaders:[OCMArg any] connectMethod:[OCMArg any] connectBody:[OCMArg any]])).andReturn(self.eventSourceMock);
+    [[self.eventSourceMock expect] close];
+    [[self.pollingManagerMock expect] stopConfigPolling];
+    [[self.pollingManagerMock reject] startConfigPolling];
+
+    [[LDClientManager sharedInstance] updateUser];
+
+    //Calling verify on the mock isn't working correctly, but the macro syntax does
+    OCMVerify([self.eventSourceMock eventSourceWithURL:[OCMArg any] httpHeaders:[OCMArg any] connectMethod:[OCMArg any] connectBody:[OCMArg any]]);
+    [self.pollingManagerMock verify];
+}
+
+- (void)testUpdateUser_online_polling {
+    LDConfig *config = [LDClient sharedInstance].ldConfig;
+    config.streaming = NO;
+    [[LDClientManager sharedInstance] setOnline:YES];
+    [[self.eventSourceMock reject] eventSourceWithURL:[OCMArg any] httpHeaders:[OCMArg any] connectMethod:[OCMArg any] connectBody:[OCMArg any]];
+    [[self.pollingManagerMock expect] stopConfigPolling];
+    [[self.pollingManagerMock expect] startConfigPolling];
+
+    [[LDClientManager sharedInstance] updateUser];
+
+    [self.eventSourceMock verify];
+    [self.pollingManagerMock verify];
+}
+
 - (void)testWillEnterBackground {
     LDClientManager *clientManager = [LDClientManager sharedInstance];
     [clientManager willEnterBackground];

@@ -118,15 +118,22 @@ NSString *const kTestMobileKey = @"testMobileKey";
 
 - (void)testStartWithValidConfig {
     LDConfig *config = [[LDConfig alloc] initWithMobileKey:kTestMobileKey];
-    LDClient *client = [LDClient sharedInstance];
-    BOOL didStart = [client start:config withUserBuilder:nil];
+    LDUserBuilder *userBuilder = [[LDUserBuilder alloc] init];
+    userBuilder.key = [[NSUUID UUID] UUIDString];
+
+    BOOL didStart = [[LDClient sharedInstance] start:config withUserBuilder:userBuilder];
     XCTAssertTrue(didStart);
 }
 
 - (void)testStartWithValidConfigMultipleTimes {
     LDConfig *config = [[LDConfig alloc] initWithMobileKey:kTestMobileKey];
-    XCTAssertTrue([[LDClient sharedInstance] start:config withUserBuilder:nil]);
-    XCTAssertFalse([[LDClient sharedInstance] start:config withUserBuilder:nil]);
+    LDUserBuilder *userBuilder = [[LDUserBuilder alloc] init];
+    userBuilder.key = [[NSUUID UUID] UUIDString];
+
+    XCTAssertTrue([[LDClient sharedInstance] start:config withUserBuilder:userBuilder]);
+    XCTAssertFalse([[LDClient sharedInstance] start:config withUserBuilder:userBuilder]);
+
+    [self.mockLDDataManager verify];
 }
 
 - (void)testBoolVariationWithStart {
@@ -478,11 +485,11 @@ NSString *const kTestMobileKey = @"testMobileKey";
     LDConfig *config = [[LDConfig alloc] initWithMobileKey:kTestMobileKey];
     [[LDClient sharedInstance] start:config withUserBuilder:nil];
     
-    OCMStub([self.dataManagerMock createCustomEvent:[OCMArg isKindOfClass:[NSString class]]  withCustomValuesDictionary:[OCMArg isKindOfClass:[NSDictionary class]] user:[OCMArg any] config:[OCMArg any]]);
+    OCMStub([self.dataManagerMock createCustomEvent:[OCMArg isKindOfClass:[NSString class]] withCustomValuesDictionary:[OCMArg isKindOfClass:[NSDictionary class]] user:[OCMArg any] config:[OCMArg any]]);
     
     XCTAssertTrue([[LDClient sharedInstance] track:@"test" data:customData]);
     
-    OCMVerify([self.dataManagerMock createCustomEvent: @"test" withCustomValuesDictionary: customData user:[OCMArg isKindOfClass:[LDUserModel class]] config:config]);
+    OCMVerify([self.dataManagerMock createCustomEvent:@"test" withCustomValuesDictionary:customData user:[OCMArg isKindOfClass:[LDUserModel class]] config:config]);
 }
 
 - (void)testOfflineWithoutStart {
@@ -533,17 +540,21 @@ NSString *const kTestMobileKey = @"testMobileKey";
 }
 
 - (void)testUpdateUserWithoutStart {
+    [[self.mockLDClientManager reject] updateUser];
     XCTAssertFalse([[LDClient sharedInstance] updateUser:[[LDUserBuilder alloc] init]]);
+    [self.mockLDClientManager verify];
 }
 
 -(void)testUpdateUserWithStart {
     LDConfig *config = [[LDConfig alloc] initWithMobileKey:kTestMobileKey];
+    [[self.mockLDClientManager expect] updateUser];
     LDUserBuilder *userBuilder = [[LDUserBuilder alloc] init];
-    
-    LDClient *ldClient = [LDClient sharedInstance];
-    [ldClient start:config withUserBuilder:userBuilder];
+    userBuilder.key = [[NSUUID UUID] UUIDString];
+    [[LDClient sharedInstance] start:config withUserBuilder:nil];
 
-    XCTAssertTrue([[LDClient sharedInstance] updateUser:[[LDUserBuilder alloc] init]]);
+    XCTAssertTrue([[LDClient sharedInstance] updateUser:userBuilder]);
+
+    [self.mockLDClientManager verify];
 }
 
 - (void)testCurrentUserBuilderWithoutStart {
