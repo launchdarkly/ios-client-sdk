@@ -111,7 +111,7 @@ NSString * const LDConfigTestMobileKey = @"testMobileKey";
     config.pollingInterval = pollingInterval;
     XCTAssertEqualObjects(config.pollingInterval, pollingInterval);
 
-    pollingInterval = [NSNumber numberWithInt:50];
+    pollingInterval = @(kMinimumPollingInterval - 5.0);
     config.pollingInterval = pollingInterval;
     XCTAssertEqualObjects([config pollingInterval], [NSNumber numberWithInt:kMinimumPollingInterval]);
 }
