@@ -285,6 +285,14 @@
 		83C886842087A786004AC82F /* LDFlagValueCounter.m in Sources */ = {isa = PBXBuildFile; fileRef = 83C8867C2087A786004AC82F /* LDFlagValueCounter.m */; };
 		83ECCC882087BF860086F879 /* LDFlagValueCounterTest.m in Sources */ = {isa = PBXBuildFile; fileRef = 83ECCC872087BF860086F879 /* LDFlagValueCounterTest.m */; };
 		83ECCC8B2087CA280086F879 /* LDFlagValueCounter+Testable.m in Sources */ = {isa = PBXBuildFile; fileRef = 83ECCC8A2087CA280086F879 /* LDFlagValueCounter+Testable.m */; };
+		83ECCC8E2087D67D0086F879 /* LDFlagCounter.h in Headers */ = {isa = PBXBuildFile; fileRef = 83ECCC8C2087D67D0086F879 /* LDFlagCounter.h */; };
+		83ECCC8F2087D67D0086F879 /* LDFlagCounter.h in Headers */ = {isa = PBXBuildFile; fileRef = 83ECCC8C2087D67D0086F879 /* LDFlagCounter.h */; };
+		83ECCC902087D67D0086F879 /* LDFlagCounter.h in Headers */ = {isa = PBXBuildFile; fileRef = 83ECCC8C2087D67D0086F879 /* LDFlagCounter.h */; };
+		83ECCC912087D67D0086F879 /* LDFlagCounter.h in Headers */ = {isa = PBXBuildFile; fileRef = 83ECCC8C2087D67D0086F879 /* LDFlagCounter.h */; };
+		83ECCC922087D67D0086F879 /* LDFlagCounter.m in Sources */ = {isa = PBXBuildFile; fileRef = 83ECCC8D2087D67D0086F879 /* LDFlagCounter.m */; };
+		83ECCC932087D67D0086F879 /* LDFlagCounter.m in Sources */ = {isa = PBXBuildFile; fileRef = 83ECCC8D2087D67D0086F879 /* LDFlagCounter.m */; };
+		83ECCC942087D67D0086F879 /* LDFlagCounter.m in Sources */ = {isa = PBXBuildFile; fileRef = 83ECCC8D2087D67D0086F879 /* LDFlagCounter.m */; };
+		83ECCC952087D67D0086F879 /* LDFlagCounter.m in Sources */ = {isa = PBXBuildFile; fileRef = 83ECCC8D2087D67D0086F879 /* LDFlagCounter.m */; };
 		83EF67811F979B4100403126 /* LDEvent+Unauthorized.h in Headers */ = {isa = PBXBuildFile; fileRef = 83EF677F1F979B4100403126 /* LDEvent+Unauthorized.h */; };
 		83EF67821F979B4100403126 /* LDEvent+Unauthorized.h in Headers */ = {isa = PBXBuildFile; fileRef = 83EF677F1F979B4100403126 /* LDEvent+Unauthorized.h */; };
 		83EF67831F979B4100403126 /* LDEvent+Unauthorized.h in Headers */ = {isa = PBXBuildFile; fileRef = 83EF677F1F979B4100403126 /* LDEvent+Unauthorized.h */; };
@@ -490,6 +498,8 @@
 		83ECCC872087BF860086F879 /* LDFlagValueCounterTest.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = LDFlagValueCounterTest.m; sourceTree = "<group>"; };
 		83ECCC892087CA280086F879 /* LDFlagValueCounter+Testable.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "LDFlagValueCounter+Testable.h"; sourceTree = "<group>"; };
 		83ECCC8A2087CA280086F879 /* LDFlagValueCounter+Testable.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "LDFlagValueCounter+Testable.m"; sourceTree = "<group>"; };
+		83ECCC8C2087D67D0086F879 /* LDFlagCounter.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = LDFlagCounter.h; sourceTree = "<group>"; };
+		83ECCC8D2087D67D0086F879 /* LDFlagCounter.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = LDFlagCounter.m; sourceTree = "<group>"; };
 		83EF677F1F979B4100403126 /* LDEvent+Unauthorized.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "LDEvent+Unauthorized.h"; sourceTree = "<group>"; };
 		83EF67801F979B4100403126 /* LDEvent+Unauthorized.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "LDEvent+Unauthorized.m"; sourceTree = "<group>"; };
 		83EF678B1F98FC9200403126 /* LDFlagConfigModel+Testable.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "LDFlagConfigModel+Testable.h"; sourceTree = "<group>"; };
@@ -830,6 +840,8 @@
 				690346E41E68990000E45133 /* LDFlagConfigModel.m */,
 				8305EC6520221973002F20DB /* LDFlagConfigValue.h */,
 				8305EC6620221973002F20DB /* LDFlagConfigValue.m */,
+				83ECCC8C2087D67D0086F879 /* LDFlagCounter.h */,
+				83ECCC8D2087D67D0086F879 /* LDFlagCounter.m */,
 				83C8867B2087A786004AC82F /* LDFlagValueCounter.h */,
 				83C8867C2087A786004AC82F /* LDFlagValueCounter.m */,
 			);
@@ -847,6 +859,7 @@
 				690346F91E68990000E45133 /* LDClientManager.h in Headers */,
 				8305EC7120222078002F20DB /* NSObject+LDFlagConfigValue.h in Headers */,
 				690346FF1E68990000E45133 /* LDFlagConfigModel.h in Headers */,
+				83ECCC8E2087D67D0086F879 /* LDFlagCounter.h in Headers */,
 				83EF67811F979B4100403126 /* LDEvent+Unauthorized.h in Headers */,
 				83B8C24F1FEC19500082B8A9 /* NSDateFormatter+LDUserModel.h in Headers */,
 				690346F51E68990000E45133 /* DarklyConstants.h in Headers */,
@@ -881,6 +894,7 @@
 				69A87E9E1E74712800B88B23 /* LDClientManager.h in Headers */,
 				8305EC7420222078002F20DB /* NSObject+LDFlagConfigValue.h in Headers */,
 				69A87EA41E74712800B88B23 /* LDFlagConfigModel.h in Headers */,
+				83ECCC912087D67D0086F879 /* LDFlagCounter.h in Headers */,
 				83EF67841F979B4100403126 /* LDEvent+Unauthorized.h in Headers */,
 				83B8C2521FEC19500082B8A9 /* NSDateFormatter+LDUserModel.h in Headers */,
 				69A87E9A1E74712800B88B23 /* DarklyConstants.h in Headers */,
@@ -915,6 +929,7 @@
 				69BD7E1F1E6C79910056D70F /* LDClientManager.h in Headers */,
 				8305EC7320222078002F20DB /* NSObject+LDFlagConfigValue.h in Headers */,
 				69BD7E251E6C79910056D70F /* LDFlagConfigModel.h in Headers */,
+				83ECCC902087D67D0086F879 /* LDFlagCounter.h in Headers */,
 				83EF67831F979B4100403126 /* LDEvent+Unauthorized.h in Headers */,
 				83B8C2511FEC19500082B8A9 /* NSDateFormatter+LDUserModel.h in Headers */,
 				69BD7E1B1E6C79910056D70F /* DarklyConstants.h in Headers */,
@@ -949,6 +964,7 @@
 				69F3F6A11E6BF82C00079A09 /* LDPollingManager.h in Headers */,
 				8305EC7220222078002F20DB /* NSObject+LDFlagConfigValue.h in Headers */,
 				69F3F6941E6BF80800079A09 /* LDDataManager.h in Headers */,
+				83ECCC8F2087D67D0086F879 /* LDFlagCounter.h in Headers */,
 				83EF67821F979B4100403126 /* LDEvent+Unauthorized.h in Headers */,
 				83B8C2501FEC19500082B8A9 /* NSDateFormatter+LDUserModel.h in Headers */,
 				69F3F6991E6BF82C00079A09 /* LDClientManager.h in Headers */,
@@ -1434,6 +1450,7 @@
 				6903470A1E68990000E45133 /* LDUtil.m in Sources */,
 				83B6FC21207E60B6002DBA7B /* NSDate+ReferencedDate.m in Sources */,
 				83C886812087A786004AC82F /* LDFlagValueCounter.m in Sources */,
+				83ECCC922087D67D0086F879 /* LDFlagCounter.m in Sources */,
 				690347001E68990000E45133 /* LDFlagConfigModel.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -1510,6 +1527,7 @@
 				69A87EAB1E74712800B88B23 /* LDUserBuilder.m in Sources */,
 				83B6FC24207E60B6002DBA7B /* NSDate+ReferencedDate.m in Sources */,
 				83C886842087A786004AC82F /* LDFlagValueCounter.m in Sources */,
+				83ECCC952087D67D0086F879 /* LDFlagCounter.m in Sources */,
 				69A87EA91E74712800B88B23 /* LDRequestManager.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -1542,6 +1560,7 @@
 				69BD7E2C1E6C79910056D70F /* LDUserBuilder.m in Sources */,
 				83B6FC23207E60B6002DBA7B /* NSDate+ReferencedDate.m in Sources */,
 				83C886832087A786004AC82F /* LDFlagValueCounter.m in Sources */,
+				83ECCC942087D67D0086F879 /* LDFlagCounter.m in Sources */,
 				69BD7E2A1E6C79910056D70F /* LDRequestManager.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -1574,6 +1593,7 @@
 				69F3F6A61E6BF82C00079A09 /* LDUserBuilder.m in Sources */,
 				83B6FC22207E60B6002DBA7B /* NSDate+ReferencedDate.m in Sources */,
 				83C886822087A786004AC82F /* LDFlagValueCounter.m in Sources */,
+				83ECCC932087D67D0086F879 /* LDFlagCounter.m in Sources */,
 				69F3F6A41E6BF82C00079A09 /* LDRequestManager.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
