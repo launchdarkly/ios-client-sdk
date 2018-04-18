@@ -60,16 +60,15 @@ NSString * const kEventModelKindIdentify = @"identify";
     if(!(self = [super init])) { return nil; }
 
     //Process json that comes down from server
-    self.key = [dictionary objectForKey: kEventModelKeyKey];
-    self.kind = [dictionary objectForKey: kEventModelKeyKind];
-    NSNumber *creationDateValue = [dictionary objectForKey:kEventModelKeyCreationDate];
-    self.creationDate = [creationDateValue longValue];
-    self.value = [dictionary objectForKey: kEventModelKeyValue];
-    self.defaultValue = [dictionary objectForKey: kEventModelKeyDefault];
-    self.data = [dictionary objectForKey:kEventModelKeyData];
+    self.key = dictionary[kEventModelKeyKey];
+    self.kind = dictionary[kEventModelKeyKind];
+    self.creationDate = [dictionary[kEventModelKeyCreationDate] longValue];
+    self.value = dictionary[kEventModelKeyValue];
+    self.defaultValue = dictionary[kEventModelKeyDefault];
+    self.data = dictionary[kEventModelKeyData];
     self.inlineUser = [dictionary.allKeys containsObject:kEventModelKeyUser];
     if (self.inlineUser) {
-        self.user = [[LDUserModel alloc] initWithDictionary:[dictionary objectForKey:kEventModelKeyUser]];
+        self.user = [[LDUserModel alloc] initWithDictionary:dictionary[kEventModelKeyUser]];
     } else {
         self.user = [[LDUserModel alloc] init];
         self.user.key = dictionary[kEventModelKeyUserKey];
@@ -155,16 +154,30 @@ NSString * const kEventModelKindIdentify = @"identify";
 -(NSDictionary *)dictionaryValueUsingConfig:(LDConfig*)config {
     NSMutableDictionary *dictionary = [[NSMutableDictionary alloc] init];
     
-    self.key ? [dictionary setObject:self.key forKey: kEventModelKeyKey] : nil;
-    self.kind ? [dictionary setObject:self.kind forKey: kEventModelKeyKind] : nil;
-    self.creationDate ? [dictionary setObject:[NSNumber numberWithInteger: self.creationDate] forKey: kEventModelKeyCreationDate] : nil;
-    self.data ? [dictionary setObject:self.data forKey: kEventModelKeyData] : nil;
-    self.value ? [dictionary setObject:self.value forKey: kEventModelKeyValue] : nil;
-    self.defaultValue ? [dictionary setObject:self.defaultValue forKey: kEventModelKeyDefault] : nil;
-    if (self.inlineUser || [self.kind isEqualToString:kEventModelKindIdentify]) {
-        self.user ? [dictionary setObject:[self.user dictionaryValueWithFlagConfig:NO includePrivateAttributes:NO config:config] forKey: kEventModelKeyUser] : nil;
-    } else {
-        self.user ? dictionary[kEventModelKeyUserKey] = self.user.key : nil;
+    if (self.key) {
+        dictionary[kEventModelKeyKey] = self.key;
+    }
+    if (self.kind) {
+        dictionary[kEventModelKeyKind] = self.kind;
+    }
+    if (self.creationDate) {
+        dictionary[kEventModelKeyCreationDate] = @(self.creationDate);
+    }
+    if (self.data) {
+        dictionary[kEventModelKeyData] = self.data;
+    }
+    if (self.value) {
+        dictionary[kEventModelKeyValue] = self.value;
+    }
+    if (self.defaultValue) {
+        dictionary[kEventModelKeyDefault] = self.defaultValue;
+    }
+    if (self.user) {
+        if (self.inlineUser || [self.kind isEqualToString:kEventModelKindIdentify]) {
+            dictionary[kEventModelKeyUser] = [self.user dictionaryValueWithFlagConfig:NO includePrivateAttributes:NO config:config];
+        } else {
+            dictionary[kEventModelKeyUserKey] = self.user.key;
+        }
     }
 
     return dictionary;
