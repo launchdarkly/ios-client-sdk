@@ -11,6 +11,7 @@
 #import "LDFlagValueCounter+Testable.h"
 #import "LDFlagConfigModel.h"
 #import "LDFlagConfigModel+Testable.h"
+#import "LDFlagConfigValue.h"
 
 extern const NSInteger kLDFlagConfigVersionDoesNotExist;
 extern const NSInteger kLDFlagConfigVariationDoesNotExist;
