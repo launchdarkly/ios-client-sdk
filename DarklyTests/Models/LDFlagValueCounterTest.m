@@ -8,18 +8,22 @@
 
 #import <XCTest/XCTest.h>
 #import "LDFlagValueCounter.h"
+#import "LDFlagValueCounter+Testable.h"
 #import "LDFlagConfigModel.h"
 #import "LDFlagConfigModel+Testable.h"
 
-@interface LDFlagValueCounterTest : XCTestCase
+extern const NSInteger kLDFlagConfigVersionDoesNotExist;
+extern const NSInteger kLDFlagConfigVariationDoesNotExist;
 
+@interface LDFlagValueCounterTest : XCTestCase
+@property (nonatomic, strong) NSDictionary<NSString*, LDFlagConfigValue*> *flagConfigDictionary;
 @end
 
 @implementation LDFlagValueCounterTest
 
 - (void)setUp {
     [super setUp];
-    // Put setup code here. This method is called before the invocation of each test method in the class.
+    self.flagConfigDictionary = [LDFlagConfigModel flagConfigFromJsonFileNamed:@"featureFlags-excludeNulls-withVersions"].featuresJsonDictionary;
 }
 
 - (void)tearDown {
@@ -28,20 +32,46 @@
 }
 
 -(void)testInitAndCounterWithValueConstructors {
-    LDFlagConfigModel *flagConfig = [LDFlagConfigModel flagConfigFromJsonFileNamed:@"featureFlags-excludeNulls-withVersions"];
-    for (NSString *flagKey in flagConfig.featuresJsonDictionary.allKeys) {
-        LDFlagConfigValue *flagConfigValue = flagConfig.featuresJsonDictionary[flagKey];
-        NSInteger variation = arc4random_uniform(9) + 1;
+    for (NSString *flagKey in self.flagConfigDictionary.allKeys) {
+        LDFlagConfigValue *flagConfigValue = self.flagConfigDictionary[flagKey];
+        NSInteger variation = arc4random_uniform(9) + 1;    //TODO: When adding the new streaming data model, replace this with the value from the flagConfigValue
 
         LDFlagValueCounter *flagValueCounter = [LDFlagValueCounter counterWithValue:flagConfigValue.value variation:variation version:flagConfigValue.version];
 
         XCTAssertEqualObjects(flagValueCounter.value, flagConfigValue.value);
         XCTAssertEqual(flagValueCounter.variation, variation);
         XCTAssertEqual(flagValueCounter.version, flagConfigValue.version);
-        XCTAssertEqual(flagValueCounter.count, 0);
+        XCTAssertEqual(flagValueCounter.count, 1);
         XCTAssertEqual(flagValueCounter.unknown, NO);
     }
 }
 
+-(void)testInitAndCounterForUnknownValueConstructors {
+    LDFlagValueCounter *flagValueCounter = [LDFlagValueCounter counterForUnknownValue];
+
+    XCTAssertNil(flagValueCounter.value);
+    XCTAssertEqual(flagValueCounter.variation, kLDFlagConfigVariationDoesNotExist);
+    XCTAssertEqual(flagValueCounter.version, kLDFlagConfigVersionDoesNotExist);
+    XCTAssertEqual(flagValueCounter.count, 1);
+    XCTAssertEqual(flagValueCounter.unknown, YES);
+}
+
+-(void)testDictionaryValue {
+    for (NSString *flagKey in self.flagConfigDictionary.allKeys) {
+        LDFlagConfigValue *flagConfigValue = self.flagConfigDictionary[flagKey];
+        NSInteger variation = arc4random_uniform(9) + 1;    //TODO: When adding the new streaming data model, replace this with the value from the flagConfigValue
+        LDFlagValueCounter *flagValueCounter = [LDFlagValueCounter counterWithValue:flagConfigValue.value variation:variation version:flagConfigValue.version];
+
+        NSDictionary *flagValueCounterDictionary = [flagValueCounter dictionaryValue];
+
+        XCTAssertTrue([flagValueCounter hasPropertiesMatchingDictionary:flagValueCounterDictionary]);
+    }
+
+    LDFlagValueCounter *flagValueCounter = [LDFlagValueCounter counterForUnknownValue];
+
+    NSDictionary *flagValueCounterDictionary = [flagValueCounter dictionaryValue];
+
+    XCTAssertTrue([flagValueCounter hasPropertiesMatchingDictionary:flagValueCounterDictionary]);
+}
 
 @end
