@@ -206,26 +206,26 @@
 		8365E50D2028F39E00DE8E2B /* LDEvent+EventTypes.m in Sources */ = {isa = PBXBuildFile; fileRef = 8365E5072028F39E00DE8E2B /* LDEvent+EventTypes.m */; };
 		8365E50E2028F39E00DE8E2B /* LDEvent+EventTypes.m in Sources */ = {isa = PBXBuildFile; fileRef = 8365E5072028F39E00DE8E2B /* LDEvent+EventTypes.m */; };
 		8365E50F2028F39E00DE8E2B /* LDEvent+EventTypes.m in Sources */ = {isa = PBXBuildFile; fileRef = 8365E5072028F39E00DE8E2B /* LDEvent+EventTypes.m */; };
-		8369475C1F1FED400047697C /* boolConfigIsABool-false.json in Resources */ = {isa = PBXBuildFile; fileRef = 836947591F1FED400047697C /* boolConfigIsABool-false.json */; };
+		8369475C1F1FED400047697C /* boolConfigIsABool-false-withVersion.json in Resources */ = {isa = PBXBuildFile; fileRef = 836947591F1FED400047697C /* boolConfigIsABool-false-withVersion.json */; };
 		8369475D1F1FED400047697C /* boolConfigIsABool-true-withVersion.json in Resources */ = {isa = PBXBuildFile; fileRef = 8369475A1F1FED400047697C /* boolConfigIsABool-true-withVersion.json */; };
-		8369475E1F1FED400047697C /* boolConfigIsABool2-true.json in Resources */ = {isa = PBXBuildFile; fileRef = 8369475B1F1FED400047697C /* boolConfigIsABool2-true.json */; };
-		836947621F1FEEB40047697C /* numberConfigIsANumber-1.json in Resources */ = {isa = PBXBuildFile; fileRef = 8369475F1F1FEEB40047697C /* numberConfigIsANumber-1.json */; };
+		8369475E1F1FED400047697C /* boolConfigIsABool2-true-withVersion.json in Resources */ = {isa = PBXBuildFile; fileRef = 8369475B1F1FED400047697C /* boolConfigIsABool2-true-withVersion.json */; };
+		836947621F1FEEB40047697C /* numberConfigIsANumber-1-withVersion.json in Resources */ = {isa = PBXBuildFile; fileRef = 8369475F1F1FEEB40047697C /* numberConfigIsANumber-1-withVersion.json */; };
 		836947631F1FEEB40047697C /* numberConfigIsANumber-2-withVersion.json in Resources */ = {isa = PBXBuildFile; fileRef = 836947601F1FEEB40047697C /* numberConfigIsANumber-2-withVersion.json */; };
-		836947641F1FEEB40047697C /* numberConfigIsANumber2-1.json in Resources */ = {isa = PBXBuildFile; fileRef = 836947611F1FEEB40047697C /* numberConfigIsANumber2-1.json */; };
+		836947641F1FEEB40047697C /* numberConfigIsANumber2-1-withVersion.json in Resources */ = {isa = PBXBuildFile; fileRef = 836947611F1FEEB40047697C /* numberConfigIsANumber2-1-withVersion.json */; };
 		836947681F1FF0A00047697C /* stringConfigIsAString-someString-withVersion.json in Resources */ = {isa = PBXBuildFile; fileRef = 836947651F1FF0A00047697C /* stringConfigIsAString-someString-withVersion.json */; };
-		836947691F1FF0A00047697C /* stringConfigIsAString-someStringA.json in Resources */ = {isa = PBXBuildFile; fileRef = 836947661F1FF0A00047697C /* stringConfigIsAString-someStringA.json */; };
-		8369476A1F1FF0A00047697C /* stringConfigIsAStringA-someString.json in Resources */ = {isa = PBXBuildFile; fileRef = 836947671F1FF0A00047697C /* stringConfigIsAStringA-someString.json */; };
-		8369476F1F1FF45B0047697C /* arrayConfigIsAnArray-1.json in Resources */ = {isa = PBXBuildFile; fileRef = 8369476B1F1FF45B0047697C /* arrayConfigIsAnArray-1.json */; };
+		836947691F1FF0A00047697C /* stringConfigIsAString-someStringA-withVersion.json in Resources */ = {isa = PBXBuildFile; fileRef = 836947661F1FF0A00047697C /* stringConfigIsAString-someStringA-withVersion.json */; };
+		8369476A1F1FF0A00047697C /* stringConfigIsAStringA-someString-withVersion.json in Resources */ = {isa = PBXBuildFile; fileRef = 836947671F1FF0A00047697C /* stringConfigIsAStringA-someString-withVersion.json */; };
+		8369476F1F1FF45B0047697C /* arrayConfigIsAnArray-1-withVersion.json in Resources */ = {isa = PBXBuildFile; fileRef = 8369476B1F1FF45B0047697C /* arrayConfigIsAnArray-1-withVersion.json */; };
 		836947701F1FF45B0047697C /* arrayConfigIsAnArray-123-withVersion.json in Resources */ = {isa = PBXBuildFile; fileRef = 8369476C1F1FF45B0047697C /* arrayConfigIsAnArray-123-withVersion.json */; };
-		836947711F1FF45B0047697C /* arrayConfigIsAnArray-Empty.json in Resources */ = {isa = PBXBuildFile; fileRef = 8369476D1F1FF45B0047697C /* arrayConfigIsAnArray-Empty.json */; };
-		836947721F1FF45B0047697C /* arrayConfigIsAnArrayA-123.json in Resources */ = {isa = PBXBuildFile; fileRef = 8369476E1F1FF45B0047697C /* arrayConfigIsAnArrayA-123.json */; };
+		836947711F1FF45B0047697C /* arrayConfigIsAnArray-Empty-withVersion.json in Resources */ = {isa = PBXBuildFile; fileRef = 8369476D1F1FF45B0047697C /* arrayConfigIsAnArray-Empty-withVersion.json */; };
+		836947721F1FF45B0047697C /* arrayConfigIsAnArrayA-123-withVersion.json in Resources */ = {isa = PBXBuildFile; fileRef = 8369476E1F1FF45B0047697C /* arrayConfigIsAnArrayA-123-withVersion.json */; };
 		8369477A1F1FF80A0047697C /* dictionaryConfigIsADictionary-3Key-withVersion.json in Resources */ = {isa = PBXBuildFile; fileRef = 836947731F1FF80A0047697C /* dictionaryConfigIsADictionary-3Key-withVersion.json */; };
-		8369477B1F1FF80A0047697C /* dictionaryConfigIsADictionary-Empty.json in Resources */ = {isa = PBXBuildFile; fileRef = 836947741F1FF80A0047697C /* dictionaryConfigIsADictionary-Empty.json */; };
-		8369477C1F1FF80A0047697C /* dictionaryConfigIsADictionary-KeyA.json in Resources */ = {isa = PBXBuildFile; fileRef = 836947751F1FF80A0047697C /* dictionaryConfigIsADictionary-KeyA.json */; };
-		8369477D1F1FF80A0047697C /* dictionaryConfigIsADictionary-KeyB-124.json in Resources */ = {isa = PBXBuildFile; fileRef = 836947761F1FF80A0047697C /* dictionaryConfigIsADictionary-KeyB-124.json */; };
-		8369477E1F1FF80A0047697C /* dictionaryConfigIsADictionary-KeyB.json in Resources */ = {isa = PBXBuildFile; fileRef = 836947771F1FF80A0047697C /* dictionaryConfigIsADictionary-KeyB.json */; };
-		8369477F1F1FF80A0047697C /* dictionaryConfigIsADictionary-KeyC-keyDValueDiffers.json in Resources */ = {isa = PBXBuildFile; fileRef = 836947781F1FF80A0047697C /* dictionaryConfigIsADictionary-KeyC-keyDValueDiffers.json */; };
-		836947801F1FF80A0047697C /* dictionaryConfigIsADictionary-KeyC.json in Resources */ = {isa = PBXBuildFile; fileRef = 836947791F1FF80A0047697C /* dictionaryConfigIsADictionary-KeyC.json */; };
+		8369477B1F1FF80A0047697C /* dictionaryConfigIsADictionary-Empty-withVersion.json in Resources */ = {isa = PBXBuildFile; fileRef = 836947741F1FF80A0047697C /* dictionaryConfigIsADictionary-Empty-withVersion.json */; };
+		8369477C1F1FF80A0047697C /* dictionaryConfigIsADictionary-KeyA-withVersion.json in Resources */ = {isa = PBXBuildFile; fileRef = 836947751F1FF80A0047697C /* dictionaryConfigIsADictionary-KeyA-withVersion.json */; };
+		8369477D1F1FF80A0047697C /* dictionaryConfigIsADictionary-KeyB-124-withVersion.json in Resources */ = {isa = PBXBuildFile; fileRef = 836947761F1FF80A0047697C /* dictionaryConfigIsADictionary-KeyB-124-withVersion.json */; };
+		8369477E1F1FF80A0047697C /* dictionaryConfigIsADictionary-KeyB-withVersion.json in Resources */ = {isa = PBXBuildFile; fileRef = 836947771F1FF80A0047697C /* dictionaryConfigIsADictionary-KeyB-withVersion.json */; };
+		8369477F1F1FF80A0047697C /* dictionaryConfigIsADictionary-KeyC-keyDValueDiffers-withVersion.json in Resources */ = {isa = PBXBuildFile; fileRef = 836947781F1FF80A0047697C /* dictionaryConfigIsADictionary-KeyC-keyDValueDiffers-withVersion.json */; };
+		836947801F1FF80A0047697C /* dictionaryConfigIsADictionary-KeyC-withVersion.json in Resources */ = {isa = PBXBuildFile; fileRef = 836947791F1FF80A0047697C /* dictionaryConfigIsADictionary-KeyC-withVersion.json */; };
 		836947831F20125F0047697C /* ldClientManagerTestConfigA.json in Resources */ = {isa = PBXBuildFile; fileRef = 836947811F20125F0047697C /* ldClientManagerTestConfigA.json */; };
 		836947841F20125F0047697C /* ldClientManagerTestConfigB.json in Resources */ = {isa = PBXBuildFile; fileRef = 836947821F20125F0047697C /* ldClientManagerTestConfigB.json */; };
 		83889B141F8E93A100A4EF69 /* LDEvent+Testable.m in Sources */ = {isa = PBXBuildFile; fileRef = 83889B131F8E93A100A4EF69 /* LDEvent+Testable.m */; };
@@ -436,26 +436,26 @@
 		835B421A1FD5AF7300709384 /* DarklyEventSource.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = DarklyEventSource.framework; path = Carthage/Build/iOS/DarklyEventSource.framework; sourceTree = "<group>"; };
 		8365E5062028F39E00DE8E2B /* LDEvent+EventTypes.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "LDEvent+EventTypes.h"; sourceTree = "<group>"; };
 		8365E5072028F39E00DE8E2B /* LDEvent+EventTypes.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "LDEvent+EventTypes.m"; sourceTree = "<group>"; };
-		836947591F1FED400047697C /* boolConfigIsABool-false.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = "boolConfigIsABool-false.json"; sourceTree = "<group>"; };
+		836947591F1FED400047697C /* boolConfigIsABool-false-withVersion.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = "boolConfigIsABool-false-withVersion.json"; sourceTree = "<group>"; };
 		8369475A1F1FED400047697C /* boolConfigIsABool-true-withVersion.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = "boolConfigIsABool-true-withVersion.json"; sourceTree = "<group>"; };
-		8369475B1F1FED400047697C /* boolConfigIsABool2-true.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = "boolConfigIsABool2-true.json"; sourceTree = "<group>"; };
-		8369475F1F1FEEB40047697C /* numberConfigIsANumber-1.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = "numberConfigIsANumber-1.json"; sourceTree = "<group>"; };
+		8369475B1F1FED400047697C /* boolConfigIsABool2-true-withVersion.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = "boolConfigIsABool2-true-withVersion.json"; sourceTree = "<group>"; };
+		8369475F1F1FEEB40047697C /* numberConfigIsANumber-1-withVersion.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = "numberConfigIsANumber-1-withVersion.json"; sourceTree = "<group>"; };
 		836947601F1FEEB40047697C /* numberConfigIsANumber-2-withVersion.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = "numberConfigIsANumber-2-withVersion.json"; sourceTree = "<group>"; };
-		836947611F1FEEB40047697C /* numberConfigIsANumber2-1.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = "numberConfigIsANumber2-1.json"; sourceTree = "<group>"; };
+		836947611F1FEEB40047697C /* numberConfigIsANumber2-1-withVersion.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = "numberConfigIsANumber2-1-withVersion.json"; sourceTree = "<group>"; };
 		836947651F1FF0A00047697C /* stringConfigIsAString-someString-withVersion.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = "stringConfigIsAString-someString-withVersion.json"; sourceTree = "<group>"; };
-		836947661F1FF0A00047697C /* stringConfigIsAString-someStringA.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = "stringConfigIsAString-someStringA.json"; sourceTree = "<group>"; };
-		836947671F1FF0A00047697C /* stringConfigIsAStringA-someString.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = "stringConfigIsAStringA-someString.json"; sourceTree = "<group>"; };
-		8369476B1F1FF45B0047697C /* arrayConfigIsAnArray-1.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = "arrayConfigIsAnArray-1.json"; sourceTree = "<group>"; };
+		836947661F1FF0A00047697C /* stringConfigIsAString-someStringA-withVersion.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = "stringConfigIsAString-someStringA-withVersion.json"; sourceTree = "<group>"; };
+		836947671F1FF0A00047697C /* stringConfigIsAStringA-someString-withVersion.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = "stringConfigIsAStringA-someString-withVersion.json"; sourceTree = "<group>"; };
+		8369476B1F1FF45B0047697C /* arrayConfigIsAnArray-1-withVersion.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = "arrayConfigIsAnArray-1-withVersion.json"; sourceTree = "<group>"; };
 		8369476C1F1FF45B0047697C /* arrayConfigIsAnArray-123-withVersion.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = "arrayConfigIsAnArray-123-withVersion.json"; sourceTree = "<group>"; };
-		8369476D1F1FF45B0047697C /* arrayConfigIsAnArray-Empty.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = "arrayConfigIsAnArray-Empty.json"; sourceTree = "<group>"; };
-		8369476E1F1FF45B0047697C /* arrayConfigIsAnArrayA-123.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = "arrayConfigIsAnArrayA-123.json"; sourceTree = "<group>"; };
+		8369476D1F1FF45B0047697C /* arrayConfigIsAnArray-Empty-withVersion.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = "arrayConfigIsAnArray-Empty-withVersion.json"; sourceTree = "<group>"; };
+		8369476E1F1FF45B0047697C /* arrayConfigIsAnArrayA-123-withVersion.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = "arrayConfigIsAnArrayA-123-withVersion.json"; sourceTree = "<group>"; };
 		836947731F1FF80A0047697C /* dictionaryConfigIsADictionary-3Key-withVersion.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = "dictionaryConfigIsADictionary-3Key-withVersion.json"; sourceTree = "<group>"; };
-		836947741F1FF80A0047697C /* dictionaryConfigIsADictionary-Empty.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = "dictionaryConfigIsADictionary-Empty.json"; sourceTree = "<group>"; };
-		836947751F1FF80A0047697C /* dictionaryConfigIsADictionary-KeyA.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = "dictionaryConfigIsADictionary-KeyA.json"; sourceTree = "<group>"; };
-		836947761F1FF80A0047697C /* dictionaryConfigIsADictionary-KeyB-124.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = "dictionaryConfigIsADictionary-KeyB-124.json"; sourceTree = "<group>"; };
-		836947771F1FF80A0047697C /* dictionaryConfigIsADictionary-KeyB.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = "dictionaryConfigIsADictionary-KeyB.json"; sourceTree = "<group>"; };
-		836947781F1FF80A0047697C /* dictionaryConfigIsADictionary-KeyC-keyDValueDiffers.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = "dictionaryConfigIsADictionary-KeyC-keyDValueDiffers.json"; sourceTree = "<group>"; };
-		836947791F1FF80A0047697C /* dictionaryConfigIsADictionary-KeyC.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = "dictionaryConfigIsADictionary-KeyC.json"; sourceTree = "<group>"; };
+		836947741F1FF80A0047697C /* dictionaryConfigIsADictionary-Empty-withVersion.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = "dictionaryConfigIsADictionary-Empty-withVersion.json"; sourceTree = "<group>"; };
+		836947751F1FF80A0047697C /* dictionaryConfigIsADictionary-KeyA-withVersion.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = "dictionaryConfigIsADictionary-KeyA-withVersion.json"; sourceTree = "<group>"; };
+		836947761F1FF80A0047697C /* dictionaryConfigIsADictionary-KeyB-124-withVersion.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = "dictionaryConfigIsADictionary-KeyB-124-withVersion.json"; sourceTree = "<group>"; };
+		836947771F1FF80A0047697C /* dictionaryConfigIsADictionary-KeyB-withVersion.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = "dictionaryConfigIsADictionary-KeyB-withVersion.json"; sourceTree = "<group>"; };
+		836947781F1FF80A0047697C /* dictionaryConfigIsADictionary-KeyC-keyDValueDiffers-withVersion.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = "dictionaryConfigIsADictionary-KeyC-keyDValueDiffers-withVersion.json"; sourceTree = "<group>"; };
+		836947791F1FF80A0047697C /* dictionaryConfigIsADictionary-KeyC-withVersion.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = "dictionaryConfigIsADictionary-KeyC-withVersion.json"; sourceTree = "<group>"; };
 		836947811F20125F0047697C /* ldClientManagerTestConfigA.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = ldClientManagerTestConfigA.json; sourceTree = "<group>"; };
 		836947821F20125F0047697C /* ldClientManagerTestConfigB.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = ldClientManagerTestConfigB.json; sourceTree = "<group>"; };
 		83889B121F8E93A100A4EF69 /* LDEvent+Testable.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "LDEvent+Testable.h"; sourceTree = "<group>"; };
@@ -702,33 +702,33 @@
 				83B8C2571FEC4C3B0082B8A9 /* featureFlags-excludeNulls-withVersions.json */,
 				83C28CF82023872B00394693 /* featureFlags-excludeNulls-withoutVersions.json */,
 				83258A411F32721A008C2133 /* emptyConfig.json */,
-				836947591F1FED400047697C /* boolConfigIsABool-false.json */,
+				836947591F1FED400047697C /* boolConfigIsABool-false-withVersion.json */,
 				8369475A1F1FED400047697C /* boolConfigIsABool-true-withVersion.json */,
 				8305EC7D202238FC002F20DB /* boolConfigIsABool-true-withoutVersion.json */,
-				8369475B1F1FED400047697C /* boolConfigIsABool2-true.json */,
+				8369475B1F1FED400047697C /* boolConfigIsABool2-true-withVersion.json */,
 				83258A431F329EFB008C2133 /* doubleConfigIsADouble-Pi-withVersion.json */,
 				8305EC8120223BC2002F20DB /* doubleConfigIsADouble-Pi-withoutVersion.json */,
-				8369475F1F1FEEB40047697C /* numberConfigIsANumber-1.json */,
+				8369475F1F1FEEB40047697C /* numberConfigIsANumber-1-withVersion.json */,
 				836947601F1FEEB40047697C /* numberConfigIsANumber-2-withVersion.json */,
 				8305EC7F20223A2E002F20DB /* numberConfigIsANumber-2-withoutVersion.json */,
-				836947611F1FEEB40047697C /* numberConfigIsANumber2-1.json */,
+				836947611F1FEEB40047697C /* numberConfigIsANumber2-1-withVersion.json */,
 				836947651F1FF0A00047697C /* stringConfigIsAString-someString-withVersion.json */,
 				8305EC8320223D65002F20DB /* stringConfigIsAString-someString-withoutVersion.json */,
-				836947661F1FF0A00047697C /* stringConfigIsAString-someStringA.json */,
-				836947671F1FF0A00047697C /* stringConfigIsAStringA-someString.json */,
-				8369476B1F1FF45B0047697C /* arrayConfigIsAnArray-1.json */,
+				836947661F1FF0A00047697C /* stringConfigIsAString-someStringA-withVersion.json */,
+				836947671F1FF0A00047697C /* stringConfigIsAStringA-someString-withVersion.json */,
+				8369476B1F1FF45B0047697C /* arrayConfigIsAnArray-1-withVersion.json */,
 				8369476C1F1FF45B0047697C /* arrayConfigIsAnArray-123-withVersion.json */,
 				8305EC8520223EBA002F20DB /* arrayConfigIsAnArray-123-withoutVersion.json */,
-				8369476D1F1FF45B0047697C /* arrayConfigIsAnArray-Empty.json */,
-				8369476E1F1FF45B0047697C /* arrayConfigIsAnArrayA-123.json */,
+				8369476D1F1FF45B0047697C /* arrayConfigIsAnArray-Empty-withVersion.json */,
+				8369476E1F1FF45B0047697C /* arrayConfigIsAnArrayA-123-withVersion.json */,
 				836947731F1FF80A0047697C /* dictionaryConfigIsADictionary-3Key-withVersion.json */,
 				8305EC8720224156002F20DB /* dictionaryConfigIsADictionary-3Key-withoutVersion.json */,
-				836947741F1FF80A0047697C /* dictionaryConfigIsADictionary-Empty.json */,
-				836947751F1FF80A0047697C /* dictionaryConfigIsADictionary-KeyA.json */,
-				836947761F1FF80A0047697C /* dictionaryConfigIsADictionary-KeyB-124.json */,
-				836947771F1FF80A0047697C /* dictionaryConfigIsADictionary-KeyB.json */,
-				836947781F1FF80A0047697C /* dictionaryConfigIsADictionary-KeyC-keyDValueDiffers.json */,
-				836947791F1FF80A0047697C /* dictionaryConfigIsADictionary-KeyC.json */,
+				836947741F1FF80A0047697C /* dictionaryConfigIsADictionary-Empty-withVersion.json */,
+				836947751F1FF80A0047697C /* dictionaryConfigIsADictionary-KeyA-withVersion.json */,
+				836947761F1FF80A0047697C /* dictionaryConfigIsADictionary-KeyB-124-withVersion.json */,
+				836947771F1FF80A0047697C /* dictionaryConfigIsADictionary-KeyB-withVersion.json */,
+				836947781F1FF80A0047697C /* dictionaryConfigIsADictionary-KeyC-keyDValueDiffers-withVersion.json */,
+				836947791F1FF80A0047697C /* dictionaryConfigIsADictionary-KeyC-withVersion.json */,
 				8305EC89202243D6002F20DB /* nullConfigIsANull-null-withVersion.json */,
 				8305EC8B2022440D002F20DB /* nullConfigIsANull-null-withoutVersion.json */,
 				836947811F20125F0047697C /* ldClientManagerTestConfigA.json */,
@@ -1175,48 +1175,48 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				8369477D1F1FF80A0047697C /* dictionaryConfigIsADictionary-KeyB-124.json in Resources */,
+				8369477D1F1FF80A0047697C /* dictionaryConfigIsADictionary-KeyB-124-withVersion.json in Resources */,
 				8305EC8820224156002F20DB /* dictionaryConfigIsADictionary-3Key-withoutVersion.json in Resources */,
 				8305EC8C2022440D002F20DB /* nullConfigIsANull-null-withoutVersion.json in Resources */,
 				8305EC8220223BC3002F20DB /* doubleConfigIsADouble-Pi-withoutVersion.json in Resources */,
 				83BE9398201AA53100DD1ED9 /* ldFlagConfigModelPatchVersion2FlagWithNull.json in Resources */,
 				8305EC8A202243D6002F20DB /* nullConfigIsANull-null-withVersion.json in Resources */,
 				83BE9387201A6AA400DD1ED9 /* ldFlagConfigModelTest.json in Resources */,
-				836947801F1FF80A0047697C /* dictionaryConfigIsADictionary-KeyC.json in Resources */,
+				836947801F1FF80A0047697C /* dictionaryConfigIsADictionary-KeyC-withVersion.json in Resources */,
 				836947841F20125F0047697C /* ldClientManagerTestConfigB.json in Resources */,
 				83BE939C201B80F800DD1ED9 /* ldFlagConfigModelDeleteNewFlag.json in Resources */,
 				83C28CF92023872C00394693 /* featureFlags-excludeNulls-withoutVersions.json in Resources */,
-				836947711F1FF45B0047697C /* arrayConfigIsAnArray-Empty.json in Resources */,
-				8369476A1F1FF0A00047697C /* stringConfigIsAStringA-someString.json in Resources */,
+				836947711F1FF45B0047697C /* arrayConfigIsAnArray-Empty-withVersion.json in Resources */,
+				8369476A1F1FF0A00047697C /* stringConfigIsAStringA-someString-withVersion.json in Resources */,
 				83258A421F32721A008C2133 /* emptyConfig.json in Resources */,
-				836947691F1FF0A00047697C /* stringConfigIsAString-someStringA.json in Resources */,
+				836947691F1FF0A00047697C /* stringConfigIsAString-someStringA-withVersion.json in Resources */,
 				8369477A1F1FF80A0047697C /* dictionaryConfigIsADictionary-3Key-withVersion.json in Resources */,
 				8305EC8420223D65002F20DB /* stringConfigIsAString-someString-withoutVersion.json in Resources */,
-				836947621F1FEEB40047697C /* numberConfigIsANumber-1.json in Resources */,
+				836947621F1FEEB40047697C /* numberConfigIsANumber-1-withVersion.json in Resources */,
 				6903472F1E689B9F00E45133 /* featureFlags-withVersions.json in Resources */,
 				83BE9389201A781200DD1ED9 /* ldFlagConfigModelPatchVersion1Flag.json in Resources */,
 				836947631F1FEEB40047697C /* numberConfigIsANumber-2-withVersion.json in Resources */,
-				8369475C1F1FED400047697C /* boolConfigIsABool-false.json in Resources */,
+				8369475C1F1FED400047697C /* boolConfigIsABool-false-withVersion.json in Resources */,
 				8305EC8020223A2E002F20DB /* numberConfigIsANumber-2-withoutVersion.json in Resources */,
 				83B8C2581FEC4C3B0082B8A9 /* featureFlags-excludeNulls-withVersions.json in Resources */,
 				8305EC7E202238FC002F20DB /* boolConfigIsABool-true-withoutVersion.json in Resources */,
 				83BE9396201A93AC00DD1ED9 /* ldFlagConfigModelPatchVersion2Flag.json in Resources */,
 				836947831F20125F0047697C /* ldClientManagerTestConfigA.json in Resources */,
 				839E0A16201F97E900DB8CD1 /* ldClientManagerTestPatchIsANumber.json in Resources */,
-				836947721F1FF45B0047697C /* arrayConfigIsAnArrayA-123.json in Resources */,
-				8369477C1F1FF80A0047697C /* dictionaryConfigIsADictionary-KeyA.json in Resources */,
-				8369475E1F1FED400047697C /* boolConfigIsABool2-true.json in Resources */,
+				836947721F1FF45B0047697C /* arrayConfigIsAnArrayA-123-withVersion.json in Resources */,
+				8369477C1F1FF80A0047697C /* dictionaryConfigIsADictionary-KeyA-withVersion.json in Resources */,
+				8369475E1F1FED400047697C /* boolConfigIsABool2-true-withVersion.json in Resources */,
 				83258A441F329EFB008C2133 /* doubleConfigIsADouble-Pi-withVersion.json in Resources */,
 				83BE9385201A63B400DD1ED9 /* ldDataManagerTestConfig.json in Resources */,
-				836947641F1FEEB40047697C /* numberConfigIsANumber2-1.json in Resources */,
+				836947641F1FEEB40047697C /* numberConfigIsANumber2-1-withVersion.json in Resources */,
 				839E0A18201FB8D900DB8CD1 /* ldClientManagerTestDeleteIsANumber.json in Resources */,
 				8305EC8E20227365002F20DB /* featureFlags-withoutVersions.json in Resources */,
-				8369477B1F1FF80A0047697C /* dictionaryConfigIsADictionary-Empty.json in Resources */,
+				8369477B1F1FF80A0047697C /* dictionaryConfigIsADictionary-Empty-withVersion.json in Resources */,
 				836947681F1FF0A00047697C /* stringConfigIsAString-someString-withVersion.json in Resources */,
-				8369477E1F1FF80A0047697C /* dictionaryConfigIsADictionary-KeyB.json in Resources */,
-				8369476F1F1FF45B0047697C /* arrayConfigIsAnArray-1.json in Resources */,
+				8369477E1F1FF80A0047697C /* dictionaryConfigIsADictionary-KeyB-withVersion.json in Resources */,
+				8369476F1F1FF45B0047697C /* arrayConfigIsAnArray-1-withVersion.json in Resources */,
 				8369475D1F1FED400047697C /* boolConfigIsABool-true-withVersion.json in Resources */,
-				8369477F1F1FF80A0047697C /* dictionaryConfigIsADictionary-KeyC-keyDValueDiffers.json in Resources */,
+				8369477F1F1FF80A0047697C /* dictionaryConfigIsADictionary-KeyC-keyDValueDiffers-withVersion.json in Resources */,
 				836947701F1FF45B0047697C /* arrayConfigIsAnArray-123-withVersion.json in Resources */,
 				83BE939A201B6EBA00DD1ED9 /* ldFlagConfigModelDeleteVersion2Flag.json in Resources */,
 				83BE938E201A863D00DD1ED9 /* ldFlagConfigModelPatchNewFlag.json in Resources */,
