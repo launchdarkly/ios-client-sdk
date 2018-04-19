@@ -47,16 +47,6 @@ extern const NSInteger kLDFlagConfigVariationDoesNotExist;
     }
 }
 
--(void)testInitAndCounterForUnknownValueConstructors {
-    LDFlagValueCounter *flagValueCounter = [LDFlagValueCounter counterForUnknownValue];
-
-    XCTAssertNil(flagValueCounter.value);
-    XCTAssertEqual(flagValueCounter.variation, kLDFlagConfigVariationDoesNotExist);
-    XCTAssertEqual(flagValueCounter.version, kLDFlagConfigVersionDoesNotExist);
-    XCTAssertEqual(flagValueCounter.count, 1);
-    XCTAssertEqual(flagValueCounter.unknown, YES);
-}
-
 -(void)testDictionaryValue {
     for (NSString *flagKey in self.flagConfigDictionary.allKeys) {
         LDFlagConfigValue *flagConfigValue = self.flagConfigDictionary[flagKey];
@@ -68,7 +58,7 @@ extern const NSInteger kLDFlagConfigVariationDoesNotExist;
         XCTAssertTrue([flagValueCounter hasPropertiesMatchingDictionary:flagValueCounterDictionary]);
     }
 
-    LDFlagValueCounter *flagValueCounter = [LDFlagValueCounter counterForUnknownValue];
+    LDFlagValueCounter *flagValueCounter = [LDFlagValueCounter counterWithValue:nil variation:kLDFlagConfigVariationDoesNotExist version:kLDFlagConfigVersionDoesNotExist];
 
     NSDictionary *flagValueCounterDictionary = [flagValueCounter dictionaryValue];
 

@@ -17,8 +17,6 @@
 
 +(instancetype _Nonnull)counterWithValue:(id _Nullable)value variation:(NSInteger)variation version:(NSInteger)version;
 -(instancetype _Nonnull)initWithValue:(id _Nullable)value variation:(NSInteger)variation version:(NSInteger)version;
-+(instancetype _Nonnull)counterForUnknownValue;
--(instancetype _Nonnull)initForUnknownValue;
 
 -(NSDictionary* _Nonnull)dictionaryValue;
 

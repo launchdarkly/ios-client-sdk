@@ -35,25 +35,9 @@ NSString * const kLDFlagValueCounterKeyUnknown = @"unknown";
     self.value = value;
     self.variation = variation;
     self.version = version;
-    self.unknown = NO;
+    self.unknown = variation == kLDFlagConfigVariationDoesNotExist;
     self.count = 1;
     
-    return self;
-}
-
-+(instancetype _Nonnull)counterForUnknownValue {
-    return [[LDFlagValueCounter alloc] initForUnknownValue];
-}
-
--(instancetype _Nonnull)initForUnknownValue {
-    if (!(self = [super init])) { return nil; }
-
-    self.value = nil;
-    self.variation = kLDFlagConfigVariationDoesNotExist;
-    self.version = kLDFlagConfigVersionDoesNotExist;
-    self.unknown = YES;
-    self.count = 1;
-
     return self;
 }
 
