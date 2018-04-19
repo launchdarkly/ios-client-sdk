@@ -10,10 +10,10 @@
 #import "LDEventModel.h"
 #import "LDUserModel+Stub.h"
 
-NSString * _Nonnull const kFeatureEventKeyStub = @"LDEventModel.featureEvent.key";
-NSString * _Nonnull const kCustomEventKeyStub = @"LDEventModel.customEvent.key";
-NSString * _Nonnull const kCustomEventCustomDataKeyStub = @"LDEventModel.customEventCustomData.key";
-NSString * _Nonnull const kCustomEventCustomDataValueStub = @"LDEventModel.customEventCustomData.value";
+NSString * const kFeatureEventKeyStub = @"LDEventModel.featureEvent.key";
+NSString * const kCustomEventKeyStub = @"LDEventModel.customEvent.key";
+NSString * const kCustomEventCustomDataKeyStub = @"LDEventModel.customEventCustomData.key";
+NSString * const kCustomEventCustomDataValueStub = @"LDEventModel.customEventCustomData.value";
 const double featureEventValueStub = 3.14159;
 const double featureEventDefaultValueStub = 2.71828;
 

@@ -9,15 +9,15 @@
 #import <Foundation/Foundation.h>
 
 @interface LDFlagValueCounter : NSObject
-@property (nonatomic, strong, readonly) id _Nullable value;
+@property (nonatomic, strong, nullable, readonly) id value;
 @property (nonatomic, assign, readonly) NSInteger variation;
 @property (nonatomic, assign, readonly) NSInteger version;
 @property (nonatomic, assign, readonly, getter=isUnknown) BOOL unknown;
 @property (nonatomic, assign) NSInteger count;
 
-+(instancetype _Nonnull)counterWithValue:(id _Nullable)value variation:(NSInteger)variation version:(NSInteger)version;
--(instancetype _Nonnull)initWithValue:(id _Nullable)value variation:(NSInteger)variation version:(NSInteger)version;
++(nonnull instancetype)counterWithValue:(nullable id)value variation:(NSInteger)variation version:(NSInteger)version;
+-(nonnull instancetype)initWithValue:(nullable id)value variation:(NSInteger)variation version:(NSInteger)version;
 
--(NSDictionary* _Nonnull)dictionaryValue;
+-(nonnull NSDictionary*)dictionaryValue;
 
 @end

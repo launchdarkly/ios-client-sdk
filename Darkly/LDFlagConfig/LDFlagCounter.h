@@ -10,16 +10,16 @@
 #import "LDFlagValueCounter.h"
 
 @interface LDFlagCounter : NSObject
-@property (nonatomic, strong, readonly) NSString * _Nonnull flagKey;
-@property (nonatomic, strong) id _Nonnull defaultValue;
-@property (nonatomic, strong, readonly) NSArray<LDFlagValueCounter*> * _Nonnull valueCounters;
+@property (nonatomic, strong, nonnull, readonly) NSString *flagKey;
+@property (nonatomic, strong, nonnull) id defaultValue;
+@property (nonatomic, strong, nonnull, readonly) NSArray<LDFlagValueCounter*> *valueCounters;
 
-+(instancetype _Nonnull)counterWithFlagKey:(NSString* _Nonnull)flagKey defaultValue:(id _Nonnull)defaultValue;
--(instancetype _Nonnull)initWithFlagKey:(NSString* _Nonnull)flagKey defaultValue:(id _Nonnull)defaultValue;
++(nonnull instancetype)counterWithFlagKey:(nonnull NSString*)flagKey defaultValue:(nonnull id)defaultValue;
+-(nonnull instancetype)initWithFlagKey:(nonnull NSString*)flagKey defaultValue:(nonnull id)defaultValue;
 
--(void)logRequestWithValue:(id _Nullable)value version:(NSInteger)version variation:(NSInteger)variation defaultValue:(id _Nonnull)defaultValue;
--(LDFlagValueCounter* _Nullable)valueCounterForVariation:(NSInteger)variation;
+-(void)logRequestWithValue:(nullable id)value version:(NSInteger)version variation:(NSInteger)variation defaultValue:(nullable id)defaultValue;
+-(nullable LDFlagValueCounter*)valueCounterForVariation:(NSInteger)variation;
 
--(NSDictionary* _Nonnull)dictionaryValue;
+-(nonnull NSDictionary*)dictionaryValue;
 
 @end

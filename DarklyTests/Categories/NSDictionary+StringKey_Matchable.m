@@ -77,7 +77,7 @@
     NSArray *matchingIgnoreKeys = [ignoreKeys filteredArrayUsingPredicate:matchingPrefixPredicate];
     if ([matchingIgnoreKeys count] == 0) { return matchingIgnoreKeys; }
     NSMutableArray *unwrappedMatchingIgnoreKeys = [NSMutableArray arrayWithCapacity:[matchingIgnoreKeys count]];
-    [matchingIgnoreKeys enumerateObjectsUsingBlock:^(id  _Nonnull obj, NSUInteger idx, BOOL * _Nonnull stop) {
+    [matchingIgnoreKeys enumerateObjectsUsingBlock:^(id obj, NSUInteger idx, BOOL *stop) {
         NSString *wrappedKey = (NSString*)obj;
         NSString *unwrappedKey = [wrappedKey stringByReplacingOccurrencesOfString:prefix withString:@""];
         [unwrappedMatchingIgnoreKeys addObject:unwrappedKey];

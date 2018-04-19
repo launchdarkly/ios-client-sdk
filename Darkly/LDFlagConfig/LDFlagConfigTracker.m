@@ -11,7 +11,7 @@
 
 @interface LDFlagConfigTracker()
 @property (nonatomic, assign) NSInteger startDateMillis;
-@property (nonatomic, strong) NSMutableDictionary<NSString*, LDFlagCounter*> * _Nonnull mutableFlagCounters;
+@property (nonatomic, strong) NSMutableDictionary<NSString*, LDFlagCounter*> *mutableFlagCounters;
 @end
 
 @implementation LDFlagConfigTracker

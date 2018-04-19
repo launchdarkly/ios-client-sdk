@@ -156,7 +156,7 @@ NSString * const LDConfigTestMobileKey = @"testMobileKey";
     NSMutableSet<NSNumber*> *selectedStatusCodes = [NSMutableSet setWithArray:@[@405, @400, @501, @200, @304, @307, @401, @404, @412, @500]];
     [selectedStatusCodes unionSet:[NSSet setWithArray:config.flagRetryStatusCodes]];    //allow flagRetryStatusCodes to change without changing the test
     NSMutableDictionary *statusCodeResults = [NSMutableDictionary dictionaryWithCapacity:selectedStatusCodes.count];
-    [selectedStatusCodes enumerateObjectsUsingBlock:^(NSNumber * _Nonnull statusCode, BOOL * _Nonnull stop) {
+    [selectedStatusCodes enumerateObjectsUsingBlock:^(NSNumber *statusCode, BOOL *stop) {
         statusCodeResults[statusCode] = @([config.flagRetryStatusCodes containsObject:statusCode]);
     }];
 

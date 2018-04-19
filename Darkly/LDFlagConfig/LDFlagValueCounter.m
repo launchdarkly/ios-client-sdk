@@ -25,11 +25,11 @@ NSString * const kLDFlagValueCounterKeyUnknown = @"unknown";
 @end
 
 @implementation LDFlagValueCounter
-+(instancetype )counterWithValue:(id _Nullable)value variation:(NSInteger)variation version:(NSInteger)version {
++(instancetype)counterWithValue:(id)value variation:(NSInteger)variation version:(NSInteger)version {
     return [[LDFlagValueCounter alloc] initWithValue:value variation:variation version:version];
 }
 
--(instancetype _Nonnull)initWithValue:(id _Nullable)value variation:(NSInteger)variation version:(NSInteger)version {
+-(instancetype)initWithValue:(id)value variation:(NSInteger)variation version:(NSInteger)version {
     if (!(self = [super init])) { return nil; }
 
     self.value = value;
@@ -41,7 +41,7 @@ NSString * const kLDFlagValueCounterKeyUnknown = @"unknown";
     return self;
 }
 
--(NSDictionary* _Nonnull)dictionaryValue {
+-(NSDictionary*)dictionaryValue {
     NSMutableDictionary *dictionary = [NSMutableDictionary dictionaryWithCapacity:3];
 
 

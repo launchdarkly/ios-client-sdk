@@ -10,7 +10,7 @@
 #import "LDFlagConfigModel+Testable.h"
 #import "NSJSONSerialization+Testable.h"
 
-extern NSString * _Nonnull  const kLDFlagConfigJsonDictionaryKeyVersion;
+extern NSString * const kLDFlagConfigJsonDictionaryKeyVersion;
 
 @implementation LDFlagConfigModel(Testable)
 +(instancetype)flagConfigFromJsonFileNamed:(NSString *)fileName {

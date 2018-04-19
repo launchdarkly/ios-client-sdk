@@ -11,10 +11,10 @@
 
 @interface LDFlagConfigTracker : NSObject
 @property (nonatomic, assign, readonly) NSInteger startDateMillis;
-@property (nonatomic, strong, readonly) NSDictionary<NSString*, LDFlagCounter*> * _Nonnull flagCounters;
+@property (nonatomic, strong, nonnull ,readonly) NSDictionary<NSString*, LDFlagCounter*> *flagCounters;
 
-+(instancetype _Nonnull)tracker;
--(instancetype _Nonnull)init;
++(nonnull instancetype)tracker;
+-(nonnull instancetype)init;
 
--(void)logRequestForFlagKey:(NSString*_Nonnull)flagKey value:(id _Nullable)value version:(NSInteger)version variation:(NSInteger)variation defaultValue:(id _Nonnull)defaultValue;
+-(void)logRequestForFlagKey:(nonnull NSString*)flagKey value:(nullable id)value version:(NSInteger)version variation:(NSInteger)variation defaultValue:(nullable id)defaultValue;
 @end

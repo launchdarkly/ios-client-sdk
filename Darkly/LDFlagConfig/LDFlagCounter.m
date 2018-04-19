@@ -14,7 +14,7 @@ NSString * const kLDFlagCounterKeyCounters = @"counters";
 
 @interface LDFlagCounter()
 @property (nonatomic, strong) NSString *flagKey;
-@property (nonatomic, strong) NSMutableArray<LDFlagValueCounter*> * _Nonnull flagValueCounters;
+@property (nonatomic, strong) NSMutableArray<LDFlagValueCounter*> *flagValueCounters;
 @end
 
 @implementation LDFlagCounter
