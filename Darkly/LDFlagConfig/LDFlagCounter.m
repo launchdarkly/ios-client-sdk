@@ -29,16 +29,20 @@
     return self;
 }
 
--(NSArray<LDFlagValueCounter*>*)counters {
+-(NSArray<LDFlagValueCounter*>*)valueCounters {
     return _flagValueCounters;
 }
 
--(void)logRequestWithValue:(id)value version:(NSInteger)version variation:(NSInteger)variation defaultValue:(id)defaultValue {
+-(LDFlagValueCounter*)valueCounterForVariation:(NSInteger)variation {
     NSPredicate *variationPredicate = [NSPredicate predicateWithBlock:^BOOL(id  _Nullable evaluatedObject, NSDictionary<NSString *,id> * _Nullable bindings) {
         if (![evaluatedObject isKindOfClass:[LDFlagValueCounter class]]) { return NO; }
         return ((LDFlagValueCounter*)evaluatedObject).variation == variation;
     }];
-    LDFlagValueCounter *selectedFlagValueCounter = [[self.counters filteredArrayUsingPredicate:variationPredicate] firstObject];
+    return [[self.flagValueCounters filteredArrayUsingPredicate:variationPredicate] firstObject];
+}
+
+-(void)logRequestWithValue:(id)value version:(NSInteger)version variation:(NSInteger)variation defaultValue:(id)defaultValue {
+    LDFlagValueCounter *selectedFlagValueCounter = [self valueCounterForVariation:variation];
     if (selectedFlagValueCounter) {
         selectedFlagValueCounter.count += 1;
         return;

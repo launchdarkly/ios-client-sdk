@@ -295,6 +295,7 @@
 		83ECCC952087D67D0086F879 /* LDFlagCounter.m in Sources */ = {isa = PBXBuildFile; fileRef = 83ECCC8D2087D67D0086F879 /* LDFlagCounter.m */; };
 		83ECCC982087DF040086F879 /* LDFlagCounterTest.m in Sources */ = {isa = PBXBuildFile; fileRef = 83ECCC972087DF040086F879 /* LDFlagCounterTest.m */; };
 		83ECCC9B2087EF4A0086F879 /* LDFlagConfigValue+Testable.m in Sources */ = {isa = PBXBuildFile; fileRef = 83ECCC9A2087EF4A0086F879 /* LDFlagConfigValue+Testable.m */; };
+		83ECCC9D208800F20086F879 /* doubleConfigIsADouble-e-withVersion.json in Resources */ = {isa = PBXBuildFile; fileRef = 83ECCC9C208800F10086F879 /* doubleConfigIsADouble-e-withVersion.json */; };
 		83EF67811F979B4100403126 /* LDEvent+Unauthorized.h in Headers */ = {isa = PBXBuildFile; fileRef = 83EF677F1F979B4100403126 /* LDEvent+Unauthorized.h */; };
 		83EF67821F979B4100403126 /* LDEvent+Unauthorized.h in Headers */ = {isa = PBXBuildFile; fileRef = 83EF677F1F979B4100403126 /* LDEvent+Unauthorized.h */; };
 		83EF67831F979B4100403126 /* LDEvent+Unauthorized.h in Headers */ = {isa = PBXBuildFile; fileRef = 83EF677F1F979B4100403126 /* LDEvent+Unauthorized.h */; };
@@ -505,6 +506,7 @@
 		83ECCC972087DF040086F879 /* LDFlagCounterTest.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = LDFlagCounterTest.m; sourceTree = "<group>"; };
 		83ECCC992087EF4A0086F879 /* LDFlagConfigValue+Testable.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "LDFlagConfigValue+Testable.h"; sourceTree = "<group>"; };
 		83ECCC9A2087EF4A0086F879 /* LDFlagConfigValue+Testable.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "LDFlagConfigValue+Testable.m"; sourceTree = "<group>"; };
+		83ECCC9C208800F10086F879 /* doubleConfigIsADouble-e-withVersion.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = "doubleConfigIsADouble-e-withVersion.json"; sourceTree = "<group>"; };
 		83EF677F1F979B4100403126 /* LDEvent+Unauthorized.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "LDEvent+Unauthorized.h"; sourceTree = "<group>"; };
 		83EF67801F979B4100403126 /* LDEvent+Unauthorized.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "LDEvent+Unauthorized.m"; sourceTree = "<group>"; };
 		83EF678B1F98FC9200403126 /* LDFlagConfigModel+Testable.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "LDFlagConfigModel+Testable.h"; sourceTree = "<group>"; };
@@ -708,6 +710,7 @@
 				8369475B1F1FED400047697C /* boolConfigIsABool2-true-withVersion.json */,
 				83258A431F329EFB008C2133 /* doubleConfigIsADouble-Pi-withVersion.json */,
 				8305EC8120223BC2002F20DB /* doubleConfigIsADouble-Pi-withoutVersion.json */,
+				83ECCC9C208800F10086F879 /* doubleConfigIsADouble-e-withVersion.json */,
 				8369475F1F1FEEB40047697C /* numberConfigIsANumber-1-withVersion.json */,
 				836947601F1FEEB40047697C /* numberConfigIsANumber-2-withVersion.json */,
 				8305EC7F20223A2E002F20DB /* numberConfigIsANumber-2-withoutVersion.json */,
@@ -1182,6 +1185,7 @@
 				83BE9398201AA53100DD1ED9 /* ldFlagConfigModelPatchVersion2FlagWithNull.json in Resources */,
 				8305EC8A202243D6002F20DB /* nullConfigIsANull-null-withVersion.json in Resources */,
 				83BE9387201A6AA400DD1ED9 /* ldFlagConfigModelTest.json in Resources */,
+				83ECCC9D208800F20086F879 /* doubleConfigIsADouble-e-withVersion.json in Resources */,
 				836947801F1FF80A0047697C /* dictionaryConfigIsADictionary-KeyC-withVersion.json in Resources */,
 				836947841F20125F0047697C /* ldClientManagerTestConfigB.json in Resources */,
 				83BE939C201B80F800DD1ED9 /* ldFlagConfigModelDeleteNewFlag.json in Resources */,

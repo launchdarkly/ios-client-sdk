@@ -11,4 +11,6 @@
 
 @interface LDFlagConfigValue(Testable)
 +(instancetype)flagConfigValueFromJsonFileNamed:(NSString*)fileName flagKey:(NSString*)flagKey;
++(NSArray<LDFlagConfigValue*>*)stubFlagConfigValuesForFlagKey:(NSString*)flagKey;
++(id)defaultValueForFlagKey:(NSString*)flagKey;
 @end

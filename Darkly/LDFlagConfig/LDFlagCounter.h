@@ -12,12 +12,13 @@
 @interface LDFlagCounter : NSObject
 @property (nonatomic, strong, readonly) NSString * _Nonnull flagKey;
 @property (nonatomic, strong) id _Nonnull defaultValue;
-@property (nonatomic, strong, readonly) NSArray<LDFlagValueCounter*> * _Nonnull counters;
+@property (nonatomic, strong, readonly) NSArray<LDFlagValueCounter*> * _Nonnull valueCounters;
 
 +(instancetype _Nonnull)counterWithFlagKey:(NSString* _Nonnull)flagKey defaultValue:(id _Nonnull)defaultValue;
 -(instancetype _Nonnull)initWithFlagKey:(NSString* _Nonnull)flagKey defaultValue:(id _Nonnull)defaultValue;
 
 -(void)logRequestWithValue:(id _Nullable)value version:(NSInteger)version variation:(NSInteger)variation defaultValue:(id _Nonnull)defaultValue;
+-(LDFlagValueCounter* _Nullable)valueCounterForVariation:(NSInteger)variation;
 
 -(NSDictionary* _Nonnull)dictionaryValue;
 
