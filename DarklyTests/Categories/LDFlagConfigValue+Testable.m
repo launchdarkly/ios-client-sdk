@@ -82,4 +82,9 @@ NSString * const kLDFlagKeyIsANull = @"isANull";
     }
     return @(YES);
 }
+
++(NSArray<NSString*>*)flagKeys {
+    return @[kLDFlagKeyIsABool, kLDFlagKeyIsANumber, kLDFlagKeyIsADouble, kLDFlagKeyIsAString, kLDFlagKeyIsAnArray, kLDFlagKeyIsADictionary, kLDFlagKeyIsANull];
+}
+
 @end

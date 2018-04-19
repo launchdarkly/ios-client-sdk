@@ -54,8 +54,7 @@ extern NSString * const kLDFlagKeyIsANull;
  NOTE: The variation comes from LD to indicate a unique flag value.
  */
 -(void)testLogRequestForKnownFlagValues {
-    NSArray<NSString*> *flagKeys = @[kLDFlagKeyIsABool, kLDFlagKeyIsANumber, kLDFlagKeyIsADouble, kLDFlagKeyIsAString, kLDFlagKeyIsAnArray, kLDFlagKeyIsADictionary, kLDFlagKeyIsANull];
-    for (NSString* flagKey in flagKeys) {
+    for (NSString* flagKey in [LDFlagConfigValue flagKeys]) {
         NSArray<LDFlagConfigValue*> *flagConfigValues = [LDFlagConfigValue stubFlagConfigValuesForFlagKey:flagKey];
         id defaultValue = [LDFlagConfigValue defaultValueForFlagKey:flagKey];
         LDFlagCounter *flagCounter = [LDFlagCounter counterWithFlagKey:flagKey defaultValue:defaultValue];
@@ -86,6 +85,37 @@ extern NSString * const kLDFlagKeyIsANull;
             XCTAssertEqual(flagCounter.valueCounters.count, logRequestForUniqueValueCount);
             XCTAssertEqual(flagValueCounter.count, 3);
         }
+    }
+}
+
+-(void)testLogRequestForUnknownFlagValues {
+    for (NSString* flagKey in [LDFlagConfigValue flagKeys]) {
+        id defaultValue = [LDFlagConfigValue defaultValueForFlagKey:flagKey];
+        LDFlagCounter *flagCounter = [LDFlagCounter counterWithFlagKey:flagKey defaultValue:defaultValue];
+
+        [flagCounter logRequestWithValue:nil version:kLDFlagConfigVersionDoesNotExist variation:kLDFlagConfigVariationDoesNotExist defaultValue:defaultValue];
+
+        XCTAssertEqual(flagCounter.valueCounters.count, 1);    //Verify the logRequest call added a new LDFlagValueCounter
+        LDFlagValueCounter *flagValueCounter = [flagCounter valueCounterForVariation:kLDFlagConfigVariationDoesNotExist];
+        XCTAssertNotNil(flagValueCounter);
+        if (!flagValueCounter) { continue; }
+
+        XCTAssertNil(flagValueCounter.value);
+        XCTAssertEqual(flagValueCounter.variation, kLDFlagConfigVariationDoesNotExist);
+        XCTAssertEqual(flagValueCounter.version, kLDFlagConfigVersionDoesNotExist);
+        XCTAssertEqual(flagValueCounter.unknown, YES);
+        XCTAssertEqual(flagValueCounter.count, 1);
+
+        //Make a second call to logRequest with an unknown value. Verify no new flagValueCounters, and the existing flagValueCounter was incremented
+        [flagCounter logRequestWithValue:nil version:kLDFlagConfigVersionDoesNotExist variation:kLDFlagConfigVariationDoesNotExist defaultValue:defaultValue];
+        XCTAssertEqual(flagCounter.valueCounters.count, 1);
+        XCTAssertEqual(flagValueCounter.count, 2);
+
+        //Make a third call to logRequest with the same value and verify no new flagValueCounters, and the count was incremented
+        [flagCounter logRequestWithValue:nil version:kLDFlagConfigVersionDoesNotExist variation:kLDFlagConfigVariationDoesNotExist defaultValue:defaultValue];
+        XCTAssertEqual(flagCounter.valueCounters.count, 1);
+        XCTAssertEqual(flagValueCounter.count, 3);
+
     }
 }
 
