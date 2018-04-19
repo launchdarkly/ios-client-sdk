@@ -44,14 +44,16 @@ NSString * const kLDFlagValueCounterKeyUnknown = @"unknown";
 -(NSDictionary* _Nonnull)dictionaryValue {
     NSMutableDictionary *dictionary = [NSMutableDictionary dictionaryWithCapacity:3];
 
-    if (self.value) {
-        dictionary[kLDFlagValueCounterKeyValue] = self.value;
-    }
-    if (self.version != kLDFlagConfigVersionDoesNotExist) {
-        dictionary[kLDFlagValueCounterKeyVersion] = @(self.version);
-    }
+
     if (self.unknown) {
         dictionary[kLDFlagValueCounterKeyUnknown] = @(self.unknown);
+    } else {
+        if (self.value) {
+            dictionary[kLDFlagValueCounterKeyValue] = self.value;
+        }
+        if (self.version != kLDFlagConfigVersionDoesNotExist) {
+            dictionary[kLDFlagValueCounterKeyVersion] = @(self.version);
+        }
     }
     dictionary[kLDFlagValueCounterKeyCount] = @(self.count);
 

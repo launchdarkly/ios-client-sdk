@@ -56,13 +56,15 @@ extern const NSInteger kLDFlagConfigVariationDoesNotExist;
         NSDictionary *flagValueCounterDictionary = [flagValueCounter dictionaryValue];
 
         XCTAssertTrue([flagValueCounter hasPropertiesMatchingDictionary:flagValueCounterDictionary]);
+
+        //Unknown flag config values
+        flagValueCounter = [LDFlagValueCounter counterWithValue:flagConfigValue.value variation:kLDFlagConfigVariationDoesNotExist version:flagConfigValue.version];
+
+        flagValueCounterDictionary = [flagValueCounter dictionaryValue];
+
+        XCTAssertTrue([flagValueCounter hasPropertiesMatchingDictionary:flagValueCounterDictionary]);
+
     }
-
-    LDFlagValueCounter *flagValueCounter = [LDFlagValueCounter counterWithValue:nil variation:kLDFlagConfigVariationDoesNotExist version:kLDFlagConfigVersionDoesNotExist];
-
-    NSDictionary *flagValueCounterDictionary = [flagValueCounter dictionaryValue];
-
-    XCTAssertTrue([flagValueCounter hasPropertiesMatchingDictionary:flagValueCounterDictionary]);
 }
 
 @end
