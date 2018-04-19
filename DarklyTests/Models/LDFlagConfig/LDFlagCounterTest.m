@@ -8,6 +8,7 @@
 
 #import <XCTest/XCTest.h>
 #import "LDFlagCounter.h"
+#import "LDFlagCounter+Testable.h"
 #import "LDFlagConfigModel.h"
 #import "LDFlagConfigModel+Testable.h"
 #import "LDFlagConfigValue.h"
@@ -116,6 +117,24 @@ extern NSString * const kLDFlagKeyIsANull;
         XCTAssertEqual(flagCounter.valueCounters.count, 1);
         XCTAssertEqual(flagValueCounter.count, 3);
 
+    }
+}
+
+-(void)testDictionaryValueForKnownFlagValues {
+    for (NSString* flagKey in [LDFlagConfigValue flagKeys]) {
+        LDFlagCounter *flagCounter = [LDFlagCounter stubForFlagKey:flagKey];
+        NSDictionary *flagCounterDictionary = [flagCounter dictionaryValue];
+
+        XCTAssertTrue([flagCounter hasPropertiesMatchingDictionary:flagCounterDictionary]);
+    }
+}
+
+-(void)testDictionaryValueForUnknownFlagValues {
+    for (NSString* flagKey in [LDFlagConfigValue flagKeys]) {
+        LDFlagCounter *flagCounter = [LDFlagCounter stubForFlagKey:flagKey useUnknownValues:YES];
+        NSDictionary *flagCounterDictionary = [flagCounter dictionaryValue];
+
+        XCTAssertTrue([flagCounter hasPropertiesMatchingDictionary:flagCounterDictionary]);
     }
 }
 
