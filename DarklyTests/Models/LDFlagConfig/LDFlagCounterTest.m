@@ -116,7 +116,6 @@ extern NSString * const kLDFlagKeyIsANull;
         [flagCounter logRequestWithValue:nil version:kLDFlagConfigVersionDoesNotExist variation:kLDFlagConfigVariationDoesNotExist defaultValue:defaultValue];
         XCTAssertEqual(flagCounter.valueCounters.count, 1);
         XCTAssertEqual(flagValueCounter.count, 3);
-
     }
 }
 
