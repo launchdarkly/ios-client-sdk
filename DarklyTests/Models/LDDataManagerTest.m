@@ -77,7 +77,7 @@ extern NSString * const kEventModelKeyKind;
     
     [[LDDataManager sharedManager] allEventDictionaries:^(NSArray *eventDictionaries) {
         for (NSDictionary *eventDictionary in eventDictionaries) {
-            NSPredicate *matchingEventPredicate = [NSPredicate predicateWithBlock:^BOOL(id  _Nullable evaluatedObject, NSDictionary<NSString *,id> * _Nullable bindings) {
+            NSPredicate *matchingEventPredicate = [NSPredicate predicateWithBlock:^BOOL(id evaluatedObject, NSDictionary<NSString *,id> *bindings) {
                 LDEventModel *evaluatedEvent = evaluatedObject;
                 return [eventDictionary[kEventModelKeyKind] isEqualToString:evaluatedEvent.kind];
             }];

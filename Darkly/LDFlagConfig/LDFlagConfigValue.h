@@ -11,7 +11,7 @@
 extern NSInteger const kLDFlagConfigVersionDoesNotExist;
 
 @interface LDFlagConfigValue: NSObject
-@property (nonatomic, strong) id _Nullable value;
+@property (nonatomic, strong, nullable) id value;
 @property (nonatomic, assign) NSInteger version;
 
 +(nullable instancetype)flagConfigValueWithObject:(nullable id)object;

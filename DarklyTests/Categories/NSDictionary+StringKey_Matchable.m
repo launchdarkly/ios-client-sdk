@@ -69,7 +69,7 @@
 -(NSArray*)ignoreKeysForKey:(NSString*)key fromKeys:(NSArray*)ignoreKeys {
     if ([key length] == 0 || [ignoreKeys count] == 0) { return nil; }
     NSString *prefix = [NSString stringWithFormat:@"%@.", key];
-    NSPredicate *matchingPrefixPredicate = [NSPredicate predicateWithBlock:^BOOL(id  _Nullable evaluatedObject, NSDictionary<NSString *,id> * _Nullable bindings) {
+    NSPredicate *matchingPrefixPredicate = [NSPredicate predicateWithBlock:^BOOL(id evaluatedObject, NSDictionary<NSString *,id> *bindings) {
         if (![evaluatedObject isKindOfClass:[NSString class]]) { return NO; }
         NSString *evaluatedKey = (NSString*)evaluatedObject;
         return [evaluatedKey hasPrefix:prefix];

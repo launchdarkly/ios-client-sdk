@@ -9,7 +9,7 @@
 #import "LDFlagValueCounter+Testable.h"
 
 @implementation LDFlagValueCounter(Testable)
--(BOOL)hasPropertiesMatchingDictionary:(NSDictionary* _Nullable)dictionary {
+-(BOOL)hasPropertiesMatchingDictionary:(NSDictionary*)dictionary {
     NSMutableArray<NSString*> *mismatchedProperties = [NSMutableArray array];
     if (self.unknown) {
         if (dictionary[kLDFlagValueCounterKeyValue]) {

@@ -8,12 +8,12 @@
 
 #import "LDFlagValueCounter.h"
 
-extern NSString * _Nonnull const kLDFlagValueCounterKeyValue;
-extern NSString * _Nonnull const kLDFlagValueCounterKeyVersion;
-extern NSString * _Nonnull const kLDFlagValueCounterKeyCount;
-extern NSString * _Nonnull const kLDFlagValueCounterKeyUnknown;
+extern NSString * const kLDFlagValueCounterKeyValue;
+extern NSString * const kLDFlagValueCounterKeyVersion;
+extern NSString * const kLDFlagValueCounterKeyCount;
+extern NSString * const kLDFlagValueCounterKeyUnknown;
 
 
 @interface LDFlagValueCounter(Testable)
--(BOOL)hasPropertiesMatchingDictionary:(NSDictionary* _Nullable)dictionary;
+-(BOOL)hasPropertiesMatchingDictionary:(NSDictionary*)dictionary;
 @end
