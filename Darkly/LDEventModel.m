@@ -11,6 +11,12 @@
 #import "NSDate+ReferencedDate.h"
 #import "LDFlagConfigTracker.h"
 
+NSString * const kEventModelKindFeature = @"feature";
+NSString * const kEventModelKindCustom = @"custom";
+NSString * const kEventModelKindIdentify = @"identify";
+NSString * const kEventModelKindFeatureSummary = @"flag";
+NSString * const kEventModelKindDebug = @"debug";
+
 NSString * const kEventModelKeyKey = @"key";
 NSString * const kEventModelKeyKind = @"kind";
 NSString * const kEventModelKeyCreationDate = @"creationDate";
@@ -24,11 +30,6 @@ NSString * const kEventModelKeyInlineUser = @"inlineUser";
 NSString * const kEventModelKeyStartDate = @"startDate";
 NSString * const kEventModelKeyEndDate = @"endDate";
 NSString * const kEventModelKeyFeatures = @"features";
-
-NSString * const kEventModelKindFeature = @"feature";
-NSString * const kEventModelKindCustom = @"custom";
-NSString * const kEventModelKindIdentify = @"identify";
-NSString * const kEventModelKindFeatureSummary = @"flag";
 
 @implementation LDEventModel
 
@@ -63,7 +64,7 @@ NSString * const kEventModelKindFeatureSummary = @"flag";
     self.startDateMillis = [decoder decodeIntegerForKey:kEventModelKeyStartDate];
     self.endDateMillis = [decoder decodeIntegerForKey:kEventModelKeyEndDate];
     self.flagRequestSummary = [decoder decodeObjectForKey:kEventModelKeyFeatures];
-    
+
     return self;
 }
 
@@ -182,7 +183,18 @@ NSString * const kEventModelKindFeatureSummary = @"flag";
     return self;
 }
 
-- (instancetype)init {
++(instancetype)debugEventWithFlagKey:(NSString *)flagKey flagValue:(NSObject*)flagValue defaultFlagValue:(NSObject*)defaultflagValue userValue:(LDUserModel*)userValue {
+    return [[LDEventModel alloc] initDebugEventWithFlagKey:flagKey flagValue:flagValue defaultFlagValue:defaultflagValue userValue:userValue];
+}
+
+-(instancetype)initDebugEventWithFlagKey:(NSString*)flagKey  flagValue:(NSObject*)flagValue defaultFlagValue:(NSObject*)defaultflagValue userValue:(LDUserModel*)userValue {
+    self = [self initFeatureEventWithFlagKey:flagKey flagValue:flagValue defaultFlagValue:defaultflagValue userValue:userValue inlineUser:YES];
+    self.kind = kEventModelKindDebug;
+
+    return self;
+}
+
+-(instancetype)init {
     self = [super init];
     
     if(self != nil) {

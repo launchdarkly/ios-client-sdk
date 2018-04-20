@@ -146,15 +146,15 @@ NSString * const testMobileKey = @"EventModelTest.testMobileKey";
         LDEventModel *originalEvent = [LDEventModel stubEventWithKind:eventKind user:self.user config:config];
         NSDictionary *eventDictionary = [originalEvent dictionaryValueUsingConfig:config];
 
-        if (![eventKind isEqualToString:kEventModelKindIdentify]) {
-            XCTAssertNil(eventDictionary[kEventModelKeyUser]);
-            XCTAssertNotNil(eventDictionary[kEventModelKeyUserKey]);
-            XCTAssertTrue([originalEvent.user.key isEqualToString:eventDictionary[kEventModelKeyUserKey]]);
-        } else {    //identify events always inline the user
+        if (originalEvent.alwaysInlinesUser) {
             XCTAssertNotNil(eventDictionary[kEventModelKeyUser]);
             XCTAssertNil(eventDictionary[kEventModelKeyUserKey]);
             LDUserModel *restoredUser = [[LDUserModel alloc] initWithDictionary:eventDictionary[kEventModelKeyUser]];
             XCTAssertTrue([originalEvent.user isEqual:restoredUser ignoringAttributes:@[kUserAttributeConfig]]);
+        } else {
+            XCTAssertNil(eventDictionary[kEventModelKeyUser]);
+            XCTAssertNotNil(eventDictionary[kEventModelKeyUserKey]);
+            XCTAssertTrue([originalEvent.user.key isEqualToString:eventDictionary[kEventModelKeyUserKey]]);
         }
         XCTAssertNil(eventDictionary[kEventModelKeyInlineUser]);
     }

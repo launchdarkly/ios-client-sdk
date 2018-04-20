@@ -16,13 +16,13 @@
 //all event kinds
 @property (nullable, nonatomic, strong) NSString *kind;
 
-//feature, custom, & identify events
+//feature, debug, custom, & identify events
 @property (nullable, nonatomic, strong) NSString *key;
 @property (atomic, assign) NSInteger creationDate;
 @property (nullable, nonatomic, strong) LDUserModel *user;
 @property (nonatomic, assign) BOOL inlineUser;
 
-//feature events only
+//feature & debug events only
 @property (nonnull, nonatomic, strong) NSObject *value;
 @property (nonnull, nonatomic, strong) NSObject *defaultValue;
 
@@ -63,4 +63,12 @@
 +(nullable instancetype)summaryEventWithTracker:(nonnull LDFlagConfigTracker*)tracker;
 -(nullable instancetype)initSummaryEventWithTracker:(nonnull LDFlagConfigTracker*)tracker;
 
++(nullable instancetype)debugEventWithFlagKey:(nonnull NSString *)flagKey
+                                    flagValue:(nullable NSObject*)flagValue
+                             defaultFlagValue:(nullable NSObject*)defaultflagValue
+                                    userValue:(nonnull LDUserModel *)userValue;
+-(nullable instancetype)initDebugEventWithFlagKey:(nonnull NSString *)flagKey
+                                        flagValue:(nullable NSObject*)flagValue
+                                 defaultFlagValue:(nullable NSObject*)defaultFlagValue
+                                        userValue:(nonnull LDUserModel*)userValue;
 @end

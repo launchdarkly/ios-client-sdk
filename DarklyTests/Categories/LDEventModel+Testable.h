@@ -24,8 +24,13 @@ extern const double featureEventValueStub;
 extern const double featureEventDefaultValueStub;
 
 @interface LDEventModel(Testable)
+@property (nonatomic, assign, readonly) BOOL isFlagRequestEventKind;
+@property (nonatomic, assign, readonly) BOOL hasCommonFields;
+@property (nonatomic, assign, readonly) BOOL alwaysInlinesUser;
 +(nonnull NSArray<NSString*>*)allEventKinds;
 +(nonnull NSArray<NSString*>*)eventKindsWithCommonFields;
++(nonnull NSArray<NSString*>*)eventKindsForFlagRequests;
++(nonnull NSArray<NSString*>*)eventKindsThatAlwaysInlineUsers;
 +(nonnull instancetype)stubEventWithKind:(nonnull NSString*)eventKind user:(nullable LDUserModel*)user config:(nullable LDConfig*)config;
 -(BOOL)isEqual:(nullable id)object;
 -(BOOL)hasPropertiesMatchingDictionary:(nullable NSDictionary*)dictionary;

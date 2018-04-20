@@ -17,6 +17,7 @@ extern NSString * const kEventModelKindFeature;
 extern NSString * const kEventModelKindCustom;
 extern NSString * const kEventModelKindIdentify;
 extern NSString * const kEventModelKindFeatureSummary;
+extern NSString * const kEventModelKindDebug;
 
 extern NSString * const kEventModelKeyKey;
 extern NSString * const kEventModelKeyKind;
@@ -40,12 +41,32 @@ const double featureEventValueStub = 3.14159;
 const double featureEventDefaultValueStub = 2.71828;
 
 @implementation LDEventModel (Testable)
-+(nonnull NSArray<NSString*>*)allEventKinds {
-    return @[kEventModelKindFeature, kEventModelKindCustom, kEventModelKindIdentify, kEventModelKindFeatureSummary];
++(NSArray<NSString*>*)allEventKinds {
+    return @[kEventModelKindFeature, kEventModelKindCustom, kEventModelKindIdentify, kEventModelKindFeatureSummary, kEventModelKindDebug];
 }
 
-+(nonnull NSArray<NSString*>*)eventKindsWithCommonFields {
-    return @[kEventModelKindFeature, kEventModelKindCustom, kEventModelKindIdentify];
++(NSArray<NSString*>*)eventKindsWithCommonFields {
+    return @[kEventModelKindFeature, kEventModelKindCustom, kEventModelKindIdentify, kEventModelKindDebug];
+}
+
+-(BOOL)hasCommonFields {
+    return [[LDEventModel eventKindsWithCommonFields] containsObject:self.kind];
+}
+
++(NSArray<NSString*>*)eventKindsForFlagRequests {
+    return @[kEventModelKindFeature, kEventModelKindDebug];
+}
+
+-(BOOL)isFlagRequestEventKind {
+    return [[LDEventModel eventKindsForFlagRequests] containsObject:self.kind];
+}
+
++(NSArray<NSString*>*)eventKindsThatAlwaysInlineUsers {
+    return @[kEventModelKindIdentify, kEventModelKindDebug];
+}
+
+-(BOOL)alwaysInlinesUser {
+    return [[LDEventModel eventKindsThatAlwaysInlineUsers] containsObject:self.kind];
 }
 
 +(instancetype)stubEventWithKind:(NSString*)eventKind user:(nullable LDUserModel*)user config:(nullable LDConfig*)config {
@@ -66,8 +87,14 @@ const double featureEventDefaultValueStub = 2.71828;
                                       userValue:user
                                      inlineUser:inlineUser];
     }
+    if ([eventKind isEqualToString:kEventModelKindDebug]) {
+        return [LDEventModel debugEventWithFlagKey:kFeatureEventKeyStub flagValue:@(featureEventValueStub) defaultFlagValue:@(featureEventDefaultValueStub) userValue:user];
+    }
     if ([eventKind isEqualToString:kEventModelKindFeatureSummary]) {
         return [LDEventModel summaryEventWithTracker:[LDFlagConfigTracker stubTracker]];
+    }
+    if ([eventKind isEqualToString:kEventModelKindDebug]) {
+        return [LDEventModel debugEventWithFlagKey:kFeatureEventKeyStub flagValue:@(featureEventValueStub) defaultFlagValue:@(featureEventDefaultValueStub) userValue:user];
     }
 
     return [LDEventModel identifyEventWithUser:user];
@@ -85,7 +112,7 @@ const double featureEventDefaultValueStub = 2.71828;
         [mismatchedProperties addObject:kEventModelKeyKind];
     }
 
-    if ([[LDEventModel eventKindsWithCommonFields] containsObject:self.kind]) {
+    if (self.hasCommonFields) {
         if (![self.key isEqualToString:otherEvent.key]) {
             [mismatchedProperties addObject:kEventModelKeyKey];
         }
@@ -106,7 +133,7 @@ const double featureEventDefaultValueStub = 2.71828;
         }
     }
 
-    if ([self.kind isEqualToString:kEventModelKindFeature]) {
+    if (self.isFlagRequestEventKind) {
         if (![self.value isEqual:otherEvent.value]) {
             [mismatchedProperties addObject:kEventModelKeyValue];
         }
@@ -149,7 +176,7 @@ const double featureEventDefaultValueStub = 2.71828;
     if (![self.kind isEqualToString:dictionary[kEventModelKeyKind]]) {
         [mismatchedProperties addObject:kEventModelKeyKind];
     }
-    if ([[LDEventModel eventKindsWithCommonFields] containsObject:self.kind]) {
+    if (self.hasCommonFields) {
         if (![self.key isEqualToString:dictionary[kEventModelKeyKey]]) {
             [mismatchedProperties addObject:kEventModelKeyKey];
         }
@@ -168,7 +195,7 @@ const double featureEventDefaultValueStub = 2.71828;
         }
     }
 
-    if ([self.kind isEqualToString:kEventModelKindFeature]) {
+    if (self.isFlagRequestEventKind) {
         if (![self.value isEqual:dictionary[kEventModelKeyValue]]) {
             [mismatchedProperties addObject:kEventModelKeyValue];
         }
