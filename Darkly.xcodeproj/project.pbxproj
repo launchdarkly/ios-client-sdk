@@ -250,7 +250,6 @@
 		83B6FC22207E60B6002DBA7B /* NSDate+ReferencedDate.m in Sources */ = {isa = PBXBuildFile; fileRef = 83B6FC1C207E60B6002DBA7B /* NSDate+ReferencedDate.m */; };
 		83B6FC23207E60B6002DBA7B /* NSDate+ReferencedDate.m in Sources */ = {isa = PBXBuildFile; fileRef = 83B6FC1C207E60B6002DBA7B /* NSDate+ReferencedDate.m */; };
 		83B6FC24207E60B6002DBA7B /* NSDate+ReferencedDate.m in Sources */ = {isa = PBXBuildFile; fileRef = 83B6FC1C207E60B6002DBA7B /* NSDate+ReferencedDate.m */; };
-		83B6FC28207E7462002DBA7B /* LDEventModel+Equatable.m in Sources */ = {isa = PBXBuildFile; fileRef = 83B6FC27207E7462002DBA7B /* LDEventModel+Equatable.m */; };
 		83B6FC2B208127B2002DBA7B /* LDEventModel+Testable.m in Sources */ = {isa = PBXBuildFile; fileRef = 83B6FC2A208127B2002DBA7B /* LDEventModel+Testable.m */; };
 		83B8C24C1FEB1CD20082B8A9 /* LDUserModel+Stub.m in Sources */ = {isa = PBXBuildFile; fileRef = 83B8C24B1FEB1CD20082B8A9 /* LDUserModel+Stub.m */; };
 		83B8C24F1FEC19500082B8A9 /* NSDateFormatter+LDUserModel.h in Headers */ = {isa = PBXBuildFile; fileRef = 83B8C24D1FEC19500082B8A9 /* NSDateFormatter+LDUserModel.h */; };
@@ -306,6 +305,8 @@
 		83ECCCAC2088FBA80086F879 /* LDFlagConfigTracker.m in Sources */ = {isa = PBXBuildFile; fileRef = 83ECCCA52088FBA80086F879 /* LDFlagConfigTracker.m */; };
 		83ECCCAD2088FBA80086F879 /* LDFlagConfigTracker.m in Sources */ = {isa = PBXBuildFile; fileRef = 83ECCCA52088FBA80086F879 /* LDFlagConfigTracker.m */; };
 		83ECCCAF2088FF420086F879 /* LDFlagConfigTrackerTest.m in Sources */ = {isa = PBXBuildFile; fileRef = 83ECCCAE2088FF420086F879 /* LDFlagConfigTrackerTest.m */; };
+		83ECCCB220890A430086F879 /* LDFlagConfigTracker+Testable.m in Sources */ = {isa = PBXBuildFile; fileRef = 83ECCCB120890A430086F879 /* LDFlagConfigTracker+Testable.m */; };
+		83ECCCB520891E8E0086F879 /* NSInteger+Testable.m in Sources */ = {isa = PBXBuildFile; fileRef = 83ECCCB420891E8E0086F879 /* NSInteger+Testable.m */; };
 		83EF67811F979B4100403126 /* LDEvent+Unauthorized.h in Headers */ = {isa = PBXBuildFile; fileRef = 83EF677F1F979B4100403126 /* LDEvent+Unauthorized.h */; };
 		83EF67821F979B4100403126 /* LDEvent+Unauthorized.h in Headers */ = {isa = PBXBuildFile; fileRef = 83EF677F1F979B4100403126 /* LDEvent+Unauthorized.h */; };
 		83EF67831F979B4100403126 /* LDEvent+Unauthorized.h in Headers */ = {isa = PBXBuildFile; fileRef = 83EF677F1F979B4100403126 /* LDEvent+Unauthorized.h */; };
@@ -481,8 +482,6 @@
 		839E0A17201FB8D900DB8CD1 /* ldClientManagerTestDeleteIsANumber.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = ldClientManagerTestDeleteIsANumber.json; sourceTree = "<group>"; };
 		83B6FC1B207E60B6002DBA7B /* NSDate+ReferencedDate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "NSDate+ReferencedDate.h"; sourceTree = "<group>"; };
 		83B6FC1C207E60B6002DBA7B /* NSDate+ReferencedDate.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "NSDate+ReferencedDate.m"; sourceTree = "<group>"; };
-		83B6FC26207E7462002DBA7B /* LDEventModel+Equatable.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "LDEventModel+Equatable.h"; sourceTree = "<group>"; };
-		83B6FC27207E7462002DBA7B /* LDEventModel+Equatable.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "LDEventModel+Equatable.m"; sourceTree = "<group>"; };
 		83B6FC29208127B2002DBA7B /* LDEventModel+Testable.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "LDEventModel+Testable.h"; sourceTree = "<group>"; };
 		83B6FC2A208127B2002DBA7B /* LDEventModel+Testable.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "LDEventModel+Testable.m"; sourceTree = "<group>"; };
 		83B8C24A1FEB1CD20082B8A9 /* LDUserModel+Stub.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "LDUserModel+Stub.h"; sourceTree = "<group>"; };
@@ -522,6 +521,10 @@
 		83ECCCA42088FBA80086F879 /* LDFlagConfigTracker.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = LDFlagConfigTracker.h; sourceTree = "<group>"; };
 		83ECCCA52088FBA80086F879 /* LDFlagConfigTracker.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = LDFlagConfigTracker.m; sourceTree = "<group>"; };
 		83ECCCAE2088FF420086F879 /* LDFlagConfigTrackerTest.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = LDFlagConfigTrackerTest.m; sourceTree = "<group>"; };
+		83ECCCB020890A430086F879 /* LDFlagConfigTracker+Testable.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "LDFlagConfigTracker+Testable.h"; sourceTree = "<group>"; };
+		83ECCCB120890A430086F879 /* LDFlagConfigTracker+Testable.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "LDFlagConfigTracker+Testable.m"; sourceTree = "<group>"; };
+		83ECCCB320891E8E0086F879 /* NSInteger+Testable.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "NSInteger+Testable.h"; sourceTree = "<group>"; };
+		83ECCCB420891E8E0086F879 /* NSInteger+Testable.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "NSInteger+Testable.m"; sourceTree = "<group>"; };
 		83EF677F1F979B4100403126 /* LDEvent+Unauthorized.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "LDEvent+Unauthorized.h"; sourceTree = "<group>"; };
 		83EF67801F979B4100403126 /* LDEvent+Unauthorized.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "LDEvent+Unauthorized.m"; sourceTree = "<group>"; };
 		83EF678B1F98FC9200403126 /* LDFlagConfigModel+Testable.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "LDFlagConfigModel+Testable.h"; sourceTree = "<group>"; };
@@ -812,10 +815,14 @@
 				83B6FC27207E7462002DBA7B /* LDEventModel+Equatable.m */,
 				83B6FC29208127B2002DBA7B /* LDEventModel+Testable.h */,
 				83B6FC2A208127B2002DBA7B /* LDEventModel+Testable.m */,
+				83ECCCB020890A430086F879 /* LDFlagConfigTracker+Testable.h */,
+				83ECCCB120890A430086F879 /* LDFlagConfigTracker+Testable.m */,
 				83ECCCA12088E4E90086F879 /* LDFlagCounter+Testable.h */,
 				83ECCCA22088E4E90086F879 /* LDFlagCounter+Testable.m */,
 				83ECCC892087CA280086F879 /* LDFlagValueCounter+Testable.h */,
 				83ECCC8A2087CA280086F879 /* LDFlagValueCounter+Testable.m */,
+				83ECCCB320891E8E0086F879 /* NSInteger+Testable.h */,
+				83ECCCB420891E8E0086F879 /* NSInteger+Testable.m */,
 			);
 			path = Categories;
 			sourceTree = "<group>";
@@ -1517,6 +1524,7 @@
 				83ECCC982087DF040086F879 /* LDFlagCounterTest.m in Sources */,
 				6903472A1E689B9F00E45133 /* LDUserModelTest.m in Sources */,
 				8349F5211F195BCF00B1F3DB /* LDUserModel+Equatable.m in Sources */,
+				83ECCCB220890A430086F879 /* LDFlagConfigTracker+Testable.m in Sources */,
 				6903472B1E689B9F00E45133 /* LDPollingManagerTest.m in Sources */,
 				83EF67901F99365600403126 /* LDClient+Testable.m in Sources */,
 				83258A3D1F323049008C2133 /* LDClientManager+EventSource.m in Sources */,
@@ -1532,7 +1540,6 @@
 				83889B141F8E93A100A4EF69 /* LDEvent+Testable.m in Sources */,
 				69B205D31EA92ECD00487CA3 /* LDRequestManagerTest.m in Sources */,
 				6903472D1E689B9F00E45133 /* LDUtilTest.m in Sources */,
-				83B6FC28207E7462002DBA7B /* LDEventModel+Equatable.m in Sources */,
 				83ECCC8B2087CA280086F879 /* LDFlagValueCounter+Testable.m in Sources */,
 				690347311E689B9F00E45133 /* LDFlagConfigModelTest.m in Sources */,
 				8305EC7C2022336C002F20DB /* LDFlagConfigValueTest.m in Sources */,
@@ -1544,6 +1551,7 @@
 				832C78901F2A8DF600E334A2 /* LDUserModel+JsonDecodeable.m in Sources */,
 				8358F25A1F4202A300ECE1AF /* LDConfig+Testable.m in Sources */,
 				83ECCCA32088E4E90086F879 /* LDFlagCounter+Testable.m in Sources */,
+				83ECCCB520891E8E0086F879 /* NSInteger+Testable.m in Sources */,
 				83F5B4751F91560300174DF7 /* LDDataManager+Testable.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

@@ -37,7 +37,7 @@ NSString * const kLDFlagCounterKeyCounters = @"counters";
 }
 
 -(LDFlagValueCounter*)valueCounterForVariation:(NSInteger)variation {
-    NSPredicate *variationPredicate = [NSPredicate predicateWithBlock:^BOOL(id  _Nullable evaluatedObject, NSDictionary<NSString *,id> * _Nullable bindings) {
+    NSPredicate *variationPredicate = [NSPredicate predicateWithBlock:^BOOL(id evaluatedObject, NSDictionary<NSString *,id> *bindings) {
         if (![evaluatedObject isKindOfClass:[LDFlagValueCounter class]]) { return NO; }
         return ((LDFlagValueCounter*)evaluatedObject).variation == variation;
     }];

@@ -10,7 +10,6 @@
 #import "LDFlagConfigModel+Testable.h"
 #import "LDEventModel.h"
 #import "LDEventModel+Testable.h"
-#import "LDEventModel+Equatable.h"
 #import "LDClient.h"
 #import "OCMock.h"
 #import "NSArray+UnitTests.h"

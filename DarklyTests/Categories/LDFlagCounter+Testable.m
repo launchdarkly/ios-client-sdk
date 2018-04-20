@@ -14,6 +14,8 @@ extern NSString * const kLDFlagCounterKeyDefaultValue;
 extern NSString * const kLDFlagCounterKeyCounters;
 
 @implementation LDFlagCounter(Testable)
+@dynamic flagValueCounters;
+
 +(instancetype)stubForFlagKey:(NSString*)flagKey {
     return [[self class] stubForFlagKey:flagKey useUnknownValues:NO];
 }

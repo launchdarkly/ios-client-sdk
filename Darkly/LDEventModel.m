@@ -9,6 +9,7 @@
 #import "LDEventModel.h"
 #import "LDUserModel.h"
 #import "NSDate+ReferencedDate.h"
+#import "LDFlagConfigTracker.h"
 
 NSString * const kEventModelKeyKey = @"key";
 NSString * const kEventModelKeyKind = @"kind";
@@ -20,10 +21,14 @@ NSString * const kEventModelKeyDefault = @"default";
 NSString * const kEventModelKeyUser = @"user";
 NSString * const kEventModelKeyUserKey = @"userKey";
 NSString * const kEventModelKeyInlineUser = @"inlineUser";
+NSString * const kEventModelKeyStartDate = @"startDate";
+NSString * const kEventModelKeyEndDate = @"endDate";
+NSString * const kEventModelKeyFeatures = @"features";
 
 NSString * const kEventModelKindFeature = @"feature";
 NSString * const kEventModelKindCustom = @"custom";
 NSString * const kEventModelKindIdentify = @"identify";
+NSString * const kEventModelKindFeatureSummary = @"flag";
 
 @implementation LDEventModel
 
@@ -36,6 +41,9 @@ NSString * const kEventModelKindIdentify = @"identify";
     [encoder encodeObject:self.defaultValue forKey:kEventModelKeyDefault];
     [encoder encodeObject:self.user forKey:kEventModelKeyUser];
     [encoder encodeBool:self.inlineUser forKey:kEventModelKeyInlineUser];
+    [encoder encodeInteger:self.startDateMillis forKey:kEventModelKeyStartDate];
+    [encoder encodeInteger:self.endDateMillis forKey:kEventModelKeyEndDate];
+    [encoder encodeObject:self.flagRequestSummary forKey:kEventModelKeyFeatures];
 }
 
 - (id)initWithCoder:(NSCoder *)decoder {
@@ -52,20 +60,20 @@ NSString * const kEventModelKindIdentify = @"identify";
     }
     self.user = [decoder decodeObjectForKey:kEventModelKeyUser];
     self.inlineUser = [decoder decodeBoolForKey:kEventModelKeyInlineUser];
-
+    self.startDateMillis = [decoder decodeIntegerForKey:kEventModelKeyStartDate];
+    self.endDateMillis = [decoder decodeIntegerForKey:kEventModelKeyEndDate];
+    self.flagRequestSummary = [decoder decodeObjectForKey:kEventModelKeyFeatures];
+    
     return self;
 }
 
 - (id)initWithDictionary:(NSDictionary *)dictionary {
     if(!(self = [super init])) { return nil; }
 
-    //Process json that comes down from server
-    self.key = dictionary[kEventModelKeyKey];
     self.kind = dictionary[kEventModelKeyKind];
-    self.creationDate = [dictionary[kEventModelKeyCreationDate] longValue];
-    self.value = dictionary[kEventModelKeyValue];
-    self.defaultValue = dictionary[kEventModelKeyDefault];
-    self.data = dictionary[kEventModelKeyData];
+
+    //common for feature, custom, & identify events
+    self.key = dictionary[kEventModelKeyKey];
     self.inlineUser = [dictionary.allKeys containsObject:kEventModelKeyUser];
     if (self.inlineUser) {
         self.user = [[LDUserModel alloc] initWithDictionary:dictionary[kEventModelKeyUser]];
@@ -73,19 +81,35 @@ NSString * const kEventModelKindIdentify = @"identify";
         self.user = [[LDUserModel alloc] init];
         self.user.key = dictionary[kEventModelKeyUserKey];
     }
+    self.creationDate = [dictionary[kEventModelKeyCreationDate] longValue];
+    if (self.creationDate == 0) {
+        self.creationDate = [[NSDate date] millisSince1970];
+    }
+
+    //feature events
+    self.value = dictionary[kEventModelKeyValue];
+    self.defaultValue = dictionary[kEventModelKeyDefault];
+
+    //custom events
+    self.data = dictionary[kEventModelKeyData];
+
+    //featureSummary events
+    self.startDateMillis = [dictionary[kEventModelKeyStartDate] integerValue];
+    self.endDateMillis = [dictionary[kEventModelKeyEndDate] integerValue];
+    self.flagRequestSummary = dictionary[kEventModelKeyFeatures];
 
     return self;
 }
 
-+(nullable instancetype)featureEventWithFlagKey:(nonnull NSString*)flagKey
-                                      flagValue:(NSObject* _Nullable)flagValue
-                               defaultFlagValue:(NSObject* _Nullable)defaultFlagValue
-                                      userValue:(nonnull LDUserModel*)userValue
-                                     inlineUser:(BOOL)inlineUser {
++(instancetype)featureEventWithFlagKey:(NSString*)flagKey
+                             flagValue:(NSObject*)flagValue
+                      defaultFlagValue:(NSObject*)defaultFlagValue
+                             userValue:(LDUserModel*)userValue
+                            inlineUser:(BOOL)inlineUser {
     return [[LDEventModel alloc] initFeatureEventWithFlagKey:flagKey flagValue:flagValue defaultFlagValue:defaultFlagValue userValue:userValue inlineUser:inlineUser];
 }
 
--(instancetype)initFeatureEventWithFlagKey:(nonnull NSString*)flagKey
+-(instancetype)initFeatureEventWithFlagKey:(NSString*)flagKey
                                  flagValue:(NSObject*)flagValue
                           defaultFlagValue:(NSObject*)defaultFlagValue
                                  userValue:(LDUserModel*)userValue
@@ -124,17 +148,36 @@ NSString * const kEventModelKindIdentify = @"identify";
     return self;
 }
 
-+(nullable instancetype)identifyEventWithUser:(nonnull LDUserModel*)user {
++(instancetype)identifyEventWithUser:(LDUserModel*)user {
     return [[LDEventModel alloc] initIdentifyEventWithUser:user];
 }
 
--(nullable instancetype)initIdentifyEventWithUser:(nonnull LDUserModel*)user {
+-(instancetype)initIdentifyEventWithUser:(LDUserModel*)user {
     if(!(self = [self init])) { return nil; }
 
     self.key = user.key;
     self.kind = kEventModelKindIdentify;
     self.user = user;
     self.inlineUser = YES;
+
+    return self;
+}
+
++(instancetype)summaryEventWithTracker:(LDFlagConfigTracker*)tracker {
+    return [[LDEventModel alloc] initSummaryEventWithTracker:tracker];
+}
+
+-(instancetype)initSummaryEventWithTracker:(LDFlagConfigTracker*)tracker {
+    if(!(self = [self init])) { return nil; }
+
+    self.kind = kEventModelKindFeatureSummary;
+    self.startDateMillis = tracker.startDateMillis;
+    self.endDateMillis = [[NSDate date] millisSince1970];
+    NSMutableDictionary *flagRequestSummary = [NSMutableDictionary dictionaryWithCapacity:tracker.flagCounters.count];
+    for (NSString *flagKey in [tracker.flagCounters.allKeys copy]) {
+        flagRequestSummary[flagKey] = [tracker.flagCounters[flagKey] dictionaryValue];
+    }
+    self.flagRequestSummary = [NSDictionary dictionaryWithDictionary:flagRequestSummary];
 
     return self;
 }
@@ -152,6 +195,10 @@ NSString * const kEventModelKindIdentify = @"identify";
 
 
 -(NSDictionary *)dictionaryValueUsingConfig:(LDConfig*)config {
+    if ([self.kind isEqualToString:kEventModelKindFeatureSummary]) {
+        return [self featuresSummaryDictionaryValue];
+    }
+
     NSMutableDictionary *dictionary = [[NSMutableDictionary alloc] init];
     
     if (self.key) {
@@ -180,7 +227,19 @@ NSString * const kEventModelKindIdentify = @"identify";
         }
     }
 
-    return dictionary;
+    return [NSDictionary dictionaryWithDictionary:dictionary];
+}
+
+-(NSDictionary*)featuresSummaryDictionaryValue; {
+    NSMutableDictionary *dictionary = [[NSMutableDictionary alloc] init];
+    if (self.kind) {
+        dictionary[kEventModelKeyKind] = self.kind;
+    }
+    dictionary[kEventModelKeyStartDate] = @(self.startDateMillis);
+    dictionary[kEventModelKeyEndDate] = @(self.endDateMillis);
+    dictionary[kEventModelKeyFeatures] = self.flagRequestSummary;
+
+    return [NSDictionary dictionaryWithDictionary:dictionary];
 }
 
 @end

@@ -4,11 +4,13 @@
 
 #import <XCTest/XCTest.h>
 #import "LDEventModel.h"
-#import "LDEventModel+Equatable.h"
+#import "LDEventModel+Testable.h"
 #import "LDUserModel.h"
 #import "LDUserModel+Equatable.h"
 #import "LDUserModel+Stub.h"
 #import "NSDate+ReferencedDate.h"
+#import "LDFlagConfigTracker+Testable.h"
+#import "NSInteger+Testable.h"
 
 extern NSString * const kEventModelKeyUser;
 extern NSString * const kEventModelKeyUserKey;
@@ -19,6 +21,8 @@ extern NSString * const kUserAttributeConfig;
 extern NSString * const kEventModelKindFeature;
 extern NSString * const kEventModelKindCustom;
 extern NSString * const kEventModelKindIdentify;
+
+extern const NSTimeInterval kLDFlagConfigTrackerTrackingInterval;
 
 NSString * const testMobileKey = @"EventModelTest.testMobileKey";
 
@@ -82,9 +86,23 @@ NSString * const testMobileKey = @"EventModelTest.testMobileKey";
     XCTAssertTrue(event.creationDate >= referenceMillis);
 }
 
+-(void)testSummaryEvent {
+    NSDate *creationDate = [NSDate date];
+    LDFlagConfigTracker *trackerStub = [LDFlagConfigTracker stubTracker];
+    LDEventModel *event = [LDEventModel summaryEventWithTracker:trackerStub];
+
+    XCTAssertNotNil(event);
+    NSInteger startDateMillis = [[creationDate dateByAddingTimeInterval:kLDFlagConfigTrackerTrackingInterval] millisSince1970];
+    XCTAssertTrue(Approximately(event.startDateMillis, startDateMillis, 10));
+    XCTAssertTrue(Approximately(event.endDateMillis, [creationDate millisSince1970], 10));
+    XCTAssertTrue([trackerStub hasPropertiesMatchingDictionary:event.flagRequestSummary]);
+}
+
 -(void)testEncodeAndDecodeEvent {
-    for (NSString *eventKind in [self eventKinds]) {
-        LDEventModel *originalEvent = [self eventForKind:eventKind inlineUser:YES];
+    LDConfig *config = [[LDConfig alloc] initWithMobileKey:testMobileKey];
+    config.inlineUserInEvents = YES;
+    for (NSString *eventKind in [LDEventModel allEventKinds]) {
+        LDEventModel *originalEvent = [LDEventModel stubEventWithKind:eventKind user:self.user config:config];
 
         NSData *encodedEventData = [NSKeyedArchiver archivedDataWithRootObject:originalEvent];
         XCTAssertNotNil(encodedEventData);
@@ -96,8 +114,9 @@ NSString * const testMobileKey = @"EventModelTest.testMobileKey";
 
 -(void)testDictionaryValueAndInitWithDictionary {
     LDConfig *config = [[LDConfig alloc] initWithMobileKey:testMobileKey];
-    for (NSString *eventKind in [self eventKinds]) {
-        LDEventModel *originalEvent = [self eventForKind:eventKind inlineUser:YES];
+    config.inlineUserInEvents = YES;
+    for (NSString *eventKind in [LDEventModel allEventKinds]) {
+        LDEventModel *originalEvent = [LDEventModel stubEventWithKind:eventKind user:self.user config:config];
         NSDictionary *eventDictionary = [originalEvent dictionaryValueUsingConfig:config];
 
         LDEventModel *restoredEvent = [[LDEventModel alloc] initWithDictionary:eventDictionary];
@@ -107,8 +126,9 @@ NSString * const testMobileKey = @"EventModelTest.testMobileKey";
 
 -(void)testDictionaryValue_inlineUser_YES {
     LDConfig *config = [[LDConfig alloc] initWithMobileKey:testMobileKey];
-    for (NSString *eventKind in [self eventKinds]) {
-        LDEventModel *originalEvent = [self eventForKind:eventKind inlineUser:YES];
+    config.inlineUserInEvents = YES;
+    for (NSString *eventKind in [LDEventModel eventKindsWithCommonFields]) {
+        LDEventModel *originalEvent = [LDEventModel stubEventWithKind:eventKind user:self.user config:config];
         NSDictionary *eventDictionary = [originalEvent dictionaryValueUsingConfig:config];
 
         XCTAssertNotNil(eventDictionary[kEventModelKeyUser]);
@@ -121,8 +141,9 @@ NSString * const testMobileKey = @"EventModelTest.testMobileKey";
 
 -(void)testDictionaryValue_inlineUser_NO {
     LDConfig *config = [[LDConfig alloc] initWithMobileKey:testMobileKey];
-    for (NSString *eventKind in [self eventKinds]) {
-        LDEventModel *originalEvent = [self eventForKind:eventKind inlineUser:NO];
+    config.inlineUserInEvents = NO;
+    for (NSString *eventKind in [LDEventModel eventKindsWithCommonFields]) {
+        LDEventModel *originalEvent = [LDEventModel stubEventWithKind:eventKind user:self.user config:config];
         NSDictionary *eventDictionary = [originalEvent dictionaryValueUsingConfig:config];
 
         if (![eventKind isEqualToString:kEventModelKindIdentify]) {
@@ -148,25 +169,6 @@ NSString * const testMobileKey = @"EventModelTest.testMobileKey";
     XCTAssertNotNil(subject);
     XCTAssertTrue(subject.allKeys.count > 0);
     XCTAssertFalse([subject.allKeys containsObject:kUserAttributeConfig]);
-}
-
-#pragma mark Helpers
--(LDEventModel*)eventForKind:(NSString*)kind inlineUser:(BOOL)inlineUser {
-    if ([kind isEqualToString:kEventModelKindFeature]) {
-        return [LDEventModel featureEventWithFlagKey:[[NSUUID UUID] UUIDString] flagValue:@7 defaultFlagValue:@3 userValue:self.user inlineUser:inlineUser];
-    }
-    if ([kind isEqualToString:kEventModelKindCustom]) {
-        return [LDEventModel customEventWithKey:[[NSUUID UUID] UUIDString] customData:@{@"red": @"is not blue"} userValue:self.user inlineUser:inlineUser];
-    }
-    if ([kind isEqualToString:kEventModelKindIdentify]) {
-        return [LDEventModel identifyEventWithUser:self.user];
-    }
-
-    return nil;
-}
-
--(NSArray<NSString*>*)eventKinds {
-    return @[kEventModelKindFeature, kEventModelKindCustom, kEventModelKindIdentify];
 }
 
 @end
