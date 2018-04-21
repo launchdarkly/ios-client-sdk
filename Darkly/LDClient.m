@@ -79,20 +79,18 @@
 
 - (BOOL)updateUser:(LDUserBuilder *)builder {
     DEBUG_LOGX(@"LDClient updateUser method called");
-    if (self.clientStarted) {
-        if (builder) {
-            self.ldUser = [LDUserBuilder compareNewBuilder:builder withUser:self.ldUser];
-            LDClientManager *clientManager = [LDClientManager sharedInstance];
-            [clientManager syncWithServerForConfig];
-            return YES;
-        } else {
-            DEBUG_LOGX(@"LDClient updateUser needs a non-nil LDUserBuilder object");
-            return NO;
-        }
-    } else {
-        DEBUG_LOGX(@"LDClient not started yet!");
+    if (!self.clientStarted) {
+        DEBUG_LOGX(@"LDClient aborted updateUser: client not started");
         return NO;
     }
+    if (!builder) {
+        DEBUG_LOGX(@"LDClient aborted updateUser: LDUserBuilder is nil");
+        return NO;
+    }
+
+    self.ldUser = [LDUserBuilder compareNewBuilder:builder withUser:self.ldUser];
+    [[LDClientManager sharedInstance] updateUser];
+    return YES;
 }
 
 - (LDUserBuilder *)currentUserBuilder {

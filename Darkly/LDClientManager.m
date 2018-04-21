@@ -93,6 +93,24 @@ NSString * const kLDClientManagerStreamMethod = @"meval";
     [self flushEvents];
 }
 
+-(void)updateUser {
+    if (!self.isOnline) {
+        DEBUG_LOGX(@"ClientManager updateUser aborted - manager is offline");
+        return;
+    }
+    if (self.eventSource) {
+        [self stopEventSource];
+    }
+    [[LDPollingManager sharedInstance] stopConfigPolling];
+
+    if ([[[LDClient sharedInstance] ldConfig] streaming]) {
+        [self configureEventSource];
+    } else {
+        [self syncWithServerForConfig];
+        [[LDPollingManager sharedInstance] startConfigPolling];
+    }
+}
+
 - (void)willEnterBackground {
     DEBUG_LOGX(@"ClientManager entering background");
     LDPollingManager *pollingMgr = [LDPollingManager sharedInstance];
