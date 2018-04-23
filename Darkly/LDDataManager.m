@@ -169,11 +169,11 @@ dispatch_queue_t eventsQueue;
 
 -(void)addEventDictionary:(NSDictionary*)eventDictionary {
     dispatch_async(eventsQueue, ^{
-        if (!_eventsArray) {
-            _eventsArray = [[NSMutableArray alloc] init];
+        if (!self.eventsArray) {
+            self.eventsArray = [[NSMutableArray alloc] init];
         }
-        if(![self isAtEventCapacity:_eventsArray]) {
-            [_eventsArray addObject:eventDictionary];
+        if(![self isAtEventCapacity:self.eventsArray]) {
+            [self.eventsArray addObject:eventDictionary];
         }
         else {
             DEBUG_LOG(@"Events have surpassed capacity. Discarding event %@", eventDictionary[@"key"]);
@@ -189,8 +189,8 @@ dispatch_queue_t eventsQueue;
 -(void) deleteProcessedEvents: (NSArray *) processedJsonArray {
     // Loop through processedEvents
     dispatch_async(eventsQueue, ^{
-        NSInteger count = MIN([processedJsonArray count], [_eventsArray count]);
-        [_eventsArray removeObjectsInRange:NSMakeRange(0, count)];
+        NSInteger count = MIN([processedJsonArray count], [self.eventsArray count]);
+        [self.eventsArray removeObjectsInRange:NSMakeRange(0, count)];
     });
 }
 
