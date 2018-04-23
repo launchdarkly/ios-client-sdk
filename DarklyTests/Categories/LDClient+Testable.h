@@ -7,7 +7,9 @@
 //
 
 #import <Darkly/Darkly.h>
+#import "LDThrottler.h"
 
 @interface LDClient(Testable)
 @property (nonatomic, assign) BOOL clientStarted;
+@property (nonatomic, strong) LDThrottler *throttler;
 @end

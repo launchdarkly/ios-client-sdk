@@ -57,3 +57,4 @@ extern NSInteger const kHTTPStatusCodeUnauthorized;
 extern NSInteger const kHTTPStatusCodeMethodNotAllowed;
 extern NSInteger const kHTTPStatusCodeNotImplemented;
 extern NSInteger const kErrorCodeUnauthorized;
+extern NSTimeInterval const kMaxThrottlingDelayInterval;

@@ -44,3 +44,4 @@ NSInteger const kHTTPStatusCodeUnauthorized = 401;
 NSInteger const kHTTPStatusCodeMethodNotAllowed = 405;
 NSInteger const kHTTPStatusCodeNotImplemented = 501;
 NSInteger const kErrorCodeUnauthorized = -kHTTPStatusCodeUnauthorized;
+NSTimeInterval const kMaxThrottlingDelayInterval = 600.0;

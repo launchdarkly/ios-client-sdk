@@ -162,6 +162,16 @@
 		8305EC8A202243D6002F20DB /* nullConfigIsANull-null-withVersion.json in Resources */ = {isa = PBXBuildFile; fileRef = 8305EC89202243D6002F20DB /* nullConfigIsANull-null-withVersion.json */; };
 		8305EC8C2022440D002F20DB /* nullConfigIsANull-null-withoutVersion.json in Resources */ = {isa = PBXBuildFile; fileRef = 8305EC8B2022440D002F20DB /* nullConfigIsANull-null-withoutVersion.json */; };
 		8305EC8E20227365002F20DB /* featureFlags-withoutVersions.json in Resources */ = {isa = PBXBuildFile; fileRef = 8305EC8D20227365002F20DB /* featureFlags-withoutVersions.json */; };
+		830C2AC5207579AC001D645D /* LDThrottler.h in Headers */ = {isa = PBXBuildFile; fileRef = 830C2AC3207579AC001D645D /* LDThrottler.h */; };
+		830C2AC6207579AC001D645D /* LDThrottler.h in Headers */ = {isa = PBXBuildFile; fileRef = 830C2AC3207579AC001D645D /* LDThrottler.h */; };
+		830C2AC7207579AC001D645D /* LDThrottler.h in Headers */ = {isa = PBXBuildFile; fileRef = 830C2AC3207579AC001D645D /* LDThrottler.h */; };
+		830C2AC8207579AC001D645D /* LDThrottler.h in Headers */ = {isa = PBXBuildFile; fileRef = 830C2AC3207579AC001D645D /* LDThrottler.h */; };
+		830C2AC9207579AC001D645D /* LDThrottler.m in Sources */ = {isa = PBXBuildFile; fileRef = 830C2AC4207579AC001D645D /* LDThrottler.m */; };
+		830C2ACA207579AC001D645D /* LDThrottler.m in Sources */ = {isa = PBXBuildFile; fileRef = 830C2AC4207579AC001D645D /* LDThrottler.m */; };
+		830C2ACB207579AC001D645D /* LDThrottler.m in Sources */ = {isa = PBXBuildFile; fileRef = 830C2AC4207579AC001D645D /* LDThrottler.m */; };
+		830C2ACC207579AC001D645D /* LDThrottler.m in Sources */ = {isa = PBXBuildFile; fileRef = 830C2AC4207579AC001D645D /* LDThrottler.m */; };
+		830C2ACF20757CE9001D645D /* LDThrottlerTest.m in Sources */ = {isa = PBXBuildFile; fileRef = 830C2ACE20757CE9001D645D /* LDThrottlerTest.m */; };
+		830C2AD220768697001D645D /* LDThrottler+Testable.m in Sources */ = {isa = PBXBuildFile; fileRef = 830C2AD120768697001D645D /* LDThrottler+Testable.m */; };
 		83258A3D1F323049008C2133 /* LDClientManager+EventSource.m in Sources */ = {isa = PBXBuildFile; fileRef = 83258A3C1F323049008C2133 /* LDClientManager+EventSource.m */; };
 		83258A401F3244D0008C2133 /* LDUserBuilder+Testable.m in Sources */ = {isa = PBXBuildFile; fileRef = 83258A3F1F3244D0008C2133 /* LDUserBuilder+Testable.m */; };
 		83258A421F32721A008C2133 /* emptyConfig.json in Resources */ = {isa = PBXBuildFile; fileRef = 83258A411F32721A008C2133 /* emptyConfig.json */; };
@@ -368,6 +378,11 @@
 		8305EC8D20227365002F20DB /* featureFlags-withoutVersions.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = "featureFlags-withoutVersions.json"; sourceTree = "<group>"; };
 		830BF92F202A8854006DF9B1 /* NSJSONSerialization+Testable.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "NSJSONSerialization+Testable.h"; sourceTree = "<group>"; };
 		830BF930202A8855006DF9B1 /* NSJSONSerialization+Testable.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "NSJSONSerialization+Testable.m"; sourceTree = "<group>"; };
+		830C2AC3207579AC001D645D /* LDThrottler.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = LDThrottler.h; sourceTree = "<group>"; };
+		830C2AC4207579AC001D645D /* LDThrottler.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = LDThrottler.m; sourceTree = "<group>"; };
+		830C2ACE20757CE9001D645D /* LDThrottlerTest.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = LDThrottlerTest.m; sourceTree = "<group>"; };
+		830C2AD020768697001D645D /* LDThrottler+Testable.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "LDThrottler+Testable.h"; sourceTree = "<group>"; };
+		830C2AD120768697001D645D /* LDThrottler+Testable.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "LDThrottler+Testable.m"; sourceTree = "<group>"; };
 		83258A3B1F323049008C2133 /* LDClientManager+EventSource.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "LDClientManager+EventSource.h"; sourceTree = "<group>"; };
 		83258A3C1F323049008C2133 /* LDClientManager+EventSource.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "LDClientManager+EventSource.m"; sourceTree = "<group>"; };
 		83258A3E1F3244D0008C2133 /* LDUserBuilder+Testable.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "LDUserBuilder+Testable.h"; sourceTree = "<group>"; };
@@ -589,6 +604,8 @@
 				690346E61E68990000E45133 /* LDPollingManager.m */,
 				690346E71E68990000E45133 /* LDRequestManager.h */,
 				690346E81E68990000E45133 /* LDRequestManager.m */,
+				830C2AC3207579AC001D645D /* LDThrottler.h */,
+				830C2AC4207579AC001D645D /* LDThrottler.m */,
 				690346E91E68990000E45133 /* LDUserBuilder.h */,
 				690346EA1E68990000E45133 /* LDUserBuilder.m */,
 				690346EB1E68990000E45133 /* LDUserModel.h */,
@@ -614,6 +631,7 @@
 				6903471B1E689B9F00E45133 /* LDUtilTest.m */,
 				6903471C1E689B9F00E45133 /* LDClientManagerTest.m */,
 				6903471F1E689B9F00E45133 /* LDConfigTest.m */,
+				830C2ACE20757CE9001D645D /* LDThrottlerTest.m */,
 				690347201E689B9F00E45133 /* DarklyXCTestCase.h */,
 				690347221E689B9F00E45133 /* DarklyXCTestCase.m */,
 				690346CE1E6872EA00E45133 /* Info.plist */,
@@ -726,6 +744,8 @@
 				83EF678C1F98FC9200403126 /* LDFlagConfigModel+Testable.m */,
 				830BF92F202A8854006DF9B1 /* NSJSONSerialization+Testable.h */,
 				830BF930202A8855006DF9B1 /* NSJSONSerialization+Testable.m */,
+				830C2AD020768697001D645D /* LDThrottler+Testable.h */,
+				830C2AD120768697001D645D /* LDThrottler+Testable.m */,
 			);
 			path = Categories;
 			sourceTree = "<group>";
@@ -791,6 +811,7 @@
 				6903470D1E68990000E45133 /* NSDictionary+JSON.h in Headers */,
 				690347091E68990000E45133 /* LDUtil.h in Headers */,
 				69BAF40D1E9AAB4800747613 /* Darkly.h in Headers */,
+				830C2AC5207579AC001D645D /* LDThrottler.h in Headers */,
 				690346F71E68990000E45133 /* LDClient.h in Headers */,
 				833D08CB1F3B97EB00BEED83 /* NSThread+MainExecutable.h in Headers */,
 				83889B171F8F28AB00A4EF69 /* NSURLResponse+Unauthorized.h in Headers */,
@@ -822,6 +843,7 @@
 				69A87EAA1E74712800B88B23 /* LDUserBuilder.h in Headers */,
 				69A87EAE1E74712800B88B23 /* LDUtil.h in Headers */,
 				69071F801EA2A7CC00497F93 /* Darkly.h in Headers */,
+				830C2AC8207579AC001D645D /* LDThrottler.h in Headers */,
 				69A87E9C1E74712800B88B23 /* LDClient.h in Headers */,
 				833D08CE1F3B97EB00BEED83 /* NSThread+MainExecutable.h in Headers */,
 				83889B1A1F8F28AB00A4EF69 /* NSURLResponse+Unauthorized.h in Headers */,
@@ -853,6 +875,7 @@
 				69BD7E2B1E6C79910056D70F /* LDUserBuilder.h in Headers */,
 				69BD7E2F1E6C79910056D70F /* LDUtil.h in Headers */,
 				69071F7F1EA2A7CB00497F93 /* Darkly.h in Headers */,
+				830C2AC7207579AC001D645D /* LDThrottler.h in Headers */,
 				69BD7E1D1E6C79910056D70F /* LDClient.h in Headers */,
 				833D08CD1F3B97EB00BEED83 /* NSThread+MainExecutable.h in Headers */,
 				83889B191F8F28AB00A4EF69 /* NSURLResponse+Unauthorized.h in Headers */,
@@ -884,6 +907,7 @@
 				69F3F6971E6BF82C00079A09 /* LDClient.h in Headers */,
 				69F3F6AB1E6BF82C00079A09 /* NSDictionary+JSON.h in Headers */,
 				69071F7E1EA2A7CA00497F93 /* Darkly.h in Headers */,
+				830C2AC6207579AC001D645D /* LDThrottler.h in Headers */,
 				69F3F6A31E6BF82C00079A09 /* LDRequestManager.h in Headers */,
 				833D08CC1F3B97EB00BEED83 /* NSThread+MainExecutable.h in Headers */,
 				83889B181F8F28AB00A4EF69 /* NSURLResponse+Unauthorized.h in Headers */,
@@ -1343,6 +1367,7 @@
 				8305EC6B20221973002F20DB /* LDFlagConfigValue.m in Sources */,
 				83EF67851F979B4100403126 /* LDEvent+Unauthorized.m in Sources */,
 				6903470E1E68990000E45133 /* NSDictionary+JSON.m in Sources */,
+				830C2AC9207579AC001D645D /* LDThrottler.m in Sources */,
 				690347021E68990000E45133 /* LDPollingManager.m in Sources */,
 				690346FC1E68990000E45133 /* LDConfig.m in Sources */,
 				690347061E68990000E45133 /* LDUserBuilder.m in Sources */,
@@ -1361,6 +1386,7 @@
 				8349F51E1F19352300B1F3DB /* NSDictionary+StringKey_Matchable.m in Sources */,
 				839956E820053081009707D1 /* LDUserModel+Testable.m in Sources */,
 				690347291E689B9F00E45133 /* LDEventModelTest.m in Sources */,
+				830C2ACF20757CE9001D645D /* LDThrottlerTest.m in Sources */,
 				690347301E689B9F00E45133 /* LDConfigTest.m in Sources */,
 				690347261E689B9F00E45133 /* LDUserBuilderTest.m in Sources */,
 				832C788D1F2977B800E334A2 /* NSString+RemoveWhitespace.m in Sources */,
@@ -1369,6 +1395,7 @@
 				6903472B1E689B9F00E45133 /* LDPollingManagerTest.m in Sources */,
 				83EF67901F99365600403126 /* LDClient+Testable.m in Sources */,
 				83258A3D1F323049008C2133 /* LDClientManager+EventSource.m in Sources */,
+				830C2AD220768697001D645D /* LDThrottler+Testable.m in Sources */,
 				8305EC7A20222B5E002F20DB /* NSObject+LDFlagConfigValueTest.m in Sources */,
 				83BE938C201A797B00DD1ED9 /* NSJSONSerialization+Testable.m in Sources */,
 				6903472E1E689B9F00E45133 /* LDClientManagerTest.m in Sources */,
@@ -1410,6 +1437,7 @@
 				8305EC6E20221973002F20DB /* LDFlagConfigValue.m in Sources */,
 				83EF67881F979B4100403126 /* LDEvent+Unauthorized.m in Sources */,
 				69A87EAF1E74712800B88B23 /* LDUtil.m in Sources */,
+				830C2ACC207579AC001D645D /* LDThrottler.m in Sources */,
 				69A87EA71E74712800B88B23 /* LDPollingManager.m in Sources */,
 				69A87E9F1E74712800B88B23 /* LDClientManager.m in Sources */,
 				69A87EAD1E74712800B88B23 /* LDUserModel.m in Sources */,
@@ -1439,6 +1467,7 @@
 				8305EC6D20221973002F20DB /* LDFlagConfigValue.m in Sources */,
 				83EF67871F979B4100403126 /* LDEvent+Unauthorized.m in Sources */,
 				69BD7E301E6C79910056D70F /* LDUtil.m in Sources */,
+				830C2ACB207579AC001D645D /* LDThrottler.m in Sources */,
 				69BD7E281E6C79910056D70F /* LDPollingManager.m in Sources */,
 				69BD7E201E6C79910056D70F /* LDClientManager.m in Sources */,
 				69BD7E2E1E6C79910056D70F /* LDUserModel.m in Sources */,
@@ -1468,6 +1497,7 @@
 				8305EC6C20221973002F20DB /* LDFlagConfigValue.m in Sources */,
 				83EF67861F979B4100403126 /* LDEvent+Unauthorized.m in Sources */,
 				69F3F6AA1E6BF82C00079A09 /* LDUtil.m in Sources */,
+				830C2ACA207579AC001D645D /* LDThrottler.m in Sources */,
 				69F3F6A21E6BF82C00079A09 /* LDPollingManager.m in Sources */,
 				69F3F69A1E6BF82C00079A09 /* LDClientManager.m in Sources */,
 				69F3F6A81E6BF82C00079A09 /* LDUserModel.m in Sources */,
