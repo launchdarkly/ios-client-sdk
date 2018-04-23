@@ -2,6 +2,26 @@
 
 All notable changes to the LaunchDarkly iOS SDK will be documented in this file. This project adheres to [Semantic Versioning](http://semver.org).
 
+## [2.12.0] - 2018-04-22
+### Added
+- `LDClient` `isOnline` readonly property that reports the online/offline status.
+- `LDClient` `setOnline` method to set the online/offline status. `setOnline` may operate asynchronously, so the client calls an optional completion block when the requested operation completes.
+
+### Changed
+- Fixed potential memory leak with `DarklyEventSource`.
+
+### Removed
+- `LDClient` `online` and `offline` methods.
+
+### Fixed
+- Calling `updateUser` on `LDClient` while streaming no longer causes the SDK to request feature flags. The SDK now disconnects from the LaunchDarkly service and reconnects with the updated user.
+- Calling `updateUser` on `LDClient` while polling now resets the polling timer after making a feature flag request.
+
+## [2.11.2] - 2018-04-06
+### Changed
+- Changes the minimum required `DarklyEventSource` to version `3.2.1` in the CocoaPods podspec
+- The maximum backoff time for reconnecting to the feature stream is now 1 hour.
+
 ## [2.11.1] - 2018-03-26
 ### Changed
 - Changes the minimum required `DarklyEventSource` to version `3.2.0` in the CocoaPods podspec

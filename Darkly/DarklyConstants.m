@@ -4,7 +4,7 @@
 
 #import "DarklyConstants.h"
 
-NSString * const kClientVersion = @"2.11.1";
+NSString * const kClientVersion = @"2.12.0";
 NSString * const kBaseUrl = @"https://app.launchdarkly.com";
 NSString * const kEventsUrl = @"https://mobile.launchdarkly.com";
 NSString * const kStreamUrl = @"https://clientstream.launchdarkly.com";
@@ -44,3 +44,4 @@ NSInteger const kHTTPStatusCodeUnauthorized = 401;
 NSInteger const kHTTPStatusCodeMethodNotAllowed = 405;
 NSInteger const kHTTPStatusCodeNotImplemented = 501;
 NSInteger const kErrorCodeUnauthorized = -kHTTPStatusCodeUnauthorized;
+NSTimeInterval const kMaxThrottlingDelayInterval = 600.0;

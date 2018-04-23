@@ -31,6 +31,7 @@
 - (void)processedConfig:(BOOL)success jsonConfigDictionary:(NSDictionary *)jsonConfigDictionary;
 - (void)startPolling;
 - (void)stopPolling;
+- (void)updateUser;
 - (void)willEnterBackground;
 - (void)willEnterForeground;
 - (void)flushEvents;

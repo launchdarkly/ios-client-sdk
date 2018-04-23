@@ -1,5 +1,5 @@
 PODS:
-  - DarklyEventSource (3.2.0)
+  - DarklyEventSource (3.2.3)
   - OCMock (3.4.1)
   - OHHTTPStubs (4.8.0):
     - OHHTTPStubs/Default (= 4.8.0)
@@ -16,15 +16,15 @@ PODS:
   - OHHTTPStubs/OHPathHelpers (4.8.0)
 
 DEPENDENCIES:
-  - DarklyEventSource (~> 3.2)
+  - DarklyEventSource (~> 3.2.3)
   - OCMock (~> 3.1)
   - OHHTTPStubs (~> 4.2)
 
 SPEC CHECKSUMS:
-  DarklyEventSource: ad6a75c82b22bea91c75fc980a563f6d2902ce90
+  DarklyEventSource: d5c8e000988ee1feac6c3ffa3dcbdfbaca10d444
   OCMock: 2cd0716969bab32a2283ff3a46fd26a8c8b4c5e3
   OHHTTPStubs: b393565822317305b87a1440d4c7aff131679f66
 
-PODFILE CHECKSUM: f3f36ff2533f4e1230e409cec137989205971a1f
+PODFILE CHECKSUM: 09df0b8e563d60585362751cc2450fe49d915cc9
 
 COCOAPODS: 1.4.0

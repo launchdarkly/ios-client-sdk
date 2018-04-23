@@ -93,6 +93,24 @@ NSString * const kLDClientManagerStreamMethod = @"meval";
     [self flushEvents];
 }
 
+-(void)updateUser {
+    if (!self.isOnline) {
+        DEBUG_LOGX(@"ClientManager updateUser aborted - manager is offline");
+        return;
+    }
+    if (self.eventSource) {
+        [self stopEventSource];
+    }
+    [[LDPollingManager sharedInstance] stopConfigPolling];
+
+    if ([[[LDClient sharedInstance] ldConfig] streaming]) {
+        [self configureEventSource];
+    } else {
+        [self syncWithServerForConfig];
+        [[LDPollingManager sharedInstance] startConfigPolling];
+    }
+}
+
 - (void)willEnterBackground {
     DEBUG_LOGX(@"ClientManager entering background");
     LDPollingManager *pollingMgr = [LDPollingManager sharedInstance];
@@ -141,11 +159,13 @@ NSString * const kLDClientManagerStreamMethod = @"meval";
 
         eventSource = [self eventSourceForUser:[LDClient sharedInstance].ldUser config:[LDClient sharedInstance].ldConfig httpHeaders:[self httpHeadersForEventSource]];
 
+        __weak typeof(self) weakSelf = self;
         [eventSource onMessage:^(LDEvent *event) {
-            [self handlePingEvent:event];
-            [self handlePutEvent:event];
-            [self handlePatchEvent:event];
-            [self handleDeleteEvent:event];
+            __strong typeof(weakSelf) strongSelf = weakSelf;
+            [strongSelf handlePingEvent:event];
+            [strongSelf handlePutEvent:event];
+            [strongSelf handlePatchEvent:event];
+            [strongSelf handleDeleteEvent:event];
         }];
 
         [eventSource onError:^(LDEvent *event) {
@@ -278,6 +298,7 @@ NSString * const kLDClientManagerStreamMethod = @"meval";
 
 - (void)stopEventSource {
     @synchronized (self) {
+        DEBUG_LOGX(@"ClientManager stopping event source.");
         [eventSource close];
         eventSource = nil;
     }

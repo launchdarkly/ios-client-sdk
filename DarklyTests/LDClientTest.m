@@ -13,6 +13,7 @@
 #import "LDUserBuilder+Testable.h"
 #import "LDClient+Testable.h"
 #import "NSJSONSerialization+Testable.h"
+#import "LDThrottler.h"
 
 #import "OCMock.h"
 #import <OHHTTPStubs/OHHTTPStubs.h>
@@ -63,6 +64,7 @@ extern NSString * _Nonnull  const kLDFlagConfigJsonDictionaryKeyValue;
 @property (nonatomic, strong) id mockLDClientManager;
 @property (nonatomic, strong) id mockLDDataManager;
 @property (nonatomic, strong) id mockLDRequestManager;
+@property (nonatomic, strong) id throttlerMock;
 @end
 
 NSString *const kFallbackString = @"fallbackString";
@@ -87,6 +89,10 @@ NSString *const kTestMobileKey = @"testMobileKey";
     id mockRequestManager = OCMClassMock([LDRequestManager class]);
     OCMStub(ClassMethod([mockRequestManager sharedInstance])).andReturn(mockRequestManager);
     self.mockLDRequestManager = mockRequestManager;
+
+    self.throttlerMock = OCMClassMock([LDThrottler class]);
+    OCMStub([self.throttlerMock runThrottled:[OCMArg invokeBlock]]);
+    [LDClient sharedInstance].throttler = self.throttlerMock;
 }
 
 - (void)tearDown {
@@ -118,15 +124,22 @@ NSString *const kTestMobileKey = @"testMobileKey";
 
 - (void)testStartWithValidConfig {
     LDConfig *config = [[LDConfig alloc] initWithMobileKey:kTestMobileKey];
-    LDClient *client = [LDClient sharedInstance];
-    BOOL didStart = [client start:config withUserBuilder:nil];
+    LDUserBuilder *userBuilder = [[LDUserBuilder alloc] init];
+    userBuilder.key = [[NSUUID UUID] UUIDString];
+
+    BOOL didStart = [[LDClient sharedInstance] start:config withUserBuilder:userBuilder];
     XCTAssertTrue(didStart);
 }
 
 - (void)testStartWithValidConfigMultipleTimes {
     LDConfig *config = [[LDConfig alloc] initWithMobileKey:kTestMobileKey];
-    XCTAssertTrue([[LDClient sharedInstance] start:config withUserBuilder:nil]);
-    XCTAssertFalse([[LDClient sharedInstance] start:config withUserBuilder:nil]);
+    LDUserBuilder *userBuilder = [[LDUserBuilder alloc] init];
+    userBuilder.key = [[NSUUID UUID] UUIDString];
+
+    XCTAssertTrue([[LDClient sharedInstance] start:config withUserBuilder:userBuilder]);
+    XCTAssertFalse([[LDClient sharedInstance] start:config withUserBuilder:userBuilder]);
+
+    [self.mockLDDataManager verify];
 }
 
 - (void)testBoolVariationWithStart {
@@ -478,38 +491,71 @@ NSString *const kTestMobileKey = @"testMobileKey";
     LDConfig *config = [[LDConfig alloc] initWithMobileKey:kTestMobileKey];
     [[LDClient sharedInstance] start:config withUserBuilder:nil];
     
-    OCMStub([self.dataManagerMock createCustomEvent:[OCMArg isKindOfClass:[NSString class]]  withCustomValuesDictionary:[OCMArg isKindOfClass:[NSDictionary class]] user:[OCMArg any] config:[OCMArg any]]);
+    OCMStub([self.dataManagerMock createCustomEvent:[OCMArg isKindOfClass:[NSString class]] withCustomValuesDictionary:[OCMArg isKindOfClass:[NSDictionary class]] user:[OCMArg any] config:[OCMArg any]]);
     
     XCTAssertTrue([[LDClient sharedInstance] track:@"test" data:customData]);
     
-    OCMVerify([self.dataManagerMock createCustomEvent: @"test" withCustomValuesDictionary: customData user:[OCMArg isKindOfClass:[LDUserModel class]] config:config]);
+    OCMVerify([self.dataManagerMock createCustomEvent:@"test" withCustomValuesDictionary:customData user:[OCMArg isKindOfClass:[LDUserModel class]] config:config]);
 }
 
-- (void)testOfflineWithoutStart {
-    XCTAssertFalse([[LDClient sharedInstance] offline]);
+- (void)testSetOnline_NO_beforeStart {
+    [[self.mockLDClientManager reject] setOnline:[OCMArg any]];
+    __block NSInteger completionCallCount = 0;
+
+    [[LDClient sharedInstance] setOnline:NO completion: ^{
+        completionCallCount += 1;
+    }];
+
+    XCTAssertFalse([LDClient sharedInstance].isOnline);
+    [self.mockLDClientManager verify];
+    XCTAssertEqual(completionCallCount, 1);
 }
 
-- (void)testOfflineWithStart {
-    [[self.mockLDClientManager expect] setOnline:YES];
-
+- (void)testSetOnline_NO_afterStart {
     LDConfig *config = [[LDConfig alloc] initWithMobileKey:kTestMobileKey];
     [[LDClient sharedInstance] start:config withUserBuilder:nil];
-    XCTAssertTrue([[LDClient sharedInstance] offline]);
+    [[self.throttlerMock reject] runThrottled:[OCMArg any]];
+    [[self.mockLDClientManager expect] setOnline:NO];
+    __block NSInteger completionCallCount = 0;
+
+    [[LDClient sharedInstance] setOnline:NO completion: ^{
+        completionCallCount += 1;
+    }];
+
+    XCTAssertFalse([LDClient sharedInstance].isOnline);
     [self.mockLDClientManager verify];
+    [self.throttlerMock verify];
+    XCTAssertEqual(completionCallCount, 1);
 }
 
-- (void)testOnlineWithoutStart {
-    XCTAssertFalse([[LDClient sharedInstance] online]);
+- (void)testSetOnline_YES_beforeStart {
+    [[self.mockLDClientManager reject] setOnline:[OCMArg any]];
+    __block NSInteger completionCallCount = 0;
+
+    [[LDClient sharedInstance] setOnline:YES completion: ^{
+        completionCallCount += 1;
+    }];
+
+    XCTAssertFalse([LDClient sharedInstance].isOnline);
+    [self.mockLDClientManager verify];
+    XCTAssertEqual(completionCallCount, 1);
 }
 
-- (void)testOnlineWithStart {
+- (void)testSetOnline_YES_afterStart {
     LDConfig *config = [[LDConfig alloc] initWithMobileKey:kTestMobileKey];
-    [[LDClient sharedInstance] start:config withUserBuilder:nil];   //sets LDClientManager online...start the mock after calling start
-
+    [[LDClient sharedInstance] start:config withUserBuilder:nil];
+    [[LDClient sharedInstance] setOnline:NO];
     [[self.mockLDClientManager expect] setOnline:YES];
+    __block NSInteger completionCallCount = 0;
+    //The throttler mock expectation is not getting fulfilled even though the LDClient does invoke it.
+    //Since the throttler mock is set to execute blocks, setting the expectation on the client manager mock verifies that the client is calling the throttler
 
-    XCTAssertTrue([[LDClient sharedInstance] online]);
+    [[LDClient sharedInstance] setOnline:YES completion: ^{
+        completionCallCount += 1;
+    }];
+
     [self.mockLDClientManager verify];
+    XCTAssertEqual(completionCallCount, 1);
 }
 
 - (void)testFlushWithoutStart {
@@ -533,17 +579,21 @@ NSString *const kTestMobileKey = @"testMobileKey";
 }
 
 - (void)testUpdateUserWithoutStart {
+    [[self.mockLDClientManager reject] updateUser];
     XCTAssertFalse([[LDClient sharedInstance] updateUser:[[LDUserBuilder alloc] init]]);
+    [self.mockLDClientManager verify];
 }
 
 -(void)testUpdateUserWithStart {
     LDConfig *config = [[LDConfig alloc] initWithMobileKey:kTestMobileKey];
+    [[self.mockLDClientManager expect] updateUser];
     LDUserBuilder *userBuilder = [[LDUserBuilder alloc] init];
-    
-    LDClient *ldClient = [LDClient sharedInstance];
-    [ldClient start:config withUserBuilder:userBuilder];
+    userBuilder.key = [[NSUUID UUID] UUIDString];
+    [[LDClient sharedInstance] start:config withUserBuilder:nil];
 
-    XCTAssertTrue([[LDClient sharedInstance] updateUser:[[LDUserBuilder alloc] init]]);
+    XCTAssertTrue([[LDClient sharedInstance] updateUser:userBuilder]);
+
+    [self.mockLDClientManager verify];
 }
 
 - (void)testCurrentUserBuilderWithoutStart {
