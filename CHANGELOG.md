@@ -2,6 +2,10 @@
 
 All notable changes to the LaunchDarkly iOS SDK will be documented in this file. This project adheres to [Semantic Versioning](http://semver.org).
 
+## [2.12.1] - 2018-04-23
+### Changed
+- Clears selected warnings in CocoaPods project
+
 ## [2.12.0] - 2018-04-22
 ### Added
 - `LDClient` `isOnline` readonly property that reports the online/offline status.
