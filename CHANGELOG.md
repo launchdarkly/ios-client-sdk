@@ -2,7 +2,7 @@
 
 All notable changes to the LaunchDarkly iOS SDK will be documented in this file. This project adheres to [Semantic Versioning](http://semver.org).
 
-## [2.12.0] - 2018-04-20
+## [2.12.0] - 2018-04-22
 ### Added
 - `LDClient` `isOnline` readonly property that reports the online/offline status.
 - `LDClient` `setOnline` method to set the online/offline status. `setOnline` may operate asynchronously, so the client calls an optional completion block when the requested operation completes.
@@ -11,7 +11,7 @@ All notable changes to the LaunchDarkly iOS SDK will be documented in this file.
 - Fixed potential memory leak with `DarklyEventSource`.
 
 ### Removed
-- `LDClient` `online` & `offline` methods.
+- `LDClient` `online` and `offline` methods.
 
 ### Fixed
 - Calling `updateUser` on `LDClient` while streaming no longer causes the SDK to request feature flags. The SDK now disconnects from the LaunchDarkly service and reconnects with the updated user.
