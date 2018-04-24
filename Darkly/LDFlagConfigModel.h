@@ -7,7 +7,8 @@
 //
 
 #import <Foundation/Foundation.h>
-#import "LDFlagConfigValue.h"
+
+@class LDFlagConfigValue;
 
 @interface LDFlagConfigModel : NSObject <NSCoding>
 

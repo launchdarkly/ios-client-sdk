@@ -5,6 +5,7 @@
 #import <XCTest/XCTest.h>
 #import "LDFlagConfigModel.h"
 #import "LDFlagConfigModel+Testable.h"
+#import "LDFlagConfigValue.h"
 #import "NSJSONSerialization+Testable.h"
 #import "NSDictionary+Testable.h"
 

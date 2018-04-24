@@ -135,10 +135,10 @@
 		69F3F6AB1E6BF82C00079A09 /* NSDictionary+JSON.h in Headers */ = {isa = PBXBuildFile; fileRef = 690346F21E68990000E45133 /* NSDictionary+JSON.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		69F3F6AC1E6BF82C00079A09 /* NSDictionary+JSON.m in Sources */ = {isa = PBXBuildFile; fileRef = 690346F31E68990000E45133 /* NSDictionary+JSON.m */; };
 		69F3F6AE1E6BF84B00079A09 /* Darkly-Prefix.pch in Headers */ = {isa = PBXBuildFile; fileRef = 690346D81E68990000E45133 /* Darkly-Prefix.pch */; settings = {ATTRIBUTES = (Public, ); }; };
-		8305EC6720221973002F20DB /* LDFlagConfigValue.h in Headers */ = {isa = PBXBuildFile; fileRef = 8305EC6520221973002F20DB /* LDFlagConfigValue.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		8305EC6820221973002F20DB /* LDFlagConfigValue.h in Headers */ = {isa = PBXBuildFile; fileRef = 8305EC6520221973002F20DB /* LDFlagConfigValue.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		8305EC6920221973002F20DB /* LDFlagConfigValue.h in Headers */ = {isa = PBXBuildFile; fileRef = 8305EC6520221973002F20DB /* LDFlagConfigValue.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		8305EC6A20221973002F20DB /* LDFlagConfigValue.h in Headers */ = {isa = PBXBuildFile; fileRef = 8305EC6520221973002F20DB /* LDFlagConfigValue.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		8305EC6720221973002F20DB /* LDFlagConfigValue.h in Headers */ = {isa = PBXBuildFile; fileRef = 8305EC6520221973002F20DB /* LDFlagConfigValue.h */; };
+		8305EC6820221973002F20DB /* LDFlagConfigValue.h in Headers */ = {isa = PBXBuildFile; fileRef = 8305EC6520221973002F20DB /* LDFlagConfigValue.h */; };
+		8305EC6920221973002F20DB /* LDFlagConfigValue.h in Headers */ = {isa = PBXBuildFile; fileRef = 8305EC6520221973002F20DB /* LDFlagConfigValue.h */; };
+		8305EC6A20221973002F20DB /* LDFlagConfigValue.h in Headers */ = {isa = PBXBuildFile; fileRef = 8305EC6520221973002F20DB /* LDFlagConfigValue.h */; };
 		8305EC6B20221973002F20DB /* LDFlagConfigValue.m in Sources */ = {isa = PBXBuildFile; fileRef = 8305EC6620221973002F20DB /* LDFlagConfigValue.m */; };
 		8305EC6C20221973002F20DB /* LDFlagConfigValue.m in Sources */ = {isa = PBXBuildFile; fileRef = 8305EC6620221973002F20DB /* LDFlagConfigValue.m */; };
 		8305EC6D20221973002F20DB /* LDFlagConfigValue.m in Sources */ = {isa = PBXBuildFile; fileRef = 8305EC6620221973002F20DB /* LDFlagConfigValue.m */; };
