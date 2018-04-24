@@ -143,10 +143,10 @@
 		8305EC6C20221973002F20DB /* LDFlagConfigValue.m in Sources */ = {isa = PBXBuildFile; fileRef = 8305EC6620221973002F20DB /* LDFlagConfigValue.m */; };
 		8305EC6D20221973002F20DB /* LDFlagConfigValue.m in Sources */ = {isa = PBXBuildFile; fileRef = 8305EC6620221973002F20DB /* LDFlagConfigValue.m */; };
 		8305EC6E20221973002F20DB /* LDFlagConfigValue.m in Sources */ = {isa = PBXBuildFile; fileRef = 8305EC6620221973002F20DB /* LDFlagConfigValue.m */; };
-		8305EC7120222078002F20DB /* NSObject+LDFlagConfigValue.h in Headers */ = {isa = PBXBuildFile; fileRef = 8305EC6F20222078002F20DB /* NSObject+LDFlagConfigValue.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		8305EC7220222078002F20DB /* NSObject+LDFlagConfigValue.h in Headers */ = {isa = PBXBuildFile; fileRef = 8305EC6F20222078002F20DB /* NSObject+LDFlagConfigValue.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		8305EC7320222078002F20DB /* NSObject+LDFlagConfigValue.h in Headers */ = {isa = PBXBuildFile; fileRef = 8305EC6F20222078002F20DB /* NSObject+LDFlagConfigValue.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		8305EC7420222078002F20DB /* NSObject+LDFlagConfigValue.h in Headers */ = {isa = PBXBuildFile; fileRef = 8305EC6F20222078002F20DB /* NSObject+LDFlagConfigValue.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		8305EC7120222078002F20DB /* NSObject+LDFlagConfigValue.h in Headers */ = {isa = PBXBuildFile; fileRef = 8305EC6F20222078002F20DB /* NSObject+LDFlagConfigValue.h */; };
+		8305EC7220222078002F20DB /* NSObject+LDFlagConfigValue.h in Headers */ = {isa = PBXBuildFile; fileRef = 8305EC6F20222078002F20DB /* NSObject+LDFlagConfigValue.h */; };
+		8305EC7320222078002F20DB /* NSObject+LDFlagConfigValue.h in Headers */ = {isa = PBXBuildFile; fileRef = 8305EC6F20222078002F20DB /* NSObject+LDFlagConfigValue.h */; };
+		8305EC7420222078002F20DB /* NSObject+LDFlagConfigValue.h in Headers */ = {isa = PBXBuildFile; fileRef = 8305EC6F20222078002F20DB /* NSObject+LDFlagConfigValue.h */; };
 		8305EC7520222078002F20DB /* NSObject+LDFlagConfigValue.m in Sources */ = {isa = PBXBuildFile; fileRef = 8305EC7020222078002F20DB /* NSObject+LDFlagConfigValue.m */; };
 		8305EC7620222078002F20DB /* NSObject+LDFlagConfigValue.m in Sources */ = {isa = PBXBuildFile; fileRef = 8305EC7020222078002F20DB /* NSObject+LDFlagConfigValue.m */; };
 		8305EC7720222078002F20DB /* NSObject+LDFlagConfigValue.m in Sources */ = {isa = PBXBuildFile; fileRef = 8305EC7020222078002F20DB /* NSObject+LDFlagConfigValue.m */; };
