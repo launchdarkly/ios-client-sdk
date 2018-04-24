@@ -7,6 +7,7 @@
 //
 
 #import "LDUserModel+Equatable.h"
+#import "LDFlagConfigModel.h"
 #import "LDUserModel+Testable.h"
 #import "NSDictionary+StringKey_Matchable.h"
 #import "NSDateFormatter+LDUserModel.h"

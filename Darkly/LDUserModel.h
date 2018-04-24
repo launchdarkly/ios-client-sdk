@@ -8,7 +8,8 @@
 
 #import <Foundation/Foundation.h>
 #import "LDConfig.h"
-#import "LDFlagConfigModel.h"
+
+@class LDFlagConfigModel;
 
 extern NSString * __nonnull const kUserAttributeIp;
 extern NSString * __nonnull const kUserAttributeCountry;

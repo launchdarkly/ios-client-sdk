@@ -6,7 +6,7 @@
 //  Copyright © 2017 LaunchDarkly. All rights reserved.
 //
 
-#import <Darkly/Darkly.h>
+#import "LDFlagConfigModel.h"
 
 @interface LDFlagConfigModel(Testable)
 +(instancetype)flagConfigFromJsonFileNamed:(NSString *)fileName;

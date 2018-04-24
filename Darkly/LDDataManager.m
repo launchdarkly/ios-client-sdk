@@ -6,6 +6,7 @@
 #import "LDDataManager.h"
 #import "LDEventModel.h"
 #import "LDUtil.h"
+#import "LDFlagConfigModel.h"
 
 int const kUserCacheSize = 5;
 
