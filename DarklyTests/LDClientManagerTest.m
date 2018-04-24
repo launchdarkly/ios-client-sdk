@@ -259,7 +259,7 @@ NSString *const kBoolFlagKey = @"isABawler";
         
         [clientManager syncWithServerForEvents];
         
-        OCMVerify([requestManagerMock performEventRequest:[OCMArg isEqual:testData]]);
+        OCMVerify([self.requestManagerMock performEventRequest:[OCMArg isEqual:testData]]);
     }];
 }
 
@@ -281,13 +281,13 @@ NSString *const kBoolFlagKey = @"isABawler";
     [dataManagerMock allEventDictionaries:^(NSArray *array) {
         OCMStub(array).andReturn(testData);
         
-        [[requestManagerMock reject] performEventRequest:[OCMArg isEqual:testData]];
+        [[self.requestManagerMock reject] performEventRequest:[OCMArg isEqual:testData]];
         
         LDClientManager *clientManager = [LDClientManager sharedInstance];
         [clientManager setOnline:NO];
         [clientManager syncWithServerForEvents];
         
-        [requestManagerMock verify];
+        [self.requestManagerMock verify];
     }];
 }
 
@@ -545,7 +545,7 @@ NSString *const kBoolFlagKey = @"isABawler";
 
         [clientManager flushEvents];
 
-        OCMVerify([requestManagerMock performEventRequest:[OCMArg isEqual:testData]]);
+        OCMVerify([self.requestManagerMock performEventRequest:[OCMArg isEqual:testData]]);
     }];
 }
 
@@ -559,7 +559,7 @@ NSString *const kBoolFlagKey = @"isABawler";
 
         [clientManager flushEvents];
 
-        OCMReject([requestManagerMock performEventRequest:[OCMArg isEqual:testData]]);
+        OCMReject([self.requestManagerMock performEventRequest:[OCMArg isEqual:testData]]);
     }];
 }
 
