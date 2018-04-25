@@ -6,7 +6,6 @@
 #import "LDUserModel.h"
 #import "LDDataManager.h"
 #import "LDUserModel.h"
-#import "LDUserModel+Stub.h"
 #import "LDUserModel+Testable.h"
 #import "LDUserModel+Equatable.h"
 #import "LDUserModel+JsonDecodeable.h"

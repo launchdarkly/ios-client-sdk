@@ -6,6 +6,7 @@
 #import "LDClient.h"
 #import "LDDataManager.h"
 #import "LDUserModel.h"
+#import "LDUserModel+Testable.h"
 #import "LDFlagConfigModel.h"
 #import "LDFlagConfigModel+Testable.h"
 #import "LDUserBuilder.h"

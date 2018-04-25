@@ -8,7 +8,7 @@
 
 #import "LDEventModel+Testable.h"
 #import "LDEventModel.h"
-#import "LDUserModel+Stub.h"
+#import "LDUserModel+Testable.h"
 #import "LDUserModel+Equatable.h"
 #import "NSInteger+Testable.h"
 #import "LDFlagConfigTracker+Testable.h"
