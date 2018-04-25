@@ -25,7 +25,7 @@ Pod::Spec.new do |s|
 
   s.source       = { :git => "https://github.com/launchdarkly/ios-client.git", :tag => "2.13.0.1b" }
 
-  s.source_files  = "Darkly/*.{h,m}"
+  s.source_files  = 'Darkly/**/*.{h,m}'
 
   s.requires_arc = true
 
