@@ -8,13 +8,18 @@
 
 #import "LDFlagConfigModel.h"
 #import "LDFlagConfigModel+Testable.h"
+#import "LDFlagConfigTracker+Testable.h"
 #import "NSJSONSerialization+Testable.h"
 
 extern NSString * const kLDFlagConfigJsonDictionaryKeyVersion;
 
 @implementation LDFlagConfigModel(Testable)
+@dynamic tracker;
+
 +(instancetype)flagConfigFromJsonFileNamed:(NSString *)fileName {
-    return [[LDFlagConfigModel alloc] initWithDictionary:[NSJSONSerialization jsonObjectFromFileNamed:fileName]];
+    LDFlagConfigModel *flagConfigModel = [[LDFlagConfigModel alloc] initWithDictionary:[NSJSONSerialization jsonObjectFromFileNamed:fileName]];
+    flagConfigModel.tracker = [LDFlagConfigTracker stubTracker];
+    return flagConfigModel;
 }
 
 +(NSDictionary*)patchFromJsonFileNamed:(NSString *)fileName useVersion:(NSInteger)version {

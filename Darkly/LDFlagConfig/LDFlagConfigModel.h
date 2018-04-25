@@ -9,10 +9,12 @@
 #import <Foundation/Foundation.h>
 
 @class LDFlagConfigValue;
+@class LDFlagConfigTracker;
 
 @interface LDFlagConfigModel : NSObject <NSCoding>
 
 @property (nullable, nonatomic, strong) NSDictionary<NSString*, LDFlagConfigValue*> *featuresJsonDictionary;
+@property (nonnull, nonatomic, strong, readonly) LDFlagConfigTracker *tracker;
 
 -(nullable id)initWithDictionary:(nullable NSDictionary*)dictionary;
 -(nullable NSDictionary*)dictionaryValue;
@@ -27,4 +29,6 @@
 
 -(BOOL)isEqualToConfig:(nullable LDFlagConfigModel*)otherConfig;
 -(BOOL)hasFeaturesEqualToDictionary:(nullable NSDictionary*)otherDictionary;
+
+-(void)resetTracker;
 @end

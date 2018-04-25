@@ -8,6 +8,7 @@
 
 #import "LDFlagConfigModel.h"
 #import "LDFlagConfigValue.h"
+#import "LDFlagConfigTracker.h"
 #import "LDUtil.h"
 #import "NSMutableDictionary+NullRemovable.h"
 
@@ -18,6 +19,10 @@ extern NSString * const kLDFlagConfigJsonDictionaryKeyValue;
 extern NSString * const kLDFlagConfigJsonDictionaryKeyVersion;
 extern const NSInteger kLDFlagConfigVersionDoesNotExist;
 
+@interface LDFlagConfigModel()
+@property (nonatomic, strong) LDFlagConfigTracker *tracker;
+@end
+
 @implementation LDFlagConfigModel
 
 - (void)encodeWithCoder:(NSCoder *)encoder {
@@ -25,13 +30,14 @@ extern const NSInteger kLDFlagConfigVersionDoesNotExist;
 }
 
 - (id)initWithCoder:(NSCoder *)decoder {
-    if (!(self = [super init])) { return nil; }
-    _featuresJsonDictionary = [decoder decodeObjectForKey:kFeaturesJsonDictionaryKey];
+    if (!(self = [self init])) { return nil; }
+    self.featuresJsonDictionary = [decoder decodeObjectForKey:kFeaturesJsonDictionaryKey];
+    self.tracker = [LDFlagConfigTracker tracker];
     return self;
 }
 
 - (id)initWithDictionary:(NSDictionary *)dictionary {
-    if (!(self = [super init])) { return nil; }
+    if (!(self = [self init])) { return nil; }
 
     NSMutableDictionary *flagConfigValues = [NSMutableDictionary dictionaryWithCapacity:dictionary.count];
 
@@ -39,7 +45,14 @@ extern const NSInteger kLDFlagConfigVersionDoesNotExist;
         flagConfigValues[key] = [LDFlagConfigValue flagConfigValueWithObject:dictionary[key]];
     }
 
-    _featuresJsonDictionary = [NSDictionary dictionaryWithDictionary:[flagConfigValues copy]];
+    self.featuresJsonDictionary = [NSDictionary dictionaryWithDictionary:[flagConfigValues copy]];
+    self.tracker = [LDFlagConfigTracker tracker];
+
+    return self;
+}
+
+-(instancetype)init {
+    if (!(self = [super init])) { return nil; }
 
     return self;
 }
@@ -121,6 +134,10 @@ extern const NSInteger kLDFlagConfigVersionDoesNotExist;
 
 -(BOOL)hasFeaturesEqualToDictionary:(NSDictionary*)otherDictionary {
     return [[self dictionaryValue] isEqualToDictionary:otherDictionary];
+}
+
+-(void)resetTracker {
+    self.tracker = [LDFlagConfigTracker tracker];
 }
 
 @end

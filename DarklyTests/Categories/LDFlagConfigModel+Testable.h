@@ -9,6 +9,8 @@
 #import "LDFlagConfigModel.h"
 
 @interface LDFlagConfigModel(Testable)
+@property (nonatomic, strong) LDFlagConfigTracker *tracker;
+
 +(instancetype)flagConfigFromJsonFileNamed:(NSString *)fileName;
 +(NSDictionary*)patchFromJsonFileNamed:(NSString *)fileName useVersion:(NSInteger)version;
 +(NSDictionary*)patchFromJsonFileNamed:(NSString *)fileName omitKey:(NSString*)key;
