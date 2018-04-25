@@ -9,7 +9,6 @@
 #import "LDEventModel+Testable.h"
 #import "LDEventModel.h"
 #import "LDUserModel+Testable.h"
-#import "LDUserModel+Equatable.h"
 #import "NSInteger+Testable.h"
 #import "LDFlagConfigTracker+Testable.h"
 
@@ -160,7 +159,7 @@ const double featureEventDefaultValueStub = 2.71828;
         if (self.startDateMillis != otherEvent.startDateMillis) {
             [mismatchedProperties addObject:kEventModelKeyStartDate];
         }
-        if (self.endDateMillis != otherEvent.endDateMillis) {
+        if (!Approximately(self.endDateMillis, otherEvent.endDateMillis, 10)) {
             [mismatchedProperties addObject:kEventModelKeyEndDate];
         }
         if (![self.flagRequestSummary isEqualToDictionary:otherEvent.flagRequestSummary]) {

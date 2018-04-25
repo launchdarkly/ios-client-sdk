@@ -7,7 +7,6 @@
 #import "LDEventModel+Testable.h"
 #import "LDUserModel.h"
 #import "LDUserModel+Testable.h"
-#import "LDUserModel+Equatable.h"
 #import "NSDate+ReferencedDate.h"
 #import "LDFlagConfigTracker+Testable.h"
 #import "NSInteger+Testable.h"

@@ -20,6 +20,14 @@ extern NSString * const userModelStubOs;
 extern NSString * const userModelStubCustomKey;
 extern NSString * const userModelStubCustomValue;
 
+extern NSString * const kUserAttributeKey;
+extern NSString * const kUserAttributeUpdatedAt;
+extern NSString * const kUserAttributeConfig;
+extern NSString * const kUserAttributeAnonymous;
+extern NSString * const kUserAttributePrivateAttributes;
+extern NSString * const kUserAttributeDevice;
+extern NSString * const kUserAttributeOs;
+
 @interface LDUserModel (Testable)
 +(instancetype)stubWithKey:(NSString*)key;
 +(NSDictionary*)customStub;
@@ -27,4 +35,6 @@ extern NSString * const userModelStubCustomValue;
  -[LDUserModel dictionaryValueWithFlags: includePrivateAttributes: config:] intentionally omits the private attributes LIST from the dictionary when includePrivateAttributes == YES to satisfy an LD server requirement. This method allows control over including that list for testing.
  */
 -(NSDictionary *)dictionaryValueWithFlags:(BOOL)includeFlags includePrivateAttributes:(BOOL)includePrivate config:(LDConfig*)config includePrivateAttributeList:(BOOL)includePrivateList;
+-(BOOL)isEqual:(id)object ignoringAttributes:(NSArray<NSString*>*)ignoredAttributes;
+-(BOOL)matchesDictionary:(NSDictionary *)dictionary includeFlags:(BOOL)includeConfig includePrivateAttributes:(BOOL)includePrivate privateAttributes:(NSArray<NSString*> *)privateAttributes;
 @end

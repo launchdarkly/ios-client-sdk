@@ -17,7 +17,6 @@
 #import "LDEvent+EventTypes.h"
 #import "LDFlagConfigModel+Testable.h"
 #import "LDUserModel+Testable.h"
-#import "LDUserModel+Equatable.h"
 #import "NSJSONSerialization+Testable.h"
 #import "LDFlagConfigTracker+Testable.h"
 #import "NSDate+ReferencedDate.h"

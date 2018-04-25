@@ -195,7 +195,6 @@
 		833D08D11F3B97EB00BEED83 /* NSThread+MainExecutable.m in Sources */ = {isa = PBXBuildFile; fileRef = 833D08CA1F3B97EB00BEED83 /* NSThread+MainExecutable.m */; };
 		833D08D21F3B97EB00BEED83 /* NSThread+MainExecutable.m in Sources */ = {isa = PBXBuildFile; fileRef = 833D08CA1F3B97EB00BEED83 /* NSThread+MainExecutable.m */; };
 		8349F51E1F19352300B1F3DB /* NSDictionary+StringKey_Matchable.m in Sources */ = {isa = PBXBuildFile; fileRef = 8349F51D1F19352300B1F3DB /* NSDictionary+StringKey_Matchable.m */; };
-		8349F5211F195BCF00B1F3DB /* LDUserModel+Equatable.m in Sources */ = {isa = PBXBuildFile; fileRef = 8349F5201F195BCF00B1F3DB /* LDUserModel+Equatable.m */; };
 		8358F25A1F4202A300ECE1AF /* LDConfig+Testable.m in Sources */ = {isa = PBXBuildFile; fileRef = 8358F2591F4202A300ECE1AF /* LDConfig+Testable.m */; };
 		835B421B1FD5AF7300709384 /* DarklyEventSource.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 835B421A1FD5AF7300709384 /* DarklyEventSource.framework */; };
 		8365E5082028F39E00DE8E2B /* LDEvent+EventTypes.h in Headers */ = {isa = PBXBuildFile; fileRef = 8365E5062028F39E00DE8E2B /* LDEvent+EventTypes.h */; };
@@ -440,8 +439,6 @@
 		833D08CA1F3B97EB00BEED83 /* NSThread+MainExecutable.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "NSThread+MainExecutable.m"; sourceTree = "<group>"; };
 		8349F51B1F1934A000B1F3DB /* NSDictionary+StringKey_Matchable.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "NSDictionary+StringKey_Matchable.h"; sourceTree = "<group>"; };
 		8349F51D1F19352300B1F3DB /* NSDictionary+StringKey_Matchable.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "NSDictionary+StringKey_Matchable.m"; sourceTree = "<group>"; };
-		8349F51F1F195BCF00B1F3DB /* LDUserModel+Equatable.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "LDUserModel+Equatable.h"; sourceTree = "<group>"; };
-		8349F5201F195BCF00B1F3DB /* LDUserModel+Equatable.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "LDUserModel+Equatable.m"; sourceTree = "<group>"; };
 		8358F2581F4202A300ECE1AF /* LDConfig+Testable.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "LDConfig+Testable.h"; sourceTree = "<group>"; };
 		8358F2591F4202A300ECE1AF /* LDConfig+Testable.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "LDConfig+Testable.m"; sourceTree = "<group>"; };
 		835B421A1FD5AF7300709384 /* DarklyEventSource.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = DarklyEventSource.framework; path = Carthage/Build/iOS/DarklyEventSource.framework; sourceTree = "<group>"; };
@@ -782,8 +779,6 @@
 				83BE938B201A797B00DD1ED9 /* NSJSONSerialization+Testable.m */,
 				839956E620053081009707D1 /* LDUserModel+Testable.h */,
 				839956E720053081009707D1 /* LDUserModel+Testable.m */,
-				8349F51F1F195BCF00B1F3DB /* LDUserModel+Equatable.h */,
-				8349F5201F195BCF00B1F3DB /* LDUserModel+Equatable.m */,
 				832C788E1F2A8DF600E334A2 /* LDUserModel+JsonDecodeable.h */,
 				832C788F1F2A8DF600E334A2 /* LDUserModel+JsonDecodeable.m */,
 				83258A3B1F323049008C2133 /* LDClientManager+EventSource.h */,
@@ -1516,7 +1511,6 @@
 				832C788D1F2977B800E334A2 /* NSString+RemoveWhitespace.m in Sources */,
 				83ECCC982087DF040086F879 /* LDFlagCounterTest.m in Sources */,
 				6903472A1E689B9F00E45133 /* LDUserModelTest.m in Sources */,
-				8349F5211F195BCF00B1F3DB /* LDUserModel+Equatable.m in Sources */,
 				83ECCCB220890A430086F879 /* LDFlagConfigTracker+Testable.m in Sources */,
 				6903472B1E689B9F00E45133 /* LDPollingManagerTest.m in Sources */,
 				83EF67901F99365600403126 /* LDClient+Testable.m in Sources */,
