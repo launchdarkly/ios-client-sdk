@@ -285,19 +285,20 @@ NSString *const kBoolFlagKey = @"isABawler";
 }
 
 - (void)testSyncWithServerForEventsNotProcessedWhenOffline {
-    NSData *testData = [[NSData alloc] init];
-    
-    [dataManagerMock allEventDictionaries:^(NSArray *array) {
-        OCMStub(array).andReturn(testData);
-        
-        [[self.requestManagerMock reject] performEventRequest:[OCMArg isEqual:testData]];
-        
-        LDClientManager *clientManager = [LDClientManager sharedInstance];
-        [clientManager setOnline:NO];
-        [clientManager syncWithServerForEvents];
-        
-        [self.requestManagerMock verify];
-    }];
+    LDConfig *config = [[LDConfig alloc] initWithMobileKey:mockMobileKey];
+    NSArray<NSDictionary*> *eventDictionaries = [LDEventModel stubEventDictionariesForUser:[LDClient sharedInstance].ldUser config:config];
+    OCMStub([self.dataManagerMock allEventDictionaries:[OCMArg checkWithBlock:^BOOL(id obj) {
+        void (^completion)(NSArray *) = obj;
+        completion(eventDictionaries);
+        return YES;
+    }]]);
+    [[self.requestManagerMock reject] performEventRequest:[OCMArg any]];
+    [[self.dataManagerMock reject] allEventDictionaries:[OCMArg any]];
+
+    [[LDClientManager sharedInstance] syncWithServerForEvents];
+
+    [self.requestManagerMock verify];
+    [self.dataManagerMock verify];
 }
 
 - (void)testStartPollingOnline {
@@ -545,31 +546,35 @@ NSString *const kBoolFlagKey = @"isABawler";
 }
 
 - (void)testFlushEventsWhenOnline {
-    NSData *testData = [[NSData alloc] init];
-    LDClientManager *clientManager = [LDClientManager sharedInstance];
-    clientManager.online = YES;
+    LDConfig *config = [[LDConfig alloc] initWithMobileKey:mockMobileKey];
+    NSArray<NSDictionary*> *eventDictionaries = [LDEventModel stubEventDictionariesForUser:[LDClient sharedInstance].ldUser config:config];
+    OCMStub([self.dataManagerMock allEventDictionaries:[OCMArg checkWithBlock:^BOOL(id obj) {
+        void (^completion)(NSArray *) = obj;
+        completion(eventDictionaries);
+        return YES;
+    }]]);
 
-    [dataManagerMock allEventDictionaries:^(NSArray *array) {
-        OCMStub(array).andReturn(testData);
+    [LDClientManager sharedInstance].online = YES;
+    [[LDClientManager sharedInstance] flushEvents];
 
-        [clientManager flushEvents];
-
-        OCMVerify([self.requestManagerMock performEventRequest:[OCMArg isEqual:testData]]);
-    }];
+    OCMVerify([self.requestManagerMock performEventRequest:[OCMArg isEqual:eventDictionaries]]);
 }
 
 - (void)testFlushEventsWhenOffline {
-    NSData *testData = [[NSData alloc] init];
-    LDClientManager *clientManager = [LDClientManager sharedInstance];
-    clientManager.online = NO;
+    LDConfig *config = [[LDConfig alloc] initWithMobileKey:mockMobileKey];
+    NSArray<NSDictionary*> *eventDictionaries = [LDEventModel stubEventDictionariesForUser:[LDClient sharedInstance].ldUser config:config];
+    OCMStub([self.dataManagerMock allEventDictionaries:[OCMArg checkWithBlock:^BOOL(id obj) {
+        void (^completion)(NSArray *) = obj;
+        completion(eventDictionaries);
+        return YES;
+    }]]);
+    [[self.requestManagerMock reject] performEventRequest:[OCMArg any]];
+    [[self.dataManagerMock reject] allEventDictionaries:[OCMArg any]];
 
-    [dataManagerMock allEventDictionaries:^(NSArray *array) {
-        OCMStub(array).andReturn(testData);
+    [[LDClientManager sharedInstance] flushEvents];
 
-        [clientManager flushEvents];
-
-        OCMReject([self.requestManagerMock performEventRequest:[OCMArg isEqual:testData]]);
-    }];
+    [self.requestManagerMock verify];
+    [self.dataManagerMock verify];
 }
 
 - (void)testClientUnauthorizedPosted {
