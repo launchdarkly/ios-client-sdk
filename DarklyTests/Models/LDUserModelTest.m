@@ -7,7 +7,6 @@
 #import "LDDataManager.h"
 #import "LDUserModel.h"
 #import "LDUserModel+Testable.h"
-#import "LDUserModel+JsonDecodeable.h"
 #import "NSMutableDictionary+NullRemovable.h"
 #import "NSString+RemoveWhitespace.h"
 #import "NSJSONSerialization+Testable.h"

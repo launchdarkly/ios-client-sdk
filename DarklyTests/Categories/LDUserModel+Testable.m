@@ -48,6 +48,13 @@ NSString * const userModelStubCustomValue = @"userModelStubCustomValue";
     return @{userModelStubCustomKey: userModelStubCustomValue};
 }
 
++(LDUserModel*)userFrom:(NSString*)jsonUser {
+    NSError *jsonError;
+    NSData *userData = [jsonUser dataUsingEncoding:NSUTF8StringEncoding];
+    NSDictionary *userDictionary = [NSJSONSerialization JSONObjectWithData:userData options:0 error:&jsonError];
+    return [[LDUserModel alloc] initWithDictionary:userDictionary];
+}
+
 -(NSDictionary *)dictionaryValueWithFlags:(BOOL)includeFlags includePrivateAttributes:(BOOL)includePrivate config:(LDConfig*)config includePrivateAttributeList:(BOOL)includePrivateList {
     NSMutableDictionary *dictionary = [NSMutableDictionary dictionaryWithDictionary:[self dictionaryValueWithFlagConfig:includeFlags includePrivateAttributes:includePrivate config:config]];
     dictionary[kUserAttributePrivateAttributes] = includePrivateList ? self.privateAttributes : nil;

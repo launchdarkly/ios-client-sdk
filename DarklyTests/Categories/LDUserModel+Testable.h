@@ -31,6 +31,7 @@ extern NSString * const kUserAttributeOs;
 @interface LDUserModel (Testable)
 +(instancetype)stubWithKey:(NSString*)key;
 +(NSDictionary*)customStub;
++(LDUserModel*)userFrom:(NSString*)jsonUser;
 /**
  -[LDUserModel dictionaryValueWithFlags: includePrivateAttributes: config:] intentionally omits the private attributes LIST from the dictionary when includePrivateAttributes == YES to satisfy an LD server requirement. This method allows control over including that list for testing.
  */
