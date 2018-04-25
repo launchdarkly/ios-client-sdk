@@ -266,9 +266,9 @@ NSString *const kBoolFlagKey = @"isABawler";
     [clientManager syncWithServerForEvents];
 
     OCMVerify([self.requestManagerMock performEventRequest:[OCMArg isEqual:eventDictionaries]]);
-    XCTAssertNotNil([LDClient sharedInstance].ldUser.config.tracker);
-    XCTAssertTrue([LDClient sharedInstance].ldUser.config.tracker.flagCounters.count == 0);
-    XCTAssertTrue(Approximately([LDClient sharedInstance].ldUser.config.tracker.startDateMillis, startDateMillis, 10));
+    XCTAssertNotNil([LDClient sharedInstance].ldUser.flagConfig.tracker);
+    XCTAssertTrue([LDClient sharedInstance].ldUser.flagConfig.tracker.flagCounters.count == 0);
+    XCTAssertTrue(Approximately([LDClient sharedInstance].ldUser.flagConfig.tracker.startDateMillis, startDateMillis, 10));
 }
 
 - (void)testDoNotSyncWithServerForEventsWhenEventsDoNotExist {
@@ -438,7 +438,7 @@ NSString *const kBoolFlagKey = @"isABawler";
     LDFlagConfigModel *flagConfig = [LDFlagConfigModel flagConfigFromJsonFileNamed:@"featureFlags-withVersions"];
 
     LDUserModel *user = [ldClientMock ldUser];
-    user.config = flagConfig;
+    user.flagConfig = flagConfig;
     [[[ldClientMock expect] andReturn:user] ldUser];
 
     NSMutableDictionary *updatedFlags = [NSMutableDictionary dictionaryWithDictionary:[flagConfig dictionaryValue]];
@@ -470,7 +470,7 @@ NSString *const kBoolFlagKey = @"isABawler";
     LDFlagConfigModel *flagConfig = [LDFlagConfigModel flagConfigFromJsonFileNamed:@"featureFlags-withVersions"];
 
     LDUserModel *user = [ldClientMock ldUser];
-    user.config = flagConfig;
+    user.flagConfig = flagConfig;
     [[[ldClientMock expect] andReturn:user] ldUser];
 
     [[LDClientManager sharedInstance] processedConfig:YES jsonConfigDictionary:[flagConfig dictionaryValue]];
@@ -506,10 +506,10 @@ NSString *const kBoolFlagKey = @"isABawler";
     XCTAssertNotNil(startingConfig);
 
     LDUserModel *clientUser = [[LDClient sharedInstance] ldUser];
-    clientUser.config = startingConfig;
+    clientUser.flagConfig = startingConfig;
     
     [[LDClientManager sharedInstance] processedConfig:YES jsonConfigDictionary:[startingConfig dictionaryValue]];
-    XCTAssertTrue(clientUser.config == startingConfig);     //Should be the same object, unchanged
+    XCTAssertTrue(clientUser.flagConfig == startingConfig);     //Should be the same object, unchanged
 }
 
 - (void)testProcessedConfigSuccessWithUserDifferentUserConfig {
@@ -517,14 +517,14 @@ NSString *const kBoolFlagKey = @"isABawler";
     XCTAssertNotNil(startingConfig);
 
     LDUserModel *clientUser = [[LDClient sharedInstance] ldUser];
-    clientUser.config = startingConfig;
+    clientUser.flagConfig = startingConfig;
     
     LDFlagConfigModel *endingConfig = [LDFlagConfigModel flagConfigFromJsonFileNamed:@"ldClientManagerTestConfigB"];
     XCTAssertNotNil(endingConfig);
 
     [[LDClientManager sharedInstance] processedConfig:YES jsonConfigDictionary:[endingConfig dictionaryValue]];
-    XCTAssertFalse(clientUser.config == startingConfig);     //Should not be the same object
-    XCTAssertTrue([clientUser.config isEqualToConfig:endingConfig]);
+    XCTAssertFalse(clientUser.flagConfig == startingConfig);     //Should not be the same object
+    XCTAssertTrue([clientUser.flagConfig isEqualToConfig:endingConfig]);
 }
 
 - (void)testSetOnlineYes {
@@ -689,14 +689,14 @@ NSString *const kBoolFlagKey = @"isABawler";
 
     messageHandler(put);
 
-    XCTAssertTrue([user.config isEqualToConfig: targetFlagConfig]);
+    XCTAssertTrue([user.flagConfig isEqualToConfig: targetFlagConfig]);
     __block LDUserModel *savedUser;
     OCMVerify([dataManagerMock saveUser:[OCMArg checkWithBlock:^BOOL(id obj) {
         if (![obj isKindOfClass:[LDUserModel class]]) { return NO; }
         savedUser = obj;
         return YES;
     }]]);
-    XCTAssertTrue([savedUser.config isEqualToConfig:targetFlagConfig]);
+    XCTAssertTrue([savedUser.flagConfig isEqualToConfig:targetFlagConfig]);
     OCMVerifyAll(notificationObserver);
 }
 
@@ -720,7 +720,7 @@ NSString *const kBoolFlagKey = @"isABawler";
         return YES;
     }]];
     OCMStub([flagConfigMock isEqualToConfig:[OCMArg any]]).andReturn(YES);
-    user.config = flagConfigMock;
+    user.flagConfig = flagConfigMock;
 
     [[dataManagerMock reject] saveUser:[OCMArg any]];
 
@@ -758,7 +758,7 @@ NSString *const kBoolFlagKey = @"isABawler";
     [[dataManagerMock reject] saveUser:[OCMArg any]];
 
     LDUserModel *user = [[LDClient sharedInstance] ldUser];
-    LDFlagConfigModel *targetFlagConfig = user.config;
+    LDFlagConfigModel *targetFlagConfig = user.flagConfig;
 
     self.cleanup = ^{
         [[NSNotificationCenter defaultCenter] removeObserver:notificationObserver];
@@ -775,7 +775,7 @@ NSString *const kBoolFlagKey = @"isABawler";
 
     messageHandler(put);
 
-    XCTAssertTrue([user.config isEqualToConfig: targetFlagConfig]);
+    XCTAssertTrue([user.flagConfig isEqualToConfig: targetFlagConfig]);
     OCMVerifyAll(notificationObserver);
     OCMVerify(dataManagerMock);
 }
@@ -794,7 +794,7 @@ NSString *const kBoolFlagKey = @"isABawler";
     [[dataManagerMock reject] saveUser:[OCMArg any]];
 
     LDUserModel *user = [[LDClient sharedInstance] ldUser];
-    LDFlagConfigModel *targetFlagConfig = user.config;
+    LDFlagConfigModel *targetFlagConfig = user.flagConfig;
 
     self.cleanup = ^{
         [[NSNotificationCenter defaultCenter] removeObserver:notificationObserver];
@@ -811,7 +811,7 @@ NSString *const kBoolFlagKey = @"isABawler";
 
     messageHandler(put);
 
-    XCTAssertTrue([user.config isEqualToConfig: targetFlagConfig]);
+    XCTAssertTrue([user.flagConfig isEqualToConfig: targetFlagConfig]);
     OCMVerifyAll(notificationObserver);
     OCMVerify(dataManagerMock);
 }
@@ -830,7 +830,7 @@ NSString *const kBoolFlagKey = @"isABawler";
     [[dataManagerMock reject] saveUser:[OCMArg any]];
 
     LDUserModel *user = [[LDClient sharedInstance] ldUser];
-    LDFlagConfigModel *targetFlagConfig = user.config;
+    LDFlagConfigModel *targetFlagConfig = user.flagConfig;
 
     self.cleanup = ^{
         [[NSNotificationCenter defaultCenter] removeObserver:notificationObserver];
@@ -847,7 +847,7 @@ NSString *const kBoolFlagKey = @"isABawler";
 
     messageHandler(put);
 
-    XCTAssertTrue([user.config isEqualToConfig: targetFlagConfig]);
+    XCTAssertTrue([user.flagConfig isEqualToConfig: targetFlagConfig]);
     OCMVerifyAll(notificationObserver);
     OCMVerify(dataManagerMock);
 }
@@ -867,7 +867,7 @@ NSString *const kBoolFlagKey = @"isABawler";
     [[dataManagerMock reject] saveUser:[OCMArg any]];
 
     LDUserModel *user = [[LDClient sharedInstance] ldUser];
-    LDFlagConfigModel *targetFlagConfig = user.config;
+    LDFlagConfigModel *targetFlagConfig = user.flagConfig;
 
     self.cleanup = ^{
         [[NSNotificationCenter defaultCenter] removeObserver:notificationObserver];
@@ -883,7 +883,7 @@ NSString *const kBoolFlagKey = @"isABawler";
 
     messageHandler(put);
 
-    XCTAssertTrue([user.config isEqualToConfig: targetFlagConfig]);
+    XCTAssertTrue([user.flagConfig isEqualToConfig: targetFlagConfig]);
     OCMVerifyAll(notificationObserver);
     OCMVerify(dataManagerMock);
 }
@@ -903,7 +903,7 @@ NSString *const kBoolFlagKey = @"isABawler";
     OCMStub([flagConfigMock hasFeaturesEqualToDictionary:[OCMArg any]]).andReturn(NO);
 
     LDUserModel *user = [[LDClient sharedInstance] ldUser];
-    user.config = flagConfigMock;
+    user.flagConfig = flagConfigMock;
 
     self.cleanup = ^{
         [[NSNotificationCenter defaultCenter] removeObserver:notificationObserver];
@@ -958,7 +958,7 @@ NSString *const kBoolFlagKey = @"isABawler";
         return YES;
     }]];
     OCMStub([flagConfigMock hasFeaturesEqualToDictionary:[OCMArg any]]).andReturn(YES);
-    user.config = flagConfigMock;
+    user.flagConfig = flagConfigMock;
 
     [[dataManagerMock reject] saveUser:[OCMArg any]];
 
@@ -996,7 +996,7 @@ NSString *const kBoolFlagKey = @"isABawler";
     id flagConfigMock = OCMClassMock([LDFlagConfigModel class]);
     [[flagConfigMock reject] addOrReplaceFromDictionary:[OCMArg any]];
     LDUserModel *user = [[LDClient sharedInstance] ldUser];
-    user.config = flagConfigMock;
+    user.flagConfig = flagConfigMock;
 
     [[dataManagerMock reject] saveUser:[OCMArg any]];
 
@@ -1034,7 +1034,7 @@ NSString *const kBoolFlagKey = @"isABawler";
     id flagConfigMock = OCMClassMock([LDFlagConfigModel class]);
     [[flagConfigMock reject] addOrReplaceFromDictionary:[OCMArg any]];
     LDUserModel *user = [[LDClient sharedInstance] ldUser];
-    user.config = flagConfigMock;
+    user.flagConfig = flagConfigMock;
 
     [[dataManagerMock reject] saveUser:[OCMArg any]];
 
@@ -1072,7 +1072,7 @@ NSString *const kBoolFlagKey = @"isABawler";
     id flagConfigMock = OCMClassMock([LDFlagConfigModel class]);
     [[flagConfigMock reject] addOrReplaceFromDictionary:[OCMArg any]];
     LDUserModel *user = [[LDClient sharedInstance] ldUser];
-    user.config = flagConfigMock;
+    user.flagConfig = flagConfigMock;
 
     [[dataManagerMock reject] saveUser:[OCMArg any]];
 
@@ -1111,7 +1111,7 @@ NSString *const kBoolFlagKey = @"isABawler";
     OCMStub([flagConfigMock hasFeaturesEqualToDictionary:[OCMArg any]]).andReturn(NO);
 
     LDUserModel *user = [[LDClient sharedInstance] ldUser];
-    user.config = flagConfigMock;
+    user.flagConfig = flagConfigMock;
 
     self.cleanup = ^{
         [flagConfigMock stopMocking];
@@ -1167,7 +1167,7 @@ NSString *const kBoolFlagKey = @"isABawler";
         return YES;
     }]];
     OCMStub([flagConfigMock hasFeaturesEqualToDictionary:[OCMArg any]]).andReturn(YES);
-    user.config = flagConfigMock;
+    user.flagConfig = flagConfigMock;
 
     [[dataManagerMock reject] saveUser:[OCMArg any]];
 
@@ -1205,7 +1205,7 @@ NSString *const kBoolFlagKey = @"isABawler";
     id flagConfigMock = OCMClassMock([LDFlagConfigModel class]);
     [[flagConfigMock reject] deleteFromDictionary:[OCMArg any]];
     LDUserModel *user = [[LDClient sharedInstance] ldUser];
-    user.config = flagConfigMock;
+    user.flagConfig = flagConfigMock;
 
     [[dataManagerMock reject] saveUser:[OCMArg any]];
 
@@ -1243,7 +1243,7 @@ NSString *const kBoolFlagKey = @"isABawler";
     id flagConfigMock = OCMClassMock([LDFlagConfigModel class]);
     [[flagConfigMock reject] deleteFromDictionary:[OCMArg any]];
     LDUserModel *user = [[LDClient sharedInstance] ldUser];
-    user.config = flagConfigMock;
+    user.flagConfig = flagConfigMock;
 
     [[dataManagerMock reject] saveUser:[OCMArg any]];
 
@@ -1281,7 +1281,7 @@ NSString *const kBoolFlagKey = @"isABawler";
     id flagConfigMock = OCMClassMock([LDFlagConfigModel class]);
     [[flagConfigMock reject] deleteFromDictionary:[OCMArg any]];
     LDUserModel *user = [[LDClient sharedInstance] ldUser];
-    user.config = flagConfigMock;
+    user.flagConfig = flagConfigMock;
 
     [[dataManagerMock reject] saveUser:[OCMArg any]];
 

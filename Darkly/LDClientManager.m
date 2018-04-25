@@ -221,13 +221,13 @@ NSString * const kLDClientManagerStreamMethod = @"meval";
     LDFlagConfigModel *newConfig = [[LDFlagConfigModel alloc] initWithDictionary:newConfigDictionary];
     LDUserModel *user = [[LDClient sharedInstance] ldUser];
 
-    if ([user.config isEqualToConfig:newConfig]) {
+    if ([user.flagConfig isEqualToConfig:newConfig]) {
         DEBUG_LOGX(@"ClientManager handlePutEvent resulted in no change to the flag config");
         [[NSNotificationCenter defaultCenter] postNotificationName:kLDUserNoChangeNotification object:nil];
         return;
     }
 
-    user.config = newConfig;
+    user.flagConfig = newConfig;
     [[LDDataManager sharedManager] saveUser:user];
     [[NSNotificationCenter defaultCenter] postNotificationName:kLDUserUpdatedNotification object:nil];
     DEBUG_LOGX(@"ClientManager posted Darkly.UserUpdatedNotification following user config update from SSE put event");
@@ -248,11 +248,11 @@ NSString * const kLDClientManagerStreamMethod = @"meval";
     }
 
     LDUserModel *user = [[LDClient sharedInstance] ldUser];
-    NSDictionary *originalFlagConfig = user.config.featuresJsonDictionary;
+    NSDictionary *originalFlagConfig = user.flagConfig.featuresJsonDictionary;
 
-    [user.config addOrReplaceFromDictionary:patchDictionary];
+    [user.flagConfig addOrReplaceFromDictionary:patchDictionary];
 
-    if ([user.config hasFeaturesEqualToDictionary:originalFlagConfig]) {
+    if ([user.flagConfig hasFeaturesEqualToDictionary:originalFlagConfig]) {
         DEBUG_LOGX(@"ClientManager handlePatchEvent resulted in no change to the flag config");
         [[NSNotificationCenter defaultCenter] postNotificationName:kLDUserNoChangeNotification object:nil];
         return;
@@ -278,11 +278,11 @@ NSString * const kLDClientManagerStreamMethod = @"meval";
     }
 
     LDUserModel *user = [[LDClient sharedInstance] ldUser];
-    NSDictionary *originalFlagConfig = user.config.featuresJsonDictionary;
+    NSDictionary *originalFlagConfig = user.flagConfig.featuresJsonDictionary;
 
-    [user.config deleteFromDictionary:deleteDictionary];
+    [user.flagConfig deleteFromDictionary:deleteDictionary];
 
-    if ([user.config hasFeaturesEqualToDictionary:originalFlagConfig]) {
+    if ([user.flagConfig hasFeaturesEqualToDictionary:originalFlagConfig]) {
         DEBUG_LOGX(@"ClientManager handleDeleteEvent resulted in no change to the flag config");
         [[NSNotificationCenter defaultCenter] postNotificationName:kLDUserNoChangeNotification object:nil];
         return;
@@ -321,10 +321,10 @@ NSString * const kLDClientManagerStreamMethod = @"meval";
 
     DEBUG_LOGX(@"ClientManager syncing events with server");
 
-    [[LDDataManager sharedManager] createSummaryEventWithTracker:[LDClient sharedInstance].ldUser.config.tracker config:[LDClient sharedInstance].ldConfig];    //TODO: When streaming events controls tracking, remove this
+    [[LDDataManager sharedManager] createSummaryEventWithTracker:[LDClient sharedInstance].ldUser.flagConfig.tracker config:[LDClient sharedInstance].ldConfig];    //TODO: When streaming events controls tracking, remove this
 
     [[LDDataManager sharedManager] allEventDictionaries:^(NSArray *eventDictionaries) {
-        [[LDClient sharedInstance].ldUser.config resetTracker];
+        [[LDClient sharedInstance].ldUser.flagConfig resetTracker];
         if (eventDictionaries) {
             [[LDRequestManager sharedInstance] performEventRequest:eventDictionaries];
         } else {
@@ -377,7 +377,7 @@ NSString * const kLDClientManagerStreamMethod = @"meval";
     DEBUG_LOGX(@"ClientManager processedConfig method called after receiving successful response from server");
 
     LDFlagConfigModel *newConfig = [[LDFlagConfigModel alloc] initWithDictionary:jsonConfigDictionary];
-    if (!newConfig || [[LDClient sharedInstance].ldUser.config isEqualToConfig:newConfig]) {
+    if (!newConfig || [[LDClient sharedInstance].ldUser.flagConfig isEqualToConfig:newConfig]) {
         //Notify interested clients and bail out if no new config, or the new config equals the existing config
         [[NSNotificationCenter defaultCenter] postNotificationName: kLDUserNoChangeNotification
                                                             object: nil];
@@ -386,7 +386,7 @@ NSString * const kLDClientManagerStreamMethod = @"meval";
     }
     
     LDUserModel *user = [LDClient sharedInstance].ldUser;
-    user.config = newConfig;
+    user.flagConfig = newConfig;
     [[LDDataManager sharedManager] saveUser:user];  // Save context
     
     [[NSNotificationCenter defaultCenter] postNotificationName: kLDUserUpdatedNotification

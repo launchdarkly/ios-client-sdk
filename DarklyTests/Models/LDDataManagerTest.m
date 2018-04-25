@@ -39,7 +39,7 @@ extern NSString * const kEventModelKeyKind;
     user.updatedAt = [NSDate date];
     
     LDFlagConfigModel *flagConfig = [LDFlagConfigModel flagConfigFromJsonFileNamed:@"ldDataManagerTestConfig"];
-    user.config = flagConfig;
+    user.flagConfig = flagConfig;
 
     clientMock = OCMClassMock([LDClient class]);
     OCMStub(ClassMethod([clientMock sharedInstance])).andReturn(clientMock);
@@ -132,7 +132,7 @@ extern NSString * const kEventModelKeyKind;
     aUser.key = userKey;
     aUser.email = @"gus@anemail.com";
     aUser.updatedAt = [NSDate date];
-    aUser.config = user.config;
+    aUser.flagConfig = user.flagConfig;
     [[LDDataManager sharedManager] saveUser: aUser];
     
     LDUserModel *foundAgainUser = [[LDDataManager sharedManager] findUserWithkey: userKey];

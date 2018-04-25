@@ -37,7 +37,8 @@ NSString * const userModelStubCustomValue = @"userModelStubCustomValue";
     stub.email = userModelStubEmail;
     stub.avatar = userModelStubAvatar;
     stub.custom = [LDUserModel customStub];
-    stub.config = [LDFlagConfigModel flagConfigFromJsonFileNamed:@"featureFlags-excludeNulls-withVersions"];
+    stub.flagConfig = [LDFlagConfigModel flagConfigFromJsonFileNamed:@"featureFlags-excludeNulls-withVersions"];
+    stub.flagConfig.tracker = tracker ?: [LDFlagConfigTracker stubTracker];
 
     return stub;
 }
@@ -169,7 +170,7 @@ NSString * const userModelStubCustomValue = @"userModelStubCustomValue";
 
     NSDictionary *dictionaryConfig = dictionary[kUserAttributeConfig];
     if (includeConfig) {
-        NSDictionary *config = [self.config dictionaryValueIncludeNulls:NO];
+        NSDictionary *config = [self.flagConfig dictionaryValueIncludeNulls:NO];
         if ( (config && ![config isEqual:dictionaryConfig]) || (!config && dictionaryConfig) ) {
             NSLog(matchingFailureReason, kUserAttributeConfig);
             return NO;
@@ -238,7 +239,7 @@ NSString * const userModelStubCustomValue = @"userModelStubCustomValue";
             case 7: return self.avatar;
             case 8: return self.custom;
             case 9: return self.updatedAt;
-            case 10: return self.config;
+            case 10: return self.flagConfig;
             case 11: return @(self.anonymous);
             case 12: return self.device;
             case 13: return self.os;

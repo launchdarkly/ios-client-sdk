@@ -64,8 +64,8 @@ NSString * const kUserAttributePrivateAttributes = @"privateAttrs";
         dictionary[kUserAttributePrivateAttributes] = [redactedPrivateAttributes allObjects];
     }
 
-    if (includeFlags && self.config.featuresJsonDictionary) {
-        dictionary[kUserAttributeConfig] = [self.config dictionaryValueIncludeNulls:NO];
+    if (includeFlags && self.flagConfig.featuresJsonDictionary) {
+        dictionary[kUserAttributeConfig] = [self.flagConfig dictionaryValueIncludeNulls:NO];
     }
 
     return [dictionary copy];
@@ -113,7 +113,7 @@ NSString * const kUserAttributePrivateAttributes = @"privateAttrs";
     [encoder encodeObject:self.avatar forKey:kUserAttributeAvatar];
     [encoder encodeObject:self.custom forKey:kUserAttributeCustom];
     [encoder encodeObject:self.updatedAt forKey:kUserAttributeUpdatedAt];
-    [encoder encodeObject:self.config forKey:kUserAttributeConfig];
+    [encoder encodeObject:self.flagConfig forKey:kUserAttributeConfig];
     [encoder encodeBool:self.anonymous forKey:kUserAttributeAnonymous];
     [encoder encodeObject:self.device forKey:kUserAttributeDevice];
     [encoder encodeObject:self.os forKey:kUserAttributeOs];
@@ -133,7 +133,7 @@ NSString * const kUserAttributePrivateAttributes = @"privateAttrs";
         self.avatar = [decoder decodeObjectForKey:kUserAttributeAvatar];
         self.custom = [decoder decodeObjectForKey:kUserAttributeCustom];
         self.updatedAt = [decoder decodeObjectForKey:kUserAttributeUpdatedAt];
-        self.config = [decoder decodeObjectForKey:kUserAttributeConfig];
+        self.flagConfig = [decoder decodeObjectForKey:kUserAttributeConfig];
         self.anonymous = [decoder decodeBoolForKey:kUserAttributeAnonymous];
         self.device = [decoder decodeObjectForKey:kUserAttributeDevice];
         self.os = [decoder decodeObjectForKey:kUserAttributeOs];
@@ -161,7 +161,7 @@ NSString * const kUserAttributePrivateAttributes = @"privateAttrs";
         }
         self.anonymous = [[dictionary objectForKey: kUserAttributeAnonymous] boolValue];
         self.updatedAt = [[NSDateFormatter userDateFormatter] dateFromString:[dictionary objectForKey:kUserAttributeUpdatedAt]];
-        self.config = [[LDFlagConfigModel alloc] initWithDictionary:[dictionary objectForKey:kUserAttributeConfig]];
+        self.flagConfig = [[LDFlagConfigModel alloc] initWithDictionary:[dictionary objectForKey:kUserAttributeConfig]];
         self.privateAttributes = [dictionary objectForKey:kUserAttributePrivateAttributes];
     }
     return self;
@@ -193,11 +193,11 @@ NSString * const kUserAttributePrivateAttributes = @"privateAttrs";
 }
 
 -(NSObject *) flagValue: ( NSString * __nonnull )keyName {
-    return [self.config configFlagValue: keyName];
+    return [self.flagConfig configFlagValue: keyName];
 }
 
 -(BOOL) doesFlagExist: ( NSString * __nonnull )keyName {
-    BOOL value = [self.config doesConfigFlagExist: keyName];
+    BOOL value = [self.flagConfig doesConfigFlagExist: keyName];
     return value;
 }
 

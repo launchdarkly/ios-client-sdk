@@ -189,9 +189,9 @@ NSString *const kTestMobileKey = @"testMobileKey";
     BOOL clientStarted = [[LDClient sharedInstance] start:clientConfig withUserBuilder:userBuilder];
     XCTAssertTrue(clientStarted);
 
-    [LDClient sharedInstance].ldUser.config = flags;
+    [LDClient sharedInstance].ldUser.flagConfig = flags;
 
-    XCTAssertNotNil([LDClient sharedInstance].ldUser.config);
+    XCTAssertNotNil([LDClient sharedInstance].ldUser.flagConfig);
     XCTAssertTrue([[LDClient sharedInstance] boolVariation:@"isABool" fallback:NO]);
 }
 
@@ -206,10 +206,10 @@ NSString *const kTestMobileKey = @"testMobileKey";
     BOOL clientStarted = [[LDClient sharedInstance] start:clientConfig withUserBuilder:userBuilder];
     XCTAssertTrue(clientStarted);
 
-    [LDClient sharedInstance].ldUser.config = flags;
+    [LDClient sharedInstance].ldUser.flagConfig = flags;
 
-    XCTAssertNotNil([LDClient sharedInstance].ldUser.config);
-    XCTAssertFalse([[[[LDClient sharedInstance] ldUser].config.featuresJsonDictionary allKeys] containsObject:targetKey]);
+    XCTAssertNotNil([LDClient sharedInstance].ldUser.flagConfig);
+    XCTAssertFalse([[[[LDClient sharedInstance] ldUser].flagConfig.featuresJsonDictionary allKeys] containsObject:targetKey]);
     XCTAssertTrue([[LDClient sharedInstance] boolVariation:targetKey fallback:YES]);
 }
 
@@ -219,7 +219,7 @@ NSString *const kTestMobileKey = @"testMobileKey";
 
     BOOL clientStarted = [[LDClient sharedInstance] start:clientConfig withUserBuilder:userBuilder];
     XCTAssertTrue(clientStarted);
-    XCTAssertNil([LDClient sharedInstance].ldUser.config);
+    XCTAssertNil([LDClient sharedInstance].ldUser.flagConfig);
     XCTAssertTrue([[[LDClient sharedInstance] stringVariation:@"isAString" fallback:kFallbackString] isEqualToString:kFallbackString]);
 }
 
@@ -232,7 +232,7 @@ NSString *const kTestMobileKey = @"testMobileKey";
     BOOL clientStarted = [[LDClient sharedInstance] start:clientConfig withUserBuilder:userBuilder];
     XCTAssertTrue(clientStarted);
 
-    [LDClient sharedInstance].ldUser.config = flags;
+    [LDClient sharedInstance].ldUser.flagConfig = flags;
 
     XCTAssertTrue([[[LDClient sharedInstance] stringVariation:@"isAString" fallback:kFallbackString] isEqualToString:kTargetValueString]);
 }
@@ -247,9 +247,9 @@ NSString *const kTestMobileKey = @"testMobileKey";
     BOOL clientStarted = [[LDClient sharedInstance] start:clientConfig withUserBuilder:userBuilder];
     XCTAssertTrue(clientStarted);
 
-    [LDClient sharedInstance].ldUser.config = flags;
+    [LDClient sharedInstance].ldUser.flagConfig = flags;
 
-    XCTAssertFalse([[[[LDClient sharedInstance] ldUser].config.featuresJsonDictionary allKeys] containsObject:targetKey]);
+    XCTAssertFalse([[[[LDClient sharedInstance] ldUser].flagConfig.featuresJsonDictionary allKeys] containsObject:targetKey]);
     XCTAssertTrue([[[LDClient sharedInstance] stringVariation:targetKey fallback:kFallbackString] isEqualToString:kFallbackString]);
 }
 
@@ -259,7 +259,7 @@ NSString *const kTestMobileKey = @"testMobileKey";
 
     BOOL clientStarted = [[LDClient sharedInstance] start:clientConfig withUserBuilder:userBuilder];
     XCTAssertTrue(clientStarted);
-    XCTAssertNil([LDClient sharedInstance].ldUser.config);
+    XCTAssertNil([LDClient sharedInstance].ldUser.flagConfig);
     XCTAssertTrue([[[LDClient sharedInstance] numberVariation:@"isANumber" fallback:@5] intValue] == 5);
 }
 
@@ -272,7 +272,7 @@ NSString *const kTestMobileKey = @"testMobileKey";
     BOOL clientStarted = [[LDClient sharedInstance] start:clientConfig withUserBuilder:userBuilder];
     XCTAssertTrue(clientStarted);
 
-    [LDClient sharedInstance].ldUser.config = flags;
+    [LDClient sharedInstance].ldUser.flagConfig = flags;
 
     XCTAssertTrue([[[LDClient sharedInstance] numberVariation:@"isANumber" fallback:@5] intValue] == 2);
 }
@@ -287,9 +287,9 @@ NSString *const kTestMobileKey = @"testMobileKey";
     BOOL clientStarted = [[LDClient sharedInstance] start:clientConfig withUserBuilder:userBuilder];
     XCTAssertTrue(clientStarted);
 
-    [LDClient sharedInstance].ldUser.config = flags;
+    [LDClient sharedInstance].ldUser.flagConfig = flags;
 
-    XCTAssertFalse([[[[LDClient sharedInstance] ldUser].config.featuresJsonDictionary allKeys] containsObject:targetKey]);
+    XCTAssertFalse([[[[LDClient sharedInstance] ldUser].flagConfig.featuresJsonDictionary allKeys] containsObject:targetKey]);
     XCTAssertTrue([[[LDClient sharedInstance] numberVariation:targetKey fallback:@5] intValue] == 5);
 }
 
@@ -299,7 +299,7 @@ NSString *const kTestMobileKey = @"testMobileKey";
 
     BOOL clientStarted = [[LDClient sharedInstance] start:clientConfig withUserBuilder:userBuilder];
     XCTAssertTrue(clientStarted);
-    XCTAssertNil([LDClient sharedInstance].ldUser.config);
+    XCTAssertNil([LDClient sharedInstance].ldUser.flagConfig);
     XCTAssertTrue([[LDClient sharedInstance] doubleVariation:@"isADouble" fallback:2.71828] == 2.71828);
 }
 
@@ -316,7 +316,7 @@ NSString *const kTestMobileKey = @"testMobileKey";
     BOOL clientStarted = [[LDClient sharedInstance] start:clientConfig withUserBuilder:userBuilder];
     XCTAssertTrue(clientStarted);
 
-    [LDClient sharedInstance].ldUser.config = flags;
+    [LDClient sharedInstance].ldUser.flagConfig = flags;
 
     XCTAssertTrue([[LDClient sharedInstance] doubleVariation:targetKey fallback:2.71828] == target);
 }
@@ -332,9 +332,9 @@ NSString *const kTestMobileKey = @"testMobileKey";
     BOOL clientStarted = [[LDClient sharedInstance] start:clientConfig withUserBuilder:userBuilder];
     XCTAssertTrue(clientStarted);
 
-    [LDClient sharedInstance].ldUser.config = flags;
+    [LDClient sharedInstance].ldUser.flagConfig = flags;
 
-    XCTAssertFalse([[[[LDClient sharedInstance] ldUser].config.featuresJsonDictionary allKeys] containsObject:targetKey]);
+    XCTAssertFalse([[[[LDClient sharedInstance] ldUser].flagConfig.featuresJsonDictionary allKeys] containsObject:targetKey]);
     XCTAssertTrue([[LDClient sharedInstance] doubleVariation:targetKey fallback:2.71828] == 2.71828);
 }
 
@@ -346,7 +346,7 @@ NSString *const kTestMobileKey = @"testMobileKey";
     NSArray *fallbackArray = @[@1, @2];
     
     XCTAssertTrue(clientStarted);
-    XCTAssertNil([LDClient sharedInstance].ldUser.config);
+    XCTAssertNil([LDClient sharedInstance].ldUser.flagConfig);
     XCTAssertTrue([[LDClient sharedInstance] arrayVariation:@"isAnArray" fallback:fallbackArray] == fallbackArray);   //object equality!!
 }
 
@@ -366,7 +366,7 @@ NSString *const kTestMobileKey = @"testMobileKey";
     BOOL clientStarted = [[LDClient sharedInstance] start:clientConfig withUserBuilder:userBuilder];
     XCTAssertTrue(clientStarted);
 
-    [LDClient sharedInstance].ldUser.config = flags;
+    [LDClient sharedInstance].ldUser.flagConfig = flags;
 
     NSArray *arrayValue = [[LDClient sharedInstance] arrayVariation:targetKey fallback:fallbackArray];
     XCTAssertTrue([arrayValue isEqualToArray:targetArray]);
@@ -384,9 +384,9 @@ NSString *const kTestMobileKey = @"testMobileKey";
     BOOL clientStarted = [[LDClient sharedInstance] start:clientConfig withUserBuilder:userBuilder];
     XCTAssertTrue(clientStarted);
 
-    [LDClient sharedInstance].ldUser.config = flags;
+    [LDClient sharedInstance].ldUser.flagConfig = flags;
 
-    XCTAssertFalse([[[[LDClient sharedInstance] ldUser].config.featuresJsonDictionary allKeys] containsObject:targetKey]);
+    XCTAssertFalse([[[[LDClient sharedInstance] ldUser].flagConfig.featuresJsonDictionary allKeys] containsObject:targetKey]);
     NSArray *arrayValue = [[LDClient sharedInstance] arrayVariation:targetKey fallback:fallbackArray];
     XCTAssertTrue(arrayValue == fallbackArray);
 }
@@ -399,7 +399,7 @@ NSString *const kTestMobileKey = @"testMobileKey";
     NSDictionary *fallback = @{@"key1": @"value1", @"key2": @[@1, @2]};
 
     XCTAssertTrue(clientStarted);
-    XCTAssertNil([LDClient sharedInstance].ldUser.config);
+    XCTAssertNil([LDClient sharedInstance].ldUser.flagConfig);
     XCTAssertTrue([[LDClient sharedInstance] dictionaryVariation:@"isADictionary" fallback:fallback] == fallback);
 }
 
@@ -419,7 +419,7 @@ NSString *const kTestMobileKey = @"testMobileKey";
     BOOL clientStarted = [[LDClient sharedInstance] start:clientConfig withUserBuilder:userBuilder];
     XCTAssertTrue(clientStarted);
 
-    [LDClient sharedInstance].ldUser.config = flags;
+    [LDClient sharedInstance].ldUser.flagConfig = flags;
 
     XCTAssertTrue([[[LDClient sharedInstance] dictionaryVariation:targetKey fallback:fallback] isEqualToDictionary:target]);
 }
@@ -436,9 +436,9 @@ NSString *const kTestMobileKey = @"testMobileKey";
     BOOL clientStarted = [[LDClient sharedInstance] start:clientConfig withUserBuilder:userBuilder];
     XCTAssertTrue(clientStarted);
 
-    [LDClient sharedInstance].ldUser.config = flags;
+    [LDClient sharedInstance].ldUser.flagConfig = flags;
 
-    XCTAssertFalse([[[[LDClient sharedInstance] ldUser].config.featuresJsonDictionary allKeys] containsObject:targetKey]);
+    XCTAssertFalse([[[[LDClient sharedInstance] ldUser].flagConfig.featuresJsonDictionary allKeys] containsObject:targetKey]);
     XCTAssertTrue([[LDClient sharedInstance] dictionaryVariation:targetKey fallback:fallback] == fallback);
 }
 

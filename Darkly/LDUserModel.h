@@ -31,7 +31,7 @@ extern NSString * __nonnull const kUserAttributeCustom;
 @property (nullable, nonatomic, strong) NSString *avatar;
 @property (nullable, nonatomic, strong) NSDictionary *custom;
 @property (nullable, nonatomic, strong) NSDate *updatedAt;
-@property (nullable, nonatomic, strong) LDFlagConfigModel *config;
+@property (nullable, nonatomic, strong) LDFlagConfigModel *flagConfig;
 @property (nonatomic, strong, nullable) NSArray<NSString *>* privateAttributes;
 
 @property (nonatomic, assign) BOOL anonymous;
