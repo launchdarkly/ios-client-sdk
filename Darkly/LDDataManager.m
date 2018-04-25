@@ -7,6 +7,7 @@
 #import "LDEventModel.h"
 #import "LDUtil.h"
 #import "LDFlagConfigModel.h"
+#import "LDFlagConfigTracker.h"
 
 int const kUserCacheSize = 5;
 
@@ -177,6 +178,15 @@ dispatch_queue_t eventsQueue;
     }
     DEBUG_LOG(@"Creating identify event for user key:%@", user.key);
     [self addEventDictionary:[[LDEventModel identifyEventWithUser:user] dictionaryValueUsingConfig:config]];
+}
+
+-(void)createSummaryEventWithTracker:(LDFlagConfigTracker*)tracker config:(LDConfig*)config {
+    if([self isAtEventCapacity:self.eventsArray]) {
+        DEBUG_LOGX(@"Events have surpassed capacity. Discarding summary event.");
+        return;
+    }
+    DEBUG_LOGX(@"Creating summary event");
+    [self addEventDictionary:[[LDEventModel summaryEventWithTracker:tracker] dictionaryValueUsingConfig:config]];
 }
 
 -(void)addEventDictionary:(NSDictionary*)eventDictionary {

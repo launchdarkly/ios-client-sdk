@@ -14,6 +14,8 @@
 #import "OCMock.h"
 #import "NSArray+UnitTests.h"
 #import "LDDataManager+Testable.h"
+#import "LDFlagConfigTracker.h"
+#import "LDFlagConfigTracker+Testable.h"
 
 extern NSString * const kEventModelKeyKind;
 
@@ -70,28 +72,34 @@ extern NSString * const kEventModelKeyKind;
     [[LDDataManager sharedManager] createCustomEventWithKey:customEvent.key customData:customEvent.data user:self.user config:config];
     LDEventModel *identifyEvent = [LDEventModel stubEventWithKind:kEventModelKindIdentify user:self.user config:config];
     [[LDDataManager sharedManager] createIdentifyEventWithUser:self.user config:config];
-    NSArray<LDEventModel*> *eventStubs = @[featureEvent, customEvent, identifyEvent];
+    LDFlagConfigTracker *trackerStub = [LDFlagConfigTracker stubTracker];
+    LDEventModel *summaryEvent = [LDEventModel summaryEventWithTracker:trackerStub];
+    [[LDDataManager sharedManager] createSummaryEventWithTracker:trackerStub config:config];
+    NSArray<LDEventModel*> *eventStubs = @[featureEvent, customEvent, identifyEvent, summaryEvent];
 
     XCTestExpectation *expectation = [self expectationWithDescription:@"All events dictionary expectation"];
     
     [[LDDataManager sharedManager] allEventDictionaries:^(NSArray *eventDictionaries) {
-        for (NSDictionary *eventDictionary in eventDictionaries) {
+        for (LDEventModel *event in eventStubs) {
             NSPredicate *matchingEventPredicate = [NSPredicate predicateWithBlock:^BOOL(id evaluatedObject, NSDictionary<NSString *,id> *bindings) {
-                LDEventModel *evaluatedEvent = evaluatedObject;
-                return [eventDictionary[kEventModelKeyKind] isEqualToString:evaluatedEvent.kind];
+                if (![evaluatedObject isKindOfClass:[NSDictionary class]]) { return NO; }
+                NSDictionary *evaluatedEventDictionary = evaluatedObject;
+                return [evaluatedEventDictionary[kEventModelKeyKind] isEqualToString:event.kind];
             }];
-            LDEventModel *matchingEvent = [[eventStubs filteredArrayUsingPredicate:matchingEventPredicate] firstObject];
+            NSDictionary *matchingEventDictionary = [[eventDictionaries filteredArrayUsingPredicate:matchingEventPredicate] firstObject];
 
-            XCTAssertNotNil(matchingEvent);
-            if (!matchingEvent) { continue; }
-            XCTAssertTrue([matchingEvent hasPropertiesMatchingDictionary:eventDictionary]);
+            XCTAssertNotNil(matchingEventDictionary);
+            if (!matchingEventDictionary) {
+                NSLog(@"Did not find matching event dictionary for event: %@", event.kind);
+                continue;
+            }
+            XCTAssertTrue([event hasPropertiesMatchingDictionary:matchingEventDictionary]);
         }
         
         [expectation fulfill];
     }];
     
     [self waitForExpectations:@[expectation] timeout:1];
-    
 }
 
 -(void)testAllEventDictionaries {
