@@ -100,6 +100,14 @@ const double featureEventDefaultValueStub = 2.71828;
     return [LDEventModel identifyEventWithUser:user];
 }
 
++(nonnull NSArray<NSDictionary*>*)stubEventDictionariesForUser:(nullable LDUserModel*)user config:(nullable LDConfig*)config {
+    NSDictionary *featureEventDictionary = [[LDEventModel stubEventWithKind:kEventModelKindFeature user:user config:config] dictionaryValueUsingConfig:config];
+    NSDictionary *customEventDictionary = [[LDEventModel stubEventWithKind:kEventModelKindCustom user:user config:config] dictionaryValueUsingConfig:config];
+    NSDictionary *identifyEventDictionary = [[LDEventModel stubEventWithKind:kEventModelKindIdentify user:user config:config] dictionaryValueUsingConfig:config];
+    NSDictionary *summaryEventDictionary = [[LDEventModel summaryEventWithTracker:[LDFlagConfigTracker stubTracker]] dictionaryValueUsingConfig:config];
+    return @[featureEventDictionary, customEventDictionary, identifyEventDictionary, summaryEventDictionary];
+}
+
 -(BOOL)isEqual:(id)object {
     if (![object isKindOfClass:[LDEventModel class]]) {
         NSLog(@"[%@ %@]: object is not class %@", NSStringFromClass([self class]), NSStringFromSelector(_cmd), NSStringFromClass([self class]));

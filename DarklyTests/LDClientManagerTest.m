@@ -11,6 +11,7 @@
 #import "LDDataManager.h"
 #import "LDPollingManager.h"
 #import "LDEventModel.h"
+#import "LDEventModel+Testable.h"
 #import "LDClientManager+EventSource.h"
 #import "LDEvent+Testable.h"
 #import "LDEvent+EventTypes.h"
@@ -18,11 +19,13 @@
 #import "LDUserModel+Stub.h"
 #import "NSJSONSerialization+Testable.h"
 #import "LDUserModel+Equatable.h"
+#import "LDFlagConfigTracker+Testable.h"
+#import "NSDate+ReferencedDate.h"
+#import "NSInteger+Testable.h"
 
 extern NSString * _Nonnull const kLDFlagConfigJsonDictionaryKeyValue;
 extern NSString * _Nonnull const kLDFlagConfigJsonDictionaryKeyVersion;
 extern NSString * _Nonnull const kLDClientManagerStreamMethod;
-
 
 NSString *const mockMobileKey = @"mockMobileKey";
 NSString *const kFeaturesJsonDictionary = @"featuresJsonDictionary";
@@ -250,17 +253,23 @@ NSString *const kBoolFlagKey = @"isABawler";
 }
 
 - (void)testSyncWithServerForEventsWhenEventsExist {
-    NSData *testData = [[NSData alloc] init];
+    LDConfig *config = [[LDConfig alloc] initWithMobileKey:mockMobileKey];
+    NSArray<NSDictionary*> *eventDictionaries = [LDEventModel stubEventDictionariesForUser:[LDClient sharedInstance].ldUser config:config];
+    OCMStub([self.dataManagerMock allEventDictionaries:[OCMArg checkWithBlock:^BOOL(id obj) {
+        void (^completion)(NSArray *) = obj;
+        completion(eventDictionaries);
+        return YES;
+    }]]);
     LDClientManager *clientManager = [LDClientManager sharedInstance];
     [clientManager setOnline:YES];
+    NSInteger startDateMillis = [[NSDate date] millisSince1970];
 
-    [dataManagerMock allEventDictionaries:^(NSArray *array) {
-        OCMStub(array).andReturn(testData);
-        
-        [clientManager syncWithServerForEvents];
-        
-        OCMVerify([self.requestManagerMock performEventRequest:[OCMArg isEqual:testData]]);
-    }];
+    [clientManager syncWithServerForEvents];
+
+    OCMVerify([self.requestManagerMock performEventRequest:[OCMArg isEqual:eventDictionaries]]);
+    XCTAssertNotNil([LDClient sharedInstance].ldUser.config.tracker);
+    XCTAssertTrue([LDClient sharedInstance].ldUser.config.tracker.flagCounters.count == 0);
+    XCTAssertTrue(Approximately([LDClient sharedInstance].ldUser.config.tracker.startDateMillis, startDateMillis, 10));
 }
 
 - (void)testDoNotSyncWithServerForEventsWhenEventsDoNotExist {
