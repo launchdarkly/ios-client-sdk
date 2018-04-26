@@ -56,8 +56,8 @@ extern NSString * const kEventModelKeyKind;
 - (void)testisFlagOnForKey {
     LDFlagConfigModel *flagConfigModel = [LDClient sharedInstance].ldUser.flagConfig;
     
-    BOOL ipaduserFlag = [[flagConfigModel configFlagValue:@"ipaduser"] boolValue];
-    BOOL iosuserFlag = [[flagConfigModel configFlagValue: @"iosuser"] boolValue];
+    BOOL ipaduserFlag = [[flagConfigModel flagValueForFlagKey:@"ipaduser"] boolValue];
+    BOOL iosuserFlag = [[flagConfigModel flagValueForFlagKey: @"iosuser"] boolValue];
     
     XCTAssertFalse(iosuserFlag);
     XCTAssertTrue(ipaduserFlag);

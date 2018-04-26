@@ -102,70 +102,70 @@ extern NSString *const kLDFlagConfigModelKeyKey;
     XCTAssertFalse([subject hasFeaturesEqualToDictionary:differentDictionary]);
 }
 
--(void)testFlagConfigValue_withVersions {
+-(void)testFlagValueForFlagKey_withVersions {
     LDFlagConfigModel *config = [LDFlagConfigModel flagConfigFromJsonFileNamed:@"featureFlags-withVersions"];
     NSDictionary *flagValues = [NSJSONSerialization jsonObjectFromFileNamed:@"featureFlags-withVersions"];
 
     for (NSString *key in [flagValues.allKeys copy]) {
         id targetValue = flagValues[key][kLDFlagConfigValueKeyValue];
         if ([targetValue isKindOfClass:[NSNull class]]) {
-            XCTAssertNil([config configFlagValue:key]);
+            XCTAssertNil([config flagValueForFlagKey:key]);
             continue;
         }
-        XCTAssertTrue([[config configFlagValue:key] isEqual:targetValue]);
+        XCTAssertTrue([[config flagValueForFlagKey:key] isEqual:targetValue]);
     }
 
-    XCTAssertNil([config configFlagValue:@"someMissingKey"]);
+    XCTAssertNil([config flagValueForFlagKey:@"someMissingKey"]);
 }
 
--(void)testFlagConfigValue_withoutVersions {
+-(void)testFlagValueForFlagKey_withoutVersions {
     LDFlagConfigModel *config = [LDFlagConfigModel flagConfigFromJsonFileNamed:@"featureFlags-withoutVersions"];
     NSDictionary *flagValues = [NSJSONSerialization jsonObjectFromFileNamed:@"featureFlags-withoutVersions"];
 
     for (NSString *key in [flagValues.allKeys copy]) {
         id targetValue = flagValues[key];
         if ([targetValue isKindOfClass:[NSNull class]]) {
-            XCTAssertNil([config configFlagValue:key]);
+            XCTAssertNil([config flagValueForFlagKey:key]);
             continue;
         }
-        XCTAssertTrue([[config configFlagValue:key] isEqual:targetValue]);
+        XCTAssertTrue([[config flagValueForFlagKey:key] isEqual:targetValue]);
     }
 
-    XCTAssertNil([config configFlagValue:@"someMissingKey"]);
+    XCTAssertNil([config flagValueForFlagKey:@"someMissingKey"]);
 }
 
--(void)testFlagConfigVersion_withVersions {
+-(void)testFlagVersionForFlagKey_withVersions {
     LDFlagConfigModel *config = [LDFlagConfigModel flagConfigFromJsonFileNamed:@"featureFlags-withVersions"];
     NSDictionary *flagValues = [NSJSONSerialization jsonObjectFromFileNamed:@"featureFlags-withVersions"];
 
     for (NSString *key in [flagValues.allKeys copy]) {
         NSInteger targetVersion = [flagValues[key][kLDFlagConfigValueKeyVersion] integerValue];
-        XCTAssertTrue([config configFlagVersion:key] == targetVersion);
+        XCTAssertTrue([config flagVersionForFlagKey:key] == targetVersion);
     }
 
-    XCTAssertTrue([config configFlagVersion:@"someMissingKey"] == kLDFlagConfigVersionDoesNotExist);
+    XCTAssertTrue([config flagVersionForFlagKey:@"someMissingKey"] == kLDFlagConfigVersionDoesNotExist);
 }
 
--(void)testFlagConfigVersion_withoutVersions {
+-(void)testFlagVersionForFlagKey_withoutVersions {
     LDFlagConfigModel *config = [LDFlagConfigModel flagConfigFromJsonFileNamed:@"featureFlags-withoutVersions"];
     NSDictionary *flagValues = [NSJSONSerialization jsonObjectFromFileNamed:@"featureFlags-withoutVersions"];
 
     for (NSString *key in [flagValues.allKeys copy]) {
-        XCTAssertTrue([config configFlagVersion:key] == kLDFlagConfigVersionDoesNotExist);
+        XCTAssertTrue([config flagVersionForFlagKey:key] == kLDFlagConfigVersionDoesNotExist);
     }
 
-    XCTAssertTrue([config configFlagVersion:@"someMissingKey"] == kLDFlagConfigVersionDoesNotExist);
+    XCTAssertTrue([config flagVersionForFlagKey:@"someMissingKey"] == kLDFlagConfigVersionDoesNotExist);
 }
 
-- (void)testDoesFlagExist {
+- (void)testDoesFlagConfigValueExistForFlagKey {
     LDFlagConfigModel *config = [LDFlagConfigModel flagConfigFromJsonFileNamed:@"featureFlags-withVersions"];
     NSDictionary *flagValues = [NSJSONSerialization jsonObjectFromFileNamed:@"featureFlags-withVersions"];
 
     for (NSString *key in [flagValues.allKeys copy]) {
-        XCTAssertTrue([config doesConfigFlagExist:key]);
+        XCTAssertTrue([config doesFlagConfigValueExistForFlagKey:key]);
     }
 
-    XCTAssertFalse([config doesConfigFlagExist:@"someMissingKey"]);
+    XCTAssertFalse([config doesFlagConfigValueExistForFlagKey:@"someMissingKey"]);
 }
 
 - (void)testAddOrReplaceFromDictionaryWhenKeyDoesntExist {
@@ -177,9 +177,9 @@ extern NSString *const kLDFlagConfigModelKeyKey;
 
     [config addOrReplaceFromDictionary:patch];
 
-    XCTAssertTrue([config doesConfigFlagExist:patchedFlagKey]);
-    XCTAssertEqual([[config configFlagValue:patchedFlagKey] boolValue], patchedFlagValue);
-    XCTAssertEqual([config configFlagVersion:patchedFlagKey], patchedFlagVersion);
+    XCTAssertTrue([config doesFlagConfigValueExistForFlagKey:patchedFlagKey]);
+    XCTAssertEqual([[config flagValueForFlagKey:patchedFlagKey] boolValue], patchedFlagValue);
+    XCTAssertEqual([config flagVersionForFlagKey:patchedFlagKey], patchedFlagVersion);
 }
 
 - (void)testAddOrReplaceFromDictionaryWhenKeyExistsWithPreviousVersion {
@@ -191,9 +191,9 @@ extern NSString *const kLDFlagConfigModelKeyKey;
 
     [config addOrReplaceFromDictionary:patch];
 
-    XCTAssertTrue([config doesConfigFlagExist:patchedFlagKey]);
-    XCTAssertEqual([[config configFlagValue:patchedFlagKey] boolValue], patchedFlagValue);
-    XCTAssertEqual([config configFlagVersion:patchedFlagKey], patchedFlagVersion);
+    XCTAssertTrue([config doesFlagConfigValueExistForFlagKey:patchedFlagKey]);
+    XCTAssertEqual([[config flagValueForFlagKey:patchedFlagKey] boolValue], patchedFlagValue);
+    XCTAssertEqual([config flagVersionForFlagKey:patchedFlagKey], patchedFlagVersion);
 }
 
 - (void)testAddOrReplaceFromDictionaryWhenPatchValueIsNull {
@@ -204,37 +204,37 @@ extern NSString *const kLDFlagConfigModelKeyKey;
 
     [config addOrReplaceFromDictionary:patch];
 
-    XCTAssertTrue([config doesConfigFlagExist:patchedFlagKey]);
-    XCTAssertNil([config configFlagValue:patchedFlagKey]);
-    XCTAssertEqual([config configFlagVersion:patchedFlagKey], patchedFlagVersion);
+    XCTAssertTrue([config doesFlagConfigValueExistForFlagKey:patchedFlagKey]);
+    XCTAssertNil([config flagValueForFlagKey:patchedFlagKey]);
+    XCTAssertEqual([config flagVersionForFlagKey:patchedFlagKey], patchedFlagVersion);
 }
 
 - (void)testAddOrReplaceFromDictionaryWhenKeyExistsWithSameVersion {
     LDFlagConfigModel *config = [LDFlagConfigModel flagConfigFromJsonFileNamed:@"ldFlagConfigModelTest"];
     NSDictionary *patch = [LDFlagConfigModel patchFromJsonFileNamed:@"ldFlagConfigModelPatchVersion2Flag" useVersion:2];
     NSString *patchedFlagKey = patch[kLDFlagConfigModelKeyKey];
-    NSString *originalFlagValue = (NSString*)[config configFlagValue:patchedFlagKey];
-    NSInteger originalFlagVersion = [config configFlagVersion:patchedFlagKey];
+    NSString *originalFlagValue = (NSString*)[config flagValueForFlagKey:patchedFlagKey];
+    NSInteger originalFlagVersion = [config flagVersionForFlagKey:patchedFlagKey];
 
     [config addOrReplaceFromDictionary:patch];
 
-    XCTAssertTrue([config doesConfigFlagExist:patchedFlagKey]);
-    XCTAssertEqual([config configFlagValue:patchedFlagKey], originalFlagValue);
-    XCTAssertEqual([config configFlagVersion:patchedFlagKey], originalFlagVersion);
+    XCTAssertTrue([config doesFlagConfigValueExistForFlagKey:patchedFlagKey]);
+    XCTAssertEqual([config flagValueForFlagKey:patchedFlagKey], originalFlagValue);
+    XCTAssertEqual([config flagVersionForFlagKey:patchedFlagKey], originalFlagVersion);
 }
 
 - (void)testAddOrReplaceFromDictionaryWhenKeyExistsWithLaterVersion {
     LDFlagConfigModel *config = [LDFlagConfigModel flagConfigFromJsonFileNamed:@"ldFlagConfigModelTest"];
     NSDictionary *patch = [LDFlagConfigModel patchFromJsonFileNamed:@"ldFlagConfigModelPatchVersion2Flag" useVersion:1];
     NSString *patchedFlagKey = patch[kLDFlagConfigModelKeyKey];
-    NSString *originalFlagValue = (NSString*)[config configFlagValue:patchedFlagKey];
-    NSInteger originalFlagVersion = [config configFlagVersion:patchedFlagKey];
+    NSString *originalFlagValue = (NSString*)[config flagValueForFlagKey:patchedFlagKey];
+    NSInteger originalFlagVersion = [config flagVersionForFlagKey:patchedFlagKey];
 
     [config addOrReplaceFromDictionary:patch];
 
-    XCTAssertTrue([config doesConfigFlagExist:patchedFlagKey]);
-    XCTAssertEqual([config configFlagValue:patchedFlagKey], originalFlagValue);
-    XCTAssertEqual([config configFlagVersion:patchedFlagKey], originalFlagVersion);
+    XCTAssertTrue([config doesFlagConfigValueExistForFlagKey:patchedFlagKey]);
+    XCTAssertEqual([config flagValueForFlagKey:patchedFlagKey], originalFlagValue);
+    XCTAssertEqual([config flagVersionForFlagKey:patchedFlagKey], originalFlagVersion);
 }
 
 - (void)testAddOrReplaceFromDictionaryWhenDictionaryIsNil {
@@ -294,7 +294,7 @@ extern NSString *const kLDFlagConfigModelKeyKey;
 
     [config deleteFromDictionary:delete];
 
-    XCTAssertFalse([config doesConfigFlagExist:deletedFlagKey]);
+    XCTAssertFalse([config doesFlagConfigValueExistForFlagKey:deletedFlagKey]);
 }
 
 - (void)testDeleteFromDictionaryWhenKeyDoesntExist {

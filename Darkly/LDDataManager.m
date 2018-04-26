@@ -100,7 +100,7 @@ dispatch_queue_t eventsQueue;
 
 - (void)compareConfigForUser:(LDUserModel *)user withNewUser:(LDUserModel *)newUser {
     for (NSString *key in [newUser.flagConfig dictionaryValueIncludeNulls:NO]) {
-        if(user == nil || ![[newUser.flagConfig configFlagValue:key] isEqual:[user.flagConfig configFlagValue:key]]) {
+        if(user == nil || ![[newUser.flagConfig flagValueForFlagKey:key] isEqual:[user.flagConfig flagValueForFlagKey:key]]) {
             [[NSNotificationCenter defaultCenter] postNotificationName:kLDFlagConfigChangedNotification object:nil userInfo:[NSDictionary dictionaryWithObject:key forKey:kFlagKey]];
         }
     }

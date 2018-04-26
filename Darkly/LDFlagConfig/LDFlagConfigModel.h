@@ -20,9 +20,9 @@
 -(nullable NSDictionary*)dictionaryValue;
 -(nullable NSDictionary*)dictionaryValueIncludeNulls:(BOOL)includeNulls;
 
--(BOOL)doesConfigFlagExist:(nonnull NSString*)keyName;
--(nullable id)configFlagValue:(nonnull NSString*)keyName;
--(NSInteger)configFlagVersion:(nonnull NSString*)keyName;
+-(BOOL)doesFlagConfigValueExistForFlagKey:(nonnull NSString*)flagKey;
+-(nullable id)flagValueForFlagKey:(nonnull NSString*)flagKey;
+-(NSInteger)flagVersionForFlagKey:(nonnull NSString*)flagKey;
 
 -(void)addOrReplaceFromDictionary:(nullable NSDictionary*)patch;
 -(void)deleteFromDictionary:(nullable NSDictionary*)delete;
