@@ -32,7 +32,7 @@
 
     XCTAssertTrue([(NSNumber*)subject.value boolValue]);
     XCTAssertEqual(subject.version, 4);
-    XCTAssertEqual(subject.variation, kLDFlagConfigVariationDoesNotExist);
+    XCTAssertEqual(subject.variation, subject.version);   //TODO: When adding server support for variation, use that value instead of the version
 }
 
 -(void)testInitializer_boolValue_withoutVersion {
@@ -48,7 +48,7 @@
 
     XCTAssertEqual([(NSNumber*)subject.value integerValue], 2);
     XCTAssertEqual(subject.version, 4);
-    XCTAssertEqual(subject.variation, kLDFlagConfigVariationDoesNotExist);
+    XCTAssertEqual(subject.variation, subject.version);   //TODO: When adding server support for variation, use that value instead of the version
 }
 
 -(void)testInitializer_numberValue_withoutVersion {
@@ -64,7 +64,7 @@
 
     XCTAssertEqual([(NSNumber*)subject.value doubleValue], M_PI);
     XCTAssertEqual(subject.version, 3);
-    XCTAssertEqual(subject.variation, kLDFlagConfigVariationDoesNotExist);
+    XCTAssertEqual(subject.variation, subject.version);   //TODO: When adding server support for variation, use that value instead of the version
 }
 
 -(void)testInitializer_doubleValue_withoutVersion {
@@ -80,7 +80,7 @@
 
     XCTAssertTrue([subject.value isEqualToString:@"someString"]);
     XCTAssertEqual(subject.version, 3);
-    XCTAssertEqual(subject.variation, kLDFlagConfigVariationDoesNotExist);
+    XCTAssertEqual(subject.variation, subject.version);   //TODO: When adding server support for variation, use that value instead of the version
 }
 
 -(void)testInitializer_stringValue_withoutVersion {
@@ -97,7 +97,7 @@
     NSArray *targetArray = @[@(1), @(2), @(3)];
     XCTAssertTrue([subject.value isEqualToArray:targetArray]);
     XCTAssertEqual(subject.version, 5);
-    XCTAssertEqual(subject.variation, kLDFlagConfigVariationDoesNotExist);
+    XCTAssertEqual(subject.variation, subject.version);   //TODO: When adding server support for variation, use that value instead of the version
 }
 
 -(void)testInitializer_arrayValue_withoutVersion {
@@ -115,7 +115,7 @@
     NSDictionary *targetDictionary = @{@"keyA": @(true), @"keyB": @[@(1), @(2), @(3)], @"keyC": @{@"keyD": @"someStringValue"}};
     XCTAssertTrue([subject.value isEqualToDictionary:targetDictionary]);
     XCTAssertEqual(subject.version, 4);
-    XCTAssertEqual(subject.variation, kLDFlagConfigVariationDoesNotExist);
+    XCTAssertEqual(subject.variation, subject.version);   //TODO: When adding server support for variation, use that value instead of the version
 }
 
 -(void)testInitializer_dictionaryValue_withoutVersion {
@@ -138,7 +138,7 @@
 
     XCTAssertTrue([subject.value isEqual:[NSNull null]]);
     XCTAssertEqual(subject.version, 2);
-    XCTAssertEqual(subject.variation, kLDFlagConfigVariationDoesNotExist);
+    XCTAssertEqual(subject.variation, subject.version);   //TODO: When adding server support for variation, use that value instead of the version
 }
 
 -(void)testInitializer_nullValue_withoutVersion {

@@ -6,7 +6,10 @@
 //  Copyright © 2018 LaunchDarkly. All rights reserved.
 //
 
+#import <Foundation/Foundation.h>
 #import "LDFlagConfigTracker.h"
+#import "LDFlagCounter.h"
+#import "LDFlagConfigValue.h"
 #import "NSDate+ReferencedDate.h"
 
 @interface LDFlagConfigTracker()
@@ -33,12 +36,15 @@
     return [NSDictionary dictionaryWithDictionary:self.mutableFlagCounters];
 }
 
--(void)logRequestForFlagKey:(NSString*)flagKey value:(id)value version:(NSInteger)version variation:(NSInteger)variation defaultValue:(id)defaultValue {
+-(void)logRequestForFlagKey:(NSString*)flagKey flagConfigValue:(LDFlagConfigValue*)flagConfigValue defaultValue:(id)defaultValue {
     if (!self.mutableFlagCounters[flagKey]) {
         self.mutableFlagCounters[flagKey] = [LDFlagCounter counterWithFlagKey:flagKey defaultValue:defaultValue];
     }
-
-    [self.mutableFlagCounters[flagKey] logRequestWithValue:value version:version variation:variation defaultValue:defaultValue];
+    
+    id reportedValue = flagConfigValue ? flagConfigValue.value : defaultValue;
+    NSInteger reportedVersion = flagConfigValue ? flagConfigValue.version : kLDFlagConfigVersionDoesNotExist;
+    NSInteger reportedVariation = flagConfigValue ? flagConfigValue.variation : kLDFlagConfigVariationDoesNotExist;
+    [self.mutableFlagCounters[flagKey] logRequestWithValue:reportedValue version:reportedVersion variation:reportedVariation defaultValue:defaultValue];
 }
 
 @end

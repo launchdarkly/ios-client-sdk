@@ -7,7 +7,9 @@
 //
 
 #import <Foundation/Foundation.h>
-#import "LDFlagCounter.h"
+
+@class LDFlagCounter;
+@class LDFlagConfigValue;
 
 @interface LDFlagConfigTracker : NSObject
 @property (nonatomic, assign, readonly) NSInteger startDateMillis;
@@ -16,5 +18,5 @@
 +(nonnull instancetype)tracker;
 -(nonnull instancetype)init;
 
--(void)logRequestForFlagKey:(nonnull NSString*)flagKey value:(nullable id)value version:(NSInteger)version variation:(NSInteger)variation defaultValue:(nullable id)defaultValue;
+-(void)logRequestForFlagKey:(nonnull NSString*)flagKey flagConfigValue:(nullable LDFlagConfigValue*)flagConfigValue defaultValue:(nullable id)defaultValue;
 @end
