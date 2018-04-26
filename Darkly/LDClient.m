@@ -11,6 +11,7 @@
 #import "DarklyConstants.h"
 #import "NSThread+MainExecutable.h"
 #import "LDThrottler.h"
+#import "LDFlagConfigModel.h"
 
 @interface LDClient()
 @property (nonatomic, assign) BOOL isOnline;
@@ -115,11 +116,11 @@
         return fallback;
     }
     if (self.clientStarted) {
-        BOOL flagExists = [self.ldUser doesFlagExist: featureKey];
-        NSObject *flagValue = [self.ldUser flagValue: featureKey];
+        BOOL flagExists = [self.ldUser.flagConfig doesConfigFlagExist:featureKey];
+        id flagValue = [self.ldUser.flagConfig configFlagValue:featureKey];
         BOOL returnValue = fallback;
         if ([flagValue isKindOfClass:[NSNumber class]] && flagExists) {
-            returnValue = [(NSNumber *)flagValue boolValue];
+            returnValue = [flagValue boolValue];
         }
         
         [[LDDataManager sharedManager] createFeatureEventWithFlagKey: featureKey flagValue:[NSNumber numberWithBool:returnValue] defaultFlagValue:[NSNumber numberWithBool:fallback] user:self.ldUser config:self.ldConfig];
@@ -137,8 +138,8 @@
         return fallback;
     }
     if (self.clientStarted) {
-        BOOL flagExists = [self.ldUser doesFlagExist: featureKey];
-        NSObject *flagValue = [self.ldUser flagValue: featureKey];
+        BOOL flagExists = [self.ldUser.flagConfig doesConfigFlagExist:featureKey];
+        id flagValue = [self.ldUser.flagConfig configFlagValue:featureKey];
         NSNumber *returnValue = fallback;
         if ([flagValue isKindOfClass:[NSNumber class]] && flagExists) {
             returnValue = (NSNumber *)flagValue;
@@ -162,8 +163,8 @@
         DEBUG_LOGX(@"LDClient not started yet!");
         return fallback;
     }
-    BOOL flagExists = [self.ldUser doesFlagExist: featureKey];
-    id flagValue = [self.ldUser flagValue: featureKey];
+    BOOL flagExists = [self.ldUser.flagConfig doesConfigFlagExist:featureKey];
+    id flagValue = [self.ldUser.flagConfig configFlagValue:featureKey];
     double returnValue = fallback;
     if (flagExists && [flagValue isKindOfClass:[NSNumber class]]) {
         returnValue = [((NSNumber *)flagValue) doubleValue];
@@ -180,8 +181,8 @@
         return fallback;
     }
     if (self.clientStarted) {
-        BOOL flagExists = [self.ldUser doesFlagExist: featureKey];
-        NSObject *flagValue = [self.ldUser flagValue: featureKey];
+        BOOL flagExists = [self.ldUser.flagConfig doesConfigFlagExist:featureKey];
+        id flagValue = [self.ldUser.flagConfig configFlagValue:featureKey];
         NSString *returnValue = fallback;
         if ([flagValue isKindOfClass:[NSString class]] && flagExists) {
             returnValue = (NSString *)flagValue;
@@ -205,8 +206,8 @@
         DEBUG_LOGX(@"LDClient not started yet!");
         return fallback;
     }
-    BOOL flagExists = [self.ldUser doesFlagExist: featureKey];
-    id flagValue = [self.ldUser flagValue: featureKey];
+    BOOL flagExists = [self.ldUser.flagConfig doesConfigFlagExist:featureKey];
+    id flagValue = [self.ldUser.flagConfig configFlagValue:featureKey];
     NSArray *returnValue = fallback;
     if (flagExists && [flagValue isKindOfClass:[NSArray class]]) {
         returnValue = (NSArray *)flagValue;
@@ -226,8 +227,8 @@
         DEBUG_LOGX(@"LDClient not started yet!");
         return fallback;
     }
-    BOOL flagExists = [self.ldUser doesFlagExist: featureKey];
-    id flagValue = [self.ldUser flagValue: featureKey];
+    BOOL flagExists = [self.ldUser.flagConfig doesConfigFlagExist:featureKey];
+    id flagValue = [self.ldUser.flagConfig configFlagValue:featureKey];
     NSDictionary *returnValue = fallback;
     if (flagExists && [flagValue isKindOfClass:[NSDictionary class]]) {
         returnValue = (NSDictionary *)flagValue;

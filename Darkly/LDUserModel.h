@@ -42,9 +42,6 @@ extern NSString * __nonnull const kUserAttributeCustom;
 -(nonnull NSDictionary *)dictionaryValueWithPrivateAttributesAndFlagConfig:(BOOL)includeFlags;
 -(nonnull NSDictionary *)dictionaryValueWithFlagConfig:(BOOL)includeFlags includePrivateAttributes:(BOOL)includePrivate config:(nullable LDConfig*)config;
 
--(NSObject * __nonnull) flagValue: ( NSString * __nonnull )keyName;
--(BOOL) doesFlagExist: (nonnull NSString *)keyName;
-
 +(NSArray<NSString *> * __nonnull) allUserAttributes;
 
 @end

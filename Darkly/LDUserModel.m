@@ -192,15 +192,6 @@ NSString * const kUserAttributePrivateAttributes = @"privateAttrs";
     return self;
 }
 
--(NSObject *) flagValue: ( NSString * __nonnull )keyName {
-    return [self.flagConfig configFlagValue: keyName];
-}
-
--(BOOL) doesFlagExist: ( NSString * __nonnull )keyName {
-    BOOL value = [self.flagConfig doesConfigFlagExist: keyName];
-    return value;
-}
-
 -(NSString*) description {
     return [[self dictionaryValueWithPrivateAttributesAndFlagConfig:YES] description];
 }
