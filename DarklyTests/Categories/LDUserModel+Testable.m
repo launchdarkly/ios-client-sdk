@@ -10,6 +10,7 @@
 #import "LDUserModel.h"
 #import "LDFlagConfigModel.h"
 #import "LDFlagConfigModel+Testable.h"
+#import "LDFlagConfigTracker+Testable.h"
 #import "NSDictionary+StringKey_Matchable.h"
 #import "NSDateFormatter+LDUserModel.h"
 
@@ -38,7 +39,7 @@ NSString * const userModelStubCustomValue = @"userModelStubCustomValue";
     stub.avatar = userModelStubAvatar;
     stub.custom = [LDUserModel customStub];
     stub.flagConfig = [LDFlagConfigModel flagConfigFromJsonFileNamed:@"featureFlags-excludeNulls-withVersions"];
-    stub.flagConfig.tracker = tracker ?: [LDFlagConfigTracker stubTracker];
+//    stub.flagConfig.tracker = tracker ?: [LDFlagConfigTracker stubTracker];
 
     return stub;
 }

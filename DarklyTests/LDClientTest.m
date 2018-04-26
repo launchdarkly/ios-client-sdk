@@ -9,6 +9,8 @@
 #import "LDUserModel+Testable.h"
 #import "LDFlagConfigModel.h"
 #import "LDFlagConfigModel+Testable.h"
+#import "LDFlagConfigValue.h"
+#import "LDFlagConfigTracker.h"
 #import "LDUserBuilder.h"
 #import "LDPollingManager.h"
 #import "LDUserBuilder+Testable.h"
@@ -20,8 +22,6 @@
 #import <OHHTTPStubs/OHHTTPStubs.h>
 
 typedef void(^MockLDClientDelegateCallbackBlock)(void);
-
-extern NSString * _Nonnull  const kLDFlagConfigJsonDictionaryKeyValue;
 
 @interface MockLDClientDelegate : NSObject <ClientDelegate>
 @property (nonatomic, assign) NSInteger userDidUpdateCallCount;
@@ -176,7 +176,7 @@ NSString *const kTestMobileKey = @"testMobileKey";
 
     BOOL clientStarted = [[LDClient sharedInstance] start:clientConfig withUserBuilder:userBuilder];
     XCTAssertTrue(clientStarted);
-    XCTAssertNil([LDClient sharedInstance].ldUser.config);
+    XCTAssertNil([LDClient sharedInstance].ldUser.flagConfig);
     XCTAssertTrue([[LDClient sharedInstance] boolVariation:@"isABool" fallback:YES]);
 }
 
@@ -720,6 +720,6 @@ NSString *const kTestMobileKey = @"testMobileKey";
 }
 
 - (id)valueFromJsonFileNamed:(NSString*)jsonFileName key:(NSString*)key {
-    return [self objectFromJsonFileNamed:jsonFileName key:key][kLDFlagConfigJsonDictionaryKeyValue];
+    return [self objectFromJsonFileNamed:jsonFileName key:key][kLDFlagConfigValueKeyValue];
 }
 @end

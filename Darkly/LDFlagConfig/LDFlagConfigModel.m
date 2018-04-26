@@ -13,11 +13,7 @@
 #import "NSMutableDictionary+NullRemovable.h"
 
 NSString * const kFeaturesJsonDictionaryKey = @"featuresJsonDictionary";
-NSString * const kLDFlagConfigJsonDictionaryKeyKey = @"key";
-
-extern NSString * const kLDFlagConfigJsonDictionaryKeyValue;
-extern NSString * const kLDFlagConfigJsonDictionaryKeyVersion;
-extern const NSInteger kLDFlagConfigVersionDoesNotExist;
+NSString * const kLDFlagConfigModelKeyKey = @"key";
 
 @interface LDFlagConfigModel()
 @property (nonatomic, strong) LDFlagConfigTracker *tracker;
@@ -78,7 +74,9 @@ extern const NSInteger kLDFlagConfigVersionDoesNotExist;
 
 -(id)configFlagValue:(NSString*)keyName {
     LDFlagConfigValue *featureValue = self.featuresJsonDictionary[keyName];
-    if (!featureValue || [featureValue.value isKindOfClass:[NSNull class]]) { return nil; }
+    if (!featureValue || [featureValue.value isKindOfClass:[NSNull class]]) {
+        return nil;
+    }
     
     return featureValue.value;
 }
@@ -97,27 +95,27 @@ extern const NSInteger kLDFlagConfigVersionDoesNotExist;
 }
 
 -(void)addOrReplaceFromDictionary:(NSDictionary*)patch {
-    NSString *flagKey = patch[kLDFlagConfigJsonDictionaryKeyKey];
+    NSString *flagKey = patch[kLDFlagConfigModelKeyKey];
     if (flagKey.length == 0) { return; }
 
-    id flagValue = patch[kLDFlagConfigJsonDictionaryKeyValue];
+    id flagValue = patch[kLDFlagConfigValueKeyValue];
     if (!flagValue) { return; }
 
-    id flagVersionObject = patch[kLDFlagConfigJsonDictionaryKeyVersion];
+    id flagVersionObject = patch[kLDFlagConfigValueKeyVersion];
     if (!flagVersionObject || ![flagVersionObject isKindOfClass:[NSNumber class]]) { return; }
     NSInteger flagVersion = [(NSNumber*)flagVersionObject integerValue];
     if ([self doesConfigFlagExist:flagKey] && flagVersion <= [self configFlagVersion:flagKey]) { return; }
 
     NSMutableDictionary *updatedFlagConfig = [NSMutableDictionary dictionaryWithDictionary:self.featuresJsonDictionary];
-    updatedFlagConfig[flagKey] = [LDFlagConfigValue flagConfigValueWithObject:@{kLDFlagConfigJsonDictionaryKeyValue:flagValue, kLDFlagConfigJsonDictionaryKeyVersion:@(flagVersion)}];
+    updatedFlagConfig[flagKey] = [LDFlagConfigValue flagConfigValueWithObject:@{kLDFlagConfigValueKeyValue:flagValue, kLDFlagConfigValueKeyVersion:@(flagVersion)}];
     self.featuresJsonDictionary = [updatedFlagConfig copy];
 }
 
 -(void)deleteFromDictionary:(nullable NSDictionary*)delete {
-    NSString *flagKey = delete[kLDFlagConfigJsonDictionaryKeyKey];
+    NSString *flagKey = delete[kLDFlagConfigModelKeyKey];
     if (flagKey.length == 0) { return; }
 
-    id flagVersionObject = delete[kLDFlagConfigJsonDictionaryKeyVersion];
+    id flagVersionObject = delete[kLDFlagConfigValueKeyVersion];
     if (!flagVersionObject || ![flagVersionObject isKindOfClass:[NSNumber class]]) { return; }
     NSInteger flagVersion = [(NSNumber*)flagVersionObject integerValue];
     if ([self doesConfigFlagExist:flagKey] && flagVersion <= [self configFlagVersion:flagKey]) { return; }

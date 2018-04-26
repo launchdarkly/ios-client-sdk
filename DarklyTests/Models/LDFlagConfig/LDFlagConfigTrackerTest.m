@@ -10,6 +10,7 @@
 #import "LDFlagConfigTracker.h"
 #import "NSDate+ReferencedDate.h"
 #import "LDFlagConfigValue+Testable.h"
+#import "LDFlagCounter.h"
 
 @interface LDFlagConfigTrackerTest : XCTestCase
 

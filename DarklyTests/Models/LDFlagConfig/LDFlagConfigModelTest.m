@@ -12,10 +12,7 @@
 #import "NSDate+ReferencedDate.h"
 #import "NSInteger+Testable.h"
 
-extern NSString *const kLDFlagConfigJsonDictionaryKeyKey;
-extern NSString *const kLDFlagConfigJsonDictionaryKeyValue;
-extern NSString *const kLDFlagConfigJsonDictionaryKeyVersion;
-extern const NSInteger kLDFlagConfigVersionDoesNotExist;
+extern NSString *const kLDFlagConfigModelKeyKey;
 
 @interface LDFlagConfigModelTest : XCTestCase
 
@@ -110,7 +107,7 @@ extern const NSInteger kLDFlagConfigVersionDoesNotExist;
     NSDictionary *flagValues = [NSJSONSerialization jsonObjectFromFileNamed:@"featureFlags-withVersions"];
 
     for (NSString *key in [flagValues.allKeys copy]) {
-        id targetValue = flagValues[key][kLDFlagConfigJsonDictionaryKeyValue];
+        id targetValue = flagValues[key][kLDFlagConfigValueKeyValue];
         if ([targetValue isKindOfClass:[NSNull class]]) {
             XCTAssertNil([config configFlagValue:key]);
             continue;
@@ -142,7 +139,7 @@ extern const NSInteger kLDFlagConfigVersionDoesNotExist;
     NSDictionary *flagValues = [NSJSONSerialization jsonObjectFromFileNamed:@"featureFlags-withVersions"];
 
     for (NSString *key in [flagValues.allKeys copy]) {
-        NSInteger targetVersion = [(NSNumber*)(flagValues[key])[kLDFlagConfigJsonDictionaryKeyVersion] integerValue];
+        NSInteger targetVersion = [flagValues[key][kLDFlagConfigValueKeyVersion] integerValue];
         XCTAssertTrue([config configFlagVersion:key] == targetVersion);
     }
 
@@ -174,9 +171,9 @@ extern const NSInteger kLDFlagConfigVersionDoesNotExist;
 - (void)testAddOrReplaceFromDictionaryWhenKeyDoesntExist {
     LDFlagConfigModel *config = [LDFlagConfigModel flagConfigFromJsonFileNamed:@"ldFlagConfigModelTest"];
     NSDictionary *patch = [NSJSONSerialization jsonObjectFromFileNamed:@"ldFlagConfigModelPatchNewFlag"];
-    NSString *patchedFlagKey = patch[kLDFlagConfigJsonDictionaryKeyKey];
-    BOOL patchedFlagValue = [patch boolValueForKey:kLDFlagConfigJsonDictionaryKeyValue];
-    NSInteger patchedFlagVersion = [patch integerValueForKey:kLDFlagConfigJsonDictionaryKeyVersion];
+    NSString *patchedFlagKey = patch[kLDFlagConfigModelKeyKey];
+    BOOL patchedFlagValue = [patch boolValueForKey:kLDFlagConfigValueKeyValue];
+    NSInteger patchedFlagVersion = [patch integerValueForKey:kLDFlagConfigValueKeyVersion];
 
     [config addOrReplaceFromDictionary:patch];
 
@@ -188,9 +185,9 @@ extern const NSInteger kLDFlagConfigVersionDoesNotExist;
 - (void)testAddOrReplaceFromDictionaryWhenKeyExistsWithPreviousVersion {
     LDFlagConfigModel *config = [LDFlagConfigModel flagConfigFromJsonFileNamed:@"ldFlagConfigModelTest"];
     NSDictionary *patch = [NSJSONSerialization jsonObjectFromFileNamed:@"ldFlagConfigModelPatchVersion1Flag"];
-    NSString *patchedFlagKey = patch[kLDFlagConfigJsonDictionaryKeyKey];
-    BOOL patchedFlagValue = [patch boolValueForKey:kLDFlagConfigJsonDictionaryKeyValue];
-    NSInteger patchedFlagVersion = [patch integerValueForKey:kLDFlagConfigJsonDictionaryKeyVersion];
+    NSString *patchedFlagKey = patch[kLDFlagConfigModelKeyKey];
+    BOOL patchedFlagValue = [patch boolValueForKey:kLDFlagConfigValueKeyValue];
+    NSInteger patchedFlagVersion = [patch integerValueForKey:kLDFlagConfigValueKeyVersion];
 
     [config addOrReplaceFromDictionary:patch];
 
@@ -202,8 +199,8 @@ extern const NSInteger kLDFlagConfigVersionDoesNotExist;
 - (void)testAddOrReplaceFromDictionaryWhenPatchValueIsNull {
     LDFlagConfigModel *config = [LDFlagConfigModel flagConfigFromJsonFileNamed:@"ldFlagConfigModelTest"];
     NSDictionary *patch = [NSJSONSerialization jsonObjectFromFileNamed:@"ldFlagConfigModelPatchVersion2FlagWithNull"];
-    NSString *patchedFlagKey = patch[kLDFlagConfigJsonDictionaryKeyKey];
-    NSInteger patchedFlagVersion = [patch integerValueForKey:kLDFlagConfigJsonDictionaryKeyVersion];
+    NSString *patchedFlagKey = patch[kLDFlagConfigModelKeyKey];
+    NSInteger patchedFlagVersion = [patch integerValueForKey:kLDFlagConfigValueKeyVersion];
 
     [config addOrReplaceFromDictionary:patch];
 
@@ -215,7 +212,7 @@ extern const NSInteger kLDFlagConfigVersionDoesNotExist;
 - (void)testAddOrReplaceFromDictionaryWhenKeyExistsWithSameVersion {
     LDFlagConfigModel *config = [LDFlagConfigModel flagConfigFromJsonFileNamed:@"ldFlagConfigModelTest"];
     NSDictionary *patch = [LDFlagConfigModel patchFromJsonFileNamed:@"ldFlagConfigModelPatchVersion2Flag" useVersion:2];
-    NSString *patchedFlagKey = patch[kLDFlagConfigJsonDictionaryKeyKey];
+    NSString *patchedFlagKey = patch[kLDFlagConfigModelKeyKey];
     NSString *originalFlagValue = (NSString*)[config configFlagValue:patchedFlagKey];
     NSInteger originalFlagVersion = [config configFlagVersion:patchedFlagKey];
 
@@ -229,7 +226,7 @@ extern const NSInteger kLDFlagConfigVersionDoesNotExist;
 - (void)testAddOrReplaceFromDictionaryWhenKeyExistsWithLaterVersion {
     LDFlagConfigModel *config = [LDFlagConfigModel flagConfigFromJsonFileNamed:@"ldFlagConfigModelTest"];
     NSDictionary *patch = [LDFlagConfigModel patchFromJsonFileNamed:@"ldFlagConfigModelPatchVersion2Flag" useVersion:1];
-    NSString *patchedFlagKey = patch[kLDFlagConfigJsonDictionaryKeyKey];
+    NSString *patchedFlagKey = patch[kLDFlagConfigModelKeyKey];
     NSString *originalFlagValue = (NSString*)[config configFlagValue:patchedFlagKey];
     NSInteger originalFlagVersion = [config configFlagVersion:patchedFlagKey];
 
@@ -263,7 +260,7 @@ extern const NSInteger kLDFlagConfigVersionDoesNotExist;
 - (void)testAddOrReplaceFromDictionaryWhenDictionaryIsMissingValue {
     LDFlagConfigModel *targetConfig = [LDFlagConfigModel flagConfigFromJsonFileNamed:@"ldFlagConfigModelTest"];
     LDFlagConfigModel *config = [LDFlagConfigModel flagConfigFromJsonFileNamed:@"ldFlagConfigModelTest"];
-    NSDictionary *patch = [LDFlagConfigModel patchFromJsonFileNamed:@"ldFlagConfigModelPatchVersion2Flag" omitKey:kLDFlagConfigJsonDictionaryKeyValue];
+    NSDictionary *patch = [LDFlagConfigModel patchFromJsonFileNamed:@"ldFlagConfigModelPatchVersion2Flag" omitKey:kLDFlagConfigValueKeyValue];
 
     [config addOrReplaceFromDictionary:patch];
 
@@ -273,7 +270,7 @@ extern const NSInteger kLDFlagConfigVersionDoesNotExist;
 - (void)testAddOrReplaceFromDictionaryWhenDictionaryIsMissingVersion {
     LDFlagConfigModel *targetConfig = [LDFlagConfigModel flagConfigFromJsonFileNamed:@"ldFlagConfigModelTest"];
     LDFlagConfigModel *config = [LDFlagConfigModel flagConfigFromJsonFileNamed:@"ldFlagConfigModelTest"];
-    NSDictionary *patch = [LDFlagConfigModel patchFromJsonFileNamed:@"ldFlagConfigModelPatchVersion2Flag" omitKey:kLDFlagConfigJsonDictionaryKeyVersion];
+    NSDictionary *patch = [LDFlagConfigModel patchFromJsonFileNamed:@"ldFlagConfigModelPatchVersion2Flag" omitKey:kLDFlagConfigValueKeyVersion];
 
     [config addOrReplaceFromDictionary:patch];
 
@@ -283,7 +280,7 @@ extern const NSInteger kLDFlagConfigVersionDoesNotExist;
 - (void)testAddOrReplaceFromDictionaryWhenDictionaryIsUnexpectedFormat {
     LDFlagConfigModel *targetConfig = [LDFlagConfigModel flagConfigFromJsonFileNamed:@"ldFlagConfigModelTest"];
     LDFlagConfigModel *config = [LDFlagConfigModel flagConfigFromJsonFileNamed:@"ldFlagConfigModelTest"];
-    NSDictionary *patch = [LDFlagConfigModel patchFromJsonFileNamed:@"ldFlagConfigModelPatchVersion2Flag" omitKey:kLDFlagConfigJsonDictionaryKeyKey];
+    NSDictionary *patch = [LDFlagConfigModel patchFromJsonFileNamed:@"ldFlagConfigModelPatchVersion2Flag" omitKey:kLDFlagConfigModelKeyKey];
 
     [config addOrReplaceFromDictionary:patch];
 
@@ -293,7 +290,7 @@ extern const NSInteger kLDFlagConfigVersionDoesNotExist;
 - (void)testDeleteFromDictionaryWhenKeyExistsWithPreviousVersion {
     LDFlagConfigModel *config = [LDFlagConfigModel flagConfigFromJsonFileNamed:@"ldFlagConfigModelTest"];
     NSDictionary *delete = [NSJSONSerialization jsonObjectFromFileNamed:@"ldFlagConfigModelDeleteVersion2Flag"];
-    NSString *deletedFlagKey = delete[kLDFlagConfigJsonDictionaryKeyKey];
+    NSString *deletedFlagKey = delete[kLDFlagConfigModelKeyKey];
 
     [config deleteFromDictionary:delete];
 
@@ -353,7 +350,7 @@ extern const NSInteger kLDFlagConfigVersionDoesNotExist;
 - (void)testDeleteFromDictionaryWhenDictionaryIsMissingVersion {
     LDFlagConfigModel *targetConfig = [LDFlagConfigModel flagConfigFromJsonFileNamed:@"ldFlagConfigModelTest"];
     LDFlagConfigModel *config = [LDFlagConfigModel flagConfigFromJsonFileNamed:@"ldFlagConfigModelTest"];
-    NSDictionary *delete = [LDFlagConfigModel deleteFromJsonFileNamed:@"ldFlagConfigModelDeleteVersion2Flag" omitKey:kLDFlagConfigJsonDictionaryKeyVersion];
+    NSDictionary *delete = [LDFlagConfigModel deleteFromJsonFileNamed:@"ldFlagConfigModelDeleteVersion2Flag" omitKey:kLDFlagConfigValueKeyVersion];
 
     [config deleteFromDictionary:delete];
 
@@ -363,7 +360,7 @@ extern const NSInteger kLDFlagConfigVersionDoesNotExist;
 - (void)testDeleteFromDictionaryWhenDictionaryIsUnexpectedFormat {
     LDFlagConfigModel *targetConfig = [LDFlagConfigModel flagConfigFromJsonFileNamed:@"ldFlagConfigModelTest"];
     LDFlagConfigModel *config = [LDFlagConfigModel flagConfigFromJsonFileNamed:@"ldFlagConfigModelTest"];
-    NSDictionary *delete = [LDFlagConfigModel deleteFromJsonFileNamed:@"ldFlagConfigModelDeleteVersion2Flag" omitKey:kLDFlagConfigJsonDictionaryKeyKey];
+    NSDictionary *delete = [LDFlagConfigModel deleteFromJsonFileNamed:@"ldFlagConfigModelDeleteVersion2Flag" omitKey:kLDFlagConfigModelKeyKey];
 
     [config deleteFromDictionary:delete];
 
@@ -476,7 +473,7 @@ extern const NSInteger kLDFlagConfigVersionDoesNotExist;
     NSMutableDictionary *sameDictionary = [NSMutableDictionary dictionaryWithDictionary:[NSJSONSerialization jsonObjectFromFileNamed:@"featureFlags-withVersions"]];
     for (NSString* key in [sameDictionary.allKeys copy]) {
         NSMutableDictionary *flagConfigValueDictionary = [NSMutableDictionary dictionaryWithDictionary:sameDictionary[key]];
-        flagConfigValueDictionary[kLDFlagConfigJsonDictionaryKeyVersion] = @(kLDFlagConfigVersionDoesNotExist);
+        flagConfigValueDictionary[kLDFlagConfigValueKeyVersion] = @(kLDFlagConfigVersionDoesNotExist);
         sameDictionary[key] = flagConfigValueDictionary;
     }
 

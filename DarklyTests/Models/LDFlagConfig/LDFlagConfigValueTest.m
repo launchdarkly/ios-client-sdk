@@ -11,9 +11,6 @@
 #import "LDFlagConfigValue.h"
 #import "LDFlagConfigValue+Testable.h"
 
-extern NSString * const kLDFlagConfigJsonDictionaryKeyValue;
-extern NSString * const kLDFlagConfigJsonDictionaryKeyVersion;
-
 @interface LDFlagConfigValueTest : XCTestCase
 
 @end
@@ -35,6 +32,7 @@ extern NSString * const kLDFlagConfigJsonDictionaryKeyVersion;
 
     XCTAssertTrue([(NSNumber*)subject.value boolValue]);
     XCTAssertEqual(subject.version, 4);
+    XCTAssertEqual(subject.variation, kLDFlagConfigVariationDoesNotExist);
 }
 
 -(void)testInitializer_boolValue_withoutVersion {
@@ -42,6 +40,7 @@ extern NSString * const kLDFlagConfigJsonDictionaryKeyVersion;
 
     XCTAssertTrue([(NSNumber*)subject.value boolValue]);
     XCTAssertEqual(subject.version, kLDFlagConfigVersionDoesNotExist);
+    XCTAssertEqual(subject.variation, kLDFlagConfigVariationDoesNotExist);
 }
 
 -(void)testInitializer_numberValue_withVersion {
@@ -49,6 +48,7 @@ extern NSString * const kLDFlagConfigJsonDictionaryKeyVersion;
 
     XCTAssertEqual([(NSNumber*)subject.value integerValue], 2);
     XCTAssertEqual(subject.version, 4);
+    XCTAssertEqual(subject.variation, kLDFlagConfigVariationDoesNotExist);
 }
 
 -(void)testInitializer_numberValue_withoutVersion {
@@ -56,6 +56,7 @@ extern NSString * const kLDFlagConfigJsonDictionaryKeyVersion;
 
     XCTAssertEqual([(NSNumber*)subject.value integerValue], 2);
     XCTAssertEqual(subject.version, kLDFlagConfigVersionDoesNotExist);
+    XCTAssertEqual(subject.variation, kLDFlagConfigVariationDoesNotExist);
 }
 
 -(void)testInitializer_doubleValue_withVersion {
@@ -63,6 +64,7 @@ extern NSString * const kLDFlagConfigJsonDictionaryKeyVersion;
 
     XCTAssertEqual([(NSNumber*)subject.value doubleValue], M_PI);
     XCTAssertEqual(subject.version, 3);
+    XCTAssertEqual(subject.variation, kLDFlagConfigVariationDoesNotExist);
 }
 
 -(void)testInitializer_doubleValue_withoutVersion {
@@ -70,6 +72,7 @@ extern NSString * const kLDFlagConfigJsonDictionaryKeyVersion;
 
     XCTAssertEqual([(NSNumber*)subject.value doubleValue], M_PI);
     XCTAssertEqual(subject.version, kLDFlagConfigVersionDoesNotExist);
+    XCTAssertEqual(subject.variation, kLDFlagConfigVariationDoesNotExist);
 }
 
 -(void)testInitializer_stringValue_withVersion {
@@ -77,6 +80,7 @@ extern NSString * const kLDFlagConfigJsonDictionaryKeyVersion;
 
     XCTAssertTrue([subject.value isEqualToString:@"someString"]);
     XCTAssertEqual(subject.version, 3);
+    XCTAssertEqual(subject.variation, kLDFlagConfigVariationDoesNotExist);
 }
 
 -(void)testInitializer_stringValue_withoutVersion {
@@ -84,6 +88,7 @@ extern NSString * const kLDFlagConfigJsonDictionaryKeyVersion;
 
     XCTAssertTrue([subject.value isEqualToString:@"someString"]);
     XCTAssertEqual(subject.version, kLDFlagConfigVersionDoesNotExist);
+    XCTAssertEqual(subject.variation, kLDFlagConfigVariationDoesNotExist);
 }
 
 -(void)testInitializer_arrayValue_withVersion {
@@ -92,6 +97,7 @@ extern NSString * const kLDFlagConfigJsonDictionaryKeyVersion;
     NSArray *targetArray = @[@(1), @(2), @(3)];
     XCTAssertTrue([subject.value isEqualToArray:targetArray]);
     XCTAssertEqual(subject.version, 5);
+    XCTAssertEqual(subject.variation, kLDFlagConfigVariationDoesNotExist);
 }
 
 -(void)testInitializer_arrayValue_withoutVersion {
@@ -100,6 +106,7 @@ extern NSString * const kLDFlagConfigJsonDictionaryKeyVersion;
     NSArray *targetArray = @[@(1), @(2), @(3)];
     XCTAssertTrue([subject.value isEqualToArray:targetArray]);
     XCTAssertEqual(subject.version, kLDFlagConfigVersionDoesNotExist);
+    XCTAssertEqual(subject.variation, kLDFlagConfigVariationDoesNotExist);
 }
 
 -(void)testInitializer_dictionaryValue_withVersion {
@@ -108,6 +115,7 @@ extern NSString * const kLDFlagConfigJsonDictionaryKeyVersion;
     NSDictionary *targetDictionary = @{@"keyA": @(true), @"keyB": @[@(1), @(2), @(3)], @"keyC": @{@"keyD": @"someStringValue"}};
     XCTAssertTrue([subject.value isEqualToDictionary:targetDictionary]);
     XCTAssertEqual(subject.version, 4);
+    XCTAssertEqual(subject.variation, kLDFlagConfigVariationDoesNotExist);
 }
 
 -(void)testInitializer_dictionaryValue_withoutVersion {
@@ -116,6 +124,7 @@ extern NSString * const kLDFlagConfigJsonDictionaryKeyVersion;
     NSDictionary *targetDictionary = @{@"keyA": @(true), @"keyB": @[@(1), @(2), @(3)], @"keyC": @{@"keyD": @"someStringValue"}};
     XCTAssertTrue([subject.value isEqualToDictionary:targetDictionary]);
     XCTAssertEqual(subject.version, kLDFlagConfigVersionDoesNotExist);
+    XCTAssertEqual(subject.variation, kLDFlagConfigVariationDoesNotExist);
 }
 
 -(void)testInitializer_ObjectIsNil {
@@ -129,6 +138,7 @@ extern NSString * const kLDFlagConfigJsonDictionaryKeyVersion;
 
     XCTAssertTrue([subject.value isEqual:[NSNull null]]);
     XCTAssertEqual(subject.version, 2);
+    XCTAssertEqual(subject.variation, kLDFlagConfigVariationDoesNotExist);
 }
 
 -(void)testInitializer_nullValue_withoutVersion {
@@ -136,6 +146,7 @@ extern NSString * const kLDFlagConfigJsonDictionaryKeyVersion;
 
     XCTAssertTrue([subject.value isEqual:[NSNull null]]);
     XCTAssertEqual(subject.version, kLDFlagConfigVersionDoesNotExist);
+    XCTAssertEqual(subject.variation, kLDFlagConfigVariationDoesNotExist);
 }
 
 -(void)testEncodeAndDecode_withVersion {
@@ -161,9 +172,10 @@ extern NSString * const kLDFlagConfigJsonDictionaryKeyVersion;
 
     NSDictionary *flagDictionary = [flagConfigValue dictionaryValue];
 
-    XCTAssertEqual(flagConfigValue.value, flagDictionary[kLDFlagConfigJsonDictionaryKeyValue]);
-    XCTAssertTrue([flagDictionary[kLDFlagConfigJsonDictionaryKeyVersion] isKindOfClass:[NSNumber class]]);
-    XCTAssertTrue(flagConfigValue.version == [(NSNumber*)flagDictionary[kLDFlagConfigJsonDictionaryKeyVersion] integerValue]);
+    XCTAssertEqual(flagConfigValue.value, flagDictionary[kLDFlagConfigValueKeyValue]);
+    XCTAssertTrue([flagDictionary[kLDFlagConfigValueKeyVersion] isKindOfClass:[NSNumber class]]);
+    XCTAssertEqual(flagConfigValue.version, [flagDictionary[kLDFlagConfigValueKeyVersion] integerValue]);
+    XCTAssertNil(flagDictionary[kLDFlagConfigValueKeyVariation]);
 }
 
 -(void)testDictionaryValue_withoutVersion {
@@ -171,12 +183,13 @@ extern NSString * const kLDFlagConfigJsonDictionaryKeyVersion;
 
     NSDictionary *flagDictionary = [flagConfigValue dictionaryValue];
 
-    XCTAssertEqual(flagConfigValue.value, flagDictionary[kLDFlagConfigJsonDictionaryKeyValue]);
-    XCTAssertTrue([flagDictionary[kLDFlagConfigJsonDictionaryKeyVersion] isKindOfClass:[NSNumber class]]);
-    XCTAssertTrue(flagConfigValue.version == [(NSNumber*)flagDictionary[kLDFlagConfigJsonDictionaryKeyVersion] integerValue]);
+    XCTAssertEqual(flagConfigValue.value, flagDictionary[kLDFlagConfigValueKeyValue]);
+    XCTAssertTrue([flagDictionary[kLDFlagConfigValueKeyVersion] isKindOfClass:[NSNumber class]]);
+    XCTAssertTrue(flagConfigValue.version == [(NSNumber*)flagDictionary[kLDFlagConfigValueKeyVersion] integerValue]);
+    XCTAssertNil(flagDictionary[kLDFlagConfigValueKeyVariation]);
 }
 
--(void)testEqual_valuesAreTheSame_withVersion {
+-(void)testIsEqual_valuesAreTheSame_withVersion {
     id flagConfigStub = [NSJSONSerialization jsonObjectFromFileNamed:@"boolConfigIsABool-true-withVersion"];
     LDFlagConfigValue *subject = [LDFlagConfigValue flagConfigValueWithObject:flagConfigStub[@"isABool"]];
     LDFlagConfigValue *other = [LDFlagConfigValue flagConfigValueWithObject:flagConfigStub[@"isABool"]];
@@ -184,7 +197,7 @@ extern NSString * const kLDFlagConfigJsonDictionaryKeyVersion;
     XCTAssertTrue([subject isEqual:other]);
 }
 
--(void)testEqual_valuesAreTheSame_withoutVersion {
+-(void)testIsEqual_valuesAreTheSame_withoutVersion {
     id flagConfigStub = [NSJSONSerialization jsonObjectFromFileNamed:@"boolConfigIsABool-true-withoutVersion"];
     LDFlagConfigValue *subject = [LDFlagConfigValue flagConfigValueWithObject:flagConfigStub[@"isABool"]];
     LDFlagConfigValue *other = [LDFlagConfigValue flagConfigValueWithObject:flagConfigStub[@"isABool"]];
@@ -192,21 +205,21 @@ extern NSString * const kLDFlagConfigJsonDictionaryKeyVersion;
     XCTAssertTrue([subject isEqual:other]);
 }
 
--(void)testEqual_valuesDiffer_differentValues_withVersion {
+-(void)testIsEqual_valuesDiffer_differentValues_withVersion {
     LDFlagConfigValue *subject = [LDFlagConfigValue flagConfigValueFromJsonFileNamed:@"boolConfigIsABool-true-withVersion" flagKey:@"isABool"];
     LDFlagConfigValue *other = [LDFlagConfigValue flagConfigValueFromJsonFileNamed:@"boolConfigIsABool-false-withVersion" flagKey:@"isABool"];
 
     XCTAssertFalse([subject isEqual:other]);
 }
 
--(void)testEqual_valuesDiffer_differentValues_withoutVersion {
+-(void)testIsEqual_valuesDiffer_differentValues_withoutVersion {
     LDFlagConfigValue *subject = [LDFlagConfigValue flagConfigValueFromJsonFileNamed:@"boolConfigIsABool-true-withoutVersion" flagKey:@"isABool"];
     LDFlagConfigValue *other = [LDFlagConfigValue flagConfigValueFromJsonFileNamed:@"boolConfigIsABool-false-withoutVersion" flagKey:@"isABool"];
 
     XCTAssertFalse([subject isEqual:other]);
 }
 
--(void)testEqual_valuesDiffer_differentVersions {
+-(void)testIsEqual_valuesDiffer_differentVersions {
     LDFlagConfigValue *subject = [LDFlagConfigValue flagConfigValueFromJsonFileNamed:@"boolConfigIsABool-true-withVersion" flagKey:@"isABool"];
     LDFlagConfigValue *other = [LDFlagConfigValue flagConfigValueFromJsonFileNamed:@"boolConfigIsABool-true-withVersion" flagKey:@"isABool"];
     other.version += 1;
@@ -214,13 +227,13 @@ extern NSString * const kLDFlagConfigJsonDictionaryKeyVersion;
     XCTAssertFalse([subject isEqual:other]);
 }
 
--(void)testEqual_valuesDiffer_differentObjects {
+-(void)testIsEqual_valuesDiffer_differentObjects {
     LDFlagConfigValue *subject = [LDFlagConfigValue flagConfigValueFromJsonFileNamed:@"boolConfigIsABool-true-withVersion" flagKey:@"isABool"];
 
     XCTAssertFalse([subject isEqual:@"someString"]);
 }
 
--(void)testEqual_valuesDiffer_otherIsNil {
+-(void)testIsEqual_valuesDiffer_otherIsNil {
     LDFlagConfigValue *subject = [LDFlagConfigValue flagConfigValueFromJsonFileNamed:@"boolConfigIsABool-true-withVersion" flagKey:@"isABool"];
 
     XCTAssertFalse([subject isEqual:nil]);

@@ -10,6 +10,7 @@
 #import "LDUserModel.h"
 #import "NSDate+ReferencedDate.h"
 #import "LDFlagConfigTracker.h"
+#import "LDFlagCounter.h"
 
 NSString * const kEventModelKindFeature = @"feature";
 NSString * const kEventModelKindCustom = @"custom";

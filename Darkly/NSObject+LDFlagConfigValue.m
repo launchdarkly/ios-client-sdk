@@ -8,17 +8,17 @@
 
 #import "NSObject+LDFlagConfigValue.h"
 
-extern NSString * const kLDFlagConfigJsonDictionaryKeyValue;
-extern NSString * const kLDFlagConfigJsonDictionaryKeyVersion;
+extern NSString * const kLDFlagConfigValueKeyValue;
+extern NSString * const kLDFlagConfigValueKeyVersion;
 
 @implementation NSObject(LDFlagConfigValue)
 
 -(BOOL)isValueAndVersionDictionary {
     if (![self isKindOfClass:[NSDictionary class]]) { return NO; }
     NSDictionary *dictionaryObject = (NSDictionary*)self;
-    if (![dictionaryObject.allKeys containsObject:kLDFlagConfigJsonDictionaryKeyValue]) { return NO; }
-    if (![dictionaryObject.allKeys containsObject:kLDFlagConfigJsonDictionaryKeyVersion]) { return NO; }
-    if (![dictionaryObject[kLDFlagConfigJsonDictionaryKeyVersion] isKindOfClass:[NSNumber class]]) { return NO; }
+    if (![dictionaryObject.allKeys containsObject:kLDFlagConfigValueKeyValue]) { return NO; }
+    if (![dictionaryObject.allKeys containsObject:kLDFlagConfigValueKeyVersion]) { return NO; }
+    if (![dictionaryObject[kLDFlagConfigValueKeyVersion] isKindOfClass:[NSNumber class]]) { return NO; }
 
     return YES;
 }

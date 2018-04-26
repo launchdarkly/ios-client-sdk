@@ -6,13 +6,16 @@
 //  Copyright © 2018 LaunchDarkly. All rights reserved.
 //
 
+#import <Foundation/Foundation.h>
 #import "LDFlagConfigValue.h"
 #import "NSObject+LDFlagConfigValue.h"
 
-NSString * const kLDFlagConfigJsonDictionaryKeyValue = @"value";
-NSString * const kLDFlagConfigJsonDictionaryKeyVersion = @"version";
+NSString * const kLDFlagConfigValueKeyValue = @"value";
+NSString * const kLDFlagConfigValueKeyVersion = @"version";
+NSString * const kLDFlagConfigValueKeyVariation = @"variation";
 
 NSInteger const kLDFlagConfigVersionDoesNotExist = -1;
+NSInteger const kLDFlagConfigVariationDoesNotExist = -1;
 
 @implementation LDFlagConfigValue
 
@@ -25,38 +28,43 @@ NSInteger const kLDFlagConfigVersionDoesNotExist = -1;
     if (!(self = [super init])) { return nil; }
     if ([object isValueAndVersionDictionary]) {
         NSDictionary *valueAndVersionDictionary = object;
-        _value = valueAndVersionDictionary[kLDFlagConfigJsonDictionaryKeyValue];
-        _version = [(NSNumber*)valueAndVersionDictionary[kLDFlagConfigJsonDictionaryKeyVersion] integerValue];
+        self.value = valueAndVersionDictionary[kLDFlagConfigValueKeyValue];
+        self.version = [valueAndVersionDictionary[kLDFlagConfigValueKeyVersion] integerValue];
+        self.variation = valueAndVersionDictionary[kLDFlagConfigValueKeyVariation] ?
+            [valueAndVersionDictionary[kLDFlagConfigValueKeyVariation] integerValue] : kLDFlagConfigVariationDoesNotExist;
     } else {
-        _value = object;
-        _version = kLDFlagConfigVersionDoesNotExist;
+        self.value = object;
+        self.version = kLDFlagConfigVersionDoesNotExist;
+        self.variation = kLDFlagConfigVariationDoesNotExist;
     }
 
     return self;
 }
 
 -(void)encodeWithCoder:(NSCoder *)encoder {
-    [encoder encodeObject:self.value forKey:kLDFlagConfigJsonDictionaryKeyValue];
-    [encoder encodeInteger:self.version forKey:kLDFlagConfigJsonDictionaryKeyVersion];
+    [encoder encodeObject:self.value forKey:kLDFlagConfigValueKeyValue];
+    [encoder encodeInteger:self.version forKey:kLDFlagConfigValueKeyVersion];
+    [encoder encodeInteger:self.variation forKey:kLDFlagConfigValueKeyVariation];
 }
 
 -(id)initWithCoder:(NSCoder *)decoder {
     if (!(self = [super init])) { return nil; }
 
-    _value = [decoder decodeObjectForKey:kLDFlagConfigJsonDictionaryKeyValue];
-    _version = [decoder decodeIntegerForKey:kLDFlagConfigJsonDictionaryKeyVersion];
+    self.value = [decoder decodeObjectForKey:kLDFlagConfigValueKeyValue];
+    self.version = [decoder decodeIntegerForKey:kLDFlagConfigValueKeyVersion];
+    self.variation = [decoder decodeIntegerForKey:kLDFlagConfigValueKeyVariation];
 
     return self;
 }
 
 -(NSDictionary*)dictionaryValue {
-    return @{kLDFlagConfigJsonDictionaryKeyValue: self.value, kLDFlagConfigJsonDictionaryKeyVersion: @(self.version)};
+    return @{kLDFlagConfigValueKeyValue:self.value, kLDFlagConfigValueKeyVersion:@(self.version)};  //TODO: Add variation when server support is added
 }
 
 -(BOOL)isEqual:(id)object {
     if (!object || ![object isKindOfClass:[LDFlagConfigValue class]]) { return NO; }
     LDFlagConfigValue *other = object;
 
-    return [self.value isEqual:other.value] && self.version == other.version;
+    return [self.value isEqual:other.value] && self.version == other.version && self.variation == other.variation;
 }
 @end

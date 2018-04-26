@@ -8,9 +8,7 @@
 
 #import <Foundation/Foundation.h>
 #import "LDFlagValueCounter.h"
-
-extern const NSInteger kLDFlagConfigVersionDoesNotExist;
-const NSInteger kLDFlagConfigVariationDoesNotExist = -1;    //TODO: When adding the new streaming data model, replace this with an extern reference to this value from the LDFlagConfigValue
+#import "LDFlagConfigValue.h"
 
 NSString * const kLDFlagValueCounterKeyValue = @"value";
 NSString * const kLDFlagValueCounterKeyVersion = @"version";

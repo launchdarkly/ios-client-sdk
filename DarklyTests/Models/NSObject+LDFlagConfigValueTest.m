@@ -10,8 +10,8 @@
 #import "NSObject+LDFlagConfigValue.h"
 #import "NSJSONSerialization+Testable.h"
 
-extern NSString * const kLDFlagConfigJsonDictionaryKeyValue;
-extern NSString * const kLDFlagConfigJsonDictionaryKeyVersion;
+extern NSString * const kLDFlagConfigValueKeyValue;
+extern NSString * const kLDFlagConfigValueKeyVersion;
 
 @interface NSObject_LDFlagConfigValueTest : XCTestCase
 @end
@@ -28,7 +28,7 @@ extern NSString * const kLDFlagConfigJsonDictionaryKeyVersion;
 -(void)testIsValueAndVersionDictionary_No_MissingValue {
     id flagConfigStub = [NSJSONSerialization jsonObjectFromFileNamed:@"boolConfigIsABool-true-withVersion"];
     id subject = [NSMutableDictionary dictionaryWithDictionary:(NSDictionary*)flagConfigStub[@"isABool"]];
-    subject[kLDFlagConfigJsonDictionaryKeyValue] = nil;
+    subject[kLDFlagConfigValueKeyValue] = nil;
 
     XCTAssertFalse([subject isValueAndVersionDictionary]);
 }
@@ -36,7 +36,7 @@ extern NSString * const kLDFlagConfigJsonDictionaryKeyVersion;
 -(void)testIsValueAndVersionDictionary_No_MissingVersion {
     id flagConfigStub = [NSJSONSerialization jsonObjectFromFileNamed:@"boolConfigIsABool-true-withVersion"];
     id subject = [NSMutableDictionary dictionaryWithDictionary:(NSDictionary*)flagConfigStub[@"isABool"]];
-    subject[kLDFlagConfigJsonDictionaryKeyVersion] = nil;
+    subject[kLDFlagConfigValueKeyVersion] = nil;
 
     XCTAssertFalse([subject isValueAndVersionDictionary]);
 }
@@ -44,7 +44,7 @@ extern NSString * const kLDFlagConfigJsonDictionaryKeyVersion;
 -(void)testIsValueAndVersionDictionary_No_VersionIsNotANumber {
     id flagConfigStub = [NSJSONSerialization jsonObjectFromFileNamed:@"boolConfigIsABool-true-withVersion"];
     id subject = [NSMutableDictionary dictionaryWithDictionary:(NSDictionary*)flagConfigStub[@"isABool"]];
-    subject[kLDFlagConfigJsonDictionaryKeyVersion] = @"not a number";
+    subject[kLDFlagConfigValueKeyVersion] = @"not a number";
 
     XCTAssertFalse([subject isValueAndVersionDictionary]);
 }

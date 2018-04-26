@@ -22,8 +22,8 @@
 #import "NSDate+ReferencedDate.h"
 #import "NSInteger+Testable.h"
 
-extern NSString * _Nonnull const kLDFlagConfigJsonDictionaryKeyValue;
-extern NSString * _Nonnull const kLDFlagConfigJsonDictionaryKeyVersion;
+extern NSString * _Nonnull const kLDFlagConfigValueKeyValue;
+extern NSString * _Nonnull const kLDFlagConfigValueKeyVersion;
 extern NSString * _Nonnull const kLDClientManagerStreamMethod;
 
 NSString *const mockMobileKey = @"mockMobileKey";
@@ -443,8 +443,8 @@ NSString *const kBoolFlagKey = @"isABawler";
 
     NSMutableDictionary *updatedFlags = [NSMutableDictionary dictionaryWithDictionary:[flagConfig dictionaryValue]];
     NSMutableDictionary *updatedBoolFlag = [NSMutableDictionary dictionaryWithDictionary:updatedFlags[kBoolFlagKey]];
-    updatedBoolFlag[kLDFlagConfigJsonDictionaryKeyValue] = @(![updatedBoolFlag[kLDFlagConfigJsonDictionaryKeyValue] boolValue]);
-    updatedBoolFlag[kLDFlagConfigJsonDictionaryKeyVersion] = @([updatedBoolFlag[kLDFlagConfigJsonDictionaryKeyVersion] integerValue] + 1);
+    updatedBoolFlag[kLDFlagConfigValueKeyValue] = @(![updatedBoolFlag[kLDFlagConfigValueKeyValue] boolValue]);
+    updatedBoolFlag[kLDFlagConfigValueKeyVersion] = @([updatedBoolFlag[kLDFlagConfigValueKeyVersion] integerValue] + 1);
     updatedFlags[kBoolFlagKey] = updatedBoolFlag;
 
     [[LDClientManager sharedInstance] processedConfig:YES jsonConfigDictionary:[updatedFlags copy]];

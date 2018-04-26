@@ -7,11 +7,10 @@
 //
 
 #import "LDFlagConfigModel.h"
+#import "LDFlagConfigValue.h"
 #import "LDFlagConfigModel+Testable.h"
 #import "LDFlagConfigTracker+Testable.h"
 #import "NSJSONSerialization+Testable.h"
-
-extern NSString * const kLDFlagConfigJsonDictionaryKeyVersion;
 
 @implementation LDFlagConfigModel(Testable)
 @dynamic tracker;
@@ -24,7 +23,7 @@ extern NSString * const kLDFlagConfigJsonDictionaryKeyVersion;
 
 +(NSDictionary*)patchFromJsonFileNamed:(NSString *)fileName useVersion:(NSInteger)version {
     NSMutableDictionary *patch = [NSMutableDictionary dictionaryWithDictionary:[NSJSONSerialization jsonObjectFromFileNamed:fileName]];
-    patch[kLDFlagConfigJsonDictionaryKeyVersion] = @(version);
+    patch[kLDFlagConfigValueKeyVersion] = @(version);
     return patch;
 }
 
