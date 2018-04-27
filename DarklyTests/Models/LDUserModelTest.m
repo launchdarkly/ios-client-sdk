@@ -10,6 +10,10 @@
 #import "NSMutableDictionary+NullRemovable.h"
 #import "NSString+RemoveWhitespace.h"
 #import "NSJSONSerialization+Testable.h"
+#import "LDUtil.h"
+#import "NSDate+ReferencedDate.h"
+#import "LDFlagConfigModel.h"
+#import "LDFlagConfigTracker.h"
 
 @interface LDUserModelTest : XCTestCase
 @end
@@ -31,6 +35,26 @@
     XCTAssertNotNil(user.device);
     XCTAssertNotNil(user.updatedAt);
     XCTAssertNil(user.privateAttributes);
+}
+
+-(void)testInit {
+    NSDate *creationDate = [NSDate date];
+    LDUserModel *user = [[LDUserModel alloc] init];
+
+    XCTAssertNotNil(user);
+    XCTAssertEqualObjects(user.device, [LDUtil getDeviceAsString]);
+    XCTAssertEqualObjects(user.os, [LDUtil getSystemVersionAsString]);
+    XCTAssertTrue([user.updatedAt isWithinTimeInterval:0.01 ofDate:creationDate]);
+    XCTAssertNotNil(user.custom);
+    XCTAssertTrue(user.custom.count == 0);
+    XCTAssertNotNil(user.flagConfig);
+    if (user.flagConfig) {
+        XCTAssertTrue(user.flagConfig.featuresJsonDictionary.count == 0);
+        XCTAssertNotNil(user.flagConfig.tracker);
+        if (user.flagConfig.tracker) {
+            XCTAssertTrue(user.flagConfig.tracker.flagCounters.count == 0);
+        }
+    }
 }
 
 -(void)testDictionaryValueWithFlags_Yes_AndPrivateProperties_Yes {

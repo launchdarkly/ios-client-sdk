@@ -169,26 +169,26 @@ NSString * const kUserAttributePrivateAttributes = @"privateAttrs";
 
 - (instancetype)init {
     self = [super init];
-    
-    if(self != nil) {
-        // Need to set device
-        NSString *device = [LDUtil getDeviceAsString];
-        DEBUG_LOG(@"User building User with device: %@", device);
-        [self setDevice:device];
-        
-        // Need to set os
-        NSString *systemVersion = [LDUtil getSystemVersionAsString];
-        DEBUG_LOG(@"User building User with system version: %@", systemVersion);
-        [self setOs:systemVersion];
-        
-        // Need to set updated Date
-        NSDate *currentDate = [NSDate date];
-        DEBUG_LOG(@"User building User with updatedAt: %@", currentDate);
-        [self setUpdatedAt:currentDate];
-        
-        self.custom = @{};
-    }
-    
+    if(self == nil) { return nil; }
+
+    // Need to set device
+    NSString *device = [LDUtil getDeviceAsString];
+    DEBUG_LOG(@"User building User with device: %@", device);
+    [self setDevice:device];
+
+    // Need to set os
+    NSString *systemVersion = [LDUtil getSystemVersionAsString];
+    DEBUG_LOG(@"User building User with system version: %@", systemVersion);
+    [self setOs:systemVersion];
+
+    // Need to set updated Date
+    NSDate *currentDate = [NSDate date];
+    DEBUG_LOG(@"User building User with updatedAt: %@", currentDate);
+    [self setUpdatedAt:currentDate];
+
+    self.custom = @{};
+    self.flagConfig = [[LDFlagConfigModel alloc] init];
+
     return self;
 }
 
