@@ -61,11 +61,14 @@ typedef void(^MockLDClientDelegateCallbackBlock)(void);
 
 @interface LDClientTest : DarklyXCTestCase <ClientDelegate>
 @property (nonatomic, strong) XCTestExpectation *userConfigUpdatedNotificationExpectation;
-@property (nonatomic, assign) BOOL configureUser;
 @property (nonatomic, strong) id mockLDClientManager;
 @property (nonatomic, strong) id mockLDDataManager;
 @property (nonatomic, strong) id mockLDRequestManager;
 @property (nonatomic, strong) id throttlerMock;
+@property (nonatomic, strong) id trackerMock;
+@property (nonatomic, strong) id userBuilderMock;
+@property (nonatomic, strong) LDUserModel *user;
+@property (nonatomic, strong) LDConfig *config;
 @end
 
 NSString *const kFallbackString = @"fallbackString";
@@ -76,8 +79,6 @@ NSString *const kTestMobileKey = @"testMobileKey";
 
 - (void)setUp {
     [super setUp];
-    // Put setup code here. This method is called before the invocation of each test method in the class.
-    self.configureUser = NO;
 
     id mockClientManager = OCMClassMock([LDClientManager class]);
     OCMStub(ClassMethod([mockClientManager sharedInstance])).andReturn(mockClientManager);
@@ -94,6 +95,15 @@ NSString *const kTestMobileKey = @"testMobileKey";
     self.throttlerMock = OCMClassMock([LDThrottler class]);
     OCMStub([self.throttlerMock runThrottled:[OCMArg invokeBlock]]);
     [LDClient sharedInstance].throttler = self.throttlerMock;
+
+    self.trackerMock = OCMClassMock([LDFlagConfigTracker class]);
+
+    self.user = [LDUserModel stubWithKey:nil usingTracker:self.trackerMock];
+
+    self.userBuilderMock = OCMClassMock([LDUserBuilder class]);
+    OCMStub([self.userBuilderMock build]).andReturn(self.user);
+
+    self.config = [[LDConfig alloc] initWithMobileKey:kTestMobileKey];
 }
 
 - (void)tearDown {
@@ -101,14 +111,21 @@ NSString *const kTestMobileKey = @"testMobileKey";
     [LDClient sharedInstance].delegate = nil;
     [OHHTTPStubs removeAllStubs];
     [[NSNotificationCenter defaultCenter] removeObserver:self];
+    self.user = nil;
+    self.config = nil;
     [self.mockLDClientManager stopMocking];
     self.mockLDClientManager = nil;
     [self.mockLDDataManager stopMocking];
     self.mockLDDataManager = nil;
     [self.mockLDRequestManager stopMocking];
     self.mockLDRequestManager = nil;
+    [self.throttlerMock stopMocking];
+    self.throttlerMock = nil;
+    [self.trackerMock stopMocking];
+    self.trackerMock = nil;
+    [self.userBuilderMock stopMocking];
+    self.userBuilderMock = nil;
 
-    self.configureUser = NO;
     self.userConfigUpdatedNotificationExpectation = nil;
     [super tearDown];
 }
@@ -163,285 +180,302 @@ NSString *const kTestMobileKey = @"testMobileKey";
     [self.mockLDDataManager verify];
 }
 
-- (void)testBoolVariationWithStart {
-    LDConfig *config = [[LDConfig alloc] initWithMobileKey:kTestMobileKey];
-    [[LDClient sharedInstance] start:config withUserBuilder:nil];
-    BOOL boolValue = [[LDClient sharedInstance] boolVariation:@"test" fallback:YES];
-    XCTAssertTrue(boolValue);
+#pragma mark - Variations
+#pragma mark Bool Variation
+- (void)testBoolVariation_knownFlag {
+    [[LDClient sharedInstance] start:self.config withUserBuilder:self.userBuilderMock];
+    NSString *flagKey = @"isABool";
+    id defaultFlagValue = @(NO);
+    LDFlagConfigModel *flagConfigModel = [self configureUserWithFlagConfigModelFromJsonFileNamed:@"boolConfigIsABool-true-withVersion"];
+    LDFlagConfigValue *flagConfigValue = [flagConfigModel flagConfigValueForFlagKey:flagKey];
+    id targetFlagValue = flagConfigValue.value;
+    [[self.dataManagerMock expect] createFeatureEventWithFlagKey:flagKey flagValue:targetFlagValue defaultFlagValue:defaultFlagValue user:self.user config:self.config];
+    [[self.trackerMock expect] logRequestForFlagKey:flagKey flagConfigValue:flagConfigValue defaultValue:defaultFlagValue];
+
+    BOOL flagValue = [[LDClient sharedInstance] boolVariation:flagKey fallback:[defaultFlagValue boolValue]];
+
+    XCTAssertEqual(flagValue, [targetFlagValue boolValue]);
+    [self.dataManagerMock verify];
+    [self.trackerMock verify];
 }
 
-- (void)testBoolVariationWithoutConfig {
-    LDConfig *clientConfig = [[LDConfig alloc] initWithMobileKey:kTestMobileKey];
-    LDUserBuilder *userBuilder = [LDUserBuilder userBuilderWithKey:[[NSUUID UUID] UUIDString]];
+- (void)testBoolVariation_unknownFlag {
+    [[LDClient sharedInstance] start:self.config withUserBuilder:self.userBuilderMock];
+    NSString *flagKey = @"dummy-flag-key";
+    id defaultFlagValue = @(YES);
+    id targetFlagValue = defaultFlagValue;
+    [self configureUserWithFlagConfigModelFromJsonFileNamed:@"boolConfigIsABool-false-withVersion"];
+    [[self.dataManagerMock expect] createFeatureEventWithFlagKey:flagKey flagValue:targetFlagValue defaultFlagValue:defaultFlagValue user:self.user config:self.config];
+    [[self.trackerMock expect] logRequestForFlagKey:flagKey flagConfigValue:nil defaultValue:defaultFlagValue];
 
-    BOOL clientStarted = [[LDClient sharedInstance] start:clientConfig withUserBuilder:userBuilder];
-    XCTAssertTrue(clientStarted);
-    XCTAssertNil([LDClient sharedInstance].ldUser.flagConfig);
-    XCTAssertTrue([[LDClient sharedInstance] boolVariation:@"isABool" fallback:YES]);
+    BOOL flagValue = [[LDClient sharedInstance] boolVariation:flagKey fallback:[defaultFlagValue boolValue]];
+
+    XCTAssertEqual(flagValue, [targetFlagValue boolValue]);
+    [self.dataManagerMock verify];
+    [self.trackerMock verify];
 }
 
-- (void)testBoolVariationWithConfig {
-    LDConfig *clientConfig = [[LDConfig alloc] initWithMobileKey:kTestMobileKey];
-    LDUserBuilder *userBuilder = [LDUserBuilder userBuilderWithKey:[[NSUUID UUID] UUIDString]];
+- (void)testBoolVariation_knownFlag_withoutStart {
+    NSString *flagKey = @"isABool";
+    id defaultFlagValue = @(NO);
+    id targetFlagValue = defaultFlagValue;
+    [self configureUserWithFlagConfigModelFromJsonFileNamed:@"boolConfigIsABool-true-withVersion"];
+    [[self.dataManagerMock reject] createFeatureEventWithFlagKey:[OCMArg any] flagValue:[OCMArg any] defaultFlagValue:[OCMArg any] user:self.user config:self.config];
+    [[self.trackerMock reject] logRequestForFlagKey:[OCMArg any] flagConfigValue:[OCMArg any] defaultValue:[OCMArg any]];
 
-    LDFlagConfigModel *flags = [LDFlagConfigModel flagConfigFromJsonFileNamed:@"boolConfigIsABool-true-withVersion"];
+    BOOL flagValue = [[LDClient sharedInstance] boolVariation:flagKey fallback:[defaultFlagValue boolValue]];
 
-    BOOL clientStarted = [[LDClient sharedInstance] start:clientConfig withUserBuilder:userBuilder];
-    XCTAssertTrue(clientStarted);
-
-    [LDClient sharedInstance].ldUser.flagConfig = flags;
-
-    XCTAssertNotNil([LDClient sharedInstance].ldUser.flagConfig);
-    XCTAssertTrue([[LDClient sharedInstance] boolVariation:@"isABool" fallback:NO]);
+    XCTAssertEqual(flagValue, [targetFlagValue boolValue]);
+    [self.dataManagerMock verify];
+    [self.trackerMock verify];
 }
 
-- (void)testBoolVariationFallback {
-    NSString *targetKey = @"isNotABool";
+#pragma mark Number Variation
+- (void)testNumberVariation_knownFlag {
+    [[LDClient sharedInstance] start:self.config withUserBuilder:self.userBuilderMock];
+    NSString *flagKey = @"isANumber";
+    id defaultFlagValue = @5;
+    LDFlagConfigModel *flagConfigModel = [self configureUserWithFlagConfigModelFromJsonFileNamed:@"numberConfigIsANumber-2-withVersion"];
+    LDFlagConfigValue *flagConfigValue = [flagConfigModel flagConfigValueForFlagKey:flagKey];
+    id targetFlagValue = flagConfigValue.value;
+    [[self.dataManagerMock expect] createFeatureEventWithFlagKey:flagKey flagValue:targetFlagValue defaultFlagValue:defaultFlagValue user:self.user config:self.config];
+    [[self.trackerMock expect] logRequestForFlagKey:flagKey flagConfigValue:flagConfigValue defaultValue:defaultFlagValue];
 
-    LDConfig *clientConfig = [[LDConfig alloc] initWithMobileKey:kTestMobileKey];
-    LDUserBuilder *userBuilder = [LDUserBuilder userBuilderWithKey:[[NSUUID UUID] UUIDString]];
+    NSNumber *flagValue = [[LDClient sharedInstance] numberVariation:flagKey fallback:defaultFlagValue];
 
-    LDFlagConfigModel *flags = [LDFlagConfigModel flagConfigFromJsonFileNamed:@"boolConfigIsABool-false"];
-
-    BOOL clientStarted = [[LDClient sharedInstance] start:clientConfig withUserBuilder:userBuilder];
-    XCTAssertTrue(clientStarted);
-
-    [LDClient sharedInstance].ldUser.flagConfig = flags;
-
-    XCTAssertNotNil([LDClient sharedInstance].ldUser.flagConfig);
-    XCTAssertFalse([[[[LDClient sharedInstance] ldUser].flagConfig.featuresJsonDictionary allKeys] containsObject:targetKey]);
-    XCTAssertTrue([[LDClient sharedInstance] boolVariation:targetKey fallback:YES]);
+    XCTAssertEqualObjects(flagValue, targetFlagValue);
+    [self.dataManagerMock verify];
+    [self.trackerMock verify];
 }
 
-- (void)testStringVariationWithoutConfig {
-    LDConfig *clientConfig = [[LDConfig alloc] initWithMobileKey:kTestMobileKey];
-    LDUserBuilder *userBuilder = [LDUserBuilder userBuilderWithKey:[[NSUUID UUID] UUIDString]];
+- (void)testNumberVariation_unknownFlag {
+    [[LDClient sharedInstance] start:self.config withUserBuilder:self.userBuilderMock];
+    NSString *flagKey = @"dummy-flag-key";
+    id defaultFlagValue = @5;
+    id targetFlagValue = defaultFlagValue;
+    [self configureUserWithFlagConfigModelFromJsonFileNamed:@"numberConfigIsANumber-2-withVersion"];
+    [[self.dataManagerMock expect] createFeatureEventWithFlagKey:flagKey flagValue:targetFlagValue defaultFlagValue:defaultFlagValue user:self.user config:self.config];
+    [[self.trackerMock expect] logRequestForFlagKey:flagKey flagConfigValue:nil defaultValue:defaultFlagValue];
 
-    BOOL clientStarted = [[LDClient sharedInstance] start:clientConfig withUserBuilder:userBuilder];
-    XCTAssertTrue(clientStarted);
-    XCTAssertNil([LDClient sharedInstance].ldUser.flagConfig);
-    XCTAssertTrue([[[LDClient sharedInstance] stringVariation:@"isAString" fallback:kFallbackString] isEqualToString:kFallbackString]);
+    NSNumber *flagValue = [[LDClient sharedInstance] numberVariation:flagKey fallback:defaultFlagValue];
+
+    XCTAssertEqualObjects(flagValue, targetFlagValue);
+    [self.dataManagerMock verify];
+    [self.trackerMock verify];
 }
 
-- (void)testStringVariationWithConfig {
-    LDConfig *clientConfig = [[LDConfig alloc] initWithMobileKey:kTestMobileKey];
-    LDUserBuilder *userBuilder = [LDUserBuilder userBuilderWithKey:[[NSUUID UUID] UUIDString]];
+- (void)testNumberVariation_knownFlag_withoutStart {
+    NSString *flagKey = @"isANumber";
+    id defaultFlagValue = @5;
+    id targetFlagValue = defaultFlagValue;
+    [self configureUserWithFlagConfigModelFromJsonFileNamed:@"numberConfigIsANumber-2-withVersion"];
+    [[self.dataManagerMock reject] createFeatureEventWithFlagKey:[OCMArg any] flagValue:[OCMArg any] defaultFlagValue:[OCMArg any] user:self.user config:self.config];
+    [[self.trackerMock reject] logRequestForFlagKey:[OCMArg any] flagConfigValue:[OCMArg any] defaultValue:[OCMArg any]];
 
-    LDFlagConfigModel *flags = [LDFlagConfigModel flagConfigFromJsonFileNamed:@"stringConfigIsAString-someString-withVersion"];
+    NSNumber *flagValue = [[LDClient sharedInstance] numberVariation:flagKey fallback:defaultFlagValue];
 
-    BOOL clientStarted = [[LDClient sharedInstance] start:clientConfig withUserBuilder:userBuilder];
-    XCTAssertTrue(clientStarted);
-
-    [LDClient sharedInstance].ldUser.flagConfig = flags;
-
-    XCTAssertTrue([[[LDClient sharedInstance] stringVariation:@"isAString" fallback:kFallbackString] isEqualToString:kTargetValueString]);
+    XCTAssertEqualObjects(flagValue, targetFlagValue);
+    [self.dataManagerMock verify];
+    [self.trackerMock verify];
 }
 
-- (void)testStringVariationFallback {
-    NSString *targetKey = @"isNotAString";
-    LDConfig *clientConfig = [[LDConfig alloc] initWithMobileKey:kTestMobileKey];
-    LDUserBuilder *userBuilder = [LDUserBuilder userBuilderWithKey:[[NSUUID UUID] UUIDString]];
+#pragma mark Double Variation
+- (void)testDoubleVariation_knownFlag {
+    [[LDClient sharedInstance] start:self.config withUserBuilder:self.userBuilderMock];
+    NSString *flagKey = @"isADouble";
+    id defaultFlagValue = @(2.71828);
+    LDFlagConfigModel *flagConfigModel = [self configureUserWithFlagConfigModelFromJsonFileNamed:@"doubleConfigIsADouble-Pi-withVersion"];
+    LDFlagConfigValue *flagConfigValue = [flagConfigModel flagConfigValueForFlagKey:flagKey];
+    id targetFlagValue = flagConfigValue.value;
+    [[self.dataManagerMock expect] createFeatureEventWithFlagKey:flagKey flagValue:targetFlagValue defaultFlagValue:defaultFlagValue user:self.user config:self.config];
+    [[self.trackerMock expect] logRequestForFlagKey:flagKey flagConfigValue:flagConfigValue defaultValue:defaultFlagValue];
 
-    LDFlagConfigModel *flags = [LDFlagConfigModel flagConfigFromJsonFileNamed:@"stringConfigIsAString-someString-withVersion"];
+    double flagValue = [[LDClient sharedInstance] doubleVariation:flagKey fallback:[defaultFlagValue doubleValue]];
 
-    BOOL clientStarted = [[LDClient sharedInstance] start:clientConfig withUserBuilder:userBuilder];
-    XCTAssertTrue(clientStarted);
-
-    [LDClient sharedInstance].ldUser.flagConfig = flags;
-
-    XCTAssertFalse([[[[LDClient sharedInstance] ldUser].flagConfig.featuresJsonDictionary allKeys] containsObject:targetKey]);
-    XCTAssertTrue([[[LDClient sharedInstance] stringVariation:targetKey fallback:kFallbackString] isEqualToString:kFallbackString]);
+    XCTAssertEqual(flagValue, [targetFlagValue doubleValue]);
+    [self.dataManagerMock verify];
+    [self.trackerMock verify];
 }
 
-- (void)testNumberVariationWithoutConfig {
-    LDConfig *clientConfig = [[LDConfig alloc] initWithMobileKey:kTestMobileKey];
-    LDUserBuilder *userBuilder = [LDUserBuilder userBuilderWithKey:[[NSUUID UUID] UUIDString]];
+- (void)testDoubleVariation_unknownFlag {
+    [[LDClient sharedInstance] start:self.config withUserBuilder:self.userBuilderMock];
+    NSString *flagKey = @"dummy-flag-key";
+    id defaultFlagValue = @(2.71828);
+    id targetFlagValue = defaultFlagValue;
+    [self configureUserWithFlagConfigModelFromJsonFileNamed:@"doubleConfigIsADouble-Pi-withVersion"];
+    [[self.dataManagerMock expect] createFeatureEventWithFlagKey:flagKey flagValue:targetFlagValue defaultFlagValue:defaultFlagValue user:self.user config:self.config];
+    [[self.trackerMock expect] logRequestForFlagKey:flagKey flagConfigValue:nil defaultValue:defaultFlagValue];
 
-    BOOL clientStarted = [[LDClient sharedInstance] start:clientConfig withUserBuilder:userBuilder];
-    XCTAssertTrue(clientStarted);
-    XCTAssertNil([LDClient sharedInstance].ldUser.flagConfig);
-    XCTAssertTrue([[[LDClient sharedInstance] numberVariation:@"isANumber" fallback:@5] intValue] == 5);
+    double flagValue = [[LDClient sharedInstance] doubleVariation:flagKey fallback:[defaultFlagValue doubleValue]];
+
+    XCTAssertEqual(flagValue, [targetFlagValue doubleValue]);
+    [self.dataManagerMock verify];
+    [self.trackerMock verify];
 }
 
-- (void)testNumberVariationWithConfig {
-    LDConfig *clientConfig = [[LDConfig alloc] initWithMobileKey:kTestMobileKey];
-    LDUserBuilder *userBuilder = [LDUserBuilder userBuilderWithKey:[[NSUUID UUID] UUIDString]];
+- (void)testDoubleVariation_knownFlag_withoutStart {
+    NSString *flagKey = @"isADouble";
+    id defaultFlagValue = @(2.71828);
+    id targetFlagValue = defaultFlagValue;
+    [self configureUserWithFlagConfigModelFromJsonFileNamed:@"doubleConfigIsADouble-Pi-withVersion"];
+    [[self.dataManagerMock reject] createFeatureEventWithFlagKey:[OCMArg any] flagValue:[OCMArg any] defaultFlagValue:[OCMArg any] user:self.user config:self.config];
+    [[self.trackerMock reject] logRequestForFlagKey:[OCMArg any] flagConfigValue:[OCMArg any] defaultValue:[OCMArg any]];
 
-    LDFlagConfigModel *flags = [LDFlagConfigModel flagConfigFromJsonFileNamed:@"numberConfigIsANumber-2-withVersion"];
+    double flagValue = [[LDClient sharedInstance] doubleVariation:flagKey fallback:[defaultFlagValue doubleValue]];
 
-    BOOL clientStarted = [[LDClient sharedInstance] start:clientConfig withUserBuilder:userBuilder];
-    XCTAssertTrue(clientStarted);
-
-    [LDClient sharedInstance].ldUser.flagConfig = flags;
-
-    XCTAssertTrue([[[LDClient sharedInstance] numberVariation:@"isANumber" fallback:@5] intValue] == 2);
+    XCTAssertEqual(flagValue, [targetFlagValue doubleValue]);
+    [self.dataManagerMock verify];
+    [self.trackerMock verify];
 }
 
-- (void)testNumberVariationFallback {
-    NSString *targetKey = @"isNotANumber";
-    LDConfig *clientConfig = [[LDConfig alloc] initWithMobileKey:kTestMobileKey];
-    LDUserBuilder *userBuilder = [LDUserBuilder userBuilderWithKey:[[NSUUID UUID] UUIDString]];
+#pragma mark String Variation
+- (void)testStringVariation_knownFlag {
+    [[LDClient sharedInstance] start:self.config withUserBuilder:self.userBuilderMock];
+    NSString *flagKey = @"isAString";
+    id defaultFlagValue = kFallbackString;
+    LDFlagConfigModel *flagConfigModel = [self configureUserWithFlagConfigModelFromJsonFileNamed:@"stringConfigIsAString-someString-withVersion"];
+    LDFlagConfigValue *flagConfigValue = [flagConfigModel flagConfigValueForFlagKey:flagKey];
+    id targetFlagValue = flagConfigValue.value;
+    [[self.dataManagerMock expect] createFeatureEventWithFlagKey:flagKey flagValue:targetFlagValue defaultFlagValue:defaultFlagValue user:self.user config:self.config];
+    [[self.trackerMock expect] logRequestForFlagKey:flagKey flagConfigValue:flagConfigValue defaultValue:defaultFlagValue];
 
-    LDFlagConfigModel *flags = [LDFlagConfigModel flagConfigFromJsonFileNamed:@"numberConfigIsANumber-2-withVersion"];
+    NSString *flagValue = [[LDClient sharedInstance] stringVariation:flagKey fallback:defaultFlagValue];
 
-    BOOL clientStarted = [[LDClient sharedInstance] start:clientConfig withUserBuilder:userBuilder];
-    XCTAssertTrue(clientStarted);
-
-    [LDClient sharedInstance].ldUser.flagConfig = flags;
-
-    XCTAssertFalse([[[[LDClient sharedInstance] ldUser].flagConfig.featuresJsonDictionary allKeys] containsObject:targetKey]);
-    XCTAssertTrue([[[LDClient sharedInstance] numberVariation:targetKey fallback:@5] intValue] == 5);
+    XCTAssertEqualObjects(flagValue, targetFlagValue);
+    [self.dataManagerMock verify];
+    [self.trackerMock verify];
 }
 
-- (void)testDoubleVariationWithoutConfig {
-    LDConfig *clientConfig = [[LDConfig alloc] initWithMobileKey:kTestMobileKey];
-    LDUserBuilder *userBuilder = [LDUserBuilder userBuilderWithKey:[[NSUUID UUID] UUIDString]];
+- (void)testStringVariation_unknownFlag {
+    [[LDClient sharedInstance] start:self.config withUserBuilder:self.userBuilderMock];
+    NSString *flagKey = @"dummy-flag-key";
+    id defaultFlagValue = kFallbackString;
+    id targetFlagValue = defaultFlagValue;
+    [self configureUserWithFlagConfigModelFromJsonFileNamed:@"stringConfigIsAString-someString-withVersion"];
+    [[self.dataManagerMock expect] createFeatureEventWithFlagKey:flagKey flagValue:targetFlagValue defaultFlagValue:defaultFlagValue user:self.user config:self.config];
+    [[self.trackerMock expect] logRequestForFlagKey:flagKey flagConfigValue:nil defaultValue:defaultFlagValue];
 
-    BOOL clientStarted = [[LDClient sharedInstance] start:clientConfig withUserBuilder:userBuilder];
-    XCTAssertTrue(clientStarted);
-    XCTAssertNil([LDClient sharedInstance].ldUser.flagConfig);
-    XCTAssertTrue([[LDClient sharedInstance] doubleVariation:@"isADouble" fallback:2.71828] == 2.71828);
+    NSString *flagValue = [[LDClient sharedInstance] stringVariation:flagKey fallback:defaultFlagValue];
+
+    XCTAssertEqualObjects(flagValue, targetFlagValue);
+    [self.dataManagerMock verify];
+    [self.trackerMock verify];
 }
 
-- (void)testDoubleVariationWithConfig {
-    NSString *targetKey = @"isADouble";
-    NSString *jsonFileName = @"doubleConfigIsADouble-Pi-withVersion";
-    double target = [[self valueFromJsonFileNamed:jsonFileName key:targetKey] doubleValue];
-    
-    LDConfig *clientConfig = [[LDConfig alloc] initWithMobileKey:kTestMobileKey];
-    LDUserBuilder *userBuilder = [LDUserBuilder userBuilderWithKey:[[NSUUID UUID] UUIDString]];
+- (void)testStringVariation_knownFlag_withoutStart {
+    NSString *flagKey = @"isAString";
+    id defaultFlagValue = kFallbackString;
+    id targetFlagValue = defaultFlagValue;
+    [self configureUserWithFlagConfigModelFromJsonFileNamed:@"stringConfigIsAString-someString-withVersion"];
+    [[self.dataManagerMock reject] createFeatureEventWithFlagKey:[OCMArg any] flagValue:[OCMArg any] defaultFlagValue:[OCMArg any] user:self.user config:self.config];
+    [[self.trackerMock reject] logRequestForFlagKey:[OCMArg any] flagConfigValue:[OCMArg any] defaultValue:[OCMArg any]];
 
-    LDFlagConfigModel *flags = [LDFlagConfigModel flagConfigFromJsonFileNamed:jsonFileName];
+    NSString *flagValue = [[LDClient sharedInstance] stringVariation:flagKey fallback:defaultFlagValue];
 
-    BOOL clientStarted = [[LDClient sharedInstance] start:clientConfig withUserBuilder:userBuilder];
-    XCTAssertTrue(clientStarted);
-
-    [LDClient sharedInstance].ldUser.flagConfig = flags;
-
-    XCTAssertTrue([[LDClient sharedInstance] doubleVariation:targetKey fallback:2.71828] == target);
+    XCTAssertEqualObjects(flagValue, targetFlagValue);
+    [self.dataManagerMock verify];
+    [self.trackerMock verify];
 }
 
-- (void)testDoubleVariationFallback {
-    NSString *targetKey = @"isNotADouble";
-    
-    LDConfig *clientConfig = [[LDConfig alloc] initWithMobileKey:kTestMobileKey];
-    LDUserBuilder *userBuilder = [LDUserBuilder userBuilderWithKey:[[NSUUID UUID] UUIDString]];
+#pragma mark Array Variation
+- (void)testArrayVariation_knownFlag {
+    [[LDClient sharedInstance] start:self.config withUserBuilder:self.userBuilderMock];
+    NSString *flagKey = @"isAnArray";
+    id defaultFlagValue = @[@1, @2];
+    LDFlagConfigModel *flagConfigModel = [self configureUserWithFlagConfigModelFromJsonFileNamed:@"arrayConfigIsAnArray-123-withVersion"];
+    LDFlagConfigValue *flagConfigValue = [flagConfigModel flagConfigValueForFlagKey:flagKey];
+    id targetFlagValue = flagConfigValue.value;
+    [[self.dataManagerMock expect] createFeatureEventWithFlagKey:flagKey flagValue:targetFlagValue defaultFlagValue:defaultFlagValue user:self.user config:self.config];
+    [[self.trackerMock expect] logRequestForFlagKey:flagKey flagConfigValue:flagConfigValue defaultValue:defaultFlagValue];
 
-    LDFlagConfigModel *flags = [LDFlagConfigModel flagConfigFromJsonFileNamed:@"doubleConfigIsADouble-Pi-withVersion"];
+    NSArray *flagValue = [[LDClient sharedInstance] arrayVariation:flagKey fallback:defaultFlagValue];
 
-    BOOL clientStarted = [[LDClient sharedInstance] start:clientConfig withUserBuilder:userBuilder];
-    XCTAssertTrue(clientStarted);
-
-    [LDClient sharedInstance].ldUser.flagConfig = flags;
-
-    XCTAssertFalse([[[[LDClient sharedInstance] ldUser].flagConfig.featuresJsonDictionary allKeys] containsObject:targetKey]);
-    XCTAssertTrue([[LDClient sharedInstance] doubleVariation:targetKey fallback:2.71828] == 2.71828);
+    XCTAssertEqualObjects(flagValue, targetFlagValue);
+    [self.dataManagerMock verify];
+    [self.trackerMock verify];
 }
 
-- (void)testArrayVariationWithoutConfig {
-    LDConfig *clientConfig = [[LDConfig alloc] initWithMobileKey:kTestMobileKey];
-    LDUserBuilder *userBuilder = [LDUserBuilder userBuilderWithKey:[[NSUUID UUID] UUIDString]];
+- (void)testArrayVariation_unknownFlag {
+    [[LDClient sharedInstance] start:self.config withUserBuilder:self.userBuilderMock];
+    NSString *flagKey = @"dummy-flag-key";
+    id defaultFlagValue = @[@1, @2];
+    id targetFlagValue = defaultFlagValue;
+    [self configureUserWithFlagConfigModelFromJsonFileNamed:@"arrayConfigIsAnArray-123-withVersion"];
+    [[self.dataManagerMock expect] createFeatureEventWithFlagKey:flagKey flagValue:targetFlagValue defaultFlagValue:defaultFlagValue user:self.user config:self.config];
+    [[self.trackerMock expect] logRequestForFlagKey:flagKey flagConfigValue:nil defaultValue:defaultFlagValue];
 
-    BOOL clientStarted = [[LDClient sharedInstance] start:clientConfig withUserBuilder:userBuilder];
-    NSArray *fallbackArray = @[@1, @2];
-    
-    XCTAssertTrue(clientStarted);
-    XCTAssertNil([LDClient sharedInstance].ldUser.flagConfig);
-    XCTAssertTrue([[LDClient sharedInstance] arrayVariation:@"isAnArray" fallback:fallbackArray] == fallbackArray);   //object equality!!
+    NSArray *flagValue = [[LDClient sharedInstance] arrayVariation:flagKey fallback:defaultFlagValue];
+
+    XCTAssertEqualObjects(flagValue, targetFlagValue);
+    [self.dataManagerMock verify];
+    [self.trackerMock verify];
 }
 
-- (void)testArrayVariationWithConfig {
-    NSString *targetKey = @"isAnArray";
-    NSString *jsonFileName = @"arrayConfigIsAnArray-123-withVersion";
+- (void)testArrayVariation_knownFlag_withoutStart {
+    NSString *flagKey = @"isAnArray";
+    id defaultFlagValue = @[@1, @2];
+    id targetFlagValue = defaultFlagValue;
+    [self configureUserWithFlagConfigModelFromJsonFileNamed:@"arrayConfigIsAnArray-123-withVersion"];
+    [[self.dataManagerMock reject] createFeatureEventWithFlagKey:[OCMArg any] flagValue:[OCMArg any] defaultFlagValue:[OCMArg any] user:self.user config:self.config];
+    [[self.trackerMock reject] logRequestForFlagKey:[OCMArg any] flagConfigValue:[OCMArg any] defaultValue:[OCMArg any]];
 
-    NSArray *fallbackArray = @[@1, @2];
-    NSArray *targetArray = [self valueFromJsonFileNamed:jsonFileName key:targetKey];
-    XCTAssertFalse([targetArray isEqualToArray:fallbackArray]);
+    NSArray *flagValue = [[LDClient sharedInstance] arrayVariation:flagKey fallback:defaultFlagValue];
 
-    LDConfig *clientConfig = [[LDConfig alloc] initWithMobileKey:kTestMobileKey];
-    LDUserBuilder *userBuilder = [LDUserBuilder userBuilderWithKey:[[NSUUID UUID] UUIDString]];
-
-    LDFlagConfigModel *flags = [LDFlagConfigModel flagConfigFromJsonFileNamed:jsonFileName];
-
-    BOOL clientStarted = [[LDClient sharedInstance] start:clientConfig withUserBuilder:userBuilder];
-    XCTAssertTrue(clientStarted);
-
-    [LDClient sharedInstance].ldUser.flagConfig = flags;
-
-    NSArray *arrayValue = [[LDClient sharedInstance] arrayVariation:targetKey fallback:fallbackArray];
-    XCTAssertTrue([arrayValue isEqualToArray:targetArray]);
+    XCTAssertEqualObjects(flagValue, targetFlagValue);
+    [self.dataManagerMock verify];
+    [self.trackerMock verify];
 }
 
-- (void)testArrayVariationFallback {
-    NSString *targetKey = @"isNotAnArray";
-    NSArray *fallbackArray = @[@1, @2];
-    
-    LDConfig *clientConfig = [[LDConfig alloc] initWithMobileKey:kTestMobileKey];
-    LDUserBuilder *userBuilder = [LDUserBuilder userBuilderWithKey:[[NSUUID UUID] UUIDString]];
+#pragma mark Dictionary Variation
+- (void)testDictionaryVariation_knownFlag {
+    [[LDClient sharedInstance] start:self.config withUserBuilder:self.userBuilderMock];
+    NSString *flagKey = @"isADictionary";
+    id defaultFlagValue = @{@"key1": @"value1", @"key2": @[@1, @2]};
+    LDFlagConfigModel *flagConfigModel = [self configureUserWithFlagConfigModelFromJsonFileNamed:@"dictionaryConfigIsADictionary-3Key-withVersion"];
+    LDFlagConfigValue *flagConfigValue = [flagConfigModel flagConfigValueForFlagKey:flagKey];
+    id targetFlagValue = flagConfigValue.value;
+    [[self.dataManagerMock expect] createFeatureEventWithFlagKey:flagKey flagValue:targetFlagValue defaultFlagValue:defaultFlagValue user:self.user config:self.config];
+    [[self.trackerMock expect] logRequestForFlagKey:flagKey flagConfigValue:flagConfigValue defaultValue:defaultFlagValue];
 
-    LDFlagConfigModel *flags = [LDFlagConfigModel flagConfigFromJsonFileNamed:@"arrayConfigIsAnArray-123-withVersion"];
+    NSDictionary *flagValue = [[LDClient sharedInstance] dictionaryVariation:flagKey fallback:defaultFlagValue];
 
-    BOOL clientStarted = [[LDClient sharedInstance] start:clientConfig withUserBuilder:userBuilder];
-    XCTAssertTrue(clientStarted);
-
-    [LDClient sharedInstance].ldUser.flagConfig = flags;
-
-    XCTAssertFalse([[[[LDClient sharedInstance] ldUser].flagConfig.featuresJsonDictionary allKeys] containsObject:targetKey]);
-    NSArray *arrayValue = [[LDClient sharedInstance] arrayVariation:targetKey fallback:fallbackArray];
-    XCTAssertTrue(arrayValue == fallbackArray);
+    XCTAssertEqualObjects(flagValue, targetFlagValue);
+    [self.dataManagerMock verify];
+    [self.trackerMock verify];
 }
 
-- (void)testDictionaryVariationWithoutConfig {
-    LDConfig *clientConfig = [[LDConfig alloc] initWithMobileKey:kTestMobileKey];
-    LDUserBuilder *userBuilder = [LDUserBuilder userBuilderWithKey:[[NSUUID UUID] UUIDString]];
+- (void)testDictionaryVariation_unknownFlag {
+    [[LDClient sharedInstance] start:self.config withUserBuilder:self.userBuilderMock];
+    NSString *flagKey = @"dummy-flag-key";
+    id defaultFlagValue = @{@"key1": @"value1", @"key2": @[@1, @2]};
+    id targetFlagValue = defaultFlagValue;
+    [self configureUserWithFlagConfigModelFromJsonFileNamed:@"dictionaryConfigIsADictionary-3Key-withVersion"];
+    [[self.dataManagerMock expect] createFeatureEventWithFlagKey:flagKey flagValue:targetFlagValue defaultFlagValue:defaultFlagValue user:self.user config:self.config];
+    [[self.trackerMock expect] logRequestForFlagKey:flagKey flagConfigValue:nil defaultValue:defaultFlagValue];
 
-    BOOL clientStarted = [[LDClient sharedInstance] start:clientConfig withUserBuilder:userBuilder];
-    NSDictionary *fallback = @{@"key1": @"value1", @"key2": @[@1, @2]};
+    NSDictionary *flagValue = [[LDClient sharedInstance] dictionaryVariation:flagKey fallback:defaultFlagValue];
 
-    XCTAssertTrue(clientStarted);
-    XCTAssertNil([LDClient sharedInstance].ldUser.flagConfig);
-    XCTAssertTrue([[LDClient sharedInstance] dictionaryVariation:@"isADictionary" fallback:fallback] == fallback);
+    XCTAssertEqualObjects(flagValue, targetFlagValue);
+    [self.dataManagerMock verify];
+    [self.trackerMock verify];
 }
 
-- (void)testDictionaryVariationWithConfig {
-    NSString *targetKey = @"isADictionary";
-    NSString *jsonFileName = @"dictionaryConfigIsADictionary-3Key-withVersion";
+- (void)testDictionaryVariation_knownFlag_withoutStart {
+    NSString *flagKey = @"isADictionary";
+    id defaultFlagValue = @{@"key1": @"value1", @"key2": @[@1, @2]};
+    id targetFlagValue = defaultFlagValue;
+    [self configureUserWithFlagConfigModelFromJsonFileNamed:@"dictionaryConfigIsADictionary-3Key-withVersion"];
+    [[self.dataManagerMock reject] createFeatureEventWithFlagKey:[OCMArg any] flagValue:[OCMArg any] defaultFlagValue:[OCMArg any] user:self.user config:self.config];
+    [[self.trackerMock reject] logRequestForFlagKey:[OCMArg any] flagConfigValue:[OCMArg any] defaultValue:[OCMArg any]];
 
-    NSDictionary *fallback = @{@"key1": @"value1", @"key2": @[@1, @2]};
-    NSDictionary *target = [self valueFromJsonFileNamed:jsonFileName key:targetKey];
-    XCTAssertFalse([target isEqualToDictionary:fallback]);
+    NSDictionary *flagValue = [[LDClient sharedInstance] dictionaryVariation:flagKey fallback:defaultFlagValue];
 
-    LDConfig *clientConfig = [[LDConfig alloc] initWithMobileKey:kTestMobileKey];
-    LDUserBuilder *userBuilder = [LDUserBuilder userBuilderWithKey:[[NSUUID UUID] UUIDString]];
-
-    LDFlagConfigModel *flags = [LDFlagConfigModel flagConfigFromJsonFileNamed:jsonFileName];
-
-    BOOL clientStarted = [[LDClient sharedInstance] start:clientConfig withUserBuilder:userBuilder];
-    XCTAssertTrue(clientStarted);
-
-    [LDClient sharedInstance].ldUser.flagConfig = flags;
-
-    XCTAssertTrue([[[LDClient sharedInstance] dictionaryVariation:targetKey fallback:fallback] isEqualToDictionary:target]);
+    XCTAssertEqualObjects(flagValue, targetFlagValue);
+    [self.dataManagerMock verify];
+    [self.trackerMock verify];
 }
 
-- (void)testDictionaryVariationFallback {
-    NSString *targetKey = @"isNotADictionary";
-    NSDictionary *fallback = @{@"key1": @"value1", @"key2": @[@1, @2]};
-    
-    LDConfig *clientConfig = [[LDConfig alloc] initWithMobileKey:kTestMobileKey];
-    LDUserBuilder *userBuilder = [LDUserBuilder userBuilderWithKey:[[NSUUID UUID] UUIDString]];
-
-    LDFlagConfigModel *flags = [LDFlagConfigModel flagConfigFromJsonFileNamed:@"dictionaryConfigIsADictionary-3Key-withVersion"];
-
-    BOOL clientStarted = [[LDClient sharedInstance] start:clientConfig withUserBuilder:userBuilder];
-    XCTAssertTrue(clientStarted);
-
-    [LDClient sharedInstance].ldUser.flagConfig = flags;
-
-    XCTAssertFalse([[[[LDClient sharedInstance] ldUser].flagConfig.featuresJsonDictionary allKeys] containsObject:targetKey]);
-    XCTAssertTrue([[LDClient sharedInstance] dictionaryVariation:targetKey fallback:fallback] == fallback);
-}
-
+#pragma mark -
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wdeprecated-declarations"
 - (void)testDeprecatedStartWithValidConfig {
@@ -722,4 +756,12 @@ NSString *const kTestMobileKey = @"testMobileKey";
 - (id)valueFromJsonFileNamed:(NSString*)jsonFileName key:(NSString*)key {
     return [self objectFromJsonFileNamed:jsonFileName key:key][kLDFlagConfigValueKeyValue];
 }
+
+-(LDFlagConfigModel*)configureUserWithFlagConfigModelFromJsonFileNamed:(NSString*)fileName {
+    LDFlagConfigModel *flagConfigModel = [LDFlagConfigModel flagConfigFromJsonFileNamed:fileName];
+    flagConfigModel.tracker = self.trackerMock;
+    [LDClient sharedInstance].ldUser.flagConfig = flagConfigModel;
+    return flagConfigModel;
+}
+
 @end
