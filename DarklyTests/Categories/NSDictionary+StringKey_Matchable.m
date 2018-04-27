@@ -51,6 +51,7 @@
                 }
             }
             else {
+                if (dictionaryValue.count == 0 && otherDictionaryValue.count == 0) { continue; }    //isEqualToDictionary fails for empty dictionaries!!
                 if ([dictionaryValue isEqualToDictionary:otherDictionary]) { continue; }
                 [differingKeys addObject:key];
             }
