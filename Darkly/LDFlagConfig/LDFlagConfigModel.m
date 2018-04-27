@@ -72,6 +72,16 @@ NSString * const kLDFlagConfigModelKeyKey = @"key";
     return [NSDictionary dictionaryWithDictionary:[flagConfigDictionaryValues copy]];
 }
 
+-(BOOL)doesFlagConfigValueExistForFlagKey:(NSString*)flagKey {
+    if (!self.featuresJsonDictionary) { return NO; }
+
+    return [[self.featuresJsonDictionary allKeys] containsObject: flagKey];
+}
+
+-(LDFlagConfigValue*)flagConfigValueForFlagKey:(NSString*)flagKey {
+    return self.featuresJsonDictionary[flagKey];
+}
+
 -(id)flagValueForFlagKey:(NSString*)flagKey {
     LDFlagConfigValue *featureValue = self.featuresJsonDictionary[flagKey];
     if (!featureValue || [featureValue.value isKindOfClass:[NSNull class]]) {
@@ -86,12 +96,6 @@ NSString * const kLDFlagConfigModelKeyKey = @"key";
     if (!featureValue) { return kLDFlagConfigVersionDoesNotExist; }
 
     return featureValue.version;
-}
-
--(BOOL)doesFlagConfigValueExistForFlagKey:(NSString*)flagKey {
-    if (!self.featuresJsonDictionary) { return NO; }
-
-    return [[self.featuresJsonDictionary allKeys] containsObject: flagKey];
 }
 
 -(void)addOrReplaceFromDictionary:(NSDictionary*)patch {
@@ -111,7 +115,7 @@ NSString * const kLDFlagConfigModelKeyKey = @"key";
     self.featuresJsonDictionary = [updatedFlagConfig copy];
 }
 
--(void)deleteFromDictionary:(nullable NSDictionary*)delete {
+-(void)deleteFromDictionary:(NSDictionary*)delete {
     NSString *flagKey = delete[kLDFlagConfigModelKeyKey];
     if (flagKey.length == 0) { return; }
 

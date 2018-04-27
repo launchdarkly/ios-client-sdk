@@ -102,6 +102,30 @@ extern NSString *const kLDFlagConfigModelKeyKey;
     XCTAssertFalse([subject hasFeaturesEqualToDictionary:differentDictionary]);
 }
 
+-(void)testFlagConfigValueForFlagKey_withVersions {
+    LDFlagConfigModel *subject = [LDFlagConfigModel flagConfigFromJsonFileNamed:@"featureFlags-withVersions"];
+    NSDictionary *flagValues = [NSJSONSerialization jsonObjectFromFileNamed:@"featureFlags-withVersions"];
+
+    for (NSString *key in [flagValues.allKeys copy]) {
+        id targetFlagConfigValue = [LDFlagConfigValue flagConfigValueWithObject:flagValues[key]];
+        XCTAssertEqualObjects([subject flagConfigValueForFlagKey:key], targetFlagConfigValue);
+    }
+
+    XCTAssertNil([subject flagValueForFlagKey:@"someMissingKey"]);
+}
+
+-(void)testFlagConfigValueForFlagKey_withoutVersions {
+    LDFlagConfigModel *subject = [LDFlagConfigModel flagConfigFromJsonFileNamed:@"featureFlags-withoutVersions"];
+    NSDictionary *flagValues = [NSJSONSerialization jsonObjectFromFileNamed:@"featureFlags-withoutVersions"];
+
+    for (NSString *key in [flagValues.allKeys copy]) {
+        id targetFlagConfigValue = [LDFlagConfigValue flagConfigValueWithObject:flagValues[key]];
+        XCTAssertEqualObjects([subject flagConfigValueForFlagKey:key], targetFlagConfigValue);
+    }
+
+    XCTAssertNil([subject flagValueForFlagKey:@"someMissingKey"]);
+}
+
 -(void)testFlagValueForFlagKey_withVersions {
     LDFlagConfigModel *config = [LDFlagConfigModel flagConfigFromJsonFileNamed:@"featureFlags-withVersions"];
     NSDictionary *flagValues = [NSJSONSerialization jsonObjectFromFileNamed:@"featureFlags-withVersions"];

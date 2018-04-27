@@ -21,6 +21,7 @@
 -(nullable NSDictionary*)dictionaryValueIncludeNulls:(BOOL)includeNulls;
 
 -(BOOL)doesFlagConfigValueExistForFlagKey:(nonnull NSString*)flagKey;
+-(nullable LDFlagConfigValue*)flagConfigValueForFlagKey:(nonnull NSString*)flagKey;
 -(nullable id)flagValueForFlagKey:(nonnull NSString*)flagKey;
 -(NSInteger)flagVersionForFlagKey:(nonnull NSString*)flagKey;
 
