@@ -67,4 +67,8 @@ NSInteger const kLDFlagConfigVariationDoesNotExist = -1;
 
     return [self.value isEqual:other.value] && self.version == other.version && self.variation == other.variation;
 }
+
+-(NSString*)description {
+    return [NSString stringWithFormat:@"<LDFlagConfigValue: %p, value: %@, version: %ld, variation: %ld>", self, [self.value description], (long)self.version, (long)self.variation];
+}
 @end

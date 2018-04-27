@@ -28,4 +28,6 @@ extern NSInteger const kLDFlagConfigVariationDoesNotExist;
 -(nonnull NSDictionary*)dictionaryValue;
 
 -(BOOL)isEqual:(nullable id)object;
+
+-(nonnull NSString*)description;
 @end
