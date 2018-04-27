@@ -10,4 +10,5 @@
 
 @interface NSDate (ReferencedDate)
 -(NSInteger)millisSince1970;
+-(BOOL)isWithinTimeInterval:(NSTimeInterval)timeInterval ofDate:(NSDate*)otherDate;
 @end
