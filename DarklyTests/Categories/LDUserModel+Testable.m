@@ -28,6 +28,10 @@ NSString * const userModelStubCustomValue = @"userModelStubCustomValue";
 
 @implementation LDUserModel (Testable)
 +(instancetype)stubWithKey:(NSString*)key {
+    return [LDUserModel stubWithKey:key usingTracker:nil];
+}
+
++(instancetype)stubWithKey:(NSString*)key usingTracker:(LDFlagConfigTracker*)tracker {
     LDUserModel *stub = [[LDUserModel alloc] init];
     stub.key = key.length ? key : [[NSUUID UUID] UUIDString];
     stub.ip = userModelStubIp;
@@ -39,7 +43,7 @@ NSString * const userModelStubCustomValue = @"userModelStubCustomValue";
     stub.avatar = userModelStubAvatar;
     stub.custom = [LDUserModel customStub];
     stub.flagConfig = [LDFlagConfigModel flagConfigFromJsonFileNamed:@"featureFlags-excludeNulls-withVersions"];
-//    stub.flagConfig.tracker = tracker ?: [LDFlagConfigTracker stubTracker];
+    stub.flagConfig.tracker = tracker ?: [LDFlagConfigTracker stubTracker];
 
     return stub;
 }

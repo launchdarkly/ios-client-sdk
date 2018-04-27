@@ -30,6 +30,7 @@ extern NSString * const kUserAttributeOs;
 
 @interface LDUserModel (Testable)
 +(instancetype)stubWithKey:(NSString*)key;
++(instancetype)stubWithKey:(NSString*)key usingTracker:(LDFlagConfigTracker*)tracker;
 +(NSDictionary*)customStub;
 +(LDUserModel*)userFrom:(NSString*)jsonUser;
 /**
