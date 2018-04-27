@@ -221,7 +221,7 @@ const double featureEventDefaultValueStub = 2.71828;
         if (self.startDateMillis != [dictionary[kEventModelKeyStartDate] integerValue]) {
             [mismatchedProperties addObject:kEventModelKeyStartDate];
         }
-        if (self.endDateMillis != [dictionary[kEventModelKeyEndDate] integerValue]) {
+        if (!Approximately(self.endDateMillis, [dictionary[kEventModelKeyEndDate] integerValue], 10)) {
             [mismatchedProperties addObject:kEventModelKeyEndDate];
         }
         if (![self.flagRequestSummary isEqualToDictionary:dictionary[kEventModelKeyFeatures]]) {
