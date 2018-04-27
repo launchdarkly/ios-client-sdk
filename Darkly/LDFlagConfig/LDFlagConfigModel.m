@@ -27,8 +27,9 @@ NSString * const kLDFlagConfigModelKeyKey = @"key";
 
 - (id)initWithCoder:(NSCoder *)decoder {
     if (!(self = [self init])) { return nil; }
+
     self.featuresJsonDictionary = [decoder decodeObjectForKey:kFeaturesJsonDictionaryKey];
-    self.tracker = [LDFlagConfigTracker tracker];
+
     return self;
 }
 
@@ -42,13 +43,15 @@ NSString * const kLDFlagConfigModelKeyKey = @"key";
     }
 
     self.featuresJsonDictionary = [NSDictionary dictionaryWithDictionary:[flagConfigValues copy]];
-    self.tracker = [LDFlagConfigTracker tracker];
 
     return self;
 }
 
 -(instancetype)init {
     if (!(self = [super init])) { return nil; }
+
+    self.featuresJsonDictionary = @{};
+    self.tracker = [LDFlagConfigTracker tracker];
 
     return self;
 }

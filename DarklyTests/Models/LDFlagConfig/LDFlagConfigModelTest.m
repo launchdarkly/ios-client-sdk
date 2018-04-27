@@ -32,6 +32,17 @@ extern NSString *const kLDFlagConfigModelKeyKey;
     XCTAssertTrue(Approximately(restoredConfig.tracker.startDateMillis, startDateMillis, 10));
 }
 
+-(void)testInit {
+    NSInteger startDateMillis = [[NSDate date] millisSince1970];
+    LDFlagConfigModel *subject = [[LDFlagConfigModel alloc] init];
+
+    XCTAssertNotNil(subject.featuresJsonDictionary);
+    XCTAssertTrue(subject.featuresJsonDictionary.count == 0);
+    XCTAssertNotNil(subject.tracker);
+    XCTAssertTrue(subject.tracker.flagCounters.count == 0);
+    XCTAssertTrue(Approximately(subject.tracker.startDateMillis, startDateMillis, 10));
+}
+
 -(void)testInitWithDictionary_withVersions {
     NSDictionary *flagConfigDictionary = [NSJSONSerialization jsonObjectFromFileNamed:@"featureFlags-withVersions"];
     NSInteger startDateMillis = [[NSDate date] millisSince1970];
