@@ -185,6 +185,10 @@ dispatch_queue_t eventsQueue;
         DEBUG_LOGX(@"Events have surpassed capacity. Discarding summary event.");
         return;
     }
+    if (tracker.flagCounters.count == 0) {
+        DEBUG_LOGX(@"Tracker has no flag counters. Discarding summary event.");
+        return;
+    }
     DEBUG_LOGX(@"Creating summary event");
     [self addEventDictionary:[[LDEventModel summaryEventWithTracker:tracker] dictionaryValueUsingConfig:config]];
 }

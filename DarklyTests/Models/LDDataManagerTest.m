@@ -53,14 +53,18 @@ extern NSString * const kEventModelKeyKind;
     [super tearDown];
 }
 
-- (void)testisFlagOnForKey {
-    LDFlagConfigModel *flagConfigModel = [LDClient sharedInstance].ldUser.flagConfig;
-    
-    BOOL ipaduserFlag = [[flagConfigModel flagValueForFlagKey:@"ipaduser"] boolValue];
-    BOOL iosuserFlag = [[flagConfigModel flagValueForFlagKey: @"iosuser"] boolValue];
-    
-    XCTAssertFalse(iosuserFlag);
-    XCTAssertTrue(ipaduserFlag);
+-(void)testCreateSummaryEvent_noCounters {
+    LDConfig *config = [[LDConfig alloc] initWithMobileKey:@"stubMobileKey"];
+    LDFlagConfigTracker *trackerStub = [LDFlagConfigTracker tracker];
+    XCTestExpectation *expectation = [self expectationWithDescription:@"All events dictionary expectation"];
+
+    [[LDDataManager sharedManager] createSummaryEventWithTracker:trackerStub config:config];
+
+    [[LDDataManager sharedManager] allEventDictionaries:^(NSArray *eventDictionaries) {
+        XCTAssertEqual(eventDictionaries.count, 0);
+        [expectation fulfill];
+    }];
+    [self waitForExpectations:@[expectation] timeout:1];
 }
 
 -(void)testAllEventsDictionaryArray {
