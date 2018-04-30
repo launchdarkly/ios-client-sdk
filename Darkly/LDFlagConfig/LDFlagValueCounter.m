@@ -19,21 +19,21 @@ NSString * const kLDFlagValueCounterKeyUnknown = @"unknown";
 @property (nonatomic, strong) id value;
 @property (nonatomic, assign) NSInteger variation;
 @property (nonatomic, assign) NSInteger version;
-@property (nonatomic, assign, getter=isUnknown) BOOL unknown;
+@property (nonatomic, assign, getter=isKnown) BOOL known;
 @end
 
 @implementation LDFlagValueCounter
-+(instancetype)counterWithValue:(id)value variation:(NSInteger)variation version:(NSInteger)version {
-    return [[LDFlagValueCounter alloc] initWithValue:value variation:variation version:version];
++(instancetype)counterWithValue:(id)value variation:(NSInteger)variation version:(NSInteger)version isKnownValue:(BOOL)isKnownValue {
+    return [[LDFlagValueCounter alloc] initWithValue:value variation:variation version:version isKnownValue:isKnownValue];
 }
 
--(instancetype)initWithValue:(id)value variation:(NSInteger)variation version:(NSInteger)version {
+-(instancetype)initWithValue:(id)value variation:(NSInteger)variation version:(NSInteger)version isKnownValue:(BOOL)isKnownValue {
     if (!(self = [super init])) { return nil; }
 
     self.value = value;
     self.variation = variation;
     self.version = version;
-    self.unknown = variation == kLDFlagConfigVariationDoesNotExist;
+    self.known = isKnownValue;
     self.count = 1;
     
     return self;
@@ -42,16 +42,15 @@ NSString * const kLDFlagValueCounterKeyUnknown = @"unknown";
 -(NSDictionary*)dictionaryValue {
     NSMutableDictionary *dictionary = [NSMutableDictionary dictionaryWithCapacity:3];
 
-
-    if (self.unknown) {
-        dictionary[kLDFlagValueCounterKeyUnknown] = @(self.unknown);
-    } else {
+    if (self.known) {
         if (self.value) {
             dictionary[kLDFlagValueCounterKeyValue] = self.value;
         }
         if (self.version != kLDFlagConfigVersionDoesNotExist) {
             dictionary[kLDFlagValueCounterKeyVersion] = @(self.version);
         }
+    } else {
+        dictionary[kLDFlagValueCounterKeyUnknown] = @(YES);
     }
     dictionary[kLDFlagValueCounterKeyCount] = @(self.count);
 
@@ -59,13 +58,13 @@ NSString * const kLDFlagValueCounterKeyUnknown = @"unknown";
 }
 
 -(NSString*)description {
-    return [NSString stringWithFormat:@"<LDFlagValueCounter: %p, value: %@, count: %ld, version: %ld, variation: %ld, unknown: %@>",
+    return [NSString stringWithFormat:@"<LDFlagValueCounter: %p, value: %@, count: %ld, version: %ld, variation: %ld, known: %@>",
             self,
             [self.value description],
             (long)self.count,
             (long)self.version,
             (long)self.variation,
-            self.isUnknown ? @"YES" : @"NO"];
+            self.known ? @"YES" : @"NO"];
 }
 
 @end

@@ -17,7 +17,7 @@
 +(nonnull instancetype)counterWithFlagKey:(nonnull NSString*)flagKey defaultValue:(nonnull id)defaultValue;
 -(nonnull instancetype)initWithFlagKey:(nonnull NSString*)flagKey defaultValue:(nonnull id)defaultValue;
 
--(void)logRequestWithValue:(nullable id)value version:(NSInteger)version variation:(NSInteger)variation defaultValue:(nullable id)defaultValue;
+-(void)logRequestWithValue:(nullable id)value version:(NSInteger)version variation:(NSInteger)variation defaultValue:(nullable id)defaultValue isKnownValue:(BOOL)isKnownValue;
 -(nullable LDFlagValueCounter*)valueCounterForVariation:(NSInteger)variation;
 
 -(nonnull NSDictionary*)dictionaryValue;

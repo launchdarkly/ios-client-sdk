@@ -17,18 +17,18 @@ extern NSString * const kLDFlagCounterKeyCounters;
 @dynamic flagValueCounters;
 
 +(instancetype)stubForFlagKey:(NSString*)flagKey {
-    return [[self class] stubForFlagKey:flagKey useUnknownValues:NO];
+    return [[self class] stubForFlagKey:flagKey useKnownValues:YES];
 }
 
-+(instancetype)stubForFlagKey:(NSString*)flagKey useUnknownValues:(BOOL)useUnknownValues {
++(instancetype)stubForFlagKey:(NSString*)flagKey useKnownValues:(BOOL)useKnownValues {
     id defaultValue = [LDFlagConfigValue defaultValueForFlagKey:flagKey];
     LDFlagCounter *flagCounter = [LDFlagCounter counterWithFlagKey:flagKey defaultValue:defaultValue];
 
     NSArray<LDFlagConfigValue*> *flagConfigValues = [LDFlagConfigValue stubFlagConfigValuesForFlagKey:flagKey];
     for (LDFlagConfigValue *flagConfigValue in flagConfigValues) {
-        NSInteger variation = useUnknownValues ? kLDFlagConfigVariationDoesNotExist : flagConfigValue.version;
+        NSInteger variation = useKnownValues ? flagConfigValue.version : kLDFlagConfigVariationDoesNotExist;
         for (NSInteger logRequests = 0; logRequests < flagConfigValue.version; logRequests += 1 ) {
-            [flagCounter logRequestWithValue:flagConfigValue.value version:flagConfigValue.version variation:variation defaultValue:defaultValue];
+            [flagCounter logRequestWithValue:flagConfigValue.value version:flagConfigValue.version variation:variation defaultValue:defaultValue isKnownValue:useKnownValues];
         }
     }
 

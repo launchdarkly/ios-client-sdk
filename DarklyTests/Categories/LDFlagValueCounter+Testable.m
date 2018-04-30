@@ -11,26 +11,29 @@
 @implementation LDFlagValueCounter(Testable)
 -(BOOL)hasPropertiesMatchingDictionary:(NSDictionary*)dictionary {
     NSMutableArray<NSString*> *mismatchedProperties = [NSMutableArray array];
-    if (self.unknown) {
-        if (dictionary[kLDFlagValueCounterKeyValue]) {
-            [mismatchedProperties addObject:kLDFlagValueCounterKeyValue];
-        }
-        if (dictionary[kLDFlagValueCounterKeyVersion]) {
-            [mismatchedProperties addObject:kLDFlagValueCounterKeyVersion];
-        }
-    } else {
+    if (self.known) {
         if (![self.value isEqual:dictionary[kLDFlagValueCounterKeyValue]]) {
             [mismatchedProperties addObject:kLDFlagValueCounterKeyValue];
         }
         if (self.version != [dictionary[kLDFlagValueCounterKeyVersion] integerValue]) {
             [mismatchedProperties addObject:kLDFlagValueCounterKeyVersion];
         }
+        if (dictionary[kLDFlagValueCounterKeyUnknown]) {
+            [mismatchedProperties addObject:kLDFlagValueCounterKeyUnknown];
+        }
+    } else {
+        if (dictionary[kLDFlagValueCounterKeyValue]) {
+            [mismatchedProperties addObject:kLDFlagValueCounterKeyValue];
+        }
+        if (dictionary[kLDFlagValueCounterKeyVersion]) {
+            [mismatchedProperties addObject:kLDFlagValueCounterKeyVersion];
+        }
+        if ([dictionary[kLDFlagValueCounterKeyUnknown] boolValue] != YES) {
+            [mismatchedProperties addObject:kLDFlagValueCounterKeyUnknown];
+        }
     }
     if (self.count != [dictionary[kLDFlagValueCounterKeyCount] integerValue]) {
         [mismatchedProperties addObject:kLDFlagValueCounterKeyCount];
-    }
-    if (self.unknown != [dictionary[kLDFlagValueCounterKeyUnknown] boolValue]) {
-        [mismatchedProperties addObject:kLDFlagValueCounterKeyUnknown];
     }
 
     if (mismatchedProperties.count > 0) {

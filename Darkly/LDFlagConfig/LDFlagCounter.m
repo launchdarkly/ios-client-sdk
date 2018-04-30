@@ -44,14 +44,14 @@ NSString * const kLDFlagCounterKeyCounters = @"counters";
     return [[self.flagValueCounters filteredArrayUsingPredicate:variationPredicate] firstObject];
 }
 
--(void)logRequestWithValue:(id)value version:(NSInteger)version variation:(NSInteger)variation defaultValue:(id)defaultValue {
+-(void)logRequestWithValue:(id)value version:(NSInteger)version variation:(NSInteger)variation defaultValue:(id)defaultValue isKnownValue:(BOOL)isKnownValue {
     LDFlagValueCounter *selectedFlagValueCounter = [self valueCounterForVariation:variation];
     if (selectedFlagValueCounter) {
         selectedFlagValueCounter.count += 1;
         return;
     }
 
-    [self.flagValueCounters addObject:[LDFlagValueCounter counterWithValue:value variation:variation version:version]];
+    [self.flagValueCounters addObject:[LDFlagValueCounter counterWithValue:value variation:variation version:version isKnownValue:isKnownValue]];
 }
 
 -(NSDictionary*)dictionaryValue {

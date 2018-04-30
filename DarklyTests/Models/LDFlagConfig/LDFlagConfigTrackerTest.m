@@ -60,7 +60,7 @@
             XCTAssertEqualObjects(flagValueCounter.value, flagConfigValue.value);
             XCTAssertEqual(flagValueCounter.variation, flagConfigValue.version);    //TODO: When the variation is added to the LDFlagConfigValue, use that instead
             XCTAssertEqual(flagValueCounter.version, flagConfigValue.version);
-            XCTAssertEqual(flagValueCounter.unknown, NO);
+            XCTAssertEqual(flagValueCounter.known, YES);
             XCTAssertEqual(flagValueCounter.count, 1);
 
             //Make a second call to logRequest with the same flag key & value. Verify no new flagValueCounters, and the existing flagValueCounter was incremented
@@ -95,7 +95,7 @@
         XCTAssertEqualObjects(flagValueCounter.value, defaultValue);
         XCTAssertEqual(flagValueCounter.variation, kLDFlagConfigVariationDoesNotExist);
         XCTAssertEqual(flagValueCounter.version, kLDFlagConfigVersionDoesNotExist);
-        XCTAssertEqual(flagValueCounter.unknown, YES);
+        XCTAssertEqual(flagValueCounter.known, NO);
         XCTAssertEqual(flagValueCounter.count, 1);
 
         //Make a second call to logRequest with an unknown value. Verify no new flagValueCounters, and the existing flagValueCounter was incremented

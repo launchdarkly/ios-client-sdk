@@ -37,13 +37,13 @@ extern const NSInteger kLDFlagConfigVariationDoesNotExist;
         LDFlagConfigValue *flagConfigValue = self.flagConfigDictionary[flagKey];
         NSInteger variation = arc4random_uniform(9) + 1;    //TODO: When adding the new streaming data model, replace this with the value from the flagConfigValue
 
-        LDFlagValueCounter *flagValueCounter = [LDFlagValueCounter counterWithValue:flagConfigValue.value variation:variation version:flagConfigValue.version];
+        LDFlagValueCounter *flagValueCounter = [LDFlagValueCounter counterWithValue:flagConfigValue.value variation:variation version:flagConfigValue.version isKnownValue:YES];
 
         XCTAssertEqualObjects(flagValueCounter.value, flagConfigValue.value);
         XCTAssertEqual(flagValueCounter.variation, variation);
         XCTAssertEqual(flagValueCounter.version, flagConfigValue.version);
         XCTAssertEqual(flagValueCounter.count, 1);
-        XCTAssertEqual(flagValueCounter.unknown, NO);
+        XCTAssertEqual(flagValueCounter.known, YES);
     }
 }
 
@@ -51,14 +51,14 @@ extern const NSInteger kLDFlagConfigVariationDoesNotExist;
     for (NSString *flagKey in self.flagConfigDictionary.allKeys) {
         LDFlagConfigValue *flagConfigValue = self.flagConfigDictionary[flagKey];
         NSInteger variation = arc4random_uniform(9) + 1;    //TODO: When adding the new streaming data model, replace this with the value from the flagConfigValue
-        LDFlagValueCounter *flagValueCounter = [LDFlagValueCounter counterWithValue:flagConfigValue.value variation:variation version:flagConfigValue.version];
+        LDFlagValueCounter *flagValueCounter = [LDFlagValueCounter counterWithValue:flagConfigValue.value variation:variation version:flagConfigValue.version isKnownValue:YES];
 
         NSDictionary *flagValueCounterDictionary = [flagValueCounter dictionaryValue];
 
         XCTAssertTrue([flagValueCounter hasPropertiesMatchingDictionary:flagValueCounterDictionary]);
 
         //Unknown flag config values
-        flagValueCounter = [LDFlagValueCounter counterWithValue:flagConfigValue.value variation:kLDFlagConfigVariationDoesNotExist version:flagConfigValue.version];
+        flagValueCounter = [LDFlagValueCounter counterWithValue:flagConfigValue.value variation:kLDFlagConfigVariationDoesNotExist version:flagConfigValue.version isKnownValue:NO];
 
         flagValueCounterDictionary = [flagValueCounter dictionaryValue];
 
