@@ -19,6 +19,7 @@
 
 -(void)logRequestWithValue:(nullable id)value version:(NSInteger)version variation:(NSInteger)variation defaultValue:(nullable id)defaultValue isKnownValue:(BOOL)isKnownValue;
 -(nullable LDFlagValueCounter*)valueCounterForVariation:(NSInteger)variation;
+-(nullable LDFlagValueCounter*)valueCounterForValue:(nonnull id)value isKnownValue:(BOOL)isKnownValue;   //TODO: When variation is implemented, remove this
 
 -(nonnull NSDictionary*)dictionaryValue;
 

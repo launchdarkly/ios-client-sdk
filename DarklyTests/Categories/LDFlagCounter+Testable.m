@@ -47,9 +47,10 @@ extern NSString * const kLDFlagCounterKeyCounters;
     } else {
         NSArray<NSDictionary*> *countersFromDictionary = dictionary[kLDFlagCounterKeyCounters];
         for (NSDictionary *counterFromDictionary in countersFromDictionary) {
-            BOOL isUnknown = [counterFromDictionary[kLDFlagValueCounterKeyUnknown] boolValue];
-            NSInteger variation = isUnknown ? kLDFlagConfigVariationDoesNotExist : [counterFromDictionary[kLDFlagValueCounterKeyVersion] integerValue];
-            LDFlagValueCounter *flagValueCounter = [self valueCounterForVariation:variation];
+            BOOL isKnownValue = ![counterFromDictionary[kLDFlagValueCounterKeyUnknown] boolValue];
+            NSInteger variation = isKnownValue ? [counterFromDictionary[kLDFlagValueCounterKeyVersion] integerValue] : kLDFlagConfigVariationDoesNotExist;
+            //            LDFlagValueCounter *flagValueCounter = [self valueCounterForVariation:variation];     //TODO: When variation is fully implemented, use it here
+            LDFlagValueCounter *flagValueCounter = [self valueCounterForValue:counterFromDictionary[kLDFlagValueCounterKeyValue] isKnownValue:isKnownValue];
             if (!flagValueCounter) {
                 [mismatchedProperties addObject:[NSString stringWithFormat:@"variation_%ld", (long)variation]];
             } else {

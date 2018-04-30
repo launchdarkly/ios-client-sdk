@@ -10,6 +10,7 @@
 
 @interface LDFlagCounter(Testable)
 @property (nonatomic, strong) NSMutableArray<LDFlagValueCounter*> *flagValueCounters;
+
 +(instancetype)stubForFlagKey:(NSString*)flagKey;
 +(instancetype)stubForFlagKey:(NSString*)flagKey useKnownValues:(BOOL)useKnownValues;
 -(BOOL)hasPropertiesMatchingDictionary:(NSDictionary*)dictionary;
