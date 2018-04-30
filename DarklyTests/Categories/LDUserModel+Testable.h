@@ -29,6 +29,8 @@ extern NSString * const kUserAttributeDevice;
 extern NSString * const kUserAttributeOs;
 
 @interface LDUserModel (Testable)
+@property (nonatomic, strong) LDFlagConfigTracker *flagConfigTracker;
+
 +(instancetype)stubWithKey:(NSString*)key;
 +(instancetype)stubWithKey:(NSString*)key usingTracker:(LDFlagConfigTracker*)tracker;
 +(NSDictionary*)customStub;

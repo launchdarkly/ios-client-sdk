@@ -14,6 +14,7 @@
 #import "NSDate+ReferencedDate.h"
 #import "LDFlagConfigModel.h"
 #import "LDFlagConfigTracker.h"
+#import "NSInteger+Testable.h"
 
 @interface LDUserModelTest : XCTestCase
 @end
@@ -50,10 +51,11 @@
     XCTAssertNotNil(user.flagConfig);
     if (user.flagConfig) {
         XCTAssertTrue(user.flagConfig.featuresJsonDictionary.count == 0);
-        XCTAssertNotNil(user.flagConfig.tracker);
-        if (user.flagConfig.tracker) {
-            XCTAssertTrue(user.flagConfig.tracker.flagCounters.count == 0);
-        }
+    }
+    XCTAssertNotNil(user.flagConfigTracker);
+    if (user.flagConfigTracker) {
+        XCTAssertTrue(user.flagConfigTracker.flagCounters.count == 0);
+        XCTAssertTrue(Approximately(user.flagConfigTracker.startDateMillis, [creationDate millisSince1970], 10));
     }
 }
 
@@ -429,8 +431,14 @@
     NSData *encodedUserData = [NSKeyedArchiver archivedDataWithRootObject:userStub];
     XCTAssertNotNil(encodedUserData);
 
+    NSInteger startDateMillis = [[NSDate date] millisSince1970];
     LDUserModel *decodedUser = [NSKeyedUnarchiver unarchiveObjectWithData:encodedUserData];
     XCTAssertTrue([userStub isEqual:decodedUser ignoringAttributes:@[kUserAttributeUpdatedAt]]);
+    XCTAssertNotNil(decodedUser.flagConfigTracker);
+    if (decodedUser.flagConfigTracker) {
+        XCTAssertTrue(decodedUser.flagConfigTracker.flagCounters.count == 0);
+        XCTAssertTrue(Approximately(decodedUser.flagConfigTracker.startDateMillis, startDateMillis, 10));
+    }
 }
 
 -(void)testInitWithDictionary {
@@ -442,8 +450,14 @@
     NSDictionary *userDictionary = [userStub dictionaryValueWithFlags:YES includePrivateAttributes:YES config:nil includePrivateAttributeList:YES];
     XCTAssertTrue(userDictionary && [userDictionary count]);
 
+    NSInteger startDateMillis = [[NSDate date] millisSince1970];
     LDUserModel *reinflatedUser = [[LDUserModel alloc] initWithDictionary:userDictionary];
     XCTAssertTrue([userStub isEqual:reinflatedUser ignoringAttributes:nil]);
+    XCTAssertNotNil(reinflatedUser.flagConfigTracker);
+    if (reinflatedUser.flagConfigTracker) {
+        XCTAssertTrue(reinflatedUser.flagConfigTracker.flagCounters.count == 0);
+        XCTAssertTrue(Approximately(reinflatedUser.flagConfigTracker.startDateMillis, startDateMillis, 10));
+    }
 }
 
 -(void)testUserJsonContainsNoWhitespace {
@@ -486,6 +500,18 @@
     
     LDUserModel *retrievedUser = [[LDDataManager sharedManager] findUserWithkey:userKey];
     XCTAssertTrue([user isEqual:retrievedUser ignoringAttributes:@[@"updatedAt"]]);
+}
+
+- (void)testResetTracker {
+    LDUserModel *subject = [LDUserModel stubWithKey:[[NSUUID UUID] UUIDString]];
+    NSInteger startDateMillis = [[NSDate date] millisSince1970];
+    [subject resetTracker];
+
+    XCTAssertNotNil(subject.flagConfigTracker);
+    if (subject.flagConfigTracker) {
+        XCTAssertTrue(subject.flagConfigTracker.flagCounters.count == 0);
+        XCTAssertTrue(Approximately(subject.flagConfigTracker.startDateMillis, startDateMillis, 10));
+    }
 }
 
 #pragma mark - Helpers

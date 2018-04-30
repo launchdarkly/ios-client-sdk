@@ -6,7 +6,6 @@
 #import "LDFlagConfigModel.h"
 #import "LDFlagConfigModel+Testable.h"
 #import "LDFlagConfigValue.h"
-#import "LDFlagConfigTracker.h"
 #import "NSJSONSerialization+Testable.h"
 #import "NSDictionary+Testable.h"
 #import "NSDate+ReferencedDate.h"
@@ -23,29 +22,20 @@ extern NSString *const kLDFlagConfigModelKeyKey;
 -(void)testEncodeAndDecode {
     LDFlagConfigModel *originalConfig = [LDFlagConfigModel flagConfigFromJsonFileNamed:@"featureFlags-withVersions"];
     NSData *archive = [NSKeyedArchiver archivedDataWithRootObject:originalConfig];
-    NSInteger startDateMillis = [[NSDate date] millisSince1970];
     LDFlagConfigModel *restoredConfig = [NSKeyedUnarchiver unarchiveObjectWithData:archive];
 
     XCTAssertTrue([restoredConfig isEqualToConfig:originalConfig]);
-    XCTAssertNotNil(restoredConfig.tracker);
-    XCTAssertTrue(restoredConfig.tracker.flagCounters.count == 0);
-    XCTAssertTrue(Approximately(restoredConfig.tracker.startDateMillis, startDateMillis, 10));
 }
 
 -(void)testInit {
-    NSInteger startDateMillis = [[NSDate date] millisSince1970];
     LDFlagConfigModel *subject = [[LDFlagConfigModel alloc] init];
 
     XCTAssertNotNil(subject.featuresJsonDictionary);
     XCTAssertTrue(subject.featuresJsonDictionary.count == 0);
-    XCTAssertNotNil(subject.tracker);
-    XCTAssertTrue(subject.tracker.flagCounters.count == 0);
-    XCTAssertTrue(Approximately(subject.tracker.startDateMillis, startDateMillis, 10));
 }
 
 -(void)testInitWithDictionary_withVersions {
     NSDictionary *flagConfigDictionary = [NSJSONSerialization jsonObjectFromFileNamed:@"featureFlags-withVersions"];
-    NSInteger startDateMillis = [[NSDate date] millisSince1970];
     LDFlagConfigModel *subject = [[LDFlagConfigModel alloc] initWithDictionary:flagConfigDictionary];
 
     for (NSString *key in [flagConfigDictionary.allKeys copy]) {
@@ -53,14 +43,10 @@ extern NSString *const kLDFlagConfigModelKeyKey;
 
         XCTAssertTrue([subject.featuresJsonDictionary[key] isEqual:flagConfigValueFromDictionary]);
     }
-    XCTAssertNotNil(subject.tracker);
-    XCTAssertTrue(subject.tracker.flagCounters.count == 0);
-    XCTAssertTrue(Approximately(subject.tracker.startDateMillis, startDateMillis, 10));
 }
 
 -(void)testInitWithDictionary_withoutVersions {
     NSDictionary *flagConfigDictionary = [NSJSONSerialization jsonObjectFromFileNamed:@"featureFlags-withoutVersions"];
-    NSInteger startDateMillis = [[NSDate date] millisSince1970];
     LDFlagConfigModel *subject = [[LDFlagConfigModel alloc] initWithDictionary:flagConfigDictionary];
 
     for (NSString *key in [flagConfigDictionary.allKeys copy]) {
@@ -68,9 +54,6 @@ extern NSString *const kLDFlagConfigModelKeyKey;
 
         XCTAssertTrue([subject.featuresJsonDictionary[key] isEqual:flagConfigValueFromDictionary]);
     }
-    XCTAssertNotNil(subject.tracker);
-    XCTAssertTrue(subject.tracker.flagCounters.count == 0);
-    XCTAssertTrue(Approximately(subject.tracker.startDateMillis, startDateMillis, 10));
 }
 
 -(void)testDictionaryValue_includeNullValues_withVersions {
@@ -516,16 +499,6 @@ extern NSString *const kLDFlagConfigModelKeyKey;
 
     NSMutableDictionary *differentDictionary = [NSJSONSerialization jsonObjectFromFileNamed:@"featureFlags-excludeNulls-withoutVersions"];
     XCTAssertFalse([subject hasFeaturesEqualToDictionary:differentDictionary]);
-}
-
-- (void)testResetTracker {
-    LDFlagConfigModel *subject = [LDFlagConfigModel flagConfigFromJsonFileNamed:@"featureFlags-withVersions"];
-    NSInteger startDateMillis = [[NSDate date] millisSince1970];
-    [subject resetTracker];
-
-    XCTAssertNotNil(subject.tracker);
-    XCTAssertTrue(subject.tracker.flagCounters.count == 0);
-    XCTAssertTrue(Approximately(subject.tracker.startDateMillis, startDateMillis, 10));
 }
 
 @end

@@ -8,6 +8,7 @@
 
 #import "LDUserModel.h"
 #import "LDFlagConfigModel.h"
+#import "LDFlagConfigTracker.h"
 #import "LDUtil.h"
 #import "NSDateFormatter+LDUserModel.h"
 
@@ -27,6 +28,9 @@ NSString * const kUserAttributeDevice = @"device";
 NSString * const kUserAttributeOs = @"os";
 NSString * const kUserAttributePrivateAttributes = @"privateAttrs";
 
+@interface LDUserModel()
+@property (nullable, nonatomic, strong) LDFlagConfigTracker *flagConfigTracker;
+@end
 
 @implementation LDUserModel
 
@@ -138,6 +142,7 @@ NSString * const kUserAttributePrivateAttributes = @"privateAttrs";
         self.device = [decoder decodeObjectForKey:kUserAttributeDevice];
         self.os = [decoder decodeObjectForKey:kUserAttributeOs];
         self.privateAttributes = [decoder decodeObjectForKey:kUserAttributePrivateAttributes];
+        self.flagConfigTracker = [LDFlagConfigTracker tracker];
     }
     return self;
 }
@@ -188,8 +193,13 @@ NSString * const kUserAttributePrivateAttributes = @"privateAttrs";
 
     self.custom = @{};
     self.flagConfig = [[LDFlagConfigModel alloc] init];
+    self.flagConfigTracker = [LDFlagConfigTracker tracker];
 
     return self;
+}
+
+-(void)resetTracker {
+    self.flagConfigTracker = [LDFlagConfigTracker tracker];
 }
 
 -(NSString*) description {

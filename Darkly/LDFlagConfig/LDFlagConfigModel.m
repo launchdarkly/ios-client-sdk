@@ -8,16 +8,11 @@
 
 #import "LDFlagConfigModel.h"
 #import "LDFlagConfigValue.h"
-#import "LDFlagConfigTracker.h"
 #import "LDUtil.h"
 #import "NSMutableDictionary+NullRemovable.h"
 
 NSString * const kFeaturesJsonDictionaryKey = @"featuresJsonDictionary";
 NSString * const kLDFlagConfigModelKeyKey = @"key";
-
-@interface LDFlagConfigModel()
-@property (nonatomic, strong) LDFlagConfigTracker *tracker;
-@end
 
 @implementation LDFlagConfigModel
 
@@ -51,7 +46,6 @@ NSString * const kLDFlagConfigModelKeyKey = @"key";
     if (!(self = [super init])) { return nil; }
 
     self.featuresJsonDictionary = @{};
-    self.tracker = [LDFlagConfigTracker tracker];
 
     return self;
 }
@@ -139,10 +133,6 @@ NSString * const kLDFlagConfigModelKeyKey = @"key";
 
 -(BOOL)hasFeaturesEqualToDictionary:(NSDictionary*)otherDictionary {
     return [[self dictionaryValue] isEqualToDictionary:otherDictionary];
-}
-
--(void)resetTracker {
-    self.tracker = [LDFlagConfigTracker tracker];
 }
 
 @end

@@ -27,6 +27,8 @@ NSString * const userModelStubCustomKey = @"userModelStubCustomKey";
 NSString * const userModelStubCustomValue = @"userModelStubCustomValue";
 
 @implementation LDUserModel (Testable)
+@dynamic flagConfigTracker;
+
 +(instancetype)stubWithKey:(NSString*)key {
     return [LDUserModel stubWithKey:key usingTracker:nil];
 }
@@ -43,7 +45,7 @@ NSString * const userModelStubCustomValue = @"userModelStubCustomValue";
     stub.avatar = userModelStubAvatar;
     stub.custom = [LDUserModel customStub];
     stub.flagConfig = [LDFlagConfigModel flagConfigFromJsonFileNamed:@"featureFlags-excludeNulls-withVersions"];
-    stub.flagConfig.tracker = tracker ?: [LDFlagConfigTracker stubTracker];
+    stub.flagConfigTracker = tracker ?: [LDFlagConfigTracker stubTracker];
 
     return stub;
 }

@@ -13,11 +13,9 @@
 #import "NSJSONSerialization+Testable.h"
 
 @implementation LDFlagConfigModel(Testable)
-@dynamic tracker;
 
 +(instancetype)flagConfigFromJsonFileNamed:(NSString *)fileName {
     LDFlagConfigModel *flagConfigModel = [[LDFlagConfigModel alloc] initWithDictionary:[NSJSONSerialization jsonObjectFromFileNamed:fileName]];
-    flagConfigModel.tracker = [LDFlagConfigTracker stubTracker];
     return flagConfigModel;
 }
 

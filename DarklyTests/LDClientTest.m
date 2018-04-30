@@ -759,8 +759,8 @@ NSString *const kTestMobileKey = @"testMobileKey";
 
 -(LDFlagConfigModel*)configureUserWithFlagConfigModelFromJsonFileNamed:(NSString*)fileName {
     LDFlagConfigModel *flagConfigModel = [LDFlagConfigModel flagConfigFromJsonFileNamed:fileName];
-    flagConfigModel.tracker = self.trackerMock;
     [LDClient sharedInstance].ldUser.flagConfig = flagConfigModel;
+
     return flagConfigModel;
 }
 

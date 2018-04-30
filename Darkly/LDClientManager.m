@@ -321,10 +321,10 @@ NSString * const kLDClientManagerStreamMethod = @"meval";
 
     DEBUG_LOGX(@"ClientManager syncing events with server");
 
-    [[LDDataManager sharedManager] createSummaryEventWithTracker:[LDClient sharedInstance].ldUser.flagConfig.tracker config:[LDClient sharedInstance].ldConfig];    //TODO: When streaming events controls tracking, remove this
+    [[LDDataManager sharedManager] createSummaryEventWithTracker:[LDClient sharedInstance].ldUser.flagConfigTracker config:[LDClient sharedInstance].ldConfig];    //TODO: When streaming events controls tracking, remove this
 
     [[LDDataManager sharedManager] allEventDictionaries:^(NSArray *eventDictionaries) {
-        [[LDClient sharedInstance].ldUser.flagConfig resetTracker];
+        [[LDClient sharedInstance].ldUser resetTracker];
         if (eventDictionaries) {
             [[LDRequestManager sharedInstance] performEventRequest:eventDictionaries];
         } else {
