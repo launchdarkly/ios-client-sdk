@@ -58,4 +58,14 @@ NSString * const kLDFlagValueCounterKeyUnknown = @"unknown";
     return [NSDictionary dictionaryWithDictionary:dictionary];
 }
 
+-(NSString*)description {
+    return [NSString stringWithFormat:@"<LDFlagValueCounter: %p, value: %@, count: %ld, version: %ld, variation: %ld, unknown: %@>",
+            self,
+            [self.value description],
+            (long)self.count,
+            (long)self.version,
+            (long)self.variation,
+            self.isUnknown ? @"YES" : @"NO"];
+}
+
 @end

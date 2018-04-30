@@ -22,4 +22,5 @@
 
 -(nonnull NSDictionary*)dictionaryValue;
 
+-(nonnull NSString*)description;
 @end

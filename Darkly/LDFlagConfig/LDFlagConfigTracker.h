@@ -19,4 +19,6 @@
 -(nonnull instancetype)init;
 
 -(void)logRequestForFlagKey:(nonnull NSString*)flagKey flagConfigValue:(nullable LDFlagConfigValue*)flagConfigValue defaultValue:(nullable id)defaultValue;
+
+-(nonnull NSString*)description;
 @end

@@ -47,4 +47,7 @@
     [self.mutableFlagCounters[flagKey] logRequestWithValue:reportedValue version:reportedVersion variation:reportedVariation defaultValue:defaultValue];
 }
 
+-(NSString*)description {
+    return [NSString stringWithFormat:@"<LDFlagConfigTracker: %p, flagCounters: %@, startDateMillis: %ld>", self, [self.mutableFlagCounters description], (long)self.startDateMillis];
+}
 @end

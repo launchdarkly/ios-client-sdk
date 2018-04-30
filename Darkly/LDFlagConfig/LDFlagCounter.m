@@ -70,4 +70,12 @@ NSString * const kLDFlagCounterKeyCounters = @"counters";
     return [NSDictionary dictionaryWithDictionary:dictionary];
 }
 
+-(NSString*)description {
+    return [NSString stringWithFormat:@"<LDFlagCounter: %p, flagKey: %@, defaultValue: %@, flagValueCounters: %@>",
+            self,
+            self.flagKey,
+            [self.defaultValue description],
+            [self.flagValueCounters description]];
+}
+
 @end

@@ -1,7 +1,7 @@
 Pod::Spec.new do |s|
 
   s.name         = "LaunchDarkly"
-  s.version      = "2.13.0.2a"
+  s.version      = "2.13.0.2c"
   s.summary      = "iOS SDK for LaunchDarkly"
 
   s.description  = <<-DESC
@@ -23,7 +23,7 @@ Pod::Spec.new do |s|
   s.tvos.deployment_target    = "9.0"
   s.osx.deployment_target     = '10.10'
 
-  s.source       = { :git => "https://github.com/launchdarkly/ios-client.git", :tag => "2.13.0.2a" }
+  s.source       = { :git => "https://github.com/launchdarkly/ios-client.git", :tag => "2.13.0.2c" }
 
   s.source_files  = 'Darkly/**/*.{h,m}'
 
