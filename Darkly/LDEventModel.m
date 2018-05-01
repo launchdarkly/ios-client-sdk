@@ -15,7 +15,7 @@
 NSString * const kEventModelKindFeature = @"feature";
 NSString * const kEventModelKindCustom = @"custom";
 NSString * const kEventModelKindIdentify = @"identify";
-NSString * const kEventModelKindFeatureSummary = @"flag";
+NSString * const kEventModelKindFeatureSummary = @"summary";
 NSString * const kEventModelKindDebug = @"debug";
 
 NSString * const kEventModelKeyKey = @"key";
