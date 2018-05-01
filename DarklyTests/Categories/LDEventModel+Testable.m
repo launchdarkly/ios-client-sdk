@@ -75,10 +75,10 @@ const double featureEventDefaultValueStub = 2.71828;
     BOOL inlineUser = config ? config.inlineUserInEvents : false;
     if ([eventKind isEqualToString:kEventModelKindFeature]) {
         return [LDEventModel featureEventWithFlagKey:kFeatureEventKeyStub
-                                        flagValue:@(featureEventValueStub)
-                                 defaultFlagValue:@(featureEventDefaultValueStub)
-                                       userValue:user
-                                      inlineUser:inlineUser];
+                                           flagValue:@(featureEventValueStub)
+                                    defaultFlagValue:@(featureEventDefaultValueStub)
+                                           userValue:user
+                                          inlineUser:inlineUser];
     }
     if ([eventKind isEqualToString:kEventModelKindCustom]) {
         return [LDEventModel customEventWithKey:kCustomEventKeyStub

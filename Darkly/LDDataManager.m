@@ -193,6 +193,19 @@ dispatch_queue_t eventsQueue;
     [self addEventDictionary:[[LDEventModel summaryEventWithTracker:tracker] dictionaryValueUsingConfig:config]];
 }
 
+-(void)createDebugEventWithFlagKey:(NSString *)flagKey flagValue:(NSObject*)flagValue defaultFlagValue:(NSObject*)defaultFlagValue user:(LDUserModel*)user config:(LDConfig*)config {
+    if([self isAtEventCapacity:_eventsArray]) {
+        DEBUG_LOG(@"Events have surpassed capacity. Discarding feature event %@", flagKey);
+        return;
+    }
+    DEBUG_LOG(@"Creating feature event for feature:%@ with value:%@ and fallback:%@", flagKey, flagValue, defaultFlagValue);
+    [self addEventDictionary:[[LDEventModel debugEventWithFlagKey:flagKey
+                                                        flagValue:flagValue
+                                                 defaultFlagValue:defaultFlagValue
+                                                        userValue:user]
+                              dictionaryValueUsingConfig:config]];
+}
+
 -(void)addEventDictionary:(NSDictionary*)eventDictionary {
     dispatch_async(eventsQueue, ^{
         if (!self.eventsArray) {

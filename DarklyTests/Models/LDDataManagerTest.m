@@ -78,7 +78,9 @@ extern NSString * const kEventModelKeyKind;
     LDFlagConfigTracker *trackerStub = [LDFlagConfigTracker stubTracker];
     LDEventModel *summaryEvent = [LDEventModel summaryEventWithTracker:trackerStub];
     [[LDDataManager sharedManager] createSummaryEventWithTracker:trackerStub config:config];
-    NSArray<LDEventModel*> *eventStubs = @[featureEvent, customEvent, identifyEvent, summaryEvent];
+    LDEventModel *debugEvent = [LDEventModel stubEventWithKind:kEventModelKindDebug user:self.user config:config];
+    [[LDDataManager sharedManager] createDebugEventWithFlagKey:featureEvent.key flagValue:featureEvent.value defaultFlagValue:featureEvent.defaultValue user:self.user config:config];
+    NSArray<LDEventModel*> *eventStubs = @[featureEvent, customEvent, identifyEvent, summaryEvent, debugEvent];
 
     XCTestExpectation *expectation = [self expectationWithDescription:@"All events dictionary expectation"];
     
@@ -104,30 +106,6 @@ extern NSString * const kEventModelKeyKind;
     
     [self waitForExpectations:@[expectation] timeout:1];
 }
-
--(void)testAllEventDictionaries {
-    LDConfig *config = [[LDConfig alloc] initWithMobileKey:@"stubMobileKey"];
-    [[LDDataManager sharedManager] createCustomEventWithKey:@"foo" customData:nil user:self.user config:config];
-    [[LDDataManager sharedManager] createCustomEventWithKey:@"fi" customData:nil user:self.user config:config];
-    
-    XCTestExpectation *expectation = [self expectationWithDescription:@"All events json data expectation"];
-    
-    [[LDDataManager sharedManager] allEventDictionaries:^(NSArray *eventDictionaries) {
-        
-        NSMutableDictionary *events = [[NSMutableDictionary alloc] init];
-        for (NSDictionary *eventDictionary in eventDictionaries) {
-            XCTAssertTrue([eventDictionary[@"userKey"] isEqualToString:self.user.key]);
-            [events setObject:[[LDEventModel alloc] initWithDictionary:eventDictionary] forKey:[eventDictionary objectForKey:@"key"]];
-        }
-        
-        XCTAssertEqual([events count], 2);
-        [expectation fulfill];
-    }];
-    
-    [self waitForExpectations:@[expectation] timeout:10];
-    
-}
-
 
 -(void)testFindOrCreateUser {
     NSString *userKey = @"thisisgus";

@@ -61,9 +61,9 @@ typedef void(^MockLDClientDelegateCallbackBlock)(void);
 
 @interface LDClientTest : DarklyXCTestCase <ClientDelegate>
 @property (nonatomic, strong) XCTestExpectation *userConfigUpdatedNotificationExpectation;
-@property (nonatomic, strong) id mockLDClientManager;
-@property (nonatomic, strong) id mockLDDataManager;
-@property (nonatomic, strong) id mockLDRequestManager;
+@property (nonatomic, strong) id clientManagerMock;
+@property (nonatomic, strong) id dataManagerMock;
+@property (nonatomic, strong) id requestManagerMock;
 @property (nonatomic, strong) id throttlerMock;
 @property (nonatomic, strong) id trackerMock;
 @property (nonatomic, strong) id userBuilderMock;
@@ -82,15 +82,15 @@ NSString *const kTestMobileKey = @"testMobileKey";
 
     id mockClientManager = OCMClassMock([LDClientManager class]);
     OCMStub(ClassMethod([mockClientManager sharedInstance])).andReturn(mockClientManager);
-    self.mockLDClientManager = mockClientManager;
+    self.clientManagerMock = mockClientManager;
 
     id mockDataManager = OCMClassMock([LDDataManager class]);
     OCMStub(ClassMethod([mockDataManager sharedManager])).andReturn(mockDataManager);
-    self.mockLDDataManager = mockDataManager;
+    self.dataManagerMock = mockDataManager;
 
     id mockRequestManager = OCMClassMock([LDRequestManager class]);
     OCMStub(ClassMethod([mockRequestManager sharedInstance])).andReturn(mockRequestManager);
-    self.mockLDRequestManager = mockRequestManager;
+    self.requestManagerMock = mockRequestManager;
 
     self.throttlerMock = OCMClassMock([LDThrottler class]);
     OCMStub([self.throttlerMock runThrottled:[OCMArg invokeBlock]]);
@@ -113,12 +113,12 @@ NSString *const kTestMobileKey = @"testMobileKey";
     [[NSNotificationCenter defaultCenter] removeObserver:self];
     self.user = nil;
     self.config = nil;
-    [self.mockLDClientManager stopMocking];
-    self.mockLDClientManager = nil;
-    [self.mockLDDataManager stopMocking];
-    self.mockLDDataManager = nil;
-    [self.mockLDRequestManager stopMocking];
-    self.mockLDRequestManager = nil;
+    [self.clientManagerMock stopMocking];
+    self.clientManagerMock = nil;
+    [self.dataManagerMock stopMocking];
+    self.dataManagerMock = nil;
+    [self.requestManagerMock stopMocking];
+    self.requestManagerMock = nil;
     [self.throttlerMock stopMocking];
     self.throttlerMock = nil;
     [self.trackerMock stopMocking];
@@ -137,16 +137,16 @@ NSString *const kTestMobileKey = @"testMobileKey";
 }
 
 - (void)testStartWithoutConfig {
-    [[self.mockLDDataManager reject] createIdentifyEventWithUser:[OCMArg any] config:[OCMArg any]];
+    [[self.dataManagerMock reject] createIdentifyEventWithUser:[OCMArg any] config:[OCMArg any]];
     XCTAssertFalse([[LDClient sharedInstance] start:nil withUserBuilder:nil]);
-    [self.mockLDDataManager verify];
+    [self.dataManagerMock verify];
 }
 
 - (void)testStartWithValidConfig {
     LDConfig *config = [[LDConfig alloc] initWithMobileKey:kTestMobileKey];
     LDUserBuilder *userBuilder = [[LDUserBuilder alloc] init];
     userBuilder.key = [[NSUUID UUID] UUIDString];
-    [[self.mockLDDataManager expect] createIdentifyEventWithUser:[OCMArg checkWithBlock:^BOOL(id obj) {
+    [[self.dataManagerMock expect] createIdentifyEventWithUser:[OCMArg checkWithBlock:^BOOL(id obj) {
         if (![obj isKindOfClass:[LDUserModel class]]) { return NO; }
         return [((LDUserModel*)obj).key isEqualToString:userBuilder.key];
     }] config:[OCMArg checkWithBlock:^BOOL(id obj) {
@@ -156,7 +156,7 @@ NSString *const kTestMobileKey = @"testMobileKey";
 
     BOOL didStart = [[LDClient sharedInstance] start:config withUserBuilder:userBuilder];
     XCTAssertTrue(didStart);
-    [self.mockLDDataManager verify];
+    [self.dataManagerMock verify];
 }
 
 - (void)testStartWithValidConfigMultipleTimes {
@@ -164,7 +164,7 @@ NSString *const kTestMobileKey = @"testMobileKey";
     LDUserBuilder *userBuilder = [[LDUserBuilder alloc] init];
     userBuilder.key = [[NSUUID UUID] UUIDString];
     __block NSInteger createIdentifyEventCallCount = 0;
-    [[self.mockLDDataManager expect] createIdentifyEventWithUser:[OCMArg checkWithBlock:^BOOL(id obj) {
+    [[self.dataManagerMock expect] createIdentifyEventWithUser:[OCMArg checkWithBlock:^BOOL(id obj) {
         if (createIdentifyEventCallCount > 0) { return NO; }    //Make sure the client only records one identify event
         if (![obj isKindOfClass:[LDUserModel class]]) { return NO; }
         if (![((LDUserModel*)obj).key isEqualToString:userBuilder.key]) { return NO; }
@@ -177,7 +177,7 @@ NSString *const kTestMobileKey = @"testMobileKey";
     XCTAssertTrue([[LDClient sharedInstance] start:config withUserBuilder:userBuilder]);
     XCTAssertFalse([[LDClient sharedInstance] start:config withUserBuilder:userBuilder]);
 
-    [self.mockLDDataManager verify];
+    [self.dataManagerMock verify];
 }
 
 #pragma mark - Variations
@@ -190,6 +190,7 @@ NSString *const kTestMobileKey = @"testMobileKey";
     LDFlagConfigValue *flagConfigValue = [flagConfigModel flagConfigValueForFlagKey:flagKey];
     id targetFlagValue = flagConfigValue.value;
     [[self.dataManagerMock expect] createFeatureEventWithFlagKey:flagKey flagValue:targetFlagValue defaultFlagValue:defaultFlagValue user:self.user config:self.config];
+    [[self.dataManagerMock expect] createDebugEventWithFlagKey:flagKey flagValue:targetFlagValue defaultFlagValue:defaultFlagValue user:self.user config:self.config];
     [[self.trackerMock expect] logRequestForFlagKey:flagKey flagConfigValue:flagConfigValue defaultValue:defaultFlagValue];
 
     BOOL flagValue = [[LDClient sharedInstance] boolVariation:flagKey fallback:[defaultFlagValue boolValue]];
@@ -206,6 +207,7 @@ NSString *const kTestMobileKey = @"testMobileKey";
     id targetFlagValue = defaultFlagValue;
     [self configureUserWithFlagConfigModelFromJsonFileNamed:@"boolConfigIsABool-false-withVersion"];
     [[self.dataManagerMock expect] createFeatureEventWithFlagKey:flagKey flagValue:targetFlagValue defaultFlagValue:defaultFlagValue user:self.user config:self.config];
+    [[self.dataManagerMock expect] createDebugEventWithFlagKey:flagKey flagValue:targetFlagValue defaultFlagValue:defaultFlagValue user:self.user config:self.config];
     [[self.trackerMock expect] logRequestForFlagKey:flagKey flagConfigValue:nil defaultValue:defaultFlagValue];
 
     BOOL flagValue = [[LDClient sharedInstance] boolVariation:flagKey fallback:[defaultFlagValue boolValue]];
@@ -221,6 +223,7 @@ NSString *const kTestMobileKey = @"testMobileKey";
     id targetFlagValue = defaultFlagValue;
     [self configureUserWithFlagConfigModelFromJsonFileNamed:@"boolConfigIsABool-true-withVersion"];
     [[self.dataManagerMock reject] createFeatureEventWithFlagKey:[OCMArg any] flagValue:[OCMArg any] defaultFlagValue:[OCMArg any] user:self.user config:self.config];
+    [[self.dataManagerMock reject] createDebugEventWithFlagKey:[OCMArg any] flagValue:[OCMArg any] defaultFlagValue:[OCMArg any] user:self.user config:self.config];
     [[self.trackerMock reject] logRequestForFlagKey:[OCMArg any] flagConfigValue:[OCMArg any] defaultValue:[OCMArg any]];
 
     BOOL flagValue = [[LDClient sharedInstance] boolVariation:flagKey fallback:[defaultFlagValue boolValue]];
@@ -239,6 +242,7 @@ NSString *const kTestMobileKey = @"testMobileKey";
     LDFlagConfigValue *flagConfigValue = [flagConfigModel flagConfigValueForFlagKey:flagKey];
     id targetFlagValue = flagConfigValue.value;
     [[self.dataManagerMock expect] createFeatureEventWithFlagKey:flagKey flagValue:targetFlagValue defaultFlagValue:defaultFlagValue user:self.user config:self.config];
+    [[self.dataManagerMock expect] createDebugEventWithFlagKey:flagKey flagValue:targetFlagValue defaultFlagValue:defaultFlagValue user:self.user config:self.config];
     [[self.trackerMock expect] logRequestForFlagKey:flagKey flagConfigValue:flagConfigValue defaultValue:defaultFlagValue];
 
     NSNumber *flagValue = [[LDClient sharedInstance] numberVariation:flagKey fallback:defaultFlagValue];
@@ -255,6 +259,7 @@ NSString *const kTestMobileKey = @"testMobileKey";
     id targetFlagValue = defaultFlagValue;
     [self configureUserWithFlagConfigModelFromJsonFileNamed:@"numberConfigIsANumber-2-withVersion"];
     [[self.dataManagerMock expect] createFeatureEventWithFlagKey:flagKey flagValue:targetFlagValue defaultFlagValue:defaultFlagValue user:self.user config:self.config];
+    [[self.dataManagerMock expect] createDebugEventWithFlagKey:flagKey flagValue:targetFlagValue defaultFlagValue:defaultFlagValue user:self.user config:self.config];
     [[self.trackerMock expect] logRequestForFlagKey:flagKey flagConfigValue:nil defaultValue:defaultFlagValue];
 
     NSNumber *flagValue = [[LDClient sharedInstance] numberVariation:flagKey fallback:defaultFlagValue];
@@ -270,6 +275,7 @@ NSString *const kTestMobileKey = @"testMobileKey";
     id targetFlagValue = defaultFlagValue;
     [self configureUserWithFlagConfigModelFromJsonFileNamed:@"numberConfigIsANumber-2-withVersion"];
     [[self.dataManagerMock reject] createFeatureEventWithFlagKey:[OCMArg any] flagValue:[OCMArg any] defaultFlagValue:[OCMArg any] user:self.user config:self.config];
+    [[self.dataManagerMock reject] createDebugEventWithFlagKey:[OCMArg any] flagValue:[OCMArg any] defaultFlagValue:[OCMArg any] user:self.user config:self.config];
     [[self.trackerMock reject] logRequestForFlagKey:[OCMArg any] flagConfigValue:[OCMArg any] defaultValue:[OCMArg any]];
 
     NSNumber *flagValue = [[LDClient sharedInstance] numberVariation:flagKey fallback:defaultFlagValue];
@@ -288,6 +294,7 @@ NSString *const kTestMobileKey = @"testMobileKey";
     LDFlagConfigValue *flagConfigValue = [flagConfigModel flagConfigValueForFlagKey:flagKey];
     id targetFlagValue = flagConfigValue.value;
     [[self.dataManagerMock expect] createFeatureEventWithFlagKey:flagKey flagValue:targetFlagValue defaultFlagValue:defaultFlagValue user:self.user config:self.config];
+    [[self.dataManagerMock expect] createDebugEventWithFlagKey:flagKey flagValue:targetFlagValue defaultFlagValue:defaultFlagValue user:self.user config:self.config];
     [[self.trackerMock expect] logRequestForFlagKey:flagKey flagConfigValue:flagConfigValue defaultValue:defaultFlagValue];
 
     double flagValue = [[LDClient sharedInstance] doubleVariation:flagKey fallback:[defaultFlagValue doubleValue]];
@@ -304,6 +311,7 @@ NSString *const kTestMobileKey = @"testMobileKey";
     id targetFlagValue = defaultFlagValue;
     [self configureUserWithFlagConfigModelFromJsonFileNamed:@"doubleConfigIsADouble-Pi-withVersion"];
     [[self.dataManagerMock expect] createFeatureEventWithFlagKey:flagKey flagValue:targetFlagValue defaultFlagValue:defaultFlagValue user:self.user config:self.config];
+    [[self.dataManagerMock expect] createDebugEventWithFlagKey:flagKey flagValue:targetFlagValue defaultFlagValue:defaultFlagValue user:self.user config:self.config];
     [[self.trackerMock expect] logRequestForFlagKey:flagKey flagConfigValue:nil defaultValue:defaultFlagValue];
 
     double flagValue = [[LDClient sharedInstance] doubleVariation:flagKey fallback:[defaultFlagValue doubleValue]];
@@ -319,6 +327,7 @@ NSString *const kTestMobileKey = @"testMobileKey";
     id targetFlagValue = defaultFlagValue;
     [self configureUserWithFlagConfigModelFromJsonFileNamed:@"doubleConfigIsADouble-Pi-withVersion"];
     [[self.dataManagerMock reject] createFeatureEventWithFlagKey:[OCMArg any] flagValue:[OCMArg any] defaultFlagValue:[OCMArg any] user:self.user config:self.config];
+    [[self.dataManagerMock reject] createDebugEventWithFlagKey:[OCMArg any] flagValue:[OCMArg any] defaultFlagValue:[OCMArg any] user:self.user config:self.config];
     [[self.trackerMock reject] logRequestForFlagKey:[OCMArg any] flagConfigValue:[OCMArg any] defaultValue:[OCMArg any]];
 
     double flagValue = [[LDClient sharedInstance] doubleVariation:flagKey fallback:[defaultFlagValue doubleValue]];
@@ -337,6 +346,7 @@ NSString *const kTestMobileKey = @"testMobileKey";
     LDFlagConfigValue *flagConfigValue = [flagConfigModel flagConfigValueForFlagKey:flagKey];
     id targetFlagValue = flagConfigValue.value;
     [[self.dataManagerMock expect] createFeatureEventWithFlagKey:flagKey flagValue:targetFlagValue defaultFlagValue:defaultFlagValue user:self.user config:self.config];
+    [[self.dataManagerMock expect] createDebugEventWithFlagKey:flagKey flagValue:targetFlagValue defaultFlagValue:defaultFlagValue user:self.user config:self.config];
     [[self.trackerMock expect] logRequestForFlagKey:flagKey flagConfigValue:flagConfigValue defaultValue:defaultFlagValue];
 
     NSString *flagValue = [[LDClient sharedInstance] stringVariation:flagKey fallback:defaultFlagValue];
@@ -353,6 +363,7 @@ NSString *const kTestMobileKey = @"testMobileKey";
     id targetFlagValue = defaultFlagValue;
     [self configureUserWithFlagConfigModelFromJsonFileNamed:@"stringConfigIsAString-someString-withVersion"];
     [[self.dataManagerMock expect] createFeatureEventWithFlagKey:flagKey flagValue:targetFlagValue defaultFlagValue:defaultFlagValue user:self.user config:self.config];
+    [[self.dataManagerMock expect] createDebugEventWithFlagKey:flagKey flagValue:targetFlagValue defaultFlagValue:defaultFlagValue user:self.user config:self.config];
     [[self.trackerMock expect] logRequestForFlagKey:flagKey flagConfigValue:nil defaultValue:defaultFlagValue];
 
     NSString *flagValue = [[LDClient sharedInstance] stringVariation:flagKey fallback:defaultFlagValue];
@@ -368,6 +379,7 @@ NSString *const kTestMobileKey = @"testMobileKey";
     id targetFlagValue = defaultFlagValue;
     [self configureUserWithFlagConfigModelFromJsonFileNamed:@"stringConfigIsAString-someString-withVersion"];
     [[self.dataManagerMock reject] createFeatureEventWithFlagKey:[OCMArg any] flagValue:[OCMArg any] defaultFlagValue:[OCMArg any] user:self.user config:self.config];
+    [[self.dataManagerMock reject] createDebugEventWithFlagKey:[OCMArg any] flagValue:[OCMArg any] defaultFlagValue:[OCMArg any] user:self.user config:self.config];
     [[self.trackerMock reject] logRequestForFlagKey:[OCMArg any] flagConfigValue:[OCMArg any] defaultValue:[OCMArg any]];
 
     NSString *flagValue = [[LDClient sharedInstance] stringVariation:flagKey fallback:defaultFlagValue];
@@ -386,6 +398,7 @@ NSString *const kTestMobileKey = @"testMobileKey";
     LDFlagConfigValue *flagConfigValue = [flagConfigModel flagConfigValueForFlagKey:flagKey];
     id targetFlagValue = flagConfigValue.value;
     [[self.dataManagerMock expect] createFeatureEventWithFlagKey:flagKey flagValue:targetFlagValue defaultFlagValue:defaultFlagValue user:self.user config:self.config];
+    [[self.dataManagerMock expect] createDebugEventWithFlagKey:flagKey flagValue:targetFlagValue defaultFlagValue:defaultFlagValue user:self.user config:self.config];
     [[self.trackerMock expect] logRequestForFlagKey:flagKey flagConfigValue:flagConfigValue defaultValue:defaultFlagValue];
 
     NSArray *flagValue = [[LDClient sharedInstance] arrayVariation:flagKey fallback:defaultFlagValue];
@@ -402,6 +415,7 @@ NSString *const kTestMobileKey = @"testMobileKey";
     id targetFlagValue = defaultFlagValue;
     [self configureUserWithFlagConfigModelFromJsonFileNamed:@"arrayConfigIsAnArray-123-withVersion"];
     [[self.dataManagerMock expect] createFeatureEventWithFlagKey:flagKey flagValue:targetFlagValue defaultFlagValue:defaultFlagValue user:self.user config:self.config];
+    [[self.dataManagerMock expect] createDebugEventWithFlagKey:flagKey flagValue:targetFlagValue defaultFlagValue:defaultFlagValue user:self.user config:self.config];
     [[self.trackerMock expect] logRequestForFlagKey:flagKey flagConfigValue:nil defaultValue:defaultFlagValue];
 
     NSArray *flagValue = [[LDClient sharedInstance] arrayVariation:flagKey fallback:defaultFlagValue];
@@ -417,6 +431,7 @@ NSString *const kTestMobileKey = @"testMobileKey";
     id targetFlagValue = defaultFlagValue;
     [self configureUserWithFlagConfigModelFromJsonFileNamed:@"arrayConfigIsAnArray-123-withVersion"];
     [[self.dataManagerMock reject] createFeatureEventWithFlagKey:[OCMArg any] flagValue:[OCMArg any] defaultFlagValue:[OCMArg any] user:self.user config:self.config];
+    [[self.dataManagerMock reject] createDebugEventWithFlagKey:[OCMArg any] flagValue:[OCMArg any] defaultFlagValue:[OCMArg any] user:self.user config:self.config];
     [[self.trackerMock reject] logRequestForFlagKey:[OCMArg any] flagConfigValue:[OCMArg any] defaultValue:[OCMArg any]];
 
     NSArray *flagValue = [[LDClient sharedInstance] arrayVariation:flagKey fallback:defaultFlagValue];
@@ -435,6 +450,7 @@ NSString *const kTestMobileKey = @"testMobileKey";
     LDFlagConfigValue *flagConfigValue = [flagConfigModel flagConfigValueForFlagKey:flagKey];
     id targetFlagValue = flagConfigValue.value;
     [[self.dataManagerMock expect] createFeatureEventWithFlagKey:flagKey flagValue:targetFlagValue defaultFlagValue:defaultFlagValue user:self.user config:self.config];
+    [[self.dataManagerMock expect] createDebugEventWithFlagKey:flagKey flagValue:targetFlagValue defaultFlagValue:defaultFlagValue user:self.user config:self.config];
     [[self.trackerMock expect] logRequestForFlagKey:flagKey flagConfigValue:flagConfigValue defaultValue:defaultFlagValue];
 
     NSDictionary *flagValue = [[LDClient sharedInstance] dictionaryVariation:flagKey fallback:defaultFlagValue];
@@ -451,6 +467,7 @@ NSString *const kTestMobileKey = @"testMobileKey";
     id targetFlagValue = defaultFlagValue;
     [self configureUserWithFlagConfigModelFromJsonFileNamed:@"dictionaryConfigIsADictionary-3Key-withVersion"];
     [[self.dataManagerMock expect] createFeatureEventWithFlagKey:flagKey flagValue:targetFlagValue defaultFlagValue:defaultFlagValue user:self.user config:self.config];
+    [[self.dataManagerMock expect] createDebugEventWithFlagKey:flagKey flagValue:targetFlagValue defaultFlagValue:defaultFlagValue user:self.user config:self.config];
     [[self.trackerMock expect] logRequestForFlagKey:flagKey flagConfigValue:nil defaultValue:defaultFlagValue];
 
     NSDictionary *flagValue = [[LDClient sharedInstance] dictionaryVariation:flagKey fallback:defaultFlagValue];
@@ -466,6 +483,7 @@ NSString *const kTestMobileKey = @"testMobileKey";
     id targetFlagValue = defaultFlagValue;
     [self configureUserWithFlagConfigModelFromJsonFileNamed:@"dictionaryConfigIsADictionary-3Key-withVersion"];
     [[self.dataManagerMock reject] createFeatureEventWithFlagKey:[OCMArg any] flagValue:[OCMArg any] defaultFlagValue:[OCMArg any] user:self.user config:self.config];
+    [[self.dataManagerMock reject] createDebugEventWithFlagKey:[OCMArg any] flagValue:[OCMArg any] defaultFlagValue:[OCMArg any] user:self.user config:self.config];
     [[self.trackerMock reject] logRequestForFlagKey:[OCMArg any] flagConfigValue:[OCMArg any] defaultValue:[OCMArg any]];
 
     NSDictionary *flagValue = [[LDClient sharedInstance] dictionaryVariation:flagKey fallback:defaultFlagValue];
@@ -554,7 +572,7 @@ NSString *const kTestMobileKey = @"testMobileKey";
 }
 
 - (void)testSetOnline_NO_beforeStart {
-    [[self.mockLDClientManager reject] setOnline:[OCMArg any]];
+    [[self.clientManagerMock reject] setOnline:[OCMArg any]];
     __block NSInteger completionCallCount = 0;
 
     [[LDClient sharedInstance] setOnline:NO completion: ^{
@@ -562,7 +580,7 @@ NSString *const kTestMobileKey = @"testMobileKey";
     }];
 
     XCTAssertFalse([LDClient sharedInstance].isOnline);
-    [self.mockLDClientManager verify];
+    [self.clientManagerMock verify];
     XCTAssertEqual(completionCallCount, 1);
 }
 
@@ -570,7 +588,7 @@ NSString *const kTestMobileKey = @"testMobileKey";
     LDConfig *config = [[LDConfig alloc] initWithMobileKey:kTestMobileKey];
     [[LDClient sharedInstance] start:config withUserBuilder:nil];
     [[self.throttlerMock reject] runThrottled:[OCMArg any]];
-    [[self.mockLDClientManager expect] setOnline:NO];
+    [[self.clientManagerMock expect] setOnline:NO];
     __block NSInteger completionCallCount = 0;
 
     [[LDClient sharedInstance] setOnline:NO completion: ^{
@@ -578,13 +596,13 @@ NSString *const kTestMobileKey = @"testMobileKey";
     }];
 
     XCTAssertFalse([LDClient sharedInstance].isOnline);
-    [self.mockLDClientManager verify];
+    [self.clientManagerMock verify];
     [self.throttlerMock verify];
     XCTAssertEqual(completionCallCount, 1);
 }
 
 - (void)testSetOnline_YES_beforeStart {
-    [[self.mockLDClientManager reject] setOnline:[OCMArg any]];
+    [[self.clientManagerMock reject] setOnline:[OCMArg any]];
     __block NSInteger completionCallCount = 0;
 
     [[LDClient sharedInstance] setOnline:YES completion: ^{
@@ -592,7 +610,7 @@ NSString *const kTestMobileKey = @"testMobileKey";
     }];
 
     XCTAssertFalse([LDClient sharedInstance].isOnline);
-    [self.mockLDClientManager verify];
+    [self.clientManagerMock verify];
     XCTAssertEqual(completionCallCount, 1);
 }
 
@@ -600,7 +618,7 @@ NSString *const kTestMobileKey = @"testMobileKey";
     LDConfig *config = [[LDConfig alloc] initWithMobileKey:kTestMobileKey];
     [[LDClient sharedInstance] start:config withUserBuilder:nil];
     [[LDClient sharedInstance] setOnline:NO];
-    [[self.mockLDClientManager expect] setOnline:YES];
+    [[self.clientManagerMock expect] setOnline:YES];
     __block NSInteger completionCallCount = 0;
     //The throttler mock expectation is not getting fulfilled even though the LDClient does invoke it.
     //Since the throttler mock is set to execute blocks, setting the expectation on the client manager mock verifies that the client is calling the throttler
@@ -609,7 +627,7 @@ NSString *const kTestMobileKey = @"testMobileKey";
         completionCallCount += 1;
     }];
 
-    [self.mockLDClientManager verify];
+    [self.clientManagerMock verify];
     XCTAssertEqual(completionCallCount, 1);
 }
 
@@ -626,28 +644,28 @@ NSString *const kTestMobileKey = @"testMobileKey";
 - (void)testStopClient {
     LDConfig *config = [[LDConfig alloc] initWithMobileKey:kTestMobileKey];
     [[LDClient sharedInstance] start:config withUserBuilder:nil];
-    [[self.mockLDClientManager expect] setOnline:NO];
+    [[self.clientManagerMock expect] setOnline:NO];
 
     XCTAssertTrue([[LDClient sharedInstance] stopClient]);
     XCTAssertFalse([[LDClient sharedInstance] clientStarted]);
-    OCMVerifyAll(self.mockLDClientManager);
+    OCMVerifyAll(self.clientManagerMock);
 }
 
 - (void)testUpdateUserWithoutStart {
-    [[self.mockLDClientManager reject] updateUser];
-    [[self.mockLDDataManager reject] createIdentifyEventWithUser:[OCMArg any] config:[OCMArg any]];
+    [[self.clientManagerMock reject] updateUser];
+    [[self.dataManagerMock reject] createIdentifyEventWithUser:[OCMArg any] config:[OCMArg any]];
     XCTAssertFalse([[LDClient sharedInstance] updateUser:[[LDUserBuilder alloc] init]]);
-    [self.mockLDClientManager verify];
-    [self.mockLDDataManager verify];
-    [self.mockLDClientManager verify];
+    [self.clientManagerMock verify];
+    [self.dataManagerMock verify];
+    [self.clientManagerMock verify];
 }
 
 -(void)testUpdateUserWithStart {
     LDConfig *config = [[LDConfig alloc] initWithMobileKey:kTestMobileKey];
-    [[self.mockLDClientManager expect] updateUser];
+    [[self.clientManagerMock expect] updateUser];
     LDUserBuilder *userBuilder = [[LDUserBuilder alloc] init];
     userBuilder.key = [[NSUUID UUID] UUIDString];
-    [[self.mockLDDataManager expect] createIdentifyEventWithUser:[OCMArg checkWithBlock:^BOOL(id obj) {
+    [[self.dataManagerMock expect] createIdentifyEventWithUser:[OCMArg checkWithBlock:^BOOL(id obj) {
         if (![obj isKindOfClass:[LDUserModel class]]) { return NO; }
         return [((LDUserModel*)obj).key isEqualToString:userBuilder.key];
     }] config:[OCMArg checkWithBlock:^BOOL(id obj) {
@@ -658,8 +676,8 @@ NSString *const kTestMobileKey = @"testMobileKey";
 
     XCTAssertTrue([[LDClient sharedInstance] updateUser:userBuilder]);
 
-    [self.mockLDClientManager verify];
-    [self.mockLDDataManager verify];
+    [self.clientManagerMock verify];
+    [self.dataManagerMock verify];
 }
 
 - (void)testCurrentUserBuilderWithoutStart {
@@ -722,11 +740,11 @@ NSString *const kTestMobileKey = @"testMobileKey";
     LDConfig *config = [[LDConfig alloc] initWithMobileKey:kTestMobileKey];
     [[LDClient sharedInstance] start:config withUserBuilder:nil];
 
-    [[self.mockLDClientManager expect] setOnline:NO];
+    [[self.clientManagerMock expect] setOnline:NO];
 
     [[NSNotificationCenter defaultCenter] postNotificationName:kLDClientUnauthorizedNotification object:nil];
 
-    [self.mockLDClientManager verify];
+    [self.clientManagerMock verify];
 }
 
 - (void)testUserUpdatedCalled {

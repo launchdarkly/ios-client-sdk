@@ -17,10 +17,6 @@ extern NSString * const kEventModelKeyInlineUser;
 
 extern NSString * const kUserAttributeConfig;
 
-extern NSString * const kEventModelKindFeature;
-extern NSString * const kEventModelKindCustom;
-extern NSString * const kEventModelKindIdentify;
-
 extern const NSTimeInterval kLDFlagConfigTrackerTrackingInterval;
 
 NSString * const testMobileKey = @"EventModelTest.testMobileKey";
@@ -85,7 +81,7 @@ NSString * const testMobileKey = @"EventModelTest.testMobileKey";
     XCTAssertTrue(event.creationDate >= referenceMillis);
 }
 
--(void)testSummaryEvent {
+- (void)testSummaryEvent {
     NSDate *creationDate = [NSDate date];
     LDFlagConfigTracker *trackerStub = [LDFlagConfigTracker stubTracker];
     LDEventModel *event = [LDEventModel summaryEventWithTracker:trackerStub];
@@ -95,6 +91,22 @@ NSString * const testMobileKey = @"EventModelTest.testMobileKey";
     XCTAssertTrue(Approximately(event.startDateMillis, startDateMillis, 10));
     XCTAssertTrue(Approximately(event.endDateMillis, [creationDate millisSince1970], 10));
     XCTAssertTrue([trackerStub hasPropertiesMatchingDictionary:event.flagRequestSummary]);
+}
+
+- (void)testDebugEventWithKey {
+    NSArray *boolValues = @[@NO, @YES];
+    for (NSNumber *value in boolValues) {
+        NSInteger referenceMillis = [[NSDate date] millisSince1970];
+        LDEventModel *event = [LDEventModel debugEventWithFlagKey:@"red" flagValue:value defaultFlagValue:value userValue:self.user];
+
+        XCTAssertEqualObjects(event.key, @"red");
+        XCTAssertEqualObjects(event.kind, kEventModelKindDebug);
+        XCTAssertEqualObjects(event.value, value);
+        XCTAssertEqualObjects(event.defaultValue, value);
+        XCTAssertTrue([event.user isEqual:self.user ignoringAttributes:@[]]);
+        XCTAssertEqual(event.inlineUser, YES);
+        XCTAssertTrue(Approximately(event.creationDate, referenceMillis, 10));
+    }
 }
 
 -(void)testEncodeAndDecodeEvent {

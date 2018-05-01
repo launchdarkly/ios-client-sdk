@@ -126,6 +126,7 @@
     BOOL returnValue = flagConfigValue.value && [flagConfigValue.value isKindOfClass:[NSNumber class]] ? [flagConfigValue.value boolValue] : fallback;
 
     [[LDDataManager sharedManager] createFeatureEventWithFlagKey:flagKey flagValue:@(returnValue) defaultFlagValue:@(fallback) user:self.ldUser config:self.ldConfig];
+    [[LDDataManager sharedManager] createDebugEventWithFlagKey:flagKey flagValue:@(returnValue) defaultFlagValue:@(fallback) user:self.ldUser config:self.ldConfig];
     [self.ldUser.flagConfigTracker logRequestForFlagKey:flagKey flagConfigValue:flagConfigValue defaultValue:@(fallback)];
     return returnValue;
 }
@@ -145,6 +146,7 @@
     NSNumber *returnValue = flagConfigValue.value && [flagConfigValue.value isKindOfClass:[NSNumber class]] ? flagConfigValue.value : fallback;
 
     [[LDDataManager sharedManager] createFeatureEventWithFlagKey:flagKey flagValue:returnValue defaultFlagValue:fallback user:self.ldUser config:self.ldConfig];
+    [[LDDataManager sharedManager] createDebugEventWithFlagKey:flagKey flagValue:returnValue defaultFlagValue:fallback user:self.ldUser config:self.ldConfig];
     [self.ldUser.flagConfigTracker logRequestForFlagKey:flagKey flagConfigValue:flagConfigValue defaultValue:fallback];
     return returnValue;
 }
@@ -164,6 +166,7 @@
     double returnValue = flagConfigValue.value && [flagConfigValue.value isKindOfClass:[NSNumber class]] ? [flagConfigValue.value doubleValue] : fallback;
 
     [[LDDataManager sharedManager] createFeatureEventWithFlagKey:flagKey flagValue:@(returnValue) defaultFlagValue:@(fallback) user:self.ldUser config:self.ldConfig];
+    [[LDDataManager sharedManager] createDebugEventWithFlagKey:flagKey flagValue:@(returnValue) defaultFlagValue:@(fallback) user:self.ldUser config:self.ldConfig];
     [self.ldUser.flagConfigTracker logRequestForFlagKey:flagKey flagConfigValue:flagConfigValue defaultValue:@(fallback)];
     return returnValue;
 }
@@ -183,6 +186,7 @@
     NSString *returnValue = flagConfigValue.value && [flagConfigValue.value isKindOfClass:[NSString class]] ? flagConfigValue.value : fallback;
 
     [[LDDataManager sharedManager] createFeatureEventWithFlagKey:flagKey flagValue:returnValue defaultFlagValue:fallback user:self.ldUser config:self.ldConfig];
+    [[LDDataManager sharedManager] createDebugEventWithFlagKey:flagKey flagValue:returnValue defaultFlagValue:fallback user:self.ldUser config:self.ldConfig];
     [self.ldUser.flagConfigTracker logRequestForFlagKey:flagKey flagConfigValue:flagConfigValue defaultValue:fallback];
     return returnValue;
 }
@@ -202,6 +206,7 @@
     NSArray *returnValue = flagConfigValue.value && [flagConfigValue.value isKindOfClass:[NSArray class]] ? flagConfigValue.value : fallback;
 
     [[LDDataManager sharedManager] createFeatureEventWithFlagKey:flagKey flagValue:returnValue defaultFlagValue:fallback user:self.ldUser config:self.ldConfig];
+    [[LDDataManager sharedManager] createDebugEventWithFlagKey:flagKey flagValue:returnValue defaultFlagValue:fallback user:self.ldUser config:self.ldConfig];
     [self.ldUser.flagConfigTracker logRequestForFlagKey:flagKey flagConfigValue:flagConfigValue defaultValue:fallback];
     return returnValue;
 }
@@ -221,6 +226,7 @@
     NSDictionary *returnValue = flagConfigValue.value && [flagConfigValue.value isKindOfClass:[NSDictionary class]] ? flagConfigValue.value : fallback;
 
     [[LDDataManager sharedManager] createFeatureEventWithFlagKey:flagKey flagValue:returnValue defaultFlagValue:fallback user:self.ldUser config:self.ldConfig];
+    [[LDDataManager sharedManager] createDebugEventWithFlagKey:flagKey flagValue:returnValue defaultFlagValue:fallback user:self.ldUser config:self.ldConfig];
     [self.ldUser.flagConfigTracker logRequestForFlagKey:flagKey flagConfigValue:flagConfigValue defaultValue:fallback];
     return returnValue;
 }
