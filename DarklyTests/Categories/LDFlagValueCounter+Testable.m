@@ -18,6 +18,9 @@
         if (self.version != [dictionary[kLDFlagValueCounterKeyVersion] integerValue]) {
             [mismatchedProperties addObject:kLDFlagValueCounterKeyVersion];
         }
+        if (self.variation != [dictionary[kLDFlagValueCounterKeyVariation] integerValue]) {
+            [mismatchedProperties addObject:kLDFlagValueCounterKeyVariation];
+        }
         if (dictionary[kLDFlagValueCounterKeyUnknown]) {
             [mismatchedProperties addObject:kLDFlagValueCounterKeyUnknown];
         }
@@ -28,6 +31,9 @@
         if (dictionary[kLDFlagValueCounterKeyVersion]) {
             [mismatchedProperties addObject:kLDFlagValueCounterKeyVersion];
         }
+        if (dictionary[kLDFlagValueCounterKeyVariation]) {
+            [mismatchedProperties addObject:kLDFlagValueCounterKeyVariation];
+        }
         if ([dictionary[kLDFlagValueCounterKeyUnknown] boolValue] != YES) {
             [mismatchedProperties addObject:kLDFlagValueCounterKeyUnknown];
         }
@@ -37,7 +43,7 @@
     }
 
     if (mismatchedProperties.count > 0) {
-        NSLog(@"[%@ %@] unequal properties %@", NSStringFromClass([self class]), NSStringFromSelector(_cmd), [mismatchedProperties componentsJoinedByString:@", "]);
+        NSLog(@"[%@ %@] unequal properties: %@", NSStringFromClass([self class]), NSStringFromSelector(_cmd), [mismatchedProperties componentsJoinedByString:@", "]);
         return NO;
     }
 

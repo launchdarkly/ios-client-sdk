@@ -10,6 +10,7 @@
 
 extern NSString * const kLDFlagValueCounterKeyValue;
 extern NSString * const kLDFlagValueCounterKeyVersion;
+extern NSString * const kLDFlagValueCounterKeyVariation;
 extern NSString * const kLDFlagValueCounterKeyCount;
 extern NSString * const kLDFlagValueCounterKeyUnknown;
 

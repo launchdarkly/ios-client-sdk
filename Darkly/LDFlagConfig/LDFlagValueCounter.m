@@ -12,6 +12,7 @@
 
 NSString * const kLDFlagValueCounterKeyValue = @"value";
 NSString * const kLDFlagValueCounterKeyVersion = @"version";
+NSString * const kLDFlagValueCounterKeyVariation = @"variation";
 NSString * const kLDFlagValueCounterKeyCount = @"count";
 NSString * const kLDFlagValueCounterKeyUnknown = @"unknown";
 
@@ -43,12 +44,9 @@ NSString * const kLDFlagValueCounterKeyUnknown = @"unknown";
     NSMutableDictionary *dictionary = [NSMutableDictionary dictionaryWithCapacity:3];
 
     if (self.known) {
-        if (self.value) {
-            dictionary[kLDFlagValueCounterKeyValue] = self.value;
-        }
-        if (self.version != kLDFlagConfigVersionDoesNotExist) {
-            dictionary[kLDFlagValueCounterKeyVersion] = @(self.version);
-        }
+        dictionary[kLDFlagValueCounterKeyValue] = self.value ?: [NSNull null];
+        dictionary[kLDFlagValueCounterKeyVersion] = @(self.version);
+        dictionary[kLDFlagValueCounterKeyVariation] = @(self.variation);
     } else {
         dictionary[kLDFlagValueCounterKeyUnknown] = @(YES);
     }

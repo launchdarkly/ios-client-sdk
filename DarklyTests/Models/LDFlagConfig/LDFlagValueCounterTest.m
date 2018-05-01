@@ -24,7 +24,7 @@ extern const NSInteger kLDFlagConfigVariationDoesNotExist;
 
 - (void)setUp {
     [super setUp];
-    self.flagConfigDictionary = [LDFlagConfigModel flagConfigFromJsonFileNamed:@"featureFlags-excludeNulls-withVersions"].featuresJsonDictionary;
+    self.flagConfigDictionary = [LDFlagConfigModel flagConfigFromJsonFileNamed:@"featureFlags-withVersions"].featuresJsonDictionary;
 }
 
 - (void)tearDown {
@@ -63,7 +63,6 @@ extern const NSInteger kLDFlagConfigVariationDoesNotExist;
         flagValueCounterDictionary = [flagValueCounter dictionaryValue];
 
         XCTAssertTrue([flagValueCounter hasPropertiesMatchingDictionary:flagValueCounterDictionary]);
-
     }
 }
 
