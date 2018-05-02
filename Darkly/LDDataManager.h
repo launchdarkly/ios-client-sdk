@@ -6,6 +6,7 @@
 #import <CoreData/CoreData.h>
 #import "LDUserModel.h"
 
+@class LDFlagConfigValue;
 @class LDFlagConfigTracker;
 
 extern int const kUserCacheSize;
@@ -18,10 +19,12 @@ extern int const kUserCacheSize;
 -(NSMutableDictionary*)retrieveUserDictionary;
 -(NSMutableArray*)retrieveEventsArray;
 -(LDUserModel*)findUserWithkey: (NSString *)key;
+-(void)createFeatureEventWithFlagKey:(NSString*)flagKey flagConfigValue:(LDFlagConfigValue*)flagConfigValue defaultFlagValue:(id)defaultFlagValue user:(LDUserModel*)user config:(LDConfig*)config;
 -(void)createFeatureEventWithFlagKey:(NSString*)flagKey flagValue:(NSObject*)flagValue defaultFlagValue:(NSObject*)defaultFlagValue user:(LDUserModel*)user config:(LDConfig*)config;
 -(void)createCustomEventWithKey:(NSString*)eventKey customData:(NSDictionary*)customData user:(LDUserModel*)user config:(LDConfig*)config;
 -(void)createIdentifyEventWithUser:(LDUserModel*)user config:(LDConfig*)config;
 -(void)createSummaryEventWithTracker:(LDFlagConfigTracker*)tracker config:(LDConfig*)config;
+-(void)createDebugEventWithFlagKey:(NSString *)flagKey flagConfigValue:(LDFlagConfigValue*)flagConfigValue defaultFlagValue:(id)defaultFlagValue user:(LDUserModel*)user config:(LDConfig*)config;
 -(void)createDebugEventWithFlagKey:(NSString*)flagKey flagValue:(NSObject*)flagValue defaultFlagValue:(NSObject*)defaultFlagValue user:(LDUserModel*)user config:(LDConfig*)config;
 -(void)purgeOldUser: (NSMutableDictionary *)dictionary;
 -(void)saveUser: (LDUserModel *) user;

@@ -70,7 +70,11 @@ extern NSString * const kEventModelKeyKind;
 -(void)testAllEventsDictionaryArray {
     LDConfig *config = [[LDConfig alloc] initWithMobileKey:@"stubMobileKey"];
     LDEventModel *featureEvent = [LDEventModel stubEventWithKind:kEventModelKindFeature user:self.user config:config];
-    [[LDDataManager sharedManager] createFeatureEventWithFlagKey:featureEvent.key flagValue:featureEvent.value defaultFlagValue:featureEvent.defaultValue user:self.user config:config];
+    [[LDDataManager sharedManager] createFeatureEventWithFlagKey:featureEvent.key
+                                                 flagConfigValue:featureEvent.flagConfigValue
+                                                defaultFlagValue:featureEvent.defaultValue
+                                                            user:self.user
+                                                          config:config];
     LDEventModel *customEvent = [LDEventModel stubEventWithKind:kEventModelKindCustom user:self.user config:config];
     [[LDDataManager sharedManager] createCustomEventWithKey:customEvent.key customData:customEvent.data user:self.user config:config];
     LDEventModel *identifyEvent = [LDEventModel stubEventWithKind:kEventModelKindIdentify user:self.user config:config];
@@ -79,7 +83,7 @@ extern NSString * const kEventModelKeyKind;
     LDEventModel *summaryEvent = [LDEventModel summaryEventWithTracker:trackerStub];
     [[LDDataManager sharedManager] createSummaryEventWithTracker:trackerStub config:config];
     LDEventModel *debugEvent = [LDEventModel stubEventWithKind:kEventModelKindDebug user:self.user config:config];
-    [[LDDataManager sharedManager] createDebugEventWithFlagKey:featureEvent.key flagValue:featureEvent.value defaultFlagValue:featureEvent.defaultValue user:self.user config:config];
+    [[LDDataManager sharedManager] createDebugEventWithFlagKey:debugEvent.key flagConfigValue:debugEvent.flagConfigValue defaultFlagValue:debugEvent.defaultValue user:self.user config:config];
     NSArray<LDEventModel*> *eventStubs = @[featureEvent, customEvent, identifyEvent, summaryEvent, debugEvent];
 
     XCTestExpectation *expectation = [self expectationWithDescription:@"All events dictionary expectation"];
