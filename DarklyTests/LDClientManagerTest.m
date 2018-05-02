@@ -16,6 +16,8 @@
 #import "LDEvent+Testable.h"
 #import "LDEvent+EventTypes.h"
 #import "LDFlagConfigModel+Testable.h"
+#import "LDFlagConfigValue.h"
+#import "LDFlagConfigValue+Testable.h"
 #import "LDUserModel+Testable.h"
 #import "NSJSONSerialization+Testable.h"
 #import "LDFlagConfigTracker+Testable.h"
@@ -399,7 +401,12 @@ NSString *const kBoolFlagKey = @"isABawler";
 
 - (void)testProcessedEventsSuccessWithProcessedEvents {
     LDConfig *config = [[LDConfig alloc] initWithMobileKey:@"testMobileKey"];
-    LDEventModel *event = [[LDEventModel alloc] initFeatureEventWithFlagKey:@"blah" flagValue:[NSNumber numberWithBool:NO] defaultFlagValue:[NSNumber numberWithBool:NO] userValue:[[LDClient sharedInstance] ldUser] inlineUser:config.inlineUserInEvents];
+    LDFlagConfigValue *flagConfigValue = [LDFlagConfigValue flagConfigValueFromJsonFileNamed:@"boolConfigIsABool-true-withVersion" flagKey:kLDFlagKeyIsABool];
+    LDEventModel *event = [LDEventModel featureEventWithFlagKey:kFeatureEventKeyStub
+                                                flagConfigValue:flagConfigValue
+                                               defaultFlagValue:@(NO)
+                                                           user:[LDClient sharedInstance].ldUser
+                                                     inlineUser:config.inlineUserInEvents];
 
     LDClientManager *clientManager = [LDClientManager sharedInstance];
     [clientManager processedEvents:YES jsonEventArray:@[[event dictionaryValueUsingConfig:config]]];

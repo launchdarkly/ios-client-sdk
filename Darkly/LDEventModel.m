@@ -132,31 +132,6 @@ NSString * const kEventModelKeyFeatures = @"features";
     return self;
 }
 
-+(instancetype)featureEventWithFlagKey:(NSString*)flagKey
-                             flagValue:(NSObject*)flagValue
-                      defaultFlagValue:(NSObject*)defaultFlagValue
-                             userValue:(LDUserModel*)userValue
-                            inlineUser:(BOOL)inlineUser {
-    return [[LDEventModel alloc] initFeatureEventWithFlagKey:flagKey flagValue:flagValue defaultFlagValue:defaultFlagValue userValue:userValue inlineUser:inlineUser];
-}
-
--(instancetype)initFeatureEventWithFlagKey:(NSString*)flagKey
-                                 flagValue:(NSObject*)flagValue
-                          defaultFlagValue:(NSObject*)defaultFlagValue
-                                 userValue:(LDUserModel*)userValue
-                                inlineUser:(BOOL)inlineUser {
-    if (!(self = [self init])) { return nil; }
-
-    self.key = flagKey;
-    self.kind = kEventModelKindFeature;
-    self.value = flagValue;
-    self.defaultValue = defaultFlagValue;
-    self.user = userValue;
-    self.inlineUser = inlineUser;
-
-    return self;
-}
-
 +(instancetype)customEventWithKey:(NSString*)featureKey
                        customData:(NSDictionary*)customData
                         userValue:(LDUserModel*)userValue
@@ -225,17 +200,6 @@ NSString * const kEventModelKeyFeatures = @"features";
                         defaultFlagValue:(id)defaultFlagValue
                                     user:(LDUserModel*)user {
     self = [self initFeatureEventWithFlagKey:flagKey flagConfigValue:flagConfigValue defaultFlagValue:defaultFlagValue user:user inlineUser:YES];
-    self.kind = kEventModelKindDebug;
-
-    return self;
-}
-
-+(instancetype)debugEventWithFlagKey:(NSString *)flagKey flagValue:(NSObject*)flagValue defaultFlagValue:(NSObject*)defaultflagValue userValue:(LDUserModel*)userValue {
-    return [[LDEventModel alloc] initDebugEventWithFlagKey:flagKey flagValue:flagValue defaultFlagValue:defaultflagValue userValue:userValue];
-}
-
--(instancetype)initDebugEventWithFlagKey:(NSString*)flagKey  flagValue:(NSObject*)flagValue defaultFlagValue:(NSObject*)defaultflagValue userValue:(LDUserModel*)userValue {
-    self = [self initFeatureEventWithFlagKey:flagKey flagValue:flagValue defaultFlagValue:defaultflagValue userValue:userValue inlineUser:YES];
     self.kind = kEventModelKindDebug;
 
     return self;
