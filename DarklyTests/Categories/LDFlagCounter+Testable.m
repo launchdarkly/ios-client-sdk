@@ -24,11 +24,16 @@ extern NSString * const kLDFlagCounterKeyCounters;
     id defaultValue = [LDFlagConfigValue defaultValueForFlagKey:flagKey];
     LDFlagCounter *flagCounter = [LDFlagCounter counterWithFlagKey:flagKey defaultValue:defaultValue];
 
-    NSArray<LDFlagConfigValue*> *flagConfigValues = [LDFlagConfigValue stubFlagConfigValuesForFlagKey:flagKey];
-    for (LDFlagConfigValue *flagConfigValue in flagConfigValues) {
-        NSInteger variation = useKnownValues ? flagConfigValue.version : kLDFlagConfigVariationDoesNotExist;
-        for (NSInteger logRequests = 0; logRequests < flagConfigValue.version; logRequests += 1 ) {
-            [flagCounter logRequestWithValue:flagConfigValue.value version:flagConfigValue.version variation:variation defaultValue:defaultValue isKnownValue:useKnownValues];
+    if (useKnownValues) {
+        NSArray<LDFlagConfigValue*> *flagConfigValues = [LDFlagConfigValue stubFlagConfigValuesForFlagKey:flagKey];
+        for (LDFlagConfigValue *flagConfigValue in flagConfigValues) {
+            for (NSInteger logRequests = 0; logRequests < flagConfigValue.version; logRequests += 1 ) {
+                [flagCounter logRequestWithFlagConfigValue:useKnownValues ? flagConfigValue : nil defaultValue:defaultValue];
+            }
+        }
+    } else {
+        for (NSInteger logRequests = 0; logRequests < 3; logRequests += 1 ) {
+            [flagCounter logRequestWithFlagConfigValue:nil defaultValue:defaultValue];
         }
     }
 
@@ -48,9 +53,12 @@ extern NSString * const kLDFlagCounterKeyCounters;
         NSArray<NSDictionary*> *countersFromDictionary = dictionary[kLDFlagCounterKeyCounters];
         for (NSDictionary *counterFromDictionary in countersFromDictionary) {
             BOOL isKnownValue = ![counterFromDictionary[kLDFlagValueCounterKeyUnknown] boolValue];
+            LDFlagConfigValue *flagConfigValue = nil;
+            if (isKnownValue) {
+                flagConfigValue = [LDFlagConfigValue flagConfigValueWithObject:counterFromDictionary];
+            }
             NSInteger variation = isKnownValue ? [counterFromDictionary[kLDFlagValueCounterKeyVersion] integerValue] : kLDFlagConfigVariationDoesNotExist;
-            //            LDFlagValueCounter *flagValueCounter = [self valueCounterForVariation:variation];     //TODO: When variation is fully implemented, use it here
-            LDFlagValueCounter *flagValueCounter = [self valueCounterForValue:counterFromDictionary[kLDFlagValueCounterKeyValue] isKnownValue:isKnownValue];
+            LDFlagValueCounter *flagValueCounter = [self valueCounterForFlagConfigValue:flagConfigValue];
             if (!flagValueCounter) {
                 [mismatchedProperties addObject:[NSString stringWithFormat:@"variation_%ld", (long)variation]];
             } else {

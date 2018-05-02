@@ -8,6 +8,8 @@
 
 #import <Foundation/Foundation.h>
 #import "LDFlagCounter.h"
+#import "LDFlagValueCounter.h"
+#import "LDFlagConfigValue.h"
 
 NSString * const kLDFlagCounterKeyDefaultValue = @"default";
 NSString * const kLDFlagCounterKeyCounters = @"counters";
@@ -33,7 +35,26 @@ NSString * const kLDFlagCounterKeyCounters = @"counters";
 }
 
 -(NSArray<LDFlagValueCounter*>*)valueCounters {
-    return _flagValueCounters;
+    return self.flagValueCounters;
+}
+
+-(void)logRequestWithFlagConfigValue:(LDFlagConfigValue*)flagConfigValue defaultValue:(id)defaultValue {
+    LDFlagValueCounter *selectedFlagValueCounter = [self valueCounterForFlagConfigValue:flagConfigValue];
+    if (selectedFlagValueCounter) {
+        selectedFlagValueCounter.count += 1;
+        return;
+    }
+
+    [self.flagValueCounters addObject:[LDFlagValueCounter counterWithFlagConfigValue:flagConfigValue]];
+}
+
+-(LDFlagValueCounter*)valueCounterForFlagConfigValue:(LDFlagConfigValue*)flagConfigValue {
+    NSPredicate *variationPredicate = [NSPredicate predicateWithBlock:^BOOL(id evaluatedObject, NSDictionary<NSString *,id> *bindings) {
+        if (![evaluatedObject isKindOfClass:[LDFlagValueCounter class]]) { return NO; }
+        LDFlagValueCounter *evaluatedFlagValueCounter = evaluatedObject;
+        return (!flagConfigValue && !evaluatedFlagValueCounter.isKnown) || (flagConfigValue && [evaluatedFlagValueCounter.flagConfigValue isEqual:flagConfigValue]);
+    }];
+    return [[self.flagValueCounters filteredArrayUsingPredicate:variationPredicate] firstObject];
 }
 
 -(LDFlagValueCounter*)valueCounterForVariation:(NSInteger)variation {

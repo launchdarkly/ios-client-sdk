@@ -7,7 +7,9 @@
 //
 
 #import <Foundation/Foundation.h>
-#import "LDFlagValueCounter.h"
+
+@class LDFlagValueCounter;
+@class LDFlagConfigValue;
 
 @interface LDFlagCounter : NSObject
 @property (nonatomic, strong, nonnull, readonly) NSString *flagKey;
@@ -17,9 +19,8 @@
 +(nonnull instancetype)counterWithFlagKey:(nonnull NSString*)flagKey defaultValue:(nonnull id)defaultValue;
 -(nonnull instancetype)initWithFlagKey:(nonnull NSString*)flagKey defaultValue:(nonnull id)defaultValue;
 
+-(void)logRequestWithFlagConfigValue:(nullable LDFlagConfigValue*)flagConfigValue defaultValue:(nullable id)defaultValue;
 -(void)logRequestWithValue:(nullable id)value version:(NSInteger)version variation:(NSInteger)variation defaultValue:(nullable id)defaultValue isKnownValue:(BOOL)isKnownValue;
--(nullable LDFlagValueCounter*)valueCounterForVariation:(NSInteger)variation;
--(nullable LDFlagValueCounter*)valueCounterForValue:(nonnull id)value isKnownValue:(BOOL)isKnownValue;   //TODO: When variation is implemented, remove this
 
 -(nonnull NSDictionary*)dictionaryValue;
 

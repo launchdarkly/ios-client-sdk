@@ -9,6 +9,8 @@
 #import <XCTest/XCTest.h>
 #import "LDFlagCounter.h"
 #import "LDFlagCounter+Testable.h"
+#import "LDFlagValueCounter.h"
+#import "LDFlagValueCounter+Testable.h"
 #import "LDFlagConfigModel.h"
 #import "LDFlagConfigModel+Testable.h"
 #import "LDFlagConfigValue.h"
@@ -38,7 +40,7 @@ extern NSString * const kLDFlagKeyIsANull;
 }
 
 -(void)testInitAndCounterWithFlagKey {
-    NSDictionary<NSString*, LDFlagConfigValue*> *flagConfigDictionary = [LDFlagConfigModel flagConfigFromJsonFileNamed:@"featureFlags-excludeNulls-withVersions"].featuresJsonDictionary;
+    NSDictionary<NSString*, LDFlagConfigValue*> *flagConfigDictionary = [LDFlagConfigModel flagConfigFromJsonFileNamed:@"featureFlags-withVersions"].featuresJsonDictionary;
     for (NSString *flagKey in flagConfigDictionary.allKeys) {
         LDFlagConfigValue *flagConfigValue = flagConfigDictionary[flagKey];
 
@@ -54,7 +56,68 @@ extern NSString * const kLDFlagKeyIsANull;
    The default value can change with every call to the LDClient's variation method. The defaultValue passed into logRequest updates the defaultValue recorded. Since LaunchDarkly doesn't care if the version changes, there is no test to verify the default value is updated by a logRequest call.
  NOTE: The variation comes from LD to indicate a unique flag value.
  */
--(void)testLogRequestForKnownFlagValues {
+-(void)testLogRequestForKnownFlagValues_usingFlagConfigValue {
+    for (NSString* flagKey in [LDFlagConfigValue flagKeys]) {
+        NSArray<LDFlagConfigValue*> *flagConfigValues = [LDFlagConfigValue stubFlagConfigValuesForFlagKey:flagKey];
+        id defaultValue = [LDFlagConfigValue defaultValueForFlagKey:flagKey];
+        LDFlagCounter *flagCounter = [LDFlagCounter counterWithFlagKey:flagKey defaultValue:defaultValue];
+        NSInteger logRequestForUniqueValueCount = 0;
+
+        for (LDFlagConfigValue *flagConfigValue in flagConfigValues) {
+            logRequestForUniqueValueCount += 1;
+            [flagCounter logRequestWithFlagConfigValue:flagConfigValue defaultValue:defaultValue];
+
+            XCTAssertEqual(flagCounter.valueCounters.count, logRequestForUniqueValueCount);    //Verify the logRequest call added a new LDFlagValueCounter
+            LDFlagValueCounter *flagValueCounter = [flagCounter valueCounterForFlagConfigValue:flagConfigValue];
+            XCTAssertNotNil(flagValueCounter);
+            if (!flagValueCounter) { continue; }
+
+            XCTAssertEqualObjects(flagValueCounter.flagConfigValue, flagConfigValue);
+            XCTAssertEqual(flagValueCounter.known, YES);
+            XCTAssertEqual(flagValueCounter.count, 1);
+
+            //Make a second call to logRequest with the same value. Verify no new flagValueCounters, and the existing flagValueCounter was incremented
+            [flagCounter logRequestWithFlagConfigValue:flagConfigValue defaultValue:defaultValue];
+            XCTAssertEqual(flagCounter.valueCounters.count, logRequestForUniqueValueCount);
+            XCTAssertEqual(flagValueCounter.count, 2);
+
+            //Make a third call to logRequest with the same value and verify no new flagValueCounters, and the count was incremented
+            [flagCounter logRequestWithFlagConfigValue:flagConfigValue defaultValue:defaultValue];
+            XCTAssertEqual(flagCounter.valueCounters.count, logRequestForUniqueValueCount);
+            XCTAssertEqual(flagValueCounter.count, 3);
+        }
+    }
+}
+
+-(void)testLogRequestForUnknownFlagValues_usingFlagConfigValue {
+    for (NSString* flagKey in [LDFlagConfigValue flagKeys]) {
+        id defaultValue = [LDFlagConfigValue defaultValueForFlagKey:flagKey];
+        LDFlagCounter *flagCounter = [LDFlagCounter counterWithFlagKey:flagKey defaultValue:defaultValue];
+
+        [flagCounter logRequestWithFlagConfigValue:nil defaultValue:defaultValue];
+
+        XCTAssertEqual(flagCounter.valueCounters.count, 1);    //Verify the logRequest call added a new LDFlagValueCounter
+        LDFlagValueCounter *flagValueCounter = [flagCounter valueCounterForFlagConfigValue:nil];
+        XCTAssertNotNil(flagValueCounter);
+        if (!flagValueCounter) { continue; }
+
+        XCTAssertNil(flagValueCounter.flagConfigValue);
+        XCTAssertEqual(flagValueCounter.known, NO);
+        XCTAssertEqual(flagValueCounter.count, 1);
+
+        //Make a second call to logRequest with an unknown value. Verify no new flagValueCounters, and the existing flagValueCounter was incremented
+        [flagCounter logRequestWithFlagConfigValue:nil defaultValue:defaultValue];
+        XCTAssertEqual(flagCounter.valueCounters.count, 1);
+        XCTAssertEqual(flagValueCounter.count, 2);
+
+        //Make a third call to logRequest with the same value and verify no new flagValueCounters, and the count was incremented
+        [flagCounter logRequestWithFlagConfigValue:nil defaultValue:defaultValue];
+        XCTAssertEqual(flagCounter.valueCounters.count, 1);
+        XCTAssertEqual(flagValueCounter.count, 3);
+    }
+}
+
+-(void)testLogRequestForKnownFlagValues_usingValueVersionAndVariation {
     for (NSString* flagKey in [LDFlagConfigValue flagKeys]) {
         NSArray<LDFlagConfigValue*> *flagConfigValues = [LDFlagConfigValue stubFlagConfigValuesForFlagKey:flagKey];
         id defaultValue = [LDFlagConfigValue defaultValueForFlagKey:flagKey];
@@ -89,7 +152,7 @@ extern NSString * const kLDFlagKeyIsANull;
     }
 }
 
--(void)testLogRequestForUnknownFlagValues {
+-(void)testLogRequestForUnknownFlagValues_usingValueVersionAndVariation {
     for (NSString* flagKey in [LDFlagConfigValue flagKeys]) {
         id defaultValue = [LDFlagConfigValue defaultValueForFlagKey:flagKey];
         LDFlagCounter *flagCounter = [LDFlagCounter counterWithFlagKey:flagKey defaultValue:defaultValue];
