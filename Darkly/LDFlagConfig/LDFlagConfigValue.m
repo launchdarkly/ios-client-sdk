@@ -9,6 +9,7 @@
 #import <Foundation/Foundation.h>
 #import "LDFlagConfigValue.h"
 #import "NSObject+LDFlagConfigValue.h"
+#import "LDUtil.h"
 
 NSString * const kLDFlagConfigValueKeyValue = @"value";
 NSString * const kLDFlagConfigValueKeyVersion = @"version";
@@ -28,12 +29,11 @@ NSInteger const kLDFlagConfigVariationDoesNotExist = -1;
     if (!(self = [super init])) { return nil; }
     if ([object isValueAndVersionDictionary]) {
         NSDictionary *valueAndVersionDictionary = object;
-        self.value = valueAndVersionDictionary[kLDFlagConfigValueKeyValue];
+        self.value = valueAndVersionDictionary[kLDFlagConfigValueKeyValue] ?: [NSNull null];
         self.version = [valueAndVersionDictionary[kLDFlagConfigValueKeyVersion] integerValue];
-        self.variation = valueAndVersionDictionary[kLDFlagConfigValueKeyVariation] ?
-            [valueAndVersionDictionary[kLDFlagConfigValueKeyVariation] integerValue] : kLDFlagConfigVariationDoesNotExist;
+        self.variation = valueAndVersionDictionary[kLDFlagConfigValueKeyVariation] ? [valueAndVersionDictionary[kLDFlagConfigValueKeyVariation] integerValue] : kLDFlagConfigVariationDoesNotExist;
     } else {
-        self.value = object;
+        self.value = object ?: [NSNull null];
         self.version = kLDFlagConfigVersionDoesNotExist;
         self.variation = kLDFlagConfigVariationDoesNotExist;
     }
@@ -58,7 +58,15 @@ NSInteger const kLDFlagConfigVariationDoesNotExist = -1;
 }
 
 -(NSDictionary*)dictionaryValue {
-    return @{kLDFlagConfigValueKeyValue:self.value, kLDFlagConfigValueKeyVersion:@(self.version)};  //TODO: Add variation when server support is added
+    NSMutableDictionary *dictionaryValue = [NSMutableDictionary dictionaryWithCapacity:3];
+    dictionaryValue[kLDFlagConfigValueKeyValue] = self.value ?: [NSNull null];
+    if (self.version != kLDFlagConfigVersionDoesNotExist) {
+        dictionaryValue[kLDFlagConfigValueKeyVersion] = @(self.version);
+    }
+    if (self.variation != kLDFlagConfigVariationDoesNotExist) {
+        dictionaryValue[kLDFlagConfigValueKeyVariation] = @(self.variation);
+    }
+    return dictionaryValue;
 }
 
 -(BOOL)isEqual:(id)object {
@@ -66,6 +74,46 @@ NSInteger const kLDFlagConfigVariationDoesNotExist = -1;
     LDFlagConfigValue *other = object;
 
     return [self.value isEqual:other.value] && self.version == other.version && self.variation == other.variation;
+}
+
+-(BOOL)hasPropertiesMatchingDictionary:(NSDictionary*)dictionary {
+    NSMutableArray<NSString*> *mismatchedProperties = [NSMutableArray array];
+
+    if (self.value) {
+        if (![self.value isEqual:dictionary[kLDFlagConfigValueKeyValue]]) {
+            [mismatchedProperties addObject:kLDFlagConfigValueKeyValue];
+        }
+    } else {
+        if (dictionary[kLDFlagConfigValueKeyValue] && ![dictionary[kLDFlagConfigValueKeyValue] isKindOfClass:[NSNull class]]) {
+            [mismatchedProperties addObject:kLDFlagConfigValueKeyValue];
+        }
+    }
+
+    if (self.version != kLDFlagConfigVersionDoesNotExist) {
+        if (self.version != [dictionary[kLDFlagConfigValueKeyVersion] integerValue]) {
+            [mismatchedProperties addObject:kLDFlagConfigValueKeyVersion];
+        }
+    } else {
+        if (dictionary[kLDFlagConfigValueKeyVersion] && [dictionary[kLDFlagConfigValueKeyVersion] integerValue] != kLDFlagConfigVersionDoesNotExist) {
+            [mismatchedProperties addObject:kLDFlagConfigValueKeyVersion];
+        }
+    }
+
+    if (self.variation != kLDFlagConfigVariationDoesNotExist) {
+        if (self.variation != [dictionary[kLDFlagConfigValueKeyVariation] integerValue]) {
+            [mismatchedProperties addObject:kLDFlagConfigValueKeyVariation];
+        }
+    } else {
+        if (dictionary[kLDFlagConfigValueKeyVariation] && [dictionary[kLDFlagConfigValueKeyVariation] integerValue] != kLDFlagConfigVariationDoesNotExist) {
+            [mismatchedProperties addObject:kLDFlagConfigValueKeyVariation];
+        }
+    }
+
+    if (mismatchedProperties.count > 0) {
+        DEBUG_LOG(@"[%@ %@] unequal fields %@", NSStringFromClass([self class]), NSStringFromSelector(_cmd), [mismatchedProperties componentsJoinedByString:@", "]);
+        return NO;
+    }
+    return YES;
 }
 
 -(NSString*)description {
