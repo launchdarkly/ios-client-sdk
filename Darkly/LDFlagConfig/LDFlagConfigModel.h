@@ -29,4 +29,5 @@
 -(BOOL)isEqualToConfig:(nullable LDFlagConfigModel*)otherConfig;
 -(BOOL)hasFeaturesEqualToDictionary:(nullable NSDictionary*)otherDictionary;
 
+-(nonnull NSString*)description;
 @end

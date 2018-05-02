@@ -132,7 +132,22 @@ NSString * const kLDFlagConfigModelKeyKey = @"key";
 }
 
 -(BOOL)hasFeaturesEqualToDictionary:(NSDictionary*)otherDictionary {
-    return [[self dictionaryValue] isEqualToDictionary:otherDictionary];
+    NSArray<NSString*> *flagKeys = self.featuresJsonDictionary.allKeys;
+    if (flagKeys.count != otherDictionary.allKeys.count) { return NO; }
+    for (NSString *flagKey in flagKeys) {
+        LDFlagConfigValue *flagConfigValue = self.featuresJsonDictionary[flagKey];
+        if (!otherDictionary[flagKey] || ![otherDictionary[flagKey] isKindOfClass:[NSDictionary class]]) { return NO; }
+        NSDictionary *otherFlagConfigValueDictionary = otherDictionary[flagKey];
+
+        if (![flagConfigValue hasPropertiesMatchingDictionary:otherFlagConfigValueDictionary]) {
+            return NO;
+        }
+    }
+    return YES;
+}
+
+-(NSString*)description {
+    return [NSString stringWithFormat:@"<LDFlagConfigModel: %p, featuresJsonDictionary: %@>", self, [self.featuresJsonDictionary description]];
 }
 
 @end
