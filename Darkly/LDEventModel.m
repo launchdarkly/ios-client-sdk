@@ -25,6 +25,8 @@ NSString * const kEventModelKeyCreationDate = @"creationDate";
 NSString * const kEventModelKeyData = @"data";
 NSString * const kEventModelKeyFlagConfigValue = @"flagConfigValue";
 NSString * const kEventModelKeyValue = @"value";
+NSString * const kEventModelKeyVersion = @"version";
+NSString * const kEventModelKeyVariation = @"variation";
 NSString * const kEventModelKeyIsDefault = @"isDefault";
 NSString * const kEventModelKeyDefault = @"default";
 NSString * const kEventModelKeyUser = @"user";
@@ -42,7 +44,6 @@ NSString * const kEventModelKeyFeatures = @"features";
     [encoder encodeInteger:self.creationDate forKey:kEventModelKeyCreationDate];
     [encoder encodeObject:self.data forKey:kEventModelKeyData];
     [encoder encodeObject:self.flagConfigValue forKey:kEventModelKeyFlagConfigValue];
-    [encoder encodeObject:self.value forKey:kEventModelKeyValue];
     [encoder encodeObject:self.defaultValue forKey:kEventModelKeyDefault];
     [encoder encodeObject:self.user forKey:kEventModelKeyUser];
     [encoder encodeBool:self.inlineUser forKey:kEventModelKeyInlineUser];
@@ -59,7 +60,6 @@ NSString * const kEventModelKeyFeatures = @"features";
     self.creationDate = [decoder decodeIntegerForKey:kEventModelKeyCreationDate];
     self.data = [decoder decodeObjectForKey:kEventModelKeyData];
     self.flagConfigValue = [decoder decodeObjectForKey:kEventModelKeyFlagConfigValue];
-    self.value = [decoder decodeObjectForKey:kEventModelKeyValue];
     self.defaultValue = [decoder decodeObjectForKey:kEventModelKeyDefault];
     if (!self.defaultValue) {
         self.defaultValue = [decoder decodeObjectForKey:kEventModelKeyIsDefault];
@@ -93,7 +93,19 @@ NSString * const kEventModelKeyFeatures = @"features";
     }
 
     //feature & debug events
-    self.flagConfigValue = [LDFlagConfigValue flagConfigValueWithObject:dictionary[kEventModelKeyFlagConfigValue]];
+    if (dictionary[kEventModelKeyValue] || dictionary[kEventModelKeyVersion] || dictionary[kEventModelKeyValue]) {
+        NSMutableDictionary *flagConfigValueDictionary = [NSMutableDictionary dictionaryWithCapacity:3];
+        flagConfigValueDictionary[kEventModelKeyValue] = dictionary[kEventModelKeyValue] ?: [NSNull null];
+        flagConfigValueDictionary[kEventModelKeyVersion] = @(kLDFlagConfigVersionDoesNotExist);
+        flagConfigValueDictionary[kEventModelKeyVariation] = @(kLDFlagConfigVersionDoesNotExist);
+        if (dictionary[kEventModelKeyVersion] && [dictionary[kEventModelKeyVersion] isKindOfClass:[NSNumber class]]) {
+            flagConfigValueDictionary[kEventModelKeyVersion] = dictionary[kEventModelKeyVersion];
+        }
+        if (dictionary[kEventModelKeyVariation] && [dictionary[kEventModelKeyVariation] isKindOfClass:[NSNumber class]]) {
+            flagConfigValueDictionary[kEventModelKeyVariation] = dictionary[kEventModelKeyVariation];
+        }
+        self.flagConfigValue = [LDFlagConfigValue flagConfigValueWithObject:flagConfigValueDictionary];
+    }
     self.defaultValue = dictionary[kEventModelKeyDefault];
 
     //custom events
@@ -237,10 +249,7 @@ NSString * const kEventModelKeyFeatures = @"features";
         dictionary[kEventModelKeyData] = self.data;
     }
     if (self.flagConfigValue) {
-        dictionary[kEventModelKeyFlagConfigValue] = [self.flagConfigValue dictionaryValue];
-    }
-    if (self.value) {
-        dictionary[kEventModelKeyValue] = self.value;
+        [dictionary addEntriesFromDictionary:[self.flagConfigValue dictionaryValue]];
     }
     if (self.defaultValue) {
         dictionary[kEventModelKeyDefault] = self.defaultValue;

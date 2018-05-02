@@ -135,6 +135,7 @@ NSString * const testMobileKey = @"EventModelTest.testMobileKey";
     for (NSString *eventKind in [LDEventModel allEventKinds]) {
         LDEventModel *originalEvent = [LDEventModel stubEventWithKind:eventKind user:self.user config:config];
         NSDictionary *eventDictionary = [originalEvent dictionaryValueUsingConfig:config];
+        XCTAssertTrue([originalEvent hasPropertiesMatchingDictionary:eventDictionary]);
 
         LDEventModel *restoredEvent = [[LDEventModel alloc] initWithDictionary:eventDictionary];
         XCTAssertTrue([originalEvent isEqual:restoredEvent]);

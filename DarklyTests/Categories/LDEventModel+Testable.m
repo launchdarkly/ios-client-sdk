@@ -26,6 +26,8 @@ extern NSString * const kEventModelKeyCreationDate;
 extern NSString * const kEventModelKeyData;
 extern NSString * const kEventModelKeyFlagConfigValue;
 extern NSString * const kEventModelKeyValue;
+extern NSString * const kEventModelKeyVersion;
+extern NSString * const kEventModelKeyVariation;
 extern NSString * const kEventModelKeyIsDefault;
 extern NSString * const kEventModelKeyDefault;
 extern NSString * const kEventModelKeyUser;
@@ -209,12 +211,14 @@ const double featureEventDefaultValueStub = 2.71828;
     }
 
     if (self.isFlagRequestEventKind) {
-        if ((!self.flagConfigValue && dictionary[kEventModelKeyFlagConfigValue])
-            || (self.flagConfigValue && ![self.flagConfigValue hasPropertiesMatchingDictionary:dictionary[kEventModelKeyFlagConfigValue]])) {
-            [mismatchedProperties addObject:kEventModelKeyFlagConfigValue];
-        }
-        if ((!self.value && dictionary[kEventModelKeyValue]) || (self.value && ![self.value isEqual:dictionary[kEventModelKeyValue]])) {
-            [mismatchedProperties addObject:kEventModelKeyValue];
+        if (self.flagConfigValue) {
+            if (![self.flagConfigValue hasPropertiesMatchingDictionary:dictionary]) {
+                [mismatchedProperties addObject:kEventModelKeyFlagConfigValue];
+            }
+        } else {
+            if (dictionary[kEventModelKeyValue] || dictionary[kEventModelKeyVersion] || dictionary[kEventModelKeyVariation]) {
+                [mismatchedProperties addObject:kEventModelKeyFlagConfigValue];
+            }
         }
         if (![self.defaultValue isEqual:dictionary[kEventModelKeyDefault]]) {
             [mismatchedProperties addObject:kEventModelKeyDefault];

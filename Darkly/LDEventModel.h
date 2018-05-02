@@ -24,7 +24,6 @@
 @property (nonatomic, assign) BOOL inlineUser;
 
 //feature & debug events only
-@property (nullable, nonatomic, strong) NSObject *value;
 @property (nullable, nonatomic, strong) LDFlagConfigValue *flagConfigValue;
 @property (nullable, nonatomic, strong) id defaultValue;
 
