@@ -10,6 +10,7 @@
 #import "NSDate+ReferencedDate.h"
 #import "LDFlagConfigTracker+Testable.h"
 #import "NSInteger+Testable.h"
+#import "LDFlagConfigValue+Testable.h"
 
 extern NSString * const kEventModelKeyUser;
 extern NSString * const kEventModelKeyUserKey;
@@ -37,20 +38,22 @@ NSString * const testMobileKey = @"EventModelTest.testMobileKey";
     [super tearDown];
 }
 
-- (void)testFeatureEventWithKey {
-    NSArray *boolValues = @[@NO, @YES];
-    for (NSNumber *value in boolValues) {
-        BOOL boolValue = [value boolValue];
-        NSInteger referenceMillis = [[NSDate date] millisSince1970];
-        LDEventModel *event = [LDEventModel featureEventWithFlagKey:@"red" flagValue:value defaultFlagValue:value userValue:self.user inlineUser:boolValue];
+- (void)testInitAndFeatureEvent {
+    for (NSString *flagKey in [LDFlagConfigValue flagKeys]) {
+        NSArray<LDFlagConfigValue*> *flagConfigValues = [LDFlagConfigValue stubFlagConfigValuesForFlagKey:flagKey];
+        id defaultFlagValue = [LDFlagConfigValue defaultValueForFlagKey:flagKey];
+        for (LDFlagConfigValue *flagConfigValue in flagConfigValues) {
+            NSInteger creationDateMillis = [[NSDate date] millisSince1970];
+            LDEventModel *featureEvent = [LDEventModel featureEventWithFlagKey:flagKey flagConfigValue:flagConfigValue defaultFlagValue:defaultFlagValue user:self.user inlineUser:NO];
 
-        XCTAssertEqualObjects(event.key, @"red");
-        XCTAssertEqualObjects(event.kind, kEventModelKindFeature);
-        XCTAssertEqualObjects(event.value, value);
-        XCTAssertEqualObjects(event.defaultValue, value);
-        XCTAssertTrue([event.user isEqual:self.user ignoringAttributes:@[]]);
-        XCTAssertEqual(event.inlineUser, boolValue);
-        XCTAssertTrue(event.creationDate >= referenceMillis);
+            XCTAssertTrue([featureEvent hasPropertiesMatchingFlagKey:flagKey
+                                                           eventKind:kEventModelKindFeature
+                                                     flagConfigValue:flagConfigValue
+                                                    defaultFlagValue:defaultFlagValue
+                                                                user:self.user
+                                                          inlineUser:NO
+                                                  creationDateMillis:creationDateMillis]);
+        }
     }
 }
 
@@ -93,19 +96,22 @@ NSString * const testMobileKey = @"EventModelTest.testMobileKey";
     XCTAssertTrue([trackerStub hasPropertiesMatchingDictionary:event.flagRequestSummary]);
 }
 
-- (void)testDebugEventWithKey {
-    NSArray *boolValues = @[@NO, @YES];
-    for (NSNumber *value in boolValues) {
-        NSInteger referenceMillis = [[NSDate date] millisSince1970];
-        LDEventModel *event = [LDEventModel debugEventWithFlagKey:@"red" flagValue:value defaultFlagValue:value userValue:self.user];
+- (void)testInitAndDebugEvent {
+    for (NSString *flagKey in [LDFlagConfigValue flagKeys]) {
+        NSArray<LDFlagConfigValue*> *flagConfigValues = [LDFlagConfigValue stubFlagConfigValuesForFlagKey:flagKey];
+        id defaultFlagValue = [LDFlagConfigValue defaultValueForFlagKey:flagKey];
+        for (LDFlagConfigValue *flagConfigValue in flagConfigValues) {
+            NSInteger creationDateMillis = [[NSDate date] millisSince1970];
+            LDEventModel *debugEvent = [LDEventModel debugEventWithFlagKey:flagKey flagConfigValue:flagConfigValue defaultFlagValue:defaultFlagValue user:self.user];
 
-        XCTAssertEqualObjects(event.key, @"red");
-        XCTAssertEqualObjects(event.kind, kEventModelKindDebug);
-        XCTAssertEqualObjects(event.value, value);
-        XCTAssertEqualObjects(event.defaultValue, value);
-        XCTAssertTrue([event.user isEqual:self.user ignoringAttributes:@[]]);
-        XCTAssertEqual(event.inlineUser, YES);
-        XCTAssertTrue(Approximately(event.creationDate, referenceMillis, 10));
+            XCTAssertTrue([debugEvent hasPropertiesMatchingFlagKey:flagKey
+                                                           eventKind:kEventModelKindDebug
+                                                     flagConfigValue:flagConfigValue
+                                                    defaultFlagValue:defaultFlagValue
+                                                                user:self.user
+                                                          inlineUser:YES
+                                                  creationDateMillis:creationDateMillis]);
+        }
     }
 }
 

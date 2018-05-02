@@ -26,6 +26,10 @@ NSString * const kLDFlagKeyIsANull = @"isANull";
 }
 
 +(NSArray<LDFlagConfigValue*>*)stubFlagConfigValuesForFlagKey:(NSString*)flagKey {
+    return [LDFlagConfigValue stubFlagConfigValuesForFlagKey:flagKey withVersions:YES];
+}
+
++(NSArray<LDFlagConfigValue*>*)stubFlagConfigValuesForFlagKey:(NSString*)flagKey withVersions:(BOOL)withVersions {
     NSMutableArray<LDFlagConfigValue*> *flagConfigValueStubs = [NSMutableArray array];
     if ([flagKey isEqualToString:kLDFlagKeyIsABool]) {
         [flagConfigValueStubs addObject:[LDFlagConfigValue flagConfigValueFromJsonFileNamed:@"boolConfigIsABool-false-withVersion" flagKey:flagKey]];
@@ -57,6 +61,13 @@ NSString * const kLDFlagKeyIsANull = @"isANull";
         [flagConfigValueStubs addObject:[LDFlagConfigValue flagConfigValueFromJsonFileNamed:@"nullConfigIsANull-null-withVersion" flagKey:flagKey]];
     }
 
+    if (!withVersions) {
+        for (LDFlagConfigValue* flagConfigValueStub in flagConfigValueStubs) {
+            flagConfigValueStub.version = kLDFlagConfigVersionDoesNotExist;
+            flagConfigValueStub.variation = kLDFlagConfigVariationDoesNotExist;
+        }
+    }
+    
     return [NSArray arrayWithArray:flagConfigValueStubs];
 }
 
@@ -78,6 +89,31 @@ NSString * const kLDFlagKeyIsANull = @"isANull";
     }
     if ([flagKey isEqualToString:kLDFlagKeyIsADictionary]) {
         return @{@"default-dictionary-key": @"default-dictionary-value"};
+    }
+    if ([flagKey isEqualToString:kLDFlagKeyIsANull]) {
+        return [NSNull null];
+    }
+    return @(YES);
+}
+
++(id)differentValueForFlagKey:(NSString*)flagKey {
+    if ([flagKey isEqualToString:kLDFlagKeyIsABool]) {
+        return @(NO);
+    }
+    if ([flagKey isEqualToString:kLDFlagKeyIsANumber]) {
+        return @(8);
+    }
+    if ([flagKey isEqualToString:kLDFlagKeyIsADouble]) {
+        return @(170.1);
+    }
+    if ([flagKey isEqualToString:kLDFlagKeyIsAString]) {
+        return @"Gallifrey";
+    }
+    if ([flagKey isEqualToString:kLDFlagKeyIsAnArray]) {
+        return @[@(1),@(2),@(3)];
+    }
+    if ([flagKey isEqualToString:kLDFlagKeyIsADictionary]) {
+        return @{@"alternate-dictionary-key": @"alternate-dictionary-value"};
     }
     if ([flagKey isEqualToString:kLDFlagKeyIsANull]) {
         return [NSNull null];

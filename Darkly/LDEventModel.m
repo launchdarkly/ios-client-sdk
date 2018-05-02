@@ -9,6 +9,7 @@
 #import "LDEventModel.h"
 #import "LDUserModel.h"
 #import "NSDate+ReferencedDate.h"
+#import "LDFlagConfigValue.h"
 #import "LDFlagConfigTracker.h"
 #import "LDFlagCounter.h"
 
@@ -22,6 +23,7 @@ NSString * const kEventModelKeyKey = @"key";
 NSString * const kEventModelKeyKind = @"kind";
 NSString * const kEventModelKeyCreationDate = @"creationDate";
 NSString * const kEventModelKeyData = @"data";
+NSString * const kEventModelKeyFlagConfigValue = @"flagConfigValue";
 NSString * const kEventModelKeyValue = @"value";
 NSString * const kEventModelKeyIsDefault = @"isDefault";
 NSString * const kEventModelKeyDefault = @"default";
@@ -39,6 +41,7 @@ NSString * const kEventModelKeyFeatures = @"features";
     [encoder encodeObject:self.kind forKey:kEventModelKeyKind];
     [encoder encodeInteger:self.creationDate forKey:kEventModelKeyCreationDate];
     [encoder encodeObject:self.data forKey:kEventModelKeyData];
+    [encoder encodeObject:self.flagConfigValue forKey:kEventModelKeyFlagConfigValue];
     [encoder encodeObject:self.value forKey:kEventModelKeyValue];
     [encoder encodeObject:self.defaultValue forKey:kEventModelKeyDefault];
     [encoder encodeObject:self.user forKey:kEventModelKeyUser];
@@ -55,6 +58,7 @@ NSString * const kEventModelKeyFeatures = @"features";
     self.kind = [decoder decodeObjectForKey:kEventModelKeyKind];
     self.creationDate = [decoder decodeIntegerForKey:kEventModelKeyCreationDate];
     self.data = [decoder decodeObjectForKey:kEventModelKeyData];
+    self.flagConfigValue = [decoder decodeObjectForKey:kEventModelKeyFlagConfigValue];
     self.value = [decoder decodeObjectForKey:kEventModelKeyValue];
     self.defaultValue = [decoder decodeObjectForKey:kEventModelKeyDefault];
     if (!self.defaultValue) {
@@ -88,8 +92,8 @@ NSString * const kEventModelKeyFeatures = @"features";
         self.creationDate = [[NSDate date] millisSince1970];
     }
 
-    //feature events
-    self.value = dictionary[kEventModelKeyValue];
+    //feature & debug events
+    self.flagConfigValue = [LDFlagConfigValue flagConfigValueWithObject:dictionary[kEventModelKeyFlagConfigValue]];
     self.defaultValue = dictionary[kEventModelKeyDefault];
 
     //custom events
@@ -99,6 +103,31 @@ NSString * const kEventModelKeyFeatures = @"features";
     self.startDateMillis = [dictionary[kEventModelKeyStartDate] integerValue];
     self.endDateMillis = [dictionary[kEventModelKeyEndDate] integerValue];
     self.flagRequestSummary = dictionary[kEventModelKeyFeatures];
+
+    return self;
+}
+
++(instancetype)featureEventWithFlagKey:(NSString*)flagKey
+                       flagConfigValue:(LDFlagConfigValue*)flagConfigValue
+                      defaultFlagValue:(id)defaultFlagValue
+                                  user:(LDUserModel*)user
+                            inlineUser:(BOOL)inlineUser {
+    return [[LDEventModel alloc] initFeatureEventWithFlagKey:flagKey flagConfigValue:flagConfigValue defaultFlagValue:defaultFlagValue user:user inlineUser:inlineUser];
+}
+
+-(instancetype)initFeatureEventWithFlagKey:(NSString*)flagKey
+                           flagConfigValue:(LDFlagConfigValue*)flagConfigValue
+                          defaultFlagValue:(id)defaultFlagValue
+                                      user:(LDUserModel*)user
+                                inlineUser:(BOOL)inlineUser {
+    if (!(self = [self init])) { return nil; }
+
+    self.key = flagKey;
+    self.kind = kEventModelKindFeature;
+    self.flagConfigValue = flagConfigValue;
+    self.defaultValue = defaultFlagValue;
+    self.user = user;
+    self.inlineUser = inlineUser;
 
     return self;
 }
@@ -184,6 +213,23 @@ NSString * const kEventModelKeyFeatures = @"features";
     return self;
 }
 
++(instancetype)debugEventWithFlagKey:(NSString*)flagKey
+                     flagConfigValue:(LDFlagConfigValue*)flagConfigValue
+                    defaultFlagValue:(id)defaultFlagValue
+                                user:(LDUserModel*)user {
+    return [[LDEventModel alloc] initDebugEventWithFlagKey:flagKey flagConfigValue:flagConfigValue defaultFlagValue:defaultFlagValue user:user];
+}
+
+-(instancetype)initDebugEventWithFlagKey:(NSString*)flagKey
+                         flagConfigValue:(LDFlagConfigValue*)flagConfigValue
+                        defaultFlagValue:(id)defaultFlagValue
+                                    user:(LDUserModel*)user {
+    self = [self initFeatureEventWithFlagKey:flagKey flagConfigValue:flagConfigValue defaultFlagValue:defaultFlagValue user:user inlineUser:YES];
+    self.kind = kEventModelKindDebug;
+
+    return self;
+}
+
 +(instancetype)debugEventWithFlagKey:(NSString *)flagKey flagValue:(NSObject*)flagValue defaultFlagValue:(NSObject*)defaultflagValue userValue:(LDUserModel*)userValue {
     return [[LDEventModel alloc] initDebugEventWithFlagKey:flagKey flagValue:flagValue defaultFlagValue:defaultflagValue userValue:userValue];
 }
@@ -226,6 +272,9 @@ NSString * const kEventModelKeyFeatures = @"features";
     if (self.data) {
         dictionary[kEventModelKeyData] = self.data;
     }
+    if (self.flagConfigValue) {
+        dictionary[kEventModelKeyFlagConfigValue] = [self.flagConfigValue dictionaryValue];
+    }
     if (self.value) {
         dictionary[kEventModelKeyValue] = self.value;
     }
@@ -253,6 +302,27 @@ NSString * const kEventModelKeyFeatures = @"features";
     dictionary[kEventModelKeyFeatures] = self.flagRequestSummary;
 
     return [NSDictionary dictionaryWithDictionary:dictionary];
+}
+
+-(nonnull NSString*)description {
+    NSString *details;
+
+    if ([self.kind isEqualToString:kEventModelKindFeature] || [self.kind isEqualToString:kEventModelKindDebug]) {
+        details = [NSString stringWithFormat:@"key: %@,\n\tflagConfigValue: %@,\n\tdefaultValue: %@,\n\tuser: %@,\n\tinlineUser: %@, creationDate: %ld",
+                   self.key, self.flagConfigValue ?: @"<null>", self.defaultValue ?: @"<null>", self.user, self.inlineUser ? @"YES" : @"NO", (long)self.creationDate];
+    }
+    if ([self.kind isEqualToString:kEventModelKindCustom]) {
+        details = [NSString stringWithFormat:@"key: %@, data: %@, user: %@, inlineUser: %@, creationDate: %ld",
+                   self.key, self.data ?: @"<null>", self.user, self.inlineUser ? @"YES" : @"NO", (long)self.creationDate];
+    }
+    if ([self.kind isEqualToString:kEventModelKindIdentify]) {
+        details = [NSString stringWithFormat:@"key: %@, user: %@, inlineUser: %@, creationDate: %ld", self.key, self.user, self.inlineUser ? @"YES" : @"NO", (long)self.creationDate];
+    }
+    if ([self.kind isEqualToString:kEventModelKindFeatureSummary]) {
+        details = [NSString stringWithFormat:@"startDateMillis: %ld, endDateMillis: %ld, flagRequestSummary: %@", (long)self.startDateMillis, (long)self.endDateMillis, self.flagRequestSummary];
+    }
+
+    return [NSString stringWithFormat:@"<LDEventModel: %p, kind: %@, %@>", self, self.kind, details];
 }
 
 @end

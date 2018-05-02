@@ -37,4 +37,11 @@ extern const double featureEventDefaultValueStub;
 +(nonnull NSArray<NSDictionary*>*)stubEventDictionariesForUser:(nullable LDUserModel*)user config:(nullable LDConfig*)config;
 -(BOOL)isEqual:(nullable id)object;
 -(BOOL)hasPropertiesMatchingDictionary:(nullable NSDictionary*)dictionary;
+-(BOOL)hasPropertiesMatchingFlagKey:(nonnull NSString*)flagKey
+                          eventKind:(nonnull NSString*)eventKind
+                    flagConfigValue:(nullable LDFlagConfigValue*)flagConfigValue
+                   defaultFlagValue:(nullable id)defaultFlagValue
+                               user:(nonnull LDUserModel*)user
+                         inlineUser:(BOOL)inlineUser
+                 creationDateMillis:(NSInteger)creationDateMillis;
 @end

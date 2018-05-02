@@ -8,6 +8,8 @@
 
 #import "LDEventModel+Testable.h"
 #import "LDEventModel.h"
+#import "LDFlagConfigValue.h"
+#import "LDFlagConfigValue+Testable.h"
 #import "LDUserModel+Testable.h"
 #import "NSInteger+Testable.h"
 #import "LDFlagConfigTracker+Testable.h"
@@ -22,6 +24,7 @@ extern NSString * const kEventModelKeyKey;
 extern NSString * const kEventModelKeyKind;
 extern NSString * const kEventModelKeyCreationDate;
 extern NSString * const kEventModelKeyData;
+extern NSString * const kEventModelKeyFlagConfigValue;
 extern NSString * const kEventModelKeyValue;
 extern NSString * const kEventModelKeyIsDefault;
 extern NSString * const kEventModelKeyDefault;
@@ -32,8 +35,11 @@ extern NSString * const kEventModelKeyStartDate;
 extern NSString * const kEventModelKeyEndDate;
 extern NSString * const kEventModelKeyFeatures;
 
+extern NSString * const kLDFlagKeyIsADouble;
+
 NSString * const kFeatureEventKeyStub = @"LDEventModel.featureEvent.key";
 NSString * const kCustomEventKeyStub = @"LDEventModel.customEvent.key";
+NSString * const kDebugEventKeyStub = @"LDEventModel.debugEvent.key";
 NSString * const kCustomEventCustomDataKeyStub = @"LDEventModel.customEventCustomData.key";
 NSString * const kCustomEventCustomDataValueStub = @"LDEventModel.customEventCustomData.value";
 const double featureEventValueStub = 3.14159;
@@ -74,10 +80,11 @@ const double featureEventDefaultValueStub = 2.71828;
     }
     BOOL inlineUser = config ? config.inlineUserInEvents : false;
     if ([eventKind isEqualToString:kEventModelKindFeature]) {
+        LDFlagConfigValue *flagConfigValue = [LDFlagConfigValue flagConfigValueFromJsonFileNamed:@"doubleConfigIsADouble-Pi-withVersion" flagKey:kLDFlagKeyIsADouble];
         return [LDEventModel featureEventWithFlagKey:kFeatureEventKeyStub
-                                           flagValue:@(featureEventValueStub)
+                                     flagConfigValue:flagConfigValue
                                     defaultFlagValue:@(featureEventDefaultValueStub)
-                                           userValue:user
+                                                user:user
                                           inlineUser:inlineUser];
     }
     if ([eventKind isEqualToString:kEventModelKindCustom]) {
@@ -86,14 +93,12 @@ const double featureEventDefaultValueStub = 2.71828;
                                       userValue:user
                                      inlineUser:inlineUser];
     }
-    if ([eventKind isEqualToString:kEventModelKindDebug]) {
-        return [LDEventModel debugEventWithFlagKey:kFeatureEventKeyStub flagValue:@(featureEventValueStub) defaultFlagValue:@(featureEventDefaultValueStub) userValue:user];
-    }
     if ([eventKind isEqualToString:kEventModelKindFeatureSummary]) {
         return [LDEventModel summaryEventWithTracker:[LDFlagConfigTracker stubTracker]];
     }
     if ([eventKind isEqualToString:kEventModelKindDebug]) {
-        return [LDEventModel debugEventWithFlagKey:kFeatureEventKeyStub flagValue:@(featureEventValueStub) defaultFlagValue:@(featureEventDefaultValueStub) userValue:user];
+        LDFlagConfigValue *flagConfigValue = [LDFlagConfigValue flagConfigValueFromJsonFileNamed:@"doubleConfigIsADouble-Pi-withVersion" flagKey:kLDFlagKeyIsADouble];
+        return [LDEventModel debugEventWithFlagKey:kDebugEventKeyStub flagConfigValue:flagConfigValue defaultFlagValue:@(featureEventDefaultValueStub) user:user];
     }
 
     return [LDEventModel identifyEventWithUser:user];
@@ -104,7 +109,8 @@ const double featureEventDefaultValueStub = 2.71828;
     NSDictionary *customEventDictionary = [[LDEventModel stubEventWithKind:kEventModelKindCustom user:user config:config] dictionaryValueUsingConfig:config];
     NSDictionary *identifyEventDictionary = [[LDEventModel stubEventWithKind:kEventModelKindIdentify user:user config:config] dictionaryValueUsingConfig:config];
     NSDictionary *summaryEventDictionary = [[LDEventModel summaryEventWithTracker:[LDFlagConfigTracker stubTracker]] dictionaryValueUsingConfig:config];
-    return @[featureEventDictionary, customEventDictionary, identifyEventDictionary, summaryEventDictionary];
+    NSDictionary *debugEventDictionary = [[LDEventModel stubEventWithKind:kEventModelKindDebug user:user config:config] dictionaryValueUsingConfig:config];
+    return @[featureEventDictionary, customEventDictionary, identifyEventDictionary, summaryEventDictionary, debugEventDictionary];
 }
 
 -(BOOL)isEqual:(id)object {
@@ -141,8 +147,8 @@ const double featureEventDefaultValueStub = 2.71828;
     }
 
     if (self.isFlagRequestEventKind) {
-        if (![self.value isEqual:otherEvent.value]) {
-            [mismatchedProperties addObject:kEventModelKeyValue];
+        if (![self.flagConfigValue isEqual:otherEvent.flagConfigValue]) {
+            [mismatchedProperties addObject:kEventModelKeyFlagConfigValue];
         }
         if (![self.defaultValue isEqual:otherEvent.defaultValue]) {
             [mismatchedProperties addObject:kEventModelKeyDefault];
@@ -203,7 +209,11 @@ const double featureEventDefaultValueStub = 2.71828;
     }
 
     if (self.isFlagRequestEventKind) {
-        if (![self.value isEqual:dictionary[kEventModelKeyValue]]) {
+        if ((!self.flagConfigValue && dictionary[kEventModelKeyFlagConfigValue])
+            || (self.flagConfigValue && ![self.flagConfigValue hasPropertiesMatchingDictionary:dictionary[kEventModelKeyFlagConfigValue]])) {
+            [mismatchedProperties addObject:kEventModelKeyFlagConfigValue];
+        }
+        if ((!self.value && dictionary[kEventModelKeyValue]) || (self.value && ![self.value isEqual:dictionary[kEventModelKeyValue]])) {
             [mismatchedProperties addObject:kEventModelKeyValue];
         }
         if (![self.defaultValue isEqual:dictionary[kEventModelKeyDefault]]) {
@@ -236,6 +246,45 @@ const double featureEventDefaultValueStub = 2.71828;
         return NO;
     }
 
+    return YES;
+}
+
+//This is only built for Feature and Debug events...open for modification to handle the others when needed
+-(BOOL)hasPropertiesMatchingFlagKey:(NSString*)flagKey
+                          eventKind:(NSString*)eventKind
+                    flagConfigValue:(LDFlagConfigValue*)flagConfigValue
+                   defaultFlagValue:(id)defaultFlagValue
+                               user:(LDUserModel*)user
+                         inlineUser:(BOOL)inlineUser
+                 creationDateMillis:(NSInteger)creationDateMillis {
+    NSMutableArray<NSString*> *mismatchedProperties = [NSMutableArray array];
+
+    if (![self.key isEqualToString:flagKey]) {
+        [mismatchedProperties addObject:kEventModelKeyKey];
+    }
+    if (![self.kind isEqualToString:eventKind]) {
+        [mismatchedProperties addObject:kEventModelKeyKind];
+    }
+    if (![self.flagConfigValue isEqual:flagConfigValue]) {
+        [mismatchedProperties addObject:kEventModelKeyValue];
+    }
+    if (![self.defaultValue isEqual:defaultFlagValue]) {
+        [mismatchedProperties addObject:kEventModelKeyDefault];
+    }
+    if (![self.user isEqual:user ignoringAttributes:@[]]) {
+        [mismatchedProperties addObject:kEventModelKeyUser];
+    }
+    if (self.inlineUser != inlineUser) {
+        [mismatchedProperties addObject:kEventModelKeyInlineUser];
+    }
+    if (!Approximately(self.creationDate, creationDateMillis, 10)) {
+        [mismatchedProperties addObject:kEventModelKeyCreationDate];
+    }
+
+    if (mismatchedProperties.count > 0) {
+        NSLog(@"[%@ %@] unequal fields %@", NSStringFromClass([self class]), NSStringFromSelector(_cmd), [mismatchedProperties componentsJoinedByString:@", "]);
+        return NO;
+    }
     return YES;
 }
 

@@ -11,8 +11,17 @@
 
 extern const NSInteger kLDFlagConfigVariationDoesNotExist;
 
+extern NSString * const kLDFlagKeyIsABool;
+extern NSString * const kLDFlagKeyIsANumber;
+extern NSString * const kLDFlagKeyIsADouble;
+extern NSString * const kLDFlagKeyIsAString;
+extern NSString * const kLDFlagKeyIsAnArray;
+extern NSString * const kLDFlagKeyIsADictionary;
+extern NSString * const kLDFlagKeyIsANull;
+
 @interface LDFlagConfigValue(Testable)
 +(instancetype)flagConfigValueFromJsonFileNamed:(NSString*)fileName flagKey:(NSString*)flagKey;
++(NSArray<LDFlagConfigValue*>*)stubFlagConfigValuesForFlagKey:(NSString*)flagKey withVersions:(BOOL)withVersions;
 +(NSArray<LDFlagConfigValue*>*)stubFlagConfigValuesForFlagKey:(NSString*)flagKey;
 +(id)defaultValueForFlagKey:(NSString*)flagKey;
 +(NSArray<NSString*>*)flagKeys;
