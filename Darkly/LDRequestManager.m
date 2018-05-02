@@ -16,6 +16,9 @@ NSString * const kHeaderMobileKey = @"api_key ";
 static NSString * const kConfigRequestCompletedNotification = @"config_request_completed_notification";
 static NSString * const kEventRequestCompletedNotification = @"event_request_completed_notification";
 
+NSString * const kEventHeaderLaunchDarklyEventSchema = @"X-LaunchDarkly-Event-Schema";
+NSString * const kEventSchema = @"3";
+
 @implementation LDRequestManager
 
 @synthesize mobileKey, baseUrl, eventsUrl, connectionTimeout, delegate;
@@ -248,6 +251,7 @@ dispatch_queue_t notificationQueue;
     NSString *authKey = [kHeaderMobileKey stringByAppendingString:mobileKey];
     
     [request addValue:authKey forHTTPHeaderField:@"Authorization"];
+    [request addValue:kEventSchema forHTTPHeaderField:kEventHeaderLaunchDarklyEventSchema];
     [request addValue:[@"iOS/" stringByAppendingString:kClientVersion] forHTTPHeaderField:@"User-Agent"];
     [request addValue: @"application/json" forHTTPHeaderField:@"Content-Type"];
     [request addValue:@"application/json" forHTTPHeaderField:@"Accept"];

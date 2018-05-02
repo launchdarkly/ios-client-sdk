@@ -14,6 +14,9 @@
 #import "LDConfig+Testable.h"
 #import "LDClient.h"
 
+extern NSString * const kEventHeaderLaunchDarklyEventSchema;
+extern NSString * const kEventSchema;
+
 static NSString *const httpMethodGet = @"GET";
 static NSString *const testMobileKey = @"testMobileKey";
 static NSString *const emptyJson = @"{ }";
@@ -385,7 +388,7 @@ static const int httpStatusCodeInternalServerError = 500;
     NSData *data = [[NSData alloc] initWithBase64EncodedString:@"" options: 0] ;
     
     [OHHTTPStubs stubRequestsPassingTest:^BOOL(NSURLRequest *request) {
-        return [request.URL.host isEqualToString:@"mobile.launchdarkly.com"];
+        return [request.URL.host isEqualToString:@"mobile.launchdarkly.com"] && [[request valueForHTTPHeaderField:kEventHeaderLaunchDarklyEventSchema] isEqualToString:kEventSchema];
     } withStubResponse:^OHHTTPStubsResponse*(NSURLRequest *request) {
         httpRequestAttempted = YES;
         [responseArrived fulfill];
@@ -394,7 +397,7 @@ static const int httpStatusCodeInternalServerError = 500;
     
     [[LDRequestManager sharedInstance] performEventRequest:[self stubEvents]];
 
-    [self waitForExpectationsWithTimeout:10 handler:^(NSError *error){
+    [self waitForExpectationsWithTimeout:1 handler:^(NSError *error){
         // By the time we reach this code, the while loop has exited
         // so the response has arrived or the test has timed out
         XCTAssertTrue(httpRequestAttempted);
