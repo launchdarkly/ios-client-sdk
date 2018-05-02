@@ -41,10 +41,7 @@
         self.mutableFlagCounters[flagKey] = [LDFlagCounter counterWithFlagKey:flagKey defaultValue:defaultValue];
     }
     
-    id reportedValue = flagConfigValue ? flagConfigValue.value : defaultValue;
-    NSInteger reportedVersion = flagConfigValue ? flagConfigValue.version : kLDFlagConfigVersionDoesNotExist;
-    NSInteger reportedVariation = flagConfigValue ? flagConfigValue.variation : kLDFlagConfigVariationDoesNotExist;
-    [self.mutableFlagCounters[flagKey] logRequestWithValue:reportedValue version:reportedVersion variation:reportedVariation defaultValue:defaultValue isKnownValue:flagConfigValue != nil];
+    [self.mutableFlagCounters[flagKey] logRequestWithFlagConfigValue:flagConfigValue defaultValue:defaultValue];
 }
 
 -(NSString*)description {

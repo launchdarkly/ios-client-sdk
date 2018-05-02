@@ -55,13 +55,11 @@
             if (!flagCounter) { continue; }
 
             XCTAssertEqual(flagCounter.valueCounters.count, logRequestForUniqueValueCount); //Verify the logRequest call added a new LDFlagValueCounter
-            LDFlagValueCounter *flagValueCounter = [flagCounter valueCounterForVariation:flagConfigValue.version];  //TODO: When the variation is added to the LDFlagConfigValue, use that instead
+            LDFlagValueCounter *flagValueCounter = [flagCounter valueCounterForFlagConfigValue:flagConfigValue];
             XCTAssertNotNil(flagValueCounter);
             if (!flagValueCounter) { continue; }
 
-            XCTAssertEqualObjects(flagValueCounter.value, flagConfigValue.value);
-            XCTAssertEqual(flagValueCounter.variation, flagConfigValue.version);    //TODO: When the variation is added to the LDFlagConfigValue, use that instead
-            XCTAssertEqual(flagValueCounter.version, flagConfigValue.version);
+            XCTAssertEqualObjects(flagValueCounter.flagConfigValue, flagConfigValue);
             XCTAssertEqual(flagValueCounter.known, YES);
             XCTAssertEqual(flagValueCounter.count, 1);
 
@@ -90,13 +88,11 @@
         if (!flagCounter) { continue; }
 
         XCTAssertEqual(flagCounter.valueCounters.count, 1);    //Verify the logRequest call added a new LDFlagValueCounter
-        LDFlagValueCounter *flagValueCounter = [flagCounter valueCounterForVariation:kLDFlagConfigVariationDoesNotExist];
+        LDFlagValueCounter *flagValueCounter = [flagCounter valueCounterForFlagConfigValue:nil];
         XCTAssertNotNil(flagValueCounter);
         if (!flagValueCounter) { continue; }
 
-        XCTAssertEqualObjects(flagValueCounter.value, defaultValue);
-        XCTAssertEqual(flagValueCounter.variation, kLDFlagConfigVariationDoesNotExist);
-        XCTAssertEqual(flagValueCounter.version, kLDFlagConfigVersionDoesNotExist);
+        XCTAssertNil(flagValueCounter.flagConfigValue);
         XCTAssertEqual(flagValueCounter.known, NO);
         XCTAssertEqual(flagValueCounter.count, 1);
 
