@@ -89,22 +89,22 @@ NSInteger const kLDFlagConfigVariationDoesNotExist = -1;
         }
     }
 
-    if (self.version != kLDFlagConfigVersionDoesNotExist) {
-        if (self.version != [dictionary[kLDFlagConfigValueKeyVersion] integerValue]) {
+    if (self.version == kLDFlagConfigVersionDoesNotExist) {
+        if (dictionary[kLDFlagConfigValueKeyVersion] && [dictionary[kLDFlagConfigValueKeyVersion] integerValue] != kLDFlagConfigVersionDoesNotExist) {
             [mismatchedProperties addObject:kLDFlagConfigValueKeyVersion];
         }
     } else {
-        if (dictionary[kLDFlagConfigValueKeyVersion] && [dictionary[kLDFlagConfigValueKeyVersion] integerValue] != kLDFlagConfigVersionDoesNotExist) {
+        if (self.version != [dictionary[kLDFlagConfigValueKeyVersion] integerValue]) {
             [mismatchedProperties addObject:kLDFlagConfigValueKeyVersion];
         }
     }
 
-    if (self.variation != kLDFlagConfigVariationDoesNotExist) {
-        if (self.variation != [dictionary[kLDFlagConfigValueKeyVariation] integerValue]) {
+    if (self.variation == kLDFlagConfigVariationDoesNotExist) {
+        if (dictionary[kLDFlagConfigValueKeyVariation] && [dictionary[kLDFlagConfigValueKeyVariation] integerValue] != kLDFlagConfigVariationDoesNotExist) {
             [mismatchedProperties addObject:kLDFlagConfigValueKeyVariation];
         }
     } else {
-        if (dictionary[kLDFlagConfigValueKeyVariation] && [dictionary[kLDFlagConfigValueKeyVariation] integerValue] != kLDFlagConfigVariationDoesNotExist) {
+        if (self.variation != [dictionary[kLDFlagConfigValueKeyVariation] integerValue]) {
             [mismatchedProperties addObject:kLDFlagConfigValueKeyVariation];
         }
     }

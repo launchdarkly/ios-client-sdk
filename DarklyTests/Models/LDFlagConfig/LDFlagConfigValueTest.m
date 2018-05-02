@@ -259,6 +259,8 @@
             NSDictionary *flagConfigValueDictionary = [flagConfigValue dictionaryValue];
 
             XCTAssertTrue([flagConfigValue hasPropertiesMatchingDictionary:flagConfigValueDictionary]);
+            XCTAssertNotNil(flagConfigValueDictionary[kLDFlagConfigValueKeyVersion]);
+            XCTAssertNotNil(flagConfigValueDictionary[kLDFlagConfigValueKeyVariation]);
 
             //mismatched dictionary
             LDFlagConfigValue *differingFlagConfigValue = [LDFlagConfigValue flagConfigValueWithObject:flagConfigValueDictionary];
@@ -289,6 +291,8 @@
             NSDictionary *flagConfigValueDictionary = [flagConfigValue dictionaryValue];
 
             XCTAssertTrue([flagConfigValue hasPropertiesMatchingDictionary:flagConfigValueDictionary]);
+            XCTAssertNil(flagConfigValueDictionary[kLDFlagConfigValueKeyVersion]);
+            XCTAssertNil(flagConfigValueDictionary[kLDFlagConfigValueKeyVariation]);
 
             LDFlagConfigValue *differingFlagConfigValue = [LDFlagConfigValue flagConfigValueWithObject:flagConfigValueDictionary];
             if (![flagKey isEqualToString:kLDFlagKeyIsANull]) {
