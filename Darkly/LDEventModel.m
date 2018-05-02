@@ -250,6 +250,11 @@ NSString * const kEventModelKeyFeatures = @"features";
     }
     if (self.flagConfigValue) {
         [dictionary addEntriesFromDictionary:[self.flagConfigValue dictionaryValue]];
+    } else {
+        //If flagConfigValue is nil, the SDK reports the fallback to the client. Setting the default here as the value communicates that in the report
+        if (self.defaultValue) {
+            dictionary[kEventModelKeyValue] = self.defaultValue;
+        }
     }
     if (self.defaultValue) {
         dictionary[kEventModelKeyDefault] = self.defaultValue;

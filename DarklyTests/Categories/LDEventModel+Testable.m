@@ -216,7 +216,10 @@ const double featureEventDefaultValueStub = 2.71828;
                 [mismatchedProperties addObject:kEventModelKeyFlagConfigValue];
             }
         } else {
-            if (dictionary[kEventModelKeyValue] || dictionary[kEventModelKeyVersion] || dictionary[kEventModelKeyVariation]) {
+            if (!dictionary[kEventModelKeyValue] || (dictionary[kEventModelKeyValue] && ![dictionary[kEventModelKeyValue] isEqual:self.defaultValue])) {
+                [mismatchedProperties addObject:kEventModelKeyFlagConfigValue];
+            }
+            if (dictionary[kEventModelKeyVersion] || dictionary[kEventModelKeyVariation]) {
                 [mismatchedProperties addObject:kEventModelKeyFlagConfigValue];
             }
         }

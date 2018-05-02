@@ -178,6 +178,17 @@ NSString * const testMobileKey = @"EventModelTest.testMobileKey";
     }
 }
 
+-(void)testDictionaryValue_flagRequestEvents_missingFlagConfigValue {
+    LDConfig *config = [[LDConfig alloc] initWithMobileKey:testMobileKey];
+    for (NSString *eventKind in [LDEventModel eventKindsForFlagRequests]) {
+        LDEventModel *originalEvent = [LDEventModel stubEventWithKind:eventKind user:self.user config:config];
+        originalEvent.flagConfigValue = nil;
+        NSDictionary *eventDictionary = [originalEvent dictionaryValueUsingConfig:config];
+
+        XCTAssertTrue([originalEvent hasPropertiesMatchingDictionary:eventDictionary]);
+    }
+}
+
 -(void)testEventDictionaryOmitsUserFlagConfig {
     LDConfig *config = [[LDConfig alloc] initWithMobileKey:testMobileKey];
     self.user = [LDUserModel stubWithKey:[[NSUUID UUID] UUIDString]];
