@@ -90,7 +90,7 @@ NSInteger const kLDFlagConfigVariationDoesNotExist = -1;
     }
 
     if (self.version == kLDFlagConfigVersionDoesNotExist) {
-        if (dictionary[kLDFlagConfigValueKeyVersion] && [dictionary[kLDFlagConfigValueKeyVersion] integerValue] != kLDFlagConfigVersionDoesNotExist) {
+        if (dictionary[kLDFlagConfigValueKeyVersion]) {
             [mismatchedProperties addObject:kLDFlagConfigValueKeyVersion];
         }
     } else {
@@ -100,7 +100,7 @@ NSInteger const kLDFlagConfigVariationDoesNotExist = -1;
     }
 
     if (self.variation == kLDFlagConfigVariationDoesNotExist) {
-        if (dictionary[kLDFlagConfigValueKeyVariation] && [dictionary[kLDFlagConfigValueKeyVariation] integerValue] != kLDFlagConfigVariationDoesNotExist) {
+        if (dictionary[kLDFlagConfigValueKeyVariation]) {
             [mismatchedProperties addObject:kLDFlagConfigValueKeyVariation];
         }
     } else {
