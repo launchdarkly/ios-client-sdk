@@ -189,8 +189,8 @@ NSString *const kTestMobileKey = @"testMobileKey";
     LDFlagConfigModel *flagConfigModel = [self configureUserWithFlagConfigModelFromJsonFileNamed:@"boolConfigIsABool-true-withVersion"];
     LDFlagConfigValue *flagConfigValue = [flagConfigModel flagConfigValueForFlagKey:flagKey];
     id targetFlagValue = flagConfigValue.value;
-    [[self.dataManagerMock expect] createFeatureEventWithFlagKey:flagKey flagValue:targetFlagValue defaultFlagValue:defaultFlagValue user:self.user config:self.config];
-    [[self.dataManagerMock expect] createDebugEventWithFlagKey:flagKey flagValue:targetFlagValue defaultFlagValue:defaultFlagValue user:self.user config:self.config];
+    [[self.dataManagerMock expect] createFeatureEventWithFlagKey:flagKey flagConfigValue:flagConfigValue defaultFlagValue:defaultFlagValue user:self.user config:self.config];
+    [[self.dataManagerMock expect] createDebugEventWithFlagKey:flagKey flagConfigValue:flagConfigValue defaultFlagValue:defaultFlagValue user:self.user config:self.config];
     [[self.trackerMock expect] logRequestForFlagKey:flagKey flagConfigValue:flagConfigValue defaultValue:defaultFlagValue];
 
     BOOL flagValue = [[LDClient sharedInstance] boolVariation:flagKey fallback:[defaultFlagValue boolValue]];
@@ -206,8 +206,8 @@ NSString *const kTestMobileKey = @"testMobileKey";
     id defaultFlagValue = @(YES);
     id targetFlagValue = defaultFlagValue;
     [self configureUserWithFlagConfigModelFromJsonFileNamed:@"boolConfigIsABool-false-withVersion"];
-    [[self.dataManagerMock expect] createFeatureEventWithFlagKey:flagKey flagValue:targetFlagValue defaultFlagValue:defaultFlagValue user:self.user config:self.config];
-    [[self.dataManagerMock expect] createDebugEventWithFlagKey:flagKey flagValue:targetFlagValue defaultFlagValue:defaultFlagValue user:self.user config:self.config];
+    [[self.dataManagerMock expect] createFeatureEventWithFlagKey:flagKey flagConfigValue:nil defaultFlagValue:defaultFlagValue user:self.user config:self.config];
+    [[self.dataManagerMock expect] createDebugEventWithFlagKey:flagKey flagConfigValue:nil defaultFlagValue:defaultFlagValue user:self.user config:self.config];
     [[self.trackerMock expect] logRequestForFlagKey:flagKey flagConfigValue:nil defaultValue:defaultFlagValue];
 
     BOOL flagValue = [[LDClient sharedInstance] boolVariation:flagKey fallback:[defaultFlagValue boolValue]];
@@ -222,8 +222,8 @@ NSString *const kTestMobileKey = @"testMobileKey";
     id defaultFlagValue = @(NO);
     id targetFlagValue = defaultFlagValue;
     [self configureUserWithFlagConfigModelFromJsonFileNamed:@"boolConfigIsABool-true-withVersion"];
-    [[self.dataManagerMock reject] createFeatureEventWithFlagKey:[OCMArg any] flagValue:[OCMArg any] defaultFlagValue:[OCMArg any] user:self.user config:self.config];
-    [[self.dataManagerMock reject] createDebugEventWithFlagKey:[OCMArg any] flagValue:[OCMArg any] defaultFlagValue:[OCMArg any] user:self.user config:self.config];
+    [[self.dataManagerMock reject] createFeatureEventWithFlagKey:[OCMArg any] flagConfigValue:[OCMArg any] defaultFlagValue:[OCMArg any] user:self.user config:self.config];
+    [[self.dataManagerMock reject] createDebugEventWithFlagKey:[OCMArg any] flagConfigValue:[OCMArg any] defaultFlagValue:[OCMArg any] user:self.user config:self.config];
     [[self.trackerMock reject] logRequestForFlagKey:[OCMArg any] flagConfigValue:[OCMArg any] defaultValue:[OCMArg any]];
 
     BOOL flagValue = [[LDClient sharedInstance] boolVariation:flagKey fallback:[defaultFlagValue boolValue]];
@@ -241,8 +241,8 @@ NSString *const kTestMobileKey = @"testMobileKey";
     LDFlagConfigModel *flagConfigModel = [self configureUserWithFlagConfigModelFromJsonFileNamed:@"numberConfigIsANumber-2-withVersion"];
     LDFlagConfigValue *flagConfigValue = [flagConfigModel flagConfigValueForFlagKey:flagKey];
     id targetFlagValue = flagConfigValue.value;
-    [[self.dataManagerMock expect] createFeatureEventWithFlagKey:flagKey flagValue:targetFlagValue defaultFlagValue:defaultFlagValue user:self.user config:self.config];
-    [[self.dataManagerMock expect] createDebugEventWithFlagKey:flagKey flagValue:targetFlagValue defaultFlagValue:defaultFlagValue user:self.user config:self.config];
+    [[self.dataManagerMock expect] createFeatureEventWithFlagKey:flagKey flagConfigValue:flagConfigValue defaultFlagValue:defaultFlagValue user:self.user config:self.config];
+    [[self.dataManagerMock expect] createDebugEventWithFlagKey:flagKey flagConfigValue:flagConfigValue defaultFlagValue:defaultFlagValue user:self.user config:self.config];
     [[self.trackerMock expect] logRequestForFlagKey:flagKey flagConfigValue:flagConfigValue defaultValue:defaultFlagValue];
 
     NSNumber *flagValue = [[LDClient sharedInstance] numberVariation:flagKey fallback:defaultFlagValue];
@@ -258,8 +258,8 @@ NSString *const kTestMobileKey = @"testMobileKey";
     id defaultFlagValue = @5;
     id targetFlagValue = defaultFlagValue;
     [self configureUserWithFlagConfigModelFromJsonFileNamed:@"numberConfigIsANumber-2-withVersion"];
-    [[self.dataManagerMock expect] createFeatureEventWithFlagKey:flagKey flagValue:targetFlagValue defaultFlagValue:defaultFlagValue user:self.user config:self.config];
-    [[self.dataManagerMock expect] createDebugEventWithFlagKey:flagKey flagValue:targetFlagValue defaultFlagValue:defaultFlagValue user:self.user config:self.config];
+    [[self.dataManagerMock expect] createFeatureEventWithFlagKey:flagKey flagConfigValue:nil defaultFlagValue:defaultFlagValue user:self.user config:self.config];
+    [[self.dataManagerMock expect] createDebugEventWithFlagKey:flagKey flagConfigValue:nil defaultFlagValue:defaultFlagValue user:self.user config:self.config];
     [[self.trackerMock expect] logRequestForFlagKey:flagKey flagConfigValue:nil defaultValue:defaultFlagValue];
 
     NSNumber *flagValue = [[LDClient sharedInstance] numberVariation:flagKey fallback:defaultFlagValue];
@@ -274,8 +274,8 @@ NSString *const kTestMobileKey = @"testMobileKey";
     id defaultFlagValue = @5;
     id targetFlagValue = defaultFlagValue;
     [self configureUserWithFlagConfigModelFromJsonFileNamed:@"numberConfigIsANumber-2-withVersion"];
-    [[self.dataManagerMock reject] createFeatureEventWithFlagKey:[OCMArg any] flagValue:[OCMArg any] defaultFlagValue:[OCMArg any] user:self.user config:self.config];
-    [[self.dataManagerMock reject] createDebugEventWithFlagKey:[OCMArg any] flagValue:[OCMArg any] defaultFlagValue:[OCMArg any] user:self.user config:self.config];
+    [[self.dataManagerMock reject] createFeatureEventWithFlagKey:[OCMArg any] flagConfigValue:[OCMArg any] defaultFlagValue:[OCMArg any] user:self.user config:self.config];
+    [[self.dataManagerMock reject] createDebugEventWithFlagKey:[OCMArg any] flagConfigValue:[OCMArg any] defaultFlagValue:[OCMArg any] user:self.user config:self.config];
     [[self.trackerMock reject] logRequestForFlagKey:[OCMArg any] flagConfigValue:[OCMArg any] defaultValue:[OCMArg any]];
 
     NSNumber *flagValue = [[LDClient sharedInstance] numberVariation:flagKey fallback:defaultFlagValue];
@@ -293,8 +293,8 @@ NSString *const kTestMobileKey = @"testMobileKey";
     LDFlagConfigModel *flagConfigModel = [self configureUserWithFlagConfigModelFromJsonFileNamed:@"doubleConfigIsADouble-Pi-withVersion"];
     LDFlagConfigValue *flagConfigValue = [flagConfigModel flagConfigValueForFlagKey:flagKey];
     id targetFlagValue = flagConfigValue.value;
-    [[self.dataManagerMock expect] createFeatureEventWithFlagKey:flagKey flagValue:targetFlagValue defaultFlagValue:defaultFlagValue user:self.user config:self.config];
-    [[self.dataManagerMock expect] createDebugEventWithFlagKey:flagKey flagValue:targetFlagValue defaultFlagValue:defaultFlagValue user:self.user config:self.config];
+    [[self.dataManagerMock expect] createFeatureEventWithFlagKey:flagKey flagConfigValue:flagConfigValue defaultFlagValue:defaultFlagValue user:self.user config:self.config];
+    [[self.dataManagerMock expect] createDebugEventWithFlagKey:flagKey flagConfigValue:flagConfigValue defaultFlagValue:defaultFlagValue user:self.user config:self.config];
     [[self.trackerMock expect] logRequestForFlagKey:flagKey flagConfigValue:flagConfigValue defaultValue:defaultFlagValue];
 
     double flagValue = [[LDClient sharedInstance] doubleVariation:flagKey fallback:[defaultFlagValue doubleValue]];
@@ -310,8 +310,8 @@ NSString *const kTestMobileKey = @"testMobileKey";
     id defaultFlagValue = @(2.71828);
     id targetFlagValue = defaultFlagValue;
     [self configureUserWithFlagConfigModelFromJsonFileNamed:@"doubleConfigIsADouble-Pi-withVersion"];
-    [[self.dataManagerMock expect] createFeatureEventWithFlagKey:flagKey flagValue:targetFlagValue defaultFlagValue:defaultFlagValue user:self.user config:self.config];
-    [[self.dataManagerMock expect] createDebugEventWithFlagKey:flagKey flagValue:targetFlagValue defaultFlagValue:defaultFlagValue user:self.user config:self.config];
+    [[self.dataManagerMock expect] createFeatureEventWithFlagKey:flagKey flagConfigValue:nil defaultFlagValue:defaultFlagValue user:self.user config:self.config];
+    [[self.dataManagerMock expect] createDebugEventWithFlagKey:flagKey flagConfigValue:nil defaultFlagValue:defaultFlagValue user:self.user config:self.config];
     [[self.trackerMock expect] logRequestForFlagKey:flagKey flagConfigValue:nil defaultValue:defaultFlagValue];
 
     double flagValue = [[LDClient sharedInstance] doubleVariation:flagKey fallback:[defaultFlagValue doubleValue]];
@@ -326,8 +326,8 @@ NSString *const kTestMobileKey = @"testMobileKey";
     id defaultFlagValue = @(2.71828);
     id targetFlagValue = defaultFlagValue;
     [self configureUserWithFlagConfigModelFromJsonFileNamed:@"doubleConfigIsADouble-Pi-withVersion"];
-    [[self.dataManagerMock reject] createFeatureEventWithFlagKey:[OCMArg any] flagValue:[OCMArg any] defaultFlagValue:[OCMArg any] user:self.user config:self.config];
-    [[self.dataManagerMock reject] createDebugEventWithFlagKey:[OCMArg any] flagValue:[OCMArg any] defaultFlagValue:[OCMArg any] user:self.user config:self.config];
+    [[self.dataManagerMock reject] createFeatureEventWithFlagKey:[OCMArg any] flagConfigValue:[OCMArg any] defaultFlagValue:[OCMArg any] user:self.user config:self.config];
+    [[self.dataManagerMock reject] createDebugEventWithFlagKey:[OCMArg any] flagConfigValue:[OCMArg any] defaultFlagValue:[OCMArg any] user:self.user config:self.config];
     [[self.trackerMock reject] logRequestForFlagKey:[OCMArg any] flagConfigValue:[OCMArg any] defaultValue:[OCMArg any]];
 
     double flagValue = [[LDClient sharedInstance] doubleVariation:flagKey fallback:[defaultFlagValue doubleValue]];
@@ -345,8 +345,8 @@ NSString *const kTestMobileKey = @"testMobileKey";
     LDFlagConfigModel *flagConfigModel = [self configureUserWithFlagConfigModelFromJsonFileNamed:@"stringConfigIsAString-someString-withVersion"];
     LDFlagConfigValue *flagConfigValue = [flagConfigModel flagConfigValueForFlagKey:flagKey];
     id targetFlagValue = flagConfigValue.value;
-    [[self.dataManagerMock expect] createFeatureEventWithFlagKey:flagKey flagValue:targetFlagValue defaultFlagValue:defaultFlagValue user:self.user config:self.config];
-    [[self.dataManagerMock expect] createDebugEventWithFlagKey:flagKey flagValue:targetFlagValue defaultFlagValue:defaultFlagValue user:self.user config:self.config];
+    [[self.dataManagerMock expect] createFeatureEventWithFlagKey:flagKey flagConfigValue:flagConfigValue defaultFlagValue:defaultFlagValue user:self.user config:self.config];
+    [[self.dataManagerMock expect] createDebugEventWithFlagKey:flagKey flagConfigValue:flagConfigValue defaultFlagValue:defaultFlagValue user:self.user config:self.config];
     [[self.trackerMock expect] logRequestForFlagKey:flagKey flagConfigValue:flagConfigValue defaultValue:defaultFlagValue];
 
     NSString *flagValue = [[LDClient sharedInstance] stringVariation:flagKey fallback:defaultFlagValue];
@@ -362,8 +362,8 @@ NSString *const kTestMobileKey = @"testMobileKey";
     id defaultFlagValue = kFallbackString;
     id targetFlagValue = defaultFlagValue;
     [self configureUserWithFlagConfigModelFromJsonFileNamed:@"stringConfigIsAString-someString-withVersion"];
-    [[self.dataManagerMock expect] createFeatureEventWithFlagKey:flagKey flagValue:targetFlagValue defaultFlagValue:defaultFlagValue user:self.user config:self.config];
-    [[self.dataManagerMock expect] createDebugEventWithFlagKey:flagKey flagValue:targetFlagValue defaultFlagValue:defaultFlagValue user:self.user config:self.config];
+    [[self.dataManagerMock expect] createFeatureEventWithFlagKey:flagKey flagConfigValue:nil defaultFlagValue:defaultFlagValue user:self.user config:self.config];
+    [[self.dataManagerMock expect] createDebugEventWithFlagKey:flagKey flagConfigValue:nil defaultFlagValue:defaultFlagValue user:self.user config:self.config];
     [[self.trackerMock expect] logRequestForFlagKey:flagKey flagConfigValue:nil defaultValue:defaultFlagValue];
 
     NSString *flagValue = [[LDClient sharedInstance] stringVariation:flagKey fallback:defaultFlagValue];
@@ -378,8 +378,8 @@ NSString *const kTestMobileKey = @"testMobileKey";
     id defaultFlagValue = kFallbackString;
     id targetFlagValue = defaultFlagValue;
     [self configureUserWithFlagConfigModelFromJsonFileNamed:@"stringConfigIsAString-someString-withVersion"];
-    [[self.dataManagerMock reject] createFeatureEventWithFlagKey:[OCMArg any] flagValue:[OCMArg any] defaultFlagValue:[OCMArg any] user:self.user config:self.config];
-    [[self.dataManagerMock reject] createDebugEventWithFlagKey:[OCMArg any] flagValue:[OCMArg any] defaultFlagValue:[OCMArg any] user:self.user config:self.config];
+    [[self.dataManagerMock reject] createFeatureEventWithFlagKey:[OCMArg any] flagConfigValue:[OCMArg any] defaultFlagValue:[OCMArg any] user:self.user config:self.config];
+    [[self.dataManagerMock reject] createDebugEventWithFlagKey:[OCMArg any] flagConfigValue:[OCMArg any] defaultFlagValue:[OCMArg any] user:self.user config:self.config];
     [[self.trackerMock reject] logRequestForFlagKey:[OCMArg any] flagConfigValue:[OCMArg any] defaultValue:[OCMArg any]];
 
     NSString *flagValue = [[LDClient sharedInstance] stringVariation:flagKey fallback:defaultFlagValue];
@@ -397,8 +397,8 @@ NSString *const kTestMobileKey = @"testMobileKey";
     LDFlagConfigModel *flagConfigModel = [self configureUserWithFlagConfigModelFromJsonFileNamed:@"arrayConfigIsAnArray-123-withVersion"];
     LDFlagConfigValue *flagConfigValue = [flagConfigModel flagConfigValueForFlagKey:flagKey];
     id targetFlagValue = flagConfigValue.value;
-    [[self.dataManagerMock expect] createFeatureEventWithFlagKey:flagKey flagValue:targetFlagValue defaultFlagValue:defaultFlagValue user:self.user config:self.config];
-    [[self.dataManagerMock expect] createDebugEventWithFlagKey:flagKey flagValue:targetFlagValue defaultFlagValue:defaultFlagValue user:self.user config:self.config];
+    [[self.dataManagerMock expect] createFeatureEventWithFlagKey:flagKey flagConfigValue:flagConfigValue defaultFlagValue:defaultFlagValue user:self.user config:self.config];
+    [[self.dataManagerMock expect] createDebugEventWithFlagKey:flagKey flagConfigValue:flagConfigValue defaultFlagValue:defaultFlagValue user:self.user config:self.config];
     [[self.trackerMock expect] logRequestForFlagKey:flagKey flagConfigValue:flagConfigValue defaultValue:defaultFlagValue];
 
     NSArray *flagValue = [[LDClient sharedInstance] arrayVariation:flagKey fallback:defaultFlagValue];
@@ -414,8 +414,8 @@ NSString *const kTestMobileKey = @"testMobileKey";
     id defaultFlagValue = @[@1, @2];
     id targetFlagValue = defaultFlagValue;
     [self configureUserWithFlagConfigModelFromJsonFileNamed:@"arrayConfigIsAnArray-123-withVersion"];
-    [[self.dataManagerMock expect] createFeatureEventWithFlagKey:flagKey flagValue:targetFlagValue defaultFlagValue:defaultFlagValue user:self.user config:self.config];
-    [[self.dataManagerMock expect] createDebugEventWithFlagKey:flagKey flagValue:targetFlagValue defaultFlagValue:defaultFlagValue user:self.user config:self.config];
+    [[self.dataManagerMock expect] createFeatureEventWithFlagKey:flagKey flagConfigValue:nil defaultFlagValue:defaultFlagValue user:self.user config:self.config];
+    [[self.dataManagerMock expect] createDebugEventWithFlagKey:flagKey flagConfigValue:nil defaultFlagValue:defaultFlagValue user:self.user config:self.config];
     [[self.trackerMock expect] logRequestForFlagKey:flagKey flagConfigValue:nil defaultValue:defaultFlagValue];
 
     NSArray *flagValue = [[LDClient sharedInstance] arrayVariation:flagKey fallback:defaultFlagValue];
@@ -430,8 +430,8 @@ NSString *const kTestMobileKey = @"testMobileKey";
     id defaultFlagValue = @[@1, @2];
     id targetFlagValue = defaultFlagValue;
     [self configureUserWithFlagConfigModelFromJsonFileNamed:@"arrayConfigIsAnArray-123-withVersion"];
-    [[self.dataManagerMock reject] createFeatureEventWithFlagKey:[OCMArg any] flagValue:[OCMArg any] defaultFlagValue:[OCMArg any] user:self.user config:self.config];
-    [[self.dataManagerMock reject] createDebugEventWithFlagKey:[OCMArg any] flagValue:[OCMArg any] defaultFlagValue:[OCMArg any] user:self.user config:self.config];
+    [[self.dataManagerMock reject] createFeatureEventWithFlagKey:[OCMArg any] flagConfigValue:[OCMArg any] defaultFlagValue:[OCMArg any] user:self.user config:self.config];
+    [[self.dataManagerMock reject] createDebugEventWithFlagKey:[OCMArg any] flagConfigValue:[OCMArg any] defaultFlagValue:[OCMArg any] user:self.user config:self.config];
     [[self.trackerMock reject] logRequestForFlagKey:[OCMArg any] flagConfigValue:[OCMArg any] defaultValue:[OCMArg any]];
 
     NSArray *flagValue = [[LDClient sharedInstance] arrayVariation:flagKey fallback:defaultFlagValue];
@@ -449,8 +449,8 @@ NSString *const kTestMobileKey = @"testMobileKey";
     LDFlagConfigModel *flagConfigModel = [self configureUserWithFlagConfigModelFromJsonFileNamed:@"dictionaryConfigIsADictionary-3Key-withVersion"];
     LDFlagConfigValue *flagConfigValue = [flagConfigModel flagConfigValueForFlagKey:flagKey];
     id targetFlagValue = flagConfigValue.value;
-    [[self.dataManagerMock expect] createFeatureEventWithFlagKey:flagKey flagValue:targetFlagValue defaultFlagValue:defaultFlagValue user:self.user config:self.config];
-    [[self.dataManagerMock expect] createDebugEventWithFlagKey:flagKey flagValue:targetFlagValue defaultFlagValue:defaultFlagValue user:self.user config:self.config];
+    [[self.dataManagerMock expect] createFeatureEventWithFlagKey:flagKey flagConfigValue:flagConfigValue defaultFlagValue:defaultFlagValue user:self.user config:self.config];
+    [[self.dataManagerMock expect] createDebugEventWithFlagKey:flagKey flagConfigValue:flagConfigValue defaultFlagValue:defaultFlagValue user:self.user config:self.config];
     [[self.trackerMock expect] logRequestForFlagKey:flagKey flagConfigValue:flagConfigValue defaultValue:defaultFlagValue];
 
     NSDictionary *flagValue = [[LDClient sharedInstance] dictionaryVariation:flagKey fallback:defaultFlagValue];
@@ -466,8 +466,8 @@ NSString *const kTestMobileKey = @"testMobileKey";
     id defaultFlagValue = @{@"key1": @"value1", @"key2": @[@1, @2]};
     id targetFlagValue = defaultFlagValue;
     [self configureUserWithFlagConfigModelFromJsonFileNamed:@"dictionaryConfigIsADictionary-3Key-withVersion"];
-    [[self.dataManagerMock expect] createFeatureEventWithFlagKey:flagKey flagValue:targetFlagValue defaultFlagValue:defaultFlagValue user:self.user config:self.config];
-    [[self.dataManagerMock expect] createDebugEventWithFlagKey:flagKey flagValue:targetFlagValue defaultFlagValue:defaultFlagValue user:self.user config:self.config];
+    [[self.dataManagerMock expect] createFeatureEventWithFlagKey:flagKey flagConfigValue:nil defaultFlagValue:defaultFlagValue user:self.user config:self.config];
+    [[self.dataManagerMock expect] createDebugEventWithFlagKey:flagKey flagConfigValue:nil defaultFlagValue:defaultFlagValue user:self.user config:self.config];
     [[self.trackerMock expect] logRequestForFlagKey:flagKey flagConfigValue:nil defaultValue:defaultFlagValue];
 
     NSDictionary *flagValue = [[LDClient sharedInstance] dictionaryVariation:flagKey fallback:defaultFlagValue];
@@ -482,8 +482,8 @@ NSString *const kTestMobileKey = @"testMobileKey";
     id defaultFlagValue = @{@"key1": @"value1", @"key2": @[@1, @2]};
     id targetFlagValue = defaultFlagValue;
     [self configureUserWithFlagConfigModelFromJsonFileNamed:@"dictionaryConfigIsADictionary-3Key-withVersion"];
-    [[self.dataManagerMock reject] createFeatureEventWithFlagKey:[OCMArg any] flagValue:[OCMArg any] defaultFlagValue:[OCMArg any] user:self.user config:self.config];
-    [[self.dataManagerMock reject] createDebugEventWithFlagKey:[OCMArg any] flagValue:[OCMArg any] defaultFlagValue:[OCMArg any] user:self.user config:self.config];
+    [[self.dataManagerMock reject] createFeatureEventWithFlagKey:[OCMArg any] flagConfigValue:[OCMArg any] defaultFlagValue:[OCMArg any] user:self.user config:self.config];
+    [[self.dataManagerMock reject] createDebugEventWithFlagKey:[OCMArg any] flagConfigValue:[OCMArg any] defaultFlagValue:[OCMArg any] user:self.user config:self.config];
     [[self.trackerMock reject] logRequestForFlagKey:[OCMArg any] flagConfigValue:[OCMArg any] defaultValue:[OCMArg any]];
 
     NSDictionary *flagValue = [[LDClient sharedInstance] dictionaryVariation:flagKey fallback:defaultFlagValue];
@@ -541,18 +541,6 @@ NSString *const kTestMobileKey = @"testMobileKey";
     user = [[LDClient sharedInstance] ldUser];
     
      XCTAssertEqual(user.email, @"my@email.com");
-}
-
--(void)testToggleCreatesEventWithCorrectArguments {
-    NSString *toggleName = @"test";
-    BOOL fallbackValue = YES;
-    LDConfig *config = [[LDConfig alloc] initWithMobileKey:kTestMobileKey];
-    OCMStub([self.dataManagerMock createFeatureEventWithFlagKey:[OCMArg any] flagValue:[OCMArg any] defaultFlagValue:[OCMArg any] user:[OCMArg any] config:[OCMArg any]]);
-    [[LDClient sharedInstance] start:config withUserBuilder:nil];
-    [[LDClient sharedInstance] boolVariation:toggleName fallback:fallbackValue];
-    
-    OCMVerify([self.dataManagerMock createFeatureEventWithFlagKey:toggleName flagValue:[NSNumber numberWithBool:fallbackValue] defaultFlagValue:[NSNumber numberWithBool:fallbackValue] user:[OCMArg isKindOfClass:[LDUserModel class]] config:config]);
-    [self.dataManagerMock stopMocking];
 }
 
 - (void)testTrackWithoutStart {
