@@ -8,6 +8,7 @@
 
 #import "LDFlagValueCounter.h"
 
+extern NSString * const kLDFlagValueCounterKeyFlagConfigValue;
 extern NSString * const kLDFlagValueCounterKeyValue;
 extern NSString * const kLDFlagValueCounterKeyVersion;
 extern NSString * const kLDFlagValueCounterKeyVariation;

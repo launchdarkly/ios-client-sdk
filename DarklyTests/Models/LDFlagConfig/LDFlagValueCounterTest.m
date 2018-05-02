@@ -12,6 +12,7 @@
 #import "LDFlagConfigModel.h"
 #import "LDFlagConfigModel+Testable.h"
 #import "LDFlagConfigValue.h"
+#import "LDFlagConfigValue+Testable.h"
 
 extern const NSInteger kLDFlagConfigVersionDoesNotExist;
 extern const NSInteger kLDFlagConfigVariationDoesNotExist;
@@ -32,6 +33,24 @@ extern const NSInteger kLDFlagConfigVariationDoesNotExist;
     [super tearDown];
 }
 
+-(void)testInitAndCounterWithFlagConfigValueConstructors {
+    for (NSString *flagKey in [LDFlagConfigValue flagKeys]) {
+        NSArray<LDFlagConfigValue*> *flagConfigValues = [LDFlagConfigValue stubFlagConfigValuesForFlagKey:flagKey];
+        for (LDFlagConfigValue *flagConfigValue in flagConfigValues) {
+            LDFlagValueCounter *flagValueCounter = [LDFlagValueCounter counterWithFlagConfigValue:flagConfigValue];
+
+            XCTAssertEqualObjects(flagValueCounter.flagConfigValue, flagConfigValue);
+            XCTAssertEqual(flagValueCounter.count, 1);
+            XCTAssertEqual(flagValueCounter.known, YES);
+        }
+    }
+
+    LDFlagValueCounter *flagValueCounter = [LDFlagValueCounter counterWithFlagConfigValue:nil];
+    XCTAssertNil(flagValueCounter.flagConfigValue);
+    XCTAssertEqual(flagValueCounter.count, 1);
+    XCTAssertEqual(flagValueCounter.known, NO);
+}
+
 -(void)testInitAndCounterWithValueConstructors {
     for (NSString *flagKey in self.flagConfigDictionary.allKeys) {
         LDFlagConfigValue *flagConfigValue = self.flagConfigDictionary[flagKey];
@@ -49,21 +68,37 @@ extern const NSInteger kLDFlagConfigVariationDoesNotExist;
 
 -(void)testDictionaryValue {
     for (NSString *flagKey in self.flagConfigDictionary.allKeys) {
-        LDFlagConfigValue *flagConfigValue = self.flagConfigDictionary[flagKey];
         NSInteger variation = arc4random_uniform(9) + 1;    //TODO: When adding the new streaming data model, replace this with the value from the flagConfigValue
-        LDFlagValueCounter *flagValueCounter = [LDFlagValueCounter counterWithValue:flagConfigValue.value variation:variation version:flagConfigValue.version isKnownValue:YES];
+        LDFlagConfigValue *flagConfigValue = self.flagConfigDictionary[flagKey];
+        flagConfigValue.variation = variation;
+        //flagConfigValue
+        LDFlagValueCounter *flagValueCounter = [LDFlagValueCounter counterWithFlagConfigValue:flagConfigValue];
 
         NSDictionary *flagValueCounterDictionary = [flagValueCounter dictionaryValue];
 
         XCTAssertTrue([flagValueCounter hasPropertiesMatchingDictionary:flagValueCounterDictionary]);
 
-        //Unknown flag config values
+        //value, version, variation
+        flagValueCounter = [LDFlagValueCounter counterWithValue:flagConfigValue.value variation:variation version:flagConfigValue.version isKnownValue:YES];
+
+        flagValueCounterDictionary = [flagValueCounter dictionaryValue];
+
+        XCTAssertTrue([flagValueCounter hasPropertiesMatchingDictionary:flagValueCounterDictionary]);
+
+        //Unknown values
         flagValueCounter = [LDFlagValueCounter counterWithValue:flagConfigValue.value variation:kLDFlagConfigVariationDoesNotExist version:flagConfigValue.version isKnownValue:NO];
 
         flagValueCounterDictionary = [flagValueCounter dictionaryValue];
 
         XCTAssertTrue([flagValueCounter hasPropertiesMatchingDictionary:flagValueCounterDictionary]);
     }
+
+    //flagConfigValue nil
+    LDFlagValueCounter *flagValueCounter = [LDFlagValueCounter counterWithFlagConfigValue:nil];
+
+    NSDictionary *flagValueCounterDictionary = [flagValueCounter dictionaryValue];
+
+    XCTAssertTrue([flagValueCounter hasPropertiesMatchingDictionary:flagValueCounterDictionary]);
 }
 
 @end

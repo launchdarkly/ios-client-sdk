@@ -10,6 +10,7 @@
 #import "LDFlagValueCounter.h"
 #import "LDFlagConfigValue.h"
 
+NSString * const kLDFlagValueCounterKeyFlagConfigValue = @"flagConfigValue";
 NSString * const kLDFlagValueCounterKeyValue = @"value";
 NSString * const kLDFlagValueCounterKeyVersion = @"version";
 NSString * const kLDFlagValueCounterKeyVariation = @"variation";
@@ -17,6 +18,7 @@ NSString * const kLDFlagValueCounterKeyCount = @"count";
 NSString * const kLDFlagValueCounterKeyUnknown = @"unknown";
 
 @interface LDFlagValueCounter()
+@property (nullable, nonatomic, strong) LDFlagConfigValue *flagConfigValue;
 @property (nonatomic, strong) id value;
 @property (nonatomic, assign) NSInteger variation;
 @property (nonatomic, assign) NSInteger version;
@@ -24,6 +26,20 @@ NSString * const kLDFlagValueCounterKeyUnknown = @"unknown";
 @end
 
 @implementation LDFlagValueCounter
++(instancetype)counterWithFlagConfigValue:(LDFlagConfigValue*)flagConfigValue {
+    return [[LDFlagValueCounter alloc] initWithFlagConfigValue:flagConfigValue];
+}
+
+-(instancetype)initWithFlagConfigValue:(LDFlagConfigValue*)flagConfigValue {
+    if (!(self = [super init])) { return nil; }
+
+    self.flagConfigValue = flagConfigValue;
+    self.known = self.flagConfigValue != nil;
+    self.count = 1;
+
+    return self;
+}
+
 +(instancetype)counterWithValue:(id)value variation:(NSInteger)variation version:(NSInteger)version isKnownValue:(BOOL)isKnownValue {
     return [[LDFlagValueCounter alloc] initWithValue:value variation:variation version:version isKnownValue:isKnownValue];
 }
@@ -44,9 +60,13 @@ NSString * const kLDFlagValueCounterKeyUnknown = @"unknown";
     NSMutableDictionary *dictionary = [NSMutableDictionary dictionaryWithCapacity:3];
 
     if (self.known) {
-        dictionary[kLDFlagValueCounterKeyValue] = self.value ?: [NSNull null];
-        dictionary[kLDFlagValueCounterKeyVersion] = @(self.version);
-        dictionary[kLDFlagValueCounterKeyVariation] = @(self.variation);
+        if (self.flagConfigValue) {
+            [dictionary addEntriesFromDictionary:[self.flagConfigValue dictionaryValue]];
+        } else {
+            dictionary[kLDFlagValueCounterKeyValue] = self.value ?: [NSNull null];
+            dictionary[kLDFlagValueCounterKeyVersion] = @(self.version);
+            dictionary[kLDFlagValueCounterKeyVariation] = @(self.variation);
+        }
     } else {
         dictionary[kLDFlagValueCounterKeyUnknown] = @(YES);
     }
@@ -56,13 +76,8 @@ NSString * const kLDFlagValueCounterKeyUnknown = @"unknown";
 }
 
 -(NSString*)description {
-    return [NSString stringWithFormat:@"<LDFlagValueCounter: %p, value: %@, count: %ld, version: %ld, variation: %ld, known: %@>",
-            self,
-            [self.value description],
-            (long)self.count,
-            (long)self.version,
-            (long)self.variation,
-            self.known ? @"YES" : @"NO"];
+    return [NSString stringWithFormat:@"<LDFlagValueCounter: %p, flagConfigValue: %@, value: %@, count: %ld, version: %ld, variation: %ld, known: %@>",
+            self, [self.flagConfigValue description], [self.value description], (long)self.count, (long)self.version, (long)self.variation, self.known ? @"YES" : @"NO"];
 }
 
 @end
