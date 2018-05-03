@@ -19,6 +19,4 @@
 
 @interface LDFlagCounter (Private)
 -(LDFlagValueCounter*)valueCounterForFlagConfigValue:(LDFlagConfigValue*)flagConfigValue;
--(LDFlagValueCounter*)valueCounterForVariation:(NSInteger)variation;
--(LDFlagValueCounter*)valueCounterForValue:(id)value isKnownValue:(BOOL)isKnownValue;   //TODO: When variation is implemented, remove this
 @end

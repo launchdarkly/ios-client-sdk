@@ -57,34 +57,6 @@ NSString * const kLDFlagCounterKeyCounters = @"counters";
     return [[self.flagValueCounters filteredArrayUsingPredicate:variationPredicate] firstObject];
 }
 
--(LDFlagValueCounter*)valueCounterForVariation:(NSInteger)variation {
-    NSPredicate *variationPredicate = [NSPredicate predicateWithBlock:^BOOL(id evaluatedObject, NSDictionary<NSString *,id> *bindings) {
-        if (![evaluatedObject isKindOfClass:[LDFlagValueCounter class]]) { return NO; }
-        return ((LDFlagValueCounter*)evaluatedObject).variation == variation;
-    }];
-    return [[self.flagValueCounters filteredArrayUsingPredicate:variationPredicate] firstObject];
-}
-
--(LDFlagValueCounter*)valueCounterForValue:(id)value isKnownValue:(BOOL)isKnownValue {
-    NSPredicate *valuePredicate = [NSPredicate predicateWithBlock:^BOOL(id evaluatedObject, NSDictionary<NSString *,id> *bindings) {
-        if (![evaluatedObject isKindOfClass:[LDFlagValueCounter class]]) { return NO; }
-        LDFlagValueCounter *evaluatedCounter = evaluatedObject;
-        return (!isKnownValue && !evaluatedCounter.isKnown) || (isKnownValue && ((evaluatedCounter.value == nil && value == nil) || [evaluatedCounter.value isEqual:value]));
-    }];
-    return [[self.flagValueCounters filteredArrayUsingPredicate:valuePredicate] firstObject];
-}
-
--(void)logRequestWithValue:(id)value version:(NSInteger)version variation:(NSInteger)variation defaultValue:(id)defaultValue isKnownValue:(BOOL)isKnownValue {
-//    LDFlagValueCounter *selectedFlagValueCounter = [self valueCounterForVariation:variation];  //TODO: When variation is implemented, use it
-    LDFlagValueCounter *selectedFlagValueCounter = [self valueCounterForValue:value isKnownValue:isKnownValue];  //TODO: When variation is implemented, use it
-    if (selectedFlagValueCounter) {
-        selectedFlagValueCounter.count += 1;
-        return;
-    }
-
-    [self.flagValueCounters addObject:[LDFlagValueCounter counterWithValue:value variation:variation version:version isKnownValue:isKnownValue]];
-}
-
 -(NSDictionary*)dictionaryValue {
     NSMutableArray<NSDictionary*> *flagValueCounterDictionaries = [NSMutableArray arrayWithCapacity:self.flagValueCounters.count];
     for (LDFlagValueCounter *flagValueCounter in self.flagValueCounters) {

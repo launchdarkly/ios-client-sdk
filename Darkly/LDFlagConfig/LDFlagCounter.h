@@ -20,7 +20,6 @@
 -(nonnull instancetype)initWithFlagKey:(nonnull NSString*)flagKey defaultValue:(nonnull id)defaultValue;
 
 -(void)logRequestWithFlagConfigValue:(nullable LDFlagConfigValue*)flagConfigValue defaultValue:(nullable id)defaultValue;
--(void)logRequestWithValue:(nullable id)value version:(NSInteger)version variation:(NSInteger)variation defaultValue:(nullable id)defaultValue isKnownValue:(BOOL)isKnownValue;
 
 -(nonnull NSDictionary*)dictionaryValue;
 

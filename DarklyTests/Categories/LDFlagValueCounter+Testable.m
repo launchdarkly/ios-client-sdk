@@ -18,14 +18,8 @@
                 [mismatchedProperties addObject:kLDFlagValueCounterKeyFlagConfigValue];
             }
         } else {
-            if (![self.value isEqual:dictionary[kLDFlagValueCounterKeyValue]]) {
-                [mismatchedProperties addObject:kLDFlagValueCounterKeyValue];
-            }
-            if (self.version != [dictionary[kLDFlagValueCounterKeyVersion] integerValue]) {
-                [mismatchedProperties addObject:kLDFlagValueCounterKeyVersion];
-            }
-            if (self.variation != [dictionary[kLDFlagValueCounterKeyVariation] integerValue]) {
-                [mismatchedProperties addObject:kLDFlagValueCounterKeyVariation];
+            if (dictionary[kLDFlagValueCounterKeyFlagConfigValue]) {
+                [mismatchedProperties addObject:kLDFlagValueCounterKeyFlagConfigValue];
             }
         }
         if (dictionary[kLDFlagValueCounterKeyUnknown]) {
@@ -34,15 +28,6 @@
     } else {
         if (dictionary[kLDFlagValueCounterKeyFlagConfigValue]) {
             [mismatchedProperties addObject:kLDFlagValueCounterKeyFlagConfigValue];
-        }
-        if (dictionary[kLDFlagValueCounterKeyValue]) {
-            [mismatchedProperties addObject:kLDFlagValueCounterKeyValue];
-        }
-        if (dictionary[kLDFlagValueCounterKeyVersion]) {
-            [mismatchedProperties addObject:kLDFlagValueCounterKeyVersion];
-        }
-        if (dictionary[kLDFlagValueCounterKeyVariation]) {
-            [mismatchedProperties addObject:kLDFlagValueCounterKeyVariation];
         }
         if ([dictionary[kLDFlagValueCounterKeyUnknown] boolValue] != YES) {
             [mismatchedProperties addObject:kLDFlagValueCounterKeyUnknown];

@@ -51,21 +51,6 @@ extern const NSInteger kLDFlagConfigVariationDoesNotExist;
     XCTAssertEqual(flagValueCounter.known, NO);
 }
 
--(void)testInitAndCounterWithValueConstructors {
-    for (NSString *flagKey in self.flagConfigDictionary.allKeys) {
-        LDFlagConfigValue *flagConfigValue = self.flagConfigDictionary[flagKey];
-        NSInteger variation = arc4random_uniform(9) + 1;    //TODO: When adding the new streaming data model, replace this with the value from the flagConfigValue
-
-        LDFlagValueCounter *flagValueCounter = [LDFlagValueCounter counterWithValue:flagConfigValue.value variation:variation version:flagConfigValue.version isKnownValue:YES];
-
-        XCTAssertEqualObjects(flagValueCounter.value, flagConfigValue.value);
-        XCTAssertEqual(flagValueCounter.variation, variation);
-        XCTAssertEqual(flagValueCounter.version, flagConfigValue.version);
-        XCTAssertEqual(flagValueCounter.count, 1);
-        XCTAssertEqual(flagValueCounter.known, YES);
-    }
-}
-
 -(void)testDictionaryValue {
     for (NSString *flagKey in self.flagConfigDictionary.allKeys) {
         NSInteger variation = arc4random_uniform(9) + 1;    //TODO: When adding the new streaming data model, replace this with the value from the flagConfigValue
@@ -82,20 +67,6 @@ extern const NSInteger kLDFlagConfigVariationDoesNotExist;
         flagConfigValue.version = kLDFlagConfigVersionDoesNotExist;
         flagConfigValue.variation = kLDFlagConfigVariationDoesNotExist;
         flagValueCounter = [LDFlagValueCounter counterWithFlagConfigValue:flagConfigValue];
-
-        flagValueCounterDictionary = [flagValueCounter dictionaryValue];
-
-        XCTAssertTrue([flagValueCounter hasPropertiesMatchingDictionary:flagValueCounterDictionary]);
-
-        //value, version, variation
-        flagValueCounter = [LDFlagValueCounter counterWithValue:flagConfigValue.value variation:variation version:flagConfigValue.version isKnownValue:YES];
-
-        flagValueCounterDictionary = [flagValueCounter dictionaryValue];
-
-        XCTAssertTrue([flagValueCounter hasPropertiesMatchingDictionary:flagValueCounterDictionary]);
-
-        //Unknown values
-        flagValueCounter = [LDFlagValueCounter counterWithValue:flagConfigValue.value variation:kLDFlagConfigVariationDoesNotExist version:flagConfigValue.version isKnownValue:NO];
 
         flagValueCounterDictionary = [flagValueCounter dictionaryValue];
 
