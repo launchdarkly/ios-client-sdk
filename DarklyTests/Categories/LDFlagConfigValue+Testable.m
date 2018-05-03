@@ -20,7 +20,7 @@ NSString * const kLDFlagKeyIsANull = @"isANull";
 @implementation LDFlagConfigValue(Testable)
 +(instancetype)flagConfigValueFromJsonFileNamed:(NSString*)fileName flagKey:(NSString*)flagKey {
     id flagConfigStub = [NSJSONSerialization jsonObjectFromFileNamed:fileName];
-    LDFlagConfigValue *flagConfigValue = [LDFlagConfigValue flagConfigValueWithObject:flagConfigStub[flagKey]];
+    LDFlagConfigValue *flagConfigValue = flagKey.length > 0 ? [LDFlagConfigValue flagConfigValueWithObject:flagConfigStub[flagKey]] : [LDFlagConfigValue flagConfigValueWithObject:flagConfigStub];
     flagConfigValue.variation = flagConfigValue.version;    //TODO: remove this when adding server support for variation
     return flagConfigValue;
 }

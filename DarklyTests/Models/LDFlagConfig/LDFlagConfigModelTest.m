@@ -6,6 +6,7 @@
 #import "LDFlagConfigModel.h"
 #import "LDFlagConfigModel+Testable.h"
 #import "LDFlagConfigValue.h"
+#import "LDFlagConfigValue+Testable.h"
 #import "NSJSONSerialization+Testable.h"
 #import "NSDictionary+Testable.h"
 #import "NSDate+ReferencedDate.h"
@@ -189,70 +190,61 @@ extern NSString *const kLDFlagConfigModelKeyKey;
 - (void)testAddOrReplaceFromDictionaryWhenKeyDoesntExist {
     LDFlagConfigModel *config = [LDFlagConfigModel flagConfigFromJsonFileNamed:@"ldFlagConfigModelTest"];
     NSDictionary *patch = [NSJSONSerialization jsonObjectFromFileNamed:@"ldFlagConfigModelPatchNewFlag"];
+    LDFlagConfigValue *flagConfigValue = [LDFlagConfigValue flagConfigValueFromJsonFileNamed:@"ldFlagConfigModelPatchNewFlag" flagKey:nil];
     NSString *patchedFlagKey = patch[kLDFlagConfigModelKeyKey];
-    BOOL patchedFlagValue = [patch boolValueForKey:kLDFlagConfigValueKeyValue];
-    NSInteger patchedFlagVersion = [patch integerValueForKey:kLDFlagConfigValueKeyVersion];
 
     [config addOrReplaceFromDictionary:patch];
 
     XCTAssertTrue([config doesFlagConfigValueExistForFlagKey:patchedFlagKey]);
-    XCTAssertEqual([[config flagValueForFlagKey:patchedFlagKey] boolValue], patchedFlagValue);
-    XCTAssertEqual([config flagVersionForFlagKey:patchedFlagKey], patchedFlagVersion);
+    XCTAssertEqualObjects([config flagConfigValueForFlagKey:patchedFlagKey], flagConfigValue);
 }
 
 - (void)testAddOrReplaceFromDictionaryWhenKeyExistsWithPreviousVersion {
     LDFlagConfigModel *config = [LDFlagConfigModel flagConfigFromJsonFileNamed:@"ldFlagConfigModelTest"];
     NSDictionary *patch = [NSJSONSerialization jsonObjectFromFileNamed:@"ldFlagConfigModelPatchVersion1Flag"];
+    LDFlagConfigValue *flagConfigValue = [LDFlagConfigValue flagConfigValueFromJsonFileNamed:@"ldFlagConfigModelPatchVersion1Flag" flagKey:nil];
     NSString *patchedFlagKey = patch[kLDFlagConfigModelKeyKey];
-    BOOL patchedFlagValue = [patch boolValueForKey:kLDFlagConfigValueKeyValue];
-    NSInteger patchedFlagVersion = [patch integerValueForKey:kLDFlagConfigValueKeyVersion];
 
     [config addOrReplaceFromDictionary:patch];
 
     XCTAssertTrue([config doesFlagConfigValueExistForFlagKey:patchedFlagKey]);
-    XCTAssertEqual([[config flagValueForFlagKey:patchedFlagKey] boolValue], patchedFlagValue);
-    XCTAssertEqual([config flagVersionForFlagKey:patchedFlagKey], patchedFlagVersion);
+    XCTAssertEqualObjects([config flagConfigValueForFlagKey:patchedFlagKey], flagConfigValue);
 }
 
 - (void)testAddOrReplaceFromDictionaryWhenPatchValueIsNull {
     LDFlagConfigModel *config = [LDFlagConfigModel flagConfigFromJsonFileNamed:@"ldFlagConfigModelTest"];
     NSDictionary *patch = [NSJSONSerialization jsonObjectFromFileNamed:@"ldFlagConfigModelPatchVersion2FlagWithNull"];
+    LDFlagConfigValue *flagConfigValue = [LDFlagConfigValue flagConfigValueFromJsonFileNamed:@"ldFlagConfigModelPatchVersion2FlagWithNull" flagKey:nil];
     NSString *patchedFlagKey = patch[kLDFlagConfigModelKeyKey];
-    NSInteger patchedFlagVersion = [patch integerValueForKey:kLDFlagConfigValueKeyVersion];
 
     [config addOrReplaceFromDictionary:patch];
 
     XCTAssertTrue([config doesFlagConfigValueExistForFlagKey:patchedFlagKey]);
-    XCTAssertNil([config flagValueForFlagKey:patchedFlagKey]);
-    XCTAssertEqual([config flagVersionForFlagKey:patchedFlagKey], patchedFlagVersion);
+    XCTAssertEqualObjects([config flagConfigValueForFlagKey:patchedFlagKey], flagConfigValue);
 }
 
 - (void)testAddOrReplaceFromDictionaryWhenKeyExistsWithSameVersion {
     LDFlagConfigModel *config = [LDFlagConfigModel flagConfigFromJsonFileNamed:@"ldFlagConfigModelTest"];
     NSDictionary *patch = [LDFlagConfigModel patchFromJsonFileNamed:@"ldFlagConfigModelPatchVersion2Flag" useVersion:2];
     NSString *patchedFlagKey = patch[kLDFlagConfigModelKeyKey];
-    NSString *originalFlagValue = (NSString*)[config flagValueForFlagKey:patchedFlagKey];
-    NSInteger originalFlagVersion = [config flagVersionForFlagKey:patchedFlagKey];
+    LDFlagConfigValue *originalFlagConfigValue = [config flagConfigValueForFlagKey:patchedFlagKey];
 
     [config addOrReplaceFromDictionary:patch];
 
     XCTAssertTrue([config doesFlagConfigValueExistForFlagKey:patchedFlagKey]);
-    XCTAssertEqual([config flagValueForFlagKey:patchedFlagKey], originalFlagValue);
-    XCTAssertEqual([config flagVersionForFlagKey:patchedFlagKey], originalFlagVersion);
+    XCTAssertEqualObjects([config flagConfigValueForFlagKey:patchedFlagKey], originalFlagConfigValue);
 }
 
 - (void)testAddOrReplaceFromDictionaryWhenKeyExistsWithLaterVersion {
     LDFlagConfigModel *config = [LDFlagConfigModel flagConfigFromJsonFileNamed:@"ldFlagConfigModelTest"];
     NSDictionary *patch = [LDFlagConfigModel patchFromJsonFileNamed:@"ldFlagConfigModelPatchVersion2Flag" useVersion:1];
     NSString *patchedFlagKey = patch[kLDFlagConfigModelKeyKey];
-    NSString *originalFlagValue = (NSString*)[config flagValueForFlagKey:patchedFlagKey];
-    NSInteger originalFlagVersion = [config flagVersionForFlagKey:patchedFlagKey];
+    LDFlagConfigValue *originalFlagConfigValue = [config flagConfigValueForFlagKey:patchedFlagKey];
 
     [config addOrReplaceFromDictionary:patch];
 
     XCTAssertTrue([config doesFlagConfigValueExistForFlagKey:patchedFlagKey]);
-    XCTAssertEqual([config flagValueForFlagKey:patchedFlagKey], originalFlagValue);
-    XCTAssertEqual([config flagVersionForFlagKey:patchedFlagKey], originalFlagVersion);
+    XCTAssertEqualObjects([config flagConfigValueForFlagKey:patchedFlagKey], originalFlagConfigValue);
 }
 
 - (void)testAddOrReplaceFromDictionaryWhenDictionaryIsNil {
