@@ -226,6 +226,16 @@
 		836947801F1FF80A0047697C /* dictionaryConfigIsADictionary-KeyC-withVersion.json in Resources */ = {isa = PBXBuildFile; fileRef = 836947791F1FF80A0047697C /* dictionaryConfigIsADictionary-KeyC-withVersion.json */; };
 		836947831F20125F0047697C /* ldClientManagerTestConfigA.json in Resources */ = {isa = PBXBuildFile; fileRef = 836947811F20125F0047697C /* ldClientManagerTestConfigA.json */; };
 		836947841F20125F0047697C /* ldClientManagerTestConfigB.json in Resources */ = {isa = PBXBuildFile; fileRef = 836947821F20125F0047697C /* ldClientManagerTestConfigB.json */; };
+		8375839A209CCE71004329DD /* LDEventTrackingContext.h in Headers */ = {isa = PBXBuildFile; fileRef = 83758398209CCE71004329DD /* LDEventTrackingContext.h */; };
+		8375839B209CCE71004329DD /* LDEventTrackingContext.h in Headers */ = {isa = PBXBuildFile; fileRef = 83758398209CCE71004329DD /* LDEventTrackingContext.h */; };
+		8375839C209CCE71004329DD /* LDEventTrackingContext.h in Headers */ = {isa = PBXBuildFile; fileRef = 83758398209CCE71004329DD /* LDEventTrackingContext.h */; };
+		8375839D209CCE71004329DD /* LDEventTrackingContext.h in Headers */ = {isa = PBXBuildFile; fileRef = 83758398209CCE71004329DD /* LDEventTrackingContext.h */; };
+		8375839E209CCE71004329DD /* LDEventTrackingContext.m in Sources */ = {isa = PBXBuildFile; fileRef = 83758399209CCE71004329DD /* LDEventTrackingContext.m */; };
+		8375839F209CCE71004329DD /* LDEventTrackingContext.m in Sources */ = {isa = PBXBuildFile; fileRef = 83758399209CCE71004329DD /* LDEventTrackingContext.m */; };
+		837583A0209CCE71004329DD /* LDEventTrackingContext.m in Sources */ = {isa = PBXBuildFile; fileRef = 83758399209CCE71004329DD /* LDEventTrackingContext.m */; };
+		837583A1209CCE71004329DD /* LDEventTrackingContext.m in Sources */ = {isa = PBXBuildFile; fileRef = 83758399209CCE71004329DD /* LDEventTrackingContext.m */; };
+		837583A3209CD0A7004329DD /* LDEventTrackingContextTest.m in Sources */ = {isa = PBXBuildFile; fileRef = 837583A2209CD0A7004329DD /* LDEventTrackingContextTest.m */; };
+		837583A7209CD187004329DD /* LDEventTrackingContext+Testable.m in Sources */ = {isa = PBXBuildFile; fileRef = 837583A6209CD187004329DD /* LDEventTrackingContext+Testable.m */; };
 		83889B141F8E93A100A4EF69 /* LDEvent+Testable.m in Sources */ = {isa = PBXBuildFile; fileRef = 83889B131F8E93A100A4EF69 /* LDEvent+Testable.m */; };
 		83889B171F8F28AB00A4EF69 /* NSURLResponse+Unauthorized.h in Headers */ = {isa = PBXBuildFile; fileRef = 83889B151F8F28AB00A4EF69 /* NSURLResponse+Unauthorized.h */; };
 		83889B181F8F28AB00A4EF69 /* NSURLResponse+Unauthorized.h in Headers */ = {isa = PBXBuildFile; fileRef = 83889B151F8F28AB00A4EF69 /* NSURLResponse+Unauthorized.h */; };
@@ -463,6 +473,11 @@
 		836947791F1FF80A0047697C /* dictionaryConfigIsADictionary-KeyC-withVersion.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = "dictionaryConfigIsADictionary-KeyC-withVersion.json"; sourceTree = "<group>"; };
 		836947811F20125F0047697C /* ldClientManagerTestConfigA.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = ldClientManagerTestConfigA.json; sourceTree = "<group>"; };
 		836947821F20125F0047697C /* ldClientManagerTestConfigB.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = ldClientManagerTestConfigB.json; sourceTree = "<group>"; };
+		83758398209CCE71004329DD /* LDEventTrackingContext.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = LDEventTrackingContext.h; sourceTree = "<group>"; };
+		83758399209CCE71004329DD /* LDEventTrackingContext.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = LDEventTrackingContext.m; sourceTree = "<group>"; };
+		837583A2209CD0A7004329DD /* LDEventTrackingContextTest.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = LDEventTrackingContextTest.m; sourceTree = "<group>"; };
+		837583A5209CD187004329DD /* LDEventTrackingContext+Testable.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "LDEventTrackingContext+Testable.h"; sourceTree = "<group>"; };
+		837583A6209CD187004329DD /* LDEventTrackingContext+Testable.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "LDEventTrackingContext+Testable.m"; sourceTree = "<group>"; };
 		83889B121F8E93A100A4EF69 /* LDEvent+Testable.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "LDEvent+Testable.h"; sourceTree = "<group>"; };
 		83889B131F8E93A100A4EF69 /* LDEvent+Testable.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "LDEvent+Testable.m"; sourceTree = "<group>"; };
 		83889B151F8F28AB00A4EF69 /* NSURLResponse+Unauthorized.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "NSURLResponse+Unauthorized.h"; sourceTree = "<group>"; };
@@ -788,22 +803,13 @@
 				83F5B4741F91560300174DF7 /* LDDataManager+Testable.m */,
 				83EF678E1F99365600403126 /* LDClient+Testable.h */,
 				83EF678F1F99365600403126 /* LDClient+Testable.m */,
-				83EF678B1F98FC9200403126 /* LDFlagConfigModel+Testable.h */,
-				83EF678C1F98FC9200403126 /* LDFlagConfigModel+Testable.m */,
-				83ECCC992087EF4A0086F879 /* LDFlagConfigValue+Testable.h */,
-				83ECCC9A2087EF4A0086F879 /* LDFlagConfigValue+Testable.m */,
+				837583A4209CD0E0004329DD /* LDFlagConfig */,
 				830BF92F202A8854006DF9B1 /* NSJSONSerialization+Testable.h */,
 				830BF930202A8855006DF9B1 /* NSJSONSerialization+Testable.m */,
 				830C2AD020768697001D645D /* LDThrottler+Testable.h */,
 				830C2AD120768697001D645D /* LDThrottler+Testable.m */,
 				83B6FC29208127B2002DBA7B /* LDEventModel+Testable.h */,
 				83B6FC2A208127B2002DBA7B /* LDEventModel+Testable.m */,
-				83ECCCB020890A430086F879 /* LDFlagConfigTracker+Testable.h */,
-				83ECCCB120890A430086F879 /* LDFlagConfigTracker+Testable.m */,
-				83ECCCA12088E4E90086F879 /* LDFlagCounter+Testable.h */,
-				83ECCCA22088E4E90086F879 /* LDFlagCounter+Testable.m */,
-				83ECCC892087CA280086F879 /* LDFlagValueCounter+Testable.h */,
-				83ECCC8A2087CA280086F879 /* LDFlagValueCounter+Testable.m */,
 				83ECCCB320891E8E0086F879 /* NSInteger+Testable.h */,
 				83ECCCB420891E8E0086F879 /* NSInteger+Testable.m */,
 			);
@@ -837,6 +843,25 @@
 			name = Categories;
 			sourceTree = "<group>";
 		};
+		837583A4209CD0E0004329DD /* LDFlagConfig */ = {
+			isa = PBXGroup;
+			children = (
+				83EF678B1F98FC9200403126 /* LDFlagConfigModel+Testable.h */,
+				83EF678C1F98FC9200403126 /* LDFlagConfigModel+Testable.m */,
+				83ECCC992087EF4A0086F879 /* LDFlagConfigValue+Testable.h */,
+				83ECCC9A2087EF4A0086F879 /* LDFlagConfigValue+Testable.m */,
+				83ECCCB020890A430086F879 /* LDFlagConfigTracker+Testable.h */,
+				83ECCCB120890A430086F879 /* LDFlagConfigTracker+Testable.m */,
+				83ECCCA12088E4E90086F879 /* LDFlagCounter+Testable.h */,
+				83ECCCA22088E4E90086F879 /* LDFlagCounter+Testable.m */,
+				83ECCC892087CA280086F879 /* LDFlagValueCounter+Testable.h */,
+				83ECCC8A2087CA280086F879 /* LDFlagValueCounter+Testable.m */,
+				837583A5209CD187004329DD /* LDEventTrackingContext+Testable.h */,
+				837583A6209CD187004329DD /* LDEventTrackingContext+Testable.m */,
+			);
+			path = LDFlagConfig;
+			sourceTree = "<group>";
+		};
 		839D6D2D1FD1B6BF000BE6BD /* CarthageFrameworks */ = {
 			isa = PBXGroup;
 			children = (
@@ -861,6 +886,8 @@
 				83ECCC8D2087D67D0086F879 /* LDFlagCounter.m */,
 				83C8867B2087A786004AC82F /* LDFlagValueCounter.h */,
 				83C8867C2087A786004AC82F /* LDFlagValueCounter.m */,
+				83758398209CCE71004329DD /* LDEventTrackingContext.h */,
+				83758399209CCE71004329DD /* LDEventTrackingContext.m */,
 			);
 			path = LDFlagConfig;
 			sourceTree = "<group>";
@@ -873,6 +900,7 @@
 				83ECCCAE2088FF420086F879 /* LDFlagConfigTrackerTest.m */,
 				83ECCC972087DF040086F879 /* LDFlagCounterTest.m */,
 				83ECCC872087BF860086F879 /* LDFlagValueCounterTest.m */,
+				837583A2209CD0A7004329DD /* LDEventTrackingContextTest.m */,
 			);
 			path = LDFlagConfig;
 			sourceTree = "<group>";
@@ -908,6 +936,7 @@
 				690346F71E68990000E45133 /* LDClient.h in Headers */,
 				833D08CB1F3B97EB00BEED83 /* NSThread+MainExecutable.h in Headers */,
 				83C8867D2087A786004AC82F /* LDFlagValueCounter.h in Headers */,
+				8375839A209CCE71004329DD /* LDEventTrackingContext.h in Headers */,
 				83ECCCA62088FBA80086F879 /* LDFlagConfigTracker.h in Headers */,
 				83889B171F8F28AB00A4EF69 /* NSURLResponse+Unauthorized.h in Headers */,
 				690347071E68990000E45133 /* LDUserModel.h in Headers */,
@@ -944,6 +973,7 @@
 				69A87E9C1E74712800B88B23 /* LDClient.h in Headers */,
 				833D08CE1F3B97EB00BEED83 /* NSThread+MainExecutable.h in Headers */,
 				83C886802087A786004AC82F /* LDFlagValueCounter.h in Headers */,
+				8375839D209CCE71004329DD /* LDEventTrackingContext.h in Headers */,
 				83ECCCA92088FBA80086F879 /* LDFlagConfigTracker.h in Headers */,
 				83889B1A1F8F28AB00A4EF69 /* NSURLResponse+Unauthorized.h in Headers */,
 				69A87EAC1E74712800B88B23 /* LDUserModel.h in Headers */,
@@ -980,6 +1010,7 @@
 				69BD7E1D1E6C79910056D70F /* LDClient.h in Headers */,
 				833D08CD1F3B97EB00BEED83 /* NSThread+MainExecutable.h in Headers */,
 				83C8867F2087A786004AC82F /* LDFlagValueCounter.h in Headers */,
+				8375839C209CCE71004329DD /* LDEventTrackingContext.h in Headers */,
 				83ECCCA82088FBA80086F879 /* LDFlagConfigTracker.h in Headers */,
 				83889B191F8F28AB00A4EF69 /* NSURLResponse+Unauthorized.h in Headers */,
 				69BD7E2D1E6C79910056D70F /* LDUserModel.h in Headers */,
@@ -1016,6 +1047,7 @@
 				69F3F6A31E6BF82C00079A09 /* LDRequestManager.h in Headers */,
 				833D08CC1F3B97EB00BEED83 /* NSThread+MainExecutable.h in Headers */,
 				83C8867E2087A786004AC82F /* LDFlagValueCounter.h in Headers */,
+				8375839B209CCE71004329DD /* LDEventTrackingContext.h in Headers */,
 				83ECCCA72088FBA80086F879 /* LDFlagConfigTracker.h in Headers */,
 				83889B181F8F28AB00A4EF69 /* NSURLResponse+Unauthorized.h in Headers */,
 				69F3F69D1E6BF82C00079A09 /* LDEventModel.h in Headers */,
@@ -1461,6 +1493,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				83889B1B1F8F28AB00A4EF69 /* NSURLResponse+Unauthorized.m in Sources */,
+				8375839E209CCE71004329DD /* LDEventTrackingContext.m in Sources */,
 				8365E50C2028F39E00DE8E2B /* LDEvent+EventTypes.m in Sources */,
 				690346FE1E68990000E45133 /* LDEventModel.m in Sources */,
 				690347121E68994500E45133 /* LDDataManager.m in Sources */,
@@ -1494,6 +1527,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				837583A7209CD187004329DD /* LDEventTrackingContext+Testable.m in Sources */,
 				83ECCCAF2088FF420086F879 /* LDFlagConfigTrackerTest.m in Sources */,
 				83EF678D1F98FC9200403126 /* LDFlagConfigModel+Testable.m in Sources */,
 				8349F51E1F19352300B1F3DB /* NSDictionary+StringKey_Matchable.m in Sources */,
@@ -1511,6 +1545,7 @@
 				83EF67901F99365600403126 /* LDClient+Testable.m in Sources */,
 				83258A3D1F323049008C2133 /* LDClientManager+EventSource.m in Sources */,
 				83ECCC9B2087EF4A0086F879 /* LDFlagConfigValue+Testable.m in Sources */,
+				837583A3209CD0A7004329DD /* LDEventTrackingContextTest.m in Sources */,
 				830C2AD220768697001D645D /* LDThrottler+Testable.m in Sources */,
 				8305EC7A20222B5E002F20DB /* NSObject+LDFlagConfigValueTest.m in Sources */,
 				83BE938C201A797B00DD1ED9 /* NSJSONSerialization+Testable.m in Sources */,
@@ -1541,6 +1576,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				83889B1E1F8F28AB00A4EF69 /* NSURLResponse+Unauthorized.m in Sources */,
+				837583A1209CCE71004329DD /* LDEventTrackingContext.m in Sources */,
 				8365E50F2028F39E00DE8E2B /* LDEvent+EventTypes.m in Sources */,
 				69A87EA31E74712800B88B23 /* LDEventModel.m in Sources */,
 				69A87E9D1E74712800B88B23 /* LDClient.m in Sources */,
@@ -1575,6 +1611,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				83889B1D1F8F28AB00A4EF69 /* NSURLResponse+Unauthorized.m in Sources */,
+				837583A0209CCE71004329DD /* LDEventTrackingContext.m in Sources */,
 				8365E50E2028F39E00DE8E2B /* LDEvent+EventTypes.m in Sources */,
 				69BD7E241E6C79910056D70F /* LDEventModel.m in Sources */,
 				69BD7E1E1E6C79910056D70F /* LDClient.m in Sources */,
@@ -1609,6 +1646,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				83889B1C1F8F28AB00A4EF69 /* NSURLResponse+Unauthorized.m in Sources */,
+				8375839F209CCE71004329DD /* LDEventTrackingContext.m in Sources */,
 				8365E50D2028F39E00DE8E2B /* LDEvent+EventTypes.m in Sources */,
 				69F3F69E1E6BF82C00079A09 /* LDEventModel.m in Sources */,
 				69F3F6981E6BF82C00079A09 /* LDClient.m in Sources */,
