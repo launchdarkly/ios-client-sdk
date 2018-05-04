@@ -9,6 +9,10 @@
 #import "NSDate+ReferencedDate.h"
 
 @implementation NSDate (ReferencedDate)
++(NSDate*)dateFromMillisSince1970:(NSInteger)millis {
+    return [NSDate dateWithTimeIntervalSince1970:millis / 1000];
+}
+
 -(NSInteger)millisSince1970 {
     return [@(floor([self timeIntervalSince1970] * 1000)) integerValue];
 }
