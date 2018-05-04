@@ -7,6 +7,9 @@
 //
 
 #import <XCTest/XCTest.h>
+#import "LDEventTrackingContext.h"
+#import "LDEventTrackingContext+Testable.h"
+#import "NSDate+ReferencedDate.h"
 
 @interface LDEventTrackingContextTest : XCTestCase
 
@@ -24,9 +27,37 @@
     [super tearDown];
 }
 
-- (void)testExample {
-    // This is an example of a functional test case.
-    // Use XCTAssert and related functions to verify your tests produce the correct results.
+-(void)testContextAndInitWithObject {
+    NSDate *debugEventsUntilDate = [[NSDate date] dateByAddingTimeInterval:30.0];
+    for (NSNumber *boolObject in @[@NO, @YES]) {
+        BOOL trackEvents = [boolObject boolValue];
+        NSDictionary *contextDictionary = @{kLDEventTrackingContextKeyTrackEvents: boolObject, kLDEventTrackingContextKeyDebugEventsUntilDate: @([debugEventsUntilDate millisSince1970])};
+
+        LDEventTrackingContext *eventTrackingContext = [LDEventTrackingContext contextWithObject:contextDictionary];
+
+        XCTAssertEqual(eventTrackingContext.trackEvents, trackEvents);
+        XCTAssertTrue([eventTrackingContext.debugEventsUntilDate isWithinTimeInterval:1.0 ofDate:debugEventsUntilDate]);
+
+        //without the debugEventsUntilDate
+        contextDictionary = @{kLDEventTrackingContextKeyTrackEvents: boolObject};
+
+        eventTrackingContext = [LDEventTrackingContext contextWithObject:contextDictionary];
+
+        XCTAssertEqual(eventTrackingContext.trackEvents, trackEvents);
+        XCTAssertNil(eventTrackingContext.debugEventsUntilDate);
+    }
+
+    LDEventTrackingContext *eventTrackingContext = [LDEventTrackingContext contextWithObject:nil];
+    XCTAssertNil(eventTrackingContext);
+
+    eventTrackingContext = [LDEventTrackingContext contextWithObject:@{}];
+    XCTAssertNil(eventTrackingContext);
+
+    eventTrackingContext = [LDEventTrackingContext contextWithObject:@{kLDEventTrackingContextKeyDebugEventsUntilDate: @([debugEventsUntilDate millisSince1970])}];
+    XCTAssertNil(eventTrackingContext);
+
+    eventTrackingContext = [LDEventTrackingContext contextWithObject:@(3)];
+    XCTAssertNil(eventTrackingContext);
 }
 
 @end

@@ -8,6 +8,9 @@
 
 #import "LDEventTrackingContext.h"
 
+extern NSString * const kLDEventTrackingContextKeyTrackEvents;
+extern NSString * const kLDEventTrackingContextKeyDebugEventsUntilDate;
+
 @interface LDEventTrackingContext(Testable)
 +(instancetype)contextWithTrackEvents:(BOOL)trackEvents debugEventsUntilDate:(NSDate*)debugEventsUntilDate;
 -(instancetype)initWithTrackEvents:(BOOL)trackEvents debugEventsUntilDate:(NSDate*)debugEventsUntilDate;

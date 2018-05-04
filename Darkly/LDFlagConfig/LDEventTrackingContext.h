@@ -17,4 +17,5 @@
 -(nonnull NSDictionary*)dictionaryValue;
 -(void)encodeWithCoder:(nonnull NSKeyedArchiver*)coder;
 -(nullable instancetype)initWithCoder:(nonnull NSKeyedUnarchiver*)coder;
+-(nonnull NSString*)description;
 @end
