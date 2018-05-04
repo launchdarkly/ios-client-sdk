@@ -27,37 +27,51 @@
     [super tearDown];
 }
 
--(void)testContextAndInitWithObject {
+-(void)testContextAndInitWithObjectAndDictionaryValue {
     NSDate *debugEventsUntilDate = [[NSDate date] dateByAddingTimeInterval:30.0];
     for (NSNumber *boolObject in @[@NO, @YES]) {
         BOOL trackEvents = [boolObject boolValue];
-        NSDictionary *contextDictionary = @{kLDEventTrackingContextKeyTrackEvents: boolObject, kLDEventTrackingContextKeyDebugEventsUntilDate: @([debugEventsUntilDate millisSince1970])};
+        LDEventTrackingContext *originalContext = [LDEventTrackingContext contextWithTrackEvents:trackEvents debugEventsUntilDate:debugEventsUntilDate];
+        NSDictionary *contextDictionary = [originalContext dictionaryValue];
 
-        LDEventTrackingContext *eventTrackingContext = [LDEventTrackingContext contextWithObject:contextDictionary];
+        LDEventTrackingContext *restoredContext = [LDEventTrackingContext contextWithObject:contextDictionary];
 
-        XCTAssertEqual(eventTrackingContext.trackEvents, trackEvents);
-        XCTAssertTrue([eventTrackingContext.debugEventsUntilDate isWithinTimeInterval:1.0 ofDate:debugEventsUntilDate]);
+        XCTAssertEqualObjects(restoredContext, originalContext);
 
         //without the debugEventsUntilDate
-        contextDictionary = @{kLDEventTrackingContextKeyTrackEvents: boolObject};
+        originalContext = [LDEventTrackingContext contextWithTrackEvents:trackEvents debugEventsUntilDate:nil];
+        contextDictionary = [originalContext dictionaryValue];
 
-        eventTrackingContext = [LDEventTrackingContext contextWithObject:contextDictionary];
+        restoredContext = [LDEventTrackingContext contextWithObject:contextDictionary];
 
-        XCTAssertEqual(eventTrackingContext.trackEvents, trackEvents);
-        XCTAssertNil(eventTrackingContext.debugEventsUntilDate);
+        XCTAssertEqualObjects(restoredContext, originalContext);
     }
 
-    LDEventTrackingContext *eventTrackingContext = [LDEventTrackingContext contextWithObject:nil];
-    XCTAssertNil(eventTrackingContext);
+    LDEventTrackingContext *trackingContext = [LDEventTrackingContext contextWithObject:nil];
+    XCTAssertNil(trackingContext);
 
-    eventTrackingContext = [LDEventTrackingContext contextWithObject:@{}];
-    XCTAssertNil(eventTrackingContext);
+    trackingContext = [LDEventTrackingContext contextWithObject:@{}];
+    XCTAssertNil(trackingContext);
 
-    eventTrackingContext = [LDEventTrackingContext contextWithObject:@{kLDEventTrackingContextKeyDebugEventsUntilDate: @([debugEventsUntilDate millisSince1970])}];
-    XCTAssertNil(eventTrackingContext);
+    trackingContext = [LDEventTrackingContext contextWithObject:@{kLDEventTrackingContextKeyDebugEventsUntilDate: @([debugEventsUntilDate millisSince1970])}];
+    XCTAssertNil(trackingContext);
 
-    eventTrackingContext = [LDEventTrackingContext contextWithObject:@(3)];
-    XCTAssertNil(eventTrackingContext);
+    trackingContext = [LDEventTrackingContext contextWithObject:@(3)];
+    XCTAssertNil(trackingContext);
+}
+
+-(void)testEncodeAndDecodeWithCoder {
+    NSDate *debugEventsUntilDate = [[NSDate date] dateByAddingTimeInterval:30.0];
+    for (NSNumber *boolObject in @[@NO, @YES]) {
+        BOOL trackEvents = [boolObject boolValue];
+        LDEventTrackingContext *originalContext = [LDEventTrackingContext contextWithTrackEvents:trackEvents debugEventsUntilDate:debugEventsUntilDate];
+
+        NSData *encodedContext = [NSKeyedArchiver archivedDataWithRootObject:originalContext];
+        XCTAssertNotNil(encodedContext);
+
+        LDEventTrackingContext *restoredContext = [NSKeyedUnarchiver unarchiveObjectWithData:encodedContext];
+        XCTAssertEqualObjects(restoredContext, originalContext);
+    }
 }
 
 @end

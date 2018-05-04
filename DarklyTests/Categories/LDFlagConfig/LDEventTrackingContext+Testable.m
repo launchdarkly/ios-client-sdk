@@ -7,6 +7,7 @@
 //
 
 #import "LDEventTrackingContext+Testable.h"
+#import "NSDate+ReferencedDate.h"
 
 @implementation LDEventTrackingContext(Testable)
 +(instancetype)contextWithTrackEvents:(BOOL)trackEvents debugEventsUntilDate:(NSDate*)debugEventsUntilDate {
@@ -24,7 +25,7 @@
 
 -(BOOL)isEqualToContext:(LDEventTrackingContext*)otherContext {
     return self.trackEvents == otherContext.trackEvents
-    && ((!self.debugEventsUntilDate && !otherContext.debugEventsUntilDate) || ([self.debugEventsUntilDate isEqualToDate:otherContext.debugEventsUntilDate]));
+        && ((!self.debugEventsUntilDate && !otherContext.debugEventsUntilDate) || ([self.debugEventsUntilDate isWithinTimeInterval:1.0 ofDate:otherContext.debugEventsUntilDate]));
 }
 
 -(BOOL)isEqual:(id)other {

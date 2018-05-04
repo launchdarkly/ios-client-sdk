@@ -32,15 +32,26 @@ NSString * const kLDEventTrackingContextKeyDebugEventsUntilDate = @"debugEventsU
 }
 
 -(NSDictionary*)dictionaryValue {
-    return @{};
+    NSMutableDictionary *dictionary = [NSMutableDictionary dictionaryWithCapacity:2];
+    dictionary[kLDEventTrackingContextKeyTrackEvents] = @(self.trackEvents);
+    if (self.debugEventsUntilDate) {
+        dictionary[kLDEventTrackingContextKeyDebugEventsUntilDate] = @([self.debugEventsUntilDate millisSince1970]);
+    }
+    return [NSDictionary dictionaryWithDictionary:dictionary];
 }
 
--(void)encodeWithCoder:(NSKeyedArchiver*)coder {
-
+-(void)encodeWithCoder:(NSCoder*)encoder {
+    [encoder encodeBool:self.trackEvents forKey:kLDEventTrackingContextKeyTrackEvents];
+    [encoder encodeObject:self.debugEventsUntilDate forKey:kLDEventTrackingContextKeyDebugEventsUntilDate];
 }
 
--(instancetype)initWithCoder:(NSKeyedUnarchiver*)coder {
-    return nil;
+-(instancetype)initWithCoder:(NSCoder*)decoder {
+    if (!(self = [super init])) { return nil; }
+
+    self.trackEvents = [decoder decodeBoolForKey:kLDEventTrackingContextKeyTrackEvents];
+    self.debugEventsUntilDate = [decoder decodeObjectForKey:kLDEventTrackingContextKeyDebugEventsUntilDate];
+
+    return self;
 }
 
 -(NSString*)description {

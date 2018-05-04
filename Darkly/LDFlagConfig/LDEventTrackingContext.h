@@ -8,14 +8,14 @@
 
 #import <Foundation/Foundation.h>
 
-@interface LDEventTrackingContext : NSObject
+@interface LDEventTrackingContext : NSObject<NSCoding>
 @property (nonatomic, assign) BOOL trackEvents;
 @property (nullable, nonatomic, strong) NSDate *debugEventsUntilDate;
 
 +(nullable instancetype)contextWithObject:(nullable id)object;
 -(nullable instancetype)initWithObject:(nullable id)object;
 -(nonnull NSDictionary*)dictionaryValue;
--(void)encodeWithCoder:(nonnull NSKeyedArchiver*)coder;
--(nullable instancetype)initWithCoder:(nonnull NSKeyedUnarchiver*)coder;
+-(void)encodeWithCoder:(nonnull NSCoder*)aCoder;
+-(nullable instancetype)initWithCoder:(nonnull NSCoder*)aDecoder;
 -(nonnull NSString*)description;
 @end
