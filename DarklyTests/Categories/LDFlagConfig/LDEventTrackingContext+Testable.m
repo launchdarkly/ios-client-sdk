@@ -10,19 +10,28 @@
 
 @implementation LDEventTrackingContext(Testable)
 +(instancetype)contextWithTrackEvents:(BOOL)trackEvents debugEventsUntilDate:(NSDate*)debugEventsUntilDate {
-    return nil;
+    return [[LDEventTrackingContext alloc] initWithTrackEvents:trackEvents debugEventsUntilDate:debugEventsUntilDate];
 }
 
 -(instancetype)initWithTrackEvents:(BOOL)trackEvents debugEventsUntilDate:(NSDate*)debugEventsUntilDate {
-    return nil;
+    if (!(self = [super init])) { return nil; }
+
+    self.trackEvents = trackEvents;
+    self.debugEventsUntilDate = debugEventsUntilDate;
+
+    return self;
 }
 
 -(BOOL)isEqualToContext:(LDEventTrackingContext*)otherContext {
-    return NO;
+    return self.trackEvents == otherContext.trackEvents
+    && ((!self.debugEventsUntilDate && !otherContext.debugEventsUntilDate) || ([self.debugEventsUntilDate isEqualToDate:otherContext.debugEventsUntilDate]));
 }
 
 -(BOOL)isEqual:(id)other {
-    return NO;
+    if (!other) { return NO; }
+    if (![other isKindOfClass:[LDEventTrackingContext class]]) { return NO; }
+    if (self == other) { return YES; }
+    return [self isEqualToContext:other];
 }
 
 @end
