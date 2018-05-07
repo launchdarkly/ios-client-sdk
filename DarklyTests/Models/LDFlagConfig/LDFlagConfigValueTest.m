@@ -27,126 +27,29 @@
     [super tearDown];
 }
 
--(void)testInitializer_boolValue_withVersion {
-    LDFlagConfigValue *subject = [LDFlagConfigValue flagConfigValueFromJsonFileNamed:@"boolConfigIsABool-true-withVersion" flagKey:@"isABool"];
+-(void)testInitAndConstructor {
+    for (NSString *flagKey in [LDFlagConfigValue flagKeys]) {
+        for (NSString *fixtureFileName in [LDFlagConfigValue fixtureFileNamesForFlagKey:flagKey includeVersion:YES]) {
+            NSDictionary *flagConfigValueDictionary = [NSJSONSerialization jsonObjectFromFileNamed:fixtureFileName];
+            LDFlagConfigValue *flagConfigValue = [LDFlagConfigValue flagConfigValueWithObject:flagConfigValueDictionary[flagKey]];
 
-    XCTAssertTrue([(NSNumber*)subject.value boolValue]);
-    XCTAssertEqual(subject.version, 4);
-    XCTAssertEqual(subject.variation, subject.version);   //TODO: When adding server support for variation, use that value instead of the version
-}
+            XCTAssertTrue([flagConfigValue hasPropertiesMatchingDictionary:flagConfigValueDictionary[flagKey]]);
+        }
+        for (NSString *fixtureFileName in [LDFlagConfigValue fixtureFileNamesForFlagKey:flagKey includeVersion:NO]) {
+            NSDictionary *flagConfigValueDictionary = [NSJSONSerialization jsonObjectFromFileNamed:fixtureFileName];
+            LDFlagConfigValue *flagConfigValue = [LDFlagConfigValue flagConfigValueWithObject:flagConfigValueDictionary[flagKey]];
 
--(void)testInitializer_boolValue_withoutVersion {
-    LDFlagConfigValue *subject = [LDFlagConfigValue flagConfigValueFromJsonFileNamed:@"boolConfigIsABool-true-withoutVersion" flagKey:@"isABool"];
-
-    XCTAssertTrue([subject.value boolValue]);
-    XCTAssertEqual(subject.version, kLDFlagConfigVersionDoesNotExist);
-    XCTAssertEqual(subject.variation, kLDFlagConfigVariationDoesNotExist);
-}
-
--(void)testInitializer_numberValue_withVersion {
-    LDFlagConfigValue *subject = [LDFlagConfigValue flagConfigValueFromJsonFileNamed:@"numberConfigIsANumber-2-withVersion" flagKey:@"isANumber"];
-
-    XCTAssertEqual([(NSNumber*)subject.value integerValue], 2);
-    XCTAssertEqual(subject.version, 4);
-    XCTAssertEqual(subject.variation, subject.version);   //TODO: When adding server support for variation, use that value instead of the version
-}
-
--(void)testInitializer_numberValue_withoutVersion {
-    LDFlagConfigValue *subject = [LDFlagConfigValue flagConfigValueFromJsonFileNamed:@"numberConfigIsANumber-2-withoutVersion" flagKey:@"isANumber"];
-
-    XCTAssertEqual([(NSNumber*)subject.value integerValue], 2);
-    XCTAssertEqual(subject.version, kLDFlagConfigVersionDoesNotExist);
-    XCTAssertEqual(subject.variation, kLDFlagConfigVariationDoesNotExist);
-}
-
--(void)testInitializer_doubleValue_withVersion {
-    LDFlagConfigValue *subject = [LDFlagConfigValue flagConfigValueFromJsonFileNamed:@"doubleConfigIsADouble-Pi-withVersion" flagKey:@"isADouble"];
-
-    XCTAssertEqual([(NSNumber*)subject.value doubleValue], M_PI);
-    XCTAssertEqual(subject.version, 3);
-    XCTAssertEqual(subject.variation, subject.version);   //TODO: When adding server support for variation, use that value instead of the version
-}
-
--(void)testInitializer_doubleValue_withoutVersion {
-    LDFlagConfigValue *subject = [LDFlagConfigValue flagConfigValueFromJsonFileNamed:@"doubleConfigIsADouble-Pi-withoutVersion" flagKey:@"isADouble"];
-
-    XCTAssertEqual([(NSNumber*)subject.value doubleValue], M_PI);
-    XCTAssertEqual(subject.version, kLDFlagConfigVersionDoesNotExist);
-    XCTAssertEqual(subject.variation, kLDFlagConfigVariationDoesNotExist);
-}
-
--(void)testInitializer_stringValue_withVersion {
-    LDFlagConfigValue *subject = [LDFlagConfigValue flagConfigValueFromJsonFileNamed:@"stringConfigIsAString-someString-withVersion" flagKey:@"isAString"];
-
-    XCTAssertTrue([subject.value isEqualToString:@"someString"]);
-    XCTAssertEqual(subject.version, 3);
-    XCTAssertEqual(subject.variation, subject.version);   //TODO: When adding server support for variation, use that value instead of the version
-}
-
--(void)testInitializer_stringValue_withoutVersion {
-    LDFlagConfigValue *subject = [LDFlagConfigValue flagConfigValueFromJsonFileNamed:@"stringConfigIsAString-someString-withoutVersion" flagKey:@"isAString"];
-
-    XCTAssertTrue([subject.value isEqualToString:@"someString"]);
-    XCTAssertEqual(subject.version, kLDFlagConfigVersionDoesNotExist);
-    XCTAssertEqual(subject.variation, kLDFlagConfigVariationDoesNotExist);
-}
-
--(void)testInitializer_arrayValue_withVersion {
-    LDFlagConfigValue *subject = [LDFlagConfigValue flagConfigValueFromJsonFileNamed:@"arrayConfigIsAnArray-123-withVersion" flagKey:@"isAnArray"];
-
-    NSArray *targetArray = @[@(1), @(2), @(3)];
-    XCTAssertTrue([subject.value isEqualToArray:targetArray]);
-    XCTAssertEqual(subject.version, 5);
-    XCTAssertEqual(subject.variation, subject.version);   //TODO: When adding server support for variation, use that value instead of the version
-}
-
--(void)testInitializer_arrayValue_withoutVersion {
-    LDFlagConfigValue *subject = [LDFlagConfigValue flagConfigValueFromJsonFileNamed:@"arrayConfigIsAnArray-123-withoutVersion" flagKey:@"isAnArray"];
-
-    NSArray *targetArray = @[@(1), @(2), @(3)];
-    XCTAssertTrue([subject.value isEqualToArray:targetArray]);
-    XCTAssertEqual(subject.version, kLDFlagConfigVersionDoesNotExist);
-    XCTAssertEqual(subject.variation, kLDFlagConfigVariationDoesNotExist);
-}
-
--(void)testInitializer_dictionaryValue_withVersion {
-    LDFlagConfigValue *subject = [LDFlagConfigValue flagConfigValueFromJsonFileNamed:@"dictionaryConfigIsADictionary-3Key-withVersion" flagKey:@"isADictionary"];
-
-    NSDictionary *targetDictionary = @{@"keyA": @(true), @"keyB": @[@(1), @(2), @(3)], @"keyC": @{@"keyD": @"someStringValue"}};
-    XCTAssertTrue([subject.value isEqualToDictionary:targetDictionary]);
-    XCTAssertEqual(subject.version, 4);
-    XCTAssertEqual(subject.variation, subject.version);   //TODO: When adding server support for variation, use that value instead of the version
-}
-
--(void)testInitializer_dictionaryValue_withoutVersion {
-    LDFlagConfigValue *subject = [LDFlagConfigValue flagConfigValueFromJsonFileNamed:@"dictionaryConfigIsADictionary-3Key-withoutVersion" flagKey:@"isADictionary"];
-
-    NSDictionary *targetDictionary = @{@"keyA": @(true), @"keyB": @[@(1), @(2), @(3)], @"keyC": @{@"keyD": @"someStringValue"}};
-    XCTAssertTrue([subject.value isEqualToDictionary:targetDictionary]);
-    XCTAssertEqual(subject.version, kLDFlagConfigVersionDoesNotExist);
-    XCTAssertEqual(subject.variation, kLDFlagConfigVariationDoesNotExist);
+            XCTAssertTrue([flagConfigValue.value isEqual:flagConfigValueDictionary[flagKey]]);
+            XCTAssertEqual(flagConfigValue.variation, kLDFlagConfigVariationDoesNotExist);
+            XCTAssertEqual(flagConfigValue.version, kLDFlagConfigVersionDoesNotExist);
+        }
+    }
 }
 
 -(void)testInitializer_ObjectIsNil {
     LDFlagConfigValue *subject = [LDFlagConfigValue flagConfigValueWithObject:nil];
 
     XCTAssertNil(subject);
-}
-
--(void)testInitializer_nullValue_withVersion {
-    LDFlagConfigValue *subject = [LDFlagConfigValue flagConfigValueFromJsonFileNamed:@"nullConfigIsANull-null-withVersion" flagKey:@"isANull"];
-
-    XCTAssertTrue([subject.value isEqual:[NSNull null]]);
-    XCTAssertEqual(subject.version, 2);
-    XCTAssertEqual(subject.variation, subject.version);   //TODO: When adding server support for variation, use that value instead of the version
-}
-
--(void)testInitializer_nullValue_withoutVersion {
-    LDFlagConfigValue *subject = [LDFlagConfigValue flagConfigValueFromJsonFileNamed:@"nullConfigIsANull-null-withoutVersion" flagKey:@"isANull"];
-
-    XCTAssertTrue([subject.value isEqual:[NSNull null]]);
-    XCTAssertEqual(subject.version, kLDFlagConfigVersionDoesNotExist);
-    XCTAssertEqual(subject.variation, kLDFlagConfigVariationDoesNotExist);
 }
 
 -(void)testEncodeAndDecode_withVersion {

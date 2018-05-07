@@ -31,44 +31,50 @@ NSString * const kLDFlagKeyIsANull = @"isANull";
 
 +(NSArray<LDFlagConfigValue*>*)stubFlagConfigValuesForFlagKey:(NSString*)flagKey withVersions:(BOOL)withVersions {
     NSMutableArray<LDFlagConfigValue*> *flagConfigValueStubs = [NSMutableArray array];
-    if ([flagKey isEqualToString:kLDFlagKeyIsABool]) {
-        [flagConfigValueStubs addObject:[LDFlagConfigValue flagConfigValueFromJsonFileNamed:@"boolConfigIsABool-false-withVersion" flagKey:flagKey]];
-        [flagConfigValueStubs addObject:[LDFlagConfigValue flagConfigValueFromJsonFileNamed:@"boolConfigIsABool-true-withVersion" flagKey:flagKey]];
-    }
-    if ([flagKey isEqualToString:kLDFlagKeyIsANumber]) {
-        [flagConfigValueStubs addObject:[LDFlagConfigValue flagConfigValueFromJsonFileNamed:@"numberConfigIsANumber-1-withVersion" flagKey:flagKey]];
-        [flagConfigValueStubs addObject:[LDFlagConfigValue flagConfigValueFromJsonFileNamed:@"numberConfigIsANumber-2-withVersion" flagKey:flagKey]];
-    }
-    if ([flagKey isEqualToString:kLDFlagKeyIsADouble]) {
-        [flagConfigValueStubs addObject:[LDFlagConfigValue flagConfigValueFromJsonFileNamed:@"doubleConfigIsADouble-Pi-withVersion" flagKey:flagKey]];
-        [flagConfigValueStubs addObject:[LDFlagConfigValue flagConfigValueFromJsonFileNamed:@"doubleConfigIsADouble-e-withVersion" flagKey:flagKey]];
-    }
-    if ([flagKey isEqualToString:kLDFlagKeyIsAString]) {
-        [flagConfigValueStubs addObject:[LDFlagConfigValue flagConfigValueFromJsonFileNamed:@"stringConfigIsAString-someString-withVersion" flagKey:flagKey]];
-        [flagConfigValueStubs addObject:[LDFlagConfigValue flagConfigValueFromJsonFileNamed:@"stringConfigIsAString-someStringA-withVersion" flagKey:flagKey]];
-    }
-    if ([flagKey isEqualToString:kLDFlagKeyIsAnArray]) {
-        [flagConfigValueStubs addObject:[LDFlagConfigValue flagConfigValueFromJsonFileNamed:@"arrayConfigIsAnArray-Empty-withVersion" flagKey:flagKey]];
-        [flagConfigValueStubs addObject:[LDFlagConfigValue flagConfigValueFromJsonFileNamed:@"arrayConfigIsAnArray-1-withVersion" flagKey:flagKey]];
-        [flagConfigValueStubs addObject:[LDFlagConfigValue flagConfigValueFromJsonFileNamed:@"arrayConfigIsAnArray-123-withVersion" flagKey:flagKey]];
-    }
-    if ([flagKey isEqualToString:kLDFlagKeyIsADictionary]) {
-        [flagConfigValueStubs addObject:[LDFlagConfigValue flagConfigValueFromJsonFileNamed:@"dictionaryConfigIsADictionary-Empty-withVersion" flagKey:flagKey]];
-        [flagConfigValueStubs addObject:[LDFlagConfigValue flagConfigValueFromJsonFileNamed:@"dictionaryConfigIsADictionary-3Key-withVersion" flagKey:flagKey]];
-        [flagConfigValueStubs addObject:[LDFlagConfigValue flagConfigValueFromJsonFileNamed:@"dictionaryConfigIsADictionary-KeyA-withVersion" flagKey:flagKey]];
-    }
-    if ([flagKey isEqualToString:kLDFlagKeyIsANull]) {
-        [flagConfigValueStubs addObject:[LDFlagConfigValue flagConfigValueFromJsonFileNamed:@"nullConfigIsANull-null-withVersion" flagKey:flagKey]];
-    }
 
-    if (!withVersions) {
-        for (LDFlagConfigValue* flagConfigValueStub in flagConfigValueStubs) {
-            flagConfigValueStub.version = kLDFlagConfigVersionDoesNotExist;
-            flagConfigValueStub.variation = kLDFlagConfigVariationDoesNotExist;
-        }
+    for (NSString *fixtureName in [LDFlagConfigValue fixtureFileNamesForFlagKey:flagKey includeVersion:withVersions]) {
+        [flagConfigValueStubs addObject:[LDFlagConfigValue flagConfigValueFromJsonFileNamed:fixtureName flagKey:flagKey]];
     }
     
     return [NSArray arrayWithArray:flagConfigValueStubs];
+}
+
++(NSArray<NSString*>*)fixtureFileNamesForFlagKey:(NSString*)flagKey includeVersion:(BOOL)includeVersion {
+    if ([flagKey isEqualToString:kLDFlagKeyIsABool]) {
+        return includeVersion ? @[@"boolConfigIsABool-false-withVersion", @"boolConfigIsABool-true-withVersion"]
+            : @[@"boolConfigIsABool-false-withoutVersion", @"boolConfigIsABool-true-withoutVersion"];
+    }
+    if ([flagKey isEqualToString:kLDFlagKeyIsANumber]) {
+        return includeVersion ? @[@"numberConfigIsANumber-1-withVersion", @"numberConfigIsANumber-2-withVersion"] :
+            @[@"numberConfigIsANumber-1-withoutVersion", @"numberConfigIsANumber-2-withoutVersion"];
+    }
+    if ([flagKey isEqualToString:kLDFlagKeyIsADouble]) {
+        return includeVersion ? @[@"doubleConfigIsADouble-Pi-withVersion", @"doubleConfigIsADouble-e-withVersion"] :
+            @[@"doubleConfigIsADouble-Pi-withoutVersion", @"doubleConfigIsADouble-e-withoutVersion"];
+    }
+    if ([flagKey isEqualToString:kLDFlagKeyIsAString]) {
+        return includeVersion ? @[@"stringConfigIsAString-someString-withVersion", @"stringConfigIsAString-someStringA-withVersion"] :
+            @[@"stringConfigIsAString-someString-withoutVersion", @"stringConfigIsAString-someStringA-withoutVersion"];
+    }
+    if ([flagKey isEqualToString:kLDFlagKeyIsAnArray]) {
+        return includeVersion ? @[@"arrayConfigIsAnArray-Empty-withVersion", @"arrayConfigIsAnArray-1-withVersion", @"arrayConfigIsAnArray-123-withVersion"] :
+            @[@"arrayConfigIsAnArray-Empty-withoutVersion", @"arrayConfigIsAnArray-1-withoutVersion", @"arrayConfigIsAnArray-123-withoutVersion"];
+    }
+    if ([flagKey isEqualToString:kLDFlagKeyIsADictionary]) {
+        return includeVersion ? @[@"dictionaryConfigIsADictionary-Empty-withVersion",
+                                  @"dictionaryConfigIsADictionary-3Key-withVersion",
+                                  @"dictionaryConfigIsADictionary-KeyA-withVersion"]
+                                :
+                                  @[@"dictionaryConfigIsADictionary-Empty-withoutVersion",
+                                  @"dictionaryConfigIsADictionary-3Key-withoutVersion",
+                                  @"dictionaryConfigIsADictionary-KeyA-withoutVersion"];
+    }
+    if ([flagKey isEqualToString:kLDFlagKeyIsANull]) {
+        return includeVersion ? @[@"nullConfigIsANull-null-withVersion"] :
+            @[@"nullConfigIsANull-null-withoutVersion"];
+    }
+
+    return @[];
 }
 
 +(id)defaultValueForFlagKey:(NSString*)flagKey {
