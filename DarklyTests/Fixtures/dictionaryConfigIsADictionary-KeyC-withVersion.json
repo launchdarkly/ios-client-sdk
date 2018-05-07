@@ -5,6 +5,7 @@
                 "keyD": "someStringValue"
             }
         },
+        "variation": 5,
         "version": 5
     }
 }

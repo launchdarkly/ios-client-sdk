@@ -483,6 +483,7 @@ extern NSString *const kLDFlagConfigModelKeyKey;
     NSMutableDictionary *sameDictionary = [NSMutableDictionary dictionaryWithDictionary:[NSJSONSerialization jsonObjectFromFileNamed:@"featureFlags-withVersions"]];
     for (NSString* key in [sameDictionary.allKeys copy]) {
         NSMutableDictionary *flagConfigValueDictionary = [NSMutableDictionary dictionaryWithDictionary:sameDictionary[key]];
+        [flagConfigValueDictionary removeObjectForKey:kLDFlagConfigValueKeyVariation];
         [flagConfigValueDictionary removeObjectForKey:kLDFlagConfigValueKeyVersion];
         sameDictionary[key] = flagConfigValueDictionary;
     }

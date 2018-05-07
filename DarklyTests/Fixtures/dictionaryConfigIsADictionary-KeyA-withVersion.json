@@ -3,6 +3,7 @@
         "value": {
             "keyA": true
         },
+        "variation": 5,
         "version": 5
     }
 }

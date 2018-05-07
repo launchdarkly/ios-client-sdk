@@ -1,6 +1,7 @@
 {
     "isABool": {
         "value": false,
+        "variation": 3,
         "version": 3
     }
 }

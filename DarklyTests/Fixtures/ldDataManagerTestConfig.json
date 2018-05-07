@@ -1,10 +1,12 @@
 {
     "iosuser": {
         "value": false,
+        "variation": 2,
         "version": 2
     },
     "ipaduser": {
         "value": true,
+        "variation": 2,
         "version": 2
     }
 }

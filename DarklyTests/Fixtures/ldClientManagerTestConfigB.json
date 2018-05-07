@@ -1,32 +1,39 @@
 {
     "ddeefe": {
         "value": false,
+        "variation": 3,
         "version": 3
     },
     "main-slider": {
         "value": false,
+        "variation": 3,
         "version": 3
     },
     "new-feature": {
         "value": true,
+        "variation": 4,
         "version": 4
     },
     "new-gallery": {
         "value": {
             "foo": 2
         },
+        "variation": 3,
         "version": 3
     },
     "one-click-checkout": {
         "value": false,
+        "variation": 3,
         "version": 3
     },
     "shopping-cart": {
         "value": 20,
+        "variation": 3,
         "version": 3
     },
     "social-icon-toggle": {
         "value": false,
+        "variation": 3,
         "version": 3
     }
 }

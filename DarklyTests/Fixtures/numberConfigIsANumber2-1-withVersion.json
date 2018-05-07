@@ -1,6 +1,7 @@
 {
     "isANumber2": {
         "value": 1,
+        "variation": 3,
         "version": 3
     }
 }
