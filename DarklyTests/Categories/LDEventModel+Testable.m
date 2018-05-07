@@ -13,6 +13,8 @@
 #import "LDUserModel+Testable.h"
 #import "NSInteger+Testable.h"
 #import "LDFlagConfigTracker+Testable.h"
+#import "LDEventTrackingContext.h"
+#import "LDEventTrackingContext+Testable.h"
 
 extern NSString * const kEventModelKindFeature;
 extern NSString * const kEventModelKindCustom;
@@ -82,7 +84,9 @@ const double featureEventDefaultValueStub = 2.71828;
     }
     BOOL inlineUser = config ? config.inlineUserInEvents : false;
     if ([eventKind isEqualToString:kEventModelKindFeature]) {
-        LDFlagConfigValue *flagConfigValue = [LDFlagConfigValue flagConfigValueFromJsonFileNamed:@"doubleConfigIsADouble-Pi-withVersion" flagKey:kLDFlagKeyIsADouble];
+        LDFlagConfigValue *flagConfigValue = [LDFlagConfigValue flagConfigValueFromJsonFileNamed:@"doubleConfigIsADouble-Pi-withVersion"
+                                                                                         flagKey:kLDFlagKeyIsADouble
+                                                                            eventTrackingContext:[LDEventTrackingContext stub]];
         return [LDEventModel featureEventWithFlagKey:kFeatureEventKeyStub
                                      flagConfigValue:flagConfigValue
                                     defaultFlagValue:@(featureEventDefaultValueStub)
@@ -99,7 +103,9 @@ const double featureEventDefaultValueStub = 2.71828;
         return [LDEventModel summaryEventWithTracker:[LDFlagConfigTracker stubTracker]];
     }
     if ([eventKind isEqualToString:kEventModelKindDebug]) {
-        LDFlagConfigValue *flagConfigValue = [LDFlagConfigValue flagConfigValueFromJsonFileNamed:@"doubleConfigIsADouble-Pi-withVersion" flagKey:kLDFlagKeyIsADouble];
+        LDFlagConfigValue *flagConfigValue = [LDFlagConfigValue flagConfigValueFromJsonFileNamed:@"doubleConfigIsADouble-Pi-withVersion"
+                                                                                         flagKey:kLDFlagKeyIsADouble
+                                                                            eventTrackingContext:[LDEventTrackingContext stub]];
         return [LDEventModel debugEventWithFlagKey:kDebugEventKeyStub flagConfigValue:flagConfigValue defaultFlagValue:@(featureEventDefaultValueStub) user:user];
     }
 

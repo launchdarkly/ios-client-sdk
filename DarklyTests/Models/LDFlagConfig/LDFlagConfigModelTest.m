@@ -7,6 +7,8 @@
 #import "LDFlagConfigModel+Testable.h"
 #import "LDFlagConfigValue.h"
 #import "LDFlagConfigValue+Testable.h"
+#import "LDEventTrackingContext.h"
+#import "LDEventTrackingContext+Testable.h"
 #import "NSJSONSerialization+Testable.h"
 #import "NSDictionary+Testable.h"
 #import "NSDate+ReferencedDate.h"
@@ -190,7 +192,7 @@ extern NSString *const kLDFlagConfigModelKeyKey;
 - (void)testAddOrReplaceFromDictionaryWhenKeyDoesntExist {
     LDFlagConfigModel *config = [LDFlagConfigModel flagConfigFromJsonFileNamed:@"ldFlagConfigModelTest"];
     NSDictionary *patch = [NSJSONSerialization jsonObjectFromFileNamed:@"ldFlagConfigModelPatchNewFlag"];
-    LDFlagConfigValue *flagConfigValue = [LDFlagConfigValue flagConfigValueFromJsonFileNamed:@"ldFlagConfigModelPatchNewFlag" flagKey:nil];
+    LDFlagConfigValue *flagConfigValue = [LDFlagConfigValue flagConfigValueFromJsonFileNamed:@"ldFlagConfigModelPatchNewFlag" flagKey:nil eventTrackingContext:nil];
     NSString *patchedFlagKey = patch[kLDFlagConfigModelKeyKey];
 
     [config addOrReplaceFromDictionary:patch];
@@ -202,7 +204,7 @@ extern NSString *const kLDFlagConfigModelKeyKey;
 - (void)testAddOrReplaceFromDictionaryWhenKeyExistsWithPreviousVersion {
     LDFlagConfigModel *config = [LDFlagConfigModel flagConfigFromJsonFileNamed:@"ldFlagConfigModelTest"];
     NSDictionary *patch = [NSJSONSerialization jsonObjectFromFileNamed:@"ldFlagConfigModelPatchVersion1Flag"];
-    LDFlagConfigValue *flagConfigValue = [LDFlagConfigValue flagConfigValueFromJsonFileNamed:@"ldFlagConfigModelPatchVersion1Flag" flagKey:nil];
+    LDFlagConfigValue *flagConfigValue = [LDFlagConfigValue flagConfigValueFromJsonFileNamed:@"ldFlagConfigModelPatchVersion1Flag" flagKey:nil eventTrackingContext:nil];
     NSString *patchedFlagKey = patch[kLDFlagConfigModelKeyKey];
 
     [config addOrReplaceFromDictionary:patch];
@@ -214,7 +216,7 @@ extern NSString *const kLDFlagConfigModelKeyKey;
 - (void)testAddOrReplaceFromDictionaryWhenPatchValueIsNull {
     LDFlagConfigModel *config = [LDFlagConfigModel flagConfigFromJsonFileNamed:@"ldFlagConfigModelTest"];
     NSDictionary *patch = [NSJSONSerialization jsonObjectFromFileNamed:@"ldFlagConfigModelPatchVersion2FlagWithNull"];
-    LDFlagConfigValue *flagConfigValue = [LDFlagConfigValue flagConfigValueFromJsonFileNamed:@"ldFlagConfigModelPatchVersion2FlagWithNull" flagKey:nil];
+    LDFlagConfigValue *flagConfigValue = [LDFlagConfigValue flagConfigValueFromJsonFileNamed:@"ldFlagConfigModelPatchVersion2FlagWithNull" flagKey:nil eventTrackingContext:nil];
     NSString *patchedFlagKey = patch[kLDFlagConfigModelKeyKey];
 
     [config addOrReplaceFromDictionary:patch];

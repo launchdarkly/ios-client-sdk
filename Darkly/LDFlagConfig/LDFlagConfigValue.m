@@ -8,12 +8,14 @@
 
 #import <Foundation/Foundation.h>
 #import "LDFlagConfigValue.h"
+#import "LDEventTrackingContext.h"
 #import "NSObject+LDFlagConfigValue.h"
 #import "LDUtil.h"
 
 NSString * const kLDFlagConfigValueKeyValue = @"value";
 NSString * const kLDFlagConfigValueKeyVersion = @"version";
 NSString * const kLDFlagConfigValueKeyVariation = @"variation";
+NSString * const kLDFlagConfigValueKeyEventTrackingContext = @"eventTrackingContext";
 
 NSInteger const kLDFlagConfigVersionDoesNotExist = -1;
 NSInteger const kLDFlagConfigVariationDoesNotExist = -1;
@@ -32,6 +34,7 @@ NSInteger const kLDFlagConfigVariationDoesNotExist = -1;
         self.value = valueAndVersionDictionary[kLDFlagConfigValueKeyValue] ?: [NSNull null];
         self.version = [valueAndVersionDictionary[kLDFlagConfigValueKeyVersion] integerValue];
         self.variation = valueAndVersionDictionary[kLDFlagConfigValueKeyVariation] ? [valueAndVersionDictionary[kLDFlagConfigValueKeyVariation] integerValue] : kLDFlagConfigVariationDoesNotExist;
+        self.eventTrackingContext = [LDEventTrackingContext contextWithObject:object];
     } else {
         self.value = object ?: [NSNull null];
         self.version = kLDFlagConfigVersionDoesNotExist;
@@ -45,6 +48,7 @@ NSInteger const kLDFlagConfigVariationDoesNotExist = -1;
     [encoder encodeObject:self.value forKey:kLDFlagConfigValueKeyValue];
     [encoder encodeInteger:self.version forKey:kLDFlagConfigValueKeyVersion];
     [encoder encodeInteger:self.variation forKey:kLDFlagConfigValueKeyVariation];
+    [encoder encodeObject:self.eventTrackingContext forKey:kLDFlagConfigValueKeyEventTrackingContext];
 }
 
 -(id)initWithCoder:(NSCoder *)decoder {
@@ -53,18 +57,22 @@ NSInteger const kLDFlagConfigVariationDoesNotExist = -1;
     self.value = [decoder decodeObjectForKey:kLDFlagConfigValueKeyValue];
     self.version = [decoder decodeIntegerForKey:kLDFlagConfigValueKeyVersion];
     self.variation = [decoder decodeIntegerForKey:kLDFlagConfigValueKeyVariation];
+    self.eventTrackingContext = [decoder decodeObjectForKey:kLDFlagConfigValueKeyEventTrackingContext];
 
     return self;
 }
 
 -(NSDictionary*)dictionaryValue {
-    NSMutableDictionary *dictionaryValue = [NSMutableDictionary dictionaryWithCapacity:3];
+    NSMutableDictionary *dictionaryValue = [NSMutableDictionary dictionaryWithCapacity:5];
     dictionaryValue[kLDFlagConfigValueKeyValue] = self.value ?: [NSNull null];
     if (self.version != kLDFlagConfigVersionDoesNotExist) {
         dictionaryValue[kLDFlagConfigValueKeyVersion] = @(self.version);
     }
     if (self.variation != kLDFlagConfigVariationDoesNotExist) {
         dictionaryValue[kLDFlagConfigValueKeyVariation] = @(self.variation);
+    }
+    if (self.eventTrackingContext) {
+        [dictionaryValue addEntriesFromDictionary:[self.eventTrackingContext dictionaryValue]];
     }
     return dictionaryValue;
 }
@@ -79,7 +87,7 @@ NSInteger const kLDFlagConfigVariationDoesNotExist = -1;
 -(BOOL)isEqual:(id)object {
     if (!object || ![object isKindOfClass:[LDFlagConfigValue class]]) { return NO; }
     LDFlagConfigValue *other = object;
-    
+
     return [self isEqualToFlagConfigValue:other];
 }
 

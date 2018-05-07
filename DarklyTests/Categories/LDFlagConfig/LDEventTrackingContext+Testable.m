@@ -10,6 +10,10 @@
 #import "NSDate+ReferencedDate.h"
 
 @implementation LDEventTrackingContext(Testable)
++(instancetype)stub {
+    return [LDEventTrackingContext contextWithTrackEvents:YES debugEventsUntilDate:[NSDate dateWithTimeIntervalSinceNow:30.0]];
+}
+
 +(instancetype)contextWithTrackEvents:(BOOL)trackEvents debugEventsUntilDate:(NSDate*)debugEventsUntilDate {
     return [[LDEventTrackingContext alloc] initWithTrackEvents:trackEvents debugEventsUntilDate:debugEventsUntilDate];
 }
@@ -35,4 +39,38 @@
     return [self isEqualToContext:other];
 }
 
+-(BOOL)hasPropertiesMatchingDictionary:(NSDictionary*)dictionary {
+    NSMutableArray<NSString*> *mismatchedProperties = [NSMutableArray array];
+
+    if (self.trackEvents) {
+        if (!dictionary[kLDEventTrackingContextKeyTrackEvents] || (dictionary[kLDEventTrackingContextKeyTrackEvents] && ![dictionary[kLDEventTrackingContextKeyTrackEvents] boolValue])) {
+            [mismatchedProperties addObject:kLDEventTrackingContextKeyTrackEvents];
+        }
+    } else {
+        if (dictionary[kLDEventTrackingContextKeyTrackEvents] && [dictionary[kLDEventTrackingContextKeyTrackEvents] boolValue]) {
+            [mismatchedProperties addObject:kLDEventTrackingContextKeyTrackEvents];
+        }
+    }
+
+    if (self.debugEventsUntilDate) {
+        if (dictionary[kLDEventTrackingContextKeyDebugEventsUntilDate]) {
+            NSDate *otherDebugUntil = [NSDate dateFromMillisSince1970:[dictionary[kLDEventTrackingContextKeyDebugEventsUntilDate] integerValue]];
+            if (![self.debugEventsUntilDate isWithinTimeInterval:1.0 ofDate:otherDebugUntil]) {
+                [mismatchedProperties addObject:kLDEventTrackingContextKeyDebugEventsUntilDate];
+            }
+        } else {
+            [mismatchedProperties addObject:kLDEventTrackingContextKeyDebugEventsUntilDate];
+        }
+    } else {
+        if (dictionary[kLDEventTrackingContextKeyDebugEventsUntilDate]) {
+            [mismatchedProperties addObject:kLDEventTrackingContextKeyDebugEventsUntilDate];
+        }
+    }
+
+    if (mismatchedProperties.count > 0) {
+        NSLog(@"[%@ %@] unequal fields %@", NSStringFromClass([self class]), NSStringFromSelector(_cmd), [mismatchedProperties componentsJoinedByString:@", "]);
+        return NO;
+    }
+    return YES;
+}
 @end

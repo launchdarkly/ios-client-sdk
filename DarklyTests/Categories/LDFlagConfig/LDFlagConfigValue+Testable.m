@@ -9,6 +9,7 @@
 #import "LDFlagConfigValue+Testable.h"
 #import "NSJSONSerialization+Testable.h"
 #import "LDEventTrackingContext.h"
+#import "LDEventTrackingContext+Testable.h"
 
 NSString * const kLDFlagKeyIsABool = @"isABool";
 NSString * const kLDFlagKeyIsANumber = @"isANumber";
@@ -19,21 +20,37 @@ NSString * const kLDFlagKeyIsADictionary = @"isADictionary";
 NSString * const kLDFlagKeyIsANull = @"isANull";
 
 @implementation LDFlagConfigValue(Testable)
-+(instancetype)flagConfigValueFromJsonFileNamed:(NSString*)fileName flagKey:(NSString*)flagKey {
-    id flagConfigStub = [NSJSONSerialization jsonObjectFromFileNamed:fileName];
-    LDFlagConfigValue *flagConfigValue = flagKey.length > 0 ? [LDFlagConfigValue flagConfigValueWithObject:flagConfigStub[flagKey]] : [LDFlagConfigValue flagConfigValueWithObject:flagConfigStub];
++(NSDictionary*)flagConfigJsonObjectFromFileNamed:(NSString*)fileName flagKey:(NSString*)flagKey eventTrackingContext:(LDEventTrackingContext*)eventTrackingContext {
+    NSMutableDictionary *flagConfigStub = [NSMutableDictionary dictionaryWithDictionary:[NSJSONSerialization jsonObjectFromFileNamed:fileName]];
+    if (eventTrackingContext) {
+        if (flagKey.length > 0) {
+            NSMutableDictionary *flagConfigObject = [NSMutableDictionary dictionaryWithDictionary:flagConfigStub[flagKey]];
+            [flagConfigObject addEntriesFromDictionary:[eventTrackingContext dictionaryValue]];
+            flagConfigStub[flagKey] = [flagConfigObject copy];
+        } else {
+            [flagConfigStub addEntriesFromDictionary:[eventTrackingContext dictionaryValue]];
+        }
+    }
+
+    return [flagConfigStub copy];
+}
+
++(instancetype)flagConfigValueFromJsonFileNamed:(NSString*)fileName flagKey:(NSString*)flagKey eventTrackingContext:(LDEventTrackingContext*)eventTrackingContext {
+    id flagConfigStub = [LDFlagConfigValue flagConfigJsonObjectFromFileNamed:fileName flagKey:flagKey eventTrackingContext:eventTrackingContext];
+    LDFlagConfigValue *flagConfigValue = flagKey.length > 0 ? [LDFlagConfigValue flagConfigValueWithObject:flagConfigStub[flagKey]]
+        : [LDFlagConfigValue flagConfigValueWithObject:flagConfigStub];
     return flagConfigValue;
 }
 
 +(NSArray<LDFlagConfigValue*>*)stubFlagConfigValuesForFlagKey:(NSString*)flagKey {
-    return [LDFlagConfigValue stubFlagConfigValuesForFlagKey:flagKey withVersions:YES];
+    return [LDFlagConfigValue stubFlagConfigValuesForFlagKey:flagKey withVersions:YES eventTrackingContext:[LDEventTrackingContext stub]];
 }
 
-+(NSArray<LDFlagConfigValue*>*)stubFlagConfigValuesForFlagKey:(NSString*)flagKey withVersions:(BOOL)withVersions {
++(NSArray<LDFlagConfigValue*>*)stubFlagConfigValuesForFlagKey:(NSString*)flagKey withVersions:(BOOL)withVersions eventTrackingContext:(LDEventTrackingContext*)eventTrackingContext {
     NSMutableArray<LDFlagConfigValue*> *flagConfigValueStubs = [NSMutableArray array];
 
     for (NSString *fixtureName in [LDFlagConfigValue fixtureFileNamesForFlagKey:flagKey includeVersion:withVersions]) {
-        [flagConfigValueStubs addObject:[LDFlagConfigValue flagConfigValueFromJsonFileNamed:fixtureName flagKey:flagKey]];
+        [flagConfigValueStubs addObject:[LDFlagConfigValue flagConfigValueFromJsonFileNamed:fixtureName flagKey:flagKey eventTrackingContext:eventTrackingContext]];
     }
     
     return [NSArray arrayWithArray:flagConfigValueStubs];
@@ -134,7 +151,7 @@ NSString * const kLDFlagKeyIsANull = @"isANull";
 +(NSDictionary<NSString*, NSArray<LDFlagConfigValue*>*>*)flagConfigValues {
     NSMutableDictionary *flagConfigValues = [NSMutableDictionary dictionaryWithCapacity:[[LDFlagConfigValue flagKeys] count]];
     for (NSString *flagKey in [LDFlagConfigValue flagKeys]) {
-        flagConfigValues[flagKey] = [LDFlagConfigValue stubFlagConfigValuesForFlagKey:flagKey withVersions:YES];
+        flagConfigValues[flagKey] = [LDFlagConfigValue stubFlagConfigValuesForFlagKey:flagKey];
     }
     return [flagConfigValues copy];
 }

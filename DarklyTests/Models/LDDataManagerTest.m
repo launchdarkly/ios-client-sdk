@@ -13,6 +13,8 @@
 #import "LDEventModel+Testable.h"
 #import "LDFlagConfigValue.h"
 #import "LDFlagConfigValue+Testable.h"
+#import "LDEventTrackingContext.h"
+#import "LDEventTrackingContext+Testable.h"
 #import "LDClient.h"
 #import "OCMock.h"
 #import "NSArray+UnitTests.h"
@@ -204,7 +206,9 @@ NSString * const kMobileKeyMock = @"LDDataManagerTest.mobileKeyMock";
     [manager createCustomEventWithKey:@"aKey" customData: @{@"carrot": @"cake"} user:self.user config:config];
     [manager createCustomEventWithKey:@"aKey" customData: @{@"carrot": @"cake"} user:self.user config:config];
     [manager createCustomEventWithKey:@"aKey" customData: @{@"carrot": @"cake"} user:self.user config:config];
-    LDFlagConfigValue *flagConfigValue = [LDFlagConfigValue flagConfigValueFromJsonFileNamed:@"boolConfigIsABool-true-withVersion" flagKey:kLDFlagKeyIsABool];
+    LDFlagConfigValue *flagConfigValue = [LDFlagConfigValue flagConfigValueFromJsonFileNamed:@"boolConfigIsABool-true-withVersion"
+                                                                                     flagKey:kLDFlagKeyIsABool
+                                                                        eventTrackingContext:[LDEventTrackingContext stub]];
     [manager createFeatureEventWithFlagKey: @"anotherKey" flagConfigValue:flagConfigValue defaultFlagValue:@(NO) user:self.user config:config];
     
     [manager allEventDictionaries:^(NSArray *array) {

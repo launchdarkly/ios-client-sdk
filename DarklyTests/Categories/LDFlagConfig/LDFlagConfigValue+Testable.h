@@ -10,6 +10,7 @@
 #import "LDFlagConfigValue.h"
 
 extern const NSInteger kLDFlagConfigVariationDoesNotExist;
+extern NSString * const kLDFlagConfigValueKeyEventTrackingContext;
 
 extern NSString * const kLDFlagKeyIsABool;
 extern NSString * const kLDFlagKeyIsANumber;
@@ -24,8 +25,9 @@ extern NSString * const kLDFlagConfigValueKeyVersion;
 extern NSString * const kLDFlagConfigValueKeyVariation;
 
 @interface LDFlagConfigValue(Testable)
-+(instancetype)flagConfigValueFromJsonFileNamed:(NSString*)fileName flagKey:(NSString*)flagKey;
-+(NSArray<LDFlagConfigValue*>*)stubFlagConfigValuesForFlagKey:(NSString*)flagKey withVersions:(BOOL)withVersions;
++(NSDictionary*)flagConfigJsonObjectFromFileNamed:(NSString*)fileName flagKey:(NSString*)flagKey eventTrackingContext:(LDEventTrackingContext*)eventTrackingContext;
++(instancetype)flagConfigValueFromJsonFileNamed:(NSString*)fileName flagKey:(NSString*)flagKey eventTrackingContext:(LDEventTrackingContext*)eventTrackingContext;
++(NSArray<LDFlagConfigValue*>*)stubFlagConfigValuesForFlagKey:(NSString*)flagKey withVersions:(BOOL)withVersions eventTrackingContext:(LDEventTrackingContext*)eventTrackingContext;
 +(NSArray<LDFlagConfigValue*>*)stubFlagConfigValuesForFlagKey:(NSString*)flagKey;
 +(NSArray<NSString*>*)fixtureFileNamesForFlagKey:(NSString*)flagKey includeVersion:(BOOL)includeVersion;
 +(id)defaultValueForFlagKey:(NSString*)flagKey;
