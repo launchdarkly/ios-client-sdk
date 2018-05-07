@@ -30,6 +30,7 @@ extern NSInteger const kLDFlagConfigVariationDoesNotExist;
 -(nullable id)initWithCoder:(nonnull NSCoder*)decoder;
 -(nonnull NSDictionary*)dictionaryValue;
 
+-(BOOL)isEqualToFlagConfigValue:(nullable LDFlagConfigValue*)other;
 -(BOOL)isEqual:(nullable id)object;
 -(BOOL)hasPropertiesMatchingDictionary:(nullable NSDictionary*)dictionary;
 

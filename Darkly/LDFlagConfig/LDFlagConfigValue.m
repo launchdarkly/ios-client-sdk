@@ -69,11 +69,22 @@ NSInteger const kLDFlagConfigVariationDoesNotExist = -1;
     return dictionaryValue;
 }
 
+-(BOOL)isEqualToFlagConfigValue:(LDFlagConfigValue*)other {
+    if (!other) { return NO; }
+    if (self == other) { return YES; }
+
+    return [self.value isEqual:other.value] && self.version == other.version && self.variation == other.variation;
+}
+
 -(BOOL)isEqual:(id)object {
     if (!object || ![object isKindOfClass:[LDFlagConfigValue class]]) { return NO; }
     LDFlagConfigValue *other = object;
+    
+    return [self isEqualToFlagConfigValue:other];
+}
 
-    return [self.value isEqual:other.value] && self.version == other.version && self.variation == other.variation;
+-(NSUInteger)hash {
+    return [self.value hash] ^ labs(self.version) ^ labs(self.variation);
 }
 
 -(BOOL)hasPropertiesMatchingDictionary:(NSDictionary*)dictionary {
@@ -89,23 +100,23 @@ NSInteger const kLDFlagConfigVariationDoesNotExist = -1;
         }
     }
 
-    if (self.version == kLDFlagConfigVersionDoesNotExist) {
-        if (dictionary[kLDFlagConfigValueKeyVersion]) {
-            [mismatchedProperties addObject:kLDFlagConfigValueKeyVersion];
-        }
-    } else {
-        if (self.version != [dictionary[kLDFlagConfigValueKeyVersion] integerValue]) {
-            [mismatchedProperties addObject:kLDFlagConfigValueKeyVersion];
-        }
-    }
-
     if (self.variation == kLDFlagConfigVariationDoesNotExist) {
         if (dictionary[kLDFlagConfigValueKeyVariation]) {
             [mismatchedProperties addObject:kLDFlagConfigValueKeyVariation];
         }
     } else {
-        if (self.variation != [dictionary[kLDFlagConfigValueKeyVariation] integerValue]) {
+        if (!dictionary[kLDFlagConfigValueKeyVariation] || self.variation != [dictionary[kLDFlagConfigValueKeyVariation] integerValue]) {
             [mismatchedProperties addObject:kLDFlagConfigValueKeyVariation];
+        }
+    }
+
+    if (self.version == kLDFlagConfigVersionDoesNotExist) {
+        if (dictionary[kLDFlagConfigValueKeyVersion]) {
+            [mismatchedProperties addObject:kLDFlagConfigValueKeyVersion];
+        }
+    } else {
+        if (!dictionary[kLDFlagConfigValueKeyVersion] || self.version != [dictionary[kLDFlagConfigValueKeyVersion] integerValue]) {
+            [mismatchedProperties addObject:kLDFlagConfigValueKeyVersion];
         }
     }
 
