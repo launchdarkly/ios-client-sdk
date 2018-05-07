@@ -29,4 +29,6 @@ extern NSString * const kLDFlagConfigValueKeyVariation;
 +(NSArray<LDFlagConfigValue*>*)stubFlagConfigValuesForFlagKey:(NSString*)flagKey;
 +(id)defaultValueForFlagKey:(NSString*)flagKey;
 +(NSArray<NSString*>*)flagKeys;
++(NSDictionary<NSString*, NSArray<LDFlagConfigValue*>*>*)flagConfigValues;
+-(NSDictionary*)dictionaryValueIncludeContext:(BOOL)includeContext;
 @end

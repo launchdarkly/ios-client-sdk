@@ -8,6 +8,7 @@
 
 #import "LDFlagConfigValue+Testable.h"
 #import "NSJSONSerialization+Testable.h"
+#import "LDEventTrackingContext.h"
 
 NSString * const kLDFlagKeyIsABool = @"isABool";
 NSString * const kLDFlagKeyIsANumber = @"isANumber";
@@ -124,4 +125,20 @@ NSString * const kLDFlagKeyIsANull = @"isANull";
     return @[kLDFlagKeyIsABool, kLDFlagKeyIsANumber, kLDFlagKeyIsADouble, kLDFlagKeyIsAString, kLDFlagKeyIsAnArray, kLDFlagKeyIsADictionary, kLDFlagKeyIsANull];
 }
 
++(NSDictionary<NSString*, NSArray<LDFlagConfigValue*>*>*)flagConfigValues {
+    NSMutableDictionary *flagConfigValues = [NSMutableDictionary dictionaryWithCapacity:[[LDFlagConfigValue flagKeys] count]];
+    for (NSString *flagKey in [LDFlagConfigValue flagKeys]) {
+        flagConfigValues[flagKey] = [LDFlagConfigValue stubFlagConfigValuesForFlagKey:flagKey withVersions:YES];
+    }
+    return [flagConfigValues copy];
+}
+
+-(NSDictionary*)dictionaryValueIncludeContext:(BOOL)includeContext {
+    NSMutableDictionary *dictionaryValue = [NSMutableDictionary dictionaryWithDictionary:[self dictionaryValue]];
+    if (includeContext) {
+        [dictionaryValue addEntriesFromDictionary:[self.eventTrackingContext dictionaryValue]];
+    }
+
+    return [dictionaryValue copy];
+}
 @end

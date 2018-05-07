@@ -8,6 +8,8 @@
 
 #import <Foundation/Foundation.h>
 
+@class LDEventTrackingContext;
+
 extern NSString * _Nonnull const kLDFlagConfigValueKeyValue;
 extern NSString * _Nonnull const kLDFlagConfigValueKeyVersion;
 extern NSString * _Nonnull const kLDFlagConfigValueKeyVariation;
@@ -16,9 +18,10 @@ extern NSInteger const kLDFlagConfigVersionDoesNotExist;
 extern NSInteger const kLDFlagConfigVariationDoesNotExist;
 
 @interface LDFlagConfigValue: NSObject
-@property (nonatomic, strong, nullable) id value;
+@property (nullable, nonatomic, strong) id value;
 @property (nonatomic, assign) NSInteger version;
 @property (nonatomic, assign) NSInteger variation;
+@property (nullable, nonatomic, strong) LDEventTrackingContext *eventTrackingContext;
 
 +(nullable instancetype)flagConfigValueWithObject:(nullable id)object;
 -(nullable instancetype)initWithObject:(nullable id)object;
