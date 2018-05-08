@@ -6,24 +6,25 @@
 
 @protocol RequestManagerDelegate <NSObject>
 
-- (void)processedEvents:(BOOL)success jsonEventArray:(NSArray *)jsonEventArray;
-- (void)processedConfig:(BOOL)success jsonConfigDictionary:(NSDictionary *)jsonConfigDictionary;
+-(void)processedEvents:(BOOL)success jsonEventArray:(nonnull NSArray*)jsonEventArray responseDate:(nullable NSDate*)responseDate;
+-(void)processedConfig:(BOOL)success jsonConfigDictionary:(nonnull NSDictionary*)jsonConfigDictionary;
 
 @end
 
+extern NSString * _Nonnull const kHeaderMobileKey;
+
 @interface LDRequestManager : NSObject
 
-extern NSString * const kHeaderMobileKey;
-@property (nonatomic) NSString* mobileKey;
-@property (nonatomic) NSString* baseUrl;
-@property (nonatomic) NSString* eventsUrl;
-@property (nonatomic) NSTimeInterval connectionTimeout;
-@property (nonatomic, weak) id <RequestManagerDelegate> delegate;
+@property (nonnull, nonatomic, copy) NSString* mobileKey;
+@property (nonnull, nonatomic, copy) NSString* baseUrl;
+@property (nonnull, nonatomic, copy) NSString* eventsUrl;
+@property (nonatomic, assign) NSTimeInterval connectionTimeout;
+@property (nullable, nonatomic, weak) id <RequestManagerDelegate> delegate;
 
-+(LDRequestManager *)sharedInstance;
++(nonnull LDRequestManager*)sharedInstance;
 
--(void)performFeatureFlagRequest:(LDUserModel *)user;
+-(void)performFeatureFlagRequest:(nullable LDUserModel*)user;
 
--(void)performEventRequest:(NSArray *)eventDictionaries;
+-(void)performEventRequest:(nullable NSArray*)eventDictionaries;
 
 @end

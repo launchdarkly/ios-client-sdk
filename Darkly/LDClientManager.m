@@ -355,7 +355,7 @@ NSString * const kLDClientManagerStreamMethod = @"meval";
     [self syncWithServerForEvents];
 }
 
-- (void)processedEvents:(BOOL)success jsonEventArray:(NSArray *)jsonEventArray {
+- (void)processedEvents:(BOOL)success jsonEventArray:(NSArray *)jsonEventArray responseDate:(NSDate*)responseDate {
     // If Success
     if (success) {
         DEBUG_LOGX(@"ClientManager processedEvents method called after receiving successful response from server");

@@ -413,7 +413,7 @@ NSString *const kBoolFlagKey = @"isABawler";
                                                      inlineUser:config.inlineUserInEvents];
 
     LDClientManager *clientManager = [LDClientManager sharedInstance];
-    [clientManager processedEvents:YES jsonEventArray:@[[event dictionaryValueUsingConfig:config]]];
+    [clientManager processedEvents:YES jsonEventArray:@[[event dictionaryValueUsingConfig:config]] responseDate:nil];
     
     OCMVerify([dataManagerMock deleteProcessedEvents:[OCMArg any]]);
 }
@@ -421,7 +421,7 @@ NSString *const kBoolFlagKey = @"isABawler";
 - (void)testProcessedEventsSuccessWithoutProcessedEvents {
     
     LDClientManager *clientManager = [LDClientManager sharedInstance];
-    [clientManager processedEvents:YES jsonEventArray:@[]];
+    [clientManager processedEvents:YES jsonEventArray:@[] responseDate:nil];
     
     [[dataManagerMock reject] deleteProcessedEvents:[OCMArg any]];
     
@@ -431,7 +431,7 @@ NSString *const kBoolFlagKey = @"isABawler";
 - (void)testProcessedEventsFailure {
     
     LDClientManager *clientManager = [LDClientManager sharedInstance];
-    [clientManager processedEvents:NO jsonEventArray:nil];
+    [clientManager processedEvents:NO jsonEventArray:nil responseDate:nil];
     
     [[dataManagerMock reject] deleteProcessedEvents:[OCMArg any]];
     

@@ -381,7 +381,7 @@ static const int httpStatusCodeInternalServerError = 500;
     [[NSNotificationCenter defaultCenter] removeObserver:clientUnauthorizedObserver];
 }
 
-- (void)testEventRequestMakesHttpRequestWithMobileKey {
+- (void)testEventRequestOnline {
     
     XCTestExpectation* responseArrived = [self expectationWithDescription:@"response of async request has arrived"];
     __block BOOL httpRequestAttempted = NO;

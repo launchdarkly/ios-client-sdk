@@ -185,7 +185,7 @@ dispatch_queue_t notificationQueue;
         dispatch_semaphore_signal(semaphore);
         dispatch_async(dispatch_get_main_queue(), ^{
             BOOL processedEvents = !error;
-            [self.delegate processedEvents:processedEvents jsonEventArray:eventDictionaries];
+            [self.delegate processedEvents:processedEvents jsonEventArray:eventDictionaries responseDate:nil];
         });
     }];
 
