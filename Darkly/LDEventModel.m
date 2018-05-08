@@ -288,15 +288,12 @@ NSString * const kEventModelKeyFeatures = @"features";
     if ([self.kind isEqualToString:kEventModelKindFeature] || [self.kind isEqualToString:kEventModelKindDebug]) {
         details = [NSString stringWithFormat:@"key: %@,\n\tflagConfigValue: %@,\n\tdefaultValue: %@,\n\tuser: %@,\n\tinlineUser: %@, creationDate: %ld",
                    self.key, self.flagConfigValue ?: @"<null>", self.defaultValue ?: @"<null>", self.user, self.inlineUser ? @"YES" : @"NO", (long)self.creationDate];
-    }
-    if ([self.kind isEqualToString:kEventModelKindCustom]) {
+    } else if ([self.kind isEqualToString:kEventModelKindCustom]) {
         details = [NSString stringWithFormat:@"key: %@, data: %@, user: %@, inlineUser: %@, creationDate: %ld",
                    self.key, self.data ?: @"<null>", self.user, self.inlineUser ? @"YES" : @"NO", (long)self.creationDate];
-    }
-    if ([self.kind isEqualToString:kEventModelKindIdentify]) {
+    } else if ([self.kind isEqualToString:kEventModelKindIdentify]) {
         details = [NSString stringWithFormat:@"key: %@, user: %@, inlineUser: %@, creationDate: %ld", self.key, self.user, self.inlineUser ? @"YES" : @"NO", (long)self.creationDate];
-    }
-    if ([self.kind isEqualToString:kEventModelKindFeatureSummary]) {
+    } else if ([self.kind isEqualToString:kEventModelKindFeatureSummary]) {
         details = [NSString stringWithFormat:@"startDateMillis: %ld, endDateMillis: %ld, flagRequestSummary: %@", (long)self.startDateMillis, (long)self.endDateMillis, self.flagRequestSummary];
     }
 
