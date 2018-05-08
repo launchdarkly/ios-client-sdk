@@ -10,12 +10,27 @@
 #import "LDFlagConfigValue.h"
 #import "LDFlagConfigModel+Testable.h"
 #import "LDFlagConfigTracker+Testable.h"
+#import "LDEventTrackingContext.h"
+#import "LDEventTrackingContext+Testable.h"
 #import "NSJSONSerialization+Testable.h"
 
 @implementation LDFlagConfigModel(Testable)
 
 +(instancetype)flagConfigFromJsonFileNamed:(NSString *)fileName {
-    LDFlagConfigModel *flagConfigModel = [[LDFlagConfigModel alloc] initWithDictionary:[NSJSONSerialization jsonObjectFromFileNamed:fileName]];
+    return [LDFlagConfigModel flagConfigFromJsonFileNamed:fileName eventTrackingContext:nil];
+}
+
++(instancetype)flagConfigFromJsonFileNamed:(NSString *)fileName eventTrackingContext:(LDEventTrackingContext*)eventTrackingContext {
+    NSMutableDictionary *flagConfigModelDictionary = [NSMutableDictionary dictionaryWithDictionary:[NSJSONSerialization jsonObjectFromFileNamed:fileName]];
+    if (eventTrackingContext) {
+        for (NSString *flagKey in flagConfigModelDictionary.allKeys) {
+            NSMutableDictionary *flagConfigValueDictionary = [NSMutableDictionary dictionaryWithDictionary:flagConfigModelDictionary[flagKey]];
+            [flagConfigValueDictionary addEntriesFromDictionary:[eventTrackingContext dictionaryValue]];
+            flagConfigModelDictionary[flagKey] = [flagConfigValueDictionary copy];
+        }
+    }
+
+    LDFlagConfigModel *flagConfigModel = [[LDFlagConfigModel alloc] initWithDictionary:flagConfigModelDictionary];
     return flagConfigModel;
 }
 

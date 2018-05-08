@@ -8,6 +8,8 @@
 
 #import <Darkly/Darkly.h>
 
+@class LDEventTrackingContext;
+
 extern NSString * const userModelStubIp;
 extern NSString * const userModelStubCountry;
 extern NSString * const userModelStubName;
@@ -28,11 +30,13 @@ extern NSString * const kUserAttributePrivateAttributes;
 extern NSString * const kUserAttributeDevice;
 extern NSString * const kUserAttributeOs;
 
+extern NSString * const kFlagKeyIsABawler;
+
 @interface LDUserModel (Testable)
 @property (nonatomic, strong) LDFlagConfigTracker *flagConfigTracker;
 
 +(instancetype)stubWithKey:(NSString*)key;
-+(instancetype)stubWithKey:(NSString*)key usingTracker:(LDFlagConfigTracker*)tracker;
++(instancetype)stubWithKey:(NSString*)key usingTracker:(LDFlagConfigTracker*)tracker eventTrackingContext:(LDEventTrackingContext*)eventTrackingContext;
 +(NSDictionary*)customStub;
 +(LDUserModel*)userFrom:(NSString*)jsonUser;
 /**

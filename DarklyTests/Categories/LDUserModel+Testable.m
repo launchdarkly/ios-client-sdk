@@ -10,6 +10,8 @@
 #import "LDUserModel.h"
 #import "LDFlagConfigModel.h"
 #import "LDFlagConfigModel+Testable.h"
+#import "LDEventTrackingContext.h"
+#import "LDEventTrackingContext+Testable.h"
 #import "LDFlagConfigTracker+Testable.h"
 #import "NSDictionary+StringKey_Matchable.h"
 #import "NSDateFormatter+LDUserModel.h"
@@ -26,14 +28,16 @@ NSString * const userModelStubOs = @"IOS 11.2.1";
 NSString * const userModelStubCustomKey = @"userModelStubCustomKey";
 NSString * const userModelStubCustomValue = @"userModelStubCustomValue";
 
+NSString * const kFlagKeyIsABawler = @"isABawler";
+
 @implementation LDUserModel (Testable)
 @dynamic flagConfigTracker;
 
 +(instancetype)stubWithKey:(NSString*)key {
-    return [LDUserModel stubWithKey:key usingTracker:nil];
+    return [LDUserModel stubWithKey:key usingTracker:nil eventTrackingContext:nil];
 }
 
-+(instancetype)stubWithKey:(NSString*)key usingTracker:(LDFlagConfigTracker*)tracker {
++(instancetype)stubWithKey:(NSString*)key usingTracker:(LDFlagConfigTracker*)tracker eventTrackingContext:(LDEventTrackingContext*)eventTrackingContext {
     LDUserModel *stub = [[LDUserModel alloc] init];
     stub.key = key.length ? key : [[NSUUID UUID] UUIDString];
     stub.ip = userModelStubIp;
@@ -44,7 +48,7 @@ NSString * const userModelStubCustomValue = @"userModelStubCustomValue";
     stub.email = userModelStubEmail;
     stub.avatar = userModelStubAvatar;
     stub.custom = [LDUserModel customStub];
-    stub.flagConfig = [LDFlagConfigModel flagConfigFromJsonFileNamed:@"featureFlags-excludeNulls-withVersions"];
+    stub.flagConfig = [LDFlagConfigModel flagConfigFromJsonFileNamed:@"featureFlags-withVersions" eventTrackingContext:eventTrackingContext];
     stub.flagConfigTracker = tracker ?: [LDFlagConfigTracker stubTracker];
 
     return stub;

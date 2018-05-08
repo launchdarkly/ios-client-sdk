@@ -684,7 +684,7 @@ NSString *const kBoolFlagKey = @"isABawler";
     }]]);
 
     LDUserModel *user = [[LDClient sharedInstance] ldUser];
-    LDFlagConfigModel *targetFlagConfig = [LDFlagConfigModel flagConfigFromJsonFileNamed:@"featureFlags-withVersions"];
+    LDFlagConfigModel *targetFlagConfig = [LDFlagConfigModel flagConfigFromJsonFileNamed:@"featureFlags-excludeNulls-withVersions"];
 
     self.cleanup = ^{
         [[NSNotificationCenter defaultCenter] removeObserver:notificationObserver];
@@ -696,7 +696,7 @@ NSString *const kBoolFlagKey = @"isABawler";
     XCTAssertNotNil(messageHandler);
     if (!messageHandler) { return; }
     
-    LDEvent *put = [LDEvent stubEvent:kLDEventTypePut fromJsonFileNamed:@"featureFlags-withVersions"];
+    LDEvent *put = [LDEvent stubEvent:kLDEventTypePut fromJsonFileNamed:@"featureFlags-excludeNulls-withVersions"];
 
     messageHandler(put);
 

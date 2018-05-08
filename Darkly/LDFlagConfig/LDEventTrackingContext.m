@@ -55,6 +55,6 @@ NSString * const kLDEventTrackingContextKeyDebugEventsUntilDate = @"debugEventsU
 }
 
 -(NSString*)description {
-    return [NSString stringWithFormat:@"<LDEventTrackingContext: %p, trackEvents: %@, debugEventsUntilDate: %@>", self, self.trackEvents ? @"YES" : @"NO", self.debugEventsUntilDate ?: @"<nil>"];
+    return [NSString stringWithFormat:@"<LDEventTrackingContext: %p, trackEvents: %@, debugEventsUntilDate: %@>", self, self.trackEvents ? @"YES" : @"NO", self.debugEventsUntilDate ?: @"nil"];
 }
 @end

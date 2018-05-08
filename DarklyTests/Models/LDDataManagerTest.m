@@ -44,6 +44,7 @@ NSString * const kMobileKeyMock = @"LDDataManagerTest.mobileKeyMock";
     clientMock = OCMClassMock([LDClient class]);
     OCMStub(ClassMethod([clientMock sharedInstance])).andReturn(clientMock);
     OCMStub([clientMock ldUser]).andReturn(user);
+    OCMStub([clientMock ldConfig]).andReturn(self.config);
 }
 
 - (void)tearDown {
@@ -55,7 +56,7 @@ NSString * const kMobileKeyMock = @"LDDataManagerTest.mobileKeyMock";
 
 -(void)testCreateFlagEvaluationEvents {
     id trackerMock = OCMClassMock([LDFlagConfigTracker class]);
-    self.user = [LDUserModel stubWithKey:nil usingTracker:trackerMock];
+    self.user = [LDUserModel stubWithKey:nil usingTracker:trackerMock eventTrackingContext:nil];
     for (NSString *flagKey in [LDFlagConfigValue flagKeys]) {
         NSArray<LDFlagConfigValue*> *flagConfigValues = [LDFlagConfigValue stubFlagConfigValuesForFlagKey:flagKey];
         id defaultFlagValue = [LDFlagConfigValue defaultValueForFlagKey:flagKey];
@@ -90,11 +91,10 @@ NSString * const kMobileKeyMock = @"LDDataManagerTest.mobileKeyMock";
 }
 
 -(void)testCreateSummaryEvent_noCounters {
-    LDConfig *config = [[LDConfig alloc] initWithMobileKey:@"stubMobileKey"];
     LDFlagConfigTracker *trackerStub = [LDFlagConfigTracker tracker];
     XCTestExpectation *expectation = [self expectationWithDescription:@"All events dictionary expectation"];
 
-    [[LDDataManager sharedManager] createSummaryEventWithTracker:trackerStub config:config];
+    [[LDDataManager sharedManager] createSummaryEventWithTracker:trackerStub config:self.config];
 
     [[LDDataManager sharedManager] allEventDictionaries:^(NSArray *eventDictionaries) {
         XCTAssertEqual(eventDictionaries.count, 0);
@@ -103,23 +103,73 @@ NSString * const kMobileKeyMock = @"LDDataManagerTest.mobileKeyMock";
     [self waitForExpectations:@[expectation] timeout:1];
 }
 
+-(void)testCreateFeatureEvent_trackEvents_YES {
+    LDEventTrackingContext *eventTrackingContext = [LDEventTrackingContext contextWithTrackEvents:YES debugEventsUntilDate:nil];
+    self.user = [LDUserModel stubWithKey:nil usingTracker:nil eventTrackingContext:eventTrackingContext];
+    LDFlagConfigValue *flagConfigValue = [self.user.flagConfig flagConfigValueForFlagKey:kFlagKeyIsABawler];
+    LDEventModel *featureEvent = [LDEventModel featureEventWithFlagKey:kFlagKeyIsABawler flagConfigValue:flagConfigValue defaultFlagValue:@(NO) user:self.user inlineUser:NO];
+    id eventModelMock = OCMClassMock([LDEventModel class]);
+    OCMStub(ClassMethod([eventModelMock featureEventWithFlagKey:[OCMArg any] flagConfigValue:[OCMArg any] defaultFlagValue:[OCMArg any] user:[OCMArg any] inlineUser:[OCMArg any]]))
+        .andReturn(featureEvent);
+    [[eventModelMock expect] featureEventWithFlagKey:kFlagKeyIsABawler flagConfigValue:flagConfigValue defaultFlagValue:@(NO) user:self.user inlineUser:NO];
+
+    [[LDDataManager sharedManager] createFeatureEventWithFlagKey:kFlagKeyIsABawler flagConfigValue:flagConfigValue defaultFlagValue:@(NO) user:self.user config:self.config];
+
+    [eventModelMock verify];
+    [eventModelMock stopMocking];
+}
+
+-(void)testCreateFeatureEvent_trackEvents_NO {
+    LDEventTrackingContext *eventTrackingContext = [LDEventTrackingContext contextWithTrackEvents:NO debugEventsUntilDate:nil];
+    self.user = [LDUserModel stubWithKey:nil usingTracker:nil eventTrackingContext:eventTrackingContext];
+    LDFlagConfigValue *flagConfigValue = [self.user.flagConfig flagConfigValueForFlagKey:kFlagKeyIsABawler];
+    LDEventModel *featureEvent = [LDEventModel featureEventWithFlagKey:kFlagKeyIsABawler flagConfigValue:flagConfigValue defaultFlagValue:@(NO) user:self.user inlineUser:NO];
+    id eventModelMock = OCMClassMock([LDEventModel class]);
+    OCMStub(ClassMethod([eventModelMock featureEventWithFlagKey:[OCMArg any] flagConfigValue:[OCMArg any] defaultFlagValue:[OCMArg any] user:[OCMArg any] inlineUser:[OCMArg any]]))
+    .andReturn(featureEvent);
+    [[eventModelMock reject] featureEventWithFlagKey:kFlagKeyIsABawler flagConfigValue:flagConfigValue defaultFlagValue:@(NO) user:self.user inlineUser:NO];
+
+    [[LDDataManager sharedManager] createFeatureEventWithFlagKey:kFlagKeyIsABawler flagConfigValue:flagConfigValue defaultFlagValue:@(NO) user:self.user config:self.config];
+
+    [eventModelMock verify];
+    [eventModelMock stopMocking];
+}
+
+-(void)testCreateFeatureEvent_eventTrackingContext_nil {
+    self.user = [LDUserModel stubWithKey:nil usingTracker:nil eventTrackingContext:nil];
+    LDFlagConfigValue *flagConfigValue = [self.user.flagConfig flagConfigValueForFlagKey:kFlagKeyIsABawler];
+    LDEventModel *featureEvent = [LDEventModel featureEventWithFlagKey:kFlagKeyIsABawler flagConfigValue:flagConfigValue defaultFlagValue:@(NO) user:self.user inlineUser:NO];
+    id eventModelMock = OCMClassMock([LDEventModel class]);
+    OCMStub(ClassMethod([eventModelMock featureEventWithFlagKey:[OCMArg any] flagConfigValue:[OCMArg any] defaultFlagValue:[OCMArg any] user:[OCMArg any] inlineUser:[OCMArg any]]))
+    .andReturn(featureEvent);
+    [[eventModelMock reject] featureEventWithFlagKey:kFlagKeyIsABawler flagConfigValue:flagConfigValue defaultFlagValue:@(NO) user:self.user inlineUser:NO];
+
+    [[LDDataManager sharedManager] createFeatureEventWithFlagKey:kFlagKeyIsABawler flagConfigValue:flagConfigValue defaultFlagValue:@(NO) user:self.user config:self.config];
+
+    [eventModelMock verify];
+    [eventModelMock stopMocking];
+}
+
 -(void)testAllEventsDictionaryArray {
-    LDConfig *config = [[LDConfig alloc] initWithMobileKey:@"stubMobileKey"];
-    LDEventModel *featureEvent = [LDEventModel stubEventWithKind:kEventModelKindFeature user:self.user config:config];
+    LDEventModel *featureEvent = [LDEventModel stubEventWithKind:kEventModelKindFeature user:self.user config:self.config];
     [[LDDataManager sharedManager] createFeatureEventWithFlagKey:featureEvent.key
                                                  flagConfigValue:featureEvent.flagConfigValue
                                                 defaultFlagValue:featureEvent.defaultValue
                                                             user:self.user
-                                                          config:config];
-    LDEventModel *customEvent = [LDEventModel stubEventWithKind:kEventModelKindCustom user:self.user config:config];
-    [[LDDataManager sharedManager] createCustomEventWithKey:customEvent.key customData:customEvent.data user:self.user config:config];
-    LDEventModel *identifyEvent = [LDEventModel stubEventWithKind:kEventModelKindIdentify user:self.user config:config];
-    [[LDDataManager sharedManager] createIdentifyEventWithUser:self.user config:config];
+                                                          config:self.config];
+    LDEventModel *customEvent = [LDEventModel stubEventWithKind:kEventModelKindCustom user:self.user config:self.config];
+    [[LDDataManager sharedManager] createCustomEventWithKey:customEvent.key customData:customEvent.data user:self.user config:self.config];
+    LDEventModel *identifyEvent = [LDEventModel stubEventWithKind:kEventModelKindIdentify user:self.user config:self.config];
+    [[LDDataManager sharedManager] createIdentifyEventWithUser:self.user config:self.config];
     LDFlagConfigTracker *trackerStub = [LDFlagConfigTracker stubTracker];
     LDEventModel *summaryEvent = [LDEventModel summaryEventWithTracker:trackerStub];
-    [[LDDataManager sharedManager] createSummaryEventWithTracker:trackerStub config:config];
-    LDEventModel *debugEvent = [LDEventModel stubEventWithKind:kEventModelKindDebug user:self.user config:config];
-    [[LDDataManager sharedManager] createDebugEventWithFlagKey:debugEvent.key flagConfigValue:debugEvent.flagConfigValue defaultFlagValue:debugEvent.defaultValue user:self.user config:config];
+    [[LDDataManager sharedManager] createSummaryEventWithTracker:trackerStub config:self.config];
+    LDEventModel *debugEvent = [LDEventModel stubEventWithKind:kEventModelKindDebug user:self.user config:self.config];
+    [[LDDataManager sharedManager] createDebugEventWithFlagKey:debugEvent.key
+                                               flagConfigValue:debugEvent.flagConfigValue
+                                              defaultFlagValue:debugEvent.defaultValue
+                                                          user:self.user
+                                                        config:self.config];
     NSArray<LDEventModel*> *eventStubs = @[featureEvent, customEvent, identifyEvent, summaryEvent, debugEvent];
 
     XCTestExpectation *expectation = [self expectationWithDescription:@"All events dictionary expectation"];
@@ -194,29 +244,27 @@ NSString * const kMobileKeyMock = @"LDDataManagerTest.mobileKeyMock";
 }
 
 -(void)testCreateEventAfterCapacityReached {
-    LDConfig *config = [[LDConfig alloc] initWithMobileKey:@"AMobileKey"];
-    config.capacity = [NSNumber numberWithInt:2];
+    self.config.capacity = @(2);
 
     XCTestExpectation *expectation = [self expectationWithDescription:@"All events dictionary expectation"];
-    OCMStub([clientMock ldConfig]).andReturn(config);
-    
+
     LDDataManager *manager = [LDDataManager sharedManager];
     [manager.eventsArray removeAllObjects];
     
-    [manager createCustomEventWithKey:@"aKey" customData: @{@"carrot": @"cake"} user:self.user config:config];
-    [manager createCustomEventWithKey:@"aKey" customData: @{@"carrot": @"cake"} user:self.user config:config];
-    [manager createCustomEventWithKey:@"aKey" customData: @{@"carrot": @"cake"} user:self.user config:config];
+    [manager createCustomEventWithKey:@"aKey" customData: @{@"carrot": @"cake"} user:self.user config:self.config];
+    [manager createCustomEventWithKey:@"aKey" customData: @{@"carrot": @"cake"} user:self.user config:self.config];
+    [manager createCustomEventWithKey:@"aKey" customData: @{@"carrot": @"cake"} user:self.user config:self.config];
     LDFlagConfigValue *flagConfigValue = [LDFlagConfigValue flagConfigValueFromJsonFileNamed:@"boolConfigIsABool-true-withVersion"
                                                                                      flagKey:kLDFlagKeyIsABool
                                                                         eventTrackingContext:[LDEventTrackingContext stub]];
-    [manager createFeatureEventWithFlagKey: @"anotherKey" flagConfigValue:flagConfigValue defaultFlagValue:@(NO) user:self.user config:config];
-    
+    [manager createFeatureEventWithFlagKey: @"anotherKey" flagConfigValue:flagConfigValue defaultFlagValue:@(NO) user:self.user config:self.config];
+
     [manager allEventDictionaries:^(NSArray *array) {
         XCTAssertEqual([array count],2);
         [expectation fulfill];
     }];
 
-    [self waitForExpectations:@[expectation] timeout:10];
+    [self waitForExpectations:@[expectation] timeout:1.0];
 }
 
 @end
