@@ -13,7 +13,7 @@
 
 @interface LDFlagConfigTracker : NSObject
 @property (nonatomic, assign, readonly) NSInteger startDateMillis;
-@property (nonatomic, strong, nonnull ,readonly) NSDictionary<NSString*, LDFlagCounter*> *flagCounters;
+@property (nonnull, nonatomic, strong, readonly) NSDictionary<NSString*, LDFlagCounter*> *flagCounters;
 
 +(nonnull instancetype)tracker;
 -(nonnull instancetype)init;
