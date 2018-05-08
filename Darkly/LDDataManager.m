@@ -149,6 +149,16 @@ dispatch_queue_t eventsQueue;
 
 #pragma mark - events
 
+-(void)createFlagEvaluationEventsWithFlagKey:(NSString*)flagKey
+                             flagConfigValue:(LDFlagConfigValue*)flagConfigValue
+                            defaultFlagValue:(id)defaultFlagValue
+                                        user:(LDUserModel*)user
+                                      config:(LDConfig*)config {
+    [self createFeatureEventWithFlagKey:flagKey flagConfigValue:flagConfigValue defaultFlagValue:defaultFlagValue user:user config:config];
+    [self createDebugEventWithFlagKey:flagKey flagConfigValue:flagConfigValue defaultFlagValue:defaultFlagValue user:user config:config];
+    [user.flagConfigTracker logRequestForFlagKey:flagKey flagConfigValue:flagConfigValue defaultValue:defaultFlagValue];
+}
+
 -(void)createFeatureEventWithFlagKey:(NSString*)flagKey flagConfigValue:(LDFlagConfigValue*)flagConfigValue defaultFlagValue:(id)defaultFlagValue user:(LDUserModel*)user config:(LDConfig*)config {
     if([self isAtEventCapacity:_eventsArray]) {
         DEBUG_LOG(@"Events have surpassed capacity. Discarding feature event %@", flagKey);

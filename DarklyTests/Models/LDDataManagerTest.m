@@ -6,6 +6,7 @@
 #import "LDFlagConfigModel.h"
 #import "LDDataManager.h"
 #import "LDUserModel.h"
+#import "LDUserModel+Testable.h"
 #import "LDFlagConfigModel.h"
 #import "LDFlagConfigModel+Testable.h"
 #import "LDEventModel.h"
@@ -18,12 +19,14 @@
 #import "LDDataManager+Testable.h"
 #import "LDFlagConfigTracker.h"
 #import "LDFlagConfigTracker+Testable.h"
+#import "LDConfig.h"
 
-extern NSString * const kEventModelKeyKind;
+NSString * const kMobileKeyMock = @"LDDataManagerTest.mobileKeyMock";
 
 @interface LDDataManagerTest : DarklyXCTestCase
-@property (nonatomic) id clientMock;
-@property (nonnull) LDUserModel *user;
+@property (nonatomic, strong) id clientMock;
+@property (nonatomic, strong) LDUserModel *user;
+@property (nonatomic, strong) LDConfig *config;
 
 @end
 
@@ -33,15 +36,8 @@ extern NSString * const kEventModelKeyKind;
 
 - (void)setUp {
     [super setUp];
-    user = [[LDUserModel alloc] init];
-    user.key = [[NSUUID UUID] UUIDString];
-    user.firstName = @"Bob";
-    user.lastName = @"Giffy";
-    user.email = @"bob@gmail.com";
-    user.updatedAt = [NSDate date];
-    
-    LDFlagConfigModel *flagConfig = [LDFlagConfigModel flagConfigFromJsonFileNamed:@"ldDataManagerTestConfig"];
-    user.flagConfig = flagConfig;
+    self.config = [[LDConfig alloc] initWithMobileKey:kMobileKeyMock];
+    self.user = [LDUserModel stubWithKey:nil];
 
     clientMock = OCMClassMock([LDClient class]);
     OCMStub(ClassMethod([clientMock sharedInstance])).andReturn(clientMock);
@@ -53,6 +49,42 @@ extern NSString * const kEventModelKeyKind;
     clientMock = nil;
     [[LDDataManager sharedManager] flushEventsDictionary];
     [super tearDown];
+}
+
+-(void)testCreateFlagEvaluationEvents {
+    id trackerMock = OCMClassMock([LDFlagConfigTracker class]);
+    self.user = [LDUserModel stubWithKey:nil usingTracker:trackerMock];
+    for (NSString *flagKey in [LDFlagConfigValue flagKeys]) {
+        NSArray<LDFlagConfigValue*> *flagConfigValues = [LDFlagConfigValue stubFlagConfigValuesForFlagKey:flagKey];
+        id defaultFlagValue = [LDFlagConfigValue defaultValueForFlagKey:flagKey];
+        for (LDFlagConfigValue *flagConfigValue in flagConfigValues) {
+            [[LDDataManager sharedManager] flushEventsDictionary];
+
+            XCTestExpectation *eventsExpectation = [self expectationWithDescription:@"LDDataManagerTest.testCreateFlagEvaluationEvents.allEvents"];
+            [[trackerMock expect] logRequestForFlagKey:flagKey flagConfigValue:flagConfigValue defaultValue:defaultFlagValue];
+
+            [[LDDataManager sharedManager] createFlagEvaluationEventsWithFlagKey:flagKey
+                                                                 flagConfigValue:flagConfigValue
+                                                                defaultFlagValue:defaultFlagValue
+                                                                            user:self.user
+                                                                          config:self.config];
+
+            [[LDDataManager sharedManager] allEventDictionaries:^(NSArray *eventDictionaries) {
+                XCTAssertEqual(eventDictionaries.count, 2);
+                for (NSString *eventKind in @[kEventModelKindFeature, kEventModelKindDebug]) {
+                    NSPredicate *eventPredicate = [NSPredicate predicateWithBlock:^BOOL(id  _Nullable evaluatedObject, NSDictionary<NSString *,id> * _Nullable bindings) {
+                        if (![evaluatedObject isKindOfClass:[NSDictionary class]]) { return NO; }
+                        NSDictionary *evaluatedDictionary = evaluatedObject;
+                        return [evaluatedDictionary[kEventModelKeyKind] isEqualToString:eventKind] && [evaluatedDictionary[kEventModelKeyKey] isEqualToString:flagKey];
+                    }];
+                    XCTAssertEqual([eventDictionaries filteredArrayUsingPredicate:eventPredicate].count, 1);
+                }
+                [eventsExpectation fulfill];
+            }];
+            [trackerMock verify];
+            [self waitForExpectations:@[eventsExpectation] timeout:1.0];
+        }
+    }
 }
 
 -(void)testCreateSummaryEvent_noCounters {

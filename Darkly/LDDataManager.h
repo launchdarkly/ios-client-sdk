@@ -19,6 +19,11 @@ extern int const kUserCacheSize;
 -(NSMutableDictionary*)retrieveUserDictionary;
 -(NSMutableArray*)retrieveEventsArray;
 -(LDUserModel*)findUserWithkey: (NSString *)key;
+-(void)createFlagEvaluationEventsWithFlagKey:(NSString*)flagKey
+                             flagConfigValue:(LDFlagConfigValue*)flagConfigValue
+                            defaultFlagValue:(id)defaultFlagValue
+                                        user:(LDUserModel*)user
+                                      config:(LDConfig*)config;
 -(void)createFeatureEventWithFlagKey:(NSString*)flagKey flagConfigValue:(LDFlagConfigValue*)flagConfigValue defaultFlagValue:(id)defaultFlagValue user:(LDUserModel*)user config:(LDConfig*)config;
 -(void)createCustomEventWithKey:(NSString*)eventKey customData:(NSDictionary*)customData user:(LDUserModel*)user config:(LDConfig*)config;
 -(void)createIdentifyEventWithUser:(LDUserModel*)user config:(LDConfig*)config;

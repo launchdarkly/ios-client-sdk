@@ -17,6 +17,9 @@ extern NSString * _Nonnull const kEventModelKindIdentify;
 extern NSString * _Nonnull const kEventModelKindFeatureSummary;
 extern NSString * _Nonnull const kEventModelKindDebug;
 
+extern NSString * _Nonnull const kEventModelKeyKey;
+extern NSString * _Nonnull const kEventModelKeyKind;
+
 extern NSString * _Nonnull const kFeatureEventKeyStub;
 extern NSString * _Nonnull const kCustomEventKeyStub;
 extern NSString * _Nonnull const kCustomEventCustomDataKeyStub;
