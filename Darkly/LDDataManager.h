@@ -2,8 +2,7 @@
 //  Copyright © 2015 Catamorphic Co. All rights reserved.
 //
 
-
-#import <CoreData/CoreData.h>
+#import <Foundation/Foundation.h>
 #import "LDUserModel.h"
 
 @class LDFlagConfigValue;
@@ -12,6 +11,8 @@
 extern int const kUserCacheSize;
 
 @interface LDDataManager : NSObject
+
+@property (nonatomic, strong) NSDate *lastEventResponseDate;
 
 +(LDDataManager *)sharedManager;
 

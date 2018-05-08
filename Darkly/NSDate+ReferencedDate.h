@@ -12,4 +12,6 @@
 +(NSDate*)dateFromMillisSince1970:(NSInteger)millis;
 -(NSInteger)millisSince1970;
 -(BOOL)isWithinTimeInterval:(NSTimeInterval)timeInterval ofDate:(NSDate*)otherDate;
+-(BOOL)isEarlierThan:(NSDate*)otherDate;
+-(BOOL)isLaterThan:(NSDate*)otherDate;
 @end

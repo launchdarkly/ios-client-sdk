@@ -23,4 +23,14 @@
     NSTimeInterval difference = fabs([self timeIntervalSinceDate:otherDate]);
     return difference <= timeInterval;
 }
+
+-(BOOL)isEarlierThan:(NSDate*)otherDate {
+    if (!otherDate) { return NO; }
+    return [self compare:otherDate] == NSOrderedAscending;
+}
+
+-(BOOL)isLaterThan:(NSDate*)otherDate {
+    if (!otherDate) { return NO; }
+    return [self compare:otherDate] == NSOrderedDescending;
+}
 @end
