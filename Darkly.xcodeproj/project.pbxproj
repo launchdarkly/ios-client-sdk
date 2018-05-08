@@ -277,7 +277,6 @@
 		83B8C2561FEC19500082B8A9 /* NSDateFormatter+LDUserModel.m in Sources */ = {isa = PBXBuildFile; fileRef = 83B8C24E1FEC19500082B8A9 /* NSDateFormatter+LDUserModel.m */; };
 		83B8C2581FEC4C3B0082B8A9 /* featureFlags-excludeNulls-withVersions.json in Resources */ = {isa = PBXBuildFile; fileRef = 83B8C2571FEC4C3B0082B8A9 /* featureFlags-excludeNulls-withVersions.json */; };
 		83B975D31FD1CA6000A4EF4E /* DarklyEventSource.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 83B975D21FD1CA6000A4EF4E /* DarklyEventSource.framework */; };
-		83BE9385201A63B400DD1ED9 /* ldDataManagerTestConfig.json in Resources */ = {isa = PBXBuildFile; fileRef = 83BE9384201A63B400DD1ED9 /* ldDataManagerTestConfig.json */; };
 		83BE9387201A6AA400DD1ED9 /* ldFlagConfigModelTest.json in Resources */ = {isa = PBXBuildFile; fileRef = 83BE9386201A6AA400DD1ED9 /* ldFlagConfigModelTest.json */; };
 		83BE9389201A781200DD1ED9 /* ldFlagConfigModelPatchVersion1Flag.json in Resources */ = {isa = PBXBuildFile; fileRef = 83BE9388201A781200DD1ED9 /* ldFlagConfigModelPatchVersion1Flag.json */; };
 		83BE938C201A797B00DD1ED9 /* NSJSONSerialization+Testable.m in Sources */ = {isa = PBXBuildFile; fileRef = 83BE938B201A797B00DD1ED9 /* NSJSONSerialization+Testable.m */; };
@@ -512,7 +511,6 @@
 		83B8C24E1FEC19500082B8A9 /* NSDateFormatter+LDUserModel.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "NSDateFormatter+LDUserModel.m"; sourceTree = "<group>"; };
 		83B8C2571FEC4C3B0082B8A9 /* featureFlags-excludeNulls-withVersions.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = "featureFlags-excludeNulls-withVersions.json"; sourceTree = "<group>"; };
 		83B975D21FD1CA6000A4EF4E /* DarklyEventSource.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = DarklyEventSource.framework; path = Carthage/Build/Mac/DarklyEventSource.framework; sourceTree = "<group>"; };
-		83BE9384201A63B400DD1ED9 /* ldDataManagerTestConfig.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = ldDataManagerTestConfig.json; sourceTree = "<group>"; };
 		83BE9386201A6AA400DD1ED9 /* ldFlagConfigModelTest.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = ldFlagConfigModelTest.json; sourceTree = "<group>"; };
 		83BE9388201A781200DD1ED9 /* ldFlagConfigModelPatchVersion1Flag.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = ldFlagConfigModelPatchVersion1Flag.json; sourceTree = "<group>"; };
 		83BE938A201A797B00DD1ED9 /* NSJSONSerialization+Testable.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "NSJSONSerialization+Testable.h"; sourceTree = "<group>"; };
@@ -784,7 +782,6 @@
 				8305EC8B2022440D002F20DB /* nullConfigIsANull-null-withoutVersion.json */,
 				836947811F20125F0047697C /* ldClientManagerTestConfigA.json */,
 				836947821F20125F0047697C /* ldClientManagerTestConfigB.json */,
-				83BE9384201A63B400DD1ED9 /* ldDataManagerTestConfig.json */,
 				83BE9386201A6AA400DD1ED9 /* ldFlagConfigModelTest.json */,
 				83BE9388201A781200DD1ED9 /* ldFlagConfigModelPatchVersion1Flag.json */,
 				83BE9395201A93AC00DD1ED9 /* ldFlagConfigModelPatchVersion2Flag.json */,
@@ -1286,7 +1283,6 @@
 				83B62E1020A0A78A00F2E656 /* arrayConfigIsAnArray-1-withoutVersion.json in Resources */,
 				83B62E0A20A0A33C00F2E656 /* doubleConfigIsADouble-e-withoutVersion.json in Resources */,
 				83B62E0C20A0A6E700F2E656 /* stringConfigIsAString-someStringA-withoutVersion.json in Resources */,
-				83BE9385201A63B400DD1ED9 /* ldDataManagerTestConfig.json in Resources */,
 				836947641F1FEEB40047697C /* numberConfigIsANumber2-1-withVersion.json in Resources */,
 				83B62E1220A0A85200F2E656 /* dictionaryConfigIsADictionary-Empty-withoutVersion.json in Resources */,
 				839E0A18201FB8D900DB8CD1 /* ldClientManagerTestDeleteIsANumber.json in Resources */,
