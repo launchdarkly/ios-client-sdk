@@ -258,6 +258,15 @@
 		83B62E1020A0A78A00F2E656 /* arrayConfigIsAnArray-1-withoutVersion.json in Resources */ = {isa = PBXBuildFile; fileRef = 83B62E0F20A0A78900F2E656 /* arrayConfigIsAnArray-1-withoutVersion.json */; };
 		83B62E1220A0A85200F2E656 /* dictionaryConfigIsADictionary-Empty-withoutVersion.json in Resources */ = {isa = PBXBuildFile; fileRef = 83B62E1120A0A85200F2E656 /* dictionaryConfigIsADictionary-Empty-withoutVersion.json */; };
 		83B62E1420A0A88E00F2E656 /* dictionaryConfigIsADictionary-KeyA-withoutVersion.json in Resources */ = {isa = PBXBuildFile; fileRef = 83B62E1320A0A88D00F2E656 /* dictionaryConfigIsADictionary-KeyA-withoutVersion.json */; };
+		83B62E1720A249A200F2E656 /* NSDateFormatter+JsonHeader.h in Headers */ = {isa = PBXBuildFile; fileRef = 83B62E1520A249A200F2E656 /* NSDateFormatter+JsonHeader.h */; };
+		83B62E1820A249A200F2E656 /* NSDateFormatter+JsonHeader.h in Headers */ = {isa = PBXBuildFile; fileRef = 83B62E1520A249A200F2E656 /* NSDateFormatter+JsonHeader.h */; };
+		83B62E1920A249A200F2E656 /* NSDateFormatter+JsonHeader.h in Headers */ = {isa = PBXBuildFile; fileRef = 83B62E1520A249A200F2E656 /* NSDateFormatter+JsonHeader.h */; };
+		83B62E1A20A249A200F2E656 /* NSDateFormatter+JsonHeader.h in Headers */ = {isa = PBXBuildFile; fileRef = 83B62E1520A249A200F2E656 /* NSDateFormatter+JsonHeader.h */; };
+		83B62E1B20A249A200F2E656 /* NSDateFormatter+JsonHeader.m in Sources */ = {isa = PBXBuildFile; fileRef = 83B62E1620A249A200F2E656 /* NSDateFormatter+JsonHeader.m */; };
+		83B62E1C20A249A200F2E656 /* NSDateFormatter+JsonHeader.m in Sources */ = {isa = PBXBuildFile; fileRef = 83B62E1620A249A200F2E656 /* NSDateFormatter+JsonHeader.m */; };
+		83B62E1D20A249A200F2E656 /* NSDateFormatter+JsonHeader.m in Sources */ = {isa = PBXBuildFile; fileRef = 83B62E1620A249A200F2E656 /* NSDateFormatter+JsonHeader.m */; };
+		83B62E1E20A249A200F2E656 /* NSDateFormatter+JsonHeader.m in Sources */ = {isa = PBXBuildFile; fileRef = 83B62E1620A249A200F2E656 /* NSDateFormatter+JsonHeader.m */; };
+		83B62E2020A2517500F2E656 /* NSDateFormatter+JsonHeaderTest.m in Sources */ = {isa = PBXBuildFile; fileRef = 83B62E1F20A2517500F2E656 /* NSDateFormatter+JsonHeaderTest.m */; };
 		83B6FC1D207E60B6002DBA7B /* NSDate+ReferencedDate.h in Headers */ = {isa = PBXBuildFile; fileRef = 83B6FC1B207E60B6002DBA7B /* NSDate+ReferencedDate.h */; };
 		83B6FC1E207E60B6002DBA7B /* NSDate+ReferencedDate.h in Headers */ = {isa = PBXBuildFile; fileRef = 83B6FC1B207E60B6002DBA7B /* NSDate+ReferencedDate.h */; };
 		83B6FC1F207E60B6002DBA7B /* NSDate+ReferencedDate.h in Headers */ = {isa = PBXBuildFile; fileRef = 83B6FC1B207E60B6002DBA7B /* NSDate+ReferencedDate.h */; };
@@ -503,6 +512,9 @@
 		83B62E0F20A0A78900F2E656 /* arrayConfigIsAnArray-1-withoutVersion.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = "arrayConfigIsAnArray-1-withoutVersion.json"; sourceTree = "<group>"; };
 		83B62E1120A0A85200F2E656 /* dictionaryConfigIsADictionary-Empty-withoutVersion.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = "dictionaryConfigIsADictionary-Empty-withoutVersion.json"; sourceTree = "<group>"; };
 		83B62E1320A0A88D00F2E656 /* dictionaryConfigIsADictionary-KeyA-withoutVersion.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = "dictionaryConfigIsADictionary-KeyA-withoutVersion.json"; sourceTree = "<group>"; };
+		83B62E1520A249A200F2E656 /* NSDateFormatter+JsonHeader.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "NSDateFormatter+JsonHeader.h"; sourceTree = "<group>"; };
+		83B62E1620A249A200F2E656 /* NSDateFormatter+JsonHeader.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "NSDateFormatter+JsonHeader.m"; sourceTree = "<group>"; };
+		83B62E1F20A2517500F2E656 /* NSDateFormatter+JsonHeaderTest.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "NSDateFormatter+JsonHeaderTest.m"; sourceTree = "<group>"; };
 		83B6FC1B207E60B6002DBA7B /* NSDate+ReferencedDate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "NSDate+ReferencedDate.h"; sourceTree = "<group>"; };
 		83B6FC1C207E60B6002DBA7B /* NSDate+ReferencedDate.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "NSDate+ReferencedDate.m"; sourceTree = "<group>"; };
 		83B6FC29208127B2002DBA7B /* LDEventModel+Testable.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "LDEventModel+Testable.h"; sourceTree = "<group>"; };
@@ -833,6 +845,7 @@
 				83B6FC2A208127B2002DBA7B /* LDEventModel+Testable.m */,
 				83ECCCB320891E8E0086F879 /* NSInteger+Testable.h */,
 				83ECCCB420891E8E0086F879 /* NSInteger+Testable.m */,
+				83B62E1F20A2517500F2E656 /* NSDateFormatter+JsonHeaderTest.m */,
 			);
 			path = Categories;
 			sourceTree = "<group>";
@@ -856,6 +869,8 @@
 				8365E5072028F39E00DE8E2B /* LDEvent+EventTypes.m */,
 				83B8C24D1FEC19500082B8A9 /* NSDateFormatter+LDUserModel.h */,
 				83B8C24E1FEC19500082B8A9 /* NSDateFormatter+LDUserModel.m */,
+				83B62E1520A249A200F2E656 /* NSDateFormatter+JsonHeader.h */,
+				83B62E1620A249A200F2E656 /* NSDateFormatter+JsonHeader.m */,
 				8305EC6F20222078002F20DB /* NSObject+LDFlagConfigValue.h */,
 				8305EC7020222078002F20DB /* NSObject+LDFlagConfigValue.m */,
 				83B6FC1B207E60B6002DBA7B /* NSDate+ReferencedDate.h */,
@@ -935,6 +950,7 @@
 			files = (
 				690346FD1E68990000E45133 /* LDEventModel.h in Headers */,
 				690346F91E68990000E45133 /* LDClientManager.h in Headers */,
+				83B62E1720A249A200F2E656 /* NSDateFormatter+JsonHeader.h in Headers */,
 				8305EC7120222078002F20DB /* NSObject+LDFlagConfigValue.h in Headers */,
 				690346FF1E68990000E45133 /* LDFlagConfigModel.h in Headers */,
 				83ECCC8E2087D67D0086F879 /* LDFlagCounter.h in Headers */,
@@ -972,6 +988,7 @@
 			files = (
 				69A87EA21E74712800B88B23 /* LDEventModel.h in Headers */,
 				69A87E9E1E74712800B88B23 /* LDClientManager.h in Headers */,
+				83B62E1A20A249A200F2E656 /* NSDateFormatter+JsonHeader.h in Headers */,
 				8305EC7420222078002F20DB /* NSObject+LDFlagConfigValue.h in Headers */,
 				69A87EA41E74712800B88B23 /* LDFlagConfigModel.h in Headers */,
 				83ECCC912087D67D0086F879 /* LDFlagCounter.h in Headers */,
@@ -1009,6 +1026,7 @@
 			files = (
 				69BD7E231E6C79910056D70F /* LDEventModel.h in Headers */,
 				69BD7E1F1E6C79910056D70F /* LDClientManager.h in Headers */,
+				83B62E1920A249A200F2E656 /* NSDateFormatter+JsonHeader.h in Headers */,
 				8305EC7320222078002F20DB /* NSObject+LDFlagConfigValue.h in Headers */,
 				69BD7E251E6C79910056D70F /* LDFlagConfigModel.h in Headers */,
 				83ECCC902087D67D0086F879 /* LDFlagCounter.h in Headers */,
@@ -1046,6 +1064,7 @@
 			files = (
 				69F3F6AE1E6BF84B00079A09 /* Darkly-Prefix.pch in Headers */,
 				69F3F6A11E6BF82C00079A09 /* LDPollingManager.h in Headers */,
+				83B62E1820A249A200F2E656 /* NSDateFormatter+JsonHeader.h in Headers */,
 				8305EC7220222078002F20DB /* NSObject+LDFlagConfigValue.h in Headers */,
 				69F3F6941E6BF80800079A09 /* LDDataManager.h in Headers */,
 				83ECCC8F2087D67D0086F879 /* LDFlagCounter.h in Headers */,
@@ -1524,6 +1543,7 @@
 				8375839E209CCE71004329DD /* LDEventTrackingContext.m in Sources */,
 				8365E50C2028F39E00DE8E2B /* LDEvent+EventTypes.m in Sources */,
 				690346FE1E68990000E45133 /* LDEventModel.m in Sources */,
+				83B62E1B20A249A200F2E656 /* NSDateFormatter+JsonHeader.m in Sources */,
 				690347121E68994500E45133 /* LDDataManager.m in Sources */,
 				832C78871F296F3400E334A2 /* NSMutableDictionary+NullRemovable.m in Sources */,
 				690347041E68990000E45133 /* LDRequestManager.m in Sources */,
@@ -1585,6 +1605,7 @@
 				83889B141F8E93A100A4EF69 /* LDEvent+Testable.m in Sources */,
 				69B205D31EA92ECD00487CA3 /* LDRequestManagerTest.m in Sources */,
 				6903472D1E689B9F00E45133 /* LDUtilTest.m in Sources */,
+				83B62E2020A2517500F2E656 /* NSDateFormatter+JsonHeaderTest.m in Sources */,
 				83ECCC8B2087CA280086F879 /* LDFlagValueCounter+Testable.m in Sources */,
 				690347311E689B9F00E45133 /* LDFlagConfigModelTest.m in Sources */,
 				8305EC7C2022336C002F20DB /* LDFlagConfigValueTest.m in Sources */,
@@ -1607,6 +1628,7 @@
 				837583A1209CCE71004329DD /* LDEventTrackingContext.m in Sources */,
 				8365E50F2028F39E00DE8E2B /* LDEvent+EventTypes.m in Sources */,
 				69A87EA31E74712800B88B23 /* LDEventModel.m in Sources */,
+				83B62E1E20A249A200F2E656 /* NSDateFormatter+JsonHeader.m in Sources */,
 				69A87E9D1E74712800B88B23 /* LDClient.m in Sources */,
 				832C788A1F296F3400E334A2 /* NSMutableDictionary+NullRemovable.m in Sources */,
 				69A87E9B1E74712800B88B23 /* DarklyConstants.m in Sources */,
@@ -1642,6 +1664,7 @@
 				837583A0209CCE71004329DD /* LDEventTrackingContext.m in Sources */,
 				8365E50E2028F39E00DE8E2B /* LDEvent+EventTypes.m in Sources */,
 				69BD7E241E6C79910056D70F /* LDEventModel.m in Sources */,
+				83B62E1D20A249A200F2E656 /* NSDateFormatter+JsonHeader.m in Sources */,
 				69BD7E1E1E6C79910056D70F /* LDClient.m in Sources */,
 				832C78891F296F3400E334A2 /* NSMutableDictionary+NullRemovable.m in Sources */,
 				69BD7E1C1E6C79910056D70F /* DarklyConstants.m in Sources */,
@@ -1677,6 +1700,7 @@
 				8375839F209CCE71004329DD /* LDEventTrackingContext.m in Sources */,
 				8365E50D2028F39E00DE8E2B /* LDEvent+EventTypes.m in Sources */,
 				69F3F69E1E6BF82C00079A09 /* LDEventModel.m in Sources */,
+				83B62E1C20A249A200F2E656 /* NSDateFormatter+JsonHeader.m in Sources */,
 				69F3F6981E6BF82C00079A09 /* LDClient.m in Sources */,
 				832C78881F296F3400E334A2 /* NSMutableDictionary+NullRemovable.m in Sources */,
 				69F3F6961E6BF82100079A09 /* DarklyConstants.m in Sources */,
