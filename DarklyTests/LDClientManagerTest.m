@@ -679,9 +679,12 @@ NSString *const kBoolFlagKey = @"isABawler";
 }
 
 - (void)testSSEPutEventSuccess {
-    id notificationObserver = OCMObserverMock();
-    [[NSNotificationCenter defaultCenter] addMockObserver:notificationObserver name:kLDUserUpdatedNotification object:nil];
-    [[notificationObserver expect] notificationWithName:kLDUserUpdatedNotification object:[OCMArg any]];
+    id userUpdatedNotificationObserver = OCMObserverMock();
+    [[NSNotificationCenter defaultCenter] addMockObserver:userUpdatedNotificationObserver name:kLDUserUpdatedNotification object:nil];
+    [[userUpdatedNotificationObserver expect] notificationWithName:kLDUserUpdatedNotification object:[OCMArg any]];
+
+    id userNoChangeNotificationObserver = OCMObserverMock();
+    [[NSNotificationCenter defaultCenter] addMockObserver:userNoChangeNotificationObserver name:kLDUserNoChangeNotification object:nil];
 
     __block LDEventSourceEventHandler messageHandler;
     OCMStub([self.eventSourceMock onMessage:[OCMArg checkWithBlock:^BOOL(id obj) {
@@ -689,38 +692,39 @@ NSString *const kBoolFlagKey = @"isABawler";
         return YES;
     }]]);
 
-    LDUserModel *user = [[LDClient sharedInstance] ldUser];
     LDFlagConfigModel *targetFlagConfig = [LDFlagConfigModel flagConfigFromJsonFileNamed:@"featureFlags-excludeNulls-withVersions"];
 
     self.cleanup = ^{
-        [[NSNotificationCenter defaultCenter] removeObserver:notificationObserver];
+        [[NSNotificationCenter defaultCenter] removeObserver:userUpdatedNotificationObserver];
+        [[NSNotificationCenter defaultCenter] removeObserver:userNoChangeNotificationObserver];
     };
 
-    LDClientManager *clientManager = [LDClientManager sharedInstance];
-    clientManager.online = YES;
+    [LDClientManager sharedInstance].online = YES;
 
     XCTAssertNotNil(messageHandler);
     if (!messageHandler) { return; }
+
+    [[self.dataManagerMock expect] saveUser:[OCMArg checkWithBlock:^BOOL(id obj) {
+        if (![obj isKindOfClass:[LDUserModel class]]) { return NO; }
+        LDUserModel *savedUser = obj;
+        XCTAssertTrue([savedUser.flagConfig isEqualToConfig:targetFlagConfig]);
+        return YES;
+    }]];
     
     LDEvent *put = [LDEvent stubEvent:kLDEventTypePut fromJsonFileNamed:@"featureFlags-excludeNulls-withVersions"];
 
     messageHandler(put);
 
-    XCTAssertTrue([user.flagConfig isEqualToConfig: targetFlagConfig]);
-    __block LDUserModel *savedUser;
-    OCMVerify([self.dataManagerMock saveUser:[OCMArg checkWithBlock:^BOOL(id obj) {
-        if (![obj isKindOfClass:[LDUserModel class]]) { return NO; }
-        savedUser = obj;
-        return YES;
-    }]]);
-    XCTAssertTrue([savedUser.flagConfig isEqualToConfig:targetFlagConfig]);
-    OCMVerifyAll(notificationObserver);
+    [self.dataManagerMock verify];
 }
 
 - (void)testSSEPutResultedInNoChange {
-    id notificationObserver = OCMObserverMock();
-    [[NSNotificationCenter defaultCenter] addMockObserver:notificationObserver name:kLDUserNoChangeNotification object:nil];
-    [[notificationObserver expect] notificationWithName:kLDUserNoChangeNotification object:[OCMArg any]];
+    id userUpdatedNotificationObserver = OCMObserverMock();
+    [[NSNotificationCenter defaultCenter] addMockObserver:userUpdatedNotificationObserver name:kLDUserUpdatedNotification object:nil];
+
+    id userNoChangeNotificationObserver = OCMObserverMock();
+    [[NSNotificationCenter defaultCenter] addMockObserver:userNoChangeNotificationObserver name:kLDUserNoChangeNotification object:nil];
+    [[userNoChangeNotificationObserver expect] notificationWithName:kLDUserNoChangeNotification object:[OCMArg any]];
 
     __block LDEventSourceEventHandler messageHandler;
     OCMStub([self.eventSourceMock onMessage:[OCMArg checkWithBlock:^BOOL(id obj) {
@@ -731,13 +735,18 @@ NSString *const kBoolFlagKey = @"isABawler";
     LDUserModel *user = [[LDClient sharedInstance] ldUser];
     id flagConfigMock = OCMClassMock([LDFlagConfigModel class]);
     OCMStub([flagConfigMock isEqualToConfig:[OCMArg any]]).andReturn(YES);
-    [[flagConfigMock expect] updateEventTrackingContextFromConfig:[OCMArg any]];
     user.flagConfig = flagConfigMock;
 
-    [[self.dataManagerMock reject] saveUser:[OCMArg any]];
+    [[self.dataManagerMock expect] saveUser:[OCMArg checkWithBlock:^BOOL(id obj) {
+        if (![obj isKindOfClass:[LDUserModel class]]) { return NO; }
+        LDUserModel *savedUser = obj;
+        XCTAssertEqualObjects(savedUser, user);
+        return YES;
+    }]];
 
     self.cleanup = ^{
-        [[NSNotificationCenter defaultCenter] removeObserver:notificationObserver];
+        [[NSNotificationCenter defaultCenter] removeObserver:userUpdatedNotificationObserver];
+        [[NSNotificationCenter defaultCenter] removeObserver:userNoChangeNotificationObserver];
         [flagConfigMock stopMocking];
     };
 
@@ -752,9 +761,7 @@ NSString *const kBoolFlagKey = @"isABawler";
 
     messageHandler(put);
 
-    [flagConfigMock verify];
-    OCMVerifyAll(notificationObserver);
-    OCMVerify(self.dataManagerMock);
+    [self.dataManagerMock verify];
 }
 
 - (void)testSSEPutEventFailedNilData {

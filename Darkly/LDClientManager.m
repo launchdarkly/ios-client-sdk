@@ -221,17 +221,11 @@ NSString * const kLDClientManagerStreamMethod = @"meval";
     LDFlagConfigModel *newConfig = [[LDFlagConfigModel alloc] initWithDictionary:newConfigDictionary];
     LDUserModel *user = [[LDClient sharedInstance] ldUser];
 
-    if ([user.flagConfig isEqualToConfig:newConfig]) {
-        [user.flagConfig updateEventTrackingContextFromConfig:newConfig];
-        DEBUG_LOGX(@"ClientManager handlePutEvent resulted in no change to the flag config");
-        [[NSNotificationCenter defaultCenter] postNotificationName:kLDUserNoChangeNotification object:nil];
-        return;
-    }
-
+    NSString *updateResultNotificationName = [user.flagConfig isEqualToConfig:newConfig] ? kLDUserNoChangeNotification : kLDUserUpdatedNotification;
     user.flagConfig = newConfig;
     [[LDDataManager sharedManager] saveUser:user];
-    [[NSNotificationCenter defaultCenter] postNotificationName:kLDUserUpdatedNotification object:nil];
-    DEBUG_LOGX(@"ClientManager posted Darkly.UserUpdatedNotification following user config update from SSE put event");
+    [[NSNotificationCenter defaultCenter] postNotificationName:updateResultNotificationName object:nil];
+    DEBUG_LOG(@"ClientManager posted %@ following user config update from SSE put event", updateResultNotificationName);
 }
 
 - (void)handlePatchEvent:(LDEvent*)event {
