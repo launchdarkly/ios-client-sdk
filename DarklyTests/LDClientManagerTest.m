@@ -475,13 +475,22 @@ NSString *const kBoolFlagKey = @"isABawler";
 
     [[self.dataManagerMock reject] saveUser:[OCMArg any]];
 
-    LDFlagConfigModel *flagConfig = [LDFlagConfigModel flagConfigFromJsonFileNamed:@"featureFlags-withVersions"];
+    LDEventTrackingContext *eventTrackingContext = [LDEventTrackingContext contextWithTrackEvents:NO debugEventsUntilDate:nil];
+    LDFlagConfigModel *flagConfig = [LDFlagConfigModel flagConfigFromJsonFileNamed:@"featureFlags-withVersions" eventTrackingContext:eventTrackingContext];
 
     LDUserModel *user = [self.ldClientMock ldUser];
     user.flagConfig = flagConfig;
     [[[self.ldClientMock expect] andReturn:user] ldUser];
 
-    [[LDClientManager sharedInstance] processedConfig:YES jsonConfigDictionary:[flagConfig dictionaryValue]];
+    LDEventTrackingContext *updatedEventTrackingContext = [LDEventTrackingContext contextWithTrackEvents:YES debugEventsUntilDate:[NSDate dateWithTimeIntervalSinceNow:30.0]];
+    LDFlagConfigModel *updatedFlagConfig = [LDFlagConfigModel flagConfigFromJsonFileNamed:@"featureFlags-withVersions" eventTrackingContext:updatedEventTrackingContext];
+
+    [[LDClientManager sharedInstance] processedConfig:YES jsonConfigDictionary:[updatedFlagConfig dictionaryValue]];
+
+    for (NSString *flagKey in flagConfig.featuresJsonDictionary.allKeys) {
+        LDFlagConfigValue *flagConfigValue = flagConfig.featuresJsonDictionary[flagKey];
+        XCTAssertEqualObjects(flagConfigValue.eventTrackingContext, updatedEventTrackingContext);
+    }
 
     OCMVerifyAll(self.dataManagerMock);
     OCMVerifyAll(mockUserUpdatedObserver);

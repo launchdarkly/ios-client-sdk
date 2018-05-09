@@ -142,6 +142,20 @@ NSString * const kLDFlagConfigModelKeyKey = @"key";
     return YES;
 }
 
+-(void)updateEventTrackingContextFromConfig:(LDFlagConfigModel*)otherConfig {
+    if (!otherConfig || otherConfig.featuresJsonDictionary.count == 0) {
+        DEBUG_LOGX(@"LDFlagConfigModel updateEventTrackingContext found missing or empty otherConfig. Aborting.");
+        return;
+    }
+    for (NSString *flagKey in [self.featuresJsonDictionary.allKeys copy]) {
+        LDFlagConfigValue *otherFlagConfigValue = otherConfig.featuresJsonDictionary[flagKey];
+        if (!otherFlagConfigValue) { continue; }
+        LDFlagConfigValue *flagConfigValue = self.featuresJsonDictionary[flagKey];
+        if (!flagConfigValue) { continue; }
+        flagConfigValue.eventTrackingContext = otherFlagConfigValue.eventTrackingContext;
+    }
+}
+
 -(NSString*)description {
     return [NSString stringWithFormat:@"<LDFlagConfigModel: %p, featuresJsonDictionary: %@>", self, [self.featuresJsonDictionary description]];
 }

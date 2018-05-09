@@ -379,6 +379,7 @@ NSString * const kLDClientManagerStreamMethod = @"meval";
 
     LDFlagConfigModel *newConfig = [[LDFlagConfigModel alloc] initWithDictionary:jsonConfigDictionary];
     if (!newConfig || [[LDClient sharedInstance].ldUser.flagConfig isEqualToConfig:newConfig]) {
+        [[LDClient sharedInstance].ldUser.flagConfig updateEventTrackingContextFromConfig:newConfig];
         //Notify interested clients and bail out if no new config, or the new config equals the existing config
         [[NSNotificationCenter defaultCenter] postNotificationName: kLDUserNoChangeNotification
                                                             object: nil];

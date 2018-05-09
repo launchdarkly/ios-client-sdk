@@ -496,4 +496,17 @@ extern NSString *const kLDFlagConfigModelKeyKey;
     XCTAssertFalse([subject hasFeaturesEqualToDictionary:differentDictionary]);
 }
 
+-(void)testUpdateEventTrackingContextFromConfig {
+    LDEventTrackingContext *eventTrackingContext = [LDEventTrackingContext contextWithTrackEvents:NO debugEventsUntilDate:nil];
+    LDFlagConfigModel *subject = [LDFlagConfigModel flagConfigFromJsonFileNamed:@"featureFlags-withVersions" eventTrackingContext:eventTrackingContext];
+    LDEventTrackingContext *updatedEventTrackingContext = [LDEventTrackingContext contextWithTrackEvents:YES debugEventsUntilDate:[NSDate dateWithTimeIntervalSinceNow:30.0]];
+    LDFlagConfigModel *updatedConfig = [LDFlagConfigModel flagConfigFromJsonFileNamed:@"featureFlags-withVersions" eventTrackingContext:updatedEventTrackingContext];
+
+    [subject updateEventTrackingContextFromConfig:updatedConfig];
+
+    for (NSString *flagKey in subject.featuresJsonDictionary.allKeys) {
+        LDFlagConfigValue *flagConfigValue = subject.featuresJsonDictionary[flagKey];
+        XCTAssertEqualObjects(flagConfigValue.eventTrackingContext, updatedEventTrackingContext);
+    }
+}
 @end

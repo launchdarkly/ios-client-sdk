@@ -29,5 +29,7 @@
 -(BOOL)isEqualToConfig:(nullable LDFlagConfigModel*)otherConfig;
 -(BOOL)hasFeaturesEqualToDictionary:(nullable NSDictionary*)otherDictionary;
 
+-(void)updateEventTrackingContextFromConfig:(nullable LDFlagConfigModel*)otherConfig;
+
 -(nonnull NSString*)description;
 @end
