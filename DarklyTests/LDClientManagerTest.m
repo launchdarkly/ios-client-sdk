@@ -44,11 +44,6 @@ NSString *const kBoolFlagKey = @"isABawler";
 @end
 
 @implementation LDClientManagerTest
-@synthesize requestManagerMock;
-@synthesize ldClientMock;
-@synthesize dataManagerMock;
-@synthesize pollingManagerMock;
-@synthesize eventSourceMock;
 
 - (void)setUp {
     [super setUp];
@@ -57,38 +52,38 @@ NSString *const kBoolFlagKey = @"isABawler";
 
     LDConfig *config = [[LDConfig alloc] initWithMobileKey:mockMobileKey];
 
-    ldClientMock = [self mockClientWithUser:user];
-    OCMStub(ClassMethod([ldClientMock sharedInstance])).andReturn(ldClientMock);
-    [[[ldClientMock expect] andReturn: config] ldConfig];
-    [[[ldClientMock expect] andReturn: user] ldUser];
+    self.ldClientMock = [self mockClientWithUser:user];
+    OCMStub(ClassMethod([self.ldClientMock sharedInstance])).andReturn(self.ldClientMock);
+    [[[self.ldClientMock expect] andReturn: config] ldConfig];
+    [[[self.ldClientMock expect] andReturn: user] ldUser];
 
-    requestManagerMock = OCMClassMock([LDRequestManager class]);
-    OCMStub(ClassMethod([requestManagerMock sharedInstance])).andReturn(requestManagerMock);
+    self.requestManagerMock = OCMClassMock([LDRequestManager class]);
+    OCMStub(ClassMethod([self.requestManagerMock sharedInstance])).andReturn(self.requestManagerMock);
     
-    dataManagerMock = OCMClassMock([LDDataManager class]);
-    OCMStub(ClassMethod([dataManagerMock sharedManager])).andReturn(dataManagerMock);
+    self.dataManagerMock = OCMClassMock([LDDataManager class]);
+    OCMStub(ClassMethod([self.dataManagerMock sharedManager])).andReturn(self.dataManagerMock);
     
-    pollingManagerMock = OCMClassMock([LDPollingManager class]);
-    OCMStub(ClassMethod([pollingManagerMock sharedInstance])).andReturn(pollingManagerMock);
+    self.pollingManagerMock = OCMClassMock([LDPollingManager class]);
+    OCMStub(ClassMethod([self.pollingManagerMock sharedInstance])).andReturn(self.pollingManagerMock);
 
-    eventSourceMock = OCMClassMock([LDEventSource class]);
-    OCMStub(ClassMethod([eventSourceMock eventSourceWithURL:[OCMArg any] httpHeaders:[OCMArg any] connectMethod:[OCMArg any] connectBody:[OCMArg any]])).andReturn(eventSourceMock);
+    self.eventSourceMock = OCMClassMock([LDEventSource class]);
+    OCMStub(ClassMethod([self.eventSourceMock eventSourceWithURL:[OCMArg any] httpHeaders:[OCMArg any] connectMethod:[OCMArg any] connectBody:[OCMArg any]])).andReturn(self.eventSourceMock);
 }
 
 - (void)tearDown {
     if (self.cleanup) { self.cleanup(); }
     [LDClientManager sharedInstance].online = NO;
-    [ldClientMock stopMocking];
-    [requestManagerMock stopMocking];
-    [dataManagerMock stopMocking];
-    [pollingManagerMock stopMocking];
-    [eventSourceMock stopMocking];
+    [self.ldClientMock stopMocking];
+    [self.requestManagerMock stopMocking];
+    [self.dataManagerMock stopMocking];
+    [self.pollingManagerMock stopMocking];
+    [self.eventSourceMock stopMocking];
     self.cleanup = nil;
-    ldClientMock = nil;
-    requestManagerMock = nil;
-    dataManagerMock = nil;
-    pollingManagerMock = nil;
-    eventSourceMock = nil;
+    self.ldClientMock = nil;
+    self.requestManagerMock = nil;
+    self.dataManagerMock = nil;
+    self.pollingManagerMock = nil;
+    self.eventSourceMock = nil;
     [super tearDown];
 }
 
@@ -102,7 +97,7 @@ NSString *const kBoolFlagKey = @"isABawler";
     __block NSURL *streamUrl;
     __block NSString *streamConnectMethod;
     __block NSData *streamConnectData;
-    OCMVerify([eventSourceMock eventSourceWithURL:[OCMArg checkWithBlock:^BOOL(id obj) {
+    OCMVerify([self.eventSourceMock eventSourceWithURL:[OCMArg checkWithBlock:^BOOL(id obj) {
         if (![obj isKindOfClass:[NSURL class]]) { return NO; }
         streamUrl = obj;
         return YES;
@@ -127,11 +122,11 @@ NSString *const kBoolFlagKey = @"isABawler";
     config.useReport = YES;
     LDUserModel *user = [LDClient sharedInstance].ldUser;
 
-    [ldClientMock stopMocking];
-    ldClientMock = OCMClassMock([LDClient class]);
-    OCMStub(ClassMethod([ldClientMock sharedInstance])).andReturn(ldClientMock);
-    OCMStub([ldClientMock ldUser]).andReturn(user);
-    OCMStub([ldClientMock ldConfig]).andReturn(config);
+    [self.ldClientMock stopMocking];
+    self.ldClientMock = OCMClassMock([LDClient class]);
+    OCMStub(ClassMethod([self.ldClientMock sharedInstance])).andReturn(self.ldClientMock);
+    OCMStub([self.ldClientMock ldUser]).andReturn(user);
+    OCMStub([self.ldClientMock ldConfig]).andReturn(config);
 
     LDClientManager *clientManager = [LDClientManager sharedInstance];
     clientManager.online = YES;
@@ -141,7 +136,7 @@ NSString *const kBoolFlagKey = @"isABawler";
     __block NSURL *streamUrl;
     __block NSString *streamConnectMethod;
     __block NSData *streamConnectData;
-    OCMVerify([eventSourceMock eventSourceWithURL:[OCMArg checkWithBlock:^BOOL(id obj) {
+    OCMVerify([self.eventSourceMock eventSourceWithURL:[OCMArg checkWithBlock:^BOOL(id obj) {
         if (![obj isKindOfClass:[NSURL class]]) { return NO; }
         streamUrl = obj;
         return YES;
@@ -225,20 +220,20 @@ NSString *const kBoolFlagKey = @"isABawler";
 }
 
 - (void)testSyncWithServerForConfigWhenUserExistsAndOnline {
-    [[requestManagerMock expect] performFeatureFlagRequest:[ldClientMock ldUser]];
+    [[self.requestManagerMock expect] performFeatureFlagRequest:[self.ldClientMock ldUser]];
     
     LDClientManager *clientManager = [LDClientManager sharedInstance];
     [clientManager setOnline:YES];
     
     [clientManager syncWithServerForConfig];
 
-    [requestManagerMock verify];
+    [self.requestManagerMock verify];
 }
 
 - (void)testSyncWithServerForConfigWhenUserDoesNotExist {
-    ldClientMock = [self mockClientWithUser:nil];
+    self.ldClientMock = [self mockClientWithUser:nil];
 
-    [[requestManagerMock reject] performFeatureFlagRequest:[OCMArg any]];
+    [[self.requestManagerMock reject] performFeatureFlagRequest:[OCMArg any]];
 
     LDClientManager *clientManager = [LDClientManager sharedInstance];
     [clientManager setOnline:YES];
@@ -247,7 +242,7 @@ NSString *const kBoolFlagKey = @"isABawler";
 }
 
 - (void)testSyncWithServerForConfigWhenOffline {
-    [[requestManagerMock reject] performFeatureFlagRequest:[OCMArg any]];
+    [[self.requestManagerMock reject] performFeatureFlagRequest:[OCMArg any]];
 
     LDClientManager *clientManager = [LDClientManager sharedInstance];
     [clientManager setOnline:NO];
@@ -280,11 +275,11 @@ NSString *const kBoolFlagKey = @"isABawler";
     LDClientManager *clientManager = [LDClientManager sharedInstance];
     [clientManager setOnline:YES];
 
-    [[requestManagerMock reject] performEventRequest:[OCMArg isEqual:testData]];
+    [[self.requestManagerMock reject] performEventRequest:[OCMArg isEqual:testData]];
     
     [clientManager syncWithServerForEvents];
     
-    [requestManagerMock verify];
+    [self.requestManagerMock verify];
 }
 
 - (void)testSyncWithServerForEventsNotProcessedWhenOffline {
@@ -309,8 +304,8 @@ NSString *const kBoolFlagKey = @"isABawler";
     clientManager.online = YES;
     [clientManager startPolling];
     
-    OCMVerify([pollingManagerMock startEventPolling]);
-    OCMVerify([eventSourceMock onMessage:[OCMArg isNotNil]]);
+    OCMVerify([self.pollingManagerMock startEventPolling]);
+    OCMVerify([self.eventSourceMock onMessage:[OCMArg isNotNil]]);
 }
 
 - (void)testStartPollingOffline {
@@ -318,7 +313,7 @@ NSString *const kBoolFlagKey = @"isABawler";
     clientManager.online = NO;
     [clientManager startPolling];
 
-    OCMReject([pollingManagerMock startEventPolling]);
+    OCMReject([self.pollingManagerMock startEventPolling]);
     XCTAssertNil(clientManager.eventSource);
 }
 
@@ -326,7 +321,7 @@ NSString *const kBoolFlagKey = @"isABawler";
     LDClientManager *clientManager = [LDClientManager sharedInstance];
     [clientManager stopPolling];
     
-    OCMVerify([pollingManagerMock stopEventPolling]);
+    OCMVerify([self.pollingManagerMock stopEventPolling]);
     XCTAssertNil([clientManager eventSource]);
 }
 
@@ -391,14 +386,14 @@ NSString *const kBoolFlagKey = @"isABawler";
     LDClientManager *clientManager = [LDClientManager sharedInstance];
     [clientManager willEnterBackground];
     
-    OCMVerify([pollingManagerMock suspendEventPolling]);
+    OCMVerify([self.pollingManagerMock suspendEventPolling]);
 }
 
 - (void)testWillEnterForeground {
     LDClientManager *clientManager = [LDClientManager sharedInstance];
     [clientManager willEnterForeground];
     
-    OCMVerify([pollingManagerMock resumeEventPolling]);
+    OCMVerify([self.pollingManagerMock resumeEventPolling]);
 }
 
 - (void)testProcessedEventsSuccessWithProcessedEvents {
@@ -415,7 +410,7 @@ NSString *const kBoolFlagKey = @"isABawler";
     LDClientManager *clientManager = [LDClientManager sharedInstance];
     [clientManager processedEvents:YES jsonEventArray:@[[event dictionaryValueUsingConfig:config]] responseDate:nil];
     
-    OCMVerify([dataManagerMock deleteProcessedEvents:[OCMArg any]]);
+    OCMVerify([self.dataManagerMock deleteProcessedEvents:[OCMArg any]]);
 }
 
 - (void)testProcessedEventsSuccessWithoutProcessedEvents {
@@ -423,9 +418,9 @@ NSString *const kBoolFlagKey = @"isABawler";
     LDClientManager *clientManager = [LDClientManager sharedInstance];
     [clientManager processedEvents:YES jsonEventArray:@[] responseDate:nil];
     
-    [[dataManagerMock reject] deleteProcessedEvents:[OCMArg any]];
+    [[self.dataManagerMock reject] deleteProcessedEvents:[OCMArg any]];
     
-    [dataManagerMock verify];
+    [self.dataManagerMock verify];
 }
 
 - (void)testProcessedEventsFailure {
@@ -433,9 +428,9 @@ NSString *const kBoolFlagKey = @"isABawler";
     LDClientManager *clientManager = [LDClientManager sharedInstance];
     [clientManager processedEvents:NO jsonEventArray:nil responseDate:nil];
     
-    [[dataManagerMock reject] deleteProcessedEvents:[OCMArg any]];
+    [[self.dataManagerMock reject] deleteProcessedEvents:[OCMArg any]];
     
-    [dataManagerMock verify];
+    [self.dataManagerMock verify];
 }
 
 - (void)testProcessedConfigSuccessWithUserConfigChanged {
@@ -448,9 +443,9 @@ NSString *const kBoolFlagKey = @"isABawler";
 
     LDFlagConfigModel *flagConfig = [LDFlagConfigModel flagConfigFromJsonFileNamed:@"featureFlags-withVersions"];
 
-    LDUserModel *user = [ldClientMock ldUser];
+    LDUserModel *user = [self.ldClientMock ldUser];
     user.flagConfig = flagConfig;
-    [[[ldClientMock expect] andReturn:user] ldUser];
+    [[[self.ldClientMock expect] andReturn:user] ldUser];
 
     NSMutableDictionary *updatedFlags = [NSMutableDictionary dictionaryWithDictionary:[flagConfig dictionaryValue]];
     NSMutableDictionary *updatedBoolFlag = [NSMutableDictionary dictionaryWithDictionary:updatedFlags[kBoolFlagKey]];
@@ -460,7 +455,7 @@ NSString *const kBoolFlagKey = @"isABawler";
 
     [[LDClientManager sharedInstance] processedConfig:YES jsonConfigDictionary:[updatedFlags copy]];
     
-    OCMVerify([dataManagerMock saveUser:[OCMArg any]]);
+    OCMVerify([self.dataManagerMock saveUser:[OCMArg any]]);
     OCMVerifyAll(mockUserUpdatedObserver);
     OCMVerifyAll(mockUserNoChangeObserver);
 
@@ -476,17 +471,17 @@ NSString *const kBoolFlagKey = @"isABawler";
     [[NSNotificationCenter defaultCenter] addMockObserver:mockUserNoChangeObserver name:kLDUserNoChangeNotification object:nil];
     [[mockUserNoChangeObserver expect] notificationWithName:kLDUserNoChangeNotification object:[OCMArg any]];
 
-    [[dataManagerMock reject] saveUser:[OCMArg any]];
+    [[self.dataManagerMock reject] saveUser:[OCMArg any]];
 
     LDFlagConfigModel *flagConfig = [LDFlagConfigModel flagConfigFromJsonFileNamed:@"featureFlags-withVersions"];
 
-    LDUserModel *user = [ldClientMock ldUser];
+    LDUserModel *user = [self.ldClientMock ldUser];
     user.flagConfig = flagConfig;
-    [[[ldClientMock expect] andReturn:user] ldUser];
+    [[[self.ldClientMock expect] andReturn:user] ldUser];
 
     [[LDClientManager sharedInstance] processedConfig:YES jsonConfigDictionary:[flagConfig dictionaryValue]];
 
-    OCMVerifyAll(dataManagerMock);
+    OCMVerifyAll(self.dataManagerMock);
     OCMVerifyAll(mockUserUpdatedObserver);
     OCMVerifyAll(mockUserNoChangeObserver);
 
@@ -498,18 +493,18 @@ NSString *const kBoolFlagKey = @"isABawler";
     LDClientManager *clientManager = [LDClientManager sharedInstance];
     [clientManager processedConfig:YES jsonConfigDictionary:nil];
     
-    [[dataManagerMock reject] saveUser:[OCMArg any]];
+    [[self.dataManagerMock reject] saveUser:[OCMArg any]];
     
-    [dataManagerMock verify];
+    [self.dataManagerMock verify];
 }
 
 - (void)testProcessedConfigFailure {
     LDClientManager *clientManager = [LDClientManager sharedInstance];
     [clientManager processedConfig:NO jsonConfigDictionary:nil];
     
-    [[dataManagerMock reject] saveUser:[OCMArg any]];
+    [[self.dataManagerMock reject] saveUser:[OCMArg any]];
     
-    [dataManagerMock verify];
+    [self.dataManagerMock verify];
 }
 
 - (void)testProcessedConfigSuccessWithUserSameUserConfig {
@@ -542,8 +537,8 @@ NSString *const kBoolFlagKey = @"isABawler";
     LDClientManager *clientManager = [LDClientManager sharedInstance];
     clientManager.online = YES;
 
-    OCMVerify([pollingManagerMock startEventPolling]);
-    OCMVerify([eventSourceMock onMessage:[OCMArg any]]);
+    OCMVerify([self.pollingManagerMock startEventPolling]);
+    OCMVerify([self.eventSourceMock onMessage:[OCMArg any]]);
 }
 
 - (void)testSetOnlineNo {
@@ -551,7 +546,7 @@ NSString *const kBoolFlagKey = @"isABawler";
     clientManager.online = YES;
     clientManager.online = NO;
 
-    OCMVerify([pollingManagerMock stopEventPolling]);
+    OCMVerify([self.pollingManagerMock stopEventPolling]);
     XCTAssertNil([clientManager eventSource]);
 }
 
@@ -597,7 +592,7 @@ NSString *const kBoolFlagKey = @"isABawler";
     [[serverUnavailableObserver expect] notificationWithName: kLDServerConnectionUnavailableNotification object:[OCMArg any]];
 
     __block LDEventSourceEventHandler errorHandler;
-    OCMStub([eventSourceMock onError:[OCMArg checkWithBlock:^BOOL(id obj) {
+    OCMStub([self.eventSourceMock onError:[OCMArg checkWithBlock:^BOOL(id obj) {
         errorHandler = (LDEventSourceEventHandler)obj;
         return YES;
     }]]);
@@ -628,7 +623,7 @@ NSString *const kBoolFlagKey = @"isABawler";
     [[serverUnavailableObserver expect] notificationWithName: kLDServerConnectionUnavailableNotification object:[OCMArg any]];
 
     __block LDEventSourceEventHandler errorHandler;
-    OCMStub([eventSourceMock onError:[OCMArg checkWithBlock:^BOOL(id obj) {
+    OCMStub([self.eventSourceMock onError:[OCMArg checkWithBlock:^BOOL(id obj) {
         errorHandler = (LDEventSourceEventHandler)obj;
         return YES;
     }]]);
@@ -651,7 +646,7 @@ NSString *const kBoolFlagKey = @"isABawler";
 
 - (void)testSSEPingEvent {
     __block LDEventSourceEventHandler messageHandler;
-    OCMStub([eventSourceMock onMessage:[OCMArg checkWithBlock:^BOOL(id obj) {
+    OCMStub([self.eventSourceMock onMessage:[OCMArg checkWithBlock:^BOOL(id obj) {
         messageHandler = (LDEventSourceEventHandler)obj;
         return YES;
     }]]);
@@ -665,7 +660,7 @@ NSString *const kBoolFlagKey = @"isABawler";
     if (!messageHandler) { return; }
     messageHandler([LDEvent stubPingEvent]);
 
-    OCMVerify([requestManagerMock performFeatureFlagRequest:[OCMArg checkWithBlock:^BOOL(id obj) {
+    OCMVerify([self.requestManagerMock performFeatureFlagRequest:[OCMArg checkWithBlock:^BOOL(id obj) {
         if (![obj isKindOfClass:[LDUserModel class]]) { return NO; }
         LDUserModel *userFromRequest = (LDUserModel*)obj;
         return [user isEqual:userFromRequest];
@@ -678,7 +673,7 @@ NSString *const kBoolFlagKey = @"isABawler";
     [[notificationObserver expect] notificationWithName:kLDUserUpdatedNotification object:[OCMArg any]];
 
     __block LDEventSourceEventHandler messageHandler;
-    OCMStub([eventSourceMock onMessage:[OCMArg checkWithBlock:^BOOL(id obj) {
+    OCMStub([self.eventSourceMock onMessage:[OCMArg checkWithBlock:^BOOL(id obj) {
         messageHandler = (LDEventSourceEventHandler)obj;
         return YES;
     }]]);
@@ -702,7 +697,7 @@ NSString *const kBoolFlagKey = @"isABawler";
 
     XCTAssertTrue([user.flagConfig isEqualToConfig: targetFlagConfig]);
     __block LDUserModel *savedUser;
-    OCMVerify([dataManagerMock saveUser:[OCMArg checkWithBlock:^BOOL(id obj) {
+    OCMVerify([self.dataManagerMock saveUser:[OCMArg checkWithBlock:^BOOL(id obj) {
         if (![obj isKindOfClass:[LDUserModel class]]) { return NO; }
         savedUser = obj;
         return YES;
@@ -717,7 +712,7 @@ NSString *const kBoolFlagKey = @"isABawler";
     [[notificationObserver expect] notificationWithName:kLDUserNoChangeNotification object:[OCMArg any]];
 
     __block LDEventSourceEventHandler messageHandler;
-    OCMStub([eventSourceMock onMessage:[OCMArg checkWithBlock:^BOOL(id obj) {
+    OCMStub([self.eventSourceMock onMessage:[OCMArg checkWithBlock:^BOOL(id obj) {
         messageHandler = (LDEventSourceEventHandler)obj;
         return YES;
     }]]);
@@ -733,7 +728,7 @@ NSString *const kBoolFlagKey = @"isABawler";
     OCMStub([flagConfigMock isEqualToConfig:[OCMArg any]]).andReturn(YES);
     user.flagConfig = flagConfigMock;
 
-    [[dataManagerMock reject] saveUser:[OCMArg any]];
+    [[self.dataManagerMock reject] saveUser:[OCMArg any]];
 
     self.cleanup = ^{
         [[NSNotificationCenter defaultCenter] removeObserver:notificationObserver];
@@ -752,7 +747,7 @@ NSString *const kBoolFlagKey = @"isABawler";
     messageHandler(put);
 
     OCMVerifyAll(notificationObserver);
-    OCMVerify(dataManagerMock);
+    OCMVerify(self.dataManagerMock);
 }
 
 - (void)testSSEPutEventFailedNilData {
@@ -761,12 +756,12 @@ NSString *const kBoolFlagKey = @"isABawler";
     [[notificationObserver expect] notificationWithName:kLDUserNoChangeNotification object:[OCMArg any]];
 
     __block LDEventSourceEventHandler messageHandler;
-    OCMStub([eventSourceMock onMessage:[OCMArg checkWithBlock:^BOOL(id obj) {
+    OCMStub([self.eventSourceMock onMessage:[OCMArg checkWithBlock:^BOOL(id obj) {
         messageHandler = (LDEventSourceEventHandler)obj;
         return YES;
     }]]);
 
-    [[dataManagerMock reject] saveUser:[OCMArg any]];
+    [[self.dataManagerMock reject] saveUser:[OCMArg any]];
 
     LDUserModel *user = [[LDClient sharedInstance] ldUser];
     LDFlagConfigModel *targetFlagConfig = user.flagConfig;
@@ -788,7 +783,7 @@ NSString *const kBoolFlagKey = @"isABawler";
 
     XCTAssertTrue([user.flagConfig isEqualToConfig: targetFlagConfig]);
     OCMVerifyAll(notificationObserver);
-    OCMVerify(dataManagerMock);
+    OCMVerify(self.dataManagerMock);
 }
 
 - (void)testSSEPutEventFailedEmptyData {
@@ -797,12 +792,12 @@ NSString *const kBoolFlagKey = @"isABawler";
     [[notificationObserver expect] notificationWithName:kLDUserNoChangeNotification object:[OCMArg any]];
 
     __block LDEventSourceEventHandler messageHandler;
-    OCMStub([eventSourceMock onMessage:[OCMArg checkWithBlock:^BOOL(id obj) {
+    OCMStub([self.eventSourceMock onMessage:[OCMArg checkWithBlock:^BOOL(id obj) {
         messageHandler = (LDEventSourceEventHandler)obj;
         return YES;
     }]]);
 
-    [[dataManagerMock reject] saveUser:[OCMArg any]];
+    [[self.dataManagerMock reject] saveUser:[OCMArg any]];
 
     LDUserModel *user = [[LDClient sharedInstance] ldUser];
     LDFlagConfigModel *targetFlagConfig = user.flagConfig;
@@ -824,7 +819,7 @@ NSString *const kBoolFlagKey = @"isABawler";
 
     XCTAssertTrue([user.flagConfig isEqualToConfig: targetFlagConfig]);
     OCMVerifyAll(notificationObserver);
-    OCMVerify(dataManagerMock);
+    OCMVerify(self.dataManagerMock);
 }
 
 - (void)testSSEPutEventFailedInvalidData {
@@ -833,12 +828,12 @@ NSString *const kBoolFlagKey = @"isABawler";
     [[notificationObserver expect] notificationWithName:kLDUserNoChangeNotification object:[OCMArg any]];
 
     __block LDEventSourceEventHandler messageHandler;
-    OCMStub([eventSourceMock onMessage:[OCMArg checkWithBlock:^BOOL(id obj) {
+    OCMStub([self.eventSourceMock onMessage:[OCMArg checkWithBlock:^BOOL(id obj) {
         messageHandler = (LDEventSourceEventHandler)obj;
         return YES;
     }]]);
 
-    [[dataManagerMock reject] saveUser:[OCMArg any]];
+    [[self.dataManagerMock reject] saveUser:[OCMArg any]];
 
     LDUserModel *user = [[LDClient sharedInstance] ldUser];
     LDFlagConfigModel *targetFlagConfig = user.flagConfig;
@@ -860,7 +855,7 @@ NSString *const kBoolFlagKey = @"isABawler";
 
     XCTAssertTrue([user.flagConfig isEqualToConfig: targetFlagConfig]);
     OCMVerifyAll(notificationObserver);
-    OCMVerify(dataManagerMock);
+    OCMVerify(self.dataManagerMock);
 }
 
 - (void)testSSEUnrecognizedEvent {
@@ -870,12 +865,12 @@ NSString *const kBoolFlagKey = @"isABawler";
     //it's not obvious, but by not setting expect on the mock observer, the observer will fail when verify is called IF it has received the notification
 
     __block LDEventSourceEventHandler messageHandler;
-    OCMStub([eventSourceMock onMessage:[OCMArg checkWithBlock:^BOOL(id obj) {
+    OCMStub([self.eventSourceMock onMessage:[OCMArg checkWithBlock:^BOOL(id obj) {
         messageHandler = (LDEventSourceEventHandler)obj;
         return YES;
     }]]);
 
-    [[dataManagerMock reject] saveUser:[OCMArg any]];
+    [[self.dataManagerMock reject] saveUser:[OCMArg any]];
 
     LDUserModel *user = [[LDClient sharedInstance] ldUser];
     LDFlagConfigModel *targetFlagConfig = user.flagConfig;
@@ -896,7 +891,7 @@ NSString *const kBoolFlagKey = @"isABawler";
 
     XCTAssertTrue([user.flagConfig isEqualToConfig: targetFlagConfig]);
     OCMVerifyAll(notificationObserver);
-    OCMVerify(dataManagerMock);
+    OCMVerify(self.dataManagerMock);
 }
 
 - (void)testSSEPatchEventSuccess {
@@ -905,7 +900,7 @@ NSString *const kBoolFlagKey = @"isABawler";
     [[notificationObserver expect] notificationWithName:kLDUserUpdatedNotification object:[OCMArg any]];
 
     __block LDEventSourceEventHandler messageHandler;
-    OCMStub([eventSourceMock onMessage:[OCMArg checkWithBlock:^BOOL(id obj) {
+    OCMStub([self.eventSourceMock onMessage:[OCMArg checkWithBlock:^BOOL(id obj) {
         messageHandler = (LDEventSourceEventHandler)obj;
         return YES;
     }]]);
@@ -940,7 +935,7 @@ NSString *const kBoolFlagKey = @"isABawler";
     }]]);
     XCTAssertTrue([patchDictionary isEqualToDictionary:targetPatchDictionary]);
     __block LDUserModel *savedUser;
-    OCMVerify([dataManagerMock saveUser:[OCMArg checkWithBlock:^BOOL(id obj) {
+    OCMVerify([self.dataManagerMock saveUser:[OCMArg checkWithBlock:^BOOL(id obj) {
         if (![obj isKindOfClass:[LDUserModel class]]) { return NO; }
         savedUser = obj;
         return YES;
@@ -955,7 +950,7 @@ NSString *const kBoolFlagKey = @"isABawler";
     [[notificationObserver expect] notificationWithName:kLDUserNoChangeNotification object:[OCMArg any]];
 
     __block LDEventSourceEventHandler messageHandler;
-    OCMStub([eventSourceMock onMessage:[OCMArg checkWithBlock:^BOOL(id obj) {
+    OCMStub([self.eventSourceMock onMessage:[OCMArg checkWithBlock:^BOOL(id obj) {
         messageHandler = (LDEventSourceEventHandler)obj;
         return YES;
     }]]);
@@ -971,7 +966,7 @@ NSString *const kBoolFlagKey = @"isABawler";
     OCMStub([flagConfigMock hasFeaturesEqualToDictionary:[OCMArg any]]).andReturn(YES);
     user.flagConfig = flagConfigMock;
 
-    [[dataManagerMock reject] saveUser:[OCMArg any]];
+    [[self.dataManagerMock reject] saveUser:[OCMArg any]];
 
     self.cleanup = ^{
         [[NSNotificationCenter defaultCenter] removeObserver:notificationObserver];
@@ -990,7 +985,7 @@ NSString *const kBoolFlagKey = @"isABawler";
     messageHandler(patch);
 
     OCMVerifyAll(notificationObserver);
-    OCMVerify(dataManagerMock);
+    OCMVerify(self.dataManagerMock);
 }
 
 - (void)testSSEPatchFailedNilData {
@@ -999,7 +994,7 @@ NSString *const kBoolFlagKey = @"isABawler";
     [[notificationObserver expect] notificationWithName:kLDUserNoChangeNotification object:[OCMArg any]];
 
     __block LDEventSourceEventHandler messageHandler;
-    OCMStub([eventSourceMock onMessage:[OCMArg checkWithBlock:^BOOL(id obj) {
+    OCMStub([self.eventSourceMock onMessage:[OCMArg checkWithBlock:^BOOL(id obj) {
         messageHandler = (LDEventSourceEventHandler)obj;
         return YES;
     }]]);
@@ -1009,7 +1004,7 @@ NSString *const kBoolFlagKey = @"isABawler";
     LDUserModel *user = [[LDClient sharedInstance] ldUser];
     user.flagConfig = flagConfigMock;
 
-    [[dataManagerMock reject] saveUser:[OCMArg any]];
+    [[self.dataManagerMock reject] saveUser:[OCMArg any]];
 
     self.cleanup = ^{
         [[NSNotificationCenter defaultCenter] removeObserver:notificationObserver];
@@ -1028,7 +1023,7 @@ NSString *const kBoolFlagKey = @"isABawler";
     messageHandler(patch);
 
     OCMVerifyAll(notificationObserver);
-    OCMVerify(dataManagerMock);
+    OCMVerify(self.dataManagerMock);
 }
 
 - (void)testSSEPatchFailedEmptyData {
@@ -1037,7 +1032,7 @@ NSString *const kBoolFlagKey = @"isABawler";
     [[notificationObserver expect] notificationWithName:kLDUserNoChangeNotification object:[OCMArg any]];
 
     __block LDEventSourceEventHandler messageHandler;
-    OCMStub([eventSourceMock onMessage:[OCMArg checkWithBlock:^BOOL(id obj) {
+    OCMStub([self.eventSourceMock onMessage:[OCMArg checkWithBlock:^BOOL(id obj) {
         messageHandler = (LDEventSourceEventHandler)obj;
         return YES;
     }]]);
@@ -1047,7 +1042,7 @@ NSString *const kBoolFlagKey = @"isABawler";
     LDUserModel *user = [[LDClient sharedInstance] ldUser];
     user.flagConfig = flagConfigMock;
 
-    [[dataManagerMock reject] saveUser:[OCMArg any]];
+    [[self.dataManagerMock reject] saveUser:[OCMArg any]];
 
     self.cleanup = ^{
         [[NSNotificationCenter defaultCenter] removeObserver:notificationObserver];
@@ -1066,7 +1061,7 @@ NSString *const kBoolFlagKey = @"isABawler";
     messageHandler(patch);
 
     OCMVerifyAll(notificationObserver);
-    OCMVerify(dataManagerMock);
+    OCMVerify(self.dataManagerMock);
 }
 
 - (void)testSSEPatchFailedInvalidData {
@@ -1075,7 +1070,7 @@ NSString *const kBoolFlagKey = @"isABawler";
     [[notificationObserver expect] notificationWithName:kLDUserNoChangeNotification object:[OCMArg any]];
 
     __block LDEventSourceEventHandler messageHandler;
-    OCMStub([eventSourceMock onMessage:[OCMArg checkWithBlock:^BOOL(id obj) {
+    OCMStub([self.eventSourceMock onMessage:[OCMArg checkWithBlock:^BOOL(id obj) {
         messageHandler = (LDEventSourceEventHandler)obj;
         return YES;
     }]]);
@@ -1085,7 +1080,7 @@ NSString *const kBoolFlagKey = @"isABawler";
     LDUserModel *user = [[LDClient sharedInstance] ldUser];
     user.flagConfig = flagConfigMock;
 
-    [[dataManagerMock reject] saveUser:[OCMArg any]];
+    [[self.dataManagerMock reject] saveUser:[OCMArg any]];
 
     self.cleanup = ^{
         [[NSNotificationCenter defaultCenter] removeObserver:notificationObserver];
@@ -1104,7 +1099,7 @@ NSString *const kBoolFlagKey = @"isABawler";
     messageHandler(patch);
 
     OCMVerifyAll(notificationObserver);
-    OCMVerify(dataManagerMock);
+    OCMVerify(self.dataManagerMock);
 }
 
 - (void)testSSEDeleteEventSuccess {
@@ -1113,7 +1108,7 @@ NSString *const kBoolFlagKey = @"isABawler";
     [[notificationObserver expect] notificationWithName:kLDUserUpdatedNotification object:[OCMArg any]];
 
     __block LDEventSourceEventHandler messageHandler;
-    OCMStub([eventSourceMock onMessage:[OCMArg checkWithBlock:^BOOL(id obj) {
+    OCMStub([self.eventSourceMock onMessage:[OCMArg checkWithBlock:^BOOL(id obj) {
         messageHandler = (LDEventSourceEventHandler)obj;
         return YES;
     }]]);
@@ -1148,7 +1143,7 @@ NSString *const kBoolFlagKey = @"isABawler";
     }]]);
     XCTAssertTrue([deleteDictionary isEqualToDictionary:targetDeleteDictionary]);
     __block LDUserModel *savedUser;
-    OCMVerify([dataManagerMock saveUser:[OCMArg checkWithBlock:^BOOL(id obj) {
+    OCMVerify([self.dataManagerMock saveUser:[OCMArg checkWithBlock:^BOOL(id obj) {
         if (![obj isKindOfClass:[LDUserModel class]]) { return NO; }
         savedUser = obj;
         return YES;
@@ -1164,7 +1159,7 @@ NSString *const kBoolFlagKey = @"isABawler";
     [[notificationObserver expect] notificationWithName:kLDUserNoChangeNotification object:[OCMArg any]];
 
     __block LDEventSourceEventHandler messageHandler;
-    OCMStub([eventSourceMock onMessage:[OCMArg checkWithBlock:^BOOL(id obj) {
+    OCMStub([self.eventSourceMock onMessage:[OCMArg checkWithBlock:^BOOL(id obj) {
         messageHandler = (LDEventSourceEventHandler)obj;
         return YES;
     }]]);
@@ -1180,7 +1175,7 @@ NSString *const kBoolFlagKey = @"isABawler";
     OCMStub([flagConfigMock hasFeaturesEqualToDictionary:[OCMArg any]]).andReturn(YES);
     user.flagConfig = flagConfigMock;
 
-    [[dataManagerMock reject] saveUser:[OCMArg any]];
+    [[self.dataManagerMock reject] saveUser:[OCMArg any]];
 
     self.cleanup = ^{
         [[NSNotificationCenter defaultCenter] removeObserver:notificationObserver];
@@ -1199,7 +1194,7 @@ NSString *const kBoolFlagKey = @"isABawler";
     messageHandler(delete);
 
     OCMVerifyAll(notificationObserver);
-    OCMVerify(dataManagerMock);
+    OCMVerify(self.dataManagerMock);
 }
 
 - (void)testSSEDeleteFailedNilData {
@@ -1208,7 +1203,7 @@ NSString *const kBoolFlagKey = @"isABawler";
     [[notificationObserver expect] notificationWithName:kLDUserNoChangeNotification object:[OCMArg any]];
 
     __block LDEventSourceEventHandler messageHandler;
-    OCMStub([eventSourceMock onMessage:[OCMArg checkWithBlock:^BOOL(id obj) {
+    OCMStub([self.eventSourceMock onMessage:[OCMArg checkWithBlock:^BOOL(id obj) {
         messageHandler = (LDEventSourceEventHandler)obj;
         return YES;
     }]]);
@@ -1218,7 +1213,7 @@ NSString *const kBoolFlagKey = @"isABawler";
     LDUserModel *user = [[LDClient sharedInstance] ldUser];
     user.flagConfig = flagConfigMock;
 
-    [[dataManagerMock reject] saveUser:[OCMArg any]];
+    [[self.dataManagerMock reject] saveUser:[OCMArg any]];
 
     self.cleanup = ^{
         [[NSNotificationCenter defaultCenter] removeObserver:notificationObserver];
@@ -1237,7 +1232,7 @@ NSString *const kBoolFlagKey = @"isABawler";
     messageHandler(delete);
 
     OCMVerifyAll(notificationObserver);
-    OCMVerify(dataManagerMock);
+    OCMVerify(self.dataManagerMock);
 }
 
 - (void)testSSEDeleteFailedEmptyData {
@@ -1246,7 +1241,7 @@ NSString *const kBoolFlagKey = @"isABawler";
     [[notificationObserver expect] notificationWithName:kLDUserNoChangeNotification object:[OCMArg any]];
 
     __block LDEventSourceEventHandler messageHandler;
-    OCMStub([eventSourceMock onMessage:[OCMArg checkWithBlock:^BOOL(id obj) {
+    OCMStub([self.eventSourceMock onMessage:[OCMArg checkWithBlock:^BOOL(id obj) {
         messageHandler = (LDEventSourceEventHandler)obj;
         return YES;
     }]]);
@@ -1256,7 +1251,7 @@ NSString *const kBoolFlagKey = @"isABawler";
     LDUserModel *user = [[LDClient sharedInstance] ldUser];
     user.flagConfig = flagConfigMock;
 
-    [[dataManagerMock reject] saveUser:[OCMArg any]];
+    [[self.dataManagerMock reject] saveUser:[OCMArg any]];
 
     self.cleanup = ^{
         [[NSNotificationCenter defaultCenter] removeObserver:notificationObserver];
@@ -1275,7 +1270,7 @@ NSString *const kBoolFlagKey = @"isABawler";
     messageHandler(delete);
 
     OCMVerifyAll(notificationObserver);
-    OCMVerify(dataManagerMock);
+    OCMVerify(self.dataManagerMock);
 }
 
 - (void)testSSEDeleteFailedInvalidData {
@@ -1284,7 +1279,7 @@ NSString *const kBoolFlagKey = @"isABawler";
     [[notificationObserver expect] notificationWithName:kLDUserNoChangeNotification object:[OCMArg any]];
 
     __block LDEventSourceEventHandler messageHandler;
-    OCMStub([eventSourceMock onMessage:[OCMArg checkWithBlock:^BOOL(id obj) {
+    OCMStub([self.eventSourceMock onMessage:[OCMArg checkWithBlock:^BOOL(id obj) {
         messageHandler = (LDEventSourceEventHandler)obj;
         return YES;
     }]]);
@@ -1294,7 +1289,7 @@ NSString *const kBoolFlagKey = @"isABawler";
     LDUserModel *user = [[LDClient sharedInstance] ldUser];
     user.flagConfig = flagConfigMock;
 
-    [[dataManagerMock reject] saveUser:[OCMArg any]];
+    [[self.dataManagerMock reject] saveUser:[OCMArg any]];
 
     self.cleanup = ^{
         [[NSNotificationCenter defaultCenter] removeObserver:notificationObserver];
@@ -1313,7 +1308,7 @@ NSString *const kBoolFlagKey = @"isABawler";
     messageHandler(delete);
 
     OCMVerifyAll(notificationObserver);
-    OCMVerify(dataManagerMock);
+    OCMVerify(self.dataManagerMock);
 }
 
 #pragma mark - Helpers
