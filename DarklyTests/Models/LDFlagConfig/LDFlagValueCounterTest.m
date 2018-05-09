@@ -53,17 +53,14 @@ extern const NSInteger kLDFlagConfigVariationDoesNotExist;
 
 -(void)testDictionaryValue {
     for (NSString *flagKey in self.flagConfigDictionary.allKeys) {
-        NSInteger variation = arc4random_uniform(9) + 1;    //TODO: When adding the new streaming data model, replace this with the value from the flagConfigValue
         LDFlagConfigValue *flagConfigValue = self.flagConfigDictionary[flagKey];
-        flagConfigValue.variation = variation;
-        //flagConfigValue
         LDFlagValueCounter *flagValueCounter = [LDFlagValueCounter counterWithFlagConfigValue:flagConfigValue];
 
         NSDictionary *flagValueCounterDictionary = [flagValueCounter dictionaryValue];
 
         XCTAssertTrue([flagValueCounter hasPropertiesMatchingDictionary:flagValueCounterDictionary]);
 
-        //version & variation do not exist
+        //test version & variation do not exist
         flagConfigValue.version = kLDFlagConfigVersionDoesNotExist;
         flagConfigValue.variation = kLDFlagConfigVariationDoesNotExist;
         flagValueCounter = [LDFlagValueCounter counterWithFlagConfigValue:flagConfigValue];
