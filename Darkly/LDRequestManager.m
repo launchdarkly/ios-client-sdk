@@ -6,8 +6,9 @@
 #import "LDUtil.h"
 #import "LDClientManager.h"
 #import "LDConfig.h"
-#import "NSURLResponse+Unauthorized.h"
+#import "NSURLResponse+LaunchDarkly.h"
 #import "NSDictionary+JSON.h"
+#import "NSHTTPURLResponse+LaunchDarkly.h"
 
 static NSString * const kFeatureFlagGetUrl = @"/msdk/eval/users/";
 static NSString * const kFeatureFlagReportUrl = @"/msdk/eval/user";
@@ -185,7 +186,7 @@ dispatch_queue_t notificationQueue;
         dispatch_semaphore_signal(semaphore);
         dispatch_async(dispatch_get_main_queue(), ^{
             BOOL processedEvents = !error;
-            [self.delegate processedEvents:processedEvents jsonEventArray:eventDictionaries responseDate:nil];
+            [self.delegate processedEvents:processedEvents jsonEventArray:eventDictionaries responseDate:[response headerDate]];
         });
     }];
 

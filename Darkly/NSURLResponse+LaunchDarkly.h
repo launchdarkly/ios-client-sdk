@@ -1,5 +1,5 @@
 //
-//  NSURLResponse+Unauthorized.h
+//  NSURLResponse+LaunchDarkly.h
 //  Darkly
 //
 //  Created by Mark Pokorny on 10/11/17. +JMJ
@@ -9,6 +9,7 @@
 #import <Foundation/Foundation.h>
 
 /// Determines if this response is an unauthorized HTTP response. By default NO, but can be overridden by subclasses that can detected unuathorized response.
-@interface NSURLResponse(Unauthorized)
+@interface NSURLResponse(LaunchDarkly)
 -(BOOL)isUnauthorizedHTTPResponse;
+-(NSDate*)headerDate;
 @end

@@ -237,14 +237,14 @@
 		837583A3209CD0A7004329DD /* LDEventTrackingContextTest.m in Sources */ = {isa = PBXBuildFile; fileRef = 837583A2209CD0A7004329DD /* LDEventTrackingContextTest.m */; };
 		837583A7209CD187004329DD /* LDEventTrackingContext+Testable.m in Sources */ = {isa = PBXBuildFile; fileRef = 837583A6209CD187004329DD /* LDEventTrackingContext+Testable.m */; };
 		83889B141F8E93A100A4EF69 /* LDEvent+Testable.m in Sources */ = {isa = PBXBuildFile; fileRef = 83889B131F8E93A100A4EF69 /* LDEvent+Testable.m */; };
-		83889B171F8F28AB00A4EF69 /* NSURLResponse+Unauthorized.h in Headers */ = {isa = PBXBuildFile; fileRef = 83889B151F8F28AB00A4EF69 /* NSURLResponse+Unauthorized.h */; };
-		83889B181F8F28AB00A4EF69 /* NSURLResponse+Unauthorized.h in Headers */ = {isa = PBXBuildFile; fileRef = 83889B151F8F28AB00A4EF69 /* NSURLResponse+Unauthorized.h */; };
-		83889B191F8F28AB00A4EF69 /* NSURLResponse+Unauthorized.h in Headers */ = {isa = PBXBuildFile; fileRef = 83889B151F8F28AB00A4EF69 /* NSURLResponse+Unauthorized.h */; };
-		83889B1A1F8F28AB00A4EF69 /* NSURLResponse+Unauthorized.h in Headers */ = {isa = PBXBuildFile; fileRef = 83889B151F8F28AB00A4EF69 /* NSURLResponse+Unauthorized.h */; };
-		83889B1B1F8F28AB00A4EF69 /* NSURLResponse+Unauthorized.m in Sources */ = {isa = PBXBuildFile; fileRef = 83889B161F8F28AB00A4EF69 /* NSURLResponse+Unauthorized.m */; };
-		83889B1C1F8F28AB00A4EF69 /* NSURLResponse+Unauthorized.m in Sources */ = {isa = PBXBuildFile; fileRef = 83889B161F8F28AB00A4EF69 /* NSURLResponse+Unauthorized.m */; };
-		83889B1D1F8F28AB00A4EF69 /* NSURLResponse+Unauthorized.m in Sources */ = {isa = PBXBuildFile; fileRef = 83889B161F8F28AB00A4EF69 /* NSURLResponse+Unauthorized.m */; };
-		83889B1E1F8F28AB00A4EF69 /* NSURLResponse+Unauthorized.m in Sources */ = {isa = PBXBuildFile; fileRef = 83889B161F8F28AB00A4EF69 /* NSURLResponse+Unauthorized.m */; };
+		83889B171F8F28AB00A4EF69 /* NSURLResponse+LaunchDarkly.h in Headers */ = {isa = PBXBuildFile; fileRef = 83889B151F8F28AB00A4EF69 /* NSURLResponse+LaunchDarkly.h */; };
+		83889B181F8F28AB00A4EF69 /* NSURLResponse+LaunchDarkly.h in Headers */ = {isa = PBXBuildFile; fileRef = 83889B151F8F28AB00A4EF69 /* NSURLResponse+LaunchDarkly.h */; };
+		83889B191F8F28AB00A4EF69 /* NSURLResponse+LaunchDarkly.h in Headers */ = {isa = PBXBuildFile; fileRef = 83889B151F8F28AB00A4EF69 /* NSURLResponse+LaunchDarkly.h */; };
+		83889B1A1F8F28AB00A4EF69 /* NSURLResponse+LaunchDarkly.h in Headers */ = {isa = PBXBuildFile; fileRef = 83889B151F8F28AB00A4EF69 /* NSURLResponse+LaunchDarkly.h */; };
+		83889B1B1F8F28AB00A4EF69 /* NSURLResponse+LaunchDarkly.m in Sources */ = {isa = PBXBuildFile; fileRef = 83889B161F8F28AB00A4EF69 /* NSURLResponse+LaunchDarkly.m */; };
+		83889B1C1F8F28AB00A4EF69 /* NSURLResponse+LaunchDarkly.m in Sources */ = {isa = PBXBuildFile; fileRef = 83889B161F8F28AB00A4EF69 /* NSURLResponse+LaunchDarkly.m */; };
+		83889B1D1F8F28AB00A4EF69 /* NSURLResponse+LaunchDarkly.m in Sources */ = {isa = PBXBuildFile; fileRef = 83889B161F8F28AB00A4EF69 /* NSURLResponse+LaunchDarkly.m */; };
+		83889B1E1F8F28AB00A4EF69 /* NSURLResponse+LaunchDarkly.m in Sources */ = {isa = PBXBuildFile; fileRef = 83889B161F8F28AB00A4EF69 /* NSURLResponse+LaunchDarkly.m */; };
 		839956E820053081009707D1 /* LDUserModel+Testable.m in Sources */ = {isa = PBXBuildFile; fileRef = 839956E720053081009707D1 /* LDUserModel+Testable.m */; };
 		839D6D271FD1B57B000BE6BD /* DarklyEventSource.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 839D6D261FD1B57B000BE6BD /* DarklyEventSource.framework */; };
 		839D6D291FD1B58E000BE6BD /* DarklyEventSource.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 839D6D281FD1B58E000BE6BD /* DarklyEventSource.framework */; };
@@ -267,6 +267,7 @@
 		83B62E1D20A249A200F2E656 /* NSDateFormatter+JsonHeader.m in Sources */ = {isa = PBXBuildFile; fileRef = 83B62E1620A249A200F2E656 /* NSDateFormatter+JsonHeader.m */; };
 		83B62E1E20A249A200F2E656 /* NSDateFormatter+JsonHeader.m in Sources */ = {isa = PBXBuildFile; fileRef = 83B62E1620A249A200F2E656 /* NSDateFormatter+JsonHeader.m */; };
 		83B62E2020A2517500F2E656 /* NSDateFormatter+JsonHeaderTest.m in Sources */ = {isa = PBXBuildFile; fileRef = 83B62E1F20A2517500F2E656 /* NSDateFormatter+JsonHeaderTest.m */; };
+		83B62E2320A258D400F2E656 /* NSDateFormatter+JsonHeader+Testable.m in Sources */ = {isa = PBXBuildFile; fileRef = 83B62E2220A258D400F2E656 /* NSDateFormatter+JsonHeader+Testable.m */; };
 		83B6FC1D207E60B6002DBA7B /* NSDate+ReferencedDate.h in Headers */ = {isa = PBXBuildFile; fileRef = 83B6FC1B207E60B6002DBA7B /* NSDate+ReferencedDate.h */; };
 		83B6FC1E207E60B6002DBA7B /* NSDate+ReferencedDate.h in Headers */ = {isa = PBXBuildFile; fileRef = 83B6FC1B207E60B6002DBA7B /* NSDate+ReferencedDate.h */; };
 		83B6FC1F207E60B6002DBA7B /* NSDate+ReferencedDate.h in Headers */ = {isa = PBXBuildFile; fileRef = 83B6FC1B207E60B6002DBA7B /* NSDate+ReferencedDate.h */; };
@@ -341,14 +342,14 @@
 		83EF678D1F98FC9200403126 /* LDFlagConfigModel+Testable.m in Sources */ = {isa = PBXBuildFile; fileRef = 83EF678C1F98FC9200403126 /* LDFlagConfigModel+Testable.m */; };
 		83EF67901F99365600403126 /* LDClient+Testable.m in Sources */ = {isa = PBXBuildFile; fileRef = 83EF678F1F99365600403126 /* LDClient+Testable.m */; };
 		83F5B4751F91560300174DF7 /* LDDataManager+Testable.m in Sources */ = {isa = PBXBuildFile; fileRef = 83F5B4741F91560300174DF7 /* LDDataManager+Testable.m */; };
-		83F5B4781F95096A00174DF7 /* NSHTTPURLResponse+Unauthorized.h in Headers */ = {isa = PBXBuildFile; fileRef = 83F5B4761F95096A00174DF7 /* NSHTTPURLResponse+Unauthorized.h */; };
-		83F5B4791F95096A00174DF7 /* NSHTTPURLResponse+Unauthorized.h in Headers */ = {isa = PBXBuildFile; fileRef = 83F5B4761F95096A00174DF7 /* NSHTTPURLResponse+Unauthorized.h */; };
-		83F5B47A1F95096A00174DF7 /* NSHTTPURLResponse+Unauthorized.h in Headers */ = {isa = PBXBuildFile; fileRef = 83F5B4761F95096A00174DF7 /* NSHTTPURLResponse+Unauthorized.h */; };
-		83F5B47B1F95096A00174DF7 /* NSHTTPURLResponse+Unauthorized.h in Headers */ = {isa = PBXBuildFile; fileRef = 83F5B4761F95096A00174DF7 /* NSHTTPURLResponse+Unauthorized.h */; };
-		83F5B47C1F95096A00174DF7 /* NSHTTPURLResponse+Unauthorized.m in Sources */ = {isa = PBXBuildFile; fileRef = 83F5B4771F95096A00174DF7 /* NSHTTPURLResponse+Unauthorized.m */; };
-		83F5B47D1F95096A00174DF7 /* NSHTTPURLResponse+Unauthorized.m in Sources */ = {isa = PBXBuildFile; fileRef = 83F5B4771F95096A00174DF7 /* NSHTTPURLResponse+Unauthorized.m */; };
-		83F5B47E1F95096A00174DF7 /* NSHTTPURLResponse+Unauthorized.m in Sources */ = {isa = PBXBuildFile; fileRef = 83F5B4771F95096A00174DF7 /* NSHTTPURLResponse+Unauthorized.m */; };
-		83F5B47F1F95096A00174DF7 /* NSHTTPURLResponse+Unauthorized.m in Sources */ = {isa = PBXBuildFile; fileRef = 83F5B4771F95096A00174DF7 /* NSHTTPURLResponse+Unauthorized.m */; };
+		83F5B4781F95096A00174DF7 /* NSHTTPURLResponse+LaunchDarkly.h in Headers */ = {isa = PBXBuildFile; fileRef = 83F5B4761F95096A00174DF7 /* NSHTTPURLResponse+LaunchDarkly.h */; };
+		83F5B4791F95096A00174DF7 /* NSHTTPURLResponse+LaunchDarkly.h in Headers */ = {isa = PBXBuildFile; fileRef = 83F5B4761F95096A00174DF7 /* NSHTTPURLResponse+LaunchDarkly.h */; };
+		83F5B47A1F95096A00174DF7 /* NSHTTPURLResponse+LaunchDarkly.h in Headers */ = {isa = PBXBuildFile; fileRef = 83F5B4761F95096A00174DF7 /* NSHTTPURLResponse+LaunchDarkly.h */; };
+		83F5B47B1F95096A00174DF7 /* NSHTTPURLResponse+LaunchDarkly.h in Headers */ = {isa = PBXBuildFile; fileRef = 83F5B4761F95096A00174DF7 /* NSHTTPURLResponse+LaunchDarkly.h */; };
+		83F5B47C1F95096A00174DF7 /* NSHTTPURLResponse+LaunchDarkly.m in Sources */ = {isa = PBXBuildFile; fileRef = 83F5B4771F95096A00174DF7 /* NSHTTPURLResponse+LaunchDarkly.m */; };
+		83F5B47D1F95096A00174DF7 /* NSHTTPURLResponse+LaunchDarkly.m in Sources */ = {isa = PBXBuildFile; fileRef = 83F5B4771F95096A00174DF7 /* NSHTTPURLResponse+LaunchDarkly.m */; };
+		83F5B47E1F95096A00174DF7 /* NSHTTPURLResponse+LaunchDarkly.m in Sources */ = {isa = PBXBuildFile; fileRef = 83F5B4771F95096A00174DF7 /* NSHTTPURLResponse+LaunchDarkly.m */; };
+		83F5B47F1F95096A00174DF7 /* NSHTTPURLResponse+LaunchDarkly.m in Sources */ = {isa = PBXBuildFile; fileRef = 83F5B4771F95096A00174DF7 /* NSHTTPURLResponse+LaunchDarkly.m */; };
 		8BB91CDBFE302A67F0F1403A /* Pods_Darkly_watchOS.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 119B5C495711E2F896661BBA /* Pods_Darkly_watchOS.framework */; };
 		D2E446FE87A4037E841D12CC /* Pods_Darkly_iOS.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 875461696618AE6C4F4B4AC6 /* Pods_Darkly_iOS.framework */; };
 		E0D956853DFFDC3A33332F76 /* Pods_DarklyTests.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C604EED857FC066033CAB2CB /* Pods_DarklyTests.framework */; };
@@ -496,8 +497,8 @@
 		837583A6209CD187004329DD /* LDEventTrackingContext+Testable.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "LDEventTrackingContext+Testable.m"; sourceTree = "<group>"; };
 		83889B121F8E93A100A4EF69 /* LDEvent+Testable.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "LDEvent+Testable.h"; sourceTree = "<group>"; };
 		83889B131F8E93A100A4EF69 /* LDEvent+Testable.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "LDEvent+Testable.m"; sourceTree = "<group>"; };
-		83889B151F8F28AB00A4EF69 /* NSURLResponse+Unauthorized.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "NSURLResponse+Unauthorized.h"; sourceTree = "<group>"; };
-		83889B161F8F28AB00A4EF69 /* NSURLResponse+Unauthorized.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "NSURLResponse+Unauthorized.m"; sourceTree = "<group>"; };
+		83889B151F8F28AB00A4EF69 /* NSURLResponse+LaunchDarkly.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "NSURLResponse+LaunchDarkly.h"; sourceTree = "<group>"; };
+		83889B161F8F28AB00A4EF69 /* NSURLResponse+LaunchDarkly.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "NSURLResponse+LaunchDarkly.m"; sourceTree = "<group>"; };
 		839956E620053081009707D1 /* LDUserModel+Testable.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "LDUserModel+Testable.h"; sourceTree = "<group>"; };
 		839956E720053081009707D1 /* LDUserModel+Testable.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "LDUserModel+Testable.m"; sourceTree = "<group>"; };
 		839D6D261FD1B57B000BE6BD /* DarklyEventSource.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = DarklyEventSource.framework; path = Carthage/Build/watchOS/DarklyEventSource.framework; sourceTree = "<group>"; };
@@ -515,6 +516,9 @@
 		83B62E1520A249A200F2E656 /* NSDateFormatter+JsonHeader.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "NSDateFormatter+JsonHeader.h"; sourceTree = "<group>"; };
 		83B62E1620A249A200F2E656 /* NSDateFormatter+JsonHeader.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "NSDateFormatter+JsonHeader.m"; sourceTree = "<group>"; };
 		83B62E1F20A2517500F2E656 /* NSDateFormatter+JsonHeaderTest.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "NSDateFormatter+JsonHeaderTest.m"; sourceTree = "<group>"; };
+		83B62E2120A258D400F2E656 /* NSDateFormatter+JsonHeader+Testable.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "NSDateFormatter+JsonHeader+Testable.h"; sourceTree = "<group>"; };
+		83B62E2220A258D400F2E656 /* NSDateFormatter+JsonHeader+Testable.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "NSDateFormatter+JsonHeader+Testable.m"; sourceTree = "<group>"; };
+		83B62E2420A275A100F2E656 /* NSHTTPURLResponse+LaunchDarkly+Testable.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "NSHTTPURLResponse+LaunchDarkly+Testable.h"; sourceTree = "<group>"; };
 		83B6FC1B207E60B6002DBA7B /* NSDate+ReferencedDate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "NSDate+ReferencedDate.h"; sourceTree = "<group>"; };
 		83B6FC1C207E60B6002DBA7B /* NSDate+ReferencedDate.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "NSDate+ReferencedDate.m"; sourceTree = "<group>"; };
 		83B6FC29208127B2002DBA7B /* LDEventModel+Testable.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "LDEventModel+Testable.h"; sourceTree = "<group>"; };
@@ -565,8 +569,8 @@
 		83EF678F1F99365600403126 /* LDClient+Testable.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "LDClient+Testable.m"; sourceTree = "<group>"; };
 		83F5B4731F91560300174DF7 /* LDDataManager+Testable.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "LDDataManager+Testable.h"; sourceTree = "<group>"; };
 		83F5B4741F91560300174DF7 /* LDDataManager+Testable.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "LDDataManager+Testable.m"; sourceTree = "<group>"; };
-		83F5B4761F95096A00174DF7 /* NSHTTPURLResponse+Unauthorized.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "NSHTTPURLResponse+Unauthorized.h"; sourceTree = "<group>"; };
-		83F5B4771F95096A00174DF7 /* NSHTTPURLResponse+Unauthorized.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "NSHTTPURLResponse+Unauthorized.m"; sourceTree = "<group>"; };
+		83F5B4761F95096A00174DF7 /* NSHTTPURLResponse+LaunchDarkly.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "NSHTTPURLResponse+LaunchDarkly.h"; sourceTree = "<group>"; };
+		83F5B4771F95096A00174DF7 /* NSHTTPURLResponse+LaunchDarkly.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "NSHTTPURLResponse+LaunchDarkly.m"; sourceTree = "<group>"; };
 		83FE9DD643D01669FB16BBEF /* Pods-Darkly_iOS.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Darkly_iOS.release.xcconfig"; path = "Pods/Target Support Files/Pods-Darkly_iOS/Pods-Darkly_iOS.release.xcconfig"; sourceTree = "<group>"; };
 		875461696618AE6C4F4B4AC6 /* Pods_Darkly_iOS.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_Darkly_iOS.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		9EBBFAE744BB0BB1176E84CC /* Pods-Darkly_watchOS.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Darkly_watchOS.release.xcconfig"; path = "Pods/Target Support Files/Pods-Darkly_watchOS/Pods-Darkly_watchOS.release.xcconfig"; sourceTree = "<group>"; };
@@ -742,6 +746,7 @@
 				83ECCC962087DE960086F879 /* LDFlagConfig */,
 				690347181E689B9F00E45133 /* LDUserModelTest.m */,
 				8305EC7920222B5E002F20DB /* NSObject+LDFlagConfigValueTest.m */,
+				83B62E1F20A2517500F2E656 /* NSDateFormatter+JsonHeaderTest.m */,
 			);
 			path = Models;
 			sourceTree = "<group>";
@@ -845,7 +850,9 @@
 				83B6FC2A208127B2002DBA7B /* LDEventModel+Testable.m */,
 				83ECCCB320891E8E0086F879 /* NSInteger+Testable.h */,
 				83ECCCB420891E8E0086F879 /* NSInteger+Testable.m */,
-				83B62E1F20A2517500F2E656 /* NSDateFormatter+JsonHeaderTest.m */,
+				83B62E2120A258D400F2E656 /* NSDateFormatter+JsonHeader+Testable.h */,
+				83B62E2220A258D400F2E656 /* NSDateFormatter+JsonHeader+Testable.m */,
+				83B62E2420A275A100F2E656 /* NSHTTPURLResponse+LaunchDarkly+Testable.h */,
 			);
 			path = Categories;
 			sourceTree = "<group>";
@@ -859,10 +866,10 @@
 				832C78821F296F3400E334A2 /* NSMutableDictionary+NullRemovable.m */,
 				833D08C91F3B97EB00BEED83 /* NSThread+MainExecutable.h */,
 				833D08CA1F3B97EB00BEED83 /* NSThread+MainExecutable.m */,
-				83889B151F8F28AB00A4EF69 /* NSURLResponse+Unauthorized.h */,
-				83889B161F8F28AB00A4EF69 /* NSURLResponse+Unauthorized.m */,
-				83F5B4761F95096A00174DF7 /* NSHTTPURLResponse+Unauthorized.h */,
-				83F5B4771F95096A00174DF7 /* NSHTTPURLResponse+Unauthorized.m */,
+				83889B151F8F28AB00A4EF69 /* NSURLResponse+LaunchDarkly.h */,
+				83889B161F8F28AB00A4EF69 /* NSURLResponse+LaunchDarkly.m */,
+				83F5B4761F95096A00174DF7 /* NSHTTPURLResponse+LaunchDarkly.h */,
+				83F5B4771F95096A00174DF7 /* NSHTTPURLResponse+LaunchDarkly.m */,
 				83EF677F1F979B4100403126 /* LDEvent+Unauthorized.h */,
 				83EF67801F979B4100403126 /* LDEvent+Unauthorized.m */,
 				8365E5062028F39E00DE8E2B /* LDEvent+EventTypes.h */,
@@ -964,7 +971,7 @@
 				690347031E68990000E45133 /* LDRequestManager.h in Headers */,
 				690347051E68990000E45133 /* LDUserBuilder.h in Headers */,
 				8305EC6720221973002F20DB /* LDFlagConfigValue.h in Headers */,
-				83F5B4781F95096A00174DF7 /* NSHTTPURLResponse+Unauthorized.h in Headers */,
+				83F5B4781F95096A00174DF7 /* NSHTTPURLResponse+LaunchDarkly.h in Headers */,
 				6903470D1E68990000E45133 /* NSDictionary+JSON.h in Headers */,
 				83B6FC1D207E60B6002DBA7B /* NSDate+ReferencedDate.h in Headers */,
 				690347091E68990000E45133 /* LDUtil.h in Headers */,
@@ -975,7 +982,7 @@
 				83C8867D2087A786004AC82F /* LDFlagValueCounter.h in Headers */,
 				8375839A209CCE71004329DD /* LDEventTrackingContext.h in Headers */,
 				83ECCCA62088FBA80086F879 /* LDFlagConfigTracker.h in Headers */,
-				83889B171F8F28AB00A4EF69 /* NSURLResponse+Unauthorized.h in Headers */,
+				83889B171F8F28AB00A4EF69 /* NSURLResponse+LaunchDarkly.h in Headers */,
 				690347071E68990000E45133 /* LDUserModel.h in Headers */,
 				8365E5082028F39E00DE8E2B /* LDEvent+EventTypes.h in Headers */,
 				832C78831F296F3400E334A2 /* NSMutableDictionary+NullRemovable.h in Headers */,
@@ -1002,7 +1009,7 @@
 				69A87EA81E74712800B88B23 /* LDRequestManager.h in Headers */,
 				69A87EB01E74712800B88B23 /* NSDictionary+JSON.h in Headers */,
 				8305EC6A20221973002F20DB /* LDFlagConfigValue.h in Headers */,
-				83F5B47B1F95096A00174DF7 /* NSHTTPURLResponse+Unauthorized.h in Headers */,
+				83F5B47B1F95096A00174DF7 /* NSHTTPURLResponse+LaunchDarkly.h in Headers */,
 				69A87EAA1E74712800B88B23 /* LDUserBuilder.h in Headers */,
 				83B6FC20207E60B6002DBA7B /* NSDate+ReferencedDate.h in Headers */,
 				69A87EAE1E74712800B88B23 /* LDUtil.h in Headers */,
@@ -1013,7 +1020,7 @@
 				83C886802087A786004AC82F /* LDFlagValueCounter.h in Headers */,
 				8375839D209CCE71004329DD /* LDEventTrackingContext.h in Headers */,
 				83ECCCA92088FBA80086F879 /* LDFlagConfigTracker.h in Headers */,
-				83889B1A1F8F28AB00A4EF69 /* NSURLResponse+Unauthorized.h in Headers */,
+				83889B1A1F8F28AB00A4EF69 /* NSURLResponse+LaunchDarkly.h in Headers */,
 				69A87EAC1E74712800B88B23 /* LDUserModel.h in Headers */,
 				8365E50B2028F39E00DE8E2B /* LDEvent+EventTypes.h in Headers */,
 				832C78861F296F3400E334A2 /* NSMutableDictionary+NullRemovable.h in Headers */,
@@ -1040,7 +1047,7 @@
 				69BD7E291E6C79910056D70F /* LDRequestManager.h in Headers */,
 				69BD7E311E6C79910056D70F /* NSDictionary+JSON.h in Headers */,
 				8305EC6920221973002F20DB /* LDFlagConfigValue.h in Headers */,
-				83F5B47A1F95096A00174DF7 /* NSHTTPURLResponse+Unauthorized.h in Headers */,
+				83F5B47A1F95096A00174DF7 /* NSHTTPURLResponse+LaunchDarkly.h in Headers */,
 				69BD7E2B1E6C79910056D70F /* LDUserBuilder.h in Headers */,
 				83B6FC1F207E60B6002DBA7B /* NSDate+ReferencedDate.h in Headers */,
 				69BD7E2F1E6C79910056D70F /* LDUtil.h in Headers */,
@@ -1051,7 +1058,7 @@
 				83C8867F2087A786004AC82F /* LDFlagValueCounter.h in Headers */,
 				8375839C209CCE71004329DD /* LDEventTrackingContext.h in Headers */,
 				83ECCCA82088FBA80086F879 /* LDFlagConfigTracker.h in Headers */,
-				83889B191F8F28AB00A4EF69 /* NSURLResponse+Unauthorized.h in Headers */,
+				83889B191F8F28AB00A4EF69 /* NSURLResponse+LaunchDarkly.h in Headers */,
 				69BD7E2D1E6C79910056D70F /* LDUserModel.h in Headers */,
 				8365E50A2028F39E00DE8E2B /* LDEvent+EventTypes.h in Headers */,
 				832C78851F296F3400E334A2 /* NSMutableDictionary+NullRemovable.h in Headers */,
@@ -1078,7 +1085,7 @@
 				69F3F6A71E6BF82C00079A09 /* LDUserModel.h in Headers */,
 				69F3F6951E6BF82100079A09 /* DarklyConstants.h in Headers */,
 				8305EC6820221973002F20DB /* LDFlagConfigValue.h in Headers */,
-				83F5B4791F95096A00174DF7 /* NSHTTPURLResponse+Unauthorized.h in Headers */,
+				83F5B4791F95096A00174DF7 /* NSHTTPURLResponse+LaunchDarkly.h in Headers */,
 				69F3F6971E6BF82C00079A09 /* LDClient.h in Headers */,
 				83B6FC1E207E60B6002DBA7B /* NSDate+ReferencedDate.h in Headers */,
 				69F3F6AB1E6BF82C00079A09 /* NSDictionary+JSON.h in Headers */,
@@ -1089,7 +1096,7 @@
 				83C8867E2087A786004AC82F /* LDFlagValueCounter.h in Headers */,
 				8375839B209CCE71004329DD /* LDEventTrackingContext.h in Headers */,
 				83ECCCA72088FBA80086F879 /* LDFlagConfigTracker.h in Headers */,
-				83889B181F8F28AB00A4EF69 /* NSURLResponse+Unauthorized.h in Headers */,
+				83889B181F8F28AB00A4EF69 /* NSURLResponse+LaunchDarkly.h in Headers */,
 				69F3F69D1E6BF82C00079A09 /* LDEventModel.h in Headers */,
 				8365E5092028F39E00DE8E2B /* LDEvent+EventTypes.h in Headers */,
 				832C78841F296F3400E334A2 /* NSMutableDictionary+NullRemovable.h in Headers */,
@@ -1539,7 +1546,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				83889B1B1F8F28AB00A4EF69 /* NSURLResponse+Unauthorized.m in Sources */,
+				83889B1B1F8F28AB00A4EF69 /* NSURLResponse+LaunchDarkly.m in Sources */,
 				8375839E209CCE71004329DD /* LDEventTrackingContext.m in Sources */,
 				8365E50C2028F39E00DE8E2B /* LDEvent+EventTypes.m in Sources */,
 				690346FE1E68990000E45133 /* LDEventModel.m in Sources */,
@@ -1550,7 +1557,7 @@
 				83ECCCAA2088FBA80086F879 /* LDFlagConfigTracker.m in Sources */,
 				833D08CF1F3B97EB00BEED83 /* NSThread+MainExecutable.m in Sources */,
 				690346FA1E68990000E45133 /* LDClientManager.m in Sources */,
-				83F5B47C1F95096A00174DF7 /* NSHTTPURLResponse+Unauthorized.m in Sources */,
+				83F5B47C1F95096A00174DF7 /* NSHTTPURLResponse+LaunchDarkly.m in Sources */,
 				690346F81E68990000E45133 /* LDClient.m in Sources */,
 				690346F61E68990000E45133 /* DarklyConstants.m in Sources */,
 				83B8C2531FEC19500082B8A9 /* NSDateFormatter+LDUserModel.m in Sources */,
@@ -1594,6 +1601,7 @@
 				83258A3D1F323049008C2133 /* LDClientManager+EventSource.m in Sources */,
 				83ECCC9B2087EF4A0086F879 /* LDFlagConfigValue+Testable.m in Sources */,
 				837583A3209CD0A7004329DD /* LDEventTrackingContextTest.m in Sources */,
+				83B62E2320A258D400F2E656 /* NSDateFormatter+JsonHeader+Testable.m in Sources */,
 				830C2AD220768697001D645D /* LDThrottler+Testable.m in Sources */,
 				8305EC7A20222B5E002F20DB /* NSObject+LDFlagConfigValueTest.m in Sources */,
 				83BE938C201A797B00DD1ED9 /* NSJSONSerialization+Testable.m in Sources */,
@@ -1624,7 +1632,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				83889B1E1F8F28AB00A4EF69 /* NSURLResponse+Unauthorized.m in Sources */,
+				83889B1E1F8F28AB00A4EF69 /* NSURLResponse+LaunchDarkly.m in Sources */,
 				837583A1209CCE71004329DD /* LDEventTrackingContext.m in Sources */,
 				8365E50F2028F39E00DE8E2B /* LDEvent+EventTypes.m in Sources */,
 				69A87EA31E74712800B88B23 /* LDEventModel.m in Sources */,
@@ -1635,7 +1643,7 @@
 				83ECCCAD2088FBA80086F879 /* LDFlagConfigTracker.m in Sources */,
 				833D08D21F3B97EB00BEED83 /* NSThread+MainExecutable.m in Sources */,
 				69A87EA11E74712800B88B23 /* LDConfig.m in Sources */,
-				83F5B47F1F95096A00174DF7 /* NSHTTPURLResponse+Unauthorized.m in Sources */,
+				83F5B47F1F95096A00174DF7 /* NSHTTPURLResponse+LaunchDarkly.m in Sources */,
 				69A87EA51E74712800B88B23 /* LDFlagConfigModel.m in Sources */,
 				69A87EB11E74712800B88B23 /* NSDictionary+JSON.m in Sources */,
 				83B8C2561FEC19500082B8A9 /* NSDateFormatter+LDUserModel.m in Sources */,
@@ -1660,7 +1668,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				83889B1D1F8F28AB00A4EF69 /* NSURLResponse+Unauthorized.m in Sources */,
+				83889B1D1F8F28AB00A4EF69 /* NSURLResponse+LaunchDarkly.m in Sources */,
 				837583A0209CCE71004329DD /* LDEventTrackingContext.m in Sources */,
 				8365E50E2028F39E00DE8E2B /* LDEvent+EventTypes.m in Sources */,
 				69BD7E241E6C79910056D70F /* LDEventModel.m in Sources */,
@@ -1671,7 +1679,7 @@
 				83ECCCAC2088FBA80086F879 /* LDFlagConfigTracker.m in Sources */,
 				833D08D11F3B97EB00BEED83 /* NSThread+MainExecutable.m in Sources */,
 				69BD7E221E6C79910056D70F /* LDConfig.m in Sources */,
-				83F5B47E1F95096A00174DF7 /* NSHTTPURLResponse+Unauthorized.m in Sources */,
+				83F5B47E1F95096A00174DF7 /* NSHTTPURLResponse+LaunchDarkly.m in Sources */,
 				69BD7E261E6C79910056D70F /* LDFlagConfigModel.m in Sources */,
 				69BD7E321E6C79910056D70F /* NSDictionary+JSON.m in Sources */,
 				83B8C2551FEC19500082B8A9 /* NSDateFormatter+LDUserModel.m in Sources */,
@@ -1696,7 +1704,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				83889B1C1F8F28AB00A4EF69 /* NSURLResponse+Unauthorized.m in Sources */,
+				83889B1C1F8F28AB00A4EF69 /* NSURLResponse+LaunchDarkly.m in Sources */,
 				8375839F209CCE71004329DD /* LDEventTrackingContext.m in Sources */,
 				8365E50D2028F39E00DE8E2B /* LDEvent+EventTypes.m in Sources */,
 				69F3F69E1E6BF82C00079A09 /* LDEventModel.m in Sources */,
@@ -1707,7 +1715,7 @@
 				83ECCCAB2088FBA80086F879 /* LDFlagConfigTracker.m in Sources */,
 				833D08D01F3B97EB00BEED83 /* NSThread+MainExecutable.m in Sources */,
 				69F3F69C1E6BF82C00079A09 /* LDConfig.m in Sources */,
-				83F5B47D1F95096A00174DF7 /* NSHTTPURLResponse+Unauthorized.m in Sources */,
+				83F5B47D1F95096A00174DF7 /* NSHTTPURLResponse+LaunchDarkly.m in Sources */,
 				69F3F6A01E6BF82C00079A09 /* LDFlagConfigModel.m in Sources */,
 				69F3F6AC1E6BF82C00079A09 /* NSDictionary+JSON.m in Sources */,
 				83B8C2541FEC19500082B8A9 /* NSDateFormatter+LDUserModel.m in Sources */,

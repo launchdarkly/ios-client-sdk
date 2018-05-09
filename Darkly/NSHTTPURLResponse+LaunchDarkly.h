@@ -1,5 +1,5 @@
 //
-//  NSHTTPURLResponse+Unauthorized.h
+//  NSHTTPURLResponse+LaunchDarkly.h
 //  Darkly
 //
 //  Created by Mark Pokorny on 10/16/17. +JMJ
@@ -8,6 +8,7 @@
 
 #import <Foundation/Foundation.h>
 
-@interface NSHTTPURLResponse(Unauthorized)
+@interface NSHTTPURLResponse(LaunchDarkly)
 -(BOOL)isUnauthorizedHTTPResponse;
+-(NSDate*)headerDate;
 @end
