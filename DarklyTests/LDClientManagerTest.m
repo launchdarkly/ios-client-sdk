@@ -25,6 +25,7 @@
 #import "LDFlagConfigTracker+Testable.h"
 #import "NSDate+ReferencedDate.h"
 #import "NSInteger+Testable.h"
+#import "NSDateFormatter+JsonHeader+Testable.h"
 
 extern NSString * _Nonnull const kLDFlagConfigValueKeyValue;
 extern NSString * _Nonnull const kLDFlagConfigValueKeyVersion;
@@ -406,29 +407,30 @@ NSString *const kBoolFlagKey = @"isABawler";
                                                defaultFlagValue:@(NO)
                                                            user:[LDClient sharedInstance].ldUser
                                                      inlineUser:config.inlineUserInEvents];
+    NSArray *events = @[[event dictionaryValueUsingConfig:config]];
+    NSDate *headerDate = [NSDateFormatter eventDateHeaderStub];
+    [[self.dataManagerMock expect] deleteProcessedEvents:events];
+    [[self.dataManagerMock expect] setLastEventResponseDate:headerDate];
 
-    LDClientManager *clientManager = [LDClientManager sharedInstance];
-    [clientManager processedEvents:YES jsonEventArray:@[[event dictionaryValueUsingConfig:config]] responseDate:nil];
-    
-    OCMVerify([self.dataManagerMock deleteProcessedEvents:[OCMArg any]]);
-}
-
-- (void)testProcessedEventsSuccessWithoutProcessedEvents {
-    
-    LDClientManager *clientManager = [LDClientManager sharedInstance];
-    [clientManager processedEvents:YES jsonEventArray:@[] responseDate:nil];
-    
-    [[self.dataManagerMock reject] deleteProcessedEvents:[OCMArg any]];
+    [[LDClientManager sharedInstance] processedEvents:YES jsonEventArray:events responseDate:headerDate];
     
     [self.dataManagerMock verify];
 }
 
+- (void)testProcessedEventsSuccessWithoutProcessedEvents {
+    NSDate *headerDate = [NSDateFormatter eventDateHeaderStub];
+    [[self.dataManagerMock expect] deleteProcessedEvents:@[]];
+    [[self.dataManagerMock expect] setLastEventResponseDate:headerDate];
+
+    [[LDClientManager sharedInstance] processedEvents:YES jsonEventArray:@[] responseDate:headerDate];
+
+    [self.dataManagerMock verify];
+}
+
 - (void)testProcessedEventsFailure {
-    
-    LDClientManager *clientManager = [LDClientManager sharedInstance];
-    [clientManager processedEvents:NO jsonEventArray:nil responseDate:nil];
-    
     [[self.dataManagerMock reject] deleteProcessedEvents:[OCMArg any]];
+
+    [[LDClientManager sharedInstance] processedEvents:NO jsonEventArray:nil responseDate:nil];
     
     [self.dataManagerMock verify];
 }

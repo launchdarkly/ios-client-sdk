@@ -361,8 +361,9 @@ NSString * const kLDClientManagerStreamMethod = @"meval";
         DEBUG_LOGX(@"ClientManager processedEvents method called after receiving successful response from server");
         // Audit cached events versus processed Events and only keep difference
         if (jsonEventArray) {
-            [[LDDataManager sharedManager] deleteProcessedEvents: jsonEventArray];
+            [[LDDataManager sharedManager] deleteProcessedEvents:jsonEventArray];
         }
+        [LDDataManager sharedManager].lastEventResponseDate = responseDate;
     }
 }
 
