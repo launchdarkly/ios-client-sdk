@@ -730,13 +730,8 @@ NSString *const kBoolFlagKey = @"isABawler";
 
     LDUserModel *user = [[LDClient sharedInstance] ldUser];
     id flagConfigMock = OCMClassMock([LDFlagConfigModel class]);
-    __block NSDictionary *putDictionary;
-    [[flagConfigMock expect] addOrReplaceFromDictionary:[OCMArg checkWithBlock:^BOOL(id obj) {
-        if (![obj isKindOfClass:[NSDictionary class]]) { return NO; }
-        putDictionary = obj;
-        return YES;
-    }]];
     OCMStub([flagConfigMock isEqualToConfig:[OCMArg any]]).andReturn(YES);
+    [[flagConfigMock expect] updateEventTrackingContextFromConfig:[OCMArg any]];
     user.flagConfig = flagConfigMock;
 
     [[self.dataManagerMock reject] saveUser:[OCMArg any]];
@@ -757,6 +752,7 @@ NSString *const kBoolFlagKey = @"isABawler";
 
     messageHandler(put);
 
+    [flagConfigMock verify];
     OCMVerifyAll(notificationObserver);
     OCMVerify(self.dataManagerMock);
 }

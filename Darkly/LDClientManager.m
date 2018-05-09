@@ -222,6 +222,7 @@ NSString * const kLDClientManagerStreamMethod = @"meval";
     LDUserModel *user = [[LDClient sharedInstance] ldUser];
 
     if ([user.flagConfig isEqualToConfig:newConfig]) {
+        [user.flagConfig updateEventTrackingContextFromConfig:newConfig];
         DEBUG_LOGX(@"ClientManager handlePutEvent resulted in no change to the flag config");
         [[NSNotificationCenter defaultCenter] postNotificationName:kLDUserNoChangeNotification object:nil];
         return;
