@@ -11,6 +11,10 @@
 		831425AF206ABB5300F2EF36 /* EnvironmentReportingMock.swift in Sources */ = {isa = PBXBuildFile; fileRef = 831425AE206ABB5300F2EF36 /* EnvironmentReportingMock.swift */; };
 		831425B1206B030100F2EF36 /* EnvironmentReporter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 831425B0206B030100F2EF36 /* EnvironmentReporter.swift */; };
 		831425B2206B030100F2EF36 /* EnvironmentReporter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 831425B0206B030100F2EF36 /* EnvironmentReporter.swift */; };
+		831AAE2C20A9E4F600B46DBA /* Throttler.swift in Sources */ = {isa = PBXBuildFile; fileRef = 831AAE2B20A9E4F600B46DBA /* Throttler.swift */; };
+		831AAE2D20A9E4F600B46DBA /* Throttler.swift in Sources */ = {isa = PBXBuildFile; fileRef = 831AAE2B20A9E4F600B46DBA /* Throttler.swift */; };
+		831AAE2E20A9E4F600B46DBA /* Throttler.swift in Sources */ = {isa = PBXBuildFile; fileRef = 831AAE2B20A9E4F600B46DBA /* Throttler.swift */; };
+		831AAE3020A9E75D00B46DBA /* ThrottlerSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = 831AAE2F20A9E75D00B46DBA /* ThrottlerSpec.swift */; };
 		831CE0661F853A1700A13A3A /* Match.swift in Sources */ = {isa = PBXBuildFile; fileRef = 831CE0651F853A1700A13A3A /* Match.swift */; };
 		831D2AAF2061AAA000B4AC3C /* Thread.swift in Sources */ = {isa = PBXBuildFile; fileRef = 831D2AAE2061AAA000B4AC3C /* Thread.swift */; };
 		831D8B6D1F6B1F7B00ED65E8 /* ObjcLDVariationValue.swift in Sources */ = {isa = PBXBuildFile; fileRef = 831D8B6C1F6B1F7B00ED65E8 /* ObjcLDVariationValue.swift */; };
@@ -199,6 +203,8 @@
 		830BF932202D188E006DF9B1 /* HTTPURLRequest.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HTTPURLRequest.swift; sourceTree = "<group>"; };
 		831425AE206ABB5300F2EF36 /* EnvironmentReportingMock.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EnvironmentReportingMock.swift; sourceTree = "<group>"; };
 		831425B0206B030100F2EF36 /* EnvironmentReporter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EnvironmentReporter.swift; sourceTree = "<group>"; };
+		831AAE2B20A9E4F600B46DBA /* Throttler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Throttler.swift; sourceTree = "<group>"; };
+		831AAE2F20A9E75D00B46DBA /* ThrottlerSpec.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ThrottlerSpec.swift; sourceTree = "<group>"; };
 		831CE0651F853A1700A13A3A /* Match.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Match.swift; sourceTree = "<group>"; };
 		831D2AAE2061AAA000B4AC3C /* Thread.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Thread.swift; sourceTree = "<group>"; };
 		831D8B6C1F6B1F7B00ED65E8 /* ObjcLDVariationValue.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ObjcLDVariationValue.swift; sourceTree = "<group>"; };
@@ -376,6 +382,7 @@
 				838F31BE1FDA096A006919FD /* UserCacheConverterSpec.swift */,
 				83B8C2441FE360CF0082B8A9 /* FlagChangeNotifierSpec.swift */,
 				83383A5020460DD30024D975 /* SynchronizingErrorSpec.swift */,
+				831AAE2F20A9E75D00B46DBA /* ThrottlerSpec.swift */,
 			);
 			path = "Service Objects";
 			sourceTree = "<group>";
@@ -593,6 +600,7 @@
 				831D8B731F72994600ED65E8 /* FlagStore.swift */,
 				837EF3732059C237009D628A /* Log.swift */,
 				83B1D7C82073F354006D1B1C /* CwlSysctl.swift */,
+				831AAE2B20A9E4F600B46DBA /* Throttler.swift */,
 			);
 			path = "Service Objects";
 			sourceTree = "<group>";
@@ -1044,6 +1052,7 @@
 				831EF35220655E730001C643 /* UserFlagCache.swift in Sources */,
 				831EF35320655E730001C643 /* FlagCollectionCache.swift in Sources */,
 				831EF35420655E730001C643 /* UserCacheConverter.swift in Sources */,
+				831AAE2E20A9E4F600B46DBA /* Throttler.swift in Sources */,
 				831EF35520655E730001C643 /* FlagSynchronizer.swift in Sources */,
 				831EF35620655E730001C643 /* FlagChangeNotifier.swift in Sources */,
 				831EF35720655E730001C643 /* LDEventReporter.swift in Sources */,
@@ -1091,6 +1100,7 @@
 				83D559761FD87D67002D10C8 /* CacheableUserFlags.swift in Sources */,
 				8358F25E1F474E5900ECE1AF /* LDChangedFlag.swift in Sources */,
 				83D559741FD87CC9002D10C8 /* KeyedValueCache.swift in Sources */,
+				831AAE2C20A9E4F600B46DBA /* Throttler.swift in Sources */,
 				8354EFE11F26380700C05156 /* LDConfig.swift in Sources */,
 				83F0A5621FB4D66600550A95 /* AnyComparer.swift in Sources */,
 				831D8B741F72994600ED65E8 /* FlagStore.swift in Sources */,
@@ -1136,6 +1146,7 @@
 				83396BC91F7C3711000E256E /* DarklyServiceSpec.swift in Sources */,
 				83EF67931F9945E800403126 /* LDEventSpec.swift in Sources */,
 				8342DAE51FB10C4800564D1F /* UserFlagCacheSpec.swift in Sources */,
+				831AAE3020A9E75D00B46DBA /* ThrottlerSpec.swift in Sources */,
 				838F96741FB9F024009CFC45 /* LDClientSpec.swift in Sources */,
 				832EA063203DEA6600A93C0E /* CacheableUserFlagsSpec.swift in Sources */,
 				83E2E2061F9E7AC7007514E9 /* LDUserSpec.swift in Sources */,
@@ -1180,6 +1191,7 @@
 				83D9EC812062DEAB004D7FA6 /* CacheableUserFlags.swift in Sources */,
 				83D9EC822062DEAB004D7FA6 /* ClientServiceFactory.swift in Sources */,
 				83D9EC832062DEAB004D7FA6 /* KeyedValueCache.swift in Sources */,
+				831AAE2D20A9E4F600B46DBA /* Throttler.swift in Sources */,
 				83D9EC842062DEAB004D7FA6 /* UserFlagCache.swift in Sources */,
 				83D9EC852062DEAB004D7FA6 /* FlagCollectionCache.swift in Sources */,
 				83D9EC862062DEAB004D7FA6 /* UserCacheConverter.swift in Sources */,
