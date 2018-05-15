@@ -368,6 +368,30 @@ final class LDFlagSynchronizingMock: LDFlagSynchronizing {
     }
 }
 
+// MARK: - ThrottlingMock
+final class ThrottlingMock: Throttling {
+
+    // MARK: maxDelay
+    var maxDelaySetCount = 0
+    var setMaxDelayCallback: (() -> Void)?
+    var maxDelay: TimeInterval = 600 {
+        didSet {
+            maxDelaySetCount += 1
+            setMaxDelayCallback?()
+        }
+    }
+
+    // MARK: runThrottled
+    var runThrottledCallCount = 0
+    var runThrottledCallback: (() -> Void)?
+    var runThrottledReceivedRunClosure: RunClosure?
+    func runThrottled(_ runClosure: RunClosure?) {
+        runThrottledCallCount += 1
+        runThrottledReceivedRunClosure = runClosure
+        runThrottledCallback?()
+    }
+}
+
 // MARK: - UserFlagCachingMock
 final class UserFlagCachingMock: UserFlagCaching {
 

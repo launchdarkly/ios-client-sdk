@@ -10,7 +10,15 @@ import Foundation
 
 typealias RunClosure = () -> Void
 
-final class Throttler {
+//sourcery: AutoMockable
+protocol Throttling {
+    //sourcery: DefaultMockValue = 600.0
+    var maxDelay: TimeInterval { get }
+
+    func runThrottled(_ runClosure: RunClosure?)
+}
+
+final class Throttler: Throttling {
     struct Constants {
         static let maxDelay: TimeInterval = 600.0
         fileprivate static let runQueueName = "LaunchDarkly.Throttler.runQueue"
