@@ -14,7 +14,7 @@ struct HTTPHeaders {
         static let apiKey = "api_key"
         static let authorization = "Authorization"
         static let userAgent = "User-Agent"
-        static let sdkVersion = "3.0.0"
+        static let sdkVersion = "3.0.0.16"
         static let contentType = "Content-Type"
         static let applicationJson = "application/json"
         static let accept = "Accept"
