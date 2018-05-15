@@ -27,6 +27,7 @@ protocol ClientServiceCreating {
     mutating func makeStreamingProvider(url: URL, httpHeaders: [String: String]) -> DarklyStreamingProvider
     mutating func makeStreamingProvider(url: URL, httpHeaders: [String: String], connectMethod: String?, connectBody: Data?) -> DarklyStreamingProvider
     func makeEnvironmentReporter() -> EnvironmentReporting
+    func makeThrottler(maxDelay: TimeInterval) -> Throttling
 }
 
 struct ClientServiceFactory: ClientServiceCreating {
@@ -84,5 +85,9 @@ struct ClientServiceFactory: ClientServiceCreating {
 
     func makeEnvironmentReporter() -> EnvironmentReporting {
         return EnvironmentReporter()
+    }
+
+    func makeThrottler(maxDelay: TimeInterval) -> Throttling {
+        return Throttler(maxDelay: maxDelay)
     }
 }

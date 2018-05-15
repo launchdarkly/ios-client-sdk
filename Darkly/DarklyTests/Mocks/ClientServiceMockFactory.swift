@@ -92,4 +92,10 @@ struct ClientServiceMockFactory: ClientServiceCreating {
     func makeEnvironmentReporter() -> EnvironmentReporting {
         return makeEnvironmentReporterReturnValue
     }
+
+    func makeThrottler(maxDelay: TimeInterval) -> Throttling {
+        let throttlingMock = ThrottlingMock()
+        throttlingMock.maxDelay = maxDelay
+        return throttlingMock
+    }
 }

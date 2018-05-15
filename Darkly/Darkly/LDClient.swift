@@ -409,6 +409,7 @@ public class LDClient {
     private(set) var flagChangeNotifier: FlagChangeNotifying
     private(set) var eventReporter: LDEventReporting
     private(set) var environmentReporter: EnvironmentReporting
+    private(set) var throttler: Throttling
 
     private init() {
         environmentReporter = serviceFactory.makeEnvironmentReporter()
@@ -417,6 +418,7 @@ public class LDClient {
         LDUserWrapper.configureKeyedArchiversToHandleVersion2_3_0AndOlderUserCacheFormat()
         serviceFactory.makeCacheConverter().convertUserCacheToFlagCache()
         flagChangeNotifier = serviceFactory.makeFlagChangeNotifier()
+        throttler = serviceFactory.makeThrottler(maxDelay: Throttler.Constants.maxDelay)
 
         //dummy objects replaced by start call
         config = LDConfig(environmentReporter: environmentReporter)
@@ -443,6 +445,7 @@ public class LDClient {
         environmentReporter = serviceFactory.makeEnvironmentReporter()
         user = LDUser(environmentReporter: environmentReporter)
         flagChangeNotifier = serviceFactory.makeFlagChangeNotifier()
+        throttler = serviceFactory.makeThrottler(maxDelay: Throttler.Constants.maxDelay)
 
         //dummy objects replaced by start call
         config = LDConfig(environmentReporter: environmentReporter)
