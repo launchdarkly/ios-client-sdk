@@ -11,15 +11,16 @@ import Foundation
 @objc(LDClient)
 public final class ObjcLDClient: NSObject {
     @objc public static let sharedInstance = ObjcLDClient()
-    @objc public var isOnline: Bool {
-        get { return LDClient.shared.isOnline }
-        set { LDClient.shared.isOnline = newValue }
-    }
+    @objc public var isOnline: Bool { return LDClient.shared.isOnline }
     @objc public var config: ObjcLDConfig { return ObjcLDConfig(LDClient.shared.config) }
     @objc public var user: ObjcLDUser { return ObjcLDUser(LDClient.shared.user) }
     
     // MARK: - Public
-    
+
+    @objc public func setOnline(_ goOnline: Bool, completion:(() -> Void)?) {
+        LDClient.shared.setOnline(goOnline, completion: completion)
+    }
+
     @objc public func startWithMobileKey(_ mobileKey: String, config: ObjcLDConfig? = nil, user userObject: ObjcLDUser? = nil) {
         if let configObject = config {
             LDClient.shared.start(mobileKey: mobileKey, config: configObject.config, user: userObject?.user)

@@ -22,18 +22,39 @@ public class LDClient {
         }
     }
 
-    ///Controls whether client contacts launch darkly for feature flags and events. When offline, client only collects events.
-    public var isOnline: Bool {
-        set {
-            var reason = ""
-            if newValue && !hasStarted { reason = "LDClient not started." }
-            if reason.isEmpty && newValue && runMode == .background && !config.enableBackgroundUpdates { reason = "LDConfig background updates not enabled." }
-            _isOnline = hasStarted && newValue && (runMode != .background || config.enableBackgroundUpdates)
-            if newValue == _isOnline { Log.debug(typeName(and: #function, appending: ": ") + "\(_isOnline)" + reason) }
+    ///Tells the online/offline state of the LDClient. Use setOnline to change the online/offline state
+    public var isOnline: Bool { return _isOnline }
+
+    //Keeps the state of the last setOnline goOnline parameter
+    private var goOnline = false
+
+    /**
+     * Set the LDClient to online/offline mode. When online, the LDClient will sync events to the server. (Default)
+     *
+     * - parameter goOnline:    Desired online/offline mode for the client
+     * - parameter completion:  Completion closure called when setOnline completes (Optional)
+     */
+    public func setOnline(_ goOnline: Bool, completion: (() -> Void)? = nil) {
+        var reason = ""
+        if goOnline && !hasStarted { reason = "LDClient not started." }
+        if reason.isEmpty && goOnline && runMode == .background && !config.enableBackgroundUpdates { reason = "LDConfig background updates not enabled." }
+        self.goOnline = hasStarted && goOnline && (runMode != .background || config.enableBackgroundUpdates)
+        if !self.goOnline {
+            _setOnline(self.goOnline, logMessagePrefix: typeName(and: #function, appending: ": "), logMessageSuffix: reason, completion: completion)
+            return
         }
-        get { return _isOnline }
+
+        throttler.runThrottled {
+            self._setOnline(self.goOnline, logMessagePrefix: self.typeName(and: #function, appending: ": "), logMessageSuffix: reason, completion: completion)
+        }
     }
-    
+
+    private func _setOnline(_ goOnline: Bool, logMessagePrefix: String, logMessageSuffix: String, completion: (() -> Void)?) {
+        _isOnline = self.goOnline
+        Log.debug(logMessagePrefix + "\(_isOnline)" + logMessageSuffix)
+        completion?()
+    }
+
     ///Takes the client offline and reconfigures using the new config. If the client was online, it brings the client online again.
     ///Make config changes by getting the config from the client, adjusting values, and then setting the new config
     ///If the config is unchanged, returns immediately.
@@ -49,12 +70,12 @@ public class LDClient {
             Log.level = environmentReporter.isDebugBuild && config.isDebugMode ? .debug : .noLogging
             Log.debug(typeName(and: #function) + "new config set")
             let wasOnline = isOnline
-            isOnline = false
+            setOnline(false)
 
             service = serviceFactory.makeDarklyServiceProvider(mobileKey: mobileKey, config: config, user: user)
             eventReporter.config = config
 
-            isOnline = wasOnline
+            setOnline(wasOnline)
         }
     }
     
@@ -67,7 +88,7 @@ public class LDClient {
         didSet {
             Log.debug(typeName(and: #function) + "new user set with key: " + user.key )
             let wasOnline = isOnline
-            isOnline = false
+            setOnline(false)
 
             if let cachedFlags = flagCache.retrieveFlags(for: user), !cachedFlags.flags.isEmpty {
                 user.flagStore.replaceStore(newFlags: cachedFlags.flags, source: .cache, completion: nil)
@@ -78,7 +99,7 @@ public class LDClient {
                 eventReporter.record(LDEvent.identifyEvent(user: user))
             }
 
-            isOnline = wasOnline
+            setOnline(wasOnline)
         }
     }
 
@@ -110,13 +131,13 @@ public class LDClient {
         let wasOnline = isOnline
         hasStarted = true
 
-        isOnline = false
+        setOnline(false)
 
         self.mobileKey = mobileKey
         self.config = config ?? self.config
         self.user = user ?? self.user
 
-        isOnline = (wasStarted && wasOnline) || (!wasStarted && self.config.startOnline)
+        setOnline((wasStarted && wasOnline) || (!wasStarted && self.config.startOnline))
         Log.debug(typeName(and: #function, appending: ": ") + "started")
     }
 
@@ -140,7 +161,7 @@ public class LDClient {
     ///After the client has stopped, variation requests will be answered with the last received feature flags.
     public func stop() {
         Log.debug(typeName(and: #function, appending: "- ") + "stopping")
-        isOnline = false
+        setOnline(false)
         hasStarted = false
         Log.debug(typeName(and: #function, appending: "- ") + "stopped")
     }
@@ -333,7 +354,7 @@ public class LDClient {
         case let .error(synchronizingError):
             if synchronizingError.isClientUnauthorized {
                 Log.debug(typeName(and: #function) + "LDClient is unauthorized")
-                isOnline = false
+                setOnline(false)
             }
             executeCallback(onServerUnavailable)
         }

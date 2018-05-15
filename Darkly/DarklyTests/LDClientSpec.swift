@@ -70,6 +70,8 @@ final class LDClientSpec: QuickSpec {
         // user flags
         var oldFlags: [LDFlagKey: FeatureFlag]!
         var oldFlagSource: LDFlagValueSource!
+        // throttler
+        var throttlerMock: ThrottlingMock? { return subject.throttler as? ThrottlingMock }
 
         init(startOnline: Bool = false,
              streamingMode: LDStreamingMode = .streaming,
@@ -96,6 +98,8 @@ final class LDClientSpec: QuickSpec {
 
             self.flagCacheMock.reset()
             self.setFlagStoreCallbackToMimicRealFlagStore()
+
+            setThrottlerToExecuteRunClosure()
         }
 
         ///Pass nil to leave the flags unchanged
@@ -110,13 +114,19 @@ final class LDClientSpec: QuickSpec {
                 self.flagStoreMock!.featureFlags = newFlags ?? self.flagStoreMock!.featureFlags
             }
         }
+
+        func setThrottlerToExecuteRunClosure() {
+            throttlerMock?.runThrottledCallback = {
+                self.throttlerMock?.runThrottledReceivedRunClosure?()
+            }
+        }
     }
 
     override func spec() {
         startSpec()
         setConfigSpec()
         setUserSpec()
-        changeIsOnlineSpec()
+        setOnlineSpec()
         stopSpec()
         trackEventSpec()
         variationSpec()
@@ -646,22 +656,27 @@ final class LDClientSpec: QuickSpec {
         }
     }
 
-    private func changeIsOnlineSpec() {
+    private func setOnlineSpec() {
         var testContext: TestContext!
 
         beforeEach {
             testContext = TestContext()
         }
 
-        describe("change isOnline") {
+        describe("setOnline") {
             context("when the client is offline") {
                 context("setting online") {
                     beforeEach {
                         testContext.subject.start(mobileKey: Constants.mockMobileKey, config: testContext.config, user: testContext.user)
 
-                        testContext.subject.isOnline = true
+                        waitUntil { done in
+                            testContext.subject.setOnline(true) {
+                                done()
+                            }
+                        }
                     }
                     it("sets the client and service objects online") {
+                        expect(testContext.throttlerMock?.runThrottledCallCount ?? 0) == 1
                         expect(testContext.subject.isOnline) == true
                         expect(testContext.subject.flagSynchronizer.isOnline) == testContext.subject.isOnline
                         expect(testContext.subject.eventReporter.isOnline) == testContext.subject.isOnline
@@ -673,10 +688,12 @@ final class LDClientSpec: QuickSpec {
                     beforeEach {
                         testContext.config.startOnline = true
                         testContext.subject.start(mobileKey: Constants.mockMobileKey, config: testContext.config, user: testContext.user)
+                        testContext.throttlerMock?.runThrottledCallCount = 0
 
-                        testContext.subject.isOnline = false
+                        testContext.subject.setOnline(false)
                     }
                     it("takes the client and service objects offline") {
+                        expect(testContext.throttlerMock?.runThrottledCallCount ?? 0) == 0
                         expect(testContext.subject.isOnline) == false
                         expect(testContext.subject.flagSynchronizer.isOnline) == testContext.subject.isOnline
                         expect(testContext.subject.eventReporter.isOnline) == testContext.subject.isOnline
@@ -685,9 +702,10 @@ final class LDClientSpec: QuickSpec {
             }
             context("when the client has not been started") {
                 beforeEach {
-                    testContext.subject.isOnline = true
+                    testContext.subject.setOnline(true)
                 }
                 it("leaves the client and service objects offline") {
+                    expect(testContext.throttlerMock?.runThrottledCallCount ?? 0) == 0
                     expect(testContext.subject.isOnline) == false
                     expect(testContext.subject.flagSynchronizer.isOnline) == testContext.subject.isOnline
                     expect(testContext.subject.eventReporter.isOnline) == testContext.subject.isOnline
@@ -703,9 +721,14 @@ final class LDClientSpec: QuickSpec {
                     }
                     context("and setting online") {
                         beforeEach {
-                            testContext.subject.isOnline = true
+                            waitUntil { done in
+                                testContext.subject.setOnline(true) {
+                                    done()
+                                }
+                            }
                         }
                         it("takes the client and service objects online") {
+                            expect(testContext.throttlerMock?.runThrottledCallCount ?? 0) == 1
                             expect(testContext.subject.isOnline) == true
                             expect(testContext.subject.flagSynchronizer.isOnline) == testContext.subject.isOnline
                             expect(testContext.makeFlagSynchronizerStreamingMode) == LDStreamingMode.polling
@@ -721,9 +744,10 @@ final class LDClientSpec: QuickSpec {
                     }
                     context("and setting online") {
                         beforeEach {
-                            testContext.subject.isOnline = true
+                            testContext.subject.setOnline(true)
                         }
                         it("leaves the client and service objects offline") {
+                            expect(testContext.throttlerMock?.runThrottledCallCount ?? 0) == 0
                             expect(testContext.subject.isOnline) == false
                             expect(testContext.subject.flagSynchronizer.isOnline) == testContext.subject.isOnline
                             expect(testContext.makeFlagSynchronizerStreamingMode) == LDStreamingMode.polling
