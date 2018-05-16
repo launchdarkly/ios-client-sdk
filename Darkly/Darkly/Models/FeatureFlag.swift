@@ -28,7 +28,7 @@ struct FeatureFlag {
 
     init?(dictionary: [String: Any]?) {
         guard let dictionary = dictionary else { return nil }
-        if dictionary.keys.sorted() == [CodingKeys.value.rawValue, CodingKeys.version.rawValue] {
+        if dictionary.containsValueAndVersionKeys {
             self.init(value: dictionary[CodingKeys.value.rawValue], version: dictionary[CodingKeys.version.rawValue] as? Int)
             return
         }
@@ -98,5 +98,10 @@ extension Dictionary where Key == String, Value == Any {
         let flagCollection = flatMapValues { (flagValue) in return FeatureFlag(object: flagValue) }
         guard flagCollection.count == self.count else { return nil }
         return flagCollection
+    }
+    var containsValueAndVersionKeys: Bool {
+        let keySet = Set(self.keys)
+        let valueAndVersionKeySet = Set([FeatureFlag.CodingKeys.value.rawValue, FeatureFlag.CodingKeys.version.rawValue])
+        return valueAndVersionKeySet.isSubset(of: keySet)
     }
 }
