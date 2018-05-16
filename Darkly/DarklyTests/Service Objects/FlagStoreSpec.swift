@@ -263,6 +263,23 @@ final class FlagStoreSpec: QuickSpec {
                     expect(testContext.subject.featureFlags) == testContext.originalFeatureFlags
                 }
             }
+            context("when the update dictionary has more keys than needed") {
+                beforeEach {
+                    testContext.updateDictionary = FlagMaintainingMock.stubPatchDictionary(key: DarklyServiceMock.FlagKeys.int,
+                                                                                           value: DarklyServiceMock.FlagValues.alternate(DarklyServiceMock.FlagValues.int),
+                                                                                           version: DarklyServiceMock.Constants.version + 1,
+                                                                                           includeExtraKey: true)
+
+                    waitUntil { done in
+                        testContext.subject.updateStore(updateDictionary: testContext.updateDictionary!, source: .server, completion: done)
+                    }
+                }
+                it("updates the feature flag to the update value") {
+                    let featureFlag = testContext.subject.featureFlags[DarklyServiceMock.FlagKeys.int]
+                    expect(AnyComparer.isEqual(featureFlag?.value, to: testContext.updateDictionaryValue)).to(beTrue())
+                    expect(featureFlag?.version) == testContext.updateDictionaryVersion
+                }
+            }
         }
     }
 

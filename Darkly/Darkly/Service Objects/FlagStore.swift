@@ -78,7 +78,7 @@ final class FlagStore: FlagMaintaining {
                     }
                 }
             }
-            guard updateDictionary.keys.sorted() == [Keys.flagKey, FeatureFlag.CodingKeys.value.rawValue, FeatureFlag.CodingKeys.version.rawValue],
+            guard updateDictionary.containsFlagKeyValueAndVersionKeys,
                 let flagKey = updateDictionary[Keys.flagKey] as? String,
                 let newValue = updateDictionary[FeatureFlag.CodingKeys.value.rawValue],
                 let newVersion = updateDictionary[FeatureFlag.CodingKeys.version.rawValue] as? Int
@@ -155,3 +155,11 @@ final class FlagStore: FlagMaintaining {
 }
 
 extension FlagStore: TypeIdentifying { }
+
+extension Dictionary where Key == String, Value == Any {
+    var containsFlagKeyValueAndVersionKeys: Bool {
+        let keySet = Set(self.keys)
+        let keyValueAndVersionSet = Set([FlagStore.Keys.flagKey, FeatureFlag.CodingKeys.value.rawValue, FeatureFlag.CodingKeys.version.rawValue])
+        return keyValueAndVersionSet.isSubset(of: keySet)
+    }
+}
