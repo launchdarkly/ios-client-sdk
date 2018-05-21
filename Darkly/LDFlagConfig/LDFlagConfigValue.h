@@ -18,7 +18,7 @@ extern NSInteger const kLDFlagConfigValueItemDoesNotExist;
 
 @interface LDFlagConfigValue: NSObject
 @property (nullable, nonatomic, strong) id value;
-@property (nonatomic, assign) NSInteger version;
+@property (nonatomic, assign) NSInteger flagConfigModelVersion;
 @property (nonatomic, assign) NSInteger variation;
 @property (nullable, nonatomic, strong) LDEventTrackingContext *eventTrackingContext;
 
