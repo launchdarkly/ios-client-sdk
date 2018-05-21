@@ -10,8 +10,8 @@
 #import "NSDictionary+JSON.h"
 #import "NSHTTPURLResponse+LaunchDarkly.h"
 
-static NSString * const kFeatureFlagGetUrl = @"/msdk/eval/users/";
-static NSString * const kFeatureFlagReportUrl = @"/msdk/eval/user";
+static NSString * const kFeatureFlagGetUrl = @"/msdk/evalx/user/";
+static NSString * const kFeatureFlagReportUrl = @"/msdk/evalx/";
 static NSString * const kEventUrl = @"/mobile/events/bulk";
 NSString * const kHeaderMobileKey = @"api_key ";
 static NSString * const kConfigRequestCompletedNotification = @"config_request_completed_notification";
