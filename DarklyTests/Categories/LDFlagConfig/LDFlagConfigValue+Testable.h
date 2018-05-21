@@ -9,7 +9,6 @@
 #import <UIKit/UIKit.h>
 #import "LDFlagConfigValue.h"
 
-extern const NSInteger kLDFlagConfigVariationDoesNotExist;
 extern NSString * const kLDFlagConfigValueKeyEventTrackingContext;
 
 extern NSString * const kLDFlagKeyIsABool;

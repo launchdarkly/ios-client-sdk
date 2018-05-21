@@ -17,8 +17,7 @@ NSString * const kLDFlagConfigValueKeyVersion = @"version";
 NSString * const kLDFlagConfigValueKeyVariation = @"variation";
 NSString * const kLDFlagConfigValueKeyEventTrackingContext = @"eventTrackingContext";
 
-NSInteger const kLDFlagConfigVersionDoesNotExist = -1;
-NSInteger const kLDFlagConfigVariationDoesNotExist = -1;
+NSInteger const kLDFlagConfigValueItemDoesNotExist = -1;
 
 @implementation LDFlagConfigValue
 
@@ -33,12 +32,12 @@ NSInteger const kLDFlagConfigVariationDoesNotExist = -1;
         NSDictionary *valueAndVersionDictionary = object;
         self.value = valueAndVersionDictionary[kLDFlagConfigValueKeyValue] ?: [NSNull null];
         self.version = [valueAndVersionDictionary[kLDFlagConfigValueKeyVersion] integerValue];
-        self.variation = valueAndVersionDictionary[kLDFlagConfigValueKeyVariation] ? [valueAndVersionDictionary[kLDFlagConfigValueKeyVariation] integerValue] : kLDFlagConfigVariationDoesNotExist;
+        self.variation = valueAndVersionDictionary[kLDFlagConfigValueKeyVariation] ? [valueAndVersionDictionary[kLDFlagConfigValueKeyVariation] integerValue] : kLDFlagConfigValueItemDoesNotExist;
         self.eventTrackingContext = [LDEventTrackingContext contextWithObject:object];
     } else {
         self.value = object ?: [NSNull null];
-        self.version = kLDFlagConfigVersionDoesNotExist;
-        self.variation = kLDFlagConfigVariationDoesNotExist;
+        self.version = kLDFlagConfigValueItemDoesNotExist;
+        self.variation = kLDFlagConfigValueItemDoesNotExist;
     }
 
     return self;
@@ -65,10 +64,10 @@ NSInteger const kLDFlagConfigVariationDoesNotExist = -1;
 -(NSDictionary*)dictionaryValue {
     NSMutableDictionary *dictionaryValue = [NSMutableDictionary dictionaryWithCapacity:5];
     dictionaryValue[kLDFlagConfigValueKeyValue] = self.value ?: [NSNull null];
-    if (self.version != kLDFlagConfigVersionDoesNotExist) {
+    if (self.version != kLDFlagConfigValueItemDoesNotExist) {
         dictionaryValue[kLDFlagConfigValueKeyVersion] = @(self.version);
     }
-    if (self.variation != kLDFlagConfigVariationDoesNotExist) {
+    if (self.variation != kLDFlagConfigValueItemDoesNotExist) {
         dictionaryValue[kLDFlagConfigValueKeyVariation] = @(self.variation);
     }
     if (self.eventTrackingContext) {
@@ -108,7 +107,7 @@ NSInteger const kLDFlagConfigVariationDoesNotExist = -1;
         }
     }
 
-    if (self.variation == kLDFlagConfigVariationDoesNotExist) {
+    if (self.variation == kLDFlagConfigValueItemDoesNotExist) {
         if (dictionary[kLDFlagConfigValueKeyVariation]) {
             [mismatchedProperties addObject:kLDFlagConfigValueKeyVariation];
         }
@@ -118,7 +117,7 @@ NSInteger const kLDFlagConfigVariationDoesNotExist = -1;
         }
     }
 
-    if (self.version == kLDFlagConfigVersionDoesNotExist) {
+    if (self.version == kLDFlagConfigValueItemDoesNotExist) {
         if (dictionary[kLDFlagConfigValueKeyVersion]) {
             [mismatchedProperties addObject:kLDFlagConfigValueKeyVersion];
         }

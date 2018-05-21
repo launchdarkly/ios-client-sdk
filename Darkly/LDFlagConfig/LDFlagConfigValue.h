@@ -14,8 +14,7 @@ extern NSString * _Nonnull const kLDFlagConfigValueKeyValue;
 extern NSString * _Nonnull const kLDFlagConfigValueKeyVersion;
 extern NSString * _Nonnull const kLDFlagConfigValueKeyVariation;
 
-extern NSInteger const kLDFlagConfigVersionDoesNotExist;
-extern NSInteger const kLDFlagConfigVariationDoesNotExist;
+extern NSInteger const kLDFlagConfigValueItemDoesNotExist;
 
 @interface LDFlagConfigValue: NSObject
 @property (nullable, nonatomic, strong) id value;

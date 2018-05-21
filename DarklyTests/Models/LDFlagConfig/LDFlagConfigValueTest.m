@@ -46,8 +46,8 @@
             LDFlagConfigValue *flagConfigValue = [LDFlagConfigValue flagConfigValueWithObject:flagConfigValueDictionary[flagKey]];
 
             XCTAssertTrue([flagConfigValue.value isEqual:flagConfigValueDictionary[flagKey]]);
-            XCTAssertEqual(flagConfigValue.variation, kLDFlagConfigVariationDoesNotExist);
-            XCTAssertEqual(flagConfigValue.version, kLDFlagConfigVersionDoesNotExist);
+            XCTAssertEqual(flagConfigValue.variation, kLDFlagConfigValueItemDoesNotExist);
+            XCTAssertEqual(flagConfigValue.version, kLDFlagConfigValueItemDoesNotExist);
             XCTAssertNil(flagConfigValue.eventTrackingContext);
         }
     }
@@ -174,12 +174,12 @@
             XCTAssertFalse([subject isEqual:other]);
 
             other = [LDFlagConfigValue flagConfigValueWithObject:flagConfigValueDictionary[flagKey]];
-            other.variation = kLDFlagConfigVariationDoesNotExist;
+            other.variation = kLDFlagConfigValueItemDoesNotExist;
 
             XCTAssertFalse([subject isEqual:other]);
 
             other.variation = subject.variation;
-            subject.variation = kLDFlagConfigVariationDoesNotExist;
+            subject.variation = kLDFlagConfigValueItemDoesNotExist;
 
             XCTAssertFalse([subject isEqual:other]);
         }
@@ -197,12 +197,12 @@
             XCTAssertFalse([subject isEqual:other]);
 
             other = [LDFlagConfigValue flagConfigValueWithObject:flagConfigValueDictionary[flagKey]];
-            other.version = kLDFlagConfigVersionDoesNotExist;
+            other.version = kLDFlagConfigValueItemDoesNotExist;
 
             XCTAssertFalse([subject isEqual:other]);
 
             other.version = subject.version;
-            subject.version = kLDFlagConfigVersionDoesNotExist;
+            subject.version = kLDFlagConfigValueItemDoesNotExist;
 
             XCTAssertFalse([subject isEqual:other]);
         }

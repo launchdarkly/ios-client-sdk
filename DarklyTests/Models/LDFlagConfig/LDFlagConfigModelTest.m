@@ -164,7 +164,7 @@ extern NSString *const kLDFlagConfigModelKeyKey;
         XCTAssertTrue([config flagVersionForFlagKey:key] == targetVersion);
     }
 
-    XCTAssertTrue([config flagVersionForFlagKey:@"someMissingKey"] == kLDFlagConfigVersionDoesNotExist);
+    XCTAssertTrue([config flagVersionForFlagKey:@"someMissingKey"] == kLDFlagConfigValueItemDoesNotExist);
 }
 
 -(void)testFlagVersionForFlagKey_withoutVersions {
@@ -172,10 +172,10 @@ extern NSString *const kLDFlagConfigModelKeyKey;
     NSDictionary *flagValues = [NSJSONSerialization jsonObjectFromFileNamed:@"featureFlags-withoutVersions"];
 
     for (NSString *key in [flagValues.allKeys copy]) {
-        XCTAssertTrue([config flagVersionForFlagKey:key] == kLDFlagConfigVersionDoesNotExist);
+        XCTAssertTrue([config flagVersionForFlagKey:key] == kLDFlagConfigValueItemDoesNotExist);
     }
 
-    XCTAssertTrue([config flagVersionForFlagKey:@"someMissingKey"] == kLDFlagConfigVersionDoesNotExist);
+    XCTAssertTrue([config flagVersionForFlagKey:@"someMissingKey"] == kLDFlagConfigValueItemDoesNotExist);
 }
 
 - (void)testDoesFlagConfigValueExistForFlagKey {

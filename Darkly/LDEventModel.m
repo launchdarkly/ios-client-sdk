@@ -96,8 +96,8 @@ NSString * const kEventModelKeyFeatures = @"features";
     if (dictionary[kEventModelKeyValue] || dictionary[kEventModelKeyVersion] || dictionary[kEventModelKeyValue]) {
         NSMutableDictionary *flagConfigValueDictionary = [NSMutableDictionary dictionaryWithCapacity:3];
         flagConfigValueDictionary[kEventModelKeyValue] = dictionary[kEventModelKeyValue] ?: [NSNull null];
-        flagConfigValueDictionary[kEventModelKeyVersion] = @(kLDFlagConfigVersionDoesNotExist);
-        flagConfigValueDictionary[kEventModelKeyVariation] = @(kLDFlagConfigVersionDoesNotExist);
+        flagConfigValueDictionary[kEventModelKeyVersion] = @(kLDFlagConfigValueItemDoesNotExist);
+        flagConfigValueDictionary[kEventModelKeyVariation] = @(kLDFlagConfigValueItemDoesNotExist);
         if (dictionary[kEventModelKeyVersion] && [dictionary[kEventModelKeyVersion] isKindOfClass:[NSNumber class]]) {
             flagConfigValueDictionary[kEventModelKeyVersion] = dictionary[kEventModelKeyVersion];
         }

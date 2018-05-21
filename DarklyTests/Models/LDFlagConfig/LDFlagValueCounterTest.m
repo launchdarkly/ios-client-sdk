@@ -14,8 +14,8 @@
 #import "LDFlagConfigValue.h"
 #import "LDFlagConfigValue+Testable.h"
 
-extern const NSInteger kLDFlagConfigVersionDoesNotExist;
-extern const NSInteger kLDFlagConfigVariationDoesNotExist;
+extern const NSInteger kLDFlagConfigValueItemDoesNotExist;
+extern const NSInteger kLDFlagConfigValueItemDoesNotExist;
 
 @interface LDFlagValueCounterTest : XCTestCase
 @property (nonatomic, strong) NSDictionary<NSString*, LDFlagConfigValue*> *flagConfigDictionary;
@@ -61,8 +61,8 @@ extern const NSInteger kLDFlagConfigVariationDoesNotExist;
         XCTAssertTrue([flagValueCounter hasPropertiesMatchingDictionary:flagValueCounterDictionary]);
 
         //test version & variation do not exist
-        flagConfigValue.version = kLDFlagConfigVersionDoesNotExist;
-        flagConfigValue.variation = kLDFlagConfigVariationDoesNotExist;
+        flagConfigValue.version = kLDFlagConfigValueItemDoesNotExist;
+        flagConfigValue.variation = kLDFlagConfigValueItemDoesNotExist;
         flagValueCounter = [LDFlagValueCounter counterWithFlagConfigValue:flagConfigValue];
 
         flagValueCounterDictionary = [flagValueCounter dictionaryValue];
