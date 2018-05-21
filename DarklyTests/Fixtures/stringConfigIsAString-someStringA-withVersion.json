@@ -2,6 +2,7 @@
     "isAString": {
         "value": "someStringA",
         "variation": 4,
-        "version": 4
+        "version": 4,
+        "flagVersion": 3
     }
 }

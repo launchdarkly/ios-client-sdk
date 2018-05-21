@@ -2,5 +2,6 @@
     "key": "version1Flag",
     "value": true,
     "variation": 2,
-    "version": 2
+    "version": 2,
+    "flagVersion": 1
 }

@@ -4,6 +4,7 @@
             "keyA": true
         },
         "variation": 5,
-        "version": 5
+        "version": 5,
+        "flagVersion": 4
     }
 }

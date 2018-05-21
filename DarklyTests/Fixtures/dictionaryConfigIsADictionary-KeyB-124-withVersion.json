@@ -4,6 +4,7 @@
             "keyB": [1, 2, 4]
         },
         "variation": 5,
-        "version": 5
+        "version": 5,
+        "flagVersion": 4
     }
 }
