@@ -26,9 +26,9 @@ extern NSString * const kLDFlagConfigValueKeyVariation;
 @interface LDFlagConfigValue(Testable)
 +(NSDictionary*)flagConfigJsonObjectFromFileNamed:(NSString*)fileName flagKey:(NSString*)flagKey eventTrackingContext:(LDEventTrackingContext*)eventTrackingContext;
 +(instancetype)flagConfigValueFromJsonFileNamed:(NSString*)fileName flagKey:(NSString*)flagKey eventTrackingContext:(LDEventTrackingContext*)eventTrackingContext;
-+(NSArray<LDFlagConfigValue*>*)stubFlagConfigValuesForFlagKey:(NSString*)flagKey withVersions:(BOOL)withVersions eventTrackingContext:(LDEventTrackingContext*)eventTrackingContext;
 +(NSArray<LDFlagConfigValue*>*)stubFlagConfigValuesForFlagKey:(NSString*)flagKey;
-+(NSArray<NSString*>*)fixtureFileNamesForFlagKey:(NSString*)flagKey includeVersion:(BOOL)includeVersion;
++(NSArray<LDFlagConfigValue*>*)stubFlagConfigValuesForFlagKey:(NSString*)flagKey eventTrackingContext:(LDEventTrackingContext*)eventTrackingContext;
++(NSArray<NSString*>*)fixtureFileNamesForFlagKey:(NSString*)flagKey;
 +(id)defaultValueForFlagKey:(NSString*)flagKey;
 +(NSArray<NSString*>*)flagKeys;
 +(NSDictionary<NSString*, NSArray<LDFlagConfigValue*>*>*)flagConfigValues;

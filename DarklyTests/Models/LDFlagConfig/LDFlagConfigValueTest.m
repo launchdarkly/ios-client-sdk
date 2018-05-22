@@ -11,6 +11,7 @@
 #import "LDFlagConfigValue.h"
 #import "LDFlagConfigValue+Testable.h"
 #import "LDEventTrackingContext+Testable.h"
+#import "NSDate+ReferencedDate.h"
 
 @interface LDFlagConfigValueTest : XCTestCase
 
@@ -31,7 +32,7 @@
 -(void)testInitAndConstructor {
     LDEventTrackingContext *eventTrackingContext = [LDEventTrackingContext stub];
     for (NSString *flagKey in [LDFlagConfigValue flagKeys]) {
-        for (NSString *fixtureFileName in [LDFlagConfigValue fixtureFileNamesForFlagKey:flagKey includeVersion:YES]) {
+        for (NSString *fixtureFileName in [LDFlagConfigValue fixtureFileNamesForFlagKey:flagKey]) {
             NSDictionary *flagConfigValueDictionary = [LDFlagConfigValue flagConfigJsonObjectFromFileNamed:fixtureFileName
                                                                                                    flagKey:flagKey
                                                                                       eventTrackingContext:eventTrackingContext];
@@ -107,22 +108,26 @@
     XCTAssertTrue([flagDictionary[kLDFlagConfigValueKeyVersion] isKindOfClass:[NSNumber class]]);
     XCTAssertEqual(flagConfigValue.modelVersion, [flagDictionary[kLDFlagConfigValueKeyVersion] integerValue]);
     XCTAssertEqual(flagConfigValue.variation, [flagDictionary[kLDFlagConfigValueKeyVariation] integerValue]);
-    XCTAssertTrue([flagConfigValue.eventTrackingContext hasPropertiesMatchingDictionary:flagDictionary]);
+    XCTAssertEqual(flagConfigValue.eventTrackingContext.trackEvents, [flagDictionary[kLDEventTrackingContextKeyTrackEvents] boolValue]);
+    XCTAssertEqual([flagConfigValue.eventTrackingContext.debugEventsUntilDate millisSince1970], [flagDictionary[kLDEventTrackingContextKeyDebugEventsUntilDate] integerValue]);
 
     flagConfigValue.value = [NSNull null];
     flagConfigValue.variation = kLDFlagConfigValueItemDoesNotExist;
     flagConfigValue.modelVersion = kLDFlagConfigValueItemDoesNotExist;
+    flagConfigValue.eventTrackingContext = nil;
 
     flagDictionary = [flagConfigValue dictionaryValue];
 
     XCTAssertEqualObjects(flagConfigValue.value, [NSNull null]);
     XCTAssertNil(flagDictionary[kLDFlagConfigValueKeyVariation]);
     XCTAssertNil(flagDictionary[kLDFlagConfigValueKeyVersion]);
+    XCTAssertNil(flagDictionary[kLDEventTrackingContextKeyTrackEvents]);
+    XCTAssertNil(flagDictionary[kLDEventTrackingContextKeyDebugEventsUntilDate]);
 }
 
 -(void)testIsEqual_valuesAreTheSame {
     for (NSString *flagKey in [LDFlagConfigValue flagKeys]) {
-        for (NSString *fixtureFileName in [LDFlagConfigValue fixtureFileNamesForFlagKey:flagKey includeVersion:YES]) {
+        for (NSString *fixtureFileName in [LDFlagConfigValue fixtureFileNamesForFlagKey:flagKey]) {
             NSDictionary *flagConfigValueDictionary = [NSJSONSerialization jsonObjectFromFileNamed:fixtureFileName];
             LDFlagConfigValue *subject = [LDFlagConfigValue flagConfigValueWithObject:flagConfigValueDictionary[flagKey]];
             LDFlagConfigValue *other = [LDFlagConfigValue flagConfigValueWithObject:flagConfigValueDictionary[flagKey]];
@@ -135,7 +140,7 @@
 -(void)testIsEqual_valuesDiffer_differentValues {
     for (NSString *flagKey in [LDFlagConfigValue flagKeys]) {
         if ([flagKey isEqualToString:kLDFlagKeyIsANull]) { continue; }  //There are no alternate values for [NSNull null]
-        for (NSString *fixtureFileName in [LDFlagConfigValue fixtureFileNamesForFlagKey:flagKey includeVersion:YES]) {
+        for (NSString *fixtureFileName in [LDFlagConfigValue fixtureFileNamesForFlagKey:flagKey]) {
             NSDictionary *flagConfigValueDictionary = [NSJSONSerialization jsonObjectFromFileNamed:fixtureFileName];
             LDFlagConfigValue *subject = [LDFlagConfigValue flagConfigValueWithObject:flagConfigValueDictionary[flagKey]];
             LDFlagConfigValue *other = [LDFlagConfigValue flagConfigValueWithObject:flagConfigValueDictionary[flagKey]];
@@ -151,7 +156,7 @@
 
 -(void)testIsEqual_valuesDiffer_differentVariations {
     for (NSString *flagKey in [LDFlagConfigValue flagKeys]) {
-        for (NSString *fixtureFileName in [LDFlagConfigValue fixtureFileNamesForFlagKey:flagKey includeVersion:YES]) {
+        for (NSString *fixtureFileName in [LDFlagConfigValue fixtureFileNamesForFlagKey:flagKey]) {
             NSDictionary *flagConfigValueDictionary = [NSJSONSerialization jsonObjectFromFileNamed:fixtureFileName];
             LDFlagConfigValue *subject = [LDFlagConfigValue flagConfigValueWithObject:flagConfigValueDictionary[flagKey]];
             LDFlagConfigValue *other = [LDFlagConfigValue flagConfigValueWithObject:flagConfigValueDictionary[flagKey]];
@@ -174,7 +179,7 @@
 
 -(void)testIsEqual_valuesDiffer_differentVersions {
     for (NSString *flagKey in [LDFlagConfigValue flagKeys]) {
-        for (NSString *fixtureFileName in [LDFlagConfigValue fixtureFileNamesForFlagKey:flagKey includeVersion:YES]) {
+        for (NSString *fixtureFileName in [LDFlagConfigValue fixtureFileNamesForFlagKey:flagKey]) {
             NSDictionary *flagConfigValueDictionary = [NSJSONSerialization jsonObjectFromFileNamed:fixtureFileName];
             LDFlagConfigValue *subject = [LDFlagConfigValue flagConfigValueWithObject:flagConfigValueDictionary[flagKey]];
             LDFlagConfigValue *other = [LDFlagConfigValue flagConfigValueWithObject:flagConfigValueDictionary[flagKey]];
@@ -212,7 +217,7 @@
     for (NSString *flagKey in [LDFlagConfigValue flagKeys]) {
         id defaultFlagValue = [LDFlagConfigValue defaultValueForFlagKey:flagKey];
 
-        NSArray<LDFlagConfigValue*> *flagConfigValues = [LDFlagConfigValue stubFlagConfigValuesForFlagKey:flagKey withVersions:YES eventTrackingContext:eventTrackingContext];
+        NSArray<LDFlagConfigValue*> *flagConfigValues = [LDFlagConfigValue stubFlagConfigValuesForFlagKey:flagKey eventTrackingContext:eventTrackingContext];
         for (LDFlagConfigValue *flagConfigValue in flagConfigValues) {
             //matching dictionary
             NSDictionary *flagConfigValueDictionary = [flagConfigValue dictionaryValue];

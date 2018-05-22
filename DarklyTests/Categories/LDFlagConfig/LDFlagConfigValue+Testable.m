@@ -43,52 +43,40 @@ NSString * const kLDFlagKeyIsANull = @"isANull";
 }
 
 +(NSArray<LDFlagConfigValue*>*)stubFlagConfigValuesForFlagKey:(NSString*)flagKey {
-    return [LDFlagConfigValue stubFlagConfigValuesForFlagKey:flagKey withVersions:YES eventTrackingContext:[LDEventTrackingContext stub]];
+    return [LDFlagConfigValue stubFlagConfigValuesForFlagKey:flagKey eventTrackingContext:[LDEventTrackingContext stub]];
 }
 
-+(NSArray<LDFlagConfigValue*>*)stubFlagConfigValuesForFlagKey:(NSString*)flagKey withVersions:(BOOL)withVersions eventTrackingContext:(LDEventTrackingContext*)eventTrackingContext {
++(NSArray<LDFlagConfigValue*>*)stubFlagConfigValuesForFlagKey:(NSString*)flagKey eventTrackingContext:(LDEventTrackingContext*)eventTrackingContext {
     NSMutableArray<LDFlagConfigValue*> *flagConfigValueStubs = [NSMutableArray array];
 
-    for (NSString *fixtureName in [LDFlagConfigValue fixtureFileNamesForFlagKey:flagKey includeVersion:withVersions]) {
+    for (NSString *fixtureName in [LDFlagConfigValue fixtureFileNamesForFlagKey:flagKey]) {
         [flagConfigValueStubs addObject:[LDFlagConfigValue flagConfigValueFromJsonFileNamed:fixtureName flagKey:flagKey eventTrackingContext:eventTrackingContext]];
     }
     
     return [NSArray arrayWithArray:flagConfigValueStubs];
 }
 
-+(NSArray<NSString*>*)fixtureFileNamesForFlagKey:(NSString*)flagKey includeVersion:(BOOL)includeVersion {
++(NSArray<NSString*>*)fixtureFileNamesForFlagKey:(NSString*)flagKey {
     if ([flagKey isEqualToString:kLDFlagKeyIsABool]) {
-        return includeVersion ? @[@"boolConfigIsABool-false-withVersion", @"boolConfigIsABool-true-withVersion"]
-            : @[@"boolConfigIsABool-false-withoutVersion", @"boolConfigIsABool-true-withoutVersion"];
+        return @[@"boolConfigIsABool-false-withVersion", @"boolConfigIsABool-true-withVersion"];
     }
     if ([flagKey isEqualToString:kLDFlagKeyIsANumber]) {
-        return includeVersion ? @[@"numberConfigIsANumber-1-withVersion", @"numberConfigIsANumber-2-withVersion"] :
-            @[@"numberConfigIsANumber-1-withoutVersion", @"numberConfigIsANumber-2-withoutVersion"];
+        return @[@"numberConfigIsANumber-1-withVersion", @"numberConfigIsANumber-2-withVersion"];
     }
     if ([flagKey isEqualToString:kLDFlagKeyIsADouble]) {
-        return includeVersion ? @[@"doubleConfigIsADouble-Pi-withVersion", @"doubleConfigIsADouble-e-withVersion"] :
-            @[@"doubleConfigIsADouble-Pi-withoutVersion", @"doubleConfigIsADouble-e-withoutVersion"];
+        return @[@"doubleConfigIsADouble-Pi-withVersion", @"doubleConfigIsADouble-e-withVersion"];
     }
     if ([flagKey isEqualToString:kLDFlagKeyIsAString]) {
-        return includeVersion ? @[@"stringConfigIsAString-someString-withVersion", @"stringConfigIsAString-someStringA-withVersion"] :
-            @[@"stringConfigIsAString-someString-withoutVersion", @"stringConfigIsAString-someStringA-withoutVersion"];
+        return @[@"stringConfigIsAString-someString-withVersion", @"stringConfigIsAString-someStringA-withVersion"];
     }
     if ([flagKey isEqualToString:kLDFlagKeyIsAnArray]) {
-        return includeVersion ? @[@"arrayConfigIsAnArray-Empty-withVersion", @"arrayConfigIsAnArray-1-withVersion", @"arrayConfigIsAnArray-123-withVersion"] :
-            @[@"arrayConfigIsAnArray-Empty-withoutVersion", @"arrayConfigIsAnArray-1-withoutVersion", @"arrayConfigIsAnArray-123-withoutVersion"];
+        return @[@"arrayConfigIsAnArray-Empty-withVersion", @"arrayConfigIsAnArray-1-withVersion", @"arrayConfigIsAnArray-123-withVersion"];
     }
     if ([flagKey isEqualToString:kLDFlagKeyIsADictionary]) {
-        return includeVersion ? @[@"dictionaryConfigIsADictionary-Empty-withVersion",
-                                  @"dictionaryConfigIsADictionary-3Key-withVersion",
-                                  @"dictionaryConfigIsADictionary-KeyA-withVersion"]
-                                :
-                                  @[@"dictionaryConfigIsADictionary-Empty-withoutVersion",
-                                  @"dictionaryConfigIsADictionary-3Key-withoutVersion",
-                                  @"dictionaryConfigIsADictionary-KeyA-withoutVersion"];
+        return @[@"dictionaryConfigIsADictionary-Empty-withVersion", @"dictionaryConfigIsADictionary-3Key-withVersion", @"dictionaryConfigIsADictionary-KeyA-withVersion"];
     }
     if ([flagKey isEqualToString:kLDFlagKeyIsANull]) {
-        return includeVersion ? @[@"nullConfigIsANull-null-withVersion"] :
-            @[@"nullConfigIsANull-null-withoutVersion"];
+        return @[@"nullConfigIsANull-null-withVersion"];
     }
 
     return @[];
