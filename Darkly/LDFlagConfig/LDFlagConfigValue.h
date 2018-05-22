@@ -12,6 +12,7 @@
 
 extern NSString * _Nonnull const kLDFlagConfigValueKeyValue;
 extern NSString * _Nonnull const kLDFlagConfigValueKeyVersion;
+extern NSString * _Nonnull const kLDFlagConfigValueKeyFlagVersion;
 extern NSString * _Nonnull const kLDFlagConfigValueKeyVariation;
 
 extern NSInteger const kLDFlagConfigValueItemDoesNotExist;
@@ -19,8 +20,8 @@ extern NSInteger const kLDFlagConfigValueItemDoesNotExist;
 @interface LDFlagConfigValue: NSObject
 @property (nullable, nonatomic, strong) id value;
 @property (nonatomic, assign) NSInteger modelVersion;
-@property (nonatomic, assign) NSInteger flagVersion;
 @property (nonatomic, assign) NSInteger variation;
+@property (nullable, nonatomic, strong) NSNumber *flagVersion;
 @property (nullable, nonatomic, strong) LDEventTrackingContext *eventTrackingContext;
 
 +(nullable instancetype)flagConfigValueWithObject:(nullable id)object;
