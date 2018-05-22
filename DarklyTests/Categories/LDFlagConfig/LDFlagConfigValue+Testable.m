@@ -58,25 +58,25 @@ NSString * const kLDFlagKeyIsANull = @"isANull";
 
 +(NSArray<NSString*>*)fixtureFileNamesForFlagKey:(NSString*)flagKey {
     if ([flagKey isEqualToString:kLDFlagKeyIsABool]) {
-        return @[@"boolConfigIsABool-false-withVersion", @"boolConfigIsABool-true-withVersion"];
+        return @[@"boolConfigIsABool-false", @"boolConfigIsABool-true"];
     }
     if ([flagKey isEqualToString:kLDFlagKeyIsANumber]) {
-        return @[@"numberConfigIsANumber-1-withVersion", @"numberConfigIsANumber-2-withVersion"];
+        return @[@"numberConfigIsANumber-1", @"numberConfigIsANumber-2"];
     }
     if ([flagKey isEqualToString:kLDFlagKeyIsADouble]) {
-        return @[@"doubleConfigIsADouble-Pi-withVersion", @"doubleConfigIsADouble-e-withVersion"];
+        return @[@"doubleConfigIsADouble-Pi", @"doubleConfigIsADouble-e"];
     }
     if ([flagKey isEqualToString:kLDFlagKeyIsAString]) {
-        return @[@"stringConfigIsAString-someString-withVersion", @"stringConfigIsAString-someStringA-withVersion"];
+        return @[@"stringConfigIsAString-someString", @"stringConfigIsAString-someStringA"];
     }
     if ([flagKey isEqualToString:kLDFlagKeyIsAnArray]) {
-        return @[@"arrayConfigIsAnArray-Empty-withVersion", @"arrayConfigIsAnArray-1-withVersion", @"arrayConfigIsAnArray-123-withVersion"];
+        return @[@"arrayConfigIsAnArray-Empty", @"arrayConfigIsAnArray-1", @"arrayConfigIsAnArray-123"];
     }
     if ([flagKey isEqualToString:kLDFlagKeyIsADictionary]) {
-        return @[@"dictionaryConfigIsADictionary-Empty-withVersion", @"dictionaryConfigIsADictionary-3Key-withVersion", @"dictionaryConfigIsADictionary-KeyA-withVersion"];
+        return @[@"dictionaryConfigIsADictionary-Empty", @"dictionaryConfigIsADictionary-3Key", @"dictionaryConfigIsADictionary-KeyA"];
     }
     if ([flagKey isEqualToString:kLDFlagKeyIsANull]) {
-        return @[@"nullConfigIsANull-null-withVersion"];
+        return @[@"nullConfigIsANull-null"];
     }
 
     return @[];

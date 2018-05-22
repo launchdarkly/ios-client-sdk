@@ -399,7 +399,7 @@ NSString *const kBoolFlagKey = @"isABawler";
 
 - (void)testProcessedEventsSuccessWithProcessedEvents {
     LDConfig *config = [[LDConfig alloc] initWithMobileKey:@"testMobileKey"];
-    LDFlagConfigValue *flagConfigValue = [LDFlagConfigValue flagConfigValueFromJsonFileNamed:@"boolConfigIsABool-true-withVersion"
+    LDFlagConfigValue *flagConfigValue = [LDFlagConfigValue flagConfigValueFromJsonFileNamed:@"boolConfigIsABool-true"
                                                                                      flagKey:kLDFlagKeyIsABool
                                                                         eventTrackingContext:[LDEventTrackingContext stub]];
     LDEventModel *event = [LDEventModel featureEventWithFlagKey:kFeatureEventKeyStub
@@ -443,7 +443,7 @@ NSString *const kBoolFlagKey = @"isABawler";
     id mockUserNoChangeObserver = OCMObserverMock();    //expect this NOT to be posted
     [[NSNotificationCenter defaultCenter] addMockObserver:mockUserNoChangeObserver name:kLDUserNoChangeNotification object:nil];
 
-    LDFlagConfigModel *flagConfig = [LDFlagConfigModel flagConfigFromJsonFileNamed:@"featureFlags-withVersions"];
+    LDFlagConfigModel *flagConfig = [LDFlagConfigModel flagConfigFromJsonFileNamed:@"featureFlags"];
 
     LDUserModel *user = [self.ldClientMock ldUser];
     user.flagConfig = flagConfig;
@@ -476,14 +476,14 @@ NSString *const kBoolFlagKey = @"isABawler";
     [[self.dataManagerMock reject] saveUser:[OCMArg any]];
 
     LDEventTrackingContext *eventTrackingContext = [LDEventTrackingContext contextWithTrackEvents:NO debugEventsUntilDate:nil];
-    LDFlagConfigModel *flagConfig = [LDFlagConfigModel flagConfigFromJsonFileNamed:@"featureFlags-withVersions" eventTrackingContext:eventTrackingContext];
+    LDFlagConfigModel *flagConfig = [LDFlagConfigModel flagConfigFromJsonFileNamed:@"featureFlags" eventTrackingContext:eventTrackingContext];
 
     LDUserModel *user = [self.ldClientMock ldUser];
     user.flagConfig = flagConfig;
     [[[self.ldClientMock expect] andReturn:user] ldUser];
 
     LDEventTrackingContext *updatedEventTrackingContext = [LDEventTrackingContext contextWithTrackEvents:YES debugEventsUntilDate:[NSDate dateWithTimeIntervalSinceNow:30.0]];
-    LDFlagConfigModel *updatedFlagConfig = [LDFlagConfigModel flagConfigFromJsonFileNamed:@"featureFlags-withVersions" eventTrackingContext:updatedEventTrackingContext];
+    LDFlagConfigModel *updatedFlagConfig = [LDFlagConfigModel flagConfigFromJsonFileNamed:@"featureFlags" eventTrackingContext:updatedEventTrackingContext];
 
     [[LDClientManager sharedInstance] processedConfig:YES jsonConfigDictionary:[updatedFlagConfig dictionaryValue]];
 
@@ -692,7 +692,7 @@ NSString *const kBoolFlagKey = @"isABawler";
         return YES;
     }]]);
 
-    LDFlagConfigModel *targetFlagConfig = [LDFlagConfigModel flagConfigFromJsonFileNamed:@"featureFlags-excludeNulls-withVersions"];
+    LDFlagConfigModel *targetFlagConfig = [LDFlagConfigModel flagConfigFromJsonFileNamed:@"featureFlags-excludeNulls"];
 
     self.cleanup = ^{
         [[NSNotificationCenter defaultCenter] removeObserver:userUpdatedNotificationObserver];
@@ -711,7 +711,7 @@ NSString *const kBoolFlagKey = @"isABawler";
         return YES;
     }]];
     
-    LDEvent *put = [LDEvent stubEvent:kLDEventTypePut fromJsonFileNamed:@"featureFlags-excludeNulls-withVersions"];
+    LDEvent *put = [LDEvent stubEvent:kLDEventTypePut fromJsonFileNamed:@"featureFlags-excludeNulls"];
 
     messageHandler(put);
 
@@ -757,7 +757,7 @@ NSString *const kBoolFlagKey = @"isABawler";
     if (!messageHandler) { return; }
 
     //NOTE: Because the flag config mock will return YES on a config comparison, the put here doesn't matter
-    LDEvent *put = [LDEvent stubEvent:kLDEventTypePut fromJsonFileNamed:@"featureFlags-withVersions"];
+    LDEvent *put = [LDEvent stubEvent:kLDEventTypePut fromJsonFileNamed:@"featureFlags"];
 
     messageHandler(put);
 
@@ -790,7 +790,7 @@ NSString *const kBoolFlagKey = @"isABawler";
     XCTAssertNotNil(messageHandler);
     if (!messageHandler) { return; }
 
-    LDEvent *put = [LDEvent stubEvent:kLDEventTypePut fromJsonFileNamed:@"featureFlags-withVersions"];
+    LDEvent *put = [LDEvent stubEvent:kLDEventTypePut fromJsonFileNamed:@"featureFlags"];
     put.data = nil;
 
     messageHandler(put);
@@ -826,7 +826,7 @@ NSString *const kBoolFlagKey = @"isABawler";
     XCTAssertNotNil(messageHandler);
     if (!messageHandler) { return; }
 
-    LDEvent *put = [LDEvent stubEvent:kLDEventTypePut fromJsonFileNamed:@"featureFlags-withVersions"];
+    LDEvent *put = [LDEvent stubEvent:kLDEventTypePut fromJsonFileNamed:@"featureFlags"];
     put.data = @"";
 
     messageHandler(put);
@@ -862,7 +862,7 @@ NSString *const kBoolFlagKey = @"isABawler";
     XCTAssertNotNil(messageHandler);
     if (!messageHandler) { return; }
 
-    LDEvent *put = [LDEvent stubEvent:kLDEventTypePut fromJsonFileNamed:@"featureFlags-withVersions"];
+    LDEvent *put = [LDEvent stubEvent:kLDEventTypePut fromJsonFileNamed:@"featureFlags"];
     put.data = @"{\"someInvalidData\":}";
 
     messageHandler(put);
@@ -899,7 +899,7 @@ NSString *const kBoolFlagKey = @"isABawler";
     XCTAssertNotNil(messageHandler);
     if (!messageHandler) { return; }
 
-    LDEvent *put = [LDEvent stubEvent:@"someUnrecognizedEvent" fromJsonFileNamed:@"featureFlags-withVersions"];
+    LDEvent *put = [LDEvent stubEvent:@"someUnrecognizedEvent" fromJsonFileNamed:@"featureFlags"];
 
     messageHandler(put);
 

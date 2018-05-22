@@ -538,7 +538,7 @@
 }
 
 -(NSDictionary*)serverJson {
-    return [NSJSONSerialization jsonObjectFromFileNamed:@"featureFlags-withVersions"];
+    return [NSJSONSerialization jsonObjectFromFileNamed:@"featureFlags"];
 }
 
 -(NSMutableDictionary*)customDictionary {

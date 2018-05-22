@@ -48,7 +48,7 @@ NSString * const kFlagKeyIsABawler = @"isABawler";
     stub.email = userModelStubEmail;
     stub.avatar = userModelStubAvatar;
     stub.custom = [LDUserModel customStub];
-    stub.flagConfig = [LDFlagConfigModel flagConfigFromJsonFileNamed:@"featureFlags-withVersions" eventTrackingContext:eventTrackingContext];
+    stub.flagConfig = [LDFlagConfigModel flagConfigFromJsonFileNamed:@"featureFlags" eventTrackingContext:eventTrackingContext];
     stub.flagConfigTracker = tracker ?: [LDFlagConfigTracker stubTracker];
 
     return stub;

@@ -25,7 +25,7 @@ extern const NSInteger kLDFlagConfigValueItemDoesNotExist;
 
 - (void)setUp {
     [super setUp];
-    self.flagConfigDictionary = [LDFlagConfigModel flagConfigFromJsonFileNamed:@"featureFlags-withVersions"].featuresJsonDictionary;
+    self.flagConfigDictionary = [LDFlagConfigModel flagConfigFromJsonFileNamed:@"featureFlags"].featuresJsonDictionary;
 }
 
 - (void)tearDown {

@@ -40,7 +40,7 @@ extern NSString * const kLDFlagKeyIsANull;
 }
 
 -(void)testInitAndCounterWithFlagKey {
-    NSDictionary<NSString*, LDFlagConfigValue*> *flagConfigDictionary = [LDFlagConfigModel flagConfigFromJsonFileNamed:@"featureFlags-withVersions"].featuresJsonDictionary;
+    NSDictionary<NSString*, LDFlagConfigValue*> *flagConfigDictionary = [LDFlagConfigModel flagConfigFromJsonFileNamed:@"featureFlags"].featuresJsonDictionary;
     for (NSString *flagKey in flagConfigDictionary.allKeys) {
         LDFlagConfigValue *flagConfigValue = flagConfigDictionary[flagKey];
 

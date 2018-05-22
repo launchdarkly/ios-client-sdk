@@ -79,7 +79,7 @@
 
 -(void)testEncodeAndDecode {
     LDEventTrackingContext *eventTrackingContext = [LDEventTrackingContext stub];
-    LDFlagConfigValue *flagConfigValue = [LDFlagConfigValue flagConfigValueFromJsonFileNamed:@"boolConfigIsABool-true-withVersion" flagKey:@"isABool" eventTrackingContext:eventTrackingContext];
+    LDFlagConfigValue *flagConfigValue = [LDFlagConfigValue flagConfigValueFromJsonFileNamed:@"boolConfigIsABool-true" flagKey:@"isABool" eventTrackingContext:eventTrackingContext];
 
     NSData *archive = [NSKeyedArchiver archivedDataWithRootObject:flagConfigValue];
     LDFlagConfigValue *restored = [NSKeyedUnarchiver unarchiveObjectWithData:archive];
@@ -98,7 +98,7 @@
 
 -(void)testDictionaryValue {
     LDEventTrackingContext *eventTrackingContext = [LDEventTrackingContext stub];
-    LDFlagConfigValue *flagConfigValue = [LDFlagConfigValue flagConfigValueFromJsonFileNamed:@"boolConfigIsABool-true-withVersion"
+    LDFlagConfigValue *flagConfigValue = [LDFlagConfigValue flagConfigValueFromJsonFileNamed:@"boolConfigIsABool-true"
                                                                                      flagKey:@"isABool"
                                                                         eventTrackingContext:eventTrackingContext];
 
@@ -201,13 +201,13 @@
 }
 
 -(void)testIsEqual_valuesDiffer_differentObjects {
-    LDFlagConfigValue *subject = [LDFlagConfigValue flagConfigValueFromJsonFileNamed:@"boolConfigIsABool-true-withVersion" flagKey:@"isABool" eventTrackingContext:nil];
+    LDFlagConfigValue *subject = [LDFlagConfigValue flagConfigValueFromJsonFileNamed:@"boolConfigIsABool-true" flagKey:@"isABool" eventTrackingContext:nil];
 
     XCTAssertFalse([subject isEqual:@"someString"]);
 }
 
 -(void)testIsEqual_valuesDiffer_otherIsNil {
-    LDFlagConfigValue *subject = [LDFlagConfigValue flagConfigValueFromJsonFileNamed:@"boolConfigIsABool-true-withVersion" flagKey:@"isABool" eventTrackingContext:nil];
+    LDFlagConfigValue *subject = [LDFlagConfigValue flagConfigValueFromJsonFileNamed:@"boolConfigIsABool-true" flagKey:@"isABool" eventTrackingContext:nil];
 
     XCTAssertFalse([subject isEqual:nil]);
 }

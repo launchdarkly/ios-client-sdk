@@ -23,7 +23,7 @@ extern NSString *const kLDFlagConfigModelKeyKey;
 @implementation LDFlagConfigModelTest
 
 -(void)testEncodeAndDecode {
-    LDFlagConfigModel *originalConfig = [LDFlagConfigModel flagConfigFromJsonFileNamed:@"featureFlags-withVersions"];
+    LDFlagConfigModel *originalConfig = [LDFlagConfigModel flagConfigFromJsonFileNamed:@"featureFlags"];
     NSData *archive = [NSKeyedArchiver archivedDataWithRootObject:originalConfig];
     LDFlagConfigModel *restoredConfig = [NSKeyedUnarchiver unarchiveObjectWithData:archive];
 
@@ -38,7 +38,7 @@ extern NSString *const kLDFlagConfigModelKeyKey;
 }
 
 -(void)testInitWithDictionary {
-    NSDictionary *flagConfigDictionary = [NSJSONSerialization jsonObjectFromFileNamed:@"featureFlags-withVersions"];
+    NSDictionary *flagConfigDictionary = [NSJSONSerialization jsonObjectFromFileNamed:@"featureFlags"];
     LDFlagConfigModel *subject = [[LDFlagConfigModel alloc] initWithDictionary:flagConfigDictionary];
 
     for (NSString *key in [flagConfigDictionary.allKeys copy]) {
@@ -49,28 +49,28 @@ extern NSString *const kLDFlagConfigModelKeyKey;
 }
 
 -(void)testDictionaryValue_includeNullValues {
-    LDFlagConfigModel *subject = [LDFlagConfigModel flagConfigFromJsonFileNamed:@"featureFlags-withVersions"];
+    LDFlagConfigModel *subject = [LDFlagConfigModel flagConfigFromJsonFileNamed:@"featureFlags"];
 
     NSDictionary *flagConfigDictionary = [subject dictionaryValueIncludeNulls:YES];
     XCTAssertTrue([subject hasFeaturesEqualToDictionary:flagConfigDictionary]);
 
-    NSDictionary *differentDictionary = [NSJSONSerialization jsonObjectFromFileNamed:@"featureFlags-excludeNulls-withVersions"];
+    NSDictionary *differentDictionary = [NSJSONSerialization jsonObjectFromFileNamed:@"featureFlags-excludeNulls"];
     XCTAssertFalse([subject hasFeaturesEqualToDictionary:differentDictionary]);
 }
 
 -(void)testDictionaryValue_excludeNullValues {
-    LDFlagConfigModel *subject = [LDFlagConfigModel flagConfigFromJsonFileNamed:@"featureFlags-excludeNulls-withVersions"];
+    LDFlagConfigModel *subject = [LDFlagConfigModel flagConfigFromJsonFileNamed:@"featureFlags-excludeNulls"];
 
     NSDictionary *flagConfigDictionary = [subject dictionaryValueIncludeNulls:NO];
     XCTAssertTrue([subject hasFeaturesEqualToDictionary:flagConfigDictionary]);
 
-    NSDictionary *differentDictionary = [NSJSONSerialization jsonObjectFromFileNamed:@"featureFlags-withVersions"];
+    NSDictionary *differentDictionary = [NSJSONSerialization jsonObjectFromFileNamed:@"featureFlags"];
     XCTAssertFalse([subject hasFeaturesEqualToDictionary:differentDictionary]);
 }
 
 -(void)testFlagConfigValueForFlagKey {
-    LDFlagConfigModel *subject = [LDFlagConfigModel flagConfigFromJsonFileNamed:@"featureFlags-withVersions"];
-    NSDictionary *flagValues = [NSJSONSerialization jsonObjectFromFileNamed:@"featureFlags-withVersions"];
+    LDFlagConfigModel *subject = [LDFlagConfigModel flagConfigFromJsonFileNamed:@"featureFlags"];
+    NSDictionary *flagValues = [NSJSONSerialization jsonObjectFromFileNamed:@"featureFlags"];
 
     for (NSString *key in [flagValues.allKeys copy]) {
         id targetFlagConfigValue = [LDFlagConfigValue flagConfigValueWithObject:flagValues[key]];
@@ -81,8 +81,8 @@ extern NSString *const kLDFlagConfigModelKeyKey;
 }
 
 -(void)testFlagValueForFlagKey {
-    LDFlagConfigModel *config = [LDFlagConfigModel flagConfigFromJsonFileNamed:@"featureFlags-withVersions"];
-    NSDictionary *flagValues = [NSJSONSerialization jsonObjectFromFileNamed:@"featureFlags-withVersions"];
+    LDFlagConfigModel *config = [LDFlagConfigModel flagConfigFromJsonFileNamed:@"featureFlags"];
+    NSDictionary *flagValues = [NSJSONSerialization jsonObjectFromFileNamed:@"featureFlags"];
 
     for (NSString *key in [flagValues.allKeys copy]) {
         id targetValue = flagValues[key][kLDFlagConfigValueKeyValue];
@@ -97,8 +97,8 @@ extern NSString *const kLDFlagConfigModelKeyKey;
 }
 
 -(void)testFlagVersionForFlagKey {
-    LDFlagConfigModel *config = [LDFlagConfigModel flagConfigFromJsonFileNamed:@"featureFlags-withVersions"];
-    NSDictionary *flagValues = [NSJSONSerialization jsonObjectFromFileNamed:@"featureFlags-withVersions"];
+    LDFlagConfigModel *config = [LDFlagConfigModel flagConfigFromJsonFileNamed:@"featureFlags"];
+    NSDictionary *flagValues = [NSJSONSerialization jsonObjectFromFileNamed:@"featureFlags"];
 
     for (NSString *key in [flagValues.allKeys copy]) {
         NSInteger targetVersion = [flagValues[key][kLDFlagConfigValueKeyVersion] integerValue];
@@ -109,8 +109,8 @@ extern NSString *const kLDFlagConfigModelKeyKey;
 }
 
 - (void)testDoesFlagConfigValueExistForFlagKey {
-    LDFlagConfigModel *config = [LDFlagConfigModel flagConfigFromJsonFileNamed:@"featureFlags-withVersions"];
-    NSDictionary *flagValues = [NSJSONSerialization jsonObjectFromFileNamed:@"featureFlags-withVersions"];
+    LDFlagConfigModel *config = [LDFlagConfigModel flagConfigFromJsonFileNamed:@"featureFlags"];
+    NSDictionary *flagValues = [NSJSONSerialization jsonObjectFromFileNamed:@"featureFlags"];
 
     for (NSString *key in [flagValues.allKeys copy]) {
         XCTAssertTrue([config doesFlagConfigValueExistForFlagKey:key]);
@@ -313,10 +313,10 @@ extern NSString *const kLDFlagConfigModelKeyKey;
 }
 
 - (void)testIsEqualToConfigBoolValues {
-    LDFlagConfigModel *boolConfigIsABool_true = [LDFlagConfigModel flagConfigFromJsonFileNamed:@"boolConfigIsABool-true-withVersion"];
-    LDFlagConfigModel *boolConfigIsABool_trueCopy = [LDFlagConfigModel flagConfigFromJsonFileNamed:@"boolConfigIsABool-true-withVersion"];
-    LDFlagConfigModel *boolConfigIsABool_false = [LDFlagConfigModel flagConfigFromJsonFileNamed:@"boolConfigIsABool-false-withVersion"];
-    LDFlagConfigModel *boolConfigIsABool2_true = [LDFlagConfigModel flagConfigFromJsonFileNamed:@"boolConfigIsABool2-true-withVersion"];
+    LDFlagConfigModel *boolConfigIsABool_true = [LDFlagConfigModel flagConfigFromJsonFileNamed:@"boolConfigIsABool-true"];
+    LDFlagConfigModel *boolConfigIsABool_trueCopy = [LDFlagConfigModel flagConfigFromJsonFileNamed:@"boolConfigIsABool-true"];
+    LDFlagConfigModel *boolConfigIsABool_false = [LDFlagConfigModel flagConfigFromJsonFileNamed:@"boolConfigIsABool-false"];
+    LDFlagConfigModel *boolConfigIsABool2_true = [LDFlagConfigModel flagConfigFromJsonFileNamed:@"boolConfigIsABool2-true"];
     
     XCTAssertFalse([boolConfigIsABool_true isEqualToConfig:nil]);
     XCTAssertTrue([boolConfigIsABool_true isEqualToConfig:boolConfigIsABool_true]);
@@ -329,10 +329,10 @@ extern NSString *const kLDFlagConfigModelKeyKey;
 }
 
 - (void)testIsEqualToConfigNumberValues {
-    LDFlagConfigModel *numberConfigIsANumber_1 = [LDFlagConfigModel flagConfigFromJsonFileNamed:@"numberConfigIsANumber-1-withVersion"];
-    LDFlagConfigModel *numberConfigIsANumber_1Copy = [LDFlagConfigModel flagConfigFromJsonFileNamed:@"numberConfigIsANumber-1-withVersion"];
-    LDFlagConfigModel *numberConfigIsANumber_2 = [LDFlagConfigModel flagConfigFromJsonFileNamed:@"numberConfigIsANumber-2-withVersion"];
-    LDFlagConfigModel *numberConfigIsANumber2_1 = [LDFlagConfigModel flagConfigFromJsonFileNamed:@"numberConfigIsANumber2-1-withVersion"];
+    LDFlagConfigModel *numberConfigIsANumber_1 = [LDFlagConfigModel flagConfigFromJsonFileNamed:@"numberConfigIsANumber-1"];
+    LDFlagConfigModel *numberConfigIsANumber_1Copy = [LDFlagConfigModel flagConfigFromJsonFileNamed:@"numberConfigIsANumber-1"];
+    LDFlagConfigModel *numberConfigIsANumber_2 = [LDFlagConfigModel flagConfigFromJsonFileNamed:@"numberConfigIsANumber-2"];
+    LDFlagConfigModel *numberConfigIsANumber2_1 = [LDFlagConfigModel flagConfigFromJsonFileNamed:@"numberConfigIsANumber2-1"];
 
     XCTAssertFalse([numberConfigIsANumber_1 isEqualToConfig:nil]);
     XCTAssertTrue([numberConfigIsANumber_1 isEqualToConfig:numberConfigIsANumber_1]);
@@ -344,10 +344,10 @@ extern NSString *const kLDFlagConfigModelKeyKey;
 }
 
 - (void)testIsEqualToConfigStringValues {
-    LDFlagConfigModel *stringConfigIsAString_someString = [LDFlagConfigModel flagConfigFromJsonFileNamed:@"stringConfigIsAString-someString-withVersion"];
-    LDFlagConfigModel *stringConfigIsAString_someStringCopy = [LDFlagConfigModel flagConfigFromJsonFileNamed:@"stringConfigIsAString-someString-withVersion"];
-    LDFlagConfigModel *stringConfigIsAString_someStringA = [LDFlagConfigModel flagConfigFromJsonFileNamed:@"stringConfigIsAString-someStringA-withVersion"];
-    LDFlagConfigModel *stringConfigIsAStringA_someString = [LDFlagConfigModel flagConfigFromJsonFileNamed:@"stringConfigIsAStringA-someString-withVersion"];
+    LDFlagConfigModel *stringConfigIsAString_someString = [LDFlagConfigModel flagConfigFromJsonFileNamed:@"stringConfigIsAString-someString"];
+    LDFlagConfigModel *stringConfigIsAString_someStringCopy = [LDFlagConfigModel flagConfigFromJsonFileNamed:@"stringConfigIsAString-someString"];
+    LDFlagConfigModel *stringConfigIsAString_someStringA = [LDFlagConfigModel flagConfigFromJsonFileNamed:@"stringConfigIsAString-someStringA"];
+    LDFlagConfigModel *stringConfigIsAStringA_someString = [LDFlagConfigModel flagConfigFromJsonFileNamed:@"stringConfigIsAStringA-someString"];
 
     XCTAssertFalse([stringConfigIsAString_someString isEqualToConfig:nil]);
     XCTAssertTrue([stringConfigIsAString_someString isEqualToConfig:stringConfigIsAString_someString]);
@@ -359,11 +359,11 @@ extern NSString *const kLDFlagConfigModelKeyKey;
 }
 
 - (void)testIsEqualToConfigArrayValues {
-    LDFlagConfigModel *arrayConfigIsAnArray_123 = [LDFlagConfigModel flagConfigFromJsonFileNamed:@"arrayConfigIsAnArray-123-withVersion"];
-    LDFlagConfigModel *arrayConfigIsAnArray_123Copy = [LDFlagConfigModel flagConfigFromJsonFileNamed:@"arrayConfigIsAnArray-123-withVersion"];
-    LDFlagConfigModel *arrayConfigIsAnArray_Empty = [LDFlagConfigModel flagConfigFromJsonFileNamed:@"arrayConfigIsAnArray-Empty-withVersion"];
-    LDFlagConfigModel *arrayConfigIsAnArray_1 = [LDFlagConfigModel flagConfigFromJsonFileNamed:@"arrayConfigIsAnArray-1-withVersion"];
-    LDFlagConfigModel *arrayConfigIsAnArrayA_123 = [LDFlagConfigModel flagConfigFromJsonFileNamed:@"arrayConfigIsAnArrayA-123-withVersion"];
+    LDFlagConfigModel *arrayConfigIsAnArray_123 = [LDFlagConfigModel flagConfigFromJsonFileNamed:@"arrayConfigIsAnArray-123"];
+    LDFlagConfigModel *arrayConfigIsAnArray_123Copy = [LDFlagConfigModel flagConfigFromJsonFileNamed:@"arrayConfigIsAnArray-123"];
+    LDFlagConfigModel *arrayConfigIsAnArray_Empty = [LDFlagConfigModel flagConfigFromJsonFileNamed:@"arrayConfigIsAnArray-Empty"];
+    LDFlagConfigModel *arrayConfigIsAnArray_1 = [LDFlagConfigModel flagConfigFromJsonFileNamed:@"arrayConfigIsAnArray-1"];
+    LDFlagConfigModel *arrayConfigIsAnArrayA_123 = [LDFlagConfigModel flagConfigFromJsonFileNamed:@"arrayConfigIsAnArrayA-123"];
 
     XCTAssertFalse([arrayConfigIsAnArray_123 isEqualToConfig:nil]);
     XCTAssertTrue([arrayConfigIsAnArray_123 isEqualToConfig:arrayConfigIsAnArray_123]);
@@ -377,14 +377,14 @@ extern NSString *const kLDFlagConfigModelKeyKey;
 }
 
 - (void)testIsEqualToConfigDictionaryValues {
-    LDFlagConfigModel *dictionaryConfigIsADictionary_3Key = [LDFlagConfigModel flagConfigFromJsonFileNamed:@"dictionaryConfigIsADictionary-3Key-withVersion"];
-    LDFlagConfigModel *dictionaryConfigIsADictionary_3KeyCopy = [LDFlagConfigModel flagConfigFromJsonFileNamed:@"dictionaryConfigIsADictionary-3Key-withVersion"];
-    LDFlagConfigModel *dictionaryConfigIsADictionary_Empty = [LDFlagConfigModel flagConfigFromJsonFileNamed:@"dictionaryConfigIsADictionary-Empty-withVersion"];
-    LDFlagConfigModel *dictionaryConfigIsADictionary_KeyA = [LDFlagConfigModel flagConfigFromJsonFileNamed:@"dictionaryConfigIsADictionary-KeyA-withVersion"];
-    LDFlagConfigModel *dictionaryConfigIsADictionary_KeyB = [LDFlagConfigModel flagConfigFromJsonFileNamed:@"dictionaryConfigIsADictionary-KeyB-withVersion"];
-    LDFlagConfigModel *dictionaryConfigIsADictionary_KeyB_124 = [LDFlagConfigModel flagConfigFromJsonFileNamed:@"dictionaryConfigIsADictionary-KeyB-124-withVersion"];
-    LDFlagConfigModel *dictionaryConfigIsADictionary_KeyC = [LDFlagConfigModel flagConfigFromJsonFileNamed:@"dictionaryConfigIsADictionary-KeyC-withVersion"];
-    LDFlagConfigModel *dictionaryConfigIsADictionary_KeyC_keyDValueDiffers = [LDFlagConfigModel flagConfigFromJsonFileNamed:@"dictionaryConfigIsADictionary-KeyC-keyDValueDiffers-withVersion"];
+    LDFlagConfigModel *dictionaryConfigIsADictionary_3Key = [LDFlagConfigModel flagConfigFromJsonFileNamed:@"dictionaryConfigIsADictionary-3Key"];
+    LDFlagConfigModel *dictionaryConfigIsADictionary_3KeyCopy = [LDFlagConfigModel flagConfigFromJsonFileNamed:@"dictionaryConfigIsADictionary-3Key"];
+    LDFlagConfigModel *dictionaryConfigIsADictionary_Empty = [LDFlagConfigModel flagConfigFromJsonFileNamed:@"dictionaryConfigIsADictionary-Empty"];
+    LDFlagConfigModel *dictionaryConfigIsADictionary_KeyA = [LDFlagConfigModel flagConfigFromJsonFileNamed:@"dictionaryConfigIsADictionary-KeyA"];
+    LDFlagConfigModel *dictionaryConfigIsADictionary_KeyB = [LDFlagConfigModel flagConfigFromJsonFileNamed:@"dictionaryConfigIsADictionary-KeyB"];
+    LDFlagConfigModel *dictionaryConfigIsADictionary_KeyB_124 = [LDFlagConfigModel flagConfigFromJsonFileNamed:@"dictionaryConfigIsADictionary-KeyB-124"];
+    LDFlagConfigModel *dictionaryConfigIsADictionary_KeyC = [LDFlagConfigModel flagConfigFromJsonFileNamed:@"dictionaryConfigIsADictionary-KeyC"];
+    LDFlagConfigModel *dictionaryConfigIsADictionary_KeyC_keyDValueDiffers = [LDFlagConfigModel flagConfigFromJsonFileNamed:@"dictionaryConfigIsADictionary-KeyC-keyDValueDiffers"];
 
     XCTAssertFalse([dictionaryConfigIsADictionary_3Key isEqualToConfig:nil]);
     XCTAssertTrue([dictionaryConfigIsADictionary_3Key isEqualToConfig:dictionaryConfigIsADictionary_3Key]);
@@ -404,20 +404,20 @@ extern NSString *const kLDFlagConfigModelKeyKey;
 }
 
 - (void)testHasFeaturesEqualToDictionary {
-    LDFlagConfigModel *subject = [LDFlagConfigModel flagConfigFromJsonFileNamed:@"featureFlags-withVersions"];
-    NSDictionary *sameDictionary = [NSJSONSerialization jsonObjectFromFileNamed:@"featureFlags-withVersions"];
+    LDFlagConfigModel *subject = [LDFlagConfigModel flagConfigFromJsonFileNamed:@"featureFlags"];
+    NSDictionary *sameDictionary = [NSJSONSerialization jsonObjectFromFileNamed:@"featureFlags"];
 
     XCTAssertTrue([subject hasFeaturesEqualToDictionary:sameDictionary]);
 
-    NSDictionary *differentDictionary = [NSJSONSerialization jsonObjectFromFileNamed:@"featureFlags-excludeNulls-withVersions"];
+    NSDictionary *differentDictionary = [NSJSONSerialization jsonObjectFromFileNamed:@"featureFlags-excludeNulls"];
     XCTAssertFalse([subject hasFeaturesEqualToDictionary:differentDictionary]);
 }
 
 -(void)testUpdateEventTrackingContextFromConfig {
     LDEventTrackingContext *eventTrackingContext = [LDEventTrackingContext contextWithTrackEvents:NO debugEventsUntilDate:nil];
-    LDFlagConfigModel *subject = [LDFlagConfigModel flagConfigFromJsonFileNamed:@"featureFlags-withVersions" eventTrackingContext:eventTrackingContext];
+    LDFlagConfigModel *subject = [LDFlagConfigModel flagConfigFromJsonFileNamed:@"featureFlags" eventTrackingContext:eventTrackingContext];
     LDEventTrackingContext *updatedEventTrackingContext = [LDEventTrackingContext contextWithTrackEvents:YES debugEventsUntilDate:[NSDate dateWithTimeIntervalSinceNow:30.0]];
-    LDFlagConfigModel *updatedConfig = [LDFlagConfigModel flagConfigFromJsonFileNamed:@"featureFlags-withVersions" eventTrackingContext:updatedEventTrackingContext];
+    LDFlagConfigModel *updatedConfig = [LDFlagConfigModel flagConfigFromJsonFileNamed:@"featureFlags" eventTrackingContext:updatedEventTrackingContext];
 
     [subject updateEventTrackingContextFromConfig:updatedConfig];
 

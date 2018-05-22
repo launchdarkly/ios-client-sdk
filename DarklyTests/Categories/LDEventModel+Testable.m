@@ -84,7 +84,7 @@ const double featureEventDefaultValueStub = 2.71828;
     }
     BOOL inlineUser = config ? config.inlineUserInEvents : false;
     if ([eventKind isEqualToString:kEventModelKindFeature]) {
-        LDFlagConfigValue *flagConfigValue = [LDFlagConfigValue flagConfigValueFromJsonFileNamed:@"doubleConfigIsADouble-Pi-withVersion"
+        LDFlagConfigValue *flagConfigValue = [LDFlagConfigValue flagConfigValueFromJsonFileNamed:@"doubleConfigIsADouble-Pi"
                                                                                          flagKey:kLDFlagKeyIsADouble
                                                                             eventTrackingContext:[LDEventTrackingContext stub]];
         return [LDEventModel featureEventWithFlagKey:kFeatureEventKeyStub
@@ -103,7 +103,7 @@ const double featureEventDefaultValueStub = 2.71828;
         return [LDEventModel summaryEventWithTracker:[LDFlagConfigTracker stubTracker]];
     }
     if ([eventKind isEqualToString:kEventModelKindDebug]) {
-        LDFlagConfigValue *flagConfigValue = [LDFlagConfigValue flagConfigValueFromJsonFileNamed:@"doubleConfigIsADouble-Pi-withVersion"
+        LDFlagConfigValue *flagConfigValue = [LDFlagConfigValue flagConfigValueFromJsonFileNamed:@"doubleConfigIsADouble-Pi"
                                                                                          flagKey:kLDFlagKeyIsADouble
                                                                             eventTrackingContext:[LDEventTrackingContext stub]];
         return [LDEventModel debugEventWithFlagKey:kDebugEventKeyStub flagConfigValue:flagConfigValue defaultFlagValue:@(featureEventDefaultValueStub) user:user];

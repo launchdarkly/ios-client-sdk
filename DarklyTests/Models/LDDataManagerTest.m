@@ -348,7 +348,7 @@ NSString * const kMobileKeyMock = @"LDDataManagerTest.mobileKeyMock";
     [manager createCustomEventWithKey:@"aKey" customData: @{@"carrot": @"cake"} user:self.user config:self.config];
     [manager createCustomEventWithKey:@"aKey" customData: @{@"carrot": @"cake"} user:self.user config:self.config];
     [manager createCustomEventWithKey:@"aKey" customData: @{@"carrot": @"cake"} user:self.user config:self.config];
-    LDFlagConfigValue *flagConfigValue = [LDFlagConfigValue flagConfigValueFromJsonFileNamed:@"boolConfigIsABool-true-withVersion"
+    LDFlagConfigValue *flagConfigValue = [LDFlagConfigValue flagConfigValueFromJsonFileNamed:@"boolConfigIsABool-true"
                                                                                      flagKey:kLDFlagKeyIsABool
                                                                         eventTrackingContext:[LDEventTrackingContext stub]];
     [manager createFeatureEventWithFlagKey: @"anotherKey" flagConfigValue:flagConfigValue defaultFlagValue:@(NO) user:self.user config:self.config];
