@@ -130,6 +130,6 @@ NSInteger const kLDFlagConfigValueItemDoesNotExist = -1;
 }
 
 -(NSString*)description {
-    return [NSString stringWithFormat:@"<LDFlagConfigValue: %p, value: %@, version: %ld, variation: %ld, eventTrackingContext: %@>", self, [self.value description], (long)self.modelVersion, (long)self.variation, self.eventTrackingContext ?: @"nil"];
+    return [NSString stringWithFormat:@"<LDFlagConfigValue: %p, value: %@, modelVersion: %ld, variation: %ld, eventTrackingContext: %@>", self, [self.value description], (long)self.modelVersion, (long)self.variation, self.eventTrackingContext ?: @"nil"];
 }
 @end

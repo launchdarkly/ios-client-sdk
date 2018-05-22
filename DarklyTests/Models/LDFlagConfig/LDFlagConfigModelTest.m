@@ -102,10 +102,10 @@ extern NSString *const kLDFlagConfigModelKeyKey;
 
     for (NSString *key in [flagValues.allKeys copy]) {
         NSInteger targetVersion = [flagValues[key][kLDFlagConfigValueKeyVersion] integerValue];
-        XCTAssertTrue([config flagVersionForFlagKey:key] == targetVersion);
+        XCTAssertTrue([config flagModelVersionForFlagKey:key] == targetVersion);
     }
 
-    XCTAssertTrue([config flagVersionForFlagKey:@"someMissingKey"] == kLDFlagConfigValueItemDoesNotExist);
+    XCTAssertTrue([config flagModelVersionForFlagKey:@"someMissingKey"] == kLDFlagConfigValueItemDoesNotExist);
 }
 
 - (void)testDoesFlagConfigValueExistForFlagKey {
@@ -213,13 +213,26 @@ extern NSString *const kLDFlagConfigModelKeyKey;
 }
 
 - (void)testAddOrReplaceFromDictionaryWhenDictionaryIsMissingVersion {
-    LDFlagConfigModel *targetConfig = [LDFlagConfigModel flagConfigFromJsonFileNamed:@"ldFlagConfigModelTest"];
     LDFlagConfigModel *config = [LDFlagConfigModel flagConfigFromJsonFileNamed:@"ldFlagConfigModelTest"];
     NSDictionary *patch = [LDFlagConfigModel patchFromJsonFileNamed:@"ldFlagConfigModelPatchVersion2Flag" omitKey:kLDFlagConfigValueKeyVersion];
+    LDFlagConfigValue *patchedFlagConfigValue = [LDFlagConfigValue flagConfigValueFromJsonFileNamed:@"ldFlagConfigModelPatchVersion2Flag" flagKey:nil eventTrackingContext:nil];
+    patchedFlagConfigValue.modelVersion = kLDFlagConfigValueItemDoesNotExist;
+    NSString *patchedFlagKey = patch[kLDFlagConfigModelKeyKey];
 
     [config addOrReplaceFromDictionary:patch];
 
-    XCTAssertTrue([config isEqualToConfig:targetConfig]);
+    XCTAssertEqualObjects([config flagConfigValueForFlagKey:patchedFlagKey], patchedFlagConfigValue);
+}
+
+- (void)testAddOrReplaceFromDictionaryWhenFlagConfigModelIsMissingVersion {
+    LDFlagConfigModel *config = [LDFlagConfigModel flagConfigFromJsonFileNamed:@"ldFlagConfigModelTest" omitKey:kLDFlagConfigValueKeyVersion];
+    NSDictionary *patch = [LDFlagConfigModel patchFromJsonFileNamed:@"ldFlagConfigModelPatchVersion2Flag" omitKey:nil];
+    LDFlagConfigValue *patchedFlagConfigValue = [LDFlagConfigValue flagConfigValueFromJsonFileNamed:@"ldFlagConfigModelPatchVersion2Flag" flagKey:nil eventTrackingContext:nil];
+    NSString *patchedFlagKey = patch[kLDFlagConfigModelKeyKey];
+
+    [config addOrReplaceFromDictionary:patch];
+
+    XCTAssertEqualObjects([config flagConfigValueForFlagKey:patchedFlagKey], patchedFlagConfigValue);
 }
 
 - (void)testAddOrReplaceFromDictionaryWhenDictionaryIsUnexpectedFormat {
@@ -415,9 +428,9 @@ extern NSString *const kLDFlagConfigModelKeyKey;
 
 -(void)testUpdateEventTrackingContextFromConfig {
     LDEventTrackingContext *eventTrackingContext = [LDEventTrackingContext contextWithTrackEvents:NO debugEventsUntilDate:nil];
-    LDFlagConfigModel *subject = [LDFlagConfigModel flagConfigFromJsonFileNamed:@"featureFlags" eventTrackingContext:eventTrackingContext];
+    LDFlagConfigModel *subject = [LDFlagConfigModel flagConfigFromJsonFileNamed:@"featureFlags" eventTrackingContext:eventTrackingContext omitKey:nil];
     LDEventTrackingContext *updatedEventTrackingContext = [LDEventTrackingContext contextWithTrackEvents:YES debugEventsUntilDate:[NSDate dateWithTimeIntervalSinceNow:30.0]];
-    LDFlagConfigModel *updatedConfig = [LDFlagConfigModel flagConfigFromJsonFileNamed:@"featureFlags" eventTrackingContext:updatedEventTrackingContext];
+    LDFlagConfigModel *updatedConfig = [LDFlagConfigModel flagConfigFromJsonFileNamed:@"featureFlags" eventTrackingContext:updatedEventTrackingContext omitKey:nil];
 
     [subject updateEventTrackingContextFromConfig:updatedConfig];
 

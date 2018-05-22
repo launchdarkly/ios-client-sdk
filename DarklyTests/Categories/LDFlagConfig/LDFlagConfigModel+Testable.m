@@ -17,10 +17,18 @@
 @implementation LDFlagConfigModel(Testable)
 
 +(instancetype)flagConfigFromJsonFileNamed:(NSString *)fileName {
-    return [LDFlagConfigModel flagConfigFromJsonFileNamed:fileName eventTrackingContext:nil];
+    return [LDFlagConfigModel flagConfigFromJsonFileNamed:fileName eventTrackingContext:nil omitKey:nil];
+}
+
++(instancetype)flagConfigFromJsonFileNamed:(NSString *)fileName omitKey:(NSString*)omitKey {
+    return [LDFlagConfigModel flagConfigFromJsonFileNamed:fileName eventTrackingContext:nil omitKey:omitKey];
 }
 
 +(instancetype)flagConfigFromJsonFileNamed:(NSString *)fileName eventTrackingContext:(LDEventTrackingContext*)eventTrackingContext {
+    return [LDFlagConfigModel flagConfigFromJsonFileNamed:fileName eventTrackingContext:eventTrackingContext omitKey:nil];
+}
+
++(instancetype)flagConfigFromJsonFileNamed:(NSString *)fileName eventTrackingContext:(LDEventTrackingContext*)eventTrackingContext omitKey:(NSString*)omitKey {
     NSMutableDictionary *flagConfigModelDictionary = [NSMutableDictionary dictionaryWithDictionary:[NSJSONSerialization jsonObjectFromFileNamed:fileName]];
     if (eventTrackingContext) {
         for (NSString *flagKey in flagConfigModelDictionary.allKeys) {
@@ -31,6 +39,23 @@
     }
 
     LDFlagConfigModel *flagConfigModel = [[LDFlagConfigModel alloc] initWithDictionary:flagConfigModelDictionary];
+
+    if (omitKey.length > 0) {
+        NSMutableDictionary *flagConfigValues = [NSMutableDictionary dictionaryWithDictionary:flagConfigModel.featuresJsonDictionary];
+        [flagConfigValues removeObjectForKey:omitKey];
+        for (NSString *flagKey in flagConfigValues.allKeys) {
+            LDFlagConfigValue *flagConfigValue = flagConfigValues[flagKey];
+            if ([omitKey isEqualToString:kLDFlagConfigValueKeyValue]) {
+                flagConfigValue.value = nil;
+            } else if ([omitKey isEqualToString:kLDFlagConfigValueKeyVersion]) {
+                flagConfigValue.modelVersion = kLDFlagConfigValueItemDoesNotExist;
+            } else if ([omitKey isEqualToString:kLDFlagConfigValueKeyVariation]) {
+                flagConfigValue.variation = kLDFlagConfigValueItemDoesNotExist;
+            }
+        }
+        flagConfigModel.featuresJsonDictionary = [flagConfigValues copy];
+    }
+
     return flagConfigModel;
 }
 
@@ -42,7 +67,9 @@
 
 +(NSDictionary*)patchFromJsonFileNamed:(NSString *)fileName omitKey:(NSString*)key {
     NSMutableDictionary *patch = [NSMutableDictionary dictionaryWithDictionary:[NSJSONSerialization jsonObjectFromFileNamed:fileName]];
-    patch[key] = nil;
+    if (key.length > 0) {
+        [patch removeObjectForKey:key];
+    }
     return patch;
 }
 
