@@ -29,21 +29,4 @@ const NSTimeInterval kLDFlagConfigTrackerTrackingInterval = -30.0;
     return tracker;
 }
 
--(BOOL)hasPropertiesMatchingDictionary:(NSDictionary*)dictionary {
-    NSMutableArray<NSString*> *mismatchedProperties = [NSMutableArray array];
-
-    for (NSString *flagKey in self.mutableFlagCounters.allKeys) {
-        LDFlagCounter *flagCounter = self.mutableFlagCounters[flagKey];
-        NSDictionary *flagCounterDictionary = dictionary[flagKey];
-        if (![flagCounter hasPropertiesMatchingDictionary:flagCounterDictionary]) {
-            [mismatchedProperties addObject:[NSString stringWithFormat:@"%@-%@", kEventModelKeyFeatures, flagKey]];
-        }
-    }
-
-    if (mismatchedProperties.count > 0) {
-        NSLog(@"[%@ %@] has unequal properties %@", NSStringFromClass([self class]), NSStringFromSelector(_cmd), [mismatchedProperties componentsJoinedByString:@", "]);
-        return NO;
-    }
-    return YES;
-}
 @end

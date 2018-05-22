@@ -17,7 +17,6 @@
 #import "LDEventTrackingContext+Testable.h"
 #import "LDClient.h"
 #import "OCMock.h"
-#import "NSArray+UnitTests.h"
 #import "LDDataManager+Testable.h"
 #import "LDFlagConfigTracker.h"
 #import "LDFlagConfigTracker+Testable.h"

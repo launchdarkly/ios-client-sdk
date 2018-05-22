@@ -8,12 +8,14 @@
 
 #import "LDFlagCounter.h"
 
+extern NSString * const kLDFlagCounterKeyDefaultValue;
+extern NSString * const kLDFlagCounterKeyCounters;
+
 @interface LDFlagCounter(Testable)
 @property (nonatomic, strong) NSMutableArray<LDFlagValueCounter*> *flagValueCounters;
 
 +(instancetype)stubForFlagKey:(NSString*)flagKey;
 +(instancetype)stubForFlagKey:(NSString*)flagKey useKnownValues:(BOOL)useKnownValues;
--(BOOL)hasPropertiesMatchingDictionary:(NSDictionary*)dictionary;
 
 @end
 

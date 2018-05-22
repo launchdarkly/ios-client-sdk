@@ -61,10 +61,10 @@ NSInteger const kLDFlagConfigValueItemDoesNotExist = -1;
 }
 
 -(NSDictionary*)dictionaryValue {
-    return [self dictionaryValueUseFlagVersionForVersion:NO];
+    return [self dictionaryValueUseFlagVersionForVersion:NO includeEventTrackingContext:YES];
 }
 
--(NSDictionary*)dictionaryValueUseFlagVersionForVersion:(BOOL)useFlagVersion {
+-(NSDictionary*)dictionaryValueUseFlagVersionForVersion:(BOOL)useFlagVersion includeEventTrackingContext:(BOOL)includeEventTrackingContext {
     NSMutableDictionary *dictionaryValue = [NSMutableDictionary dictionaryWithCapacity:5];
     dictionaryValue[kLDFlagConfigValueKeyValue] = self.value ?: [NSNull null];
     if (self.modelVersion != kLDFlagConfigValueItemDoesNotExist) {
@@ -76,7 +76,7 @@ NSInteger const kLDFlagConfigValueItemDoesNotExist = -1;
     if (self.variation != kLDFlagConfigValueItemDoesNotExist) {
         dictionaryValue[kLDFlagConfigValueKeyVariation] = @(self.variation);
     }
-    if (self.eventTrackingContext) {
+    if (self.eventTrackingContext && includeEventTrackingContext) {
         [dictionaryValue addEntriesFromDictionary:[self.eventTrackingContext dictionaryValue]];
     }
     return dictionaryValue;

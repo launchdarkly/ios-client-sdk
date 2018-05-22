@@ -32,7 +32,7 @@ extern NSInteger const kLDFlagConfigValueItemDoesNotExist;
 -(void)encodeWithCoder:(nonnull NSCoder*)encoder;
 -(nullable id)initWithCoder:(nonnull NSCoder*)decoder;
 -(nonnull NSDictionary*)dictionaryValue;
--(nonnull NSDictionary*)dictionaryValueUseFlagVersionForVersion:(BOOL)useFlagVersion;
+-(nonnull NSDictionary*)dictionaryValueUseFlagVersionForVersion:(BOOL)useFlagVersion includeEventTrackingContext:(BOOL)includeEventTrackingContext;
 
 ///Returns true when the core items of both flagConfigValues are the same.
 ///Ignores the optional items

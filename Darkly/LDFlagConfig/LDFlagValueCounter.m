@@ -42,7 +42,7 @@ NSString * const kLDFlagValueCounterKeyUnknown = @"unknown";
 
     if (self.known) {
         if (self.flagConfigValue) {
-            [dictionary addEntriesFromDictionary:[self.flagConfigValue dictionaryValue]];
+            [dictionary addEntriesFromDictionary:[self.flagConfigValue dictionaryValueUseFlagVersionForVersion:YES includeEventTrackingContext:NO]];
         }
     } else {
         dictionary[kLDFlagValueCounterKeyUnknown] = @(YES);

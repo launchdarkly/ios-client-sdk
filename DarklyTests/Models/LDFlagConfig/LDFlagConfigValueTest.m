@@ -121,13 +121,13 @@
     XCTAssertNil(flagConfigValue.flagVersion);
 }
 
--(void)testDictionaryValueUseFlagVersionForVersion {
+-(void)testDictionaryValue {
     LDEventTrackingContext *eventTrackingContext = [LDEventTrackingContext stub];
     LDFlagConfigValue *flagConfigValue = [LDFlagConfigValue flagConfigValueFromJsonFileNamed:@"boolConfigIsABool-true"
                                                                                      flagKey:@"isABool"
                                                                         eventTrackingContext:eventTrackingContext];
 
-    NSDictionary *flagDictionary = [flagConfigValue dictionaryValueUseFlagVersionForVersion:NO];
+    NSDictionary *flagDictionary = [flagConfigValue dictionaryValueUseFlagVersionForVersion:NO includeEventTrackingContext:YES];
 
     //Core items
     XCTAssertEqualObjects(flagDictionary[kLDFlagConfigValueKeyValue], flagConfigValue.value);
@@ -139,7 +139,7 @@
     XCTAssertTrue([[NSDate dateFromMillisSince1970:[flagDictionary[kLDEventTrackingContextKeyDebugEventsUntilDate] integerValue]]
                    isWithinTimeInterval:1.0 ofDate:eventTrackingContext.debugEventsUntilDate]);
 
-    flagDictionary = [flagConfigValue dictionaryValueUseFlagVersionForVersion:YES];
+    flagDictionary = [flagConfigValue dictionaryValueUseFlagVersionForVersion:YES includeEventTrackingContext:NO];
 
     //Core items
     XCTAssertEqualObjects(flagDictionary[kLDFlagConfigValueKeyValue], flagConfigValue.value);
@@ -147,9 +147,8 @@
     XCTAssertEqual([flagDictionary[kLDFlagConfigValueKeyVariation] integerValue], flagConfigValue.variation);
     //Optional items
     XCTAssertNil(flagDictionary[kLDFlagConfigValueKeyFlagVersion]);
-    XCTAssertEqual([flagDictionary[kLDEventTrackingContextKeyTrackEvents] boolValue], eventTrackingContext.trackEvents);
-    XCTAssertTrue([[NSDate dateFromMillisSince1970:[flagDictionary[kLDEventTrackingContextKeyDebugEventsUntilDate] integerValue]]
-                   isWithinTimeInterval:1.0 ofDate:eventTrackingContext.debugEventsUntilDate]);
+    XCTAssertNil(flagDictionary[kLDEventTrackingContextKeyTrackEvents]);
+    XCTAssertNil(flagDictionary[kLDEventTrackingContextKeyDebugEventsUntilDate]);
 
     flagConfigValue.value = [NSNull null];
     flagConfigValue.variation = kLDFlagConfigValueItemDoesNotExist;

@@ -39,40 +39,4 @@ extern NSString * const kLDFlagCounterKeyCounters;
 
     return flagCounter;
 }
-
--(BOOL)hasPropertiesMatchingDictionary:(NSDictionary*)dictionary {
-    NSMutableArray<NSString*> *mismatchedProperties = [NSMutableArray array];
-
-    if (![self.defaultValue isEqual:dictionary[kLDFlagCounterKeyDefaultValue]]) {
-        [mismatchedProperties addObject:kLDFlagCounterKeyDefaultValue];
-    }
-
-    if (!dictionary[kLDFlagCounterKeyCounters]) {
-        [mismatchedProperties addObject:kLDFlagCounterKeyCounters];
-    } else {
-        NSArray<NSDictionary*> *countersFromDictionary = dictionary[kLDFlagCounterKeyCounters];
-        for (NSDictionary *counterFromDictionary in countersFromDictionary) {
-            BOOL isKnownValue = ![counterFromDictionary[kLDFlagValueCounterKeyUnknown] boolValue];
-            LDFlagConfigValue *flagConfigValue = nil;
-            if (isKnownValue) {
-                flagConfigValue = [LDFlagConfigValue flagConfigValueWithObject:counterFromDictionary];
-            }
-            NSInteger variation = isKnownValue ? [counterFromDictionary[kLDFlagValueCounterKeyVersion] integerValue] : kLDFlagConfigValueItemDoesNotExist;
-            LDFlagValueCounter *flagValueCounter = [self valueCounterForFlagConfigValue:flagConfigValue];
-            if (!flagValueCounter) {
-                [mismatchedProperties addObject:[NSString stringWithFormat:@"variation_%ld", (long)variation]];
-            } else {
-                if (![flagValueCounter hasPropertiesMatchingDictionary:counterFromDictionary]) {
-                    [mismatchedProperties addObject:[NSString stringWithFormat:@"variation_%ld", (long)variation]];
-                }
-            }
-        }
-    }
-
-    if (mismatchedProperties.count > 0) {
-        NSLog(@"[%@ %@] flag key %@ has unequal properties %@", NSStringFromClass([self class]), NSStringFromSelector(_cmd), self.flagKey, [mismatchedProperties componentsJoinedByString:@", "]);
-        return NO;
-    }
-    return YES;
-}
 @end

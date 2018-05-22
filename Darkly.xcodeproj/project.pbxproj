@@ -47,7 +47,7 @@
 		690347301E689B9F00E45133 /* LDConfigTest.m in Sources */ = {isa = PBXBuildFile; fileRef = 6903471F1E689B9F00E45133 /* LDConfigTest.m */; };
 		690347311E689B9F00E45133 /* LDFlagConfigModelTest.m in Sources */ = {isa = PBXBuildFile; fileRef = 690347211E689B9F00E45133 /* LDFlagConfigModelTest.m */; };
 		690347321E689B9F00E45133 /* DarklyXCTestCase.m in Sources */ = {isa = PBXBuildFile; fileRef = 690347221E689B9F00E45133 /* DarklyXCTestCase.m */; };
-		690347331E689B9F00E45133 /* NSArray+UnitTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 690347251E689B9F00E45133 /* NSArray+UnitTests.m */; };
+		690347331E689B9F00E45133 /* NSArray+Testable.m in Sources */ = {isa = PBXBuildFile; fileRef = 690347251E689B9F00E45133 /* NSArray+Testable.m */; };
 		69071F7E1EA2A7CA00497F93 /* Darkly.h in Headers */ = {isa = PBXBuildFile; fileRef = 69BAF40B1E9AAB4800747613 /* Darkly.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		69071F7F1EA2A7CB00497F93 /* Darkly.h in Headers */ = {isa = PBXBuildFile; fileRef = 69BAF40B1E9AAB4800747613 /* Darkly.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		69071F801EA2A7CC00497F93 /* Darkly.h in Headers */ = {isa = PBXBuildFile; fileRef = 69BAF40B1E9AAB4800747613 /* Darkly.h */; settings = {ATTRIBUTES = (Public, ); }; };
@@ -393,8 +393,8 @@
 		690347201E689B9F00E45133 /* DarklyXCTestCase.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DarklyXCTestCase.h; sourceTree = "<group>"; };
 		690347211E689B9F00E45133 /* LDFlagConfigModelTest.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = LDFlagConfigModelTest.m; sourceTree = "<group>"; };
 		690347221E689B9F00E45133 /* DarklyXCTestCase.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = DarklyXCTestCase.m; sourceTree = "<group>"; };
-		690347241E689B9F00E45133 /* NSArray+UnitTests.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "NSArray+UnitTests.h"; sourceTree = "<group>"; };
-		690347251E689B9F00E45133 /* NSArray+UnitTests.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "NSArray+UnitTests.m"; sourceTree = "<group>"; };
+		690347241E689B9F00E45133 /* NSArray+Testable.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "NSArray+Testable.h"; sourceTree = "<group>"; };
+		690347251E689B9F00E45133 /* NSArray+Testable.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "NSArray+Testable.m"; sourceTree = "<group>"; };
 		69A87E8F1E74458900B88B23 /* Darkly.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Darkly.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		69BAF40B1E9AAB4800747613 /* Darkly.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = Darkly.h; path = Framework/Darkly.h; sourceTree = SOURCE_ROOT; };
 		69BAF40C1E9AAB4800747613 /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; name = Info.plist; path = Framework/Info.plist; sourceTree = SOURCE_ROOT; };
@@ -751,8 +751,8 @@
 			children = (
 				83BE9392201A8DEE00DD1ED9 /* NSObject+Testable.h */,
 				83BE9393201A8DEE00DD1ED9 /* NSObject+Testable.m */,
-				690347241E689B9F00E45133 /* NSArray+UnitTests.h */,
-				690347251E689B9F00E45133 /* NSArray+UnitTests.m */,
+				690347241E689B9F00E45133 /* NSArray+Testable.h */,
+				690347251E689B9F00E45133 /* NSArray+Testable.m */,
 				8349F51B1F1934A000B1F3DB /* NSDictionary+StringKey_Matchable.h */,
 				8349F51D1F19352300B1F3DB /* NSDictionary+StringKey_Matchable.m */,
 				83BE938F201A8AD100DD1ED9 /* NSDictionary+Testable.h */,
@@ -1526,7 +1526,7 @@
 				8305EC7C2022336C002F20DB /* LDFlagConfigValueTest.m in Sources */,
 				83BE9391201A8AD100DD1ED9 /* NSDictionary+Testable.m in Sources */,
 				83258A401F3244D0008C2133 /* LDUserBuilder+Testable.m in Sources */,
-				690347331E689B9F00E45133 /* NSArray+UnitTests.m in Sources */,
+				690347331E689B9F00E45133 /* NSArray+Testable.m in Sources */,
 				6903472C1E689B9F00E45133 /* LDClientTest.m in Sources */,
 				8358F25A1F4202A300ECE1AF /* LDConfig+Testable.m in Sources */,
 				83ECCCA32088E4E90086F879 /* LDFlagCounter+Testable.m in Sources */,

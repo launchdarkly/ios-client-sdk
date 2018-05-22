@@ -13,6 +13,7 @@
 #import "LDFlagConfigModel+Testable.h"
 #import "LDFlagConfigValue.h"
 #import "LDFlagConfigValue+Testable.h"
+#import "LDEventTrackingContext+Testable.h"
 
 extern const NSInteger kLDFlagConfigValueItemDoesNotExist;
 extern const NSInteger kLDFlagConfigValueItemDoesNotExist;
@@ -25,7 +26,7 @@ extern const NSInteger kLDFlagConfigValueItemDoesNotExist;
 
 - (void)setUp {
     [super setUp];
-    self.flagConfigDictionary = [LDFlagConfigModel flagConfigFromJsonFileNamed:@"featureFlags"].featuresJsonDictionary;
+    self.flagConfigDictionary = [LDFlagConfigModel flagConfigFromJsonFileNamed:@"featureFlags" eventTrackingContext:[LDEventTrackingContext stub]].featuresJsonDictionary;
 }
 
 - (void)tearDown {
@@ -58,16 +59,27 @@ extern const NSInteger kLDFlagConfigValueItemDoesNotExist;
 
         NSDictionary *flagValueCounterDictionary = [flagValueCounter dictionaryValue];
 
-        XCTAssertTrue([flagValueCounter hasPropertiesMatchingDictionary:flagValueCounterDictionary]);
+        XCTAssertEqualObjects(flagValueCounterDictionary[kLDFlagConfigValueKeyValue], flagConfigValue.value);
+        XCTAssertEqual([flagValueCounterDictionary[kLDFlagConfigValueKeyVariation] integerValue], flagConfigValue.variation);
+        XCTAssertEqualObjects(flagValueCounterDictionary[kLDFlagConfigValueKeyVersion], flagConfigValue.flagVersion);
+        XCTAssertNil(flagValueCounterDictionary[kLDFlagConfigValueKeyFlagVersion]);
+        XCTAssertNil(flagValueCounterDictionary[kLDEventTrackingContextKeyTrackEvents]);
+        XCTAssertNil(flagValueCounterDictionary[kLDEventTrackingContextKeyDebugEventsUntilDate]);
 
         //test version & variation do not exist
         flagConfigValue.modelVersion = kLDFlagConfigValueItemDoesNotExist;
         flagConfigValue.variation = kLDFlagConfigValueItemDoesNotExist;
+        flagConfigValue.flagVersion = nil;
         flagValueCounter = [LDFlagValueCounter counterWithFlagConfigValue:flagConfigValue];
 
         flagValueCounterDictionary = [flagValueCounter dictionaryValue];
 
-        XCTAssertTrue([flagValueCounter hasPropertiesMatchingDictionary:flagValueCounterDictionary]);
+        XCTAssertEqualObjects(flagValueCounterDictionary[kLDFlagConfigValueKeyValue], flagConfigValue.value);
+        XCTAssertNil(flagValueCounterDictionary[kLDFlagConfigValueKeyVariation]);
+        XCTAssertNil(flagValueCounterDictionary[kLDFlagConfigValueKeyVersion]);
+        XCTAssertNil(flagValueCounterDictionary[kLDFlagConfigValueKeyFlagVersion]);
+        XCTAssertNil(flagValueCounterDictionary[kLDEventTrackingContextKeyTrackEvents]);
+        XCTAssertNil(flagValueCounterDictionary[kLDEventTrackingContextKeyDebugEventsUntilDate]);
     }
 
     //flagConfigValue nil
