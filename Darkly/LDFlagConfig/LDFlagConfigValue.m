@@ -61,10 +61,17 @@ NSInteger const kLDFlagConfigValueItemDoesNotExist = -1;
 }
 
 -(NSDictionary*)dictionaryValue {
+    return [self dictionaryValueUseFlagVersionForVersion:NO];
+}
+
+-(NSDictionary*)dictionaryValueUseFlagVersionForVersion:(BOOL)useFlagVersion {
     NSMutableDictionary *dictionaryValue = [NSMutableDictionary dictionaryWithCapacity:5];
     dictionaryValue[kLDFlagConfigValueKeyValue] = self.value ?: [NSNull null];
     if (self.modelVersion != kLDFlagConfigValueItemDoesNotExist) {
         dictionaryValue[kLDFlagConfigValueKeyVersion] = @(self.modelVersion);
+    }
+    if (self.flagVersion) {
+        dictionaryValue[useFlagVersion ? kLDFlagConfigValueKeyVersion : kLDFlagConfigValueKeyFlagVersion] = self.flagVersion;
     }
     if (self.variation != kLDFlagConfigValueItemDoesNotExist) {
         dictionaryValue[kLDFlagConfigValueKeyVariation] = @(self.variation);
