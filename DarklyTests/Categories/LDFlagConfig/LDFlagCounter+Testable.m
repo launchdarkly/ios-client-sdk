@@ -27,7 +27,7 @@ extern NSString * const kLDFlagCounterKeyCounters;
     if (useKnownValues) {
         NSArray<LDFlagConfigValue*> *flagConfigValues = [LDFlagConfigValue stubFlagConfigValuesForFlagKey:flagKey];
         for (LDFlagConfigValue *flagConfigValue in flagConfigValues) {
-            for (NSInteger logRequests = 0; logRequests < flagConfigValue.flagConfigModelVersion; logRequests += 1 ) {
+            for (NSInteger logRequests = 0; logRequests < flagConfigValue.modelVersion; logRequests += 1 ) {
                 [flagCounter logRequestWithFlagConfigValue:useKnownValues ? flagConfigValue : nil defaultValue:defaultValue];
             }
         }

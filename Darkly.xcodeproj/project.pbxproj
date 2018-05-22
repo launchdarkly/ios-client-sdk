@@ -143,15 +143,6 @@
 		8305EC6C20221973002F20DB /* LDFlagConfigValue.m in Sources */ = {isa = PBXBuildFile; fileRef = 8305EC6620221973002F20DB /* LDFlagConfigValue.m */; };
 		8305EC6D20221973002F20DB /* LDFlagConfigValue.m in Sources */ = {isa = PBXBuildFile; fileRef = 8305EC6620221973002F20DB /* LDFlagConfigValue.m */; };
 		8305EC6E20221973002F20DB /* LDFlagConfigValue.m in Sources */ = {isa = PBXBuildFile; fileRef = 8305EC6620221973002F20DB /* LDFlagConfigValue.m */; };
-		8305EC7120222078002F20DB /* NSObject+LDFlagConfigValue.h in Headers */ = {isa = PBXBuildFile; fileRef = 8305EC6F20222078002F20DB /* NSObject+LDFlagConfigValue.h */; };
-		8305EC7220222078002F20DB /* NSObject+LDFlagConfigValue.h in Headers */ = {isa = PBXBuildFile; fileRef = 8305EC6F20222078002F20DB /* NSObject+LDFlagConfigValue.h */; };
-		8305EC7320222078002F20DB /* NSObject+LDFlagConfigValue.h in Headers */ = {isa = PBXBuildFile; fileRef = 8305EC6F20222078002F20DB /* NSObject+LDFlagConfigValue.h */; };
-		8305EC7420222078002F20DB /* NSObject+LDFlagConfigValue.h in Headers */ = {isa = PBXBuildFile; fileRef = 8305EC6F20222078002F20DB /* NSObject+LDFlagConfigValue.h */; };
-		8305EC7520222078002F20DB /* NSObject+LDFlagConfigValue.m in Sources */ = {isa = PBXBuildFile; fileRef = 8305EC7020222078002F20DB /* NSObject+LDFlagConfigValue.m */; };
-		8305EC7620222078002F20DB /* NSObject+LDFlagConfigValue.m in Sources */ = {isa = PBXBuildFile; fileRef = 8305EC7020222078002F20DB /* NSObject+LDFlagConfigValue.m */; };
-		8305EC7720222078002F20DB /* NSObject+LDFlagConfigValue.m in Sources */ = {isa = PBXBuildFile; fileRef = 8305EC7020222078002F20DB /* NSObject+LDFlagConfigValue.m */; };
-		8305EC7820222078002F20DB /* NSObject+LDFlagConfigValue.m in Sources */ = {isa = PBXBuildFile; fileRef = 8305EC7020222078002F20DB /* NSObject+LDFlagConfigValue.m */; };
-		8305EC7A20222B5E002F20DB /* NSObject+LDFlagConfigValueTest.m in Sources */ = {isa = PBXBuildFile; fileRef = 8305EC7920222B5E002F20DB /* NSObject+LDFlagConfigValueTest.m */; };
 		8305EC7C2022336C002F20DB /* LDFlagConfigValueTest.m in Sources */ = {isa = PBXBuildFile; fileRef = 8305EC7B2022336C002F20DB /* LDFlagConfigValueTest.m */; };
 		8305EC7E202238FC002F20DB /* boolConfigIsABool-true-withoutVersion.json in Resources */ = {isa = PBXBuildFile; fileRef = 8305EC7D202238FC002F20DB /* boolConfigIsABool-true-withoutVersion.json */; };
 		8305EC8020223A2E002F20DB /* numberConfigIsANumber-2-withoutVersion.json in Resources */ = {isa = PBXBuildFile; fileRef = 8305EC7F20223A2E002F20DB /* numberConfigIsANumber-2-withoutVersion.json */; };
@@ -429,9 +420,6 @@
 		7587BE78E11BC6EC851CA413 /* Pods-Darkly_osx.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Darkly_osx.debug.xcconfig"; path = "Pods/Target Support Files/Pods-Darkly_osx/Pods-Darkly_osx.debug.xcconfig"; sourceTree = "<group>"; };
 		8305EC6520221973002F20DB /* LDFlagConfigValue.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = LDFlagConfigValue.h; sourceTree = "<group>"; };
 		8305EC6620221973002F20DB /* LDFlagConfigValue.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = LDFlagConfigValue.m; sourceTree = "<group>"; };
-		8305EC6F20222078002F20DB /* NSObject+LDFlagConfigValue.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "NSObject+LDFlagConfigValue.h"; sourceTree = "<group>"; };
-		8305EC7020222078002F20DB /* NSObject+LDFlagConfigValue.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "NSObject+LDFlagConfigValue.m"; sourceTree = "<group>"; };
-		8305EC7920222B5E002F20DB /* NSObject+LDFlagConfigValueTest.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "NSObject+LDFlagConfigValueTest.m"; sourceTree = "<group>"; };
 		8305EC7B2022336C002F20DB /* LDFlagConfigValueTest.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = LDFlagConfigValueTest.m; sourceTree = "<group>"; };
 		8305EC7D202238FC002F20DB /* boolConfigIsABool-true-withoutVersion.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = "boolConfigIsABool-true-withoutVersion.json"; sourceTree = "<group>"; };
 		8305EC7F20223A2E002F20DB /* numberConfigIsANumber-2-withoutVersion.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = "numberConfigIsANumber-2-withoutVersion.json"; sourceTree = "<group>"; };
@@ -743,7 +731,6 @@
 				690347171E689B9F00E45133 /* LDEventModelTest.m */,
 				83ECCC962087DE960086F879 /* LDFlagConfig */,
 				690347181E689B9F00E45133 /* LDUserModelTest.m */,
-				8305EC7920222B5E002F20DB /* NSObject+LDFlagConfigValueTest.m */,
 				83B62E1F20A2517500F2E656 /* NSDateFormatter+JsonHeaderTest.m */,
 			);
 			path = Models;
@@ -874,8 +861,6 @@
 				83B8C24E1FEC19500082B8A9 /* NSDateFormatter+LDUserModel.m */,
 				83B62E1520A249A200F2E656 /* NSDateFormatter+JsonHeader.h */,
 				83B62E1620A249A200F2E656 /* NSDateFormatter+JsonHeader.m */,
-				8305EC6F20222078002F20DB /* NSObject+LDFlagConfigValue.h */,
-				8305EC7020222078002F20DB /* NSObject+LDFlagConfigValue.m */,
 				83B6FC1B207E60B6002DBA7B /* NSDate+ReferencedDate.h */,
 				83B6FC1C207E60B6002DBA7B /* NSDate+ReferencedDate.m */,
 			);
@@ -954,7 +939,6 @@
 				690346FD1E68990000E45133 /* LDEventModel.h in Headers */,
 				690346F91E68990000E45133 /* LDClientManager.h in Headers */,
 				83B62E1720A249A200F2E656 /* NSDateFormatter+JsonHeader.h in Headers */,
-				8305EC7120222078002F20DB /* NSObject+LDFlagConfigValue.h in Headers */,
 				690346FF1E68990000E45133 /* LDFlagConfigModel.h in Headers */,
 				83ECCC8E2087D67D0086F879 /* LDFlagCounter.h in Headers */,
 				83EF67811F979B4100403126 /* LDEvent+Unauthorized.h in Headers */,
@@ -992,7 +976,6 @@
 				69A87EA21E74712800B88B23 /* LDEventModel.h in Headers */,
 				69A87E9E1E74712800B88B23 /* LDClientManager.h in Headers */,
 				83B62E1A20A249A200F2E656 /* NSDateFormatter+JsonHeader.h in Headers */,
-				8305EC7420222078002F20DB /* NSObject+LDFlagConfigValue.h in Headers */,
 				69A87EA41E74712800B88B23 /* LDFlagConfigModel.h in Headers */,
 				83ECCC912087D67D0086F879 /* LDFlagCounter.h in Headers */,
 				83EF67841F979B4100403126 /* LDEvent+Unauthorized.h in Headers */,
@@ -1030,7 +1013,6 @@
 				69BD7E231E6C79910056D70F /* LDEventModel.h in Headers */,
 				69BD7E1F1E6C79910056D70F /* LDClientManager.h in Headers */,
 				83B62E1920A249A200F2E656 /* NSDateFormatter+JsonHeader.h in Headers */,
-				8305EC7320222078002F20DB /* NSObject+LDFlagConfigValue.h in Headers */,
 				69BD7E251E6C79910056D70F /* LDFlagConfigModel.h in Headers */,
 				83ECCC902087D67D0086F879 /* LDFlagCounter.h in Headers */,
 				83EF67831F979B4100403126 /* LDEvent+Unauthorized.h in Headers */,
@@ -1068,7 +1050,6 @@
 				69F3F6AE1E6BF84B00079A09 /* Darkly-Prefix.pch in Headers */,
 				69F3F6A11E6BF82C00079A09 /* LDPollingManager.h in Headers */,
 				83B62E1820A249A200F2E656 /* NSDateFormatter+JsonHeader.h in Headers */,
-				8305EC7220222078002F20DB /* NSObject+LDFlagConfigValue.h in Headers */,
 				69F3F6941E6BF80800079A09 /* LDDataManager.h in Headers */,
 				83ECCC8F2087D67D0086F879 /* LDFlagCounter.h in Headers */,
 				83EF67821F979B4100403126 /* LDEvent+Unauthorized.h in Headers */,
@@ -1564,7 +1545,6 @@
 				690347021E68990000E45133 /* LDPollingManager.m in Sources */,
 				690346FC1E68990000E45133 /* LDConfig.m in Sources */,
 				690347061E68990000E45133 /* LDUserBuilder.m in Sources */,
-				8305EC7520222078002F20DB /* NSObject+LDFlagConfigValue.m in Sources */,
 				690347081E68990000E45133 /* LDUserModel.m in Sources */,
 				6903470A1E68990000E45133 /* LDUtil.m in Sources */,
 				83B6FC21207E60B6002DBA7B /* NSDate+ReferencedDate.m in Sources */,
@@ -1599,7 +1579,6 @@
 				837583A3209CD0A7004329DD /* LDEventTrackingContextTest.m in Sources */,
 				83B62E2320A258D400F2E656 /* NSDateFormatter+JsonHeader+Testable.m in Sources */,
 				830C2AD220768697001D645D /* LDThrottler+Testable.m in Sources */,
-				8305EC7A20222B5E002F20DB /* NSObject+LDFlagConfigValueTest.m in Sources */,
 				83BE938C201A797B00DD1ED9 /* NSJSONSerialization+Testable.m in Sources */,
 				6903472E1E689B9F00E45133 /* LDClientManagerTest.m in Sources */,
 				69E5275E1E6E948F00E4B63B /* LDDataManagerTest.m in Sources */,
@@ -1650,7 +1629,6 @@
 				69A87EA71E74712800B88B23 /* LDPollingManager.m in Sources */,
 				69A87E9F1E74712800B88B23 /* LDClientManager.m in Sources */,
 				69A87EAD1E74712800B88B23 /* LDUserModel.m in Sources */,
-				8305EC7820222078002F20DB /* NSObject+LDFlagConfigValue.m in Sources */,
 				69A87E981E74712800B88B23 /* LDDataManager.m in Sources */,
 				69A87EAB1E74712800B88B23 /* LDUserBuilder.m in Sources */,
 				83B6FC24207E60B6002DBA7B /* NSDate+ReferencedDate.m in Sources */,
@@ -1686,7 +1664,6 @@
 				69BD7E281E6C79910056D70F /* LDPollingManager.m in Sources */,
 				69BD7E201E6C79910056D70F /* LDClientManager.m in Sources */,
 				69BD7E2E1E6C79910056D70F /* LDUserModel.m in Sources */,
-				8305EC7720222078002F20DB /* NSObject+LDFlagConfigValue.m in Sources */,
 				69BD7E191E6C79910056D70F /* LDDataManager.m in Sources */,
 				69BD7E2C1E6C79910056D70F /* LDUserBuilder.m in Sources */,
 				83B6FC23207E60B6002DBA7B /* NSDate+ReferencedDate.m in Sources */,
@@ -1722,7 +1699,6 @@
 				69F3F6A21E6BF82C00079A09 /* LDPollingManager.m in Sources */,
 				69F3F69A1E6BF82C00079A09 /* LDClientManager.m in Sources */,
 				69F3F6A81E6BF82C00079A09 /* LDUserModel.m in Sources */,
-				8305EC7620222078002F20DB /* NSObject+LDFlagConfigValue.m in Sources */,
 				69F3F6921E6BF7F600079A09 /* LDDataManager.m in Sources */,
 				69F3F6A61E6BF82C00079A09 /* LDUserBuilder.m in Sources */,
 				83B6FC22207E60B6002DBA7B /* NSDate+ReferencedDate.m in Sources */,

@@ -61,7 +61,7 @@ extern const NSInteger kLDFlagConfigValueItemDoesNotExist;
         XCTAssertTrue([flagValueCounter hasPropertiesMatchingDictionary:flagValueCounterDictionary]);
 
         //test version & variation do not exist
-        flagConfigValue.flagConfigModelVersion = kLDFlagConfigValueItemDoesNotExist;
+        flagConfigValue.modelVersion = kLDFlagConfigValueItemDoesNotExist;
         flagConfigValue.variation = kLDFlagConfigValueItemDoesNotExist;
         flagValueCounter = [LDFlagValueCounter counterWithFlagConfigValue:flagConfigValue];
 
