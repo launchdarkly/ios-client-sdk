@@ -35,7 +35,6 @@
 @property (nonatomic, assign) NSInteger endDateMillis;
 @property (nullable, nonatomic, strong) NSDictionary *flagRequestSummary;
 
--(nonnull id)initWithDictionary:(nonnull NSDictionary*)dictionary;
 -(nonnull NSDictionary *)dictionaryValueUsingConfig:(nonnull LDConfig*)config;
 
 +(nullable instancetype)featureEventWithFlagKey:(nonnull NSString *)flagKey

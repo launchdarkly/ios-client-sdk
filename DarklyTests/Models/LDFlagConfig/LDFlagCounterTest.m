@@ -130,7 +130,7 @@ extern NSString * const kLDFlagKeyIsANull;
         XCTAssertEqual(counterDictionaries.count, flagCounter.flagValueCounters.count);
         if (counterDictionaries.count != flagCounter.flagValueCounters.count) { continue; }
         for (LDFlagValueCounter *flagValueCounter in flagCounter.flagValueCounters) {
-            NSDictionary *selectedCounterDictionary = [counterDictionaries selectDictionaryMatchingFlagValueCounter:flagValueCounter];
+            NSDictionary *selectedCounterDictionary = [counterDictionaries dictionaryForFlagValueCounter:flagValueCounter];
             XCTAssertNotNil(selectedCounterDictionary, @"counter dictionary not found for flagValueCounter: %@", [flagValueCounter description]);
             if (!selectedCounterDictionary) { continue; }
 

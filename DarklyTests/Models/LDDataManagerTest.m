@@ -21,6 +21,8 @@
 #import "LDFlagConfigTracker.h"
 #import "LDFlagConfigTracker+Testable.h"
 #import "LDConfig.h"
+#import "NSInteger+Testable.h"
+#import "NSArray+Testable.h"
 
 NSString * const kMobileKeyMock = @"LDDataManagerTest.mobileKeyMock";
 
@@ -269,19 +271,42 @@ NSString * const kMobileKeyMock = @"LDDataManagerTest.mobileKeyMock";
     
     [[LDDataManager sharedManager] allEventDictionaries:^(NSArray *eventDictionaries) {
         for (LDEventModel *event in eventStubs) {
-            NSPredicate *matchingEventPredicate = [NSPredicate predicateWithBlock:^BOOL(id evaluatedObject, NSDictionary<NSString *,id> *bindings) {
-                if (![evaluatedObject isKindOfClass:[NSDictionary class]]) { return NO; }
-                NSDictionary *evaluatedEventDictionary = evaluatedObject;
-                return [evaluatedEventDictionary[kEventModelKeyKind] isEqualToString:event.kind];
-            }];
-            NSDictionary *matchingEventDictionary = [[eventDictionaries filteredArrayUsingPredicate:matchingEventPredicate] firstObject];
+            NSDictionary *eventDictionary = [eventDictionaries dictionaryForEvent:event];
 
-            XCTAssertNotNil(matchingEventDictionary);
-            if (!matchingEventDictionary) {
+            XCTAssertNotNil(eventDictionary);
+            if (!eventDictionary) {
                 NSLog(@"Did not find matching event dictionary for event: %@", event.kind);
                 continue;
             }
-            XCTAssertTrue([event hasPropertiesMatchingDictionary:matchingEventDictionary]);
+
+            XCTAssertEqualObjects(eventDictionary[kEventModelKeyKind], event.kind);
+            if (event.hasCommonFields) {
+                XCTAssertEqualObjects(eventDictionary[kEventModelKeyKey], event.key);
+                if (event.alwaysInlinesUser) {
+                    XCTAssertNotNil(eventDictionary[kEventModelKeyUser]);
+                } else {
+                    XCTAssertEqualObjects(eventDictionary[kEventModelKeyUserKey], event.user.key);
+                }
+                XCTAssertNil(eventDictionary[kEventModelKeyInlineUser]);
+                XCTAssertTrue(Approximately([eventDictionary[kEventModelKeyCreationDate] integerValue], event.creationDate, 1));
+            }
+            if (event.isFlagRequestEventKind) {
+                XCTAssertEqualObjects(eventDictionary[kLDFlagConfigValueKeyValue], event.flagConfigValue.value);
+                XCTAssertEqualObjects(eventDictionary[kLDFlagConfigValueKeyVariation], @(event.flagConfigValue.variation));
+                XCTAssertEqualObjects(eventDictionary[kLDFlagConfigValueKeyVersion], event.flagConfigValue.flagVersion);
+                XCTAssertNil(eventDictionary[kLDFlagConfigValueKeyFlagVersion]);
+                XCTAssertNil(eventDictionary[kLDEventTrackingContextKeyTrackEvents]);
+                XCTAssertNil(eventDictionary[kLDEventTrackingContextKeyDebugEventsUntilDate]);
+                XCTAssertEqualObjects(eventDictionary[kEventModelKeyDefault], event.defaultValue);
+            }
+            if ([event.kind isEqualToString:kEventModelKindCustom]) {
+                XCTAssertEqualObjects(eventDictionary[kEventModelKeyData], event.data);
+            }
+            if ([event.kind isEqualToString:kEventModelKindFeatureSummary]) {
+                XCTAssertEqualObjects(eventDictionary[kEventModelKeyStartDate], @(event.startDateMillis));
+                XCTAssertTrue(Approximately([eventDictionary[kEventModelKeyEndDate] integerValue], event.endDateMillis, 10));
+                XCTAssertEqualObjects(eventDictionary[kEventModelKeyFeatures], event.flagRequestSummary);
+            }
         }
         
         [expectation fulfill];

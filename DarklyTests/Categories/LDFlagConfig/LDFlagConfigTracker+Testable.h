@@ -12,4 +12,6 @@
 @property (nonatomic, assign) NSInteger startDateMillis;
 @property (nonatomic, strong) NSMutableDictionary<NSString*, LDFlagCounter*> *mutableFlagCounters;
 +(instancetype)stubTracker;
++(instancetype)stubTrackerIncludeFlagVersion:(BOOL)includeFlagVersion;
++(instancetype)stubTrackerUseKnownValues:(BOOL)useKnownValues;
 @end

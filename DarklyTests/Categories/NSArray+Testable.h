@@ -5,7 +5,9 @@
 #import <Foundation/Foundation.h>
 
 @class LDFlagValueCounter;
+@class LDEventModel;
 
 @interface NSArray (Testable)
--(NSDictionary*)selectDictionaryMatchingFlagValueCounter:(LDFlagValueCounter*)flagValueCounter;
+-(NSDictionary*)dictionaryForFlagValueCounter:(LDFlagValueCounter*)flagValueCounter;
+-(NSDictionary*)dictionaryForEvent:(LDEventModel*)event;
 @end

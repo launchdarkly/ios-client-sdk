@@ -21,14 +21,22 @@ extern NSString * const kLDFlagCounterKeyCounters;
 }
 
 +(instancetype)stubForFlagKey:(NSString*)flagKey useKnownValues:(BOOL)useKnownValues {
+    return [LDFlagCounter stubForFlagKey:flagKey useKnownValues:useKnownValues includeFlagVersion:YES];
+}
+
++(instancetype)stubForFlagKey:(NSString*)flagKey includeFlagVersion:(BOOL)includeFlagVersion {
+    return [LDFlagCounter stubForFlagKey:flagKey useKnownValues:YES includeFlagVersion:includeFlagVersion];
+}
+
++(instancetype)stubForFlagKey:(NSString*)flagKey useKnownValues:(BOOL)useKnownValues includeFlagVersion:(BOOL)includeFlagVersion {
     id defaultValue = [LDFlagConfigValue defaultValueForFlagKey:flagKey];
     LDFlagCounter *flagCounter = [LDFlagCounter counterWithFlagKey:flagKey defaultValue:defaultValue];
 
     if (useKnownValues) {
-        NSArray<LDFlagConfigValue*> *flagConfigValues = [LDFlagConfigValue stubFlagConfigValuesForFlagKey:flagKey];
+        NSArray<LDFlagConfigValue*> *flagConfigValues = [LDFlagConfigValue stubFlagConfigValuesForFlagKey:flagKey includeFlagVersion:includeFlagVersion];
         for (LDFlagConfigValue *flagConfigValue in flagConfigValues) {
             for (NSInteger logRequests = 0; logRequests < flagConfigValue.modelVersion; logRequests += 1 ) {
-                [flagCounter logRequestWithFlagConfigValue:useKnownValues ? flagConfigValue : nil defaultValue:defaultValue];
+                [flagCounter logRequestWithFlagConfigValue:flagConfigValue defaultValue:defaultValue];
             }
         }
     } else {

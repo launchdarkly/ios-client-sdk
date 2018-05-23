@@ -16,29 +16,6 @@
 #import "LDEventTrackingContext.h"
 #import "LDEventTrackingContext+Testable.h"
 
-extern NSString * const kEventModelKindFeature;
-extern NSString * const kEventModelKindCustom;
-extern NSString * const kEventModelKindIdentify;
-extern NSString * const kEventModelKindFeatureSummary;
-extern NSString * const kEventModelKindDebug;
-
-extern NSString * const kEventModelKeyKey;
-extern NSString * const kEventModelKeyKind;
-extern NSString * const kEventModelKeyCreationDate;
-extern NSString * const kEventModelKeyData;
-extern NSString * const kEventModelKeyFlagConfigValue;
-extern NSString * const kEventModelKeyValue;
-extern NSString * const kEventModelKeyVersion;
-extern NSString * const kEventModelKeyVariation;
-extern NSString * const kEventModelKeyIsDefault;
-extern NSString * const kEventModelKeyDefault;
-extern NSString * const kEventModelKeyUser;
-extern NSString * const kEventModelKeyUserKey;
-extern NSString * const kEventModelKeyInlineUser;
-extern NSString * const kEventModelKeyStartDate;
-extern NSString * const kEventModelKeyEndDate;
-extern NSString * const kEventModelKeyFeatures;
-
 extern NSString * const kLDFlagKeyIsADouble;
 
 NSString * const kFeatureEventKeyStub = @"LDEventModel.featureEvent.key";
@@ -78,7 +55,7 @@ const double featureEventDefaultValueStub = 2.71828;
     return [[LDEventModel eventKindsThatAlwaysInlineUsers] containsObject:self.kind];
 }
 
-+(instancetype)stubEventWithKind:(NSString*)eventKind user:(nullable LDUserModel*)user config:(nullable LDConfig*)config {
++(instancetype)stubEventWithKind:(NSString*)eventKind user:(LDUserModel*)user config:(LDConfig*)config {
     if (!user) {
         user = [LDUserModel stubWithKey:[[NSUUID UUID] UUIDString]];
     }
@@ -177,77 +154,6 @@ const double featureEventDefaultValueStub = 2.71828;
             [mismatchedProperties addObject:kEventModelKeyEndDate];
         }
         if (![self.flagRequestSummary isEqualToDictionary:otherEvent.flagRequestSummary]) {
-            [mismatchedProperties addObject:kEventModelKeyFeatures];
-        }
-    }
-
-    //identify events have only the fields common to all events
-
-    if (mismatchedProperties.count > 0) {
-        NSLog(@"[%@ %@] unequal fields %@", NSStringFromClass([self class]), NSStringFromSelector(_cmd), [mismatchedProperties componentsJoinedByString:@", "]);
-        return NO;
-    }
-
-    return YES;
-}
-
--(BOOL)hasPropertiesMatchingDictionary:(NSDictionary*)dictionary {
-    NSMutableArray<NSString*> *mismatchedProperties = [NSMutableArray array];
-
-    if (![self.kind isEqualToString:dictionary[kEventModelKeyKind]]) {
-        [mismatchedProperties addObject:kEventModelKeyKind];
-    }
-    if (self.hasCommonFields) {
-        if (![self.key isEqualToString:dictionary[kEventModelKeyKey]]) {
-            [mismatchedProperties addObject:kEventModelKeyKey];
-        }
-        if (self.inlineUser) {
-            if (![self.user.key isEqualToString:dictionary[kEventModelKeyUser][kUserAttributeKey]]) {
-                [mismatchedProperties addObject:kEventModelKeyUser];
-            }
-        } else {
-            if (![self.user.key isEqualToString:dictionary[kEventModelKeyUserKey]]) {
-                [mismatchedProperties addObject:kEventModelKeyUserKey];
-            }
-        }
-        //If the event and dictionary have creation dates within 1 millisecond, that's close enough...
-        if (!Approximately(self.creationDate, [dictionary[kEventModelKeyCreationDate] integerValue], 1)) {
-            [mismatchedProperties addObject:kEventModelKeyCreationDate];
-        }
-    }
-
-    if (self.isFlagRequestEventKind) {
-        if (self.flagConfigValue) {
-            if (![self.flagConfigValue hasPropertiesMatchingDictionary:dictionary]) {
-                [mismatchedProperties addObject:kEventModelKeyFlagConfigValue];
-            }
-        } else {
-            if (!dictionary[kEventModelKeyValue] || (dictionary[kEventModelKeyValue] && ![dictionary[kEventModelKeyValue] isEqual:self.defaultValue])) {
-                [mismatchedProperties addObject:kEventModelKeyFlagConfigValue];
-            }
-            if (dictionary[kEventModelKeyVersion] || dictionary[kEventModelKeyVariation]) {
-                [mismatchedProperties addObject:kEventModelKeyFlagConfigValue];
-            }
-        }
-        if (![self.defaultValue isEqual:dictionary[kEventModelKeyDefault]]) {
-            [mismatchedProperties addObject:kEventModelKeyDefault];
-        }
-    }
-
-    if ([self.kind isEqualToString:kEventModelKindCustom]) {
-        if (![self.data isEqual:dictionary[kEventModelKeyData]]) {
-            [mismatchedProperties addObject:kEventModelKeyData];
-        }
-    }
-
-    if ([self.kind isEqualToString:kEventModelKindFeatureSummary]) {
-        if (self.startDateMillis != [dictionary[kEventModelKeyStartDate] integerValue]) {
-            [mismatchedProperties addObject:kEventModelKeyStartDate];
-        }
-        if (!Approximately(self.endDateMillis, [dictionary[kEventModelKeyEndDate] integerValue], 10)) {
-            [mismatchedProperties addObject:kEventModelKeyEndDate];
-        }
-        if (![self.flagRequestSummary isEqualToDictionary:dictionary[kEventModelKeyFeatures]]) {
             [mismatchedProperties addObject:kEventModelKeyFeatures];
         }
     }

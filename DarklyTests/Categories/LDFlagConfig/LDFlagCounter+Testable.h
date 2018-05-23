@@ -16,6 +16,8 @@ extern NSString * const kLDFlagCounterKeyCounters;
 
 +(instancetype)stubForFlagKey:(NSString*)flagKey;
 +(instancetype)stubForFlagKey:(NSString*)flagKey useKnownValues:(BOOL)useKnownValues;
++(instancetype)stubForFlagKey:(NSString*)flagKey includeFlagVersion:(BOOL)includeFlagVersion;
++(instancetype)stubForFlagKey:(NSString*)flagKey useKnownValues:(BOOL)useKnownValues includeFlagVersion:(BOOL)includeFlagVersion;
 
 @end
 

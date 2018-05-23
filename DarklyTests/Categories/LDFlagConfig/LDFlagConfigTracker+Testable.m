@@ -19,11 +19,26 @@ const NSTimeInterval kLDFlagConfigTrackerTrackingInterval = -30.0;
 @dynamic mutableFlagCounters;
 
 +(instancetype)stubTracker {
+    return [LDFlagConfigTracker stubTrackerIncludeFlagVersion:YES];
+}
+
++(instancetype)stubTrackerIncludeFlagVersion:(BOOL)includeFlagVersion {
     NSDate *startStubbing = [NSDate date];
     LDFlagConfigTracker *tracker = [LDFlagConfigTracker tracker];
     tracker.startDateMillis = [[startStubbing dateByAddingTimeInterval:kLDFlagConfigTrackerTrackingInterval] millisSince1970];
     for (NSString *flagKey in [LDFlagConfigValue flagKeys]) {
-        tracker.mutableFlagCounters[flagKey] = [LDFlagCounter stubForFlagKey:flagKey];
+        tracker.mutableFlagCounters[flagKey] = [LDFlagCounter stubForFlagKey:flagKey includeFlagVersion:includeFlagVersion];
+    }
+
+    return tracker;
+}
+
++(instancetype)stubTrackerUseKnownValues:(BOOL)useKnownValues {
+    NSDate *startStubbing = [NSDate date];
+    LDFlagConfigTracker *tracker = [LDFlagConfigTracker tracker];
+    tracker.startDateMillis = [[startStubbing dateByAddingTimeInterval:kLDFlagConfigTrackerTrackingInterval] millisSince1970];
+    for (NSString *flagKey in [LDFlagConfigValue flagKeys]) {
+        tracker.mutableFlagCounters[flagKey] = [LDFlagCounter stubForFlagKey:flagKey useKnownValues:useKnownValues];
     }
 
     return tracker;

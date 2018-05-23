@@ -73,52 +73,6 @@ NSString * const kEventModelKeyFeatures = @"features";
     return self;
 }
 
-- (id)initWithDictionary:(NSDictionary *)dictionary {
-    if(!(self = [super init])) { return nil; }
-
-    self.kind = dictionary[kEventModelKeyKind];
-
-    //common for feature, custom, & identify events
-    self.key = dictionary[kEventModelKeyKey];
-    self.inlineUser = [dictionary.allKeys containsObject:kEventModelKeyUser];
-    if (self.inlineUser) {
-        self.user = [[LDUserModel alloc] initWithDictionary:dictionary[kEventModelKeyUser]];
-    } else {
-        self.user = [[LDUserModel alloc] init];
-        self.user.key = dictionary[kEventModelKeyUserKey];
-    }
-    self.creationDate = [dictionary[kEventModelKeyCreationDate] longValue];
-    if (self.creationDate == 0) {
-        self.creationDate = [[NSDate date] millisSince1970];
-    }
-
-    //feature & debug events
-    if (dictionary[kEventModelKeyValue] || dictionary[kEventModelKeyVersion] || dictionary[kEventModelKeyValue]) {
-        NSMutableDictionary *flagConfigValueDictionary = [NSMutableDictionary dictionaryWithCapacity:3];
-        flagConfigValueDictionary[kEventModelKeyValue] = dictionary[kEventModelKeyValue] ?: [NSNull null];
-        flagConfigValueDictionary[kEventModelKeyVersion] = @(kLDFlagConfigValueItemDoesNotExist);
-        flagConfigValueDictionary[kEventModelKeyVariation] = @(kLDFlagConfigValueItemDoesNotExist);
-        if (dictionary[kEventModelKeyVersion] && [dictionary[kEventModelKeyVersion] isKindOfClass:[NSNumber class]]) {
-            flagConfigValueDictionary[kEventModelKeyVersion] = dictionary[kEventModelKeyVersion];
-        }
-        if (dictionary[kEventModelKeyVariation] && [dictionary[kEventModelKeyVariation] isKindOfClass:[NSNumber class]]) {
-            flagConfigValueDictionary[kEventModelKeyVariation] = dictionary[kEventModelKeyVariation];
-        }
-        self.flagConfigValue = [LDFlagConfigValue flagConfigValueWithObject:flagConfigValueDictionary];
-    }
-    self.defaultValue = dictionary[kEventModelKeyDefault];
-
-    //custom events
-    self.data = dictionary[kEventModelKeyData];
-
-    //featureSummary events
-    self.startDateMillis = [dictionary[kEventModelKeyStartDate] integerValue];
-    self.endDateMillis = [dictionary[kEventModelKeyEndDate] integerValue];
-    self.flagRequestSummary = dictionary[kEventModelKeyFeatures];
-
-    return self;
-}
-
 +(instancetype)featureEventWithFlagKey:(NSString*)flagKey
                        flagConfigValue:(LDFlagConfigValue*)flagConfigValue
                       defaultFlagValue:(id)defaultFlagValue
@@ -249,7 +203,7 @@ NSString * const kEventModelKeyFeatures = @"features";
         dictionary[kEventModelKeyData] = self.data;
     }
     if (self.flagConfigValue) {
-        [dictionary addEntriesFromDictionary:[self.flagConfigValue dictionaryValue]];
+        [dictionary addEntriesFromDictionary:[self.flagConfigValue dictionaryValueUseFlagVersionForVersion:YES includeEventTrackingContext:NO]];
     } else {
         //If flagConfigValue is nil, the SDK reports the fallback to the client. Setting the default here as the value communicates that in the report
         if (self.defaultValue) {
