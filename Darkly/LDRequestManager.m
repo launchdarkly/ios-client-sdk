@@ -11,7 +11,7 @@
 #import "NSHTTPURLResponse+LaunchDarkly.h"
 
 static NSString * const kFeatureFlagGetUrl = @"/msdk/evalx/users/";
-static NSString * const kFeatureFlagReportUrl = @"/msdk/evalx/user/";
+static NSString * const kFeatureFlagReportUrl = @"/msdk/evalx/user";
 static NSString * const kEventUrl = @"/mobile/events/bulk";
 NSString * const kHeaderMobileKey = @"api_key ";
 static NSString * const kConfigRequestCompletedNotification = @"config_request_completed_notification";
