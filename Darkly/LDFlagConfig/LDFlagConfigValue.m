@@ -86,7 +86,7 @@ NSInteger const kLDFlagConfigValueItemDoesNotExist = -1;
     if (!other) { return NO; }
     if (self == other) { return YES; }
 
-    return [self.value isEqual:other.value] && self.modelVersion == other.modelVersion && self.variation == other.variation;
+    return self.variation == other.variation && self.modelVersion == other.modelVersion;
 }
 
 -(BOOL)isEqual:(id)object {
@@ -97,7 +97,7 @@ NSInteger const kLDFlagConfigValueItemDoesNotExist = -1;
 }
 
 -(NSUInteger)hash {
-    return [self.value hash] ^ labs(self.modelVersion) ^ labs(self.variation);
+    return labs(self.variation) ^ labs(self.modelVersion);
 }
 
 -(BOOL)hasPropertiesMatchingDictionary:(NSDictionary*)dictionary {

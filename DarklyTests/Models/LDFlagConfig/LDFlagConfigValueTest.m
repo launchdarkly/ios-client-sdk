@@ -183,24 +183,6 @@
     }
 }
 
--(void)testIsEqual_valuesDiffer_differentValues {
-    LDEventTrackingContext *eventTrackingContext = [LDEventTrackingContext stub];
-    for (NSString *flagKey in [LDFlagConfigValue flagKeys]) {
-        if ([flagKey isEqualToString:kLDFlagKeyIsANull]) { continue; }  //There are no alternate values for [NSNull null]
-        for (NSString *fixtureFileName in [LDFlagConfigValue fixtureFileNamesForFlagKey:flagKey]) {
-            //Include optional items that are the same in other to ensure equality only considers core items
-            LDFlagConfigValue *subject = [LDFlagConfigValue flagConfigValueFromJsonFileNamed:fixtureFileName flagKey:flagKey eventTrackingContext:eventTrackingContext];
-            LDFlagConfigValue *other = [LDFlagConfigValue flagConfigValueFromJsonFileNamed:fixtureFileName flagKey:flagKey eventTrackingContext:eventTrackingContext];
-            other.value = [LDFlagConfigValue defaultValueForFlagKey:flagKey];
-            if ([flagKey isEqualToString:kLDFlagKeyIsABool]) {
-                other.value = @(![subject.value boolValue]);
-            }
-
-            XCTAssertFalse([subject isEqual:other]);
-        }
-    }
-}
-
 -(void)testIsEqual_valuesDiffer_differentVariations {
     LDEventTrackingContext *eventTrackingContext = [LDEventTrackingContext stub];
     for (NSString *flagKey in [LDFlagConfigValue flagKeys]) {
