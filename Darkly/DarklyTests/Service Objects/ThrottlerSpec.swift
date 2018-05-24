@@ -20,6 +20,7 @@ final class ThrottlerSpec: QuickSpec {
         initSpec()
         delaySpec()
         runSpec()
+        cancelSpec()
     }
 
     func initSpec() {
@@ -44,7 +45,7 @@ final class ThrottlerSpec: QuickSpec {
                     subject = Throttler()
                 }
                 it("sets the maxDelay constant") {
-                    expect(subject.maxDelay) == Throttler.Constants.maxDelay
+                    expect(subject.maxDelay) == Throttler.Constants.defaultDelay
                 }
                 it("is ready for the first run") {
                     expect(subject.runAttempts) == 0
@@ -61,19 +62,17 @@ final class ThrottlerSpec: QuickSpec {
         describe("delayForAttempt") {
             var subject: Throttler!
             var lastDelay: TimeInterval!
-            context("") {
-                beforeEach {
-                    subject = Throttler(maxDelay: Constants.maxDelay)
-                }
-                it("increases delay with each attempt") {
-                    for _ in 0..<100 {
-                        for attempt in 1...subject.maxAttempts {
-                            let delay = subject.test_delayForAttempt(attempt)
-                            if attempt > 1 {
-                                expect(delay) > lastDelay
-                            }
-                            lastDelay = delay
+            beforeEach {
+                subject = Throttler(maxDelay: Constants.maxDelay)
+            }
+            it("increases delay with each attempt") {
+                for _ in 0..<100 {
+                    for attempt in 1...subject.maxAttempts {
+                        let delay = subject.test_delayForAttempt(attempt)
+                        if attempt > 1 {
+                            expect(delay) > lastDelay
                         }
+                        lastDelay = delay
                     }
                 }
             }
@@ -122,10 +121,10 @@ final class ThrottlerSpec: QuickSpec {
     func secondRunSpec() {
         var subject: Throttler!
         var runCalled: Date!
-        var runExecuted: [Date?]!
+        var runExecuted: [Date]!
         context("two runThrottled calls") {
             beforeEach {
-                runExecuted = [Date?]()
+                runExecuted = [Date]()
                 subject = Throttler(maxDelay: Constants.maxDelay)
 
                 runCalled = Date()
@@ -150,12 +149,12 @@ final class ThrottlerSpec: QuickSpec {
             it("calls the run closure right away, calls the run closure a second time after a delay, and resets itself for the next runThrottled call") {
                 //calls the run closure right away
                 expect(runExecuted.first).toNot(beNil())
-                guard let firstRunExecuted = runExecuted.first! else { return }
+                guard let firstRunExecuted = runExecuted.first else { return }
                 expect(firstRunExecuted.timeIntervalSince(runCalled)) <= 0.1
 
                 //calls the run closure a second time after a delay
                 expect(runExecuted.count) == 2
-                guard let secondRunExecuted = runExecuted.last! else { return }
+                guard let secondRunExecuted = runExecuted.last else { return }
                 expect(secondRunExecuted.timeIntervalSince(runCalled)) > 0.1
                 expect(secondRunExecuted.timeIntervalSince(runCalled)) < 4.0
 
@@ -218,6 +217,32 @@ final class ThrottlerSpec: QuickSpec {
             }
             it("limits the delay to the maximum") {
                 expect(subject.delay) == subject.maxDelay
+            }
+        }
+    }
+
+    func cancelSpec() {
+        var subject: Throttler!
+        var runCount = 0
+        context("cancel") {
+            beforeEach {
+                subject = Throttler(maxDelay: Constants.maxDelay)
+
+                for _ in 0..<subject.maxAttempts {
+                    subject.runThrottled {
+                        runCount += 1
+                    }
+                }
+
+                subject.cancelThrottledRun()
+            }
+            it("cancels the scheduled run") {
+                expect(subject.runAttempts) == 0
+                expect(subject.delay) == 0.0
+                expect(subject.timerStart).to(beNil())
+                expect(subject.delayTimer).to(beNil())
+                expect(subject.runClosureForTesting).to(beNil())
+                expect(runCount) == 1   //First run should proceed directly
             }
         }
     }

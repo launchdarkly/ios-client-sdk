@@ -15,18 +15,16 @@ enum LDClientRunMode {
 public class LDClient {
     public static let shared = LDClient()
     
-    private var _isOnline = false {
+    ///Tells the online/offline state of the LDClient. Use setOnline to change the online/offline state
+    public private (set) var isOnline: Bool = false {
         didSet {
             flagSynchronizer.isOnline = isOnline
             eventReporter.isOnline = isOnline
         }
     }
 
-    ///Tells the online/offline state of the LDClient. Use setOnline to change the online/offline state
-    public var isOnline: Bool { return _isOnline }
-
     //Keeps the state of the last setOnline goOnline parameter
-    private var goOnline = false
+    private var lastSetOnlineCallValue = false
 
     /**
      * Set the LDClient to online/offline mode. When online, the LDClient will sync events to the server. (Default)
@@ -35,24 +33,35 @@ public class LDClient {
      * - parameter completion:  Completion closure called when setOnline completes (Optional)
      */
     public func setOnline(_ goOnline: Bool, completion: (() -> Void)? = nil) {
-        var reason = ""
-        if goOnline && !hasStarted { reason = "LDClient not started." }
-        if reason.isEmpty && goOnline && runMode == .background && !config.enableBackgroundUpdates { reason = "LDConfig background updates not enabled." }
-        self.goOnline = hasStarted && goOnline && (runMode != .background || config.enableBackgroundUpdates)
-        if !self.goOnline {
-            _setOnline(self.goOnline, logMessagePrefix: typeName(and: #function, appending: ": "), logMessageSuffix: reason, completion: completion)
+        lastSetOnlineCallValue = goOnline && canGoOnline
+        if !lastSetOnlineCallValue {
+            //go offline, which is not throttled
+            isOnline = false
+            Log.debug(typeName(and: #function, appending: ": false.") + reasonOnlineUnavailable(goOnline: goOnline))
+            completion?()
             return
         }
 
         throttler.runThrottled {
-            self._setOnline(self.goOnline, logMessagePrefix: self.typeName(and: #function, appending: ": "), logMessageSuffix: reason, completion: completion)
+            self.isOnline = self.canGoOnline
+            Log.debug(self.typeName(and: #function, appending: ": \(self.isOnline).") + self.reasonOnlineUnavailable(goOnline: self.canGoOnline))
+            completion?()
         }
     }
 
-    private func _setOnline(_ goOnline: Bool, logMessagePrefix: String, logMessageSuffix: String, completion: (() -> Void)?) {
-        _isOnline = self.goOnline
-        Log.debug(logMessagePrefix + "\(_isOnline)" + logMessageSuffix)
-        completion?()
+    private var canGoOnline: Bool {
+        return hasStarted && isInSupportedRunMode
+    }
+
+    private var isInSupportedRunMode: Bool {
+        return runMode == .foreground || config.enableBackgroundUpdates     //TODO: Should this be allowBackgroundFlagUpdates instead? That considers the os as well, and only enabled for macOS
+    }
+
+    private func reasonOnlineUnavailable(goOnline: Bool) -> String {
+        if !goOnline { return "" }
+        if !hasStarted { return " LDClient not started." }
+        if !isInSupportedRunMode { return " LDConfig background updates not enabled." }
+        return ""
     }
 
     ///Takes the client offline and reconfigures using the new config. If the client was online, it brings the client online again.
@@ -125,7 +134,7 @@ public class LDClient {
     ///     LDClient.shared.start(mobileKey: appMobileKey, config: appConfig, user: appUser)
     ///Call this before you want to capture feature flags. The LDClient will not go online until you call this method.
     ///Subsequent calls to this method cause the LDClient to go offline, reconfigure using the new config & user (if supplied), and then go online if it was online when start was called
-    public func start(mobileKey: String, config: LDConfig? = nil, user: LDUser? = nil) {
+    public func start(mobileKey: String, config: LDConfig? = nil, user: LDUser? = nil) {    //TODO: The call to setOnline could be throttled, and therefore asynchronous. Should there be a completion closure here too?
         Log.debug(typeName(and: #function, appending: ": ") + "starting")
         let wasStarted = hasStarted
         let wasOnline = isOnline
@@ -404,7 +413,7 @@ public class LDClient {
             }
             eventReporter.isOnline = isOnline && runMode == .foreground
 
-            let willSetSynchronizerOnline = isOnline && (runMode == .foreground || allowBackgroundFlagUpdates )
+            let willSetSynchronizerOnline = isOnline && isInSupportedRunMode
             //The only time the flag synchronizer configuration WILL match is if the client sets flag polling with the polling interval set to the background polling interval.
             //if it does match, keeping the synchronizer precludes an extra flag request
             if !flagSynchronizerConfigMatchesConfigAndRunMode {
@@ -439,7 +448,7 @@ public class LDClient {
         LDUserWrapper.configureKeyedArchiversToHandleVersion2_3_0AndOlderUserCacheFormat()
         serviceFactory.makeCacheConverter().convertUserCacheToFlagCache()
         flagChangeNotifier = serviceFactory.makeFlagChangeNotifier()
-        throttler = serviceFactory.makeThrottler(maxDelay: Throttler.Constants.maxDelay)
+        throttler = serviceFactory.makeThrottler(maxDelay: Throttler.Constants.defaultDelay)
 
         //dummy objects replaced by start call
         config = LDConfig(environmentReporter: environmentReporter)
@@ -466,7 +475,7 @@ public class LDClient {
         environmentReporter = serviceFactory.makeEnvironmentReporter()
         user = LDUser(environmentReporter: environmentReporter)
         flagChangeNotifier = serviceFactory.makeFlagChangeNotifier()
-        throttler = serviceFactory.makeThrottler(maxDelay: Throttler.Constants.maxDelay)
+        throttler = serviceFactory.makeThrottler(maxDelay: Throttler.Constants.defaultDelay)
 
         //dummy objects replaced by start call
         config = LDConfig(environmentReporter: environmentReporter)

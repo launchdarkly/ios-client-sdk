@@ -15,12 +15,13 @@ protocol Throttling {
     //sourcery: DefaultMockValue = 600.0
     var maxDelay: TimeInterval { get }
 
-    func runThrottled(_ runClosure: RunClosure?)
+    func runThrottled(_ runClosure: @escaping RunClosure)
+    func cancelThrottledRun()
 }
 
 final class Throttler: Throttling {
     struct Constants {
-        static let maxDelay: TimeInterval = 600.0
+        static let defaultDelay: TimeInterval = 600.0
         fileprivate static let runQueueName = "LaunchDarkly.Throttler.runQueue"
     }
 
@@ -34,14 +35,13 @@ final class Throttler: Throttling {
     private var runPostTimer: RunClosure?
     private var runQueue = DispatchQueue(label: Constants.runQueueName, qos: .userInitiated)
 
-    init(maxDelay: TimeInterval = Constants.maxDelay) {
+    init(maxDelay: TimeInterval = Constants.defaultDelay) {
         self.maxDelay = maxDelay
         runAttempts = 0
         delay = 0.0
     }
 
-    func runThrottled(_ runClosure: RunClosure?) {
-        guard let runClosure = runClosure else { return }
+    func runThrottled(_ runClosure: @escaping RunClosure) {
         guard delay < maxDelay else {
             runAttempts += 1
             self.runClosure = runClosure
@@ -69,6 +69,20 @@ final class Throttler: Throttling {
         }
     }
 
+    func cancelThrottledRun() {
+        delayTimer?.invalidate()
+        runClosure = nil
+        resetTimingData()
+        runPostTimer = nil
+    }
+
+    private func resetTimingData() {
+        runAttempts = 0
+        delay = 0.0
+        delayTimer = nil
+        timerStart = nil
+    }
+
     private func delayForAttempt(_ attempt: Int) -> TimeInterval {
         guard Double(attempt) <= log2(maxDelay) else { return maxDelay }
         let exponentialBackoff = min(maxDelay, pow(2, attempt).timeInterval)        //pow(x, y) returns x^y
@@ -93,10 +107,7 @@ final class Throttler: Throttling {
                 }
             }
 
-            self?.runAttempts = 0
-            self?.delay = 0.0
-            self?.delayTimer = nil
-            self?.timerStart = nil
+            self?.resetTimingData()
 
             self?.runPostTimer?()
             self?.runPostTimer = nil
@@ -112,6 +123,7 @@ extension Decimal {
 
 #if DEBUG
     extension Throttler {
+        var runClosureForTesting: RunClosure? { return runClosure }
         var timerFiredCallback: RunClosure? {
             set { runPostTimer = newValue }
             get { return runPostTimer }

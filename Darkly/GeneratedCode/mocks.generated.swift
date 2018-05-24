@@ -385,10 +385,18 @@ final class ThrottlingMock: Throttling {
     var runThrottledCallCount = 0
     var runThrottledCallback: (() -> Void)?
     var runThrottledReceivedRunClosure: RunClosure?
-    func runThrottled(_ runClosure: RunClosure?) {
+    func runThrottled(_ runClosure: @escaping RunClosure) {
         runThrottledCallCount += 1
         runThrottledReceivedRunClosure = runClosure
         runThrottledCallback?()
+    }
+
+    // MARK: cancelThrottledRun
+    var cancelThrottledRunCallCount = 0
+    var cancelThrottledRunCallback: (() -> Void)?
+    func cancelThrottledRun() {
+        cancelThrottledRunCallCount += 1
+        cancelThrottledRunCallback?()
     }
 }
 

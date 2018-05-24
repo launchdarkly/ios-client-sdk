@@ -1600,18 +1600,35 @@ final class LDClientSpec: QuickSpec {
         describe("didEnterBackground notification") {
             context("after starting client") {
                 context("when online") {
-                    beforeEach {
-                        testContext = TestContext(startOnline: true, runMode: .foreground)
-                        testContext.subject.start(mobileKey: Constants.mockMobileKey)
+                    context("background updates disabled") {
+                        beforeEach {
+                            testContext = TestContext(startOnline: true, enableBackgroundUpdates: false, runMode: .foreground)
+                            testContext.subject.start(mobileKey: Constants.mockMobileKey)
 
-                        NotificationCenter.default.post(name: .UIApplicationDidEnterBackground, object: self)
+                            NotificationCenter.default.post(name: .UIApplicationDidEnterBackground, object: self)
+                        }
+                        it("takes the sdk offline and reports events") {
+                            expect(testContext.subject.isOnline) == true
+                            expect(testContext.subject.runMode) == LDClientRunMode.background
+                            expect(testContext.eventReporterMock.reportEventsCallCount) == 1
+                            expect(testContext.eventReporterMock.isOnline) == false
+                            expect(testContext.flagSynchronizerMock.isOnline) == false
+                        }
                     }
-                    it("takes the sdk offline and reports events") {
-                        expect(testContext.subject.isOnline) == true
-                        expect(testContext.subject.runMode) == LDClientRunMode.background
-                        expect(testContext.eventReporterMock.reportEventsCallCount) == 1
-                        expect(testContext.eventReporterMock.isOnline) == false
-                        expect(testContext.flagSynchronizerMock.isOnline) == false
+                    context("background updates enabled") {
+                        beforeEach {
+                            testContext = TestContext(startOnline: true, enableBackgroundUpdates: true, runMode: .foreground)
+                            testContext.subject.start(mobileKey: Constants.mockMobileKey)
+
+                            NotificationCenter.default.post(name: .UIApplicationDidEnterBackground, object: self)
+                        }
+                        it("leaves the sdk online and reports events") {
+                            expect(testContext.subject.isOnline) == true
+                            expect(testContext.subject.runMode) == LDClientRunMode.background
+                            expect(testContext.eventReporterMock.reportEventsCallCount) == 1
+                            expect(testContext.eventReporterMock.isOnline) == false
+                            expect(testContext.flagSynchronizerMock.isOnline) == true
+                        }
                     }
                 }
                 context("when offline") {
