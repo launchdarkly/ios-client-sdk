@@ -222,6 +222,12 @@ NSString * const testMobileKey = @"EventModelTest.testMobileKey";
 
         NSDictionary *eventDictionary = [event dictionaryValueUsingConfig:config];
 
+        //Checks that differ from testDictionaryValue
+        XCTAssertEqualObjects(eventDictionary[kLDFlagConfigValueKeyValue], event.defaultValue);
+        XCTAssertNil(eventDictionary[kLDFlagConfigValueKeyVariation]);
+        XCTAssertNil(eventDictionary[kLDFlagConfigValueKeyVersion]);
+
+        //Checks that are the same as in testDictionaryValue
         XCTAssertEqualObjects(eventDictionary[kEventModelKeyKind], event.kind);
         XCTAssertEqualObjects(eventDictionary[kEventModelKeyKey], event.key);
         if (event.alwaysInlinesUser) {
@@ -231,27 +237,26 @@ NSString * const testMobileKey = @"EventModelTest.testMobileKey";
         }
         XCTAssertNil(eventDictionary[kEventModelKeyInlineUser]);
         XCTAssertTrue(Approximately([eventDictionary[kEventModelKeyCreationDate] integerValue], event.creationDate, 1));
-        XCTAssertEqualObjects(eventDictionary[kLDFlagConfigValueKeyValue], event.defaultValue);
-        XCTAssertNil(eventDictionary[kLDFlagConfigValueKeyVariation]);
-        XCTAssertNil(eventDictionary[kLDFlagConfigValueKeyVersion]);
         XCTAssertNil(eventDictionary[kLDFlagConfigValueKeyFlagVersion]);
         XCTAssertNil(eventDictionary[kLDEventTrackingContextKeyTrackEvents]);
         XCTAssertNil(eventDictionary[kLDEventTrackingContextKeyDebugEventsUntilDate]);
         XCTAssertEqualObjects(eventDictionary[kEventModelKeyDefault], event.defaultValue);
     }
+}
 
-    //Summary event
+-(void)testDictionaryValue_summaryEvents_missingFlagConfigValue {
+    LDConfig *config = [[LDConfig alloc] initWithMobileKey:testMobileKey];
     LDFlagConfigTracker *tracker = [LDFlagConfigTracker stubTrackerUseKnownValues:NO];
     LDEventModel *event = [LDEventModel summaryEventWithTracker:tracker];
 
     NSDictionary *eventDictionary = [event dictionaryValueUsingConfig:config];
 
-    //Tests the same as main dictionaryValue test
+    //Checks that differ from testDictionaryValue
     XCTAssertEqualObjects(eventDictionary[kEventModelKeyStartDate], @(event.startDateMillis));
     XCTAssertTrue(Approximately([eventDictionary[kEventModelKeyEndDate] integerValue], event.endDateMillis, 10));
     XCTAssertEqualObjects(eventDictionary[kEventModelKeyFeatures], event.flagRequestSummary);
 
-    //Tests that differ from the main dictionaryValue test
+    //Checks that are the same as in testDictionaryValue
     for (NSString *flagKey in tracker.flagCounters.allKeys) {
         LDFlagCounter *flagCounter = tracker.flagCounters[flagKey];
         NSDictionary *flagCounterDictionary = eventDictionary[kEventModelKeyFeatures][flagKey];
@@ -264,7 +269,6 @@ NSString * const testMobileKey = @"EventModelTest.testMobileKey";
         XCTAssertNil(flagConfigValueSummary[kLDFlagConfigValueKeyValue]);
         XCTAssertNil(flagConfigValueSummary[kLDFlagConfigValueKeyVariation]);
     }
-
 }
 
 -(void)testDictionaryValue_flagRequestEvents_missingFlagVersion {
@@ -275,10 +279,10 @@ NSString * const testMobileKey = @"EventModelTest.testMobileKey";
 
         NSDictionary *eventDictionary = [event dictionaryValueUsingConfig:config];
 
-        //Tests that differ from the main dictionaryValue test
+        //Checks that differ from testDictionaryValue
         XCTAssertEqualObjects(eventDictionary[kLDFlagConfigValueKeyVersion], @(event.flagConfigValue.modelVersion));
 
-        //Tests the same as main dictionaryValue test
+        //Checks that are the same as in testDictionaryValue
         XCTAssertEqualObjects(eventDictionary[kEventModelKeyKind], event.kind);
         XCTAssertEqualObjects(eventDictionary[kEventModelKeyKey], event.key);
         if (event.alwaysInlinesUser) {
@@ -295,19 +299,21 @@ NSString * const testMobileKey = @"EventModelTest.testMobileKey";
         XCTAssertNil(eventDictionary[kLDEventTrackingContextKeyDebugEventsUntilDate]);
         XCTAssertEqualObjects(eventDictionary[kEventModelKeyDefault], event.defaultValue);
     }
+}
 
-    //Summary event
+-(void)testDictionaryValue_summaryEvents_missingFlagVersion {
+    LDConfig *config = [[LDConfig alloc] initWithMobileKey:testMobileKey];
     LDFlagConfigTracker *tracker = [LDFlagConfigTracker stubTrackerIncludeFlagVersion:NO];
     LDEventModel *event = [LDEventModel summaryEventWithTracker:tracker];
 
     NSDictionary *eventDictionary = [event dictionaryValueUsingConfig:config];
 
-    //Tests the same as main dictionaryValue test
+    //Checks that differ from testDictionaryValue
     XCTAssertEqualObjects(eventDictionary[kEventModelKeyStartDate], @(event.startDateMillis));
     XCTAssertTrue(Approximately([eventDictionary[kEventModelKeyEndDate] integerValue], event.endDateMillis, 10));
     XCTAssertEqualObjects(eventDictionary[kEventModelKeyFeatures], event.flagRequestSummary);
 
-    //Tests that differ from the main dictionaryValue test
+    //Checks that are the same as in testDictionaryValue
     for (NSString *flagKey in tracker.flagCounters.allKeys) {
         LDFlagCounter *flagCounter = tracker.flagCounters[flagKey];
         NSDictionary *flagCounterDictionary = eventDictionary[kEventModelKeyFeatures][flagKey];
@@ -327,11 +333,12 @@ NSString * const testMobileKey = @"EventModelTest.testMobileKey";
     LDConfig *config = [[LDConfig alloc] initWithMobileKey:testMobileKey];
     self.user = [LDUserModel stubWithKey:[[NSUUID UUID] UUIDString]];
     LDEventModel *eventStub = [[LDEventModel alloc] initCustomEventWithKey:@"eventStubKey" customData:@{} userValue:self.user inlineUser:YES];
-    NSDictionary *subject = [eventStub dictionaryValueUsingConfig:config][kEventModelKeyUser];
+    
+    NSDictionary *eventDictionary = [eventStub dictionaryValueUsingConfig:config][kEventModelKeyUser];
 
-    XCTAssertNotNil(subject);
-    XCTAssertTrue(subject.allKeys.count > 0);
-    XCTAssertFalse([subject.allKeys containsObject:kUserAttributeConfig]);
+    XCTAssertNotNil(eventDictionary);
+    XCTAssertTrue(eventDictionary.allKeys.count > 0);
+    XCTAssertFalse([eventDictionary.allKeys containsObject:kUserAttributeConfig]);
 }
 
 @end

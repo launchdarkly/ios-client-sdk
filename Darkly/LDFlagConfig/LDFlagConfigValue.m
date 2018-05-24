@@ -71,7 +71,8 @@ NSInteger const kLDFlagConfigValueItemDoesNotExist = -1;
         dictionaryValue[kLDFlagConfigValueKeyVersion] = @(self.modelVersion);
     }
     if (self.flagVersion) {
-        dictionaryValue[useFlagVersion ? kLDFlagConfigValueKeyVersion : kLDFlagConfigValueKeyFlagVersion] = self.flagVersion;
+        NSString *versionKey = useFlagVersion ? kLDFlagConfigValueKeyVersion : kLDFlagConfigValueKeyFlagVersion;
+        dictionaryValue[versionKey] = self.flagVersion;
     }
     if (self.variation != kLDFlagConfigValueItemDoesNotExist) {
         dictionaryValue[kLDFlagConfigValueKeyVariation] = @(self.variation);
