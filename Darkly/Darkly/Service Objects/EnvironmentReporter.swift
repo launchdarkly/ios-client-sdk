@@ -14,6 +14,12 @@ import WatchKit
 
 enum OperatingSystem: String {
     case iOS, watchOS, macOS   //TODO: when adding tv support, add case
+
+    static var allOperatingSystems: [OperatingSystem] { return [.iOS, .watchOS, .macOS] }
+    static var backgroundEnabledOperatingSystems: [OperatingSystem] { return [.macOS] }
+    static var backgroundDisabledOperatingSystems: [OperatingSystem] { return [.iOS, .watchOS] }
+
+    var isBackgroundEnabled: Bool { return OperatingSystem.backgroundEnabledOperatingSystems.contains(self) }
 }
 
 //sourcery: AutoMockable

@@ -54,7 +54,7 @@ public class LDClient {
     }
 
     private var isInSupportedRunMode: Bool {
-        return runMode == .foreground || config.enableBackgroundUpdates     //TODO: Should this be allowBackgroundFlagUpdates instead? That considers the os as well, and only enabled for macOS
+        return runMode == .foreground || config.enableBackgroundUpdates
     }
 
     private func reasonOnlineUnavailable(goOnline: Bool) -> String {

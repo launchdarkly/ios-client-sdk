@@ -325,12 +325,23 @@ final class LDConfigSpec: QuickSpec {
                 }
             }
             context("when using a production build") {
-                beforeEach {
-                    testContext = TestContext(useStub: true, isDebugBuild: false)
-                    testContext.subject.enableBackgroundUpdates = true
+                context("on a background disabled operating system") {
+                    it("does not enable background updates") {
+                        for operatingSystem in OperatingSystem.backgroundDisabledOperatingSystems {
+                            testContext = TestContext(useStub: true, operatingSystem: operatingSystem, isDebugBuild: false)
+                            testContext.subject.enableBackgroundUpdates = true
+                            expect(testContext.subject.enableBackgroundUpdates) == false
+                        }
+                    }
                 }
-                it("does not enable background updates") {
-                    expect(testContext.subject.enableBackgroundUpdates) == false
+                context("on a background enabled operating system") {
+                    it("enables background updates") {
+                        for operatingSystem in OperatingSystem.backgroundEnabledOperatingSystems {
+                            testContext = TestContext(useStub: true, operatingSystem: operatingSystem, isDebugBuild: false)
+                            testContext.subject.enableBackgroundUpdates = true
+                            expect(testContext.subject.enableBackgroundUpdates) == true
+                        }
+                    }
                 }
             }
         }

@@ -78,7 +78,7 @@ public struct LDConfig {
         set { enableBgUpdates = newValue && allowBackgroundUpdates }
         get { return enableBgUpdates }
     }
-    private(set) var allowBackgroundUpdates: Bool
+    private var allowBackgroundUpdates: Bool
     
     ///Determines whether LDClient will be online / offline at start. If offline at start, set the client online to receive flag updates. Default: true
     public var startOnline: Bool = Defaults.online
@@ -103,7 +103,7 @@ public struct LDConfig {
     init(environmentReporter: EnvironmentReporting) {
         minima = Minima(environmentReporter: environmentReporter)
         allowStreamingMode = environmentReporter.operatingSystem != .watchOS
-        allowBackgroundUpdates = environmentReporter.isDebugBuild
+        allowBackgroundUpdates = environmentReporter.isDebugBuild || environmentReporter.operatingSystem.isBackgroundEnabled
     }
 
     public init() {

@@ -244,7 +244,7 @@ final class LDClientSpec: QuickSpec {
             }
             context("when configured to not allow background updates and running in background mode") {
                 beforeEach {
-                    testContext = TestContext(startOnline: true, runMode: .background)
+                    testContext = TestContext(startOnline: true, enableBackgroundUpdates: false, runMode: .background)
                     testContext.config.enableBackgroundUpdates = false
 
                     testContext.subject.start(mobileKey: Constants.mockMobileKey, config: testContext.config, user: testContext.user)
