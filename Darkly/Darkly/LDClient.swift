@@ -33,19 +33,16 @@ public class LDClient {
      * - parameter completion:  Completion closure called when setOnline completes (Optional)
      */
     public func setOnline(_ goOnline: Bool, completion: (() -> Void)? = nil) {
-        lastSetOnlineCallValue = goOnline && canGoOnline
-        if !lastSetOnlineCallValue {
+        lastSetOnlineCallValue = goOnline
+        if !(goOnline && canGoOnline) {
             //go offline, which is not throttled
-            isOnline = false
-            Log.debug(typeName(and: #function, appending: ": false.") + reasonOnlineUnavailable(goOnline: goOnline))
-            completion?()
+            go(online: false, reasonOnlineUnavailable: reasonOnlineUnavailable(goOnline: goOnline), completion: completion)
             return
         }
 
         throttler.runThrottled {
-            self.isOnline = self.canGoOnline
-            Log.debug(self.typeName(and: #function, appending: ": \(self.isOnline).") + self.reasonOnlineUnavailable(goOnline: self.canGoOnline))
-            completion?()
+            //since going online was throttled, check the last called setOnline value and whether we can go online
+            self.go(online: self.lastSetOnlineCallValue && self.canGoOnline, reasonOnlineUnavailable: self.reasonOnlineUnavailable(goOnline: self.lastSetOnlineCallValue), completion: completion)
         }
     }
 
@@ -55,6 +52,12 @@ public class LDClient {
 
     private var isInSupportedRunMode: Bool {
         return runMode == .foreground || config.enableBackgroundUpdates
+    }
+
+    private func go(online goOnline: Bool, reasonOnlineUnavailable: String, completion:(() -> Void)?) {
+        isOnline = goOnline
+        Log.debug(typeName(and: "setOnline", appending: ": \(self.isOnline).") + reasonOnlineUnavailable)
+        completion?()
     }
 
     private func reasonOnlineUnavailable(goOnline: Bool) -> String {

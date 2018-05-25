@@ -1,7 +1,7 @@
 Pod::Spec.new do |ld|
 
   ld.name         = "LaunchDarkly"
-  ld.version      = "3.0.0.16b"
+  ld.version      = "3.0.0.16c"
   ld.summary      = "iOS SDK for LaunchDarkly"
 
   ld.description  = <<-DESC
