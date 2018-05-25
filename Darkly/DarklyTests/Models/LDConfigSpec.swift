@@ -289,31 +289,19 @@ final class LDConfigSpec: QuickSpec {
 
     private func allowStreamingModeSpec() {
         var testContext: TestContext!
-
         describe("allowStreamingMode") {
-            context("on iOS devices") {
-                beforeEach {
-                    testContext = TestContext(useStub: true, operatingSystem: .iOS)
-                }
-                it("allows streaming mode") {
-                    expect(testContext.subject.allowStreamingMode) == true
+            it("allows streaming mode only on selected operating systems") {
+                for operatingSystem in OperatingSystem.allOperatingSystems {
+                    testContext = TestContext(useStub: true, operatingSystem: operatingSystem)
+                    expect(testContext.subject.allowStreamingMode) == operatingSystem.isStreamingEnabled
                 }
             }
-            context("on watchOS devices") {
-                beforeEach {
-                    testContext = TestContext(useStub: true, operatingSystem: .watchOS)
-                }
-                it("disallows streaming mode") {
-                    expect(testContext.subject.allowStreamingMode) == false
-                }
-            }
-            //TODO: When adding mac & tv support, add tests covering those OS's too
+            //TODO: When adding tv support, add test covering that OS too
         }
     }
 
     private func allowBackgroundUpdatesSpec() {
         var testContext: TestContext!
-
         describe("enableBackgroundUpdates") {
             context("when using a debug build") {
                 beforeEach {
@@ -325,22 +313,11 @@ final class LDConfigSpec: QuickSpec {
                 }
             }
             context("when using a production build") {
-                context("on a background disabled operating system") {
-                    it("does not enable background updates") {
-                        for operatingSystem in OperatingSystem.backgroundDisabledOperatingSystems {
-                            testContext = TestContext(useStub: true, operatingSystem: operatingSystem, isDebugBuild: false)
-                            testContext.subject.enableBackgroundUpdates = true
-                            expect(testContext.subject.enableBackgroundUpdates) == false
-                        }
-                    }
-                }
-                context("on a background enabled operating system") {
-                    it("enables background updates") {
-                        for operatingSystem in OperatingSystem.backgroundEnabledOperatingSystems {
-                            testContext = TestContext(useStub: true, operatingSystem: operatingSystem, isDebugBuild: false)
-                            testContext.subject.enableBackgroundUpdates = true
-                            expect(testContext.subject.enableBackgroundUpdates) == true
-                        }
+                it("enables background updates only on selected operating systems") {
+                    for operatingSystem in OperatingSystem.allOperatingSystems {
+                        testContext = TestContext(useStub: true, operatingSystem: operatingSystem, isDebugBuild: false)
+                        testContext.subject.enableBackgroundUpdates = true
+                        expect(testContext.subject.enableBackgroundUpdates) == operatingSystem.isBackgroundEnabled
                     }
                 }
             }

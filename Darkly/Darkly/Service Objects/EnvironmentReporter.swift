@@ -16,10 +16,15 @@ enum OperatingSystem: String {
     case iOS, watchOS, macOS   //TODO: when adding tv support, add case
 
     static var allOperatingSystems: [OperatingSystem] { return [.iOS, .watchOS, .macOS] }
+    
+    var isBackgroundEnabled: Bool { return OperatingSystem.backgroundEnabledOperatingSystems.contains(self) }
     static var backgroundEnabledOperatingSystems: [OperatingSystem] { return [.macOS] }
     static var backgroundDisabledOperatingSystems: [OperatingSystem] { return [.iOS, .watchOS] }
 
-    var isBackgroundEnabled: Bool { return OperatingSystem.backgroundEnabledOperatingSystems.contains(self) }
+    var isStreamingEnabled: Bool { return OperatingSystem.streamingEnabledOperatingSystems.contains(self) }
+    static var streamingEnabledOperatingSystems: [OperatingSystem] { return [.iOS, .macOS] }
+    static var streamingDisabledOperatingSystems: [OperatingSystem] { return [.watchOS] }
+
 }
 
 //sourcery: AutoMockable
