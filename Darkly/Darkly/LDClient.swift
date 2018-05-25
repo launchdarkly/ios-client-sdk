@@ -134,7 +134,7 @@ public class LDClient {
     ///     LDClient.shared.start(mobileKey: appMobileKey, config: appConfig, user: appUser)
     ///Call this before you want to capture feature flags. The LDClient will not go online until you call this method.
     ///Subsequent calls to this method cause the LDClient to go offline, reconfigure using the new config & user (if supplied), and then go online if it was online when start was called
-    public func start(mobileKey: String, config: LDConfig? = nil, user: LDUser? = nil) {    //TODO: The call to setOnline could be throttled, and therefore asynchronous. Should there be a completion closure here too?
+    public func start(mobileKey: String, config: LDConfig? = nil, user: LDUser? = nil, completion: (() -> Void)? = nil) {    //TODO: The call to setOnline could be throttled, and therefore asynchronous. Should there be a completion closure here too?
         Log.debug(typeName(and: #function, appending: ": ") + "starting")
         let wasStarted = hasStarted
         let wasOnline = isOnline
@@ -146,8 +146,10 @@ public class LDClient {
         self.config = config ?? self.config
         self.user = user ?? self.user
 
-        setOnline((wasStarted && wasOnline) || (!wasStarted && self.config.startOnline))
-        Log.debug(typeName(and: #function, appending: ": ") + "started")
+        setOnline((wasStarted && wasOnline) || (!wasStarted && self.config.startOnline)) {
+            Log.debug(self.typeName(and: #function, appending: ": ") + "started")
+            completion?()
+        }
     }
 
     private func effectiveStreamingMode(runMode: LDClientRunMode) -> LDStreamingMode {

@@ -149,7 +149,9 @@ final class LDClientSpec: QuickSpec {
                 beforeEach {
                     testContext.config.startOnline = true
 
-                    testContext.subject.start(mobileKey: Constants.mockMobileKey, config: testContext.config, user: testContext.user)
+                    waitUntil { done in
+                        testContext.subject.start(mobileKey: Constants.mockMobileKey, config: testContext.config, user: testContext.user, completion: done)
+                    }
                 }
                 it("takes the client and service objects online") {
                     expect(testContext.subject.isOnline) == true
@@ -180,7 +182,9 @@ final class LDClientSpec: QuickSpec {
             }
             context("when configured to start offline") {
                 beforeEach {
-                    testContext.subject.start(mobileKey: Constants.mockMobileKey, config: testContext.config, user: testContext.user)
+                    waitUntil { done in
+                        testContext.subject.start(mobileKey: Constants.mockMobileKey, config: testContext.config, user: testContext.user, completion: done)
+                    }
                 }
                 it("leaves the client and service objects offline") {
                     expect(testContext.subject.isOnline) == false
@@ -213,7 +217,9 @@ final class LDClientSpec: QuickSpec {
                 beforeEach {
                     testContext = TestContext(startOnline: true, runMode: .background)
 
-                    testContext.subject.start(mobileKey: Constants.mockMobileKey, config: testContext.config, user: testContext.user)
+                    waitUntil { done in
+                        testContext.subject.start(mobileKey: Constants.mockMobileKey, config: testContext.config, user: testContext.user, completion: done)
+                    }
                 }
                 it("takes the client and service objects online") {
                     expect(testContext.subject.isOnline) == true
@@ -247,7 +253,9 @@ final class LDClientSpec: QuickSpec {
                     testContext = TestContext(startOnline: true, enableBackgroundUpdates: false, runMode: .background)
                     testContext.config.enableBackgroundUpdates = false
 
-                    testContext.subject.start(mobileKey: Constants.mockMobileKey, config: testContext.config, user: testContext.user)
+                    waitUntil { done in
+                        testContext.subject.start(mobileKey: Constants.mockMobileKey, config: testContext.config, user: testContext.user, completion: done)
+                    }
                 }
                 it("leaves the client and service objects offline") {
                     expect(testContext.subject.isOnline) == false
@@ -282,7 +290,9 @@ final class LDClientSpec: QuickSpec {
                 context("while online") {
                     beforeEach {
                         testContext.config.startOnline = true
-                        testContext.subject.start(mobileKey: Constants.mockMobileKey, config: testContext.config, user: testContext.user)
+                        waitUntil { done in
+                            testContext.subject.start(mobileKey: Constants.mockMobileKey, config: testContext.config, user: testContext.user, completion: done)
+                        }
 
                         newConfig = testContext.subject.config
                         newConfig.baseUrl = Constants.alternateMockUrl
@@ -321,7 +331,9 @@ final class LDClientSpec: QuickSpec {
                 context("while offline") {
                     beforeEach {
                         testContext.config.startOnline = false
-                        testContext.subject.start(mobileKey: Constants.mockMobileKey, config: testContext.config, user: testContext.user)
+                        waitUntil { done in
+                            testContext.subject.start(mobileKey: Constants.mockMobileKey, config: testContext.config, user: testContext.user, completion: done)
+                        }
 
                         newConfig = testContext.subject.config
                         newConfig.baseUrl = Constants.alternateMockUrl
@@ -363,7 +375,9 @@ final class LDClientSpec: QuickSpec {
                     beforeEach {
                         testContext.subject.config = testContext.config
                         testContext.subject.user = testContext.user
-                        testContext.subject.start(mobileKey: Constants.mockMobileKey)
+                        waitUntil { done in
+                            testContext.subject.start(mobileKey: Constants.mockMobileKey, completion: done)
+                        }
                     }
                     it("saves the config") {
                         expect(testContext.subject.config) == testContext.config
@@ -389,7 +403,9 @@ final class LDClientSpec: QuickSpec {
                 }
                 context("without setting config or user") {
                     beforeEach {
-                        testContext.subject.start(mobileKey: Constants.mockMobileKey)
+                        waitUntil { done in
+                            testContext.subject.start(mobileKey: Constants.mockMobileKey, completion: done)
+                        }
                         testContext.config = testContext.subject.config
                         testContext.user = testContext.subject.user
                     }
@@ -421,7 +437,9 @@ final class LDClientSpec: QuickSpec {
                     testContext.flagStoreMock.featureFlags = [:]
 
                     testContext.config.startOnline = false
-                    testContext.subject.start(mobileKey: Constants.mockMobileKey, config: testContext.config, user: testContext.user)
+                    waitUntil { done in
+                        testContext.subject.start(mobileKey: Constants.mockMobileKey, config: testContext.config, user: testContext.user, completion: done)
+                    }
                 }
                 it("checks the user flag cache for the user") {
                     expect(testContext.flagCacheMock.retrieveFlagsCallCount) == 1
@@ -436,7 +454,9 @@ final class LDClientSpec: QuickSpec {
                     testContext.flagStoreMock.featureFlags = [:]
 
                     testContext.config.startOnline = false
-                    testContext.subject.start(mobileKey: Constants.mockMobileKey, config: testContext.config, user: testContext.user)
+                    waitUntil { done in
+                        testContext.subject.start(mobileKey: Constants.mockMobileKey, config: testContext.config, user: testContext.user, completion: done)
+                    }
                 }
                 it("checks the user flag cache for the user") {
                     expect(testContext.flagCacheMock.retrieveFlagsCallCount) == 1
