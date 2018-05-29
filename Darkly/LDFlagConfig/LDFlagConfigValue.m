@@ -31,10 +31,18 @@ NSInteger const kLDFlagConfigValueItemDoesNotExist = -1;
     if (!(self = [super init])) { return nil; }
     NSDictionary *flagConfigValueDictionary = object;
     self.value = flagConfigValueDictionary[kLDFlagConfigValueKeyValue] ?: [NSNull null];
-    self.modelVersion = flagConfigValueDictionary[kLDFlagConfigValueKeyVersion] ?
-        [flagConfigValueDictionary[kLDFlagConfigValueKeyVersion] integerValue] : kLDFlagConfigValueItemDoesNotExist;
-    self.flagVersion = flagConfigValueDictionary[kLDFlagConfigValueKeyFlagVersion];
-    self.variation = flagConfigValueDictionary[kLDFlagConfigValueKeyVariation] ? [flagConfigValueDictionary[kLDFlagConfigValueKeyVariation] integerValue] : kLDFlagConfigValueItemDoesNotExist;
+    self.modelVersion = kLDFlagConfigValueItemDoesNotExist;
+    if (flagConfigValueDictionary[kLDFlagConfigValueKeyVersion] != nil && [flagConfigValueDictionary[kLDFlagConfigValueKeyVersion] isKindOfClass:[NSNumber class]]) {
+        self.modelVersion = [flagConfigValueDictionary[kLDFlagConfigValueKeyVersion] integerValue];
+    }
+    self.flagVersion = nil;
+    if (flagConfigValueDictionary[kLDFlagConfigValueKeyFlagVersion] != nil && [flagConfigValueDictionary[kLDFlagConfigValueKeyFlagVersion] isKindOfClass:[NSNumber class]]) {
+        self.flagVersion = flagConfigValueDictionary[kLDFlagConfigValueKeyFlagVersion];
+    }
+    self.variation = kLDFlagConfigValueItemDoesNotExist;
+    if (flagConfigValueDictionary[kLDFlagConfigValueKeyVariation] != nil && [flagConfigValueDictionary[kLDFlagConfigValueKeyVariation] isKindOfClass:[NSNumber class]]) {
+        self.variation = [flagConfigValueDictionary[kLDFlagConfigValueKeyVariation] integerValue];
+    }
     self.eventTrackingContext = [LDEventTrackingContext contextWithObject:object];
 
     return self;

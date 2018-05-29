@@ -32,17 +32,26 @@
     for (NSNumber *boolObject in @[@NO, @YES]) {
         BOOL trackEvents = [boolObject boolValue];
         LDEventTrackingContext *originalContext = [LDEventTrackingContext contextWithTrackEvents:trackEvents debugEventsUntilDate:debugEventsUntilDate];
-        NSDictionary *contextDictionary = [originalContext dictionaryValue];
+        NSMutableDictionary *contextDictionary = [NSMutableDictionary dictionaryWithDictionary:[originalContext dictionaryValue]];
 
-        LDEventTrackingContext *restoredContext = [LDEventTrackingContext contextWithObject:contextDictionary];
+        LDEventTrackingContext *restoredContext = [LDEventTrackingContext contextWithObject:[contextDictionary copy]];
 
         XCTAssertEqualObjects(restoredContext, originalContext);
 
         //without the debugEventsUntilDate
         originalContext = [LDEventTrackingContext contextWithTrackEvents:trackEvents debugEventsUntilDate:nil];
-        contextDictionary = [originalContext dictionaryValue];
+        contextDictionary = [NSMutableDictionary dictionaryWithDictionary:[originalContext dictionaryValue]];
 
-        restoredContext = [LDEventTrackingContext contextWithObject:contextDictionary];
+        restoredContext = [LDEventTrackingContext contextWithObject:[contextDictionary copy]];
+
+        XCTAssertEqualObjects(restoredContext, originalContext);
+
+        //null debugEventsUntilDate
+        originalContext = [LDEventTrackingContext contextWithTrackEvents:trackEvents debugEventsUntilDate:nil];
+        contextDictionary = [NSMutableDictionary dictionaryWithDictionary:[originalContext dictionaryValue]];
+        contextDictionary[kLDEventTrackingContextKeyDebugEventsUntilDate] = [NSNull null];
+
+        restoredContext = [LDEventTrackingContext contextWithObject:[contextDictionary copy]];
 
         XCTAssertEqualObjects(restoredContext, originalContext);
     }
@@ -51,6 +60,9 @@
     XCTAssertNil(trackingContext);
 
     trackingContext = [LDEventTrackingContext contextWithObject:@{}];
+    XCTAssertNil(trackingContext);
+
+    trackingContext = [LDEventTrackingContext contextWithObject:@{kLDEventTrackingContextKeyTrackEvents: [NSNull null]}];
     XCTAssertNil(trackingContext);
 
     trackingContext = [LDEventTrackingContext contextWithObject:@{kLDEventTrackingContextKeyDebugEventsUntilDate: @([debugEventsUntilDate millisSince1970])}];

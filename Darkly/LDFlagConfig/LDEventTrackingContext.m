@@ -21,10 +21,11 @@ NSString * const kLDEventTrackingContextKeyDebugEventsUntilDate = @"debugEventsU
     if (!object || ![object isKindOfClass:[NSDictionary class]]) { return nil; }
     NSDictionary *dictionary = object;
     if (!dictionary[kLDEventTrackingContextKeyTrackEvents]) { return nil; }
+    if (![dictionary[kLDEventTrackingContextKeyTrackEvents] isKindOfClass:[NSNumber class]]) { return nil; }
     if (!(self = [super init])) { return nil; }
 
     self.trackEvents = [dictionary[kLDEventTrackingContextKeyTrackEvents] boolValue];
-    if (dictionary[kLDEventTrackingContextKeyDebugEventsUntilDate]) {
+    if (dictionary[kLDEventTrackingContextKeyDebugEventsUntilDate] && [dictionary[kLDEventTrackingContextKeyDebugEventsUntilDate] isKindOfClass:[NSNumber class]]) {
         self.debugEventsUntilDate = [NSDate dateFromMillisSince1970:[dictionary[kLDEventTrackingContextKeyDebugEventsUntilDate] integerValue]];
     }
 
