@@ -2,6 +2,11 @@
 
 All notable changes to the LaunchDarkly iOS SDK will be documented in this file. This project adheres to [Semantic Versioning](http://semver.org).
 
+## [2.13.0] - 2018-04-30
+### Added
+- New property `inlineUserInEvents` in `LDConfig`. When `YES` includes the full user (excluding private attributes) in analytics `feature` and `custom` events. When `NO` includes only the `userKey`. Default: `NO`.
+- Calling `start` or `updateUser` (when started) on `LDClient` logs an analytics `identify` event. `identify` events contain the full user (excluding private attributes) regardless of `inlineUserInEvents`.
+
 ## [2.12.1] - 2018-04-23
 ### Changed
 - Clears selected warnings in CocoaPods project

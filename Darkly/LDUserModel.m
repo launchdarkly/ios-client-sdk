@@ -8,6 +8,7 @@
 
 #import "LDUserModel.h"
 #import "LDFlagConfigModel.h"
+#import "LDFlagConfigTracker.h"
 #import "LDUtil.h"
 #import "NSDateFormatter+LDUserModel.h"
 
@@ -27,6 +28,9 @@ NSString * const kUserAttributeDevice = @"device";
 NSString * const kUserAttributeOs = @"os";
 NSString * const kUserAttributePrivateAttributes = @"privateAttrs";
 
+@interface LDUserModel()
+@property (nullable, nonatomic, strong) LDFlagConfigTracker *flagConfigTracker;
+@end
 
 @implementation LDUserModel
 
@@ -64,8 +68,8 @@ NSString * const kUserAttributePrivateAttributes = @"privateAttrs";
         dictionary[kUserAttributePrivateAttributes] = [redactedPrivateAttributes allObjects];
     }
 
-    if (includeFlags && self.config.featuresJsonDictionary) {
-        dictionary[kUserAttributeConfig] = [self.config dictionaryValueIncludeNulls:NO];
+    if (includeFlags && self.flagConfig.featuresJsonDictionary) {
+        dictionary[kUserAttributeConfig] = [self.flagConfig dictionaryValueIncludeNulls:NO];
     }
 
     return [dictionary copy];
@@ -113,7 +117,7 @@ NSString * const kUserAttributePrivateAttributes = @"privateAttrs";
     [encoder encodeObject:self.avatar forKey:kUserAttributeAvatar];
     [encoder encodeObject:self.custom forKey:kUserAttributeCustom];
     [encoder encodeObject:self.updatedAt forKey:kUserAttributeUpdatedAt];
-    [encoder encodeObject:self.config forKey:kUserAttributeConfig];
+    [encoder encodeObject:self.flagConfig forKey:kUserAttributeConfig];
     [encoder encodeBool:self.anonymous forKey:kUserAttributeAnonymous];
     [encoder encodeObject:self.device forKey:kUserAttributeDevice];
     [encoder encodeObject:self.os forKey:kUserAttributeOs];
@@ -133,11 +137,12 @@ NSString * const kUserAttributePrivateAttributes = @"privateAttrs";
         self.avatar = [decoder decodeObjectForKey:kUserAttributeAvatar];
         self.custom = [decoder decodeObjectForKey:kUserAttributeCustom];
         self.updatedAt = [decoder decodeObjectForKey:kUserAttributeUpdatedAt];
-        self.config = [decoder decodeObjectForKey:kUserAttributeConfig];
+        self.flagConfig = [decoder decodeObjectForKey:kUserAttributeConfig];
         self.anonymous = [decoder decodeBoolForKey:kUserAttributeAnonymous];
         self.device = [decoder decodeObjectForKey:kUserAttributeDevice];
         self.os = [decoder decodeObjectForKey:kUserAttributeOs];
         self.privateAttributes = [decoder decodeObjectForKey:kUserAttributePrivateAttributes];
+        self.flagConfigTracker = [LDFlagConfigTracker tracker];
     }
     return self;
 }
@@ -161,7 +166,7 @@ NSString * const kUserAttributePrivateAttributes = @"privateAttrs";
         }
         self.anonymous = [[dictionary objectForKey: kUserAttributeAnonymous] boolValue];
         self.updatedAt = [[NSDateFormatter userDateFormatter] dateFromString:[dictionary objectForKey:kUserAttributeUpdatedAt]];
-        self.config = [[LDFlagConfigModel alloc] initWithDictionary:[dictionary objectForKey:kUserAttributeConfig]];
+        self.flagConfig = [[LDFlagConfigModel alloc] initWithDictionary:[dictionary objectForKey:kUserAttributeConfig]];
         self.privateAttributes = [dictionary objectForKey:kUserAttributePrivateAttributes];
     }
     return self;
@@ -169,36 +174,32 @@ NSString * const kUserAttributePrivateAttributes = @"privateAttrs";
 
 - (instancetype)init {
     self = [super init];
-    
-    if(self != nil) {
-        // Need to set device
-        NSString *device = [LDUtil getDeviceAsString];
-        DEBUG_LOG(@"User building User with device: %@", device);
-        [self setDevice:device];
-        
-        // Need to set os
-        NSString *systemVersion = [LDUtil getSystemVersionAsString];
-        DEBUG_LOG(@"User building User with system version: %@", systemVersion);
-        [self setOs:systemVersion];
-        
-        // Need to set updated Date
-        NSDate *currentDate = [NSDate date];
-        DEBUG_LOG(@"User building User with updatedAt: %@", currentDate);
-        [self setUpdatedAt:currentDate];
-        
-        self.custom = @{};
-    }
-    
+    if(self == nil) { return nil; }
+
+    // Need to set device
+    NSString *device = [LDUtil getDeviceAsString];
+    DEBUG_LOG(@"User building User with device: %@", device);
+    [self setDevice:device];
+
+    // Need to set os
+    NSString *systemVersion = [LDUtil getSystemVersionAsString];
+    DEBUG_LOG(@"User building User with system version: %@", systemVersion);
+    [self setOs:systemVersion];
+
+    // Need to set updated Date
+    NSDate *currentDate = [NSDate date];
+    DEBUG_LOG(@"User building User with updatedAt: %@", currentDate);
+    [self setUpdatedAt:currentDate];
+
+    self.custom = @{};
+    self.flagConfig = [[LDFlagConfigModel alloc] init];
+    self.flagConfigTracker = [LDFlagConfigTracker tracker];
+
     return self;
 }
 
--(NSObject *) flagValue: ( NSString * __nonnull )keyName {
-    return [self.config configFlagValue: keyName];
-}
-
--(BOOL) doesFlagExist: ( NSString * __nonnull )keyName {
-    BOOL value = [self.config doesConfigFlagExist: keyName];
-    return value;
+-(void)resetTracker {
+    self.flagConfigTracker = [LDFlagConfigTracker tracker];
 }
 
 -(NSString*) description {

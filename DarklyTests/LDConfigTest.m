@@ -31,6 +31,7 @@ NSString * const LDConfigTestMobileKey = @"testMobileKey";
     XCTAssertEqualObjects([config capacity], [NSNumber numberWithInt:kCapacity]);
     XCTAssertEqualObjects([config connectionTimeout], [NSNumber numberWithInt:kConnectionTimeout]);
     XCTAssertEqualObjects([config flushInterval], [NSNumber numberWithInt:kDefaultFlushInterval]);
+    XCTAssertFalse([config inlineUserInEvents]);
     XCTAssertFalse([config debugEnabled]);
 }
 
@@ -110,7 +111,7 @@ NSString * const LDConfigTestMobileKey = @"testMobileKey";
     config.pollingInterval = pollingInterval;
     XCTAssertEqualObjects(config.pollingInterval, pollingInterval);
 
-    pollingInterval = [NSNumber numberWithInt:50];
+    pollingInterval = @(kMinimumPollingInterval - 5.0);
     config.pollingInterval = pollingInterval;
     XCTAssertEqualObjects([config pollingInterval], [NSNumber numberWithInt:kMinimumPollingInterval]);
 }
@@ -132,6 +133,13 @@ NSString * const LDConfigTestMobileKey = @"testMobileKey";
     XCTAssertEqualObjects(config.privateUserAttributes, LDUserModel.allUserAttributes);
 }
 
+- (void)testConfigSetInlineUserInEvents {
+    LDConfig *config = [[LDConfig alloc] initWithMobileKey:LDConfigTestMobileKey];
+    config.inlineUserInEvents = YES;
+
+    XCTAssertTrue(config.inlineUserInEvents);
+}
+
 - (void)testConfigOverrideDebug {
     LDConfig *config = [[LDConfig alloc] initWithMobileKey:LDConfigTestMobileKey];
     config.debugEnabled = YES;
@@ -148,7 +156,7 @@ NSString * const LDConfigTestMobileKey = @"testMobileKey";
     NSMutableSet<NSNumber*> *selectedStatusCodes = [NSMutableSet setWithArray:@[@405, @400, @501, @200, @304, @307, @401, @404, @412, @500]];
     [selectedStatusCodes unionSet:[NSSet setWithArray:config.flagRetryStatusCodes]];    //allow flagRetryStatusCodes to change without changing the test
     NSMutableDictionary *statusCodeResults = [NSMutableDictionary dictionaryWithCapacity:selectedStatusCodes.count];
-    [selectedStatusCodes enumerateObjectsUsingBlock:^(NSNumber * _Nonnull statusCode, BOOL * _Nonnull stop) {
+    [selectedStatusCodes enumerateObjectsUsingBlock:^(NSNumber *statusCode, BOOL *stop) {
         statusCodeResults[statusCode] = @([config.flagRetryStatusCodes containsObject:statusCode]);
     }];
 

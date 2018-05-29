@@ -1,6 +1,8 @@
 {
     "isANumber2": {
         "value": 1,
-        "version": 3
+        "variation": 3,
+        "version": 3,
+        "flagVersion": 2
     }
 }

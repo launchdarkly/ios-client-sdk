@@ -1,14 +1,20 @@
 {
     "version1Flag": {
         "value": false,
-        "version": 1
+        "variation": 1,
+        "version": 1,
+        "flagVersion": 0
     },
     "version2Flag": {
         "value": "version2",
-        "version": 2
+        "variation": 2,
+        "version": 2,
+        "flagVersion": 1
     },
     "version3Flag": {
         "value": 3,
-        "version": 3
+        "variation": 3,
+        "version": 3,
+        "flagVersion": 2
     }
 }

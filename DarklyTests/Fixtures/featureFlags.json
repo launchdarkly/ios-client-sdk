@@ -1,0 +1,55 @@
+{
+    "_links": {
+        "value": {
+            "href": "/api/eval/users/eyJrZXkiOiAiamVmZkB0ZXN0LmNvbSJ9",
+            "type": "application/json"
+        },
+        "variation": 2,
+        "version": 2,
+        "flagVersion": 1
+    },
+    "devices.hasipad": {
+        "value": false,
+        "variation": 2,
+        "version": 2,
+        "flagVersion": 1
+    },
+    "isConnected": {
+        "value": null,
+        "variation": 2,
+        "version": 2,
+        "flagVersion": 1
+    },
+    "isAString": {
+        "value": "test",
+        "variation": 2,
+        "version": 2,
+        "flagVersion": 1
+    },
+    "isAArray": {
+        "value": [0, 1, 2],
+        "variation": 2,
+        "version": 2,
+        "flagVersion": 1
+    },
+    "isAObject": {
+        "value": {
+            "key": 0
+        },
+        "variation": 2,
+        "version": 2,
+        "flagVersion": 1
+    },
+    "isANumber": {
+        "value": 0,
+        "variation": 2,
+        "version": 2,
+        "flagVersion": 1
+    },
+    "isABawler": {
+        "value": true,
+        "variation": 2,
+        "version": 2,
+        "flagVersion": 1
+    }
+}

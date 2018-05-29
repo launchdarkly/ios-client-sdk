@@ -11,6 +11,9 @@
 #import "DarklyConstants.h"
 #import "NSThread+MainExecutable.h"
 #import "LDThrottler.h"
+#import "LDFlagConfigModel.h"
+#import "LDFlagConfigValue.h"
+#import "LDFlagConfigTracker.h"
 
 @interface LDClient()
 @property (nonatomic, assign) BOOL isOnline;
@@ -47,6 +50,11 @@
                                                      name:kLDClientUnauthorizedNotification object:nil];
     });
     return sharedLDClient;
+}
+
+-(void)setLdUser:(LDUserModel*)user {
+    _ldUser = user;
+    [[LDDataManager sharedManager] createIdentifyEventWithUser:_ldUser config:self.ldConfig];
 }
 
 -(BOOL)start:(LDConfigBuilder *)inputConfigBuilder userBuilder:(LDUserBuilder *)inputUserBuilder {
@@ -103,132 +111,111 @@
     }
 }
 
-- (BOOL)boolVariation:(NSString *)featureKey fallback:(BOOL)fallback{
-    DEBUG_LOG(@"LDClient boolVariation method called for feature=%@ and fallback=%d", featureKey, fallback);
-    if (![featureKey isKindOfClass:[NSString class]]) {
-        NSLog(@"featureKey should be an NSString. Returning fallback value");
-        return fallback;
-    }
-    if (self.clientStarted) {
-        BOOL flagExists = [self.ldUser doesFlagExist: featureKey];
-        NSObject *flagValue = [self.ldUser flagValue: featureKey];
-        BOOL returnValue = fallback;
-        if ([flagValue isKindOfClass:[NSNumber class]] && flagExists) {
-            returnValue = [(NSNumber *)flagValue boolValue];
-        }
-        
-        [[LDDataManager sharedManager] createFeatureEvent: featureKey keyValue:[NSNumber numberWithBool:returnValue] defaultKeyValue:[NSNumber numberWithBool:fallback] user:self.ldUser config:self.ldConfig];
-        return returnValue;
-    } else {
-        DEBUG_LOGX(@"LDClient not started yet!");
-    }
-    return fallback;
-}
-
-- (NSNumber*)numberVariation:(NSString *)featureKey fallback:(NSNumber*)fallback{
-    DEBUG_LOG(@"LDClient numberVariation method called for feature=%@ and fallback=%@", featureKey, fallback);
-    if (![featureKey isKindOfClass:[NSString class]]) {
-        NSLog(@"featureKey should be an NSString. Returning fallback value");
-        return fallback;
-    }
-    if (self.clientStarted) {
-        BOOL flagExists = [self.ldUser doesFlagExist: featureKey];
-        NSObject *flagValue = [self.ldUser flagValue: featureKey];
-        NSNumber *returnValue = fallback;
-        if ([flagValue isKindOfClass:[NSNumber class]] && flagExists) {
-            returnValue = (NSNumber *)flagValue;
-        }
-        
-        [[LDDataManager sharedManager] createFeatureEvent: featureKey keyValue:returnValue defaultKeyValue:fallback user:self.ldUser config:self.ldConfig];
-        return returnValue;
-    } else {
-        DEBUG_LOGX(@"LDClient not started yet!");
-    }
-    return fallback;
-}
-
-- (double)doubleVariation:(NSString *)featureKey fallback:(double)fallback {
-    DEBUG_LOG(@"LDClient doubleVariation method called for feature=%@ and fallback=%f", featureKey, fallback);
-    if (![featureKey isKindOfClass:[NSString class]]) {
-        NSLog(@"featureKey should be an NSString. Returning fallback value");
+- (BOOL)boolVariation:(NSString *)flagKey fallback:(BOOL)fallback{
+    DEBUG_LOG(@"LDClient boolVariation method called for flagKey=%@ and fallback=%d", flagKey, fallback);
+    if (![flagKey isKindOfClass:[NSString class]]) {
+        NSLog(@"flagKey should be an NSString. Returning fallback value");
         return fallback;
     }
     if (!self.clientStarted) {
         DEBUG_LOGX(@"LDClient not started yet!");
         return fallback;
     }
-    BOOL flagExists = [self.ldUser doesFlagExist: featureKey];
-    id flagValue = [self.ldUser flagValue: featureKey];
-    double returnValue = fallback;
-    if (flagExists && [flagValue isKindOfClass:[NSNumber class]]) {
-        returnValue = [((NSNumber *)flagValue) doubleValue];
-    }
-    
-    [[LDDataManager sharedManager] createFeatureEvent:featureKey keyValue:[NSNumber numberWithDouble:returnValue] defaultKeyValue:[NSNumber numberWithDouble:fallback] user:self.ldUser config:self.ldConfig];
+
+    LDFlagConfigValue *flagConfigValue = [self.ldUser.flagConfig flagConfigValueForFlagKey:flagKey];
+    BOOL returnValue = flagConfigValue.value && [flagConfigValue.value isKindOfClass:[NSNumber class]] ? [flagConfigValue.value boolValue] : fallback;
+
+    [[LDDataManager sharedManager] createFlagEvaluationEventsWithFlagKey:flagKey flagConfigValue:flagConfigValue defaultFlagValue:@(fallback) user:self.ldUser config:self.ldConfig];
     return returnValue;
 }
 
-- (NSString*)stringVariation:(NSString *)featureKey fallback:(NSString*)fallback{
-    DEBUG_LOG(@"LDClient stringVariation method called for feature=%@ and fallback=%@", featureKey, fallback);
-    if (![featureKey isKindOfClass:[NSString class]]) {
-        NSLog(@"featureKey should be an NSString. Returning fallback value");
-        return fallback;
-    }
-    if (self.clientStarted) {
-        BOOL flagExists = [self.ldUser doesFlagExist: featureKey];
-        NSObject *flagValue = [self.ldUser flagValue: featureKey];
-        NSString *returnValue = fallback;
-        if ([flagValue isKindOfClass:[NSString class]] && flagExists) {
-            returnValue = (NSString *)flagValue;
-        }
-        
-        [[LDDataManager sharedManager] createFeatureEvent: featureKey keyValue:returnValue defaultKeyValue:fallback user:self.ldUser config:self.ldConfig];
-        return returnValue;
-    } else {
-        DEBUG_LOGX(@"LDClient not started yet!");
-    }
-    return fallback;
-}
-
-- (NSArray*)arrayVariation:(NSString *)featureKey fallback:(NSArray*)fallback{
-    DEBUG_LOG(@"LDClient arrayVariation method called for feature=%@ and fallback=%@", featureKey, fallback);
-    if (![featureKey isKindOfClass:[NSString class]]) {
-        NSLog(@"featureKey should be an NSString. Returning fallback value");
+- (NSNumber*)numberVariation:(NSString *)flagKey fallback:(NSNumber*)fallback{
+    DEBUG_LOG(@"LDClient numberVariation method called for flagKey=%@ and fallback=%@", flagKey, fallback);
+    if (![flagKey isKindOfClass:[NSString class]]) {
+        NSLog(@"flagKey should be an NSString. Returning fallback value");
         return fallback;
     }
     if (!self.clientStarted) {
         DEBUG_LOGX(@"LDClient not started yet!");
         return fallback;
     }
-    BOOL flagExists = [self.ldUser doesFlagExist: featureKey];
-    id flagValue = [self.ldUser flagValue: featureKey];
-    NSArray *returnValue = fallback;
-    if (flagExists && [flagValue isKindOfClass:[NSArray class]]) {
-        returnValue = (NSArray *)flagValue;
-    }
-    
-    [[LDDataManager sharedManager] createFeatureEvent: featureKey keyValue:returnValue defaultKeyValue:fallback user:self.ldUser config:self.ldConfig];
+
+    LDFlagConfigValue *flagConfigValue = [self.ldUser.flagConfig flagConfigValueForFlagKey:flagKey];
+    NSNumber *returnValue = flagConfigValue.value && [flagConfigValue.value isKindOfClass:[NSNumber class]] ? flagConfigValue.value : fallback;
+
+    [[LDDataManager sharedManager] createFlagEvaluationEventsWithFlagKey:flagKey flagConfigValue:flagConfigValue defaultFlagValue:fallback user:self.ldUser config:self.ldConfig];
     return returnValue;
 }
 
-- (NSDictionary*)dictionaryVariation:(NSString *)featureKey fallback:(NSDictionary*)fallback{
-    DEBUG_LOG(@"LDClient dictionaryVariation method called for feature=%@ and fallback=%@", featureKey, fallback);
-    if (![featureKey isKindOfClass:[NSString class]]) {
-        NSLog(@"featureKey should be an NSString. Returning fallback value");
+- (double)doubleVariation:(NSString *)flagKey fallback:(double)fallback {
+    DEBUG_LOG(@"LDClient doubleVariation method called for flagKey=%@ and fallback=%f", flagKey, fallback);
+    if (![flagKey isKindOfClass:[NSString class]]) {
+        NSLog(@"flagKey should be an NSString. Returning fallback value");
         return fallback;
     }
     if (!self.clientStarted) {
         DEBUG_LOGX(@"LDClient not started yet!");
         return fallback;
     }
-    BOOL flagExists = [self.ldUser doesFlagExist: featureKey];
-    id flagValue = [self.ldUser flagValue: featureKey];
-    NSDictionary *returnValue = fallback;
-    if (flagExists && [flagValue isKindOfClass:[NSDictionary class]]) {
-        returnValue = (NSDictionary *)flagValue;
+
+    LDFlagConfigValue *flagConfigValue = [self.ldUser.flagConfig flagConfigValueForFlagKey:flagKey];
+    double returnValue = flagConfigValue.value && [flagConfigValue.value isKindOfClass:[NSNumber class]] ? [flagConfigValue.value doubleValue] : fallback;
+
+    [[LDDataManager sharedManager] createFlagEvaluationEventsWithFlagKey:flagKey flagConfigValue:flagConfigValue defaultFlagValue:@(fallback) user:self.ldUser config:self.ldConfig];
+    return returnValue;
+}
+
+- (NSString*)stringVariation:(NSString *)flagKey fallback:(NSString*)fallback{
+    DEBUG_LOG(@"LDClient stringVariation method called for flagKey=%@ and fallback=%@", flagKey, fallback);
+    if (![flagKey isKindOfClass:[NSString class]]) {
+        NSLog(@"flagKey should be an NSString. Returning fallback value");
+        return fallback;
     }
-    
-    [[LDDataManager sharedManager] createFeatureEvent: featureKey keyValue:returnValue defaultKeyValue:fallback user:self.ldUser config:self.ldConfig];
+    if (!self.clientStarted) {
+        DEBUG_LOGX(@"LDClient not started yet!");
+        return fallback;
+    }
+
+    LDFlagConfigValue *flagConfigValue = [self.ldUser.flagConfig flagConfigValueForFlagKey:flagKey];
+    NSString *returnValue = flagConfigValue.value && [flagConfigValue.value isKindOfClass:[NSString class]] ? flagConfigValue.value : fallback;
+
+    [[LDDataManager sharedManager] createFlagEvaluationEventsWithFlagKey:flagKey flagConfigValue:flagConfigValue defaultFlagValue:fallback user:self.ldUser config:self.ldConfig];
+    return returnValue;
+}
+
+- (NSArray*)arrayVariation:(NSString *)flagKey fallback:(NSArray*)fallback{
+    DEBUG_LOG(@"LDClient arrayVariation method called for flagKey=%@ and fallback=%@", flagKey, fallback);
+    if (![flagKey isKindOfClass:[NSString class]]) {
+        NSLog(@"flagKey should be an NSString. Returning fallback value");
+        return fallback;
+    }
+    if (!self.clientStarted) {
+        DEBUG_LOGX(@"LDClient not started yet!");
+        return fallback;
+    }
+
+    LDFlagConfigValue *flagConfigValue = [self.ldUser.flagConfig flagConfigValueForFlagKey:flagKey];
+    NSArray *returnValue = flagConfigValue.value && [flagConfigValue.value isKindOfClass:[NSArray class]] ? flagConfigValue.value : fallback;
+
+    [[LDDataManager sharedManager] createFlagEvaluationEventsWithFlagKey:flagKey flagConfigValue:flagConfigValue defaultFlagValue:fallback user:self.ldUser config:self.ldConfig];
+    return returnValue;
+}
+
+- (NSDictionary*)dictionaryVariation:(NSString *)flagKey fallback:(NSDictionary*)fallback{
+    DEBUG_LOG(@"LDClient dictionaryVariation method called for flagKey=%@ and fallback=%@", flagKey, fallback);
+    if (![flagKey isKindOfClass:[NSString class]]) {
+        NSLog(@"flagKey should be an NSString. Returning fallback value");
+        return fallback;
+    }
+    if (!self.clientStarted) {
+        DEBUG_LOGX(@"LDClient not started yet!");
+        return fallback;
+    }
+
+    LDFlagConfigValue *flagConfigValue = [self.ldUser.flagConfig flagConfigValueForFlagKey:flagKey];
+    NSDictionary *returnValue = flagConfigValue.value && [flagConfigValue.value isKindOfClass:[NSDictionary class]] ? flagConfigValue.value : fallback;
+
+    [[LDDataManager sharedManager] createFlagEvaluationEventsWithFlagKey:flagKey flagConfigValue:flagConfigValue defaultFlagValue:fallback user:self.ldUser config:self.ldConfig];
     return returnValue;
 }
 
@@ -236,7 +223,7 @@
 {
     DEBUG_LOG(@"LDClient track method called for event=%@ and data=%@", eventName, dataDictionary);
     if (self.clientStarted) {
-        [[LDDataManager sharedManager] createCustomEvent:eventName withCustomValuesDictionary: dataDictionary user:self.ldUser config:self.ldConfig];
+        [[LDDataManager sharedManager] createCustomEventWithKey:eventName customData: dataDictionary user:self.ldUser config:self.ldConfig];
         return YES;
     } else {
         DEBUG_LOGX(@"LDClient not started yet!");

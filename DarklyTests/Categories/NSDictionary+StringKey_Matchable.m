@@ -51,6 +51,7 @@
                 }
             }
             else {
+                if (dictionaryValue.count == 0 && otherDictionaryValue.count == 0) { continue; }    //isEqualToDictionary fails for empty dictionaries!!
                 if ([dictionaryValue isEqualToDictionary:otherDictionary]) { continue; }
                 [differingKeys addObject:key];
             }
@@ -69,7 +70,7 @@
 -(NSArray*)ignoreKeysForKey:(NSString*)key fromKeys:(NSArray*)ignoreKeys {
     if ([key length] == 0 || [ignoreKeys count] == 0) { return nil; }
     NSString *prefix = [NSString stringWithFormat:@"%@.", key];
-    NSPredicate *matchingPrefixPredicate = [NSPredicate predicateWithBlock:^BOOL(id  _Nullable evaluatedObject, NSDictionary<NSString *,id> * _Nullable bindings) {
+    NSPredicate *matchingPrefixPredicate = [NSPredicate predicateWithBlock:^BOOL(id evaluatedObject, NSDictionary<NSString *,id> *bindings) {
         if (![evaluatedObject isKindOfClass:[NSString class]]) { return NO; }
         NSString *evaluatedKey = (NSString*)evaluatedObject;
         return [evaluatedKey hasPrefix:prefix];
@@ -77,7 +78,7 @@
     NSArray *matchingIgnoreKeys = [ignoreKeys filteredArrayUsingPredicate:matchingPrefixPredicate];
     if ([matchingIgnoreKeys count] == 0) { return matchingIgnoreKeys; }
     NSMutableArray *unwrappedMatchingIgnoreKeys = [NSMutableArray arrayWithCapacity:[matchingIgnoreKeys count]];
-    [matchingIgnoreKeys enumerateObjectsUsingBlock:^(id  _Nonnull obj, NSUInteger idx, BOOL * _Nonnull stop) {
+    [matchingIgnoreKeys enumerateObjectsUsingBlock:^(id obj, NSUInteger idx, BOOL *stop) {
         NSString *wrappedKey = (NSString*)obj;
         NSString *unwrappedKey = [wrappedKey stringByReplacingOccurrencesOfString:prefix withString:@""];
         [unwrappedMatchingIgnoreKeys addObject:unwrappedKey];
