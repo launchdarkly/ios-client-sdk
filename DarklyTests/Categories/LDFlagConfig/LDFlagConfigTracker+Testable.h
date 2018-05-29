@@ -7,9 +7,10 @@
 //
 
 #import "LDFlagConfigTracker.h"
+#import "NSDate+ReferencedDate.h"
 
 @interface LDFlagConfigTracker(Testable)
-@property (nonatomic, assign) NSInteger startDateMillis;
+@property (nonatomic, assign) LDMillisecond startDateMillis;
 @property (nonatomic, strong) NSMutableDictionary<NSString*, LDFlagCounter*> *mutableFlagCounters;
 +(instancetype)stubTracker;
 +(instancetype)stubTrackerIncludeFlagVersion:(BOOL)includeFlagVersion;

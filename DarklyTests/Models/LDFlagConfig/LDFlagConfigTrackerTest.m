@@ -31,7 +31,7 @@
 }
 
 -(void)testInitAndTrackerConstructors {
-    NSInteger creationMillis = [[NSDate date] millisSince1970];
+    LDMillisecond creationMillis = [[NSDate date] millisSince1970];
     LDFlagConfigTracker *tracker = [LDFlagConfigTracker tracker];
 
     XCTAssertTrue(labs(tracker.startDateMillis - creationMillis) <= 1);

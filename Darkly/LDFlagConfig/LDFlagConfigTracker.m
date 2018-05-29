@@ -13,7 +13,7 @@
 #import "NSDate+ReferencedDate.h"
 
 @interface LDFlagConfigTracker()
-@property (nonatomic, assign) NSInteger startDateMillis;
+@property (nonatomic, assign) LDMillisecond startDateMillis;
 @property (nonatomic, strong) NSMutableDictionary<NSString*, LDFlagCounter*> *mutableFlagCounters;
 @end
 

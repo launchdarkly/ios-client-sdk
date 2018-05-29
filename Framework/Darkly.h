@@ -24,7 +24,6 @@ FOUNDATION_EXPORT const unsigned char DarklyVersionString[];
 #import <Darkly/LDDataManager.h>
 #import <Darkly/DarklyConstants.h>
 #import <Darkly/LDClientManager.h>
-#import <Darkly/LDEventModel.h>
 #import <Darkly/LDPollingManager.h>
 #import <Darkly/LDRequestManager.h>
 #import <Darkly/LDUtil.h>

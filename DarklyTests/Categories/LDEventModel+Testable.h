@@ -7,6 +7,8 @@
 //
 
 #import <Darkly/Darkly.h>
+#import "LDEventModel.h"
+#import "NSDate+ReferencedDate.h"
 
 @class LDUserModel;
 @class LDConfig;
@@ -59,5 +61,5 @@ extern const double featureEventDefaultValueStub;
                    defaultFlagValue:(nullable id)defaultFlagValue
                                user:(nonnull LDUserModel*)user
                          inlineUser:(BOOL)inlineUser
-                 creationDateMillis:(NSInteger)creationDateMillis;
+                 creationDateMillis:(LDMillisecond)creationDateMillis;
 @end

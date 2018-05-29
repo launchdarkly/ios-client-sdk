@@ -12,7 +12,7 @@
 #import "NSJSONSerialization+Testable.h"
 #import "NSDictionary+Testable.h"
 #import "NSDate+ReferencedDate.h"
-#import "NSInteger+Testable.h"
+#import "NSDate+Testable.h"
 
 extern NSString *const kLDFlagConfigModelKeyKey;
 

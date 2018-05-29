@@ -8,6 +8,7 @@
 
 #import "LDEventTrackingContext+Testable.h"
 #import "NSDate+ReferencedDate.h"
+#import "NSNumber+LaunchDarkly.h"
 
 @implementation LDEventTrackingContext(Testable)
 +(instancetype)stub {
@@ -54,7 +55,7 @@
 
     if (self.debugEventsUntilDate) {
         if (dictionary[kLDEventTrackingContextKeyDebugEventsUntilDate]) {
-            NSDate *otherDebugUntil = [NSDate dateFromMillisSince1970:[dictionary[kLDEventTrackingContextKeyDebugEventsUntilDate] integerValue]];
+            NSDate *otherDebugUntil = [NSDate dateFromMillisSince1970:[dictionary[kLDEventTrackingContextKeyDebugEventsUntilDate] ldMillisecondValue]];
             if (![self.debugEventsUntilDate isWithinTimeInterval:1.0 ofDate:otherDebugUntil]) {
                 [mismatchedProperties addObject:kLDEventTrackingContextKeyDebugEventsUntilDate];
             }

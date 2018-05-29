@@ -9,13 +9,14 @@
 #import "LDUserModel+Testable.h"
 #import "NSDate+ReferencedDate.h"
 #import "LDFlagConfigTracker+Testable.h"
-#import "NSInteger+Testable.h"
+#import "NSDate+Testable.h"
 #import "LDFlagConfigValue+Testable.h"
 #import "LDFlagCounter+Testable.h"
 #import "NSArray+Testable.h"
 #import "LDFlagValueCounter+Testable.h"
 #import "LDEventTrackingContext+Testable.h"
 #import "NSArray+Testable.h"
+#import "NSNumber+LaunchDarkly.h"
 
 extern NSString * const kEventModelKeyUser;
 extern NSString * const kEventModelKeyUserKey;
@@ -48,7 +49,7 @@ NSString * const testMobileKey = @"EventModelTest.testMobileKey";
         NSArray<LDFlagConfigValue*> *flagConfigValues = [LDFlagConfigValue stubFlagConfigValuesForFlagKey:flagKey];
         id defaultFlagValue = [LDFlagConfigValue defaultValueForFlagKey:flagKey];
         for (LDFlagConfigValue *flagConfigValue in flagConfigValues) {
-            NSInteger creationDateMillis = [[NSDate date] millisSince1970];
+            LDMillisecond creationDateMillis = [[NSDate date] millisSince1970];
             LDEventModel *featureEvent = [LDEventModel featureEventWithFlagKey:flagKey flagConfigValue:flagConfigValue defaultFlagValue:defaultFlagValue user:self.user inlineUser:NO];
 
             XCTAssertTrue([featureEvent hasPropertiesMatchingFlagKey:flagKey
@@ -67,7 +68,7 @@ NSString * const testMobileKey = @"EventModelTest.testMobileKey";
     NSArray *boolValues = @[@NO, @YES];
     for (NSNumber *value in boolValues) {
         BOOL boolValue = [value boolValue];
-        NSInteger referenceMillis = [[NSDate date] millisSince1970];
+        LDMillisecond referenceMillis = [[NSDate date] millisSince1970];
         LDEventModel *event = [LDEventModel customEventWithKey:@"red" customData:dictionary userValue:self.user inlineUser:boolValue];
 
         XCTAssertEqualObjects(event.key, @"red");
@@ -80,7 +81,7 @@ NSString * const testMobileKey = @"EventModelTest.testMobileKey";
 }
 
 - (void)testIdentifyEvent {
-    NSInteger referenceMillis = [[NSDate date] millisSince1970];
+    LDMillisecond referenceMillis = [[NSDate date] millisSince1970];
     LDEventModel *event = [LDEventModel identifyEventWithUser:self.user];
 
     XCTAssertEqualObjects(event.kind, kEventModelKindIdentify);
@@ -96,7 +97,7 @@ NSString * const testMobileKey = @"EventModelTest.testMobileKey";
     LDEventModel *event = [LDEventModel summaryEventWithTracker:trackerStub];
 
     XCTAssertNotNil(event);
-    NSInteger startDateMillis = [[creationDate dateByAddingTimeInterval:kLDFlagConfigTrackerTrackingInterval] millisSince1970];
+    LDMillisecond startDateMillis = [[creationDate dateByAddingTimeInterval:kLDFlagConfigTrackerTrackingInterval] millisSince1970];
     XCTAssertTrue(Approximately(event.startDateMillis, startDateMillis, 10));
     XCTAssertTrue(Approximately(event.endDateMillis, [creationDate millisSince1970], 10));
     //Verify flagCounter dictionaries match the tracker
@@ -132,7 +133,7 @@ NSString * const testMobileKey = @"EventModelTest.testMobileKey";
         NSArray<LDFlagConfigValue*> *flagConfigValues = [LDFlagConfigValue stubFlagConfigValuesForFlagKey:flagKey];
         id defaultFlagValue = [LDFlagConfigValue defaultValueForFlagKey:flagKey];
         for (LDFlagConfigValue *flagConfigValue in flagConfigValues) {
-            NSInteger creationDateMillis = [[NSDate date] millisSince1970];
+            LDMillisecond creationDateMillis = [[NSDate date] millisSince1970];
             LDEventModel *debugEvent = [LDEventModel debugEventWithFlagKey:flagKey flagConfigValue:flagConfigValue defaultFlagValue:defaultFlagValue user:self.user];
 
             XCTAssertTrue([debugEvent hasPropertiesMatchingFlagKey:flagKey
@@ -176,7 +177,7 @@ NSString * const testMobileKey = @"EventModelTest.testMobileKey";
                 XCTAssertEqualObjects(eventDictionary[kEventModelKeyUserKey], event.user.key);
             }
             XCTAssertNil(eventDictionary[kEventModelKeyInlineUser]);
-            XCTAssertTrue(Approximately([eventDictionary[kEventModelKeyCreationDate] integerValue], event.creationDate, 1));
+            XCTAssertTrue(Approximately([eventDictionary[kEventModelKeyCreationDate] ldMillisecondValue], event.creationDate, 1));
         }
         if (event.isFlagRequestEventKind) {
             XCTAssertEqualObjects(eventDictionary[kLDFlagConfigValueKeyValue], event.flagConfigValue.value);
@@ -192,7 +193,7 @@ NSString * const testMobileKey = @"EventModelTest.testMobileKey";
         }
         if ([event.kind isEqualToString:kEventModelKindFeatureSummary]) {
             XCTAssertEqualObjects(eventDictionary[kEventModelKeyStartDate], @(event.startDateMillis));
-            XCTAssertTrue(Approximately([eventDictionary[kEventModelKeyEndDate] integerValue], event.endDateMillis, 10));
+            XCTAssertTrue(Approximately([eventDictionary[kEventModelKeyEndDate] ldMillisecondValue], event.endDateMillis, 10));
             XCTAssertEqualObjects(eventDictionary[kEventModelKeyFeatures], event.flagRequestSummary);
         }
     }
@@ -236,7 +237,7 @@ NSString * const testMobileKey = @"EventModelTest.testMobileKey";
             XCTAssertEqualObjects(eventDictionary[kEventModelKeyUserKey], event.user.key);
         }
         XCTAssertNil(eventDictionary[kEventModelKeyInlineUser]);
-        XCTAssertTrue(Approximately([eventDictionary[kEventModelKeyCreationDate] integerValue], event.creationDate, 1));
+        XCTAssertTrue(Approximately([eventDictionary[kEventModelKeyCreationDate] ldMillisecondValue], event.creationDate, 1));
         XCTAssertNil(eventDictionary[kLDFlagConfigValueKeyFlagVersion]);
         XCTAssertNil(eventDictionary[kLDEventTrackingContextKeyTrackEvents]);
         XCTAssertNil(eventDictionary[kLDEventTrackingContextKeyDebugEventsUntilDate]);
@@ -253,7 +254,7 @@ NSString * const testMobileKey = @"EventModelTest.testMobileKey";
 
     //Checks that differ from testDictionaryValue
     XCTAssertEqualObjects(eventDictionary[kEventModelKeyStartDate], @(event.startDateMillis));
-    XCTAssertTrue(Approximately([eventDictionary[kEventModelKeyEndDate] integerValue], event.endDateMillis, 10));
+    XCTAssertTrue(Approximately([eventDictionary[kEventModelKeyEndDate] ldMillisecondValue], event.endDateMillis, 10));
     XCTAssertEqualObjects(eventDictionary[kEventModelKeyFeatures], event.flagRequestSummary);
 
     //Checks that are the same as in testDictionaryValue
@@ -291,7 +292,7 @@ NSString * const testMobileKey = @"EventModelTest.testMobileKey";
             XCTAssertEqualObjects(eventDictionary[kEventModelKeyUserKey], event.user.key);
         }
         XCTAssertNil(eventDictionary[kEventModelKeyInlineUser]);
-        XCTAssertTrue(Approximately([eventDictionary[kEventModelKeyCreationDate] integerValue], event.creationDate, 1));
+        XCTAssertTrue(Approximately([eventDictionary[kEventModelKeyCreationDate] ldMillisecondValue], event.creationDate, 1));
         XCTAssertEqualObjects(eventDictionary[kLDFlagConfigValueKeyValue], event.flagConfigValue.value);
         XCTAssertEqualObjects(eventDictionary[kLDFlagConfigValueKeyVariation], @(event.flagConfigValue.variation));
         XCTAssertNil(eventDictionary[kLDFlagConfigValueKeyFlagVersion]);
@@ -310,7 +311,7 @@ NSString * const testMobileKey = @"EventModelTest.testMobileKey";
 
     //Checks that differ from testDictionaryValue
     XCTAssertEqualObjects(eventDictionary[kEventModelKeyStartDate], @(event.startDateMillis));
-    XCTAssertTrue(Approximately([eventDictionary[kEventModelKeyEndDate] integerValue], event.endDateMillis, 10));
+    XCTAssertTrue(Approximately([eventDictionary[kEventModelKeyEndDate] ldMillisecondValue], event.endDateMillis, 10));
     XCTAssertEqualObjects(eventDictionary[kEventModelKeyFeatures], event.flagRequestSummary);
 
     //Checks that are the same as in testDictionaryValue

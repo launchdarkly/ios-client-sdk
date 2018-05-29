@@ -41,14 +41,14 @@ NSString * const kEventModelKeyFeatures = @"features";
 - (void)encodeWithCoder:(NSCoder *)encoder {
     [encoder encodeObject:self.key forKey:kEventModelKeyKey];
     [encoder encodeObject:self.kind forKey:kEventModelKeyKind];
-    [encoder encodeInteger:self.creationDate forKey:kEventModelKeyCreationDate];
+    [encoder encodeInt64:self.creationDate forKey:kEventModelKeyCreationDate];
     [encoder encodeObject:self.data forKey:kEventModelKeyData];
     [encoder encodeObject:self.flagConfigValue forKey:kEventModelKeyFlagConfigValue];
     [encoder encodeObject:self.defaultValue forKey:kEventModelKeyDefault];
     [encoder encodeObject:self.user forKey:kEventModelKeyUser];
     [encoder encodeBool:self.inlineUser forKey:kEventModelKeyInlineUser];
-    [encoder encodeInteger:self.startDateMillis forKey:kEventModelKeyStartDate];
-    [encoder encodeInteger:self.endDateMillis forKey:kEventModelKeyEndDate];
+    [encoder encodeInt64:self.startDateMillis forKey:kEventModelKeyStartDate];
+    [encoder encodeInt64:self.endDateMillis forKey:kEventModelKeyEndDate];
     [encoder encodeObject:self.flagRequestSummary forKey:kEventModelKeyFeatures];
 }
 
@@ -57,7 +57,7 @@ NSString * const kEventModelKeyFeatures = @"features";
 
     self.key = [decoder decodeObjectForKey:kEventModelKeyKey];
     self.kind = [decoder decodeObjectForKey:kEventModelKeyKind];
-    self.creationDate = [decoder decodeIntegerForKey:kEventModelKeyCreationDate];
+    self.creationDate = [decoder decodeInt64ForKey:kEventModelKeyCreationDate];
     self.data = [decoder decodeObjectForKey:kEventModelKeyData];
     self.flagConfigValue = [decoder decodeObjectForKey:kEventModelKeyFlagConfigValue];
     self.defaultValue = [decoder decodeObjectForKey:kEventModelKeyDefault];
@@ -66,8 +66,8 @@ NSString * const kEventModelKeyFeatures = @"features";
     }
     self.user = [decoder decodeObjectForKey:kEventModelKeyUser];
     self.inlineUser = [decoder decodeBoolForKey:kEventModelKeyInlineUser];
-    self.startDateMillis = [decoder decodeIntegerForKey:kEventModelKeyStartDate];
-    self.endDateMillis = [decoder decodeIntegerForKey:kEventModelKeyEndDate];
+    self.startDateMillis = [decoder decodeInt64ForKey:kEventModelKeyStartDate];
+    self.endDateMillis = [decoder decodeInt64ForKey:kEventModelKeyEndDate];
     self.flagRequestSummary = [decoder decodeObjectForKey:kEventModelKeyFeatures];
 
     return self;

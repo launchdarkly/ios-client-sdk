@@ -12,6 +12,7 @@
 #import "LDFlagConfigValue+Testable.h"
 #import "LDEventTrackingContext+Testable.h"
 #import "NSDate+ReferencedDate.h"
+#import "NSNumber+LaunchDarkly.h"
 
 @interface LDFlagConfigValueTest : XCTestCase
 
@@ -164,7 +165,7 @@
     //Optional items
     XCTAssertEqualObjects(flagDictionary[kLDFlagConfigValueKeyFlagVersion], flagConfigValue.flagVersion);
     XCTAssertEqual([flagDictionary[kLDEventTrackingContextKeyTrackEvents] boolValue], eventTrackingContext.trackEvents);
-    XCTAssertTrue([[NSDate dateFromMillisSince1970:[flagDictionary[kLDEventTrackingContextKeyDebugEventsUntilDate] integerValue]]
+    XCTAssertTrue([[NSDate dateFromMillisSince1970:[flagDictionary[kLDEventTrackingContextKeyDebugEventsUntilDate] ldMillisecondValue]]
                    isWithinTimeInterval:1.0 ofDate:eventTrackingContext.debugEventsUntilDate]);
 
     flagDictionary = [flagConfigValue dictionaryValueUseFlagVersionForVersion:YES includeEventTrackingContext:NO];

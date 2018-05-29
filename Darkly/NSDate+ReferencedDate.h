@@ -8,9 +8,11 @@
 
 #import <Foundation/Foundation.h>
 
+typedef long long LDMillisecond;
+
 @interface NSDate (ReferencedDate)
-+(NSDate*)dateFromMillisSince1970:(NSInteger)millis;
--(NSInteger)millisSince1970;
++(NSDate*)dateFromMillisSince1970:(LDMillisecond)millis;
+-(LDMillisecond)millisSince1970;
 -(BOOL)isWithinTimeInterval:(NSTimeInterval)timeInterval ofDate:(NSDate*)otherDate;
 -(BOOL)isEarlierThan:(NSDate*)otherDate;
 -(BOOL)isLaterThan:(NSDate*)otherDate;

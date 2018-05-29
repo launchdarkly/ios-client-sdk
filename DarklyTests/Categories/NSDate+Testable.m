@@ -6,8 +6,8 @@
 //  Copyright © 2018 LaunchDarkly. All rights reserved.
 //
 
-#import "NSInteger+Testable.h"
+#import "NSDate+Testable.h"
 
-bool Approximately(long num1, long num2, long range) {
+bool Approximately(LDMillisecond num1, LDMillisecond num2, LDMillisecond range) {
     return labs(num1 - num2) <= range;
 }

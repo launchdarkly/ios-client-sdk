@@ -8,6 +8,7 @@
 
 #import "LDEventTrackingContext.h"
 #import "NSDate+ReferencedDate.h"
+#import "NSNumber+LaunchDarkly.h"
 
 NSString * const kLDEventTrackingContextKeyTrackEvents = @"trackEvents";
 NSString * const kLDEventTrackingContextKeyDebugEventsUntilDate = @"debugEventsUntilDate";
@@ -26,7 +27,7 @@ NSString * const kLDEventTrackingContextKeyDebugEventsUntilDate = @"debugEventsU
 
     self.trackEvents = [dictionary[kLDEventTrackingContextKeyTrackEvents] boolValue];
     if (dictionary[kLDEventTrackingContextKeyDebugEventsUntilDate] && [dictionary[kLDEventTrackingContextKeyDebugEventsUntilDate] isKindOfClass:[NSNumber class]]) {
-        self.debugEventsUntilDate = [NSDate dateFromMillisSince1970:[dictionary[kLDEventTrackingContextKeyDebugEventsUntilDate] integerValue]];
+        self.debugEventsUntilDate = [NSDate dateFromMillisSince1970:[dictionary[kLDEventTrackingContextKeyDebugEventsUntilDate] ldMillisecondValue]];
     }
 
     return self;

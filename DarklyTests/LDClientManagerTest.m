@@ -24,8 +24,9 @@
 #import "NSJSONSerialization+Testable.h"
 #import "LDFlagConfigTracker+Testable.h"
 #import "NSDate+ReferencedDate.h"
-#import "NSInteger+Testable.h"
+#import "NSDate+Testable.h"
 #import "NSDateFormatter+JsonHeader+Testable.h"
+#import "NSDate+ReferencedDate.h"
 
 extern NSString * _Nonnull const kLDFlagConfigValueKeyValue;
 extern NSString * _Nonnull const kLDFlagConfigValueKeyVersion;
@@ -261,7 +262,7 @@ NSString *const kBoolFlagKey = @"isABawler";
     }]]);
     LDClientManager *clientManager = [LDClientManager sharedInstance];
     [clientManager setOnline:YES];
-    NSInteger startDateMillis = [[NSDate date] millisSince1970];
+    LDMillisecond startDateMillis = [[NSDate date] millisSince1970];
 
     [clientManager syncWithServerForEvents];
 

@@ -14,7 +14,7 @@
 #import "NSDate+ReferencedDate.h"
 #import "LDFlagConfigModel.h"
 #import "LDFlagConfigTracker.h"
-#import "NSInteger+Testable.h"
+#import "NSDate+Testable.h"
 
 @interface LDUserModelTest : XCTestCase
 @end
@@ -431,7 +431,7 @@
     NSData *encodedUserData = [NSKeyedArchiver archivedDataWithRootObject:userStub];
     XCTAssertNotNil(encodedUserData);
 
-    NSInteger startDateMillis = [[NSDate date] millisSince1970];
+    LDMillisecond startDateMillis = [[NSDate date] millisSince1970];
     LDUserModel *decodedUser = [NSKeyedUnarchiver unarchiveObjectWithData:encodedUserData];
     XCTAssertTrue([userStub isEqual:decodedUser ignoringAttributes:@[kUserAttributeUpdatedAt]]);
     XCTAssertNotNil(decodedUser.flagConfigTracker);
@@ -450,7 +450,7 @@
     NSDictionary *userDictionary = [userStub dictionaryValueWithFlags:YES includePrivateAttributes:YES config:nil includePrivateAttributeList:YES];
     XCTAssertTrue(userDictionary && [userDictionary count]);
 
-    NSInteger startDateMillis = [[NSDate date] millisSince1970];
+    LDMillisecond startDateMillis = [[NSDate date] millisSince1970];
     LDUserModel *reinflatedUser = [[LDUserModel alloc] initWithDictionary:userDictionary];
     XCTAssertTrue([userStub isEqual:reinflatedUser ignoringAttributes:nil]);
     XCTAssertNotNil(reinflatedUser.flagConfigTracker);
@@ -504,7 +504,7 @@
 
 - (void)testResetTracker {
     LDUserModel *subject = [LDUserModel stubWithKey:[[NSUUID UUID] UUIDString]];
-    NSInteger startDateMillis = [[NSDate date] millisSince1970];
+    LDMillisecond startDateMillis = [[NSDate date] millisSince1970];
     [subject resetTracker];
 
     XCTAssertNotNil(subject.flagConfigTracker);

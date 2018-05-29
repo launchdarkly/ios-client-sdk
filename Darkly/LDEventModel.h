@@ -8,6 +8,7 @@
 
 #import <Foundation/Foundation.h>
 #import "LDUserModel.h"
+#import "NSDate+ReferencedDate.h"
 
 @class LDConfig;
 @class LDFlagConfigValue;
@@ -19,7 +20,7 @@
 
 //feature, debug, custom, & identify events
 @property (nullable, nonatomic, strong) NSString *key;
-@property (atomic, assign) NSInteger creationDate;
+@property (nonatomic, assign) LDMillisecond creationDate;
 @property (nullable, nonatomic, strong) LDUserModel *user;
 @property (nonatomic, assign) BOOL inlineUser;
 
@@ -31,8 +32,8 @@
 @property (nullable, nonatomic, strong) NSDictionary *data;
 
 //summary events only
-@property (nonatomic, assign) NSInteger startDateMillis;
-@property (nonatomic, assign) NSInteger endDateMillis;
+@property (nonatomic, assign) LDMillisecond startDateMillis;
+@property (nonatomic, assign) LDMillisecond endDateMillis;
 @property (nullable, nonatomic, strong) NSDictionary *flagRequestSummary;
 
 -(nonnull NSDictionary *)dictionaryValueUsingConfig:(nonnull LDConfig*)config;

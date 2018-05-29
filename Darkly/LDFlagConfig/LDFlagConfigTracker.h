@@ -7,12 +7,13 @@
 //
 
 #import <Foundation/Foundation.h>
+#import "NSDate+ReferencedDate.h"
 
 @class LDFlagCounter;
 @class LDFlagConfigValue;
 
 @interface LDFlagConfigTracker : NSObject
-@property (nonatomic, assign, readonly) NSInteger startDateMillis;
+@property (nonatomic, assign, readonly) LDMillisecond startDateMillis;
 @property (nonnull, nonatomic, strong, readonly) NSDictionary<NSString*, LDFlagCounter*> *flagCounters;
 
 +(nonnull instancetype)tracker;

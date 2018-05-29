@@ -11,10 +11,11 @@
 #import "LDFlagConfigValue.h"
 #import "LDFlagConfigValue+Testable.h"
 #import "LDUserModel+Testable.h"
-#import "NSInteger+Testable.h"
+#import "NSDate+Testable.h"
 #import "LDFlagConfigTracker+Testable.h"
 #import "LDEventTrackingContext.h"
 #import "LDEventTrackingContext+Testable.h"
+#import "NSDate+ReferencedDate.h"
 
 extern NSString * const kLDFlagKeyIsADouble;
 
@@ -175,7 +176,7 @@ const double featureEventDefaultValueStub = 2.71828;
                    defaultFlagValue:(id)defaultFlagValue
                                user:(LDUserModel*)user
                          inlineUser:(BOOL)inlineUser
-                 creationDateMillis:(NSInteger)creationDateMillis {
+                 creationDateMillis:(LDMillisecond)creationDateMillis {
     NSMutableArray<NSString*> *mismatchedProperties = [NSMutableArray array];
 
     if (![self.key isEqualToString:flagKey]) {
