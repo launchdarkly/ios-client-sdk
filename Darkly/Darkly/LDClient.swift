@@ -34,7 +34,8 @@ public class LDClient {
      */
     public func setOnline(_ goOnline: Bool, completion: (() -> Void)? = nil) {
         lastSetOnlineCallValue = goOnline
-        if !(goOnline && canGoOnline) {
+        guard goOnline, canGoOnline
+        else {
             //go offline, which is not throttled
             go(online: false, reasonOnlineUnavailable: reasonOnlineUnavailable(goOnline: goOnline), completion: completion)
             return
