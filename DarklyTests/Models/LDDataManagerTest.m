@@ -117,7 +117,7 @@ NSString * const kMobileKeyMock = @"LDDataManagerTest.mobileKeyMock";
             [[LDDataManager sharedManager] flushEventsDictionary];
 
             XCTestExpectation *eventsExpectation = [self expectationWithDescription:@"LDDataManagerTest.testCreateFlagEvaluationEvents.allEvents"];
-            [[trackerMock expect] logRequestForFlagKey:flagKey flagConfigValue:flagConfigValue defaultValue:defaultFlagValue];
+            [[trackerMock expect] logRequestForFlagKey:flagKey reportedFlagValue:flagConfigValue.value flagConfigValue:flagConfigValue defaultValue:defaultFlagValue];
 
             [[LDDataManager sharedManager] createFlagEvaluationEventsWithFlagKey:flagKey
                                                                reportedFlagValue:flagConfigValue.value

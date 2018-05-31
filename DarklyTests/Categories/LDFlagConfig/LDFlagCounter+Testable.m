@@ -36,12 +36,12 @@ extern NSString * const kLDFlagCounterKeyCounters;
         NSArray<LDFlagConfigValue*> *flagConfigValues = [LDFlagConfigValue stubFlagConfigValuesForFlagKey:flagKey includeFlagVersion:includeFlagVersion];
         for (LDFlagConfigValue *flagConfigValue in flagConfigValues) {
             for (NSInteger logRequests = 0; logRequests < flagConfigValue.modelVersion; logRequests += 1 ) {
-                [flagCounter logRequestWithFlagConfigValue:flagConfigValue defaultValue:defaultValue];
+                [flagCounter logRequestWithFlagConfigValue:flagConfigValue reportedFlagValue:flagConfigValue.value defaultValue:defaultValue];
             }
         }
     } else {
         for (NSInteger logRequests = 0; logRequests < 3; logRequests += 1 ) {
-            [flagCounter logRequestWithFlagConfigValue:nil defaultValue:defaultValue];
+            [flagCounter logRequestWithFlagConfigValue:nil reportedFlagValue:defaultValue defaultValue:defaultValue];
         }
     }
 

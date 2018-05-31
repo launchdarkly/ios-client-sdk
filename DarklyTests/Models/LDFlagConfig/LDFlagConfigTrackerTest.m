@@ -48,7 +48,7 @@
 
         for (LDFlagConfigValue *flagConfigValue in flagConfigValues) {
             logRequestForUniqueValueCount += 1;
-            [tracker logRequestForFlagKey:flagKey flagConfigValue:flagConfigValue defaultValue:defaultValue];
+            [tracker logRequestForFlagKey:flagKey reportedFlagValue:flagConfigValue.value flagConfigValue:flagConfigValue defaultValue:defaultValue];
 
             LDFlagCounter *flagCounter = tracker.flagCounters[flagKey];
             XCTAssertNotNil(flagCounter);    //Verify the logRequest call added a new LDFlagCounter
@@ -64,12 +64,12 @@
             XCTAssertEqual(flagValueCounter.count, 1);
 
             //Make a second call to logRequest with the same flag key & value. Verify no new flagValueCounters, and the existing flagValueCounter was incremented
-            [tracker logRequestForFlagKey:flagKey flagConfigValue:flagConfigValue defaultValue:defaultValue];
+            [tracker logRequestForFlagKey:flagKey reportedFlagValue:flagConfigValue.value flagConfigValue:flagConfigValue defaultValue:defaultValue];
             XCTAssertEqual(flagCounter.valueCounters.count, logRequestForUniqueValueCount);
             XCTAssertEqual(flagValueCounter.count, 2);
 
             //Make a third call to logRequest with the same value and verify no new flagValueCounters, and the count was incremented
-            [tracker logRequestForFlagKey:flagKey flagConfigValue:flagConfigValue defaultValue:defaultValue];
+            [tracker logRequestForFlagKey:flagKey reportedFlagValue:flagConfigValue.value flagConfigValue:flagConfigValue defaultValue:defaultValue];
             XCTAssertEqual(flagCounter.valueCounters.count, logRequestForUniqueValueCount);
             XCTAssertEqual(flagValueCounter.count, 3);
         }
@@ -81,7 +81,7 @@
     for (NSString* flagKey in [LDFlagConfigValue flagKeys]) {
         id defaultValue = [LDFlagConfigValue defaultValueForFlagKey:flagKey];
 
-        [tracker logRequestForFlagKey:flagKey flagConfigValue:nil defaultValue:defaultValue];
+        [tracker logRequestForFlagKey:flagKey reportedFlagValue:defaultValue flagConfigValue:nil defaultValue:defaultValue];
 
         LDFlagCounter *flagCounter = tracker.flagCounters[flagKey];
         XCTAssertNotNil(flagCounter);    //Verify the logRequest call added a new LDFlagCounter
@@ -97,12 +97,12 @@
         XCTAssertEqual(flagValueCounter.count, 1);
 
         //Make a second call to logRequest with an unknown value. Verify no new flagValueCounters, and the existing flagValueCounter was incremented
-        [tracker logRequestForFlagKey:flagKey flagConfigValue:nil defaultValue:defaultValue];
+        [tracker logRequestForFlagKey:flagKey reportedFlagValue:defaultValue flagConfigValue:nil defaultValue:defaultValue];
         XCTAssertEqual(flagCounter.valueCounters.count, 1);
         XCTAssertEqual(flagValueCounter.count, 2);
 
         //Make a third call to logRequest with the same value and verify no new flagValueCounters, and the count was incremented
-        [tracker logRequestForFlagKey:flagKey flagConfigValue:nil defaultValue:defaultValue];
+        [tracker logRequestForFlagKey:flagKey reportedFlagValue:defaultValue flagConfigValue:nil defaultValue:defaultValue];
         XCTAssertEqual(flagCounter.valueCounters.count, 1);
         XCTAssertEqual(flagValueCounter.count, 3);
     }

@@ -19,7 +19,7 @@
 +(nonnull instancetype)counterWithFlagKey:(nonnull NSString*)flagKey defaultValue:(nonnull id)defaultValue;
 -(nonnull instancetype)initWithFlagKey:(nonnull NSString*)flagKey defaultValue:(nonnull id)defaultValue;
 
--(void)logRequestWithFlagConfigValue:(nullable LDFlagConfigValue*)flagConfigValue defaultValue:(nullable id)defaultValue;
+-(void)logRequestWithFlagConfigValue:(nullable LDFlagConfigValue*)flagConfigValue reportedFlagValue:(nonnull id)reportedFlagValue defaultValue:(nullable id)defaultValue;
 
 -(nonnull NSDictionary*)dictionaryValue;
 

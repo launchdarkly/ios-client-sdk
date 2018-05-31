@@ -53,9 +53,9 @@ const NSTimeInterval kLDFlagConfigTrackerTrackingInterval = -30.0;
     LDFlagConfigValue *flagConfigValue = [LDFlagConfigValue flagConfigValueFromJsonFileNamed:@"nullConfigIsANull-null" flagKey:kLDFlagKeyIsANull eventTrackingContext:eventTrackingContext];
     for (NSString *flagKey in [LDFlagConfigValue flagKeys]) {
         id defaultValue = [LDFlagConfigValue defaultValueForFlagKey:flagKey];
-        [tracker logRequestForFlagKey:flagKey flagConfigValue:flagConfigValue defaultValue:defaultValue];
-        [tracker logRequestForFlagKey:flagKey flagConfigValue:flagConfigValue defaultValue:defaultValue];
-        [tracker logRequestForFlagKey:flagKey flagConfigValue:flagConfigValue defaultValue:defaultValue];
+        [tracker logRequestForFlagKey:flagKey reportedFlagValue:defaultValue flagConfigValue:flagConfigValue defaultValue:defaultValue];
+        [tracker logRequestForFlagKey:flagKey reportedFlagValue:defaultValue flagConfigValue:flagConfigValue defaultValue:defaultValue];
+        [tracker logRequestForFlagKey:flagKey reportedFlagValue:defaultValue flagConfigValue:flagConfigValue defaultValue:defaultValue];
     }
     return tracker;
 }

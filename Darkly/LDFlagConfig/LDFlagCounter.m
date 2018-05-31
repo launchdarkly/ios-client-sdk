@@ -38,14 +38,14 @@ NSString * const kLDFlagCounterKeyCounters = @"counters";
     return self.flagValueCounters;
 }
 
--(void)logRequestWithFlagConfigValue:(LDFlagConfigValue*)flagConfigValue defaultValue:(id)defaultValue {
+-(void)logRequestWithFlagConfigValue:(LDFlagConfigValue*)flagConfigValue reportedFlagValue:(id)reportedFlagValue defaultValue:(id)defaultValue {
     LDFlagValueCounter *selectedFlagValueCounter = [self valueCounterForFlagConfigValue:flagConfigValue];
     if (selectedFlagValueCounter) {
         selectedFlagValueCounter.count += 1;
         return;
     }
 
-    [self.flagValueCounters addObject:[LDFlagValueCounter counterWithFlagConfigValue:flagConfigValue]];
+    [self.flagValueCounters addObject:[LDFlagValueCounter counterWithFlagConfigValue:flagConfigValue reportedFlagValue:reportedFlagValue]];
 }
 
 -(LDFlagValueCounter*)valueCounterForFlagConfigValue:(LDFlagConfigValue*)flagConfigValue {

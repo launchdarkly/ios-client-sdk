@@ -19,7 +19,10 @@
 +(nonnull instancetype)tracker;
 -(nonnull instancetype)init;
 
--(void)logRequestForFlagKey:(nonnull NSString*)flagKey flagConfigValue:(nullable LDFlagConfigValue*)flagConfigValue defaultValue:(nullable id)defaultValue;
+-(void)logRequestForFlagKey:(nonnull NSString*)flagKey
+          reportedFlagValue:(nonnull id)reportedFlagValue
+            flagConfigValue:(nullable LDFlagConfigValue*)flagConfigValue
+               defaultValue:(nullable id)defaultValue;
 
 -(nonnull NSString*)description;
 @end

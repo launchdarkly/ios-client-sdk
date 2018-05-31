@@ -23,14 +23,15 @@ NSString * const kLDFlagValueCounterKeyUnknown = @"unknown";
 @end
 
 @implementation LDFlagValueCounter
-+(instancetype)counterWithFlagConfigValue:(LDFlagConfigValue*)flagConfigValue {
-    return [[LDFlagValueCounter alloc] initWithFlagConfigValue:flagConfigValue];
++(instancetype)counterWithFlagConfigValue:(LDFlagConfigValue*)flagConfigValue reportedFlagValue:(id)reportedFlagValue {
+    return [[LDFlagValueCounter alloc] initWithFlagConfigValue:flagConfigValue reportedFlagValue:reportedFlagValue];
 }
 
--(instancetype)initWithFlagConfigValue:(LDFlagConfigValue*)flagConfigValue {
+-(instancetype)initWithFlagConfigValue:(LDFlagConfigValue*)flagConfigValue reportedFlagValue:(id)reportedFlagValue  {
     if (!(self = [super init])) { return nil; }
 
     self.flagConfigValue = flagConfigValue;
+    self.reportedFlagValue = reportedFlagValue;
     self.known = self.flagConfigValue != nil;
     self.count = 1;
 
@@ -47,14 +48,15 @@ NSString * const kLDFlagValueCounterKeyUnknown = @"unknown";
     } else {
         dictionary[kLDFlagValueCounterKeyUnknown] = @(YES);
     }
+    dictionary[kLDFlagValueCounterKeyValue] = self.reportedFlagValue ?: [NSNull null];
     dictionary[kLDFlagValueCounterKeyCount] = @(self.count);
 
     return [NSDictionary dictionaryWithDictionary:dictionary];
 }
 
 -(NSString*)description {
-    return [NSString stringWithFormat:@"<LDFlagValueCounter: %p, flagConfigValue: %@, count: %ld, known: %@>",
-            self, [self.flagConfigValue description], (long)self.count, self.known ? @"YES" : @"NO"];
+    return [NSString stringWithFormat:@"<LDFlagValueCounter: %p, reportedFlagValue: %@, flagConfigValue: %@, count: %ld, known: %@>",
+            self, [self.reportedFlagValue description], [self.flagConfigValue description], (long)self.count, self.known ? @"YES" : @"NO"];
 }
 
 @end

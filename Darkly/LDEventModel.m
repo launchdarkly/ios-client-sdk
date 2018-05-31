@@ -248,8 +248,8 @@ NSString * const kEventModelKeyFeatures = @"features";
     NSString *details;
 
     if ([self.kind isEqualToString:kEventModelKindFeature] || [self.kind isEqualToString:kEventModelKindDebug]) {
-        details = [NSString stringWithFormat:@"key: %@,\n\tflagConfigValue: %@,\n\tdefaultValue: %@,\n\tuser: %@,\n\tinlineUser: %@, creationDate: %ld",
-                   self.key, self.flagConfigValue ?: @"<null>", self.defaultValue ?: @"<null>", self.user, self.inlineUser ? @"YES" : @"NO", (long)self.creationDate];
+        details = [NSString stringWithFormat:@"key: %@,\n\treportedFlagValue: %@,\n\tflagConfigValue: %@,\n\tdefaultValue: %@,\n\tuser: %@,\n\tinlineUser: %@, creationDate: %ld",
+                   self.key, self.reportedValue ?: @"<null>", self.flagConfigValue ?: @"<null>", self.defaultValue ?: @"<null>", self.user, self.inlineUser ? @"YES" : @"NO", (long)self.creationDate];
     } else if ([self.kind isEqualToString:kEventModelKindCustom]) {
         details = [NSString stringWithFormat:@"key: %@, data: %@, user: %@, inlineUser: %@, creationDate: %ld",
                    self.key, self.data ?: @"<null>", self.user, self.inlineUser ? @"YES" : @"NO", (long)self.creationDate];

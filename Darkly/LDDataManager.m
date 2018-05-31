@@ -159,7 +159,7 @@ dispatch_queue_t eventsQueue;
                                       config:(LDConfig*)config {
     [self createFeatureEventWithFlagKey:flagKey reportedFlagValue:reportedFlagValue flagConfigValue:flagConfigValue defaultFlagValue:defaultFlagValue user:user config:config];
     [self createDebugEventWithFlagKey:flagKey reportedFlagValue:reportedFlagValue flagConfigValue:flagConfigValue defaultFlagValue:defaultFlagValue user:user config:config];
-    [user.flagConfigTracker logRequestForFlagKey:flagKey flagConfigValue:flagConfigValue defaultValue:defaultFlagValue];
+    [user.flagConfigTracker logRequestForFlagKey:flagKey reportedFlagValue:reportedFlagValue flagConfigValue:flagConfigValue defaultValue:defaultFlagValue];
 }
 
 -(void)createFeatureEventWithFlagKey:(NSString*)flagKey

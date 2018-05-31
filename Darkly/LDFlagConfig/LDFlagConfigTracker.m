@@ -36,12 +36,12 @@
     return [NSDictionary dictionaryWithDictionary:self.mutableFlagCounters];
 }
 
--(void)logRequestForFlagKey:(NSString*)flagKey flagConfigValue:(LDFlagConfigValue*)flagConfigValue defaultValue:(id)defaultValue {
+-(void)logRequestForFlagKey:(NSString*)flagKey reportedFlagValue:(id)reportedFlagValue flagConfigValue:(LDFlagConfigValue*)flagConfigValue defaultValue:(id)defaultValue {
     if (!self.mutableFlagCounters[flagKey]) {
         self.mutableFlagCounters[flagKey] = [LDFlagCounter counterWithFlagKey:flagKey defaultValue:defaultValue];
     }
     
-    [self.mutableFlagCounters[flagKey] logRequestWithFlagConfigValue:flagConfigValue defaultValue:defaultValue];
+    [self.mutableFlagCounters[flagKey] logRequestWithFlagConfigValue:flagConfigValue reportedFlagValue:reportedFlagValue defaultValue:defaultValue];
 }
 
 -(NSString*)description {

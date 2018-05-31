@@ -67,7 +67,7 @@ extern NSString * const kLDFlagKeyIsANull;
 
         for (LDFlagConfigValue *flagConfigValue in flagConfigValues) {
             logRequestForUniqueValueCount += 1;
-            [flagCounter logRequestWithFlagConfigValue:flagConfigValue defaultValue:defaultValue];
+            [flagCounter logRequestWithFlagConfigValue:flagConfigValue reportedFlagValue:flagConfigValue.value defaultValue:defaultValue];
 
             XCTAssertEqual(flagCounter.valueCounters.count, logRequestForUniqueValueCount);    //Verify the logRequest call added a new LDFlagValueCounter
             LDFlagValueCounter *flagValueCounter = [flagCounter valueCounterForFlagConfigValue:flagConfigValue];
@@ -75,16 +75,17 @@ extern NSString * const kLDFlagKeyIsANull;
             if (!flagValueCounter) { continue; }
 
             XCTAssertEqualObjects(flagValueCounter.flagConfigValue, flagConfigValue);
+            XCTAssertEqualObjects(flagValueCounter.reportedFlagValue, flagConfigValue.value);
             XCTAssertEqual(flagValueCounter.known, YES);
             XCTAssertEqual(flagValueCounter.count, 1);
 
             //Make a second call to logRequest with the same value. Verify no new flagValueCounters, and the existing flagValueCounter was incremented
-            [flagCounter logRequestWithFlagConfigValue:flagConfigValue defaultValue:defaultValue];
+            [flagCounter logRequestWithFlagConfigValue:flagConfigValue reportedFlagValue:flagConfigValue.value defaultValue:defaultValue];
             XCTAssertEqual(flagCounter.valueCounters.count, logRequestForUniqueValueCount);
             XCTAssertEqual(flagValueCounter.count, 2);
 
             //Make a third call to logRequest with the same value and verify no new flagValueCounters, and the count was incremented
-            [flagCounter logRequestWithFlagConfigValue:flagConfigValue defaultValue:defaultValue];
+            [flagCounter logRequestWithFlagConfigValue:flagConfigValue reportedFlagValue:flagConfigValue.value defaultValue:defaultValue];
             XCTAssertEqual(flagCounter.valueCounters.count, logRequestForUniqueValueCount);
             XCTAssertEqual(flagValueCounter.count, 3);
         }
@@ -96,7 +97,7 @@ extern NSString * const kLDFlagKeyIsANull;
         id defaultValue = [LDFlagConfigValue defaultValueForFlagKey:flagKey];
         LDFlagCounter *flagCounter = [LDFlagCounter counterWithFlagKey:flagKey defaultValue:defaultValue];
 
-        [flagCounter logRequestWithFlagConfigValue:nil defaultValue:defaultValue];
+        [flagCounter logRequestWithFlagConfigValue:nil reportedFlagValue:defaultValue defaultValue:defaultValue];
 
         XCTAssertEqual(flagCounter.valueCounters.count, 1);    //Verify the logRequest call added a new LDFlagValueCounter
         LDFlagValueCounter *flagValueCounter = [flagCounter valueCounterForFlagConfigValue:nil];
@@ -104,16 +105,17 @@ extern NSString * const kLDFlagKeyIsANull;
         if (!flagValueCounter) { continue; }
 
         XCTAssertNil(flagValueCounter.flagConfigValue);
+        XCTAssertEqualObjects(flagValueCounter.reportedFlagValue, defaultValue);
         XCTAssertEqual(flagValueCounter.known, NO);
         XCTAssertEqual(flagValueCounter.count, 1);
 
         //Make a second call to logRequest with an unknown value. Verify no new flagValueCounters, and the existing flagValueCounter was incremented
-        [flagCounter logRequestWithFlagConfigValue:nil defaultValue:defaultValue];
+        [flagCounter logRequestWithFlagConfigValue:nil reportedFlagValue:defaultValue defaultValue:defaultValue];
         XCTAssertEqual(flagCounter.valueCounters.count, 1);
         XCTAssertEqual(flagValueCounter.count, 2);
 
         //Make a third call to logRequest with the same value and verify no new flagValueCounters, and the count was incremented
-        [flagCounter logRequestWithFlagConfigValue:nil defaultValue:defaultValue];
+        [flagCounter logRequestWithFlagConfigValue:nil reportedFlagValue:defaultValue defaultValue:defaultValue];
         XCTAssertEqual(flagCounter.valueCounters.count, 1);
         XCTAssertEqual(flagValueCounter.count, 3);
     }
