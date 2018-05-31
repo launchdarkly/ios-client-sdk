@@ -10,6 +10,7 @@
 #import "LDFlagConfigValue+Testable.h"
 #import "LDFlagCounter+Testable.h"
 #import "NSDate+ReferencedDate.h"
+#import "LDEventTrackingContext+Testable.h"
 
 extern NSString * const kEventModelKeyFeatures;
 const NSTimeInterval kLDFlagConfigTrackerTrackingInterval = -30.0;
@@ -41,6 +42,21 @@ const NSTimeInterval kLDFlagConfigTrackerTrackingInterval = -30.0;
         tracker.mutableFlagCounters[flagKey] = [LDFlagCounter stubForFlagKey:flagKey useKnownValues:useKnownValues];
     }
 
+    return tracker;
+}
+
++(instancetype)stubTrackerWithNullValuesInFlagConfigValue {
+    NSDate *startStubbing = [NSDate date];
+    LDFlagConfigTracker *tracker = [LDFlagConfigTracker tracker];
+    tracker.startDateMillis = [[startStubbing dateByAddingTimeInterval:kLDFlagConfigTrackerTrackingInterval] millisSince1970];
+    LDEventTrackingContext *eventTrackingContext = [LDEventTrackingContext stub];
+    LDFlagConfigValue *flagConfigValue = [LDFlagConfigValue flagConfigValueFromJsonFileNamed:@"nullConfigIsANull-null" flagKey:kLDFlagKeyIsANull eventTrackingContext:eventTrackingContext];
+    for (NSString *flagKey in [LDFlagConfigValue flagKeys]) {
+        id defaultValue = [LDFlagConfigValue defaultValueForFlagKey:flagKey];
+        [tracker logRequestForFlagKey:flagKey flagConfigValue:flagConfigValue defaultValue:defaultValue];
+        [tracker logRequestForFlagKey:flagKey flagConfigValue:flagConfigValue defaultValue:defaultValue];
+        [tracker logRequestForFlagKey:flagKey flagConfigValue:flagConfigValue defaultValue:defaultValue];
+    }
     return tracker;
 }
 

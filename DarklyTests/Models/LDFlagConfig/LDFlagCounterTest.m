@@ -160,7 +160,7 @@ extern NSString * const kLDFlagKeyIsANull;
         NSDictionary *selectedCounterDictionary = [counterDictionaries firstObject];
         XCTAssertEqual([selectedCounterDictionary[kLDFlagValueCounterKeyUnknown] boolValue], YES);
         XCTAssertEqual([selectedCounterDictionary[kLDFlagValueCounterKeyCount] integerValue], flagValueCounter.count);
-        XCTAssertNil(selectedCounterDictionary[kLDFlagConfigValueKeyValue]);
+        XCTAssertEqualObjects(selectedCounterDictionary[kLDFlagConfigValueKeyValue], [LDFlagConfigValue defaultValueForFlagKey:flagKey]);
         XCTAssertNil(selectedCounterDictionary[kLDFlagConfigValueKeyVariation]);
         XCTAssertNil(selectedCounterDictionary[kLDFlagConfigValueKeyVersion]);
         XCTAssertNil(selectedCounterDictionary[kLDFlagConfigValueKeyFlagVersion]);

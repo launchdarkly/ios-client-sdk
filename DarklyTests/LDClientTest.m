@@ -17,6 +17,7 @@
 #import "LDClient+Testable.h"
 #import "NSJSONSerialization+Testable.h"
 #import "LDThrottler.h"
+#import "LDFlagConfigValue+Testable.h"
 
 #import "OCMock.h"
 #import <OHHTTPStubs/OHHTTPStubs.h>
@@ -193,6 +194,21 @@ NSString *const kTestMobileKey = @"testMobileKey";
     [self.dataManagerMock verify];
 }
 
+- (void)testBoolVariation_knownFlag_nullValue {
+    [[LDClient sharedInstance] start:self.config withUserBuilder:self.userBuilderMock];
+    NSString *flagKey = kLDFlagKeyIsABool;
+    id defaultFlagValue = [LDFlagConfigValue defaultValueForFlagKey:flagKey];
+    LDFlagConfigModel *flagConfigModel = [self configureUserWithFlagConfigModelFromJsonFileNamed:@"boolConfigIsABool-false"];
+    LDFlagConfigValue *flagConfigValue = [flagConfigModel flagConfigValueForFlagKey:flagKey];
+    flagConfigValue.value = [NSNull null];
+    [[self.dataManagerMock expect] createFlagEvaluationEventsWithFlagKey:flagKey flagConfigValue:flagConfigValue defaultFlagValue:defaultFlagValue user:self.user config:self.config];
+
+    BOOL flagValue = [[LDClient sharedInstance] boolVariation:flagKey fallback:[defaultFlagValue boolValue]];
+
+    XCTAssertEqualObjects(@(flagValue), defaultFlagValue);
+    [self.dataManagerMock verify];
+}
+
 - (void)testBoolVariation_unknownFlag {
     [[LDClient sharedInstance] start:self.config withUserBuilder:self.userBuilderMock];
     NSString *flagKey = @"dummy-flag-key";
@@ -209,9 +225,9 @@ NSString *const kTestMobileKey = @"testMobileKey";
 
 - (void)testBoolVariation_knownFlag_withoutStart {
     NSString *flagKey = @"isABool";
-    id defaultFlagValue = @(NO);
+    id defaultFlagValue = @(YES);
     id targetFlagValue = defaultFlagValue;
-    [self configureUserWithFlagConfigModelFromJsonFileNamed:@"boolConfigIsABool-true"];
+    [self configureUserWithFlagConfigModelFromJsonFileNamed:@"boolConfigIsABool-false"];
     [[self.dataManagerMock reject] createFlagEvaluationEventsWithFlagKey:[OCMArg any] flagConfigValue:[OCMArg any] defaultFlagValue:[OCMArg any] user:self.user config:self.config];
 
     BOOL flagValue = [[LDClient sharedInstance] boolVariation:flagKey fallback:[defaultFlagValue boolValue]];
@@ -233,6 +249,21 @@ NSString *const kTestMobileKey = @"testMobileKey";
     NSNumber *flagValue = [[LDClient sharedInstance] numberVariation:flagKey fallback:defaultFlagValue];
 
     XCTAssertEqualObjects(flagValue, targetFlagValue);
+    [self.dataManagerMock verify];
+}
+
+- (void)testNumberVariation_knownFlag_nullValue {
+    [[LDClient sharedInstance] start:self.config withUserBuilder:self.userBuilderMock];
+    NSString *flagKey = kLDFlagKeyIsANumber;
+    id defaultFlagValue = [LDFlagConfigValue defaultValueForFlagKey:flagKey];
+    LDFlagConfigModel *flagConfigModel = [self configureUserWithFlagConfigModelFromJsonFileNamed:@"numberConfigIsANumber-2"];
+    LDFlagConfigValue *flagConfigValue = [flagConfigModel flagConfigValueForFlagKey:flagKey];
+    flagConfigValue.value = [NSNull null];
+    [[self.dataManagerMock expect] createFlagEvaluationEventsWithFlagKey:flagKey flagConfigValue:flagConfigValue defaultFlagValue:defaultFlagValue user:self.user config:self.config];
+
+    NSNumber *flagValue = [[LDClient sharedInstance] numberVariation:flagKey fallback:defaultFlagValue];
+
+    XCTAssertEqualObjects(flagValue, defaultFlagValue);
     [self.dataManagerMock verify];
 }
 
@@ -279,6 +310,21 @@ NSString *const kTestMobileKey = @"testMobileKey";
     [self.dataManagerMock verify];
 }
 
+- (void)testDoubleVariation_knownFlag_nullValue {
+    [[LDClient sharedInstance] start:self.config withUserBuilder:self.userBuilderMock];
+    NSString *flagKey = kLDFlagKeyIsADouble;
+    id defaultFlagValue = [LDFlagConfigValue defaultValueForFlagKey:flagKey];
+    LDFlagConfigModel *flagConfigModel = [self configureUserWithFlagConfigModelFromJsonFileNamed:@"doubleConfigIsADouble-Pi"];
+    LDFlagConfigValue *flagConfigValue = [flagConfigModel flagConfigValueForFlagKey:flagKey];
+    flagConfigValue.value = [NSNull null];
+    [[self.dataManagerMock expect] createFlagEvaluationEventsWithFlagKey:flagKey flagConfigValue:flagConfigValue defaultFlagValue:defaultFlagValue user:self.user config:self.config];
+
+    double flagValue = [[LDClient sharedInstance] doubleVariation:flagKey fallback:[defaultFlagValue doubleValue]];
+
+    XCTAssertEqualObjects(@(flagValue), defaultFlagValue);
+    [self.dataManagerMock verify];
+}
+
 - (void)testDoubleVariation_unknownFlag {
     [[LDClient sharedInstance] start:self.config withUserBuilder:self.userBuilderMock];
     NSString *flagKey = @"dummy-flag-key";
@@ -319,6 +365,21 @@ NSString *const kTestMobileKey = @"testMobileKey";
     NSString *flagValue = [[LDClient sharedInstance] stringVariation:flagKey fallback:defaultFlagValue];
 
     XCTAssertEqualObjects(flagValue, targetFlagValue);
+    [self.dataManagerMock verify];
+}
+
+- (void)testStringVariation_knownFlag_nullValue {
+    [[LDClient sharedInstance] start:self.config withUserBuilder:self.userBuilderMock];
+    NSString *flagKey = kLDFlagKeyIsAString;
+    id defaultFlagValue = [LDFlagConfigValue defaultValueForFlagKey:flagKey];
+    LDFlagConfigModel *flagConfigModel = [self configureUserWithFlagConfigModelFromJsonFileNamed:@"stringConfigIsAString-someString"];
+    LDFlagConfigValue *flagConfigValue = [flagConfigModel flagConfigValueForFlagKey:flagKey];
+    flagConfigValue.value = [NSNull null];
+    [[self.dataManagerMock expect] createFlagEvaluationEventsWithFlagKey:flagKey flagConfigValue:flagConfigValue defaultFlagValue:defaultFlagValue user:self.user config:self.config];
+
+    NSString *flagValue = [[LDClient sharedInstance] stringVariation:flagKey fallback:defaultFlagValue];
+
+    XCTAssertEqualObjects(flagValue, defaultFlagValue);
     [self.dataManagerMock verify];
 }
 
@@ -365,6 +426,21 @@ NSString *const kTestMobileKey = @"testMobileKey";
     [self.dataManagerMock verify];
 }
 
+- (void)testArrayVariation_knownFlag_nullValue {
+    [[LDClient sharedInstance] start:self.config withUserBuilder:self.userBuilderMock];
+    NSString *flagKey = kLDFlagKeyIsAnArray;
+    id defaultFlagValue = [LDFlagConfigValue defaultValueForFlagKey:flagKey];
+    LDFlagConfigModel *flagConfigModel = [self configureUserWithFlagConfigModelFromJsonFileNamed:@"arrayConfigIsAnArray-123"];
+    LDFlagConfigValue *flagConfigValue = [flagConfigModel flagConfigValueForFlagKey:flagKey];
+    flagConfigValue.value = [NSNull null];
+    [[self.dataManagerMock expect] createFlagEvaluationEventsWithFlagKey:flagKey flagConfigValue:flagConfigValue defaultFlagValue:defaultFlagValue user:self.user config:self.config];
+
+    NSArray *flagValue = [[LDClient sharedInstance] arrayVariation:flagKey fallback:defaultFlagValue];
+
+    XCTAssertEqualObjects(flagValue, defaultFlagValue);
+    [self.dataManagerMock verify];
+}
+
 - (void)testArrayVariation_unknownFlag {
     [[LDClient sharedInstance] start:self.config withUserBuilder:self.userBuilderMock];
     NSString *flagKey = @"dummy-flag-key";
@@ -405,6 +481,21 @@ NSString *const kTestMobileKey = @"testMobileKey";
     NSDictionary *flagValue = [[LDClient sharedInstance] dictionaryVariation:flagKey fallback:defaultFlagValue];
 
     XCTAssertEqualObjects(flagValue, targetFlagValue);
+    [self.dataManagerMock verify];
+}
+
+- (void)testDictionaryVariation_knownFlag_nullValue {
+    [[LDClient sharedInstance] start:self.config withUserBuilder:self.userBuilderMock];
+    NSString *flagKey = kLDFlagKeyIsADictionary;
+    id defaultFlagValue = [LDFlagConfigValue defaultValueForFlagKey:flagKey];
+    LDFlagConfigModel *flagConfigModel = [self configureUserWithFlagConfigModelFromJsonFileNamed:@"dictionaryConfigIsADictionary-3Key"];
+    LDFlagConfigValue *flagConfigValue = [flagConfigModel flagConfigValueForFlagKey:flagKey];
+    flagConfigValue.value = [NSNull null];
+    [[self.dataManagerMock expect] createFlagEvaluationEventsWithFlagKey:flagKey flagConfigValue:flagConfigValue defaultFlagValue:defaultFlagValue user:self.user config:self.config];
+
+    NSDictionary *flagValue = [[LDClient sharedInstance] dictionaryVariation:flagKey fallback:defaultFlagValue];
+
+    XCTAssertEqualObjects(flagValue, defaultFlagValue);
     [self.dataManagerMock verify];
 }
 

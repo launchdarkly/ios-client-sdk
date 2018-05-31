@@ -60,7 +60,12 @@ NSString * const kLDFlagCounterKeyCounters = @"counters";
 -(NSDictionary*)dictionaryValue {
     NSMutableArray<NSDictionary*> *flagValueCounterDictionaries = [NSMutableArray arrayWithCapacity:self.flagValueCounters.count];
     for (LDFlagValueCounter *flagValueCounter in self.flagValueCounters) {
-        [flagValueCounterDictionaries addObject:[flagValueCounter dictionaryValue]];
+        NSMutableDictionary *flagValueCounterDictionary = [NSMutableDictionary dictionaryWithDictionary:[flagValueCounter dictionaryValue]];
+        //If the flagConfigValue.value is nil or null, the client will have served the default value
+        if (!flagValueCounter.flagConfigValue.value || [flagValueCounter.flagConfigValue.value isKindOfClass:[NSNull class]]) {
+            flagValueCounterDictionary[kLDFlagConfigValueKeyValue] = self.defaultValue ?: [NSNull null];
+        }
+        [flagValueCounterDictionaries addObject:[flagValueCounterDictionary copy]];
     }
     NSMutableDictionary *dictionary = [NSMutableDictionary dictionary];
     if (self.defaultValue) {

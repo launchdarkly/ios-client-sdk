@@ -202,12 +202,16 @@ NSString * const kEventModelKeyFeatures = @"features";
     if (self.data) {
         dictionary[kEventModelKeyData] = self.data;
     }
-    if (self.flagConfigValue) {
-        [dictionary addEntriesFromDictionary:[self.flagConfigValue dictionaryValueUseFlagVersionForVersion:YES includeEventTrackingContext:NO]];
-    } else {
-        //If flagConfigValue is nil, the SDK reports the fallback to the client. Setting the default here as the value communicates that in the report
-        if (self.defaultValue) {
-            dictionary[kEventModelKeyValue] = self.defaultValue;
+    if ([self.kind isEqualToString:kEventModelKindFeature] || [self.kind isEqualToString:kEventModelKindDebug]) {
+        if (self.flagConfigValue) {
+            [dictionary addEntriesFromDictionary:[self.flagConfigValue dictionaryValueUseFlagVersionForVersion:YES includeEventTrackingContext:NO]];
+            //If flagConfigValue.value is nil or null, the SDK reports the fallback to the client. Setting the default here as the value communicates that in the report
+            if ((!self.flagConfigValue.value || [self.flagConfigValue.value isKindOfClass:[NSNull class]]) && self.defaultValue) {
+                dictionary[kEventModelKeyValue] = self.defaultValue ?: [NSNull null];
+            }
+        } else {
+            //If flagConfigValue is nil, the SDK reports the fallback to the client. Setting the default here as the value communicates that in the report
+            dictionary[kEventModelKeyValue] = self.defaultValue ?: [NSNull null];
         }
     }
     if (self.defaultValue) {

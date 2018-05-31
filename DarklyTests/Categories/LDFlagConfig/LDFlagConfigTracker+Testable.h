@@ -15,4 +15,5 @@
 +(instancetype)stubTracker;
 +(instancetype)stubTrackerIncludeFlagVersion:(BOOL)includeFlagVersion;
 +(instancetype)stubTrackerUseKnownValues:(BOOL)useKnownValues;
++(instancetype)stubTrackerWithNullValuesInFlagConfigValue;
 @end
