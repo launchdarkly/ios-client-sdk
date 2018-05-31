@@ -66,6 +66,7 @@ const double featureEventDefaultValueStub = 2.71828;
                                                                                          flagKey:kLDFlagKeyIsADouble
                                                                             eventTrackingContext:[LDEventTrackingContext stub]];
         return [LDEventModel featureEventWithFlagKey:kFeatureEventKeyStub
+                                   reportedFlagValue:flagConfigValue.value
                                      flagConfigValue:flagConfigValue
                                     defaultFlagValue:@(featureEventDefaultValueStub)
                                                 user:user
@@ -84,7 +85,11 @@ const double featureEventDefaultValueStub = 2.71828;
         LDFlagConfigValue *flagConfigValue = [LDFlagConfigValue flagConfigValueFromJsonFileNamed:@"doubleConfigIsADouble-Pi"
                                                                                          flagKey:kLDFlagKeyIsADouble
                                                                             eventTrackingContext:[LDEventTrackingContext stub]];
-        return [LDEventModel debugEventWithFlagKey:kDebugEventKeyStub flagConfigValue:flagConfigValue defaultFlagValue:@(featureEventDefaultValueStub) user:user];
+        return [LDEventModel debugEventWithFlagKey:kDebugEventKeyStub
+                                 reportedFlagValue:flagConfigValue.value
+                                   flagConfigValue:flagConfigValue
+                                  defaultFlagValue:@(featureEventDefaultValueStub)
+                                              user:user];
     }
 
     return [LDEventModel identifyEventWithUser:user];

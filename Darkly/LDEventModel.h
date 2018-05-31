@@ -26,6 +26,7 @@
 
 //feature & debug events only
 @property (nullable, nonatomic, strong) LDFlagConfigValue *flagConfigValue;
+@property (nullable, nonatomic, strong) id reportedValue;
 @property (nullable, nonatomic, strong) id defaultValue;
 
 //custom events only
@@ -39,11 +40,13 @@
 -(nonnull NSDictionary *)dictionaryValueUsingConfig:(nonnull LDConfig*)config;
 
 +(nullable instancetype)featureEventWithFlagKey:(nonnull NSString *)flagKey
+                              reportedFlagValue:(nonnull id)reportedFlagValue
                                 flagConfigValue:(nullable LDFlagConfigValue*)flagConfigValue
                                defaultFlagValue:(nullable id)defaultflagValue
                                            user:(nonnull LDUserModel*)user
                                      inlineUser:(BOOL)inlineUser;
 -(nullable instancetype)initFeatureEventWithFlagKey:(nonnull NSString *)flagKey
+                                  reportedFlagValue:(nonnull id)reportedFlagValue
                                     flagConfigValue:(nullable LDFlagConfigValue*)flagConfigValue
                                    defaultFlagValue:(nullable id)defaultFlagValue
                                                user:(nonnull LDUserModel*)user
@@ -65,13 +68,15 @@
 -(nullable instancetype)initSummaryEventWithTracker:(nonnull LDFlagConfigTracker*)tracker;
 
 +(nullable instancetype)debugEventWithFlagKey:(nonnull NSString*)flagKey
-                     flagConfigValue:(nullable LDFlagConfigValue*)flagConfigValue
-                    defaultFlagValue:(nullable id)defaultFlagValue
-                                user:(nonnull LDUserModel*)user;
+                            reportedFlagValue:(nonnull id)reportedFlagValue
+                              flagConfigValue:(nullable LDFlagConfigValue*)flagConfigValue
+                             defaultFlagValue:(nullable id)defaultFlagValue
+                                         user:(nonnull LDUserModel*)user;
 -(nullable instancetype)initDebugEventWithFlagKey:(nonnull NSString*)flagKey
-                         flagConfigValue:(nullable LDFlagConfigValue*)flagConfigValue
-                        defaultFlagValue:(nullable id)defaultFlagValue
-                                    user:(nonnull LDUserModel*)user;
+                                reportedFlagValue:(nonnull id)reportedFlagValue
+                                  flagConfigValue:(nullable LDFlagConfigValue*)flagConfigValue
+                                 defaultFlagValue:(nullable id)defaultFlagValue
+                                             user:(nonnull LDUserModel*)user;
 
 -(nonnull NSString*)description;
 @end

@@ -67,9 +67,19 @@ NSString * const kMobileKeyMock = @"LDDataManagerTest.mobileKeyMock";
     LDEventTrackingContext *eventTrackingContext = includeTrackingContext ? [LDEventTrackingContext contextWithTrackEvents:trackEvents debugEventsUntilDate:nil] : nil;
     self.user = [LDUserModel stubWithKey:nil usingTracker:nil eventTrackingContext:eventTrackingContext];
     LDFlagConfigValue *flagConfigValue = [self.user.flagConfig flagConfigValueForFlagKey:kFlagKeyIsABawler];
-    LDEventModel *featureEvent = [LDEventModel featureEventWithFlagKey:kFlagKeyIsABawler flagConfigValue:flagConfigValue defaultFlagValue:@(NO) user:self.user inlineUser:NO];
+    LDEventModel *featureEvent = [LDEventModel featureEventWithFlagKey:kFlagKeyIsABawler
+                                                     reportedFlagValue:flagConfigValue.value
+                                                       flagConfigValue:flagConfigValue
+                                                      defaultFlagValue:@(NO)
+                                                                  user:self.user
+                                                            inlineUser:NO];
     self.eventModelMock = OCMClassMock([LDEventModel class]);
-    OCMStub(ClassMethod([self.eventModelMock featureEventWithFlagKey:[OCMArg any] flagConfigValue:[OCMArg any] defaultFlagValue:[OCMArg any] user:[OCMArg any] inlineUser:[OCMArg any]]))
+    OCMStub(ClassMethod([self.eventModelMock featureEventWithFlagKey:[OCMArg any]
+                                                   reportedFlagValue:[OCMArg any]
+                                                     flagConfigValue:[OCMArg any]
+                                                    defaultFlagValue:[OCMArg any]
+                                                                user:[OCMArg any]
+                                                          inlineUser:[OCMArg any]]))
     .andReturn(featureEvent);
 
     return flagConfigValue;
@@ -84,9 +94,14 @@ NSString * const kMobileKeyMock = @"LDDataManagerTest.mobileKeyMock";
     LDEventTrackingContext *eventTrackingContext = includeTrackingContext ? [LDEventTrackingContext contextWithTrackEvents:NO debugEventsUntilDate:debugUntil] : nil;
     self.user = [LDUserModel stubWithKey:nil usingTracker:nil eventTrackingContext:eventTrackingContext];
     LDFlagConfigValue *flagConfigValue = [self.user.flagConfig flagConfigValueForFlagKey:kFlagKeyIsABawler];
-    LDEventModel *debugEvent = [LDEventModel debugEventWithFlagKey:kFlagKeyIsABawler flagConfigValue:flagConfigValue defaultFlagValue:@(NO) user:self.user];
+    LDEventModel *debugEvent = [LDEventModel debugEventWithFlagKey:kFlagKeyIsABawler reportedFlagValue:flagConfigValue.value flagConfigValue:flagConfigValue defaultFlagValue:@(NO) user:self.user];
     self.eventModelMock = OCMClassMock([LDEventModel class]);
-    OCMStub(ClassMethod([self.eventModelMock featureEventWithFlagKey:[OCMArg any] flagConfigValue:[OCMArg any] defaultFlagValue:[OCMArg any] user:[OCMArg any] inlineUser:[OCMArg any]]))
+    OCMStub(ClassMethod([self.eventModelMock featureEventWithFlagKey:[OCMArg any]
+                                                   reportedFlagValue:[OCMArg any]
+                                                     flagConfigValue:[OCMArg any]
+                                                    defaultFlagValue:[OCMArg any]
+                                                                user:[OCMArg any]
+                                                          inlineUser:[OCMArg any]]))
     .andReturn(debugEvent);
 
     return flagConfigValue;
@@ -105,6 +120,7 @@ NSString * const kMobileKeyMock = @"LDDataManagerTest.mobileKeyMock";
             [[trackerMock expect] logRequestForFlagKey:flagKey flagConfigValue:flagConfigValue defaultValue:defaultFlagValue];
 
             [[LDDataManager sharedManager] createFlagEvaluationEventsWithFlagKey:flagKey
+                                                               reportedFlagValue:flagConfigValue.value
                                                                  flagConfigValue:flagConfigValue
                                                                 defaultFlagValue:defaultFlagValue
                                                                             user:self.user
@@ -143,27 +159,52 @@ NSString * const kMobileKeyMock = @"LDDataManagerTest.mobileKeyMock";
 
 -(void)testCreateFeatureEvent_trackEvents_YES {
     LDFlagConfigValue *flagConfigValue = [self setupCreateFeatureEventTestWithTrackEvents:YES];
-    [[self.eventModelMock expect] featureEventWithFlagKey:kFlagKeyIsABawler flagConfigValue:flagConfigValue defaultFlagValue:@(NO) user:self.user inlineUser:NO];
+    [[self.eventModelMock expect] featureEventWithFlagKey:kFlagKeyIsABawler
+                                        reportedFlagValue:flagConfigValue.value
+                                          flagConfigValue:flagConfigValue
+                                         defaultFlagValue:@(NO)
+                                                     user:self.user
+                                               inlineUser:NO];
 
-    [[LDDataManager sharedManager] createFeatureEventWithFlagKey:kFlagKeyIsABawler flagConfigValue:flagConfigValue defaultFlagValue:@(NO) user:self.user config:self.config];
+    [[LDDataManager sharedManager] createFeatureEventWithFlagKey:kFlagKeyIsABawler
+                                               reportedFlagValue:flagConfigValue.value
+                                                 flagConfigValue:flagConfigValue
+                                                defaultFlagValue:@(NO)
+                                                            user:self.user
+                                                          config:self.config];
 
     [self.eventModelMock verify];
 }
 
 -(void)testCreateFeatureEvent_trackEvents_NO {
     LDFlagConfigValue *flagConfigValue = [self setupCreateFeatureEventTestWithTrackEvents:NO];
-    [[self.eventModelMock reject] featureEventWithFlagKey:[OCMArg any] flagConfigValue:[OCMArg any] defaultFlagValue:[OCMArg any] user:[OCMArg any] inlineUser:[OCMArg any]];
+    [[self.eventModelMock reject] featureEventWithFlagKey:[OCMArg any] reportedFlagValue:[OCMArg any] flagConfigValue:[OCMArg any] defaultFlagValue:[OCMArg any] user:[OCMArg any] inlineUser:[OCMArg any]];
 
-    [[LDDataManager sharedManager] createFeatureEventWithFlagKey:kFlagKeyIsABawler flagConfigValue:flagConfigValue defaultFlagValue:@(NO) user:self.user config:self.config];
+    [[LDDataManager sharedManager] createFeatureEventWithFlagKey:kFlagKeyIsABawler
+                                               reportedFlagValue:flagConfigValue.value
+                                                 flagConfigValue:flagConfigValue
+                                                defaultFlagValue:@(NO)
+                                                            user:self.user
+                                                          config:self.config];
 
     [self.eventModelMock verify];
 }
 
 -(void)testCreateFeatureEvent_eventTrackingContext_nil {
     LDFlagConfigValue *flagConfigValue = [self setupCreateFeatureEventTestWithTrackEvents:YES includeTrackingContext:NO];
-    [[self.eventModelMock reject] featureEventWithFlagKey:[OCMArg any] flagConfigValue:[OCMArg any] defaultFlagValue:[OCMArg any] user:[OCMArg any] inlineUser:[OCMArg any]];
+    [[self.eventModelMock reject] featureEventWithFlagKey:[OCMArg any]
+                                        reportedFlagValue:[OCMArg any]
+                                          flagConfigValue:[OCMArg any]
+                                         defaultFlagValue:[OCMArg any]
+                                                     user:[OCMArg any]
+                                               inlineUser:[OCMArg any]];
 
-    [[LDDataManager sharedManager] createFeatureEventWithFlagKey:kFlagKeyIsABawler flagConfigValue:flagConfigValue defaultFlagValue:@(NO) user:self.user config:self.config];
+    [[LDDataManager sharedManager] createFeatureEventWithFlagKey:kFlagKeyIsABawler
+                                               reportedFlagValue:flagConfigValue.value
+                                                 flagConfigValue:flagConfigValue
+                                                defaultFlagValue:@(NO)
+                                                            user:self.user
+                                                          config:self.config];
 
     [self.eventModelMock verify];
 }
@@ -171,9 +212,14 @@ NSString * const kMobileKeyMock = @"LDDataManagerTest.mobileKeyMock";
 -(void)testCreateDebugEvent_lastEventResponseDate_systemDate_debugEventsUntilDate_createEvent {
     //lastEventResponseDate < systemDate < debugEventsUntilDate         create event
     LDFlagConfigValue *flagConfigValue = [self setupCreateDebugEventTestWithLastEventResponseDate:[NSDate dateWithTimeIntervalSinceNow:-1.0] debugUntil:[NSDate dateWithTimeIntervalSinceNow:1.0]];
-    [[self.eventModelMock expect] debugEventWithFlagKey:kFlagKeyIsABawler flagConfigValue:flagConfigValue defaultFlagValue:@(NO) user:self.user];
+    [[self.eventModelMock expect] debugEventWithFlagKey:kFlagKeyIsABawler reportedFlagValue:flagConfigValue.value flagConfigValue:flagConfigValue defaultFlagValue:@(NO) user:self.user];
 
-    [[LDDataManager sharedManager] createDebugEventWithFlagKey:kFlagKeyIsABawler flagConfigValue:flagConfigValue defaultFlagValue:@(NO) user:self.user config:self.config];
+    [[LDDataManager sharedManager] createDebugEventWithFlagKey:kFlagKeyIsABawler
+                                             reportedFlagValue:flagConfigValue.value
+                                               flagConfigValue:flagConfigValue
+                                              defaultFlagValue:@(NO)
+                                                          user:self.user
+                                                        config:self.config];
 
     [self.eventModelMock verify];
 }
@@ -181,9 +227,14 @@ NSString * const kMobileKeyMock = @"LDDataManagerTest.mobileKeyMock";
 -(void)testCreateDebugEvent_systemDate_lastEventResponseDate_debugEventsUntilDate_createEvent {
     //systemDate < lastEventResponseDate < debugEventsUntilDate         create event        //system time not right, set too far in the past, but lastEventResponse hasn't reached debug
     LDFlagConfigValue *flagConfigValue = [self setupCreateDebugEventTestWithLastEventResponseDate:[NSDate dateWithTimeIntervalSinceNow:1.0] debugUntil:[NSDate dateWithTimeIntervalSinceNow:2.0]];
-    [[self.eventModelMock expect] debugEventWithFlagKey:kFlagKeyIsABawler flagConfigValue:flagConfigValue defaultFlagValue:@(NO) user:self.user];
+    [[self.eventModelMock expect] debugEventWithFlagKey:kFlagKeyIsABawler reportedFlagValue:flagConfigValue.value flagConfigValue:flagConfigValue defaultFlagValue:@(NO) user:self.user];
 
-    [[LDDataManager sharedManager] createDebugEventWithFlagKey:kFlagKeyIsABawler flagConfigValue:flagConfigValue defaultFlagValue:@(NO) user:self.user config:self.config];
+    [[LDDataManager sharedManager] createDebugEventWithFlagKey:kFlagKeyIsABawler
+                                             reportedFlagValue:flagConfigValue.value
+                                               flagConfigValue:flagConfigValue
+                                              defaultFlagValue:@(NO)
+                                                          user:self.user
+                                                        config:self.config];
 
     [self.eventModelMock verify];
 }
@@ -191,9 +242,14 @@ NSString * const kMobileKeyMock = @"LDDataManagerTest.mobileKeyMock";
 -(void)testCreateDebugEvent_lastEventResponseDate_debugEventsUntilDate_systemDate_dontCreateEvent {
     //lastEventResponseDate < debugEventsUntilDate < systemDate         no event
     LDFlagConfigValue *flagConfigValue = [self setupCreateDebugEventTestWithLastEventResponseDate:[NSDate dateWithTimeIntervalSinceNow:-1.0] debugUntil:[NSDate date]];
-    [[self.eventModelMock reject] debugEventWithFlagKey:[OCMArg any] flagConfigValue:[OCMArg any] defaultFlagValue:[OCMArg any] user:[OCMArg any]];
+    [[self.eventModelMock reject] debugEventWithFlagKey:[OCMArg any] reportedFlagValue:[OCMArg any] flagConfigValue:[OCMArg any] defaultFlagValue:[OCMArg any] user:[OCMArg any]];
 
-    [[LDDataManager sharedManager] createDebugEventWithFlagKey:kFlagKeyIsABawler flagConfigValue:flagConfigValue defaultFlagValue:@(NO) user:self.user config:self.config];
+    [[LDDataManager sharedManager] createDebugEventWithFlagKey:kFlagKeyIsABawler
+                                             reportedFlagValue:flagConfigValue.value
+                                               flagConfigValue:flagConfigValue
+                                              defaultFlagValue:@(NO)
+                                                          user:self.user
+                                                        config:self.config];
 
     [self.eventModelMock verify];
 }
@@ -201,9 +257,14 @@ NSString * const kMobileKeyMock = @"LDDataManagerTest.mobileKeyMock";
 -(void)testCreateDebugEvent_debugEventsUntilDate_lastEventResponseDate_systemDate_dontCreateEvent {
     //debugEventsUntilDate < lastEventResponseDate < systemDate         no event
     LDFlagConfigValue *flagConfigValue = [self setupCreateDebugEventTestWithLastEventResponseDate:[NSDate dateWithTimeIntervalSinceNow:-1.0] debugUntil:[NSDate dateWithTimeIntervalSinceNow:-2.0]];
-    [[self.eventModelMock reject] debugEventWithFlagKey:[OCMArg any] flagConfigValue:[OCMArg any] defaultFlagValue:[OCMArg any] user:[OCMArg any]];
+    [[self.eventModelMock reject] debugEventWithFlagKey:[OCMArg any] reportedFlagValue:[OCMArg any] flagConfigValue:[OCMArg any] defaultFlagValue:[OCMArg any] user:[OCMArg any]];
 
-    [[LDDataManager sharedManager] createDebugEventWithFlagKey:kFlagKeyIsABawler flagConfigValue:flagConfigValue defaultFlagValue:@(NO) user:self.user config:self.config];
+    [[LDDataManager sharedManager] createDebugEventWithFlagKey:kFlagKeyIsABawler
+                                             reportedFlagValue:flagConfigValue.value
+                                               flagConfigValue:flagConfigValue
+                                              defaultFlagValue:@(NO)
+                                                          user:self.user
+                                                        config:self.config];
 
     [self.eventModelMock verify];
 }
@@ -211,9 +272,14 @@ NSString * const kMobileKeyMock = @"LDDataManagerTest.mobileKeyMock";
 -(void)testCreateDebugEvent_debugEventsUntilDate_systemDate_lastEventResponseDate_dontCreateEvent {
     //debugEventsUntilDate < systemDate < lastEventResponseDate         no event
     LDFlagConfigValue *flagConfigValue = [self setupCreateDebugEventTestWithLastEventResponseDate:[NSDate dateWithTimeIntervalSinceNow:1.0] debugUntil:[NSDate dateWithTimeIntervalSinceNow:-1.0]];
-    [[self.eventModelMock reject] debugEventWithFlagKey:[OCMArg any] flagConfigValue:[OCMArg any] defaultFlagValue:[OCMArg any] user:[OCMArg any]];
+    [[self.eventModelMock reject] debugEventWithFlagKey:[OCMArg any] reportedFlagValue:[OCMArg any] flagConfigValue:[OCMArg any] defaultFlagValue:[OCMArg any] user:[OCMArg any]];
 
-    [[LDDataManager sharedManager] createDebugEventWithFlagKey:kFlagKeyIsABawler flagConfigValue:flagConfigValue defaultFlagValue:@(NO) user:self.user config:self.config];
+    [[LDDataManager sharedManager] createDebugEventWithFlagKey:kFlagKeyIsABawler
+                                             reportedFlagValue:flagConfigValue.value
+                                               flagConfigValue:flagConfigValue
+                                              defaultFlagValue:@(NO)
+                                                          user:self.user
+                                                        config:self.config];
 
     [self.eventModelMock verify];
 }
@@ -221,27 +287,42 @@ NSString * const kMobileKeyMock = @"LDDataManagerTest.mobileKeyMock";
 -(void)testCreateDebugEvent_systemDate_debugEventsUntilDate_lastEventResponseDate_dontCreateEvent {
     //systemDate < debugEventsUntilDate < lastEventResponseDate         no event            //system time not right, set too far in the past, lastEventResponse past debug
     LDFlagConfigValue *flagConfigValue = [self setupCreateDebugEventTestWithLastEventResponseDate:[NSDate dateWithTimeIntervalSinceNow:2.0] debugUntil:[NSDate dateWithTimeIntervalSinceNow:1.0]];
-    [[self.eventModelMock reject] debugEventWithFlagKey:[OCMArg any] flagConfigValue:[OCMArg any] defaultFlagValue:[OCMArg any] user:[OCMArg any]];
+    [[self.eventModelMock reject] debugEventWithFlagKey:[OCMArg any] reportedFlagValue:[OCMArg any] flagConfigValue:[OCMArg any] defaultFlagValue:[OCMArg any] user:[OCMArg any]];
 
-    [[LDDataManager sharedManager] createDebugEventWithFlagKey:kFlagKeyIsABawler flagConfigValue:flagConfigValue defaultFlagValue:@(NO) user:self.user config:self.config];
+    [[LDDataManager sharedManager] createDebugEventWithFlagKey:kFlagKeyIsABawler
+                                             reportedFlagValue:flagConfigValue.value
+                                               flagConfigValue:flagConfigValue
+                                              defaultFlagValue:@(NO)
+                                                          user:self.user
+                                                        config:self.config];
 
     [self.eventModelMock verify];
 }
 
 -(void)testCreateDebugEvent_missingDebugEventsUntilDate_dontCreateEvent {
     LDFlagConfigValue *flagConfigValue = [self setupCreateDebugEventTestWithLastEventResponseDate:[NSDate dateWithTimeIntervalSinceNow:-1.0] debugUntil:nil];
-    [[self.eventModelMock reject] debugEventWithFlagKey:[OCMArg any] flagConfigValue:[OCMArg any] defaultFlagValue:[OCMArg any] user:[OCMArg any]];
+    [[self.eventModelMock reject] debugEventWithFlagKey:[OCMArg any] reportedFlagValue:[OCMArg any] flagConfigValue:[OCMArg any] defaultFlagValue:[OCMArg any] user:[OCMArg any]];
 
-    [[LDDataManager sharedManager] createDebugEventWithFlagKey:kFlagKeyIsABawler flagConfigValue:flagConfigValue defaultFlagValue:@(NO) user:self.user config:self.config];
+    [[LDDataManager sharedManager] createDebugEventWithFlagKey:kFlagKeyIsABawler
+                                             reportedFlagValue:flagConfigValue.value
+                                               flagConfigValue:flagConfigValue
+                                              defaultFlagValue:@(NO)
+                                                          user:self.user
+                                                        config:self.config];
 
     [self.eventModelMock verify];
 }
 
 -(void)testCreateDebugEvent_missingEventTrackingContext_dontCreateEvent {
     LDFlagConfigValue *flagConfigValue = [self setupCreateDebugEventTestWithLastEventResponseDate:[NSDate dateWithTimeIntervalSinceNow:-1.0] debugUntil:nil includeTrackingContext:NO];
-    [[self.eventModelMock reject] debugEventWithFlagKey:[OCMArg any] flagConfigValue:[OCMArg any] defaultFlagValue:[OCMArg any] user:[OCMArg any]];
+    [[self.eventModelMock reject] debugEventWithFlagKey:[OCMArg any] reportedFlagValue:[OCMArg any] flagConfigValue:[OCMArg any] defaultFlagValue:[OCMArg any] user:[OCMArg any]];
 
-    [[LDDataManager sharedManager] createDebugEventWithFlagKey:kFlagKeyIsABawler flagConfigValue:flagConfigValue defaultFlagValue:@(NO) user:self.user config:self.config];
+    [[LDDataManager sharedManager] createDebugEventWithFlagKey:kFlagKeyIsABawler
+                                             reportedFlagValue:flagConfigValue.value
+                                               flagConfigValue:flagConfigValue
+                                              defaultFlagValue:@(NO)
+                                                          user:self.user
+                                                        config:self.config];
 
     [self.eventModelMock verify];
 }
@@ -249,6 +330,7 @@ NSString * const kMobileKeyMock = @"LDDataManagerTest.mobileKeyMock";
 -(void)testAllEventsDictionaryArray {
     LDEventModel *featureEvent = [LDEventModel stubEventWithKind:kEventModelKindFeature user:self.user config:self.config];
     [[LDDataManager sharedManager] createFeatureEventWithFlagKey:featureEvent.key
+                                               reportedFlagValue:featureEvent.reportedValue
                                                  flagConfigValue:featureEvent.flagConfigValue
                                                 defaultFlagValue:featureEvent.defaultValue
                                                             user:self.user
@@ -262,6 +344,7 @@ NSString * const kMobileKeyMock = @"LDDataManagerTest.mobileKeyMock";
     [[LDDataManager sharedManager] createSummaryEventWithTracker:trackerStub config:self.config];
     LDEventModel *debugEvent = [LDEventModel stubEventWithKind:kEventModelKindDebug user:self.user config:self.config];
     [[LDDataManager sharedManager] createDebugEventWithFlagKey:debugEvent.key
+                                             reportedFlagValue:debugEvent.reportedValue
                                                flagConfigValue:debugEvent.flagConfigValue
                                               defaultFlagValue:debugEvent.defaultValue
                                                           user:self.user
@@ -376,7 +459,12 @@ NSString * const kMobileKeyMock = @"LDDataManagerTest.mobileKeyMock";
     LDFlagConfigValue *flagConfigValue = [LDFlagConfigValue flagConfigValueFromJsonFileNamed:@"boolConfigIsABool-true"
                                                                                      flagKey:kLDFlagKeyIsABool
                                                                         eventTrackingContext:[LDEventTrackingContext stub]];
-    [manager createFeatureEventWithFlagKey: @"anotherKey" flagConfigValue:flagConfigValue defaultFlagValue:@(NO) user:self.user config:self.config];
+    [manager createFeatureEventWithFlagKey: @"anotherKey"
+                         reportedFlagValue:flagConfigValue.value
+                           flagConfigValue:flagConfigValue
+                          defaultFlagValue:@(NO)
+                                      user:self.user
+                                    config:self.config];
 
     [manager allEventDictionaries:^(NSArray *array) {
         XCTAssertEqual([array count],2);

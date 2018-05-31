@@ -404,6 +404,7 @@ NSString *const kBoolFlagKey = @"isABawler";
                                                                                      flagKey:kLDFlagKeyIsABool
                                                                         eventTrackingContext:[LDEventTrackingContext stub]];
     LDEventModel *event = [LDEventModel featureEventWithFlagKey:kFeatureEventKeyStub
+                                              reportedFlagValue:flagConfigValue.value
                                                 flagConfigValue:flagConfigValue
                                                defaultFlagValue:@(NO)
                                                            user:[LDClient sharedInstance].ldUser

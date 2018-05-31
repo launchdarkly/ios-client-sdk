@@ -74,14 +74,21 @@ NSString * const kEventModelKeyFeatures = @"features";
 }
 
 +(instancetype)featureEventWithFlagKey:(NSString*)flagKey
+                     reportedFlagValue:(id)reportedFlagValue
                        flagConfigValue:(LDFlagConfigValue*)flagConfigValue
                       defaultFlagValue:(id)defaultFlagValue
                                   user:(LDUserModel*)user
                             inlineUser:(BOOL)inlineUser {
-    return [[LDEventModel alloc] initFeatureEventWithFlagKey:flagKey flagConfigValue:flagConfigValue defaultFlagValue:defaultFlagValue user:user inlineUser:inlineUser];
+    return [[LDEventModel alloc] initFeatureEventWithFlagKey:flagKey
+                                           reportedFlagValue:reportedFlagValue
+                                             flagConfigValue:flagConfigValue
+                                            defaultFlagValue:defaultFlagValue
+                                                        user:user
+                                                  inlineUser:inlineUser];
 }
 
 -(instancetype)initFeatureEventWithFlagKey:(NSString*)flagKey
+                         reportedFlagValue:(id)reportedFlagValue
                            flagConfigValue:(LDFlagConfigValue*)flagConfigValue
                           defaultFlagValue:(id)defaultFlagValue
                                       user:(LDUserModel*)user
@@ -90,6 +97,7 @@ NSString * const kEventModelKeyFeatures = @"features";
 
     self.key = flagKey;
     self.kind = kEventModelKindFeature;
+    self.reportedValue = reportedFlagValue;
     self.flagConfigValue = flagConfigValue;
     self.defaultValue = defaultFlagValue;
     self.user = user;
@@ -155,17 +163,19 @@ NSString * const kEventModelKeyFeatures = @"features";
 }
 
 +(instancetype)debugEventWithFlagKey:(NSString*)flagKey
+                   reportedFlagValue:(id)reportedFlagValue
                      flagConfigValue:(LDFlagConfigValue*)flagConfigValue
                     defaultFlagValue:(id)defaultFlagValue
                                 user:(LDUserModel*)user {
-    return [[LDEventModel alloc] initDebugEventWithFlagKey:flagKey flagConfigValue:flagConfigValue defaultFlagValue:defaultFlagValue user:user];
+    return [[LDEventModel alloc] initDebugEventWithFlagKey:flagKey reportedFlagValue:reportedFlagValue flagConfigValue:flagConfigValue defaultFlagValue:defaultFlagValue user:user];
 }
 
 -(instancetype)initDebugEventWithFlagKey:(NSString*)flagKey
+                       reportedFlagValue:(id)reportedFlagValue
                          flagConfigValue:(LDFlagConfigValue*)flagConfigValue
                         defaultFlagValue:(id)defaultFlagValue
                                     user:(LDUserModel*)user {
-    self = [self initFeatureEventWithFlagKey:flagKey flagConfigValue:flagConfigValue defaultFlagValue:defaultFlagValue user:user inlineUser:YES];
+    self = [self initFeatureEventWithFlagKey:flagKey reportedFlagValue:reportedFlagValue flagConfigValue:flagConfigValue defaultFlagValue:defaultFlagValue user:user inlineUser:YES];
     self.kind = kEventModelKindDebug;
 
     return self;
@@ -205,14 +215,8 @@ NSString * const kEventModelKeyFeatures = @"features";
     if ([self.kind isEqualToString:kEventModelKindFeature] || [self.kind isEqualToString:kEventModelKindDebug]) {
         if (self.flagConfigValue) {
             [dictionary addEntriesFromDictionary:[self.flagConfigValue dictionaryValueUseFlagVersionForVersion:YES includeEventTrackingContext:NO]];
-            //If flagConfigValue.value is nil or null, the SDK reports the fallback to the client. Setting the default here as the value communicates that in the report
-            if ((!self.flagConfigValue.value || [self.flagConfigValue.value isKindOfClass:[NSNull class]]) && self.defaultValue) {
-                dictionary[kEventModelKeyValue] = self.defaultValue ?: [NSNull null];
-            }
-        } else {
-            //If flagConfigValue is nil, the SDK reports the fallback to the client. Setting the default here as the value communicates that in the report
-            dictionary[kEventModelKeyValue] = self.defaultValue ?: [NSNull null];
         }
+        dictionary[kEventModelKeyValue] = self.reportedValue ?: [NSNull null];
     }
     if (self.defaultValue) {
         dictionary[kEventModelKeyDefault] = self.defaultValue;

@@ -152,16 +152,22 @@ dispatch_queue_t eventsQueue;
 #pragma mark - events
 
 -(void)createFlagEvaluationEventsWithFlagKey:(NSString*)flagKey
+                           reportedFlagValue:(id)reportedFlagValue
                              flagConfigValue:(LDFlagConfigValue*)flagConfigValue
                             defaultFlagValue:(id)defaultFlagValue
                                         user:(LDUserModel*)user
                                       config:(LDConfig*)config {
-    [self createFeatureEventWithFlagKey:flagKey flagConfigValue:flagConfigValue defaultFlagValue:defaultFlagValue user:user config:config];
-    [self createDebugEventWithFlagKey:flagKey flagConfigValue:flagConfigValue defaultFlagValue:defaultFlagValue user:user config:config];
+    [self createFeatureEventWithFlagKey:flagKey reportedFlagValue:reportedFlagValue flagConfigValue:flagConfigValue defaultFlagValue:defaultFlagValue user:user config:config];
+    [self createDebugEventWithFlagKey:flagKey reportedFlagValue:reportedFlagValue flagConfigValue:flagConfigValue defaultFlagValue:defaultFlagValue user:user config:config];
     [user.flagConfigTracker logRequestForFlagKey:flagKey flagConfigValue:flagConfigValue defaultValue:defaultFlagValue];
 }
 
--(void)createFeatureEventWithFlagKey:(NSString*)flagKey flagConfigValue:(LDFlagConfigValue*)flagConfigValue defaultFlagValue:(id)defaultFlagValue user:(LDUserModel*)user config:(LDConfig*)config {
+-(void)createFeatureEventWithFlagKey:(NSString*)flagKey
+                   reportedFlagValue:(id)reportedFlagValue
+                     flagConfigValue:(LDFlagConfigValue*)flagConfigValue
+                    defaultFlagValue:(id)defaultFlagValue
+                                user:(LDUserModel*)user
+                              config:(LDConfig*)config {
     if ([self isAtEventCapacity:self.eventsArray]) {
         DEBUG_LOG(@"Events have surpassed capacity. Discarding feature event %@", flagKey);
         return;
@@ -172,6 +178,7 @@ dispatch_queue_t eventsQueue;
     }
     DEBUG_LOG(@"Creating feature event for feature:%@ with flagConfigValue:%@ and fallback:%@", flagKey, flagConfigValue, defaultFlagValue);
     [self addEventDictionary:[[LDEventModel featureEventWithFlagKey:flagKey
+                                                  reportedFlagValue:reportedFlagValue
                                                     flagConfigValue:flagConfigValue
                                                    defaultFlagValue:defaultFlagValue
                                                                user:user
@@ -210,7 +217,12 @@ dispatch_queue_t eventsQueue;
     [self addEventDictionary:[[LDEventModel summaryEventWithTracker:tracker] dictionaryValueUsingConfig:config]];
 }
 
--(void)createDebugEventWithFlagKey:(NSString *)flagKey flagConfigValue:(LDFlagConfigValue*)flagConfigValue defaultFlagValue:(id)defaultFlagValue user:(LDUserModel*)user config:(LDConfig*)config {
+-(void)createDebugEventWithFlagKey:(NSString *)flagKey
+                 reportedFlagValue:(id)reportedFlagValue
+                   flagConfigValue:(LDFlagConfigValue*)flagConfigValue
+                  defaultFlagValue:(id)defaultFlagValue
+                              user:(LDUserModel*)user
+                            config:(LDConfig*)config {
     if ([self isAtEventCapacity:self.eventsArray]) {
         DEBUG_LOG(@"Events have surpassed capacity. Discarding debug event %@", flagKey);
         return;
@@ -221,6 +233,7 @@ dispatch_queue_t eventsQueue;
     }
     DEBUG_LOG(@"Creating debug event for feature:%@ with flagConfigValue:%@ and fallback:%@", flagKey, flagConfigValue, defaultFlagValue);
     [self addEventDictionary:[[LDEventModel debugEventWithFlagKey:flagKey
+                                                reportedFlagValue:reportedFlagValue
                                                   flagConfigValue:flagConfigValue
                                                  defaultFlagValue:defaultFlagValue
                                                              user:user]

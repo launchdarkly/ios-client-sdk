@@ -21,15 +21,26 @@ extern int const kUserCacheSize;
 -(NSMutableArray*)retrieveEventsArray;
 -(LDUserModel*)findUserWithkey: (NSString *)key;
 -(void)createFlagEvaluationEventsWithFlagKey:(NSString*)flagKey
+                           reportedFlagValue:(id)reportedFlagValue
                              flagConfigValue:(LDFlagConfigValue*)flagConfigValue
                             defaultFlagValue:(id)defaultFlagValue
                                         user:(LDUserModel*)user
                                       config:(LDConfig*)config;
--(void)createFeatureEventWithFlagKey:(NSString*)flagKey flagConfigValue:(LDFlagConfigValue*)flagConfigValue defaultFlagValue:(id)defaultFlagValue user:(LDUserModel*)user config:(LDConfig*)config;
+-(void)createFeatureEventWithFlagKey:(NSString*)flagKey
+                   reportedFlagValue:(id)reportedFlagValue
+                     flagConfigValue:(LDFlagConfigValue*)flagConfigValue
+                    defaultFlagValue:(id)defaultFlagValue
+                                user:(LDUserModel*)user
+                              config:(LDConfig*)config;
 -(void)createCustomEventWithKey:(NSString*)eventKey customData:(NSDictionary*)customData user:(LDUserModel*)user config:(LDConfig*)config;
 -(void)createIdentifyEventWithUser:(LDUserModel*)user config:(LDConfig*)config;
 -(void)createSummaryEventWithTracker:(LDFlagConfigTracker*)tracker config:(LDConfig*)config;
--(void)createDebugEventWithFlagKey:(NSString *)flagKey flagConfigValue:(LDFlagConfigValue*)flagConfigValue defaultFlagValue:(id)defaultFlagValue user:(LDUserModel*)user config:(LDConfig*)config;
+-(void)createDebugEventWithFlagKey:(NSString *)flagKey
+                 reportedFlagValue:(id)reportedFlagValue
+                   flagConfigValue:(LDFlagConfigValue*)flagConfigValue
+                  defaultFlagValue:(id)defaultFlagValue
+                              user:(LDUserModel*)user
+                            config:(LDConfig*)config;
 -(void)purgeOldUser: (NSMutableDictionary *)dictionary;
 -(void)saveUser: (LDUserModel *) user;
 -(void)saveUserDeprecated:(LDUserModel *)user __deprecated_msg("Use saveUser: instead");

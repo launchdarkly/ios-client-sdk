@@ -50,7 +50,12 @@ NSString * const testMobileKey = @"EventModelTest.testMobileKey";
         id defaultFlagValue = [LDFlagConfigValue defaultValueForFlagKey:flagKey];
         for (LDFlagConfigValue *flagConfigValue in flagConfigValues) {
             LDMillisecond creationDateMillis = [[NSDate date] millisSince1970];
-            LDEventModel *featureEvent = [LDEventModel featureEventWithFlagKey:flagKey flagConfigValue:flagConfigValue defaultFlagValue:defaultFlagValue user:self.user inlineUser:NO];
+            LDEventModel *featureEvent = [LDEventModel featureEventWithFlagKey:flagKey
+                                                             reportedFlagValue:flagConfigValue.value
+                                                               flagConfigValue:flagConfigValue
+                                                              defaultFlagValue:defaultFlagValue
+                                                                          user:self.user
+                                                                    inlineUser:NO];
 
             XCTAssertTrue([featureEvent hasPropertiesMatchingFlagKey:flagKey
                                                            eventKind:kEventModelKindFeature
@@ -134,7 +139,11 @@ NSString * const testMobileKey = @"EventModelTest.testMobileKey";
         id defaultFlagValue = [LDFlagConfigValue defaultValueForFlagKey:flagKey];
         for (LDFlagConfigValue *flagConfigValue in flagConfigValues) {
             LDMillisecond creationDateMillis = [[NSDate date] millisSince1970];
-            LDEventModel *debugEvent = [LDEventModel debugEventWithFlagKey:flagKey flagConfigValue:flagConfigValue defaultFlagValue:defaultFlagValue user:self.user];
+            LDEventModel *debugEvent = [LDEventModel debugEventWithFlagKey:flagKey
+                                                         reportedFlagValue:flagConfigValue.value
+                                                           flagConfigValue:flagConfigValue
+                                                          defaultFlagValue:defaultFlagValue
+                                                                      user:self.user];
 
             XCTAssertTrue([debugEvent hasPropertiesMatchingFlagKey:flagKey
                                                            eventKind:kEventModelKindDebug
@@ -221,6 +230,7 @@ NSString * const testMobileKey = @"EventModelTest.testMobileKey";
     LDConfig *config = [[LDConfig alloc] initWithMobileKey:testMobileKey];
     for (NSString *eventKind in [LDEventModel eventKindsForFlagRequests]) {
         LDEventModel *event = [LDEventModel stubEventWithKind:eventKind user:self.user config:config];
+        event.reportedValue = event.defaultValue;
         event.flagConfigValue = nil;
 
         NSDictionary *eventDictionary = [event dictionaryValueUsingConfig:config];
@@ -251,6 +261,7 @@ NSString * const testMobileKey = @"EventModelTest.testMobileKey";
     LDConfig *config = [[LDConfig alloc] initWithMobileKey:testMobileKey];
     for (NSString *eventKind in [LDEventModel eventKindsForFlagRequests]) {
         LDEventModel *event = [LDEventModel stubEventWithKind:eventKind user:self.user config:config];
+        event.reportedValue = event.defaultValue;
         event.flagConfigValue.value = [NSNull null];
 
         NSDictionary *eventDictionary = [event dictionaryValueUsingConfig:config];
