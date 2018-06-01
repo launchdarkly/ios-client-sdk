@@ -6,6 +6,5 @@
 #import "DarklyConstants.h"
 
 @interface DarklyXCTestCase : XCTestCase
-@property (nonatomic) id dataManagerMock;
 
 @end

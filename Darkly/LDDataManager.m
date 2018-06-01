@@ -7,6 +7,10 @@
 #import "LDEventModel.h"
 #import "LDUtil.h"
 #import "LDFlagConfigModel.h"
+#import "LDFlagConfigValue.h"
+#import "LDEventTrackingContext.h"
+#import "LDFlagConfigTracker.h"
+#import "NSDate+ReferencedDate.h"
 
 int const kUserCacheSize = 5;
 
@@ -98,8 +102,8 @@ dispatch_queue_t eventsQueue;
 }
 
 - (void)compareConfigForUser:(LDUserModel *)user withNewUser:(LDUserModel *)newUser {
-    for (NSString *key in [newUser.config dictionaryValueIncludeNulls:NO]) {
-        if(user == nil || ![[newUser.config configFlagValue:key] isEqual:[user.config configFlagValue:key]]) {
+    for (NSString *key in [newUser.flagConfig dictionaryValueIncludeNulls:NO]) {
+        if(user == nil || ![[newUser.flagConfig flagValueForFlagKey:key] isEqual:[user.flagConfig flagValueForFlagKey:key]]) {
             [[NSNotificationCenter defaultCenter] postNotificationName:kLDFlagConfigChangedNotification object:nil userInfo:[NSDictionary dictionaryWithObject:key forKey:kFlagKey]];
         }
     }
@@ -147,37 +151,114 @@ dispatch_queue_t eventsQueue;
 
 #pragma mark - events
 
--(void) createFeatureEvent: (NSString *)featureKey keyValue:(NSObject*)keyValue defaultKeyValue:(NSObject*)defaultKeyValue user:(LDUserModel*)user config:(LDConfig*)config {
-    if(![self isAtEventCapacity:_eventsArray]) {
-        DEBUG_LOG(@"Creating event for feature:%@ with value:%@ and fallback:%@", featureKey, keyValue, defaultKeyValue);
-        [self addEventDictionary:[[[LDEventModel alloc] initFeatureEventWithKey:featureKey keyValue:keyValue defaultKeyValue:defaultKeyValue userValue:user] dictionaryValueUsingConfig:config]];
-    }
-    else {
-        DEBUG_LOG(@"Events have surpassed capacity. Discarding feature event %@", featureKey);
-    }
+-(void)createFlagEvaluationEventsWithFlagKey:(NSString*)flagKey
+                           reportedFlagValue:(id)reportedFlagValue
+                             flagConfigValue:(LDFlagConfigValue*)flagConfigValue
+                            defaultFlagValue:(id)defaultFlagValue
+                                        user:(LDUserModel*)user
+                                      config:(LDConfig*)config {
+    [self createFeatureEventWithFlagKey:flagKey reportedFlagValue:reportedFlagValue flagConfigValue:flagConfigValue defaultFlagValue:defaultFlagValue user:user config:config];
+    [self createDebugEventWithFlagKey:flagKey reportedFlagValue:reportedFlagValue flagConfigValue:flagConfigValue defaultFlagValue:defaultFlagValue user:user config:config];
+    [user.flagConfigTracker logRequestForFlagKey:flagKey reportedFlagValue:reportedFlagValue flagConfigValue:flagConfigValue defaultValue:defaultFlagValue];
 }
 
--(void) createCustomEvent: (NSString *)eventKey withCustomValuesDictionary: (NSDictionary *)customDict user:(LDUserModel*)user config:(LDConfig*)config {
-    if(![self isAtEventCapacity:_eventsArray]) {
-        DEBUG_LOG(@"Creating event for custom key:%@ and value:%@", eventKey, customDict);
-        [self addEventDictionary:[[[LDEventModel alloc] initCustomEventWithKey:eventKey andDataDictionary: customDict userValue:user] dictionaryValueUsingConfig:config]];
+-(void)createFeatureEventWithFlagKey:(NSString*)flagKey
+                   reportedFlagValue:(id)reportedFlagValue
+                     flagConfigValue:(LDFlagConfigValue*)flagConfigValue
+                    defaultFlagValue:(id)defaultFlagValue
+                                user:(LDUserModel*)user
+                              config:(LDConfig*)config {
+    if ([self isAtEventCapacity:self.eventsArray]) {
+        DEBUG_LOG(@"Events have surpassed capacity. Discarding feature event %@", flagKey);
+        return;
     }
-    else {
-        DEBUG_LOG(@"Events have surpassed capacity. Discarding event %@ with dictionary %@", eventKey, customDict);
+    if (!flagConfigValue.eventTrackingContext || (flagConfigValue.eventTrackingContext && !flagConfigValue.eventTrackingContext.trackEvents)) {
+        DEBUG_LOG(@"Tracking is off. Discarding feature event %@", flagKey);
+        return;
     }
+    DEBUG_LOG(@"Creating feature event for feature:%@ with flagConfigValue:%@ and fallback:%@", flagKey, flagConfigValue, defaultFlagValue);
+    [self addEventDictionary:[[LDEventModel featureEventWithFlagKey:flagKey
+                                                  reportedFlagValue:reportedFlagValue
+                                                    flagConfigValue:flagConfigValue
+                                                   defaultFlagValue:defaultFlagValue
+                                                               user:user
+                                                         inlineUser:config.inlineUserInEvents]
+                              dictionaryValueUsingConfig:config]];
+}
+
+-(void)createCustomEventWithKey:(NSString *)eventKey customData:(NSDictionary *)customData user:(LDUserModel*)user config:(LDConfig*)config {
+    if ([self isAtEventCapacity:self.eventsArray]) {
+        DEBUG_LOG(@"Events have surpassed capacity. Discarding custom event %@ with customData %@", eventKey, customData);
+        return;
+    }
+    DEBUG_LOG(@"Creating custom event for custom key:%@ and customData:%@", eventKey, customData);
+    [self addEventDictionary:[[LDEventModel customEventWithKey:eventKey customData:customData userValue:user inlineUser:config.inlineUserInEvents] dictionaryValueUsingConfig:config]];
+}
+
+-(void)createIdentifyEventWithUser:(LDUserModel*)user config:(LDConfig*)config {
+    if ([self isAtEventCapacity:self.eventsArray]) {
+        DEBUG_LOG(@"Events have surpassed capacity. Discarding identify event for user key:%@", user.key);
+        return;
+    }
+    DEBUG_LOG(@"Creating identify event for user key:%@", user.key);
+    [self addEventDictionary:[[LDEventModel identifyEventWithUser:user] dictionaryValueUsingConfig:config]];
+}
+
+-(void)createSummaryEventWithTracker:(LDFlagConfigTracker*)tracker config:(LDConfig*)config {
+    if ([self isAtEventCapacity:self.eventsArray]) {
+        DEBUG_LOGX(@"Events have surpassed capacity. Discarding summary event.");
+        return;
+    }
+    if (tracker.flagCounters.count == 0) {
+        DEBUG_LOGX(@"Tracker has no flag counters. Discarding summary event.");
+        return;
+    }
+    DEBUG_LOGX(@"Creating summary event");
+    [self addEventDictionary:[[LDEventModel summaryEventWithTracker:tracker] dictionaryValueUsingConfig:config]];
+}
+
+-(void)createDebugEventWithFlagKey:(NSString *)flagKey
+                 reportedFlagValue:(id)reportedFlagValue
+                   flagConfigValue:(LDFlagConfigValue*)flagConfigValue
+                  defaultFlagValue:(id)defaultFlagValue
+                              user:(LDUserModel*)user
+                            config:(LDConfig*)config {
+    if ([self isAtEventCapacity:self.eventsArray]) {
+        DEBUG_LOG(@"Events have surpassed capacity. Discarding debug event %@", flagKey);
+        return;
+    }
+    if (![self shouldCreateDebugEventForContext:flagConfigValue.eventTrackingContext lastEventResponseDate:self.lastEventResponseDate]) {
+        DEBUG_LOG(@"LDDataManager createDebugEventWithFlagKey aborting, debug events are turned off. Discarding debug event %@", flagKey);
+        return;
+    }
+    DEBUG_LOG(@"Creating debug event for feature:%@ with flagConfigValue:%@ and fallback:%@", flagKey, flagConfigValue, defaultFlagValue);
+    [self addEventDictionary:[[LDEventModel debugEventWithFlagKey:flagKey
+                                                reportedFlagValue:reportedFlagValue
+                                                  flagConfigValue:flagConfigValue
+                                                 defaultFlagValue:defaultFlagValue
+                                                             user:user]
+                              dictionaryValueUsingConfig:config]];
+}
+
+-(BOOL)shouldCreateDebugEventForContext:(LDEventTrackingContext*)eventTrackingContext lastEventResponseDate:(NSDate*)lastEventResponseDate {
+    if (!eventTrackingContext || !eventTrackingContext.debugEventsUntilDate) { return NO; }
+    if ([lastEventResponseDate isLaterThan:eventTrackingContext.debugEventsUntilDate]) { return NO; }
+    if ([[NSDate date] isLaterThan:eventTrackingContext.debugEventsUntilDate]) { return NO; }
+
+    return YES;
 }
 
 -(void)addEventDictionary:(NSDictionary*)eventDictionary {
+    if (!eventDictionary || eventDictionary.allKeys.count == 0) {
+        DEBUG_LOGX(@"LDDataManager addEventDictionary aborting. Event dictionary is missing or empty.");
+        return;
+    }
     dispatch_async(eventsQueue, ^{
-        if (!self.eventsArray) {
-            self.eventsArray = [[NSMutableArray alloc] init];
-        }
-        if(![self isAtEventCapacity:self.eventsArray]) {
-            [self.eventsArray addObject:eventDictionary];
-        }
-        else {
+        if([self isAtEventCapacity:self.eventsArray]) {
             DEBUG_LOG(@"Events have surpassed capacity. Discarding event %@", eventDictionary[@"key"]);
+            return;
         }
+        [self.eventsArray addObject:eventDictionary];
     });
 }
 
@@ -206,7 +287,7 @@ dispatch_queue_t eventsQueue;
 }
 
 -(void)flushEventsDictionary {
-    [_eventsArray removeAllObjects];
+    [self.eventsArray removeAllObjects];
 }
 
 - (NSMutableArray *)retrieveEventsArray {

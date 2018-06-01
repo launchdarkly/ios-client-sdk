@@ -18,9 +18,9 @@
 		690346FA1E68990000E45133 /* LDClientManager.m in Sources */ = {isa = PBXBuildFile; fileRef = 690346DE1E68990000E45133 /* LDClientManager.m */; };
 		690346FB1E68990000E45133 /* LDConfig.h in Headers */ = {isa = PBXBuildFile; fileRef = 690346DF1E68990000E45133 /* LDConfig.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		690346FC1E68990000E45133 /* LDConfig.m in Sources */ = {isa = PBXBuildFile; fileRef = 690346E01E68990000E45133 /* LDConfig.m */; };
-		690346FD1E68990000E45133 /* LDEventModel.h in Headers */ = {isa = PBXBuildFile; fileRef = 690346E11E68990000E45133 /* LDEventModel.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		690346FD1E68990000E45133 /* LDEventModel.h in Headers */ = {isa = PBXBuildFile; fileRef = 690346E11E68990000E45133 /* LDEventModel.h */; settings = {ATTRIBUTES = (Private, ); }; };
 		690346FE1E68990000E45133 /* LDEventModel.m in Sources */ = {isa = PBXBuildFile; fileRef = 690346E21E68990000E45133 /* LDEventModel.m */; };
-		690346FF1E68990000E45133 /* LDFlagConfigModel.h in Headers */ = {isa = PBXBuildFile; fileRef = 690346E31E68990000E45133 /* LDFlagConfigModel.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		690346FF1E68990000E45133 /* LDFlagConfigModel.h in Headers */ = {isa = PBXBuildFile; fileRef = 690346E31E68990000E45133 /* LDFlagConfigModel.h */; };
 		690347001E68990000E45133 /* LDFlagConfigModel.m in Sources */ = {isa = PBXBuildFile; fileRef = 690346E41E68990000E45133 /* LDFlagConfigModel.m */; };
 		690347011E68990000E45133 /* LDPollingManager.h in Headers */ = {isa = PBXBuildFile; fileRef = 690346E51E68990000E45133 /* LDPollingManager.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		690347021E68990000E45133 /* LDPollingManager.m in Sources */ = {isa = PBXBuildFile; fileRef = 690346E61E68990000E45133 /* LDPollingManager.m */; };
@@ -43,11 +43,11 @@
 		6903472C1E689B9F00E45133 /* LDClientTest.m in Sources */ = {isa = PBXBuildFile; fileRef = 6903471A1E689B9F00E45133 /* LDClientTest.m */; };
 		6903472D1E689B9F00E45133 /* LDUtilTest.m in Sources */ = {isa = PBXBuildFile; fileRef = 6903471B1E689B9F00E45133 /* LDUtilTest.m */; };
 		6903472E1E689B9F00E45133 /* LDClientManagerTest.m in Sources */ = {isa = PBXBuildFile; fileRef = 6903471C1E689B9F00E45133 /* LDClientManagerTest.m */; };
-		6903472F1E689B9F00E45133 /* featureFlags-withVersions.json in Resources */ = {isa = PBXBuildFile; fileRef = 6903471E1E689B9F00E45133 /* featureFlags-withVersions.json */; };
+		6903472F1E689B9F00E45133 /* featureFlags.json in Resources */ = {isa = PBXBuildFile; fileRef = 6903471E1E689B9F00E45133 /* featureFlags.json */; };
 		690347301E689B9F00E45133 /* LDConfigTest.m in Sources */ = {isa = PBXBuildFile; fileRef = 6903471F1E689B9F00E45133 /* LDConfigTest.m */; };
 		690347311E689B9F00E45133 /* LDFlagConfigModelTest.m in Sources */ = {isa = PBXBuildFile; fileRef = 690347211E689B9F00E45133 /* LDFlagConfigModelTest.m */; };
 		690347321E689B9F00E45133 /* DarklyXCTestCase.m in Sources */ = {isa = PBXBuildFile; fileRef = 690347221E689B9F00E45133 /* DarklyXCTestCase.m */; };
-		690347331E689B9F00E45133 /* NSArray+UnitTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 690347251E689B9F00E45133 /* NSArray+UnitTests.m */; };
+		690347331E689B9F00E45133 /* NSArray+Testable.m in Sources */ = {isa = PBXBuildFile; fileRef = 690347251E689B9F00E45133 /* NSArray+Testable.m */; };
 		69071F7E1EA2A7CA00497F93 /* Darkly.h in Headers */ = {isa = PBXBuildFile; fileRef = 69BAF40B1E9AAB4800747613 /* Darkly.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		69071F7F1EA2A7CB00497F93 /* Darkly.h in Headers */ = {isa = PBXBuildFile; fileRef = 69BAF40B1E9AAB4800747613 /* Darkly.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		69071F801EA2A7CC00497F93 /* Darkly.h in Headers */ = {isa = PBXBuildFile; fileRef = 69BAF40B1E9AAB4800747613 /* Darkly.h */; settings = {ATTRIBUTES = (Public, ); }; };
@@ -62,9 +62,9 @@
 		69A87E9F1E74712800B88B23 /* LDClientManager.m in Sources */ = {isa = PBXBuildFile; fileRef = 690346DE1E68990000E45133 /* LDClientManager.m */; };
 		69A87EA01E74712800B88B23 /* LDConfig.h in Headers */ = {isa = PBXBuildFile; fileRef = 690346DF1E68990000E45133 /* LDConfig.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		69A87EA11E74712800B88B23 /* LDConfig.m in Sources */ = {isa = PBXBuildFile; fileRef = 690346E01E68990000E45133 /* LDConfig.m */; };
-		69A87EA21E74712800B88B23 /* LDEventModel.h in Headers */ = {isa = PBXBuildFile; fileRef = 690346E11E68990000E45133 /* LDEventModel.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		69A87EA21E74712800B88B23 /* LDEventModel.h in Headers */ = {isa = PBXBuildFile; fileRef = 690346E11E68990000E45133 /* LDEventModel.h */; settings = {ATTRIBUTES = (Private, ); }; };
 		69A87EA31E74712800B88B23 /* LDEventModel.m in Sources */ = {isa = PBXBuildFile; fileRef = 690346E21E68990000E45133 /* LDEventModel.m */; };
-		69A87EA41E74712800B88B23 /* LDFlagConfigModel.h in Headers */ = {isa = PBXBuildFile; fileRef = 690346E31E68990000E45133 /* LDFlagConfigModel.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		69A87EA41E74712800B88B23 /* LDFlagConfigModel.h in Headers */ = {isa = PBXBuildFile; fileRef = 690346E31E68990000E45133 /* LDFlagConfigModel.h */; };
 		69A87EA51E74712800B88B23 /* LDFlagConfigModel.m in Sources */ = {isa = PBXBuildFile; fileRef = 690346E41E68990000E45133 /* LDFlagConfigModel.m */; };
 		69A87EA61E74712800B88B23 /* LDPollingManager.h in Headers */ = {isa = PBXBuildFile; fileRef = 690346E51E68990000E45133 /* LDPollingManager.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		69A87EA71E74712800B88B23 /* LDPollingManager.m in Sources */ = {isa = PBXBuildFile; fileRef = 690346E61E68990000E45133 /* LDPollingManager.m */; };
@@ -91,9 +91,9 @@
 		69BD7E201E6C79910056D70F /* LDClientManager.m in Sources */ = {isa = PBXBuildFile; fileRef = 690346DE1E68990000E45133 /* LDClientManager.m */; };
 		69BD7E211E6C79910056D70F /* LDConfig.h in Headers */ = {isa = PBXBuildFile; fileRef = 690346DF1E68990000E45133 /* LDConfig.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		69BD7E221E6C79910056D70F /* LDConfig.m in Sources */ = {isa = PBXBuildFile; fileRef = 690346E01E68990000E45133 /* LDConfig.m */; };
-		69BD7E231E6C79910056D70F /* LDEventModel.h in Headers */ = {isa = PBXBuildFile; fileRef = 690346E11E68990000E45133 /* LDEventModel.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		69BD7E231E6C79910056D70F /* LDEventModel.h in Headers */ = {isa = PBXBuildFile; fileRef = 690346E11E68990000E45133 /* LDEventModel.h */; settings = {ATTRIBUTES = (Private, ); }; };
 		69BD7E241E6C79910056D70F /* LDEventModel.m in Sources */ = {isa = PBXBuildFile; fileRef = 690346E21E68990000E45133 /* LDEventModel.m */; };
-		69BD7E251E6C79910056D70F /* LDFlagConfigModel.h in Headers */ = {isa = PBXBuildFile; fileRef = 690346E31E68990000E45133 /* LDFlagConfigModel.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		69BD7E251E6C79910056D70F /* LDFlagConfigModel.h in Headers */ = {isa = PBXBuildFile; fileRef = 690346E31E68990000E45133 /* LDFlagConfigModel.h */; };
 		69BD7E261E6C79910056D70F /* LDFlagConfigModel.m in Sources */ = {isa = PBXBuildFile; fileRef = 690346E41E68990000E45133 /* LDFlagConfigModel.m */; };
 		69BD7E271E6C79910056D70F /* LDPollingManager.h in Headers */ = {isa = PBXBuildFile; fileRef = 690346E51E68990000E45133 /* LDPollingManager.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		69BD7E281E6C79910056D70F /* LDPollingManager.m in Sources */ = {isa = PBXBuildFile; fileRef = 690346E61E68990000E45133 /* LDPollingManager.m */; };
@@ -118,9 +118,9 @@
 		69F3F69A1E6BF82C00079A09 /* LDClientManager.m in Sources */ = {isa = PBXBuildFile; fileRef = 690346DE1E68990000E45133 /* LDClientManager.m */; };
 		69F3F69B1E6BF82C00079A09 /* LDConfig.h in Headers */ = {isa = PBXBuildFile; fileRef = 690346DF1E68990000E45133 /* LDConfig.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		69F3F69C1E6BF82C00079A09 /* LDConfig.m in Sources */ = {isa = PBXBuildFile; fileRef = 690346E01E68990000E45133 /* LDConfig.m */; };
-		69F3F69D1E6BF82C00079A09 /* LDEventModel.h in Headers */ = {isa = PBXBuildFile; fileRef = 690346E11E68990000E45133 /* LDEventModel.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		69F3F69D1E6BF82C00079A09 /* LDEventModel.h in Headers */ = {isa = PBXBuildFile; fileRef = 690346E11E68990000E45133 /* LDEventModel.h */; settings = {ATTRIBUTES = (Private, ); }; };
 		69F3F69E1E6BF82C00079A09 /* LDEventModel.m in Sources */ = {isa = PBXBuildFile; fileRef = 690346E21E68990000E45133 /* LDEventModel.m */; };
-		69F3F69F1E6BF82C00079A09 /* LDFlagConfigModel.h in Headers */ = {isa = PBXBuildFile; fileRef = 690346E31E68990000E45133 /* LDFlagConfigModel.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		69F3F69F1E6BF82C00079A09 /* LDFlagConfigModel.h in Headers */ = {isa = PBXBuildFile; fileRef = 690346E31E68990000E45133 /* LDFlagConfigModel.h */; };
 		69F3F6A01E6BF82C00079A09 /* LDFlagConfigModel.m in Sources */ = {isa = PBXBuildFile; fileRef = 690346E41E68990000E45133 /* LDFlagConfigModel.m */; };
 		69F3F6A11E6BF82C00079A09 /* LDPollingManager.h in Headers */ = {isa = PBXBuildFile; fileRef = 690346E51E68990000E45133 /* LDPollingManager.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		69F3F6A21E6BF82C00079A09 /* LDPollingManager.m in Sources */ = {isa = PBXBuildFile; fileRef = 690346E61E68990000E45133 /* LDPollingManager.m */; };
@@ -135,33 +135,16 @@
 		69F3F6AB1E6BF82C00079A09 /* NSDictionary+JSON.h in Headers */ = {isa = PBXBuildFile; fileRef = 690346F21E68990000E45133 /* NSDictionary+JSON.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		69F3F6AC1E6BF82C00079A09 /* NSDictionary+JSON.m in Sources */ = {isa = PBXBuildFile; fileRef = 690346F31E68990000E45133 /* NSDictionary+JSON.m */; };
 		69F3F6AE1E6BF84B00079A09 /* Darkly-Prefix.pch in Headers */ = {isa = PBXBuildFile; fileRef = 690346D81E68990000E45133 /* Darkly-Prefix.pch */; settings = {ATTRIBUTES = (Public, ); }; };
-		8305EC6720221973002F20DB /* LDFlagConfigValue.h in Headers */ = {isa = PBXBuildFile; fileRef = 8305EC6520221973002F20DB /* LDFlagConfigValue.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		8305EC6820221973002F20DB /* LDFlagConfigValue.h in Headers */ = {isa = PBXBuildFile; fileRef = 8305EC6520221973002F20DB /* LDFlagConfigValue.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		8305EC6920221973002F20DB /* LDFlagConfigValue.h in Headers */ = {isa = PBXBuildFile; fileRef = 8305EC6520221973002F20DB /* LDFlagConfigValue.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		8305EC6A20221973002F20DB /* LDFlagConfigValue.h in Headers */ = {isa = PBXBuildFile; fileRef = 8305EC6520221973002F20DB /* LDFlagConfigValue.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		8305EC6720221973002F20DB /* LDFlagConfigValue.h in Headers */ = {isa = PBXBuildFile; fileRef = 8305EC6520221973002F20DB /* LDFlagConfigValue.h */; };
+		8305EC6820221973002F20DB /* LDFlagConfigValue.h in Headers */ = {isa = PBXBuildFile; fileRef = 8305EC6520221973002F20DB /* LDFlagConfigValue.h */; };
+		8305EC6920221973002F20DB /* LDFlagConfigValue.h in Headers */ = {isa = PBXBuildFile; fileRef = 8305EC6520221973002F20DB /* LDFlagConfigValue.h */; };
+		8305EC6A20221973002F20DB /* LDFlagConfigValue.h in Headers */ = {isa = PBXBuildFile; fileRef = 8305EC6520221973002F20DB /* LDFlagConfigValue.h */; };
 		8305EC6B20221973002F20DB /* LDFlagConfigValue.m in Sources */ = {isa = PBXBuildFile; fileRef = 8305EC6620221973002F20DB /* LDFlagConfigValue.m */; };
 		8305EC6C20221973002F20DB /* LDFlagConfigValue.m in Sources */ = {isa = PBXBuildFile; fileRef = 8305EC6620221973002F20DB /* LDFlagConfigValue.m */; };
 		8305EC6D20221973002F20DB /* LDFlagConfigValue.m in Sources */ = {isa = PBXBuildFile; fileRef = 8305EC6620221973002F20DB /* LDFlagConfigValue.m */; };
 		8305EC6E20221973002F20DB /* LDFlagConfigValue.m in Sources */ = {isa = PBXBuildFile; fileRef = 8305EC6620221973002F20DB /* LDFlagConfigValue.m */; };
-		8305EC7120222078002F20DB /* NSObject+LDFlagConfigValue.h in Headers */ = {isa = PBXBuildFile; fileRef = 8305EC6F20222078002F20DB /* NSObject+LDFlagConfigValue.h */; };
-		8305EC7220222078002F20DB /* NSObject+LDFlagConfigValue.h in Headers */ = {isa = PBXBuildFile; fileRef = 8305EC6F20222078002F20DB /* NSObject+LDFlagConfigValue.h */; };
-		8305EC7320222078002F20DB /* NSObject+LDFlagConfigValue.h in Headers */ = {isa = PBXBuildFile; fileRef = 8305EC6F20222078002F20DB /* NSObject+LDFlagConfigValue.h */; };
-		8305EC7420222078002F20DB /* NSObject+LDFlagConfigValue.h in Headers */ = {isa = PBXBuildFile; fileRef = 8305EC6F20222078002F20DB /* NSObject+LDFlagConfigValue.h */; };
-		8305EC7520222078002F20DB /* NSObject+LDFlagConfigValue.m in Sources */ = {isa = PBXBuildFile; fileRef = 8305EC7020222078002F20DB /* NSObject+LDFlagConfigValue.m */; };
-		8305EC7620222078002F20DB /* NSObject+LDFlagConfigValue.m in Sources */ = {isa = PBXBuildFile; fileRef = 8305EC7020222078002F20DB /* NSObject+LDFlagConfigValue.m */; };
-		8305EC7720222078002F20DB /* NSObject+LDFlagConfigValue.m in Sources */ = {isa = PBXBuildFile; fileRef = 8305EC7020222078002F20DB /* NSObject+LDFlagConfigValue.m */; };
-		8305EC7820222078002F20DB /* NSObject+LDFlagConfigValue.m in Sources */ = {isa = PBXBuildFile; fileRef = 8305EC7020222078002F20DB /* NSObject+LDFlagConfigValue.m */; };
-		8305EC7A20222B5E002F20DB /* NSObject+LDFlagConfigValueTest.m in Sources */ = {isa = PBXBuildFile; fileRef = 8305EC7920222B5E002F20DB /* NSObject+LDFlagConfigValueTest.m */; };
 		8305EC7C2022336C002F20DB /* LDFlagConfigValueTest.m in Sources */ = {isa = PBXBuildFile; fileRef = 8305EC7B2022336C002F20DB /* LDFlagConfigValueTest.m */; };
-		8305EC7E202238FC002F20DB /* boolConfigIsABool-true-withoutVersion.json in Resources */ = {isa = PBXBuildFile; fileRef = 8305EC7D202238FC002F20DB /* boolConfigIsABool-true-withoutVersion.json */; };
-		8305EC8020223A2E002F20DB /* numberConfigIsANumber-2-withoutVersion.json in Resources */ = {isa = PBXBuildFile; fileRef = 8305EC7F20223A2E002F20DB /* numberConfigIsANumber-2-withoutVersion.json */; };
-		8305EC8220223BC3002F20DB /* doubleConfigIsADouble-Pi-withoutVersion.json in Resources */ = {isa = PBXBuildFile; fileRef = 8305EC8120223BC2002F20DB /* doubleConfigIsADouble-Pi-withoutVersion.json */; };
-		8305EC8420223D65002F20DB /* stringConfigIsAString-someString-withoutVersion.json in Resources */ = {isa = PBXBuildFile; fileRef = 8305EC8320223D65002F20DB /* stringConfigIsAString-someString-withoutVersion.json */; };
-		8305EC8620223EBA002F20DB /* arrayConfigIsAnArray-123-withoutVersion.json in Resources */ = {isa = PBXBuildFile; fileRef = 8305EC8520223EBA002F20DB /* arrayConfigIsAnArray-123-withoutVersion.json */; };
-		8305EC8820224156002F20DB /* dictionaryConfigIsADictionary-3Key-withoutVersion.json in Resources */ = {isa = PBXBuildFile; fileRef = 8305EC8720224156002F20DB /* dictionaryConfigIsADictionary-3Key-withoutVersion.json */; };
-		8305EC8A202243D6002F20DB /* nullConfigIsANull-null-withVersion.json in Resources */ = {isa = PBXBuildFile; fileRef = 8305EC89202243D6002F20DB /* nullConfigIsANull-null-withVersion.json */; };
-		8305EC8C2022440D002F20DB /* nullConfigIsANull-null-withoutVersion.json in Resources */ = {isa = PBXBuildFile; fileRef = 8305EC8B2022440D002F20DB /* nullConfigIsANull-null-withoutVersion.json */; };
-		8305EC8E20227365002F20DB /* featureFlags-withoutVersions.json in Resources */ = {isa = PBXBuildFile; fileRef = 8305EC8D20227365002F20DB /* featureFlags-withoutVersions.json */; };
+		8305EC8A202243D6002F20DB /* nullConfigIsANull-null.json in Resources */ = {isa = PBXBuildFile; fileRef = 8305EC89202243D6002F20DB /* nullConfigIsANull-null.json */; };
 		830C2AC5207579AC001D645D /* LDThrottler.h in Headers */ = {isa = PBXBuildFile; fileRef = 830C2AC3207579AC001D645D /* LDThrottler.h */; };
 		830C2AC6207579AC001D645D /* LDThrottler.h in Headers */ = {isa = PBXBuildFile; fileRef = 830C2AC3207579AC001D645D /* LDThrottler.h */; };
 		830C2AC7207579AC001D645D /* LDThrottler.h in Headers */ = {isa = PBXBuildFile; fileRef = 830C2AC3207579AC001D645D /* LDThrottler.h */; };
@@ -175,7 +158,7 @@
 		83258A3D1F323049008C2133 /* LDClientManager+EventSource.m in Sources */ = {isa = PBXBuildFile; fileRef = 83258A3C1F323049008C2133 /* LDClientManager+EventSource.m */; };
 		83258A401F3244D0008C2133 /* LDUserBuilder+Testable.m in Sources */ = {isa = PBXBuildFile; fileRef = 83258A3F1F3244D0008C2133 /* LDUserBuilder+Testable.m */; };
 		83258A421F32721A008C2133 /* emptyConfig.json in Resources */ = {isa = PBXBuildFile; fileRef = 83258A411F32721A008C2133 /* emptyConfig.json */; };
-		83258A441F329EFB008C2133 /* doubleConfigIsADouble-Pi-withVersion.json in Resources */ = {isa = PBXBuildFile; fileRef = 83258A431F329EFB008C2133 /* doubleConfigIsADouble-Pi-withVersion.json */; };
+		83258A441F329EFB008C2133 /* doubleConfigIsADouble-Pi.json in Resources */ = {isa = PBXBuildFile; fileRef = 83258A431F329EFB008C2133 /* doubleConfigIsADouble-Pi.json */; };
 		832C78831F296F3400E334A2 /* NSMutableDictionary+NullRemovable.h in Headers */ = {isa = PBXBuildFile; fileRef = 832C78811F296F3400E334A2 /* NSMutableDictionary+NullRemovable.h */; };
 		832C78841F296F3400E334A2 /* NSMutableDictionary+NullRemovable.h in Headers */ = {isa = PBXBuildFile; fileRef = 832C78811F296F3400E334A2 /* NSMutableDictionary+NullRemovable.h */; };
 		832C78851F296F3400E334A2 /* NSMutableDictionary+NullRemovable.h in Headers */ = {isa = PBXBuildFile; fileRef = 832C78811F296F3400E334A2 /* NSMutableDictionary+NullRemovable.h */; };
@@ -185,7 +168,6 @@
 		832C78891F296F3400E334A2 /* NSMutableDictionary+NullRemovable.m in Sources */ = {isa = PBXBuildFile; fileRef = 832C78821F296F3400E334A2 /* NSMutableDictionary+NullRemovable.m */; };
 		832C788A1F296F3400E334A2 /* NSMutableDictionary+NullRemovable.m in Sources */ = {isa = PBXBuildFile; fileRef = 832C78821F296F3400E334A2 /* NSMutableDictionary+NullRemovable.m */; };
 		832C788D1F2977B800E334A2 /* NSString+RemoveWhitespace.m in Sources */ = {isa = PBXBuildFile; fileRef = 832C788C1F2977B800E334A2 /* NSString+RemoveWhitespace.m */; };
-		832C78901F2A8DF600E334A2 /* LDUserModel+JsonDecodeable.m in Sources */ = {isa = PBXBuildFile; fileRef = 832C788F1F2A8DF600E334A2 /* LDUserModel+JsonDecodeable.m */; };
 		833D08CB1F3B97EB00BEED83 /* NSThread+MainExecutable.h in Headers */ = {isa = PBXBuildFile; fileRef = 833D08C91F3B97EB00BEED83 /* NSThread+MainExecutable.h */; };
 		833D08CC1F3B97EB00BEED83 /* NSThread+MainExecutable.h in Headers */ = {isa = PBXBuildFile; fileRef = 833D08C91F3B97EB00BEED83 /* NSThread+MainExecutable.h */; };
 		833D08CD1F3B97EB00BEED83 /* NSThread+MainExecutable.h in Headers */ = {isa = PBXBuildFile; fileRef = 833D08C91F3B97EB00BEED83 /* NSThread+MainExecutable.h */; };
@@ -195,9 +177,16 @@
 		833D08D11F3B97EB00BEED83 /* NSThread+MainExecutable.m in Sources */ = {isa = PBXBuildFile; fileRef = 833D08CA1F3B97EB00BEED83 /* NSThread+MainExecutable.m */; };
 		833D08D21F3B97EB00BEED83 /* NSThread+MainExecutable.m in Sources */ = {isa = PBXBuildFile; fileRef = 833D08CA1F3B97EB00BEED83 /* NSThread+MainExecutable.m */; };
 		8349F51E1F19352300B1F3DB /* NSDictionary+StringKey_Matchable.m in Sources */ = {isa = PBXBuildFile; fileRef = 8349F51D1F19352300B1F3DB /* NSDictionary+StringKey_Matchable.m */; };
-		8349F5211F195BCF00B1F3DB /* LDUserModel+Equatable.m in Sources */ = {isa = PBXBuildFile; fileRef = 8349F5201F195BCF00B1F3DB /* LDUserModel+Equatable.m */; };
 		8358F25A1F4202A300ECE1AF /* LDConfig+Testable.m in Sources */ = {isa = PBXBuildFile; fileRef = 8358F2591F4202A300ECE1AF /* LDConfig+Testable.m */; };
 		835B421B1FD5AF7300709384 /* DarklyEventSource.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 835B421A1FD5AF7300709384 /* DarklyEventSource.framework */; };
+		83620B8520BDF36B00F1F28E /* NSNumber+LaunchDarkly.h in Headers */ = {isa = PBXBuildFile; fileRef = 83620B8320BDF36B00F1F28E /* NSNumber+LaunchDarkly.h */; };
+		83620B8620BDF36B00F1F28E /* NSNumber+LaunchDarkly.h in Headers */ = {isa = PBXBuildFile; fileRef = 83620B8320BDF36B00F1F28E /* NSNumber+LaunchDarkly.h */; };
+		83620B8720BDF36B00F1F28E /* NSNumber+LaunchDarkly.h in Headers */ = {isa = PBXBuildFile; fileRef = 83620B8320BDF36B00F1F28E /* NSNumber+LaunchDarkly.h */; };
+		83620B8820BDF36B00F1F28E /* NSNumber+LaunchDarkly.h in Headers */ = {isa = PBXBuildFile; fileRef = 83620B8320BDF36B00F1F28E /* NSNumber+LaunchDarkly.h */; };
+		83620B8920BDF36B00F1F28E /* NSNumber+LaunchDarkly.m in Sources */ = {isa = PBXBuildFile; fileRef = 83620B8420BDF36B00F1F28E /* NSNumber+LaunchDarkly.m */; };
+		83620B8A20BDF36B00F1F28E /* NSNumber+LaunchDarkly.m in Sources */ = {isa = PBXBuildFile; fileRef = 83620B8420BDF36B00F1F28E /* NSNumber+LaunchDarkly.m */; };
+		83620B8B20BDF36B00F1F28E /* NSNumber+LaunchDarkly.m in Sources */ = {isa = PBXBuildFile; fileRef = 83620B8420BDF36B00F1F28E /* NSNumber+LaunchDarkly.m */; };
+		83620B8C20BDF36B00F1F28E /* NSNumber+LaunchDarkly.m in Sources */ = {isa = PBXBuildFile; fileRef = 83620B8420BDF36B00F1F28E /* NSNumber+LaunchDarkly.m */; };
 		8365E5082028F39E00DE8E2B /* LDEvent+EventTypes.h in Headers */ = {isa = PBXBuildFile; fileRef = 8365E5062028F39E00DE8E2B /* LDEvent+EventTypes.h */; };
 		8365E5092028F39E00DE8E2B /* LDEvent+EventTypes.h in Headers */ = {isa = PBXBuildFile; fileRef = 8365E5062028F39E00DE8E2B /* LDEvent+EventTypes.h */; };
 		8365E50A2028F39E00DE8E2B /* LDEvent+EventTypes.h in Headers */ = {isa = PBXBuildFile; fileRef = 8365E5062028F39E00DE8E2B /* LDEvent+EventTypes.h */; };
@@ -207,19 +196,19 @@
 		8365E50E2028F39E00DE8E2B /* LDEvent+EventTypes.m in Sources */ = {isa = PBXBuildFile; fileRef = 8365E5072028F39E00DE8E2B /* LDEvent+EventTypes.m */; };
 		8365E50F2028F39E00DE8E2B /* LDEvent+EventTypes.m in Sources */ = {isa = PBXBuildFile; fileRef = 8365E5072028F39E00DE8E2B /* LDEvent+EventTypes.m */; };
 		8369475C1F1FED400047697C /* boolConfigIsABool-false.json in Resources */ = {isa = PBXBuildFile; fileRef = 836947591F1FED400047697C /* boolConfigIsABool-false.json */; };
-		8369475D1F1FED400047697C /* boolConfigIsABool-true-withVersion.json in Resources */ = {isa = PBXBuildFile; fileRef = 8369475A1F1FED400047697C /* boolConfigIsABool-true-withVersion.json */; };
+		8369475D1F1FED400047697C /* boolConfigIsABool-true.json in Resources */ = {isa = PBXBuildFile; fileRef = 8369475A1F1FED400047697C /* boolConfigIsABool-true.json */; };
 		8369475E1F1FED400047697C /* boolConfigIsABool2-true.json in Resources */ = {isa = PBXBuildFile; fileRef = 8369475B1F1FED400047697C /* boolConfigIsABool2-true.json */; };
 		836947621F1FEEB40047697C /* numberConfigIsANumber-1.json in Resources */ = {isa = PBXBuildFile; fileRef = 8369475F1F1FEEB40047697C /* numberConfigIsANumber-1.json */; };
-		836947631F1FEEB40047697C /* numberConfigIsANumber-2-withVersion.json in Resources */ = {isa = PBXBuildFile; fileRef = 836947601F1FEEB40047697C /* numberConfigIsANumber-2-withVersion.json */; };
+		836947631F1FEEB40047697C /* numberConfigIsANumber-2.json in Resources */ = {isa = PBXBuildFile; fileRef = 836947601F1FEEB40047697C /* numberConfigIsANumber-2.json */; };
 		836947641F1FEEB40047697C /* numberConfigIsANumber2-1.json in Resources */ = {isa = PBXBuildFile; fileRef = 836947611F1FEEB40047697C /* numberConfigIsANumber2-1.json */; };
-		836947681F1FF0A00047697C /* stringConfigIsAString-someString-withVersion.json in Resources */ = {isa = PBXBuildFile; fileRef = 836947651F1FF0A00047697C /* stringConfigIsAString-someString-withVersion.json */; };
+		836947681F1FF0A00047697C /* stringConfigIsAString-someString.json in Resources */ = {isa = PBXBuildFile; fileRef = 836947651F1FF0A00047697C /* stringConfigIsAString-someString.json */; };
 		836947691F1FF0A00047697C /* stringConfigIsAString-someStringA.json in Resources */ = {isa = PBXBuildFile; fileRef = 836947661F1FF0A00047697C /* stringConfigIsAString-someStringA.json */; };
 		8369476A1F1FF0A00047697C /* stringConfigIsAStringA-someString.json in Resources */ = {isa = PBXBuildFile; fileRef = 836947671F1FF0A00047697C /* stringConfigIsAStringA-someString.json */; };
 		8369476F1F1FF45B0047697C /* arrayConfigIsAnArray-1.json in Resources */ = {isa = PBXBuildFile; fileRef = 8369476B1F1FF45B0047697C /* arrayConfigIsAnArray-1.json */; };
-		836947701F1FF45B0047697C /* arrayConfigIsAnArray-123-withVersion.json in Resources */ = {isa = PBXBuildFile; fileRef = 8369476C1F1FF45B0047697C /* arrayConfigIsAnArray-123-withVersion.json */; };
+		836947701F1FF45B0047697C /* arrayConfigIsAnArray-123.json in Resources */ = {isa = PBXBuildFile; fileRef = 8369476C1F1FF45B0047697C /* arrayConfigIsAnArray-123.json */; };
 		836947711F1FF45B0047697C /* arrayConfigIsAnArray-Empty.json in Resources */ = {isa = PBXBuildFile; fileRef = 8369476D1F1FF45B0047697C /* arrayConfigIsAnArray-Empty.json */; };
 		836947721F1FF45B0047697C /* arrayConfigIsAnArrayA-123.json in Resources */ = {isa = PBXBuildFile; fileRef = 8369476E1F1FF45B0047697C /* arrayConfigIsAnArrayA-123.json */; };
-		8369477A1F1FF80A0047697C /* dictionaryConfigIsADictionary-3Key-withVersion.json in Resources */ = {isa = PBXBuildFile; fileRef = 836947731F1FF80A0047697C /* dictionaryConfigIsADictionary-3Key-withVersion.json */; };
+		8369477A1F1FF80A0047697C /* dictionaryConfigIsADictionary-3Key.json in Resources */ = {isa = PBXBuildFile; fileRef = 836947731F1FF80A0047697C /* dictionaryConfigIsADictionary-3Key.json */; };
 		8369477B1F1FF80A0047697C /* dictionaryConfigIsADictionary-Empty.json in Resources */ = {isa = PBXBuildFile; fileRef = 836947741F1FF80A0047697C /* dictionaryConfigIsADictionary-Empty.json */; };
 		8369477C1F1FF80A0047697C /* dictionaryConfigIsADictionary-KeyA.json in Resources */ = {isa = PBXBuildFile; fileRef = 836947751F1FF80A0047697C /* dictionaryConfigIsADictionary-KeyA.json */; };
 		8369477D1F1FF80A0047697C /* dictionaryConfigIsADictionary-KeyB-124.json in Resources */ = {isa = PBXBuildFile; fileRef = 836947761F1FF80A0047697C /* dictionaryConfigIsADictionary-KeyB-124.json */; };
@@ -228,21 +217,49 @@
 		836947801F1FF80A0047697C /* dictionaryConfigIsADictionary-KeyC.json in Resources */ = {isa = PBXBuildFile; fileRef = 836947791F1FF80A0047697C /* dictionaryConfigIsADictionary-KeyC.json */; };
 		836947831F20125F0047697C /* ldClientManagerTestConfigA.json in Resources */ = {isa = PBXBuildFile; fileRef = 836947811F20125F0047697C /* ldClientManagerTestConfigA.json */; };
 		836947841F20125F0047697C /* ldClientManagerTestConfigB.json in Resources */ = {isa = PBXBuildFile; fileRef = 836947821F20125F0047697C /* ldClientManagerTestConfigB.json */; };
+		8375839A209CCE71004329DD /* LDEventTrackingContext.h in Headers */ = {isa = PBXBuildFile; fileRef = 83758398209CCE71004329DD /* LDEventTrackingContext.h */; };
+		8375839B209CCE71004329DD /* LDEventTrackingContext.h in Headers */ = {isa = PBXBuildFile; fileRef = 83758398209CCE71004329DD /* LDEventTrackingContext.h */; };
+		8375839C209CCE71004329DD /* LDEventTrackingContext.h in Headers */ = {isa = PBXBuildFile; fileRef = 83758398209CCE71004329DD /* LDEventTrackingContext.h */; };
+		8375839D209CCE71004329DD /* LDEventTrackingContext.h in Headers */ = {isa = PBXBuildFile; fileRef = 83758398209CCE71004329DD /* LDEventTrackingContext.h */; };
+		8375839E209CCE71004329DD /* LDEventTrackingContext.m in Sources */ = {isa = PBXBuildFile; fileRef = 83758399209CCE71004329DD /* LDEventTrackingContext.m */; };
+		8375839F209CCE71004329DD /* LDEventTrackingContext.m in Sources */ = {isa = PBXBuildFile; fileRef = 83758399209CCE71004329DD /* LDEventTrackingContext.m */; };
+		837583A0209CCE71004329DD /* LDEventTrackingContext.m in Sources */ = {isa = PBXBuildFile; fileRef = 83758399209CCE71004329DD /* LDEventTrackingContext.m */; };
+		837583A1209CCE71004329DD /* LDEventTrackingContext.m in Sources */ = {isa = PBXBuildFile; fileRef = 83758399209CCE71004329DD /* LDEventTrackingContext.m */; };
+		837583A3209CD0A7004329DD /* LDEventTrackingContextTest.m in Sources */ = {isa = PBXBuildFile; fileRef = 837583A2209CD0A7004329DD /* LDEventTrackingContextTest.m */; };
+		837583A7209CD187004329DD /* LDEventTrackingContext+Testable.m in Sources */ = {isa = PBXBuildFile; fileRef = 837583A6209CD187004329DD /* LDEventTrackingContext+Testable.m */; };
 		83889B141F8E93A100A4EF69 /* LDEvent+Testable.m in Sources */ = {isa = PBXBuildFile; fileRef = 83889B131F8E93A100A4EF69 /* LDEvent+Testable.m */; };
-		83889B171F8F28AB00A4EF69 /* NSURLResponse+Unauthorized.h in Headers */ = {isa = PBXBuildFile; fileRef = 83889B151F8F28AB00A4EF69 /* NSURLResponse+Unauthorized.h */; };
-		83889B181F8F28AB00A4EF69 /* NSURLResponse+Unauthorized.h in Headers */ = {isa = PBXBuildFile; fileRef = 83889B151F8F28AB00A4EF69 /* NSURLResponse+Unauthorized.h */; };
-		83889B191F8F28AB00A4EF69 /* NSURLResponse+Unauthorized.h in Headers */ = {isa = PBXBuildFile; fileRef = 83889B151F8F28AB00A4EF69 /* NSURLResponse+Unauthorized.h */; };
-		83889B1A1F8F28AB00A4EF69 /* NSURLResponse+Unauthorized.h in Headers */ = {isa = PBXBuildFile; fileRef = 83889B151F8F28AB00A4EF69 /* NSURLResponse+Unauthorized.h */; };
-		83889B1B1F8F28AB00A4EF69 /* NSURLResponse+Unauthorized.m in Sources */ = {isa = PBXBuildFile; fileRef = 83889B161F8F28AB00A4EF69 /* NSURLResponse+Unauthorized.m */; };
-		83889B1C1F8F28AB00A4EF69 /* NSURLResponse+Unauthorized.m in Sources */ = {isa = PBXBuildFile; fileRef = 83889B161F8F28AB00A4EF69 /* NSURLResponse+Unauthorized.m */; };
-		83889B1D1F8F28AB00A4EF69 /* NSURLResponse+Unauthorized.m in Sources */ = {isa = PBXBuildFile; fileRef = 83889B161F8F28AB00A4EF69 /* NSURLResponse+Unauthorized.m */; };
-		83889B1E1F8F28AB00A4EF69 /* NSURLResponse+Unauthorized.m in Sources */ = {isa = PBXBuildFile; fileRef = 83889B161F8F28AB00A4EF69 /* NSURLResponse+Unauthorized.m */; };
+		83889B171F8F28AB00A4EF69 /* NSURLResponse+LaunchDarkly.h in Headers */ = {isa = PBXBuildFile; fileRef = 83889B151F8F28AB00A4EF69 /* NSURLResponse+LaunchDarkly.h */; };
+		83889B181F8F28AB00A4EF69 /* NSURLResponse+LaunchDarkly.h in Headers */ = {isa = PBXBuildFile; fileRef = 83889B151F8F28AB00A4EF69 /* NSURLResponse+LaunchDarkly.h */; };
+		83889B191F8F28AB00A4EF69 /* NSURLResponse+LaunchDarkly.h in Headers */ = {isa = PBXBuildFile; fileRef = 83889B151F8F28AB00A4EF69 /* NSURLResponse+LaunchDarkly.h */; };
+		83889B1A1F8F28AB00A4EF69 /* NSURLResponse+LaunchDarkly.h in Headers */ = {isa = PBXBuildFile; fileRef = 83889B151F8F28AB00A4EF69 /* NSURLResponse+LaunchDarkly.h */; };
+		83889B1B1F8F28AB00A4EF69 /* NSURLResponse+LaunchDarkly.m in Sources */ = {isa = PBXBuildFile; fileRef = 83889B161F8F28AB00A4EF69 /* NSURLResponse+LaunchDarkly.m */; };
+		83889B1C1F8F28AB00A4EF69 /* NSURLResponse+LaunchDarkly.m in Sources */ = {isa = PBXBuildFile; fileRef = 83889B161F8F28AB00A4EF69 /* NSURLResponse+LaunchDarkly.m */; };
+		83889B1D1F8F28AB00A4EF69 /* NSURLResponse+LaunchDarkly.m in Sources */ = {isa = PBXBuildFile; fileRef = 83889B161F8F28AB00A4EF69 /* NSURLResponse+LaunchDarkly.m */; };
+		83889B1E1F8F28AB00A4EF69 /* NSURLResponse+LaunchDarkly.m in Sources */ = {isa = PBXBuildFile; fileRef = 83889B161F8F28AB00A4EF69 /* NSURLResponse+LaunchDarkly.m */; };
 		839956E820053081009707D1 /* LDUserModel+Testable.m in Sources */ = {isa = PBXBuildFile; fileRef = 839956E720053081009707D1 /* LDUserModel+Testable.m */; };
 		839D6D271FD1B57B000BE6BD /* DarklyEventSource.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 839D6D261FD1B57B000BE6BD /* DarklyEventSource.framework */; };
 		839D6D291FD1B58E000BE6BD /* DarklyEventSource.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 839D6D281FD1B58E000BE6BD /* DarklyEventSource.framework */; };
 		839E0A16201F97E900DB8CD1 /* ldClientManagerTestPatchIsANumber.json in Resources */ = {isa = PBXBuildFile; fileRef = 839E0A15201F97E800DB8CD1 /* ldClientManagerTestPatchIsANumber.json */; };
 		839E0A18201FB8D900DB8CD1 /* ldClientManagerTestDeleteIsANumber.json in Resources */ = {isa = PBXBuildFile; fileRef = 839E0A17201FB8D900DB8CD1 /* ldClientManagerTestDeleteIsANumber.json */; };
-		83B8C24C1FEB1CD20082B8A9 /* LDUserModel+Stub.m in Sources */ = {isa = PBXBuildFile; fileRef = 83B8C24B1FEB1CD20082B8A9 /* LDUserModel+Stub.m */; };
+		83B62E1720A249A200F2E656 /* NSDateFormatter+JsonHeader.h in Headers */ = {isa = PBXBuildFile; fileRef = 83B62E1520A249A200F2E656 /* NSDateFormatter+JsonHeader.h */; };
+		83B62E1820A249A200F2E656 /* NSDateFormatter+JsonHeader.h in Headers */ = {isa = PBXBuildFile; fileRef = 83B62E1520A249A200F2E656 /* NSDateFormatter+JsonHeader.h */; };
+		83B62E1920A249A200F2E656 /* NSDateFormatter+JsonHeader.h in Headers */ = {isa = PBXBuildFile; fileRef = 83B62E1520A249A200F2E656 /* NSDateFormatter+JsonHeader.h */; };
+		83B62E1A20A249A200F2E656 /* NSDateFormatter+JsonHeader.h in Headers */ = {isa = PBXBuildFile; fileRef = 83B62E1520A249A200F2E656 /* NSDateFormatter+JsonHeader.h */; };
+		83B62E1B20A249A200F2E656 /* NSDateFormatter+JsonHeader.m in Sources */ = {isa = PBXBuildFile; fileRef = 83B62E1620A249A200F2E656 /* NSDateFormatter+JsonHeader.m */; };
+		83B62E1C20A249A200F2E656 /* NSDateFormatter+JsonHeader.m in Sources */ = {isa = PBXBuildFile; fileRef = 83B62E1620A249A200F2E656 /* NSDateFormatter+JsonHeader.m */; };
+		83B62E1D20A249A200F2E656 /* NSDateFormatter+JsonHeader.m in Sources */ = {isa = PBXBuildFile; fileRef = 83B62E1620A249A200F2E656 /* NSDateFormatter+JsonHeader.m */; };
+		83B62E1E20A249A200F2E656 /* NSDateFormatter+JsonHeader.m in Sources */ = {isa = PBXBuildFile; fileRef = 83B62E1620A249A200F2E656 /* NSDateFormatter+JsonHeader.m */; };
+		83B62E2020A2517500F2E656 /* NSDateFormatter+JsonHeaderTest.m in Sources */ = {isa = PBXBuildFile; fileRef = 83B62E1F20A2517500F2E656 /* NSDateFormatter+JsonHeaderTest.m */; };
+		83B62E2320A258D400F2E656 /* NSDateFormatter+JsonHeader+Testable.m in Sources */ = {isa = PBXBuildFile; fileRef = 83B62E2220A258D400F2E656 /* NSDateFormatter+JsonHeader+Testable.m */; };
+		83B6FC1D207E60B6002DBA7B /* NSDate+ReferencedDate.h in Headers */ = {isa = PBXBuildFile; fileRef = 83B6FC1B207E60B6002DBA7B /* NSDate+ReferencedDate.h */; };
+		83B6FC1E207E60B6002DBA7B /* NSDate+ReferencedDate.h in Headers */ = {isa = PBXBuildFile; fileRef = 83B6FC1B207E60B6002DBA7B /* NSDate+ReferencedDate.h */; };
+		83B6FC1F207E60B6002DBA7B /* NSDate+ReferencedDate.h in Headers */ = {isa = PBXBuildFile; fileRef = 83B6FC1B207E60B6002DBA7B /* NSDate+ReferencedDate.h */; };
+		83B6FC20207E60B6002DBA7B /* NSDate+ReferencedDate.h in Headers */ = {isa = PBXBuildFile; fileRef = 83B6FC1B207E60B6002DBA7B /* NSDate+ReferencedDate.h */; };
+		83B6FC21207E60B6002DBA7B /* NSDate+ReferencedDate.m in Sources */ = {isa = PBXBuildFile; fileRef = 83B6FC1C207E60B6002DBA7B /* NSDate+ReferencedDate.m */; };
+		83B6FC22207E60B6002DBA7B /* NSDate+ReferencedDate.m in Sources */ = {isa = PBXBuildFile; fileRef = 83B6FC1C207E60B6002DBA7B /* NSDate+ReferencedDate.m */; };
+		83B6FC23207E60B6002DBA7B /* NSDate+ReferencedDate.m in Sources */ = {isa = PBXBuildFile; fileRef = 83B6FC1C207E60B6002DBA7B /* NSDate+ReferencedDate.m */; };
+		83B6FC24207E60B6002DBA7B /* NSDate+ReferencedDate.m in Sources */ = {isa = PBXBuildFile; fileRef = 83B6FC1C207E60B6002DBA7B /* NSDate+ReferencedDate.m */; };
+		83B6FC2B208127B2002DBA7B /* LDEventModel+Testable.m in Sources */ = {isa = PBXBuildFile; fileRef = 83B6FC2A208127B2002DBA7B /* LDEventModel+Testable.m */; };
 		83B8C24F1FEC19500082B8A9 /* NSDateFormatter+LDUserModel.h in Headers */ = {isa = PBXBuildFile; fileRef = 83B8C24D1FEC19500082B8A9 /* NSDateFormatter+LDUserModel.h */; };
 		83B8C2501FEC19500082B8A9 /* NSDateFormatter+LDUserModel.h in Headers */ = {isa = PBXBuildFile; fileRef = 83B8C24D1FEC19500082B8A9 /* NSDateFormatter+LDUserModel.h */; };
 		83B8C2511FEC19500082B8A9 /* NSDateFormatter+LDUserModel.h in Headers */ = {isa = PBXBuildFile; fileRef = 83B8C24D1FEC19500082B8A9 /* NSDateFormatter+LDUserModel.h */; };
@@ -251,9 +268,8 @@
 		83B8C2541FEC19500082B8A9 /* NSDateFormatter+LDUserModel.m in Sources */ = {isa = PBXBuildFile; fileRef = 83B8C24E1FEC19500082B8A9 /* NSDateFormatter+LDUserModel.m */; };
 		83B8C2551FEC19500082B8A9 /* NSDateFormatter+LDUserModel.m in Sources */ = {isa = PBXBuildFile; fileRef = 83B8C24E1FEC19500082B8A9 /* NSDateFormatter+LDUserModel.m */; };
 		83B8C2561FEC19500082B8A9 /* NSDateFormatter+LDUserModel.m in Sources */ = {isa = PBXBuildFile; fileRef = 83B8C24E1FEC19500082B8A9 /* NSDateFormatter+LDUserModel.m */; };
-		83B8C2581FEC4C3B0082B8A9 /* featureFlags-excludeNulls-withVersions.json in Resources */ = {isa = PBXBuildFile; fileRef = 83B8C2571FEC4C3B0082B8A9 /* featureFlags-excludeNulls-withVersions.json */; };
+		83B8C2581FEC4C3B0082B8A9 /* featureFlags-excludeNulls.json in Resources */ = {isa = PBXBuildFile; fileRef = 83B8C2571FEC4C3B0082B8A9 /* featureFlags-excludeNulls.json */; };
 		83B975D31FD1CA6000A4EF4E /* DarklyEventSource.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 83B975D21FD1CA6000A4EF4E /* DarklyEventSource.framework */; };
-		83BE9385201A63B400DD1ED9 /* ldDataManagerTestConfig.json in Resources */ = {isa = PBXBuildFile; fileRef = 83BE9384201A63B400DD1ED9 /* ldDataManagerTestConfig.json */; };
 		83BE9387201A6AA400DD1ED9 /* ldFlagConfigModelTest.json in Resources */ = {isa = PBXBuildFile; fileRef = 83BE9386201A6AA400DD1ED9 /* ldFlagConfigModelTest.json */; };
 		83BE9389201A781200DD1ED9 /* ldFlagConfigModelPatchVersion1Flag.json in Resources */ = {isa = PBXBuildFile; fileRef = 83BE9388201A781200DD1ED9 /* ldFlagConfigModelPatchVersion1Flag.json */; };
 		83BE938C201A797B00DD1ED9 /* NSJSONSerialization+Testable.m in Sources */ = {isa = PBXBuildFile; fileRef = 83BE938B201A797B00DD1ED9 /* NSJSONSerialization+Testable.m */; };
@@ -264,7 +280,39 @@
 		83BE9398201AA53100DD1ED9 /* ldFlagConfigModelPatchVersion2FlagWithNull.json in Resources */ = {isa = PBXBuildFile; fileRef = 83BE9397201AA53100DD1ED9 /* ldFlagConfigModelPatchVersion2FlagWithNull.json */; };
 		83BE939A201B6EBA00DD1ED9 /* ldFlagConfigModelDeleteVersion2Flag.json in Resources */ = {isa = PBXBuildFile; fileRef = 83BE9399201B6EBA00DD1ED9 /* ldFlagConfigModelDeleteVersion2Flag.json */; };
 		83BE939C201B80F800DD1ED9 /* ldFlagConfigModelDeleteNewFlag.json in Resources */ = {isa = PBXBuildFile; fileRef = 83BE939B201B80F800DD1ED9 /* ldFlagConfigModelDeleteNewFlag.json */; };
-		83C28CF92023872C00394693 /* featureFlags-excludeNulls-withoutVersions.json in Resources */ = {isa = PBXBuildFile; fileRef = 83C28CF82023872B00394693 /* featureFlags-excludeNulls-withoutVersions.json */; };
+		83C8867D2087A786004AC82F /* LDFlagValueCounter.h in Headers */ = {isa = PBXBuildFile; fileRef = 83C8867B2087A786004AC82F /* LDFlagValueCounter.h */; };
+		83C8867E2087A786004AC82F /* LDFlagValueCounter.h in Headers */ = {isa = PBXBuildFile; fileRef = 83C8867B2087A786004AC82F /* LDFlagValueCounter.h */; };
+		83C8867F2087A786004AC82F /* LDFlagValueCounter.h in Headers */ = {isa = PBXBuildFile; fileRef = 83C8867B2087A786004AC82F /* LDFlagValueCounter.h */; };
+		83C886802087A786004AC82F /* LDFlagValueCounter.h in Headers */ = {isa = PBXBuildFile; fileRef = 83C8867B2087A786004AC82F /* LDFlagValueCounter.h */; };
+		83C886812087A786004AC82F /* LDFlagValueCounter.m in Sources */ = {isa = PBXBuildFile; fileRef = 83C8867C2087A786004AC82F /* LDFlagValueCounter.m */; };
+		83C886822087A786004AC82F /* LDFlagValueCounter.m in Sources */ = {isa = PBXBuildFile; fileRef = 83C8867C2087A786004AC82F /* LDFlagValueCounter.m */; };
+		83C886832087A786004AC82F /* LDFlagValueCounter.m in Sources */ = {isa = PBXBuildFile; fileRef = 83C8867C2087A786004AC82F /* LDFlagValueCounter.m */; };
+		83C886842087A786004AC82F /* LDFlagValueCounter.m in Sources */ = {isa = PBXBuildFile; fileRef = 83C8867C2087A786004AC82F /* LDFlagValueCounter.m */; };
+		83ECCC882087BF860086F879 /* LDFlagValueCounterTest.m in Sources */ = {isa = PBXBuildFile; fileRef = 83ECCC872087BF860086F879 /* LDFlagValueCounterTest.m */; };
+		83ECCC8B2087CA280086F879 /* LDFlagValueCounter+Testable.m in Sources */ = {isa = PBXBuildFile; fileRef = 83ECCC8A2087CA280086F879 /* LDFlagValueCounter+Testable.m */; };
+		83ECCC8E2087D67D0086F879 /* LDFlagCounter.h in Headers */ = {isa = PBXBuildFile; fileRef = 83ECCC8C2087D67D0086F879 /* LDFlagCounter.h */; };
+		83ECCC8F2087D67D0086F879 /* LDFlagCounter.h in Headers */ = {isa = PBXBuildFile; fileRef = 83ECCC8C2087D67D0086F879 /* LDFlagCounter.h */; };
+		83ECCC902087D67D0086F879 /* LDFlagCounter.h in Headers */ = {isa = PBXBuildFile; fileRef = 83ECCC8C2087D67D0086F879 /* LDFlagCounter.h */; };
+		83ECCC912087D67D0086F879 /* LDFlagCounter.h in Headers */ = {isa = PBXBuildFile; fileRef = 83ECCC8C2087D67D0086F879 /* LDFlagCounter.h */; };
+		83ECCC922087D67D0086F879 /* LDFlagCounter.m in Sources */ = {isa = PBXBuildFile; fileRef = 83ECCC8D2087D67D0086F879 /* LDFlagCounter.m */; };
+		83ECCC932087D67D0086F879 /* LDFlagCounter.m in Sources */ = {isa = PBXBuildFile; fileRef = 83ECCC8D2087D67D0086F879 /* LDFlagCounter.m */; };
+		83ECCC942087D67D0086F879 /* LDFlagCounter.m in Sources */ = {isa = PBXBuildFile; fileRef = 83ECCC8D2087D67D0086F879 /* LDFlagCounter.m */; };
+		83ECCC952087D67D0086F879 /* LDFlagCounter.m in Sources */ = {isa = PBXBuildFile; fileRef = 83ECCC8D2087D67D0086F879 /* LDFlagCounter.m */; };
+		83ECCC982087DF040086F879 /* LDFlagCounterTest.m in Sources */ = {isa = PBXBuildFile; fileRef = 83ECCC972087DF040086F879 /* LDFlagCounterTest.m */; };
+		83ECCC9B2087EF4A0086F879 /* LDFlagConfigValue+Testable.m in Sources */ = {isa = PBXBuildFile; fileRef = 83ECCC9A2087EF4A0086F879 /* LDFlagConfigValue+Testable.m */; };
+		83ECCC9D208800F20086F879 /* doubleConfigIsADouble-e.json in Resources */ = {isa = PBXBuildFile; fileRef = 83ECCC9C208800F10086F879 /* doubleConfigIsADouble-e.json */; };
+		83ECCCA32088E4E90086F879 /* LDFlagCounter+Testable.m in Sources */ = {isa = PBXBuildFile; fileRef = 83ECCCA22088E4E90086F879 /* LDFlagCounter+Testable.m */; };
+		83ECCCA62088FBA80086F879 /* LDFlagConfigTracker.h in Headers */ = {isa = PBXBuildFile; fileRef = 83ECCCA42088FBA80086F879 /* LDFlagConfigTracker.h */; };
+		83ECCCA72088FBA80086F879 /* LDFlagConfigTracker.h in Headers */ = {isa = PBXBuildFile; fileRef = 83ECCCA42088FBA80086F879 /* LDFlagConfigTracker.h */; };
+		83ECCCA82088FBA80086F879 /* LDFlagConfigTracker.h in Headers */ = {isa = PBXBuildFile; fileRef = 83ECCCA42088FBA80086F879 /* LDFlagConfigTracker.h */; };
+		83ECCCA92088FBA80086F879 /* LDFlagConfigTracker.h in Headers */ = {isa = PBXBuildFile; fileRef = 83ECCCA42088FBA80086F879 /* LDFlagConfigTracker.h */; };
+		83ECCCAA2088FBA80086F879 /* LDFlagConfigTracker.m in Sources */ = {isa = PBXBuildFile; fileRef = 83ECCCA52088FBA80086F879 /* LDFlagConfigTracker.m */; };
+		83ECCCAB2088FBA80086F879 /* LDFlagConfigTracker.m in Sources */ = {isa = PBXBuildFile; fileRef = 83ECCCA52088FBA80086F879 /* LDFlagConfigTracker.m */; };
+		83ECCCAC2088FBA80086F879 /* LDFlagConfigTracker.m in Sources */ = {isa = PBXBuildFile; fileRef = 83ECCCA52088FBA80086F879 /* LDFlagConfigTracker.m */; };
+		83ECCCAD2088FBA80086F879 /* LDFlagConfigTracker.m in Sources */ = {isa = PBXBuildFile; fileRef = 83ECCCA52088FBA80086F879 /* LDFlagConfigTracker.m */; };
+		83ECCCAF2088FF420086F879 /* LDFlagConfigTrackerTest.m in Sources */ = {isa = PBXBuildFile; fileRef = 83ECCCAE2088FF420086F879 /* LDFlagConfigTrackerTest.m */; };
+		83ECCCB220890A430086F879 /* LDFlagConfigTracker+Testable.m in Sources */ = {isa = PBXBuildFile; fileRef = 83ECCCB120890A430086F879 /* LDFlagConfigTracker+Testable.m */; };
+		83ECCCB520891E8E0086F879 /* NSDate+Testable.m in Sources */ = {isa = PBXBuildFile; fileRef = 83ECCCB420891E8E0086F879 /* NSDate+Testable.m */; };
 		83EF67811F979B4100403126 /* LDEvent+Unauthorized.h in Headers */ = {isa = PBXBuildFile; fileRef = 83EF677F1F979B4100403126 /* LDEvent+Unauthorized.h */; };
 		83EF67821F979B4100403126 /* LDEvent+Unauthorized.h in Headers */ = {isa = PBXBuildFile; fileRef = 83EF677F1F979B4100403126 /* LDEvent+Unauthorized.h */; };
 		83EF67831F979B4100403126 /* LDEvent+Unauthorized.h in Headers */ = {isa = PBXBuildFile; fileRef = 83EF677F1F979B4100403126 /* LDEvent+Unauthorized.h */; };
@@ -276,14 +324,14 @@
 		83EF678D1F98FC9200403126 /* LDFlagConfigModel+Testable.m in Sources */ = {isa = PBXBuildFile; fileRef = 83EF678C1F98FC9200403126 /* LDFlagConfigModel+Testable.m */; };
 		83EF67901F99365600403126 /* LDClient+Testable.m in Sources */ = {isa = PBXBuildFile; fileRef = 83EF678F1F99365600403126 /* LDClient+Testable.m */; };
 		83F5B4751F91560300174DF7 /* LDDataManager+Testable.m in Sources */ = {isa = PBXBuildFile; fileRef = 83F5B4741F91560300174DF7 /* LDDataManager+Testable.m */; };
-		83F5B4781F95096A00174DF7 /* NSHTTPURLResponse+Unauthorized.h in Headers */ = {isa = PBXBuildFile; fileRef = 83F5B4761F95096A00174DF7 /* NSHTTPURLResponse+Unauthorized.h */; };
-		83F5B4791F95096A00174DF7 /* NSHTTPURLResponse+Unauthorized.h in Headers */ = {isa = PBXBuildFile; fileRef = 83F5B4761F95096A00174DF7 /* NSHTTPURLResponse+Unauthorized.h */; };
-		83F5B47A1F95096A00174DF7 /* NSHTTPURLResponse+Unauthorized.h in Headers */ = {isa = PBXBuildFile; fileRef = 83F5B4761F95096A00174DF7 /* NSHTTPURLResponse+Unauthorized.h */; };
-		83F5B47B1F95096A00174DF7 /* NSHTTPURLResponse+Unauthorized.h in Headers */ = {isa = PBXBuildFile; fileRef = 83F5B4761F95096A00174DF7 /* NSHTTPURLResponse+Unauthorized.h */; };
-		83F5B47C1F95096A00174DF7 /* NSHTTPURLResponse+Unauthorized.m in Sources */ = {isa = PBXBuildFile; fileRef = 83F5B4771F95096A00174DF7 /* NSHTTPURLResponse+Unauthorized.m */; };
-		83F5B47D1F95096A00174DF7 /* NSHTTPURLResponse+Unauthorized.m in Sources */ = {isa = PBXBuildFile; fileRef = 83F5B4771F95096A00174DF7 /* NSHTTPURLResponse+Unauthorized.m */; };
-		83F5B47E1F95096A00174DF7 /* NSHTTPURLResponse+Unauthorized.m in Sources */ = {isa = PBXBuildFile; fileRef = 83F5B4771F95096A00174DF7 /* NSHTTPURLResponse+Unauthorized.m */; };
-		83F5B47F1F95096A00174DF7 /* NSHTTPURLResponse+Unauthorized.m in Sources */ = {isa = PBXBuildFile; fileRef = 83F5B4771F95096A00174DF7 /* NSHTTPURLResponse+Unauthorized.m */; };
+		83F5B4781F95096A00174DF7 /* NSHTTPURLResponse+LaunchDarkly.h in Headers */ = {isa = PBXBuildFile; fileRef = 83F5B4761F95096A00174DF7 /* NSHTTPURLResponse+LaunchDarkly.h */; };
+		83F5B4791F95096A00174DF7 /* NSHTTPURLResponse+LaunchDarkly.h in Headers */ = {isa = PBXBuildFile; fileRef = 83F5B4761F95096A00174DF7 /* NSHTTPURLResponse+LaunchDarkly.h */; };
+		83F5B47A1F95096A00174DF7 /* NSHTTPURLResponse+LaunchDarkly.h in Headers */ = {isa = PBXBuildFile; fileRef = 83F5B4761F95096A00174DF7 /* NSHTTPURLResponse+LaunchDarkly.h */; };
+		83F5B47B1F95096A00174DF7 /* NSHTTPURLResponse+LaunchDarkly.h in Headers */ = {isa = PBXBuildFile; fileRef = 83F5B4761F95096A00174DF7 /* NSHTTPURLResponse+LaunchDarkly.h */; };
+		83F5B47C1F95096A00174DF7 /* NSHTTPURLResponse+LaunchDarkly.m in Sources */ = {isa = PBXBuildFile; fileRef = 83F5B4771F95096A00174DF7 /* NSHTTPURLResponse+LaunchDarkly.m */; };
+		83F5B47D1F95096A00174DF7 /* NSHTTPURLResponse+LaunchDarkly.m in Sources */ = {isa = PBXBuildFile; fileRef = 83F5B4771F95096A00174DF7 /* NSHTTPURLResponse+LaunchDarkly.m */; };
+		83F5B47E1F95096A00174DF7 /* NSHTTPURLResponse+LaunchDarkly.m in Sources */ = {isa = PBXBuildFile; fileRef = 83F5B4771F95096A00174DF7 /* NSHTTPURLResponse+LaunchDarkly.m */; };
+		83F5B47F1F95096A00174DF7 /* NSHTTPURLResponse+LaunchDarkly.m in Sources */ = {isa = PBXBuildFile; fileRef = 83F5B4771F95096A00174DF7 /* NSHTTPURLResponse+LaunchDarkly.m */; };
 		8BB91CDBFE302A67F0F1403A /* Pods_Darkly_watchOS.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 119B5C495711E2F896661BBA /* Pods_Darkly_watchOS.framework */; };
 		D2E446FE87A4037E841D12CC /* Pods_Darkly_iOS.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 875461696618AE6C4F4B4AC6 /* Pods_Darkly_iOS.framework */; };
 		E0D956853DFFDC3A33332F76 /* Pods_DarklyTests.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C604EED857FC066033CAB2CB /* Pods_DarklyTests.framework */; };
@@ -348,13 +396,13 @@
 		6903471A1E689B9F00E45133 /* LDClientTest.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = LDClientTest.m; sourceTree = "<group>"; };
 		6903471B1E689B9F00E45133 /* LDUtilTest.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = LDUtilTest.m; sourceTree = "<group>"; };
 		6903471C1E689B9F00E45133 /* LDClientManagerTest.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = LDClientManagerTest.m; sourceTree = "<group>"; };
-		6903471E1E689B9F00E45133 /* featureFlags-withVersions.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = "featureFlags-withVersions.json"; sourceTree = "<group>"; };
+		6903471E1E689B9F00E45133 /* featureFlags.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = featureFlags.json; sourceTree = "<group>"; };
 		6903471F1E689B9F00E45133 /* LDConfigTest.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = LDConfigTest.m; sourceTree = "<group>"; };
 		690347201E689B9F00E45133 /* DarklyXCTestCase.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DarklyXCTestCase.h; sourceTree = "<group>"; };
 		690347211E689B9F00E45133 /* LDFlagConfigModelTest.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = LDFlagConfigModelTest.m; sourceTree = "<group>"; };
 		690347221E689B9F00E45133 /* DarklyXCTestCase.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = DarklyXCTestCase.m; sourceTree = "<group>"; };
-		690347241E689B9F00E45133 /* NSArray+UnitTests.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "NSArray+UnitTests.h"; sourceTree = "<group>"; };
-		690347251E689B9F00E45133 /* NSArray+UnitTests.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "NSArray+UnitTests.m"; sourceTree = "<group>"; };
+		690347241E689B9F00E45133 /* NSArray+Testable.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "NSArray+Testable.h"; sourceTree = "<group>"; };
+		690347251E689B9F00E45133 /* NSArray+Testable.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "NSArray+Testable.m"; sourceTree = "<group>"; };
 		69A87E8F1E74458900B88B23 /* Darkly.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Darkly.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		69BAF40B1E9AAB4800747613 /* Darkly.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = Darkly.h; path = Framework/Darkly.h; sourceTree = SOURCE_ROOT; };
 		69BAF40C1E9AAB4800747613 /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; name = Info.plist; path = Framework/Info.plist; sourceTree = SOURCE_ROOT; };
@@ -363,21 +411,8 @@
 		7587BE78E11BC6EC851CA413 /* Pods-Darkly_osx.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Darkly_osx.debug.xcconfig"; path = "Pods/Target Support Files/Pods-Darkly_osx/Pods-Darkly_osx.debug.xcconfig"; sourceTree = "<group>"; };
 		8305EC6520221973002F20DB /* LDFlagConfigValue.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = LDFlagConfigValue.h; sourceTree = "<group>"; };
 		8305EC6620221973002F20DB /* LDFlagConfigValue.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = LDFlagConfigValue.m; sourceTree = "<group>"; };
-		8305EC6F20222078002F20DB /* NSObject+LDFlagConfigValue.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "NSObject+LDFlagConfigValue.h"; sourceTree = "<group>"; };
-		8305EC7020222078002F20DB /* NSObject+LDFlagConfigValue.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "NSObject+LDFlagConfigValue.m"; sourceTree = "<group>"; };
-		8305EC7920222B5E002F20DB /* NSObject+LDFlagConfigValueTest.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "NSObject+LDFlagConfigValueTest.m"; sourceTree = "<group>"; };
 		8305EC7B2022336C002F20DB /* LDFlagConfigValueTest.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = LDFlagConfigValueTest.m; sourceTree = "<group>"; };
-		8305EC7D202238FC002F20DB /* boolConfigIsABool-true-withoutVersion.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = "boolConfigIsABool-true-withoutVersion.json"; sourceTree = "<group>"; };
-		8305EC7F20223A2E002F20DB /* numberConfigIsANumber-2-withoutVersion.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = "numberConfigIsANumber-2-withoutVersion.json"; sourceTree = "<group>"; };
-		8305EC8120223BC2002F20DB /* doubleConfigIsADouble-Pi-withoutVersion.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = "doubleConfigIsADouble-Pi-withoutVersion.json"; sourceTree = "<group>"; };
-		8305EC8320223D65002F20DB /* stringConfigIsAString-someString-withoutVersion.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = "stringConfigIsAString-someString-withoutVersion.json"; sourceTree = "<group>"; };
-		8305EC8520223EBA002F20DB /* arrayConfigIsAnArray-123-withoutVersion.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = "arrayConfigIsAnArray-123-withoutVersion.json"; sourceTree = "<group>"; };
-		8305EC8720224156002F20DB /* dictionaryConfigIsADictionary-3Key-withoutVersion.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = "dictionaryConfigIsADictionary-3Key-withoutVersion.json"; sourceTree = "<group>"; };
-		8305EC89202243D6002F20DB /* nullConfigIsANull-null-withVersion.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = "nullConfigIsANull-null-withVersion.json"; sourceTree = "<group>"; };
-		8305EC8B2022440D002F20DB /* nullConfigIsANull-null-withoutVersion.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = "nullConfigIsANull-null-withoutVersion.json"; sourceTree = "<group>"; };
-		8305EC8D20227365002F20DB /* featureFlags-withoutVersions.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = "featureFlags-withoutVersions.json"; sourceTree = "<group>"; };
-		830BF92F202A8854006DF9B1 /* NSJSONSerialization+Testable.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "NSJSONSerialization+Testable.h"; sourceTree = "<group>"; };
-		830BF930202A8855006DF9B1 /* NSJSONSerialization+Testable.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "NSJSONSerialization+Testable.m"; sourceTree = "<group>"; };
+		8305EC89202243D6002F20DB /* nullConfigIsANull-null.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = "nullConfigIsANull-null.json"; sourceTree = "<group>"; };
 		830C2AC3207579AC001D645D /* LDThrottler.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = LDThrottler.h; sourceTree = "<group>"; };
 		830C2AC4207579AC001D645D /* LDThrottler.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = LDThrottler.m; sourceTree = "<group>"; };
 		830C2ACE20757CE9001D645D /* LDThrottlerTest.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = LDThrottlerTest.m; sourceTree = "<group>"; };
@@ -388,38 +423,36 @@
 		83258A3E1F3244D0008C2133 /* LDUserBuilder+Testable.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "LDUserBuilder+Testable.h"; sourceTree = "<group>"; };
 		83258A3F1F3244D0008C2133 /* LDUserBuilder+Testable.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "LDUserBuilder+Testable.m"; sourceTree = "<group>"; };
 		83258A411F32721A008C2133 /* emptyConfig.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = emptyConfig.json; sourceTree = "<group>"; };
-		83258A431F329EFB008C2133 /* doubleConfigIsADouble-Pi-withVersion.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = "doubleConfigIsADouble-Pi-withVersion.json"; sourceTree = "<group>"; };
+		83258A431F329EFB008C2133 /* doubleConfigIsADouble-Pi.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = "doubleConfigIsADouble-Pi.json"; sourceTree = "<group>"; };
 		832C78811F296F3400E334A2 /* NSMutableDictionary+NullRemovable.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "NSMutableDictionary+NullRemovable.h"; sourceTree = "<group>"; };
 		832C78821F296F3400E334A2 /* NSMutableDictionary+NullRemovable.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "NSMutableDictionary+NullRemovable.m"; sourceTree = "<group>"; };
 		832C788B1F2977B800E334A2 /* NSString+RemoveWhitespace.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = "NSString+RemoveWhitespace.h"; path = "../../Darkly/NSString+RemoveWhitespace.h"; sourceTree = "<group>"; };
 		832C788C1F2977B800E334A2 /* NSString+RemoveWhitespace.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = "NSString+RemoveWhitespace.m"; path = "../../Darkly/NSString+RemoveWhitespace.m"; sourceTree = "<group>"; };
-		832C788E1F2A8DF600E334A2 /* LDUserModel+JsonDecodeable.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "LDUserModel+JsonDecodeable.h"; sourceTree = "<group>"; };
-		832C788F1F2A8DF600E334A2 /* LDUserModel+JsonDecodeable.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "LDUserModel+JsonDecodeable.m"; sourceTree = "<group>"; };
 		833D08C91F3B97EB00BEED83 /* NSThread+MainExecutable.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "NSThread+MainExecutable.h"; sourceTree = "<group>"; };
 		833D08CA1F3B97EB00BEED83 /* NSThread+MainExecutable.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "NSThread+MainExecutable.m"; sourceTree = "<group>"; };
 		8349F51B1F1934A000B1F3DB /* NSDictionary+StringKey_Matchable.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "NSDictionary+StringKey_Matchable.h"; sourceTree = "<group>"; };
 		8349F51D1F19352300B1F3DB /* NSDictionary+StringKey_Matchable.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "NSDictionary+StringKey_Matchable.m"; sourceTree = "<group>"; };
-		8349F51F1F195BCF00B1F3DB /* LDUserModel+Equatable.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "LDUserModel+Equatable.h"; sourceTree = "<group>"; };
-		8349F5201F195BCF00B1F3DB /* LDUserModel+Equatable.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "LDUserModel+Equatable.m"; sourceTree = "<group>"; };
 		8358F2581F4202A300ECE1AF /* LDConfig+Testable.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "LDConfig+Testable.h"; sourceTree = "<group>"; };
 		8358F2591F4202A300ECE1AF /* LDConfig+Testable.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "LDConfig+Testable.m"; sourceTree = "<group>"; };
 		835B421A1FD5AF7300709384 /* DarklyEventSource.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = DarklyEventSource.framework; path = Carthage/Build/iOS/DarklyEventSource.framework; sourceTree = "<group>"; };
+		83620B8320BDF36B00F1F28E /* NSNumber+LaunchDarkly.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "NSNumber+LaunchDarkly.h"; sourceTree = "<group>"; };
+		83620B8420BDF36B00F1F28E /* NSNumber+LaunchDarkly.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "NSNumber+LaunchDarkly.m"; sourceTree = "<group>"; };
 		8365E5062028F39E00DE8E2B /* LDEvent+EventTypes.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "LDEvent+EventTypes.h"; sourceTree = "<group>"; };
 		8365E5072028F39E00DE8E2B /* LDEvent+EventTypes.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "LDEvent+EventTypes.m"; sourceTree = "<group>"; };
 		836947591F1FED400047697C /* boolConfigIsABool-false.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = "boolConfigIsABool-false.json"; sourceTree = "<group>"; };
-		8369475A1F1FED400047697C /* boolConfigIsABool-true-withVersion.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = "boolConfigIsABool-true-withVersion.json"; sourceTree = "<group>"; };
+		8369475A1F1FED400047697C /* boolConfigIsABool-true.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = "boolConfigIsABool-true.json"; sourceTree = "<group>"; };
 		8369475B1F1FED400047697C /* boolConfigIsABool2-true.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = "boolConfigIsABool2-true.json"; sourceTree = "<group>"; };
 		8369475F1F1FEEB40047697C /* numberConfigIsANumber-1.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = "numberConfigIsANumber-1.json"; sourceTree = "<group>"; };
-		836947601F1FEEB40047697C /* numberConfigIsANumber-2-withVersion.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = "numberConfigIsANumber-2-withVersion.json"; sourceTree = "<group>"; };
+		836947601F1FEEB40047697C /* numberConfigIsANumber-2.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = "numberConfigIsANumber-2.json"; sourceTree = "<group>"; };
 		836947611F1FEEB40047697C /* numberConfigIsANumber2-1.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = "numberConfigIsANumber2-1.json"; sourceTree = "<group>"; };
-		836947651F1FF0A00047697C /* stringConfigIsAString-someString-withVersion.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = "stringConfigIsAString-someString-withVersion.json"; sourceTree = "<group>"; };
+		836947651F1FF0A00047697C /* stringConfigIsAString-someString.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = "stringConfigIsAString-someString.json"; sourceTree = "<group>"; };
 		836947661F1FF0A00047697C /* stringConfigIsAString-someStringA.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = "stringConfigIsAString-someStringA.json"; sourceTree = "<group>"; };
 		836947671F1FF0A00047697C /* stringConfigIsAStringA-someString.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = "stringConfigIsAStringA-someString.json"; sourceTree = "<group>"; };
 		8369476B1F1FF45B0047697C /* arrayConfigIsAnArray-1.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = "arrayConfigIsAnArray-1.json"; sourceTree = "<group>"; };
-		8369476C1F1FF45B0047697C /* arrayConfigIsAnArray-123-withVersion.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = "arrayConfigIsAnArray-123-withVersion.json"; sourceTree = "<group>"; };
+		8369476C1F1FF45B0047697C /* arrayConfigIsAnArray-123.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = "arrayConfigIsAnArray-123.json"; sourceTree = "<group>"; };
 		8369476D1F1FF45B0047697C /* arrayConfigIsAnArray-Empty.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = "arrayConfigIsAnArray-Empty.json"; sourceTree = "<group>"; };
 		8369476E1F1FF45B0047697C /* arrayConfigIsAnArrayA-123.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = "arrayConfigIsAnArrayA-123.json"; sourceTree = "<group>"; };
-		836947731F1FF80A0047697C /* dictionaryConfigIsADictionary-3Key-withVersion.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = "dictionaryConfigIsADictionary-3Key-withVersion.json"; sourceTree = "<group>"; };
+		836947731F1FF80A0047697C /* dictionaryConfigIsADictionary-3Key.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = "dictionaryConfigIsADictionary-3Key.json"; sourceTree = "<group>"; };
 		836947741F1FF80A0047697C /* dictionaryConfigIsADictionary-Empty.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = "dictionaryConfigIsADictionary-Empty.json"; sourceTree = "<group>"; };
 		836947751F1FF80A0047697C /* dictionaryConfigIsADictionary-KeyA.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = "dictionaryConfigIsADictionary-KeyA.json"; sourceTree = "<group>"; };
 		836947761F1FF80A0047697C /* dictionaryConfigIsADictionary-KeyB-124.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = "dictionaryConfigIsADictionary-KeyB-124.json"; sourceTree = "<group>"; };
@@ -428,23 +461,35 @@
 		836947791F1FF80A0047697C /* dictionaryConfigIsADictionary-KeyC.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = "dictionaryConfigIsADictionary-KeyC.json"; sourceTree = "<group>"; };
 		836947811F20125F0047697C /* ldClientManagerTestConfigA.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = ldClientManagerTestConfigA.json; sourceTree = "<group>"; };
 		836947821F20125F0047697C /* ldClientManagerTestConfigB.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = ldClientManagerTestConfigB.json; sourceTree = "<group>"; };
+		83758398209CCE71004329DD /* LDEventTrackingContext.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = LDEventTrackingContext.h; sourceTree = "<group>"; };
+		83758399209CCE71004329DD /* LDEventTrackingContext.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = LDEventTrackingContext.m; sourceTree = "<group>"; };
+		837583A2209CD0A7004329DD /* LDEventTrackingContextTest.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = LDEventTrackingContextTest.m; sourceTree = "<group>"; };
+		837583A5209CD187004329DD /* LDEventTrackingContext+Testable.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "LDEventTrackingContext+Testable.h"; sourceTree = "<group>"; };
+		837583A6209CD187004329DD /* LDEventTrackingContext+Testable.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "LDEventTrackingContext+Testable.m"; sourceTree = "<group>"; };
 		83889B121F8E93A100A4EF69 /* LDEvent+Testable.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "LDEvent+Testable.h"; sourceTree = "<group>"; };
 		83889B131F8E93A100A4EF69 /* LDEvent+Testable.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "LDEvent+Testable.m"; sourceTree = "<group>"; };
-		83889B151F8F28AB00A4EF69 /* NSURLResponse+Unauthorized.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "NSURLResponse+Unauthorized.h"; sourceTree = "<group>"; };
-		83889B161F8F28AB00A4EF69 /* NSURLResponse+Unauthorized.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "NSURLResponse+Unauthorized.m"; sourceTree = "<group>"; };
+		83889B151F8F28AB00A4EF69 /* NSURLResponse+LaunchDarkly.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "NSURLResponse+LaunchDarkly.h"; sourceTree = "<group>"; };
+		83889B161F8F28AB00A4EF69 /* NSURLResponse+LaunchDarkly.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "NSURLResponse+LaunchDarkly.m"; sourceTree = "<group>"; };
 		839956E620053081009707D1 /* LDUserModel+Testable.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "LDUserModel+Testable.h"; sourceTree = "<group>"; };
 		839956E720053081009707D1 /* LDUserModel+Testable.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "LDUserModel+Testable.m"; sourceTree = "<group>"; };
 		839D6D261FD1B57B000BE6BD /* DarklyEventSource.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = DarklyEventSource.framework; path = Carthage/Build/watchOS/DarklyEventSource.framework; sourceTree = "<group>"; };
 		839D6D281FD1B58E000BE6BD /* DarklyEventSource.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = DarklyEventSource.framework; path = Carthage/Build/tvOS/DarklyEventSource.framework; sourceTree = "<group>"; };
 		839E0A15201F97E800DB8CD1 /* ldClientManagerTestPatchIsANumber.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = ldClientManagerTestPatchIsANumber.json; sourceTree = "<group>"; };
 		839E0A17201FB8D900DB8CD1 /* ldClientManagerTestDeleteIsANumber.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = ldClientManagerTestDeleteIsANumber.json; sourceTree = "<group>"; };
-		83B8C24A1FEB1CD20082B8A9 /* LDUserModel+Stub.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "LDUserModel+Stub.h"; sourceTree = "<group>"; };
-		83B8C24B1FEB1CD20082B8A9 /* LDUserModel+Stub.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "LDUserModel+Stub.m"; sourceTree = "<group>"; };
+		83B62E1520A249A200F2E656 /* NSDateFormatter+JsonHeader.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "NSDateFormatter+JsonHeader.h"; sourceTree = "<group>"; };
+		83B62E1620A249A200F2E656 /* NSDateFormatter+JsonHeader.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "NSDateFormatter+JsonHeader.m"; sourceTree = "<group>"; };
+		83B62E1F20A2517500F2E656 /* NSDateFormatter+JsonHeaderTest.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "NSDateFormatter+JsonHeaderTest.m"; sourceTree = "<group>"; };
+		83B62E2120A258D400F2E656 /* NSDateFormatter+JsonHeader+Testable.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "NSDateFormatter+JsonHeader+Testable.h"; sourceTree = "<group>"; };
+		83B62E2220A258D400F2E656 /* NSDateFormatter+JsonHeader+Testable.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "NSDateFormatter+JsonHeader+Testable.m"; sourceTree = "<group>"; };
+		83B62E2420A275A100F2E656 /* NSHTTPURLResponse+LaunchDarkly+Testable.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "NSHTTPURLResponse+LaunchDarkly+Testable.h"; sourceTree = "<group>"; };
+		83B6FC1B207E60B6002DBA7B /* NSDate+ReferencedDate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "NSDate+ReferencedDate.h"; sourceTree = "<group>"; };
+		83B6FC1C207E60B6002DBA7B /* NSDate+ReferencedDate.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "NSDate+ReferencedDate.m"; sourceTree = "<group>"; };
+		83B6FC29208127B2002DBA7B /* LDEventModel+Testable.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "LDEventModel+Testable.h"; sourceTree = "<group>"; };
+		83B6FC2A208127B2002DBA7B /* LDEventModel+Testable.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "LDEventModel+Testable.m"; sourceTree = "<group>"; };
 		83B8C24D1FEC19500082B8A9 /* NSDateFormatter+LDUserModel.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "NSDateFormatter+LDUserModel.h"; sourceTree = "<group>"; };
 		83B8C24E1FEC19500082B8A9 /* NSDateFormatter+LDUserModel.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "NSDateFormatter+LDUserModel.m"; sourceTree = "<group>"; };
-		83B8C2571FEC4C3B0082B8A9 /* featureFlags-excludeNulls-withVersions.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = "featureFlags-excludeNulls-withVersions.json"; sourceTree = "<group>"; };
+		83B8C2571FEC4C3B0082B8A9 /* featureFlags-excludeNulls.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = "featureFlags-excludeNulls.json"; sourceTree = "<group>"; };
 		83B975D21FD1CA6000A4EF4E /* DarklyEventSource.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = DarklyEventSource.framework; path = Carthage/Build/Mac/DarklyEventSource.framework; sourceTree = "<group>"; };
-		83BE9384201A63B400DD1ED9 /* ldDataManagerTestConfig.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = ldDataManagerTestConfig.json; sourceTree = "<group>"; };
 		83BE9386201A6AA400DD1ED9 /* ldFlagConfigModelTest.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = ldFlagConfigModelTest.json; sourceTree = "<group>"; };
 		83BE9388201A781200DD1ED9 /* ldFlagConfigModelPatchVersion1Flag.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = ldFlagConfigModelPatchVersion1Flag.json; sourceTree = "<group>"; };
 		83BE938A201A797B00DD1ED9 /* NSJSONSerialization+Testable.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "NSJSONSerialization+Testable.h"; sourceTree = "<group>"; };
@@ -458,7 +503,26 @@
 		83BE9397201AA53100DD1ED9 /* ldFlagConfigModelPatchVersion2FlagWithNull.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = ldFlagConfigModelPatchVersion2FlagWithNull.json; sourceTree = "<group>"; };
 		83BE9399201B6EBA00DD1ED9 /* ldFlagConfigModelDeleteVersion2Flag.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = ldFlagConfigModelDeleteVersion2Flag.json; sourceTree = "<group>"; };
 		83BE939B201B80F800DD1ED9 /* ldFlagConfigModelDeleteNewFlag.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = ldFlagConfigModelDeleteNewFlag.json; sourceTree = "<group>"; };
-		83C28CF82023872B00394693 /* featureFlags-excludeNulls-withoutVersions.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = "featureFlags-excludeNulls-withoutVersions.json"; sourceTree = "<group>"; };
+		83C8867B2087A786004AC82F /* LDFlagValueCounter.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = LDFlagValueCounter.h; sourceTree = "<group>"; };
+		83C8867C2087A786004AC82F /* LDFlagValueCounter.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = LDFlagValueCounter.m; sourceTree = "<group>"; };
+		83ECCC872087BF860086F879 /* LDFlagValueCounterTest.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = LDFlagValueCounterTest.m; sourceTree = "<group>"; };
+		83ECCC892087CA280086F879 /* LDFlagValueCounter+Testable.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "LDFlagValueCounter+Testable.h"; sourceTree = "<group>"; };
+		83ECCC8A2087CA280086F879 /* LDFlagValueCounter+Testable.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "LDFlagValueCounter+Testable.m"; sourceTree = "<group>"; };
+		83ECCC8C2087D67D0086F879 /* LDFlagCounter.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = LDFlagCounter.h; sourceTree = "<group>"; };
+		83ECCC8D2087D67D0086F879 /* LDFlagCounter.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = LDFlagCounter.m; sourceTree = "<group>"; };
+		83ECCC972087DF040086F879 /* LDFlagCounterTest.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = LDFlagCounterTest.m; sourceTree = "<group>"; };
+		83ECCC992087EF4A0086F879 /* LDFlagConfigValue+Testable.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "LDFlagConfigValue+Testable.h"; sourceTree = "<group>"; };
+		83ECCC9A2087EF4A0086F879 /* LDFlagConfigValue+Testable.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "LDFlagConfigValue+Testable.m"; sourceTree = "<group>"; };
+		83ECCC9C208800F10086F879 /* doubleConfigIsADouble-e.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = "doubleConfigIsADouble-e.json"; sourceTree = "<group>"; };
+		83ECCCA12088E4E90086F879 /* LDFlagCounter+Testable.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "LDFlagCounter+Testable.h"; sourceTree = "<group>"; };
+		83ECCCA22088E4E90086F879 /* LDFlagCounter+Testable.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "LDFlagCounter+Testable.m"; sourceTree = "<group>"; };
+		83ECCCA42088FBA80086F879 /* LDFlagConfigTracker.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = LDFlagConfigTracker.h; sourceTree = "<group>"; };
+		83ECCCA52088FBA80086F879 /* LDFlagConfigTracker.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = LDFlagConfigTracker.m; sourceTree = "<group>"; };
+		83ECCCAE2088FF420086F879 /* LDFlagConfigTrackerTest.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = LDFlagConfigTrackerTest.m; sourceTree = "<group>"; };
+		83ECCCB020890A430086F879 /* LDFlagConfigTracker+Testable.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "LDFlagConfigTracker+Testable.h"; sourceTree = "<group>"; };
+		83ECCCB120890A430086F879 /* LDFlagConfigTracker+Testable.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "LDFlagConfigTracker+Testable.m"; sourceTree = "<group>"; };
+		83ECCCB320891E8E0086F879 /* NSDate+Testable.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "NSDate+Testable.h"; sourceTree = "<group>"; };
+		83ECCCB420891E8E0086F879 /* NSDate+Testable.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "NSDate+Testable.m"; sourceTree = "<group>"; };
 		83EF677F1F979B4100403126 /* LDEvent+Unauthorized.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "LDEvent+Unauthorized.h"; sourceTree = "<group>"; };
 		83EF67801F979B4100403126 /* LDEvent+Unauthorized.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "LDEvent+Unauthorized.m"; sourceTree = "<group>"; };
 		83EF678B1F98FC9200403126 /* LDFlagConfigModel+Testable.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "LDFlagConfigModel+Testable.h"; sourceTree = "<group>"; };
@@ -467,8 +531,8 @@
 		83EF678F1F99365600403126 /* LDClient+Testable.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "LDClient+Testable.m"; sourceTree = "<group>"; };
 		83F5B4731F91560300174DF7 /* LDDataManager+Testable.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "LDDataManager+Testable.h"; sourceTree = "<group>"; };
 		83F5B4741F91560300174DF7 /* LDDataManager+Testable.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "LDDataManager+Testable.m"; sourceTree = "<group>"; };
-		83F5B4761F95096A00174DF7 /* NSHTTPURLResponse+Unauthorized.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "NSHTTPURLResponse+Unauthorized.h"; sourceTree = "<group>"; };
-		83F5B4771F95096A00174DF7 /* NSHTTPURLResponse+Unauthorized.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "NSHTTPURLResponse+Unauthorized.m"; sourceTree = "<group>"; };
+		83F5B4761F95096A00174DF7 /* NSHTTPURLResponse+LaunchDarkly.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "NSHTTPURLResponse+LaunchDarkly.h"; sourceTree = "<group>"; };
+		83F5B4771F95096A00174DF7 /* NSHTTPURLResponse+LaunchDarkly.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "NSHTTPURLResponse+LaunchDarkly.m"; sourceTree = "<group>"; };
 		83FE9DD643D01669FB16BBEF /* Pods-Darkly_iOS.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Darkly_iOS.release.xcconfig"; path = "Pods/Target Support Files/Pods-Darkly_iOS/Pods-Darkly_iOS.release.xcconfig"; sourceTree = "<group>"; };
 		875461696618AE6C4F4B4AC6 /* Pods_Darkly_iOS.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_Darkly_iOS.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		9EBBFAE744BB0BB1176E84CC /* Pods-Darkly_watchOS.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Darkly_watchOS.release.xcconfig"; path = "Pods/Target Support Files/Pods-Darkly_watchOS/Pods-Darkly_watchOS.release.xcconfig"; sourceTree = "<group>"; };
@@ -596,16 +660,13 @@
 				690346E01E68990000E45133 /* LDConfig.m */,
 				690346E11E68990000E45133 /* LDEventModel.h */,
 				690346E21E68990000E45133 /* LDEventModel.m */,
-				690346E31E68990000E45133 /* LDFlagConfigModel.h */,
-				690346E41E68990000E45133 /* LDFlagConfigModel.m */,
-				8305EC6520221973002F20DB /* LDFlagConfigValue.h */,
-				8305EC6620221973002F20DB /* LDFlagConfigValue.m */,
 				690346E51E68990000E45133 /* LDPollingManager.h */,
 				690346E61E68990000E45133 /* LDPollingManager.m */,
 				690346E71E68990000E45133 /* LDRequestManager.h */,
 				690346E81E68990000E45133 /* LDRequestManager.m */,
 				830C2AC3207579AC001D645D /* LDThrottler.h */,
 				830C2AC4207579AC001D645D /* LDThrottler.m */,
+				83C886862087A7D4004AC82F /* LDFlagConfig */,
 				690346E91E68990000E45133 /* LDUserBuilder.h */,
 				690346EA1E68990000E45133 /* LDUserBuilder.m */,
 				690346EB1E68990000E45133 /* LDUserModel.h */,
@@ -644,10 +705,9 @@
 			children = (
 				690347161E689B9F00E45133 /* LDDataManagerTest.m */,
 				690347171E689B9F00E45133 /* LDEventModelTest.m */,
+				83ECCC962087DE960086F879 /* LDFlagConfig */,
 				690347181E689B9F00E45133 /* LDUserModelTest.m */,
-				690347211E689B9F00E45133 /* LDFlagConfigModelTest.m */,
-				8305EC7920222B5E002F20DB /* NSObject+LDFlagConfigValueTest.m */,
-				8305EC7B2022336C002F20DB /* LDFlagConfigValueTest.m */,
+				83B62E1F20A2517500F2E656 /* NSDateFormatter+JsonHeaderTest.m */,
 			);
 			path = Models;
 			sourceTree = "<group>";
@@ -655,43 +715,34 @@
 		6903471D1E689B9F00E45133 /* Fixtures */ = {
 			isa = PBXGroup;
 			children = (
-				6903471E1E689B9F00E45133 /* featureFlags-withVersions.json */,
-				8305EC8D20227365002F20DB /* featureFlags-withoutVersions.json */,
-				83B8C2571FEC4C3B0082B8A9 /* featureFlags-excludeNulls-withVersions.json */,
-				83C28CF82023872B00394693 /* featureFlags-excludeNulls-withoutVersions.json */,
+				6903471E1E689B9F00E45133 /* featureFlags.json */,
+				83B8C2571FEC4C3B0082B8A9 /* featureFlags-excludeNulls.json */,
 				83258A411F32721A008C2133 /* emptyConfig.json */,
 				836947591F1FED400047697C /* boolConfigIsABool-false.json */,
-				8369475A1F1FED400047697C /* boolConfigIsABool-true-withVersion.json */,
-				8305EC7D202238FC002F20DB /* boolConfigIsABool-true-withoutVersion.json */,
+				8369475A1F1FED400047697C /* boolConfigIsABool-true.json */,
 				8369475B1F1FED400047697C /* boolConfigIsABool2-true.json */,
-				83258A431F329EFB008C2133 /* doubleConfigIsADouble-Pi-withVersion.json */,
-				8305EC8120223BC2002F20DB /* doubleConfigIsADouble-Pi-withoutVersion.json */,
+				83258A431F329EFB008C2133 /* doubleConfigIsADouble-Pi.json */,
+				83ECCC9C208800F10086F879 /* doubleConfigIsADouble-e.json */,
 				8369475F1F1FEEB40047697C /* numberConfigIsANumber-1.json */,
-				836947601F1FEEB40047697C /* numberConfigIsANumber-2-withVersion.json */,
-				8305EC7F20223A2E002F20DB /* numberConfigIsANumber-2-withoutVersion.json */,
+				836947601F1FEEB40047697C /* numberConfigIsANumber-2.json */,
 				836947611F1FEEB40047697C /* numberConfigIsANumber2-1.json */,
-				836947651F1FF0A00047697C /* stringConfigIsAString-someString-withVersion.json */,
-				8305EC8320223D65002F20DB /* stringConfigIsAString-someString-withoutVersion.json */,
+				836947651F1FF0A00047697C /* stringConfigIsAString-someString.json */,
 				836947661F1FF0A00047697C /* stringConfigIsAString-someStringA.json */,
 				836947671F1FF0A00047697C /* stringConfigIsAStringA-someString.json */,
 				8369476B1F1FF45B0047697C /* arrayConfigIsAnArray-1.json */,
-				8369476C1F1FF45B0047697C /* arrayConfigIsAnArray-123-withVersion.json */,
-				8305EC8520223EBA002F20DB /* arrayConfigIsAnArray-123-withoutVersion.json */,
+				8369476C1F1FF45B0047697C /* arrayConfigIsAnArray-123.json */,
 				8369476D1F1FF45B0047697C /* arrayConfigIsAnArray-Empty.json */,
 				8369476E1F1FF45B0047697C /* arrayConfigIsAnArrayA-123.json */,
-				836947731F1FF80A0047697C /* dictionaryConfigIsADictionary-3Key-withVersion.json */,
-				8305EC8720224156002F20DB /* dictionaryConfigIsADictionary-3Key-withoutVersion.json */,
+				836947731F1FF80A0047697C /* dictionaryConfigIsADictionary-3Key.json */,
 				836947741F1FF80A0047697C /* dictionaryConfigIsADictionary-Empty.json */,
 				836947751F1FF80A0047697C /* dictionaryConfigIsADictionary-KeyA.json */,
 				836947761F1FF80A0047697C /* dictionaryConfigIsADictionary-KeyB-124.json */,
 				836947771F1FF80A0047697C /* dictionaryConfigIsADictionary-KeyB.json */,
 				836947781F1FF80A0047697C /* dictionaryConfigIsADictionary-KeyC-keyDValueDiffers.json */,
 				836947791F1FF80A0047697C /* dictionaryConfigIsADictionary-KeyC.json */,
-				8305EC89202243D6002F20DB /* nullConfigIsANull-null-withVersion.json */,
-				8305EC8B2022440D002F20DB /* nullConfigIsANull-null-withoutVersion.json */,
+				8305EC89202243D6002F20DB /* nullConfigIsANull-null.json */,
 				836947811F20125F0047697C /* ldClientManagerTestConfigA.json */,
 				836947821F20125F0047697C /* ldClientManagerTestConfigB.json */,
-				83BE9384201A63B400DD1ED9 /* ldDataManagerTestConfig.json */,
 				83BE9386201A6AA400DD1ED9 /* ldFlagConfigModelTest.json */,
 				83BE9388201A781200DD1ED9 /* ldFlagConfigModelPatchVersion1Flag.json */,
 				83BE9395201A93AC00DD1ED9 /* ldFlagConfigModelPatchVersion2Flag.json */,
@@ -710,8 +761,8 @@
 			children = (
 				83BE9392201A8DEE00DD1ED9 /* NSObject+Testable.h */,
 				83BE9393201A8DEE00DD1ED9 /* NSObject+Testable.m */,
-				690347241E689B9F00E45133 /* NSArray+UnitTests.h */,
-				690347251E689B9F00E45133 /* NSArray+UnitTests.m */,
+				690347241E689B9F00E45133 /* NSArray+Testable.h */,
+				690347251E689B9F00E45133 /* NSArray+Testable.m */,
 				8349F51B1F1934A000B1F3DB /* NSDictionary+StringKey_Matchable.h */,
 				8349F51D1F19352300B1F3DB /* NSDictionary+StringKey_Matchable.m */,
 				83BE938F201A8AD100DD1ED9 /* NSDictionary+Testable.h */,
@@ -720,14 +771,8 @@
 				832C788C1F2977B800E334A2 /* NSString+RemoveWhitespace.m */,
 				83BE938A201A797B00DD1ED9 /* NSJSONSerialization+Testable.h */,
 				83BE938B201A797B00DD1ED9 /* NSJSONSerialization+Testable.m */,
-				83B8C24A1FEB1CD20082B8A9 /* LDUserModel+Stub.h */,
-				83B8C24B1FEB1CD20082B8A9 /* LDUserModel+Stub.m */,
 				839956E620053081009707D1 /* LDUserModel+Testable.h */,
 				839956E720053081009707D1 /* LDUserModel+Testable.m */,
-				8349F51F1F195BCF00B1F3DB /* LDUserModel+Equatable.h */,
-				8349F5201F195BCF00B1F3DB /* LDUserModel+Equatable.m */,
-				832C788E1F2A8DF600E334A2 /* LDUserModel+JsonDecodeable.h */,
-				832C788F1F2A8DF600E334A2 /* LDUserModel+JsonDecodeable.m */,
 				83258A3B1F323049008C2133 /* LDClientManager+EventSource.h */,
 				83258A3C1F323049008C2133 /* LDClientManager+EventSource.m */,
 				83258A3E1F3244D0008C2133 /* LDUserBuilder+Testable.h */,
@@ -740,12 +785,16 @@
 				83F5B4741F91560300174DF7 /* LDDataManager+Testable.m */,
 				83EF678E1F99365600403126 /* LDClient+Testable.h */,
 				83EF678F1F99365600403126 /* LDClient+Testable.m */,
-				83EF678B1F98FC9200403126 /* LDFlagConfigModel+Testable.h */,
-				83EF678C1F98FC9200403126 /* LDFlagConfigModel+Testable.m */,
-				830BF92F202A8854006DF9B1 /* NSJSONSerialization+Testable.h */,
-				830BF930202A8855006DF9B1 /* NSJSONSerialization+Testable.m */,
+				837583A4209CD0E0004329DD /* LDFlagConfig */,
 				830C2AD020768697001D645D /* LDThrottler+Testable.h */,
 				830C2AD120768697001D645D /* LDThrottler+Testable.m */,
+				83B6FC29208127B2002DBA7B /* LDEventModel+Testable.h */,
+				83B6FC2A208127B2002DBA7B /* LDEventModel+Testable.m */,
+				83ECCCB320891E8E0086F879 /* NSDate+Testable.h */,
+				83ECCCB420891E8E0086F879 /* NSDate+Testable.m */,
+				83B62E2120A258D400F2E656 /* NSDateFormatter+JsonHeader+Testable.h */,
+				83B62E2220A258D400F2E656 /* NSDateFormatter+JsonHeader+Testable.m */,
+				83B62E2420A275A100F2E656 /* NSHTTPURLResponse+LaunchDarkly+Testable.h */,
 			);
 			path = Categories;
 			sourceTree = "<group>";
@@ -759,20 +808,43 @@
 				832C78821F296F3400E334A2 /* NSMutableDictionary+NullRemovable.m */,
 				833D08C91F3B97EB00BEED83 /* NSThread+MainExecutable.h */,
 				833D08CA1F3B97EB00BEED83 /* NSThread+MainExecutable.m */,
-				83889B151F8F28AB00A4EF69 /* NSURLResponse+Unauthorized.h */,
-				83889B161F8F28AB00A4EF69 /* NSURLResponse+Unauthorized.m */,
-				83F5B4761F95096A00174DF7 /* NSHTTPURLResponse+Unauthorized.h */,
-				83F5B4771F95096A00174DF7 /* NSHTTPURLResponse+Unauthorized.m */,
+				83889B151F8F28AB00A4EF69 /* NSURLResponse+LaunchDarkly.h */,
+				83889B161F8F28AB00A4EF69 /* NSURLResponse+LaunchDarkly.m */,
+				83F5B4761F95096A00174DF7 /* NSHTTPURLResponse+LaunchDarkly.h */,
+				83F5B4771F95096A00174DF7 /* NSHTTPURLResponse+LaunchDarkly.m */,
 				83EF677F1F979B4100403126 /* LDEvent+Unauthorized.h */,
 				83EF67801F979B4100403126 /* LDEvent+Unauthorized.m */,
 				8365E5062028F39E00DE8E2B /* LDEvent+EventTypes.h */,
 				8365E5072028F39E00DE8E2B /* LDEvent+EventTypes.m */,
 				83B8C24D1FEC19500082B8A9 /* NSDateFormatter+LDUserModel.h */,
 				83B8C24E1FEC19500082B8A9 /* NSDateFormatter+LDUserModel.m */,
-				8305EC6F20222078002F20DB /* NSObject+LDFlagConfigValue.h */,
-				8305EC7020222078002F20DB /* NSObject+LDFlagConfigValue.m */,
+				83B62E1520A249A200F2E656 /* NSDateFormatter+JsonHeader.h */,
+				83B62E1620A249A200F2E656 /* NSDateFormatter+JsonHeader.m */,
+				83B6FC1B207E60B6002DBA7B /* NSDate+ReferencedDate.h */,
+				83B6FC1C207E60B6002DBA7B /* NSDate+ReferencedDate.m */,
+				83620B8320BDF36B00F1F28E /* NSNumber+LaunchDarkly.h */,
+				83620B8420BDF36B00F1F28E /* NSNumber+LaunchDarkly.m */,
 			);
 			name = Categories;
+			sourceTree = "<group>";
+		};
+		837583A4209CD0E0004329DD /* LDFlagConfig */ = {
+			isa = PBXGroup;
+			children = (
+				83EF678B1F98FC9200403126 /* LDFlagConfigModel+Testable.h */,
+				83EF678C1F98FC9200403126 /* LDFlagConfigModel+Testable.m */,
+				83ECCC992087EF4A0086F879 /* LDFlagConfigValue+Testable.h */,
+				83ECCC9A2087EF4A0086F879 /* LDFlagConfigValue+Testable.m */,
+				83ECCCB020890A430086F879 /* LDFlagConfigTracker+Testable.h */,
+				83ECCCB120890A430086F879 /* LDFlagConfigTracker+Testable.m */,
+				83ECCCA12088E4E90086F879 /* LDFlagCounter+Testable.h */,
+				83ECCCA22088E4E90086F879 /* LDFlagCounter+Testable.m */,
+				83ECCC892087CA280086F879 /* LDFlagValueCounter+Testable.h */,
+				83ECCC8A2087CA280086F879 /* LDFlagValueCounter+Testable.m */,
+				837583A5209CD187004329DD /* LDEventTrackingContext+Testable.h */,
+				837583A6209CD187004329DD /* LDEventTrackingContext+Testable.m */,
+			);
+			path = LDFlagConfig;
 			sourceTree = "<group>";
 		};
 		839D6D2D1FD1B6BF000BE6BD /* CarthageFrameworks */ = {
@@ -786,6 +858,38 @@
 			name = CarthageFrameworks;
 			sourceTree = "<group>";
 		};
+		83C886862087A7D4004AC82F /* LDFlagConfig */ = {
+			isa = PBXGroup;
+			children = (
+				690346E31E68990000E45133 /* LDFlagConfigModel.h */,
+				690346E41E68990000E45133 /* LDFlagConfigModel.m */,
+				8305EC6520221973002F20DB /* LDFlagConfigValue.h */,
+				8305EC6620221973002F20DB /* LDFlagConfigValue.m */,
+				83ECCCA42088FBA80086F879 /* LDFlagConfigTracker.h */,
+				83ECCCA52088FBA80086F879 /* LDFlagConfigTracker.m */,
+				83ECCC8C2087D67D0086F879 /* LDFlagCounter.h */,
+				83ECCC8D2087D67D0086F879 /* LDFlagCounter.m */,
+				83C8867B2087A786004AC82F /* LDFlagValueCounter.h */,
+				83C8867C2087A786004AC82F /* LDFlagValueCounter.m */,
+				83758398209CCE71004329DD /* LDEventTrackingContext.h */,
+				83758399209CCE71004329DD /* LDEventTrackingContext.m */,
+			);
+			path = LDFlagConfig;
+			sourceTree = "<group>";
+		};
+		83ECCC962087DE960086F879 /* LDFlagConfig */ = {
+			isa = PBXGroup;
+			children = (
+				690347211E689B9F00E45133 /* LDFlagConfigModelTest.m */,
+				8305EC7B2022336C002F20DB /* LDFlagConfigValueTest.m */,
+				83ECCCAE2088FF420086F879 /* LDFlagConfigTrackerTest.m */,
+				83ECCC972087DF040086F879 /* LDFlagCounterTest.m */,
+				83ECCC872087BF860086F879 /* LDFlagValueCounterTest.m */,
+				837583A2209CD0A7004329DD /* LDEventTrackingContextTest.m */,
+			);
+			path = LDFlagConfig;
+			sourceTree = "<group>";
+		};
 /* End PBXGroup section */
 
 /* Begin PBXHeadersBuildPhase section */
@@ -795,11 +899,13 @@
 			files = (
 				690346FD1E68990000E45133 /* LDEventModel.h in Headers */,
 				690346F91E68990000E45133 /* LDClientManager.h in Headers */,
-				8305EC7120222078002F20DB /* NSObject+LDFlagConfigValue.h in Headers */,
+				83B62E1720A249A200F2E656 /* NSDateFormatter+JsonHeader.h in Headers */,
 				690346FF1E68990000E45133 /* LDFlagConfigModel.h in Headers */,
+				83ECCC8E2087D67D0086F879 /* LDFlagCounter.h in Headers */,
 				83EF67811F979B4100403126 /* LDEvent+Unauthorized.h in Headers */,
 				83B8C24F1FEC19500082B8A9 /* NSDateFormatter+LDUserModel.h in Headers */,
 				690346F51E68990000E45133 /* DarklyConstants.h in Headers */,
+				83620B8520BDF36B00F1F28E /* NSNumber+LaunchDarkly.h in Headers */,
 				690346FB1E68990000E45133 /* LDConfig.h in Headers */,
 				690347011E68990000E45133 /* LDPollingManager.h in Headers */,
 				690346F41E68990000E45133 /* Darkly-Prefix.pch in Headers */,
@@ -807,14 +913,18 @@
 				690347031E68990000E45133 /* LDRequestManager.h in Headers */,
 				690347051E68990000E45133 /* LDUserBuilder.h in Headers */,
 				8305EC6720221973002F20DB /* LDFlagConfigValue.h in Headers */,
-				83F5B4781F95096A00174DF7 /* NSHTTPURLResponse+Unauthorized.h in Headers */,
+				83F5B4781F95096A00174DF7 /* NSHTTPURLResponse+LaunchDarkly.h in Headers */,
 				6903470D1E68990000E45133 /* NSDictionary+JSON.h in Headers */,
+				83B6FC1D207E60B6002DBA7B /* NSDate+ReferencedDate.h in Headers */,
 				690347091E68990000E45133 /* LDUtil.h in Headers */,
 				69BAF40D1E9AAB4800747613 /* Darkly.h in Headers */,
 				830C2AC5207579AC001D645D /* LDThrottler.h in Headers */,
 				690346F71E68990000E45133 /* LDClient.h in Headers */,
 				833D08CB1F3B97EB00BEED83 /* NSThread+MainExecutable.h in Headers */,
-				83889B171F8F28AB00A4EF69 /* NSURLResponse+Unauthorized.h in Headers */,
+				83C8867D2087A786004AC82F /* LDFlagValueCounter.h in Headers */,
+				8375839A209CCE71004329DD /* LDEventTrackingContext.h in Headers */,
+				83ECCCA62088FBA80086F879 /* LDFlagConfigTracker.h in Headers */,
+				83889B171F8F28AB00A4EF69 /* NSURLResponse+LaunchDarkly.h in Headers */,
 				690347071E68990000E45133 /* LDUserModel.h in Headers */,
 				8365E5082028F39E00DE8E2B /* LDEvent+EventTypes.h in Headers */,
 				832C78831F296F3400E334A2 /* NSMutableDictionary+NullRemovable.h in Headers */,
@@ -827,11 +937,13 @@
 			files = (
 				69A87EA21E74712800B88B23 /* LDEventModel.h in Headers */,
 				69A87E9E1E74712800B88B23 /* LDClientManager.h in Headers */,
-				8305EC7420222078002F20DB /* NSObject+LDFlagConfigValue.h in Headers */,
+				83B62E1A20A249A200F2E656 /* NSDateFormatter+JsonHeader.h in Headers */,
 				69A87EA41E74712800B88B23 /* LDFlagConfigModel.h in Headers */,
+				83ECCC912087D67D0086F879 /* LDFlagCounter.h in Headers */,
 				83EF67841F979B4100403126 /* LDEvent+Unauthorized.h in Headers */,
 				83B8C2521FEC19500082B8A9 /* NSDateFormatter+LDUserModel.h in Headers */,
 				69A87E9A1E74712800B88B23 /* DarklyConstants.h in Headers */,
+				83620B8820BDF36B00F1F28E /* NSNumber+LaunchDarkly.h in Headers */,
 				69A87EA01E74712800B88B23 /* LDConfig.h in Headers */,
 				69A87EA61E74712800B88B23 /* LDPollingManager.h in Headers */,
 				69A87E991E74712800B88B23 /* Darkly-Prefix.pch in Headers */,
@@ -839,14 +951,18 @@
 				69A87EA81E74712800B88B23 /* LDRequestManager.h in Headers */,
 				69A87EB01E74712800B88B23 /* NSDictionary+JSON.h in Headers */,
 				8305EC6A20221973002F20DB /* LDFlagConfigValue.h in Headers */,
-				83F5B47B1F95096A00174DF7 /* NSHTTPURLResponse+Unauthorized.h in Headers */,
+				83F5B47B1F95096A00174DF7 /* NSHTTPURLResponse+LaunchDarkly.h in Headers */,
 				69A87EAA1E74712800B88B23 /* LDUserBuilder.h in Headers */,
+				83B6FC20207E60B6002DBA7B /* NSDate+ReferencedDate.h in Headers */,
 				69A87EAE1E74712800B88B23 /* LDUtil.h in Headers */,
 				69071F801EA2A7CC00497F93 /* Darkly.h in Headers */,
 				830C2AC8207579AC001D645D /* LDThrottler.h in Headers */,
 				69A87E9C1E74712800B88B23 /* LDClient.h in Headers */,
 				833D08CE1F3B97EB00BEED83 /* NSThread+MainExecutable.h in Headers */,
-				83889B1A1F8F28AB00A4EF69 /* NSURLResponse+Unauthorized.h in Headers */,
+				83C886802087A786004AC82F /* LDFlagValueCounter.h in Headers */,
+				8375839D209CCE71004329DD /* LDEventTrackingContext.h in Headers */,
+				83ECCCA92088FBA80086F879 /* LDFlagConfigTracker.h in Headers */,
+				83889B1A1F8F28AB00A4EF69 /* NSURLResponse+LaunchDarkly.h in Headers */,
 				69A87EAC1E74712800B88B23 /* LDUserModel.h in Headers */,
 				8365E50B2028F39E00DE8E2B /* LDEvent+EventTypes.h in Headers */,
 				832C78861F296F3400E334A2 /* NSMutableDictionary+NullRemovable.h in Headers */,
@@ -859,11 +975,13 @@
 			files = (
 				69BD7E231E6C79910056D70F /* LDEventModel.h in Headers */,
 				69BD7E1F1E6C79910056D70F /* LDClientManager.h in Headers */,
-				8305EC7320222078002F20DB /* NSObject+LDFlagConfigValue.h in Headers */,
+				83B62E1920A249A200F2E656 /* NSDateFormatter+JsonHeader.h in Headers */,
 				69BD7E251E6C79910056D70F /* LDFlagConfigModel.h in Headers */,
+				83ECCC902087D67D0086F879 /* LDFlagCounter.h in Headers */,
 				83EF67831F979B4100403126 /* LDEvent+Unauthorized.h in Headers */,
 				83B8C2511FEC19500082B8A9 /* NSDateFormatter+LDUserModel.h in Headers */,
 				69BD7E1B1E6C79910056D70F /* DarklyConstants.h in Headers */,
+				83620B8720BDF36B00F1F28E /* NSNumber+LaunchDarkly.h in Headers */,
 				69BD7E211E6C79910056D70F /* LDConfig.h in Headers */,
 				69BD7E271E6C79910056D70F /* LDPollingManager.h in Headers */,
 				69BD7E1A1E6C79910056D70F /* Darkly-Prefix.pch in Headers */,
@@ -871,14 +989,18 @@
 				69BD7E291E6C79910056D70F /* LDRequestManager.h in Headers */,
 				69BD7E311E6C79910056D70F /* NSDictionary+JSON.h in Headers */,
 				8305EC6920221973002F20DB /* LDFlagConfigValue.h in Headers */,
-				83F5B47A1F95096A00174DF7 /* NSHTTPURLResponse+Unauthorized.h in Headers */,
+				83F5B47A1F95096A00174DF7 /* NSHTTPURLResponse+LaunchDarkly.h in Headers */,
 				69BD7E2B1E6C79910056D70F /* LDUserBuilder.h in Headers */,
+				83B6FC1F207E60B6002DBA7B /* NSDate+ReferencedDate.h in Headers */,
 				69BD7E2F1E6C79910056D70F /* LDUtil.h in Headers */,
 				69071F7F1EA2A7CB00497F93 /* Darkly.h in Headers */,
 				830C2AC7207579AC001D645D /* LDThrottler.h in Headers */,
 				69BD7E1D1E6C79910056D70F /* LDClient.h in Headers */,
 				833D08CD1F3B97EB00BEED83 /* NSThread+MainExecutable.h in Headers */,
-				83889B191F8F28AB00A4EF69 /* NSURLResponse+Unauthorized.h in Headers */,
+				83C8867F2087A786004AC82F /* LDFlagValueCounter.h in Headers */,
+				8375839C209CCE71004329DD /* LDEventTrackingContext.h in Headers */,
+				83ECCCA82088FBA80086F879 /* LDFlagConfigTracker.h in Headers */,
+				83889B191F8F28AB00A4EF69 /* NSURLResponse+LaunchDarkly.h in Headers */,
 				69BD7E2D1E6C79910056D70F /* LDUserModel.h in Headers */,
 				8365E50A2028F39E00DE8E2B /* LDEvent+EventTypes.h in Headers */,
 				832C78851F296F3400E334A2 /* NSMutableDictionary+NullRemovable.h in Headers */,
@@ -891,11 +1013,13 @@
 			files = (
 				69F3F6AE1E6BF84B00079A09 /* Darkly-Prefix.pch in Headers */,
 				69F3F6A11E6BF82C00079A09 /* LDPollingManager.h in Headers */,
-				8305EC7220222078002F20DB /* NSObject+LDFlagConfigValue.h in Headers */,
+				83B62E1820A249A200F2E656 /* NSDateFormatter+JsonHeader.h in Headers */,
 				69F3F6941E6BF80800079A09 /* LDDataManager.h in Headers */,
+				83ECCC8F2087D67D0086F879 /* LDFlagCounter.h in Headers */,
 				83EF67821F979B4100403126 /* LDEvent+Unauthorized.h in Headers */,
 				83B8C2501FEC19500082B8A9 /* NSDateFormatter+LDUserModel.h in Headers */,
 				69F3F6991E6BF82C00079A09 /* LDClientManager.h in Headers */,
+				83620B8620BDF36B00F1F28E /* NSNumber+LaunchDarkly.h in Headers */,
 				69F3F6A51E6BF82C00079A09 /* LDUserBuilder.h in Headers */,
 				69F3F6A91E6BF82C00079A09 /* LDUtil.h in Headers */,
 				69F3F69B1E6BF82C00079A09 /* LDConfig.h in Headers */,
@@ -903,14 +1027,18 @@
 				69F3F6A71E6BF82C00079A09 /* LDUserModel.h in Headers */,
 				69F3F6951E6BF82100079A09 /* DarklyConstants.h in Headers */,
 				8305EC6820221973002F20DB /* LDFlagConfigValue.h in Headers */,
-				83F5B4791F95096A00174DF7 /* NSHTTPURLResponse+Unauthorized.h in Headers */,
+				83F5B4791F95096A00174DF7 /* NSHTTPURLResponse+LaunchDarkly.h in Headers */,
 				69F3F6971E6BF82C00079A09 /* LDClient.h in Headers */,
+				83B6FC1E207E60B6002DBA7B /* NSDate+ReferencedDate.h in Headers */,
 				69F3F6AB1E6BF82C00079A09 /* NSDictionary+JSON.h in Headers */,
 				69071F7E1EA2A7CA00497F93 /* Darkly.h in Headers */,
 				830C2AC6207579AC001D645D /* LDThrottler.h in Headers */,
 				69F3F6A31E6BF82C00079A09 /* LDRequestManager.h in Headers */,
 				833D08CC1F3B97EB00BEED83 /* NSThread+MainExecutable.h in Headers */,
-				83889B181F8F28AB00A4EF69 /* NSURLResponse+Unauthorized.h in Headers */,
+				83C8867E2087A786004AC82F /* LDFlagValueCounter.h in Headers */,
+				8375839B209CCE71004329DD /* LDEventTrackingContext.h in Headers */,
+				83ECCCA72088FBA80086F879 /* LDFlagConfigTracker.h in Headers */,
+				83889B181F8F28AB00A4EF69 /* NSURLResponse+LaunchDarkly.h in Headers */,
 				69F3F69D1E6BF82C00079A09 /* LDEventModel.h in Headers */,
 				8365E5092028F39E00DE8E2B /* LDEvent+EventTypes.h in Headers */,
 				832C78841F296F3400E334A2 /* NSMutableDictionary+NullRemovable.h in Headers */,
@@ -1086,51 +1214,42 @@
 			buildActionMask = 2147483647;
 			files = (
 				8369477D1F1FF80A0047697C /* dictionaryConfigIsADictionary-KeyB-124.json in Resources */,
-				8305EC8820224156002F20DB /* dictionaryConfigIsADictionary-3Key-withoutVersion.json in Resources */,
-				8305EC8C2022440D002F20DB /* nullConfigIsANull-null-withoutVersion.json in Resources */,
-				8305EC8220223BC3002F20DB /* doubleConfigIsADouble-Pi-withoutVersion.json in Resources */,
 				83BE9398201AA53100DD1ED9 /* ldFlagConfigModelPatchVersion2FlagWithNull.json in Resources */,
-				8305EC8A202243D6002F20DB /* nullConfigIsANull-null-withVersion.json in Resources */,
+				8305EC8A202243D6002F20DB /* nullConfigIsANull-null.json in Resources */,
 				83BE9387201A6AA400DD1ED9 /* ldFlagConfigModelTest.json in Resources */,
+				83ECCC9D208800F20086F879 /* doubleConfigIsADouble-e.json in Resources */,
 				836947801F1FF80A0047697C /* dictionaryConfigIsADictionary-KeyC.json in Resources */,
 				836947841F20125F0047697C /* ldClientManagerTestConfigB.json in Resources */,
 				83BE939C201B80F800DD1ED9 /* ldFlagConfigModelDeleteNewFlag.json in Resources */,
-				83C28CF92023872C00394693 /* featureFlags-excludeNulls-withoutVersions.json in Resources */,
 				836947711F1FF45B0047697C /* arrayConfigIsAnArray-Empty.json in Resources */,
 				8369476A1F1FF0A00047697C /* stringConfigIsAStringA-someString.json in Resources */,
 				83258A421F32721A008C2133 /* emptyConfig.json in Resources */,
 				836947691F1FF0A00047697C /* stringConfigIsAString-someStringA.json in Resources */,
-				8369477A1F1FF80A0047697C /* dictionaryConfigIsADictionary-3Key-withVersion.json in Resources */,
-				8305EC8420223D65002F20DB /* stringConfigIsAString-someString-withoutVersion.json in Resources */,
+				8369477A1F1FF80A0047697C /* dictionaryConfigIsADictionary-3Key.json in Resources */,
 				836947621F1FEEB40047697C /* numberConfigIsANumber-1.json in Resources */,
-				6903472F1E689B9F00E45133 /* featureFlags-withVersions.json in Resources */,
+				6903472F1E689B9F00E45133 /* featureFlags.json in Resources */,
 				83BE9389201A781200DD1ED9 /* ldFlagConfigModelPatchVersion1Flag.json in Resources */,
-				836947631F1FEEB40047697C /* numberConfigIsANumber-2-withVersion.json in Resources */,
+				836947631F1FEEB40047697C /* numberConfigIsANumber-2.json in Resources */,
 				8369475C1F1FED400047697C /* boolConfigIsABool-false.json in Resources */,
-				8305EC8020223A2E002F20DB /* numberConfigIsANumber-2-withoutVersion.json in Resources */,
-				83B8C2581FEC4C3B0082B8A9 /* featureFlags-excludeNulls-withVersions.json in Resources */,
-				8305EC7E202238FC002F20DB /* boolConfigIsABool-true-withoutVersion.json in Resources */,
+				83B8C2581FEC4C3B0082B8A9 /* featureFlags-excludeNulls.json in Resources */,
 				83BE9396201A93AC00DD1ED9 /* ldFlagConfigModelPatchVersion2Flag.json in Resources */,
 				836947831F20125F0047697C /* ldClientManagerTestConfigA.json in Resources */,
 				839E0A16201F97E900DB8CD1 /* ldClientManagerTestPatchIsANumber.json in Resources */,
 				836947721F1FF45B0047697C /* arrayConfigIsAnArrayA-123.json in Resources */,
 				8369477C1F1FF80A0047697C /* dictionaryConfigIsADictionary-KeyA.json in Resources */,
 				8369475E1F1FED400047697C /* boolConfigIsABool2-true.json in Resources */,
-				83258A441F329EFB008C2133 /* doubleConfigIsADouble-Pi-withVersion.json in Resources */,
-				83BE9385201A63B400DD1ED9 /* ldDataManagerTestConfig.json in Resources */,
+				83258A441F329EFB008C2133 /* doubleConfigIsADouble-Pi.json in Resources */,
 				836947641F1FEEB40047697C /* numberConfigIsANumber2-1.json in Resources */,
 				839E0A18201FB8D900DB8CD1 /* ldClientManagerTestDeleteIsANumber.json in Resources */,
-				8305EC8E20227365002F20DB /* featureFlags-withoutVersions.json in Resources */,
 				8369477B1F1FF80A0047697C /* dictionaryConfigIsADictionary-Empty.json in Resources */,
-				836947681F1FF0A00047697C /* stringConfigIsAString-someString-withVersion.json in Resources */,
+				836947681F1FF0A00047697C /* stringConfigIsAString-someString.json in Resources */,
 				8369477E1F1FF80A0047697C /* dictionaryConfigIsADictionary-KeyB.json in Resources */,
 				8369476F1F1FF45B0047697C /* arrayConfigIsAnArray-1.json in Resources */,
-				8369475D1F1FED400047697C /* boolConfigIsABool-true-withVersion.json in Resources */,
+				8369475D1F1FED400047697C /* boolConfigIsABool-true.json in Resources */,
 				8369477F1F1FF80A0047697C /* dictionaryConfigIsADictionary-KeyC-keyDValueDiffers.json in Resources */,
-				836947701F1FF45B0047697C /* arrayConfigIsAnArray-123-withVersion.json in Resources */,
+				836947701F1FF45B0047697C /* arrayConfigIsAnArray-123.json in Resources */,
 				83BE939A201B6EBA00DD1ED9 /* ldFlagConfigModelDeleteVersion2Flag.json in Resources */,
 				83BE938E201A863D00DD1ED9 /* ldFlagConfigModelPatchNewFlag.json in Resources */,
-				8305EC8620223EBA002F20DB /* arrayConfigIsAnArray-123-withoutVersion.json in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1352,15 +1471,18 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				83889B1B1F8F28AB00A4EF69 /* NSURLResponse+Unauthorized.m in Sources */,
+				83889B1B1F8F28AB00A4EF69 /* NSURLResponse+LaunchDarkly.m in Sources */,
+				8375839E209CCE71004329DD /* LDEventTrackingContext.m in Sources */,
 				8365E50C2028F39E00DE8E2B /* LDEvent+EventTypes.m in Sources */,
 				690346FE1E68990000E45133 /* LDEventModel.m in Sources */,
+				83B62E1B20A249A200F2E656 /* NSDateFormatter+JsonHeader.m in Sources */,
 				690347121E68994500E45133 /* LDDataManager.m in Sources */,
 				832C78871F296F3400E334A2 /* NSMutableDictionary+NullRemovable.m in Sources */,
 				690347041E68990000E45133 /* LDRequestManager.m in Sources */,
+				83ECCCAA2088FBA80086F879 /* LDFlagConfigTracker.m in Sources */,
 				833D08CF1F3B97EB00BEED83 /* NSThread+MainExecutable.m in Sources */,
 				690346FA1E68990000E45133 /* LDClientManager.m in Sources */,
-				83F5B47C1F95096A00174DF7 /* NSHTTPURLResponse+Unauthorized.m in Sources */,
+				83F5B47C1F95096A00174DF7 /* NSHTTPURLResponse+LaunchDarkly.m in Sources */,
 				690346F81E68990000E45133 /* LDClient.m in Sources */,
 				690346F61E68990000E45133 /* DarklyConstants.m in Sources */,
 				83B8C2531FEC19500082B8A9 /* NSDateFormatter+LDUserModel.m in Sources */,
@@ -1371,9 +1493,12 @@
 				690347021E68990000E45133 /* LDPollingManager.m in Sources */,
 				690346FC1E68990000E45133 /* LDConfig.m in Sources */,
 				690347061E68990000E45133 /* LDUserBuilder.m in Sources */,
-				8305EC7520222078002F20DB /* NSObject+LDFlagConfigValue.m in Sources */,
+				83620B8920BDF36B00F1F28E /* NSNumber+LaunchDarkly.m in Sources */,
 				690347081E68990000E45133 /* LDUserModel.m in Sources */,
 				6903470A1E68990000E45133 /* LDUtil.m in Sources */,
+				83B6FC21207E60B6002DBA7B /* NSDate+ReferencedDate.m in Sources */,
+				83C886812087A786004AC82F /* LDFlagValueCounter.m in Sources */,
+				83ECCC922087D67D0086F879 /* LDFlagCounter.m in Sources */,
 				690347001E68990000E45133 /* LDFlagConfigModel.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -1382,38 +1507,47 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				837583A7209CD187004329DD /* LDEventTrackingContext+Testable.m in Sources */,
+				83ECCCAF2088FF420086F879 /* LDFlagConfigTrackerTest.m in Sources */,
 				83EF678D1F98FC9200403126 /* LDFlagConfigModel+Testable.m in Sources */,
 				8349F51E1F19352300B1F3DB /* NSDictionary+StringKey_Matchable.m in Sources */,
+				83B6FC2B208127B2002DBA7B /* LDEventModel+Testable.m in Sources */,
 				839956E820053081009707D1 /* LDUserModel+Testable.m in Sources */,
 				690347291E689B9F00E45133 /* LDEventModelTest.m in Sources */,
 				830C2ACF20757CE9001D645D /* LDThrottlerTest.m in Sources */,
 				690347301E689B9F00E45133 /* LDConfigTest.m in Sources */,
 				690347261E689B9F00E45133 /* LDUserBuilderTest.m in Sources */,
 				832C788D1F2977B800E334A2 /* NSString+RemoveWhitespace.m in Sources */,
+				83ECCC982087DF040086F879 /* LDFlagCounterTest.m in Sources */,
 				6903472A1E689B9F00E45133 /* LDUserModelTest.m in Sources */,
-				8349F5211F195BCF00B1F3DB /* LDUserModel+Equatable.m in Sources */,
+				83ECCCB220890A430086F879 /* LDFlagConfigTracker+Testable.m in Sources */,
 				6903472B1E689B9F00E45133 /* LDPollingManagerTest.m in Sources */,
 				83EF67901F99365600403126 /* LDClient+Testable.m in Sources */,
 				83258A3D1F323049008C2133 /* LDClientManager+EventSource.m in Sources */,
+				83ECCC9B2087EF4A0086F879 /* LDFlagConfigValue+Testable.m in Sources */,
+				837583A3209CD0A7004329DD /* LDEventTrackingContextTest.m in Sources */,
+				83B62E2320A258D400F2E656 /* NSDateFormatter+JsonHeader+Testable.m in Sources */,
 				830C2AD220768697001D645D /* LDThrottler+Testable.m in Sources */,
-				8305EC7A20222B5E002F20DB /* NSObject+LDFlagConfigValueTest.m in Sources */,
 				83BE938C201A797B00DD1ED9 /* NSJSONSerialization+Testable.m in Sources */,
 				6903472E1E689B9F00E45133 /* LDClientManagerTest.m in Sources */,
 				69E5275E1E6E948F00E4B63B /* LDDataManagerTest.m in Sources */,
 				83BE9394201A8DEE00DD1ED9 /* NSObject+Testable.m in Sources */,
+				83ECCC882087BF860086F879 /* LDFlagValueCounterTest.m in Sources */,
 				690347321E689B9F00E45133 /* DarklyXCTestCase.m in Sources */,
 				83889B141F8E93A100A4EF69 /* LDEvent+Testable.m in Sources */,
 				69B205D31EA92ECD00487CA3 /* LDRequestManagerTest.m in Sources */,
 				6903472D1E689B9F00E45133 /* LDUtilTest.m in Sources */,
+				83B62E2020A2517500F2E656 /* NSDateFormatter+JsonHeaderTest.m in Sources */,
+				83ECCC8B2087CA280086F879 /* LDFlagValueCounter+Testable.m in Sources */,
 				690347311E689B9F00E45133 /* LDFlagConfigModelTest.m in Sources */,
 				8305EC7C2022336C002F20DB /* LDFlagConfigValueTest.m in Sources */,
 				83BE9391201A8AD100DD1ED9 /* NSDictionary+Testable.m in Sources */,
 				83258A401F3244D0008C2133 /* LDUserBuilder+Testable.m in Sources */,
-				690347331E689B9F00E45133 /* NSArray+UnitTests.m in Sources */,
+				690347331E689B9F00E45133 /* NSArray+Testable.m in Sources */,
 				6903472C1E689B9F00E45133 /* LDClientTest.m in Sources */,
-				83B8C24C1FEB1CD20082B8A9 /* LDUserModel+Stub.m in Sources */,
-				832C78901F2A8DF600E334A2 /* LDUserModel+JsonDecodeable.m in Sources */,
 				8358F25A1F4202A300ECE1AF /* LDConfig+Testable.m in Sources */,
+				83ECCCA32088E4E90086F879 /* LDFlagCounter+Testable.m in Sources */,
+				83ECCCB520891E8E0086F879 /* NSDate+Testable.m in Sources */,
 				83F5B4751F91560300174DF7 /* LDDataManager+Testable.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -1422,15 +1556,18 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				83889B1E1F8F28AB00A4EF69 /* NSURLResponse+Unauthorized.m in Sources */,
+				83889B1E1F8F28AB00A4EF69 /* NSURLResponse+LaunchDarkly.m in Sources */,
+				837583A1209CCE71004329DD /* LDEventTrackingContext.m in Sources */,
 				8365E50F2028F39E00DE8E2B /* LDEvent+EventTypes.m in Sources */,
 				69A87EA31E74712800B88B23 /* LDEventModel.m in Sources */,
+				83B62E1E20A249A200F2E656 /* NSDateFormatter+JsonHeader.m in Sources */,
 				69A87E9D1E74712800B88B23 /* LDClient.m in Sources */,
 				832C788A1F296F3400E334A2 /* NSMutableDictionary+NullRemovable.m in Sources */,
 				69A87E9B1E74712800B88B23 /* DarklyConstants.m in Sources */,
+				83ECCCAD2088FBA80086F879 /* LDFlagConfigTracker.m in Sources */,
 				833D08D21F3B97EB00BEED83 /* NSThread+MainExecutable.m in Sources */,
 				69A87EA11E74712800B88B23 /* LDConfig.m in Sources */,
-				83F5B47F1F95096A00174DF7 /* NSHTTPURLResponse+Unauthorized.m in Sources */,
+				83F5B47F1F95096A00174DF7 /* NSHTTPURLResponse+LaunchDarkly.m in Sources */,
 				69A87EA51E74712800B88B23 /* LDFlagConfigModel.m in Sources */,
 				69A87EB11E74712800B88B23 /* NSDictionary+JSON.m in Sources */,
 				83B8C2561FEC19500082B8A9 /* NSDateFormatter+LDUserModel.m in Sources */,
@@ -1441,9 +1578,12 @@
 				69A87EA71E74712800B88B23 /* LDPollingManager.m in Sources */,
 				69A87E9F1E74712800B88B23 /* LDClientManager.m in Sources */,
 				69A87EAD1E74712800B88B23 /* LDUserModel.m in Sources */,
-				8305EC7820222078002F20DB /* NSObject+LDFlagConfigValue.m in Sources */,
+				83620B8C20BDF36B00F1F28E /* NSNumber+LaunchDarkly.m in Sources */,
 				69A87E981E74712800B88B23 /* LDDataManager.m in Sources */,
 				69A87EAB1E74712800B88B23 /* LDUserBuilder.m in Sources */,
+				83B6FC24207E60B6002DBA7B /* NSDate+ReferencedDate.m in Sources */,
+				83C886842087A786004AC82F /* LDFlagValueCounter.m in Sources */,
+				83ECCC952087D67D0086F879 /* LDFlagCounter.m in Sources */,
 				69A87EA91E74712800B88B23 /* LDRequestManager.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -1452,15 +1592,18 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				83889B1D1F8F28AB00A4EF69 /* NSURLResponse+Unauthorized.m in Sources */,
+				83889B1D1F8F28AB00A4EF69 /* NSURLResponse+LaunchDarkly.m in Sources */,
+				837583A0209CCE71004329DD /* LDEventTrackingContext.m in Sources */,
 				8365E50E2028F39E00DE8E2B /* LDEvent+EventTypes.m in Sources */,
 				69BD7E241E6C79910056D70F /* LDEventModel.m in Sources */,
+				83B62E1D20A249A200F2E656 /* NSDateFormatter+JsonHeader.m in Sources */,
 				69BD7E1E1E6C79910056D70F /* LDClient.m in Sources */,
 				832C78891F296F3400E334A2 /* NSMutableDictionary+NullRemovable.m in Sources */,
 				69BD7E1C1E6C79910056D70F /* DarklyConstants.m in Sources */,
+				83ECCCAC2088FBA80086F879 /* LDFlagConfigTracker.m in Sources */,
 				833D08D11F3B97EB00BEED83 /* NSThread+MainExecutable.m in Sources */,
 				69BD7E221E6C79910056D70F /* LDConfig.m in Sources */,
-				83F5B47E1F95096A00174DF7 /* NSHTTPURLResponse+Unauthorized.m in Sources */,
+				83F5B47E1F95096A00174DF7 /* NSHTTPURLResponse+LaunchDarkly.m in Sources */,
 				69BD7E261E6C79910056D70F /* LDFlagConfigModel.m in Sources */,
 				69BD7E321E6C79910056D70F /* NSDictionary+JSON.m in Sources */,
 				83B8C2551FEC19500082B8A9 /* NSDateFormatter+LDUserModel.m in Sources */,
@@ -1471,9 +1614,12 @@
 				69BD7E281E6C79910056D70F /* LDPollingManager.m in Sources */,
 				69BD7E201E6C79910056D70F /* LDClientManager.m in Sources */,
 				69BD7E2E1E6C79910056D70F /* LDUserModel.m in Sources */,
-				8305EC7720222078002F20DB /* NSObject+LDFlagConfigValue.m in Sources */,
+				83620B8B20BDF36B00F1F28E /* NSNumber+LaunchDarkly.m in Sources */,
 				69BD7E191E6C79910056D70F /* LDDataManager.m in Sources */,
 				69BD7E2C1E6C79910056D70F /* LDUserBuilder.m in Sources */,
+				83B6FC23207E60B6002DBA7B /* NSDate+ReferencedDate.m in Sources */,
+				83C886832087A786004AC82F /* LDFlagValueCounter.m in Sources */,
+				83ECCC942087D67D0086F879 /* LDFlagCounter.m in Sources */,
 				69BD7E2A1E6C79910056D70F /* LDRequestManager.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -1482,15 +1628,18 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				83889B1C1F8F28AB00A4EF69 /* NSURLResponse+Unauthorized.m in Sources */,
+				83889B1C1F8F28AB00A4EF69 /* NSURLResponse+LaunchDarkly.m in Sources */,
+				8375839F209CCE71004329DD /* LDEventTrackingContext.m in Sources */,
 				8365E50D2028F39E00DE8E2B /* LDEvent+EventTypes.m in Sources */,
 				69F3F69E1E6BF82C00079A09 /* LDEventModel.m in Sources */,
+				83B62E1C20A249A200F2E656 /* NSDateFormatter+JsonHeader.m in Sources */,
 				69F3F6981E6BF82C00079A09 /* LDClient.m in Sources */,
 				832C78881F296F3400E334A2 /* NSMutableDictionary+NullRemovable.m in Sources */,
 				69F3F6961E6BF82100079A09 /* DarklyConstants.m in Sources */,
+				83ECCCAB2088FBA80086F879 /* LDFlagConfigTracker.m in Sources */,
 				833D08D01F3B97EB00BEED83 /* NSThread+MainExecutable.m in Sources */,
 				69F3F69C1E6BF82C00079A09 /* LDConfig.m in Sources */,
-				83F5B47D1F95096A00174DF7 /* NSHTTPURLResponse+Unauthorized.m in Sources */,
+				83F5B47D1F95096A00174DF7 /* NSHTTPURLResponse+LaunchDarkly.m in Sources */,
 				69F3F6A01E6BF82C00079A09 /* LDFlagConfigModel.m in Sources */,
 				69F3F6AC1E6BF82C00079A09 /* NSDictionary+JSON.m in Sources */,
 				83B8C2541FEC19500082B8A9 /* NSDateFormatter+LDUserModel.m in Sources */,
@@ -1501,9 +1650,12 @@
 				69F3F6A21E6BF82C00079A09 /* LDPollingManager.m in Sources */,
 				69F3F69A1E6BF82C00079A09 /* LDClientManager.m in Sources */,
 				69F3F6A81E6BF82C00079A09 /* LDUserModel.m in Sources */,
-				8305EC7620222078002F20DB /* NSObject+LDFlagConfigValue.m in Sources */,
+				83620B8A20BDF36B00F1F28E /* NSNumber+LaunchDarkly.m in Sources */,
 				69F3F6921E6BF7F600079A09 /* LDDataManager.m in Sources */,
 				69F3F6A61E6BF82C00079A09 /* LDUserBuilder.m in Sources */,
+				83B6FC22207E60B6002DBA7B /* NSDate+ReferencedDate.m in Sources */,
+				83C886822087A786004AC82F /* LDFlagValueCounter.m in Sources */,
+				83ECCC932087D67D0086F879 /* LDFlagCounter.m in Sources */,
 				69F3F6A41E6BF82C00079A09 /* LDRequestManager.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

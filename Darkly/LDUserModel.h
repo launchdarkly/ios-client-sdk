@@ -10,6 +10,7 @@
 #import "LDConfig.h"
 
 @class LDFlagConfigModel;
+@class LDFlagConfigTracker;
 
 extern NSString * __nonnull const kUserAttributeIp;
 extern NSString * __nonnull const kUserAttributeCountry;
@@ -31,7 +32,8 @@ extern NSString * __nonnull const kUserAttributeCustom;
 @property (nullable, nonatomic, strong) NSString *avatar;
 @property (nullable, nonatomic, strong) NSDictionary *custom;
 @property (nullable, nonatomic, strong) NSDate *updatedAt;
-@property (nullable, nonatomic, strong) LDFlagConfigModel *config;
+@property (nullable, nonatomic, strong) LDFlagConfigModel *flagConfig;
+@property (nullable, nonatomic, strong, readonly) LDFlagConfigTracker *flagConfigTracker;
 @property (nonatomic, strong, nullable) NSArray<NSString *>* privateAttributes;
 
 @property (nonatomic, assign) BOOL anonymous;
@@ -42,9 +44,8 @@ extern NSString * __nonnull const kUserAttributeCustom;
 -(nonnull NSDictionary *)dictionaryValueWithPrivateAttributesAndFlagConfig:(BOOL)includeFlags;
 -(nonnull NSDictionary *)dictionaryValueWithFlagConfig:(BOOL)includeFlags includePrivateAttributes:(BOOL)includePrivate config:(nullable LDConfig*)config;
 
--(NSObject * __nonnull) flagValue: ( NSString * __nonnull )keyName;
--(BOOL) doesFlagExist: (nonnull NSString *)keyName;
-
 +(NSArray<NSString *> * __nonnull) allUserAttributes;
+
+-(void)resetTracker;
 
 @end

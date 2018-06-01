@@ -1,32 +1,46 @@
 {
     "ddeefe": {
         "value": false,
-        "version": 3
+        "variation": 3,
+        "version": 3,
+        "flagVersion": 2
     },
     "main-slider": {
         "value": false,
-        "version": 3
+        "variation": 3,
+        "version": 3,
+        "flagVersion": 2
     },
     "new-feature": {
         "value": false,
-        "version": 3
+        "variation": 3,
+        "version": 3,
+        "flagVersion": 2
     },
     "new-gallery": {
         "value": {
             "foo": 2
         },
-        "version": 3
+        "variation": 3,
+        "version": 3,
+        "flagVersion": 2
     },
     "one-click-checkout": {
         "value": false,
-        "version": 3
+        "variation": 3,
+        "version": 3,
+        "flagVersion": 2
     },
     "shopping-cart": {
         "value": 20,
-        "version": 3
+        "variation": 3,
+        "version": 3,
+        "flagVersion": 2
     },
     "social-icon-toggle": {
         "value": false,
-        "version": 3
+        "variation": 3,
+        "version": 3,
+        "flagVersion": 2
     }
 }

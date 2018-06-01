@@ -7,22 +7,13 @@
 //
 
 #import "LDEventSource.h"
-#import <CoreGraphics/CGBase.h>
+#import "LDEventParser.h"
+#import "LDEventStringAccumulator.h"
 
-static CGFloat const ES_RETRY_INTERVAL = 1.0;
-static CGFloat const ES_DEFAULT_TIMEOUT = 300.0;
-static CGFloat const ES_MAX_RECONNECT_TIME = 3600.0;
+static NSTimeInterval const ES_RETRY_INTERVAL = 1.0;
+static NSTimeInterval const ES_DEFAULT_TIMEOUT = 300.0;
+static NSTimeInterval const ES_MAX_RECONNECT_TIME = 3600.0;
 
-static NSString *const ESKeyValueDelimiter = @":";
-static NSString *const LDEventSeparatorLFLF = @"\n\n";
-static NSString *const LDEventSeparatorCRCR = @"\r\r";
-static NSString *const LDEventSeparatorCRLFCRLF = @"\r\n\r\n";
-static NSString *const LDEventKeyValuePairSeparator = @"\n";
-
-static NSString *const LDEventDataKey = @"data";
-static NSString *const LDEventIDKey = @"id";
-static NSString *const LDEventEventKey = @"event";
-static NSString *const LDEventRetryKey = @"retry";
 NSString *const LDEventSourceErrorDomain = @"LDEventSourceErrorDomain";
 
 static NSInteger const HTTPStatusCodeUnauthorized = 401;
@@ -40,10 +31,11 @@ static NSInteger const HTTPStatusCodeUnauthorized = 401;
 @property (nonatomic, assign) NSTimeInterval timeoutInterval;
 @property (nonatomic, assign) NSTimeInterval retryInterval;
 @property (nonatomic, assign) NSInteger retryAttempt;
-@property (readonly, nonatomic, strong) NSDictionary <NSString *, NSString *> *httpRequestHeaders;
+@property (nonatomic, strong) NSDictionary <NSString *, NSString *> *httpRequestHeaders;
 @property (nonatomic, strong) NSString *connectMethod;
 @property (nonatomic, strong) NSData *connectBody;
 @property (nonatomic, strong) id lastEventID;
+@property (nonatomic, strong) LDEventStringAccumulator *eventStringAccumulator;
 
 - (void)_open;
 - (void)_dispatchEvent:(LDEvent *)e;
@@ -80,24 +72,26 @@ static NSInteger const HTTPStatusCodeUnauthorized = 401;
 - (instancetype)initWithURL:(NSURL *)URL httpHeaders:(NSDictionary<NSString*, NSString *>*) headers timeoutInterval:(NSTimeInterval)timeoutInterval connectMethod:(NSString*)connectMethod connectBody:(NSData*)connectBody
 {
     self = [super init];
-    if (self) {
-        _listeners = [NSMutableDictionary dictionary];
-        _eventURL = URL;
-        _timeoutInterval = timeoutInterval;
-        _retryInterval = ES_RETRY_INTERVAL;
-        _retryAttempt = 0;
-        _httpRequestHeaders = headers;
-        _connectMethod = connectMethod;
-        _connectBody = connectBody;
-        messageQueue = dispatch_queue_create("com.launchdarkly.eventsource-queue", DISPATCH_QUEUE_SERIAL);
-        connectionQueue = dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_HIGH, 0);
-        
-        dispatch_time_t popTime = dispatch_time(DISPATCH_TIME_NOW, (int64_t)(_retryInterval * NSEC_PER_SEC));
-        __weak typeof(self) weakSelf = self;
-        dispatch_after(popTime, connectionQueue, ^(void){
-            [weakSelf _open];
-        });
-    }
+    if (!self) { return nil; }
+
+    self.listeners = [NSMutableDictionary dictionary];
+    self.eventURL = URL;
+    self.timeoutInterval = timeoutInterval;
+    self.retryInterval = ES_RETRY_INTERVAL;
+    self.retryAttempt = 0;
+    self.httpRequestHeaders = headers;
+    self.connectMethod = connectMethod;
+    self.connectBody = connectBody;
+    messageQueue = dispatch_queue_create("com.launchdarkly.eventsource-queue", DISPATCH_QUEUE_SERIAL);
+    connectionQueue = dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_HIGH, 0);
+    self.eventStringAccumulator = [[LDEventStringAccumulator alloc] init];
+
+    dispatch_time_t popTime = dispatch_time(DISPATCH_TIME_NOW, (int64_t)(_retryInterval * NSEC_PER_SEC));
+    __weak typeof(self) weakSelf = self;
+    dispatch_after(popTime, connectionQueue, ^(void){
+        [weakSelf _open];
+    });
+
     return self;
 }
 
@@ -160,53 +154,30 @@ didReceiveResponse:(NSURLResponse *)response completionHandler:(void (^)(NSURLSe
 - (void)URLSession:(NSURLSession *)session dataTask:(NSURLSessionDataTask *)dataTask didReceiveData:(NSData *)data
 {
     NSString *eventString = [[NSString alloc] initWithData:data encoding:NSUTF8StringEncoding];
-    NSArray *lines = [eventString componentsSeparatedByCharactersInSet:[NSCharacterSet newlineCharacterSet]];
-    
-    LDEvent *event = [LDEvent new];
-    event.readyState = kEventStateOpen;
-    
-    for (NSString *line in lines) {
-        if ([line hasPrefix:ESKeyValueDelimiter]) {
-            continue;
+    [self.eventStringAccumulator accumulateEventStringWithString:eventString];
+    if ([self.eventStringAccumulator isReadyToParseEvent]) {
+        [self parseEventString:self.eventStringAccumulator.eventString];
+        [self.eventStringAccumulator reset];
+    }
+}
+
+- (void)parseEventString:(NSString*)eventString {
+    if (eventString.length == 0) { return; }
+    LDEventParser *parser = [LDEventParser eventParserWithEventString:eventString];
+    if (parser.event) {
+        __weak typeof(self) weakSelf = self;
+        dispatch_async(messageQueue, ^{
+            [weakSelf _dispatchEvent:parser.event];
+        });
+        if (parser.event.id) {
+            self.lastEventID = parser.event.id;
         }
-        
-        if (!line || line.length == 0) {
-            __weak typeof(self) weakSelf = self;
-            dispatch_async(messageQueue, ^{
-                [weakSelf _dispatchEvent:event];
-            });
-            
-            event = [LDEvent new];
-            event.readyState = kEventStateOpen;
-            continue;
-        }
-        
-        @autoreleasepool {
-            NSScanner *scanner = [NSScanner scannerWithString:line];
-            scanner.charactersToBeSkipped = [NSCharacterSet whitespaceCharacterSet];
-            
-            NSString *key, *value;
-            [scanner scanUpToString:ESKeyValueDelimiter intoString:&key];
-            [scanner scanString:ESKeyValueDelimiter intoString:nil];
-            [scanner scanUpToCharactersFromSet:[NSCharacterSet newlineCharacterSet] intoString:&value];
-            
-            if (key && value) {
-                if ([key isEqualToString:LDEventEventKey]) {
-                    event.event = value;
-                } else if ([key isEqualToString:LDEventDataKey]) {
-                    if (event.data != nil) {
-                        event.data = [event.data stringByAppendingFormat:@"\n%@", value];
-                    } else {
-                        event.data = value;
-                    }
-                } else if ([key isEqualToString:LDEventIDKey]) {
-                    event.id = value;
-                    self.lastEventID = event.id;
-                } else if ([key isEqualToString:LDEventRetryKey]) {
-                    self.retryInterval = [value doubleValue];
-                }
-            }
-        }
+    }
+    if (parser.retryInterval) {
+        self.retryInterval = [parser.retryInterval doubleValue];
+    }
+    if (parser.remainingEventString.length > 0) {
+        [self parseEventString:parser.remainingEventString];
     }
 }
 
@@ -318,7 +289,7 @@ didReceiveResponse:(NSURLResponse *)response completionHandler:(void (^)(NSURLSe
     }
 }
 
-- (CGFloat)increaseIntervalWithBackoff {
+- (NSTimeInterval)increaseIntervalWithBackoff {
     _retryAttempt++;
     return arc4random_uniform(MIN(ES_MAX_RECONNECT_TIME, _retryInterval * pow(2, _retryAttempt)));
 }
@@ -349,6 +320,16 @@ didReceiveResponse:(NSURLResponse *)response completionHandler:(void (^)(NSURLSe
             self.id,
             self.event,
             self.data];
+}
+
+-(id)copyWithZone:(NSZone*)zone {
+    LDEvent *copiedEvent = [[LDEvent alloc] init];
+    copiedEvent.id = self.id;
+    copiedEvent.event = self.event;
+    copiedEvent.data = self.data;
+    copiedEvent.readyState = self.readyState;
+    copiedEvent.error = self.error;
+    return copiedEvent;
 }
 
 @end

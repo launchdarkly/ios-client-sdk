@@ -13,6 +13,12 @@
 #import "LDConfig.h"
 #import "LDConfig+Testable.h"
 #import "LDClient.h"
+#import "NSDateFormatter+JsonHeader.h"
+#import "NSDateFormatter+JsonHeader+Testable.h"
+#import "NSHTTPURLResponse+LaunchDarkly+Testable.h"
+
+extern NSString * const kEventHeaderLaunchDarklyEventSchema;
+extern NSString * const kEventSchema;
 
 static NSString *const httpMethodGet = @"GET";
 static NSString *const testMobileKey = @"testMobileKey";
@@ -24,8 +30,10 @@ static const int httpStatusCodeUnauthorized = 401;
 static const int httpStatusCodeInternalServerError = 500;
 
 @interface LDRequestManagerTest : DarklyXCTestCase
-@property (nonatomic) id clientManagerMock;
-@property (nonatomic) id ldClientMock;
+@property (nonatomic, strong) id clientManagerMock;
+@property (nonatomic, strong) id ldClientMock;
+@property (nonatomic, strong) id requestManagerDelegateMock;
+
 @end
 
 @implementation LDRequestManagerTest
@@ -44,14 +52,16 @@ static const int httpStatusCodeInternalServerError = 500;
 }
 
 - (void)tearDown {
-    // Put teardown code here. This method is called after the invocation of each test method in the class.
-    [super tearDown];
+    [LDRequestManager sharedInstance].delegate = nil;
+    [self.requestManagerDelegateMock stopMocking];
+    self.requestManagerDelegateMock = nil;
     [self.ldClientMock stopMocking];
     self.ldClientMock = nil;
     [self.clientManagerMock stopMocking];
     self.clientManagerMock = nil;
-    [LDRequestManager sharedInstance].delegate = nil;
+    [OHHTTPStubs onStubActivation:nil];
     [OHHTTPStubs removeAllStubs];
+    [super tearDown];
 }
 
 - (void)testPerformFeatureFlagRequest_GetRequest_Success {
@@ -378,31 +388,31 @@ static const int httpStatusCodeInternalServerError = 500;
     [[NSNotificationCenter defaultCenter] removeObserver:clientUnauthorizedObserver];
 }
 
-- (void)testEventRequestMakesHttpRequestWithMobileKey {
-    
-    XCTestExpectation* responseArrived = [self expectationWithDescription:@"response of async request has arrived"];
-    __block BOOL httpRequestAttempted = NO;
+- (void)testPerformEventRequest_Online {
+    XCTestExpectation* responseArrivedExpectation = [self expectationWithDescription:@"response of async request has arrived"];
     NSData *data = [[NSData alloc] initWithBase64EncodedString:@"" options: 0] ;
-    
     [OHHTTPStubs stubRequestsPassingTest:^BOOL(NSURLRequest *request) {
-        return [request.URL.host isEqualToString:@"mobile.launchdarkly.com"];
+        return [request.URL.host isEqualToString:@"mobile.launchdarkly.com"] && [[request valueForHTTPHeaderField:kEventHeaderLaunchDarklyEventSchema] isEqualToString:kEventSchema];
     } withStubResponse:^OHHTTPStubsResponse*(NSURLRequest *request) {
-        httpRequestAttempted = YES;
-        [responseArrived fulfill];
-        return [OHHTTPStubsResponse responseWithData: data statusCode:httpStatusCodeOk headers:[self headerForStatusCode:httpStatusCodeOk]];
+        return [OHHTTPStubsResponse responseWithData:data statusCode:httpStatusCodeOk headers:[self headerForStatusCode:httpStatusCodeOk]];
     }];
-    
+    self.requestManagerDelegateMock = OCMProtocolMock(@protocol(RequestManagerDelegate));
+    [LDRequestManager sharedInstance].delegate = self.requestManagerDelegateMock;
+    NSDate *targetHeaderDate = [NSDateFormatter eventDateHeaderStub];
+    [[self.requestManagerDelegateMock expect] processedEvents:YES jsonEventArray:[OCMArg isKindOfClass:[NSArray class]] responseDate:[OCMArg checkWithBlock:^BOOL(id obj) {
+        XCTAssertEqualObjects(obj, targetHeaderDate);
+        [responseArrivedExpectation fulfill];
+        return YES;
+    }]];
+
     [[LDRequestManager sharedInstance] performEventRequest:[self stubEvents]];
 
-    [self waitForExpectationsWithTimeout:10 handler:^(NSError *error){
-        // By the time we reach this code, the while loop has exited
-        // so the response has arrived or the test has timed out
-        XCTAssertTrue(httpRequestAttempted);
-        [OHHTTPStubs removeAllStubs];
-    }];
+    [self waitForExpectations:@[responseArrivedExpectation] timeout:1.0];
+    [self.requestManagerDelegateMock verify];
 }
 
-- (void)testPerformEventRequestOffline {
+- (void)testPerformEventRequest_Offline {
+    [self.clientManagerMock stopMocking];
     id clientManagerMock = OCMClassMock([LDClientManager class]);
     OCMStub(ClassMethod([clientManagerMock sharedInstance])).andReturn(clientManagerMock);
     OCMStub([clientManagerMock isOnline]).andReturn(NO);
@@ -500,9 +510,9 @@ static const int httpStatusCodeInternalServerError = 500;
 
 - (NSDictionary*)headerForStatusCode:(int)statusCode {
     if (statusCode == httpStatusCodeOk) {
-        return @{@"Content-Type":@"application/json"};
+        return @{@"Content-Type":@"application/json", kHeaderKeyDate:kDateHeaderValueDate};
     }
-    return @{@"Content-Type":@"text"};
+    return @{@"Content-Type":@"text", kHeaderKeyDate:kDateHeaderValueDate};
 }
 
 - (NSData*)emptyJsonData {

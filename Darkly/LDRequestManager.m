@@ -6,15 +6,19 @@
 #import "LDUtil.h"
 #import "LDClientManager.h"
 #import "LDConfig.h"
-#import "NSURLResponse+Unauthorized.h"
+#import "NSURLResponse+LaunchDarkly.h"
 #import "NSDictionary+JSON.h"
+#import "NSHTTPURLResponse+LaunchDarkly.h"
 
-static NSString * const kFeatureFlagGetUrl = @"/msdk/eval/users/";
-static NSString * const kFeatureFlagReportUrl = @"/msdk/eval/user";
+static NSString * const kFeatureFlagGetUrl = @"/msdk/evalx/users/";
+static NSString * const kFeatureFlagReportUrl = @"/msdk/evalx/user";
 static NSString * const kEventUrl = @"/mobile/events/bulk";
 NSString * const kHeaderMobileKey = @"api_key ";
 static NSString * const kConfigRequestCompletedNotification = @"config_request_completed_notification";
 static NSString * const kEventRequestCompletedNotification = @"event_request_completed_notification";
+
+NSString * const kEventHeaderLaunchDarklyEventSchema = @"X-LaunchDarkly-Event-Schema";
+NSString * const kEventSchema = @"3";
 
 @implementation LDRequestManager
 
@@ -182,7 +186,7 @@ dispatch_queue_t notificationQueue;
         dispatch_semaphore_signal(semaphore);
         dispatch_async(dispatch_get_main_queue(), ^{
             BOOL processedEvents = !error;
-            [self.delegate processedEvents:processedEvents jsonEventArray:eventDictionaries];
+            [self.delegate processedEvents:processedEvents jsonEventArray:eventDictionaries responseDate:[response headerDate]];
         });
     }];
 
@@ -248,6 +252,7 @@ dispatch_queue_t notificationQueue;
     NSString *authKey = [kHeaderMobileKey stringByAppendingString:mobileKey];
     
     [request addValue:authKey forHTTPHeaderField:@"Authorization"];
+    [request addValue:kEventSchema forHTTPHeaderField:kEventHeaderLaunchDarklyEventSchema];
     [request addValue:[@"iOS/" stringByAppendingString:kClientVersion] forHTTPHeaderField:@"User-Agent"];
     [request addValue: @"application/json" forHTTPHeaderField:@"Content-Type"];
     [request addValue:@"application/json" forHTTPHeaderField:@"Accept"];

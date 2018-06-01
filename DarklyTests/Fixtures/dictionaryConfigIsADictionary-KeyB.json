@@ -3,6 +3,8 @@
         "value": {
             "keyB": [1, 2, 3]
         },
-        "version": 5
+        "variation": 5,
+        "version": 5,
+        "flagVersion": 4
     }
 }

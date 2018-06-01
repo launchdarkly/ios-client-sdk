@@ -1,10 +1,8 @@
 {
-    "isADictionary":{}
-}
-{
     "isADictionary": {
-        "value": {}
-        },
-        "version": 3
+        "value": {},
+        "variation": 3,
+        "version": 3,
+        "flagVersion": 2
     }
 }

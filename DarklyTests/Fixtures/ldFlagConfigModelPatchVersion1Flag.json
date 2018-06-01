@@ -1,5 +1,7 @@
 {
     "key": "version1Flag",
     "value": true,
-    "version": 2
+    "variation": 2,
+    "version": 2,
+    "flagVersion": 1
 }

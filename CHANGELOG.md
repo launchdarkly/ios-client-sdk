@@ -2,6 +2,18 @@
 
 All notable changes to the LaunchDarkly iOS SDK will be documented in this file. This project adheres to [Semantic Versioning](http://semver.org).
 
+## [2.13.0] - 2018-06-01
+### Added
+- New property `inlineUserInEvents` in `LDConfig`. When `YES` includes the full user (excluding private attributes) in analytics `feature` and `custom` events. When `NO` includes only the `userKey`. Default: `NO`.
+- Calling `start` or `updateUser` (when started) on `LDClient` logs an analytics `identify` event. `identify` events contain the full user (excluding private attributes) regardless of `inlineUserInEvents`.
+- Adds analytics `summary` event used to track feature flag requests to the SDK.
+- Adds analytics `debug` event available to assist with debugging when requested from the website Debugger.
+
+### Changed
+- Changes analytics `feature` events so that they are only sent when requested via the website Dashboard.
+- Fixed a defect preventing the SDK from updating correctly on a `put` streaming event when there are no flag changes.
+- Fixed a defect on `watchOS` causing the SDK to report analytics dates incorrectly.
+
 ## [2.12.1] - 2018-04-23
 ### Changed
 - Clears selected warnings in CocoaPods project

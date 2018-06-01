@@ -6,13 +6,15 @@
 #import "LDUserModel.h"
 #import "LDDataManager.h"
 #import "LDUserModel.h"
-#import "LDUserModel+Stub.h"
 #import "LDUserModel+Testable.h"
-#import "LDUserModel+Equatable.h"
-#import "LDUserModel+JsonDecodeable.h"
 #import "NSMutableDictionary+NullRemovable.h"
 #import "NSString+RemoveWhitespace.h"
 #import "NSJSONSerialization+Testable.h"
+#import "LDUtil.h"
+#import "NSDate+ReferencedDate.h"
+#import "LDFlagConfigModel.h"
+#import "LDFlagConfigTracker.h"
+#import "NSDate+Testable.h"
 
 @interface LDUserModelTest : XCTestCase
 @end
@@ -34,6 +36,27 @@
     XCTAssertNotNil(user.device);
     XCTAssertNotNil(user.updatedAt);
     XCTAssertNil(user.privateAttributes);
+}
+
+-(void)testInit {
+    NSDate *creationDate = [NSDate date];
+    LDUserModel *user = [[LDUserModel alloc] init];
+
+    XCTAssertNotNil(user);
+    XCTAssertEqualObjects(user.device, [LDUtil getDeviceAsString]);
+    XCTAssertEqualObjects(user.os, [LDUtil getSystemVersionAsString]);
+    XCTAssertTrue([user.updatedAt isWithinTimeInterval:0.01 ofDate:creationDate]);
+    XCTAssertNotNil(user.custom);
+    XCTAssertTrue(user.custom.count == 0);
+    XCTAssertNotNil(user.flagConfig);
+    if (user.flagConfig) {
+        XCTAssertTrue(user.flagConfig.featuresJsonDictionary.count == 0);
+    }
+    XCTAssertNotNil(user.flagConfigTracker);
+    if (user.flagConfigTracker) {
+        XCTAssertTrue(user.flagConfigTracker.flagCounters.count == 0);
+        XCTAssertTrue(Approximately(user.flagConfigTracker.startDateMillis, [creationDate millisSince1970], 10));
+    }
 }
 
 -(void)testDictionaryValueWithFlags_Yes_AndPrivateProperties_Yes {
@@ -408,8 +431,14 @@
     NSData *encodedUserData = [NSKeyedArchiver archivedDataWithRootObject:userStub];
     XCTAssertNotNil(encodedUserData);
 
+    LDMillisecond startDateMillis = [[NSDate date] millisSince1970];
     LDUserModel *decodedUser = [NSKeyedUnarchiver unarchiveObjectWithData:encodedUserData];
     XCTAssertTrue([userStub isEqual:decodedUser ignoringAttributes:@[kUserAttributeUpdatedAt]]);
+    XCTAssertNotNil(decodedUser.flagConfigTracker);
+    if (decodedUser.flagConfigTracker) {
+        XCTAssertTrue(decodedUser.flagConfigTracker.flagCounters.count == 0);
+        XCTAssertTrue(Approximately(decodedUser.flagConfigTracker.startDateMillis, startDateMillis, 10));
+    }
 }
 
 -(void)testInitWithDictionary {
@@ -421,8 +450,14 @@
     NSDictionary *userDictionary = [userStub dictionaryValueWithFlags:YES includePrivateAttributes:YES config:nil includePrivateAttributeList:YES];
     XCTAssertTrue(userDictionary && [userDictionary count]);
 
+    LDMillisecond startDateMillis = [[NSDate date] millisSince1970];
     LDUserModel *reinflatedUser = [[LDUserModel alloc] initWithDictionary:userDictionary];
     XCTAssertTrue([userStub isEqual:reinflatedUser ignoringAttributes:nil]);
+    XCTAssertNotNil(reinflatedUser.flagConfigTracker);
+    if (reinflatedUser.flagConfigTracker) {
+        XCTAssertTrue(reinflatedUser.flagConfigTracker.flagCounters.count == 0);
+        XCTAssertTrue(Approximately(reinflatedUser.flagConfigTracker.startDateMillis, startDateMillis, 10));
+    }
 }
 
 -(void)testUserJsonContainsNoWhitespace {
@@ -467,6 +502,18 @@
     XCTAssertTrue([user isEqual:retrievedUser ignoringAttributes:@[@"updatedAt"]]);
 }
 
+- (void)testResetTracker {
+    LDUserModel *subject = [LDUserModel stubWithKey:[[NSUUID UUID] UUIDString]];
+    LDMillisecond startDateMillis = [[NSDate date] millisSince1970];
+    [subject resetTracker];
+
+    XCTAssertNotNil(subject.flagConfigTracker);
+    if (subject.flagConfigTracker) {
+        XCTAssertTrue(subject.flagConfigTracker.flagCounters.count == 0);
+        XCTAssertTrue(Approximately(subject.flagConfigTracker.startDateMillis, startDateMillis, 10));
+    }
+}
+
 #pragma mark - Helpers
 ///Trims out null values, and config
 -(NSDictionary*)targetUserDictionaryFrom:(NSDictionary*)userDictionary withConfig:(BOOL)withConfig {
@@ -491,7 +538,7 @@
 }
 
 -(NSDictionary*)serverJson {
-    return [NSJSONSerialization jsonObjectFromFileNamed:@"featureFlags-withVersions"];
+    return [NSJSONSerialization jsonObjectFromFileNamed:@"featureFlags"];
 }
 
 -(NSMutableDictionary*)customDictionary {

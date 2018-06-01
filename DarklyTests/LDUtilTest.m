@@ -36,7 +36,7 @@
 }
 
 - (void)testBase64UrlEncodeString {
-    [[self unencodedStrings] enumerateObjectsUsingBlock:^(NSString * _Nonnull input, NSUInteger index, BOOL * _Nonnull stop) {
+    [[self unencodedStrings] enumerateObjectsUsingBlock:^(NSString *input, NSUInteger index, BOOL *stop) {
         XCTAssertTrue([[self base64UrlEncodedStrings][index] isEqualToString:[LDUtil base64UrlEncodeString: input]]);
     }];
 }
