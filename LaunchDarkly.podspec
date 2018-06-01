@@ -32,6 +32,6 @@ Pod::Spec.new do |s|
   s.xcconfig	= { 'CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS' => 'NO' }
 
   s.subspec 'Core' do |eventSource|
-    eventSource.dependency 'DarklyEventSource', '~>3.2.3'
+    eventSource.dependency 'DarklyEventSource', '~>3.2.4'
   end
 end

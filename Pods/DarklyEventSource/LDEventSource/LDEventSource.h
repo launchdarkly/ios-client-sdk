@@ -19,7 +19,7 @@ extern NSString *const LDEventSourceErrorDomain;
 // ---------------------------------------------------------------------------------------------------------------------
 
 /// Describes an Event received from an EventSource
-@interface LDEvent : NSObject
+@interface LDEvent : NSObject <NSCopying>
 
 /// The Event ID
 @property (nonatomic, strong) id id;
@@ -33,6 +33,7 @@ extern NSString *const LDEventSourceErrorDomain;
 /// Provides details of any errors with the connection to the EventSource
 @property (nonatomic, strong) NSError *error;
 
+-(id)copyWithZone:(NSZone*)zone;
 @end
 
 // ---------------------------------------------------------------------------------------------------------------------
