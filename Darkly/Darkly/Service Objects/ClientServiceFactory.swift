@@ -23,7 +23,7 @@ protocol ClientServiceCreating {
                                        service: DarklyServiceProvider,
                                        onSyncComplete: SyncCompleteClosure?) -> LDFlagSynchronizing
     func makeFlagChangeNotifier() -> FlagChangeNotifying
-    func makeEventReporter(config: LDConfig, service: DarklyServiceProvider) -> LDEventReporting
+    func makeEventReporter(config: LDConfig, service: DarklyServiceProvider) -> EventReporting
     mutating func makeStreamingProvider(url: URL, httpHeaders: [String: String]) -> DarklyStreamingProvider
     mutating func makeStreamingProvider(url: URL, httpHeaders: [String: String], connectMethod: String?, connectBody: Data?) -> DarklyStreamingProvider
     func makeEnvironmentReporter() -> EnvironmentReporting
@@ -71,8 +71,8 @@ struct ClientServiceFactory: ClientServiceCreating {
         return FlagChangeNotifier()
     }
 
-    func makeEventReporter(config: LDConfig, service: DarklyServiceProvider) -> LDEventReporting {
-        return LDEventReporter(config: config, service: service)
+    func makeEventReporter(config: LDConfig, service: DarklyServiceProvider) -> EventReporting {
+        return EventReporter(config: config, service: service)
     }
 
     func makeStreamingProvider(url: URL, httpHeaders: [String: String]) -> DarklyStreamingProvider {

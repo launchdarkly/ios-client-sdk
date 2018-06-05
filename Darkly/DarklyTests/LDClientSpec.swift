@@ -47,7 +47,7 @@ final class LDClientSpec: QuickSpec {
         var flagCacheMock: UserFlagCachingMock! { return serviceFactoryMock.userFlagCache }
         var flagStoreMock: FlagMaintainingMock! { return user.flagStore as? FlagMaintainingMock }
         var flagSynchronizerMock: LDFlagSynchronizingMock! { return subject.flagSynchronizer as? LDFlagSynchronizingMock }
-        var eventReporterMock: LDEventReportingMock! { return subject.eventReporter as? LDEventReportingMock }
+        var eventReporterMock: EventReportingMock! { return subject.eventReporter as? EventReportingMock }
         var changeNotifierMock: FlagChangeNotifyingMock! { return subject.flagChangeNotifier as? FlagChangeNotifyingMock }
         var environmentReporterMock: EnvironmentReportingMock! { return subject.environmentReporter as? EnvironmentReportingMock }
         // makeFlagSynchronizer getters
@@ -66,7 +66,7 @@ final class LDClientSpec: QuickSpec {
         var replaceStoreComplete: CompletionClosure? { return flagStoreMock.replaceStoreReceivedArguments?.completion }
         var updateStoreComplete: CompletionClosure? { return flagStoreMock.updateStoreReceivedArguments?.completion }
         var deleteFlagComplete: CompletionClosure? { return flagStoreMock.deleteFlagReceivedArguments?.completion }
-        var recordedEvent: LaunchDarkly.LDEvent? { return eventReporterMock.recordReceivedArguments?.event }
+        var recordedEvent: LaunchDarkly.Event? { return eventReporterMock.recordReceivedArguments?.event }
         // user flags
         var oldFlags: [LDFlagKey: FeatureFlag]!
         var oldFlagSource: LDFlagValueSource!
@@ -792,10 +792,10 @@ final class LDClientSpec: QuickSpec {
         }
 
         describe("stop") {
-            var event: LaunchDarkly.LDEvent!
+            var event: LaunchDarkly.Event!
             var priorRecordedEvents: Int!
             beforeEach {
-                event = LDEvent.stub(for: .custom, with: testContext.user)
+                event = Event.stub(for: .custom, with: testContext.user)
             }
             context("when started") {
                 beforeEach {
@@ -874,9 +874,9 @@ final class LDClientSpec: QuickSpec {
         }
 
         describe("track event") {
-            var event: LaunchDarkly.LDEvent!
+            var event: LaunchDarkly.Event!
             beforeEach {
-                event = LDEvent.stub(for: .custom, with: testContext.user)
+                event = Event.stub(for: .custom, with: testContext.user)
             }
             context("when client was started") {
                 beforeEach {
@@ -939,7 +939,7 @@ final class LDClientSpec: QuickSpec {
                 it("records a flag request event") {
                     _ = testContext.subject.variation(forKey: DarklyServiceMock.FlagKeys.bool, fallback: DefaultFlagValues.bool)
                     expect(testContext.eventReporterMock.recordCallCount) == 2  //the first event comes from the start call
-                    expect(testContext.recordedEvent?.kind) == .flagRequest
+                    expect(testContext.recordedEvent?.kind) == .feature
                     expect(testContext.recordedEvent?.key) == DarklyServiceMock.FlagKeys.bool
                     expect(AnyComparer.isEqual(testContext.recordedEvent?.value, to: DarklyServiceMock.FlagValues.bool)).to(beTrue())
                     expect(AnyComparer.isEqual(testContext.recordedEvent?.defaultValue, to: DefaultFlagValues.bool)).to(beTrue())
@@ -960,7 +960,7 @@ final class LDClientSpec: QuickSpec {
                 it("records a flag request event") {
                     _ = testContext.subject.variation(forKey: BadFlagKeys.bool, fallback: DefaultFlagValues.bool)
                     expect(testContext.eventReporterMock.recordCallCount) == 2  //the first event comes from the start call
-                    expect(testContext.recordedEvent?.kind) == .flagRequest
+                    expect(testContext.recordedEvent?.kind) == .feature
                     expect(testContext.recordedEvent?.key) == BadFlagKeys.bool
                     expect(AnyComparer.isEqual(testContext.recordedEvent?.value, to: DefaultFlagValues.bool)).to(beTrue())
                     expect(AnyComparer.isEqual(testContext.recordedEvent?.defaultValue, to: DefaultFlagValues.bool)).to(beTrue())
@@ -1019,7 +1019,7 @@ final class LDClientSpec: QuickSpec {
                 it("records a flag request event") {
                     _ = testContext.subject.variationAndSource(forKey: DarklyServiceMock.FlagKeys.bool, fallback: DefaultFlagValues.bool)
                     expect(testContext.eventReporterMock.recordCallCount) == 2  //the first event comes from the start call
-                    expect(testContext.recordedEvent?.kind) == .flagRequest
+                    expect(testContext.recordedEvent?.kind) == .feature
                     expect(testContext.recordedEvent?.key) == DarklyServiceMock.FlagKeys.bool
                     expect(AnyComparer.isEqual(testContext.recordedEvent?.value, to: DarklyServiceMock.FlagValues.bool)).to(beTrue())
                     expect(AnyComparer.isEqual(testContext.recordedEvent?.defaultValue, to: DefaultFlagValues.bool)).to(beTrue())
@@ -1044,7 +1044,7 @@ final class LDClientSpec: QuickSpec {
                 it("records a flag request event") {
                     _ = testContext.subject.variationAndSource(forKey: BadFlagKeys.bool, fallback: DefaultFlagValues.bool)
                     expect(testContext.eventReporterMock.recordCallCount) == 2  //the first event comes from the start call
-                    expect(testContext.recordedEvent?.kind) == .flagRequest
+                    expect(testContext.recordedEvent?.kind) == .feature
                     expect(testContext.recordedEvent?.key) == BadFlagKeys.bool
                     expect(AnyComparer.isEqual(testContext.recordedEvent?.value, to: DefaultFlagValues.bool)).to(beTrue())
                     expect(AnyComparer.isEqual(testContext.recordedEvent?.defaultValue, to: DefaultFlagValues.bool)).to(beTrue())

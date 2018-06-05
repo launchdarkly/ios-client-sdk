@@ -109,7 +109,7 @@ public class LDClient {
             service = serviceFactory.makeDarklyServiceProvider(mobileKey: mobileKey, config: config, user: user)
 
             if hasStarted {
-                eventReporter.record(LDEvent.identifyEvent(user: user))
+                eventReporter.record(Event.identifyEvent(user: user))
             }
 
             setOnline(wasOnline)
@@ -194,7 +194,7 @@ public class LDClient {
             Log.debug(typeName(and: #function) + "aborted. LDClient not started")
             return
         }
-        let event = LDEvent.customEvent(key: key, user: user, data: data)
+        let event = Event.customEvent(key: key, user: user, data: data)
         Log.debug(typeName(and: #function) + "event: \(event), data: \(String(describing: data))")
         eventReporter.record(event)
     }
@@ -237,7 +237,7 @@ public class LDClient {
         }
         let value = user.flagStore.variation(forKey: key, fallback: fallback)
         Log.debug(typeName(and: #function) + "flagKey: \(key), value: \(value), fallback: \(fallback)")
-        eventReporter.record(LDEvent.flagRequestEvent(key: key, user: user, value: value, defaultValue: fallback))
+        eventReporter.record(Event.featureEvent(key: key, user: user, value: value, defaultValue: fallback))
         return value
     }
 
@@ -269,7 +269,7 @@ public class LDClient {
         }
         let (value, source) = user.flagStore.variationAndSource(forKey: key, fallback: fallback)
         Log.debug(typeName(and: #function) + "flagKey: \(key), value: \(value), fallback: \(fallback), source: \(source)")
-        eventReporter.record(LDEvent.flagRequestEvent(key: key, user: user, value: value, defaultValue: fallback))
+        eventReporter.record(Event.featureEvent(key: key, user: user, value: value, defaultValue: fallback))
         return (value, source)
     }
     
@@ -443,7 +443,7 @@ public class LDClient {
     private(set) var flagCache: UserFlagCaching
     private(set) var flagSynchronizer: LDFlagSynchronizing
     private(set) var flagChangeNotifier: FlagChangeNotifying
-    private(set) var eventReporter: LDEventReporting
+    private(set) var eventReporter: EventReporting
     private(set) var environmentReporter: EnvironmentReporting
     private(set) var throttler: Throttling
 

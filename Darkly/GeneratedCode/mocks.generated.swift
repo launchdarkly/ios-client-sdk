@@ -124,6 +124,58 @@ final class EnvironmentReportingMock: EnvironmentReporting {
     }
 }
 
+// MARK: - EventReportingMock
+final class EventReportingMock: EventReporting {
+
+    // MARK: config
+    var configSetCount = 0
+    var setConfigCallback: (() -> Void)?
+    var config: LDConfig = LDConfig.stub {
+        didSet {
+            configSetCount += 1
+            setConfigCallback?()
+        }
+    }
+
+    // MARK: isOnline
+    var isOnlineSetCount = 0
+    var setIsOnlineCallback: (() -> Void)?
+    var isOnline: Bool = false {
+        didSet {
+            isOnlineSetCount += 1
+            setIsOnlineCallback?()
+        }
+    }
+
+    // MARK: service
+    var serviceSetCount = 0
+    var setServiceCallback: (() -> Void)?
+    var service: DarklyServiceProvider = DarklyServiceMock() {
+        didSet {
+            serviceSetCount += 1
+            setServiceCallback?()
+        }
+    }
+
+    // MARK: record
+    var recordCallCount = 0
+    var recordCallback: (() -> Void)?
+    var recordReceivedArguments: (event: Event, completion: CompletionClosure?)?
+    func record(_ event: Event, completion: CompletionClosure?) {
+        recordCallCount += 1
+        recordReceivedArguments = (event: event, completion: completion)
+        recordCallback?()
+    }
+
+    // MARK: reportEvents
+    var reportEventsCallCount = 0
+    var reportEventsCallback: (() -> Void)?
+    func reportEvents() {
+        reportEventsCallCount += 1
+        reportEventsCallback?()
+    }
+}
+
 // MARK: - FlagChangeNotifyingMock
 final class FlagChangeNotifyingMock: FlagChangeNotifying {
 
@@ -279,58 +331,6 @@ final class KeyedValueCachingMock: KeyedValueCaching {
         removeObjectCallCount += 1
         removeObjectReceivedForKey = forKey
         removeObjectCallback?()
-    }
-}
-
-// MARK: - LDEventReportingMock
-final class LDEventReportingMock: LDEventReporting {
-
-    // MARK: config
-    var configSetCount = 0
-    var setConfigCallback: (() -> Void)?
-    var config: LDConfig = LDConfig.stub {
-        didSet {
-            configSetCount += 1
-            setConfigCallback?()
-        }
-    }
-
-    // MARK: isOnline
-    var isOnlineSetCount = 0
-    var setIsOnlineCallback: (() -> Void)?
-    var isOnline: Bool = false {
-        didSet {
-            isOnlineSetCount += 1
-            setIsOnlineCallback?()
-        }
-    }
-
-    // MARK: service
-    var serviceSetCount = 0
-    var setServiceCallback: (() -> Void)?
-    var service: DarklyServiceProvider = DarklyServiceMock() {
-        didSet {
-            serviceSetCount += 1
-            setServiceCallback?()
-        }
-    }
-
-    // MARK: record
-    var recordCallCount = 0
-    var recordCallback: (() -> Void)?
-    var recordReceivedArguments: (event: LaunchDarkly.LDEvent, completion: CompletionClosure?)?
-    func record(_ event: LaunchDarkly.LDEvent, completion: CompletionClosure?) {
-        recordCallCount += 1
-        recordReceivedArguments = (event: event, completion: completion)
-        recordCallback?()
-    }
-
-    // MARK: reportEvents
-    var reportEventsCallCount = 0
-    var reportEventsCallback: (() -> Void)?
-    func reportEvents() {
-        reportEventsCallCount += 1
-        reportEventsCallback?()
     }
 }
 

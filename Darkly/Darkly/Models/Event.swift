@@ -1,5 +1,5 @@
 //
-//  LDEvent.swift
+//  Event.swift
 //  Darkly
 //
 //  Created by Mark Pokorny on 7/11/17. +JMJ
@@ -8,24 +8,24 @@
 
 import Foundation
 
-enum LDEventType: String {
-    case flagRequest, identify, custom
-}
-
-struct LDEvent { //sdk internal, not publically accessible
+struct Event { //sdk internal, not publically accessible
     enum CodingKeys: String, CodingKey {
         case key, kind, creationDate, user, value, defaultValue = "default", data
     }
 
+    enum Kind: String {
+        case feature, identify, custom
+    }
+
     let key: String
-    let kind: LDEventType
+    let kind: Kind
     let creationDate: Date
     let user: LDUser
     let value: Any?
     let defaultValue: Any?
     let data: [String: Any]?
 
-    init(key: String, kind: LDEventType = .custom, user: LDUser, value: Any? = nil, defaultValue: Any? = nil, data: [String: Any]? = nil) {
+    init(key: String, kind: Kind = .custom, user: LDUser, value: Any? = nil, defaultValue: Any? = nil, data: [String: Any]? = nil) {
         self.key = key
         self.kind = kind
         self.creationDate = Date()
@@ -35,19 +35,19 @@ struct LDEvent { //sdk internal, not publically accessible
         self.data = data
     }
 
-    static func flagRequestEvent(key: String, user: LDUser, value: Any?, defaultValue: Any?) -> LDEvent {
+    static func featureEvent(key: String, user: LDUser, value: Any?, defaultValue: Any?) -> Event {
         Log.debug(typeName(and: #function) + "key: " + key + ", value: \(String(describing: value)), " + "fallback: \(String(describing: defaultValue))")
-        return LDEvent(key: key, kind: .flagRequest, user: user, value: value, defaultValue: defaultValue)
+        return Event(key: key, kind: .feature, user: user, value: value, defaultValue: defaultValue)
     }
 
-    static func customEvent(key: String, user: LDUser, data: [String: Any]? = nil) -> LDEvent {
+    static func customEvent(key: String, user: LDUser, data: [String: Any]? = nil) -> Event {
         Log.debug(typeName(and: #function) + "key: " + key + ", data: \(String(describing: data))")
-        return LDEvent(key: key, kind: .custom, user: user, data: data)
+        return Event(key: key, kind: .custom, user: user, data: data)
     }
 
-    static func identifyEvent(user: LDUser) -> LDEvent {
+    static func identifyEvent(user: LDUser) -> Event {
         Log.debug(typeName(and: #function) + "key: " + user.key)
-        return LDEvent(key: user.key, kind: .identify, user: user)
+        return Event(key: user.key, kind: .identify, user: user)
     }
 
     func dictionaryValue(config: LDConfig) -> [String: Any] {
@@ -64,7 +64,7 @@ struct LDEvent { //sdk internal, not publically accessible
     }
 }
 
-extension Array where Element == LDEvent {
+extension Array where Element == Event {
     func dictionaryValues(config: LDConfig) -> [[String: Any]] {
         return self.map { (event) in event.dictionaryValue(config: config) }
     }
@@ -82,8 +82,8 @@ extension Array where Element == [String: Any] {
 }
 
 extension Dictionary where Key == String, Value == Any {
-    var eventKey: String? { return self[LDEvent.CodingKeys.key.rawValue] as? String }
-    var eventCreationDateMillis: Int64? { return self[LDEvent.CodingKeys.creationDate.rawValue] as? Int64 }
+    var eventKey: String? { return self[Event.CodingKeys.key.rawValue] as? String }
+    var eventCreationDateMillis: Int64? { return self[Event.CodingKeys.creationDate.rawValue] as? Int64 }
 
     func matches(eventDictionary other: [String: Any]) -> Bool {
         guard let key = eventKey, let creationDateMillis = eventCreationDateMillis,
@@ -93,8 +93,8 @@ extension Dictionary where Key == String, Value == Any {
     }
 }
 
-extension LDEvent: Equatable {
-    static func == (lhs: LDEvent, rhs: LDEvent) -> Bool { return lhs.key == rhs.key && lhs.creationDate == rhs.creationDate }
+extension Event: Equatable {
+    static func == (lhs: Event, rhs: Event) -> Bool { return lhs.key == rhs.key && lhs.creationDate == rhs.creationDate }
 }
 
-extension LDEvent: TypeIdentifying { }
+extension Event: TypeIdentifying { }

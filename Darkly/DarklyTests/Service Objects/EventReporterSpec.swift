@@ -1,5 +1,5 @@
 //
-//  LDEventReporterSpec.swift
+//  EventReporterSpec.swift
 //  DarklyTests
 //
 //  Created by Mark Pokorny on 9/26/17.
@@ -11,17 +11,17 @@ import Nimble
 import XCTest
 @testable import LaunchDarkly
 
-final class LDEventReporterSpec: QuickSpec {
+final class EventReporterSpec: QuickSpec {
     struct Constants {
         static let eventCapacity = 3
         static let eventFlushIntervalMillis = 10_000
         static let eventFlushInterval500Millis = 500
     }
     
-    var subject: LDEventReporter!
+    var subject: EventReporter!
     var user: LDUser!
     var mockService: DarklyServiceMock!
-    var mockEvents: [LDEvent]!
+    var mockEvents: [Event]!
 
     private func setupReporter(withEvents eventCount: Int = 0, eventFlushMillis: Int? = nil) {
         var config = LDConfig.stub
@@ -30,7 +30,7 @@ final class LDEventReporterSpec: QuickSpec {
 
         user = LDUser.stub()
         
-        subject = LDEventReporter(config: config, service: mockService)
+        subject = EventReporter(config: config, service: mockService)
         waitUntil { done in
             self.recordEvents(eventCount, completion: done)
         }
@@ -150,22 +150,22 @@ final class LDEventReporterSpec: QuickSpec {
                 }
                 it("records events up to event capacity") {
                     expect({ self.reporterState(isOnline: false, isReporting: false, reportTries: 0) }).to(match())
-                    let eventStoreKeys = self.subject.eventStore.flatMap { (eventDictionary) in eventDictionary[LDEvent.CodingKeys.key.rawValue] as? String }
+                    let eventStoreKeys = self.subject.eventStore.flatMap { (eventDictionary) in eventDictionary[Event.CodingKeys.key.rawValue] as? String }
                     let mockEventKeys = self.mockEvents.map { (event) in event.key }
                     expect(eventStoreKeys) == mockEventKeys
                 }
             }
             context("event store full") {
-                var extraEvent: LDEvent!
+                var extraEvent: Event!
                 beforeEach {
                     self.setupReporter(withEvents: Constants.eventCapacity)
-                    extraEvent = LDEvent.stub(for: .flagRequest, with: self.user)
+                    extraEvent = Event.stub(for: .feature, with: self.user)
 
                     self.subject.record(extraEvent)
                 }
                 it("doesn't record any more events") {
                     expect({ self.reporterState(isOnline: false, isReporting: false, reportTries: 0, recordedEvents: self.mockEvents) }).to(match())
-                    let eventStoreKeys = self.subject.eventStore.flatMap { (eventDictionary) in eventDictionary[LDEvent.CodingKeys.key.rawValue] as? String }
+                    let eventStoreKeys = self.subject.eventStore.flatMap { (eventDictionary) in eventDictionary[Event.CodingKeys.key.rawValue] as? String }
                     expect(eventStoreKeys.contains(extraEvent.key)) == false
                 }
             }
@@ -175,7 +175,7 @@ final class LDEventReporterSpec: QuickSpec {
             context("online") {
                 context("success") {
                     beforeEach {
-                        //The LDEventReporter will try to report events if it's started online with events. By starting online without events, then adding them, we "beat the timer" by reporting them right away
+                        //The EventReporter will try to report events if it's started online with events. By starting online without events, then adding them, we "beat the timer" by reporting them right away
                         self.setupReporter()
                         self.subject.isOnline = true
 
@@ -291,13 +291,13 @@ final class LDEventReporterSpec: QuickSpec {
             return
         }
         while mockEvents.count < eventCount {
-            let event = LDEvent.stub(for: LDEvent.eventType(for: mockEvents.count), with: self.user)
+            let event = Event.stub(for: Event.eventType(for: mockEvents.count), with: self.user)
             mockEvents.append(event)
             subject.record(event, completion: mockEvents.count == eventCount ? completion : nil)
         }
     }
     
-    private func reporterState(isOnline: Bool, isReporting: Bool, reportTries: Int, recordedEvents: [LDEvent]? = nil, publishedEvents: [LDEvent]? = nil) -> ToMatchResult {
+    private func reporterState(isOnline: Bool, isReporting: Bool, reportTries: Int, recordedEvents: [Event]? = nil, publishedEvents: [Event]? = nil) -> ToMatchResult {
         var messages = [String]()
         if self.subject.isOnline != isOnline { messages.append("isOnline equals \(self.subject.isOnline)") }
         if self.subject.isReportingActive != isReporting { messages.append("isReportingActive equals \(self.subject.isReportingActive)") }
@@ -324,25 +324,25 @@ final class LDEventReporterSpec: QuickSpec {
     }
 }
 
-extension LDEvent {
-    static func stub(for eventType: LDEventType, with user: LDUser) -> LDEvent {
+extension Event {
+    static func stub(for eventType: Kind, with user: LDUser) -> Event {
         switch eventType {
-        case .flagRequest: return LDEvent.flagRequestEvent(key: UUID().uuidString, user: user, value: true, defaultValue: false)
-        case .identify: return LDEvent.identifyEvent(user: user)
-        case .custom: return LDEvent.customEvent(key: UUID().uuidString, user: user, data: ["custom": UUID().uuidString])
+        case .feature: return Event.featureEvent(key: UUID().uuidString, user: user, value: true, defaultValue: false)
+        case .identify: return Event.identifyEvent(user: user)
+        case .custom: return Event.customEvent(key: UUID().uuidString, user: user, data: ["custom": UUID().uuidString])
         }
     }
     
-    static func stubEvents(_ eventCount: Int, user: LDUser) -> [LDEvent] {
-        var eventStubs = [LDEvent]()
+    static func stubEvents(_ eventCount: Int, user: LDUser) -> [Event] {
+        var eventStubs = [Event]()
         while eventStubs.count < eventCount {
-            eventStubs.append(LDEvent.stub(for: LDEvent.eventType(for: eventStubs.count), with: user))
+            eventStubs.append(Event.stub(for: Event.eventType(for: eventStubs.count), with: user))
         }
         return eventStubs
     }
 
-    static func eventType(for count: Int) -> LDEventType {
-        let types: [LDEventType] = [.flagRequest, .identify, .custom]
+    static func eventType(for count: Int) -> Kind {
+        let types: [Kind] = [.feature, .identify, .custom]
         return types[count % types.count]
     }
 
@@ -360,15 +360,15 @@ extension LDEvent {
     }
 }
 
-extension LDEventType {
-    static var random: LDEventType {
-        let types: [LDEventType] = [.flagRequest, .identify, .custom]
+extension Event.Kind {
+    static var random: Event.Kind {
+        let types: [Event.Kind] = [.feature, .identify, .custom]
         let index = Int(arc4random_uniform(2))
         return types[index]
     }
 }
 
-extension Array where Element == LDEvent {
+extension Array where Element == Event {
     func matches(eventDictionaries: [[String: Any]]) -> Bool {
         guard self.count == eventDictionaries.count else { return false }
         for index in self.indices {
@@ -379,7 +379,7 @@ extension Array where Element == LDEvent {
 }
 
 extension Array where Element == [String: Any] {
-    func matches(events: [LDEvent]) -> Bool {
+    func matches(events: [Event]) -> Bool {
         guard self.count == events.count else { return false }
         for index in self.indices {
             if !events[index].matches(eventDictionary: self[index]) { return false }

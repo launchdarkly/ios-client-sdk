@@ -1,5 +1,5 @@
 //
-//  LDEventReporter.swift
+//  EventReporter.swift
 //  Darkly
 //
 //  Created by Mark Pokorny on 7/24/17. +JMJ
@@ -9,28 +9,28 @@
 import Foundation
 
 //sourcery: AutoMockable
-protocol LDEventReporting {
+protocol EventReporting {
     //sourcery: DefaultMockValue = LDConfig.stub
     var config: LDConfig { get set }
     //sourcery: DefaultMockValue = false
     var isOnline: Bool { get set }
     //sourcery: DefaultMockValue = DarklyServiceMock()
     var service: DarklyServiceProvider { get set }
-    func record(_ event: LaunchDarkly.LDEvent, completion: CompletionClosure?)
+    func record(_ event: Event, completion: CompletionClosure?)
     //sourcery: NoMock
-    func record(_ event: LaunchDarkly.LDEvent)
+    func record(_ event: Event)
 
     func reportEvents()
 }
 
-extension LDEventReporting {
+extension EventReporting {
     //sourcery: NoMock
-    func record(_ event: LDEvent) {
+    func record(_ event: Event) {
         record(event, completion: nil)
     }
 }
 
-class LDEventReporter: LDEventReporting {
+class EventReporter: EventReporting {
     fileprivate struct Constants {
         static let eventQueueLabel = "com.launchdarkly.eventSyncQueue"
     }
@@ -60,7 +60,7 @@ class LDEventReporter: LDEventReporting {
         self.service = service
     }
 
-    func record(_ event: LDEvent, completion: CompletionClosure? = nil) {
+    func record(_ event: Event, completion: CompletionClosure? = nil) {
         eventQueue.async {
             defer {
                 DispatchQueue.main.async {
@@ -143,4 +143,4 @@ class LDEventReporter: LDEventReporting {
     private var isEventStoreFull: Bool { return eventStore.count >= config.eventCapacity}
 }
 
-extension LDEventReporter: TypeIdentifying { }
+extension EventReporter: TypeIdentifying { }

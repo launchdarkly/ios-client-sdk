@@ -38,7 +38,7 @@ final class DarklyServiceSpec: QuickSpec {
             }
             config = LDConfig.stub
             config.useReport = useReport
-            mockEventDictionaries = includeMockEventDictionaries ? LDEvent.stubEventDictionaries(Constants.eventCount, user: user, config: config) : nil
+            mockEventDictionaries = includeMockEventDictionaries ? Event.stubEventDictionaries(Constants.eventCount, user: user, config: config) : nil
             serviceMock = DarklyServiceMock(config: config)
             subject = DarklyService(mobileKey: mobileKey, config: config, user: user, serviceFactory: serviceFactoryMock)
         }
