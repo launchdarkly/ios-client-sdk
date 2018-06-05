@@ -76,7 +76,7 @@ extension Array where Element == [String: Any] {
         return try? JSONSerialization.data(withJSONObject: self, options: [])
     }
 
-    func contains(eventDictionary: [String: Any]) -> Bool {
+    func contains(_ eventDictionary: [String: Any]) -> Bool {
         return !self.filter { (testDictionary) in testDictionary.matches(eventDictionary: eventDictionary) }.isEmpty
     }
 }

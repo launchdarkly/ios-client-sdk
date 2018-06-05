@@ -44,12 +44,7 @@ final class UserCacheConverter: UserCacheConverting {
 
 extension LDUser {
     fileprivate init(userObject: Any, usingKeyIfMissing key: String) {
-        self = LDUser(dataObject: userObject) ?? LDUser(dictionaryObject: userObject) ?? LDUser(key: key)
-    }
-
-    private init?(dictionaryObject: Any) {
-        guard let userDictionary = dictionaryObject as? [String: Any] else { return nil }
-        self = LDUser(userDictionary: userDictionary)
+        self = LDUser(dataObject: userObject) ?? LDUser(object: userObject) ?? LDUser(key: key)
     }
 
     private init?(dataObject: Any) {

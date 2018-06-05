@@ -134,7 +134,7 @@ class EventReporter: EventReporting {
     
     private func updateEventStore(reportedEventDictionaries: [[String: Any]]) {
         eventQueue.async {
-            let remainingEventDictionaries = self.eventStore.filter { (eventDictionary) in !reportedEventDictionaries.contains(eventDictionary: eventDictionary) }
+            let remainingEventDictionaries = self.eventStore.filter { (eventDictionary) in !reportedEventDictionaries.contains(eventDictionary) }
             self.eventStore = remainingEventDictionaries
             Log.debug(self.typeName + ".reportEvents() - completed")
         }

@@ -68,6 +68,11 @@ public struct LDUser {
         Log.debug(typeName(and: #function) + "user: \(self)")
     }
     
+    public init?(object: Any?) {
+        guard let userDictionary = object as? [String: Any] else { return nil }
+        self = LDUser(userDictionary: userDictionary)
+    }
+
     public init(userDictionary: [String: Any]) {
         key = userDictionary[CodingKeys.key.rawValue] as? String ?? LDUser.defaultKey(environmentReporter: EnvironmentReporter())
         isAnonymous = userDictionary[CodingKeys.isAnonymous.rawValue] as? Bool ?? false
