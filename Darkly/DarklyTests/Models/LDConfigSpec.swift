@@ -13,6 +13,24 @@ import Nimble
 final class LDConfigSpec: QuickSpec {
     struct Constants {
         fileprivate static let alternateMockUrl = URL(string: "https://dummy.alternate.com")!
+        fileprivate static let eventCapacity = 10
+        fileprivate static let connectionTimeoutMillis = 10
+        fileprivate static let eventFlushIntervalMillis = 10
+        fileprivate static let pollIntervalMillis = 10
+        fileprivate static let backgroundPollIntervalMillis = 10
+
+        fileprivate static let streamingMode = LDStreamingMode.polling
+        fileprivate static let enableBackgroundUpdates = true
+        fileprivate static let startOnline = false
+
+        fileprivate static let allUserAttributesPrivate = true
+        fileprivate static let privateUserAttributes: [String]? = ["dummy"]
+
+        fileprivate static let useReport = true
+
+        fileprivate static let inlineUserInEvents = true
+
+        fileprivate static let debugMode = true
     }
 
     struct TestContext {
@@ -28,11 +46,106 @@ final class LDConfigSpec: QuickSpec {
     }
 
     override func spec() {
+        initSpec()
         flagPollingIntervalSpec()
         equalsSpec()
         isReportRetryStatusCodeSpec()
         allowStreamingModeSpec()
         allowBackgroundUpdatesSpec()
+    }
+
+    func initSpec() {
+        describe("init") {
+            var config: LDConfig!
+            beforeEach {
+                config = LDConfig()
+            }
+            context("without changing config values") {
+                it("has the default config values") {
+                    expect(config.baseUrl) == LDConfig.Defaults.baseUrl
+                    expect(config.eventsUrl) == LDConfig.Defaults.eventsUrl
+                    expect(config.streamUrl) == LDConfig.Defaults.streamUrl
+                    expect(config.eventCapacity) == LDConfig.Defaults.eventCapacity
+                    expect(config.connectionTimeoutMillis) == LDConfig.Defaults.connectionTimeoutMillis
+                    expect(config.eventFlushIntervalMillis) == LDConfig.Defaults.eventFlushIntervalMillis
+                    expect(config.pollIntervalMillis) == LDConfig.Defaults.pollIntervalMillis
+                    expect(config.backgroundPollIntervalMillis) == LDConfig.Defaults.backgroundPollIntervalMillis
+                    expect(config.streamingMode) == LDConfig.Defaults.streamingMode
+                    expect(config.enableBackgroundUpdates) == LDConfig.Defaults.enableBackgroundUpdates
+                    expect(config.startOnline) == LDConfig.Defaults.startOnline
+                    expect(config.allUserAttributesPrivate) == LDConfig.Defaults.allUserAttributesPrivate
+                    expect(config.privateUserAttributes).to(beNil())
+                    expect(config.useReport) == LDConfig.Defaults.useReport
+                    expect(config.inlineUserInEvents) == LDConfig.Defaults.inlineUserInEvents
+                    expect(config.isDebugMode) == LDConfig.Defaults.debugMode
+                }
+            }
+            context("changing the config values") {
+                beforeEach {
+                    config.baseUrl = Constants.alternateMockUrl
+                    config.eventsUrl = Constants.alternateMockUrl
+                    config.streamUrl = Constants.alternateMockUrl
+                    config.eventCapacity = Constants.eventCapacity
+                    config.connectionTimeoutMillis = Constants.connectionTimeoutMillis
+                    config.eventFlushIntervalMillis = Constants.eventFlushIntervalMillis
+                    config.pollIntervalMillis = Constants.pollIntervalMillis
+                    config.backgroundPollIntervalMillis = Constants.backgroundPollIntervalMillis
+                    config.streamingMode = Constants.streamingMode
+                    config.enableBackgroundUpdates = Constants.enableBackgroundUpdates
+                    config.startOnline = Constants.startOnline
+                    config.allUserAttributesPrivate = Constants.allUserAttributesPrivate
+                    config.privateUserAttributes = Constants.privateUserAttributes
+                    config.useReport = Constants.useReport
+                    config.inlineUserInEvents = Constants.inlineUserInEvents
+                    config.isDebugMode = Constants.debugMode
+                }
+                it("has the changed config values") {
+                    expect(config.baseUrl) == Constants.alternateMockUrl
+                    expect(config.eventsUrl) == Constants.alternateMockUrl
+                    expect(config.streamUrl) == Constants.alternateMockUrl
+                    expect(config.eventCapacity) == Constants.eventCapacity
+                    expect(config.connectionTimeoutMillis) == Constants.connectionTimeoutMillis
+                    expect(config.eventFlushIntervalMillis) == Constants.eventFlushIntervalMillis
+                    expect(config.pollIntervalMillis) == Constants.pollIntervalMillis
+                    expect(config.backgroundPollIntervalMillis) == Constants.backgroundPollIntervalMillis
+                    expect(config.streamingMode) == Constants.streamingMode
+                    expect(config.enableBackgroundUpdates) == Constants.enableBackgroundUpdates
+                    expect(config.startOnline) == Constants.startOnline
+                    expect(config.allUserAttributesPrivate) == Constants.allUserAttributesPrivate
+                    expect(config.privateUserAttributes) == Constants.privateUserAttributes
+                    expect(config.useReport) == Constants.useReport
+                    expect(config.inlineUserInEvents) == Constants.inlineUserInEvents
+                    expect(config.isDebugMode) == Constants.debugMode
+                }
+            }
+        }
+        describe("Minima init") {
+            var environmentReporter: EnvironmentReportingMock!
+            var minima: LDConfig.Minima!
+            beforeEach {
+                environmentReporter = EnvironmentReportingMock()
+            }
+            context("for production builds") {
+                beforeEach {
+                    environmentReporter.isDebugBuild = false
+                    minima = LDConfig.Minima(environmentReporter: environmentReporter)
+                }
+                it("has the production minima") {
+                    expect(minima.pollingIntervalMillis) == LDConfig.Minima.Production.pollingIntervalMillis
+                    expect(minima.backgroundPollIntervalMillis) == LDConfig.Minima.Production.backgroundPollIntervalMillis
+                }
+            }
+            context("for debug builds") {
+                beforeEach {
+                    environmentReporter.isDebugBuild = true
+                    minima = LDConfig.Minima(environmentReporter: environmentReporter)
+                }
+                it("has the debug minima") {
+                    expect(minima.pollingIntervalMillis) == LDConfig.Minima.Debug.pollingIntervalMillis
+                    expect(minima.backgroundPollIntervalMillis) == LDConfig.Minima.Debug.backgroundPollIntervalMillis
+                }
+            }
+        }
     }
 
     func flagPollingIntervalSpec() {
@@ -253,6 +366,15 @@ final class LDConfigSpec: QuickSpec {
                 beforeEach {
                     otherConfig = testContext.subject
                     otherConfig.useReport = !testContext.subject.useReport
+                }
+                it("returns false") {
+                    expect(testContext.subject) != otherConfig
+                }
+            }
+            context("when inlineUserInEvents differs") {
+                beforeEach {
+                    otherConfig = testContext.subject
+                    otherConfig.inlineUserInEvents = !testContext.subject.inlineUserInEvents
                 }
                 it("returns false") {
                     expect(testContext.subject) != otherConfig

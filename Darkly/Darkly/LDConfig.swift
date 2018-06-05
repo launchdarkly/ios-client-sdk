@@ -18,7 +18,7 @@ public struct LDConfig {
         static let millisPerSecond: Double = 1000
     }
 
-    fileprivate struct Defaults {
+    public struct Defaults {
         static let baseUrl = URL(string: "https://app.launchdarkly.com")!
         static let eventsUrl = URL(string: "https://mobile.launchdarkly.com")!
         static let streamUrl = URL(string: "https://clientstream.launchdarkly.com")!
@@ -30,26 +30,46 @@ public struct LDConfig {
         static let pollIntervalMillis = 300_000
         static let backgroundPollIntervalMillis = 3_600_000
 
-        static let streaming = LDStreamingMode.streaming
+        static let streamingMode = LDStreamingMode.streaming
         static let enableBackgroundUpdates = false
-        static let online = true
+        static let startOnline = true
+
+        static let allUserAttributesPrivate = false
+        static let privateUserAttributes: [String]? = nil
+
+        static let useReport = false
+
+        static let inlineUserInEvents = false
 
         static let debugMode = false
     }
 
     public struct Minima {
-        public let backgroundPollIntervalMillis: Int    ///The minimum background polling interval in milliseconds. Value: 15 minutes
-        public let pollingIntervalMillis: Int   ///The minimum polling interval in milliseconds. Value: 5 minutes
 
-        init(environmentReporter: EnvironmentReporting) {
-            self.pollingIntervalMillis = environmentReporter.isDebugBuild ? 60_000 : 300_000
-            self.backgroundPollIntervalMillis = environmentReporter.isDebugBuild ? 60_000 : 900_000
+        //swiftlint:disable:next nesting
+        struct Production {
+            static let pollingIntervalMillis = 300_000
+            static let backgroundPollIntervalMillis = 900_000
+        }
+
+        //swiftlint:disable:next nesting
+        struct Debug {
+            static let pollingIntervalMillis = 60_000
+            static let backgroundPollIntervalMillis = 60_000
+        }
+
+        public let pollingIntervalMillis: Int   ///The minimum polling interval in milliseconds. Value: 5 minutes
+        public let backgroundPollIntervalMillis: Int    ///The minimum background polling interval in milliseconds. Value: 15 minutes
+
+        init(environmentReporter: EnvironmentReporting = EnvironmentReporter()) {
+            self.pollingIntervalMillis = environmentReporter.isDebugBuild ? Debug.pollingIntervalMillis : Production.pollingIntervalMillis
+            self.backgroundPollIntervalMillis = environmentReporter.isDebugBuild ? Debug.backgroundPollIntervalMillis : Production.backgroundPollIntervalMillis
         }
     }
 
-    public var baseUrl: URL = Defaults.baseUrl                ///You probably don't need to set this unless instructed by LaunchDarkly.
-    public var eventsUrl: URL = Defaults.eventsUrl            ///You probably don't need to set this unless instructed by LaunchDarkly.
-    public var streamUrl: URL = Defaults.streamUrl            ///You probably don't need to set this unless instructed by LaunchDarkly.
+    public var baseUrl: URL = Defaults.baseUrl                ///Don't set this unless instructed by LaunchDarkly.
+    public var eventsUrl: URL = Defaults.eventsUrl            ///Don't set this unless instructed by LaunchDarkly.
+    public var streamUrl: URL = Defaults.streamUrl            ///Don't set this unless instructed by LaunchDarkly.
 
     ///The max number of analytics events to queue before sending them to LaunchDarkly. Default: 100
     public var eventCapacity: Int = Defaults.eventCapacity
@@ -69,7 +89,7 @@ public struct LDConfig {
     var backgroundFlagPollInterval: TimeInterval { return backgroundPollIntervalMillis.timeInterval }
 
     ///Enables real-time streaming flag updates. When set to .polling, an efficient polling mechanism is used. Default: .streaming
-    public var streamingMode: LDStreamingMode = Defaults.streaming
+    public var streamingMode: LDStreamingMode = Defaults.streamingMode
     private(set) var allowStreamingMode: Bool
 
     private var enableBgUpdates: Bool = Defaults.enableBackgroundUpdates
@@ -81,18 +101,21 @@ public struct LDConfig {
     private var allowBackgroundUpdates: Bool
     
     ///Determines whether LDClient will be online / offline at start. If offline at start, set the client online to receive flag updates. Default: true
-    public var startOnline: Bool = Defaults.online
+    public var startOnline: Bool = Defaults.startOnline
 
     //Private Attributes
     ///Treat all user attributes as private for event reporting for all users. When set, ignores values in either LDConfig.privateUserAttributes or LDUser.privateAttributes. Default: false
-    public var allUserAttributesPrivate: Bool = false
+    public var allUserAttributesPrivate: Bool = Defaults.allUserAttributesPrivate
     ///List of user attributes and top level custom dictionary keys to treat as private for event reporting for all users. Private attribute values will not be included in events reported to Launch Darkly, but the attribute name will still be sent. All user attributes can be declared private except key, anonymous, device, & os. Access the user attribute names that can be declared private through the identifiers included in LDUser.swift. To declare all user attributes private, either set privateUserAttributes to LDUser.allUserAttributes or raise LDConfig.allUserAttributesPrivate. Default: nil
-    public var privateUserAttributes: [String]? = nil
+    public var privateUserAttributes: [String]? = Defaults.privateUserAttributes
 
     //Flag Requests using REPORT method
     /// Flag that enables REPORT HTTP method for feature flag requests. When useReport is false, feature flag requests use the GET HTTP method. Do not use unless advised by LaunchDarkly. Default: false
-    public var useReport: Bool = false
+    public var useReport: Bool = Defaults.useReport
     private static let flagRetryStatusCodes = [HTTPURLResponse.StatusCodes.methodNotAllowed, HTTPURLResponse.StatusCodes.badRequest, HTTPURLResponse.StatusCodes.notImplemented]
+
+    /// Flag that tells the SDK to include the user attributes in analytics event reports. When set to true, event reports will contain the user attributes, except attributes marked as private. When set to false, event reports will contain the user's key only, reducing the size of event reports. Default: false
+    public var inlineUserInEvents: Bool = Defaults.inlineUserInEvents
 
     ///Enables additional logging for development. Default: false
     public var isDebugMode: Bool = Defaults.debugMode
@@ -143,6 +166,7 @@ extension LDConfig: Equatable {
             && (lhs.privateUserAttributes == nil && rhs.privateUserAttributes == nil
                 || (lhs.privateUserAttributes != nil && rhs.privateUserAttributes != nil && lhs.privateUserAttributes! == rhs.privateUserAttributes!))
             && lhs.useReport == rhs.useReport
+            && lhs.inlineUserInEvents == rhs.inlineUserInEvents
             && lhs.isDebugMode == rhs.isDebugMode
     }
 }
