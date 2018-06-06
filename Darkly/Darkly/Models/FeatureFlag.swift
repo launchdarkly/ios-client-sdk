@@ -30,23 +30,13 @@ struct FeatureFlag {
 
     init?(dictionary: [String: Any]?) {
         guard let dictionary = dictionary else { return nil }
-        if dictionary.containsValueAndVersionKeys {
-            self.init(value: dictionary[CodingKeys.value.rawValue], variation: nil, version: dictionary[CodingKeys.version.rawValue] as? Int)
-            return
-        }
-        self.init(value: dictionary, variation: nil, version: nil)
+        guard dictionary.value != nil || dictionary.variation != nil || dictionary.version != nil else { return nil }
+        self.init(value: dictionary.value, variation: dictionary.variation, version: dictionary.version)
     }
 
     init?(object: Any?) {
-        if let object = object as? [String: Any] {
-            self.init(dictionary: object)
-            return
-        }
-        if let object = object {
-            self.init(value: object, variation: nil, version: nil)
-            return
-        }
-        return nil
+        guard let object = object as? [String: Any] else { return nil }
+        self.init(dictionary: object)
     }
 
     func dictionaryValue(exciseNil: Bool) -> [String: Any]? {
