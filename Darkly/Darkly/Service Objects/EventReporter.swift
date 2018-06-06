@@ -148,8 +148,7 @@ extension EventReporter: TypeIdentifying { }
 extension Array where Element == [String: Any] {
     var eventKeys: String {
         let keys = self.flatMap { (eventDictionary) in eventDictionary.eventKey }
-        guard keys.count > 0 else { return "" }
+        guard !keys.isEmpty else { return "" }
         return keys.joined(separator: ", ")
     }
 }
-

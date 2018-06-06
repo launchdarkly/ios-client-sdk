@@ -77,6 +77,11 @@ public final class ObjcLDConfig: NSObject {
         set { config.useReport = newValue }
     }
 
+    @objc public var inlineUserInEvents: Bool {
+        get { return config.inlineUserInEvents }
+        set { config.inlineUserInEvents = newValue }
+    }
+
     @objc public var debugMode: Bool {
         get { return config.isDebugMode }
         set { config.isDebugMode = newValue }
