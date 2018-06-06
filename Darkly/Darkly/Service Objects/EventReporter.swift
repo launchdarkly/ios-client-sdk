@@ -136,7 +136,7 @@ class EventReporter: EventReporting {
         eventQueue.async {
             let remainingEventDictionaries = self.eventStore.filter { (eventDictionary) in !reportedEventDictionaries.contains(eventDictionary) }
             self.eventStore = remainingEventDictionaries
-            Log.debug(self.typeName + ".reportEvents() - completed")
+            Log.debug(self.typeName + ".reportEvents() completed for keys: " + reportedEventDictionaries.eventKeys)
         }
     }
     
@@ -144,3 +144,12 @@ class EventReporter: EventReporting {
 }
 
 extension EventReporter: TypeIdentifying { }
+
+extension Array where Element == [String: Any] {
+    var eventKeys: String {
+        let keys = self.flatMap { (eventDictionary) in eventDictionary.eventKey }
+        guard keys.count > 0 else { return "" }
+        return keys.joined(separator: ", ")
+    }
+}
+
