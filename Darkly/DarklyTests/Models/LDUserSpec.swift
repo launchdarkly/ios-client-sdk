@@ -1466,7 +1466,7 @@ extension LDUser {
     }
 
     private func messageIfValueDoesntMatch(value: Any?, in dictionary: [String: Any], for attribute: String) -> String? {
-        if !AnyComparer.isEqual(value, to: dictionary[attribute], considerNilEqual: true) { return MatcherMessages.valuesDontMatch + attribute }
+        if !AnyComparer.isEqual(value, to: dictionary[attribute]) { return MatcherMessages.valuesDontMatch + attribute }
         return nil
     }
 
@@ -1497,13 +1497,6 @@ extension LDUser {
         var dictionary = dictionaryValue(includeFlagConfig: includeFlagConfig, includePrivateAttributes: true, config: LDConfig.stub)
         dictionary[CodingKeys.privateAttributes.rawValue] = privateAttributes
         return dictionary
-    }
-}
-
-extension AnyComparer {
-    static func isEqual(_ value: Any?, to other: Any?, considerNilEqual: Bool = false) -> Bool {
-        if value == nil && other == nil { return considerNilEqual }
-        return isEqual(value, to: other)
     }
 }
 

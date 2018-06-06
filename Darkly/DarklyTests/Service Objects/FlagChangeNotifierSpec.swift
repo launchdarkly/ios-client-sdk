@@ -26,7 +26,7 @@ final class FlagChangeNotifierSpec: QuickSpec {
         var flagCollectionChangeHandlerCallCount = 0
         var flagsUnchangedHandlerCallCount = 0
         var flagsUnchangedOwnerKey: String?
-        var featureFlags: [LDFlagKey: FeatureFlag] = DarklyServiceMock.Constants.featureFlags(includeNullValue: true, includeVersions: true)
+        var featureFlags: [LDFlagKey: FeatureFlag] = DarklyServiceMock.Constants.stubFeatureFlags(includeNullValue: true, includeVariations: true, includeVersions: true)
         var user: LDUser = LDUser.stub(key: Constants.userKey, includeNullValue: true)
         var flagStoreMock: FlagMaintainingMock! { return user.flagStore as! FlagMaintainingMock }
         let alternateFlagKeys = ["flag-key-1", "flag-key-2", "flag-key-3"]
@@ -461,7 +461,7 @@ final class FlagChangeNotifierSpec: QuickSpec {
                                 flagsUnchangedHandler: {
                                     testContext.flagsUnchangedHandlerCallCount += 1
                             })
-                            oldFlags = DarklyServiceMock.Constants.featureFlags(includeNullValue: true, includeVersions: true, alternateValuesForKeys: [key])
+                            oldFlags = DarklyServiceMock.Constants.stubFeatureFlags(includeNullValue: true, includeVariations: true, includeVersions: true, alternateValuesForKeys: [key])
                             targetChangedFlag = LDChangedFlag.stub(key: key, oldFlags: oldFlags, newFlags: testContext.user.flagStore.featureFlags)
 
                             waitUntil { done in
@@ -509,7 +509,7 @@ final class FlagChangeNotifierSpec: QuickSpec {
                                 flagsUnchangedHandler: {
                                     testContext.flagsUnchangedHandlerCallCount += 1
                             })
-                            oldFlags = DarklyServiceMock.Constants.featureFlags(includeNullValue: true, includeVersions: true, alternateValuesForKeys: [key])
+                            oldFlags = DarklyServiceMock.Constants.stubFeatureFlags(includeNullValue: true, includeVariations: true, includeVersions: true, alternateValuesForKeys: [key])
                             testContext.owners[key] = nil
 
                             waitUntil { done in
@@ -566,7 +566,7 @@ final class FlagChangeNotifierSpec: QuickSpec {
                                 flagsUnchangedHandler: {
                                     testContext.flagsUnchangedHandlerCallCount += 1
                             })
-                            oldFlags = DarklyServiceMock.Constants.featureFlags(includeNullValue: true, includeVersions: true, alternateValuesForKeys: [key])
+                            oldFlags = DarklyServiceMock.Constants.stubFeatureFlags(includeNullValue: true, includeVariations: true, includeVersions: true, alternateValuesForKeys: [key])
                             targetChangedFlags = [key: LDChangedFlag.stub(key: key, oldFlags: oldFlags, newFlags: testContext.user.flagStore.featureFlags)]
 
                             waitUntil { done in
@@ -591,9 +591,10 @@ final class FlagChangeNotifierSpec: QuickSpec {
                                 testContext.flagsUnchangedHandlerCallCount += 1
                         })
                         let changedFlagKeys = [DarklyServiceMock.FlagKeys.bool, DarklyServiceMock.FlagKeys.int, DarklyServiceMock.FlagKeys.double]
-                        oldFlags = DarklyServiceMock.Constants.featureFlags(includeNullValue: true,
-                                                                            includeVersions: true,
-                                                                            alternateValuesForKeys: changedFlagKeys)
+                        oldFlags = DarklyServiceMock.Constants.stubFeatureFlags(includeNullValue: true,
+                                                                                includeVariations: true,
+                                                                                includeVersions: true,
+                                                                                alternateValuesForKeys: changedFlagKeys)
                         targetChangedFlags = [LDFlagKey: LDChangedFlag](uniqueKeysWithValues: changedFlagKeys.map { (flagKey) in
                             return (flagKey, LDChangedFlag.stub(key: flagKey, oldFlags: oldFlags, newFlags: testContext.user.flagStore.featureFlags))
                         })
@@ -644,9 +645,10 @@ final class FlagChangeNotifierSpec: QuickSpec {
                                 testContext.flagsUnchangedHandlerCallCount += 1
                         })
                         let changedFlagKeys = [DarklyServiceMock.FlagKeys.bool, DarklyServiceMock.FlagKeys.int, DarklyServiceMock.FlagKeys.double]
-                        oldFlags = DarklyServiceMock.Constants.featureFlags(includeNullValue: true,
-                                                                            includeVersions: true,
-                                                                            alternateValuesForKeys: changedFlagKeys)
+                        oldFlags = DarklyServiceMock.Constants.stubFeatureFlags(includeNullValue: true,
+                                                                                includeVariations: true,
+                                                                                includeVersions: true,
+                                                                                alternateValuesForKeys: changedFlagKeys)
                         testContext.owners[DarklyServiceMock.FlagKeys.all.observerKey] = nil
 
                         waitUntil { done in
@@ -704,7 +706,7 @@ final class FlagChangeNotifierSpec: QuickSpec {
                                 flagsUnchangedHandler: {
                                     testContext.flagsUnchangedHandlerCallCount += 1
                             })
-                            oldFlags = DarklyServiceMock.Constants.featureFlags(includeNullValue: true, includeVersions: true, alternateValuesForKeys: [key])
+                            oldFlags = DarklyServiceMock.Constants.stubFeatureFlags(includeNullValue: true, includeVariations: true, includeVersions: true, alternateValuesForKeys: [key])
                             targetChangedFlags = [key: LDChangedFlag.stub(key: key, oldFlags: oldFlags, newFlags: testContext.user.flagStore.featureFlags)]
                             targetChangedFlags![LDUser.StubConstants.userKey] = LDChangedFlag.stub(key: LDUser.StubConstants.userKey,
                                                                                                    oldFlags: oldFlags,
@@ -732,9 +734,10 @@ final class FlagChangeNotifierSpec: QuickSpec {
                                 testContext.flagsUnchangedHandlerCallCount += 1
                         })
                         let changedFlagKeys = [DarklyServiceMock.FlagKeys.bool, DarklyServiceMock.FlagKeys.int, DarklyServiceMock.FlagKeys.double]
-                        oldFlags = DarklyServiceMock.Constants.featureFlags(includeNullValue: true,
-                                                                            includeVersions: true,
-                                                                            alternateValuesForKeys: changedFlagKeys)
+                        oldFlags = DarklyServiceMock.Constants.stubFeatureFlags(includeNullValue: true,
+                                                                                includeVariations: true,
+                                                                                includeVersions: true,
+                                                                                alternateValuesForKeys: changedFlagKeys)
                         targetChangedFlags = [LDFlagKey: LDChangedFlag](uniqueKeysWithValues: changedFlagKeys.map { (flagKey) in
                             return (flagKey, LDChangedFlag.stub(key: flagKey, oldFlags: oldFlags, newFlags: testContext.user.flagStore.featureFlags))
                         })
@@ -788,9 +791,10 @@ final class FlagChangeNotifierSpec: QuickSpec {
                                 testContext.flagsUnchangedHandlerCallCount += 1
                         })
                         let changedFlagKeys = [DarklyServiceMock.FlagKeys.bool, DarklyServiceMock.FlagKeys.int, DarklyServiceMock.FlagKeys.double]
-                        oldFlags = DarklyServiceMock.Constants.featureFlags(includeNullValue: true,
-                                                                            includeVersions: true,
-                                                                            alternateValuesForKeys: changedFlagKeys)
+                        oldFlags = DarklyServiceMock.Constants.stubFeatureFlags(includeNullValue: true,
+                                                                                includeVariations: true,
+                                                                                includeVersions: true,
+                                                                                alternateValuesForKeys: changedFlagKeys)
                         testContext.owners[LDFlagKey.anyKey.observerKey] = nil
 
                         waitUntil { done in

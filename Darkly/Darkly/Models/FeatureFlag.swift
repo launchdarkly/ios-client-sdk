@@ -11,7 +11,7 @@ import Foundation
 struct FeatureFlag {
 
     enum CodingKeys: String, CodingKey {
-        case value, version
+        case value, variation, version
     }
 
     struct Constants {
@@ -19,20 +19,22 @@ struct FeatureFlag {
     }
     
     let value: Any?
+    let variation: Int?
     let version: Int?
 
-    init(value: Any?, version: Int?) {
+    init(value: Any?, variation: Int?, version: Int?) {
         self.value = value is NSNull ? nil : value
+        self.variation = variation
         self.version = version
     }
 
     init?(dictionary: [String: Any]?) {
         guard let dictionary = dictionary else { return nil }
         if dictionary.containsValueAndVersionKeys {
-            self.init(value: dictionary[CodingKeys.value.rawValue], version: dictionary[CodingKeys.version.rawValue] as? Int)
+            self.init(value: dictionary[CodingKeys.value.rawValue], variation: nil, version: dictionary[CodingKeys.version.rawValue] as? Int)
             return
         }
-        self.init(value: dictionary, version: nil)
+        self.init(value: dictionary, variation: nil, version: nil)
     }
 
     init?(object: Any?) {
@@ -41,7 +43,7 @@ struct FeatureFlag {
             return
         }
         if let object = object {
-            self.init(value: object, version: nil)
+            self.init(value: object, variation: nil, version: nil)
             return
         }
         return nil
@@ -93,6 +95,18 @@ extension Dictionary where Key == String, Value == FeatureFlag {
 }
 
 extension Dictionary where Key == String, Value == Any {
+    var value: Any? {
+        return self[FeatureFlag.CodingKeys.value.rawValue]
+    }
+
+    var variation: Int? {
+        return self[FeatureFlag.CodingKeys.variation.rawValue] as? Int
+    }
+
+    var version: Int? {
+        return self[FeatureFlag.CodingKeys.version.rawValue] as? Int
+    }
+
     var flagCollection: [LDFlagKey: FeatureFlag]? {
         guard !(self is [LDFlagKey: FeatureFlag]) else { return self as? [LDFlagKey: FeatureFlag] }
         let flagCollection = flatMapValues { (flagValue) in return FeatureFlag(object: flagValue) }

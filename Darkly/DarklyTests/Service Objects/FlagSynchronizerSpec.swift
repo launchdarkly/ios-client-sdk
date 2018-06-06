@@ -397,7 +397,7 @@ final class FlagSynchronizerSpec: QuickSpec {
                 }
                 it("requests flags and calls onSyncComplete with the new flags and streaming event") {
                     expect({ testContext.synchronizerState(synchronizerOnline: true, streamingMode: .streaming, flagRequests: 1, streamCreated: true, streamClosed: false) }).to(match())
-                    expect(newFlags == DarklyServiceMock.Constants.featureFlags(includeNullValue: false, includeVersions: true)).to(beTrue())
+                    expect(newFlags == DarklyServiceMock.Constants.stubFeatureFlags(includeNullValue: false, includeVariations: true, includeVersions: true)).to(beTrue())
                     expect(streamingEvent) == .ping
                 }
             }
@@ -490,7 +490,7 @@ final class FlagSynchronizerSpec: QuickSpec {
                 }
                 it("does not request flags and calls onSyncComplete with new flags and put event type") {
                     expect({ testContext.synchronizerState(synchronizerOnline: true, streamingMode: .streaming, flagRequests: 0, streamCreated: true, streamClosed: false) }).to(match())
-                    expect(newFlags == DarklyServiceMock.Constants.featureFlags(includeNullValue: false, includeVersions: true)).to(beTrue())
+                    expect(newFlags == DarklyServiceMock.Constants.stubFeatureFlags(includeNullValue: false, includeVariations: true, includeVersions: true)).to(beTrue())
                     expect(streamingEvent) == .put
                 }
             }
@@ -690,7 +690,7 @@ final class FlagSynchronizerSpec: QuickSpec {
                 }
                 it("makes a flag request and calls onSyncComplete with no streaming event") {
                     expect(testContext?.serviceMock.getFeatureFlagsCallCount) == 2
-                    expect(newFlags == DarklyServiceMock.Constants.featureFlags(includeNullValue: false, includeVersions: true)).to(beTrue())
+                    expect(newFlags == DarklyServiceMock.Constants.stubFeatureFlags(includeNullValue: false, includeVariations: true, includeVersions: true)).to(beTrue())
                     expect(streamingEvent).to(beNil())
                 }
                 //This particular test causes a retain cycle between the FlagSynchronizer and something else. By removing onSyncComplete, the closure is no longer called after the test is complete.

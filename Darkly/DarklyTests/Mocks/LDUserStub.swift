@@ -40,7 +40,11 @@ extension LDUser {
         }
     }
 
-    static func stub(key: String? = nil, includeNullValue: Bool = false, includeVersions: Bool = true, environmentReporter: EnvironmentReportingMock? = nil) -> LDUser {
+    static func stub(key: String? = nil,
+                     includeNullValue: Bool = false,
+                     includeVariations: Bool = true,
+                     includeVersions: Bool = true,
+                     environmentReporter: EnvironmentReportingMock? = nil) -> LDUser {
         var user = LDUser(key: key ?? UUID().uuidString,
                           name: StubConstants.name,
                           firstName: StubConstants.firstName,
@@ -53,13 +57,13 @@ extension LDUser {
                           device: environmentReporter?.deviceModel,
                           operatingSystem: environmentReporter?.systemVersion,
                           isAnonymous: StubConstants.isAnonymous)
-        user.flagStore = FlagMaintainingMock(flags: user.stubFlags(includeNullValue: includeNullValue, includeVersions: includeVersions))
+        user.flagStore = FlagMaintainingMock(flags: user.stubFlags(includeNullValue: includeNullValue, includeVariations: includeVariations, includeVersions: includeVersions))
         return user
     }
 
-    private func stubFlags(includeNullValue: Bool, includeVersions: Bool) -> [String: FeatureFlag] {
-        var flags = DarklyServiceMock.Constants.featureFlags(includeNullValue: includeNullValue, includeVersions: includeVersions)
-        flags[StubConstants.userKey] = FeatureFlag(value: key, version: 2)
+    private func stubFlags(includeNullValue: Bool, includeVariations: Bool, includeVersions: Bool) -> [String: FeatureFlag] {
+        var flags = DarklyServiceMock.Constants.stubFeatureFlags(includeNullValue: includeNullValue, includeVariations: includeVariations, includeVersions: includeVersions)
+        flags[StubConstants.userKey] = FeatureFlag(value: key, variation: DarklyServiceMock.Constants.variation, version: DarklyServiceMock.Constants.version)
         return flags
     }
 

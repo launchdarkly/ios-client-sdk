@@ -80,8 +80,9 @@ final class FlagStore: FlagMaintaining {
             }
             guard updateDictionary.containsFlagKeyValueAndVersionKeys,
                 let flagKey = updateDictionary[Keys.flagKey] as? String,
-                let newValue = updateDictionary[FeatureFlag.CodingKeys.value.rawValue],
-                let newVersion = updateDictionary[FeatureFlag.CodingKeys.version.rawValue] as? Int
+                let newValue = updateDictionary.value,
+//                let newVariation = updateDictionary.variation,
+                let newVersion = updateDictionary.version
             else {
                 Log.debug(self.typeName(and: #function) + "aborted. Malformed update dictionary. updateDictionary: \(String(describing: updateDictionary))")
                 return
@@ -93,7 +94,7 @@ final class FlagStore: FlagMaintaining {
                 return
             }
 
-            let newFlag = FeatureFlag(value: newValue, version: newVersion)
+            let newFlag = FeatureFlag(value: newValue, variation: nil, version: newVersion)
             Log.debug(self.typeName(and: #function) + "succeeded. new flag: \(newFlag), " + "prior flag: \(String(describing: self.featureFlags[flagKey]))")
             self.featureFlags[flagKey] = newFlag
 

@@ -107,7 +107,8 @@ final class DarklyServiceSpec: QuickSpec {
                     it("calls completion with data, response, and no error") {
                         expect(responses).toNot(beNil())
                         expect(responses?.data).toNot(beNil())
-                        expect(responses?.data == DarklyServiceMock.Constants.featureFlags(includeNullValue: false, includeVersions: true).dictionaryValue(exciseNil: false).jsonData).to(beTrue())
+                        expect(responses?.data == DarklyServiceMock.Constants.stubFeatureFlags(includeNullValue: false, includeVariations: true, includeVersions: true)
+                            .dictionaryValue(exciseNil: false).jsonData).to(beTrue())
                         expect(responses?.urlResponse?.httpStatusCode) == HTTPURLResponse.StatusCodes.ok
                         expect(responses?.error).to(beNil())
                     }
@@ -185,7 +186,7 @@ final class DarklyServiceSpec: QuickSpec {
                     it("calls completion with data, response, and no error") {
                         expect(responses).toNot(beNil())
                         expect(responses?.data).toNot(beNil())
-                        expect(responses?.data == DarklyServiceMock.Constants.featureFlags(includeNullValue: false, includeVersions: true)
+                        expect(responses?.data == DarklyServiceMock.Constants.stubFeatureFlags(includeNullValue: false, includeVariations: true, includeVersions: true)
                             .dictionaryValue(exciseNil: false).jsonData).to(beTrue())
                         expect(responses?.urlResponse?.httpStatusCode) == HTTPURLResponse.StatusCodes.ok
                         expect(responses?.error).to(beNil())
