@@ -19,6 +19,7 @@ final class EventSpec: QuickSpec {
 
     override func spec() {
         initSpec()
+        kindSpec()
         featureEventSpec()
         customEventSpec()
         identifyEventSpec()
@@ -63,6 +64,16 @@ final class EventSpec: QuickSpec {
                     expect(event.value).to(beNil())
                     expect(event.defaultValue).to(beNil())
                     expect(event.data).to(beNil())
+                }
+            }
+        }
+    }
+
+    func kindSpec() {
+        describe("isAlwaysInlineUserKind") {
+            it("returns true when event kind should inline user") {
+                for kind in Event.Kind.allKinds {
+                    expect(kind.isAlwaysInlineUserKind) == Event.Kind.alwaysInlineUserKinds.contains(kind)
                 }
             }
         }
@@ -503,4 +514,8 @@ fileprivate extension Array where Element == [String: Any] {
         guard selectedDictionaries.count == 1 else { return nil }
         return selectedDictionaries.first
     }
+}
+
+extension Event.Kind {
+    static var allKinds: [Event.Kind] { return [.feature, .custom, .identify] }
 }

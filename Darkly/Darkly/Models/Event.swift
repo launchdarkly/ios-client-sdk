@@ -15,6 +15,9 @@ struct Event { //sdk internal, not publically accessible
 
     enum Kind: String {
         case feature, identify, custom
+
+        static var alwaysInlineUserKinds: [Kind] { return [identify] }
+        var isAlwaysInlineUserKind: Bool { return Kind.alwaysInlineUserKinds.contains(self) }
     }
 
     let key: String
