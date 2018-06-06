@@ -146,72 +146,157 @@ final class EventSpec: QuickSpec {
     }
 
     func dictionaryValueSpec() {
-        let config = LDConfig.stub
+        var config = LDConfig.stub
         let user = LDUser.stub()
         var event: Event!
         describe("dictionaryValue") {
             var eventDictionary: [String: Any]!
-            context("with optional items") {
-                beforeEach {
-                    event = Event(key: Constants.eventKey, kind: .feature, user: user, value: true, defaultValue: false, data: Constants.eventData)
-                    eventDictionary = event.dictionaryValue(config: config)
-                }
-                it("creates a dictionary with matching elements") {
-                    expect(eventDictionary.eventKey) == Constants.eventKey
-                    expect(eventDictionary.eventKind) == .feature
-                    expect(eventDictionary.eventCreationDate?.isWithin(0.001, of: event.creationDate)).to(beTrue())
-                    expect(eventDictionary.eventUser).toNot(beNil())
-                    if let eventDictionaryUser = eventDictionary.eventUser {
-                        expect(eventDictionaryUser.key) == user.key
-                        expect(eventDictionaryUser.name) == user.name
-                        expect(eventDictionaryUser.firstName) == user.firstName
-                        expect(eventDictionaryUser.lastName) == user.lastName
-                        expect(eventDictionaryUser.country) == user.country
-                        expect(eventDictionaryUser.ipAddress) == user.ipAddress
-                        expect(eventDictionaryUser.email) == user.email
-                        expect(eventDictionaryUser.avatar) == user.avatar
-                        expect(AnyComparer.isEqual(eventDictionaryUser.custom, to: user.custom)).to(beTrue())
-                        expect(eventDictionaryUser.device) == user.device
-                        expect(eventDictionaryUser.operatingSystem) == user.operatingSystem
-                        expect(eventDictionaryUser.isAnonymous) == user.isAnonymous
-                        expect(eventDictionaryUser.privateAttributes).to(beNil())
+
+            context("feature event") {
+                context("without inlining user") {
+                    beforeEach {
+                        event = Event.featureEvent(key: Constants.eventKey, user: user, value: true, defaultValue: false)
+                        config.inlineUserInEvents = false   //Default value, here for clarity
+                        eventDictionary = event.dictionaryValue(config: config)
                     }
-                    expect(AnyComparer.isEqual(eventDictionary.eventValue, to: true)).to(beTrue())
-                    expect(AnyComparer.isEqual(eventDictionary.eventDefaultValue, to: false)).to(beTrue())
-                    expect(eventDictionary.eventData).toNot(beNil())
-                    if let eventData = eventDictionary.eventData {
-                        expect(eventData == Constants.eventData).to(beTrue())
+                    it("creates a dictionary with matching non-user elements") {
+                        expect(eventDictionary.eventKey) == Constants.eventKey
+                        expect(eventDictionary.eventKind) == .feature
+                        expect(eventDictionary.eventCreationDate?.isWithin(0.001, of: event.creationDate)).to(beTrue())
+                        expect(AnyComparer.isEqual(eventDictionary.eventValue, to: true)).to(beTrue())
+                        expect(AnyComparer.isEqual(eventDictionary.eventDefaultValue, to: false)).to(beTrue())
+                        expect(eventDictionary.eventData).to(beNil())
+                    }
+                    it("creates a dictionary with the user key only") {
+                        expect(eventDictionary.eventUserKey) == user.key
+                        expect(eventDictionary.eventUser).to(beNil())
+                    }
+                }
+                context("inlining user") {
+                    beforeEach {
+                        event = Event.featureEvent(key: Constants.eventKey, user: user, value: true, defaultValue: false)
+                        config.inlineUserInEvents = true
+                        eventDictionary = event.dictionaryValue(config: config)
+                    }
+                    it("creates a dictionary with matching non-user elements") {
+                        expect(eventDictionary.eventKey) == Constants.eventKey
+                        expect(eventDictionary.eventKind) == .feature
+                        expect(eventDictionary.eventCreationDate?.isWithin(0.001, of: event.creationDate)).to(beTrue())
+                        expect(AnyComparer.isEqual(eventDictionary.eventValue, to: true)).to(beTrue())
+                        expect(AnyComparer.isEqual(eventDictionary.eventDefaultValue, to: false)).to(beTrue())
+                        expect(eventDictionary.eventData).to(beNil())
+                    }
+                    it("creates a dictionary with the full user") {
+                        expect(eventDictionary.eventUser).toNot(beNil())
+                        if let eventDictionaryUser = eventDictionary.eventUser {
+                            expect(eventDictionaryUser.key) == user.key
+                            expect(eventDictionaryUser.name) == user.name
+                            expect(eventDictionaryUser.firstName) == user.firstName
+                            expect(eventDictionaryUser.lastName) == user.lastName
+                            expect(eventDictionaryUser.country) == user.country
+                            expect(eventDictionaryUser.ipAddress) == user.ipAddress
+                            expect(eventDictionaryUser.email) == user.email
+                            expect(eventDictionaryUser.avatar) == user.avatar
+                            expect(AnyComparer.isEqual(eventDictionaryUser.custom, to: user.custom)).to(beTrue())
+                            expect(eventDictionaryUser.device) == user.device
+                            expect(eventDictionaryUser.operatingSystem) == user.operatingSystem
+                            expect(eventDictionaryUser.isAnonymous) == user.isAnonymous
+                            expect(eventDictionaryUser.privateAttributes).to(beNil())
+                        }
+                        expect(eventDictionary.eventUserKey).to(beNil())
                     }
                 }
             }
-            context("without optional items") {
+
+            context("identify event") {
                 beforeEach {
-                    event = Event(key: Constants.eventKey, kind: .feature, user: user)
-                    eventDictionary = event.dictionaryValue(config: config)
+                    event = Event.identifyEvent(user: user)
                 }
-                it("creates a dictionary with matching elements omitting null values") {
-                    expect(eventDictionary.eventKey) == Constants.eventKey
-                    expect(eventDictionary.eventKind) == .feature
-                    expect(eventDictionary.eventCreationDate?.isWithin(0.001, of: event.creationDate)).to(beTrue())
-                    expect(eventDictionary.eventUser).toNot(beNil())
-                    if let eventDictionaryUser = eventDictionary.eventUser {
-                        expect(eventDictionaryUser.key) == user.key
-                        expect(eventDictionaryUser.name) == user.name
-                        expect(eventDictionaryUser.firstName) == user.firstName
-                        expect(eventDictionaryUser.lastName) == user.lastName
-                        expect(eventDictionaryUser.country) == user.country
-                        expect(eventDictionaryUser.ipAddress) == user.ipAddress
-                        expect(eventDictionaryUser.email) == user.email
-                        expect(eventDictionaryUser.avatar) == user.avatar
-                        expect(AnyComparer.isEqual(eventDictionaryUser.custom, to: user.custom)).to(beTrue())
-                        expect(eventDictionaryUser.device) == user.device
-                        expect(eventDictionaryUser.operatingSystem) == user.operatingSystem
-                        expect(eventDictionaryUser.isAnonymous) == user.isAnonymous
-                        expect(eventDictionaryUser.privateAttributes).to(beNil())
+                it("creates a dictionary with the full user and matching non-user elements") {
+                    for inlineUser in [true, false] {
+                        config.inlineUserInEvents = inlineUser
+                        eventDictionary = event.dictionaryValue(config: config)
+
+                        expect(eventDictionary.eventKey) == user.key
+                        expect(eventDictionary.eventKind) == .identify
+                        expect(eventDictionary.eventCreationDate?.isWithin(0.001, of: event.creationDate)).to(beTrue())
+                        expect(eventDictionary.eventValue).to(beNil())
+                        expect(eventDictionary.eventDefaultValue).to(beNil())
+                        expect(eventDictionary.eventData).to(beNil())
+                        expect(eventDictionary.eventUser).toNot(beNil())
+                        if let eventDictionaryUser = eventDictionary.eventUser {
+                            expect(eventDictionaryUser.key) == user.key
+                            expect(eventDictionaryUser.name) == user.name
+                            expect(eventDictionaryUser.firstName) == user.firstName
+                            expect(eventDictionaryUser.lastName) == user.lastName
+                            expect(eventDictionaryUser.country) == user.country
+                            expect(eventDictionaryUser.ipAddress) == user.ipAddress
+                            expect(eventDictionaryUser.email) == user.email
+                            expect(eventDictionaryUser.avatar) == user.avatar
+                            expect(AnyComparer.isEqual(eventDictionaryUser.custom, to: user.custom)).to(beTrue())
+                            expect(eventDictionaryUser.device) == user.device
+                            expect(eventDictionaryUser.operatingSystem) == user.operatingSystem
+                            expect(eventDictionaryUser.isAnonymous) == user.isAnonymous
+                            expect(eventDictionaryUser.privateAttributes).to(beNil())
+                        }
+                        expect(eventDictionary.eventUserKey).to(beNil())
                     }
-                    expect(eventDictionary.eventValue).to(beNil())
-                    expect(eventDictionary.eventDefaultValue).to(beNil())
-                    expect(eventDictionary.eventData).to(beNil())
+                }
+            }
+
+            context("custom event") {
+                context("without inlining user") {
+                    beforeEach {
+                        event = Event.customEvent(key: Constants.eventKey, user: user, data: Constants.eventData)
+                        config.inlineUserInEvents = false   //Default value, here for clarity
+                        eventDictionary = event.dictionaryValue(config: config)
+                    }
+                    it("creates a dictionary with matching non-user elements") {
+                        expect(eventDictionary.eventKey) == Constants.eventKey
+                        expect(eventDictionary.eventKind) == .custom
+                        expect(eventDictionary.eventCreationDate?.isWithin(0.001, of: event.creationDate)).to(beTrue())
+                        expect(AnyComparer.isEqual(eventDictionary.eventData, to: Constants.eventData)).to(beTrue())
+                        expect(eventDictionary.eventValue).to(beNil())
+                        expect(eventDictionary.eventDefaultValue).to(beNil())
+                    }
+                    it("creates a dictionary with the user key only") {
+                        expect(eventDictionary.eventUserKey) == user.key
+                        expect(eventDictionary.eventUser).to(beNil())
+                    }
+                }
+                context("inlining user") {
+                    beforeEach {
+                        event = Event.customEvent(key: Constants.eventKey, user: user, data: Constants.eventData)
+                        config.inlineUserInEvents = true
+                        eventDictionary = event.dictionaryValue(config: config)
+                    }
+                    it("creates a dictionary with matching non-user elements") {
+                        expect(eventDictionary.eventKey) == Constants.eventKey
+                        expect(eventDictionary.eventKind) == .custom
+                        expect(eventDictionary.eventCreationDate?.isWithin(0.001, of: event.creationDate)).to(beTrue())
+                        expect(AnyComparer.isEqual(eventDictionary.eventData, to: Constants.eventData)).to(beTrue())
+                        expect(eventDictionary.eventValue).to(beNil())
+                        expect(eventDictionary.eventDefaultValue).to(beNil())
+                    }
+                    it("creates a dictionary with the full user") {
+                        expect(eventDictionary.eventUser).toNot(beNil())
+                        if let eventDictionaryUser = eventDictionary.eventUser {
+                            expect(eventDictionaryUser.key) == user.key
+                            expect(eventDictionaryUser.name) == user.name
+                            expect(eventDictionaryUser.firstName) == user.firstName
+                            expect(eventDictionaryUser.lastName) == user.lastName
+                            expect(eventDictionaryUser.country) == user.country
+                            expect(eventDictionaryUser.ipAddress) == user.ipAddress
+                            expect(eventDictionaryUser.email) == user.email
+                            expect(eventDictionaryUser.avatar) == user.avatar
+                            expect(AnyComparer.isEqual(eventDictionaryUser.custom, to: user.custom)).to(beTrue())
+                            expect(eventDictionaryUser.device) == user.device
+                            expect(eventDictionaryUser.operatingSystem) == user.operatingSystem
+                            expect(eventDictionaryUser.isAnonymous) == user.isAnonymous
+                            expect(eventDictionaryUser.privateAttributes).to(beNil())
+                        }
+                        expect(eventDictionary.eventUserKey).to(beNil())
+                    }
                 }
             }
         }
@@ -233,21 +318,27 @@ final class EventSpec: QuickSpec {
                     guard let eventDictionary = eventDictionaries.eventDictionary(for: event) else { return }
                     expect(eventDictionary.eventKind) == event.kind
                     expect(eventDictionary.eventCreationDate?.isWithin(0.001, of: event.creationDate)).to(beTrue())
-                    expect(eventDictionary.eventUser).toNot(beNil())
-                    if let eventDictionaryUser = eventDictionary.eventUser {
-                        expect(eventDictionaryUser.key) == user.key
-                        expect(eventDictionaryUser.name) == user.name
-                        expect(eventDictionaryUser.firstName) == user.firstName
-                        expect(eventDictionaryUser.lastName) == user.lastName
-                        expect(eventDictionaryUser.country) == user.country
-                        expect(eventDictionaryUser.ipAddress) == user.ipAddress
-                        expect(eventDictionaryUser.email) == user.email
-                        expect(eventDictionaryUser.avatar) == user.avatar
-                        expect(AnyComparer.isEqual(eventDictionaryUser.custom, to: user.custom)).to(beTrue())
-                        expect(eventDictionaryUser.device) == user.device
-                        expect(eventDictionaryUser.operatingSystem) == user.operatingSystem
-                        expect(eventDictionaryUser.isAnonymous) == user.isAnonymous
-                        expect(eventDictionaryUser.privateAttributes).to(beNil())
+                    if event.kind.isAlwaysInlineUserKind {
+                        expect(eventDictionary.eventUser).toNot(beNil())
+                        if let eventDictionaryUser = eventDictionary.eventUser {
+                            expect(eventDictionaryUser.key) == user.key
+                            expect(eventDictionaryUser.name) == user.name
+                            expect(eventDictionaryUser.firstName) == user.firstName
+                            expect(eventDictionaryUser.lastName) == user.lastName
+                            expect(eventDictionaryUser.country) == user.country
+                            expect(eventDictionaryUser.ipAddress) == user.ipAddress
+                            expect(eventDictionaryUser.email) == user.email
+                            expect(eventDictionaryUser.avatar) == user.avatar
+                            expect(AnyComparer.isEqual(eventDictionaryUser.custom, to: user.custom)).to(beTrue())
+                            expect(eventDictionaryUser.device) == user.device
+                            expect(eventDictionaryUser.operatingSystem) == user.operatingSystem
+                            expect(eventDictionaryUser.isAnonymous) == user.isAnonymous
+                            expect(eventDictionaryUser.privateAttributes).to(beNil())
+                        }
+                        expect(eventDictionary.eventUserKey).to(beNil())
+                    } else {
+                        expect(eventDictionary.eventUserKey) == user.key
+                        expect(eventDictionary.eventUser).to(beNil())
                     }
                     if let eventValue = event.value {
                         expect(AnyComparer.isEqual(eventDictionary.eventValue, to: eventValue)).to(beTrue())
@@ -502,6 +593,7 @@ fileprivate extension Dictionary where Key == String, Value == Any {
         return Event.Kind(rawValue: stringKind)
     }
     var eventCreationDate: Date? { return Date(millisSince1970: self[Event.CodingKeys.creationDate.rawValue] as? Int64) }
+    var eventUserKey: String? { return self[Event.CodingKeys.userKey.rawValue] as? String }
     var eventUser: LDUser? { return LDUser(object: self[Event.CodingKeys.user.rawValue]) }
     var eventValue: Any? { return self[Event.CodingKeys.value.rawValue] }
     var eventDefaultValue: Any? { return self[Event.CodingKeys.defaultValue.rawValue] }

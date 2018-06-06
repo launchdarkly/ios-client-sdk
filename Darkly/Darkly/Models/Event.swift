@@ -10,7 +10,7 @@ import Foundation
 
 struct Event { //sdk internal, not publically accessible
     enum CodingKeys: String, CodingKey {
-        case key, kind, creationDate, user, value, defaultValue = "default", data
+        case key, kind, creationDate, user, userKey, value, defaultValue = "default", data
     }
 
     enum Kind: String {
@@ -58,7 +58,11 @@ struct Event { //sdk internal, not publically accessible
         eventDictionary[CodingKeys.key.rawValue] = key
         eventDictionary[CodingKeys.kind.rawValue] = kind.rawValue
         eventDictionary[CodingKeys.creationDate.rawValue] = creationDate.millisSince1970
-        eventDictionary[CodingKeys.user.rawValue] = user.dictionaryValue(includeFlagConfig: false, includePrivateAttributes: false, config: config)
+        if kind.isAlwaysInlineUserKind || config.inlineUserInEvents {
+            eventDictionary[CodingKeys.user.rawValue] = user.dictionaryValue(includeFlagConfig: false, includePrivateAttributes: false, config: config)
+        } else {
+            eventDictionary[CodingKeys.userKey.rawValue] = user.key
+        }
         eventDictionary[CodingKeys.value.rawValue] = value
         eventDictionary[CodingKeys.defaultValue.rawValue] = defaultValue
         eventDictionary[CodingKeys.data.rawValue] = data
