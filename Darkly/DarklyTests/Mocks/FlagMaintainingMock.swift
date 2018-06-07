@@ -34,10 +34,11 @@ extension FlagMaintainingMock {
         return (value, .server)
     }
 
-    static func stubPatchDictionary(key: LDFlagKey?, value: Any?, version: Int?, includeExtraKey: Bool = false) -> [String: Any] {
+    static func stubPatchDictionary(key: LDFlagKey?, value: Any?, variation: Int?, version: Int?, includeExtraKey: Bool = false) -> [String: Any] {
         var updateDictionary = [String: Any]()
         if let key = key { updateDictionary[FlagStore.Keys.flagKey] = key }
         if let value = value { updateDictionary[FeatureFlag.CodingKeys.value.rawValue] = value }
+        if let variation = variation { updateDictionary[FeatureFlag.CodingKeys.variation.rawValue] = variation }
         if let version = version { updateDictionary[FeatureFlag.CodingKeys.version.rawValue] = version }
         if includeExtraKey { updateDictionary[Constants.updateDictionaryExtraKey] = Constants.updateDictionaryExtraValue }
         return updateDictionary

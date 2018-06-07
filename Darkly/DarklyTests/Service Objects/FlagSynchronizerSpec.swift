@@ -557,7 +557,10 @@ final class FlagSynchronizerSpec: QuickSpec {
                 }
                 it("does not request flags and calls onSyncComplete with new flags and put event type") {
                     expect({ testContext.synchronizerState(synchronizerOnline: true, streamingMode: .streaming, flagRequests: 0, streamCreated: true, streamClosed: false) }).to(match())
-                    expect(flagDictionary == FlagMaintainingMock.stubPatchDictionary(key: DarklyServiceMock.FlagKeys.int, value: DarklyServiceMock.FlagValues.int + 1, version: DarklyServiceMock.Constants.version + 1)).to(beTrue())
+                    expect(flagDictionary == FlagMaintainingMock.stubPatchDictionary(key: DarklyServiceMock.FlagKeys.int,
+                                                                                     value: DarklyServiceMock.FlagValues.int + 1,
+                                                                                     variation: DarklyServiceMock.Constants.variation + 1,
+                                                                                     version: DarklyServiceMock.Constants.version + 1)).to(beTrue())
                     expect(streamingEvent) == .patch
                 }
             }

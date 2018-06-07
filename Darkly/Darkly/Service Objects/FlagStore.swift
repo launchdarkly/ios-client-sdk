@@ -81,23 +81,19 @@ final class FlagStore: FlagMaintaining {
                     }
                 }
             }
-            guard updateDictionary.containsFlagKeyValueAndVersionKeys,
-                let flagKey = updateDictionary[Keys.flagKey] as? String,
-                let newValue = updateDictionary.value,
-//                let newVariation = updateDictionary.variation,
-                let newVersion = updateDictionary.version
+            guard let flagKey = updateDictionary[Keys.flagKey] as? String
             else {
                 Log.debug(self.typeName(and: #function) + "aborted. Malformed update dictionary. updateDictionary: \(String(describing: updateDictionary))")
                 return
             }
-            guard self.isValidVersion(for: flagKey, newVersion: newVersion)
+            guard self.isValidVersion(for: flagKey, newVersion: updateDictionary.version)
             else {
                 Log.debug(self.typeName(and: #function) + "aborted. Invalid version. updateDictionary: \(String(describing: updateDictionary)) "
                     + "existing flag: \(String(describing: self.featureFlags[flagKey]))")
                 return
             }
 
-            let newFlag = FeatureFlag(value: newValue, variation: nil, version: newVersion)
+            let newFlag = FeatureFlag(value: updateDictionary.value, variation: updateDictionary.variation, version: updateDictionary.version)
             Log.debug(self.typeName(and: #function) + "succeeded. new flag: \(newFlag), " + "prior flag: \(String(describing: self.featureFlags[flagKey]))")
             self.featureFlags[flagKey] = newFlag
 
@@ -138,9 +134,9 @@ final class FlagStore: FlagMaintaining {
         }
     }
 
-    private func isValidVersion(for flagKey: LDFlagKey, newVersion: Int) -> Bool {
-        guard let featureFlag = featureFlags[flagKey], let existingVersion = featureFlag.version else { return true }  //new flags ignore version, ignore missing version too
-        return newVersion > existingVersion
+    private func isValidVersion(for flagKey: LDFlagKey, newVersion: Int?) -> Bool {
+        guard let featureFlagVersion = featureFlags[flagKey]?.version, let newFlagVersion = newVersion else { return true }  //new flags ignore version, ignore missing version too
+        return newFlagVersion > featureFlagVersion
     }
 
     func featureFlag(for flagKey: LDFlagKey) -> FeatureFlag? {

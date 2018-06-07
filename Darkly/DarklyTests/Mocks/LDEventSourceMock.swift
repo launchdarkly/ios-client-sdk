@@ -31,6 +31,7 @@ extension DarklyStreamingProviderMock {
     func sendPatch() {
         sendEvent(DarklyEventSource.LDEvent.stubPatchEvent(data: FlagMaintainingMock.stubPatchDictionary(key: DarklyServiceMock.FlagKeys.int,
                                                                                                          value: DarklyServiceMock.FlagValues.int + 1,
+                                                                                                         variation: DarklyServiceMock.Constants.variation + 1,
                                                                                                          version: DarklyServiceMock.Constants.version + 1).jsonString))
     }
 

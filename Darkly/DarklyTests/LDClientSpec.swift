@@ -1355,6 +1355,7 @@ final class LDClientSpec: QuickSpec {
                 oldFlags = testContext.flagStoreMock.featureFlags
                 flagUpdateDictionary = FlagMaintainingMock.stubPatchDictionary(key: DarklyServiceMock.FlagKeys.int,
                                                                                value: DarklyServiceMock.FlagValues.int + 1,
+                                                                               variation: DarklyServiceMock.Constants.variation + 1,
                                                                                version: DarklyServiceMock.Constants.version + 1)
                 let newIntFlag = FeatureFlag(value: DarklyServiceMock.FlagValues.int + 1, variation: DarklyServiceMock.Constants.variation + 1, version: DarklyServiceMock.Constants.version + 1)
                 newFlags = oldFlags.dictionaryValue(exciseNil: false)
@@ -1391,6 +1392,7 @@ final class LDClientSpec: QuickSpec {
                 oldFlags = testContext.flagStoreMock.featureFlags
                 flagUpdateDictionary = FlagMaintainingMock.stubPatchDictionary(key: DarklyServiceMock.FlagKeys.int,
                                                                                value: DarklyServiceMock.FlagValues.int + 1,
+                                                                               variation: DarklyServiceMock.Constants.variation,
                                                                                version: DarklyServiceMock.Constants.version)
                 newFlags = oldFlags.dictionaryValue(exciseNil: false)
 
