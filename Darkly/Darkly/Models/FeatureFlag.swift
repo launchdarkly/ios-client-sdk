@@ -58,10 +58,10 @@ struct FeatureFlag {
 
 extension FeatureFlag: Equatable {
     public static func == (lhs: FeatureFlag, rhs: FeatureFlag) -> Bool {
-        if lhs.value == nil {
-            if rhs.value != nil { return false }
+        if lhs.variation == nil {
+            if rhs.variation != nil { return false }
         } else {
-            if !AnyComparer.isEqual(lhs.value, to: rhs.value) { return false }
+            if lhs.variation != rhs.variation { return false }
         }
         if lhs.version == nil {
             if rhs.version != nil { return false }

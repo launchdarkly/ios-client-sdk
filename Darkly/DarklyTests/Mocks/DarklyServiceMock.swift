@@ -37,6 +37,23 @@ final class DarklyServiceMock: DarklyServiceProvider {
         static var all: [Any] { return [bool, int, double, string, array, dictionary, null] }
         static var allThatCanBeInequal: [Any] { return [bool, int, double, string, array, dictionary] }
 
+        static func value(from flagKey: LDFlagKey) -> Any? {
+            switch flagKey {
+            case FlagKeys.bool: return FlagValues.bool
+            case FlagKeys.int: return FlagValues.int
+            case FlagKeys.double: return FlagValues.double
+            case FlagKeys.string: return FlagValues.string
+            case FlagKeys.array: return FlagValues.array
+            case FlagKeys.dictionary: return FlagValues.dictionary
+            case FlagKeys.null: return FlagValues.null
+            default: return nil
+            }
+        }
+
+        static func alternateValue(from flagKey: LDFlagKey) -> Any? {
+            return alternate(value(from: flagKey))
+        }
+
         static func alternate<T>(_ value: T) -> T {
             switch value {
             case let value as Bool: return !value as! T
@@ -76,35 +93,35 @@ final class DarklyServiceMock: DarklyServiceProvider {
 
         static let version = 2
         static let variation = 3
-        static func stubFeatureFlags(includeNullValue: Bool, includeVariations: Bool, includeVersions: Bool, alternateValuesForKeys: [LDFlagKey] = []) -> [LDFlagKey: FeatureFlag] {
-            let variation: Int? = includeVariations ? Constants.variation : nil
-            let version: Int? = includeVersions ? Constants.version : nil
-            var featureFlags: [LDFlagKey: FeatureFlag] = [
-                FlagKeys.bool: FeatureFlag(value: alternateValuesForKeys.contains(FlagKeys.bool) ? FlagValues.alternate(FlagValues.bool) : FlagValues.bool,
-                                           variation: variation,
-                                           version: version),
-                FlagKeys.int: FeatureFlag(value: alternateValuesForKeys.contains(FlagKeys.int) ? FlagValues.alternate(FlagValues.int) : FlagValues.int,
-                                          variation: variation,
-                                          version: version),
-                FlagKeys.double: FeatureFlag(value: alternateValuesForKeys.contains(FlagKeys.double) ? FlagValues.alternate(FlagValues.double) : FlagValues.double,
-                                             variation: variation,
-                                             version: version),
-                FlagKeys.string: FeatureFlag(value: alternateValuesForKeys.contains(FlagKeys.string) ? FlagValues.alternate(FlagValues.string) : FlagValues.string,
-                                             variation: variation,
-                                             version: version),
-                FlagKeys.array: FeatureFlag(value: alternateValuesForKeys.contains(FlagKeys.array) ? FlagValues.alternate(FlagValues.array) : FlagValues.array,
-                                            variation: variation,
-                                            version: version),
-                FlagKeys.dictionary: FeatureFlag(value: alternateValuesForKeys.contains(FlagKeys.dictionary) ? FlagValues.alternate(FlagValues.dictionary) : FlagValues.dictionary,
-                                                 variation: variation,
-                                                 version: version)
-            ]
-            if includeNullValue {
-                featureFlags[DarklyServiceMock.FlagKeys.null] = FeatureFlag(value: DarklyServiceMock.FlagValues.null, variation: variation, version: version)
+        static func stubFeatureFlags(includeNullValue: Bool, includeVariations: Bool, includeVersions: Bool, alternateValuesForKeys alternateValueKeys: [LDFlagKey] = []) -> [LDFlagKey: FeatureFlag] {
+            let flagKeys = includeNullValue ? FlagKeys.all : FlagKeys.allThatCanBeInequal
+            let featureFlagTuples = flagKeys.map { (flagKey) in
+                return (flagKey, FeatureFlag(value: value(for: flagKey, alternateValueKeys: alternateValueKeys),
+                                             variation: variation(for: flagKey, includeVariations: includeVariations, alternateValueKeys: alternateValueKeys),
+                                             version: version(for: flagKey, includeVersions: includeVersions, alternateValueKeys: alternateValueKeys)))
             }
-            return featureFlags
+
+            return Dictionary(uniqueKeysWithValues: featureFlagTuples)
         }
-    }
+
+        private static func useAlternateValue(flagKey: LDFlagKey, alternateValueKeys: [LDFlagKey]) -> Bool {
+            return alternateValueKeys.contains(flagKey)
+        }
+
+        private static func value(for flagKey: LDFlagKey, alternateValueKeys: [LDFlagKey]) -> Any? {
+            return  useAlternateValue(flagKey: flagKey, alternateValueKeys: alternateValueKeys) ? FlagValues.alternateValue(from: flagKey) : FlagValues.value(from: flagKey)
+        }
+
+        private static func variation(for flagKey: LDFlagKey, includeVariations: Bool, alternateValueKeys: [LDFlagKey]) -> Int? {
+            guard includeVariations else { return nil }
+            return useAlternateValue(flagKey: flagKey, alternateValueKeys: alternateValueKeys) ? variation + 1 : variation
+        }
+
+        private static func version(for flagKey: LDFlagKey, includeVersions: Bool, alternateValueKeys: [LDFlagKey]) -> Int? {
+            guard includeVersions else { return nil }
+            return useAlternateValue(flagKey: flagKey, alternateValueKeys: alternateValueKeys) ? version + 1 : version
+        }
+}
 
     var config: LDConfig
     var user: LDUser

@@ -113,19 +113,19 @@ final class AnySpec: QuickSpec {
                     }
                 }
             }
-            context("with non-matching feature flags") {
+            context("with different feature flags") {
                 var featureFlag: FeatureFlag!
                 var otherFlag: FeatureFlag!
-                context("with version") {
+                context("with elements") {
                     var version = 0
-                    var variation: Int? { return version + 1 }
-                    context("with differing value") {
+                    var variation: Int { return version + 1 }
+                    context("with differing variation") {
                         it("returns false") {
                             DarklyServiceMock.FlagValues.all.forEach { (value) in
                                 guard !(value is NSNull) else { return }
                                 version += 1
                                 featureFlag = FeatureFlag(value: value, variation: variation, version: version)
-                                otherFlag = FeatureFlag(value: DarklyServiceMock.FlagValues.alternate(value) as Any, variation: variation, version: version)
+                                otherFlag = FeatureFlag(value: value, variation: variation + 1, version: version)
 
                                 expect(AnyComparer.isEqual(featureFlag, to: otherFlag)).to(beFalse())
                             }
@@ -143,17 +143,17 @@ final class AnySpec: QuickSpec {
                         }
                     }
                 }
-                context("without version") {
+                context("without elements") {
                     context("with differing value") {
                         var variation = 0
-                        it("returns false") {
+                        it("returns true") {
                             DarklyServiceMock.FlagValues.all.forEach { (value) in
                                 variation += 1
                                 guard !(value is NSNull) else { return }
-                                featureFlag = FeatureFlag(value: value, variation: variation, version: nil)
-                                otherFlag = FeatureFlag(value: DarklyServiceMock.FlagValues.alternate(value) as Any, variation: variation, version: nil)
+                                featureFlag = FeatureFlag(value: value, variation: nil, version: nil)
+                                otherFlag = FeatureFlag(value: DarklyServiceMock.FlagValues.alternate(value) as Any, variation: nil, version: nil)
 
-                                expect(AnyComparer.isEqual(featureFlag, to: otherFlag)).to(beFalse())
+                                expect(AnyComparer.isEqual(featureFlag, to: otherFlag)).to(beTrue())
                             }
                         }
                     }
