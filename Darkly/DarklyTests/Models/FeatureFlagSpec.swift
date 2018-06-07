@@ -570,3 +570,12 @@ extension AnyComparer {
         return isEqual(value, to: other)
     }
 }
+
+extension FeatureFlag {
+    static let nilPlaceholder = -1
+    func allPropertiesMatch(_ otherFlag: FeatureFlag) -> Bool {
+        return AnyComparer.isEqual(self.value, to: otherFlag.value, considerNilAndNullEqual: true)
+            && variation ?? FeatureFlag.nilPlaceholder == otherFlag.variation ?? FeatureFlag.nilPlaceholder
+            && version ?? FeatureFlag.nilPlaceholder == otherFlag.version ?? FeatureFlag.nilPlaceholder
+    }
+}

@@ -10,7 +10,7 @@ import Foundation
 
 struct Event { //sdk internal, not publically accessible
     enum CodingKeys: String, CodingKey {
-        case key, kind, creationDate, user, userKey, value, defaultValue = "default", data
+        case key, kind, creationDate, user, userKey, value, defaultValue = "default", variation, data
     }
 
     enum Kind: String {
@@ -26,21 +26,24 @@ struct Event { //sdk internal, not publically accessible
     let user: LDUser
     let value: Any?
     let defaultValue: Any?
+    let featureFlag: FeatureFlag?
     let data: [String: Any]?
 
-    init(key: String, kind: Kind = .custom, user: LDUser, value: Any? = nil, defaultValue: Any? = nil, data: [String: Any]? = nil) {
+    init(key: String, kind: Kind = .custom, user: LDUser, value: Any? = nil, defaultValue: Any? = nil, featureFlag: FeatureFlag? = nil, data: [String: Any]? = nil) {
         self.key = key
         self.kind = kind
         self.creationDate = Date()
         self.user = user
         self.value = value
         self.defaultValue = defaultValue
+        self.featureFlag = featureFlag
         self.data = data
     }
 
-    static func featureEvent(key: String, user: LDUser, value: Any?, defaultValue: Any?) -> Event {
-        Log.debug(typeName(and: #function) + "key: " + key + ", value: \(String(describing: value)), " + "fallback: \(String(describing: defaultValue))")
-        return Event(key: key, kind: .feature, user: user, value: value, defaultValue: defaultValue)
+    static func featureEvent(key: String, user: LDUser, value: Any?, defaultValue: Any?, featureFlag: FeatureFlag?) -> Event {
+        Log.debug(typeName(and: #function) + "key: " + key + ", value: \(String(describing: value)), " + "fallback: \(String(describing: defaultValue)), "
+            + "featureFlag: \(String(describing: featureFlag))")
+        return Event(key: key, kind: .feature, user: user, value: value, defaultValue: defaultValue, featureFlag: featureFlag)
     }
 
     static func customEvent(key: String, user: LDUser, data: [String: Any]? = nil) -> Event {
@@ -65,6 +68,7 @@ struct Event { //sdk internal, not publically accessible
         }
         eventDictionary[CodingKeys.value.rawValue] = value
         eventDictionary[CodingKeys.defaultValue.rawValue] = defaultValue
+        eventDictionary[CodingKeys.variation.rawValue] = featureFlag?.variation
         eventDictionary[CodingKeys.data.rawValue] = data
 
         return eventDictionary

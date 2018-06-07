@@ -49,6 +49,7 @@ final class FlagStoreSpec: QuickSpec {
         replaceStoreSpec()
         updateStoreSpec()
         deleteFlagSpec()
+        featureFlagSpec()
         variationAndSourceSpec()
         variationSpec()
     }
@@ -367,6 +368,32 @@ final class FlagStoreSpec: QuickSpec {
                 }
             }
         }
+    }
+
+    func featureFlagSpec() {
+        var flagStore: FlagStore!
+        describe("featureFlag") {
+            beforeEach {
+                flagStore = FlagStore(featureFlags: DarklyServiceMock.Constants.stubFeatureFlags(includeNullValue: true, includeVariations: true, includeVersions: true), flagValueSource: .server)
+            }
+            context("when flag key exists") {
+                it("returns the feature flag") {
+                    flagStore.featureFlags.forEach { (flagKey, featureFlag) in
+                        expect(flagStore.featureFlag(for: flagKey)?.allPropertiesMatch(featureFlag)).to(beTrue())
+                    }
+                }
+            }
+            context("when flag key doesn't exist") {
+                var featureFlag: FeatureFlag?
+                beforeEach {
+                    featureFlag = flagStore.featureFlag(for: DarklyServiceMock.FlagKeys.dummy)
+                }
+                it("returns nil") {
+                    expect(featureFlag).to(beNil())
+                }
+            }
+        }
+
     }
 
     func variationAndSourceSpec() {

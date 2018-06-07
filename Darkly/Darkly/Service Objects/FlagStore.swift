@@ -18,6 +18,9 @@ protocol FlagMaintaining {
     func deleteFlag(deleteDictionary: [String: Any], completion: CompletionClosure?)
 
     //sourcery: NoMock
+    func featureFlag(for flagKey: LDFlagKey) -> FeatureFlag?
+
+    //sourcery: NoMock
     func variation<T: LDFlagValueConvertible>(forKey key: LDFlagKey, fallback: T) -> T
     //sourcery: NoMock
     func variationAndSource<T: LDFlagValueConvertible>(forKey key: LDFlagKey, fallback: T) -> (T, LDFlagValueSource)
@@ -138,6 +141,10 @@ final class FlagStore: FlagMaintaining {
     private func isValidVersion(for flagKey: LDFlagKey, newVersion: Int) -> Bool {
         guard let featureFlag = featureFlags[flagKey], let existingVersion = featureFlag.version else { return true }  //new flags ignore version, ignore missing version too
         return newVersion > existingVersion
+    }
+
+    func featureFlag(for flagKey: LDFlagKey) -> FeatureFlag? {
+        return featureFlags[flagKey]
     }
 
     func variation<T: LDFlagValueConvertible>(forKey key: LDFlagKey, fallback: T) -> T {

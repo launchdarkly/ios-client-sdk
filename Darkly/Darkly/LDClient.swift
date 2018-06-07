@@ -235,9 +235,10 @@ public class LDClient {
             Log.debug(typeName(and: #function) + "returning fallback: \(fallback)." + " LDClient not started.")
             return fallback
         }
-        let value = user.flagStore.variation(forKey: key, fallback: fallback)
+        let featureFlag = user.flagStore.featureFlag(for: key)
+        let value = user.flagStore.variation(forKey: key, fallback: fallback)   //TODO: When adding debug & summary events, modify this to use the featureFlag instead of using the flagStore's variation method
         Log.debug(typeName(and: #function) + "flagKey: \(key), value: \(value), fallback: \(fallback)")
-        eventReporter.record(Event.featureEvent(key: key, user: user, value: value, defaultValue: fallback))
+        eventReporter.record(Event.featureEvent(key: key, user: user, value: value, defaultValue: fallback, featureFlag: featureFlag))
         return value
     }
 
@@ -267,9 +268,10 @@ public class LDClient {
             Log.debug(typeName(and: #function) + "returning fallback: \(fallback), source: \(LDFlagValueSource.fallback)." + " LDClient not started.")
             return (fallback, .fallback)
         }
-        let (value, source) = user.flagStore.variationAndSource(forKey: key, fallback: fallback)
+        let featureFlag = user.flagStore.featureFlag(for: key)
+        let (value, source) = user.flagStore.variationAndSource(forKey: key, fallback: fallback)       //TODO: When adding debug & summary events, modify this to use the featureFlag instead of using the flagStore's variation method
         Log.debug(typeName(and: #function) + "flagKey: \(key), value: \(value), fallback: \(fallback), source: \(source)")
-        eventReporter.record(Event.featureEvent(key: key, user: user, value: value, defaultValue: fallback))
+        eventReporter.record(Event.featureEvent(key: key, user: user, value: value, defaultValue: fallback, featureFlag: featureFlag))
         return (value, source)
     }
     

@@ -20,6 +20,7 @@ final class DarklyServiceMock: DarklyServiceProvider {
         static let array = "array-flag"
         static let dictionary = "dictionary-flag"
         static let null = "null-flag"
+        static let dummy = "dummy-flag"
 
         static var all: [LDFlagKey] { return [bool, int, double, string, array, dictionary, null] }
         static var allThatCanBeInequal: [LDFlagKey] { return [bool, int, double, string, array, dictionary] }
@@ -96,32 +97,50 @@ final class DarklyServiceMock: DarklyServiceProvider {
         static func stubFeatureFlags(includeNullValue: Bool, includeVariations: Bool, includeVersions: Bool, alternateValuesForKeys alternateValueKeys: [LDFlagKey] = []) -> [LDFlagKey: FeatureFlag] {
             let flagKeys = includeNullValue ? FlagKeys.all : FlagKeys.allThatCanBeInequal
             let featureFlagTuples = flagKeys.map { (flagKey) in
-                return (flagKey, FeatureFlag(value: value(for: flagKey, alternateValueKeys: alternateValueKeys),
-                                             variation: variation(for: flagKey, includeVariations: includeVariations, alternateValueKeys: alternateValueKeys),
-                                             version: version(for: flagKey, includeVersions: includeVersions, alternateValueKeys: alternateValueKeys)))
+                return (flagKey, stubFeatureFlag(for: flagKey,
+                                                 includeVariation: includeVariations,
+                                                 includeVersion: includeVersions,
+                                                 useAlternateValue: useAlternateValue(for: flagKey, alternateValueKeys: alternateValueKeys)))
             }
 
             return Dictionary(uniqueKeysWithValues: featureFlagTuples)
         }
 
-        private static func useAlternateValue(flagKey: LDFlagKey, alternateValueKeys: [LDFlagKey]) -> Bool {
+        private static func useAlternateValue(for flagKey: LDFlagKey, alternateValueKeys: [LDFlagKey]) -> Bool {
             return alternateValueKeys.contains(flagKey)
         }
 
         private static func value(for flagKey: LDFlagKey, alternateValueKeys: [LDFlagKey]) -> Any? {
-            return  useAlternateValue(flagKey: flagKey, alternateValueKeys: alternateValueKeys) ? FlagValues.alternateValue(from: flagKey) : FlagValues.value(from: flagKey)
+            return value(for: flagKey, useAlternateValue: useAlternateValue(for: flagKey, alternateValueKeys: alternateValueKeys))
         }
 
-        private static func variation(for flagKey: LDFlagKey, includeVariations: Bool, alternateValueKeys: [LDFlagKey]) -> Int? {
-            guard includeVariations else { return nil }
-            return useAlternateValue(flagKey: flagKey, alternateValueKeys: alternateValueKeys) ? variation + 1 : variation
+        private static func value(for flagKey: LDFlagKey, useAlternateValue: Bool) -> Any? {
+            return  useAlternateValue ? FlagValues.alternateValue(from: flagKey) : FlagValues.value(from: flagKey)
         }
 
-        private static func version(for flagKey: LDFlagKey, includeVersions: Bool, alternateValueKeys: [LDFlagKey]) -> Int? {
-            guard includeVersions else { return nil }
-            return useAlternateValue(flagKey: flagKey, alternateValueKeys: alternateValueKeys) ? version + 1 : version
+        private static func variation(for flagKey: LDFlagKey, includeVariation: Bool, alternateValueKeys: [LDFlagKey]) -> Int? {
+            return variation(for: flagKey, includeVariation: includeVariation, useAlternateValue: useAlternateValue(for: flagKey, alternateValueKeys: alternateValueKeys))
         }
-}
+
+        private static func variation(for flagKey: LDFlagKey, includeVariation: Bool, useAlternateValue: Bool) -> Int? {
+            guard includeVariation else { return nil }
+            return useAlternateValue ? variation + 1 : variation
+        }
+
+        private static func version(for flagKey: LDFlagKey, includeVersion: Bool, alternateValueKeys: [LDFlagKey]) -> Int? {
+            return version(for: flagKey, includeVersion: includeVersion, useAlternateValue: useAlternateValue(for: flagKey, alternateValueKeys: alternateValueKeys))
+        }
+        private static func version(for flagKey: LDFlagKey, includeVersion: Bool, useAlternateValue: Bool) -> Int? {
+            guard includeVersion else { return nil }
+            return useAlternateValue ? version + 1 : version
+        }
+
+        static func stubFeatureFlag(for flagKey: LDFlagKey, includeVariation: Bool, includeVersion: Bool, useAlternateValue: Bool = false) -> FeatureFlag {
+            return FeatureFlag(value: value(for: flagKey, useAlternateValue: useAlternateValue),
+                               variation: variation(for: flagKey, includeVariation: includeVariation, useAlternateValue: useAlternateValue),
+                               version: version(for: flagKey, includeVersion: includeVersion, useAlternateValue: useAlternateValue))
+        }
+    }
 
     var config: LDConfig
     var user: LDUser

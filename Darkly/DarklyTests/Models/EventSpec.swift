@@ -33,13 +33,15 @@ final class EventSpec: QuickSpec {
     func initSpec() {
         describe("init") {
             var user: LDUser!
+            var featureFlag: FeatureFlag!
             var event: Event!
             beforeEach {
                 user = LDUser.stub()
             }
             context("with optional items") {
                 beforeEach {
-                    event = Event(key: Constants.eventKey, kind: .feature, user: user, value: true, defaultValue: false, data: Constants.eventData)
+                    featureFlag = DarklyServiceMock.Constants.stubFeatureFlag(for: DarklyServiceMock.FlagKeys.bool, includeVariation: true, includeVersion: true)
+                    event = Event(key: Constants.eventKey, kind: .feature, user: user, value: true, defaultValue: false, featureFlag: featureFlag, data: Constants.eventData)
                 }
                 it("creates an event with matching data") {
                     expect(event.key) == Constants.eventKey
@@ -48,6 +50,7 @@ final class EventSpec: QuickSpec {
                     expect(event.user) == user
                     expect(AnyComparer.isEqual(event.value, to: true)).to(beTrue())
                     expect(AnyComparer.isEqual(event.defaultValue, to: false)).to(beTrue())
+                    expect(event.featureFlag?.allPropertiesMatch(featureFlag)).to(beTrue())
                     expect(event.data).toNot(beNil())
                     expect(event.data == Constants.eventData).to(beTrue())
                 }
@@ -63,6 +66,7 @@ final class EventSpec: QuickSpec {
                     expect(event.user) == user
                     expect(event.value).to(beNil())
                     expect(event.defaultValue).to(beNil())
+                    expect(event.featureFlag).to(beNil())
                     expect(event.data).to(beNil())
                 }
             }
@@ -82,12 +86,14 @@ final class EventSpec: QuickSpec {
     func featureEventSpec() {
         var user: LDUser!
         var event: Event!
+        var featureFlag: FeatureFlag!
         beforeEach {
+            featureFlag = DarklyServiceMock.Constants.stubFeatureFlag(for: DarklyServiceMock.FlagKeys.bool, includeVariation: true, includeVersion: true)
             user = LDUser.stub()
         }
         describe("featureEvent") {
             beforeEach {
-                event = Event.featureEvent(key: Constants.eventKey, user: user, value: true, defaultValue: false)
+                event = Event.featureEvent(key: Constants.eventKey, user: user, value: true, defaultValue: false, featureFlag: featureFlag)
             }
             it("creates a flag request event with matching data") {
                 expect(event.key) == Constants.eventKey
@@ -96,6 +102,7 @@ final class EventSpec: QuickSpec {
                 expect(event.user) == user
                 expect(AnyComparer.isEqual(event.value, to: true)).to(beTrue())
                 expect(AnyComparer.isEqual(event.defaultValue, to: false)).to(beTrue())
+                expect(event.featureFlag?.allPropertiesMatch(featureFlag)).to(beTrue())
                 expect(event.data).to(beNil())
             }
         }
@@ -148,14 +155,18 @@ final class EventSpec: QuickSpec {
     func dictionaryValueSpec() {
         var config = LDConfig.stub
         let user = LDUser.stub()
+        var featureFlag: FeatureFlag!
         var event: Event!
         describe("dictionaryValue") {
             var eventDictionary: [String: Any]!
 
             context("feature event") {
+                beforeEach {
+                    featureFlag = DarklyServiceMock.Constants.stubFeatureFlag(for: DarklyServiceMock.FlagKeys.bool, includeVariation: true, includeVersion: true)
+                }
                 context("without inlining user") {
                     beforeEach {
-                        event = Event.featureEvent(key: Constants.eventKey, user: user, value: true, defaultValue: false)
+                        event = Event.featureEvent(key: Constants.eventKey, user: user, value: true, defaultValue: false, featureFlag: featureFlag)
                         config.inlineUserInEvents = false   //Default value, here for clarity
                         eventDictionary = event.dictionaryValue(config: config)
                     }
@@ -165,6 +176,7 @@ final class EventSpec: QuickSpec {
                         expect(eventDictionary.eventCreationDate?.isWithin(0.001, of: event.creationDate)).to(beTrue())
                         expect(AnyComparer.isEqual(eventDictionary.eventValue, to: true)).to(beTrue())
                         expect(AnyComparer.isEqual(eventDictionary.eventDefaultValue, to: false)).to(beTrue())
+                        expect(eventDictionary.eventVariation) == featureFlag.variation
                         expect(eventDictionary.eventData).to(beNil())
                     }
                     it("creates a dictionary with the user key only") {
@@ -174,7 +186,7 @@ final class EventSpec: QuickSpec {
                 }
                 context("inlining user") {
                     beforeEach {
-                        event = Event.featureEvent(key: Constants.eventKey, user: user, value: true, defaultValue: false)
+                        event = Event.featureEvent(key: Constants.eventKey, user: user, value: true, defaultValue: false, featureFlag: featureFlag)
                         config.inlineUserInEvents = true
                         eventDictionary = event.dictionaryValue(config: config)
                     }
@@ -184,6 +196,7 @@ final class EventSpec: QuickSpec {
                         expect(eventDictionary.eventCreationDate?.isWithin(0.001, of: event.creationDate)).to(beTrue())
                         expect(AnyComparer.isEqual(eventDictionary.eventValue, to: true)).to(beTrue())
                         expect(AnyComparer.isEqual(eventDictionary.eventDefaultValue, to: false)).to(beTrue())
+                        expect(eventDictionary.eventVariation) == featureFlag.variation
                         expect(eventDictionary.eventData).to(beNil())
                     }
                     it("creates a dictionary with the full user") {
@@ -222,6 +235,7 @@ final class EventSpec: QuickSpec {
                         expect(eventDictionary.eventCreationDate?.isWithin(0.001, of: event.creationDate)).to(beTrue())
                         expect(eventDictionary.eventValue).to(beNil())
                         expect(eventDictionary.eventDefaultValue).to(beNil())
+                        expect(eventDictionary.eventVariation).to(beNil())
                         expect(eventDictionary.eventData).to(beNil())
                         expect(eventDictionary.eventUser).toNot(beNil())
                         if let eventDictionaryUser = eventDictionary.eventUser {
@@ -258,6 +272,7 @@ final class EventSpec: QuickSpec {
                         expect(AnyComparer.isEqual(eventDictionary.eventData, to: Constants.eventData)).to(beTrue())
                         expect(eventDictionary.eventValue).to(beNil())
                         expect(eventDictionary.eventDefaultValue).to(beNil())
+                        expect(eventDictionary.eventVariation).to(beNil())
                     }
                     it("creates a dictionary with the user key only") {
                         expect(eventDictionary.eventUserKey) == user.key
@@ -277,6 +292,7 @@ final class EventSpec: QuickSpec {
                         expect(AnyComparer.isEqual(eventDictionary.eventData, to: Constants.eventData)).to(beTrue())
                         expect(eventDictionary.eventValue).to(beNil())
                         expect(eventDictionary.eventDefaultValue).to(beNil())
+                        expect(eventDictionary.eventVariation).to(beNil())
                     }
                     it("creates a dictionary with the full user") {
                         expect(eventDictionary.eventUser).toNot(beNil())
@@ -349,6 +365,11 @@ final class EventSpec: QuickSpec {
                         expect(AnyComparer.isEqual(eventDictionary.eventDefaultValue, to: eventDefaultValue)).to(beTrue())
                     } else {
                         expect(eventDictionary.eventDefaultValue).to(beNil())
+                    }
+                    if let eventVariation = event.featureFlag?.variation {
+                        expect(eventDictionary.eventVariation) == eventVariation
+                    } else {
+                        expect(eventDictionary.eventVariation).to(beNil())
                     }
                     if let eventData = event.data {
                         expect(eventDictionary.eventData).toNot(beNil())
@@ -597,6 +618,7 @@ fileprivate extension Dictionary where Key == String, Value == Any {
     var eventUser: LDUser? { return LDUser(object: self[Event.CodingKeys.user.rawValue]) }
     var eventValue: Any? { return self[Event.CodingKeys.value.rawValue] }
     var eventDefaultValue: Any? { return self[Event.CodingKeys.defaultValue.rawValue] }
+    var eventVariation: Int? { return self[Event.CodingKeys.variation.rawValue] as? Int }
     var eventData: [String: Any]? { return self[Event.CodingKeys.data.rawValue] as? [String: Any] }
 }
 
