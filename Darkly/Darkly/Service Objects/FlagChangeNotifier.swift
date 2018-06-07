@@ -120,7 +120,7 @@ final class FlagChangeNotifier: FlagChangeNotifying {
         return oldFlags.symmetricDifference(newFlags)     //symmetricDifference tests for equality, which includes version. Exclude version here.
             .filter { (flagKey) in
                 guard let oldFeatureFlag = oldFlags[flagKey], let newFeatureFlag = newFlags[flagKey] else { return true }
-                return !oldFeatureFlag.matchesValue(newFeatureFlag)
+                return !oldFeatureFlag.matchesVariation(newFeatureFlag)
         }
     }
 }

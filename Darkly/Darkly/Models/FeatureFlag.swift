@@ -73,9 +73,9 @@ extension FeatureFlag: Equatable {
 }
 
 extension FeatureFlag {
-    func matchesValue(_ other: FeatureFlag) -> Bool {
-        guard value != nil else { return other.value == nil }
-        return AnyComparer.isEqual(self.value, to: other.value)
+    func matchesVariation(_ other: FeatureFlag) -> Bool {
+        guard variation != nil else { return other.variation == nil }
+        return variation == other.variation
     }
 }
 
