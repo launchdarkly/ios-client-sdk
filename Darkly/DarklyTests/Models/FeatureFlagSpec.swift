@@ -184,99 +184,74 @@ final class FeatureFlagSpec: QuickSpec {
 
     func dictionaryValueSpec() {
         var featureFlags: [LDFlagKey: FeatureFlag]!
-        beforeEach {
-            featureFlags = DarklyServiceMock.Constants.stubFeatureFlags(includeNullValue: false, includeVariations: true, includeVersions: true)    //TODO: Include null value
-        }
         describe("dictionaryValue") {
-            context("dont exciseNil") {
+            context("when not excising nil values") {
                 context("with elements") {
-                    it("creates a dictionary with the value and version including nil value representations") {
+                    beforeEach {
+                        featureFlags = DarklyServiceMock.Constants.stubFeatureFlags(includeNullValue: true, includeVariations: true, includeVersions: true)
+                    }
+                    it("creates a dictionary with all elements including nil value representations") {
                         featureFlags.forEach { (_, featureFlag) in
                             let featureFlagDictionary = featureFlag.dictionaryValue(exciseNil: false)
 
                             expect(featureFlagDictionary).toNot(beNil())
-                            expect(AnyComparer.isEqual(featureFlagDictionary?.value, to: featureFlag.value)).to(beTrue())
-//                            expect(featureFlagDictionary?.variation) == featureFlag.variation
+                            expect(AnyComparer.isEqual(featureFlagDictionary?.value, to: featureFlag.value, considerNilAndNullEqual: true)).to(beTrue())
+                            expect(featureFlagDictionary?.variation) == featureFlag.variation
                             expect(featureFlagDictionary?.version) == featureFlag.version
                         }
                     }
                 }
                 context("without elements") {
+                    beforeEach {
+                        featureFlags = DarklyServiceMock.Constants.stubFeatureFlags(includeNullValue: true, includeVariations: false, includeVersions: false)
+                    }
                     it("creates a dictionary with the value including nil value and version representations") {
-                        DarklyServiceMock.FlagValues.all.forEach { (value) in
-                            let featureFlag = FeatureFlag(value: value, variation: nil, version: nil)
-
+                        featureFlags.forEach { (_, featureFlag) in
                             let featureFlagDictionary = featureFlag.dictionaryValue(exciseNil: false)
 
                             expect(featureFlagDictionary).toNot(beNil())
-                            expect(AnyComparer.isEqual(featureFlagDictionary?.value, to: value)).to(beTrue())
+                            expect(AnyComparer.isEqual(featureFlagDictionary?.value, to: featureFlag.value, considerNilAndNullEqual: true)).to(beTrue())
+                            expect(featureFlagDictionary?.variation).to(beNil())
                             expect(featureFlagDictionary?.version).to(beNil())
                         }
                     }
                 }
-                context("dictionary has null value") {
-                    var featureFlag: FeatureFlag!
-                    var featureFlagDictionary: [String: Any]?
-                    let dictionaryValue: [String: Any]! = DarklyServiceMock.FlagValues.dictionary.appendNull()
-                    beforeEach {
-                        featureFlag = FeatureFlag(value: dictionaryValue, variation: DarklyServiceMock.Constants.variation, version: DarklyServiceMock.Constants.version)
-
-                        featureFlagDictionary = featureFlag.dictionaryValue(exciseNil: false)
-                    }
-                    it("creates a dictionary with the dictionary value including nil value representation") {
-                        expect(featureFlagDictionary).toNot(beNil())
-                        expect(AnyComparer.isEqual(featureFlagDictionary?.value, to: dictionaryValue)).to(beTrue())
-                        expect(featureFlagDictionary?.version) == DarklyServiceMock.Constants.version
-                    }
-                }
             }
-            context("exciseNil") {
-                context("with versions") {
-                    var version = 0
-                    it("creates a dictionary with the value and version excluding nil values") {
-                        DarklyServiceMock.FlagValues.all.forEach { (value) in
-                            version += 1
-                            let featureFlag = FeatureFlag(value: value, variation: version + 1, version: version)
-
-                            let featureFlagDictionary = featureFlag.dictionaryValue(exciseNil: true)
-
-                            if value is NSNull {
-                                expect(featureFlagDictionary).to(beNil())
-                            } else {
-                                expect(AnyComparer.isEqual(featureFlagDictionary?.value, to: value)).to(beTrue())
-                                expect(featureFlagDictionary?.version) == version
-                            }
-                        }
-                    }
-                }
-                context("without versions") {
-                    it("creates a dictionary with the value excluding nil value and version representations") {
-                        DarklyServiceMock.FlagValues.all.forEach { (value) in
-                            let featureFlag = FeatureFlag(value: value, variation: nil, version: nil)
-
-                            let featureFlagDictionary = featureFlag.dictionaryValue(exciseNil: true)
-
-                            if value is NSNull {
-                                expect(featureFlagDictionary).to(beNil())
-                            } else {
-                                expect(AnyComparer.isEqual(featureFlagDictionary?.value, to: value)).to(beTrue())
-                                expect(featureFlagDictionary?.version) == FeatureFlag.Constants.nilVersionPlaceholder
-                            }
-                        }
-                    }
-                }
-                context("dictionary has null value") {
-                    var featureFlag: FeatureFlag!
-                    var featureFlagDictionary: [String: Any]?
+            context("when excising nil values") {
+                context("with elements") {
                     beforeEach {
-                        featureFlag = FeatureFlag(value: DarklyServiceMock.FlagValues.dictionary.appendNull(), variation: DarklyServiceMock.Constants.variation, version: DarklyServiceMock.Constants.version)
-
-                        featureFlagDictionary = featureFlag.dictionaryValue(exciseNil: true)
+                        featureFlags = DarklyServiceMock.Constants.stubFeatureFlags(includeNullValue: true, includeVariations: true, includeVersions: true)
                     }
-                    it("creates a dictionary with the dictionary value excluding nil value representation") {
-                        expect(featureFlagDictionary).toNot(beNil())
-                        expect(AnyComparer.isEqual(featureFlagDictionary?.value, to: DarklyServiceMock.FlagValues.dictionary)).to(beTrue())
-                        expect(featureFlagDictionary?.version) == DarklyServiceMock.Constants.version
+                    it("creates a dictionary that excludes nil value representations") {
+                        featureFlags.forEach { (_, featureFlag) in
+                            let featureFlagDictionary = featureFlag.dictionaryValue(exciseNil: true)
+
+                            if featureFlag.value == nil {
+                                expect(featureFlagDictionary?.value).to(beNil())
+                            } else {
+                                expect(AnyComparer.isEqual(featureFlagDictionary?.value, to: featureFlag.value)).to(beTrue())
+                            }
+                            expect(featureFlagDictionary?.variation) == featureFlag.variation
+                            expect(featureFlagDictionary?.version) == featureFlag.version
+                        }
+                    }
+                }
+                context("without elements") {
+                    beforeEach {
+                        featureFlags = DarklyServiceMock.Constants.stubFeatureFlags(includeNullValue: true, includeVariations: false, includeVersions: false)
+                    }
+                    it("creates a dictionary with the value excluding nil value and version representations") {
+                        featureFlags.forEach { (_, featureFlag) in
+                            let featureFlagDictionary = featureFlag.dictionaryValue(exciseNil: true)
+
+                            if featureFlag.value is NSNull {
+                                expect(featureFlagDictionary?.value).to(beNil())
+                            } else {
+                                expect(AnyComparer.isEqual(featureFlagDictionary?.value, to: featureFlag.value)).to(beTrue())
+                            }
+                            expect(featureFlagDictionary?.variation).to(beNil())
+                            expect(featureFlagDictionary?.version).to(beNil())
+                        }
                     }
                 }
             }
@@ -414,81 +389,81 @@ final class FeatureFlagSpec: QuickSpec {
     func collectionSpec() {
         describe("dictionaryValue") {
             var featureFlags: [LDFlagKey: FeatureFlag]!
-            var subject: [LDFlagKey: Any]!
-            //Unwrap the dictionary values that we want to verify match the originals. 2 step process.
-            //First step is to unwrap the FeatureFlag dictionary for the specific key
-            var subjectFlagDictionary: (LDFlagKey) -> [String: Any]? { return { (key) in subject[key] as? [String: Any] } }
-            //Then we can unwrap the value & version. The key here is really just used to pass into the previous closure
-            var subjectFlagValue: (LDFlagKey) -> Any? { return { (key) in subjectFlagDictionary(key)?[FeatureFlag.CodingKeys.value.rawValue] } }
-            var subjectFlagVersion: (LDFlagKey) -> Int? { return { (key) in subjectFlagDictionary(key)?[FeatureFlag.CodingKeys.version.rawValue] as? Int } }
+            var featureFlagDictionaries: [LDFlagKey: Any]!
+            var featureFlagDictionary: [String: Any]?
             context("when not excising nil values") {
-                context("with value and version") {
+                context("with elements") {
                     beforeEach {
                         featureFlags = DarklyServiceMock.Constants.stubFeatureFlags(includeNullValue: true, includeVariations: true, includeVersions: true)
-                        subject = featureFlags.dictionaryValue(exciseNil: false)
+
+                        featureFlagDictionaries = featureFlags.dictionaryValue(exciseNil: false)
                     }
                     it("creates a matching dictionary that includes nil representations") {
-                        featureFlags.forEach { (keyValuePair) in
-                            let (key, featureFlag) = keyValuePair
-                            if featureFlag.value == nil {
-                                expect(subjectFlagValue(key) is NSNull).to(beTrue())
-                            } else {
-                                expect(AnyComparer.isEqual(subjectFlagValue(key), to: featureFlag.value)).to(beTrue())
-                            }
-                            expect(subjectFlagVersion(key)) == featureFlag.version
+                        featureFlags.forEach { (key, featureFlag) in
+                            featureFlagDictionary = featureFlagDictionaries[key] as? [String: Any]
+
+                            expect(featureFlagDictionary).toNot(beNil())
+                            expect(AnyComparer.isEqual(featureFlagDictionary?.value, to: featureFlag.value, considerNilAndNullEqual: true)).to(beTrue())
+                            expect(featureFlagDictionary?.variation) == featureFlag.variation
+                            expect(featureFlagDictionary?.version) == featureFlag.version
                         }
                     }
                 }
-                context("with value only") {
+                context("without elements") {
                     beforeEach {
-                        featureFlags = DarklyServiceMock.Constants.stubFeatureFlags(includeNullValue: true, includeVariations: true, includeVersions: false)
-                        subject = featureFlags.dictionaryValue(exciseNil: false)
+                        featureFlags = DarklyServiceMock.Constants.stubFeatureFlags(includeNullValue: true, includeVariations: false, includeVersions: false)
+
+                        featureFlagDictionaries = featureFlags.dictionaryValue(exciseNil: false)
                     }
                     it("creates a matching dictionary that includes nil representations") {
-                        featureFlags.forEach { (keyValuePair) in
-                            let (key, featureFlag) = keyValuePair
-                            if featureFlag.value == nil {
-                                expect(subjectFlagValue(key) is NSNull).to(beTrue())
-                            } else {
-                                expect(AnyComparer.isEqual(subjectFlagValue(key), to: featureFlag.value)).to(beTrue())
-                            }
-                            expect(subjectFlagDictionary(key)?[FeatureFlag.CodingKeys.version.rawValue] is NSNull).to(beTrue())
+                        featureFlags.forEach { (key, featureFlag) in
+                            featureFlagDictionary = featureFlagDictionaries[key] as? [String: Any]
+
+                            expect(featureFlagDictionary).toNot(beNil())
+                            expect(AnyComparer.isEqual(featureFlagDictionary?.value, to: featureFlag.value, considerNilAndNullEqual: true)).to(beTrue())
+                            expect(featureFlagDictionary?.variation).to(beNil())
+                            expect(featureFlagDictionary?.version).to(beNil())
                         }
                     }
                 }
             }
             context("when excising nil values") {
-                context("with value and version") {
+                context("with elements") {
                     beforeEach {
                         featureFlags = DarklyServiceMock.Constants.stubFeatureFlags(includeNullValue: true, includeVariations: true, includeVersions: true)
-                        subject = featureFlags.dictionaryValue(exciseNil: true)
+
+                        featureFlagDictionaries = featureFlags.dictionaryValue(exciseNil: true)
                     }
-                    it("creates a matching dictionary that excludes nil representations") {
-                        featureFlags.forEach { (keyValuePair) in
-                            let (key, featureFlag) = keyValuePair
+                    it("creates a matching dictionary that excludes nil value representations") {
+                        featureFlags.forEach { (key, featureFlag) in
+                            featureFlagDictionary = featureFlagDictionaries[key] as? [String: Any]
+
                             if featureFlag.value == nil {
-                                expect(subjectFlagDictionary(key)).to(beNil())
+                                expect(featureFlagDictionary?.value).to(beNil())
                             } else {
-                                expect(AnyComparer.isEqual(subjectFlagValue(key), to: featureFlag.value)).to(beTrue())
-                                expect(subjectFlagVersion(key)) == featureFlag.version
+                                expect(AnyComparer.isEqual(featureFlagDictionary?.value, to: featureFlag.value)).to(beTrue())
                             }
+                            expect(featureFlagDictionary?.variation) == featureFlag.variation
+                            expect(featureFlagDictionary?.version) == featureFlag.version
                         }
                     }
                 }
-                context("with value only") {
+                context("without elements") {
                     beforeEach {
-                        featureFlags = DarklyServiceMock.Constants.stubFeatureFlags(includeNullValue: true, includeVariations: true, includeVersions: false)
-                        subject = featureFlags.dictionaryValue(exciseNil: true)
+                        featureFlags = DarklyServiceMock.Constants.stubFeatureFlags(includeNullValue: true, includeVariations: false, includeVersions: false)
+                        featureFlagDictionaries = featureFlags.dictionaryValue(exciseNil: true)
                     }
                     it("creates a matching dictionary that includes nil representations") {
-                        featureFlags.forEach { (keyValuePair) in
-                            let (key, featureFlag) = keyValuePair
-                            if featureFlag.value == nil {
-                                expect(subjectFlagDictionary(key)).to(beNil())
+                        featureFlags.forEach { (key, featureFlag) in
+                            featureFlagDictionary = featureFlagDictionaries[key] as? [String: Any]
+
+                            if featureFlag.value is NSNull {
+                                expect(featureFlagDictionary?.value).to(beNil())
                             } else {
-                                expect(AnyComparer.isEqual(subjectFlagValue(key), to: featureFlag.value)).to(beTrue())
-                                expect(subjectFlagVersion(key)) == FeatureFlag.Constants.nilVersionPlaceholder
+                                expect(AnyComparer.isEqual(featureFlagDictionary?.value, to: featureFlag.value)).to(beTrue())
                             }
+                            expect(featureFlagDictionary?.variation).to(beNil())
+                            expect(featureFlagDictionary?.version).to(beNil())
                         }
                     }
                 }
@@ -496,55 +471,71 @@ final class FeatureFlagSpec: QuickSpec {
         }
 
         describe("flagCollection") {
-            var flagDictionary: [LDFlagKey: Any]!
-            var subject: [LDFlagKey: FeatureFlag]?
-            context("dictionary has feature flag values and versions") {
+            var flagDictionaries: [LDFlagKey: Any]!
+            var flagDictionary: [String: Any]?
+            var featureFlags: [LDFlagKey: FeatureFlag]?
+            var featureFlag: FeatureFlag?
+            context("dictionary has feature flag elements") {
                 beforeEach {
-                    flagDictionary = self.flagDictionary(versions: true, exciseNil: false)
-                    subject = flagDictionary.flagCollection
+                    flagDictionaries = DarklyServiceMock.Constants.stubFeatureFlags(includeNullValue: true, includeVariations: true, includeVersions: true)
+                        .dictionaryValue(exciseNil: false)
+
+                    featureFlags = flagDictionaries.flagCollection
                 }
-                it("creates a matching FeatureFlag dictionary with values and versions") {
-                    DarklyServiceMock.Constants.stubFeatureFlags(includeNullValue: true, includeVariations: true, includeVersions: true).forEach { (keyValuePair) in
-                        let (key, featureFlag) = keyValuePair
-                        if featureFlag.value == nil {
-                            expect(subject?[key]?.value).to(beNil())
-                        } else {
-                            expect(AnyComparer.isEqual(subject?[key]?.value, to: featureFlag.value)).to(beTrue())
-                        }
-                        expect(subject?[key]?.version) == DarklyServiceMock.Constants.version
+                it("creates matching FeatureFlags with flag elements") {
+                    flagDictionaries.forEach { (key, object) in
+                        flagDictionary = object as? [String: Any]
+                        featureFlag = featureFlags?[key]
+
+                        expect(AnyComparer.isEqual(featureFlag?.value, to: flagDictionary?.value, considerNilAndNullEqual: true)).to(beTrue())
+                        expect(featureFlag?.variation) == flagDictionary?.variation
+                        expect(featureFlag?.version) == flagDictionary?.version
                     }
                 }
             }
-            context("dictionary has feature flag values and nil version placeholders") {
+            context("dictionary has flag values without nil version placeholders") {
                 beforeEach {
-                    flagDictionary = self.flagDictionary(versions: false, exciseNil: true)
-                    subject = flagDictionary.flagCollection
+                    flagDictionaries = DarklyServiceMock.Constants.stubFeatureFlags(includeNullValue: false, includeVariations: false, includeVersions: false)
+                        .dictionaryValue(exciseNil: true)
+
+                    featureFlags = flagDictionaries.flagCollection
                 }
-                it("creates a matching FeatureFlag dictionary with values and nil versions") {
-                    DarklyServiceMock.Constants.stubFeatureFlags(includeNullValue: true, includeVariations: true, includeVersions: true).forEach { (keyValuePair) in
-                        let (key, featureFlag) = keyValuePair
-                        if featureFlag.value == nil {
-                            expect(subject?.keys.contains(key)).to(beFalse())
-                        } else {
-                            expect(AnyComparer.isEqual(subject?[key]?.value, to: featureFlag.value)).to(beTrue())
-                            expect(subject?[key]?.version) == FeatureFlag.Constants.nilVersionPlaceholder
-                        }
+                it("creates matching FeatureFlags without missing elements") {
+                    flagDictionaries.forEach { (key, object) in
+                        flagDictionary = object as? [String: Any]
+                        featureFlag = featureFlags?[key]
+
+                        expect(AnyComparer.isEqual(featureFlag?.value, to: flagDictionary?.value, considerNilAndNullEqual: true)).to(beTrue())
+                        expect(featureFlag?.variation).to(beNil())
+                        expect(featureFlag?.version).to(beNil())
                     }
                 }
             }
             context("dictionary already has FeatureFlag values") {
                 beforeEach {
-                    flagDictionary = DarklyServiceMock.Constants.stubFeatureFlags(includeNullValue: true, includeVariations: true, includeVersions: true)
-                    subject = flagDictionary.flagCollection
+                    flagDictionaries = DarklyServiceMock.Constants.stubFeatureFlags(includeNullValue: true, includeVariations: true, includeVersions: true)
+
+                    featureFlags = flagDictionaries.flagCollection
                 }
                 it("returns the existing FeatureFlag dictionary") {
-                    expect(subject == flagDictionary).to(beTrue())
+                    expect(featureFlags == flagDictionaries).to(beTrue())
+                }
+            }
+            context("dictionary does not all convert into FeatureFlags") {
+                beforeEach {
+                    flagDictionaries = DarklyServiceMock.Constants.stubFeatureFlags(includeNullValue: true, includeVariations: false, includeVersions: false)
+                        .dictionaryValue(exciseNil: true)
+
+                    featureFlags = flagDictionaries.flagCollection
+                }
+                it("returns nil") {
+                    expect(featureFlags).to(beNil())
                 }
             }
         }
     }
 
-    func flagDictionary(versions: Bool, exciseNil: Bool) -> [String: Any] {
+    func stubFlagDictionaries(versions: Bool, exciseNil: Bool) -> [String: Any] {
         return DarklyServiceMock.Constants.stubFeatureFlags(includeNullValue: true, includeVariations: true, includeVersions: true)
             .flatMapValues {(featureFlag) in versions ? featureFlag : FeatureFlag(value: featureFlag.value, variation: nil, version: nil) }
             .dictionaryValue(exciseNil: exciseNil)

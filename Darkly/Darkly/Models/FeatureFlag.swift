@@ -12,12 +12,11 @@ struct FeatureFlag {
 
     enum CodingKeys: String, CodingKey {
         case value, variation, version
+
+        static var allKeys: [CodingKeys] { return [.value, .variation, .version] }
+        static var allKeyStrings: [String] { return allKeys.map { (key) in key.rawValue } }
     }
 
-    struct Constants {
-        static let nilVersionPlaceholder = -1
-    }
-    
     let value: Any?
     let variation: Int?
     let version: Int?
@@ -30,7 +29,7 @@ struct FeatureFlag {
 
     init?(dictionary: [String: Any]?) {
         guard let dictionary = dictionary else { return nil }
-        guard dictionary.value != nil || dictionary.variation != nil || dictionary.version != nil else { return nil }
+        guard dictionary.hasAtLeastOneFeatureFlagKey else { return nil }
         self.init(value: dictionary.value, variation: dictionary.variation, version: dictionary.version)
     }
 
@@ -40,17 +39,19 @@ struct FeatureFlag {
     }
 
     func dictionaryValue(exciseNil: Bool) -> [String: Any]? {
-        if exciseNil && value == nil { return nil }
         var dictionaryValue = [String: Any]()
-        var nilExcisedValue = value
-        if exciseNil, let dictionaryValue = value as? [LDFlagKey: Any] {
-            nilExcisedValue = dictionaryValue.filter { (_, value) -> Bool in
-                if value is NSNull { return false }
-                return true
-            }
+        var preparedValue = value
+        if exciseNil, let valueDictionary = value as? [String: Any] {
+            preparedValue = valueDictionary.nullValuesRemoved
         }
-        dictionaryValue[CodingKeys.value.rawValue] = nilExcisedValue ?? NSNull()
-        dictionaryValue[CodingKeys.version.rawValue] = version ?? (exciseNil ? Constants.nilVersionPlaceholder : NSNull())
+        dictionaryValue[CodingKeys.value.rawValue] = preparedValue ?? NSNull()
+        dictionaryValue[CodingKeys.variation.rawValue] = variation ?? NSNull()
+        dictionaryValue[CodingKeys.version.rawValue] = version ?? NSNull()
+
+        if exciseNil {
+            dictionaryValue = dictionaryValue.nullValuesRemoved
+        }
+
         return dictionaryValue
     }
 }
@@ -78,7 +79,7 @@ extension FeatureFlag {
     }
 }
 
-extension Dictionary where Key == String, Value == FeatureFlag {
+extension Dictionary where Key == LDFlagKey, Value == FeatureFlag {
     func dictionaryValue(exciseNil: Bool) -> [String: Any] {
         return self.flatMapValues { (featureFlag) in featureFlag.dictionaryValue(exciseNil: exciseNil) }
     }
@@ -103,6 +104,16 @@ extension Dictionary where Key == String, Value == Any {
         guard flagCollection.count == self.count else { return nil }
         return flagCollection
     }
+
+    var nullValuesRemoved: [String: Any] {
+        return self.filter { (_, value) in !(value is NSNull) }
+    }
+
+    var hasAtLeastOneFeatureFlagKey: Bool {
+        guard !keys.isEmpty else { return false }
+        return !Set(keys).isDisjoint(with: Set(FeatureFlag.CodingKeys.allKeyStrings))
+    }
+
     var containsValueAndVersionKeys: Bool {
         let keySet = Set(self.keys)
         let valueAndVersionKeySet = Set([FeatureFlag.CodingKeys.value.rawValue, FeatureFlag.CodingKeys.version.rawValue])

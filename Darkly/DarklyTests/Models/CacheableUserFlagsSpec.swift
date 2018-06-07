@@ -169,7 +169,7 @@ final class CacheableUserFlagsSpec: QuickSpec {
                     subjectDictionary = subject.dictionaryValue
                 }
                 it("creates a matching dictionary without null values") {
-                    expect(subjectDictionaryFeatureFlags) == DarklyServiceMock.Constants.stubFeatureFlags(includeNullValue: false, includeVariations: true, includeVersions: true)
+                    expect(subjectDictionaryFeatureFlags) == DarklyServiceMock.Constants.stubFeatureFlags(includeNullValue: true, includeVariations: true, includeVersions: true)
                     expect(subjectDictionaryLastUpdated) == Constants.lastUpdatedString
                 }
             }
@@ -186,7 +186,7 @@ final class CacheableUserFlagsSpec: QuickSpec {
                     featureFlags.keys.forEach { (key) in
                         flagDictionary = subjectDictionaryFlags?[key] as? [String: Any]
                         expect(AnyComparer.isEqual(flagDictionaryValue, to: featureFlags[key]?.value)).to(beTrue())
-                        expect(flagDictionaryVersion) == FeatureFlag.Constants.nilVersionPlaceholder
+                        expect(flagDictionaryVersion).to(beNil())
                     }
                 }
             }
