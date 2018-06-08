@@ -60,12 +60,13 @@ final class FeatureFlagSpec: QuickSpec {
         describe("init with dictionary") {
             var version = 0
             var variation: Int { return version + 1 }
+            var flagVersion: Int { return version - 1 }
             var featureFlag: FeatureFlag?
             context("when elements make the whole dictionary") {
                 it("creates a feature flag with all elements") {
                     DarklyServiceMock.FlagValues.all.forEach { (value) in
                         version += 1
-                        let dictionaryFromElements = [String: Any](value: value, variation: variation, version: version)
+                        let dictionaryFromElements = [String: Any](value: value, variation: variation, version: version, flagVersion: flagVersion)
 
                         featureFlag = FeatureFlag(dictionary: dictionaryFromElements)
 
@@ -79,7 +80,7 @@ final class FeatureFlagSpec: QuickSpec {
                 it("creates a feature flag with all elements") {
                     DarklyServiceMock.FlagValues.all.forEach { (value) in
                         version += 1
-                        let dictionaryFromElements = [String: Any](value: value, variation: variation, version: version, includeExtraDictionaryItems: true)
+                        let dictionaryFromElements = [String: Any](value: value, variation: variation, version: version, flagVersion: flagVersion, includeExtraDictionaryItems: true)
 
                         featureFlag = FeatureFlag(dictionary: dictionaryFromElements)
 
@@ -92,7 +93,7 @@ final class FeatureFlagSpec: QuickSpec {
             context("when dictionary only contains value") {
                 it("it creates a feature flag with the value only") {
                     DarklyServiceMock.FlagValues.all.forEach { (value) in
-                        let dictionaryFromElements = [String: Any](value: value, variation: nil, version: nil)
+                        let dictionaryFromElements = [String: Any](value: value, variation: nil, version: nil, flagVersion: nil)
 
                         featureFlag = FeatureFlag(dictionary: dictionaryFromElements)
 
@@ -104,7 +105,7 @@ final class FeatureFlagSpec: QuickSpec {
             }
             context("when dictionary only contains variation") {
                 beforeEach {
-                    let dictionaryFromElements = [String: Any](value: nil, variation: DarklyServiceMock.Constants.variation, version: nil)
+                    let dictionaryFromElements = [String: Any](value: nil, variation: DarklyServiceMock.Constants.variation, version: nil, flagVersion: nil)
 
                     featureFlag = FeatureFlag(dictionary: dictionaryFromElements)
                 }
@@ -116,7 +117,7 @@ final class FeatureFlagSpec: QuickSpec {
             }
             context("when dictionary only contains version") {
                 beforeEach {
-                    let dictionaryFromElements = [String: Any](value: nil, variation: nil, version: DarklyServiceMock.Constants.version)
+                    let dictionaryFromElements = [String: Any](value: nil, variation: nil, version: DarklyServiceMock.Constants.version, flagVersion: nil)
 
                     featureFlag = FeatureFlag(dictionary: dictionaryFromElements)
                 }
@@ -147,12 +148,13 @@ final class FeatureFlagSpec: QuickSpec {
         describe("init with any object") {
             var version = 0
             var variation: Int { return version + 1 }
+            var flagVersion: Int { return version - 1 }
             var featureFlag: FeatureFlag?
             context("object is a dictionary with all elements") {
-                it("creates a feature flag with the value but without a version") {
+                it("creates a feature flag with all elements") {
                     DarklyServiceMock.FlagValues.all.forEach { (value) in
                         version += 1
-                        let object: Any? = [String: Any](value: value, variation: variation, version: version)
+                        let object: Any? = [String: Any](value: value, variation: variation, version: version, flagVersion: flagVersion)
 
                         featureFlag = FeatureFlag(object: object)
 
@@ -546,7 +548,7 @@ final class FeatureFlagSpec: QuickSpec {
 }
 
 extension Dictionary where Key == String, Value == Any {
-    init(value: Any?, variation: Int?, version: Int?, includeExtraDictionaryItems: Bool = false) {
+    init(value: Any?, variation: Int?, version: Int?, flagVersion: Int?, includeExtraDictionaryItems: Bool = false) {
         self.init()
         if let value = value {
             self[FeatureFlag.CodingKeys.value.rawValue] = value
@@ -556,6 +558,9 @@ extension Dictionary where Key == String, Value == Any {
         }
         if let version = version {
             self[FeatureFlag.CodingKeys.version.rawValue] = version
+        }
+        if let flagVersion = flagVersion {
+            self[FeatureFlag.CodingKeys.flagVersion.rawValue] = flagVersion
         }
         if includeExtraDictionaryItems {
             self[FeatureFlagSpec.Constants.extraDictionaryKey] = FeatureFlagSpec.Constants.extraDictionaryValue
