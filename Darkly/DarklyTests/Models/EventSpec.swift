@@ -40,7 +40,7 @@ final class EventSpec: QuickSpec {
             }
             context("with optional items") {
                 beforeEach {
-                    featureFlag = DarklyServiceMock.Constants.stubFeatureFlag(for: DarklyServiceMock.FlagKeys.bool, includeVariation: true, includeVersion: true)
+                    featureFlag = DarklyServiceMock.Constants.stubFeatureFlag(for: DarklyServiceMock.FlagKeys.bool)
                     event = Event(key: Constants.eventKey, kind: .feature, user: user, value: true, defaultValue: false, featureFlag: featureFlag, data: Constants.eventData)
                 }
                 it("creates an event with matching data") {
@@ -88,7 +88,7 @@ final class EventSpec: QuickSpec {
         var event: Event!
         var featureFlag: FeatureFlag!
         beforeEach {
-            featureFlag = DarklyServiceMock.Constants.stubFeatureFlag(for: DarklyServiceMock.FlagKeys.bool, includeVariation: true, includeVersion: true)
+            featureFlag = DarklyServiceMock.Constants.stubFeatureFlag(for: DarklyServiceMock.FlagKeys.bool)
             user = LDUser.stub()
         }
         describe("featureEvent") {
@@ -162,7 +162,7 @@ final class EventSpec: QuickSpec {
 
             context("feature event") {
                 beforeEach {
-                    featureFlag = DarklyServiceMock.Constants.stubFeatureFlag(for: DarklyServiceMock.FlagKeys.bool, includeVariation: true, includeVersion: true)
+                    featureFlag = DarklyServiceMock.Constants.stubFeatureFlag(for: DarklyServiceMock.FlagKeys.bool)
                 }
                 context("without inlining user") {
                     beforeEach {

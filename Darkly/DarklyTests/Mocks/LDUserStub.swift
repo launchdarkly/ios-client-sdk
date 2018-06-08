@@ -41,9 +41,7 @@ extension LDUser {
     }
 
     static func stub(key: String? = nil,
-                     includeNullValue: Bool = false,
-                     includeVariations: Bool = true,
-                     includeVersions: Bool = true,
+                     includeNullValue: Bool = false,    //TODO: Change this to true
                      environmentReporter: EnvironmentReportingMock? = nil) -> LDUser {
         var user = LDUser(key: key ?? UUID().uuidString,
                           name: StubConstants.name,
@@ -57,13 +55,16 @@ extension LDUser {
                           device: environmentReporter?.deviceModel,
                           operatingSystem: environmentReporter?.systemVersion,
                           isAnonymous: StubConstants.isAnonymous)
-        user.flagStore = FlagMaintainingMock(flags: user.stubFlags(includeNullValue: includeNullValue, includeVariations: includeVariations, includeVersions: includeVersions))
+        user.flagStore = FlagMaintainingMock(flags: user.stubFlags(includeNullValue: includeNullValue))
         return user
     }
 
-    private func stubFlags(includeNullValue: Bool, includeVariations: Bool, includeVersions: Bool) -> [String: FeatureFlag] {
-        var flags = DarklyServiceMock.Constants.stubFeatureFlags(includeNullValue: includeNullValue, includeVariations: includeVariations, includeVersions: includeVersions)
-        flags[StubConstants.userKey] = FeatureFlag(value: key, variation: DarklyServiceMock.Constants.variation, version: DarklyServiceMock.Constants.version)
+    private func stubFlags(includeNullValue: Bool) -> [String: FeatureFlag] {
+        var flags = DarklyServiceMock.Constants.stubFeatureFlags(includeNullValue: includeNullValue)
+        flags[StubConstants.userKey] = FeatureFlag(value: key,
+                                                   variation: DarklyServiceMock.Constants.variation,
+                                                   version: DarklyServiceMock.Constants.version,
+                                                   flagVersion: DarklyServiceMock.Constants.flagVersion)
         return flags
     }
 

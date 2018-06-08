@@ -328,7 +328,7 @@ extension Event {
     static func stub(for eventType: Kind, with user: LDUser) -> Event {
         switch eventType {
         case .feature:
-            let featureFlag = DarklyServiceMock.Constants.stubFeatureFlag(for: DarklyServiceMock.FlagKeys.bool, includeVariation: true, includeVersion: true)
+            let featureFlag = DarklyServiceMock.Constants.stubFeatureFlag(for: DarklyServiceMock.FlagKeys.bool)
             return Event.featureEvent(key: UUID().uuidString, user: user, value: true, defaultValue: false, featureFlag: featureFlag)
         case .identify: return Event.identifyEvent(user: user)
         case .custom: return Event.customEvent(key: UUID().uuidString, user: user, data: ["custom": UUID().uuidString])

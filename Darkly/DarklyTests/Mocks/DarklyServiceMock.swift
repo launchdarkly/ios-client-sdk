@@ -60,7 +60,7 @@ final class DarklyServiceMock: DarklyServiceProvider {
             case let value as Bool: return !value as! T
             case let value as Int: return value + 1 as! T
             case let value as Double: return value + 1.0 as! T
-            case let value as String: return value + "-" as! T
+            case let value as String: return value + "-alternate" as! T
             case var value as [Any]:
                 value.append(4)
                 return value as! T  //Not sure why, but this crashes if you combine append the value into the return
@@ -74,7 +74,7 @@ final class DarklyServiceMock: DarklyServiceProvider {
 
     struct Constants {
         static var streamData: Data {
-            let featureFlags = stubFeatureFlags(includeNullValue: false, includeVariations: true, includeVersions: true)
+            let featureFlags = stubFeatureFlags(includeNullValue: false, includeVariations: true, includeVersions: true, includeFlagVersions: true)
             let featureFlagDictionaries = featureFlags.dictionaryValue(exciseNil: false)
             let eventStreamString = "event: put\ndata:\(featureFlagDictionaries.jsonString!)"
 
@@ -97,14 +97,20 @@ final class DarklyServiceMock: DarklyServiceProvider {
         static let stubNameStream = "Stream Connect Stub"
         static let stubNameEvent = "Event Report Stub"
 
-        static let version = 2
-        static let variation = 3
-        static func stubFeatureFlags(includeNullValue: Bool, includeVariations: Bool, includeVersions: Bool, alternateValuesForKeys alternateValueKeys: [LDFlagKey] = []) -> [LDFlagKey: FeatureFlag] {
+        static let variation = 2
+        static let version = 4
+        static let flagVersion = 3
+        static func stubFeatureFlags(includeNullValue: Bool = true,
+                                     includeVariations: Bool = true,
+                                     includeVersions: Bool = true,
+                                     includeFlagVersions: Bool = true,
+                                     alternateValuesForKeys alternateValueKeys: [LDFlagKey] = []) -> [LDFlagKey: FeatureFlag] {
             let flagKeys = includeNullValue ? FlagKeys.all : FlagKeys.allThatCanBeInequal
             let featureFlagTuples = flagKeys.map { (flagKey) in
                 return (flagKey, stubFeatureFlag(for: flagKey,
                                                  includeVariation: includeVariations,
                                                  includeVersion: includeVersions,
+                                                 includeFlagVersion: includeFlagVersions,
                                                  useAlternateValue: useAlternateValue(for: flagKey, alternateValueKeys: alternateValueKeys)))
             }
 
@@ -140,10 +146,24 @@ final class DarklyServiceMock: DarklyServiceProvider {
             return useAlternateValue ? version + 1 : version
         }
 
-        static func stubFeatureFlag(for flagKey: LDFlagKey, includeVariation: Bool, includeVersion: Bool, useAlternateValue: Bool = false) -> FeatureFlag {
+        private static func flagVersion(for flagKey: LDFlagKey, includeFlagVersion: Bool, alternateValueKeys: [LDFlagKey]) -> Int? {
+            return flagVersion(for: flagKey, includeFlagVersion: includeFlagVersion, useAlternateValue: useAlternateValue(for: flagKey, alternateValueKeys: alternateValueKeys))
+        }
+        private static func flagVersion(for flagKey: LDFlagKey, includeFlagVersion: Bool, useAlternateValue: Bool) -> Int? {
+            guard includeFlagVersion else { return nil }
+            return useAlternateValue ? flagVersion + 1 : flagVersion
+        }
+
+        static func stubFeatureFlag(for flagKey: LDFlagKey,
+                                    includeVariation: Bool = true,
+                                    includeVersion: Bool = true,
+                                    includeFlagVersion: Bool = true,
+                                    useAlternateValue: Bool = false) -> FeatureFlag {
             return FeatureFlag(value: value(for: flagKey, useAlternateValue: useAlternateValue),
                                variation: variation(for: flagKey, includeVariation: includeVariation, useAlternateValue: useAlternateValue),
-                               version: version(for: flagKey, includeVersion: includeVersion, useAlternateValue: useAlternateValue))
+                               version: version(for: flagKey, includeVersion: includeVersion, useAlternateValue: useAlternateValue),
+                               flagVersion: flagVersion(for: flagKey, includeFlagVersion: includeFlagVersion, useAlternateValue: useAlternateValue)
+            )
         }
     }
 
@@ -199,7 +219,7 @@ extension DarklyServiceMock {
 
     ///Use when testing requires the mock service to actually make a flag request
     func stubFlagRequest(statusCode: Int, useReport: Bool, onActivation activate: ((URLRequest, OHHTTPStubsDescriptor, OHHTTPStubsResponse) -> Void)? = nil) {
-        let responseData = statusCode == HTTPURLResponse.StatusCodes.ok ? Constants.stubFeatureFlags(includeNullValue: false, includeVariations: true, includeVersions: true)
+        let responseData = statusCode == HTTPURLResponse.StatusCodes.ok ? Constants.stubFeatureFlags(includeNullValue: false)
             .dictionaryValue(exciseNil: false).jsonData!
             : Data()
         let stubResponse: OHHTTPStubsResponseBlock = { (_) in OHHTTPStubsResponse(data: responseData, statusCode: Int32(statusCode), headers: nil)}
@@ -212,7 +232,7 @@ extension DarklyServiceMock {
     func stubFlagResponse(statusCode: Int, badData: Bool = false, responseOnly: Bool = false, errorOnly: Bool = false) {
         let response = HTTPURLResponse(url: config.baseUrl, statusCode: statusCode, httpVersion: Constants.httpVersion, headerFields: nil)
         if statusCode == HTTPURLResponse.StatusCodes.ok {
-            let flagData = try? JSONSerialization.data(withJSONObject: Constants.stubFeatureFlags(includeNullValue: false, includeVariations: true, includeVersions: true)
+            let flagData = try? JSONSerialization.data(withJSONObject: Constants.stubFeatureFlags(includeNullValue: false)
                 .dictionaryValue(exciseNil: false),
                                                        options: [])
             stubbedFlagResponse = (flagData, response, nil)

@@ -1221,7 +1221,7 @@ final class LDClientSpec: QuickSpec {
 
         context("flags have different values") {
             beforeEach {
-                let newBoolFeatureFlag = FeatureFlag(value: !DarklyServiceMock.FlagValues.bool, variation: DarklyServiceMock.Constants.variation + 1, version: DarklyServiceMock.Constants.version + 1)
+                let newBoolFeatureFlag = DarklyServiceMock.Constants.stubFeatureFlag(for: DarklyServiceMock.FlagKeys.bool, useAlternateValue: true)
                 newFlags = testContext.user.flagStore.featureFlags.dictionaryValue(exciseNil: false)
                 newFlags[DarklyServiceMock.FlagKeys.bool] = newBoolFeatureFlag.dictionaryValue(exciseNil: false)
                 testContext.setFlagStoreCallbackToMimicRealFlagStore(newFlags: newFlags.flagCollection!)
@@ -1253,7 +1253,7 @@ final class LDClientSpec: QuickSpec {
         context("a flag was added") {
             beforeEach {
                 newFlags = testContext.user.flagStore.featureFlags.dictionaryValue(exciseNil: false)
-                newFlags[Constants.newFlagKey] = FeatureFlag(value: Constants.newFlagValue, variation: 2, version: 1).dictionaryValue(exciseNil: false)
+                newFlags[Constants.newFlagKey] = DarklyServiceMock.Constants.stubFeatureFlag(for: DarklyServiceMock.FlagKeys.string, useAlternateValue: true).dictionaryValue(exciseNil: false)
                 testContext.setFlagStoreCallbackToMimicRealFlagStore(newFlags: newFlags.flagCollection!)
 
                 waitUntil { done in
@@ -1357,7 +1357,7 @@ final class LDClientSpec: QuickSpec {
                                                                                value: DarklyServiceMock.FlagValues.int + 1,
                                                                                variation: DarklyServiceMock.Constants.variation + 1,
                                                                                version: DarklyServiceMock.Constants.version + 1)
-                let newIntFlag = FeatureFlag(value: DarklyServiceMock.FlagValues.int + 1, variation: DarklyServiceMock.Constants.variation + 1, version: DarklyServiceMock.Constants.version + 1)
+                let newIntFlag = DarklyServiceMock.Constants.stubFeatureFlag(for: DarklyServiceMock.FlagKeys.int, useAlternateValue: true)
                 newFlags = oldFlags.dictionaryValue(exciseNil: false)
                 newFlags[DarklyServiceMock.FlagKeys.int] = newIntFlag.dictionaryValue(exciseNil: false)
                 testContext.setFlagStoreCallbackToMimicRealFlagStore(newFlags: newFlags.flagCollection!)

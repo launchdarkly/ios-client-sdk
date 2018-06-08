@@ -397,7 +397,7 @@ final class FlagSynchronizerSpec: QuickSpec {
                 }
                 it("requests flags and calls onSyncComplete with the new flags and streaming event") {
                     expect({ testContext.synchronizerState(synchronizerOnline: true, streamingMode: .streaming, flagRequests: 1, streamCreated: true, streamClosed: false) }).to(match())
-                    expect(newFlags == DarklyServiceMock.Constants.stubFeatureFlags(includeNullValue: false, includeVariations: true, includeVersions: true)).to(beTrue())
+                    expect(newFlags == DarklyServiceMock.Constants.stubFeatureFlags(includeNullValue: false)).to(beTrue())
                     expect(streamingEvent) == .ping
                 }
             }
@@ -490,7 +490,7 @@ final class FlagSynchronizerSpec: QuickSpec {
                 }
                 it("does not request flags and calls onSyncComplete with new flags and put event type") {
                     expect({ testContext.synchronizerState(synchronizerOnline: true, streamingMode: .streaming, flagRequests: 0, streamCreated: true, streamClosed: false) }).to(match())
-                    expect(newFlags == DarklyServiceMock.Constants.stubFeatureFlags(includeNullValue: false, includeVariations: true, includeVersions: true)).to(beTrue())
+                    expect(newFlags == DarklyServiceMock.Constants.stubFeatureFlags(includeNullValue: false)).to(beTrue())
                     expect(streamingEvent) == .put
                 }
             }

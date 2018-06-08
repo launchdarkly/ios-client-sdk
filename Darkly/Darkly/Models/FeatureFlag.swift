@@ -22,17 +22,17 @@ struct FeatureFlag {
     let version: Int?
     let flagVersion: Int?
 
-    init(value: Any?, variation: Int?, version: Int?) {
+    init(value: Any?, variation: Int?, version: Int?, flagVersion: Int?) {
         self.value = value is NSNull ? nil : value
         self.variation = variation
         self.version = version
-        self.flagVersion = nil
+        self.flagVersion = flagVersion
     }
 
     init?(dictionary: [String: Any]?) {
         guard let dictionary = dictionary else { return nil }
         guard dictionary.hasAtLeastOneFeatureFlagKey else { return nil }
-        self.init(value: dictionary.value, variation: dictionary.variation, version: dictionary.version)
+        self.init(value: dictionary.value, variation: dictionary.variation, version: dictionary.version, flagVersion: dictionary.flagVersion)
     }
 
     init?(object: Any?) {

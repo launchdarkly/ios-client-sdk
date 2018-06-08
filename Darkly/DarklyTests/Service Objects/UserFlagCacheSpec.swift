@@ -78,7 +78,7 @@ final class UserFlagCacheSpec: QuickSpec {
                     mockFlagStore = mockUser.flagStore as? FlagMaintainingMock
 
                     changedFlags = mockFlagStore.featureFlags
-                    changedFlags["newKey"] = FeatureFlag(value: true, variation: DarklyServiceMock.Constants.variation, version: DarklyServiceMock.Constants.version)
+                    changedFlags["newKey"] = DarklyServiceMock.Constants.stubFeatureFlag(for: DarklyServiceMock.FlagKeys.bool)
                     mockFlagStore.featureFlags = changedFlags!
                     changedUserFlags = CacheableUserFlags(user: mockUser)
 

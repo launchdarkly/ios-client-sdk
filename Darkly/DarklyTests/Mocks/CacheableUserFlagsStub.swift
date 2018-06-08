@@ -11,7 +11,6 @@ import Foundation
 
 extension CacheableUserFlags {
     static func stub() -> CacheableUserFlags {
-        return CacheableUserFlags(flags: DarklyServiceMock.Constants.stubFeatureFlags(includeNullValue: false, includeVariations: true, includeVersions: true),
-                                  lastUpdated: Date())
+        return CacheableUserFlags(flags: DarklyServiceMock.Constants.stubFeatureFlags(includeNullValue: false), lastUpdated: Date())
     }
 }

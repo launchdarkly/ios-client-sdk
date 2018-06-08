@@ -94,7 +94,7 @@ final class FlagStore: FlagMaintaining {
                 return
             }
 
-            let newFlag = FeatureFlag(value: updateDictionary.value, variation: updateDictionary.variation, version: updateDictionary.version)
+            let newFlag = FeatureFlag(value: updateDictionary.value, variation: updateDictionary.variation, version: updateDictionary.version, flagVersion: updateDictionary.flagVersion)
             Log.debug(self.typeName(and: #function) + "succeeded. new flag: \(newFlag), " + "prior flag: \(String(describing: self.featureFlags[flagKey]))")
             self.featureFlags[flagKey] = newFlag
 

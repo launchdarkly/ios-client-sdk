@@ -51,7 +51,10 @@ final class AnySpec: QuickSpec {
                                                 "int-array-key": [1, 2, 3],
                                                 "dictionary-key": ["keyA": true, "keyB": -1, "keyC": "howdy"]]
         static let date = Date().addingTimeInterval(-1.0)
-        static let userFlags = CacheableUserFlags(flags: DarklyServiceMock.Constants.stubFeatureFlags(includeNullValue: false, includeVariations: true, includeVersions: true),
+        static let userFlags = CacheableUserFlags(flags: DarklyServiceMock.Constants.stubFeatureFlags(includeNullValue: false,
+                                                                                                      includeVariations: true,
+                                                                                                      includeVersions: true,
+                                                                                                      includeFlagVersions: true),
                                                   lastUpdated: Date().addingTimeInterval(1.0))
         static let null = NSNull()
 
@@ -87,26 +90,27 @@ final class AnySpec: QuickSpec {
                 }
             }
             context("with matching feature flags") {
-                var featureFlag: FeatureFlag!
+                var featureFlags: [LDFlagKey: FeatureFlag]!
                 var otherFlag: FeatureFlag!
                 context("with elements") {
-                    var version = 0
-                    var variation: Int? { return version + 1 }
+                    beforeEach {
+                        featureFlags = DarklyServiceMock.Constants.stubFeatureFlags()
+                    }
                     it("returns true") {
-                        DarklyServiceMock.FlagValues.all.forEach { (value) in
-                            version += 1
-                            featureFlag = FeatureFlag(value: value, variation: variation, version: version)
-                            otherFlag = FeatureFlag(value: value, variation: variation, version: version)
+                        featureFlags.forEach { (_, featureFlag) in
+                            otherFlag = FeatureFlag(value: featureFlag.value, variation: featureFlag.variation, version: featureFlag.version, flagVersion: featureFlag.flagVersion)
 
                             expect(AnyComparer.isEqual(featureFlag, to: otherFlag)).to(beTrue())
                         }
                     }
                 }
                 context("without elements") {
+                    beforeEach {
+                        featureFlags = DarklyServiceMock.Constants.stubFeatureFlags(includeVariations: false, includeVersions: false, includeFlagVersions: false)
+                    }
                     it("returns true") {
-                        DarklyServiceMock.FlagValues.all.forEach { (value) in
-                            featureFlag = FeatureFlag(value: value, variation: nil, version: nil)
-                            otherFlag = FeatureFlag(value: value, variation: nil, version: nil)
+                        featureFlags.forEach { (_, featureFlag) in
+                            otherFlag = FeatureFlag(value: featureFlag.value, variation: nil, version: nil, flagVersion: nil)
 
                             expect(AnyComparer.isEqual(featureFlag, to: otherFlag)).to(beTrue())
                         }
@@ -114,18 +118,16 @@ final class AnySpec: QuickSpec {
                 }
             }
             context("with different feature flags") {
-                var featureFlag: FeatureFlag!
+                var featureFlags: [LDFlagKey: FeatureFlag]!
                 var otherFlag: FeatureFlag!
                 context("with elements") {
-                    var version = 0
-                    var variation: Int { return version + 1 }
+                    beforeEach {
+                        featureFlags = DarklyServiceMock.Constants.stubFeatureFlags()
+                    }
                     context("with differing variation") {
                         it("returns false") {
-                            DarklyServiceMock.FlagValues.all.forEach { (value) in
-                                guard !(value is NSNull) else { return }
-                                version += 1
-                                featureFlag = FeatureFlag(value: value, variation: variation, version: version)
-                                otherFlag = FeatureFlag(value: value, variation: variation + 1, version: version)
+                            featureFlags.forEach { (_, featureFlag) in
+                                otherFlag = FeatureFlag(value: featureFlag.value, variation: featureFlag.variation! + 1, version: featureFlag.version, flagVersion: featureFlag.flagVersion)
 
                                 expect(AnyComparer.isEqual(featureFlag, to: otherFlag)).to(beFalse())
                             }
@@ -133,25 +135,35 @@ final class AnySpec: QuickSpec {
                     }
                     context("with differing version") {
                         it("returns false") {
-                            DarklyServiceMock.FlagValues.all.forEach { (value) in
-                                version += 1
-                                featureFlag = FeatureFlag(value: value, variation: variation, version: version)
-                                otherFlag = FeatureFlag(value: value, variation: variation, version: version + 1)
+                            featureFlags.forEach { (_, featureFlag) in
+                                otherFlag = FeatureFlag(value: featureFlag.value, variation: featureFlag.variation, version: featureFlag.version! + 1, flagVersion: featureFlag.flagVersion)
 
                                 expect(AnyComparer.isEqual(featureFlag, to: otherFlag)).to(beFalse())
                             }
                         }
                     }
+                    context("with differing flagVersion") {
+                        it("returns true") {
+                            featureFlags.forEach { (_, featureFlag) in
+                                otherFlag = FeatureFlag(value: featureFlag.value, variation: featureFlag.variation, version: featureFlag.version, flagVersion: featureFlag.flagVersion! + 1)
+
+                                expect(AnyComparer.isEqual(featureFlag, to: otherFlag)).to(beTrue())
+                            }
+                        }
+                    }
                 }
                 context("without elements") {
+                    beforeEach {
+                        featureFlags = DarklyServiceMock.Constants.stubFeatureFlags(includeVariations: false, includeVersions: false, includeFlagVersions: false)
+                    }
                     context("with differing value") {
-                        var variation = 0
-                        it("returns true") {
-                            DarklyServiceMock.FlagValues.all.forEach { (value) in
-                                variation += 1
-                                guard !(value is NSNull) else { return }
-                                featureFlag = FeatureFlag(value: value, variation: nil, version: nil)
-                                otherFlag = FeatureFlag(value: DarklyServiceMock.FlagValues.alternate(value) as Any, variation: nil, version: nil)
+                        it("returns true") {    //Yeah, this is weird. Since the variation is missing the comparison succeeds
+                            featureFlags.forEach { (flagKey, featureFlag) in
+                                otherFlag = DarklyServiceMock.Constants.stubFeatureFlag(for: flagKey,
+                                                                                        includeVariation: false,
+                                                                                        includeVersion: false,
+                                                                                        includeFlagVersion: false,
+                                                                                        useAlternateValue: true)
 
                                 expect(AnyComparer.isEqual(featureFlag, to: otherFlag)).to(beTrue())
                             }
