@@ -46,8 +46,8 @@ final class DarklyService: DarklyServiceProvider {
     }
 
     struct FlagRequestPath {
-        static let get = "msdk/eval/users"
-        static let report = "msdk/eval/user"
+        static let get = "msdk/evalx/users"
+        static let report = "msdk/evalx/user"
     }
 
     struct StreamRequestPath {

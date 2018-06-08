@@ -69,6 +69,7 @@ final class FlagStore: FlagMaintaining {
        {
             "key": <flag-key>,
             "value": <new-flag-value>,
+            "variation": <new-flag-variation>,
             "version": <new-flag-version>
         }
     */

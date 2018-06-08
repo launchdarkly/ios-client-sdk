@@ -113,10 +113,4 @@ extension Dictionary where Key == String, Value == Any {
         guard !keys.isEmpty else { return false }
         return !Set(keys).isDisjoint(with: Set(FeatureFlag.CodingKeys.allKeyStrings))
     }
-
-    var containsValueAndVersionKeys: Bool {
-        let keySet = Set(self.keys)
-        let valueAndVersionKeySet = Set([FeatureFlag.CodingKeys.value.rawValue, FeatureFlag.CodingKeys.version.rawValue])
-        return valueAndVersionKeySet.isSubset(of: keySet)
-    }
 }
