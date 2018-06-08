@@ -11,20 +11,22 @@ import Foundation
 struct FeatureFlag {
 
     enum CodingKeys: String, CodingKey {
-        case value, variation, version
+        case value, variation, version, flagVersion
 
-        static var allKeys: [CodingKeys] { return [.value, .variation, .version] }
+        static var allKeys: [CodingKeys] { return [.value, .variation, .version, .flagVersion] }
         static var allKeyStrings: [String] { return allKeys.map { (key) in key.rawValue } }
     }
 
     let value: Any?
     let variation: Int?
     let version: Int?
+    let flagVersion: Int?
 
     init(value: Any?, variation: Int?, version: Int?) {
         self.value = value is NSNull ? nil : value
         self.variation = variation
         self.version = version
+        self.flagVersion = nil
     }
 
     init?(dictionary: [String: Any]?) {
@@ -96,6 +98,10 @@ extension Dictionary where Key == String, Value == Any {
 
     var version: Int? {
         return self[FeatureFlag.CodingKeys.version.rawValue] as? Int
+    }
+
+    var flagVersion: Int? {
+        return self[FeatureFlag.CodingKeys.flagVersion.rawValue] as? Int
     }
 
     var flagCollection: [LDFlagKey: FeatureFlag]? {
