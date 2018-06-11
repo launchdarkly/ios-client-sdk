@@ -42,6 +42,7 @@ final class FeatureFlagSpec: QuickSpec {
                         expect(AnyComparer.isEqual(featureFlag.value, to: value, considerNilAndNullEqual: true)).to(beTrue())
                         expect(featureFlag.variation) == variation
                         expect(featureFlag.version) == version
+                        expect(featureFlag.flagVersion) == flagVersion
                     }
                 }
             }
@@ -59,54 +60,57 @@ final class FeatureFlagSpec: QuickSpec {
         }
 
         describe("init with dictionary") {
-            var version = 0
-            var variation: Int { return version + 1 }
-            var flagVersion: Int { return version - 1 }
+            var variation = 0
+            var flagVersion: Int { return variation + 1 }
+            var version: Int { return flagVersion + 1 }
             var featureFlag: FeatureFlag?
             context("when elements make the whole dictionary") {
                 it("creates a feature flag with all elements") {
                     DarklyServiceMock.FlagValues.all.forEach { (value) in
-                        version += 1
-                        let dictionaryFromElements = [String: Any](value: value, variation: variation, version: version, flagVersion: flagVersion)
+                        variation += 1
+                        let dictionaryFromElements = Dictionary(value: value, variation: variation, version: version, flagVersion: flagVersion)
 
                         featureFlag = FeatureFlag(dictionary: dictionaryFromElements)
 
                         expect(AnyComparer.isEqual(featureFlag?.value, to: value, considerNilAndNullEqual: true)).to(beTrue())
                         expect(featureFlag?.variation) == variation
                         expect(featureFlag?.version) == version
+                        expect(featureFlag?.flagVersion) == flagVersion
                     }
                 }
             }
             context("when elements are part of the dictionary") {
                 it("creates a feature flag with all elements") {
                     DarklyServiceMock.FlagValues.all.forEach { (value) in
-                        version += 1
-                        let dictionaryFromElements = [String: Any](value: value, variation: variation, version: version, flagVersion: flagVersion, includeExtraDictionaryItems: true)
+                        variation += 1
+                        let dictionaryFromElements = Dictionary(value: value, variation: variation, version: version, flagVersion: flagVersion, includeExtraDictionaryItems: true)
 
                         featureFlag = FeatureFlag(dictionary: dictionaryFromElements)
 
                         expect(AnyComparer.isEqual(featureFlag?.value, to: value, considerNilAndNullEqual: true)).to(beTrue())
                         expect(featureFlag?.variation) == variation
                         expect(featureFlag?.version) == version
+                        expect(featureFlag?.flagVersion) == flagVersion
                     }
                 }
             }
             context("when dictionary only contains value") {
                 it("it creates a feature flag with the value only") {
                     DarklyServiceMock.FlagValues.all.forEach { (value) in
-                        let dictionaryFromElements = [String: Any](value: value, variation: nil, version: nil, flagVersion: nil)
+                        let dictionaryFromElements = Dictionary(value: value, variation: nil, version: nil, flagVersion: nil)
 
                         featureFlag = FeatureFlag(dictionary: dictionaryFromElements)
 
                         expect(AnyComparer.isEqual(featureFlag?.value, to: value, considerNilAndNullEqual: true)).to(beTrue())
                         expect(featureFlag?.variation).to(beNil())
                         expect(featureFlag?.version).to(beNil())
+                        expect(featureFlag?.flagVersion).to(beNil())
                     }
                 }
             }
             context("when dictionary only contains variation") {
                 beforeEach {
-                    let dictionaryFromElements = [String: Any](value: nil, variation: DarklyServiceMock.Constants.variation, version: nil, flagVersion: nil)
+                    let dictionaryFromElements = Dictionary(value: nil, variation: DarklyServiceMock.Constants.variation, version: nil, flagVersion: nil)
 
                     featureFlag = FeatureFlag(dictionary: dictionaryFromElements)
                 }
@@ -114,11 +118,12 @@ final class FeatureFlagSpec: QuickSpec {
                     expect(featureFlag?.value).to(beNil())
                     expect(featureFlag?.variation) == DarklyServiceMock.Constants.variation
                     expect(featureFlag?.version).to(beNil())
+                    expect(featureFlag?.flagVersion).to(beNil())
                 }
             }
             context("when dictionary only contains version") {
                 beforeEach {
-                    let dictionaryFromElements = [String: Any](value: nil, variation: nil, version: DarklyServiceMock.Constants.version, flagVersion: nil)
+                    let dictionaryFromElements = Dictionary(value: nil, variation: nil, version: DarklyServiceMock.Constants.version, flagVersion: nil)
 
                     featureFlag = FeatureFlag(dictionary: dictionaryFromElements)
                 }
@@ -126,6 +131,20 @@ final class FeatureFlagSpec: QuickSpec {
                     expect(featureFlag?.value).to(beNil())
                     expect(featureFlag?.variation).to(beNil())
                     expect(featureFlag?.version) == DarklyServiceMock.Constants.version
+                    expect(featureFlag?.flagVersion).to(beNil())
+                }
+            }
+            context("when dictionary only contains flagVersion") {
+                beforeEach {
+                    let dictionaryFromElements = Dictionary(value: nil, variation: nil, version: nil, flagVersion: DarklyServiceMock.Constants.flagVersion)
+
+                    featureFlag = FeatureFlag(dictionary: dictionaryFromElements)
+                }
+                it("it creates a feature flag with the version only") {
+                    expect(featureFlag?.value).to(beNil())
+                    expect(featureFlag?.variation).to(beNil())
+                    expect(featureFlag?.version).to(beNil())
+                    expect(featureFlag?.flagVersion) == DarklyServiceMock.Constants.flagVersion
                 }
             }
             context("when the dictionary does not contain any element") {
@@ -147,21 +166,22 @@ final class FeatureFlagSpec: QuickSpec {
         }
 
         describe("init with any object") {
-            var version = 0
-            var variation: Int { return version + 1 }
-            var flagVersion: Int { return version - 1 }
+            var variation = 0
+            var flagVersion: Int { return variation + 1 }
+            var version: Int { return flagVersion + 1 }
             var featureFlag: FeatureFlag?
             context("object is a dictionary with all elements") {
                 it("creates a feature flag with all elements") {
                     DarklyServiceMock.FlagValues.all.forEach { (value) in
-                        version += 1
-                        let object: Any? = [String: Any](value: value, variation: variation, version: version, flagVersion: flagVersion)
+                        variation += 1
+                        let object: Any? = Dictionary(value: value, variation: variation, version: version, flagVersion: flagVersion)
 
                         featureFlag = FeatureFlag(object: object)
 
                         expect(AnyComparer.isEqual(featureFlag?.value, to: value, considerNilAndNullEqual: true)).to(beTrue())
                         expect(featureFlag?.variation) == variation
                         expect(featureFlag?.version) == version
+                        expect(featureFlag?.flagVersion) == flagVersion
                     }
                 }
             }
