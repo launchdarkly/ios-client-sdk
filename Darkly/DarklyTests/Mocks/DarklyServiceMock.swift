@@ -74,7 +74,7 @@ final class DarklyServiceMock: DarklyServiceProvider {
 
     struct Constants {
         static var streamData: Data {
-            let featureFlags = stubFeatureFlags(includeNullValue: false, includeVariations: true, includeVersions: true, includeFlagVersions: true)
+            let featureFlags = stubFeatureFlags(includeNullValue: false)
             let featureFlagDictionaries = featureFlags.dictionaryValue(exciseNil: false)
             let eventStreamString = "event: put\ndata:\(featureFlagDictionaries.jsonString!)"
 
