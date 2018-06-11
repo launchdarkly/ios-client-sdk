@@ -795,7 +795,7 @@ final class LDClientSpec: QuickSpec {
             var event: LaunchDarkly.Event!
             var priorRecordedEvents: Int!
             beforeEach {
-                event = Event.stub(for: .custom, with: testContext.user)
+                event = Event.stub(.custom, with: testContext.user)
             }
             context("when started") {
                 beforeEach {
@@ -876,7 +876,7 @@ final class LDClientSpec: QuickSpec {
         describe("track event") {
             var event: LaunchDarkly.Event!
             beforeEach {
-                event = Event.stub(for: .custom, with: testContext.user)
+                event = Event.stub(.custom, with: testContext.user)
             }
             context("when client was started") {
                 beforeEach {

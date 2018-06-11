@@ -159,7 +159,7 @@ final class EventReporterSpec: QuickSpec {
                 var extraEvent: Event!
                 beforeEach {
                     self.setupReporter(withEvents: Constants.eventCapacity)
-                    extraEvent = Event.stub(for: .feature, with: self.user)
+                    extraEvent = Event.stub(.feature, with: self.user)
 
                     self.subject.record(extraEvent)
                 }
@@ -291,7 +291,7 @@ final class EventReporterSpec: QuickSpec {
             return
         }
         while mockEvents.count < eventCount {
-            let event = Event.stub(for: Event.eventType(for: mockEvents.count), with: self.user)
+            let event = Event.stub(Event.eventKind(for: mockEvents.count), with: self.user)
             mockEvents.append(event)
             subject.record(event, completion: mockEvents.count == eventCount ? completion : nil)
         }
@@ -325,7 +325,7 @@ final class EventReporterSpec: QuickSpec {
 }
 
 extension Event {
-    static func stub(for eventType: Kind, with user: LDUser) -> Event {
+    static func stub(_ eventType: Kind, with user: LDUser) -> Event {
         switch eventType {
         case .feature:
             let featureFlag = DarklyServiceMock.Constants.stubFeatureFlag(for: DarklyServiceMock.FlagKeys.bool)
@@ -334,22 +334,25 @@ extension Event {
         case .custom: return Event.customEvent(key: UUID().uuidString, user: user, data: ["custom": UUID().uuidString])
         }
     }
+
+    static func stubFeatureEvent(_ featureFlag: FeatureFlag, with user: LDUser) -> Event {
+        return Event.featureEvent(key: UUID().uuidString, user: user, value: true, defaultValue: false, featureFlag: featureFlag)
+    }
     
-    static func stubEvents(_ eventCount: Int, user: LDUser) -> [Event] {
+    static func stubEvents(for user: LDUser) -> [Event] {
         var eventStubs = [Event]()
-        while eventStubs.count < eventCount {
-            eventStubs.append(Event.stub(for: Event.eventType(for: eventStubs.count), with: user))
+        Event.Kind.allKinds.forEach { (eventKind) in
+            eventStubs.append(Event.stub(eventKind, with: user))
         }
         return eventStubs
     }
 
-    static func eventType(for count: Int) -> Kind {
-        let types: [Kind] = [.feature, .identify, .custom]
-        return types[count % types.count]
+    static func eventKind(for count: Int) -> Kind {
+        return Event.Kind.allKinds[count % Event.Kind.allKinds.count]
     }
 
     static func stubEventDictionaries(_ eventCount: Int, user: LDUser, config: LDConfig) -> [[String: Any]] {
-        let eventStubs = stubEvents(eventCount, user: user)
+        let eventStubs = stubEvents(for: user)
         return eventStubs.map { (event) in event.dictionaryValue(config: config) }
     }
 

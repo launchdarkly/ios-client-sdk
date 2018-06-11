@@ -153,7 +153,7 @@ final class EventSpec: QuickSpec {
     }
 
     func dictionaryValueSpec() {
-        var config = LDConfig.stub
+        var config: LDConfig!
         let user = LDUser.stub()
         var featureFlag: FeatureFlag!
         var event: Event!
@@ -162,6 +162,7 @@ final class EventSpec: QuickSpec {
 
             context("feature event") {
                 beforeEach {
+                    config = LDConfig.stub
                     featureFlag = DarklyServiceMock.Constants.stubFeatureFlag(for: DarklyServiceMock.FlagKeys.bool)
                 }
                 context("without inlining user") {
@@ -177,6 +178,7 @@ final class EventSpec: QuickSpec {
                         expect(AnyComparer.isEqual(eventDictionary.eventValue, to: true)).to(beTrue())
                         expect(AnyComparer.isEqual(eventDictionary.eventDefaultValue, to: false)).to(beTrue())
                         expect(eventDictionary.eventVariation) == featureFlag.variation
+                        expect(eventDictionary.eventVersion) == featureFlag.flagVersion     //Since feature flags include the flag version, it should be used.
                         expect(eventDictionary.eventData).to(beNil())
                     }
                     it("creates a dictionary with the user key only") {
@@ -197,6 +199,7 @@ final class EventSpec: QuickSpec {
                         expect(AnyComparer.isEqual(eventDictionary.eventValue, to: true)).to(beTrue())
                         expect(AnyComparer.isEqual(eventDictionary.eventDefaultValue, to: false)).to(beTrue())
                         expect(eventDictionary.eventVariation) == featureFlag.variation
+                        expect(eventDictionary.eventVersion) == featureFlag.flagVersion     //Since feature flags include the flag version, it should be used.
                         expect(eventDictionary.eventData).to(beNil())
                     }
                     it("creates a dictionary with the full user") {
@@ -217,6 +220,44 @@ final class EventSpec: QuickSpec {
                             expect(eventDictionaryUser.privateAttributes).to(beNil())
                         }
                         expect(eventDictionary.eventUserKey).to(beNil())
+                    }
+                }
+                context("omitting the flagVersion") {
+                    beforeEach {
+                        featureFlag = DarklyServiceMock.Constants.stubFeatureFlag(for: DarklyServiceMock.FlagKeys.bool, includeFlagVersion: false)
+                        event = Event.featureEvent(key: Constants.eventKey, user: user, value: true, defaultValue: false, featureFlag: featureFlag)
+                        eventDictionary = event.dictionaryValue(config: config)
+                    }
+                    it("creates a dictionary with the version") {
+                        expect(eventDictionary.eventKey) == Constants.eventKey
+                        expect(eventDictionary.eventKind) == .feature
+                        expect(eventDictionary.eventCreationDate?.isWithin(0.001, of: event.creationDate)).to(beTrue())
+                        expect(AnyComparer.isEqual(eventDictionary.eventValue, to: true)).to(beTrue())
+                        expect(AnyComparer.isEqual(eventDictionary.eventDefaultValue, to: false)).to(beTrue())
+                        expect(eventDictionary.eventUserKey) == user.key
+                        expect(eventDictionary.eventUser).to(beNil())
+                        expect(eventDictionary.eventVariation) == featureFlag.variation
+                        expect(eventDictionary.eventVersion) == featureFlag.version
+                        expect(eventDictionary.eventData).to(beNil())
+                    }
+                }
+                context("omitting flagVersion and version") {
+                    beforeEach {
+                        featureFlag = DarklyServiceMock.Constants.stubFeatureFlag(for: DarklyServiceMock.FlagKeys.bool, includeVersion: false, includeFlagVersion: false)
+                        event = Event.featureEvent(key: Constants.eventKey, user: user, value: true, defaultValue: false, featureFlag: featureFlag)
+                        eventDictionary = event.dictionaryValue(config: config)
+                    }
+                    it("creates a dictionary without the version") {
+                        expect(eventDictionary.eventKey) == Constants.eventKey
+                        expect(eventDictionary.eventKind) == .feature
+                        expect(eventDictionary.eventCreationDate?.isWithin(0.001, of: event.creationDate)).to(beTrue())
+                        expect(AnyComparer.isEqual(eventDictionary.eventValue, to: true)).to(beTrue())
+                        expect(AnyComparer.isEqual(eventDictionary.eventDefaultValue, to: false)).to(beTrue())
+                        expect(eventDictionary.eventUserKey) == user.key
+                        expect(eventDictionary.eventUser).to(beNil())
+                        expect(eventDictionary.eventVariation) == featureFlag.variation
+                        expect(eventDictionary.eventVersion).to(beNil())
+                        expect(eventDictionary.eventData).to(beNil())
                     }
                 }
             }
@@ -322,9 +363,11 @@ final class EventSpec: QuickSpec {
         let config = LDConfig.stub
         let user = LDUser.stub()
         describe("dictionaryValues") {
-            let events = Event.stubEvents(3, user: user)
+            var events: [Event]!
             var eventDictionaries: [[String: Any]]!
             beforeEach {
+                events = Event.stubEvents(for: user)
+
                 eventDictionaries = events.dictionaryValues(config: config)
             }
             it("creates an array of event dictionaries with matching elements") {
@@ -370,6 +413,11 @@ final class EventSpec: QuickSpec {
                         expect(eventDictionary.eventVariation) == eventVariation
                     } else {
                         expect(eventDictionary.eventVariation).to(beNil())
+                    }
+                    if let eventFlagVersion = event.featureFlag?.flagVersion {
+                        expect(eventDictionary.eventVersion) == eventFlagVersion
+                    } else {
+                        expect(eventDictionary.eventVersion).to(beNil())
                     }
                     if let eventData = event.data {
                         expect(eventDictionary.eventData).toNot(beNil())
@@ -421,7 +469,7 @@ final class EventSpec: QuickSpec {
             }
             context("when the event dictionary is not in the array") {
                 beforeEach {
-                    targetDictionary = Event.stub(for: .feature, with: user).dictionaryValue(config: config)
+                    targetDictionary = Event.stub(.feature, with: user).dictionaryValue(config: config)
                 }
                 it("returns false") {
                     expect(eventDictionaries.contains(targetDictionary)) == false
@@ -440,7 +488,7 @@ final class EventSpec: QuickSpec {
                     eventDictionaries = LDUser.stubUsers(Constants.eventCapacity).map { (user) in
                         user.dictionaryValue(includeFlagConfig: false, includePrivateAttributes: true, config: config)
                     }
-                    targetDictionary = Event.stub(for: .identify, with: user).dictionaryValue(config: config)
+                    targetDictionary = Event.stub(.identify, with: user).dictionaryValue(config: config)
                 }
                 it("returns false") {
                     expect(eventDictionaries.contains(targetDictionary)) == false
@@ -458,7 +506,7 @@ final class EventSpec: QuickSpec {
                 var event: Event!
                 var eventDictionary: [String: Any]!
                 beforeEach {
-                    event = Event.stub(for: .custom, with: user)
+                    event = Event.stub(.custom, with: user)
                     eventDictionary = event.dictionaryValue(config: config)
                 }
                 context("when the dictionary contains a key") {
@@ -480,7 +528,7 @@ final class EventSpec: QuickSpec {
                 var event: Event!
                 var eventDictionary: [String: Any]!
                 beforeEach {
-                    event = Event.stub(for: .custom, with: user)
+                    event = Event.stub(.custom, with: user)
                     eventDictionary = event.dictionaryValue(config: config)
                 }
                 context("when the dictionary contains a creation date") {
@@ -502,7 +550,7 @@ final class EventSpec: QuickSpec {
                 var eventDictionary: [String: Any]!
                 var otherDictionary: [String: Any]!
                 beforeEach {
-                    eventDictionary = Event.stub(for: .custom, with: user).dictionaryValue(config: config)
+                    eventDictionary = Event.stub(.custom, with: user).dictionaryValue(config: config)
                     otherDictionary = eventDictionary
                 }
                 context("when keys and creationDateMillis are equal") {
@@ -619,6 +667,7 @@ fileprivate extension Dictionary where Key == String, Value == Any {
     var eventValue: Any? { return self[Event.CodingKeys.value.rawValue] }
     var eventDefaultValue: Any? { return self[Event.CodingKeys.defaultValue.rawValue] }
     var eventVariation: Int? { return self[Event.CodingKeys.variation.rawValue] as? Int }
+    var eventVersion: Int? { return self[Event.CodingKeys.version.rawValue] as? Int }
     var eventData: [String: Any]? { return self[Event.CodingKeys.data.rawValue] as? [String: Any] }
 }
 

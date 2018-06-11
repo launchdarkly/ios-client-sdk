@@ -10,12 +10,13 @@ import Foundation
 
 struct Event { //sdk internal, not publically accessible
     enum CodingKeys: String, CodingKey {
-        case key, kind, creationDate, user, userKey, value, defaultValue = "default", variation, data
+        case key, kind, creationDate, user, userKey, value, defaultValue = "default", variation, version, data
     }
 
     enum Kind: String {
         case feature, identify, custom
 
+        static var allKinds: [Kind] { return [.feature, .identify, .custom] }
         static var alwaysInlineUserKinds: [Kind] { return [identify] }
         var isAlwaysInlineUserKind: Bool { return Kind.alwaysInlineUserKinds.contains(self) }
     }
@@ -69,6 +70,7 @@ struct Event { //sdk internal, not publically accessible
         eventDictionary[CodingKeys.value.rawValue] = value
         eventDictionary[CodingKeys.defaultValue.rawValue] = defaultValue
         eventDictionary[CodingKeys.variation.rawValue] = featureFlag?.variation
+        eventDictionary[CodingKeys.version.rawValue] = featureFlag?.flagVersion ?? featureFlag?.version     //Supercedes version if the flagVersion exists
         eventDictionary[CodingKeys.data.rawValue] = data
 
         return eventDictionary
@@ -88,7 +90,7 @@ extension Array where Element == [String: Any] {
     }
 
     func contains(_ eventDictionary: [String: Any]) -> Bool {
-        return !self.filter { (testDictionary) in testDictionary.matches(eventDictionary: eventDictionary) }.isEmpty
+        return !self.filter { (element) in element.matches(eventDictionary: eventDictionary) }.isEmpty
     }
 }
 
