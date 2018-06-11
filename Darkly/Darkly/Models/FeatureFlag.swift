@@ -49,6 +49,7 @@ struct FeatureFlag {
         dictionaryValue[CodingKeys.value.rawValue] = preparedValue ?? NSNull()
         dictionaryValue[CodingKeys.variation.rawValue] = variation ?? NSNull()
         dictionaryValue[CodingKeys.version.rawValue] = version ?? NSNull()
+        dictionaryValue[CodingKeys.flagVersion.rawValue] = flagVersion ?? NSNull()
 
         if exciseNil {
             dictionaryValue = dictionaryValue.withNullValuesRemoved

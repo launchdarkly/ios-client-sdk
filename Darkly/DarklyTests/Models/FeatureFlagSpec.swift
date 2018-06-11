@@ -221,6 +221,7 @@ final class FeatureFlagSpec: QuickSpec {
                             expect(AnyComparer.isEqual(featureFlagDictionary?.value, to: featureFlag.value, considerNilAndNullEqual: true)).to(beTrue())
                             expect(featureFlagDictionary?.variation) == featureFlag.variation
                             expect(featureFlagDictionary?.version) == featureFlag.version
+                            expect(featureFlagDictionary?.flagVersion) == featureFlag.flagVersion
                         }
                     }
                 }
@@ -236,6 +237,7 @@ final class FeatureFlagSpec: QuickSpec {
                             expect(AnyComparer.isEqual(featureFlagDictionary?.value, to: featureFlag.value, considerNilAndNullEqual: true)).to(beTrue())
                             expect(featureFlagDictionary?.variation).to(beNil())
                             expect(featureFlagDictionary?.version).to(beNil())
+                            expect(featureFlagDictionary?.flagVersion).to(beNil())
                         }
                     }
                 }
@@ -249,13 +251,10 @@ final class FeatureFlagSpec: QuickSpec {
                         featureFlags.forEach { (_, featureFlag) in
                             let featureFlagDictionary = featureFlag.dictionaryValue(exciseNil: true)
 
-                            if featureFlag.value == nil {
-                                expect(featureFlagDictionary?.value).to(beNil())
-                            } else {
-                                expect(AnyComparer.isEqual(featureFlagDictionary?.value, to: featureFlag.value)).to(beTrue())
-                            }
+                            expect(AnyComparer.isEqual(featureFlagDictionary?.value, to: featureFlag.value, considerNilAndNullEqual: true)).to(beTrue())
                             expect(featureFlagDictionary?.variation) == featureFlag.variation
                             expect(featureFlagDictionary?.version) == featureFlag.version
+                            expect(featureFlagDictionary?.flagVersion) == featureFlag.flagVersion
                         }
                     }
                 }
@@ -274,6 +273,7 @@ final class FeatureFlagSpec: QuickSpec {
                             }
                             expect(featureFlagDictionary?.variation).to(beNil())
                             expect(featureFlagDictionary?.version).to(beNil())
+                            expect(featureFlagDictionary?.flagVersion).to(beNil())
                         }
                     }
                 }
@@ -284,7 +284,7 @@ final class FeatureFlagSpec: QuickSpec {
             context("with elements") {
                 var featureFlags: [LDFlagKey: FeatureFlag]!
                 beforeEach {
-                    featureFlags = DarklyServiceMock.Constants.stubFeatureFlags(includeNullValue: true)
+                    featureFlags = DarklyServiceMock.Constants.stubFeatureFlags()
                 }
                 it("creates a feature flag with the same elements as the original") {
                     featureFlags.forEach { (_, featureFlag) in
@@ -293,6 +293,7 @@ final class FeatureFlagSpec: QuickSpec {
                         expect(reinflatedFlag).toNot(beNil())
                         expect(AnyComparer.isEqual(reinflatedFlag?.value, to: featureFlag.value, considerNilAndNullEqual: true)).to(beTrue())
                         expect(reinflatedFlag?.version) == featureFlag.version
+                        expect(reinflatedFlag?.flagVersion) == featureFlag.flagVersion
                     }
                 }
             }
@@ -310,6 +311,7 @@ final class FeatureFlagSpec: QuickSpec {
                     expect(reinflatedFlag).toNot(beNil())
                     expect(AnyComparer.isEqual(reinflatedFlag?.value, to: DarklyServiceMock.FlagValues.dictionary.appendNull())).to(beTrue())
                     expect(reinflatedFlag?.version) == DarklyServiceMock.Constants.version
+                    expect(reinflatedFlag?.flagVersion) == DarklyServiceMock.Constants.flagVersion
                 }
             }
         }
@@ -327,6 +329,19 @@ final class FeatureFlagSpec: QuickSpec {
                     it("returns true") {
                         originalFlags.forEach { (_, originalFlag) in
                             otherFlag = FeatureFlag(value: originalFlag.value, variation: originalFlag.variation, version: originalFlag.version, flagVersion: originalFlag.flagVersion)
+
+                            expect(originalFlag == otherFlag).to(beTrue())
+                        }
+                    }
+                }
+                context("when values differ") {
+                    it("returns true") {    //This is a weird effect of comparing the variation, and not the value itself. The server should not return different values for the same variation.
+                        originalFlags.forEach { (_, originalFlag) in
+                            if originalFlag.value == nil { return }
+                            otherFlag = FeatureFlag(value: DarklyServiceMock.FlagValues.alternate(originalFlag.value),
+                                                    variation: originalFlag.variation,
+                                                    version: originalFlag.version,
+                                                    flagVersion: originalFlag.flagVersion)
 
                             expect(originalFlag == otherFlag).to(beTrue())
                         }
@@ -356,10 +371,22 @@ final class FeatureFlagSpec: QuickSpec {
                         }
                     }
                 }
+                context("when flagVersions differ") {
+                    it("returns true") {
+                        originalFlags.forEach { (_, originalFlag) in
+                            otherFlag = FeatureFlag(value: originalFlag.value,
+                                                    variation: originalFlag.variation,
+                                                    version: originalFlag.version,
+                                                    flagVersion: DarklyServiceMock.Constants.flagVersion + 1)
+
+                            expect(originalFlag == otherFlag).to(beTrue())
+                        }
+                    }
+                }
             }
             context("when value only exists") {
                 beforeEach {
-                    originalFlags = DarklyServiceMock.Constants.stubFeatureFlags(includeVariations: false, includeVersions: false)
+                    originalFlags = DarklyServiceMock.Constants.stubFeatureFlags(includeVariations: false, includeVersions: false, includeFlagVersions: false)
                 }
                 it("returns true") {
                     originalFlags.forEach { (_, originalFlag) in
@@ -434,6 +461,7 @@ final class FeatureFlagSpec: QuickSpec {
                             expect(AnyComparer.isEqual(featureFlagDictionary?.value, to: featureFlag.value, considerNilAndNullEqual: true)).to(beTrue())
                             expect(featureFlagDictionary?.variation) == featureFlag.variation
                             expect(featureFlagDictionary?.version) == featureFlag.version
+                            expect(featureFlagDictionary?.flagVersion) == featureFlag.flagVersion
                         }
                     }
                 }
@@ -451,6 +479,7 @@ final class FeatureFlagSpec: QuickSpec {
                             expect(AnyComparer.isEqual(featureFlagDictionary?.value, to: featureFlag.value, considerNilAndNullEqual: true)).to(beTrue())
                             expect(featureFlagDictionary?.variation).to(beNil())
                             expect(featureFlagDictionary?.version).to(beNil())
+                            expect(featureFlagDictionary?.flagVersion).to(beNil())
                         }
                     }
                 }
@@ -473,6 +502,7 @@ final class FeatureFlagSpec: QuickSpec {
                             }
                             expect(featureFlagDictionary?.variation) == featureFlag.variation
                             expect(featureFlagDictionary?.version) == featureFlag.version
+                            expect(featureFlagDictionary?.flagVersion) == featureFlag.flagVersion
                         }
                     }
                 }
@@ -492,6 +522,7 @@ final class FeatureFlagSpec: QuickSpec {
                             }
                             expect(featureFlagDictionary?.variation).to(beNil())
                             expect(featureFlagDictionary?.version).to(beNil())
+                            expect(featureFlagDictionary?.flagVersion).to(beNil())
                         }
                     }
                 }
@@ -517,6 +548,7 @@ final class FeatureFlagSpec: QuickSpec {
                         expect(AnyComparer.isEqual(featureFlag?.value, to: flagDictionary?.value, considerNilAndNullEqual: true)).to(beTrue())
                         expect(featureFlag?.variation) == flagDictionary?.variation
                         expect(featureFlag?.version) == flagDictionary?.version
+                        expect(featureFlag?.flagVersion) == flagDictionary?.flagVersion
                     }
                 }
             }
@@ -535,6 +567,7 @@ final class FeatureFlagSpec: QuickSpec {
                         expect(AnyComparer.isEqual(featureFlag?.value, to: flagDictionary?.value, considerNilAndNullEqual: true)).to(beTrue())
                         expect(featureFlag?.variation).to(beNil())
                         expect(featureFlag?.version).to(beNil())
+                        expect(featureFlag?.flagVersion).to(beNil())
                     }
                 }
             }
