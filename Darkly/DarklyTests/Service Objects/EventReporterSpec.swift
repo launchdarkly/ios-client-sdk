@@ -325,8 +325,8 @@ final class EventReporterSpec: QuickSpec {
 }
 
 extension Event {
-    static func stub(_ eventType: Kind, with user: LDUser) -> Event {
-        switch eventType {
+    static func stub(_ eventKind: Kind, with user: LDUser) -> Event {
+        switch eventKind {
         case .feature:
             let featureFlag = DarklyServiceMock.Constants.stubFeatureFlag(for: DarklyServiceMock.FlagKeys.bool)
             return Event.featureEvent(key: UUID().uuidString, user: user, value: true, defaultValue: false, featureFlag: featureFlag)

@@ -51,11 +51,7 @@ final class AnySpec: QuickSpec {
                                                 "int-array-key": [1, 2, 3],
                                                 "dictionary-key": ["keyA": true, "keyB": -1, "keyC": "howdy"]]
         static let date = Date().addingTimeInterval(-1.0)
-        static let userFlags = CacheableUserFlags(flags: DarklyServiceMock.Constants.stubFeatureFlags(includeNullValue: false,
-                                                                                                      includeVariations: true,
-                                                                                                      includeVersions: true,
-                                                                                                      includeFlagVersions: true),
-                                                  lastUpdated: Date().addingTimeInterval(1.0))
+        static let userFlags = CacheableUserFlags(flags: DarklyServiceMock.Constants.stubFeatureFlags(includeNullValue: false), lastUpdated: Date().addingTimeInterval(1.0))
         static let null = NSNull()
 
         static let all: [Any] = [bool, int, double, string, array, dictionary, date, userFlags, null]

@@ -41,7 +41,7 @@ extension LDUser {
     }
 
     static func stub(key: String? = nil,
-                     includeNullValue: Bool = false,    //TODO: Change this to true
+                     includeNullValue: Bool = true,
                      environmentReporter: EnvironmentReportingMock? = nil) -> LDUser {
         var user = LDUser(key: key ?? UUID().uuidString,
                           name: StubConstants.name,
