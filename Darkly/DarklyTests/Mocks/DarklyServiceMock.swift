@@ -73,8 +73,13 @@ final class DarklyServiceMock: DarklyServiceProvider {
     }
 
     struct Constants {
-        static let streamData = "event: put\ndata:\(stubFeatureFlags(includeNullValue: false, includeVariations: true, includeVersions: true).dictionaryValue(exciseNil: false).jsonString!)"
-            .data(using: .utf8)!
+        static var streamData: Data {
+            let featureFlags = stubFeatureFlags(includeNullValue: false, includeVariations: true, includeVersions: true)
+            let featureFlagDictionaries = featureFlags.dictionaryValue(exciseNil: false)
+            let eventStreamString = "event: put\ndata:\(featureFlagDictionaries.jsonString!)"
+
+            return eventStreamString.data(using: .utf8)!
+        }
         static let error = NSError(domain: NSURLErrorDomain, code: Int(CFNetworkErrors.cfurlErrorResourceUnavailable.rawValue), userInfo: nil)
         static let jsonErrorString = "Bad json data"
         static let errorData = jsonErrorString.data(using: .utf8)!

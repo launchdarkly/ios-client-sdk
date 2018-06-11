@@ -42,14 +42,14 @@ struct FeatureFlag {
         var dictionaryValue = [String: Any]()
         var preparedValue = value
         if exciseNil, let valueDictionary = value as? [String: Any] {
-            preparedValue = valueDictionary.nullValuesRemoved
+            preparedValue = valueDictionary.withNullValuesRemoved
         }
         dictionaryValue[CodingKeys.value.rawValue] = preparedValue ?? NSNull()
         dictionaryValue[CodingKeys.variation.rawValue] = variation ?? NSNull()
         dictionaryValue[CodingKeys.version.rawValue] = version ?? NSNull()
 
         if exciseNil {
-            dictionaryValue = dictionaryValue.nullValuesRemoved
+            dictionaryValue = dictionaryValue.withNullValuesRemoved
         }
 
         return dictionaryValue
@@ -105,7 +105,7 @@ extension Dictionary where Key == String, Value == Any {
         return flagCollection
     }
 
-    var nullValuesRemoved: [String: Any] {
+    var withNullValuesRemoved: [String: Any] {
         return self.filter { (_, value) in !(value is NSNull) }
     }
 
