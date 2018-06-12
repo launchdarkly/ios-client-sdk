@@ -76,7 +76,7 @@ final class EventSpec: QuickSpec {
     func kindSpec() {
         describe("isAlwaysInlineUserKind") {
             it("returns true when event kind should inline user") {
-                for kind in Event.Kind.allKinds {
+                for kind in Event.Kind.all {
                     expect(kind.isAlwaysInlineUserKind) == Event.Kind.alwaysInlineUserKinds.contains(kind)
                 }
             }
@@ -680,5 +680,71 @@ fileprivate extension Array where Element == [String: Any] {
 }
 
 extension Event.Kind {
-    static var allKinds: [Event.Kind] { return [.feature, .custom, .identify] }
+    static var all: [Event.Kind] { return [.feature, .custom, .identify] }
+
+    static var random: Event.Kind {
+        let index = Int(arc4random_uniform(UInt32(Event.Kind.all.count) - 1))
+        return Event.Kind.all[index]
+    }
+}
+
+extension Event {
+    static func stub(_ eventKind: Kind, with user: LDUser) -> Event {
+        switch eventKind {
+        case .feature:
+            let featureFlag = DarklyServiceMock.Constants.stubFeatureFlag(for: DarklyServiceMock.FlagKeys.bool)
+            return Event.featureEvent(key: UUID().uuidString, user: user, value: true, defaultValue: false, featureFlag: featureFlag)
+        case .identify: return Event.identifyEvent(user: user)
+        case .custom: return Event.customEvent(key: UUID().uuidString, user: user, data: ["custom": UUID().uuidString])
+        }
+    }
+
+    static func stubFeatureEvent(_ featureFlag: FeatureFlag, with user: LDUser) -> Event {
+        return Event.featureEvent(key: UUID().uuidString, user: user, value: true, defaultValue: false, featureFlag: featureFlag)
+    }
+
+    static func stubEvents(for user: LDUser) -> [Event] {
+        var eventStubs = [Event]()
+        Event.Kind.all.forEach { (eventKind) in
+            eventStubs.append(Event.stub(eventKind, with: user))
+        }
+        return eventStubs
+    }
+
+    static func eventKind(for count: Int) -> Kind {
+        return Event.Kind.all[count % Event.Kind.all.count]
+    }
+
+    static func stubEventDictionaries(_ eventCount: Int, user: LDUser, config: LDConfig) -> [[String: Any]] {
+        let eventStubs = stubEvents(for: user)
+        return eventStubs.map { (event) in event.dictionaryValue(config: config) }
+    }
+
+    func matches(eventDictionary: [String: Any]?) -> Bool {
+        guard let eventDictionary = eventDictionary,
+            let eventDictionaryKey = eventDictionary.eventKey,
+            let eventDictionaryCreationDateMillis = eventDictionary.eventCreationDateMillis
+            else { return false }
+        return key == eventDictionaryKey && creationDate.millisSince1970 == eventDictionaryCreationDateMillis
+    }
+}
+
+extension Array where Element == Event {
+    func matches(eventDictionaries: [[String: Any]]) -> Bool {
+        guard self.count == eventDictionaries.count else { return false }
+        for index in self.indices {
+            if !self[index].matches(eventDictionary: eventDictionaries[index]) { return false }
+        }
+        return true
+    }
+}
+
+extension Array where Element == [String: Any] {
+    func matches(events: [Event]) -> Bool {
+        guard self.count == events.count else { return false }
+        for index in self.indices {
+            if !events[index].matches(eventDictionary: self[index]) { return false }
+        }
+        return true
+    }
 }
