@@ -45,6 +45,17 @@ extension Dictionary where Key == String {
     var base64UrlEncodedString: String? { return jsonData?.base64UrlEncodedString }
 }
 
+extension Dictionary where Key == String, Value == Any {
+    var withNullValuesRemoved: [String: Any] {
+        var filteredDictionary = self.filter { (_, value) in !(value is NSNull) }
+        filteredDictionary = filteredDictionary.mapValues { (value) in
+            guard let dictionary = value as? [String: Any] else { return value }
+            return dictionary.withNullValuesRemoved
+        }
+        return filteredDictionary
+    }
+}
+
 extension Optional where Wrapped == [String: Any] {
     public static func == (lhs: [String: Any]?, rhs: [String: Any]?) -> Bool {
         guard let lhs = lhs else { return rhs == nil }

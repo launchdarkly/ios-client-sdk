@@ -112,10 +112,6 @@ extension Dictionary where Key == String, Value == Any {
         return flagCollection
     }
 
-    var withNullValuesRemoved: [String: Any] {
-        return self.filter { (_, value) in !(value is NSNull) }
-    }
-
     var hasAtLeastOneFeatureFlagKey: Bool {
         guard !keys.isEmpty else { return false }
         return !Set(keys).isDisjoint(with: Set(FeatureFlag.CodingKeys.allKeyStrings))
