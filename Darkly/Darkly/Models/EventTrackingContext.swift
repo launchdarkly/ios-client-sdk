@@ -28,6 +28,10 @@ struct EventTrackingContext {
         guard let dictionary = object as? [String: Any] else { return nil }
         self.init(dictionary: dictionary)
     }
+
+    var dictionaryValue: [String: Any] {
+        return [CodingKeys.trackEvents.rawValue: trackEvents]
+    }
 }
 
 extension Dictionary where Key == String, Value == Any {

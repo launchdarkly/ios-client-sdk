@@ -91,7 +91,19 @@ final class EventTrackingContextSpec: QuickSpec {
     }
 
     private func dictionaryValueSpec() {
+        describe("dictionaryValue") {
+            var eventTrackingContext: EventTrackingContext!
+            var eventTrackingDictionary: [String: Any]!
+            it("contains matching values") {
+                [true, false].forEach { (trackEvents) in
+                    eventTrackingContext = EventTrackingContext(trackEvents: trackEvents)
 
+                    eventTrackingDictionary = eventTrackingContext.dictionaryValue
+
+                    expect(eventTrackingDictionary.trackEvents) == trackEvents
+                }
+            }
+        }
     }
 }
 
