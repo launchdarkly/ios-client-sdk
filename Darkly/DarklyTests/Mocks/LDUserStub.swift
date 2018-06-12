@@ -64,7 +64,8 @@ extension LDUser {
         flags[StubConstants.userKey] = FeatureFlag(value: key,
                                                    variation: DarklyServiceMock.Constants.variation,
                                                    version: DarklyServiceMock.Constants.version,
-                                                   flagVersion: DarklyServiceMock.Constants.flagVersion)
+                                                   flagVersion: DarklyServiceMock.Constants.flagVersion,
+                                                   eventTrackingContext: EventTrackingContext.stub())
         return flags
     }
 

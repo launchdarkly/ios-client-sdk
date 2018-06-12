@@ -57,7 +57,7 @@ final class CacheableUserFlagsSpec: QuickSpec {
                 context("matching types") {
                     beforeEach {
                         let featureFlagDictionaries = DarklyServiceMock.Constants.stubFeatureFlags(includeNullValue: false)
-                            .dictionaryValue(exciseNil: false)
+                            .dictionaryValue
                         flagDictionary = [CacheableUserFlags.CodingKeys.flags.rawValue: featureFlagDictionaries,
                                           CacheableUserFlags.CodingKeys.lastUpdated.rawValue: Constants.lastUpdatedString]
                         subject = CacheableUserFlags(dictionary: flagDictionary)
@@ -121,7 +121,7 @@ final class CacheableUserFlagsSpec: QuickSpec {
             context("object is a dictionary") {
                 beforeEach {
                     featureFlags = DarklyServiceMock.Constants.stubFeatureFlags(includeNullValue: false)
-                    object = [CacheableUserFlags.CodingKeys.flags.rawValue: featureFlags.dictionaryValue(exciseNil: false),
+                    object = [CacheableUserFlags.CodingKeys.flags.rawValue: featureFlags.dictionaryValue,
                               CacheableUserFlags.CodingKeys.lastUpdated.rawValue: Constants.lastUpdatedString]
                     subject = CacheableUserFlags(object: object)
                 }

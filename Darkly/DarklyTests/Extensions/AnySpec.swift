@@ -94,7 +94,7 @@ final class AnySpec: QuickSpec {
                     }
                     it("returns true") {
                         featureFlags.forEach { (_, featureFlag) in
-                            otherFlag = FeatureFlag(value: featureFlag.value, variation: featureFlag.variation, version: featureFlag.version, flagVersion: featureFlag.flagVersion)
+                            otherFlag = FeatureFlag(copying: featureFlag)
 
                             expect(AnyComparer.isEqual(featureFlag, to: otherFlag)).to(beTrue())
                         }
@@ -106,7 +106,7 @@ final class AnySpec: QuickSpec {
                     }
                     it("returns true") {
                         featureFlags.forEach { (_, featureFlag) in
-                            otherFlag = FeatureFlag(value: featureFlag.value, variation: nil, version: nil, flagVersion: nil)
+                            otherFlag = FeatureFlag(value: featureFlag.value, variation: nil, version: nil, flagVersion: nil, eventTrackingContext: nil)
 
                             expect(AnyComparer.isEqual(featureFlag, to: otherFlag)).to(beTrue())
                         }
@@ -123,7 +123,7 @@ final class AnySpec: QuickSpec {
                     context("with differing variation") {
                         it("returns false") {
                             featureFlags.forEach { (_, featureFlag) in
-                                otherFlag = FeatureFlag(value: featureFlag.value, variation: featureFlag.variation! + 1, version: featureFlag.version, flagVersion: featureFlag.flagVersion)
+                                otherFlag = FeatureFlag(copying: featureFlag, variation: featureFlag.variation! + 1)
 
                                 expect(AnyComparer.isEqual(featureFlag, to: otherFlag)).to(beFalse())
                             }
@@ -132,7 +132,7 @@ final class AnySpec: QuickSpec {
                     context("with differing version") {
                         it("returns false") {
                             featureFlags.forEach { (_, featureFlag) in
-                                otherFlag = FeatureFlag(value: featureFlag.value, variation: featureFlag.variation, version: featureFlag.version! + 1, flagVersion: featureFlag.flagVersion)
+                                otherFlag = FeatureFlag(copying: featureFlag, version: featureFlag.version! + 1)
 
                                 expect(AnyComparer.isEqual(featureFlag, to: otherFlag)).to(beFalse())
                             }
@@ -141,7 +141,20 @@ final class AnySpec: QuickSpec {
                     context("with differing flagVersion") {
                         it("returns true") {
                             featureFlags.forEach { (_, featureFlag) in
-                                otherFlag = FeatureFlag(value: featureFlag.value, variation: featureFlag.variation, version: featureFlag.version, flagVersion: featureFlag.flagVersion! + 1)
+                                otherFlag = FeatureFlag(copying: featureFlag, flagVersion: featureFlag.flagVersion! + 1)
+
+                                expect(AnyComparer.isEqual(featureFlag, to: otherFlag)).to(beTrue())
+                            }
+                        }
+                    }
+                    context("with differing eventTrackingContext") {
+                        var eventTrackingContext: EventTrackingContext!
+                        beforeEach {
+                            eventTrackingContext = EventTrackingContext(trackEvents: false)
+                        }
+                        it("returns true") {
+                            featureFlags.forEach { (_, featureFlag) in
+                                otherFlag = FeatureFlag(copying: featureFlag, eventTrackingContext: eventTrackingContext)
 
                                 expect(AnyComparer.isEqual(featureFlag, to: otherFlag)).to(beTrue())
                             }

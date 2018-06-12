@@ -24,7 +24,7 @@ extension DarklyStreamingProviderMock {
 
     func sendPut() {
         sendEvent(DarklyEventSource.LDEvent.stubPutEvent(data: DarklyServiceMock.Constants.stubFeatureFlags(includeNullValue: false, includeVariations: true, includeVersions: true)
-            .dictionaryValue(exciseNil: false)
+            .dictionaryValue
             .jsonString))
     }
 

@@ -256,7 +256,7 @@ extension LDUserWrapper: NSCoding {
         encoder.encode(wrapped.operatingSystem, forKey: LDUser.CodingKeys.operatingSystem.rawValue)
         encoder.encode(wrapped.lastUpdated, forKey: LDUser.CodingKeys.lastUpdated.rawValue)
         encoder.encode(wrapped.privateAttributes, forKey: LDUser.CodingKeys.privateAttributes.rawValue)
-        encoder.encode([Keys.featureFlags: wrapped.flagStore.featureFlags.dictionaryValue(exciseNil: true)], forKey: LDUser.CodingKeys.config.rawValue)
+        encoder.encode([Keys.featureFlags: wrapped.flagStore.featureFlags.dictionaryValue.withNullValuesRemoved], forKey: LDUser.CodingKeys.config.rawValue)
     }
 
     public convenience init?(coder decoder: NSCoder) {

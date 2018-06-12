@@ -21,18 +21,21 @@ struct FeatureFlag {
     let variation: Int?
     let version: Int?
     let flagVersion: Int?
+    let eventTrackingContext: EventTrackingContext?
 
-    init(value: Any?, variation: Int?, version: Int?, flagVersion: Int?) {
+    init(value: Any?, variation: Int?, version: Int?, flagVersion: Int?, eventTrackingContext: EventTrackingContext?) {
         self.value = value is NSNull ? nil : value
         self.variation = variation
         self.version = version
         self.flagVersion = flagVersion
+        self.eventTrackingContext = eventTrackingContext
     }
 
     init?(dictionary: [String: Any]?) {
         guard let dictionary = dictionary else { return nil }
         guard dictionary.hasAtLeastOneFeatureFlagKey else { return nil }
-        self.init(value: dictionary.value, variation: dictionary.variation, version: dictionary.version, flagVersion: dictionary.flagVersion)
+        let eventTrackingContext = EventTrackingContext(dictionary: dictionary)
+        self.init(value: dictionary.value, variation: dictionary.variation, version: dictionary.version, flagVersion: dictionary.flagVersion, eventTrackingContext: eventTrackingContext)
     }
 
     init?(object: Any?) {
@@ -40,19 +43,16 @@ struct FeatureFlag {
         self.init(dictionary: object)
     }
 
-    func dictionaryValue(exciseNil: Bool) -> [String: Any]? {
+    var dictionaryValue: [String: Any] {
         var dictionaryValue = [String: Any]()
-        var preparedValue = value
-        if exciseNil, let valueDictionary = value as? [String: Any] {
-            preparedValue = valueDictionary.withNullValuesRemoved
-        }
-        dictionaryValue[CodingKeys.value.rawValue] = preparedValue ?? NSNull()
+        dictionaryValue[CodingKeys.value.rawValue] = value ?? NSNull()
         dictionaryValue[CodingKeys.variation.rawValue] = variation ?? NSNull()
         dictionaryValue[CodingKeys.version.rawValue] = version ?? NSNull()
         dictionaryValue[CodingKeys.flagVersion.rawValue] = flagVersion ?? NSNull()
-
-        if exciseNil {
-            dictionaryValue = dictionaryValue.withNullValuesRemoved
+        if let eventTrackingContext = eventTrackingContext {
+            dictionaryValue.merge(eventTrackingContext.dictionaryValue) { (_, eventTrackingContextValue) in
+                return eventTrackingContextValue
+            }
         }
 
         return dictionaryValue
@@ -83,8 +83,8 @@ extension FeatureFlag {
 }
 
 extension Dictionary where Key == LDFlagKey, Value == FeatureFlag {
-    func dictionaryValue(exciseNil: Bool) -> [String: Any] {
-        return self.flatMapValues { (featureFlag) in featureFlag.dictionaryValue(exciseNil: exciseNil) }
+    var dictionaryValue: [String: Any] {
+        return self.flatMapValues { (featureFlag) in featureFlag.dictionaryValue }
     }
 }
 

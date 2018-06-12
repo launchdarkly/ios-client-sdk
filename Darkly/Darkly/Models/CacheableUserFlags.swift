@@ -26,7 +26,7 @@ struct CacheableUserFlags {
     }
 
     var dictionaryValue: [String: Any] {
-        return [CodingKeys.flags.rawValue: flags.dictionaryValue(exciseNil: true), CodingKeys.lastUpdated.rawValue: lastUpdated.stringValue]
+        return [CodingKeys.flags.rawValue: flags.dictionaryValue.withNullValuesRemoved, CodingKeys.lastUpdated.rawValue: lastUpdated.stringValue]
     }
 
     init?(dictionary: [String: Any]) {

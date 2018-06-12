@@ -113,3 +113,9 @@ extension Dictionary where Key == String, Value == Any {
         self[EventTrackingContext.CodingKeys.trackEvents.rawValue] = trackEvents
     }
 }
+
+extension EventTrackingContext {
+    static func stub() -> EventTrackingContext {
+        return EventTrackingContext(trackEvents: true)
+    }
+}

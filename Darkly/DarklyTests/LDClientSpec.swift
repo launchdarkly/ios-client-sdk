@@ -1222,8 +1222,8 @@ final class LDClientSpec: QuickSpec {
         context("flags have different values") {
             beforeEach {
                 let newBoolFeatureFlag = DarklyServiceMock.Constants.stubFeatureFlag(for: DarklyServiceMock.FlagKeys.bool, useAlternateValue: true)
-                newFlags = testContext.user.flagStore.featureFlags.dictionaryValue(exciseNil: false)
-                newFlags[DarklyServiceMock.FlagKeys.bool] = newBoolFeatureFlag.dictionaryValue(exciseNil: false)
+                newFlags = testContext.user.flagStore.featureFlags.dictionaryValue
+                newFlags[DarklyServiceMock.FlagKeys.bool] = newBoolFeatureFlag.dictionaryValue
                 testContext.setFlagStoreCallbackToMimicRealFlagStore(newFlags: newFlags.flagCollection!)
 
                 waitUntil { done in
@@ -1252,8 +1252,8 @@ final class LDClientSpec: QuickSpec {
         }
         context("a flag was added") {
             beforeEach {
-                newFlags = testContext.user.flagStore.featureFlags.dictionaryValue(exciseNil: false)
-                newFlags[Constants.newFlagKey] = DarklyServiceMock.Constants.stubFeatureFlag(for: DarklyServiceMock.FlagKeys.string, useAlternateValue: true).dictionaryValue(exciseNil: false)
+                newFlags = testContext.user.flagStore.featureFlags.dictionaryValue
+                newFlags[Constants.newFlagKey] = DarklyServiceMock.Constants.stubFeatureFlag(for: DarklyServiceMock.FlagKeys.string, useAlternateValue: true).dictionaryValue
                 testContext.setFlagStoreCallbackToMimicRealFlagStore(newFlags: newFlags.flagCollection!)
 
                 waitUntil { done in
@@ -1282,7 +1282,7 @@ final class LDClientSpec: QuickSpec {
         }
         context("a flag was removed") {
             beforeEach {
-                newFlags = testContext.user.flagStore.featureFlags.dictionaryValue(exciseNil: false)
+                newFlags = testContext.user.flagStore.featureFlags.dictionaryValue
                 newFlags.removeValue(forKey: DarklyServiceMock.FlagKeys.dictionary)
                 testContext.setFlagStoreCallbackToMimicRealFlagStore(newFlags: newFlags.flagCollection!)
 
@@ -1312,7 +1312,7 @@ final class LDClientSpec: QuickSpec {
         }
         context("there were no changes to the flags") {
             beforeEach {
-                newFlags = testContext.user.flagStore.featureFlags.dictionaryValue(exciseNil: false)
+                newFlags = testContext.user.flagStore.featureFlags.dictionaryValue
 
                 waitUntil { done in
                     testContext.changeNotifierMock.notifyObserversCallback = done
@@ -1358,8 +1358,8 @@ final class LDClientSpec: QuickSpec {
                                                                                variation: DarklyServiceMock.Constants.variation + 1,
                                                                                version: DarklyServiceMock.Constants.version + 1)
                 let newIntFlag = DarklyServiceMock.Constants.stubFeatureFlag(for: DarklyServiceMock.FlagKeys.int, useAlternateValue: true)
-                newFlags = oldFlags.dictionaryValue(exciseNil: false)
-                newFlags[DarklyServiceMock.FlagKeys.int] = newIntFlag.dictionaryValue(exciseNil: false)
+                newFlags = oldFlags.dictionaryValue
+                newFlags[DarklyServiceMock.FlagKeys.int] = newIntFlag.dictionaryValue
                 testContext.setFlagStoreCallbackToMimicRealFlagStore(newFlags: newFlags.flagCollection!)
 
                 waitUntil { done in
@@ -1394,7 +1394,7 @@ final class LDClientSpec: QuickSpec {
                                                                                value: DarklyServiceMock.FlagValues.int + 1,
                                                                                variation: DarklyServiceMock.Constants.variation,
                                                                                version: DarklyServiceMock.Constants.version)
-                newFlags = oldFlags.dictionaryValue(exciseNil: false)
+                newFlags = oldFlags.dictionaryValue
 
                 waitUntil { done in
                     testContext.changeNotifierMock.notifyObserversCallback = done
@@ -1437,7 +1437,7 @@ final class LDClientSpec: QuickSpec {
             beforeEach {
                 oldFlags = testContext.flagStoreMock.featureFlags
                 flagUpdateDictionary = FlagMaintainingMock.stubDeleteDictionary(key: DarklyServiceMock.FlagKeys.int, version: DarklyServiceMock.Constants.version + 1)
-                newFlags = oldFlags.dictionaryValue(exciseNil: false)
+                newFlags = oldFlags.dictionaryValue
                 newFlags.removeValue(forKey: DarklyServiceMock.FlagKeys.int)
                 testContext.setFlagStoreCallbackToMimicRealFlagStore(newFlags: newFlags.flagCollection!)
 
@@ -1470,7 +1470,7 @@ final class LDClientSpec: QuickSpec {
             beforeEach {
                 oldFlags = testContext.flagStoreMock.featureFlags
                 flagUpdateDictionary = FlagMaintainingMock.stubDeleteDictionary(key: DarklyServiceMock.FlagKeys.int, version: DarklyServiceMock.Constants.version)
-                newFlags = oldFlags.dictionaryValue(exciseNil: false)
+                newFlags = oldFlags.dictionaryValue
 
                 waitUntil { done in
                     testContext.changeNotifierMock.notifyObserversCallback = done
