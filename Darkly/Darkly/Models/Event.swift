@@ -41,7 +41,7 @@ struct Event { //sdk internal, not publically accessible
         self.data = data
     }
 
-    static func featureEvent(key: String, user: LDUser, value: Any?, defaultValue: Any?, featureFlag: FeatureFlag?) -> Event {
+    static func featureEvent(key: String, value: Any?, defaultValue: Any?, featureFlag: FeatureFlag?, user: LDUser) -> Event {
         Log.debug(typeName(and: #function) + "key: " + key + ", value: \(String(describing: value)), " + "fallback: \(String(describing: defaultValue)), "
             + "featureFlag: \(String(describing: featureFlag))")
         return Event(key: key, kind: .feature, user: user, value: value, defaultValue: defaultValue, featureFlag: featureFlag)

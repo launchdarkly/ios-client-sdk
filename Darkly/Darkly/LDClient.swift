@@ -238,7 +238,7 @@ public class LDClient {
         let featureFlag = user.flagStore.featureFlag(for: key)
         let value = user.flagStore.variation(forKey: key, fallback: fallback)   //TODO: When adding debug & summary events, modify this to use the featureFlag instead of using the flagStore's variation method
         Log.debug(typeName(and: #function) + "flagKey: \(key), value: \(value), fallback: \(fallback)")
-        eventReporter.record(Event.featureEvent(key: key, user: user, value: value, defaultValue: fallback, featureFlag: featureFlag))
+        eventReporter.record(Event.featureEvent(key: key, value: value, defaultValue: fallback, featureFlag: featureFlag, user: user))
         return value
     }
 
@@ -271,7 +271,7 @@ public class LDClient {
         let featureFlag = user.flagStore.featureFlag(for: key)
         let (value, source) = user.flagStore.variationAndSource(forKey: key, fallback: fallback)       //TODO: When adding debug & summary events, modify this to use the featureFlag instead of using the flagStore's variation method
         Log.debug(typeName(and: #function) + "flagKey: \(key), value: \(value), fallback: \(fallback), source: \(source)")
-        eventReporter.record(Event.featureEvent(key: key, user: user, value: value, defaultValue: fallback, featureFlag: featureFlag))
+        eventReporter.record(Event.featureEvent(key: key, value: value, defaultValue: fallback, featureFlag: featureFlag, user: user))
         return (value, source)
     }
     

@@ -93,7 +93,7 @@ final class EventSpec: QuickSpec {
         }
         describe("featureEvent") {
             beforeEach {
-                event = Event.featureEvent(key: Constants.eventKey, user: user, value: true, defaultValue: false, featureFlag: featureFlag)
+                event = Event.featureEvent(key: Constants.eventKey, value: true, defaultValue: false, featureFlag: featureFlag, user: user)
             }
             it("creates a flag request event with matching data") {
                 expect(event.key) == Constants.eventKey
@@ -167,7 +167,7 @@ final class EventSpec: QuickSpec {
                 }
                 context("without inlining user") {
                     beforeEach {
-                        event = Event.featureEvent(key: Constants.eventKey, user: user, value: true, defaultValue: false, featureFlag: featureFlag)
+                        event = Event.featureEvent(key: Constants.eventKey, value: true, defaultValue: false, featureFlag: featureFlag, user: user)
                         config.inlineUserInEvents = false   //Default value, here for clarity
                         eventDictionary = event.dictionaryValue(config: config)
                     }
@@ -188,7 +188,7 @@ final class EventSpec: QuickSpec {
                 }
                 context("inlining user") {
                     beforeEach {
-                        event = Event.featureEvent(key: Constants.eventKey, user: user, value: true, defaultValue: false, featureFlag: featureFlag)
+                        event = Event.featureEvent(key: Constants.eventKey, value: true, defaultValue: false, featureFlag: featureFlag, user: user)
                         config.inlineUserInEvents = true
                         eventDictionary = event.dictionaryValue(config: config)
                     }
@@ -225,7 +225,7 @@ final class EventSpec: QuickSpec {
                 context("omitting the flagVersion") {
                     beforeEach {
                         featureFlag = DarklyServiceMock.Constants.stubFeatureFlag(for: DarklyServiceMock.FlagKeys.bool, includeFlagVersion: false)
-                        event = Event.featureEvent(key: Constants.eventKey, user: user, value: true, defaultValue: false, featureFlag: featureFlag)
+                        event = Event.featureEvent(key: Constants.eventKey, value: true, defaultValue: false, featureFlag: featureFlag, user: user)
                         eventDictionary = event.dictionaryValue(config: config)
                     }
                     it("creates a dictionary with the version") {
@@ -244,7 +244,7 @@ final class EventSpec: QuickSpec {
                 context("omitting flagVersion and version") {
                     beforeEach {
                         featureFlag = DarklyServiceMock.Constants.stubFeatureFlag(for: DarklyServiceMock.FlagKeys.bool, includeVersion: false, includeFlagVersion: false)
-                        event = Event.featureEvent(key: Constants.eventKey, user: user, value: true, defaultValue: false, featureFlag: featureFlag)
+                        event = Event.featureEvent(key: Constants.eventKey, value: true, defaultValue: false, featureFlag: featureFlag, user: user)
                         eventDictionary = event.dictionaryValue(config: config)
                     }
                     it("creates a dictionary without the version") {
@@ -693,14 +693,14 @@ extension Event {
         switch eventKind {
         case .feature:
             let featureFlag = DarklyServiceMock.Constants.stubFeatureFlag(for: DarklyServiceMock.FlagKeys.bool)
-            return Event.featureEvent(key: UUID().uuidString, user: user, value: true, defaultValue: false, featureFlag: featureFlag)
+            return Event.featureEvent(key: UUID().uuidString, value: true, defaultValue: false, featureFlag: featureFlag, user: user)
         case .identify: return Event.identifyEvent(user: user)
         case .custom: return Event.customEvent(key: UUID().uuidString, user: user, data: ["custom": UUID().uuidString])
         }
     }
 
     static func stubFeatureEvent(_ featureFlag: FeatureFlag, with user: LDUser) -> Event {
-        return Event.featureEvent(key: UUID().uuidString, user: user, value: true, defaultValue: false, featureFlag: featureFlag)
+        return Event.featureEvent(key: UUID().uuidString, value: true, defaultValue: false, featureFlag: featureFlag, user: user)
     }
 
     static func stubEvents(for user: LDUser) -> [Event] {
