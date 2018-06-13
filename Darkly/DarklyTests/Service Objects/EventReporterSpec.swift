@@ -16,6 +16,7 @@ final class EventReporterSpec: QuickSpec {
         static let eventCapacity = 3
         static let eventFlushIntervalMillis = 10_000
         static let eventFlushInterval500Millis = 500
+        static let defaultValue = false
     }
     
     struct TestContext {
@@ -27,8 +28,11 @@ final class EventReporterSpec: QuickSpec {
         var eventKeys: [String]! {
             return events.flatMap { (event) in event.key }
         }
+        var flagKey: LDFlagKey!
+        var eventTrackingContext: EventTrackingContext!
+        var featureFlag: FeatureFlag!
 
-        init(eventCount: Int = 0, eventFlushMillis: Int? = nil, stubResponseSuccess: Bool = true, stubResponseOnly: Bool = false, stubResponseErrorOnly: Bool = false) {
+        init(eventCount: Int = 0, eventFlushMillis: Int? = nil, stubResponseSuccess: Bool = true, stubResponseOnly: Bool = false, stubResponseErrorOnly: Bool = false, trackEvents: Bool? = true) {
             config = LDConfig.stub
             config.eventCapacity = Constants.eventCapacity
             config.eventFlushIntervalMillis = eventFlushMillis ?? Constants.eventFlushIntervalMillis
@@ -45,6 +49,12 @@ final class EventReporterSpec: QuickSpec {
             }
 
             eventReporter = EventReporter(config: config, service: serviceMock, events: events)
+
+            flagKey = UUID().uuidString
+            if let trackEvents = trackEvents {
+                eventTrackingContext = EventTrackingContext(trackEvents: trackEvents)
+            }
+            featureFlag = DarklyServiceMock.Constants.stubFeatureFlag(for: DarklyServiceMock.FlagKeys.bool, eventTrackingContext: eventTrackingContext)
         }
 
         mutating func recordEvents(_ eventCount: Int, completion: CompletionClosure? = nil) {
@@ -66,6 +76,7 @@ final class EventReporterSpec: QuickSpec {
         changeConfigSpec()
         recordEventSpec()
         reportEventsSpec()
+        recordFlagEvalutaionEventsSpec()
         reportTimerSpec()
     }
 
@@ -78,6 +89,8 @@ final class EventReporterSpec: QuickSpec {
                 testContext.eventReporter = EventReporter(config: testContext.config, service: testContext.serviceMock)
             }
             it("starts offline without reporting events") {
+                expect(testContext.eventReporter.config) == testContext.config
+                expect(testContext.eventReporter.service) === testContext.serviceMock
                 expect(testContext.eventReporter.isOnline) == false
                 expect(testContext.eventReporter.isReportingActive) == false
                 expect(testContext.serviceMock.publishEventDictionariesCallCount) == 0
@@ -190,7 +203,7 @@ final class EventReporterSpec: QuickSpec {
                     expect(testContext.eventReporter.isOnline) == false
                     expect(testContext.eventReporter.isReportingActive) == false
                     expect(testContext.serviceMock.publishEventDictionariesCallCount) == 0
-                    expect(testContext.eventReporter.config.streamingMode) == config.streamingMode
+                    expect(testContext.eventReporter.config) == config
                 }
             }
         }
@@ -242,7 +255,6 @@ final class EventReporterSpec: QuickSpec {
                         //The EventReporter will try to report events if it's started online with events. By starting online without events, then adding them, we "beat the timer" by reporting them right away
                         testContext = TestContext()
                         testContext.eventReporter.isOnline = true
-
                         waitUntil { done in
                             testContext.recordEvents(Constants.eventCapacity, completion: done)
                         }
@@ -261,7 +273,6 @@ final class EventReporterSpec: QuickSpec {
                     beforeEach {
                         testContext = TestContext(stubResponseSuccess: false)
                         testContext.eventReporter.isOnline = true
-
                         waitUntil { done in
                             testContext.recordEvents(Constants.eventCapacity, completion: done)
                         }
@@ -280,7 +291,6 @@ final class EventReporterSpec: QuickSpec {
                     beforeEach {
                         testContext = TestContext(stubResponseSuccess: false, stubResponseOnly: true)
                         testContext.eventReporter.isOnline = true
-
                         waitUntil { done in
                             testContext.recordEvents(Constants.eventCapacity, completion: done)
                         }
@@ -299,7 +309,6 @@ final class EventReporterSpec: QuickSpec {
                     beforeEach {
                         testContext = TestContext(stubResponseSuccess: false, stubResponseErrorOnly: true)
                         testContext.eventReporter.isOnline = true
-
                         waitUntil { done in
                             testContext.recordEvents(Constants.eventCapacity, completion: done)
                         }
@@ -331,6 +340,63 @@ final class EventReporterSpec: QuickSpec {
         }
     }
 
+    private func recordFlagEvalutaionEventsSpec() {
+        var testContext: TestContext!
+        describe("recordFlagEvaluationEvents") {
+            context("when trackEvents is on") {
+                beforeEach {
+                    testContext = TestContext(trackEvents: true)
+
+                    waitUntil { done in
+                        testContext.eventReporter.recordFlagEvaluationEvents(flagKey: testContext.flagKey,
+                                                                             value: testContext.featureFlag.value!,
+                                                                             defaultValue: Constants.defaultValue,
+                                                                             featureFlag: testContext.featureFlag,
+                                                                             user: testContext.user,
+                                                                             completion: done)
+                    }
+                }
+                it("records a feature event") {
+                    expect(testContext.eventReporter.eventStoreKeys.contains(testContext.flagKey)).to(beTrue())
+                }
+            }
+            context("when trackEvents is off") {
+                beforeEach {
+                    testContext = TestContext(trackEvents: false)
+
+                    waitUntil { done in
+                        testContext.eventReporter.recordFlagEvaluationEvents(flagKey: testContext.flagKey,
+                                                                             value: testContext.featureFlag.value!,
+                                                                             defaultValue: Constants.defaultValue,
+                                                                             featureFlag: testContext.featureFlag,
+                                                                             user: testContext.user,
+                                                                             completion: done)
+                    }
+                }
+                it("does not record a feature event") {
+                    expect(testContext.eventReporter.eventStoreKeys.contains(testContext.flagKey)).to(beFalse())
+                }
+            }
+            context("when eventTrackingContext is nil") {
+                beforeEach {
+                    testContext = TestContext(trackEvents: nil)
+
+                    waitUntil { done in
+                        testContext.eventReporter.recordFlagEvaluationEvents(flagKey: testContext.flagKey,
+                                                                             value: testContext.featureFlag.value!,
+                                                                             defaultValue: Constants.defaultValue,
+                                                                             featureFlag: testContext.featureFlag,
+                                                                             user: testContext.user,
+                                                                             completion: done)
+                    }
+                }
+                it("does not record a feature event") {
+                    expect(testContext.eventReporter.eventStoreKeys.contains(testContext.flagKey)).to(beFalse())
+                }
+            }
+        }
+    }
+
     private func reportTimerSpec() {
         describe("report timer fires") {
             var testContext: TestContext!
@@ -338,7 +404,6 @@ final class EventReporterSpec: QuickSpec {
                 beforeEach {
                     testContext = TestContext(eventFlushMillis: Constants.eventFlushInterval500Millis)
                     testContext.eventReporter.isOnline = true
-
                     waitUntil { done in
                         testContext.recordEvents(Constants.eventCapacity, completion: done)
                     }
