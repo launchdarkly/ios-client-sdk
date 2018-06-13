@@ -19,6 +19,7 @@ protocol EventReporting {
     func record(_ event: Event, completion: CompletionClosure?)
     //sourcery: NoMock
     func record(_ event: Event)
+    func recordFlagEvaluationEvents(flagKey: LDFlagKey, value: Any, defaultValue: Any, featureFlag: FeatureFlag?, user: LDUser)
 
     func reportEvents()
 }
@@ -76,6 +77,10 @@ class EventReporter: EventReporting {
         }
     }
     
+    func recordFlagEvaluationEvents(flagKey: LDFlagKey, value: Any, defaultValue: Any, featureFlag: FeatureFlag?, user: LDUser) {
+
+    }
+
     private func startReporting() {
         guard isOnline && !isReportingActive else { return }
         if #available(iOS 10.0, watchOS 3.0, macOS 10.12, *) {
@@ -152,3 +157,12 @@ extension Array where Element == [String: Any] {
         return keys.joined(separator: ", ")
     }
 }
+
+#if DEBUG
+    extension EventReporter {
+        convenience init(config: LDConfig, service: DarklyServiceProvider, events: [Event]) {
+            self.init(config: config, service: service)
+            eventStore.append(contentsOf: events.dictionaryValues(config: config))
+        }
+    }
+#endif

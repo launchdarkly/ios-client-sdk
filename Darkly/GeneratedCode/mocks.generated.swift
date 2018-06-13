@@ -167,6 +167,17 @@ final class EventReportingMock: EventReporting {
         recordCallback?()
     }
 
+    // MARK: recordFlagEvaluationEvents
+    var recordFlagEvaluationEventsCallCount = 0
+    var recordFlagEvaluationEventsCallback: (() -> Void)?
+    //swiftlint:disable:next large_tuple 
+    var recordFlagEvaluationEventsReceivedArguments: (flagKey: LDFlagKey, value: Any, defaultValue: Any, featureFlag: FeatureFlag?, user: LDUser)?
+    func recordFlagEvaluationEvents(flagKey: LDFlagKey, value: Any, defaultValue: Any, featureFlag: FeatureFlag?, user: LDUser) {
+        recordFlagEvaluationEventsCallCount += 1
+        recordFlagEvaluationEventsReceivedArguments = (flagKey: flagKey, value: value, defaultValue: defaultValue, featureFlag: featureFlag, user: user)
+        recordFlagEvaluationEventsCallback?()
+    }
+
     // MARK: reportEvents
     var reportEventsCallCount = 0
     var reportEventsCallback: (() -> Void)?

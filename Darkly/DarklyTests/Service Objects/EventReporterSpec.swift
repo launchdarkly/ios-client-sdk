@@ -18,265 +18,347 @@ final class EventReporterSpec: QuickSpec {
         static let eventFlushInterval500Millis = 500
     }
     
-    var subject: EventReporter!
-    var user: LDUser!
-    var mockService: DarklyServiceMock!
-    var mockEvents: [Event]!
+    struct TestContext {
+        var eventReporter: EventReporter!
+        var config: LDConfig!
+        var user: LDUser!
+        var serviceMock: DarklyServiceMock!
+        var events: [Event]!
+        var eventKeys: [String]! {
+            return events.flatMap { (event) in event.key }
+        }
 
-    private func setupReporter(withEvents eventCount: Int = 0, eventFlushMillis: Int? = nil) {
-        var config = LDConfig.stub
-        config.eventCapacity = Constants.eventCapacity
-        config.eventFlushIntervalMillis = eventFlushMillis ?? Constants.eventFlushIntervalMillis
+        init(eventCount: Int = 0, eventFlushMillis: Int? = nil, stubResponseSuccess: Bool = true, stubResponseOnly: Bool = false, stubResponseErrorOnly: Bool = false) {
+            config = LDConfig.stub
+            config.eventCapacity = Constants.eventCapacity
+            config.eventFlushIntervalMillis = eventFlushMillis ?? Constants.eventFlushIntervalMillis
 
-        user = LDUser.stub()
-        
-        subject = EventReporter(config: config, service: mockService)
-        waitUntil { done in
-            self.recordEvents(eventCount, completion: done)
+            user = LDUser.stub()
+
+            serviceMock = DarklyServiceMock()
+            serviceMock.stubEventResponse(success: stubResponseSuccess, responseOnly: stubResponseOnly, errorOnly: stubResponseErrorOnly)
+
+            events = []
+            while events.count < eventCount {
+                let event = Event.stub(Event.eventKind(for: events.count), with: user)
+                events.append(event)
+            }
+
+            eventReporter = EventReporter(config: config, service: serviceMock, events: events)
+        }
+
+        mutating func recordEvents(_ eventCount: Int, completion: CompletionClosure? = nil) {
+            guard eventCount > 0 else {
+                completion?()
+                return
+            }
+            while events.count < eventCount {
+                let event = Event.stub(Event.eventKind(for: events.count), with: user)
+                events.append(event)
+                eventReporter.record(event, completion: events.count == eventCount ? completion : nil)
+            }
         }
     }
     
     override func spec() {
-        beforeEach {
-            self.mockService = DarklyServiceMock()
-            self.mockService.stubEventResponse(success: true)
-            self.mockEvents = []
-        }
+        initSpec()
+        isOnlineSpec()
+        changeConfigSpec()
+        recordEventSpec()
+        reportEventsSpec()
+        reportTimerSpec()
+    }
+
+    private func initSpec() {
         describe("init") {
-            context("without events") {
-                beforeEach {
-                    self.setupReporter()
-                }
-                it("starts offline without reporting events") {
-                    expect({ self.reporterState(isOnline: false, isReporting: false, reportTries: 0) }).to(match())
-                }
+            var testContext: TestContext!
+            beforeEach {
+                testContext = TestContext()
+
+                testContext.eventReporter = EventReporter(config: testContext.config, service: testContext.serviceMock)
+            }
+            it("starts offline without reporting events") {
+                expect(testContext.eventReporter.isOnline) == false
+                expect(testContext.eventReporter.isReportingActive) == false
+                expect(testContext.serviceMock.publishEventDictionariesCallCount) == 0
             }
         }
+    }
 
+    private func isOnlineSpec() {
         describe("isOnline") {
+            var testContext: TestContext!
+            beforeEach {
+                testContext = TestContext()
+            }
             context("online to offline") {
                 beforeEach {
-                    self.setupReporter()
-                    self.subject.isOnline = true
+                    testContext.eventReporter.isOnline = true
 
-                    self.subject.isOnline = false
+                    testContext.eventReporter.isOnline = false
                 }
                 it("goes offline and stops reporting") {
-                    expect({ self.reporterState(isOnline: false, isReporting: false, reportTries: 0) }).to(match())
+                    expect(testContext.eventReporter.isOnline) == false
+                    expect(testContext.eventReporter.isReportingActive) == false
+                    expect(testContext.serviceMock.publishEventDictionariesCallCount) == 0
                 }
             }
             context("offline to online") {
                 context("with events") {
                     beforeEach {
-                        self.setupReporter(withEvents: Constants.eventCapacity)
+                        testContext = TestContext(eventCount: Constants.eventCapacity)
 
-                        self.subject.isOnline = true
+                        testContext.eventReporter.isOnline = true
                     }
                     it("goes online and starts reporting") {
-                        expect({ self.reporterState(isOnline: true, isReporting: true, reportTries: 1, publishedEvents: self.mockEvents) }).to(match())
-                        expect(self.subject.eventStore.isEmpty).toEventually(beTrue())  //event processing is asynchronous
+                        expect(testContext.eventReporter.isOnline) == true
+                        expect(testContext.eventReporter.isReportingActive) == true
+                        expect(testContext.serviceMock.publishEventDictionariesCallCount) == 1
+                        expect(testContext.serviceMock.publishedEventDictionaryKeys) == testContext.eventKeys
+                        expect(testContext.eventReporter.eventStore.isEmpty).toEventually(beTrue())  //event processing is asynchronous
                     }
                 }
                 context("without events") {
                     beforeEach {
-                        self.setupReporter()
-                        self.subject.isOnline = true
+                        testContext = TestContext()
+
+                        testContext.eventReporter.isOnline = true
                     }
                     it("goes online and starts reporting") {
-                        expect({ self.reporterState(isOnline: true, isReporting: true, reportTries: 0) }).to(match())
+                        expect(testContext.eventReporter.isOnline) == true
+                        expect(testContext.eventReporter.isReportingActive) == true
+                        expect(testContext.serviceMock.publishEventDictionariesCallCount) == 0
                     }
                 }
             }
             context("online to online") {
                 beforeEach {
-                    self.setupReporter()
-                    self.subject.isOnline = true
+                    testContext = TestContext()
+                    testContext.eventReporter.isOnline = true
 
-                    self.subject.isOnline = true
+                    testContext.eventReporter.isOnline = true
                 }
                 it("stays online and continues reporting") {
-                    expect({ self.reporterState(isOnline: true, isReporting: true, reportTries: 0) }).to(match())
+                    expect(testContext.eventReporter.isOnline) == true
+                    expect(testContext.eventReporter.isReportingActive) == true
+                    expect(testContext.serviceMock.publishEventDictionariesCallCount) == 0
                 }
             }
             context("offline to offline") {
                 beforeEach {
-                    self.setupReporter(withEvents: Constants.eventCapacity)
+                    testContext = TestContext(eventCount: Constants.eventCapacity)
 
-                    self.subject.isOnline = false
+                    testContext.eventReporter.isOnline = false
                 }
                 it("stays offline and does not start reporting") {
-                    expect({ self.reporterState(isOnline: false, isReporting: false, reportTries: 0, recordedEvents: self.mockEvents) }).to(match())
+                    expect(testContext.eventReporter.isOnline) == false
+                    expect(testContext.eventReporter.isReportingActive) == false
+                    expect(testContext.serviceMock.publishEventDictionariesCallCount) == 0
+                    expect(testContext.eventReporter.eventStoreKeys) == testContext.eventKeys
                 }
             }
         }
+    }
 
+    private func changeConfigSpec() {
         describe("change config") {
             var config: LDConfig!
+            var testContext: TestContext!
             beforeEach {
-                self.setupReporter()
+                testContext = TestContext()
                 config = LDConfig.stub
                 config.streamingMode = .polling //using this to verify the config was changed...could be any value different from the setup
             }
             context("while offline") {
                 beforeEach {
-                    self.subject.config = config
+                    testContext.eventReporter.config = config
                 }
                 it("changes the config") {
-                    expect({ self.reporterState(isOnline: false, isReporting: false, reportTries: 0) }).to(match())
-                    expect(self.subject.config.streamingMode) == config.streamingMode
+                    expect(testContext.eventReporter.isOnline) == false
+                    expect(testContext.eventReporter.isReportingActive) == false
+                    expect(testContext.serviceMock.publishEventDictionariesCallCount) == 0
+                    expect(testContext.eventReporter.config.streamingMode) == config.streamingMode
                 }
             }
             context("while online") {
                 beforeEach {
-                    self.subject.isOnline = true
+                    testContext.eventReporter.isOnline = true
 
-                    self.subject.config = config
+                    testContext.eventReporter.config = config
                 }
                 it("takes the reporter offline and changes the config") {
-                    expect({ self.reporterState(isOnline: false, isReporting: false, reportTries: 0) }).to(match())
-                    expect(self.subject.config.streamingMode) == config.streamingMode
+                    expect(testContext.eventReporter.isOnline) == false
+                    expect(testContext.eventReporter.isReportingActive) == false
+                    expect(testContext.serviceMock.publishEventDictionariesCallCount) == 0
+                    expect(testContext.eventReporter.config.streamingMode) == config.streamingMode
                 }
             }
         }
+    }
 
+    private func recordEventSpec() {
         describe("recordEvent") {
+            var testContext: TestContext!
             context("event store empty") {
                 beforeEach {
-                    self.setupReporter()   //side-effect is mockEvents is also reset...do this before creating events
+                    testContext = TestContext()
 
                     waitUntil { done in
-                        self.recordEvents(Constants.eventCapacity, completion: done)
+                        testContext.recordEvents(Constants.eventCapacity, completion: done) // Stub events, call testContext.eventReporter.recordEvent, and keeps them in testContext.events
                     }
                 }
                 it("records events up to event capacity") {
-                    expect({ self.reporterState(isOnline: false, isReporting: false, reportTries: 0) }).to(match())
-                    let eventStoreKeys = self.subject.eventStore.flatMap { (eventDictionary) in eventDictionary[Event.CodingKeys.key.rawValue] as? String }
-                    let mockEventKeys = self.mockEvents.map { (event) in event.key }
-                    expect(eventStoreKeys) == mockEventKeys
+                    expect(testContext.eventReporter.isOnline) == false
+                    expect(testContext.eventReporter.isReportingActive) == false
+                    expect(testContext.serviceMock.publishEventDictionariesCallCount) == 0
+                    expect(testContext.eventReporter.eventStoreKeys) == testContext.eventKeys
                 }
             }
             context("event store full") {
                 var extraEvent: Event!
                 beforeEach {
-                    self.setupReporter(withEvents: Constants.eventCapacity)
-                    extraEvent = Event.stub(.feature, with: self.user)
+                    testContext = TestContext(eventCount: Constants.eventCapacity)
+                    extraEvent = Event.stub(.feature, with: testContext.user)
 
-                    self.subject.record(extraEvent)
+                    testContext.eventReporter.record(extraEvent)
                 }
                 it("doesn't record any more events") {
-                    expect({ self.reporterState(isOnline: false, isReporting: false, reportTries: 0, recordedEvents: self.mockEvents) }).to(match())
-                    let eventStoreKeys = self.subject.eventStore.flatMap { (eventDictionary) in eventDictionary[Event.CodingKeys.key.rawValue] as? String }
-                    expect(eventStoreKeys.contains(extraEvent.key)) == false
+                    expect(testContext.eventReporter.isOnline) == false
+                    expect(testContext.eventReporter.isReportingActive) == false
+                    expect(testContext.serviceMock.publishEventDictionariesCallCount) == 0
+                    expect(testContext.eventReporter.eventStoreKeys) == testContext.eventKeys
+                    expect(testContext.eventReporter.eventStoreKeys.contains(extraEvent.key)) == false
                 }
             }
         }
-        
+    }
+
+    private func reportEventsSpec() {
         describe("reportEvents") {
+            var testContext: TestContext!
             context("online") {
                 context("success") {
                     beforeEach {
                         //The EventReporter will try to report events if it's started online with events. By starting online without events, then adding them, we "beat the timer" by reporting them right away
-                        self.setupReporter()
-                        self.subject.isOnline = true
+                        testContext = TestContext()
+                        testContext.eventReporter.isOnline = true
 
                         waitUntil { done in
-                            self.recordEvents(Constants.eventCapacity, completion: done)
+                            testContext.recordEvents(Constants.eventCapacity, completion: done)
                         }
 
-                        self.subject.reportEvents()
+                        testContext.eventReporter.reportEvents()
                     }
                     it("reports events") {
-                        expect({ self.reporterState(isOnline: true, isReporting: true, reportTries: 1, publishedEvents: self.mockEvents) }).to(match())
-                        expect(self.subject.eventStore.isEmpty).toEventually(beTrue())  //event processing is async
+                        expect(testContext.eventReporter.isOnline) == true
+                        expect(testContext.eventReporter.isReportingActive) == true
+                        expect(testContext.serviceMock.publishEventDictionariesCallCount) == 1
+                        expect(testContext.serviceMock.publishedEventDictionaryKeys) == testContext.eventKeys
+                        expect(testContext.eventReporter.eventStore.isEmpty).toEventually(beTrue())  //event processing is async
                     }
                 }
                 context("failure") {
                     beforeEach {
-                        self.mockService.stubEventResponse(success: false)
-                        self.setupReporter()
-                        self.subject.isOnline = true
+                        testContext = TestContext(stubResponseSuccess: false)
+                        testContext.eventReporter.isOnline = true
 
                         waitUntil { done in
-                            self.recordEvents(Constants.eventCapacity, completion: done)
+                            testContext.recordEvents(Constants.eventCapacity, completion: done)
                         }
 
-                        self.subject.reportEvents()
+                        testContext.eventReporter.reportEvents()
                     }
-                    it("reports events") {
-                        expect({ self.reporterState(isOnline: true, isReporting: true, reportTries: 1, recordedEvents: self.mockEvents, publishedEvents: self.mockEvents) }).to(match())
+                    it("retains reported events after the failure") {
+                        expect(testContext.eventReporter.isOnline) == true
+                        expect(testContext.eventReporter.isReportingActive) == true
+                        expect(testContext.serviceMock.publishEventDictionariesCallCount) == 1
+                        expect(testContext.eventReporter.eventStoreKeys) == testContext.eventKeys
+                        expect(testContext.serviceMock.publishedEventDictionaryKeys) == testContext.eventKeys
                     }
                 }
                 context("failure - response only") {
                     beforeEach {
-                        self.mockService.stubEventResponse(success: false, responseOnly: true)
-                        self.setupReporter()
-                        self.subject.isOnline = true
+                        testContext = TestContext(stubResponseSuccess: false, stubResponseOnly: true)
+                        testContext.eventReporter.isOnline = true
 
                         waitUntil { done in
-                            self.recordEvents(Constants.eventCapacity, completion: done)
+                            testContext.recordEvents(Constants.eventCapacity, completion: done)
                         }
 
-                        self.subject.reportEvents()
+                        testContext.eventReporter.reportEvents()
                     }
-                    it("reports events") {
-                        expect({ self.reporterState(isOnline: true, isReporting: true, reportTries: 1, recordedEvents: self.mockEvents, publishedEvents: self.mockEvents) }).to(match())
+                    it("retains reported events after the failure") {
+                        expect(testContext.eventReporter.isOnline) == true
+                        expect(testContext.eventReporter.isReportingActive) == true
+                        expect(testContext.serviceMock.publishEventDictionariesCallCount) == 1
+                        expect(testContext.eventReporter.eventStoreKeys) == testContext.eventKeys
+                        expect(testContext.serviceMock.publishedEventDictionaryKeys) == testContext.eventKeys
                     }
                 }
                 context("failure - error only") {
                     beforeEach {
-                        self.mockService.stubEventResponse(success: false, errorOnly: true)
-                        self.setupReporter()
-                        self.subject.isOnline = true
+                        testContext = TestContext(stubResponseSuccess: false, stubResponseErrorOnly: true)
+                        testContext.eventReporter.isOnline = true
 
                         waitUntil { done in
-                            self.recordEvents(Constants.eventCapacity, completion: done)
+                            testContext.recordEvents(Constants.eventCapacity, completion: done)
                         }
 
-                        self.subject.reportEvents()
+                        testContext.eventReporter.reportEvents()
                     }
-                    it("reports events") {
-                        expect({ self.reporterState(isOnline: true, isReporting: true, reportTries: 1, recordedEvents: self.mockEvents, publishedEvents: self.mockEvents) }).to(match())
+                    it("retains reported events after the failure") {
+                        expect(testContext.eventReporter.isOnline) == true
+                        expect(testContext.eventReporter.isReportingActive) == true
+                        expect(testContext.serviceMock.publishEventDictionariesCallCount) == 1
+                        expect(testContext.eventReporter.eventStoreKeys) == testContext.eventKeys
+                        expect(testContext.serviceMock.publishedEventDictionaryKeys) == testContext.eventKeys
                     }
                 }
             }
             context("offline") {
                 beforeEach {
-                    self.setupReporter(withEvents: Constants.eventCapacity)
+                    testContext = TestContext(eventCount: Constants.eventCapacity)
 
-                    self.subject.reportEvents()
+                    testContext.eventReporter.reportEvents()
                 }
                 it("doesn't report events") {
-                    expect({ self.reporterState(isOnline: false, isReporting: false, reportTries: 0, recordedEvents: self.mockEvents) }).to(match())
+                    expect(testContext.eventReporter.isOnline) == false
+                    expect(testContext.eventReporter.isReportingActive) == false
+                    expect(testContext.serviceMock.publishEventDictionariesCallCount) == 0
+                    expect(testContext.eventReporter.eventStoreKeys) == testContext.eventKeys
                 }
             }
         }
-        
+    }
+
+    private func reportTimerSpec() {
         describe("report timer fires") {
+            var testContext: TestContext!
             context("with events") {
                 beforeEach {
-                    self.setupReporter(eventFlushMillis: Constants.eventFlushInterval500Millis)
-                    self.subject.isOnline = true
+                    testContext = TestContext(eventFlushMillis: Constants.eventFlushInterval500Millis)
+                    testContext.eventReporter.isOnline = true
 
                     waitUntil { done in
-                        self.recordEvents(Constants.eventCapacity, completion: done)
+                        testContext.recordEvents(Constants.eventCapacity, completion: done)
                     }
                 }
                 it("reports events") {
-                    expect(self.mockService.publishEventDictionariesCallCount).toEventually(equal(1))
-                    expect(self.mockService.publishedEventDictionaries?.count).toEventually(equal(self.mockEvents.count))
-                    expect(self.mockService.publishedEventDictionaryKeys).toEventually(equal(self.mockEvents.map { (event) in event.key }))
-                    expect(self.subject.eventStore.isEmpty).toEventually(beTrue())
+                    expect(testContext.serviceMock.publishEventDictionariesCallCount).toEventually(equal(1))
+                    expect(testContext.serviceMock.publishedEventDictionaries?.count).toEventually(equal(testContext.events.count))
+                    expect(testContext.serviceMock.publishedEventDictionaryKeys).toEventually(equal(testContext.eventKeys))
+                    expect( testContext.eventReporter.eventStore.isEmpty).toEventually(beTrue())
                 }
             }
             context("without events") {
                 beforeEach {
-                    self.setupReporter(eventFlushMillis: Constants.eventFlushInterval500Millis)
-                    self.subject.isOnline = true
+                    testContext = TestContext(eventFlushMillis: Constants.eventFlushInterval500Millis)
+                    testContext.eventReporter.isOnline = true
                 }
                 it("doesn't report events") {
                     waitUntil { (done) in
                         DispatchQueue.main.asyncAfter(deadline: DispatchTime.now() + DispatchTimeInterval.milliseconds(Constants.eventFlushInterval500Millis)) {
-                            expect(self.mockService.publishEventDictionariesCallCount) == 0
+                            expect(testContext.serviceMock.publishEventDictionariesCallCount) == 0
                             done()
                         }
                     }
@@ -284,42 +366,10 @@ final class EventReporterSpec: QuickSpec {
             }
         }
     }
-    
-    private func recordEvents(_ eventCount: Int, completion: CompletionClosure? = nil) {
-        guard eventCount > 0 else {
-            completion?()
-            return
-        }
-        while mockEvents.count < eventCount {
-            let event = Event.stub(Event.eventKind(for: mockEvents.count), with: self.user)
-            mockEvents.append(event)
-            subject.record(event, completion: mockEvents.count == eventCount ? completion : nil)
-        }
-    }
-    
-    private func reporterState(isOnline: Bool, isReporting: Bool, reportTries: Int, recordedEvents: [Event]? = nil, publishedEvents: [Event]? = nil) -> ToMatchResult {
-        var messages = [String]()
-        if self.subject.isOnline != isOnline { messages.append("isOnline equals \(self.subject.isOnline)") }
-        if self.subject.isReportingActive != isReporting { messages.append("isReportingActive equals \(self.subject.isReportingActive)") }
-        if self.mockService.publishEventDictionariesCallCount != reportTries { messages.append("reportTries equals \(self.mockService.publishEventDictionariesCallCount)") }
-        if let recordedEvents = recordedEvents {
-            if !self.subject.eventStore.matches(events: recordedEvents) {
-                messages.append("recorded events don't match"
-                    + (self.subject.eventStore.count != recordedEvents.count ? " (count mismatch eventStore=\(self.subject.eventStore.count) recordedEvents=\(recordedEvents.count)"
-                        : "") )
-            }
-        }
-        if let publishedEvents = publishedEvents {
-            if let serviceEventDictionaries = self.mockService.publishedEventDictionaries {
-                if !serviceEventDictionaries.matches(events: publishedEvents) {
-                    messages.append("published events don't match"
-                        + (serviceEventDictionaries.count != publishedEvents.count
-                            ? " (count mismatch servicePublishedEvents=\(serviceEventDictionaries.count) publishedEvents=\(publishedEvents.count)"
-                            : "") ) }
-            } else {
-                messages.append("published events is nil")
-            }
-        }
-        return messages.isEmpty ? .matched : .failed(reason: messages.joined(separator: ", "))
+}
+
+extension EventReporter {
+    var eventStoreKeys: [String] {
+        return eventStore.flatMap { (eventDictionary) in return eventDictionary.eventKey }
     }
 }
