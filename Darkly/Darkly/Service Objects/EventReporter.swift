@@ -19,6 +19,8 @@ protocol EventReporting {
     func record(_ event: Event, completion: CompletionClosure?)
     //sourcery: NoMock
     func record(_ event: Event)
+    //sourcery: NoMock
+    func recordFlagEvaluationEvents(flagKey: LDFlagKey, value: Any, defaultValue: Any, featureFlag: FeatureFlag?, user: LDUser)
     //swiftlint:disable:next function_parameter_count
     func recordFlagEvaluationEvents(flagKey: LDFlagKey, value: Any, defaultValue: Any, featureFlag: FeatureFlag?, user: LDUser, completion: CompletionClosure?)
 
@@ -76,6 +78,10 @@ class EventReporter: EventReporting {
             }
             self.eventStore.append(event.dictionaryValue(config: self.config))
         }
+    }
+    
+    func recordFlagEvaluationEvents(flagKey: LDFlagKey, value: Any, defaultValue: Any, featureFlag: FeatureFlag?, user: LDUser) {
+        recordFlagEvaluationEvents(flagKey: flagKey, value: value, defaultValue: defaultValue, featureFlag: featureFlag, user: user, completion: nil)
     }
     
     func recordFlagEvaluationEvents(flagKey: LDFlagKey, value: Any, defaultValue: Any, featureFlag: FeatureFlag?, user: LDUser, completion: CompletionClosure? = nil) {

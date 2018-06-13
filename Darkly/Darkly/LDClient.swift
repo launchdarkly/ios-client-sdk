@@ -229,16 +229,16 @@ public class LDClient {
     /// or cast the fallback value into the feature flag type prior to calling variation:
     ///
     ///     let dictionaryFlagValue = LDClient.shared.variation(forKey: "dictionary-key", fallback: ["a": 1, "b": 2] as [LDFlagKey: Any])
-    public func variation<T: LDFlagValueConvertible>(forKey key: LDFlagKey, fallback: T) -> T {
+    public func variation<T: LDFlagValueConvertible>(forKey flagKey: LDFlagKey, fallback: T) -> T {
         guard hasStarted
         else {
             Log.debug(typeName(and: #function) + "returning fallback: \(fallback)." + " LDClient not started.")
             return fallback
         }
-        let featureFlag = user.flagStore.featureFlag(for: key)
-        let value = user.flagStore.variation(forKey: key, fallback: fallback)   //TODO: When adding debug & summary events, modify this to use the featureFlag instead of using the flagStore's variation method
-        Log.debug(typeName(and: #function) + "flagKey: \(key), value: \(value), fallback: \(fallback)")
-        eventReporter.record(Event.featureEvent(key: key, value: value, defaultValue: fallback, featureFlag: featureFlag, user: user))
+        let featureFlag = user.flagStore.featureFlag(for: flagKey)
+        let value: T = self.value(from: featureFlag, fallback: fallback)
+        Log.debug(typeName(and: #function) + "flagKey: \(flagKey), value: \(value), fallback: \(fallback), featureFlag: \(String(describing: featureFlag))")
+        eventReporter.recordFlagEvaluationEvents(flagKey: flagKey, value: value, defaultValue: fallback, featureFlag: featureFlag, user: user)
         return value
     }
 
@@ -262,19 +262,24 @@ public class LDClient {
     /// or cast the fallback value into the feature flag type prior to calling variation:
     ///
     ///     let (dictionaryFlagValue, dictionaryFeatureFlagSource) = LDClient.shared.variationAndSource(forKey: "dictionary-key", fallback: ["a": 1, "b": 2] as [LDFlagKey: Any])
-    public func variationAndSource<T: LDFlagValueConvertible>(forKey key: LDFlagKey, fallback: T) -> (T, LDFlagValueSource) {
+    public func variationAndSource<T: LDFlagValueConvertible>(forKey flagKey: LDFlagKey, fallback: T) -> (T, LDFlagValueSource) {
         guard hasStarted
         else {
             Log.debug(typeName(and: #function) + "returning fallback: \(fallback), source: \(LDFlagValueSource.fallback)." + " LDClient not started.")
             return (fallback, .fallback)
         }
-        let featureFlag = user.flagStore.featureFlag(for: key)
-        let (value, source) = user.flagStore.variationAndSource(forKey: key, fallback: fallback)       //TODO: When adding debug & summary events, modify this to use the featureFlag instead of using the flagStore's variation method
-        Log.debug(typeName(and: #function) + "flagKey: \(key), value: \(value), fallback: \(fallback), source: \(source)")
-        eventReporter.record(Event.featureEvent(key: key, value: value, defaultValue: fallback, featureFlag: featureFlag, user: user))
+        let (featureFlag, flagStoreSource) = user.flagStore.featureFlagAndSource(for: flagKey)
+        let source = flagStoreSource ?? .fallback
+        let value: T = self.value(from: featureFlag, fallback: fallback)
+        Log.debug(typeName(and: #function) + "flagKey: \(flagKey), value: \(value), fallback: \(fallback), featureFlag: \(String(describing: featureFlag)), source: \(source)")
+        eventReporter.recordFlagEvaluationEvents(flagKey: flagKey, value: value, defaultValue: fallback, featureFlag: featureFlag, user: user)
         return (value, source)
     }
-    
+
+    private func value<T>(from featureFlag: FeatureFlag?, fallback: T) -> T {
+        return featureFlag?.value as? T ?? fallback
+    }
+
     // MARK: Feature Flag Updates
     
     /* FF Change Notification

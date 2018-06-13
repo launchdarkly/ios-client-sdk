@@ -438,3 +438,9 @@ extension EventReporter {
         return eventStore.flatMap { (eventDictionary) in return eventDictionary.eventKey }
     }
 }
+
+extension EventReportingMock {
+    func recordFlagEvaluationEvents(flagKey: LDFlagKey, value: Any, defaultValue: Any, featureFlag: FeatureFlag?, user: LDUser) {
+        recordFlagEvaluationEvents(flagKey: flagKey, value: value, defaultValue: defaultValue, featureFlag: featureFlag, user: user, completion: nil)
+    }
+}
