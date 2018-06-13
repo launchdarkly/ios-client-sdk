@@ -19,6 +19,8 @@ protocol FlagMaintaining {
 
     //sourcery: NoMock
     func featureFlag(for flagKey: LDFlagKey) -> FeatureFlag?
+    //sourcery: NoMock
+    func featureFlagAndSource(for flagKey: LDFlagKey) -> (FeatureFlag?, LDFlagValueSource?)
 
     //sourcery: NoMock
     func variation<T: LDFlagValueConvertible>(forKey key: LDFlagKey, fallback: T) -> T
@@ -142,7 +144,13 @@ final class FlagStore: FlagMaintaining {
     }
 
     func featureFlag(for flagKey: LDFlagKey) -> FeatureFlag? {
-        return featureFlags[flagKey]
+        let (featureFlag, _) = featureFlagAndSource(for: flagKey)
+        return featureFlag
+    }
+
+    func featureFlagAndSource(for flagKey: LDFlagKey) -> (FeatureFlag?, LDFlagValueSource?) {
+        let featureFlag = featureFlags[flagKey]
+        return (featureFlag, featureFlag == nil ? nil : flagValueSource)
     }
 
     func variation<T: LDFlagValueConvertible>(forKey key: LDFlagKey, fallback: T) -> T {

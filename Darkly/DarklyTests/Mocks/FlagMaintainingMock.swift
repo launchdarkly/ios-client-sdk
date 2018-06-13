@@ -25,6 +25,11 @@ extension FlagMaintainingMock {
         return featureFlags[flagKey]
     }
 
+    func featureFlagAndSource(for flagKey: LDFlagKey) -> (FeatureFlag?, LDFlagValueSource?) {
+        let featureFlag = featureFlags[flagKey]
+        return (featureFlag, featureFlag == nil ? nil : flagValueSource)
+    }
+
     func variation<T: LDFlagValueConvertible>(forKey key: String, fallback: T) -> T {
         return featureFlags[key]?.value as? T ?? fallback
     }
