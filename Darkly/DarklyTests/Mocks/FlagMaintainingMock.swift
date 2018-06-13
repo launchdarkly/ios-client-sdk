@@ -36,7 +36,7 @@ extension FlagMaintainingMock {
 
     func variationAndSource<T: LDFlagValueConvertible>(forKey key: String, fallback: T) -> (T, LDFlagValueSource) {
         guard let value = featureFlags[key]?.value as? T else { return (fallback, .fallback) }
-        return (value, .server)
+        return (value, flagValueSource)
     }
 
     static func stubPatchDictionary(key: LDFlagKey?, value: Any?, variation: Int?, version: Int?, includeExtraKey: Bool = false) -> [String: Any] {

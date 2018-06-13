@@ -999,6 +999,7 @@ final class LDClientSpec: QuickSpec {
 
             context("flag store contains the requested value") {
                 beforeEach {
+                    testContext.flagStoreMock.flagValueSource = .server
                     testContext.subject.start(mobileKey: Constants.mockMobileKey, config: testContext.config, user: testContext.user)
                 }
                 it("returns the flag value and source") {
