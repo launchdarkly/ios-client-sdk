@@ -19,4 +19,15 @@ extension Date {
     func isWithin(_ timeInterval: TimeInterval, of otherDate: Date) -> Bool {
         return fabs(self.timeIntervalSince(otherDate)) <= timeInterval
     }
+
+    func isEarlierThan(_ otherDate: Date) -> Bool {
+        let timeDifference = self.timeIntervalSince(otherDate)
+        return timeDifference < 0.0
+    }
+
+    func isLaterThan(_ otherDate: Date) -> Bool {
+        let timeDifference = self.timeIntervalSince(otherDate)
+        return timeDifference > 0.0
+    }
+
 }
