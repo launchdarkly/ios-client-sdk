@@ -14,10 +14,10 @@ struct Event { //sdk internal, not publically accessible
     }
 
     enum Kind: String {
-        case feature, identify, custom
+        case feature, debug, identify, custom
 
-        static var allKinds: [Kind] { return [.feature, .identify, .custom] }
-        static var alwaysInlineUserKinds: [Kind] { return [identify] }
+        static var allKinds: [Kind] { return [feature, debug, identify, custom] }
+        static var alwaysInlineUserKinds: [Kind] { return [identify, debug] }
         var isAlwaysInlineUserKind: Bool { return Kind.alwaysInlineUserKinds.contains(self) }
     }
 
@@ -45,6 +45,12 @@ struct Event { //sdk internal, not publically accessible
         Log.debug(typeName(and: #function) + "key: " + key + ", value: \(String(describing: value)), " + "fallback: \(String(describing: defaultValue)), "
             + "featureFlag: \(String(describing: featureFlag))")
         return Event(key: key, kind: .feature, user: user, value: value, defaultValue: defaultValue, featureFlag: featureFlag)
+    }
+
+    static func debugEvent(key: String, value: Any?, defaultValue: Any?, featureFlag: FeatureFlag, user: LDUser) -> Event {
+        Log.debug(typeName(and: #function) + "key: " + key + ", value: \(String(describing: value)), " + "fallback: \(String(describing: defaultValue)), "
+            + "featureFlag: \(String(describing: featureFlag))")
+        return Event(key: key, kind: .debug, user: user, value: value, defaultValue: defaultValue, featureFlag: featureFlag)
     }
 
     static func customEvent(key: String, user: LDUser, data: [String: Any]? = nil) -> Event {

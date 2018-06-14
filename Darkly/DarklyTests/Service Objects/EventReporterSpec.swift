@@ -76,7 +76,7 @@ final class EventReporterSpec: QuickSpec {
         changeConfigSpec()
         recordEventSpec()
         reportEventsSpec()
-        recordFlagEvalutaionEventsSpec()
+        recordFlagEvaluationEventsSpec()
         reportTimerSpec()
     }
 
@@ -340,7 +340,7 @@ final class EventReporterSpec: QuickSpec {
         }
     }
 
-    private func recordFlagEvalutaionEventsSpec() {
+    private func recordFlagEvaluationEventsSpec() {
         var testContext: TestContext!
         describe("recordFlagEvaluationEvents") {
             context("when trackEvents is on") {
