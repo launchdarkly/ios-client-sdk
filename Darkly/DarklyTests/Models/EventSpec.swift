@@ -76,7 +76,7 @@ final class EventSpec: QuickSpec {
     func kindSpec() {
         describe("isAlwaysInlineUserKind") {
             it("returns true when event kind should inline user") {
-                for kind in Event.Kind.all {
+                for kind in Event.Kind.allKinds {
                     expect(kind.isAlwaysInlineUserKind) == Event.Kind.alwaysInlineUserKinds.contains(kind)
                 }
             }
@@ -680,11 +680,9 @@ fileprivate extension Array where Element == [String: Any] {
 }
 
 extension Event.Kind {
-    static var all: [Event.Kind] { return [.feature, .custom, .identify] }
-
     static var random: Event.Kind {
-        let index = Int(arc4random_uniform(UInt32(Event.Kind.all.count) - 1))
-        return Event.Kind.all[index]
+        let index = Int(arc4random_uniform(UInt32(Event.Kind.allKinds.count) - 1))
+        return Event.Kind.allKinds[index]
     }
 }
 
@@ -705,14 +703,14 @@ extension Event {
 
     static func stubEvents(for user: LDUser) -> [Event] {
         var eventStubs = [Event]()
-        Event.Kind.all.forEach { (eventKind) in
+        Event.Kind.allKinds.forEach { (eventKind) in
             eventStubs.append(Event.stub(eventKind, with: user))
         }
         return eventStubs
     }
 
     static func eventKind(for count: Int) -> Kind {
-        return Event.Kind.all[count % Event.Kind.all.count]
+        return Event.Kind.allKinds[count % Event.Kind.allKinds.count]
     }
 
     static func stubEventDictionaries(_ eventCount: Int, user: LDUser, config: LDConfig) -> [[String: Any]] {
