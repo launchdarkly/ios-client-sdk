@@ -18,8 +18,11 @@ struct AnyComparer {
         case (let value as Bool, let other as Bool): if value != other { return false }
         case (let value as Int, let other as Int): if value != other { return false }
         case (let value as Int, let other as Double): if Double(value) != other { return false }
-        case (let value as Double, let other as Double): if value != other { return false }
         case (let value as Double, let other as Int): if value != Double(other) { return false }
+        case (let value as Int64, let other as Int64): if value != other { return false }
+        case (let value as Int64, let other as Double): if Double(value) != other { return false }
+        case (let value as Double, let other as Int64): if value != Double(other) { return false }
+        case (let value as Double, let other as Double): if value != other { return false }
         case (let value as String, let other as String): if value != other { return false }
         case (let value as [Any], let other as [Any]): if !value.isEqual(to: other) { return false }
         case (let value as [String: Any], let other as [String: Any]): if !value.isEqual(to: other) { return false }

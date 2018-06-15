@@ -221,10 +221,9 @@ extension DarklyServiceMock {
     var reportFlagRequestStubTest: OHHTTPStubsTestBlock { return flagRequestStubTest && isMethodREPORT() }
 
     ///Use when testing requires the mock service to actually make a flag request
-    func stubFlagRequest(statusCode: Int, useReport: Bool, onActivation activate: ((URLRequest, OHHTTPStubsDescriptor, OHHTTPStubsResponse) -> Void)? = nil) {
-        let responseData = statusCode == HTTPURLResponse.StatusCodes.ok ?
-            Constants.stubFeatureFlags(includeNullValue: false).dictionaryValue.jsonData!
-            : Data()
+    func stubFlagRequest(statusCode: Int, featureFlags: [LDFlagKey: FeatureFlag]? = nil, useReport: Bool, onActivation activate: ((URLRequest, OHHTTPStubsDescriptor, OHHTTPStubsResponse) -> Void)? = nil) {
+        let stubbedFeatureFlags = featureFlags ?? Constants.stubFeatureFlags()
+        let responseData = statusCode == HTTPURLResponse.StatusCodes.ok ? stubbedFeatureFlags.dictionaryValue.jsonData! : Data()
         let stubResponse: OHHTTPStubsResponseBlock = { (_) in OHHTTPStubsResponse(data: responseData, statusCode: Int32(statusCode), headers: nil)}
         stubRequest(passingTest: useReport ? reportFlagRequestStubTest : getFlagRequestStubTest,
                     stub: stubResponse,

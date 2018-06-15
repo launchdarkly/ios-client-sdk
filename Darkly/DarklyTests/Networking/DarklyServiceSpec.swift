@@ -25,11 +25,14 @@ final class DarklyServiceSpec: QuickSpec {
 
     struct TestContext {
         let user = LDUser.stub()
+        var featureFlags: [LDFlagKey: FeatureFlag]! {
+            return user.flagStore.featureFlags
+        }
         var config: LDConfig!
         let mockEventDictionaries: [[String: Any]]?
         var serviceMock: DarklyServiceMock!
-        var serviceFactoryMock: ClientServiceMockFactory? { return subject.serviceFactory as? ClientServiceMockFactory }
-        var subject: DarklyService!
+        var serviceFactoryMock: ClientServiceMockFactory? { return service.serviceFactory as? ClientServiceMockFactory }
+        var service: DarklyService!
 
         init(mobileKey: String, useReport: Bool, includeMockEventDictionaries: Bool = false, operatingSystemName: String? = nil) {
             let serviceFactoryMock = ClientServiceMockFactory()
@@ -40,7 +43,7 @@ final class DarklyServiceSpec: QuickSpec {
             config.useReport = useReport
             mockEventDictionaries = includeMockEventDictionaries ? Event.stubEventDictionaries(Constants.eventCount, user: user, config: config) : nil
             serviceMock = DarklyServiceMock(config: config)
-            subject = DarklyService(mobileKey: mobileKey, config: config, user: user, serviceFactory: serviceFactoryMock)
+            service = DarklyService(mobileKey: mobileKey, config: config, user: user, serviceFactory: serviceFactoryMock)
         }
     }
     
@@ -63,7 +66,7 @@ final class DarklyServiceSpec: QuickSpec {
                 testContext = TestContext(mobileKey: Constants.mockMobileKey, useReport: false, operatingSystemName: EnvironmentReportingMock.Constants.systemName)
             }
             it("creates a header with the specified user agent") {
-                expect(testContext.subject.httpHeaders.userAgent.hasPrefix(EnvironmentReportingMock.Constants.systemName)).to(beTrue())
+                expect(testContext.service.httpHeaders.userAgent.hasPrefix(EnvironmentReportingMock.Constants.systemName)).to(beTrue())
             }
         }
     }
@@ -88,13 +91,13 @@ final class DarklyServiceSpec: QuickSpec {
                 context("success") {
                     beforeEach {
                         waitUntil { done in
-                            testContext.serviceMock.stubFlagRequest(statusCode: HTTPURLResponse.StatusCodes.ok, useReport: true) { (_, _, _) in
+                            testContext.serviceMock.stubFlagRequest(statusCode: HTTPURLResponse.StatusCodes.ok, featureFlags: testContext.featureFlags, useReport: true) { (_, _, _) in
                                 reportRequestCount += 1
                             }
-                            testContext.serviceMock.stubFlagRequest(statusCode: HTTPURLResponse.StatusCodes.ok, useReport: false) { (_, _, _) in
+                            testContext.serviceMock.stubFlagRequest(statusCode: HTTPURLResponse.StatusCodes.ok, featureFlags: testContext.featureFlags, useReport: false) { (_, _, _) in
                                 getRequestCount += 1
                             }
-                            testContext.subject.getFeatureFlags(useReport: false, completion: { (data, response, error) in
+                            testContext.service.getFeatureFlags(useReport: false, completion: { (data, response, error) in
                                 responses = (data, response, error)
                                 done()
                             })
@@ -107,7 +110,7 @@ final class DarklyServiceSpec: QuickSpec {
                     it("calls completion with data, response, and no error") {
                         expect(responses).toNot(beNil())
                         expect(responses?.data).toNot(beNil())
-                        expect(responses?.data == DarklyServiceMock.Constants.stubFeatureFlags(includeNullValue: false).dictionaryValue.jsonData).to(beTrue())
+                        expect(responses?.data == testContext.featureFlags.dictionaryValue.jsonData).to(beTrue())
                         expect(responses?.urlResponse?.httpStatusCode) == HTTPURLResponse.StatusCodes.ok
                         expect(responses?.error).to(beNil())
                     }
@@ -121,7 +124,7 @@ final class DarklyServiceSpec: QuickSpec {
                             testContext.serviceMock.stubFlagRequest(statusCode: HTTPURLResponse.StatusCodes.internalServerError, useReport: false) { (_, _, _) in
                                 getRequestCount += 1
                             }
-                            testContext.subject.getFeatureFlags(useReport: false, completion: { (data, response, error) in
+                            testContext.service.getFeatureFlags(useReport: false, completion: { (data, response, error) in
                                 responses = (data, response, error)
                                 done()
                             })
@@ -148,7 +151,7 @@ final class DarklyServiceSpec: QuickSpec {
                         testContext.serviceMock.stubFlagRequest(statusCode: HTTPURLResponse.StatusCodes.ok, useReport: false) { (_, _, _) in
                             getRequestCount += 1
                         }
-                        testContext.subject.getFeatureFlags(useReport: false, completion: { (data, response, error) in
+                        testContext.service.getFeatureFlags(useReport: false, completion: { (data, response, error) in
                             responses = (data, response, error)
                         })
                     }
@@ -166,13 +169,13 @@ final class DarklyServiceSpec: QuickSpec {
                 context("success") {
                     beforeEach {
                         waitUntil { done in
-                            testContext.serviceMock.stubFlagRequest(statusCode: HTTPURLResponse.StatusCodes.ok, useReport: false) { (_, _, _) in
+                            testContext.serviceMock.stubFlagRequest(statusCode: HTTPURLResponse.StatusCodes.ok, featureFlags: testContext.featureFlags, useReport: false) { (_, _, _) in
                                 getRequestCount += 1
                             }
-                            testContext.serviceMock.stubFlagRequest(statusCode: HTTPURLResponse.StatusCodes.ok, useReport: true) { (_, _, _) in
+                            testContext.serviceMock.stubFlagRequest(statusCode: HTTPURLResponse.StatusCodes.ok, featureFlags: testContext.featureFlags, useReport: true) { (_, _, _) in
                                 reportRequestCount += 1
                             }
-                            testContext.subject.getFeatureFlags(useReport: true, completion: { (data, response, error) in
+                            testContext.service.getFeatureFlags(useReport: true, completion: { (data, response, error) in
                                 responses = (data, response, error)
                                 done()
                             })
@@ -185,7 +188,7 @@ final class DarklyServiceSpec: QuickSpec {
                     it("calls completion with data, response, and no error") {
                         expect(responses).toNot(beNil())
                         expect(responses?.data).toNot(beNil())
-                        expect(responses?.data == DarklyServiceMock.Constants.stubFeatureFlags(includeNullValue: false).dictionaryValue.jsonData).to(beTrue())
+                        expect(responses?.data == testContext.featureFlags.dictionaryValue.jsonData).to(beTrue())
                         expect(responses?.urlResponse?.httpStatusCode) == HTTPURLResponse.StatusCodes.ok
                         expect(responses?.error).to(beNil())
                     }
@@ -199,7 +202,7 @@ final class DarklyServiceSpec: QuickSpec {
                             testContext.serviceMock.stubFlagRequest(statusCode: HTTPURLResponse.StatusCodes.internalServerError, useReport: false) { (_, _, _) in
                                 getRequestCount += 1
                             }
-                            testContext.subject.getFeatureFlags(useReport: true, completion: { (data, response, error) in
+                            testContext.service.getFeatureFlags(useReport: true, completion: { (data, response, error) in
                                 responses = (data, response, error)
                                 done()
                             })
@@ -226,7 +229,7 @@ final class DarklyServiceSpec: QuickSpec {
                         testContext.serviceMock.stubFlagRequest(statusCode: HTTPURLResponse.StatusCodes.ok, useReport: true) { (_, _, _) in
                             reportRequestCount += 1
                         }
-                        testContext.subject.getFeatureFlags(useReport: true, completion: { (data, response, error) in
+                        testContext.service.getFeatureFlags(useReport: true, completion: { (data, response, error) in
                             responses = (data, response, error)
                         })
                     }
@@ -248,7 +251,7 @@ final class DarklyServiceSpec: QuickSpec {
             context("when using GET method to connect") {
                 beforeEach {
                     testContext = TestContext(mobileKey: Constants.mockMobileKey, useReport: false)
-                    eventSource = testContext.subject.createEventSource(useReport: false) as? DarklyStreamingProviderMock
+                    eventSource = testContext.service.createEventSource(useReport: false) as? DarklyStreamingProviderMock
                 }
                 it("creates an event source that makes valid GET request") {
                     expect(eventSource).toNot(beNil())
@@ -267,7 +270,7 @@ final class DarklyServiceSpec: QuickSpec {
             context("when using REPORT method to connect") {
                 beforeEach {
                     testContext = TestContext(mobileKey: Constants.mockMobileKey, useReport: true)
-                    eventSource = testContext.subject.createEventSource(useReport: true) as? DarklyStreamingProviderMock
+                    eventSource = testContext.service.createEventSource(useReport: true) as? DarklyStreamingProviderMock
                 }
                 it("creates an event source that makes valid REPORT request") {
                     expect(eventSource).toNot(beNil())
@@ -302,7 +305,7 @@ final class DarklyServiceSpec: QuickSpec {
                         testContext.serviceMock.stubEventRequest(success: true) { (request, _, _) in
                             eventRequest = request
                         }
-                        testContext.subject.publishEventDictionaries(testContext.mockEventDictionaries!) { (data, response, error) in
+                        testContext.service.publishEventDictionaries(testContext.mockEventDictionaries!) { (data, response, error) in
                             responses = (data, response, error)
                             done()
                         }
@@ -324,7 +327,7 @@ final class DarklyServiceSpec: QuickSpec {
                         testContext.serviceMock.stubEventRequest(success: false) { (request, _, _) in
                             eventRequest = request
                         }
-                        testContext.subject.publishEventDictionaries(testContext.mockEventDictionaries!) { (data, response, error) in
+                        testContext.service.publishEventDictionaries(testContext.mockEventDictionaries!) { (data, response, error) in
                             responses = (data, response, error)
                             done()
                         }
@@ -347,7 +350,7 @@ final class DarklyServiceSpec: QuickSpec {
                     testContext.serviceMock.stubEventRequest(success: true) { (request, _, _) in
                         eventRequest = request
                     }
-                    testContext.subject.publishEventDictionaries(testContext.mockEventDictionaries!) { (data, response, error) in
+                    testContext.service.publishEventDictionaries(testContext.mockEventDictionaries!) { (data, response, error) in
                         responses = (data, response, error)
                         eventsPublished = true
                     }
@@ -367,7 +370,7 @@ final class DarklyServiceSpec: QuickSpec {
                     testContext.serviceMock.stubEventRequest(success: true) { (request, _, _) in
                         eventRequest = request
                     }
-                    testContext.subject.publishEventDictionaries(emptyEventDictionaryList) { (data, response, error) in
+                    testContext.service.publishEventDictionaries(emptyEventDictionaryList) { (data, response, error) in
                         responses = (data, response, error)
                         eventsPublished = true
                     }
