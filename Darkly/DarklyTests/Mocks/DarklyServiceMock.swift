@@ -231,8 +231,8 @@ extension DarklyServiceMock {
     }
 
     ///Use when testing requires the mock service to simulate a service response to the flag request callback
-    func stubFlagResponse(statusCode: Int, badData: Bool = false, responseOnly: Bool = false, errorOnly: Bool = false) {
-        let response = HTTPURLResponse(url: config.baseUrl, statusCode: statusCode, httpVersion: Constants.httpVersion, headerFields: nil)
+    func stubFlagResponse(statusCode: Int, badData: Bool = false, responseOnly: Bool = false, errorOnly: Bool = false, responseDate: Date? = nil) {
+        let response = HTTPURLResponse(url: config.baseUrl, statusCode: statusCode, httpVersion: Constants.httpVersion, headerFields: HTTPURLResponse.dateHeader(from: responseDate))
         if statusCode == HTTPURLResponse.StatusCodes.ok {
             let flagData = try? JSONSerialization.data(withJSONObject: Constants.stubFeatureFlags(includeNullValue: false).dictionaryValue,
                                                        options: [])
@@ -282,9 +282,12 @@ extension DarklyServiceMock {
     }
 
     ///Use when testing requires the mock service to provide a service response to the event request callback
-    func stubEventResponse(success: Bool, responseOnly: Bool = false, errorOnly: Bool = false) {
+    func stubEventResponse(success: Bool, responseOnly: Bool = false, errorOnly: Bool = false, responseDate: Date? = nil) {
         if success {
-            let response = HTTPURLResponse(url: config.eventsUrl, statusCode: HTTPURLResponse.StatusCodes.accepted, httpVersion: Constants.httpVersion, headerFields: nil)
+            let response = HTTPURLResponse(url: config.eventsUrl,
+                                           statusCode: HTTPURLResponse.StatusCodes.accepted,
+                                           httpVersion: Constants.httpVersion,
+                                           headerFields: HTTPURLResponse.dateHeader(from: responseDate))
             stubbedEventResponse = (nil, response, nil)
             return
         }
@@ -338,4 +341,11 @@ extension OHHTTPStubs {
  */
 public func isMethodREPORT() -> OHHTTPStubsTestBlock {
     return { request in request.httpMethod == URLRequest.HTTPMethods.report }
+}
+
+extension HTTPURLResponse {
+    static func dateHeader(from date: Date?) -> [String: String]? {
+        guard let date = date else { return nil }
+        return [HTTPURLResponse.HeaderKeys.date: DateFormatter.httpUrlHeaderFormatter.string(from: date)]
+    }
 }

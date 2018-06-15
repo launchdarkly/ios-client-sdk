@@ -9,6 +9,11 @@
 import Foundation
 
 extension HTTPURLResponse {
+
+    struct HeaderKeys {
+        static let date = "Date"
+    }
+
     struct StatusCodes {
         //swiftlint:disable:next identifier_name
         static let ok = 200
@@ -18,5 +23,10 @@ extension HTTPURLResponse {
         static let methodNotAllowed = 405
         static let internalServerError = 500
         static let notImplemented = 501
+    }
+
+    var headerDate: Date? {
+        guard let dateHeader = self.allHeaderFields[HeaderKeys.date] as? String else { return nil }
+        return DateFormatter.httpUrlHeaderFormatter.date(from: dateHeader)
     }
 }

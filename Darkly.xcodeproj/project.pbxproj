@@ -97,6 +97,9 @@
 		835F43D220D0309A0070DE51 /* EventTrackingContext.swift in Sources */ = {isa = PBXBuildFile; fileRef = 835F43D020D0309A0070DE51 /* EventTrackingContext.swift */; };
 		835F43D320D0309A0070DE51 /* EventTrackingContext.swift in Sources */ = {isa = PBXBuildFile; fileRef = 835F43D020D0309A0070DE51 /* EventTrackingContext.swift */; };
 		835F43D520D031740070DE51 /* EventTrackingContextSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = 835F43D420D031740070DE51 /* EventTrackingContextSpec.swift */; };
+		8372668C20D4439600BD1088 /* DateFormatter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8372668B20D4439600BD1088 /* DateFormatter.swift */; };
+		8372668D20D4439600BD1088 /* DateFormatter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8372668B20D4439600BD1088 /* DateFormatter.swift */; };
+		8372668E20D4439600BD1088 /* DateFormatter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8372668B20D4439600BD1088 /* DateFormatter.swift */; };
 		837EF3742059C237009D628A /* Log.swift in Sources */ = {isa = PBXBuildFile; fileRef = 837EF3732059C237009D628A /* Log.swift */; };
 		838838411F5EFADF0023D11B /* LDFlagValue.swift in Sources */ = {isa = PBXBuildFile; fileRef = 838838401F5EFADF0023D11B /* LDFlagValue.swift */; };
 		838838431F5EFB9C0023D11B /* LDFlagBaseTypeConvertible.swift in Sources */ = {isa = PBXBuildFile; fileRef = 838838421F5EFB9C0023D11B /* LDFlagBaseTypeConvertible.swift */; };
@@ -267,6 +270,7 @@
 		835E1D461F68B3EC00184DB4 /* ObjcLDFlagValue.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ObjcLDFlagValue.swift; sourceTree = "<group>"; };
 		835F43D020D0309A0070DE51 /* EventTrackingContext.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EventTrackingContext.swift; sourceTree = "<group>"; };
 		835F43D420D031740070DE51 /* EventTrackingContextSpec.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EventTrackingContextSpec.swift; sourceTree = "<group>"; };
+		8372668B20D4439600BD1088 /* DateFormatter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DateFormatter.swift; sourceTree = "<group>"; };
 		837EF3732059C237009D628A /* Log.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Log.swift; sourceTree = "<group>"; };
 		838838401F5EFADF0023D11B /* LDFlagValue.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = LDFlagValue.swift; sourceTree = "<group>"; };
 		838838421F5EFB9C0023D11B /* LDFlagBaseTypeConvertible.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = LDFlagBaseTypeConvertible.swift; sourceTree = "<group>"; };
@@ -611,6 +615,7 @@
 				83DDBEFD1FA24F9600E428B6 /* Date.swift */,
 				83F0A5611FB4D66600550A95 /* AnyComparer.swift */,
 				831D2AAE2061AAA000B4AC3C /* Thread.swift */,
+				8372668B20D4439600BD1088 /* DateFormatter.swift */,
 			);
 			path = Extensions;
 			sourceTree = "<group>";
@@ -1123,6 +1128,7 @@
 				831EF35D20655E730001C643 /* HTTPURLRequest.swift in Sources */,
 				831EF35E20655E730001C643 /* Dictionary.swift in Sources */,
 				835E4C54206BDF8D004C6E6C /* EnvironmentReporter.swift in Sources */,
+				8372668E20D4439600BD1088 /* DateFormatter.swift in Sources */,
 				835F43D320D0309A0070DE51 /* EventTrackingContext.swift in Sources */,
 				831EF35F20655E730001C643 /* Optional.swift in Sources */,
 				831EF36020655E730001C643 /* Data.swift in Sources */,
@@ -1154,6 +1160,7 @@
 				835E1D471F68B3EC00184DB4 /* ObjcLDFlagValue.swift in Sources */,
 				830BF933202D188E006DF9B1 /* HTTPURLRequest.swift in Sources */,
 				8354EFE51F263DAC00C05156 /* FeatureFlag.swift in Sources */,
+				8372668C20D4439600BD1088 /* DateFormatter.swift in Sources */,
 				83A2D6241F51CD7A00EA3BD4 /* LDUser.swift in Sources */,
 				8354EFE21F26380700C05156 /* Event.swift in Sources */,
 				831D8B721F71D3E700ED65E8 /* DarklyService.swift in Sources */,
@@ -1247,6 +1254,7 @@
 				83D9EC7A2062DEAB004D7FA6 /* LDFlagValueConvertible.swift in Sources */,
 				83D9EC7B2062DEAB004D7FA6 /* LDFlagBaseTypeConvertible.swift in Sources */,
 				83D9EC7C2062DEAB004D7FA6 /* FeatureFlag.swift in Sources */,
+				8372668D20D4439600BD1088 /* DateFormatter.swift in Sources */,
 				83D9EC7D2062DEAB004D7FA6 /* LDChangedFlag.swift in Sources */,
 				83D9EC7E2062DEAB004D7FA6 /* FlagChangeObserver.swift in Sources */,
 				83D9EC7F2062DEAB004D7FA6 /* FlagsUnchangedObserver.swift in Sources */,
