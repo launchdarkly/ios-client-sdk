@@ -62,6 +62,8 @@ class EventReporter: EventReporting {
     private weak var eventReportTimer: Timer?
     var isReportingActive: Bool { return eventReportTimer != nil }
 
+    private var lastFlagEvaluationUser: LDUser? = nil       //TODO: Remove when implementing summary events
+
     init(config: LDConfig, service: DarklyServiceProvider) {
         self.config = config
         self.service = service
@@ -111,6 +113,8 @@ class EventReporter: EventReporting {
         dispatchGroup.notify(queue: .main) {
             completion?()
         }
+
+        lastFlagEvaluationUser = user       //TODO: Remove when implementing summary events
     }
 
     private func startReporting() {
@@ -139,8 +143,14 @@ class EventReporter: EventReporting {
             return
         }
         Log.debug(typeName(and: #function, appending: " - ") + "starting")
-        let reportedEventDictionaries = eventStore //this is async, so keep what we're reporting at this time for later use
-        service.publishEventDictionaries(eventStore) { serviceResponse in
+
+        //TODO: When implementing summary events, remove this code
+        if let summaryEventStubDictionary = Event.stubSummaryEventDictionary(featureFlags: self.lastFlagEvaluationUser?.flagStore.featureFlags) {
+            self.eventStore.append(summaryEventStubDictionary)
+        }
+        
+        let reportedEventDictionaries = self.eventStore //this is async, so keep what we're reporting at this time for later use
+        self.service.publishEventDictionaries(self.eventStore) { serviceResponse in
             self.processEventResponse(reportedEventDictionaries: reportedEventDictionaries, serviceResponse: serviceResponse)
         }
     }
