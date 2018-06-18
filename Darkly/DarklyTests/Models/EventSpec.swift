@@ -801,8 +801,8 @@ final class EventSpec: QuickSpec {
 
 extension Dictionary where Key == String, Value == Any {
     var eventKind: Event.Kind? {
-        guard let stringKind = self[Event.CodingKeys.kind.rawValue] as? String else { return nil }
-        return Event.Kind(rawValue: stringKind)
+        guard let eventKindString = eventKindString else { return nil }
+        return Event.Kind(rawValue: eventKindString)
     }
     var eventCreationDate: Date? { return Date(millisSince1970: self[Event.CodingKeys.creationDate.rawValue] as? Int64) }
     var eventUserKey: String? { return self[Event.CodingKeys.userKey.rawValue] as? String }

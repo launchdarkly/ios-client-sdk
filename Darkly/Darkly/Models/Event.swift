@@ -131,6 +131,10 @@ extension Array where Element == [String: Any] {
 extension Dictionary where Key == String, Value == Any {
     var eventKey: String? { return self[Event.CodingKeys.key.rawValue] as? String }
     var eventCreationDateMillis: Int64? { return self[Event.CodingKeys.creationDate.rawValue] as? Int64 }
+    //TODO: When implementing summary events, return this to EventSpec's Dictionary extension
+    var eventKindString: String? {
+        return self[Event.CodingKeys.kind.rawValue] as? String
+    }
 
     func matches(eventDictionary other: [String: Any]) -> Bool {
         guard let key = eventKey, let creationDateMillis = eventCreationDateMillis,
@@ -141,7 +145,7 @@ extension Dictionary where Key == String, Value == Any {
 }
 
 extension Event: Equatable {
-    static func == (lhs: Event, rhs: Event) -> Bool { return lhs.key == rhs.key && lhs.creationDate == rhs.creationDate }
+    static func == (lhs: Event, rhs: Event) -> Bool { return lhs.key == rhs.key && lhs.kind == rhs.kind && lhs.creationDate == rhs.creationDate }
 }
 
 extension Event: TypeIdentifying { }

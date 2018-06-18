@@ -148,8 +148,8 @@ class EventReporter: EventReporting {
         if let summaryEventStubDictionary = Event.stubSummaryEventDictionary(featureFlags: self.lastFlagEvaluationUser?.flagStore.featureFlags) {
             self.eventStore.append(summaryEventStubDictionary)
         }
-        
-        let reportedEventDictionaries = self.eventStore //this is async, so keep what we're reporting at this time for later use
+
+        let reportedEventDictionaries = self.eventStore //event reporting is async, so keep what we're reporting at this time for later use
         self.service.publishEventDictionaries(self.eventStore) { serviceResponse in
             self.processEventResponse(reportedEventDictionaries: reportedEventDictionaries, serviceResponse: serviceResponse)
         }
@@ -182,7 +182,8 @@ class EventReporter: EventReporting {
     
     private func updateEventStore(reportedEventDictionaries: [[String: Any]]) {
         eventQueue.async {
-            let remainingEventDictionaries = self.eventStore.filter { (eventDictionary) in !reportedEventDictionaries.contains(eventDictionary) }
+            var remainingEventDictionaries = self.eventStore.filter { (eventDictionary) in !reportedEventDictionaries.contains(eventDictionary) }
+            remainingEventDictionaries = remainingEventDictionaries.filter { (eventDictionary) -> Bool in eventDictionary.eventKindString != "summary" }    //TODO: When implementing summary events, remove this
             self.eventStore = remainingEventDictionaries
             Log.debug(self.typeName + ".reportEvents() completed for keys: " + reportedEventDictionaries.eventKeys)
         }
