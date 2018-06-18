@@ -799,7 +799,7 @@ final class EventSpec: QuickSpec {
     }
 }
 
-fileprivate extension Dictionary where Key == String, Value == Any {
+extension Dictionary where Key == String, Value == Any {
     var eventKind: Event.Kind? {
         guard let stringKind = self[Event.CodingKeys.kind.rawValue] as? String else { return nil }
         return Event.Kind(rawValue: stringKind)
@@ -814,11 +814,14 @@ fileprivate extension Dictionary where Key == String, Value == Any {
     var eventData: [String: Any]? { return self[Event.CodingKeys.data.rawValue] as? [String: Any] }
 }
 
-fileprivate extension Array where Element == [String: Any] {
+extension Array where Element == [String: Any] {
     func eventDictionary(for event: Event) -> [String: Any]? {
         let selectedDictionaries = self.filter { (eventDictionary) -> Bool in event.key == eventDictionary.eventKey }
         guard selectedDictionaries.count == 1 else { return nil }
         return selectedDictionaries.first
+    }
+    var eventKinds: [Event.Kind] {
+        return self.flatMap { (eventDictionary) in return eventDictionary.eventKind }
     }
 }
 

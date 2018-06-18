@@ -28,19 +28,31 @@ final class EventReporterSpec: QuickSpec {
         var eventKeys: [String]! {
             return events.flatMap { (event) in event.key }
         }
+        var lastEventResponseDate: Date?
         var flagKey: LDFlagKey!
         var eventTrackingContext: EventTrackingContext!
         var featureFlag: FeatureFlag!
+        var eventStubResponseDate: Date?
 
-        init(eventCount: Int = 0, eventFlushMillis: Int? = nil, stubResponseSuccess: Bool = true, stubResponseOnly: Bool = false, stubResponseErrorOnly: Bool = false, trackEvents: Bool? = true) {
+        init(eventCount: Int = 0,
+             eventFlushMillis: Int? = nil,
+             lastEventResponseDate: Date? = nil,
+             stubResponseSuccess: Bool = true,
+             stubResponseOnly: Bool = false,
+             stubResponseErrorOnly: Bool = false,
+             eventStubResponseDate: Date? = nil,
+             trackEvents: Bool? = true,
+             debugEventsUntilDate: Date? = nil) {
+
             config = LDConfig.stub
             config.eventCapacity = Constants.eventCapacity
             config.eventFlushIntervalMillis = eventFlushMillis ?? Constants.eventFlushIntervalMillis
 
             user = LDUser.stub()
 
+            self.eventStubResponseDate = eventStubResponseDate?.adjustedForHttpUrlHeaderUse
             serviceMock = DarklyServiceMock()
-            serviceMock.stubEventResponse(success: stubResponseSuccess, responseOnly: stubResponseOnly, errorOnly: stubResponseErrorOnly)
+            serviceMock.stubEventResponse(success: stubResponseSuccess, responseOnly: stubResponseOnly, errorOnly: stubResponseErrorOnly, responseDate: self.eventStubResponseDate)
 
             events = []
             while events.count < eventCount {
@@ -48,11 +60,15 @@ final class EventReporterSpec: QuickSpec {
                 events.append(event)
             }
 
-            eventReporter = EventReporter(config: config, service: serviceMock, events: events)
+            self.lastEventResponseDate = lastEventResponseDate?.adjustedForHttpUrlHeaderUse
+            eventReporter = EventReporter(config: config, service: serviceMock, events: events, lastEventResponseDate: self.lastEventResponseDate)
 
             flagKey = UUID().uuidString
             if let trackEvents = trackEvents {
                 eventTrackingContext = EventTrackingContext(trackEvents: trackEvents)
+            }
+            if let debugEventsUntilDate = debugEventsUntilDate {
+                eventTrackingContext = EventTrackingContext(trackEvents: self.eventTrackingContext?.trackEvents ?? false, debugEventsUntilDate: debugEventsUntilDate)
             }
             featureFlag = DarklyServiceMock.Constants.stubFeatureFlag(for: DarklyServiceMock.FlagKeys.bool, eventTrackingContext: eventTrackingContext)
         }
@@ -249,11 +265,15 @@ final class EventReporterSpec: QuickSpec {
     private func reportEventsSpec() {
         describe("reportEvents") {
             var testContext: TestContext!
+            var eventStubResponseDate: Date!
+            beforeEach {
+                eventStubResponseDate = Date().addingTimeInterval(-TimeInterval.oneSecond)
+            }
             context("online") {
                 context("success") {
                     beforeEach {
                         //The EventReporter will try to report events if it's started online with events. By starting online without events, then adding them, we "beat the timer" by reporting them right away
-                        testContext = TestContext()
+                        testContext = TestContext(eventStubResponseDate: eventStubResponseDate)
                         testContext.eventReporter.isOnline = true
                         waitUntil { done in
                             testContext.recordEvents(Constants.eventCapacity, completion: done)
@@ -267,11 +287,12 @@ final class EventReporterSpec: QuickSpec {
                         expect(testContext.serviceMock.publishEventDictionariesCallCount) == 1
                         expect(testContext.serviceMock.publishedEventDictionaryKeys) == testContext.eventKeys
                         expect(testContext.eventReporter.eventStore.isEmpty).toEventually(beTrue())  //event processing is async
+                        expect(testContext.eventReporter.lastEventResponseDate).toEventually(equal(testContext.eventStubResponseDate))
                     }
                 }
                 context("failure") {
                     beforeEach {
-                        testContext = TestContext(stubResponseSuccess: false)
+                        testContext = TestContext(stubResponseSuccess: false, eventStubResponseDate: eventStubResponseDate)
                         testContext.eventReporter.isOnline = true
                         waitUntil { done in
                             testContext.recordEvents(Constants.eventCapacity, completion: done)
@@ -285,11 +306,12 @@ final class EventReporterSpec: QuickSpec {
                         expect(testContext.serviceMock.publishEventDictionariesCallCount) == 1
                         expect(testContext.eventReporter.eventStoreKeys) == testContext.eventKeys
                         expect(testContext.serviceMock.publishedEventDictionaryKeys) == testContext.eventKeys
+                        expect(testContext.eventReporter.lastEventResponseDate).to(beNil())
                     }
                 }
                 context("failure - response only") {
                     beforeEach {
-                        testContext = TestContext(stubResponseSuccess: false, stubResponseOnly: true)
+                        testContext = TestContext(stubResponseSuccess: false, stubResponseOnly: true, eventStubResponseDate: eventStubResponseDate)
                         testContext.eventReporter.isOnline = true
                         waitUntil { done in
                             testContext.recordEvents(Constants.eventCapacity, completion: done)
@@ -303,11 +325,12 @@ final class EventReporterSpec: QuickSpec {
                         expect(testContext.serviceMock.publishEventDictionariesCallCount) == 1
                         expect(testContext.eventReporter.eventStoreKeys) == testContext.eventKeys
                         expect(testContext.serviceMock.publishedEventDictionaryKeys) == testContext.eventKeys
+                        expect(testContext.eventReporter.lastEventResponseDate).to(beNil())
                     }
                 }
                 context("failure - error only") {
                     beforeEach {
-                        testContext = TestContext(stubResponseSuccess: false, stubResponseErrorOnly: true)
+                        testContext = TestContext(stubResponseSuccess: false, stubResponseErrorOnly: true, eventStubResponseDate: eventStubResponseDate)
                         testContext.eventReporter.isOnline = true
                         waitUntil { done in
                             testContext.recordEvents(Constants.eventCapacity, completion: done)
@@ -321,12 +344,13 @@ final class EventReporterSpec: QuickSpec {
                         expect(testContext.serviceMock.publishEventDictionariesCallCount) == 1
                         expect(testContext.eventReporter.eventStoreKeys) == testContext.eventKeys
                         expect(testContext.serviceMock.publishedEventDictionaryKeys) == testContext.eventKeys
+                        expect(testContext.eventReporter.lastEventResponseDate).to(beNil())
                     }
                 }
             }
             context("offline") {
                 beforeEach {
-                    testContext = TestContext(eventCount: Constants.eventCapacity)
+                    testContext = TestContext(eventCount: Constants.eventCapacity, eventStubResponseDate: eventStubResponseDate)
 
                     testContext.eventReporter.reportEvents()
                 }
@@ -335,6 +359,7 @@ final class EventReporterSpec: QuickSpec {
                     expect(testContext.eventReporter.isReportingActive) == false
                     expect(testContext.serviceMock.publishEventDictionariesCallCount) == 0
                     expect(testContext.eventReporter.eventStoreKeys) == testContext.eventKeys
+                    expect(testContext.eventReporter.lastEventResponseDate).to(beNil())
                 }
             }
         }
@@ -357,7 +382,9 @@ final class EventReporterSpec: QuickSpec {
                     }
                 }
                 it("records a feature event") {
+                    expect(testContext.eventReporter.eventStore.count) == 1
                     expect(testContext.eventReporter.eventStoreKeys.contains(testContext.flagKey)).to(beTrue())
+                    expect(testContext.eventReporter.eventStoreKinds.contains(.feature)).to(beTrue())
                 }
             }
             context("when trackEvents is off") {
@@ -374,7 +401,91 @@ final class EventReporterSpec: QuickSpec {
                     }
                 }
                 it("does not record a feature event") {
-                    expect(testContext.eventReporter.eventStoreKeys.contains(testContext.flagKey)).to(beFalse())
+                    expect(testContext.eventReporter.eventStore).to(beEmpty())
+                }
+            }
+            context("when debugEventsUntilDate exists") {
+                context("lastEventResponseDate exists") {
+                    context("and debugEventsUntilDate is later") {
+                        beforeEach {
+                            testContext = TestContext(lastEventResponseDate: Date(), trackEvents: false, debugEventsUntilDate: Date().addingTimeInterval(TimeInterval.oneSecond))
+
+                            waitUntil { done in
+                                testContext.eventReporter.recordFlagEvaluationEvents(flagKey: testContext.flagKey, value: testContext.featureFlag.value!, defaultValue: Constants.defaultValue, featureFlag: testContext.featureFlag, user: testContext.user, completion: done)
+                            }
+                        }
+                        it("records a debug event") {
+                            expect(testContext.eventReporter.eventStore.count) == 1
+                            expect(testContext.eventReporter.eventStoreKeys.contains(testContext.flagKey)).to(beTrue())
+                            expect(testContext.eventReporter.eventStoreKinds.contains(.debug)).to(beTrue())
+                        }
+                    }
+                    context("and debugEventsUntilDate is earlier") {
+                        beforeEach {
+                            testContext = TestContext(lastEventResponseDate: Date(), trackEvents: false, debugEventsUntilDate: Date().addingTimeInterval(-TimeInterval.oneSecond))
+
+                            waitUntil { done in
+                                testContext.eventReporter.recordFlagEvaluationEvents(flagKey: testContext.flagKey, value: testContext.featureFlag.value!, defaultValue: Constants.defaultValue, featureFlag: testContext.featureFlag, user: testContext.user, completion: done)
+                            }
+                        }
+                        it("does not record a debug event") {
+                            expect(testContext.eventReporter.eventStore).to(beEmpty())
+                        }
+                    }
+                }
+                context("lastEventResponseDate is nil") {
+                    context("and debugEventsUntilDate is later than current time") {
+                        beforeEach {
+                            testContext = TestContext(lastEventResponseDate: nil, trackEvents: false, debugEventsUntilDate: Date().addingTimeInterval(TimeInterval.oneSecond))
+
+                            waitUntil { done in
+                                testContext.eventReporter.recordFlagEvaluationEvents(flagKey: testContext.flagKey, value: testContext.featureFlag.value!, defaultValue: Constants.defaultValue, featureFlag: testContext.featureFlag, user: testContext.user, completion: done)
+                            }
+                        }
+                        it("records a debug event") {
+                            expect(testContext.eventReporter.eventStore.count) == 1
+                            expect(testContext.eventReporter.eventStoreKeys.contains(testContext.flagKey)).to(beTrue())
+                            expect(testContext.eventReporter.eventStoreKinds.contains(.debug)).to(beTrue())
+                        }
+                    }
+                    context("and debugEventsUntilDate is earlier than current time") {
+                        beforeEach {
+                            testContext = TestContext(lastEventResponseDate: nil, trackEvents: false, debugEventsUntilDate: Date().addingTimeInterval(-TimeInterval.oneSecond))
+
+                            waitUntil { done in
+                                testContext.eventReporter.recordFlagEvaluationEvents(flagKey: testContext.flagKey, value: testContext.featureFlag.value!, defaultValue: Constants.defaultValue, featureFlag: testContext.featureFlag, user: testContext.user, completion: done)
+                            }
+                        }
+                        it("does not record a debug event") {
+                            expect(testContext.eventReporter.eventStore).to(beEmpty())
+                        }
+                    }
+                }
+            }
+            context("when both trackEvents is true and debugEventsUntilDate is later than lastEventResponseDate") {
+                beforeEach {
+                    testContext = TestContext(lastEventResponseDate: Date(), trackEvents: true, debugEventsUntilDate: Date().addingTimeInterval(TimeInterval.oneSecond))
+
+                    waitUntil { done in
+                        testContext.eventReporter.recordFlagEvaluationEvents(flagKey: testContext.flagKey, value: testContext.featureFlag.value!, defaultValue: Constants.defaultValue, featureFlag: testContext.featureFlag, user: testContext.user, completion: done)
+                    }
+                }
+                it("records a feature and debug event") {
+                    expect(testContext.eventReporter.eventStore.count == 2).to(beTrue())
+                    expect(testContext.eventReporter.eventStoreKeys.filter { (eventKey) in eventKey == testContext.flagKey }.count == 2).to(beTrue())
+                    expect(Set(testContext.eventReporter.eventStore.eventKinds)).to(equal(Set([.feature, .debug])))
+                }
+            }
+            context("when debugEventsUntilDate is nil") {
+                beforeEach {
+                    testContext = TestContext(lastEventResponseDate: Date(), trackEvents: false, debugEventsUntilDate: nil)
+
+                    waitUntil { done in
+                        testContext.eventReporter.recordFlagEvaluationEvents(flagKey: testContext.flagKey, value: testContext.featureFlag.value!, defaultValue: Constants.defaultValue, featureFlag: testContext.featureFlag, user: testContext.user, completion: done)
+                    }
+                }
+                it("does not record an event") {
+                    expect(testContext.eventReporter.eventStore).to(beEmpty())
                 }
             }
             context("when eventTrackingContext is nil") {
@@ -390,8 +501,8 @@ final class EventReporterSpec: QuickSpec {
                                                                              completion: done)
                     }
                 }
-                it("does not record a feature event") {
-                    expect(testContext.eventReporter.eventStoreKeys.contains(testContext.flagKey)).to(beFalse())
+                it("does not record an event") {
+                    expect(testContext.eventReporter.eventStore).to(beEmpty())
                 }
             }
         }
@@ -437,10 +548,25 @@ extension EventReporter {
     var eventStoreKeys: [String] {
         return eventStore.flatMap { (eventDictionary) in return eventDictionary.eventKey }
     }
+    var eventStoreKinds: [Event.Kind] {
+        return eventStore.flatMap { (eventDictionary) in return eventDictionary.eventKind }
+    }
 }
 
 extension EventReportingMock {
     func recordFlagEvaluationEvents(flagKey: LDFlagKey, value: Any, defaultValue: Any, featureFlag: FeatureFlag?, user: LDUser) {
         recordFlagEvaluationEvents(flagKey: flagKey, value: value, defaultValue: defaultValue, featureFlag: featureFlag, user: user, completion: nil)
+    }
+}
+
+extension TimeInterval {
+    static let oneSecond: TimeInterval = 1.0
+}
+
+private extension Date {
+    var adjustedForHttpUrlHeaderUse: Date {
+        let headerDateFormatter = DateFormatter.httpUrlHeaderFormatter
+        let dateString = headerDateFormatter.string(from: self)
+        return headerDateFormatter.date(from: dateString) ?? self
     }
 }

@@ -147,6 +147,16 @@ final class EventReportingMock: EventReporting {
         }
     }
 
+    // MARK: lastEventResponseDate
+    var lastEventResponseDateSetCount = 0
+    var setLastEventResponseDateCallback: (() -> Void)?
+    var lastEventResponseDate: Date? {
+        didSet {
+            lastEventResponseDateSetCount += 1
+            setLastEventResponseDateCallback?()
+        }
+    }
+
     // MARK: service
     var serviceSetCount = 0
     var setServiceCallback: (() -> Void)?

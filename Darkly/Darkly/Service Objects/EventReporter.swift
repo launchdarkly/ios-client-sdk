@@ -14,6 +14,8 @@ protocol EventReporting {
     var config: LDConfig { get set }
     //sourcery: DefaultMockValue = false
     var isOnline: Bool { get set }
+    //sourcery: DefaultMockValue = nil
+    var lastEventResponseDate: Date? { get }
     //sourcery: DefaultMockValue = DarklyServiceMock()
     var service: DarklyServiceProvider { get set }
     func record(_ event: Event, completion: CompletionClosure?)
@@ -52,6 +54,7 @@ class EventReporter: EventReporting {
             isOnline ? startReporting() : stopReporting()
         }
     }
+    private (set) var lastEventResponseDate: Date? = nil
 
     var service: DarklyServiceProvider
     private(set) var eventStore = [[String: Any]]()
@@ -85,12 +88,29 @@ class EventReporter: EventReporting {
     }
     
     func recordFlagEvaluationEvents(flagKey: LDFlagKey, value: Any, defaultValue: Any, featureFlag: FeatureFlag?, user: LDUser, completion: CompletionClosure? = nil) {
-        guard featureFlag?.eventTrackingContext?.trackEvents == true else {
-            completion?()
-            return
+        let recordingFeatureEvent = featureFlag?.eventTrackingContext?.trackEvents == true
+        let recordingDebugEvent = featureFlag?.eventTrackingContext?.shouldCreateDebugEvents(lastEventReportResponseTime: lastEventResponseDate) ?? false
+        let dispatchGroup = DispatchGroup()
+
+        if recordingFeatureEvent {
+            let featureEvent = Event.featureEvent(key: flagKey, value: value, defaultValue: defaultValue, featureFlag: featureFlag, user: user)
+            dispatchGroup.enter()
+            record(featureEvent) {
+                dispatchGroup.leave()
+            }
         }
-        let featureEvent = Event.featureEvent(key: flagKey, value: value, defaultValue: defaultValue, featureFlag: featureFlag, user: user)
-        record(featureEvent, completion: completion)
+
+        if recordingDebugEvent, let featureFlag = featureFlag {
+            let debugEvent = Event.debugEvent(key: flagKey, value: value, defaultValue: defaultValue, featureFlag: featureFlag, user: user)
+            dispatchGroup.enter()
+            record(debugEvent) {
+                dispatchGroup.leave()
+            }
+        }
+
+        dispatchGroup.notify(queue: .main) {
+            completion?()
+        }
     }
 
     private func startReporting() {
@@ -136,6 +156,7 @@ class EventReporter: EventReporting {
             report(serviceResponse.urlResponse)
             return
         }
+        lastEventResponseDate = httpResponse.headerDate
         updateEventStore(reportedEventDictionaries: reportedEventDictionaries)
     }
     
@@ -172,9 +193,10 @@ extension Array where Element == [String: Any] {
 
 #if DEBUG
     extension EventReporter {
-        convenience init(config: LDConfig, service: DarklyServiceProvider, events: [Event]) {
+        convenience init(config: LDConfig, service: DarklyServiceProvider, events: [Event], lastEventResponseDate: Date?) {
             self.init(config: config, service: service)
             eventStore.append(contentsOf: events.dictionaryValues(config: config))
+            self.lastEventResponseDate = lastEventResponseDate
         }
     }
 #endif
