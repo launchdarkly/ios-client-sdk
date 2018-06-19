@@ -182,6 +182,10 @@
 		83EBCBA420D9A1F3003A7142 /* FlagValueCounter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 83EBCBA220D9A1F3003A7142 /* FlagValueCounter.swift */; };
 		83EBCBA520D9A1F3003A7142 /* FlagValueCounter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 83EBCBA220D9A1F3003A7142 /* FlagValueCounter.swift */; };
 		83EBCBAA20D9A451003A7142 /* FlagValueCounterSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = 83EBCBA920D9A451003A7142 /* FlagValueCounterSpec.swift */; };
+		83EBCBAC20D9C6A6003A7142 /* FlagCounter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 83EBCBAB20D9C6A6003A7142 /* FlagCounter.swift */; };
+		83EBCBAD20D9C6A6003A7142 /* FlagCounter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 83EBCBAB20D9C6A6003A7142 /* FlagCounter.swift */; };
+		83EBCBAE20D9C6A6003A7142 /* FlagCounter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 83EBCBAB20D9C6A6003A7142 /* FlagCounter.swift */; };
+		83EBCBB120D9C7B5003A7142 /* FlagCounterSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = 83EBCBB020D9C7B5003A7142 /* FlagCounterSpec.swift */; };
 		83EF678A1F97CFEC00403126 /* Dictionary.swift in Sources */ = {isa = PBXBuildFile; fileRef = 83EF67891F97CFEC00403126 /* Dictionary.swift */; };
 		83EF67931F9945E800403126 /* EventSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = 83EF67921F9945E800403126 /* EventSpec.swift */; };
 		83EF67951F994BAD00403126 /* LDUserStub.swift in Sources */ = {isa = PBXBuildFile; fileRef = 83EF67941F994BAD00403126 /* LDUserStub.swift */; };
@@ -318,6 +322,8 @@
 		83E2E2081F9FF9E1007514E9 /* Optional.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Optional.swift; sourceTree = "<group>"; };
 		83EBCBA220D9A1F3003A7142 /* FlagValueCounter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FlagValueCounter.swift; sourceTree = "<group>"; };
 		83EBCBA920D9A451003A7142 /* FlagValueCounterSpec.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FlagValueCounterSpec.swift; sourceTree = "<group>"; };
+		83EBCBAB20D9C6A6003A7142 /* FlagCounter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FlagCounter.swift; sourceTree = "<group>"; };
+		83EBCBB020D9C7B5003A7142 /* FlagCounterSpec.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FlagCounterSpec.swift; sourceTree = "<group>"; };
 		83EF67891F97CFEC00403126 /* Dictionary.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Dictionary.swift; sourceTree = "<group>"; };
 		83EF67921F9945E800403126 /* EventSpec.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EventSpec.swift; sourceTree = "<group>"; };
 		83EF67941F994BAD00403126 /* LDUserStub.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LDUserStub.swift; sourceTree = "<group>"; };
@@ -662,6 +668,7 @@
 		83EBCBA120D9A1BA003A7142 /* FlagRequestTracking */ = {
 			isa = PBXGroup;
 			children = (
+				83EBCBAB20D9C6A6003A7142 /* FlagCounter.swift */,
 				83EBCBA220D9A1F3003A7142 /* FlagValueCounter.swift */,
 			);
 			path = FlagRequestTracking;
@@ -682,7 +689,7 @@
 				83A0E6B0203B557F00224298 /* FeatureFlagSpec.swift */,
 				835F43D420D031740070DE51 /* EventTrackingContextSpec.swift */,
 				83EBCBA820D9A297003A7142 /* FlagChange */,
-				83EBCBA920D9A451003A7142 /* FlagValueCounterSpec.swift */,
+				83EBCBAF20D9C78D003A7142 /* FlagRequestTracking */,
 			);
 			path = FeatureFlag;
 			sourceTree = "<group>";
@@ -693,6 +700,15 @@
 				83B9A07F204F56F4000C3F17 /* FlagChangeObserverSpec.swift */,
 			);
 			path = FlagChange;
+			sourceTree = "<group>";
+		};
+		83EBCBAF20D9C78D003A7142 /* FlagRequestTracking */ = {
+			isa = PBXGroup;
+			children = (
+				83EBCBB020D9C7B5003A7142 /* FlagCounterSpec.swift */,
+				83EBCBA920D9A451003A7142 /* FlagValueCounterSpec.swift */,
+			);
+			path = FlagRequestTracking;
 			sourceTree = "<group>";
 		};
 		83EF67911F9945CE00403126 /* Models */ = {
@@ -1176,6 +1192,7 @@
 				831EF34520655E730001C643 /* LDClient.swift in Sources */,
 				831EF34620655E730001C643 /* LDUser.swift in Sources */,
 				831EF34720655E730001C643 /* LDFlagValue.swift in Sources */,
+				83EBCBAE20D9C6A6003A7142 /* FlagCounter.swift in Sources */,
 				831EF34820655E730001C643 /* LDFlagValueConvertible.swift in Sources */,
 				831EF34920655E730001C643 /* LDFlagBaseTypeConvertible.swift in Sources */,
 				831EF34A20655E730001C643 /* FeatureFlag.swift in Sources */,
@@ -1268,6 +1285,7 @@
 				83B8C2471FE4071F0082B8A9 /* HTTPURLResponse.swift in Sources */,
 				83DDBEF61FA24A7E00E428B6 /* Data.swift in Sources */,
 				838F96781FBA504A009CFC45 /* ClientServiceFactory.swift in Sources */,
+				83EBCBAC20D9C6A6003A7142 /* FlagCounter.swift in Sources */,
 				83DDBEFA1FA24AFB00E428B6 /* Array.swift in Sources */,
 				831D8B6D1F6B1F7B00ED65E8 /* ObjcLDVariationValue.swift in Sources */,
 			);
@@ -1302,6 +1320,7 @@
 				832EA061203D03B700A93C0E /* AnySpec.swift in Sources */,
 				832307AA1F7ECA630029815A /* LDConfigStub.swift in Sources */,
 				835F43D520D031740070DE51 /* EventTrackingContextSpec.swift in Sources */,
+				83EBCBB120D9C7B5003A7142 /* FlagCounterSpec.swift in Sources */,
 				83B8C2451FE360CF0082B8A9 /* FlagChangeNotifierSpec.swift in Sources */,
 				8335299E1FC37727001166F8 /* FlagMaintainingMock.swift in Sources */,
 				83383A5120460DD30024D975 /* SynchronizingErrorSpec.swift in Sources */,
@@ -1364,6 +1383,7 @@
 				83D9EC992062DEAB004D7FA6 /* ObjcLDConfig.swift in Sources */,
 				83D9EC9A2062DEAB004D7FA6 /* ObjcLDUser.swift in Sources */,
 				83D9EC9B2062DEAB004D7FA6 /* ObjcLDFlagValue.swift in Sources */,
+				83EBCBAD20D9C6A6003A7142 /* FlagCounter.swift in Sources */,
 				83D9EC9C2062DEAB004D7FA6 /* ObjcLDChangedFlag.swift in Sources */,
 				83D9EC9D2062DEAB004D7FA6 /* ObjcLDVariationValue.swift in Sources */,
 			);
