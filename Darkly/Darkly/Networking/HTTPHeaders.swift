@@ -10,14 +10,19 @@ import Foundation
 
 struct HTTPHeaders {
     
-    struct Constants {
-        static let apiKey = "api_key"
+    struct HeaderKey {
         static let authorization = "Authorization"
         static let userAgent = "User-Agent"
-        static let sdkVersion = "3.0.0.16b"
         static let contentType = "Content-Type"
-        static let applicationJson = "application/json"
         static let accept = "Accept"
+        static let eventSchema = "X-LaunchDarkly-Event-Schema"
+    }
+
+    struct HeaderValue {
+        static let apiKey = "api_key"
+        static let sdkVersion = "3.0.0.22"
+        static let applicationJson = "application/json"
+        static let eventSchema3 = "3"
     }
     
     let mobileKey: String
@@ -28,13 +33,14 @@ struct HTTPHeaders {
         self.systemName = environmentReporter.systemName
     }
     
-    var authKey: String { return "\(Constants.apiKey) \(mobileKey)" }
-    var userAgent: String { return "\(systemName)/\(Constants.sdkVersion)" }
+    var authKey: String { return "\(HeaderValue.apiKey) \(mobileKey)" }
+    var userAgent: String { return "\(systemName)/\(HeaderValue.sdkVersion)" }
     
-    var eventSourceHeaders: [String: String] { return [Constants.authorization: authKey, Constants.userAgent: userAgent] }
-    var flagRequestHeaders: [String: String] { return [Constants.authorization: authKey, Constants.userAgent: userAgent] }
-    var eventRequestHeaders: [String: String] { return [Constants.authorization: authKey,
-                                                       Constants.userAgent: userAgent,
-                                                       Constants.contentType: Constants.applicationJson,
-                                                       Constants.accept: Constants.applicationJson] }
+    var eventSourceHeaders: [String: String] { return [HeaderKey.authorization: authKey, HeaderKey.userAgent: userAgent] }
+    var flagRequestHeaders: [String: String] { return [HeaderKey.authorization: authKey, HeaderKey.userAgent: userAgent] }
+    var eventRequestHeaders: [String: String] { return [HeaderKey.authorization: authKey,
+                                                        HeaderKey.userAgent: userAgent,
+                                                        HeaderKey.contentType: HeaderValue.applicationJson,
+                                                        HeaderKey.accept: HeaderValue.applicationJson,
+                                                        HeaderKey.eventSchema: HeaderValue.eventSchema3] }
 }
