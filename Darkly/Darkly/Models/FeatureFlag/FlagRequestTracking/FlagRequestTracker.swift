@@ -22,6 +22,12 @@ struct FlagRequestTracker {
         }
         guard let flagCounter = flagCounters[flagKey] else { return }
         flagCounter.logRequest(reportedValue: reportedValue, featureFlag: featureFlag, defaultValue: defaultValue)
+
+        //TODO: Remove when implementing Summary Event, this is for testing the FlagRequestTracker
+        Log.debug(typeName(and: #function) + "flagKey: \(flagKey), " + "reportedValue: \(String(describing: reportedValue)), " + "variation: \(String(describing: featureFlag?.variation)), "
+            + "version: \(String(describing: featureFlag?.version)), " + "isKnown: \(String(describing: flagValueCounter?.isKnown)), " + "count: \(String(describing: flagValueCounter?.count)), "
+            + "defaultValue: \(String(describing: defaultValue))")
+
     }
 
     var dictionaryValue: [String: Any] {
@@ -29,6 +35,8 @@ struct FlagRequestTracker {
                 CodingKeys.features.rawValue: flagCounters.dictionaryValues]
     }
 }
+
+extension FlagRequestTracker: TypeIdentifying { }
 
 extension Dictionary where Key == String, Value == FlagCounter {
     var dictionaryValues: [LDFlagKey: Any] {
