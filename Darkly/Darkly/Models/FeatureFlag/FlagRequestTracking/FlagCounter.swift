@@ -26,6 +26,11 @@ final class FlagCounter {
             flagValueCounter = newFlagValueCounter
         }
         flagValueCounter?.count += 1
+
+        //TODO: Remove when implementing Summary Event, this is for testing the FlagRequestTracker
+        Log.debug(typeName(and: #function) + "flagKey: \(flagKey), " + "reportedValue: \(String(describing: reportedValue)), " + "variation: \(String(describing: featureFlag?.variation)), "
+            + "version: \(String(describing: featureFlag?.version)), " + "isKnown: \(String(describing: flagValueCounter?.isKnown)), " + "count: \(String(describing: flagValueCounter?.count)), "
+            + "defaultValue: \(String(describing: defaultValue))")
     }
 }
 
@@ -45,3 +50,5 @@ extension Array where Element == FlagValueCounter {
         return selectedFlagValueCounters.first
     }
 }
+
+extension FlagCounter: TypeIdentifying { }
