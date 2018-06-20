@@ -186,6 +186,10 @@
 		83EBCBAD20D9C6A6003A7142 /* FlagCounter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 83EBCBAB20D9C6A6003A7142 /* FlagCounter.swift */; };
 		83EBCBAE20D9C6A6003A7142 /* FlagCounter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 83EBCBAB20D9C6A6003A7142 /* FlagCounter.swift */; };
 		83EBCBB120D9C7B5003A7142 /* FlagCounterSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = 83EBCBB020D9C7B5003A7142 /* FlagCounterSpec.swift */; };
+		83EBCBB320DABE1B003A7142 /* FlagRequestTracker.swift in Sources */ = {isa = PBXBuildFile; fileRef = 83EBCBB220DABE1B003A7142 /* FlagRequestTracker.swift */; };
+		83EBCBB420DABE1B003A7142 /* FlagRequestTracker.swift in Sources */ = {isa = PBXBuildFile; fileRef = 83EBCBB220DABE1B003A7142 /* FlagRequestTracker.swift */; };
+		83EBCBB520DABE1B003A7142 /* FlagRequestTracker.swift in Sources */ = {isa = PBXBuildFile; fileRef = 83EBCBB220DABE1B003A7142 /* FlagRequestTracker.swift */; };
+		83EBCBB720DABE93003A7142 /* FlagRequestTrackerSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = 83EBCBB620DABE93003A7142 /* FlagRequestTrackerSpec.swift */; };
 		83EF678A1F97CFEC00403126 /* Dictionary.swift in Sources */ = {isa = PBXBuildFile; fileRef = 83EF67891F97CFEC00403126 /* Dictionary.swift */; };
 		83EF67931F9945E800403126 /* EventSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = 83EF67921F9945E800403126 /* EventSpec.swift */; };
 		83EF67951F994BAD00403126 /* LDUserStub.swift in Sources */ = {isa = PBXBuildFile; fileRef = 83EF67941F994BAD00403126 /* LDUserStub.swift */; };
@@ -324,6 +328,8 @@
 		83EBCBA920D9A451003A7142 /* FlagValueCounterSpec.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FlagValueCounterSpec.swift; sourceTree = "<group>"; };
 		83EBCBAB20D9C6A6003A7142 /* FlagCounter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FlagCounter.swift; sourceTree = "<group>"; };
 		83EBCBB020D9C7B5003A7142 /* FlagCounterSpec.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FlagCounterSpec.swift; sourceTree = "<group>"; };
+		83EBCBB220DABE1B003A7142 /* FlagRequestTracker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FlagRequestTracker.swift; sourceTree = "<group>"; };
+		83EBCBB620DABE93003A7142 /* FlagRequestTrackerSpec.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FlagRequestTrackerSpec.swift; sourceTree = "<group>"; };
 		83EF67891F97CFEC00403126 /* Dictionary.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Dictionary.swift; sourceTree = "<group>"; };
 		83EF67921F9945E800403126 /* EventSpec.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EventSpec.swift; sourceTree = "<group>"; };
 		83EF67941F994BAD00403126 /* LDUserStub.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LDUserStub.swift; sourceTree = "<group>"; };
@@ -668,6 +674,7 @@
 		83EBCBA120D9A1BA003A7142 /* FlagRequestTracking */ = {
 			isa = PBXGroup;
 			children = (
+				83EBCBB220DABE1B003A7142 /* FlagRequestTracker.swift */,
 				83EBCBAB20D9C6A6003A7142 /* FlagCounter.swift */,
 				83EBCBA220D9A1F3003A7142 /* FlagValueCounter.swift */,
 			);
@@ -705,6 +712,7 @@
 		83EBCBAF20D9C78D003A7142 /* FlagRequestTracking */ = {
 			isa = PBXGroup;
 			children = (
+				83EBCBB620DABE93003A7142 /* FlagRequestTrackerSpec.swift */,
 				83EBCBB020D9C7B5003A7142 /* FlagCounterSpec.swift */,
 				83EBCBA920D9A451003A7142 /* FlagValueCounterSpec.swift */,
 			);
@@ -1222,6 +1230,7 @@
 				835F43D320D0309A0070DE51 /* EventTrackingContext.swift in Sources */,
 				831EF35F20655E730001C643 /* Optional.swift in Sources */,
 				831EF36020655E730001C643 /* Data.swift in Sources */,
+				83EBCBB520DABE1B003A7142 /* FlagRequestTracker.swift in Sources */,
 				831EF36120655E730001C643 /* Array.swift in Sources */,
 				831EF36220655E730001C643 /* JSONSerialization.swift in Sources */,
 				831EF36320655E730001C643 /* Date.swift in Sources */,
@@ -1243,6 +1252,7 @@
 			files = (
 				831D8B6F1F71532300ED65E8 /* HTTPHeaders.swift in Sources */,
 				835E1D3F1F63450A00184DB4 /* ObjcLDClient.swift in Sources */,
+				83EBCBB320DABE1B003A7142 /* FlagRequestTracker.swift in Sources */,
 				837EF3742059C237009D628A /* Log.swift in Sources */,
 				835F43D120D0309A0070DE51 /* EventTrackingContext.swift in Sources */,
 				83FEF8DD1F266742001CF12C /* FlagSynchronizer.swift in Sources */,
@@ -1312,6 +1322,7 @@
 				83E2E2061F9E7AC7007514E9 /* LDUserSpec.swift in Sources */,
 				83D17EAA1FCDA18C00B2823C /* DictionarySpec.swift in Sources */,
 				83A0E6B1203B557F00224298 /* FeatureFlagSpec.swift in Sources */,
+				83EBCBB720DABE93003A7142 /* FlagRequestTrackerSpec.swift in Sources */,
 				83EF67951F994BAD00403126 /* LDUserStub.swift in Sources */,
 				83D5597C1FD9BED7002D10C8 /* FlagCollectionCacheSpec.swift in Sources */,
 				83F0A5641FB5F33800550A95 /* LDConfigSpec.swift in Sources */,
@@ -1341,6 +1352,7 @@
 			files = (
 				83D9EC752062DEAB004D7FA6 /* LDCommon.swift in Sources */,
 				83D9EC762062DEAB004D7FA6 /* LDConfig.swift in Sources */,
+				83EBCBB420DABE1B003A7142 /* FlagRequestTracker.swift in Sources */,
 				83D9EC772062DEAB004D7FA6 /* LDClient.swift in Sources */,
 				835F43D220D0309A0070DE51 /* EventTrackingContext.swift in Sources */,
 				83D9EC782062DEAB004D7FA6 /* LDUser.swift in Sources */,
