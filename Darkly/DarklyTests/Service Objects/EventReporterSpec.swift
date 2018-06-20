@@ -33,6 +33,7 @@ final class EventReporterSpec: QuickSpec {
         var eventTrackingContext: EventTrackingContext!
         var featureFlag: FeatureFlag!
         var eventStubResponseDate: Date?
+        var flagRequestTracker: FlagRequestTracker?
 
         init(eventCount: Int = 0,
              eventFlushMillis: Int? = nil,
@@ -42,7 +43,8 @@ final class EventReporterSpec: QuickSpec {
              stubResponseErrorOnly: Bool = false,
              eventStubResponseDate: Date? = nil,
              trackEvents: Bool? = true,
-             debugEventsUntilDate: Date? = nil) {
+             debugEventsUntilDate: Date? = nil,
+             flagRequestTracker: FlagRequestTracker? = nil) {
 
             config = LDConfig.stub
             config.eventCapacity = Constants.eventCapacity
@@ -61,7 +63,8 @@ final class EventReporterSpec: QuickSpec {
             }
 
             self.lastEventResponseDate = lastEventResponseDate?.adjustedForHttpUrlHeaderUse
-            eventReporter = EventReporter(config: config, service: serviceMock, events: events, lastEventResponseDate: self.lastEventResponseDate)
+            self.flagRequestTracker = flagRequestTracker
+            eventReporter = EventReporter(config: config, service: serviceMock, events: events, lastEventResponseDate: self.lastEventResponseDate, flagRequestTracker: flagRequestTracker)
 
             flagKey = UUID().uuidString
             if let trackEvents = trackEvents {
@@ -93,6 +96,7 @@ final class EventReporterSpec: QuickSpec {
         recordEventSpec()
         reportEventsSpec()
         recordFlagEvaluationEventsSpec()
+        resetFlagRequestTrackerSpec()
         reportTimerSpec()
     }
 
@@ -366,6 +370,10 @@ final class EventReporterSpec: QuickSpec {
     }
 
     private func recordFlagEvaluationEventsSpec() {
+        recordFeatureAndDebugEventsSpec()
+    }
+
+    private func recordFeatureAndDebugEventsSpec() {
         var testContext: TestContext!
         describe("recordFlagEvaluationEvents") {
             context("when trackEvents is on") {
@@ -504,6 +512,20 @@ final class EventReporterSpec: QuickSpec {
                 it("does not record an event") {
                     expect(testContext.eventReporter.eventStore).to(beEmpty())
                 }
+            }
+        }
+    }
+
+    private func resetFlagRequestTrackerSpec() {
+        describe("resetFlagRequestTracker") {
+            var testContext: TestContext!
+            beforeEach {
+                testContext = TestContext(flagRequestTracker: FlagRequestTracker.stub())
+
+                testContext.eventReporter.resetFlagRequestTracker()
+            }
+            it("resets the flagRequestTracker") {
+                expect(testContext.eventReporter.flagRequestTracker.flagCounters.isEmpty) == true
             }
         }
     }

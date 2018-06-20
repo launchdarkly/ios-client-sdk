@@ -25,6 +25,7 @@ protocol EventReporting {
     func recordFlagEvaluationEvents(flagKey: LDFlagKey, value: Any, defaultValue: Any, featureFlag: FeatureFlag?, user: LDUser)
     //swiftlint:disable:next function_parameter_count
     func recordFlagEvaluationEvents(flagKey: LDFlagKey, value: Any, defaultValue: Any, featureFlag: FeatureFlag?, user: LDUser, completion: CompletionClosure?)
+    func resetFlagRequestTracker()
 
     func reportEvents()
 }
@@ -58,6 +59,7 @@ class EventReporter: EventReporting {
 
     var service: DarklyServiceProvider
     private(set) var eventStore = [[String: Any]]()
+    private(set) var flagRequestTracker = FlagRequestTracker()
     
     private weak var eventReportTimer: Timer?
     var isReportingActive: Bool { return eventReportTimer != nil }
@@ -90,6 +92,8 @@ class EventReporter: EventReporting {
     }
     
     func recordFlagEvaluationEvents(flagKey: LDFlagKey, value: Any, defaultValue: Any, featureFlag: FeatureFlag?, user: LDUser, completion: CompletionClosure? = nil) {
+        flagRequestTracker.logRequest(flagKey: flagKey, reportedValue: value, featureFlag: featureFlag, defaultValue: defaultValue)
+
         let recordingFeatureEvent = featureFlag?.eventTrackingContext?.trackEvents == true
         let recordingDebugEvent = featureFlag?.eventTrackingContext?.shouldCreateDebugEvents(lastEventReportResponseTime: lastEventResponseDate) ?? false
         let dispatchGroup = DispatchGroup()
@@ -115,6 +119,10 @@ class EventReporter: EventReporting {
         }
 
         lastFlagEvaluationUser = user       //TODO: Remove when implementing summary events
+    }
+
+    func resetFlagRequestTracker() {
+        flagRequestTracker = FlagRequestTracker()
     }
 
     private func startReporting() {
@@ -204,10 +212,13 @@ extension Array where Element == [String: Any] {
 
 #if DEBUG
     extension EventReporter {
-        convenience init(config: LDConfig, service: DarklyServiceProvider, events: [Event], lastEventResponseDate: Date?) {
+        convenience init(config: LDConfig, service: DarklyServiceProvider, events: [Event], lastEventResponseDate: Date?, flagRequestTracker: FlagRequestTracker? = nil) {
             self.init(config: config, service: service)
             eventStore.append(contentsOf: events.dictionaryValues(config: config))
             self.lastEventResponseDate = lastEventResponseDate
+            if let flagRequestTracker = flagRequestTracker {
+                self.flagRequestTracker = flagRequestTracker
+            }
         }
     }
 #endif
