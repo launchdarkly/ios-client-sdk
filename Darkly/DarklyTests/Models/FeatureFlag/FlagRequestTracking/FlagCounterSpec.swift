@@ -112,19 +112,14 @@ final class FlagCounterSpec: QuickSpec {
                     flagCounters = FlagCounter.stubFlagCounters(includeUnknownValue: false)
                 }
                 it("creates a flag counter dictionary") {
-                    flagCounters.forEach { (flagKey, flagCounter) in
+                    flagCounters.forEach { (_, flagCounter) in
                         let flagValueCounter = flagCounter.flagValueCounters.first!
 
                         flagCounterDictionary = flagCounter.dictionaryValue
+                        expect(AnyComparer.isEqual(flagCounterDictionary.flagCounterDefaultValue, to: flagCounter.defaultValue, considerNilAndNullEqual: true)).to(beTrue())
+                        expect(flagCounterDictionary.flagCounterCounters?.count) == 1
 
-                        expect(flagCounterDictionary.keys.count) == 1
-                        expect(flagCounterDictionary.keys.first) == flagKey
-
-                        guard let counterDetailDictionary = flagCounterDictionary.flagCounterDetailDictionary(for: flagKey) else { return }
-                        expect(AnyComparer.isEqual(counterDetailDictionary.flagCounterDefaultValue, to: flagCounter.defaultValue, considerNilAndNullEqual: true)).to(beTrue())
-                        expect(counterDetailDictionary.flagCounterCounters?.count) == 1
-
-                        guard let valueCounterDictionaries = counterDetailDictionary.flagCounterCounters, valueCounterDictionaries.count == 1,
+                        guard let valueCounterDictionaries = flagCounterDictionary.flagCounterCounters, valueCounterDictionaries.count == 1,
                             let valueCounterDictionary = valueCounterDictionaries.first
                         else { return }
                         expect(AnyComparer.isEqual(valueCounterDictionary.valueCounterReportedValue, to: flagValueCounter.reportedValue, considerNilAndNullEqual: true)).to(beTrue())
@@ -144,15 +139,10 @@ final class FlagCounterSpec: QuickSpec {
                     let flagValueCounter = flagCounter.flagValueCounters.first!
 
                     flagCounterDictionary = flagCounter.dictionaryValue
+                    expect(AnyComparer.isEqual(flagCounterDictionary.flagCounterDefaultValue, to: flagCounter.defaultValue, considerNilAndNullEqual: true)).to(beTrue())
+                    expect(flagCounterDictionary.flagCounterCounters?.count) == 1
 
-                    expect(flagCounterDictionary.keys.count) == 1
-                    expect(flagCounterDictionary.keys.first) == flagCounter.flagKey
-
-                    guard let counterDetailDictionary = flagCounterDictionary.flagCounterDetailDictionary(for: flagCounter.flagKey) else { return }
-                    expect(AnyComparer.isEqual(counterDetailDictionary.flagCounterDefaultValue, to: flagCounter.defaultValue, considerNilAndNullEqual: true)).to(beTrue())
-                    expect(counterDetailDictionary.flagCounterCounters?.count) == 1
-
-                    guard let counterDictionaries = counterDetailDictionary.flagCounterCounters, counterDictionaries.count == 1,
+                    guard let counterDictionaries = flagCounterDictionary.flagCounterCounters, counterDictionaries.count == 1,
                         let counterDictionary = counterDictionaries.first
                         else { return }
                     expect(AnyComparer.isEqual(counterDictionary.valueCounterReportedValue, to: flagValueCounter.reportedValue, considerNilAndNullEqual: true)).to(beTrue())
@@ -202,9 +192,6 @@ extension FlagCounter {
 }
 
 extension Dictionary where Key == String, Value == Any {
-    func flagCounterDetailDictionary(for flagKey: LDFlagKey) -> [String: Any]? {
-        return self[flagKey] as? [String: Any]
-    }
     var flagCounterDefaultValue: Any? {
         return self[FlagCounter.CodingKeys.defaultValue.rawValue]
     }

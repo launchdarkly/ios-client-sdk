@@ -38,35 +38,32 @@ final class FlagCounter {
     }
 
     /* Creates a dictionary of the form
-     "flag-key":
-        {                                                              -|
-            "default": "default-value",                                 |
-            "counters": [                                               |
-                {                               -|                      |
-                    "value": "result-value"      |                      |
-                    "version": 17,               |-     flag value      |
-                    "count": 23,                 |- counter dictionary  |
-                    "variation": 1,              |                      |
-                },                              -|                      |
-                {                                                       |
-                    "value": "another-value"                            |
-                    "version": 17,                                      |- detailDictionary
-                    "count": 3,                                         |
-                    "variation": 0,                                     |
-                },                                                      |
-                {   //If the flag-key isn't a part of the flag store, the flag is unknown. This could happen on the very first app launch if the client app asks for flags before the server responds
-                    //or if the client app requests a flag that doesn't exist.
-                    "unknown": true,                                    |
-                    "value": "default-value",                           |
-                    "count": 1                                          |
-                }                                                       |
-            ]                                                           |
-        }                                                              -|
+        "default": "default-value",
+        "counters": [
+            {
+                "value": "result-value"
+                "version": 17,
+                "count": 23,
+                "variation": 1,
+            },
+            {
+                "value": "another-value"
+                "version": 17,
+                "count": 3,
+                "variation": 0,
+            },
+            {   //If the flag-key isn't a part of the flag store, the flag is unknown.
+                //This could happen on the very first app launch if the client app asks for flags before the server responds
+                //or if the client app requests a flag that doesn't exist.
+                "unknown": true,
+                "value": "default-value",
+                "count": 1
+            }
+        ]
     */
     var dictionaryValue: [String: Any] {
-        let detailDictionary = [CodingKeys.defaultValue.rawValue: defaultValue ?? NSNull(),
-                                CodingKeys.counters.rawValue: flagValueCounters.dictionaryValues]
-        return [flagKey: detailDictionary]
+        return [CodingKeys.defaultValue.rawValue: defaultValue ?? NSNull(),
+                CodingKeys.counters.rawValue: flagValueCounters.dictionaryValues]
     }
 }
 
