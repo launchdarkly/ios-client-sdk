@@ -35,7 +35,6 @@ public struct LDUser {
     
     internal fileprivate(set) var lastUpdated: Date
     internal var flagStore: FlagMaintaining = FlagStore()
-    internal var flagRequestTracker = FlagRequestTracker()
     
     public init(key: String? = nil,
                 name: String? = nil,
@@ -178,10 +177,6 @@ public struct LDUser {
     //For macOS & watchOS, this should be a UUID that the sdk creates and stores so that the value returned here should be always the same
     static func defaultKey(environmentReporter: EnvironmentReporting) -> String {
         return environmentReporter.vendorUUID ?? UserDefaults.standard.installationKey
-    }
-
-    mutating func resetFlagRequestTracker() {
-        flagRequestTracker = FlagRequestTracker()
     }
 }
 

@@ -24,6 +24,7 @@ struct FlagRequestTracker {
         flagCounter.logRequest(reportedValue: reportedValue, featureFlag: featureFlag, defaultValue: defaultValue)
 
         //TODO: Remove when implementing Summary Event, this is for testing the FlagRequestTracker
+        let flagValueCounter = flagCounter.flagValueCounters.flagValueCounter(for: featureFlag)
         Log.debug(typeName(and: #function) + "flagKey: \(flagKey), " + "reportedValue: \(String(describing: reportedValue)), " + "variation: \(String(describing: featureFlag?.variation)), "
             + "version: \(String(describing: featureFlag?.version)), " + "isKnown: \(String(describing: flagValueCounter?.isKnown)), " + "count: \(String(describing: flagValueCounter?.count)), "
             + "defaultValue: \(String(describing: defaultValue))")

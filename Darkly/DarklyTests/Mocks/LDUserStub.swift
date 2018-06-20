@@ -56,7 +56,6 @@ extension LDUser {
                           operatingSystem: environmentReporter?.systemVersion,
                           isAnonymous: StubConstants.isAnonymous)
         user.flagStore = FlagMaintainingMock(flags: user.stubFlags(includeNullValue: includeNullValue))
-        user.flagRequestTracker = FlagRequestTracker.stub()
         return user
     }
 
