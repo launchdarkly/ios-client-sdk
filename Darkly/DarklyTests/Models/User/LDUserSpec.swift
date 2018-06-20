@@ -49,6 +49,7 @@ final class LDUserSpec: QuickSpec {
                         if let privateAttributes = subject.privateAttributes {
                             expect(privateAttributes) == LDUser.privatizableAttributes
                         }
+                        expect(subject.flagRequestTracker.flagCounters.isEmpty).to(beTrue())
                     }
                 }
                 context("excluding system values") {
@@ -79,6 +80,7 @@ final class LDUserSpec: QuickSpec {
                         if let privateAttributes = subject.privateAttributes {
                             expect(privateAttributes) == LDUser.privatizableAttributes
                         }
+                        expect(subject.flagRequestTracker.flagCounters.isEmpty).to(beTrue())
                     }
                 }
             }
@@ -104,6 +106,7 @@ final class LDUserSpec: QuickSpec {
                     expect(subject.operatingSystem) == environmentReporter.systemVersion
                     expect(subject.custom).to(beNil())
                     expect(subject.privateAttributes).to(beNil())
+                    expect(subject.flagRequestTracker.flagCounters.isEmpty).to(beTrue())
                 }
             }
             context("called without a key multiple times") {
@@ -163,11 +166,13 @@ final class LDUserSpec: QuickSpec {
                         }
 
                         expect(subject.flagStore.featureFlags == originalUser.flagStore.featureFlags).to(beTrue())
+                        expect(subject.flagRequestTracker.flagCounters.isEmpty).to(beTrue())
                     }
                 }
                 context("but without optional elements") {
                     beforeEach {
                         originalUser = LDUser(isAnonymous: true)
+                        originalUser.flagRequestTracker = FlagRequestTracker.stub()
                         var userDictionary = originalUser.dictionaryValueWithAllAttributes(includeFlagConfig: true)
                         userDictionary[LDUser.CodingKeys.lastUpdated.rawValue] = mockLastUpdated
                         subject = LDUser(userDictionary: userDictionary)
@@ -195,6 +200,7 @@ final class LDUserSpec: QuickSpec {
                         expect(subject.privateAttributes).to(beNil())
 
                         expect(subject.flagStore.featureFlags == originalUser.flagStore.featureFlags).to(beTrue())
+                        expect(subject.flagRequestTracker.flagCounters.isEmpty).to(beTrue())
                     }
                 }
             }
@@ -236,11 +242,13 @@ final class LDUserSpec: QuickSpec {
                         }
 
                         expect(subject.flagStore.featureFlags.isEmpty).to(beTrue())
+                        expect(subject.flagRequestTracker.flagCounters.isEmpty).to(beTrue())
                     }
                 }
                 context("or optional elements") {
                     beforeEach {
                         originalUser = LDUser(isAnonymous: true)
+                        originalUser.flagRequestTracker = FlagRequestTracker.stub()
                         var userDictionary = originalUser.dictionaryValueWithAllAttributes(includeFlagConfig: false)
                         userDictionary[LDUser.CodingKeys.lastUpdated.rawValue] = mockLastUpdated
                         subject = LDUser(userDictionary: userDictionary)
@@ -266,6 +274,7 @@ final class LDUserSpec: QuickSpec {
                         expect(subject.privateAttributes).to(beNil())
 
                         expect(subject.flagStore.featureFlags.isEmpty).to(beTrue())
+                        expect(subject.flagRequestTracker.flagCounters.isEmpty).to(beTrue())
                     }
                 }
                 context("and with an empty dictionary") {
@@ -291,6 +300,7 @@ final class LDUserSpec: QuickSpec {
                         expect(subject.privateAttributes).to(beNil())
 
                         expect(subject.flagStore.featureFlags.isEmpty).to(beTrue())
+                        expect(subject.flagRequestTracker.flagCounters.isEmpty).to(beTrue())
                     }
                 }
                 context("but with an incorrect last updated format") {
@@ -318,6 +328,7 @@ final class LDUserSpec: QuickSpec {
                         expect(subject.privateAttributes).to(beNil())
 
                         expect(subject.flagStore.featureFlags.isEmpty).to(beTrue())
+                        expect(subject.flagRequestTracker.flagCounters.isEmpty).to(beTrue())
                     }
                 }
             }

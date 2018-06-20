@@ -35,6 +35,7 @@ public struct LDUser {
     
     internal fileprivate(set) var lastUpdated: Date
     internal var flagStore: FlagMaintaining = FlagStore()
+    internal var flagRequestTracker = FlagRequestTracker()
     
     public init(key: String? = nil,
                 name: String? = nil,
