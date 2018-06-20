@@ -22,13 +22,10 @@ final class FlagCounterSpec: QuickSpec {
         describe("init") {
             var flagCounter: FlagCounter!
             it("creates a flag counter") {
-                DarklyServiceMock.FlagKeys.all.forEach { (flagKey) in
-                    flagCounter = FlagCounter(flagKey: flagKey)
-
-                    expect(flagCounter.flagKey) == flagKey
-                    expect(flagCounter.defaultValue).to(beNil())
-                    expect(flagCounter.flagValueCounters.isEmpty).to(beTrue())
-                }
+                flagCounter = FlagCounter()
+                
+                expect(flagCounter.defaultValue).to(beNil())
+                expect(flagCounter.flagValueCounters.isEmpty).to(beTrue())
             }
         }
     }
@@ -41,7 +38,7 @@ final class FlagCounterSpec: QuickSpec {
             context("with known values") {
                 it("logs the request") {
                     DarklyServiceMock.FlagKeys.all.forEach { (flagKey) in
-                        flagCounter = FlagCounter(flagKey: flagKey)
+                        flagCounter = FlagCounter()
                         featureFlag = DarklyServiceMock.Constants.stubFeatureFlag(for: flagKey)
 
                         //log request with original featureFlag
@@ -82,7 +79,7 @@ final class FlagCounterSpec: QuickSpec {
             }
             context("with unknown value") {
                 beforeEach {
-                    flagCounter = FlagCounter(flagKey: DarklyServiceMock.FlagKeys.dummy)
+                    flagCounter = FlagCounter()
                 }
                 it("logs the request") {
                     for logRequestCount in [1, 2, 3] {
@@ -162,9 +159,9 @@ extension FlagCounter {
     }
 
     class func stub(flagKey: LDFlagKey) -> FlagCounter {
-        let flagCounter = FlagCounter(flagKey: flagKey)
+        let flagCounter = FlagCounter()
         var featureFlag: FeatureFlag? = nil
-        if DarklyServiceMock.FlagKeys.all.contains(flagKey) {
+        if flagKey.isKnown {
             featureFlag = DarklyServiceMock.Constants.stubFeatureFlag(for: flagKey)
             flagCounter.logRequest(reportedValue: featureFlag?.value, featureFlag: featureFlag, defaultValue: featureFlag?.value)
         } else {

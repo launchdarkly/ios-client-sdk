@@ -13,13 +13,8 @@ final class FlagCounter {
         case defaultValue = "default", counters
     }
 
-    let flagKey: String
     var defaultValue: Any? = nil
     var flagValueCounters = [FlagValueCounter]()
-
-    init(flagKey: String) {
-        self.flagKey = flagKey
-    }
 
     func logRequest(reportedValue: Any?, featureFlag: FeatureFlag?, defaultValue: Any?) {
         self.defaultValue = defaultValue
@@ -32,7 +27,7 @@ final class FlagCounter {
         flagValueCounter?.count += 1
 
         //TODO: Remove when implementing Summary Event, this is for testing the FlagRequestTracker
-        Log.debug(typeName(and: #function) + "flagKey: \(flagKey), " + "reportedValue: \(String(describing: reportedValue)), " + "variation: \(String(describing: featureFlag?.variation)), "
+        Log.debug(typeName(and: #function) + "reportedValue: \(String(describing: reportedValue)), " + "variation: \(String(describing: featureFlag?.variation)), "
             + "version: \(String(describing: featureFlag?.version)), " + "isKnown: \(String(describing: flagValueCounter?.isKnown)), " + "count: \(String(describing: flagValueCounter?.count)), "
             + "defaultValue: \(String(describing: defaultValue))")
     }

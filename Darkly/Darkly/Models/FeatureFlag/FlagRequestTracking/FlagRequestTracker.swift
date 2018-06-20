@@ -18,7 +18,7 @@ struct FlagRequestTracker {
 
     mutating func logRequest(flagKey: LDFlagKey, reportedValue: Any?, featureFlag: FeatureFlag?, defaultValue: Any?) {
         if flagCounters[flagKey] == nil {
-            flagCounters[flagKey] = FlagCounter(flagKey: flagKey)
+            flagCounters[flagKey] = FlagCounter()
         }
         guard let flagCounter = flagCounters[flagKey] else { return }
         flagCounter.logRequest(reportedValue: reportedValue, featureFlag: featureFlag, defaultValue: defaultValue)

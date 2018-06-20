@@ -52,7 +52,6 @@ final class FlagRequestTrackerSpec: QuickSpec {
                                         XCTFail("expected flagCounter to not be nil, got nil")
                                         return
                                 }
-                                expect(flagCounter.flagKey) == flagKey
                                 expect(AnyComparer.isEqual(flagCounter.defaultValue, to: featureFlag.value, considerNilAndNullEqual: true)).to(beTrue())
                                 expect(flagCounter.flagValueCounters.count) == (useAlternateValue ? 2 : 1)
                                 guard let flagValueCounter = flagCounter.flagValueCounters.flagValueCounter(for: featureFlag)
@@ -82,7 +81,6 @@ final class FlagRequestTrackerSpec: QuickSpec {
                                 XCTFail("expected flagCounter to not be nil, got nil")
                                 return
                         }
-                        expect(flagCounter.flagKey) == DarklyServiceMock.FlagKeys.dummy
                         expect(AnyComparer.isEqual(flagCounter.defaultValue, to: false, considerNilAndNullEqual: true)).to(beTrue())
                         expect(flagCounter.flagValueCounters.count) == 1
                         guard let flagValueCounter = flagCounter.flagValueCounters.flagValueCounter(for: nil)
