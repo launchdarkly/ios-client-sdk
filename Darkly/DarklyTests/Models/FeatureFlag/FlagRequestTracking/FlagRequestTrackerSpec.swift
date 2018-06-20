@@ -15,6 +15,7 @@ final class FlagRequestTrackerSpec: QuickSpec {
     override func spec() {
         initSpec()
         logRequestSpec()
+        dictionaryValueSpec()
     }
 
     private func initSpec() {
@@ -46,7 +47,7 @@ final class FlagRequestTrackerSpec: QuickSpec {
                             for logRequestCount in [1, 2, 3] {
                                 flagRequestTracker.logRequest(flagKey: flagKey, reportedValue: featureFlag.value, featureFlag: featureFlag, defaultValue: featureFlag.value)
 
-                                guard let flagCounter = flagRequestTracker.flagCounters.flagCounter(for: flagKey)
+                                guard let flagCounter = flagRequestTracker.flagCounters[flagKey]
                                     else {
                                         XCTFail("expected flagCounter to not be nil, got nil")
                                         return
@@ -76,7 +77,7 @@ final class FlagRequestTrackerSpec: QuickSpec {
                     for logRequestCount in [1, 2, 3] {
                         flagRequestTracker.logRequest(flagKey: DarklyServiceMock.FlagKeys.dummy, reportedValue: false, featureFlag: nil, defaultValue: false)
 
-                        guard let flagCounter = flagRequestTracker.flagCounters.flagCounter(for: DarklyServiceMock.FlagKeys.dummy)
+                        guard let flagCounter = flagRequestTracker.flagCounters[DarklyServiceMock.FlagKeys.dummy]
                             else {
                                 XCTFail("expected flagCounter to not be nil, got nil")
                                 return
@@ -97,5 +98,81 @@ final class FlagRequestTrackerSpec: QuickSpec {
                 }
             }
         }
+    }
+
+    private func dictionaryValueSpec() {
+        describe("dictionaryValue") {
+            var flagRequestTracker: FlagRequestTracker!
+            var trackerDictionary: [String: Any]!
+            context("") {
+                beforeEach {
+                    flagRequestTracker = FlagRequestTracker.stub()
+
+                    trackerDictionary = flagRequestTracker.dictionaryValue
+                }
+                it("creates a tracker dictionary") {
+                    expect(trackerDictionary.flagRequestTrackerStartDate?.isWithin(0.001, of: flagRequestTracker.startDate)).to(beTrue())
+                    expect(trackerDictionary.flagRequestTrackerFeatures).toNot(beNil())
+                    guard let trackerDictionaryFeatures = trackerDictionary.flagRequestTrackerFeatures
+                    else {
+                        XCTFail("expected trackerDictionaryFeatures to not be nil, got nil")
+                        return
+                    }
+                    flagRequestTracker.flagCounters.forEach { (flagKey, flagCounter) in
+                        guard let flagCounterDictionary = trackerDictionaryFeatures[flagKey] as? [String: Any]
+                        else {
+                            XCTFail("expected flagCounterDictionary to not be nil, got nil")
+                            return
+                        }
+                        expect(AnyComparer.isEqual(flagCounterDictionary.flagCounterDefaultValue, to: flagCounter.defaultValue, considerNilAndNullEqual: true)).to(beTrue())
+                        expect(flagCounterDictionary.flagCounterCounters?.count) == 1
+                        guard let flagValueCounterDictionary = flagCounterDictionary.flagCounterCounters?.first
+                        else {
+                            XCTFail("expected flagValueCounterDictionary to not be nil, got nil")
+                            return
+                        }
+                        let flagValueCounter = flagCounter.flagValueCounters.first!
+                        if flagKey.isKnown {
+                            expect(AnyComparer.isEqual(flagValueCounterDictionary.valueCounterReportedValue, to: flagValueCounter.reportedValue, considerNilAndNullEqual: true)).to(beTrue())
+                            expect(flagValueCounterDictionary.valueCounterVariation) == flagValueCounter.featureFlag?.variation
+                            expect(flagValueCounterDictionary.valueCounterVersion) == flagValueCounter.featureFlag?.flagVersion
+                            expect(flagValueCounterDictionary.valueCounterIsUnknown).to(beNil())
+                        } else {
+                            expect(AnyComparer.isEqual(flagValueCounterDictionary.valueCounterReportedValue, to: false, considerNilAndNullEqual: true)).to(beTrue())
+                            expect(flagValueCounterDictionary.valueCounterVariation).to(beNil())
+                            expect(flagValueCounterDictionary.valueCounterVersion).to(beNil())
+                            expect(flagValueCounterDictionary.valueCounterIsUnknown) == true
+                        }
+                        expect(flagValueCounterDictionary.valueCounterCount) == flagValueCounter.count
+                    }
+                }
+            }
+        }
+    }
+}
+
+extension FlagRequestTracker {
+    static func stub() -> FlagRequestTracker {
+        var tracker = FlagRequestTracker()
+        tracker.flagCounters = FlagCounter.stubFlagCounters()
+        return tracker
+    }
+}
+
+extension Dictionary where Key == String, Value == Any {
+    var flagRequestTrackerStartDateMillis: Int64? {
+        return self[FlagRequestTracker.CodingKeys.startDate.rawValue] as? Int64
+    }
+    var flagRequestTrackerStartDate: Date? {
+        return Date(millisSince1970: flagRequestTrackerStartDateMillis)
+    }
+    var flagRequestTrackerFeatures: [LDFlagKey: Any]? {
+        return self[FlagRequestTracker.CodingKeys.features.rawValue] as? [LDFlagKey: Any]
+    }
+}
+
+extension LDFlagKey {
+    var isKnown: Bool {
+        return DarklyServiceMock.FlagKeys.all.contains(self)
     }
 }

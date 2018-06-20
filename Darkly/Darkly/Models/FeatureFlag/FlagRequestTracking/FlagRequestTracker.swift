@@ -9,24 +9,29 @@
 import Foundation
 
 struct FlagRequestTracker {
+    enum CodingKeys: String, CodingKey {
+        case startDate, features
+    }
+
     let startDate = Date()
-    var flagCounters = [FlagCounter]()
+    var flagCounters = [LDFlagKey: FlagCounter]()
 
     mutating func logRequest(flagKey: LDFlagKey, reportedValue: Any?, featureFlag: FeatureFlag?, defaultValue: Any?) {
-        if flagCounters.flagCounter(for: flagKey) == nil {
-            flagCounters.append(FlagCounter(flagKey: flagKey))
+        if flagCounters[flagKey] == nil {
+            flagCounters[flagKey] = FlagCounter(flagKey: flagKey)
         }
-        guard let flagCounter = flagCounters.flagCounter(for: flagKey) else { return }
+        guard let flagCounter = flagCounters[flagKey] else { return }
         flagCounter.logRequest(reportedValue: reportedValue, featureFlag: featureFlag, defaultValue: defaultValue)
+    }
+
+    var dictionaryValue: [String: Any] {
+        return [CodingKeys.startDate.rawValue: startDate.millisSince1970,
+                CodingKeys.features.rawValue: flagCounters.dictionaryValues]
     }
 }
 
-extension Array where Element == FlagCounter {
-    func flagCounter(for flagKey: LDFlagKey) -> FlagCounter? {
-        let selectedCounters = filter { (flagCounter) in
-            return flagCounter.flagKey == flagKey
-        }
-        guard selectedCounters.count == 1 else { return nil }
-        return selectedCounters.first
+extension Dictionary where Key == String, Value == FlagCounter {
+    var dictionaryValues: [LDFlagKey: Any] {
+        return mapValues { (flagCounter) in return flagCounter.dictionaryValue }
     }
 }
