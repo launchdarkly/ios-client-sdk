@@ -64,11 +64,8 @@ final class FlagCounter {
         }                                                              -|
     */
     var dictionaryValue: [String: Any] {
-        let valueCounterDictionaries = flagValueCounters.map { (flagValueCounter) in
-            return flagValueCounter.dictionaryValue
-        }
         let detailDictionary = [CodingKeys.defaultValue.rawValue: defaultValue ?? NSNull(),
-                                CodingKeys.counters.rawValue: valueCounterDictionaries]
+                                CodingKeys.counters.rawValue: flagValueCounters.dictionaryValues]
         return [flagKey: detailDictionary]
     }
 }
@@ -87,6 +84,12 @@ extension Array where Element == FlagValueCounter {
         }
         guard selectedFlagValueCounters.count == 1 else { return nil }
         return selectedFlagValueCounters.first
+    }
+
+    var dictionaryValues: [[String: Any]] {
+        return map { (flagValueCounter) in
+            return flagValueCounter.dictionaryValue
+        }
     }
 }
 
