@@ -19,6 +19,7 @@ final class LDUserSpec: QuickSpec {
     override func spec() {
         initSpec()
         dictionaryValueSpec()
+        resetFlagRequestTrackerSpec()
     }
 
     private func initSpec() {
@@ -1263,6 +1264,20 @@ final class LDUserSpec: QuickSpec {
                         }
                     }
                 }
+            }
+        }
+    }
+
+    private func resetFlagRequestTrackerSpec() {
+        describe("resetFlagRequestTracker") {
+            var user: LDUser!
+            beforeEach {
+                user = LDUser.stub()
+
+                user.resetFlagRequestTracker()
+            }
+            it("resets the tracker") {
+                expect(user.flagRequestTracker.flagCounters.isEmpty).to(beTrue())
             }
         }
     }

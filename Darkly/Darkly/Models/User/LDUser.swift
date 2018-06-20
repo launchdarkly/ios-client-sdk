@@ -179,6 +179,10 @@ public struct LDUser {
     static func defaultKey(environmentReporter: EnvironmentReporting) -> String {
         return environmentReporter.vendorUUID ?? UserDefaults.standard.installationKey
     }
+
+    mutating func resetFlagRequestTracker() {
+        flagRequestTracker = FlagRequestTracker()
+    }
 }
 
 extension UserDefaults {
