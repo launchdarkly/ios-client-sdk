@@ -371,6 +371,7 @@ final class EventReporterSpec: QuickSpec {
 
     private func recordFlagEvaluationEventsSpec() {
         recordFeatureAndDebugEventsSpec()
+        recordSummaryEventsSpec()
     }
 
     private func recordFeatureAndDebugEventsSpec() {
@@ -516,6 +517,81 @@ final class EventReporterSpec: QuickSpec {
         }
     }
 
+    private func recordSummaryEventsSpec() {
+        describe("recordSummaryEvents") {
+            var testContext: TestContext!
+            context("with known values") {
+                var featureFlag: FeatureFlag!
+                beforeEach {
+                    testContext = TestContext()
+                }
+                it("logs flag requests") {
+                    DarklyServiceMock.FlagKeys.all.forEach { (flagKey) in
+                        for useAlternateValue in [false, true] {
+                            guard !(flagKey == DarklyServiceMock.FlagKeys.null && useAlternateValue) else { return }     //skip alternate value on null since there isn't one
+                            featureFlag =  DarklyServiceMock.Constants.stubFeatureFlag(for: flagKey, useAlternateValue: useAlternateValue)
+                            for logRequestCount in [1, 2, 3] {
+                                testContext.eventReporter.recordFlagEvaluationEvents(flagKey: flagKey,
+                                                                                     value: featureFlag.value,
+                                                                                     defaultValue: featureFlag.value,
+                                                                                     featureFlag: featureFlag,
+                                                                                     user: testContext.user)
+
+                                guard let flagCounter = testContext.eventReporter.flagRequestTracker.flagCounters[flagKey]
+                                    else {
+                                        XCTFail("expected flagCounter to not be nil, got nil")
+                                        return
+                                }
+                                expect(AnyComparer.isEqual(flagCounter.defaultValue, to: featureFlag.value, considerNilAndNullEqual: true)).to(beTrue())
+                                expect(flagCounter.flagValueCounters.count) == (useAlternateValue ? 2 : 1)
+                                guard let flagValueCounter = flagCounter.flagValueCounters.flagValueCounter(for: featureFlag)
+                                    else {
+                                        XCTFail("expected flagValueCounter to not be nil, got nil")
+                                        return
+                                }
+                                expect(AnyComparer.isEqual(flagValueCounter.reportedValue, to: featureFlag.value, considerNilAndNullEqual: true)).to(beTrue())
+                                expect(flagValueCounter.featureFlag) == featureFlag
+                                expect(flagValueCounter.isKnown) == true
+                                expect(flagValueCounter.count) == logRequestCount
+                            }
+                        }
+                    }
+                }
+            }
+            context("with unknown value") {
+                beforeEach {
+                    testContext = TestContext()
+                }
+                it("logs flag requests") {
+                    for logRequestCount in [1, 2, 3] {
+                        testContext.eventReporter.recordFlagEvaluationEvents(flagKey: DarklyServiceMock.FlagKeys.dummy,
+                                                                             value: false,
+                                                                             defaultValue: false,
+                                                                             featureFlag: nil,
+                                                                             user: testContext.user)
+
+                        guard let flagCounter = testContext.eventReporter.flagRequestTracker.flagCounters[DarklyServiceMock.FlagKeys.dummy]
+                            else {
+                                XCTFail("expected flagCounter to not be nil, got nil")
+                                return
+                        }
+                        expect(AnyComparer.isEqual(flagCounter.defaultValue, to: false, considerNilAndNullEqual: true)).to(beTrue())
+                        expect(flagCounter.flagValueCounters.count) == 1
+                        guard let flagValueCounter = flagCounter.flagValueCounters.flagValueCounter(for: nil)
+                            else {
+                                XCTFail("expected flagValueCounter to not be nil, got nil")
+                                return
+                        }
+                        expect(AnyComparer.isEqual(flagValueCounter.reportedValue, to: false, considerNilAndNullEqual: true)).to(beTrue())
+                        expect(flagValueCounter.featureFlag).to(beNil())
+                        expect(flagValueCounter.isKnown) == false
+                        expect(flagValueCounter.count) == logRequestCount
+                    }
+                }
+            }
+        }
+    }
+
     private func resetFlagRequestTrackerSpec() {
         describe("resetFlagRequestTracker") {
             var testContext: TestContext!
@@ -576,7 +652,7 @@ extension EventReporter {
 }
 
 extension EventReportingMock {
-    func recordFlagEvaluationEvents(flagKey: LDFlagKey, value: Any, defaultValue: Any, featureFlag: FeatureFlag?, user: LDUser) {
+    func recordFlagEvaluationEvents(flagKey: LDFlagKey, value: Any?, defaultValue: Any?, featureFlag: FeatureFlag?, user: LDUser) {
         recordFlagEvaluationEvents(flagKey: flagKey, value: value, defaultValue: defaultValue, featureFlag: featureFlag, user: user, completion: nil)
     }
 }
