@@ -8,7 +8,7 @@
 
 import Foundation
 
-struct FlagValueCounter {
+final class FlagValueCounter {
     enum CodingKeys: String, CodingKey {
         case value, variation, version, unknown, count
     }
@@ -22,7 +22,7 @@ struct FlagValueCounter {
         self.reportedValue = reportedValue
         self.featureFlag = featureFlag
         isKnown = featureFlag != nil
-        count = 1
+        count = 0
     }
 
     var dictionaryValue: [String: Any] {

@@ -32,7 +32,7 @@ final class FlagValueCounterSpec: QuickSpec {
                         expect(AnyComparer.isEqual(flagValueCounter.reportedValue, to: featureFlag.value)).to(beTrue())
                         expect(flagValueCounter.featureFlag) == featureFlag
                         expect(flagValueCounter.isKnown) == true
-                        expect(flagValueCounter.count) == 1
+                        expect(flagValueCounter.count) == 0
                     }
                 }
             }
@@ -44,7 +44,7 @@ final class FlagValueCounterSpec: QuickSpec {
                     expect(AnyComparer.isEqual(flagValueCounter.reportedValue, to: true)).to(beTrue())
                     expect(flagValueCounter.featureFlag).to(beNil())
                     expect(flagValueCounter.isKnown) == false
-                    expect(flagValueCounter.count) == 1
+                    expect(flagValueCounter.count) == 0
                 }
             }
         }
@@ -70,7 +70,7 @@ final class FlagValueCounterSpec: QuickSpec {
                             expect(flagValueCounterDictionary.valueCounterVariation) == featureFlag.variation
                             expect(flagValueCounterDictionary.valueCounterVersion) == featureFlag.flagVersion
                             expect(flagValueCounterDictionary.valueCounterIsUnknown).to(beNil())
-                            expect(flagValueCounterDictionary.valueCounterCount) == 1
+                            expect(flagValueCounterDictionary.valueCounterCount) == 0
                         }
                     }
                 }
@@ -88,7 +88,7 @@ final class FlagValueCounterSpec: QuickSpec {
                             expect(flagValueCounterDictionary.valueCounterVariation) == featureFlag.variation
                             expect(flagValueCounterDictionary.valueCounterVersion) == featureFlag.version
                             expect(flagValueCounterDictionary.valueCounterIsUnknown).to(beNil())
-                            expect(flagValueCounterDictionary.valueCounterCount) == 1
+                            expect(flagValueCounterDictionary.valueCounterCount) == 0
                         }
                     }
                 }
@@ -104,7 +104,7 @@ final class FlagValueCounterSpec: QuickSpec {
                     expect(flagValueCounterDictionary.valueCounterVariation).to(beNil())
                     expect(flagValueCounterDictionary.valueCounterVersion).to(beNil())
                     expect(flagValueCounterDictionary.valueCounterIsUnknown) == true
-                    expect(flagValueCounterDictionary.valueCounterCount) == 1
+                    expect(flagValueCounterDictionary.valueCounterCount) == 0
                 }
             }
         }
