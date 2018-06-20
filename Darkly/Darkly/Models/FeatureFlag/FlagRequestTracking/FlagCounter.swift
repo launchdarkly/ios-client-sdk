@@ -9,6 +9,10 @@
 import Foundation
 
 final class FlagCounter {
+    enum CodingKeys: String, CodingKey {
+        case defaultValue = "default", counters
+    }
+
     let flagKey: String
     var defaultValue: Any? = nil
     var flagValueCounters = [FlagValueCounter]()
@@ -31,6 +35,41 @@ final class FlagCounter {
         Log.debug(typeName(and: #function) + "flagKey: \(flagKey), " + "reportedValue: \(String(describing: reportedValue)), " + "variation: \(String(describing: featureFlag?.variation)), "
             + "version: \(String(describing: featureFlag?.version)), " + "isKnown: \(String(describing: flagValueCounter?.isKnown)), " + "count: \(String(describing: flagValueCounter?.count)), "
             + "defaultValue: \(String(describing: defaultValue))")
+    }
+
+    /* Creates a dictionary of the form
+     "flag-key":
+        {                                                              -|
+            "default": "default-value",                                 |
+            "counters": [                                               |
+                {                               -|                      |
+                    "value": "result-value"      |                      |
+                    "version": 17,               |-     flag value      |
+                    "count": 23,                 |- counter dictionary  |
+                    "variation": 1,              |                      |
+                },                              -|                      |
+                {                                                       |
+                    "value": "another-value"                            |
+                    "version": 17,                                      |- detailDictionary
+                    "count": 3,                                         |
+                    "variation": 0,                                     |
+                },                                                      |
+                {   //If the flag-key isn't a part of the flag store, the flag is unknown. This could happen on the very first app launch if the client app asks for flags before the server responds
+                    //or if the client app requests a flag that doesn't exist.
+                    "unknown": true,                                    |
+                    "value": "default-value",                           |
+                    "count": 1                                          |
+                }                                                       |
+            ]                                                           |
+        }                                                              -|
+    */
+    var dictionaryValue: [String: Any] {
+        let valueCounterDictionaries = flagValueCounters.map { (flagValueCounter) in
+            return flagValueCounter.dictionaryValue
+        }
+        let detailDictionary = [CodingKeys.defaultValue.rawValue: defaultValue ?? NSNull(),
+                                CodingKeys.counters.rawValue: valueCounterDictionaries]
+        return [flagKey: detailDictionary]
     }
 }
 
