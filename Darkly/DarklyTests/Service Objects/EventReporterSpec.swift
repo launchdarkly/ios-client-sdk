@@ -260,7 +260,7 @@ final class EventReporterSpec: QuickSpec {
                     expect(testContext.eventReporter.isReportingActive) == false
                     expect(testContext.serviceMock.publishEventDictionariesCallCount) == 0
                     expect(testContext.eventReporter.eventStoreKeys) == testContext.eventKeys
-                    expect(testContext.eventReporter.eventStoreKeys.contains(extraEvent.key)) == false
+                    expect(testContext.eventReporter.eventStoreKeys.contains(extraEvent.key!)) == false
                 }
             }
         }
