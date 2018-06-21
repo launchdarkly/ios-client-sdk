@@ -16,6 +16,7 @@ final class FlagRequestTrackerSpec: QuickSpec {
         initSpec()
         trackRequestSpec()
         dictionaryValueSpec()
+        hasLoggedRequestsSpec()
     }
 
     private func initSpec() {
@@ -26,7 +27,7 @@ final class FlagRequestTrackerSpec: QuickSpec {
             }
             it("creates a tracker") {
                 expect(flagRequestTracker.startDate.isWithin(0.001, of: Date())).to(beTrue())
-                expect(flagRequestTracker.flagCounters.isEmpty).to(beTrue())
+                expect(flagRequestTracker.hasLoggedRequests) == false
             }
         }
     }
@@ -203,6 +204,35 @@ final class FlagRequestTrackerSpec: QuickSpec {
                         expect(flagValueCounterDictionary.valueCounterIsUnknown) == true
                     }
                     expect(flagValueCounterDictionary.valueCounterCount) == flagValueCounter.count
+                }
+            }
+        }
+    }
+
+    private func hasLoggedRequestsSpec() {
+        describe("hasLoggedRequests") {
+            var flagRequestTracker: FlagRequestTracker!
+            var hasLoggedRequests: Bool!
+            context("with flag counters") {
+                beforeEach {
+                    flagRequestTracker = FlagRequestTracker()
+                    let featureFlag = DarklyServiceMock.Constants.stubFeatureFlag(for: DarklyServiceMock.FlagKeys.bool)
+                    flagRequestTracker.logRequest(flagKey: DarklyServiceMock.FlagKeys.bool, reportedValue: featureFlag.value, featureFlag: featureFlag, defaultValue: false)
+
+                    hasLoggedRequests = flagRequestTracker.hasLoggedRequests
+                }
+                it("returns true") {
+                    expect(hasLoggedRequests) == true
+                }
+            }
+            context("without flag counters") {
+                beforeEach {
+                    flagRequestTracker = FlagRequestTracker()
+
+                    hasLoggedRequests = flagRequestTracker.hasLoggedRequests
+                }
+                it("returns false") {
+                    expect(hasLoggedRequests) == false
                 }
             }
         }

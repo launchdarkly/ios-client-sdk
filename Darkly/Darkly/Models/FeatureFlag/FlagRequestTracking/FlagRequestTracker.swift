@@ -39,6 +39,10 @@ struct FlagRequestTracker {
         return [CodingKeys.startDate.rawValue: startDate.millisSince1970,
                 CodingKeys.features.rawValue: flagCounters.dictionaryValues]
     }
+
+    var hasLoggedRequests: Bool {
+        return !flagCounters.isEmpty
+    }
 }
 
 extension FlagRequestTracker: TypeIdentifying { }

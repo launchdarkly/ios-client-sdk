@@ -553,7 +553,7 @@ final class EventReporterSpec: QuickSpec {
                 testContext.eventReporter.resetFlagRequestTracker()
             }
             it("resets the flagRequestTracker") {
-                expect(testContext.eventReporter.flagRequestTracker.flagCounters.isEmpty) == true
+                expect(testContext.eventReporter.flagRequestTracker.hasLoggedRequests) == false
             }
         }
     }
