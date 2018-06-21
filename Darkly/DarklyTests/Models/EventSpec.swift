@@ -12,7 +12,9 @@ import Nimble
 
 final class EventSpec: QuickSpec {
     struct Constants {
-        static let eventCapacity = 3
+        static var eventCapacity: Int {
+            return Event.Kind.allKinds.count
+        }
         static let eventKey = "EventSpec.Event.Key"
         static let eventData: [String: Any] = ["stubDataKey": "stubDataValue"]
     }
@@ -443,6 +445,9 @@ final class EventSpec: QuickSpec {
             }
 
             context("custom event") {
+                beforeEach {
+                    config = LDConfig.stub
+                }
                 context("without inlining user") {
                     beforeEach {
                         event = Event.customEvent(key: Constants.eventKey, user: user, data: Constants.eventData)
