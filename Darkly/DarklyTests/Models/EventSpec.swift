@@ -544,7 +544,7 @@ final class EventSpec: QuickSpec {
                         }
                         expect(eventDictionary.eventUserKey).to(beNil())
                     } else {
-                        expect(eventDictionary.eventUserKey) == user.key
+                        expect(eventDictionary.eventUserKey) == event.user.key
                         expect(eventDictionary.eventUser).to(beNil())
                     }
                     if let eventValue = event.value {
@@ -848,6 +848,7 @@ extension Event {
             return Event.featureEvent(key: UUID().uuidString, value: true, defaultValue: false, featureFlag: featureFlag, user: user)
         case .identify: return Event.identifyEvent(user: user)
         case .custom: return Event.customEvent(key: UUID().uuidString, user: user, data: ["custom": UUID().uuidString])
+        case .summary: return Event.summaryEvent(flagRequestTracker: FlagRequestTracker.stub())
         }
     }
 

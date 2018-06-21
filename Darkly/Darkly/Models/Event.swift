@@ -14,9 +14,9 @@ struct Event { //sdk internal, not publically accessible
     }
 
     enum Kind: String {
-        case feature, debug, identify, custom
+        case feature, debug, identify, custom, summary
 
-        static var allKinds: [Kind] { return [feature, debug, identify, custom] }
+        static var allKinds: [Kind] { return [feature, debug, identify, custom, summary] }
         static var alwaysInlineUserKinds: [Kind] { return [identify, debug] }
         var isAlwaysInlineUserKind: Bool { return Kind.alwaysInlineUserKinds.contains(self) }
     }
@@ -61,6 +61,11 @@ struct Event { //sdk internal, not publically accessible
     static func identifyEvent(user: LDUser) -> Event {
         Log.debug(typeName(and: #function) + "key: " + user.key)
         return Event(key: user.key, kind: .identify, user: user)
+    }
+
+    static func summaryEvent(flagRequestTracker: FlagRequestTracker) -> Event {
+        Log.debug(typeName(and: #function))
+        return Event(key: "", kind: .summary, user: LDUser())
     }
 
     //TODO: Remove when implementing summary events
