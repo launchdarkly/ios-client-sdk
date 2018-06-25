@@ -247,6 +247,13 @@ extension FlagRequestTracker {
     }
 }
 
+extension FlagRequestTracker: Equatable {
+    public static func == (lhs: FlagRequestTracker, rhs: FlagRequestTracker) -> Bool {
+        if !lhs.startDate.isWithin(0.001, of: rhs.startDate) { return false }
+        return lhs.flagCounters == rhs.flagCounters
+    }
+}
+
 extension Dictionary where Key == String, Value == Any {
     var flagRequestTrackerStartDateMillis: Int64? {
         return self[FlagRequestTracker.CodingKeys.startDate.rawValue] as? Int64

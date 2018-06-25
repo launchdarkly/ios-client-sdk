@@ -111,6 +111,23 @@ final class FlagValueCounterSpec: QuickSpec {
     }
 }
 
+extension FlagValueCounter: Equatable {
+    public static func == (lhs: FlagValueCounter, rhs: FlagValueCounter) -> Bool {
+        if !AnyComparer.isEqual(lhs.reportedValue, to: rhs.reportedValue, considerNilAndNullEqual: true) { return false }
+        return lhs.featureFlag == rhs.featureFlag && lhs.isKnown == rhs.isKnown && lhs.count == rhs.count
+    }
+}
+
+extension Array where Element == FlagValueCounter {
+    static func == (lhs: [FlagValueCounter], rhs: [FlagValueCounter]) -> Bool {
+        guard lhs.count == rhs.count else { return false }
+        for (index, leftFlagValueCounter) in lhs.enumerated() where leftFlagValueCounter != rhs[index] {
+            return false
+        }
+        return true
+    }
+}
+
 extension Dictionary where Key == String, Value == Any {
     var valueCounterReportedValue: Any? { return self[FlagValueCounter.CodingKeys.value.rawValue] }
     var valueCounterVariation: Int? { return self[FlagValueCounter.CodingKeys.variation.rawValue] as? Int }

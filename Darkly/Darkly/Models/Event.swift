@@ -76,9 +76,9 @@ struct Event { //sdk internal, not publically accessible
         return Event(kind: .identify, key: user.key, user: user)
     }
 
-    static func summaryEvent(flagRequestTracker: FlagRequestTracker) -> Event {
+    static func summaryEvent(flagRequestTracker: FlagRequestTracker, endDate: Date = Date()) -> Event {
         Log.debug(typeName(and: #function))
-        return Event(kind: .summary, key: "", user: LDUser())
+        return Event(kind: .summary, flagRequestTracker: flagRequestTracker, endDate: endDate)
     }
 
     //TODO: Remove when implementing summary events
@@ -163,7 +163,7 @@ extension Dictionary where Key == String, Value == Any {
     func matches(eventDictionary other: [String: Any]) -> Bool {
         guard let kind = eventKind else { return false }
         if kind == .summary {
-            return kind == other.eventKind
+            return kind == other.eventKind && eventEndDate?.isWithin(0.001, of: other.eventEndDate) ?? false
         }
         guard let key = eventKey, let creationDateMillis = eventCreationDateMillis,
             let otherKey = other.eventKey, let otherCreationDateMillis = other.eventCreationDateMillis
@@ -175,7 +175,7 @@ extension Dictionary where Key == String, Value == Any {
 extension Event: Equatable {
     static func == (lhs: Event, rhs: Event) -> Bool {
         if lhs.kind == .summary {
-            return lhs.kind == rhs.kind
+            return lhs.kind == rhs.kind && lhs.endDate?.isWithin(0.001, of: rhs.endDate) ?? false
         }
         return lhs.kind == rhs.kind && lhs.key == rhs.key && lhs.creationDate == rhs.creationDate
     }

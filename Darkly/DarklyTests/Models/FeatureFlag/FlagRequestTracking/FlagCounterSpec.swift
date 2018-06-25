@@ -239,11 +239,28 @@ extension FlagCounter {
     }
 }
 
+extension FlagCounter: Equatable {
+    public static func == (lhs: FlagCounter, rhs: FlagCounter) -> Bool {
+        if !AnyComparer.isEqual(lhs.defaultValue, to: rhs.defaultValue, considerNilAndNullEqual: true) { return false }
+        return lhs.flagValueCounters == rhs.flagValueCounters
+    }
+}
+
 extension Dictionary where Key == String, Value == Any {
     var flagCounterDefaultValue: Any? {
         return self[FlagCounter.CodingKeys.defaultValue.rawValue]
     }
     var flagCounterFlagValueCounters: [[String: Any]]? {
         return self[FlagCounter.CodingKeys.counters.rawValue] as? [[String: Any]]
+    }
+}
+
+extension Dictionary where Key == LDFlagKey, Value == FlagCounter {
+    static func == (lhs: [LDFlagKey: FlagCounter], rhs: [LDFlagKey: FlagCounter]) -> Bool {
+        if Set(lhs.keys) != Set(rhs.keys) { return false }
+        for key in lhs.keys where lhs[key] != rhs[key] {
+            return false
+        }
+        return true
     }
 }
