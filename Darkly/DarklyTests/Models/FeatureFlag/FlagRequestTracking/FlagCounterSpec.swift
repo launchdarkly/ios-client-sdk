@@ -206,7 +206,7 @@ final class FlagCounterSpec: QuickSpec {
 
 extension FlagCounter {
     struct Constants {
-        static let requestCount = 3
+        static let requestCount = 5
     }
 
     class func stub(flagKey: LDFlagKey) -> FlagCounter {

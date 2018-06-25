@@ -124,6 +124,10 @@ struct Event { //sdk internal, not publically accessible
         eventDictionary[CodingKeys.variation.rawValue] = featureFlag?.variation
         eventDictionary[CodingKeys.version.rawValue] = featureFlag?.flagVersion ?? featureFlag?.version     //Supercedes version if the flagVersion exists
         eventDictionary[CodingKeys.data.rawValue] = data
+        if let flagRequestTracker = flagRequestTracker {
+            eventDictionary.merge(flagRequestTracker.dictionaryValue) { (_, trackerItem) in return trackerItem }
+        }
+        eventDictionary[CodingKeys.endDate.rawValue] = endDate?.millisSince1970
 
         return eventDictionary
     }
