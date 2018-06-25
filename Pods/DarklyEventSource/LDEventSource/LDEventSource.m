@@ -173,7 +173,7 @@ didReceiveResponse:(NSURLResponse *)response completionHandler:(void (^)(NSURLSe
             self.lastEventID = parser.event.id;
         }
     }
-    if (parser.retryInterval) {
+    if (parser.retryInterval != nil) {
         self.retryInterval = [parser.retryInterval doubleValue];
     }
     if (parser.remainingEventString.length > 0) {
