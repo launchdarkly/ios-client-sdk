@@ -947,6 +947,59 @@ final class EventSpec: QuickSpec {
                         expect(eventDictionary.matches(eventDictionary: otherDictionary)) == false
                     }
                 }
+                context("for summary event dictionaries") {
+                    var event: Event!
+                    beforeEach {
+                        event = Event.stub(.summary, with: user)
+                        eventDictionary = event.dictionaryValue(config: config)
+                    }
+                    context("when the kinds and endDates match") {
+                        beforeEach {
+                            otherDictionary = event.dictionaryValue(config: config)
+                        }
+                        it("returns true") {
+                            expect(eventDictionary.matches(eventDictionary: otherDictionary)) == true
+                        }
+                    }
+                    context("when the kinds do not match") {
+                        beforeEach {
+                            otherDictionary = event.dictionaryValue(config: config)
+                            otherDictionary[Event.CodingKeys.kind.rawValue] = Event.Kind.feature.rawValue
+                        }
+                        it("returns false") {
+                            expect(eventDictionary.matches(eventDictionary: otherDictionary)) == false
+                        }
+                    }
+                    context("when the endDates do not match") {
+                        context("endDates differ") {
+                            beforeEach {
+                                otherDictionary = event.dictionaryValue(config: config)
+                                otherDictionary[Event.CodingKeys.endDate.rawValue] = event.endDate!.addingTimeInterval(0.002).millisSince1970
+                            }
+                            it("returns false") {
+                                expect(eventDictionary.matches(eventDictionary: otherDictionary)) == false
+                            }
+                        }
+                        context("endDate is nil") {
+                            beforeEach {
+                                eventDictionary.removeValue(forKey: Event.CodingKeys.endDate.rawValue)
+                                otherDictionary = event.dictionaryValue(config: config)
+                            }
+                            it("returns false") {
+                                expect(eventDictionary.matches(eventDictionary: otherDictionary)) == false
+                            }
+                        }
+                        context("other endDate is nil") {
+                            beforeEach {
+                                otherDictionary = event.dictionaryValue(config: config)
+                                otherDictionary.removeValue(forKey: Event.CodingKeys.endDate.rawValue)
+                            }
+                            it("returns false") {
+                                expect(eventDictionary.matches(eventDictionary: otherDictionary)) == false
+                            }
+                        }
+                    }
+                }
             }
         }
     }
@@ -991,6 +1044,35 @@ final class EventSpec: QuickSpec {
                 }
                 it("returns false") {
                     expect(event1) != event2
+                }
+            }
+            context("summary events") {
+                beforeEach {
+                    event1 = Event.stub(.summary, with: user)
+                }
+                context("when events match") {
+                    beforeEach {
+                        event2 = event1
+                    }
+                    it("returns true") {
+                        expect(event1) == event2
+                    }
+                }
+                context("when kinds differ") {
+                    beforeEach {
+                        event2 = Event(kind: .custom, flagRequestTracker: event1.flagRequestTracker, endDate: event1.endDate)
+                    }
+                    it("returns false") {
+                        expect(event1) != event2
+                    }
+                }
+                context("when endDates differ") {
+                    beforeEach {
+                        event2 = Event(kind: .summary, flagRequestTracker: event1.flagRequestTracker, endDate: event1.endDate?.addingTimeInterval(0.0011))
+                    }
+                    it("returns false") {
+                        expect(event1) != event2
+                    }
                 }
             }
         }
