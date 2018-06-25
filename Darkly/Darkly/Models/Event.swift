@@ -151,7 +151,7 @@ extension Array where Element == [String: Any] {
 }
 
 extension Dictionary where Key == String, Value == Any {
-    var eventKindString: String? {
+    private var eventKindString: String? {
         return self[Event.CodingKeys.kind.rawValue] as? String
     }
     var eventKind: Event.Kind? {

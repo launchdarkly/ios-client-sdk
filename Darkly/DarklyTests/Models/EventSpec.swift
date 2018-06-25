@@ -629,7 +629,7 @@ final class EventSpec: QuickSpec {
                         expect(flagValueCounterDictionary.valueCounterCount) == flagValueCounter.count
                     }
                 }
-                
+
                 expect(eventDictionary.eventKey).to(beNil())
                 expect(eventDictionary.eventCreationDate).to(beNil())
                 expect(eventDictionary.eventUser).to(beNil())
@@ -793,6 +793,34 @@ final class EventSpec: QuickSpec {
         let config = LDConfig.stub
         let user = LDUser.stub()
         describe("event dictionary") {
+            describe("eventKind") {
+                context("when the dictionary contains the event kind") {
+                    var events: [Event]!
+                    var eventDictionary: [String: Any]!
+                    beforeEach {
+                        events = Event.stubEvents(for: user)
+                    }
+                    it("returns the event kind") {
+                        events.forEach { (event) in
+                            eventDictionary = event.dictionaryValue(config: config)
+
+                            expect(eventDictionary.eventKind) == event.kind
+                        }
+                    }
+                }
+                context("when the dictionary does not contain the event kind") {
+                    var eventDictionary: [String: Any]!
+                    beforeEach {
+                        let event = Event.stub(.custom, with: user)
+                        eventDictionary = event.dictionaryValue(config: config)
+                        eventDictionary.removeValue(forKey: Event.CodingKeys.kind.rawValue)
+                    }
+                    it("returns nil") {
+                        expect(eventDictionary.eventKind).to(beNil())
+                    }
+                }
+            }
+
             describe("eventKey") {
                 var event: Event!
                 var eventDictionary: [String: Any]!
@@ -833,6 +861,28 @@ final class EventSpec: QuickSpec {
                     }
                     it("returns nil") {
                         expect(eventDictionary.eventCreationDateMillis).to(beNil())
+                    }
+                }
+            }
+
+            describe("eventEndDate") {
+                var event: Event!
+                var eventDictionary: [String: Any]!
+                beforeEach {
+                    event = Event.stub(.summary, with: user)
+                    eventDictionary = event.dictionaryValue(config: config)
+                }
+                context("when the dictionary contains the event endDate") {
+                    it("returns the event kind") {
+                        expect(eventDictionary.eventEndDate?.isWithin(0.001, of: event.endDate)).to(beTrue())
+                    }
+                }
+                context("when the dictionary does not contain the event kind") {
+                    beforeEach {
+                        eventDictionary.removeValue(forKey: Event.CodingKeys.endDate.rawValue)
+                    }
+                    it("returns nil") {
+                        expect(eventDictionary.eventEndDate).to(beNil())
                     }
                 }
             }
@@ -948,10 +998,6 @@ final class EventSpec: QuickSpec {
 }
 
 extension Dictionary where Key == String, Value == Any {
-    var eventKind: Event.Kind? {
-        guard let eventKindString = eventKindString else { return nil }
-        return Event.Kind(rawValue: eventKindString)
-    }
     var eventCreationDate: Date? { return Date(millisSince1970: self[Event.CodingKeys.creationDate.rawValue] as? Int64) }
     var eventUserKey: String? { return self[Event.CodingKeys.userKey.rawValue] as? String }
     var eventUser: LDUser? { return LDUser(object: self[Event.CodingKeys.user.rawValue]) }
