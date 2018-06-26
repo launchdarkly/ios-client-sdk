@@ -168,10 +168,6 @@ dispatch_queue_t eventsQueue;
                     defaultFlagValue:(id)defaultFlagValue
                                 user:(LDUserModel*)user
                               config:(LDConfig*)config {
-    if ([self isAtEventCapacity:self.eventsArray]) {
-        DEBUG_LOG(@"Events have surpassed capacity. Discarding feature event %@", flagKey);
-        return;
-    }
     if (!flagConfigValue.eventTrackingContext || (flagConfigValue.eventTrackingContext && !flagConfigValue.eventTrackingContext.trackEvents)) {
         DEBUG_LOG(@"Tracking is off. Discarding feature event %@", flagKey);
         return;
@@ -187,28 +183,16 @@ dispatch_queue_t eventsQueue;
 }
 
 -(void)createCustomEventWithKey:(NSString *)eventKey customData:(NSDictionary *)customData user:(LDUserModel*)user config:(LDConfig*)config {
-    if ([self isAtEventCapacity:self.eventsArray]) {
-        DEBUG_LOG(@"Events have surpassed capacity. Discarding custom event %@ with customData %@", eventKey, customData);
-        return;
-    }
     DEBUG_LOG(@"Creating custom event for custom key:%@ and customData:%@", eventKey, customData);
     [self addEventDictionary:[[LDEventModel customEventWithKey:eventKey customData:customData userValue:user inlineUser:config.inlineUserInEvents] dictionaryValueUsingConfig:config]];
 }
 
 -(void)createIdentifyEventWithUser:(LDUserModel*)user config:(LDConfig*)config {
-    if ([self isAtEventCapacity:self.eventsArray]) {
-        DEBUG_LOG(@"Events have surpassed capacity. Discarding identify event for user key:%@", user.key);
-        return;
-    }
     DEBUG_LOG(@"Creating identify event for user key:%@", user.key);
     [self addEventDictionary:[[LDEventModel identifyEventWithUser:user] dictionaryValueUsingConfig:config]];
 }
 
 -(void)createSummaryEventWithTracker:(LDFlagConfigTracker*)tracker config:(LDConfig*)config {
-    if ([self isAtEventCapacity:self.eventsArray]) {
-        DEBUG_LOGX(@"Events have surpassed capacity. Discarding summary event.");
-        return;
-    }
     if (tracker.flagCounters.count == 0) {
         DEBUG_LOGX(@"Tracker has no flag counters. Discarding summary event.");
         return;
@@ -223,10 +207,6 @@ dispatch_queue_t eventsQueue;
                   defaultFlagValue:(id)defaultFlagValue
                               user:(LDUserModel*)user
                             config:(LDConfig*)config {
-    if ([self isAtEventCapacity:self.eventsArray]) {
-        DEBUG_LOG(@"Events have surpassed capacity. Discarding debug event %@", flagKey);
-        return;
-    }
     if (![self shouldCreateDebugEventForContext:flagConfigValue.eventTrackingContext lastEventResponseDate:self.lastEventResponseDate]) {
         DEBUG_LOG(@"LDDataManager createDebugEventWithFlagKey aborting, debug events are turned off. Discarding debug event %@", flagKey);
         return;

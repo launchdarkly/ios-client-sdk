@@ -78,7 +78,7 @@ NSInteger const kLDFlagConfigValueItemDoesNotExist = -1;
     if (self.modelVersion != kLDFlagConfigValueItemDoesNotExist) {
         dictionaryValue[kLDFlagConfigValueKeyVersion] = @(self.modelVersion);
     }
-    if (self.flagVersion) {
+    if (self.flagVersion != nil) {
         NSString *versionKey = useFlagVersion ? kLDFlagConfigValueKeyVersion : kLDFlagConfigValueKeyFlagVersion;
         dictionaryValue[versionKey] = self.flagVersion;
     }
@@ -150,6 +150,6 @@ NSInteger const kLDFlagConfigValueItemDoesNotExist = -1;
 }
 
 -(NSString*)description {
-    return [NSString stringWithFormat:@"<LDFlagConfigValue: %p, value: %@, modelVersion: %ld, variation: %ld, flagVersion: %@, eventTrackingContext: %@>", self, [self.value description], (long)self.modelVersion, (long)self.variation, self.flagVersion ? [self.flagVersion description] : @"nil", self.eventTrackingContext ?: @"nil"];
+    return [NSString stringWithFormat:@"<LDFlagConfigValue: %p, value: %@, modelVersion: %ld, variation: %ld, flagVersion: %@, eventTrackingContext: %@>", self, [self.value description], (long)self.modelVersion, (long)self.variation, self.flagVersion != nil ? [self.flagVersion description] : @"nil", self.eventTrackingContext ?: @"nil"];
 }
 @end
