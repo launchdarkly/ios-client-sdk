@@ -4,7 +4,7 @@ All notable changes to the LaunchDarkly iOS SDK will be documented in this file.
 
 ## [2.13.1] - 2018-06-21
 ### Changed
-- Removed early tests for reaching event capacity that caused Thread Sanitizer warnings
+- Removed early tests for reaching event capacity that caused benign Thread Sanitizer warnings
 - Changed pointer nil tests to clear Static Analyzer pointer comparison warnings
 
 ## [2.13.0] - 2018-06-01
