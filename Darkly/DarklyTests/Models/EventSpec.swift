@@ -609,9 +609,9 @@ final class EventSpec: QuickSpec {
                             return
                     }
                     expect(AnyComparer.isEqual(flagCounterDictionary.flagCounterDefaultValue, to: flagCounter.defaultValue, considerNilAndNullEqual: true)).to(beTrue())
-                    guard let flagValueCounters = flagCounterDictionary.flagCounterCounters, flagValueCounters.count == flagCounter.flagValueCounters.count
+                    guard let flagValueCounters = flagCounterDictionary.flagCounterFlagValueCounters, flagValueCounters.count == flagCounter.flagValueCounters.count
                         else {
-                            XCTFail("expected flag value counters for \(flagKey) to have \(flagCounter.flagValueCounters.count) entries, got \(flagCounterDictionary.flagCounterCounters?.count ?? 0)")
+                            XCTFail("expected flag value counters for \(flagKey) to have \(flagCounter.flagValueCounters.count) entries, got \(flagCounterDictionary.flagCounterFlagValueCounters?.count ?? 0)")
                             return
                     }
                     for (index, flagValueCounter) in flagCounter.flagValueCounters.enumerated() {

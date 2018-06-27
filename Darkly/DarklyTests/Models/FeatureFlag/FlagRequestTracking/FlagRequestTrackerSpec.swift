@@ -217,7 +217,7 @@ final class FlagRequestTrackerSpec: QuickSpec {
                 beforeEach {
                     flagRequestTracker = FlagRequestTracker()
                     let featureFlag = DarklyServiceMock.Constants.stubFeatureFlag(for: DarklyServiceMock.FlagKeys.bool)
-                    flagRequestTracker.logRequest(flagKey: DarklyServiceMock.FlagKeys.bool, reportedValue: featureFlag.value, featureFlag: featureFlag, defaultValue: false)
+                    flagRequestTracker.trackRequest(flagKey: DarklyServiceMock.FlagKeys.bool, reportedValue: featureFlag.value, featureFlag: featureFlag, defaultValue: false)
 
                     hasLoggedRequests = flagRequestTracker.hasLoggedRequests
                 }
