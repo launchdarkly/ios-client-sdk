@@ -128,7 +128,7 @@ final class EventTrackingContextSpec: QuickSpec {
             }
             context("object is not a dictionary or does not contain trackEvents") {
                 it("returns nil") {
-                    DarklyServiceMock.FlagValues.all.forEach { (object) in
+                    DarklyServiceMock.FlagValues.knownFlags.forEach { (object) in
                         eventTrackingContext = EventTrackingContext(object: object)
 
                         expect(eventTrackingContext).to(beNil())

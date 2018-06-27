@@ -422,7 +422,7 @@ final class FlagStoreSpec: QuickSpec {
             context("when flag key doesn't exist") {
                 var featureFlag: FeatureFlag?
                 beforeEach {
-                    featureFlag = flagStore.featureFlag(for: DarklyServiceMock.FlagKeys.dummy)
+                    featureFlag = flagStore.featureFlag(for: DarklyServiceMock.FlagKeys.unknown)
                 }
                 it("returns nil") {
                     expect(featureFlag).to(beNil())
@@ -451,7 +451,7 @@ final class FlagStoreSpec: QuickSpec {
                 var flagStoreFeatureFlag: FeatureFlag?
                 var flagStoreSource: LDFlagValueSource?
                 beforeEach {
-                    (flagStoreFeatureFlag, flagStoreSource) = testContext.flagStore.featureFlagAndSource(for: DarklyServiceMock.FlagKeys.dummy)
+                    (flagStoreFeatureFlag, flagStoreSource) = testContext.flagStore.featureFlagAndSource(for: DarklyServiceMock.FlagKeys.unknown)
                 }
                 it("returns nil for the feature flag and source") {
                     expect(flagStoreFeatureFlag).to(beNil())

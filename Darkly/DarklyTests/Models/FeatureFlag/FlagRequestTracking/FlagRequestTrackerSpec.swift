@@ -14,7 +14,7 @@ import Nimble
 final class FlagRequestTrackerSpec: QuickSpec {
     override func spec() {
         initSpec()
-        logRequestSpec()
+        trackRequestSpec()
         dictionaryValueSpec()
     }
 
@@ -31,67 +31,129 @@ final class FlagRequestTrackerSpec: QuickSpec {
         }
     }
 
-    private func logRequestSpec() {
-        describe("logRequest") {
+    private func trackRequestSpec() {
+        describe("trackRequest") {
             var flagRequestTracker: FlagRequestTracker!
+            var flagKey: LDFlagKey!
             var featureFlag: FeatureFlag!
             context("with known value") {
-                beforeEach {
-                    flagRequestTracker = FlagRequestTracker()
-                }
-                it("logs the flag request") {
-                    DarklyServiceMock.FlagKeys.all.forEach { (flagKey) in
-                        for useAlternateValue in [false, true] {
-                            guard !(flagKey == DarklyServiceMock.FlagKeys.null && useAlternateValue) else { return }     //skip alternate value on null since there isn't one
-                            featureFlag =  DarklyServiceMock.Constants.stubFeatureFlag(for: flagKey, useAlternateValue: useAlternateValue)
-                            for logRequestCount in [1, 2, 3] {
-                                flagRequestTracker.logRequest(flagKey: flagKey, reportedValue: featureFlag.value, featureFlag: featureFlag, defaultValue: featureFlag.value)
+                context("first request") {
+                    beforeEach {
+                        flagRequestTracker = FlagRequestTracker()
+                        flagKey = DarklyServiceMock.FlagKeys.dictionary
+                        featureFlag =  DarklyServiceMock.Constants.stubFeatureFlag(for: flagKey)
 
-                                guard let flagCounter = flagRequestTracker.flagCounters[flagKey]
-                                    else {
-                                        XCTFail("expected flagCounter to not be nil, got nil")
-                                        return
-                                }
-                                expect(AnyComparer.isEqual(flagCounter.defaultValue, to: featureFlag.value, considerNilAndNullEqual: true)).to(beTrue())
-                                expect(flagCounter.flagValueCounters.count) == (useAlternateValue ? 2 : 1)
-                                guard let flagValueCounter = flagCounter.flagValueCounters.flagValueCounter(for: featureFlag)
-                                    else {
-                                        XCTFail("expected flagValueCounter to not be nil, got nil")
-                                        return
-                                }
-                                expect(AnyComparer.isEqual(flagValueCounter.reportedValue, to: featureFlag.value, considerNilAndNullEqual: true)).to(beTrue())
-                                expect(flagValueCounter.featureFlag) == featureFlag
-                                expect(flagValueCounter.isKnown) == true
-                                expect(flagValueCounter.count) == logRequestCount
-                            }
+                        flagRequestTracker.trackRequest(flagKey: flagKey, reportedValue: featureFlag.value, featureFlag: featureFlag, defaultValue: featureFlag.value)
+                    }
+                    it("creates a flag counter for the flagKey") {
+                        let flagCounter = flagRequestTracker.flagCounters[flagKey]
+                        expect(flagCounter).toNot(beNil())
+                        expect(AnyComparer.isEqual(flagCounter?.defaultValue, to: featureFlag.value, considerNilAndNullEqual: true)).to(beTrue())
+                    }
+                    it("creates a flag value counter for the feature flag") {
+                        let flagCounter = flagRequestTracker.flagCounters[flagKey]
+                        let flagValueCounter = flagCounter?.flagValueCounters.flagValueCounter(for: featureFlag)
+                        expect(flagCounter?.flagValueCounters.count) == 1
+                        expect(AnyComparer.isEqual(flagValueCounter?.reportedValue, to: featureFlag.value, considerNilAndNullEqual: true)).to(beTrue())
+                        expect(flagValueCounter?.featureFlag) == featureFlag
+                        expect(flagValueCounter?.isKnown) == true
+                        expect(flagValueCounter?.count) == 1
+                    }
+                }
+                context("later request") {
+                    context("with the same feature flag value") {
+                        beforeEach {
+                            flagRequestTracker = FlagRequestTracker.stub()
+                            flagKey = DarklyServiceMock.FlagKeys.dictionary
+                            featureFlag =  DarklyServiceMock.Constants.stubFeatureFlag(for: flagKey)
+
+                            flagRequestTracker.trackRequest(flagKey: flagKey, reportedValue: featureFlag.value, featureFlag: featureFlag, defaultValue: featureFlag.value)
+                        }
+                        it("increments the flag value counter for the feature flag") {
+                            let flagCounter = flagRequestTracker.flagCounters[flagKey]
+                            let flagValueCounter = flagCounter?.flagValueCounters.flagValueCounter(for: featureFlag)
+                            expect(flagCounter?.flagValueCounters.count) == 1
+                            expect(AnyComparer.isEqual(flagValueCounter?.reportedValue, to: featureFlag.value, considerNilAndNullEqual: true)).to(beTrue())
+                            expect(flagValueCounter?.featureFlag) == featureFlag
+                            expect(flagValueCounter?.isKnown) == true
+                            expect(flagValueCounter?.count) == FlagCounter.Constants.requestCount + 1
+                        }
+                    }
+                    context("with a different feature flag value") {
+                        beforeEach {
+                            flagRequestTracker = FlagRequestTracker.stub()
+                            flagKey = DarklyServiceMock.FlagKeys.dictionary
+                            featureFlag =  DarklyServiceMock.Constants.stubFeatureFlag(for: flagKey, useAlternateValue: true)
+
+                            flagRequestTracker.trackRequest(flagKey: flagKey, reportedValue: featureFlag.value, featureFlag: featureFlag, defaultValue: featureFlag.value)
+                        }
+                        it("creates a new flag value counter for the feature flag") {
+                            let flagCounter = flagRequestTracker.flagCounters[flagKey]
+                            let flagValueCounter = flagCounter?.flagValueCounters.flagValueCounter(for: featureFlag)
+                            expect(flagCounter?.flagValueCounters.count) == 2
+                            expect(AnyComparer.isEqual(flagValueCounter?.reportedValue, to: featureFlag.value, considerNilAndNullEqual: true)).to(beTrue())
+                            expect(flagValueCounter?.featureFlag) == featureFlag
+                            expect(flagValueCounter?.isKnown) == true
+                            expect(flagValueCounter?.count) == 1
                         }
                     }
                 }
             }
             context("with unknown value") {
-                beforeEach {
-                    flagRequestTracker = FlagRequestTracker()
-                }
-                it("logs the flag request") {
-                    for logRequestCount in [1, 2, 3] {
-                        flagRequestTracker.logRequest(flagKey: DarklyServiceMock.FlagKeys.dummy, reportedValue: false, featureFlag: nil, defaultValue: false)
+                context("first request") {
+                    beforeEach {
+                        flagRequestTracker = FlagRequestTracker()
+                        flagKey = DarklyServiceMock.FlagKeys.unknown
 
-                        guard let flagCounter = flagRequestTracker.flagCounters[DarklyServiceMock.FlagKeys.dummy]
-                            else {
-                                XCTFail("expected flagCounter to not be nil, got nil")
-                                return
-                        }
-                        expect(AnyComparer.isEqual(flagCounter.defaultValue, to: false, considerNilAndNullEqual: true)).to(beTrue())
-                        expect(flagCounter.flagValueCounters.count) == 1
-                        guard let flagValueCounter = flagCounter.flagValueCounters.flagValueCounter(for: nil)
-                            else {
-                                XCTFail("expected flagValueCounter to not be nil, got nil")
-                                return
-                        }
-                        expect(AnyComparer.isEqual(flagValueCounter.reportedValue, to: false, considerNilAndNullEqual: true)).to(beTrue())
-                        expect(flagValueCounter.featureFlag).to(beNil())
-                        expect(flagValueCounter.isKnown) == false
-                        expect(flagValueCounter.count) == logRequestCount
+                        flagRequestTracker.trackRequest(flagKey: flagKey, reportedValue: false, featureFlag: nil, defaultValue: false)
+                    }
+                    it("creates a flag counter for the flagKey") {
+                        let flagCounter = flagRequestTracker.flagCounters[flagKey]
+                        expect(flagCounter).toNot(beNil())
+                        expect(AnyComparer.isEqual(flagCounter?.defaultValue, to: false, considerNilAndNullEqual: true)).to(beTrue())
+                    }
+                    it("creates a flag value counter for the feature flag") {
+                        let flagCounter = flagRequestTracker.flagCounters[flagKey]
+                        let flagValueCounter = flagCounter?.flagValueCounters.flagValueCounter(for: nil)
+                        expect(flagCounter?.flagValueCounters.count) == 1
+                        expect(AnyComparer.isEqual(flagValueCounter?.reportedValue, to: false, considerNilAndNullEqual: true)).to(beTrue())
+                        expect(flagValueCounter?.featureFlag).to(beNil())
+                        expect(flagValueCounter?.isKnown) == false
+                        expect(flagValueCounter?.count) == 1
+                    }
+                }
+                context("later request") {
+                    beforeEach {
+                        flagRequestTracker = FlagRequestTracker.stub()
+                        flagKey = DarklyServiceMock.FlagKeys.unknown
+
+                        flagRequestTracker.trackRequest(flagKey: flagKey, reportedValue: false, featureFlag: nil, defaultValue: false)
+                    }
+                    it("increments the flag value counter for the feature flag") {
+                        let flagCounter = flagRequestTracker.flagCounters[flagKey]
+                        let flagValueCounter = flagCounter?.flagValueCounters.flagValueCounter(for: nil)
+                        expect(flagCounter?.flagValueCounters.count) == 1
+                        expect(AnyComparer.isEqual(flagValueCounter?.reportedValue, to: false, considerNilAndNullEqual: true)).to(beTrue())
+                        expect(flagValueCounter?.featureFlag).to(beNil())
+                        expect(flagValueCounter?.isKnown) == false
+                        expect(flagValueCounter?.count) == FlagCounter.Constants.requestCount + 1
+                    }
+                }
+                context("later request with a different default value") {
+                    beforeEach {
+                        flagRequestTracker = FlagRequestTracker.stub()
+                        flagKey = DarklyServiceMock.FlagKeys.unknown
+
+                        flagRequestTracker.trackRequest(flagKey: flagKey, reportedValue: true, featureFlag: nil, defaultValue: true)
+                    }
+                    it("increments the flag value counter for the feature flag") {
+                        let flagCounter = flagRequestTracker.flagCounters[flagKey]
+                        let flagValueCounter = flagCounter?.flagValueCounters.flagValueCounter(for: nil)
+                        expect(flagCounter?.flagValueCounters.count) == 1
+                        expect(AnyComparer.isEqual(flagValueCounter?.reportedValue, to: true, considerNilAndNullEqual: true)).to(beTrue())
+                        expect(flagValueCounter?.featureFlag).to(beNil())
+                        expect(flagValueCounter?.isKnown) == false
+                        expect(flagValueCounter?.count) == FlagCounter.Constants.requestCount + 1
                     }
                 }
             }
@@ -122,8 +184,8 @@ final class FlagRequestTrackerSpec: QuickSpec {
                             return
                     }
                     expect(AnyComparer.isEqual(flagCounterDictionary.flagCounterDefaultValue, to: flagCounter.defaultValue, considerNilAndNullEqual: true)).to(beTrue())
-                    expect(flagCounterDictionary.flagCounterCounters?.count) == 1
-                    guard let flagValueCounterDictionary = flagCounterDictionary.flagCounterCounters?.first
+                    expect(flagCounterDictionary.flagCounterFlagValueCounters?.count) == 1
+                    guard let flagValueCounterDictionary = flagCounterDictionary.flagCounterFlagValueCounters?.first
                         else {
                             XCTFail("expected flagValueCounterDictionary to not be nil, got nil")
                             return
@@ -169,6 +231,6 @@ extension Dictionary where Key == String, Value == Any {
 
 extension LDFlagKey {
     var isKnown: Bool {
-        return DarklyServiceMock.FlagKeys.all.contains(self)
+        return DarklyServiceMock.FlagKeys.knownFlags.contains(self)
     }
 }

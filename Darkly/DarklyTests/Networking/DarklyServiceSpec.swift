@@ -313,7 +313,7 @@ final class DarklyServiceSpec: QuickSpec {
                 }
                 it("makes a valid request") {
                     expect(eventRequest).toNot(beNil())
-                    expect(eventRequest?.allHTTPHeaderFields?[HTTPHeaders.HeaderKey.eventSchema]) == HTTPHeaders.HeaderValue.eventSchema3
+                    expect(eventRequest?.allHTTPHeaderFields?[HTTPHeaders.HeaderKey.eventSchema]) == HTTPHeaders.HeaderValue.eventSchema
                 }
                 it("calls completion with data, response, and no error") {
                     expect(responses.data).toNot(beNil())
@@ -336,7 +336,7 @@ final class DarklyServiceSpec: QuickSpec {
                 }
                 it("makes a valid request") {
                     expect(eventRequest).toNot(beNil())
-                    expect(eventRequest?.allHTTPHeaderFields?[HTTPHeaders.HeaderKey.eventSchema]) == HTTPHeaders.HeaderValue.eventSchema3
+                    expect(eventRequest?.allHTTPHeaderFields?[HTTPHeaders.HeaderKey.eventSchema]) == HTTPHeaders.HeaderValue.eventSchema
                 }
                 it("calls completion with error and no data or response") {
                     expect(responses.data?.isEmpty ?? true) == true

@@ -13,7 +13,7 @@ final class FlagValueCounter {
         case value, variation, version, unknown, count
     }
 
-    let reportedValue: Any?
+    var reportedValue: Any?
     let featureFlag: FeatureFlag?
     let isKnown: Bool
     var count: Int

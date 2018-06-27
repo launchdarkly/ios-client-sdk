@@ -35,7 +35,7 @@ final class FeatureFlagSpec: QuickSpec {
                 var version: Int { return flagVersion + 1 }
                 let eventTrackingContext = EventTrackingContext.stub()
                 it("creates a feature flag with matching elements") {
-                    DarklyServiceMock.FlagValues.all.forEach { (value) in
+                    DarklyServiceMock.FlagValues.knownFlags.forEach { (value) in
                         variation += 1
 
                         featureFlag = FeatureFlag(value: value, variation: variation, version: version, flagVersion: flagVersion, eventTrackingContext: eventTrackingContext)
@@ -70,7 +70,7 @@ final class FeatureFlagSpec: QuickSpec {
             var featureFlag: FeatureFlag?
             context("when elements make the whole dictionary") {
                 it("creates a feature flag with all elements") {
-                    DarklyServiceMock.FlagValues.all.forEach { (value) in
+                    DarklyServiceMock.FlagValues.knownFlags.forEach { (value) in
                         variation += 1
                         let dictionaryFromElements = Dictionary(value: value, variation: variation, version: version, flagVersion: flagVersion, trackEvents: trackEvents)
 
@@ -86,7 +86,7 @@ final class FeatureFlagSpec: QuickSpec {
             }
             context("when elements are part of the dictionary") {
                 it("creates a feature flag with all elements") {
-                    DarklyServiceMock.FlagValues.all.forEach { (value) in
+                    DarklyServiceMock.FlagValues.knownFlags.forEach { (value) in
                         variation += 1
                         let dictionaryFromElements = Dictionary(value: value,
                                                                 variation: variation,
@@ -107,7 +107,7 @@ final class FeatureFlagSpec: QuickSpec {
             }
             context("when dictionary only contains value") {
                 it("it creates a feature flag with the value only") {
-                    DarklyServiceMock.FlagValues.all.forEach { (value) in
+                    DarklyServiceMock.FlagValues.knownFlags.forEach { (value) in
                         let dictionaryFromElements = Dictionary(value: value, variation: nil, version: nil, flagVersion: nil, trackEvents: nil)
 
                         featureFlag = FeatureFlag(dictionary: dictionaryFromElements)
@@ -198,7 +198,7 @@ final class FeatureFlagSpec: QuickSpec {
             let trackEvents = true
             context("object is a dictionary with all elements") {
                 it("creates a feature flag with all elements") {
-                    DarklyServiceMock.FlagValues.all.forEach { (value) in
+                    DarklyServiceMock.FlagValues.knownFlags.forEach { (value) in
                         variation += 1
                         let object: Any? = Dictionary(value: value, variation: variation, version: version, flagVersion: flagVersion, trackEvents: trackEvents)
 
@@ -214,7 +214,7 @@ final class FeatureFlagSpec: QuickSpec {
             }
             context("object is any value") {
                 it("returns nil") {
-                    DarklyServiceMock.FlagValues.all.forEach { (value) in
+                    DarklyServiceMock.FlagValues.knownFlags.forEach { (value) in
                         featureFlag = FeatureFlag(object: value)
 
                         expect(featureFlag).to(beNil())

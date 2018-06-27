@@ -20,10 +20,10 @@ final class DarklyServiceMock: DarklyServiceProvider {
         static let array = "array-flag"
         static let dictionary = "dictionary-flag"
         static let null = "null-flag"
-        static let dummy = "dummy-flag"
+        static let unknown = "unknown-flag"
 
-        static var all: [LDFlagKey] { return [bool, int, double, string, array, dictionary, null] }
-        static var allThatCanBeInequal: [LDFlagKey] { return [bool, int, double, string, array, dictionary] }
+        static var knownFlags: [LDFlagKey] { return [bool, int, double, string, array, dictionary, null] }   //known means the SDK has the feature flag value
+        static var flagsWithAnAlternateValue: [LDFlagKey] { return [bool, int, double, string, array, dictionary] }
     }
 
     struct FlagValues {
@@ -35,8 +35,7 @@ final class DarklyServiceMock: DarklyServiceProvider {
         static let dictionary: [String: Any] = ["sub-flag-a": false, "sub-flag-b": 3, "sub-flag-c": 2.71828]
         static let null = NSNull()
 
-        static var all: [Any] { return [bool, int, double, string, array, dictionary, null] }
-        static var allThatCanBeInequal: [Any] { return [bool, int, double, string, array, dictionary] }
+        static var knownFlags: [Any] { return [bool, int, double, string, array, dictionary, null] }
 
         static func value(from flagKey: LDFlagKey) -> Any? {
             switch flagKey {
@@ -106,7 +105,7 @@ final class DarklyServiceMock: DarklyServiceProvider {
                                      includeFlagVersions: Bool = true,
                                      alternateValuesForKeys alternateValueKeys: [LDFlagKey] = [],
                                      eventTrackingContext: EventTrackingContext? = EventTrackingContext.stub()) -> [LDFlagKey: FeatureFlag] {
-            let flagKeys = includeNullValue ? FlagKeys.all : FlagKeys.allThatCanBeInequal
+            let flagKeys = includeNullValue ? FlagKeys.knownFlags : FlagKeys.flagsWithAnAlternateValue
             let featureFlagTuples = flagKeys.map { (flagKey) in
                 return (flagKey, stubFeatureFlag(for: flagKey,
                                                  includeVariation: includeVariations,
@@ -347,5 +346,14 @@ extension HTTPURLResponse {
     static func dateHeader(from date: Date?) -> [String: String]? {
         guard let date = date else { return nil }
         return [HTTPURLResponse.HeaderKeys.date: DateFormatter.httpUrlHeaderFormatter.string(from: date)]
+    }
+}
+
+extension LDFlagKey {
+    var isKnownFlagKey: Bool {
+        return DarklyServiceMock.FlagKeys.knownFlags.contains(self)
+    }
+    var hasAlternateValue: Bool {
+        return DarklyServiceMock.FlagKeys.flagsWithAnAlternateValue.contains(self)
     }
 }

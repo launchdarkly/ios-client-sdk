@@ -16,13 +16,16 @@ final class FlagCounter {
     var defaultValue: Any? = nil
     var flagValueCounters = [FlagValueCounter]()
 
-    func logRequest(reportedValue: Any?, featureFlag: FeatureFlag?, defaultValue: Any?) {
+    func trackRequest(reportedValue: Any?, featureFlag: FeatureFlag?, defaultValue: Any?) {
         self.defaultValue = defaultValue
         var flagValueCounter = flagValueCounters.flagValueCounter(for: featureFlag)
         if flagValueCounter == nil {
             let newFlagValueCounter = FlagValueCounter(reportedValue: reportedValue, featureFlag: featureFlag)
             flagValueCounters.append(newFlagValueCounter)
             flagValueCounter = newFlagValueCounter
+        }
+        if flagValueCounter?.isKnown == false { //keep the last reported value
+            flagValueCounter?.reportedValue = reportedValue
         }
         flagValueCounter?.count += 1
     }
@@ -69,7 +72,13 @@ extension Array where Element == FlagValueCounter {
                 return flagValueCounter.featureFlag == featureFlag
             }
         }
-        guard selectedFlagValueCounters.count == 1 else { return nil }
+        guard selectedFlagValueCounters.count == 1
+        else {
+            if selectedFlagValueCounters.count > 1 {
+                Log.debug(typeName(and: #function) + "found multiple flagValueCounters for featureFlag: \(String(describing: featureFlag))")
+            }
+            return nil
+        }
         return selectedFlagValueCounters.first
     }
 
@@ -79,3 +88,5 @@ extension Array where Element == FlagValueCounter {
         }
     }
 }
+
+extension Array: TypeIdentifying { }

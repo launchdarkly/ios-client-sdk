@@ -22,7 +22,7 @@ struct HTTPHeaders {
         static let apiKey = "api_key"
         static let sdkVersion = "3.0.0.22"
         static let applicationJson = "application/json"
-        static let eventSchema3 = "3"
+        static let eventSchema = "3"
     }
     
     let mobileKey: String
@@ -42,5 +42,5 @@ struct HTTPHeaders {
                                                         HeaderKey.userAgent: userAgent,
                                                         HeaderKey.contentType: HeaderValue.applicationJson,
                                                         HeaderKey.accept: HeaderValue.applicationJson,
-                                                        HeaderKey.eventSchema: HeaderValue.eventSchema3] }
+                                                        HeaderKey.eventSchema: HeaderValue.eventSchema] }
 }

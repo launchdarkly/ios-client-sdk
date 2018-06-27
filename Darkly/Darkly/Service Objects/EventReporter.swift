@@ -92,7 +92,7 @@ class EventReporter: EventReporting {
     }
     
     func recordFlagEvaluationEvents(flagKey: LDFlagKey, value: Any?, defaultValue: Any?, featureFlag: FeatureFlag?, user: LDUser, completion: CompletionClosure? = nil) {
-        flagRequestTracker.logRequest(flagKey: flagKey, reportedValue: value, featureFlag: featureFlag, defaultValue: defaultValue)
+        flagRequestTracker.trackRequest(flagKey: flagKey, reportedValue: value, featureFlag: featureFlag, defaultValue: defaultValue)
 
         let recordingFeatureEvent = featureFlag?.eventTrackingContext?.trackEvents == true
         let recordingDebugEvent = featureFlag?.eventTrackingContext?.shouldCreateDebugEvents(lastEventReportResponseTime: lastEventResponseDate) ?? false

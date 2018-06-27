@@ -16,12 +16,12 @@ struct FlagRequestTracker {
     let startDate = Date()
     var flagCounters = [LDFlagKey: FlagCounter]()
 
-    mutating func logRequest(flagKey: LDFlagKey, reportedValue: Any?, featureFlag: FeatureFlag?, defaultValue: Any?) {
+    mutating func trackRequest(flagKey: LDFlagKey, reportedValue: Any?, featureFlag: FeatureFlag?, defaultValue: Any?) {
         if flagCounters[flagKey] == nil {
             flagCounters[flagKey] = FlagCounter()
         }
         guard let flagCounter = flagCounters[flagKey] else { return }
-        flagCounter.logRequest(reportedValue: reportedValue, featureFlag: featureFlag, defaultValue: defaultValue)
+        flagCounter.trackRequest(reportedValue: reportedValue, featureFlag: featureFlag, defaultValue: defaultValue)
 
         //TODO: Remove when implementing Summary Event, this is for testing the FlagRequestTracker
         let flagValueCounter = flagCounter.flagValueCounters.flagValueCounter(for: featureFlag)
