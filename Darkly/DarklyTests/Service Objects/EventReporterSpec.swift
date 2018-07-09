@@ -103,9 +103,10 @@ final class EventReporterSpec: QuickSpec {
         isOnlineSpec()
         changeConfigSpec()
         recordEventSpec()
-        reportEventsSpec()
         recordFlagEvaluationEventsSpec()
+        recordSummaryEventSpec()
         resetFlagRequestTrackerSpec()
+        reportEventsSpec()
         reportTimerSpec()
     }
 
@@ -484,7 +485,7 @@ final class EventReporterSpec: QuickSpec {
     private func recordFlagEvaluationEventsSpec() {
         describe("recordFlagEvaluationEvents") {
             recordFeatureAndDebugEventsSpec()
-            recordSummaryEventsSpec()
+            trackFlagRequestSpec()
         }
     }
 
@@ -631,7 +632,7 @@ final class EventReporterSpec: QuickSpec {
         }
     }
 
-    private func recordSummaryEventsSpec() {
+    private func trackFlagRequestSpec() {
         context("record summary event") {
             var testContext: TestContext!
             var flagKey: LDFlagKey!
@@ -652,6 +653,47 @@ final class EventReporterSpec: QuickSpec {
                 expect(flagValueCounter).toNot(beNil())
                 expect(AnyComparer.isEqual(flagValueCounter?.reportedValue, to: featureFlag.value, considerNilAndNullEqual: true)).to(beTrue())
                 expect(flagValueCounter?.featureFlag) == featureFlag
+            }
+        }
+    }
+
+    private func recordSummaryEventSpec() {
+        describe("recordSummaryEvent") {
+            var testContext: TestContext!
+            context("with tracked requests") {
+                beforeEach {
+                    testContext = TestContext()
+                    testContext.eventReporter.isOnline = true
+                    testContext.flagRequestTracker = FlagRequestTracker.stub()  //Delay setting tracked requests to avoid triggering a reportEvents call
+                    testContext.eventReporter.setFlagRequestTracker(testContext.flagRequestTracker!)
+
+                    waitUntil { done in
+                        testContext.eventReporter.recordSummaryEvent(completion: done)
+                    }
+                }
+                it("records a summary event") {
+                    expect(testContext.eventReporter.isOnline) == true
+                    expect(testContext.eventReporter.isReportingActive) == true
+                    expect(testContext.eventReporter.eventStore.count) == 1
+                    expect(testContext.eventReporter.eventStoreKinds.contains(.summary)) == true
+                    expect(testContext.eventReporter.flagRequestTracker.hasLoggedRequests) == false
+                }
+            }
+            context("without tracked requests") {
+                beforeEach {
+                    testContext = TestContext()
+                    testContext.eventReporter.isOnline = true
+
+                    waitUntil { done in
+                        testContext.eventReporter.recordSummaryEvent(completion: done)
+                    }
+                }
+                it("does not record a summary event") {
+                    expect(testContext.eventReporter.isOnline) == true
+                    expect(testContext.eventReporter.isReportingActive) == true
+                    expect(testContext.eventReporter.eventStore.count) == 0
+                    expect(testContext.eventReporter.flagRequestTracker.hasLoggedRequests) == false
+                }
             }
         }
     }

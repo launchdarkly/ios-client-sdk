@@ -188,6 +188,14 @@ final class EventReportingMock: EventReporting {
         recordFlagEvaluationEventsCallback?()
     }
 
+    // MARK: recordSummaryEvent
+    var recordSummaryEventCallCount = 0
+    var recordSummaryEventCallback: (() -> Void)?
+    func recordSummaryEvent() {
+        recordSummaryEventCallCount += 1
+        recordSummaryEventCallback?()
+    }
+
     // MARK: resetFlagRequestTracker
     var resetFlagRequestTrackerCallCount = 0
     var resetFlagRequestTrackerCallback: (() -> Void)?

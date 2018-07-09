@@ -22,6 +22,7 @@ protocol EventReporting {
     //sourcery: NoMock
     func record(_ event: Event)
     func recordFlagEvaluationEvents(flagKey: LDFlagKey, value: Any?, defaultValue: Any?, featureFlag: FeatureFlag?, user: LDUser)
+    func recordSummaryEvent()
     func resetFlagRequestTracker()
 
     func reportEvents()
@@ -118,6 +119,22 @@ class EventReporter: EventReporting {
         lastFlagEvaluationUser = user       //TODO: Remove when implementing summary events
     }
 
+    func recordSummaryEvent() {
+        recordSummaryEvent(completion: nil)
+    }
+
+    func recordSummaryEvent(completion: CompletionClosure?) {
+        if let summaryEvent = Event.summaryEvent(flagRequestTracker: flagRequestTracker) {
+            resetFlagRequestTracker()
+            record(summaryEvent) {
+                completion?()
+            }
+            return
+        }
+        resetFlagRequestTracker()
+        completion?()
+    }
+
     func resetFlagRequestTracker() {
         flagRequestTracker = FlagRequestTracker()
     }
@@ -158,16 +175,9 @@ class EventReporter: EventReporting {
         }
         Log.debug(typeName(and: #function, appending: " - ") + "starting")
 
-        if let summaryEvent = Event.summaryEvent(flagRequestTracker: flagRequestTracker) {
-            resetFlagRequestTracker()
-            record(summaryEvent) {
-                self.publish(self.eventStore, completion: completion)
-            }
-            return
+        recordSummaryEvent {
+            self.publish(self.eventStore, completion: completion)
         }
-
-        resetFlagRequestTracker()
-        publish(self.eventStore, completion: completion)
     }
 
     private func publish(_ eventDictionaries: [[String: Any]], completion: CompletionClosure?) {
