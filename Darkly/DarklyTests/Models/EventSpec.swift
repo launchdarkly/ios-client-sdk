@@ -203,7 +203,7 @@ final class EventSpec: QuickSpec {
         var flagRequestTracker: FlagRequestTracker!
         var endDate: Date!
         describe("summaryEvent") {
-            context("") {
+            context("with tracked requests") {
                 beforeEach {
                     flagRequestTracker = FlagRequestTracker.stub()
                     endDate = Date()
@@ -222,6 +222,17 @@ final class EventSpec: QuickSpec {
                     expect(event.defaultValue).to(beNil())
                     expect(event.featureFlag).to(beNil())
                     expect(event.data).to(beNil())
+                }
+            }
+            context("without tracked requests") {
+                beforeEach {
+                    flagRequestTracker = FlagRequestTracker()
+                    endDate = Date()
+
+                    event = Event.summaryEvent(flagRequestTracker: flagRequestTracker, endDate: endDate)
+                }
+                it("does not create an event") {
+                    expect(event).to(beNil())
                 }
             }
         }
@@ -1119,10 +1130,10 @@ extension Event {
             return Event.featureEvent(key: UUID().uuidString, value: true, defaultValue: false, featureFlag: featureFlag, user: user)
         case .debug:
             let featureFlag = DarklyServiceMock.Constants.stubFeatureFlag(for: DarklyServiceMock.FlagKeys.bool)
-            return Event.featureEvent(key: UUID().uuidString, value: true, defaultValue: false, featureFlag: featureFlag, user: user)
+            return Event.debugEvent(key: UUID().uuidString, value: true, defaultValue: false, featureFlag: featureFlag, user: user)
         case .identify: return Event.identifyEvent(user: user)
         case .custom: return Event.customEvent(key: UUID().uuidString, user: user, data: ["custom": UUID().uuidString])
-        case .summary: return Event.summaryEvent(flagRequestTracker: FlagRequestTracker.stub())
+        case .summary: return Event.summaryEvent(flagRequestTracker: FlagRequestTracker.stub())!
         }
     }
 

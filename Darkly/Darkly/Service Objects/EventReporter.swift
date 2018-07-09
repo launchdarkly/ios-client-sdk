@@ -131,7 +131,7 @@ class EventReporter: EventReporting {
             eventReportTimer = Timer.scheduledTimer(withTimeInterval: config.eventFlushInterval, repeats: true) { [weak self] (_) in self?.reportEvents() }
         } else {
             // the run loop retains the timer, so eventReportTimer is weak to avoid the retain cycle. Setting the timer to a strong reference is important so that the timer doesn't get nil'd before added to the run loop.
-            let timer = Timer(timeInterval: config.eventFlushInterval, target: self, selector: #selector(reportEvents), userInfo: nil, repeats: true)
+            let timer = Timer(timeInterval: config.eventFlushInterval, target: self, selector: #selector(eventReportTimerFired), userInfo: nil, repeats: true)
             eventReportTimer = timer
             RunLoop.current.add(timer, forMode: .defaultRunLoopMode)
         }
@@ -143,27 +143,48 @@ class EventReporter: EventReporting {
         eventReportTimer?.invalidate()
         eventReportTimer = nil
     }
+
+    @objc func eventReportTimerFired() {
+        reportEvents(completion: nil)
+    }
+
+    func reportEvents() {
+        reportEvents(completion: nil)
+    }
     
-    @objc func reportEvents() {
-        guard isOnline && !eventStore.isEmpty else {
+    func reportEvents(completion: CompletionClosure?) {
+        guard isOnline && (!eventStore.isEmpty || flagRequestTracker.hasLoggedRequests) else {
             if !isOnline { Log.debug(typeName(and: #function) + "aborted. EventReporter is offline") }
-            else if eventStore.isEmpty { Log.debug(typeName(and: #function) + "aborted. Event store is empty") }
+            else if eventStore.isEmpty && !flagRequestTracker.hasLoggedRequests { Log.debug(typeName(and: #function) + "aborted. Event store is empty") }
+            completion?()
             return
         }
         Log.debug(typeName(and: #function, appending: " - ") + "starting")
 
-        //TODO: When implementing summary events, remove this code
-        if let summaryEventStubDictionary = Event.stubSummaryEventDictionary(featureFlags: self.lastFlagEvaluationUser?.flagStore.featureFlags) {
-            self.eventStore.append(summaryEventStubDictionary)
+        if let summaryEvent = Event.summaryEvent(flagRequestTracker: flagRequestTracker) {
+            resetFlagRequestTracker()
+            record(summaryEvent) {
+                self.publish(self.eventStore, completion: completion)
+            }
+            return
         }
 
-        let reportedEventDictionaries = self.eventStore //event reporting is async, so keep what we're reporting at this time for later use
-        self.service.publishEventDictionaries(self.eventStore) { serviceResponse in
-            self.processEventResponse(reportedEventDictionaries: reportedEventDictionaries, serviceResponse: serviceResponse)
+        resetFlagRequestTracker()
+        publish(self.eventStore, completion: completion)
+    }
+
+    private func publish(_ eventDictionaries: [[String: Any]], completion: CompletionClosure?) {
+        self.service.publishEventDictionaries(eventDictionaries) { serviceResponse in
+            self.processEventResponse(reportedEventDictionaries: eventDictionaries, serviceResponse: serviceResponse, completion: completion)
         }
     }
     
-    private func processEventResponse(reportedEventDictionaries: [[String: Any]], serviceResponse: ServiceResponse) {
+    private func processEventResponse(reportedEventDictionaries: [[String: Any]], serviceResponse: ServiceResponse, completion: CompletionClosure?) {
+        defer {
+            DispatchQueue.main.async {
+                completion?()
+            }
+        }
         guard serviceResponse.error == nil else {
             report(serviceResponse.error)
             return
@@ -219,6 +240,10 @@ extension Array where Element == [String: Any] {
             if let flagRequestTracker = flagRequestTracker {
                 self.flagRequestTracker = flagRequestTracker
             }
+        }
+
+        func setFlagRequestTracker(_ tracker: FlagRequestTracker) {
+            flagRequestTracker = tracker
         }
     }
 #endif

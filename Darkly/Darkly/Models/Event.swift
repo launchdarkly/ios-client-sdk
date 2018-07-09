@@ -76,8 +76,12 @@ struct Event { //sdk internal, not publically accessible
         return Event(kind: .identify, key: user.key, user: user)
     }
 
-    static func summaryEvent(flagRequestTracker: FlagRequestTracker, endDate: Date = Date()) -> Event {
+    static func summaryEvent(flagRequestTracker: FlagRequestTracker, endDate: Date = Date()) -> Event? {
         Log.debug(typeName(and: #function))
+        guard flagRequestTracker.hasLoggedRequests
+        else {
+            return nil
+        }
         return Event(kind: .summary, flagRequestTracker: flagRequestTracker, endDate: endDate)
     }
 
@@ -159,6 +163,7 @@ extension Dictionary where Key == String, Value == Any {
         return Event.Kind(rawValue: eventKindString)
     }
     var eventKey: String? { return self[Event.CodingKeys.key.rawValue] as? String }
+    var eventKindAndKey: String? { return "\(eventKindString ?? "<no kind>") \(eventKey ?? "<no key>")" }
     var eventCreationDateMillis: Int64? { return self[Event.CodingKeys.creationDate.rawValue] as? Int64 }
     var eventEndDate: Date? {
         return Date(millisSince1970: self[Event.CodingKeys.endDate.rawValue] as? Int64)
