@@ -21,10 +21,7 @@ protocol EventReporting {
     func record(_ event: Event, completion: CompletionClosure?)
     //sourcery: NoMock
     func record(_ event: Event)
-    //sourcery: NoMock
     func recordFlagEvaluationEvents(flagKey: LDFlagKey, value: Any?, defaultValue: Any?, featureFlag: FeatureFlag?, user: LDUser)
-    //swiftlint:disable:next function_parameter_count
-    func recordFlagEvaluationEvents(flagKey: LDFlagKey, value: Any?, defaultValue: Any?, featureFlag: FeatureFlag?, user: LDUser, completion: CompletionClosure?)
     func resetFlagRequestTracker()
 
     func reportEvents()

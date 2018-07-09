@@ -715,12 +715,6 @@ extension EventReporter {
     }
 }
 
-extension EventReportingMock {
-    func recordFlagEvaluationEvents(flagKey: LDFlagKey, value: Any?, defaultValue: Any?, featureFlag: FeatureFlag?, user: LDUser) {
-        recordFlagEvaluationEvents(flagKey: flagKey, value: value, defaultValue: defaultValue, featureFlag: featureFlag, user: user, completion: nil)
-    }
-}
-
 extension TimeInterval {
     static let oneSecond: TimeInterval = 1.0
 }
