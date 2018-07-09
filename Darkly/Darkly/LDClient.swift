@@ -109,6 +109,7 @@ public class LDClient {
             service = serviceFactory.makeDarklyServiceProvider(mobileKey: mobileKey, config: config, user: user)
 
             if hasStarted {
+                eventReporter.recordSummaryEvent()
                 eventReporter.record(Event.identifyEvent(user: user))
             }
 

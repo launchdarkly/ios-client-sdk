@@ -615,6 +615,7 @@ final class LDClientSpec: QuickSpec {
                 beforeEach {
                     testContext.config.startOnline = true
                     testContext.subject.start(mobileKey: Constants.mockMobileKey, config: testContext.config, user: testContext.user)
+                    testContext.eventReporterMock.recordSummaryEventCallCount = 0   //calling start sets the user, which calls eventReporter.recordSummaryEvent()
 
                     newUser = LDUser.stub()
                     testContext.subject.user = newUser
@@ -630,7 +631,8 @@ final class LDClientSpec: QuickSpec {
                     expect(testContext.subject.eventReporter.isOnline) == true
                     expect(testContext.subject.flagSynchronizer.isOnline) == true
                 }
-                it("records an identify event") {
+                it("records identify and summary events") {
+                    expect(testContext.eventReporterMock.recordSummaryEventCallCount) == 1
                     expect(testContext.eventReporterMock.recordReceivedArguments?.event.kind == .identify).to(beTrue())
                 }
             }
@@ -638,6 +640,7 @@ final class LDClientSpec: QuickSpec {
                 beforeEach {
                     testContext.config.startOnline = false
                     testContext.subject.start(mobileKey: Constants.mockMobileKey, config: testContext.config, user: testContext.user)
+                    testContext.eventReporterMock.recordSummaryEventCallCount = 0   //calling start sets the user, which calls eventReporter.recordSummaryEvent()
 
                     newUser = LDUser.stub()
                     testContext.subject.user = newUser
@@ -653,7 +656,8 @@ final class LDClientSpec: QuickSpec {
                     expect(testContext.subject.eventReporter.isOnline) == false
                     expect(testContext.subject.flagSynchronizer.isOnline) == false
                 }
-                it("records an identify event") {
+                it("records identify and summary events") {
+                    expect(testContext.eventReporterMock.recordSummaryEventCallCount) == 1
                     expect(testContext.eventReporterMock.recordReceivedArguments?.event.kind == .identify).to(beTrue())
                 }
             }
@@ -674,6 +678,7 @@ final class LDClientSpec: QuickSpec {
                     expect(testContext.subject.flagSynchronizer.isOnline) == false
                 }
                 it("does not record any event") {
+                    expect(testContext.eventReporterMock.recordSummaryEventCallCount) == 0
                     expect(testContext.eventReporterMock.recordCallCount) == 0
                 }
             }
