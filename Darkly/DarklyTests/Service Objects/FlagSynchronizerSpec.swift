@@ -668,35 +668,40 @@ final class FlagSynchronizerSpec: QuickSpec {
     }
 
     func pollingTimerFiresSpec() {
-        var testContext: TestContext!
-
-        beforeEach {
-            testContext = TestContext(streamingMode: .streaming, useReport: false)
-        }
-
         describe("polling timer fires") {
+            var testContext: TestContext!
             var newFlags: [String: FeatureFlag]?
             var streamingEvent: DarklyEventSource.LDEvent.EventType?
-            var onSyncCompleteCallCount = 0
-            beforeEach {
-                waitUntil(timeout: 2) { done in
-                    //In polling mode, the flagSynchronizer makes a flag request when set online right away. To verify the timer this test waits the polling interval (1s) for a second flag request
-                    testContext = TestContext(streamingMode: .polling, useReport: false, onSyncComplete: { (result) in
-                        onSyncCompleteCallCount += 1
-                        if onSyncCompleteCallCount >= 2 {   //Ignore the initial flag request, wait for the timer
-                            if case .success(let flags, let streamEvent) = result { (newFlags, streamingEvent) = (flags.flagCollection, streamEvent) }
-                            done()
-                        }
-                    })
+            context("one second interval") {
+                beforeEach {
+                    testContext = TestContext(streamingMode: .polling, useReport: false)
                     testContext.serviceMock.stubFlagResponse(statusCode: HTTPURLResponse.StatusCodes.ok)
 
-                    testContext.subject.isOnline = true
+                    waitUntil(timeout: 2) { done in
+                        //In polling mode, the flagSynchronizer makes a flag request when set online right away. To verify the timer this test waits the polling interval (1s) for a second flag request
+                        testContext.subject.onSyncComplete = { (result) in
+                            testContext.onSyncCompleteCallCount += 1
+                            if testContext.onSyncCompleteCallCount == 2 {   //Ignore the initial flag request, wait for the timer
+                                if case .success(let flags, let streamEvent) = result {
+                                    (newFlags, streamingEvent) = (flags.flagCollection, streamEvent)
+                                }
+                                done()
+                            } else if testContext.onSyncCompleteCallCount > 2 {
+                                XCTFail("FlagSynchronizerSpec.pollingTimerFiresSpec onSyncComplete closure called \(testContext.onSyncCompleteCallCount) times on flagSynchronizer: \(testContext.subject.identifier)")
+                            }
+                        }
+
+                        testContext.subject.isOnline = true
+                    }
                 }
-            }
-            it("makes a flag request & calls onSyncComplete with no streaming event") {
-                expect(testContext.serviceMock.getFeatureFlagsCallCount) == 2
-                expect(newFlags == DarklyServiceMock.Constants.featureFlags(includeNullValue: false, includeVersions: true)).to(beTrue())
-                expect(streamingEvent).to(beNil())
+                it("makes a flag request and calls onSyncComplete with no streaming event") {
+                    expect(testContext.serviceMock.getFeatureFlagsCallCount) == 2
+                    expect(newFlags == DarklyServiceMock.Constants.featureFlags(includeNullValue: false, includeVersions: true)).to(beTrue())
+                    expect(streamingEvent).to(beNil())
+                }
+                afterEach {
+                    testContext.subject.onSyncComplete = nil
+                }
             }
         }
     }
