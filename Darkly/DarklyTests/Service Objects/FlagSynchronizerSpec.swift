@@ -249,7 +249,6 @@ final class FlagSynchronizerSpec: QuickSpec {
 
         beforeEach {
             testContext = TestContext(streamingMode: .streaming, useReport: false, onSyncComplete: { (_) in
-                print("onSyncCompleteCalled")
                 testContext.onSyncCompleteCallCount += 1
             })
         }
@@ -301,11 +300,6 @@ final class FlagSynchronizerSpec: QuickSpec {
                     testContext.subject.isOnline = true
 
                     testContext.eventSourceMock?.sendHeartbeat()
-                    waitUntil { done in
-                        _ = Timer.scheduledTimer(withTimeInterval: 0.1, repeats: false, block: { (_) in
-                            done()
-                        })
-                    }
                 }
                 it("does not request flags or report sync complete") {
                     expect({ testContext.synchronizerState(synchronizerOnline: true, streamingMode: .streaming, flagRequests: 0, streamCreated: true, streamClosed: false) }).to(match())
@@ -317,11 +311,6 @@ final class FlagSynchronizerSpec: QuickSpec {
                     testContext.subject.isOnline = true
 
                     testContext.eventSourceMock?.sendNullEvent()
-                    waitUntil { done in
-                        _ = Timer.scheduledTimer(withTimeInterval: 0.1, repeats: false, block: { (_) in
-                            done()
-                        })
-                    }
                 }
                 it("does not request flags or report sync complete") {
                     expect({ testContext.synchronizerState(synchronizerOnline: true, streamingMode: .streaming, flagRequests: 0, streamCreated: true, streamClosed: false) }).to(match())
@@ -333,11 +322,6 @@ final class FlagSynchronizerSpec: QuickSpec {
                     testContext.subject.isOnline = true
 
                     testContext.eventSourceMock?.sendEvent(LDEvent.stubReadyStateEvent(eventState: kEventStateConnecting))
-                    waitUntil { done in
-                        _ = Timer.scheduledTimer(withTimeInterval: 0.1, repeats: false, block: { (_) in
-                            done()
-                        })
-                    }
                 }
                 it("does not request flags or report sync complete") {
                     expect({ testContext.synchronizerState(synchronizerOnline: true, streamingMode: .streaming, flagRequests: 0, streamCreated: true, streamClosed: false) }).to(match())
@@ -349,11 +333,6 @@ final class FlagSynchronizerSpec: QuickSpec {
                     testContext.subject.isOnline = true
 
                     testContext.eventSourceMock?.sendEvent(LDEvent.stubReadyStateEvent(eventState: kEventStateOpen))
-                    waitUntil { done in
-                        _ = Timer.scheduledTimer(withTimeInterval: 0.1, repeats: false, block: { (_) in
-                            done()
-                        })
-                    }
                 }
                 it("does not request flags or report sync complete") {
                     expect({ testContext.synchronizerState(synchronizerOnline: true, streamingMode: .streaming, flagRequests: 0, streamCreated: true, streamClosed: false) }).to(match())
@@ -365,11 +344,6 @@ final class FlagSynchronizerSpec: QuickSpec {
                     testContext.subject.isOnline = true
 
                     testContext.eventSourceMock?.sendEvent(LDEvent.stubReadyStateEvent(eventState: kEventStateClosed))
-                    waitUntil { done in
-                        _ = Timer.scheduledTimer(withTimeInterval: 0.1, repeats: false, block: { (_) in
-                            done()
-                        })
-                    }
                 }
                 it("does not request flags") {
                     expect({ testContext.synchronizerState(synchronizerOnline: true, streamingMode: .streaming, flagRequests: 0, streamCreated: true, streamClosed: false) }).to(match())
