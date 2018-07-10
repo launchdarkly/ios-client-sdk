@@ -23,8 +23,8 @@ end
 
 target 'DarklyTests' do
     platform :ios, '8.0'
-    pod 'OHHTTPStubs/Swift'
-    pod 'Quick'
-    pod 'Nimble'
-    pod 'Sourcery'
+    pod 'OHHTTPStubs/Swift', '6.1.0'
+    pod 'Quick', '1.3.0'
+    pod 'Nimble', '7.1.3'
+    pod 'Sourcery', '0.13.1'
 end

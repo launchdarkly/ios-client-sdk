@@ -1,4 +1,4 @@
-// Generated using Sourcery 0.9.0 — https://github.com/krzysztofzablocki/Sourcery
+// Generated using Sourcery 0.13.1 — https://github.com/krzysztofzablocki/Sourcery
 // DO NOT EDIT
 
 //swiftlint:disable vertical_whitespace
@@ -174,7 +174,7 @@ final class FlagCollectionCachingMock: FlagCollectionCaching {
     // MARK: retrieveFlags
     var retrieveFlagsCallCount = 0
     var retrieveFlagsCallback: (() -> Void)?
-    var retrieveFlagsReturnValue: [String: CacheableUserFlags] = [:]
+    var retrieveFlagsReturnValue: [String: CacheableUserFlags]!
     func retrieveFlags() -> [String: CacheableUserFlags] {
         retrieveFlagsCallCount += 1
         return retrieveFlagsReturnValue
