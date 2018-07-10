@@ -335,7 +335,7 @@ final class DarklyServiceSpec: QuickSpec {
                     expect(eventRequest).toNot(beNil())
                 }
                 it("calls completion with error and no data or response") {
-                    expect(responses.data).to(beNil())
+                    expect(responses.data?.isEmpty ?? true) == true
                     expect(responses.urlResponse).to(beNil())
                     expect(responses.error).toNot(beNil())
                 }
