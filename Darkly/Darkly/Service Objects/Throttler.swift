@@ -30,7 +30,7 @@ final class Throttler: Throttling {
     private (set) var runAttempts: Int
     private (set) var delay: TimeInterval
     private (set) var timerStart: Date?
-    private (set) var delayTimer: Timer?
+    private (set) weak var delayTimer: Timer?
     private var runClosure: RunClosure?
     private var runPostTimer: RunClosure?
     private var runQueue = DispatchQueue(label: Constants.runQueueName, qos: .userInitiated)
