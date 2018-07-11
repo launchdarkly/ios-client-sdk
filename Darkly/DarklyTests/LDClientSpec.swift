@@ -138,15 +138,12 @@ final class LDClientSpec: QuickSpec {
     }
 
     private func startSpec() {
-        var testContext: TestContext!
-
-        beforeEach {
-            testContext = TestContext()
-        }
-
         describe("start") {
+            var testContext: TestContext!
+
             context("when configured to start online") {
                 beforeEach {
+                    testContext = TestContext()
                     testContext.config.startOnline = true
 
                     waitUntil { done in
@@ -182,6 +179,7 @@ final class LDClientSpec: QuickSpec {
             }
             context("when configured to start offline") {
                 beforeEach {
+                    testContext = TestContext()
                     waitUntil { done in
                         testContext.subject.start(mobileKey: Constants.mockMobileKey, config: testContext.config, user: testContext.user, completion: done)
                     }
@@ -289,6 +287,7 @@ final class LDClientSpec: QuickSpec {
                 var newUser: LDUser!
                 context("while online") {
                     beforeEach {
+                        testContext = TestContext()
                         testContext.config.startOnline = true
                         waitUntil { done in
                             testContext.subject.start(mobileKey: Constants.mockMobileKey, config: testContext.config, user: testContext.user, completion: done)
@@ -330,6 +329,7 @@ final class LDClientSpec: QuickSpec {
                 }
                 context("while offline") {
                     beforeEach {
+                        testContext = TestContext()
                         testContext.config.startOnline = false
                         waitUntil { done in
                             testContext.subject.start(mobileKey: Constants.mockMobileKey, config: testContext.config, user: testContext.user, completion: done)
@@ -373,6 +373,7 @@ final class LDClientSpec: QuickSpec {
             context("when called without config or user") {
                 context("after setting config and user") {
                     beforeEach {
+                        testContext = TestContext()
                         testContext.subject.config = testContext.config
                         testContext.subject.user = testContext.user
                         waitUntil { done in
@@ -403,6 +404,7 @@ final class LDClientSpec: QuickSpec {
                 }
                 context("without setting config or user") {
                     beforeEach {
+                        testContext = TestContext()
                         waitUntil { done in
                             testContext.subject.start(mobileKey: Constants.mockMobileKey, completion: done)
                         }
@@ -432,6 +434,7 @@ final class LDClientSpec: QuickSpec {
             context("when called with cached flags for the user") {
                 var retrievedFlags: [LDFlagKey: FeatureFlag]!
                 beforeEach {
+                    testContext = TestContext()
                     testContext.flagCacheMock.retrieveFlagsReturnValue = CacheableUserFlags(user: testContext.user)
                     retrievedFlags = testContext.flagCacheMock.retrieveFlagsReturnValue!.flags
                     testContext.flagStoreMock.featureFlags = [:]
@@ -451,6 +454,7 @@ final class LDClientSpec: QuickSpec {
             }
             context("when called without cached flags for the user") {
                 beforeEach {
+                    testContext = TestContext()
                     testContext.flagStoreMock.featureFlags = [:]
 
                     testContext.config.startOnline = false
@@ -677,13 +681,12 @@ final class LDClientSpec: QuickSpec {
     }
 
     private func setOnlineSpec() {
-        var testContext: TestContext!
-
-        beforeEach {
-            testContext = TestContext()
-        }
-
         describe("setOnline") {
+            var testContext: TestContext!
+
+            beforeEach {
+                testContext = TestContext()
+            }
             context("when the client is offline") {
                 context("setting online") {
                     beforeEach {

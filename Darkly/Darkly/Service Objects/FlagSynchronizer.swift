@@ -307,6 +307,7 @@ class FlagSynchronizer: LDFlagSynchronizing {
     
     //sourcery: NoMock
     deinit {
+        onSyncComplete = nil
         stopEventSource()
         stopPolling()
     }
