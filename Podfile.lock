@@ -1,5 +1,5 @@
 PODS:
-  - DarklyEventSource (3.2.0)
+  - DarklyEventSource (3.2.5)
   - Nimble (7.1.3)
   - OHHTTPStubs/Core (6.1.0)
   - OHHTTPStubs/Default (6.1.0):
@@ -19,7 +19,7 @@ PODS:
   - SwiftLint (0.24.0)
 
 DEPENDENCIES:
-  - DarklyEventSource (~> 3.2)
+  - DarklyEventSource (~> 3.2.5)
   - Nimble (= 7.1.3)
   - OHHTTPStubs/Swift (= 6.1.0)
   - Quick (= 1.3.0)
@@ -27,13 +27,13 @@ DEPENDENCIES:
   - SwiftLint
 
 SPEC CHECKSUMS:
-  DarklyEventSource: ad6a75c82b22bea91c75fc980a563f6d2902ce90
+  DarklyEventSource: 3c31d126137713d61b92ab05923ca0c09c4033a6
   Nimble: 2839b01d1b31f6a6a7777a221f0d91cf52e8e27b
   OHHTTPStubs: 1e21c7d2c084b8153fc53d48400d8919d2d432d0
   Quick: 03278013f71aa05fe9ecabc94fbcc6835f1ee76f
   Sourcery: 9ef51b8777516f204d82996441f293813158d0d7
   SwiftLint: a014c92b4664e8b13f380f8640a51bb1733778ba
 
-PODFILE CHECKSUM: 7257e117173a6141dfe09c6d47afe7d4709ce7ed
+PODFILE CHECKSUM: e3f91eeb812f7fd1b794be64723fb2873b654c92
 
 COCOAPODS: 1.4.0
