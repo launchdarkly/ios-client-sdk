@@ -3,3 +3,4 @@
 xcuserdata
 *.playground
 /default.profraw
+/Carthage
