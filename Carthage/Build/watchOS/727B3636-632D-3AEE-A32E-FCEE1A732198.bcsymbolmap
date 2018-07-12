@@ -1,0 +1,157 @@
+BCSymbolMap Version: 2.0
++[LDEventSource eventSourceWithURL:httpHeaders:]
++[LDEventSource eventSourceWithURL:httpHeaders:connectMethod:connectBody:]
++[LDEventSource eventSourceWithURL:httpHeaders:timeoutInterval:connectMethod:connectBody:]
+-[LDEventSource initWithURL:httpHeaders:]
+-[LDEventSource initWithURL:httpHeaders:connectMethod:connectBody:]
+-[LDEventSource initWithURL:httpHeaders:timeoutInterval:connectMethod:connectBody:]
+___83-[LDEventSource initWithURL:httpHeaders:timeoutInterval:connectMethod:connectBody:]_block_invoke
+___copy_helper_block_
+___destroy_helper_block_
+-[LDEventSource addEventListener:handler:]
+-[LDEventSource onMessage:]
+-[LDEventSource onError:]
+-[LDEventSource onOpen:]
+-[LDEventSource onReadyStateChanged:]
+-[LDEventSource close]
+-[LDEventSource URLSession:dataTask:didReceiveResponse:completionHandler:]
+-[LDEventSource URLSession:dataTask:didReceiveData:]
+-[LDEventSource parseEventString:]
+___34-[LDEventSource parseEventString:]_block_invoke
+___copy_helper_block_.91
+___destroy_helper_block_.92
+-[LDEventSource URLSession:task:didCompleteWithError:]
+___54-[LDEventSource URLSession:task:didCompleteWithError:]_block_invoke
+___copy_helper_block_.116
+___destroy_helper_block_.117
+-[LDEventSource eventErrorForTask:errorCode:underlyingError:]
+-[LDEventSource responseIsUnauthorizedForTask:]
+-[LDEventSource _open]
+-[LDEventSource _dispatchEvent:type:]
+___37-[LDEventSource _dispatchEvent:type:]_block_invoke
+___copy_helper_block_.191
+___destroy_helper_block_.192
+-[LDEventSource _dispatchEvent:]
+-[LDEventSource increaseIntervalWithBackoff]
+-[LDEventSource eventURL]
+-[LDEventSource setEventURL:]
+-[LDEventSource eventSourceTask]
+-[LDEventSource setEventSourceTask:]
+-[LDEventSource session]
+-[LDEventSource setSession:]
+-[LDEventSource listeners]
+-[LDEventSource setListeners:]
+-[LDEventSource timeoutInterval]
+-[LDEventSource setTimeoutInterval:]
+-[LDEventSource retryInterval]
+-[LDEventSource setRetryInterval:]
+-[LDEventSource retryAttempt]
+-[LDEventSource setRetryAttempt:]
+-[LDEventSource httpRequestHeaders]
+-[LDEventSource setHttpRequestHeaders:]
+-[LDEventSource connectMethod]
+-[LDEventSource setConnectMethod:]
+-[LDEventSource connectBody]
+-[LDEventSource setConnectBody:]
+-[LDEventSource lastEventID]
+-[LDEventSource setLastEventID:]
+-[LDEventSource eventStringAccumulator]
+-[LDEventSource setEventStringAccumulator:]
+-[LDEventSource .cxx_destruct]
+-[LDEvent description]
+-[LDEvent copyWithZone:]
+-[LDEvent id]
+-[LDEvent setId:]
+-[LDEvent event]
+-[LDEvent setEvent:]
+-[LDEvent data]
+-[LDEvent setData:]
+-[LDEvent readyState]
+-[LDEvent setReadyState:]
+-[LDEvent error]
+-[LDEvent setError:]
+-[LDEvent .cxx_destruct]
+_OBJC_IVAR_$_LDEventSource.messageQueue
+_OBJC_IVAR_$_LDEventSource.connectionQueue
+_OBJC_IVAR_$_LDEventSource._retryInterval
+___block_descriptor_tmp
+_OBJC_IVAR_$_LDEventSource.wasClosed
+_OBJC_IVAR_$_LDEventSource._retryAttempt
+___block_descriptor_tmp.93
+___block_descriptor_tmp.118
+___block_descriptor_tmp.193
+_OBJC_IVAR_$_LDEventSource._eventURL
+_OBJC_IVAR_$_LDEventSource._eventSourceTask
+_OBJC_IVAR_$_LDEventSource._session
+_OBJC_IVAR_$_LDEventSource._listeners
+_OBJC_IVAR_$_LDEventSource._timeoutInterval
+_OBJC_IVAR_$_LDEventSource._httpRequestHeaders
+_OBJC_IVAR_$_LDEventSource._connectMethod
+_OBJC_IVAR_$_LDEventSource._connectBody
+_OBJC_IVAR_$_LDEventSource._lastEventID
+_OBJC_IVAR_$_LDEventSource._eventStringAccumulator
+l_OBJC_PROTOCOL_$_NSObject
+l_OBJC_LABEL_PROTOCOL_$_NSObject
+l_OBJC_PROTOCOL_$_NSURLSessionDelegate
+l_OBJC_LABEL_PROTOCOL_$_NSURLSessionDelegate
+l_OBJC_PROTOCOL_$_NSURLSessionTaskDelegate
+l_OBJC_LABEL_PROTOCOL_$_NSURLSessionTaskDelegate
+l_OBJC_PROTOCOL_$_NSURLSessionDataDelegate
+l_OBJC_LABEL_PROTOCOL_$_NSURLSessionDataDelegate
+_OBJC_IVAR_$_LDEvent._id
+_OBJC_IVAR_$_LDEvent._event
+_OBJC_IVAR_$_LDEvent._data
+_OBJC_IVAR_$_LDEvent._readyState
+_OBJC_IVAR_$_LDEvent._error
+l_OBJC_PROTOCOL_$_NSCopying
+l_OBJC_LABEL_PROTOCOL_$_NSCopying
+Apple LLVM version 9.0.0 (clang-900.0.39.2)
+/Users/markpokorny/Documents/Development/launchDarkly/ios-client-swift-private/Carthage/Checkouts/ios-eventsource/LDEventSource/LDEventSource.m
+/Users/markpokorny/Documents/Development/launchDarkly/ios-client-swift-private/Carthage/Checkouts/ios-eventsource
+/Users/markpokorny/Documents/Development/launchDarkly/ios-client-swift-private/Carthage/Checkouts/ios-eventsource/LDEventSource/LDEventSource.h
+__destroy_helper_block_
+__copy_helper_block_
+__37-[LDEventSource _dispatchEvent:type:]_block_invoke
+__54-[LDEventSource URLSession:task:didCompleteWithError:]_block_invoke
+__34-[LDEventSource parseEventString:]_block_invoke
+__83-[LDEventSource initWithURL:httpHeaders:timeoutInterval:connectMethod:connectBody:]_block_invoke
+-[NSString(LDEventSource) lines]
+/Users/markpokorny/Documents/Development/launchDarkly/ios-client-swift-private/Carthage/Checkouts/ios-eventsource/LDEventSource/NSString+LDEventSource.m
++[LDEventParser eventParserWithEventString:]
+-[LDEventParser initWithEventString:]
+-[LDEventParser parseEventString]
+-[LDEventParser linesToParseFromEventString]
+-[LDEventParser remainingEventStringAfterParsingEventString]
+___60-[LDEventParser remainingEventStringAfterParsingEventString]_block_invoke
+-[LDEventParser eventString]
+-[LDEventParser setEventString:]
+-[LDEventParser event]
+-[LDEventParser setEvent:]
+-[LDEventParser retryInterval]
+-[LDEventParser setRetryInterval:]
+-[LDEventParser remainingEventString]
+-[LDEventParser setRemainingEventString:]
+-[LDEventParser .cxx_destruct]
+___block_literal_global
+_OBJC_IVAR_$_LDEventParser._eventString
+_OBJC_IVAR_$_LDEventParser._event
+_OBJC_IVAR_$_LDEventParser._retryInterval
+_OBJC_IVAR_$_LDEventParser._remainingEventString
+/Users/markpokorny/Documents/Development/launchDarkly/ios-client-swift-private/Carthage/Checkouts/ios-eventsource/LDEventSource/LDEventParser.m
+/Users/markpokorny/Documents/Development/launchDarkly/ios-client-swift-private/Carthage/Checkouts/ios-eventsource/LDEventSource/LDEventParser.h
+__60-[LDEventParser remainingEventStringAfterParsingEventString]_block_invoke
+-[LDEventStringAccumulator accumulateEventStringWithString:]
+-[LDEventStringAccumulator isReadyToParseEvent]
+-[LDEventStringAccumulator reset]
+-[LDEventStringAccumulator eventString]
+-[LDEventStringAccumulator setEventString:]
+-[LDEventStringAccumulator .cxx_destruct]
+_OBJC_IVAR_$_LDEventStringAccumulator._eventString
+/Users/markpokorny/Documents/Development/launchDarkly/ios-client-swift-private/Carthage/Checkouts/ios-eventsource/LDEventSource/LDEventStringAccumulator.m
+/Users/markpokorny/Documents/Development/launchDarkly/ios-client-swift-private/Carthage/Checkouts/ios-eventsource/LDEventSource/LDEventStringAccumulator.h
+-[NSArray(LDEventSource) indexOfFirstEmptyLine]
+-[NSArray(LDEventSource) subArrayFromIndex:]
+/Users/markpokorny/Documents/Development/launchDarkly/ios-client-swift-private/Carthage/Checkouts/ios-eventsource/LDEventSource/NSArray+LDEventSource.m
+NSMakeRange
+/Applications/Xcode9.2.app/Contents/Developer/Platforms/WatchOS.platform/Developer/SDKs/WatchOS4.2.sdk/System/Library/Frameworks/Foundation.framework/Headers/NSRange.h
+/Users/markpokorny/Library/Caches/org.carthage.CarthageKit/DerivedData/9.2_9C40b/ios-eventsource/3.2.5/Build/Intermediates.noindex/ArchiveIntermediates/DarklyEventSource/IntermediateBuildFilesPath/LDEventSource.build/Release-watchos/DarklyEventSource.build/DerivedSources/DarklyEventSource_vers.c
