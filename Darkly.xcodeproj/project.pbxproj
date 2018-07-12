@@ -7,6 +7,10 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		2A89B8D989B0842AF40415C3 /* Pods_DarklyTests.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D8F8E2C0E78822B90FC2696A /* Pods_DarklyTests.framework */; };
+		83028E4D20F7903800FC53E3 /* DarklyEventSource.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 83028E4C20F7903800FC53E3 /* DarklyEventSource.framework */; };
+		83028E5120F7908E00FC53E3 /* DarklyEventSource.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 83028E5020F7908D00FC53E3 /* DarklyEventSource.framework */; };
+		83028E5820F7A3F500FC53E3 /* DarklyEventSource.framework.dSYM in CopyFiles */ = {isa = PBXBuildFile; fileRef = 83028E5720F7A3F500FC53E3 /* DarklyEventSource.framework.dSYM */; };
 		830BF933202D188E006DF9B1 /* HTTPURLRequest.swift in Sources */ = {isa = PBXBuildFile; fileRef = 830BF932202D188E006DF9B1 /* HTTPURLRequest.swift */; };
 		831425AF206ABB5300F2EF36 /* EnvironmentReportingMock.swift in Sources */ = {isa = PBXBuildFile; fileRef = 831425AE206ABB5300F2EF36 /* EnvironmentReportingMock.swift */; };
 		831425B1206B030100F2EF36 /* EnvironmentReporter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 831425B0206B030100F2EF36 /* EnvironmentReporter.swift */; };
@@ -118,8 +122,6 @@
 		83D5597A1FD87E6B002D10C8 /* UserCacheConverter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 83D559791FD87E6B002D10C8 /* UserCacheConverter.swift */; };
 		83D5597C1FD9BED7002D10C8 /* FlagCollectionCacheSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = 83D5597B1FD9BED7002D10C8 /* FlagCollectionCacheSpec.swift */; };
 		83D5597E1FDA01F9002D10C8 /* KeyedValueCacheSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = 83D5597D1FDA01F9002D10C8 /* KeyedValueCacheSpec.swift */; };
-		83D9EC6F2062DBB7004D7FA6 /* Darkly_watchOS.h in Headers */ = {isa = PBXBuildFile; fileRef = 83D9EC6D2062DBB7004D7FA6 /* Darkly_watchOS.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		83D9EC732062DBF3004D7FA6 /* DarklyEventSource.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 83D9EC742062DBF3004D7FA6 /* DarklyEventSource.framework */; };
 		83D9EC752062DEAB004D7FA6 /* LDCommon.swift in Sources */ = {isa = PBXBuildFile; fileRef = 83B6C4B51F4DE7630055351C /* LDCommon.swift */; };
 		83D9EC762062DEAB004D7FA6 /* LDConfig.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8354EFDD1F26380700C05156 /* LDConfig.swift */; };
 		83D9EC772062DEAB004D7FA6 /* LDClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8354EFDC1F26380700C05156 /* LDClient.swift */; };
@@ -166,6 +168,7 @@
 		83DDBEFC1FA24B2700E428B6 /* JSONSerialization.swift in Sources */ = {isa = PBXBuildFile; fileRef = 83DDBEFB1FA24B2700E428B6 /* JSONSerialization.swift */; };
 		83DDBEFE1FA24F9600E428B6 /* Date.swift in Sources */ = {isa = PBXBuildFile; fileRef = 83DDBEFD1FA24F9600E428B6 /* Date.swift */; };
 		83DDBF001FA2589900E428B6 /* FlagStoreSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = 83DDBEFF1FA2589900E428B6 /* FlagStoreSpec.swift */; };
+		83DFE4E920F7B5FE00F308EC /* DarklyEventSource.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 83028E5220F790A500FC53E3 /* DarklyEventSource.framework */; };
 		83E2E2061F9E7AC7007514E9 /* LDUserSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = 83E2E2051F9E7AC7007514E9 /* LDUserSpec.swift */; };
 		83E2E2091F9FF9E1007514E9 /* Optional.swift in Sources */ = {isa = PBXBuildFile; fileRef = 83E2E2081F9FF9E1007514E9 /* Optional.swift */; };
 		83EF678A1F97CFEC00403126 /* Dictionary.swift in Sources */ = {isa = PBXBuildFile; fileRef = 83EF67891F97CFEC00403126 /* Dictionary.swift */; };
@@ -176,10 +179,9 @@
 		83FEF8DB1F2666DA001CF12C /* UserFlagCache.swift in Sources */ = {isa = PBXBuildFile; fileRef = 83FEF8DA1F2666DA001CF12C /* UserFlagCache.swift */; };
 		83FEF8DD1F266742001CF12C /* FlagSynchronizer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 83FEF8DC1F266742001CF12C /* FlagSynchronizer.swift */; };
 		83FEF8DF1F2667E4001CF12C /* LDEventReporter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 83FEF8DE1F2667E4001CF12C /* LDEventReporter.swift */; };
-		8484B738BA46EFE8DAB4EE38 /* Pods_Darkly_macOS.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 3773C42C09CD67C6F1589C16 /* Pods_Darkly_macOS.framework */; };
-		877EEB425B85EAD9C96EC097 /* Pods_DarklyTests.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = AC93234F8E9E55803D098770 /* Pods_DarklyTests.framework */; };
-		8E62A01B296F221C0D37AB63 /* Pods_Darkly_watchOS.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = EF0C6432824438EBA2954DA5 /* Pods_Darkly_watchOS.framework */; };
-		C6EA93E03FC1A08AADF532D0 /* Pods_Darkly_iOS.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C76BA8CBE4E870F6803A8FE8 /* Pods_Darkly_iOS.framework */; };
+		CB2730FFF9FB9DAC2A63B833 /* Pods_Darkly_watchOS.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 8BE86FFBC539C93AECD5AEBC /* Pods_Darkly_watchOS.framework */; };
+		DABD6E11921D244D025ADF24 /* Pods_Darkly_macOS.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 958C6A532870715F4585879B /* Pods_Darkly_macOS.framework */; };
+		E4CF5845271E9DE61D4B187E /* Pods_Darkly_iOS.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 21E3FAB8A7A9A474A0B06CD7 /* Pods_Darkly_iOS.framework */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -192,14 +194,31 @@
 		};
 /* End PBXContainerItemProxy section */
 
+/* Begin PBXCopyFilesBuildPhase section */
+		83028E5620F7A39E00FC53E3 /* CopyFiles */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 16;
+			files = (
+				83028E5820F7A3F500FC53E3 /* DarklyEventSource.framework.dSYM in CopyFiles */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
+
 /* Begin PBXFileReference section */
-		0D77BEBA1B6F5040DBFB836B /* Pods-Darkly_iOS.testing.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Darkly_iOS.testing.xcconfig"; path = "Pods/Target Support Files/Pods-Darkly_iOS/Pods-Darkly_iOS.testing.xcconfig"; sourceTree = "<group>"; };
-		2DD55117D72B659CB8CCFDB2 /* Pods-Darkly_macOS.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Darkly_macOS.debug.xcconfig"; path = "Pods/Target Support Files/Pods-Darkly_macOS/Pods-Darkly_macOS.debug.xcconfig"; sourceTree = "<group>"; };
-		2FB66451DF5343970E572BB7 /* Pods-Darkly_iOS.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Darkly_iOS.debug.xcconfig"; path = "Pods/Target Support Files/Pods-Darkly_iOS/Pods-Darkly_iOS.debug.xcconfig"; sourceTree = "<group>"; };
-		3773C42C09CD67C6F1589C16 /* Pods_Darkly_macOS.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_Darkly_macOS.framework; sourceTree = BUILT_PRODUCTS_DIR; };
-		65D790D08CD84FD874B9A5D8 /* Pods-DarklyTests.testing.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-DarklyTests.testing.xcconfig"; path = "Pods/Target Support Files/Pods-DarklyTests/Pods-DarklyTests.testing.xcconfig"; sourceTree = "<group>"; };
-		6D78FF715370FB95F6F5E9CA /* Pods-Darkly_iOS.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Darkly_iOS.release.xcconfig"; path = "Pods/Target Support Files/Pods-Darkly_iOS/Pods-Darkly_iOS.release.xcconfig"; sourceTree = "<group>"; };
-		7B043E1A9DC44E730A3F3730 /* Pods-DarklyTests.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-DarklyTests.release.xcconfig"; path = "Pods/Target Support Files/Pods-DarklyTests/Pods-DarklyTests.release.xcconfig"; sourceTree = "<group>"; };
+		116D24066863F2CC92EA97A9 /* Pods-Darkly_iOS.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Darkly_iOS.release.xcconfig"; path = "Pods/Target Support Files/Pods-Darkly_iOS/Pods-Darkly_iOS.release.xcconfig"; sourceTree = "<group>"; };
+		1DB3B0685C67689D84293B4D /* Pods-Darkly_iOS.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Darkly_iOS.debug.xcconfig"; path = "Pods/Target Support Files/Pods-Darkly_iOS/Pods-Darkly_iOS.debug.xcconfig"; sourceTree = "<group>"; };
+		1E32761786B304FC33EDC9E7 /* Pods-DarklyTests.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-DarklyTests.release.xcconfig"; path = "Pods/Target Support Files/Pods-DarklyTests/Pods-DarklyTests.release.xcconfig"; sourceTree = "<group>"; };
+		21E3FAB8A7A9A474A0B06CD7 /* Pods_Darkly_iOS.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_Darkly_iOS.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		4C8B006E67D40D32D69DE2FB /* Pods-DarklyTests.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-DarklyTests.debug.xcconfig"; path = "Pods/Target Support Files/Pods-DarklyTests/Pods-DarklyTests.debug.xcconfig"; sourceTree = "<group>"; };
+		59DBC8D8F06E48BFD436786A /* Pods-Darkly_macOS.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Darkly_macOS.release.xcconfig"; path = "Pods/Target Support Files/Pods-Darkly_macOS/Pods-Darkly_macOS.release.xcconfig"; sourceTree = "<group>"; };
+		7DD0CB8A0A66E8B5F5E5CC45 /* Pods-Darkly_macOS.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Darkly_macOS.debug.xcconfig"; path = "Pods/Target Support Files/Pods-Darkly_macOS/Pods-Darkly_macOS.debug.xcconfig"; sourceTree = "<group>"; };
+		83028E4C20F7903800FC53E3 /* DarklyEventSource.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = DarklyEventSource.framework; path = Carthage/Build/iOS/DarklyEventSource.framework; sourceTree = SOURCE_ROOT; };
+		83028E5020F7908D00FC53E3 /* DarklyEventSource.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = DarklyEventSource.framework; path = Carthage/Build/Mac/DarklyEventSource.framework; sourceTree = SOURCE_ROOT; };
+		83028E5220F790A500FC53E3 /* DarklyEventSource.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = DarklyEventSource.framework; path = Carthage/Build/watchOS/DarklyEventSource.framework; sourceTree = SOURCE_ROOT; };
+		83028E5720F7A3F500FC53E3 /* DarklyEventSource.framework.dSYM */ = {isa = PBXFileReference; lastKnownFileType = wrapper.dsym; path = DarklyEventSource.framework.dSYM; sourceTree = "<group>"; };
 		830BF932202D188E006DF9B1 /* HTTPURLRequest.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HTTPURLRequest.swift; sourceTree = "<group>"; };
 		831425AE206ABB5300F2EF36 /* EnvironmentReportingMock.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EnvironmentReportingMock.swift; sourceTree = "<group>"; };
 		831425B0206B030100F2EF36 /* EnvironmentReporter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EnvironmentReporter.swift; sourceTree = "<group>"; };
@@ -274,7 +293,6 @@
 		83D9EC5F2062DB8C004D7FA6 /* Darkly_watchOS.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Darkly_watchOS.h; sourceTree = "<group>"; };
 		83D9EC602062DB8C004D7FA6 /* Darkly_watchOS.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = Darkly_watchOS.m; sourceTree = "<group>"; };
 		83D9EC6B2062DBB7004D7FA6 /* Darkly.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Darkly.framework; sourceTree = BUILT_PRODUCTS_DIR; };
-		83D9EC6D2062DBB7004D7FA6 /* Darkly_watchOS.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Darkly_watchOS.h; sourceTree = "<group>"; };
 		83D9EC6E2062DBB7004D7FA6 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		83D9EC742062DBF3004D7FA6 /* DarklyEventSource.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = DarklyEventSource.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		83DDBEF51FA24A7E00E428B6 /* Data.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Data.swift; sourceTree = "<group>"; };
@@ -292,13 +310,11 @@
 		83FEF8DA1F2666DA001CF12C /* UserFlagCache.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = UserFlagCache.swift; sourceTree = "<group>"; };
 		83FEF8DC1F266742001CF12C /* FlagSynchronizer.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = FlagSynchronizer.swift; sourceTree = "<group>"; };
 		83FEF8DE1F2667E4001CF12C /* LDEventReporter.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = LDEventReporter.swift; sourceTree = "<group>"; };
-		8BA10E0855569013A7DBE66E /* Pods-DarklyTests.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-DarklyTests.debug.xcconfig"; path = "Pods/Target Support Files/Pods-DarklyTests/Pods-DarklyTests.debug.xcconfig"; sourceTree = "<group>"; };
-		A89EECE422172B2C71086838 /* Pods-Darkly_watchOS.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Darkly_watchOS.debug.xcconfig"; path = "Pods/Target Support Files/Pods-Darkly_watchOS/Pods-Darkly_watchOS.debug.xcconfig"; sourceTree = "<group>"; };
-		A9D1672EB13968A2E52FDB67 /* Pods-Darkly_watchOS.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Darkly_watchOS.release.xcconfig"; path = "Pods/Target Support Files/Pods-Darkly_watchOS/Pods-Darkly_watchOS.release.xcconfig"; sourceTree = "<group>"; };
-		AC93234F8E9E55803D098770 /* Pods_DarklyTests.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_DarklyTests.framework; sourceTree = BUILT_PRODUCTS_DIR; };
-		C76BA8CBE4E870F6803A8FE8 /* Pods_Darkly_iOS.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_Darkly_iOS.framework; sourceTree = BUILT_PRODUCTS_DIR; };
-		E426A66AECABDF4C830ECF75 /* Pods-Darkly_macOS.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Darkly_macOS.release.xcconfig"; path = "Pods/Target Support Files/Pods-Darkly_macOS/Pods-Darkly_macOS.release.xcconfig"; sourceTree = "<group>"; };
-		EF0C6432824438EBA2954DA5 /* Pods_Darkly_watchOS.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_Darkly_watchOS.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		8BE86FFBC539C93AECD5AEBC /* Pods_Darkly_watchOS.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_Darkly_watchOS.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		958C6A532870715F4585879B /* Pods_Darkly_macOS.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_Darkly_macOS.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		9670E63CBB48E75E0D7F83CB /* Pods-Darkly_watchOS.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Darkly_watchOS.release.xcconfig"; path = "Pods/Target Support Files/Pods-Darkly_watchOS/Pods-Darkly_watchOS.release.xcconfig"; sourceTree = "<group>"; };
+		C7BD6E98C3D5A26F1A931F2A /* Pods-Darkly_watchOS.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Darkly_watchOS.debug.xcconfig"; path = "Pods/Target Support Files/Pods-Darkly_watchOS/Pods-Darkly_watchOS.debug.xcconfig"; sourceTree = "<group>"; };
+		D8F8E2C0E78822B90FC2696A /* Pods_DarklyTests.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_DarklyTests.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -306,7 +322,8 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				8484B738BA46EFE8DAB4EE38 /* Pods_Darkly_macOS.framework in Frameworks */,
+				83028E5120F7908E00FC53E3 /* DarklyEventSource.framework in Frameworks */,
+				DABD6E11921D244D025ADF24 /* Pods_Darkly_macOS.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -314,7 +331,8 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				C6EA93E03FC1A08AADF532D0 /* Pods_Darkly_iOS.framework in Frameworks */,
+				83028E4D20F7903800FC53E3 /* DarklyEventSource.framework in Frameworks */,
+				E4CF5845271E9DE61D4B187E /* Pods_Darkly_iOS.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -323,7 +341,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				8354EFCC1F22491C00C05156 /* Darkly.framework in Frameworks */,
-				877EEB425B85EAD9C96EC097 /* Pods_DarklyTests.framework in Frameworks */,
+				2A89B8D989B0842AF40415C3 /* Pods_DarklyTests.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -331,8 +349,8 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				83D9EC732062DBF3004D7FA6 /* DarklyEventSource.framework in Frameworks */,
-				8E62A01B296F221C0D37AB63 /* Pods_Darkly_watchOS.framework in Frameworks */,
+				83DFE4E920F7B5FE00F308EC /* DarklyEventSource.framework in Frameworks */,
+				CB2730FFF9FB9DAC2A63B833 /* Pods_Darkly_watchOS.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -343,12 +361,38 @@
 			isa = PBXGroup;
 			children = (
 				83D9EC742062DBF3004D7FA6 /* DarklyEventSource.framework */,
-				AC93234F8E9E55803D098770 /* Pods_DarklyTests.framework */,
-				C76BA8CBE4E870F6803A8FE8 /* Pods_Darkly_iOS.framework */,
-				EF0C6432824438EBA2954DA5 /* Pods_Darkly_watchOS.framework */,
-				3773C42C09CD67C6F1589C16 /* Pods_Darkly_macOS.framework */,
+				D8F8E2C0E78822B90FC2696A /* Pods_DarklyTests.framework */,
+				21E3FAB8A7A9A474A0B06CD7 /* Pods_Darkly_iOS.framework */,
+				958C6A532870715F4585879B /* Pods_Darkly_macOS.framework */,
+				8BE86FFBC539C93AECD5AEBC /* Pods_Darkly_watchOS.framework */,
 			);
 			name = Frameworks;
+			sourceTree = "<group>";
+		};
+		35D209AC6E91916E8AEB6998 /* Pods */ = {
+			isa = PBXGroup;
+			children = (
+				4C8B006E67D40D32D69DE2FB /* Pods-DarklyTests.debug.xcconfig */,
+				1E32761786B304FC33EDC9E7 /* Pods-DarklyTests.release.xcconfig */,
+				1DB3B0685C67689D84293B4D /* Pods-Darkly_iOS.debug.xcconfig */,
+				116D24066863F2CC92EA97A9 /* Pods-Darkly_iOS.release.xcconfig */,
+				7DD0CB8A0A66E8B5F5E5CC45 /* Pods-Darkly_macOS.debug.xcconfig */,
+				59DBC8D8F06E48BFD436786A /* Pods-Darkly_macOS.release.xcconfig */,
+				C7BD6E98C3D5A26F1A931F2A /* Pods-Darkly_watchOS.debug.xcconfig */,
+				9670E63CBB48E75E0D7F83CB /* Pods-Darkly_watchOS.release.xcconfig */,
+			);
+			name = Pods;
+			sourceTree = "<group>";
+		};
+		83028E4B20F78FAE00FC53E3 /* Carthage Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				83028E5720F7A3F500FC53E3 /* DarklyEventSource.framework.dSYM */,
+				83028E4C20F7903800FC53E3 /* DarklyEventSource.framework */,
+				83028E5220F790A500FC53E3 /* DarklyEventSource.framework */,
+				83028E5020F7908D00FC53E3 /* DarklyEventSource.framework */,
+			);
+			name = "Carthage Frameworks";
 			sourceTree = "<group>";
 		};
 		831CE0671F853CB700A13A3A /* Matcher */ = {
@@ -423,12 +467,12 @@
 				8354EFCF1F22491C00C05156 /* DarklyTests */,
 				83411A5C1FABDA5E00E5CF39 /* GeneratedCode */,
 				83D9EC5E2062DB8C004D7FA6 /* Darkly-watchOS */,
-				83D9EC6C2062DBB7004D7FA6 /* Darkly-watchOS */,
 				831EF33C20655D700001C643 /* Darkly_macOS */,
 				8354EFC31F22491C00C05156 /* Products */,
-				8CFDD6922FA984B49AEFD2D5 /* Pods */,
+				83028E4B20F78FAE00FC53E3 /* Carthage Frameworks */,
 				3384F0CC93C5C19D2A6C5E66 /* Frameworks */,
 				83D9EC582062DAAF004D7FA6 /* Darkly_iOS copy-Info.plist */,
+				35D209AC6E91916E8AEB6998 /* Pods */,
 			);
 			sourceTree = "<group>";
 		};
@@ -544,14 +588,6 @@
 			children = (
 				83D9EC5F2062DB8C004D7FA6 /* Darkly_watchOS.h */,
 				83D9EC602062DB8C004D7FA6 /* Darkly_watchOS.m */,
-			);
-			path = "Darkly-watchOS";
-			sourceTree = "<group>";
-		};
-		83D9EC6C2062DBB7004D7FA6 /* Darkly-watchOS */ = {
-			isa = PBXGroup;
-			children = (
-				83D9EC6D2062DBB7004D7FA6 /* Darkly_watchOS.h */,
 				83D9EC6E2062DBB7004D7FA6 /* Info.plist */,
 			);
 			path = "Darkly-watchOS";
@@ -605,23 +641,6 @@
 			path = "Service Objects";
 			sourceTree = "<group>";
 		};
-		8CFDD6922FA984B49AEFD2D5 /* Pods */ = {
-			isa = PBXGroup;
-			children = (
-				2FB66451DF5343970E572BB7 /* Pods-Darkly_iOS.debug.xcconfig */,
-				6D78FF715370FB95F6F5E9CA /* Pods-Darkly_iOS.release.xcconfig */,
-				8BA10E0855569013A7DBE66E /* Pods-DarklyTests.debug.xcconfig */,
-				7B043E1A9DC44E730A3F3730 /* Pods-DarklyTests.release.xcconfig */,
-				65D790D08CD84FD874B9A5D8 /* Pods-DarklyTests.testing.xcconfig */,
-				0D77BEBA1B6F5040DBFB836B /* Pods-Darkly_iOS.testing.xcconfig */,
-				A89EECE422172B2C71086838 /* Pods-Darkly_watchOS.debug.xcconfig */,
-				A9D1672EB13968A2E52FDB67 /* Pods-Darkly_watchOS.release.xcconfig */,
-				2DD55117D72B659CB8CCFDB2 /* Pods-Darkly_macOS.debug.xcconfig */,
-				E426A66AECABDF4C830ECF75 /* Pods-Darkly_macOS.release.xcconfig */,
-			);
-			name = Pods;
-			sourceTree = "<group>";
-		};
 /* End PBXGroup section */
 
 /* Begin PBXHeadersBuildPhase section */
@@ -645,7 +664,6 @@
 			isa = PBXHeadersBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				83D9EC6F2062DBB7004D7FA6 /* Darkly_watchOS.h in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -656,13 +674,14 @@
 			isa = PBXNativeTarget;
 			buildConfigurationList = 831EF34220655D700001C643 /* Build configuration list for PBXNativeTarget "Darkly_macOS" */;
 			buildPhases = (
-				5CCA91C79606251A09C01C57 /* [CP] Check Pods Manifest.lock */,
+				D6B5A95DA5B96EE0C1402473 /* [CP] Check Pods Manifest.lock */,
 				830C2AC2207416A5001D645D /* ShellScript */,
 				831EF33620655D700001C643 /* Sources */,
 				831EF33720655D700001C643 /* Frameworks */,
 				831EF33820655D700001C643 /* Headers */,
 				831EF33920655D700001C643 /* Resources */,
-				F541C40F8B6A0132D932CAFB /* [CP] Copy Pods Resources */,
+				83028E5620F7A39E00FC53E3 /* CopyFiles */,
+				FCFC394596472C6831BCFE2D /* [CP] Copy Pods Resources */,
 			);
 			buildRules = (
 			);
@@ -677,13 +696,14 @@
 			isa = PBXNativeTarget;
 			buildConfigurationList = 8354EFD61F22491C00C05156 /* Build configuration list for PBXNativeTarget "Darkly_iOS" */;
 			buildPhases = (
-				F36F7FA7E7EB3A91EAB0BF27 /* [CP] Check Pods Manifest.lock */,
+				4A435E1BB6A9AEA06E830964 /* [CP] Check Pods Manifest.lock */,
 				835E1CFE1F61AC0600184DB4 /* ShellScript */,
 				8354EFBD1F22491C00C05156 /* Sources */,
 				8354EFBE1F22491C00C05156 /* Frameworks */,
 				8354EFBF1F22491C00C05156 /* Headers */,
 				8354EFC01F22491C00C05156 /* Resources */,
-				ACC7289921D9D31A4F8C6FE4 /* [CP] Copy Pods Resources */,
+				83028E5920F7A47F00FC53E3 /* ShellScript */,
+				D9A53DF887B213CF9BDE1F64 /* [CP] Copy Pods Resources */,
 			);
 			buildRules = (
 			);
@@ -698,13 +718,13 @@
 			isa = PBXNativeTarget;
 			buildConfigurationList = 8354EFD91F22491C00C05156 /* Build configuration list for PBXNativeTarget "DarklyTests" */;
 			buildPhases = (
-				F0E460976E8B26DB5FE1462E /* [CP] Check Pods Manifest.lock */,
+				1FA213ED5FFF0867372C59D0 /* [CP] Check Pods Manifest.lock */,
 				83411A561FABCA2200E5CF39 /* ShellScript */,
 				8354EFC71F22491C00C05156 /* Sources */,
 				8354EFC81F22491C00C05156 /* Frameworks */,
 				8354EFC91F22491C00C05156 /* Resources */,
-				C6FBDDB343FCEE10910D61F8 /* [CP] Embed Pods Frameworks */,
-				EA3855784641B2F9E9B6C7B2 /* [CP] Copy Pods Resources */,
+				97C0831603CBCF1C1595C417 /* [CP] Embed Pods Frameworks */,
+				2F6362EE6402F304872D5B36 /* [CP] Copy Pods Resources */,
 			);
 			buildRules = (
 			);
@@ -720,13 +740,14 @@
 			isa = PBXNativeTarget;
 			buildConfigurationList = 83D9EC702062DBB7004D7FA6 /* Build configuration list for PBXNativeTarget "Darkly_watchOS" */;
 			buildPhases = (
-				F438EA421B0F0DDCF587D333 /* [CP] Check Pods Manifest.lock */,
+				95F5E737C250E5CC2BEA0A82 /* [CP] Check Pods Manifest.lock */,
 				830C2AC120741687001D645D /* ShellScript */,
 				83D9EC662062DBB7004D7FA6 /* Sources */,
 				83D9EC672062DBB7004D7FA6 /* Frameworks */,
 				83D9EC682062DBB7004D7FA6 /* Headers */,
 				83D9EC692062DBB7004D7FA6 /* Resources */,
-				D98C737BC642CE6D4FCD2792 /* [CP] Copy Pods Resources */,
+				83028E5A20F7A54000FC53E3 /* ShellScript */,
+				EDCEAB6A2DD68E7E5A53B18F /* [CP] Copy Pods Resources */,
 			);
 			buildRules = (
 			);
@@ -819,7 +840,7 @@
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXShellScriptBuildPhase section */
-		5CCA91C79606251A09C01C57 /* [CP] Check Pods Manifest.lock */ = {
+		1FA213ED5FFF0867372C59D0 /* [CP] Check Pods Manifest.lock */ = {
 			isa = PBXShellScriptBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -830,12 +851,75 @@
 			);
 			name = "[CP] Check Pods Manifest.lock";
 			outputPaths = (
-				"$(DERIVED_FILE_DIR)/Pods-Darkly_macOS-checkManifestLockResult.txt",
+				"$(DERIVED_FILE_DIR)/Pods-DarklyTests-checkManifestLockResult.txt",
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
 			shellScript = "diff \"${PODS_PODFILE_DIR_PATH}/Podfile.lock\" \"${PODS_ROOT}/Manifest.lock\" > /dev/null\nif [ $? != 0 ] ; then\n    # print error to STDERR\n    echo \"error: The sandbox is not in sync with the Podfile.lock. Run 'pod install' or update your CocoaPods installation.\" >&2\n    exit 1\nfi\n# This output is used by Xcode 'outputs' to avoid re-running this script phase.\necho \"SUCCESS\" > \"${SCRIPT_OUTPUT_FILE_0}\"\n";
 			showEnvVarsInLog = 0;
+		};
+		2F6362EE6402F304872D5B36 /* [CP] Copy Pods Resources */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputPaths = (
+			);
+			name = "[CP] Copy Pods Resources";
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "\"${SRCROOT}/Pods/Target Support Files/Pods-DarklyTests/Pods-DarklyTests-resources.sh\"\n";
+			showEnvVarsInLog = 0;
+		};
+		4A435E1BB6A9AEA06E830964 /* [CP] Check Pods Manifest.lock */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputPaths = (
+				"${PODS_PODFILE_DIR_PATH}/Podfile.lock",
+				"${PODS_ROOT}/Manifest.lock",
+			);
+			name = "[CP] Check Pods Manifest.lock";
+			outputPaths = (
+				"$(DERIVED_FILE_DIR)/Pods-Darkly_iOS-checkManifestLockResult.txt",
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "diff \"${PODS_PODFILE_DIR_PATH}/Podfile.lock\" \"${PODS_ROOT}/Manifest.lock\" > /dev/null\nif [ $? != 0 ] ; then\n    # print error to STDERR\n    echo \"error: The sandbox is not in sync with the Podfile.lock. Run 'pod install' or update your CocoaPods installation.\" >&2\n    exit 1\nfi\n# This output is used by Xcode 'outputs' to avoid re-running this script phase.\necho \"SUCCESS\" > \"${SCRIPT_OUTPUT_FILE_0}\"\n";
+			showEnvVarsInLog = 0;
+		};
+		83028E5920F7A47F00FC53E3 /* ShellScript */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputPaths = (
+				"$(SRCROOT)/Carthage/Build/iOS/DarklyEventSource.framework",
+			);
+			outputPaths = (
+				"$(BUILT_PRODUCTS_DIR)/$(FRAMEWORKS_FOLDER_PATH)/DarklyEventSource.framework",
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "/usr/local/bin/carthage copy-frameworks";
+		};
+		83028E5A20F7A54000FC53E3 /* ShellScript */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputPaths = (
+				"$(SRCROOT)/Carthage/Build/watchOS/DarklyEventSource.framework",
+			);
+			outputPaths = (
+				"$(BUILT_PRODUCTS_DIR)/$(FRAMEWORKS_FOLDER_PATH)/DarklyEventSource.framework",
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "/usr/local/bin/carthage copy-frameworks";
 		};
 		830C2AC120741687001D645D /* ShellScript */ = {
 			isa = PBXShellScriptBuildPhase;
@@ -889,22 +973,25 @@
 			shellPath = /bin/sh;
 			shellScript = "${PODS_ROOT}/SwiftLint/swiftlint";
 		};
-		ACC7289921D9D31A4F8C6FE4 /* [CP] Copy Pods Resources */ = {
+		95F5E737C250E5CC2BEA0A82 /* [CP] Check Pods Manifest.lock */ = {
 			isa = PBXShellScriptBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
 			);
 			inputPaths = (
+				"${PODS_PODFILE_DIR_PATH}/Podfile.lock",
+				"${PODS_ROOT}/Manifest.lock",
 			);
-			name = "[CP] Copy Pods Resources";
+			name = "[CP] Check Pods Manifest.lock";
 			outputPaths = (
+				"$(DERIVED_FILE_DIR)/Pods-Darkly_watchOS-checkManifestLockResult.txt",
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "\"${SRCROOT}/Pods/Target Support Files/Pods-Darkly_iOS/Pods-Darkly_iOS-resources.sh\"\n";
+			shellScript = "diff \"${PODS_PODFILE_DIR_PATH}/Podfile.lock\" \"${PODS_ROOT}/Manifest.lock\" > /dev/null\nif [ $? != 0 ] ; then\n    # print error to STDERR\n    echo \"error: The sandbox is not in sync with the Podfile.lock. Run 'pod install' or update your CocoaPods installation.\" >&2\n    exit 1\nfi\n# This output is used by Xcode 'outputs' to avoid re-running this script phase.\necho \"SUCCESS\" > \"${SCRIPT_OUTPUT_FILE_0}\"\n";
 			showEnvVarsInLog = 0;
 		};
-		C6FBDDB343FCEE10910D61F8 /* [CP] Embed Pods Frameworks */ = {
+		97C0831603CBCF1C1595C417 /* [CP] Embed Pods Frameworks */ = {
 			isa = PBXShellScriptBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -928,7 +1015,40 @@
 			shellScript = "\"${SRCROOT}/Pods/Target Support Files/Pods-DarklyTests/Pods-DarklyTests-frameworks.sh\"\n";
 			showEnvVarsInLog = 0;
 		};
-		D98C737BC642CE6D4FCD2792 /* [CP] Copy Pods Resources */ = {
+		D6B5A95DA5B96EE0C1402473 /* [CP] Check Pods Manifest.lock */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputPaths = (
+				"${PODS_PODFILE_DIR_PATH}/Podfile.lock",
+				"${PODS_ROOT}/Manifest.lock",
+			);
+			name = "[CP] Check Pods Manifest.lock";
+			outputPaths = (
+				"$(DERIVED_FILE_DIR)/Pods-Darkly_macOS-checkManifestLockResult.txt",
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "diff \"${PODS_PODFILE_DIR_PATH}/Podfile.lock\" \"${PODS_ROOT}/Manifest.lock\" > /dev/null\nif [ $? != 0 ] ; then\n    # print error to STDERR\n    echo \"error: The sandbox is not in sync with the Podfile.lock. Run 'pod install' or update your CocoaPods installation.\" >&2\n    exit 1\nfi\n# This output is used by Xcode 'outputs' to avoid re-running this script phase.\necho \"SUCCESS\" > \"${SCRIPT_OUTPUT_FILE_0}\"\n";
+			showEnvVarsInLog = 0;
+		};
+		D9A53DF887B213CF9BDE1F64 /* [CP] Copy Pods Resources */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputPaths = (
+			);
+			name = "[CP] Copy Pods Resources";
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "\"${SRCROOT}/Pods/Target Support Files/Pods-Darkly_iOS/Pods-Darkly_iOS-resources.sh\"\n";
+			showEnvVarsInLog = 0;
+		};
+		EDCEAB6A2DD68E7E5A53B18F /* [CP] Copy Pods Resources */ = {
 			isa = PBXShellScriptBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -943,76 +1063,7 @@
 			shellScript = "\"${SRCROOT}/Pods/Target Support Files/Pods-Darkly_watchOS/Pods-Darkly_watchOS-resources.sh\"\n";
 			showEnvVarsInLog = 0;
 		};
-		EA3855784641B2F9E9B6C7B2 /* [CP] Copy Pods Resources */ = {
-			isa = PBXShellScriptBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			inputPaths = (
-			);
-			name = "[CP] Copy Pods Resources";
-			outputPaths = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-			shellPath = /bin/sh;
-			shellScript = "\"${SRCROOT}/Pods/Target Support Files/Pods-DarklyTests/Pods-DarklyTests-resources.sh\"\n";
-			showEnvVarsInLog = 0;
-		};
-		F0E460976E8B26DB5FE1462E /* [CP] Check Pods Manifest.lock */ = {
-			isa = PBXShellScriptBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			inputPaths = (
-				"${PODS_PODFILE_DIR_PATH}/Podfile.lock",
-				"${PODS_ROOT}/Manifest.lock",
-			);
-			name = "[CP] Check Pods Manifest.lock";
-			outputPaths = (
-				"$(DERIVED_FILE_DIR)/Pods-DarklyTests-checkManifestLockResult.txt",
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-			shellPath = /bin/sh;
-			shellScript = "diff \"${PODS_PODFILE_DIR_PATH}/Podfile.lock\" \"${PODS_ROOT}/Manifest.lock\" > /dev/null\nif [ $? != 0 ] ; then\n    # print error to STDERR\n    echo \"error: The sandbox is not in sync with the Podfile.lock. Run 'pod install' or update your CocoaPods installation.\" >&2\n    exit 1\nfi\n# This output is used by Xcode 'outputs' to avoid re-running this script phase.\necho \"SUCCESS\" > \"${SCRIPT_OUTPUT_FILE_0}\"\n";
-			showEnvVarsInLog = 0;
-		};
-		F36F7FA7E7EB3A91EAB0BF27 /* [CP] Check Pods Manifest.lock */ = {
-			isa = PBXShellScriptBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			inputPaths = (
-				"${PODS_PODFILE_DIR_PATH}/Podfile.lock",
-				"${PODS_ROOT}/Manifest.lock",
-			);
-			name = "[CP] Check Pods Manifest.lock";
-			outputPaths = (
-				"$(DERIVED_FILE_DIR)/Pods-Darkly_iOS-checkManifestLockResult.txt",
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-			shellPath = /bin/sh;
-			shellScript = "diff \"${PODS_PODFILE_DIR_PATH}/Podfile.lock\" \"${PODS_ROOT}/Manifest.lock\" > /dev/null\nif [ $? != 0 ] ; then\n    # print error to STDERR\n    echo \"error: The sandbox is not in sync with the Podfile.lock. Run 'pod install' or update your CocoaPods installation.\" >&2\n    exit 1\nfi\n# This output is used by Xcode 'outputs' to avoid re-running this script phase.\necho \"SUCCESS\" > \"${SCRIPT_OUTPUT_FILE_0}\"\n";
-			showEnvVarsInLog = 0;
-		};
-		F438EA421B0F0DDCF587D333 /* [CP] Check Pods Manifest.lock */ = {
-			isa = PBXShellScriptBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			inputPaths = (
-				"${PODS_PODFILE_DIR_PATH}/Podfile.lock",
-				"${PODS_ROOT}/Manifest.lock",
-			);
-			name = "[CP] Check Pods Manifest.lock";
-			outputPaths = (
-				"$(DERIVED_FILE_DIR)/Pods-Darkly_watchOS-checkManifestLockResult.txt",
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-			shellPath = /bin/sh;
-			shellScript = "diff \"${PODS_PODFILE_DIR_PATH}/Podfile.lock\" \"${PODS_ROOT}/Manifest.lock\" > /dev/null\nif [ $? != 0 ] ; then\n    # print error to STDERR\n    echo \"error: The sandbox is not in sync with the Podfile.lock. Run 'pod install' or update your CocoaPods installation.\" >&2\n    exit 1\nfi\n# This output is used by Xcode 'outputs' to avoid re-running this script phase.\necho \"SUCCESS\" > \"${SCRIPT_OUTPUT_FILE_0}\"\n";
-			showEnvVarsInLog = 0;
-		};
-		F541C40F8B6A0132D932CAFB /* [CP] Copy Pods Resources */ = {
+		FCFC394596472C6831BCFE2D /* [CP] Copy Pods Resources */ = {
 			isa = PBXShellScriptBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -1235,7 +1286,7 @@
 /* Begin XCBuildConfiguration section */
 		831EF34020655D700001C643 /* Debug */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = 2DD55117D72B659CB8CCFDB2 /* Pods-Darkly_macOS.debug.xcconfig */;
+			baseConfigurationReference = 7DD0CB8A0A66E8B5F5E5CC45 /* Pods-Darkly_macOS.debug.xcconfig */;
 			buildSettings = {
 				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
 				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
@@ -1246,6 +1297,10 @@
 				DYLIB_COMPATIBILITY_VERSION = 1;
 				DYLIB_CURRENT_VERSION = 1;
 				DYLIB_INSTALL_NAME_BASE = "@rpath";
+				FRAMEWORK_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(PROJECT_DIR)/Carthage/Build/Mac",
+				);
 				FRAMEWORK_VERSION = A;
 				GCC_C_LANGUAGE_STANDARD = gnu11;
 				INFOPLIST_FILE = Darkly_macOS/Info.plist;
@@ -1262,7 +1317,7 @@
 		};
 		831EF34120655D700001C643 /* Release */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = E426A66AECABDF4C830ECF75 /* Pods-Darkly_macOS.release.xcconfig */;
+			baseConfigurationReference = 59DBC8D8F06E48BFD436786A /* Pods-Darkly_macOS.release.xcconfig */;
 			buildSettings = {
 				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
 				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
@@ -1273,6 +1328,10 @@
 				DYLIB_COMPATIBILITY_VERSION = 1;
 				DYLIB_CURRENT_VERSION = 1;
 				DYLIB_INSTALL_NAME_BASE = "@rpath";
+				FRAMEWORK_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(PROJECT_DIR)/Carthage/Build/Mac",
+				);
 				FRAMEWORK_VERSION = A;
 				GCC_C_LANGUAGE_STANDARD = gnu11;
 				INFOPLIST_FILE = Darkly_macOS/Info.plist;
@@ -1408,7 +1467,7 @@
 		};
 		8354EFD71F22491C00C05156 /* Debug */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = 2FB66451DF5343970E572BB7 /* Pods-Darkly_iOS.debug.xcconfig */;
+			baseConfigurationReference = 1DB3B0685C67689D84293B4D /* Pods-Darkly_iOS.debug.xcconfig */;
 			buildSettings = {
 				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES;
 				CLANG_ENABLE_MODULES = YES;
@@ -1417,6 +1476,10 @@
 				DYLIB_COMPATIBILITY_VERSION = 1;
 				DYLIB_CURRENT_VERSION = 1;
 				DYLIB_INSTALL_NAME_BASE = "@rpath";
+				FRAMEWORK_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(PROJECT_DIR)/Carthage/Build/iOS",
+				);
 				INFOPLIST_FILE = "$(PROJECT_DIR)/Framework/Info.plist";
 				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
 				IPHONEOS_DEPLOYMENT_TARGET = 8.0;
@@ -1434,7 +1497,7 @@
 		};
 		8354EFD81F22491C00C05156 /* Release */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = 6D78FF715370FB95F6F5E9CA /* Pods-Darkly_iOS.release.xcconfig */;
+			baseConfigurationReference = 116D24066863F2CC92EA97A9 /* Pods-Darkly_iOS.release.xcconfig */;
 			buildSettings = {
 				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES;
 				CLANG_ENABLE_MODULES = YES;
@@ -1443,6 +1506,10 @@
 				DYLIB_COMPATIBILITY_VERSION = 1;
 				DYLIB_CURRENT_VERSION = 1;
 				DYLIB_INSTALL_NAME_BASE = "@rpath";
+				FRAMEWORK_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(PROJECT_DIR)/Carthage/Build/iOS",
+				);
 				INFOPLIST_FILE = "$(PROJECT_DIR)/Framework/Info.plist";
 				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
 				IPHONEOS_DEPLOYMENT_TARGET = 8.0;
@@ -1459,7 +1526,7 @@
 		};
 		8354EFDA1F22491C00C05156 /* Debug */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = 8BA10E0855569013A7DBE66E /* Pods-DarklyTests.debug.xcconfig */;
+			baseConfigurationReference = 4C8B006E67D40D32D69DE2FB /* Pods-DarklyTests.debug.xcconfig */;
 			buildSettings = {
 				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = "$(inherited)";
 				INFOPLIST_FILE = "$(PROJECT_DIR)/Darkly/DarklyTests/Info.plist";
@@ -1474,7 +1541,7 @@
 		};
 		8354EFDB1F22491C00C05156 /* Release */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = 7B043E1A9DC44E730A3F3730 /* Pods-DarklyTests.release.xcconfig */;
+			baseConfigurationReference = 1E32761786B304FC33EDC9E7 /* Pods-DarklyTests.release.xcconfig */;
 			buildSettings = {
 				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = "$(inherited)";
 				INFOPLIST_FILE = "$(PROJECT_DIR)/Darkly/DarklyTests/Info.plist";
@@ -1489,7 +1556,7 @@
 		};
 		83D9EC712062DBB7004D7FA6 /* Debug */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = A89EECE422172B2C71086838 /* Pods-Darkly_watchOS.debug.xcconfig */;
+			baseConfigurationReference = C7BD6E98C3D5A26F1A931F2A /* Pods-Darkly_watchOS.debug.xcconfig */;
 			buildSettings = {
 				APPLICATION_EXTENSION_API_ONLY = YES;
 				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
@@ -1500,6 +1567,10 @@
 				DYLIB_COMPATIBILITY_VERSION = 1;
 				DYLIB_CURRENT_VERSION = 1;
 				DYLIB_INSTALL_NAME_BASE = "@rpath";
+				FRAMEWORK_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(PROJECT_DIR)/Carthage/Build/watchOS",
+				);
 				GCC_C_LANGUAGE_STANDARD = gnu11;
 				INFOPLIST_FILE = "Darkly-watchOS/Info.plist";
 				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
@@ -1516,7 +1587,7 @@
 		};
 		83D9EC722062DBB7004D7FA6 /* Release */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = A9D1672EB13968A2E52FDB67 /* Pods-Darkly_watchOS.release.xcconfig */;
+			baseConfigurationReference = 9670E63CBB48E75E0D7F83CB /* Pods-Darkly_watchOS.release.xcconfig */;
 			buildSettings = {
 				APPLICATION_EXTENSION_API_ONLY = YES;
 				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
@@ -1527,6 +1598,10 @@
 				DYLIB_COMPATIBILITY_VERSION = 1;
 				DYLIB_CURRENT_VERSION = 1;
 				DYLIB_INSTALL_NAME_BASE = "@rpath";
+				FRAMEWORK_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(PROJECT_DIR)/Carthage/Build/watchOS",
+				);
 				GCC_C_LANGUAGE_STANDARD = gnu11;
 				INFOPLIST_FILE = "Darkly-watchOS/Info.plist";
 				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
