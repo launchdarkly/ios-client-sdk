@@ -9,7 +9,7 @@
 import Foundation
 import Quick
 import Nimble
-@testable import Darkly
+@testable import LaunchDarkly
 
 final class FeatureFlagSpec: QuickSpec {
 

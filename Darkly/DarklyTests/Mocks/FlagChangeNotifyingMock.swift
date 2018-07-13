@@ -7,7 +7,7 @@
 //
 
 import Foundation
-@testable import Darkly
+@testable import LaunchDarkly
 
 extension FlagChangeNotifyingMock {
     func removeObserver(_ key: String, owner: LDFlagChangeOwner) {

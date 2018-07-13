@@ -9,7 +9,7 @@
 import Quick
 import Nimble
 import Foundation
-@testable import Darkly
+@testable import LaunchDarkly
 
 final class FlagCollectionCacheSpec: QuickSpec {
     override func spec() {

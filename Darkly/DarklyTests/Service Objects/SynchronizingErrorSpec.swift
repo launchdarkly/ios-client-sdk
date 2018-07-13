@@ -9,7 +9,7 @@
 import Quick
 import Nimble
 import DarklyEventSource
-@testable import Darkly
+@testable import LaunchDarkly
 
 final class SynchronizingErrorSpec: QuickSpec {
     override func spec() {

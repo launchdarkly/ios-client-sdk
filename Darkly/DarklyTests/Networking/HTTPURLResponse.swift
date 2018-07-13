@@ -7,7 +7,7 @@
 //
 
 import Foundation
-@testable import Darkly
+@testable import LaunchDarkly
 
 extension HTTPURLResponse.StatusCodes {
     static let all = [ok, accepted, badRequest, unauthorized, methodNotAllowed, internalServerError, notImplemented]

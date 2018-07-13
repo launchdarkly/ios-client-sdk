@@ -9,7 +9,7 @@
 import Quick
 import Nimble
 import DarklyEventSource
-@testable import Darkly
+@testable import LaunchDarkly
 
 final class LDClientSpec: QuickSpec {
     struct Constants {
@@ -66,7 +66,7 @@ final class LDClientSpec: QuickSpec {
         var replaceStoreComplete: CompletionClosure? { return flagStoreMock.replaceStoreReceivedArguments?.completion }
         var updateStoreComplete: CompletionClosure? { return flagStoreMock.updateStoreReceivedArguments?.completion }
         var deleteFlagComplete: CompletionClosure? { return flagStoreMock.deleteFlagReceivedArguments?.completion }
-        var recordedEvent: Darkly.LDEvent? { return eventReporterMock.recordReceivedArguments?.event }
+        var recordedEvent: LaunchDarkly.LDEvent? { return eventReporterMock.recordReceivedArguments?.event }
         // user flags
         var oldFlags: [LDFlagKey: FeatureFlag]!
         var oldFlagSource: LDFlagValueSource!
@@ -792,7 +792,7 @@ final class LDClientSpec: QuickSpec {
         }
 
         describe("stop") {
-            var event: Darkly.LDEvent!
+            var event: LaunchDarkly.LDEvent!
             var priorRecordedEvents: Int!
             beforeEach {
                 event = LDEvent.stub(for: .custom, with: testContext.user)
@@ -874,7 +874,7 @@ final class LDClientSpec: QuickSpec {
         }
 
         describe("track event") {
-            var event: Darkly.LDEvent!
+            var event: LaunchDarkly.LDEvent!
             beforeEach {
                 event = LDEvent.stub(for: .custom, with: testContext.user)
             }

@@ -16,9 +16,9 @@ protocol LDEventReporting {
     var isOnline: Bool { get set }
     //sourcery: DefaultMockValue = DarklyServiceMock()
     var service: DarklyServiceProvider { get set }
-    func record(_ event: LDEvent, completion: CompletionClosure?)
+    func record(_ event: LaunchDarkly.LDEvent, completion: CompletionClosure?)
     //sourcery: NoMock
-    func record(_ event: LDEvent)
+    func record(_ event: LaunchDarkly.LDEvent)
 
     func reportEvents()
 }

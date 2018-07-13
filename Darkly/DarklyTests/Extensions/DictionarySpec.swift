@@ -9,7 +9,7 @@
 import Foundation
 import Quick
 import Nimble
-@testable import Darkly
+@testable import LaunchDarkly
 
 public final class DictionarySpec: QuickSpec {
     public override func spec() {

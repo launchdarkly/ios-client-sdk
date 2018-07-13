@@ -7,7 +7,7 @@
 //
 
 import Foundation
-@testable import Darkly
+@testable import LaunchDarkly
 
 extension LDUser {
     struct StubConstants {

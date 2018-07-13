@@ -6,7 +6,7 @@
 //  Copyright © 2017 LaunchDarkly. All rights reserved.
 //
 
-@testable import Darkly
+@testable import LaunchDarkly
 
 struct ClientServiceMockFactory: ClientServiceCreating {
     func makeKeyedValueCache() -> KeyedValueCaching {

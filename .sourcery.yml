@@ -5,6 +5,6 @@ templates:
 output: Darkly/GeneratedCode/
 
 args:
-  app: Darkly
+  app: LaunchDarkly
   imports: 
   - DarklyEventSource

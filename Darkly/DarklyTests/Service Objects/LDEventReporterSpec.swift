@@ -9,7 +9,7 @@
 import Quick
 import Nimble
 import XCTest
-@testable import Darkly
+@testable import LaunchDarkly
 
 final class LDEventReporterSpec: QuickSpec {
     struct Constants {

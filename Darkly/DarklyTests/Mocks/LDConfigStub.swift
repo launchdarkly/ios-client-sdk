@@ -6,7 +6,7 @@
 //  Copyright © 2017 LaunchDarkly. All rights reserved.
 //
 
-@testable import Darkly
+@testable import LaunchDarkly
 
 extension LDConfig {
     static var stub: LDConfig { return stub(environmentReporter: EnvironmentReportingMock()) }

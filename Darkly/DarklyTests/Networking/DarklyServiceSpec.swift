@@ -10,7 +10,7 @@ import Quick
 import Nimble
 import OHHTTPStubs
 import DarklyEventSource
-@testable import Darkly
+@testable import LaunchDarkly
 
 final class DarklyServiceSpec: QuickSpec {
     

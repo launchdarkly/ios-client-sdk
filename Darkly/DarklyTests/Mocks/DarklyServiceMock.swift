@@ -9,7 +9,7 @@
 import Quick
 import Nimble
 import OHHTTPStubs
-@testable import Darkly
+@testable import LaunchDarkly
 
 final class DarklyServiceMock: DarklyServiceProvider {
     struct FlagKeys {

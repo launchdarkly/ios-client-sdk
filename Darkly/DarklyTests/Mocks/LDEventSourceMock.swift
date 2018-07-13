@@ -7,7 +7,7 @@
 //
 
 import DarklyEventSource
-@testable import Darkly
+@testable import LaunchDarkly
 
 extension DarklyStreamingProviderMock {
     func sendPing() {

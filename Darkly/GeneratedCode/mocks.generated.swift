@@ -5,7 +5,7 @@
 
 
 import DarklyEventSource
-@testable import Darkly
+@testable import LaunchDarkly
 
 
 // MARK: - DarklyStreamingProviderMock
@@ -318,8 +318,8 @@ final class LDEventReportingMock: LDEventReporting {
     // MARK: record
     var recordCallCount = 0
     var recordCallback: (() -> Void)?
-    var recordReceivedArguments: (event: Darkly.LDEvent, completion: CompletionClosure?)?
-    func record(_ event: Darkly.LDEvent, completion: CompletionClosure?) {
+    var recordReceivedArguments: (event: LaunchDarkly.LDEvent, completion: CompletionClosure?)?
+    func record(_ event: LaunchDarkly.LDEvent, completion: CompletionClosure?) {
         recordCallCount += 1
         recordReceivedArguments = (event: event, completion: completion)
         recordCallback?()
