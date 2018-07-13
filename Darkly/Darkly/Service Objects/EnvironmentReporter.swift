@@ -10,6 +10,8 @@ import Foundation
 
 #if os(iOS) || os(watchOS)
 import WatchKit
+#elseif os(OSX)
+import AppKit
 #endif
 
 enum OperatingSystem: String {
