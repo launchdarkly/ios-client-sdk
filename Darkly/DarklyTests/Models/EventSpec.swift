@@ -759,9 +759,6 @@ final class EventSpec: QuickSpec {
                 }
                 context("at the last item") {
                     beforeEach {
-                        //TODO: remove this line when implementing dictionaryValue on summary events. Test failed when summary event was last, so this cuts off the summary event from the dictionary
-                        eventDictionaries = Event.stubEventDictionaries(Constants.eventCapacity - 1, user: user, config: config)
-
                         targetDictionary = eventDictionaries.last
                     }
                     it("returns true") {

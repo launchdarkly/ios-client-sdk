@@ -123,6 +123,7 @@ class EventReporter: EventReporting {
         recordSummaryEvent(completion: nil)
     }
 
+    //This method is not intended for public use, as is hinted at by its absence from the EventReporting protocol. It helps testing the asynchronous method. Other type instances should not be concerned with responding to recording the summary event.
     func recordSummaryEvent(completion: CompletionClosure?) {
         if let summaryEvent = Event.summaryEvent(flagRequestTracker: flagRequestTracker) {
             resetFlagRequestTracker()

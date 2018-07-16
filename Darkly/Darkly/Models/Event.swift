@@ -171,9 +171,12 @@ extension Dictionary where Key == String, Value == Any {
 
     func matches(eventDictionary other: [String: Any]) -> Bool {
         guard let kind = eventKind else { return false }
-        if kind == .summary {
-            return kind == other.eventKind && eventEndDate?.isWithin(0.001, of: other.eventEndDate) ?? false
-        }
+            if kind == .summary {
+                guard kind == other.eventKind,
+                    let eventEndDate = eventEndDate, eventEndDate.isWithin(0.001, of: other.eventEndDate)
+                else { return false}
+                return true
+            }
         guard let key = eventKey, let creationDateMillis = eventCreationDateMillis,
             let otherKey = other.eventKey, let otherCreationDateMillis = other.eventCreationDateMillis
         else { return false }
