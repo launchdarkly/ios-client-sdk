@@ -85,34 +85,6 @@ struct Event { //sdk internal, not publically accessible
         return Event(kind: .summary, flagRequestTracker: flagRequestTracker, endDate: endDate)
     }
 
-    //TODO: Remove when implementing summary events
-    static func stubSummaryEventDictionary(featureFlags: [String: FeatureFlag]?) -> [String: Any]? {
-        guard let featureFlags = featureFlags, !featureFlags.isEmpty else { return nil }
-
-        var flagCounterDictionaries = [String: Any]()
-        featureFlags.forEach { (flagKey, featureFlag) in
-            var flagCounter = [String: Any]()
-            flagCounter["value"] = featureFlag.value ?? NSNull()
-            flagCounter["variation"] = featureFlag.variation
-            flagCounter["version"] = featureFlag.flagVersion ?? featureFlag.version
-            flagCounter["count"] = 1
-
-            var flagCounterDictionary = [String: Any]()
-            flagCounterDictionary["default"] = featureFlag.value ?? NSNull()
-            flagCounterDictionary["counters"] = [flagCounter]
-
-            flagCounterDictionaries[flagKey] = flagCounterDictionary
-        }
-
-        var summaryEventDictionary = [String: Any]()
-        summaryEventDictionary[CodingKeys.kind.rawValue] = "summary"
-        summaryEventDictionary["startDate"] = Date().addingTimeInterval(-30.0).millisSince1970
-        summaryEventDictionary["endDate"] = Date().millisSince1970
-        summaryEventDictionary["features"] = flagCounterDictionaries
-
-        return summaryEventDictionary
-    }
-
     func dictionaryValue(config: LDConfig) -> [String: Any] {
         var eventDictionary = [String: Any]()
         eventDictionary[CodingKeys.kind.rawValue] = kind.rawValue
