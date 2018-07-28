@@ -9,6 +9,7 @@
 #import "LDEventSource.h"
 #import "LDEventParser.h"
 #import "LDEventStringAccumulator.h"
+#import "NSString+LDEventSource.h"
 
 static NSTimeInterval const ES_RETRY_INTERVAL = 1.0;
 static NSTimeInterval const ES_DEFAULT_TIMEOUT = 300.0;
@@ -176,7 +177,7 @@ didReceiveResponse:(NSURLResponse *)response completionHandler:(void (^)(NSURLSe
     if (parser.retryInterval != nil) {
         self.retryInterval = [parser.retryInterval doubleValue];
     }
-    if (parser.remainingEventString.length > 0) {
+    if (parser.remainingEventString.length > 0 && parser.remainingEventString.hasEventPrefix) {
         [self parseEventString:parser.remainingEventString];
     }
 }

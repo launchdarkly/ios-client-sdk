@@ -10,8 +10,6 @@
 
 @class LDEvent;
 
-extern NSString * const kLDEventSourceEventTerminator;
-
 @interface LDEventParser : NSObject
 @property (nonatomic, copy, readonly) NSString *eventString;
 @property (nonatomic, strong, readonly) LDEvent *event;
