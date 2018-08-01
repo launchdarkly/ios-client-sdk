@@ -135,6 +135,7 @@ final class LDClientSpec: QuickSpec {
         onSyncCompleteSpec()
         runModeSpec()
         streamingModeSpec()
+        reportEventsSpec()
     }
 
     private func startSpec() {
@@ -1995,6 +1996,21 @@ final class LDClientSpec: QuickSpec {
                 }
             }
             //TODO: When adding mac & tv support, add tests to verify the streaming mode
+        }
+    }
+
+    private func reportEventsSpec() {
+        var testContext: TestContext!
+
+        describe("reportEvents") {
+            beforeEach {
+                testContext = TestContext()
+
+                testContext.subject.reportEvents()
+            }
+            it("tells the event reporter to report events") {
+                expect(testContext.eventReporterMock.reportEventsCallCount) == 1
+            }
         }
     }
 }

@@ -395,6 +395,12 @@ public class LDClient {
         }
     }
 
+    // MARK: - Events
+    ///The LDClient will report events on the LDConfig.eventFlushInterval and when the client app moves to the background. There should normally not be a need to call reportEvents.
+    public func reportEvents() {
+        eventReporter.reportEvents()
+    }
+
     // MARK: - Foreground / Background notification
     @objc private func didEnterBackground() {
         Log.debug(typeName(and: #function))

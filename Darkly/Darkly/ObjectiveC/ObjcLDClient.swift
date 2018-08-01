@@ -137,6 +137,14 @@ public final class ObjcLDClient: NSObject {
         LDClient.shared.observeFlagsUnchanged(owner: owner, handler: handler)
     }
     
+    // MARK: - Events
+
+    @objc public func reportEvents() {
+        LDClient.shared.reportEvents()
+    }
+
+    // MARK: - Private
+
     private override init() {
         _ = LDClient.shared
     }
