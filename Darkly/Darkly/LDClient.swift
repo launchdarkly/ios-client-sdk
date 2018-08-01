@@ -204,10 +204,8 @@ public class LDClient {
     
     /* FF Value Requests
      Conceptual Model
-     The LDClient is the focal point for flag value requests. It should appear to the app that the client contains a store of [key: value] pairs where the keys are all strings and the values any of the supported LD flag types (Bool, number (int, float), String, Array, Dictionary). The LDFlaggable protocol defines the LD supported flag types.
-     When asked for a variation value, the LDClient provides either the LDFlaggable value, or a (LDFlaggable, LDVariationSource) that reports the value and value source.
-     
-     At launch, the LDClient should ask the LDFlagCache to load the cached user's flags (if any) and then ask the flag synchronizer to start synchronizing (via streaming / polling)
+     The LDClient is the focal point for flag value requests. It should appear to the app that the client contains a store of [key: value] pairs where the keys are all strings and the values any of the supported LD flag types (Bool, Int, Double, String, Array, Dictionary).
+     When asked for a variation value, the LDClient provides either the value, or the value and LDVariationSource as a tuple.
     */
     
     ///Usage
@@ -515,6 +513,11 @@ extension LDClient: TypeIdentifying { }
 
         func setRunMode(_ runMode: LDClientRunMode) {
             self.runMode = runMode
+        }
+
+        public var allFeatureFlagValues: [LDFlagKey: Any]? {
+            guard hasStarted else { return nil}
+            return user.flagStore.featureFlags.flatMapValues { (featureFlag) -> Any? in featureFlag.value }
         }
     }
 #endif
