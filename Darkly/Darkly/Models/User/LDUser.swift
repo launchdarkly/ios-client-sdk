@@ -293,5 +293,22 @@ extension LDUser: TypeIdentifying { }
         func value(forAttribute attribute: String) -> Any? {
             return value(for: attribute)
         }
+
+        //Compares all user properties except lastUpdated
+        func isEqual(to otherUser: LDUser) -> Bool {
+            return key == otherUser.key
+                && name == otherUser.name
+                && firstName == otherUser.firstName
+                && lastName == otherUser.lastName
+                && country == otherUser.country
+                && ipAddress == otherUser.ipAddress
+                && email == otherUser.email
+                && avatar == otherUser.avatar
+                && AnyComparer.isEqual(custom, to: otherUser.custom)
+                && isAnonymous == otherUser.isAnonymous
+                && device == otherUser.device
+                && operatingSystem == otherUser.operatingSystem
+                && AnyComparer.isEqual(privateAttributes, to: otherUser.privateAttributes)
+        }
     }
 #endif
