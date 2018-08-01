@@ -76,7 +76,7 @@ const NSTimeInterval minDelayInterval = 1.0;
     NSDate *fireDate = [self.timerStartDate dateByAddingTimeInterval:delaySeconds];
 
     NSTimer *delayTimer = [[NSTimer alloc] initWithFireDate:fireDate interval:0 target:self selector:@selector(timerFired) userInfo:nil repeats:NO];
-    [[NSRunLoop currentRunLoop] addTimer:delayTimer forMode:NSDefaultRunLoopMode];
+    [[NSRunLoop mainRunLoop] addTimer:delayTimer forMode:NSDefaultRunLoopMode];
     return delayTimer;
 }
 
