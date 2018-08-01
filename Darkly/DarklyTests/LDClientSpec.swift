@@ -136,6 +136,7 @@ final class LDClientSpec: QuickSpec {
         runModeSpec()
         streamingModeSpec()
         reportEventsSpec()
+        allFeatureFlagValuesSpec()
     }
 
     private func startSpec() {
@@ -2010,6 +2011,39 @@ final class LDClientSpec: QuickSpec {
             }
             it("tells the event reporter to report events") {
                 expect(testContext.eventReporterMock.reportEventsCallCount) == 1
+            }
+        }
+    }
+
+    private func allFeatureFlagValuesSpec() {
+        var testContext: TestContext!
+        var featureFlagValues: [LDFlagKey: Any]?
+        fdescribe("allFeatureFlagValues") {
+            context("when client was started") {
+                var featureFlags: [LDFlagKey: FeatureFlag]!
+                beforeEach {
+                    testContext = TestContext()
+                    testContext.subject.start(mobileKey: Constants.mockMobileKey)
+                    featureFlags = testContext.subject.user.flagStore.featureFlags
+
+                    featureFlagValues = testContext.subject.allFeatureFlagValues
+                }
+                it("returns a matching dictionary of flag keys and values") {
+                    expect(featureFlagValues?.count) == featureFlags.count - 1 //nil is omitted
+                    featureFlags.keys.forEach { (flagKey) in
+                        expect(AnyComparer.isEqual(featureFlagValues?[flagKey], to: featureFlags[flagKey]?.value)).to(beTrue())
+                    }
+                }
+            }
+            context("when client was not started") {
+                beforeEach {
+                    testContext = TestContext()
+
+                    featureFlagValues = testContext.subject.allFeatureFlagValues
+                }
+                it("returns nil") {
+                    expect(featureFlagValues).to(beNil())
+                }
             }
         }
     }

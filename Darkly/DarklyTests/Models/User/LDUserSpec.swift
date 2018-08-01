@@ -1255,7 +1255,6 @@ final class LDUserSpec: QuickSpec {
             }
         }
     }
-
 }
 
 extension LDUser {
