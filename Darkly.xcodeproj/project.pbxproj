@@ -287,6 +287,7 @@
 		831188382113A16900D77CB5 /* LaunchDarkly.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = LaunchDarkly.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		8311883A2113A16900D77CB5 /* Darkly_tvOS.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Darkly_tvOS.h; sourceTree = "<group>"; };
 		8311883B2113A16900D77CB5 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		831188402113AC7D00D77CB5 /* DarklyEventSource.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = DarklyEventSource.framework; path = Carthage/Build/tvOS/DarklyEventSource.framework; sourceTree = "<group>"; };
 		831425AE206ABB5300F2EF36 /* EnvironmentReportingMock.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EnvironmentReportingMock.swift; sourceTree = "<group>"; };
 		831425B0206B030100F2EF36 /* EnvironmentReporter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EnvironmentReporter.swift; sourceTree = "<group>"; };
 		831AAE2B20A9E4F600B46DBA /* Throttler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Throttler.swift; sourceTree = "<group>"; };
@@ -400,6 +401,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				FAF4DA51190D8E23307C4CAB /* Pods_Darkly_tvOS.framework in Frameworks */,
+				831188412113AC7D00D77CB5 /* DarklyEventSource.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -480,6 +482,7 @@
 				83028E4C20F7903800FC53E3 /* DarklyEventSource.framework */,
 				83028E5220F790A500FC53E3 /* DarklyEventSource.framework */,
 				83028E5020F7908D00FC53E3 /* DarklyEventSource.framework */,
+				831188402113AC7D00D77CB5 /* DarklyEventSource.framework */,
 			);
 			name = "Carthage Frameworks";
 			sourceTree = "<group>";
@@ -869,6 +872,7 @@
 				831188342113A16900D77CB5 /* Frameworks */,
 				831188352113A16900D77CB5 /* Headers */,
 				831188362113A16900D77CB5 /* Resources */,
+				831188422113AD1300D77CB5 /* ShellScript */,
 				4D7710C529EF6EEA12580466 /* [CP] Copy Pods Resources */,
 			);
 			buildRules = (
@@ -1189,6 +1193,34 @@
 			shellScript = "${PODS_ROOT}/SwiftLint/swiftlint";
 		};
 		830C2AC2207416A5001D645D /* ShellScript */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputPaths = (
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "${PODS_ROOT}/SwiftLint/swiftlint";
+		};
+		831188422113AD1300D77CB5 /* ShellScript */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputPaths = (
+				"$(SRCROOT)/Carthage/Build/tvOS/DarklyEventSource.framework",
+			);
+			outputPaths = (
+				"$(BUILT_PRODUCTS_DIR)/$(FRAMEWORKS_FOLDER_PATH)/DarklyEventSource.framework",
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "/usr/local/bin/carthage copy-frameworks";
+		};
+		8311886E2113AF8A00D77CB5 /* ShellScript */ = {
 			isa = PBXShellScriptBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
