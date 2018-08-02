@@ -1255,6 +1255,298 @@ final class LDUserSpec: QuickSpec {
             }
         }
     }
+
+    private func isEqualSpec() {
+        var user: LDUser!
+        var otherUser: LDUser!
+
+        describe("isEqual") {
+            context("when users are equal") {
+                context("with all properties set") {
+                    beforeEach {
+                        user = LDUser.stub()
+                        otherUser = user
+                    }
+                    it("returns true") {
+                        expect(user.isEqual(to: otherUser)) == true
+                    }
+                }
+                context("with no properties set") {
+                    beforeEach {
+                        user = LDUser()
+                        otherUser = user
+                    }
+                    it("returns true") {
+                        expect(user.isEqual(to: otherUser)) == true
+                    }
+                }
+            }
+            context("when users are not equal") {
+                context("keys differ") {
+                    beforeEach {
+                        user = LDUser.stub()
+                        otherUser = user
+                        otherUser.key = "dummy"
+                    }
+                    it("returns false") {
+                        expect(user.isEqual(to: otherUser)) == false
+                    }
+                }
+                context("names differ") {
+                    context("other name exists") {
+                        beforeEach {
+                            user = LDUser.stub()
+                            otherUser = user
+                            otherUser.name = "dummy"
+                        }
+                        it("returns false") {
+                            expect(user.isEqual(to: otherUser)) == false
+                        }
+                    }
+                    context("other name does not exist") {
+                        beforeEach {
+                            user = LDUser.stub()
+                            otherUser = user
+                            otherUser.name = nil
+                        }
+                        it("returns false") {
+                            expect(user.isEqual(to: otherUser)) == false
+                        }
+                    }
+                }
+                context("firstNames differ") {
+                    context("other firstName exists") {
+                        beforeEach {
+                            user = LDUser.stub()
+                            otherUser = user
+                            otherUser.firstName = "dummy"
+                        }
+                        it("returns false") {
+                            expect(user.isEqual(to: otherUser)) == false
+                        }
+                    }
+                    context("other firstName does not exist") {
+                        beforeEach {
+                            user = LDUser.stub()
+                            otherUser = user
+                            otherUser.firstName = nil
+                        }
+                        it("returns false") {
+                            expect(user.isEqual(to: otherUser)) == false
+                        }
+                    }
+                }
+                context("lastNames differ") {
+                    context("other lastName exists") {
+                        beforeEach {
+                            user = LDUser.stub()
+                            otherUser = user
+                            otherUser.lastName = "dummy"
+                        }
+                        it("returns false") {
+                            expect(user.isEqual(to: otherUser)) == false
+                        }
+                    }
+                    context("other lastName does not exist") {
+                        beforeEach {
+                            user = LDUser.stub()
+                            otherUser = user
+                            otherUser.lastName = nil
+                        }
+                        it("returns false") {
+                            expect(user.isEqual(to: otherUser)) == false
+                        }
+                    }
+                }
+                context("countries differ") {
+                    context("other country exists") {
+                        beforeEach {
+                            user = LDUser.stub()
+                            otherUser = user
+                            otherUser.country = "dummy"
+                        }
+                        it("returns false") {
+                            expect(user.isEqual(to: otherUser)) == false
+                        }
+                    }
+                    context("other country does not exist") {
+                        beforeEach {
+                            user = LDUser.stub()
+                            otherUser = user
+                            otherUser.country = nil
+                        }
+                        it("returns false") {
+                            expect(user.isEqual(to: otherUser)) == false
+                        }
+                    }
+                }
+                context("ipAddresses differ") {
+                    context("other ipAddress exists") {
+                        beforeEach {
+                            user = LDUser.stub()
+                            otherUser = user
+                            otherUser.ipAddress = "dummy"
+                        }
+                        it("returns false") {
+                            expect(user.isEqual(to: otherUser)) == false
+                        }
+                    }
+                    context("other ipAddress does not exist") {
+                        beforeEach {
+                            user = LDUser.stub()
+                            otherUser = user
+                            otherUser.ipAddress = nil
+                        }
+                        it("returns false") {
+                            expect(user.isEqual(to: otherUser)) == false
+                        }
+                    }
+                }
+                context("email addresses differ") {
+                    context("other email exists") {
+                        beforeEach {
+                            user = LDUser.stub()
+                            otherUser = user
+                            otherUser.email = "dummy"
+                        }
+                        it("returns false") {
+                            expect(user.isEqual(to: otherUser)) == false
+                        }
+                    }
+                    context("other email does not exist") {
+                        beforeEach {
+                            user = LDUser.stub()
+                            otherUser = user
+                            otherUser.email = nil
+                        }
+                        it("returns false") {
+                            expect(user.isEqual(to: otherUser)) == false
+                        }
+                    }
+                }
+                context("avatars differ") {
+                    context("other avatar exists") {
+                        beforeEach {
+                            user = LDUser.stub()
+                            otherUser = user
+                            otherUser.avatar = "dummy"
+                        }
+                        it("returns false") {
+                            expect(user.isEqual(to: otherUser)) == false
+                        }
+                    }
+                    context("other avatar does not exist") {
+                        beforeEach {
+                            user = LDUser.stub()
+                            otherUser = user
+                            otherUser.avatar = nil
+                        }
+                        it("returns false") {
+                            expect(user.isEqual(to: otherUser)) == false
+                        }
+                    }
+                }
+                context("custom dictionaries differ") {
+                    context("other custom dictionary exists") {
+                        beforeEach {
+                            user = LDUser.stub()
+                            otherUser = user
+                            otherUser.custom = ["dummy": true]
+                        }
+                        it("returns false") {
+                            expect(user.isEqual(to: otherUser)) == false
+                        }
+                    }
+                    context("other custom dictionary does not exist") {
+                        beforeEach {
+                            user = LDUser.stub()
+                            otherUser = user
+                            otherUser.custom = nil
+                        }
+                        it("returns false") {
+                            expect(user.isEqual(to: otherUser)) == false
+                        }
+                    }
+                }
+                context("isAnonymous differs") {
+                    beforeEach {
+                        user = LDUser.stub()
+                        otherUser = user
+                        otherUser.isAnonymous = !user.isAnonymous
+                    }
+                    it("returns false") {
+                        expect(user.isEqual(to: otherUser)) == false
+                    }
+                }
+                context("devices differ") {
+                    context("other device exists") {
+                        beforeEach {
+                            user = LDUser.stub()
+                            otherUser = user
+                            otherUser.device = "dummy"
+                        }
+                        it("returns false") {
+                            expect(user.isEqual(to: otherUser)) == false
+                        }
+                    }
+                    context("other device does not exist") {
+                        beforeEach {
+                            user = LDUser.stub()
+                            otherUser = user
+                            otherUser.device = nil
+                        }
+                        it("returns false") {
+                            expect(user.isEqual(to: otherUser)) == false
+                        }
+                    }
+                }
+                context("operatingSystems differ") {
+                    context("other operatingSystem exists") {
+                        beforeEach {
+                            user = LDUser.stub()
+                            otherUser = user
+                            otherUser.operatingSystem = "dummy"
+                        }
+                        it("returns false") {
+                            expect(user.isEqual(to: otherUser)) == false
+                        }
+                    }
+                    context("other operatingSystem does not exist") {
+                        beforeEach {
+                            user = LDUser.stub()
+                            otherUser = user
+                            otherUser.operatingSystem = nil
+                        }
+                        it("returns false") {
+                            expect(user.isEqual(to: otherUser)) == false
+                        }
+                    }
+                }
+                context("privateAttributes differ") {
+                    context("other privateAttributes exists") {
+                        beforeEach {
+                            user = LDUser.stub()
+                            otherUser = user
+                            otherUser.privateAttributes = ["dummy"]
+                        }
+                        it("returns false") {
+                            expect(user.isEqual(to: otherUser)) == false
+                        }
+                    }
+                    context("other privateAttributes does not exist") {
+                        beforeEach {
+                            user = LDUser.stub()
+                            otherUser = user
+                            otherUser.privateAttributes = nil
+                        }
+                        it("returns false") {
+                            expect(user.isEqual(to: otherUser)) == false
+                        }
+                    }
+                }
+            }
+        }
+    }
 }
 
 extension LDUser {
