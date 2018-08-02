@@ -49,7 +49,6 @@ final class LDClientSpec: QuickSpec {
         var flagSynchronizerMock: LDFlagSynchronizingMock! { return subject.flagSynchronizer as? LDFlagSynchronizingMock }
         var eventReporterMock: EventReportingMock! { return subject.eventReporter as? EventReportingMock }
         var changeNotifierMock: FlagChangeNotifyingMock! { return subject.flagChangeNotifier as? FlagChangeNotifyingMock }
-        var environmentReporterMock: EnvironmentReportingMock! { return subject.environmentReporter as? EnvironmentReportingMock }
         // makeFlagSynchronizer getters
         var makeFlagSynchronizerStreamingMode: LDStreamingMode? { return serviceFactoryMock.makeFlagSynchronizerReceivedParameters?.streamingMode }
         var makeFlagSynchronizerPollingInterval: TimeInterval? { return serviceFactoryMock.makeFlagSynchronizerReceivedParameters?.pollingInterval }
