@@ -12,15 +12,6 @@
 #import "NSString+LDEventSource.h"
 #import "NSArray+LDEventSource.h"
 
-static NSString *const ESKeyValueDelimiter = @":";
-
-static NSString *const LDEventDataKey = @"data";
-static NSString *const LDEventIDKey = @"id";
-static NSString *const LDEventEventKey = @"event";
-static NSString *const LDEventRetryKey = @"retry";
-
-NSString * const kLDEventSourceEventTerminator = @"\n\n";
-
 @interface LDEventParser()
 @property (nonatomic, copy) NSString *eventString;
 @property (nonatomic, strong) LDEvent *event;
@@ -53,7 +44,7 @@ NSString * const kLDEventSourceEventTerminator = @"\n\n";
     event.readyState = kEventStateOpen;
 
     for (NSString *line in linesToParse) {
-        if ([line hasPrefix:ESKeyValueDelimiter]) {
+        if ([line hasPrefix:LDEventSourceKeyValueDelimiter]) {
             continue;
         }
 
@@ -67,22 +58,22 @@ NSString * const kLDEventSourceEventTerminator = @"\n\n";
             scanner.charactersToBeSkipped = [NSCharacterSet whitespaceCharacterSet];
 
             NSString *key, *value;
-            [scanner scanUpToString:ESKeyValueDelimiter intoString:&key];
-            [scanner scanString:ESKeyValueDelimiter intoString:nil];
+            [scanner scanUpToString:LDEventSourceKeyValueDelimiter intoString:&key];
+            [scanner scanString:LDEventSourceKeyValueDelimiter intoString:nil];
             [scanner scanUpToCharactersFromSet:[NSCharacterSet newlineCharacterSet] intoString:&value];
 
             if (key && value) {
-                if ([key isEqualToString:LDEventEventKey]) {
+                if ([key isEqualToString:LDEventKeyEvent]) {
                     event.event = value;
-                } else if ([key isEqualToString:LDEventDataKey]) {
+                } else if ([key isEqualToString:LDEventKeyData]) {
                     if (event.data != nil) {
                         event.data = [event.data stringByAppendingFormat:@"\n%@", value];
                     } else {
                         event.data = value;
                     }
-                } else if ([key isEqualToString:LDEventIDKey]) {
+                } else if ([key isEqualToString:LDEventKeyId]) {
                     event.id = value;
-                } else if ([key isEqualToString:LDEventRetryKey]) {
+                } else if ([key isEqualToString:LDEventKeyRetry]) {
                     if ([value isKindOfClass:[NSNumber class]]) {
                         self.retryInterval = @([value doubleValue]);
                     }
@@ -95,34 +86,25 @@ NSString * const kLDEventSourceEventTerminator = @"\n\n";
 //extracts lines from the first thru the event terminator
 -(nullable NSArray<NSString*>*)linesToParseFromEventString {
     if (self.eventString.length == 0) { return nil; }
-    if (![self.eventString containsString:kLDEventSourceEventTerminator]) { return nil; }
+    if (!self.eventString.hasEventTerminator) { return nil; }
 
-    NSArray<NSString*> *eventStringParts = [self.eventString componentsSeparatedByString:kLDEventSourceEventTerminator];
+    NSArray<NSString*> *eventStringParts = [self.eventString componentsSeparatedByString:LDEventSourceEventTerminator];
     if (eventStringParts.count == 0) { return nil; }    //This should never happen because the guard for the terminator's presence passed...defensive
-    NSString *eventStringToParse = [eventStringParts.firstObject stringByAppendingString:kLDEventSourceEventTerminator];
+    NSString *eventStringToParse = [eventStringParts.firstObject stringByAppendingString:LDEventSourceEventTerminator];
 
     return [eventStringToParse lines];
 }
 
 -(nullable NSString*)remainingEventStringAfterParsingEventString {
     if (self.eventString.length == 0) { return nil; }
-    if (![self.eventString containsString:kLDEventSourceEventTerminator]) { return self.eventString; }
+    if (!self.eventString.hasEventTerminator) { return nil; }
 
-    NSArray<NSString*> *eventStringParts = [self.eventString componentsSeparatedByString:kLDEventSourceEventTerminator];
+    NSArray<NSString*> *eventStringParts = [self.eventString componentsSeparatedByString:LDEventSourceEventTerminator];
     if (eventStringParts.count < 2) { return nil; }     //This should never happen because the guard for the terminator's presence passed...defensive
     if (eventStringParts.count == 2 && eventStringParts[1].length == 0) { return nil; } //There is no remaining string after the terminator...this should be the normal exit
 
-    NSArray<NSString*> *remainingEventStringParts = [eventStringParts subArrayFromIndex:1];
-    NSPredicate *nonemptyStringPredicate = [NSPredicate predicateWithBlock:^BOOL(id  _Nullable evaluatedObject, NSDictionary<NSString *,id> * _Nullable bindings) {
-        if (![evaluatedObject isKindOfClass:[NSString class]]) { return NO; }
-        NSString *evaluatedString = evaluatedObject;
-        return evaluatedString.length > 0;
-    }];
-    NSArray<NSString*> *nonEmptyRemainingEventStringParts = [remainingEventStringParts filteredArrayUsingPredicate:nonemptyStringPredicate];
-    NSString *remainingEventString = [nonEmptyRemainingEventStringParts componentsJoinedByString:kLDEventSourceEventTerminator];
-    if (remainingEventString.length == 0) {
-        return nil;
-    }
+    NSString *remainingEventString = [[eventStringParts subArrayFromIndex:1] componentsJoinedByString:LDEventSourceEventTerminator];
+    if (remainingEventString.length == 0) { return nil; }
 
     return remainingEventString;
 }

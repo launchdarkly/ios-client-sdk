@@ -8,7 +8,7 @@
 
 #import <Foundation/Foundation.h>
 #import "LDEventStringAccumulator.h"
-#import "LDEventParser.h"
+#import "NSString+LDEventSource.h"
 
 @implementation LDEventStringAccumulator
 -(void)accumulateEventStringWithString:(NSString*)eventString {
@@ -22,7 +22,7 @@
 
 -(BOOL)isReadyToParseEvent {
     if (self.eventString.length == 0) { return NO; }
-    return [self.eventString containsString:kLDEventSourceEventTerminator];
+    return self.eventString.hasEventTerminator;
 }
 
 -(void)reset {
