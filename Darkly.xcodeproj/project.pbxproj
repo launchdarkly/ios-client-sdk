@@ -12,6 +12,7 @@
 		83028E4D20F7903800FC53E3 /* DarklyEventSource.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 83028E4C20F7903800FC53E3 /* DarklyEventSource.framework */; };
 		83028E5120F7908E00FC53E3 /* DarklyEventSource.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 83028E5020F7908D00FC53E3 /* DarklyEventSource.framework */; };
 		830BF933202D188E006DF9B1 /* HTTPURLRequest.swift in Sources */ = {isa = PBXBuildFile; fileRef = 830BF932202D188E006DF9B1 /* HTTPURLRequest.swift */; };
+		8311883C2113A16900D77CB5 /* Darkly_tvOS.h in Headers */ = {isa = PBXBuildFile; fileRef = 8311883A2113A16900D77CB5 /* Darkly_tvOS.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		831425AF206ABB5300F2EF36 /* EnvironmentReportingMock.swift in Sources */ = {isa = PBXBuildFile; fileRef = 831425AE206ABB5300F2EF36 /* EnvironmentReportingMock.swift */; };
 		831425B1206B030100F2EF36 /* EnvironmentReporter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 831425B0206B030100F2EF36 /* EnvironmentReporter.swift */; };
 		831425B2206B030100F2EF36 /* EnvironmentReporter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 831425B0206B030100F2EF36 /* EnvironmentReporter.swift */; };
@@ -232,6 +233,10 @@
 		83028E5020F7908D00FC53E3 /* DarklyEventSource.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = DarklyEventSource.framework; path = Carthage/Build/Mac/DarklyEventSource.framework; sourceTree = SOURCE_ROOT; };
 		83028E5220F790A500FC53E3 /* DarklyEventSource.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = DarklyEventSource.framework; path = Carthage/Build/watchOS/DarklyEventSource.framework; sourceTree = SOURCE_ROOT; };
 		830BF932202D188E006DF9B1 /* HTTPURLRequest.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HTTPURLRequest.swift; sourceTree = "<group>"; };
+		831188322113A04400D77CB5 /* Darkly_iOS copy2-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; name = "Darkly_iOS copy2-Info.plist"; path = "/Users/markpokorny/Documents/Development/launchDarkly/ios-client-swift-private/Darkly_iOS copy2-Info.plist"; sourceTree = "<absolute>"; };
+		831188382113A16900D77CB5 /* LaunchDarkly.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = LaunchDarkly.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		8311883A2113A16900D77CB5 /* Darkly_tvOS.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Darkly_tvOS.h; sourceTree = "<group>"; };
+		8311883B2113A16900D77CB5 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		831425AE206ABB5300F2EF36 /* EnvironmentReportingMock.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EnvironmentReportingMock.swift; sourceTree = "<group>"; };
 		831425B0206B030100F2EF36 /* EnvironmentReporter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EnvironmentReporter.swift; sourceTree = "<group>"; };
 		831AAE2B20A9E4F600B46DBA /* Throttler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Throttler.swift; sourceTree = "<group>"; };
@@ -338,6 +343,13 @@
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
+		831188342113A16900D77CB5 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		831EF33720655D700001C643 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
@@ -416,6 +428,15 @@
 			name = "Carthage Frameworks";
 			sourceTree = "<group>";
 		};
+		831188392113A16900D77CB5 /* Darkly_tvOS */ = {
+			isa = PBXGroup;
+			children = (
+				8311883A2113A16900D77CB5 /* Darkly_tvOS.h */,
+				8311883B2113A16900D77CB5 /* Info.plist */,
+			);
+			path = Darkly_tvOS;
+			sourceTree = "<group>";
+		};
 		831CE0671F853CB700A13A3A /* Matcher */ = {
 			isa = PBXGroup;
 			children = (
@@ -489,11 +510,13 @@
 				83411A5C1FABDA5E00E5CF39 /* GeneratedCode */,
 				83D9EC5E2062DB8C004D7FA6 /* Darkly-watchOS */,
 				831EF33C20655D700001C643 /* Darkly_macOS */,
+				831188392113A16900D77CB5 /* Darkly_tvOS */,
 				8354EFC31F22491C00C05156 /* Products */,
 				83028E4B20F78FAE00FC53E3 /* Carthage Frameworks */,
 				3384F0CC93C5C19D2A6C5E66 /* Frameworks */,
 				83D9EC582062DAAF004D7FA6 /* Darkly_iOS copy-Info.plist */,
 				35D209AC6E91916E8AEB6998 /* Pods */,
+				831188322113A04400D77CB5 /* Darkly_iOS copy2-Info.plist */,
 			);
 			sourceTree = "<group>";
 		};
@@ -504,6 +527,7 @@
 				8354EFCB1F22491C00C05156 /* DarklyTests.xctest */,
 				83D9EC6B2062DBB7004D7FA6 /* LaunchDarkly.framework */,
 				831EF33B20655D700001C643 /* LaunchDarkly.framework */,
+				831188382113A16900D77CB5 /* LaunchDarkly.framework */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -746,6 +770,14 @@
 /* End PBXGroup section */
 
 /* Begin PBXHeadersBuildPhase section */
+		831188352113A16900D77CB5 /* Headers */ = {
+			isa = PBXHeadersBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				8311883C2113A16900D77CB5 /* Darkly_tvOS.h in Headers */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		831EF33820655D700001C643 /* Headers */ = {
 			isa = PBXHeadersBuildPhase;
 			buildActionMask = 2147483647;
@@ -772,6 +804,24 @@
 /* End PBXHeadersBuildPhase section */
 
 /* Begin PBXNativeTarget section */
+		831188372113A16900D77CB5 /* Darkly_tvOS */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 8311883D2113A16900D77CB5 /* Build configuration list for PBXNativeTarget "Darkly_tvOS" */;
+			buildPhases = (
+				831188332113A16900D77CB5 /* Sources */,
+				831188342113A16900D77CB5 /* Frameworks */,
+				831188352113A16900D77CB5 /* Headers */,
+				831188362113A16900D77CB5 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = Darkly_tvOS;
+			productName = Darkly_tvOS;
+			productReference = 831188382113A16900D77CB5 /* LaunchDarkly.framework */;
+			productType = "com.apple.product-type.framework";
+		};
 		831EF33A20655D700001C643 /* Darkly_macOS */ = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = 831EF34220655D700001C643 /* Build configuration list for PBXNativeTarget "Darkly_macOS" */;
@@ -869,6 +919,10 @@
 				LastUpgradeCheck = 0900;
 				ORGANIZATIONNAME = LaunchDarkly;
 				TargetAttributes = {
+					831188372113A16900D77CB5 = {
+						CreatedOnToolsVersion = 9.2;
+						ProvisioningStyle = Automatic;
+					};
 					831EF33A20655D700001C643 = {
 						CreatedOnToolsVersion = 9.2;
 						ProvisioningStyle = Automatic;
@@ -904,12 +958,20 @@
 				8354EFC11F22491C00C05156 /* Darkly_iOS */,
 				83D9EC6A2062DBB7004D7FA6 /* Darkly_watchOS */,
 				831EF33A20655D700001C643 /* Darkly_macOS */,
+				831188372113A16900D77CB5 /* Darkly_tvOS */,
 				8354EFCA1F22491C00C05156 /* DarklyTests */,
 			);
 		};
 /* End PBXProject section */
 
 /* Begin PBXResourcesBuildPhase section */
+		831188362113A16900D77CB5 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		831EF33920655D700001C643 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -1182,6 +1244,13 @@
 /* End PBXShellScriptBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
+		831188332113A16900D77CB5 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		831EF33620655D700001C643 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -1404,6 +1473,70 @@
 /* End PBXTargetDependency section */
 
 /* Begin XCBuildConfiguration section */
+		8311883E2113A16900D77CB5 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				APPLICATION_EXTENSION_API_ONLY = YES;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CODE_SIGN_IDENTITY = "";
+				CODE_SIGN_STYLE = Automatic;
+				DEFINES_MODULE = YES;
+				DYLIB_COMPATIBILITY_VERSION = 1;
+				DYLIB_CURRENT_VERSION = 1;
+				DYLIB_INSTALL_NAME_BASE = "@rpath";
+				FRAMEWORK_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(PROJECT_DIR)/Carthage/Build/tvOS",
+				);
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				INFOPLIST_FILE = "$(SRCROOT)/Framework/Info.plist";
+				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
+				IPHONEOS_DEPLOYMENT_TARGET = 8.0;
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";
+				MODULEMAP_FILE = "$(PROJECT_DIR)/Framework/module.modulemap";
+				PRODUCT_BUNDLE_IDENTIFIER = "com.launchdarkly.Darkly-tvOS";
+				PRODUCT_NAME = LaunchDarkly;
+				SDKROOT = appletvos;
+				SKIP_INSTALL = YES;
+				SWIFT_VERSION = 4.0;
+				TARGETED_DEVICE_FAMILY = 3;
+				TVOS_DEPLOYMENT_TARGET = 9.0;
+			};
+			name = Debug;
+		};
+		8311883F2113A16900D77CB5 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				APPLICATION_EXTENSION_API_ONLY = YES;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CODE_SIGN_IDENTITY = "";
+				CODE_SIGN_STYLE = Automatic;
+				DEFINES_MODULE = YES;
+				DYLIB_COMPATIBILITY_VERSION = 1;
+				DYLIB_CURRENT_VERSION = 1;
+				DYLIB_INSTALL_NAME_BASE = "@rpath";
+				FRAMEWORK_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(PROJECT_DIR)/Carthage/Build/tvOS",
+				);
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				INFOPLIST_FILE = "$(SRCROOT)/Framework/Info.plist";
+				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
+				IPHONEOS_DEPLOYMENT_TARGET = 8.0;
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";
+				MODULEMAP_FILE = "$(PROJECT_DIR)/Framework/module.modulemap";
+				PRODUCT_BUNDLE_IDENTIFIER = "com.launchdarkly.Darkly-tvOS";
+				PRODUCT_NAME = LaunchDarkly;
+				SDKROOT = appletvos;
+				SKIP_INSTALL = YES;
+				SWIFT_VERSION = 4.0;
+				TARGETED_DEVICE_FAMILY = 3;
+				TVOS_DEPLOYMENT_TARGET = 9.0;
+			};
+			name = Release;
+		};
 		831EF34020655D700001C643 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = 7DD0CB8A0A66E8B5F5E5CC45 /* Pods-Darkly_macOS.debug.xcconfig */;
@@ -1739,6 +1872,15 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
+		8311883D2113A16900D77CB5 /* Build configuration list for PBXNativeTarget "Darkly_tvOS" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				8311883E2113A16900D77CB5 /* Debug */,
+				8311883F2113A16900D77CB5 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
 		831EF34220655D700001C643 /* Build configuration list for PBXNativeTarget "Darkly_macOS" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
