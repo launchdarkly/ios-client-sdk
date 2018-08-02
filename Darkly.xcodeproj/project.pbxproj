@@ -11,8 +11,8 @@
 		2A89B8D989B0842AF40415C3 /* Pods_DarklyTests.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D8F8E2C0E78822B90FC2696A /* Pods_DarklyTests.framework */; };
 		83028E4D20F7903800FC53E3 /* DarklyEventSource.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 83028E4C20F7903800FC53E3 /* DarklyEventSource.framework */; };
 		83028E5120F7908E00FC53E3 /* DarklyEventSource.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 83028E5020F7908D00FC53E3 /* DarklyEventSource.framework */; };
-		83028E5820F7A3F500FC53E3 /* DarklyEventSource.framework.dSYM in CopyFiles */ = {isa = PBXBuildFile; fileRef = 83028E5720F7A3F500FC53E3 /* DarklyEventSource.framework.dSYM */; };
 		830BF933202D188E006DF9B1 /* HTTPURLRequest.swift in Sources */ = {isa = PBXBuildFile; fileRef = 830BF932202D188E006DF9B1 /* HTTPURLRequest.swift */; };
+		831187F621139A1300D77CB5 /* DarklyEventSource.framework.dSYM in CopyFiles */ = {isa = PBXBuildFile; fileRef = 831187F521139A1300D77CB5 /* DarklyEventSource.framework.dSYM */; };
 		831425AF206ABB5300F2EF36 /* EnvironmentReportingMock.swift in Sources */ = {isa = PBXBuildFile; fileRef = 831425AE206ABB5300F2EF36 /* EnvironmentReportingMock.swift */; };
 		831425B1206B030100F2EF36 /* EnvironmentReporter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 831425B0206B030100F2EF36 /* EnvironmentReporter.swift */; };
 		831425B2206B030100F2EF36 /* EnvironmentReporter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 831425B0206B030100F2EF36 /* EnvironmentReporter.swift */; };
@@ -224,7 +224,7 @@
 			dstPath = "";
 			dstSubfolderSpec = 16;
 			files = (
-				83028E5820F7A3F500FC53E3 /* DarklyEventSource.framework.dSYM in CopyFiles */,
+				831187F621139A1300D77CB5 /* DarklyEventSource.framework.dSYM in CopyFiles */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -245,8 +245,8 @@
 		83028E4C20F7903800FC53E3 /* DarklyEventSource.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = DarklyEventSource.framework; path = Carthage/Build/iOS/DarklyEventSource.framework; sourceTree = SOURCE_ROOT; };
 		83028E5020F7908D00FC53E3 /* DarklyEventSource.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = DarklyEventSource.framework; path = Carthage/Build/Mac/DarklyEventSource.framework; sourceTree = SOURCE_ROOT; };
 		83028E5220F790A500FC53E3 /* DarklyEventSource.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = DarklyEventSource.framework; path = Carthage/Build/watchOS/DarklyEventSource.framework; sourceTree = SOURCE_ROOT; };
-		83028E5720F7A3F500FC53E3 /* DarklyEventSource.framework.dSYM */ = {isa = PBXFileReference; lastKnownFileType = wrapper.dsym; path = DarklyEventSource.framework.dSYM; sourceTree = "<group>"; };
 		830BF932202D188E006DF9B1 /* HTTPURLRequest.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HTTPURLRequest.swift; sourceTree = "<group>"; };
+		831187F521139A1300D77CB5 /* DarklyEventSource.framework.dSYM */ = {isa = PBXFileReference; lastKnownFileType = wrapper.dsym; path = DarklyEventSource.framework.dSYM; sourceTree = "<group>"; };
 		831425AE206ABB5300F2EF36 /* EnvironmentReportingMock.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EnvironmentReportingMock.swift; sourceTree = "<group>"; };
 		831425B0206B030100F2EF36 /* EnvironmentReporter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EnvironmentReporter.swift; sourceTree = "<group>"; };
 		831AAE2B20A9E4F600B46DBA /* Throttler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Throttler.swift; sourceTree = "<group>"; };
@@ -424,7 +424,7 @@
 		83028E4B20F78FAE00FC53E3 /* Carthage Frameworks */ = {
 			isa = PBXGroup;
 			children = (
-				83028E5720F7A3F500FC53E3 /* DarklyEventSource.framework.dSYM */,
+				831187F521139A1300D77CB5 /* DarklyEventSource.framework.dSYM */,
 				83028E4C20F7903800FC53E3 /* DarklyEventSource.framework */,
 				83028E5220F790A500FC53E3 /* DarklyEventSource.framework */,
 				83028E5020F7908D00FC53E3 /* DarklyEventSource.framework */,
