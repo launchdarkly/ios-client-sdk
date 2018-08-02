@@ -12,6 +12,8 @@ import Foundation
 import WatchKit
 #elseif os(OSX)
 import AppKit
+#elseif os(tvOS)
+import UIKit
 #endif
 
 enum OperatingSystem: String {
@@ -81,16 +83,14 @@ struct EnvironmentReporter: EnvironmentReporting {
     var foregroundNotification: Notification.Name? { return NSApplication.didBecomeActiveNotification }
     var vendorUUID: String? { return nil }
     #elseif os(tvOS)
-    var deviceModel: String { return "tvOS.device.model" }
-    var systemVersion: String { return "tvOS.system.version" }
-    var systemName: String { return "tvOS.system.name" }
+    var deviceModel: String { return UIDevice.current.model }
+    var systemVersion: String { return UIDevice.current.systemVersion }
+    var systemName: String { return UIDevice.current.systemName }
     var operatingSystem: OperatingSystem { return .tvOS }
     var backgroundNotification: Notification.Name? { return .UIApplicationDidEnterBackground }
     var foregroundNotification: Notification.Name? { return .UIApplicationWillEnterForeground }
-    var vendorUUID: String? { return "tvOS.vendor.uuid" }
+    var vendorUUID: String? { return UIDevice.current.identifierForVendor?.uuidString }
     #endif
-    //TODO: when adding tv support, add case
-//    var vendorUUID: String? { return UIDevice.current.identifierForVendor?.uuidString }   //TODO: this should be in the tvOS case too
 }
 
 #if os(OSX)
