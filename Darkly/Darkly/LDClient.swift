@@ -165,7 +165,7 @@ public class LDClient {
         }
         if reason.isEmpty && config.streamingMode == .streaming && !config.allowStreamingMode {
             reason = " LDConfig disallowed streaming mode. "
-            reason += environmentReporter.operatingSystem == .watchOS ? "Streaming is not allowed on watchOS." : "Unknown reason."
+            reason += !environmentReporter.operatingSystem.isStreamingEnabled ? "Streaming is not allowed on \(environmentReporter.operatingSystem.rawValue)." : "Unknown reason."
         }
         Log.debug(typeName(and: #function, appending: ": ") + "\(streamingMode)\(reason)")
         return streamingMode
@@ -450,7 +450,7 @@ public class LDClient {
             && (flagSynchronizer.streamingMode == .streaming
                 || flagSynchronizer.streamingMode == .polling && flagSynchronizer.pollingInterval == config.flagPollingInterval(runMode: runMode))
     }
-    private var allowBackgroundFlagUpdates: Bool { return config.enableBackgroundUpdates && environmentReporter.operatingSystem == .macOS }
+    private var allowBackgroundFlagUpdates: Bool { return config.enableBackgroundUpdates && environmentReporter.operatingSystem.isBackgroundEnabled }
 
     private(set) var flagCache: UserFlagCaching
     private(set) var flagSynchronizer: LDFlagSynchronizing

@@ -138,7 +138,7 @@ class EventReporter: EventReporting {
 
     private func startReporting() {
         guard isOnline && !isReportingActive else { return }
-        if #available(iOS 10.0, watchOS 3.0, macOS 10.12, *) {
+        if #available(iOS 10.0, watchOS 3.0, macOS 10.12, *, tvOS 10.0) {
             eventReportTimer = Timer.scheduledTimer(withTimeInterval: config.eventFlushInterval, repeats: true) { [weak self] (_) in self?.reportEvents() }
         } else {
             // the run loop retains the timer, so eventReportTimer is weak to avoid the retain cycle. Setting the timer to a strong reference is important so that the timer doesn't get nil'd before added to the run loop.

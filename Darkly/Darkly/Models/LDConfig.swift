@@ -125,7 +125,7 @@ public struct LDConfig {
 
     init(environmentReporter: EnvironmentReporting) {
         minima = Minima(environmentReporter: environmentReporter)
-        allowStreamingMode = environmentReporter.operatingSystem != .watchOS
+        allowStreamingMode = environmentReporter.operatingSystem.isStreamingEnabled
         allowBackgroundUpdates = environmentReporter.isDebugBuild || environmentReporter.operatingSystem.isBackgroundEnabled
     }
 

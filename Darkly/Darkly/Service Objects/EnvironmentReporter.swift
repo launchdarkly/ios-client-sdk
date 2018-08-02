@@ -15,16 +15,16 @@ import AppKit
 #endif
 
 enum OperatingSystem: String {
-    case iOS, watchOS, macOS   //TODO: when adding tv support, add case
+    case iOS, watchOS, macOS, tvOS
 
-    static var allOperatingSystems: [OperatingSystem] { return [.iOS, .watchOS, .macOS] }
+    static var allOperatingSystems: [OperatingSystem] { return [.iOS, .watchOS, .macOS, .tvOS] }
     
     var isBackgroundEnabled: Bool { return OperatingSystem.backgroundEnabledOperatingSystems.contains(self) }
     static var backgroundEnabledOperatingSystems: [OperatingSystem] { return [.macOS] }
-    static var backgroundDisabledOperatingSystems: [OperatingSystem] { return [.iOS, .watchOS] }
+    static var backgroundDisabledOperatingSystems: [OperatingSystem] { return [.iOS, .watchOS, .tvOS] }
 
     var isStreamingEnabled: Bool { return OperatingSystem.streamingEnabledOperatingSystems.contains(self) }
-    static var streamingEnabledOperatingSystems: [OperatingSystem] { return [.iOS, .macOS] }
+    static var streamingEnabledOperatingSystems: [OperatingSystem] { return [.iOS, .macOS, .tvOS] }
     static var streamingDisabledOperatingSystems: [OperatingSystem] { return [.watchOS] }
 
 }
@@ -80,6 +80,14 @@ struct EnvironmentReporter: EnvironmentReporting {
     var backgroundNotification: Notification.Name? { return NSApplication.willResignActiveNotification }
     var foregroundNotification: Notification.Name? { return NSApplication.didBecomeActiveNotification }
     var vendorUUID: String? { return nil }
+    #elseif os(tvOS)
+    var deviceModel: String { return "tvOS.device.model" }
+    var systemVersion: String { return "tvOS.system.version" }
+    var systemName: String { return "tvOS.system.name" }
+    var operatingSystem: OperatingSystem { return .tvOS }
+    var backgroundNotification: Notification.Name? { return .UIApplicationDidEnterBackground }
+    var foregroundNotification: Notification.Name? { return .UIApplicationWillEnterForeground }
+    var vendorUUID: String? { return "tvOS.vendor.uuid" }
     #endif
     //TODO: when adding tv support, add case
 //    var vendorUUID: String? { return UIDevice.current.identifierForVendor?.uuidString }   //TODO: this should be in the tvOS case too
