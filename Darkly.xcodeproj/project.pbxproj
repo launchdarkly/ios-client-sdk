@@ -56,6 +56,9 @@
 		8311886B2113AE6100D77CB5 /* ObjcLDFlagValue.swift in Sources */ = {isa = PBXBuildFile; fileRef = 835E1D461F68B3EC00184DB4 /* ObjcLDFlagValue.swift */; };
 		8311886C2113AE6400D77CB5 /* ObjcLDChangedFlag.swift in Sources */ = {isa = PBXBuildFile; fileRef = 835E1D421F685AC900184DB4 /* ObjcLDChangedFlag.swift */; };
 		8311886D2113AE6700D77CB5 /* ObjcLDVariationValue.swift in Sources */ = {isa = PBXBuildFile; fileRef = 831D8B6C1F6B1F7B00ED65E8 /* ObjcLDVariationValue.swift */; };
+		831188702113C2D300D77CB5 /* Darkly.h in Headers */ = {isa = PBXBuildFile; fileRef = 8354EFC51F22491C00C05156 /* Darkly.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		831188712113C50A00D77CB5 /* Darkly.h in Headers */ = {isa = PBXBuildFile; fileRef = 8354EFC51F22491C00C05156 /* Darkly.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		831188722113C50B00D77CB5 /* Darkly.h in Headers */ = {isa = PBXBuildFile; fileRef = 8354EFC51F22491C00C05156 /* Darkly.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		831425AF206ABB5300F2EF36 /* EnvironmentReportingMock.swift in Sources */ = {isa = PBXBuildFile; fileRef = 831425AE206ABB5300F2EF36 /* EnvironmentReportingMock.swift */; };
 		831425B1206B030100F2EF36 /* EnvironmentReporter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 831425B0206B030100F2EF36 /* EnvironmentReporter.swift */; };
 		831425B2206B030100F2EF36 /* EnvironmentReporter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 831425B0206B030100F2EF36 /* EnvironmentReporter.swift */; };
@@ -400,8 +403,8 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				FAF4DA51190D8E23307C4CAB /* Pods_Darkly_tvOS.framework in Frameworks */,
 				831188412113AC7D00D77CB5 /* DarklyEventSource.framework in Frameworks */,
+				FAF4DA51190D8E23307C4CAB /* Pods_Darkly_tvOS.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -834,6 +837,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				8311883C2113A16900D77CB5 /* Darkly_tvOS.h in Headers */,
+				831188702113C2D300D77CB5 /* Darkly.h in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -842,6 +846,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				831EF33F20655D700001C643 /* Darkly_macOS.h in Headers */,
+				831188722113C50B00D77CB5 /* Darkly.h in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -857,6 +862,7 @@
 			isa = PBXHeadersBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				831188712113C50A00D77CB5 /* Darkly.h in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
