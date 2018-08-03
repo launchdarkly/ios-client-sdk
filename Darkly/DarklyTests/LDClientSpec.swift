@@ -1995,7 +1995,22 @@ final class LDClientSpec: QuickSpec {
                     expect(testContext.makeFlagSynchronizerStreamingMode) == LDStreamingMode.polling
                 }
             }
-            //TODO: When adding mac & tv support, add tests to verify the streaming mode
+            context("when running on macOS") {
+                beforeEach {
+                    testContext = TestContext(startOnline: true, runMode: .foreground, operatingSystem: .macOS)
+                }
+                it("sets the flag synchronizer to streaming mode") {
+                    expect(testContext.makeFlagSynchronizerStreamingMode) == LDStreamingMode.streaming
+                }
+            }
+            context("when running on tvOS") {
+                beforeEach {
+                    testContext = TestContext(startOnline: true, runMode: .foreground, operatingSystem: .tvOS)
+                }
+                it("sets the flag synchronizer to streaming mode") {
+                    expect(testContext.makeFlagSynchronizerStreamingMode) == LDStreamingMode.streaming
+                }
+            }
         }
     }
 

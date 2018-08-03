@@ -418,7 +418,6 @@ final class LDConfigSpec: QuickSpec {
                     expect(testContext.subject.allowStreamingMode) == operatingSystem.isStreamingEnabled
                 }
             }
-            //TODO: When adding tv support, add test covering that OS too
         }
     }
 
