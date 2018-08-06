@@ -286,10 +286,8 @@
 		83028E5020F7908D00FC53E3 /* DarklyEventSource.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = DarklyEventSource.framework; path = Carthage/Build/Mac/DarklyEventSource.framework; sourceTree = SOURCE_ROOT; };
 		83028E5220F790A500FC53E3 /* DarklyEventSource.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = DarklyEventSource.framework; path = Carthage/Build/watchOS/DarklyEventSource.framework; sourceTree = SOURCE_ROOT; };
 		830BF932202D188E006DF9B1 /* HTTPURLRequest.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HTTPURLRequest.swift; sourceTree = "<group>"; };
-		831188322113A04400D77CB5 /* Darkly_iOS copy2-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; name = "Darkly_iOS copy2-Info.plist"; path = "/Users/markpokorny/Documents/Development/launchDarkly/ios-client-swift-private/Darkly_iOS copy2-Info.plist"; sourceTree = "<absolute>"; };
 		831188382113A16900D77CB5 /* LaunchDarkly.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = LaunchDarkly.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		8311883A2113A16900D77CB5 /* Darkly_tvOS.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Darkly_tvOS.h; sourceTree = "<group>"; };
-		8311883B2113A16900D77CB5 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		831188402113AC7D00D77CB5 /* DarklyEventSource.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = DarklyEventSource.framework; path = Carthage/Build/tvOS/DarklyEventSource.framework; sourceTree = "<group>"; };
 		831425AE206ABB5300F2EF36 /* EnvironmentReportingMock.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EnvironmentReportingMock.swift; sourceTree = "<group>"; };
 		831425B0206B030100F2EF36 /* EnvironmentReporter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EnvironmentReporter.swift; sourceTree = "<group>"; };
@@ -304,7 +302,6 @@
 		831D8B761F72A4B400ED65E8 /* FlagSynchronizerSpec.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FlagSynchronizerSpec.swift; sourceTree = "<group>"; };
 		831EF33B20655D700001C643 /* LaunchDarkly.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = LaunchDarkly.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		831EF33D20655D700001C643 /* Darkly_macOS.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Darkly_macOS.h; sourceTree = "<group>"; };
-		831EF33E20655D700001C643 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		832307A51F7D8D720029815A /* URLRequestSpec.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = URLRequestSpec.swift; sourceTree = "<group>"; };
 		832307A71F7DA61B0029815A /* LDEventSourceMock.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LDEventSourceMock.swift; sourceTree = "<group>"; };
 		832307A91F7ECA630029815A /* LDConfigStub.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LDConfigStub.swift; sourceTree = "<group>"; };
@@ -343,6 +340,7 @@
 		838F96731FB9F024009CFC45 /* LDClientSpec.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LDClientSpec.swift; sourceTree = "<group>"; };
 		838F96771FBA504A009CFC45 /* ClientServiceFactory.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClientServiceFactory.swift; sourceTree = "<group>"; };
 		838F96791FBA551A009CFC45 /* ClientServiceMockFactory.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClientServiceMockFactory.swift; sourceTree = "<group>"; };
+		83906A762118EB9000D7D3C5 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		8392FFA020323F6600320914 /* URLResponse.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = URLResponse.swift; sourceTree = "<group>"; };
 		8392FFA22033565700320914 /* HTTPURLResponse.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HTTPURLResponse.swift; sourceTree = "<group>"; };
 		83A0E6B0203B557F00224298 /* FeatureFlagSpec.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FeatureFlagSpec.swift; sourceTree = "<group>"; };
@@ -363,11 +361,9 @@
 		83D559791FD87E6B002D10C8 /* UserCacheConverter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserCacheConverter.swift; sourceTree = "<group>"; };
 		83D5597B1FD9BED7002D10C8 /* FlagCollectionCacheSpec.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FlagCollectionCacheSpec.swift; sourceTree = "<group>"; };
 		83D5597D1FDA01F9002D10C8 /* KeyedValueCacheSpec.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeyedValueCacheSpec.swift; sourceTree = "<group>"; };
-		83D9EC582062DAAF004D7FA6 /* Darkly_iOS copy-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; name = "Darkly_iOS copy-Info.plist"; path = "/Users/markpokorny/Documents/Development/launchDarkly/ios-client-swift-private/Darkly_iOS copy-Info.plist"; sourceTree = "<absolute>"; };
 		83D9EC5F2062DB8C004D7FA6 /* Darkly_watchOS.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Darkly_watchOS.h; sourceTree = "<group>"; };
 		83D9EC602062DB8C004D7FA6 /* Darkly_watchOS.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = Darkly_watchOS.m; sourceTree = "<group>"; };
 		83D9EC6B2062DBB7004D7FA6 /* LaunchDarkly.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = LaunchDarkly.framework; sourceTree = BUILT_PRODUCTS_DIR; };
-		83D9EC6E2062DBB7004D7FA6 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		83D9EC742062DBF3004D7FA6 /* DarklyEventSource.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = DarklyEventSource.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		83DDBEF51FA24A7E00E428B6 /* Data.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Data.swift; sourceTree = "<group>"; };
 		83DDBEF91FA24AFB00E428B6 /* Array.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Array.swift; sourceTree = "<group>"; };
@@ -494,7 +490,6 @@
 			isa = PBXGroup;
 			children = (
 				8311883A2113A16900D77CB5 /* Darkly_tvOS.h */,
-				8311883B2113A16900D77CB5 /* Info.plist */,
 			);
 			path = Darkly_tvOS;
 			sourceTree = "<group>";
@@ -539,7 +534,6 @@
 			isa = PBXGroup;
 			children = (
 				831EF33D20655D700001C643 /* Darkly_macOS.h */,
-				831EF33E20655D700001C643 /* Info.plist */,
 			);
 			path = Darkly_macOS;
 			sourceTree = "<group>";
@@ -576,9 +570,7 @@
 				8354EFC31F22491C00C05156 /* Products */,
 				83028E4B20F78FAE00FC53E3 /* Carthage Frameworks */,
 				3384F0CC93C5C19D2A6C5E66 /* Frameworks */,
-				83D9EC582062DAAF004D7FA6 /* Darkly_iOS copy-Info.plist */,
 				35D209AC6E91916E8AEB6998 /* Pods */,
-				831188322113A04400D77CB5 /* Darkly_iOS copy2-Info.plist */,
 			);
 			sourceTree = "<group>";
 		};
@@ -654,6 +646,7 @@
 			isa = PBXGroup;
 			children = (
 				8354EFC51F22491C00C05156 /* Darkly.h */,
+				83906A762118EB9000D7D3C5 /* Info.plist */,
 			);
 			path = Support;
 			sourceTree = "<group>";
@@ -688,7 +681,6 @@
 			children = (
 				83D9EC5F2062DB8C004D7FA6 /* Darkly_watchOS.h */,
 				83D9EC602062DB8C004D7FA6 /* Darkly_watchOS.m */,
-				83D9EC6E2062DBB7004D7FA6 /* Info.plist */,
 			);
 			path = "Darkly-watchOS";
 			sourceTree = "<group>";
@@ -1668,7 +1660,7 @@
 					"$(PROJECT_DIR)/Carthage/Build/tvOS",
 				);
 				GCC_C_LANGUAGE_STANDARD = gnu11;
-				INFOPLIST_FILE = "$(SRCROOT)/Framework/Info.plist";
+				INFOPLIST_FILE = "$(PROJECT_DIR)/Darkly/Darkly/Support/Info.plist";
 				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
 				IPHONEOS_DEPLOYMENT_TARGET = 8.0;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";
@@ -1701,7 +1693,7 @@
 					"$(PROJECT_DIR)/Carthage/Build/tvOS",
 				);
 				GCC_C_LANGUAGE_STANDARD = gnu11;
-				INFOPLIST_FILE = "$(SRCROOT)/Framework/Info.plist";
+				INFOPLIST_FILE = "$(PROJECT_DIR)/Darkly/Darkly/Support/Info.plist";
 				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
 				IPHONEOS_DEPLOYMENT_TARGET = 8.0;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";
@@ -1735,7 +1727,7 @@
 				);
 				FRAMEWORK_VERSION = A;
 				GCC_C_LANGUAGE_STANDARD = gnu11;
-				INFOPLIST_FILE = Darkly_macOS/Info.plist;
+				INFOPLIST_FILE = "$(PROJECT_DIR)/Darkly/Darkly/Support/Info.plist";
 				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks @loader_path/Frameworks";
 				MACOSX_DEPLOYMENT_TARGET = 10.10;
@@ -1766,7 +1758,7 @@
 				);
 				FRAMEWORK_VERSION = A;
 				GCC_C_LANGUAGE_STANDARD = gnu11;
-				INFOPLIST_FILE = Darkly_macOS/Info.plist;
+				INFOPLIST_FILE = "$(PROJECT_DIR)/Darkly/Darkly/Support/Info.plist";
 				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks @loader_path/Frameworks";
 				MACOSX_DEPLOYMENT_TARGET = 10.10;
@@ -1912,7 +1904,7 @@
 					"$(inherited)",
 					"$(PROJECT_DIR)/Carthage/Build/iOS",
 				);
-				INFOPLIST_FILE = "$(PROJECT_DIR)/Framework/Info.plist";
+				INFOPLIST_FILE = "$(PROJECT_DIR)/Darkly/Darkly/Support/Info.plist";
 				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
 				IPHONEOS_DEPLOYMENT_TARGET = 8.0;
 				LD_DYLIB_INSTALL_NAME = "$(DYLIB_INSTALL_NAME_BASE:standardizepath)/$(EXECUTABLE_PATH)";
@@ -1942,7 +1934,7 @@
 					"$(inherited)",
 					"$(PROJECT_DIR)/Carthage/Build/iOS",
 				);
-				INFOPLIST_FILE = "$(PROJECT_DIR)/Framework/Info.plist";
+				INFOPLIST_FILE = "$(PROJECT_DIR)/Darkly/Darkly/Support/Info.plist";
 				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
 				IPHONEOS_DEPLOYMENT_TARGET = 8.0;
 				LD_DYLIB_INSTALL_NAME = "$(DYLIB_INSTALL_NAME_BASE:standardizepath)/$(EXECUTABLE_PATH)";
@@ -2004,7 +1996,7 @@
 					"$(PROJECT_DIR)/Carthage/Build/watchOS",
 				);
 				GCC_C_LANGUAGE_STANDARD = gnu11;
-				INFOPLIST_FILE = "Darkly-watchOS/Info.plist";
+				INFOPLIST_FILE = "$(PROJECT_DIR)/Darkly/Darkly/Support/Info.plist";
 				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";
 				PRODUCT_BUNDLE_IDENTIFIER = "com.launchdarkly.Darkly-watchOS";
@@ -2035,7 +2027,7 @@
 					"$(PROJECT_DIR)/Carthage/Build/watchOS",
 				);
 				GCC_C_LANGUAGE_STANDARD = gnu11;
-				INFOPLIST_FILE = "Darkly-watchOS/Info.plist";
+				INFOPLIST_FILE = "$(PROJECT_DIR)/Darkly/Darkly/Support/Info.plist";
 				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";
 				PRODUCT_BUNDLE_IDENTIFIER = "com.launchdarkly.Darkly-watchOS";
