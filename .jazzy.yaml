@@ -28,8 +28,50 @@ custom_categories:
     - LDConfig
     - LDUser
 
+  - name: Enumerations
+    children:
+    - LDStreamingMode
+    - LDFlagValueSource
+    - LDFlagValue
+
   - name: Flag Changes
     children:
     - LDChangedFlag
+
+  - name: LD Protocols
+    children:
+    - LDFlagValueConvertible
+    - LDFlagBaseTypeConvertible
+
+  - name: Objective-C
+    children:
+    - ObjcLDClient
+    - ObjcLDConfig
+    - ObjcLDUser
+
+  - name: Obj-C Enumerations
+    children:
+    - ObjcLDFlagValue
+    - ObjcLDFlagValueSource
+    - NSString
+
+  - name: Obj-C Variation Values
+    children:
+    - ObjcLDArrayVariationValue
+    - ObjcLDBoolVariationValue
+    - ObjcLDDictionaryVariationValue
+    - ObjcLDDoubleVariationValue
+    - ObjcLDIntegerVariationValue
+    - ObjcLDStringVariationValue
+
+  - name: Obj-C Changed Flags
+    children:
+    - ObjcLDChangedFlag
+    - ObjcLDArrayChangedFlag
+    - ObjcLDBoolChangedFlag
+    - ObjcLDDictionaryChangedFlag
+    - ObjcLDDoubleChangedFlag
+    - ObjcLDIntegerChangedFlag
+    - ObjcLDStringChangedFlag
 
 #output: "Docs"

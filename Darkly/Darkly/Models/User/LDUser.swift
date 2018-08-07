@@ -259,7 +259,7 @@ extension LDUserWrapper: NSCoding {
         encoder.encode([Keys.featureFlags: wrapped.flagStore.featureFlags.dictionaryValue.withNullValuesRemoved], forKey: LDUser.CodingKeys.config.rawValue)
     }
 
-    public convenience init?(coder decoder: NSCoder) {
+    convenience init?(coder decoder: NSCoder) {
         var user = LDUser(key: decoder.decodeObject(forKey: LDUser.CodingKeys.key.rawValue) as? String,
                           name: decoder.decodeObject(forKey: LDUser.CodingKeys.name.rawValue) as? String,
                           firstName: decoder.decodeObject(forKey: LDUser.CodingKeys.firstName.rawValue) as? String,

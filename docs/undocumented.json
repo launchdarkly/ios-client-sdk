@@ -387,13 +387,6 @@
     },
     {
       "file": "/Users/markpokorny/Documents/Development/launchDarkly/ios-client-swift-private/Darkly/Darkly/Models/User/LDUser.swift",
-      "line": null,
-      "symbol": "LDUserWrapper",
-      "symbol_kind": "source.lang.swift.decl.extension",
-      "warning": "undocumented"
-    },
-    {
-      "file": "/Users/markpokorny/Documents/Development/launchDarkly/ios-client-swift-private/Darkly/Darkly/Models/User/LDUser.swift",
       "line": 11,
       "symbol": "LDUser",
       "symbol_kind": "source.lang.swift.decl.struct",
@@ -515,13 +508,6 @@
       "file": "/Users/markpokorny/Documents/Development/launchDarkly/ios-client-swift-private/Darkly/Darkly/Models/User/LDUser.swift",
       "line": 76,
       "symbol": "LDUser.init(userDictionary:)",
-      "symbol_kind": "source.lang.swift.decl.function.method.instance",
-      "warning": "undocumented"
-    },
-    {
-      "file": "/Users/markpokorny/Documents/Development/launchDarkly/ios-client-swift-private/Darkly/Darkly/Models/User/LDUser.swift",
-      "line": 262,
-      "symbol": "LDUserWrapper.init(coder:)",
       "symbol_kind": "source.lang.swift.decl.function.method.instance",
       "warning": "undocumented"
     },
