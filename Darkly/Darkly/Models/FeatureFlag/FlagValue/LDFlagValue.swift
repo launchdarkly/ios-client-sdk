@@ -143,7 +143,7 @@ extension LDFlagValue: Equatable {
 }
 
 extension Array where Element == LDFlagValue {
-    public static func == (lhs: [LDFlagValue], rhs: [LDFlagValue]) -> Bool {
+    static func == (lhs: [LDFlagValue], rhs: [LDFlagValue]) -> Bool {
         guard lhs.count == rhs.count else { return false }
         //the idea for this came from https://stackoverflow.com/questions/39161168/how-to-compare-two-array-of-objects
         return zip(lhs, rhs).enumerated().filter { (item) -> Bool in
@@ -152,13 +152,13 @@ extension Array where Element == LDFlagValue {
         }.isEmpty
     }
 
-    public func isEqual(to other: [LDFlagValue]) -> Bool {
+    func isEqual(to other: [LDFlagValue]) -> Bool {
         return self == other
     }
 }
 
 extension Dictionary where Key == LDFlagKey, Value == LDFlagValue {
-    public static func == (lhs: [LDFlagKey: LDFlagValue], rhs: [LDFlagKey: LDFlagValue]) -> Bool {
+    static func == (lhs: [LDFlagKey: LDFlagValue], rhs: [LDFlagKey: LDFlagValue]) -> Bool {
         guard lhs.count == rhs.count else { return false }
         let leftKeys = lhs.keys.sorted()
         let rightKeys = rhs.keys.sorted()

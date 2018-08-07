@@ -60,7 +60,7 @@ struct FeatureFlag {
 }
 
 extension FeatureFlag: Equatable {
-    public static func == (lhs: FeatureFlag, rhs: FeatureFlag) -> Bool {
+    static func == (lhs: FeatureFlag, rhs: FeatureFlag) -> Bool {
         if lhs.variation == nil {
             if rhs.variation != nil { return false }
         } else {

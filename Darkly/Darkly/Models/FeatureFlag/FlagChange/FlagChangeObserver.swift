@@ -30,7 +30,7 @@ struct FlagChangeObserver {
 }
 
 extension FlagChangeObserver: Equatable {
-    public static func == (lhs: FlagChangeObserver, rhs: FlagChangeObserver) -> Bool {
+    static func == (lhs: FlagChangeObserver, rhs: FlagChangeObserver) -> Bool {
         return lhs.flagKeys == rhs.flagKeys && lhs.owner === rhs.owner
     }
 }

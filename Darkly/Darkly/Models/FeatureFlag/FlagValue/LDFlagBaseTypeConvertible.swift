@@ -31,6 +31,7 @@ extension LDFlagValue {
 
 // MARK: - Bool
 
+/// :nodoc:
 extension Bool: LDFlagBaseTypeConvertible {
     public init?(_ flag: LDFlagValue?) {
         guard let flag = flag,
@@ -42,6 +43,7 @@ extension Bool: LDFlagBaseTypeConvertible {
 
 // MARK: - Int
 
+/// :nodoc:
 extension Int: LDFlagBaseTypeConvertible {
     public init?(_ flag: LDFlagValue?) {
         //TODO: Assess whether we need to initialize with a double or string too
@@ -54,6 +56,7 @@ extension Int: LDFlagBaseTypeConvertible {
 
 // MARK: - Double
 
+/// :nodoc:
 extension Double: LDFlagBaseTypeConvertible {
     public init?(_ flag: LDFlagValue?) {
         //TODO: Assess whether we need to initialize with an int or string too
@@ -66,6 +69,7 @@ extension Double: LDFlagBaseTypeConvertible {
 
 // MARK: - String
 
+/// :nodoc:
 extension String: LDFlagBaseTypeConvertible {
     public init?(_ flag: LDFlagValue?) {
         guard let flag = flag,
@@ -77,6 +81,7 @@ extension String: LDFlagBaseTypeConvertible {
 
 // MARK: - Array
 
+/// :nodoc:
 extension Array: LDFlagBaseTypeConvertible {
     public init?(_ flag: LDFlagValue?) {
         guard let flagArray = flag?.baseArray as? [Element] else { return nil }
@@ -85,11 +90,11 @@ extension Array: LDFlagBaseTypeConvertible {
 }
 
 extension LDFlagValue {
-    public func toBaseTypeArray<BaseType: LDFlagBaseTypeConvertible>() -> [BaseType]? {
+    func toBaseTypeArray<BaseType: LDFlagBaseTypeConvertible>() -> [BaseType]? {
         return self.flagValueArray?.flatMap { BaseType($0) }
     }
 
-    public var baseArray: [LDFlagBaseTypeConvertible]? {
+    var baseArray: [LDFlagBaseTypeConvertible]? {
         return self.flagValueArray?.flatMap { (flagValue) in flagValue.baseValue}
     }
 }
@@ -97,16 +102,17 @@ extension LDFlagValue {
 // MARK: - Dictionary
 
 extension LDFlagValue {
-    public func toBaseTypeDictionary<Value: LDFlagBaseTypeConvertible>() -> [LDFlagKey: Value]? {
+    func toBaseTypeDictionary<Value: LDFlagBaseTypeConvertible>() -> [LDFlagKey: Value]? {
         return baseDictionary as? [LDFlagKey: Value]
     }
     
-    public var baseDictionary: [String: LDFlagBaseTypeConvertible]? {
+    var baseDictionary: [String: LDFlagBaseTypeConvertible]? {
         guard let flagValues = flagValueDictionary else { return nil }
         return flagValues.flatMapValues { (dictionaryValue) in dictionaryValue.baseValue }
     }
 }
 
+/// :nodoc:
 extension Dictionary: LDFlagBaseTypeConvertible {
     public init?(_ flag: LDFlagValue?) {
         guard let flagValue = flag?.baseDictionary as? [Key: Value]

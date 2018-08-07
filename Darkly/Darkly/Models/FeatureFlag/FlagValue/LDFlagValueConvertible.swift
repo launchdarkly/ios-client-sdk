@@ -15,7 +15,7 @@ public protocol LDFlagValueConvertible {
 
 // MARK: - Bool
 
-//let boolFlag: LDFlagValue = true.toLDFlagValue()
+/// :nodoc:
 extension Bool: LDFlagValueConvertible {
     public func toLDFlagValue() -> LDFlagValue {
         return .bool(self)
@@ -24,6 +24,7 @@ extension Bool: LDFlagValueConvertible {
 
 // MARK: - Int
 
+/// :nodoc:
 extension Int: LDFlagValueConvertible {
     public func toLDFlagValue() -> LDFlagValue {
         return .int(self)
@@ -32,6 +33,7 @@ extension Int: LDFlagValueConvertible {
 
 // MARK: - Double
 
+/// :nodoc:
 extension Double: LDFlagValueConvertible {
     public func toLDFlagValue() -> LDFlagValue {
         return .double(self)
@@ -40,6 +42,7 @@ extension Double: LDFlagValueConvertible {
 
 // MARK: - String
 
+/// :nodoc:
 extension String: LDFlagValueConvertible {
     public func toLDFlagValue() -> LDFlagValue {
         return .string(self)
@@ -49,12 +52,13 @@ extension String: LDFlagValueConvertible {
 // MARK: - Array
 
 extension Array where Element: LDFlagValueConvertible {
-    public func toLDFlagValue() -> LDFlagValue {
+    func toLDFlagValue() -> LDFlagValue {
         let flagValues = self.map { (element) in element.toLDFlagValue() }
         return .array(flagValues)
     }
 }
 
+/// :nodoc:
 extension Array: LDFlagValueConvertible {
     public func toLDFlagValue() -> LDFlagValue {
         guard let flags = self as? [LDFlagValueConvertible] else {
@@ -68,7 +72,7 @@ extension Array: LDFlagValueConvertible {
 // MARK: - Dictionary
 
 extension Dictionary where Value: LDFlagValueConvertible {
-    public func toLDFlagValue() -> LDFlagValue {
+    func toLDFlagValue() -> LDFlagValue {
         var flagValues = [LDFlagKey: LDFlagValue]()
         for (key, value) in self {
             flagValues[String(describing: key)] = value.toLDFlagValue()
@@ -77,6 +81,7 @@ extension Dictionary where Value: LDFlagValueConvertible {
     }
 }
 
+/// :nodoc:
 extension Dictionary: LDFlagValueConvertible {
     public func toLDFlagValue() -> LDFlagValue {
         if let flagValueDictionary = self as? [LDFlagKey: LDFlagValue] { return .dictionary(flagValueDictionary) }
@@ -84,7 +89,7 @@ extension Dictionary: LDFlagValueConvertible {
         return .dictionary(flagValues)
     }
     
-    internal static func convertToFlagValues(_ dictionary: [LDFlagKey: LDFlagValueConvertible]?) -> [LDFlagKey: LDFlagValue]? {
+    static func convertToFlagValues(_ dictionary: [LDFlagKey: LDFlagValueConvertible]?) -> [LDFlagKey: LDFlagValue]? {
         guard let dictionary = dictionary else { return nil }
         var flagValues = [LDFlagKey: LDFlagValue]()
         for (key, value) in dictionary {
@@ -94,6 +99,7 @@ extension Dictionary: LDFlagValueConvertible {
     }
 }
 
+/// :nodoc:
 extension NSNull: LDFlagValueConvertible {
     public func toLDFlagValue() -> LDFlagValue {
         return .null
