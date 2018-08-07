@@ -1,0 +1,35 @@
+module: LaunchDarkly
+author: LaunchDarkly
+author_url: http://launchdarkly.com
+github_url: https://github.com/launchdarkly/ios-client
+clean: true
+include:
+  - "Darkly/Darkly/**"
+exclude:
+  - "Darkly/Darkly/User/CacheableUserFlags.swift"
+  - "Darkly/Darkly/FeatureFlag/*"
+  - "Darkly/Darkly/FeatureFlag/FlagChange/Flag*"
+  - "Darkly/Darkly/FeatureFlag/FlagRequestTracking/*"
+  - "Darkly/Darkly/FeatureFlag/FlagValue/*"
+  - "Darkly/Darkly/ServiceObjects/*"
+  - "Darkly/Darkly/Networking/*"
+  - "Darkly/Darkly/Extensions/*"
+
+copyright: 'Copyright © 2018 Catamorphic Co.'
+
+#swift_version: 4.0
+
+theme: fullwidth
+
+custom_categories:
+  - name: Launch Darkly
+    children:
+    - LDClient
+    - LDConfig
+    - LDUser
+
+  - name: Flag Changes
+    children:
+    - LDChangedFlag
+
+#output: "Docs"
