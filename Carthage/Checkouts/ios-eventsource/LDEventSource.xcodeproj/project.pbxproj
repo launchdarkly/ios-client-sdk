@@ -7,9 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		2817148A1DD736A200F7A8E0 /* UIKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 2838333F17A1C02900C0141D /* UIKit.framework */; };
 		2838334117A1C02900C0141D /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 2838332C17A1BFFE00C0141D /* Foundation.framework */; };
-		2838334317A1C02900C0141D /* CoreGraphics.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 2838334217A1C02900C0141D /* CoreGraphics.framework */; };
 		2838334917A1C02900C0141D /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = 2838334717A1C02900C0141D /* InfoPlist.strings */; };
 		2838334B17A1C02900C0141D /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 2838334A17A1C02900C0141D /* main.m */; };
 		2838334F17A1C02900C0141D /* AppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = 2838334E17A1C02900C0141D /* AppDelegate.m */; };
@@ -23,6 +21,12 @@
 		832C787A1F291AA700E334A2 /* LDEventSource.h in Headers */ = {isa = PBXBuildFile; fileRef = 832C78791F291AA700E334A2 /* LDEventSource.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		832C787C1F291AB300E334A2 /* LDEventSource.m in Sources */ = {isa = PBXBuildFile; fileRef = 832C787B1F291AB300E334A2 /* LDEventSource.m */; };
 		832C78801F291ACE00E334A2 /* LDEventSource-Prefix.pch in Headers */ = {isa = PBXBuildFile; fileRef = 832C787F1F291ACE00E334A2 /* LDEventSource-Prefix.pch */; };
+		835B123C20E6557B009C2ACB /* LDEventParserTest.m in Sources */ = {isa = PBXBuildFile; fileRef = 835B123B20E6557B009C2ACB /* LDEventParserTest.m */; };
+		835B123F20E65DF8009C2ACB /* DarklyEventSource.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 69DE1C251E61765000CF816C /* DarklyEventSource.framework */; };
+		835B124120E666C2009C2ACB /* LDEventSourceTest.m in Sources */ = {isa = PBXBuildFile; fileRef = 835B124020E666C2009C2ACB /* LDEventSourceTest.m */; };
+		835B124420E66837009C2ACB /* largePutEvent.txt in Resources */ = {isa = PBXBuildFile; fileRef = 835B124320E66837009C2ACB /* largePutEvent.txt */; };
+		835B124820E668EE009C2ACB /* NSString+Testable.m in Sources */ = {isa = PBXBuildFile; fileRef = 835B124720E668EE009C2ACB /* NSString+Testable.m */; };
+		835B124E20E6A936009C2ACB /* LDEventSource+Testable.m in Sources */ = {isa = PBXBuildFile; fileRef = 835B124D20E6A936009C2ACB /* LDEventSource+Testable.m */; };
 		83620B8F20BEE51600F1F28E /* LDEventParser.h in Headers */ = {isa = PBXBuildFile; fileRef = 83620B8D20BEE51600F1F28E /* LDEventParser.h */; };
 		83620B9020BEE51600F1F28E /* LDEventParser.m in Sources */ = {isa = PBXBuildFile; fileRef = 83620B8E20BEE51600F1F28E /* LDEventParser.m */; };
 		83620B9320BF14E000F1F28E /* LDEventStringAccumulator.h in Headers */ = {isa = PBXBuildFile; fileRef = 83620B9120BF14E000F1F28E /* LDEventStringAccumulator.h */; };
@@ -31,7 +35,9 @@
 		83620B9820C0A89100F1F28E /* NSString+LDEventSource.m in Sources */ = {isa = PBXBuildFile; fileRef = 83620B9620C0A89100F1F28E /* NSString+LDEventSource.m */; };
 		83620B9B20C0A9EC00F1F28E /* NSArray+LDEventSource.h in Headers */ = {isa = PBXBuildFile; fileRef = 83620B9920C0A9EC00F1F28E /* NSArray+LDEventSource.h */; };
 		83620B9C20C0A9EC00F1F28E /* NSArray+LDEventSource.m in Sources */ = {isa = PBXBuildFile; fileRef = 83620B9A20C0A9EC00F1F28E /* NSArray+LDEventSource.m */; };
+		8364C58320EC120D00210EAE /* testEventWithSpaces.txt in Resources */ = {isa = PBXBuildFile; fileRef = 8364C58220EC120D00210EAE /* testEventWithSpaces.txt */; };
 		83B975D11FD1C83300A4EF4E /* DarklyEventSource.h in Headers */ = {isa = PBXBuildFile; fileRef = 83B975D01FD1C83300A4EF4E /* DarklyEventSource.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		EDC66098619F9E9C9907365A /* Pods_DarklyEventSourceTests.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1855D8187242D352F67D5139 /* Pods_DarklyEventSourceTests.framework */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -41,6 +47,13 @@
 			proxyType = 1;
 			remoteGlobalIDString = 69DE1C241E61765000CF816C;
 			remoteInfo = "EventSource-iOS";
+		};
+		835B123D20E65D69009C2ACB /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 2838332117A1BFFD00C0141D /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 69DE1C241E61765000CF816C;
+			remoteInfo = DarklyEventSource;
 		};
 /* End PBXContainerItemProxy section */
 
@@ -59,10 +72,9 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		1855D8187242D352F67D5139 /* Pods_DarklyEventSourceTests.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_DarklyEventSourceTests.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		2838332C17A1BFFE00C0141D /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = System/Library/Frameworks/Foundation.framework; sourceTree = SDKROOT; };
 		2838333E17A1C02900C0141D /* EventViewer.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = EventViewer.app; sourceTree = BUILT_PRODUCTS_DIR; };
-		2838333F17A1C02900C0141D /* UIKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = UIKit.framework; path = System/Library/Frameworks/UIKit.framework; sourceTree = SDKROOT; };
-		2838334217A1C02900C0141D /* CoreGraphics.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreGraphics.framework; path = System/Library/Frameworks/CoreGraphics.framework; sourceTree = SDKROOT; };
 		2838334617A1C02900C0141D /* EventViewer-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "EventViewer-Info.plist"; sourceTree = "<group>"; };
 		2838334817A1C02900C0141D /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/InfoPlist.strings; sourceTree = "<group>"; };
 		2838334A17A1C02900C0141D /* main.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = main.m; sourceTree = "<group>"; };
@@ -80,6 +92,15 @@
 		832C787B1F291AB300E334A2 /* LDEventSource.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = LDEventSource.m; path = LDEventSource/LDEventSource.m; sourceTree = SOURCE_ROOT; };
 		832C787D1F291AC000E334A2 /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; name = Info.plist; path = LDEventSource/Info.plist; sourceTree = SOURCE_ROOT; };
 		832C787F1F291ACE00E334A2 /* LDEventSource-Prefix.pch */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = "LDEventSource-Prefix.pch"; path = "LDEventSource/LDEventSource-Prefix.pch"; sourceTree = SOURCE_ROOT; };
+		835B123320E5A319009C2ACB /* DarklyEventSourceTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = DarklyEventSourceTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		835B123720E5A31A009C2ACB /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		835B123B20E6557B009C2ACB /* LDEventParserTest.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = LDEventParserTest.m; sourceTree = "<group>"; };
+		835B124020E666C2009C2ACB /* LDEventSourceTest.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = LDEventSourceTest.m; sourceTree = "<group>"; };
+		835B124320E66837009C2ACB /* largePutEvent.txt */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = largePutEvent.txt; sourceTree = "<group>"; };
+		835B124620E668EE009C2ACB /* NSString+Testable.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "NSString+Testable.h"; sourceTree = "<group>"; };
+		835B124720E668EE009C2ACB /* NSString+Testable.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "NSString+Testable.m"; sourceTree = "<group>"; };
+		835B124920E689EF009C2ACB /* LDEventSource+Testable.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "LDEventSource+Testable.h"; sourceTree = "<group>"; };
+		835B124D20E6A936009C2ACB /* LDEventSource+Testable.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "LDEventSource+Testable.m"; sourceTree = "<group>"; };
 		83620B8D20BEE51600F1F28E /* LDEventParser.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = LDEventParser.h; sourceTree = "<group>"; };
 		83620B8E20BEE51600F1F28E /* LDEventParser.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = LDEventParser.m; sourceTree = "<group>"; };
 		83620B9120BF14E000F1F28E /* LDEventStringAccumulator.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = LDEventStringAccumulator.h; sourceTree = "<group>"; };
@@ -88,7 +109,10 @@
 		83620B9620C0A89100F1F28E /* NSString+LDEventSource.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "NSString+LDEventSource.m"; sourceTree = "<group>"; };
 		83620B9920C0A9EC00F1F28E /* NSArray+LDEventSource.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "NSArray+LDEventSource.h"; sourceTree = "<group>"; };
 		83620B9A20C0A9EC00F1F28E /* NSArray+LDEventSource.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "NSArray+LDEventSource.m"; sourceTree = "<group>"; };
+		8364C58220EC120D00210EAE /* testEventWithSpaces.txt */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = testEventWithSpaces.txt; sourceTree = "<group>"; };
 		83B975D01FD1C83300A4EF4E /* DarklyEventSource.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = DarklyEventSource.h; sourceTree = "<group>"; };
+		8DE5C853D572C56CE29ED5F8 /* Pods-DarklyEventSourceTests.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-DarklyEventSourceTests.debug.xcconfig"; path = "Pods/Target Support Files/Pods-DarklyEventSourceTests/Pods-DarklyEventSourceTests.debug.xcconfig"; sourceTree = "<group>"; };
+		CDB9A18E68C90D6B6D9EF54A /* Pods-DarklyEventSourceTests.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-DarklyEventSourceTests.release.xcconfig"; path = "Pods/Target Support Files/Pods-DarklyEventSourceTests/Pods-DarklyEventSourceTests.release.xcconfig"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -97,9 +121,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				69DE1C2C1E61765000CF816C /* DarklyEventSource.framework in Frameworks */,
-				2817148A1DD736A200F7A8E0 /* UIKit.framework in Frameworks */,
 				2838334117A1C02900C0141D /* Foundation.framework in Frameworks */,
-				2838334317A1C02900C0141D /* CoreGraphics.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -107,6 +129,15 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		835B123020E5A319009C2ACB /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				835B123F20E65DF8009C2ACB /* DarklyEventSource.framework in Frameworks */,
+				EDC66098619F9E9C9907365A /* Pods_DarklyEventSourceTests.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -118,8 +149,10 @@
 			children = (
 				2838332E17A1BFFE00C0141D /* LDEventSource */,
 				2838334417A1C02900C0141D /* EventViewer */,
+				835B123420E5A31A009C2ACB /* DarklyEventSourceTests */,
 				2838332B17A1BFFE00C0141D /* Frameworks */,
 				2838332A17A1BFFE00C0141D /* Products */,
+				44CADEFF622525D649E4BAEF /* Pods */,
 			);
 			sourceTree = "<group>";
 		};
@@ -128,6 +161,7 @@
 			children = (
 				2838333E17A1C02900C0141D /* EventViewer.app */,
 				69DE1C251E61765000CF816C /* DarklyEventSource.framework */,
+				835B123320E5A319009C2ACB /* DarklyEventSourceTests.xctest */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -136,8 +170,7 @@
 			isa = PBXGroup;
 			children = (
 				2838332C17A1BFFE00C0141D /* Foundation.framework */,
-				2838333F17A1C02900C0141D /* UIKit.framework */,
-				2838334217A1C02900C0141D /* CoreGraphics.framework */,
+				1855D8187242D352F67D5139 /* Pods_DarklyEventSourceTests.framework */,
 			);
 			name = Frameworks;
 			sourceTree = "<group>";
@@ -197,6 +230,47 @@
 			name = "Supporting Files";
 			sourceTree = "<group>";
 		};
+		44CADEFF622525D649E4BAEF /* Pods */ = {
+			isa = PBXGroup;
+			children = (
+				8DE5C853D572C56CE29ED5F8 /* Pods-DarklyEventSourceTests.debug.xcconfig */,
+				CDB9A18E68C90D6B6D9EF54A /* Pods-DarklyEventSourceTests.release.xcconfig */,
+			);
+			name = Pods;
+			sourceTree = "<group>";
+		};
+		835B123420E5A31A009C2ACB /* DarklyEventSourceTests */ = {
+			isa = PBXGroup;
+			children = (
+				835B124020E666C2009C2ACB /* LDEventSourceTest.m */,
+				835B123B20E6557B009C2ACB /* LDEventParserTest.m */,
+				835B123720E5A31A009C2ACB /* Info.plist */,
+				835B124520E668C1009C2ACB /* Categories */,
+				835B124220E66716009C2ACB /* Fixtures */,
+			);
+			path = DarklyEventSourceTests;
+			sourceTree = "<group>";
+		};
+		835B124220E66716009C2ACB /* Fixtures */ = {
+			isa = PBXGroup;
+			children = (
+				835B124320E66837009C2ACB /* largePutEvent.txt */,
+				8364C58220EC120D00210EAE /* testEventWithSpaces.txt */,
+			);
+			path = Fixtures;
+			sourceTree = "<group>";
+		};
+		835B124520E668C1009C2ACB /* Categories */ = {
+			isa = PBXGroup;
+			children = (
+				835B124620E668EE009C2ACB /* NSString+Testable.h */,
+				835B124720E668EE009C2ACB /* NSString+Testable.m */,
+				835B124920E689EF009C2ACB /* LDEventSource+Testable.h */,
+				835B124D20E6A936009C2ACB /* LDEventSource+Testable.m */,
+			);
+			path = Categories;
+			sourceTree = "<group>";
+		};
 /* End PBXGroup section */
 
 /* Begin PBXHeadersBuildPhase section */
@@ -254,17 +328,42 @@
 			productReference = 69DE1C251E61765000CF816C /* DarklyEventSource.framework */;
 			productType = "com.apple.product-type.framework";
 		};
+		835B123220E5A319009C2ACB /* DarklyEventSourceTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 835B123A20E5A31A009C2ACB /* Build configuration list for PBXNativeTarget "DarklyEventSourceTests" */;
+			buildPhases = (
+				F7892E50DA276A45BC668855 /* [CP] Check Pods Manifest.lock */,
+				835B122F20E5A319009C2ACB /* Sources */,
+				835B123020E5A319009C2ACB /* Frameworks */,
+				835B123120E5A319009C2ACB /* Resources */,
+				B152A38C9EC9EA6FF7527908 /* [CP] Embed Pods Frameworks */,
+				B599EA3A3CD6A2D759F79719 /* [CP] Copy Pods Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				835B123E20E65D69009C2ACB /* PBXTargetDependency */,
+			);
+			name = DarklyEventSourceTests;
+			productName = DarklyEventSourceTests;
+			productReference = 835B123320E5A319009C2ACB /* DarklyEventSourceTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
 		2838332117A1BFFD00C0141D /* Project object */ = {
 			isa = PBXProject;
 			attributes = {
-				LastUpgradeCheck = 0900;
+				LastUpgradeCheck = 0940;
 				ORGANIZATIONNAME = "Neil Cowburn";
 				TargetAttributes = {
 					69DE1C241E61765000CF816C = {
 						CreatedOnToolsVersion = 8.2.1;
+						ProvisioningStyle = Automatic;
+					};
+					835B123220E5A319009C2ACB = {
+						CreatedOnToolsVersion = 9.4.1;
 						ProvisioningStyle = Automatic;
 					};
 				};
@@ -283,6 +382,7 @@
 			targets = (
 				69DE1C241E61765000CF816C /* DarklyEventSource */,
 				2838333D17A1C02900C0141D /* EventViewer */,
+				835B123220E5A319009C2ACB /* DarklyEventSourceTests */,
 			);
 		};
 /* End PBXProject section */
@@ -307,7 +407,70 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		835B123120E5A319009C2ACB /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				8364C58320EC120D00210EAE /* testEventWithSpaces.txt in Resources */,
+				835B124420E66837009C2ACB /* largePutEvent.txt in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXResourcesBuildPhase section */
+
+/* Begin PBXShellScriptBuildPhase section */
+		B152A38C9EC9EA6FF7527908 /* [CP] Embed Pods Frameworks */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputPaths = (
+				"${SRCROOT}/Pods/Target Support Files/Pods-DarklyEventSourceTests/Pods-DarklyEventSourceTests-frameworks.sh",
+				"${BUILT_PRODUCTS_DIR}/OHHTTPStubs/OHHTTPStubs.framework",
+			);
+			name = "[CP] Embed Pods Frameworks";
+			outputPaths = (
+				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/OHHTTPStubs.framework",
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "\"${SRCROOT}/Pods/Target Support Files/Pods-DarklyEventSourceTests/Pods-DarklyEventSourceTests-frameworks.sh\"\n";
+			showEnvVarsInLog = 0;
+		};
+		B599EA3A3CD6A2D759F79719 /* [CP] Copy Pods Resources */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputPaths = (
+			);
+			name = "[CP] Copy Pods Resources";
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "\"${SRCROOT}/Pods/Target Support Files/Pods-DarklyEventSourceTests/Pods-DarklyEventSourceTests-resources.sh\"\n";
+			showEnvVarsInLog = 0;
+		};
+		F7892E50DA276A45BC668855 /* [CP] Check Pods Manifest.lock */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputPaths = (
+				"${PODS_PODFILE_DIR_PATH}/Podfile.lock",
+				"${PODS_ROOT}/Manifest.lock",
+			);
+			name = "[CP] Check Pods Manifest.lock";
+			outputPaths = (
+				"$(DERIVED_FILE_DIR)/Pods-DarklyEventSourceTests-checkManifestLockResult.txt",
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "diff \"${PODS_PODFILE_DIR_PATH}/Podfile.lock\" \"${PODS_ROOT}/Manifest.lock\" > /dev/null\nif [ $? != 0 ] ; then\n    # print error to STDERR\n    echo \"error: The sandbox is not in sync with the Podfile.lock. Run 'pod install' or update your CocoaPods installation.\" >&2\n    exit 1\nfi\n# This output is used by Xcode 'outputs' to avoid re-running this script phase.\necho \"SUCCESS\" > \"${SCRIPT_OUTPUT_FILE_0}\"\n";
+			showEnvVarsInLog = 0;
+		};
+/* End PBXShellScriptBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
 		2838333A17A1C02900C0141D /* Sources */ = {
@@ -332,6 +495,17 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		835B122F20E5A319009C2ACB /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				835B123C20E6557B009C2ACB /* LDEventParserTest.m in Sources */,
+				835B124E20E6A936009C2ACB /* LDEventSource+Testable.m in Sources */,
+				835B124820E668EE009C2ACB /* NSString+Testable.m in Sources */,
+				835B124120E666C2009C2ACB /* LDEventSourceTest.m in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
@@ -339,6 +513,11 @@
 			isa = PBXTargetDependency;
 			target = 69DE1C241E61765000CF816C /* DarklyEventSource */;
 			targetProxy = 69DE1C2A1E61765000CF816C /* PBXContainerItemProxy */;
+		};
+		835B123E20E65D69009C2ACB /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 69DE1C241E61765000CF816C /* DarklyEventSource */;
+			targetProxy = 835B123D20E65D69009C2ACB /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
 
@@ -373,11 +552,13 @@
 				CLANG_WARN_BOOL_CONVERSION = YES;
 				CLANG_WARN_COMMA = YES;
 				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
 				CLANG_WARN_EMPTY_BODY = YES;
 				CLANG_WARN_ENUM_CONVERSION = YES;
 				CLANG_WARN_INFINITE_RECURSION = YES;
 				CLANG_WARN_INT_CONVERSION = YES;
 				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
 				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
 				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
 				CLANG_WARN_STRICT_PROTOTYPES = YES;
@@ -423,11 +604,13 @@
 				CLANG_WARN_BOOL_CONVERSION = YES;
 				CLANG_WARN_COMMA = YES;
 				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
 				CLANG_WARN_EMPTY_BODY = YES;
 				CLANG_WARN_ENUM_CONVERSION = YES;
 				CLANG_WARN_INFINITE_RECURSION = YES;
 				CLANG_WARN_INT_CONVERSION = YES;
 				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
 				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
 				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
 				CLANG_WARN_STRICT_PROTOTYPES = YES;
@@ -555,6 +738,74 @@
 			};
 			name = Release;
 		};
+		835B123820E5A31A009C2ACB /* Debug */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = 8DE5C853D572C56CE29ED5F8 /* Pods-DarklyEventSourceTests.debug.xcconfig */;
+			buildSettings = {
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
+				CODE_SIGN_STYLE = Automatic;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				DEVELOPMENT_TEAM = "";
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				INFOPLIST_FILE = DarklyEventSourceTests/Info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 11.4;
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";
+				MTL_ENABLE_DEBUG_INFO = YES;
+				PRODUCT_BUNDLE_IDENTIFIER = com.launchdarkly.DarklyEventSourceTests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		835B123920E5A31A009C2ACB /* Release */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = CDB9A18E68C90D6B6D9EF54A /* Pods-DarklyEventSourceTests.release.xcconfig */;
+			buildSettings = {
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
+				CODE_SIGN_STYLE = Automatic;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				DEVELOPMENT_TEAM = "";
+				ENABLE_NS_ASSERTIONS = NO;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				INFOPLIST_FILE = DarklyEventSourceTests/Info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 11.4;
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";
+				MTL_ENABLE_DEBUG_INFO = NO;
+				PRODUCT_BUNDLE_IDENTIFIER = com.launchdarkly.DarklyEventSourceTests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
@@ -581,6 +832,15 @@
 			buildConfigurations = (
 				69DE1C2E1E61765000CF816C /* Debug */,
 				69DE1C2F1E61765000CF816C /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		835B123A20E5A31A009C2ACB /* Build configuration list for PBXNativeTarget "DarklyEventSourceTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				835B123820E5A31A009C2ACB /* Debug */,
+				835B123920E5A31A009C2ACB /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;

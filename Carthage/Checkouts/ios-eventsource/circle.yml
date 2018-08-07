@@ -1,3 +1,21 @@
+# Keep this at the top to reduce noise in chatrooms when we mess up circleci setup
+experimental:
+  notify:
+    branches:
+      only:
+        - master
+        
+machine:
+ pre:
+   - gem install bundler
+ xcode:
+  version: 9.2
+ 
+dependencies:
+ post:
+   - bundle exec pod --version
+
 test:
-  override:
-    - echo "No tests are defined for LDEventSource."
+ post:
+  - bundle exec pod lib lint --use-libraries 
+  - if [ "$CIRCLE_BRANCH" = 'master' ]; then pod spec lint --use-libraries; fi
