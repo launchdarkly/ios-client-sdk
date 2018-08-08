@@ -193,7 +193,41 @@
 
                 </div>
               </div>
-            <p>The LDClient is the heart of the SDK, providing client apps access to LaunchDarkly services. This singleton provides the ability to set a configuration (LDConfig) that controls how the client talks to LD servers, and a user (LDUser) that provides finer control on the feature flag values delivered to the SDK. Once the LDClient has started, it connects to LD&rsquo;s servers to get the feature flag values you set in the Dashboard.</p>
+            <p>The LDClient is the heart of the SDK, providing client apps running iOS, watchOS, macOS, or tvOS access to LaunchDarkly services. This singleton provides the ability to set a configuration (LDConfig) that controls how the LDClient talks to LaunchDarkly servers, and a user (LDUser) that provides finer control on the feature flag values delivered to LDClient. Once the LDClient has started, it connects to LaunchDarkly&rsquo;s servers to get the feature flag values you set in the Dashboard.</p>
+<h2 id='usage' class='heading'>Usage</h2>
+<h3 id='startup' class='heading'>Startup</h3>
+
+<ol>
+<li>If desired, configure a <code><a href="../Structs/LDConfig.html">LDConfig</a></code> and <code><a href="../Structs/LDUser.html">LDUser</a></code>. While neither are required, both give you additional control over the feature flags delivered to the LDClient. See <code><a href="../Structs/LDConfig.html">LDConfig</a></code> &amp; <code><a href="../Structs/LDUser.html">LDUser</a></code> for more details.</li>
+<li>Call <code>LDClient.shared.start(mobileKey: config: user: completion:)</code>
+
+<ul>
+<li>The mobileKey comes from your LaunchDarkly Account settings (on the left at the bottom). If you have multiple projects be sure to choose the correct Mobile key.</li>
+<li>If you do not pass in a LDConfig or LDUser, LDCLient creates a default for you</li>
+<li>The optional completion closure allows the LDClient to notify your app when it has gone online.</li>
+</ul></li>
+<li>Because the LDClient is a singleton, you do not have to keep a reference to it in your code.</li>
+</ol>
+<h3 id='getting-feature-flags' class='heading'>Getting Feature Flags</h3>
+
+<p>Once the LDClient has started, it makes your feature flags available using the <code>variation</code> and <code>variationAndSource</code> methods. A <code>variation</code> is a specific flag value. For example a boolean feature flag has 2 variations, <code>true</code> and <code>false</code>. You can create feature flags with more than 2 variations using other feature flag types. See <code><a href="../Enums/LDFlagValue.html">LDFlagValue</a></code> for the available types.</p>
+<pre class="highlight swift"><code> <span class="k">let</span> <span class="nv">boolFlag</span> <span class="o">=</span> <span class="kt">LDClient</span><span class="o">.</span><span class="n">shared</span><span class="o">.</span><span class="nf">variation</span><span class="p">(</span><span class="nv">forKey</span><span class="p">:</span> <span class="s">"my-bool-flag"</span><span class="p">,</span> <span class="nv">fallback</span><span class="p">:</span> <span class="kc">false</span><span class="p">)</span>
+</code></pre>
+
+<p>If you need to know the source of the variation provided to you for a specific feature flag, the <code>variationAndSource</code> method returns a tuple with the (value, source) in a single call.</p>
+
+<p>See <code>variation(forKey: fallback:)</code> or <code>variationAndSource(forKey: fallback:)</code> for details</p>
+<h3 id='observing-feature-flags' class='heading'>Observing Feature Flags</h3>
+
+<p>You might need to know when a feature flag value changes. This is not required, you can check the flag&rsquo;s value when you need it.</p>
+
+<p>The LDClient provides several <code>observe</code> methods that allow you to tell the LDClient to notify you when there is a change. There are several options, depending on whether you want to know when a specific flag changes, when any flag in a collection changes, or when a flag doesn&rsquo;t change.</p>
+<pre class="highlight swift"><code> <span class="kt">LDClient</span><span class="o">.</span><span class="n">shared</span><span class="o">.</span><span class="nf">observe</span><span class="p">(</span><span class="s">"flag-key"</span><span class="p">,</span> <span class="nv">owner</span><span class="p">:</span> <span class="k">self</span><span class="p">,</span> <span class="nv">observer</span><span class="p">:</span> <span class="p">{</span> <span class="p">[</span><span class="k">weak</span> <span class="k">self</span><span class="p">]</span> <span class="p">(</span><span class="n">changedFlag</span><span class="p">)</span> <span class="k">in</span>
+    <span class="k">self</span><span class="p">?</span><span class="o">.</span><span class="nf">updateFlag</span><span class="p">(</span><span class="nv">key</span><span class="p">:</span> <span class="s">"flag-key"</span><span class="p">,</span> <span class="nv">changedFlag</span><span class="p">:</span> <span class="n">changedFlag</span><span class="p">)</span>
+ <span class="p">}</span>
+</code></pre>
+
+<p>The <code>changedFlag</code> passed in to the closure contains the old and new value, and the old and new valueSource</p>
 
           </div>
         </section>
@@ -201,6 +235,13 @@
         <section class="section">
           <div class="section-content">
             <div class="task-group">
+              <div class="task-name-container">
+                <a name="/State%20Controls%20and%20Indicators"></a>
+                <a name="//apple_ref/swift/Section/State Controls and Indicators" class="dashAnchor"></a>
+                <a href="#/State%20Controls%20and%20Indicators">
+                  <h3 class="section-name">State Controls and Indicators</h3>
+                </a>
+              </div>
               <ul class="item-container">
                 <li class="item">
                   <div>
@@ -215,7 +256,7 @@
                     <section class="section">
                       <div class="pointer"></div>
                       <div class="abstract">
-                        <p>Undocumented</p>
+                        <p>Access to the LDClient singleton. For iOS apps with watchOS companion apps, there will be a singleton on each platform. These singletons do not communicate with each other. If you try to share feature flags between apps, the latest flag values may be overwritten by old feature flags from the other platform. LaunchDarkly recommends not sharing feature flags between apps and allowing each LDClient to manage feature flags on its own platform. If you share feature flag data between apps, provide a way to prevent the LDClients from overwriting new feature flags with old feature flags in the shared data.</p>
 
                       </div>
                       <div class="declaration">
@@ -242,7 +283,13 @@
                     <section class="section">
                       <div class="pointer"></div>
                       <div class="abstract">
-                        <p>Tells the online/offline state of the LDClient. Use setOnline to change the online/offline state</p>
+                        <p>Reports the online/offline state of the LDClient.</p>
+
+<p>When online, the SDK communicates with LaunchDarkly servers for feature flag values and event reporting.</p>
+
+<p>When offline, the SDK does not attempt to communicate with LaunchDarkly servers. Client apps can request feature flag values and set/change feature flag observers while offline. The SDK will collect events while offline.</p>
+
+<p>Use <code>setOnline(_: completion:)</code> to change the online/offline state.</p>
 
                       </div>
                       <div class="declaration">
@@ -269,7 +316,17 @@
                     <section class="section">
                       <div class="pointer"></div>
                       <div class="abstract">
-                        <p>Set the LDClient to online/offline mode. When online, the LDClient will sync events to the server. (Default)</p>
+                        <p>Set the LDClient online/offline.</p>
+
+<p>When online, the SDK communicates with LaunchDarkly servers for feature flag values and event reporting.</p>
+
+<p>When offline, the SDK does not attempt to communicate with LaunchDarkly servers. Client apps can request feature flag values and set/change feature flag observers while offline. The SDK will collect events while offline.</p>
+
+<p>The SDK protects itself from multiple rapid calls to setOnline(true) by enforcing an increasing delay (called <em>throttling</em>) each time setOnline(true) is called within a short time. The first time, the call proceeds normally. For each subsequent call the delay is enforced, and if waiting, increased to a maximum delay. When the delay has elapsed, the <code>setOnline(true)</code> will proceed, assuming that the client app has not called <code>setOnline(false)</code> during the delay. Therefore a call to setOnline(true) may not immediately result in the LDClient going online. Client app developers should consider this situation abnormal, and take steps to prevent the client app from making multiple rapid setOnline(true) calls. Calls to setOnline(false) are not throttled. Note that calls to <code>start(config: user: completion:)</code>, and setting the <code><a href="../Classes/LDClient.html#/s:12LaunchDarkly8LDClientC6configAA8LDConfigVv">config</a></code> or <code><a href="../Classes/LDClient.html#/s:12LaunchDarkly8LDClientC4userAA6LDUserVv">user</a></code> can also call <code>setOnline(true)</code> under certain conditions. After the delay, the SDK resets and the client app can make a susequent call to setOnline(true) without being throttled.</p>
+
+<p>Client apps can set a completion closure called when the setOnline call completes. For unthrottled <code>setOnline(true)</code> and all <code>setOnline(false)</code> calls, the SDK will call the closure immediately on completion of this method. For throttled <code>setOnline(true)</code> calls, the SDK will call the closure after the throttling delay at the completion of the setOnline method.</p>
+
+<p>Use <code><a href="../Classes/LDClient.html#/s:12LaunchDarkly8LDClientC8isOnlineSbv">isOnline</a></code> to get the online/offline state.</p>
 
                       </div>
                       <div class="declaration">
@@ -292,7 +349,7 @@
                               </td>
                               <td>
                                 <div>
-                                  <p>Desired online/offline mode for the client</p>
+                                  <p>Desired online/offline mode for the LDClient</p>
                                 </div>
                               </td>
                             </tr>
@@ -327,11 +384,13 @@
                     <section class="section">
                       <div class="pointer"></div>
                       <div class="abstract">
-                        <p>Takes the client offline and reconfigures using the new config. If the client was online, it brings the client online again.
-Make config changes by getting the config from the client, adjusting values, and then setting the new config
-If the config is unchanged, returns immediately.
-Usage:
-     LDClient.shared.config = newConfig</p>
+                        <p>The LDConfig that configures the LDClient. See <code><a href="../Structs/LDConfig.html">LDConfig</a></code> for details about what can be configured.</p>
+
+<p>Normally, the client app should set desired values into a LDConfig and pass that into <code>start(config: user: completion:)</code>. If the client does not pass a LDConfig to the LDClient, the LDClient creates a LDConfig using all default values.</p>
+
+<p>The client app can change the LDConfig by getting the <code>config</code>, adjusting the values, and setting it into the LDClient.</p>
+
+<p>When a new config is set, the LDClient goes offline and reconfigures using the new config. If the client was online when the new config was set, it goes online again, subject to a throttling delay if in force (see <code>setOnline(_: completion:)</code> for details). To change both the <code>config</code> and <code><a href="../Classes/LDClient.html#/s:12LaunchDarkly8LDClientC4userAA6LDUserVv">user</a></code>, set the LDClient offline, set both properties, then set the LDClient online.</p>
 
                       </div>
                       <div class="declaration">
@@ -358,11 +417,13 @@ Usage:
                     <section class="section">
                       <div class="pointer"></div>
                       <div class="abstract">
-                        <p>The LDUser set into the LDClient controls the set of feature flags returned by the LD server, and ties event tracking to the user.
-Setting the user takes the client offline and configures for the new user. If the client was online, it brings the client online again.
-Make user changes by getting the user from the client, adjusting values, and then setting the new user
-Usage:
-     LDClient.shared.user = newUser</p>
+                        <p>The LDUser set into the LDClient may affect the set of feature flags returned by the LD server, and ties event tracking to the user. See <code><a href="../Structs/LDUser.html">LDUser</a></code> for details about what information can be retained.</p>
+
+<p>Normally, the client app should create and set the LDUser and pass that into <code>start(config: user: completion:)</code>.</p>
+
+<p>The client app can change the LDUser by getting the <code>user</code>, adjusting the values, and setting it into the LDClient. This allows client apps to collect information over time from the user and update as information is collected. Client apps should follow <a href="apple.com/legal/privacy">Apple&rsquo;s Privacy Policy</a> when collecting user information. If the client app does not create a LDUser, LDClient creates an anonymous default user, which can affect the feature flags delivered to the LDClient.</p>
+
+<p>When a new user is set, the LDClient goes offline and sets the new user. If the client was online when the new user was set, it goes online again, subject to a throttling delay if in force (see <code>setOnline(_: completion:)</code> for details). To change both the <code><a href="../Classes/LDClient.html#/s:12LaunchDarkly8LDClientC6configAA8LDConfigVv">config</a></code> and <code>user</code>, set the LDClient offline, set both properties, then set the LDClient online.</p>
 
                       </div>
                       <div class="declaration">
@@ -376,17 +437,6 @@ Usage:
                     </section>
                   </div>
                 </li>
-              </ul>
-            </div>
-            <div class="task-group">
-              <div class="task-name-container">
-                <a name="/Public"></a>
-                <a name="//apple_ref/swift/Section/Public" class="dashAnchor"></a>
-                <a href="#/Public">
-                  <h3 class="section-name">Public</h3>
-                </a>
-              </div>
-              <ul class="item-container">
                 <li class="item">
                   <div>
                     <code>
@@ -400,13 +450,15 @@ Usage:
                     <section class="section">
                       <div class="pointer"></div>
                       <div class="abstract">
-                        <p>Starts the LDClient using the passed in mobile key, config, &amp; user
-Starting the LDClient means setting the config &amp; user, taking the client online if config.startOnline is true (the default setting), and starting event recording
-Uses the previously set config and user if those parameters are not included. If a config or user was not previously set, uses a default config or user
-Usage:
-     LDClient.shared.start(mobileKey: appMobileKey, config: appConfig, user: appUser)
-Call this before you want to capture feature flags. The LDClient will not go online until you call this method.
-Subsequent calls to this method cause the LDClient to go offline, reconfigure using the new config &amp; user (if supplied), and then go online if it was online when start was called</p>
+                        <p>Starts the LDClient using the passed in <code>mobileKey</code>, <code><a href="../Classes/LDClient.html#/s:12LaunchDarkly8LDClientC6configAA8LDConfigVv">config</a></code>, &amp; <code><a href="../Classes/LDClient.html#/s:12LaunchDarkly8LDClientC4userAA6LDUserVv">user</a></code>. Call this before requesting feature flag values. The LDClient will not go online until you call this method.</p>
+
+<p>Starting the LDClient means setting the <code><a href="../Classes/LDClient.html#/s:12LaunchDarkly8LDClientC6configAA8LDConfigVv">config</a></code> &amp; <code><a href="../Classes/LDClient.html#/s:12LaunchDarkly8LDClientC4userAA6LDUserVv">user</a></code>, setting the client online if <code>config.startOnline</code> is true (the default setting), and starting event recording. The client app must start the LDClient before it will report feature flag values. If a client does not call start, the LDClient will only report fallback values, and no events will be recorded.</p>
+
+<p>If the start call omits the <code><a href="../Classes/LDClient.html#/s:12LaunchDarkly8LDClientC6configAA8LDConfigVv">config</a></code> or <code><a href="../Classes/LDClient.html#/s:12LaunchDarkly8LDClientC4userAA6LDUserVv">user</a></code>, the LDClient uses the previously set <code><a href="../Classes/LDClient.html#/s:12LaunchDarkly8LDClientC6configAA8LDConfigVv">config</a></code> and <code><a href="../Classes/LDClient.html#/s:12LaunchDarkly8LDClientC4userAA6LDUserVv">user</a></code>, or defaults if they were never set.</p>
+
+<p>If the start call includes the optional <code>completion</code> closure, LDClient calls the <code>completion</code> closure when <code>setOnline(_: completion:)</code> embedded in the start method completes. The start call is subject to throttling delays, therefore the <code>completion</code> closure call may be delayed.</p>
+
+<p>Subsequent calls to this method cause the LDClient to go offline, reconfigure using the new <code><a href="../Classes/LDClient.html#/s:12LaunchDarkly8LDClientC6configAA8LDConfigVv">config</a></code> &amp; <code><a href="../Classes/LDClient.html#/s:12LaunchDarkly8LDClientC4userAA6LDUserVv">user</a></code> (if supplied), and then go online if it was online when start was called. Normally there should only be one call to start. To change <code><a href="../Classes/LDClient.html#/s:12LaunchDarkly8LDClientC6configAA8LDConfigVv">config</a></code> or <code><a href="../Classes/LDClient.html#/s:12LaunchDarkly8LDClientC4userAA6LDUserVv">user</a></code>, set them directly on LDClient.</p>
 
                       </div>
                       <div class="declaration">
@@ -416,6 +468,61 @@ Subsequent calls to this method cause the LDClient to go offline, reconfigure us
                           <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">func</span> <span class="nf">start</span><span class="p">(</span><span class="nv">mobileKey</span><span class="p">:</span> <span class="kt">String</span><span class="p">,</span> <span class="nv">config</span><span class="p">:</span> <span class="kt"><a href="../Structs/LDConfig.html">LDConfig</a></span><span class="p">?</span> <span class="o">=</span> <span class="kc">nil</span><span class="p">,</span> <span class="nv">user</span><span class="p">:</span> <span class="kt"><a href="../Structs/LDUser.html">LDUser</a></span><span class="p">?</span> <span class="o">=</span> <span class="kc">nil</span><span class="p">,</span> <span class="nv">completion</span><span class="p">:</span> <span class="p">(()</span> <span class="o">-&gt;</span> <span class="kt">Void</span><span class="p">)?</span> <span class="o">=</span> <span class="kc">nil</span><span class="p">)</span></code></pre>
 
                         </div>
+                      </div>
+                      <div>
+                        <h4>Parameters</h4>
+                        <table class="graybox">
+                          <tbody>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>mobileKey</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>The Mobile key from your <a href="app.launchdarkly.com">LaunchDarkly Account</a> settings (on the left at the bottom). If you have multiple projects be sure to choose the correct Mobile key.</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>config</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>The LDConfig set with the desired configuration. If omitted, LDClient retains the previously set config, or default if one was never set. (Optional)</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>user</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>The LDUser set with the desired user. If omitted, LDClient retains the previously set user, or default if one was never set. (Optional)</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>completion</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>Closure called when the embedded <code>setOnline</code> call completes, subject to throttling delays. (Optional)</p>
+                                </div>
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
                       </div>
                     </section>
                   </div>
@@ -433,10 +540,9 @@ Subsequent calls to this method cause the LDClient to go offline, reconfigure us
                     <section class="section">
                       <div class="pointer"></div>
                       <div class="abstract">
-                        <p>Stops the LDClient. Stopping the client means take the client offline and stop recording events.
-Usage:
-     LDClient.shared.stop()
-After the client has stopped, variation requests will be answered with the last received feature flags.</p>
+                        <p>Stops the LDClient. Stopping the client means the LDClient goes offline and stops recording events. LDClient will no longer provide feature flag values, only returning fallback values.</p>
+
+<p>There is almost no reason to stop the LDClient. Normally, set the LDClient offline to stop communication with the LaunchDarkly servers. Stop the LDClient to stop recording events. There is no need to stop the LDClient prior to suspending, moving to the background, or terminating the app. The SDK will respond to these events as the system requires and as configured in LDConfig.</p>
 
                       </div>
                       <div class="declaration">
@@ -444,36 +550,6 @@ After the client has stopped, variation requests will be answered with the last 
                         <div class="language">
                           <p class="aside-title">Swift</p>
                           <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">func</span> <span class="nf">stop</span><span class="p">()</span></code></pre>
-
-                        </div>
-                      </div>
-                    </section>
-                  </div>
-                </li>
-                <li class="item">
-                  <div>
-                    <code>
-                    <a name="/s:12LaunchDarkly8LDClientC10trackEventySS3key_s10DictionaryVySSypGSg4datatF"></a>
-                    <a name="//apple_ref/swift/Method/trackEvent(key:data:)" class="dashAnchor"></a>
-                    <a class="token" href="#/s:12LaunchDarkly8LDClientC10trackEventySS3key_s10DictionaryVySSypGSg4datatF">trackEvent(key:data:)</a>
-                    </code>
-                  </div>
-                  <div class="height-container">
-                    <div class="pointer-container"></div>
-                    <section class="section">
-                      <div class="pointer"></div>
-                      <div class="abstract">
-                        <p>Adds an event to the LDClient event store. LDClient periodically transmits events to LD based on the frequency set in LDConfig.eventFlushIntervalMillis.
-Usage:   LDClient.shared.trackEvent(key: <q>app-event-key</q>, data: appEventData)
-Once an app has called trackEvent(), the app cannot remove the event from the event store.
-If the client is offline, the client stores the event until the app takes the client online, and the client has transmitted the event.</p>
-
-                      </div>
-                      <div class="declaration">
-                        <h4>Declaration</h4>
-                        <div class="language">
-                          <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">func</span> <span class="nf">trackEvent</span><span class="p">(</span><span class="nv">key</span><span class="p">:</span> <span class="kt">String</span><span class="p">,</span> <span class="nv">data</span><span class="p">:</span> <span class="p">[</span><span class="kt">String</span><span class="p">:</span> <span class="kt">Any</span><span class="p">]?</span> <span class="o">=</span> <span class="kc">nil</span><span class="p">)</span></code></pre>
 
                         </div>
                       </div>
@@ -504,25 +580,36 @@ If the client is offline, the client stores the event until the app takes the cl
                     <section class="section">
                       <div class="pointer"></div>
                       <div class="abstract">
-                        <p>Usage</p>
+                        <p>Returns the variation for the given feature flag. If the flag does not exist, cannot be cast to the correct return type, or the LDClient is not started, returns the fallback value.</p>
 
-<p>let boolFeatureFlagValue = LDClient.shared.variation(forKey: <q>bool-flag-key</q>, fallback: false) //boolFeatureFlagValue is a Bool</p>
+<p>A <em>variation</em> is a specific flag value. For example a boolean feature flag has 2 variations, <em>true</em> and <em>false</em>. You can create feature flags with more than 2 variations using other feature flag types. See <code><a href="../Enums/LDFlagValue.html">LDFlagValue</a></code> for the available types.</p>
 
-<p>Pay close attention to the type of the fallback value for collections. If the fallback collection type is more restrictive than the feature flag, the sdk will return the fallback even though the
- feature flag is present because it cannot convert the feature flag into the type requested via the fallback value.</p>
+<p>The LDClient must be started in order to return feature flag values. If the LDClient is not started, it will always return the fallback value. The LDClient must be online to keep the feature flag values up-to-date.</p>
 
-<p>For example, if the feature flag has the type [LDFlagKey: Any], but the fallback has the type [LDFlagKey: Int], the sdk will not be able to convert the flags into the requested type,
- and will return the fallback value.</p>
+<p>When online, the LDClient has two modes for maintaining feature flag values: <em>streaming</em> and <em>polling</em>. The client app requests the mode by setting the <code>config.streamingMode</code>, see <code><a href="../Structs/LDConfig.html">LDConfig</a></code> for details.</p>
 
-<p>To avoid this, make sure the fallback type matches the expected feature flag type. Either specify the fallback value type to be the feature flag type, or cast the fallback value to the feature
- flag type prior to making the variation request</p>
+<ul>
+<li>In streaming mode, the LDClient opens a long-running connection to LaunchDarkly&rsquo;s streaming server (called <em>clientstream</em>). When a flag value changes on the server, the clientstream notifies the SDK to update the value. Streaming mode is not available on watchOS. On iOS and tvOS, the client app must be running in the foreground to connect to clientstream. On macOS the client app may run in either foreground or background to connect to clientstream. If streaming mode is not available, the SDK reverts to polling mode.</li>
+<li>In polling mode, the LDClient requests feature flags from LaunchDarkly&rsquo;s app server at regular intervals defined in the LDConfig. When a flag value changes on the server, the LDClient will learn of the change the next time the SDK requests feature flags.</li>
+</ul>
 
-<p>In the above example, either specify that the fallback value&rsquo;s type is [LDFlagKey: Any]:</p>
-<pre class="highlight swift"><code> <span class="k">let</span> <span class="nv">fallbackValue</span><span class="p">:</span> <span class="p">[</span><span class="kt">LDFlagKey</span><span class="p">:</span> <span class="kt">Any</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="s">"a"</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span> <span class="s">"b"</span><span class="p">:</span> <span class="mi">2</span><span class="p">]</span>
+<p>When offline, LDClient closes the clientstream connection and no longer requests feature flags. The LDClient will return feature flag values (assuming the LDClient was started), which may not match the values set on the LaunchDarkly server.</p>
+
+<p>A call to <code>variation</code> records events reported later. Recorded events allow clients to analyze usage and assist in debugging issues.</p>
+<h3 id='usage' class='heading'>Usage</h3>
+<pre class="highlight swift"><code><span class="k">let</span> <span class="nv">boolFeatureFlagValue</span> <span class="o">=</span> <span class="kt">LDClient</span><span class="o">.</span><span class="n">shared</span><span class="o">.</span><span class="nf">variation</span><span class="p">(</span><span class="nv">forKey</span><span class="p">:</span> <span class="s">"bool-flag-key"</span><span class="p">,</span> <span class="nv">fallback</span><span class="p">:</span> <span class="kc">false</span><span class="p">)</span> <span class="c1">//boolFeatureFlagValue is a Bool</span>
+</code></pre>
+
+<p><strong>Important</strong> The fallback value tells the SDK the type of the feature flag. In several cases, the feature flag type cannot be determined by the values sent from the server. It is possible to provide a fallback value with a type that does not match the feature flag value&rsquo;s type. The SDK will attempt to convert the feature flag&rsquo;s value into the type of the fallback value in the variation request. If that cast fails, the SDK will not be able to determine the correct return type, and will always return the fallback value.</p>
+
+<p>Pay close attention to the type of the fallback value for collections. If the fallback collection type is more restrictive than the feature flag, the sdk will return the fallback even though the feature flag is present because it cannot convert the feature flag into the type requested via the fallback value. For example, if the feature flag has the type <code>[LDFlagKey: Any]</code>, but the fallback has the type <code>[LDFlagKey: Int]</code>, the sdk will not be able to convert the flags into the requested type, and will return the fallback value.</p>
+
+<p>To avoid this, make sure the fallback type matches the expected feature flag type. Either specify the fallback value type to be the feature flag type, or cast the fallback value to the feature flag type prior to making the variation request. In the above example, either specify that the fallback value&rsquo;s type is [LDFlagKey: Any]:</p>
+<pre class="highlight swift"><code><span class="k">let</span> <span class="nv">fallbackValue</span><span class="p">:</span> <span class="p">[</span><span class="kt">LDFlagKey</span><span class="p">:</span> <span class="kt">Any</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="s">"a"</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span> <span class="s">"b"</span><span class="p">:</span> <span class="mi">2</span><span class="p">]</span>     <span class="c1">//dictionary type would be [LDFlagKey: Int] without the type specifier</span>
 </code></pre>
 
 <p>or cast the fallback value into the feature flag type prior to calling variation:</p>
-<pre class="highlight swift"><code> <span class="k">let</span> <span class="nv">dictionaryFlagValue</span> <span class="o">=</span> <span class="kt">LDClient</span><span class="o">.</span><span class="n">shared</span><span class="o">.</span><span class="nf">variation</span><span class="p">(</span><span class="nv">forKey</span><span class="p">:</span> <span class="s">"dictionary-key"</span><span class="p">,</span> <span class="nv">fallback</span><span class="p">:</span> <span class="p">[</span><span class="s">"a"</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span> <span class="s">"b"</span><span class="p">:</span> <span class="mi">2</span><span class="p">]</span> <span class="k">as</span> <span class="p">[</span><span class="kt">LDFlagKey</span><span class="p">:</span> <span class="kt">Any</span><span class="p">])</span>
+<pre class="highlight swift"><code><span class="k">let</span> <span class="nv">dictionaryFlagValue</span> <span class="o">=</span> <span class="kt">LDClient</span><span class="o">.</span><span class="n">shared</span><span class="o">.</span><span class="nf">variation</span><span class="p">(</span><span class="nv">forKey</span><span class="p">:</span> <span class="s">"dictionary-key"</span><span class="p">,</span> <span class="nv">fallback</span><span class="p">:</span> <span class="p">[</span><span class="s">"a"</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span> <span class="s">"b"</span><span class="p">:</span> <span class="mi">2</span><span class="p">]</span> <span class="k">as</span> <span class="p">[</span><span class="kt">LDFlagKey</span><span class="p">:</span> <span class="kt">Any</span><span class="p">])</span>  <span class="c1">//cast always succeeds since the destination type is less restrictive</span>
 </code></pre>
 
                       </div>
@@ -533,6 +620,41 @@ If the client is offline, the client stores the event until the app takes the cl
                           <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">func</span> <span class="n">variation</span><span class="o">&lt;</span><span class="kt">T</span><span class="o">&gt;</span><span class="p">(</span><span class="n">forKey</span> <span class="nv">flagKey</span><span class="p">:</span> <span class="kt">LDFlagKey</span><span class="p">,</span> <span class="nv">fallback</span><span class="p">:</span> <span class="kt">T</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kt">T</span> <span class="k">where</span> <span class="kt">T</span> <span class="p">:</span> <span class="kt"><a href="../Protocols/LDFlagValueConvertible.html">LDFlagValueConvertible</a></span></code></pre>
 
                         </div>
+                      </div>
+                      <div>
+                        <h4>Parameters</h4>
+                        <table class="graybox">
+                          <tbody>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>forKey</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>The LDFlagKey for the requested feature flag.</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>fallback</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>The fallback value to return if the feature flag key does not exist.</p>
+                                </div>
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                      <div>
+                        <h4>Return Value</h4>
+                        <p>The requested feature flag value, or the fallback if the flag is missing or cannot be cast to the fallback type, or the client is not started</p>
                       </div>
                     </section>
                   </div>
@@ -550,25 +672,36 @@ If the client is offline, the client stores the event until the app takes the cl
                     <section class="section">
                       <div class="pointer"></div>
                       <div class="abstract">
-                        <p>Usage</p>
+                        <p>Returns the variation and source for the given feature flag as a tuple. If the flag does not exist, cannot be cast to the correct return type, or the LDClient is not started, returns the fallback value and <code>.fallback</code> for the source.</p>
 
-<p>let (boolFeatureFlagValue, boolFeatureFlagSource) = LDClient.shared.variationAndSource(forKey: <q>bool-flag-key</q>, fallback: false)    //boolFeatureFlagValue is a Bool</p>
+<p>A <em>variation</em> is a specific flag value. For example a boolean feature flag has 2 variations, <em>true</em> and <em>false</em>. You can create feature flags with more than 2 variations using other feature flag types. See <code><a href="../Enums/LDFlagValue.html">LDFlagValue</a></code> for the available types.</p>
 
-<p>Pay close attention to the type of the fallback value for collections. If the fallback collection type is more restrictive than the feature flag, the sdk will return the fallback even though the
- feature flag is present because it cannot convert the feature flag into the type requested via the fallback value.</p>
+<p>The LDClient must be started in order to return feature flag values. If the LDClient is not started, it will always return the fallback value. The LDClient must be online to keep the feature flag values up-to-date.</p>
 
-<p>For example, if the feature flag has the type [LDFlagKey: Any], but the fallback has the type [LDFlagKey: Int], the sdk will not be able to convert the flags into the requested type,
- and will return the fallback value.</p>
+<p>When online, the LDClient has two modes for maintaining feature flag values: <em>streaming</em> and <em>polling</em>. The client app requests the mode by setting the <code>config.streamingMode</code>, see <code><a href="../Structs/LDConfig.html">LDConfig</a></code> for details.</p>
 
-<p>To avoid this, make sure the fallback type matches the expected feature flag type. Either specify the fallback value type to be the feature flag type, or cast the fallback value to the feature
- flag type prior to making the variation request</p>
+<ul>
+<li>In streaming mode, the LDClient opens a long-running connection to LaunchDarkly&rsquo;s streaming server (called <em>clientstream</em>). When a flag value changes on the server, the clientstream notifies the SDK to update the value. Streaming mode is not available on watchOS. On iOS and tvOS, the client app must be running in the foreground to connect to clientstream. On macOS the client app may run in either foreground or background to connect to clientstream. If streaming mode is not available, the SDK reverts to polling mode.</li>
+<li>In polling mode, the LDClient requests feature flags from LaunchDarkly&rsquo;s app server at regular intervals defined in the LDConfig. When a flag value changes on the server, the LDClient will learn of the change the next time the SDK requests feature flags.</li>
+</ul>
 
-<p>In the above example, either specify that the fallback value&rsquo;s type is [LDFlagKey: Any]:</p>
-<pre class="highlight swift"><code> <span class="k">let</span> <span class="nv">fallbackValue</span><span class="p">:</span> <span class="p">[</span><span class="kt">LDFlagKey</span><span class="p">:</span> <span class="kt">Any</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="s">"a"</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span> <span class="s">"b"</span><span class="p">:</span> <span class="mi">2</span><span class="p">]</span>
+<p>When offline, LDClient closes the clientstream connection and no longer requests feature flags. The LDClient will return feature flag values (assuming the LDClient was started), which may not match the values set on the LaunchDarkly server.</p>
+
+<p>A call to <code>variationAndSource</code> records events reported later. Recorded events allow clients to analyze usage and assist in debugging issues.</p>
+<h3 id='usage' class='heading'>Usage</h3>
+<pre class="highlight swift"><code><span class="k">let</span> <span class="p">(</span><span class="nv">boolFeatureFlagValue</span><span class="p">,</span> <span class="nv">boolFeatureFlagSource</span><span class="p">)</span> <span class="o">=</span> <span class="kt">LDClient</span><span class="o">.</span><span class="n">shared</span><span class="o">.</span><span class="nf">variationAndSource</span><span class="p">(</span><span class="nv">forKey</span><span class="p">:</span> <span class="s">"bool-flag-key"</span><span class="p">,</span> <span class="nv">fallback</span><span class="p">:</span> <span class="kc">false</span><span class="p">)</span>    <span class="c1">//boolFeatureFlagValue is a Bool</span>
+</code></pre>
+
+<p><strong>Important</strong> The fallback value tells the SDK the type of the feature flag. In several cases, the feature flag type cannot be determined by the values sent from the server. It is possible to provide a fallback value with a type that does not match the feature flag value&rsquo;s type. The SDK will attempt to convert the feature flag&rsquo;s value into the type of the fallback value in the variation request. If that cast fails, the SDK will not be able to determine the correct return type, and will always return the fallback value.</p>
+
+<p>Pay close attention to the type of the fallback value for collections. If the fallback collection type is more restrictive than the feature flag, the sdk will return the fallback even though the feature flag is present because it cannot convert the feature flag into the type requested via the fallback value. For example, if the feature flag has the type <code>[LDFlagKey: Any]</code>, but the fallback has the type <code>[LDFlagKey: Int]</code>, the sdk will not be able to convert the flags into the requested type, and will return the fallback value.</p>
+
+<p>To avoid this, make sure the fallback type matches the expected feature flag type. Either specify the fallback value type to be the feature flag type, or cast the fallback value to the feature flag type prior to making the variation request. In the above example, either specify that the fallback value&rsquo;s type is [LDFlagKey: Any]:</p>
+<pre class="highlight swift"><code><span class="k">let</span> <span class="nv">fallbackValue</span><span class="p">:</span> <span class="p">[</span><span class="kt">LDFlagKey</span><span class="p">:</span> <span class="kt">Any</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="s">"a"</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span> <span class="s">"b"</span><span class="p">:</span> <span class="mi">2</span><span class="p">]</span>     <span class="c1">//dictionary type would be [LDFlagKey: Int] without the type specifier</span>
 </code></pre>
 
 <p>or cast the fallback value into the feature flag type prior to calling variation:</p>
-<pre class="highlight swift"><code> <span class="k">let</span> <span class="p">(</span><span class="nv">dictionaryFlagValue</span><span class="p">,</span> <span class="nv">dictionaryFeatureFlagSource</span><span class="p">)</span> <span class="o">=</span> <span class="kt">LDClient</span><span class="o">.</span><span class="n">shared</span><span class="o">.</span><span class="nf">variationAndSource</span><span class="p">(</span><span class="nv">forKey</span><span class="p">:</span> <span class="s">"dictionary-key"</span><span class="p">,</span> <span class="nv">fallback</span><span class="p">:</span> <span class="p">[</span><span class="s">"a"</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span> <span class="s">"b"</span><span class="p">:</span> <span class="mi">2</span><span class="p">]</span> <span class="k">as</span> <span class="p">[</span><span class="kt">LDFlagKey</span><span class="p">:</span> <span class="kt">Any</span><span class="p">])</span>
+<pre class="highlight swift"><code><span class="k">let</span> <span class="p">(</span><span class="nv">dictionaryFlagValue</span><span class="p">,</span> <span class="nv">dictionaryFeatureFlagSource</span><span class="p">)</span> <span class="o">=</span> <span class="kt">LDClient</span><span class="o">.</span><span class="n">shared</span><span class="o">.</span><span class="nf">variationAndSource</span><span class="p">(</span><span class="nv">forKey</span><span class="p">:</span> <span class="s">"dictionary-key"</span><span class="p">,</span> <span class="nv">fallback</span><span class="p">:</span> <span class="p">[</span><span class="s">"a"</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span> <span class="s">"b"</span><span class="p">:</span> <span class="mi">2</span><span class="p">]</span> <span class="k">as</span> <span class="p">[</span><span class="kt">LDFlagKey</span><span class="p">:</span> <span class="kt">Any</span><span class="p">])</span>  <span class="c1">//cast always succeeds since the destination type is less restrictive</span>
 </code></pre>
 
                       </div>
@@ -579,6 +712,41 @@ If the client is offline, the client stores the event until the app takes the cl
                           <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">func</span> <span class="n">variationAndSource</span><span class="o">&lt;</span><span class="kt">T</span><span class="o">&gt;</span><span class="p">(</span><span class="n">forKey</span> <span class="nv">flagKey</span><span class="p">:</span> <span class="kt">LDFlagKey</span><span class="p">,</span> <span class="nv">fallback</span><span class="p">:</span> <span class="kt">T</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="p">(</span><span class="kt">T</span><span class="p">,</span> <span class="kt"><a href="../Enums/LDFlagValueSource.html">LDFlagValueSource</a></span><span class="p">)</span> <span class="k">where</span> <span class="kt">T</span> <span class="p">:</span> <span class="kt"><a href="../Protocols/LDFlagValueConvertible.html">LDFlagValueConvertible</a></span></code></pre>
 
                         </div>
+                      </div>
+                      <div>
+                        <h4>Parameters</h4>
+                        <table class="graybox">
+                          <tbody>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>forKey</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>The LDFlagKey for the requested feature flag.</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>fallback</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>The fallback value to return if the feature flag key does not exist.</p>
+                                </div>
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                      <div>
+                        <h4>Return Value</h4>
+                        <p>A tuple containing the requested feature flag value and source, or the fallback if the flag is missing or cannot be cast to the fallback type, or the client is not started. If the fallback value is returned, the source is <code>.fallback</code></p>
                       </div>
                     </section>
                   </div>
@@ -607,16 +775,22 @@ If the client is offline, the client stores the event until the app takes the cl
                     <section class="section">
                       <div class="pointer"></div>
                       <div class="abstract">
-                        <p>Usage
-     LDClient.shared.observe(<q>flag-key</q>, owner: self, observer: { <a href="changedFlag">weak self</a> in
-         if let oldValue = Bool(changedFlag.oldValue) {
-             //do something with the oldValue. oldValue &amp; newValue have constructors that take an LDFlagValue for any of the LD supported types
-         }
-         if let newValue = changedFlag.newValue?.baseValue as? Bool {
-             //do something with the newValue. oldValue &amp; newValue can be converted to their base value and cast to their LD supported type
-         }
-     }
-LDClient keeps a weak reference to the owner. Apps should keep only weak references to self in observers to avoid memory leaks</p>
+                        <p>Sets a handler for the specified flag key executed on the specified owner. If the flag&rsquo;s value changes, executes the handler, passing in the <code>changedFlag</code> containing the old and new flag values, and old and new flag value source. See <code><a href="../Structs/LDChangedFlag.html">LDChangedFlag</a></code> for details.</p>
+
+<p>The SDK retains only weak references to owner, which allows the client app to freely destroy change owners without issues. Client apps should use a capture list specifying <code>[weak self]</code> inside handlers to avoid retain cycles causing a memory leak.</p>
+
+<p>The SDK executes handlers on the main thread.</p>
+
+<p>LDChangedFlag does not know the type of oldValue or newValue. The client app should cast the value into the type needed. See <code>variation(forKey: fallback:)</code> for details about the SDK and feature flag types.</p>
+
+<p>SeeAlso: <code><a href="../Structs/LDChangedFlag.html">LDChangedFlag</a></code> and <code><a href="../Classes/LDClient.html#/s:12LaunchDarkly8LDClientC13stopObservingyyXl5owner_tF">stopObserving(owner:)</a></code></p>
+<h3 id='usage' class='heading'>Usage</h3>
+<pre class="highlight swift"><code><span class="kt">LDClient</span><span class="o">.</span><span class="n">shared</span><span class="o">.</span><span class="nf">observe</span><span class="p">(</span><span class="s">"flag-key"</span><span class="p">,</span> <span class="nv">owner</span><span class="p">:</span> <span class="k">self</span><span class="p">)</span> <span class="p">{</span> <span class="p">[</span><span class="k">weak</span> <span class="k">self</span><span class="p">]</span> <span class="p">(</span><span class="n">changedFlag</span><span class="p">)</span> <span class="k">in</span>
+   <span class="k">if</span> <span class="k">let</span> <span class="nv">newValue</span> <span class="o">=</span> <span class="n">changedFlag</span><span class="o">.</span><span class="n">newValue</span> <span class="k">as?</span> <span class="kt">Bool</span> <span class="p">{</span>
+       <span class="c1">//do something with the newValue</span>
+   <span class="p">}</span>
+<span class="p">}</span>
+</code></pre>
 
                       </div>
                       <div class="declaration">
@@ -626,6 +800,49 @@ LDClient keeps a weak reference to the owner. Apps should keep only weak referen
                           <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">func</span> <span class="nf">observe</span><span class="p">(</span><span class="n">_</span> <span class="nv">key</span><span class="p">:</span> <span class="kt">LDFlagKey</span><span class="p">,</span> <span class="nv">owner</span><span class="p">:</span> <span class="kt">LDFlagChangeOwner</span><span class="p">,</span> <span class="nv">handler</span><span class="p">:</span> <span class="kd">@escaping</span> <span class="kt">LDFlagChangeHandler</span><span class="p">)</span></code></pre>
 
                         </div>
+                      </div>
+                      <div>
+                        <h4>Parameters</h4>
+                        <table class="graybox">
+                          <tbody>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>key</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>The LDFlagKey for the flag to observe.</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>owner</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>The LDFlagChangeOwner which will execute the handler. The SDK retains a weak reference to the owner.</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>handler</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>The closure the SDK will execute when the feature flag changes.</p>
+                                </div>
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
                       </div>
                     </section>
                   </div>
@@ -643,14 +860,23 @@ LDClient keeps a weak reference to the owner. Apps should keep only weak referen
                     <section class="section">
                       <div class="pointer"></div>
                       <div class="abstract">
-                        <p>Usage
-     LDClient.shared.observe(flagKeys, owner: self, observer: { (changedFlags) in
-         //There will be an LDChangedFlag entry in changedFlags for each changed flag. The closure will only be called once regardless of how many flags changed.
-         if let someChangedFlag = changedFlags[<q>some-flag-key</q>] {
-             //do something with someChangedFlag
-         }
-     }
- changedFlags is a [LDFlagKey: LDChangedFlag]</p>
+                        <p>Sets a handler for the specified flag keys executed on the specified owner. If any observed flag&rsquo;s value changes, executes the handler 1 time, passing in a dictionary of [LDFlagKey: LDChangedFlag] containing the old and new flag values, and old and new flag value source. See <code><a href="../Structs/LDChangedFlag.html">LDChangedFlag</a></code> for details.</p>
+
+<p>The SDK retains only weak references to owner, which allows the client app to freely destroy change owners without issues. Client apps should use a capture list specifying <code>[weak self]</code> inside handlers to avoid retain cycles causing a memory leak.</p>
+
+<p>The SDK executes handlers on the main thread.</p>
+
+<p>LDChangedFlag does not know the type of oldValue or newValue. The client app should cast the value into the type needed. See <code>variation(forKey: fallback:)</code> for details about the SDK and feature flag types.</p>
+
+<p>SeeAlso: <code><a href="../Structs/LDChangedFlag.html">LDChangedFlag</a></code> and <code><a href="../Classes/LDClient.html#/s:12LaunchDarkly8LDClientC13stopObservingyyXl5owner_tF">stopObserving(owner:)</a></code></p>
+<h3 id='usage' class='heading'>Usage</h3>
+<pre class="highlight swift"><code><span class="kt">LDClient</span><span class="o">.</span><span class="n">shared</span><span class="o">.</span><span class="nf">observe</span><span class="p">(</span><span class="n">flagKeys</span><span class="p">,</span> <span class="nv">owner</span><span class="p">:</span> <span class="k">self</span><span class="p">)</span> <span class="p">{</span> <span class="p">[</span><span class="k">weak</span> <span class="k">self</span><span class="p">]</span> <span class="p">(</span><span class="n">changedFlags</span><span class="p">)</span> <span class="k">in</span>     <span class="c1">// changedFlags is a [LDFlagKey: LDChangedFlag]</span>
+   <span class="c1">//There will be an LDChangedFlag entry in changedFlags for each changed flag. The closure will only be called once regardless of how many flags changed.</span>
+   <span class="k">if</span> <span class="k">let</span> <span class="nv">someChangedFlag</span> <span class="o">=</span> <span class="n">changedFlags</span><span class="p">[</span><span class="s">"some-flag-key"</span><span class="p">]</span> <span class="p">{</span>    <span class="c1">// someChangedFlag is a LDChangedFlag</span>
+       <span class="c1">//do something with someChangedFlag</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+</code></pre>
 
                       </div>
                       <div class="declaration">
@@ -660,6 +886,49 @@ LDClient keeps a weak reference to the owner. Apps should keep only weak referen
                           <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">func</span> <span class="nf">observe</span><span class="p">(</span><span class="n">_</span> <span class="nv">keys</span><span class="p">:</span> <span class="p">[</span><span class="kt">LDFlagKey</span><span class="p">],</span> <span class="nv">owner</span><span class="p">:</span> <span class="kt">LDFlagChangeOwner</span><span class="p">,</span> <span class="nv">handler</span><span class="p">:</span> <span class="kd">@escaping</span> <span class="kt">LDFlagCollectionChangeHandler</span><span class="p">)</span></code></pre>
 
                         </div>
+                      </div>
+                      <div>
+                        <h4>Parameters</h4>
+                        <table class="graybox">
+                          <tbody>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>keys</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>An array of LDFlagKeys for the flags to observe.</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>owner</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>The LDFlagChangeOwner which will execute the handler. The SDK retains a weak reference to the owner.</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>handler</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>The LDFlagCollectionChangeHandler the SDK will execute 1 time when any of the observed feature flags change.</p>
+                                </div>
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
                       </div>
                     </section>
                   </div>
@@ -677,14 +946,23 @@ LDClient keeps a weak reference to the owner. Apps should keep only weak referen
                     <section class="section">
                       <div class="pointer"></div>
                       <div class="abstract">
-                        <p>Usage
-     LDClient.shared.observeAll(owner: self, observer: { (changedFlags) in
-         //There will be an LDChangedFlag entry in changedFlags for each changed flag. The closure will only be called once regardless of how many flags changed.
-         if let someChangedFlag = changedFlags[<q>some-flag-key</q>] {
-             //do something with someChangedFlag
-         }
-     }
- changedFlags is a [LDFlagKey: LDChangedFlag]</p>
+                        <p>Sets a handler for all flag keys executed on the specified owner. If any flag&rsquo;s value changes, executes the handler 1 time, passing in a dictionary of [LDFlagKey: LDChangedFlag] containing the old and new flag values, and old and new flag value source. See <code><a href="../Structs/LDChangedFlag.html">LDChangedFlag</a></code> for details.</p>
+
+<p>The SDK retains only weak references to owner, which allows the client app to freely destroy change owners without issues. Client apps should use a capture list specifying <code>[weak self]</code> inside handlers to avoid retain cycles causing a memory leak.</p>
+
+<p>The SDK executes handlers on the main thread.</p>
+
+<p>LDChangedFlag does not know the type of oldValue or newValue. The client app should cast the value into the type needed. See <code>variation(forKey: fallback:)</code> for details about the SDK and feature flag types.</p>
+
+<p>SeeAlso: <code><a href="../Structs/LDChangedFlag.html">LDChangedFlag</a></code> and <code><a href="../Classes/LDClient.html#/s:12LaunchDarkly8LDClientC13stopObservingyyXl5owner_tF">stopObserving(owner:)</a></code></p>
+<h3 id='usage' class='heading'>Usage</h3>
+<pre class="highlight swift"><code><span class="kt">LDClient</span><span class="o">.</span><span class="n">shared</span><span class="o">.</span><span class="nf">observeAll</span><span class="p">(</span><span class="nv">owner</span><span class="p">:</span> <span class="k">self</span><span class="p">)</span> <span class="p">{</span> <span class="p">[</span><span class="k">weak</span> <span class="k">self</span><span class="p">]</span> <span class="p">(</span><span class="n">changedFlags</span><span class="p">)</span> <span class="k">in</span>     <span class="c1">// changedFlags is a [LDFlagKey: LDChangedFlag]</span>
+   <span class="c1">//There will be an LDChangedFlag entry in changedFlags for each changed flag. The closure will only be called once regardless of how many flags changed.</span>
+   <span class="k">if</span> <span class="k">let</span> <span class="nv">someChangedFlag</span> <span class="o">=</span> <span class="n">changedFlags</span><span class="p">[</span><span class="s">"some-flag-key"</span><span class="p">]</span> <span class="p">{</span>    <span class="c1">// someChangedFlag is a LDChangedFlag</span>
+       <span class="c1">//do something with someChangedFlag</span>
+   <span class="p">}</span>
+<span class="p">}</span>
+</code></pre>
 
                       </div>
                       <div class="declaration">
@@ -694,6 +972,37 @@ LDClient keeps a weak reference to the owner. Apps should keep only weak referen
                           <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">func</span> <span class="nf">observeAll</span><span class="p">(</span><span class="nv">owner</span><span class="p">:</span> <span class="kt">LDFlagChangeOwner</span><span class="p">,</span> <span class="nv">handler</span><span class="p">:</span> <span class="kd">@escaping</span> <span class="kt">LDFlagCollectionChangeHandler</span><span class="p">)</span></code></pre>
 
                         </div>
+                      </div>
+                      <div>
+                        <h4>Parameters</h4>
+                        <table class="graybox">
+                          <tbody>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>owner</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>The LDFlagChangeOwner which will execute the handler. The SDK retains a weak reference to the owner.</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>handler</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>The LDFlagCollectionChangeHandler the SDK will execute 1 time when any of the observed feature flags change.</p>
+                                </div>
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
                       </div>
                     </section>
                   </div>
@@ -711,7 +1020,20 @@ LDClient keeps a weak reference to the owner. Apps should keep only weak referen
                     <section class="section">
                       <div class="pointer"></div>
                       <div class="abstract">
-                        <p>Sets a handler called when a flag update leaves the flags unchanged from their previous values.</p>
+                        <p>Sets a handler executed when a flag update leaves the flags unchanged from their previous values.</p>
+
+<p>This handler can only ever be called when the LDClient is polling.</p>
+
+<p>The SDK retains only weak references to owner, which allows the client app to freely destroy change owners without issues. Client apps should use a capture list specifying <code>[weak self]</code> inside handlers to avoid retain cycles causing a memory leak.</p>
+
+<p>The SDK executes handlers on the main thread.</p>
+
+<p>SeeAlso: <code><a href="../Classes/LDClient.html#/s:12LaunchDarkly8LDClientC13stopObservingyyXl5owner_tF">stopObserving(owner:)</a></code></p>
+<h3 id='usage' class='heading'>Usage</h3>
+<pre class="highlight swift"><code><span class="kt">LDClient</span><span class="o">.</span><span class="n">shared</span><span class="o">.</span><span class="nf">observeFlagsUnchanged</span><span class="p">(</span><span class="nv">owner</span><span class="p">:</span> <span class="k">self</span><span class="p">)</span> <span class="p">{</span> <span class="p">[</span><span class="k">weak</span> <span class="k">self</span><span class="p">]</span> <span class="k">in</span>
+   <span class="c1">//do something after the flags were not updated. The closure will be called once on the main thread if the client is polling and the poll did not change any flag values.</span>
+<span class="p">}</span>
+</code></pre>
 
                       </div>
                       <div class="declaration">
@@ -721,6 +1043,37 @@ LDClient keeps a weak reference to the owner. Apps should keep only weak referen
                           <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">func</span> <span class="nf">observeFlagsUnchanged</span><span class="p">(</span><span class="nv">owner</span><span class="p">:</span> <span class="kt">LDFlagChangeOwner</span><span class="p">,</span> <span class="nv">handler</span><span class="p">:</span> <span class="kd">@escaping</span> <span class="kt">LDFlagsUnchangedHandler</span><span class="p">)</span></code></pre>
 
                         </div>
+                      </div>
+                      <div>
+                        <h4>Parameters</h4>
+                        <table class="graybox">
+                          <tbody>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>owner</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>The LDFlagChangeOwner which will execute the handler. The SDK retains a weak reference to the owner.</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>handler</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>The LDFlagsUnchangedHandler the SDK will execute 1 time when a flag request completes with no flags changed.</p>
+                                </div>
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
                       </div>
                     </section>
                   </div>
@@ -740,6 +1093,8 @@ LDClient keeps a weak reference to the owner. Apps should keep only weak referen
                       <div class="abstract">
                         <p>Removes all observers for the given owner, including the flagsUnchangedObserver</p>
 
+<p>The client app does not have to call this method. If the client app deinits a LDFlagChangeOwner, the SDK will automatically remove its handlers without ever calling them again.</p>
+
                       </div>
                       <div class="declaration">
                         <h4>Declaration</h4>
@@ -748,6 +1103,25 @@ LDClient keeps a weak reference to the owner. Apps should keep only weak referen
                           <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">func</span> <span class="nf">stopObserving</span><span class="p">(</span><span class="nv">owner</span><span class="p">:</span> <span class="kt">LDFlagChangeOwner</span><span class="p">)</span></code></pre>
 
                         </div>
+                      </div>
+                      <div>
+                        <h4>Parameters</h4>
+                        <table class="graybox">
+                          <tbody>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>owner</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>The LDFlagChangeOwner owning the handlers to remove, whether a flag change handler or flags unchanged handler.</p>
+                                </div>
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
                       </div>
                     </section>
                   </div>
@@ -765,7 +1139,7 @@ LDClient keeps a weak reference to the owner. Apps should keep only weak referen
                     <section class="section">
                       <div class="pointer"></div>
                       <div class="abstract">
-                        <p>Called if the client is unable to contact the server</p>
+                        <p>Sets a closure called if the client is unable to contact the LaunchDarkly server. Unlike the observers, only 1 closure can be set at any given time. The SDK keeps a strong reference to the closure. Client apps should take care to remove the closure prior to deinit on the owner in order to avoid the SDK causing an object to not be destroyed when expected.</p>
 
                       </div>
                       <div class="declaration">
@@ -775,6 +1149,83 @@ LDClient keeps a weak reference to the owner. Apps should keep only weak referen
                           <pre class="highlight swift"><code><span class="kd">public</span> <span class="k">var</span> <span class="nv">onServerUnavailable</span><span class="p">:</span> <span class="p">(()</span> <span class="o">-&gt;</span> <span class="kt">Void</span><span class="p">)?</span> <span class="p">{</span> <span class="k">get</span> <span class="k">set</span> <span class="p">}</span></code></pre>
 
                         </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+              </ul>
+            </div>
+            <div class="task-group">
+              <div class="task-name-container">
+                <a name="/Events"></a>
+                <a name="//apple_ref/swift/Section/Events" class="dashAnchor"></a>
+                <a href="#/Events">
+                  <h3 class="section-name">Events</h3>
+                </a>
+              </div>
+              <ul class="item-container">
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:12LaunchDarkly8LDClientC10trackEventySS3key_s10DictionaryVySSypGSg4datatF"></a>
+                    <a name="//apple_ref/swift/Method/trackEvent(key:data:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:12LaunchDarkly8LDClientC10trackEventySS3key_s10DictionaryVySSypGSg4datatF">trackEvent(key:data:)</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Adds a custom event to the LDClient event store. A client app can set a tracking event to allow client customized data analysis. Once an app has called <code>trackEvent</code>, the app cannot remove the event from the event store.</p>
+
+<p>LDClient periodically transmits events to LaunchDarkly based on the frequency set in LDConfig.eventFlushIntervalMillis. The LDClient must be started and online. Ths SDK stores events tracked while the LDClient is offline, but started.</p>
+
+<p>Once the SDK&rsquo;s event store is full, the SDK discards events until they can be reported to LaunchDarkly. Configure the size of the event store using <code>eventCapacity</code> on the <code><a href="../Classes/LDClient.html#/s:12LaunchDarkly8LDClientC6configAA8LDConfigVv">config</a></code>. See <code><a href="../Structs/LDConfig.html">LDConfig</a></code> for details.</p>
+<h3 id='usage' class='heading'>Usage</h3>
+<pre class="highlight swift"><code><span class="k">let</span> <span class="nv">appEventData</span> <span class="o">=</span> <span class="p">[</span><span class="s">"some-custom-key: "</span><span class="n">some</span><span class="o">-</span><span class="n">custom</span><span class="o">-</span><span class="n">value</span><span class="s">", "</span><span class="n">another</span><span class="o">-</span><span class="n">custom</span><span class="o">-</span><span class="n">key</span><span class="s">": 7]
+LDClient.shared.trackEvent(key: "</span><span class="n">app</span><span class="o">-</span><span class="n">event</span><span class="o">-</span><span class="n">key</span><span class="s">", data: appEventData)
+</span></code></pre>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">func</span> <span class="nf">trackEvent</span><span class="p">(</span><span class="nv">key</span><span class="p">:</span> <span class="kt">String</span><span class="p">,</span> <span class="nv">data</span><span class="p">:</span> <span class="p">[</span><span class="kt">String</span><span class="p">:</span> <span class="kt">Any</span><span class="p">]?</span> <span class="o">=</span> <span class="kc">nil</span><span class="p">)</span></code></pre>
+
+                        </div>
+                      </div>
+                      <div>
+                        <h4>Parameters</h4>
+                        <table class="graybox">
+                          <tbody>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>key</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>The key for the event. The SDK does nothing with the key, which can be any string the client app sends</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>data</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>The data for the event. The SDK does nothing with the data, which can be any [String: Any] the client app sends. (Optional)</p>
+                                </div>
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
                       </div>
                     </section>
                   </div>

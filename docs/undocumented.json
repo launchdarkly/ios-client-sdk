@@ -1,13 +1,6 @@
 {
   "warnings": [
     {
-      "file": "/Users/markpokorny/Documents/Development/launchDarkly/ios-client-swift-private/Darkly/Darkly/LDClient.swift",
-      "line": 19,
-      "symbol": "LDClient.shared",
-      "symbol_kind": "source.lang.swift.decl.var.static",
-      "warning": "undocumented"
-    },
-    {
       "file": "/Users/markpokorny/Documents/Development/launchDarkly/ios-client-swift-private/Darkly/Darkly/Models/FeatureFlag/FlagChange/LDChangedFlag.swift",
       "line": 11,
       "symbol": "LDChangedFlag",

@@ -208,7 +208,41 @@
                     <section class="section">
                       <div class="pointer"></div>
                       <div class="abstract">
-                        <p>The LDClient is the heart of the SDK, providing client apps access to LaunchDarkly services. This singleton provides the ability to set a configuration (LDConfig) that controls how the client talks to LD servers, and a user (LDUser) that provides finer control on the feature flag values delivered to the SDK. Once the LDClient has started, it connects to LD&rsquo;s servers to get the feature flag values you set in the Dashboard.</p>
+                        <p>The LDClient is the heart of the SDK, providing client apps running iOS, watchOS, macOS, or tvOS access to LaunchDarkly services. This singleton provides the ability to set a configuration (LDConfig) that controls how the LDClient talks to LaunchDarkly servers, and a user (LDUser) that provides finer control on the feature flag values delivered to LDClient. Once the LDClient has started, it connects to LaunchDarkly&rsquo;s servers to get the feature flag values you set in the Dashboard.</p>
+<h2 id='usage' class='heading'>Usage</h2>
+<h3 id='startup' class='heading'>Startup</h3>
+
+<ol>
+<li>If desired, configure a <code><a href="Structs/LDConfig.html">LDConfig</a></code> and <code><a href="Structs/LDUser.html">LDUser</a></code>. While neither are required, both give you additional control over the feature flags delivered to the LDClient. See <code><a href="Structs/LDConfig.html">LDConfig</a></code> &amp; <code><a href="Structs/LDUser.html">LDUser</a></code> for more details.</li>
+<li>Call <code>LDClient.shared.start(mobileKey: config: user: completion:)</code>
+
+<ul>
+<li>The mobileKey comes from your LaunchDarkly Account settings (on the left at the bottom). If you have multiple projects be sure to choose the correct Mobile key.</li>
+<li>If you do not pass in a LDConfig or LDUser, LDCLient creates a default for you</li>
+<li>The optional completion closure allows the LDClient to notify your app when it has gone online.</li>
+</ul></li>
+<li>Because the LDClient is a singleton, you do not have to keep a reference to it in your code.</li>
+</ol>
+<h3 id='getting-feature-flags' class='heading'>Getting Feature Flags</h3>
+
+<p>Once the LDClient has started, it makes your feature flags available using the <code>variation</code> and <code>variationAndSource</code> methods. A <code>variation</code> is a specific flag value. For example a boolean feature flag has 2 variations, <code>true</code> and <code>false</code>. You can create feature flags with more than 2 variations using other feature flag types. See <code><a href="Enums/LDFlagValue.html">LDFlagValue</a></code> for the available types.</p>
+<pre class="highlight swift"><code> <span class="k">let</span> <span class="nv">boolFlag</span> <span class="o">=</span> <span class="kt">LDClient</span><span class="o">.</span><span class="n">shared</span><span class="o">.</span><span class="nf">variation</span><span class="p">(</span><span class="nv">forKey</span><span class="p">:</span> <span class="s">"my-bool-flag"</span><span class="p">,</span> <span class="nv">fallback</span><span class="p">:</span> <span class="kc">false</span><span class="p">)</span>
+</code></pre>
+
+<p>If you need to know the source of the variation provided to you for a specific feature flag, the <code>variationAndSource</code> method returns a tuple with the (value, source) in a single call.</p>
+
+<p>See <code>variation(forKey: fallback:)</code> or <code>variationAndSource(forKey: fallback:)</code> for details</p>
+<h3 id='observing-feature-flags' class='heading'>Observing Feature Flags</h3>
+
+<p>You might need to know when a feature flag value changes. This is not required, you can check the flag&rsquo;s value when you need it.</p>
+
+<p>The LDClient provides several <code>observe</code> methods that allow you to tell the LDClient to notify you when there is a change. There are several options, depending on whether you want to know when a specific flag changes, when any flag in a collection changes, or when a flag doesn&rsquo;t change.</p>
+<pre class="highlight swift"><code> <span class="kt">LDClient</span><span class="o">.</span><span class="n">shared</span><span class="o">.</span><span class="nf">observe</span><span class="p">(</span><span class="s">"flag-key"</span><span class="p">,</span> <span class="nv">owner</span><span class="p">:</span> <span class="k">self</span><span class="p">,</span> <span class="nv">observer</span><span class="p">:</span> <span class="p">{</span> <span class="p">[</span><span class="k">weak</span> <span class="k">self</span><span class="p">]</span> <span class="p">(</span><span class="n">changedFlag</span><span class="p">)</span> <span class="k">in</span>
+    <span class="k">self</span><span class="p">?</span><span class="o">.</span><span class="nf">updateFlag</span><span class="p">(</span><span class="nv">key</span><span class="p">:</span> <span class="s">"flag-key"</span><span class="p">,</span> <span class="nv">changedFlag</span><span class="p">:</span> <span class="n">changedFlag</span><span class="p">)</span>
+ <span class="p">}</span>
+</code></pre>
+
+<p>The <code>changedFlag</code> passed in to the closure contains the old and new value, and the old and new valueSource</p>
 
                         <a href="Classes/LDClient.html" class="slightly-smaller">See more</a>
                       </div>

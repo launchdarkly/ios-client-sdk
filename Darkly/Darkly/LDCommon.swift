@@ -8,6 +8,7 @@
 
 import Foundation
 
+//TODO: Jazzy appears to skip type aliases
 public typealias LDFlagChangeOwner = AnyObject
 public typealias LDFlagKey = String
 typealias UserKey = String
