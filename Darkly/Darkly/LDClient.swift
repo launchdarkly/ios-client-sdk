@@ -516,7 +516,7 @@ extension LDClient: TypeIdentifying { }
         }
 
         public var allFeatureFlagValues: [LDFlagKey: Any]? {
-            guard hasStarted else { return nil}
+            guard hasStarted else { return nil }
             return user.flagStore.featureFlags.flatMapValues { (featureFlag) -> Any? in featureFlag.value }
         }
     }
