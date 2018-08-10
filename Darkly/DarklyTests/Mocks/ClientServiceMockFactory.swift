@@ -90,6 +90,10 @@ struct ClientServiceMockFactory: ClientServiceCreating {
 
     var makeEnvironmentReporterReturnValue: EnvironmentReportingMock = EnvironmentReportingMock()
     func makeEnvironmentReporter() -> EnvironmentReporting {
+        // the code generator is not generating the default, not sure why not //sourcery: DefaultMockValue = .UIApplicationDidEnterBackground
+        // the code generator is not generating the default, not sure why not //sourcery: DefaultMockValue = .UIApplicationWillEnterForeground
+        makeEnvironmentReporterReturnValue.backgroundNotification = .UIApplicationDidEnterBackground
+        makeEnvironmentReporterReturnValue.foregroundNotification = .UIApplicationWillEnterForeground
         return makeEnvironmentReporterReturnValue
     }
 

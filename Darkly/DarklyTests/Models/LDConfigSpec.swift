@@ -81,41 +81,52 @@ final class LDConfigSpec: QuickSpec {
                 }
             }
             context("changing the config values") {
+                var testElements: [(OperatingSystem, LDConfig)]!
                 beforeEach {
-                    config.baseUrl = Constants.alternateMockUrl
-                    config.eventsUrl = Constants.alternateMockUrl
-                    config.streamUrl = Constants.alternateMockUrl
-                    config.eventCapacity = Constants.eventCapacity
-                    config.connectionTimeoutMillis = Constants.connectionTimeoutMillis
-                    config.eventFlushIntervalMillis = Constants.eventFlushIntervalMillis
-                    config.pollIntervalMillis = Constants.pollIntervalMillis
-                    config.backgroundPollIntervalMillis = Constants.backgroundPollIntervalMillis
-                    config.streamingMode = Constants.streamingMode
-                    config.enableBackgroundUpdates = Constants.enableBackgroundUpdates
-                    config.startOnline = Constants.startOnline
-                    config.allUserAttributesPrivate = Constants.allUserAttributesPrivate
-                    config.privateUserAttributes = Constants.privateUserAttributes
-                    config.useReport = Constants.useReport
-                    config.inlineUserInEvents = Constants.inlineUserInEvents
-                    config.isDebugMode = Constants.debugMode
+                    testElements = [(OperatingSystem, LDConfig)]()
+                    OperatingSystem.allOperatingSystems.forEach { (os) in   //iOS, watchOS, & tvOS don't allow enableBackgroundUpdates to change, macOS should
+                        let testContext = TestContext(operatingSystem: os)
+                        config = testContext.subject
+
+                        config.baseUrl = Constants.alternateMockUrl
+                        config.eventsUrl = Constants.alternateMockUrl
+                        config.streamUrl = Constants.alternateMockUrl
+                        config.eventCapacity = Constants.eventCapacity
+                        config.connectionTimeoutMillis = Constants.connectionTimeoutMillis
+                        config.eventFlushIntervalMillis = Constants.eventFlushIntervalMillis
+                        config.pollIntervalMillis = Constants.pollIntervalMillis
+                        config.backgroundPollIntervalMillis = Constants.backgroundPollIntervalMillis
+                        config.streamingMode = Constants.streamingMode
+                        config.enableBackgroundUpdates = Constants.enableBackgroundUpdates
+                        config.startOnline = Constants.startOnline
+                        config.allUserAttributesPrivate = Constants.allUserAttributesPrivate
+                        config.privateUserAttributes = Constants.privateUserAttributes
+                        config.useReport = Constants.useReport
+                        config.inlineUserInEvents = Constants.inlineUserInEvents
+                        config.isDebugMode = Constants.debugMode
+
+                        testElements.append((os, config))
+                    }
                 }
                 it("has the changed config values") {
-                    expect(config.baseUrl) == Constants.alternateMockUrl
-                    expect(config.eventsUrl) == Constants.alternateMockUrl
-                    expect(config.streamUrl) == Constants.alternateMockUrl
-                    expect(config.eventCapacity) == Constants.eventCapacity
-                    expect(config.connectionTimeoutMillis) == Constants.connectionTimeoutMillis
-                    expect(config.eventFlushIntervalMillis) == Constants.eventFlushIntervalMillis
-                    expect(config.pollIntervalMillis) == Constants.pollIntervalMillis
-                    expect(config.backgroundPollIntervalMillis) == Constants.backgroundPollIntervalMillis
-                    expect(config.streamingMode) == Constants.streamingMode
-                    expect(config.enableBackgroundUpdates) == Constants.enableBackgroundUpdates
-                    expect(config.startOnline) == Constants.startOnline
-                    expect(config.allUserAttributesPrivate) == Constants.allUserAttributesPrivate
-                    expect(config.privateUserAttributes) == Constants.privateUserAttributes
-                    expect(config.useReport) == Constants.useReport
-                    expect(config.inlineUserInEvents) == Constants.inlineUserInEvents
-                    expect(config.isDebugMode) == Constants.debugMode
+                    testElements.forEach { (os, config) in
+                        expect(config.baseUrl) == Constants.alternateMockUrl
+                        expect(config.eventsUrl) == Constants.alternateMockUrl
+                        expect(config.streamUrl) == Constants.alternateMockUrl
+                        expect(config.eventCapacity) == Constants.eventCapacity
+                        expect(config.connectionTimeoutMillis) == Constants.connectionTimeoutMillis
+                        expect(config.eventFlushIntervalMillis) == Constants.eventFlushIntervalMillis
+                        expect(config.pollIntervalMillis) == Constants.pollIntervalMillis
+                        expect(config.backgroundPollIntervalMillis) == Constants.backgroundPollIntervalMillis
+                        expect(config.streamingMode) == Constants.streamingMode
+                        expect(config.enableBackgroundUpdates) == os.isBackgroundEnabled    //iOS, watchOS, & tvOS don't allow this to change, macOS should
+                        expect(config.startOnline) == Constants.startOnline
+                        expect(config.allUserAttributesPrivate) == Constants.allUserAttributesPrivate
+                        expect(config.privateUserAttributes) == Constants.privateUserAttributes
+                        expect(config.useReport) == Constants.useReport
+                        expect(config.inlineUserInEvents) == Constants.inlineUserInEvents
+                        expect(config.isDebugMode) == Constants.debugMode
+                    }
                 }
             }
         }
@@ -316,6 +327,9 @@ final class LDConfigSpec: QuickSpec {
             }
             context("when enable background updates differ") {
                 beforeEach {
+                    testContext = TestContext(useStub: true, operatingSystem: OperatingSystem.backgroundEnabledOperatingSystems.first!) //must use a background enabled OS to test inequality
+                    testContext.subject.useReport = true
+
                     otherConfig = testContext.subject
                     otherConfig.enableBackgroundUpdates = !testContext.subject.enableBackgroundUpdates
                 }
@@ -424,22 +438,11 @@ final class LDConfigSpec: QuickSpec {
     private func allowBackgroundUpdatesSpec() {
         var testContext: TestContext!
         describe("enableBackgroundUpdates") {
-            context("when using a debug build") {
-                beforeEach {
-                    testContext = TestContext(useStub: true, isDebugBuild: true)
+            it("enables background updates only on selected operating systems") {
+                for operatingSystem in OperatingSystem.allOperatingSystems {
+                    testContext = TestContext(useStub: true, operatingSystem: operatingSystem)
                     testContext.subject.enableBackgroundUpdates = true
-                }
-                it("enables background updates") {
-                    expect(testContext.subject.enableBackgroundUpdates) == true
-                }
-            }
-            context("when using a production build") {
-                it("enables background updates only on selected operating systems") {
-                    for operatingSystem in OperatingSystem.allOperatingSystems {
-                        testContext = TestContext(useStub: true, operatingSystem: operatingSystem, isDebugBuild: false)
-                        testContext.subject.enableBackgroundUpdates = true
-                        expect(testContext.subject.enableBackgroundUpdates) == operatingSystem.isBackgroundEnabled
-                    }
+                    expect(testContext.subject.enableBackgroundUpdates) == operatingSystem.isBackgroundEnabled
                 }
             }
         }

@@ -9,6 +9,7 @@
 import Foundation
 
 #if os(iOS) || os(watchOS)
+import UIKit
 import WatchKit
 #elseif os(OSX)
 import AppKit
@@ -43,9 +44,9 @@ protocol EnvironmentReporting {
     var systemName: String { get }
     //sourcery: DefaultMockValue = .iOS
     var operatingSystem: OperatingSystem { get }
-    //sourcery: DefaultMockValue = .UIApplicationDidEnterBackground
+    // the code generator is not generating the default, not sure why not //sourcery: DefaultMockValue = .UIApplicationDidEnterBackground
     var backgroundNotification: Notification.Name? { get }
-    //sourcery: DefaultMockValue = .UIApplicationWillEnterForeground
+    // the code generator is not generating the default, not sure why not //sourcery: DefaultMockValue = .UIApplicationWillEnterForeground
     var foregroundNotification: Notification.Name? { get }
     //sourcery: DefaultMockValue = Constants.vendorUUID
     var vendorUUID: String? { get }

@@ -121,7 +121,7 @@ public class LDClient {
         didSet {
             Log.debug(typeName(and: #function) + "new service set")
             eventReporter.service = service
-            flagSynchronizer = serviceFactory.makeFlagSynchronizer(streamingMode: effectiveStreamingMode(runMode: runMode),
+            flagSynchronizer = serviceFactory.makeFlagSynchronizer(streamingMode: effectiveStreamingMode(runMode: runMode, config: config),
                                                                    pollingInterval: config.flagPollingInterval(runMode: runMode),
                                                                    useReport: config.useReport,
                                                                    service: service,
@@ -157,15 +157,15 @@ public class LDClient {
         }
     }
 
-    private func effectiveStreamingMode(runMode: LDClientRunMode) -> LDStreamingMode {
+    private func effectiveStreamingMode(runMode: LDClientRunMode, config: LDConfig) -> LDStreamingMode {
         var reason = ""
-        let streamingMode: LDStreamingMode = runMode == .foreground && config.streamingMode == .streaming && config.allowStreamingMode ? .streaming : .polling
-        if config.streamingMode == .streaming && runMode != .foreground {
-            reason = " LDClient is in background mode."
+        let streamingMode: LDStreamingMode = (runMode == .foreground || config.enableBackgroundUpdates) && config.streamingMode == .streaming && config.allowStreamingMode ? .streaming : .polling
+        if config.streamingMode == .streaming && runMode != .foreground && !config.enableBackgroundUpdates {
+            reason = " LDClient is in background mode with background updates disabled."
         }
         if reason.isEmpty && config.streamingMode == .streaming && !config.allowStreamingMode {
             reason = " LDConfig disallowed streaming mode. "
-            reason += !environmentReporter.operatingSystem.isStreamingEnabled ? "Streaming is not allowed on \(environmentReporter.operatingSystem.rawValue)." : "Unknown reason."
+            reason += !environmentReporter.operatingSystem.isStreamingEnabled ? "Streaming is not allowed on \(environmentReporter.operatingSystem)." : "Unknown reason."
         }
         Log.debug(typeName(and: #function, appending: ": ") + "\(streamingMode)\(reason)")
         return streamingMode
@@ -436,7 +436,7 @@ public class LDClient {
             //if it does match, keeping the synchronizer precludes an extra flag request
             if !flagSynchronizerConfigMatchesConfigAndRunMode {
                 flagSynchronizer.isOnline = false
-                flagSynchronizer = serviceFactory.makeFlagSynchronizer(streamingMode: effectiveStreamingMode(runMode: runMode),
+                flagSynchronizer = serviceFactory.makeFlagSynchronizer(streamingMode: effectiveStreamingMode(runMode: runMode, config: config),
                                                                        pollingInterval: config.flagPollingInterval(runMode: runMode),
                                                                        useReport: config.useReport,
                                                                        service: service,
@@ -446,7 +446,7 @@ public class LDClient {
         }
     }
     private var flagSynchronizerConfigMatchesConfigAndRunMode: Bool {
-        return flagSynchronizer.streamingMode == effectiveStreamingMode(runMode: runMode)
+        return flagSynchronizer.streamingMode == effectiveStreamingMode(runMode: runMode, config: config)
             && (flagSynchronizer.streamingMode == .streaming
                 || flagSynchronizer.streamingMode == .polling && flagSynchronizer.pollingInterval == config.flagPollingInterval(runMode: runMode))
     }
@@ -459,24 +459,27 @@ public class LDClient {
     private(set) var environmentReporter: EnvironmentReporting
     private(set) var throttler: Throttling
 
-    private init() {
-        environmentReporter = serviceFactory.makeEnvironmentReporter()
-        user = LDUser(environmentReporter: environmentReporter)
-        flagCache = serviceFactory.makeUserFlagCache()
+    private init(serviceFactory: ClientServiceCreating? = nil) {
+        if let serviceFactory = serviceFactory {
+            self.serviceFactory = serviceFactory
+        }
+        environmentReporter = self.serviceFactory.makeEnvironmentReporter()
+        flagCache = self.serviceFactory.makeUserFlagCache()
         LDUserWrapper.configureKeyedArchiversToHandleVersion2_3_0AndOlderUserCacheFormat()
-        serviceFactory.makeCacheConverter().convertUserCacheToFlagCache()
-        flagChangeNotifier = serviceFactory.makeFlagChangeNotifier()
-        throttler = serviceFactory.makeThrottler(maxDelay: Throttler.Constants.defaultDelay)
+        self.serviceFactory.makeCacheConverter().convertUserCacheToFlagCache()
+        flagChangeNotifier = self.serviceFactory.makeFlagChangeNotifier()
+        throttler = self.serviceFactory.makeThrottler(maxDelay: Throttler.Constants.defaultDelay)
 
-        //dummy objects replaced by start call
+        //dummy objects replaced by client at start
         config = LDConfig(environmentReporter: environmentReporter)
-        service = serviceFactory.makeDarklyServiceProvider(mobileKey: "", config: config, user: user)
-        flagSynchronizer = serviceFactory.makeFlagSynchronizer(streamingMode: .polling,
-                                                               pollingInterval: config.flagPollInterval,
-                                                               useReport: config.useReport,
-                                                               service: service,
-                                                               onSyncComplete: nil)
-        eventReporter = serviceFactory.makeEventReporter(config: config, service: service)
+        user = LDUser(environmentReporter: environmentReporter)
+        service = self.serviceFactory.makeDarklyServiceProvider(mobileKey: "", config: config, user: user)
+        flagSynchronizer = self.serviceFactory.makeFlagSynchronizer(streamingMode: .polling,
+                                                                    pollingInterval: config.flagPollInterval,
+                                                                    useReport: config.useReport,
+                                                                    service: service,
+                                                                    onSyncComplete: nil)
+        eventReporter = self.serviceFactory.makeEventReporter(config: config, service: service)
 
         if let backgroundNotification = environmentReporter.backgroundNotification {
             NotificationCenter.default.addObserver(self, selector: #selector(didEnterBackground), name: backgroundNotification, object: nil)
@@ -486,20 +489,21 @@ public class LDClient {
         }
     }
 
-    private convenience init(serviceFactory: ClientServiceCreating, runMode: LDClientRunMode) {
-        self.init()
+    private convenience init(serviceFactory: ClientServiceCreating, config: LDConfig, user: LDUser, runMode: LDClientRunMode) {
+        self.init(serviceFactory: serviceFactory)
+        //Setting these inside the init do not trigger the didSet closures
         self.runMode = runMode
-        self.serviceFactory = serviceFactory
-        environmentReporter = serviceFactory.makeEnvironmentReporter()
-        user = LDUser(environmentReporter: environmentReporter)
-        flagChangeNotifier = serviceFactory.makeFlagChangeNotifier()
-        throttler = serviceFactory.makeThrottler(maxDelay: Throttler.Constants.defaultDelay)
+        self.config = config
+        self.user = user
 
-        //dummy objects replaced by start call
-        config = LDConfig(environmentReporter: environmentReporter)
-        flagCache = serviceFactory.makeUserFlagCache()
-        service = serviceFactory.makeDarklyServiceProvider(mobileKey: "", config: config, user: user)
-        eventReporter = serviceFactory.makeEventReporter(config: config, service: service)
+        //dummy objects replaced by client at start
+        service = self.serviceFactory.makeDarklyServiceProvider(mobileKey: "", config: config, user: user)  //didSet not triggered here
+        flagSynchronizer = self.serviceFactory.makeFlagSynchronizer(streamingMode: effectiveStreamingMode(runMode: runMode, config: config),
+                                                                    pollingInterval: config.flagPollingInterval(runMode: runMode),
+                                                                    useReport: config.useReport,
+                                                                    service: service,
+                                                                    onSyncComplete: onSyncComplete)
+        eventReporter = self.serviceFactory.makeEventReporter(config: config, service: service)
     }
 }
 
@@ -507,8 +511,8 @@ extension LDClient: TypeIdentifying { }
 
 #if DEBUG
     extension LDClient {
-        class func makeClient(with serviceFactory: ClientServiceCreating, runMode: LDClientRunMode = .foreground) -> LDClient {
-            return LDClient(serviceFactory: serviceFactory, runMode: runMode)
+        class func makeClient(with serviceFactory: ClientServiceCreating, config: LDConfig, user: LDUser, runMode: LDClientRunMode = .foreground) -> LDClient {
+            return LDClient(serviceFactory: serviceFactory, config: config, user: user, runMode: runMode)
         }
 
         func setRunMode(_ runMode: LDClientRunMode) {

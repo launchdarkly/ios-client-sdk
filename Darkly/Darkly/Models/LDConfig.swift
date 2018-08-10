@@ -126,7 +126,7 @@ public struct LDConfig {
     init(environmentReporter: EnvironmentReporting) {
         minima = Minima(environmentReporter: environmentReporter)
         allowStreamingMode = environmentReporter.operatingSystem.isStreamingEnabled
-        allowBackgroundUpdates = environmentReporter.isDebugBuild || environmentReporter.operatingSystem.isBackgroundEnabled
+        allowBackgroundUpdates = environmentReporter.operatingSystem.isBackgroundEnabled
     }
 
     public init() {
