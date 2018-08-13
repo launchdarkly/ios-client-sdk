@@ -28,7 +28,7 @@ public struct LDConfig {
     }
 
     /// The default values set when a LDConfig is initialized
-    public struct Defaults {
+    struct Defaults {
         /// The default url for making feature flag requests
         static let baseUrl = URL(string: "https://app.launchdarkly.com")!
         /// The default url for making event reports
