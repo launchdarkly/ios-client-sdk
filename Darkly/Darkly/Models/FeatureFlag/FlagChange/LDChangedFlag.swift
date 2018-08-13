@@ -15,7 +15,7 @@ public struct LDChangedFlag {
     public let newValue: Any?
     public let newValueSource: LDFlagValueSource?
     
-    public init(key: LDFlagKey, oldValue: Any?, oldValueSource: LDFlagValueSource?, newValue: Any?, newValueSource: LDFlagValueSource?) {
+    init(key: LDFlagKey, oldValue: Any?, oldValueSource: LDFlagValueSource?, newValue: Any?, newValueSource: LDFlagValueSource?) {
         self.key = key
         self.oldValue = oldValue
         self.oldValueSource = oldValueSource
