@@ -23,7 +23,7 @@
         <a class="header-link" href="../index.html">
           LaunchDarkly Docs
         </a>
-         (35% documented)
+         (41% documented)
       </p>
     
       <p class="header-col--secondary">
@@ -99,10 +99,7 @@
             <a class="nav-group-name-link" href="../LD Protocols.html">LD Protocols</a>
             <ul class="nav-group-tasks">
               <li class="nav-group-task">
-                <a class="nav-group-task-link" href="../Protocols/LDFlagValueConvertible.html">LDFlagValueConvertible</a>
-              </li>
-              <li class="nav-group-task">
-                <a class="nav-group-task-link" href="../Protocols/LDFlagBaseTypeConvertible.html">LDFlagBaseTypeConvertible</a>
+                <a class="nav-group-task-link" href="../LD Protocols.html#/s:12LaunchDarkly22LDFlagValueConvertibleP">LDFlagValueConvertible</a>
               </li>
             </ul>
           </li>
@@ -196,7 +193,8 @@
 
                 </div>
               </div>
-            <p>Undocumented</p>
+            <p>Defines the sources for feature flag values.
+See also: <code><a href="../Classes/LDClient.html#/s:12LaunchDarkly8LDClientC18variationAndSourcex_AA011LDFlagValueF0OtSS6forKey_x8fallbacktAA0gH11ConvertibleRzlF">LDClient.variationAndSource(forKey:fallback:)</a></code> and <code><a href="../Structs/LDChangedFlag.html">LDChangedFlag</a></code></p>
 
           </div>
         </section>
@@ -218,7 +216,7 @@
                     <section class="section">
                       <div class="pointer"></div>
                       <div class="abstract">
-                        <p>Undocumented</p>
+                        <p>Feature flag comes from the server, either the <code>clientstream</code> or a feature flag request</p>
 
                       </div>
                       <div class="declaration">
@@ -245,7 +243,7 @@
                     <section class="section">
                       <div class="pointer"></div>
                       <div class="abstract">
-                        <p>Undocumented</p>
+                        <p>Feature flag comes from the cache. Cached feature flags are used on app launch until the SDK gets the first feature flag update</p>
 
                       </div>
                       <div class="declaration">
@@ -272,7 +270,7 @@
                     <section class="section">
                       <div class="pointer"></div>
                       <div class="abstract">
-                        <p>Undocumented</p>
+                        <p>Feature flag comes from the client provided fallback. The SDK will serve fallback values when the flag key is not found, or when the SDK cannot convert the feature flag to the client provided type. Since the client provides this value in the <code><a href="../Classes/LDClient.html#/s:12LaunchDarkly8LDClientC18variationAndSourcex_AA011LDFlagValueF0OtSS6forKey_x8fallbacktAA0gH11ConvertibleRzlF">LDClient.variationAndSource(forKey:fallback:)</a></code>, an LDChangedFlag will not contain a <code>fallback</code> valueSource</p>
 
                       </div>
                       <div class="declaration">
