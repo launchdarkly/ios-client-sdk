@@ -10,6 +10,7 @@ import Foundation
 
 //Protocol to convert base LDFlagType into an LDFlagValue
 public protocol LDFlagValueConvertible {
+    /// :nodoc:
     func toLDFlagValue() -> LDFlagValue
 }
 

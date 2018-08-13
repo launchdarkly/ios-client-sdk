@@ -24,74 +24,74 @@ public enum LDFlagValue {
 
 // MARK: - Bool
 
-extension LDFlagValue: ExpressibleByBooleanLiteral {
-    public init(_ value: Bool) {
-        self = .bool(value)
-    }
-    
-    public init(booleanLiteral value: Bool) {
-        self.init(value)
-    }
-}
+//extension LDFlagValue: ExpressibleByBooleanLiteral {
+//    init(_ value: Bool) {
+//        self = .bool(value)
+//    }
+//
+//    public init(booleanLiteral value: Bool) {
+//        self.init(value)
+//    }
+//}
 
 // MARK: - Int
 
-extension LDFlagValue: ExpressibleByIntegerLiteral {
-    public init(_ value: Int) {
-        self = .int(value)
-    }
-    
-    public init(integerLiteral value: Int) {
-        self.init(value)
-    }
-}
+//extension LDFlagValue: ExpressibleByIntegerLiteral {
+//    public init(_ value: Int) {
+//        self = .int(value)
+//    }
+//
+//    public init(integerLiteral value: Int) {
+//        self.init(value)
+//    }
+//}
 
 // MARK: - Double
 
-extension LDFlagValue: ExpressibleByFloatLiteral {
-    public init(_ value: FloatLiteralType) {
-        self = .double(value)
-    }
-    
-    public init(floatLiteral value: FloatLiteralType) {
-        self.init(value)
-    }
-}
+//extension LDFlagValue: ExpressibleByFloatLiteral {
+//    public init(_ value: FloatLiteralType) {
+//        self = .double(value)
+//    }
+//
+//    public init(floatLiteral value: FloatLiteralType) {
+//        self.init(value)
+//    }
+//}
 
 // MARK: - String
 
-extension LDFlagValue: ExpressibleByStringLiteral {
-    public init(_ value: StringLiteralType) {
-        self = .string(value)
-    }
-    
-    public init(unicodeScalarLiteral value: StringLiteralType) {
-        self.init(value)
-    }
-    
-    public init(extendedGraphemeClusterLiteral value: StringLiteralType) {
-        self.init(value)
-    }
-    
-    public init(stringLiteral value: StringLiteralType) {
-        self.init(value)
-    }
-}
+//extension LDFlagValue: ExpressibleByStringLiteral {
+//    public init(_ value: StringLiteralType) {
+//        self = .string(value)
+//    }
+//
+//    public init(unicodeScalarLiteral value: StringLiteralType) {
+//        self.init(value)
+//    }
+//
+//    public init(extendedGraphemeClusterLiteral value: StringLiteralType) {
+//        self.init(value)
+//    }
+//
+//    public init(stringLiteral value: StringLiteralType) {
+//        self.init(value)
+//    }
+//}
 
 // MARK: - Array
 
-extension LDFlagValue: ExpressibleByArrayLiteral {
-    public init<Collection: Swift.Collection>(_ collection: Collection) where Collection.Iterator.Element == LDFlagValue {
-        self = .array(Array(collection))
-    }
-    
-    public init(arrayLiteral elements: LDFlagValue...) {
-        self.init(elements)
-    }
-}
+//extension LDFlagValue: ExpressibleByArrayLiteral {
+//    public init<Collection: Swift.Collection>(_ collection: Collection) where Collection.Iterator.Element == LDFlagValue {
+//        self = .array(Array(collection))
+//    }
+//    
+//    public init(arrayLiteral elements: LDFlagValue...) {
+//        self.init(elements)
+//    }
+//}
 
 extension LDFlagValue {
-    public var flagValueArray: [LDFlagValue]? {
+    var flagValueArray: [LDFlagValue]? {
         guard case let .array(array) = self else { return nil }
         return array
     }
@@ -99,29 +99,29 @@ extension LDFlagValue {
 
 // MARK: - Dictionary
 
-extension LDFlagValue: ExpressibleByDictionaryLiteral {
-    public typealias Key = LDFlagKey
-    public typealias Value = LDFlagValue
-    
-    public init<Dictionary: Sequence>(_ keyValuePairs: Dictionary) where Dictionary.Iterator.Element == (Key, Value) {
-        var dictionary = [Key: Value]()
-        for (key, value) in keyValuePairs {
-            dictionary[key] = value
-        }
-        self.init(dictionary)
-    }
-    
-    public init(dictionaryLiteral elements: (Key, Value)...) {
-        self.init(elements)
-    }
-    
-    public init(_ dictionary: Dictionary<Key, Value>) {
-        self = .dictionary(dictionary)
-    }
-}
+//extension LDFlagValue: ExpressibleByDictionaryLiteral {
+//    public typealias Key = LDFlagKey
+//    public typealias Value = LDFlagValue
+//
+//    public init<Dictionary: Sequence>(_ keyValuePairs: Dictionary) where Dictionary.Iterator.Element == (Key, Value) {
+//        var dictionary = [Key: Value]()
+//        for (key, value) in keyValuePairs {
+//            dictionary[key] = value
+//        }
+//        self.init(dictionary)
+//    }
+//
+//    public init(dictionaryLiteral elements: (Key, Value)...) {
+//        self.init(elements)
+//    }
+//
+//    public init(_ dictionary: Dictionary<Key, Value>) {
+//        self = .dictionary(dictionary)
+//    }
+//}
 
 extension LDFlagValue {
-    public var flagValueDictionary: [LDFlagKey: LDFlagValue]? {
+    var flagValueDictionary: [LDFlagKey: LDFlagValue]? {
         guard case let .dictionary(value) = self else { return nil }
         return value
     }

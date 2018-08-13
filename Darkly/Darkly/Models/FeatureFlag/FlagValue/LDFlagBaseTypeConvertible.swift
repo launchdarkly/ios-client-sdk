@@ -8,15 +8,16 @@
 
 import Foundation
 
-//Protocol to convert LDFlagValue into it's Base Type
-public protocol LDFlagBaseTypeConvertible {
+///Protocol to convert LDFlagValue into it's Base Type.
+protocol LDFlagBaseTypeConvertible {
+    ///Failable initializer. Client app developers should not use LDFlagBaseTypeConvertible. The SDK uses this protocol to limit feature flag types to those defined in `LDFlagValue`.
     init?(_ flag: LDFlagValue?)
 }
 
 // MARK: - LDFlagValue
 
 extension LDFlagValue {
-    public var baseValue: LDFlagBaseTypeConvertible? {
+    var baseValue: LDFlagBaseTypeConvertible? {
         switch self {
         case let .bool(value): return value
         case let .int(value): return value
@@ -31,9 +32,8 @@ extension LDFlagValue {
 
 // MARK: - Bool
 
-/// :nodoc:
 extension Bool: LDFlagBaseTypeConvertible {
-    public init?(_ flag: LDFlagValue?) {
+    init?(_ flag: LDFlagValue?) {
         guard let flag = flag,
             case let .bool(bool) = flag
         else { return nil }
@@ -43,9 +43,8 @@ extension Bool: LDFlagBaseTypeConvertible {
 
 // MARK: - Int
 
-/// :nodoc:
 extension Int: LDFlagBaseTypeConvertible {
-    public init?(_ flag: LDFlagValue?) {
+    init?(_ flag: LDFlagValue?) {
         //TODO: Assess whether we need to initialize with a double or string too
         guard let flag = flag,
             case let .int(value) = flag
@@ -56,9 +55,8 @@ extension Int: LDFlagBaseTypeConvertible {
 
 // MARK: - Double
 
-/// :nodoc:
 extension Double: LDFlagBaseTypeConvertible {
-    public init?(_ flag: LDFlagValue?) {
+    init?(_ flag: LDFlagValue?) {
         //TODO: Assess whether we need to initialize with an int or string too
         guard let flag = flag,
             case let .double(value) = flag
@@ -69,9 +67,8 @@ extension Double: LDFlagBaseTypeConvertible {
 
 // MARK: - String
 
-/// :nodoc:
 extension String: LDFlagBaseTypeConvertible {
-    public init?(_ flag: LDFlagValue?) {
+    init?(_ flag: LDFlagValue?) {
         guard let flag = flag,
             case let .string(value) = flag
         else { return nil }
@@ -81,9 +78,8 @@ extension String: LDFlagBaseTypeConvertible {
 
 // MARK: - Array
 
-/// :nodoc:
 extension Array: LDFlagBaseTypeConvertible {
-    public init?(_ flag: LDFlagValue?) {
+    init?(_ flag: LDFlagValue?) {
         guard let flagArray = flag?.baseArray as? [Element] else { return nil }
         self = flagArray
     }
@@ -112,9 +108,8 @@ extension LDFlagValue {
     }
 }
 
-/// :nodoc:
 extension Dictionary: LDFlagBaseTypeConvertible {
-    public init?(_ flag: LDFlagValue?) {
+    init?(_ flag: LDFlagValue?) {
         guard let flagValue = flag?.baseDictionary as? [Key: Value]
             else { return nil }
         self = flagValue
