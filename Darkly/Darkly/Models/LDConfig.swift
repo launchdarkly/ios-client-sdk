@@ -155,6 +155,7 @@ extension LDConfig: Equatable {
         return lhs.baseUrl == rhs.baseUrl
             && lhs.eventsUrl == rhs.eventsUrl
             && lhs.streamUrl == rhs.streamUrl
+            && lhs.eventCapacity == rhs.eventCapacity   //added
             && lhs.connectionTimeoutMillis == rhs.connectionTimeoutMillis
             && lhs.eventFlushIntervalMillis == rhs.eventFlushIntervalMillis
             && lhs.pollIntervalMillis == rhs.pollIntervalMillis

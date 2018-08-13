@@ -280,6 +280,15 @@ final class LDConfigSpec: QuickSpec {
                     expect(testContext.subject) != otherConfig
                 }
             }
+            context("when the event capacities differ") {
+                beforeEach {
+                    otherConfig = testContext.subject
+                    otherConfig.eventCapacity = testContext.subject.eventCapacity + 1
+                }
+                it("returns false") {
+                    expect(testContext.subject) != otherConfig
+                }
+            }
             context("when the connection timeouts differ") {
                 beforeEach {
                     otherConfig = testContext.subject
