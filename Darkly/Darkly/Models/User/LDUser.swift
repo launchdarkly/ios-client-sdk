@@ -45,9 +45,9 @@ public struct LDUser {
                 email: String? = nil,
                 avatar: String? = nil,
                 custom: [String: Any]? = nil,
+                isAnonymous: Bool? = nil,
                 device: String? = nil,
                 operatingSystem: String? = nil,
-                isAnonymous: Bool? = nil,
                 privateAttributes: [String]? = nil) {
         let environmentReporter = EnvironmentReporter()
         let selectedKey = key ?? LDUser.defaultKey(environmentReporter: environmentReporter)

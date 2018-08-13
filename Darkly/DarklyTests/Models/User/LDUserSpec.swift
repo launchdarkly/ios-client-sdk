@@ -65,8 +65,7 @@ final class LDUserSpec: QuickSpec {
                     beforeEach {
                         user = LDUser(key: LDUser.StubConstants.key, name: LDUser.StubConstants.name, firstName: LDUser.StubConstants.firstName, lastName: LDUser.StubConstants.lastName,
                                       country: LDUser.StubConstants.country, ipAddress: LDUser.StubConstants.ipAddress, email: LDUser.StubConstants.email, avatar: LDUser.StubConstants.avatar,
-                                      custom: LDUser.StubConstants.custom(includeSystemValues: false), device: LDUser.StubConstants.device, operatingSystem: LDUser.StubConstants.operatingSystem,
-                                      isAnonymous: LDUser.StubConstants.isAnonymous, privateAttributes: LDUser.privatizableAttributes)
+                                      custom: LDUser.StubConstants.custom(includeSystemValues: false), isAnonymous: LDUser.StubConstants.isAnonymous, device: LDUser.StubConstants.device, operatingSystem: LDUser.StubConstants.operatingSystem, privateAttributes: LDUser.privatizableAttributes)
                     }
                     it("creates a LDUser with optional elements") {
                         expect(user.key) == LDUser.StubConstants.key

@@ -52,9 +52,9 @@ extension LDUser {
                           email: StubConstants.email,
                           avatar: StubConstants.avatar,
                           custom: StubConstants.custom(includeSystemValues: true),
+                          isAnonymous: StubConstants.isAnonymous,
                           device: environmentReporter?.deviceModel,
-                          operatingSystem: environmentReporter?.systemVersion,
-                          isAnonymous: StubConstants.isAnonymous)
+                          operatingSystem: environmentReporter?.systemVersion)
         user.flagStore = FlagMaintainingMock(flags: user.stubFlags(includeNullValue: includeNullValue))
         return user
     }
