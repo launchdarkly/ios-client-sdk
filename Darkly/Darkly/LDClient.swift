@@ -404,7 +404,7 @@ public class LDClient {
      - parameter owner: The LDFlagChangeOwner which will execute the handler. The SDK retains a weak reference to the owner.
      - parameter handler: The closure the SDK will execute when the feature flag changes.
     */
-    public func observe(_ key: LDFlagKey, owner: LDFlagChangeOwner, handler: @escaping LDFlagChangeHandler) {
+    public func observe(key: LDFlagKey, owner: LDFlagChangeOwner, handler: @escaping LDFlagChangeHandler) {
         Log.debug(typeName(and: #function) + "flagKey: \(key), owner: \(String(describing: owner))")
         flagChangeNotifier.addFlagChangeObserver(FlagChangeObserver(key: key, owner: owner, flagChangeHandler: handler))
     }
@@ -434,7 +434,7 @@ public class LDClient {
      - parameter owner: The LDFlagChangeOwner which will execute the handler. The SDK retains a weak reference to the owner.
      - parameter handler: The LDFlagCollectionChangeHandler the SDK will execute 1 time when any of the observed feature flags change.
      */
-    public func observe(_ keys: [LDFlagKey], owner: LDFlagChangeOwner, handler: @escaping LDFlagCollectionChangeHandler) {
+    public func observe(keys: [LDFlagKey], owner: LDFlagChangeOwner, handler: @escaping LDFlagCollectionChangeHandler) {
         Log.debug(typeName(and: #function) + "flagKeys: \(keys), owner: \(String(describing: owner))")
         flagChangeNotifier.addFlagChangeObserver(FlagChangeObserver(keys: keys, owner: owner, flagCollectionChangeHandler: handler))
     }
