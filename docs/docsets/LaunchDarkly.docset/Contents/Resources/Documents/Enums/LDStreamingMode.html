@@ -23,7 +23,7 @@
         <a class="header-link" href="../index.html">
           LaunchDarkly Docs
         </a>
-         (19% documented)
+         (24% documented)
       </p>
     
       <p class="header-col--secondary">
@@ -193,7 +193,7 @@
 
                 </div>
               </div>
-            <p>Undocumented</p>
+            <p>Defines the connection modes available to set into LDClient</p>
 
           </div>
         </section>
@@ -215,7 +215,7 @@
                     <section class="section">
                       <div class="pointer"></div>
                       <div class="abstract">
-                        <p>Undocumented</p>
+                        <p>In streaming mode, the LDClient opens a long-running connection to LaunchDarkly&rsquo;s streaming server (called <em>clientstream</em>). When a flag value changes on the server, the clientstream notifies the SDK to update the value. Streaming mode is not available on watchOS. On iOS and tvOS, the client app must be running in the foreground to connect to clientstream. On macOS the client app may run in either foreground or background to connect to clientstream. If streaming mode is not available, the SDK reverts to polling mode.</p>
 
                       </div>
                       <div class="declaration">
@@ -242,7 +242,7 @@
                     <section class="section">
                       <div class="pointer"></div>
                       <div class="abstract">
-                        <p>Undocumented</p>
+                        <p>In polling mode, the LDClient requests feature flags from LaunchDarkly&rsquo;s app server at regular intervals defined in the LDConfig. When a flag value changes on the server, the LDClient will learn of the change the next time the SDK requests feature flags.</p>
 
                       </div>
                       <div class="declaration">

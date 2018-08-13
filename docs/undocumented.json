@@ -1,6 +1,13 @@
 {
   "warnings": [
     {
+      "file": "/Users/markpokorny/Documents/Development/launchDarkly/ios-client-swift-private/Darkly/Darkly/LDClient.swift",
+      "line": 721,
+      "symbol": "LDClient.allFeatureFlagValues",
+      "symbol_kind": "source.lang.swift.decl.var.instance",
+      "warning": "undocumented"
+    },
+    {
       "file": "/Users/markpokorny/Documents/Development/launchDarkly/ios-client-swift-private/Darkly/Darkly/Models/FeatureFlag/FlagChange/LDChangedFlag.swift",
       "line": 11,
       "symbol": "LDChangedFlag",
@@ -298,76 +305,6 @@
       "file": "/Users/markpokorny/Documents/Development/launchDarkly/ios-client-swift-private/Darkly/Darkly/Models/FeatureFlag/FlagValue/LDFlagValueConvertible.swift",
       "line": 13,
       "symbol": "LDFlagValueConvertible.toLDFlagValue()",
-      "symbol_kind": "source.lang.swift.decl.function.method.instance",
-      "warning": "undocumented"
-    },
-    {
-      "file": "/Users/markpokorny/Documents/Development/launchDarkly/ios-client-swift-private/Darkly/Darkly/Models/LDConfig.swift",
-      "line": null,
-      "symbol": "LDConfig",
-      "symbol_kind": "source.lang.swift.decl.extension",
-      "warning": "undocumented"
-    },
-    {
-      "file": "/Users/markpokorny/Documents/Development/launchDarkly/ios-client-swift-private/Darkly/Darkly/Models/LDConfig.swift",
-      "line": 11,
-      "symbol": "LDStreamingMode",
-      "symbol_kind": "source.lang.swift.decl.enum",
-      "warning": "undocumented"
-    },
-    {
-      "file": "/Users/markpokorny/Documents/Development/launchDarkly/ios-client-swift-private/Darkly/Darkly/Models/LDConfig.swift",
-      "line": 12,
-      "symbol": "LDStreamingMode.polling",
-      "symbol_kind": "source.lang.swift.decl.enumelement",
-      "warning": "undocumented"
-    },
-    {
-      "file": "/Users/markpokorny/Documents/Development/launchDarkly/ios-client-swift-private/Darkly/Darkly/Models/LDConfig.swift",
-      "line": 12,
-      "symbol": "LDStreamingMode.streaming",
-      "symbol_kind": "source.lang.swift.decl.enumelement",
-      "warning": "undocumented"
-    },
-    {
-      "file": "/Users/markpokorny/Documents/Development/launchDarkly/ios-client-swift-private/Darkly/Darkly/Models/LDConfig.swift",
-      "line": 15,
-      "symbol": "LDConfig",
-      "symbol_kind": "source.lang.swift.decl.struct",
-      "warning": "undocumented"
-    },
-    {
-      "file": "/Users/markpokorny/Documents/Development/launchDarkly/ios-client-swift-private/Darkly/Darkly/Models/LDConfig.swift",
-      "line": 21,
-      "symbol": "LDConfig.Defaults",
-      "symbol_kind": "source.lang.swift.decl.struct",
-      "warning": "undocumented"
-    },
-    {
-      "file": "/Users/markpokorny/Documents/Development/launchDarkly/ios-client-swift-private/Darkly/Darkly/Models/LDConfig.swift",
-      "line": 47,
-      "symbol": "LDConfig.Minima",
-      "symbol_kind": "source.lang.swift.decl.struct",
-      "warning": "undocumented"
-    },
-    {
-      "file": "/Users/markpokorny/Documents/Development/launchDarkly/ios-client-swift-private/Darkly/Darkly/Models/LDConfig.swift",
-      "line": 61,
-      "symbol": "LDConfig.Minima.pollingIntervalMillis",
-      "symbol_kind": "source.lang.swift.decl.var.instance",
-      "warning": "undocumented"
-    },
-    {
-      "file": "/Users/markpokorny/Documents/Development/launchDarkly/ios-client-swift-private/Darkly/Darkly/Models/LDConfig.swift",
-      "line": 70,
-      "symbol": "LDConfig.baseUrl",
-      "symbol_kind": "source.lang.swift.decl.var.instance",
-      "warning": "undocumented"
-    },
-    {
-      "file": "/Users/markpokorny/Documents/Development/launchDarkly/ios-client-swift-private/Darkly/Darkly/Models/LDConfig.swift",
-      "line": 132,
-      "symbol": "LDConfig.init()",
       "symbol_kind": "source.lang.swift.decl.function.method.instance",
       "warning": "undocumented"
     },
@@ -921,6 +858,13 @@
       "file": "/Users/markpokorny/Documents/Development/launchDarkly/ios-client-swift-private/Darkly/Darkly/ObjectiveC/ObjcLDClient.swift",
       "line": 136,
       "symbol": "ObjcLDClient.observeFlagsUnchanged(owner:handler:)",
+      "symbol_kind": "source.lang.swift.decl.function.method.instance",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/markpokorny/Documents/Development/launchDarkly/ios-client-swift-private/Darkly/Darkly/ObjectiveC/ObjcLDClient.swift",
+      "line": 142,
+      "symbol": "ObjcLDClient.reportEvents()",
       "symbol_kind": "source.lang.swift.decl.function.method.instance",
       "warning": "undocumented"
     },

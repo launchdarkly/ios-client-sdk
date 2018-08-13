@@ -23,7 +23,7 @@
         <a class="header-link" href="../index.html">
           LaunchDarkly Docs
         </a>
-         (19% documented)
+         (24% documented)
       </p>
     
       <p class="header-col--secondary">
@@ -193,7 +193,9 @@
 
                 </div>
               </div>
-            <p>Undocumented</p>
+            <p>Use LDConfig to configure the LDClient. When initialized, a LDConfig contains the default values which can be changed as needed.</p>
+
+<p>The client app can change the LDConfig by getting the <code>config</code> from <code><a href="../Classes/LDClient.html">LDClient</a></code>, adjusting the values, and setting it back into the <code><a href="../Classes/LDClient.html">LDClient</a></code>.</p>
 
           </div>
         </section>
@@ -215,7 +217,7 @@
                     <section class="section">
                       <div class="pointer"></div>
                       <div class="abstract">
-                        <p>Undocumented</p>
+                        <p>The default values set when a LDConfig is initialized</p>
 
                       </div>
                       <div class="declaration">
@@ -242,7 +244,7 @@
                     <section class="section">
                       <div class="pointer"></div>
                       <div class="abstract">
-                        <p>Undocumented</p>
+                        <p>The minimum values allowed to be set into LDConfig</p>
 
                         <a href="../Structs/LDConfig/Minima.html" class="slightly-smaller">See more</a>
                       </div>
@@ -270,7 +272,7 @@
                     <section class="section">
                       <div class="pointer"></div>
                       <div class="abstract">
-                        <p>Undocumented</p>
+                        <p>The url for making feature flag requests. Do not change unless instructed by LaunchDarkly.</p>
 
                       </div>
                       <div class="declaration">
@@ -297,7 +299,7 @@
                     <section class="section">
                       <div class="pointer"></div>
                       <div class="abstract">
-                        <p>Don&rsquo;t set this unless instructed by LaunchDarkly.</p>
+                        <p>The url for making event reports. Do not change unless instructed by LaunchDarkly.</p>
 
                       </div>
                       <div class="declaration">
@@ -324,7 +326,7 @@
                     <section class="section">
                       <div class="pointer"></div>
                       <div class="abstract">
-                        <p>Don&rsquo;t set this unless instructed by LaunchDarkly.</p>
+                        <p>The url for connecting to the <em>clientstream</em>. Do not change unless instructed by LaunchDarkly.</p>
 
                       </div>
                       <div class="declaration">
@@ -351,8 +353,7 @@
                     <section class="section">
                       <div class="pointer"></div>
                       <div class="abstract">
-                        <p>Don&rsquo;t set this unless instructed by LaunchDarkly.
-The max number of analytics events to queue before sending them to LaunchDarkly. Default: 100</p>
+                        <p>The maximum number of analytics events the LDClient can store. When the LDClient event store reaches the eventCapacity, the SDK discards events until it successfully reports them to LaunchDarkly. (Default: 100)</p>
 
                       </div>
                       <div class="declaration">
@@ -366,6 +367,17 @@ The max number of analytics events to queue before sending them to LaunchDarkly.
                     </section>
                   </div>
                 </li>
+              </ul>
+            </div>
+            <div class="task-group">
+              <div class="task-name-container">
+                <a name="/Time%20configuration"></a>
+                <a name="//apple_ref/swift/Section/Time configuration" class="dashAnchor"></a>
+                <a href="#/Time%20configuration">
+                  <h3 class="section-name">Time configuration</h3>
+                </a>
+              </div>
+              <ul class="item-container">
                 <li class="item">
                   <div>
                     <code>
@@ -379,7 +391,7 @@ The max number of analytics events to queue before sending them to LaunchDarkly.
                     <section class="section">
                       <div class="pointer"></div>
                       <div class="abstract">
-                        <p>The timeout in milliseconds when connecting to LaunchDarkly. Default: 10 seconds</p>
+                        <p>The timeout interval in milliseconds for flag requests and event reports. (Default: 10 seconds)</p>
 
                       </div>
                       <div class="declaration">
@@ -406,7 +418,7 @@ The max number of analytics events to queue before sending them to LaunchDarkly.
                     <section class="section">
                       <div class="pointer"></div>
                       <div class="abstract">
-                        <p>The minimum amount of time in milliseconds to wait in between sending analytics events to LaunchDarkly.</p>
+                        <p>The interval between event reports in milliseconds (Default: 30 seconds)</p>
 
                       </div>
                       <div class="declaration">
@@ -433,7 +445,7 @@ The max number of analytics events to queue before sending them to LaunchDarkly.
                     <section class="section">
                       <div class="pointer"></div>
                       <div class="abstract">
-                        <p>The interval between feature flag updates. Only relevant when not streaming Default: 5 minutes. Minimum: 5 minutes</p>
+                        <p>The interval between feature flag requests in milliseconds. Used only for polling mode. (Default: 5 minutes)</p>
 
                       </div>
                       <div class="declaration">
@@ -460,7 +472,7 @@ The max number of analytics events to queue before sending them to LaunchDarkly.
                     <section class="section">
                       <div class="pointer"></div>
                       <div class="abstract">
-                        <p>The interval in milliseconds that we will poll for flag updates when your app is in the background. Default: 1 hour. Minimum: 15 minutes</p>
+                        <p>The interval between feature flag requests while running in the background, in milliseconds. Used only for polling mode. (Default: 60 minutes)</p>
 
                       </div>
                       <div class="declaration">
@@ -487,7 +499,7 @@ The max number of analytics events to queue before sending them to LaunchDarkly.
                     <section class="section">
                       <div class="pointer"></div>
                       <div class="abstract">
-                        <p>Enables real-time streaming flag updates. When set to .polling, an efficient polling mechanism is used. Default: .streaming</p>
+                        <p>Controls the method the SDK uses to keep feature flags updated. When set to .streaming, connects to <code>clientstream</code> which notifies the SDK of feature flag changes. When set to .polling, an efficient polling mechanism is used to periodically request feature flag values. Ignored for watchOS, which always uses .polling. See <code><a href="../Enums/LDStreamingMode.html">LDStreamingMode</a></code> for more details. (Default: .streaming)</p>
 
                       </div>
                       <div class="declaration">
@@ -514,7 +526,7 @@ The max number of analytics events to queue before sending them to LaunchDarkly.
                     <section class="section">
                       <div class="pointer"></div>
                       <div class="abstract">
-                        <p>Enables feature flag updates when your app is in the background. Allowed on macOS only. Default: false</p>
+                        <p>Enables feature flag updates when your app is in the background. Allowed on macOS only. (Default: false)</p>
 
                       </div>
                       <div class="declaration">
@@ -541,7 +553,7 @@ The max number of analytics events to queue before sending them to LaunchDarkly.
                     <section class="section">
                       <div class="pointer"></div>
                       <div class="abstract">
-                        <p>Determines whether LDClient will be online / offline at start. If offline at start, set the client online to receive flag updates. Default: true</p>
+                        <p>Controls LDClient start behavior. When true, calling start causes LDClient to go online. When false, calling start causes LDClient to remain offline. If offline at start, set the client online to receive flag updates. (Default: true)</p>
 
                       </div>
                       <div class="declaration">
@@ -568,7 +580,13 @@ The max number of analytics events to queue before sending them to LaunchDarkly.
                     <section class="section">
                       <div class="pointer"></div>
                       <div class="abstract">
-                        <p>Treat all user attributes as private for event reporting for all users. When set, ignores values in either LDConfig.privateUserAttributes or LDUser.privateAttributes. Default: false</p>
+                        <p>Treat all user attributes as private for event reporting for all users.</p>
+
+<p>The SDK will not include private attribute values in analytics events, but private attribute names will be sent.</p>
+
+<p>When true, ignores values in either LDConfig.privateUserAttributes or LDUser.privateAttributes. (Default: false)</p>
+
+<p>See Also: <code><a href="../Structs/LDConfig.html#/s:12LaunchDarkly8LDConfigV21privateUserAttributesSaySSGSgv">privateUserAttributes</a></code> and <code><a href="../Structs/LDUser.html#/s:12LaunchDarkly6LDUserV17privateAttributesSaySSGSgv">LDUser.privateAttributes</a></code></p>
 
                       </div>
                       <div class="declaration">
@@ -595,7 +613,13 @@ The max number of analytics events to queue before sending them to LaunchDarkly.
                     <section class="section">
                       <div class="pointer"></div>
                       <div class="abstract">
-                        <p>List of user attributes and top level custom dictionary keys to treat as private for event reporting for all users. Private attribute values will not be included in events reported to Launch Darkly, but the attribute name will still be sent. All user attributes can be declared private except key, anonymous, device, &amp; os. Access the user attribute names that can be declared private through the identifiers included in LDUser.swift. To declare all user attributes private, either set privateUserAttributes to LDUser.allUserAttributes or raise LDConfig.allUserAttributesPrivate. Default: nil</p>
+                        <p>User attributes and top level custom dictionary keys to treat as private for event reporting for all users.</p>
+
+<p>The SDK will not include private attribute values in analytics events, but private attribute names will be sent.</p>
+
+<p>All user attributes can be declared private except key, anonymous, device, &amp; os. See <code><a href="../Structs/LDUser.html#/s:12LaunchDarkly6LDUserV22privatizableAttributesSaySSGvZ">LDUser.privatizableAttributes</a></code> for the attribute names that can be declared private. To set private user attributes for a specific user, see <code><a href="../Structs/LDUser.html#/s:12LaunchDarkly6LDUserV17privateAttributesSaySSGSgv">LDUser.privateAttributes</a></code>. (Default: nil)</p>
+
+<p>See Also: <code><a href="../Structs/LDConfig.html#/s:12LaunchDarkly8LDConfigV24allUserAttributesPrivateSbv">allUserAttributesPrivate</a></code>, <code><a href="../Structs/LDUser.html#/s:12LaunchDarkly6LDUserV22privatizableAttributesSaySSGvZ">LDUser.privatizableAttributes</a></code>, and <code><a href="../Structs/LDUser.html#/s:12LaunchDarkly6LDUserV17privateAttributesSaySSGSgv">LDUser.privateAttributes</a></code>.</p>
 
                       </div>
                       <div class="declaration">
@@ -622,7 +646,7 @@ The max number of analytics events to queue before sending them to LaunchDarkly.
                     <section class="section">
                       <div class="pointer"></div>
                       <div class="abstract">
-                        <p>Flag that enables REPORT HTTP method for feature flag requests. When useReport is false, feature flag requests use the GET HTTP method. Do not use unless advised by LaunchDarkly. Default: false</p>
+                        <p>Directs the SDK to use REPORT for HTTP requests to connect to <code>clientstream</code> and make feature flag requests. When false the SDK uses GET for these requests. Do not use unless advised by LaunchDarkly. (Default: false)</p>
 
                       </div>
                       <div class="declaration">
@@ -649,7 +673,7 @@ The max number of analytics events to queue before sending them to LaunchDarkly.
                     <section class="section">
                       <div class="pointer"></div>
                       <div class="abstract">
-                        <p>Flag that tells the SDK to include the user attributes in analytics event reports. When set to true, event reports will contain the user attributes, except attributes marked as private. When set to false, event reports will contain the user&rsquo;s key only, reducing the size of event reports. Default: false</p>
+                        <p>Controls how the SDK reports the user in analytics event reports. When set to true, event reports will contain the user attributes, except attributes marked as private. When set to false, event reports will contain the user&rsquo;s key only, reducing the size of event reports. (Default: false)</p>
 
                       </div>
                       <div class="declaration">
@@ -676,7 +700,7 @@ The max number of analytics events to queue before sending them to LaunchDarkly.
                     <section class="section">
                       <div class="pointer"></div>
                       <div class="abstract">
-                        <p>Enables additional logging for development. Default: false</p>
+                        <p>Enables logging for debugging. (Default: false)</p>
 
                       </div>
                       <div class="declaration">
@@ -703,7 +727,7 @@ The max number of analytics events to queue before sending them to LaunchDarkly.
                     <section class="section">
                       <div class="pointer"></div>
                       <div class="abstract">
-                        <p>LD defined minima</p>
+                        <p>LaunchDarkly defined minima for selected configurable items</p>
 
                       </div>
                       <div class="declaration">
@@ -730,7 +754,7 @@ The max number of analytics events to queue before sending them to LaunchDarkly.
                     <section class="section">
                       <div class="pointer"></div>
                       <div class="abstract">
-                        <p>Undocumented</p>
+                        <p>LDConfig constructor. Configurable values are all set to their default values. The client app can modify these values as desired. Note that client app developers may prefer to get the LDConfig from <code><a href="../Classes/LDClient.html#/s:12LaunchDarkly8LDClientC6configAA8LDConfigVv">LDClient.config</a></code> in order to retain previously set values.</p>
 
                       </div>
                       <div class="declaration">

@@ -23,7 +23,7 @@
         <a class="header-link" href="../index.html">
           LaunchDarkly Docs
         </a>
-         (19% documented)
+         (24% documented)
       </p>
     
       <p class="header-col--secondary">
@@ -777,19 +777,23 @@
                       <div class="abstract">
                         <p>Sets a handler for the specified flag key executed on the specified owner. If the flag&rsquo;s value changes, executes the handler, passing in the <code>changedFlag</code> containing the old and new flag values, and old and new flag value source. See <code><a href="../Structs/LDChangedFlag.html">LDChangedFlag</a></code> for details.</p>
 
-<p>The SDK retains only weak references to owner, which allows the client app to freely destroy change owners without issues. Client apps should use a capture list specifying <code>[weak self]</code> inside handlers to avoid retain cycles causing a memory leak.</p>
+<p>The SDK retains only weak references to the owner, which allows the client app to freely destroy owners without issues. Client apps should use a capture list specifying <code>[weak self]</code> inside handlers to avoid retain cycles causing a memory leak.</p>
 
 <p>The SDK executes handlers on the main thread.</p>
 
 <p>LDChangedFlag does not know the type of oldValue or newValue. The client app should cast the value into the type needed. See <code>variation(forKey: fallback:)</code> for details about the SDK and feature flag types.</p>
 
 <p>SeeAlso: <code><a href="../Structs/LDChangedFlag.html">LDChangedFlag</a></code> and <code><a href="../Classes/LDClient.html#/s:12LaunchDarkly8LDClientC13stopObservingyyXl5owner_tF">stopObserving(owner:)</a></code></p>
-<h3 id='usage' class='heading'>Usage</h3>
-<pre class="highlight swift"><code><span class="kt">LDClient</span><span class="o">.</span><span class="n">shared</span><span class="o">.</span><span class="nf">observe</span><span class="p">(</span><span class="s">"flag-key"</span><span class="p">,</span> <span class="nv">owner</span><span class="p">:</span> <span class="k">self</span><span class="p">)</span> <span class="p">{</span> <span class="p">[</span><span class="k">weak</span> <span class="k">self</span><span class="p">]</span> <span class="p">(</span><span class="n">changedFlag</span><span class="p">)</span> <span class="k">in</span>
-   <span class="k">if</span> <span class="k">let</span> <span class="nv">newValue</span> <span class="o">=</span> <span class="n">changedFlag</span><span class="o">.</span><span class="n">newValue</span> <span class="k">as?</span> <span class="kt">Bool</span> <span class="p">{</span>
-       <span class="c1">//do something with the newValue</span>
-   <span class="p">}</span>
-<span class="p">}</span>
+
+<p>### Usage</p>
+<pre class="highlight swift"><code> <span class="kt">LDClient</span><span class="o">.</span><span class="n">shared</span><span class="o">.</span><span class="nf">observe</span><span class="p">(</span><span class="s">"flag-key"</span><span class="p">,</span> <span class="nv">owner</span><span class="p">:</span> <span class="k">self</span><span class="p">)</span> <span class="p">{</span> <span class="p">[</span><span class="k">weak</span> <span class="k">self</span><span class="p">]</span> <span class="p">(</span><span class="n">changedFlag</span><span class="p">)</span> <span class="k">in</span>
+    <span class="k">if</span> <span class="k">let</span> <span class="nv">newValue</span> <span class="o">=</span> <span class="n">changedFlag</span><span class="o">.</span><span class="n">newValue</span> <span class="k">as?</span> <span class="kt">Bool</span> <span class="p">{</span>
+        <span class="c1">//do something with the newValue</span>
+    <span class="p">}</span>
+<span class="c1">///The LDClient will report events on the LDConfig.eventFlushInterval and when the client app moves to the background. There should normally not be a need to call reportEvents.</span>
+<span class="kd">public</span> <span class="kd">func</span> <span class="nf">reportEvents</span><span class="p">()</span> <span class="p">{</span>
+    <span class="n">eventReporter</span><span class="o">.</span><span class="nf">reportEvents</span><span class="p">()</span>
+ <span class="p">}</span>
 </code></pre>
 
                       </div>
@@ -1226,6 +1230,64 @@ LDClient.shared.trackEvent(key: "</span><span class="n">app</span><span class="o
                             </tr>
                           </tbody>
                         </table>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:12LaunchDarkly8LDClientC12reportEventsyyF"></a>
+                    <a name="//apple_ref/swift/Method/reportEvents()" class="dashAnchor"></a>
+                    <a class="token" href="#/s:12LaunchDarkly8LDClientC12reportEventsyyF">reportEvents()</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Report events to LaunchDarkly servers. While online, the LDClient automatically reports events on the <code>LDConfig.eventFlushInterval</code>, and whenever the client app moves to the background. There should normally not be a need to call reportEvents.</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">func</span> <span class="nf">reportEvents</span><span class="p">()</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+              </ul>
+            </div>
+            <div class="task-group">
+              <ul class="item-container">
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:12LaunchDarkly8LDClientC20allFeatureFlagValuess10DictionaryVySSypGSgv"></a>
+                    <a name="//apple_ref/swift/Property/allFeatureFlagValues" class="dashAnchor"></a>
+                    <a class="token" href="#/s:12LaunchDarkly8LDClientC20allFeatureFlagValuess10DictionaryVySSypGSgv">allFeatureFlagValues</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Undocumented</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="k">var</span> <span class="nv">allFeatureFlagValues</span><span class="p">:</span> <span class="p">[</span><span class="kt">LDFlagKey</span> <span class="p">:</span> <span class="kt">Any</span><span class="p">]?</span> <span class="p">{</span> <span class="k">get</span> <span class="p">}</span></code></pre>
+
+                        </div>
                       </div>
                     </section>
                   </div>
