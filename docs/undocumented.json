@@ -57,13 +57,6 @@
       "warning": "undocumented"
     },
     {
-      "file": "/Users/markpokorny/Documents/Development/launchDarkly/ios-client-swift-private/Darkly/Darkly/Models/FeatureFlag/FlagValue/LDFlagValueConvertible.swift",
-      "line": 12,
-      "symbol": "LDFlagValueConvertible",
-      "symbol_kind": "source.lang.swift.decl.protocol",
-      "warning": "undocumented"
-    },
-    {
       "file": "/Users/markpokorny/Documents/Development/launchDarkly/ios-client-swift-private/Darkly/Darkly/ObjectiveC/ObjcLDChangedFlag.swift",
       "line": 12,
       "symbol": "ObjcLDChangedFlag",
