@@ -8,55 +8,6 @@
       "warning": "undocumented"
     },
     {
-      "file": "/Users/markpokorny/Documents/Development/launchDarkly/ios-client-swift-private/Darkly/Darkly/Models/FeatureFlag/FlagChange/LDChangedFlag.swift",
-      "line": 11,
-      "symbol": "LDChangedFlag",
-      "symbol_kind": "source.lang.swift.decl.struct",
-      "warning": "undocumented"
-    },
-    {
-      "file": "/Users/markpokorny/Documents/Development/launchDarkly/ios-client-swift-private/Darkly/Darkly/Models/FeatureFlag/FlagChange/LDChangedFlag.swift",
-      "line": 12,
-      "symbol": "LDChangedFlag.key",
-      "symbol_kind": "source.lang.swift.decl.var.instance",
-      "warning": "undocumented"
-    },
-    {
-      "file": "/Users/markpokorny/Documents/Development/launchDarkly/ios-client-swift-private/Darkly/Darkly/Models/FeatureFlag/FlagChange/LDChangedFlag.swift",
-      "line": 13,
-      "symbol": "LDChangedFlag.oldValue",
-      "symbol_kind": "source.lang.swift.decl.var.instance",
-      "warning": "undocumented"
-    },
-    {
-      "file": "/Users/markpokorny/Documents/Development/launchDarkly/ios-client-swift-private/Darkly/Darkly/Models/FeatureFlag/FlagChange/LDChangedFlag.swift",
-      "line": 14,
-      "symbol": "LDChangedFlag.oldValueSource",
-      "symbol_kind": "source.lang.swift.decl.var.instance",
-      "warning": "undocumented"
-    },
-    {
-      "file": "/Users/markpokorny/Documents/Development/launchDarkly/ios-client-swift-private/Darkly/Darkly/Models/FeatureFlag/FlagChange/LDChangedFlag.swift",
-      "line": 15,
-      "symbol": "LDChangedFlag.newValue",
-      "symbol_kind": "source.lang.swift.decl.var.instance",
-      "warning": "undocumented"
-    },
-    {
-      "file": "/Users/markpokorny/Documents/Development/launchDarkly/ios-client-swift-private/Darkly/Darkly/Models/FeatureFlag/FlagChange/LDChangedFlag.swift",
-      "line": 16,
-      "symbol": "LDChangedFlag.newValueSource",
-      "symbol_kind": "source.lang.swift.decl.var.instance",
-      "warning": "undocumented"
-    },
-    {
-      "file": "/Users/markpokorny/Documents/Development/launchDarkly/ios-client-swift-private/Darkly/Darkly/Models/FeatureFlag/FlagChange/LDChangedFlag.swift",
-      "line": 18,
-      "symbol": "LDChangedFlag.init(key:oldValue:oldValueSource:newValue:newValueSource:)",
-      "symbol_kind": "source.lang.swift.decl.function.method.instance",
-      "warning": "undocumented"
-    },
-    {
       "file": "/Users/markpokorny/Documents/Development/launchDarkly/ios-client-swift-private/Darkly/Darkly/ObjectiveC/ObjcLDChangedFlag.swift",
       "line": 12,
       "symbol": "ObjcLDChangedFlag",

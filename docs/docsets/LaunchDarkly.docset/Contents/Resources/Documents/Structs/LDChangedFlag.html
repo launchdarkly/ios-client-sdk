@@ -23,7 +23,7 @@
         <a class="header-link" href="../index.html">
           LaunchDarkly Docs
         </a>
-         (41% documented)
+         (44% documented)
       </p>
     
       <p class="header-col--secondary">
@@ -193,7 +193,7 @@
 
                 </div>
               </div>
-            <p>Undocumented</p>
+            <p>Collects the elements of a feature flag that changed as a result of a <code>clientstream</code> update or feature flag request. The SDK will pass a LDChangedFlag or a collection of LDChangedFlags into feature flag observer closures. The client app will have to convert the old/newValue into the expected type. See <code>LDClient.observe(key:owner:handler:)</code>, <code>LDClient.observe(keys:owner:handler:)</code>, and <code><a href="../Classes/LDClient.html#/s:12LaunchDarkly8LDClientC10observeAllyyXl5owner_ys10DictionaryVySSAA13LDChangedFlagVGc7handlertF">LDClient.observeAll(owner:handler:)</a></code> for more details.</p>
 
           </div>
         </section>
@@ -215,7 +215,7 @@
                     <section class="section">
                       <div class="pointer"></div>
                       <div class="abstract">
-                        <p>Undocumented</p>
+                        <p>The key of the changed feature flag</p>
 
                       </div>
                       <div class="declaration">
@@ -242,7 +242,7 @@
                     <section class="section">
                       <div class="pointer"></div>
                       <div class="abstract">
-                        <p>Undocumented</p>
+                        <p>The feature flag&rsquo;s value before the change</p>
 
                       </div>
                       <div class="declaration">
@@ -269,7 +269,7 @@
                     <section class="section">
                       <div class="pointer"></div>
                       <div class="abstract">
-                        <p>Undocumented</p>
+                        <p>The feature flag value&rsquo;s source before the change</p>
 
                       </div>
                       <div class="declaration">
@@ -296,7 +296,7 @@
                     <section class="section">
                       <div class="pointer"></div>
                       <div class="abstract">
-                        <p>Undocumented</p>
+                        <p>The feature flag&rsquo;s value after the change</p>
 
                       </div>
                       <div class="declaration">
@@ -323,7 +323,7 @@
                     <section class="section">
                       <div class="pointer"></div>
                       <div class="abstract">
-                        <p>Undocumented</p>
+                        <p>The feature flag value&rsquo;s source after the change</p>
 
                       </div>
                       <div class="declaration">
@@ -331,33 +331,6 @@
                         <div class="language">
                           <p class="aside-title">Swift</p>
                           <pre class="highlight swift"><code><span class="kd">public</span> <span class="k">let</span> <span class="nv">newValueSource</span><span class="p">:</span> <span class="kt"><a href="../Enums/LDFlagValueSource.html">LDFlagValueSource</a></span><span class="p">?</span></code></pre>
-
-                        </div>
-                      </div>
-                    </section>
-                  </div>
-                </li>
-                <li class="item">
-                  <div>
-                    <code>
-                    <a name="/s:12LaunchDarkly13LDChangedFlagVACSS3key_ypSg8oldValueAA06LDFlagG6SourceOSg0fgI0AE03newG0AI0jgI0tcfc"></a>
-                    <a name="//apple_ref/swift/Method/init(key:oldValue:oldValueSource:newValue:newValueSource:)" class="dashAnchor"></a>
-                    <a class="token" href="#/s:12LaunchDarkly13LDChangedFlagVACSS3key_ypSg8oldValueAA06LDFlagG6SourceOSg0fgI0AE03newG0AI0jgI0tcfc">init(key:oldValue:oldValueSource:newValue:newValueSource:)</a>
-                    </code>
-                  </div>
-                  <div class="height-container">
-                    <div class="pointer-container"></div>
-                    <section class="section">
-                      <div class="pointer"></div>
-                      <div class="abstract">
-                        <p>Undocumented</p>
-
-                      </div>
-                      <div class="declaration">
-                        <h4>Declaration</h4>
-                        <div class="language">
-                          <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="nf">init</span><span class="p">(</span><span class="nv">key</span><span class="p">:</span> <span class="kt">LDFlagKey</span><span class="p">,</span> <span class="nv">oldValue</span><span class="p">:</span> <span class="kt">Any</span><span class="p">?,</span> <span class="nv">oldValueSource</span><span class="p">:</span> <span class="kt"><a href="../Enums/LDFlagValueSource.html">LDFlagValueSource</a></span><span class="p">?,</span> <span class="nv">newValue</span><span class="p">:</span> <span class="kt">Any</span><span class="p">?,</span> <span class="nv">newValueSource</span><span class="p">:</span> <span class="kt"><a href="../Enums/LDFlagValueSource.html">LDFlagValueSource</a></span><span class="p">?)</span></code></pre>
 
                         </div>
                       </div>
