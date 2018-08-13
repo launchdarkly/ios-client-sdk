@@ -14,11 +14,11 @@ import Foundation
 public struct LDChangedFlag {
     ///The key of the changed feature flag
     public let key: LDFlagKey
-    ///The feature flag's value before the change
+    ///The feature flag's value before the change. The client app will have to convert the oldValue into the expected type.
     public let oldValue: Any?
     ///The feature flag value's source before the change
     public let oldValueSource: LDFlagValueSource?
-    ///The feature flag's value after the change
+    ///The feature flag's value after the change. The client app will have to convert the newValue into the expected type.
     public let newValue: Any?
     ///The feature flag value's source after the change
     public let newValueSource: LDFlagValueSource?

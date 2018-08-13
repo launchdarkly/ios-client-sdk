@@ -27,6 +27,7 @@ custom_categories:
     - LDClient
     - LDConfig
     - LDUser
+    - LDFlagKey
 
   - name: Enumerations
     children:
@@ -37,11 +38,14 @@ custom_categories:
   - name: Flag Changes
     children:
     - LDChangedFlag
+    - LDFlagChangeOwner
+    - LDFlagChangeHandler
+    - LDFlagCollectionChangeHandler
+    - LDFlagsUnchangedHandler
 
   - name: LD Protocols
     children:
     - LDFlagValueConvertible
-    - LDFlagBaseTypeConvertible
 
   - name: Objective-C
     children:

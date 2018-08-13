@@ -23,7 +23,7 @@
         <a class="header-link" href="../index.html">
           LaunchDarkly Docs
         </a>
-         (44% documented)
+         (45% documented)
       </p>
     
       <p class="header-col--secondary">
@@ -71,6 +71,9 @@
               <li class="nav-group-task">
                 <a class="nav-group-task-link" href="../Structs/LDUser/CodingKeys.html">– CodingKeys</a>
               </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Launch Darkly.html#/s:12LaunchDarkly9LDFlagKeya">LDFlagKey</a>
+              </li>
             </ul>
           </li>
           <li class="nav-group-name">
@@ -92,6 +95,18 @@
             <ul class="nav-group-tasks">
               <li class="nav-group-task">
                 <a class="nav-group-task-link" href="../Structs/LDChangedFlag.html">LDChangedFlag</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Flag Changes.html#/s:12LaunchDarkly17LDFlagChangeOwnera">LDFlagChangeOwner</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Flag Changes.html#/s:12LaunchDarkly19LDFlagChangeHandlera">LDFlagChangeHandler</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Flag Changes.html#/s:12LaunchDarkly29LDFlagCollectionChangeHandlera">LDFlagCollectionChangeHandler</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Flag Changes.html#/s:12LaunchDarkly23LDFlagsUnchangedHandlera">LDFlagsUnchangedHandler</a>
               </li>
             </ul>
           </li>
@@ -617,7 +632,7 @@
                         <h4>Declaration</h4>
                         <div class="language">
                           <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">func</span> <span class="n">variation</span><span class="o">&lt;</span><span class="kt">T</span><span class="o">&gt;</span><span class="p">(</span><span class="n">forKey</span> <span class="nv">flagKey</span><span class="p">:</span> <span class="kt">LDFlagKey</span><span class="p">,</span> <span class="nv">fallback</span><span class="p">:</span> <span class="kt">T</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kt">T</span> <span class="k">where</span> <span class="kt">T</span> <span class="p">:</span> <span class="kt"><a href="../LD Protocols.html#/s:12LaunchDarkly22LDFlagValueConvertibleP">LDFlagValueConvertible</a></span></code></pre>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">func</span> <span class="n">variation</span><span class="o">&lt;</span><span class="kt">T</span><span class="o">&gt;</span><span class="p">(</span><span class="n">forKey</span> <span class="nv">flagKey</span><span class="p">:</span> <span class="kt"><a href="../Launch Darkly.html#/s:12LaunchDarkly9LDFlagKeya">LDFlagKey</a></span><span class="p">,</span> <span class="nv">fallback</span><span class="p">:</span> <span class="kt">T</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kt">T</span> <span class="k">where</span> <span class="kt">T</span> <span class="p">:</span> <span class="kt"><a href="../LD Protocols.html#/s:12LaunchDarkly22LDFlagValueConvertibleP">LDFlagValueConvertible</a></span></code></pre>
 
                         </div>
                       </div>
@@ -709,7 +724,7 @@
                         <h4>Declaration</h4>
                         <div class="language">
                           <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">func</span> <span class="n">variationAndSource</span><span class="o">&lt;</span><span class="kt">T</span><span class="o">&gt;</span><span class="p">(</span><span class="n">forKey</span> <span class="nv">flagKey</span><span class="p">:</span> <span class="kt">LDFlagKey</span><span class="p">,</span> <span class="nv">fallback</span><span class="p">:</span> <span class="kt">T</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="p">(</span><span class="kt">T</span><span class="p">,</span> <span class="kt"><a href="../Enums/LDFlagValueSource.html">LDFlagValueSource</a></span><span class="p">)</span> <span class="k">where</span> <span class="kt">T</span> <span class="p">:</span> <span class="kt"><a href="../LD Protocols.html#/s:12LaunchDarkly22LDFlagValueConvertibleP">LDFlagValueConvertible</a></span></code></pre>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">func</span> <span class="n">variationAndSource</span><span class="o">&lt;</span><span class="kt">T</span><span class="o">&gt;</span><span class="p">(</span><span class="n">forKey</span> <span class="nv">flagKey</span><span class="p">:</span> <span class="kt"><a href="../Launch Darkly.html#/s:12LaunchDarkly9LDFlagKeya">LDFlagKey</a></span><span class="p">,</span> <span class="nv">fallback</span><span class="p">:</span> <span class="kt">T</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="p">(</span><span class="kt">T</span><span class="p">,</span> <span class="kt"><a href="../Enums/LDFlagValueSource.html">LDFlagValueSource</a></span><span class="p">)</span> <span class="k">where</span> <span class="kt">T</span> <span class="p">:</span> <span class="kt"><a href="../LD Protocols.html#/s:12LaunchDarkly22LDFlagValueConvertibleP">LDFlagValueConvertible</a></span></code></pre>
 
                         </div>
                       </div>
@@ -765,9 +780,9 @@
                 <li class="item">
                   <div>
                     <code>
-                    <a name="/s:12LaunchDarkly8LDClientC7observeySS_yXl5owneryAA13LDChangedFlagVc7handlertF"></a>
-                    <a name="//apple_ref/swift/Method/observe(_:owner:handler:)" class="dashAnchor"></a>
-                    <a class="token" href="#/s:12LaunchDarkly8LDClientC7observeySS_yXl5owneryAA13LDChangedFlagVc7handlertF">observe(_:owner:handler:)</a>
+                    <a name="/s:12LaunchDarkly8LDClientC7observeySS3key_yXl5owneryAA13LDChangedFlagVc7handlertF"></a>
+                    <a name="//apple_ref/swift/Method/observe(key:owner:handler:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:12LaunchDarkly8LDClientC7observeySS3key_yXl5owneryAA13LDChangedFlagVc7handlertF">observe(key:owner:handler:)</a>
                     </code>
                   </div>
                   <div class="height-container">
@@ -801,7 +816,7 @@
                         <h4>Declaration</h4>
                         <div class="language">
                           <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">func</span> <span class="nf">observe</span><span class="p">(</span><span class="n">_</span> <span class="nv">key</span><span class="p">:</span> <span class="kt">LDFlagKey</span><span class="p">,</span> <span class="nv">owner</span><span class="p">:</span> <span class="kt">LDFlagChangeOwner</span><span class="p">,</span> <span class="nv">handler</span><span class="p">:</span> <span class="kd">@escaping</span> <span class="kt">LDFlagChangeHandler</span><span class="p">)</span></code></pre>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">func</span> <span class="nf">observe</span><span class="p">(</span><span class="nv">key</span><span class="p">:</span> <span class="kt"><a href="../Launch Darkly.html#/s:12LaunchDarkly9LDFlagKeya">LDFlagKey</a></span><span class="p">,</span> <span class="nv">owner</span><span class="p">:</span> <span class="kt"><a href="../Flag Changes.html#/s:12LaunchDarkly17LDFlagChangeOwnera">LDFlagChangeOwner</a></span><span class="p">,</span> <span class="nv">handler</span><span class="p">:</span> <span class="kd">@escaping</span> <span class="kt"><a href="../Flag Changes.html#/s:12LaunchDarkly19LDFlagChangeHandlera">LDFlagChangeHandler</a></span><span class="p">)</span></code></pre>
 
                         </div>
                       </div>
@@ -854,9 +869,9 @@
                 <li class="item">
                   <div>
                     <code>
-                    <a name="/s:12LaunchDarkly8LDClientC7observeySaySSG_yXl5ownerys10DictionaryVySSAA13LDChangedFlagVGc7handlertF"></a>
-                    <a name="//apple_ref/swift/Method/observe(_:owner:handler:)" class="dashAnchor"></a>
-                    <a class="token" href="#/s:12LaunchDarkly8LDClientC7observeySaySSG_yXl5ownerys10DictionaryVySSAA13LDChangedFlagVGc7handlertF">observe(_:owner:handler:)</a>
+                    <a name="/s:12LaunchDarkly8LDClientC7observeySaySSG4keys_yXl5ownerys10DictionaryVySSAA13LDChangedFlagVGc7handlertF"></a>
+                    <a name="//apple_ref/swift/Method/observe(keys:owner:handler:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:12LaunchDarkly8LDClientC7observeySaySSG4keys_yXl5ownerys10DictionaryVySSAA13LDChangedFlagVGc7handlertF">observe(keys:owner:handler:)</a>
                     </code>
                   </div>
                   <div class="height-container">
@@ -887,7 +902,7 @@
                         <h4>Declaration</h4>
                         <div class="language">
                           <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">func</span> <span class="nf">observe</span><span class="p">(</span><span class="n">_</span> <span class="nv">keys</span><span class="p">:</span> <span class="p">[</span><span class="kt">LDFlagKey</span><span class="p">],</span> <span class="nv">owner</span><span class="p">:</span> <span class="kt">LDFlagChangeOwner</span><span class="p">,</span> <span class="nv">handler</span><span class="p">:</span> <span class="kd">@escaping</span> <span class="kt">LDFlagCollectionChangeHandler</span><span class="p">)</span></code></pre>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">func</span> <span class="nf">observe</span><span class="p">(</span><span class="nv">keys</span><span class="p">:</span> <span class="p">[</span><span class="kt"><a href="../Launch Darkly.html#/s:12LaunchDarkly9LDFlagKeya">LDFlagKey</a></span><span class="p">],</span> <span class="nv">owner</span><span class="p">:</span> <span class="kt"><a href="../Flag Changes.html#/s:12LaunchDarkly17LDFlagChangeOwnera">LDFlagChangeOwner</a></span><span class="p">,</span> <span class="nv">handler</span><span class="p">:</span> <span class="kd">@escaping</span> <span class="kt"><a href="../Flag Changes.html#/s:12LaunchDarkly29LDFlagCollectionChangeHandlera">LDFlagCollectionChangeHandler</a></span><span class="p">)</span></code></pre>
 
                         </div>
                       </div>
@@ -973,7 +988,7 @@
                         <h4>Declaration</h4>
                         <div class="language">
                           <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">func</span> <span class="nf">observeAll</span><span class="p">(</span><span class="nv">owner</span><span class="p">:</span> <span class="kt">LDFlagChangeOwner</span><span class="p">,</span> <span class="nv">handler</span><span class="p">:</span> <span class="kd">@escaping</span> <span class="kt">LDFlagCollectionChangeHandler</span><span class="p">)</span></code></pre>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">func</span> <span class="nf">observeAll</span><span class="p">(</span><span class="nv">owner</span><span class="p">:</span> <span class="kt"><a href="../Flag Changes.html#/s:12LaunchDarkly17LDFlagChangeOwnera">LDFlagChangeOwner</a></span><span class="p">,</span> <span class="nv">handler</span><span class="p">:</span> <span class="kd">@escaping</span> <span class="kt"><a href="../Flag Changes.html#/s:12LaunchDarkly29LDFlagCollectionChangeHandlera">LDFlagCollectionChangeHandler</a></span><span class="p">)</span></code></pre>
 
                         </div>
                       </div>
@@ -1044,7 +1059,7 @@
                         <h4>Declaration</h4>
                         <div class="language">
                           <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">func</span> <span class="nf">observeFlagsUnchanged</span><span class="p">(</span><span class="nv">owner</span><span class="p">:</span> <span class="kt">LDFlagChangeOwner</span><span class="p">,</span> <span class="nv">handler</span><span class="p">:</span> <span class="kd">@escaping</span> <span class="kt">LDFlagsUnchangedHandler</span><span class="p">)</span></code></pre>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">func</span> <span class="nf">observeFlagsUnchanged</span><span class="p">(</span><span class="nv">owner</span><span class="p">:</span> <span class="kt"><a href="../Flag Changes.html#/s:12LaunchDarkly17LDFlagChangeOwnera">LDFlagChangeOwner</a></span><span class="p">,</span> <span class="nv">handler</span><span class="p">:</span> <span class="kd">@escaping</span> <span class="kt"><a href="../Flag Changes.html#/s:12LaunchDarkly23LDFlagsUnchangedHandlera">LDFlagsUnchangedHandler</a></span><span class="p">)</span></code></pre>
 
                         </div>
                       </div>
@@ -1104,7 +1119,7 @@
                         <h4>Declaration</h4>
                         <div class="language">
                           <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">func</span> <span class="nf">stopObserving</span><span class="p">(</span><span class="nv">owner</span><span class="p">:</span> <span class="kt">LDFlagChangeOwner</span><span class="p">)</span></code></pre>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">func</span> <span class="nf">stopObserving</span><span class="p">(</span><span class="nv">owner</span><span class="p">:</span> <span class="kt"><a href="../Flag Changes.html#/s:12LaunchDarkly17LDFlagChangeOwnera">LDFlagChangeOwner</a></span><span class="p">)</span></code></pre>
 
                         </div>
                       </div>
@@ -1285,7 +1300,7 @@ LDClient.shared.trackEvent(key: "</span><span class="n">app</span><span class="o
                         <h4>Declaration</h4>
                         <div class="language">
                           <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="k">var</span> <span class="nv">allFeatureFlagValues</span><span class="p">:</span> <span class="p">[</span><span class="kt">LDFlagKey</span> <span class="p">:</span> <span class="kt">Any</span><span class="p">]?</span> <span class="p">{</span> <span class="k">get</span> <span class="p">}</span></code></pre>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="k">var</span> <span class="nv">allFeatureFlagValues</span><span class="p">:</span> <span class="p">[</span><span class="kt"><a href="../Launch Darkly.html#/s:12LaunchDarkly9LDFlagKeya">LDFlagKey</a></span> <span class="p">:</span> <span class="kt">Any</span><span class="p">]?</span> <span class="p">{</span> <span class="k">get</span> <span class="p">}</span></code></pre>
 
                         </div>
                       </div>

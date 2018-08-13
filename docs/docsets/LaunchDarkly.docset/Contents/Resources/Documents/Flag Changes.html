@@ -23,7 +23,7 @@
         <a class="header-link" href="index.html">
           LaunchDarkly Docs
         </a>
-         (44% documented)
+         (45% documented)
       </p>
     
       <p class="header-col--secondary">
@@ -71,6 +71,9 @@
               <li class="nav-group-task">
                 <a class="nav-group-task-link" href="Structs/LDUser/CodingKeys.html">– CodingKeys</a>
               </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="Launch Darkly.html#/s:12LaunchDarkly9LDFlagKeya">LDFlagKey</a>
+              </li>
             </ul>
           </li>
           <li class="nav-group-name">
@@ -92,6 +95,18 @@
             <ul class="nav-group-tasks">
               <li class="nav-group-task">
                 <a class="nav-group-task-link" href="Structs/LDChangedFlag.html">LDChangedFlag</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="Flag Changes.html#/s:12LaunchDarkly17LDFlagChangeOwnera">LDFlagChangeOwner</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="Flag Changes.html#/s:12LaunchDarkly19LDFlagChangeHandlera">LDFlagChangeHandler</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="Flag Changes.html#/s:12LaunchDarkly29LDFlagCollectionChangeHandlera">LDFlagCollectionChangeHandler</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="Flag Changes.html#/s:12LaunchDarkly23LDFlagsUnchangedHandlera">LDFlagsUnchangedHandler</a>
               </li>
             </ul>
           </li>
@@ -208,7 +223,7 @@
                     <section class="section">
                       <div class="pointer"></div>
                       <div class="abstract">
-                        <p>Collects the elements of a feature flag that changed as a result of a <code>clientstream</code> update or feature flag request. The SDK will pass a LDChangedFlag or a collection of LDChangedFlags into feature flag observer closures. The client app will have to convert the old/newValue into the expected type. See <code>LDClient.observe(key:owner:handler:)</code>, <code>LDClient.observe(keys:owner:handler:)</code>, and <code><a href="Classes/LDClient.html#/s:12LaunchDarkly8LDClientC10observeAllyyXl5owner_ys10DictionaryVySSAA13LDChangedFlagVGc7handlertF">LDClient.observeAll(owner:handler:)</a></code> for more details.</p>
+                        <p>Collects the elements of a feature flag that changed as a result of a <code>clientstream</code> update or feature flag request. The SDK will pass a LDChangedFlag or a collection of LDChangedFlags into feature flag observer closures. The client app will have to convert the old/newValue into the expected type. See <code><a href="Classes/LDClient.html#/s:12LaunchDarkly8LDClientC7observeySS3key_yXl5owneryAA13LDChangedFlagVc7handlertF">LDClient.observe(key:owner:handler:)</a></code>, <code><a href="Classes/LDClient.html#/s:12LaunchDarkly8LDClientC7observeySaySSG4keys_yXl5ownerys10DictionaryVySSAA13LDChangedFlagVGc7handlertF">LDClient.observe(keys:owner:handler:)</a></code>, and <code><a href="Classes/LDClient.html#/s:12LaunchDarkly8LDClientC10observeAllyyXl5owner_ys10DictionaryVySSAA13LDChangedFlagVGc7handlertF">LDClient.observeAll(owner:handler:)</a></code> for more details.</p>
 
                         <a href="Structs/LDChangedFlag.html" class="slightly-smaller">See more</a>
                       </div>
@@ -217,6 +232,118 @@
                         <div class="language">
                           <p class="aside-title">Swift</p>
                           <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">struct</span> <span class="kt">LDChangedFlag</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+              </ul>
+            </div>
+            <div class="task-group">
+              <ul class="item-container">
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:12LaunchDarkly17LDFlagChangeOwnera"></a>
+                    <a name="//apple_ref/swift/Alias/LDFlagChangeOwner" class="dashAnchor"></a>
+                    <a class="token" href="#/s:12LaunchDarkly17LDFlagChangeOwnera">LDFlagChangeOwner</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>An object can own the change observer for as long as the object exists. Swift structs and enums cannot be change observer owners.</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">typealias</span> <span class="kt">LDFlagChangeOwner</span> <span class="o">=</span> <span class="kt">AnyObject</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:12LaunchDarkly19LDFlagChangeHandlera"></a>
+                    <a name="//apple_ref/swift/Alias/LDFlagChangeHandler" class="dashAnchor"></a>
+                    <a class="token" href="#/s:12LaunchDarkly19LDFlagChangeHandlera">LDFlagChangeHandler</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>A closure used to notify a flag change owner of a change to a single feature flag&rsquo;s value.</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">typealias</span> <span class="kt">LDFlagChangeHandler</span> <span class="o">=</span> <span class="p">(</span><span class="kt"><a href="Structs/LDChangedFlag.html">LDChangedFlag</a></span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kt">Void</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:12LaunchDarkly29LDFlagCollectionChangeHandlera"></a>
+                    <a name="//apple_ref/swift/Alias/LDFlagCollectionChangeHandler" class="dashAnchor"></a>
+                    <a class="token" href="#/s:12LaunchDarkly29LDFlagCollectionChangeHandlera">LDFlagCollectionChangeHandler</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>A closure used to notify a flag change owner of a change to the feature flags in a collection of <code><a href="Structs/LDChangedFlag.html">LDChangedFlag</a></code>.</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">typealias</span> <span class="kt">LDFlagCollectionChangeHandler</span> <span class="o">=</span> <span class="p">([</span><span class="kt"><a href="Launch Darkly.html#/s:12LaunchDarkly9LDFlagKeya">LDFlagKey</a></span> <span class="p">:</span> <span class="kt"><a href="Structs/LDChangedFlag.html">LDChangedFlag</a></span><span class="p">])</span> <span class="o">-&gt;</span> <span class="kt">Void</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:12LaunchDarkly23LDFlagsUnchangedHandlera"></a>
+                    <a name="//apple_ref/swift/Alias/LDFlagsUnchangedHandler" class="dashAnchor"></a>
+                    <a class="token" href="#/s:12LaunchDarkly23LDFlagsUnchangedHandlera">LDFlagsUnchangedHandler</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>A closure used to notify a flag change owner that a feature flag request resulted in no changes to any feature flag.</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">typealias</span> <span class="kt">LDFlagsUnchangedHandler</span> <span class="o">=</span> <span class="p">()</span> <span class="o">-&gt;</span> <span class="kt">Void</span></code></pre>
 
                         </div>
                       </div>
