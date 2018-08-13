@@ -8,34 +8,89 @@
 
 import Foundation
 
+/**
+ LDUser allows clients to collect information about users in order to refine the feature flag values sent to the SDK. For example, the client app may launch with the SDK defined anonymous user. As the user works with the client app, information may be collected as needed and sent to LaunchDarkly. The client app controls the information collected, which LaunchDarkly does not use except as the client directs to refine feature flags. Client apps should follow [Apple's Privacy Policy](apple.com/legal/privacy) when collecting user information.
+
+ The SDK caches last known feature flags for use on app startup to provide continuity with the last app run. Provided the LDClient is online and can establish a connection with LaunchDarkly servers, cached information will only be used a very short time. Once the latest feature flags arrive at the SDK, the SDK no longer uses cached feature flags. The SDK retains feature flags on the last 5 client defined users. The SDK will retain feature flags until they are overwritten by a different user's feature flags, or until the user removes the app from the device.
+
+ The SDK does not cache user information collected, except for the user key. The user key is used to identify the cached feature flags for that user. Client app developers should use caution not to use sensitive user information as the user-key.
+ */
 public struct LDUser {
     
-    enum CodingKeys: String, CodingKey {
+    ///String keys associated with LDUser properties
+    public enum CodingKeys: String, CodingKey {
+        ///Key names match the corresponding LDUser property
         case key, name, firstName, lastName, country, ipAddress = "ip", email, avatar, custom, isAnonymous = "anonymous", device, operatingSystem = "os", lastUpdated = "updatedAt", config, privateAttributes = "privateAttrs"
     }
 
+    /**
+     LDUser attributes that can be marked private.
+
+     The SDK will not include private attribute values in analytics events, but private attribute names will be sent.
+
+     See Also: `LDConfig.allUserAttributesPrivate`, `LDConfig.privateUserAttributes`, and `privateAttributes`.
+    */
     public static var privatizableAttributes: [String] {
         return [CodingKeys.name.rawValue, CodingKeys.firstName.rawValue, CodingKeys.lastName.rawValue, CodingKeys.country.rawValue, CodingKeys.ipAddress.rawValue, CodingKeys.email.rawValue, CodingKeys.avatar.rawValue, CodingKeys.custom.rawValue]
     }
     static var sdkSetAttributes: [String] { return [CodingKeys.device.rawValue, CodingKeys.operatingSystem.rawValue] }
 
+    ///Client app defined string that uniquely identifies the user. If the client app does not define a key, the SDK will assign an identifier associated with the anonymous user. The key cannot be made private.
     public var key: String
+    ///Client app defined name for the user. (Default: nil)
     public var name: String?
+    ///Client app defined first name for the user. (Default: nil)
     public var firstName: String?
+    ///Client app defined last name for the user. (Default: nil)
     public var lastName: String?
+    ///Client app defined country for the user. (Default: nil)
     public var country: String?
+    ///Client app defined ipAddress for the user. (Default: nil)
     public var ipAddress: String?
+    ///Client app defined email address for the user. (Default: nil)
     public var email: String?
+    ///Client app defined avatar for the user. (Default: nil)
     public var avatar: String?
+    ///Client app defined dictionary for the user. The client app may declare top level dictionary items as private. If the client app defines custom as private, the SDK considers the dictionary private except for device & operatingSystem (which cannot be made private). See `privateAttributes` for details. (Default: nil)
     public var custom: [String: Any]?
+    ///Client app defined isAnonymous for the user. If the client app does not define isAnonymous, the SDK will use the `key` to set this attribute. isAnonymous cannot be made private. (Default: true)
     public var isAnonymous: Bool
+    ///Client app defined device for the user. The SDK will determine the device automatically, however the client app can override the value. The SDK will insert the device into the `custom` dictionary. The device cannot be made private. (Default: the system identified device)
     public var device: String?
+    ///Client app defined operatingSystem for the user. The SDK will determine the operatingSystem automatically, however the client app can override the value. The SDK will insert the operatingSystem into the `custom` dictionary. The operatingSystem cannot be made private. (Default: the system identified operating system)
     public var operatingSystem: String?
+    /**
+     Client app defined privateAttributes for the user.
+
+     The SDK will not include private attribute values in analytics events, but private attribute names will be sent.
+
+     This attribute is ignored if `LDConfig.allUserAttributesPrivate` is true. Combined with `LDConfig.privateUserAttributes`. The SDK considers attributes appearing in either list as private. Client apps may define attributes found in `privatizableAttributes` and top level `custom` dictionary keys here. (Default: nil)
+
+     See Also: `LDConfig.allUserAttributesPrivate` and `LDConfig.privateUserAttributes`.
+
+    */
     public var privateAttributes: [String]?
     
     internal fileprivate(set) var lastUpdated: Date
     internal var flagStore: FlagMaintaining = FlagStore()
     
+    /**
+     Initializer to create a LDUser. Client configurable attributes each have an optional parameter to facilitate setting user information into the LDUser. The SDK will automatically set `key`, `device`, `operatingSystem`, and `isAnonymous` attributes if the client does not provide them. The SDK embeds `device` and `operatingSystem` into the `custom` dictionary for transmission to LaunchDarkly.
+
+     - parameter key: String that uniquely identifies the user. If the client app does not define a key, the SDK will assign an identifier associated with the anonymous user.
+     - parameter name: Client app defined name for the user. (Default: nil)
+     - parameter firstName: Client app defined first name for the user. (Default: nil)
+     - parameter lastName: Client app defined last name for the user. (Default: nil)
+     - parameter country: Client app defined country for the user. (Default: nil)
+     - parameter ipAddress: Client app defined ipAddress for the user. (Default: nil)
+     - parameter email: Client app defined email address for the user. (Default: nil)
+     - parameter avatar: Client app defined avatar for the user. (Default: nil)
+     - parameter custom: Client app defined dictionary for the user. The client app may declare top level dictionary items as private. If the client app defines custom as private, the SDK considers the dictionary private except for device & operatingSystem (which cannot be made private). See `privateAttributes` for details. (Default: nil)
+     - parameter isAnonymous: Client app defined isAnonymous for the user. If the client app does not define isAnonymous, the SDK will use the `key` to set this attribute. (Default: nil)
+     - parameter device: Client app defined device for the user. The SDK will determine the device automatically, however the client app can override the value. The SDK will insert the device into the `custom` dictionary. (Default: nil)
+     - parameter operatingSystem: Client app defined operatingSystem for the user. The SDK will determine the operatingSystem automatically, however the client app can override the value. The SDK will insert the operatingSystem into the `custom` dictionary. (Default: nil)
+     - parameter privateAttributes: Client app defined privateAttributes for the user. (Default: nil)
+     */
     public init(key: String? = nil,
                 name: String? = nil,
                 firstName: String? = nil,
@@ -68,11 +123,21 @@ public struct LDUser {
         Log.debug(typeName(and: #function) + "user: \(self)")
     }
     
+    /**
+     Failable Initializer that takes any object and attempts to create a LDUser from the object. If the object is a [String: Any], constructs the LDUser via `init(userDictionary:)`
+
+     - parameter object: Any object. The initializer will attempt to convert the object into [String: Any] and construct the LDUser
+    */
     public init?(object: Any?) {
         guard let userDictionary = object as? [String: Any] else { return nil }
         self = LDUser(userDictionary: userDictionary)
     }
 
+    /**
+     Initializer that takes a [String: Any] and creates a LDUser from the contents. Uses any keys present to define corresponding attribute values. Initializes attributes not present in the dictionary to their default value. Attempts to set `device` and `operatingSystem` from corresponding values embedded in `custom`. Attempts to set feature flags from values set in `config`.
+
+     - parameter userDictionary: Dictionary with LDUser attribute keys and values.
+     */
     public init(userDictionary: [String: Any]) {
         key = userDictionary[CodingKeys.key.rawValue] as? String ?? LDUser.defaultKey(environmentReporter: EnvironmentReporter())
         isAnonymous = userDictionary[CodingKeys.isAnonymous.rawValue] as? Bool ?? false
@@ -95,8 +160,11 @@ public struct LDUser {
         Log.debug(typeName(and: #function) + "user: \(self)")
     }
 
+    /**
+     Internal initializer that accepts an environment reporter, used for testing
+    */
     init(environmentReporter: EnvironmentReporting) {
-        self.init(key: LDUser.defaultKey(environmentReporter: environmentReporter), device: environmentReporter.deviceModel, operatingSystem: environmentReporter.systemVersion, isAnonymous: true)
+        self.init(key: LDUser.defaultKey(environmentReporter: environmentReporter), isAnonymous: true, device: environmentReporter.deviceModel, operatingSystem: environmentReporter.systemVersion)
     }
 
     //swiftlint:disable:next cyclomatic_complexity
@@ -120,8 +188,13 @@ public struct LDUser {
         default: return nil
         }
     }
+    ///Returns the custom dictionary without the SDK set device and operatingSystem attributes
     var customWithoutSdkSetAttributes: [String: Any]? { return custom?.filter { (key, _) in !LDUser.sdkSetAttributes.contains(key) } }
 
+    ///Dictionary with LDUser attribute keys and values, with options to include feature flags and private attributes. LDConfig object used to help resolving what attributes should be private.
+    /// - parameter includeFlagConfig: Controls whether the resulting dictionary includes feature flags under the `config` key
+    /// - parameter includePrivateAttributes: Controls whether the resulting dictionary includes private attributes
+    /// - parameter config: Provides supporting information for defining private attributes
     func dictionaryValue(includeFlagConfig: Bool, includePrivateAttributes includePrivate: Bool, config: LDConfig) -> [String: Any] {
         var dictionary = [String: Any]()
         var redactedAttributes = [String]()
@@ -173,9 +246,11 @@ public struct LDUser {
         return dictionary
     }
 
-    //For iOS & tvOS, this should be UIDevice.current.identifierForVendor.UUIDString
-    //For macOS & watchOS, this should be a UUID that the sdk creates and stores so that the value returned here should be always the same
+    ///Default key is the LDUser.key the SDK provides when any intializer is called without defining the key. The key should be constant with respect to the client app installation on a specific device. (The key may change if the client app is uninstalled and then reinstalled on the same device.)
+    ///- parameter environmentReporter: The environmentReporter provides selected information that varies between OS regarding how it's determined
     static func defaultKey(environmentReporter: EnvironmentReporting) -> String {
+        //For iOS & tvOS, this should be UIDevice.current.identifierForVendor.UUIDString
+        //For macOS & watchOS, this should be a UUID that the sdk creates and stores so that the value returned here should be always the same
         return environmentReporter.vendorUUID ?? UserDefaults.standard.installationKey
     }
 }
@@ -185,7 +260,7 @@ extension UserDefaults {
         fileprivate static let deviceIdentifier = "ldDeviceIdentifier"
     }
 
-    var installationKey: String {
+    fileprivate var installationKey: String {
         if let key = self.string(forKey: Keys.deviceIdentifier) { return key }
 
         let key = UUID().uuidString
@@ -195,12 +270,14 @@ extension UserDefaults {
 }
 
 extension LDUser: Equatable {
+    ///Compares users by comparing their user keys only, to allow the client app to collect user information over time
     public static func == (lhs: LDUser, rhs: LDUser) -> Bool {
         return lhs.key == rhs.key
     }
 }
 
 extension DateFormatter {
+    ///Date formatter configured to format dates to/from the format 2018-08-13T19:06:38.123Z
     class var ldDateFormatter: DateFormatter {
         let formatter = DateFormatter()
         formatter.dateFormat = "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'"
@@ -210,14 +287,17 @@ extension DateFormatter {
 }
 
 extension Date {
+    ///Date string using the format 2018-08-13T19:06:38.123Z
     var stringValue: String { return DateFormatter.ldDateFormatter.string(from: self) }
 
     //When a date is converted to JSON, the resulting string is not as precise as the original date (only to the nearest .001s)
     //By converting the date to json, then back into a date, the result can be compared with any date re-inflated from json
+    ///Date truncated to the nearest millisecond, which is the precision for string formatted dates
     var stringEquivalentDate: Date { return stringValue.dateValue }
 }
 
 extension String {
+    ///Date converted from a string using the format 2018-08-13T19:06:38.123Z
     var dateValue: Date { return DateFormatter.ldDateFormatter.date(from: self) ?? Date() }
 }
 
@@ -227,6 +307,7 @@ extension Array where Element == String {
     }
 }
 
+///Class providing ObjC interoperability with the LDUser struct
 @objc final class LDUserWrapper: NSObject {
     let wrapped: LDUser
 
@@ -280,6 +361,7 @@ extension LDUserWrapper: NSCoding {
         self.init(user: user)
     }
 
+    ///Method to configure NSKeyed(Un)Archivers to convert version 2.3.0 and older user caches to 2.3.1 and later user cache formats. Note that the v3 SDK no longer caches LDUsers, rather only feature flags and the LDUser.key are cached.
     class func configureKeyedArchiversToHandleVersion2_3_0AndOlderUserCacheFormat() {
         NSKeyedUnarchiver.setClass(LDUserWrapper.self, forClassName: "LDUserModel")
         NSKeyedArchiver.setClassName("LDUserModel", for: LDUserWrapper.self)
@@ -290,11 +372,12 @@ extension LDUser: TypeIdentifying { }
 
 #if DEBUG
     extension LDUser {
+        ///Testing method to get the user attribute value from a LDUser struct
         func value(forAttribute attribute: String) -> Any? {
             return value(for: attribute)
         }
 
-        //Compares all user properties except lastUpdated
+        //Compares all user properties except lastUpdated. Excludes the composed FlagStore, which contains the users feature flags
         func isEqual(to otherUser: LDUser) -> Bool {
             return key == otherUser.key
                 && name == otherUser.name

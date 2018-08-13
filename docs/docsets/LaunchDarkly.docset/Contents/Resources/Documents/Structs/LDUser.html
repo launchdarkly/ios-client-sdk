@@ -23,7 +23,7 @@
         <a class="header-link" href="../index.html">
           LaunchDarkly Docs
         </a>
-         (24% documented)
+         (35% documented)
       </p>
     
       <p class="header-col--secondary">
@@ -67,6 +67,9 @@
               </li>
               <li class="nav-group-task">
                 <a class="nav-group-task-link" href="../Structs/LDUser.html">LDUser</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Structs/LDUser/CodingKeys.html">– CodingKeys</a>
               </li>
             </ul>
           </li>
@@ -193,7 +196,11 @@
 
                 </div>
               </div>
-            <p>Undocumented</p>
+            <p>LDUser allows clients to collect information about users in order to refine the feature flag values sent to the SDK. For example, the client app may launch with the SDK defined anonymous user. As the user works with the client app, information may be collected as needed and sent to LaunchDarkly. The client app controls the information collected, which LaunchDarkly does not use except as the client directs to refine feature flags. Client apps should follow <a href="apple.com/legal/privacy">Apple&rsquo;s Privacy Policy</a> when collecting user information.</p>
+
+<p>The SDK caches last known feature flags for use on app startup to provide continuity with the last app run. Provided the LDClient is online and can establish a connection with LaunchDarkly servers, cached information will only be used a very short time. Once the latest feature flags arrive at the SDK, the SDK no longer uses cached feature flags. The SDK retains feature flags on the last 5 client defined users. The SDK will retain feature flags until they are overwritten by a different user&rsquo;s feature flags, or until the user removes the app from the device.</p>
+
+<p>The SDK does not cache user information collected, except for the user key. The user key is used to identify the cached feature flags for that user. Client app developers should use caution not to use sensitive user information as the user-key.</p>
 
           </div>
         </section>
@@ -202,6 +209,34 @@
           <div class="section-content">
             <div class="task-group">
               <ul class="item-container">
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:12LaunchDarkly6LDUserV10CodingKeysO"></a>
+                    <a name="//apple_ref/swift/Enum/CodingKeys" class="dashAnchor"></a>
+                    <a class="token" href="#/s:12LaunchDarkly6LDUserV10CodingKeysO">CodingKeys</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>String keys associated with LDUser properties</p>
+
+                        <a href="../Structs/LDUser/CodingKeys.html" class="slightly-smaller">See more</a>
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">enum</span> <span class="kt">CodingKeys</span> <span class="p">:</span> <span class="kt">String</span><span class="p">,</span> <span class="kt">CodingKey</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
                 <li class="item">
                   <div>
                     <code>
@@ -215,7 +250,11 @@
                     <section class="section">
                       <div class="pointer"></div>
                       <div class="abstract">
-                        <p>Undocumented</p>
+                        <p>LDUser attributes that can be marked private.</p>
+
+<p>The SDK will not include private attribute values in analytics events, but private attribute names will be sent.</p>
+
+<p>See Also: <code><a href="../Structs/LDConfig.html#/s:12LaunchDarkly8LDConfigV24allUserAttributesPrivateSbv">LDConfig.allUserAttributesPrivate</a></code>, <code><a href="../Structs/LDConfig.html#/s:12LaunchDarkly8LDConfigV21privateUserAttributesSaySSGSgv">LDConfig.privateUserAttributes</a></code>, and <code><a href="../Structs/LDUser.html#/s:12LaunchDarkly6LDUserV17privateAttributesSaySSGSgv">privateAttributes</a></code>.</p>
 
                       </div>
                       <div class="declaration">
@@ -242,7 +281,7 @@
                     <section class="section">
                       <div class="pointer"></div>
                       <div class="abstract">
-                        <p>Undocumented</p>
+                        <p>Client app defined string that uniquely identifies the user. If the client app does not define a key, the SDK will assign an identifier associated with the anonymous user. The key cannot be made private.</p>
 
                       </div>
                       <div class="declaration">
@@ -269,7 +308,7 @@
                     <section class="section">
                       <div class="pointer"></div>
                       <div class="abstract">
-                        <p>Undocumented</p>
+                        <p>Client app defined name for the user. (Default: nil)</p>
 
                       </div>
                       <div class="declaration">
@@ -296,7 +335,7 @@
                     <section class="section">
                       <div class="pointer"></div>
                       <div class="abstract">
-                        <p>Undocumented</p>
+                        <p>Client app defined first name for the user. (Default: nil)</p>
 
                       </div>
                       <div class="declaration">
@@ -323,7 +362,7 @@
                     <section class="section">
                       <div class="pointer"></div>
                       <div class="abstract">
-                        <p>Undocumented</p>
+                        <p>Client app defined last name for the user. (Default: nil)</p>
 
                       </div>
                       <div class="declaration">
@@ -350,7 +389,7 @@
                     <section class="section">
                       <div class="pointer"></div>
                       <div class="abstract">
-                        <p>Undocumented</p>
+                        <p>Client app defined country for the user. (Default: nil)</p>
 
                       </div>
                       <div class="declaration">
@@ -377,7 +416,7 @@
                     <section class="section">
                       <div class="pointer"></div>
                       <div class="abstract">
-                        <p>Undocumented</p>
+                        <p>Client app defined ipAddress for the user. (Default: nil)</p>
 
                       </div>
                       <div class="declaration">
@@ -404,7 +443,7 @@
                     <section class="section">
                       <div class="pointer"></div>
                       <div class="abstract">
-                        <p>Undocumented</p>
+                        <p>Client app defined email address for the user. (Default: nil)</p>
 
                       </div>
                       <div class="declaration">
@@ -431,7 +470,7 @@
                     <section class="section">
                       <div class="pointer"></div>
                       <div class="abstract">
-                        <p>Undocumented</p>
+                        <p>Client app defined avatar for the user. (Default: nil)</p>
 
                       </div>
                       <div class="declaration">
@@ -458,7 +497,7 @@
                     <section class="section">
                       <div class="pointer"></div>
                       <div class="abstract">
-                        <p>Undocumented</p>
+                        <p>Client app defined dictionary for the user. The client app may declare top level dictionary items as private. If the client app defines custom as private, the SDK considers the dictionary private except for device &amp; operatingSystem (which cannot be made private). See <code><a href="../Structs/LDUser.html#/s:12LaunchDarkly6LDUserV17privateAttributesSaySSGSgv">privateAttributes</a></code> for details. (Default: nil)</p>
 
                       </div>
                       <div class="declaration">
@@ -485,7 +524,7 @@
                     <section class="section">
                       <div class="pointer"></div>
                       <div class="abstract">
-                        <p>Undocumented</p>
+                        <p>Client app defined isAnonymous for the user. If the client app does not define isAnonymous, the SDK will use the <code><a href="../Structs/LDUser.html#/s:12LaunchDarkly6LDUserV3keySSv">key</a></code> to set this attribute. isAnonymous cannot be made private. (Default: true)</p>
 
                       </div>
                       <div class="declaration">
@@ -512,7 +551,7 @@
                     <section class="section">
                       <div class="pointer"></div>
                       <div class="abstract">
-                        <p>Undocumented</p>
+                        <p>Client app defined device for the user. The SDK will determine the device automatically, however the client app can override the value. The SDK will insert the device into the <code><a href="../Structs/LDUser.html#/s:12LaunchDarkly6LDUserV6customs10DictionaryVySSypGSgv">custom</a></code> dictionary. The device cannot be made private. (Default: the system identified device)</p>
 
                       </div>
                       <div class="declaration">
@@ -539,7 +578,7 @@
                     <section class="section">
                       <div class="pointer"></div>
                       <div class="abstract">
-                        <p>Undocumented</p>
+                        <p>Client app defined operatingSystem for the user. The SDK will determine the operatingSystem automatically, however the client app can override the value. The SDK will insert the operatingSystem into the <code><a href="../Structs/LDUser.html#/s:12LaunchDarkly6LDUserV6customs10DictionaryVySSypGSgv">custom</a></code> dictionary. The operatingSystem cannot be made private. (Default: the system identified operating system)</p>
 
                       </div>
                       <div class="declaration">
@@ -566,7 +605,13 @@
                     <section class="section">
                       <div class="pointer"></div>
                       <div class="abstract">
-                        <p>Undocumented</p>
+                        <p>Client app defined privateAttributes for the user.</p>
+
+<p>The SDK will not include private attribute values in analytics events, but private attribute names will be sent.</p>
+
+<p>This attribute is ignored if <code><a href="../Structs/LDConfig.html#/s:12LaunchDarkly8LDConfigV24allUserAttributesPrivateSbv">LDConfig.allUserAttributesPrivate</a></code> is true. Combined with <code><a href="../Structs/LDConfig.html#/s:12LaunchDarkly8LDConfigV21privateUserAttributesSaySSGSgv">LDConfig.privateUserAttributes</a></code>. The SDK considers attributes appearing in either list as private. Client apps may define attributes found in <code><a href="../Structs/LDUser.html#/s:12LaunchDarkly6LDUserV22privatizableAttributesSaySSGvZ">privatizableAttributes</a></code> and top level <code><a href="../Structs/LDUser.html#/s:12LaunchDarkly6LDUserV6customs10DictionaryVySSypGSgv">custom</a></code> dictionary keys here. (Default: nil)</p>
+
+<p>See Also: <code><a href="../Structs/LDConfig.html#/s:12LaunchDarkly8LDConfigV24allUserAttributesPrivateSbv">LDConfig.allUserAttributesPrivate</a></code> and <code><a href="../Structs/LDConfig.html#/s:12LaunchDarkly8LDConfigV21privateUserAttributesSaySSGSgv">LDConfig.privateUserAttributes</a></code>.</p>
 
                       </div>
                       <div class="declaration">
@@ -583,9 +628,9 @@
                 <li class="item">
                   <div>
                     <code>
-                    <a name="/s:12LaunchDarkly6LDUserVACSSSg3key_AD4nameAD9firstNameAD04lastG0AD7countryAD9ipAddressAD5emailAD6avatars10DictionaryVySSypGSg6customAD6deviceAD15operatingSystemSbSg11isAnonymousSaySSGSg17privateAttributestcfc"></a>
-                    <a name="//apple_ref/swift/Method/init(key:name:firstName:lastName:country:ipAddress:email:avatar:custom:device:operatingSystem:isAnonymous:privateAttributes:)" class="dashAnchor"></a>
-                    <a class="token" href="#/s:12LaunchDarkly6LDUserVACSSSg3key_AD4nameAD9firstNameAD04lastG0AD7countryAD9ipAddressAD5emailAD6avatars10DictionaryVySSypGSg6customAD6deviceAD15operatingSystemSbSg11isAnonymousSaySSGSg17privateAttributestcfc">init(key:name:firstName:lastName:country:ipAddress:email:avatar:custom:device:operatingSystem:isAnonymous:privateAttributes:)</a>
+                    <a name="/s:12LaunchDarkly6LDUserVACSSSg3key_AD4nameAD9firstNameAD04lastG0AD7countryAD9ipAddressAD5emailAD6avatars10DictionaryVySSypGSg6customSbSg11isAnonymousAD6deviceAD15operatingSystemSaySSGSg17privateAttributestcfc"></a>
+                    <a name="//apple_ref/swift/Method/init(key:name:firstName:lastName:country:ipAddress:email:avatar:custom:isAnonymous:device:operatingSystem:privateAttributes:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:12LaunchDarkly6LDUserVACSSSg3key_AD4nameAD9firstNameAD04lastG0AD7countryAD9ipAddressAD5emailAD6avatars10DictionaryVySSypGSg6customSbSg11isAnonymousAD6deviceAD15operatingSystemSaySSGSg17privateAttributestcfc">init(key:name:firstName:lastName:country:ipAddress:email:avatar:custom:isAnonymous:device:operatingSystem:privateAttributes:)</a>
                     </code>
                   </div>
                   <div class="height-container">
@@ -593,7 +638,7 @@
                     <section class="section">
                       <div class="pointer"></div>
                       <div class="abstract">
-                        <p>Undocumented</p>
+                        <p>Initializer to create a LDUser. Client configurable attributes each have an optional parameter to facilitate setting user information into the LDUser. The SDK will automatically set <code><a href="../Structs/LDUser.html#/s:12LaunchDarkly6LDUserV3keySSv">key</a></code>, <code><a href="../Structs/LDUser.html#/s:12LaunchDarkly6LDUserV6deviceSSSgv">device</a></code>, <code><a href="../Structs/LDUser.html#/s:12LaunchDarkly6LDUserV15operatingSystemSSSgv">operatingSystem</a></code>, and <code><a href="../Structs/LDUser.html#/s:12LaunchDarkly6LDUserV11isAnonymousSbv">isAnonymous</a></code> attributes if the client does not provide them. The SDK embeds <code><a href="../Structs/LDUser.html#/s:12LaunchDarkly6LDUserV6deviceSSSgv">device</a></code> and <code><a href="../Structs/LDUser.html#/s:12LaunchDarkly6LDUserV15operatingSystemSSSgv">operatingSystem</a></code> into the <code><a href="../Structs/LDUser.html#/s:12LaunchDarkly6LDUserV6customs10DictionaryVySSypGSgv">custom</a></code> dictionary for transmission to LaunchDarkly.</p>
 
                       </div>
                       <div class="declaration">
@@ -609,12 +654,175 @@
             <span class="nv">email</span><span class="p">:</span> <span class="kt">String</span><span class="p">?</span> <span class="o">=</span> <span class="kc">nil</span><span class="p">,</span>
             <span class="nv">avatar</span><span class="p">:</span> <span class="kt">String</span><span class="p">?</span> <span class="o">=</span> <span class="kc">nil</span><span class="p">,</span>
             <span class="nv">custom</span><span class="p">:</span> <span class="p">[</span><span class="kt">String</span><span class="p">:</span> <span class="kt">Any</span><span class="p">]?</span> <span class="o">=</span> <span class="kc">nil</span><span class="p">,</span>
+            <span class="nv">isAnonymous</span><span class="p">:</span> <span class="kt">Bool</span><span class="p">?</span> <span class="o">=</span> <span class="kc">nil</span><span class="p">,</span>
             <span class="nv">device</span><span class="p">:</span> <span class="kt">String</span><span class="p">?</span> <span class="o">=</span> <span class="kc">nil</span><span class="p">,</span>
             <span class="nv">operatingSystem</span><span class="p">:</span> <span class="kt">String</span><span class="p">?</span> <span class="o">=</span> <span class="kc">nil</span><span class="p">,</span>
-            <span class="nv">isAnonymous</span><span class="p">:</span> <span class="kt">Bool</span><span class="p">?</span> <span class="o">=</span> <span class="kc">nil</span><span class="p">,</span>
             <span class="nv">privateAttributes</span><span class="p">:</span> <span class="p">[</span><span class="kt">String</span><span class="p">]?</span> <span class="o">=</span> <span class="kc">nil</span><span class="p">)</span></code></pre>
 
                         </div>
+                      </div>
+                      <div>
+                        <h4>Parameters</h4>
+                        <table class="graybox">
+                          <tbody>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>key</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>String that uniquely identifies the user. If the client app does not define a key, the SDK will assign an identifier associated with the anonymous user.</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>name</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>Client app defined name for the user. (Default: nil)</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>firstName</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>Client app defined first name for the user. (Default: nil)</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>lastName</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>Client app defined last name for the user. (Default: nil)</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>country</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>Client app defined country for the user. (Default: nil)</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>ipAddress</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>Client app defined ipAddress for the user. (Default: nil)</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>email</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>Client app defined email address for the user. (Default: nil)</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>avatar</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>Client app defined avatar for the user. (Default: nil)</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>custom</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>Client app defined dictionary for the user. The client app may declare top level dictionary items as private. If the client app defines custom as private, the SDK considers the dictionary private except for device &amp; operatingSystem (which cannot be made private). See <code><a href="../Structs/LDUser.html#/s:12LaunchDarkly6LDUserV17privateAttributesSaySSGSgv">privateAttributes</a></code> for details. (Default: nil)</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>isAnonymous</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>Client app defined isAnonymous for the user. If the client app does not define isAnonymous, the SDK will use the <code><a href="../Structs/LDUser.html#/s:12LaunchDarkly6LDUserV3keySSv">key</a></code> to set this attribute. (Default: nil)</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>device</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>Client app defined device for the user. The SDK will determine the device automatically, however the client app can override the value. The SDK will insert the device into the <code><a href="../Structs/LDUser.html#/s:12LaunchDarkly6LDUserV6customs10DictionaryVySSypGSgv">custom</a></code> dictionary. (Default: nil)</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>operatingSystem</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>Client app defined operatingSystem for the user. The SDK will determine the operatingSystem automatically, however the client app can override the value. The SDK will insert the operatingSystem into the <code><a href="../Structs/LDUser.html#/s:12LaunchDarkly6LDUserV6customs10DictionaryVySSypGSgv">custom</a></code> dictionary. (Default: nil)</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>privateAttributes</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>Client app defined privateAttributes for the user. (Default: nil)</p>
+                                </div>
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
                       </div>
                     </section>
                   </div>
@@ -632,7 +840,7 @@
                     <section class="section">
                       <div class="pointer"></div>
                       <div class="abstract">
-                        <p>Undocumented</p>
+                        <p>Failable Initializer that takes any object and attempts to create a LDUser from the object. If the object is a [String: Any], constructs the LDUser via <code><a href="../Structs/LDUser.html#/s:12LaunchDarkly6LDUserVACs10DictionaryVySSypG04userD0_tcfc">init(userDictionary:)</a></code></p>
 
                       </div>
                       <div class="declaration">
@@ -642,6 +850,25 @@
                           <pre class="highlight swift"><code><span class="kd">public</span> <span class="nf">init</span><span class="p">?(</span><span class="nv">object</span><span class="p">:</span> <span class="kt">Any</span><span class="p">?)</span></code></pre>
 
                         </div>
+                      </div>
+                      <div>
+                        <h4>Parameters</h4>
+                        <table class="graybox">
+                          <tbody>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>object</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>Any object. The initializer will attempt to convert the object into [String: Any] and construct the LDUser</p>
+                                </div>
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
                       </div>
                     </section>
                   </div>
@@ -659,7 +886,7 @@
                     <section class="section">
                       <div class="pointer"></div>
                       <div class="abstract">
-                        <p>Undocumented</p>
+                        <p>Initializer that takes a [String: Any] and creates a LDUser from the contents. Uses any keys present to define corresponding attribute values. Initializes attributes not present in the dictionary to their default value. Attempts to set <code><a href="../Structs/LDUser.html#/s:12LaunchDarkly6LDUserV6deviceSSSgv">device</a></code> and <code><a href="../Structs/LDUser.html#/s:12LaunchDarkly6LDUserV15operatingSystemSSSgv">operatingSystem</a></code> from corresponding values embedded in <code><a href="../Structs/LDUser.html#/s:12LaunchDarkly6LDUserV6customs10DictionaryVySSypGSgv">custom</a></code>. Attempts to set feature flags from values set in <code>config</code>.</p>
 
                       </div>
                       <div class="declaration">
@@ -669,6 +896,25 @@
                           <pre class="highlight swift"><code><span class="kd">public</span> <span class="nf">init</span><span class="p">(</span><span class="nv">userDictionary</span><span class="p">:</span> <span class="p">[</span><span class="kt">String</span> <span class="p">:</span> <span class="kt">Any</span><span class="p">])</span></code></pre>
 
                         </div>
+                      </div>
+                      <div>
+                        <h4>Parameters</h4>
+                        <table class="graybox">
+                          <tbody>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>userDictionary</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>Dictionary with LDUser attribute keys and values.</p>
+                                </div>
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
                       </div>
                     </section>
                   </div>
@@ -680,9 +926,9 @@
                 <li class="item">
                   <div>
                     <code>
-                    <a name="/s:s9EquatableP2eeoiSbx_xtFZ"></a>
+                    <a name="/s:12LaunchDarkly6LDUserV2eeoiSbAC_ACtFZ"></a>
                     <a name="//apple_ref/swift/Method/==(_:_:)" class="dashAnchor"></a>
-                    <a class="token" href="#/s:s9EquatableP2eeoiSbx_xtFZ">==(_:_:)</a>
+                    <a class="token" href="#/s:12LaunchDarkly6LDUserV2eeoiSbAC_ACtFZ">==(_:_:)</a>
                     </code>
                   </div>
                   <div class="height-container">
@@ -690,7 +936,8 @@
                     <section class="section">
                       <div class="pointer"></div>
                       <div class="abstract">
-                        
+                        <p>Compares users by comparing their user keys only, to allow the client app to collect user information over time</p>
+
                       </div>
                       <div class="declaration">
                         <h4>Declaration</h4>
