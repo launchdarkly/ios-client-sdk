@@ -22,13 +22,17 @@ public final class ObjcLDClient: NSObject {
     }
 
     @objc public func startWithMobileKey(_ mobileKey: String, config: ObjcLDConfig? = nil, user userObject: ObjcLDUser? = nil) {
-        if let configObject = config {
-            LDClient.shared.start(mobileKey: mobileKey, config: configObject.config, user: userObject?.user)
-            return
-        }
-        LDClient.shared.start(mobileKey: mobileKey, user: userObject?.user)
+        ObjcLDClient.sharedInstance.startWithMobileKey(mobileKey, config: config, user: userObject, completion: nil)
     }
     
+    @objc public func startWithMobileKey(_ mobileKey: String, config: ObjcLDConfig? = nil, user userObject: ObjcLDUser? = nil, completion: (() -> Void)? = nil) {
+        if let configObject = config {
+            LDClient.shared.start(mobileKey: mobileKey, config: configObject.config, user: userObject?.user, completion: completion)
+            return
+        }
+        LDClient.shared.start(mobileKey: mobileKey, user: userObject?.user, completion: completion)
+    }
+
     @objc(setConfig:) public func setConfig(_ config: ObjcLDConfig) {
         LDClient.shared.config = config.config
     }
