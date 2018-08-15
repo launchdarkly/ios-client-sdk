@@ -55,6 +55,17 @@ extern const NSInteger kLDFlagConfigValueItemDoesNotExist;
     XCTAssertEqual(flagValueCounter.known, NO);
 }
 
+-(void)testInitAndCounterWithFlagConfigValueConstructors_nullReportedValue {
+    LDEventTrackingContext *eventTrackingContext = [[LDEventTrackingContext alloc] init];
+    LDFlagConfigValue *flagConfigValue = [LDFlagConfigValue flagConfigValueFromJsonFileNamed:@"nullConfigIsANull-null" flagKey:kLDFlagKeyIsANull eventTrackingContext:eventTrackingContext];
+    id reportedFlagValue = nil;
+    LDFlagValueCounter *flagValueCounter = [LDFlagValueCounter counterWithFlagConfigValue:flagConfigValue reportedFlagValue:reportedFlagValue];
+    XCTAssertEqualObjects(flagValueCounter.flagConfigValue, flagConfigValue);
+    XCTAssertEqualObjects(flagValueCounter.reportedFlagValue, [NSNull null]);
+    XCTAssertEqual(flagValueCounter.count, 1);
+    XCTAssertEqual(flagValueCounter.known, YES);
+}
+
 -(void)testDictionaryValue {
     for (NSString *flagKey in self.flagConfigDictionary.allKeys) {
         LDFlagConfigValue *flagConfigValue = self.flagConfigDictionary[flagKey];

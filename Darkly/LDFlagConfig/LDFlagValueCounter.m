@@ -27,8 +27,11 @@ NSString * const kLDFlagValueCounterKeyUnknown = @"unknown";
     return [[LDFlagValueCounter alloc] initWithFlagConfigValue:flagConfigValue reportedFlagValue:reportedFlagValue];
 }
 
--(instancetype)initWithFlagConfigValue:(LDFlagConfigValue*)flagConfigValue reportedFlagValue:(id)reportedFlagValue  {
+-(instancetype)initWithFlagConfigValue:(LDFlagConfigValue*)flagConfigValue reportedFlagValue:(id)reportedFlagValue {
     if (!(self = [super init])) { return nil; }
+    if (reportedFlagValue == nil) {
+        reportedFlagValue = [NSNull null];
+    }
 
     self.flagConfigValue = flagConfigValue;
     self.reportedFlagValue = reportedFlagValue;
@@ -48,7 +51,7 @@ NSString * const kLDFlagValueCounterKeyUnknown = @"unknown";
     } else {
         dictionary[kLDFlagValueCounterKeyUnknown] = @(YES);
     }
-    dictionary[kLDFlagValueCounterKeyValue] = self.reportedFlagValue ?: [NSNull null];
+    dictionary[kLDFlagValueCounterKeyValue] = self.reportedFlagValue;
     dictionary[kLDFlagValueCounterKeyCount] = @(self.count);
 
     return [NSDictionary dictionaryWithDictionary:dictionary];

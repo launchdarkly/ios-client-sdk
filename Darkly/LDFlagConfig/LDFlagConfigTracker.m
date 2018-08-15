@@ -11,6 +11,7 @@
 #import "LDFlagCounter.h"
 #import "LDFlagConfigValue.h"
 #import "NSDate+ReferencedDate.h"
+#import "LDUtil.h"
 
 @interface LDFlagConfigTracker()
 @property (nonatomic, assign) LDMillisecond startDateMillis;
@@ -26,22 +27,45 @@
 -(instancetype)init {
     if (!(self = [super init])) { return nil; }
 
-    self.startDateMillis = [[NSDate date] millisSince1970];
-    self.mutableFlagCounters = [NSMutableDictionary dictionary];
+    @synchronized(self) {
+        self.startDateMillis = [[NSDate date] millisSince1970];
+        self.mutableFlagCounters = [NSMutableDictionary dictionary];
 
-    return self;
+        return self;
+    }
 }
 
--(NSDictionary*)flagCounters {
-    return [NSDictionary dictionaryWithDictionary:self.mutableFlagCounters];
+-(BOOL)hasTrackedEvents {
+    @synchronized(self) {
+        return self.mutableFlagCounters.count > 0;
+    }
 }
 
 -(void)logRequestForFlagKey:(NSString*)flagKey reportedFlagValue:(id)reportedFlagValue flagConfigValue:(LDFlagConfigValue*)flagConfigValue defaultValue:(id)defaultValue {
-    if (!self.mutableFlagCounters[flagKey]) {
-        self.mutableFlagCounters[flagKey] = [LDFlagCounter counterWithFlagKey:flagKey defaultValue:defaultValue];
+    if(flagKey.length == 0) {
+        DEBUG_LOGX(@"-[LDFlagConfigTracker logRequestForFlagKey:reportedFlagValue:flagConfigValue:defaultValue] called with an empty flagKey. Aborting.");
+        return;
     }
-    
-    [self.mutableFlagCounters[flagKey] logRequestWithFlagConfigValue:flagConfigValue reportedFlagValue:reportedFlagValue defaultValue:defaultValue];
+    @synchronized(self) {
+        if (!self.mutableFlagCounters[flagKey]) {
+            self.mutableFlagCounters[flagKey] = [LDFlagCounter counterWithFlagKey:flagKey defaultValue:defaultValue];
+        }
+
+        [self.mutableFlagCounters[flagKey] logRequestWithFlagConfigValue:flagConfigValue reportedFlagValue:reportedFlagValue];
+    }
+}
+
+-(NSDictionary<NSString*, NSDictionary*>*)flagRequestSummary {
+    @synchronized(self) {
+        NSMutableDictionary *flagRequestSummary = [NSMutableDictionary dictionaryWithCapacity:self.mutableFlagCounters.count];
+        NSDictionary<NSString*, LDFlagCounter*> *flagCounters = [NSDictionary dictionaryWithDictionary:self.mutableFlagCounters];
+        for (NSString *flagKey in flagCounters.allKeys) {
+            NSDictionary *counterDictionary = [flagCounters[flagKey] dictionaryValue];
+            if (counterDictionary == nil) { continue; }
+            flagRequestSummary[flagKey] = counterDictionary;
+        }
+        return [NSDictionary dictionaryWithDictionary:flagRequestSummary];
+    }
 }
 
 -(NSString*)description {

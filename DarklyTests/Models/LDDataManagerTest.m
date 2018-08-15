@@ -157,6 +157,19 @@ NSString * const kMobileKeyMock = @"LDDataManagerTest.mobileKeyMock";
     [self waitForExpectations:@[expectation] timeout:1];
 }
 
+-(void)testCreateSummaryEvent_nilTracker {
+    LDFlagConfigTracker *tracker = nil;
+    XCTestExpectation *expectation = [self expectationWithDescription:@"LDDataManagerTest.testCreateSummaryEvent_nilTracker.allEvents"];
+
+    [[LDDataManager sharedManager] createSummaryEventWithTracker:tracker config:self.config];
+
+    [[LDDataManager sharedManager] allEventDictionaries:^(NSArray *eventDictionaries) {
+        XCTAssertEqual(eventDictionaries.count, 0);
+        [expectation fulfill];
+    }];
+    [self waitForExpectations:@[expectation] timeout:1];
+}
+
 -(void)testCreateFeatureEvent_trackEvents_YES {
     LDFlagConfigValue *flagConfigValue = [self setupCreateFeatureEventTestWithTrackEvents:YES];
     [[self.eventModelMock expect] featureEventWithFlagKey:kFlagKeyIsABawler
