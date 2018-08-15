@@ -14,7 +14,7 @@
 
 @interface LDFlagConfigTracker : NSObject
 @property (nonatomic, assign, readonly) LDMillisecond startDateMillis;
-@property (nonnull, nonatomic, strong, readonly) NSDictionary<NSString*, LDFlagCounter*> *flagCounters;
+@property (nonatomic, assign, readonly) BOOL hasTrackedEvents;
 
 +(nonnull instancetype)tracker;
 -(nonnull instancetype)init;
@@ -23,6 +23,6 @@
           reportedFlagValue:(nonnull id)reportedFlagValue
             flagConfigValue:(nullable LDFlagConfigValue*)flagConfigValue
                defaultValue:(nullable id)defaultValue;
-
+-(nonnull NSDictionary<NSString*, NSDictionary*>*)flagRequestSummary;
 -(nonnull NSString*)description;
 @end

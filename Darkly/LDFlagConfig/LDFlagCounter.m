@@ -27,25 +27,34 @@ NSString * const kLDFlagCounterKeyCounters = @"counters";
 -(instancetype)initWithFlagKey:(NSString*)flagKey defaultValue:(id)defaultValue {
     if (!(self = [super init])) { return nil; }
 
-    self.flagKey = flagKey;
-    self.defaultValue = defaultValue;
-    self.flagValueCounters = [NSMutableArray array];
+    @synchronized(self) {
+        self.flagKey = flagKey;
+        self.defaultValue = defaultValue;
+        self.flagValueCounters = [NSMutableArray array];
 
-    return self;
-}
-
--(NSArray<LDFlagValueCounter*>*)valueCounters {
-    return self.flagValueCounters;
-}
-
--(void)logRequestWithFlagConfigValue:(LDFlagConfigValue*)flagConfigValue reportedFlagValue:(id)reportedFlagValue defaultValue:(id)defaultValue {
-    LDFlagValueCounter *selectedFlagValueCounter = [self valueCounterForFlagConfigValue:flagConfigValue];
-    if (selectedFlagValueCounter) {
-        selectedFlagValueCounter.count += 1;
-        return;
+        return self;
     }
+}
 
-    [self.flagValueCounters addObject:[LDFlagValueCounter counterWithFlagConfigValue:flagConfigValue reportedFlagValue:reportedFlagValue]];
+-(BOOL)hasLoggedRequests {
+    @synchronized(self) {
+        return self.flagValueCounters.count > 0;
+    }
+}
+
+-(void)logRequestWithFlagConfigValue:(LDFlagConfigValue*)flagConfigValue reportedFlagValue:(id)reportedFlagValue {
+    if (reportedFlagValue == nil) {
+        reportedFlagValue = [NSNull null];
+    }
+    @synchronized(self) {
+        LDFlagValueCounter *selectedFlagValueCounter = [self valueCounterForFlagConfigValue:flagConfigValue];
+        if (selectedFlagValueCounter) {
+            selectedFlagValueCounter.count += 1;
+            return;
+        }
+
+        [self.flagValueCounters addObject:[LDFlagValueCounter counterWithFlagConfigValue:flagConfigValue reportedFlagValue:reportedFlagValue]];
+    }
 }
 
 -(LDFlagValueCounter*)valueCounterForFlagConfigValue:(LDFlagConfigValue*)flagConfigValue {
@@ -58,24 +67,27 @@ NSString * const kLDFlagCounterKeyCounters = @"counters";
 }
 
 -(NSDictionary*)dictionaryValue {
-    NSMutableArray<NSDictionary*> *flagValueCounterDictionaries = [NSMutableArray arrayWithCapacity:self.flagValueCounters.count];
-    for (LDFlagValueCounter *flagValueCounter in self.flagValueCounters) {
-        NSMutableDictionary *flagValueCounterDictionary = [NSMutableDictionary dictionaryWithDictionary:[flagValueCounter dictionaryValue]];
-        //If the flagConfigValue.value is nil or null, the client will have served the default value
-        if (!flagValueCounter.flagConfigValue.value || [flagValueCounter.flagConfigValue.value isKindOfClass:[NSNull class]]) {
-            flagValueCounterDictionary[kLDFlagConfigValueKeyValue] = self.defaultValue ?: [NSNull null];
+    @synchronized(self) {
+        NSMutableArray<NSDictionary*> *flagValueCounterDictionaries = [NSMutableArray arrayWithCapacity:self.flagValueCounters.count];
+        NSArray<LDFlagValueCounter*> *flagValueCounters = [NSArray arrayWithArray: self.flagValueCounters];
+        for (LDFlagValueCounter *flagValueCounter in flagValueCounters) {
+            NSMutableDictionary *flagValueCounterDictionary = [NSMutableDictionary dictionaryWithDictionary:[flagValueCounter dictionaryValue]];
+            //If the flagConfigValue.value is nil or null, the client will have served the default value
+            if (!flagValueCounter.flagConfigValue.value || [flagValueCounter.flagConfigValue.value isKindOfClass:[NSNull class]]) {
+                flagValueCounterDictionary[kLDFlagConfigValueKeyValue] = self.defaultValue ?: [NSNull null];
+            }
+            [flagValueCounterDictionaries addObject:[flagValueCounterDictionary copy]];
         }
-        [flagValueCounterDictionaries addObject:[flagValueCounterDictionary copy]];
-    }
-    NSMutableDictionary *dictionary = [NSMutableDictionary dictionary];
-    if (self.defaultValue) {
-        dictionary[kLDFlagCounterKeyDefaultValue] = self.defaultValue;
-    } else {
-        dictionary[kLDFlagCounterKeyDefaultValue] = [NSNull null];
-    }
-    dictionary[kLDFlagCounterKeyCounters] = flagValueCounterDictionaries;
+        NSMutableDictionary *dictionary = [NSMutableDictionary dictionary];
+        if (self.defaultValue) {
+            dictionary[kLDFlagCounterKeyDefaultValue] = self.defaultValue;
+        } else {
+            dictionary[kLDFlagCounterKeyDefaultValue] = [NSNull null];
+        }
+        dictionary[kLDFlagCounterKeyCounters] = flagValueCounterDictionaries;
 
-    return [NSDictionary dictionaryWithDictionary:dictionary];
+        return [NSDictionary dictionaryWithDictionary:dictionary];
+    }
 }
 
 -(NSString*)description {

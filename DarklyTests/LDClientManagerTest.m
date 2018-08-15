@@ -268,7 +268,7 @@ NSString *const kBoolFlagKey = @"isABawler";
 
     OCMVerify([self.requestManagerMock performEventRequest:[OCMArg isEqual:eventDictionaries]]);
     XCTAssertNotNil([LDClient sharedInstance].ldUser.flagConfigTracker);
-    XCTAssertTrue([LDClient sharedInstance].ldUser.flagConfigTracker.flagCounters.count == 0);
+    XCTAssertFalse([LDClient sharedInstance].ldUser.flagConfigTracker.hasTrackedEvents);
     XCTAssertTrue(Approximately([LDClient sharedInstance].ldUser.flagConfigTracker.startDateMillis, startDateMillis, 10));
 }
 

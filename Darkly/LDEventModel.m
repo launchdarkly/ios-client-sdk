@@ -149,15 +149,12 @@ NSString * const kEventModelKeyFeatures = @"features";
 
 -(instancetype)initSummaryEventWithTracker:(LDFlagConfigTracker*)tracker {
     if(!(self = [self init])) { return nil; }
+    if(tracker == nil) { return nil; }
 
     self.kind = kEventModelKindFeatureSummary;
     self.startDateMillis = tracker.startDateMillis;
     self.endDateMillis = [[NSDate date] millisSince1970];
-    NSMutableDictionary *flagRequestSummary = [NSMutableDictionary dictionaryWithCapacity:tracker.flagCounters.count];
-    for (NSString *flagKey in [tracker.flagCounters.allKeys copy]) {
-        flagRequestSummary[flagKey] = [tracker.flagCounters[flagKey] dictionaryValue];
-    }
-    self.flagRequestSummary = [NSDictionary dictionaryWithDictionary:flagRequestSummary];
+    self.flagRequestSummary = tracker.flagRequestSummary;
 
     return self;
 }

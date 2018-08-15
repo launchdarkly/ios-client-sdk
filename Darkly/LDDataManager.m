@@ -193,12 +193,17 @@ dispatch_queue_t eventsQueue;
 }
 
 -(void)createSummaryEventWithTracker:(LDFlagConfigTracker*)tracker config:(LDConfig*)config {
-    if (tracker.flagCounters.count == 0) {
-        DEBUG_LOGX(@"Tracker has no flag counters. Discarding summary event.");
+    if (!tracker.hasTrackedEvents) {
+        DEBUG_LOGX(@"Tracker has no events to report. Discarding summary event.");
+        return;
+    }
+    LDEventModel *summaryEvent = [LDEventModel summaryEventWithTracker:tracker];
+    if (summaryEvent == nil) {
+        DEBUG_LOGX(@"Failed to create summary event. Aborting.");
         return;
     }
     DEBUG_LOGX(@"Creating summary event");
-    [self addEventDictionary:[[LDEventModel summaryEventWithTracker:tracker] dictionaryValueUsingConfig:config]];
+    [self addEventDictionary:[summaryEvent dictionaryValueUsingConfig:config]];
 }
 
 -(void)createDebugEventWithFlagKey:(NSString *)flagKey

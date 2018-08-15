@@ -106,10 +106,11 @@ NSString * const testMobileKey = @"EventModelTest.testMobileKey";
     XCTAssertTrue(Approximately(event.startDateMillis, startDateMillis, 10));
     XCTAssertTrue(Approximately(event.endDateMillis, [creationDate millisSince1970], 10));
     //Verify flagCounter dictionaries match the tracker
-    XCTAssertEqual(event.flagRequestSummary.allKeys.count, trackerStub.flagCounters.allKeys.count);
-    if (event.flagRequestSummary.allKeys.count != trackerStub.flagCounters.allKeys.count) { return; }
-    for (NSString *flagKey in trackerStub.flagCounters.allKeys) {
-        LDFlagCounter *flagCounter = trackerStub.flagCounters[flagKey];
+    XCTAssertEqual(event.flagRequestSummary.allKeys.count, trackerStub.mutableFlagCounters.allKeys.count);
+    if (event.flagRequestSummary.allKeys.count != trackerStub.mutableFlagCounters.allKeys.count) { return; }
+    NSDictionary<NSString*, LDFlagCounter*> *flagCounters = [NSDictionary dictionaryWithDictionary: trackerStub.mutableFlagCounters];
+    for (NSString *flagKey in flagCounters.allKeys) {
+        LDFlagCounter *flagCounter = flagCounters[flagKey];
         NSDictionary *flagCounterDictionary = event.flagRequestSummary[flagKey];
 
         XCTAssertEqualObjects(flagCounterDictionary[kLDFlagCounterKeyDefaultValue], flagCounter.defaultValue);
@@ -131,6 +132,69 @@ NSString * const testMobileKey = @"EventModelTest.testMobileKey";
             XCTAssertNil(selectedCounterDictionary[kLDEventTrackingContextKeyDebugEventsUntilDate]);
         }
     }
+}
+
+- (void)testSummaryEvent_emptyTracker {
+    LDFlagConfigTracker *tracker = [LDFlagConfigTracker tracker];
+
+    LDEventModel *event = [LDEventModel summaryEventWithTracker:tracker];
+
+    XCTAssertNotNil(event);
+}
+
+- (void)testSummaryEvent_nilTracker {
+    LDFlagConfigTracker *tracker = nil;     //avoids a compiler warning about sending nil to summaryEventWithTracker
+
+    LDEventModel *event = [LDEventModel summaryEventWithTracker:tracker];
+
+    XCTAssertNil(event);
+}
+
+//Verify that once the summary event is created, a tracker change does not change the event
+- (void)testSummaryEvent_changeTracker {
+    LDFlagConfigTracker *unchangedTrackerStub = [LDFlagConfigTracker stubTracker];
+    LDFlagConfigTracker *trackerStub = [LDFlagConfigTracker stubTracker];
+
+    LDEventModel *event = [LDEventModel summaryEventWithTracker:trackerStub];
+
+    //Change the tracker by logging one more request for each flag key
+    NSDictionary<NSString*, LDFlagCounter*> *flagCounters = trackerStub.mutableFlagCounters;
+    for (NSString *flagKey in flagCounters.allKeys) {
+        LDFlagCounter *flagCounter = flagCounters[flagKey];
+        LDFlagValueCounter *flagValueCounter = [flagCounter.flagValueCounters firstObject];
+        LDFlagConfigValue *flagConfigValue = flagValueCounter.flagConfigValue;
+        [trackerStub logRequestForFlagKey:flagKey reportedFlagValue:flagConfigValue.value flagConfigValue:flagConfigValue defaultValue:flagCounter.defaultValue];
+    }
+
+    XCTAssertNotNil(event);
+    //Verify flagCounter dictionaries match the unchanged tracker
+    XCTAssertEqual(event.flagRequestSummary.allKeys.count, unchangedTrackerStub.mutableFlagCounters.allKeys.count);
+    if (event.flagRequestSummary.allKeys.count != unchangedTrackerStub.mutableFlagCounters.allKeys.count) { return; }
+    NSDictionary<NSString*, LDFlagCounter*> *unchangedFlagCounters = [NSDictionary dictionaryWithDictionary: unchangedTrackerStub.mutableFlagCounters];
+    for (NSString *flagKey in unchangedFlagCounters.allKeys) {
+        LDFlagCounter *flagCounter = unchangedFlagCounters[flagKey];
+        NSDictionary *flagCounterDictionary = event.flagRequestSummary[flagKey];
+
+        XCTAssertEqualObjects(flagCounterDictionary[kLDFlagCounterKeyDefaultValue], flagCounter.defaultValue);
+        NSArray<NSDictionary*> *counterDictionaries = flagCounterDictionary[kLDFlagCounterKeyCounters];
+        XCTAssertEqual(counterDictionaries.count, flagCounter.flagValueCounters.count);
+        if (counterDictionaries.count != flagCounter.flagValueCounters.count) { continue; }
+        for (LDFlagValueCounter *flagValueCounter in flagCounter.flagValueCounters) {
+            NSDictionary *selectedCounterDictionary = [counterDictionaries dictionaryForFlagValueCounter:flagValueCounter];
+            XCTAssertNotNil(selectedCounterDictionary, @"counter dictionary not found for flagValueCounter: %@", [flagValueCounter description]);
+            if (!selectedCounterDictionary) { continue; }
+
+            XCTAssertEqualObjects(selectedCounterDictionary[kLDFlagConfigValueKeyValue], flagValueCounter.flagConfigValue.value);
+            XCTAssertEqual([selectedCounterDictionary[kLDFlagConfigValueKeyVariation] integerValue], flagValueCounter.flagConfigValue.variation);
+            XCTAssertEqualObjects(selectedCounterDictionary[kLDFlagConfigValueKeyVersion], flagValueCounter.flagConfigValue.flagVersion);
+            XCTAssertEqual([selectedCounterDictionary[kLDFlagValueCounterKeyCount] integerValue], flagValueCounter.count);
+            XCTAssertNil(selectedCounterDictionary[kLDFlagValueCounterKeyUnknown]);
+            XCTAssertNil(selectedCounterDictionary[kLDFlagConfigValueKeyFlagVersion]);
+            XCTAssertNil(selectedCounterDictionary[kLDEventTrackingContextKeyTrackEvents]);
+            XCTAssertNil(selectedCounterDictionary[kLDEventTrackingContextKeyDebugEventsUntilDate]);
+        }
+    }
+
 }
 
 - (void)testInitAndDebugEvent {
@@ -301,10 +365,11 @@ NSString * const testMobileKey = @"EventModelTest.testMobileKey";
     XCTAssertEqualObjects(eventDictionary[kEventModelKeyFeatures], event.flagRequestSummary);
 
     //Checks that are the same as in testDictionaryValue
-    for (NSString *flagKey in tracker.flagCounters.allKeys) {
-        LDFlagCounter *flagCounter = tracker.flagCounters[flagKey];
+    NSDictionary<NSString*, LDFlagCounter*> *flagCounters = [NSDictionary dictionaryWithDictionary: tracker.mutableFlagCounters];
+    for (NSString *flagKey in flagCounters.allKeys) {
+        LDFlagCounter *flagCounter = flagCounters[flagKey];
         NSDictionary *flagCounterDictionary = eventDictionary[kEventModelKeyFeatures][flagKey];
-        LDFlagValueCounter *flagValueCounter = flagCounter.valueCounters.firstObject;
+        LDFlagValueCounter *flagValueCounter = flagCounter.flagValueCounters.firstObject;
         XCTAssertEqual(((NSArray*)flagCounterDictionary[kLDFlagCounterKeyCounters]).count, 1);
         NSDictionary *flagConfigValueSummary = [flagCounterDictionary[kLDFlagCounterKeyCounters] firstObject];
         XCTAssertEqualObjects(flagConfigValueSummary[kLDFlagConfigValueKeyValue], [LDFlagConfigValue defaultValueForFlagKey:flagKey]);
@@ -326,10 +391,11 @@ NSString * const testMobileKey = @"EventModelTest.testMobileKey";
     XCTAssertEqualObjects(eventDictionary[kEventModelKeyStartDate], @(event.startDateMillis));
     XCTAssertTrue(Approximately([eventDictionary[kEventModelKeyEndDate] ldMillisecondValue], event.endDateMillis, 10));
     XCTAssertEqualObjects(eventDictionary[kEventModelKeyFeatures], event.flagRequestSummary);
-    for (NSString *flagKey in tracker.flagCounters.allKeys) {
-        LDFlagCounter *flagCounter = tracker.flagCounters[flagKey];
+    NSDictionary<NSString*, LDFlagCounter*> *flagCounters = [NSDictionary dictionaryWithDictionary: tracker.mutableFlagCounters];
+    for (NSString *flagKey in flagCounters.allKeys) {
+        LDFlagCounter *flagCounter = flagCounters[flagKey];
         NSDictionary *flagCounterDictionary = eventDictionary[kEventModelKeyFeatures][flagKey];
-        LDFlagValueCounter *flagValueCounter = flagCounter.valueCounters.firstObject;
+        LDFlagValueCounter *flagValueCounter = flagCounter.flagValueCounters.firstObject;
         LDFlagConfigValue *flagConfigValue = flagValueCounter.flagConfigValue;
         NSDictionary *flagConfigValueSummary = [flagCounterDictionary[kLDFlagCounterKeyCounters] firstObject];
         XCTAssertEqual(((NSArray*)flagCounterDictionary[kLDFlagCounterKeyCounters]).count, 1);
@@ -384,10 +450,12 @@ NSString * const testMobileKey = @"EventModelTest.testMobileKey";
     XCTAssertEqualObjects(eventDictionary[kEventModelKeyFeatures], event.flagRequestSummary);
 
     //Checks that are the same as in testDictionaryValue
-    for (NSString *flagKey in tracker.flagCounters.allKeys) {
-        LDFlagCounter *flagCounter = tracker.flagCounters[flagKey];
+    NSDictionary<NSString*, LDFlagCounter*> *flagCounters = [NSDictionary dictionaryWithDictionary: tracker.mutableFlagCounters];
+    for (NSString *flagKey in flagCounters.allKeys) {
+        LDFlagCounter *flagCounter = flagCounters[flagKey];
         NSDictionary *flagCounterDictionary = eventDictionary[kEventModelKeyFeatures][flagKey];
-        for (LDFlagValueCounter *flagValueCounter in flagCounter.valueCounters) {
+        NSArray<LDFlagValueCounter*> *flagValueCounters = [NSArray arrayWithArray:flagCounter.flagValueCounters];
+        for (LDFlagValueCounter *flagValueCounter in flagValueCounters) {
             LDFlagConfigValue *flagConfigValue = flagValueCounter.flagConfigValue;
             NSDictionary *flagConfigValueSummary = [flagCounterDictionary[kLDFlagCounterKeyCounters] dictionaryForFlagValueCounter:flagValueCounter];
             XCTAssertEqualObjects(flagConfigValueSummary[kLDFlagConfigValueKeyVersion], @(flagConfigValue.modelVersion));

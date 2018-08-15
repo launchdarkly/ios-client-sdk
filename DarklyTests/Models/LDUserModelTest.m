@@ -15,6 +15,8 @@
 #import "LDFlagConfigModel.h"
 #import "LDFlagConfigTracker.h"
 #import "NSDate+Testable.h"
+#import "LDFlagConfigTracker.h"
+#import "LDFlagConfigTracker+Testable.h"
 
 @interface LDUserModelTest : XCTestCase
 @end
@@ -54,7 +56,7 @@
     }
     XCTAssertNotNil(user.flagConfigTracker);
     if (user.flagConfigTracker) {
-        XCTAssertTrue(user.flagConfigTracker.flagCounters.count == 0);
+        XCTAssertFalse(user.flagConfigTracker.hasTrackedEvents);
         XCTAssertTrue(Approximately(user.flagConfigTracker.startDateMillis, [creationDate millisSince1970], 10));
     }
 }
@@ -436,7 +438,7 @@
     XCTAssertTrue([userStub isEqual:decodedUser ignoringAttributes:@[kUserAttributeUpdatedAt]]);
     XCTAssertNotNil(decodedUser.flagConfigTracker);
     if (decodedUser.flagConfigTracker) {
-        XCTAssertTrue(decodedUser.flagConfigTracker.flagCounters.count == 0);
+        XCTAssertFalse(decodedUser.flagConfigTracker.hasTrackedEvents);
         XCTAssertTrue(Approximately(decodedUser.flagConfigTracker.startDateMillis, startDateMillis, 10));
     }
 }
@@ -455,7 +457,7 @@
     XCTAssertTrue([userStub isEqual:reinflatedUser ignoringAttributes:nil]);
     XCTAssertNotNil(reinflatedUser.flagConfigTracker);
     if (reinflatedUser.flagConfigTracker) {
-        XCTAssertTrue(reinflatedUser.flagConfigTracker.flagCounters.count == 0);
+        XCTAssertFalse(reinflatedUser.flagConfigTracker.hasTrackedEvents);
         XCTAssertTrue(Approximately(reinflatedUser.flagConfigTracker.startDateMillis, startDateMillis, 10));
     }
 }
@@ -509,7 +511,7 @@
 
     XCTAssertNotNil(subject.flagConfigTracker);
     if (subject.flagConfigTracker) {
-        XCTAssertTrue(subject.flagConfigTracker.flagCounters.count == 0);
+        XCTAssertFalse(subject.flagConfigTracker.hasTrackedEvents);
         XCTAssertTrue(Approximately(subject.flagConfigTracker.startDateMillis, startDateMillis, 10));
     }
 }

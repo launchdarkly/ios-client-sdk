@@ -13,6 +13,9 @@
 #import "LDFlagCounter.h"
 #import "LDFlagCounter+Testable.h"
 #import "LDFlagValueCounter.h"
+#import "LDEventTrackingContext.h"
+#import "LDFlagConfigTracker.h"
+#import "LDFlagConfigTracker+Testable.h"
 
 @interface LDFlagConfigTrackerTest : XCTestCase
 
@@ -35,8 +38,8 @@
     LDFlagConfigTracker *tracker = [LDFlagConfigTracker tracker];
 
     XCTAssertTrue(labs(tracker.startDateMillis - creationMillis) <= 1);
-    XCTAssertNotNil(tracker.flagCounters);
-    XCTAssertEqual(tracker.flagCounters.count, 0);
+    XCTAssertNotNil(tracker.mutableFlagCounters);
+    XCTAssertFalse(tracker.hasTrackedEvents);
 }
 
 -(void)testLogRequestForKnownValues {
@@ -50,11 +53,14 @@
             logRequestForUniqueValueCount += 1;
             [tracker logRequestForFlagKey:flagKey reportedFlagValue:flagConfigValue.value flagConfigValue:flagConfigValue defaultValue:defaultValue];
 
-            LDFlagCounter *flagCounter = tracker.flagCounters[flagKey];
+            XCTAssertTrue(tracker.hasTrackedEvents);
+
+            LDFlagCounter *flagCounter = tracker.mutableFlagCounters[flagKey];
             XCTAssertNotNil(flagCounter);    //Verify the logRequest call added a new LDFlagCounter
             if (!flagCounter) { continue; }
 
-            XCTAssertEqual(flagCounter.valueCounters.count, logRequestForUniqueValueCount); //Verify the logRequest call added a new LDFlagValueCounter
+            XCTAssertTrue(flagCounter.hasLoggedRequests);
+            XCTAssertEqual(flagCounter.flagValueCounters.count, logRequestForUniqueValueCount); //Verify the logRequest call added a new LDFlagValueCounter
             LDFlagValueCounter *flagValueCounter = [flagCounter valueCounterForFlagConfigValue:flagConfigValue];
             XCTAssertNotNil(flagValueCounter);
             if (!flagValueCounter) { continue; }
@@ -65,12 +71,12 @@
 
             //Make a second call to logRequest with the same flag key & value. Verify no new flagValueCounters, and the existing flagValueCounter was incremented
             [tracker logRequestForFlagKey:flagKey reportedFlagValue:flagConfigValue.value flagConfigValue:flagConfigValue defaultValue:defaultValue];
-            XCTAssertEqual(flagCounter.valueCounters.count, logRequestForUniqueValueCount);
+            XCTAssertEqual(flagCounter.flagValueCounters.count, logRequestForUniqueValueCount);
             XCTAssertEqual(flagValueCounter.count, 2);
 
             //Make a third call to logRequest with the same value and verify no new flagValueCounters, and the count was incremented
             [tracker logRequestForFlagKey:flagKey reportedFlagValue:flagConfigValue.value flagConfigValue:flagConfigValue defaultValue:defaultValue];
-            XCTAssertEqual(flagCounter.valueCounters.count, logRequestForUniqueValueCount);
+            XCTAssertEqual(flagCounter.flagValueCounters.count, logRequestForUniqueValueCount);
             XCTAssertEqual(flagValueCounter.count, 3);
         }
     }
@@ -83,11 +89,11 @@
 
         [tracker logRequestForFlagKey:flagKey reportedFlagValue:defaultValue flagConfigValue:nil defaultValue:defaultValue];
 
-        LDFlagCounter *flagCounter = tracker.flagCounters[flagKey];
+        LDFlagCounter *flagCounter = tracker.mutableFlagCounters[flagKey];
         XCTAssertNotNil(flagCounter);    //Verify the logRequest call added a new LDFlagCounter
         if (!flagCounter) { continue; }
 
-        XCTAssertEqual(flagCounter.valueCounters.count, 1);    //Verify the logRequest call added a new LDFlagValueCounter
+        XCTAssertEqual(flagCounter.flagValueCounters.count, 1);    //Verify the logRequest call added a new LDFlagValueCounter
         LDFlagValueCounter *flagValueCounter = [flagCounter valueCounterForFlagConfigValue:nil];
         XCTAssertNotNil(flagValueCounter);
         if (!flagValueCounter) { continue; }
@@ -98,13 +104,23 @@
 
         //Make a second call to logRequest with an unknown value. Verify no new flagValueCounters, and the existing flagValueCounter was incremented
         [tracker logRequestForFlagKey:flagKey reportedFlagValue:defaultValue flagConfigValue:nil defaultValue:defaultValue];
-        XCTAssertEqual(flagCounter.valueCounters.count, 1);
+        XCTAssertEqual(flagCounter.flagValueCounters.count, 1);
         XCTAssertEqual(flagValueCounter.count, 2);
 
         //Make a third call to logRequest with the same value and verify no new flagValueCounters, and the count was incremented
         [tracker logRequestForFlagKey:flagKey reportedFlagValue:defaultValue flagConfigValue:nil defaultValue:defaultValue];
-        XCTAssertEqual(flagCounter.valueCounters.count, 1);
+        XCTAssertEqual(flagCounter.flagValueCounters.count, 1);
         XCTAssertEqual(flagValueCounter.count, 3);
     }
+}
+
+-(void)testLogRequestForEmptyFlagKey {
+    LDFlagConfigTracker *tracker = [LDFlagConfigTracker tracker];
+    LDEventTrackingContext *eventTrackingContext = [[LDEventTrackingContext alloc] init];
+    LDFlagConfigValue *flagConfigValue = [LDFlagConfigValue flagConfigValueFromJsonFileNamed:@"boolConfigIsABool-true" flagKey:kLDFlagKeyIsABool eventTrackingContext:eventTrackingContext];
+
+    [tracker logRequestForFlagKey:@"" reportedFlagValue:@YES flagConfigValue:flagConfigValue defaultValue:@NO];
+
+    XCTAssertFalse(tracker.hasTrackedEvents);
 }
 @end

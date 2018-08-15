@@ -1155,7 +1155,7 @@
 		690346B51E6872EA00E45133 /* Project object */ = {
 			isa = PBXProject;
 			attributes = {
-				LastUpgradeCheck = 0920;
+				LastUpgradeCheck = 0940;
 				ORGANIZATIONNAME = LaunchDarkly;
 				TargetAttributes = {
 					690346BD1E6872EA00E45133 = {
