@@ -11,20 +11,24 @@ import Foundation
 @objc(LDClient)
 public final class ObjcLDClient: NSObject {
     @objc public static let sharedInstance = ObjcLDClient()
-    @objc public var isOnline: Bool { return LDClient.shared.isOnline }
-    @objc public var config: ObjcLDConfig { return ObjcLDConfig(LDClient.shared.config) }
-    @objc public var user: ObjcLDUser { return ObjcLDUser(LDClient.shared.user) }
-    
-    // MARK: - Public
 
+    @objc public var isOnline: Bool { return LDClient.shared.isOnline }
     @objc public func setOnline(_ goOnline: Bool, completion:(() -> Void)?) {
         LDClient.shared.setOnline(goOnline, completion: completion)
+    }
+    @objc public var config: ObjcLDConfig { return ObjcLDConfig(LDClient.shared.config) }
+    @objc(setConfig:) public func setConfig(_ config: ObjcLDConfig) {
+        LDClient.shared.config = config.config
+    }
+    @objc public var user: ObjcLDUser { return ObjcLDUser(LDClient.shared.user) }
+    @objc(setUser:) public func setUser(_ user: ObjcLDUser) {
+        LDClient.shared.user = user.user
     }
 
     @objc public func startWithMobileKey(_ mobileKey: String, config: ObjcLDConfig? = nil, user userObject: ObjcLDUser? = nil) {
         ObjcLDClient.sharedInstance.startWithMobileKey(mobileKey, config: config, user: userObject, completion: nil)
     }
-    
+
     @objc public func startWithMobileKey(_ mobileKey: String, config: ObjcLDConfig? = nil, user userObject: ObjcLDUser? = nil, completion: (() -> Void)? = nil) {
         if let configObject = config {
             LDClient.shared.start(mobileKey: mobileKey, config: configObject.config, user: userObject?.user, completion: completion)
@@ -33,22 +37,10 @@ public final class ObjcLDClient: NSObject {
         LDClient.shared.start(mobileKey: mobileKey, user: userObject?.user, completion: completion)
     }
 
-    @objc(setConfig:) public func setConfig(_ config: ObjcLDConfig) {
-        LDClient.shared.config = config.config
-    }
-    
-    @objc(setUser:) public func setUser(_ user: ObjcLDUser) {
-        LDClient.shared.user = user.user
-    }
-
     @objc public func stop() {
         LDClient.shared.stop()
     }
 
-    @objc public func trackEvent(key: String, data: [String: Any]? = nil) {
-        LDClient.shared.trackEvent(key: key, data: data)
-    }
-    
     // MARK: Feature Flag values
 
     @objc public func boolVariation(forKey key: LDFlagKey, fallback: Bool) -> Bool {
@@ -98,6 +90,8 @@ public final class ObjcLDClient: NSObject {
     @objc public func dictionaryVariationAndSource(forKey key: LDFlagKey, fallback: [String: Any]) -> ObjcLDDictionaryVariationValue {
         return ObjcLDDictionaryVariationValue(LDClient.shared.variationAndSource(forKey: key, fallback: fallback))
     }
+
+    // MARK: - Feature Flag Updates
     
     @objc public func observeBool(_ key: LDFlagKey, owner: LDFlagChangeOwner, handler: @escaping (ObjcLDBoolChangedFlag) -> Void) {
         LDClient.shared.observe(key: key, owner: owner) { (changedFlag) in handler(ObjcLDBoolChangedFlag(changedFlag)) }
@@ -140,8 +134,20 @@ public final class ObjcLDClient: NSObject {
     @objc public func observeFlagsUnchanged(owner: LDFlagChangeOwner, handler: @escaping LDFlagsUnchangedHandler) {
         LDClient.shared.observeFlagsUnchanged(owner: owner, handler: handler)
     }
+
+    @objc(stopObservingForOwner:) public func stopObserving(owner: LDFlagChangeOwner) {
+        LDClient.shared.stopObserving(owner: owner)
+    }
+
+    @objc public func setOnServerUnavailable(_ handler: @escaping () -> Void) {
+        LDClient.shared.onServerUnavailable = handler
+    }
     
     // MARK: - Events
+
+    @objc public func trackEvent(key: String, data: [String: Any]? = nil) {
+        LDClient.shared.trackEvent(key: key, data: data)
+    }
 
     @objc public func reportEvents() {
         LDClient.shared.reportEvents()
