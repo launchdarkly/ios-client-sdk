@@ -16,13 +16,13 @@ public final class ObjcLDClient: NSObject {
     @objc public func setOnline(_ goOnline: Bool, completion:(() -> Void)?) {
         LDClient.shared.setOnline(goOnline, completion: completion)
     }
-    @objc public var config: ObjcLDConfig { return ObjcLDConfig(LDClient.shared.config) }
-    @objc(setConfig:) public func setConfig(_ config: ObjcLDConfig) {
-        LDClient.shared.config = config.config
+    @objc public var config: ObjcLDConfig {
+        get { return ObjcLDConfig(LDClient.shared.config) }
+        set { LDClient.shared.config = config.config }
     }
-    @objc public var user: ObjcLDUser { return ObjcLDUser(LDClient.shared.user) }
-    @objc(setUser:) public func setUser(_ user: ObjcLDUser) {
-        LDClient.shared.user = user.user
+    @objc public var user: ObjcLDUser {
+        get { return ObjcLDUser(LDClient.shared.user) }
+        set { LDClient.shared.user = user.user }
     }
 
     @objc public func startWithMobileKey(_ mobileKey: String, config: ObjcLDConfig? = nil, user userObject: ObjcLDUser? = nil) {
