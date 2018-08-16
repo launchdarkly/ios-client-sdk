@@ -150,7 +150,7 @@ public class LDClient {
     }
     
     /**
-     The LDUser set into the LDClient may affect the set of feature flags returned by the LD server, and ties event tracking to the user. See `LDUser` for details about what information can be retained.
+     The LDUser set into the LDClient may affect the set of feature flags returned by the LaunchDarkly server, and ties event tracking to the user. See `LDUser` for details about what information can be retained.
 
      Normally, the client app should create and set the LDUser and pass that into `start(config: user: completion:)`.
 

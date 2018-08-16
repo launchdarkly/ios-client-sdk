@@ -23,7 +23,7 @@
         <a class="header-link" href="index.html">
           LaunchDarkly Docs
         </a>
-         (45% documented)
+         (53% documented)
       </p>
     
       <p class="header-col--secondary">
@@ -220,7 +220,47 @@
                     <section class="section">
                       <div class="pointer"></div>
                       <div class="abstract">
-                        <p>Undocumented</p>
+                        <p>The LDClient is the heart of the SDK, providing client apps running iOS, watchOS, macOS, or tvOS access to LaunchDarkly services. This singleton provides the ability to set a configuration (LDConfig) that controls how the LDClient talks to LaunchDarkly servers, and a user (LDUser) that provides finer control on the feature flag values delivered to LDClient. Once the LDClient has started, it connects to LaunchDarkly&rsquo;s servers to get the feature flag values you set in the Dashboard.</p>
+<h3 id='objc-classes' class='heading'>Objc Classes</h3>
+
+<p>The SDK creates an Objective-C native style API by wrapping Swift specific classes, properties, and methods into Objective-C wrapper classes prefixed by <code>Objc</code>. By defining Objective-C specific names, client apps written in Objective-C can use a native coding style, including using familiar LaunchDarkly SDK names like <code><a href="Classes/LDClient.html">LDClient</a></code>, <code><a href="Structs/LDConfig.html">LDConfig</a></code>, and <code><a href="Structs/LDUser.html">LDUser</a></code>. Objective-C developers should refer to the Objc documentation by following the Objc specific links following type, property, and method names.</p>
+<h2 id='usage' class='heading'>Usage</h2>
+<h3 id='startup' class='heading'>Startup</h3>
+
+<ol>
+<li>If desired, configure a LDConfig (<code><a href="Classes/ObjcLDConfig.html">ObjcLDConfig</a></code>) and LDUser (<code><a href="Classes/ObjcLDUser.html">ObjcLDUser</a></code>). While neither are required, both give you additional control over the feature flags delivered to the LDClient. See <code><a href="Classes/ObjcLDConfig.html">ObjcLDConfig</a></code> &amp; <code><a href="Classes/ObjcLDUser.html">ObjcLDUser</a></code> for more details.</li>
+<li>Call <code>[LDClient.sharedInstance startWithMobileKey: config: user: completion:]</code> (<code><a href="Classes/ObjcLDClient.html#/c:@M@LaunchDarkly@objc(cs)LDClient(im)startWithMobileKey:config:user:completion:">ObjcLDClient.startWithMobileKey(_:config:user:completion:)</a></code>)</li>
+<li>The mobileKey comes from your LaunchDarkly Account settings (on the left at the bottom). If you have multiple projects be sure to choose the correct Mobile key.</li>
+<li>If you do not pass in a LDConfig or LDUser, LDCLient creates a default for you</li>
+<li>The optional completion closure allows the LDClient to notify your app when it has gone online.</li>
+<li>Because the LDClient is a singleton, you do not have to keep a reference to it in your code.</li>
+</ol>
+<h3 id='getting-feature-flags' class='heading'>Getting Feature Flags</h3>
+
+<p>Once the LDClient has started, it makes your feature flags available using the <code>variation</code> and <code>variationAndSource</code> methods. A <code>variation</code> is a specific flag value. For example a boolean feature flag has 2 variations, <code>YES</code> and <code>NO</code>. You can create feature flags with more than 2 variations using other feature flag types. See <code><a href="Enums/LDFlagValue.html">LDFlagValue</a></code> for the available types.</p>
+<pre class="highlight swift"><code><span class="kt">BOOL</span> <span class="n">boolFlag</span> <span class="o">=</span> <span class="p">[</span><span class="kt">LDClient</span><span class="o">.</span><span class="n">sharedInstance</span> <span class="nv">boolVariationForKey</span><span class="p">:</span><span class="s">@"my-bool-flag"</span> <span class="nv">fallback</span><span class="p">:</span><span class="kt">NO</span><span class="p">];</span>
+</code></pre>
+
+<p>If you need to know the source of the variation provided to you for a specific feature flag, the typed <code>variationAndSource</code> methods return a LDVariationValue with the value &amp; source in a single call.</p>
+<pre class="highlight swift"><code><span class="kt">LDBoolVariationValue</span> <span class="o">*</span><span class="n">boolVariationValue</span> <span class="o">=</span> <span class="p">[</span><span class="kt">LDClient</span><span class="o">.</span><span class="n">sharedInstance</span> <span class="nv">boolVariationAndSourceForKey</span><span class="p">:</span><span class="s">@"my-bool-flag"</span> <span class="nv">fallback</span><span class="p">:</span><span class="kt">NO</span><span class="p">];</span>
+<span class="kt">BOOL</span> <span class="n">boolFlag</span> <span class="o">=</span> <span class="n">boolVariationValue</span><span class="o">.</span><span class="n">value</span><span class="p">;</span>
+<span class="kt">LDFlagValueSource</span> <span class="n">boolFlagSource</span> <span class="o">=</span> <span class="n">boolVariationValue</span><span class="o">.</span><span class="n">source</span><span class="p">;</span>
+</code></pre>
+
+<p>See the typed <code>-[LDCLient variationForKey: fallback:]</code> or <code>-[LDClient variationAndSourceForKey: fallback:]</code> methods in the section <strong>Feature Flag values</strong> for details.</p>
+<h3 id='observing-feature-flags' class='heading'>Observing Feature Flags</h3>
+
+<p>You might need to know when a feature flag value changes. This is not required, you can check the flag&rsquo;s value when you need it.</p>
+
+<p>The LDClient provides several <code>observe</code> methods that allow you to tell the LDClient to notify you when there is a change. There are several options, depending on whether you want to know when a specific flag changes, when any flag in a collection changes, or when a flag doesn&rsquo;t change.</p>
+<pre class="highlight swift"><code><span class="n">__weak</span> <span class="nf">typeof</span><span class="p">(</span><span class="k">self</span><span class="p">)</span> <span class="n">weakSelf</span> <span class="o">=</span> <span class="k">self</span><span class="p">;</span>
+<span class="p">[</span><span class="kt">LDClient</span><span class="o">.</span><span class="n">sharedInstance</span> <span class="nv">observeBool</span><span class="p">:</span><span class="s">@"my-bool-flag"</span> <span class="nv">owner</span><span class="p">:</span><span class="k">self</span> <span class="nv">handler</span><span class="p">:</span><span class="o">^</span><span class="p">(</span><span class="kt">LDBoolChangedFlag</span> <span class="o">*</span><span class="n">changedFlag</span><span class="p">)</span> <span class="p">{</span>
+   <span class="n">__strong</span> <span class="nf">typeof</span><span class="p">(</span><span class="n">weakSelf</span><span class="p">)</span> <span class="n">strongSelf</span> <span class="o">=</span> <span class="n">weakSelf</span><span class="p">;</span>
+   <span class="p">[</span><span class="n">strongSelf</span> <span class="nv">updateFlagWithKey</span><span class="p">:</span><span class="s">@"my-bool-flag"</span> <span class="nv">changedFlag</span><span class="p">:</span><span class="n">changedFlag</span><span class="p">];</span>
+<span class="p">}];</span>
+</code></pre>
+
+<p>The <code>changedFlag</code> passed in to the block contains the old and new value, and the old and new valueSource. See the typed <code><a href="Structs/LDChangedFlag.html">LDChangedFlag</a></code> classes in the <strong>Obj-C Changed Flags</strong></p>
 
                         <a href="Classes/ObjcLDClient.html" class="slightly-smaller">See more</a>
                       </div>
