@@ -518,38 +518,37 @@ public final class ObjcLDClient: NSObject {
 
     // MARK: - Feature Flag Updates
     
-    @objc public func observeBool(_ key: LDFlagKey, owner: LDFlagChangeOwner, handler: @escaping (ObjcLDBoolChangedFlag) -> Void) {
+    @objc public func observeBool(_ key: LDFlagKey, owner: LDFlagChangeOwner, handler: @escaping (_ changedFlag: ObjcLDBoolChangedFlag) -> Void) {
         LDClient.shared.observe(key: key, owner: owner) { (changedFlag) in handler(ObjcLDBoolChangedFlag(changedFlag)) }
     }
 
-    @objc public func observeInteger(_ key: LDFlagKey, owner: LDFlagChangeOwner, handler: @escaping (ObjcLDIntegerChangedFlag) -> Void) {
+    @objc public func observeInteger(_ key: LDFlagKey, owner: LDFlagChangeOwner, handler: @escaping (_ changedFlag: ObjcLDIntegerChangedFlag) -> Void) {
         LDClient.shared.observe(key: key, owner: owner) { (changedFlag) in handler(ObjcLDIntegerChangedFlag(changedFlag)) }
     }
     
-    @objc public func observeDouble(_ key: LDFlagKey, owner: LDFlagChangeOwner, handler: @escaping (ObjcLDDoubleChangedFlag) -> Void) {
+    @objc public func observeDouble(_ key: LDFlagKey, owner: LDFlagChangeOwner, handler: @escaping (_ changedFlag: ObjcLDDoubleChangedFlag) -> Void) {
         LDClient.shared.observe(key: key, owner: owner) { (changedFlag) in handler(ObjcLDDoubleChangedFlag(changedFlag)) }
     }
-    
-    @objc public func observeString(_ key: LDFlagKey, owner: LDFlagChangeOwner, handler: @escaping (ObjcLDStringChangedFlag) -> Void) {
+    @objc public func observeString(_ key: LDFlagKey, owner: LDFlagChangeOwner, handler: @escaping (_ changedFlag: ObjcLDStringChangedFlag) -> Void) {
         LDClient.shared.observe(key: key, owner: owner) { (changedFlag) in handler(ObjcLDStringChangedFlag(changedFlag)) }
     }
     
-    @objc public func observeArray(_ key: LDFlagKey, owner: LDFlagChangeOwner, handler: @escaping (ObjcLDArrayChangedFlag) -> Void) {
+    @objc public func observeArray(_ key: LDFlagKey, owner: LDFlagChangeOwner, handler: @escaping (_ changedFlag: ObjcLDArrayChangedFlag) -> Void) {
         LDClient.shared.observe(key: key, owner: owner) { (changedFlag) in handler(ObjcLDArrayChangedFlag(changedFlag)) }
     }
     
-    @objc public func observeDictionary(_ key: LDFlagKey, owner: LDFlagChangeOwner, handler: @escaping (ObjcLDDictionaryChangedFlag) -> Void) {
+    @objc public func observeDictionary(_ key: LDFlagKey, owner: LDFlagChangeOwner, handler: @escaping (_ changedFlag: ObjcLDDictionaryChangedFlag) -> Void) {
         LDClient.shared.observe(key: key, owner: owner) { (changedFlag) in handler(ObjcLDDictionaryChangedFlag(changedFlag)) }
     }
     
-    @objc public func observeKeys(_ keys: [LDFlagKey], owner: LDFlagChangeOwner, handler: @escaping ([LDFlagKey: ObjcLDChangedFlag]) -> Void) {
+    @objc public func observeKeys(_ keys: [LDFlagKey], owner: LDFlagChangeOwner, handler: @escaping (_ changedFlags: [LDFlagKey: ObjcLDChangedFlag]) -> Void) {
         LDClient.shared.observe(keys: keys, owner: owner) { (changedFlags) in
             let objcChangedFlags = changedFlags.mapValues { (changedFlag) -> ObjcLDChangedFlag in changedFlag.objcChangedFlag }
             handler(objcChangedFlags)
         }
     }
 
-    @objc public func observeAllKeys(owner: LDFlagChangeOwner, handler: @escaping ([LDFlagKey: ObjcLDChangedFlag]) -> Void) {
+    @objc public func observeAllKeys(owner: LDFlagChangeOwner, handler: @escaping (_ changedFlags: [LDFlagKey: ObjcLDChangedFlag]) -> Void) {
         LDClient.shared.observeAll(owner: owner) { (changedFlags) in
             let objcChangedFlags = changedFlags.mapValues { (changedFlag) -> ObjcLDChangedFlag in changedFlag.objcChangedFlag }
             handler(objcChangedFlags)
@@ -564,7 +563,7 @@ public final class ObjcLDClient: NSObject {
         LDClient.shared.stopObserving(owner: owner)
     }
 
-    @objc public func setOnServerUnavailable(_ handler: @escaping () -> Void) {
+    @objc public func setOnServerUnavailable(_ handler: (() -> Void)?) {
         LDClient.shared.onServerUnavailable = handler
     }
     
