@@ -518,29 +518,192 @@ public final class ObjcLDClient: NSObject {
 
     // MARK: - Feature Flag Updates
     
+    /**
+     Sets a handler for the specified BOOL flag key executed on the specified owner. If the flag's value changes, executes the handler, passing in the `changedFlag` containing the old and new flag values, and old and new flag value source. See `ObjcLDBoolChangedFlag` for details.
+
+     The SDK retains only weak references to the owner, which allows the client app to freely destroy owners without issues. Client apps should capture a strong self reference from a weak reference immediately inside the handler to avoid retain cycles causing a memory leak.
+
+     The SDK executes handlers on the main thread.
+
+     SeeAlso: `ObjcLDBoolChangedFlag` and `stopObserving(owner:)`
+
+     ### Usage
+     ````
+     __weak typeof(self) weakSelf = self;
+     [LDClient.sharedInstance observeBool:"my-bool-flag" owner:self handler:^(LDBoolChangedFlag *changedFlag){
+        __strong typeof(weakSelf) strongSelf = weakSelf;
+        [strongSelf showBoolChangedFlag:changedFlag];
+     }];
+     ````
+
+     - parameter key: The LDFlagKey for the flag to observe.
+     - parameter owner: The LDFlagChangeOwner which will execute the handler. The SDK retains a weak reference to the owner.
+     - parameter handler: The block the SDK will execute when the feature flag changes.
+     - parameter changedFlag: The LDBoolChangedFlag passed into the handler containing the old & new flag value and source
+     */
     @objc public func observeBool(_ key: LDFlagKey, owner: LDFlagChangeOwner, handler: @escaping (_ changedFlag: ObjcLDBoolChangedFlag) -> Void) {
         LDClient.shared.observe(key: key, owner: owner) { (changedFlag) in handler(ObjcLDBoolChangedFlag(changedFlag)) }
     }
 
+    /**
+     Sets a handler for the specified NSInteger flag key executed on the specified owner. If the flag's value changes, executes the handler, passing in the `changedFlag` containing the old and new flag values, and old and new flag value source. See `ObjcLDIntegerChangedFlag` for details.
+
+     The SDK retains only weak references to the owner, which allows the client app to freely destroy owners without issues. Client apps should capture a strong self reference from a weak reference immediately inside the handler to avoid retain cycles causing a memory leak.
+
+     The SDK executes handlers on the main thread.
+
+     SeeAlso: `ObjcLDIntegerChangedFlag` and `stopObserving(owner:)`
+
+     ### Usage
+     ````
+     __weak typeof(self) weakSelf = self;
+     [LDClient.sharedInstance observeInteger:"my-integer-flag" owner:self handler:^(LDIntegerChangedFlag *changedFlag){
+        __strong typeof(weakSelf) strongSelf = weakSelf;
+        [strongSelf showIntegerChangedFlag:changedFlag];
+     }];
+     ````
+
+     - parameter key: The LDFlagKey for the flag to observe.
+     - parameter owner: The LDFlagChangeOwner which will execute the handler. The SDK retains a weak reference to the owner.
+     - parameter handler: The block the SDK will execute when the feature flag changes.
+     - parameter changedFlag: The LDIntegerChangedFlag passed into the handler containing the old & new flag value and source
+     */
     @objc public func observeInteger(_ key: LDFlagKey, owner: LDFlagChangeOwner, handler: @escaping (_ changedFlag: ObjcLDIntegerChangedFlag) -> Void) {
         LDClient.shared.observe(key: key, owner: owner) { (changedFlag) in handler(ObjcLDIntegerChangedFlag(changedFlag)) }
     }
     
+    /**
+     Sets a handler for the specified double flag key executed on the specified owner. If the flag's value changes, executes the handler, passing in the `changedFlag` containing the old and new flag values, and old and new flag value source. See `ObjcLDDoubleChangedFlag` for details.
+
+     The SDK retains only weak references to the owner, which allows the client app to freely destroy owners without issues. Client apps should capture a strong self reference from a weak reference immediately inside the handler to avoid retain cycles causing a memory leak.
+
+     The SDK executes handlers on the main thread.
+
+     SeeAlso: `ObjcLDDoubleChangedFlag` and `stopObserving(owner:)`
+
+     ### Usage
+     ````
+     __weak typeof(self) weakSelf = self;
+     [LDClient.sharedInstance observeDouble:"my-double-flag" owner:self handler:^(LDDoubleChangedFlag *changedFlag){
+        __strong typeof(weakSelf) strongSelf = weakSelf;
+        [strongSelf showDoubleChangedFlag:changedFlag];
+     }];
+     ````
+
+     - parameter key: The LDFlagKey for the flag to observe.
+     - parameter owner: The LDFlagChangeOwner which will execute the handler. The SDK retains a weak reference to the owner.
+     - parameter handler: The block the SDK will execute when the feature flag changes.
+     - parameter changedFlag: The LDDoubleChangedFlag passed into the handler containing the old & new flag value and source
+     */
     @objc public func observeDouble(_ key: LDFlagKey, owner: LDFlagChangeOwner, handler: @escaping (_ changedFlag: ObjcLDDoubleChangedFlag) -> Void) {
         LDClient.shared.observe(key: key, owner: owner) { (changedFlag) in handler(ObjcLDDoubleChangedFlag(changedFlag)) }
     }
+
+    /**
+     Sets a handler for the specified NSString flag key executed on the specified owner. If the flag's value changes, executes the handler, passing in the `changedFlag` containing the old and new flag values, and old and new flag value source. See `ObjcLDStringChangedFlag` for details.
+
+     The SDK retains only weak references to the owner, which allows the client app to freely destroy owners without issues. Client apps should capture a strong self reference from a weak reference immediately inside the handler to avoid retain cycles causing a memory leak.
+
+     The SDK executes handlers on the main thread.
+
+     SeeAlso: `ObjcLDStringChangedFlag` and `stopObserving(owner:)`
+
+     ### Usage
+     ````
+     __weak typeof(self) weakSelf = self;
+     [LDClient.sharedInstance observeString:"my-string-flag" owner:self handler:^(LDStringChangedFlag *changedFlag){
+        __strong typeof(weakSelf) strongSelf = weakSelf;
+        [strongSelf showStringChangedFlag:changedFlag];
+     }];
+     ````
+
+     - parameter key: The LDFlagKey for the flag to observe.
+     - parameter owner: The LDFlagChangeOwner which will execute the handler. The SDK retains a weak reference to the owner.
+     - parameter handler: The block the SDK will execute when the feature flag changes.
+     - parameter changedFlag: The LDStringChangedFlag passed into the handler containing the old & new flag value & source
+     */
     @objc public func observeString(_ key: LDFlagKey, owner: LDFlagChangeOwner, handler: @escaping (_ changedFlag: ObjcLDStringChangedFlag) -> Void) {
         LDClient.shared.observe(key: key, owner: owner) { (changedFlag) in handler(ObjcLDStringChangedFlag(changedFlag)) }
     }
     
+    /**
+     Sets a handler for the specified NSArray flag key executed on the specified owner. If the flag's value changes, executes the handler, passing in the `changedFlag` containing the old and new flag values, and old and new flag value source. See `ObjcLDArrayChangedFlag` for details.
+
+     The SDK retains only weak references to the owner, which allows the client app to freely destroy owners without issues. Client apps should capture a strong self reference from a weak reference immediately inside the handler to avoid retain cycles causing a memory leak.
+
+     The SDK executes handlers on the main thread.
+
+     SeeAlso: `ObjcLDArrayChangedFlag` and `stopObserving(owner:)`
+
+     ### Usage
+     ````
+     __weak typeof(self) weakSelf = self;
+     [LDClient.sharedInstance observeArray:"my-array-flag" owner:self handler:^(LDArrayChangedFlag *changedFlag){
+        __strong typeof(weakSelf) strongSelf = weakSelf;
+        [strongSelf showArrayChangedFlag:changedFlag];
+     }];
+     ````
+
+     - parameter key: The LDFlagKey for the flag to observe.
+     - parameter owner: The LDFlagChangeOwner which will execute the handler. The SDK retains a weak reference to the owner.
+     - parameter handler: The block the SDK will execute when the feature flag changes.
+     - parameter changedFlag: The LDArrayChangedFlag passed into the handler containing the old & new flag value & source
+    */
     @objc public func observeArray(_ key: LDFlagKey, owner: LDFlagChangeOwner, handler: @escaping (_ changedFlag: ObjcLDArrayChangedFlag) -> Void) {
         LDClient.shared.observe(key: key, owner: owner) { (changedFlag) in handler(ObjcLDArrayChangedFlag(changedFlag)) }
     }
     
+    /**
+     Sets a handler for the specified NSDictionary flag key executed on the specified owner. If the flag's value changes, executes the handler, passing in the `changedFlag` containing the old and new flag values, and old and new flag value source. See `ObjcLDDictionaryChangedFlag` for details.
+
+     The SDK retains only weak references to the owner, which allows the client app to freely destroy owners without issues. Client apps should capture a strong self reference from a weak reference immediately inside the handler to avoid retain cycles causing a memory leak.
+
+     The SDK executes handlers on the main thread.
+
+     SeeAlso: `ObjcLDDictionaryChangedFlag` and `stopObserving(owner:)`
+
+     ### Usage
+     ````
+     __weak typeof(self) weakSelf = self;
+     [LDClient.sharedInstance observeDictionary:"my-dictionary-flag" owner:self handler:^(LDDictionaryChangedFlag *changedFlag){
+        __strong typeof(weakSelf) strongSelf = weakSelf;
+        [strongSelf showDictionaryChangedFlag:changedFlag];
+     }];
+     ````
+
+     - parameter key: The LDFlagKey for the flag to observe.
+     - parameter owner: The LDFlagChangeOwner which will execute the handler. The SDK retains a weak reference to the owner.
+     - parameter handler: The block the SDK will execute when the feature flag changes.
+     - parameter changedFlag: The LDDictionaryChangedFlag passed into the handler containing the old & new flag value & source
+     */
     @objc public func observeDictionary(_ key: LDFlagKey, owner: LDFlagChangeOwner, handler: @escaping (_ changedFlag: ObjcLDDictionaryChangedFlag) -> Void) {
         LDClient.shared.observe(key: key, owner: owner) { (changedFlag) in handler(ObjcLDDictionaryChangedFlag(changedFlag)) }
     }
     
+    /**
+     Sets a handler for the specified flag keys executed on the specified owner. If any observed flag's value changes, executes the handler 1 time, passing in a dictionary of <NSString*, LDChangedFlag*> containing the old and new flag values, and old and new flag value source. See LDChangedFlag (`ObjcLDChangedFlag`) for details.
+
+     The SDK retains only weak references to owner, which allows the client app to freely destroy change owners without issues. Client apps should capture a strong self reference from a weak reference immediately inside the handler to avoid retain cycles causing a memory leak.
+
+     The SDK executes handlers on the main thread.
+
+     SeeAlso: `ObjcLDChangedFlag` and `stopObserving(owner:)`
+
+     ### Usage
+     ````
+     __weak typeof(self) weakSelf = self;
+     [LDClient.sharedInstance observeKeys:@[@"my-bool-flag",@"my-string-flag", @"my-dictionary-flag"] owner:self handler:^(NSDictionary<NSString *,LDChangedFlag *> * _Nonnull changedFlags) {
+        __strong typeof(weakSelf) strongSelf = weakSelf;
+        //There will be a typed LDChangedFlag entry in changedFlags for each changed flag. The block will only be called once regardless of how many flags changed.
+        [strongSelf showChangedFlags: changedFlags];
+     }];
+     ````
+
+     - parameter keys: An array of NSString* flag keys for the flags to observe.
+     - parameter owner: The LDFlagChangeOwner which will execute the handler. The SDK retains a weak reference to the owner.
+     - parameter handler: The LDFlagCollectionChangeHandler the SDK will execute 1 time when any of the observed feature flags change.
+     - parameter changedFlags: A dictionary <NSString*, LDChangedFlag*> using the changed flag keys as the dictionary keys. Cast the resulting LDChangedFlag to the correct LDChangedFlagType.
+     */
     @objc public func observeKeys(_ keys: [LDFlagKey], owner: LDFlagChangeOwner, handler: @escaping (_ changedFlags: [LDFlagKey: ObjcLDChangedFlag]) -> Void) {
         LDClient.shared.observe(keys: keys, owner: owner) { (changedFlags) in
             let objcChangedFlags = changedFlags.mapValues { (changedFlag) -> ObjcLDChangedFlag in changedFlag.objcChangedFlag }
@@ -548,6 +711,29 @@ public final class ObjcLDClient: NSObject {
         }
     }
 
+    /**
+     Sets a handler for all flag keys executed on the specified owner. If any flag's value changes, executes the handler 1 time, passing in a dictionary of <NSString*, LDChangedFlag*> containing the old and new flag values, and old and new flag value source. See LDChangedFlag (`ObjcLDChangedFlag`) for details.
+
+     The SDK retains only weak references to owner, which allows the client app to freely destroy change owners without issues. Client apps should capture a strong self reference from a weak reference immediately inside the handler to avoid retain cycles causing a memory leak.
+
+     The SDK executes handlers on the main thread.
+
+     SeeAlso: `ObjcLDChangedFlag` and `stopObserving(owner:)`
+
+     ### Usage
+     ````
+     __weak typeof(self) weakSelf = self;
+     [LDClient.sharedInstance observeAllKeysWithOwner:self handler:^(NSDictionary<NSString *,LDChangedFlag *> * _Nonnull changedFlags) {
+        __strong typeof(weakSelf) strongSelf = weakSelf;
+        //There will be a typed LDChangedFlag entry in changedFlags for each changed flag. The block will only be called once regardless of how many flags changed.
+        [strongSelf showChangedFlags:changedFlags];
+     }];
+     ````
+
+     - parameter owner: The LDFlagChangeOwner which will execute the handler. The SDK retains a weak reference to the owner.
+     - parameter handler: The LDFlagCollectionChangeHandler the SDK will execute 1 time when any of the observed feature flags change.
+     - parameter changedFlags: A dictionary <NSString*, LDChangedFlag*> using the changed flag keys as the dictionary keys. Cast the resulting LDChangedFlag to the correct LDChangedFlagType.
+     */
     @objc public func observeAllKeys(owner: LDFlagChangeOwner, handler: @escaping (_ changedFlags: [LDFlagKey: ObjcLDChangedFlag]) -> Void) {
         LDClient.shared.observeAll(owner: owner) { (changedFlags) in
             let objcChangedFlags = changedFlags.mapValues { (changedFlag) -> ObjcLDChangedFlag in changedFlag.objcChangedFlag }
@@ -555,14 +741,50 @@ public final class ObjcLDClient: NSObject {
         }
     }
 
+    /**
+     Sets a handler executed when a flag update leaves the flags unchanged from their previous values.
+
+     This handler can only ever be called when the LDClient is polling.
+
+     The SDK retains only weak references to owner, which allows the client app to freely destroy change owners without issues. Client apps should capture a strong self reference from a weak reference immediately inside the handler to avoid retain cycles causing a memory leak.
+
+     The SDK executes handlers on the main thread.
+
+     SeeAlso: `stopObserving(owner:)`
+
+     ### Usage
+     ````
+     __weak typeof(self) weakSelf = self;
+     [[LDClient sharedInstance] observeFlagsUnchangedWithOwner:self handler:^{
+        __strong typeof(weakSelf) strongSelf = weakSelf;
+        //do something after the flags were not updated. The block will be called once on the main thread if the client is polling and the poll did not change any flag values.
+        [self checkFeatureValues];
+     }];
+     ````
+
+     - parameter owner: The LDFlagChangeOwner which will execute the handler. The SDK retains a weak reference to the owner.
+     - parameter handler: The LDFlagsUnchangedHandler the SDK will execute 1 time when a flag request completes with no flags changed.
+     */
     @objc public func observeFlagsUnchanged(owner: LDFlagChangeOwner, handler: @escaping LDFlagsUnchangedHandler) {
         LDClient.shared.observeFlagsUnchanged(owner: owner, handler: handler)
     }
 
+    /**
+     Removes all observers for the given owner, including a flagsUnchangedObserver
+
+     The client app does not have to call this method. If the client app deinits a LDFlagChangeOwner, the SDK will automatically remove its handlers without ever calling them again.
+
+     - parameter owner: The LDFlagChangeOwner owning the handlers to remove, whether a flag change handler or flags unchanged handler.
+     */
     @objc(stopObservingForOwner:) public func stopObserving(owner: LDFlagChangeOwner) {
         LDClient.shared.stopObserving(owner: owner)
     }
 
+    /**
+     Sets a block called if the client is unable to contact the LaunchDarkly server. Unlike the observer methods, only 1 block can be set at any given time. The SDK keeps a strong reference to the block. Client apps should take care to remove the block prior to deinit on the owner in order to avoid the SDK causing an object to not be destroyed when expected.
+
+     - parameter handler: The block the SDK will execute 1 time when the client is unable to contact the LaunchDarkly server
+     */
     @objc public func setOnServerUnavailable(_ handler: (() -> Void)?) {
         LDClient.shared.onServerUnavailable = handler
     }

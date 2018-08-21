@@ -23,7 +23,7 @@
         <a class="header-link" href="../index.html">
           LaunchDarkly Docs
         </a>
-         (53% documented)
+         (58% documented)
       </p>
     
       <p class="header-col--secondary">
@@ -1673,7 +1673,20 @@
                     <section class="section">
                       <div class="pointer"></div>
                       <div class="abstract">
-                        <p>Undocumented</p>
+                        <p>Sets a handler for the specified BOOL flag key executed on the specified owner. If the flag&rsquo;s value changes, executes the handler, passing in the <code>changedFlag</code> containing the old and new flag values, and old and new flag value source. See <code><a href="../Classes/ObjcLDBoolChangedFlag.html">ObjcLDBoolChangedFlag</a></code> for details.</p>
+
+<p>The SDK retains only weak references to the owner, which allows the client app to freely destroy owners without issues. Client apps should capture a strong self reference from a weak reference immediately inside the handler to avoid retain cycles causing a memory leak.</p>
+
+<p>The SDK executes handlers on the main thread.</p>
+
+<p>SeeAlso: <code><a href="../Classes/ObjcLDBoolChangedFlag.html">ObjcLDBoolChangedFlag</a></code> and <code><a href="../Classes/ObjcLDClient.html#/c:@M@LaunchDarkly@objc(cs)LDClient(im)stopObservingForOwner:">stopObserving(owner:)</a></code></p>
+<h3 id='usage' class='heading'>Usage</h3>
+<pre class="highlight swift"><code><span class="n">__weak</span> <span class="nf">typeof</span><span class="p">(</span><span class="k">self</span><span class="p">)</span> <span class="n">weakSelf</span> <span class="o">=</span> <span class="k">self</span><span class="p">;</span>
+<span class="p">[</span><span class="kt">LDClient</span><span class="o">.</span><span class="n">sharedInstance</span> <span class="nv">observeBool</span><span class="p">:</span><span class="s">"my-bool-flag"</span> <span class="nv">owner</span><span class="p">:</span><span class="k">self</span> <span class="nv">handler</span><span class="p">:</span><span class="o">^</span><span class="p">(</span><span class="kt">LDBoolChangedFlag</span> <span class="o">*</span><span class="n">changedFlag</span><span class="p">){</span>
+   <span class="n">__strong</span> <span class="nf">typeof</span><span class="p">(</span><span class="n">weakSelf</span><span class="p">)</span> <span class="n">strongSelf</span> <span class="o">=</span> <span class="n">weakSelf</span><span class="p">;</span>
+   <span class="p">[</span><span class="n">strongSelf</span> <span class="nv">showBoolChangedFlag</span><span class="p">:</span><span class="n">changedFlag</span><span class="p">];</span>
+<span class="p">}];</span>
+</code></pre>
 
                       </div>
                       <div class="declaration">
@@ -1681,9 +1694,64 @@
                         <div class="language">
                           <p class="aside-title">Swift</p>
                           <pre class="highlight swift"><code><span class="kd">@objc</span>
-<span class="kd">public</span> <span class="kd">func</span> <span class="nf">observeBool</span><span class="p">(</span><span class="n">_</span> <span class="nv">key</span><span class="p">:</span> <span class="kt"><a href="../Launch Darkly.html#/s:12LaunchDarkly9LDFlagKeya">LDFlagKey</a></span><span class="p">,</span> <span class="nv">owner</span><span class="p">:</span> <span class="kt"><a href="../Flag Changes.html#/s:12LaunchDarkly17LDFlagChangeOwnera">LDFlagChangeOwner</a></span><span class="p">,</span> <span class="nv">handler</span><span class="p">:</span> <span class="kd">@escaping</span> <span class="p">(</span><span class="kt"><a href="../Classes/ObjcLDBoolChangedFlag.html">ObjcLDBoolChangedFlag</a></span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kt">Void</span><span class="p">)</span></code></pre>
+<span class="kd">public</span> <span class="kd">func</span> <span class="nf">observeBool</span><span class="p">(</span><span class="n">_</span> <span class="nv">key</span><span class="p">:</span> <span class="kt"><a href="../Launch Darkly.html#/s:12LaunchDarkly9LDFlagKeya">LDFlagKey</a></span><span class="p">,</span> <span class="nv">owner</span><span class="p">:</span> <span class="kt"><a href="../Flag Changes.html#/s:12LaunchDarkly17LDFlagChangeOwnera">LDFlagChangeOwner</a></span><span class="p">,</span> <span class="nv">handler</span><span class="p">:</span> <span class="kd">@escaping</span> <span class="p">(</span><span class="n">_</span> <span class="nv">changedFlag</span><span class="p">:</span> <span class="kt"><a href="../Classes/ObjcLDBoolChangedFlag.html">ObjcLDBoolChangedFlag</a></span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kt">Void</span><span class="p">)</span></code></pre>
 
                         </div>
+                      </div>
+                      <div>
+                        <h4>Parameters</h4>
+                        <table class="graybox">
+                          <tbody>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>key</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>The LDFlagKey for the flag to observe.</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>owner</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>The LDFlagChangeOwner which will execute the handler. The SDK retains a weak reference to the owner.</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>handler</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>The block the SDK will execute when the feature flag changes.</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>changedFlag</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>The LDBoolChangedFlag passed into the handler containing the old &amp; new flag value and source</p>
+                                </div>
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
                       </div>
                     </section>
                   </div>
@@ -1701,7 +1769,20 @@
                     <section class="section">
                       <div class="pointer"></div>
                       <div class="abstract">
-                        <p>Undocumented</p>
+                        <p>Sets a handler for the specified NSInteger flag key executed on the specified owner. If the flag&rsquo;s value changes, executes the handler, passing in the <code>changedFlag</code> containing the old and new flag values, and old and new flag value source. See <code><a href="../Classes/ObjcLDIntegerChangedFlag.html">ObjcLDIntegerChangedFlag</a></code> for details.</p>
+
+<p>The SDK retains only weak references to the owner, which allows the client app to freely destroy owners without issues. Client apps should capture a strong self reference from a weak reference immediately inside the handler to avoid retain cycles causing a memory leak.</p>
+
+<p>The SDK executes handlers on the main thread.</p>
+
+<p>SeeAlso: <code><a href="../Classes/ObjcLDIntegerChangedFlag.html">ObjcLDIntegerChangedFlag</a></code> and <code><a href="../Classes/ObjcLDClient.html#/c:@M@LaunchDarkly@objc(cs)LDClient(im)stopObservingForOwner:">stopObserving(owner:)</a></code></p>
+<h3 id='usage' class='heading'>Usage</h3>
+<pre class="highlight swift"><code><span class="n">__weak</span> <span class="nf">typeof</span><span class="p">(</span><span class="k">self</span><span class="p">)</span> <span class="n">weakSelf</span> <span class="o">=</span> <span class="k">self</span><span class="p">;</span>
+<span class="p">[</span><span class="kt">LDClient</span><span class="o">.</span><span class="n">sharedInstance</span> <span class="nv">observeInteger</span><span class="p">:</span><span class="s">"my-integer-flag"</span> <span class="nv">owner</span><span class="p">:</span><span class="k">self</span> <span class="nv">handler</span><span class="p">:</span><span class="o">^</span><span class="p">(</span><span class="kt">LDIntegerChangedFlag</span> <span class="o">*</span><span class="n">changedFlag</span><span class="p">){</span>
+   <span class="n">__strong</span> <span class="nf">typeof</span><span class="p">(</span><span class="n">weakSelf</span><span class="p">)</span> <span class="n">strongSelf</span> <span class="o">=</span> <span class="n">weakSelf</span><span class="p">;</span>
+   <span class="p">[</span><span class="n">strongSelf</span> <span class="nv">showIntegerChangedFlag</span><span class="p">:</span><span class="n">changedFlag</span><span class="p">];</span>
+<span class="p">}];</span>
+</code></pre>
 
                       </div>
                       <div class="declaration">
@@ -1709,9 +1790,64 @@
                         <div class="language">
                           <p class="aside-title">Swift</p>
                           <pre class="highlight swift"><code><span class="kd">@objc</span>
-<span class="kd">public</span> <span class="kd">func</span> <span class="nf">observeInteger</span><span class="p">(</span><span class="n">_</span> <span class="nv">key</span><span class="p">:</span> <span class="kt"><a href="../Launch Darkly.html#/s:12LaunchDarkly9LDFlagKeya">LDFlagKey</a></span><span class="p">,</span> <span class="nv">owner</span><span class="p">:</span> <span class="kt"><a href="../Flag Changes.html#/s:12LaunchDarkly17LDFlagChangeOwnera">LDFlagChangeOwner</a></span><span class="p">,</span> <span class="nv">handler</span><span class="p">:</span> <span class="kd">@escaping</span> <span class="p">(</span><span class="kt"><a href="../Classes/ObjcLDIntegerChangedFlag.html">ObjcLDIntegerChangedFlag</a></span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kt">Void</span><span class="p">)</span></code></pre>
+<span class="kd">public</span> <span class="kd">func</span> <span class="nf">observeInteger</span><span class="p">(</span><span class="n">_</span> <span class="nv">key</span><span class="p">:</span> <span class="kt"><a href="../Launch Darkly.html#/s:12LaunchDarkly9LDFlagKeya">LDFlagKey</a></span><span class="p">,</span> <span class="nv">owner</span><span class="p">:</span> <span class="kt"><a href="../Flag Changes.html#/s:12LaunchDarkly17LDFlagChangeOwnera">LDFlagChangeOwner</a></span><span class="p">,</span> <span class="nv">handler</span><span class="p">:</span> <span class="kd">@escaping</span> <span class="p">(</span><span class="n">_</span> <span class="nv">changedFlag</span><span class="p">:</span> <span class="kt"><a href="../Classes/ObjcLDIntegerChangedFlag.html">ObjcLDIntegerChangedFlag</a></span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kt">Void</span><span class="p">)</span></code></pre>
 
                         </div>
+                      </div>
+                      <div>
+                        <h4>Parameters</h4>
+                        <table class="graybox">
+                          <tbody>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>key</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>The LDFlagKey for the flag to observe.</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>owner</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>The LDFlagChangeOwner which will execute the handler. The SDK retains a weak reference to the owner.</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>handler</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>The block the SDK will execute when the feature flag changes.</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>changedFlag</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>The LDIntegerChangedFlag passed into the handler containing the old &amp; new flag value and source</p>
+                                </div>
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
                       </div>
                     </section>
                   </div>
@@ -1729,7 +1865,20 @@
                     <section class="section">
                       <div class="pointer"></div>
                       <div class="abstract">
-                        <p>Undocumented</p>
+                        <p>Sets a handler for the specified double flag key executed on the specified owner. If the flag&rsquo;s value changes, executes the handler, passing in the <code>changedFlag</code> containing the old and new flag values, and old and new flag value source. See <code><a href="../Classes/ObjcLDDoubleChangedFlag.html">ObjcLDDoubleChangedFlag</a></code> for details.</p>
+
+<p>The SDK retains only weak references to the owner, which allows the client app to freely destroy owners without issues. Client apps should capture a strong self reference from a weak reference immediately inside the handler to avoid retain cycles causing a memory leak.</p>
+
+<p>The SDK executes handlers on the main thread.</p>
+
+<p>SeeAlso: <code><a href="../Classes/ObjcLDDoubleChangedFlag.html">ObjcLDDoubleChangedFlag</a></code> and <code><a href="../Classes/ObjcLDClient.html#/c:@M@LaunchDarkly@objc(cs)LDClient(im)stopObservingForOwner:">stopObserving(owner:)</a></code></p>
+<h3 id='usage' class='heading'>Usage</h3>
+<pre class="highlight swift"><code><span class="n">__weak</span> <span class="nf">typeof</span><span class="p">(</span><span class="k">self</span><span class="p">)</span> <span class="n">weakSelf</span> <span class="o">=</span> <span class="k">self</span><span class="p">;</span>
+<span class="p">[</span><span class="kt">LDClient</span><span class="o">.</span><span class="n">sharedInstance</span> <span class="nv">observeDouble</span><span class="p">:</span><span class="s">"my-double-flag"</span> <span class="nv">owner</span><span class="p">:</span><span class="k">self</span> <span class="nv">handler</span><span class="p">:</span><span class="o">^</span><span class="p">(</span><span class="kt">LDDoubleChangedFlag</span> <span class="o">*</span><span class="n">changedFlag</span><span class="p">){</span>
+   <span class="n">__strong</span> <span class="nf">typeof</span><span class="p">(</span><span class="n">weakSelf</span><span class="p">)</span> <span class="n">strongSelf</span> <span class="o">=</span> <span class="n">weakSelf</span><span class="p">;</span>
+   <span class="p">[</span><span class="n">strongSelf</span> <span class="nv">showDoubleChangedFlag</span><span class="p">:</span><span class="n">changedFlag</span><span class="p">];</span>
+<span class="p">}];</span>
+</code></pre>
 
                       </div>
                       <div class="declaration">
@@ -1737,9 +1886,64 @@
                         <div class="language">
                           <p class="aside-title">Swift</p>
                           <pre class="highlight swift"><code><span class="kd">@objc</span>
-<span class="kd">public</span> <span class="kd">func</span> <span class="nf">observeDouble</span><span class="p">(</span><span class="n">_</span> <span class="nv">key</span><span class="p">:</span> <span class="kt"><a href="../Launch Darkly.html#/s:12LaunchDarkly9LDFlagKeya">LDFlagKey</a></span><span class="p">,</span> <span class="nv">owner</span><span class="p">:</span> <span class="kt"><a href="../Flag Changes.html#/s:12LaunchDarkly17LDFlagChangeOwnera">LDFlagChangeOwner</a></span><span class="p">,</span> <span class="nv">handler</span><span class="p">:</span> <span class="kd">@escaping</span> <span class="p">(</span><span class="kt"><a href="../Classes/ObjcLDDoubleChangedFlag.html">ObjcLDDoubleChangedFlag</a></span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kt">Void</span><span class="p">)</span></code></pre>
+<span class="kd">public</span> <span class="kd">func</span> <span class="nf">observeDouble</span><span class="p">(</span><span class="n">_</span> <span class="nv">key</span><span class="p">:</span> <span class="kt"><a href="../Launch Darkly.html#/s:12LaunchDarkly9LDFlagKeya">LDFlagKey</a></span><span class="p">,</span> <span class="nv">owner</span><span class="p">:</span> <span class="kt"><a href="../Flag Changes.html#/s:12LaunchDarkly17LDFlagChangeOwnera">LDFlagChangeOwner</a></span><span class="p">,</span> <span class="nv">handler</span><span class="p">:</span> <span class="kd">@escaping</span> <span class="p">(</span><span class="n">_</span> <span class="nv">changedFlag</span><span class="p">:</span> <span class="kt"><a href="../Classes/ObjcLDDoubleChangedFlag.html">ObjcLDDoubleChangedFlag</a></span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kt">Void</span><span class="p">)</span></code></pre>
 
                         </div>
+                      </div>
+                      <div>
+                        <h4>Parameters</h4>
+                        <table class="graybox">
+                          <tbody>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>key</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>The LDFlagKey for the flag to observe.</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>owner</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>The LDFlagChangeOwner which will execute the handler. The SDK retains a weak reference to the owner.</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>handler</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>The block the SDK will execute when the feature flag changes.</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>changedFlag</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>The LDDoubleChangedFlag passed into the handler containing the old &amp; new flag value and source</p>
+                                </div>
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
                       </div>
                     </section>
                   </div>
@@ -1757,7 +1961,20 @@
                     <section class="section">
                       <div class="pointer"></div>
                       <div class="abstract">
-                        <p>Undocumented</p>
+                        <p>Sets a handler for the specified NSString flag key executed on the specified owner. If the flag&rsquo;s value changes, executes the handler, passing in the <code>changedFlag</code> containing the old and new flag values, and old and new flag value source. See <code><a href="../Classes/ObjcLDStringChangedFlag.html">ObjcLDStringChangedFlag</a></code> for details.</p>
+
+<p>The SDK retains only weak references to the owner, which allows the client app to freely destroy owners without issues. Client apps should capture a strong self reference from a weak reference immediately inside the handler to avoid retain cycles causing a memory leak.</p>
+
+<p>The SDK executes handlers on the main thread.</p>
+
+<p>SeeAlso: <code><a href="../Classes/ObjcLDStringChangedFlag.html">ObjcLDStringChangedFlag</a></code> and <code><a href="../Classes/ObjcLDClient.html#/c:@M@LaunchDarkly@objc(cs)LDClient(im)stopObservingForOwner:">stopObserving(owner:)</a></code></p>
+<h3 id='usage' class='heading'>Usage</h3>
+<pre class="highlight swift"><code><span class="n">__weak</span> <span class="nf">typeof</span><span class="p">(</span><span class="k">self</span><span class="p">)</span> <span class="n">weakSelf</span> <span class="o">=</span> <span class="k">self</span><span class="p">;</span>
+<span class="p">[</span><span class="kt">LDClient</span><span class="o">.</span><span class="n">sharedInstance</span> <span class="nv">observeString</span><span class="p">:</span><span class="s">"my-string-flag"</span> <span class="nv">owner</span><span class="p">:</span><span class="k">self</span> <span class="nv">handler</span><span class="p">:</span><span class="o">^</span><span class="p">(</span><span class="kt">LDStringChangedFlag</span> <span class="o">*</span><span class="n">changedFlag</span><span class="p">){</span>
+   <span class="n">__strong</span> <span class="nf">typeof</span><span class="p">(</span><span class="n">weakSelf</span><span class="p">)</span> <span class="n">strongSelf</span> <span class="o">=</span> <span class="n">weakSelf</span><span class="p">;</span>
+   <span class="p">[</span><span class="n">strongSelf</span> <span class="nv">showStringChangedFlag</span><span class="p">:</span><span class="n">changedFlag</span><span class="p">];</span>
+<span class="p">}];</span>
+</code></pre>
 
                       </div>
                       <div class="declaration">
@@ -1765,9 +1982,64 @@
                         <div class="language">
                           <p class="aside-title">Swift</p>
                           <pre class="highlight swift"><code><span class="kd">@objc</span>
-<span class="kd">public</span> <span class="kd">func</span> <span class="nf">observeString</span><span class="p">(</span><span class="n">_</span> <span class="nv">key</span><span class="p">:</span> <span class="kt"><a href="../Launch Darkly.html#/s:12LaunchDarkly9LDFlagKeya">LDFlagKey</a></span><span class="p">,</span> <span class="nv">owner</span><span class="p">:</span> <span class="kt"><a href="../Flag Changes.html#/s:12LaunchDarkly17LDFlagChangeOwnera">LDFlagChangeOwner</a></span><span class="p">,</span> <span class="nv">handler</span><span class="p">:</span> <span class="kd">@escaping</span> <span class="p">(</span><span class="kt"><a href="../Classes/ObjcLDStringChangedFlag.html">ObjcLDStringChangedFlag</a></span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kt">Void</span><span class="p">)</span></code></pre>
+<span class="kd">public</span> <span class="kd">func</span> <span class="nf">observeString</span><span class="p">(</span><span class="n">_</span> <span class="nv">key</span><span class="p">:</span> <span class="kt"><a href="../Launch Darkly.html#/s:12LaunchDarkly9LDFlagKeya">LDFlagKey</a></span><span class="p">,</span> <span class="nv">owner</span><span class="p">:</span> <span class="kt"><a href="../Flag Changes.html#/s:12LaunchDarkly17LDFlagChangeOwnera">LDFlagChangeOwner</a></span><span class="p">,</span> <span class="nv">handler</span><span class="p">:</span> <span class="kd">@escaping</span> <span class="p">(</span><span class="n">_</span> <span class="nv">changedFlag</span><span class="p">:</span> <span class="kt"><a href="../Classes/ObjcLDStringChangedFlag.html">ObjcLDStringChangedFlag</a></span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kt">Void</span><span class="p">)</span></code></pre>
 
                         </div>
+                      </div>
+                      <div>
+                        <h4>Parameters</h4>
+                        <table class="graybox">
+                          <tbody>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>key</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>The LDFlagKey for the flag to observe.</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>owner</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>The LDFlagChangeOwner which will execute the handler. The SDK retains a weak reference to the owner.</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>handler</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>The block the SDK will execute when the feature flag changes.</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>changedFlag</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>The LDStringChangedFlag passed into the handler containing the old &amp; new flag value &amp; source</p>
+                                </div>
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
                       </div>
                     </section>
                   </div>
@@ -1785,7 +2057,20 @@
                     <section class="section">
                       <div class="pointer"></div>
                       <div class="abstract">
-                        <p>Undocumented</p>
+                        <p>Sets a handler for the specified NSArray flag key executed on the specified owner. If the flag&rsquo;s value changes, executes the handler, passing in the <code>changedFlag</code> containing the old and new flag values, and old and new flag value source. See <code><a href="../Classes/ObjcLDArrayChangedFlag.html">ObjcLDArrayChangedFlag</a></code> for details.</p>
+
+<p>The SDK retains only weak references to the owner, which allows the client app to freely destroy owners without issues. Client apps should capture a strong self reference from a weak reference immediately inside the handler to avoid retain cycles causing a memory leak.</p>
+
+<p>The SDK executes handlers on the main thread.</p>
+
+<p>SeeAlso: <code><a href="../Classes/ObjcLDArrayChangedFlag.html">ObjcLDArrayChangedFlag</a></code> and <code><a href="../Classes/ObjcLDClient.html#/c:@M@LaunchDarkly@objc(cs)LDClient(im)stopObservingForOwner:">stopObserving(owner:)</a></code></p>
+<h3 id='usage' class='heading'>Usage</h3>
+<pre class="highlight swift"><code><span class="n">__weak</span> <span class="nf">typeof</span><span class="p">(</span><span class="k">self</span><span class="p">)</span> <span class="n">weakSelf</span> <span class="o">=</span> <span class="k">self</span><span class="p">;</span>
+<span class="p">[</span><span class="kt">LDClient</span><span class="o">.</span><span class="n">sharedInstance</span> <span class="nv">observeArray</span><span class="p">:</span><span class="s">"my-array-flag"</span> <span class="nv">owner</span><span class="p">:</span><span class="k">self</span> <span class="nv">handler</span><span class="p">:</span><span class="o">^</span><span class="p">(</span><span class="kt">LDArrayChangedFlag</span> <span class="o">*</span><span class="n">changedFlag</span><span class="p">){</span>
+   <span class="n">__strong</span> <span class="nf">typeof</span><span class="p">(</span><span class="n">weakSelf</span><span class="p">)</span> <span class="n">strongSelf</span> <span class="o">=</span> <span class="n">weakSelf</span><span class="p">;</span>
+   <span class="p">[</span><span class="n">strongSelf</span> <span class="nv">showArrayChangedFlag</span><span class="p">:</span><span class="n">changedFlag</span><span class="p">];</span>
+<span class="p">}];</span>
+</code></pre>
 
                       </div>
                       <div class="declaration">
@@ -1793,9 +2078,64 @@
                         <div class="language">
                           <p class="aside-title">Swift</p>
                           <pre class="highlight swift"><code><span class="kd">@objc</span>
-<span class="kd">public</span> <span class="kd">func</span> <span class="nf">observeArray</span><span class="p">(</span><span class="n">_</span> <span class="nv">key</span><span class="p">:</span> <span class="kt"><a href="../Launch Darkly.html#/s:12LaunchDarkly9LDFlagKeya">LDFlagKey</a></span><span class="p">,</span> <span class="nv">owner</span><span class="p">:</span> <span class="kt"><a href="../Flag Changes.html#/s:12LaunchDarkly17LDFlagChangeOwnera">LDFlagChangeOwner</a></span><span class="p">,</span> <span class="nv">handler</span><span class="p">:</span> <span class="kd">@escaping</span> <span class="p">(</span><span class="kt"><a href="../Classes/ObjcLDArrayChangedFlag.html">ObjcLDArrayChangedFlag</a></span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kt">Void</span><span class="p">)</span></code></pre>
+<span class="kd">public</span> <span class="kd">func</span> <span class="nf">observeArray</span><span class="p">(</span><span class="n">_</span> <span class="nv">key</span><span class="p">:</span> <span class="kt"><a href="../Launch Darkly.html#/s:12LaunchDarkly9LDFlagKeya">LDFlagKey</a></span><span class="p">,</span> <span class="nv">owner</span><span class="p">:</span> <span class="kt"><a href="../Flag Changes.html#/s:12LaunchDarkly17LDFlagChangeOwnera">LDFlagChangeOwner</a></span><span class="p">,</span> <span class="nv">handler</span><span class="p">:</span> <span class="kd">@escaping</span> <span class="p">(</span><span class="n">_</span> <span class="nv">changedFlag</span><span class="p">:</span> <span class="kt"><a href="../Classes/ObjcLDArrayChangedFlag.html">ObjcLDArrayChangedFlag</a></span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kt">Void</span><span class="p">)</span></code></pre>
 
                         </div>
+                      </div>
+                      <div>
+                        <h4>Parameters</h4>
+                        <table class="graybox">
+                          <tbody>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>key</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>The LDFlagKey for the flag to observe.</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>owner</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>The LDFlagChangeOwner which will execute the handler. The SDK retains a weak reference to the owner.</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>handler</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>The block the SDK will execute when the feature flag changes.</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>changedFlag</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>The LDArrayChangedFlag passed into the handler containing the old &amp; new flag value &amp; source</p>
+                                </div>
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
                       </div>
                     </section>
                   </div>
@@ -1813,7 +2153,20 @@
                     <section class="section">
                       <div class="pointer"></div>
                       <div class="abstract">
-                        <p>Undocumented</p>
+                        <p>Sets a handler for the specified NSDictionary flag key executed on the specified owner. If the flag&rsquo;s value changes, executes the handler, passing in the <code>changedFlag</code> containing the old and new flag values, and old and new flag value source. See <code><a href="../Classes/ObjcLDDictionaryChangedFlag.html">ObjcLDDictionaryChangedFlag</a></code> for details.</p>
+
+<p>The SDK retains only weak references to the owner, which allows the client app to freely destroy owners without issues. Client apps should capture a strong self reference from a weak reference immediately inside the handler to avoid retain cycles causing a memory leak.</p>
+
+<p>The SDK executes handlers on the main thread.</p>
+
+<p>SeeAlso: <code><a href="../Classes/ObjcLDDictionaryChangedFlag.html">ObjcLDDictionaryChangedFlag</a></code> and <code><a href="../Classes/ObjcLDClient.html#/c:@M@LaunchDarkly@objc(cs)LDClient(im)stopObservingForOwner:">stopObserving(owner:)</a></code></p>
+<h3 id='usage' class='heading'>Usage</h3>
+<pre class="highlight swift"><code><span class="n">__weak</span> <span class="nf">typeof</span><span class="p">(</span><span class="k">self</span><span class="p">)</span> <span class="n">weakSelf</span> <span class="o">=</span> <span class="k">self</span><span class="p">;</span>
+<span class="p">[</span><span class="kt">LDClient</span><span class="o">.</span><span class="n">sharedInstance</span> <span class="nv">observeDictionary</span><span class="p">:</span><span class="s">"my-dictionary-flag"</span> <span class="nv">owner</span><span class="p">:</span><span class="k">self</span> <span class="nv">handler</span><span class="p">:</span><span class="o">^</span><span class="p">(</span><span class="kt">LDDictionaryChangedFlag</span> <span class="o">*</span><span class="n">changedFlag</span><span class="p">){</span>
+   <span class="n">__strong</span> <span class="nf">typeof</span><span class="p">(</span><span class="n">weakSelf</span><span class="p">)</span> <span class="n">strongSelf</span> <span class="o">=</span> <span class="n">weakSelf</span><span class="p">;</span>
+   <span class="p">[</span><span class="n">strongSelf</span> <span class="nv">showDictionaryChangedFlag</span><span class="p">:</span><span class="n">changedFlag</span><span class="p">];</span>
+<span class="p">}];</span>
+</code></pre>
 
                       </div>
                       <div class="declaration">
@@ -1821,9 +2174,64 @@
                         <div class="language">
                           <p class="aside-title">Swift</p>
                           <pre class="highlight swift"><code><span class="kd">@objc</span>
-<span class="kd">public</span> <span class="kd">func</span> <span class="nf">observeDictionary</span><span class="p">(</span><span class="n">_</span> <span class="nv">key</span><span class="p">:</span> <span class="kt"><a href="../Launch Darkly.html#/s:12LaunchDarkly9LDFlagKeya">LDFlagKey</a></span><span class="p">,</span> <span class="nv">owner</span><span class="p">:</span> <span class="kt"><a href="../Flag Changes.html#/s:12LaunchDarkly17LDFlagChangeOwnera">LDFlagChangeOwner</a></span><span class="p">,</span> <span class="nv">handler</span><span class="p">:</span> <span class="kd">@escaping</span> <span class="p">(</span><span class="kt"><a href="../Classes/ObjcLDDictionaryChangedFlag.html">ObjcLDDictionaryChangedFlag</a></span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kt">Void</span><span class="p">)</span></code></pre>
+<span class="kd">public</span> <span class="kd">func</span> <span class="nf">observeDictionary</span><span class="p">(</span><span class="n">_</span> <span class="nv">key</span><span class="p">:</span> <span class="kt"><a href="../Launch Darkly.html#/s:12LaunchDarkly9LDFlagKeya">LDFlagKey</a></span><span class="p">,</span> <span class="nv">owner</span><span class="p">:</span> <span class="kt"><a href="../Flag Changes.html#/s:12LaunchDarkly17LDFlagChangeOwnera">LDFlagChangeOwner</a></span><span class="p">,</span> <span class="nv">handler</span><span class="p">:</span> <span class="kd">@escaping</span> <span class="p">(</span><span class="n">_</span> <span class="nv">changedFlag</span><span class="p">:</span> <span class="kt"><a href="../Classes/ObjcLDDictionaryChangedFlag.html">ObjcLDDictionaryChangedFlag</a></span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kt">Void</span><span class="p">)</span></code></pre>
 
                         </div>
+                      </div>
+                      <div>
+                        <h4>Parameters</h4>
+                        <table class="graybox">
+                          <tbody>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>key</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>The LDFlagKey for the flag to observe.</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>owner</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>The LDFlagChangeOwner which will execute the handler. The SDK retains a weak reference to the owner.</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>handler</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>The block the SDK will execute when the feature flag changes.</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>changedFlag</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>The LDDictionaryChangedFlag passed into the handler containing the old &amp; new flag value &amp; source</p>
+                                </div>
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
                       </div>
                     </section>
                   </div>
@@ -1841,7 +2249,21 @@
                     <section class="section">
                       <div class="pointer"></div>
                       <div class="abstract">
-                        <p>Undocumented</p>
+                        <p>Sets a handler for the specified flag keys executed on the specified owner. If any observed flag&rsquo;s value changes, executes the handler 1 time, passing in a dictionary of <NSString*, LDChangedFlag*> containing the old and new flag values, and old and new flag value source. See LDChangedFlag (<code><a href="../Classes/ObjcLDChangedFlag.html">ObjcLDChangedFlag</a></code>) for details.</p>
+
+<p>The SDK retains only weak references to owner, which allows the client app to freely destroy change owners without issues. Client apps should capture a strong self reference from a weak reference immediately inside the handler to avoid retain cycles causing a memory leak.</p>
+
+<p>The SDK executes handlers on the main thread.</p>
+
+<p>SeeAlso: <code><a href="../Classes/ObjcLDChangedFlag.html">ObjcLDChangedFlag</a></code> and <code><a href="../Classes/ObjcLDClient.html#/c:@M@LaunchDarkly@objc(cs)LDClient(im)stopObservingForOwner:">stopObserving(owner:)</a></code></p>
+<h3 id='usage' class='heading'>Usage</h3>
+<pre class="highlight swift"><code><span class="n">__weak</span> <span class="nf">typeof</span><span class="p">(</span><span class="k">self</span><span class="p">)</span> <span class="n">weakSelf</span> <span class="o">=</span> <span class="k">self</span><span class="p">;</span>
+<span class="p">[</span><span class="kt">LDClient</span><span class="o">.</span><span class="n">sharedInstance</span> <span class="nv">observeKeys</span><span class="p">:</span><span class="err">@</span><span class="p">[</span><span class="s">@"my-bool-flag"</span><span class="p">,</span><span class="s">@"my-string-flag"</span><span class="p">,</span> <span class="s">@"my-dictionary-flag"</span><span class="p">]</span> <span class="nv">owner</span><span class="p">:</span><span class="k">self</span> <span class="nv">handler</span><span class="p">:</span><span class="o">^</span><span class="p">(</span><span class="kt">NSDictionary</span><span class="o">&lt;</span><span class="kt">NSString</span> <span class="o">*</span><span class="p">,</span><span class="kt">LDChangedFlag</span> <span class="o">*&gt;</span> <span class="o">*</span> <span class="n">_Nonnull</span> <span class="n">changedFlags</span><span class="p">)</span> <span class="p">{</span>
+   <span class="n">__strong</span> <span class="nf">typeof</span><span class="p">(</span><span class="n">weakSelf</span><span class="p">)</span> <span class="n">strongSelf</span> <span class="o">=</span> <span class="n">weakSelf</span><span class="p">;</span>
+   <span class="c1">//There will be a typed LDChangedFlag entry in changedFlags for each changed flag. The block will only be called once regardless of how many flags changed.</span>
+   <span class="p">[</span><span class="n">strongSelf</span> <span class="nv">showChangedFlags</span><span class="p">:</span> <span class="n">changedFlags</span><span class="p">];</span>
+<span class="p">}];</span>
+</code></pre>
 
                       </div>
                       <div class="declaration">
@@ -1849,9 +2271,64 @@
                         <div class="language">
                           <p class="aside-title">Swift</p>
                           <pre class="highlight swift"><code><span class="kd">@objc</span>
-<span class="kd">public</span> <span class="kd">func</span> <span class="nf">observeKeys</span><span class="p">(</span><span class="n">_</span> <span class="nv">keys</span><span class="p">:</span> <span class="p">[</span><span class="kt"><a href="../Launch Darkly.html#/s:12LaunchDarkly9LDFlagKeya">LDFlagKey</a></span><span class="p">],</span> <span class="nv">owner</span><span class="p">:</span> <span class="kt"><a href="../Flag Changes.html#/s:12LaunchDarkly17LDFlagChangeOwnera">LDFlagChangeOwner</a></span><span class="p">,</span> <span class="nv">handler</span><span class="p">:</span> <span class="kd">@escaping</span> <span class="p">([</span><span class="kt"><a href="../Launch Darkly.html#/s:12LaunchDarkly9LDFlagKeya">LDFlagKey</a></span><span class="p">:</span> <span class="kt"><a href="../Classes/ObjcLDChangedFlag.html">ObjcLDChangedFlag</a></span><span class="p">])</span> <span class="o">-&gt;</span> <span class="kt">Void</span><span class="p">)</span></code></pre>
+<span class="kd">public</span> <span class="kd">func</span> <span class="nf">observeKeys</span><span class="p">(</span><span class="n">_</span> <span class="nv">keys</span><span class="p">:</span> <span class="p">[</span><span class="kt"><a href="../Launch Darkly.html#/s:12LaunchDarkly9LDFlagKeya">LDFlagKey</a></span><span class="p">],</span> <span class="nv">owner</span><span class="p">:</span> <span class="kt"><a href="../Flag Changes.html#/s:12LaunchDarkly17LDFlagChangeOwnera">LDFlagChangeOwner</a></span><span class="p">,</span> <span class="nv">handler</span><span class="p">:</span> <span class="kd">@escaping</span> <span class="p">(</span><span class="n">_</span> <span class="nv">changedFlags</span><span class="p">:</span> <span class="p">[</span><span class="kt"><a href="../Launch Darkly.html#/s:12LaunchDarkly9LDFlagKeya">LDFlagKey</a></span><span class="p">:</span> <span class="kt"><a href="../Classes/ObjcLDChangedFlag.html">ObjcLDChangedFlag</a></span><span class="p">])</span> <span class="o">-&gt;</span> <span class="kt">Void</span><span class="p">)</span></code></pre>
 
                         </div>
+                      </div>
+                      <div>
+                        <h4>Parameters</h4>
+                        <table class="graybox">
+                          <tbody>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>keys</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>An array of NSString* flag keys for the flags to observe.</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>owner</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>The LDFlagChangeOwner which will execute the handler. The SDK retains a weak reference to the owner.</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>handler</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>The LDFlagCollectionChangeHandler the SDK will execute 1 time when any of the observed feature flags change.</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>changedFlags</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>A dictionary <NSString*, LDChangedFlag*> using the changed flag keys as the dictionary keys. Cast the resulting LDChangedFlag to the correct LDChangedFlagType.</p>
+                                </div>
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
                       </div>
                     </section>
                   </div>
@@ -1869,7 +2346,21 @@
                     <section class="section">
                       <div class="pointer"></div>
                       <div class="abstract">
-                        <p>Undocumented</p>
+                        <p>Sets a handler for all flag keys executed on the specified owner. If any flag&rsquo;s value changes, executes the handler 1 time, passing in a dictionary of <NSString*, LDChangedFlag*> containing the old and new flag values, and old and new flag value source. See LDChangedFlag (<code><a href="../Classes/ObjcLDChangedFlag.html">ObjcLDChangedFlag</a></code>) for details.</p>
+
+<p>The SDK retains only weak references to owner, which allows the client app to freely destroy change owners without issues. Client apps should capture a strong self reference from a weak reference immediately inside the handler to avoid retain cycles causing a memory leak.</p>
+
+<p>The SDK executes handlers on the main thread.</p>
+
+<p>SeeAlso: <code><a href="../Classes/ObjcLDChangedFlag.html">ObjcLDChangedFlag</a></code> and <code><a href="../Classes/ObjcLDClient.html#/c:@M@LaunchDarkly@objc(cs)LDClient(im)stopObservingForOwner:">stopObserving(owner:)</a></code></p>
+<h3 id='usage' class='heading'>Usage</h3>
+<pre class="highlight swift"><code><span class="n">__weak</span> <span class="nf">typeof</span><span class="p">(</span><span class="k">self</span><span class="p">)</span> <span class="n">weakSelf</span> <span class="o">=</span> <span class="k">self</span><span class="p">;</span>
+<span class="p">[</span><span class="kt">LDClient</span><span class="o">.</span><span class="n">sharedInstance</span> <span class="nv">observeAllKeysWithOwner</span><span class="p">:</span><span class="k">self</span> <span class="nv">handler</span><span class="p">:</span><span class="o">^</span><span class="p">(</span><span class="kt">NSDictionary</span><span class="o">&lt;</span><span class="kt">NSString</span> <span class="o">*</span><span class="p">,</span><span class="kt">LDChangedFlag</span> <span class="o">*&gt;</span> <span class="o">*</span> <span class="n">_Nonnull</span> <span class="n">changedFlags</span><span class="p">)</span> <span class="p">{</span>
+   <span class="n">__strong</span> <span class="nf">typeof</span><span class="p">(</span><span class="n">weakSelf</span><span class="p">)</span> <span class="n">strongSelf</span> <span class="o">=</span> <span class="n">weakSelf</span><span class="p">;</span>
+   <span class="c1">//There will be a typed LDChangedFlag entry in changedFlags for each changed flag. The block will only be called once regardless of how many flags changed.</span>
+   <span class="p">[</span><span class="n">strongSelf</span> <span class="nv">showChangedFlags</span><span class="p">:</span><span class="n">changedFlags</span><span class="p">];</span>
+<span class="p">}];</span>
+</code></pre>
 
                       </div>
                       <div class="declaration">
@@ -1877,9 +2368,52 @@
                         <div class="language">
                           <p class="aside-title">Swift</p>
                           <pre class="highlight swift"><code><span class="kd">@objc</span>
-<span class="kd">public</span> <span class="kd">func</span> <span class="nf">observeAllKeys</span><span class="p">(</span><span class="nv">owner</span><span class="p">:</span> <span class="kt"><a href="../Flag Changes.html#/s:12LaunchDarkly17LDFlagChangeOwnera">LDFlagChangeOwner</a></span><span class="p">,</span> <span class="nv">handler</span><span class="p">:</span> <span class="kd">@escaping</span> <span class="p">([</span><span class="kt"><a href="../Launch Darkly.html#/s:12LaunchDarkly9LDFlagKeya">LDFlagKey</a></span><span class="p">:</span> <span class="kt"><a href="../Classes/ObjcLDChangedFlag.html">ObjcLDChangedFlag</a></span><span class="p">])</span> <span class="o">-&gt;</span> <span class="kt">Void</span><span class="p">)</span></code></pre>
+<span class="kd">public</span> <span class="kd">func</span> <span class="nf">observeAllKeys</span><span class="p">(</span><span class="nv">owner</span><span class="p">:</span> <span class="kt"><a href="../Flag Changes.html#/s:12LaunchDarkly17LDFlagChangeOwnera">LDFlagChangeOwner</a></span><span class="p">,</span> <span class="nv">handler</span><span class="p">:</span> <span class="kd">@escaping</span> <span class="p">(</span><span class="n">_</span> <span class="nv">changedFlags</span><span class="p">:</span> <span class="p">[</span><span class="kt"><a href="../Launch Darkly.html#/s:12LaunchDarkly9LDFlagKeya">LDFlagKey</a></span><span class="p">:</span> <span class="kt"><a href="../Classes/ObjcLDChangedFlag.html">ObjcLDChangedFlag</a></span><span class="p">])</span> <span class="o">-&gt;</span> <span class="kt">Void</span><span class="p">)</span></code></pre>
 
                         </div>
+                      </div>
+                      <div>
+                        <h4>Parameters</h4>
+                        <table class="graybox">
+                          <tbody>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>owner</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>The LDFlagChangeOwner which will execute the handler. The SDK retains a weak reference to the owner.</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>handler</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>The LDFlagCollectionChangeHandler the SDK will execute 1 time when any of the observed feature flags change.</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>changedFlags</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>A dictionary <NSString*, LDChangedFlag*> using the changed flag keys as the dictionary keys. Cast the resulting LDChangedFlag to the correct LDChangedFlagType.</p>
+                                </div>
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
                       </div>
                     </section>
                   </div>
@@ -1897,7 +2431,23 @@
                     <section class="section">
                       <div class="pointer"></div>
                       <div class="abstract">
-                        <p>Undocumented</p>
+                        <p>Sets a handler executed when a flag update leaves the flags unchanged from their previous values.</p>
+
+<p>This handler can only ever be called when the LDClient is polling.</p>
+
+<p>The SDK retains only weak references to owner, which allows the client app to freely destroy change owners without issues. Client apps should capture a strong self reference from a weak reference immediately inside the handler to avoid retain cycles causing a memory leak.</p>
+
+<p>The SDK executes handlers on the main thread.</p>
+
+<p>SeeAlso: <code><a href="../Classes/ObjcLDClient.html#/c:@M@LaunchDarkly@objc(cs)LDClient(im)stopObservingForOwner:">stopObserving(owner:)</a></code></p>
+<h3 id='usage' class='heading'>Usage</h3>
+<pre class="highlight swift"><code><span class="n">__weak</span> <span class="nf">typeof</span><span class="p">(</span><span class="k">self</span><span class="p">)</span> <span class="n">weakSelf</span> <span class="o">=</span> <span class="k">self</span><span class="p">;</span>
+<span class="p">[[</span><span class="kt">LDClient</span> <span class="n">sharedInstance</span><span class="p">]</span> <span class="nv">observeFlagsUnchangedWithOwner</span><span class="p">:</span><span class="k">self</span> <span class="nv">handler</span><span class="p">:</span><span class="o">^</span><span class="p">{</span>
+   <span class="n">__strong</span> <span class="nf">typeof</span><span class="p">(</span><span class="n">weakSelf</span><span class="p">)</span> <span class="n">strongSelf</span> <span class="o">=</span> <span class="n">weakSelf</span><span class="p">;</span>
+   <span class="c1">//do something after the flags were not updated. The block will be called once on the main thread if the client is polling and the poll did not change any flag values.</span>
+   <span class="p">[</span><span class="k">self</span> <span class="n">checkFeatureValues</span><span class="p">];</span>
+<span class="p">}];</span>
+</code></pre>
 
                       </div>
                       <div class="declaration">
@@ -1908,6 +2458,37 @@
 <span class="kd">public</span> <span class="kd">func</span> <span class="nf">observeFlagsUnchanged</span><span class="p">(</span><span class="nv">owner</span><span class="p">:</span> <span class="kt"><a href="../Flag Changes.html#/s:12LaunchDarkly17LDFlagChangeOwnera">LDFlagChangeOwner</a></span><span class="p">,</span> <span class="nv">handler</span><span class="p">:</span> <span class="kd">@escaping</span> <span class="kt"><a href="../Flag Changes.html#/s:12LaunchDarkly23LDFlagsUnchangedHandlera">LDFlagsUnchangedHandler</a></span><span class="p">)</span></code></pre>
 
                         </div>
+                      </div>
+                      <div>
+                        <h4>Parameters</h4>
+                        <table class="graybox">
+                          <tbody>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>owner</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>The LDFlagChangeOwner which will execute the handler. The SDK retains a weak reference to the owner.</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>handler</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>The LDFlagsUnchangedHandler the SDK will execute 1 time when a flag request completes with no flags changed.</p>
+                                </div>
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
                       </div>
                     </section>
                   </div>
@@ -1925,7 +2506,9 @@
                     <section class="section">
                       <div class="pointer"></div>
                       <div class="abstract">
-                        <p>Undocumented</p>
+                        <p>Removes all observers for the given owner, including a flagsUnchangedObserver</p>
+
+<p>The client app does not have to call this method. If the client app deinits a LDFlagChangeOwner, the SDK will automatically remove its handlers without ever calling them again.</p>
 
                       </div>
                       <div class="declaration">
@@ -1936,6 +2519,25 @@
 <span class="kd">public</span> <span class="kd">func</span> <span class="nf">stopObserving</span><span class="p">(</span><span class="nv">owner</span><span class="p">:</span> <span class="kt"><a href="../Flag Changes.html#/s:12LaunchDarkly17LDFlagChangeOwnera">LDFlagChangeOwner</a></span><span class="p">)</span></code></pre>
 
                         </div>
+                      </div>
+                      <div>
+                        <h4>Parameters</h4>
+                        <table class="graybox">
+                          <tbody>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>owner</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>The LDFlagChangeOwner owning the handlers to remove, whether a flag change handler or flags unchanged handler.</p>
+                                </div>
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
                       </div>
                     </section>
                   </div>
@@ -1953,7 +2555,7 @@
                     <section class="section">
                       <div class="pointer"></div>
                       <div class="abstract">
-                        <p>Undocumented</p>
+                        <p>Sets a block called if the client is unable to contact the LaunchDarkly server. Unlike the observer methods, only 1 block can be set at any given time. The SDK keeps a strong reference to the block. Client apps should take care to remove the block prior to deinit on the owner in order to avoid the SDK causing an object to not be destroyed when expected.</p>
 
                       </div>
                       <div class="declaration">
@@ -1961,9 +2563,28 @@
                         <div class="language">
                           <p class="aside-title">Swift</p>
                           <pre class="highlight swift"><code><span class="kd">@objc</span>
-<span class="kd">public</span> <span class="kd">func</span> <span class="nf">setOnServerUnavailable</span><span class="p">(</span><span class="n">_</span> <span class="nv">handler</span><span class="p">:</span> <span class="kd">@escaping</span> <span class="p">()</span> <span class="o">-&gt;</span> <span class="kt">Void</span><span class="p">)</span></code></pre>
+<span class="kd">public</span> <span class="kd">func</span> <span class="nf">setOnServerUnavailable</span><span class="p">(</span><span class="n">_</span> <span class="nv">handler</span><span class="p">:</span> <span class="p">(()</span> <span class="o">-&gt;</span> <span class="kt">Void</span><span class="p">)?)</span></code></pre>
 
                         </div>
+                      </div>
+                      <div>
+                        <h4>Parameters</h4>
+                        <table class="graybox">
+                          <tbody>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>handler</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>The block the SDK will execute 1 time when the client is unable to contact the LaunchDarkly server</p>
+                                </div>
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
                       </div>
                     </section>
                   </div>
