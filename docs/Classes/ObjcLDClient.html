@@ -2613,7 +2613,14 @@
                     <section class="section">
                       <div class="pointer"></div>
                       <div class="abstract">
-                        <p>Undocumented</p>
+                        <p>Adds a custom event to the LDClient event store. A client app can set a tracking event to allow client customized data analysis. Once an app has called <code>trackEvent</code>, the app cannot remove the event from the event store.</p>
+
+<p>LDClient periodically transmits events to LaunchDarkly based on the frequency set in LDConfig.eventFlushIntervalMillis. The LDClient must be started and online. Ths SDK stores events tracked while the LDClient is offline, but started.</p>
+
+<p>Once the SDK&rsquo;s event store is full, the SDK discards events until they can be reported to LaunchDarkly. Configure the size of the event store using <code>eventCapacity</code> on the <code><a href="../Classes/ObjcLDClient.html#/c:@M@LaunchDarkly@objc(cs)LDClient(py)config">config</a></code>. See <code><a href="../Structs/LDConfig.html">LDConfig</a></code> (<code><a href="../Classes/ObjcLDConfig.html">ObjcLDConfig</a></code>) for details.</p>
+<h3 id='usage' class='heading'>Usage</h3>
+<pre class="highlight swift"><code><span class="p">[</span><span class="kt">LDClient</span><span class="o">.</span><span class="n">sharedInstance</span> <span class="nv">trackEventWithKey</span><span class="p">:</span><span class="s">@"event-key"</span> <span class="nv">data</span><span class="p">:</span><span class="err">@</span><span class="p">{</span><span class="s">@"event-data-key"</span><span class="p">:</span><span class="mi">7</span><span class="p">}];</span>
+</code></pre>
 
                       </div>
                       <div class="declaration">
@@ -2624,6 +2631,37 @@
 <span class="kd">public</span> <span class="kd">func</span> <span class="nf">trackEvent</span><span class="p">(</span><span class="nv">key</span><span class="p">:</span> <span class="kt">String</span><span class="p">,</span> <span class="nv">data</span><span class="p">:</span> <span class="p">[</span><span class="kt">String</span><span class="p">:</span> <span class="kt">Any</span><span class="p">]?</span> <span class="o">=</span> <span class="kc">nil</span><span class="p">)</span></code></pre>
 
                         </div>
+                      </div>
+                      <div>
+                        <h4>Parameters</h4>
+                        <table class="graybox">
+                          <tbody>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>key</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>The key for the event. The SDK does nothing with the key, which can be any string the client app sends</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>data</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>The data for the event. The SDK does nothing with the data, which can be any NSDictionary the client app sends. (Optional)</p>
+                                </div>
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
                       </div>
                     </section>
                   </div>
@@ -2641,7 +2679,7 @@
                     <section class="section">
                       <div class="pointer"></div>
                       <div class="abstract">
-                        <p>Undocumented</p>
+                        <p>Report events to LaunchDarkly servers. While online, the LDClient automatically reports events on the <code>LDConfig.eventFlushInterval</code>, and whenever the client app moves to the background. There should normally not be a need to call reportEvents.</p>
 
                       </div>
                       <div class="declaration">

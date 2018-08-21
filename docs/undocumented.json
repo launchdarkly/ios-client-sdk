@@ -197,20 +197,6 @@
       "warning": "undocumented"
     },
     {
-      "file": "/Users/markpokorny/Documents/Development/launchDarkly/ios-client-swift-private/Darkly/Darkly/ObjectiveC/ObjcLDClient.swift",
-      "line": 794,
-      "symbol": "ObjcLDClient.trackEvent(key:data:)",
-      "symbol_kind": "source.lang.swift.decl.function.method.instance",
-      "warning": "undocumented"
-    },
-    {
-      "file": "/Users/markpokorny/Documents/Development/launchDarkly/ios-client-swift-private/Darkly/Darkly/ObjectiveC/ObjcLDClient.swift",
-      "line": 798,
-      "symbol": "ObjcLDClient.reportEvents()",
-      "symbol_kind": "source.lang.swift.decl.function.method.instance",
-      "warning": "undocumented"
-    },
-    {
       "file": "/Users/markpokorny/Documents/Development/launchDarkly/ios-client-swift-private/Darkly/Darkly/ObjectiveC/ObjcLDConfig.swift",
       "line": 12,
       "symbol": "ObjcLDConfig",
