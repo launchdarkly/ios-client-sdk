@@ -23,7 +23,7 @@
         <a class="header-link" href="index.html">
           LaunchDarkly Docs
         </a>
-         (89% documented)
+         (100% documented)
       </p>
     
       <p class="header-col--secondary">
@@ -220,7 +220,9 @@
                     <section class="section">
                       <div class="pointer"></div>
                       <div class="abstract">
-                        <p>Undocumented</p>
+                        <p>Collects the elements of a feature flag that changed as a result of a <code>clientstream</code> update or feature flag request. The SDK will pass a typed ObjcLDChangedFlag or a collection of ObjcLDChangedFlags into feature flag observer blocks. This is the base type for the typed ObjcLDChangedFlags passed into observer blocks. The client app will have to convert the ObjcLDChangedFlag into the expected typed ObjcLDChangedFlag type.</p>
+
+<p>See the typed <code><a href="Classes/ObjcLDClient.html">ObjcLDClient</a></code> observeWithKey:owner:handler:, observeWithKeys:owner:handler:, and observeAllWithOwner:handler: for more details.</p>
 
                         <a href="Classes/ObjcLDChangedFlag.html" class="slightly-smaller">See more</a>
                       </div>
@@ -249,7 +251,9 @@
                     <section class="section">
                       <div class="pointer"></div>
                       <div class="abstract">
-                        <p>Wraps the changed bool values of a flag-key. If the flag is not actually a Bool, old &amp; new value default to false and old &amp; new valueSource returns &lsquo;type mismatch&rsquo;</p>
+                        <p>Wraps the changed feature flag&rsquo;s BOOL values and sources.</p>
+
+<p>If the flag is not actually a BOOL, the SDK sets the old &amp; new value to false and old &amp; new valueSource to &lsquo;type mismatch&rsquo;</p>
 
                         <a href="Classes/ObjcLDBoolChangedFlag.html" class="slightly-smaller">See more</a>
                       </div>
@@ -278,7 +282,9 @@
                     <section class="section">
                       <div class="pointer"></div>
                       <div class="abstract">
-                        <p>Wraps the changed integer values of a flag-key. If the flag is not actually an Int, old &amp; new value default to 0 and old &amp; new valueSource returns &lsquo;type mismatch&rsquo;</p>
+                        <p>Wraps the changed feature flag&rsquo;s NSInteger values and sources.</p>
+
+<p>If the flag is not actually a NSInteger, the SDK sets the old &amp; new value to 0 and old &amp; new valueSource to &lsquo;type mismatch&rsquo;</p>
 
                         <a href="Classes/ObjcLDIntegerChangedFlag.html" class="slightly-smaller">See more</a>
                       </div>
@@ -307,7 +313,9 @@
                     <section class="section">
                       <div class="pointer"></div>
                       <div class="abstract">
-                        <p>Wraps the changed double values of a flag-key. If the flag is not actually a Double, old &amp; new value default to 0.0 and old &amp; new valueSource returns &lsquo;type mismatch&rsquo;</p>
+                        <p>Wraps the changed feature flag&rsquo;s double values and sources.</p>
+
+<p>If the flag is not actually a double, the SDK sets the old &amp; new value to 0.0 and old &amp; new valueSource to &lsquo;type mismatch&rsquo;</p>
 
                         <a href="Classes/ObjcLDDoubleChangedFlag.html" class="slightly-smaller">See more</a>
                       </div>
@@ -336,7 +344,9 @@
                     <section class="section">
                       <div class="pointer"></div>
                       <div class="abstract">
-                        <p>Wraps the changed string values of a flag-key. If the flag is not actually a String, old &amp; new value default to nil and old &amp; new valueSource returns &lsquo;type mismatch&rsquo;</p>
+                        <p>Wraps the changed feature flag&rsquo;s NSString values and sources.</p>
+
+<p>If the flag is not actually a NSString, the SDK sets the old &amp; new value to nil and old &amp; new valueSource to &lsquo;type mismatch&rsquo;</p>
 
                         <a href="Classes/ObjcLDStringChangedFlag.html" class="slightly-smaller">See more</a>
                       </div>
@@ -365,7 +375,9 @@
                     <section class="section">
                       <div class="pointer"></div>
                       <div class="abstract">
-                        <p>Wraps the changed array values of a flag-key. If the flag is not actually an Array, old &amp; new value default to nil and old &amp; new valueSource returns &lsquo;type mismatch&rsquo;</p>
+                        <p>Wraps the changed feature flag&rsquo;s NSArray values and sources.</p>
+
+<p>If the flag is not actually a NSArray, the SDK sets the old &amp; new value to nil and old &amp; new valueSource to &lsquo;type mismatch&rsquo;</p>
 
                         <a href="Classes/ObjcLDArrayChangedFlag.html" class="slightly-smaller">See more</a>
                       </div>
@@ -394,7 +406,9 @@
                     <section class="section">
                       <div class="pointer"></div>
                       <div class="abstract">
-                        <p>Wraps the changed dictionary values of a flag-key. If the flag is not actually a Dictionary, old &amp; new value default to nil and old &amp; new valueSource returns &lsquo;type mismatch&rsquo;</p>
+                        <p>Wraps the changed feature flag&rsquo;s NSDictionary values and sources.</p>
+
+<p>If the flag is not actually a NSDictionary, the SDK sets the old &amp; new value to nil and old &amp; new valueSource to &lsquo;type mismatch&rsquo;</p>
 
                         <a href="Classes/ObjcLDDictionaryChangedFlag.html" class="slightly-smaller">See more</a>
                       </div>
