@@ -61,21 +61,21 @@ custom_categories:
 
   - name: Obj-C Variation Values
     children:
-    - ObjcLDArrayVariationValue
     - ObjcLDBoolVariationValue
-    - ObjcLDDictionaryVariationValue
-    - ObjcLDDoubleVariationValue
     - ObjcLDIntegerVariationValue
+    - ObjcLDDoubleVariationValue
     - ObjcLDStringVariationValue
+    - ObjcLDArrayVariationValue
+    - ObjcLDDictionaryVariationValue
 
   - name: Obj-C Changed Flags
     children:
     - ObjcLDChangedFlag
-    - ObjcLDArrayChangedFlag
     - ObjcLDBoolChangedFlag
-    - ObjcLDDictionaryChangedFlag
-    - ObjcLDDoubleChangedFlag
     - ObjcLDIntegerChangedFlag
+    - ObjcLDDoubleChangedFlag
     - ObjcLDStringChangedFlag
+    - ObjcLDArrayChangedFlag
+    - ObjcLDDictionaryChangedFlag
 
 #output: "Docs"
