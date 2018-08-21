@@ -23,7 +23,7 @@
         <a class="header-link" href="../index.html">
           LaunchDarkly Docs
         </a>
-         (67% documented)
+         (78% documented)
       </p>
     
       <p class="header-col--secondary">
@@ -206,7 +206,11 @@
 
                 </div>
               </div>
-            <p>Undocumented</p>
+            <p>LDUser allows clients to collect information about users in order to refine the feature flag values sent to the SDK. For example, the client app may launch with the SDK defined anonymous user. As the user works with the client app, information may be collected as needed and sent to LaunchDarkly. The client app controls the information collected, which LaunchDarkly does not use except as the client directs to refine feature flags. Client apps should follow <a href="apple.com/legal/privacy">Apple&rsquo;s Privacy Policy</a> when collecting user information.</p>
+
+<p>The SDK caches last known feature flags for use on app startup to provide continuity with the last app run. Provided the LDClient is online and can establish a connection with LaunchDarkly servers, cached information will only be used a very short time. Once the latest feature flags arrive at the SDK, the SDK no longer uses cached feature flags. The SDK retains feature flags on the last 5 client defined users. The SDK will retain feature flags until they are overwritten by a different user&rsquo;s feature flags, or until the user removes the app from the device.</p>
+
+<p>The SDK does not cache user information collected, except for the user key. The user key is used to identify the cached feature flags for that user. Client app developers should use caution not to use sensitive user information as the user-key.</p>
 
           </div>
         </section>
@@ -228,7 +232,11 @@
                     <section class="section">
                       <div class="pointer"></div>
                       <div class="abstract">
-                        <p>Undocumented</p>
+                        <p>LDUser attributes that can be marked private.</p>
+
+<p>The SDK will not include private attribute values in analytics events, but private attribute names will be sent.</p>
+
+<p>See Also: <code><a href="../Classes/ObjcLDConfig.html#/c:@M@LaunchDarkly@objc(cs)LDConfig(py)allUserAttributesPrivate">ObjcLDConfig.allUserAttributesPrivate</a></code>, <code><a href="../Classes/ObjcLDConfig.html#/c:@M@LaunchDarkly@objc(cs)LDConfig(py)privateUserAttributes">ObjcLDConfig.privateUserAttributes</a></code>, and <code><a href="../Classes/ObjcLDUser.html#/c:@M@LaunchDarkly@objc(cs)LDUser(py)privateAttributes">privateAttributes</a></code>.</p>
 
                       </div>
                       <div class="declaration">
@@ -256,7 +264,7 @@
                     <section class="section">
                       <div class="pointer"></div>
                       <div class="abstract">
-                        <p>Undocumented</p>
+                        <p>LDUser name attribute used to make <code><a href="../Classes/ObjcLDUser.html#/c:@M@LaunchDarkly@objc(cs)LDUser(py)name">name</a></code> private</p>
 
                       </div>
                       <div class="declaration">
@@ -284,7 +292,7 @@
                     <section class="section">
                       <div class="pointer"></div>
                       <div class="abstract">
-                        <p>Undocumented</p>
+                        <p>LDUser firstName attribute used to make <code><a href="../Classes/ObjcLDUser.html#/c:@M@LaunchDarkly@objc(cs)LDUser(py)firstName">firstName</a></code> private</p>
 
                       </div>
                       <div class="declaration">
@@ -312,7 +320,7 @@
                     <section class="section">
                       <div class="pointer"></div>
                       <div class="abstract">
-                        <p>Undocumented</p>
+                        <p>LDUser lastName attribute used to make <code><a href="../Classes/ObjcLDUser.html#/c:@M@LaunchDarkly@objc(cs)LDUser(py)lastName">lastName</a></code> private</p>
 
                       </div>
                       <div class="declaration">
@@ -340,7 +348,7 @@
                     <section class="section">
                       <div class="pointer"></div>
                       <div class="abstract">
-                        <p>Undocumented</p>
+                        <p>LDUser country attribute used to make <code><a href="../Classes/ObjcLDUser.html#/c:@M@LaunchDarkly@objc(cs)LDUser(py)country">country</a></code> private</p>
 
                       </div>
                       <div class="declaration">
@@ -368,7 +376,7 @@
                     <section class="section">
                       <div class="pointer"></div>
                       <div class="abstract">
-                        <p>Undocumented</p>
+                        <p>LDUser ipAddress attribute used to make <code><a href="../Classes/ObjcLDUser.html#/c:@M@LaunchDarkly@objc(cs)LDUser(py)ipAddress">ipAddress</a></code> private</p>
 
                       </div>
                       <div class="declaration">
@@ -396,7 +404,7 @@
                     <section class="section">
                       <div class="pointer"></div>
                       <div class="abstract">
-                        <p>Undocumented</p>
+                        <p>LDUser email attribute used to make <code><a href="../Classes/ObjcLDUser.html#/c:@M@LaunchDarkly@objc(cs)LDUser(py)email">email</a></code> private</p>
 
                       </div>
                       <div class="declaration">
@@ -424,7 +432,7 @@
                     <section class="section">
                       <div class="pointer"></div>
                       <div class="abstract">
-                        <p>Undocumented</p>
+                        <p>LDUser avatar attribute used to make <code><a href="../Classes/ObjcLDUser.html#/c:@M@LaunchDarkly@objc(cs)LDUser(py)avatar">avatar</a></code> private</p>
 
                       </div>
                       <div class="declaration">
@@ -452,7 +460,7 @@
                     <section class="section">
                       <div class="pointer"></div>
                       <div class="abstract">
-                        <p>Undocumented</p>
+                        <p>LDUser custom attribute used to make <code><a href="../Classes/ObjcLDUser.html#/c:@M@LaunchDarkly@objc(cs)LDUser(py)custom">custom</a></code> private</p>
 
                       </div>
                       <div class="declaration">
@@ -480,7 +488,7 @@
                     <section class="section">
                       <div class="pointer"></div>
                       <div class="abstract">
-                        <p>Undocumented</p>
+                        <p>Client app defined string that uniquely identifies the user. If the client app does not define a key, the SDK will assign an identifier associated with the anonymous user. The key cannot be made private.</p>
 
                       </div>
                       <div class="declaration">
@@ -508,7 +516,7 @@
                     <section class="section">
                       <div class="pointer"></div>
                       <div class="abstract">
-                        <p>Undocumented</p>
+                        <p>Client app defined name for the user. (Default: nil)</p>
 
                       </div>
                       <div class="declaration">
@@ -536,7 +544,7 @@
                     <section class="section">
                       <div class="pointer"></div>
                       <div class="abstract">
-                        <p>Undocumented</p>
+                        <p>Client app defined first name for the user. (Default: nil)</p>
 
                       </div>
                       <div class="declaration">
@@ -564,7 +572,7 @@
                     <section class="section">
                       <div class="pointer"></div>
                       <div class="abstract">
-                        <p>Undocumented</p>
+                        <p>Client app defined last name for the user. (Default: nil)</p>
 
                       </div>
                       <div class="declaration">
@@ -592,7 +600,7 @@
                     <section class="section">
                       <div class="pointer"></div>
                       <div class="abstract">
-                        <p>Undocumented</p>
+                        <p>Client app defined country for the user. (Default: nil)</p>
 
                       </div>
                       <div class="declaration">
@@ -620,7 +628,7 @@
                     <section class="section">
                       <div class="pointer"></div>
                       <div class="abstract">
-                        <p>Undocumented</p>
+                        <p>Client app defined ipAddress for the user. (Default: nil)</p>
 
                       </div>
                       <div class="declaration">
@@ -648,7 +656,7 @@
                     <section class="section">
                       <div class="pointer"></div>
                       <div class="abstract">
-                        <p>Undocumented</p>
+                        <p>Client app defined email address for the user. (Default: nil)</p>
 
                       </div>
                       <div class="declaration">
@@ -676,7 +684,7 @@
                     <section class="section">
                       <div class="pointer"></div>
                       <div class="abstract">
-                        <p>Undocumented</p>
+                        <p>Client app defined avatar for the user. (Default: nil)</p>
 
                       </div>
                       <div class="declaration">
@@ -704,7 +712,7 @@
                     <section class="section">
                       <div class="pointer"></div>
                       <div class="abstract">
-                        <p>Undocumented</p>
+                        <p>Client app defined dictionary for the user. The client app may declare top level dictionary items as private. If the client app defines custom as private, the SDK considers the dictionary private except for device &amp; operatingSystem (which cannot be made private). See <code><a href="../Classes/ObjcLDUser.html#/c:@M@LaunchDarkly@objc(cs)LDUser(py)privateAttributes">privateAttributes</a></code> for details. (Default: nil)</p>
 
                       </div>
                       <div class="declaration">
@@ -732,7 +740,7 @@
                     <section class="section">
                       <div class="pointer"></div>
                       <div class="abstract">
-                        <p>Undocumented</p>
+                        <p>Client app defined isAnonymous for the user. If the client app does not define isAnonymous, the SDK will use the <code><a href="../Classes/ObjcLDUser.html#/c:@M@LaunchDarkly@objc(cs)LDUser(py)key">key</a></code> to set this attribute. isAnonymous cannot be made private. (Default: YES)</p>
 
                       </div>
                       <div class="declaration">
@@ -760,7 +768,7 @@
                     <section class="section">
                       <div class="pointer"></div>
                       <div class="abstract">
-                        <p>Undocumented</p>
+                        <p>Client app defined device for the user. The SDK will determine the device automatically, however the client app can override the value. The SDK will insert the device into the <code><a href="../Classes/ObjcLDUser.html#/c:@M@LaunchDarkly@objc(cs)LDUser(py)custom">custom</a></code> dictionary. The device cannot be made private. (Default: the system identified device)</p>
 
                       </div>
                       <div class="declaration">
@@ -788,7 +796,7 @@
                     <section class="section">
                       <div class="pointer"></div>
                       <div class="abstract">
-                        <p>Undocumented</p>
+                        <p>Client app defined operatingSystem for the user. The SDK will determine the operatingSystem automatically, however the client app can override the value. The SDK will insert the operatingSystem into the <code><a href="../Classes/ObjcLDUser.html#/c:@M@LaunchDarkly@objc(cs)LDUser(py)custom">custom</a></code> dictionary. The operatingSystem cannot be made private. (Default: the system identified operating system)</p>
 
                       </div>
                       <div class="declaration">
@@ -816,7 +824,13 @@
                     <section class="section">
                       <div class="pointer"></div>
                       <div class="abstract">
-                        <p>Undocumented</p>
+                        <p>Client app defined privateAttributes for the user.</p>
+
+<p>The SDK will not include private attribute values in analytics events, but private attribute names will be sent.</p>
+
+<p>This attribute is ignored if <code><a href="../Classes/ObjcLDConfig.html#/c:@M@LaunchDarkly@objc(cs)LDConfig(py)allUserAttributesPrivate">ObjcLDConfig.allUserAttributesPrivate</a></code> is YES. Combined with <code><a href="../Classes/ObjcLDConfig.html#/c:@M@LaunchDarkly@objc(cs)LDConfig(py)privateUserAttributes">ObjcLDConfig.privateUserAttributes</a></code>. The SDK considers attributes appearing in either list as private. Client apps may define attributes found in <code><a href="../Classes/ObjcLDUser.html#/c:@M@LaunchDarkly@objc(cs)LDUser(cpy)privatizableAttributes">privatizableAttributes</a></code> and top level <code><a href="../Classes/ObjcLDUser.html#/c:@M@LaunchDarkly@objc(cs)LDUser(py)custom">custom</a></code> dictionary keys here. (Default: nil)</p>
+
+<p>See Also: <code><a href="../Classes/ObjcLDConfig.html#/c:@M@LaunchDarkly@objc(cs)LDConfig(py)allUserAttributesPrivate">ObjcLDConfig.allUserAttributesPrivate</a></code> and <code><a href="../Classes/ObjcLDConfig.html#/c:@M@LaunchDarkly@objc(cs)LDConfig(py)privateUserAttributes">ObjcLDConfig.privateUserAttributes</a></code>.</p>
 
                       </div>
                       <div class="declaration">
@@ -844,7 +858,7 @@
                     <section class="section">
                       <div class="pointer"></div>
                       <div class="abstract">
-                        <p>Undocumented</p>
+                        <p>Initializer to create a LDUser. Client configurable attributes are set to their default value. The SDK will automatically set <code><a href="../Classes/ObjcLDUser.html#/c:@M@LaunchDarkly@objc(cs)LDUser(py)key">key</a></code>, <code><a href="../Classes/ObjcLDUser.html#/c:@M@LaunchDarkly@objc(cs)LDUser(py)device">device</a></code>, <code><a href="../Classes/ObjcLDUser.html#/c:@M@LaunchDarkly@objc(cs)LDUser(py)operatingSystem">operatingSystem</a></code>, and <code><a href="../Classes/ObjcLDUser.html#/c:@M@LaunchDarkly@objc(cs)LDUser(py)isAnonymous">isAnonymous</a></code> attributes. The SDK embeds <code><a href="../Classes/ObjcLDUser.html#/c:@M@LaunchDarkly@objc(cs)LDUser(py)device">device</a></code> and <code><a href="../Classes/ObjcLDUser.html#/c:@M@LaunchDarkly@objc(cs)LDUser(py)operatingSystem">operatingSystem</a></code> into the <code><a href="../Classes/ObjcLDUser.html#/c:@M@LaunchDarkly@objc(cs)LDUser(py)custom">custom</a></code> dictionary for transmission to LaunchDarkly.</p>
 
                       </div>
                       <div class="declaration">
@@ -872,7 +886,7 @@
                     <section class="section">
                       <div class="pointer"></div>
                       <div class="abstract">
-                        <p>Undocumented</p>
+                        <p>Initializer to create a LDUser with a specific key. Other client configurable attributes are set to their default value. The SDK will automatically set <code><a href="../Classes/ObjcLDUser.html#/c:@M@LaunchDarkly@objc(cs)LDUser(py)key">key</a></code>, <code><a href="../Classes/ObjcLDUser.html#/c:@M@LaunchDarkly@objc(cs)LDUser(py)device">device</a></code>, <code><a href="../Classes/ObjcLDUser.html#/c:@M@LaunchDarkly@objc(cs)LDUser(py)operatingSystem">operatingSystem</a></code>, and <code><a href="../Classes/ObjcLDUser.html#/c:@M@LaunchDarkly@objc(cs)LDUser(py)isAnonymous">isAnonymous</a></code> attributes. The SDK embeds <code><a href="../Classes/ObjcLDUser.html#/c:@M@LaunchDarkly@objc(cs)LDUser(py)device">device</a></code> and <code><a href="../Classes/ObjcLDUser.html#/c:@M@LaunchDarkly@objc(cs)LDUser(py)operatingSystem">operatingSystem</a></code> into the <code><a href="../Classes/ObjcLDUser.html#/c:@M@LaunchDarkly@objc(cs)LDUser(py)custom">custom</a></code> dictionary for transmission to LaunchDarkly.</p>
 
                       </div>
                       <div class="declaration">
@@ -883,6 +897,118 @@
 <span class="kd">public</span> <span class="nf">init</span><span class="p">(</span><span class="nv">key</span><span class="p">:</span> <span class="kt">String</span><span class="p">)</span></code></pre>
 
                         </div>
+                      </div>
+                      <div>
+                        <h4>Parameters</h4>
+                        <table class="graybox">
+                          <tbody>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>key</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>String that uniquely identifies the user. If the client app does not define a key, the SDK will assign an identifier associated with the anonymous user.</p>
+                                </div>
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/c:@M@LaunchDarkly@objc(cs)LDUser(im)initWithObject:"></a>
+                    <a name="//apple_ref/swift/Method/init(object:)" class="dashAnchor"></a>
+                    <a class="token" href="#/c:@M@LaunchDarkly@objc(cs)LDUser(im)initWithObject:">init(object:)</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Failable Initializer that takes any object and attempts to create a LDUser from the object. If the object is a NSDictionary, constructs the LDUser via -[LDUser initWithUserDictionary:]</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">@objc</span>
+<span class="kd">public</span> <span class="nf">init</span><span class="p">?(</span><span class="nv">object</span><span class="p">:</span> <span class="kt">Any</span><span class="p">?)</span></code></pre>
+
+                        </div>
+                      </div>
+                      <div>
+                        <h4>Parameters</h4>
+                        <table class="graybox">
+                          <tbody>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>object</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>Any object. The initializer will attempt to convert the object into a NSDictionary and construct the LDUser</p>
+                                </div>
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:12LaunchDarkly10ObjcLDUserCACs10DictionaryVySSypG04userE0_tcfc"></a>
+                    <a name="//apple_ref/swift/Method/init(userDictionary:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:12LaunchDarkly10ObjcLDUserCACs10DictionaryVySSypG04userE0_tcfc">init(userDictionary:)</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Initializer that takes a NSDictionary and creates a LDUser from the contents. Uses any keys present to define corresponding attribute values. Initializes attributes not present in the dictionary to their default value. The initializer attempts to set <code><a href="../Classes/ObjcLDUser.html#/c:@M@LaunchDarkly@objc(cs)LDUser(py)device">device</a></code> and <code><a href="../Classes/ObjcLDUser.html#/c:@M@LaunchDarkly@objc(cs)LDUser(py)operatingSystem">operatingSystem</a></code> from corresponding values embedded in <code><a href="../Classes/ObjcLDUser.html#/c:@M@LaunchDarkly@objc(cs)LDUser(py)custom">custom</a></code>. The initializer attempts to set feature flags from values set in <code>config</code>.</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="nf">init</span><span class="p">(</span><span class="nv">userDictionary</span><span class="p">:</span> <span class="p">[</span><span class="kt">String</span> <span class="p">:</span> <span class="kt">Any</span><span class="p">])</span></code></pre>
+
+                        </div>
+                      </div>
+                      <div>
+                        <h4>Parameters</h4>
+                        <table class="graybox">
+                          <tbody>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>userDictionary</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>NSDictionary with LDUser attribute keys and values.</p>
+                                </div>
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
                       </div>
                     </section>
                   </div>
@@ -900,7 +1026,7 @@
                     <section class="section">
                       <div class="pointer"></div>
                       <div class="abstract">
-                        <p>Undocumented</p>
+                        <p>Compares users by comparing their user keys only, to allow the client app to collect user information over time</p>
 
                       </div>
                       <div class="declaration">
