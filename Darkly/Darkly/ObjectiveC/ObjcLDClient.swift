@@ -545,13 +545,6 @@ public final class ObjcLDClient: NSObject {
     }
 
     /**
-     Handler passed to the client app when a BOOL feature flag value changes
-
-     - parameter changedFlag: The LDBoolChangedFlag passed into the handler containing the old & new flag value and source
-     */
-    public typealias ObjcLDBoolChangedFlagHandler = (_ changedFlag: ObjcLDBoolChangedFlag) -> Void
-
-    /**
      Sets a handler for the specified NSInteger flag key executed on the specified owner. If the flag's value changes, executes the handler, passing in the `changedFlag` containing the old and new flag values, and old and new flag value source. See `ObjcLDIntegerChangedFlag` for details.
 
      The SDK retains only weak references to the owner, which allows the client app to freely destroy owners without issues. Client apps should capture a strong self reference from a weak reference immediately inside the handler to avoid retain cycles causing a memory leak.
@@ -578,13 +571,6 @@ public final class ObjcLDClient: NSObject {
     }
     
     /**
-     Handler passed to the client app when a NSInteger feature flag value changes
-
-     - parameter changedFlag: The LDIntegerChangedFlag passed into the handler containing the old & new flag value and source
-     */
-    public typealias ObjcLDIntegerChangedFlagHandler = (_ changedFlag: ObjcLDIntegerChangedFlag) -> Void
-
-    /**
      Sets a handler for the specified double flag key executed on the specified owner. If the flag's value changes, executes the handler, passing in the `changedFlag` containing the old and new flag values, and old and new flag value source. See `ObjcLDDoubleChangedFlag` for details.
 
      The SDK retains only weak references to the owner, which allows the client app to freely destroy owners without issues. Client apps should capture a strong self reference from a weak reference immediately inside the handler to avoid retain cycles causing a memory leak.
@@ -609,13 +595,6 @@ public final class ObjcLDClient: NSObject {
     @objc public func observeDouble(_ key: LDFlagKey, owner: LDFlagChangeOwner, handler: @escaping ObjcLDDoubleChangedFlagHandler) {
         LDClient.shared.observe(key: key, owner: owner) { (changedFlag) in handler(ObjcLDDoubleChangedFlag(changedFlag)) }
     }
-
-    /**
-     Handler passed to the client app when a double feature flag value changes
-
-     - parameter changedFlag: The LDDoubleChangedFlag passed into the handler containing the old & new flag value and source
-     */
-    public typealias ObjcLDDoubleChangedFlagHandler = (_ changedFlag: ObjcLDDoubleChangedFlag) -> Void
 
     /**
      Sets a handler for the specified NSString flag key executed on the specified owner. If the flag's value changes, executes the handler, passing in the `changedFlag` containing the old and new flag values, and old and new flag value source. See `ObjcLDStringChangedFlag` for details.
@@ -644,13 +623,6 @@ public final class ObjcLDClient: NSObject {
     }
     
     /**
-     Handler passed to the client app when a NSString feature flag value changes
-
-     - parameter changedFlag: The LDStringChangedFlag passed into the handler containing the old & new flag value & source
-     */
-    public typealias ObjcLDStringChangedFlagHandler = (_ changedFlag: ObjcLDStringChangedFlag) -> Void
-
-    /**
      Sets a handler for the specified NSArray flag key executed on the specified owner. If the flag's value changes, executes the handler, passing in the `changedFlag` containing the old and new flag values, and old and new flag value source. See `ObjcLDArrayChangedFlag` for details.
 
      The SDK retains only weak references to the owner, which allows the client app to freely destroy owners without issues. Client apps should capture a strong self reference from a weak reference immediately inside the handler to avoid retain cycles causing a memory leak.
@@ -677,13 +649,6 @@ public final class ObjcLDClient: NSObject {
     }
     
     /**
-     Handler passed to the client app when a NSArray feature flag value changes
-
-     - parameter changedFlag: The LDArrayChangedFlag passed into the handler containing the old & new flag value & source
-     */
-    public typealias ObjcLDArrayChangedFlagHandler = (_ changedFlag: ObjcLDArrayChangedFlag) -> Void
-
-    /**
      Sets a handler for the specified NSDictionary flag key executed on the specified owner. If the flag's value changes, executes the handler, passing in the `changedFlag` containing the old and new flag values, and old and new flag value source. See `ObjcLDDictionaryChangedFlag` for details.
 
      The SDK retains only weak references to the owner, which allows the client app to freely destroy owners without issues. Client apps should capture a strong self reference from a weak reference immediately inside the handler to avoid retain cycles causing a memory leak.
@@ -709,13 +674,6 @@ public final class ObjcLDClient: NSObject {
         LDClient.shared.observe(key: key, owner: owner) { (changedFlag) in handler(ObjcLDDictionaryChangedFlag(changedFlag)) }
     }
     
-    /**
-     Handler passed to the client app when a NSArray feature flag value changes
-
-     - parameter changedFlag: The LDDictionaryChangedFlag passed into the handler containing the old & new flag value & source
-     */
-    public typealias ObjcLDDictionaryChangedFlagHandler = (_ changedFlag: ObjcLDDictionaryChangedFlag) -> Void
-
     /**
      Sets a handler for the specified flag keys executed on the specified owner. If any observed flag's value changes, executes the handler 1 time, passing in a dictionary of <NSString*, LDChangedFlag*> containing the old and new flag values, and old and new flag value source. See LDChangedFlag (`ObjcLDChangedFlag`) for details.
 
@@ -745,13 +703,6 @@ public final class ObjcLDClient: NSObject {
             handler(objcChangedFlags)
         }
     }
-
-    /**
-     Handler passed to the client app when a NSArray feature flag value changes
-
-     - parameter changedFlags: A dictionary <NSString*, LDChangedFlag*> using the changed flag keys as the dictionary keys. Cast the resulting LDChangedFlag to the correct LDChangedFlagType.
-     */
-    public typealias ObjcLDChangedFlagCollectionHandler = (_ changedFlags: [LDFlagKey: ObjcLDChangedFlag]) -> Void
 
     /**
      Sets a handler for all flag keys executed on the specified owner. If any flag's value changes, executes the handler 1 time, passing in a dictionary of <NSString*, LDChangedFlag*> containing the old and new flag values, and old and new flag value source. See LDChangedFlag (`ObjcLDChangedFlag`) for details.
@@ -830,6 +781,55 @@ public final class ObjcLDClient: NSObject {
         LDClient.shared.onServerUnavailable = handler
     }
     
+    /**
+     Handler passed to the client app when a BOOL feature flag value changes
+
+     - parameter changedFlag: The LDBoolChangedFlag passed into the handler containing the old & new flag value and source
+     */
+    public typealias ObjcLDBoolChangedFlagHandler = (_ changedFlag: ObjcLDBoolChangedFlag) -> Void
+
+    /**
+     Handler passed to the client app when a NSInteger feature flag value changes
+
+     - parameter changedFlag: The LDIntegerChangedFlag passed into the handler containing the old & new flag value and source
+     */
+    public typealias ObjcLDIntegerChangedFlagHandler = (_ changedFlag: ObjcLDIntegerChangedFlag) -> Void
+
+    /**
+     Handler passed to the client app when a double feature flag value changes
+
+     - parameter changedFlag: The LDDoubleChangedFlag passed into the handler containing the old & new flag value and source
+     */
+    public typealias ObjcLDDoubleChangedFlagHandler = (_ changedFlag: ObjcLDDoubleChangedFlag) -> Void
+
+    /**
+     Handler passed to the client app when a NSString feature flag value changes
+
+     - parameter changedFlag: The LDStringChangedFlag passed into the handler containing the old & new flag value & source
+     */
+    public typealias ObjcLDStringChangedFlagHandler = (_ changedFlag: ObjcLDStringChangedFlag) -> Void
+
+    /**
+     Handler passed to the client app when a NSArray feature flag value changes
+
+     - parameter changedFlag: The LDArrayChangedFlag passed into the handler containing the old & new flag value & source
+     */
+    public typealias ObjcLDArrayChangedFlagHandler = (_ changedFlag: ObjcLDArrayChangedFlag) -> Void
+
+    /**
+     Handler passed to the client app when a NSArray feature flag value changes
+
+     - parameter changedFlag: The LDDictionaryChangedFlag passed into the handler containing the old & new flag value & source
+     */
+    public typealias ObjcLDDictionaryChangedFlagHandler = (_ changedFlag: ObjcLDDictionaryChangedFlag) -> Void
+
+    /**
+     Handler passed to the client app when a NSArray feature flag value changes
+
+     - parameter changedFlags: A dictionary <NSString*, LDChangedFlag*> using the changed flag keys as the dictionary keys. Cast the resulting LDChangedFlag to the correct LDChangedFlagType.
+     */
+    public typealias ObjcLDChangedFlagCollectionHandler = (_ changedFlags: [LDFlagKey: ObjcLDChangedFlag]) -> Void
+
     // MARK: - Events
 
     /**

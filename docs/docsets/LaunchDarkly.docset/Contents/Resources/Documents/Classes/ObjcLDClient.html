@@ -1663,52 +1663,6 @@
                 <li class="item">
                   <div>
                     <code>
-                    <a name="/s:12LaunchDarkly12ObjcLDClientC0C24LDBoolChangedFlagHandlera"></a>
-                    <a name="//apple_ref/swift/Alias/ObjcLDBoolChangedFlagHandler" class="dashAnchor"></a>
-                    <a class="token" href="#/s:12LaunchDarkly12ObjcLDClientC0C24LDBoolChangedFlagHandlera">ObjcLDBoolChangedFlagHandler</a>
-                    </code>
-                  </div>
-                  <div class="height-container">
-                    <div class="pointer-container"></div>
-                    <section class="section">
-                      <div class="pointer"></div>
-                      <div class="abstract">
-                        <p>Handler passed to the client app when a BOOL feature flag value changes</p>
-
-                      </div>
-                      <div class="declaration">
-                        <h4>Declaration</h4>
-                        <div class="language">
-                          <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">typealias</span> <span class="kt">ObjcLDBoolChangedFlagHandler</span> <span class="o">=</span> <span class="p">(</span><span class="n">_</span> <span class="nv">changedFlag</span><span class="p">:</span> <span class="kt"><a href="../Classes/ObjcLDBoolChangedFlag.html">ObjcLDBoolChangedFlag</a></span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kt">Void</span></code></pre>
-
-                        </div>
-                      </div>
-                      <div>
-                        <h4>Parameters</h4>
-                        <table class="graybox">
-                          <tbody>
-                            <tr>
-                              <td>
-                                <code>
-                                <em>changedFlag</em>
-                                </code>
-                              </td>
-                              <td>
-                                <div>
-                                  <p>The LDBoolChangedFlag passed into the handler containing the old &amp; new flag value and source</p>
-                                </div>
-                              </td>
-                            </tr>
-                          </tbody>
-                        </table>
-                      </div>
-                    </section>
-                  </div>
-                </li>
-                <li class="item">
-                  <div>
-                    <code>
                     <a name="/c:@M@LaunchDarkly@objc(cs)LDClient(im)observeBool:owner:handler:"></a>
                     <a name="//apple_ref/swift/Method/observeBool(_:owner:handler:)" class="dashAnchor"></a>
                     <a class="token" href="#/c:@M@LaunchDarkly@objc(cs)LDClient(im)observeBool:owner:handler:">observeBool(_:owner:handler:)</a>
@@ -1824,7 +1778,7 @@
                         <div class="language">
                           <p class="aside-title">Swift</p>
                           <pre class="highlight swift"><code><span class="kd">@objc</span>
-<span class="kd">public</span> <span class="kd">func</span> <span class="nf">observeInteger</span><span class="p">(</span><span class="n">_</span> <span class="nv">key</span><span class="p">:</span> <span class="kt"><a href="../Launch Darkly.html#/s:12LaunchDarkly9LDFlagKeya">LDFlagKey</a></span><span class="p">,</span> <span class="nv">owner</span><span class="p">:</span> <span class="kt"><a href="../Flag Changes.html#/s:12LaunchDarkly17LDFlagChangeOwnera">LDFlagChangeOwner</a></span><span class="p">,</span> <span class="nv">handler</span><span class="p">:</span> <span class="kd">@escaping</span> <span class="p">(</span><span class="n">_</span> <span class="nv">changedFlag</span><span class="p">:</span> <span class="kt"><a href="../Classes/ObjcLDIntegerChangedFlag.html">ObjcLDIntegerChangedFlag</a></span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kt">Void</span><span class="p">)</span></code></pre>
+<span class="kd">public</span> <span class="kd">func</span> <span class="nf">observeInteger</span><span class="p">(</span><span class="n">_</span> <span class="nv">key</span><span class="p">:</span> <span class="kt"><a href="../Launch Darkly.html#/s:12LaunchDarkly9LDFlagKeya">LDFlagKey</a></span><span class="p">,</span> <span class="nv">owner</span><span class="p">:</span> <span class="kt"><a href="../Flag Changes.html#/s:12LaunchDarkly17LDFlagChangeOwnera">LDFlagChangeOwner</a></span><span class="p">,</span> <span class="nv">handler</span><span class="p">:</span> <span class="kd">@escaping</span> <span class="kt"><a href="../Classes/ObjcLDClient.html#/s:12LaunchDarkly12ObjcLDClientC0C27LDIntegerChangedFlagHandlera">ObjcLDIntegerChangedFlagHandler</a></span><span class="p">)</span></code></pre>
 
                         </div>
                       </div>
@@ -1865,18 +1819,6 @@
                               <td>
                                 <div>
                                   <p>The block the SDK will execute when the feature flag changes.</p>
-                                </div>
-                              </td>
-                            </tr>
-                            <tr>
-                              <td>
-                                <code>
-                                <em>changedFlag</em>
-                                </code>
-                              </td>
-                              <td>
-                                <div>
-                                  <p>The LDIntegerChangedFlag passed into the handler containing the old &amp; new flag value and source</p>
                                 </div>
                               </td>
                             </tr>
@@ -1920,7 +1862,7 @@
                         <div class="language">
                           <p class="aside-title">Swift</p>
                           <pre class="highlight swift"><code><span class="kd">@objc</span>
-<span class="kd">public</span> <span class="kd">func</span> <span class="nf">observeDouble</span><span class="p">(</span><span class="n">_</span> <span class="nv">key</span><span class="p">:</span> <span class="kt"><a href="../Launch Darkly.html#/s:12LaunchDarkly9LDFlagKeya">LDFlagKey</a></span><span class="p">,</span> <span class="nv">owner</span><span class="p">:</span> <span class="kt"><a href="../Flag Changes.html#/s:12LaunchDarkly17LDFlagChangeOwnera">LDFlagChangeOwner</a></span><span class="p">,</span> <span class="nv">handler</span><span class="p">:</span> <span class="kd">@escaping</span> <span class="p">(</span><span class="n">_</span> <span class="nv">changedFlag</span><span class="p">:</span> <span class="kt"><a href="../Classes/ObjcLDDoubleChangedFlag.html">ObjcLDDoubleChangedFlag</a></span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kt">Void</span><span class="p">)</span></code></pre>
+<span class="kd">public</span> <span class="kd">func</span> <span class="nf">observeDouble</span><span class="p">(</span><span class="n">_</span> <span class="nv">key</span><span class="p">:</span> <span class="kt"><a href="../Launch Darkly.html#/s:12LaunchDarkly9LDFlagKeya">LDFlagKey</a></span><span class="p">,</span> <span class="nv">owner</span><span class="p">:</span> <span class="kt"><a href="../Flag Changes.html#/s:12LaunchDarkly17LDFlagChangeOwnera">LDFlagChangeOwner</a></span><span class="p">,</span> <span class="nv">handler</span><span class="p">:</span> <span class="kd">@escaping</span> <span class="kt"><a href="../Classes/ObjcLDClient.html#/s:12LaunchDarkly12ObjcLDClientC0C26LDDoubleChangedFlagHandlera">ObjcLDDoubleChangedFlagHandler</a></span><span class="p">)</span></code></pre>
 
                         </div>
                       </div>
@@ -1961,18 +1903,6 @@
                               <td>
                                 <div>
                                   <p>The block the SDK will execute when the feature flag changes.</p>
-                                </div>
-                              </td>
-                            </tr>
-                            <tr>
-                              <td>
-                                <code>
-                                <em>changedFlag</em>
-                                </code>
-                              </td>
-                              <td>
-                                <div>
-                                  <p>The LDDoubleChangedFlag passed into the handler containing the old &amp; new flag value and source</p>
                                 </div>
                               </td>
                             </tr>
@@ -2016,7 +1946,7 @@
                         <div class="language">
                           <p class="aside-title">Swift</p>
                           <pre class="highlight swift"><code><span class="kd">@objc</span>
-<span class="kd">public</span> <span class="kd">func</span> <span class="nf">observeString</span><span class="p">(</span><span class="n">_</span> <span class="nv">key</span><span class="p">:</span> <span class="kt"><a href="../Launch Darkly.html#/s:12LaunchDarkly9LDFlagKeya">LDFlagKey</a></span><span class="p">,</span> <span class="nv">owner</span><span class="p">:</span> <span class="kt"><a href="../Flag Changes.html#/s:12LaunchDarkly17LDFlagChangeOwnera">LDFlagChangeOwner</a></span><span class="p">,</span> <span class="nv">handler</span><span class="p">:</span> <span class="kd">@escaping</span> <span class="p">(</span><span class="n">_</span> <span class="nv">changedFlag</span><span class="p">:</span> <span class="kt"><a href="../Classes/ObjcLDStringChangedFlag.html">ObjcLDStringChangedFlag</a></span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kt">Void</span><span class="p">)</span></code></pre>
+<span class="kd">public</span> <span class="kd">func</span> <span class="nf">observeString</span><span class="p">(</span><span class="n">_</span> <span class="nv">key</span><span class="p">:</span> <span class="kt"><a href="../Launch Darkly.html#/s:12LaunchDarkly9LDFlagKeya">LDFlagKey</a></span><span class="p">,</span> <span class="nv">owner</span><span class="p">:</span> <span class="kt"><a href="../Flag Changes.html#/s:12LaunchDarkly17LDFlagChangeOwnera">LDFlagChangeOwner</a></span><span class="p">,</span> <span class="nv">handler</span><span class="p">:</span> <span class="kd">@escaping</span> <span class="kt"><a href="../Classes/ObjcLDClient.html#/s:12LaunchDarkly12ObjcLDClientC0C26LDStringChangedFlagHandlera">ObjcLDStringChangedFlagHandler</a></span><span class="p">)</span></code></pre>
 
                         </div>
                       </div>
@@ -2057,18 +1987,6 @@
                               <td>
                                 <div>
                                   <p>The block the SDK will execute when the feature flag changes.</p>
-                                </div>
-                              </td>
-                            </tr>
-                            <tr>
-                              <td>
-                                <code>
-                                <em>changedFlag</em>
-                                </code>
-                              </td>
-                              <td>
-                                <div>
-                                  <p>The LDStringChangedFlag passed into the handler containing the old &amp; new flag value &amp; source</p>
                                 </div>
                               </td>
                             </tr>
@@ -2112,7 +2030,7 @@
                         <div class="language">
                           <p class="aside-title">Swift</p>
                           <pre class="highlight swift"><code><span class="kd">@objc</span>
-<span class="kd">public</span> <span class="kd">func</span> <span class="nf">observeArray</span><span class="p">(</span><span class="n">_</span> <span class="nv">key</span><span class="p">:</span> <span class="kt"><a href="../Launch Darkly.html#/s:12LaunchDarkly9LDFlagKeya">LDFlagKey</a></span><span class="p">,</span> <span class="nv">owner</span><span class="p">:</span> <span class="kt"><a href="../Flag Changes.html#/s:12LaunchDarkly17LDFlagChangeOwnera">LDFlagChangeOwner</a></span><span class="p">,</span> <span class="nv">handler</span><span class="p">:</span> <span class="kd">@escaping</span> <span class="p">(</span><span class="n">_</span> <span class="nv">changedFlag</span><span class="p">:</span> <span class="kt"><a href="../Classes/ObjcLDArrayChangedFlag.html">ObjcLDArrayChangedFlag</a></span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kt">Void</span><span class="p">)</span></code></pre>
+<span class="kd">public</span> <span class="kd">func</span> <span class="nf">observeArray</span><span class="p">(</span><span class="n">_</span> <span class="nv">key</span><span class="p">:</span> <span class="kt"><a href="../Launch Darkly.html#/s:12LaunchDarkly9LDFlagKeya">LDFlagKey</a></span><span class="p">,</span> <span class="nv">owner</span><span class="p">:</span> <span class="kt"><a href="../Flag Changes.html#/s:12LaunchDarkly17LDFlagChangeOwnera">LDFlagChangeOwner</a></span><span class="p">,</span> <span class="nv">handler</span><span class="p">:</span> <span class="kd">@escaping</span> <span class="kt"><a href="../Classes/ObjcLDClient.html#/s:12LaunchDarkly12ObjcLDClientC0C25LDArrayChangedFlagHandlera">ObjcLDArrayChangedFlagHandler</a></span><span class="p">)</span></code></pre>
 
                         </div>
                       </div>
@@ -2153,18 +2071,6 @@
                               <td>
                                 <div>
                                   <p>The block the SDK will execute when the feature flag changes.</p>
-                                </div>
-                              </td>
-                            </tr>
-                            <tr>
-                              <td>
-                                <code>
-                                <em>changedFlag</em>
-                                </code>
-                              </td>
-                              <td>
-                                <div>
-                                  <p>The LDArrayChangedFlag passed into the handler containing the old &amp; new flag value &amp; source</p>
                                 </div>
                               </td>
                             </tr>
@@ -2208,7 +2114,7 @@
                         <div class="language">
                           <p class="aside-title">Swift</p>
                           <pre class="highlight swift"><code><span class="kd">@objc</span>
-<span class="kd">public</span> <span class="kd">func</span> <span class="nf">observeDictionary</span><span class="p">(</span><span class="n">_</span> <span class="nv">key</span><span class="p">:</span> <span class="kt"><a href="../Launch Darkly.html#/s:12LaunchDarkly9LDFlagKeya">LDFlagKey</a></span><span class="p">,</span> <span class="nv">owner</span><span class="p">:</span> <span class="kt"><a href="../Flag Changes.html#/s:12LaunchDarkly17LDFlagChangeOwnera">LDFlagChangeOwner</a></span><span class="p">,</span> <span class="nv">handler</span><span class="p">:</span> <span class="kd">@escaping</span> <span class="p">(</span><span class="n">_</span> <span class="nv">changedFlag</span><span class="p">:</span> <span class="kt"><a href="../Classes/ObjcLDDictionaryChangedFlag.html">ObjcLDDictionaryChangedFlag</a></span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kt">Void</span><span class="p">)</span></code></pre>
+<span class="kd">public</span> <span class="kd">func</span> <span class="nf">observeDictionary</span><span class="p">(</span><span class="n">_</span> <span class="nv">key</span><span class="p">:</span> <span class="kt"><a href="../Launch Darkly.html#/s:12LaunchDarkly9LDFlagKeya">LDFlagKey</a></span><span class="p">,</span> <span class="nv">owner</span><span class="p">:</span> <span class="kt"><a href="../Flag Changes.html#/s:12LaunchDarkly17LDFlagChangeOwnera">LDFlagChangeOwner</a></span><span class="p">,</span> <span class="nv">handler</span><span class="p">:</span> <span class="kd">@escaping</span> <span class="kt"><a href="../Classes/ObjcLDClient.html#/s:12LaunchDarkly12ObjcLDClientC0C30LDDictionaryChangedFlagHandlera">ObjcLDDictionaryChangedFlagHandler</a></span><span class="p">)</span></code></pre>
 
                         </div>
                       </div>
@@ -2249,18 +2155,6 @@
                               <td>
                                 <div>
                                   <p>The block the SDK will execute when the feature flag changes.</p>
-                                </div>
-                              </td>
-                            </tr>
-                            <tr>
-                              <td>
-                                <code>
-                                <em>changedFlag</em>
-                                </code>
-                              </td>
-                              <td>
-                                <div>
-                                  <p>The LDDictionaryChangedFlag passed into the handler containing the old &amp; new flag value &amp; source</p>
                                 </div>
                               </td>
                             </tr>
@@ -2305,7 +2199,7 @@
                         <div class="language">
                           <p class="aside-title">Swift</p>
                           <pre class="highlight swift"><code><span class="kd">@objc</span>
-<span class="kd">public</span> <span class="kd">func</span> <span class="nf">observeKeys</span><span class="p">(</span><span class="n">_</span> <span class="nv">keys</span><span class="p">:</span> <span class="p">[</span><span class="kt"><a href="../Launch Darkly.html#/s:12LaunchDarkly9LDFlagKeya">LDFlagKey</a></span><span class="p">],</span> <span class="nv">owner</span><span class="p">:</span> <span class="kt"><a href="../Flag Changes.html#/s:12LaunchDarkly17LDFlagChangeOwnera">LDFlagChangeOwner</a></span><span class="p">,</span> <span class="nv">handler</span><span class="p">:</span> <span class="kd">@escaping</span> <span class="p">(</span><span class="n">_</span> <span class="nv">changedFlags</span><span class="p">:</span> <span class="p">[</span><span class="kt"><a href="../Launch Darkly.html#/s:12LaunchDarkly9LDFlagKeya">LDFlagKey</a></span><span class="p">:</span> <span class="kt"><a href="../Classes/ObjcLDChangedFlag.html">ObjcLDChangedFlag</a></span><span class="p">])</span> <span class="o">-&gt;</span> <span class="kt">Void</span><span class="p">)</span></code></pre>
+<span class="kd">public</span> <span class="kd">func</span> <span class="nf">observeKeys</span><span class="p">(</span><span class="n">_</span> <span class="nv">keys</span><span class="p">:</span> <span class="p">[</span><span class="kt"><a href="../Launch Darkly.html#/s:12LaunchDarkly9LDFlagKeya">LDFlagKey</a></span><span class="p">],</span> <span class="nv">owner</span><span class="p">:</span> <span class="kt"><a href="../Flag Changes.html#/s:12LaunchDarkly17LDFlagChangeOwnera">LDFlagChangeOwner</a></span><span class="p">,</span> <span class="nv">handler</span><span class="p">:</span> <span class="kd">@escaping</span> <span class="kt"><a href="../Classes/ObjcLDClient.html#/s:12LaunchDarkly12ObjcLDClientC0C30LDChangedFlagCollectionHandlera">ObjcLDChangedFlagCollectionHandler</a></span><span class="p">)</span></code></pre>
 
                         </div>
                       </div>
@@ -2346,18 +2240,6 @@
                               <td>
                                 <div>
                                   <p>The LDFlagCollectionChangeHandler the SDK will execute 1 time when any of the observed feature flags change.</p>
-                                </div>
-                              </td>
-                            </tr>
-                            <tr>
-                              <td>
-                                <code>
-                                <em>changedFlags</em>
-                                </code>
-                              </td>
-                              <td>
-                                <div>
-                                  <p>A dictionary <NSString*, LDChangedFlag*> using the changed flag keys as the dictionary keys. Cast the resulting LDChangedFlag to the correct LDChangedFlagType.</p>
                                 </div>
                               </td>
                             </tr>
@@ -2402,7 +2284,7 @@
                         <div class="language">
                           <p class="aside-title">Swift</p>
                           <pre class="highlight swift"><code><span class="kd">@objc</span>
-<span class="kd">public</span> <span class="kd">func</span> <span class="nf">observeAllKeys</span><span class="p">(</span><span class="nv">owner</span><span class="p">:</span> <span class="kt"><a href="../Flag Changes.html#/s:12LaunchDarkly17LDFlagChangeOwnera">LDFlagChangeOwner</a></span><span class="p">,</span> <span class="nv">handler</span><span class="p">:</span> <span class="kd">@escaping</span> <span class="p">(</span><span class="n">_</span> <span class="nv">changedFlags</span><span class="p">:</span> <span class="p">[</span><span class="kt"><a href="../Launch Darkly.html#/s:12LaunchDarkly9LDFlagKeya">LDFlagKey</a></span><span class="p">:</span> <span class="kt"><a href="../Classes/ObjcLDChangedFlag.html">ObjcLDChangedFlag</a></span><span class="p">])</span> <span class="o">-&gt;</span> <span class="kt">Void</span><span class="p">)</span></code></pre>
+<span class="kd">public</span> <span class="kd">func</span> <span class="nf">observeAllKeys</span><span class="p">(</span><span class="nv">owner</span><span class="p">:</span> <span class="kt"><a href="../Flag Changes.html#/s:12LaunchDarkly17LDFlagChangeOwnera">LDFlagChangeOwner</a></span><span class="p">,</span> <span class="nv">handler</span><span class="p">:</span> <span class="kd">@escaping</span> <span class="kt"><a href="../Classes/ObjcLDClient.html#/s:12LaunchDarkly12ObjcLDClientC0C30LDChangedFlagCollectionHandlera">ObjcLDChangedFlagCollectionHandler</a></span><span class="p">)</span></code></pre>
 
                         </div>
                       </div>
@@ -2431,18 +2313,6 @@
                               <td>
                                 <div>
                                   <p>The LDFlagCollectionChangeHandler the SDK will execute 1 time when any of the observed feature flags change.</p>
-                                </div>
-                              </td>
-                            </tr>
-                            <tr>
-                              <td>
-                                <code>
-                                <em>changedFlags</em>
-                                </code>
-                              </td>
-                              <td>
-                                <div>
-                                  <p>A dictionary <NSString*, LDChangedFlag*> using the changed flag keys as the dictionary keys. Cast the resulting LDChangedFlag to the correct LDChangedFlagType.</p>
                                 </div>
                               </td>
                             </tr>
@@ -2614,6 +2484,328 @@
                               <td>
                                 <div>
                                   <p>The block the SDK will execute 1 time when the client is unable to contact the LaunchDarkly server</p>
+                                </div>
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:12LaunchDarkly12ObjcLDClientC0C24LDBoolChangedFlagHandlera"></a>
+                    <a name="//apple_ref/swift/Alias/ObjcLDBoolChangedFlagHandler" class="dashAnchor"></a>
+                    <a class="token" href="#/s:12LaunchDarkly12ObjcLDClientC0C24LDBoolChangedFlagHandlera">ObjcLDBoolChangedFlagHandler</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Handler passed to the client app when a BOOL feature flag value changes</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">typealias</span> <span class="kt">ObjcLDBoolChangedFlagHandler</span> <span class="o">=</span> <span class="p">(</span><span class="n">_</span> <span class="nv">changedFlag</span><span class="p">:</span> <span class="kt"><a href="../Classes/ObjcLDBoolChangedFlag.html">ObjcLDBoolChangedFlag</a></span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kt">Void</span></code></pre>
+
+                        </div>
+                      </div>
+                      <div>
+                        <h4>Parameters</h4>
+                        <table class="graybox">
+                          <tbody>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>changedFlag</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>The LDBoolChangedFlag passed into the handler containing the old &amp; new flag value and source</p>
+                                </div>
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:12LaunchDarkly12ObjcLDClientC0C27LDIntegerChangedFlagHandlera"></a>
+                    <a name="//apple_ref/swift/Alias/ObjcLDIntegerChangedFlagHandler" class="dashAnchor"></a>
+                    <a class="token" href="#/s:12LaunchDarkly12ObjcLDClientC0C27LDIntegerChangedFlagHandlera">ObjcLDIntegerChangedFlagHandler</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Handler passed to the client app when a NSInteger feature flag value changes</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">typealias</span> <span class="kt">ObjcLDIntegerChangedFlagHandler</span> <span class="o">=</span> <span class="p">(</span><span class="n">_</span> <span class="nv">changedFlag</span><span class="p">:</span> <span class="kt"><a href="../Classes/ObjcLDIntegerChangedFlag.html">ObjcLDIntegerChangedFlag</a></span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kt">Void</span></code></pre>
+
+                        </div>
+                      </div>
+                      <div>
+                        <h4>Parameters</h4>
+                        <table class="graybox">
+                          <tbody>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>changedFlag</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>The LDIntegerChangedFlag passed into the handler containing the old &amp; new flag value and source</p>
+                                </div>
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:12LaunchDarkly12ObjcLDClientC0C26LDDoubleChangedFlagHandlera"></a>
+                    <a name="//apple_ref/swift/Alias/ObjcLDDoubleChangedFlagHandler" class="dashAnchor"></a>
+                    <a class="token" href="#/s:12LaunchDarkly12ObjcLDClientC0C26LDDoubleChangedFlagHandlera">ObjcLDDoubleChangedFlagHandler</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Handler passed to the client app when a double feature flag value changes</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">typealias</span> <span class="kt">ObjcLDDoubleChangedFlagHandler</span> <span class="o">=</span> <span class="p">(</span><span class="n">_</span> <span class="nv">changedFlag</span><span class="p">:</span> <span class="kt"><a href="../Classes/ObjcLDDoubleChangedFlag.html">ObjcLDDoubleChangedFlag</a></span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kt">Void</span></code></pre>
+
+                        </div>
+                      </div>
+                      <div>
+                        <h4>Parameters</h4>
+                        <table class="graybox">
+                          <tbody>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>changedFlag</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>The LDDoubleChangedFlag passed into the handler containing the old &amp; new flag value and source</p>
+                                </div>
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:12LaunchDarkly12ObjcLDClientC0C26LDStringChangedFlagHandlera"></a>
+                    <a name="//apple_ref/swift/Alias/ObjcLDStringChangedFlagHandler" class="dashAnchor"></a>
+                    <a class="token" href="#/s:12LaunchDarkly12ObjcLDClientC0C26LDStringChangedFlagHandlera">ObjcLDStringChangedFlagHandler</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Handler passed to the client app when a NSString feature flag value changes</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">typealias</span> <span class="kt">ObjcLDStringChangedFlagHandler</span> <span class="o">=</span> <span class="p">(</span><span class="n">_</span> <span class="nv">changedFlag</span><span class="p">:</span> <span class="kt"><a href="../Classes/ObjcLDStringChangedFlag.html">ObjcLDStringChangedFlag</a></span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kt">Void</span></code></pre>
+
+                        </div>
+                      </div>
+                      <div>
+                        <h4>Parameters</h4>
+                        <table class="graybox">
+                          <tbody>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>changedFlag</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>The LDStringChangedFlag passed into the handler containing the old &amp; new flag value &amp; source</p>
+                                </div>
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:12LaunchDarkly12ObjcLDClientC0C25LDArrayChangedFlagHandlera"></a>
+                    <a name="//apple_ref/swift/Alias/ObjcLDArrayChangedFlagHandler" class="dashAnchor"></a>
+                    <a class="token" href="#/s:12LaunchDarkly12ObjcLDClientC0C25LDArrayChangedFlagHandlera">ObjcLDArrayChangedFlagHandler</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Handler passed to the client app when a NSArray feature flag value changes</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">typealias</span> <span class="kt">ObjcLDArrayChangedFlagHandler</span> <span class="o">=</span> <span class="p">(</span><span class="n">_</span> <span class="nv">changedFlag</span><span class="p">:</span> <span class="kt"><a href="../Classes/ObjcLDArrayChangedFlag.html">ObjcLDArrayChangedFlag</a></span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kt">Void</span></code></pre>
+
+                        </div>
+                      </div>
+                      <div>
+                        <h4>Parameters</h4>
+                        <table class="graybox">
+                          <tbody>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>changedFlag</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>The LDArrayChangedFlag passed into the handler containing the old &amp; new flag value &amp; source</p>
+                                </div>
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:12LaunchDarkly12ObjcLDClientC0C30LDDictionaryChangedFlagHandlera"></a>
+                    <a name="//apple_ref/swift/Alias/ObjcLDDictionaryChangedFlagHandler" class="dashAnchor"></a>
+                    <a class="token" href="#/s:12LaunchDarkly12ObjcLDClientC0C30LDDictionaryChangedFlagHandlera">ObjcLDDictionaryChangedFlagHandler</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Handler passed to the client app when a NSArray feature flag value changes</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">typealias</span> <span class="kt">ObjcLDDictionaryChangedFlagHandler</span> <span class="o">=</span> <span class="p">(</span><span class="n">_</span> <span class="nv">changedFlag</span><span class="p">:</span> <span class="kt"><a href="../Classes/ObjcLDDictionaryChangedFlag.html">ObjcLDDictionaryChangedFlag</a></span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kt">Void</span></code></pre>
+
+                        </div>
+                      </div>
+                      <div>
+                        <h4>Parameters</h4>
+                        <table class="graybox">
+                          <tbody>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>changedFlag</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>The LDDictionaryChangedFlag passed into the handler containing the old &amp; new flag value &amp; source</p>
+                                </div>
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:12LaunchDarkly12ObjcLDClientC0C30LDChangedFlagCollectionHandlera"></a>
+                    <a name="//apple_ref/swift/Alias/ObjcLDChangedFlagCollectionHandler" class="dashAnchor"></a>
+                    <a class="token" href="#/s:12LaunchDarkly12ObjcLDClientC0C30LDChangedFlagCollectionHandlera">ObjcLDChangedFlagCollectionHandler</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Handler passed to the client app when a NSArray feature flag value changes</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">typealias</span> <span class="kt">ObjcLDChangedFlagCollectionHandler</span> <span class="o">=</span> <span class="p">(</span><span class="n">_</span> <span class="nv">changedFlags</span><span class="p">:</span> <span class="p">[</span><span class="kt"><a href="../Launch Darkly.html#/s:12LaunchDarkly9LDFlagKeya">LDFlagKey</a></span> <span class="p">:</span> <span class="kt"><a href="../Classes/ObjcLDChangedFlag.html">ObjcLDChangedFlag</a></span><span class="p">])</span> <span class="o">-&gt;</span> <span class="kt">Void</span></code></pre>
+
+                        </div>
+                      </div>
+                      <div>
+                        <h4>Parameters</h4>
+                        <table class="graybox">
+                          <tbody>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>changedFlags</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>A dictionary <NSString*, LDChangedFlag*> using the changed flag keys as the dictionary keys. Cast the resulting LDChangedFlag to the correct LDChangedFlagType.</p>
                                 </div>
                               </td>
                             </tr>
