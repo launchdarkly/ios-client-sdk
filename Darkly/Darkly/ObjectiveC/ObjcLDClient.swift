@@ -141,8 +141,8 @@ public final class ObjcLDClient: NSObject {
      - parameter config: The LDConfig set with the desired configuration. If omitted, LDClient retains the previously set config, or default if one was never set. (Optional)
      - parameter user: The LDUser set with the desired user. If omitted, LDClient retains the previously set user, or default if one was never set. (Optional)
      */
-    @objc public func startWithMobileKey(_ mobileKey: String, config: ObjcLDConfig? = nil, user userObject: ObjcLDUser? = nil) {
-        ObjcLDClient.sharedInstance.startWithMobileKey(mobileKey, config: config, user: userObject, completion: nil)
+    @objc public func startWithMobileKey(_ mobileKey: String, config: ObjcLDConfig? = nil, user: ObjcLDUser? = nil) {
+        ObjcLDClient.sharedInstance.startWithMobileKey(mobileKey, config: config, user: user, completion: nil)
     }
 
     /**
@@ -161,12 +161,12 @@ public final class ObjcLDClient: NSObject {
      - parameter user: The LDUser set with the desired user. If omitted, LDClient retains the previously set user, or default if one was never set. (Optional)
      - parameter completion: Closure called when the embedded `setOnline` call completes, subject to throttling delays. (Optional)
      */
-    @objc public func startWithMobileKey(_ mobileKey: String, config: ObjcLDConfig? = nil, user userObject: ObjcLDUser? = nil, completion: (() -> Void)? = nil) {
+    @objc public func startWithMobileKey(_ mobileKey: String, config: ObjcLDConfig? = nil, user: ObjcLDUser? = nil, completion: (() -> Void)? = nil) {
         if let configObject = config {
-            LDClient.shared.start(mobileKey: mobileKey, config: configObject.config, user: userObject?.user, completion: completion)
+            LDClient.shared.start(mobileKey: mobileKey, config: configObject.config, user: user?.user, completion: completion)
             return
         }
-        LDClient.shared.start(mobileKey: mobileKey, user: userObject?.user, completion: completion)
+        LDClient.shared.start(mobileKey: mobileKey, user: user?.user, completion: completion)
     }
 
     /**
@@ -198,7 +198,7 @@ public final class ObjcLDClient: NSObject {
      BOOL boolFeatureFlagValue = [LDClient.sharedInstance boolVariationForKey:@"my-bool-flag" fallback:NO];
      ````
 
-     - parameter forKey: The LDFlagKey for the requested feature flag.
+     - parameter key: The LDFlagKey for the requested feature flag.
      - parameter fallback: The fallback value to return if the feature flag key does not exist.
 
      - returns: The requested BOOL feature flag value, or the fallback if the flag is missing or cannot be cast to a BOOL, or the client is not started
@@ -227,7 +227,7 @@ public final class ObjcLDClient: NSObject {
      LDFlagValueSource boolFeatureFlagSource = boolValueAndSource.source;
      ````
 
-     - parameter forKey: The LDFlagKey for the requested feature flag.
+     - parameter key: The LDFlagKey for the requested feature flag.
      - parameter fallback: The fallback value to return if the feature flag key does not exist.
 
      - returns: A `LDBoolVariationValue` (`ObjcLDBoolVariationValue`) containing the requested feature flag value and source, or the fallback if the flag is missing or cannot be cast to a BOOL, or the client is not started. If the fallback value is returned, the source is `LDFlagValueSourceFallback`
@@ -254,7 +254,7 @@ public final class ObjcLDClient: NSObject {
      NSInteger integerFeatureFlagValue = [LDClient.sharedInstance integerVariationForKey:@"my-integer-flag" fallback:5];
      ````
 
-     - parameter forKey: The LDFlagKey for the requested feature flag.
+     - parameter key: The LDFlagKey for the requested feature flag.
      - parameter fallback: The fallback value to return if the feature flag key does not exist.
 
      - returns: The requested NSInteger feature flag value, or the fallback if the flag is missing or cannot be cast to a NSInteger, or the client is not started
@@ -283,7 +283,7 @@ public final class ObjcLDClient: NSObject {
      LDFlagValueSource integerFeatureFlagSource = integerValueAndSource.source;
      ````
 
-     - parameter forKey: The LDFlagKey for the requested feature flag.
+     - parameter key: The LDFlagKey for the requested feature flag.
      - parameter fallback: The fallback value to return if the feature flag key does not exist.
 
      - returns: A `LDIntegerVariationValue` (`ObjcLDIntegerVariationValue`) containing the requested feature flag value and source, or the fallback if the flag is missing or cannot be cast to a NSInteger, or the client is not started. If the fallback value is returned, the source is `LDFlagValueSourceFallback`
@@ -310,7 +310,7 @@ public final class ObjcLDClient: NSObject {
      double doubleFeatureFlagValue = [LDClient.sharedInstance doubleVariationForKey:@"my-double-flag" fallback:2.71828];
      ````
 
-     - parameter forKey: The LDFlagKey for the requested feature flag.
+     - parameter key: The LDFlagKey for the requested feature flag.
      - parameter fallback: The fallback value to return if the feature flag key does not exist.
 
      - returns: The requested double feature flag value, or the fallback if the flag is missing or cannot be cast to a double, or the client is not started
@@ -339,7 +339,7 @@ public final class ObjcLDClient: NSObject {
      LDFlagValueSource doubleFeatureFlagSource = doubleValueAndSource.source;
      ````
 
-     - parameter forKey: The LDFlagKey for the requested feature flag.
+     - parameter key: The LDFlagKey for the requested feature flag.
      - parameter fallback: The fallback value to return if the feature flag key does not exist.
 
      - returns: A `LDDoubleVariationValue` (`ObjcLDDoubleVariationValue`) containing the requested feature flag value and source, or the fallback if the flag is missing or cannot be cast to a double, or the client is not started. If the fallback value is returned, the source is `LDFlagValueSourceFallback`
@@ -366,7 +366,7 @@ public final class ObjcLDClient: NSObject {
      NSString *stringFeatureFlagValue = [LDClient.sharedInstance stringVariationForKey:@"my-string-flag" fallback:@"<fallback>"];
      ````
 
-     - parameter forKey: The LDFlagKey for the requested feature flag.
+     - parameter key: The LDFlagKey for the requested feature flag.
      - parameter fallback: The fallback value to return if the feature flag key does not exist.
 
      - returns: The requested NSString feature flag value, or the fallback if the flag is missing or cannot be cast to a NSString, or the client is not started
@@ -395,7 +395,7 @@ public final class ObjcLDClient: NSObject {
      LDFlagValueSource stringFeatureFlagSource = stringValueAndSource.source;
      ````
 
-     - parameter forKey: The LDFlagKey for the requested feature flag.
+     - parameter key: The LDFlagKey for the requested feature flag.
      - parameter fallback: The fallback value to return if the feature flag key does not exist.
 
      - returns: A `LDStringVariationValue` (`ObjcLDStringVariationValue`) containing the requested feature flag value and source, or the fallback if the flag is missing or cannot be cast to a NSString, or the client is not started. If the fallback value is returned, the source is `LDFlagValueSourceFallback`
@@ -422,7 +422,7 @@ public final class ObjcLDClient: NSObject {
      NSArray *arrayFeatureFlagValue = [LDClient.sharedInstance arrayVariationForKey:@"my-array-flag" fallback:@[@1,@2,@3]];
      ````
 
-     - parameter forKey: The LDFlagKey for the requested feature flag.
+     - parameter key: The LDFlagKey for the requested feature flag.
      - parameter fallback: The fallback value to return if the feature flag key does not exist.
 
      - returns: The requested NSArray feature flag value, or the fallback if the flag is missing or cannot be cast to a NSArray, or the client is not started
@@ -451,7 +451,7 @@ public final class ObjcLDClient: NSObject {
      LDFlagValueSource arrayFeatureFlagSource = arrayValueAndSource.source;
      ````
 
-     - parameter forKey: The LDFlagKey for the requested feature flag.
+     - parameter key: The LDFlagKey for the requested feature flag.
      - parameter fallback: The fallback value to return if the feature flag key does not exist.
 
      - returns: A `LDArrayVariationValue` (`ObjcLDArrayVariationValue`) containing the requested feature flag value and source, or the fallback if the flag is missing or cannot be cast to a NSArray, or the client is not started. If the fallback value is returned, the source is `LDFlagValueSourceFallback`
@@ -478,7 +478,7 @@ public final class ObjcLDClient: NSObject {
      NSDictionary *dictionaryFeatureFlagValue = [LDClient.sharedInstance dictionaryVariationForKey:@"my-dictionary-flag" fallback:@{@"dictionary":@"fallback"}];
      ````
 
-     - parameter forKey: The LDFlagKey for the requested feature flag.
+     - parameter key: The LDFlagKey for the requested feature flag.
      - parameter fallback: The fallback value to return if the feature flag key does not exist.
 
      - returns: The requested NSDictionary feature flag value, or the fallback if the flag is missing or cannot be cast to a NSDictionary, or the client is not started
@@ -507,7 +507,7 @@ public final class ObjcLDClient: NSObject {
      LDFlagValueSource dictionaryFeatureFlagSource = dictionaryValueAndSource.source;
      ````
 
-     - parameter forKey: The LDFlagKey for the requested feature flag.
+     - parameter key: The LDFlagKey for the requested feature flag.
      - parameter fallback: The fallback value to return if the feature flag key does not exist.
 
      - returns: A `LDDictionaryVariationValue` (`ObjcLDDictionaryVariationValue`) containing the requested feature flag value and source, or the fallback if the flag is missing or cannot be cast to a NSDictionary, or the client is not started. If the fallback value is returned, the source is `LDFlagValueSourceFallback`
@@ -517,7 +517,7 @@ public final class ObjcLDClient: NSObject {
     }
 
     // MARK: - Feature Flag Updates
-    
+
     /**
      Sets a handler for the specified BOOL flag key executed on the specified owner. If the flag's value changes, executes the handler, passing in the `changedFlag` containing the old and new flag values, and old and new flag value source. See `ObjcLDBoolChangedFlag` for details.
 
@@ -539,11 +539,17 @@ public final class ObjcLDClient: NSObject {
      - parameter key: The LDFlagKey for the flag to observe.
      - parameter owner: The LDFlagChangeOwner which will execute the handler. The SDK retains a weak reference to the owner.
      - parameter handler: The block the SDK will execute when the feature flag changes.
-     - parameter changedFlag: The LDBoolChangedFlag passed into the handler containing the old & new flag value and source
      */
-    @objc public func observeBool(_ key: LDFlagKey, owner: LDFlagChangeOwner, handler: @escaping (_ changedFlag: ObjcLDBoolChangedFlag) -> Void) {
+    @objc public func observeBool(_ key: LDFlagKey, owner: LDFlagChangeOwner, handler: @escaping ObjcLDBoolChangedFlagHandler) {
         LDClient.shared.observe(key: key, owner: owner) { (changedFlag) in handler(ObjcLDBoolChangedFlag(changedFlag)) }
     }
+
+    /**
+     Handler passed to the client app when a BOOL feature flag value changes
+
+     - parameter changedFlag: The LDBoolChangedFlag passed into the handler containing the old & new flag value and source
+     */
+    public typealias ObjcLDBoolChangedFlagHandler = (_ changedFlag: ObjcLDBoolChangedFlag) -> Void
 
     /**
      Sets a handler for the specified NSInteger flag key executed on the specified owner. If the flag's value changes, executes the handler, passing in the `changedFlag` containing the old and new flag values, and old and new flag value source. See `ObjcLDIntegerChangedFlag` for details.
@@ -566,12 +572,18 @@ public final class ObjcLDClient: NSObject {
      - parameter key: The LDFlagKey for the flag to observe.
      - parameter owner: The LDFlagChangeOwner which will execute the handler. The SDK retains a weak reference to the owner.
      - parameter handler: The block the SDK will execute when the feature flag changes.
-     - parameter changedFlag: The LDIntegerChangedFlag passed into the handler containing the old & new flag value and source
      */
-    @objc public func observeInteger(_ key: LDFlagKey, owner: LDFlagChangeOwner, handler: @escaping (_ changedFlag: ObjcLDIntegerChangedFlag) -> Void) {
+    @objc public func observeInteger(_ key: LDFlagKey, owner: LDFlagChangeOwner, handler: @escaping ObjcLDIntegerChangedFlagHandler) {
         LDClient.shared.observe(key: key, owner: owner) { (changedFlag) in handler(ObjcLDIntegerChangedFlag(changedFlag)) }
     }
     
+    /**
+     Handler passed to the client app when a NSInteger feature flag value changes
+
+     - parameter changedFlag: The LDIntegerChangedFlag passed into the handler containing the old & new flag value and source
+     */
+    public typealias ObjcLDIntegerChangedFlagHandler = (_ changedFlag: ObjcLDIntegerChangedFlag) -> Void
+
     /**
      Sets a handler for the specified double flag key executed on the specified owner. If the flag's value changes, executes the handler, passing in the `changedFlag` containing the old and new flag values, and old and new flag value source. See `ObjcLDDoubleChangedFlag` for details.
 
@@ -593,11 +605,17 @@ public final class ObjcLDClient: NSObject {
      - parameter key: The LDFlagKey for the flag to observe.
      - parameter owner: The LDFlagChangeOwner which will execute the handler. The SDK retains a weak reference to the owner.
      - parameter handler: The block the SDK will execute when the feature flag changes.
-     - parameter changedFlag: The LDDoubleChangedFlag passed into the handler containing the old & new flag value and source
      */
-    @objc public func observeDouble(_ key: LDFlagKey, owner: LDFlagChangeOwner, handler: @escaping (_ changedFlag: ObjcLDDoubleChangedFlag) -> Void) {
+    @objc public func observeDouble(_ key: LDFlagKey, owner: LDFlagChangeOwner, handler: @escaping ObjcLDDoubleChangedFlagHandler) {
         LDClient.shared.observe(key: key, owner: owner) { (changedFlag) in handler(ObjcLDDoubleChangedFlag(changedFlag)) }
     }
+
+    /**
+     Handler passed to the client app when a double feature flag value changes
+
+     - parameter changedFlag: The LDDoubleChangedFlag passed into the handler containing the old & new flag value and source
+     */
+    public typealias ObjcLDDoubleChangedFlagHandler = (_ changedFlag: ObjcLDDoubleChangedFlag) -> Void
 
     /**
      Sets a handler for the specified NSString flag key executed on the specified owner. If the flag's value changes, executes the handler, passing in the `changedFlag` containing the old and new flag values, and old and new flag value source. See `ObjcLDStringChangedFlag` for details.
@@ -620,12 +638,18 @@ public final class ObjcLDClient: NSObject {
      - parameter key: The LDFlagKey for the flag to observe.
      - parameter owner: The LDFlagChangeOwner which will execute the handler. The SDK retains a weak reference to the owner.
      - parameter handler: The block the SDK will execute when the feature flag changes.
-     - parameter changedFlag: The LDStringChangedFlag passed into the handler containing the old & new flag value & source
      */
-    @objc public func observeString(_ key: LDFlagKey, owner: LDFlagChangeOwner, handler: @escaping (_ changedFlag: ObjcLDStringChangedFlag) -> Void) {
+    @objc public func observeString(_ key: LDFlagKey, owner: LDFlagChangeOwner, handler: @escaping ObjcLDStringChangedFlagHandler) {
         LDClient.shared.observe(key: key, owner: owner) { (changedFlag) in handler(ObjcLDStringChangedFlag(changedFlag)) }
     }
     
+    /**
+     Handler passed to the client app when a NSString feature flag value changes
+
+     - parameter changedFlag: The LDStringChangedFlag passed into the handler containing the old & new flag value & source
+     */
+    public typealias ObjcLDStringChangedFlagHandler = (_ changedFlag: ObjcLDStringChangedFlag) -> Void
+
     /**
      Sets a handler for the specified NSArray flag key executed on the specified owner. If the flag's value changes, executes the handler, passing in the `changedFlag` containing the old and new flag values, and old and new flag value source. See `ObjcLDArrayChangedFlag` for details.
 
@@ -647,12 +671,18 @@ public final class ObjcLDClient: NSObject {
      - parameter key: The LDFlagKey for the flag to observe.
      - parameter owner: The LDFlagChangeOwner which will execute the handler. The SDK retains a weak reference to the owner.
      - parameter handler: The block the SDK will execute when the feature flag changes.
-     - parameter changedFlag: The LDArrayChangedFlag passed into the handler containing the old & new flag value & source
     */
-    @objc public func observeArray(_ key: LDFlagKey, owner: LDFlagChangeOwner, handler: @escaping (_ changedFlag: ObjcLDArrayChangedFlag) -> Void) {
+    @objc public func observeArray(_ key: LDFlagKey, owner: LDFlagChangeOwner, handler: @escaping ObjcLDArrayChangedFlagHandler) {
         LDClient.shared.observe(key: key, owner: owner) { (changedFlag) in handler(ObjcLDArrayChangedFlag(changedFlag)) }
     }
     
+    /**
+     Handler passed to the client app when a NSArray feature flag value changes
+
+     - parameter changedFlag: The LDArrayChangedFlag passed into the handler containing the old & new flag value & source
+     */
+    public typealias ObjcLDArrayChangedFlagHandler = (_ changedFlag: ObjcLDArrayChangedFlag) -> Void
+
     /**
      Sets a handler for the specified NSDictionary flag key executed on the specified owner. If the flag's value changes, executes the handler, passing in the `changedFlag` containing the old and new flag values, and old and new flag value source. See `ObjcLDDictionaryChangedFlag` for details.
 
@@ -674,12 +704,18 @@ public final class ObjcLDClient: NSObject {
      - parameter key: The LDFlagKey for the flag to observe.
      - parameter owner: The LDFlagChangeOwner which will execute the handler. The SDK retains a weak reference to the owner.
      - parameter handler: The block the SDK will execute when the feature flag changes.
-     - parameter changedFlag: The LDDictionaryChangedFlag passed into the handler containing the old & new flag value & source
      */
-    @objc public func observeDictionary(_ key: LDFlagKey, owner: LDFlagChangeOwner, handler: @escaping (_ changedFlag: ObjcLDDictionaryChangedFlag) -> Void) {
+    @objc public func observeDictionary(_ key: LDFlagKey, owner: LDFlagChangeOwner, handler: @escaping ObjcLDDictionaryChangedFlagHandler) {
         LDClient.shared.observe(key: key, owner: owner) { (changedFlag) in handler(ObjcLDDictionaryChangedFlag(changedFlag)) }
     }
     
+    /**
+     Handler passed to the client app when a NSArray feature flag value changes
+
+     - parameter changedFlag: The LDDictionaryChangedFlag passed into the handler containing the old & new flag value & source
+     */
+    public typealias ObjcLDDictionaryChangedFlagHandler = (_ changedFlag: ObjcLDDictionaryChangedFlag) -> Void
+
     /**
      Sets a handler for the specified flag keys executed on the specified owner. If any observed flag's value changes, executes the handler 1 time, passing in a dictionary of <NSString*, LDChangedFlag*> containing the old and new flag values, and old and new flag value source. See LDChangedFlag (`ObjcLDChangedFlag`) for details.
 
@@ -702,14 +738,20 @@ public final class ObjcLDClient: NSObject {
      - parameter keys: An array of NSString* flag keys for the flags to observe.
      - parameter owner: The LDFlagChangeOwner which will execute the handler. The SDK retains a weak reference to the owner.
      - parameter handler: The LDFlagCollectionChangeHandler the SDK will execute 1 time when any of the observed feature flags change.
-     - parameter changedFlags: A dictionary <NSString*, LDChangedFlag*> using the changed flag keys as the dictionary keys. Cast the resulting LDChangedFlag to the correct LDChangedFlagType.
      */
-    @objc public func observeKeys(_ keys: [LDFlagKey], owner: LDFlagChangeOwner, handler: @escaping (_ changedFlags: [LDFlagKey: ObjcLDChangedFlag]) -> Void) {
+    @objc public func observeKeys(_ keys: [LDFlagKey], owner: LDFlagChangeOwner, handler: @escaping ObjcLDChangedFlagCollectionHandler) {
         LDClient.shared.observe(keys: keys, owner: owner) { (changedFlags) in
             let objcChangedFlags = changedFlags.mapValues { (changedFlag) -> ObjcLDChangedFlag in changedFlag.objcChangedFlag }
             handler(objcChangedFlags)
         }
     }
+
+    /**
+     Handler passed to the client app when a NSArray feature flag value changes
+
+     - parameter changedFlags: A dictionary <NSString*, LDChangedFlag*> using the changed flag keys as the dictionary keys. Cast the resulting LDChangedFlag to the correct LDChangedFlagType.
+     */
+    public typealias ObjcLDChangedFlagCollectionHandler = (_ changedFlags: [LDFlagKey: ObjcLDChangedFlag]) -> Void
 
     /**
      Sets a handler for all flag keys executed on the specified owner. If any flag's value changes, executes the handler 1 time, passing in a dictionary of <NSString*, LDChangedFlag*> containing the old and new flag values, and old and new flag value source. See LDChangedFlag (`ObjcLDChangedFlag`) for details.
@@ -732,9 +774,8 @@ public final class ObjcLDClient: NSObject {
 
      - parameter owner: The LDFlagChangeOwner which will execute the handler. The SDK retains a weak reference to the owner.
      - parameter handler: The LDFlagCollectionChangeHandler the SDK will execute 1 time when any of the observed feature flags change.
-     - parameter changedFlags: A dictionary <NSString*, LDChangedFlag*> using the changed flag keys as the dictionary keys. Cast the resulting LDChangedFlag to the correct LDChangedFlagType.
      */
-    @objc public func observeAllKeys(owner: LDFlagChangeOwner, handler: @escaping (_ changedFlags: [LDFlagKey: ObjcLDChangedFlag]) -> Void) {
+    @objc public func observeAllKeys(owner: LDFlagChangeOwner, handler: @escaping ObjcLDChangedFlagCollectionHandler) {
         LDClient.shared.observeAll(owner: owner) { (changedFlags) in
             let objcChangedFlags = changedFlags.mapValues { (changedFlag) -> ObjcLDChangedFlag in changedFlag.objcChangedFlag }
             handler(objcChangedFlags)
