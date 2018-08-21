@@ -142,7 +142,8 @@ public struct LDConfig {
     public var startOnline: Bool = Defaults.startOnline
 
     //Private Attributes
-    /** Treat all user attributes as private for event reporting for all users.
+    /**
+     Treat all user attributes as private for event reporting for all users.
 
      The SDK will not include private attribute values in analytics events, but private attribute names will be sent.
 
@@ -212,6 +213,7 @@ extension Int {
 }
 
 extension LDConfig: Equatable {
+    ///Compares the settable properties in 2 LDConfig structs
     public static func == (lhs: LDConfig, rhs: LDConfig) -> Bool {
         return lhs.baseUrl == rhs.baseUrl
             && lhs.eventsUrl == rhs.eventsUrl

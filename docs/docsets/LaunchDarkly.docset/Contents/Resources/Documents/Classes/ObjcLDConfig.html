@@ -23,7 +23,7 @@
         <a class="header-link" href="../index.html">
           LaunchDarkly Docs
         </a>
-         (58% documented)
+         (67% documented)
       </p>
     
       <p class="header-col--secondary">
@@ -206,7 +206,9 @@
 
                 </div>
               </div>
-            <p>Undocumented</p>
+            <p>Use LDConfig to configure the LDClient. When initialized, a LDConfig contains the default values which can be changed as needed.</p>
+
+<p>The client app can change the LDConfig by getting the <code>config</code> from LDClient (<code><a href="../Classes/ObjcLDClient.html">ObjcLDClient</a></code>), adjusting the values, and setting it back into the LDClient (<code><a href="../Classes/ObjcLDClient.html">ObjcLDClient</a></code>).</p>
 
           </div>
         </section>
@@ -228,7 +230,7 @@
                     <section class="section">
                       <div class="pointer"></div>
                       <div class="abstract">
-                        <p>Undocumented</p>
+                        <p>The url for making feature flag requests. Do not change unless instructed by LaunchDarkly.</p>
 
                       </div>
                       <div class="declaration">
@@ -256,7 +258,7 @@
                     <section class="section">
                       <div class="pointer"></div>
                       <div class="abstract">
-                        <p>Undocumented</p>
+                        <p>The url for making event reports. Do not change unless instructed by LaunchDarkly.</p>
 
                       </div>
                       <div class="declaration">
@@ -284,7 +286,7 @@
                     <section class="section">
                       <div class="pointer"></div>
                       <div class="abstract">
-                        <p>Undocumented</p>
+                        <p>The url for connecting to the <em>clientstream</em>. Do not change unless instructed by LaunchDarkly.</p>
 
                       </div>
                       <div class="declaration">
@@ -312,7 +314,7 @@
                     <section class="section">
                       <div class="pointer"></div>
                       <div class="abstract">
-                        <p>Undocumented</p>
+                        <p>The maximum number of analytics events the LDClient can store. When the LDClient event store reaches the eventCapacity, the SDK discards events until it successfully reports them to LaunchDarkly. (Default: 100)</p>
 
                       </div>
                       <div class="declaration">
@@ -340,7 +342,7 @@
                     <section class="section">
                       <div class="pointer"></div>
                       <div class="abstract">
-                        <p>Undocumented</p>
+                        <p>The timeout interval in milliseconds for flag requests and event reports. (Default: 10 seconds)</p>
 
                       </div>
                       <div class="declaration">
@@ -368,7 +370,7 @@
                     <section class="section">
                       <div class="pointer"></div>
                       <div class="abstract">
-                        <p>Undocumented</p>
+                        <p>The interval between event reports in milliseconds (Default: 30 seconds)</p>
 
                       </div>
                       <div class="declaration">
@@ -396,7 +398,7 @@
                     <section class="section">
                       <div class="pointer"></div>
                       <div class="abstract">
-                        <p>Undocumented</p>
+                        <p>The interval between feature flag requests in milliseconds. Used only for polling mode. (Default: 5 minutes)</p>
 
                       </div>
                       <div class="declaration">
@@ -424,7 +426,7 @@
                     <section class="section">
                       <div class="pointer"></div>
                       <div class="abstract">
-                        <p>Undocumented</p>
+                        <p>The interval between feature flag requests while running in the background, in milliseconds. Used only for polling mode. (Default: 60 minutes)</p>
 
                       </div>
                       <div class="declaration">
@@ -433,34 +435,6 @@
                           <p class="aside-title">Swift</p>
                           <pre class="highlight swift"><code><span class="kd">@objc</span>
 <span class="kd">public</span> <span class="k">var</span> <span class="nv">backgroundPollIntervalMillis</span><span class="p">:</span> <span class="kt">Int</span> <span class="p">{</span> <span class="k">get</span> <span class="k">set</span> <span class="p">}</span></code></pre>
-
-                        </div>
-                      </div>
-                    </section>
-                  </div>
-                </li>
-                <li class="item">
-                  <div>
-                    <code>
-                    <a name="/c:@M@LaunchDarkly@objc(cs)LDConfig(py)minBackgroundPollIntervalMillis"></a>
-                    <a name="//apple_ref/swift/Property/minBackgroundPollIntervalMillis" class="dashAnchor"></a>
-                    <a class="token" href="#/c:@M@LaunchDarkly@objc(cs)LDConfig(py)minBackgroundPollIntervalMillis">minBackgroundPollIntervalMillis</a>
-                    </code>
-                  </div>
-                  <div class="height-container">
-                    <div class="pointer-container"></div>
-                    <section class="section">
-                      <div class="pointer"></div>
-                      <div class="abstract">
-                        <p>Undocumented</p>
-
-                      </div>
-                      <div class="declaration">
-                        <h4>Declaration</h4>
-                        <div class="language">
-                          <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="kd">@objc</span>
-<span class="kd">public</span> <span class="k">var</span> <span class="nv">minBackgroundPollIntervalMillis</span><span class="p">:</span> <span class="kt">Int</span> <span class="p">{</span> <span class="k">get</span> <span class="p">}</span></code></pre>
 
                         </div>
                       </div>
@@ -480,7 +454,7 @@
                     <section class="section">
                       <div class="pointer"></div>
                       <div class="abstract">
-                        <p>Undocumented</p>
+                        <p>The minimum interval between feature flag requests in milliseconds. Used only for polling mode. (5 minutes)</p>
 
                       </div>
                       <div class="declaration">
@@ -489,6 +463,34 @@
                           <p class="aside-title">Swift</p>
                           <pre class="highlight swift"><code><span class="kd">@objc</span>
 <span class="kd">public</span> <span class="k">var</span> <span class="nv">minPollingIntervalMillis</span><span class="p">:</span> <span class="kt">Int</span> <span class="p">{</span> <span class="k">get</span> <span class="p">}</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/c:@M@LaunchDarkly@objc(cs)LDConfig(py)minBackgroundPollIntervalMillis"></a>
+                    <a name="//apple_ref/swift/Property/minBackgroundPollIntervalMillis" class="dashAnchor"></a>
+                    <a class="token" href="#/c:@M@LaunchDarkly@objc(cs)LDConfig(py)minBackgroundPollIntervalMillis">minBackgroundPollIntervalMillis</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>The minimum interval between feature flag requests while running in the background, in milliseconds. Used only for polling mode. (15 minutes)</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">@objc</span>
+<span class="kd">public</span> <span class="k">var</span> <span class="nv">minBackgroundPollIntervalMillis</span><span class="p">:</span> <span class="kt">Int</span> <span class="p">{</span> <span class="k">get</span> <span class="p">}</span></code></pre>
 
                         </div>
                       </div>
@@ -508,7 +510,7 @@
                     <section class="section">
                       <div class="pointer"></div>
                       <div class="abstract">
-                        <p>Undocumented</p>
+                        <p>Controls the method the SDK uses to keep feature flags updated. When set to .streaming, connects to <code>clientstream</code> which notifies the SDK of feature flag changes. When set to .polling, an efficient polling mechanism is used to periodically request feature flag values. Ignored for watchOS, which always uses .polling. See <code><a href="../Enums/LDStreamingMode.html">LDStreamingMode</a></code> for more details. (Default: .streaming)</p>
 
                       </div>
                       <div class="declaration">
@@ -536,7 +538,7 @@
                     <section class="section">
                       <div class="pointer"></div>
                       <div class="abstract">
-                        <p>Undocumented</p>
+                        <p>Enables feature flag updates when your app is in the background. Allowed on macOS only. (Default: NO)</p>
 
                       </div>
                       <div class="declaration">
@@ -564,7 +566,7 @@
                     <section class="section">
                       <div class="pointer"></div>
                       <div class="abstract">
-                        <p>Undocumented</p>
+                        <p>Controls LDClient start behavior. When YES, calling start causes LDClient to go online. When NO, calling start causes LDClient to remain offline. If offline at start, set the client online to receive flag updates. (Default: YES)</p>
 
                       </div>
                       <div class="declaration">
@@ -592,7 +594,13 @@
                     <section class="section">
                       <div class="pointer"></div>
                       <div class="abstract">
-                        <p>Undocumented</p>
+                        <p>Treat all user attributes as private for event reporting for all users.</p>
+
+<p>The SDK will not include private attribute values in analytics events, but private attribute names will be sent.</p>
+
+<p>When YES, ignores values in either LDConfig.privateUserAttributes or LDUser.privateAttributes. (Default: NO)</p>
+
+<p>See Also: <code><a href="../Classes/ObjcLDConfig.html#/c:@M@LaunchDarkly@objc(cs)LDConfig(py)privateUserAttributes">privateUserAttributes</a></code> and <code><a href="../Structs/LDUser.html#/s:12LaunchDarkly6LDUserV17privateAttributesSaySSGSgv">LDUser.privateAttributes</a></code> (<code><a href="../Classes/ObjcLDUser.html#/c:@M@LaunchDarkly@objc(cs)LDUser(py)privateAttributes">ObjcLDUser.privateAttributes</a></code>)</p>
 
                       </div>
                       <div class="declaration">
@@ -620,7 +628,13 @@
                     <section class="section">
                       <div class="pointer"></div>
                       <div class="abstract">
-                        <p>Undocumented</p>
+                        <p>User attributes and top level custom dictionary keys to treat as private for event reporting for all users.</p>
+
+<p>The SDK will not include private attribute values in analytics events, but private attribute names will be sent.</p>
+
+<p>See <code><a href="../Structs/LDUser.html#/s:12LaunchDarkly6LDUserV22privatizableAttributesSaySSGvZ">LDUser.privatizableAttributes</a></code> (<code><a href="../Classes/ObjcLDUser.html#/c:@M@LaunchDarkly@objc(cs)LDUser(cpy)privatizableAttributes">ObjcLDUser.privatizableAttributes</a></code>) for the attribute names that can be declared private. To set private user attributes for a specific user, see <code><a href="../Structs/LDUser.html#/s:12LaunchDarkly6LDUserV17privateAttributesSaySSGSgv">LDUser.privateAttributes</a></code> (<code><a href="../Classes/ObjcLDUser.html#/c:@M@LaunchDarkly@objc(cs)LDUser(py)privateAttributes">ObjcLDUser.privateAttributes</a></code>). (Default: nil)</p>
+
+<p>See Also: <code><a href="../Classes/ObjcLDConfig.html#/c:@M@LaunchDarkly@objc(cs)LDConfig(py)allUserAttributesPrivate">allUserAttributesPrivate</a></code>, <code><a href="../Structs/LDUser.html#/s:12LaunchDarkly6LDUserV22privatizableAttributesSaySSGvZ">LDUser.privatizableAttributes</a></code> (<code><a href="../Classes/ObjcLDUser.html#/c:@M@LaunchDarkly@objc(cs)LDUser(cpy)privatizableAttributes">ObjcLDUser.privatizableAttributes</a></code>), and <code><a href="../Structs/LDUser.html#/s:12LaunchDarkly6LDUserV17privateAttributesSaySSGSgv">LDUser.privateAttributes</a></code> (<code><a href="../Classes/ObjcLDUser.html#/c:@M@LaunchDarkly@objc(cs)LDUser(py)privateAttributes">ObjcLDUser.privateAttributes</a></code>).</p>
 
                       </div>
                       <div class="declaration">
@@ -648,7 +662,7 @@
                     <section class="section">
                       <div class="pointer"></div>
                       <div class="abstract">
-                        <p>Undocumented</p>
+                        <p>Directs the SDK to use REPORT for HTTP requests to connect to <code>clientstream</code> and make feature flag requests. When NO the SDK uses GET for these requests. Do not use unless advised by LaunchDarkly. (Default: NO)</p>
 
                       </div>
                       <div class="declaration">
@@ -676,7 +690,7 @@
                     <section class="section">
                       <div class="pointer"></div>
                       <div class="abstract">
-                        <p>Undocumented</p>
+                        <p>Controls how the SDK reports the user in analytics event reports. When set to YES, event reports will contain the user attributes, except attributes marked as private. When set to NO, event reports will contain the user&rsquo;s key only, reducing the size of event reports. (Default: NO)</p>
 
                       </div>
                       <div class="declaration">
@@ -704,7 +718,7 @@
                     <section class="section">
                       <div class="pointer"></div>
                       <div class="abstract">
-                        <p>Undocumented</p>
+                        <p>Enables logging for debugging. (Default: NO)</p>
 
                       </div>
                       <div class="declaration">
@@ -713,34 +727,6 @@
                           <p class="aside-title">Swift</p>
                           <pre class="highlight swift"><code><span class="kd">@objc</span>
 <span class="kd">public</span> <span class="k">var</span> <span class="nv">debugMode</span><span class="p">:</span> <span class="kt">Bool</span> <span class="p">{</span> <span class="k">get</span> <span class="k">set</span> <span class="p">}</span></code></pre>
-
-                        </div>
-                      </div>
-                    </section>
-                  </div>
-                </li>
-                <li class="item">
-                  <div>
-                    <code>
-                    <a name="/c:@M@LaunchDarkly@objc(cs)LDConfig(py)minimumBackgroundPollIntervalMillis"></a>
-                    <a name="//apple_ref/swift/Property/minimumBackgroundPollIntervalMillis" class="dashAnchor"></a>
-                    <a class="token" href="#/c:@M@LaunchDarkly@objc(cs)LDConfig(py)minimumBackgroundPollIntervalMillis">minimumBackgroundPollIntervalMillis</a>
-                    </code>
-                  </div>
-                  <div class="height-container">
-                    <div class="pointer-container"></div>
-                    <section class="section">
-                      <div class="pointer"></div>
-                      <div class="abstract">
-                        <p>Undocumented</p>
-
-                      </div>
-                      <div class="declaration">
-                        <h4>Declaration</h4>
-                        <div class="language">
-                          <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="kd">@objc</span>
-<span class="kd">public</span> <span class="k">var</span> <span class="nv">minimumBackgroundPollIntervalMillis</span><span class="p">:</span> <span class="kt">Int</span> <span class="p">{</span> <span class="k">get</span> <span class="p">}</span></code></pre>
 
                         </div>
                       </div>
@@ -760,7 +746,7 @@
                     <section class="section">
                       <div class="pointer"></div>
                       <div class="abstract">
-                        <p>Undocumented</p>
+                        <p>LDConfig constructor. Configurable values are all set to their default values. The client app can modify these values as desired. Note that client app developers may prefer to get the LDConfig from <code><a href="../Classes/LDClient.html#/s:12LaunchDarkly8LDClientC6configAA8LDConfigVv">LDClient.config</a></code> (<code><a href="../Classes/ObjcLDClient.html#/c:@M@LaunchDarkly@objc(cs)LDClient(py)config">ObjcLDClient.config</a></code>) in order to retain previously set values.</p>
 
                       </div>
                       <div class="declaration">
@@ -788,7 +774,7 @@
                     <section class="section">
                       <div class="pointer"></div>
                       <div class="abstract">
-                        <p>Undocumented</p>
+                        <p>Compares the settable properties in 2 LDConfig structs</p>
 
                       </div>
                       <div class="declaration">
