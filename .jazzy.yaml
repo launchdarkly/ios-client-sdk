@@ -77,5 +77,3 @@ custom_categories:
     - ObjcLDStringChangedFlag
     - ObjcLDArrayChangedFlag
     - ObjcLDDictionaryChangedFlag
-
-#output: "Docs"
