@@ -37,6 +37,8 @@ public enum LDFlagValue {
     case null
 }
 
+// The commented out code in this file is intended to support automated typing from the json, which is not implemented in the 3.0.0 release. When that capability can be supported with later Swift versions, uncomment this code to support it.
+
 // MARK: - Bool
 
 //extension LDFlagValue: ExpressibleByBooleanLiteral {
