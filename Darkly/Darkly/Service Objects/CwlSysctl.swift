@@ -61,10 +61,10 @@ public struct Sysctl {
         let optionalString = try dataForKeys(keys).withUnsafeBufferPointer { dataPointer -> String? in
             dataPointer.baseAddress.flatMap { String(validatingUTF8: $0) }
         }
-        guard let s = optionalString else {
+        guard let str = optionalString else {
             throw Error.malformedUTF8
         }
-        return s
+        return str
     }
 
     /// e.g. "MacPro4,1"
