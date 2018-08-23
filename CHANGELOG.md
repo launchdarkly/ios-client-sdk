@@ -2,6 +2,10 @@
 
 All notable changes to the LaunchDarkly iOS SDK will be documented in this file. This project adheres to [Semantic Versioning](http://semver.org).
 
+## [2.13.4] - 2018-08-23
+### Changed
+- Update to DarklyEventSource `3.2.7`
+
 ## [2.13.3] - 2018-08-15
 ### Changed
 - Synchronized summary event creation to limit thread access and protect data integrity
