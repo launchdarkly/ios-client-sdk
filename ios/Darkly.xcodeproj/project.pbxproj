@@ -8,6 +8,8 @@
 
 /* Begin PBXBuildFile section */
 		00299DE04A20B6AE76BB5D10 /* Pods_Darkly_osx.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 42914B4BAC723AB28455BEA6 /* Pods_Darkly_osx.framework */; };
+		3C74EE5A2130A9550095D0A1 /* RNLaunchDarkly.m in Sources */ = {isa = PBXBuildFile; fileRef = 3C74EE522130A9550095D0A1 /* RNLaunchDarkly.m */; };
+		3C74EE5F2130A9550095D0A1 /* RNLaunchDarkly.h in Headers */ = {isa = PBXBuildFile; fileRef = 3C74EE572130A9550095D0A1 /* RNLaunchDarkly.h */; };
 		690346C81E6872EA00E45133 /* Darkly.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 690346BE1E6872EA00E45133 /* Darkly.framework */; };
 		690346F41E68990000E45133 /* Darkly-Prefix.pch in Headers */ = {isa = PBXBuildFile; fileRef = 690346D81E68990000E45133 /* Darkly-Prefix.pch */; settings = {ATTRIBUTES = (Public, ); }; };
 		690346F51E68990000E45133 /* DarklyConstants.h in Headers */ = {isa = PBXBuildFile; fileRef = 690346D91E68990000E45133 /* DarklyConstants.h */; settings = {ATTRIBUTES = (Public, ); }; };
@@ -354,6 +356,8 @@
 		119B5C495711E2F896661BBA /* Pods_Darkly_watchOS.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_Darkly_watchOS.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		155D5D329F638FA4835A6755 /* Pods-Darkly_osx.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Darkly_osx.release.xcconfig"; path = "Pods/Target Support Files/Pods-Darkly_osx/Pods-Darkly_osx.release.xcconfig"; sourceTree = "<group>"; };
 		2746B66055EC9588A1F04353 /* Pods-Darkly_iOS.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Darkly_iOS.debug.xcconfig"; path = "Pods/Target Support Files/Pods-Darkly_iOS/Pods-Darkly_iOS.debug.xcconfig"; sourceTree = "<group>"; };
+		3C74EE522130A9550095D0A1 /* RNLaunchDarkly.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = RNLaunchDarkly.m; sourceTree = "<group>"; };
+		3C74EE572130A9550095D0A1 /* RNLaunchDarkly.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = RNLaunchDarkly.h; sourceTree = "<group>"; };
 		42914B4BAC723AB28455BEA6 /* Pods_Darkly_osx.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_Darkly_osx.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		44E14CDC307AB772C30E92E6 /* Pods-Darkly_tvOS.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Darkly_tvOS.release.xcconfig"; path = "Pods/Target Support Files/Pods-Darkly_tvOS/Pods-Darkly_tvOS.release.xcconfig"; sourceTree = "<group>"; };
 		6429DA897DEC32323ED9F178 /* Pods_Darkly_tvOS.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_Darkly_tvOS.framework; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -602,6 +606,15 @@
 			name = Frameworks;
 			sourceTree = "<group>";
 		};
+		3C74EE502130A9550095D0A1 /* RNLaunchDarkly */ = {
+			isa = PBXGroup;
+			children = (
+				3C74EE522130A9550095D0A1 /* RNLaunchDarkly.m */,
+				3C74EE572130A9550095D0A1 /* RNLaunchDarkly.h */,
+			);
+			path = RNLaunchDarkly;
+			sourceTree = "<group>";
+		};
 		5FDCDA73B7400418599AAF98 /* Pods */ = {
 			isa = PBXGroup;
 			children = (
@@ -625,6 +638,7 @@
 				690346C01E6872EA00E45133 /* Darkly */,
 				690346CB1E6872EA00E45133 /* DarklyTests */,
 				690346BF1E6872EA00E45133 /* Products */,
+				3C74EE502130A9550095D0A1 /* RNLaunchDarkly */,
 				839D6D2D1FD1B6BF000BE6BD /* CarthageFrameworks */,
 				5FDCDA73B7400418599AAF98 /* Pods */,
 				277872449006192CE422B05F /* Frameworks */,
@@ -899,6 +913,7 @@
 			files = (
 				690346FD1E68990000E45133 /* LDEventModel.h in Headers */,
 				690346F91E68990000E45133 /* LDClientManager.h in Headers */,
+				3C74EE5F2130A9550095D0A1 /* RNLaunchDarkly.h in Headers */,
 				83B62E1720A249A200F2E656 /* NSDateFormatter+JsonHeader.h in Headers */,
 				690346FF1E68990000E45133 /* LDFlagConfigModel.h in Headers */,
 				83ECCC8E2087D67D0086F879 /* LDFlagCounter.h in Headers */,
@@ -1472,6 +1487,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				83889B1B1F8F28AB00A4EF69 /* NSURLResponse+LaunchDarkly.m in Sources */,
+				3C74EE5A2130A9550095D0A1 /* RNLaunchDarkly.m in Sources */,
 				8375839E209CCE71004329DD /* LDEventTrackingContext.m in Sources */,
 				8365E50C2028F39E00DE8E2B /* LDEvent+EventTypes.m in Sources */,
 				690346FE1E68990000E45133 /* LDEventModel.m in Sources */,

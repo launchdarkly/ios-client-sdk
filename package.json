@@ -1,0 +1,25 @@
+{
+  "name": "launch-darkly-react-native",
+  "version": "0.0.13",
+  "description": "React Native wrapper over LaunchDarkly SDK's for iOS and Android.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "react-native",
+    "feature flag",
+    "feature toggle",
+    "launch darkly"
+  ],
+  "author": "Infinitix <contact@infinitix.io>",
+  "homepage": "https://github.com/orel91/launch-darkly-react-native",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/orel91/react-native-launch-darkly.git"
+  },
+  "peerDependencies": {
+    "react-native": "^0.51.0"
+  }
+}
