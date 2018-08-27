@@ -361,6 +361,12 @@ public class LDClient {
         return (value, source)
     }
 
+    //TODO: LD wants this capability public
+    public var allFeatureFlagValues: [LDFlagKey: Any]? {
+        guard hasStarted else { return nil }
+        return user.flagStore.featureFlags.flatMapValues { (featureFlag) -> Any? in featureFlag.value }
+    }
+
     private func value<T>(from featureFlag: FeatureFlag?, fallback: T) -> T {
         return featureFlag?.value as? T ?? fallback
     }
@@ -718,10 +724,5 @@ extension LDClient: TypeIdentifying { }
             self.runMode = runMode
         }
 
-        //TODO: LD wants this capability public
-        var allFeatureFlagValues: [LDFlagKey: Any]? {
-            guard hasStarted else { return nil }
-            return user.flagStore.featureFlags.compactMapValues { (featureFlag) -> Any? in featureFlag.value }
-        }
     }
 #endif

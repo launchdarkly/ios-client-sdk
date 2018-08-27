@@ -516,6 +516,11 @@ public final class ObjcLDClient: NSObject {
         return ObjcLDDictionaryVariationValue(LDClient.shared.variationAndSource(forKey: key, fallback: fallback))
     }
 
+    //TODO: LD wants this capability public
+    @objc public var allFeatureFlagValues: [LDFlagKey: Any]? {
+        return LDClient.shared.allFeatureFlagValues
+    }
+
     // MARK: - Feature Flag Updates
 
     /**
