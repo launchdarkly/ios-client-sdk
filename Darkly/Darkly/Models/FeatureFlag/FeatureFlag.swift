@@ -84,7 +84,7 @@ extension FeatureFlag {
 
 extension Dictionary where Key == LDFlagKey, Value == FeatureFlag {
     var dictionaryValue: [String: Any] {
-        return self.flatMapValues { (featureFlag) in featureFlag.dictionaryValue }
+        return self.compactMapValues { (featureFlag) in featureFlag.dictionaryValue }
     }
 }
 
@@ -107,7 +107,7 @@ extension Dictionary where Key == String, Value == Any {
 
     var flagCollection: [LDFlagKey: FeatureFlag]? {
         guard !(self is [LDFlagKey: FeatureFlag]) else { return self as? [LDFlagKey: FeatureFlag] }
-        let flagCollection = flatMapValues { (flagValue) in return FeatureFlag(object: flagValue) }
+        let flagCollection = compactMapValues { (flagValue) in return FeatureFlag(object: flagValue) }
         guard flagCollection.count == self.count else { return nil }
         return flagCollection
     }

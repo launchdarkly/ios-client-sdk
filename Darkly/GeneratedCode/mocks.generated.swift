@@ -264,8 +264,8 @@ final class FlagCollectionCachingMock: FlagCollectionCaching {
     var retrieveFlagsReturnValue: [String: CacheableUserFlags]!
     func retrieveFlags() -> [String: CacheableUserFlags] {
         retrieveFlagsCallCount += 1
-        return retrieveFlagsReturnValue
         retrieveFlagsCallback?()
+        return retrieveFlagsReturnValue
     }
 
     // MARK: storeFlags
@@ -354,8 +354,8 @@ final class KeyedValueCachingMock: KeyedValueCaching {
     func dictionary(forKey: String) -> [String: Any]? {
         dictionaryCallCount += 1
         dictionaryReceivedForKey = forKey
-        return dictionaryReturnValue
         dictionaryCallback?()
+        return dictionaryReturnValue
     }
 
     // MARK: removeObject
@@ -456,7 +456,7 @@ final class UserFlagCachingMock: UserFlagCaching {
     func retrieveFlags(for user: LDUser) -> CacheableUserFlags? {
         retrieveFlagsCallCount += 1
         retrieveFlagsReceivedUser = user
-        return retrieveFlagsReturnValue
         retrieveFlagsCallback?()
+        return retrieveFlagsReturnValue
     }
 }

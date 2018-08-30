@@ -46,7 +46,7 @@ final class FlagCollectionCache: FlagCollectionCaching {
 
     private var cachedFlagDictionaries: [String: Any]? { return keyStore.dictionary(forKey: Keys.cachedFlags) }
     private var cachedUserFlags: [String: CacheableUserFlags]? {
-        return cachedFlagDictionaries?.flatMapValues { (flagDictionary) in
+        return cachedFlagDictionaries?.compactMapValues { (flagDictionary) in
             return CacheableUserFlags(object: flagDictionary)
         }
     }

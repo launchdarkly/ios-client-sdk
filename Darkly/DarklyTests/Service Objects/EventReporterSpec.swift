@@ -25,10 +25,10 @@ final class EventReporterSpec: QuickSpec {
         var serviceMock: DarklyServiceMock!
         var events: [Event]!
         var eventKeys: [String]! {
-            return events.flatMap { (event) in event.key }
+            return events.compactMap { (event) in event.key }
         }
         var eventKinds: [Event.Kind]! {
-            return events.flatMap { (event) in event.kind }
+            return events.compactMap { (event) in event.kind }
         }
         var lastEventResponseDate: Date?
         var flagKey: LDFlagKey!
@@ -750,10 +750,10 @@ final class EventReporterSpec: QuickSpec {
 
 extension EventReporter {
     var eventStoreKeys: [String] {
-        return eventStore.flatMap { (eventDictionary) in return eventDictionary.eventKey }
+        return eventStore.compactMap { (eventDictionary) in return eventDictionary.eventKey }
     }
     var eventStoreKinds: [Event.Kind] {
-        return eventStore.flatMap { (eventDictionary) in return eventDictionary.eventKind }
+        return eventStore.compactMap { (eventDictionary) in return eventDictionary.eventKind }
     }
 }
 

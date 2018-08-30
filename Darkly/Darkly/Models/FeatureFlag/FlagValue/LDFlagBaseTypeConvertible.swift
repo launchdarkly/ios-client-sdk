@@ -87,11 +87,11 @@ extension Array: LDFlagBaseTypeConvertible {
 
 extension LDFlagValue {
     func toBaseTypeArray<BaseType: LDFlagBaseTypeConvertible>() -> [BaseType]? {
-        return self.flagValueArray?.flatMap { BaseType($0) }
+        return self.flagValueArray?.compactMap { BaseType($0) }
     }
 
     var baseArray: [LDFlagBaseTypeConvertible]? {
-        return self.flagValueArray?.flatMap { (flagValue) in flagValue.baseValue}
+        return self.flagValueArray?.compactMap { (flagValue) in flagValue.baseValue}
     }
 }
 
@@ -104,7 +104,7 @@ extension LDFlagValue {
     
     var baseDictionary: [String: LDFlagBaseTypeConvertible]? {
         guard let flagValues = flagValueDictionary else { return nil }
-        return flagValues.flatMapValues { (dictionaryValue) in dictionaryValue.baseValue }
+        return flagValues.compactMapValues { (dictionaryValue) in dictionaryValue.baseValue }
     }
 }
 

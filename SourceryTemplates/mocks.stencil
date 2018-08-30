@@ -38,8 +38,9 @@ final class {{ type.name }}Mock: {{ type.name }} {
 {% if not method.shortName == "init" %}        {{ method.annotations.StubName|default:method.callName }}CallCount += 1{% endif %}
 {%if method.parameters.count == 1 %}        {{ method.annotations.StubName|default:method.callName }}Received{% for param in method.parameters %}{{ param.name|upperFirstLetter }} = {{ param.name }}{% endfor %}{% else %}{% if not method.parameters.count == 0 %}        {{ method.annotations.StubName|default:method.callName }}ReceivedArguments = ({% for param in method.parameters %}{{ param.name }}: {{ param.name }}{% if not forloop.last%}, {% endif %}{% endfor %}){% endif %}{% if not method.returnTypeName.isVoid %}{% endif %}{% endif %}
 {% if method.throws %}        if let {{ method.annotations.StubName|default:method.callName }}ShouldThrow = {{ method.annotations.StubName|default:method.callName }}ShouldThrow { throw {{ method.annotations.StubName|default:method.callName }}ShouldThrow }{% endif %}
-{% if not method.returnTypeName.isVoid and not method.shortName == "init" %}        return {{ method.annotations.StubName|default:method.callName }}ReturnValue{% endif %}
         {{ method.annotations.StubName|default:method.callName }}Callback?()
+{% if not method.returnTypeName.isVoid and not method.shortName == "init" %}
+        return {{ method.annotations.StubName|default:method.callName }}ReturnValue{% endif %}
     }
 {% endfor %}
 }

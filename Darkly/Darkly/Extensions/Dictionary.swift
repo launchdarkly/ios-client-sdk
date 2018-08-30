@@ -74,9 +74,9 @@ extension Dictionary {
         pairs.forEach { (key, value) in self[key] = value }
     }
 
-    func flatMapValues<T>(_ transform: (Dictionary.Value) throws -> T?) rethrows -> Dictionary<Dictionary.Key, T> {
+    func compactMapValues<T>(_ transform: (Dictionary.Value) throws -> T?) rethrows -> Dictionary<Dictionary.Key, T> {
         var dictionary = [Dictionary.Key: T]()
-        try self.mapValues(transform).flatMap { (keyValuePair) -> (Dictionary.Key, T)? in
+        try self.mapValues(transform).compactMap { (keyValuePair) -> (Dictionary.Key, T)? in
             guard let value = keyValuePair.value else { return nil }
             return (keyValuePair.key, value)
         }.forEach { (pair: (key: Dictionary.Key, value: T)) in dictionary[pair.key] = pair.value }

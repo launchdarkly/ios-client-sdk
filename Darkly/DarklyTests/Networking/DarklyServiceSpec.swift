@@ -14,7 +14,7 @@ import DarklyEventSource
 
 final class DarklyServiceSpec: QuickSpec {
     
-    typealias ServiceResponses = (data: Data?, urlResponse: URLResponse?, error: Error?)!
+    typealias ServiceResponses = (data: Data?, urlResponse: URLResponse?, error: Error?)
     
     struct Constants {
         static let eventCount = 3
@@ -299,7 +299,7 @@ final class DarklyServiceSpec: QuickSpec {
                 testContext = TestContext(mobileKey: Constants.mockMobileKey, useReport: false, includeMockEventDictionaries: true)
             }
             context("success") {
-                var responses: ServiceResponses
+                var responses: ServiceResponses!
                 beforeEach {
                     waitUntil { done in
                         testContext.serviceMock.stubEventRequest(success: true) { (request, _, _) in
@@ -322,7 +322,7 @@ final class DarklyServiceSpec: QuickSpec {
                 }
             }
             context("failure") {
-                var responses: ServiceResponses
+                var responses: ServiceResponses!
                 beforeEach {
                     waitUntil { done in
                         testContext.serviceMock.stubEventRequest(success: false) { (request, _, _) in
@@ -345,7 +345,7 @@ final class DarklyServiceSpec: QuickSpec {
                 }
             }
             context("empty mobile key") {
-                var responses: ServiceResponses
+                var responses: ServiceResponses!
                 var eventsPublished = false
                 beforeEach {
                     testContext = TestContext(mobileKey: Constants.emptyMobileKey, useReport: false, includeMockEventDictionaries: true)
@@ -364,7 +364,7 @@ final class DarklyServiceSpec: QuickSpec {
                 }
             }
             context("empty event list") {
-                var responses: ServiceResponses
+                var responses: ServiceResponses!
                 var eventsPublished = false
                 let emptyEventDictionaryList: [[String: Any]] = []
                 beforeEach {

@@ -1108,7 +1108,7 @@ extension Array where Element == [String: Any] {
         return selectedDictionaries.first
     }
     var eventKinds: [Event.Kind] {
-        return self.flatMap { (eventDictionary) in return eventDictionary.eventKind }
+        return self.compactMap { (eventDictionary) in return eventDictionary.eventKind }
     }
 }
 

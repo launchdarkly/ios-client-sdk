@@ -202,8 +202,8 @@ final class DarklyServiceMock: DarklyServiceProvider {
     var stubbedEventResponse: ServiceResponse?
     var publishEventDictionariesCallCount = 0
     var publishedEventDictionaries: [[String: Any]]?
-    var publishedEventDictionaryKeys: [String]? { return publishedEventDictionaries?.flatMap { (eventDictionary) in eventDictionary.eventKey } }
-    var publishedEventDictionaryKinds: [Event.Kind]? { return publishedEventDictionaries?.flatMap { (eventDictionary) in eventDictionary.eventKind } }
+    var publishedEventDictionaryKeys: [String]? { return publishedEventDictionaries?.compactMap { (eventDictionary) in eventDictionary.eventKey } }
+    var publishedEventDictionaryKinds: [Event.Kind]? { return publishedEventDictionaries?.compactMap { (eventDictionary) in eventDictionary.eventKind } }
     func publishEventDictionaries(_ eventDictionaries: [[String: Any]], completion: ServiceCompletionHandler?) {
         publishEventDictionariesCallCount += 1
         publishedEventDictionaries = eventDictionaries
