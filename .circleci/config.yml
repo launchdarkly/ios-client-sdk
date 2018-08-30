@@ -1,0 +1,72 @@
+# config file version: 1.0.3
+version: 2
+jobs:
+  build:
+    working_directory: /Users/distiller/launchdarkly/ios-client/tmp
+    parallelism: 1    # controls the # of containers for the job. In theory, adding another container should halve the number of tests run in each container, but instead appears to run all tests in both containers.
+    shell: /bin/bash --login
+
+    environment:
+      LC_ALL: en_US.UTF-8
+      LANG: en_US.UTF-8
+      FL_OUTPUT_DIR: output
+
+    macos:
+      xcode: '9.4.1'
+
+    steps:
+    - checkout
+
+    - run:
+        name: Show xcodebuild Version
+        command: xcodebuild -version
+
+    # Restore the dependency cache
+    - restore_cache:
+        keys:
+        - v1-dep-{{ .Branch }}-    # This branch if available
+        - v1-dep-master-           # Default branch if not
+
+    - run:
+        name: Check Gemfile Dependencies
+        command: 'bundle check --path=vendor/bundle || bundle install --path=vendor/bundle --jobs=4 --retry=3'
+
+    - run: 
+        name: Show CocoaPods Version
+        command: bundle exec pod --version
+
+    # Save dependency cache
+    - save_cache:
+        key: v1-dep-{{ .Branch }}-{{ epoch }}
+        paths:
+          - vendor/bundle
+
+    - run:
+       name: List Simulators
+       command: instruments -s devices
+
+    - run:
+        name: Clean, Build, & Test
+        command: set -o pipefail && xcodebuild clean build test -workspace 'Darkly.xcworkspace' -scheme 'Darkly_iOS' -sdk iphonesimulator -destination 'platform=iOS Simulator,name=iPhone 6,OS=latest' CODE_SIGNING_REQUIRED=NO CODE_SIGN_IDENTITY= PROVISIONING_PROFILE= | tee 'xcode_raw.log' | xcpretty --color --report html --output '/Users/distiller/launchdarkly/ios-client/tmp/output/report.html' --report junit --output '/Users/distiller/launchdarkly/ios-client/tmp/output/xcode/report.junit'
+
+    - run:
+        name: CocoaPods lib lint
+        command: |
+            curl https://cocoapods-specs.circleci.com/fetch-cocoapods-repo-from-s3.sh | bash -s cf
+            bundle exec pod lib lint
+
+    - run:
+        name: CocoaPods spec lint
+        command: if [ "$CIRCLE_BRANCH" = 'master' ]; then bundle exec pod spec lint --use-libraries; fi
+
+    - run: 
+        name: Copy XC Activity Log
+        command: find "${HOME}/Library/Developer/Xcode/DerivedData" -name '*.xcactivitylog' -exec cp {} output/xcactivitylog \; || true
+
+    - store_test_results:
+        path: output
+        destination: test_results
+
+    - store_artifacts:
+        path: output
+        destination: artifacts
