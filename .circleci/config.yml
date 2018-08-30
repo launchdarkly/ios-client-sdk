@@ -1,4 +1,4 @@
-# config file version: 0.0.1
+# config file version: 1.0.0
 version: 2
 jobs:
   build:
@@ -49,19 +49,20 @@ jobs:
         name: Clean, Build, & Test
         command: set -o pipefail && xcodebuild clean build test -workspace 'Darkly.xcworkspace' -scheme 'Darkly_iOS' -sdk iphonesimulator -destination 'platform=iOS Simulator,name=iPhone 6,OS=latest' CODE_SIGNING_REQUIRED=NO CODE_SIGN_IDENTITY= PROVISIONING_PROFILE= | tee 'xcode_raw.log' | xcpretty --color --report html --output '/Users/distiller/launchdarkly/ios-client-swift-private/tmp/output/report.html' --report junit --output '/Users/distiller/launchdarkly/ios-client-swift-private/tmp/output/xcode/report.junit'
 
-    - run:
-        name: CocoaPods lib lint
-        command: |
-            curl https://cocoapods-specs.circleci.com/fetch-cocoapods-repo-from-s3.sh | bash -s cf
-            bundle exec pod lib lint
-
-    - run:
-        name: CocoaPods spec lint
-        command: if [ "$CIRCLE_BRANCH" = 'master' ]; then bundle exec pod spec lint --use-libraries; fi
-
     - run: 
         name: Copy XC Activity Log
         command: find "${HOME}/Library/Developer/Xcode/DerivedData" -name '*.xcactivitylog' -exec cp {} output/xcactivitylog \; || true
+
+    # CocoaPods linting will be enabled when the Swift SDK is moving into production
+    #- run:
+    #    name: CocoaPods lib lint
+    #    command: |
+    #        curl https://cocoapods-specs.circleci.com/fetch-cocoapods-repo-from-s3.sh | bash -s cf
+    #        bundle exec pod lib lint
+
+    #- run:
+    #    name: CocoaPods spec lint
+    #    command: if [ "$CIRCLE_BRANCH" = 'master' ]; then bundle exec pod spec lint --use-libraries; fi
 
     - store_test_results:
         path: output
