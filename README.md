@@ -21,26 +21,13 @@ or
 
 Add the following line to your podfile:
 ```
-pod 'LaunchDarkly'
 pod 'launch-darkly-react-native', path: '../node_modules/launch-darkly-react-native'
+pod 'LaunchDarkly', path: '../node_modules/launch-darkly-react-native/ios'
 ```
 and run
 ```
 pod install
 ```
-
-#### Android:
-
-See manual directions.
-
-### Manual installation
-
-
-#### iOS
-
-1. In XCode, in the project navigator, right click `Libraries` ➜ `Add Files to [your project's name]`
-2. Go to `node_modules` ➜ `launch-darkly-react-native` and add `RNLaunchDarkly.xcodeproj`
-3. In XCode, in the project navigator, select your project. Add `libRNLaunchDarkly.a` to your project's `Build Phases` ➜ `Link Binary With Libraries`
 
 #### Android
 
@@ -56,6 +43,7 @@ See manual directions.
   	```
       compile project(':launch-darkly-react-native')
   	```
+4. You will also need to go through the steps for installing Android SDK for LaunchDarkly [here](https://github.com/launchdarkly/android-client)
 
 
 ## Usage
