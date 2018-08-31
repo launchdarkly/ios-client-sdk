@@ -361,10 +361,16 @@ public class LDClient {
         return (value, source)
     }
 
-    //TODO: LD wants this capability public
-    public var allFeatureFlagValues: [LDFlagKey: Any]? {
+    /**
+     Returns a dictionary with the flag keys and their values. If the LDClient is not started, returns nil.
+
+     The dictionary will not contain feature flags from the server with null values.
+
+     LDClient will not provide any source or change information, only flag keys and flag values. The client app should convert the feature flag value into the desired type.
+    */
+    public var allFlagValues: [LDFlagKey: Any]? {
         guard hasStarted else { return nil }
-        return user.flagStore.featureFlags.flatMapValues { (featureFlag) -> Any? in featureFlag.value }
+        return user.flagStore.featureFlags.compactMapValues { (featureFlag) -> Any? in featureFlag.value }
     }
 
     private func value<T>(from featureFlag: FeatureFlag?, fallback: T) -> T {

@@ -144,7 +144,7 @@ final class LDClientSpec: QuickSpec {
         runModeSpec()
         streamingModeSpec()
         reportEventsSpec()
-        allFeatureFlagValuesSpec()
+        allFlagValuesSpec()
     }
 
     private func startSpec() {
@@ -2054,10 +2054,10 @@ final class LDClientSpec: QuickSpec {
         }
     }
 
-    private func allFeatureFlagValuesSpec() {
+    private func allFlagValuesSpec() {
         var testContext: TestContext!
         var featureFlagValues: [LDFlagKey: Any]?
-        describe("allFeatureFlagValues") {
+        describe("allFlagValues") {
             context("when client was started") {
                 var featureFlags: [LDFlagKey: FeatureFlag]!
                 beforeEach {
@@ -2065,7 +2065,7 @@ final class LDClientSpec: QuickSpec {
                     testContext.subject.start(mobileKey: Constants.mockMobileKey)
                     featureFlags = testContext.subject.user.flagStore.featureFlags
 
-                    featureFlagValues = testContext.subject.allFeatureFlagValues
+                    featureFlagValues = testContext.subject.allFlagValues
                 }
                 it("returns a matching dictionary of flag keys and values") {
                     expect(featureFlagValues?.count) == featureFlags.count - 1 //nil is omitted
@@ -2078,7 +2078,7 @@ final class LDClientSpec: QuickSpec {
                 beforeEach {
                     testContext = TestContext()
 
-                    featureFlagValues = testContext.subject.allFeatureFlagValues
+                    featureFlagValues = testContext.subject.allFlagValues
                 }
                 it("returns nil") {
                     expect(featureFlagValues).to(beNil())

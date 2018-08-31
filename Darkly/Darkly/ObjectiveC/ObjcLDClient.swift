@@ -516,9 +516,15 @@ public final class ObjcLDClient: NSObject {
         return ObjcLDDictionaryVariationValue(LDClient.shared.variationAndSource(forKey: key, fallback: fallback))
     }
 
-    //TODO: LD wants this capability public
-    @objc public var allFeatureFlagValues: [LDFlagKey: Any]? {
-        return LDClient.shared.allFeatureFlagValues
+    /**
+     Returns a dictionary with the flag keys and their values. If the LDClient is not started, returns nil.
+
+     The dictionary will not contain feature flags from the server with null values.
+
+     LDClient will not provide any source or change information, only flag keys and flag values. The client app should convert the feature flag value into the desired type.
+     */
+    @objc public var allFlagValues: [LDFlagKey: Any]? {
+        return LDClient.shared.allFlagValues
     }
 
     // MARK: - Feature Flag Updates
