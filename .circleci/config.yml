@@ -12,7 +12,7 @@ jobs:
       FL_OUTPUT_DIR: output
 
     macos:
-      xcode: '9.4.1'
+      xcode: '10.0.0'
 
     steps:
     - checkout

@@ -2,6 +2,11 @@
 
 All notable changes to the LaunchDarkly iOS SDK will be documented in this file. This project adheres to [Semantic Versioning](http://semver.org).
 
+## [2.13.5] - 2018-09-20
+### Changed
+- Repairs carthage build errors caused by higher fidelity checks in Xcode 10's new build engine.
+- Removes CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS from the podspec, allowing Xcode 10s default setting to be used
+
 ## [2.13.4] - 2018-08-23
 ### Changed
 - Update to DarklyEventSource `3.2.7`
