@@ -138,8 +138,10 @@
 
 @end
 
-
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdeprecated-implementations"
 @implementation LDConfigBuilder
+#pragma clang diagnostic pop
 
 - (id)init {
     self = [super init];

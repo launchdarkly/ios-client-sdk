@@ -51,7 +51,7 @@ $ brew install carthage
 To integrate LaunchDarkly into your Xcode project using Carthage, specify it in your `Cartfile`:
 
 ```ogdl
-github "launchdarkly/ios-client" "2.13.4"
+github "launchdarkly/ios-client" "2.13.5"
 ```
 
 Run `carthage` to build the framework and drag the built `Darkly.framework` into your Xcode project.
@@ -61,7 +61,7 @@ Quick setup
 
 1. Add the SDK to your `Podfile`:
 
-        pod 'LaunchDarkly', '2.13.4'
+        pod 'LaunchDarkly', '2.13.5'
 
 2. Import the LaunchDarkly client:
 
