@@ -2,9 +2,10 @@
 
 All notable changes to the LaunchDarkly iOS SDK will be documented in this file. This project adheres to [Semantic Versioning](http://semver.org).
 
-## [2.13.6] - 2018-10-04
+## [2.13.6] - 2018-10-05
 ### Fixed
 - LDClient's `updateUser` did not attempt to retrieve the new user's cached flag values.
+- Fixed defect preventing a user's feature flags from being cached correctly under certain conditions.
 
 ## [2.13.5] - 2018-09-23
 ### Changed
