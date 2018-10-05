@@ -96,7 +96,6 @@ NSString *const kTestMobileKey = @"testMobileKey";
     OCMStub([self.throttlerMock runThrottled:[OCMArg invokeBlock]]);
     [LDClient sharedInstance].throttler = self.throttlerMock;
 
-
     self.user = [LDUserModel stubWithKey:nil];
 
     self.userBuilderMock = OCMClassMock([LDUserBuilder class]);
@@ -782,31 +781,102 @@ NSString *const kTestMobileKey = @"testMobileKey";
     OCMVerifyAll(self.clientManagerMock);
 }
 
-- (void)testUpdateUserWithoutStart {
+- (void)testUpdateUser_withoutStart {
     [[self.clientManagerMock reject] updateUser];
     [[self.dataManagerMock reject] createIdentifyEventWithUser:[OCMArg any] config:[OCMArg any]];
+
     XCTAssertFalse([[LDClient sharedInstance] updateUser:[[LDUserBuilder alloc] init]]);
+
     [self.clientManagerMock verify];
     [self.dataManagerMock verify];
-    [self.clientManagerMock verify];
 }
 
--(void)testUpdateUserWithStart {
-    LDConfig *config = [[LDConfig alloc] initWithMobileKey:kTestMobileKey];
+- (void)testUpdateUser_withoutBuilder {
+    [[LDClient sharedInstance] start:self.config withUserBuilder:self.userBuilderMock];
+    [[self.clientManagerMock reject] updateUser];
+    [[self.dataManagerMock reject] createIdentifyEventWithUser:[OCMArg any] config:[OCMArg any]];
+
+    XCTAssertFalse([[LDClient sharedInstance] updateUser:nil]);
+
+    [self.clientManagerMock verify];
+    [self.dataManagerMock verify];
+}
+
+-(void)testUpdateUser_sameUser {
+    [[LDClient sharedInstance] start:self.config withUserBuilder:self.userBuilderMock];
+    //Configure the builder with the same user key, and an updated name
+    [[[self.userBuilderMock stub] andReturn:self.user.key] key];
+    NSString *newUserName = @"George Gershwin";
+    [[[self.userBuilderMock stub] andReturn:newUserName] name];
+    [[[self.userBuilderMock expect] andReturn:self.user] compareNewBuilder:[OCMArg checkWithBlock:^BOOL(id obj) {
+        if (![obj isKindOfClass:[LDUserBuilder class]]) {
+            return NO;
+        }
+        LDUserBuilder *userBuilder = obj;
+        self.user.name = userBuilder.name;  //Simulates the compare copying builder properties into the existing user
+        return [userBuilder isEqual:self.userBuilderMock];
+    }] withUser:self.user];
+    [[self.dataManagerMock expect] saveUser:self.user];
     [[self.clientManagerMock expect] updateUser];
-    LDUserBuilder *userBuilder = [[LDUserBuilder alloc] init];
-    userBuilder.key = [[NSUUID UUID] UUIDString];
     [[self.dataManagerMock expect] createIdentifyEventWithUser:[OCMArg checkWithBlock:^BOOL(id obj) {
-        if (![obj isKindOfClass:[LDUserModel class]]) { return NO; }
-        return [((LDUserModel*)obj).key isEqualToString:userBuilder.key];
-    }] config:[OCMArg checkWithBlock:^BOOL(id obj) {
-        if (![obj isKindOfClass:[LDConfig class]]) { return NO; }
-        return [((LDConfig*)obj).mobileKey isEqualToString:config.mobileKey];
-    }]];
-    [[LDClient sharedInstance] start:config withUserBuilder:nil];
+        if (![obj isKindOfClass:[LDUserModel class]]) {
+            return NO;
+        }
+        LDUserModel *user = obj;
+        return [user.key isEqualToString:self.user.key] && [user.name isEqualToString:newUserName];
+    }] config:self.config];
 
-    XCTAssertTrue([[LDClient sharedInstance] updateUser:userBuilder]);
+    XCTAssertTrue([[LDClient sharedInstance] updateUser:self.userBuilderMock]);
 
+    [self.userBuilderMock verify];
+    XCTAssertEqualObjects([LDClient sharedInstance].ldUser, self.user);
+    [self.clientManagerMock verify];
+    [self.dataManagerMock verify];
+}
+
+-(void)testUpdateUser_differentUser {
+    [[LDClient sharedInstance] start:self.config withUserBuilder:self.userBuilderMock];
+    LDUserModel *newUser = [LDUserModel stubWithKey:[[NSUUID UUID] UUIDString]];
+    self.userBuilderMock = nil; //Stop the originally set up builder from mocking because it's set to build into the existing user
+    id newUserBuilderMock = [OCMockObject niceMockForClass:[LDUserBuilder class]];
+    [[[newUserBuilderMock expect] andReturn:newUser] build];
+    [[[newUserBuilderMock stub] andReturn:newUser.key] key];    //Give the builder the key for the newUser to trigger the 'different user' part of updateUser
+    [[self.clientManagerMock expect] updateUser];
+    [[self.dataManagerMock expect] createIdentifyEventWithUser:[OCMArg checkWithBlock:^BOOL(id obj) {
+        if (![obj isKindOfClass:[LDUserModel class]]) {
+            return NO;
+        }
+        LDUserModel *user = obj;
+        return [user.key isEqualToString:newUser.key];
+    }] config:self.config];
+
+    XCTAssertTrue([[LDClient sharedInstance] updateUser:newUserBuilderMock]);
+
+    [newUserBuilderMock verify];
+    XCTAssertEqualObjects([LDClient sharedInstance].ldUser, newUser);
+    [self.clientManagerMock verify];
+    [self.dataManagerMock verify];
+}
+
+-(void)testUpdateUser_differentUser_builderKeyOmitted {
+    [[LDClient sharedInstance] start:self.config withUserBuilder:self.userBuilderMock];
+    LDUserModel *newUser = [LDUserModel stubWithKey:[[NSUUID UUID] UUIDString]];
+    self.userBuilderMock = nil; //Stop the originally set up builder from mocking because it's set to build into the existing user. Omit the key to trigger the 'different user' part of updateUser
+    id newUserBuilderMock = [OCMockObject niceMockForClass:[LDUserBuilder class]];
+    [[[newUserBuilderMock expect] andReturn:newUser] build];
+    [[self.clientManagerMock expect] updateUser];
+    [[self.dataManagerMock expect] createIdentifyEventWithUser:[OCMArg checkWithBlock:^BOOL(id obj) {
+        if (![obj isKindOfClass:[LDUserModel class]]) {
+            return NO;
+        }
+        LDUserModel *user = obj;
+        return [user.key isEqualToString:newUser.key];
+    }] config:self.config];
+
+    XCTAssertTrue([[LDClient sharedInstance] updateUser:newUserBuilderMock]);
+
+    [newUserBuilderMock verify];
+    XCTAssertEqualObjects([LDClient sharedInstance].ldUser, newUser);
     [self.clientManagerMock verify];
     [self.dataManagerMock verify];
 }

@@ -11,6 +11,7 @@
 #import "LDEventTrackingContext.h"
 #import "LDFlagConfigTracker.h"
 #import "NSDate+ReferencedDate.h"
+#import "NSThread+MainExecutable.h"
 
 int const kUserCacheSize = 5;
 
@@ -24,6 +25,7 @@ static NSString * const kFlagKey = @"flagkey";
 
 @implementation LDDataManager
 
+dispatch_queue_t saveUserQueue;
 dispatch_queue_t eventsQueue;
 
 + (id)sharedManager {
@@ -32,7 +34,8 @@ dispatch_queue_t eventsQueue;
     dispatch_once(&onceToken, ^{
         sharedDataManager = [[self alloc] init];
         sharedDataManager.eventsArray = [[NSMutableArray alloc] init];
-        eventsQueue = dispatch_queue_create("com.launchdarkly.EventQueue", NULL);
+        saveUserQueue = dispatch_queue_create("com.launchdarkly.dataManager.saveUserQueue", DISPATCH_QUEUE_SERIAL);
+        eventsQueue = dispatch_queue_create("com.launchdarkly.dataManager.eventQueue", DISPATCH_QUEUE_SERIAL);
     });
     return sharedDataManager;
 }
@@ -50,43 +53,51 @@ dispatch_queue_t eventsQueue;
 }
 
 -(void) saveUser: (LDUserModel *) user {
-    [self saveUser:user asDict:YES];
+    [self saveUser:user asDict:YES completion:nil];
 }
 
 -(void) saveUserDeprecated:(LDUserModel *)user {
-    [self saveUser:user asDict:NO];
+    [self saveUser:user asDict:NO completion:nil];
 }
 
--(void) saveUser:(LDUserModel *)user asDict:(BOOL)asDict {
-    NSMutableDictionary *userDictionary = [self retrieveUserDictionary];
-    if (userDictionary) {
-        LDUserModel *resultUser = [userDictionary objectForKey:user.key];
-        if (resultUser) {
-            // User is found
-            [self compareConfigForUser:resultUser withNewUser:user];
-            resultUser = user;
-            resultUser.updatedAt = [NSDate date];
+-(void) saveUser:(LDUserModel *)user asDict:(BOOL)asDict completion:(void (^)(void))completion {
+    LDUserModel *userCopy = [[LDUserModel alloc] initWithDictionary:[user dictionaryValueWithPrivateAttributesAndFlagConfig:YES]];      //Preserve the user while waiting to save on the saveQueue
+    dispatch_async(saveUserQueue, ^{
+        NSMutableDictionary *userDictionary = [self retrieveUserDictionary];
+        if (userDictionary) {
+            LDUserModel *resultUser = [userDictionary objectForKey:userCopy.key];
+            if (resultUser) {
+                // User is found
+                [self compareConfigForUser:resultUser withNewUser:userCopy];
+                userCopy.updatedAt = [NSDate date];
+                userDictionary[userCopy.key] = userCopy;
+            } else {
+                // User is not found so need to create and purge old users
+                [self compareConfigForUser:nil withNewUser:userCopy];
+                [self purgeOldUser: userDictionary];
+                userCopy.updatedAt = [NSDate date];
+                userDictionary[userCopy.key] = userCopy;
+            }
         } else {
-            // User is not found so need to create and purge old users
-            [self compareConfigForUser:nil withNewUser:user];
-            [self purgeOldUser: userDictionary];
-            user.updatedAt = [NSDate date];
-            [userDictionary setObject:user forKey:user.key];
+            // No Dictionary exists so create
+            [self compareConfigForUser:nil withNewUser:userCopy];
+            userDictionary = [[NSMutableDictionary alloc] init];
+            userDictionary[userCopy.key] = userCopy;
         }
-    } else {
-        // No Dictionary exists so create
-        [self compareConfigForUser:nil withNewUser:user];
-        userDictionary = [[NSMutableDictionary alloc] init];
-        [userDictionary setObject:user forKey:user.key];
-    }
-    [userDictionary setObject:user forKey:user.key];
-    if (asDict) {
-        [self storeUserDictionary:userDictionary];
-    }
-    else{
-        [self deprecatedStoreUserDictionary:userDictionary];
-    }
-    
+        userDictionary[userCopy.key] = userCopy;
+        if (asDict) {
+            [self storeUserDictionary:userDictionary];
+        }
+        else{
+            [self deprecatedStoreUserDictionary:userDictionary];
+        }
+        DEBUG_LOG(@"LDDataManager saved user:%@ %@", userCopy.key, userCopy);
+        if (completion != nil) {
+            [NSThread performOnMainThread:^{
+                completion();
+            }];
+        }
+    });
 }
 
 -(LDUserModel *)findUserWithkey: (NSString *)key {
@@ -95,6 +106,7 @@ dispatch_queue_t eventsQueue;
     if (userDictionary) {
         resultUser = [userDictionary objectForKey:key];
         if (resultUser) {
+            DEBUG_LOG(@"LDDataManager found cached user:%@ %@", resultUser.key, resultUser);
             resultUser.updatedAt = [NSDate date];
         }
     }

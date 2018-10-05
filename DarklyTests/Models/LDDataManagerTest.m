@@ -27,6 +27,10 @@
 
 NSString * const kMobileKeyMock = @"LDDataManagerTest.mobileKeyMock";
 
+@interface LDDataManager (LDDataManagerTest)
+-(void)saveUser:(LDUserModel*)user asDict:(BOOL)asDict completion:(void (^)(void))completion;
+@end
+
 @interface LDDataManagerTest : DarklyXCTestCase
 @property (nonatomic, strong) id clientMock;
 @property (nonatomic, strong) id eventModelMock;
@@ -412,50 +416,60 @@ NSString * const kMobileKeyMock = @"LDDataManagerTest.mobileKeyMock";
     [self waitForExpectations:@[expectation] timeout:1];
 }
 
--(void)testFindOrCreateUser {
-    NSString *userKey = @"thisisgus";
-    LDUserModel *aUser = [[LDUserModel alloc] init];
-    aUser.key = userKey;
-    aUser.email = @"gus@anemail.com";
-    aUser.updatedAt = [NSDate date];
-    aUser.flagConfig = user.flagConfig;
-    [[LDDataManager sharedManager] saveUser: aUser];
+-(void)testSaveAndFindUser {
+    XCTestExpectation *userSavedExpectation = [self expectationWithDescription:@"LDDataManagerTest.testSaveAndFindUser.userSavedExpectation"];
+
+    [[LDDataManager sharedManager] saveUser:self.user asDict:YES completion:^{
+        [userSavedExpectation fulfill];
+    }];
+    [self waitForExpectations:@[userSavedExpectation] timeout:1.0];
+    LDUserModel *foundUser = [[LDDataManager sharedManager] findUserWithkey:self.user.key];
     
-    LDUserModel *foundAgainUser = [[LDDataManager sharedManager] findUserWithkey: userKey];
-    
-    XCTAssertNotNil(foundAgainUser);
-    XCTAssertEqualObjects(aUser.email, foundAgainUser.email);
+    XCTAssertNotNil(foundUser);
+    XCTAssertTrue([foundUser isEqual:self.user ignoringAttributes:@[kUserAttributeUpdatedAt]]);
 }
 
--(void) testPurgeUsers {
-    NSString *baseUserKey = @"gus";
-    NSString *baseUserEmail = @"gus@email.com";
-    
+-(void)testSaveAndFindUser_backwardCompatibility {
+    XCTestExpectation *userSavedExpectation = [self expectationWithDescription:@"LDDataManagerTest.testSaveAndFindUser.userSavedExpectation"];
+
+    [[LDDataManager sharedManager] saveUser:self.user asDict:NO completion:^{
+        [userSavedExpectation fulfill];
+    }];
+    [self waitForExpectations:@[userSavedExpectation] timeout:1.0];
+    LDUserModel *foundUser = [[LDDataManager sharedManager] findUserWithkey:self.user.key];
+
+    XCTAssertNotNil(foundUser);
+    XCTAssertTrue([foundUser isEqual:self.user ignoringAttributes:@[kUserAttributeUpdatedAt]]);
+}
+
+-(void)testSaveAndFindUsers_overCapacity {
+    NSMutableArray *users = [NSMutableArray arrayWithCapacity:kUserCacheSize + 3];
     for(int index = 0; index < kUserCacheSize + 3; index++) {
-        LDUserModel *aUser = [[LDUserModel alloc] init];
-        aUser.key = [NSString stringWithFormat: @"%@%d", baseUserKey, index];
-        aUser.email = [NSString stringWithFormat: @"%@%d", baseUserEmail, index];;
-        
-        NSTimeInterval secondsInXHours = (index+1) * 60 * 60 * 24;
-        NSDate *dateInXHours = [[NSDate date] dateByAddingTimeInterval:secondsInXHours];
-        aUser.updatedAt = dateInXHours;
-        
-        [[LDDataManager sharedManager] saveUser: aUser];
+        LDUserModel *user = [LDUserModel stubWithKey:[[NSUUID UUID] UUIDString]];
+        //Keep users ordered most recent first
+        if (users.count == 0) {
+            [users addObject:user];
+        } else {
+            [users insertObject:user atIndex:0];
+        }
+        XCTestExpectation *userSavedExpectation = [self expectationWithDescription:[NSString stringWithFormat:@"LDDataManagerTest.testSaveAndFindUser.userSavedExpectation.%d", index]];
+
+        [[LDDataManager sharedManager] saveUser:user asDict:YES completion:^{
+            [userSavedExpectation fulfill];
+        }];
+
+        [self waitForExpectations:@[userSavedExpectation] timeout:1.0];
+        for(int usersIndex = 0; usersIndex < users.count; usersIndex++) {
+            LDUserModel *targetUser = users[usersIndex];
+            LDUserModel *foundUser = [[LDDataManager sharedManager] findUserWithkey:targetUser.key];
+            if (usersIndex < kUserCacheSize) {
+                XCTAssertNotNil(foundUser);
+                XCTAssertTrue([foundUser isEqual:targetUser ignoringAttributes:@[kUserAttributeUpdatedAt]]);
+            } else {
+                XCTAssertNil(foundUser);
+            }
+        }
     }
-    
-    XCTAssertEqual([[[LDDataManager sharedManager] retrieveUserDictionary] count],kUserCacheSize);
-    NSString *firstCreatedKey = [NSString stringWithFormat: @"%@%d", baseUserKey, 0];
-    LDUserModel *firstCreatedUser = [[LDDataManager sharedManager] findUserWithkey:firstCreatedKey];
-    XCTAssertNil(firstCreatedUser);
-    NSString *secondCreatedKey = [NSString stringWithFormat: @"%@%d", baseUserKey, 1];
-    LDUserModel *secondCreatedUser = [[LDDataManager sharedManager] findUserWithkey:secondCreatedKey];
-    XCTAssertNil(secondCreatedUser);
-    NSString *thirdCreatedKey = [NSString stringWithFormat: @"%@%d", baseUserKey, 2];
-    LDUserModel *thirdCreatedUser = [[LDDataManager sharedManager] findUserWithkey:thirdCreatedKey];
-    XCTAssertNil(thirdCreatedUser);
-    NSString *fourthCreatedKey = [NSString stringWithFormat: @"%@%d", baseUserKey, 3];
-    LDUserModel *fourthCreatedUser = [[LDDataManager sharedManager] findUserWithkey:fourthCreatedKey];
-    XCTAssertNotNil(fourthCreatedUser);
 }
 
 -(void)testCreateEventAfterCapacityReached {

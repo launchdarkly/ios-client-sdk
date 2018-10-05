@@ -96,7 +96,13 @@
         return NO;
     }
 
-    self.ldUser = [LDUserBuilder compareNewBuilder:builder withUser:self.ldUser];
+    if (builder.key.length > 0 && [builder.key isEqualToString:self.ldUser.key]) {
+        self.ldUser = [LDUserBuilder compareNewBuilder:builder withUser:self.ldUser];
+        [[LDDataManager sharedManager] saveUser:self.ldUser];
+    } else {
+        self.ldUser = [builder build];
+    }
+
     [[LDClientManager sharedInstance] updateUser];
     return YES;
 }

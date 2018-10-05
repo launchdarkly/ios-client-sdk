@@ -477,33 +477,6 @@
     XCTAssertTrue([user isEqual:[LDUserModel userFrom:jsonUser] ignoringAttributes:ignoredProperties]);
 }
 
-- (void)testUserSave {
-    NSString *userKey = [[NSUUID UUID] UUIDString];
-    NSMutableDictionary *userDict = [self userDictionaryWithUserKey:userKey userName:@"John Doe" customDictionary:[self customDictionary]];
-    [self validateUserModelIsEqualBehaviorUsingUserDictionary:userDict];
-    LDUserModel *user = [[LDUserModel alloc] initWithDictionary:userDict];
-    
-    [[LDDataManager sharedManager] saveUser:user];
-    
-    LDUserModel *retrievedUser = [[LDDataManager sharedManager] findUserWithkey:userKey];
-    XCTAssertTrue([user isEqual:retrievedUser ignoringAttributes:@[@"updatedAt"]]);
-}
-
--(void)testUserBackwardsCompatibility {
-    NSString *userKey = [[NSUUID UUID] UUIDString];
-    NSMutableDictionary *userDict = [self userDictionaryWithUserKey:userKey userName:@"John Doe" customDictionary:[self customDictionary]];
-    LDUserModel *user = [[LDUserModel alloc] initWithDictionary:userDict];
-    [self validateUserModelIsEqualBehaviorUsingUserDictionary:userDict];
-
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wdeprecated-declarations"
-    [[LDDataManager sharedManager] saveUserDeprecated:user];
-#pragma clang diagnostic pop
-    
-    LDUserModel *retrievedUser = [[LDDataManager sharedManager] findUserWithkey:userKey];
-    XCTAssertTrue([user isEqual:retrievedUser ignoringAttributes:@[@"updatedAt"]]);
-}
-
 - (void)testResetTracker {
     LDUserModel *subject = [LDUserModel stubWithKey:[[NSUUID UUID] UUIDString]];
     LDMillisecond startDateMillis = [[NSDate date] millisSince1970];
