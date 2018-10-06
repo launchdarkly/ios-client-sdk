@@ -41,7 +41,6 @@ extern int const kUserCacheSize;
                   defaultFlagValue:(id)defaultFlagValue
                               user:(LDUserModel*)user
                             config:(LDConfig*)config;
--(void)purgeOldUser: (NSMutableDictionary *)dictionary;
 -(void)saveUser: (LDUserModel *) user;
 -(void)saveUserDeprecated:(LDUserModel *)user __deprecated_msg("Use saveUser: instead");
 -(void)deleteProcessedEvents: (NSArray *) processedJsonArray;
