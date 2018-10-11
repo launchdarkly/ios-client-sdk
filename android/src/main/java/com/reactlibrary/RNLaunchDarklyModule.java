@@ -22,13 +22,11 @@ import java.util.Collections;
 
 public class RNLaunchDarklyModule extends ReactContextBaseJavaModule {
 
-  private final ReactApplicationContext reactContext;
   private LDClient ldClient;
   private LDUser user;
 
   public RNLaunchDarklyModule(ReactApplicationContext reactContext) {
     super(reactContext);
-    this.reactContext = reactContext;
   }
 
   @Override
@@ -72,6 +70,12 @@ public class RNLaunchDarklyModule extends ReactContextBaseJavaModule {
     }
 
     user = userBuilder.build();
+
+    ReactApplicationContext reactContext = getReactApplicationContext();
+    if (reactContext == null) {
+      Log.d("RNLaunchDarklyModule", "Couldn't init RNLaunchDarklyModule - reactContext was null");
+      return;
+    }
 
     Application application = reactContext.getCurrentActivity().getApplication();
 
