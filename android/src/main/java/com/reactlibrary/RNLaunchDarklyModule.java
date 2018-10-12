@@ -71,13 +71,13 @@ public class RNLaunchDarklyModule extends ReactContextBaseJavaModule {
 
     user = userBuilder.build();
 
-    ReactApplicationContext reactContext = getReactApplicationContext();
-    if (reactContext == null) {
-      Log.d("RNLaunchDarklyModule", "Couldn't init RNLaunchDarklyModule - reactContext was null");
+    Activity currentActivity = getCurrentActivity();
+    if (currentActivity == null) {
+      Log.d("RNLaunchDarklyModule", "Couldn't init RNLaunchDarklyModule - currentActivity was null");
       return;
     }
 
-    Application application = reactContext.getCurrentActivity().getApplication();
+    Application application = currentActivity.getApplication();
 
     if (application != null) {
       ldClient = LDClient.init(application, ldConfig, user, 5);
