@@ -120,8 +120,6 @@ dispatch_queue_t notificationQueue;
     NSURLSessionConfiguration *configuration = [NSURLSessionConfiguration defaultSessionConfiguration];
     NSURLSession *defaultSession = [NSURLSession sessionWithConfiguration:configuration delegate:nil delegateQueue:nil];
     
-    dispatch_semaphore_t semaphore = dispatch_semaphore_create(0);
-
     NSURLSessionDataTask *dataTask = [defaultSession dataTaskWithRequest:request completionHandler:^(NSData * _Nullable data, NSURLResponse * _Nullable response, NSError * _Nullable error) {
         if ([response isUnauthorizedHTTPResponse]) {
             //Calling postNotification on the task completion handler thread causes the LDRequestManager to hang in some situations. Dispatching the postNotification onto the notificationQueue avoids that hang.
@@ -133,12 +131,9 @@ dispatch_queue_t notificationQueue;
         if (completionHandler) {
             completionHandler(data, response, error);
         }
-        dispatch_semaphore_signal(semaphore);
     }];
     
     [dataTask resume];
-    
-    dispatch_semaphore_wait(semaphore, DISPATCH_TIME_FOREVER);
 }
 
 -(void)performEventRequest:(NSArray *)eventDictionaries {
@@ -159,8 +154,6 @@ dispatch_queue_t notificationQueue;
     }
 
     DEBUG_LOGX(@"RequestManager syncing events to server");
-    
-    dispatch_semaphore_t semaphore = dispatch_semaphore_create(0);
     
     NSURLSession *defaultSession = [NSURLSession sharedSession];
     NSString *requestUrl = [eventsUrl stringByAppendingString:kEventUrl];
@@ -183,7 +176,6 @@ dispatch_queue_t notificationQueue;
             });
         }
 
-        dispatch_semaphore_signal(semaphore);
         dispatch_async(dispatch_get_main_queue(), ^{
             BOOL processedEvents = !error;
             [self.delegate processedEvents:processedEvents jsonEventArray:eventDictionaries responseDate:[response headerDate]];
@@ -191,8 +183,6 @@ dispatch_queue_t notificationQueue;
     }];
 
     [dataTask resume];
-
-    dispatch_semaphore_wait(semaphore, DISPATCH_TIME_FOREVER);
 }
 
 #pragma mark - requests

@@ -2,6 +2,10 @@
 
 All notable changes to the LaunchDarkly iOS SDK will be documented in this file. This project adheres to [Semantic Versioning](http://semver.org).
 
+## [2.13.7] - 2018-10-15
+### Changed
+- Initializing LDClient in polling mode no longer blocks the calling thread.
+
 ## [2.13.6] - 2018-10-05
 ### Fixed
 - LDClient's `updateUser` did not attempt to retrieve the new user's cached flag values.
