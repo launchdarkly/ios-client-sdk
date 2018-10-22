@@ -51,5 +51,11 @@
         "variation": 2,
         "version": 2,
         "flagVersion": 1
+    },
+    "isADouble": {
+        "value": 2.71828,
+        "variation": 2,
+        "version": 2,
+        "flagVersion": 1
     }
 }

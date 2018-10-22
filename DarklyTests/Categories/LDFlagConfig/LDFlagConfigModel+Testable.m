@@ -20,6 +20,19 @@
     return [LDFlagConfigModel flagConfigFromJsonFileNamed:fileName eventTrackingContext:nil omitKey:nil];
 }
 
++(instancetype)flagConfigWithOnlyFlagValuesFromJsonFileNamed:(NSString *)fileName {
+    LDFlagConfigModel *flagConfigModel = [LDFlagConfigModel flagConfigFromJsonFileNamed:fileName];
+    NSDictionary<NSString*, LDFlagConfigValue*> *featuresJsonDictionary = flagConfigModel.featuresJsonDictionary;
+    NSMutableDictionary *allFlagValues = [NSMutableDictionary dictionaryWithCapacity:featuresJsonDictionary.count];
+    for (NSString *flagKey in featuresJsonDictionary.allKeys) {
+        id flagValue = featuresJsonDictionary[flagKey].value;
+        allFlagValues[flagKey] = flagValue ?: [NSNull null];
+    }
+    flagConfigModel.featuresJsonDictionary = [allFlagValues copy];
+
+    return flagConfigModel;
+}
+
 +(instancetype)flagConfigFromJsonFileNamed:(NSString *)fileName omitKey:(NSString*)omitKey {
     return [LDFlagConfigModel flagConfigFromJsonFileNamed:fileName eventTrackingContext:nil omitKey:omitKey];
 }
