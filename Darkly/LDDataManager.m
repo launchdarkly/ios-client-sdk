@@ -156,6 +156,9 @@ dispatch_queue_t eventsQueue;
         else{
             decodedUser = [[LDUserModel alloc] initWithDictionary:[encodedDictionary objectForKey:key]];
         }
+        if (decodedUser == nil) {
+            continue;
+        }
         [retrievalDictionary setObject:decodedUser forKey:key];
     }
     return retrievalDictionary;

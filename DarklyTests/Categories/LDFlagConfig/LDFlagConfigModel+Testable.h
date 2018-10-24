@@ -13,6 +13,7 @@
 @interface LDFlagConfigModel(Testable)
 
 +(instancetype)flagConfigFromJsonFileNamed:(NSString *)fileName;
++(instancetype)flagConfigWithOnlyFlagValuesFromJsonFileNamed:(NSString *)fileName;
 +(instancetype)flagConfigFromJsonFileNamed:(NSString *)fileName omitKey:(NSString*)key;
 +(instancetype)flagConfigFromJsonFileNamed:(NSString *)fileName eventTrackingContext:(LDEventTrackingContext*)eventTrackingContext;
 +(instancetype)flagConfigFromJsonFileNamed:(NSString *)fileName eventTrackingContext:(LDEventTrackingContext*)eventTrackingContext omitKey:(NSString*)key;

@@ -26,11 +26,18 @@ NSInteger const kLDFlagConfigValueItemDoesNotExist = -1;
 }
 
 -(instancetype)initWithObject:(id)object {
-    if (!object) { return nil; }
-    if (![object isKindOfClass:[NSDictionary class]]) { return nil; }
+    if (object == nil) { return nil; }
     if (!(self = [super init])) { return nil; }
+    if (![object isKindOfClass:[NSDictionary class]]) {
+        //The object is not a LDFlagConfigValue dictionary. Assume that it's from a dictionary of flagKey: flagValue elements, as it would be in an older user cache
+        self.value = object;
+        self.modelVersion = kLDFlagConfigValueItemDoesNotExist;
+        self.variation = kLDFlagConfigValueItemDoesNotExist;
+        self.flagVersion = nil;
+        self.eventTrackingContext = nil;
+        return self;
+    }
     NSDictionary *flagConfigValueDictionary = object;
-    self.value = flagConfigValueDictionary[kLDFlagConfigValueKeyValue] ?: [NSNull null];
     self.modelVersion = kLDFlagConfigValueItemDoesNotExist;
     if (flagConfigValueDictionary[kLDFlagConfigValueKeyVersion] != nil && [flagConfigValueDictionary[kLDFlagConfigValueKeyVersion] isKindOfClass:[NSNumber class]]) {
         self.modelVersion = [flagConfigValueDictionary[kLDFlagConfigValueKeyVersion] integerValue];
@@ -42,6 +49,17 @@ NSInteger const kLDFlagConfigValueItemDoesNotExist = -1;
     self.variation = kLDFlagConfigValueItemDoesNotExist;
     if (flagConfigValueDictionary[kLDFlagConfigValueKeyVariation] != nil && [flagConfigValueDictionary[kLDFlagConfigValueKeyVariation] isKindOfClass:[NSNumber class]]) {
         self.variation = [flagConfigValueDictionary[kLDFlagConfigValueKeyVariation] integerValue];
+    }
+    self.value = flagConfigValueDictionary[kLDFlagConfigValueKeyValue];
+    if (self.value == nil) {
+        //If the value isn't in the dictionary, then the dictionary might not be a flagConfigValue dictionary, or the value might just be missing. Check other elements to decide.
+        if (self.modelVersion != kLDFlagConfigValueItemDoesNotExist || self.flagVersion != nil || self.variation != kLDFlagConfigValueItemDoesNotExist) {
+            //At least one other item in a LDFlagConfigValue dictionary exists
+            self.value = [NSNull null];
+        } else {
+            //None of the other items in a LDFlagConfigValue dictionary exist. Assume the dictionary is the flag value
+            self.value = flagConfigValueDictionary;
+        }
     }
     self.eventTrackingContext = [LDEventTrackingContext contextWithObject:object];
 

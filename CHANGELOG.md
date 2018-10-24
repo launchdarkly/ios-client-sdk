@@ -2,6 +2,10 @@
 
 All notable changes to the LaunchDarkly iOS SDK will be documented in this file. This project adheres to [Semantic Versioning](http://semver.org).
 
+## [2.13.8] - 2018-10-23
+### Fixed
+- Fixed defect preventing feature flags cached prior to version 2.11.0 from restoring correctly and possibly crashing
+
 ## [2.13.7] - 2018-10-15
 ### Changed
 - Initializing LDClient in polling mode no longer blocks the calling thread.
