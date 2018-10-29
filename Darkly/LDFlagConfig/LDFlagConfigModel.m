@@ -61,8 +61,15 @@ NSString * const kLDFlagConfigModelKeyKey = @"key";
     NSMutableDictionary *flagConfigDictionaryValues = [NSMutableDictionary dictionaryWithCapacity:featuresJsonDictionary.count];
     for (NSString *key in featuresJsonDictionary.allKeys) {
         LDFlagConfigValue *flagConfigValue = featuresJsonDictionary[key];
-        if (!includeNulls && [flagConfigValue.value isKindOfClass:[NSNull class]]) { continue; }
-        flagConfigDictionaryValues[key] = [flagConfigValue dictionaryValue];
+        if (![flagConfigValue isKindOfClass:[LDFlagConfigValue class]]) {
+            DEBUG_LOG(@"LDFlagConfigModel dictionaryValueIncludeNulls: found an invalid value for key:%@. Skipping without putting the value into the dictionary.", key);
+            continue;   //The value coming out of the featuresJsonDictionary is not a LDFlagConfigValue. Skip it.
+        }
+        if (!includeNulls && [flagConfigValue.value isKindOfClass:[NSNull class]]) {
+            continue;
+        }
+        NSDictionary *flagConfigValueDictionary = [flagConfigValue dictionaryValue];
+        flagConfigDictionaryValues[key] = flagConfigValueDictionary;
     }
     if (!includeNulls) {
         [flagConfigDictionaryValues removeNullValues];  //Redact nulls out of values that are dictionaries
