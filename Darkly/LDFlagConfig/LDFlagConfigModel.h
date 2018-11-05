@@ -23,8 +23,8 @@
 -(nullable id)flagValueForFlagKey:(nonnull NSString*)flagKey;
 -(NSInteger)flagModelVersionForFlagKey:(nonnull NSString*)flagKey;
 
--(void)addOrReplaceFromDictionary:(nullable NSDictionary*)patchEvent;
--(void)deleteFromDictionary:(nullable NSDictionary*)deleteEvent;
+-(void)addOrReplaceFromDictionary:(nullable NSDictionary*)eventDictionary;
+-(void)deleteFromDictionary:(nullable NSDictionary*)eventDictionary;
 
 -(BOOL)isEqualToConfig:(nullable LDFlagConfigModel*)otherConfig;
 -(BOOL)hasFeaturesEqualToDictionary:(nullable NSDictionary*)otherDictionary;
