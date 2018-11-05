@@ -2,10 +2,10 @@
 
 All notable changes to the LaunchDarkly iOS SDK will be documented in this file. This project adheres to [Semantic Versioning](http://semver.org).
 
-## [2.13.9] - 2018-10-31
+## [2.13.9] - 2018-11-05
 ### Fixed
-- Fixed defect causing a crash when unknown data exists in a feature flag cache
-- Renamed SSE patch and delete handling parameters to avoid the use of Objective-C++ reserved words.
+- Fixed defect causing a crash when unknown data exists in a feature flag cache.
+- Renamed function parameters to avoid the use of Objective-C++ reserved words.
 
 ## [2.13.8] - 2018-10-23
 ### Fixed
