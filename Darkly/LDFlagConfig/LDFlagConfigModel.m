@@ -61,8 +61,15 @@ NSString * const kLDFlagConfigModelKeyKey = @"key";
     NSMutableDictionary *flagConfigDictionaryValues = [NSMutableDictionary dictionaryWithCapacity:featuresJsonDictionary.count];
     for (NSString *key in featuresJsonDictionary.allKeys) {
         LDFlagConfigValue *flagConfigValue = featuresJsonDictionary[key];
-        if (!includeNulls && [flagConfigValue.value isKindOfClass:[NSNull class]]) { continue; }
-        flagConfigDictionaryValues[key] = [flagConfigValue dictionaryValue];
+        if (![flagConfigValue isKindOfClass:[LDFlagConfigValue class]]) {
+            DEBUG_LOG(@"LDFlagConfigModel dictionaryValueIncludeNulls: found an invalid value for key:%@. Skipping without putting the value into the dictionary.", key);
+            continue;   //The value coming out of the featuresJsonDictionary is not a LDFlagConfigValue. Skip it.
+        }
+        if (!includeNulls && [flagConfigValue.value isKindOfClass:[NSNull class]]) {
+            continue;
+        }
+        NSDictionary *flagConfigValueDictionary = [flagConfigValue dictionaryValue];
+        flagConfigDictionaryValues[key] = flagConfigValueDictionary;
     }
     if (!includeNulls) {
         [flagConfigDictionaryValues removeNullValues];  //Redact nulls out of values that are dictionaries
@@ -97,9 +104,9 @@ NSString * const kLDFlagConfigModelKeyKey = @"key";
     return featureValue.modelVersion;
 }
 
--(void)addOrReplaceFromDictionary:(NSDictionary*)patch {
-    NSString *flagKey = patch[kLDFlagConfigModelKeyKey];
-    LDFlagConfigValue *patchedFlagConfigValue = [LDFlagConfigValue flagConfigValueWithObject:patch];
+-(void)addOrReplaceFromDictionary:(NSDictionary*)eventDictionary {
+    NSString *flagKey = eventDictionary[kLDFlagConfigModelKeyKey];
+    LDFlagConfigValue *patchedFlagConfigValue = [LDFlagConfigValue flagConfigValueWithObject:eventDictionary];
     if (![self shouldApplyPatch:patchedFlagConfigValue forFlagKey:flagKey]) { return; }
 
     NSMutableDictionary *updatedFlagConfig = [NSMutableDictionary dictionaryWithDictionary:self.featuresJsonDictionary];
@@ -117,11 +124,11 @@ NSString * const kLDFlagConfigModelKeyKey = @"key";
     return patchedFlagConfigValue.modelVersion > [self flagModelVersionForFlagKey:flagKey];
 }
 
--(void)deleteFromDictionary:(NSDictionary*)delete {
-    NSString *flagKey = delete[kLDFlagConfigModelKeyKey];
+-(void)deleteFromDictionary:(NSDictionary*)eventDictionary {
+    NSString *flagKey = eventDictionary[kLDFlagConfigModelKeyKey];
     if (flagKey.length == 0) { return; }
 
-    id flagVersionObject = delete[kLDFlagConfigValueKeyVersion];
+    id flagVersionObject = eventDictionary[kLDFlagConfigValueKeyVersion];
     if (!flagVersionObject || ![flagVersionObject isKindOfClass:[NSNumber class]]) { return; }
     NSInteger flagVersion = [(NSNumber*)flagVersionObject integerValue];
     if ([self doesFlagConfigValueExistForFlagKey:flagKey] && flagVersion <= [self flagModelVersionForFlagKey:flagKey]) { return; }

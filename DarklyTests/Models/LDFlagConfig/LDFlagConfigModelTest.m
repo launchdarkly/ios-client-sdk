@@ -48,6 +48,25 @@ extern NSString *const kLDFlagConfigModelKeyKey;
     }
 }
 
+-(void)testInitWithDictionary_nonConfigValues {
+    LDFlagConfigModel *targetFlagConfigModel = [LDFlagConfigModel flagConfigFromJsonFileNamed:@"featureFlags"];
+    LDFlagConfigModel *flagConfigModel = [LDFlagConfigModel flagConfigWithOnlyFlagValuesFromJsonFileNamed:@"featureFlags"];
+
+    LDFlagConfigModel *restoredFlagConfigModel = [[LDFlagConfigModel alloc] initWithDictionary:flagConfigModel.featuresJsonDictionary];
+
+    XCTAssertEqualObjects([NSSet setWithArray:restoredFlagConfigModel.featuresJsonDictionary.allKeys], [NSSet setWithArray:targetFlagConfigModel.featuresJsonDictionary.allKeys]);
+    for (NSString *flagKey in targetFlagConfigModel.featuresJsonDictionary.allKeys) {
+        LDFlagConfigValue *targetFlagConfigValue = [targetFlagConfigModel flagConfigValueForFlagKey:flagKey];
+        LDFlagConfigValue *flagConfigValue = [restoredFlagConfigModel flagConfigValueForFlagKey:flagKey];
+
+        XCTAssertEqualObjects(flagConfigValue.value, targetFlagConfigValue.value);
+        XCTAssertEqual(flagConfigValue.variation, kLDFlagConfigValueItemDoesNotExist);
+        XCTAssertNil(flagConfigValue.flagVersion);
+        XCTAssertEqual(flagConfigValue.modelVersion, kLDFlagConfigValueItemDoesNotExist);
+        XCTAssertNil(flagConfigValue.eventTrackingContext);
+    }
+}
+
 -(void)testDictionaryValue_includeNullValues {
     LDFlagConfigModel *subject = [LDFlagConfigModel flagConfigFromJsonFileNamed:@"featureFlags"];
 
@@ -69,22 +88,15 @@ extern NSString *const kLDFlagConfigModelKeyKey;
 }
 
 -(void)testDictionaryValue_nonConfigValues {
-    LDFlagConfigModel *targetFlagConfigModel = [LDFlagConfigModel flagConfigFromJsonFileNamed:@"featureFlags"];
     LDFlagConfigModel *flagConfigModel = [LDFlagConfigModel flagConfigWithOnlyFlagValuesFromJsonFileNamed:@"featureFlags"];
 
-    LDFlagConfigModel *restoredFlagConfigModel = [[LDFlagConfigModel alloc] initWithDictionary:flagConfigModel.featuresJsonDictionary];
+    NSDictionary *flagConfigModelDictionary = [flagConfigModel dictionaryValueIncludeNulls:NO];
 
-    XCTAssertEqualObjects([NSSet setWithArray:restoredFlagConfigModel.featuresJsonDictionary.allKeys], [NSSet setWithArray:targetFlagConfigModel.featuresJsonDictionary.allKeys]);
-    for (NSString *flagKey in targetFlagConfigModel.featuresJsonDictionary.allKeys) {
-        LDFlagConfigValue *targetFlagConfigValue = [targetFlagConfigModel flagConfigValueForFlagKey:flagKey];
-        LDFlagConfigValue *flagConfigValue = [restoredFlagConfigModel flagConfigValueForFlagKey:flagKey];
-
-        XCTAssertEqualObjects(flagConfigValue.value, targetFlagConfigValue.value);
-        XCTAssertEqual(flagConfigValue.variation, kLDFlagConfigValueItemDoesNotExist);
-        XCTAssertNil(flagConfigValue.flagVersion);
-        XCTAssertEqual(flagConfigValue.modelVersion, kLDFlagConfigValueItemDoesNotExist);
-        XCTAssertNil(flagConfigValue.eventTrackingContext);
+    XCTAssertNotNil(flagConfigModelDictionary);
+    if (flagConfigModelDictionary == nil) {
+        return;
     }
+    XCTAssertTrue(flagConfigModelDictionary.count == 0);
 }
 
 -(void)testFlagConfigValueForFlagKey {
