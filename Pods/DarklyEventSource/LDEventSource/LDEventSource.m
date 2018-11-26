@@ -155,10 +155,13 @@ didReceiveResponse:(NSURLResponse *)response completionHandler:(void (^)(NSURLSe
 - (void)URLSession:(NSURLSession *)session dataTask:(NSURLSessionDataTask *)dataTask didReceiveData:(NSData *)data
 {
     NSString *eventString = [[NSString alloc] initWithData:data encoding:NSUTF8StringEncoding];
-    [self.eventStringAccumulator accumulateEventStringWithString:eventString];
-    if ([self.eventStringAccumulator isReadyToParseEvent]) {
-        [self parseEventString:self.eventStringAccumulator.eventString];
-        [self.eventStringAccumulator reset];
+    @synchronized(self) {
+        [self.eventStringAccumulator accumulateEventStringWithString:eventString];
+        if ([self.eventStringAccumulator isReadyToParseEvent]) {
+            NSString *accumulatedEventString = [self.eventStringAccumulator.eventString copy];
+            [self.eventStringAccumulator reset];
+            [self parseEventString:accumulatedEventString];
+        }
     }
 }
 
