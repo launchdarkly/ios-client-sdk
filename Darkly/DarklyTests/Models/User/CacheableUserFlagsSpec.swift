@@ -38,7 +38,7 @@ final class CacheableUserFlagsSpec: QuickSpec {
 
         describe("init with user") {
             var user: LDUser!
-            var flagStoreMock: FlagMaintainingMock! { return user.flagStore as! FlagMaintainingMock }
+            var flagStoreMock: FlagMaintainingMock! { return (user.flagStore as! FlagMaintainingMock) }
             var userFlags: [LDFlagKey: Any]? { return flagStoreMock.featureFlags }
 
             beforeEach {
