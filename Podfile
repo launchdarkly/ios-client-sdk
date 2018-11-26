@@ -29,5 +29,5 @@ target 'DarklyTests' do
     pod 'OHHTTPStubs/Swift', '6.1.0'
     pod 'Quick', '1.3.1'
     pod 'Nimble', '7.1.3'
-    pod 'Sourcery', '0.13.1'
+    pod 'Sourcery', '0.15.0'
 end
