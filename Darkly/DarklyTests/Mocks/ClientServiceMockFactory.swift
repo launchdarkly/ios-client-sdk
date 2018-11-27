@@ -7,6 +7,7 @@
 //
 
 @testable import LaunchDarkly
+import UIKit
 
 struct ClientServiceMockFactory: ClientServiceCreating {
     func makeKeyedValueCache() -> KeyedValueCaching {
@@ -92,8 +93,8 @@ struct ClientServiceMockFactory: ClientServiceCreating {
     func makeEnvironmentReporter() -> EnvironmentReporting {
         // the code generator is not generating the default, not sure why not //sourcery: DefaultMockValue = .UIApplicationDidEnterBackground
         // the code generator is not generating the default, not sure why not //sourcery: DefaultMockValue = .UIApplicationWillEnterForeground
-        makeEnvironmentReporterReturnValue.backgroundNotification = .UIApplicationDidEnterBackground
-        makeEnvironmentReporterReturnValue.foregroundNotification = .UIApplicationWillEnterForeground
+        makeEnvironmentReporterReturnValue.backgroundNotification = UIApplication.didEnterBackgroundNotification
+        makeEnvironmentReporterReturnValue.foregroundNotification = UIApplication.willEnterForegroundNotification
         return makeEnvironmentReporterReturnValue
     }
 

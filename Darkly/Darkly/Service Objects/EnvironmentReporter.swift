@@ -64,8 +64,8 @@ struct EnvironmentReporter: EnvironmentReporting {
     var systemVersion: String { return UIDevice.current.systemVersion }
     var systemName: String { return UIDevice.current.systemName }
     var operatingSystem: OperatingSystem { return .iOS }
-    var backgroundNotification: Notification.Name? { return .UIApplicationDidEnterBackground }
-    var foregroundNotification: Notification.Name? { return .UIApplicationWillEnterForeground }
+    var backgroundNotification: Notification.Name? { return UIApplication.didEnterBackgroundNotification }
+    var foregroundNotification: Notification.Name? { return UIApplication.willEnterForegroundNotification }
     var vendorUUID: String? { return UIDevice.current.identifierForVendor?.uuidString }
     #elseif os(watchOS)
     var deviceModel: String { return WKInterfaceDevice.current().model }

@@ -144,7 +144,7 @@ class EventReporter: EventReporting {
             // the run loop retains the timer, so eventReportTimer is weak to avoid the retain cycle. Setting the timer to a strong reference is important so that the timer doesn't get nil'd before added to the run loop.
             let timer = Timer(timeInterval: config.eventFlushInterval, target: self, selector: #selector(eventReportTimerFired), userInfo: nil, repeats: true)
             eventReportTimer = timer
-            RunLoop.current.add(timer, forMode: .defaultRunLoopMode)
+            RunLoop.current.add(timer, forMode: RunLoop.Mode.default)
         }
         reportEvents()
     }

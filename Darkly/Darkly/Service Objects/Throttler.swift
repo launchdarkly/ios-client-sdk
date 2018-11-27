@@ -94,7 +94,7 @@ final class Throttler: Throttling {
         timerStart = timerStart ?? Date()
         let fire = timerStart!.addingTimeInterval(delay)
         let timer = Timer(fireAt: fire, interval: 0.0, target: self, selector: #selector(timerFired), userInfo: nil, repeats: false)
-        RunLoop.current.add(timer, forMode: .defaultRunLoopMode)
+        RunLoop.current.add(timer, forMode: RunLoop.Mode.default)
         return timer
     }
 
