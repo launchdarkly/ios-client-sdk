@@ -12,4 +12,8 @@
 -(LDMillisecond)ldMillisecondValue {
     return [self longLongValue];
 }
+
+-(uint64_t)nanoSecondValue {
+    return self.integerValue * NSEC_PER_SEC;
+}
 @end

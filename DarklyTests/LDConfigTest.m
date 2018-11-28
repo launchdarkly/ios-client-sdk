@@ -3,21 +3,24 @@
 //
 
 #import "LDConfig.h"
+#import "LDClient.h"
 #import "LDConfig+Testable.h"
 #import "DarklyXCTestCase.h"
 #import "DarklyConstants.h"
-
-@interface LDConfigTest : DarklyXCTestCase
-
-@end
+#import "LDUserModel.h"
 
 NSString * const LDConfigTestMobileKey = @"testMobileKey";
+
+@interface LDConfigTest : DarklyXCTestCase
+@property (nonatomic, strong, readonly) NSArray<NSString*> *environmentSuffixes;
+@property (nonatomic, strong) NSDictionary<NSString*,NSString*> *secondaryMobileKeys;
+@end
 
 @implementation LDConfigTest
 
 - (void)setUp {
     [super setUp];
-    // Put setup code here. This method is called before the invocation of each test method in the class.
+    self.secondaryMobileKeys = [LDConfig secondaryMobileKeysStub];
 }
 
 - (void)tearDown {
@@ -47,6 +50,60 @@ NSString * const LDConfigTestMobileKey = @"testMobileKey";
     XCTAssertEqualObjects([config connectionTimeout], [NSNumber numberWithInt:kConnectionTimeout]);
     XCTAssertEqualObjects([config flushInterval], [NSNumber numberWithInt:kDefaultFlushInterval]);
     XCTAssertFalse([config debugEnabled]);
+}
+
+-(void)testSetSecondaryMobileKeys {
+    LDConfig *config = [[LDConfig alloc] initWithMobileKey:LDConfigTestMobileKey];
+
+    config.secondaryMobileKeys = self.secondaryMobileKeys;
+
+    XCTAssertEqualObjects(config.secondaryMobileKeys, self.secondaryMobileKeys);
+}
+
+-(void)testSetSecondaryMobileKeys_containsPrimaryMobileKey {
+    LDConfig *config = [[LDConfig alloc] initWithMobileKey:LDConfigTestMobileKey];
+    NSMutableDictionary *secondaryMobileKeys = [NSMutableDictionary dictionaryWithDictionary:self.secondaryMobileKeys];
+    NSString *badEnvironmentName = self.secondaryMobileKeys.allKeys.firstObject;
+    secondaryMobileKeys[badEnvironmentName] = LDConfigTestMobileKey;
+    self.secondaryMobileKeys = [secondaryMobileKeys copy];
+
+    XCTAssertThrowsSpecificNamed(config.secondaryMobileKeys = self.secondaryMobileKeys, NSException, NSInvalidArgumentException);
+}
+
+-(void)testSetSecondaryMobileKeys_containsPrimaryEnvironmentName {
+    LDConfig *config = [[LDConfig alloc] initWithMobileKey:LDConfigTestMobileKey];
+    NSMutableDictionary *secondaryMobileKeys = [NSMutableDictionary dictionaryWithDictionary:self.secondaryMobileKeys];
+    secondaryMobileKeys[kLDPrimaryEnvironmentName] = [NSString stringWithFormat:@"%@.%@", LDConfigTestSecondaryMobileKeyMock, @"Z"];
+    self.secondaryMobileKeys = [secondaryMobileKeys copy];
+
+    XCTAssertThrowsSpecificNamed(config.secondaryMobileKeys = self.secondaryMobileKeys, NSException, NSInvalidArgumentException);
+}
+
+-(void)testSetSecondaryMobileKeys_containsSameMobileKeyTwice {
+    LDConfig *config = [[LDConfig alloc] initWithMobileKey:LDConfigTestMobileKey];
+    NSMutableDictionary *secondaryMobileKeys = [NSMutableDictionary dictionaryWithDictionary:self.secondaryMobileKeys];
+    secondaryMobileKeys[[NSString stringWithFormat:@"%@.%@", LDConfigTestEnvironmentNameMock, @"Z"]] = self.secondaryMobileKeys.allValues.firstObject;
+    self.secondaryMobileKeys = [secondaryMobileKeys copy];
+
+    XCTAssertThrowsSpecificNamed(config.secondaryMobileKeys = self.secondaryMobileKeys, NSException, NSInvalidArgumentException);
+}
+
+-(void)testSetSecondaryMobileKeys_containsEmptyEnvironmentName {
+    LDConfig *config = [[LDConfig alloc] initWithMobileKey:LDConfigTestMobileKey];
+    NSMutableDictionary *secondaryMobileKeys = [NSMutableDictionary dictionaryWithDictionary:self.secondaryMobileKeys];
+    secondaryMobileKeys[@""] = [NSString stringWithFormat:@"%@.%@", LDConfigTestSecondaryMobileKeyMock, @"Z"];
+    self.secondaryMobileKeys = [secondaryMobileKeys copy];
+
+    XCTAssertThrowsSpecificNamed(config.secondaryMobileKeys = self.secondaryMobileKeys, NSException, NSInvalidArgumentException);
+}
+
+-(void)testSetSecondaryMobileKeys_containsEmptyMobileKey {
+    LDConfig *config = [[LDConfig alloc] initWithMobileKey:LDConfigTestMobileKey];
+    NSMutableDictionary *secondaryMobileKeys = [NSMutableDictionary dictionaryWithDictionary:self.secondaryMobileKeys];
+    secondaryMobileKeys[[NSString stringWithFormat:@"%@.%@", LDConfigTestEnvironmentNameMock, @"Z"]] = @"";
+    self.secondaryMobileKeys = [secondaryMobileKeys copy];
+
+    XCTAssertThrowsSpecificNamed(config.secondaryMobileKeys = self.secondaryMobileKeys, NSException, NSInvalidArgumentException);
 }
 
 - (void)testConfigOverrideBaseUrl {

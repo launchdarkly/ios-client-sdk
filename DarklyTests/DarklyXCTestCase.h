@@ -6,5 +6,5 @@
 #import "DarklyConstants.h"
 
 @interface DarklyXCTestCase : XCTestCase
-
+@property (nonatomic, strong) void (^cleanup)(void);
 @end

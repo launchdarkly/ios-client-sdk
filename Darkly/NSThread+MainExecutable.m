@@ -9,10 +9,10 @@
 #import "NSThread+MainExecutable.h"
 
 @implementation NSThread (MainExecutable)
-+ (void)performOnMainThread:(void(^)(void))executionBlock {
++ (void)performOnMainThread:(void(^)(void))executionBlock waitUntilDone:(BOOL)wait {
     if (!executionBlock) { return; }
     if (![NSThread isMainThread]) {
-        [self performSelectorOnMainThread:@selector(performOnMainThread:) withObject:executionBlock waitUntilDone:YES];
+        [self performSelectorOnMainThread:@selector(performOnMainThread:waitUntilDone:) withObject:executionBlock waitUntilDone:wait];
         return;
     }
     executionBlock();

@@ -11,4 +11,5 @@
 
 @interface NSNumber(LaunchDarkly)
 -(LDMillisecond)ldMillisecondValue;
+-(uint64_t)nanoSecondValue;
 @end

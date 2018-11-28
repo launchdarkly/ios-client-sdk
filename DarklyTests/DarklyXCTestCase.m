@@ -16,6 +16,7 @@
 }
 
 - (void)tearDown {
+    if (self.cleanup) { self.cleanup(); }
     [super tearDown];
 }
 

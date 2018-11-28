@@ -9,6 +9,10 @@
 #import <Foundation/Foundation.h>
 
 @interface NSHTTPURLResponse(LaunchDarkly)
+@property (assign, nonatomic, readonly) BOOL isOk;
+@property (assign, nonatomic, readonly) BOOL isNotModified;
+@property (copy, nonatomic, readonly) NSString *etag;
+
 -(BOOL)isUnauthorizedHTTPResponse;
 -(NSDate*)headerDate;
 @end

@@ -2,6 +2,26 @@
 
 All notable changes to the LaunchDarkly iOS SDK will be documented in this file. This project adheres to [Semantic Versioning](http://semver.org).
 
+## [2.14.0.pre.1] - 2018-11-28
+### Added
+- Added `allFlags` property to LDClient that provides a dictionary of feature flag keys and values. Accessing feature flags via `allFlags` does not record any analytics events.
+- Implemented support for multiple mobile-keys. Each set of feature flags associated with a mobile-key is called an `environment`.
+  • Added `secondaryMobileKeys` to LDConfig. LDConfig `mobileKey` refers to the *primary* environment, and must be present. All entries in `secondaryMobileKeys` refer to optional *secondary* environments.
+  NOTE: See LDClient.h for the requirements to add secondaryMobileKeys. The SDK will throw an NSInvalidArgumentException if an attempt is made to set mobile-keys that do not meet these requirements.
+  • Installed `LDClientInterface` protocol used to access secondary environment feature flags. May also be used on the primary environment to provide normalized access to feature flags.
+  • Adds `environmentForMobileKeyNamed:` to vend an environment (primary or secondary) object conforming to `LDClientInterface`. Use the vended object to access feature flags for the requested environment.
+  • Adds new constant `kLDPrimaryEnvironmentName` used to vend the primary environment's `LDClientInterface` from `environmentForMobileKeyNamed:`.
+
+### Changed
+- LDUserBuilder build method no longer restores cached user attributes. The SDK sets into the LDUserModel object only the attributes in the LDUserBuilder at the time of the build message. On start, the SDK restores the last cached feature flags, which the SDK will use until the first feature flag update from the server.
+- Changed the format for caching feature flags to associate a set of feature flags with a mobile key. Downgrading to an earlier version will be able to store feature flags, but without the environment association. As a result, the SDK will not restore cached feature flags from 2.14.0 if the SDK is downgraded to a version before 2.14.0.
+- Installed a URL cache that does not use the `[NSURLSession defaultSession]` or the `[NSURLCache sharedURLCache]`, precluding conflicts with custom client app url caching.
+
+### Fixed
+- Fixed defect preventing SDK from calling `userUpdated` or `featureFlagDidUpdate` when deleting a feature flag under certain conditions.
+- Fixed defect preventing URL caching for feature flag requests using the REPORT verb.
+- Fixed defect causing the loss of some analytics events when changing users.
+
 ## [2.13.9] - 2018-11-05
 ### Fixed
 - Fixed defect causing a crash when unknown data exists in a feature flag cache.
