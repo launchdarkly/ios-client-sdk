@@ -30,7 +30,7 @@ Pod::Spec.new do |ld|
 
   ld.requires_arc = true
 
-  ld.swift_version = '4.0'
+  ld.swift_version = '4.2'
 
   ld.subspec 'Core' do |es|
     es.dependency 'DarklyEventSource', '~> 3.2.7'
