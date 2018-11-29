@@ -89,13 +89,17 @@ class EventReporter: EventReporting {
     
     func recordFlagEvaluationEvents(flagKey: LDFlagKey, value: Any?, defaultValue: Any?, featureFlag: FeatureFlag?, user: LDUser, completion: CompletionClosure? = nil) {
 
-        eventQueue.async { [weak self] in
-            self?.flagRequestTracker.trackRequest(flagKey: flagKey, reportedValue: value, featureFlag: featureFlag, defaultValue: defaultValue)
-        }
-
         let recordingFeatureEvent = featureFlag?.eventTrackingContext?.trackEvents == true
         let recordingDebugEvent = featureFlag?.eventTrackingContext?.shouldCreateDebugEvents(lastEventReportResponseTime: lastEventResponseDate) ?? false
         let dispatchGroup = DispatchGroup()
+
+        //If flag requests come from multiple threads, record them one at a time in the event queue to keep the count from getting messed up in the tracker
+        //Use the eventQueue so that when creating the summary event we get all the requests in the tracker before replacing it with a new tracker
+        dispatchGroup.enter()
+        eventQueue.async { [weak self] in
+            self?.flagRequestTracker.trackRequest(flagKey: flagKey, reportedValue: value, featureFlag: featureFlag, defaultValue: defaultValue)
+            dispatchGroup.leave()
+        }
 
         if recordingFeatureEvent {
             let featureEvent = Event.featureEvent(key: flagKey, value: value, defaultValue: defaultValue, featureFlag: featureFlag, user: user)
