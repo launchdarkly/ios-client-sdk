@@ -23,6 +23,7 @@ struct FeatureFlag {
     let flagVersion: Int?
     let eventTrackingContext: EventTrackingContext?
 
+    //TODO: Add the flag key into this to help with debugging
     init(value: Any?, variation: Int?, version: Int?, flagVersion: Int?, eventTrackingContext: EventTrackingContext?) {
         self.value = value is NSNull ? nil : value
         self.variation = variation

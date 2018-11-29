@@ -36,9 +36,14 @@ final class EventReporterSpec: QuickSpec {
         var featureFlag: FeatureFlag!
         var eventStubResponseDate: Date?
         var flagRequestTracker: FlagRequestTracker?
+        var reportersTracker: FlagRequestTracker? {
+            return eventReporter.flagRequestTracker
+        }
+        var flagRequestCount: Int
 
         init(eventCount: Int = 0,
              eventFlushMillis: Int? = nil,
+             flagRequestCount: Int = 1,
              lastEventResponseDate: Date? = nil,
              stubResponseSuccess: Bool = true,
              stubResponseOnly: Bool = false,
@@ -76,6 +81,7 @@ final class EventReporterSpec: QuickSpec {
                 eventTrackingContext = EventTrackingContext(trackEvents: self.eventTrackingContext?.trackEvents ?? false, debugEventsUntilDate: debugEventsUntilDate)
             }
             featureFlag = DarklyServiceMock.Constants.stubFeatureFlag(for: DarklyServiceMock.FlagKeys.bool, eventTrackingContext: eventTrackingContext)
+            self.flagRequestCount = flagRequestCount
         }
 
         mutating func recordEvents(_ eventCount: Int, completion: CompletionClosure? = nil) {
@@ -95,6 +101,14 @@ final class EventReporterSpec: QuickSpec {
             eventRecordingGroup.notify(queue: DispatchQueue.main) {
                 completion?()
             }
+        }
+
+        func flagCounter(for key: LDFlagKey) -> FlagCounter? {
+            return reportersTracker?.flagCounters[key]
+        }
+
+        func flagValueCounter(for key: LDFlagKey, and featureFlag: FeatureFlag?) -> FlagValueCounter? {
+            return flagCounter(for: key)?.flagValueCounters.flagValueCounter(for: featureFlag)
         }
     }
     
@@ -510,6 +524,14 @@ final class EventReporterSpec: QuickSpec {
                     expect(testContext.eventReporter.eventStoreKeys.contains(testContext.flagKey)).to(beTrue())
                     expect(testContext.eventReporter.eventStoreKinds.contains(.feature)).to(beTrue())
                 }
+                it("tracks the flag request") {
+                    let flagValueCounter = testContext.flagValueCounter(for: testContext.flagKey, and: testContext.featureFlag)
+                    expect(flagValueCounter).toNot(beNil())
+                    expect(AnyComparer.isEqual(flagValueCounter?.reportedValue, to: testContext.featureFlag.value)).to(beTrue())
+                    expect(flagValueCounter?.featureFlag) == testContext.featureFlag
+                    expect(flagValueCounter?.isKnown) == true
+                    expect(flagValueCounter?.count) == 1
+                }
             }
             context("when trackEvents is off") {
                 beforeEach {
@@ -527,6 +549,14 @@ final class EventReporterSpec: QuickSpec {
                 it("does not record a feature event") {
                     expect(testContext.eventReporter.eventStore).to(beEmpty())
                 }
+                it("tracks the flag request") {
+                    let flagValueCounter = testContext.flagValueCounter(for: testContext.flagKey, and: testContext.featureFlag)
+                    expect(flagValueCounter).toNot(beNil())
+                    expect(AnyComparer.isEqual(flagValueCounter?.reportedValue, to: testContext.featureFlag.value)).to(beTrue())
+                    expect(flagValueCounter?.featureFlag) == testContext.featureFlag
+                    expect(flagValueCounter?.isKnown) == true
+                    expect(flagValueCounter?.count) == 1
+                }
             }
             context("when debugEventsUntilDate exists") {
                 context("lastEventResponseDate exists") {
@@ -543,6 +573,14 @@ final class EventReporterSpec: QuickSpec {
                             expect(testContext.eventReporter.eventStoreKeys.contains(testContext.flagKey)).to(beTrue())
                             expect(testContext.eventReporter.eventStoreKinds.contains(.debug)).to(beTrue())
                         }
+                        it("tracks the flag request") {
+                            let flagValueCounter = testContext.flagValueCounter(for: testContext.flagKey, and: testContext.featureFlag)
+                            expect(flagValueCounter).toNot(beNil())
+                            expect(AnyComparer.isEqual(flagValueCounter?.reportedValue, to: testContext.featureFlag.value)).to(beTrue())
+                            expect(flagValueCounter?.featureFlag) == testContext.featureFlag
+                            expect(flagValueCounter?.isKnown) == true
+                            expect(flagValueCounter?.count) == 1
+                        }
                     }
                     context("and debugEventsUntilDate is earlier") {
                         beforeEach {
@@ -554,6 +592,14 @@ final class EventReporterSpec: QuickSpec {
                         }
                         it("does not record a debug event") {
                             expect(testContext.eventReporter.eventStore).to(beEmpty())
+                        }
+                        it("tracks the flag request") {
+                            let flagValueCounter = testContext.flagValueCounter(for: testContext.flagKey, and: testContext.featureFlag)
+                            expect(flagValueCounter).toNot(beNil())
+                            expect(AnyComparer.isEqual(flagValueCounter?.reportedValue, to: testContext.featureFlag.value)).to(beTrue())
+                            expect(flagValueCounter?.featureFlag) == testContext.featureFlag
+                            expect(flagValueCounter?.isKnown) == true
+                            expect(flagValueCounter?.count) == 1
                         }
                     }
                 }
@@ -571,6 +617,14 @@ final class EventReporterSpec: QuickSpec {
                             expect(testContext.eventReporter.eventStoreKeys.contains(testContext.flagKey)).to(beTrue())
                             expect(testContext.eventReporter.eventStoreKinds.contains(.debug)).to(beTrue())
                         }
+                        it("tracks the flag request") {
+                            let flagValueCounter = testContext.flagValueCounter(for: testContext.flagKey, and: testContext.featureFlag)
+                            expect(flagValueCounter).toNot(beNil())
+                            expect(AnyComparer.isEqual(flagValueCounter?.reportedValue, to: testContext.featureFlag.value)).to(beTrue())
+                            expect(flagValueCounter?.featureFlag) == testContext.featureFlag
+                            expect(flagValueCounter?.isKnown) == true
+                            expect(flagValueCounter?.count) == 1
+                        }
                     }
                     context("and debugEventsUntilDate is earlier than current time") {
                         beforeEach {
@@ -582,6 +636,14 @@ final class EventReporterSpec: QuickSpec {
                         }
                         it("does not record a debug event") {
                             expect(testContext.eventReporter.eventStore).to(beEmpty())
+                        }
+                        it("tracks the flag request") {
+                            let flagValueCounter = testContext.flagValueCounter(for: testContext.flagKey, and: testContext.featureFlag)
+                            expect(flagValueCounter).toNot(beNil())
+                            expect(AnyComparer.isEqual(flagValueCounter?.reportedValue, to: testContext.featureFlag.value)).to(beTrue())
+                            expect(flagValueCounter?.featureFlag) == testContext.featureFlag
+                            expect(flagValueCounter?.isKnown) == true
+                            expect(flagValueCounter?.count) == 1
                         }
                     }
                 }
@@ -599,6 +661,14 @@ final class EventReporterSpec: QuickSpec {
                     expect(testContext.eventReporter.eventStoreKeys.filter { (eventKey) in eventKey == testContext.flagKey }.count == 2).to(beTrue())
                     expect(Set(testContext.eventReporter.eventStore.eventKinds)).to(equal(Set([.feature, .debug])))
                 }
+                it("tracks the flag request") {
+                    let flagValueCounter = testContext.flagValueCounter(for: testContext.flagKey, and: testContext.featureFlag)
+                    expect(flagValueCounter).toNot(beNil())
+                    expect(AnyComparer.isEqual(flagValueCounter?.reportedValue, to: testContext.featureFlag.value)).to(beTrue())
+                    expect(flagValueCounter?.featureFlag) == testContext.featureFlag
+                    expect(flagValueCounter?.isKnown) == true
+                    expect(flagValueCounter?.count) == 1
+                }
             }
             context("when debugEventsUntilDate is nil") {
                 beforeEach {
@@ -610,6 +680,14 @@ final class EventReporterSpec: QuickSpec {
                 }
                 it("does not record an event") {
                     expect(testContext.eventReporter.eventStore).to(beEmpty())
+                }
+                it("tracks the flag request") {
+                    let flagValueCounter = testContext.flagValueCounter(for: testContext.flagKey, and: testContext.featureFlag)
+                    expect(flagValueCounter).toNot(beNil())
+                    expect(AnyComparer.isEqual(flagValueCounter?.reportedValue, to: testContext.featureFlag.value)).to(beTrue())
+                    expect(flagValueCounter?.featureFlag) == testContext.featureFlag
+                    expect(flagValueCounter?.isKnown) == true
+                    expect(flagValueCounter?.count) == 1
                 }
             }
             context("when eventTrackingContext is nil") {
@@ -627,6 +705,78 @@ final class EventReporterSpec: QuickSpec {
                 }
                 it("does not record an event") {
                     expect(testContext.eventReporter.eventStore).to(beEmpty())
+                }
+                it("tracks the flag request") {
+                    let flagValueCounter = testContext.flagValueCounter(for: testContext.flagKey, and: testContext.featureFlag)
+                    expect(flagValueCounter).toNot(beNil())
+                    expect(AnyComparer.isEqual(flagValueCounter?.reportedValue, to: testContext.featureFlag.value)).to(beTrue())
+                    expect(flagValueCounter?.featureFlag) == testContext.featureFlag
+                    expect(flagValueCounter?.isKnown) == true
+                    expect(flagValueCounter?.count) == 1
+                }
+            }
+            context("when multiple flag requests are made") {
+                context("serially") {
+                    beforeEach {
+                        testContext = TestContext(flagRequestCount: 3, trackEvents: false)
+
+                        waitUntil { done in
+                            for index in 1...testContext.flagRequestCount {
+                                testContext.eventReporter.recordFlagEvaluationEvents(flagKey: testContext.flagKey,
+                                                                                     value: testContext.featureFlag.value!,
+                                                                                     defaultValue: Constants.defaultValue,
+                                                                                     featureFlag: testContext.featureFlag,
+                                                                                     user: testContext.user,
+                                                                                     completion: index == testContext.flagRequestCount ? done : nil)
+                            }
+                        }
+                    }
+                    it("tracks the flag request") {
+                        let flagValueCounter = testContext.flagValueCounter(for: testContext.flagKey, and: testContext.featureFlag)
+                        expect(flagValueCounter).toNot(beNil())
+                        expect(AnyComparer.isEqual(flagValueCounter?.reportedValue, to: testContext.featureFlag.value)).to(beTrue())
+                        expect(flagValueCounter?.featureFlag) == testContext.featureFlag
+                        expect(flagValueCounter?.isKnown) == true
+                        expect(flagValueCounter?.count) == testContext.flagRequestCount
+                    }
+                }
+                context("concurrently") {
+                    let requestQueue = DispatchQueue(label: "com.launchdarkly.test.eventReporterSpec.flagRequestTracking.concurrent", qos: .userInitiated, attributes: .concurrent)
+                    var recordFlagEvaluationCompletionCallCount = 0
+                    var recordFlagEvaluationCompletion: (() -> Void)!
+                    beforeEach {
+                        testContext = TestContext(flagRequestCount: 5, trackEvents: false)
+
+                        waitUntil { done in
+                            recordFlagEvaluationCompletion = {
+                                DispatchQueue.main.async {
+                                    recordFlagEvaluationCompletionCallCount += 1
+                                    if recordFlagEvaluationCompletionCallCount == testContext.flagRequestCount {
+                                        done()
+                                    }
+                                }
+                            }
+                            let fireTime = DispatchTime.now() + 0.1
+                            for _ in 1...testContext.flagRequestCount {
+                                requestQueue.asyncAfter(deadline: fireTime) {
+                                    testContext.eventReporter.recordFlagEvaluationEvents(flagKey: testContext.flagKey,
+                                                                                         value: testContext.featureFlag.value!,
+                                                                                         defaultValue: Constants.defaultValue,
+                                                                                         featureFlag: testContext.featureFlag,
+                                                                                         user: testContext.user,
+                                                                                         completion: recordFlagEvaluationCompletion)
+                                }
+                            }
+                        }
+                    }
+                    it("tracks the flag request") {
+                        let flagValueCounter = testContext.flagValueCounter(for: testContext.flagKey, and: testContext.featureFlag)
+                        expect(flagValueCounter).toNot(beNil())
+                        expect(AnyComparer.isEqual(flagValueCounter?.reportedValue, to: testContext.featureFlag.value)).to(beTrue())
+                        expect(flagValueCounter?.featureFlag) == testContext.featureFlag
+                        expect(flagValueCounter?.isKnown) == true
+                        expect(flagValueCounter?.count) == testContext.flagRequestCount
+                    }
                 }
             }
         }
