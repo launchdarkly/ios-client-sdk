@@ -20,7 +20,7 @@ struct HTTPHeaders {
 
     struct HeaderValue {
         static let apiKey = "api_key"
-        static let sdkVersion = "3.0.0.28"
+        static let sdkVersion = "3.0.0.28a"
         static let applicationJson = "application/json"
         static let eventSchema = "3"
     }
