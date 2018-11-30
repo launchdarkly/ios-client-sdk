@@ -785,24 +785,25 @@ final class EventReporterSpec: QuickSpec {
     private func trackFlagRequestSpec() {
         context("record summary event") {
             var testContext: TestContext!
-            var flagKey: LDFlagKey!
-            var featureFlag: FeatureFlag!
             beforeEach {
                 testContext = TestContext()
-                flagKey = DarklyServiceMock.FlagKeys.dictionary
-                featureFlag =  DarklyServiceMock.Constants.stubFeatureFlag(for: flagKey)
 
-                testContext.eventReporter.recordFlagEvaluationEvents(flagKey: flagKey, value: featureFlag.value, defaultValue: featureFlag.value, featureFlag: featureFlag, user: testContext.user)
+                waitUntil { done in
+                    testContext.eventReporter.recordFlagEvaluationEvents(flagKey: testContext.flagKey, value: testContext.featureFlag.value, defaultValue: testContext.featureFlag.value, featureFlag: testContext.featureFlag, user: testContext.user, completion: done)
+                }
             }
             it("tracks flag requests") {
-                let flagCounter = testContext.eventReporter.flagRequestTracker.flagCounters[flagKey]
+                let flagCounter = testContext.flagCounter(for: testContext.flagKey)
                 expect(flagCounter).toNot(beNil())
-                expect(AnyComparer.isEqual(flagCounter?.defaultValue, to: featureFlag.value, considerNilAndNullEqual: true)).to(beTrue())
+                expect(AnyComparer.isEqual(flagCounter?.defaultValue, to: testContext.featureFlag.value, considerNilAndNullEqual: true)).to(beTrue())
                 expect(flagCounter?.flagValueCounters.count) == 1
-                let flagValueCounter = flagCounter?.flagValueCounters.first
+
+                let flagValueCounter = testContext.flagValueCounter(for: testContext.flagKey, and: testContext.featureFlag)
                 expect(flagValueCounter).toNot(beNil())
-                expect(AnyComparer.isEqual(flagValueCounter?.reportedValue, to: featureFlag.value, considerNilAndNullEqual: true)).to(beTrue())
-                expect(flagValueCounter?.featureFlag) == featureFlag
+                expect(AnyComparer.isEqual(flagValueCounter?.reportedValue, to: testContext.featureFlag.value)).to(beTrue())
+                expect(flagValueCounter?.featureFlag) == testContext.featureFlag
+                expect(flagValueCounter?.isKnown) == true
+                expect(flagValueCounter?.count) == testContext.flagRequestCount
             }
         }
     }

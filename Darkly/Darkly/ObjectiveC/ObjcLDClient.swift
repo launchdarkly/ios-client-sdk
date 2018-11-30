@@ -112,7 +112,7 @@ public final class ObjcLDClient: NSObject {
      */
     @objc public var config: ObjcLDConfig {
         get { return ObjcLDConfig(LDClient.shared.config) }
-        set { LDClient.shared.config = config.config }
+        set { LDClient.shared.config = newValue.config }
     }
     /**
      The LDUser set into the LDClient may affect the set of feature flags returned by the LaunchDarkly server, and ties event tracking to the user. See `LDUser` (`ObjcLDUser`) for details about what information can be retained.
@@ -125,7 +125,7 @@ public final class ObjcLDClient: NSObject {
      */
     @objc public var user: ObjcLDUser {
         get { return ObjcLDUser(LDClient.shared.user) }
-        set { LDClient.shared.user = user.user }
+        set { LDClient.shared.user = newValue.user }
     }
 
     /**
