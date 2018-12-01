@@ -164,13 +164,16 @@ public class LDClient {
             let wasOnline = isOnline
             setOnline(false)
 
+            if hasStarted {
+                eventReporter.recordSummaryEvent()
+            }
+
             if let cachedFlags = flagCache.retrieveFlags(for: user), !cachedFlags.flags.isEmpty {
                 user.flagStore.replaceStore(newFlags: cachedFlags.flags, source: .cache, completion: nil)
             }
             service = serviceFactory.makeDarklyServiceProvider(mobileKey: mobileKey, config: config, user: user)
 
             if hasStarted {
-                eventReporter.recordSummaryEvent()
                 eventReporter.record(Event.identifyEvent(user: user))
             }
 
