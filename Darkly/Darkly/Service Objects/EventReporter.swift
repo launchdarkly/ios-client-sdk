@@ -153,7 +153,6 @@ class EventReporter: EventReporting {
             eventReportTimer = timer
             RunLoop.current.add(timer, forMode: RunLoop.Mode.default)
         }
-        reportEvents()
     }
     
     private func stopReporting() {
