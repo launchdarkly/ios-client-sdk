@@ -144,7 +144,9 @@ class EventReporter: EventReporting {
     }
 
     private func startReporting() {
-        guard isOnline && !isReportingActive else { return }
+        guard isOnline && !isReportingActive else {
+            return
+        }
         if #available(iOS 10.0, watchOS 3.0, macOS 10.12, *, tvOS 10.0) {
             eventReportTimer = Timer.scheduledTimer(withTimeInterval: config.eventFlushInterval, repeats: true) { [weak self] (_) in self?.reportEvents() }
         } else {
@@ -156,7 +158,9 @@ class EventReporter: EventReporting {
     }
     
     private func stopReporting() {
-        guard isReportingActive else { return }
+        guard isReportingActive else {
+            return
+        }
         eventReportTimer?.invalidate()
         eventReportTimer = nil
     }
@@ -171,8 +175,11 @@ class EventReporter: EventReporting {
     
     func reportEvents(completion: CompletionClosure?) {
         guard isOnline && (!eventStore.isEmpty || flagRequestTracker.hasLoggedRequests) else {
-            if !isOnline { Log.debug(typeName(and: #function) + "aborted. EventReporter is offline") }
-            else if eventStore.isEmpty && !flagRequestTracker.hasLoggedRequests { Log.debug(typeName(and: #function) + "aborted. Event store is empty") }
+            if !isOnline {
+                Log.debug(typeName(and: #function) + "aborted. EventReporter is offline")
+            } else if eventStore.isEmpty && !flagRequestTracker.hasLoggedRequests {
+                Log.debug(typeName(and: #function) + "aborted. Event store is empty")
+            }
             completion?()
             return
         }
@@ -221,8 +228,9 @@ class EventReporter: EventReporting {
     
     private func updateEventStore(reportedEventDictionaries: [[String: Any]]) {
         eventQueue.async {
-            let remainingEventDictionaries = self.eventStore.filter { (eventDictionary) in !reportedEventDictionaries.contains(eventDictionary) }
-//            remainingEventDictionaries = remainingEventDictionaries.filter { (eventDictionary) -> Bool in eventDictionary.eventKind != .summary }    //TODO: When implementing summary events, remove this
+            let remainingEventDictionaries = self.eventStore.filter { (eventDictionary) in
+                !reportedEventDictionaries.contains(eventDictionary)
+            }
             self.eventStore = remainingEventDictionaries
             Log.debug(self.typeName + ".reportEvents() completed for keys: " + reportedEventDictionaries.eventKeys)
         }
@@ -235,8 +243,12 @@ extension EventReporter: TypeIdentifying { }
 
 extension Array where Element == [String: Any] {
     var eventKeys: String {
-        let keys = self.compactMap { (eventDictionary) in eventDictionary.eventKey }
-        guard !keys.isEmpty else { return "" }
+        let keys = self.compactMap { (eventDictionary) in
+            eventDictionary.eventKey
+        }
+        guard !keys.isEmpty else {
+            return ""
+        }
         return keys.joined(separator: ", ")
     }
 }
