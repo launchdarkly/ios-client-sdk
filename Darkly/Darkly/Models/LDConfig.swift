@@ -81,7 +81,7 @@ public struct LDConfig {
 
         //swiftlint:disable:next nesting
         struct Debug {
-            static let pollingIntervalMillis = 60_000
+            static let pollingIntervalMillis = 30_000
             static let backgroundPollIntervalMillis = 60_000
         }
 
