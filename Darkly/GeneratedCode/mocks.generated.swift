@@ -120,6 +120,16 @@ final class EnvironmentReportingMock: EnvironmentReporting {
             setVendorUUIDCallback?()
         }
     }
+
+    // MARK: sdkVersion
+    var sdkVersionSetCount = 0
+    var setSdkVersionCallback: (() -> Void)?
+    var sdkVersion: String = Constants.sdkVersion {
+        didSet {
+            sdkVersionSetCount += 1
+            setSdkVersionCallback?()
+        }
+    }
 }
 
 // MARK: - EventReportingMock

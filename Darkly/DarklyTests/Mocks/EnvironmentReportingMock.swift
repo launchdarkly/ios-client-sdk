@@ -14,5 +14,6 @@ extension EnvironmentReportingMock {
         static let systemVersion = "systemVersionMock"
         static let systemName = "systemNameMock"
         static let vendorUUID = "vendorUUIDMock"
+        static let sdkVersion = "sdkVersionStub"
     }
 }

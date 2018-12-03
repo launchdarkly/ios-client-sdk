@@ -20,21 +20,22 @@ struct HTTPHeaders {
 
     struct HeaderValue {
         static let apiKey = "api_key"
-        static let sdkVersion = "3.0.0.28b"
         static let applicationJson = "application/json"
         static let eventSchema = "3"
     }
     
     let mobileKey: String
     let systemName: String
+    let sdkVersion: String
     
     init(mobileKey: String, environmentReporter: EnvironmentReporting) {
         self.mobileKey = mobileKey
         self.systemName = environmentReporter.systemName
+        self.sdkVersion = environmentReporter.sdkVersion
     }
     
     var authKey: String { return "\(HeaderValue.apiKey) \(mobileKey)" }
-    var userAgent: String { return "\(systemName)/\(HeaderValue.sdkVersion)" }
+    var userAgent: String { return "\(systemName)/\(sdkVersion)" }
     
     var eventSourceHeaders: [String: String] { return [HeaderKey.authorization: authKey, HeaderKey.userAgent: userAgent] }
     var flagRequestHeaders: [String: String] { return [HeaderKey.authorization: authKey, HeaderKey.userAgent: userAgent] }

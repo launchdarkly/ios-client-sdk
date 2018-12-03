@@ -50,6 +50,8 @@ protocol EnvironmentReporting {
     var foregroundNotification: Notification.Name? { get }
     //sourcery: DefaultMockValue = Constants.vendorUUID
     var vendorUUID: String? { get }
+    //sourcery: DefaultMockValue = Constants.sdkVersion
+    var sdkVersion: String { get }
 }
 
 struct EnvironmentReporter: EnvironmentReporting {
@@ -92,6 +94,7 @@ struct EnvironmentReporter: EnvironmentReporting {
     var foregroundNotification: Notification.Name? { return UIApplication.willEnterForegroundNotification }
     var vendorUUID: String? { return UIDevice.current.identifierForVendor?.uuidString }
     #endif
+    var sdkVersion: String { return Bundle(for: LDClient.self).infoDictionary?["CFBundleShortVersionString"] as? String ?? "3.x" }
 }
 
 #if os(OSX)
