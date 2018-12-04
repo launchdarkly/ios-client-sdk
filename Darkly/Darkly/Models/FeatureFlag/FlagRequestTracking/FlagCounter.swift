@@ -60,6 +60,40 @@ final class FlagCounter {
     }
 }
 
+private extension Optional where Wrapped == Int {
+    ///Returns true if both values are nil, or if both values are the same
+    func isEqualMatchingNil(to other: Int?) -> Bool {
+        guard let myself = self, let otherSelf = other
+        else {
+            return self == nil && other == nil
+        }
+        return myself == otherSelf
+    }
+}
+
+private extension FeatureFlag {
+    func isEqualUsingFlagVersion(to other: FeatureFlag?) -> Bool {
+        if !variation.isEqualMatchingNil(to: other?.variation) {
+            return false
+        }
+        if flagVersion == nil && other?.flagVersion == nil {
+            return version.isEqualMatchingNil(to: other?.version)   //compare the version since the flagVersion is missing in both flags
+        } else {
+            return flagVersion.isEqualMatchingNil(to: other?.flagVersion)
+        }
+    }
+}
+
+private extension Optional where Wrapped == FeatureFlag {
+    func isEqualUsingFlagVersion(to other: FeatureFlag?) -> Bool {
+        guard let featureFlag = self
+        else {
+            return false
+        }
+        return featureFlag.isEqualUsingFlagVersion(to: other)
+    }
+}
+
 extension Array where Element == FlagValueCounter {
     func flagValueCounter(for featureFlag: FeatureFlag?) -> FlagValueCounter? {
         let selectedFlagValueCounters: [FlagValueCounter]
@@ -69,7 +103,7 @@ extension Array where Element == FlagValueCounter {
             }
         } else {
             selectedFlagValueCounters = self.filter { (flagValueCounter) in
-                return flagValueCounter.featureFlag == featureFlag
+                return flagValueCounter.featureFlag.isEqualUsingFlagVersion(to: featureFlag)
             }
         }
         guard selectedFlagValueCounters.count == 1
