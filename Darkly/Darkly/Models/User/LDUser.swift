@@ -17,7 +17,7 @@ import Foundation
  */
 public struct LDUser {
     
-    ///String keys associated with LDUser properties
+    ///String keys associated with LDUser properties.
     public enum CodingKeys: String, CodingKey {
         ///Key names match the corresponding LDUser property
         case key, name, firstName, lastName, country, ipAddress = "ip", email, avatar, custom, isAnonymous = "anonymous", device, operatingSystem = "os", lastUpdated = "updatedAt", config, privateAttributes = "privateAttrs"

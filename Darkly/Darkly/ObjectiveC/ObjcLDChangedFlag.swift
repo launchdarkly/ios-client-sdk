@@ -35,7 +35,7 @@ public class ObjcLDChangedFlag: NSObject {
 
 ///Wraps the changed feature flag's BOOL values and sources.
 ///
-///If the flag is not actually a BOOL, the SDK sets the old & new value to false and old & new valueSource to 'type mismatch'
+///If the flag is not actually a BOOL the SDK sets the old and new value to false, and old and new valueSource to 'type mismatch'.
 @objc(LDBoolChangedFlag)
 public final class ObjcLDBoolChangedFlag: ObjcLDChangedFlag {
     ///The changed flag's value before it changed
@@ -54,7 +54,7 @@ public final class ObjcLDBoolChangedFlag: ObjcLDChangedFlag {
 
 ///Wraps the changed feature flag's NSInteger values and sources.
 ///
-///If the flag is not actually a NSInteger, the SDK sets the old & new value to 0 and old & new valueSource to 'type mismatch'
+///If the flag is not actually an NSInteger the SDK sets the old and new value to 0, and old and new valueSource to 'type mismatch'.
 @objc(LDIntegerChangedFlag)
 public final class ObjcLDIntegerChangedFlag: ObjcLDChangedFlag {
     ///The changed flag's value before it changed
@@ -73,7 +73,7 @@ public final class ObjcLDIntegerChangedFlag: ObjcLDChangedFlag {
 
 ///Wraps the changed feature flag's double values and sources.
 ///
-///If the flag is not actually a double, the SDK sets the old & new value to 0.0 and old & new valueSource to 'type mismatch'
+///If the flag is not actually a double the SDK sets the old and new value to 0.0, and old and new valueSource to 'type mismatch'.
 @objc(LDDoubleChangedFlag)
 public final class ObjcLDDoubleChangedFlag: ObjcLDChangedFlag {
     ///The changed flag's value before it changed
@@ -92,7 +92,7 @@ public final class ObjcLDDoubleChangedFlag: ObjcLDChangedFlag {
 
 ///Wraps the changed feature flag's NSString values and sources.
 ///
-///If the flag is not actually a NSString, the SDK sets the old & new value to nil and old & new valueSource to 'type mismatch'
+///If the flag is not actually an NSString the SDK sets the old and new value to nil, and old and new valueSource to 'type mismatch'.
 @objc(LDStringChangedFlag)
 public final class ObjcLDStringChangedFlag: ObjcLDChangedFlag {
     ///The changed flag's value before it changed
@@ -111,7 +111,7 @@ public final class ObjcLDStringChangedFlag: ObjcLDChangedFlag {
 
 ///Wraps the changed feature flag's NSArray values and sources.
 ///
-///If the flag is not actually a NSArray, the SDK sets the old & new value to nil and old & new valueSource to 'type mismatch'
+///If the flag is not actually a NSArray the SDK sets the old and new value to nil, and old and new valueSource to 'type mismatch'.
 @objc(LDArrayChangedFlag)
 public final class ObjcLDArrayChangedFlag: ObjcLDChangedFlag {
     ///The changed flag's value before it changed
@@ -130,7 +130,7 @@ public final class ObjcLDArrayChangedFlag: ObjcLDChangedFlag {
 
 ///Wraps the changed feature flag's NSDictionary values and sources.
 ///
-///If the flag is not actually a NSDictionary, the SDK sets the old & new value to nil and old & new valueSource to 'type mismatch'
+///If the flag is not actually an NSDictionary the SDK sets the old and new value to nil, and old and new valueSource to 'type mismatch'.
 @objc(LDDictionaryChangedFlag)
 public final class ObjcLDDictionaryChangedFlag: ObjcLDChangedFlag {
     ///The changed flag's value before it changed

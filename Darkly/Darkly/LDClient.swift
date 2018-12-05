@@ -16,10 +16,10 @@ enum LDClientRunMode {
  The LDClient is the heart of the SDK, providing client apps running iOS, watchOS, macOS, or tvOS access to LaunchDarkly services. This singleton provides the ability to set a configuration (LDConfig) that controls how the LDClient talks to LaunchDarkly servers, and a user (LDUser) that provides finer control on the feature flag values delivered to LDClient. Once the LDClient has started, it connects to LaunchDarkly's servers to get the feature flag values you set in the Dashboard.
 ## Usage
 ### Startup
- 1. If desired, configure a `LDConfig` and `LDUser`. While neither are required, both give you additional control over the feature flags delivered to the LDClient. See `LDConfig` & `LDUser` for more details.
+ 1. To customize, configure a `LDConfig` and `LDUser`. While neither are required, both give you additional control over the feature flags delivered to the LDClient. See `LDConfig` & `LDUser` for more details.
  2. Call `LDClient.shared.start(mobileKey: config: user: completion:)`
-    - The mobileKey comes from your LaunchDarkly Account settings (on the left at the bottom). If you have multiple projects be sure to choose the correct Mobile key.
-    - If you do not pass in a LDConfig or LDUser, LDCLient creates a default for you
+    - The mobileKey comes from your LaunchDarkly Account settings (on the left, at the bottom). If you have multiple projects be sure to choose the correct Mobile key.
+    - If you do not pass in a LDConfig or LDUser, LDCLient will create a default for you.
     - The optional completion closure allows the LDClient to notify your app when it has gone online.
  3. Because the LDClient is a singleton, you do not have to keep a reference to it in your code.
 
@@ -35,13 +35,13 @@ enum LDClientRunMode {
 ### Observing Feature Flags
  You might need to know when a feature flag value changes. This is not required, you can check the flag's value when you need it.
 
- The LDClient provides several `observe` methods that allow you to tell the LDClient to notify you when there is a change. There are several options, depending on whether you want to know when a specific flag changes, when any flag in a collection changes, or when a flag doesn't change.
+ If you want to know when a feature flag value changes, you can check the flag's value. You can also use one of several `observe` methods to have the LDClient notify you when a change occurs. There are several options--you can set up notificiations based on when a specific flag changes, when any flag in a collection changes, or when a flag doesn't change.
  ````
  LDClient.shared.observe("flag-key", owner: self, observer: { [weak self] (changedFlag) in
     self?.updateFlag(key: "flag-key", changedFlag: changedFlag)
  }
  ````
- The `changedFlag` passed in to the closure contains the old and new value, and the old and new valueSource
+ The `changedFlag` passed in to the closure contains the old and new value, and the old and new valueSource.
  */
 public class LDClient {
 

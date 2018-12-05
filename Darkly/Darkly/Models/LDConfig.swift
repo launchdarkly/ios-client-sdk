@@ -8,7 +8,7 @@
 
 import Foundation
 
-/// Defines the connection modes available to set into LDClient
+/// Defines the connection modes available to set into LDClient.
 public enum LDStreamingMode {
     /// In streaming mode, the LDClient opens a long-running connection to LaunchDarkly's streaming server (called *clientstream*). When a flag value changes on the server, the clientstream notifies the SDK to update the value. Streaming mode is not available on watchOS. On iOS and tvOS, the client app must be running in the foreground to connect to clientstream. On macOS the client app may run in either foreground or background to connect to clientstream. If streaming mode is not available, the SDK reverts to polling mode.
     case streaming
@@ -70,7 +70,7 @@ public struct LDConfig {
         static let debugMode = false
     }
 
-    /// The minimum values allowed to be set into LDConfig
+    /// The minimum values allowed to be set into LDConfig.
     public struct Minima {
 
         //swiftlint:disable:next nesting

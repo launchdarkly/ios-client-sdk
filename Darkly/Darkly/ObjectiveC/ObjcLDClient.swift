@@ -15,15 +15,15 @@ import Foundation
  The SDK creates an Objective-C native style API by wrapping Swift specific classes, properties, and methods into Objective-C wrapper classes prefixed by `Objc`. By defining Objective-C specific names, client apps written in Objective-C can use a native coding style, including using familiar LaunchDarkly SDK names like `LDClient`, `LDConfig`, and `LDUser`. Objective-C developers should refer to the Objc documentation by following the Objc specific links following type, property, and method names.
  ## Usage
  ### Startup
- 1. If desired, configure a LDConfig (`ObjcLDConfig`) and LDUser (`ObjcLDUser`). While neither are required, both give you additional control over the feature flags delivered to the LDClient. See `ObjcLDConfig` & `ObjcLDUser` for more details.
+ 1. To customize, configure a LDConfig (`ObjcLDConfig`) and LDUser (`ObjcLDUser`). While neither are required, both give you additional control over the feature flags delivered to the LDClient. See `ObjcLDConfig` & `ObjcLDUser` for more details.
  2. Call `[LDClient.sharedInstance startWithMobileKey: config: user: completion:]` (`ObjcLDClient.startWithMobileKey(_:config:user:completion:)`)
- - The mobileKey comes from your LaunchDarkly Account settings (on the left at the bottom). If you have multiple projects be sure to choose the correct Mobile key.
- - If you do not pass in a LDConfig or LDUser, LDCLient creates a default for you
+ - The mobileKey comes from your LaunchDarkly Account settings (on the left, at the bottom). If you have multiple projects be sure to choose the correct Mobile key.
+ - If you do not pass in a LDConfig or LDUser, LDCLient will create a default for you.
  - The optional completion closure allows the LDClient to notify your app when it has gone online.
  3. Because the LDClient is a singleton, you do not have to keep a reference to it in your code.
 
  ### Getting Feature Flags
- Once the LDClient has started, it makes your feature flags available using the `variation` and `variationAndSource` methods. A `variation` is a specific flag value. For example a boolean feature flag has 2 variations, `YES` and `NO`. You can create feature flags with more than 2 variations using other feature flag types. See `LDFlagValue` for the available types.
+ Once the LDClient has started, it makes your feature flags available using the `variation` and `variationAndSource` methods. A `variation` is a specific flag value. For example, a boolean feature flag has 2 variations, `YES` and `NO`. You can create feature flags with more than 2 variations using other feature flag types. See `LDFlagValue` for the available types.
  ````
  BOOL boolFlag = [LDClient.sharedInstance boolVariationForKey:@"my-bool-flag" fallback:NO];
  ````
@@ -37,9 +37,7 @@ import Foundation
  See the typed `-[LDCLient variationForKey: fallback:]` or `-[LDClient variationAndSourceForKey: fallback:]` methods in the section **Feature Flag values** for details.
 
  ### Observing Feature Flags
- You might need to know when a feature flag value changes. This is not required, you can check the flag's value when you need it.
-
- The LDClient provides several `observe` methods that allow you to tell the LDClient to notify you when there is a change. There are several options, depending on whether you want to know when a specific flag changes, when any flag in a collection changes, or when a flag doesn't change.
+ If you want to know when a feature flag value changes, you can check the flag's value. You can also use one of several `observe` methods to have the LDClient notify you when a change occurs. There are several options-- you can setup notifications based on when a specific flag changes, when any flag in a collection changes, or when a flag doesn't change.
  ````
  __weak typeof(self) weakSelf = self;
  [LDClient.sharedInstance observeBool:@"my-bool-flag" owner:self handler:^(LDBoolChangedFlag *changedFlag) {
@@ -47,7 +45,7 @@ import Foundation
     [strongSelf updateFlagWithKey:@"my-bool-flag" changedFlag:changedFlag];
  }];
  ````
- The `changedFlag` passed in to the block contains the old and new value, and the old and new valueSource. See the typed `LDChangedFlag` classes in the **Obj-C Changed Flags**
+ The `changedFlag` passed in to the block contains the old and new value, and the old and new valueSource. See the typed `LDChangedFlag` classes in the **Obj-C Changed Flags**.
  */
 @objc(LDClient)
 public final class ObjcLDClient: NSObject {

@@ -5,11 +5,13 @@ Pod::Spec.new do |ld|
   ld.summary      = "iOS SDK for LaunchDarkly"
 
   ld.description  = <<-DESC
-                   LaunchDarkly is a continuous delivery platform that provides feature flags as a service and allows developers to iterate quickly and safely. We allow you to easily flag your features and manage them from the LaunchDarkly dashboard.  With LaunchDarkly, you can:
-                   * Roll out a new feature to a subset of your users (like a group of users who opt-in to a beta tester group), gathering feedback and bug reports from real-world use cases.
-                   * Gradually roll out a feature to an increasing percentage of users, and track the effect that the feature has on key metrics (for instance, how likely is a user to complete a purchase if they have feature A versus feature B?).
-                   * Turn off a feature that you realize is causing performance problems in production, without needing to re-deploy, or even restart the application with a changed configuration file.
-                   * Grant access to certain features based on user attributes, like payment plan (eg: users on the ‘gold’ plan get access to more features than users in the ‘silver’ plan). Disable parts of your application to facilitate maintenance, without taking everything offline.
+                   LaunchDarkly is the feature management platform that software teams use to build better software, faster. Development teams use feature management as a best practice to separate code deployments from feature releases. With LaunchDarkly teams control their entire feature lifecycles from concept to launch to value.
+                   With LaunchDarkly, you can:
+                   * Release a new feature to a subset of your users, like a group of users who opt-in to a beta tester group.
+                   * Slowly roll out a feature to an increasing percentage of users and track the effect that feature has on key metrics.
+                   * Instantly turn off a feature that is causing problems, without re-deploying code or restarting the application with a changed config file.
+                   * Maintain granular control over your users’ experience by granting access to certain features based on any attribute you choose. For example, provide different users with different funtionality based on their payment plan.
+                   * Disable parts of your application to facilitate maintenance, without taking everything offline.
                    DESC
 
 #  ld.homepage     = "https://github.com/launchdarkly/ios-client-swift"	#TODO: Once we release, point this to the public home page

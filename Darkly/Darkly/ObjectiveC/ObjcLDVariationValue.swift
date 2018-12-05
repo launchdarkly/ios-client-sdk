@@ -8,7 +8,7 @@
 
 import Foundation
 
-///Objective-C object that contains a BOOL feature flag's value and source
+///Objective-C object that contains a BOOL feature flag's value and source.
 @objc (LDBoolVariationValue)
 public final class ObjcLDBoolVariationValue: NSObject {
     ///The feature flag's BOOL value
@@ -24,7 +24,7 @@ public final class ObjcLDBoolVariationValue: NSObject {
     @objc public var sourceString: String { return source.stringValue }
 }
 
-///Objective-C object that contains a NSInteger feature flag's value and source
+///Objective-C object that contains an NSInteger feature flag's value and source.
 @objc (LDIntegerVariationValue)
 public final class ObjcLDIntegerVariationValue: NSObject {
     ///The feature flag's NSInteger value
@@ -41,7 +41,7 @@ public final class ObjcLDIntegerVariationValue: NSObject {
     @objc public var sourceString: String { return source.stringValue }
 }
 
-///Objective-C object that contains a double feature flag's value and source
+///Objective-C object that contains a double feature flag's value and source.
 @objc (LDDoubleVariationValue)
 public final class ObjcLDDoubleVariationValue: NSObject {
     ///The feature flag's double value
@@ -58,7 +58,7 @@ public final class ObjcLDDoubleVariationValue: NSObject {
     @objc public var sourceString: String { return source.stringValue }
 }
 
-///Objective-C object that contains a NSString feature flag's value and source
+///Objective-C object that contains an NSString feature flag's value and source.
 @objc (LDStringVariationValue)
 public final class ObjcLDStringVariationValue: NSObject {
     ///The feature flag's NSString value
@@ -75,7 +75,7 @@ public final class ObjcLDStringVariationValue: NSObject {
     @objc public var sourceString: String { return source.stringValue }
 }
 
-///Objective-C object that contains a NSArray feature flag's value and source
+///Objective-C object that contains an NSArray feature flag's value and source.
 @objc (LDArrayVariationValue)
 public final class ObjcLDArrayVariationValue: NSObject {
     ///The feature flag's NSArray value
@@ -92,7 +92,7 @@ public final class ObjcLDArrayVariationValue: NSObject {
     @objc public var sourceString: String { return source.stringValue }
 }
 
-///Objective-C object that contains a NSDictionary feature flag's value and source
+///Objective-C object that contains an NSDictionary feature flag's value and source.
 @objc (LDDictionaryVariationValue)
 public final class ObjcLDDictionaryVariationValue: NSObject {
     ///The feature flag's NSDictionary value
