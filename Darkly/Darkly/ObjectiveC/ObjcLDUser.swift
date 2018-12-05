@@ -144,7 +144,7 @@ public final class ObjcLDUser: NSObject {
 
      - parameter userDictionary: NSDictionary with LDUser attribute keys and values.
      */
-    public init(userDictionary: [String: Any]) {
+    @objc public init(userDictionary: [String: Any]) {
         self.user = LDUser(userDictionary: userDictionary)
     }
 
