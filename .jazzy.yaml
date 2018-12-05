@@ -17,8 +17,6 @@ exclude:
 
 copyright: 'Copyright © 2018 Catamorphic Co.'
 
-swift_version: '4.2'
-
 theme: fullwidth
 
 custom_categories:
