@@ -126,8 +126,10 @@ public final class ObjcLDUser: NSObject {
      - parameter key: String that uniquely identifies the user. If the client app does not define a key, the SDK will assign an identifier associated with the anonymous user.
      */
     @objc public init(key: String) { user = LDUser(key: key) }
-    //SDK initializer to wrap the Swift LDUser into ObjcLDUser
-    init(_ user: LDUser) { self.user = user }
+    ///Initializer to wrap the Swift LDUser into ObjcLDUser for use in mixed apps. Objective-C apps should use LDUser directly.
+    public init(_ user: LDUser) {
+        self.user = user
+    }
 
     /**
      Failable Initializer that takes any object and attempts to create a LDUser from the object. If the object is a NSDictionary, constructs the LDUser via -[LDUser initWithUserDictionary:]
