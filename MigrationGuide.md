@@ -4,9 +4,10 @@ LaunchDarkly Migration Guide for the iOS Swift SDK
 # Getting Started
 Follow the steps below to migrate your app from v2.x to v3.0.0. Most of these steps will be required, your IDE will give you build errors if you don't take them. However some steps (such as converting time intervals to Millis) the compiler can't warn you about. We recommend reading through the guide before starting to get a feel for what you will need to do to migrate your app to v3.0.0.
 
-Below the Migration Steps list are sections that give more detailed instructions.
+### Multiple Environments
+Version 3.0.0 does not support multiple environments. If you use version 2.14.0 or later and set LDConfig's `secondaryMobileKeys` you will not be able to migrate to version 3.0.0. Multiple Environments will be added in a future release to the Swift SDK.
 
-The section [API Differences from v2.x](#api-differences-from-v2x) has all of the changes to the API.
+[API Differences from v2.x](#api-differences-from-v2x) lists all of the changes to the API.
 
 ## Migration Steps
 1. Integrate the v3.0.0 SDK into your app. (e.g. CocoaPods podfile or Carthage cartfile change to point to v3.0.0). See [Integrate the Swift SDK into your app using either CocoaPods or Carthage](#integrate-the-swift-sdk-into-your-app-using-either-cocoapods-or-carthage) for details.
@@ -68,7 +69,7 @@ See [Getting Feature Flag Values](#getting-feature-flag-values) for details.
 ### Install `LDClient` Feature Flag Observers
 For any object (Swift enum and struct cannot be feature flag observers) that conformed to `LDClientDelegate`, set observers on the `LDClient` that correspond to the implemented delegate methods. Use the steps below as a guide.
 - `featureFlagDidUpdate` was called whenever any feature flag was updated. Assess the feature flags the former delegate was interested in.
-  1. If the object watches a single feature flag, use `observer(key:, owner:, handler:)`. You can call the original delegate method from the `handler`, or copy the code in the delegate method into the handler. The `LDChangedFlag` passed into the handler has the `key` for the changed flag.
+  1. If the object watches a single feature flag, use `observe(key:, owner:, handler:)`. You can call the original delegate method from the `handler`, or copy the code in the delegate method into the handler. The `LDChangedFlag` passed into the handler has the `key` for the changed flag.
   2. If the object watches a set of feature flags, but not all of them in the environment, use `observe(keys:, owner:, handler:)`. As with 1 above, you can call the original delegate method by looping through the keys in the `[LDFlagKey, LDChangedFlag]` passed into the handler. Or you may copy the delegate method code into the handler. Each changed feature flag has an entry in `changedFlags` that contains a `LDChangedFlag` you can use to update the client app.
   3. If the object watches all of the feature flags in an environment (available with a specific `mobileKey`) use `observeAll(owner: , handler:)`. Follow the guidance in #2 above to unpack changed feature flag details.
 - `userDidUpdate` was called whenever any feature flag changed. Follow the guidance under `featureFlagDidUpdate` to decide which observer method to call on the client.
@@ -83,9 +84,6 @@ If they were not re-used when implementing observers, you can delete the former 
 ---
 ## API Differences from v2.x
 This section details the changes between the v2.x and v3.0.0 APIs.
-
-### Multiple Environments
-Version 3.0.0 does not support multiple environments. If you use version 2.14.0 or later and set LDConfig's `secondaryMobileKeys` you will not be able to migrate to version 3.0.0. Multiple Environments will be added in a future release to the Swift SDK.
 
 ### Configuration with `LDConfig`
 LDConfig has changed to a `struct`, and therefore uses value semantics.
