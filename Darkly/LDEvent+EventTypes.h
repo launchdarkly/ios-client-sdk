@@ -2,7 +2,7 @@
 //  LDEvent+EventTypes.h
 //  Darkly
 //
-//  Created by Mark Pokorny on 2/5/18.
+//  Created by Mark Pokorny on 2/5/18. +JMJ
 //  Copyright © 2018 LaunchDarkly. All rights reserved.
 //
 

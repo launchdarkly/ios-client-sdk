@@ -10,6 +10,15 @@
 #import "NSHTTPURLResponse+LaunchDarkly.h"
 
 @implementation NSURLResponse(LaunchDarkly)
+
+-(BOOL)isOk {
+    return NO;
+}
+
+-(BOOL)isNotModified {
+    return NO;
+}
+
 -(BOOL)isUnauthorizedHTTPResponse {
     return NO;
 }
@@ -17,4 +26,9 @@
 -(NSDate*)headerDate {
     return nil;
 }
+
+-(NSString*)etag {
+    return nil;
+}
+
 @end

@@ -8,8 +8,11 @@
 
 #import <Foundation/Foundation.h>
 
-/// Determines if this response is an unauthorized HTTP response. By default NO, but can be overridden by subclasses that can detected unuathorized response.
 @interface NSURLResponse(LaunchDarkly)
+@property (assign, nonatomic, readonly) BOOL isOk;
+@property (assign, nonatomic, readonly) BOOL isNotModified;
+@property (copy, nonatomic, readonly) NSString *etag;
+
 -(BOOL)isUnauthorizedHTTPResponse;
 -(NSDate*)headerDate;
 @end

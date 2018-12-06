@@ -99,6 +99,20 @@ extern NSString *const kLDFlagConfigModelKeyKey;
     XCTAssertTrue(flagConfigModelDictionary.count == 0);
 }
 
+-(void)testAllFlagValues {
+    LDFlagConfigModel *flagConfigModel = [LDFlagConfigModel flagConfigFromJsonFileNamed:@"featureFlags"];
+
+    NSDictionary<NSString*, id> *allFlags = flagConfigModel.allFlagValues;
+
+    for (NSString *flagKey in flagConfigModel.featuresJsonDictionary) {
+        if ([flagKey isEqualToString:@"isConnected"]) {
+            XCTAssertNil(allFlags[flagKey]);
+        } else {
+            XCTAssertEqualObjects(allFlags[flagKey], [flagConfigModel flagValueForFlagKey:flagKey]);
+        }
+    }
+}
+
 -(void)testFlagConfigValueForFlagKey {
     LDFlagConfigModel *subject = [LDFlagConfigModel flagConfigFromJsonFileNamed:@"featureFlags"];
     NSDictionary *flagValues = [NSJSONSerialization jsonObjectFromFileNamed:@"featureFlags"];
@@ -139,15 +153,15 @@ extern NSString *const kLDFlagConfigModelKeyKey;
     XCTAssertTrue([config flagModelVersionForFlagKey:@"someMissingKey"] == kLDFlagConfigValueItemDoesNotExist);
 }
 
-- (void)testDoesFlagConfigValueExistForFlagKey {
+- (void)testContainsFlagKey {
     LDFlagConfigModel *config = [LDFlagConfigModel flagConfigFromJsonFileNamed:@"featureFlags"];
     NSDictionary *flagValues = [NSJSONSerialization jsonObjectFromFileNamed:@"featureFlags"];
 
     for (NSString *key in [flagValues.allKeys copy]) {
-        XCTAssertTrue([config doesFlagConfigValueExistForFlagKey:key]);
+        XCTAssertTrue([config containsFlagKey:key]);
     }
 
-    XCTAssertFalse([config doesFlagConfigValueExistForFlagKey:@"someMissingKey"]);
+    XCTAssertFalse([config containsFlagKey:@"someMissingKey"]);
 }
 
 - (void)testAddOrReplaceFromDictionaryWhenKeyDoesntExist {
@@ -158,7 +172,7 @@ extern NSString *const kLDFlagConfigModelKeyKey;
 
     [config addOrReplaceFromDictionary:patch];
 
-    XCTAssertTrue([config doesFlagConfigValueExistForFlagKey:patchedFlagKey]);
+    XCTAssertTrue([config containsFlagKey:patchedFlagKey]);
     XCTAssertEqualObjects([config flagConfigValueForFlagKey:patchedFlagKey], flagConfigValue);
 }
 
@@ -170,7 +184,7 @@ extern NSString *const kLDFlagConfigModelKeyKey;
 
     [config addOrReplaceFromDictionary:patch];
 
-    XCTAssertTrue([config doesFlagConfigValueExistForFlagKey:patchedFlagKey]);
+    XCTAssertTrue([config containsFlagKey:patchedFlagKey]);
     XCTAssertEqualObjects([config flagConfigValueForFlagKey:patchedFlagKey], flagConfigValue);
 }
 
@@ -182,7 +196,7 @@ extern NSString *const kLDFlagConfigModelKeyKey;
 
     [config addOrReplaceFromDictionary:patch];
 
-    XCTAssertTrue([config doesFlagConfigValueExistForFlagKey:patchedFlagKey]);
+    XCTAssertTrue([config containsFlagKey:patchedFlagKey]);
     XCTAssertEqualObjects([config flagConfigValueForFlagKey:patchedFlagKey], flagConfigValue);
 }
 
@@ -194,7 +208,7 @@ extern NSString *const kLDFlagConfigModelKeyKey;
 
     [config addOrReplaceFromDictionary:patch];
 
-    XCTAssertTrue([config doesFlagConfigValueExistForFlagKey:patchedFlagKey]);
+    XCTAssertTrue([config containsFlagKey:patchedFlagKey]);
     XCTAssertEqualObjects([config flagConfigValueForFlagKey:patchedFlagKey], originalFlagConfigValue);
 }
 
@@ -206,7 +220,7 @@ extern NSString *const kLDFlagConfigModelKeyKey;
 
     [config addOrReplaceFromDictionary:patch];
 
-    XCTAssertTrue([config doesFlagConfigValueExistForFlagKey:patchedFlagKey]);
+    XCTAssertTrue([config containsFlagKey:patchedFlagKey]);
     XCTAssertEqualObjects([config flagConfigValueForFlagKey:patchedFlagKey], originalFlagConfigValue);
 }
 
@@ -283,7 +297,7 @@ extern NSString *const kLDFlagConfigModelKeyKey;
 
     [config deleteFromDictionary:delete];
 
-    XCTAssertFalse([config doesFlagConfigValueExistForFlagKey:deletedFlagKey]);
+    XCTAssertFalse([config containsFlagKey:deletedFlagKey]);
 }
 
 - (void)testDeleteFromDictionaryWhenKeyDoesntExist {
@@ -457,6 +471,94 @@ extern NSString *const kLDFlagConfigModelKeyKey;
     XCTAssertFalse([subject hasFeaturesEqualToDictionary:differentDictionary]);
 }
 
+-(void)testDifferingFlagKeysFromConfig_matchingConfig {
+    LDFlagConfigModel *flagConfig = [LDFlagConfigModel flagConfigFromJsonFileNamed:@"featureFlags"];
+    LDFlagConfigModel *otherConfig = [LDFlagConfigModel flagConfigFromJsonFileNamed:@"featureFlags"];
+
+    XCTAssertNil([flagConfig differingFlagKeysFromConfig:otherConfig]);
+}
+
+-(void)testDifferingFlagKeysFromConfig_differentValues {
+    LDFlagConfigModel *flagConfig = [LDFlagConfigModel stub];
+    NSMutableArray<NSString*> *flagKeysWithDifferentValues = [NSMutableArray arrayWithCapacity:[LDFlagConfigValue flagKeys].count];
+    for (NSString *flagKeyWithDifferentValue in [LDFlagConfigValue flagKeys]) {
+        if ([flagKeyWithDifferentValue isEqualToString:kLDFlagKeyIsANull]) { continue; }    //Null has no alternate value
+        [flagKeysWithDifferentValues addObject:flagKeyWithDifferentValue];
+        LDFlagConfigModel *otherConfig = [LDFlagConfigModel stubWithAlternateValuesForFlagKeys:flagKeysWithDifferentValues];
+
+        XCTAssertEqualObjects([NSSet setWithArray:[flagConfig differingFlagKeysFromConfig:otherConfig]], [NSSet setWithArray:flagKeysWithDifferentValues]);
+    }
+
+    //repeat varying the selector instead of the parameter
+    LDFlagConfigModel *otherConfig = [LDFlagConfigModel stub];
+    [flagKeysWithDifferentValues removeAllObjects];
+    for (NSString *flagKeyWithDifferentValue in [LDFlagConfigValue flagKeys]) {
+        if ([flagKeyWithDifferentValue isEqualToString:kLDFlagKeyIsANull]) { continue; }    //Null has no alternate value
+        [flagKeysWithDifferentValues addObject:flagKeyWithDifferentValue];
+        LDFlagConfigModel *flagConfig = [LDFlagConfigModel stubWithAlternateValuesForFlagKeys:flagKeysWithDifferentValues];
+
+        XCTAssertEqualObjects([NSSet setWithArray:[flagConfig differingFlagKeysFromConfig:otherConfig]], [NSSet setWithArray:flagKeysWithDifferentValues]);
+    }
+}
+
+-(void)testDifferingFlagKeysFromConfig_omittedValues {
+    LDFlagConfigModel *flagConfig = [LDFlagConfigModel stub];
+    NSMutableArray<NSString*> *omittedFlagKeys = [NSMutableArray arrayWithCapacity:[LDFlagConfigValue flagKeys].count];
+    for (NSString *omittedFlagKey in [LDFlagConfigValue flagKeys]) {
+        [omittedFlagKeys addObject:omittedFlagKey];
+        LDFlagConfigModel *otherConfig = [LDFlagConfigModel stubOmittingFlagKeys:omittedFlagKeys];
+
+        XCTAssertEqualObjects([NSSet setWithArray:[flagConfig differingFlagKeysFromConfig:otherConfig]], [NSSet setWithArray:omittedFlagKeys]);
+    }
+
+    //repeat varying the selector instead of the parameter
+    LDFlagConfigModel *otherConfig = [LDFlagConfigModel stub];
+    [omittedFlagKeys removeAllObjects];
+    for (NSString *omittedFlagKey in [LDFlagConfigValue flagKeys]) {
+        [omittedFlagKeys addObject:omittedFlagKey];
+        LDFlagConfigModel *flagConfig = [LDFlagConfigModel stubOmittingFlagKeys:omittedFlagKeys];
+
+        XCTAssertEqualObjects([NSSet setWithArray:[flagConfig differingFlagKeysFromConfig:otherConfig]], [NSSet setWithArray:omittedFlagKeys]);
+    }
+}
+
+-(void)testDifferingFlagKeysFromConfig_addedValue {
+    LDFlagConfigModel *flagConfig = [LDFlagConfigModel stub];
+    LDFlagConfigModel *otherConfig = [LDFlagConfigModel stub];
+    LDFlagConfigValue *addedFlagConfigValue = [LDFlagConfigValue stubForFlagKey:kLDFlagKeyIsABool];
+    NSString *addedFlagKey = [NSUUID UUID].UUIDString;
+    [otherConfig setFlagConfigValue:addedFlagConfigValue forKey:addedFlagKey];
+
+    XCTAssertEqualObjects([flagConfig differingFlagKeysFromConfig:otherConfig], @[addedFlagKey]);
+
+    //repeat adding the flagConfigValue to otherConfig
+    flagConfig = [LDFlagConfigModel stub];
+    otherConfig = [LDFlagConfigModel stub];
+    [flagConfig setFlagConfigValue:addedFlagConfigValue forKey:addedFlagKey];
+
+    XCTAssertEqualObjects([flagConfig differingFlagKeysFromConfig:otherConfig], @[addedFlagKey]);
+}
+
+-(void)testDifferingFlagKeysFromConfig_emptyConfig {
+    LDFlagConfigModel *flagConfig = [LDFlagConfigModel stub];
+    LDFlagConfigModel *otherConfig = [[LDFlagConfigModel alloc] init];
+
+    XCTAssertEqualObjects([NSSet setWithArray:[flagConfig differingFlagKeysFromConfig:otherConfig]], [NSSet setWithArray:[LDFlagConfigValue flagKeys]]);
+
+    //repeat making flagConfig empty
+    flagConfig = [[LDFlagConfigModel alloc] init];
+    otherConfig = [LDFlagConfigModel stub];
+
+    XCTAssertEqualObjects([NSSet setWithArray:[flagConfig differingFlagKeysFromConfig:otherConfig]], [NSSet setWithArray:[LDFlagConfigValue flagKeys]]);
+}
+
+-(void)testDifferingFlagKeysFromConfig_missingConfig {
+    LDFlagConfigModel *flagConfig = [LDFlagConfigModel stub];
+    LDFlagConfigModel *otherConfig = nil;
+
+    XCTAssertEqualObjects([NSSet setWithArray:[flagConfig differingFlagKeysFromConfig:otherConfig]], [NSSet setWithArray:[LDFlagConfigValue flagKeys]]);
+}
+
 -(void)testUpdateEventTrackingContextFromConfig {
     LDEventTrackingContext *eventTrackingContext = [LDEventTrackingContext contextWithTrackEvents:NO debugEventsUntilDate:nil];
     LDFlagConfigModel *subject = [LDFlagConfigModel flagConfigFromJsonFileNamed:@"featureFlags" eventTrackingContext:eventTrackingContext omitKey:nil];
@@ -468,6 +570,18 @@ extern NSString *const kLDFlagConfigModelKeyKey;
     for (NSString *flagKey in subject.featuresJsonDictionary.allKeys) {
         LDFlagConfigValue *flagConfigValue = subject.featuresJsonDictionary[flagKey];
         XCTAssertEqualObjects(flagConfigValue.eventTrackingContext, updatedEventTrackingContext);
+    }
+}
+
+-(void)testCopy {
+    LDFlagConfigModel *originalConfig = [LDFlagConfigModel flagConfigFromJsonFileNamed:@"featureFlags"];
+
+    LDFlagConfigModel *copiedConfig = [originalConfig copy];
+
+    XCTAssertTrue([copiedConfig isEqualToConfig:originalConfig]);
+    XCTAssertFalse(copiedConfig == originalConfig);     //copy is not the same object
+    for (NSString *flagKey in originalConfig.featuresJsonDictionary) {
+        XCTAssertFalse(originalConfig.featuresJsonDictionary[flagKey] == copiedConfig.featuresJsonDictionary[flagKey]);     //flagConfigValue copy is not the same object as the original
     }
 }
 @end

@@ -17,6 +17,7 @@
 #import "NSDate+Testable.h"
 #import "LDFlagConfigTracker.h"
 #import "LDFlagConfigTracker+Testable.h"
+#import "NSDictionary+LaunchDarkly.h"
 
 @interface LDUserModelTest : XCTestCase
 @end
@@ -489,6 +490,32 @@
     }
 }
 
+-(void)testCopy {
+    LDUserModel *originalUser = [LDUserModel stubWithKey:[[NSUUID UUID] UUIDString]];   //flagConfig includes a null feature flag
+    originalUser.privateAttributes = [LDUserModel allUserAttributes];
+
+    LDUserModel *copiedUser = [originalUser copy];
+
+    XCTAssertTrue([copiedUser isEqual:originalUser ignoringAttributes:@[kUserAttributeUpdatedAt]]);
+    XCTAssertFalse(originalUser == copiedUser);     //Verify different user objects
+    XCTAssertFalse(originalUser.flagConfig == copiedUser.flagConfig);   //Verify different flagConfig objects
+    XCTAssertTrue([copiedUser.flagConfig isEqualToConfig:originalUser.flagConfig]);
+    XCTAssertFalse(originalUser.flagConfigTracker == copiedUser.flagConfigTracker);     //Verify different flagConfigTracker objects
+    XCTAssertFalse(originalUser.privateAttributes == copiedUser.privateAttributes);   //Verify different flagConfig objects
+}
+
+-(void)testCopy_noPrivateAttributes {
+    LDUserModel *originalUser = [LDUserModel stubWithKey:[[NSUUID UUID] UUIDString]];
+
+    LDUserModel *copiedUser = [originalUser copy];
+
+    XCTAssertTrue([copiedUser isEqual:originalUser ignoringAttributes:@[kUserAttributeUpdatedAt]]);
+    XCTAssertFalse(originalUser == copiedUser);     //Verify different user objects
+    XCTAssertFalse(originalUser.flagConfig == copiedUser.flagConfig);   //Verify different flagConfig objects
+    XCTAssertFalse(originalUser.flagConfigTracker == copiedUser.flagConfigTracker);     //Verify different flagConfigTracker objects
+    XCTAssertNil(copiedUser.privateAttributes);
+}
+
 #pragma mark - Helpers
 ///Trims out null values, and config
 -(NSDictionary*)targetUserDictionaryFrom:(NSDictionary*)userDictionary withConfig:(BOOL)withConfig {
@@ -514,12 +541,6 @@
 
 -(NSDictionary*)serverJson {
     return [NSJSONSerialization jsonObjectFromFileNamed:@"featureFlags"];
-}
-
--(NSMutableDictionary*)customDictionary {
-    return [NSMutableDictionary dictionaryWithDictionary:@{@"foo": @"Foo",
-                                                           @"device": @"iPad",
-                                                           @"os": @"IOS 9.2.1"}];
 }
 
 -(NSMutableDictionary*)userDictionaryWithUserKey:(NSString*)userKey userName:(NSString*)userName customDictionary:(NSDictionary*)customDictionary {

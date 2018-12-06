@@ -16,15 +16,8 @@ FOUNDATION_EXPORT const unsigned char DarklyVersionString[];
 
 // In this header, you should import all the public headers of your framework using statements like #import <Darkly/PublicHeader.h>
 
-#import <Darkly/LDConfig.h>
-#import <Darkly/LDClient.h>
-#import <Darkly/LDUserBuilder.h>
-#import <Darkly/LDUserModel.h>
-
-#import <Darkly/LDDataManager.h>
 #import <Darkly/DarklyConstants.h>
-#import <Darkly/LDClientManager.h>
-#import <Darkly/LDPollingManager.h>
-#import <Darkly/LDRequestManager.h>
-#import <Darkly/LDUtil.h>
-#import <Darkly/NSDictionary+JSON.h>
+#import <Darkly/LDConfig.h>
+#import <Darkly/LDUserBuilder.h>
+#import <Darkly/LDClientInterface.h>
+#import <Darkly/LDClient.h>
