@@ -9,18 +9,18 @@ Below the Migration Steps list are sections that give more detailed instructions
 The section [API Differences from v2.x](#api-differences-from-v2x) has all of the changes to the API.
 
 ## Migration Steps
-1. Integrate the v3.0.0 SDK into your app. (e.g. CocoaPods podfile or Carthage cartfile change to point to v3.0.0).
+1. Integrate the v3.0.0 SDK into your app. (e.g. CocoaPods podfile or Carthage cartfile change to point to v3.0.0). See [Integrate the Swift SDK into your app using either CocoaPods or Carthage](#integrate-the-swift-sdk-into-your-app-using-either-cocoapods-or-carthage) for details.
 2. Clean, and delete Derived Data.
-3. Update imports to `LaunchDarkly`.
+3. Update imports to `LaunchDarkly`. See [Update imports to `LaunchDarkly`](#update-imports-to-launchdarkly) for details.
 4. In Swift code, replace instances of `LDClient.sharedInstance()` with `LDClient.shared`. Do not change Objective-C `[LDClient sharedInstance]` instances.
-5. Update `LDUser` and properties.
-6. Update `LDConfig` and properties.
-7. Update `LDClient` Controls.
-8. Update `LDClient` Feature Flag access
-9. Install `LDClient` Observers
-10. Remove `LDClientDelegate` methods if they were not re-used.
+5. Update `LDUser` and properties. See [Update `LDUser` and properties](#update-lduser-and-properties) for details.
+6. Update `LDConfig` and properties. See [Update `LDConfig` and properties](#update-ldconfig-and-properties) for details.
+7. Update `LDClient` Controls. See [Update `LDClient` Controls](#update-ldclient-controls) for details.
+8. Update `LDClient` Feature Flag access. See [Update `LDClient` Feature Flag access](#update-ldclient-feature-flag-access) for details.
+9. Install `LDClient` Feature Flag Observers. See [Install `LDClient` Feature Flag Observers](#install-ldclient-feature-flag-observers) for details.
+10. Remove `LDClientDelegate` methods if they were not re-used. See [Remove `LDClientDelegate` methods](#remove-ldclientdelegate-methods) for details.
 
-### Integrate the v3.0.0 SDK into your app using either CocoaPods or Carthage
+### Integrate the Swift SDK into your app using either CocoaPods or Carthage
 #### CocoaPods
 - Add `use_frameworks!` to either the root or to any targets that include `LaunchDarkly`
 
@@ -33,6 +33,8 @@ The section [API Differences from v2.x](#api-differences-from-v2x) has all of th
 - Replace references to `<someUser>.ip` with `<someUser>.ipAddress`
 - Replace references to `<someUser>.custom<jsonType>` with `<someUser>.custom`, and convert the object set into a `[String: Any]`
 
+See [Custom users with `LDUser`](#custom-users-with-lduser) for details.
+
 ### Update `LDConfig` and properties
 - Replace initializers that take a `mobileKey` with the non-mobile key initializer.
 - Change lines that set `baseUrl`, `eventsUrl`, and `streamUrl` with strings to instead set these properties with `URL` objects.
@@ -40,6 +42,8 @@ The section [API Differences from v2.x](#api-differences-from-v2x) has all of th
 - Change lines that set time-based properties (`connectionTimeout`, `flushInterval`, `pollingInterval`, and `backgroundFetchInterval`) to their millisecond property (`connectionTimeoutMillis`, `flushIntervalMillis`, `pollingIntervalMillis`, and `backgroundFetchIntervalMillis`). Set these properties with `Int` values.
 - Change lines that set `streaming` to set `streamingMode`. For Swift apps, use the enum `.streaming` or `.polling`. For Objective-C apps, set to `YES` for streaming, and `NO` for polling as with the v2.x SDK. Note that if you do not have this property set, LDConfig sets it to streaming mode for you.
 - Change lines that set `debugEnabled` to set `debugMode` instead.
+
+See [Configuration with LDConfig](#configuration-with-ldconfig) for details.
 
 ### Update `LDClient` Controls
 - Replace references to `LDClient.sharedInstance()` in Swift code to `LDClient.shared`. Do not change references to `sharedInstance` in Objective-C code.
@@ -52,12 +56,16 @@ The section [API Differences from v2.x](#api-differences-from-v2x) has all of th
 - Change calls to `start` to not expect a return value. If desired, capture the SDK's online status using `isOnline`.
 - Change calls to `stopClient` to `stop`
 
+See [`LDClient` Controls](#ldclient-controls) for details.
+
 ### Update `LDClient` Feature Flag access
 - For Objective-C apps, add `ForKey` to each `variation` method call. e.g. `[[LDClient sharedInstance] boolVariationForKey:some-key fallback:fallback-value]`
 - For Swift apps remove the type in the variation call, and add `forKey:` to the first parameter. e.g. `LDClient.shared.variation(forKey: some-key, fallback: fallback-value)`.
 - Replace calls to `numberVariation` with `integerVariation` or `doubleVariation` as appropriate. Replace the type of the `integerVariation` call with `Int` (Swift) or `NSInteger` (Objective-C). For Objective-C apps, the client can wrap the result into an NSNumber if needed.
 
-### Install `LDClient` Observers
+See [Getting Feature Flag Values](#getting-feature-flag-values) for details.
+
+### Install `LDClient` Feature Flag Observers
 For any object (Swift enum and struct cannot be feature flag observers) that conformed to `LDClientDelegate`, set observers on the `LDClient` that correspond to the implemented delegate methods. Use the steps below as a guide.
 - `featureFlagDidUpdate` was called whenever any feature flag was updated. Assess the feature flags the former delegate was interested in.
   1. If the object watches a single feature flag, use `observer(key:, owner:, handler:)`. You can call the original delegate method from the `handler`, or copy the code in the delegate method into the handler. The `LDChangedFlag` passed into the handler has the `key` for the changed flag.
@@ -66,6 +74,8 @@ For any object (Swift enum and struct cannot be feature flag observers) that con
 - `userDidUpdate` was called whenever any feature flag changed. Follow the guidance under `featureFlagDidUpdate` to decide which observer method to call on the client.
 - `userUnchanged` was called in `.polling` mode when the response to a flag request did not change any feature flag value. If your app uses `.streaming` mode (whether you set it explicitly or accept the default value in `LDConfig`) you can ignore this method. If using `.polling` mode, call `observeFlagsUnchanged` and either call the delegate method from within the handler, or copy the delegate method code into the handler.
 - `serverConnectionUnavailable` was called when the SDK could not connect to LaunchDarkly servers. Set `onServerUnavailable` with a closure to execute when that occurs. Unlike the `observe` methods above, the SDK can only accept 1 `onServerUnavailable` closure. When the object that sets the closure no longer needs to watch for this condition, set `onServerUnavailable` to `nil` or set another closure from another interested object. If a client app has several objects that watch this condition, consider setting the observer in the `AppDelegate` and posting a notification from the closure.
+
+See [Monitoring Feature Flags for changes](#monitoring-feature-flags-for-changes) for details.
 
 ### Remove `LDClientDelegate` methods.
 If they were not re-used when implementing observers, you can delete the former `LDClientDelegate` methods.
@@ -77,7 +87,7 @@ This section details the changes between the v2.x and v3.0.0 APIs.
 ### Multiple Environments
 Version 3.0.0 does not support multiple environments. If you use version 2.14.0 or later and set LDConfig's `secondaryMobileKeys` you will not be able to migrate to version 3.0.0. Multiple Environments will be added in a future release to the Swift SDK.
 
-### Configuration with LDConfig
+### Configuration with `LDConfig`
 LDConfig has changed to a `struct`, and therefore uses value semantics.
 
 #### Changed `LDConfig` Properties
@@ -155,7 +165,7 @@ This property has changed to `user` and its type has changed to `LDUser`. Client
 ##### `ldConfig`
 This property has changed to `config`. Client apps can set the `config` directly.
 ##### `delegate`
-This property was removed. See [Replacing LDClient delegate methods](#replacing-ld-client-delegate)
+This property was removed. See [Replacing LDClient delegate methods](#replacing-ldclient-delegate-methods)
 ##### `start`
 - This method has a new `mobileKey` first parameter.
 - `inputConfig` has changed to `config`.
