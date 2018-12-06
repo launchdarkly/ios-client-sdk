@@ -131,8 +131,14 @@ public final class ObjcLDConfig: NSObject {
     }
     
     ///LDConfig constructor. Configurable values are all set to their default values. The client app can modify these values as desired. Note that client app developers may prefer to get the LDConfig from `LDClient.config` (`ObjcLDClient.config`) in order to retain previously set values.
-    @objc public override init() { config = LDConfig() }
-    init(_ config: LDConfig) { self.config = config }
+    @objc public override init() {
+        config = LDConfig()
+    }
+
+    //Initializer to wrap the Swift LDConfig into ObjcLDConfig for use in Objective-C apps.
+    init(_ config: LDConfig) {
+        self.config = config
+    }
 
     ///Compares the settable properties in 2 LDConfig structs
     @objc public func isEqual(object: Any?) -> Bool {

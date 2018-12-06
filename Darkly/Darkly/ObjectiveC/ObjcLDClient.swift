@@ -109,7 +109,7 @@ public final class ObjcLDClient: NSObject {
      When a new config is set, the LDClient goes offline and reconfigures using the new config. If the client was online when the new config was set, it goes online again, subject to a throttling delay if in force (see `ObjcLDClient.setOnline(_:completion:)` for details). To change both the `config` and `user`, set the LDClient offline, set both properties, then set the LDClient online.
      */
     @objc public var config: ObjcLDConfig {
-        get { return ObjcLDConfig(LDClient.shared.config) }
+        get { return LDClient.shared.config.objcLdConfig }
         set { LDClient.shared.config = newValue.config }
     }
     /**
@@ -122,7 +122,7 @@ public final class ObjcLDClient: NSObject {
      When a new user is set, the LDClient goes offline and sets the new user. If the client was online when the new user was set, it goes online again, subject to a throttling delay if in force (see `ObjcLDClient.setOnline(_:completion:)` for details). To change both the `config` and `user`, set the LDClient offline, set both properties, then set the LDClient online.
      */
     @objc public var user: ObjcLDUser {
-        get { return ObjcLDUser(LDClient.shared.user) }
+        get { return LDClient.shared.user.objcLdUser }
         set { LDClient.shared.user = newValue.user }
     }
 

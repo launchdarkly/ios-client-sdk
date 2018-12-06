@@ -35,6 +35,11 @@ public enum LDFlagValue {
     case dictionary([LDFlagKey: LDFlagValue])
     ///Null flag value
     case null
+
+    ///An NSObject wrapper for the Swift LDFlagValue enum. Intended for use in mixed apps when Swift code needs to pass a LDFlagValue into an Objective-C method.
+    public var objcLdFlagValue: ObjcLDFlagValue {
+        return ObjcLDFlagValue(self)
+    }
 }
 
 // The commented out code in this file is intended to support automated typing from the json, which is not implemented in the 3.0.0 release. When that capability can be supported with later Swift versions, uncomment this code to support it.

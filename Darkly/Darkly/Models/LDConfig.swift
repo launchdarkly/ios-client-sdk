@@ -180,6 +180,11 @@ public struct LDConfig {
     ///LaunchDarkly defined minima for selected configurable items
     public let minima: Minima
 
+    ///An NSObject wrapper for the Swift LDConfig struct. Intended for use in mixed apps when Swift code needs to pass a config into an Objective-C method.
+    public var objcLdConfig: ObjcLDConfig {
+        return ObjcLDConfig(self)
+    }
+
     //Internal constructor to enable automated testing
     init(environmentReporter: EnvironmentReporting) {
         minima = Minima(environmentReporter: environmentReporter)

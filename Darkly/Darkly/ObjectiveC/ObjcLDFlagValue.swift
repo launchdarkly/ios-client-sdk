@@ -16,8 +16,7 @@ public final class ObjcLDFlagValue: NSObject {
     ///String representation of the type of the feature flag.
     @objc public var flagValueType: String? { return flagVal.typeString }
 
-    init?(_ flagValue: LDFlagValue?) {
-        guard let flagValue = flagValue else { return nil }
+    init(_ flagValue: LDFlagValue) {
         self.flagVal = flagValue
     }
 }

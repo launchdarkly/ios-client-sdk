@@ -154,10 +154,11 @@ extension LDFlagValueSource {
     }
 }
 
-extension LDChangedFlag {
-    var objcChangedFlag: ObjcLDChangedFlag {
-        let sourceValue = oldValue ?? newValue
-        switch sourceValue {
+public extension LDChangedFlag {
+    ///An NSObject wrapper for the Swift LDChangeFlag enum. Intended for use in mixed apps when Swift code needs to pass a LDChangeFlag into an Objective-C method.
+    public var objcChangedFlag: ObjcLDChangedFlag {
+        let extantValue = oldValue ?? newValue
+        switch extantValue {
         case _ as Bool: return ObjcLDBoolChangedFlag(self)
         case _ as Int: return ObjcLDIntegerChangedFlag(self)
         case _ as Double: return ObjcLDDoubleChangedFlag(self)

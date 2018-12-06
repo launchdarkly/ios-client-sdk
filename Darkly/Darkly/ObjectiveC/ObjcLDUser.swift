@@ -119,15 +119,21 @@ public final class ObjcLDUser: NSObject {
     /**
      Initializer to create a LDUser. Client configurable attributes are set to their default value. The SDK will automatically set `key`, `device`, `operatingSystem`, and `isAnonymous` attributes. The SDK embeds `device` and `operatingSystem` into the `custom` dictionary for transmission to LaunchDarkly.
      */
-    @objc public override init() { user = LDUser() }
+    @objc public override init() {
+        user = LDUser()
+    }
+
     /**
      Initializer to create a LDUser with a specific key. Other client configurable attributes are set to their default value. The SDK will automatically set `key`, `device`, `operatingSystem`, and `isAnonymous` attributes. The SDK embeds `device` and `operatingSystem` into the `custom` dictionary for transmission to LaunchDarkly.
 
      - parameter key: String that uniquely identifies the user. If the client app does not define a key, the SDK will assign an identifier associated with the anonymous user.
      */
-    @objc public init(key: String) { user = LDUser(key: key) }
-    ///Initializer to wrap the Swift LDUser into ObjcLDUser for use in mixed apps. Objective-C apps should use LDUser directly.
-    public init(_ user: LDUser) {
+    @objc public init(key: String) {
+        user = LDUser(key: key)
+    }
+
+    //Initializer to wrap the Swift LDUser into ObjcLDUser for use in Objective-C apps.
+    init(_ user: LDUser) {
         self.user = user
     }
 
