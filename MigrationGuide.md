@@ -2,6 +2,12 @@ LaunchDarkly Migration Guide for the iOS Swift SDK
 ==================================================
 
 # Getting Started
+Follow the steps below to migrate your app from v2.x to v3.0.0. Most of these steps will be required, your IDE will give you build errors if you don't take them. However some steps (such as converting time intervals to Millis) the compiler can't warn you about. We recommend reading through the guide before starting to get a feel for what you will need to do to migrate your app to v3.0.0.
+
+Below the Migration Steps list are sections that give more detailed instructions.
+
+The section [API Differences from v2.x](#api-differences-from-v2x) has all of the changes to the API.
+
 ## Migration Steps
 1. Integrate the v3.0.0 SDK into your app. (e.g. CocoaPods podfile or Carthage cartfile change to point to v3.0.0).
 2. Clean, and delete Derived Data.
