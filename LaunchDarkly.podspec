@@ -10,7 +10,7 @@ Pod::Spec.new do |ld|
                    * Release a new feature to a subset of your users, like a group of users who opt-in to a beta tester group.
                    * Slowly roll out a feature to an increasing percentage of users and track the effect that feature has on key metrics.
                    * Instantly turn off a feature that is causing problems, without re-deploying code or restarting the application with a changed config file.
-                   * Maintain granular control over your users’ experience by granting access to certain features based on any attribute you choose. For example, provide different users with different funtionality based on their payment plan.
+                   * Maintain granular control over your users’ experience by granting access to certain features based on any attribute you choose. For example, provide different users with different functionality based on their payment plan.
                    * Disable parts of your application to facilitate maintenance, without taking everything offline.
                    DESC
 
