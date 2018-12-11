@@ -24,6 +24,10 @@ Version 3.0.0 does not support multiple environments. If you use version 2.14.0 
 ### Integrate the Swift SDK into your app using either CocoaPods or Carthage
 #### CocoaPods
 - Add `use_frameworks!` to either the root or to any targets that include `LaunchDarkly`
+#### Carthage
+- Replace the `Darkly.framework` for each target with `LaunchDarkly.framework`. The `DarklyEventSource.framework` should also be present, just as with v2.x.
+- For Objective-C apps using Carthage, turn on `Always Embed Swift Standard Libraries` in Build Settings
+- If you use the copy frameworks carthage script, replace `Darkly.framework` with `LaunchDarkly.framework` in both the Input and Output files entries.
 
 ### Update imports to `LaunchDarkly`
 - The module was renamed from `Darkly` to `LaunchDarkly`. Replace any `#import` that has a LD header with a single `@import LaunchDarkly;` (Objective-C) or `import LaunchDarkly` (Swift)
