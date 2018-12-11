@@ -8,10 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		488F8626EC2884402E4EA95C /* Pods_DarklyTests.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 7A211E127C7BBE25BB78FEF1 /* Pods_DarklyTests.framework */; };
-		83028E4D20F7903800FC53E3 /* DarklyEventSource.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 83028E4C20F7903800FC53E3 /* DarklyEventSource.framework */; };
-		83028E5120F7908E00FC53E3 /* DarklyEventSource.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 83028E5020F7908D00FC53E3 /* DarklyEventSource.framework */; };
 		830BF933202D188E006DF9B1 /* HTTPURLRequest.swift in Sources */ = {isa = PBXBuildFile; fileRef = 830BF932202D188E006DF9B1 /* HTTPURLRequest.swift */; };
-		831188412113AC7D00D77CB5 /* DarklyEventSource.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 831188402113AC7D00D77CB5 /* DarklyEventSource.framework */; };
 		831188432113ADBE00D77CB5 /* LDCommon.swift in Sources */ = {isa = PBXBuildFile; fileRef = 83B6C4B51F4DE7630055351C /* LDCommon.swift */; };
 		831188442113ADC200D77CB5 /* LDConfig.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8354EFDD1F26380700C05156 /* LDConfig.swift */; };
 		831188452113ADC500D77CB5 /* LDClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8354EFDC1F26380700C05156 /* LDClient.swift */; };
@@ -225,7 +222,6 @@
 		83DDBEFC1FA24B2700E428B6 /* JSONSerialization.swift in Sources */ = {isa = PBXBuildFile; fileRef = 83DDBEFB1FA24B2700E428B6 /* JSONSerialization.swift */; };
 		83DDBEFE1FA24F9600E428B6 /* Date.swift in Sources */ = {isa = PBXBuildFile; fileRef = 83DDBEFD1FA24F9600E428B6 /* Date.swift */; };
 		83DDBF001FA2589900E428B6 /* FlagStoreSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = 83DDBEFF1FA2589900E428B6 /* FlagStoreSpec.swift */; };
-		83DFE4E920F7B5FE00F308EC /* DarklyEventSource.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 83028E5220F790A500FC53E3 /* DarklyEventSource.framework */; };
 		83E2E2061F9E7AC7007514E9 /* LDUserSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = 83E2E2051F9E7AC7007514E9 /* LDUserSpec.swift */; };
 		83E2E2091F9FF9E1007514E9 /* Optional.swift in Sources */ = {isa = PBXBuildFile; fileRef = 83E2E2081F9FF9E1007514E9 /* Optional.swift */; };
 		83EBCBA320D9A1F3003A7142 /* FlagValueCounter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 83EBCBA220D9A1F3003A7142 /* FlagValueCounter.swift */; };
@@ -275,12 +271,8 @@
 		59DBC8D8F06E48BFD436786A /* Pods-Darkly_macOS.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Darkly_macOS.release.xcconfig"; path = "Pods/Target Support Files/Pods-Darkly_macOS/Pods-Darkly_macOS.release.xcconfig"; sourceTree = "<group>"; };
 		7A211E127C7BBE25BB78FEF1 /* Pods_DarklyTests.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_DarklyTests.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		7DD0CB8A0A66E8B5F5E5CC45 /* Pods-Darkly_macOS.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Darkly_macOS.debug.xcconfig"; path = "Pods/Target Support Files/Pods-Darkly_macOS/Pods-Darkly_macOS.debug.xcconfig"; sourceTree = "<group>"; };
-		83028E4C20F7903800FC53E3 /* DarklyEventSource.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = DarklyEventSource.framework; path = Carthage/Build/iOS/DarklyEventSource.framework; sourceTree = SOURCE_ROOT; };
-		83028E5020F7908D00FC53E3 /* DarklyEventSource.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = DarklyEventSource.framework; path = Carthage/Build/Mac/DarklyEventSource.framework; sourceTree = SOURCE_ROOT; };
-		83028E5220F790A500FC53E3 /* DarklyEventSource.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = DarklyEventSource.framework; path = Carthage/Build/watchOS/DarklyEventSource.framework; sourceTree = SOURCE_ROOT; };
 		830BF932202D188E006DF9B1 /* HTTPURLRequest.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HTTPURLRequest.swift; sourceTree = "<group>"; };
 		831188382113A16900D77CB5 /* LaunchDarkly.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = LaunchDarkly.framework; sourceTree = BUILT_PRODUCTS_DIR; };
-		831188402113AC7D00D77CB5 /* DarklyEventSource.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = DarklyEventSource.framework; path = Carthage/Build/tvOS/DarklyEventSource.framework; sourceTree = "<group>"; };
 		831425AE206ABB5300F2EF36 /* EnvironmentReportingMock.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EnvironmentReportingMock.swift; sourceTree = "<group>"; };
 		831425B0206B030100F2EF36 /* EnvironmentReporter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EnvironmentReporter.swift; sourceTree = "<group>"; };
 		831AAE2B20A9E4F600B46DBA /* Throttler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Throttler.swift; sourceTree = "<group>"; };
@@ -386,7 +378,6 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				831188412113AC7D00D77CB5 /* DarklyEventSource.framework in Frameworks */,
 				AC88E193E98B3E7DC1F1DAB3 /* Pods_Darkly_tvOS.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -395,7 +386,6 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				83028E5120F7908E00FC53E3 /* DarklyEventSource.framework in Frameworks */,
 				CF488F0E5FE1F7387B2362F5 /* Pods_Darkly_macOS.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -404,7 +394,6 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				83028E4D20F7903800FC53E3 /* DarklyEventSource.framework in Frameworks */,
 				919A71052A0BAF4934529633 /* Pods_Darkly_iOS.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -422,7 +411,6 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				83DFE4E920F7B5FE00F308EC /* DarklyEventSource.framework in Frameworks */,
 				A0DA5C7DAFBD3FA917810644 /* Pods_Darkly_watchOS.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -462,10 +450,6 @@
 		83028E4B20F78FAE00FC53E3 /* Carthage Frameworks */ = {
 			isa = PBXGroup;
 			children = (
-				83028E4C20F7903800FC53E3 /* DarklyEventSource.framework */,
-				83028E5220F790A500FC53E3 /* DarklyEventSource.framework */,
-				83028E5020F7908D00FC53E3 /* DarklyEventSource.framework */,
-				831188402113AC7D00D77CB5 /* DarklyEventSource.framework */,
 			);
 			name = "Carthage Frameworks";
 			sourceTree = "<group>";
