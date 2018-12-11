@@ -7,6 +7,9 @@ Follow the steps below to migrate your app from v2.x to v3.0.0. Most of these st
 ### Multiple Environments
 Version 3.0.0 does not support multiple environments. If you use version 2.14.0 or later and set LDConfig's `secondaryMobileKeys` you will not be able to migrate to version 3.0.0. Multiple Environments will be added in a future release to the Swift SDK.
 
+### Swift Version
+Version 3.0.0 is built on Swift 4.2 using Xcode 10. The SDK will not build using previous Swift versions, and therefore you must use Xcode 10 or later to build.
+
 [API Differences from v2.x](#api-differences-from-v2x) lists all of the changes to the API.
 
 ## Migration Steps
