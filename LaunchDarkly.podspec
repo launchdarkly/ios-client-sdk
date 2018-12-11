@@ -1,7 +1,7 @@
 Pod::Spec.new do |ld|
 
   ld.name         = "LaunchDarkly"
-  ld.version      = "3.0.0.30"
+  ld.version      = "3.0.0-beta1"
   ld.summary      = "iOS SDK for LaunchDarkly"
 
   ld.description  = <<-DESC
@@ -14,21 +14,20 @@ Pod::Spec.new do |ld|
                    * Disable parts of your application to facilitate maintenance, without taking everything offline.
                    DESC
 
-#  ld.homepage     = "https://github.com/launchdarkly/ios-client-swift"	#TODO: Once we release, point this to the public home page
   ld.homepage     = "https://github.com/launchdarkly/ios-client"
 
   ld.license      = { :type => "Apache License, Version 2.0", :file => "LICENSE.txt" }
 
-  ld.author             = { "LaunchDarkly" => "team@launchdarkly.com" }
+  ld.author       = { "LaunchDarkly" => "team@launchdarkly.com" }
 
   ld.ios.deployment_target     = "8.0"
   ld.watchos.deployment_target = "2.0"
   ld.tvos.deployment_target    = "9.0"
   ld.osx.deployment_target     = "10.10"
 
-  ld.source       = { :git => "https://github.com/launchdarkly/ios-client-swift-private.git" }	#TODO: Add the tag when ready
+  ld.source       = { :git => "https://github.com/launchdarkly/ios-client.git", :tag => '3.0.0-beta1'}
 
-  ld.source_files  = "Darkly/Darkly/**/*.{h,m,swift}"
+  ld.source_files = "Darkly/Darkly/**/*.{h,m,swift}"
 
   ld.requires_arc = true
 
