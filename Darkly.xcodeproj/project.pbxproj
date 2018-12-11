@@ -447,13 +447,6 @@
 			name = Frameworks;
 			sourceTree = "<group>";
 		};
-		83028E4B20F78FAE00FC53E3 /* Carthage Frameworks */ = {
-			isa = PBXGroup;
-			children = (
-			);
-			name = "Carthage Frameworks";
-			sourceTree = "<group>";
-		};
 		831CE0671F853CB700A13A3A /* Matcher */ = {
 			isa = PBXGroup;
 			children = (
@@ -517,7 +510,6 @@
 				8354EFCF1F22491C00C05156 /* DarklyTests */,
 				83411A5C1FABDA5E00E5CF39 /* GeneratedCode */,
 				8354EFC31F22491C00C05156 /* Products */,
-				83028E4B20F78FAE00FC53E3 /* Carthage Frameworks */,
 				35D209AC6E91916E8AEB6998 /* Pods */,
 				5C12B801AC9C368C5E09AEFF /* Frameworks */,
 			);
@@ -804,11 +796,11 @@
 			buildConfigurationList = 8311883D2113A16900D77CB5 /* Build configuration list for PBXNativeTarget "Darkly_tvOS" */;
 			buildPhases = (
 				6785B0986F7DF8CA4D438562 /* [CP] Check Pods Manifest.lock */,
+				833FD9F821C01333001F80EB /* ShellScript */,
 				831188332113A16900D77CB5 /* Sources */,
 				831188342113A16900D77CB5 /* Frameworks */,
 				831188352113A16900D77CB5 /* Headers */,
 				831188362113A16900D77CB5 /* Resources */,
-				831188422113AD1300D77CB5 /* ShellScript */,
 				BD1254571E58C001260BBDAD /* [CP] Copy Pods Resources */,
 			);
 			buildRules = (
@@ -851,7 +843,6 @@
 				8354EFBE1F22491C00C05156 /* Frameworks */,
 				8354EFBF1F22491C00C05156 /* Headers */,
 				8354EFC01F22491C00C05156 /* Resources */,
-				83028E5920F7A47F00FC53E3 /* ShellScript */,
 				49D8BC543FE6F496A6BF1185 /* [CP] Copy Pods Resources */,
 			);
 			buildRules = (
@@ -895,7 +886,6 @@
 				83D9EC672062DBB7004D7FA6 /* Frameworks */,
 				83D9EC682062DBB7004D7FA6 /* Headers */,
 				83D9EC692062DBB7004D7FA6 /* Resources */,
-				83028E5A20F7A54000FC53E3 /* ShellScript */,
 				BA3C8F6B4746B0BAFA55A021 /* [CP] Copy Pods Resources */,
 			);
 			buildRules = (
@@ -1115,36 +1105,6 @@
 			shellScript = "\"${SRCROOT}/Pods/Target Support Files/Pods-Darkly_macOS/Pods-Darkly_macOS-resources.sh\"\n";
 			showEnvVarsInLog = 0;
 		};
-		83028E5920F7A47F00FC53E3 /* ShellScript */ = {
-			isa = PBXShellScriptBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			inputPaths = (
-				"$(SRCROOT)/Carthage/Build/iOS/DarklyEventSource.framework",
-			);
-			outputPaths = (
-				"$(BUILT_PRODUCTS_DIR)/$(FRAMEWORKS_FOLDER_PATH)/DarklyEventSource.framework",
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-			shellPath = /bin/sh;
-			shellScript = "/usr/local/bin/carthage copy-frameworks";
-		};
-		83028E5A20F7A54000FC53E3 /* ShellScript */ = {
-			isa = PBXShellScriptBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			inputPaths = (
-				"$(SRCROOT)/Carthage/Build/watchOS/DarklyEventSource.framework",
-			);
-			outputPaths = (
-				"$(BUILT_PRODUCTS_DIR)/$(FRAMEWORKS_FOLDER_PATH)/DarklyEventSource.framework",
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-			shellPath = /bin/sh;
-			shellScript = "/usr/local/bin/carthage copy-frameworks";
-		};
 		830C2AC120741687001D645D /* ShellScript */ = {
 			isa = PBXShellScriptBuildPhase;
 			buildActionMask = 2147483647;
@@ -1156,7 +1116,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "${PODS_ROOT}/SwiftLint/swiftlint";
+			shellScript = "${PODS_ROOT}/SwiftLint/swiftlint\n";
 		};
 		830C2AC2207416A5001D645D /* ShellScript */ = {
 			isa = PBXShellScriptBuildPhase;
@@ -1169,22 +1129,24 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "${PODS_ROOT}/SwiftLint/swiftlint";
+			shellScript = "${PODS_ROOT}/SwiftLint/swiftlint\n";
 		};
-		831188422113AD1300D77CB5 /* ShellScript */ = {
+		833FD9F821C01333001F80EB /* ShellScript */ = {
 			isa = PBXShellScriptBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
 			);
+			inputFileListPaths = (
+			);
 			inputPaths = (
-				"$(SRCROOT)/Carthage/Build/tvOS/DarklyEventSource.framework",
+			);
+			outputFileListPaths = (
 			);
 			outputPaths = (
-				"$(BUILT_PRODUCTS_DIR)/$(FRAMEWORKS_FOLDER_PATH)/DarklyEventSource.framework",
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "/usr/local/bin/carthage copy-frameworks";
+			shellScript = "${PODS_ROOT}/SwiftLint/swiftlint\n";
 		};
 		83411A561FABCA2200E5CF39 /* ShellScript */ = {
 			isa = PBXShellScriptBuildPhase;
@@ -1210,7 +1172,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "${PODS_ROOT}/SwiftLint/swiftlint";
+			shellScript = "${PODS_ROOT}/SwiftLint/swiftlint\n";
 		};
 		95F5E737C250E5CC2BEA0A82 /* [CP] Check Pods Manifest.lock */ = {
 			isa = PBXShellScriptBuildPhase;
