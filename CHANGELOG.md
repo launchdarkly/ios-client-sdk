@@ -2,7 +2,7 @@
 
 All notable changes to the LaunchDarkly iOS SDK will be documented in this file. This project adheres to [Semantic Versioning](http://semver.org).
 
-## [3.0.0-beta1] - 2018-12-11
+## [3.0.0-beta.1] - 2018-12-11
 ### Added
 - `LDClient` can now provide information about the source of a feature flag, `cache`, `server`, and `fallback`.
 - `LDConfig` offers some new configuration properties: `eventCapacity`, `startOnline`, `enableBackgroundUpdates`
@@ -10,7 +10,7 @@ All notable changes to the LaunchDarkly iOS SDK will be documented in this file.
 - `LDClient` has a new property `allFlagValues` which provides the client app with a snapshot of the feature flags available and their values
 
 ### Changed
-- Replaced Objective-C SDK with Swift SDK. See MigrationGuide.md for details on converting to v3.
+- Replaced Objective-C SDK with Swift SDK. See [MigrationGuide.md](./MigrationGuide.md) for details on converting to v3.
 - `LDConfig` and `LDUser` are Swift `struct`s, giving you value semantics which makes it easier to control the SDK.
 - `LDClient` controls remain similar to v2.x. Setting a `config` or `user` is possible before, during, and after start. 
 - `LDClient` uses Swift generics to get feature flag values. Swift client apps use a `variation` method (without the type) to get flag values.

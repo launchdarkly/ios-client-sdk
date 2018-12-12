@@ -27,7 +27,7 @@ source 'https://github.com/CocoaPods/Specs.git'
 platform :ios, '8.0'
 
 target 'TargetName' do
-pod 'LaunchDarkly'
+pod 'LaunchDarkly', '3.0.0-beta.1'
 end
 ```
 
@@ -54,14 +54,14 @@ To integrate LaunchDarkly into your Xcode project using Carthage, specify it in 
 github "launchdarkly/ios-client" "v3-beta"
 ```
 
-Run `carthage` to build the framework and drag the built `LaunchDarkly.framework` into your Xcode project.
+Run `carthage update` to build the framework and drag the built `LaunchDarkly.framework` for your platform into your Xcode project.
 
 Quick setup
 -----------
 
 1. Add the SDK to your `Podfile`:
 
-        pod 'LaunchDarkly', '3.0.0-beta1'
+        pod 'LaunchDarkly', '3.0.0-beta.1'
 
 2. Import the LaunchDarkly client:
 
