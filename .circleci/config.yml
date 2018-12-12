@@ -61,7 +61,7 @@ jobs:
 
     - run:
         name: CocoaPods spec lint
-        command: if [ "$CIRCLE_BRANCH" = 'master' ]; then bundle exec pod spec lint --use-libraries; fi
+        command: if [ "$CIRCLE_BRANCH" = 'master' ]; then bundle exec pod spec lint; fi
 
     - store_test_results:
         path: output
