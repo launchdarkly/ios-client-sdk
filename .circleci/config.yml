@@ -1,4 +1,4 @@
-# config file version: 1.0.1
+# config file version: 1.0.2
 version: 2
 jobs:
   build:
@@ -53,16 +53,15 @@ jobs:
         name: Copy XC Activity Log
         command: find "${HOME}/Library/Developer/Xcode/DerivedData" -name '*.xcactivitylog' -exec cp {} output/xcactivitylog \; || true
 
-    # CocoaPods linting will be enabled when the Swift SDK is moving into production
-    #- run:
-    #    name: CocoaPods lib lint
-    #    command: |
-    #        curl https://cocoapods-specs.circleci.com/fetch-cocoapods-repo-from-s3.sh | bash -s cf
-    #        bundle exec pod lib lint
+    - run:
+        name: CocoaPods lib lint
+        command: |
+            curl https://cocoapods-specs.circleci.com/fetch-cocoapods-repo-from-s3.sh | bash -s cf
+            bundle exec pod lib lint
 
-    #- run:
-    #    name: CocoaPods spec lint
-    #    command: if [ "$CIRCLE_BRANCH" = 'master' ]; then bundle exec pod spec lint --use-libraries; fi
+    - run:
+        name: CocoaPods spec lint
+        command: if [ "$CIRCLE_BRANCH" = 'master' ]; then bundle exec pod spec lint --use-libraries; fi
 
     - store_test_results:
         path: output
