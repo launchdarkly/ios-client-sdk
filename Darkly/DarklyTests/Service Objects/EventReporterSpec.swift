@@ -13,8 +13,8 @@ import XCTest
 
 final class EventReporterSpec: QuickSpec {
     struct Constants {
-        static let eventFlushIntervalMillis = 10_000
-        static let eventFlushInterval500Millis = 500
+        static let eventFlushInterval: TimeInterval = 10.0
+        static let eventFlushIntervalHalfSecond: TimeInterval = 0.5
         static let defaultValue = false
     }
     
@@ -42,7 +42,7 @@ final class EventReporterSpec: QuickSpec {
         var flagRequestCount: Int
 
         init(eventCount: Int = 0,
-             eventFlushMillis: Int? = nil,
+             eventFlushInterval: TimeInterval? = nil,
              flagRequestCount: Int = 1,
              lastEventResponseDate: Date? = nil,
              stubResponseSuccess: Bool = true,
@@ -55,7 +55,7 @@ final class EventReporterSpec: QuickSpec {
 
             config = LDConfig.stub
             config.eventCapacity = Event.Kind.allKinds.count
-            config.eventFlushIntervalMillis = eventFlushMillis ?? Constants.eventFlushIntervalMillis
+            config.eventFlushInterval = eventFlushInterval ?? Constants.eventFlushInterval
 
             user = LDUser.stub()
 
@@ -866,7 +866,7 @@ final class EventReporterSpec: QuickSpec {
             var testContext: TestContext!
             context("with events") {
                 beforeEach {
-                    testContext = TestContext(eventFlushMillis: Constants.eventFlushInterval500Millis)
+                    testContext = TestContext(eventFlushInterval: Constants.eventFlushIntervalHalfSecond)
                     testContext.eventReporter.isOnline = true
                     waitUntil { done in
                         testContext.recordEvents(Event.Kind.allKinds.count, completion: done)
@@ -881,12 +881,12 @@ final class EventReporterSpec: QuickSpec {
             }
             context("without events") {
                 beforeEach {
-                    testContext = TestContext(eventFlushMillis: Constants.eventFlushInterval500Millis)
+                    testContext = TestContext(eventFlushInterval: Constants.eventFlushIntervalHalfSecond)
                     testContext.eventReporter.isOnline = true
                 }
                 it("doesn't report events") {
                     waitUntil { (done) in
-                        DispatchQueue.main.asyncAfter(deadline: DispatchTime.now() + DispatchTimeInterval.milliseconds(Constants.eventFlushInterval500Millis)) {
+                        DispatchQueue.main.asyncAfter(deadline: DispatchTime.now() + Constants.eventFlushIntervalHalfSecond) {
                             expect(testContext.serviceMock.publishEventDictionariesCallCount) == 0
                             done()
                         }

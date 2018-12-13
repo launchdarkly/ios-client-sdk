@@ -87,7 +87,7 @@ final class LDClientSpec: QuickSpec {
             config.startOnline = startOnline
             config.streamingMode = streamingMode
             config.enableBackgroundUpdates = enableBackgroundUpdates
-            config.eventFlushIntervalMillis = 300_000   //5 min...don't want this to trigger
+            config.eventFlushInterval = 300.0   //5 min...don't want this to trigger
 
             user = LDUser.stub()
             oldFlags = user.flagStore.featureFlags
@@ -522,8 +522,8 @@ final class LDClientSpec: QuickSpec {
                     newConfig = testContext.config
                     //change some values and check they're propagated to supporting objects
                     newConfig.baseUrl = Constants.alternateMockUrl
-                    newConfig.pollIntervalMillis += 1
-                    newConfig.eventFlushIntervalMillis += 1
+                    newConfig.flagPollingInterval += 0.001
+                    newConfig.eventFlushInterval += 0.001
                 }
                 context("with run mode set to foreground") {
                     beforeEach {
@@ -554,8 +554,8 @@ final class LDClientSpec: QuickSpec {
                                 newConfig = testContext.config
                                 //change some values and check they're propagated to supporting objects
                                 newConfig.baseUrl = Constants.alternateMockUrl
-                                newConfig.pollIntervalMillis += 1
-                                newConfig.eventFlushIntervalMillis += 1
+                                newConfig.flagPollingInterval += 0.001
+                                newConfig.eventFlushInterval += 0.001
 
                                 testContext.subject.config = newConfig
                             }
@@ -584,8 +584,8 @@ final class LDClientSpec: QuickSpec {
                     newConfig = testContext.config
                     //change some values and check they're propagated to supporting objects
                     newConfig.baseUrl = Constants.alternateMockUrl
-                    newConfig.pollIntervalMillis += 1
-                    newConfig.eventFlushIntervalMillis += 1
+                    newConfig.flagPollingInterval += 0.001
+                    newConfig.eventFlushInterval += 0.001
 
                     testContext.subject.config = newConfig
                 }
@@ -608,8 +608,8 @@ final class LDClientSpec: QuickSpec {
                     newConfig = testContext.subject.config
                     //change some values and check they're propagated to supporting objects
                     newConfig.baseUrl = Constants.alternateMockUrl
-                    newConfig.pollIntervalMillis += 1
-                    newConfig.eventFlushIntervalMillis += 1
+                    newConfig.flagPollingInterval += 0.001
+                    newConfig.eventFlushInterval += 0.001
 
                     testContext.subject.config = newConfig
                 }

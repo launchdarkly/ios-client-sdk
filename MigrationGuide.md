@@ -47,7 +47,7 @@ See [Custom users with `LDUser`](#custom-users-with-lduser) for details.
 - Replace initializers that take a `mobileKey` with the non-mobile key initializer.
 - Change lines that set `baseUrl`, `eventsUrl`, and `streamUrl` with strings to instead set these properties with `URL` objects.
 - Change lines that set `capacity` to set `eventCapacity`
-- Change lines that set time-based properties (`connectionTimeout`, `flushInterval`, `pollingInterval`, and `backgroundFetchInterval`) to their millisecond property (`connectionTimeoutMillis`, `flushIntervalMillis`, `pollingIntervalMillis`, and `backgroundFetchIntervalMillis`). Set these properties with `Int` values.
+- Change lines that set time-based properties (`connectionTimeout`, `flushInterval`, `pollingInterval`, and `backgroundFetchInterval`) to their `TimeInterval` property (`connectionTimeout`, `eventFlushInterval`, `flagPollingInterval`, and `backgroundFlagPollingInterval`).
 - Change lines that set `streaming` to set `streamingMode`. For Swift apps, use the enum `.streaming` or `.polling`. For Objective-C apps, set to `YES` for streaming, and `NO` for polling as with the v2.x SDK. Note that if you do not have this property set, LDConfig sets it to streaming mode for you.
 - Change lines that set `debugEnabled` to set `debugMode` instead.
 
@@ -106,7 +106,10 @@ These properties have changed to `URL` objects. Set these properties by converti
 ##### `capacity`
 This property has changed to `eventCapacity`.
 ##### Time based properties (`connectionTimeout`, `flushInterval`, `pollingInterval`, and `backgroundFetchInterval`)
-These properties have changed to `Int` properties representing milliseconds. The names have changed by appending `Millis` to the v2.x names.
+These properties have changed to `TimeInterval` properties. 
+- `flushInterval` has changed to `eventFlushInterval`.
+- `pollingInterval` has changed to `flagPollingInterval`.
+- `backgroundFetchInterval` has changed to `backgroundFlagPollingInterval` 
 ##### `streaming`
 This property has changed to `streamingMode` and to an enum type `LDStreamingMode`. The default remains `.streaming`. To set polling mode, set this property to `.polling`.
 ##### `debugEnabled`

@@ -844,7 +844,7 @@ public final class ObjcLDClient: NSObject {
     /**
      Adds a custom event to the LDClient event store. A client app can set a tracking event to allow client customized data analysis. Once an app has called `trackEvent`, the app cannot remove the event from the event store.
 
-     LDClient periodically transmits events to LaunchDarkly based on the frequency set in LDConfig.eventFlushIntervalMillis. The LDClient must be started and online. Ths SDK stores events tracked while the LDClient is offline, but started.
+     LDClient periodically transmits events to LaunchDarkly based on the frequency set in LDConfig.eventFlushInterval. The LDClient must be started and online. Ths SDK stores events tracked while the LDClient is offline, but started.
 
      Once the SDK's event store is full, the SDK discards events until they can be reported to LaunchDarkly. Configure the size of the event store using `eventCapacity` on the `config`. See `LDConfig` (`ObjcLDConfig`) for details.
 

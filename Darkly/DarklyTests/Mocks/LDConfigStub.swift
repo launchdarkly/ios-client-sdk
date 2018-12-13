@@ -17,7 +17,7 @@ extension LDConfig {
         config.eventsUrl = DarklyServiceMock.Constants.mockEventsUrl
         config.streamUrl = DarklyServiceMock.Constants.mockStreamUrl
 
-        config.pollIntervalMillis = 1000
+        config.flagPollingInterval = 1.0
 
         config.enableBackgroundUpdates = true
 
