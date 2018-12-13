@@ -118,6 +118,7 @@
 		8335299E1FC37727001166F8 /* FlagMaintainingMock.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8335299D1FC37727001166F8 /* FlagMaintainingMock.swift */; };
 		83383A5120460DD30024D975 /* SynchronizingErrorSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = 83383A5020460DD30024D975 /* SynchronizingErrorSpec.swift */; };
 		83396BC91F7C3711000E256E /* DarklyServiceSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = 83396BC81F7C3711000E256E /* DarklyServiceSpec.swift */; };
+		833FDA1C21C2B7DE001F80EB /* ObjcLDFlagValueSourceSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = 833FDA1B21C2B7DE001F80EB /* ObjcLDFlagValueSourceSpec.swift */; };
 		83411A5F1FABDA8700E5CF39 /* mocks.generated.swift in Sources */ = {isa = PBXBuildFile; fileRef = 83411A5D1FABDA8700E5CF39 /* mocks.generated.swift */; };
 		8342DAE51FB10C4800564D1F /* UserFlagCacheSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8342DAE41FB10C4800564D1F /* UserFlagCacheSpec.swift */; };
 		8354EFCC1F22491C00C05156 /* LaunchDarkly.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 8354EFC21F22491C00C05156 /* LaunchDarkly.framework */; };
@@ -294,6 +295,7 @@
 		8335299D1FC37727001166F8 /* FlagMaintainingMock.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FlagMaintainingMock.swift; sourceTree = "<group>"; };
 		83383A5020460DD30024D975 /* SynchronizingErrorSpec.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SynchronizingErrorSpec.swift; sourceTree = "<group>"; };
 		83396BC81F7C3711000E256E /* DarklyServiceSpec.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DarklyServiceSpec.swift; sourceTree = "<group>"; };
+		833FDA1B21C2B7DE001F80EB /* ObjcLDFlagValueSourceSpec.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ObjcLDFlagValueSourceSpec.swift; sourceTree = "<group>"; };
 		83411A5D1FABDA8700E5CF39 /* mocks.generated.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = mocks.generated.swift; path = Darkly/GeneratedCode/mocks.generated.swift; sourceTree = SOURCE_ROOT; };
 		8342DAE41FB10C4800564D1F /* UserFlagCacheSpec.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserFlagCacheSpec.swift; sourceTree = "<group>"; };
 		8354EFC21F22491C00C05156 /* LaunchDarkly.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = LaunchDarkly.framework; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -494,6 +496,14 @@
 			path = Networking;
 			sourceTree = "<group>";
 		};
+		833FDA1A21C2B7AA001F80EB /* ObjectiveC */ = {
+			isa = PBXGroup;
+			children = (
+				833FDA1B21C2B7DE001F80EB /* ObjcLDFlagValueSourceSpec.swift */,
+			);
+			path = ObjectiveC;
+			sourceTree = "<group>";
+		};
 		83411A5C1FABDA5E00E5CF39 /* GeneratedCode */ = {
 			isa = PBXGroup;
 			children = (
@@ -552,6 +562,7 @@
 				831D8B751F72A48900ED65E8 /* Service Objects */,
 				83396BC71F7C3688000E256E /* Networking */,
 				83D17EA81FCDA16300B2823C /* Extensions */,
+				833FDA1A21C2B7AA001F80EB /* ObjectiveC */,
 				831CE0671F853CB700A13A3A /* Matcher */,
 				8354EFD21F22491C00C05156 /* Info.plist */,
 			);
@@ -1447,6 +1458,7 @@
 			files = (
 				8392FFA120323F6600320914 /* URLResponse.swift in Sources */,
 				83CFE7CE1F7AD81D0010544E /* EventReporterSpec.swift in Sources */,
+				833FDA1C21C2B7DE001F80EB /* ObjcLDFlagValueSourceSpec.swift in Sources */,
 				8392FFA32033565700320914 /* HTTPURLResponse.swift in Sources */,
 				83B8C2491FE84D4F0082B8A9 /* FlagChangeNotifyingMock.swift in Sources */,
 				83411A5F1FABDA8700E5CF39 /* mocks.generated.swift in Sources */,
