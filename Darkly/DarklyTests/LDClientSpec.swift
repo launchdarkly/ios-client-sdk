@@ -102,7 +102,7 @@ final class LDClientSpec: QuickSpec {
             setThrottlerToExecuteRunClosure()
 
             if startClient {
-                subject.start()
+                subject.start(config: config)
             }
             if runMode == .background {
                 subject.setRunMode(.background)
@@ -387,14 +387,13 @@ final class LDClientSpec: QuickSpec {
                     }
                 }
             }
-            context("when called without config or user") {
-                context("after setting config and user") {
+            context("when called without user") {
+                context("after setting user") {
                     beforeEach {
                         testContext = TestContext()
-                        testContext.subject.config = testContext.config
                         testContext.subject.user = testContext.user
                         waitUntil { done in
-                            testContext.subject.start(completion: done)
+                            testContext.subject.start(config: testContext.config, completion: done)
                         }
                     }
                     it("saves the config") {
@@ -419,11 +418,11 @@ final class LDClientSpec: QuickSpec {
                         expect(testContext.recordedEvent?.key) == testContext.user.key
                     }
                 }
-                context("without setting config or user") {
+                context("without setting user") {
                     beforeEach {
                         testContext = TestContext()
                         waitUntil { done in
-                            testContext.subject.start(completion: done)
+                            testContext.subject.start(config: testContext.config, completion: done)
                         }
                         testContext.config = testContext.subject.config
                         testContext.user = testContext.subject.user
@@ -1741,7 +1740,7 @@ final class LDClientSpec: QuickSpec {
                         context("when offline at foreground notification") {
                             beforeEach {
                                 testContext = TestContext(startOnline: false, runMode: .background, operatingSystem: os)
-                                testContext.subject.start()
+                                testContext.subject.start(config: testContext.config)
 
                                 NotificationCenter.default.post(name: testContext.environmentReporterMock.foregroundNotification!, object: self)
                             }
@@ -1778,7 +1777,7 @@ final class LDClientSpec: QuickSpec {
                             context("streaming mode") {
                                 beforeEach {
                                     testContext = TestContext(startOnline: true, streamingMode: .streaming, enableBackgroundUpdates: true, runMode: .foreground, operatingSystem: .macOS)
-                                    testContext.subject.start()
+                                    testContext.subject.start(config: testContext.config)
 
                                     testContext.subject.setRunMode(.background)
                                 }
@@ -1793,7 +1792,7 @@ final class LDClientSpec: QuickSpec {
                             context("polling mode") {
                                 beforeEach {
                                     testContext = TestContext(startOnline: true, streamingMode: .polling, enableBackgroundUpdates: true, runMode: .foreground, operatingSystem: .macOS)
-                                    testContext.subject.start()
+                                    testContext.subject.start(config: testContext.config)
 
                                     testContext.subject.setRunMode(.background)
                                 }
@@ -1810,7 +1809,7 @@ final class LDClientSpec: QuickSpec {
                         context("with background updates disabled") {
                             beforeEach {
                                 testContext = TestContext(startOnline: true, enableBackgroundUpdates: false, runMode: .foreground, operatingSystem: .macOS)
-                                testContext.subject.start()
+                                testContext.subject.start(config: testContext.config)
 
                                 testContext.subject.setRunMode(.background)
                             }
@@ -1830,7 +1829,7 @@ final class LDClientSpec: QuickSpec {
                         var makeFlagSynchronizerCallCount: Int!
                         beforeEach {
                             testContext = TestContext(startOnline: true, runMode: .foreground, operatingSystem: .macOS)
-                            testContext.subject.start()
+                            testContext.subject.start(config: testContext.config)
                             eventReporterIsOnlineSetCount = testContext.eventReporterMock.isOnlineSetCount
                             flagSynchronizerIsOnlineSetCount = testContext.flagSynchronizerMock.isOnlineSetCount
                             makeFlagSynchronizerCallCount = testContext.serviceFactoryMock.makeFlagSynchronizerCallCount
@@ -1853,7 +1852,7 @@ final class LDClientSpec: QuickSpec {
                         var makeFlagSynchronizerCallCount: Int!
                         beforeEach {
                             testContext = TestContext(startOnline: true, enableBackgroundUpdates: true, runMode: .background, operatingSystem: .macOS)
-                            testContext.subject.start()
+                            testContext.subject.start(config: testContext.config)
                             NotificationCenter.default.post(name: testContext.environmentReporterMock.backgroundNotification!, object: self)
                             eventReporterIsOnlineSetCount = testContext.eventReporterMock.isOnlineSetCount
                             flagSynchronizerIsOnlineSetCount = testContext.flagSynchronizerMock.isOnlineSetCount
@@ -1873,7 +1872,7 @@ final class LDClientSpec: QuickSpec {
                         context("streaming mode") {
                             beforeEach {
                                 testContext = TestContext(startOnline: true, streamingMode: .streaming, runMode: .background, operatingSystem: .macOS)
-                                testContext.subject.start()
+                                testContext.subject.start(config: testContext.config)
 
                                 testContext.subject.setRunMode(.foreground)
                             }
@@ -1888,7 +1887,7 @@ final class LDClientSpec: QuickSpec {
                         context("polling mode") {
                             beforeEach {
                                 testContext = TestContext(startOnline: true, streamingMode: .polling, runMode: .background, operatingSystem: .macOS)
-                                testContext.subject.start()
+                                testContext.subject.start(config: testContext.config)
 
                                 testContext.subject.setRunMode(.foreground)
                             }
@@ -1910,7 +1909,7 @@ final class LDClientSpec: QuickSpec {
                         context("with background updates enabled") {
                             beforeEach {
                                 testContext = TestContext(startOnline: false, enableBackgroundUpdates: true, runMode: .foreground, operatingSystem: .macOS)
-                                testContext.subject.start()
+                                testContext.subject.start(config: testContext.config)
 
                                 testContext.subject.setRunMode(.background)
                             }
@@ -1925,7 +1924,7 @@ final class LDClientSpec: QuickSpec {
                         context("with background updates disabled") {
                             beforeEach {
                                 testContext = TestContext(startOnline: false, enableBackgroundUpdates: false, runMode: .foreground, operatingSystem: .macOS)
-                                testContext.subject.start()
+                                testContext.subject.start(config: testContext.config)
 
                                 testContext.subject.setRunMode(.background)
                             }
@@ -1945,7 +1944,7 @@ final class LDClientSpec: QuickSpec {
                         var makeFlagSynchronizerCallCount: Int!
                         beforeEach {
                             testContext = TestContext(startOnline: false, runMode: .foreground, operatingSystem: .macOS)
-                            testContext.subject.start()
+                            testContext.subject.start(config: testContext.config)
                             eventReporterIsOnlineSetCount = testContext.eventReporterMock.isOnlineSetCount
                             flagSynchronizerIsOnlineSetCount = testContext.flagSynchronizerMock.isOnlineSetCount
                             makeFlagSynchronizerCallCount = testContext.serviceFactoryMock.makeFlagSynchronizerCallCount
@@ -1968,7 +1967,7 @@ final class LDClientSpec: QuickSpec {
                         var makeFlagSynchronizerCallCount: Int!
                         beforeEach {
                             testContext = TestContext(startOnline: false, runMode: .background, operatingSystem: .macOS)
-                            testContext.subject.start()
+                            testContext.subject.start(config: testContext.config)
                             eventReporterIsOnlineSetCount = testContext.eventReporterMock.isOnlineSetCount
                             flagSynchronizerIsOnlineSetCount = testContext.flagSynchronizerMock.isOnlineSetCount
                             makeFlagSynchronizerCallCount = testContext.serviceFactoryMock.makeFlagSynchronizerCallCount
@@ -1987,7 +1986,7 @@ final class LDClientSpec: QuickSpec {
                         context("streaming mode") {
                             beforeEach {
                                 testContext = TestContext(startOnline: false, streamingMode: .streaming, runMode: .background, operatingSystem: .macOS)
-                                testContext.subject.start()
+                                testContext.subject.start(config: testContext.config)
 
                                 testContext.subject.setRunMode(.foreground)
                             }
@@ -2002,7 +2001,7 @@ final class LDClientSpec: QuickSpec {
                         context("polling mode") {
                             beforeEach {
                                 testContext = TestContext(startOnline: false, streamingMode: .polling, runMode: .background, operatingSystem: .macOS)
-                                testContext.subject.start()
+                                testContext.subject.start(config: testContext.config)
 
                                 testContext.subject.setRunMode(.foreground)
                             }
@@ -2061,7 +2060,7 @@ final class LDClientSpec: QuickSpec {
                 var featureFlags: [LDFlagKey: FeatureFlag]!
                 beforeEach {
                     testContext = TestContext()
-                    testContext.subject.start()
+                    testContext.subject.start(config: testContext.config)
                     featureFlags = testContext.subject.user.flagStore.featureFlags
 
                     featureFlagValues = testContext.subject.allFlagValues

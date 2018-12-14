@@ -27,7 +27,7 @@ source 'https://github.com/CocoaPods/Specs.git'
 platform :ios, '8.0'
 
 target 'TargetName' do
-pod 'LaunchDarkly', '3.0.0-beta.1'
+pod 'LaunchDarkly', '3.0.0-beta.2'
 end
 ```
 
@@ -61,7 +61,7 @@ Quick setup
 
 1. Add the SDK to your `Podfile`:
 
-        pod 'LaunchDarkly', '3.0.0-beta.1'
+        pod 'LaunchDarkly', '3.0.0-beta.2'
 
 2. Import the LaunchDarkly client:
 
@@ -73,11 +73,11 @@ Quick setup
 
 3. Instantiate a new LDClient with your mobile key and user:
 
-        let config = LDConfig()
+        let config = LDConfig(mobileKey: my-mobile-key)
 
         let user = LDUser(key: "aa0ceb")
 
-        LDClient.shared.start(mobileKey: my-mobile-key, config: config, user: user)
+        LDClient.shared.start(config: config, user: user)
 
 (Be sure to use a mobile key from your environments. Never embed a standard SDK key into a mobile application.)
 

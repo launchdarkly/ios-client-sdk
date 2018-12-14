@@ -44,7 +44,6 @@ Version 3.0.0 is built on Swift 4.2 using Xcode 10. The SDK will not build using
 See [Custom users with `LDUser`](#custom-users-with-lduser) for details.
 
 ### Update `LDConfig` and properties
-- Replace initializers that take a `mobileKey` with the non-mobile key initializer.
 - Change lines that set `baseUrl`, `eventsUrl`, and `streamUrl` with strings to instead set these properties with `URL` objects.
 - Change lines that set `capacity` to set `eventCapacity`
 - Change lines that set time-based properties (`connectionTimeout`, `flushInterval`, `pollingInterval`, and `backgroundFetchInterval`) to their `TimeInterval` property (`connectionTimeout`, `eventFlushInterval`, `flagPollingInterval`, and `backgroundFlagPollingInterval`).
@@ -58,7 +57,6 @@ See [Configuration with LDConfig](#configuration-with-ldconfig) for details.
 - Replace references to `ldUser` to `user`.
 - Replace references to `ldConfig` to `config`.
 - Remove any references to `delegate`.
-- Change calls to `start` to insert the `mobileKey` as the first parameter.
 - Change calls to `start` to use the parameter name `config`.
 - Change calls to `start` to use the parameter name `user`.
 - Change calls to `start` to not expect a return value. If desired, capture the SDK's online status using `isOnline`.
@@ -96,8 +94,6 @@ This section details the changes between the v2.x and v3.0.0 APIs.
 LDConfig has changed to a `struct`, and therefore uses value semantics.
 
 #### Changed `LDConfig` Properties
-##### `mobileKey`
-LDConfig no longer contains a mobileKey. Instead, pass the mobileKey into LDClient's `start` method.
 ##### URL properties (`baseUrl`, `eventsUrl`, and `streamUrl`)
 These properties have changed to `URL` objects. Set these properties by converting URL strings to a URL using:
 ```swift
@@ -175,7 +171,6 @@ This property has changed to `config`. Client apps can set the `config` directly
 ##### `delegate`
 This property was removed. See [Replacing LDClient delegate methods](#replacing-ldclient-delegate-methods)
 ##### `start`
-- This method has a new `mobileKey` first parameter.
 - `inputConfig` has changed to `config`.
 - `withUserBuilder` has changed to `user` and its type changed to `LDUser`
 - `completion` was added to get a callback when the SDK has completed starting

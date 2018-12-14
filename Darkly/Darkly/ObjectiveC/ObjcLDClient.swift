@@ -131,16 +131,15 @@ public final class ObjcLDClient: NSObject {
 
      Starting the LDClient means setting the `config` & `user`, setting the client online if `config.startOnline` is YES (the default setting), and starting event recording. The client app must start the LDClient before it will report feature flag values. If a client does not call start, the LDClient will only report fallback values, and no events will be recorded.
 
-     If the start call omits the `config` or `user`, the LDClient uses the previously set `config` and `user`, or defaults if they were never set.
+     If the start call omits the `user`, the LDClient uses the previously set `user`, or the default `user` if it was never set.
 
      Subsequent calls to this method cause the LDClient to go offline, reconfigure using the new `config` & `user` (if supplied), and then go online if it was online when start was called. Normally there should only be one call to start. To change `config` or `user`, set them directly on LDClient.
 
-     - parameter mobileKey: The Mobile key from your [LaunchDarkly Account](app.launchdarkly.com) settings (on the left at the bottom). If you have multiple projects be sure to choose the correct Mobile key.
-     - parameter config: The LDConfig set with the desired configuration. If omitted, LDClient retains the previously set config, or default if one was never set. (Optional)
+     - parameter config: The LDConfig that contains the desired configuration. (Required)
      - parameter user: The LDUser set with the desired user. If omitted, LDClient retains the previously set user, or default if one was never set. (Optional)
      */
-    @objc public func start(config: ObjcLDConfig? = nil, user: ObjcLDUser? = nil) {
-        ObjcLDClient.sharedInstance.start(config: config, user: user, completion: nil)
+    @objc public func start(config configWrapper: ObjcLDConfig, user userWrapper: ObjcLDUser? = nil) {
+        ObjcLDClient.sharedInstance.start(config: configWrapper, user: userWrapper, completion: nil)
     }
 
     /**
@@ -148,22 +147,18 @@ public final class ObjcLDClient: NSObject {
 
      Starting the LDClient means setting the `config` & `user`, setting the client online if `config.startOnline` is YES (the default setting), and starting event recording. The client app must start the LDClient before it will report feature flag values. If a client does not call start, the LDClient will only report fallback values, and no events will be recorded.
 
-     If the start call omits the `config` or `user`, the LDClient uses the previously set `config` and `user`, or defaults if they were never set.
+     If the start call omits the `user`, the LDClient uses the previously set `user`, or the default `user` if it was never set.
 
      If the start call includes the optional `completion` block, LDClient calls the `completion` block when `[LDClient.sharedInstance setOnline: completion:]` embedded in the start method completes. The start call is subject to throttling delays, therefore the `completion` block call may be delayed.
 
      Subsequent calls to this method cause the LDClient to go offline, reconfigure using the new `config` & `user` (if supplied), and then go online if it was online when start was called. Normally there should only be one call to start. To change `config` or `user`, set them directly on LDClient.
 
-     - parameter config: The LDConfig set with the desired configuration. If omitted, LDClient retains the previously set config, or default if one was never set. (Optional)
+     - parameter config: The LDConfig that contains the desired configuration. (Required)
      - parameter user: The LDUser set with the desired user. If omitted, LDClient retains the previously set user, or default if one was never set. (Optional)
      - parameter completion: Closure called when the embedded `setOnline` call completes, subject to throttling delays. (Optional)
      */
-    @objc public func start(config: ObjcLDConfig? = nil, user: ObjcLDUser? = nil, completion: (() -> Void)? = nil) {
-        if let configObject = config {
-            LDClient.shared.start(config: configObject.config, user: user?.user, completion: completion)
-            return
-        }
-        LDClient.shared.start(user: user?.user, completion: completion)
+    @objc public func start(config configWrapper: ObjcLDConfig, user userWrapper: ObjcLDUser? = nil, completion: (() -> Void)? = nil) {
+        LDClient.shared.start(config: configWrapper.config, user: userWrapper?.user, completion: completion)
     }
 
     /**

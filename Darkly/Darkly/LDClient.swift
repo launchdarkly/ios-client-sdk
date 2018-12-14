@@ -16,10 +16,10 @@ enum LDClientRunMode {
  The LDClient is the heart of the SDK, providing client apps running iOS, watchOS, macOS, or tvOS access to LaunchDarkly services. This singleton provides the ability to set a configuration (LDConfig) that controls how the LDClient talks to LaunchDarkly servers, and a user (LDUser) that provides finer control on the feature flag values delivered to LDClient. Once the LDClient has started, it connects to LaunchDarkly's servers to get the feature flag values you set in the Dashboard.
 ## Usage
 ### Startup
- 1. To customize, configure a `LDConfig` and `LDUser`. While neither are required, both give you additional control over the feature flags delivered to the LDClient. See `LDConfig` & `LDUser` for more details.
-    - The mobileKey comes from your LaunchDarkly Account settings (on the left, at the bottom). If you have multiple projects be sure to choose the correct Mobile key.
+ 1. To customize, configure a `LDConfig` and `LDUser`. The `config` is required, the `user` is optional. Both give you additional control over the feature flags delivered to the LDClient. See `LDConfig` & `LDUser` for more details.
+    - The mobileKey set into the `LDConfig` comes from your LaunchDarkly Account settings (on the left, at the bottom). If you have multiple projects be sure to choose the correct Mobile key.
  2. Call `LDClient.shared.start(config: user: completion:)`
-    - If you do not pass in a LDConfig or LDUser, LDCLient will create a default for you.
+    - If you do not pass in a LDUser, LDCLient will create a default for you.
     - The optional completion closure allows the LDClient to notify your app when it has gone online.
  3. Because the LDClient is a singleton, you do not have to keep a reference to it in your code.
 
@@ -196,22 +196,21 @@ public class LDClient {
     private(set) var hasStarted = false
 
     /**
-     Starts the LDClient using the passed in `mobileKey`, `config`, & `user`. Call this before requesting feature flag values. The LDClient will not go online until you call this method.
+     Starts the LDClient using the passed in `config` & `user`. Call this before requesting feature flag values. The LDClient will not go online until you call this method.
 
      Starting the LDClient means setting the `config` & `user`, setting the client online if `config.startOnline` is true (the default setting), and starting event recording. The client app must start the LDClient before it will report feature flag values. If a client does not call start, the LDClient will only report fallback values, and no events will be recorded.
 
-     If the start call omits the `config` or `user`, the LDClient uses the previously set `config` and `user`, or defaults if they were never set.
+     If the start call omits the `user`, the LDClient uses the previously set `user`, or the default `user` if it was never set.
 
      If the start call includes the optional `completion` closure, LDClient calls the `completion` closure when `setOnline(_: completion:)` embedded in the start method completes. The start call is subject to throttling delays, therefore the `completion` closure call may be delayed.
 
      Subsequent calls to this method cause the LDClient to go offline, reconfigure using the new `config` & `user` (if supplied), and then go online if it was online when start was called. Normally there should only be one call to start. To change `config` or `user`, set them directly on LDClient.
 
-     - parameter mobileKey: The Mobile key from your [LaunchDarkly Account](app.launchdarkly.com) settings (on the left at the bottom). If you have multiple projects be sure to choose the correct Mobile key.
-     - parameter config: The LDConfig set with the desired configuration. If omitted, LDClient retains the previously set config, or default if one was never set. (Optional)
+     - parameter config: The LDConfig that contains the desired configuration. (Required)
      - parameter user: The LDUser set with the desired user. If omitted, LDClient retains the previously set user, or default if one was never set. (Optional)
      - parameter completion: Closure called when the embedded `setOnline` call completes, subject to throttling delays. (Optional)
     */
-    public func start(config: LDConfig? = nil, user: LDUser? = nil, completion: (() -> Void)? = nil) {
+    public func start(config: LDConfig, user: LDUser? = nil, completion: (() -> Void)? = nil) {
         Log.debug(typeName(and: #function, appending: ": ") + "starting")
         let wasStarted = hasStarted
         let wasOnline = isOnline
@@ -219,7 +218,7 @@ public class LDClient {
 
         setOnline(false)
 
-        self.config = config ?? self.config
+        self.config = config
         self.user = user ?? self.user
 
         setOnline((wasStarted && wasOnline) || (!wasStarted && self.config.startOnline)) {
