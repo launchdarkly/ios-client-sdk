@@ -367,7 +367,7 @@ final class DarklyServiceSpec: QuickSpec {
                 var eventsPublished = false
                 let emptyEventDictionaryList: [[String: Any]] = []
                 beforeEach {
-                    testContext = TestContext(mobileKey: Constants.emptyMobileKey, useReport: false, includeMockEventDictionaries: true)
+                    testContext = TestContext(mobileKey: LDConfig.Constants.mockMobileKey, useReport: false, includeMockEventDictionaries: true)
                     testContext.serviceMock.stubEventRequest(success: true) { (request, _, _) in
                         eventRequest = request
                     }
