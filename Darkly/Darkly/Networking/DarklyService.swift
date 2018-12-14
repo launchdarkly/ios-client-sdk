@@ -69,7 +69,7 @@ final class DarklyService: DarklyServiceProvider {
         self.config = config
         self.user = user
         self.serviceFactory = serviceFactory
-        self.httpHeaders = HTTPHeaders(mobileKey: config.mobileKey, environmentReporter: serviceFactory.makeEnvironmentReporter())
+        self.httpHeaders = HTTPHeaders(config: config, environmentReporter: serviceFactory.makeEnvironmentReporter())
 
         self.session = URLSession(configuration: URLSessionConfiguration.default)
     }

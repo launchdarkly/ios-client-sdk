@@ -28,8 +28,8 @@ struct HTTPHeaders {
     let systemName: String
     let sdkVersion: String
     
-    init(mobileKey: String, environmentReporter: EnvironmentReporting) {
-        self.mobileKey = mobileKey
+    init(config: LDConfig, environmentReporter: EnvironmentReporting) {
+        self.mobileKey = config.mobileKey
         self.systemName = environmentReporter.systemName
         self.sdkVersion = environmentReporter.sdkVersion
     }
