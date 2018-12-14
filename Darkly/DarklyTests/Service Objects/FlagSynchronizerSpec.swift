@@ -13,7 +13,6 @@ import DarklyEventSource
 
 final class FlagSynchronizerSpec: QuickSpec {
     struct Constants {
-        fileprivate static let mockMobileKey = "mockMobileKey"
         fileprivate static let pollingInterval: TimeInterval = 1
         fileprivate static let waitMillis: Int = 500
     }
