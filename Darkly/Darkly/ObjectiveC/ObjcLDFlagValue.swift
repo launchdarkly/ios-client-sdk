@@ -42,10 +42,15 @@ public class ObjcLDFlagValueSource: NSObject {
     let flagValueSource: LDFlagValueSource?
     let typeMismatch: Bool
 
+    ///LDFlagValueSource constant indicating the source is nil.
     @objc public static let nilSource = -1
+    ///LDFlagValueSource constant indicating the source is the server.
     @objc public static let server = 0
+    ///LDFlagValueSource constant indicating the source is the cache.
     @objc public static let cache = 1
+    ///LDFlagValueSource constant indicating the source is the fallback value.
     @objc public static let fallback = 2
+    ///LDFlagValueSource constant indicating the actual flag type differs from the type requested by the client.
     @objc public static let typeMismatch = 3
 
     struct StringConstants {
@@ -58,6 +63,7 @@ public class ObjcLDFlagValueSource: NSObject {
         self.typeMismatch = typeMismatch
     }
 
+    ///Initializer that takes an integer and returns the LDFlagValueSource provided the integer matches one of the LDFlagValueSource constants. Otherwise, returns nil.
     @objc public init?(rawValue: Int) {
         guard rawValue >= ObjcLDFlagValueSource.nilSource && rawValue <= ObjcLDFlagValueSource.typeMismatch
         else {
@@ -68,6 +74,7 @@ public class ObjcLDFlagValueSource: NSObject {
         super.init()
     }
 
+    ///Property that converts the LDFlagValueSource into an integer matching one of the LDFlagValueSource constants.
     @objc public var rawValue: Int {
         if typeMismatch {
             return ObjcLDFlagValueSource.typeMismatch
@@ -79,6 +86,7 @@ public class ObjcLDFlagValueSource: NSObject {
         return flagValueSource.intValue
     }
 
+    ///Property that converts the LDFlagValueSource into a string describing one of the LDFlagValueSource constants.
     @objc public var stringValue: String {
         if typeMismatch {
             return StringConstants.typeMismatch
@@ -90,6 +98,7 @@ public class ObjcLDFlagValueSource: NSObject {
         return "\(flagValueSource)"
     }
 
+    ///Compares a LDFlagValueSource to another object, returning true when the object is the same as the receiver.
     @objc public func isEqual(toObject object: Any?) -> Bool {
         guard let other = object as? ObjcLDFlagValueSource
         else {
@@ -98,6 +107,7 @@ public class ObjcLDFlagValueSource: NSObject {
         return self.rawValue == other.rawValue
     }
 
+    ///Compares a LDFlagValueSource to an Int, returning true when the receiver has the same raw value as the constantValue.
     @objc public func isEqual(toConstant constantValue: Int) -> Bool {
         return rawValue == constantValue
     }
