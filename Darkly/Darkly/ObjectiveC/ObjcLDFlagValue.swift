@@ -90,7 +90,7 @@ public class ObjcLDFlagValueSource: NSObject {
         return "\(flagValueSource)"
     }
 
-    @objc public func isEqual(object: Any?) -> Bool {
+    @objc public func isEqual(toObject object: Any?) -> Bool {
         guard let other = object as? ObjcLDFlagValueSource
         else {
             return false

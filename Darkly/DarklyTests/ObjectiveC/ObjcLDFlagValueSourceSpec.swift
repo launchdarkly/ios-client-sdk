@@ -199,7 +199,7 @@ final class ObjcLDFlagValueSourceSpec: QuickSpec {
                                 receiverSource = ObjcLDFlagValueSource(receiver, typeMismatch: false)
                                 otherSource = ObjcLDFlagValueSource(receiver, typeMismatch: false)
 
-                                result = receiverSource.isEqual(object: otherSource)
+                                result = receiverSource.isEqual(toObject: otherSource)
                             }
                             it("reports true for source \(receiver)") {
                                 expect(result) == true
@@ -215,7 +215,7 @@ final class ObjcLDFlagValueSourceSpec: QuickSpec {
                                     receiverSource = ObjcLDFlagValueSource(receiver, typeMismatch: false)
                                     otherSource = ObjcLDFlagValueSource(other, typeMismatch: false)
 
-                                    result = receiverSource.isEqual(object: otherSource)
+                                    result = receiverSource.isEqual(toObject: otherSource)
                                 }
                                 it("reports false for receiver source \(receiver) other source \(other)") {
                                     expect(result) == false
@@ -230,7 +230,7 @@ final class ObjcLDFlagValueSourceSpec: QuickSpec {
                                     receiverSource = ObjcLDFlagValueSource(receiver, typeMismatch: true)
                                     otherSource = ObjcLDFlagValueSource(other, typeMismatch: false)
 
-                                    result = receiverSource.isEqual(object: otherSource)
+                                    result = receiverSource.isEqual(toObject: otherSource)
                                 }
                                 it("reports false for receiver source \(receiver) other source \(other)") {
                                     expect(result) == false
@@ -241,7 +241,7 @@ final class ObjcLDFlagValueSourceSpec: QuickSpec {
                                     receiverSource = ObjcLDFlagValueSource(receiver, typeMismatch: true)
                                     otherSource = ObjcLDFlagValueSource(other, typeMismatch: true)
 
-                                    result = receiverSource.isEqual(object: otherSource)
+                                    result = receiverSource.isEqual(toObject: otherSource)
                                 }
                                 it("reports true for receiver source \(receiver) other source \(other)") {
                                     expect(result) == true
@@ -256,7 +256,7 @@ final class ObjcLDFlagValueSourceSpec: QuickSpec {
                                     receiverSource = ObjcLDFlagValueSource(receiver, typeMismatch: false)
                                     otherSource = ObjcLDFlagValueSource(other, typeMismatch: true)
 
-                                    result = receiverSource.isEqual(object: otherSource)
+                                    result = receiverSource.isEqual(toObject: otherSource)
                                 }
                                 it("reports false for receiver source \(receiver) other source \(other)") {
                                     expect(result) == false
@@ -269,7 +269,7 @@ final class ObjcLDFlagValueSourceSpec: QuickSpec {
                             receiverSource = ObjcLDFlagValueSource(receiver, typeMismatch: false)
                             otherSource = ObjcLDFlagValueSource(nil, typeMismatch: false)
 
-                            result = receiverSource.isEqual(object: otherSource)
+                            result = receiverSource.isEqual(toObject: otherSource)
                         }
                         it("reports false for receiver source \(receiver)") {
                             expect(result) == false
@@ -285,7 +285,7 @@ final class ObjcLDFlagValueSourceSpec: QuickSpec {
                                 receiverSource = ObjcLDFlagValueSource(nil, typeMismatch: false)
                                 otherSource = ObjcLDFlagValueSource(other, typeMismatch: true)
 
-                                result = receiverSource.isEqual(object: otherSource)
+                                result = receiverSource.isEqual(toObject: otherSource)
                             }
                             it("reports false for receiver source nil other source \(other)") {
                                 expect(result) == false
@@ -296,7 +296,7 @@ final class ObjcLDFlagValueSourceSpec: QuickSpec {
                                 receiverSource = ObjcLDFlagValueSource(nil, typeMismatch: false)
                                 otherSource = ObjcLDFlagValueSource(other, typeMismatch: false)
 
-                                result = receiverSource.isEqual(object: otherSource)
+                                result = receiverSource.isEqual(toObject: otherSource)
                             }
                             it("reports false for receiver source nil other source \(other)") {
                                 expect(result) == false
@@ -310,7 +310,7 @@ final class ObjcLDFlagValueSourceSpec: QuickSpec {
                             receiverSource = ObjcLDFlagValueSource(nil, typeMismatch: false)
                             otherSource = ObjcLDFlagValueSource(nil, typeMismatch: false)
 
-                            result = receiverSource.isEqual(object: otherSource)
+                            result = receiverSource.isEqual(toObject: otherSource)
                         }
                         it("reports true") {
                             expect(result) == true
@@ -321,7 +321,7 @@ final class ObjcLDFlagValueSourceSpec: QuickSpec {
                             receiverSource = ObjcLDFlagValueSource(nil, typeMismatch: true)
                             otherSource = ObjcLDFlagValueSource(nil, typeMismatch: false)
 
-                            result = receiverSource.isEqual(object: otherSource)
+                            result = receiverSource.isEqual(toObject: otherSource)
                         }
                         it("reports false") {
                             expect(result) == false
@@ -332,7 +332,7 @@ final class ObjcLDFlagValueSourceSpec: QuickSpec {
                             receiverSource = ObjcLDFlagValueSource(nil, typeMismatch: false)
                             otherSource = ObjcLDFlagValueSource(nil, typeMismatch: true)
 
-                            result = receiverSource.isEqual(object: otherSource)
+                            result = receiverSource.isEqual(toObject: otherSource)
                         }
                         it("reports false") {
                             expect(result) == false
@@ -343,7 +343,7 @@ final class ObjcLDFlagValueSourceSpec: QuickSpec {
                             receiverSource = ObjcLDFlagValueSource(nil, typeMismatch: true)
                             otherSource = ObjcLDFlagValueSource(nil, typeMismatch: true)
 
-                            result = receiverSource.isEqual(object: otherSource)
+                            result = receiverSource.isEqual(toObject: otherSource)
                         }
                         it("reports true") {
                             expect(result) == true
@@ -355,7 +355,7 @@ final class ObjcLDFlagValueSourceSpec: QuickSpec {
                 beforeEach {
                     receiverSource = ObjcLDFlagValueSource(.server, typeMismatch: false)
 
-                    result = receiverSource.isEqual(object: NSObject())
+                    result = receiverSource.isEqual(toObject: NSObject())
                 }
                 it("reports false") {
                     expect(result) == false
@@ -365,7 +365,7 @@ final class ObjcLDFlagValueSourceSpec: QuickSpec {
                 beforeEach {
                     receiverSource = ObjcLDFlagValueSource(.server, typeMismatch: false)
 
-                    result = receiverSource.isEqual(object: nil)
+                    result = receiverSource.isEqual(toObject: nil)
                 }
                 it("reports false") {
                     expect(result) == false
