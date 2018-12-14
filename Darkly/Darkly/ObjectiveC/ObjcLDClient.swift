@@ -127,7 +127,7 @@ public final class ObjcLDClient: NSObject {
     }
 
     /**
-     Starts the LDClient using the passed in `mobileKey`, `config`, & `user`. Call this before requesting feature flag values. The LDClient will not go online until you call this method.
+     Starts the LDClient using the passed in `config` & `user`. Call this before requesting feature flag values. The LDClient will not go online until you call this method.
 
      Starting the LDClient means setting the `config` & `user`, setting the client online if `config.startOnline` is YES (the default setting), and starting event recording. The client app must start the LDClient before it will report feature flag values. If a client does not call start, the LDClient will only report fallback values, and no events will be recorded.
 
@@ -139,12 +139,12 @@ public final class ObjcLDClient: NSObject {
      - parameter config: The LDConfig set with the desired configuration. If omitted, LDClient retains the previously set config, or default if one was never set. (Optional)
      - parameter user: The LDUser set with the desired user. If omitted, LDClient retains the previously set user, or default if one was never set. (Optional)
      */
-    @objc public func startWithMobileKey(_ mobileKey: String, config: ObjcLDConfig? = nil, user: ObjcLDUser? = nil) {
-        ObjcLDClient.sharedInstance.startWithMobileKey(mobileKey, config: config, user: user, completion: nil)
+    @objc public func start(config: ObjcLDConfig? = nil, user: ObjcLDUser? = nil) {
+        ObjcLDClient.sharedInstance.start(config: config, user: user, completion: nil)
     }
 
     /**
-     Starts the LDClient using the passed in `mobileKey`, `config`, & `user`. Call this before requesting feature flag values. The LDClient will not go online until you call this method.
+     Starts the LDClient using the passed in `config` & `user`. Call this before requesting feature flag values. The LDClient will not go online until you call this method.
 
      Starting the LDClient means setting the `config` & `user`, setting the client online if `config.startOnline` is YES (the default setting), and starting event recording. The client app must start the LDClient before it will report feature flag values. If a client does not call start, the LDClient will only report fallback values, and no events will be recorded.
 
@@ -154,17 +154,16 @@ public final class ObjcLDClient: NSObject {
 
      Subsequent calls to this method cause the LDClient to go offline, reconfigure using the new `config` & `user` (if supplied), and then go online if it was online when start was called. Normally there should only be one call to start. To change `config` or `user`, set them directly on LDClient.
 
-     - parameter mobileKey: The Mobile key from your [LaunchDarkly Account](app.launchdarkly.com) settings (on the left at the bottom). If you have multiple projects be sure to choose the correct Mobile key.
      - parameter config: The LDConfig set with the desired configuration. If omitted, LDClient retains the previously set config, or default if one was never set. (Optional)
      - parameter user: The LDUser set with the desired user. If omitted, LDClient retains the previously set user, or default if one was never set. (Optional)
      - parameter completion: Closure called when the embedded `setOnline` call completes, subject to throttling delays. (Optional)
      */
-    @objc public func startWithMobileKey(_ mobileKey: String, config: ObjcLDConfig? = nil, user: ObjcLDUser? = nil, completion: (() -> Void)? = nil) {
+    @objc public func start(config: ObjcLDConfig? = nil, user: ObjcLDUser? = nil, completion: (() -> Void)? = nil) {
         if let configObject = config {
-            LDClient.shared.start(mobileKey: mobileKey, config: configObject.config, user: user?.user, completion: completion)
+            LDClient.shared.start(config: configObject.config, user: user?.user, completion: completion)
             return
         }
-        LDClient.shared.start(mobileKey: mobileKey, user: user?.user, completion: completion)
+        LDClient.shared.start(user: user?.user, completion: completion)
     }
 
     /**

@@ -13,7 +13,6 @@ import DarklyEventSource
 
 final class LDClientSpec: QuickSpec {
     struct Constants {
-        fileprivate static let mockMobileKey = "mockMobileKey"
         fileprivate static let alternateMockUrl = URL(string: "https://dummy.alternate.com")!
 
         fileprivate static let newFlagKey = "LDClientSpec.newFlagKey"
@@ -103,7 +102,7 @@ final class LDClientSpec: QuickSpec {
             setThrottlerToExecuteRunClosure()
 
             if startClient {
-                subject.start(mobileKey: Constants.mockMobileKey)
+                subject.start()
             }
             if runMode == .background {
                 subject.setRunMode(.background)
@@ -157,7 +156,7 @@ final class LDClientSpec: QuickSpec {
                     testContext.config.startOnline = true
 
                     waitUntil { done in
-                        testContext.subject.start(mobileKey: Constants.mockMobileKey, config: testContext.config, user: testContext.user, completion: done)
+                        testContext.subject.start(config: testContext.config, user: testContext.user, completion: done)
                     }
                 }
                 it("takes the client and service objects online") {
@@ -191,7 +190,7 @@ final class LDClientSpec: QuickSpec {
                 beforeEach {
                     testContext = TestContext()
                     waitUntil { done in
-                        testContext.subject.start(mobileKey: Constants.mockMobileKey, config: testContext.config, user: testContext.user, completion: done)
+                        testContext.subject.start(config: testContext.config, user: testContext.user, completion: done)
                     }
                 }
                 it("leaves the client and service objects offline") {
@@ -228,7 +227,7 @@ final class LDClientSpec: QuickSpec {
                             testContext = TestContext(startOnline: true, runMode: .background, operatingSystem: os)
 
                             waitUntil { done in
-                                testContext.subject.start(mobileKey: Constants.mockMobileKey, config: testContext.config, user: testContext.user, completion: done)
+                                testContext.subject.start(config: testContext.config, user: testContext.user, completion: done)
                             }
                         }
                         it("takes the client and service objects online when background enabled") {
@@ -268,7 +267,7 @@ final class LDClientSpec: QuickSpec {
                             testContext.config.enableBackgroundUpdates = false
 
                             waitUntil { done in
-                                testContext.subject.start(mobileKey: Constants.mockMobileKey, config: testContext.config, user: testContext.user, completion: done)
+                                testContext.subject.start(config: testContext.config, user: testContext.user, completion: done)
                             }
                         }
                         it("leaves the client and service objects offline") {
@@ -308,7 +307,7 @@ final class LDClientSpec: QuickSpec {
                         testContext = TestContext()
                         testContext.config.startOnline = true
                         waitUntil { done in
-                            testContext.subject.start(mobileKey: Constants.mockMobileKey, config: testContext.config, user: testContext.user, completion: done)
+                            testContext.subject.start(config: testContext.config, user: testContext.user, completion: done)
                         }
 
                         newConfig = testContext.subject.config
@@ -316,7 +315,7 @@ final class LDClientSpec: QuickSpec {
 
                         newUser = LDUser.stub()
 
-                        testContext.subject.start(mobileKey: Constants.mockMobileKey, config: newConfig, user: newUser)
+                        testContext.subject.start(config: newConfig, user: newUser)
                     }
                     it("takes the client and service objects online") {
                         expect(testContext.subject.isOnline) == true
@@ -350,7 +349,7 @@ final class LDClientSpec: QuickSpec {
                         testContext = TestContext()
                         testContext.config.startOnline = false
                         waitUntil { done in
-                            testContext.subject.start(mobileKey: Constants.mockMobileKey, config: testContext.config, user: testContext.user, completion: done)
+                            testContext.subject.start(config: testContext.config, user: testContext.user, completion: done)
                         }
 
                         newConfig = testContext.subject.config
@@ -358,7 +357,7 @@ final class LDClientSpec: QuickSpec {
 
                         newUser = LDUser.stub()
 
-                        testContext.subject.start(mobileKey: Constants.mockMobileKey, config: newConfig, user: newUser)
+                        testContext.subject.start(config: newConfig, user: newUser)
                     }
                     it("leaves the client and service objects offline") {
                         expect(testContext.subject.isOnline) == false
@@ -395,7 +394,7 @@ final class LDClientSpec: QuickSpec {
                         testContext.subject.config = testContext.config
                         testContext.subject.user = testContext.user
                         waitUntil { done in
-                            testContext.subject.start(mobileKey: Constants.mockMobileKey, completion: done)
+                            testContext.subject.start(completion: done)
                         }
                     }
                     it("saves the config") {
@@ -424,7 +423,7 @@ final class LDClientSpec: QuickSpec {
                     beforeEach {
                         testContext = TestContext()
                         waitUntil { done in
-                            testContext.subject.start(mobileKey: Constants.mockMobileKey, completion: done)
+                            testContext.subject.start(completion: done)
                         }
                         testContext.config = testContext.subject.config
                         testContext.user = testContext.subject.user
@@ -459,7 +458,7 @@ final class LDClientSpec: QuickSpec {
 
                     testContext.config.startOnline = false
                     waitUntil { done in
-                        testContext.subject.start(mobileKey: Constants.mockMobileKey, config: testContext.config, user: testContext.user, completion: done)
+                        testContext.subject.start(config: testContext.config, user: testContext.user, completion: done)
                     }
                 }
                 it("checks the user flag cache for the user") {
@@ -477,7 +476,7 @@ final class LDClientSpec: QuickSpec {
 
                     testContext.config.startOnline = false
                     waitUntil { done in
-                        testContext.subject.start(mobileKey: Constants.mockMobileKey, config: testContext.config, user: testContext.user, completion: done)
+                        testContext.subject.start(config: testContext.config, user: testContext.user, completion: done)
                     }
                 }
                 it("checks the user flag cache for the user") {
@@ -501,7 +500,7 @@ final class LDClientSpec: QuickSpec {
             }
             context("when config values are the same") {
                 beforeEach {
-                    testContext.subject.start(mobileKey: Constants.mockMobileKey, config: testContext.config, user: testContext.user)
+                    testContext.subject.start(config: testContext.config, user: testContext.user)
                     setIsOnlineCount = (testContext.flagSynchronizerMock.isOnlineSetCount, testContext.eventReporterMock.isOnlineSetCount)
 
                     testContext.subject.config = testContext.config
@@ -527,7 +526,7 @@ final class LDClientSpec: QuickSpec {
                 }
                 context("with run mode set to foreground") {
                     beforeEach {
-                        testContext.subject.start(mobileKey: Constants.mockMobileKey, config: testContext.config, user: testContext.user)
+                        testContext.subject.start(config: testContext.config, user: testContext.user)
 
                         testContext.subject.config = newConfig
                     }
@@ -549,7 +548,7 @@ final class LDClientSpec: QuickSpec {
                         context("on \(os)") {
                             beforeEach {
                                 testContext = TestContext(startOnline: true, runMode: .background, operatingSystem: os)
-                                testContext.subject.start(mobileKey: Constants.mockMobileKey, config: testContext.config, user: testContext.user)
+                                testContext.subject.start(config: testContext.config, user: testContext.user)
 
                                 newConfig = testContext.config
                                 //change some values and check they're propagated to supporting objects
@@ -579,7 +578,7 @@ final class LDClientSpec: QuickSpec {
                 var newConfig: LDConfig!
                 beforeEach {
                     testContext.config.startOnline = false
-                    testContext.subject.start(mobileKey: Constants.mockMobileKey, config: testContext.config, user: testContext.user)
+                    testContext.subject.start(config: testContext.config, user: testContext.user)
 
                     newConfig = testContext.config
                     //change some values and check they're propagated to supporting objects
@@ -640,7 +639,7 @@ final class LDClientSpec: QuickSpec {
             context("when the client is online") {
                 beforeEach {
                     testContext.config.startOnline = true
-                    testContext.subject.start(mobileKey: Constants.mockMobileKey, config: testContext.config, user: testContext.user)
+                    testContext.subject.start(config: testContext.config, user: testContext.user)
                     testContext.eventReporterMock.recordSummaryEventCallCount = 0   //calling start sets the user, which calls eventReporter.recordSummaryEvent()
 
                     newUser = LDUser.stub()
@@ -665,7 +664,7 @@ final class LDClientSpec: QuickSpec {
             context("when the client is offline") {
                 beforeEach {
                     testContext.config.startOnline = false
-                    testContext.subject.start(mobileKey: Constants.mockMobileKey, config: testContext.config, user: testContext.user)
+                    testContext.subject.start(config: testContext.config, user: testContext.user)
                     testContext.eventReporterMock.recordSummaryEventCallCount = 0   //calling start sets the user, which calls eventReporter.recordSummaryEvent()
 
                     newUser = LDUser.stub()
@@ -721,7 +720,7 @@ final class LDClientSpec: QuickSpec {
             context("when the client is offline") {
                 context("setting online") {
                     beforeEach {
-                        testContext.subject.start(mobileKey: Constants.mockMobileKey, config: testContext.config, user: testContext.user)
+                        testContext.subject.start(config: testContext.config, user: testContext.user)
 
                         waitUntil { done in
                             testContext.subject.setOnline(true) {
@@ -741,7 +740,7 @@ final class LDClientSpec: QuickSpec {
                 context("setting offline") {
                     beforeEach {
                         testContext.config.startOnline = true
-                        testContext.subject.start(mobileKey: Constants.mockMobileKey, config: testContext.config, user: testContext.user)
+                        testContext.subject.start(config: testContext.config, user: testContext.user)
                         testContext.throttlerMock?.runThrottledCallCount = 0
 
                         testContext.subject.setOnline(false)
@@ -773,7 +772,7 @@ final class LDClientSpec: QuickSpec {
                         }
                         context("while configured to enable background updates") {
                             beforeEach {
-                                testContext.subject.start(mobileKey: Constants.mockMobileKey, config: testContext.config, user: testContext.user)
+                                testContext.subject.start(config: testContext.config, user: testContext.user)
                             }
                             context("and setting online") {
                                 var targetRunThrottledCalls: Int!
@@ -796,7 +795,7 @@ final class LDClientSpec: QuickSpec {
                         context("while configured to disable background updates") {
                             beforeEach {
                                 testContext.config.enableBackgroundUpdates = false
-                                testContext.subject.start(mobileKey: Constants.mockMobileKey, config: testContext.config, user: testContext.user)
+                                testContext.subject.start(config: testContext.config, user: testContext.user)
                             }
                             context("and setting online") {
                                 beforeEach {
@@ -836,7 +835,7 @@ final class LDClientSpec: QuickSpec {
                 context("and online") {
                     beforeEach {
                         testContext.config.startOnline = true
-                        testContext.subject.start(mobileKey: Constants.mockMobileKey, config: testContext.config, user: testContext.user)
+                        testContext.subject.start(config: testContext.config, user: testContext.user)
                         priorRecordedEvents = testContext.eventReporterMock.recordCallCount
 
                         testContext.subject.stop()
@@ -852,7 +851,7 @@ final class LDClientSpec: QuickSpec {
                 context("and offline") {
                     beforeEach {
                         testContext.config.startOnline = false
-                        testContext.subject.start(mobileKey: Constants.mockMobileKey, config: testContext.config, user: testContext.user)
+                        testContext.subject.start(config: testContext.config, user: testContext.user)
                         priorRecordedEvents = testContext.eventReporterMock.recordCallCount
 
                         testContext.subject.stop()
@@ -881,7 +880,7 @@ final class LDClientSpec: QuickSpec {
             context("when already stopped") {
                 beforeEach {
                     testContext.config.startOnline = false
-                    testContext.subject.start(mobileKey: Constants.mockMobileKey, config: testContext.config, user: testContext.user)
+                    testContext.subject.start(config: testContext.config, user: testContext.user)
                     testContext.subject.stop()
                     priorRecordedEvents = testContext.eventReporterMock.recordCallCount
 
@@ -909,7 +908,7 @@ final class LDClientSpec: QuickSpec {
             }
             context("when client was started") {
                 beforeEach {
-                    testContext.subject.start(mobileKey: Constants.mockMobileKey, config: testContext.config, user: testContext.user)
+                    testContext.subject.start(config: testContext.config, user: testContext.user)
 
                     testContext.subject.trackEvent(key: event.key!, data: event.data)
                 }
@@ -931,7 +930,7 @@ final class LDClientSpec: QuickSpec {
             context("when client was stopped") {
                 var priorRecordedEvents: Int!
                 beforeEach {
-                    testContext.subject.start(mobileKey: Constants.mockMobileKey, config: testContext.config, user: testContext.user)
+                    testContext.subject.start(config: testContext.config, user: testContext.user)
                     testContext.subject.stop()
                     priorRecordedEvents = testContext.eventReporterMock.recordCallCount
 
@@ -952,7 +951,7 @@ final class LDClientSpec: QuickSpec {
             }
             context("flag store contains the requested value") {
                 beforeEach {
-                    testContext.subject.start(mobileKey: Constants.mockMobileKey, config: testContext.config, user: testContext.user)
+                    testContext.subject.start(config: testContext.config, user: testContext.user)
                 }
                 it("returns the flag value") {
                     expect(testContext.subject.variation(forKey: DarklyServiceMock.FlagKeys.bool, fallback: DefaultFlagValues.bool)) == DarklyServiceMock.FlagValues.bool
@@ -975,7 +974,7 @@ final class LDClientSpec: QuickSpec {
             }
             context("flag store does not contain the requested value") {
                 beforeEach {
-                    testContext.subject.start(mobileKey: Constants.mockMobileKey, config: testContext.config, user: testContext.user)
+                    testContext.subject.start(config: testContext.config, user: testContext.user)
                 }
                 it("returns the fallback value") {
                     expect(testContext.subject.variation(forKey: BadFlagKeys.bool, fallback: DefaultFlagValues.bool)) == DefaultFlagValues.bool
@@ -1026,7 +1025,7 @@ final class LDClientSpec: QuickSpec {
             context("flag store contains the requested value") {
                 beforeEach {
                     testContext.flagStoreMock.flagValueSource = .server
-                    testContext.subject.start(mobileKey: Constants.mockMobileKey, config: testContext.config, user: testContext.user)
+                    testContext.subject.start(config: testContext.config, user: testContext.user)
                 }
                 it("returns the flag value and source") {
                     expect(testContext.subject.variationAndSource(forKey: DarklyServiceMock.FlagKeys.bool, fallback: DefaultFlagValues.bool)
@@ -1055,7 +1054,7 @@ final class LDClientSpec: QuickSpec {
             }
             context("flag store does not contain the requested value") {
                 beforeEach {
-                    testContext.subject.start(mobileKey: Constants.mockMobileKey, config: testContext.config, user: testContext.user)
+                    testContext.subject.start(config: testContext.config, user: testContext.user)
                 }
                 it("returns the fallback value and fallback source") {
                     expect(testContext.subject.variationAndSource(forKey: BadFlagKeys.bool, fallback: DefaultFlagValues.bool) == (DefaultFlagValues.bool, .fallback)).to(beTrue())
@@ -1110,7 +1109,7 @@ final class LDClientSpec: QuickSpec {
             var testContext: TestContext!
             beforeEach {
                 testContext = TestContext()
-                testContext.subject.start(mobileKey: Constants.mockMobileKey, config: testContext.config, user: testContext.user)
+                testContext.subject.start(config: testContext.config, user: testContext.user)
                 changedFlag = LDChangedFlag(key: DarklyServiceMock.FlagKeys.bool, oldValue: false, oldValueSource: .cache, newValue: true, newValueSource: .server)
 
                 testContext.subject.observe(key: DarklyServiceMock.FlagKeys.bool, owner: self, handler: { (change) in
@@ -1133,7 +1132,7 @@ final class LDClientSpec: QuickSpec {
 
             beforeEach {
                 testContext = TestContext()
-                testContext.subject.start(mobileKey: Constants.mockMobileKey, config: testContext.config, user: testContext.user)
+                testContext.subject.start(config: testContext.config, user: testContext.user)
                 changedFlags = [DarklyServiceMock.FlagKeys.bool: LDChangedFlag(key: DarklyServiceMock.FlagKeys.bool,
                                                                                oldValue: false,
                                                                                oldValueSource: .cache,
@@ -1159,7 +1158,7 @@ final class LDClientSpec: QuickSpec {
             var testContext: TestContext!
             beforeEach {
                 testContext = TestContext()
-                testContext.subject.start(mobileKey: Constants.mockMobileKey, config: testContext.config, user: testContext.user)
+                testContext.subject.start(config: testContext.config, user: testContext.user)
                 changedFlags = [DarklyServiceMock.FlagKeys.bool: LDChangedFlag(key: DarklyServiceMock.FlagKeys.bool,
                                                                                oldValue: false,
                                                                                oldValueSource: .cache,
@@ -1184,7 +1183,7 @@ final class LDClientSpec: QuickSpec {
             var testContext: TestContext!
             beforeEach {
                 testContext = TestContext()
-                testContext.subject.start(mobileKey: Constants.mockMobileKey, config: testContext.config, user: testContext.user)
+                testContext.subject.start(config: testContext.config, user: testContext.user)
 
                 testContext.subject.observeFlagsUnchanged(owner: self, handler: {
                     testContext.flagsUnchangedCallCount += 1
@@ -1203,7 +1202,7 @@ final class LDClientSpec: QuickSpec {
             var testContext: TestContext!
             beforeEach {
                 testContext = TestContext()
-                testContext.subject.start(mobileKey: Constants.mockMobileKey, config: testContext.config, user: testContext.user)
+                testContext.subject.start(config: testContext.config, user: testContext.user)
 
                 testContext.subject.stopObserving(owner: self)
             }
@@ -1261,7 +1260,7 @@ final class LDClientSpec: QuickSpec {
                 waitUntil { done in
                     testContext.changeNotifierMock.notifyObserversCallback = done
 
-                    testContext.subject.start(mobileKey: Constants.mockMobileKey, config: testContext.config, user: testContext.user)
+                    testContext.subject.start(config: testContext.config, user: testContext.user)
 
                     testContext.onSyncComplete?(.success(newFlags, eventType))
                     if testContext.flagStoreMock.replaceStoreCallCount > 0 { testContext.replaceStoreComplete?() }
@@ -1291,7 +1290,7 @@ final class LDClientSpec: QuickSpec {
                 waitUntil { done in
                     testContext.changeNotifierMock.notifyObserversCallback = done
 
-                    testContext.subject.start(mobileKey: Constants.mockMobileKey, config: testContext.config, user: testContext.user)
+                    testContext.subject.start(config: testContext.config, user: testContext.user)
 
                     testContext.onSyncComplete?(.success(newFlags, eventType))
                     if testContext.flagStoreMock.replaceStoreCallCount > 0 { testContext.replaceStoreComplete?() }
@@ -1321,7 +1320,7 @@ final class LDClientSpec: QuickSpec {
                 waitUntil { done in
                     testContext.changeNotifierMock.notifyObserversCallback = done
 
-                    testContext.subject.start(mobileKey: Constants.mockMobileKey, config: testContext.config, user: testContext.user)
+                    testContext.subject.start(config: testContext.config, user: testContext.user)
 
                     testContext.onSyncComplete?(.success(newFlags, eventType))
                     if testContext.flagStoreMock.replaceStoreCallCount > 0 { testContext.replaceStoreComplete?() }
@@ -1349,7 +1348,7 @@ final class LDClientSpec: QuickSpec {
                 waitUntil { done in
                     testContext.changeNotifierMock.notifyObserversCallback = done
 
-                    testContext.subject.start(mobileKey: Constants.mockMobileKey, config: testContext.config, user: testContext.user)
+                    testContext.subject.start(config: testContext.config, user: testContext.user)
 
                     testContext.onSyncComplete?(.success(newFlags, eventType))
                     if testContext.flagStoreMock.replaceStoreCallCount > 0 { testContext.replaceStoreComplete?() }
@@ -1397,7 +1396,7 @@ final class LDClientSpec: QuickSpec {
                 waitUntil { done in
                     testContext.changeNotifierMock.notifyObserversCallback = done
 
-                    testContext.subject.start(mobileKey: Constants.mockMobileKey, config: testContext.config, user: testContext.user)
+                    testContext.subject.start(config: testContext.config, user: testContext.user)
 
                     testContext.onSyncComplete?(.success(flagUpdateDictionary, .patch))
                     if testContext.flagStoreMock.updateStoreCallCount > 0 { testContext.updateStoreComplete?() }
@@ -1431,7 +1430,7 @@ final class LDClientSpec: QuickSpec {
                 waitUntil { done in
                     testContext.changeNotifierMock.notifyObserversCallback = done
 
-                    testContext.subject.start(mobileKey: Constants.mockMobileKey, config: testContext.config, user: testContext.user)
+                    testContext.subject.start(config: testContext.config, user: testContext.user)
 
                     testContext.onSyncComplete?(.success(flagUpdateDictionary, .patch))
                     if testContext.flagStoreMock.updateStoreCallCount > 0 { testContext.updateStoreComplete?() }
@@ -1476,7 +1475,7 @@ final class LDClientSpec: QuickSpec {
                 waitUntil { done in
                     testContext.changeNotifierMock.notifyObserversCallback = done
 
-                    testContext.subject.start(mobileKey: Constants.mockMobileKey, config: testContext.config, user: testContext.user)
+                    testContext.subject.start(config: testContext.config, user: testContext.user)
 
                     testContext.onSyncComplete?(.success(flagUpdateDictionary, .delete))
                     if testContext.flagStoreMock.deleteFlagCallCount > 0 { testContext.deleteFlagComplete?() }
@@ -1507,7 +1506,7 @@ final class LDClientSpec: QuickSpec {
                 waitUntil { done in
                     testContext.changeNotifierMock.notifyObserversCallback = done
 
-                    testContext.subject.start(mobileKey: Constants.mockMobileKey, config: testContext.config, user: testContext.user)
+                    testContext.subject.start(config: testContext.config, user: testContext.user)
 
                     testContext.onSyncComplete?(.success(flagUpdateDictionary, .delete))
                     if testContext.flagStoreMock.deleteFlagCallCount > 0 { testContext.deleteFlagComplete?() }
@@ -1547,7 +1546,7 @@ final class LDClientSpec: QuickSpec {
                         done()
                     }
 
-                    testContext.subject.start(mobileKey: Constants.mockMobileKey, config: testContext.config, user: testContext.user)
+                    testContext.subject.start(config: testContext.config, user: testContext.user)
 
                     testContext.onSyncComplete?(.error(.response(HTTPURLResponse(url: testContext.config.baseUrl,
                                                                                  statusCode: HTTPURLResponse.StatusCodes.internalServerError,
@@ -1571,7 +1570,7 @@ final class LDClientSpec: QuickSpec {
                         done()
                     }
 
-                    testContext.subject.start(mobileKey: Constants.mockMobileKey, config: testContext.config, user: testContext.user)
+                    testContext.subject.start(config: testContext.config, user: testContext.user)
 
                     testContext.onSyncComplete?(.error(.request(DarklyServiceMock.Constants.error)))
                 }
@@ -1592,7 +1591,7 @@ final class LDClientSpec: QuickSpec {
                         done()
                     }
 
-                    testContext.subject.start(mobileKey: Constants.mockMobileKey, config: testContext.config, user: testContext.user)
+                    testContext.subject.start(config: testContext.config, user: testContext.user)
 
                     testContext.onSyncComplete?(.error(.data(DarklyServiceMock.Constants.errorData)))
                 }
@@ -1613,7 +1612,7 @@ final class LDClientSpec: QuickSpec {
                         done()
                     }
 
-                    testContext.subject.start(mobileKey: Constants.mockMobileKey, config: testContext.config, user: testContext.user)
+                    testContext.subject.start(config: testContext.config, user: testContext.user)
 
                     testContext.onSyncComplete?(.error(.response(HTTPURLResponse(url: testContext.config.baseUrl,
                                                                                  statusCode: HTTPURLResponse.StatusCodes.unauthorized,
@@ -1637,7 +1636,7 @@ final class LDClientSpec: QuickSpec {
                         done()
                     }
 
-                    testContext.subject.start(mobileKey: Constants.mockMobileKey, config: testContext.config, user: testContext.user)
+                    testContext.subject.start(config: testContext.config, user: testContext.user)
 
                     testContext.onSyncComplete?(.error(.event(DarklyEventSource.LDEvent.stubNonNSErrorEvent())))
                 }
@@ -1742,7 +1741,7 @@ final class LDClientSpec: QuickSpec {
                         context("when offline at foreground notification") {
                             beforeEach {
                                 testContext = TestContext(startOnline: false, runMode: .background, operatingSystem: os)
-                                testContext.subject.start(mobileKey: Constants.mockMobileKey)
+                                testContext.subject.start()
 
                                 NotificationCenter.default.post(name: testContext.environmentReporterMock.foregroundNotification!, object: self)
                             }
@@ -1779,7 +1778,7 @@ final class LDClientSpec: QuickSpec {
                             context("streaming mode") {
                                 beforeEach {
                                     testContext = TestContext(startOnline: true, streamingMode: .streaming, enableBackgroundUpdates: true, runMode: .foreground, operatingSystem: .macOS)
-                                    testContext.subject.start(mobileKey: Constants.mockMobileKey)
+                                    testContext.subject.start()
 
                                     testContext.subject.setRunMode(.background)
                                 }
@@ -1794,7 +1793,7 @@ final class LDClientSpec: QuickSpec {
                             context("polling mode") {
                                 beforeEach {
                                     testContext = TestContext(startOnline: true, streamingMode: .polling, enableBackgroundUpdates: true, runMode: .foreground, operatingSystem: .macOS)
-                                    testContext.subject.start(mobileKey: Constants.mockMobileKey)
+                                    testContext.subject.start()
 
                                     testContext.subject.setRunMode(.background)
                                 }
@@ -1811,7 +1810,7 @@ final class LDClientSpec: QuickSpec {
                         context("with background updates disabled") {
                             beforeEach {
                                 testContext = TestContext(startOnline: true, enableBackgroundUpdates: false, runMode: .foreground, operatingSystem: .macOS)
-                                testContext.subject.start(mobileKey: Constants.mockMobileKey)
+                                testContext.subject.start()
 
                                 testContext.subject.setRunMode(.background)
                             }
@@ -1831,7 +1830,7 @@ final class LDClientSpec: QuickSpec {
                         var makeFlagSynchronizerCallCount: Int!
                         beforeEach {
                             testContext = TestContext(startOnline: true, runMode: .foreground, operatingSystem: .macOS)
-                            testContext.subject.start(mobileKey: Constants.mockMobileKey)
+                            testContext.subject.start()
                             eventReporterIsOnlineSetCount = testContext.eventReporterMock.isOnlineSetCount
                             flagSynchronizerIsOnlineSetCount = testContext.flagSynchronizerMock.isOnlineSetCount
                             makeFlagSynchronizerCallCount = testContext.serviceFactoryMock.makeFlagSynchronizerCallCount
@@ -1854,7 +1853,7 @@ final class LDClientSpec: QuickSpec {
                         var makeFlagSynchronizerCallCount: Int!
                         beforeEach {
                             testContext = TestContext(startOnline: true, enableBackgroundUpdates: true, runMode: .background, operatingSystem: .macOS)
-                            testContext.subject.start(mobileKey: Constants.mockMobileKey)
+                            testContext.subject.start()
                             NotificationCenter.default.post(name: testContext.environmentReporterMock.backgroundNotification!, object: self)
                             eventReporterIsOnlineSetCount = testContext.eventReporterMock.isOnlineSetCount
                             flagSynchronizerIsOnlineSetCount = testContext.flagSynchronizerMock.isOnlineSetCount
@@ -1874,7 +1873,7 @@ final class LDClientSpec: QuickSpec {
                         context("streaming mode") {
                             beforeEach {
                                 testContext = TestContext(startOnline: true, streamingMode: .streaming, runMode: .background, operatingSystem: .macOS)
-                                testContext.subject.start(mobileKey: Constants.mockMobileKey)
+                                testContext.subject.start()
 
                                 testContext.subject.setRunMode(.foreground)
                             }
@@ -1889,7 +1888,7 @@ final class LDClientSpec: QuickSpec {
                         context("polling mode") {
                             beforeEach {
                                 testContext = TestContext(startOnline: true, streamingMode: .polling, runMode: .background, operatingSystem: .macOS)
-                                testContext.subject.start(mobileKey: Constants.mockMobileKey)
+                                testContext.subject.start()
 
                                 testContext.subject.setRunMode(.foreground)
                             }
@@ -1911,7 +1910,7 @@ final class LDClientSpec: QuickSpec {
                         context("with background updates enabled") {
                             beforeEach {
                                 testContext = TestContext(startOnline: false, enableBackgroundUpdates: true, runMode: .foreground, operatingSystem: .macOS)
-                                testContext.subject.start(mobileKey: Constants.mockMobileKey)
+                                testContext.subject.start()
 
                                 testContext.subject.setRunMode(.background)
                             }
@@ -1926,7 +1925,7 @@ final class LDClientSpec: QuickSpec {
                         context("with background updates disabled") {
                             beforeEach {
                                 testContext = TestContext(startOnline: false, enableBackgroundUpdates: false, runMode: .foreground, operatingSystem: .macOS)
-                                testContext.subject.start(mobileKey: Constants.mockMobileKey)
+                                testContext.subject.start()
 
                                 testContext.subject.setRunMode(.background)
                             }
@@ -1946,7 +1945,7 @@ final class LDClientSpec: QuickSpec {
                         var makeFlagSynchronizerCallCount: Int!
                         beforeEach {
                             testContext = TestContext(startOnline: false, runMode: .foreground, operatingSystem: .macOS)
-                            testContext.subject.start(mobileKey: Constants.mockMobileKey)
+                            testContext.subject.start()
                             eventReporterIsOnlineSetCount = testContext.eventReporterMock.isOnlineSetCount
                             flagSynchronizerIsOnlineSetCount = testContext.flagSynchronizerMock.isOnlineSetCount
                             makeFlagSynchronizerCallCount = testContext.serviceFactoryMock.makeFlagSynchronizerCallCount
@@ -1969,7 +1968,7 @@ final class LDClientSpec: QuickSpec {
                         var makeFlagSynchronizerCallCount: Int!
                         beforeEach {
                             testContext = TestContext(startOnline: false, runMode: .background, operatingSystem: .macOS)
-                            testContext.subject.start(mobileKey: Constants.mockMobileKey)
+                            testContext.subject.start()
                             eventReporterIsOnlineSetCount = testContext.eventReporterMock.isOnlineSetCount
                             flagSynchronizerIsOnlineSetCount = testContext.flagSynchronizerMock.isOnlineSetCount
                             makeFlagSynchronizerCallCount = testContext.serviceFactoryMock.makeFlagSynchronizerCallCount
@@ -1988,7 +1987,7 @@ final class LDClientSpec: QuickSpec {
                         context("streaming mode") {
                             beforeEach {
                                 testContext = TestContext(startOnline: false, streamingMode: .streaming, runMode: .background, operatingSystem: .macOS)
-                                testContext.subject.start(mobileKey: Constants.mockMobileKey)
+                                testContext.subject.start()
 
                                 testContext.subject.setRunMode(.foreground)
                             }
@@ -2003,7 +2002,7 @@ final class LDClientSpec: QuickSpec {
                         context("polling mode") {
                             beforeEach {
                                 testContext = TestContext(startOnline: false, streamingMode: .polling, runMode: .background, operatingSystem: .macOS)
-                                testContext.subject.start(mobileKey: Constants.mockMobileKey)
+                                testContext.subject.start()
 
                                 testContext.subject.setRunMode(.foreground)
                             }
@@ -2062,7 +2061,7 @@ final class LDClientSpec: QuickSpec {
                 var featureFlags: [LDFlagKey: FeatureFlag]!
                 beforeEach {
                     testContext = TestContext()
-                    testContext.subject.start(mobileKey: Constants.mockMobileKey)
+                    testContext.subject.start()
                     featureFlags = testContext.subject.user.flagStore.featureFlags
 
                     featureFlagValues = testContext.subject.allFlagValues

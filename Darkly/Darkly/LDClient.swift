@@ -17,8 +17,8 @@ enum LDClientRunMode {
 ## Usage
 ### Startup
  1. To customize, configure a `LDConfig` and `LDUser`. While neither are required, both give you additional control over the feature flags delivered to the LDClient. See `LDConfig` & `LDUser` for more details.
- 2. Call `LDClient.shared.start(mobileKey: config: user: completion:)`
     - The mobileKey comes from your LaunchDarkly Account settings (on the left, at the bottom). If you have multiple projects be sure to choose the correct Mobile key.
+ 2. Call `LDClient.shared.start(config: user: completion:)`
     - If you do not pass in a LDConfig or LDUser, LDCLient will create a default for you.
     - The optional completion closure allows the LDClient to notify your app when it has gone online.
  3. Because the LDClient is a singleton, you do not have to keep a reference to it in your code.
@@ -211,7 +211,7 @@ public class LDClient {
      - parameter user: The LDUser set with the desired user. If omitted, LDClient retains the previously set user, or default if one was never set. (Optional)
      - parameter completion: Closure called when the embedded `setOnline` call completes, subject to throttling delays. (Optional)
     */
-    public func start(mobileKey: String, config: LDConfig? = nil, user: LDUser? = nil, completion: (() -> Void)? = nil) {
+    public func start(config: LDConfig? = nil, user: LDUser? = nil, completion: (() -> Void)? = nil) {
         Log.debug(typeName(and: #function, appending: ": ") + "starting")
         let wasStarted = hasStarted
         let wasOnline = isOnline
@@ -219,7 +219,6 @@ public class LDClient {
 
         setOnline(false)
 
-        self.mobileKey = mobileKey
         self.config = config ?? self.config
         self.user = user ?? self.user
 
@@ -630,7 +629,6 @@ public class LDClient {
 
     // MARK: - Private
     private(set) var serviceFactory: ClientServiceCreating = ClientServiceFactory()
-    private var mobileKey = ""
 
     private(set) var runMode: LDClientRunMode = .foreground {
         didSet {
