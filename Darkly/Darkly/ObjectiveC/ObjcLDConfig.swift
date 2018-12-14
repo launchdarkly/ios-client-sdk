@@ -17,6 +17,12 @@ import Foundation
 public final class ObjcLDConfig: NSObject {
     var config: LDConfig
     
+    /// The Mobile key from your [LaunchDarkly Account](app.launchdarkly.com) settings (on the left at the bottom). If you have multiple projects be sure to choose the correct Mobile key.
+    @objc public var mobileKey: String {
+        get { return config.mobileKey }
+        set { config.mobileKey = newValue }
+    }
+
     /// The url for making feature flag requests. Do not change unless instructed by LaunchDarkly.
     @objc public var baseUrl: URL {
         get { return config.baseUrl }
@@ -131,8 +137,8 @@ public final class ObjcLDConfig: NSObject {
     }
     
     ///LDConfig constructor. Configurable values are all set to their default values. The client app can modify these values as desired. Note that client app developers may prefer to get the LDConfig from `LDClient.config` (`ObjcLDClient.config`) in order to retain previously set values.
-    @objc public override init() {
-        config = LDConfig()
+    @objc public init(mobileKey: String) {
+        config = LDConfig(mobileKey: mobileKey)
     }
 
     //Initializer to wrap the Swift LDConfig into ObjcLDConfig for use in Objective-C apps.

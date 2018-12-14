@@ -83,7 +83,7 @@ final class LDClientSpec: QuickSpec {
             let clientServiceFactory = ClientServiceMockFactory()
             if let operatingSystem = operatingSystem { clientServiceFactory.makeEnvironmentReporterReturnValue.operatingSystem = operatingSystem }
 
-            config = LDConfig.stub(environmentReporter: clientServiceFactory.makeEnvironmentReporterReturnValue)
+            config = LDConfig.stub(mobileKey: LDConfig.Constants.mockMobileKey, environmentReporter: clientServiceFactory.makeEnvironmentReporterReturnValue)
             config.startOnline = startOnline
             config.streamingMode = streamingMode
             config.enableBackgroundUpdates = enableBackgroundUpdates

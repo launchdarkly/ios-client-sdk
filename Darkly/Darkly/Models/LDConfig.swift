@@ -92,6 +92,9 @@ public struct LDConfig {
         }
     }
 
+    /// The Mobile key from your [LaunchDarkly Account](app.launchdarkly.com) settings (on the left at the bottom). If you have multiple projects be sure to choose the correct Mobile key.
+    public var mobileKey: String
+
     /// The url for making feature flag requests. Do not change unless instructed by LaunchDarkly.
     public var baseUrl: URL = Defaults.baseUrl
     /// The url for making event reports. Do not change unless instructed by LaunchDarkly.
@@ -174,15 +177,16 @@ public struct LDConfig {
     }
 
     //Internal constructor to enable automated testing
-    init(environmentReporter: EnvironmentReporting) {
+    init(mobileKey: String, environmentReporter: EnvironmentReporting) {
+        self.mobileKey = mobileKey
         minima = Minima(environmentReporter: environmentReporter)
         allowStreamingMode = environmentReporter.operatingSystem.isStreamingEnabled
         allowBackgroundUpdates = environmentReporter.operatingSystem.isBackgroundEnabled
     }
 
     ///LDConfig constructor. Configurable values are all set to their default values. The client app can modify these values as desired. Note that client app developers may prefer to get the LDConfig from `LDClient.config` in order to retain previously set values.
-    public init() {
-        self.init(environmentReporter: EnvironmentReporter())
+    public init(mobileKey: String) {
+        self.init(mobileKey: mobileKey, environmentReporter: EnvironmentReporter())
     }
 
     //Determine the effective flag polling interval based on runMode, configured foreground & background polling interval, and minimum foreground & background polling interval.

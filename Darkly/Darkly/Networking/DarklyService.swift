@@ -59,19 +59,17 @@ final class DarklyService: DarklyServiceProvider {
         static let report = "REPORT"
     }
     
-    private let mobileKey: String
     let config: LDConfig
     let user: LDUser
     let httpHeaders: HTTPHeaders
     private (set) var serviceFactory: ClientServiceCreating
     private var session: URLSession
 
-    init(mobileKey: String, config: LDConfig, user: LDUser, serviceFactory: ClientServiceCreating) {
-        self.mobileKey = mobileKey
+    init(config: LDConfig, user: LDUser, serviceFactory: ClientServiceCreating) {
         self.config = config
         self.user = user
         self.serviceFactory = serviceFactory
-        self.httpHeaders = HTTPHeaders(mobileKey: mobileKey, environmentReporter: serviceFactory.makeEnvironmentReporter())
+        self.httpHeaders = HTTPHeaders(mobileKey: config.mobileKey, environmentReporter: serviceFactory.makeEnvironmentReporter())
 
         self.session = URLSession(configuration: URLSessionConfiguration.default)
     }
@@ -79,7 +77,7 @@ final class DarklyService: DarklyServiceProvider {
     // MARK: Feature Flags
     
     func getFeatureFlags(useReport: Bool, completion: ServiceCompletionHandler?) {
-        guard !mobileKey.isEmpty,
+        guard !config.mobileKey.isEmpty,
             let flagRequest = flagRequest(useReport: useReport)
         else { return }
         let dataTask = self.session.dataTask(with: flagRequest) { (data, response, error) in
@@ -141,7 +139,7 @@ final class DarklyService: DarklyServiceProvider {
     // MARK: Publish Events
     
     func publishEventDictionaries(_ eventDictionaries: [[String: Any]], completion: ServiceCompletionHandler?) {
-        guard !mobileKey.isEmpty,
+        guard !config.mobileKey.isEmpty,
             !eventDictionaries.isEmpty
         else { return }
         let dataTask = self.session.dataTask(with: eventRequest(eventDictionaries: eventDictionaries)) { (data, response, error) in

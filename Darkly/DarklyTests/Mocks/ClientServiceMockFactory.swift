@@ -43,7 +43,7 @@ struct ClientServiceMockFactory: ClientServiceCreating {
         return UserFlagCache(flagCollectionStore: FlagCollectionCachingMock())
     }
 
-    func makeDarklyServiceProvider(mobileKey: String, config: LDConfig, user: LDUser) -> DarklyServiceProvider {
+    func makeDarklyServiceProvider(config: LDConfig, user: LDUser) -> DarklyServiceProvider {
         return DarklyServiceMock(config: config, user: user)
     }
 

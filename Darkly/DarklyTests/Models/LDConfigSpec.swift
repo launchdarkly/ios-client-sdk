@@ -41,7 +41,8 @@ final class LDConfigSpec: QuickSpec {
             self.environmentReporter = EnvironmentReportingMock()
             if let operatingSystem = operatingSystem { self.environmentReporter.operatingSystem = operatingSystem }
             if let isDebugBuild = isDebugBuild { self.environmentReporter.isDebugBuild = isDebugBuild }
-            subject = useStub ? LDConfig.stub(environmentReporter: self.environmentReporter) : LDConfig(environmentReporter: self.environmentReporter)
+            subject = useStub ? LDConfig.stub(mobileKey: LDConfig.Constants.mockMobileKey, environmentReporter: self.environmentReporter) :
+                LDConfig(mobileKey: LDConfig.Constants.mockMobileKey, environmentReporter: self.environmentReporter)
         }
     }
 
@@ -58,10 +59,11 @@ final class LDConfigSpec: QuickSpec {
         describe("init") {
             var config: LDConfig!
             beforeEach {
-                config = LDConfig()
+                config = LDConfig(mobileKey: LDConfig.Constants.mockMobileKey)
             }
             context("without changing config values") {
                 it("has the default config values") {
+                    expect(config.mobileKey) == LDConfig.Constants.mockMobileKey
                     expect(config.baseUrl) == LDConfig.Defaults.baseUrl
                     expect(config.eventsUrl) == LDConfig.Defaults.eventsUrl
                     expect(config.streamUrl) == LDConfig.Defaults.streamUrl

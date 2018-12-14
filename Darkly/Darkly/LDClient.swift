@@ -142,7 +142,7 @@ public class LDClient {
             let wasOnline = isOnline
             setOnline(false)
 
-            service = serviceFactory.makeDarklyServiceProvider(mobileKey: mobileKey, config: config, user: user)
+            service = serviceFactory.makeDarklyServiceProvider(config: config, user: user)
             eventReporter.config = config
 
             setOnline(wasOnline)
@@ -171,7 +171,7 @@ public class LDClient {
             if let cachedFlags = flagCache.retrieveFlags(for: user), !cachedFlags.flags.isEmpty {
                 user.flagStore.replaceStore(newFlags: cachedFlags.flags, source: .cache, completion: nil)
             }
-            service = serviceFactory.makeDarklyServiceProvider(mobileKey: mobileKey, config: config, user: user)
+            service = serviceFactory.makeDarklyServiceProvider(config: config, user: user)
 
             if hasStarted {
                 eventReporter.record(Event.identifyEvent(user: user))
@@ -685,9 +685,9 @@ public class LDClient {
         throttler = self.serviceFactory.makeThrottler(maxDelay: Throttler.Constants.defaultDelay)
 
         //dummy objects replaced by client at start
-        config = LDConfig(environmentReporter: environmentReporter)
+        config = LDConfig(mobileKey: "", environmentReporter: environmentReporter)
         user = LDUser(environmentReporter: environmentReporter)
-        service = self.serviceFactory.makeDarklyServiceProvider(mobileKey: "", config: config, user: user)
+        service = self.serviceFactory.makeDarklyServiceProvider(config: config, user: user)
         flagSynchronizer = self.serviceFactory.makeFlagSynchronizer(streamingMode: .polling,
                                                                     pollingInterval: config.flagPollingInterval,
                                                                     useReport: config.useReport,
@@ -711,7 +711,7 @@ public class LDClient {
         self.user = user
 
         //dummy objects replaced by client at start
-        service = self.serviceFactory.makeDarklyServiceProvider(mobileKey: "", config: config, user: user)  //didSet not triggered here
+        service = self.serviceFactory.makeDarklyServiceProvider(config: config, user: user)  //didSet not triggered here
         flagSynchronizer = self.serviceFactory.makeFlagSynchronizer(streamingMode: effectiveStreamingMode(runMode: runMode, config: config),
                                                                     pollingInterval: config.flagPollingInterval(runMode: runMode),
                                                                     useReport: config.useReport,

@@ -16,7 +16,7 @@ protocol ClientServiceCreating {
     func makeFlagCollectionCache(keyStore: KeyedValueCaching) -> FlagCollectionCaching
     func makeUserFlagCache() -> UserFlagCaching
     func makeUserFlagCache(flagCollectionStore: FlagCollectionCaching) -> UserFlagCaching
-    func makeDarklyServiceProvider(mobileKey: String, config: LDConfig, user: LDUser) -> DarklyServiceProvider
+    func makeDarklyServiceProvider(config: LDConfig, user: LDUser) -> DarklyServiceProvider
     mutating func makeFlagSynchronizer(streamingMode: LDStreamingMode,
                                        pollingInterval: TimeInterval,
                                        useReport: Bool,
@@ -55,8 +55,8 @@ struct ClientServiceFactory: ClientServiceCreating {
         return UserFlagCache(flagCollectionStore: flagCollectionStore)
     }
 
-    func makeDarklyServiceProvider(mobileKey: String, config: LDConfig, user: LDUser) -> DarklyServiceProvider {
-        return DarklyService(mobileKey: mobileKey, config: config, user: user, serviceFactory: self)
+    func makeDarklyServiceProvider(config: LDConfig, user: LDUser) -> DarklyServiceProvider {
+        return DarklyService(config: config, user: user, serviceFactory: self)
     }
 
     func makeFlagSynchronizer(streamingMode: LDStreamingMode,

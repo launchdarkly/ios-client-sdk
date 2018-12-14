@@ -9,10 +9,15 @@
 @testable import LaunchDarkly
 
 extension LDConfig {
-    static var stub: LDConfig { return stub(environmentReporter: EnvironmentReportingMock()) }
 
-    static func stub(environmentReporter: EnvironmentReportingMock) -> LDConfig {
-        var config = LDConfig(environmentReporter: environmentReporter)
+    struct Constants {
+        static let mockMobileKey = "mockMobileKey"
+    }
+
+    static var stub: LDConfig { return stub(mobileKey: Constants.mockMobileKey, environmentReporter: EnvironmentReportingMock()) }
+
+    static func stub(mobileKey: String, environmentReporter: EnvironmentReportingMock) -> LDConfig {
+        var config = LDConfig(mobileKey: mobileKey, environmentReporter: environmentReporter)
         config.baseUrl = DarklyServiceMock.Constants.mockBaseUrl
         config.eventsUrl = DarklyServiceMock.Constants.mockEventsUrl
         config.streamUrl = DarklyServiceMock.Constants.mockStreamUrl
