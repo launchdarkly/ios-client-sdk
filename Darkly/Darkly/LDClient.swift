@@ -112,7 +112,7 @@ public class LDClient {
 
     private func go(online goOnline: Bool, reasonOnlineUnavailable: String, completion:(() -> Void)?) {
         isOnline = goOnline
-        Log.debug(typeName(and: "setOnline", appending: ": \(self.isOnline).") + reasonOnlineUnavailable)
+        Log.debug(typeName(and: "setOnline", appending: ": ") + (reasonOnlineUnavailable.isEmpty ? "\(self.isOnline)." : "true aborted.") + reasonOnlineUnavailable)
         completion?()
     }
 
