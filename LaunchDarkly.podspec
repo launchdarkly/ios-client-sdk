@@ -25,7 +25,7 @@ Pod::Spec.new do |ld|
   ld.tvos.deployment_target    = "9.0"
   ld.osx.deployment_target     = "10.10"
 
-  ld.source       = { :git => "https://github.com/launchdarkly/ios-client.git", :tag => '3.0.0-beta.1'}
+  ld.source       = { :git => "https://github.com/launchdarkly/ios-client-swift-private.git", :tag => '3.0.0-beta.2.3c'}
 
   ld.source_files = "Darkly/Darkly/**/*.{h,m,swift}"
 

@@ -53,15 +53,16 @@ jobs:
         name: Copy XC Activity Log
         command: find "${HOME}/Library/Developer/Xcode/DerivedData" -name '*.xcactivitylog' -exec cp {} output/xcactivitylog \; || true
 
-    - run:
-        name: CocoaPods lib lint
-        command: |
-            curl https://cocoapods-specs.circleci.com/fetch-cocoapods-repo-from-s3.sh | bash -s cf
-            bundle exec pod lib lint
+    #When prepping for the next release, uncomment these and ensure tags have been correctly placed
+    #- run:
+    #    name: CocoaPods lib lint
+    #    command: |
+    #        curl https://cocoapods-specs.circleci.com/fetch-cocoapods-repo-from-s3.sh | bash -s cf
+    #        bundle exec pod lib lint
 
-    - run:
-        name: CocoaPods spec lint
-        command: if [ "$CIRCLE_BRANCH" = 'master' ]; then bundle exec pod spec lint; fi
+    #- run:
+    #    name: CocoaPods spec lint
+    #    command: if [ "$CIRCLE_BRANCH" = 'master' ]; then bundle exec pod spec lint; fi
 
     - store_test_results:
         path: output
