@@ -182,6 +182,9 @@ public struct LDConfig {
         minima = Minima(environmentReporter: environmentReporter)
         allowStreamingMode = environmentReporter.operatingSystem.isStreamingEnabled
         allowBackgroundUpdates = environmentReporter.operatingSystem.isBackgroundEnabled
+        if mobileKey.isEmpty {
+            Log.debug(typeName(and: #function, appending: ": ") + "mobileKey is empty. The SDK will not operate correctly without a valid mobile key.")
+        }
     }
 
     ///LDConfig constructor. Configurable values are all set to their default values. The client app can modify these values as desired. Note that client app developers may prefer to get the LDConfig from `LDClient.config` in order to retain previously set values.

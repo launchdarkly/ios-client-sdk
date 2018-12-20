@@ -814,6 +814,21 @@ final class LDClientSpec: QuickSpec {
                     }
                 }
             }
+            context("when the mobile key is empty") {
+                beforeEach {
+                    testContext.config.mobileKey = ""
+                    testContext.subject.start(config: testContext.config, user: testContext.user)
+                    testContext.throttlerMock?.runThrottledCallCount = 0
+
+                    testContext.subject.setOnline(true)
+                }
+                it("leaves the client and service objects offline") {
+                    expect(testContext.throttlerMock?.runThrottledCallCount ?? 0) == 0
+                    expect(testContext.subject.isOnline) == false
+                    expect(testContext.subject.flagSynchronizer.isOnline) == testContext.subject.isOnline
+                    expect(testContext.subject.eventReporter.isOnline) == testContext.subject.isOnline
+                }
+            }
         }
     }
 

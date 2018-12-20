@@ -79,7 +79,14 @@ final class DarklyService: DarklyServiceProvider {
     func getFeatureFlags(useReport: Bool, completion: ServiceCompletionHandler?) {
         guard !config.mobileKey.isEmpty,
             let flagRequest = flagRequest(useReport: useReport)
-        else { return }
+        else {
+            if config.mobileKey.isEmpty {
+                Log.debug(typeName(and: #function, appending: ": ") + "Aborting. No mobileKey.")
+            } else {
+                Log.debug(typeName(and: #function, appending: ": ") + "Aborting. Unable to create flagRequest.")
+            }
+            return
+        }
         let dataTask = self.session.dataTask(with: flagRequest) { (data, response, error) in
             DispatchQueue.main.async {
                 completion?((data, response, error))
@@ -141,7 +148,14 @@ final class DarklyService: DarklyServiceProvider {
     func publishEventDictionaries(_ eventDictionaries: [[String: Any]], completion: ServiceCompletionHandler?) {
         guard !config.mobileKey.isEmpty,
             !eventDictionaries.isEmpty
-        else { return }
+        else {
+            if config.mobileKey.isEmpty {
+                Log.debug(typeName(and: #function, appending: ": ") + "Aborting. No mobileKey.")
+            } else {
+                Log.debug(typeName(and: #function, appending: ": ") + "Aborting. No event dictionary.")
+            }
+            return
+        }
         let dataTask = self.session.dataTask(with: eventRequest(eventDictionaries: eventDictionaries)) { (data, response, error) in
             completion?((data, response, error))
         }
@@ -159,6 +173,8 @@ final class DarklyService: DarklyServiceProvider {
     
     private var eventUrl: URL { return config.eventsUrl.appendingPathComponent(EventRequestPath.bulk) }
 }
+
+extension DarklyService: TypeIdentifying { }
 
 extension URLRequest {
     mutating func appendHeaders(_ newHeaders: [String: String]) {

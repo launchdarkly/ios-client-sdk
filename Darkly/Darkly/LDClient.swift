@@ -80,6 +80,8 @@ public class LDClient {
 
      Client apps can set a completion closure called when the setOnline call completes. For unthrottled `setOnline(true)` and all `setOnline(false)` calls, the SDK will call the closure immediately on completion of this method. For throttled `setOnline(true)` calls, the SDK will call the closure after the throttling delay at the completion of the setOnline method.
 
+     The SDK will not go online if the client has not been started, or the `mobileKey` is empty. For macOS, the SDK will not go online in the background unless `enableBackgroundUpdates` is true.
+
      Use `isOnline` to get the online/offline state.
 
      - parameter goOnline:    Desired online/offline mode for the LDClient
@@ -101,7 +103,7 @@ public class LDClient {
     }
 
     private var canGoOnline: Bool {
-        return hasStarted && isInSupportedRunMode
+        return hasStarted && isInSupportedRunMode && !config.mobileKey.isEmpty
     }
 
     private var isInSupportedRunMode: Bool {
@@ -115,9 +117,18 @@ public class LDClient {
     }
 
     private func reasonOnlineUnavailable(goOnline: Bool) -> String {
-        if !goOnline { return "" }
-        if !hasStarted { return " LDClient not started." }
-        if !isInSupportedRunMode { return " LDConfig background updates not enabled." }
+        if !goOnline {
+            return ""
+        }
+        if !hasStarted {
+            return " LDClient not started."
+        }
+        if !isInSupportedRunMode {
+            return " LDConfig background updates not enabled."
+        }
+        if config.mobileKey.isEmpty {
+            return " Mobile Key is empty."
+        }
         return ""
     }
 
