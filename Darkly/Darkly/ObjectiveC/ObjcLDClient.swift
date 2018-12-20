@@ -135,8 +135,8 @@ public final class ObjcLDClient: NSObject {
 
      Subsequent calls to this method cause the LDClient to go offline, reconfigure using the new `config` & `user` (if supplied), and then go online if it was online when start was called. Normally there should only be one call to start. To change `config` or `user`, set them directly on LDClient.
 
-     - parameter config: The LDConfig that contains the desired configuration. (Required)
-     - parameter user: The LDUser set with the desired user. If omitted, LDClient retains the previously set user, or default if one was never set. (Optional)
+     - parameter configWrapper: The LDConfig that contains the desired configuration. (Required)
+     - parameter userWrapper: The LDUser set with the desired user. If omitted, LDClient retains the previously set user, or default if one was never set. (Optional)
      */
     @objc public func start(config configWrapper: ObjcLDConfig, user userWrapper: ObjcLDUser? = nil) {
         ObjcLDClient.sharedInstance.start(config: configWrapper, user: userWrapper, completion: nil)
@@ -153,8 +153,8 @@ public final class ObjcLDClient: NSObject {
 
      Subsequent calls to this method cause the LDClient to go offline, reconfigure using the new `config` & `user` (if supplied), and then go online if it was online when start was called. Normally there should only be one call to start. To change `config` or `user`, set them directly on LDClient.
 
-     - parameter config: The LDConfig that contains the desired configuration. (Required)
-     - parameter user: The LDUser set with the desired user. If omitted, LDClient retains the previously set user, or default if one was never set. (Optional)
+     - parameter configWrapper: The LDConfig that contains the desired configuration. (Required)
+     - parameter userWrapper: The LDUser set with the desired user. If omitted, LDClient retains the previously set user, or default if one was never set. (Optional)
      - parameter completion: Closure called when the embedded `setOnline` call completes, subject to throttling delays. (Optional)
      */
     @objc public func start(config configWrapper: ObjcLDConfig, user userWrapper: ObjcLDUser? = nil, completion: (() -> Void)? = nil) {
