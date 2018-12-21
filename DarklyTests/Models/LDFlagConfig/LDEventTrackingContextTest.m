@@ -86,4 +86,31 @@
     }
 }
 
+-(void)testCopyWithZone {
+    NSDate *debugEventsUntilDate = [[NSDate date] dateByAddingTimeInterval:30.0];
+    for (NSNumber *boolObject in @[@NO, @YES]) {
+        BOOL trackEvents = [boolObject boolValue];
+        LDEventTrackingContext *originalContext = [LDEventTrackingContext contextWithTrackEvents:trackEvents debugEventsUntilDate:debugEventsUntilDate];
+
+        LDEventTrackingContext *copiedContext = [originalContext copy];
+
+        XCTAssertTrue(copiedContext != originalContext);    //pointer inequality
+        XCTAssertEqual(copiedContext.trackEvents, originalContext.trackEvents);
+        XCTAssertEqualObjects(copiedContext.debugEventsUntilDate, originalContext.debugEventsUntilDate);
+    }
+}
+
+-(void)testCopyWithZone_noDebugEventsUntilDate {
+    for (NSNumber *boolObject in @[@NO, @YES]) {
+        BOOL trackEvents = [boolObject boolValue];
+        LDEventTrackingContext *originalContext = [LDEventTrackingContext contextWithTrackEvents:trackEvents debugEventsUntilDate:nil];
+
+        LDEventTrackingContext *copiedContext = [originalContext copy];
+
+        XCTAssertTrue(copiedContext != originalContext);    //pointer inequality
+        XCTAssertEqual(copiedContext.trackEvents, originalContext.trackEvents);
+        XCTAssertNil(copiedContext.debugEventsUntilDate);
+    }
+}
+
 @end

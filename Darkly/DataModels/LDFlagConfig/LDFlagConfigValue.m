@@ -170,4 +170,15 @@ NSInteger const kLDFlagConfigValueItemDoesNotExist = -1;
 -(NSString*)description {
     return [NSString stringWithFormat:@"<LDFlagConfigValue: %p, value: %@, modelVersion: %ld, variation: %ld, flagVersion: %@, eventTrackingContext: %@>", self, [self.value description], (long)self.modelVersion, (long)self.variation, self.flagVersion != nil ? [self.flagVersion description] : @"nil", self.eventTrackingContext ?: @"nil"];
 }
+
+-(id)copyWithZone:(NSZone*)zone {
+    LDFlagConfigValue *copy = [[self class] new];
+    copy.value = [self.value copy];
+    copy.modelVersion = self.modelVersion;
+    copy.variation = self.variation;
+    copy.flagVersion = [self.flagVersion copy];
+    copy.eventTrackingContext = [self.eventTrackingContext copy];
+
+    return copy;
+}
 @end

@@ -263,7 +263,7 @@
         return;
     }
 
-    [self.dataManager recordSummaryEventWithTracker:self.user.flagConfigTracker];
+    [self.dataManager recordSummaryEventAndResetTrackerForUser:self.user];
 
     DEBUG_LOG(@"LDEnvironment updating user key: %@, was online: %@", newUser.key, self.isOnline ? @"YES" : @"NO");
     BOOL wasOnline = self.isOnline;

@@ -38,7 +38,7 @@
                                 user:(nonnull LDUserModel*)user;
 -(void)recordCustomEventWithKey:(nonnull NSString*)eventKey customData:(nullable NSDictionary*)customData user:(nonnull LDUserModel*)user;
 -(void)recordIdentifyEventWithUser:(nonnull LDUserModel*)user;
--(void)recordSummaryEventWithTracker:(nullable LDFlagConfigTracker*)tracker;
+-(void)recordSummaryEventAndResetTrackerForUser:(nonnull LDUserModel*)user;
 -(void)recordDebugEventWithFlagKey:(nonnull NSString*)flagKey
                  reportedFlagValue:(nonnull id)reportedFlagValue
                    flagConfigValue:(nullable LDFlagConfigValue*)flagConfigValue

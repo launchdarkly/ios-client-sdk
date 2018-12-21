@@ -199,4 +199,45 @@ extern NSString * const kLDFlagKeyIsANull;
     }
 }
 
+-(void)testCopyWithZone {
+    for (NSString *flagKey in [LDFlagConfigValue flagKeys]) {
+        LDFlagCounter *originalFlagCounter = [LDFlagCounter stubForFlagKey:flagKey];
+
+        LDFlagCounter *copiedFlagCounter = [originalFlagCounter copy];
+
+        XCTAssertTrue(copiedFlagCounter != originalFlagCounter);    //pointers differ
+        XCTAssertEqualObjects(copiedFlagCounter.flagKey, originalFlagCounter.flagKey);
+        XCTAssertEqualObjects(copiedFlagCounter.defaultValue, originalFlagCounter.defaultValue);
+        XCTAssertTrue(copiedFlagCounter.flagValueCounters != originalFlagCounter.flagValueCounters);    //pointers differ
+        XCTAssertEqual(copiedFlagCounter.flagValueCounters.count, originalFlagCounter.flagValueCounters.count);
+        if (copiedFlagCounter.flagValueCounters.count != originalFlagCounter.flagValueCounters.count) {
+            return;
+        }
+        for (NSInteger index = 0; index < originalFlagCounter.flagValueCounters.count; index++) {
+            //FlagValueCounter
+            LDFlagValueCounter *originalFlagValueCounter = originalFlagCounter.flagValueCounters[index];
+            LDFlagValueCounter *copiedFlagValueCounter = copiedFlagCounter.flagValueCounters[index];
+            XCTAssertTrue(copiedFlagValueCounter != originalFlagValueCounter);    //pointers differ
+            XCTAssertEqualObjects(copiedFlagValueCounter.reportedFlagValue, originalFlagValueCounter.reportedFlagValue);
+            XCTAssertEqual(copiedFlagValueCounter.isKnown, originalFlagValueCounter.isKnown);
+            XCTAssertEqual(copiedFlagValueCounter.count, originalFlagValueCounter.count);
+
+            //FlagConfigValue
+            LDFlagConfigValue *originalFlagConfigValue = originalFlagValueCounter.flagConfigValue;
+            LDFlagConfigValue *copiedFlagConfigValue = copiedFlagValueCounter.flagConfigValue;
+            XCTAssertTrue(copiedFlagConfigValue != originalFlagConfigValue);    //pointers differ
+            XCTAssertEqualObjects(copiedFlagConfigValue.value, originalFlagConfigValue.value);
+            XCTAssertEqual(copiedFlagConfigValue.modelVersion, originalFlagConfigValue.modelVersion);
+            XCTAssertEqual(copiedFlagConfigValue.variation, originalFlagConfigValue.variation);
+            XCTAssertEqualObjects(copiedFlagConfigValue.flagVersion, originalFlagConfigValue.flagVersion);
+
+            //EventTrackingContext
+            LDEventTrackingContext *originalEventTrackingContext = originalFlagConfigValue.eventTrackingContext;
+            LDEventTrackingContext *copiedEventTrackingContext = copiedFlagConfigValue.eventTrackingContext;
+            XCTAssertTrue(copiedEventTrackingContext != originalEventTrackingContext);    //pointers differ
+            XCTAssertEqual(copiedEventTrackingContext.trackEvents, originalEventTrackingContext.trackEvents);
+            XCTAssertEqualObjects(copiedEventTrackingContext.debugEventsUntilDate, originalEventTrackingContext.debugEventsUntilDate);
+        }
+    }
+}
 @end

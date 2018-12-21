@@ -12,6 +12,7 @@
 #import "LDFlagConfigValue.h"
 #import "NSDate+ReferencedDate.h"
 #import "LDUtil.h"
+#import "NSDictionary+LaunchDarkly.h"
 
 @interface LDFlagConfigTracker()
 @property (nonatomic, assign) LDMillisecond startDateMillis;
@@ -70,5 +71,16 @@
 
 -(NSString*)description {
     return [NSString stringWithFormat:@"<LDFlagConfigTracker: %p, flagCounters: %@, startDateMillis: %ld>", self, [self.mutableFlagCounters description], (long)self.startDateMillis];
+}
+
+-(id)copyWithZone:(NSZone*)zone {
+    LDFlagConfigTracker *copy = [[self class] new];
+    copy.startDateMillis = self.startDateMillis;
+    copy.mutableFlagCounters = [NSMutableDictionary dictionary];
+    NSDictionary<NSString*, LDFlagCounter*> *flagCountersCopy = [self.mutableFlagCounters copy];
+    for (NSString *flagKey in flagCountersCopy.allKeys) {
+        copy.mutableFlagCounters[flagKey] = [flagCountersCopy[flagKey] copy];
+    }
+    return copy;
 }
 @end

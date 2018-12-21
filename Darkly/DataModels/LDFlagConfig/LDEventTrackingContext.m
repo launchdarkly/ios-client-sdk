@@ -59,4 +59,11 @@ NSString * const kLDEventTrackingContextKeyDebugEventsUntilDate = @"debugEventsU
 -(NSString*)description {
     return [NSString stringWithFormat:@"<LDEventTrackingContext: %p, trackEvents: %@, debugEventsUntilDate: %@>", self, self.trackEvents ? @"YES" : @"NO", self.debugEventsUntilDate ?: @"nil"];
 }
+
+-(id)copyWithZone:(NSZone*)zone {
+    LDEventTrackingContext *copiedContext = [[self class] new];
+    copiedContext.trackEvents = self.trackEvents;
+    copiedContext.debugEventsUntilDate = [self.debugEventsUntilDate copy];  //This may not return a different object, NSDate may be treated more like a value-type
+    return copiedContext;
+}
 @end

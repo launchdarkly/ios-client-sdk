@@ -694,11 +694,35 @@ extern NSString * const kUserDefaultsKeyUserEnvironments;
     }
 }
 
+-(void)testRecordSummaryEvent {
+    XCTestExpectation *expectation = [self expectationWithDescription:@"All events dictionary expectation"];
+    LDFlagConfigTracker *tracker = self.user.flagConfigTracker;
+    LDEventModel *summaryEvent = [LDEventModel summaryEventWithTracker:self.user.flagConfigTracker];
+
+    [self.dataManager recordSummaryEventAndResetTrackerForUser:self.user];
+
+    __block NSDictionary *eventDictionary;
+    [self.dataManager allEventDictionaries:^(NSArray *eventDictionaries) {
+        XCTAssertEqual(eventDictionaries.count, 1);
+        if (eventDictionaries.count == 1) {
+            eventDictionary = [eventDictionaries firstObject];
+        }
+        [expectation fulfill];
+    }];
+    [self waitForExpectations:@[expectation] timeout:1];
+    XCTAssertNotNil(self.user.flagConfigTracker);
+    XCTAssertTrue(self.user.flagConfigTracker != tracker);      //different pointers
+    XCTAssertFalse(self.user.flagConfigTracker.hasTrackedEvents);
+    XCTAssertEqualObjects(eventDictionary[kEventModelKeyStartDate], @(summaryEvent.startDateMillis));
+    XCTAssertTrue(Approximately([eventDictionary[kEventModelKeyEndDate] ldMillisecondValue], summaryEvent.endDateMillis, 10));
+    XCTAssertEqualObjects(eventDictionary[kEventModelKeyFeatures], summaryEvent.flagRequestSummary);
+}
+
 -(void)testRecordSummaryEvent_noCounters {
-    LDFlagConfigTracker *trackerStub = [LDFlagConfigTracker tracker];
+    self.user.flagConfigTracker = [LDFlagConfigTracker tracker];
     XCTestExpectation *expectation = [self expectationWithDescription:@"All events dictionary expectation"];
 
-    [self.dataManager recordSummaryEventWithTracker:trackerStub];
+    [self.dataManager recordSummaryEventAndResetTrackerForUser:self.user];
 
     [self.dataManager allEventDictionaries:^(NSArray *eventDictionaries) {
         XCTAssertEqual(eventDictionaries.count, 0);
@@ -708,16 +732,56 @@ extern NSString * const kUserDefaultsKeyUserEnvironments;
 }
 
 -(void)testRecordSummaryEvent_nilTracker {
-    LDFlagConfigTracker *tracker = nil;
+    self.user.flagConfigTracker = nil;
     XCTestExpectation *expectation = [self expectationWithDescription:@"LDDataManagerTest.testRecordSummaryEvent_nilTracker.allEvents"];
 
-    [self.dataManager recordSummaryEventWithTracker:tracker];
+    [self.dataManager recordSummaryEventAndResetTrackerForUser:self.user];
 
     [self.dataManager allEventDictionaries:^(NSArray *eventDictionaries) {
         XCTAssertEqual(eventDictionaries.count, 0);
         [expectation fulfill];
     }];
     [self waitForExpectations:@[expectation] timeout:1];
+}
+
+-(void)testRecordSummaryEvent_multipleThreads {
+    dispatch_queue_t firstQueue = dispatch_queue_create("com.launchdarkly.test.dataManager.recordSummaryEvent.multipleThreads.one", DISPATCH_QUEUE_SERIAL);
+    XCTestExpectation *firstQueueFiredExpectation = [self expectationWithDescription:@"firstQueueFiredExpectation"];
+    dispatch_queue_t secondQueue = dispatch_queue_create("com.launchdarkly.test.dataManager.recordSummaryEvent.multipleThreads.two", DISPATCH_QUEUE_SERIAL);
+    XCTestExpectation *secondQueueFiredExpectation = [self expectationWithDescription:@"secondQueueFiredExpectation"];
+    dispatch_time_t fireTime = dispatch_time(DISPATCH_TIME_NOW, 1000);  //one millisecond later
+    XCTestExpectation *expectation = [self expectationWithDescription:@"All events dictionary expectation"];
+    LDFlagConfigTracker *tracker = self.user.flagConfigTracker;
+    LDEventModel *summaryEvent = [LDEventModel summaryEventWithTracker:self.user.flagConfigTracker];
+    __weak typeof(self) weakSelf = self;
+
+    dispatch_after(fireTime, firstQueue, ^{
+        __strong typeof(weakSelf) strongSelf = weakSelf;
+        [strongSelf.dataManager recordSummaryEventAndResetTrackerForUser:self.user];
+        [firstQueueFiredExpectation fulfill];
+    });
+    dispatch_after(fireTime, secondQueue, ^{
+        __strong typeof(weakSelf) strongSelf = weakSelf;
+        [strongSelf.dataManager recordSummaryEventAndResetTrackerForUser:self.user];
+        [secondQueueFiredExpectation fulfill];
+    });
+
+    [self waitForExpectations:@[firstQueueFiredExpectation, secondQueueFiredExpectation] timeout:1.0];
+    __block NSDictionary *eventDictionary;
+    [self.dataManager allEventDictionaries:^(NSArray *eventDictionaries) {
+        XCTAssertEqual(eventDictionaries.count, 1);
+        if (eventDictionaries.count == 1) {
+            eventDictionary = [eventDictionaries firstObject];
+        }
+        [expectation fulfill];
+    }];
+    [self waitForExpectations:@[expectation] timeout:1];
+    XCTAssertNotNil(self.user.flagConfigTracker);
+    XCTAssertTrue(self.user.flagConfigTracker != tracker);      //different pointers
+    XCTAssertFalse(self.user.flagConfigTracker.hasTrackedEvents);
+    XCTAssertEqualObjects(eventDictionary[kEventModelKeyStartDate], @(summaryEvent.startDateMillis));
+    XCTAssertTrue(Approximately([eventDictionary[kEventModelKeyEndDate] ldMillisecondValue], summaryEvent.endDateMillis, 10));
+    XCTAssertEqualObjects(eventDictionary[kEventModelKeyFeatures], summaryEvent.flagRequestSummary);
 }
 
 -(void)testRecordFeatureEvent_trackEvents_YES {
@@ -890,9 +954,8 @@ extern NSString * const kUserDefaultsKeyUserEnvironments;
     [self.dataManager recordCustomEventWithKey:customEvent.key customData:customEvent.data user:self.user];
     LDEventModel *identifyEvent = [LDEventModel stubEventWithKind:kEventModelKindIdentify user:self.user config:self.config];
     [self.dataManager recordIdentifyEventWithUser:self.user];
-    LDFlagConfigTracker *trackerStub = [LDFlagConfigTracker stubTracker];
-    LDEventModel *summaryEvent = [LDEventModel summaryEventWithTracker:trackerStub];
-    [self.dataManager recordSummaryEventWithTracker:trackerStub];
+    LDEventModel *summaryEvent = [LDEventModel summaryEventWithTracker:self.user.flagConfigTracker];
+    [self.dataManager recordSummaryEventAndResetTrackerForUser:self.user];
     LDEventModel *debugEvent = [LDEventModel stubEventWithKind:kEventModelKindDebug user:self.user config:self.config];
     [self.dataManager recordDebugEventWithFlagKey:debugEvent.key
                                              reportedFlagValue:debugEvent.reportedValue

@@ -11,7 +11,7 @@
 @class LDFlagValueCounter;
 @class LDFlagConfigValue;
 
-@interface LDFlagCounter : NSObject
+@interface LDFlagCounter : NSObject <NSCopying>
 @property (nonatomic, strong, nonnull, readonly) NSString *flagKey;
 @property (nonatomic, strong, nonnull) id defaultValue;
 @property (nonatomic, assign, readonly) BOOL hasLoggedRequests;
@@ -24,4 +24,6 @@
 -(nonnull NSDictionary*)dictionaryValue;
 
 -(nonnull NSString*)description;
+-(id)copyWithZone:(nullable NSZone*)zone;
+
 @end

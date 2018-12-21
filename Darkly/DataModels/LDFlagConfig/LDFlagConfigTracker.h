@@ -12,7 +12,7 @@
 @class LDFlagCounter;
 @class LDFlagConfigValue;
 
-@interface LDFlagConfigTracker : NSObject
+@interface LDFlagConfigTracker : NSObject <NSCopying>
 @property (nonatomic, assign, readonly) LDMillisecond startDateMillis;
 @property (nonatomic, assign, readonly) BOOL hasTrackedEvents;
 
@@ -25,4 +25,5 @@
                defaultValue:(nullable id)defaultValue;
 -(nonnull NSDictionary<NSString*, NSDictionary*>*)flagRequestSummary;
 -(nonnull NSString*)description;
+-(id)copyWithZone:(nullable NSZone*)zone;
 @end

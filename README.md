@@ -51,7 +51,7 @@ $ brew install carthage
 To integrate LaunchDarkly into your Xcode project using Carthage, specify it in your `Cartfile`:
 
 ```ogdl
-github "launchdarkly/ios-client" "2.14.0"
+github "launchdarkly/ios-client" "2.14.1"
 ```
 
 Run `carthage` to build the framework and drag the built `Darkly.framework` into your Xcode project.
@@ -61,7 +61,7 @@ Quick setup
 
 1. Add the SDK to your `Podfile`:
 
-        pod 'LaunchDarkly', '2.14.0'
+        pod 'LaunchDarkly', '2.14.1'
 
 2. Import the LaunchDarkly client:
 
@@ -87,9 +87,9 @@ Your first feature flag
 
         BOOL showFeature = [[LDClient sharedInstance] boolVariation:@"YOUR_FLAG_KEY" fallback:NO];
         if (showFeature) {
-                NSLog(@"Showing feature for %@", user.key);
+            NSLog(@"Showing feature for %@", user.key);
         } else {
-                NSLog(@"Not showing feature for user %@", user.key);
+            NSLog(@"Not showing feature for user %@", user.key);
         }
 
 Manage the feature on your dashboard — control who sees the feature without re-deploying your application!
