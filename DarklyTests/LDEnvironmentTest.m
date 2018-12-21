@@ -681,7 +681,7 @@ static NSString *const defaultStringFeatureFlagValue = @"LDEnvironmentTest.Featu
     LDUserModel *newUser = [LDUserModel stubWithKey:[[NSUUID UUID] UUIDString]];
     id newUserMock = [OCMockObject niceMockForClass:[LDUserModel class]];
     [[[newUserMock expect] andReturn:newUser] copy];
-    [[self.dataManagerMock expect] recordSummaryEventWithTracker:self.environment.user.flagConfigTracker];
+    [[self.dataManagerMock expect] recordSummaryEventAndResetTrackerForUser:self.environment.user];
     [[self.environmentControllerMock expect] setOnline:NO];
     [[self.dataManagerMock expect] convertToEnvironmentBasedCacheForUser:newUser config:self.config];
     [[self.dataManagerMock expect] retrieveFlagConfigForUser:newUser];
@@ -719,7 +719,7 @@ static NSString *const defaultStringFeatureFlagValue = @"LDEnvironmentTest.Featu
 
     [self.environment start];
     self.environment.online = YES;
-    [[self.dataManagerMock expect] recordSummaryEventWithTracker:self.environment.user.flagConfigTracker];
+    [[self.dataManagerMock expect] recordSummaryEventAndResetTrackerForUser:self.environment.user];
     [[originalEnvironmentControllerMock expect] setOnline:NO];
     [[self.dataManagerMock reject] convertToEnvironmentBasedCacheForUser:[OCMArg any] config:[OCMArg any]];
     [[self.dataManagerMock expect] retrieveFlagConfigForUser:newUser];
@@ -741,7 +741,7 @@ static NSString *const defaultStringFeatureFlagValue = @"LDEnvironmentTest.Featu
     LDUserModel *newUser = [LDUserModel stubWithKey:[[NSUUID UUID] UUIDString]];
     id newUserMock = [OCMockObject niceMockForClass:[LDUserModel class]];
     [[[newUserMock expect] andReturn:newUser] copy];
-    [[self.dataManagerMock expect] recordSummaryEventWithTracker:self.environment.user.flagConfigTracker];
+    [[self.dataManagerMock expect] recordSummaryEventAndResetTrackerForUser:self.environment.user];
     [[self.environmentControllerMock reject] setOnline:NO];
     [[self.dataManagerMock expect] convertToEnvironmentBasedCacheForUser:newUser config:self.config];
     [[self.dataManagerMock expect] retrieveFlagConfigForUser:newUser];
@@ -763,7 +763,7 @@ static NSString *const defaultStringFeatureFlagValue = @"LDEnvironmentTest.Featu
     LDUserModel *originalEnvironmentUser = self.environment.user;
     [self.environment start];
     self.environment.online = YES;
-    [[self.dataManagerMock reject] recordSummaryEventWithTracker:[OCMArg any]];
+    [[self.dataManagerMock reject] recordSummaryEventAndResetTrackerForUser:[OCMArg any]];
     [[self.environmentControllerMock reject] setOnline:[OCMArg any]];
     [[self.dataManagerMock reject] convertToEnvironmentBasedCacheForUser:[OCMArg any] config:[OCMArg any]];
     [[self.dataManagerMock reject] retrieveFlagConfigForUser:[OCMArg any]];
@@ -781,7 +781,7 @@ static NSString *const defaultStringFeatureFlagValue = @"LDEnvironmentTest.Featu
 -(void)testUpdateUser_notStarted {
     LDUserModel *originalEnvironmentUser = self.environment.user;
     LDUserModel *newUser = [LDUserModel stubWithKey:[[NSUUID UUID] UUIDString]];
-    [[self.dataManagerMock reject] recordSummaryEventWithTracker:[OCMArg any]];
+    [[self.dataManagerMock reject] recordSummaryEventAndResetTrackerForUser:[OCMArg any]];
     [[self.environmentControllerMock reject] setOnline:[OCMArg any]];
     [[self.dataManagerMock reject] convertToEnvironmentBasedCacheForUser:[OCMArg any] config:[OCMArg any]];
     [[self.dataManagerMock reject] retrieveFlagConfigForUser:[OCMArg any]];

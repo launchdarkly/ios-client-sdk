@@ -229,7 +229,7 @@ NSString *const kBoolFlagKey = @"isABawler";
     self.environmentController.online = YES;    //triggers startPolling
     [[self.pollingManagerMock expect] stopEventPolling];
     [[self.eventSourceMock expect] close];
-    [[self.dataManagerMock expect] recordSummaryEventWithTracker:self.user.flagConfigTracker];
+    [[self.dataManagerMock expect] recordSummaryEventAndResetTrackerForUser:self.user];
     [[self.dataManagerMock expect] allEventDictionaries:[OCMArg checkWithBlock:^BOOL(id obj) {
         ((void (^)(NSArray *))obj)(self.events);
         return YES;
@@ -250,7 +250,7 @@ NSString *const kBoolFlagKey = @"isABawler";
     self.environmentController.online = YES;    //triggers startPolling
     [[self.pollingManagerMock expect] stopEventPolling];
     [[self.pollingManagerMock expect] stopFlagConfigPolling];
-    [[self.dataManagerMock expect] recordSummaryEventWithTracker:self.user.flagConfigTracker];
+    [[self.dataManagerMock expect] recordSummaryEventAndResetTrackerForUser:self.user];
     [[self.dataManagerMock expect] allEventDictionaries:[OCMArg checkWithBlock:^BOOL(id obj) {
         ((void (^)(NSArray *))obj)(self.events);
         return YES;
@@ -270,7 +270,7 @@ NSString *const kBoolFlagKey = @"isABawler";
     [[self.pollingManagerMock expect] suspendEventPolling];
     [[self.eventSourceMock expect] close];
     [[self.pollingManagerMock reject] suspendFlagConfigPolling];
-    [[self.dataManagerMock expect] recordSummaryEventWithTracker:self.user.flagConfigTracker];
+    [[self.dataManagerMock expect] recordSummaryEventAndResetTrackerForUser:self.user];
     [[self.dataManagerMock expect] allEventDictionaries:[OCMArg checkWithBlock:^BOOL(id obj) {
         ((void (^)(NSArray *))obj)(self.events);
         return YES;
@@ -292,7 +292,7 @@ NSString *const kBoolFlagKey = @"isABawler";
     [[self.pollingManagerMock expect] suspendEventPolling];
     [[self.eventSourceMock reject] close];
     [[self.pollingManagerMock expect] suspendFlagConfigPolling];
-    [[self.dataManagerMock expect] recordSummaryEventWithTracker:self.user.flagConfigTracker];
+    [[self.dataManagerMock expect] recordSummaryEventAndResetTrackerForUser:self.user];
     [[self.dataManagerMock expect] allEventDictionaries:[OCMArg checkWithBlock:^BOOL(id obj) {
         ((void (^)(NSArray *))obj)(self.events);
         return YES;
@@ -1357,7 +1357,7 @@ NSString *const kBoolFlagKey = @"isABawler";
         completion(self.events);
         return YES;
     }]];
-    [[self.dataManagerMock expect] recordSummaryEventWithTracker:[OCMArg any]];
+    [[self.dataManagerMock expect] recordSummaryEventAndResetTrackerForUser:self.user];
     self.environmentController.online = YES;
     [[self.requestManagerMock expect] performEventRequest:self.events isOnline:self.environmentController.isOnline];
 
@@ -1375,21 +1375,17 @@ NSString *const kBoolFlagKey = @"isABawler";
     }]];
     self.environmentController.online = YES;
     [[self.requestManagerMock expect] performEventRequest:self.events isOnline:YES];
-    [[self.dataManagerMock expect] recordSummaryEventWithTracker:[OCMArg any]];
-    LDMillisecond startDateMillis = [[NSDate date] millisSince1970];
+    [[self.dataManagerMock expect] recordSummaryEventAndResetTrackerForUser:self.user];
 
     [self.environmentController syncWithServerForEvents];
 
     [self.requestManagerMock verify];
     [self.dataManagerMock verify];
-    XCTAssertNotNil(self.user.flagConfigTracker);
-    XCTAssertFalse(self.user.flagConfigTracker.hasTrackedEvents);
-    XCTAssertTrue(Approximately(self.user.flagConfigTracker.startDateMillis, startDateMillis, 10));
 }
 
 - (void)testSyncWithServerForEvents_eventsEmpty {
     self.environmentController.online = YES;
-    [[self.dataManagerMock expect] recordSummaryEventWithTracker:[OCMArg any]];
+    [[self.dataManagerMock expect] recordSummaryEventAndResetTrackerForUser:self.user];
     [[self.dataManagerMock stub] allEventDictionaries:[OCMArg checkWithBlock:^BOOL(id obj) {
         void (^completion)(NSArray *) = obj;
         completion(@[]);
@@ -1405,7 +1401,7 @@ NSString *const kBoolFlagKey = @"isABawler";
 
 - (void)testSyncWithServerForEvents_eventsNil {
     self.environmentController.online = YES;
-    [[self.dataManagerMock expect] recordSummaryEventWithTracker:[OCMArg any]];
+    [[self.dataManagerMock expect] recordSummaryEventAndResetTrackerForUser:self.user];
     [[self.dataManagerMock stub] allEventDictionaries:[OCMArg checkWithBlock:^BOOL(id obj) {
         void (^completion)(NSArray *) = obj;
         completion(nil);
@@ -1490,7 +1486,7 @@ NSString *const kBoolFlagKey = @"isABawler";
         completion(self.events);
         return YES;
     }]];
-    [[self.dataManagerMock expect] recordSummaryEventWithTracker:[OCMArg any]];
+    [[self.dataManagerMock expect] recordSummaryEventAndResetTrackerForUser:self.user];
 
     [self.environmentController flushEvents];
 

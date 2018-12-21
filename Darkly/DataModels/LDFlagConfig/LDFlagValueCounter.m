@@ -62,4 +62,14 @@ NSString * const kLDFlagValueCounterKeyUnknown = @"unknown";
             self, [self.reportedFlagValue description], [self.flagConfigValue description], (long)self.count, self.known ? @"YES" : @"NO"];
 }
 
+-(id)copyWithZone:(NSZone*)zone {
+    LDFlagValueCounter *copy = [[self class] new];
+    copy.flagConfigValue = [self.flagConfigValue copy];
+    copy.reportedFlagValue = [self.reportedFlagValue copy];
+    copy.known = self.known;
+    copy.count = self.count;
+
+    return copy;
+}
+
 @end

@@ -10,6 +10,7 @@
 #import "LDFlagCounter.h"
 #import "LDFlagValueCounter.h"
 #import "LDFlagConfigValue.h"
+#import "NSDictionary+LaunchDarkly.h"
 
 NSString * const kLDFlagCounterKeyDefaultValue = @"default";
 NSString * const kLDFlagCounterKeyCounters = @"counters";
@@ -98,4 +99,16 @@ NSString * const kLDFlagCounterKeyCounters = @"counters";
             [self.flagValueCounters description]];
 }
 
+-(id)copyWithZone:(nullable NSZone*)zone {
+    LDFlagCounter *copy = [[self class] new];
+    copy.flagKey = self.flagKey;
+    copy.defaultValue = [self.defaultValue copy];
+    NSMutableArray *copiedFlagValueCounters = [NSMutableArray arrayWithCapacity:self.flagValueCounters.count];
+    [self.flagValueCounters enumerateObjectsUsingBlock:^(LDFlagValueCounter * _Nonnull flagValueCounter, NSUInteger idx, BOOL * _Nonnull stop) {
+        [copiedFlagValueCounters addObject:[flagValueCounter copy]];
+    }];
+    copy.flagValueCounters = copiedFlagValueCounters;
+
+    return copy;
+}
 @end

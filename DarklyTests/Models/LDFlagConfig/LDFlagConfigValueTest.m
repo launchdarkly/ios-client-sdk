@@ -441,4 +441,56 @@
     }
 }
 
+-(void)testCopyWithZone {
+    LDEventTrackingContext *eventTrackingContext = [LDEventTrackingContext stub];
+    for (NSString *flagKey in [LDFlagConfigValue flagKeys]) {
+        for (NSString *fixtureFileName in [LDFlagConfigValue fixtureFileNamesForFlagKey:flagKey]) {
+            NSDictionary *flagConfigValueDictionary = [LDFlagConfigValue flagConfigJsonObjectFromFileNamed:fixtureFileName
+                                                                                                   flagKey:flagKey
+                                                                                      eventTrackingContext:eventTrackingContext][flagKey];
+            LDFlagConfigValue *originalFlagConfigValue = [LDFlagConfigValue flagConfigValueWithObject:flagConfigValueDictionary];
+
+            LDFlagConfigValue *copiedFlagConfigValue = [originalFlagConfigValue copy];
+
+            XCTAssertTrue(copiedFlagConfigValue != originalFlagConfigValue);    //pointers differ
+            //Core items
+            XCTAssertEqualObjects(copiedFlagConfigValue.value, originalFlagConfigValue.value);
+            XCTAssertEqual(copiedFlagConfigValue.modelVersion, originalFlagConfigValue.modelVersion);
+            XCTAssertEqual(copiedFlagConfigValue.variation, originalFlagConfigValue.variation);
+
+            //Optional items
+            XCTAssertEqualObjects(copiedFlagConfigValue.flagVersion, originalFlagConfigValue.flagVersion);
+            XCTAssertTrue(copiedFlagConfigValue.eventTrackingContext != originalFlagConfigValue.eventTrackingContext);      //pointers differ
+            XCTAssertEqual(copiedFlagConfigValue.eventTrackingContext.trackEvents, originalFlagConfigValue.eventTrackingContext.trackEvents);
+            XCTAssertEqualObjects(copiedFlagConfigValue.eventTrackingContext.debugEventsUntilDate, originalFlagConfigValue.eventTrackingContext.debugEventsUntilDate);
+        }
+    }
+}
+
+-(void)testCopyWithZone_withoutOptionalItems {
+    for (NSString *flagKey in [LDFlagConfigValue flagKeys]) {
+        for (NSString *fixtureFileName in [LDFlagConfigValue fixtureFileNamesForFlagKey:flagKey]) {
+            NSDictionary *flagConfigValueDictionary = [LDFlagConfigValue flagConfigJsonObjectFromFileNamed:fixtureFileName
+                                                                                                   flagKey:flagKey
+                                                                                      eventTrackingContext:nil];
+            NSMutableDictionary *partialFlagConfigValueDictionary = [NSMutableDictionary dictionaryWithDictionary:flagConfigValueDictionary];
+            [partialFlagConfigValueDictionary removeObjectForKey:kLDFlagConfigValueKeyFlagVersion];
+            [partialFlagConfigValueDictionary removeObjectForKey:kLDEventTrackingContextKeyTrackEvents];
+            [partialFlagConfigValueDictionary removeObjectForKey:kLDEventTrackingContextKeyDebugEventsUntilDate];
+            LDFlagConfigValue *originalFlagConfigValue = [LDFlagConfigValue flagConfigValueWithObject:partialFlagConfigValueDictionary];
+
+            LDFlagConfigValue *copiedFlagConfigValue = [originalFlagConfigValue copy];
+
+            XCTAssertTrue(copiedFlagConfigValue != originalFlagConfigValue);    //pointers differ
+            //Core items
+            XCTAssertEqualObjects(copiedFlagConfigValue.value, originalFlagConfigValue.value);
+            XCTAssertEqual(copiedFlagConfigValue.modelVersion, originalFlagConfigValue.modelVersion);
+            XCTAssertEqual(copiedFlagConfigValue.variation, originalFlagConfigValue.variation);
+            //Optional items
+            XCTAssertNil(copiedFlagConfigValue.flagVersion);
+            XCTAssertNil(copiedFlagConfigValue.eventTrackingContext);
+        }
+    }
+}
+
 @end

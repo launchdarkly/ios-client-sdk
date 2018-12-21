@@ -112,4 +112,35 @@ extern const NSInteger kLDFlagConfigValueItemDoesNotExist;
     XCTAssertNil(flagValueCounterDictionary[kLDEventTrackingContextKeyDebugEventsUntilDate]);
 }
 
+-(void)testCopyWithZone {
+    for (NSString *flagKey in [LDFlagConfigValue flagKeys]) {
+        NSArray<LDFlagConfigValue*> *flagConfigValues = [LDFlagConfigValue stubFlagConfigValuesForFlagKey:flagKey];
+        for (LDFlagConfigValue *flagConfigValue in flagConfigValues) {
+            LDFlagValueCounter *originalFlagValueCounter = [LDFlagValueCounter counterWithFlagConfigValue:flagConfigValue reportedFlagValue:flagConfigValue.value];
+
+            LDFlagValueCounter *copiedFlagValueCounter = [originalFlagValueCounter copy];
+
+            XCTAssertTrue(copiedFlagValueCounter != originalFlagValueCounter);      //pointers differ
+            XCTAssertTrue(copiedFlagValueCounter.flagConfigValue != originalFlagValueCounter.flagConfigValue);      //pointers differ
+            XCTAssertEqualObjects(copiedFlagValueCounter.flagConfigValue, originalFlagValueCounter.flagConfigValue);
+            XCTAssertEqualObjects(copiedFlagValueCounter.reportedFlagValue, originalFlagValueCounter.reportedFlagValue);
+            XCTAssertEqual(copiedFlagValueCounter.count, originalFlagValueCounter.count);
+            XCTAssertEqual(copiedFlagValueCounter.known, originalFlagValueCounter.known);
+        }
+    }
+}
+
+-(void)testCopyWithZone_noFlagConfigValue {
+    id defaultValue = [LDFlagConfigValue defaultValueForFlagKey:kLDFlagKeyIsABool];
+    LDFlagValueCounter *originalFlagValueCounter = [LDFlagValueCounter counterWithFlagConfigValue:nil reportedFlagValue:defaultValue];
+
+    LDFlagValueCounter *copiedFlagValueCounter = [originalFlagValueCounter copy];
+
+    XCTAssertTrue(copiedFlagValueCounter != originalFlagValueCounter);      //pointers differ
+    XCTAssertNil(copiedFlagValueCounter.flagConfigValue);
+    XCTAssertEqualObjects(copiedFlagValueCounter.reportedFlagValue, originalFlagValueCounter.reportedFlagValue);
+    XCTAssertEqual(copiedFlagValueCounter.count, originalFlagValueCounter.count);
+    XCTAssertEqual(copiedFlagValueCounter.known, originalFlagValueCounter.known);
+}
+
 @end

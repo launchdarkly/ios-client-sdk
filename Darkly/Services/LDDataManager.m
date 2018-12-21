@@ -376,18 +376,23 @@ NSString * const kUserDefaultsKeyUserEnvironments = @"com.launchdarkly.dataManag
     [self addEventDictionary:[[LDEventModel identifyEventWithUser:user] dictionaryValueUsingConfig:self.config]];
 }
 
--(void)recordSummaryEventWithTracker:(LDFlagConfigTracker*)tracker {
-    if (!tracker.hasTrackedEvents) {
-        DEBUG_LOGX(@"Tracker has no events to report. Discarding summary event.");
-        return;
+-(void)recordSummaryEventAndResetTrackerForUser:(LDUserModel*)user {
+    @synchronized (self) {
+        LDFlagConfigTracker *trackerCopy = [user.flagConfigTracker copy];
+        if (!trackerCopy.hasTrackedEvents) {
+            DEBUG_LOGX(@"Tracker has no events to report. Discarding summary event.");
+            return;
+        }
+        [user resetTracker];
+
+        LDEventModel *summaryEvent = [LDEventModel summaryEventWithTracker:trackerCopy];
+        if (summaryEvent == nil) {
+            DEBUG_LOGX(@"Failed to create summary event. Aborting.");
+            return;
+        }
+        DEBUG_LOGX(@"Creating summary event");
+        [self addEventDictionary:[summaryEvent dictionaryValueUsingConfig:self.config]];
     }
-    LDEventModel *summaryEvent = [LDEventModel summaryEventWithTracker:tracker];
-    if (summaryEvent == nil) {
-        DEBUG_LOGX(@"Failed to create summary event. Aborting.");
-        return;
-    }
-    DEBUG_LOGX(@"Creating summary event");
-    [self addEventDictionary:[summaryEvent dictionaryValueUsingConfig:self.config]];
 }
 
 -(void)recordDebugEventWithFlagKey:(NSString *)flagKey

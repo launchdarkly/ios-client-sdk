@@ -2,6 +2,11 @@
 
 All notable changes to the LaunchDarkly iOS SDK will be documented in this file. This project adheres to [Semantic Versioning](http://semver.org).
 
+## [2.14.1] - 2018-12-21
+### Added
+- Added copy methods to several objects involved in creating a summary event
+- Added additional synchronization to creating a summary event
+
 ## [2.14.0] - 2018-12-05
 ### Added
 - Added `allFlags` property to `LDClient` that provides a dictionary of feature flag keys and values. Accessing feature flags via `allFlags` does not record any analytics events.

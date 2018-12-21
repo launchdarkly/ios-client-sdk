@@ -17,7 +17,7 @@ extern NSString * _Nonnull const kLDFlagConfigValueKeyVariation;
 
 extern NSInteger const kLDFlagConfigValueItemDoesNotExist;
 
-@interface LDFlagConfigValue: NSObject
+@interface LDFlagConfigValue: NSObject <NSCopying>
 //Core Items
 @property (nullable, nonatomic, strong) id value;
 @property (nonatomic, assign) NSInteger modelVersion;
@@ -43,4 +43,6 @@ extern NSInteger const kLDFlagConfigValueItemDoesNotExist;
 -(BOOL)hasPropertiesMatchingDictionary:(nullable NSDictionary*)dictionary;
 
 -(nonnull NSString*)description;
+-(id)copyWithZone:(nullable NSZone*)zone;
+
 @end

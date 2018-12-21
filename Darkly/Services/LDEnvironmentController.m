@@ -359,12 +359,11 @@ NSString * const kLDStreamPath = @"meval";
 
     DEBUG_LOGX(@"EnvironmentController syncing events with server");
 
-    [self.dataManager recordSummaryEventWithTracker:self.user.flagConfigTracker];
+    [self.dataManager recordSummaryEventAndResetTrackerForUser:self.user];
 
     __weak typeof(self) weakSelf = self;
     [self.dataManager allEventDictionaries:^(NSArray *eventDictionaries) {
         __strong typeof(weakSelf) strongSelf = weakSelf;
-        [strongSelf.user resetTracker];
         if (eventDictionaries.count == 0) {
             DEBUG_LOGX(@"EnvironmentController has no events so won't sync events with server");
             return;

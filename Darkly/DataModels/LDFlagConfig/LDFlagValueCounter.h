@@ -10,7 +10,7 @@
 
 @class LDFlagConfigValue;
 
-@interface LDFlagValueCounter : NSObject
+@interface LDFlagValueCounter : NSObject <NSCopying>
 @property (nonnull, nonatomic, strong) id reportedFlagValue;
 @property (nullable, nonatomic, strong, readonly) LDFlagConfigValue *flagConfigValue;
 @property (nonatomic, assign, readonly, getter=isKnown) BOOL known;
@@ -22,4 +22,6 @@
 -(nonnull NSDictionary*)dictionaryValue;
 
 -(nonnull NSString*)description;
+-(id)copyWithZone:(nullable NSZone*)zone;
+
 @end
