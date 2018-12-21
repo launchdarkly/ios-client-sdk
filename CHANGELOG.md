@@ -3,9 +3,9 @@
 All notable changes to the LaunchDarkly iOS SDK will be documented in this file. This project adheres to [Semantic Versioning](http://semver.org).
 
 ## [2.14.1] - 2018-12-21
-### Added
-- Added copy methods to several objects involved in creating a summary event
-- Added additional synchronization to creating a summary event
+### Changed
+- Added copy methods to several objects involved in creating a summary event.
+- Added additional synchronization to creating a summary event in order to potentially prevent some crash scenarios.
 
 ## [2.14.0] - 2018-12-05
 ### Added
