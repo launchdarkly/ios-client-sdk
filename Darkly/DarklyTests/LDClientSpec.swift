@@ -1252,7 +1252,7 @@ final class LDClientSpec: QuickSpec {
         }
     }
 
-    /* The concept of the onSyncCompleteSuccess tests is to configure the flags & mocks to simulate the intended change, prep the callbacks to trigger done() to end the async wait, and then call onSyncComplete with the parameters for the area under test. onSyncComplete will call a flagStore method which has an async closure, and so the test has to trigger that closure to get the correct code to execute in onSyncComplete. Once the async flagStore closure runs for the appropriate update method, the result can be measured in the mocks. While setting up each test is slightly different, measuring the result is largely the same.
+    /* The concept of the onSyncCompleteSuccess tests is to configure the flags & mocks to simulate the intended change, prep the callbacks to trigger done() to end the async wait, and then call onFlagSyncComplete with the parameters for the area under test. onFlagSyncComplete will call a flagStore method which has an async closure, and so the test has to trigger that closure to get the correct code to execute in onFlagSyncComplete. Once the async flagStore closure runs for the appropriate update method, the result can be measured in the mocks. While setting up each test is slightly different, measuring the result is largely the same.
      */
     private func onSyncCompleteSuccessReplacingFlagsSpec(streamingMode: LDStreamingMode, eventType: DarklyEventSource.LDEvent.EventType? = nil) {
         var testContext: TestContext!

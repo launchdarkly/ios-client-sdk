@@ -37,13 +37,13 @@ enum SynchronizingError: Error {
     }
 }
 
-enum SyncResult {
+enum FlagSyncResult {
     case success([String: Any], DarklyEventSource.LDEvent.EventType?)
     case error(SynchronizingError)
 }
 
 typealias CompletionClosure = (() -> Void)
-typealias SyncCompleteClosure = ((SyncResult) -> Void)
+typealias SyncCompleteClosure = ((FlagSyncResult) -> Void)
 
 extension DarklyEventSource.LDEvent {
     enum EventType: String {

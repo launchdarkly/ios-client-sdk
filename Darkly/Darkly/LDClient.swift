@@ -200,7 +200,7 @@ public class LDClient {
                                                                    pollingInterval: config.flagPollingInterval(runMode: runMode),
                                                                    useReport: config.useReport,
                                                                    service: service,
-                                                                   onSyncComplete: onSyncComplete)
+                                                                   onSyncComplete: onFlagSyncComplete)
         }
     }
 
@@ -539,7 +539,7 @@ public class LDClient {
         }
     }
 
-    private func onSyncComplete(result: SyncResult) {
+    private func onFlagSyncComplete(result: FlagSyncResult) {
         Log.debug(typeName(and: #function) + "result: \(result)")
         switch result {
         case let .success(flagDictionary, streamingEvent):
@@ -662,7 +662,7 @@ public class LDClient {
                                                                        pollingInterval: config.flagPollingInterval(runMode: runMode),
                                                                        useReport: config.useReport,
                                                                        service: service,
-                                                                       onSyncComplete: onSyncComplete)
+                                                                       onSyncComplete: onFlagSyncComplete)
             }
             flagSynchronizer.isOnline = willSetSynchronizerOnline
         }
@@ -724,7 +724,7 @@ public class LDClient {
                                                                     pollingInterval: config.flagPollingInterval(runMode: runMode),
                                                                     useReport: config.useReport,
                                                                     service: service,
-                                                                    onSyncComplete: onSyncComplete)
+                                                                    onSyncComplete: onFlagSyncComplete)
         eventReporter = self.serviceFactory.makeEventReporter(config: config, service: service)
     }
 }
