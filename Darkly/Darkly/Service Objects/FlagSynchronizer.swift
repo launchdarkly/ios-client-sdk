@@ -51,6 +51,10 @@ extension DarklyEventSource.LDEvent {
         case heartbeat = ":", ping, put, patch, delete
     }
 
+    var eventType: EventType? {
+        return EventType(rawValue: event ?? "")
+    }
+
     var isUnauthorized: Bool {
         let error = self.error as NSError?
         return error?.domain == DarklyEventSource.LDEventSourceErrorDomain && error?.code == -HTTPURLResponse.StatusCodes.unauthorized
@@ -153,19 +157,17 @@ class FlagSynchronizer: LDFlagSynchronizing {
             return
         }    //Since eventSource.close() is async, this prevents responding to events after .close() is called, but before it's actually closed
         //NOTE: It is possible that an LDEventSource was replaced and the event reported here is from the previous eventSource. However there is no information about the eventSource in the LDEvent to do anything about it.
-        guard let eventDescription = event.event, !eventDescription.isEmpty
+
+        guard let eventType = event.eventType
         else {
-            Log.debug(typeName(and: #function) + "aborted. Event Description is empty.")
-            if event.error != nil { reportEventError(event) }
+            Log.debug(typeName(and: #function) + "aborted. Unknown event type.")
+            reportEventError(event)
             return
         }
 
-        Log.debug(typeName(and: #function) + "event: \(event)")
-        switch eventDescription {
-        case DarklyEventSource.LDEvent.EventType.ping.rawValue: makeFlagRequest()
-        case DarklyEventSource.LDEvent.EventType.put.rawValue: process(event, eventType: .put)
-        case DarklyEventSource.LDEvent.EventType.patch.rawValue: process(event, eventType: .patch)
-        case DarklyEventSource.LDEvent.EventType.delete.rawValue: process(event, eventType: .delete)
+        switch eventType {
+        case .ping: makeFlagRequest()
+        case .put, .patch, .delete: process(event, eventType: eventType)
         default: break
         }
     }
@@ -299,8 +301,14 @@ class FlagSynchronizer: LDFlagSynchronizing {
     }
 
     private func reportEventError(_ event: DarklyEventSource.LDEvent) {
+        guard event.error != nil
+        else {
+            return
+        }
         Log.debug(typeName(and: #function) + "event: \(event)")
-        guard let onSyncComplete = self.onSyncComplete else { return }
+        guard let onSyncComplete = self.onSyncComplete else {
+            return
+        }
         DispatchQueue.main.async {
             onSyncComplete(.error(.event(event)))
         }
