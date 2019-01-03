@@ -822,11 +822,40 @@ final class FlagSynchronizerSpec: QuickSpec {
                 }
             }
         }
+        describe("makeFlagRequest") {
+            var testContext: TestContext!
+            //This test completes the test suite on makeFlagRequest by validating the method bails out if it's called and the synchronizer is offline. While that shouldn't happen, there are 2 code paths that don't directly verify the SDK is online before calling the method, so it seems a wise precaution to validate that the method does bailout. Other tests exercise the rest of the method.
+            context("offline") {
+                var synchronizingError: SynchronizingError?
+                beforeEach {
+                    waitUntil { done in
+                        testContext = TestContext(streamingMode: .streaming, useReport: false, onSyncComplete: { (result) in
+                            if case .error(let syncError) = result {
+                                synchronizingError = syncError
+                            }
+                            done()
+                        })
+                        testContext.serviceMock.stubFlagResponse(statusCode: HTTPURLResponse.StatusCodes.ok)
+
+                        testContext.subject.testMakeFlagRequest()
+                    }
+                }
+                it("does not request flags and calls onSyncComplete with an isOffline error") {
+                    expect({ testContext.synchronizerState(synchronizerOnline: false, streamingMode: .streaming, flagRequests: 0, streamCreated: false) }).to(match())
+                    expect(synchronizingError).toNot(beNil())
+                    guard let synchronizingError = synchronizingError
+                    else {
+                        return
+                    }
+                    expect(synchronizingError) == SynchronizingError.isOffline
+                }
+            }
+        }
     }
 }
 
-extension SynchronizingError {
-    static func == (lhs: SynchronizingError, rhs: SynchronizingError) -> Bool {
+extension SynchronizingError: Equatable {
+    public static func == (lhs: SynchronizingError, rhs: SynchronizingError) -> Bool {
         switch (lhs, rhs) {
         case let (.data(left), .data(right)): return left == right
         case let (.response(left), .response(right)):
@@ -838,6 +867,8 @@ extension SynchronizingError {
             let leftError = left as NSError
             let rightError = right as NSError
             return leftError.domain == rightError.domain && leftError.code == rightError.code
+        case (.isOffline, .isOffline):
+            return true
         default: return false
         }
     }

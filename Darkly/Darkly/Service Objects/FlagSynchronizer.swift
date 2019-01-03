@@ -227,6 +227,7 @@ class FlagSynchronizer: LDFlagSynchronizing {
     private func makeFlagRequest() {
         guard isOnline else {
             Log.debug(typeName(and: #function) + "aborted. Flag Synchronizer is offline.")
+            onSyncComplete?(.error(.isOffline))
             return
         }
         Log.debug(typeName(and: #function, appending: " - ") + "starting")
@@ -323,3 +324,11 @@ class FlagSynchronizer: LDFlagSynchronizing {
 }
 
 extension FlagSynchronizer: TypeIdentifying { }
+
+#if DEBUG
+extension FlagSynchronizer {
+    func testMakeFlagRequest() {
+        makeFlagRequest()
+    }
+}
+#endif
