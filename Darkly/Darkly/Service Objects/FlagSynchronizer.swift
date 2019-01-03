@@ -21,6 +21,7 @@ protocol LDFlagSynchronizing {
 }
 
 enum SynchronizingError: Error {
+    case isOffline
     case request(Error)
     case response(URLResponse?)
     case data(Data?)
