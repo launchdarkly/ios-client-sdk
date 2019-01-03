@@ -231,20 +231,22 @@ class FlagSynchronizer: LDFlagSynchronizing {
             return
         }
         Log.debug(typeName(and: #function, appending: " - ") + "starting")
-        service.getFeatureFlags(useReport: useReport, completion: { serviceResponse in
-            if self.shouldRetryFlagRequest(useReport: self.useReport, statusCode: (serviceResponse.urlResponse as? HTTPURLResponse)?.statusCode) {
-                Log.debug(self.typeName(and: #function, appending: " - ") + "retrying via GET")
-                self.service.getFeatureFlags(useReport: false, completion: { (retryServiceResponse) in
-                    self.processFlagResponse(serviceResponse: retryServiceResponse)
+        let context = (useReport: useReport,
+                       logPrefix: typeName(and: #function, appending: " - "))
+        service.getFeatureFlags(useReport: useReport, completion: { [weak self] (serviceResponse) in
+            if FlagSynchronizer.shouldRetryFlagRequest(useReport: context.useReport, statusCode: (serviceResponse.urlResponse as? HTTPURLResponse)?.statusCode) {
+                Log.debug(context.logPrefix + "retrying via GET")
+                self?.service.getFeatureFlags(useReport: false, completion: { (retryServiceResponse) in
+                    self?.processFlagResponse(serviceResponse: retryServiceResponse)
                 })
             } else {
-                self.processFlagResponse(serviceResponse: serviceResponse)
+                self?.processFlagResponse(serviceResponse: serviceResponse)
             }
-            Log.debug(self.typeName(and: #function, appending: " - ") + "complete")
+            Log.debug(context.logPrefix + "complete")
         })
     }
 
-    private func shouldRetryFlagRequest(useReport: Bool, statusCode: Int?) -> Bool {
+    private class func shouldRetryFlagRequest(useReport: Bool, statusCode: Int?) -> Bool {
         guard let statusCode = statusCode else { return false }
         return useReport && LDConfig.isReportRetryStatusCode(statusCode)
     }
@@ -266,20 +268,27 @@ class FlagSynchronizer: LDFlagSynchronizing {
             reportDataError(serviceResponse.data)
             return
         }
-        reportSuccess(flagDictionary: flags, eventType: self.streamingActive ? .ping : nil)
+        reportSuccess(flagDictionary: flags, eventType: streamingActive ? .ping : nil)
     }
 
     private func reportSuccess(flagDictionary: [String: Any], eventType: DarklyEventSource.LDEvent.EventType?) {
         Log.debug(typeName(and: #function) + "flagDictionary: \(flagDictionary)" + (eventType == nil ? "" : ", eventType: \(String(describing: eventType))"))
-        guard let onSyncComplete = self.onSyncComplete else { return }
+        guard let onSyncComplete = onSyncComplete
+        else {
+            return
+        }
+        let reportedEventType = streamingActive ? eventType : nil
         DispatchQueue.main.async {
-            onSyncComplete(.success(flagDictionary, self.streamingActive ? eventType : nil))
+            onSyncComplete(.success(flagDictionary, reportedEventType))
         }
     }
     
     private func report(_ error: Error) {
         Log.debug(typeName(and: #function) + "error: \(error)")
-        guard let onSyncComplete = self.onSyncComplete else { return }
+        guard let onSyncComplete = onSyncComplete
+        else {
+            return
+        }
         DispatchQueue.main.async {
             onSyncComplete(.error(.request(error)))
         }
@@ -287,7 +296,10 @@ class FlagSynchronizer: LDFlagSynchronizing {
     
     private func report(_ response: URLResponse?) {
         Log.debug(typeName(and: #function) + "response: \(String(describing: response))")
-        guard let onSyncComplete = self.onSyncComplete else { return }
+        guard let onSyncComplete = onSyncComplete
+        else {
+            return
+        }
         DispatchQueue.main.async {
             onSyncComplete(.error(.response(response)))
         }
@@ -295,7 +307,10 @@ class FlagSynchronizer: LDFlagSynchronizing {
     
     private func reportDataError(_ data: Data?) {
         Log.debug(typeName(and: #function) + "data: \(String(describing: data))")
-        guard let onSyncComplete = self.onSyncComplete else { return }
+        guard let onSyncComplete = onSyncComplete
+        else {
+            return
+        }
         DispatchQueue.main.async {
             onSyncComplete(.error(.data(data)))
         }
@@ -307,7 +322,8 @@ class FlagSynchronizer: LDFlagSynchronizing {
             return
         }
         Log.debug(typeName(and: #function) + "event: \(event)")
-        guard let onSyncComplete = self.onSyncComplete else {
+        guard let onSyncComplete = onSyncComplete
+        else {
             return
         }
         DispatchQueue.main.async {
