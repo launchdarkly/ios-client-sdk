@@ -8,6 +8,13 @@
 
 import Foundation
 
+enum EventSyncResult {
+    case success([[String: Any]])
+    case error(SynchronizingError)
+}
+
+typealias EventSyncCompleteClosure = ((EventSyncResult) -> Void)
+
 //sourcery: AutoMockable
 protocol EventReporting {
     //sourcery: DefaultMockValue = LDConfig.stub
@@ -61,6 +68,8 @@ class EventReporter: EventReporting {
     
     private weak var eventReportTimer: Timer?
     var isReportingActive: Bool { return eventReportTimer != nil }
+
+    var onSyncComplete: EventSyncCompleteClosure? = nil
 
     init(config: LDConfig, service: DarklyServiceProvider) {
         self.config = config
@@ -166,64 +175,61 @@ class EventReporter: EventReporting {
     }
 
     @objc func eventReportTimerFired() {
-        reportEvents(completion: nil)
+        reportEvents()
     }
 
     func reportEvents() {
-        reportEvents(completion: nil)
-    }
-    
-    func reportEvents(completion: CompletionClosure?) {
         guard isOnline && (!eventStore.isEmpty || flagRequestTracker.hasLoggedRequests) else {
             if !isOnline {
                 Log.debug(typeName(and: #function) + "aborted. EventReporter is offline")
+                reportSyncComplete(.error(.isOffline))
             } else if eventStore.isEmpty && !flagRequestTracker.hasLoggedRequests {
                 Log.debug(typeName(and: #function) + "aborted. Event store is empty")
+                reportSyncComplete(.success([[String: Any]]()))
             }
-            completion?()
             return
         }
         Log.debug(typeName(and: #function, appending: " - ") + "starting")
 
         recordSummaryEvent {
-            self.publish(self.eventStore, completion: completion)
+            self.publish(self.eventStore)
         }
     }
 
-    private func publish(_ eventDictionaries: [[String: Any]], completion: CompletionClosure?) {
+    private func publish(_ eventDictionaries: [[String: Any]]) {
         self.service.publishEventDictionaries(eventDictionaries) { serviceResponse in
-            self.processEventResponse(reportedEventDictionaries: eventDictionaries, serviceResponse: serviceResponse, completion: completion)
+            self.processEventResponse(reportedEventDictionaries: eventDictionaries, serviceResponse: serviceResponse)
         }
     }
     
-    private func processEventResponse(reportedEventDictionaries: [[String: Any]], serviceResponse: ServiceResponse, completion: CompletionClosure?) {
-        defer {
-            DispatchQueue.main.async {
-                completion?()
-            }
-        }
-        guard serviceResponse.error == nil else {
-            report(serviceResponse.error)
+    private func processEventResponse(reportedEventDictionaries: [[String: Any]], serviceResponse: ServiceResponse) {
+        if let serviceResponseError = serviceResponse.error {
+            Log.debug(typeName(and: #function) + "error: \(String(describing: serviceResponseError))")
+            reportSyncComplete(.error(.request(serviceResponseError)))
             return
         }
+
         guard let httpResponse = serviceResponse.urlResponse as? HTTPURLResponse,
             httpResponse.statusCode == HTTPURLResponse.StatusCodes.accepted
         else {
-            report(serviceResponse.urlResponse)
+            Log.debug(typeName(and: #function) + "response: \(String(describing: serviceResponse.urlResponse))")
+            reportSyncComplete(.error(.response(serviceResponse.urlResponse)))
             return
         }
         lastEventResponseDate = httpResponse.headerDate
         updateEventStore(reportedEventDictionaries: reportedEventDictionaries)
+        Log.debug(typeName(and: #function) + " completed for keys: " + reportedEventDictionaries.eventKeys)
+        reportSyncComplete(.success(reportedEventDictionaries))
     }
     
-    private func report(_ error: Error?) {
-        Log.debug(typeName + ".reportEvents() " + "error: \(String(describing: error))")
-        //TODO: Implement when error reporting architecture is established
-    }
-    
-    private func report(_ response: URLResponse?) {
-        Log.debug(typeName + ".reportEvents() " + "response: \(String(describing: response))")
-        //TODO: Implement when error reporting architecture is established
+    private func reportSyncComplete(_ result: EventSyncResult) {
+        guard let onSyncComplete = onSyncComplete
+        else {
+            return
+        }
+        DispatchQueue.main.async {
+            onSyncComplete(result)
+        }
     }
     
     private func updateEventStore(reportedEventDictionaries: [[String: Any]]) {
@@ -232,7 +238,6 @@ class EventReporter: EventReporting {
                 !reportedEventDictionaries.contains(eventDictionary)
             }
             self.eventStore = remainingEventDictionaries
-            Log.debug(self.typeName + ".reportEvents() completed for keys: " + reportedEventDictionaries.eventKeys)
         }
     }
     
