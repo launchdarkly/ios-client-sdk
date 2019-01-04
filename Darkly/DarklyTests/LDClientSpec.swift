@@ -60,7 +60,7 @@ final class LDClientSpec: QuickSpec {
         var flagsUnchangedCallCount = 0
         var flagsUnchangedObserver: FlagsUnchangedObserver? { return changeNotifierMock?.addFlagsUnchangedObserverReceivedObserver }
         var flagsUnchangedHandler: LDFlagsUnchangedHandler? { return flagsUnchangedObserver?.flagsUnchangedHandler }
-        var onSyncComplete: SyncCompleteClosure? { return serviceFactoryMock.onSyncComplete }
+        var onSyncComplete: FlagSyncCompleteClosure? { return serviceFactoryMock.onSyncComplete }
         // flag maintaining mock accessors
         var replaceStoreComplete: CompletionClosure? { return flagStoreMock.replaceStoreReceivedArguments?.completion }
         var updateStoreComplete: CompletionClosure? { return flagStoreMock.updateStoreReceivedArguments?.completion }

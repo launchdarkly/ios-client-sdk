@@ -21,7 +21,7 @@ protocol ClientServiceCreating {
                                        pollingInterval: TimeInterval,
                                        useReport: Bool,
                                        service: DarklyServiceProvider,
-                                       onSyncComplete: SyncCompleteClosure?) -> LDFlagSynchronizing
+                                       onSyncComplete: FlagSyncCompleteClosure?) -> LDFlagSynchronizing
     func makeFlagChangeNotifier() -> FlagChangeNotifying
     func makeEventReporter(config: LDConfig, service: DarklyServiceProvider) -> EventReporting
     mutating func makeStreamingProvider(url: URL, httpHeaders: [String: String]) -> DarklyStreamingProvider
@@ -63,7 +63,7 @@ struct ClientServiceFactory: ClientServiceCreating {
                               pollingInterval: TimeInterval,
                               useReport: Bool,
                               service: DarklyServiceProvider,
-                              onSyncComplete: SyncCompleteClosure?) -> LDFlagSynchronizing {
+                              onSyncComplete: FlagSyncCompleteClosure?) -> LDFlagSynchronizing {
         return FlagSynchronizer(streamingMode: streamingMode, pollingInterval: pollingInterval, useReport: useReport, service: service, onSyncComplete: onSyncComplete)
     }
 

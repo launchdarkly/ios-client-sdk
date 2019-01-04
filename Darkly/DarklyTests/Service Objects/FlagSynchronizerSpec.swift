@@ -27,7 +27,7 @@ final class FlagSynchronizerSpec: QuickSpec {
         var syncErrorEvent: DarklyEventSource.LDEvent?
         var onSyncCompleteCallCount = 0
 
-        init(streamingMode: LDStreamingMode, useReport: Bool, onSyncComplete: SyncCompleteClosure? = nil) {
+        init(streamingMode: LDStreamingMode, useReport: Bool, onSyncComplete: FlagSyncCompleteClosure? = nil) {
             config = LDConfig.stub
             user = LDUser.stub()
             serviceMock = DarklyServiceMock()
@@ -248,126 +248,8 @@ final class FlagSynchronizerSpec: QuickSpec {
             streamingPutEventSpec()
             streamingPatchEventSpec()
             streamingDeleteEventSpec()
-
-            context("other events") {
-                var testContext: TestContext!
-
-                beforeEach {
-                    testContext = TestContext(streamingMode: .streaming, useReport: false, onSyncComplete: { (_) in
-                        testContext.onSyncCompleteCallCount += 1
-                    })
-                }
-                context("error event") {
-                    beforeEach {
-                        waitUntil { done in
-                            testContext = TestContext(streamingMode: .streaming, useReport: false, onSyncComplete: { (syncResult) in
-                                if case .error(let errorResult) = syncResult, case .event(let errorEvent) = errorResult { testContext.syncErrorEvent = errorEvent }
-                                done()
-                            })
-                            testContext.subject.isOnline = true
-
-                            testContext.eventSourceMock?.sendEvent(LDEvent.stubErrorEvent())
-                        }
-                    }
-                    it("does not request flags & reports the error via onSyncComplete") {
-                        expect({ testContext.synchronizerState(synchronizerOnline: true, streamingMode: .streaming, flagRequests: 0, streamCreated: true, streamClosed: false) }).to(match())
-                        expect(testContext.syncErrorEvent).toNot(beNil())
-                        expect(testContext.syncErrorEvent?.isUnauthorized).to(beFalse())
-                    }
-                }
-                context("unauthorized error event") {
-                    beforeEach {
-                        waitUntil { done in
-                            testContext = TestContext(streamingMode: .streaming, useReport: false, onSyncComplete: { (syncResult) in
-                                if case .error(let errorResult) = syncResult, case .event(let errorEvent) = errorResult { testContext.syncErrorEvent = errorEvent }
-                                done()
-                            })
-                            testContext.subject.isOnline = true
-
-                            testContext.eventSourceMock?.sendEvent(LDEvent.stubUnauthorizedEvent())
-                        }
-                    }
-                    it("does not request flags & reports the error via onSyncComplete") {
-                        expect({ testContext.synchronizerState(synchronizerOnline: true, streamingMode: .streaming, flagRequests: 0, streamCreated: true, streamClosed: false) }).to(match())
-                        expect(testContext.syncErrorEvent).toNot(beNil())
-                        expect(testContext.syncErrorEvent?.isUnauthorized).to(beTrue())
-                    }
-                }
-                context("heartbeat") {
-                    beforeEach {
-                        testContext.subject.isOnline = true
-
-                        testContext.eventSourceMock?.sendHeartbeat()
-                    }
-                    it("does not request flags or report sync complete") {
-                        expect({ testContext.synchronizerState(synchronizerOnline: true, streamingMode: .streaming, flagRequests: 0, streamCreated: true, streamClosed: false) }).to(match())
-                        expect(testContext.onSyncCompleteCallCount) == 0
-                    }
-                }
-                context("null event") {
-                    beforeEach {
-                        testContext.subject.isOnline = true
-
-                        testContext.eventSourceMock?.sendNullEvent()
-                    }
-                    it("does not request flags or report sync complete") {
-                        expect({ testContext.synchronizerState(synchronizerOnline: true, streamingMode: .streaming, flagRequests: 0, streamCreated: true, streamClosed: false) }).to(match())
-                        expect(testContext.onSyncCompleteCallCount) == 0
-                    }
-                }
-                context("connecting event") {
-                    beforeEach {
-                        testContext.subject.isOnline = true
-
-                        testContext.eventSourceMock?.sendEvent(LDEvent.stubReadyStateEvent(eventState: kEventStateConnecting))
-                    }
-                    it("does not request flags or report sync complete") {
-                        expect({ testContext.synchronizerState(synchronizerOnline: true, streamingMode: .streaming, flagRequests: 0, streamCreated: true, streamClosed: false) }).to(match())
-                        expect(testContext.onSyncCompleteCallCount) == 0
-                    }
-                }
-                context("open event") {
-                    beforeEach {
-                        testContext.subject.isOnline = true
-
-                        testContext.eventSourceMock?.sendEvent(LDEvent.stubReadyStateEvent(eventState: kEventStateOpen))
-                    }
-                    it("does not request flags or report sync complete") {
-                        expect({ testContext.synchronizerState(synchronizerOnline: true, streamingMode: .streaming, flagRequests: 0, streamCreated: true, streamClosed: false) }).to(match())
-                        expect(testContext.onSyncCompleteCallCount) == 0
-                    }
-                }
-                context("closed event") {
-                    beforeEach {
-                        testContext.subject.isOnline = true
-
-                        testContext.eventSourceMock?.sendEvent(LDEvent.stubReadyStateEvent(eventState: kEventStateClosed))
-                    }
-                    it("does not request flags") {
-                        expect({ testContext.synchronizerState(synchronizerOnline: true, streamingMode: .streaming, flagRequests: 0, streamCreated: true, streamClosed: false) }).to(match())
-                        expect(testContext.onSyncCompleteCallCount) == 0
-                    }
-                }
-                context("non NSError event") {
-                    var syncErrorEvent: DarklyEventSource.LDEvent?
-                    beforeEach {
-                        waitUntil { done in
-                            testContext = TestContext(streamingMode: .streaming, useReport: false, onSyncComplete: { (syncResult) in
-                                if case .error(let errorResult) = syncResult, case .event(let errorEvent) = errorResult { syncErrorEvent = errorEvent }
-                                done()
-                            })
-                            testContext.subject.isOnline = true
-
-                            testContext.eventSourceMock?.sendEvent(LDEvent.stubNonNSErrorEvent())
-                        }
-                    }
-                    it("does not request flags & reports the error via onSyncComplete") {
-                        expect({ testContext.synchronizerState(synchronizerOnline: true, streamingMode: .streaming, flagRequests: 0, streamCreated: true, streamClosed: false) }).to(match())
-                        expect(syncErrorEvent).toNot(beNil())
-                        expect(syncErrorEvent?.isUnauthorized).to(beFalse())
-                    }
-                }
-            }
+            streamingOtherEventSpec()
+            streamingProcessingSpec()
         }
     }
 
@@ -669,6 +551,206 @@ final class FlagSynchronizerSpec: QuickSpec {
         }
     }
 
+    func streamingOtherEventSpec() {
+        context("other events") {
+            var testContext: TestContext!
+
+            beforeEach {
+                testContext = TestContext(streamingMode: .streaming, useReport: false, onSyncComplete: { (_) in
+                    testContext.onSyncCompleteCallCount += 1
+                })
+            }
+            context("error event") {
+                beforeEach {
+                    waitUntil { done in
+                        testContext = TestContext(streamingMode: .streaming, useReport: false, onSyncComplete: { (syncResult) in
+                            if case .error(let errorResult) = syncResult, case .event(let errorEvent) = errorResult { testContext.syncErrorEvent = errorEvent }
+                            done()
+                        })
+                        testContext.subject.isOnline = true
+
+                        testContext.eventSourceMock?.sendEvent(LDEvent.stubErrorEvent())
+                    }
+                }
+                it("does not request flags & reports the error via onSyncComplete") {
+                    expect({ testContext.synchronizerState(synchronizerOnline: true, streamingMode: .streaming, flagRequests: 0, streamCreated: true, streamClosed: false) }).to(match())
+                    expect(testContext.syncErrorEvent).toNot(beNil())
+                    expect(testContext.syncErrorEvent?.isUnauthorized).to(beFalse())
+                }
+            }
+            context("unauthorized error event") {
+                beforeEach {
+                    waitUntil { done in
+                        testContext = TestContext(streamingMode: .streaming, useReport: false, onSyncComplete: { (syncResult) in
+                            if case .error(let errorResult) = syncResult, case .event(let errorEvent) = errorResult { testContext.syncErrorEvent = errorEvent }
+                            done()
+                        })
+                        testContext.subject.isOnline = true
+
+                        testContext.eventSourceMock?.sendEvent(LDEvent.stubUnauthorizedEvent())
+                    }
+                }
+                it("does not request flags & reports the error via onSyncComplete") {
+                    expect({ testContext.synchronizerState(synchronizerOnline: true, streamingMode: .streaming, flagRequests: 0, streamCreated: true, streamClosed: false) }).to(match())
+                    expect(testContext.syncErrorEvent).toNot(beNil())
+                    expect(testContext.syncErrorEvent?.isUnauthorized).to(beTrue())
+                }
+            }
+            context("heartbeat") {
+                beforeEach {
+                    testContext.subject.isOnline = true
+
+                    testContext.eventSourceMock?.sendHeartbeat()
+                }
+                it("does not request flags or report sync complete") {
+                    expect({ testContext.synchronizerState(synchronizerOnline: true, streamingMode: .streaming, flagRequests: 0, streamCreated: true, streamClosed: false) }).to(match())
+                    expect(testContext.onSyncCompleteCallCount) == 0
+                }
+            }
+            context("null event") {
+                beforeEach {
+                    testContext.subject.isOnline = true
+
+                    testContext.eventSourceMock?.sendNullEvent()
+                }
+                it("does not request flags or report sync complete") {
+                    expect({ testContext.synchronizerState(synchronizerOnline: true, streamingMode: .streaming, flagRequests: 0, streamCreated: true, streamClosed: false) }).to(match())
+                    expect(testContext.onSyncCompleteCallCount) == 0
+                }
+            }
+            context("connecting event") {
+                beforeEach {
+                    testContext.subject.isOnline = true
+
+                    testContext.eventSourceMock?.sendEvent(LDEvent.stubReadyStateEvent(eventState: kEventStateConnecting))
+                }
+                it("does not request flags or report sync complete") {
+                    expect({ testContext.synchronizerState(synchronizerOnline: true, streamingMode: .streaming, flagRequests: 0, streamCreated: true, streamClosed: false) }).to(match())
+                    expect(testContext.onSyncCompleteCallCount) == 0
+                }
+            }
+            context("open event") {
+                beforeEach {
+                    testContext.subject.isOnline = true
+
+                    testContext.eventSourceMock?.sendEvent(LDEvent.stubReadyStateEvent(eventState: kEventStateOpen))
+                }
+                it("does not request flags or report sync complete") {
+                    expect({ testContext.synchronizerState(synchronizerOnline: true, streamingMode: .streaming, flagRequests: 0, streamCreated: true, streamClosed: false) }).to(match())
+                    expect(testContext.onSyncCompleteCallCount) == 0
+                }
+            }
+            context("closed event") {
+                beforeEach {
+                    testContext.subject.isOnline = true
+
+                    testContext.eventSourceMock?.sendEvent(LDEvent.stubReadyStateEvent(eventState: kEventStateClosed))
+                }
+                it("does not request flags") {
+                    expect({ testContext.synchronizerState(synchronizerOnline: true, streamingMode: .streaming, flagRequests: 0, streamCreated: true, streamClosed: false) }).to(match())
+                    expect(testContext.onSyncCompleteCallCount) == 0
+                }
+            }
+            context("non NSError event") {
+                var syncErrorEvent: DarklyEventSource.LDEvent?
+                beforeEach {
+                    waitUntil { done in
+                        testContext = TestContext(streamingMode: .streaming, useReport: false, onSyncComplete: { (syncResult) in
+                            if case .error(let errorResult) = syncResult,
+                               case .event(let errorEvent) = errorResult {
+                                syncErrorEvent = errorEvent
+                            }
+                            done()
+                        })
+                        testContext.subject.isOnline = true
+
+                        testContext.eventSourceMock?.sendEvent(LDEvent.stubNonNSErrorEvent())
+                    }
+                }
+                it("does not request flags & reports the error via onSyncComplete") {
+                    expect({ testContext.synchronizerState(synchronizerOnline: true, streamingMode: .streaming, flagRequests: 0, streamCreated: true, streamClosed: false) }).to(match())
+                    expect(syncErrorEvent).toNot(beNil())
+                    expect(syncErrorEvent?.isUnauthorized).to(beFalse())
+                }
+            }
+        }
+    }
+
+    private func streamingProcessingSpec() {
+        var testContext: TestContext!
+        var syncError: SynchronizingError?
+        var event: DarklyEventSource.LDEvent!
+
+        context("event reported while offline") {
+            beforeEach {
+                event = DarklyEventSource.LDEvent.stubPutEvent(data: DarklyServiceMock.Constants.stubFeatureFlags(includeNullValue: false, includeVariations: true, includeVersions: true)
+                    .dictionaryValue
+                    .jsonString)
+                waitUntil { done in
+                    testContext = TestContext(streamingMode: .streaming, useReport: false, onSyncComplete: { result in
+                        if case .error(let errorResult) = result {
+                            syncError = errorResult
+                        }
+                        done()
+                    })
+
+                    testContext.subject.testProcessEvent(event)
+                }
+            }
+            it("reports offline") {
+                expect(syncError == .isOffline).to(beTrue())
+            }
+        }
+        context("event reported while polling") {
+            beforeEach {
+                event = DarklyEventSource.LDEvent.stubPutEvent(data: DarklyServiceMock.Constants.stubFeatureFlags(includeNullValue: false, includeVariations: true, includeVersions: true)
+                    .dictionaryValue
+                    .jsonString)
+                waitUntil { done in
+                    testContext = TestContext(streamingMode: .polling, useReport: false, onSyncComplete: { _ in
+                        done()
+                    })
+                    testContext.subject.isOnline = true
+                }
+                waitUntil { done in
+                    testContext.subject.onSyncComplete = { result in
+                        if case .error(let errorResult) = result {
+                            syncError = errorResult
+                        }
+                        done()
+                    }
+
+                    testContext.subject.testProcessEvent(event)
+                }
+            }
+            it("reports an event error") {
+                expect(syncError == .event(event)).to(beTrue())
+            }
+        }
+        context("event reported while streaming inactive") {
+            beforeEach {
+                event = DarklyEventSource.LDEvent.stubPutEvent(data: DarklyServiceMock.Constants.stubFeatureFlags(includeNullValue: false, includeVariations: true, includeVersions: true)
+                    .dictionaryValue
+                    .jsonString)
+                waitUntil { done in
+                    testContext = TestContext(streamingMode: .streaming, useReport: false, onSyncComplete: { result in
+                        if case .error(let errorResult) = result {
+                            syncError = errorResult
+                        }
+                        done()
+                    })
+                    testContext.subject.isOnline = true
+                    testContext.subject.testEventSource = nil
+
+                    testContext.subject.testProcessEvent(event)
+                }
+            }
+            it("reports offline") {
+                expect(syncError == .isOffline).to(beTrue())
+            }
+        }
+    }
+
     func pollingTimerFiresSpec() {
         describe("polling timer fires") {
             context("one second interval") {
@@ -857,7 +939,10 @@ final class FlagSynchronizerSpec: QuickSpec {
 extension SynchronizingError: Equatable {
     public static func == (lhs: SynchronizingError, rhs: SynchronizingError) -> Bool {
         switch (lhs, rhs) {
-        case let (.data(left), .data(right)): return left == right
+        case (.isOffline, .isOffline):
+            return true
+        case let (.data(left), .data(right)):
+            return left == right
         case let (.response(left), .response(right)):
             guard let leftResponse = left as? HTTPURLResponse, let rightResponse = right as? HTTPURLResponse else {
                 return left == nil && right == nil
@@ -867,9 +952,10 @@ extension SynchronizingError: Equatable {
             let leftError = left as NSError
             let rightError = right as NSError
             return leftError.domain == rightError.domain && leftError.code == rightError.code
-        case (.isOffline, .isOffline):
-            return true
-        default: return false
+        case let (.event(left), .event(right)):
+            return left == right
+        default:
+            return false
         }
     }
 }

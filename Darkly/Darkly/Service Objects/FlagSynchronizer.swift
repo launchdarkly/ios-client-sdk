@@ -25,14 +25,15 @@ enum SynchronizingError: Error {
     case request(Error)
     case response(URLResponse?)
     case data(Data?)
-    case event(DarklyEventSource.LDEvent)
+    case event(DarklyEventSource.LDEvent?)
 
     var isClientUnauthorized: Bool {
         switch self {
         case .response(let urlResponse):
             guard let httpResponse = urlResponse as? HTTPURLResponse else { return false }
             return httpResponse.statusCode == HTTPURLResponse.StatusCodes.unauthorized
-        case .event(let event): return event.isUnauthorized
+        case .event(let event):
+            return event?.isUnauthorized ?? false
         default: return false
         }
     }
@@ -44,7 +45,7 @@ enum FlagSyncResult {
 }
 
 typealias CompletionClosure = (() -> Void)
-typealias SyncCompleteClosure = ((FlagSyncResult) -> Void)
+typealias FlagSyncCompleteClosure = ((FlagSyncResult) -> Void)
 
 extension DarklyEventSource.LDEvent {
     enum EventType: String {
@@ -65,7 +66,7 @@ class FlagSynchronizer: LDFlagSynchronizing {
     let service: DarklyServiceProvider
     private var eventSource: DarklyStreamingProvider?
     private weak var flagRequestTimer: Timer?
-    var onSyncComplete: SyncCompleteClosure?
+    var onSyncComplete: FlagSyncCompleteClosure?
 
     let streamingMode: LDStreamingMode
     
@@ -82,7 +83,7 @@ class FlagSynchronizer: LDFlagSynchronizing {
     var streamingActive: Bool { return eventSource != nil }
     var pollingActive: Bool { return flagRequestTimer != nil }
     
-    init(streamingMode: LDStreamingMode, pollingInterval: TimeInterval, useReport: Bool, service: DarklyServiceProvider, onSyncComplete: SyncCompleteClosure?) {
+    init(streamingMode: LDStreamingMode, pollingInterval: TimeInterval, useReport: Bool, service: DarklyServiceProvider, onSyncComplete: FlagSyncCompleteClosure?) {
         Log.debug(FlagSynchronizer.typeName(and: #function) + "streamingMode: \(streamingMode), " + "pollingInterval: \(pollingInterval), " + "useReport: \(useReport)")
         self.streamingMode = streamingMode
         self.pollingInterval = pollingInterval
@@ -147,21 +148,39 @@ class FlagSynchronizer: LDFlagSynchronizing {
     }
     
     private func process(_ event: DarklyEventSource.LDEvent?) {
-        guard streamingActive,
-            let event = event
-        else {
-            var reason = ""
-            if !streamingActive { reason = "Clientstream is not active." }
-            else { reason = "Event is nil." }
-            Log.debug(typeName(and: #function) + "aborted. " + reason)
+        //Because this method is called asynchronously by the LDEventSource, need to check these conditions prior to processing the event.
+        if !isOnline {
+            Log.debug(typeName(and: #function) + "aborted. " + "Flag Synchronizer is offline.")
+            reportSyncComplete(.error(.isOffline))
             return
-        }    //Since eventSource.close() is async, this prevents responding to events after .close() is called, but before it's actually closed
+        }
+        if streamingMode == .polling {
+            Log.debug(typeName(and: #function) + "aborted. " + "Flag Synchronizer is in polling mode.")
+            reportSyncComplete(.error(.event(event)))
+            return
+        }
+        if !streamingActive {
+            //Since eventSource.close() is async, this prevents responding to events after .close() is called, but before it's actually closed
+            Log.debug(typeName(and: #function) + "aborted. " + "Clientstream is not active.")
+            reportSyncComplete(.error(.isOffline))
+            return
+        }
+        guard let event = event
+        else {
+            Log.debug(typeName(and: #function) + "aborted. No streaming event.")
+            reportSyncComplete(.error(.event(nil)))
+            return
+        }
         //NOTE: It is possible that an LDEventSource was replaced and the event reported here is from the previous eventSource. However there is no information about the eventSource in the LDEvent to do anything about it.
-
+        if event.error != nil {
+            Log.debug(typeName(and: #function) + "aborted. Streaming event reported an error. event: \(event)")
+            reportSyncComplete(.error(.event(event)))
+            return
+        }
         guard let eventType = event.eventType
         else {
             Log.debug(typeName(and: #function) + "aborted. Unknown event type.")
-            reportEventError(event)
+            reportSyncComplete(.error(.event(event)))
             return
         }
 
@@ -227,7 +246,7 @@ class FlagSynchronizer: LDFlagSynchronizing {
     private func makeFlagRequest() {
         guard isOnline else {
             Log.debug(typeName(and: #function) + "aborted. Flag Synchronizer is offline.")
-            onSyncComplete?(.error(.isOffline))
+            reportSyncComplete(.error(.isOffline))
             return
         }
         Log.debug(typeName(and: #function, appending: " - ") + "starting")
@@ -253,13 +272,15 @@ class FlagSynchronizer: LDFlagSynchronizing {
 
     private func processFlagResponse(serviceResponse: ServiceResponse) {
         if let serviceResponseError = serviceResponse.error {
-            report(serviceResponseError)
+            Log.debug(typeName(and: #function) + "error: \(serviceResponseError)")
+            reportSyncComplete(.error(.request(serviceResponseError)))
             return
         }
         guard let httpResponse = serviceResponse.urlResponse as? HTTPURLResponse,
             httpResponse.statusCode == HTTPURLResponse.StatusCodes.ok
         else {
-            report(serviceResponse.urlResponse)
+            Log.debug(typeName(and: #function) + "response: \(String(describing: serviceResponse.urlResponse))")
+            reportSyncComplete(.error(.response(serviceResponse.urlResponse)))
             return
         }
         guard let data = serviceResponse.data,
@@ -273,47 +294,12 @@ class FlagSynchronizer: LDFlagSynchronizing {
 
     private func reportSuccess(flagDictionary: [String: Any], eventType: DarklyEventSource.LDEvent.EventType?) {
         Log.debug(typeName(and: #function) + "flagDictionary: \(flagDictionary)" + (eventType == nil ? "" : ", eventType: \(String(describing: eventType))"))
-        guard let onSyncComplete = onSyncComplete
-        else {
-            return
-        }
-        let reportedEventType = streamingActive ? eventType : nil
-        DispatchQueue.main.async {
-            onSyncComplete(.success(flagDictionary, reportedEventType))
-        }
-    }
-    
-    private func report(_ error: Error) {
-        Log.debug(typeName(and: #function) + "error: \(error)")
-        guard let onSyncComplete = onSyncComplete
-        else {
-            return
-        }
-        DispatchQueue.main.async {
-            onSyncComplete(.error(.request(error)))
-        }
-    }
-    
-    private func report(_ response: URLResponse?) {
-        Log.debug(typeName(and: #function) + "response: \(String(describing: response))")
-        guard let onSyncComplete = onSyncComplete
-        else {
-            return
-        }
-        DispatchQueue.main.async {
-            onSyncComplete(.error(.response(response)))
-        }
+        reportSyncComplete(.success(flagDictionary, streamingActive ? eventType : nil))
     }
     
     private func reportDataError(_ data: Data?) {
         Log.debug(typeName(and: #function) + "data: \(String(describing: data))")
-        guard let onSyncComplete = onSyncComplete
-        else {
-            return
-        }
-        DispatchQueue.main.async {
-            onSyncComplete(.error(.data(data)))
-        }
+        reportSyncComplete(.error(.data(data)))
     }
 
     private func reportEventError(_ event: DarklyEventSource.LDEvent) {
@@ -322,12 +308,16 @@ class FlagSynchronizer: LDFlagSynchronizing {
             return
         }
         Log.debug(typeName(and: #function) + "event: \(event)")
+        reportSyncComplete(.error(.event(event)))
+    }
+
+    private func reportSyncComplete(_ result: FlagSyncResult) {
         guard let onSyncComplete = onSyncComplete
         else {
             return
         }
         DispatchQueue.main.async {
-            onSyncComplete(.error(.event(event)))
+            onSyncComplete(result)
         }
     }
     
@@ -343,8 +333,17 @@ extension FlagSynchronizer: TypeIdentifying { }
 
 #if DEBUG
 extension FlagSynchronizer {
+    var testEventSource: DarklyStreamingProvider? {
+        set { eventSource = newValue }
+        get { return eventSource }
+    }
+
     func testMakeFlagRequest() {
         makeFlagRequest()
+    }
+
+    func testProcessEvent(_ event: DarklyEventSource.LDEvent?) {
+        process(event)
     }
 }
 #endif
