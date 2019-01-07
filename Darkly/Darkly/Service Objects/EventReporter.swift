@@ -25,7 +25,6 @@ protocol EventReporting {
     var lastEventResponseDate: Date? { get }
     //sourcery: DefaultMockValue = DarklyServiceMock()
     var service: DarklyServiceProvider { get set }
-    var onSyncComplete: EventSyncCompleteClosure? { get set }
     func record(_ event: Event, completion: CompletionClosure?)
     //sourcery: NoMock
     func record(_ event: Event)
@@ -70,11 +69,12 @@ class EventReporter: EventReporting {
     private weak var eventReportTimer: Timer?
     var isReportingActive: Bool { return eventReportTimer != nil }
 
-    var onSyncComplete: EventSyncCompleteClosure? = nil
+    private let onSyncComplete: EventSyncCompleteClosure?
 
-    init(config: LDConfig, service: DarklyServiceProvider) {
+    init(config: LDConfig, service: DarklyServiceProvider, onSyncComplete: EventSyncCompleteClosure?) {
         self.config = config
         self.service = service
+        self.onSyncComplete = onSyncComplete
     }
 
     func record(_ event: Event, completion: CompletionClosure? = nil) {
@@ -227,6 +227,7 @@ class EventReporter: EventReporting {
     }
     
     private func reportSyncComplete(_ result: EventSyncResult) {
+        //The eventReporter is created when the LDClient singleton is created, and kept for the app's lifetime. So while the use of self in the async block does setup a retain cycle, it's not going to cause a memory leak
         guard let onSyncComplete = onSyncComplete
         else {
             return
@@ -265,13 +266,26 @@ extension Array where Element == [String: Any] {
 
 #if DEBUG
     extension EventReporter {
-        convenience init(config: LDConfig, service: DarklyServiceProvider, events: [Event], lastEventResponseDate: Date?, flagRequestTracker: FlagRequestTracker? = nil) {
-            self.init(config: config, service: service)
+        convenience init(config: LDConfig,
+                         service: DarklyServiceProvider,
+                         events: [Event],
+                         lastEventResponseDate: Date?,
+                         flagRequestTracker: FlagRequestTracker? = nil,
+                         onSyncComplete: EventSyncCompleteClosure?) {
+            self.init(config: config, service: service, onSyncComplete: onSyncComplete)
             eventStore.append(contentsOf: events.dictionaryValues(config: config))
             self.lastEventResponseDate = lastEventResponseDate
             if let flagRequestTracker = flagRequestTracker {
                 self.flagRequestTracker = flagRequestTracker
             }
+        }
+
+        var testOnSyncComplete: EventSyncCompleteClosure? {
+            return onSyncComplete
+        }
+
+        func add(_ events: [Event]) {
+            eventStore.append(contentsOf: events.dictionaryValues(config: config))
         }
 
         func setFlagRequestTracker(_ tracker: FlagRequestTracker) {

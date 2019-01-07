@@ -60,7 +60,7 @@ final class LDClientSpec: QuickSpec {
         var flagsUnchangedCallCount = 0
         var flagsUnchangedObserver: FlagsUnchangedObserver? { return changeNotifierMock?.addFlagsUnchangedObserverReceivedObserver }
         var flagsUnchangedHandler: LDFlagsUnchangedHandler? { return flagsUnchangedObserver?.flagsUnchangedHandler }
-        var onSyncComplete: FlagSyncCompleteClosure? { return serviceFactoryMock.onSyncComplete }
+        var onSyncComplete: FlagSyncCompleteClosure? { return serviceFactoryMock.onFlagSyncComplete }
         // flag maintaining mock accessors
         var replaceStoreComplete: CompletionClosure? { return flagStoreMock.replaceStoreReceivedArguments?.completion }
         var updateStoreComplete: CompletionClosure? { return flagStoreMock.updateStoreReceivedArguments?.completion }
@@ -163,7 +163,6 @@ final class LDClientSpec: QuickSpec {
                     expect(testContext.subject.isOnline) == true
                     expect(testContext.subject.flagSynchronizer.isOnline) == testContext.subject.isOnline
                     expect(testContext.subject.eventReporter.isOnline) == testContext.subject.isOnline
-                    expect(testContext.eventReporterMock.onSyncCompleteSetCount) == 1
                 }
                 it("saves the config") {
                     expect(testContext.subject.config) == testContext.config
@@ -198,7 +197,6 @@ final class LDClientSpec: QuickSpec {
                     expect(testContext.subject.isOnline) == false
                     expect(testContext.subject.flagSynchronizer.isOnline) == testContext.subject.isOnline
                     expect(testContext.subject.eventReporter.isOnline) == testContext.subject.isOnline
-                    expect(testContext.eventReporterMock.onSyncCompleteSetCount) == 1
                 }
                 it("saves the config") {
                     expect(testContext.subject.config) == testContext.config
@@ -236,7 +234,6 @@ final class LDClientSpec: QuickSpec {
                             expect(testContext.subject.isOnline) == os.isBackgroundEnabled
                             expect(testContext.subject.flagSynchronizer.isOnline) == testContext.subject.isOnline
                             expect(testContext.subject.eventReporter.isOnline) == testContext.subject.isOnline
-                            expect(testContext.eventReporterMock.onSyncCompleteSetCount) == 1
                         }
                         it("saves the config") {
                             expect(testContext.subject.config) == testContext.config
@@ -277,7 +274,6 @@ final class LDClientSpec: QuickSpec {
                             expect(testContext.subject.isOnline) == false
                             expect(testContext.subject.flagSynchronizer.isOnline) == testContext.subject.isOnline
                             expect(testContext.subject.eventReporter.isOnline) == testContext.subject.isOnline
-                            expect(testContext.eventReporterMock.onSyncCompleteSetCount) == 1
                         }
                         it("saves the config") {
                             expect(testContext.subject.config) == testContext.config
@@ -325,7 +321,6 @@ final class LDClientSpec: QuickSpec {
                         expect(testContext.subject.isOnline) == true
                         expect(testContext.subject.flagSynchronizer.isOnline) == testContext.subject.isOnline
                         expect(testContext.subject.eventReporter.isOnline) == testContext.subject.isOnline
-                        expect(testContext.eventReporterMock.onSyncCompleteSetCount) == 2
                     }
                     it("saves the config") {
                         expect(testContext.subject.config) == newConfig
@@ -368,7 +363,6 @@ final class LDClientSpec: QuickSpec {
                         expect(testContext.subject.isOnline) == false
                         expect(testContext.subject.flagSynchronizer.isOnline) == testContext.subject.isOnline
                         expect(testContext.subject.eventReporter.isOnline) == testContext.subject.isOnline
-                        expect(testContext.eventReporterMock.onSyncCompleteSetCount) == 2
                     }
                     it("saves the config") {
                         expect(testContext.subject.config) == newConfig

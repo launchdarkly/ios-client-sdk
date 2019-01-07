@@ -52,7 +52,8 @@ final class EventReporterSpec: QuickSpec {
              eventStubResponseDate: Date? = nil,
              trackEvents: Bool? = true,
              debugEventsUntilDate: Date? = nil,
-             flagRequestTracker: FlagRequestTracker? = nil) {
+             flagRequestTracker: FlagRequestTracker? = nil,
+             onSyncComplete: EventSyncCompleteClosure? = nil) {
 
             config = LDConfig.stub
             config.eventCapacity = Event.Kind.allKinds.count
@@ -72,7 +73,12 @@ final class EventReporterSpec: QuickSpec {
 
             self.lastEventResponseDate = lastEventResponseDate?.adjustedForHttpUrlHeaderUse
             self.flagRequestTracker = flagRequestTracker
-            eventReporter = EventReporter(config: config, service: serviceMock, events: events, lastEventResponseDate: self.lastEventResponseDate, flagRequestTracker: flagRequestTracker)
+            eventReporter = EventReporter(config: config,
+                                          service: serviceMock,
+                                          events: events,
+                                          lastEventResponseDate: self.lastEventResponseDate,
+                                          flagRequestTracker: flagRequestTracker,
+                                          onSyncComplete: onSyncComplete)
 
             flagKey = UUID().uuidString
             if let trackEvents = trackEvents {
@@ -104,6 +110,14 @@ final class EventReporterSpec: QuickSpec {
             }
         }
 
+        mutating func addEvents(_ eventCount: Int) {
+            for _ in 0..<eventCount {
+                let event = Event.stub(Event.eventKind(for: events.count), with: user)
+                events.append(event)
+            }
+            eventReporter?.add(events)
+        }
+
         func flagCounter(for key: LDFlagKey) -> FlagCounter? {
             return reportersTracker?.flagCounters[key]
         }
@@ -131,13 +145,16 @@ final class EventReporterSpec: QuickSpec {
             beforeEach {
                 testContext = TestContext()
 
-                testContext.eventReporter = EventReporter(config: testContext.config, service: testContext.serviceMock)
+                testContext.eventReporter = EventReporter(config: testContext.config, service: testContext.serviceMock) { (_) in
+
+                }
             }
             it("starts offline without reporting events") {
                 expect(testContext.eventReporter.config) == testContext.config
                 expect(testContext.eventReporter.service) === testContext.serviceMock
                 expect(testContext.eventReporter.isOnline) == false
                 expect(testContext.eventReporter.isReportingActive) == false
+                expect(testContext.eventReporter.testOnSyncComplete).toNot(beNil())
                 expect(testContext.serviceMock.publishEventDictionariesCallCount) == 0
             }
         }
@@ -301,19 +318,15 @@ final class EventReporterSpec: QuickSpec {
                     context("with events and tracked requests") {
                         beforeEach {
                             //The EventReporter will try to report events if it's started online with events. By starting online without events, then adding them, we "beat the timer" by reporting them right away
-                            testContext = TestContext(eventStubResponseDate: eventStubResponseDate)
-                            testContext.eventReporter.isOnline = true
-                            waitUntil { done in
-                                testContext.recordEvents(Event.Kind.nonSummaryKinds.count, completion: done)
-                            }
-                            testContext.flagRequestTracker = FlagRequestTracker.stub()
-                            testContext.eventReporter.setFlagRequestTracker(testContext.flagRequestTracker!)
-
-                            waitUntil { done in
-                                testContext.eventReporter.onSyncComplete = { (result) in
+                            waitUntil { syncComplete in
+                                testContext = TestContext(eventStubResponseDate: eventStubResponseDate, onSyncComplete: { (result) in
                                     testContext.syncResult = result
-                                    done()
-                                }
+                                    syncComplete()
+                                })
+                                testContext.eventReporter.isOnline = true
+                                testContext.addEvents(Event.Kind.nonSummaryKinds.count)
+                                testContext.flagRequestTracker = FlagRequestTracker.stub()
+                                testContext.eventReporter.setFlagRequestTracker(testContext.flagRequestTracker!)
 
                                 testContext.eventReporter.reportEvents()
                             }
@@ -334,17 +347,13 @@ final class EventReporterSpec: QuickSpec {
                     context("with events only") {
                         beforeEach {
                             //The EventReporter will try to report events if it's started online with events. By starting online without events, then adding them, we "beat the timer" by reporting them right away
-                            testContext = TestContext(eventStubResponseDate: eventStubResponseDate)
-                            testContext.eventReporter.isOnline = true
-                            waitUntil { done in
-                                testContext.recordEvents(Event.Kind.nonSummaryKinds.count, completion: done)
-                            }
-
-                            waitUntil { done in
-                                testContext.eventReporter.onSyncComplete = { (result) in
+                            waitUntil { syncComplete in
+                                testContext = TestContext(eventStubResponseDate: eventStubResponseDate, onSyncComplete: { (result) in
                                     testContext.syncResult = result
-                                    done()
-                                }
+                                    syncComplete()
+                                })
+                                testContext.eventReporter.isOnline = true
+                                testContext.addEvents(Event.Kind.nonSummaryKinds.count)
 
                                 testContext.eventReporter.reportEvents()
                             }
@@ -365,16 +374,14 @@ final class EventReporterSpec: QuickSpec {
                     context("with tracked requests only") {
                         beforeEach {
                             //The EventReporter will try to report events if it's started online with events. By starting online without events, then adding them, we "beat the timer" by reporting them right away
-                            testContext = TestContext(eventStubResponseDate: eventStubResponseDate)
-                            testContext.eventReporter.isOnline = true
-                            testContext.flagRequestTracker = FlagRequestTracker.stub()
-                            testContext.eventReporter.setFlagRequestTracker(testContext.flagRequestTracker!)
-
-                            waitUntil { done in
-                                testContext.eventReporter.onSyncComplete = { (result) in
+                            waitUntil { syncComplete in
+                                testContext = TestContext(eventStubResponseDate: eventStubResponseDate, onSyncComplete: { (result) in
                                     testContext.syncResult = result
-                                    done()
-                                }
+                                    syncComplete()
+                                })
+                                testContext.eventReporter.isOnline = true
+                                testContext.flagRequestTracker = FlagRequestTracker.stub()
+                                testContext.eventReporter.setFlagRequestTracker(testContext.flagRequestTracker!)
 
                                 testContext.eventReporter.reportEvents()
                             }
@@ -393,14 +400,12 @@ final class EventReporterSpec: QuickSpec {
                     }
                     context("without events or tracked requests") {
                         beforeEach {
-                            testContext = TestContext(eventStubResponseDate: eventStubResponseDate)
-                            testContext.eventReporter.isOnline = true
-
-                            waitUntil { done in
-                                testContext.eventReporter.onSyncComplete = { (result) in
+                            waitUntil { syncComplete in
+                                testContext = TestContext(eventStubResponseDate: eventStubResponseDate, onSyncComplete: { (result) in
                                     testContext.syncResult = result
-                                    done()
-                                }
+                                    syncComplete()
+                                })
+                                testContext.eventReporter.isOnline = true
 
                                 testContext.eventReporter.reportEvents()
                             }
@@ -419,19 +424,15 @@ final class EventReporterSpec: QuickSpec {
                 context("failure") {
                     context("server error") {
                         beforeEach {
-                            testContext = TestContext(stubResponseSuccess: false, eventStubResponseDate: eventStubResponseDate)
-                            testContext.eventReporter.isOnline = true
-                            waitUntil { done in
-                                testContext.recordEvents(Event.Kind.nonSummaryKinds.count, completion: done)
-                            }
-                            testContext.flagRequestTracker = FlagRequestTracker.stub()
-                            testContext.eventReporter.setFlagRequestTracker(testContext.flagRequestTracker!)
-
-                            waitUntil { done in
-                                testContext.eventReporter.onSyncComplete = { (result) in
+                            waitUntil { syncComplete in
+                                testContext = TestContext(stubResponseSuccess: false, eventStubResponseDate: eventStubResponseDate, onSyncComplete: { (result) in
                                     testContext.syncResult = result
-                                    done()
-                                }
+                                    syncComplete()
+                                })
+                                testContext.eventReporter.isOnline = true
+                                testContext.addEvents(Event.Kind.nonSummaryKinds.count)
+                                testContext.flagRequestTracker = FlagRequestTracker.stub()
+                                testContext.eventReporter.setFlagRequestTracker(testContext.flagRequestTracker!)
 
                                 testContext.eventReporter.reportEvents()
                             }
@@ -451,19 +452,15 @@ final class EventReporterSpec: QuickSpec {
                     }
                     context("response only") {
                         beforeEach {
-                            testContext = TestContext(stubResponseSuccess: false, stubResponseOnly: true, eventStubResponseDate: eventStubResponseDate)
-                            testContext.eventReporter.isOnline = true
-                            waitUntil { done in
-                                testContext.recordEvents(Event.Kind.nonSummaryKinds.count, completion: done)
-                            }
-                            testContext.flagRequestTracker = FlagRequestTracker.stub()
-                            testContext.eventReporter.setFlagRequestTracker(testContext.flagRequestTracker!)
-
-                            waitUntil { done in
-                                testContext.eventReporter.onSyncComplete = { (result) in
+                            waitUntil { syncComplete in
+                                testContext = TestContext(stubResponseSuccess: false, stubResponseOnly: true, eventStubResponseDate: eventStubResponseDate, onSyncComplete: { (result) in
                                     testContext.syncResult = result
-                                    done()
-                                }
+                                    syncComplete()
+                                })
+                                testContext.eventReporter.isOnline = true
+                                testContext.addEvents(Event.Kind.nonSummaryKinds.count)
+                                testContext.flagRequestTracker = FlagRequestTracker.stub()
+                                testContext.eventReporter.setFlagRequestTracker(testContext.flagRequestTracker!)
 
                                 testContext.eventReporter.reportEvents()
                             }
@@ -483,19 +480,15 @@ final class EventReporterSpec: QuickSpec {
                     }
                     context("error only") {
                         beforeEach {
-                            testContext = TestContext(stubResponseSuccess: false, stubResponseErrorOnly: true, eventStubResponseDate: eventStubResponseDate)
-                            testContext.eventReporter.isOnline = true
-                            waitUntil { done in
-                                testContext.recordEvents(Event.Kind.nonSummaryKinds.count, completion: done)
-                            }
-                            testContext.flagRequestTracker = FlagRequestTracker.stub()
-                            testContext.eventReporter.setFlagRequestTracker(testContext.flagRequestTracker!)
-
-                            waitUntil { done in
-                                testContext.eventReporter.onSyncComplete = { (result) in
+                            waitUntil { syncComplete in
+                                testContext = TestContext(stubResponseSuccess: false, stubResponseErrorOnly: true, eventStubResponseDate: eventStubResponseDate, onSyncComplete: { (result) in
                                     testContext.syncResult = result
-                                    done()
-                                }
+                                    syncComplete()
+                                })
+                                testContext.eventReporter.isOnline = true
+                                testContext.addEvents(Event.Kind.nonSummaryKinds.count)
+                                testContext.flagRequestTracker = FlagRequestTracker.stub()
+                                testContext.eventReporter.setFlagRequestTracker(testContext.flagRequestTracker!)
 
                                 testContext.eventReporter.reportEvents()
                             }
@@ -517,18 +510,14 @@ final class EventReporterSpec: QuickSpec {
             }
             context("offline") {
                 beforeEach {
-                    testContext = TestContext(eventStubResponseDate: eventStubResponseDate)
-                    waitUntil { done in
-                        testContext.recordEvents(Event.Kind.nonSummaryKinds.count, completion: done)
-                    }
-                    testContext.flagRequestTracker = FlagRequestTracker.stub()
-                    testContext.eventReporter.setFlagRequestTracker(testContext.flagRequestTracker!)
-
-                    waitUntil { done in
-                        testContext.eventReporter.onSyncComplete = { (result) in
+                    waitUntil { syncComplete in
+                        testContext = TestContext(eventStubResponseDate: eventStubResponseDate, onSyncComplete: { (result) in
                             testContext.syncResult = result
-                            done()
-                        }
+                            syncComplete()
+                        })
+                        testContext.addEvents(Event.Kind.nonSummaryKinds.count)
+                        testContext.flagRequestTracker = FlagRequestTracker.stub()
+                        testContext.eventReporter.setFlagRequestTracker(testContext.flagRequestTracker!)
 
                         testContext.eventReporter.reportEvents()
                     }

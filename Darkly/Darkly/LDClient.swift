@@ -231,9 +231,6 @@ public class LDClient {
 
         self.config = config
         self.user = user ?? self.user
-        eventReporter.onSyncComplete = { (eventSyncResult) in
-            self.onEventSyncComplete(result: eventSyncResult)
-        }
 
         setOnline((wasStarted && wasOnline) || (!wasStarted && self.config.startOnline)) {
             Log.debug(self.typeName(and: #function, appending: ": ") + "started")
@@ -564,13 +561,13 @@ public class LDClient {
             default: break
             }
         case .error(let synchronizingError):
-            process(synchronizingError)
+            process(synchronizingError, logPrefix: typeName(and: #function, appending: ": "))
         }
     }
 
-    private func process(_ synchronizingError: SynchronizingError) {
+    private func process(_ synchronizingError: SynchronizingError, logPrefix: String) {
         if synchronizingError.isClientUnauthorized {
-            Log.debug(typeName(and: #function) + "LDClient is unauthorized")
+            Log.debug(logPrefix + "LDClient is unauthorized")
             setOnline(false)
         }
         executeCallback(onServerUnavailable)
@@ -634,7 +631,7 @@ public class LDClient {
         case .success:
             break   //EventReporter handles removing events from the event store, so there's nothing to do here. It's here in case we want to do something in the future.
         case .error(let synchronizingError):
-            process(synchronizingError)
+            process(synchronizingError, logPrefix: typeName(and: #function, appending: ": "))
         }
     }
 
@@ -718,7 +715,7 @@ public class LDClient {
                                                                     useReport: config.useReport,
                                                                     service: service,
                                                                     onSyncComplete: nil)
-        eventReporter = self.serviceFactory.makeEventReporter(config: config, service: service)
+        eventReporter = self.serviceFactory.makeEventReporter(config: config, service: service, onSyncComplete: nil)
 
         if let backgroundNotification = environmentReporter.backgroundNotification {
             NotificationCenter.default.addObserver(self, selector: #selector(didEnterBackground), name: backgroundNotification, object: nil)
@@ -726,6 +723,9 @@ public class LDClient {
         if let foregroundNotification = environmentReporter.foregroundNotification {
             NotificationCenter.default.addObserver(self, selector: #selector(willEnterForeground), name: foregroundNotification, object: nil)
         }
+
+        //Since eventReporter lasts the life of the singleton, we can configure it here...swift requires the client to be instantiated before we can pass the onSyncComplete method 
+        eventReporter = self.serviceFactory.makeEventReporter(config: config, service: service, onSyncComplete: onEventSyncComplete)
     }
 
     private convenience init(serviceFactory: ClientServiceCreating, config: LDConfig, user: LDUser, runMode: LDClientRunMode) {
@@ -742,7 +742,7 @@ public class LDClient {
                                                                     useReport: config.useReport,
                                                                     service: service,
                                                                     onSyncComplete: onFlagSyncComplete)
-        eventReporter = self.serviceFactory.makeEventReporter(config: config, service: service)
+        eventReporter = self.serviceFactory.makeEventReporter(config: config, service: service, onSyncComplete: onEventSyncComplete)
     }
 }
 
