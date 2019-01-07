@@ -924,11 +924,6 @@ final class FlagSynchronizerSpec: QuickSpec {
                 }
                 it("does not request flags and calls onSyncComplete with an isOffline error") {
                     expect({ testContext.synchronizerState(synchronizerOnline: false, streamingMode: .streaming, flagRequests: 0, streamCreated: false) }).to(match())
-                    expect(synchronizingError).toNot(beNil())
-                    guard let synchronizingError = synchronizingError
-                    else {
-                        return
-                    }
                     expect(synchronizingError) == SynchronizingError.isOffline
                 }
             }
