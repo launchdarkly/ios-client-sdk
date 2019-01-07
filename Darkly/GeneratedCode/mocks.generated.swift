@@ -175,6 +175,16 @@ final class EventReportingMock: EventReporting {
         }
     }
 
+    // MARK: onSyncComplete
+    var onSyncCompleteSetCount = 0
+    var setOnSyncCompleteCallback: (() -> Void)?
+    var onSyncComplete: EventSyncCompleteClosure? {
+        didSet {
+            onSyncCompleteSetCount += 1
+            setOnSyncCompleteCallback?()
+        }
+    }
+
     // MARK: record
     var recordCallCount = 0
     var recordCallback: (() -> Void)?

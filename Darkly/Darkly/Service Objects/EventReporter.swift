@@ -25,6 +25,7 @@ protocol EventReporting {
     var lastEventResponseDate: Date? { get }
     //sourcery: DefaultMockValue = DarklyServiceMock()
     var service: DarklyServiceProvider { get set }
+    var onSyncComplete: EventSyncCompleteClosure? { get set }
     func record(_ event: Event, completion: CompletionClosure?)
     //sourcery: NoMock
     func record(_ event: Event)
