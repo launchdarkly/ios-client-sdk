@@ -77,6 +77,7 @@ class EventReporter: EventReporting {
     }
 
     func record(_ event: Event, completion: CompletionClosure? = nil) {
+        //The eventReporter is created when the LDClient singleton is created, and kept for the app's lifetime. So while the use of self in the async block does setup a retain cycle, it's not going to cause a memory leak
         eventQueue.async {
             defer {
                 DispatchQueue.main.async {
@@ -191,13 +192,15 @@ class EventReporter: EventReporting {
         }
         Log.debug(typeName(and: #function, appending: " - ") + "starting")
 
+        //The eventReporter is created when the LDClient singleton is created, and kept for the app's lifetime. So while the use of self in the async block does setup a retain cycle, it's not going to cause a memory leak
         recordSummaryEvent {
             self.publish(self.eventStore)
         }
     }
 
     private func publish(_ eventDictionaries: [[String: Any]]) {
-        self.service.publishEventDictionaries(eventDictionaries) { serviceResponse in
+        //The eventReporter is created when the LDClient singleton is created, and kept for the app's lifetime. So while the use of self in the async block does setup a retain cycle, it's not going to cause a memory leak
+        service.publishEventDictionaries(eventDictionaries) { serviceResponse in
             self.processEventResponse(reportedEventDictionaries: eventDictionaries, serviceResponse: serviceResponse)
         }
     }
@@ -233,6 +236,7 @@ class EventReporter: EventReporting {
     }
     
     private func updateEventStore(reportedEventDictionaries: [[String: Any]]) {
+        //The eventReporter is created when the LDClient singleton is created, and kept for the app's lifetime. So while the use of self in the async block does setup a retain cycle, it's not going to cause a memory leak
         eventQueue.async {
             let remainingEventDictionaries = self.eventStore.filter { (eventDictionary) in
                 !reportedEventDictionaries.contains(eventDictionary)
@@ -248,7 +252,7 @@ extension EventReporter: TypeIdentifying { }
 
 extension Array where Element == [String: Any] {
     var eventKeys: String {
-        let keys = self.compactMap { (eventDictionary) in
+        let keys = compactMap { (eventDictionary) in
             eventDictionary.eventKey
         }
         guard !keys.isEmpty else {
