@@ -231,6 +231,9 @@ public class LDClient {
 
         self.config = config
         self.user = user ?? self.user
+        eventReporter.onSyncComplete = { (eventSyncResult) in
+            self.onEventSyncComplete(result: eventSyncResult)
+        }
 
         setOnline((wasStarted && wasOnline) || (!wasStarted && self.config.startOnline)) {
             Log.debug(self.typeName(and: #function, appending: ": ") + "started")
@@ -560,13 +563,17 @@ public class LDClient {
                 }
             default: break
             }
-        case let .error(synchronizingError):
-            if synchronizingError.isClientUnauthorized {
-                Log.debug(typeName(and: #function) + "LDClient is unauthorized")
-                setOnline(false)
-            }
-            executeCallback(onServerUnavailable)
+        case .error(let synchronizingError):
+            process(synchronizingError)
         }
+    }
+
+    private func process(_ synchronizingError: SynchronizingError) {
+        if synchronizingError.isClientUnauthorized {
+            Log.debug(typeName(and: #function) + "LDClient is unauthorized")
+            setOnline(false)
+        }
+        executeCallback(onServerUnavailable)
     }
 
     private func updateCacheAndReportChanges(flagCache: UserFlagCaching, changeNotifier: FlagChangeNotifying, user: LDUser, oldFlags: [LDFlagKey: FeatureFlag], oldFlagSource: LDFlagValueSource) {
@@ -619,6 +626,16 @@ public class LDClient {
     */
     public func reportEvents() {
         eventReporter.reportEvents()
+    }
+
+    private func onEventSyncComplete(result: EventSyncResult) {
+        Log.debug(typeName(and: #function) + "result: \(result)")
+        switch result {
+        case .success:
+            break   //EventReporter handles removing events from the event store, so there's nothing to do here. It's here in case we want to do something in the future.
+        case .error(let synchronizingError):
+            process(synchronizingError)
+        }
     }
 
     // MARK: - Foreground / Background notification
