@@ -65,6 +65,10 @@ struct ClientServiceMockFactory: ClientServiceCreating {
         return flagSynchronizingMock
     }
 
+    mutating func makeFlagSynchronizer(streamingMode: LDStreamingMode, pollingInterval: TimeInterval, useReport: Bool, service: DarklyServiceProvider) -> LDFlagSynchronizing {
+        return makeFlagSynchronizer(streamingMode: streamingMode, pollingInterval: pollingInterval, useReport: useReport, service: service, onSyncComplete: nil)
+    }
+
     func makeFlagChangeNotifier() -> FlagChangeNotifying {
         return FlagChangeNotifyingMock()
     }
@@ -80,6 +84,10 @@ struct ClientServiceMockFactory: ClientServiceCreating {
         let reporterMock = EventReportingMock()
         reporterMock.config = config
         return reporterMock
+    }
+
+    mutating func makeEventReporter(config: LDConfig, service: DarklyServiceProvider) -> EventReporting {
+        return makeEventReporter(config: config, service: service, onSyncComplete: nil)
     }
 
     var makeStreamingProviderCallCount = 0

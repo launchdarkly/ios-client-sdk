@@ -713,9 +713,8 @@ public class LDClient {
         flagSynchronizer = self.serviceFactory.makeFlagSynchronizer(streamingMode: .polling,
                                                                     pollingInterval: config.flagPollingInterval,
                                                                     useReport: config.useReport,
-                                                                    service: service,
-                                                                    onSyncComplete: nil)
-        eventReporter = self.serviceFactory.makeEventReporter(config: config, service: service, onSyncComplete: nil)
+                                                                    service: service)
+        eventReporter = self.serviceFactory.makeEventReporter(config: config, service: service)
 
         if let backgroundNotification = environmentReporter.backgroundNotification {
             NotificationCenter.default.addObserver(self, selector: #selector(didEnterBackground), name: backgroundNotification, object: nil)
