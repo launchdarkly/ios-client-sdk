@@ -181,14 +181,14 @@ class EventReporter: EventReporting {
     }
 
     func reportEvents() {
-        guard isOnline && (!eventStore.isEmpty || flagRequestTracker.hasLoggedRequests) else {
-            if !isOnline {
-                Log.debug(typeName(and: #function) + "aborted. EventReporter is offline")
-                reportSyncComplete(.error(.isOffline))
-            } else if eventStore.isEmpty && !flagRequestTracker.hasLoggedRequests {
-                Log.debug(typeName(and: #function) + "aborted. Event store is empty")
-                reportSyncComplete(.success([[String: Any]]()))
-            }
+        guard isOnline else {
+            Log.debug(typeName(and: #function) + "aborted. EventReporter is offline")
+            reportSyncComplete(.error(.isOffline))
+            return
+        }
+        guard !eventStore.isEmpty || flagRequestTracker.hasLoggedRequests else {
+            Log.debug(typeName(and: #function) + "aborted. Event store is empty")
+            reportSyncComplete(.success([[String: Any]]()))
             return
         }
         Log.debug(typeName(and: #function, appending: " - ") + "starting")
