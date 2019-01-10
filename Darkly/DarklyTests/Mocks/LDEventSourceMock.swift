@@ -41,7 +41,9 @@ extension DarklyStreamingProviderMock {
     }
 
     func sendEvent(_ event: DarklyEventSource.LDEvent?) {
-        guard let messageHandler = onMessageEventReceivedHandler else { return }
+        guard let messageHandler = onMessageEventReceivedHandler else {
+            return
+        }
         messageHandler(event)
     }
 }
