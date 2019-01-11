@@ -704,7 +704,7 @@ public class LDClient {
         LDUserWrapper.configureKeyedArchiversToHandleVersion2_3_0AndOlderUserCacheFormat()
         self.serviceFactory.makeCacheConverter().convertUserCacheToFlagCache()
         flagChangeNotifier = self.serviceFactory.makeFlagChangeNotifier()
-        throttler = self.serviceFactory.makeThrottler(maxDelay: Throttler.Constants.defaultDelay)
+        throttler = self.serviceFactory.makeThrottler(maxDelay: Throttler.Constants.defaultDelay, environmentReporter: environmentReporter)
 
         //dummy objects replaced by client at start
         config = LDConfig(mobileKey: "", environmentReporter: environmentReporter)
