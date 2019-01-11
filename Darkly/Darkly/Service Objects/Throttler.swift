@@ -25,8 +25,15 @@ final class Throttler: Throttling {
         fileprivate static let runQueueName = "LaunchDarkly.Throttler.runQueue"
     }
 
+    class func maxAttempts(forDelay delayInterval: TimeInterval) -> Int {
+        return Int(ceil(log2(delayInterval)))
+    }
+
+    let throttlingEnabled: Bool
     private (set) var maxDelay: TimeInterval
-    var maxAttempts: Int { return Int(ceil(log2(maxDelay))) }
+    var maxAttempts: Int {
+        return Throttler.maxAttempts(forDelay: maxDelay)
+    }
     private (set) var runAttempts: Int
     private (set) var delay: TimeInterval
     private (set) var timerStart: Date?
@@ -35,10 +42,11 @@ final class Throttler: Throttling {
     private var runPostTimer: RunClosure?
     private var runQueue = DispatchQueue(label: Constants.runQueueName, qos: .userInitiated)
 
-    init(maxDelay: TimeInterval = Constants.defaultDelay) {
+    init(maxDelay: TimeInterval = Constants.defaultDelay, environmentReporter: EnvironmentReporting = EnvironmentReporter()) {
         self.maxDelay = maxDelay
         runAttempts = 0
         delay = 0.0
+        throttlingEnabled = environmentReporter.shouldThrottleOnlineCalls
     }
 
     func runThrottled(_ runClosure: @escaping RunClosure) {
@@ -54,15 +62,15 @@ final class Throttler: Throttling {
             self?.delayTimer = nil
         }
 
-        if runAttempts == 0 {
-            Log.debug(typeName(and: #function) + "Executing run closure on first attempt.")
+        if runAttempts == 0 || !throttlingEnabled {
+            Log.debug(typeName(and: #function) + "Executing run closure unthrottled. Run Attempts: \(runAttempts). throttlingEnabled: \(throttlingEnabled).")
             runClosure()
         } else {
             self.runClosure = runClosure
         }
 
-        runAttempts += 1
-        delay =  delayForAttempt(runAttempts)
+        runAttempts += throttlingEnabled ? 1 : 0
+        delay = delayForAttempt(runAttempts)
         delayTimer = delayTimer(for: delay)
         if runAttempts > 1 {
             Log.debug(typeName(and: #function) + "Throttling run closure. Run attempts: \(runAttempts), Delay: \(delay)")
@@ -84,13 +92,24 @@ final class Throttler: Throttling {
     }
 
     private func delayForAttempt(_ attempt: Int) -> TimeInterval {
-        guard Double(attempt) <= log2(maxDelay) else { return maxDelay }
+        guard throttlingEnabled
+        else {
+            return 0.0
+        }
+        guard Double(attempt) <= log2(maxDelay)
+        else {
+            return maxDelay
+        }
         let exponentialBackoff = min(maxDelay, pow(2, attempt).timeInterval)        //pow(x, y) returns x^y
         let jitterBackoff = Double(arc4random_uniform(UInt32(exponentialBackoff)))  // arc4random_uniform(upperBound) returns an Int uniformly randomized between 0..<upperBound
         return exponentialBackoff/2 + jitterBackoff/2                               //half of each should yield [2^(runAttempts-1), 2^runAttempts)
     }
 
-    private func delayTimer(for delay: TimeInterval) -> Timer {
+    private func delayTimer(for delay: TimeInterval) -> Timer? {
+        guard throttlingEnabled
+        else {
+            return nil
+        }
         timerStart = timerStart ?? Date()
         let fire = timerStart!.addingTimeInterval(delay)
         let timer = Timer(fireAt: fire, interval: 0.0, target: self, selector: #selector(timerFired), userInfo: nil, repeats: false)
