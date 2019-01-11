@@ -143,6 +143,7 @@
 		8372668C20D4439600BD1088 /* DateFormatter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8372668B20D4439600BD1088 /* DateFormatter.swift */; };
 		8372668D20D4439600BD1088 /* DateFormatter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8372668B20D4439600BD1088 /* DateFormatter.swift */; };
 		8372668E20D4439600BD1088 /* DateFormatter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8372668B20D4439600BD1088 /* DateFormatter.swift */; };
+		837E38C921E804ED0008A50C /* EnvironmentReporterSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = 837E38C821E804ED0008A50C /* EnvironmentReporterSpec.swift */; };
 		837EF3742059C237009D628A /* Log.swift in Sources */ = {isa = PBXBuildFile; fileRef = 837EF3732059C237009D628A /* Log.swift */; };
 		838838411F5EFADF0023D11B /* LDFlagValue.swift in Sources */ = {isa = PBXBuildFile; fileRef = 838838401F5EFADF0023D11B /* LDFlagValue.swift */; };
 		838838431F5EFB9C0023D11B /* LDFlagBaseTypeConvertible.swift in Sources */ = {isa = PBXBuildFile; fileRef = 838838421F5EFB9C0023D11B /* LDFlagBaseTypeConvertible.swift */; };
@@ -317,6 +318,7 @@
 		835F43D020D0309A0070DE51 /* EventTrackingContext.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EventTrackingContext.swift; sourceTree = "<group>"; };
 		835F43D420D031740070DE51 /* EventTrackingContextSpec.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EventTrackingContextSpec.swift; sourceTree = "<group>"; };
 		8372668B20D4439600BD1088 /* DateFormatter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DateFormatter.swift; sourceTree = "<group>"; };
+		837E38C821E804ED0008A50C /* EnvironmentReporterSpec.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EnvironmentReporterSpec.swift; sourceTree = "<group>"; };
 		837EF3732059C237009D628A /* Log.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Log.swift; sourceTree = "<group>"; };
 		838838401F5EFADF0023D11B /* LDFlagValue.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = LDFlagValue.swift; sourceTree = "<group>"; };
 		838838421F5EFB9C0023D11B /* LDFlagBaseTypeConvertible.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = LDFlagBaseTypeConvertible.swift; sourceTree = "<group>"; };
@@ -481,6 +483,7 @@
 				83B8C2441FE360CF0082B8A9 /* FlagChangeNotifierSpec.swift */,
 				83383A5020460DD30024D975 /* SynchronizingErrorSpec.swift */,
 				831AAE2F20A9E75D00B46DBA /* ThrottlerSpec.swift */,
+				837E38C821E804ED0008A50C /* EnvironmentReporterSpec.swift */,
 			);
 			path = "Service Objects";
 			sourceTree = "<group>";
@@ -1467,6 +1470,7 @@
 				83DDBF001FA2589900E428B6 /* FlagStoreSpec.swift in Sources */,
 				83396BC91F7C3711000E256E /* DarklyServiceSpec.swift in Sources */,
 				83EF67931F9945E800403126 /* EventSpec.swift in Sources */,
+				837E38C921E804ED0008A50C /* EnvironmentReporterSpec.swift in Sources */,
 				8342DAE51FB10C4800564D1F /* UserFlagCacheSpec.swift in Sources */,
 				831AAE3020A9E75D00B46DBA /* ThrottlerSpec.swift in Sources */,
 				838F96741FB9F024009CFC45 /* LDClientSpec.swift in Sources */,

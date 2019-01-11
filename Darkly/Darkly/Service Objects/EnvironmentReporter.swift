@@ -52,6 +52,8 @@ protocol EnvironmentReporting {
     var vendorUUID: String? { get }
     //sourcery: DefaultMockValue = Constants.sdkVersion
     var sdkVersion: String { get }
+    //sourcery: DefaultMockValue = true
+    var shouldThrottleOnlineCalls: Bool { get }
 }
 
 struct EnvironmentReporter: EnvironmentReporting {
@@ -94,6 +96,17 @@ struct EnvironmentReporter: EnvironmentReporting {
     var foregroundNotification: Notification.Name? { return UIApplication.willEnterForegroundNotification }
     var vendorUUID: String? { return UIDevice.current.identifierForVendor?.uuidString }
     #endif
+
+    #if INTEGRATION_HARNESS
+    var shouldThrottleOnlineCalls: Bool {
+        return !isDebugBuild
+    }
+    #else
+    var shouldThrottleOnlineCalls: Bool {
+        return true
+    }
+    #endif
+
     var sdkVersion: String { return Bundle(for: LDClient.self).infoDictionary?["CFBundleShortVersionString"] as? String ?? "3.x" }
 }
 

@@ -130,6 +130,16 @@ final class EnvironmentReportingMock: EnvironmentReporting {
             setSdkVersionCallback?()
         }
     }
+
+    // MARK: shouldThrottleOnlineCalls
+    var shouldThrottleOnlineCallsSetCount = 0
+    var setShouldThrottleOnlineCallsCallback: (() -> Void)?
+    var shouldThrottleOnlineCalls: Bool = true {
+        didSet {
+            shouldThrottleOnlineCallsSetCount += 1
+            setShouldThrottleOnlineCallsCallback?()
+        }
+    }
 }
 
 // MARK: - EventReportingMock
