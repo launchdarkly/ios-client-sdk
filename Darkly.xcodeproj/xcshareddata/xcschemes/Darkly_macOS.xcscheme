@@ -15,7 +15,7 @@
             <BuildableReference
                BuildableIdentifier = "primary"
                BlueprintIdentifier = "69A87E8E1E74458900B88B23"
-               BuildableName = "Darkly.framework"
+               BuildableName = "Darkly-macOS.framework"
                BlueprintName = "Darkly_macOS"
                ReferencedContainer = "container:Darkly.xcodeproj">
             </BuildableReference>
@@ -46,7 +46,7 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "69A87E8E1E74458900B88B23"
-            BuildableName = "Darkly.framework"
+            BuildableName = "Darkly-macOS.framework"
             BlueprintName = "Darkly_macOS"
             ReferencedContainer = "container:Darkly.xcodeproj">
          </BuildableReference>
@@ -64,7 +64,7 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "69A87E8E1E74458900B88B23"
-            BuildableName = "Darkly.framework"
+            BuildableName = "Darkly-macOS.framework"
             BlueprintName = "Darkly_macOS"
             ReferencedContainer = "container:Darkly.xcodeproj">
          </BuildableReference>

@@ -459,11 +459,11 @@
 		690347221E689B9F00E45133 /* DarklyXCTestCase.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = DarklyXCTestCase.m; sourceTree = "<group>"; };
 		690347241E689B9F00E45133 /* NSArray+Testable.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "NSArray+Testable.h"; sourceTree = "<group>"; };
 		690347251E689B9F00E45133 /* NSArray+Testable.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "NSArray+Testable.m"; sourceTree = "<group>"; };
-		69A87E8F1E74458900B88B23 /* Darkly.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Darkly.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		69A87E8F1E74458900B88B23 /* Darkly-macOS.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = "Darkly-macOS.framework"; sourceTree = BUILT_PRODUCTS_DIR; };
 		69BAF40B1E9AAB4800747613 /* Darkly.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = Darkly.h; path = Framework/Darkly.h; sourceTree = SOURCE_ROOT; };
 		69BAF40C1E9AAB4800747613 /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; name = Info.plist; path = Framework/Info.plist; sourceTree = SOURCE_ROOT; };
-		69BD7E101E6C79550056D70F /* Darkly.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Darkly.framework; sourceTree = BUILT_PRODUCTS_DIR; };
-		69F3F67B1E6BF7C000079A09 /* Darkly.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Darkly.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		69BD7E101E6C79550056D70F /* Darkly-watchOS.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = "Darkly-watchOS.framework"; sourceTree = BUILT_PRODUCTS_DIR; };
+		69F3F67B1E6BF7C000079A09 /* Darkly-tvOS.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = "Darkly-tvOS.framework"; sourceTree = BUILT_PRODUCTS_DIR; };
 		7B984B958E0E9D092D750D8F /* Pods-Darkly_osx.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Darkly_osx.release.xcconfig"; path = "Pods/Target Support Files/Pods-Darkly_osx/Pods-Darkly_osx.release.xcconfig"; sourceTree = "<group>"; };
 		7E899F5F16EA49C1554A53E3 /* Pods_Darkly_iOS.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_Darkly_iOS.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		8279600B49F8EFAD34D0DF1D /* Pods_Darkly_tvOS.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_Darkly_tvOS.framework; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -707,9 +707,9 @@
 			children = (
 				690346BE1E6872EA00E45133 /* Darkly.framework */,
 				690346C71E6872EA00E45133 /* DarklyTests.xctest */,
-				69F3F67B1E6BF7C000079A09 /* Darkly.framework */,
-				69BD7E101E6C79550056D70F /* Darkly.framework */,
-				69A87E8F1E74458900B88B23 /* Darkly.framework */,
+				69F3F67B1E6BF7C000079A09 /* Darkly-tvOS.framework */,
+				69BD7E101E6C79550056D70F /* Darkly-watchOS.framework */,
+				69A87E8F1E74458900B88B23 /* Darkly-macOS.framework */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -1320,7 +1320,7 @@
 			);
 			name = Darkly_macOS;
 			productName = Darkly_macOS;
-			productReference = 69A87E8F1E74458900B88B23 /* Darkly.framework */;
+			productReference = 69A87E8F1E74458900B88B23 /* Darkly-macOS.framework */;
 			productType = "com.apple.product-type.framework";
 		};
 		69BD7E0F1E6C79550056D70F /* Darkly_watchOS */ = {
@@ -1339,7 +1339,7 @@
 			);
 			name = Darkly_watchOS;
 			productName = Darkly_watchOS;
-			productReference = 69BD7E101E6C79550056D70F /* Darkly.framework */;
+			productReference = 69BD7E101E6C79550056D70F /* Darkly-watchOS.framework */;
 			productType = "com.apple.product-type.framework";
 		};
 		69F3F67A1E6BF7C000079A09 /* Darkly_tvOS */ = {
@@ -1358,7 +1358,7 @@
 			);
 			name = Darkly_tvOS;
 			productName = "Darkly tvOS";
-			productReference = 69F3F67B1E6BF7C000079A09 /* Darkly.framework */;
+			productReference = 69F3F67B1E6BF7C000079A09 /* Darkly-tvOS.framework */;
 			productType = "com.apple.product-type.framework";
 		};
 /* End PBXNativeTarget section */
@@ -2074,7 +2074,7 @@
 				MACOSX_DEPLOYMENT_TARGET = 10.10;
 				MODULEMAP_FILE = "$(PROJECT_DIR)/Framework/module.modulemap";
 				PRODUCT_BUNDLE_IDENTIFIER = "com.launchdarkly.Darkly-macOS";
-				PRODUCT_NAME = Darkly;
+				PRODUCT_NAME = "Darkly-macOS";
 				SDKROOT = macosx;
 				SKIP_INSTALL = YES;
 			};
@@ -2099,7 +2099,7 @@
 				MACOSX_DEPLOYMENT_TARGET = 10.10;
 				MODULEMAP_FILE = "$(PROJECT_DIR)/Framework/module.modulemap";
 				PRODUCT_BUNDLE_IDENTIFIER = "com.launchdarkly.Darkly-macOS";
-				PRODUCT_NAME = Darkly;
+				PRODUCT_NAME = "Darkly-macOS";
 				SDKROOT = macosx;
 				SKIP_INSTALL = YES;
 			};
@@ -2122,7 +2122,7 @@
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";
 				MODULEMAP_FILE = "$(PROJECT_DIR)/Framework/module.modulemap";
 				PRODUCT_BUNDLE_IDENTIFIER = "com.launchdarkly.Darkly-watchOS";
-				PRODUCT_NAME = Darkly;
+				PRODUCT_NAME = "Darkly-watchOS";
 				SDKROOT = watchos;
 				SKIP_INSTALL = YES;
 				TARGETED_DEVICE_FAMILY = 4;
@@ -2147,7 +2147,7 @@
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";
 				MODULEMAP_FILE = "$(PROJECT_DIR)/Framework/module.modulemap";
 				PRODUCT_BUNDLE_IDENTIFIER = "com.launchdarkly.Darkly-watchOS";
-				PRODUCT_NAME = Darkly;
+				PRODUCT_NAME = "Darkly-watchOS";
 				SDKROOT = watchos;
 				SKIP_INSTALL = YES;
 				TARGETED_DEVICE_FAMILY = 4;
@@ -2172,7 +2172,7 @@
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";
 				MODULEMAP_FILE = "$(PROJECT_DIR)/Framework/module.modulemap";
 				PRODUCT_BUNDLE_IDENTIFIER = "com.launchdarkly.Darkly-tvOS";
-				PRODUCT_NAME = Darkly;
+				PRODUCT_NAME = "Darkly-tvOS";
 				SDKROOT = appletvos;
 				SKIP_INSTALL = YES;
 				TARGETED_DEVICE_FAMILY = 3;
@@ -2197,7 +2197,7 @@
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";
 				MODULEMAP_FILE = "$(PROJECT_DIR)/Framework/module.modulemap";
 				PRODUCT_BUNDLE_IDENTIFIER = "com.launchdarkly.Darkly-tvOS";
-				PRODUCT_NAME = Darkly;
+				PRODUCT_NAME = "Darkly-tvOS";
 				SDKROOT = appletvos;
 				SKIP_INSTALL = YES;
 				TARGETED_DEVICE_FAMILY = 3;

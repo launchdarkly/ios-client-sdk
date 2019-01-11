@@ -15,7 +15,7 @@
             <BuildableReference
                BuildableIdentifier = "primary"
                BlueprintIdentifier = "69BD7E0F1E6C79550056D70F"
-               BuildableName = "Darkly.framework"
+               BuildableName = "Darkly-watchOS.framework"
                BlueprintName = "Darkly_watchOS"
                ReferencedContainer = "container:Darkly.xcodeproj">
             </BuildableReference>
@@ -46,7 +46,7 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "69BD7E0F1E6C79550056D70F"
-            BuildableName = "Darkly.framework"
+            BuildableName = "Darkly-watchOS.framework"
             BlueprintName = "Darkly_watchOS"
             ReferencedContainer = "container:Darkly.xcodeproj">
          </BuildableReference>
@@ -64,7 +64,7 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "69BD7E0F1E6C79550056D70F"
-            BuildableName = "Darkly.framework"
+            BuildableName = "Darkly-watchOS.framework"
             BlueprintName = "Darkly_watchOS"
             ReferencedContainer = "container:Darkly.xcodeproj">
          </BuildableReference>
