@@ -84,11 +84,13 @@ final class ThrottlerSpec: QuickSpec {
     //Normally we don't test private methods, but this one had a bug and so this test was added...figured might as well keep it
     func delaySpec() {
         describe("delayForAttempt") {
+            var environmentReporterMock: EnvironmentReportingMock!
             var throttler: Throttler!
             var lastDelay: TimeInterval!
             context("throttling enabled") {
                 beforeEach {
-                    throttler = Throttler(maxDelay: Constants.maxDelay)
+                    environmentReporterMock = EnvironmentReportingMock()
+                    throttler = Throttler(maxDelay: Constants.maxDelay, environmentReporter: environmentReporterMock)
                 }
                 it("increases delay with each attempt") {
                     for _ in 0..<100 {
@@ -134,17 +136,19 @@ final class ThrottlerSpec: QuickSpec {
     }
 
     func firstRunSpec() {
-        var subject: Throttler!
+        var environmentReporterMock: EnvironmentReportingMock!
+        var throttler: Throttler!
         var runCalled: Date!
         var runExecuted: Date?
         context("one runThrottled call") {
             beforeEach {
-                subject = Throttler(maxDelay: Constants.maxDelay)
+                environmentReporterMock = EnvironmentReportingMock()
+                throttler = Throttler(maxDelay: Constants.maxDelay, environmentReporter: environmentReporterMock)
 
                 runCalled = Date()
                 waitUntil(timeout: 2.0) { done in
-                    subject.timerFiredCallback = done
-                    subject.runThrottled({
+                    throttler.timerFiredCallback = done
+                    throttler.runThrottled({
                         runExecuted = Date()
                     })
                 }
@@ -155,33 +159,35 @@ final class ThrottlerSpec: QuickSpec {
                 expect(runExecuted.timeIntervalSince(runCalled)) <= 0.1
             }
             it("resets itself for the next runThrottled call") {
-                expect(subject.runAttempts) == 0
-                expect(subject.delay) == 0.0
-                expect(subject.timerStart).to(beNil())
-                expect(subject.delayTimer).to(beNil())
+                expect(throttler.runAttempts) == 0
+                expect(throttler.delay) == 0.0
+                expect(throttler.timerStart).to(beNil())
+                expect(throttler.delayTimer).to(beNil())
             }
         }
     }
 
     func secondRunSpec() {
-        var subject: Throttler!
+        var environmentReporterMock: EnvironmentReportingMock!
+        var throttler: Throttler!
         var runCalled: Date!
         var runExecuted: [Date]!
         context("two runThrottled calls") {
             beforeEach {
                 runExecuted = [Date]()
-                subject = Throttler(maxDelay: Constants.maxDelay)
+                environmentReporterMock = EnvironmentReportingMock()
+                throttler = Throttler(maxDelay: Constants.maxDelay, environmentReporter: environmentReporterMock)
 
                 runCalled = Date()
                 waitUntil(timeout: 4.0) { done in
-                    subject.timerFiredCallback = {
+                    throttler.timerFiredCallback = {
                         if runExecuted.count >= 2 {
                             done()
                         }
                     }
 
                     for _ in 0..<2 {
-                        subject.runThrottled({
+                        throttler.runThrottled({
                             runExecuted.append(Date())
                             if runExecuted.count >= 2 {
                                 done()
@@ -204,16 +210,17 @@ final class ThrottlerSpec: QuickSpec {
                 expect(secondRunExecuted.timeIntervalSince(runCalled)) < 4.0
 
                 //resets itself for the next runThrottled call
-                expect(subject.runAttempts) == 0
-                expect(subject.delay) == 0.0
-                expect(subject.timerStart).to(beNil())
-                expect(subject.delayTimer).to(beNil())
+                expect(throttler.runAttempts) == 0
+                expect(throttler.delay) == 0.0
+                expect(throttler.timerStart).to(beNil())
+                expect(throttler.delayTimer).to(beNil())
             }
         }
     }
 
     func multipleRunSpec() {
-        var subject: Throttler!
+        var environmentReporterMock: EnvironmentReportingMock!
+        var throttler: Throttler!
         var runCount = 0
         var delayIntervals = [TimeInterval]()
         var timerStarted: Date!
@@ -221,47 +228,50 @@ final class ThrottlerSpec: QuickSpec {
 
         context("multiple runThrottled calls") {
             beforeEach {
-                subject = Throttler(maxDelay: Constants.maxDelay)
+                environmentReporterMock = EnvironmentReportingMock()
+                throttler = Throttler(maxDelay: Constants.maxDelay, environmentReporter: environmentReporterMock)
 
-                for runAttempt in 0..<subject.maxAttempts {
-                    subject.runThrottled {
+                for runAttempt in 0..<throttler.maxAttempts {
+                    throttler.runThrottled {
                         runCount += 1
                     }
-                    delayIntervals.append(subject.delay)
+                    delayIntervals.append(throttler.delay)
                     if runAttempt == 0 {
-                        timerStarted = subject.timerStart
+                        timerStarted = throttler.timerStart
                     }
-                    timersExisted.append(subject.delayTimer != nil)
+                    timersExisted.append(throttler.delayTimer != nil)
                 }
             }
             it("increases the delay") {
-                for runAttempt in 1..<subject.maxAttempts {
+                for runAttempt in 1..<throttler.maxAttempts {
                     expect(delayIntervals[runAttempt - 1]) < delayIntervals[runAttempt]
                 }
             }
             it("doesn't change the timer start date") {
-                expect(subject.timerStart).toNot(beNil())
-                guard subject.timerStart != nil else { return }
-                expect(subject.timerStart!) == timerStarted
+                expect(throttler.timerStart).toNot(beNil())
+                guard throttler.timerStart != nil else { return }
+                expect(throttler.timerStart!) == timerStarted
             }
             it("creates a timer") {
-                expect(subject.delayTimer).toNot(beNil())
+                expect(throttler.delayTimer).toNot(beNil())
             }
         }
     }
 
     func maxDelaySpec() {
-        var subject: Throttler!
+        var environmentReporterMock: EnvironmentReportingMock!
+        var throttler: Throttler!
         context("max delay is reached") {
             beforeEach {
-                subject = Throttler(maxDelay: Constants.maxDelay)
+                environmentReporterMock = EnvironmentReportingMock()
+                throttler = Throttler(maxDelay: Constants.maxDelay, environmentReporter: environmentReporterMock)
 
-                for _ in 0..<subject.maxAttempts + 1 {
-                    subject.runThrottled { }
+                for _ in 0..<throttler.maxAttempts + 1 {
+                    throttler.runThrottled { }
                 }
             }
             it("limits the delay to the maximum") {
-                expect(subject.delay) == subject.maxDelay
+                expect(throttler.delay) == throttler.maxDelay
             }
         }
     }
@@ -294,26 +304,28 @@ final class ThrottlerSpec: QuickSpec {
     }
 
     func cancelSpec() {
-        var subject: Throttler!
+        var environmentReporterMock: EnvironmentReportingMock!
+        var throttler: Throttler!
         var runCount = 0
         context("cancel") {
             beforeEach {
-                subject = Throttler(maxDelay: Constants.maxDelay)
+                environmentReporterMock = EnvironmentReportingMock()
+                throttler = Throttler(maxDelay: Constants.maxDelay, environmentReporter: environmentReporterMock)
 
-                for _ in 0..<subject.maxAttempts {
-                    subject.runThrottled {
+                for _ in 0..<throttler.maxAttempts {
+                    throttler.runThrottled {
                         runCount += 1
                     }
                 }
 
-                subject.cancelThrottledRun()
+                throttler.cancelThrottledRun()
             }
             it("cancels the scheduled run") {
-                expect(subject.runAttempts) == 0
-                expect(subject.delay) == 0.0
-                expect(subject.timerStart).to(beNil())
-                expect(subject.delayTimer).to(beNil())
-                expect(subject.runClosureForTesting).to(beNil())
+                expect(throttler.runAttempts) == 0
+                expect(throttler.delay) == 0.0
+                expect(throttler.timerStart).to(beNil())
+                expect(throttler.delayTimer).to(beNil())
+                expect(throttler.runClosureForTesting).to(beNil())
                 expect(runCount) == 1   //First run should proceed directly
             }
         }
