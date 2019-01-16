@@ -70,10 +70,14 @@ static NSInteger const HTTPStatusCodeUnauthorized = 401;
     return [self initWithURL:URL httpHeaders:headers timeoutInterval:ES_DEFAULT_TIMEOUT connectMethod:connectMethod connectBody:connectBody];
 }
 
-- (instancetype)initWithURL:(NSURL *)URL httpHeaders:(NSDictionary<NSString*, NSString *>*) headers timeoutInterval:(NSTimeInterval)timeoutInterval connectMethod:(NSString*)connectMethod connectBody:(NSData*)connectBody
-{
-    self = [super init];
-    if (!self) { return nil; }
+- (instancetype)initWithURL:(NSURL *)URL
+                httpHeaders:(NSDictionary<NSString*, NSString *>*)headers
+            timeoutInterval:(NSTimeInterval)timeoutInterval
+              connectMethod:(NSString*)connectMethod
+                connectBody:(NSData*)connectBody {
+    if (!(self = [super init])) {
+        return nil;
+    }
 
     self.listeners = [NSMutableDictionary dictionary];
     self.eventURL = URL;

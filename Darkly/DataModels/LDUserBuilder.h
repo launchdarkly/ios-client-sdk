@@ -5,6 +5,8 @@
 @import Foundation;
 @class LDUserModel;
 
+NS_ASSUME_NONNULL_BEGIN
+
 @interface LDUserBuilder : NSObject
 
 /**
@@ -78,7 +80,7 @@
  * @param inputKey    key for the data
  * @param value    value for the data
  */
-- (void)customString:(nonnull NSString *)inputKey value:(nonnull NSString *)value;
+- (void)customString:(NSString *)inputKey value:(NSString *)value;
 
 /**
  * Provide custom BOOL data for the dictionary associated with
@@ -87,7 +89,7 @@
  * @param inputKey    key for the data
  * @param value    value for the data
  */
-- (void)customBool:(nonnull NSString *)inputKey value:(BOOL)value;
+- (void)customBool:(NSString *)inputKey value:(BOOL)value;
 
 /**
  * Provide custom NSNumber data for the dictionary associated with
@@ -96,7 +98,7 @@
  * @param inputKey    key for the data
  * @param value    value for the data
  */
-- (void)customNumber:(nonnull NSString *)inputKey value:(nonnull NSNumber *)value;
+- (void)customNumber:(NSString *)inputKey value:(NSNumber *)value;
 
 /**
  * Provide custom NSArray data for the dictionary associated with
@@ -105,12 +107,12 @@
  * @param inputKey    key for the data
  * @param value    value for the data
  */
-- (void)customArray:(nonnull NSString *)inputKey value:(nonnull NSArray *)value;
+- (void)customArray:(NSString *)inputKey value:(NSArray *)value;
 
--(nonnull LDUserModel *)build;
+-(LDUserModel *)build;
 
-+ (nonnull LDUserBuilder *)currentBuilder:(nonnull LDUserModel *)iUser;
-+ (nonnull LDUserBuilder *)retrieveCurrentBuilder:(nonnull LDUserModel *)iUser __deprecated_msg("Use `currentBuilder:` instead");
++ (LDUserBuilder *)currentBuilder:(LDUserModel *)iUser;
++ (LDUserBuilder *)retrieveCurrentBuilder:(LDUserModel *)iUser __deprecated_msg("Use `currentBuilder:` instead");
 
 /**
  * Provide a key to the user builder to identify the user. If this key
@@ -119,28 +121,28 @@
  * @param key    the key for the user
  * @return the user builder
  */
-- (nonnull LDUserBuilder *)withKey:(nonnull NSString *)key __deprecated_msg("Pass value directly to `key` instead");
+- (LDUserBuilder *)withKey:(NSString *)key __deprecated_msg("Pass value directly to `key` instead");
 /**
  * Provide the ip address of the user. (Optional)
  *
  * @param ip    the ip of the user
  * @return the user builder
  */
-- (nonnull LDUserBuilder *)withIp:(nullable NSString *)ip __deprecated_msg("Pass value directly to `ip` instead");
+- (LDUserBuilder *)withIp:(nullable NSString *)ip __deprecated_msg("Pass value directly to `ip` instead");
 /**
  * Provide the country of the user. (Optional)
  *
  * @param country    the country of the user
  * @return the user builder
  */
-- (nonnull LDUserBuilder *)withCountry:(nullable NSString *)country __deprecated_msg("Pass value directly to `country` instead");
+- (LDUserBuilder *)withCountry:(nullable NSString *)country __deprecated_msg("Pass value directly to `country` instead");
 /**
  * Provide the name of the user. (Optional)
  *
  * @param name    the name of the user
  * @return the user builder
  */
-- (nonnull LDUserBuilder *)withName:(nullable NSString *)name __deprecated_msg("Pass value directly to `name` instead");
+- (LDUserBuilder *)withName:(nullable NSString *)name __deprecated_msg("Pass value directly to `name` instead");
 
 /**
  * Provide the first name of the user. (Optional)
@@ -148,28 +150,28 @@
  * @param firstName    the firstName of the user
  * @return the user builder
  */
-- (nonnull LDUserBuilder *)withFirstName:(nullable NSString *)firstName __deprecated_msg("Pass value directly to `firstName` instead");
+- (LDUserBuilder *)withFirstName:(nullable NSString *)firstName __deprecated_msg("Pass value directly to `firstName` instead");
 /**
  * Provide the last name of the user. (Optional)
  *
  * @param lastName    the lastName of the user
  * @return the user builder
  */
-- (nonnull LDUserBuilder *)withLastName:(nullable NSString *)lastName __deprecated_msg("Pass value directly to `lastName` instead");
+- (LDUserBuilder *)withLastName:(nullable NSString *)lastName __deprecated_msg("Pass value directly to `lastName` instead");
 /**
  * Provide the email address of the user. (Optional)
  *
  * @param email    the email of the user
  * @return the user builder
  */
-- (nonnull LDUserBuilder *)withEmail:(nullable NSString *)email __deprecated_msg("Pass value directly to `email` instead");
+- (LDUserBuilder *)withEmail:(nullable NSString *)email __deprecated_msg("Pass value directly to `email` instead");
 /**
  * Provide the avatar of the user. (Optional)
  *
  * @param avatar    the avatar of the user
  * @return the user builder
  */
-- (nonnull LDUserBuilder *)withAvatar:(nullable NSString *)avatar __deprecated_msg("Pass value directly to `avatar` instead");
+- (LDUserBuilder *)withAvatar:(nullable NSString *)avatar __deprecated_msg("Pass value directly to `avatar` instead");
 /**
  * Provide custom String data for the dictionary associated with
  * the user. (Optional)
@@ -178,7 +180,7 @@
  * @param value    value for the data
  * @return the user builder
  */
-- (nonnull LDUserBuilder *)withCustomString:(nullable NSString *)inputKey value:(nullable NSString *)value __deprecated_msg("Use `customString:value` instead");
+- (LDUserBuilder *)withCustomString:(nullable NSString *)inputKey value:(nullable NSString *)value __deprecated_msg("Use `customString:value` instead");
 /**
  * Provide custom BOOL data for the dictionary associated with
  * the user. (Optional)
@@ -187,7 +189,7 @@
  * @param value    value for the data
  * @return the user builder
  */
-- (nonnull LDUserBuilder *)withCustomBool:(nullable NSString *)inputKey value:(BOOL)value __deprecated_msg("Use `customBool:value` instead");
+- (LDUserBuilder *)withCustomBool:(nullable NSString *)inputKey value:(BOOL)value __deprecated_msg("Use `customBool:value` instead");
 /**
  * Provide custom NSNumber data for the dictionary associated with
  * the user. (Optional)
@@ -196,7 +198,7 @@
  * @param value    value for the data
  * @return the user builder
  */
-- (nonnull LDUserBuilder *)withCustomNumber:(nullable NSString *)inputKey value:(nullable NSNumber *)value __deprecated_msg("Use `customNumber:value` instead");
+- (LDUserBuilder *)withCustomNumber:(nullable NSString *)inputKey value:(nullable NSNumber *)value __deprecated_msg("Use `customNumber:value` instead");
 /**
  * Provide custom NSArray data for the dictionary associated with
  * the user. (Optional)
@@ -205,7 +207,7 @@
  * @param value    value for the data
  * @return the user builder
  */
-- (nonnull LDUserBuilder *)withCustomArray:(nullable NSString *)inputKey value:(nullable NSArray *)value __deprecated_msg("Use `customArray:value` instead");
+- (LDUserBuilder *)withCustomArray:(nullable NSString *)inputKey value:(nullable NSArray *)value __deprecated_msg("Use `customArray:value` instead");
 /**
  * Provide custom NSMutableDictionary data for the dictionary associated with
  * the user. (Optional)
@@ -213,7 +215,7 @@
  * @param inputDictionary Dictionary to associated with the user
  * @return the user builder
  */
-- (nonnull LDUserBuilder *)withCustomDictionary:(nullable NSMutableDictionary *)inputDictionary __deprecated_msg("Pass value directly to `customDictionary` instead");
+- (LDUserBuilder *)withCustomDictionary:(nullable NSMutableDictionary *)inputDictionary __deprecated_msg("Pass value directly to `customDictionary` instead");
 /**
  * Provide whether the user is anonymous. Note, if a key is
  * auto-generated for the user, then anonymous is set to YES. Default
@@ -222,6 +224,8 @@
  * @param anonymous    whether user is anonymous
  * @return the user builder
  */
-- (nonnull LDUserBuilder *)withAnonymous:(BOOL)anonymous __deprecated_msg("Pass value directly to `isAnonymous` instead");
+- (LDUserBuilder *)withAnonymous:(BOOL)anonymous __deprecated_msg("Pass value directly to `isAnonymous` instead");
+
+NS_ASSUME_NONNULL_END
 
 @end

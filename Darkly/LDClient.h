@@ -8,6 +8,8 @@
 
 @class LDUserModel;
 
+NS_ASSUME_NONNULL_BEGIN
+
 @protocol ClientDelegate <NSObject>
 @optional
 -(void)userDidUpdate;
@@ -22,8 +24,8 @@
 @property (nonatomic, strong, readonly) LDUserModel *ldUser;
 @property (nonatomic, strong, readonly) LDConfig *ldConfig;
 @property (nonatomic, copy, readonly) NSString *environmentName;
-@property (nonatomic, weak) id<ClientDelegate> delegate;
-@property (nonatomic, strong, readonly) NSDictionary<NSString*, id> *allFlags;
+@property (nonatomic, weak, nullable) id<ClientDelegate> delegate;
+@property (nonatomic, strong, readonly, nullable) NSDictionary<NSString*, id> *allFlags;
 
 + (LDClient *)sharedInstance;
 
@@ -60,7 +62,7 @@
  * @param goOnline    Desired online/offline mode for the client
  * @param completion    Completion block called when setOnline completes
  */
-- (void)setOnline:(BOOL)goOnline completion:(void(^)(void))completion;
+- (void)setOnline:(BOOL)goOnline completion:(nullable void(^)(void))completion;
 
 /**
  * Sync all events to the server. Events are synced to the server on a
@@ -100,7 +102,7 @@
  * @param fallback   Fallback value for feature flag
  * @return the feature flag value
  */
-- (NSNumber*)numberVariation:(NSString *)featureKey fallback:(NSNumber*)fallback;
+- (nullable NSNumber*)numberVariation:(NSString *)featureKey fallback:(nullable NSNumber*)fallback;
 
 /**
  * Retrieve a feature flag value. If the configuration for this feature
@@ -122,7 +124,7 @@
  * @param fallback   Fallback value for feature flag
  * @return the feature flag value
  */
-- (NSString*)stringVariation:(NSString *)featureKey fallback:(NSString*)fallback;
+- (nullable NSString*)stringVariation:(NSString *)featureKey fallback:(nullable NSString*)fallback;
 
 /**
  * Retrieve a feature flag value. If the configuration for this feature
@@ -133,7 +135,7 @@
  * @param fallback   Fallback value for feature flag
  * @return the feature flag value
  */
-- (NSArray*)arrayVariation:(NSString *)featureKey fallback:(NSArray*)fallback;
+- (nullable NSArray*)arrayVariation:(NSString *)featureKey fallback:(nullable NSArray*)fallback;
 
 /**
  * Retrieve a feature flag value. If the configuration for this feature
@@ -144,7 +146,7 @@
  * @param fallback   Fallback value for feature flag
  * @return the feature flag value
  */
-- (NSDictionary*)dictionaryVariation:(NSString *)featureKey fallback:(NSDictionary*)fallback;
+- (nullable NSDictionary*)dictionaryVariation:(NSString *)featureKey fallback:(nullable NSDictionary*)fallback;
 
 #pragma mark - Event
 
@@ -155,7 +157,7 @@
  * @param dataDictionary  Data to be attached to custom event
  * @return whether the event was successfully recorded
  */
-- (BOOL)track:(NSString *)eventName data:(NSDictionary *)dataDictionary;
+- (BOOL)track:(NSString *)eventName data:(nullable NSDictionary *)dataDictionary;
 
 #pragma mark - User
 
@@ -188,6 +190,8 @@
  *
  * @return  the LDClientInterface object associated with name in secondaryMobileKeys
  */
-+(id<LDClientInterface>)environmentForMobileKeyNamed:(NSString*)name;
++(nullable id<LDClientInterface>)environmentForMobileKeyNamed:(NSString*)name;
+
+NS_ASSUME_NONNULL_END
 
 @end
