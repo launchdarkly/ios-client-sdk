@@ -37,7 +37,7 @@ final class ThrottlerSpec: QuickSpec {
                     expect(throttler.runAttempts) == 0
                     expect(throttler.delay) == 0.0
                     expect(throttler.timerStart).to(beNil())
-                    expect(throttler.delayTimer).to(beNil())
+                    expect(throttler.delayClosure).to(beNil())
                 }
             }
             context("without a maxDelay parameter") {
@@ -51,7 +51,7 @@ final class ThrottlerSpec: QuickSpec {
                     expect(throttler.runAttempts) == 0
                     expect(throttler.delay) == 0.0
                     expect(throttler.timerStart).to(beNil())
-                    expect(throttler.delayTimer).to(beNil())
+                    expect(throttler.delayClosure).to(beNil())
                 }
             }
             context("with an environment reporter") {
@@ -162,7 +162,7 @@ final class ThrottlerSpec: QuickSpec {
                 expect(throttler.runAttempts) == 0
                 expect(throttler.delay) == 0.0
                 expect(throttler.timerStart).to(beNil())
-                expect(throttler.delayTimer).to(beNil())
+                expect(throttler.delayClosure).to(beNil())
             }
         }
     }
@@ -213,7 +213,7 @@ final class ThrottlerSpec: QuickSpec {
                 expect(throttler.runAttempts) == 0
                 expect(throttler.delay) == 0.0
                 expect(throttler.timerStart).to(beNil())
-                expect(throttler.delayTimer).to(beNil())
+                expect(throttler.delayClosure).to(beNil())
             }
         }
     }
@@ -223,7 +223,7 @@ final class ThrottlerSpec: QuickSpec {
         var throttler: Throttler!
         var runCount = 0
         var delayIntervals = [TimeInterval]()
-        var timerStarted: Date!
+        var timerStarted: DispatchTime!
         var timersExisted = [Bool]()
 
         context("multiple runThrottled calls") {
@@ -239,7 +239,7 @@ final class ThrottlerSpec: QuickSpec {
                     if runAttempt == 0 {
                         timerStarted = throttler.timerStart
                     }
-                    timersExisted.append(throttler.delayTimer != nil)
+                    timersExisted.append(throttler.delayClosure != nil)
                 }
             }
             it("increases the delay") {
@@ -253,7 +253,7 @@ final class ThrottlerSpec: QuickSpec {
                 expect(throttler.timerStart!) == timerStarted
             }
             it("creates a timer") {
-                expect(throttler.delayTimer).toNot(beNil())
+                expect(throttler.delayClosure).toNot(beNil())
             }
         }
     }
@@ -297,7 +297,7 @@ final class ThrottlerSpec: QuickSpec {
                     expect(throttler.runAttempts) == 0
                     expect(throttler.delay) == 0.0
                     expect(throttler.timerStart).to(beNil())
-                    expect(throttler.delayTimer).to(beNil())
+                    expect(throttler.delayClosure).to(beNil())
                 }
             }
         }
@@ -324,7 +324,7 @@ final class ThrottlerSpec: QuickSpec {
                 expect(throttler.runAttempts) == 0
                 expect(throttler.delay) == 0.0
                 expect(throttler.timerStart).to(beNil())
-                expect(throttler.delayTimer).to(beNil())
+                expect(throttler.delayClosure).to(beNil())
                 expect(throttler.runClosureForTesting).to(beNil())
                 expect(runCount) == 1   //First run should proceed directly
             }
