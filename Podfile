@@ -3,29 +3,25 @@ workspace 'Darkly.xcworkspace'
 target 'Darkly_iOS' do
     platform :ios, '8.0'
     pod 'SwiftLint', '0.29.0'
-#    pod 'DarklyEventSource', '3.2.8'
-    pod 'DarklyEventSource', :git => 'https://github.com/launchdarkly/ios-eventsource.git', :branch => 'addNullabilitySpecifiers'
+    pod 'DarklyEventSource', '4.0.0'
 end
 
 target 'Darkly_watchOS' do
     platform :watchos, '2.0'
     pod 'SwiftLint', '0.29.0'
-#    pod 'DarklyEventSource', '3.2.8'
-    pod 'DarklyEventSource', :git => 'https://github.com/launchdarkly/ios-eventsource.git', :branch => 'addNullabilitySpecifiers'
+    pod 'DarklyEventSource', '4.0.0'
 end
 
 target 'Darkly_macOS' do
     platform :osx, '10.10'
     pod 'SwiftLint', '0.29.0'
-#    pod 'DarklyEventSource', '3.2.8'
-    pod 'DarklyEventSource', :git => 'https://github.com/launchdarkly/ios-eventsource.git', :branch => 'addNullabilitySpecifiers'
+    pod 'DarklyEventSource', '4.0.0'
 end
 
 target 'Darkly_tvOS' do
     platform :tvos, '9.0'
     pod 'SwiftLint', '0.29.0'
-#    pod 'DarklyEventSource', '3.2.8'
-    pod 'DarklyEventSource', :git => 'https://github.com/launchdarkly/ios-eventsource.git', :branch => 'addNullabilitySpecifiers'
+    pod 'DarklyEventSource', '4.0.0'
 end
 
 target 'DarklyTests' do

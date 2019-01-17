@@ -19,7 +19,9 @@ NSString * const LDEventSourceEventTerminator = @"\n\n";
 
 @implementation NSString(LDEventSource)
 -(NSArray<NSString*>*)lines {
-    if (self.length == 0) { return nil; }
+    if (self.length == 0) {
+        return nil;
+    }
     return [self componentsSeparatedByCharactersInSet:[NSCharacterSet newlineCharacterSet]];
 }
 

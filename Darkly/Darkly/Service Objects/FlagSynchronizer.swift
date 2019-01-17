@@ -126,7 +126,6 @@ class FlagSynchronizer: LDFlagSynchronizing {
         }
         Log.debug(typeName(and: #function))
         eventSource = service.createEventSource(useReport: useReport)  //The LDConfig.connectionTimeout should NOT be set here. Heartbeat is sent every 3m. ES default timeout is 5m. This is an async operation.
-        //LDEventSource waits 1s before attempting the connection, providing time to set handlers.
         //LDEventSource reacts to connection errors by closing the connection and establishing a new one after an exponentially increasing wait. That makes it self healing.
         //While we could keep the LDEventSource state, there's not much we can do to help it connect. If it can't connect, it's likely we won't be able to poll the server either...so it seems best to just do nothing and let it heal itself.
         eventSource?.onMessageEvent { [weak self] (event) in
@@ -135,6 +134,7 @@ class FlagSynchronizer: LDFlagSynchronizing {
         eventSource?.onErrorEvent { [weak self] (event) in
             self?.process(event)
         }
+        eventSource?.open()
     }
     
     private func stopEventSource() {

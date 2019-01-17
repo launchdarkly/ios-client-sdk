@@ -29,6 +29,14 @@ final class DarklyStreamingProviderMock: DarklyStreamingProvider {
         onErrorEventCallback?()
     }
 
+    // MARK: open
+    var openCallCount = 0
+    var openCallback: (() -> Void)?
+    func open() {
+        openCallCount += 1
+        openCallback?()
+    }
+
     // MARK: close
     var closeCallCount = 0
     var closeCallback: (() -> Void)?

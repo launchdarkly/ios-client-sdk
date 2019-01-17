@@ -24,6 +24,7 @@ protocol DarklyServiceProvider: class {
 protocol DarklyStreamingProvider: class {
     func onMessageEvent(_ handler: LDEventSourceEventHandler?)
     func onErrorEvent(_ handler: LDEventSourceEventHandler?)
+    func open()
     func close()
 }
 
