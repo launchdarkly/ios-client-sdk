@@ -12,7 +12,9 @@
 
 @implementation LDEventStringAccumulator
 -(void)accumulateEventStringWithString:(NSString*)eventString {
-    if (eventString.length == 0) { return; }
+    if (eventString.length == 0) {
+        return;
+    }
     if (self.eventString == nil) {
         self.eventString = eventString;
         return;
@@ -21,7 +23,9 @@
 }
 
 -(BOOL)isReadyToParseEvent {
-    if (self.eventString.length == 0) { return NO; }
+    if (self.eventString.length == 0) {
+        return NO;
+    }
     return self.eventString.hasEventTerminator;
 }
 

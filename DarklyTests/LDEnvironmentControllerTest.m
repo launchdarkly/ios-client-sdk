@@ -152,6 +152,7 @@ NSString *const kBoolFlagKey = @"isABawler";
     [[[self.eventSourceMock expect] andReturn:self.eventSourceMock] eventSourceWithURL:[OCMArg any] httpHeaders:[OCMArg any] connectMethod:[OCMArg any] connectBody:[OCMArg any]];
     [[self.eventSourceMock expect] onMessage:[OCMArg any]];
     [[self.eventSourceMock expect] onError:[OCMArg any]];
+    [[self.eventSourceMock expect] open];
     [[self.requestManagerMock reject] performFeatureFlagRequest:[OCMArg any] isOnline:[OCMArg any]];
 
     self.environmentController.online = YES;
@@ -376,6 +377,7 @@ NSString *const kBoolFlagKey = @"isABawler";
         streamConnectData = obj;
         return YES;
     }]];
+    [[self.eventSourceMock expect] open];
 
     self.environmentController.online = YES;
 
@@ -407,6 +409,7 @@ NSString *const kBoolFlagKey = @"isABawler";
         streamConnectData = obj;
         return YES;
     }]];
+    [[self.eventSourceMock expect] open];
 
     self.environmentController.online = YES;
 
@@ -417,15 +420,21 @@ NSString *const kBoolFlagKey = @"isABawler";
 }
 
 - (void)testEventSourceNotCreated_offline {
+    [[self.eventSourceMock reject] open];
+
     [self.environmentController startPolling];
 
     XCTAssertNil(self.environmentController.eventSource);
+    [self.eventSourceMock verify];
 }
 
 - (void)testConfigureEventSource_offline {
+    [[self.eventSourceMock reject] open];
+
     [self.environmentController configureEventSource];
 
     XCTAssertNil(self.environmentController.eventSource);
+    [self.eventSourceMock verify];
 }
 
 - (void)testEventSourceRemainsConstantAcrossStartPollingCalls {
@@ -435,6 +444,7 @@ NSString *const kBoolFlagKey = @"isABawler";
     [[[self.eventSourceMock expect] andReturn:self.eventSourceMock] eventSourceWithURL:[OCMArg any] httpHeaders:[OCMArg any] connectMethod:[OCMArg any] connectBody:[OCMArg any]];
     [[self.eventSourceMock expect] onMessage:[OCMArg any]];
     [[self.eventSourceMock expect] onError:[OCMArg any]];
+    [[self.eventSourceMock expect] open];
     self.environmentController.online = YES;
 
     [[self.eventSourceMock reject] eventSourceWithURL:[OCMArg any] httpHeaders:[OCMArg any] connectMethod:[OCMArg any] connectBody:[OCMArg any]];
@@ -478,7 +488,9 @@ NSString *const kBoolFlagKey = @"isABawler";
     [[self.requestManagerMock expect] performFeatureFlagRequest:self.user isOnline:YES];
 
     XCTAssertNotNil(messageHandler);
-    if (!messageHandler) { return; }
+    if (!messageHandler) {
+        return;
+    }
     messageHandler([LDEvent stubPingEvent]);
 
     [self.requestManagerMock verify];

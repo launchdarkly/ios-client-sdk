@@ -30,6 +30,6 @@ Pod::Spec.new do |s|
   s.requires_arc = true
 
   s.subspec 'Core' do |eventSource|
-    eventSource.dependency 'DarklyEventSource', '~>3.2.7'
+    eventSource.dependency 'DarklyEventSource', '~>4.0.0'
   end
 end

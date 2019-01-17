@@ -130,6 +130,9 @@ typedef void (^LDEventSourceEventHandler)(LDEvent * _Nullable event);
 /// @param handler The handler for the Message event.
 - (void)addEventListener:(NSString *)eventName handler:(LDEventSourceEventHandler)handler;
 
+/// Opens the connection to the EventSource.
+- (void)open;
+
 /// Closes the connection to the EventSource.
 - (void)close;
 
