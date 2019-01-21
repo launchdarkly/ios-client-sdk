@@ -36,8 +36,8 @@ final class Throttler: Throttling {
     }
     private (set) var runAttempts: Int
     private (set) var delay: TimeInterval
-    private (set) var timerStart: DispatchTime?
-    private (set) var delayClosure: DispatchWorkItem?       //cancellable wrapper for the run closure
+    private (set) var timerStart: Date?
+    private (set) var delayTimer: TimeResponding?
     private var runClosure: RunClosure?
     private var runPostTimer: RunClosure?
     private var runQueue = DispatchQueue(label: Constants.runQueueName, qos: .userInitiated)
@@ -58,8 +58,8 @@ final class Throttler: Throttling {
         }
 
         runQueue.sync { [weak self] in
-            self?.delayClosure?.cancel()
-            self?.delayClosure = nil
+            self?.delayTimer?.cancel()
+            self?.delayTimer = nil
         }
 
         if runAttempts == 0 || !throttlingEnabled {
@@ -71,15 +71,14 @@ final class Throttler: Throttling {
 
         runAttempts += throttlingEnabled ? 1 : 0
         delay = delayForAttempt(runAttempts)
-        delayClosure = delayClosure(for: delay)
+        delayTimer = delayTimer(for: delay)
         if runAttempts > 1 {
             Log.debug(typeName(and: #function) + "Throttling run closure. Run attempts: \(runAttempts), Delay: \(delay)")
         }
     }
 
     func cancelThrottledRun() {
-        delayClosure?.cancel()
-        delayClosure = nil
+        delayTimer?.cancel()
         runClosure = nil
         resetTimingData()
         runPostTimer = nil
@@ -88,7 +87,7 @@ final class Throttler: Throttling {
     private func resetTimingData() {
         runAttempts = 0
         delay = 0.0
-        delayClosure = nil
+        delayTimer = nil
         timerStart = nil
     }
 
@@ -106,18 +105,14 @@ final class Throttler: Throttling {
         return exponentialBackoff/2 + jitterBackoff/2                               //half of each should yield [2^(runAttempts-1), 2^runAttempts)
     }
 
-    private func delayClosure(for delay: TimeInterval) -> DispatchWorkItem? {
+    private func delayTimer(for delay: TimeInterval) -> TimeResponding? {
         guard throttlingEnabled
         else {
             return nil
         }
-        timerStart = timerStart ?? DispatchTime.now()
-        let fireTime = timerStart! + delay
-        let dispatchBlock = DispatchWorkItem { [weak self] in
-            self?.timerFired()
-        }
-        runQueue.asyncAfter(deadline: fireTime, execute: dispatchBlock)
-        return dispatchBlock
+        timerStart = timerStart ?? Date()
+        let timer = LDTimer(withTimeInterval: delay, repeats: false, fireQueue: runQueue, execute: timerFired)
+        return timer
     }
 
     @objc func timerFired() {

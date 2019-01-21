@@ -63,9 +63,13 @@ extension DarklyEventSource.LDEvent {
 }
 
 class FlagSynchronizer: LDFlagSynchronizing {
+    struct Constants {
+        fileprivate static let queueName = "LaunchDarkly.FlagSynchronizer.syncQueue"
+    }
+
     let service: DarklyServiceProvider
     private var eventSource: DarklyStreamingProvider?
-    private weak var flagRequestTimer: Timer?
+    private var flagRequestTimer: TimeResponding?
     var onSyncComplete: FlagSyncCompleteClosure?
 
     let streamingMode: LDStreamingMode
@@ -80,9 +84,14 @@ class FlagSynchronizer: LDFlagSynchronizing {
     let pollingInterval: TimeInterval
     let useReport: Bool
     
-    var streamingActive: Bool { return eventSource != nil }
-    var pollingActive: Bool { return flagRequestTimer != nil }
-    
+    var streamingActive: Bool {
+        return eventSource != nil
+    }
+    var pollingActive: Bool {
+        return flagRequestTimer != nil
+    }
+    private var syncQueue = DispatchQueue(label: Constants.queueName, qos: .utility)
+
     init(streamingMode: LDStreamingMode, pollingInterval: TimeInterval, useReport: Bool, service: DarklyServiceProvider, onSyncComplete: FlagSyncCompleteClosure?) {
         Log.debug(FlagSynchronizer.typeName(and: #function) + "streamingMode: \(streamingMode), " + "pollingInterval: \(pollingInterval), " + "useReport: \(useReport)")
         self.streamingMode = streamingMode
@@ -216,14 +225,7 @@ class FlagSynchronizer: LDFlagSynchronizing {
                 return
         }
         Log.debug(typeName(and: #function))
-        if #available(iOS 10.0, watchOS 3.0, macOS 10.12, tvOS 10.0, *) {
-            flagRequestTimer = Timer.scheduledTimer(withTimeInterval: pollingInterval, repeats: true) { [weak self] (_) in self?.processTimer() }
-        } else {
-            // the run loop retains the timer, so flagRequestTimer is weak to avoid a retain cycle. Setting the timer to a strong reference is important so that the timer doesn't get nil'd before it's added to the run loop.
-            let timer = Timer(timeInterval: pollingInterval, target: self, selector: #selector(processTimer), userInfo: nil, repeats: true)
-            flagRequestTimer = timer
-            RunLoop.current.add(timer, forMode: RunLoop.Mode.default)
-        }
+        flagRequestTimer = LDTimer(withTimeInterval: pollingInterval, repeats: true, fireQueue: syncQueue, execute: processTimer)
         makeFlagRequest()
     }
     
@@ -233,7 +235,7 @@ class FlagSynchronizer: LDFlagSynchronizing {
             return
         }
         Log.debug(typeName(and: #function))
-        flagRequestTimer?.invalidate()
+        flagRequestTimer?.cancel()
         flagRequestTimer = nil
     }
     
