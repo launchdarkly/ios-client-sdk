@@ -374,7 +374,7 @@ final class EventSpec: QuickSpec {
 
                     expect(eventDictionary.eventKind) == .identify
                     expect(eventDictionary.eventKey) == user.key
-                    expect(eventDictionary.eventCreationDate?.isWithin(0.001, of: event.creationDate!)).to(beTrue())
+                    expect(eventDictionary.eventCreationDate?.isWithin(0.1, of: event.creationDate!)).to(beTrue())
                     expect(eventDictionary.eventValue).to(beNil())
                     expect(eventDictionary.eventDefaultValue).to(beNil())
                     expect(eventDictionary.eventVariation).to(beNil())

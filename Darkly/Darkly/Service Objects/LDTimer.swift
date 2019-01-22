@@ -62,3 +62,11 @@ final class LDTimer: TimeResponding {
         isCancelled = true
     }
 }
+
+#if DEBUG
+extension LDTimer {
+    var testFireQueue: DispatchQueue {
+        return fireQueue
+    }
+}
+#endif
