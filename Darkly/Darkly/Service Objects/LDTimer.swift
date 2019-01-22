@@ -2,7 +2,7 @@
 //  LDTimer.swift
 //  Darkly
 //
-//  Created by Mark Pokorny on 1/17/19.
+//  Created by Mark Pokorny on 1/17/19. +JMJ
 //  Copyright © 2019 Catamorphic Co. All rights reserved.
 //
 
@@ -37,7 +37,7 @@ final class LDTimer: TimeResponding {
         self.fireQueue = fireQueue
         self.execute = execute
 
-        // the run loop retains the timer, so flagRequestTimer is weak to avoid a retain cycle. Setting the timer to a strong reference is important so that the timer doesn't get nil'd before it's added to the run loop.
+        // the run loop retains the timer, so the property is weak to avoid a retain cycle. Setting the timer to a strong reference is important so that the timer doesn't get nil'd before it's added to the run loop.
         let timer = Timer(timeInterval: timeInterval, target: self, selector: #selector(timerFired), userInfo: nil, repeats: repeats)
         self.timer = timer
         RunLoop.main.add(timer, forMode: RunLoop.Mode.default)

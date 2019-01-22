@@ -912,7 +912,7 @@ final class FlagSynchronizerSpec: QuickSpec {
 
                     waitUntil(timeout: 2) { done in
                         //In polling mode, the flagSynchronizer makes a flag request when set online right away. To verify the timer this test waits the polling interval (1s) for a second flag request
-                        testContext?.flagSynchronizer.onSyncComplete = { (result) in
+                        testContext.flagSynchronizer.onSyncComplete = { (result) in
                             if case .success(let flags, let streamEvent) = result {
                                 (newFlags, streamingEvent) = (flags.flagCollection, streamEvent)
                             }
@@ -924,13 +924,13 @@ final class FlagSynchronizerSpec: QuickSpec {
                     testContext.flagSynchronizer.isOnline = false
                 }
                 it("makes a flag request and calls onSyncComplete with no streaming event") {
-                    expect(testContext?.serviceMock.getFeatureFlagsCallCount) == 2
+                    expect(testContext.serviceMock.getFeatureFlagsCallCount) == 2
                     expect(newFlags == DarklyServiceMock.Constants.stubFeatureFlags(includeNullValue: false, includeVariations: true, includeVersions: true)).to(beTrue())
                     expect(streamingEvent).to(beNil())
                 }
                 //This particular test causes a retain cycle between the FlagSynchronizer and something else. By removing onSyncComplete, the closure is no longer called after the test is complete.
                 afterEach {
-                    testContext?.flagSynchronizer.onSyncComplete = nil
+                    testContext.flagSynchronizer.onSyncComplete = nil
                 }
             }
         }
