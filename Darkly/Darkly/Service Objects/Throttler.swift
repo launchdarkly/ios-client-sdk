@@ -116,19 +116,18 @@ final class Throttler: Throttling {
     }
 
     @objc func timerFired() {
-        runQueue.async { [weak self] in
-            if self?.runAttempts ?? 0 > 1 {
-                DispatchQueue.main.async {
-                    self?.runClosure?()
-                    self?.runClosure = nil
-                }
+        //This code should be run in the runQueue. When the LDTimer fires, it will run this code in the runQueue.
+        if runAttempts > 1 {
+            DispatchQueue.main.async {
+                self.runClosure?()
+                self.runClosure = nil
             }
-
-            self?.resetTimingData()
-
-            self?.runPostTimer?()
-            self?.runPostTimer = nil
         }
+
+        resetTimingData()
+
+        runPostTimer?()
+        runPostTimer = nil
     }
 }
 
