@@ -166,6 +166,9 @@ final class EventReporterSpec: QuickSpec {
             beforeEach {
                 testContext = TestContext()
             }
+            afterEach {
+                testContext.eventReporter.isOnline = false
+            }
             context("online to offline") {
                 beforeEach {
                     testContext.eventReporter.isOnline = true
@@ -312,6 +315,9 @@ final class EventReporterSpec: QuickSpec {
             var eventStubResponseDate: Date!
             beforeEach {
                 eventStubResponseDate = Date().addingTimeInterval(-TimeInterval.oneSecond)
+            }
+            afterEach {
+                testContext.eventReporter.isOnline = false
             }
             context("online") {
                 context("success") {
@@ -851,6 +857,9 @@ final class EventReporterSpec: QuickSpec {
     private func recordSummaryEventSpec() {
         describe("recordSummaryEvent") {
             var testContext: TestContext!
+            afterEach {
+                testContext.eventReporter.isOnline = false
+            }
             context("with tracked requests") {
                 beforeEach {
                     testContext = TestContext()
@@ -906,6 +915,9 @@ final class EventReporterSpec: QuickSpec {
     private func reportTimerSpec() {
         describe("report timer fires") {
             var testContext: TestContext!
+            afterEach {
+                testContext.eventReporter.isOnline = false
+            }
             context("with events") {
                 beforeEach {
                     testContext = TestContext(eventFlushInterval: Constants.eventFlushIntervalHalfSecond)

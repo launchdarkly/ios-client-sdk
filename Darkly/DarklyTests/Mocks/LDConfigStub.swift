@@ -14,7 +14,9 @@ extension LDConfig {
         static let mockMobileKey = "mockMobileKey"
     }
 
-    static var stub: LDConfig { return stub(mobileKey: Constants.mockMobileKey, environmentReporter: EnvironmentReportingMock()) }
+    static var stub: LDConfig {
+        return stub(mobileKey: Constants.mockMobileKey, environmentReporter: EnvironmentReportingMock())
+    }
 
     static func stub(mobileKey: String, environmentReporter: EnvironmentReportingMock) -> LDConfig {
         var config = LDConfig(mobileKey: mobileKey, environmentReporter: environmentReporter)

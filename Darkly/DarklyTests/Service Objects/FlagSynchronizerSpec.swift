@@ -23,7 +23,7 @@ final class FlagSynchronizerSpec: QuickSpec {
         var flagStoreMock: FlagMaintainingMock! { return user.flagStore as? FlagMaintainingMock }
         var serviceMock: DarklyServiceMock!
         var eventSourceMock: DarklyStreamingProviderMock? { return serviceMock.createdEventSource }
-        var subject: FlagSynchronizer!
+        var flagSynchronizer: FlagSynchronizer!
         var syncErrorEvent: DarklyEventSource.LDEvent?
         var onSyncCompleteCallCount = 0
 
@@ -31,7 +31,11 @@ final class FlagSynchronizerSpec: QuickSpec {
             config = LDConfig.stub
             user = LDUser.stub()
             serviceMock = DarklyServiceMock()
-            subject = FlagSynchronizer(streamingMode: streamingMode, pollingInterval: Constants.pollingInterval, useReport: useReport, service: serviceMock, onSyncComplete: onSyncComplete)
+            flagSynchronizer = FlagSynchronizer(streamingMode: streamingMode,
+                                                pollingInterval: Constants.pollingInterval,
+                                                useReport: useReport,
+                                                service: serviceMock,
+                                                onSyncComplete: onSyncComplete)
         }
 
         private func isStreamingActive(online: Bool, streamingMode: LDStreamingMode) -> Bool { return online && (streamingMode == .streaming) }
@@ -46,10 +50,18 @@ final class FlagSynchronizerSpec: QuickSpec {
             var messages = [String]()
 
             //synchronizer state
-            if subject.isOnline != isOnline { messages.append("isOnline equals \(subject.isOnline)") }
-            if subject.streamingMode != streamingMode { messages.append("streamingMode equals \(subject.streamingMode)") }
-            if subject.streamingActive != isStreamingActive(online: isOnline, streamingMode: streamingMode) { messages.append("streamingActive equals \(subject.streamingActive)") }
-            if subject.pollingActive != isPollingActive(online: isOnline, streamingMode: streamingMode) { messages.append("pollingActive equals \(subject.pollingActive)") }
+            if flagSynchronizer.isOnline != isOnline {
+                messages.append("isOnline equals \(flagSynchronizer.isOnline)")
+            }
+            if flagSynchronizer.streamingMode != streamingMode {
+                messages.append("streamingMode equals \(flagSynchronizer.streamingMode)")
+            }
+            if flagSynchronizer.streamingActive != isStreamingActive(online: isOnline, streamingMode: streamingMode) {
+                messages.append("streamingActive equals \(flagSynchronizer.streamingActive)")
+            }
+            if flagSynchronizer.pollingActive != isPollingActive(online: isOnline, streamingMode: streamingMode) {
+                messages.append("pollingActive equals \(flagSynchronizer.pollingActive)")
+            }
 
             //flag requests
             if serviceMock.getFeatureFlagsCallCount != flagRequests { messages.append("flag requests equals \(serviceMock.getFeatureFlagsCallCount)") }
@@ -101,8 +113,8 @@ final class FlagSynchronizerSpec: QuickSpec {
                 context("get flag requests") {
                     it("starts up streaming offline using get flag requests") {
                         expect({ testContext.synchronizerState(synchronizerOnline: false, streamingMode: .streaming, flagRequests: 0, streamCreated: false) }).to(match())
-                        expect(testContext.subject.pollingInterval) == Constants.pollingInterval
-                        expect(testContext.subject.useReport) == false
+                        expect(testContext.flagSynchronizer.pollingInterval) == Constants.pollingInterval
+                        expect(testContext.flagSynchronizer.useReport) == false
                     }
                 }
                 context("report flag requests") {
@@ -111,20 +123,23 @@ final class FlagSynchronizerSpec: QuickSpec {
                     }
                     it("starts up streaming offline using report flag requests") {
                         expect({ testContext.synchronizerState(synchronizerOnline: false, streamingMode: .streaming, flagRequests: 0, streamCreated: false) }).to(match())
-                        expect(testContext.subject.pollingInterval) == Constants.pollingInterval
-                        expect(testContext.subject.useReport) == true
+                        expect(testContext.flagSynchronizer.pollingInterval) == Constants.pollingInterval
+                        expect(testContext.flagSynchronizer.useReport) == true
                     }
                 }
             }
             context("polling mode") {
+                afterEach {
+                    testContext.flagSynchronizer.isOnline = false
+                }
                 context("get flag requests") {
                     beforeEach {
                         testContext = TestContext(streamingMode: .polling, useReport: false)
                     }
                     it("starts up polling offline using get flag requests") {
                         expect({ testContext.synchronizerState(synchronizerOnline: false, streamingMode: .polling, flagRequests: 0, streamCreated: false) }).to(match())
-                        expect(testContext.subject.pollingInterval) == Constants.pollingInterval
-                        expect(testContext.subject.useReport) == false
+                        expect(testContext.flagSynchronizer.pollingInterval) == Constants.pollingInterval
+                        expect(testContext.flagSynchronizer.useReport) == false
                     }
                 }
                 context("report flag requests") {
@@ -133,8 +148,8 @@ final class FlagSynchronizerSpec: QuickSpec {
                     }
                     it("starts up polling offline using report flag requests") {
                         expect({ testContext.synchronizerState(synchronizerOnline: false, streamingMode: .polling, flagRequests: 0, streamCreated: false) }).to(match())
-                        expect(testContext.subject.pollingInterval) == Constants.pollingInterval
-                        expect(testContext.subject.useReport) == true
+                        expect(testContext.flagSynchronizer.pollingInterval) == Constants.pollingInterval
+                        expect(testContext.flagSynchronizer.useReport) == true
                     }
                 }
             }
@@ -151,9 +166,9 @@ final class FlagSynchronizerSpec: QuickSpec {
             context("online to offline") {
                 context("streaming") {
                     beforeEach {
-                        testContext.subject.isOnline = true
+                        testContext.flagSynchronizer.isOnline = true
 
-                        testContext.subject.isOnline = false
+                        testContext.flagSynchronizer.isOnline = false
                     }
                     it("stops streaming") {
                         expect({ testContext.synchronizerState(synchronizerOnline: false,
@@ -167,9 +182,9 @@ final class FlagSynchronizerSpec: QuickSpec {
                 context("polling") {
                     beforeEach {
                         testContext = TestContext(streamingMode: .polling, useReport: false)
-                        testContext.subject.isOnline = true
+                        testContext.flagSynchronizer.isOnline = true
 
-                        testContext.subject.isOnline = false
+                        testContext.flagSynchronizer.isOnline = false
                     }
                     it("stops polling") {
                         expect({ testContext.synchronizerState(synchronizerOnline: false, streamingMode: .polling, flagRequests: 1, streamCreated: false) }).to(match())
@@ -179,7 +194,7 @@ final class FlagSynchronizerSpec: QuickSpec {
             context("offline to online") {
                 context("streaming") {
                     beforeEach {
-                        testContext.subject.isOnline = true
+                        testContext.flagSynchronizer.isOnline = true
                     }
                     it("starts streaming") {
                         //streaming expects a ping on successful connection that triggers a flag request. No ping means no flag requests
@@ -199,7 +214,10 @@ final class FlagSynchronizerSpec: QuickSpec {
                     beforeEach {
                         testContext = TestContext(streamingMode: .polling, useReport: false)
 
-                        testContext.subject.isOnline = true
+                        testContext.flagSynchronizer.isOnline = true
+                    }
+                    afterEach {
+                        testContext.flagSynchronizer.isOnline = false
                     }
                     it("starts polling") {
                         //polling starts by requesting flags
@@ -210,9 +228,9 @@ final class FlagSynchronizerSpec: QuickSpec {
             context("online to online") {
                 context("streaming") {
                     beforeEach {
-                        testContext.subject.isOnline = true
+                        testContext.flagSynchronizer.isOnline = true
 
-                        testContext.subject.isOnline = true
+                        testContext.flagSynchronizer.isOnline = true
                     }
                     it("does not stop streaming") {
                         expect({ testContext.synchronizerState(synchronizerOnline: true,
@@ -228,9 +246,12 @@ final class FlagSynchronizerSpec: QuickSpec {
                 context("polling") {
                     beforeEach {
                         testContext = TestContext(streamingMode: .polling, useReport: false)
-                        testContext.subject.isOnline = true
+                        testContext.flagSynchronizer.isOnline = true
 
-                        testContext.subject.isOnline = true
+                        testContext.flagSynchronizer.isOnline = true
+                    }
+                    afterEach {
+                        testContext.flagSynchronizer.isOnline = false
                     }
                     it("does not stop polling") {
                         // setting the same value shouldn't make another flag request
@@ -241,7 +262,7 @@ final class FlagSynchronizerSpec: QuickSpec {
             context("offline to offline") {
                 context("streaming") {
                     beforeEach {
-                        testContext.subject.isOnline = false
+                        testContext.flagSynchronizer.isOnline = false
                     }
                     it("does not start streaming") {
                         expect({ testContext.synchronizerState(synchronizerOnline: false, streamingMode: .streaming, flagRequests: 0, streamCreated: false) }).to(match())
@@ -251,7 +272,7 @@ final class FlagSynchronizerSpec: QuickSpec {
                     beforeEach {
                         testContext = TestContext(streamingMode: .polling, useReport: false)
 
-                        testContext.subject.isOnline = false
+                        testContext.flagSynchronizer.isOnline = false
                     }
                     it("does not start polling") {
                         expect({ testContext.synchronizerState(synchronizerOnline: false, streamingMode: .polling, flagRequests: 0, streamCreated: false) }).to(match())
@@ -290,7 +311,7 @@ final class FlagSynchronizerSpec: QuickSpec {
                             done()
                         })
                         testContext.serviceMock.stubFlagResponse(statusCode: HTTPURLResponse.StatusCodes.ok)
-                        testContext.subject.isOnline = true
+                        testContext.flagSynchronizer.isOnline = true
 
                         testContext.eventSourceMock?.sendPing()
                     }
@@ -315,7 +336,7 @@ final class FlagSynchronizerSpec: QuickSpec {
                             done()
                         })
                         testContext.serviceMock.stubFlagResponse(statusCode: HTTPURLResponse.StatusCodes.ok, badData: true)
-                        testContext.subject.isOnline = true
+                        testContext.flagSynchronizer.isOnline = true
 
                         testContext.eventSourceMock?.sendPing()
                     }
@@ -341,7 +362,7 @@ final class FlagSynchronizerSpec: QuickSpec {
                             done()
                         })
                         testContext.serviceMock.stubFlagResponse(statusCode: HTTPURLResponse.StatusCodes.internalServerError, responseOnly: true)
-                        testContext.subject.isOnline = true
+                        testContext.flagSynchronizer.isOnline = true
 
                         testContext.eventSourceMock?.sendPing()
                     }
@@ -368,7 +389,7 @@ final class FlagSynchronizerSpec: QuickSpec {
                             done()
                         })
                         testContext.serviceMock.stubFlagResponse(statusCode: HTTPURLResponse.StatusCodes.internalServerError, errorOnly: true)
-                        testContext.subject.isOnline = true
+                        testContext.flagSynchronizer.isOnline = true
 
                         testContext.eventSourceMock?.sendPing()
                     }
@@ -403,7 +424,7 @@ final class FlagSynchronizerSpec: QuickSpec {
                             if case .success(let flags, let streamEvent) = result { (newFlags, streamingEvent) = (flags.flagCollection, streamEvent) }
                             done()
                         })
-                        testContext.subject.isOnline = true
+                        testContext.flagSynchronizer.isOnline = true
 
                         testContext.eventSourceMock?.sendPut()
                     }
@@ -427,7 +448,7 @@ final class FlagSynchronizerSpec: QuickSpec {
                             if case .error(let error) = result { syncError = error }
                             done()
                         })
-                        testContext.subject.isOnline = true
+                        testContext.flagSynchronizer.isOnline = true
 
                         testContext.eventSourceMock?.sendEvent(DarklyEventSource.LDEvent.stubPutEvent(data: DarklyServiceMock.Constants.jsonErrorString))
                     }
@@ -450,7 +471,7 @@ final class FlagSynchronizerSpec: QuickSpec {
                             if case .error(let error) = result { syncError = error }
                             done()
                         })
-                        testContext.subject.isOnline = true
+                        testContext.flagSynchronizer.isOnline = true
 
                         testContext.eventSourceMock?.sendEvent(DarklyEventSource.LDEvent.stubPutEvent(data: nil))
                     }
@@ -485,7 +506,7 @@ final class FlagSynchronizerSpec: QuickSpec {
                             if case .success(let patch, let streamEvent) = result { (flagDictionary, streamingEvent) = (patch, streamEvent) }
                             done()
                         })
-                        testContext.subject.isOnline = true
+                        testContext.flagSynchronizer.isOnline = true
 
                         testContext.eventSourceMock?.sendPatch()
                     }
@@ -512,7 +533,7 @@ final class FlagSynchronizerSpec: QuickSpec {
                             if case .error(let error) = result { syncError = error }
                             done()
                         })
-                        testContext.subject.isOnline = true
+                        testContext.flagSynchronizer.isOnline = true
 
                         testContext.eventSourceMock?.sendEvent(DarklyEventSource.LDEvent.stubPatchEvent(data: DarklyServiceMock.Constants.jsonErrorString))
                     }
@@ -535,7 +556,7 @@ final class FlagSynchronizerSpec: QuickSpec {
                             if case .error(let error) = result { syncError = error }
                             done()
                         })
-                        testContext.subject.isOnline = true
+                        testContext.flagSynchronizer.isOnline = true
 
                         testContext.eventSourceMock?.sendEvent(DarklyEventSource.LDEvent.stubPatchEvent(data: nil))
                     }
@@ -570,7 +591,7 @@ final class FlagSynchronizerSpec: QuickSpec {
                             if case .success(let delete, let streamEvent) = result { (flagDictionary, streamingEvent) = (delete, streamEvent) }
                             done()
                         })
-                        testContext.subject.isOnline = true
+                        testContext.flagSynchronizer.isOnline = true
 
                         testContext.eventSourceMock?.sendDelete()
                     }
@@ -594,7 +615,7 @@ final class FlagSynchronizerSpec: QuickSpec {
                             if case .error(let error) = result { syncError = error }
                             done()
                         })
-                        testContext.subject.isOnline = true
+                        testContext.flagSynchronizer.isOnline = true
 
                         testContext.eventSourceMock?.sendEvent(DarklyEventSource.LDEvent.stubDeleteEvent(data: DarklyServiceMock.Constants.jsonErrorString))
                     }
@@ -617,7 +638,7 @@ final class FlagSynchronizerSpec: QuickSpec {
                             if case .error(let error) = result { syncError = error }
                             done()
                         })
-                        testContext.subject.isOnline = true
+                        testContext.flagSynchronizer.isOnline = true
 
                         testContext.eventSourceMock?.sendEvent(DarklyEventSource.LDEvent.stubDeleteEvent(data: nil))
                     }
@@ -651,7 +672,7 @@ final class FlagSynchronizerSpec: QuickSpec {
                             if case .error(let errorResult) = syncResult, case .event(let errorEvent) = errorResult { testContext.syncErrorEvent = errorEvent }
                             done()
                         })
-                        testContext.subject.isOnline = true
+                        testContext.flagSynchronizer.isOnline = true
 
                         testContext.eventSourceMock?.sendEvent(LDEvent.stubErrorEvent())
                     }
@@ -674,7 +695,7 @@ final class FlagSynchronizerSpec: QuickSpec {
                             if case .error(let errorResult) = syncResult, case .event(let errorEvent) = errorResult { testContext.syncErrorEvent = errorEvent }
                             done()
                         })
-                        testContext.subject.isOnline = true
+                        testContext.flagSynchronizer.isOnline = true
 
                         testContext.eventSourceMock?.sendEvent(LDEvent.stubUnauthorizedEvent())
                     }
@@ -692,7 +713,7 @@ final class FlagSynchronizerSpec: QuickSpec {
             }
             context("heartbeat") {
                 beforeEach {
-                    testContext.subject.isOnline = true
+                    testContext.flagSynchronizer.isOnline = true
 
                     testContext.eventSourceMock?.sendHeartbeat()
                 }
@@ -708,7 +729,7 @@ final class FlagSynchronizerSpec: QuickSpec {
             }
             context("null event") {
                 beforeEach {
-                    testContext.subject.isOnline = true
+                    testContext.flagSynchronizer.isOnline = true
 
                     testContext.eventSourceMock?.sendNullEvent()
                 }
@@ -724,7 +745,7 @@ final class FlagSynchronizerSpec: QuickSpec {
             }
             context("connecting event") {
                 beforeEach {
-                    testContext.subject.isOnline = true
+                    testContext.flagSynchronizer.isOnline = true
 
                     testContext.eventSourceMock?.sendEvent(LDEvent.stubReadyStateEvent(eventState: kEventStateConnecting))
                 }
@@ -740,7 +761,7 @@ final class FlagSynchronizerSpec: QuickSpec {
             }
             context("open event") {
                 beforeEach {
-                    testContext.subject.isOnline = true
+                    testContext.flagSynchronizer.isOnline = true
 
                     testContext.eventSourceMock?.sendEvent(LDEvent.stubReadyStateEvent(eventState: kEventStateOpen))
                 }
@@ -756,7 +777,7 @@ final class FlagSynchronizerSpec: QuickSpec {
             }
             context("closed event") {
                 beforeEach {
-                    testContext.subject.isOnline = true
+                    testContext.flagSynchronizer.isOnline = true
 
                     testContext.eventSourceMock?.sendEvent(LDEvent.stubReadyStateEvent(eventState: kEventStateClosed))
                 }
@@ -781,7 +802,7 @@ final class FlagSynchronizerSpec: QuickSpec {
                             }
                             done()
                         })
-                        testContext.subject.isOnline = true
+                        testContext.flagSynchronizer.isOnline = true
 
                         testContext.eventSourceMock?.sendEvent(LDEvent.stubNonNSErrorEvent())
                     }
@@ -818,7 +839,7 @@ final class FlagSynchronizerSpec: QuickSpec {
                         done()
                     })
 
-                    testContext.subject.testProcessEvent(event)
+                    testContext.flagSynchronizer.testProcessEvent(event)
                 }
             }
             it("reports offline") {
@@ -834,18 +855,21 @@ final class FlagSynchronizerSpec: QuickSpec {
                     testContext = TestContext(streamingMode: .polling, useReport: false, onSyncComplete: { _ in
                         done()
                     })
-                    testContext.subject.isOnline = true
+                    testContext.flagSynchronizer.isOnline = true
                 }
                 waitUntil { done in
-                    testContext.subject.onSyncComplete = { result in
+                    testContext.flagSynchronizer.onSyncComplete = { result in
                         if case .error(let errorResult) = result {
                             syncError = errorResult
                         }
                         done()
                     }
 
-                    testContext.subject.testProcessEvent(event)
+                    testContext.flagSynchronizer.testProcessEvent(event)
                 }
+            }
+            afterEach {
+                testContext.flagSynchronizer.isOnline = false
             }
             it("reports an event error") {
                 expect(syncError == .event(event)).to(beTrue())
@@ -863,10 +887,10 @@ final class FlagSynchronizerSpec: QuickSpec {
                         }
                         done()
                     })
-                    testContext.subject.isOnline = true
-                    testContext.subject.testEventSource = nil
+                    testContext.flagSynchronizer.isOnline = true
+                    testContext.flagSynchronizer.testEventSource = nil
 
-                    testContext.subject.testProcessEvent(event)
+                    testContext.flagSynchronizer.testProcessEvent(event)
                 }
             }
             it("reports offline") {
@@ -878,23 +902,26 @@ final class FlagSynchronizerSpec: QuickSpec {
     func pollingTimerFiresSpec() {
         describe("polling timer fires") {
             context("one second interval") {
-                var testContext: TestContext?
+                var testContext: TestContext!
                 var newFlags: [String: FeatureFlag]?
                 var streamingEvent: DarklyEventSource.LDEvent.EventType?
                 beforeEach {
                     testContext = TestContext(streamingMode: .polling, useReport: false)
-                    testContext?.serviceMock.stubFlagResponse(statusCode: HTTPURLResponse.StatusCodes.ok)
-                    testContext?.subject.isOnline = true
+                    testContext.serviceMock.stubFlagResponse(statusCode: HTTPURLResponse.StatusCodes.ok)
+                    testContext.flagSynchronizer.isOnline = true
 
                     waitUntil(timeout: 2) { done in
                         //In polling mode, the flagSynchronizer makes a flag request when set online right away. To verify the timer this test waits the polling interval (1s) for a second flag request
-                        testContext?.subject.onSyncComplete = { (result) in
+                        testContext?.flagSynchronizer.onSyncComplete = { (result) in
                             if case .success(let flags, let streamEvent) = result {
                                 (newFlags, streamingEvent) = (flags.flagCollection, streamEvent)
                             }
                             done()
                         }
                     }
+                }
+                afterEach {
+                    testContext.flagSynchronizer.isOnline = false
                 }
                 it("makes a flag request and calls onSyncComplete with no streaming event") {
                     expect(testContext?.serviceMock.getFeatureFlagsCallCount) == 2
@@ -903,7 +930,7 @@ final class FlagSynchronizerSpec: QuickSpec {
                 }
                 //This particular test causes a retain cycle between the FlagSynchronizer and something else. By removing onSyncComplete, the closure is no longer called after the test is complete.
                 afterEach {
-                    testContext?.subject.onSyncComplete = nil
+                    testContext?.flagSynchronizer.onSyncComplete = nil
                 }
             }
         }
@@ -920,7 +947,7 @@ final class FlagSynchronizerSpec: QuickSpec {
                                 done()
                             })
                             testContext.serviceMock.stubFlagResponse(statusCode: HTTPURLResponse.StatusCodes.ok)
-                            testContext.subject.isOnline = true
+                            testContext.flagSynchronizer.isOnline = true
 
                             testContext.eventSourceMock?.sendPing()
                         }
@@ -939,7 +966,7 @@ final class FlagSynchronizerSpec: QuickSpec {
                                         done()
                                     })
                                     testContext.serviceMock.stubFlagResponse(statusCode: statusCode)
-                                    testContext.subject.isOnline = true
+                                    testContext.flagSynchronizer.isOnline = true
 
                                     testContext.eventSourceMock?.sendPing()
                                 }
@@ -957,7 +984,7 @@ final class FlagSynchronizerSpec: QuickSpec {
                                         done()
                                     })
                                     testContext.serviceMock.stubFlagResponse(statusCode: statusCode)
-                                    testContext.subject.isOnline = true
+                                    testContext.flagSynchronizer.isOnline = true
 
                                     testContext.eventSourceMock?.sendPing()
                                 }
@@ -977,7 +1004,7 @@ final class FlagSynchronizerSpec: QuickSpec {
                                 done()
                             })
                             testContext.serviceMock.stubFlagResponse(statusCode: HTTPURLResponse.StatusCodes.ok)
-                            testContext.subject.isOnline = true
+                            testContext.flagSynchronizer.isOnline = true
 
                             testContext.eventSourceMock?.sendPing()
                         }
@@ -996,7 +1023,7 @@ final class FlagSynchronizerSpec: QuickSpec {
                                         done()
                                     })
                                     testContext.serviceMock.stubFlagResponse(statusCode: statusCode)
-                                    testContext.subject.isOnline = true
+                                    testContext.flagSynchronizer.isOnline = true
 
                                     testContext.eventSourceMock?.sendPing()
                                 }
@@ -1014,7 +1041,7 @@ final class FlagSynchronizerSpec: QuickSpec {
                                         done()
                                     })
                                     testContext.serviceMock.stubFlagResponse(statusCode: statusCode)
-                                    testContext.subject.isOnline = true
+                                    testContext.flagSynchronizer.isOnline = true
 
                                     testContext.eventSourceMock?.sendPing()
                                 }
@@ -1043,7 +1070,7 @@ final class FlagSynchronizerSpec: QuickSpec {
                         })
                         testContext.serviceMock.stubFlagResponse(statusCode: HTTPURLResponse.StatusCodes.ok)
 
-                        testContext.subject.testMakeFlagRequest()
+                        testContext.flagSynchronizer.testMakeFlagRequest()
                     }
                 }
                 it("does not request flags and calls onSyncComplete with an isOffline error") {

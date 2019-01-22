@@ -121,6 +121,11 @@ final class ThrottlerSpec: QuickSpec {
         }
     }
 
+    //The upper bound on the max delay is always 2^runAttempt, exclusive.
+    func maxDelay(runAttempt: Int) -> TimeInterval {
+        return pow(2, runAttempt).timeInterval
+    }
+
     func runSpec() {
         describe("runThrottled") {
             context("throttling enabled") {
@@ -146,7 +151,7 @@ final class ThrottlerSpec: QuickSpec {
                 throttler = Throttler(maxDelay: Constants.maxDelay, environmentReporter: environmentReporterMock)
 
                 runCalled = Date()
-                waitUntil(timeout: 2.0) { done in
+                waitUntil(timeout: self.maxDelay(runAttempt: 1)) { done in
                     throttler.timerFiredCallback = done
                     throttler.runThrottled({
                         runExecuted = Date()
@@ -158,7 +163,7 @@ final class ThrottlerSpec: QuickSpec {
                 guard let runExecuted = runExecuted else { return }
                 expect(runExecuted.timeIntervalSince(runCalled)) <= 0.1
             }
-            it("resets itself for the next runThrottled call") {
+            it("resets itself for the next runThrottled call when the timer fires") {
                 expect(throttler.runAttempts) == 0
                 expect(throttler.delay) == 0.0
                 expect(throttler.timerStart).to(beNil())
@@ -179,7 +184,7 @@ final class ThrottlerSpec: QuickSpec {
                 throttler = Throttler(maxDelay: Constants.maxDelay, environmentReporter: environmentReporterMock)
 
                 runCalled = Date()
-                waitUntil(timeout: 4.0) { done in
+                waitUntil(timeout: self.maxDelay(runAttempt: 2)) { done in
                     throttler.timerFiredCallback = {
                         if runExecuted.count >= 2 {
                             done()
@@ -196,18 +201,24 @@ final class ThrottlerSpec: QuickSpec {
                     }
                 }
             }
-            //Normally, this would be 3 it closures. Since this test takes ~2-4 seconds to setup, all 3 it closures are squashed into 1
+            //Normally, this would be 3 "it" closures. Since this test takes ~2-4 seconds to setup, all 3 it closures are squashed into 1
             it("calls the run closure right away, calls the run closure a second time after a delay, and resets itself for the next runThrottled call") {
                 //calls the run closure right away
                 expect(runExecuted.first).toNot(beNil())
-                guard let firstRunExecuted = runExecuted.first else { return }
-                expect(firstRunExecuted.timeIntervalSince(runCalled)) <= 0.1
+                guard let firstRunExecuted = runExecuted.first
+                else {
+                    return
+                }
+                expect(firstRunExecuted.timeIntervalSince(runCalled)) <= 0.1    //0.1s is arbitrary, the min throttling delay is 1.0s. Anything less verifies unthrottled execution.
 
                 //calls the run closure a second time after a delay
                 expect(runExecuted.count) == 2
-                guard let secondRunExecuted = runExecuted.last else { return }
-                expect(secondRunExecuted.timeIntervalSince(runCalled)) > 0.1
-                expect(secondRunExecuted.timeIntervalSince(runCalled)) < 4.0
+                guard let secondRunExecuted = runExecuted.last
+                else {
+                    return
+                }
+                expect(secondRunExecuted.timeIntervalSince(runCalled)) >= 2.0   //The delay is a random interval in the range [2.0, 4.0) seconds
+                expect(secondRunExecuted.timeIntervalSince(runCalled)) < self.maxDelay(runAttempt: 2)   //as above, this must be < 4.0 seconds
 
                 //resets itself for the next runThrottled call
                 expect(throttler.runAttempts) == 0
@@ -219,6 +230,7 @@ final class ThrottlerSpec: QuickSpec {
     }
 
     func multipleRunSpec() {
+        //This spec just tests that the delay is increased appropriately, without changing the original timer start time
         var environmentReporterMock: EnvironmentReportingMock!
         var throttler: Throttler!
         var runCount = 0
@@ -244,12 +256,16 @@ final class ThrottlerSpec: QuickSpec {
             }
             it("increases the delay") {
                 for runAttempt in 1..<throttler.maxAttempts {
+                    //Because maxDelay for a runAttempt is in the range [2^(runAttempt -1), 2^runAttempt), the sequence of delay times for run attempts must be increasing
                     expect(delayIntervals[runAttempt - 1]) < delayIntervals[runAttempt]
                 }
             }
             it("doesn't change the timer start date") {
                 expect(throttler.timerStart).toNot(beNil())
-                guard throttler.timerStart != nil else { return }
+                guard throttler.timerStart != nil
+                else {
+                    return
+                }
                 expect(throttler.timerStart!) == timerStarted
             }
             it("creates a timer") {
@@ -315,6 +331,9 @@ final class ThrottlerSpec: QuickSpec {
                 for _ in 0..<throttler.maxAttempts {
                     throttler.runThrottled {
                         runCount += 1
+                        if runCount > 1 {
+                            fail("run closure called more than once.")
+                        }
                     }
                 }
 
