@@ -43,6 +43,10 @@ final class LDTimer: TimeResponding {
         RunLoop.main.add(timer, forMode: RunLoop.Mode.default)
     }
 
+    deinit {
+        timer?.invalidate()
+    }
+
     @objc private func timerFired() {
         fireQueue.async { [weak self] in
             guard (self?.isCancelled ?? true) == false
@@ -54,7 +58,7 @@ final class LDTimer: TimeResponding {
     }
 
     func cancel() {
-        self.timer?.invalidate()
-        self.isCancelled = true
+        timer?.invalidate()
+        isCancelled = true
     }
 }
