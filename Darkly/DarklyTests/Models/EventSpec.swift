@@ -16,7 +16,6 @@ final class EventSpec: QuickSpec {
             return Event.Kind.allKinds.count
         }
         static let eventKey = "EventSpec.Event.Key"
-        static let eventData: [String: Any] = ["stubDataKey": "stubDataValue"]
     }
 
     struct CustomEvent {
@@ -64,7 +63,7 @@ final class EventSpec: QuickSpec {
                 beforeEach {
                     featureFlag = DarklyServiceMock.Constants.stubFeatureFlag(for: DarklyServiceMock.FlagKeys.bool)
 
-                    event = Event(kind: .feature, key: Constants.eventKey, user: user, value: true, defaultValue: false, featureFlag: featureFlag, data: Constants.eventData, flagRequestTracker: FlagRequestTracker.stub(), endDate: Date())
+                    event = Event(kind: .feature, key: Constants.eventKey, user: user, value: true, defaultValue: false, featureFlag: featureFlag, data: CustomEvent.dictionaryData, flagRequestTracker: FlagRequestTracker.stub(), endDate: Date())
                 }
                 it("creates an event with matching data") {
                     expect(event.kind) == Event.Kind.feature
@@ -75,7 +74,7 @@ final class EventSpec: QuickSpec {
                     expect(AnyComparer.isEqual(event.defaultValue, to: false)).to(beTrue())
                     expect(event.featureFlag?.allPropertiesMatch(featureFlag)).to(beTrue())
                     expect(event.data).toNot(beNil())
-                    expect(AnyComparer.isEqual(event.data, to: Constants.eventData)).to(beTrue())
+                    expect(AnyComparer.isEqual(event.data, to: CustomEvent.dictionaryData)).to(beTrue())
                     expect(event.flagRequestTracker).toNot(beNil())
                     expect(event.endDate).toNot(beNil())
                 }
@@ -451,7 +450,7 @@ final class EventSpec: QuickSpec {
             }
             context("without inlining user") {
                 beforeEach {
-                    event = Event.customEvent(key: Constants.eventKey, user: user, data: Constants.eventData)
+                    event = Event.customEvent(key: Constants.eventKey, user: user, data: CustomEvent.dictionaryData)
                     config.inlineUserInEvents = false   //Default value, here for clarity
                     eventDictionary = event.dictionaryValue(config: config)
                 }
@@ -459,7 +458,7 @@ final class EventSpec: QuickSpec {
                     expect(eventDictionary.eventKind) == .custom
                     expect(eventDictionary.eventKey) == Constants.eventKey
                     expect(eventDictionary.eventCreationDate?.isWithin(0.001, of: event.creationDate!)).to(beTrue())
-                    expect(AnyComparer.isEqual(eventDictionary.eventData, to: Constants.eventData)).to(beTrue())
+                    expect(AnyComparer.isEqual(eventDictionary.eventData, to: CustomEvent.dictionaryData)).to(beTrue())
                     expect(eventDictionary.eventValue).to(beNil())
                     expect(eventDictionary.eventDefaultValue).to(beNil())
                     expect(eventDictionary.eventVariation).to(beNil())
@@ -471,7 +470,7 @@ final class EventSpec: QuickSpec {
             }
             context("inlining user") {
                 beforeEach {
-                    event = Event.customEvent(key: Constants.eventKey, user: user, data: Constants.eventData)
+                    event = Event.customEvent(key: Constants.eventKey, user: user, data: CustomEvent.dictionaryData)
                     config.inlineUserInEvents = true
                     eventDictionary = event.dictionaryValue(config: config)
                 }
@@ -479,7 +478,7 @@ final class EventSpec: QuickSpec {
                     expect(eventDictionary.eventKind) == .custom
                     expect(eventDictionary.eventKey) == Constants.eventKey
                     expect(eventDictionary.eventCreationDate?.isWithin(0.001, of: event.creationDate!)).to(beTrue())
-                    expect(AnyComparer.isEqual(eventDictionary.eventData, to: Constants.eventData)).to(beTrue())
+                    expect(AnyComparer.isEqual(eventDictionary.eventData, to: CustomEvent.dictionaryData)).to(beTrue())
                     expect(eventDictionary.eventValue).to(beNil())
                     expect(eventDictionary.eventDefaultValue).to(beNil())
                     expect(eventDictionary.eventVariation).to(beNil())
@@ -1058,7 +1057,7 @@ final class EventSpec: QuickSpec {
             var event2: Event!
             context("on the same event") {
                 beforeEach {
-                    event1 = Event(kind: .feature, key: Constants.eventKey, user: user, value: true, defaultValue: false, data: Constants.eventData)
+                    event1 = Event(kind: .feature, key: Constants.eventKey, user: user, value: true, defaultValue: false, data: CustomEvent.dictionaryData)
                     event2 = event1
                 }
                 it("returns true") {
@@ -1069,7 +1068,7 @@ final class EventSpec: QuickSpec {
                 let eventKey = UUID().uuidString
                 beforeEach {
                     event1 = Event(kind: .feature, key: eventKey, user: LDUser.stub(key: UUID().uuidString), value: true, defaultValue: false)
-                    event2 = Event(kind: .custom, key: eventKey, user: LDUser.stub(key: UUID().uuidString), data: Constants.eventData)
+                    event2 = Event(kind: .custom, key: eventKey, user: LDUser.stub(key: UUID().uuidString), data: CustomEvent.dictionaryData)
                 }
                 it("returns false") {
                     expect(event1) != event2
@@ -1077,8 +1076,8 @@ final class EventSpec: QuickSpec {
             }
             context("when only the keys differ") {
                 beforeEach {
-                    event1 = Event(kind: .feature, key: UUID().uuidString, user: user, value: true, defaultValue: false, data: Constants.eventData)
-                    event2 = Event(kind: .feature, key: UUID().uuidString, user: user, value: true, defaultValue: false, data: Constants.eventData)
+                    event1 = Event(kind: .feature, key: UUID().uuidString, user: user, value: true, defaultValue: false, data: CustomEvent.dictionaryData)
+                    event2 = Event(kind: .feature, key: UUID().uuidString, user: user, value: true, defaultValue: false, data: CustomEvent.dictionaryData)
                 }
                 it("returns false") {
                     expect(event1) != event2
@@ -1086,7 +1085,7 @@ final class EventSpec: QuickSpec {
             }
             context("on different events") {
                 beforeEach {
-                    event1 = Event(kind: .feature, key: UUID().uuidString, user: user, value: true, defaultValue: false, data: Constants.eventData)
+                    event1 = Event(kind: .feature, key: UUID().uuidString, user: user, value: true, defaultValue: false, data: CustomEvent.dictionaryData)
                     event2 = Event(kind: .identify, key: UUID().uuidString, user: LDUser.stub(key: UUID().uuidString))
                 }
                 it("returns false") {
