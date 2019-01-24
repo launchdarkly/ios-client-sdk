@@ -28,7 +28,7 @@ struct Event { //sdk internal, not publically accessible
     let value: Any?
     let defaultValue: Any?
     let featureFlag: FeatureFlag?
-    let data: [String: Any]?
+    let data: Any?
     let flagRequestTracker: FlagRequestTracker?
     let endDate: Date?
 
@@ -38,7 +38,7 @@ struct Event { //sdk internal, not publically accessible
          value: Any? = nil,
          defaultValue: Any? = nil,
          featureFlag: FeatureFlag? = nil,
-         data: [String: Any]? = nil,
+         data: Any? = nil,
          flagRequestTracker: FlagRequestTracker? = nil,
          endDate: Date? = nil) {
 
@@ -66,7 +66,7 @@ struct Event { //sdk internal, not publically accessible
         return Event(kind: .debug, key: key, user: user, value: value, defaultValue: defaultValue, featureFlag: featureFlag)
     }
 
-    static func customEvent(key: String, user: LDUser, data: [String: Any]? = nil) -> Event {
+    static func customEvent(key: String, user: LDUser, data: Any? = nil) -> Event {
         Log.debug(typeName(and: #function) + "key: " + key + ", data: \(String(describing: data))")
         return Event(kind: .custom, key: key, user: user, data: data)
     }

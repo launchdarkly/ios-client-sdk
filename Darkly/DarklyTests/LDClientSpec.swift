@@ -930,7 +930,7 @@ final class LDClientSpec: QuickSpec {
                     expect(testContext.eventReporterMock.recordReceivedArguments?.event.key) == event.key
                     expect(testContext.eventReporterMock.recordReceivedArguments?.event.user) == event.user
                     expect(testContext.eventReporterMock.recordReceivedArguments?.event.data).toNot(beNil())
-                    expect(testContext.eventReporterMock.recordReceivedArguments?.event.data == event.data).to(beTrue())
+                    expect(AnyComparer.isEqual(testContext.eventReporterMock.recordReceivedArguments?.event.data, to: event.data)).to(beTrue())
                 }
             }
             context("when client was not started") {

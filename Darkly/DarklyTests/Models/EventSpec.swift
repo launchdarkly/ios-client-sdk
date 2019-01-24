@@ -57,7 +57,7 @@ final class EventSpec: QuickSpec {
                     expect(AnyComparer.isEqual(event.defaultValue, to: false)).to(beTrue())
                     expect(event.featureFlag?.allPropertiesMatch(featureFlag)).to(beTrue())
                     expect(event.data).toNot(beNil())
-                    expect(event.data == Constants.eventData).to(beTrue())
+                    expect(AnyComparer.isEqual(event.data, to: Constants.eventData)).to(beTrue())
                     expect(event.flagRequestTracker).toNot(beNil())
                     expect(event.endDate).toNot(beNil())
                 }
@@ -163,7 +163,7 @@ final class EventSpec: QuickSpec {
                 expect(event.key) == Constants.eventKey
                 expect(event.creationDate).toNot(beNil())
                 expect(event.user) == user
-                expect(event.data == Constants.eventData).to(beTrue())
+                expect(AnyComparer.isEqual(event.data, to: Constants.eventData)).to(beTrue())
 
                 expect(event.value).to(beNil())
                 expect(event.defaultValue).to(beNil())
@@ -721,7 +721,7 @@ final class EventSpec: QuickSpec {
                     if let eventData = event.data {
                         expect(eventDictionary.eventData).toNot(beNil())
                         if let eventDictionaryData = eventDictionary.eventData {
-                            expect(eventDictionaryData == eventData).to(beTrue())
+                            expect(AnyComparer.isEqual(eventDictionaryData, to: eventData)).to(beTrue())
                         }
                     } else {
                         expect(eventDictionary.eventData).to(beNil())

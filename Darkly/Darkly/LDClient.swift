@@ -608,7 +608,7 @@ public class LDClient {
      - parameter key: The key for the event. The SDK does nothing with the key, which can be any string the client app sends
      - parameter data: The data for the event. The SDK does nothing with the data, which can be any [String: Any] the client app sends. (Optional)
     */
-    public func trackEvent(key: String, data: [String: Any]? = nil) {
+    public func trackEvent(key: String, data: Any? = nil) {
         guard hasStarted else {
             Log.debug(typeName(and: #function) + "aborted. LDClient not started")
             return
