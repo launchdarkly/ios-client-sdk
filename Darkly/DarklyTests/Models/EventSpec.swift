@@ -19,6 +19,24 @@ final class EventSpec: QuickSpec {
         static let eventData: [String: Any] = ["stubDataKey": "stubDataValue"]
     }
 
+    struct CustomEvent {
+        static let intData = 3
+        static let doubleData = 1.414
+        static let boolData = true
+        static let stringData = "custom event string data"
+        static let arrayData: [Any] = [12, 1.61803, true, "custom event array data"]
+        static let nestedArrayData = [1, 3, 7, 12]
+        static let nestedDictionaryData = ["one": 1.0, "three": 3.0, "seven": 7.0, "twelve": 12.0]
+        static let dictionaryData: [String: Any] = ["dozen": 12,
+                                                    "phi": 1.61803,
+                                                    "true": true,
+                                                    "data string": "custom event dictionary data",
+                                                    "nestedArray": nestedArrayData,
+                                                    "nestedDictionary": nestedDictionaryData]
+
+        static let allData: [Any] = [intData, doubleData, boolData, stringData, arrayData, dictionaryData]
+    }
+
     override func spec() {
         initSpec()
         kindSpec()
@@ -155,20 +173,41 @@ final class EventSpec: QuickSpec {
             user = LDUser.stub()
         }
         describe("customEvent") {
-            beforeEach {
-                event = Event.customEvent(key: Constants.eventKey, user: user, data: Constants.eventData)
-            }
-            it("creates a custom event with matching data") {
-                expect(event.kind) == Event.Kind.custom
-                expect(event.key) == Constants.eventKey
-                expect(event.creationDate).toNot(beNil())
-                expect(event.user) == user
-                expect(AnyComparer.isEqual(event.data, to: Constants.eventData)).to(beTrue())
+            for eventData in CustomEvent.allData {
+                context("with data") {
+                    beforeEach {
+                        event = Event.customEvent(key: Constants.eventKey, user: user, data: eventData)
+                    }
+                    it("creates a custom event with matching data") {
+                        expect(event.kind) == Event.Kind.custom
+                        expect(event.key) == Constants.eventKey
+                        expect(event.creationDate).toNot(beNil())
+                        expect(event.user) == user
+                        expect(AnyComparer.isEqual(event.data, to: eventData)).to(beTrue())
 
-                expect(event.value).to(beNil())
-                expect(event.defaultValue).to(beNil())
-                expect(event.endDate).to(beNil())
-                expect(event.flagRequestTracker).to(beNil())
+                        expect(event.value).to(beNil())
+                        expect(event.defaultValue).to(beNil())
+                        expect(event.endDate).to(beNil())
+                        expect(event.flagRequestTracker).to(beNil())
+                    }
+                }
+            }
+            context("without data") {
+                beforeEach {
+                    event = Event.customEvent(key: Constants.eventKey, user: user, data: nil)
+                }
+                it("creates a custom event with matching data") {
+                    expect(event.kind) == Event.Kind.custom
+                    expect(event.key) == Constants.eventKey
+                    expect(event.creationDate).toNot(beNil())
+                    expect(event.user) == user
+                    expect(event.data).to(beNil())
+
+                    expect(event.value).to(beNil())
+                    expect(event.defaultValue).to(beNil())
+                    expect(event.endDate).to(beNil())
+                    expect(event.flagRequestTracker).to(beNil())
+                }
             }
         }
     }
