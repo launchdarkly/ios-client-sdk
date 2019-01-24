@@ -263,9 +263,7 @@ final class ThrottlerSpec: QuickSpec {
             it("doesn't change the timer start date") {
                 expect(throttler.timerStart).toNot(beNil())
                 guard throttler.timerStart != nil
-                else {
-                    return
-                }
+                else { return }
                 expect(throttler.timerStart!) == timerStarted
             }
             it("creates a timer") {
