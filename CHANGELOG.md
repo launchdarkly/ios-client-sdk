@@ -2,7 +2,7 @@
 
 All notable changes to the LaunchDarkly iOS SDK will be documented in this file. This project adheres to [Semantic Versioning](http://semver.org).
 
-## [2.14.2] - 2019-01-18
+## [2.14.2] - 2019-01-24
 ### Added
 - Added nullability specifiers to public SDK classes.
 
