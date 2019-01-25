@@ -186,8 +186,10 @@ NSString *const kTestMobileKey = @"testMobileKey";
     [[self.nsUrlSessionMock reject] setSharedLDSessionForConfig:[OCMArg any]];
     [(LDEnvironment*)[self.primaryEnvironmentMock reject] start];
     [[self.primaryEnvironmentMock reject] setOnline:[OCMArg any]];
+    LDConfig *emptyConfig = nil;
+    LDUserBuilder *emptyUserBuilder = nil;
 
-    XCTAssertFalse([[LDClient sharedInstance] start:nil withUserBuilder:nil]);
+    XCTAssertFalse([[LDClient sharedInstance] start:emptyConfig withUserBuilder:emptyUserBuilder]);
 
     XCTAssertNil([LDClient sharedInstance].primaryEnvironment);
     [self.nsUrlSessionMock verify];
@@ -215,8 +217,9 @@ NSString *const kTestMobileKey = @"testMobileKey";
     [[[self.primaryEnvironmentMock stub] andReturn:self.primaryEnvironmentMock] environmentForMobileKey:kTestMobileKey config:self.config user:[OCMArg isKindOfClass:[LDUserModel class]]];
     [(LDEnvironment*)[self.primaryEnvironmentMock expect] start];
     [[self.primaryEnvironmentMock expect] setOnline:YES];
+    LDUserBuilder *emptyUserBuilder = nil;
 
-    XCTAssertTrue([[LDClient sharedInstance] start:self.config withUserBuilder:nil]);
+    XCTAssertTrue([[LDClient sharedInstance] start:self.config withUserBuilder:emptyUserBuilder]);
 
     XCTAssertNotNil([LDClient sharedInstance].ldUser);
     XCTAssertEqualObjects([LDClient sharedInstance].primaryEnvironment, self.primaryEnvironmentMock);
@@ -812,8 +815,9 @@ NSString *const kTestMobileKey = @"testMobileKey";
 - (void)testUpdateUser_withoutBuilder {
     [[LDClient sharedInstance] start:self.config withUserBuilder:self.userBuilder];
     [(LDEnvironment*)[self.primaryEnvironmentMock reject] updateUser:[OCMArg any]];
+    LDUserBuilder *emptyUserBuilder = nil;
 
-    XCTAssertFalse([[LDClient sharedInstance] updateUser:nil]);
+    XCTAssertFalse([[LDClient sharedInstance] updateUser:emptyUserBuilder]);
 
     XCTAssertTrue([[LDClient sharedInstance].ldUser isEqual:self.user ignoringAttributes:self.ignoredUserAttributes]);
     [self.primaryEnvironmentMock verify];
@@ -864,8 +868,9 @@ NSString *const kTestMobileKey = @"testMobileKey";
 -(void)testEnvironmentForMobileKeyNamed_missingEnvironmentName {
     [self setupSecondaryEnvironments];
     [[LDClient sharedInstance] start:self.config withUserBuilder:self.userBuilder];
+    NSString *emptyEnvironmentName = nil;
 
-    XCTAssertThrowsSpecificNamed([LDClient environmentForMobileKeyNamed:nil], NSException, NSInvalidArgumentException);
+    XCTAssertThrowsSpecificNamed([LDClient environmentForMobileKeyNamed:emptyEnvironmentName], NSException, NSInvalidArgumentException);
 }
 
 -(void)testEnvironmentForMobileKeyNamed_emptyEnvironmentName {

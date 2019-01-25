@@ -153,7 +153,6 @@ NSString * const kLDStreamPath = @"meval";
         }
 
         self.eventSource = [self eventSourceForUser:self.user config:self.config httpHeaders:[self httpHeadersForEventSource]];
-
         __weak typeof(self) weakSelf = self;
         [self.eventSource onMessage:^(LDEvent *event) {
             __strong typeof(weakSelf) strongSelf = weakSelf;
@@ -162,12 +161,15 @@ NSString * const kLDStreamPath = @"meval";
             [strongSelf handlePatchEvent:event];
             [strongSelf handleDeleteEvent:event];
         }];
-
         [self.eventSource onError:^(LDEvent *event) {
-            [self reportFlagConfigProcessingCompleteWithNotificationName:kLDServerConnectionUnavailableNotification message:@"clientstream reported error"];
-            if (![event isUnauthorizedEvent]) { return; }
-            [self reportFlagConfigProcessingCompleteWithNotificationName:kLDClientUnauthorizedNotification message:@"clientstream reported client unauthrorized"];
+            __strong typeof(weakSelf) strongSelf = weakSelf;
+            [strongSelf reportFlagConfigProcessingCompleteWithNotificationName:kLDServerConnectionUnavailableNotification message:@"clientstream reported error"];
+            if (![event isUnauthorizedEvent]) {
+                return;
+            }
+            [strongSelf reportFlagConfigProcessingCompleteWithNotificationName:kLDClientUnauthorizedNotification message:@"clientstream reported client unauthrorized"];
         }];
+        [self.eventSource open];
     }
 }
 

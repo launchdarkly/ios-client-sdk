@@ -2,6 +2,13 @@
 
 All notable changes to the LaunchDarkly iOS SDK will be documented in this file. This project adheres to [Semantic Versioning](http://semver.org).
 
+## [2.14.2] - 2019-01-24
+### Added
+- Added nullability specifiers to public SDK classes.
+
+### Changed
+- Updated to `DarklyEventSource` version `4.0.0`, which eliminates a 1-second delay in SDK initialization.
+
 ## [2.14.1] - 2018-12-21
 ### Changed
 - Added copy methods to several objects involved in creating a summary event.

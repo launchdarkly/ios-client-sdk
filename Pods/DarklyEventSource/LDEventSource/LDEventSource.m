@@ -38,7 +38,7 @@ static NSInteger const HTTPStatusCodeUnauthorized = 401;
 @property (nonatomic, strong) id lastEventID;
 @property (nonatomic, strong) LDEventStringAccumulator *eventStringAccumulator;
 
-- (void)_open;
+- (void)open;
 - (void)_dispatchEvent:(LDEvent *)e;
 
 @end
@@ -70,10 +70,14 @@ static NSInteger const HTTPStatusCodeUnauthorized = 401;
     return [self initWithURL:URL httpHeaders:headers timeoutInterval:ES_DEFAULT_TIMEOUT connectMethod:connectMethod connectBody:connectBody];
 }
 
-- (instancetype)initWithURL:(NSURL *)URL httpHeaders:(NSDictionary<NSString*, NSString *>*) headers timeoutInterval:(NSTimeInterval)timeoutInterval connectMethod:(NSString*)connectMethod connectBody:(NSData*)connectBody
-{
-    self = [super init];
-    if (!self) { return nil; }
+- (instancetype)initWithURL:(NSURL *)URL
+                httpHeaders:(NSDictionary<NSString*, NSString *>*)headers
+            timeoutInterval:(NSTimeInterval)timeoutInterval
+              connectMethod:(NSString*)connectMethod
+                connectBody:(NSData*)connectBody {
+    if (!(self = [super init])) {
+        return nil;
+    }
 
     self.listeners = [NSMutableDictionary dictionary];
     self.eventURL = URL;
@@ -86,12 +90,6 @@ static NSInteger const HTTPStatusCodeUnauthorized = 401;
     messageQueue = dispatch_queue_create("com.launchdarkly.eventsource-queue", DISPATCH_QUEUE_SERIAL);
     connectionQueue = dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_HIGH, 0);
     self.eventStringAccumulator = [[LDEventStringAccumulator alloc] init];
-
-    dispatch_time_t popTime = dispatch_time(DISPATCH_TIME_NOW, (int64_t)(_retryInterval * NSEC_PER_SEC));
-    __weak typeof(self) weakSelf = self;
-    dispatch_after(popTime, connectionQueue, ^(void){
-        [weakSelf _open];
-    });
 
     return self;
 }
@@ -204,7 +202,8 @@ didReceiveResponse:(NSURLResponse *)response completionHandler:(void (^)(NSURLSe
         dispatch_time_t popTime = dispatch_time(DISPATCH_TIME_NOW, (int64_t)([self increaseIntervalWithBackoff] * NSEC_PER_SEC));
         __weak typeof(self) weakSelf = self;
         dispatch_after(popTime, connectionQueue, ^(void){
-            [weakSelf _open];
+            __strong typeof(weakSelf) strongSelf = weakSelf;
+            [strongSelf open];
         });
     }
 }
@@ -233,7 +232,7 @@ didReceiveResponse:(NSURLResponse *)response completionHandler:(void (^)(NSURLSe
     return response && response.statusCode == HTTPStatusCodeUnauthorized;
 }
 
-- (void)_open
+- (void)open
 {
     wasClosed = NO;
     NSMutableURLRequest *request = [NSMutableURLRequest requestWithURL:self.eventURL cachePolicy:NSURLRequestReloadIgnoringCacheData timeoutInterval:self.timeoutInterval];
@@ -276,8 +275,8 @@ didReceiveResponse:(NSURLResponse *)response completionHandler:(void (^)(NSURLSe
 
 - (void)_dispatchEvent:(LDEvent *)event type:(NSString * const)type
 {
-    NSArray *errorHandlers = self.listeners[type];
-    for (LDEventSourceEventHandler handler in errorHandlers) {
+    NSArray *eventHandlers = self.listeners[type];
+    for (LDEventSourceEventHandler handler in eventHandlers) {
         dispatch_async(connectionQueue, ^{
             handler(event);
         });

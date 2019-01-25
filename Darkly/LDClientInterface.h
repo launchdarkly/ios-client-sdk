@@ -11,11 +11,13 @@
 @protocol ClientDelegate;
 @class LDUserBuilder;
 
+NS_ASSUME_NONNULL_BEGIN
+
 @protocol LDClientInterface <NSObject>
 
 @property (nonatomic, copy, readonly) NSString *environmentName;    ///The name associated with the environment in LDConfig.
-@property (nonatomic, weak) id<ClientDelegate> delegate;
-@property (nonatomic, strong, readonly) NSDictionary<NSString*, id> *allFlags;   ///Dictionary of <flagKey: flagValue> for all feature flags in the environment
+@property (nonatomic, weak, nullable) id<ClientDelegate> delegate;
+@property (nonatomic, strong, readonly, nullable) NSDictionary<NSString*, id> *allFlags;   ///Dictionary of <flagKey: flagValue> for all feature flags in the environment
 
 #pragma mark - Variation
 
@@ -39,7 +41,7 @@
  * @param fallback   Fallback value for feature flag
  * @return the feature flag value
  */
-- (NSNumber*)numberVariation:(NSString *)featureKey fallback:(NSNumber*)fallback;
+- (nullable NSNumber*)numberVariation:(NSString *)featureKey fallback:(nullable NSNumber*)fallback;
 
 /**
  * Retrieve a feature flag value. If the configuration for this feature
@@ -61,7 +63,7 @@
  * @param fallback   Fallback value for feature flag
  * @return the feature flag value
  */
-- (NSString*)stringVariation:(NSString *)featureKey fallback:(NSString*)fallback;
+- (nullable NSString*)stringVariation:(NSString *)featureKey fallback:(nullable NSString*)fallback;
 
 /**
  * Retrieve a feature flag value. If the configuration for this feature
@@ -72,7 +74,7 @@
  * @param fallback   Fallback value for feature flag
  * @return the feature flag value
  */
-- (NSArray*)arrayVariation:(NSString *)featureKey fallback:(NSArray*)fallback;
+- (nullable NSArray*)arrayVariation:(NSString *)featureKey fallback:(nullable NSArray*)fallback;
 
 /**
  * Retrieve a feature flag value. If the configuration for this feature
@@ -83,7 +85,7 @@
  * @param fallback   Fallback value for feature flag
  * @return the feature flag value
  */
-- (NSDictionary*)dictionaryVariation:(NSString *)featureKey fallback:(NSDictionary*)fallback;
+- (nullable NSDictionary*)dictionaryVariation:(NSString *)featureKey fallback:(nullable NSDictionary*)fallback;
 
 #pragma mark - Event
 
@@ -94,6 +96,8 @@
  * @param dataDictionary  Data to be attached to custom event
  * @return whether the event was successfully recorded
  */
-- (BOOL)track:(NSString *)eventName data:(NSDictionary *)dataDictionary;
+- (BOOL)track:(NSString *)eventName data:(nullable NSDictionary *)dataDictionary;
+
+NS_ASSUME_NONNULL_END
 
 @end

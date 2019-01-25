@@ -4,7 +4,6 @@
 
 #import <Foundation/Foundation.h>
 
-
 /*!
  *  @brief Enum for setting up log output level.
  *  @since 4.2.0
@@ -16,6 +15,8 @@ typedef enum {
     DarklyLogLevelDebug,            //Debug level, outputs critical and main events
     DarklyLogLevelAll               //Highest level, outputs all events
 } DarklyLogLevel;
+
+NS_ASSUME_NONNULL_BEGIN
 
 extern NSString * const kClientVersion;
 extern NSString * const kLDPrimaryEnvironmentName;
@@ -50,6 +51,8 @@ extern NSString *const kLDEventTimerFiredNotification;
 extern NSString *const kLDBackgroundFetchInitiated;
 extern NSString *const kLDNotificationUserInfoKeyMobileKey;
 extern NSString *const kLDNotificationUserInfoKeyFlagKeys;
+
+NS_ASSUME_NONNULL_END
 
 extern int const kCapacity;
 extern int const kConnectionTimeout;

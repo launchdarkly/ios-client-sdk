@@ -4,12 +4,14 @@
 
 #import <Foundation/Foundation.h>
 
+NS_ASSUME_NONNULL_BEGIN
+
 @interface LDConfig : NSObject
 
 /**
  This is the mobile key retrieved from the LaunchDarkly account settings.
  */
-@property (nonatomic, readonly, nonnull) NSString* mobileKey;
+@property (nonatomic, readonly) NSString* mobileKey;
 
 /**
  These are the names and mobile keys for secondary environments to use in the SDK. The
@@ -120,19 +122,19 @@
  @param mobileKey The mobileKey retrieved from the LaunchDarkly account settings.
  @return An instance of LDConfig object.
  */
-- (instancetype _Nonnull)initWithMobileKey:(nonnull NSString *)mobileKey NS_DESIGNATED_INITIALIZER;
+- (instancetype)initWithMobileKey:(NSString *)mobileKey NS_DESIGNATED_INITIALIZER;
 - (BOOL)isFlagRetryStatusCode:(NSInteger)statusCode;
 -(NSString*)secondaryMobileKeysDescription;
-- (instancetype _Nonnull )init NS_UNAVAILABLE;
+- (instancetype)init NS_UNAVAILABLE;
 
 @end
 
 __deprecated_msg("Use LDConfig instead")
 @interface LDConfigBuilder : NSObject
 
-@property (nonatomic, strong, nonnull) LDConfig *config;
+@property (nonatomic, strong) LDConfig *config;
 
-- (instancetype _Nonnull )init;
+- (instancetype)init;
 
 /**
  * Provide an mobileKey to the configuration builder. This is the mobileKey
@@ -141,7 +143,7 @@ __deprecated_msg("Use LDConfig instead")
  * @param mobileKey    the mobileKey for the configuration
  * @return the configuration builder
  */
-- (LDConfigBuilder *_Nonnull)withMobileKey:(NSString *_Nonnull)mobileKey __deprecated_msg("Use `setMobileKey:` on an LDConfig object");
+- (LDConfigBuilder *)withMobileKey:(NSString *)mobileKey __deprecated_msg("Use `setMobileKey:` on an LDConfig object");
 /**
  * Provide the baseUrl of the LaunchDarkly server. This will allow you
  * to switch between production and staging environments. (Optional)
@@ -149,7 +151,7 @@ __deprecated_msg("Use LDConfig instead")
  * @param baseUrl    the baseUrl of the server
  * @return the configuration builder
  */
-- (LDConfigBuilder *_Nonnull)withBaseUrl:(NSString *_Nullable)baseUrl __deprecated_msg("Use `setBaseUrl:` on an LDConfig object");
+- (LDConfigBuilder *)withBaseUrl:(NSString *)baseUrl __deprecated_msg("Use `setBaseUrl:` on an LDConfig object");
 /**
  * Provide the eventsUrl of the LaunchDarkly server. This will allow you
  * to switch between production and staging environments. (Optional)
@@ -157,7 +159,7 @@ __deprecated_msg("Use LDConfig instead")
  * @param eventsUrl    the eventsUrl of the server
  * @return the configuration builder
  */
-- (LDConfigBuilder *_Nonnull)withEventsUrl:(NSString *_Nullable)eventsUrl __deprecated_msg("Use `setEventsUrl:` on an LDConfig object");
+- (LDConfigBuilder *)withEventsUrl:(nullable NSString *)eventsUrl __deprecated_msg("Use `setEventsUrl:` on an LDConfig object");
 /**
  * Provide the capacity for storing feature flag and custom events. Events
  * are persisted on the client and then synced to the server on a regular
@@ -168,7 +170,7 @@ __deprecated_msg("Use LDConfig instead")
  * @param capacity  the number of events to store
  * @return the configuration builder
  */
-- (LDConfigBuilder *_Nonnull)withCapacity:(int)capacity __deprecated_msg("Use `setCapacity:` on an LDConfig object");
+- (LDConfigBuilder *)withCapacity:(int)capacity __deprecated_msg("Use `setCapacity:` on an LDConfig object");
 /**
  * The connection timeout to be used when syncing to the LaunchDarkly
  * server. The default is 10 seconds. (Optional)
@@ -176,7 +178,7 @@ __deprecated_msg("Use LDConfig instead")
  * @param connectionTimeout timeout for network connections in seconds
  * @return the configuration builder
  */
-- (LDConfigBuilder *_Nonnull)withConnectionTimeout:(int)connectionTimeout __deprecated_msg("Use `setConnectionTimeout:` on an LDConfig object");
+- (LDConfigBuilder *)withConnectionTimeout:(int)connectionTimeout __deprecated_msg("Use `setConnectionTimeout:` on an LDConfig object");
 /**
  * The interval at which events are synced to the server. The default
  * is 30 seconds for streaming mode; in polling mode, the flush interval defaults to the polling interval. (Optional)
@@ -184,7 +186,7 @@ __deprecated_msg("Use LDConfig instead")
  * @param flushInterval the flush interval in seconds
  * @return the configuration builder
  */
-- (LDConfigBuilder *_Nonnull)withFlushInterval:(int)flushInterval __deprecated_msg("Use `setFlushInterval:` on an LDConfig object");
+- (LDConfigBuilder *)withFlushInterval:(int)flushInterval __deprecated_msg("Use `setFlushInterval:` on an LDConfig object");
 /**
  * Set the polling interval (in seconds) for polling mode only. An interval
  * less than 300 is set to the minimum (5 minutes). The default is 5 minutes. (Optional)
@@ -192,7 +194,7 @@ __deprecated_msg("Use LDConfig instead")
  * @param pollingInterval the polling interval in seconds
  * @return the configuration builder
  */
-- (LDConfigBuilder *_Nonnull)withPollingInterval:(int)pollingInterval __deprecated_msg("Use `setPollingInterval:` on an LDConfig object");
+- (LDConfigBuilder *)withPollingInterval:(int)pollingInterval __deprecated_msg("Use `setPollingInterval:` on an LDConfig object");
 /**
  * Set the background fetch interval (in seconds) for background fetch. An interval
  * less than 900 is set to the minimum (15 minutes). The default is 60 minutes. (Optional)
@@ -200,22 +202,24 @@ __deprecated_msg("Use LDConfig instead")
  * @param backgroundFetchInterval the background fetch interval in seconds
  * @return the configuration builder
  */
-- (LDConfigBuilder *_Nonnull)withBackgroundFetchInterval:(int)backgroundFetchInterval __deprecated_msg("Use `setBackgroundFetchInterval:` on an LDConfig object");
+- (LDConfigBuilder *)withBackgroundFetchInterval:(int)backgroundFetchInterval __deprecated_msg("Use `setBackgroundFetchInterval:` on an LDConfig object");
 /**
  * Enable streaming mode for flags. When streaming is false, disable streaming and switch to polling mode. (Optional)
  *
  * @param streamingEnabled Whether streaming is enabled or not
  * @return the configuration builder
  */
-- (LDConfigBuilder *_Nonnull)withStreaming:(BOOL)streamingEnabled __deprecated_msg("Use `setStreaming:` on an LDConfig object");
+- (LDConfigBuilder *)withStreaming:(BOOL)streamingEnabled __deprecated_msg("Use `setStreaming:` on an LDConfig object");
 /**
  * Enable debug mode to allow things such as logging. (Optional)
  *
  * @param debugEnabled Whether debugging is enabled or not
  * @return the configuration builder
  */
-- (LDConfigBuilder *_Nonnull)withDebugEnabled:(BOOL)debugEnabled __deprecated_msg("Use `setDebugEnabled:` on an LDConfig object");
+- (LDConfigBuilder *)withDebugEnabled:(BOOL)debugEnabled __deprecated_msg("Use `setDebugEnabled:` on an LDConfig object");
 
--(LDConfig *_Nonnull)build;
+-(LDConfig *)build;
+
+NS_ASSUME_NONNULL_END
 
 @end
