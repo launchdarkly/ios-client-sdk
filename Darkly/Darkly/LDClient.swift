@@ -606,14 +606,16 @@ public class LDClient {
      ````
 
      - parameter key: The key for the event. The SDK does nothing with the key, which can be any string the client app sends
-     - parameter data: The data for the event. The SDK does nothing with the data, which can be any [String: Any] the client app sends. (Optional)
+     - parameter data: The data for the event. The SDK does nothing with the data, which can be any valid JSON item the client app sends. (Optional)
+
+     - throws: JSONSerialization.JSONError.invalidJsonObject if the data is not a valid JSON item
     */
-    public func trackEvent(key: String, data: Any? = nil) {
+    public func trackEvent(key: String, data: Any? = nil) throws {
         guard hasStarted else {
             Log.debug(typeName(and: #function) + "aborted. LDClient not started")
             return
         }
-        let event = Event.customEvent(key: key, user: user, data: data)
+        let event = try Event.customEvent(key: key, user: user, data: data)
         Log.debug(typeName(and: #function) + "event: \(event), data: \(String(describing: data))")
         eventReporter.record(event)
     }

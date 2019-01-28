@@ -11,6 +11,7 @@ import Foundation
 extension JSONSerialization {
     enum JSONError: Error {
         case notADictionary
+        case invalidJsonObject
     }
 
     static func jsonDictionary(with data: Data, options: JSONSerialization.ReadingOptions = []) throws -> [String: Any] {

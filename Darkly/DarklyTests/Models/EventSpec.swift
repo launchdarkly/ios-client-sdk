@@ -173,11 +173,10 @@ final class EventSpec: QuickSpec {
         }
         describe("customEvent") {
             for eventData in CustomEvent.allData {
-                context("with data") {
-                    beforeEach {
-                        event = Event.customEvent(key: Constants.eventKey, user: user, data: eventData)
-                    }
+                context("with valid json data") {
                     it("creates a custom event with matching data") {
+                        expect { event = try Event.customEvent(key: Constants.eventKey, user: user, data: eventData) }.toNot(throwError())
+
                         expect(event.kind) == Event.Kind.custom
                         expect(event.key) == Constants.eventKey
                         expect(event.creationDate).toNot(beNil())
@@ -191,11 +190,15 @@ final class EventSpec: QuickSpec {
                     }
                 }
             }
-            context("without data") {
-                beforeEach {
-                    event = Event.customEvent(key: Constants.eventKey, user: user, data: nil)
+            context("with invalid json data") {
+                it("throws an invalidJsonObject error") {
+                    expect { event = try Event.customEvent(key: Constants.eventKey, user: user, data: Date()) }.to(throwError(JSONSerialization.JSONError.invalidJsonObject))
                 }
+            }
+            context("without data") {
                 it("creates a custom event with matching data") {
+                    expect { event = try Event.customEvent(key: Constants.eventKey, user: user, data: nil) }.toNot(throwError())
+
                     expect(event.kind) == Event.Kind.custom
                     expect(event.key) == Constants.eventKey
                     expect(event.creationDate).toNot(beNil())
@@ -448,9 +451,63 @@ final class EventSpec: QuickSpec {
             beforeEach {
                 config = LDConfig.stub
             }
+            for eventData in CustomEvent.allData {
+                context("with valid json data") {
+                    beforeEach {
+                        do {
+                            event = try Event.customEvent(key: Constants.eventKey, user: user, data: eventData)
+                        } catch JSONSerialization.JSONError.invalidJsonObject {
+                            fail("customEvent threw an invalidJsonObject exception")
+                        } catch {
+                            fail("customEvent threw an exception")
+                        }
+                        eventDictionary = event.dictionaryValue(config: config)
+                    }
+                    it("creates a dictionary with matching custom data") {
+                        expect(eventDictionary.eventKind) == .custom
+                        expect(eventDictionary.eventKey) == Constants.eventKey
+                        expect(eventDictionary.eventCreationDate?.isWithin(0.001, of: event.creationDate!)).to(beTrue())
+                        expect(AnyComparer.isEqual(eventDictionary.eventData, to: eventData)).to(beTrue())
+                        expect(eventDictionary.eventValue).to(beNil())
+                        expect(eventDictionary.eventDefaultValue).to(beNil())
+                        expect(eventDictionary.eventVariation).to(beNil())
+                        expect(eventDictionary.eventUserKey) == user.key
+                        expect(eventDictionary.eventUser).to(beNil())
+                    }
+                }
+            }
+            context("without data") {
+                beforeEach {
+                    do {
+                        event = try Event.customEvent(key: Constants.eventKey, user: user, data: nil)
+                    } catch JSONSerialization.JSONError.invalidJsonObject {
+                        fail("customEvent threw an invalidJsonObject exception")
+                    } catch {
+                        fail("customEvent threw an exception")
+                    }
+                    eventDictionary = event.dictionaryValue(config: config)
+                }
+                it("creates a dictionary with matching custom data") {
+                    expect(eventDictionary.eventKind) == .custom
+                    expect(eventDictionary.eventKey) == Constants.eventKey
+                    expect(eventDictionary.eventCreationDate?.isWithin(0.001, of: event.creationDate!)).to(beTrue())
+                    expect(eventDictionary.eventData).to(beNil())
+                    expect(eventDictionary.eventValue).to(beNil())
+                    expect(eventDictionary.eventDefaultValue).to(beNil())
+                    expect(eventDictionary.eventVariation).to(beNil())
+                    expect(eventDictionary.eventUserKey) == user.key
+                    expect(eventDictionary.eventUser).to(beNil())
+                }
+            }
             context("without inlining user") {
                 beforeEach {
-                    event = Event.customEvent(key: Constants.eventKey, user: user, data: CustomEvent.dictionaryData)
+                    do {
+                        event = try Event.customEvent(key: Constants.eventKey, user: user, data: CustomEvent.dictionaryData)
+                    } catch JSONSerialization.JSONError.invalidJsonObject {
+                        fail("customEvent threw an invalidJsonObject exception")
+                    } catch {
+                        fail("customEvent threw an exception")
+                    }
                     config.inlineUserInEvents = false   //Default value, here for clarity
                     eventDictionary = event.dictionaryValue(config: config)
                 }
@@ -470,7 +527,13 @@ final class EventSpec: QuickSpec {
             }
             context("inlining user") {
                 beforeEach {
-                    event = Event.customEvent(key: Constants.eventKey, user: user, data: CustomEvent.dictionaryData)
+                    do {
+                        event = try Event.customEvent(key: Constants.eventKey, user: user, data: CustomEvent.dictionaryData)
+                    } catch JSONSerialization.JSONError.invalidJsonObject {
+                        fail("customEvent threw an invalidJsonObject exception")
+                    } catch {
+                        fail("customEvent threw an exception")
+                    }
                     config.inlineUserInEvents = true
                     eventDictionary = event.dictionaryValue(config: config)
                 }
@@ -1133,7 +1196,7 @@ extension Dictionary where Key == String, Value == Any {
     var eventDefaultValue: Any? { return self[Event.CodingKeys.defaultValue.rawValue] }
     var eventVariation: Int? { return self[Event.CodingKeys.variation.rawValue] as? Int }
     var eventVersion: Int? { return self[Event.CodingKeys.version.rawValue] as? Int }
-    var eventData: [String: Any]? { return self[Event.CodingKeys.data.rawValue] as? [String: Any] }
+    var eventData: Any? { return self[Event.CodingKeys.data.rawValue] }
     var eventStartDate: Date? { return Date(millisSince1970: self[FlagRequestTracker.CodingKeys.startDate.rawValue] as? Int64) }
     var eventEndDate: Date? { return Date(millisSince1970: self[Event.CodingKeys.endDate.rawValue] as? Int64) }
     var eventFeatures: [String: Any]? { return self[FlagRequestTracker.CodingKeys.features.rawValue] as? [String: Any] }
@@ -1167,7 +1230,7 @@ extension Event {
             let featureFlag = DarklyServiceMock.Constants.stubFeatureFlag(for: DarklyServiceMock.FlagKeys.bool)
             return Event.debugEvent(key: UUID().uuidString, value: true, defaultValue: false, featureFlag: featureFlag, user: user)
         case .identify: return Event.identifyEvent(user: user)
-        case .custom: return Event.customEvent(key: UUID().uuidString, user: user, data: ["custom": UUID().uuidString])
+        case .custom: return (try? Event.customEvent(key: UUID().uuidString, user: user, data: ["custom": UUID().uuidString]))!
         case .summary: return Event.summaryEvent(flagRequestTracker: FlagRequestTracker.stub())!
         }
     }

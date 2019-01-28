@@ -858,7 +858,7 @@ final class LDClientSpec: QuickSpec {
                         expect(testContext.subject.isOnline) == false
                     }
                     it("stops recording events") {
-                        testContext.subject.trackEvent(key: event.key!)
+                        expect { try testContext.subject.trackEvent(key: event.key!) }.toNot(throwError())
                         expect(testContext.eventReporterMock.recordCallCount) == priorRecordedEvents
                     }
                 }
@@ -874,7 +874,7 @@ final class LDClientSpec: QuickSpec {
                         expect(testContext.subject.isOnline) == false
                     }
                     it("stops recording events") {
-                        testContext.subject.trackEvent(key: event.key!)
+                        expect { try testContext.subject.trackEvent(key: event.key!) }.toNot(throwError())
                         expect(testContext.eventReporterMock.recordCallCount) == priorRecordedEvents
                     }
                 }
@@ -887,7 +887,7 @@ final class LDClientSpec: QuickSpec {
                     expect(testContext.subject.isOnline) == false
                 }
                 it("does not record events") {
-                    testContext.subject.trackEvent(key: event.key!)
+                    expect { try testContext.subject.trackEvent(key: event.key!) }.toNot(throwError())
                     expect(testContext.eventReporterMock.recordCallCount) == 0
                 }
             }
@@ -904,7 +904,7 @@ final class LDClientSpec: QuickSpec {
                     expect(testContext.subject.isOnline) == false
                 }
                 it("stops recording events") {
-                    testContext.subject.trackEvent(key: event.key!)
+                    expect { try testContext.subject.trackEvent(key: event.key!) }.toNot(throwError())
                     expect(testContext.eventReporterMock.recordCallCount) == priorRecordedEvents
                 }
             }
@@ -924,7 +924,8 @@ final class LDClientSpec: QuickSpec {
                 beforeEach {
                     testContext.subject.start(config: testContext.config, user: testContext.user)
 
-                    testContext.subject.trackEvent(key: event.key!, data: event.data)
+                    //swiftlint:disable:next force_try
+                    try! testContext.subject.trackEvent(key: event.key!, data: event.data)
                 }
                 it("records a custom event") {
                     expect(testContext.eventReporterMock.recordReceivedArguments?.event.key) == event.key
@@ -935,7 +936,8 @@ final class LDClientSpec: QuickSpec {
             }
             context("when client was not started") {
                 beforeEach {
-                    testContext.subject.trackEvent(key: event.key!, data: event.data)
+                    //swiftlint:disable:next force_try
+                    try! testContext.subject.trackEvent(key: event.key!, data: event.data)
                 }
                 it("does not record any events") {
                     expect(testContext.eventReporterMock.recordCallCount) == 0
@@ -948,7 +950,8 @@ final class LDClientSpec: QuickSpec {
                     testContext.subject.stop()
                     priorRecordedEvents = testContext.eventReporterMock.recordCallCount
 
-                    testContext.subject.trackEvent(key: event.key!, data: event.data)
+                    //swiftlint:disable:next force_try
+                    try! testContext.subject.trackEvent(key: event.key!, data: event.data)
                 }
                 it("does not record any more events") {
                     expect(testContext.eventReporterMock.recordCallCount) == priorRecordedEvents

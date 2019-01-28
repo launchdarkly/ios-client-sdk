@@ -66,8 +66,14 @@ struct Event { //sdk internal, not publically accessible
         return Event(kind: .debug, key: key, user: user, value: value, defaultValue: defaultValue, featureFlag: featureFlag)
     }
 
-    static func customEvent(key: String, user: LDUser, data: Any? = nil) -> Event {
+    static func customEvent(key: String, user: LDUser, data: Any? = nil) throws -> Event {
         Log.debug(typeName(and: #function) + "key: " + key + ", data: \(String(describing: data))")
+        if let data = data {
+            guard JSONSerialization.isValidJSONObject([CodingKeys.data.rawValue: data]) //the top level object must be either an array or an object for isValidJSONObject to work correctly
+            else {
+                throw JSONSerialization.JSONError.invalidJsonObject
+            }
+        }
         return Event(kind: .custom, key: key, user: user, data: data)
     }
 
