@@ -9,7 +9,7 @@
 import Foundation
 
 extension JSONSerialization {
-    enum JSONError: Error {
+    public enum JSONError: Error {
         case notADictionary
         case invalidJsonObject
     }
