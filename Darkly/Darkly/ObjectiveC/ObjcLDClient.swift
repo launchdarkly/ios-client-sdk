@@ -849,8 +849,7 @@ public final class ObjcLDClient: NSObject {
 
      - parameter key: The key for the event. The SDK does nothing with the key, which can be any string the client app sends
      - parameter data: The data for the event. The SDK does nothing with the data, which can be any valid JSON item the client app sends. (Optional)
-
-     - throws: JSONSerialization.JSONError.invalidJsonObject if the data is not a valid JSON item
+     - parameter error: NSError object to hold the invalidJsonObject error if the data is not a valid JSON item. (Optional)
      */
     @objc public func trackEvent(key: String, data: Any? = nil) throws {
         try LDClient.shared.trackEvent(key: key, data: data)

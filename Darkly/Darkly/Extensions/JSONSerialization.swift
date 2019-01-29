@@ -11,7 +11,9 @@ import Foundation
 extension JSONSerialization {
     @objc (LaunchDarklyJSONError)
     public enum JSONError: Int, Error {
+        ///Error used when the expected JSON object is a dictionary, but the actual object is not
         case notADictionary
+        ///Error used when the expected object is a valid JSON object, but the actual object is not
         case invalidJsonObject
     }
 
@@ -20,6 +22,7 @@ extension JSONSerialization {
         return decodedDictionary
     }
 
+    ///String domain set into NSError objects for Objective-C clients when the SDK sends a JSONError 
     @objc(LaunchDarklyJSONErrorDomain)
     public static let JSONErrorDomain = "LaunchDarkly.JSONError"
 }
