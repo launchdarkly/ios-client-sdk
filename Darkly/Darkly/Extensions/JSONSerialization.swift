@@ -21,5 +21,5 @@ extension JSONSerialization {
     }
 
     @objc(LaunchDarklyJSONErrorDomain)
-    public static let JSONErrorDomain = "(extension in LaunchDarkly):__C.NSJSONSerialization.JSONError"
+    public static let JSONErrorDomain = "LaunchDarkly.JSONError"
 }
