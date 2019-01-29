@@ -23,6 +23,7 @@ Version 3.0.0 is built on Swift 4.2 using Xcode 10. The SDK will not build using
 8. Update `LDClient` Feature Flag access. See [Update `LDClient` Feature Flag access](#update-ldclient-feature-flag-access) for details.
 9. Install `LDClient` Feature Flag Observers. See [Install `LDClient` Feature Flag Observers](#install-ldclient-feature-flag-observers) for details.
 10. Remove `LDClientDelegate` methods if they were not re-used. See [Remove `LDClientDelegate` methods](#remove-ldclientdelegate-methods) for details.
+11. Install exception handling for `LDClient` `trackEvent` calls. See [Install `LDClient.trackEvent` exception handling](#install-ldclienttrackevent-exception-handling) for details.
 
 ### Integrate the Swift SDK into your app using either CocoaPods or Carthage
 #### CocoaPods
@@ -85,6 +86,13 @@ See [Monitoring Feature Flags for changes](#monitoring-feature-flags-for-changes
 
 ### Remove `LDClientDelegate` methods.
 If they were not re-used when implementing observers, you can delete the former `LDClientDelegate` methods.
+
+### Install `LDClient.trackEvent` exception handling
+See [Event Controls](#event-controls) for more details.
+#### Swift Client Apps
+Wrap calls to `trackEvent` into do-catch statements. If desired, catch `JSONSerialization.JSONError.invalidJsonObject` errors. Alternatively, add `throws` to any method calls `trackEvent` to allow the calling method to handle the error.
+#### Objective-C Client Apps
+Calls to `trackEvent` include a 3rd parameter `error`, which the SDK sets when a call receives invalid JSON data. To verify the `error` object set by `trackEvents` threw a `JSONSerialization.JSONError.invalidJsonObject` error, compare the `domain` to `LaunchDarklyJSONErrorDomain` and the `code` to `LaunchDarklyJSONErrorInvalidJsonObject`. 
 
 ---
 ## API Differences from v2.x
@@ -221,7 +229,11 @@ The LDClient wrapper provides type-based single-key observer methods that functi
 ##### `flush`
 This method has changed to `reportEvents()`.
 ##### `track`
-This method has changed to `trackEvent`
+This method has changed to `trackEvent`. `trackEvent` can now throw if the `data` parameter does not contain a valid JSON Object, or `nil`. This check is made at run-time. For Objective-C client apps, the method has an additional `error` parameter, which the SDK populates when the data is not a valid JSON object.
+#### New Event Controls
+##### `JSONSerialization`
+A new enum `JSONError` has cases the SDK uses when a JSON object does not meet expectations. `notADictionary` and `invalidJsonObject` cases were added. The SDK does not throw `notADictionary` to client apps. Client apps should handle `invalidJsonObject` errors thrown from `trackEvent`
+A new string constant `LaunchDarklyJSONErrorDomain` provides the ability for Objective-C apps to verify the `NSError` `domain`. The SDK sets this domain for `JSONError`s reported via `trackEvent` in Objective-C only.
 
 ## Replacing LDClient delegate methods
 ### `featureFlagDidUpdate` and `userDidUpdate`

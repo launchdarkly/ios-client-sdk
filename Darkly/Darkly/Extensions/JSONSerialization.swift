@@ -18,7 +18,8 @@ extension JSONSerialization {
     }
 
     static func jsonDictionary(with data: Data, options: JSONSerialization.ReadingOptions = []) throws -> [String: Any] {
-        guard let decodedDictionary = try JSONSerialization.jsonObject(with: data, options: options) as? [String: Any] else { throw JSONError.notADictionary }
+        guard let decodedDictionary = try JSONSerialization.jsonObject(with: data, options: options) as? [String: Any]
+        else { throw JSONError.notADictionary }
         return decodedDictionary
     }
 
