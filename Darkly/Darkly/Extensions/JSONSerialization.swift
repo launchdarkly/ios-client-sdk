@@ -9,7 +9,8 @@
 import Foundation
 
 extension JSONSerialization {
-    public enum JSONError: Error {
+    @objc (LaunchDarklyJSONError)
+    public enum JSONError: Int, Error {
         case notADictionary
         case invalidJsonObject
     }
@@ -18,4 +19,7 @@ extension JSONSerialization {
         guard let decodedDictionary = try JSONSerialization.jsonObject(with: data, options: options) as? [String: Any] else { throw JSONError.notADictionary }
         return decodedDictionary
     }
+
+    @objc(LaunchDarklyJSONErrorDomain)
+    public static let JSONErrorDomain = "(extension in LaunchDarkly):__C.NSJSONSerialization.JSONError"
 }
