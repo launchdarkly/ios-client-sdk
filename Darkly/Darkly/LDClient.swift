@@ -406,7 +406,7 @@ public class LDClient {
      */
     public func variationAndSource<T: LDFlagValueConvertible>(forKey flagKey: LDFlagKey, fallback: T) -> (T, LDFlagValueSource) {
         let (value, source) = variationAndSource(forKey: flagKey, fallback: fallback as T?)
-        return (value ?? fallback, source)
+        return (value ?? fallback, source)  //Because the fallback is wrapped into an Optional, the nil coalescing right side should never be called
     }
 
     /**

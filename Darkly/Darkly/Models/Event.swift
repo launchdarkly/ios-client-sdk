@@ -101,6 +101,7 @@ struct Event { //sdk internal, not publically accessible
         } else {
             eventDictionary[CodingKeys.userKey.rawValue] = user?.key
         }
+        //TODO: This may be a bug. Both value and defaultValue are written to their respective keys, as Optionals. Verify proper behavior and fix if needed
         eventDictionary[CodingKeys.value.rawValue] = value
         eventDictionary[CodingKeys.defaultValue.rawValue] = defaultValue
         eventDictionary[CodingKeys.variation.rawValue] = featureFlag?.variation
