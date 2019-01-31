@@ -341,7 +341,7 @@ public final class ObjcLDClient: NSObject {
     }
 
     /**
-     Returns the NSString variation for the given feature flag. If the flag does not exist, cannot be cast to a NSString, or the LDClient is not started, returns the fallback value.
+     Returns the NSString variation for the given feature flag. If the flag does not exist, cannot be cast to a NSString, or the LDClient is not started, returns the fallback value, which may be nil.
 
      A *variation* is a specific flag value. For example a boolean feature flag has 2 variations, *YES* and *NO*. You can create feature flags with more than 2 variations using other feature flag types. See `LDFlagValue` for the available types.
 
@@ -359,16 +359,16 @@ public final class ObjcLDClient: NSObject {
      ````
 
      - parameter key: The LDFlagKey for the requested feature flag.
-     - parameter fallback: The fallback value to return if the feature flag key does not exist.
+     - parameter fallback: The fallback value to return if the feature flag key does not exist. The fallback value may be nil.
 
-     - returns: The requested NSString feature flag value, or the fallback if the flag is missing or cannot be cast to a NSString, or the client is not started
+     - returns: The requested NSString feature flag value, or the fallback value (which may be nil) if the flag is missing or cannot be cast to a NSString, or the client is not started.
      */
     @objc public func stringVariation(forKey key: LDFlagKey, fallback: String?) -> String? {
         return LDClient.shared.variation(forKey: key, fallback: fallback)
     }
 
     /**
-     Returns the `LDStringVariationValue` (`ObjcLDStringVariationValue`) containing the value and source for the given feature flag. If the flag does not exist, cannot be cast to a NSString, or the LDClient is not started, returns the fallback value and `LDFlagValueSourceFallback` for the source.
+     Returns the `LDStringVariationValue` (`ObjcLDStringVariationValue`) containing the value and source for the given feature flag. If the flag does not exist, cannot be cast to a NSString, or the LDClient is not started, returns the fallback value (which may be nil) and `LDFlagValueSourceFallback` for the source.
 
      A *variation* is a specific flag value. For example a boolean feature flag has 2 variations, *true* and *false*. You can create feature flags with more than 2 variations using other feature flag types. See `LDFlagValue` for the available types.
 
@@ -388,16 +388,16 @@ public final class ObjcLDClient: NSObject {
      ````
 
      - parameter key: The LDFlagKey for the requested feature flag.
-     - parameter fallback: The fallback value to return if the feature flag key does not exist.
+     - parameter fallback: The fallback value to return if the feature flag key does not exist. The fallback value may be nil.
 
-     - returns: A `LDStringVariationValue` (`ObjcLDStringVariationValue`) containing the requested feature flag value and source, or the fallback if the flag is missing or cannot be cast to a NSString, or the client is not started. If the fallback value is returned, the source is `LDFlagValueSourceFallback`
+     - returns: A `LDStringVariationValue` (`ObjcLDStringVariationValue`) containing the requested feature flag value and source, or the fallback value (which may be nil) if the flag is missing or cannot be cast to a NSString, or the client is not started. If the fallback value is returned, the source is `LDFlagValueSourceFallback`
      */
     @objc public func stringVariationAndSource(forKey key: LDFlagKey, fallback: String?) -> ObjcLDStringVariationValue {
         return ObjcLDStringVariationValue(LDClient.shared.variationAndSource(forKey: key, fallback: fallback))
     }
 
     /**
-     Returns the NSArray variation for the given feature flag. If the flag does not exist, cannot be cast to a NSArray, or the LDClient is not started, returns the fallback value.
+     Returns the NSArray variation for the given feature flag. If the flag does not exist, cannot be cast to a NSArray, or the LDClient is not started, returns the fallback value, which may be nil..
 
      A *variation* is a specific flag value. For example a boolean feature flag has 2 variations, *YES* and *NO*. You can create feature flags with more than 2 variations using other feature flag types. See `LDFlagValue` for the available types.
 
@@ -415,16 +415,16 @@ public final class ObjcLDClient: NSObject {
      ````
 
      - parameter key: The LDFlagKey for the requested feature flag.
-     - parameter fallback: The fallback value to return if the feature flag key does not exist.
+     - parameter fallback: The fallback value to return if the feature flag key does not exist. The fallback value may be nil.
 
-     - returns: The requested NSArray feature flag value, or the fallback if the flag is missing or cannot be cast to a NSArray, or the client is not started
+     - returns: The requested NSArray feature flag value, or the fallback value (which may be nil) if the flag is missing or cannot be cast to a NSArray, or the client is not started
      */
     @objc public func arrayVariation(forKey key: LDFlagKey, fallback: [Any]?) -> [Any]? {
         return LDClient.shared.variation(forKey: key, fallback: fallback)
     }
     
     /**
-     Returns the `LDArrayVariationValue` (`ObjcLDArrayVariationValue`) containing the value and source for the given feature flag. If the flag does not exist, cannot be cast to a NSArray, or the LDClient is not started, returns the fallback value and `LDFlagValueSourceFallback` for the source.
+     Returns the `LDArrayVariationValue` (`ObjcLDArrayVariationValue`) containing the value and source for the given feature flag. If the flag does not exist, cannot be cast to a NSArray, or the LDClient is not started, returns the fallback value (which may be nil) and `LDFlagValueSourceFallback` for the source.
 
      A *variation* is a specific flag value. For example a boolean feature flag has 2 variations, *true* and *false*. You can create feature flags with more than 2 variations using other feature flag types. See `LDFlagValue` for the available types.
 
@@ -444,16 +444,16 @@ public final class ObjcLDClient: NSObject {
      ````
 
      - parameter key: The LDFlagKey for the requested feature flag.
-     - parameter fallback: The fallback value to return if the feature flag key does not exist.
+     - parameter fallback: The fallback value to return if the feature flag key does not exist. The fallback value may be nil.
 
-     - returns: A `LDArrayVariationValue` (`ObjcLDArrayVariationValue`) containing the requested feature flag value and source, or the fallback if the flag is missing or cannot be cast to a NSArray, or the client is not started. If the fallback value is returned, the source is `LDFlagValueSourceFallback`
+     - returns: A `LDArrayVariationValue` (`ObjcLDArrayVariationValue`) containing the requested feature flag value and source, or the fallback value (which may be nil) if the flag is missing or cannot be cast to a NSArray, or the client is not started. If the fallback value is returned, the source is `LDFlagValueSourceFallback`
      */
     @objc public func arrayVariationAndSource(forKey key: LDFlagKey, fallback: [Any]?) -> ObjcLDArrayVariationValue {
         return ObjcLDArrayVariationValue(LDClient.shared.variationAndSource(forKey: key, fallback: fallback))
     }
 
     /**
-     Returns the NSDictionary variation for the given feature flag. If the flag does not exist, cannot be cast to a NSDictionary, or the LDClient is not started, returns the fallback value.
+     Returns the NSDictionary variation for the given feature flag. If the flag does not exist, cannot be cast to a NSDictionary, or the LDClient is not started, returns the fallback value, which may be nil..
 
      A *variation* is a specific flag value. For example a boolean feature flag has 2 variations, *YES* and *NO*. You can create feature flags with more than 2 variations using other feature flag types. See `LDFlagValue` for the available types.
 
@@ -471,16 +471,16 @@ public final class ObjcLDClient: NSObject {
      ````
 
      - parameter key: The LDFlagKey for the requested feature flag.
-     - parameter fallback: The fallback value to return if the feature flag key does not exist.
+     - parameter fallback: The fallback value to return if the feature flag key does not exist. The fallback value may be nil.
 
-     - returns: The requested NSDictionary feature flag value, or the fallback if the flag is missing or cannot be cast to a NSDictionary, or the client is not started
+     - returns: The requested NSDictionary feature flag value, or the fallback value (which may be nil) if the flag is missing or cannot be cast to a NSDictionary, or the client is not started
      */
     @objc public func dictionaryVariation(forKey key: LDFlagKey, fallback: [String: Any]?) -> [String: Any]? {
         return LDClient.shared.variation(forKey: key, fallback: fallback)
     }
     
     /**
-     Returns the `LDDictionaryVariationValue` (`ObjcLDDictionaryVariationValue`) containing the value and source for the given feature flag. If the flag does not exist, cannot be cast to a NSDictionary, or the LDClient is not started, returns the fallback value and `LDFlagValueSourceFallback` for the source.
+     Returns the `LDDictionaryVariationValue` (`ObjcLDDictionaryVariationValue`) containing the value and source for the given feature flag. If the flag does not exist, cannot be cast to a NSDictionary, or the LDClient is not started, returns the fallback value (which may be nil) and `LDFlagValueSourceFallback` for the source.
 
      A *variation* is a specific flag value. For example a boolean feature flag has 2 variations, *true* and *false*. You can create feature flags with more than 2 variations using other feature flag types. See `LDFlagValue` for the available types.
 
@@ -500,9 +500,9 @@ public final class ObjcLDClient: NSObject {
      ````
 
      - parameter key: The LDFlagKey for the requested feature flag.
-     - parameter fallback: The fallback value to return if the feature flag key does not exist.
+     - parameter fallback: The fallback value to return if the feature flag key does not exist. The fallback value may be nil.
 
-     - returns: A `LDDictionaryVariationValue` (`ObjcLDDictionaryVariationValue`) containing the requested feature flag value and source, or the fallback if the flag is missing or cannot be cast to a NSDictionary, or the client is not started. If the fallback value is returned, the source is `LDFlagValueSourceFallback`
+     - returns: A `LDDictionaryVariationValue` (`ObjcLDDictionaryVariationValue`) containing the requested feature flag value and source, or the fallback value (which may be nil) if the flag is missing or cannot be cast to a NSDictionary, or the client is not started. If the fallback value is returned, the source is `LDFlagValueSourceFallback`
      */
     @objc public func dictionaryVariationAndSource(forKey key: LDFlagKey, fallback: [String: Any]?) -> ObjcLDDictionaryVariationValue {
         return ObjcLDDictionaryVariationValue(LDClient.shared.variationAndSource(forKey: key, fallback: fallback))
