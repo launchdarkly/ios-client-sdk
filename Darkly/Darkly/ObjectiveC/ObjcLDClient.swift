@@ -363,7 +363,7 @@ public final class ObjcLDClient: NSObject {
 
      - returns: The requested NSString feature flag value, or the fallback if the flag is missing or cannot be cast to a NSString, or the client is not started
      */
-    @objc public func stringVariation(forKey key: LDFlagKey, fallback: String) -> String {
+    @objc public func stringVariation(forKey key: LDFlagKey, fallback: String?) -> String? {
         return LDClient.shared.variation(forKey: key, fallback: fallback)
     }
 
@@ -392,7 +392,7 @@ public final class ObjcLDClient: NSObject {
 
      - returns: A `LDStringVariationValue` (`ObjcLDStringVariationValue`) containing the requested feature flag value and source, or the fallback if the flag is missing or cannot be cast to a NSString, or the client is not started. If the fallback value is returned, the source is `LDFlagValueSourceFallback`
      */
-    @objc public func stringVariationAndSource(forKey key: LDFlagKey, fallback: String) -> ObjcLDStringVariationValue {
+    @objc public func stringVariationAndSource(forKey key: LDFlagKey, fallback: String?) -> ObjcLDStringVariationValue {
         return ObjcLDStringVariationValue(LDClient.shared.variationAndSource(forKey: key, fallback: fallback))
     }
 
@@ -419,7 +419,7 @@ public final class ObjcLDClient: NSObject {
 
      - returns: The requested NSArray feature flag value, or the fallback if the flag is missing or cannot be cast to a NSArray, or the client is not started
      */
-    @objc public func arrayVariation(forKey key: LDFlagKey, fallback: [Any]) -> [Any] {
+    @objc public func arrayVariation(forKey key: LDFlagKey, fallback: [Any]?) -> [Any]? {
         return LDClient.shared.variation(forKey: key, fallback: fallback)
     }
     
@@ -448,7 +448,7 @@ public final class ObjcLDClient: NSObject {
 
      - returns: A `LDArrayVariationValue` (`ObjcLDArrayVariationValue`) containing the requested feature flag value and source, or the fallback if the flag is missing or cannot be cast to a NSArray, or the client is not started. If the fallback value is returned, the source is `LDFlagValueSourceFallback`
      */
-    @objc public func arrayVariationAndSource(forKey key: LDFlagKey, fallback: [Any]) -> ObjcLDArrayVariationValue {
+    @objc public func arrayVariationAndSource(forKey key: LDFlagKey, fallback: [Any]?) -> ObjcLDArrayVariationValue {
         return ObjcLDArrayVariationValue(LDClient.shared.variationAndSource(forKey: key, fallback: fallback))
     }
 
@@ -475,7 +475,7 @@ public final class ObjcLDClient: NSObject {
 
      - returns: The requested NSDictionary feature flag value, or the fallback if the flag is missing or cannot be cast to a NSDictionary, or the client is not started
      */
-    @objc public func dictionaryVariation(forKey key: LDFlagKey, fallback: [String: Any]) -> [String: Any] {
+    @objc public func dictionaryVariation(forKey key: LDFlagKey, fallback: [String: Any]?) -> [String: Any]? {
         return LDClient.shared.variation(forKey: key, fallback: fallback)
     }
     
@@ -504,7 +504,7 @@ public final class ObjcLDClient: NSObject {
 
      - returns: A `LDDictionaryVariationValue` (`ObjcLDDictionaryVariationValue`) containing the requested feature flag value and source, or the fallback if the flag is missing or cannot be cast to a NSDictionary, or the client is not started. If the fallback value is returned, the source is `LDFlagValueSourceFallback`
      */
-    @objc public func dictionaryVariationAndSource(forKey key: LDFlagKey, fallback: [String: Any]) -> ObjcLDDictionaryVariationValue {
+    @objc public func dictionaryVariationAndSource(forKey key: LDFlagKey, fallback: [String: Any]?) -> ObjcLDDictionaryVariationValue {
         return ObjcLDDictionaryVariationValue(LDClient.shared.variationAndSource(forKey: key, fallback: fallback))
     }
 

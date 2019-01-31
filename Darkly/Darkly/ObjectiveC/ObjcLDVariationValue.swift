@@ -62,11 +62,11 @@ public final class ObjcLDDoubleVariationValue: NSObject {
 @objc (LDStringVariationValue)
 public final class ObjcLDStringVariationValue: NSObject {
     ///The feature flag's NSString value
-    @objc public let value: String
+    @objc public let value: String?
     ///The feature flag value's source
     @objc public let source: ObjcLDFlagValueSource
     
-    init(_ variationValue: (value: String, source: LDFlagValueSource)) {
+    init(_ variationValue: (value: String?, source: LDFlagValueSource)) {
         self.value = variationValue.value
         self.source = ObjcLDFlagValueSource(variationValue.source)
     }
@@ -79,11 +79,11 @@ public final class ObjcLDStringVariationValue: NSObject {
 @objc (LDArrayVariationValue)
 public final class ObjcLDArrayVariationValue: NSObject {
     ///The feature flag's NSArray value
-    @objc public let value: [Any]
+    @objc public let value: [Any]?
     ///The feature flag value's source
     @objc public let source: ObjcLDFlagValueSource
     
-    init(_ variationValue: (value: [Any], source: LDFlagValueSource)) {
+    init(_ variationValue: (value: [Any]?, source: LDFlagValueSource)) {
         self.value = variationValue.value
         self.source = ObjcLDFlagValueSource(variationValue.source)
     }
@@ -96,11 +96,11 @@ public final class ObjcLDArrayVariationValue: NSObject {
 @objc (LDDictionaryVariationValue)
 public final class ObjcLDDictionaryVariationValue: NSObject {
     ///The feature flag's NSDictionary value
-    @objc public let value: [String: Any]
+    @objc public let value: [String: Any]?
     ///The feature flag value's source
     @objc public let source: ObjcLDFlagValueSource
     
-    init(_ variationValue: (value: [String: Any], source: LDFlagValueSource)) {
+    init(_ variationValue: (value: [String: Any]?, source: LDFlagValueSource)) {
         self.value = variationValue.value
         self.source = ObjcLDFlagValueSource(variationValue.source)
     }
