@@ -199,15 +199,21 @@ This property sets a closure called when the SDK is unable to contact the Launch
 
 ### Getting Feature Flag Values
 #### `variation()`
-Swift Generics allowed us to combine the `variation` methods that were used in the v2.x SDK. v3.0.0 has a single `variation` method that returns a type that matches the type the client app provides in the `fallback` parameter.
+Swift Generics allowed us to combine the `variation` methods that were used in the v2.x SDK. v3.0.0 has one `variation` method that returns a non-Optional type that matches the non-Optional type the client app provides in the `fallback` parameter. A second `variation` method allows the client app to use an Optional as the `fallback`. This method requires the client to specify the Optional type when passing `nil` as the `fallback`. For this second method, the fallback parameter is defaulted to `nil`. When using this second method, set the type on the item holding the return value, e.g.
+```swift
+    let boolFlagValue: Bool? = LDClient.shared.variation(forKey: "bool-flag-key")
+```
 #### `variationAndSource()`
-A new `variationAndSource()` method returns a tuple `(value, source)` that allows the client app to see what the source of the value was. `source` is an `LDFlagValueSource` enum with `.server`, `.cache`, and `.fallback`.
+A new `variationAndSource()` method returns a tuple `(value, source)` that allows the client app to see what the source of the value was. `source` is an `LDFlagValueSource` enum with `.server`, `.cache`, and `.fallback`. As with the `variation` methods, there are two `variationAndSource` methods. The first returns a non-Optional type as the tuple's `value`, while the second returns an Optional type as the tuple's `value`. This second method requires the client to specify the Optional type when passing `nil` as the `fallback`. For this second method, the fallback parameter is defaulted to `nil`. When using this second method, set the type on the item holding the return value, e.g.
+```swift
+    let (boolFlagValue, boolFlagSource): (Bool?, LDFlagValueSource) = LDClient.shared.variationAndSource(forKey: "bool-flag-key")
+``` 
 #### `allFlagValues`
 A new computed property `allFlagValues` returns a `[LDFlagKey: Any]` that has all feature flag keys and their values. This dictionary is a snapshot taken when `allFlagValues` was requested. The SDK does not try to keep these values up-to-date, and does not record any events when accessing the dictionary.
 #### Objective-C Feature Flag Value Compatibility
 Swift generic functions cannot operate in Objective-C. The `ObjcLDClient` wrapper retains the type-based variation methods used in v2.x, except for `numberVariation`. A new `integerVariation` method reports NSInteger feature flags. NSNumbers that were decimal numbers should use `doubleVariation`.
 
-The wrapper also includes new type-based `variationAndSource` methods that return a type-based `VariationValue` object (e.g. `LDBoolVariationValue`) that encapsulates the `value` and `source`. `source` is an `ObjcLDFlagValueSource` Objective-C int backed enum (accessed in Objective-C via `LDFlagValueSource`). In addition to `server`, `cache`, and `fallback`, `nilSource`, and `typeMismatch` could be possible values.
+The wrapper also includes new type-based `variationAndSource` methods that return a type-based `VariationValue` object (e.g. `LDBoolVariationValue`) that encapsulates the `value` and `source`. `source` is an `ObjcLDFlagValueSource` Objective-C int backed enum (accessed in Objective-C via `LDFlagValueSource`). In addition to `server`, `cache`, and `fallback`, other possible values could be `nilSource` and `typeMismatch`. Feature Flag types that are object types have value types that are nullable in the wrapper. Take care to verify a value exists before using it.
 
 ### Monitoring Feature Flags for changes
 v3.0.0 removes the `LDClientDelegate`, which included `featureFlagDidUpdate` and `userDidUpdate` that the SDK called to notify client apps of changes in the set of feature flags for a given mobile key (called the environment), and the `userUnchanged` that the SDK called in `.polling` mode when the response to a feature flag request did not change any feature flag value. In order to have the SDK notify the client app when feature flags change, we have provided a closure based observer API.
