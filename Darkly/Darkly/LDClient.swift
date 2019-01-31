@@ -363,7 +363,7 @@ public class LDClient {
         let featureFlag = user.flagStore.featureFlag(for: flagKey)
         let value: T? = self.value(from: featureFlag, fallback: fallback)
         Log.debug(typeName(and: #function) + "flagKey: \(flagKey), value: \(value.stringValue), fallback: \(fallback.stringValue), featureFlag: \(featureFlag.stringValue)")
-        eventReporter.recordFlagEvaluationEvents(flagKey: flagKey, value: value, defaultValue: nil, featureFlag: featureFlag, user: user)
+        eventReporter.recordFlagEvaluationEvents(flagKey: flagKey, value: value, defaultValue: fallback, featureFlag: featureFlag, user: user)
         return value
     }
 
