@@ -355,15 +355,7 @@ public class LDClient {
      - returns: The requested feature flag value, or the fallback if the flag is missing or cannot be cast to the fallback type, or the client is not started
      */
     public func variation<T: LDFlagValueConvertible>(forKey flagKey: LDFlagKey, fallback: T? = nil) -> T? {
-        guard hasStarted
-        else {
-            Log.debug(typeName(and: #function) + "returning fallback: \(fallback.stringValue)." + " LDClient not started.")
-            return nil
-        }
-        let featureFlag = user.flagStore.featureFlag(for: flagKey)
-        let value: T? = self.value(from: featureFlag, fallback: fallback)
-        Log.debug(typeName(and: #function) + "flagKey: \(flagKey), value: \(value.stringValue), fallback: \(fallback.stringValue), featureFlag: \(featureFlag.stringValue)")
-        eventReporter.recordFlagEvaluationEvents(flagKey: flagKey, value: value, defaultValue: fallback, featureFlag: featureFlag, user: user)
+        let (value, _) = variationAndSource(forKey: flagKey, fallback: fallback)
         return value
     }
 
