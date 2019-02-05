@@ -16,9 +16,21 @@ struct Event { //sdk internal, not publically accessible
     enum Kind: String {
         case feature, debug, identify, custom, summary
 
-        static var allKinds: [Kind] { return [feature, debug, identify, custom, summary] }
-        static var alwaysInlineUserKinds: [Kind] { return [identify, debug] }
-        var isAlwaysInlineUserKind: Bool { return Kind.alwaysInlineUserKinds.contains(self) }
+        static var allKinds: [Kind] {
+            return [feature, debug, identify, custom, summary]
+        }
+        static var alwaysInlineUserKinds: [Kind] {
+            return [identify, debug]
+        }
+        var isAlwaysInlineUserKind: Bool {
+            return Kind.alwaysInlineUserKinds.contains(self)
+        }
+        static var alwaysIncludeValueKinds: [Kind] {
+            return [feature, debug]
+        }
+        var isAlwaysIncludeValueKinds: Bool {
+            return Kind.alwaysIncludeValueKinds.contains(self)
+        }
     }
 
     let kind: Kind
@@ -101,9 +113,10 @@ struct Event { //sdk internal, not publically accessible
         } else {
             eventDictionary[CodingKeys.userKey.rawValue] = user?.key
         }
-        //TODO: This may be a bug. Both value and defaultValue are written to their respective keys, as Optionals. Verify proper behavior and fix if needed
-        eventDictionary[CodingKeys.value.rawValue] = value
-        eventDictionary[CodingKeys.defaultValue.rawValue] = defaultValue
+        if kind.isAlwaysIncludeValueKinds {
+            eventDictionary[CodingKeys.value.rawValue] = value ?? NSNull()
+            eventDictionary[CodingKeys.defaultValue.rawValue] = defaultValue ?? NSNull()
+        }
         eventDictionary[CodingKeys.variation.rawValue] = featureFlag?.variation
         eventDictionary[CodingKeys.version.rawValue] = featureFlag?.flagVersion ?? featureFlag?.version     //Supercedes version if the flagVersion exists
         eventDictionary[CodingKeys.data.rawValue] = data

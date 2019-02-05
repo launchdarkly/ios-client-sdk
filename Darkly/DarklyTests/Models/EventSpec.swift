@@ -395,6 +395,27 @@ final class EventSpec: QuickSpec {
                     expect(eventDictionary.eventData).to(beNil())
                 }
             }
+            context("without value or defaultValue") {
+                beforeEach {
+                    featureFlag = DarklyServiceMock.Constants.stubFeatureFlag(for: DarklyServiceMock.FlagKeys.null)
+                    event = Event.featureEvent(key: Constants.eventKey, value: nil, defaultValue: nil, featureFlag: featureFlag, user: user)
+                    eventDictionary = event.dictionaryValue(config: config)
+                }
+                it("creates a dictionary with matching non-user elements") {
+                    expect(eventDictionary.eventKind) == .feature
+                    expect(eventDictionary.eventKey) == Constants.eventKey
+                    expect(eventDictionary.eventCreationDate?.isWithin(0.001, of: event.creationDate!)).to(beTrue())
+                    expect(AnyComparer.isEqual(eventDictionary.eventValue, to: NSNull())).to(beTrue())
+                    expect(AnyComparer.isEqual(eventDictionary.eventDefaultValue, to: NSNull())).to(beTrue())
+                    expect(eventDictionary.eventVariation) == featureFlag.variation
+                    expect(eventDictionary.eventVersion) == featureFlag.flagVersion     //Since feature flags include the flag version, it should be used.
+                    expect(eventDictionary.eventData).to(beNil())
+                }
+                it("creates a dictionary with the user key only") {
+                    expect(eventDictionary.eventUserKey) == user.key
+                    expect(eventDictionary.eventUser).to(beNil())
+                }
+            }
         }
     }
 
@@ -687,6 +708,40 @@ final class EventSpec: QuickSpec {
                     expect(eventDictionary.eventUserKey).to(beNil())
                     expect(eventDictionary.eventVariation) == featureFlag.variation
                     expect(eventDictionary.eventVersion).to(beNil())
+                    expect(eventDictionary.eventData).to(beNil())
+                }
+            }
+            context("without value or defaultValue") {
+                beforeEach {
+                    featureFlag = DarklyServiceMock.Constants.stubFeatureFlag(for: DarklyServiceMock.FlagKeys.null)
+                    event = Event.debugEvent(key: Constants.eventKey, value: nil, defaultValue: nil, featureFlag: featureFlag, user: user)
+                    eventDictionary = event.dictionaryValue(config: config)
+                }
+                it("creates a dictionary with matching non-user elements") {
+                    expect(eventDictionary.eventKind) == .debug
+                    expect(eventDictionary.eventKey) == Constants.eventKey
+                    expect(eventDictionary.eventCreationDate?.isWithin(0.001, of: event.creationDate!)).to(beTrue())
+                    expect(AnyComparer.isEqual(eventDictionary.eventValue, to: NSNull())).to(beTrue())
+                    expect(AnyComparer.isEqual(eventDictionary.eventDefaultValue, to: NSNull())).to(beTrue())
+                    expect(eventDictionary.eventUser).toNot(beNil())
+                    if let eventDictionaryUser = eventDictionary.eventUser {
+                        expect(eventDictionaryUser.key) == user.key
+                        expect(eventDictionaryUser.name) == user.name
+                        expect(eventDictionaryUser.firstName) == user.firstName
+                        expect(eventDictionaryUser.lastName) == user.lastName
+                        expect(eventDictionaryUser.country) == user.country
+                        expect(eventDictionaryUser.ipAddress) == user.ipAddress
+                        expect(eventDictionaryUser.email) == user.email
+                        expect(eventDictionaryUser.avatar) == user.avatar
+                        expect(AnyComparer.isEqual(eventDictionaryUser.custom, to: user.custom)).to(beTrue())
+                        expect(eventDictionaryUser.device) == user.device
+                        expect(eventDictionaryUser.operatingSystem) == user.operatingSystem
+                        expect(eventDictionaryUser.isAnonymous) == user.isAnonymous
+                        expect(eventDictionaryUser.privateAttributes).to(beNil())
+                    }
+                    expect(eventDictionary.eventUserKey).to(beNil())
+                    expect(eventDictionary.eventVariation) == featureFlag.variation
+                    expect(eventDictionary.eventVersion) == featureFlag.flagVersion     //Since feature flags include the flag version, it should be used.
                     expect(eventDictionary.eventData).to(beNil())
                 }
             }
