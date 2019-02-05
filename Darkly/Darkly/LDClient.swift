@@ -449,8 +449,7 @@ public class LDClient {
             return (fallback, .fallback)
         }
         let (featureFlag, flagStoreSource) = user.flagStore.featureFlagAndSource(for: flagKey)
-        let source = flagStoreSource ?? .fallback
-        let value: T? = self.value(from: featureFlag, fallback: fallback)
+        let (value, source): (T?, LDFlagValueSource) = valueAndSource(from: featureFlag, fallback: fallback, source: flagStoreSource)
         Log.debug(typeName(and: #function) + "flagKey: \(flagKey), value: \(value.stringValue), fallback: \(fallback.stringValue), featureFlag: \(featureFlag.stringValue), source: \(source)")
         eventReporter.recordFlagEvaluationEvents(flagKey: flagKey, value: value, defaultValue: fallback, featureFlag: featureFlag, user: user)
         return (value, source)
@@ -468,8 +467,12 @@ public class LDClient {
         return user.flagStore.featureFlags.compactMapValues { (featureFlag) -> Any? in featureFlag.value }
     }
 
-    private func value<T>(from featureFlag: FeatureFlag?, fallback: T?) -> T? {
-        return featureFlag?.value as? T ?? fallback
+    private func valueAndSource<T>(from featureFlag: FeatureFlag?, fallback: T?, source: LDFlagValueSource?) -> (T?, LDFlagValueSource) {
+        guard let value = featureFlag?.value as? T
+        else {
+            return (fallback, .fallback)
+        }
+        return (value, source ?? .fallback)
     }
 
     // MARK: Feature Flag Updates

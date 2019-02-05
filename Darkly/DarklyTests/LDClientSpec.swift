@@ -1223,6 +1223,35 @@ final class LDClientSpec: QuickSpec {
                         expect(testContext.eventReporterMock.recordFlagEvaluationEventsReceivedArguments?.user) == testContext.user
                     }
                 }
+                context("flag value is null") {
+                    var arrayValue: (value: [Int], source: LDFlagValueSource)!
+                    var dictionaryValue: (value: [String: Any], source: LDFlagValueSource)!
+                    it("returns the fallback value and source") {
+                        expect(testContext.subject.variationAndSource(forKey: DarklyServiceMock.FlagKeys.null, fallback: DefaultFlagValues.bool)
+                            == (DefaultFlagValues.bool, LDFlagValueSource.fallback)).to(beTrue())
+                        expect(testContext.subject.variationAndSource(forKey: DarklyServiceMock.FlagKeys.null, fallback: DefaultFlagValues.int)
+                            == (DefaultFlagValues.int, LDFlagValueSource.fallback)).to(beTrue())
+                        expect(testContext.subject.variationAndSource(forKey: DarklyServiceMock.FlagKeys.null, fallback: DefaultFlagValues.double)
+                            == (DefaultFlagValues.double, LDFlagValueSource.fallback)).to(beTrue())
+                        expect(testContext.subject.variationAndSource(forKey: DarklyServiceMock.FlagKeys.null, fallback: DefaultFlagValues.string)
+                            == (DefaultFlagValues.string, LDFlagValueSource.fallback)).to(beTrue())
+                        arrayValue = testContext.subject.variationAndSource(forKey: DarklyServiceMock.FlagKeys.null, fallback: DefaultFlagValues.array)
+                        expect(arrayValue.value == DefaultFlagValues.array).to(beTrue())
+                        expect(arrayValue.source) == LDFlagValueSource.fallback
+                        dictionaryValue = testContext.subject.variationAndSource(forKey: DarklyServiceMock.FlagKeys.null, fallback: DefaultFlagValues.dictionary)
+                        expect(dictionaryValue.value == DefaultFlagValues.dictionary).to(beTrue())
+                        expect(dictionaryValue.source) == LDFlagValueSource.fallback
+                    }
+                    it("records a flag evaluation event") {
+                        _ = testContext.subject.variationAndSource(forKey: DarklyServiceMock.FlagKeys.null, fallback: DefaultFlagValues.bool)
+                        expect(testContext.eventReporterMock.recordFlagEvaluationEventsCallCount) == 1
+                        expect(testContext.eventReporterMock.recordFlagEvaluationEventsReceivedArguments?.flagKey) == DarklyServiceMock.FlagKeys.null
+                        expect(AnyComparer.isEqual(testContext.eventReporterMock.recordFlagEvaluationEventsReceivedArguments?.value, to: DefaultFlagValues.bool)).to(beTrue())
+                        expect(AnyComparer.isEqual(testContext.eventReporterMock.recordFlagEvaluationEventsReceivedArguments?.defaultValue, to: DefaultFlagValues.bool)).to(beTrue())
+                        expect(testContext.eventReporterMock.recordFlagEvaluationEventsReceivedArguments?.featureFlag) == testContext.flagStoreMock.featureFlags[DarklyServiceMock.FlagKeys.null]
+                        expect(testContext.eventReporterMock.recordFlagEvaluationEventsReceivedArguments?.user) == testContext.user
+                    }
+                }
             }
             context("flag store does not contain the requested value") {
                 beforeEach {
