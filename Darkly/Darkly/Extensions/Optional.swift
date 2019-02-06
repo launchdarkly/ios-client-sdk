@@ -10,7 +10,10 @@ import Foundation
 
 extension Optional where Wrapped: Collection {
     var isNilOrEmpty: Bool {
-        guard case let .some(value) = self else { return true }
+        guard case let .some(value) = self
+        else {
+            return true
+        }
         return value.isEmpty
     }
 }

@@ -3,7 +3,7 @@
 //  DarklyEventSource
 //
 //  Created by Mark Pokorny on 5/30/18. +JMJ
-//  Copyright © 2018 Catamorphic Co. All rights reserved.
+//  Copyright © 2018 Neil Cowburn. Portions copyright © Catamorphic Co. All rights reserved.
 //
 
 #import <Foundation/Foundation.h>
@@ -11,6 +11,8 @@
 #import "LDEventSource.h"
 #import "NSString+LDEventSource.h"
 #import "NSArray+LDEventSource.h"
+
+double MILLISEC_PER_SEC = 1000.0;
 
 @interface LDEventParser()
 @property (nonatomic, copy) NSString *eventString;
@@ -25,7 +27,9 @@
 }
 
 -(instancetype)initWithEventString:(NSString*)eventString {
-    if (!(self = [super init])) { return nil; }
+    if (!(self = [super init])) {
+        return nil;
+    }
 
     self.eventString = eventString;
     [self parseEventString];
@@ -34,7 +38,9 @@
 }
 
 -(void)parseEventString {
-    if (self.eventString.length == 0) { return; }
+    if (self.eventString.length == 0) {
+        return;
+    }
 
     NSArray<NSString*> *linesToParse = [self linesToParseFromEventString];
     self.remainingEventString = [self remainingEventStringAfterParsingEventString];
@@ -74,8 +80,10 @@
                 } else if ([key isEqualToString:LDEventKeyId]) {
                     event.id = value;
                 } else if ([key isEqualToString:LDEventKeyRetry]) {
-                    if ([value isKindOfClass:[NSNumber class]]) {
-                        self.retryInterval = @([value doubleValue]);
+                    NSCharacterSet *nonDigitCharacters = [[NSCharacterSet decimalDigitCharacterSet] invertedSet];
+                    NSRange nonDigitRange = [value rangeOfCharacterFromSet:nonDigitCharacters];
+                    if (nonDigitRange.location == NSNotFound) {
+                        self.retryInterval = @([value integerValue]/MILLISEC_PER_SEC);
                     }
                 }
             }
@@ -85,26 +93,42 @@
 
 //extracts lines from the first thru the event terminator
 -(nullable NSArray<NSString*>*)linesToParseFromEventString {
-    if (self.eventString.length == 0) { return nil; }
-    if (!self.eventString.hasEventTerminator) { return nil; }
+    if (self.eventString.length == 0) {
+        return nil;
+    }
+    if (!self.eventString.hasEventTerminator) {
+        return nil;
+    }
 
     NSArray<NSString*> *eventStringParts = [self.eventString componentsSeparatedByString:LDEventSourceEventTerminator];
-    if (eventStringParts.count == 0) { return nil; }    //This should never happen because the guard for the terminator's presence passed...defensive
+    if (eventStringParts.count == 0) {
+        return nil;     //This should never happen because the guard for the terminator's presence passed...defensive
+    }
     NSString *eventStringToParse = [eventStringParts.firstObject stringByAppendingString:LDEventSourceEventTerminator];
 
     return [eventStringToParse lines];
 }
 
 -(nullable NSString*)remainingEventStringAfterParsingEventString {
-    if (self.eventString.length == 0) { return nil; }
-    if (!self.eventString.hasEventTerminator) { return nil; }
+    if (self.eventString.length == 0) {
+        return nil;
+    }
+    if (!self.eventString.hasEventTerminator) {
+        return nil;
+    }
 
     NSArray<NSString*> *eventStringParts = [self.eventString componentsSeparatedByString:LDEventSourceEventTerminator];
-    if (eventStringParts.count < 2) { return nil; }     //This should never happen because the guard for the terminator's presence passed...defensive
-    if (eventStringParts.count == 2 && eventStringParts[1].length == 0) { return nil; } //There is no remaining string after the terminator...this should be the normal exit
+    if (eventStringParts.count < 2) {
+        return nil;     //This should never happen because the guard for the terminator's presence passed...defensive
+    }
+    if (eventStringParts.count == 2 && eventStringParts[1].length == 0) {
+        return nil;     //There is no remaining string after the terminator...this should be the normal exit
+    }
 
     NSString *remainingEventString = [[eventStringParts subArrayFromIndex:1] componentsJoinedByString:LDEventSourceEventTerminator];
-    if (remainingEventString.length == 0) { return nil; }
+    if (remainingEventString.length == 0) {
+        return nil;
+    }
 
     return remainingEventString;
 }

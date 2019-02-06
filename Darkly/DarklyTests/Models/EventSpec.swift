@@ -16,7 +16,24 @@ final class EventSpec: QuickSpec {
             return Event.Kind.allKinds.count
         }
         static let eventKey = "EventSpec.Event.Key"
-        static let eventData: [String: Any] = ["stubDataKey": "stubDataValue"]
+    }
+
+    struct CustomEvent {
+        static let intData = 3
+        static let doubleData = 1.414
+        static let boolData = true
+        static let stringData = "custom event string data"
+        static let arrayData: [Any] = [12, 1.61803, true, "custom event array data"]
+        static let nestedArrayData = [1, 3, 7, 12]
+        static let nestedDictionaryData = ["one": 1.0, "three": 3.0, "seven": 7.0, "twelve": 12.0]
+        static let dictionaryData: [String: Any] = ["dozen": 12,
+                                                    "phi": 1.61803,
+                                                    "true": true,
+                                                    "data string": "custom event dictionary data",
+                                                    "nestedArray": nestedArrayData,
+                                                    "nestedDictionary": nestedDictionaryData]
+
+        static let allData: [Any] = [intData, doubleData, boolData, stringData, arrayData, dictionaryData]
     }
 
     override func spec() {
@@ -46,7 +63,7 @@ final class EventSpec: QuickSpec {
                 beforeEach {
                     featureFlag = DarklyServiceMock.Constants.stubFeatureFlag(for: DarklyServiceMock.FlagKeys.bool)
 
-                    event = Event(kind: .feature, key: Constants.eventKey, user: user, value: true, defaultValue: false, featureFlag: featureFlag, data: Constants.eventData, flagRequestTracker: FlagRequestTracker.stub(), endDate: Date())
+                    event = Event(kind: .feature, key: Constants.eventKey, user: user, value: true, defaultValue: false, featureFlag: featureFlag, data: CustomEvent.dictionaryData, flagRequestTracker: FlagRequestTracker.stub(), endDate: Date())
                 }
                 it("creates an event with matching data") {
                     expect(event.kind) == Event.Kind.feature
@@ -57,7 +74,7 @@ final class EventSpec: QuickSpec {
                     expect(AnyComparer.isEqual(event.defaultValue, to: false)).to(beTrue())
                     expect(event.featureFlag?.allPropertiesMatch(featureFlag)).to(beTrue())
                     expect(event.data).toNot(beNil())
-                    expect(event.data == Constants.eventData).to(beTrue())
+                    expect(AnyComparer.isEqual(event.data, to: CustomEvent.dictionaryData)).to(beTrue())
                     expect(event.flagRequestTracker).toNot(beNil())
                     expect(event.endDate).toNot(beNil())
                 }
@@ -155,20 +172,44 @@ final class EventSpec: QuickSpec {
             user = LDUser.stub()
         }
         describe("customEvent") {
-            beforeEach {
-                event = Event.customEvent(key: Constants.eventKey, user: user, data: Constants.eventData)
-            }
-            it("creates a custom event with matching data") {
-                expect(event.kind) == Event.Kind.custom
-                expect(event.key) == Constants.eventKey
-                expect(event.creationDate).toNot(beNil())
-                expect(event.user) == user
-                expect(event.data == Constants.eventData).to(beTrue())
+            for eventData in CustomEvent.allData {
+                context("with valid json data") {
+                    it("creates a custom event with matching data") {
+                        expect { event = try Event.customEvent(key: Constants.eventKey, user: user, data: eventData) }.toNot(throwError())
 
-                expect(event.value).to(beNil())
-                expect(event.defaultValue).to(beNil())
-                expect(event.endDate).to(beNil())
-                expect(event.flagRequestTracker).to(beNil())
+                        expect(event.kind) == Event.Kind.custom
+                        expect(event.key) == Constants.eventKey
+                        expect(event.creationDate).toNot(beNil())
+                        expect(event.user) == user
+                        expect(AnyComparer.isEqual(event.data, to: eventData)).to(beTrue())
+
+                        expect(event.value).to(beNil())
+                        expect(event.defaultValue).to(beNil())
+                        expect(event.endDate).to(beNil())
+                        expect(event.flagRequestTracker).to(beNil())
+                    }
+                }
+            }
+            context("with invalid json data") {
+                it("throws an invalidJsonObject error") {
+                    expect { event = try Event.customEvent(key: Constants.eventKey, user: user, data: Date()) }.to(throwError(JSONSerialization.JSONError.invalidJsonObject))
+                }
+            }
+            context("without data") {
+                it("creates a custom event with matching data") {
+                    expect { event = try Event.customEvent(key: Constants.eventKey, user: user, data: nil) }.toNot(throwError())
+
+                    expect(event.kind) == Event.Kind.custom
+                    expect(event.key) == Constants.eventKey
+                    expect(event.creationDate).toNot(beNil())
+                    expect(event.user) == user
+                    expect(event.data).to(beNil())
+
+                    expect(event.value).to(beNil())
+                    expect(event.defaultValue).to(beNil())
+                    expect(event.endDate).to(beNil())
+                    expect(event.flagRequestTracker).to(beNil())
+                }
             }
         }
     }
@@ -354,6 +395,27 @@ final class EventSpec: QuickSpec {
                     expect(eventDictionary.eventData).to(beNil())
                 }
             }
+            context("without value or defaultValue") {
+                beforeEach {
+                    featureFlag = DarklyServiceMock.Constants.stubFeatureFlag(for: DarklyServiceMock.FlagKeys.null)
+                    event = Event.featureEvent(key: Constants.eventKey, value: nil, defaultValue: nil, featureFlag: featureFlag, user: user)
+                    eventDictionary = event.dictionaryValue(config: config)
+                }
+                it("creates a dictionary with matching non-user elements") {
+                    expect(eventDictionary.eventKind) == .feature
+                    expect(eventDictionary.eventKey) == Constants.eventKey
+                    expect(eventDictionary.eventCreationDate?.isWithin(0.001, of: event.creationDate!)).to(beTrue())
+                    expect(AnyComparer.isEqual(eventDictionary.eventValue, to: NSNull())).to(beTrue())
+                    expect(AnyComparer.isEqual(eventDictionary.eventDefaultValue, to: NSNull())).to(beTrue())
+                    expect(eventDictionary.eventVariation) == featureFlag.variation
+                    expect(eventDictionary.eventVersion) == featureFlag.flagVersion     //Since feature flags include the flag version, it should be used.
+                    expect(eventDictionary.eventData).to(beNil())
+                }
+                it("creates a dictionary with the user key only") {
+                    expect(eventDictionary.eventUserKey) == user.key
+                    expect(eventDictionary.eventUser).to(beNil())
+                }
+            }
         }
     }
 
@@ -374,7 +436,7 @@ final class EventSpec: QuickSpec {
 
                     expect(eventDictionary.eventKind) == .identify
                     expect(eventDictionary.eventKey) == user.key
-                    expect(eventDictionary.eventCreationDate?.isWithin(0.001, of: event.creationDate!)).to(beTrue())
+                    expect(eventDictionary.eventCreationDate?.isWithin(0.1, of: event.creationDate!)).to(beTrue())
                     expect(eventDictionary.eventValue).to(beNil())
                     expect(eventDictionary.eventDefaultValue).to(beNil())
                     expect(eventDictionary.eventVariation).to(beNil())
@@ -410,9 +472,63 @@ final class EventSpec: QuickSpec {
             beforeEach {
                 config = LDConfig.stub
             }
+            for eventData in CustomEvent.allData {
+                context("with valid json data") {
+                    beforeEach {
+                        do {
+                            event = try Event.customEvent(key: Constants.eventKey, user: user, data: eventData)
+                        } catch JSONSerialization.JSONError.invalidJsonObject {
+                            fail("customEvent threw an invalidJsonObject exception")
+                        } catch {
+                            fail("customEvent threw an exception")
+                        }
+                        eventDictionary = event.dictionaryValue(config: config)
+                    }
+                    it("creates a dictionary with matching custom data") {
+                        expect(eventDictionary.eventKind) == .custom
+                        expect(eventDictionary.eventKey) == Constants.eventKey
+                        expect(eventDictionary.eventCreationDate?.isWithin(0.001, of: event.creationDate!)).to(beTrue())
+                        expect(AnyComparer.isEqual(eventDictionary.eventData, to: eventData)).to(beTrue())
+                        expect(eventDictionary.eventValue).to(beNil())
+                        expect(eventDictionary.eventDefaultValue).to(beNil())
+                        expect(eventDictionary.eventVariation).to(beNil())
+                        expect(eventDictionary.eventUserKey) == user.key
+                        expect(eventDictionary.eventUser).to(beNil())
+                    }
+                }
+            }
+            context("without data") {
+                beforeEach {
+                    do {
+                        event = try Event.customEvent(key: Constants.eventKey, user: user, data: nil)
+                    } catch JSONSerialization.JSONError.invalidJsonObject {
+                        fail("customEvent threw an invalidJsonObject exception")
+                    } catch {
+                        fail("customEvent threw an exception")
+                    }
+                    eventDictionary = event.dictionaryValue(config: config)
+                }
+                it("creates a dictionary with matching custom data") {
+                    expect(eventDictionary.eventKind) == .custom
+                    expect(eventDictionary.eventKey) == Constants.eventKey
+                    expect(eventDictionary.eventCreationDate?.isWithin(0.001, of: event.creationDate!)).to(beTrue())
+                    expect(eventDictionary.eventData).to(beNil())
+                    expect(eventDictionary.eventValue).to(beNil())
+                    expect(eventDictionary.eventDefaultValue).to(beNil())
+                    expect(eventDictionary.eventVariation).to(beNil())
+                    expect(eventDictionary.eventUserKey) == user.key
+                    expect(eventDictionary.eventUser).to(beNil())
+                }
+            }
             context("without inlining user") {
                 beforeEach {
-                    event = Event.customEvent(key: Constants.eventKey, user: user, data: Constants.eventData)
+                    do {
+                        event = try Event.customEvent(key: Constants.eventKey, user: user, data: CustomEvent.dictionaryData)
+                    } catch JSONSerialization.JSONError.invalidJsonObject {
+                        fail("customEvent threw an invalidJsonObject exception")
+                    } catch {
+                        fail("customEvent threw an exception")
+                    }
                     config.inlineUserInEvents = false   //Default value, here for clarity
                     eventDictionary = event.dictionaryValue(config: config)
                 }
@@ -420,7 +536,7 @@ final class EventSpec: QuickSpec {
                     expect(eventDictionary.eventKind) == .custom
                     expect(eventDictionary.eventKey) == Constants.eventKey
                     expect(eventDictionary.eventCreationDate?.isWithin(0.001, of: event.creationDate!)).to(beTrue())
-                    expect(AnyComparer.isEqual(eventDictionary.eventData, to: Constants.eventData)).to(beTrue())
+                    expect(AnyComparer.isEqual(eventDictionary.eventData, to: CustomEvent.dictionaryData)).to(beTrue())
                     expect(eventDictionary.eventValue).to(beNil())
                     expect(eventDictionary.eventDefaultValue).to(beNil())
                     expect(eventDictionary.eventVariation).to(beNil())
@@ -432,7 +548,13 @@ final class EventSpec: QuickSpec {
             }
             context("inlining user") {
                 beforeEach {
-                    event = Event.customEvent(key: Constants.eventKey, user: user, data: Constants.eventData)
+                    do {
+                        event = try Event.customEvent(key: Constants.eventKey, user: user, data: CustomEvent.dictionaryData)
+                    } catch JSONSerialization.JSONError.invalidJsonObject {
+                        fail("customEvent threw an invalidJsonObject exception")
+                    } catch {
+                        fail("customEvent threw an exception")
+                    }
                     config.inlineUserInEvents = true
                     eventDictionary = event.dictionaryValue(config: config)
                 }
@@ -440,7 +562,7 @@ final class EventSpec: QuickSpec {
                     expect(eventDictionary.eventKind) == .custom
                     expect(eventDictionary.eventKey) == Constants.eventKey
                     expect(eventDictionary.eventCreationDate?.isWithin(0.001, of: event.creationDate!)).to(beTrue())
-                    expect(AnyComparer.isEqual(eventDictionary.eventData, to: Constants.eventData)).to(beTrue())
+                    expect(AnyComparer.isEqual(eventDictionary.eventData, to: CustomEvent.dictionaryData)).to(beTrue())
                     expect(eventDictionary.eventValue).to(beNil())
                     expect(eventDictionary.eventDefaultValue).to(beNil())
                     expect(eventDictionary.eventVariation).to(beNil())
@@ -589,6 +711,40 @@ final class EventSpec: QuickSpec {
                     expect(eventDictionary.eventData).to(beNil())
                 }
             }
+            context("without value or defaultValue") {
+                beforeEach {
+                    featureFlag = DarklyServiceMock.Constants.stubFeatureFlag(for: DarklyServiceMock.FlagKeys.null)
+                    event = Event.debugEvent(key: Constants.eventKey, value: nil, defaultValue: nil, featureFlag: featureFlag, user: user)
+                    eventDictionary = event.dictionaryValue(config: config)
+                }
+                it("creates a dictionary with matching non-user elements") {
+                    expect(eventDictionary.eventKind) == .debug
+                    expect(eventDictionary.eventKey) == Constants.eventKey
+                    expect(eventDictionary.eventCreationDate?.isWithin(0.001, of: event.creationDate!)).to(beTrue())
+                    expect(AnyComparer.isEqual(eventDictionary.eventValue, to: NSNull())).to(beTrue())
+                    expect(AnyComparer.isEqual(eventDictionary.eventDefaultValue, to: NSNull())).to(beTrue())
+                    expect(eventDictionary.eventUser).toNot(beNil())
+                    if let eventDictionaryUser = eventDictionary.eventUser {
+                        expect(eventDictionaryUser.key) == user.key
+                        expect(eventDictionaryUser.name) == user.name
+                        expect(eventDictionaryUser.firstName) == user.firstName
+                        expect(eventDictionaryUser.lastName) == user.lastName
+                        expect(eventDictionaryUser.country) == user.country
+                        expect(eventDictionaryUser.ipAddress) == user.ipAddress
+                        expect(eventDictionaryUser.email) == user.email
+                        expect(eventDictionaryUser.avatar) == user.avatar
+                        expect(AnyComparer.isEqual(eventDictionaryUser.custom, to: user.custom)).to(beTrue())
+                        expect(eventDictionaryUser.device) == user.device
+                        expect(eventDictionaryUser.operatingSystem) == user.operatingSystem
+                        expect(eventDictionaryUser.isAnonymous) == user.isAnonymous
+                        expect(eventDictionaryUser.privateAttributes).to(beNil())
+                    }
+                    expect(eventDictionary.eventUserKey).to(beNil())
+                    expect(eventDictionary.eventVariation) == featureFlag.variation
+                    expect(eventDictionary.eventVersion) == featureFlag.flagVersion     //Since feature flags include the flag version, it should be used.
+                    expect(eventDictionary.eventData).to(beNil())
+                }
+            }
         }
     }
 
@@ -721,7 +877,7 @@ final class EventSpec: QuickSpec {
                     if let eventData = event.data {
                         expect(eventDictionary.eventData).toNot(beNil())
                         if let eventDictionaryData = eventDictionary.eventData {
-                            expect(eventDictionaryData == eventData).to(beTrue())
+                            expect(AnyComparer.isEqual(eventDictionaryData, to: eventData)).to(beTrue())
                         }
                     } else {
                         expect(eventDictionary.eventData).to(beNil())
@@ -1019,7 +1175,7 @@ final class EventSpec: QuickSpec {
             var event2: Event!
             context("on the same event") {
                 beforeEach {
-                    event1 = Event(kind: .feature, key: Constants.eventKey, user: user, value: true, defaultValue: false, data: Constants.eventData)
+                    event1 = Event(kind: .feature, key: Constants.eventKey, user: user, value: true, defaultValue: false, data: CustomEvent.dictionaryData)
                     event2 = event1
                 }
                 it("returns true") {
@@ -1030,7 +1186,7 @@ final class EventSpec: QuickSpec {
                 let eventKey = UUID().uuidString
                 beforeEach {
                     event1 = Event(kind: .feature, key: eventKey, user: LDUser.stub(key: UUID().uuidString), value: true, defaultValue: false)
-                    event2 = Event(kind: .custom, key: eventKey, user: LDUser.stub(key: UUID().uuidString), data: Constants.eventData)
+                    event2 = Event(kind: .custom, key: eventKey, user: LDUser.stub(key: UUID().uuidString), data: CustomEvent.dictionaryData)
                 }
                 it("returns false") {
                     expect(event1) != event2
@@ -1038,8 +1194,8 @@ final class EventSpec: QuickSpec {
             }
             context("when only the keys differ") {
                 beforeEach {
-                    event1 = Event(kind: .feature, key: UUID().uuidString, user: user, value: true, defaultValue: false, data: Constants.eventData)
-                    event2 = Event(kind: .feature, key: UUID().uuidString, user: user, value: true, defaultValue: false, data: Constants.eventData)
+                    event1 = Event(kind: .feature, key: UUID().uuidString, user: user, value: true, defaultValue: false, data: CustomEvent.dictionaryData)
+                    event2 = Event(kind: .feature, key: UUID().uuidString, user: user, value: true, defaultValue: false, data: CustomEvent.dictionaryData)
                 }
                 it("returns false") {
                     expect(event1) != event2
@@ -1047,7 +1203,7 @@ final class EventSpec: QuickSpec {
             }
             context("on different events") {
                 beforeEach {
-                    event1 = Event(kind: .feature, key: UUID().uuidString, user: user, value: true, defaultValue: false, data: Constants.eventData)
+                    event1 = Event(kind: .feature, key: UUID().uuidString, user: user, value: true, defaultValue: false, data: CustomEvent.dictionaryData)
                     event2 = Event(kind: .identify, key: UUID().uuidString, user: LDUser.stub(key: UUID().uuidString))
                 }
                 it("returns false") {
@@ -1095,7 +1251,7 @@ extension Dictionary where Key == String, Value == Any {
     var eventDefaultValue: Any? { return self[Event.CodingKeys.defaultValue.rawValue] }
     var eventVariation: Int? { return self[Event.CodingKeys.variation.rawValue] as? Int }
     var eventVersion: Int? { return self[Event.CodingKeys.version.rawValue] as? Int }
-    var eventData: [String: Any]? { return self[Event.CodingKeys.data.rawValue] as? [String: Any] }
+    var eventData: Any? { return self[Event.CodingKeys.data.rawValue] }
     var eventStartDate: Date? { return Date(millisSince1970: self[FlagRequestTracker.CodingKeys.startDate.rawValue] as? Int64) }
     var eventEndDate: Date? { return Date(millisSince1970: self[Event.CodingKeys.endDate.rawValue] as? Int64) }
     var eventFeatures: [String: Any]? { return self[FlagRequestTracker.CodingKeys.features.rawValue] as? [String: Any] }
@@ -1129,7 +1285,7 @@ extension Event {
             let featureFlag = DarklyServiceMock.Constants.stubFeatureFlag(for: DarklyServiceMock.FlagKeys.bool)
             return Event.debugEvent(key: UUID().uuidString, value: true, defaultValue: false, featureFlag: featureFlag, user: user)
         case .identify: return Event.identifyEvent(user: user)
-        case .custom: return Event.customEvent(key: UUID().uuidString, user: user, data: ["custom": UUID().uuidString])
+        case .custom: return (try? Event.customEvent(key: UUID().uuidString, user: user, data: ["custom": UUID().uuidString]))!
         case .summary: return Event.summaryEvent(flagRequestTracker: FlagRequestTracker.stub())!
         }
     }

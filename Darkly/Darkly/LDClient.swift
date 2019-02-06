@@ -16,10 +16,10 @@ enum LDClientRunMode {
  The LDClient is the heart of the SDK, providing client apps running iOS, watchOS, macOS, or tvOS access to LaunchDarkly services. This singleton provides the ability to set a configuration (LDConfig) that controls how the LDClient talks to LaunchDarkly servers, and a user (LDUser) that provides finer control on the feature flag values delivered to LDClient. Once the LDClient has started, it connects to LaunchDarkly's servers to get the feature flag values you set in the Dashboard.
 ## Usage
 ### Startup
- 1. To customize, configure a `LDConfig` and `LDUser`. While neither are required, both give you additional control over the feature flags delivered to the LDClient. See `LDConfig` & `LDUser` for more details.
- 2. Call `LDClient.shared.start(mobileKey: config: user: completion:)`
-    - The mobileKey comes from your LaunchDarkly Account settings (on the left, at the bottom). If you have multiple projects be sure to choose the correct Mobile key.
-    - If you do not pass in a LDConfig or LDUser, LDCLient will create a default for you.
+ 1. To customize, configure a `LDConfig` and `LDUser`. The `config` is required, the `user` is optional. Both give you additional control over the feature flags delivered to the LDClient. See `LDConfig` & `LDUser` for more details.
+    - The mobileKey set into the `LDConfig` comes from your LaunchDarkly Account settings (on the left, at the bottom). If you have multiple projects be sure to choose the correct Mobile key.
+ 2. Call `LDClient.shared.start(config: user: completion:)`
+    - If you do not pass in a LDUser, LDCLient will create a default for you.
     - The optional completion closure allows the LDClient to notify your app when it has gone online.
  3. Because the LDClient is a singleton, you do not have to keep a reference to it in your code.
 
@@ -80,6 +80,8 @@ public class LDClient {
 
      Client apps can set a completion closure called when the setOnline call completes. For unthrottled `setOnline(true)` and all `setOnline(false)` calls, the SDK will call the closure immediately on completion of this method. For throttled `setOnline(true)` calls, the SDK will call the closure after the throttling delay at the completion of the setOnline method.
 
+     The SDK will not go online if the client has not been started, or the `mobileKey` is empty. For macOS, the SDK will not go online in the background unless `enableBackgroundUpdates` is true.
+
      Use `isOnline` to get the online/offline state.
 
      - parameter goOnline:    Desired online/offline mode for the LDClient
@@ -101,7 +103,7 @@ public class LDClient {
     }
 
     private var canGoOnline: Bool {
-        return hasStarted && isInSupportedRunMode
+        return hasStarted && isInSupportedRunMode && !config.mobileKey.isEmpty
     }
 
     private var isInSupportedRunMode: Bool {
@@ -110,14 +112,23 @@ public class LDClient {
 
     private func go(online goOnline: Bool, reasonOnlineUnavailable: String, completion:(() -> Void)?) {
         isOnline = goOnline
-        Log.debug(typeName(and: "setOnline", appending: ": \(self.isOnline).") + reasonOnlineUnavailable)
+        Log.debug(typeName(and: "setOnline", appending: ": ") + (reasonOnlineUnavailable.isEmpty ? "\(self.isOnline)." : "true aborted.") + reasonOnlineUnavailable)
         completion?()
     }
 
     private func reasonOnlineUnavailable(goOnline: Bool) -> String {
-        if !goOnline { return "" }
-        if !hasStarted { return " LDClient not started." }
-        if !isInSupportedRunMode { return " LDConfig background updates not enabled." }
+        if !goOnline {
+            return ""
+        }
+        if !hasStarted {
+            return " LDClient not started."
+        }
+        if !isInSupportedRunMode {
+            return " LDConfig background updates not enabled."
+        }
+        if config.mobileKey.isEmpty {
+            return " Mobile Key is empty."
+        }
         return ""
     }
 
@@ -142,7 +153,7 @@ public class LDClient {
             let wasOnline = isOnline
             setOnline(false)
 
-            service = serviceFactory.makeDarklyServiceProvider(mobileKey: mobileKey, config: config, user: user)
+            service = serviceFactory.makeDarklyServiceProvider(config: config, user: user)
             eventReporter.config = config
 
             setOnline(wasOnline)
@@ -171,7 +182,7 @@ public class LDClient {
             if let cachedFlags = flagCache.retrieveFlags(for: user), !cachedFlags.flags.isEmpty {
                 user.flagStore.replaceStore(newFlags: cachedFlags.flags, source: .cache, completion: nil)
             }
-            service = serviceFactory.makeDarklyServiceProvider(mobileKey: mobileKey, config: config, user: user)
+            service = serviceFactory.makeDarklyServiceProvider(config: config, user: user)
 
             if hasStarted {
                 eventReporter.record(Event.identifyEvent(user: user))
@@ -189,29 +200,28 @@ public class LDClient {
                                                                    pollingInterval: config.flagPollingInterval(runMode: runMode),
                                                                    useReport: config.useReport,
                                                                    service: service,
-                                                                   onSyncComplete: onSyncComplete)
+                                                                   onSyncComplete: onFlagSyncComplete)
         }
     }
 
     private(set) var hasStarted = false
 
     /**
-     Starts the LDClient using the passed in `mobileKey`, `config`, & `user`. Call this before requesting feature flag values. The LDClient will not go online until you call this method.
+     Starts the LDClient using the passed in `config` & `user`. Call this before requesting feature flag values. The LDClient will not go online until you call this method.
 
      Starting the LDClient means setting the `config` & `user`, setting the client online if `config.startOnline` is true (the default setting), and starting event recording. The client app must start the LDClient before it will report feature flag values. If a client does not call start, the LDClient will only report fallback values, and no events will be recorded.
 
-     If the start call omits the `config` or `user`, the LDClient uses the previously set `config` and `user`, or defaults if they were never set.
+     If the start call omits the `user`, the LDClient uses the previously set `user`, or the default `user` if it was never set.
 
      If the start call includes the optional `completion` closure, LDClient calls the `completion` closure when `setOnline(_: completion:)` embedded in the start method completes. The start call is subject to throttling delays, therefore the `completion` closure call may be delayed.
 
      Subsequent calls to this method cause the LDClient to go offline, reconfigure using the new `config` & `user` (if supplied), and then go online if it was online when start was called. Normally there should only be one call to start. To change `config` or `user`, set them directly on LDClient.
 
-     - parameter mobileKey: The Mobile key from your [LaunchDarkly Account](app.launchdarkly.com) settings (on the left at the bottom). If you have multiple projects be sure to choose the correct Mobile key.
-     - parameter config: The LDConfig set with the desired configuration. If omitted, LDClient retains the previously set config, or default if one was never set. (Optional)
+     - parameter config: The LDConfig that contains the desired configuration. (Required)
      - parameter user: The LDUser set with the desired user. If omitted, LDClient retains the previously set user, or default if one was never set. (Optional)
      - parameter completion: Closure called when the embedded `setOnline` call completes, subject to throttling delays. (Optional)
     */
-    public func start(mobileKey: String, config: LDConfig? = nil, user: LDUser? = nil, completion: (() -> Void)? = nil) {
+    public func start(config: LDConfig, user: LDUser? = nil, completion: (() -> Void)? = nil) {
         Log.debug(typeName(and: #function, appending: ": ") + "starting")
         let wasStarted = hasStarted
         let wasOnline = isOnline
@@ -219,8 +229,7 @@ public class LDClient {
 
         setOnline(false)
 
-        self.mobileKey = mobileKey
-        self.config = config ?? self.config
+        self.config = config
         self.user = user ?? self.user
 
         setOnline((wasStarted && wasOnline) || (!wasStarted && self.config.startOnline)) {
@@ -264,7 +273,7 @@ public class LDClient {
     */
     
     /**
-     Returns the variation for the given feature flag. If the flag does not exist, cannot be cast to the correct return type, or the LDClient is not started, returns the fallback value.
+     Returns the variation for the given feature flag. If the flag does not exist, cannot be cast to the correct return type, or the LDClient is not started, returns the fallback value. Use this method when the fallback value is a non-Optional type. See `variation` with the Optional return value when the fallback value can be nil.
 
      A *variation* is a specific flag value. For example a boolean feature flag has 2 variations, *true* and *false*. You can create feature flags with more than 2 variations using other feature flag types. See `LDFlagValue` for the available types.
 
@@ -288,7 +297,7 @@ public class LDClient {
 
      To avoid this, make sure the fallback type matches the expected feature flag type. Either specify the fallback value type to be the feature flag type, or cast the fallback value to the feature flag type prior to making the variation request. In the above example, either specify that the fallback value's type is [LDFlagKey: Any]:
      ````
-     let fallbackValue: [LDFlagKey: Any] = ["a": 1, "b": 2]     //dictionary type would be [LDFlagKey: Int] without the type specifier
+     let fallbackValue: [LDFlagKey: Any] = ["a": 1, "b": 2]     //dictionary type would be [String: Int] without the type specifier
      ````
      or cast the fallback value into the feature flag type prior to calling variation:
      ````
@@ -301,20 +310,57 @@ public class LDClient {
      - returns: The requested feature flag value, or the fallback if the flag is missing or cannot be cast to the fallback type, or the client is not started
     */
     public func variation<T: LDFlagValueConvertible>(forKey flagKey: LDFlagKey, fallback: T) -> T {
-        guard hasStarted
-        else {
-            Log.debug(typeName(and: #function) + "returning fallback: \(fallback)." + " LDClient not started.")
-            return fallback
-        }
-        let featureFlag = user.flagStore.featureFlag(for: flagKey)
-        let value: T = self.value(from: featureFlag, fallback: fallback)
-        Log.debug(typeName(and: #function) + "flagKey: \(flagKey), value: \(value), fallback: \(fallback), featureFlag: \(String(describing: featureFlag))")
-        eventReporter.recordFlagEvaluationEvents(flagKey: flagKey, value: value, defaultValue: fallback, featureFlag: featureFlag, user: user)
+        return variation(forKey: flagKey, fallback: fallback as T?) ?? fallback     //the fallback cast to 'as T?' directs the call to the Optional-returning variation method
+    }
+
+    /**
+     Returns the variation for the given feature flag. If the flag does not exist, cannot be cast to the correct return type, or the LDClient is not started, returns the fallback value, which may be `nil`. Use this method when the fallback value is an Optional type. See `variation` with the non-Optional return value when the fallback value cannot be nil.
+
+     A *variation* is a specific flag value. For example a boolean feature flag has 2 variations, *true* and *false*. You can create feature flags with more than 2 variations using other feature flag types. See `LDFlagValue` for the available types.
+
+     The LDClient must be started in order to return feature flag values. If the LDClient is not started, it will always return the fallback value. The LDClient must be online to keep the feature flag values up-to-date.
+
+     When online, the LDClient has two modes for maintaining feature flag values: *streaming* and *polling*. The client app requests the mode by setting the `config.streamingMode`, see `LDConfig` for details.
+     - In streaming mode, the LDClient opens a long-running connection to LaunchDarkly's streaming server (called *clientstream*). When a flag value changes on the server, the clientstream notifies the SDK to update the value. Streaming mode is not available on watchOS. On iOS and tvOS, the client app must be running in the foreground to connect to clientstream. On macOS the client app may run in either foreground or background to connect to clientstream. If streaming mode is not available, the SDK reverts to polling mode.
+     - In polling mode, the LDClient requests feature flags from LaunchDarkly's app server at regular intervals defined in the LDConfig. When a flag value changes on the server, the LDClient will learn of the change the next time the SDK requests feature flags.
+
+     When offline, LDClient closes the clientstream connection and no longer requests feature flags. The LDClient will return feature flag values (assuming the LDClient was started), which may not match the values set on the LaunchDarkly server.
+
+     A call to `variation` records events reported later. Recorded events allow clients to analyze usage and assist in debugging issues.
+
+     ### Usage
+     ````
+     let boolFeatureFlagValue: Bool? = LDClient.shared.variation(forKey: "bool-flag-key", fallback: nil) //boolFeatureFlagValue is a Bool?
+     ````
+     **Important** The fallback value tells the SDK the type of the feature flag. In several cases, the feature flag type cannot be determined by the values sent from the server. It is possible to provide a fallback value with a type that does not match the feature flag value's type. The SDK will attempt to convert the feature flag's value into the type of the fallback value in the variation request. If that cast fails, the SDK will not be able to determine the correct return type, and will always return the fallback value.
+
+     When specifying `nil` as the fallback value, the compiler must also know the type of the optional. Without this information, the compiler will give the error "'nil' requires a contextual type". There are several ways to provide this information, by setting the type on the item holding the return value, by casting the return value to the desired type, or by casting `nil` to the desired type. We recommend following the above example and setting the type on the return value item.
+
+     For this method, the fallback value is defaulted to `nil`, allowing the call site to omit the fallback value.
+
+     Pay close attention to the type of the fallback value for collections. If the fallback collection type is more restrictive than the feature flag, the sdk will return the fallback even though the feature flag is present because it cannot convert the feature flag into the type requested via the fallback value. For example, if the feature flag has the type `[LDFlagKey: Any]`, but the fallback has the type `[LDFlagKey: Int]`, the sdk will not be able to convert the flags into the requested type, and will return the fallback value.
+
+     To avoid this, make sure the fallback type matches the expected feature flag type. Either specify the fallback value type to be the feature flag type, or cast the fallback value to the feature flag type prior to making the variation request. In the above example, either specify that the fallback value's type is [LDFlagKey: Any]:
+     ````
+     let fallbackValue: [LDFlagKey: Any]? = ["a": 1, "b": 2]     //dictionary type would be [String: Int] without the type specifier
+     ````
+     or cast the fallback value into the feature flag type prior to calling variation:
+     ````
+     let dictionaryFlagValue = LDClient.shared.variation(forKey: "dictionary-key", fallback: ["a": 1, "b": 2] as [LDFlagKey: Any]?)  //cast always succeeds since the destination type is less restrictive
+     ````
+
+     - parameter forKey: The LDFlagKey for the requested feature flag.
+     - parameter fallback: The fallback value to return if the feature flag key does not exist. If omitted, the fallback value is `nil`. (Optional)
+
+     - returns: The requested feature flag value, or the fallback if the flag is missing or cannot be cast to the fallback type, or the client is not started
+     */
+    public func variation<T: LDFlagValueConvertible>(forKey flagKey: LDFlagKey, fallback: T? = nil) -> T? {
+        let (value, _) = variationAndSource(forKey: flagKey, fallback: fallback)
         return value
     }
 
     /**
-     Returns the variation and source for the given feature flag as a tuple. If the flag does not exist, cannot be cast to the correct return type, or the LDClient is not started, returns the fallback value and `.fallback` for the source.
+     Returns the variation and source for the given feature flag as a tuple. If the flag does not exist, cannot be cast to the correct return type, or the LDClient is not started, returns the fallback value and `.fallback` for the source. Use this method when the fallback value is a non-Optional type. See `variationAndSource` with the Optional return value when the fallback value can be nil.
 
      A *variation* is a specific flag value. For example a boolean feature flag has 2 variations, *true* and *false*. You can create feature flags with more than 2 variations using other feature flag types. See `LDFlagValue` for the available types.
 
@@ -338,7 +384,7 @@ public class LDClient {
 
      To avoid this, make sure the fallback type matches the expected feature flag type. Either specify the fallback value type to be the feature flag type, or cast the fallback value to the feature flag type prior to making the variation request. In the above example, either specify that the fallback value's type is [LDFlagKey: Any]:
      ````
-     let fallbackValue: [LDFlagKey: Any] = ["a": 1, "b": 2]     //dictionary type would be [LDFlagKey: Int] without the type specifier
+     let fallbackValue: [LDFlagKey: Any] = ["a": 1, "b": 2]     //dictionary type would be [String: Int] without the type specifier
      ````
      or cast the fallback value into the feature flag type prior to calling variation:
      ````
@@ -351,15 +397,60 @@ public class LDClient {
      - returns: A tuple containing the requested feature flag value and source, or the fallback if the flag is missing or cannot be cast to the fallback type, or the client is not started. If the fallback value is returned, the source is `.fallback`
      */
     public func variationAndSource<T: LDFlagValueConvertible>(forKey flagKey: LDFlagKey, fallback: T) -> (T, LDFlagValueSource) {
+        let (value, source) = variationAndSource(forKey: flagKey, fallback: fallback as T?)
+        return (value ?? fallback, source)  //Because the fallback is wrapped into an Optional, the nil coalescing right side should never be called
+    }
+
+    /**
+     Returns the variation and source for the given feature flag as a tuple. If the flag does not exist, cannot be cast to the correct return type, or the LDClient is not started, returns the fallback value and `.fallback` for the source. Use this method when the fallback value is an Optional type. See `variationAndSource` with the non-Optional return value when the fallback value cannot be nil.
+
+     A *variation* is a specific flag value. For example a boolean feature flag has 2 variations, *true* and *false*. You can create feature flags with more than 2 variations using other feature flag types. See `LDFlagValue` for the available types.
+
+     The LDClient must be started in order to return feature flag values. If the LDClient is not started, it will always return the fallback value. The LDClient must be online to keep the feature flag values up-to-date.
+
+     When online, the LDClient has two modes for maintaining feature flag values: *streaming* and *polling*. The client app requests the mode by setting the `config.streamingMode`, see `LDConfig` for details.
+     - In streaming mode, the LDClient opens a long-running connection to LaunchDarkly's streaming server (called *clientstream*). When a flag value changes on the server, the clientstream notifies the SDK to update the value. Streaming mode is not available on watchOS. On iOS and tvOS, the client app must be running in the foreground to connect to clientstream. On macOS the client app may run in either foreground or background to connect to clientstream. If streaming mode is not available, the SDK reverts to polling mode.
+     - In polling mode, the LDClient requests feature flags from LaunchDarkly's app server at regular intervals defined in the LDConfig. When a flag value changes on the server, the LDClient will learn of the change the next time the SDK requests feature flags.
+
+     When offline, LDClient closes the clientstream connection and no longer requests feature flags. The LDClient will return feature flag values (assuming the LDClient was started), which may not match the values set on the LaunchDarkly server.
+
+     A call to `variationAndSource` records events reported later. Recorded events allow clients to analyze usage and assist in debugging issues.
+
+     ### Usage
+     ````
+     let (boolFeatureFlagValue, boolFeatureFlagSource): (Bool?, LDFlagValueSource) = LDClient.shared.variationAndSource(forKey: "bool-flag-key", fallback: nil) //boolFeatureFlagValue is a Bool?
+     ````
+     **Important** The fallback value tells the SDK the type of the feature flag. In several cases, the feature flag type cannot be determined by the values sent from the server. It is possible to provide a fallback value with a type that does not match the feature flag value's type. The SDK will attempt to convert the feature flag's value into the type of the fallback value in the variation request. If that cast fails, the SDK will not be able to determine the correct return type, and will always return the fallback value.
+
+     When specifying `nil` as the fallback value, the compiler must also know the type of the optional. Without this information, the compiler will give the error "'nil' requires a contextual type". There are several ways to provide this information, by setting the type on the item holding the return value, by casting the return value to the desired type, or by casting `nil` to the desired type. We recommend following the above example and setting the type on the return value item.
+
+     For this method, the fallback value is defaulted to `nil`, allowing the call site to omit the fallback value.
+
+     Pay close attention to the type of the fallback value for collections. If the fallback collection type is more restrictive than the feature flag, the sdk will return the fallback even though the feature flag is present because it cannot convert the feature flag into the type requested via the fallback value. For example, if the feature flag has the type `[LDFlagKey: Any]`, but the fallback has the type `[LDFlagKey: Int]`, the sdk will not be able to convert the flags into the requested type, and will return the fallback value.
+
+     To avoid this, make sure the fallback type matches the expected feature flag type. Either specify the fallback value type to be the feature flag type, or cast the fallback value to the feature flag type prior to making the variation request. In the above example, either specify that the fallback value's type is [LDFlagKey: Any]:
+     ````
+     let fallbackValue: [LDFlagKey: Any] = ["a": 1, "b": 2]     //dictionary type would be [String: Int] without the type specifier
+     ````
+     or cast the fallback value into the feature flag type prior to calling variation:
+     ````
+     let (dictionaryFlagValue, dictionaryFeatureFlagSource) = LDClient.shared.variationAndSource(forKey: "dictionary-key", fallback: ["a": 1, "b": 2] as [LDFlagKey: Any])  //cast always succeeds since the destination type is less restrictive
+     ````
+
+     - parameter forKey: The LDFlagKey for the requested feature flag.
+     - parameter fallback: The fallback value to return if the feature flag key does not exist. If omitted, the fallback value is `nil`. (Optional)
+
+     - returns: A tuple containing the requested feature flag value and source, or the fallback if the flag is missing or cannot be cast to the fallback type, or the client is not started. If the fallback value is returned, the source is `.fallback`
+     */
+    public func variationAndSource<T: LDFlagValueConvertible>(forKey flagKey: LDFlagKey, fallback: T? = nil) -> (T?, LDFlagValueSource) {
         guard hasStarted
         else {
-            Log.debug(typeName(and: #function) + "returning fallback: \(fallback), source: \(LDFlagValueSource.fallback)." + " LDClient not started.")
+            Log.debug(typeName(and: #function) + "returning fallback: \(fallback.stringValue), source: \(LDFlagValueSource.fallback)." + " LDClient not started.")
             return (fallback, .fallback)
         }
         let (featureFlag, flagStoreSource) = user.flagStore.featureFlagAndSource(for: flagKey)
-        let source = flagStoreSource ?? .fallback
-        let value: T = self.value(from: featureFlag, fallback: fallback)
-        Log.debug(typeName(and: #function) + "flagKey: \(flagKey), value: \(value), fallback: \(fallback), featureFlag: \(String(describing: featureFlag)), source: \(source)")
+        let (value, source): (T?, LDFlagValueSource) = valueAndSource(from: featureFlag, fallback: fallback, source: flagStoreSource)
+        Log.debug(typeName(and: #function) + "flagKey: \(flagKey), value: \(value.stringValue), fallback: \(fallback.stringValue), featureFlag: \(featureFlag.stringValue), source: \(source)")
         eventReporter.recordFlagEvaluationEvents(flagKey: flagKey, value: value, defaultValue: fallback, featureFlag: featureFlag, user: user)
         return (value, source)
     }
@@ -376,8 +467,12 @@ public class LDClient {
         return user.flagStore.featureFlags.compactMapValues { (featureFlag) -> Any? in featureFlag.value }
     }
 
-    private func value<T>(from featureFlag: FeatureFlag?, fallback: T) -> T {
-        return featureFlag?.value as? T ?? fallback
+    private func valueAndSource<T>(from featureFlag: FeatureFlag?, fallback: T?, source: LDFlagValueSource?) -> (T?, LDFlagValueSource) {
+        guard let value = featureFlag?.value as? T
+        else {
+            return (fallback, .fallback)
+        }
+        return (value, source ?? .fallback)
     }
 
     // MARK: Feature Flag Updates
@@ -530,7 +625,7 @@ public class LDClient {
         }
     }
 
-    private func onSyncComplete(result: SyncResult) {
+    private func onFlagSyncComplete(result: FlagSyncResult) {
         Log.debug(typeName(and: #function) + "result: \(result)")
         switch result {
         case let .success(flagDictionary, streamingEvent):
@@ -551,13 +646,17 @@ public class LDClient {
                 }
             default: break
             }
-        case let .error(synchronizingError):
-            if synchronizingError.isClientUnauthorized {
-                Log.debug(typeName(and: #function) + "LDClient is unauthorized")
-                setOnline(false)
-            }
-            executeCallback(onServerUnavailable)
+        case .error(let synchronizingError):
+            process(synchronizingError, logPrefix: typeName(and: #function, appending: ": "))
         }
+    }
+
+    private func process(_ synchronizingError: SynchronizingError, logPrefix: String) {
+        if synchronizingError.isClientUnauthorized {
+            Log.debug(logPrefix + "LDClient is unauthorized")
+            setOnline(false)
+        }
+        executeCallback(onServerUnavailable)
     }
 
     private func updateCacheAndReportChanges(flagCache: UserFlagCaching, changeNotifier: FlagChangeNotifying, user: LDUser, oldFlags: [LDFlagKey: FeatureFlag], oldFlagSource: LDFlagValueSource) {
@@ -582,7 +681,7 @@ public class LDClient {
     /**
      Adds a custom event to the LDClient event store. A client app can set a tracking event to allow client customized data analysis. Once an app has called `trackEvent`, the app cannot remove the event from the event store.
 
-     LDClient periodically transmits events to LaunchDarkly based on the frequency set in LDConfig.eventFlushIntervalMillis. The LDClient must be started and online. Ths SDK stores events tracked while the LDClient is offline, but started.
+     LDClient periodically transmits events to LaunchDarkly based on the frequency set in LDConfig.eventFlushInterval. The LDClient must be started and online. Ths SDK stores events tracked while the LDClient is offline, but started.
 
      Once the SDK's event store is full, the SDK discards events until they can be reported to LaunchDarkly. Configure the size of the event store using `eventCapacity` on the `config`. See `LDConfig` for details.
 
@@ -593,14 +692,16 @@ public class LDClient {
      ````
 
      - parameter key: The key for the event. The SDK does nothing with the key, which can be any string the client app sends
-     - parameter data: The data for the event. The SDK does nothing with the data, which can be any [String: Any] the client app sends. (Optional)
+     - parameter data: The data for the event. The SDK does nothing with the data, which can be any valid JSON item the client app sends. (Optional)
+
+     - throws: JSONSerialization.JSONError.invalidJsonObject if the data is not a valid JSON item
     */
-    public func trackEvent(key: String, data: [String: Any]? = nil) {
+    public func trackEvent(key: String, data: Any? = nil) throws {
         guard hasStarted else {
             Log.debug(typeName(and: #function) + "aborted. LDClient not started")
             return
         }
-        let event = Event.customEvent(key: key, user: user, data: data)
+        let event = try Event.customEvent(key: key, user: user, data: data)
         Log.debug(typeName(and: #function) + "event: \(event), data: \(String(describing: data))")
         eventReporter.record(event)
     }
@@ -610,6 +711,16 @@ public class LDClient {
     */
     public func reportEvents() {
         eventReporter.reportEvents()
+    }
+
+    private func onEventSyncComplete(result: EventSyncResult) {
+        Log.debug(typeName(and: #function) + "result: \(result)")
+        switch result {
+        case .success:
+            break   //EventReporter handles removing events from the event store, so there's nothing to do here. It's here in case we want to do something in the future.
+        case .error(let synchronizingError):
+            process(synchronizingError, logPrefix: typeName(and: #function, appending: ": "))
+        }
     }
 
     // MARK: - Foreground / Background notification
@@ -630,7 +741,6 @@ public class LDClient {
 
     // MARK: - Private
     private(set) var serviceFactory: ClientServiceCreating = ClientServiceFactory()
-    private var mobileKey = ""
 
     private(set) var runMode: LDClientRunMode = .foreground {
         didSet {
@@ -654,7 +764,7 @@ public class LDClient {
                                                                        pollingInterval: config.flagPollingInterval(runMode: runMode),
                                                                        useReport: config.useReport,
                                                                        service: service,
-                                                                       onSyncComplete: onSyncComplete)
+                                                                       onSyncComplete: onFlagSyncComplete)
             }
             flagSynchronizer.isOnline = willSetSynchronizerOnline
         }
@@ -682,17 +792,16 @@ public class LDClient {
         LDUserWrapper.configureKeyedArchiversToHandleVersion2_3_0AndOlderUserCacheFormat()
         self.serviceFactory.makeCacheConverter().convertUserCacheToFlagCache()
         flagChangeNotifier = self.serviceFactory.makeFlagChangeNotifier()
-        throttler = self.serviceFactory.makeThrottler(maxDelay: Throttler.Constants.defaultDelay)
+        throttler = self.serviceFactory.makeThrottler(maxDelay: Throttler.Constants.defaultDelay, environmentReporter: environmentReporter)
 
         //dummy objects replaced by client at start
-        config = LDConfig(environmentReporter: environmentReporter)
+        config = LDConfig(mobileKey: "", environmentReporter: environmentReporter)
         user = LDUser(environmentReporter: environmentReporter)
-        service = self.serviceFactory.makeDarklyServiceProvider(mobileKey: "", config: config, user: user)
+        service = self.serviceFactory.makeDarklyServiceProvider(config: config, user: user)
         flagSynchronizer = self.serviceFactory.makeFlagSynchronizer(streamingMode: .polling,
-                                                                    pollingInterval: config.flagPollInterval,
+                                                                    pollingInterval: config.flagPollingInterval,
                                                                     useReport: config.useReport,
-                                                                    service: service,
-                                                                    onSyncComplete: nil)
+                                                                    service: service)
         eventReporter = self.serviceFactory.makeEventReporter(config: config, service: service)
 
         if let backgroundNotification = environmentReporter.backgroundNotification {
@@ -701,6 +810,9 @@ public class LDClient {
         if let foregroundNotification = environmentReporter.foregroundNotification {
             NotificationCenter.default.addObserver(self, selector: #selector(willEnterForeground), name: foregroundNotification, object: nil)
         }
+
+        //Since eventReporter lasts the life of the singleton, we can configure it here...swift requires the client to be instantiated before we can pass the onSyncComplete method 
+        eventReporter = self.serviceFactory.makeEventReporter(config: config, service: service, onSyncComplete: onEventSyncComplete)
     }
 
     private convenience init(serviceFactory: ClientServiceCreating, config: LDConfig, user: LDUser, runMode: LDClientRunMode) {
@@ -711,17 +823,27 @@ public class LDClient {
         self.user = user
 
         //dummy objects replaced by client at start
-        service = self.serviceFactory.makeDarklyServiceProvider(mobileKey: "", config: config, user: user)  //didSet not triggered here
+        service = self.serviceFactory.makeDarklyServiceProvider(config: config, user: user)  //didSet not triggered here
         flagSynchronizer = self.serviceFactory.makeFlagSynchronizer(streamingMode: effectiveStreamingMode(runMode: runMode, config: config),
                                                                     pollingInterval: config.flagPollingInterval(runMode: runMode),
                                                                     useReport: config.useReport,
                                                                     service: service,
-                                                                    onSyncComplete: onSyncComplete)
-        eventReporter = self.serviceFactory.makeEventReporter(config: config, service: service)
+                                                                    onSyncComplete: onFlagSyncComplete)
+        eventReporter = self.serviceFactory.makeEventReporter(config: config, service: service, onSyncComplete: onEventSyncComplete)
     }
 }
 
 extension LDClient: TypeIdentifying { }
+
+private extension Optional {
+    var stringValue: String {
+        guard let value = self
+        else {
+            return "<nil>"
+        }
+        return "\(value)"
+    }
+}
 
 #if DEBUG
     extension LDClient {

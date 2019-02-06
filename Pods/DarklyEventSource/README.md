@@ -1,10 +1,12 @@
 # EventSource
-**Server-Sent Events for iOS, watchOS, tvOS and Mac**
+**Server-Sent Events for iOS, watchOS, tvOS and macOS**
 
 ![Travis](https://travis-ci.org/neilco/EventSource.svg?branch=master)
 [![CocoaPods Compatible](https://img.shields.io/cocoapods/v/DarklyEventSource.svg)](https://img.shields.io/cocoapods/v/DarklyEventSource.svg)
 [![Carthage Compatible](https://img.shields.io/badge/Carthage-compatible-4BC51D.svg?style=flat)](https://github.com/Carthage/Carthage)
 [![Platform](https://img.shields.io/cocoapods/p/AFNetworking.svg?style=flat)](http://cocoadocs.org/docsets/AFNetworking)
+
+For details on Server Sent Events, see the [Specification](https://html.spec.whatwg.org/multipage/server-sent-events.html)
 
 ## What does it do?
 
@@ -52,7 +54,18 @@ With the exception of the `onError:`, the `event` and `data` properties for thes
 
 #### Graceful Connection Handling
 
-Reconnection attempts are automatic and seamless, even if the server goes go. How frequently reconnection attempts are made is controlled by the server by setting the `retry` key on its events. 
+To make the initial connection to the streaming event server, call `open` on the event source. That gives you control over when events start arriving.
+
+```objc
+NSURL *serverURL = [NSURL URLWithString:@"http://127.0.0.1:8000/"];
+EventSource *source = [EventSource eventSourceWithURL:serverURL];
+[source onMessage:^(Event *e) {
+    NSLog(@"%@: %@", e.event, e.data);
+}];
+[source open];
+```
+
+Reconnection attempts are automatic and seamless, even if the server goes down. How frequently reconnection attempts are made is controlled by the server by setting the `retry` key on its events. If the server doesn't send a retry, the default is 1 second intervals. 
 
 ### Server Code
 
@@ -93,7 +106,7 @@ source 'https://github.com/CocoaPods/Specs.git'
 platform :ios, '8.0'
 
 target 'TargetName' do
-pod 'DarklyEventSource', '~> 3.2.7'
+pod 'DarklyEventSource', '~> 4.0.0'
 end
 ```
 
@@ -117,7 +130,7 @@ $ brew install carthage
 To integrate EventSource into your Xcode project using Carthage, specify it in your `Cartfile`:
 
 ```ogdl
-github "launchdarkly/ios-eventsource" >= 3.2.7
+github "launchdarkly/ios-eventsource" >= 4.0.0
 ```
 
 Run `carthage` to build the framework and drag the built `EventSource.framework` into your Xcode project.

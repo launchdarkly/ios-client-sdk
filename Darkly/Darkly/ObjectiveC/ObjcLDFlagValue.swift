@@ -38,48 +38,115 @@ extension LDFlagValue {
 ///Defines the possible sources for feature flag values.
 ///See also: `LDClient.variationAndSource(forKey:fallback:)` and `LDChangedFlag`
 @objc(LDFlagValueSource)
-public enum ObjcLDFlagValueSource: Int {
-    ///ObjcLDFlagValueSourceNilSource indicates the feature flag value's source is not available (Objective-C only)
-    case nilSource = -1
-    ///ObjcLDFlagValueSourceServer indicates the feature flag value's source is the LaunchDarkly server
-    case server
-    ///ObjcLDFlagValueSourceCache indicates the feature flag value's source is the SDK's local cache
-    case cache
-    ///ObjcLDFlagValueSourceFallback indicates the feature flag value's source is the fallback value provided by the client app
-    case fallback
-    ///ObjcLDFlagValueSourceTypeMismatch indicates the type of feature flag requested differs from the actual feature flag type (Objective-C only)
-    case typeMismatch
-    
+public class ObjcLDFlagValueSource: NSObject {
+    let flagValueSource: LDFlagValueSource?
+    let typeMismatch: Bool
+
+    ///LDFlagValueSource constant indicating the source is nil.
+    @objc public static let nilSource = -1
+    ///LDFlagValueSource constant indicating the source is the server.
+    @objc public static let server = 0
+    ///LDFlagValueSource constant indicating the source is the cache.
+    @objc public static let cache = 1
+    ///LDFlagValueSource constant indicating the source is the fallback value.
+    @objc public static let fallback = 2
+    ///LDFlagValueSource constant indicating the actual flag type differs from the type requested by the client.
+    @objc public static let typeMismatch = 3
+
+    struct StringConstants {
+        static let typeMismatch = "type mismatch"
+        static let nilSource = "<nil>"
+    }
+
     init(_ source: LDFlagValueSource?, typeMismatch: Bool = false) {
+        flagValueSource = source
+        self.typeMismatch = typeMismatch
+    }
+
+    ///Initializer that takes an integer and returns the LDFlagValueSource provided the integer matches one of the LDFlagValueSource constants. Otherwise, returns nil.
+    @objc public init?(rawValue: Int) {
+        guard rawValue >= ObjcLDFlagValueSource.nilSource && rawValue <= ObjcLDFlagValueSource.typeMismatch
+        else {
+            return nil
+        }
+        self.typeMismatch = rawValue == ObjcLDFlagValueSource.typeMismatch
+        self.flagValueSource = LDFlagValueSource(rawValue: rawValue)
+        super.init()
+    }
+
+    ///Property that converts the LDFlagValueSource into an integer matching one of the LDFlagValueSource constants.
+    @objc public var rawValue: Int {
         if typeMismatch {
-            self = .typeMismatch
-            return
+            return ObjcLDFlagValueSource.typeMismatch
         }
-        if let source = source {
-            switch source {
-            case .server: self = .server
-            case .cache: self = .cache
-            case .fallback: self = .fallback
-            }
-            return
+        guard let flagValueSource = flagValueSource
+        else {
+            return ObjcLDFlagValueSource.nilSource
         }
-        self = .nilSource
+        return flagValueSource.intValue
     }
 
-    var stringValue: String {
+    ///Property that converts the LDFlagValueSource into a string describing one of the LDFlagValueSource constants.
+    @objc public var stringValue: String {
+        if typeMismatch {
+            return StringConstants.typeMismatch
+        }
+        guard let flagValueSource = flagValueSource
+        else {
+            return StringConstants.nilSource
+        }
+        return "\(flagValueSource)"
+    }
+
+    ///Compares a LDFlagValueSource to another object, returning true when the object is the same as the receiver.
+    @objc public func isEqual(toObject object: Any?) -> Bool {
+        guard let other = object as? ObjcLDFlagValueSource
+        else {
+            return false
+        }
+        return self.rawValue == other.rawValue
+    }
+
+    ///Compares a LDFlagValueSource to an Int, returning true when the receiver has the same raw value as the constantValue.
+    @objc public func isEqual(toConstant constantValue: Int) -> Bool {
+        return rawValue == constantValue
+    }
+}
+
+private extension LDFlagValueSource {
+    init?(rawValue: Int) {
+        guard rawValue >= ObjcLDFlagValueSource.server && rawValue <= ObjcLDFlagValueSource.fallback
+        else {
+            return nil
+        }
+        switch rawValue {
+        case ObjcLDFlagValueSource.server:
+            self = .server
+        case ObjcLDFlagValueSource.cache:
+            self = .cache
+        case ObjcLDFlagValueSource.fallback:
+            self = .fallback
+        default:
+            return nil
+        }
+    }
+
+    var intValue: Int {
         switch self {
-        case .nilSource: return "<nil>"
-        case .server: return "server"
-        case .cache: return "cache"
-        case .fallback: return "fallback"
-        case .typeMismatch: return "type mismatch"
+        case .server: return ObjcLDFlagValueSource.server
+        case .cache: return ObjcLDFlagValueSource.cache
+        case .fallback: return ObjcLDFlagValueSource.fallback
         }
     }
 }
 
-extension NSString {
-    ///String representation of an ObjcLDFlagValueSource 
-    @objc public class func stringWithFlagValueSource(_ source: ObjcLDFlagValueSource) -> NSString {
-        return source.stringValue as NSString
+#if DEBUG
+extension LDFlagValueSource {
+    init?(intValue: Int) {
+        self.init(rawValue: intValue)
+    }
+    var intRawValue: Int {
+        return self.intValue
     }
 }
+#endif

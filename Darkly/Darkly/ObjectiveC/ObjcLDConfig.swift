@@ -17,6 +17,12 @@ import Foundation
 public final class ObjcLDConfig: NSObject {
     var config: LDConfig
     
+    /// The Mobile key from your [LaunchDarkly Account](app.launchdarkly.com) settings (on the left at the bottom). If you have multiple projects be sure to choose the correct Mobile key.
+    @objc public var mobileKey: String {
+        get { return config.mobileKey }
+        set { config.mobileKey = newValue }
+    }
+
     /// The url for making feature flag requests. Do not change unless instructed by LaunchDarkly.
     @objc public var baseUrl: URL {
         get { return config.baseUrl }
@@ -39,31 +45,31 @@ public final class ObjcLDConfig: NSObject {
         set { config.eventCapacity = newValue }
     }
 
-    /// The timeout interval in milliseconds for flag requests and event reports. (Default: 10 seconds)
-    @objc public var connectionTimeoutMillis: Int {
-        get { return config.connectionTimeoutMillis }
-        set { config.connectionTimeoutMillis = newValue }
+    /// The timeout interval for flag requests and event reports. (Default: 10 seconds)
+    @objc public var connectionTimeout: TimeInterval {
+        get { return config.connectionTimeout }
+        set { config.connectionTimeout = newValue }
     }
-    /// The interval between event reports in milliseconds (Default: 30 seconds)
-    @objc public var eventFlushIntervalMillis: Int {
-        get { return config.eventFlushIntervalMillis }
-        set { config.eventFlushIntervalMillis = newValue }
+    /// The time interval between event reports (Default: 30 seconds)
+    @objc public var eventFlushInterval: TimeInterval {
+        get { return config.eventFlushInterval }
+        set { config.eventFlushInterval = newValue }
     }
-    /// The interval between feature flag requests in milliseconds. Used only for polling mode. (Default: 5 minutes)
-    @objc public var pollIntervalMillis: Int {
-        get { return config.pollIntervalMillis }
-        set { config.pollIntervalMillis = newValue }
+    /// The interval between feature flag requests. Used only for polling mode. (Default: 5 minutes)
+    @objc public var flagPollingInterval: TimeInterval {
+        get { return config.flagPollingInterval }
+        set { config.flagPollingInterval = newValue }
     }
-    /// The interval between feature flag requests while running in the background, in milliseconds. Used only for polling mode. (Default: 60 minutes)
-    @objc public var backgroundPollIntervalMillis: Int {
-        get { return config.backgroundPollIntervalMillis }
-        set { config.backgroundPollIntervalMillis = newValue }
+    /// The interval between feature flag requests while running in the background. Used only for polling mode. (Default: 60 minutes)
+    @objc public var backgroundFlagPollingInterval: TimeInterval {
+        get { return config.backgroundFlagPollingInterval }
+        set { config.backgroundFlagPollingInterval = newValue }
     }
 
-    /// The minimum interval between feature flag requests in milliseconds. Used only for polling mode. (5 minutes)
-    @objc public var minPollingIntervalMillis: Int { return config.minima.pollingIntervalMillis }
-    /// The minimum interval between feature flag requests while running in the background, in milliseconds. Used only for polling mode. (15 minutes)
-    @objc public var minBackgroundPollIntervalMillis: Int { return config.minima.backgroundPollIntervalMillis }
+    /// The minimum interval between feature flag requests. Used only for polling mode. (5 minutes)
+    @objc public var minFlagPollingInterval: TimeInterval { return config.minima.flagPollingInterval }
+    /// The minimum interval between feature flag requests while running in the background. Used only for polling mode. (15 minutes)
+    @objc public var minBackgroundFlagPollInterval: TimeInterval { return config.minima.backgroundFlagPollingInterval }
 
     /// Controls the method the SDK uses to keep feature flags updated. When set to .streaming, connects to `clientstream` which notifies the SDK of feature flag changes. When set to .polling, an efficient polling mechanism is used to periodically request feature flag values. Ignored for watchOS, which always uses .polling. See `LDStreamingMode` for more details. (Default: .streaming)
     @objc public var streamingMode: Bool {
@@ -131,8 +137,8 @@ public final class ObjcLDConfig: NSObject {
     }
     
     ///LDConfig constructor. Configurable values are all set to their default values. The client app can modify these values as desired. Note that client app developers may prefer to get the LDConfig from `LDClient.config` (`ObjcLDClient.config`) in order to retain previously set values.
-    @objc public override init() {
-        config = LDConfig()
+    @objc public init(mobileKey: String) {
+        config = LDConfig(mobileKey: mobileKey)
     }
 
     //Initializer to wrap the Swift LDConfig into ObjcLDConfig for use in Objective-C apps.

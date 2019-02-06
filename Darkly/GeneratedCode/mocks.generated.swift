@@ -29,6 +29,14 @@ final class DarklyStreamingProviderMock: DarklyStreamingProvider {
         onErrorEventCallback?()
     }
 
+    // MARK: open
+    var openCallCount = 0
+    var openCallback: (() -> Void)?
+    func open() {
+        openCallCount += 1
+        openCallback?()
+    }
+
     // MARK: close
     var closeCallCount = 0
     var closeCallback: (() -> Void)?
@@ -128,6 +136,16 @@ final class EnvironmentReportingMock: EnvironmentReporting {
         didSet {
             sdkVersionSetCount += 1
             setSdkVersionCallback?()
+        }
+    }
+
+    // MARK: shouldThrottleOnlineCalls
+    var shouldThrottleOnlineCallsSetCount = 0
+    var setShouldThrottleOnlineCallsCallback: (() -> Void)?
+    var shouldThrottleOnlineCalls: Bool = true {
+        didSet {
+            shouldThrottleOnlineCallsSetCount += 1
+            setShouldThrottleOnlineCallsCallback?()
         }
     }
 }

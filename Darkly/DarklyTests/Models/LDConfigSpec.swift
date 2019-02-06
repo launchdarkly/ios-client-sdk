@@ -14,10 +14,10 @@ final class LDConfigSpec: QuickSpec {
     struct Constants {
         fileprivate static let alternateMockUrl = URL(string: "https://dummy.alternate.com")!
         fileprivate static let eventCapacity = 10
-        fileprivate static let connectionTimeoutMillis = 10
-        fileprivate static let eventFlushIntervalMillis = 10
-        fileprivate static let pollIntervalMillis = 10
-        fileprivate static let backgroundPollIntervalMillis = 10
+        fileprivate static let connectionTimeout: TimeInterval = 0.01
+        fileprivate static let eventFlushInterval: TimeInterval = 0.01
+        fileprivate static let flagPollingInterval: TimeInterval = 0.01
+        fileprivate static let backgroundFlagPollingInterval: TimeInterval = 0.01
 
         fileprivate static let streamingMode = LDStreamingMode.polling
         fileprivate static let enableBackgroundUpdates = true
@@ -41,7 +41,8 @@ final class LDConfigSpec: QuickSpec {
             self.environmentReporter = EnvironmentReportingMock()
             if let operatingSystem = operatingSystem { self.environmentReporter.operatingSystem = operatingSystem }
             if let isDebugBuild = isDebugBuild { self.environmentReporter.isDebugBuild = isDebugBuild }
-            subject = useStub ? LDConfig.stub(environmentReporter: self.environmentReporter) : LDConfig(environmentReporter: self.environmentReporter)
+            subject = useStub ? LDConfig.stub(mobileKey: LDConfig.Constants.mockMobileKey, environmentReporter: self.environmentReporter) :
+                LDConfig(mobileKey: LDConfig.Constants.mockMobileKey, environmentReporter: self.environmentReporter)
         }
     }
 
@@ -58,18 +59,19 @@ final class LDConfigSpec: QuickSpec {
         describe("init") {
             var config: LDConfig!
             beforeEach {
-                config = LDConfig()
+                config = LDConfig(mobileKey: LDConfig.Constants.mockMobileKey)
             }
             context("without changing config values") {
                 it("has the default config values") {
+                    expect(config.mobileKey) == LDConfig.Constants.mockMobileKey
                     expect(config.baseUrl) == LDConfig.Defaults.baseUrl
                     expect(config.eventsUrl) == LDConfig.Defaults.eventsUrl
                     expect(config.streamUrl) == LDConfig.Defaults.streamUrl
                     expect(config.eventCapacity) == LDConfig.Defaults.eventCapacity
-                    expect(config.connectionTimeoutMillis) == LDConfig.Defaults.connectionTimeoutMillis
-                    expect(config.eventFlushIntervalMillis) == LDConfig.Defaults.eventFlushIntervalMillis
-                    expect(config.pollIntervalMillis) == LDConfig.Defaults.pollIntervalMillis
-                    expect(config.backgroundPollIntervalMillis) == LDConfig.Defaults.backgroundPollIntervalMillis
+                    expect(config.connectionTimeout) == LDConfig.Defaults.connectionTimeout
+                    expect(config.eventFlushInterval) == LDConfig.Defaults.eventFlushInterval
+                    expect(config.flagPollingInterval) == LDConfig.Defaults.flagPollingInterval
+                    expect(config.backgroundFlagPollingInterval) == LDConfig.Defaults.backgroundFlagPollingInterval
                     expect(config.streamingMode) == LDConfig.Defaults.streamingMode
                     expect(config.enableBackgroundUpdates) == LDConfig.Defaults.enableBackgroundUpdates
                     expect(config.startOnline) == LDConfig.Defaults.startOnline
@@ -92,10 +94,10 @@ final class LDConfigSpec: QuickSpec {
                         config.eventsUrl = Constants.alternateMockUrl
                         config.streamUrl = Constants.alternateMockUrl
                         config.eventCapacity = Constants.eventCapacity
-                        config.connectionTimeoutMillis = Constants.connectionTimeoutMillis
-                        config.eventFlushIntervalMillis = Constants.eventFlushIntervalMillis
-                        config.pollIntervalMillis = Constants.pollIntervalMillis
-                        config.backgroundPollIntervalMillis = Constants.backgroundPollIntervalMillis
+                        config.connectionTimeout = Constants.connectionTimeout
+                        config.eventFlushInterval = Constants.eventFlushInterval
+                        config.flagPollingInterval = Constants.flagPollingInterval
+                        config.backgroundFlagPollingInterval = Constants.backgroundFlagPollingInterval
                         config.streamingMode = Constants.streamingMode
                         config.enableBackgroundUpdates = Constants.enableBackgroundUpdates
                         config.startOnline = Constants.startOnline
@@ -114,10 +116,10 @@ final class LDConfigSpec: QuickSpec {
                         expect(config.eventsUrl) == Constants.alternateMockUrl
                         expect(config.streamUrl) == Constants.alternateMockUrl
                         expect(config.eventCapacity) == Constants.eventCapacity
-                        expect(config.connectionTimeoutMillis) == Constants.connectionTimeoutMillis
-                        expect(config.eventFlushIntervalMillis) == Constants.eventFlushIntervalMillis
-                        expect(config.pollIntervalMillis) == Constants.pollIntervalMillis
-                        expect(config.backgroundPollIntervalMillis) == Constants.backgroundPollIntervalMillis
+                        expect(config.connectionTimeout) == Constants.connectionTimeout
+                        expect(config.eventFlushInterval) == Constants.eventFlushInterval
+                        expect(config.flagPollingInterval) == Constants.flagPollingInterval
+                        expect(config.backgroundFlagPollingInterval) == Constants.backgroundFlagPollingInterval
                         expect(config.streamingMode) == Constants.streamingMode
                         expect(config.enableBackgroundUpdates) == os.isBackgroundEnabled    //iOS, watchOS, & tvOS don't allow this to change, macOS should
                         expect(config.startOnline) == Constants.startOnline
@@ -142,8 +144,8 @@ final class LDConfigSpec: QuickSpec {
                     minima = LDConfig.Minima(environmentReporter: environmentReporter)
                 }
                 it("has the production minima") {
-                    expect(minima.pollingIntervalMillis) == LDConfig.Minima.Production.pollingIntervalMillis
-                    expect(minima.backgroundPollIntervalMillis) == LDConfig.Minima.Production.backgroundPollIntervalMillis
+                    expect(minima.flagPollingInterval) == LDConfig.Minima.Production.flagPollingInterval
+                    expect(minima.backgroundFlagPollingInterval) == LDConfig.Minima.Production.backgroundFlagPollingInterval
                 }
             }
             context("for debug builds") {
@@ -152,8 +154,8 @@ final class LDConfigSpec: QuickSpec {
                     minima = LDConfig.Minima(environmentReporter: environmentReporter)
                 }
                 it("has the debug minima") {
-                    expect(minima.pollingIntervalMillis) == LDConfig.Minima.Debug.pollingIntervalMillis
-                    expect(minima.backgroundPollIntervalMillis) == LDConfig.Minima.Debug.backgroundPollIntervalMillis
+                    expect(minima.flagPollingInterval) == LDConfig.Minima.Debug.flagPollingInterval
+                    expect(minima.backgroundFlagPollingInterval) == LDConfig.Minima.Debug.backgroundFlagPollingInterval
                 }
             }
         }
@@ -171,64 +173,64 @@ final class LDConfigSpec: QuickSpec {
             context("when running in foreground mode") {
                 context("polling interval above the minimum") {
                     beforeEach {
-                        testContext.subject.pollIntervalMillis = testContext.subject.minima.pollingIntervalMillis + 1
+                        testContext.subject.flagPollingInterval = testContext.subject.minima.flagPollingInterval + 0.001
 
                         effectivePollingInterval = testContext.subject.flagPollingInterval(runMode: .foreground)
                     }
-                    it("returns pollIntervalMillis") {
-                        expect(effectivePollingInterval) == testContext.subject.flagPollInterval
+                    it("returns flagPollingInterval") {
+                        expect(effectivePollingInterval) == testContext.subject.flagPollingInterval
                     }
                 }
                 context("polling interval at the minimum") {
                     beforeEach {
-                        testContext.subject.pollIntervalMillis = testContext.subject.minima.pollingIntervalMillis
+                        testContext.subject.flagPollingInterval = testContext.subject.minima.flagPollingInterval
 
                         effectivePollingInterval = testContext.subject.flagPollingInterval(runMode: .foreground)
                     }
-                    it("returns pollIntervalMillis") {
-                        expect(effectivePollingInterval) == testContext.subject.flagPollInterval
+                    it("returns flagPollingInterval") {
+                        expect(effectivePollingInterval) == testContext.subject.flagPollingInterval
                     }
                 }
                 context("polling interval below the minimum") {
                     beforeEach {
-                        testContext.subject.pollIntervalMillis = testContext.subject.minima.pollingIntervalMillis - 1
+                        testContext.subject.flagPollingInterval = testContext.subject.minima.flagPollingInterval - 0.001
 
                         effectivePollingInterval = testContext.subject.flagPollingInterval(runMode: .foreground)
                     }
-                    it("returns Minima.pollIntervalMillis") {
-                        expect(effectivePollingInterval) == testContext.subject.minima.pollingIntervalMillis.timeInterval
+                    it("returns Minima.flagPollingInterval") {
+                        expect(effectivePollingInterval) == testContext.subject.minima.flagPollingInterval
                     }
                 }
             }
             context("when running in background mode") {
                 context("polling interval above the minimum") {
                     beforeEach {
-                        testContext.subject.backgroundPollIntervalMillis = testContext.subject.minima.backgroundPollIntervalMillis + 1
+                        testContext.subject.backgroundFlagPollingInterval = testContext.subject.minima.backgroundFlagPollingInterval + 0.001
 
                         effectivePollingInterval = testContext.subject.flagPollingInterval(runMode: .background)
                     }
-                    it("returns backgroundPollIntervalMillis") {
-                        expect(effectivePollingInterval) == testContext.subject.backgroundFlagPollInterval
+                    it("returns backgroundFlagPollingInterval") {
+                        expect(effectivePollingInterval) == testContext.subject.backgroundFlagPollingInterval
                     }
                 }
                 context("polling interval at the minimum") {
                     beforeEach {
-                        testContext.subject.backgroundPollIntervalMillis = testContext.subject.minima.backgroundPollIntervalMillis
+                        testContext.subject.backgroundFlagPollingInterval = testContext.subject.minima.backgroundFlagPollingInterval
 
                         effectivePollingInterval = testContext.subject.flagPollingInterval(runMode: .background)
                     }
-                    it("returns backgroundPollIntervalMillis") {
-                        expect(effectivePollingInterval) == testContext.subject.backgroundFlagPollInterval
+                    it("returns backgroundFlagPollingInterval") {
+                        expect(effectivePollingInterval) == testContext.subject.backgroundFlagPollingInterval
                     }
                 }
                 context("polling interval below the minimum") {
                     beforeEach {
-                        testContext.subject.backgroundPollIntervalMillis = testContext.subject.minima.backgroundPollIntervalMillis - 1
+                        testContext.subject.backgroundFlagPollingInterval = testContext.subject.minima.backgroundFlagPollingInterval - 0.001
 
                         effectivePollingInterval = testContext.subject.flagPollingInterval(runMode: .background)
                     }
-                    it("returns Minima.backgroundPollIntervalMillis") {
-                        expect(effectivePollingInterval) == testContext.subject.minima.backgroundPollIntervalMillis.timeInterval
+                    it("returns Minima.backgroundFlagPollingInterval") {
+                        expect(effectivePollingInterval) == testContext.subject.minima.backgroundFlagPollingInterval
                     }
                 }
             }
@@ -292,7 +294,7 @@ final class LDConfigSpec: QuickSpec {
             context("when the connection timeouts differ") {
                 beforeEach {
                     otherConfig = testContext.subject
-                    otherConfig.connectionTimeoutMillis = testContext.subject.connectionTimeoutMillis + 1
+                    otherConfig.connectionTimeout = testContext.subject.connectionTimeout + 0.001
                 }
                 it("returns false") {
                     expect(testContext.subject) != otherConfig
@@ -301,7 +303,7 @@ final class LDConfigSpec: QuickSpec {
             context("when the event flush intervals differ") {
                 beforeEach {
                     otherConfig = testContext.subject
-                    otherConfig.eventFlushIntervalMillis = testContext.subject.eventFlushIntervalMillis + 1
+                    otherConfig.eventFlushInterval = testContext.subject.eventFlushInterval + 0.001
                 }
                 it("returns false") {
                     expect(testContext.subject) != otherConfig
@@ -310,7 +312,7 @@ final class LDConfigSpec: QuickSpec {
             context("when the poll intervals differ") {
                 beforeEach {
                     otherConfig = testContext.subject
-                    otherConfig.pollIntervalMillis = testContext.subject.pollIntervalMillis + 1
+                    otherConfig.flagPollingInterval = testContext.subject.flagPollingInterval + 0.001
                 }
                 it("returns false") {
                     expect(testContext.subject) != otherConfig
@@ -319,7 +321,7 @@ final class LDConfigSpec: QuickSpec {
             context("when the background poll intervals differ") {
                 beforeEach {
                     otherConfig = testContext.subject
-                    otherConfig.backgroundPollIntervalMillis = testContext.subject.backgroundPollIntervalMillis + 1
+                    otherConfig.backgroundFlagPollingInterval = testContext.subject.backgroundFlagPollingInterval + 0.001
                 }
                 it("returns false") {
                     expect(testContext.subject) != otherConfig

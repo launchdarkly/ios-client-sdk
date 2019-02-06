@@ -15,10 +15,10 @@ import Foundation
  The SDK creates an Objective-C native style API by wrapping Swift specific classes, properties, and methods into Objective-C wrapper classes prefixed by `Objc`. By defining Objective-C specific names, client apps written in Objective-C can use a native coding style, including using familiar LaunchDarkly SDK names like `LDClient`, `LDConfig`, and `LDUser`. Objective-C developers should refer to the Objc documentation by following the Objc specific links following type, property, and method names.
  ## Usage
  ### Startup
- 1. To customize, configure a LDConfig (`ObjcLDConfig`) and LDUser (`ObjcLDUser`). While neither are required, both give you additional control over the feature flags delivered to the LDClient. See `ObjcLDConfig` & `ObjcLDUser` for more details.
- 2. Call `[LDClient.sharedInstance startWithMobileKey: config: user: completion:]` (`ObjcLDClient.startWithMobileKey(_:config:user:completion:)`)
- - The mobileKey comes from your LaunchDarkly Account settings (on the left, at the bottom). If you have multiple projects be sure to choose the correct Mobile key.
- - If you do not pass in a LDConfig or LDUser, LDCLient will create a default for you.
+ 1. To customize, configure a LDConfig (`ObjcLDConfig`) and LDUser (`ObjcLDUser`). The `config` is required, the `user` is optional. Both give you additional control over the feature flags delivered to the LDClient. See `ObjcLDConfig` & `ObjcLDUser` for more details.
+ - The mobileKey set into the `LDConfig` comes from your LaunchDarkly Account settings (on the left, at the bottom). If you have multiple projects be sure to choose the correct Mobile key.
+ 2. Call `[LDClient.sharedInstance startWithConfig: user: completion:]` (`ObjcLDClient.startWithConfig(_:config:user:completion:)`)
+ - If you do not pass in a LDUser, LDCLient will create a default for you.
  - The optional completion closure allows the LDClient to notify your app when it has gone online.
  3. Because the LDClient is a singleton, you do not have to keep a reference to it in your code.
 
@@ -127,44 +127,38 @@ public final class ObjcLDClient: NSObject {
     }
 
     /**
-     Starts the LDClient using the passed in `mobileKey`, `config`, & `user`. Call this before requesting feature flag values. The LDClient will not go online until you call this method.
+     Starts the LDClient using the passed in `config` & `user`. Call this before requesting feature flag values. The LDClient will not go online until you call this method.
 
      Starting the LDClient means setting the `config` & `user`, setting the client online if `config.startOnline` is YES (the default setting), and starting event recording. The client app must start the LDClient before it will report feature flag values. If a client does not call start, the LDClient will only report fallback values, and no events will be recorded.
 
-     If the start call omits the `config` or `user`, the LDClient uses the previously set `config` and `user`, or defaults if they were never set.
+     If the start call omits the `user`, the LDClient uses the previously set `user`, or the default `user` if it was never set.
 
      Subsequent calls to this method cause the LDClient to go offline, reconfigure using the new `config` & `user` (if supplied), and then go online if it was online when start was called. Normally there should only be one call to start. To change `config` or `user`, set them directly on LDClient.
 
-     - parameter mobileKey: The Mobile key from your [LaunchDarkly Account](app.launchdarkly.com) settings (on the left at the bottom). If you have multiple projects be sure to choose the correct Mobile key.
-     - parameter config: The LDConfig set with the desired configuration. If omitted, LDClient retains the previously set config, or default if one was never set. (Optional)
-     - parameter user: The LDUser set with the desired user. If omitted, LDClient retains the previously set user, or default if one was never set. (Optional)
+     - parameter configWrapper: The LDConfig that contains the desired configuration. (Required)
+     - parameter userWrapper: The LDUser set with the desired user. If omitted, LDClient retains the previously set user, or default if one was never set. (Optional)
      */
-    @objc public func startWithMobileKey(_ mobileKey: String, config: ObjcLDConfig? = nil, user: ObjcLDUser? = nil) {
-        ObjcLDClient.sharedInstance.startWithMobileKey(mobileKey, config: config, user: user, completion: nil)
+    @objc public func start(config configWrapper: ObjcLDConfig, user userWrapper: ObjcLDUser? = nil) {
+        ObjcLDClient.sharedInstance.start(config: configWrapper, user: userWrapper, completion: nil)
     }
 
     /**
-     Starts the LDClient using the passed in `mobileKey`, `config`, & `user`. Call this before requesting feature flag values. The LDClient will not go online until you call this method.
+     Starts the LDClient using the passed in `config` & `user`. Call this before requesting feature flag values. The LDClient will not go online until you call this method.
 
      Starting the LDClient means setting the `config` & `user`, setting the client online if `config.startOnline` is YES (the default setting), and starting event recording. The client app must start the LDClient before it will report feature flag values. If a client does not call start, the LDClient will only report fallback values, and no events will be recorded.
 
-     If the start call omits the `config` or `user`, the LDClient uses the previously set `config` and `user`, or defaults if they were never set.
+     If the start call omits the `user`, the LDClient uses the previously set `user`, or the default `user` if it was never set.
 
      If the start call includes the optional `completion` block, LDClient calls the `completion` block when `[LDClient.sharedInstance setOnline: completion:]` embedded in the start method completes. The start call is subject to throttling delays, therefore the `completion` block call may be delayed.
 
      Subsequent calls to this method cause the LDClient to go offline, reconfigure using the new `config` & `user` (if supplied), and then go online if it was online when start was called. Normally there should only be one call to start. To change `config` or `user`, set them directly on LDClient.
 
-     - parameter mobileKey: The Mobile key from your [LaunchDarkly Account](app.launchdarkly.com) settings (on the left at the bottom). If you have multiple projects be sure to choose the correct Mobile key.
-     - parameter config: The LDConfig set with the desired configuration. If omitted, LDClient retains the previously set config, or default if one was never set. (Optional)
-     - parameter user: The LDUser set with the desired user. If omitted, LDClient retains the previously set user, or default if one was never set. (Optional)
+     - parameter configWrapper: The LDConfig that contains the desired configuration. (Required)
+     - parameter userWrapper: The LDUser set with the desired user. If omitted, LDClient retains the previously set user, or default if one was never set. (Optional)
      - parameter completion: Closure called when the embedded `setOnline` call completes, subject to throttling delays. (Optional)
      */
-    @objc public func startWithMobileKey(_ mobileKey: String, config: ObjcLDConfig? = nil, user: ObjcLDUser? = nil, completion: (() -> Void)? = nil) {
-        if let configObject = config {
-            LDClient.shared.start(mobileKey: mobileKey, config: configObject.config, user: user?.user, completion: completion)
-            return
-        }
-        LDClient.shared.start(mobileKey: mobileKey, user: user?.user, completion: completion)
+    @objc public func start(config configWrapper: ObjcLDConfig, user userWrapper: ObjcLDUser? = nil, completion: (() -> Void)? = nil) {
+        LDClient.shared.start(config: configWrapper.config, user: userWrapper?.user, completion: completion)
     }
 
     /**
@@ -347,7 +341,7 @@ public final class ObjcLDClient: NSObject {
     }
 
     /**
-     Returns the NSString variation for the given feature flag. If the flag does not exist, cannot be cast to a NSString, or the LDClient is not started, returns the fallback value.
+     Returns the NSString variation for the given feature flag. If the flag does not exist, cannot be cast to a NSString, or the LDClient is not started, returns the fallback value, which may be nil.
 
      A *variation* is a specific flag value. For example a boolean feature flag has 2 variations, *YES* and *NO*. You can create feature flags with more than 2 variations using other feature flag types. See `LDFlagValue` for the available types.
 
@@ -365,16 +359,16 @@ public final class ObjcLDClient: NSObject {
      ````
 
      - parameter key: The LDFlagKey for the requested feature flag.
-     - parameter fallback: The fallback value to return if the feature flag key does not exist.
+     - parameter fallback: The fallback value to return if the feature flag key does not exist. The fallback value may be nil.
 
-     - returns: The requested NSString feature flag value, or the fallback if the flag is missing or cannot be cast to a NSString, or the client is not started
+     - returns: The requested NSString feature flag value, or the fallback value (which may be nil) if the flag is missing or cannot be cast to a NSString, or the client is not started.
      */
-    @objc public func stringVariation(forKey key: LDFlagKey, fallback: String) -> String {
+    @objc public func stringVariation(forKey key: LDFlagKey, fallback: String?) -> String? {
         return LDClient.shared.variation(forKey: key, fallback: fallback)
     }
 
     /**
-     Returns the `LDStringVariationValue` (`ObjcLDStringVariationValue`) containing the value and source for the given feature flag. If the flag does not exist, cannot be cast to a NSString, or the LDClient is not started, returns the fallback value and `LDFlagValueSourceFallback` for the source.
+     Returns the `LDStringVariationValue` (`ObjcLDStringVariationValue`) containing the value and source for the given feature flag. If the flag does not exist, cannot be cast to a NSString, or the LDClient is not started, returns the fallback value (which may be nil) and `LDFlagValueSourceFallback` for the source.
 
      A *variation* is a specific flag value. For example a boolean feature flag has 2 variations, *true* and *false*. You can create feature flags with more than 2 variations using other feature flag types. See `LDFlagValue` for the available types.
 
@@ -394,16 +388,16 @@ public final class ObjcLDClient: NSObject {
      ````
 
      - parameter key: The LDFlagKey for the requested feature flag.
-     - parameter fallback: The fallback value to return if the feature flag key does not exist.
+     - parameter fallback: The fallback value to return if the feature flag key does not exist. The fallback value may be nil.
 
-     - returns: A `LDStringVariationValue` (`ObjcLDStringVariationValue`) containing the requested feature flag value and source, or the fallback if the flag is missing or cannot be cast to a NSString, or the client is not started. If the fallback value is returned, the source is `LDFlagValueSourceFallback`
+     - returns: A `LDStringVariationValue` (`ObjcLDStringVariationValue`) containing the requested feature flag value and source, or the fallback value (which may be nil) if the flag is missing or cannot be cast to a NSString, or the client is not started. If the fallback value is returned, the source is `LDFlagValueSourceFallback`
      */
-    @objc public func stringVariationAndSource(forKey key: LDFlagKey, fallback: String) -> ObjcLDStringVariationValue {
+    @objc public func stringVariationAndSource(forKey key: LDFlagKey, fallback: String?) -> ObjcLDStringVariationValue {
         return ObjcLDStringVariationValue(LDClient.shared.variationAndSource(forKey: key, fallback: fallback))
     }
 
     /**
-     Returns the NSArray variation for the given feature flag. If the flag does not exist, cannot be cast to a NSArray, or the LDClient is not started, returns the fallback value.
+     Returns the NSArray variation for the given feature flag. If the flag does not exist, cannot be cast to a NSArray, or the LDClient is not started, returns the fallback value, which may be nil..
 
      A *variation* is a specific flag value. For example a boolean feature flag has 2 variations, *YES* and *NO*. You can create feature flags with more than 2 variations using other feature flag types. See `LDFlagValue` for the available types.
 
@@ -421,16 +415,16 @@ public final class ObjcLDClient: NSObject {
      ````
 
      - parameter key: The LDFlagKey for the requested feature flag.
-     - parameter fallback: The fallback value to return if the feature flag key does not exist.
+     - parameter fallback: The fallback value to return if the feature flag key does not exist. The fallback value may be nil.
 
-     - returns: The requested NSArray feature flag value, or the fallback if the flag is missing or cannot be cast to a NSArray, or the client is not started
+     - returns: The requested NSArray feature flag value, or the fallback value (which may be nil) if the flag is missing or cannot be cast to a NSArray, or the client is not started
      */
-    @objc public func arrayVariation(forKey key: LDFlagKey, fallback: [Any]) -> [Any] {
+    @objc public func arrayVariation(forKey key: LDFlagKey, fallback: [Any]?) -> [Any]? {
         return LDClient.shared.variation(forKey: key, fallback: fallback)
     }
     
     /**
-     Returns the `LDArrayVariationValue` (`ObjcLDArrayVariationValue`) containing the value and source for the given feature flag. If the flag does not exist, cannot be cast to a NSArray, or the LDClient is not started, returns the fallback value and `LDFlagValueSourceFallback` for the source.
+     Returns the `LDArrayVariationValue` (`ObjcLDArrayVariationValue`) containing the value and source for the given feature flag. If the flag does not exist, cannot be cast to a NSArray, or the LDClient is not started, returns the fallback value (which may be nil) and `LDFlagValueSourceFallback` for the source.
 
      A *variation* is a specific flag value. For example a boolean feature flag has 2 variations, *true* and *false*. You can create feature flags with more than 2 variations using other feature flag types. See `LDFlagValue` for the available types.
 
@@ -450,16 +444,16 @@ public final class ObjcLDClient: NSObject {
      ````
 
      - parameter key: The LDFlagKey for the requested feature flag.
-     - parameter fallback: The fallback value to return if the feature flag key does not exist.
+     - parameter fallback: The fallback value to return if the feature flag key does not exist. The fallback value may be nil.
 
-     - returns: A `LDArrayVariationValue` (`ObjcLDArrayVariationValue`) containing the requested feature flag value and source, or the fallback if the flag is missing or cannot be cast to a NSArray, or the client is not started. If the fallback value is returned, the source is `LDFlagValueSourceFallback`
+     - returns: A `LDArrayVariationValue` (`ObjcLDArrayVariationValue`) containing the requested feature flag value and source, or the fallback value (which may be nil) if the flag is missing or cannot be cast to a NSArray, or the client is not started. If the fallback value is returned, the source is `LDFlagValueSourceFallback`
      */
-    @objc public func arrayVariationAndSource(forKey key: LDFlagKey, fallback: [Any]) -> ObjcLDArrayVariationValue {
+    @objc public func arrayVariationAndSource(forKey key: LDFlagKey, fallback: [Any]?) -> ObjcLDArrayVariationValue {
         return ObjcLDArrayVariationValue(LDClient.shared.variationAndSource(forKey: key, fallback: fallback))
     }
 
     /**
-     Returns the NSDictionary variation for the given feature flag. If the flag does not exist, cannot be cast to a NSDictionary, or the LDClient is not started, returns the fallback value.
+     Returns the NSDictionary variation for the given feature flag. If the flag does not exist, cannot be cast to a NSDictionary, or the LDClient is not started, returns the fallback value, which may be nil..
 
      A *variation* is a specific flag value. For example a boolean feature flag has 2 variations, *YES* and *NO*. You can create feature flags with more than 2 variations using other feature flag types. See `LDFlagValue` for the available types.
 
@@ -477,16 +471,16 @@ public final class ObjcLDClient: NSObject {
      ````
 
      - parameter key: The LDFlagKey for the requested feature flag.
-     - parameter fallback: The fallback value to return if the feature flag key does not exist.
+     - parameter fallback: The fallback value to return if the feature flag key does not exist. The fallback value may be nil.
 
-     - returns: The requested NSDictionary feature flag value, or the fallback if the flag is missing or cannot be cast to a NSDictionary, or the client is not started
+     - returns: The requested NSDictionary feature flag value, or the fallback value (which may be nil) if the flag is missing or cannot be cast to a NSDictionary, or the client is not started
      */
-    @objc public func dictionaryVariation(forKey key: LDFlagKey, fallback: [String: Any]) -> [String: Any] {
+    @objc public func dictionaryVariation(forKey key: LDFlagKey, fallback: [String: Any]?) -> [String: Any]? {
         return LDClient.shared.variation(forKey: key, fallback: fallback)
     }
     
     /**
-     Returns the `LDDictionaryVariationValue` (`ObjcLDDictionaryVariationValue`) containing the value and source for the given feature flag. If the flag does not exist, cannot be cast to a NSDictionary, or the LDClient is not started, returns the fallback value and `LDFlagValueSourceFallback` for the source.
+     Returns the `LDDictionaryVariationValue` (`ObjcLDDictionaryVariationValue`) containing the value and source for the given feature flag. If the flag does not exist, cannot be cast to a NSDictionary, or the LDClient is not started, returns the fallback value (which may be nil) and `LDFlagValueSourceFallback` for the source.
 
      A *variation* is a specific flag value. For example a boolean feature flag has 2 variations, *true* and *false*. You can create feature flags with more than 2 variations using other feature flag types. See `LDFlagValue` for the available types.
 
@@ -506,11 +500,11 @@ public final class ObjcLDClient: NSObject {
      ````
 
      - parameter key: The LDFlagKey for the requested feature flag.
-     - parameter fallback: The fallback value to return if the feature flag key does not exist.
+     - parameter fallback: The fallback value to return if the feature flag key does not exist. The fallback value may be nil.
 
-     - returns: A `LDDictionaryVariationValue` (`ObjcLDDictionaryVariationValue`) containing the requested feature flag value and source, or the fallback if the flag is missing or cannot be cast to a NSDictionary, or the client is not started. If the fallback value is returned, the source is `LDFlagValueSourceFallback`
+     - returns: A `LDDictionaryVariationValue` (`ObjcLDDictionaryVariationValue`) containing the requested feature flag value and source, or the fallback value (which may be nil) if the flag is missing or cannot be cast to a NSDictionary, or the client is not started. If the fallback value is returned, the source is `LDFlagValueSourceFallback`
      */
-    @objc public func dictionaryVariationAndSource(forKey key: LDFlagKey, fallback: [String: Any]) -> ObjcLDDictionaryVariationValue {
+    @objc public func dictionaryVariationAndSource(forKey key: LDFlagKey, fallback: [String: Any]?) -> ObjcLDDictionaryVariationValue {
         return ObjcLDDictionaryVariationValue(LDClient.shared.variationAndSource(forKey: key, fallback: fallback))
     }
 
@@ -844,7 +838,7 @@ public final class ObjcLDClient: NSObject {
     /**
      Adds a custom event to the LDClient event store. A client app can set a tracking event to allow client customized data analysis. Once an app has called `trackEvent`, the app cannot remove the event from the event store.
 
-     LDClient periodically transmits events to LaunchDarkly based on the frequency set in LDConfig.eventFlushIntervalMillis. The LDClient must be started and online. Ths SDK stores events tracked while the LDClient is offline, but started.
+     LDClient periodically transmits events to LaunchDarkly based on the frequency set in LDConfig.eventFlushInterval. The LDClient must be started and online. Ths SDK stores events tracked while the LDClient is offline, but started.
 
      Once the SDK's event store is full, the SDK discards events until they can be reported to LaunchDarkly. Configure the size of the event store using `eventCapacity` on the `config`. See `LDConfig` (`ObjcLDConfig`) for details.
 
@@ -854,10 +848,11 @@ public final class ObjcLDClient: NSObject {
      ````
 
      - parameter key: The key for the event. The SDK does nothing with the key, which can be any string the client app sends
-     - parameter data: The data for the event. The SDK does nothing with the data, which can be any NSDictionary the client app sends. (Optional)
+     - parameter data: The data for the event. The SDK does nothing with the data, which can be any valid JSON item the client app sends. (Optional)
+     - parameter error: NSError object to hold the invalidJsonObject error if the data is not a valid JSON item. (Optional)
      */
-    @objc public func trackEvent(key: String, data: [String: Any]? = nil) {
-        LDClient.shared.trackEvent(key: key, data: data)
+    @objc public func trackEvent(key: String, data: Any? = nil) throws {
+        try LDClient.shared.trackEvent(key: key, data: data)
     }
 
     /**

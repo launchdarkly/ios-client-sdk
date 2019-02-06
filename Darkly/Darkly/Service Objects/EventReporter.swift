@@ -8,6 +8,13 @@
 
 import Foundation
 
+enum EventSyncResult {
+    case success([[String: Any]])
+    case error(SynchronizingError)
+}
+
+typealias EventSyncCompleteClosure = ((EventSyncResult) -> Void)
+
 //sourcery: AutoMockable
 protocol EventReporting {
     //sourcery: DefaultMockValue = LDConfig.stub
@@ -59,15 +66,19 @@ class EventReporter: EventReporting {
     private(set) var eventStore = [[String: Any]]()
     private(set) var flagRequestTracker = FlagRequestTracker()
     
-    private weak var eventReportTimer: Timer?
+    private var eventReportTimer: TimeResponding?
     var isReportingActive: Bool { return eventReportTimer != nil }
 
-    init(config: LDConfig, service: DarklyServiceProvider) {
+    private let onSyncComplete: EventSyncCompleteClosure?
+
+    init(config: LDConfig, service: DarklyServiceProvider, onSyncComplete: EventSyncCompleteClosure?) {
         self.config = config
         self.service = service
+        self.onSyncComplete = onSyncComplete
     }
 
     func record(_ event: Event, completion: CompletionClosure? = nil) {
+        //The eventReporter is created when the LDClient singleton is created, and kept for the app's lifetime. So while the use of self in the async block does setup a retain cycle, it's not going to cause a memory leak
         eventQueue.async {
             defer {
                 DispatchQueue.main.async {
@@ -147,92 +158,85 @@ class EventReporter: EventReporting {
         guard isOnline && !isReportingActive else {
             return
         }
-        if #available(iOS 10.0, watchOS 3.0, macOS 10.12, *, tvOS 10.0) {
-            eventReportTimer = Timer.scheduledTimer(withTimeInterval: config.eventFlushInterval, repeats: true) { [weak self] (_) in self?.reportEvents() }
-        } else {
-            // the run loop retains the timer, so eventReportTimer is weak to avoid the retain cycle. Setting the timer to a strong reference is important so that the timer doesn't get nil'd before added to the run loop.
-            let timer = Timer(timeInterval: config.eventFlushInterval, target: self, selector: #selector(eventReportTimerFired), userInfo: nil, repeats: true)
-            eventReportTimer = timer
-            RunLoop.current.add(timer, forMode: RunLoop.Mode.default)
-        }
+        eventReportTimer = LDTimer(withTimeInterval: config.eventFlushInterval, repeats: true, fireQueue: eventQueue, execute: reportEvents)
     }
     
     private func stopReporting() {
         guard isReportingActive else {
             return
         }
-        eventReportTimer?.invalidate()
+        eventReportTimer?.cancel()
         eventReportTimer = nil
     }
 
     @objc func eventReportTimerFired() {
-        reportEvents(completion: nil)
+        reportEvents()
     }
 
     func reportEvents() {
-        reportEvents(completion: nil)
-    }
-    
-    func reportEvents(completion: CompletionClosure?) {
-        guard isOnline && (!eventStore.isEmpty || flagRequestTracker.hasLoggedRequests) else {
-            if !isOnline {
-                Log.debug(typeName(and: #function) + "aborted. EventReporter is offline")
-            } else if eventStore.isEmpty && !flagRequestTracker.hasLoggedRequests {
-                Log.debug(typeName(and: #function) + "aborted. Event store is empty")
-            }
-            completion?()
+        guard isOnline else {
+            Log.debug(typeName(and: #function) + "aborted. EventReporter is offline")
+            reportSyncComplete(.error(.isOffline))
+            return
+        }
+        guard !eventStore.isEmpty || flagRequestTracker.hasLoggedRequests else {
+            Log.debug(typeName(and: #function) + "aborted. Event store is empty")
+            reportSyncComplete(.success([[String: Any]]()))
             return
         }
         Log.debug(typeName(and: #function, appending: " - ") + "starting")
 
+        //The eventReporter is created when the LDClient singleton is created, and kept for the app's lifetime. So while the use of self in the async block does setup a retain cycle, it's not going to cause a memory leak
         recordSummaryEvent {
-            self.publish(self.eventStore, completion: completion)
+            self.publish(self.eventStore)
         }
     }
 
-    private func publish(_ eventDictionaries: [[String: Any]], completion: CompletionClosure?) {
-        self.service.publishEventDictionaries(eventDictionaries) { serviceResponse in
-            self.processEventResponse(reportedEventDictionaries: eventDictionaries, serviceResponse: serviceResponse, completion: completion)
+    private func publish(_ eventDictionaries: [[String: Any]]) {
+        //The eventReporter is created when the LDClient singleton is created, and kept for the app's lifetime. So while the use of self in the async block does setup a retain cycle, it's not going to cause a memory leak
+        service.publishEventDictionaries(eventDictionaries) { serviceResponse in
+            self.processEventResponse(reportedEventDictionaries: eventDictionaries, serviceResponse: serviceResponse)
         }
     }
     
-    private func processEventResponse(reportedEventDictionaries: [[String: Any]], serviceResponse: ServiceResponse, completion: CompletionClosure?) {
-        defer {
-            DispatchQueue.main.async {
-                completion?()
-            }
-        }
-        guard serviceResponse.error == nil else {
-            report(serviceResponse.error)
+    private func processEventResponse(reportedEventDictionaries: [[String: Any]], serviceResponse: ServiceResponse) {
+        if let serviceResponseError = serviceResponse.error {
+            Log.debug(typeName(and: #function) + "error: \(String(describing: serviceResponseError))")
+            reportSyncComplete(.error(.request(serviceResponseError)))
             return
         }
+
         guard let httpResponse = serviceResponse.urlResponse as? HTTPURLResponse,
             httpResponse.statusCode == HTTPURLResponse.StatusCodes.accepted
         else {
-            report(serviceResponse.urlResponse)
+            Log.debug(typeName(and: #function) + "response: \(String(describing: serviceResponse.urlResponse))")
+            reportSyncComplete(.error(.response(serviceResponse.urlResponse)))
             return
         }
         lastEventResponseDate = httpResponse.headerDate
         updateEventStore(reportedEventDictionaries: reportedEventDictionaries)
+        Log.debug(typeName(and: #function) + " completed for keys: " + reportedEventDictionaries.eventKeys)
+        reportSyncComplete(.success(reportedEventDictionaries))
     }
     
-    private func report(_ error: Error?) {
-        Log.debug(typeName + ".reportEvents() " + "error: \(String(describing: error))")
-        //TODO: Implement when error reporting architecture is established
-    }
-    
-    private func report(_ response: URLResponse?) {
-        Log.debug(typeName + ".reportEvents() " + "response: \(String(describing: response))")
-        //TODO: Implement when error reporting architecture is established
+    private func reportSyncComplete(_ result: EventSyncResult) {
+        //The eventReporter is created when the LDClient singleton is created, and kept for the app's lifetime. So while the use of self in the async block does setup a retain cycle, it's not going to cause a memory leak
+        guard let onSyncComplete = onSyncComplete
+        else {
+            return
+        }
+        DispatchQueue.main.async {
+            onSyncComplete(result)
+        }
     }
     
     private func updateEventStore(reportedEventDictionaries: [[String: Any]]) {
+        //The eventReporter is created when the LDClient singleton is created, and kept for the app's lifetime. So while the use of self in the async block does setup a retain cycle, it's not going to cause a memory leak
         eventQueue.async {
             let remainingEventDictionaries = self.eventStore.filter { (eventDictionary) in
                 !reportedEventDictionaries.contains(eventDictionary)
             }
             self.eventStore = remainingEventDictionaries
-            Log.debug(self.typeName + ".reportEvents() completed for keys: " + reportedEventDictionaries.eventKeys)
         }
     }
     
@@ -243,7 +247,7 @@ extension EventReporter: TypeIdentifying { }
 
 extension Array where Element == [String: Any] {
     var eventKeys: String {
-        let keys = self.compactMap { (eventDictionary) in
+        let keys = compactMap { (eventDictionary) in
             eventDictionary.eventKey
         }
         guard !keys.isEmpty else {
@@ -255,13 +259,26 @@ extension Array where Element == [String: Any] {
 
 #if DEBUG
     extension EventReporter {
-        convenience init(config: LDConfig, service: DarklyServiceProvider, events: [Event], lastEventResponseDate: Date?, flagRequestTracker: FlagRequestTracker? = nil) {
-            self.init(config: config, service: service)
+        convenience init(config: LDConfig,
+                         service: DarklyServiceProvider,
+                         events: [Event],
+                         lastEventResponseDate: Date?,
+                         flagRequestTracker: FlagRequestTracker? = nil,
+                         onSyncComplete: EventSyncCompleteClosure?) {
+            self.init(config: config, service: service, onSyncComplete: onSyncComplete)
             eventStore.append(contentsOf: events.dictionaryValues(config: config))
             self.lastEventResponseDate = lastEventResponseDate
             if let flagRequestTracker = flagRequestTracker {
                 self.flagRequestTracker = flagRequestTracker
             }
+        }
+
+        var testOnSyncComplete: EventSyncCompleteClosure? {
+            return onSyncComplete
+        }
+
+        func add(_ events: [Event]) {
+            eventStore.append(contentsOf: events.dictionaryValues(config: config))
         }
 
         func setFlagRequestTracker(_ tracker: FlagRequestTracker) {

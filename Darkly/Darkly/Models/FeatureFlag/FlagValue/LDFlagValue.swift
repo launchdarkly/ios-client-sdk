@@ -10,7 +10,7 @@ import Foundation
 
 ///Defines the sources for feature flag values.
 ///See also: `LDClient.variationAndSource(forKey:fallback:)` and `LDChangedFlag`
-public enum LDFlagValueSource {
+public enum LDFlagValueSource: CaseIterable {
     ///Feature flag comes from the server, either the `clientstream` or a feature flag request
     case server
     ///Feature flag comes from the cache. Cached feature flags are used on app launch until the SDK gets the first feature flag update

@@ -16,9 +16,21 @@ struct Event { //sdk internal, not publically accessible
     enum Kind: String {
         case feature, debug, identify, custom, summary
 
-        static var allKinds: [Kind] { return [feature, debug, identify, custom, summary] }
-        static var alwaysInlineUserKinds: [Kind] { return [identify, debug] }
-        var isAlwaysInlineUserKind: Bool { return Kind.alwaysInlineUserKinds.contains(self) }
+        static var allKinds: [Kind] {
+            return [feature, debug, identify, custom, summary]
+        }
+        static var alwaysInlineUserKinds: [Kind] {
+            return [identify, debug]
+        }
+        var isAlwaysInlineUserKind: Bool {
+            return Kind.alwaysInlineUserKinds.contains(self)
+        }
+        static var alwaysIncludeValueKinds: [Kind] {
+            return [feature, debug]
+        }
+        var isAlwaysIncludeValueKinds: Bool {
+            return Kind.alwaysIncludeValueKinds.contains(self)
+        }
     }
 
     let kind: Kind
@@ -28,7 +40,7 @@ struct Event { //sdk internal, not publically accessible
     let value: Any?
     let defaultValue: Any?
     let featureFlag: FeatureFlag?
-    let data: [String: Any]?
+    let data: Any?
     let flagRequestTracker: FlagRequestTracker?
     let endDate: Date?
 
@@ -38,7 +50,7 @@ struct Event { //sdk internal, not publically accessible
          value: Any? = nil,
          defaultValue: Any? = nil,
          featureFlag: FeatureFlag? = nil,
-         data: [String: Any]? = nil,
+         data: Any? = nil,
          flagRequestTracker: FlagRequestTracker? = nil,
          endDate: Date? = nil) {
 
@@ -66,8 +78,14 @@ struct Event { //sdk internal, not publically accessible
         return Event(kind: .debug, key: key, user: user, value: value, defaultValue: defaultValue, featureFlag: featureFlag)
     }
 
-    static func customEvent(key: String, user: LDUser, data: [String: Any]? = nil) -> Event {
+    static func customEvent(key: String, user: LDUser, data: Any? = nil) throws -> Event {
         Log.debug(typeName(and: #function) + "key: " + key + ", data: \(String(describing: data))")
+        if let data = data {
+            guard JSONSerialization.isValidJSONObject([CodingKeys.data.rawValue: data]) //the top level object must be either an array or an object for isValidJSONObject to work correctly
+            else {
+                throw JSONSerialization.JSONError.invalidJsonObject
+            }
+        }
         return Event(kind: .custom, key: key, user: user, data: data)
     }
 
@@ -95,8 +113,10 @@ struct Event { //sdk internal, not publically accessible
         } else {
             eventDictionary[CodingKeys.userKey.rawValue] = user?.key
         }
-        eventDictionary[CodingKeys.value.rawValue] = value
-        eventDictionary[CodingKeys.defaultValue.rawValue] = defaultValue
+        if kind.isAlwaysIncludeValueKinds {
+            eventDictionary[CodingKeys.value.rawValue] = value ?? NSNull()
+            eventDictionary[CodingKeys.defaultValue.rawValue] = defaultValue ?? NSNull()
+        }
         eventDictionary[CodingKeys.variation.rawValue] = featureFlag?.variation
         eventDictionary[CodingKeys.version.rawValue] = featureFlag?.flagVersion ?? featureFlag?.version     //Supercedes version if the flagVersion exists
         eventDictionary[CodingKeys.data.rawValue] = data

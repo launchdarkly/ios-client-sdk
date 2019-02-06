@@ -23,6 +23,7 @@ Version 3.0.0 is built on Swift 4.2 using Xcode 10. The SDK will not build using
 8. Update `LDClient` Feature Flag access. See [Update `LDClient` Feature Flag access](#update-ldclient-feature-flag-access) for details.
 9. Install `LDClient` Feature Flag Observers. See [Install `LDClient` Feature Flag Observers](#install-ldclient-feature-flag-observers) for details.
 10. Remove `LDClientDelegate` methods if they were not re-used. See [Remove `LDClientDelegate` methods](#remove-ldclientdelegate-methods) for details.
+11. Install exception handling for `LDClient` `trackEvent` calls. See [Install `LDClient.trackEvent` exception handling](#install-ldclienttrackevent-exception-handling) for details.
 
 ### Integrate the Swift SDK into your app using either CocoaPods or Carthage
 #### CocoaPods
@@ -44,10 +45,9 @@ Version 3.0.0 is built on Swift 4.2 using Xcode 10. The SDK will not build using
 See [Custom users with `LDUser`](#custom-users-with-lduser) for details.
 
 ### Update `LDConfig` and properties
-- Replace initializers that take a `mobileKey` with the non-mobile key initializer.
 - Change lines that set `baseUrl`, `eventsUrl`, and `streamUrl` with strings to instead set these properties with `URL` objects.
 - Change lines that set `capacity` to set `eventCapacity`
-- Change lines that set time-based properties (`connectionTimeout`, `flushInterval`, `pollingInterval`, and `backgroundFetchInterval`) to their millisecond property (`connectionTimeoutMillis`, `flushIntervalMillis`, `pollingIntervalMillis`, and `backgroundFetchIntervalMillis`). Set these properties with `Int` values.
+- Change lines that set time-based properties (`connectionTimeout`, `flushInterval`, `pollingInterval`, and `backgroundFetchInterval`) to their `TimeInterval` property (`connectionTimeout`, `eventFlushInterval`, `flagPollingInterval`, and `backgroundFlagPollingInterval`).
 - Change lines that set `streaming` to set `streamingMode`. For Swift apps, use the enum `.streaming` or `.polling`. For Objective-C apps, set to `YES` for streaming, and `NO` for polling as with the v2.x SDK. Note that if you do not have this property set, LDConfig sets it to streaming mode for you.
 - Change lines that set `debugEnabled` to set `debugMode` instead.
 
@@ -58,7 +58,6 @@ See [Configuration with LDConfig](#configuration-with-ldconfig) for details.
 - Replace references to `ldUser` to `user`.
 - Replace references to `ldConfig` to `config`.
 - Remove any references to `delegate`.
-- Change calls to `start` to insert the `mobileKey` as the first parameter.
 - Change calls to `start` to use the parameter name `config`.
 - Change calls to `start` to use the parameter name `user`.
 - Change calls to `start` to not expect a return value. If desired, capture the SDK's online status using `isOnline`.
@@ -88,6 +87,13 @@ See [Monitoring Feature Flags for changes](#monitoring-feature-flags-for-changes
 ### Remove `LDClientDelegate` methods.
 If they were not re-used when implementing observers, you can delete the former `LDClientDelegate` methods.
 
+### Install `LDClient.trackEvent` exception handling
+See [Event Controls](#event-controls) for more details.
+#### Swift Client Apps
+Wrap calls to `trackEvent` into do-catch statements. If desired, catch `JSONSerialization.JSONError.invalidJsonObject` errors. Alternatively, add `throws` to any method calls `trackEvent` to allow the calling method to handle the error.
+#### Objective-C Client Apps
+Calls to `trackEvent` include a 3rd parameter `error`, which the SDK sets when a call receives invalid JSON data. To verify the `error` object set by `trackEvents` threw a `JSONSerialization.JSONError.invalidJsonObject` error, compare the `domain` to `LaunchDarklyJSONErrorDomain` and the `code` to `LaunchDarklyJSONErrorInvalidJsonObject`. 
+
 ---
 ## API Differences from v2.x
 This section details the changes between the v2.x and v3.0.0 APIs.
@@ -96,8 +102,6 @@ This section details the changes between the v2.x and v3.0.0 APIs.
 LDConfig has changed to a `struct`, and therefore uses value semantics.
 
 #### Changed `LDConfig` Properties
-##### `mobileKey`
-LDConfig no longer contains a mobileKey. Instead, pass the mobileKey into LDClient's `start` method.
 ##### URL properties (`baseUrl`, `eventsUrl`, and `streamUrl`)
 These properties have changed to `URL` objects. Set these properties by converting URL strings to a URL using:
 ```swift
@@ -106,7 +110,10 @@ These properties have changed to `URL` objects. Set these properties by converti
 ##### `capacity`
 This property has changed to `eventCapacity`.
 ##### Time based properties (`connectionTimeout`, `flushInterval`, `pollingInterval`, and `backgroundFetchInterval`)
-These properties have changed to `Int` properties representing milliseconds. The names have changed by appending `Millis` to the v2.x names.
+These properties have changed to `TimeInterval` properties. 
+- `flushInterval` has changed to `eventFlushInterval`.
+- `pollingInterval` has changed to `flagPollingInterval`.
+- `backgroundFetchInterval` has changed to `backgroundFlagPollingInterval` 
 ##### `streaming`
 This property has changed to `streamingMode` and to an enum type `LDStreamingMode`. The default remains `.streaming`. To set polling mode, set this property to `.polling`.
 ##### `debugEnabled`
@@ -172,7 +179,6 @@ This property has changed to `config`. Client apps can set the `config` directly
 ##### `delegate`
 This property was removed. See [Replacing LDClient delegate methods](#replacing-ldclient-delegate-methods)
 ##### `start`
-- This method has a new `mobileKey` first parameter.
 - `inputConfig` has changed to `config`.
 - `withUserBuilder` has changed to `user` and its type changed to `LDUser`
 - `completion` was added to get a callback when the SDK has completed starting
@@ -193,15 +199,21 @@ This property sets a closure called when the SDK is unable to contact the Launch
 
 ### Getting Feature Flag Values
 #### `variation()`
-Swift Generics allowed us to combine the `variation` methods that were used in the v2.x SDK. v3.0.0 has a single `variation` method that returns a type that matches the type the client app provides in the `fallback` parameter.
+Swift Generics allowed us to combine the `variation` methods that were used in the v2.x SDK. v3.0.0 has one `variation` method that returns a non-Optional type that matches the non-Optional type the client app provides in the `fallback` parameter. A second `variation` method allows the client app to use an Optional as the `fallback`. This method requires the client to specify the Optional type when passing `nil` as the `fallback`. For this second method, the fallback parameter is defaulted to `nil`. When using this second method, set the type on the item holding the return value, e.g.
+```swift
+    let boolFlagValue: Bool? = LDClient.shared.variation(forKey: "bool-flag-key")
+```
 #### `variationAndSource()`
-A new `variationAndSource()` method returns a tuple `(value, source)` that allows the client app to see what the source of the value was. `source` is an `LDFlagValueSource` enum with `.server`, `.cache`, and `.fallback`.
+A new `variationAndSource()` method returns a tuple `(value, source)` that allows the client app to see what the source of the value was. `source` is an `LDFlagValueSource` enum with `.server`, `.cache`, and `.fallback`. As with the `variation` methods, there are two `variationAndSource` methods. The first returns a non-Optional type as the tuple's `value`, while the second returns an Optional type as the tuple's `value`. This second method requires the client to specify the Optional type when passing `nil` as the `fallback`. For this second method, the fallback parameter is defaulted to `nil`. When using this second method, set the type on the item holding the return value, e.g.
+```swift
+    let (boolFlagValue, boolFlagSource): (Bool?, LDFlagValueSource) = LDClient.shared.variationAndSource(forKey: "bool-flag-key")
+``` 
 #### `allFlagValues`
 A new computed property `allFlagValues` returns a `[LDFlagKey: Any]` that has all feature flag keys and their values. This dictionary is a snapshot taken when `allFlagValues` was requested. The SDK does not try to keep these values up-to-date, and does not record any events when accessing the dictionary.
 #### Objective-C Feature Flag Value Compatibility
 Swift generic functions cannot operate in Objective-C. The `ObjcLDClient` wrapper retains the type-based variation methods used in v2.x, except for `numberVariation`. A new `integerVariation` method reports NSInteger feature flags. NSNumbers that were decimal numbers should use `doubleVariation`.
 
-The wrapper also includes new type-based `variationAndSource` methods that return a type-based `VariationValue` object (e.g. `LDBoolVariationValue`) that encapsulates the `value` and `source`. `source` is an `ObjcLDFlagValueSource` Objective-C int backed enum (accessed in Objective-C via `LDFlagValueSource`). In addition to `server`, `cache`, and `fallback`, `nilSource`, and `typeMismatch` could be possible values.
+The wrapper also includes new type-based `variationAndSource` methods that return a type-based `VariationValue` object (e.g. `LDBoolVariationValue`) that encapsulates the `value` and `source`. `source` is an `ObjcLDFlagValueSource` Objective-C int backed enum (accessed in Objective-C via `LDFlagValueSource`). In addition to `server`, `cache`, and `fallback`, other possible values could be `nilSource` and `typeMismatch`. Feature Flag types that are object types have value types that are nullable in the wrapper. Take care to verify a value exists before using it.
 
 ### Monitoring Feature Flags for changes
 v3.0.0 removes the `LDClientDelegate`, which included `featureFlagDidUpdate` and `userDidUpdate` that the SDK called to notify client apps of changes in the set of feature flags for a given mobile key (called the environment), and the `userUnchanged` that the SDK called in `.polling` mode when the response to a feature flag request did not change any feature flag value. In order to have the SDK notify the client app when feature flags change, we have provided a closure based observer API.
@@ -223,7 +235,11 @@ The LDClient wrapper provides type-based single-key observer methods that functi
 ##### `flush`
 This method has changed to `reportEvents()`.
 ##### `track`
-This method has changed to `trackEvent`
+This method has changed to `trackEvent`. `trackEvent` can now throw if the `data` parameter does not contain a valid JSON Object, or `nil`. This check is made at run-time. For Objective-C client apps, the method has an additional `error` parameter, which the SDK populates when the data is not a valid JSON object.
+#### New Event Controls
+##### `JSONSerialization`
+A new enum `JSONError` has cases the SDK uses when a JSON object does not meet expectations. `notADictionary` and `invalidJsonObject` cases were added. The SDK does not throw `notADictionary` to client apps. Client apps should handle `invalidJsonObject` errors thrown from `trackEvent`
+A new string constant `LaunchDarklyJSONErrorDomain` provides the ability for Objective-C apps to verify the `NSError` `domain`. The SDK sets this domain for `JSONError`s reported via `trackEvent` in Objective-C only.
 
 ## Replacing LDClient delegate methods
 ### `featureFlagDidUpdate` and `userDidUpdate`

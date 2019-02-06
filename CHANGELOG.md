@@ -2,6 +2,15 @@
 
 All notable changes to the LaunchDarkly iOS SDK will be documented in this file. This project adheres to [Semantic Versioning](http://semver.org).
 
+## [3.0.0-beta.2] - 2019-02-06
+### Changed
+- `LDFlagValueSource` is a Swift `enum` the SDK uses to communicate the source of a feature flag (`server`, `cache`, `fallback`) to the client app. The Objective-C `enum` was changed to an object to provide Objective-C client apps access to the methods available to the enum.
+- `mobileKey` was restored to a property within the `LDConfig`. As a result, `LDClient.start()` no longer takes a `mobileKey` parameter, and the `config` parameter is now required.
+- `LDConfig` time-based properties (`connectionTimeout`, `eventFlushInterval`, `flagPollingInterval`, and `backgroundFlagPollingInterval`) were changed to type `TimeInterval`.
+- Installs `DarklyEventSource` version `4.0.0`.
+- `LDClient.trackEvent` now accepts any valid json object. If an invalid JSON object is passed, the SDK throws a `JSONSerialization.JSONError.invalidJsonObject` error at runtime.
+-`LDClient.variation` and `variationAndSource` now accept Optional types and `nil` for the fallback value. The client app must specify the Optional Type for the compiler. See the migration guide for details.
+
 ## [3.0.0-beta.1] - 2018-12-11
 ### Added
 - `LDClient` can now provide information about the source of a feature flag, `cache`, `server`, and `fallback`.

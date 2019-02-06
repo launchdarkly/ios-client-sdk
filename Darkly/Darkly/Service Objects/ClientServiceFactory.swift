@@ -16,18 +16,20 @@ protocol ClientServiceCreating {
     func makeFlagCollectionCache(keyStore: KeyedValueCaching) -> FlagCollectionCaching
     func makeUserFlagCache() -> UserFlagCaching
     func makeUserFlagCache(flagCollectionStore: FlagCollectionCaching) -> UserFlagCaching
-    func makeDarklyServiceProvider(mobileKey: String, config: LDConfig, user: LDUser) -> DarklyServiceProvider
+    func makeDarklyServiceProvider(config: LDConfig, user: LDUser) -> DarklyServiceProvider
+    mutating func makeFlagSynchronizer(streamingMode: LDStreamingMode, pollingInterval: TimeInterval, useReport: Bool, service: DarklyServiceProvider) -> LDFlagSynchronizing
     mutating func makeFlagSynchronizer(streamingMode: LDStreamingMode,
                                        pollingInterval: TimeInterval,
                                        useReport: Bool,
                                        service: DarklyServiceProvider,
-                                       onSyncComplete: SyncCompleteClosure?) -> LDFlagSynchronizing
+                                       onSyncComplete: FlagSyncCompleteClosure?) -> LDFlagSynchronizing
     func makeFlagChangeNotifier() -> FlagChangeNotifying
-    func makeEventReporter(config: LDConfig, service: DarklyServiceProvider) -> EventReporting
+    mutating func makeEventReporter(config: LDConfig, service: DarklyServiceProvider) -> EventReporting
+    mutating func makeEventReporter(config: LDConfig, service: DarklyServiceProvider, onSyncComplete: EventSyncCompleteClosure?) -> EventReporting
     mutating func makeStreamingProvider(url: URL, httpHeaders: [String: String]) -> DarklyStreamingProvider
     mutating func makeStreamingProvider(url: URL, httpHeaders: [String: String], connectMethod: String?, connectBody: Data?) -> DarklyStreamingProvider
     func makeEnvironmentReporter() -> EnvironmentReporting
-    func makeThrottler(maxDelay: TimeInterval) -> Throttling
+    func makeThrottler(maxDelay: TimeInterval, environmentReporter: EnvironmentReporting) -> Throttling
 }
 
 struct ClientServiceFactory: ClientServiceCreating {
@@ -55,15 +57,19 @@ struct ClientServiceFactory: ClientServiceCreating {
         return UserFlagCache(flagCollectionStore: flagCollectionStore)
     }
 
-    func makeDarklyServiceProvider(mobileKey: String, config: LDConfig, user: LDUser) -> DarklyServiceProvider {
-        return DarklyService(mobileKey: mobileKey, config: config, user: user, serviceFactory: self)
+    func makeDarklyServiceProvider(config: LDConfig, user: LDUser) -> DarklyServiceProvider {
+        return DarklyService(config: config, user: user, serviceFactory: self)
+    }
+
+    func makeFlagSynchronizer(streamingMode: LDStreamingMode, pollingInterval: TimeInterval, useReport: Bool, service: DarklyServiceProvider) -> LDFlagSynchronizing {
+        return makeFlagSynchronizer(streamingMode: streamingMode, pollingInterval: pollingInterval, useReport: useReport, service: service, onSyncComplete: nil)
     }
 
     func makeFlagSynchronizer(streamingMode: LDStreamingMode,
                               pollingInterval: TimeInterval,
                               useReport: Bool,
                               service: DarklyServiceProvider,
-                              onSyncComplete: SyncCompleteClosure?) -> LDFlagSynchronizing {
+                              onSyncComplete: FlagSyncCompleteClosure?) -> LDFlagSynchronizing {
         return FlagSynchronizer(streamingMode: streamingMode, pollingInterval: pollingInterval, useReport: useReport, service: service, onSyncComplete: onSyncComplete)
     }
 
@@ -72,7 +78,11 @@ struct ClientServiceFactory: ClientServiceCreating {
     }
 
     func makeEventReporter(config: LDConfig, service: DarklyServiceProvider) -> EventReporting {
-        return EventReporter(config: config, service: service)
+        return makeEventReporter(config: config, service: service, onSyncComplete: nil)
+    }
+
+    func makeEventReporter(config: LDConfig, service: DarklyServiceProvider, onSyncComplete: EventSyncCompleteClosure? = nil) -> EventReporting {
+        return EventReporter(config: config, service: service, onSyncComplete: onSyncComplete)
     }
 
     func makeStreamingProvider(url: URL, httpHeaders: [String: String]) -> DarklyStreamingProvider {
@@ -87,7 +97,7 @@ struct ClientServiceFactory: ClientServiceCreating {
         return EnvironmentReporter()
     }
 
-    func makeThrottler(maxDelay: TimeInterval) -> Throttling {
-        return Throttler(maxDelay: maxDelay)
+    func makeThrottler(maxDelay: TimeInterval, environmentReporter: EnvironmentReporting) -> Throttling {
+        return Throttler(maxDelay: maxDelay, environmentReporter: environmentReporter)
     }
 }

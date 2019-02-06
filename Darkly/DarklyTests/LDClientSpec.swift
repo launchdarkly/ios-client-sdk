@@ -13,7 +13,6 @@ import DarklyEventSource
 
 final class LDClientSpec: QuickSpec {
     struct Constants {
-        fileprivate static let mockMobileKey = "mockMobileKey"
         fileprivate static let alternateMockUrl = URL(string: "https://dummy.alternate.com")!
 
         fileprivate static let newFlagKey = "LDClientSpec.newFlagKey"
@@ -61,7 +60,7 @@ final class LDClientSpec: QuickSpec {
         var flagsUnchangedCallCount = 0
         var flagsUnchangedObserver: FlagsUnchangedObserver? { return changeNotifierMock?.addFlagsUnchangedObserverReceivedObserver }
         var flagsUnchangedHandler: LDFlagsUnchangedHandler? { return flagsUnchangedObserver?.flagsUnchangedHandler }
-        var onSyncComplete: SyncCompleteClosure? { return serviceFactoryMock.onSyncComplete }
+        var onSyncComplete: FlagSyncCompleteClosure? { return serviceFactoryMock.onFlagSyncComplete }
         // flag maintaining mock accessors
         var replaceStoreComplete: CompletionClosure? { return flagStoreMock.replaceStoreReceivedArguments?.completion }
         var updateStoreComplete: CompletionClosure? { return flagStoreMock.updateStoreReceivedArguments?.completion }
@@ -83,11 +82,11 @@ final class LDClientSpec: QuickSpec {
             let clientServiceFactory = ClientServiceMockFactory()
             if let operatingSystem = operatingSystem { clientServiceFactory.makeEnvironmentReporterReturnValue.operatingSystem = operatingSystem }
 
-            config = LDConfig.stub(environmentReporter: clientServiceFactory.makeEnvironmentReporterReturnValue)
+            config = LDConfig.stub(mobileKey: LDConfig.Constants.mockMobileKey, environmentReporter: clientServiceFactory.makeEnvironmentReporterReturnValue)
             config.startOnline = startOnline
             config.streamingMode = streamingMode
             config.enableBackgroundUpdates = enableBackgroundUpdates
-            config.eventFlushIntervalMillis = 300_000   //5 min...don't want this to trigger
+            config.eventFlushInterval = 300.0   //5 min...don't want this to trigger
 
             user = LDUser.stub()
             oldFlags = user.flagStore.featureFlags
@@ -103,7 +102,7 @@ final class LDClientSpec: QuickSpec {
             setThrottlerToExecuteRunClosure()
 
             if startClient {
-                subject.start(mobileKey: Constants.mockMobileKey)
+                subject.start(config: config)
             }
             if runMode == .background {
                 subject.setRunMode(.background)
@@ -157,7 +156,7 @@ final class LDClientSpec: QuickSpec {
                     testContext.config.startOnline = true
 
                     waitUntil { done in
-                        testContext.subject.start(mobileKey: Constants.mockMobileKey, config: testContext.config, user: testContext.user, completion: done)
+                        testContext.subject.start(config: testContext.config, user: testContext.user, completion: done)
                     }
                 }
                 it("takes the client and service objects online") {
@@ -191,7 +190,7 @@ final class LDClientSpec: QuickSpec {
                 beforeEach {
                     testContext = TestContext()
                     waitUntil { done in
-                        testContext.subject.start(mobileKey: Constants.mockMobileKey, config: testContext.config, user: testContext.user, completion: done)
+                        testContext.subject.start(config: testContext.config, user: testContext.user, completion: done)
                     }
                 }
                 it("leaves the client and service objects offline") {
@@ -228,7 +227,7 @@ final class LDClientSpec: QuickSpec {
                             testContext = TestContext(startOnline: true, runMode: .background, operatingSystem: os)
 
                             waitUntil { done in
-                                testContext.subject.start(mobileKey: Constants.mockMobileKey, config: testContext.config, user: testContext.user, completion: done)
+                                testContext.subject.start(config: testContext.config, user: testContext.user, completion: done)
                             }
                         }
                         it("takes the client and service objects online when background enabled") {
@@ -268,7 +267,7 @@ final class LDClientSpec: QuickSpec {
                             testContext.config.enableBackgroundUpdates = false
 
                             waitUntil { done in
-                                testContext.subject.start(mobileKey: Constants.mockMobileKey, config: testContext.config, user: testContext.user, completion: done)
+                                testContext.subject.start(config: testContext.config, user: testContext.user, completion: done)
                             }
                         }
                         it("leaves the client and service objects offline") {
@@ -308,7 +307,7 @@ final class LDClientSpec: QuickSpec {
                         testContext = TestContext()
                         testContext.config.startOnline = true
                         waitUntil { done in
-                            testContext.subject.start(mobileKey: Constants.mockMobileKey, config: testContext.config, user: testContext.user, completion: done)
+                            testContext.subject.start(config: testContext.config, user: testContext.user, completion: done)
                         }
 
                         newConfig = testContext.subject.config
@@ -316,7 +315,7 @@ final class LDClientSpec: QuickSpec {
 
                         newUser = LDUser.stub()
 
-                        testContext.subject.start(mobileKey: Constants.mockMobileKey, config: newConfig, user: newUser)
+                        testContext.subject.start(config: newConfig, user: newUser)
                     }
                     it("takes the client and service objects online") {
                         expect(testContext.subject.isOnline) == true
@@ -350,7 +349,7 @@ final class LDClientSpec: QuickSpec {
                         testContext = TestContext()
                         testContext.config.startOnline = false
                         waitUntil { done in
-                            testContext.subject.start(mobileKey: Constants.mockMobileKey, config: testContext.config, user: testContext.user, completion: done)
+                            testContext.subject.start(config: testContext.config, user: testContext.user, completion: done)
                         }
 
                         newConfig = testContext.subject.config
@@ -358,7 +357,7 @@ final class LDClientSpec: QuickSpec {
 
                         newUser = LDUser.stub()
 
-                        testContext.subject.start(mobileKey: Constants.mockMobileKey, config: newConfig, user: newUser)
+                        testContext.subject.start(config: newConfig, user: newUser)
                     }
                     it("leaves the client and service objects offline") {
                         expect(testContext.subject.isOnline) == false
@@ -388,14 +387,13 @@ final class LDClientSpec: QuickSpec {
                     }
                 }
             }
-            context("when called without config or user") {
-                context("after setting config and user") {
+            context("when called without user") {
+                context("after setting user") {
                     beforeEach {
                         testContext = TestContext()
-                        testContext.subject.config = testContext.config
                         testContext.subject.user = testContext.user
                         waitUntil { done in
-                            testContext.subject.start(mobileKey: Constants.mockMobileKey, completion: done)
+                            testContext.subject.start(config: testContext.config, completion: done)
                         }
                     }
                     it("saves the config") {
@@ -420,11 +418,11 @@ final class LDClientSpec: QuickSpec {
                         expect(testContext.recordedEvent?.key) == testContext.user.key
                     }
                 }
-                context("without setting config or user") {
+                context("without setting user") {
                     beforeEach {
                         testContext = TestContext()
                         waitUntil { done in
-                            testContext.subject.start(mobileKey: Constants.mockMobileKey, completion: done)
+                            testContext.subject.start(config: testContext.config, completion: done)
                         }
                         testContext.config = testContext.subject.config
                         testContext.user = testContext.subject.user
@@ -459,7 +457,7 @@ final class LDClientSpec: QuickSpec {
 
                     testContext.config.startOnline = false
                     waitUntil { done in
-                        testContext.subject.start(mobileKey: Constants.mockMobileKey, config: testContext.config, user: testContext.user, completion: done)
+                        testContext.subject.start(config: testContext.config, user: testContext.user, completion: done)
                     }
                 }
                 it("checks the user flag cache for the user") {
@@ -477,7 +475,7 @@ final class LDClientSpec: QuickSpec {
 
                     testContext.config.startOnline = false
                     waitUntil { done in
-                        testContext.subject.start(mobileKey: Constants.mockMobileKey, config: testContext.config, user: testContext.user, completion: done)
+                        testContext.subject.start(config: testContext.config, user: testContext.user, completion: done)
                     }
                 }
                 it("checks the user flag cache for the user") {
@@ -501,7 +499,7 @@ final class LDClientSpec: QuickSpec {
             }
             context("when config values are the same") {
                 beforeEach {
-                    testContext.subject.start(mobileKey: Constants.mockMobileKey, config: testContext.config, user: testContext.user)
+                    testContext.subject.start(config: testContext.config, user: testContext.user)
                     setIsOnlineCount = (testContext.flagSynchronizerMock.isOnlineSetCount, testContext.eventReporterMock.isOnlineSetCount)
 
                     testContext.subject.config = testContext.config
@@ -522,12 +520,12 @@ final class LDClientSpec: QuickSpec {
                     newConfig = testContext.config
                     //change some values and check they're propagated to supporting objects
                     newConfig.baseUrl = Constants.alternateMockUrl
-                    newConfig.pollIntervalMillis += 1
-                    newConfig.eventFlushIntervalMillis += 1
+                    newConfig.flagPollingInterval += 0.001
+                    newConfig.eventFlushInterval += 0.001
                 }
                 context("with run mode set to foreground") {
                     beforeEach {
-                        testContext.subject.start(mobileKey: Constants.mockMobileKey, config: testContext.config, user: testContext.user)
+                        testContext.subject.start(config: testContext.config, user: testContext.user)
 
                         testContext.subject.config = newConfig
                     }
@@ -549,13 +547,13 @@ final class LDClientSpec: QuickSpec {
                         context("on \(os)") {
                             beforeEach {
                                 testContext = TestContext(startOnline: true, runMode: .background, operatingSystem: os)
-                                testContext.subject.start(mobileKey: Constants.mockMobileKey, config: testContext.config, user: testContext.user)
+                                testContext.subject.start(config: testContext.config, user: testContext.user)
 
                                 newConfig = testContext.config
                                 //change some values and check they're propagated to supporting objects
                                 newConfig.baseUrl = Constants.alternateMockUrl
-                                newConfig.pollIntervalMillis += 1
-                                newConfig.eventFlushIntervalMillis += 1
+                                newConfig.flagPollingInterval += 0.001
+                                newConfig.eventFlushInterval += 0.001
 
                                 testContext.subject.config = newConfig
                             }
@@ -579,13 +577,13 @@ final class LDClientSpec: QuickSpec {
                 var newConfig: LDConfig!
                 beforeEach {
                     testContext.config.startOnline = false
-                    testContext.subject.start(mobileKey: Constants.mockMobileKey, config: testContext.config, user: testContext.user)
+                    testContext.subject.start(config: testContext.config, user: testContext.user)
 
                     newConfig = testContext.config
                     //change some values and check they're propagated to supporting objects
                     newConfig.baseUrl = Constants.alternateMockUrl
-                    newConfig.pollIntervalMillis += 1
-                    newConfig.eventFlushIntervalMillis += 1
+                    newConfig.flagPollingInterval += 0.001
+                    newConfig.eventFlushInterval += 0.001
 
                     testContext.subject.config = newConfig
                 }
@@ -608,8 +606,8 @@ final class LDClientSpec: QuickSpec {
                     newConfig = testContext.subject.config
                     //change some values and check they're propagated to supporting objects
                     newConfig.baseUrl = Constants.alternateMockUrl
-                    newConfig.pollIntervalMillis += 1
-                    newConfig.eventFlushIntervalMillis += 1
+                    newConfig.flagPollingInterval += 0.001
+                    newConfig.eventFlushInterval += 0.001
 
                     testContext.subject.config = newConfig
                 }
@@ -640,7 +638,7 @@ final class LDClientSpec: QuickSpec {
             context("when the client is online") {
                 beforeEach {
                     testContext.config.startOnline = true
-                    testContext.subject.start(mobileKey: Constants.mockMobileKey, config: testContext.config, user: testContext.user)
+                    testContext.subject.start(config: testContext.config, user: testContext.user)
                     testContext.eventReporterMock.recordSummaryEventCallCount = 0   //calling start sets the user, which calls eventReporter.recordSummaryEvent()
 
                     newUser = LDUser.stub()
@@ -665,7 +663,7 @@ final class LDClientSpec: QuickSpec {
             context("when the client is offline") {
                 beforeEach {
                     testContext.config.startOnline = false
-                    testContext.subject.start(mobileKey: Constants.mockMobileKey, config: testContext.config, user: testContext.user)
+                    testContext.subject.start(config: testContext.config, user: testContext.user)
                     testContext.eventReporterMock.recordSummaryEventCallCount = 0   //calling start sets the user, which calls eventReporter.recordSummaryEvent()
 
                     newUser = LDUser.stub()
@@ -721,7 +719,7 @@ final class LDClientSpec: QuickSpec {
             context("when the client is offline") {
                 context("setting online") {
                     beforeEach {
-                        testContext.subject.start(mobileKey: Constants.mockMobileKey, config: testContext.config, user: testContext.user)
+                        testContext.subject.start(config: testContext.config, user: testContext.user)
 
                         waitUntil { done in
                             testContext.subject.setOnline(true) {
@@ -741,7 +739,7 @@ final class LDClientSpec: QuickSpec {
                 context("setting offline") {
                     beforeEach {
                         testContext.config.startOnline = true
-                        testContext.subject.start(mobileKey: Constants.mockMobileKey, config: testContext.config, user: testContext.user)
+                        testContext.subject.start(config: testContext.config, user: testContext.user)
                         testContext.throttlerMock?.runThrottledCallCount = 0
 
                         testContext.subject.setOnline(false)
@@ -773,7 +771,7 @@ final class LDClientSpec: QuickSpec {
                         }
                         context("while configured to enable background updates") {
                             beforeEach {
-                                testContext.subject.start(mobileKey: Constants.mockMobileKey, config: testContext.config, user: testContext.user)
+                                testContext.subject.start(config: testContext.config, user: testContext.user)
                             }
                             context("and setting online") {
                                 var targetRunThrottledCalls: Int!
@@ -796,7 +794,7 @@ final class LDClientSpec: QuickSpec {
                         context("while configured to disable background updates") {
                             beforeEach {
                                 testContext.config.enableBackgroundUpdates = false
-                                testContext.subject.start(mobileKey: Constants.mockMobileKey, config: testContext.config, user: testContext.user)
+                                testContext.subject.start(config: testContext.config, user: testContext.user)
                             }
                             context("and setting online") {
                                 beforeEach {
@@ -814,6 +812,21 @@ final class LDClientSpec: QuickSpec {
                             }
                         }
                     }
+                }
+            }
+            context("when the mobile key is empty") {
+                beforeEach {
+                    testContext.config.mobileKey = ""
+                    testContext.subject.start(config: testContext.config, user: testContext.user)
+                    testContext.throttlerMock?.runThrottledCallCount = 0
+
+                    testContext.subject.setOnline(true)
+                }
+                it("leaves the client and service objects offline") {
+                    expect(testContext.throttlerMock?.runThrottledCallCount ?? 0) == 0
+                    expect(testContext.subject.isOnline) == false
+                    expect(testContext.subject.flagSynchronizer.isOnline) == testContext.subject.isOnline
+                    expect(testContext.subject.eventReporter.isOnline) == testContext.subject.isOnline
                 }
             }
         }
@@ -836,7 +849,7 @@ final class LDClientSpec: QuickSpec {
                 context("and online") {
                     beforeEach {
                         testContext.config.startOnline = true
-                        testContext.subject.start(mobileKey: Constants.mockMobileKey, config: testContext.config, user: testContext.user)
+                        testContext.subject.start(config: testContext.config, user: testContext.user)
                         priorRecordedEvents = testContext.eventReporterMock.recordCallCount
 
                         testContext.subject.stop()
@@ -845,14 +858,14 @@ final class LDClientSpec: QuickSpec {
                         expect(testContext.subject.isOnline) == false
                     }
                     it("stops recording events") {
-                        testContext.subject.trackEvent(key: event.key!)
+                        expect { try testContext.subject.trackEvent(key: event.key!) }.toNot(throwError())
                         expect(testContext.eventReporterMock.recordCallCount) == priorRecordedEvents
                     }
                 }
                 context("and offline") {
                     beforeEach {
                         testContext.config.startOnline = false
-                        testContext.subject.start(mobileKey: Constants.mockMobileKey, config: testContext.config, user: testContext.user)
+                        testContext.subject.start(config: testContext.config, user: testContext.user)
                         priorRecordedEvents = testContext.eventReporterMock.recordCallCount
 
                         testContext.subject.stop()
@@ -861,7 +874,7 @@ final class LDClientSpec: QuickSpec {
                         expect(testContext.subject.isOnline) == false
                     }
                     it("stops recording events") {
-                        testContext.subject.trackEvent(key: event.key!)
+                        expect { try testContext.subject.trackEvent(key: event.key!) }.toNot(throwError())
                         expect(testContext.eventReporterMock.recordCallCount) == priorRecordedEvents
                     }
                 }
@@ -874,14 +887,14 @@ final class LDClientSpec: QuickSpec {
                     expect(testContext.subject.isOnline) == false
                 }
                 it("does not record events") {
-                    testContext.subject.trackEvent(key: event.key!)
+                    expect { try testContext.subject.trackEvent(key: event.key!) }.toNot(throwError())
                     expect(testContext.eventReporterMock.recordCallCount) == 0
                 }
             }
             context("when already stopped") {
                 beforeEach {
                     testContext.config.startOnline = false
-                    testContext.subject.start(mobileKey: Constants.mockMobileKey, config: testContext.config, user: testContext.user)
+                    testContext.subject.start(config: testContext.config, user: testContext.user)
                     testContext.subject.stop()
                     priorRecordedEvents = testContext.eventReporterMock.recordCallCount
 
@@ -891,7 +904,7 @@ final class LDClientSpec: QuickSpec {
                     expect(testContext.subject.isOnline) == false
                 }
                 it("stops recording events") {
-                    testContext.subject.trackEvent(key: event.key!)
+                    expect { try testContext.subject.trackEvent(key: event.key!) }.toNot(throwError())
                     expect(testContext.eventReporterMock.recordCallCount) == priorRecordedEvents
                 }
             }
@@ -909,20 +922,22 @@ final class LDClientSpec: QuickSpec {
             }
             context("when client was started") {
                 beforeEach {
-                    testContext.subject.start(mobileKey: Constants.mockMobileKey, config: testContext.config, user: testContext.user)
+                    testContext.subject.start(config: testContext.config, user: testContext.user)
 
-                    testContext.subject.trackEvent(key: event.key!, data: event.data)
+                    //swiftlint:disable:next force_try
+                    try! testContext.subject.trackEvent(key: event.key!, data: event.data)
                 }
                 it("records a custom event") {
                     expect(testContext.eventReporterMock.recordReceivedArguments?.event.key) == event.key
                     expect(testContext.eventReporterMock.recordReceivedArguments?.event.user) == event.user
                     expect(testContext.eventReporterMock.recordReceivedArguments?.event.data).toNot(beNil())
-                    expect(testContext.eventReporterMock.recordReceivedArguments?.event.data == event.data).to(beTrue())
+                    expect(AnyComparer.isEqual(testContext.eventReporterMock.recordReceivedArguments?.event.data, to: event.data)).to(beTrue())
                 }
             }
             context("when client was not started") {
                 beforeEach {
-                    testContext.subject.trackEvent(key: event.key!, data: event.data)
+                    //swiftlint:disable:next force_try
+                    try! testContext.subject.trackEvent(key: event.key!, data: event.data)
                 }
                 it("does not record any events") {
                     expect(testContext.eventReporterMock.recordCallCount) == 0
@@ -931,11 +946,12 @@ final class LDClientSpec: QuickSpec {
             context("when client was stopped") {
                 var priorRecordedEvents: Int!
                 beforeEach {
-                    testContext.subject.start(mobileKey: Constants.mockMobileKey, config: testContext.config, user: testContext.user)
+                    testContext.subject.start(config: testContext.config, user: testContext.user)
                     testContext.subject.stop()
                     priorRecordedEvents = testContext.eventReporterMock.recordCallCount
 
-                    testContext.subject.trackEvent(key: event.key!, data: event.data)
+                    //swiftlint:disable:next force_try
+                    try! testContext.subject.trackEvent(key: event.key!, data: event.data)
                 }
                 it("does not record any more events") {
                     expect(testContext.eventReporterMock.recordCallCount) == priorRecordedEvents
@@ -952,47 +968,139 @@ final class LDClientSpec: QuickSpec {
             }
             context("flag store contains the requested value") {
                 beforeEach {
-                    testContext.subject.start(mobileKey: Constants.mockMobileKey, config: testContext.config, user: testContext.user)
+                    testContext.subject.start(config: testContext.config, user: testContext.user)
                 }
-                it("returns the flag value") {
-                    expect(testContext.subject.variation(forKey: DarklyServiceMock.FlagKeys.bool, fallback: DefaultFlagValues.bool)) == DarklyServiceMock.FlagValues.bool
-                    expect(testContext.subject.variation(forKey: DarklyServiceMock.FlagKeys.int, fallback: DefaultFlagValues.int)) == DarklyServiceMock.FlagValues.int
-                    expect(testContext.subject.variation(forKey: DarklyServiceMock.FlagKeys.double, fallback: DefaultFlagValues.double)) == DarklyServiceMock.FlagValues.double
-                    expect(testContext.subject.variation(forKey: DarklyServiceMock.FlagKeys.string, fallback: DefaultFlagValues.string)) == DarklyServiceMock.FlagValues.string
-                    expect(testContext.subject.variation(forKey: DarklyServiceMock.FlagKeys.array, fallback: DefaultFlagValues.array) == DarklyServiceMock.FlagValues.array).to(beTrue())
-                    expect(testContext.subject.variation(forKey: DarklyServiceMock.FlagKeys.dictionary, fallback: DefaultFlagValues.dictionary)
-                        == DarklyServiceMock.FlagValues.dictionary).to(beTrue())
+                context("non-Optional fallback value") {
+                    it("returns the flag value") {
+                        //The casts in the expect() calls allow the compiler to determine which variation method to use. This test calls the non-Optional variation method
+                        expect(testContext.subject.variation(forKey: DarklyServiceMock.FlagKeys.bool, fallback: DefaultFlagValues.bool) as Bool) == DarklyServiceMock.FlagValues.bool
+                        expect(testContext.subject.variation(forKey: DarklyServiceMock.FlagKeys.int, fallback: DefaultFlagValues.int) as Int) == DarklyServiceMock.FlagValues.int
+                        expect(testContext.subject.variation(forKey: DarklyServiceMock.FlagKeys.double, fallback: DefaultFlagValues.double) as Double) == DarklyServiceMock.FlagValues.double
+                        expect(testContext.subject.variation(forKey: DarklyServiceMock.FlagKeys.string, fallback: DefaultFlagValues.string) as String) == DarklyServiceMock.FlagValues.string
+                        expect(testContext.subject.variation(forKey: DarklyServiceMock.FlagKeys.array, fallback: DefaultFlagValues.array) == DarklyServiceMock.FlagValues.array).to(beTrue())
+                        expect(testContext.subject.variation(forKey: DarklyServiceMock.FlagKeys.dictionary, fallback: DefaultFlagValues.dictionary) as [String: Any]
+                            == DarklyServiceMock.FlagValues.dictionary).to(beTrue())
+                    }
+                    it("records a flag evaluation event") {
+                        _ = testContext.subject.variation(forKey: DarklyServiceMock.FlagKeys.bool, fallback: DefaultFlagValues.bool)
+                        expect(testContext.eventReporterMock.recordFlagEvaluationEventsCallCount) == 1
+                        expect(testContext.eventReporterMock.recordFlagEvaluationEventsReceivedArguments?.flagKey) == DarklyServiceMock.FlagKeys.bool
+                        expect(AnyComparer.isEqual(testContext.eventReporterMock.recordFlagEvaluationEventsReceivedArguments?.value, to: DarklyServiceMock.FlagValues.bool)).to(beTrue())
+                        expect(AnyComparer.isEqual(testContext.eventReporterMock.recordFlagEvaluationEventsReceivedArguments?.defaultValue, to: DefaultFlagValues.bool)).to(beTrue())
+                        expect(testContext.eventReporterMock.recordFlagEvaluationEventsReceivedArguments?.featureFlag) == testContext.flagStoreMock.featureFlags[DarklyServiceMock.FlagKeys.bool]
+                        expect(testContext.eventReporterMock.recordFlagEvaluationEventsReceivedArguments?.user) == testContext.user
+                    }
                 }
-                it("records a flag evaluation event") {
-                    _ = testContext.subject.variation(forKey: DarklyServiceMock.FlagKeys.bool, fallback: DefaultFlagValues.bool)
-                    expect(testContext.eventReporterMock.recordFlagEvaluationEventsCallCount) == 1
-                    expect(testContext.eventReporterMock.recordFlagEvaluationEventsReceivedArguments?.flagKey) == DarklyServiceMock.FlagKeys.bool
-                    expect(AnyComparer.isEqual(testContext.eventReporterMock.recordFlagEvaluationEventsReceivedArguments?.value, to: DarklyServiceMock.FlagValues.bool)).to(beTrue())
-                    expect(AnyComparer.isEqual(testContext.eventReporterMock.recordFlagEvaluationEventsReceivedArguments?.defaultValue, to: DefaultFlagValues.bool)).to(beTrue())
-                    expect(testContext.eventReporterMock.recordFlagEvaluationEventsReceivedArguments?.featureFlag) == testContext.flagStoreMock.featureFlags[DarklyServiceMock.FlagKeys.bool]
-                    expect(testContext.eventReporterMock.recordFlagEvaluationEventsReceivedArguments?.user) == testContext.user
+                context("Optional fallback value") {
+                    it("returns the flag value") {
+                        //The casts in the expect() calls allow the compiler to determine which variation method to use. This test calls the Optional variation method
+                        expect(testContext.subject.variation(forKey: DarklyServiceMock.FlagKeys.bool, fallback: DefaultFlagValues.bool as Bool?)) == DarklyServiceMock.FlagValues.bool
+                        expect(testContext.subject.variation(forKey: DarklyServiceMock.FlagKeys.int, fallback: DefaultFlagValues.int  as Int?)) == DarklyServiceMock.FlagValues.int
+                        expect(testContext.subject.variation(forKey: DarklyServiceMock.FlagKeys.double, fallback: DefaultFlagValues.double as Double?)) == DarklyServiceMock.FlagValues.double
+                        expect(testContext.subject.variation(forKey: DarklyServiceMock.FlagKeys.string, fallback: DefaultFlagValues.string as String?)) == DarklyServiceMock.FlagValues.string
+                        expect(testContext.subject.variation(forKey: DarklyServiceMock.FlagKeys.array, fallback: DefaultFlagValues.array as Array?) == DarklyServiceMock.FlagValues.array).to(beTrue())
+                        expect(testContext.subject.variation(forKey: DarklyServiceMock.FlagKeys.dictionary, fallback: DefaultFlagValues.dictionary as [String: Any]?)
+                            == DarklyServiceMock.FlagValues.dictionary).to(beTrue())
+                    }
+                    it("records a flag evaluation event") {
+                        //The cast in the variation call directs the compiler to the Optional variation method
+                        _ = testContext.subject.variation(forKey: DarklyServiceMock.FlagKeys.bool, fallback: DefaultFlagValues.bool as Bool?)
+                        expect(testContext.eventReporterMock.recordFlagEvaluationEventsCallCount) == 1
+                        expect(testContext.eventReporterMock.recordFlagEvaluationEventsReceivedArguments?.flagKey) == DarklyServiceMock.FlagKeys.bool
+                        expect(AnyComparer.isEqual(testContext.eventReporterMock.recordFlagEvaluationEventsReceivedArguments?.value, to: DarklyServiceMock.FlagValues.bool)).to(beTrue())
+                        expect(AnyComparer.isEqual(testContext.eventReporterMock.recordFlagEvaluationEventsReceivedArguments?.defaultValue, to: DefaultFlagValues.bool)).to(beTrue())
+                        expect(testContext.eventReporterMock.recordFlagEvaluationEventsReceivedArguments?.featureFlag) == testContext.flagStoreMock.featureFlags[DarklyServiceMock.FlagKeys.bool]
+                        expect(testContext.eventReporterMock.recordFlagEvaluationEventsReceivedArguments?.user) == testContext.user
+                    }
+                }
+                context("No fallback value") {
+                    it("returns the flag value") {
+                        //The casts in the expect() calls allow the compiler to determine the return type.
+                        expect(testContext.subject.variation(forKey: DarklyServiceMock.FlagKeys.bool, fallback: nil as Bool?)) == DarklyServiceMock.FlagValues.bool
+                        expect(testContext.subject.variation(forKey: DarklyServiceMock.FlagKeys.int, fallback: nil  as Int?)) == DarklyServiceMock.FlagValues.int
+                        expect(testContext.subject.variation(forKey: DarklyServiceMock.FlagKeys.double, fallback: nil as Double?)) == DarklyServiceMock.FlagValues.double
+                        expect(testContext.subject.variation(forKey: DarklyServiceMock.FlagKeys.string, fallback: nil as String?)) == DarklyServiceMock.FlagValues.string
+                        expect(testContext.subject.variation(forKey: DarklyServiceMock.FlagKeys.array, fallback: nil as Array?) == DarklyServiceMock.FlagValues.array).to(beTrue())
+                        expect(testContext.subject.variation(forKey: DarklyServiceMock.FlagKeys.dictionary, fallback: nil as [String: Any]?)
+                            == DarklyServiceMock.FlagValues.dictionary).to(beTrue())
+                    }
+                    it("records a flag evaluation event") {
+                        //The cast in the variation call allows the compiler to determine the return type
+                        _ = testContext.subject.variation(forKey: DarklyServiceMock.FlagKeys.bool, fallback: nil as Bool?)
+                        expect(testContext.eventReporterMock.recordFlagEvaluationEventsCallCount) == 1
+                        expect(testContext.eventReporterMock.recordFlagEvaluationEventsReceivedArguments?.flagKey) == DarklyServiceMock.FlagKeys.bool
+                        expect(AnyComparer.isEqual(testContext.eventReporterMock.recordFlagEvaluationEventsReceivedArguments?.value, to: DarklyServiceMock.FlagValues.bool)).to(beTrue())
+                        expect(testContext.eventReporterMock.recordFlagEvaluationEventsReceivedArguments?.defaultValue).to(beNil())
+                        expect(testContext.eventReporterMock.recordFlagEvaluationEventsReceivedArguments?.featureFlag) == testContext.flagStoreMock.featureFlags[DarklyServiceMock.FlagKeys.bool]
+                        expect(testContext.eventReporterMock.recordFlagEvaluationEventsReceivedArguments?.user) == testContext.user
+                    }
                 }
             }
             context("flag store does not contain the requested value") {
                 beforeEach {
-                    testContext.subject.start(mobileKey: Constants.mockMobileKey, config: testContext.config, user: testContext.user)
+                    testContext.subject.start(config: testContext.config, user: testContext.user)
                 }
-                it("returns the fallback value") {
-                    expect(testContext.subject.variation(forKey: BadFlagKeys.bool, fallback: DefaultFlagValues.bool)) == DefaultFlagValues.bool
-                    expect(testContext.subject.variation(forKey: BadFlagKeys.int, fallback: DefaultFlagValues.int)) == DefaultFlagValues.int
-                    expect(testContext.subject.variation(forKey: BadFlagKeys.double, fallback: DefaultFlagValues.double)) == DefaultFlagValues.double
-                    expect(testContext.subject.variation(forKey: BadFlagKeys.string, fallback: DefaultFlagValues.string)) == DefaultFlagValues.string
-                    expect(testContext.subject.variation(forKey: BadFlagKeys.array, fallback: DefaultFlagValues.array) == DefaultFlagValues.array).to(beTrue())
-                    expect(testContext.subject.variation(forKey: BadFlagKeys.dictionary, fallback: DefaultFlagValues.dictionary) == DefaultFlagValues.dictionary).to(beTrue())
+                context("non-Optional fallback value") {
+                    it("returns the fallback value") {
+                        //The casts in the expect() calls allow the compiler to determine which variation method to use. This test calls the non-Optional variation method
+                        expect(testContext.subject.variation(forKey: BadFlagKeys.bool, fallback: DefaultFlagValues.bool) as Bool) == DefaultFlagValues.bool
+                        expect(testContext.subject.variation(forKey: BadFlagKeys.int, fallback: DefaultFlagValues.int) as Int) == DefaultFlagValues.int
+                        expect(testContext.subject.variation(forKey: BadFlagKeys.double, fallback: DefaultFlagValues.double) as Double) == DefaultFlagValues.double
+                        expect(testContext.subject.variation(forKey: BadFlagKeys.string, fallback: DefaultFlagValues.string) as String) == DefaultFlagValues.string
+                        expect(testContext.subject.variation(forKey: BadFlagKeys.array, fallback: DefaultFlagValues.array) == DefaultFlagValues.array).to(beTrue())
+                        expect(testContext.subject.variation(forKey: BadFlagKeys.dictionary, fallback: DefaultFlagValues.dictionary) as [String: Any] == DefaultFlagValues.dictionary).to(beTrue())
+                    }
+                    it("records a flag evaluation event") {
+                        _ = testContext.subject.variation(forKey: BadFlagKeys.bool, fallback: DefaultFlagValues.bool)
+                        expect(testContext.eventReporterMock.recordFlagEvaluationEventsCallCount) == 1
+                        expect(testContext.eventReporterMock.recordFlagEvaluationEventsReceivedArguments?.flagKey) == BadFlagKeys.bool
+                        expect(AnyComparer.isEqual(testContext.eventReporterMock.recordFlagEvaluationEventsReceivedArguments?.value, to: DefaultFlagValues.bool)).to(beTrue())
+                        expect(AnyComparer.isEqual(testContext.eventReporterMock.recordFlagEvaluationEventsReceivedArguments?.defaultValue, to: DefaultFlagValues.bool)).to(beTrue())
+                        expect(testContext.eventReporterMock.recordFlagEvaluationEventsReceivedArguments?.featureFlag).to(beNil())
+                        expect(testContext.eventReporterMock.recordFlagEvaluationEventsReceivedArguments?.user) == testContext.user
+                    }
                 }
-                it("records a flag evaluation event") {
-                    _ = testContext.subject.variation(forKey: BadFlagKeys.bool, fallback: DefaultFlagValues.bool)
-                    expect(testContext.eventReporterMock.recordFlagEvaluationEventsCallCount) == 1
-                    expect(testContext.eventReporterMock.recordFlagEvaluationEventsReceivedArguments?.flagKey) == BadFlagKeys.bool
-                    expect(AnyComparer.isEqual(testContext.eventReporterMock.recordFlagEvaluationEventsReceivedArguments?.value, to: DefaultFlagValues.bool)).to(beTrue())
-                    expect(AnyComparer.isEqual(testContext.eventReporterMock.recordFlagEvaluationEventsReceivedArguments?.defaultValue, to: DefaultFlagValues.bool)).to(beTrue())
-                    expect(testContext.eventReporterMock.recordFlagEvaluationEventsReceivedArguments?.featureFlag).to(beNil())
-                    expect(testContext.eventReporterMock.recordFlagEvaluationEventsReceivedArguments?.user) == testContext.user
+                context("Optional fallback value") {
+                    it("returns the fallback value") {
+                        //The casts in the expect() calls allow the compiler to determine which variation method to use. This test calls the non-Optional variation method
+                        expect(testContext.subject.variation(forKey: BadFlagKeys.bool, fallback: DefaultFlagValues.bool as Bool?)) == DefaultFlagValues.bool
+                        expect(testContext.subject.variation(forKey: BadFlagKeys.int, fallback: DefaultFlagValues.int as Int?)) == DefaultFlagValues.int
+                        expect(testContext.subject.variation(forKey: BadFlagKeys.double, fallback: DefaultFlagValues.double as Double?)) == DefaultFlagValues.double
+                        expect(testContext.subject.variation(forKey: BadFlagKeys.string, fallback: DefaultFlagValues.string as String?)) == DefaultFlagValues.string
+                        expect(testContext.subject.variation(forKey: BadFlagKeys.array, fallback: DefaultFlagValues.array as Array?) == DefaultFlagValues.array).to(beTrue())
+                        expect(testContext.subject.variation(forKey: BadFlagKeys.dictionary, fallback: DefaultFlagValues.dictionary as [String: Any]?) == DefaultFlagValues.dictionary).to(beTrue())
+                    }
+                    it("records a flag evaluation event") {
+                        //The cast in the variation call directs the compiler to the Optional variation method
+                        _ = testContext.subject.variation(forKey: BadFlagKeys.bool, fallback: DefaultFlagValues.bool as Bool?)
+                        expect(testContext.eventReporterMock.recordFlagEvaluationEventsCallCount) == 1
+                        expect(testContext.eventReporterMock.recordFlagEvaluationEventsReceivedArguments?.flagKey) == BadFlagKeys.bool
+                        expect(AnyComparer.isEqual(testContext.eventReporterMock.recordFlagEvaluationEventsReceivedArguments?.value, to: DefaultFlagValues.bool)).to(beTrue())
+                        expect(AnyComparer.isEqual(testContext.eventReporterMock.recordFlagEvaluationEventsReceivedArguments?.defaultValue, to: DefaultFlagValues.bool)).to(beTrue())
+                        expect(testContext.eventReporterMock.recordFlagEvaluationEventsReceivedArguments?.featureFlag).to(beNil())
+                        expect(testContext.eventReporterMock.recordFlagEvaluationEventsReceivedArguments?.user) == testContext.user
+                    }
+                }
+                context("no fallback value") {
+                    it("returns nil") {
+                        //The casts in the expect() calls allow the compiler to determine which variation method to use. This test calls the non-Optional variation method
+                        expect(testContext.subject.variation(forKey: BadFlagKeys.bool, fallback: nil as Bool?)).to(beNil())
+                        expect(testContext.subject.variation(forKey: BadFlagKeys.int, fallback: nil as Int?)).to(beNil())
+                        expect(testContext.subject.variation(forKey: BadFlagKeys.double, fallback: nil as Double?)).to(beNil())
+                        expect(testContext.subject.variation(forKey: BadFlagKeys.string, fallback: nil as String?)).to(beNil())
+                        expect(testContext.subject.variation(forKey: BadFlagKeys.array, fallback: nil as [Any]?)).to(beNil())
+                        expect(testContext.subject.variation(forKey: BadFlagKeys.dictionary, fallback: nil as [String: Any]?)).to(beNil())
+                    }
+                    it("records a flag evaluation event") {
+                        //The cast in the variation call directs the compiler to the Optional variation method
+                        _ = testContext.subject.variation(forKey: BadFlagKeys.bool, fallback: nil as Bool?)
+                        expect(testContext.eventReporterMock.recordFlagEvaluationEventsCallCount) == 1
+                        expect(testContext.eventReporterMock.recordFlagEvaluationEventsReceivedArguments?.flagKey) == BadFlagKeys.bool
+                        expect(testContext.eventReporterMock.recordFlagEvaluationEventsReceivedArguments?.value).to(beNil())
+                        expect(testContext.eventReporterMock.recordFlagEvaluationEventsReceivedArguments?.defaultValue).to(beNil())
+                        expect(testContext.eventReporterMock.recordFlagEvaluationEventsReceivedArguments?.featureFlag).to(beNil())
+                        expect(testContext.eventReporterMock.recordFlagEvaluationEventsReceivedArguments?.user) == testContext.user
+                    }
                 }
             }
             context("when it hasnt started") {
@@ -1000,12 +1108,13 @@ final class LDClientSpec: QuickSpec {
                     testContext = TestContext(startOnline: false)
                 }
                 it("returns the fallback value") {
-                    expect(testContext.subject.variation(forKey: DarklyServiceMock.FlagKeys.bool, fallback: DefaultFlagValues.bool)) == DefaultFlagValues.bool
-                    expect(testContext.subject.variation(forKey: DarklyServiceMock.FlagKeys.int, fallback: DefaultFlagValues.int)) == DefaultFlagValues.int
-                    expect(testContext.subject.variation(forKey: DarklyServiceMock.FlagKeys.double, fallback: DefaultFlagValues.double)) == DefaultFlagValues.double
-                    expect(testContext.subject.variation(forKey: DarklyServiceMock.FlagKeys.string, fallback: DefaultFlagValues.string)) == DefaultFlagValues.string
+                    //The casts in the expect() calls allow the compiler to determine which variation method to use. This test calls the non-Optional variation method
+                    expect(testContext.subject.variation(forKey: DarklyServiceMock.FlagKeys.bool, fallback: DefaultFlagValues.bool) as Bool) == DefaultFlagValues.bool
+                    expect(testContext.subject.variation(forKey: DarklyServiceMock.FlagKeys.int, fallback: DefaultFlagValues.int) as Int) == DefaultFlagValues.int
+                    expect(testContext.subject.variation(forKey: DarklyServiceMock.FlagKeys.double, fallback: DefaultFlagValues.double) as Double) == DefaultFlagValues.double
+                    expect(testContext.subject.variation(forKey: DarklyServiceMock.FlagKeys.string, fallback: DefaultFlagValues.string) as String) == DefaultFlagValues.string
                     expect(testContext.subject.variation(forKey: DarklyServiceMock.FlagKeys.array, fallback: DefaultFlagValues.array) == DefaultFlagValues.array).to(beTrue())
-                    expect(testContext.subject.variation(forKey: DarklyServiceMock.FlagKeys.dictionary, fallback: DefaultFlagValues.dictionary) == DefaultFlagValues.dictionary).to(beTrue())
+                    expect(testContext.subject.variation(forKey: DarklyServiceMock.FlagKeys.dictionary, fallback: DefaultFlagValues.dictionary) as [String: Any] == DefaultFlagValues.dictionary).to(beTrue())
                 }
                 it("does not record a flag evaluation event") {
                     _ = testContext.subject.variation(forKey: DarklyServiceMock.FlagKeys.bool, fallback: DefaultFlagValues.bool)
@@ -1017,8 +1126,6 @@ final class LDClientSpec: QuickSpec {
 
     private func variationAndSourceSpec() {
         describe("variation and source") {
-            var arrayValue: (value: [Int], source: LDFlagValueSource)!
-            var dictionaryValue: (value: [String: Any], source: LDFlagValueSource)!
             var testContext: TestContext!
             beforeEach {
                 testContext = TestContext()
@@ -1026,60 +1133,221 @@ final class LDClientSpec: QuickSpec {
             context("flag store contains the requested value") {
                 beforeEach {
                     testContext.flagStoreMock.flagValueSource = .server
-                    testContext.subject.start(mobileKey: Constants.mockMobileKey, config: testContext.config, user: testContext.user)
+                    testContext.subject.start(config: testContext.config, user: testContext.user)
                 }
-                it("returns the flag value and source") {
-                    expect(testContext.subject.variationAndSource(forKey: DarklyServiceMock.FlagKeys.bool, fallback: DefaultFlagValues.bool)
-                        == (DarklyServiceMock.FlagValues.bool, LDFlagValueSource.server)).to(beTrue())
-                    expect(testContext.subject.variationAndSource(forKey: DarklyServiceMock.FlagKeys.int, fallback: DefaultFlagValues.int)
-                        == (DarklyServiceMock.FlagValues.int, LDFlagValueSource.server)).to(beTrue())
-                    expect(testContext.subject.variationAndSource(forKey: DarklyServiceMock.FlagKeys.double, fallback: DefaultFlagValues.double)
-                        == (DarklyServiceMock.FlagValues.double, LDFlagValueSource.server)).to(beTrue())
-                    expect(testContext.subject.variationAndSource(forKey: DarklyServiceMock.FlagKeys.string, fallback: DefaultFlagValues.string) == (DarklyServiceMock.FlagValues.string, LDFlagValueSource.server)).to(beTrue())
-                    arrayValue = testContext.subject.variationAndSource(forKey: DarklyServiceMock.FlagKeys.array, fallback: DefaultFlagValues.array)
-                    expect(arrayValue.value == DarklyServiceMock.FlagValues.array).to(beTrue())
-                    expect(arrayValue.source) == LDFlagValueSource.server
-                    dictionaryValue = testContext.subject.variationAndSource(forKey: DarklyServiceMock.FlagKeys.dictionary, fallback: DefaultFlagValues.dictionary)
-                    expect(dictionaryValue.value == DarklyServiceMock.FlagValues.dictionary).to(beTrue())
-                    expect(dictionaryValue.source) == LDFlagValueSource.server
+                context("non-Optional fallback value") {
+                    var arrayValue: (value: [Int], source: LDFlagValueSource)!
+                    var dictionaryValue: (value: [String: Any], source: LDFlagValueSource)!
+                    it("returns the flag value and source") {
+                        expect(testContext.subject.variationAndSource(forKey: DarklyServiceMock.FlagKeys.bool, fallback: DefaultFlagValues.bool)
+                            == (DarklyServiceMock.FlagValues.bool, LDFlagValueSource.server)).to(beTrue())
+                        expect(testContext.subject.variationAndSource(forKey: DarklyServiceMock.FlagKeys.int, fallback: DefaultFlagValues.int)
+                            == (DarklyServiceMock.FlagValues.int, LDFlagValueSource.server)).to(beTrue())
+                        expect(testContext.subject.variationAndSource(forKey: DarklyServiceMock.FlagKeys.double, fallback: DefaultFlagValues.double)
+                            == (DarklyServiceMock.FlagValues.double, LDFlagValueSource.server)).to(beTrue())
+                        expect(testContext.subject.variationAndSource(forKey: DarklyServiceMock.FlagKeys.string, fallback: DefaultFlagValues.string) == (DarklyServiceMock.FlagValues.string, LDFlagValueSource.server)).to(beTrue())
+                        arrayValue = testContext.subject.variationAndSource(forKey: DarklyServiceMock.FlagKeys.array, fallback: DefaultFlagValues.array)
+                        expect(arrayValue.value == DarklyServiceMock.FlagValues.array).to(beTrue())
+                        expect(arrayValue.source) == LDFlagValueSource.server
+                        dictionaryValue = testContext.subject.variationAndSource(forKey: DarklyServiceMock.FlagKeys.dictionary, fallback: DefaultFlagValues.dictionary)
+                        expect(dictionaryValue.value == DarklyServiceMock.FlagValues.dictionary).to(beTrue())
+                        expect(dictionaryValue.source) == LDFlagValueSource.server
+                    }
+                    it("records a flag evaluation event") {
+                        _ = testContext.subject.variationAndSource(forKey: DarklyServiceMock.FlagKeys.bool, fallback: DefaultFlagValues.bool)
+                        expect(testContext.eventReporterMock.recordFlagEvaluationEventsCallCount) == 1
+                        expect(testContext.eventReporterMock.recordFlagEvaluationEventsReceivedArguments?.flagKey) == DarklyServiceMock.FlagKeys.bool
+                        expect(AnyComparer.isEqual(testContext.eventReporterMock.recordFlagEvaluationEventsReceivedArguments?.value, to: DarklyServiceMock.FlagValues.bool)).to(beTrue())
+                        expect(AnyComparer.isEqual(testContext.eventReporterMock.recordFlagEvaluationEventsReceivedArguments?.defaultValue, to: DefaultFlagValues.bool)).to(beTrue())
+                        expect(testContext.eventReporterMock.recordFlagEvaluationEventsReceivedArguments?.featureFlag) == testContext.flagStoreMock.featureFlags[DarklyServiceMock.FlagKeys.bool]
+                        expect(testContext.eventReporterMock.recordFlagEvaluationEventsReceivedArguments?.user) == testContext.user
+                    }
                 }
-                it("records a flag evaluation event") {
-                    _ = testContext.subject.variationAndSource(forKey: DarklyServiceMock.FlagKeys.bool, fallback: DefaultFlagValues.bool)
-                    expect(testContext.eventReporterMock.recordFlagEvaluationEventsCallCount) == 1
-                    expect(testContext.eventReporterMock.recordFlagEvaluationEventsReceivedArguments?.flagKey) == DarklyServiceMock.FlagKeys.bool
-                    expect(AnyComparer.isEqual(testContext.eventReporterMock.recordFlagEvaluationEventsReceivedArguments?.value, to: DarklyServiceMock.FlagValues.bool)).to(beTrue())
-                    expect(AnyComparer.isEqual(testContext.eventReporterMock.recordFlagEvaluationEventsReceivedArguments?.defaultValue, to: DefaultFlagValues.bool)).to(beTrue())
-                    expect(testContext.eventReporterMock.recordFlagEvaluationEventsReceivedArguments?.featureFlag) == testContext.flagStoreMock.featureFlags[DarklyServiceMock.FlagKeys.bool]
-                    expect(testContext.eventReporterMock.recordFlagEvaluationEventsReceivedArguments?.user) == testContext.user
+                context("Optional fallback value") {
+                    var arrayValue: (value: [Int]?, source: LDFlagValueSource)!
+                    var dictionaryValue: (value: [String: Any]?, source: LDFlagValueSource)!
+                    it("returns the flag value and source") {
+                        //The casts in the expect() calls allow the compiler to determine which variation method to use. This test calls the Optional variation method
+                        expect(testContext.subject.variationAndSource(forKey: DarklyServiceMock.FlagKeys.bool, fallback: DefaultFlagValues.bool as Bool?)
+                            == (DarklyServiceMock.FlagValues.bool, LDFlagValueSource.server)).to(beTrue())
+                        expect(testContext.subject.variationAndSource(forKey: DarklyServiceMock.FlagKeys.int, fallback: DefaultFlagValues.int as Int?)
+                            == (DarklyServiceMock.FlagValues.int, LDFlagValueSource.server)).to(beTrue())
+                        expect(testContext.subject.variationAndSource(forKey: DarklyServiceMock.FlagKeys.double, fallback: DefaultFlagValues.double as Double?)
+                            == (DarklyServiceMock.FlagValues.double, LDFlagValueSource.server)).to(beTrue())
+                        expect(testContext.subject.variationAndSource(forKey: DarklyServiceMock.FlagKeys.string, fallback: DefaultFlagValues.string as String?)
+                            == (DarklyServiceMock.FlagValues.string, LDFlagValueSource.server)).to(beTrue())
+                        arrayValue = testContext.subject.variationAndSource(forKey: DarklyServiceMock.FlagKeys.array, fallback: DefaultFlagValues.array as Array?)
+                        expect(arrayValue.value == DarklyServiceMock.FlagValues.array).to(beTrue())
+                        expect(arrayValue.source) == LDFlagValueSource.server
+                        dictionaryValue = testContext.subject.variationAndSource(forKey: DarklyServiceMock.FlagKeys.dictionary, fallback: DefaultFlagValues.dictionary as [String: Any]?)
+                        expect(dictionaryValue.value == DarklyServiceMock.FlagValues.dictionary).to(beTrue())
+                        expect(dictionaryValue.source) == LDFlagValueSource.server
+                    }
+                    it("records a flag evaluation event") {
+                        //The cast in the variation call directs the compiler to the Optional variation method
+                        _ = testContext.subject.variationAndSource(forKey: DarklyServiceMock.FlagKeys.bool, fallback: DefaultFlagValues.bool as Bool?)
+                        expect(testContext.eventReporterMock.recordFlagEvaluationEventsCallCount) == 1
+                        expect(testContext.eventReporterMock.recordFlagEvaluationEventsReceivedArguments?.flagKey) == DarklyServiceMock.FlagKeys.bool
+                        expect(AnyComparer.isEqual(testContext.eventReporterMock.recordFlagEvaluationEventsReceivedArguments?.value, to: DarklyServiceMock.FlagValues.bool)).to(beTrue())
+                        expect(AnyComparer.isEqual(testContext.eventReporterMock.recordFlagEvaluationEventsReceivedArguments?.defaultValue, to: DefaultFlagValues.bool)).to(beTrue())
+                        expect(testContext.eventReporterMock.recordFlagEvaluationEventsReceivedArguments?.featureFlag) == testContext.flagStoreMock.featureFlags[DarklyServiceMock.FlagKeys.bool]
+                        expect(testContext.eventReporterMock.recordFlagEvaluationEventsReceivedArguments?.user) == testContext.user
+                    }
+                }
+                context("No fallback value") {
+                    var arrayValue: (value: [Int]?, source: LDFlagValueSource)!
+                    var dictionaryValue: (value: [String: Any]?, source: LDFlagValueSource)!
+                    it("returns the flag value and source") {
+                        expect(testContext.subject.variationAndSource(forKey: DarklyServiceMock.FlagKeys.bool, fallback: nil as Bool?)
+                            == (DarklyServiceMock.FlagValues.bool, LDFlagValueSource.server)).to(beTrue())
+                        expect(testContext.subject.variationAndSource(forKey: DarklyServiceMock.FlagKeys.int, fallback: nil as Int?)
+                            == (DarklyServiceMock.FlagValues.int, LDFlagValueSource.server)).to(beTrue())
+                        expect(testContext.subject.variationAndSource(forKey: DarklyServiceMock.FlagKeys.double, fallback: nil as Double?)
+                            == (DarklyServiceMock.FlagValues.double, LDFlagValueSource.server)).to(beTrue())
+                        expect(testContext.subject.variationAndSource(forKey: DarklyServiceMock.FlagKeys.string, fallback: nil as String?)
+                            == (DarklyServiceMock.FlagValues.string, LDFlagValueSource.server)).to(beTrue())
+                        arrayValue = testContext.subject.variationAndSource(forKey: DarklyServiceMock.FlagKeys.array, fallback: nil as Array?)
+                        expect(arrayValue.value == DarklyServiceMock.FlagValues.array).to(beTrue())
+                        expect(arrayValue.source) == LDFlagValueSource.server
+                        dictionaryValue = testContext.subject.variationAndSource(forKey: DarklyServiceMock.FlagKeys.dictionary, fallback: nil as [String: Any]?)
+                        expect(dictionaryValue.value == DarklyServiceMock.FlagValues.dictionary).to(beTrue())
+                        expect(dictionaryValue.source) == LDFlagValueSource.server
+                    }
+                    it("records a flag evaluation event") {
+                        _ = testContext.subject.variationAndSource(forKey: DarklyServiceMock.FlagKeys.bool, fallback: nil as Bool?)
+                        expect(testContext.eventReporterMock.recordFlagEvaluationEventsCallCount) == 1
+                        expect(testContext.eventReporterMock.recordFlagEvaluationEventsReceivedArguments?.flagKey) == DarklyServiceMock.FlagKeys.bool
+                        expect(AnyComparer.isEqual(testContext.eventReporterMock.recordFlagEvaluationEventsReceivedArguments?.value, to: DarklyServiceMock.FlagValues.bool)).to(beTrue())
+                        expect(testContext.eventReporterMock.recordFlagEvaluationEventsReceivedArguments?.defaultValue).to(beNil())
+                        expect(testContext.eventReporterMock.recordFlagEvaluationEventsReceivedArguments?.featureFlag) == testContext.flagStoreMock.featureFlags[DarklyServiceMock.FlagKeys.bool]
+                        expect(testContext.eventReporterMock.recordFlagEvaluationEventsReceivedArguments?.user) == testContext.user
+                    }
+                }
+                context("flag value is null") {
+                    var arrayValue: (value: [Int], source: LDFlagValueSource)!
+                    var dictionaryValue: (value: [String: Any], source: LDFlagValueSource)!
+                    it("returns the fallback value and source") {
+                        expect(testContext.subject.variationAndSource(forKey: DarklyServiceMock.FlagKeys.null, fallback: DefaultFlagValues.bool)
+                            == (DefaultFlagValues.bool, LDFlagValueSource.fallback)).to(beTrue())
+                        expect(testContext.subject.variationAndSource(forKey: DarklyServiceMock.FlagKeys.null, fallback: DefaultFlagValues.int)
+                            == (DefaultFlagValues.int, LDFlagValueSource.fallback)).to(beTrue())
+                        expect(testContext.subject.variationAndSource(forKey: DarklyServiceMock.FlagKeys.null, fallback: DefaultFlagValues.double)
+                            == (DefaultFlagValues.double, LDFlagValueSource.fallback)).to(beTrue())
+                        expect(testContext.subject.variationAndSource(forKey: DarklyServiceMock.FlagKeys.null, fallback: DefaultFlagValues.string)
+                            == (DefaultFlagValues.string, LDFlagValueSource.fallback)).to(beTrue())
+                        arrayValue = testContext.subject.variationAndSource(forKey: DarklyServiceMock.FlagKeys.null, fallback: DefaultFlagValues.array)
+                        expect(arrayValue.value == DefaultFlagValues.array).to(beTrue())
+                        expect(arrayValue.source) == LDFlagValueSource.fallback
+                        dictionaryValue = testContext.subject.variationAndSource(forKey: DarklyServiceMock.FlagKeys.null, fallback: DefaultFlagValues.dictionary)
+                        expect(dictionaryValue.value == DefaultFlagValues.dictionary).to(beTrue())
+                        expect(dictionaryValue.source) == LDFlagValueSource.fallback
+                    }
+                    it("records a flag evaluation event") {
+                        _ = testContext.subject.variationAndSource(forKey: DarklyServiceMock.FlagKeys.null, fallback: DefaultFlagValues.bool)
+                        expect(testContext.eventReporterMock.recordFlagEvaluationEventsCallCount) == 1
+                        expect(testContext.eventReporterMock.recordFlagEvaluationEventsReceivedArguments?.flagKey) == DarklyServiceMock.FlagKeys.null
+                        expect(AnyComparer.isEqual(testContext.eventReporterMock.recordFlagEvaluationEventsReceivedArguments?.value, to: DefaultFlagValues.bool)).to(beTrue())
+                        expect(AnyComparer.isEqual(testContext.eventReporterMock.recordFlagEvaluationEventsReceivedArguments?.defaultValue, to: DefaultFlagValues.bool)).to(beTrue())
+                        expect(testContext.eventReporterMock.recordFlagEvaluationEventsReceivedArguments?.featureFlag) == testContext.flagStoreMock.featureFlags[DarklyServiceMock.FlagKeys.null]
+                        expect(testContext.eventReporterMock.recordFlagEvaluationEventsReceivedArguments?.user) == testContext.user
+                    }
                 }
             }
             context("flag store does not contain the requested value") {
                 beforeEach {
-                    testContext.subject.start(mobileKey: Constants.mockMobileKey, config: testContext.config, user: testContext.user)
+                    testContext.subject.start(config: testContext.config, user: testContext.user)
                 }
-                it("returns the fallback value and fallback source") {
-                    expect(testContext.subject.variationAndSource(forKey: BadFlagKeys.bool, fallback: DefaultFlagValues.bool) == (DefaultFlagValues.bool, .fallback)).to(beTrue())
-                    expect(testContext.subject.variationAndSource(forKey: BadFlagKeys.int, fallback: DefaultFlagValues.int) == (DefaultFlagValues.int, .fallback)).to(beTrue())
-                    expect(testContext.subject.variationAndSource(forKey: BadFlagKeys.double, fallback: DefaultFlagValues.double) == (DefaultFlagValues.double, .fallback)).to(beTrue())
-                    expect(testContext.subject.variationAndSource(forKey: BadFlagKeys.string, fallback: DefaultFlagValues.string) == (DefaultFlagValues.string, .fallback)).to(beTrue())
-                    arrayValue = testContext.subject.variationAndSource(forKey: BadFlagKeys.array, fallback: DefaultFlagValues.array)
-                    expect(arrayValue.value == DefaultFlagValues.array).to(beTrue())
-                    expect(arrayValue.source) == LDFlagValueSource.fallback
-                    dictionaryValue = testContext.subject.variationAndSource(forKey: BadFlagKeys.dictionary, fallback: DefaultFlagValues.dictionary)
-                    expect(dictionaryValue.value == DefaultFlagValues.dictionary).to(beTrue())
-                    expect(dictionaryValue.source) == LDFlagValueSource.fallback
+                context("non-Optional fallback value") {
+                    var arrayValue: (value: [Int], source: LDFlagValueSource)!
+                    var dictionaryValue: (value: [String: Any], source: LDFlagValueSource)!
+                    it("returns the fallback value and fallback source") {
+                        expect(testContext.subject.variationAndSource(forKey: BadFlagKeys.bool, fallback: DefaultFlagValues.bool) == (DefaultFlagValues.bool, .fallback)).to(beTrue())
+                        expect(testContext.subject.variationAndSource(forKey: BadFlagKeys.int, fallback: DefaultFlagValues.int) == (DefaultFlagValues.int, .fallback)).to(beTrue())
+                        expect(testContext.subject.variationAndSource(forKey: BadFlagKeys.double, fallback: DefaultFlagValues.double) == (DefaultFlagValues.double, .fallback)).to(beTrue())
+                        expect(testContext.subject.variationAndSource(forKey: BadFlagKeys.string, fallback: DefaultFlagValues.string) == (DefaultFlagValues.string, .fallback)).to(beTrue())
+                        arrayValue = testContext.subject.variationAndSource(forKey: BadFlagKeys.array, fallback: DefaultFlagValues.array)
+                        expect(arrayValue.value == DefaultFlagValues.array).to(beTrue())
+                        expect(arrayValue.source) == LDFlagValueSource.fallback
+                        dictionaryValue = testContext.subject.variationAndSource(forKey: BadFlagKeys.dictionary, fallback: DefaultFlagValues.dictionary)
+                        expect(dictionaryValue.value == DefaultFlagValues.dictionary).to(beTrue())
+                        expect(dictionaryValue.source) == LDFlagValueSource.fallback
+                    }
+                    it("records a flag evaluation event") {
+                        _ = testContext.subject.variationAndSource(forKey: BadFlagKeys.bool, fallback: DefaultFlagValues.bool)
+                        expect(testContext.eventReporterMock.recordFlagEvaluationEventsCallCount) == 1
+                        expect(testContext.eventReporterMock.recordFlagEvaluationEventsReceivedArguments?.flagKey) == BadFlagKeys.bool
+                        expect(AnyComparer.isEqual(testContext.eventReporterMock.recordFlagEvaluationEventsReceivedArguments?.value, to: DefaultFlagValues.bool)).to(beTrue())
+                        expect(AnyComparer.isEqual(testContext.eventReporterMock.recordFlagEvaluationEventsReceivedArguments?.defaultValue, to: DefaultFlagValues.bool)).to(beTrue())
+                        expect(testContext.eventReporterMock.recordFlagEvaluationEventsReceivedArguments?.featureFlag).to(beNil())
+                        expect(testContext.eventReporterMock.recordFlagEvaluationEventsReceivedArguments?.user) == testContext.user
+                    }
                 }
-                it("records a flag evaluation event") {
-                    _ = testContext.subject.variationAndSource(forKey: BadFlagKeys.bool, fallback: DefaultFlagValues.bool)
-                    expect(testContext.eventReporterMock.recordFlagEvaluationEventsCallCount) == 1
-                    expect(testContext.eventReporterMock.recordFlagEvaluationEventsReceivedArguments?.flagKey) == BadFlagKeys.bool
-                    expect(AnyComparer.isEqual(testContext.eventReporterMock.recordFlagEvaluationEventsReceivedArguments?.value, to: DefaultFlagValues.bool)).to(beTrue())
-                    expect(AnyComparer.isEqual(testContext.eventReporterMock.recordFlagEvaluationEventsReceivedArguments?.defaultValue, to: DefaultFlagValues.bool)).to(beTrue())
-                    expect(testContext.eventReporterMock.recordFlagEvaluationEventsReceivedArguments?.featureFlag).to(beNil())
-                    expect(testContext.eventReporterMock.recordFlagEvaluationEventsReceivedArguments?.user) == testContext.user
+                context("Optional fallback value") {
+                    var arrayValue: (value: [Int]?, source: LDFlagValueSource)!
+                    var dictionaryValue: (value: [String: Any]?, source: LDFlagValueSource)!
+                    it("returns the fallback value and fallback source") {
+                        //The casts in the expect() calls allow the compiler to determine which variation method to use. This test calls the non-Optional variation method
+                        expect(testContext.subject.variationAndSource(forKey: BadFlagKeys.bool, fallback: DefaultFlagValues.bool as Bool?)
+                            == (DefaultFlagValues.bool, .fallback)).to(beTrue())
+                        expect(testContext.subject.variationAndSource(forKey: BadFlagKeys.int, fallback: DefaultFlagValues.int as Int?)
+                            == (DefaultFlagValues.int, .fallback)).to(beTrue())
+                        expect(testContext.subject.variationAndSource(forKey: BadFlagKeys.double, fallback: DefaultFlagValues.double as Double?)
+                            == (DefaultFlagValues.double, .fallback)).to(beTrue())
+                        expect(testContext.subject.variationAndSource(forKey: BadFlagKeys.string, fallback: DefaultFlagValues.string as String?)
+                            == (DefaultFlagValues.string, .fallback)).to(beTrue())
+                        arrayValue = testContext.subject.variationAndSource(forKey: BadFlagKeys.array, fallback: DefaultFlagValues.array as Array?)
+                        expect(arrayValue.value == DefaultFlagValues.array).to(beTrue())
+                        expect(arrayValue.source) == LDFlagValueSource.fallback
+                        dictionaryValue = testContext.subject.variationAndSource(forKey: BadFlagKeys.dictionary, fallback: DefaultFlagValues.dictionary as [String: Any]?)
+                        expect(dictionaryValue.value == DefaultFlagValues.dictionary).to(beTrue())
+                        expect(dictionaryValue.source) == LDFlagValueSource.fallback
+                    }
+                    it("records a flag evaluation event") {
+                        //The cast in the variation call directs the compiler to the Optional variation method
+                        _ = testContext.subject.variationAndSource(forKey: BadFlagKeys.bool, fallback: DefaultFlagValues.bool as Bool?)
+                        expect(testContext.eventReporterMock.recordFlagEvaluationEventsCallCount) == 1
+                        expect(testContext.eventReporterMock.recordFlagEvaluationEventsReceivedArguments?.flagKey) == BadFlagKeys.bool
+                        expect(AnyComparer.isEqual(testContext.eventReporterMock.recordFlagEvaluationEventsReceivedArguments?.value, to: DefaultFlagValues.bool)).to(beTrue())
+                        expect(AnyComparer.isEqual(testContext.eventReporterMock.recordFlagEvaluationEventsReceivedArguments?.defaultValue, to: DefaultFlagValues.bool)).to(beTrue())
+                        expect(testContext.eventReporterMock.recordFlagEvaluationEventsReceivedArguments?.featureFlag).to(beNil())
+                        expect(testContext.eventReporterMock.recordFlagEvaluationEventsReceivedArguments?.user) == testContext.user
+                    }
+                }
+                context("no fallback value") {
+                    var arrayValue: (value: [Int]?, source: LDFlagValueSource)!
+                    var dictionaryValue: (value: [String: Any]?, source: LDFlagValueSource)!
+                    it("returns the fallback value and fallback source") {
+                        //The casts in the expect() calls allow the compiler to determine which variation method to use. This test calls the non-Optional variation method
+                        expect(testContext.subject.variationAndSource(forKey: BadFlagKeys.bool, fallback: nil as Bool?)
+                            == (nil, .fallback)).to(beTrue())
+                        expect(testContext.subject.variationAndSource(forKey: BadFlagKeys.int, fallback: nil as Int?)
+                            == (nil, .fallback)).to(beTrue())
+                        expect(testContext.subject.variationAndSource(forKey: BadFlagKeys.double, fallback: nil as Double?)
+                            == (nil, .fallback)).to(beTrue())
+                        expect(testContext.subject.variationAndSource(forKey: BadFlagKeys.string, fallback: nil as String?)
+                            == (nil, .fallback)).to(beTrue())
+                        arrayValue = testContext.subject.variationAndSource(forKey: BadFlagKeys.array, fallback: nil as Array?)
+                        expect(arrayValue.value).to(beNil())
+                        expect(arrayValue.source) == LDFlagValueSource.fallback
+                        dictionaryValue = testContext.subject.variationAndSource(forKey: BadFlagKeys.dictionary, fallback: nil as [String: Any]?)
+                        expect(dictionaryValue.value).to(beNil())
+                        expect(dictionaryValue.source) == LDFlagValueSource.fallback
+                    }
+                    it("records a flag evaluation event") {
+                        //The cast in the variation call directs the compiler to the Optional variation method
+                        _ = testContext.subject.variationAndSource(forKey: BadFlagKeys.bool, fallback: nil as Bool?)
+                        expect(testContext.eventReporterMock.recordFlagEvaluationEventsCallCount) == 1
+                        expect(testContext.eventReporterMock.recordFlagEvaluationEventsReceivedArguments?.flagKey) == BadFlagKeys.bool
+                        expect(testContext.eventReporterMock.recordFlagEvaluationEventsReceivedArguments?.value).to(beNil())
+                        expect(testContext.eventReporterMock.recordFlagEvaluationEventsReceivedArguments?.defaultValue).to(beNil())
+                        expect(testContext.eventReporterMock.recordFlagEvaluationEventsReceivedArguments?.featureFlag).to(beNil())
+                        expect(testContext.eventReporterMock.recordFlagEvaluationEventsReceivedArguments?.user) == testContext.user
+                    }
                 }
             }
             context("when it hasnt started") {
+                var arrayValue: (value: [Int], source: LDFlagValueSource)!
+                var dictionaryValue: (value: [String: Any], source: LDFlagValueSource)!
                 beforeEach {
                     testContext = TestContext(startOnline: false)
                 }
@@ -1090,8 +1358,10 @@ final class LDClientSpec: QuickSpec {
                         == (DefaultFlagValues.double, LDFlagValueSource.fallback)).to(beTrue())
                     expect(testContext.subject.variationAndSource(forKey: BadFlagKeys.string, fallback: DefaultFlagValues.string)
                         == (DefaultFlagValues.string, LDFlagValueSource.fallback)).to(beTrue())
+                    arrayValue = testContext.subject.variationAndSource(forKey: BadFlagKeys.array, fallback: DefaultFlagValues.array)
                     expect(arrayValue.value == DefaultFlagValues.array).to(beTrue())
                     expect(arrayValue.source) == LDFlagValueSource.fallback
+                    dictionaryValue = testContext.subject.variationAndSource(forKey: BadFlagKeys.dictionary, fallback: DefaultFlagValues.dictionary)
                     expect(dictionaryValue.value == DefaultFlagValues.dictionary).to(beTrue())
                     expect(dictionaryValue.source) == LDFlagValueSource.fallback
                 }
@@ -1110,7 +1380,7 @@ final class LDClientSpec: QuickSpec {
             var testContext: TestContext!
             beforeEach {
                 testContext = TestContext()
-                testContext.subject.start(mobileKey: Constants.mockMobileKey, config: testContext.config, user: testContext.user)
+                testContext.subject.start(config: testContext.config, user: testContext.user)
                 changedFlag = LDChangedFlag(key: DarklyServiceMock.FlagKeys.bool, oldValue: false, oldValueSource: .cache, newValue: true, newValueSource: .server)
 
                 testContext.subject.observe(key: DarklyServiceMock.FlagKeys.bool, owner: self, handler: { (change) in
@@ -1133,7 +1403,7 @@ final class LDClientSpec: QuickSpec {
 
             beforeEach {
                 testContext = TestContext()
-                testContext.subject.start(mobileKey: Constants.mockMobileKey, config: testContext.config, user: testContext.user)
+                testContext.subject.start(config: testContext.config, user: testContext.user)
                 changedFlags = [DarklyServiceMock.FlagKeys.bool: LDChangedFlag(key: DarklyServiceMock.FlagKeys.bool,
                                                                                oldValue: false,
                                                                                oldValueSource: .cache,
@@ -1159,7 +1429,7 @@ final class LDClientSpec: QuickSpec {
             var testContext: TestContext!
             beforeEach {
                 testContext = TestContext()
-                testContext.subject.start(mobileKey: Constants.mockMobileKey, config: testContext.config, user: testContext.user)
+                testContext.subject.start(config: testContext.config, user: testContext.user)
                 changedFlags = [DarklyServiceMock.FlagKeys.bool: LDChangedFlag(key: DarklyServiceMock.FlagKeys.bool,
                                                                                oldValue: false,
                                                                                oldValueSource: .cache,
@@ -1184,7 +1454,7 @@ final class LDClientSpec: QuickSpec {
             var testContext: TestContext!
             beforeEach {
                 testContext = TestContext()
-                testContext.subject.start(mobileKey: Constants.mockMobileKey, config: testContext.config, user: testContext.user)
+                testContext.subject.start(config: testContext.config, user: testContext.user)
 
                 testContext.subject.observeFlagsUnchanged(owner: self, handler: {
                     testContext.flagsUnchangedCallCount += 1
@@ -1203,7 +1473,7 @@ final class LDClientSpec: QuickSpec {
             var testContext: TestContext!
             beforeEach {
                 testContext = TestContext()
-                testContext.subject.start(mobileKey: Constants.mockMobileKey, config: testContext.config, user: testContext.user)
+                testContext.subject.start(config: testContext.config, user: testContext.user)
 
                 testContext.subject.stopObserving(owner: self)
             }
@@ -1239,7 +1509,7 @@ final class LDClientSpec: QuickSpec {
         }
     }
 
-    /* The concept of the onSyncCompleteSuccess tests is to configure the flags & mocks to simulate the intended change, prep the callbacks to trigger done() to end the async wait, and then call onSyncComplete with the parameters for the area under test. onSyncComplete will call a flagStore method which has an async closure, and so the test has to trigger that closure to get the correct code to execute in onSyncComplete. Once the async flagStore closure runs for the appropriate update method, the result can be measured in the mocks. While setting up each test is slightly different, measuring the result is largely the same.
+    /* The concept of the onSyncCompleteSuccess tests is to configure the flags & mocks to simulate the intended change, prep the callbacks to trigger done() to end the async wait, and then call onFlagSyncComplete with the parameters for the area under test. onFlagSyncComplete will call a flagStore method which has an async closure, and so the test has to trigger that closure to get the correct code to execute in onFlagSyncComplete. Once the async flagStore closure runs for the appropriate update method, the result can be measured in the mocks. While setting up each test is slightly different, measuring the result is largely the same.
      */
     private func onSyncCompleteSuccessReplacingFlagsSpec(streamingMode: LDStreamingMode, eventType: DarklyEventSource.LDEvent.EventType? = nil) {
         var testContext: TestContext!
@@ -1261,7 +1531,7 @@ final class LDClientSpec: QuickSpec {
                 waitUntil { done in
                     testContext.changeNotifierMock.notifyObserversCallback = done
 
-                    testContext.subject.start(mobileKey: Constants.mockMobileKey, config: testContext.config, user: testContext.user)
+                    testContext.subject.start(config: testContext.config, user: testContext.user)
 
                     testContext.onSyncComplete?(.success(newFlags, eventType))
                     if testContext.flagStoreMock.replaceStoreCallCount > 0 { testContext.replaceStoreComplete?() }
@@ -1291,7 +1561,7 @@ final class LDClientSpec: QuickSpec {
                 waitUntil { done in
                     testContext.changeNotifierMock.notifyObserversCallback = done
 
-                    testContext.subject.start(mobileKey: Constants.mockMobileKey, config: testContext.config, user: testContext.user)
+                    testContext.subject.start(config: testContext.config, user: testContext.user)
 
                     testContext.onSyncComplete?(.success(newFlags, eventType))
                     if testContext.flagStoreMock.replaceStoreCallCount > 0 { testContext.replaceStoreComplete?() }
@@ -1321,7 +1591,7 @@ final class LDClientSpec: QuickSpec {
                 waitUntil { done in
                     testContext.changeNotifierMock.notifyObserversCallback = done
 
-                    testContext.subject.start(mobileKey: Constants.mockMobileKey, config: testContext.config, user: testContext.user)
+                    testContext.subject.start(config: testContext.config, user: testContext.user)
 
                     testContext.onSyncComplete?(.success(newFlags, eventType))
                     if testContext.flagStoreMock.replaceStoreCallCount > 0 { testContext.replaceStoreComplete?() }
@@ -1349,7 +1619,7 @@ final class LDClientSpec: QuickSpec {
                 waitUntil { done in
                     testContext.changeNotifierMock.notifyObserversCallback = done
 
-                    testContext.subject.start(mobileKey: Constants.mockMobileKey, config: testContext.config, user: testContext.user)
+                    testContext.subject.start(config: testContext.config, user: testContext.user)
 
                     testContext.onSyncComplete?(.success(newFlags, eventType))
                     if testContext.flagStoreMock.replaceStoreCallCount > 0 { testContext.replaceStoreComplete?() }
@@ -1397,7 +1667,7 @@ final class LDClientSpec: QuickSpec {
                 waitUntil { done in
                     testContext.changeNotifierMock.notifyObserversCallback = done
 
-                    testContext.subject.start(mobileKey: Constants.mockMobileKey, config: testContext.config, user: testContext.user)
+                    testContext.subject.start(config: testContext.config, user: testContext.user)
 
                     testContext.onSyncComplete?(.success(flagUpdateDictionary, .patch))
                     if testContext.flagStoreMock.updateStoreCallCount > 0 { testContext.updateStoreComplete?() }
@@ -1431,7 +1701,7 @@ final class LDClientSpec: QuickSpec {
                 waitUntil { done in
                     testContext.changeNotifierMock.notifyObserversCallback = done
 
-                    testContext.subject.start(mobileKey: Constants.mockMobileKey, config: testContext.config, user: testContext.user)
+                    testContext.subject.start(config: testContext.config, user: testContext.user)
 
                     testContext.onSyncComplete?(.success(flagUpdateDictionary, .patch))
                     if testContext.flagStoreMock.updateStoreCallCount > 0 { testContext.updateStoreComplete?() }
@@ -1476,7 +1746,7 @@ final class LDClientSpec: QuickSpec {
                 waitUntil { done in
                     testContext.changeNotifierMock.notifyObserversCallback = done
 
-                    testContext.subject.start(mobileKey: Constants.mockMobileKey, config: testContext.config, user: testContext.user)
+                    testContext.subject.start(config: testContext.config, user: testContext.user)
 
                     testContext.onSyncComplete?(.success(flagUpdateDictionary, .delete))
                     if testContext.flagStoreMock.deleteFlagCallCount > 0 { testContext.deleteFlagComplete?() }
@@ -1507,7 +1777,7 @@ final class LDClientSpec: QuickSpec {
                 waitUntil { done in
                     testContext.changeNotifierMock.notifyObserversCallback = done
 
-                    testContext.subject.start(mobileKey: Constants.mockMobileKey, config: testContext.config, user: testContext.user)
+                    testContext.subject.start(config: testContext.config, user: testContext.user)
 
                     testContext.onSyncComplete?(.success(flagUpdateDictionary, .delete))
                     if testContext.flagStoreMock.deleteFlagCallCount > 0 { testContext.deleteFlagComplete?() }
@@ -1547,7 +1817,7 @@ final class LDClientSpec: QuickSpec {
                         done()
                     }
 
-                    testContext.subject.start(mobileKey: Constants.mockMobileKey, config: testContext.config, user: testContext.user)
+                    testContext.subject.start(config: testContext.config, user: testContext.user)
 
                     testContext.onSyncComplete?(.error(.response(HTTPURLResponse(url: testContext.config.baseUrl,
                                                                                  statusCode: HTTPURLResponse.StatusCodes.internalServerError,
@@ -1571,7 +1841,7 @@ final class LDClientSpec: QuickSpec {
                         done()
                     }
 
-                    testContext.subject.start(mobileKey: Constants.mockMobileKey, config: testContext.config, user: testContext.user)
+                    testContext.subject.start(config: testContext.config, user: testContext.user)
 
                     testContext.onSyncComplete?(.error(.request(DarklyServiceMock.Constants.error)))
                 }
@@ -1592,7 +1862,7 @@ final class LDClientSpec: QuickSpec {
                         done()
                     }
 
-                    testContext.subject.start(mobileKey: Constants.mockMobileKey, config: testContext.config, user: testContext.user)
+                    testContext.subject.start(config: testContext.config, user: testContext.user)
 
                     testContext.onSyncComplete?(.error(.data(DarklyServiceMock.Constants.errorData)))
                 }
@@ -1613,7 +1883,7 @@ final class LDClientSpec: QuickSpec {
                         done()
                     }
 
-                    testContext.subject.start(mobileKey: Constants.mockMobileKey, config: testContext.config, user: testContext.user)
+                    testContext.subject.start(config: testContext.config, user: testContext.user)
 
                     testContext.onSyncComplete?(.error(.response(HTTPURLResponse(url: testContext.config.baseUrl,
                                                                                  statusCode: HTTPURLResponse.StatusCodes.unauthorized,
@@ -1637,7 +1907,7 @@ final class LDClientSpec: QuickSpec {
                         done()
                     }
 
-                    testContext.subject.start(mobileKey: Constants.mockMobileKey, config: testContext.config, user: testContext.user)
+                    testContext.subject.start(config: testContext.config, user: testContext.user)
 
                     testContext.onSyncComplete?(.error(.event(DarklyEventSource.LDEvent.stubNonNSErrorEvent())))
                 }
@@ -1742,7 +2012,7 @@ final class LDClientSpec: QuickSpec {
                         context("when offline at foreground notification") {
                             beforeEach {
                                 testContext = TestContext(startOnline: false, runMode: .background, operatingSystem: os)
-                                testContext.subject.start(mobileKey: Constants.mockMobileKey)
+                                testContext.subject.start(config: testContext.config)
 
                                 NotificationCenter.default.post(name: testContext.environmentReporterMock.foregroundNotification!, object: self)
                             }
@@ -1779,7 +2049,7 @@ final class LDClientSpec: QuickSpec {
                             context("streaming mode") {
                                 beforeEach {
                                     testContext = TestContext(startOnline: true, streamingMode: .streaming, enableBackgroundUpdates: true, runMode: .foreground, operatingSystem: .macOS)
-                                    testContext.subject.start(mobileKey: Constants.mockMobileKey)
+                                    testContext.subject.start(config: testContext.config)
 
                                     testContext.subject.setRunMode(.background)
                                 }
@@ -1794,7 +2064,7 @@ final class LDClientSpec: QuickSpec {
                             context("polling mode") {
                                 beforeEach {
                                     testContext = TestContext(startOnline: true, streamingMode: .polling, enableBackgroundUpdates: true, runMode: .foreground, operatingSystem: .macOS)
-                                    testContext.subject.start(mobileKey: Constants.mockMobileKey)
+                                    testContext.subject.start(config: testContext.config)
 
                                     testContext.subject.setRunMode(.background)
                                 }
@@ -1811,7 +2081,7 @@ final class LDClientSpec: QuickSpec {
                         context("with background updates disabled") {
                             beforeEach {
                                 testContext = TestContext(startOnline: true, enableBackgroundUpdates: false, runMode: .foreground, operatingSystem: .macOS)
-                                testContext.subject.start(mobileKey: Constants.mockMobileKey)
+                                testContext.subject.start(config: testContext.config)
 
                                 testContext.subject.setRunMode(.background)
                             }
@@ -1831,7 +2101,7 @@ final class LDClientSpec: QuickSpec {
                         var makeFlagSynchronizerCallCount: Int!
                         beforeEach {
                             testContext = TestContext(startOnline: true, runMode: .foreground, operatingSystem: .macOS)
-                            testContext.subject.start(mobileKey: Constants.mockMobileKey)
+                            testContext.subject.start(config: testContext.config)
                             eventReporterIsOnlineSetCount = testContext.eventReporterMock.isOnlineSetCount
                             flagSynchronizerIsOnlineSetCount = testContext.flagSynchronizerMock.isOnlineSetCount
                             makeFlagSynchronizerCallCount = testContext.serviceFactoryMock.makeFlagSynchronizerCallCount
@@ -1854,7 +2124,7 @@ final class LDClientSpec: QuickSpec {
                         var makeFlagSynchronizerCallCount: Int!
                         beforeEach {
                             testContext = TestContext(startOnline: true, enableBackgroundUpdates: true, runMode: .background, operatingSystem: .macOS)
-                            testContext.subject.start(mobileKey: Constants.mockMobileKey)
+                            testContext.subject.start(config: testContext.config)
                             NotificationCenter.default.post(name: testContext.environmentReporterMock.backgroundNotification!, object: self)
                             eventReporterIsOnlineSetCount = testContext.eventReporterMock.isOnlineSetCount
                             flagSynchronizerIsOnlineSetCount = testContext.flagSynchronizerMock.isOnlineSetCount
@@ -1874,7 +2144,7 @@ final class LDClientSpec: QuickSpec {
                         context("streaming mode") {
                             beforeEach {
                                 testContext = TestContext(startOnline: true, streamingMode: .streaming, runMode: .background, operatingSystem: .macOS)
-                                testContext.subject.start(mobileKey: Constants.mockMobileKey)
+                                testContext.subject.start(config: testContext.config)
 
                                 testContext.subject.setRunMode(.foreground)
                             }
@@ -1889,7 +2159,7 @@ final class LDClientSpec: QuickSpec {
                         context("polling mode") {
                             beforeEach {
                                 testContext = TestContext(startOnline: true, streamingMode: .polling, runMode: .background, operatingSystem: .macOS)
-                                testContext.subject.start(mobileKey: Constants.mockMobileKey)
+                                testContext.subject.start(config: testContext.config)
 
                                 testContext.subject.setRunMode(.foreground)
                             }
@@ -1911,7 +2181,7 @@ final class LDClientSpec: QuickSpec {
                         context("with background updates enabled") {
                             beforeEach {
                                 testContext = TestContext(startOnline: false, enableBackgroundUpdates: true, runMode: .foreground, operatingSystem: .macOS)
-                                testContext.subject.start(mobileKey: Constants.mockMobileKey)
+                                testContext.subject.start(config: testContext.config)
 
                                 testContext.subject.setRunMode(.background)
                             }
@@ -1926,7 +2196,7 @@ final class LDClientSpec: QuickSpec {
                         context("with background updates disabled") {
                             beforeEach {
                                 testContext = TestContext(startOnline: false, enableBackgroundUpdates: false, runMode: .foreground, operatingSystem: .macOS)
-                                testContext.subject.start(mobileKey: Constants.mockMobileKey)
+                                testContext.subject.start(config: testContext.config)
 
                                 testContext.subject.setRunMode(.background)
                             }
@@ -1946,7 +2216,7 @@ final class LDClientSpec: QuickSpec {
                         var makeFlagSynchronizerCallCount: Int!
                         beforeEach {
                             testContext = TestContext(startOnline: false, runMode: .foreground, operatingSystem: .macOS)
-                            testContext.subject.start(mobileKey: Constants.mockMobileKey)
+                            testContext.subject.start(config: testContext.config)
                             eventReporterIsOnlineSetCount = testContext.eventReporterMock.isOnlineSetCount
                             flagSynchronizerIsOnlineSetCount = testContext.flagSynchronizerMock.isOnlineSetCount
                             makeFlagSynchronizerCallCount = testContext.serviceFactoryMock.makeFlagSynchronizerCallCount
@@ -1969,7 +2239,7 @@ final class LDClientSpec: QuickSpec {
                         var makeFlagSynchronizerCallCount: Int!
                         beforeEach {
                             testContext = TestContext(startOnline: false, runMode: .background, operatingSystem: .macOS)
-                            testContext.subject.start(mobileKey: Constants.mockMobileKey)
+                            testContext.subject.start(config: testContext.config)
                             eventReporterIsOnlineSetCount = testContext.eventReporterMock.isOnlineSetCount
                             flagSynchronizerIsOnlineSetCount = testContext.flagSynchronizerMock.isOnlineSetCount
                             makeFlagSynchronizerCallCount = testContext.serviceFactoryMock.makeFlagSynchronizerCallCount
@@ -1988,7 +2258,7 @@ final class LDClientSpec: QuickSpec {
                         context("streaming mode") {
                             beforeEach {
                                 testContext = TestContext(startOnline: false, streamingMode: .streaming, runMode: .background, operatingSystem: .macOS)
-                                testContext.subject.start(mobileKey: Constants.mockMobileKey)
+                                testContext.subject.start(config: testContext.config)
 
                                 testContext.subject.setRunMode(.foreground)
                             }
@@ -2003,7 +2273,7 @@ final class LDClientSpec: QuickSpec {
                         context("polling mode") {
                             beforeEach {
                                 testContext = TestContext(startOnline: false, streamingMode: .polling, runMode: .background, operatingSystem: .macOS)
-                                testContext.subject.start(mobileKey: Constants.mockMobileKey)
+                                testContext.subject.start(config: testContext.config)
 
                                 testContext.subject.setRunMode(.foreground)
                             }
@@ -2062,7 +2332,7 @@ final class LDClientSpec: QuickSpec {
                 var featureFlags: [LDFlagKey: FeatureFlag]!
                 beforeEach {
                     testContext = TestContext()
-                    testContext.subject.start(mobileKey: Constants.mockMobileKey)
+                    testContext.subject.start(config: testContext.config)
                     featureFlags = testContext.subject.user.flagStore.featureFlags
 
                     featureFlagValues = testContext.subject.allFlagValues

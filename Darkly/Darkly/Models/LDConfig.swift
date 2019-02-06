@@ -23,10 +23,6 @@ public enum LDStreamingMode {
  */
 public struct LDConfig {
 
-    fileprivate struct Constants {
-        static let millisPerSecond: Double = 1000
-    }
-
     /// The default values set when a LDConfig is initialized
     struct Defaults {
         /// The default url for making feature flag requests
@@ -39,14 +35,14 @@ public struct LDConfig {
         /// The default maximum number of events the LDClient can store
         static let eventCapacity = 100
 
-        /// The default timeout interval in milliseconds for flag requests and event reports. (10 seconds)
-        static let connectionTimeoutMillis = 10_000
-        /// The default interval between event reports in milliseconds (30 seconds)
-        static let eventFlushIntervalMillis = 30_000
-        /// The default interval between feature flag requests in milliseconds. Used only for polling mode. (5 minutes)
-        static let pollIntervalMillis = 300_000
-        /// The default interval between feature flag requests while running in the background, in milliseconds. Used only for polling mode. (60 minutes)
-        static let backgroundPollIntervalMillis = 3_600_000
+        /// The default timeout interval for flag requests and event reports. (10 seconds)
+        static let connectionTimeout: TimeInterval = 10.0
+        /// The default time interval between event reports. (30 seconds)
+        static let eventFlushInterval: TimeInterval = 30.0
+        /// The default time interval between feature flag requests. Used only for polling mode. (5 minutes)
+        static let flagPollingInterval: TimeInterval =  300.0
+        /// The default interval between feature flag requests while running in the background. Used only for polling mode. (60 minutes)
+        static let backgroundFlagPollingInterval: TimeInterval = 3600.0
 
         /// The default streaming mode (.streaming)
         static let streamingMode = LDStreamingMode.streaming
@@ -75,26 +71,29 @@ public struct LDConfig {
 
         //swiftlint:disable:next nesting
         struct Production {
-            static let pollingIntervalMillis = 300_000
-            static let backgroundPollIntervalMillis = 900_000
+            static let flagPollingInterval: TimeInterval = 300.0
+            static let backgroundFlagPollingInterval: TimeInterval = 900.0
         }
 
         //swiftlint:disable:next nesting
         struct Debug {
-            static let pollingIntervalMillis = 30_000
-            static let backgroundPollIntervalMillis = 60_000
+            static let flagPollingInterval: TimeInterval = 30.0
+            static let backgroundFlagPollingInterval: TimeInterval = 60.0
         }
 
-        /// The minimum interval between feature flag requests in milliseconds. Used only for polling mode. (5 minutes)
-        public let pollingIntervalMillis: Int
-        /// The minimum interval between feature flag requests while running in the background, in milliseconds. Used only for polling mode. (15 minutes)
-        public let backgroundPollIntervalMillis: Int
+        /// The minimum time interval between feature flag requests. Used only for polling mode. (5 minutes)
+        public let flagPollingInterval: TimeInterval
+        /// The minimum time interval between feature flag requests while running in the background. Used only for polling mode. (15 minutes)
+        public let backgroundFlagPollingInterval: TimeInterval
 
         init(environmentReporter: EnvironmentReporting = EnvironmentReporter()) {
-            self.pollingIntervalMillis = environmentReporter.isDebugBuild ? Debug.pollingIntervalMillis : Production.pollingIntervalMillis
-            self.backgroundPollIntervalMillis = environmentReporter.isDebugBuild ? Debug.backgroundPollIntervalMillis : Production.backgroundPollIntervalMillis
+            self.flagPollingInterval = environmentReporter.isDebugBuild ? Debug.flagPollingInterval : Production.flagPollingInterval
+            self.backgroundFlagPollingInterval = environmentReporter.isDebugBuild ? Debug.backgroundFlagPollingInterval : Production.backgroundFlagPollingInterval
         }
     }
+
+    /// The Mobile key from your [LaunchDarkly Account](app.launchdarkly.com) settings (on the left at the bottom). If you have multiple projects be sure to choose the correct Mobile key.
+    public var mobileKey: String
 
     /// The url for making feature flag requests. Do not change unless instructed by LaunchDarkly.
     public var baseUrl: URL = Defaults.baseUrl
@@ -108,22 +107,14 @@ public struct LDConfig {
 
     // MARK: Time configuration
 
-    /// The timeout interval in milliseconds for flag requests and event reports. (Default: 10 seconds)
-    public var connectionTimeoutMillis: Int = Defaults.connectionTimeoutMillis
-    /// The connection timeout interval in seconds for flag requests and event reports. Set via `connectionTimeoutMillis`. (Default: 10 seconds)
-    var connectionTimeout: TimeInterval { return connectionTimeoutMillis.timeInterval }
-    /// The interval between event reports in milliseconds (Default: 30 seconds)
-    public var eventFlushIntervalMillis: Int = Defaults.eventFlushIntervalMillis
-    /// The interval in seconds between event reports. Set via `eventFlushIntervalMillis`(Default: 30 seconds)
-    var eventFlushInterval: TimeInterval { return eventFlushIntervalMillis.timeInterval }
-    /// The interval between feature flag requests in milliseconds. Used only for polling mode. (Default: 5 minutes)
-    public var pollIntervalMillis: Int = Defaults.pollIntervalMillis
-    /// The interval in seconds between feature flag requests. Used only for polling mode. Set via `pollIntervalMillis` (Default: 5 minutes)
-    var flagPollInterval: TimeInterval { return pollIntervalMillis.timeInterval }
-    /// The interval between feature flag requests while running in the background, in milliseconds. Used only for polling mode. (Default: 60 minutes)
-    public var backgroundPollIntervalMillis: Int = Defaults.backgroundPollIntervalMillis
-    /// The interval in seconds between feature flag requests while running in the background. Used only for polling mode. Set via `backgroundPollIntervalMillis` (Default: 60 minutes)
-    var backgroundFlagPollInterval: TimeInterval { return backgroundPollIntervalMillis.timeInterval }
+    /// The timeout interval for flag requests and event reports. (Default: 10 seconds)
+    public var connectionTimeout: TimeInterval = Defaults.connectionTimeout
+    /// The time interval between event reports (Default: 30 seconds)
+    public var eventFlushInterval: TimeInterval = Defaults.eventFlushInterval
+    /// The time interval between feature flag requests. Used only for polling mode. (Default: 5 minutes)
+    public var flagPollingInterval: TimeInterval = Defaults.flagPollingInterval
+    /// The time interval between feature flag requests while running in the background. Used only for polling mode. (Default: 60 minutes)
+    public var backgroundFlagPollingInterval: TimeInterval = Defaults.backgroundFlagPollingInterval
 
     /// Controls the method the SDK uses to keep feature flags updated. When set to .streaming, connects to `clientstream` which notifies the SDK of feature flag changes. When set to .polling, an efficient polling mechanism is used to periodically request feature flag values. Ignored for watchOS, which always uses .polling. See `LDStreamingMode` for more details. (Default: .streaming)
     public var streamingMode: LDStreamingMode = Defaults.streamingMode
@@ -186,22 +177,26 @@ public struct LDConfig {
     }
 
     //Internal constructor to enable automated testing
-    init(environmentReporter: EnvironmentReporting) {
+    init(mobileKey: String, environmentReporter: EnvironmentReporting) {
+        self.mobileKey = mobileKey
         minima = Minima(environmentReporter: environmentReporter)
         allowStreamingMode = environmentReporter.operatingSystem.isStreamingEnabled
         allowBackgroundUpdates = environmentReporter.operatingSystem.isBackgroundEnabled
+        if mobileKey.isEmpty {
+            Log.debug(typeName(and: #function, appending: ": ") + "mobileKey is empty. The SDK will not operate correctly without a valid mobile key.")
+        }
     }
 
     ///LDConfig constructor. Configurable values are all set to their default values. The client app can modify these values as desired. Note that client app developers may prefer to get the LDConfig from `LDClient.config` in order to retain previously set values.
-    public init() {
-        self.init(environmentReporter: EnvironmentReporter())
+    public init(mobileKey: String) {
+        self.init(mobileKey: mobileKey, environmentReporter: EnvironmentReporter())
     }
 
     //Determine the effective flag polling interval based on runMode, configured foreground & background polling interval, and minimum foreground & background polling interval.
     func flagPollingInterval(runMode: LDClientRunMode) -> TimeInterval {
-        let pollingIntervalMillis = runMode == .foreground ? max(pollIntervalMillis, minima.pollingIntervalMillis) : max(backgroundPollIntervalMillis, minima.backgroundPollIntervalMillis)
-        Log.debug(typeName(and: #function, appending: ": ") + "\(pollingIntervalMillis.timeInterval)")
-        return pollingIntervalMillis.timeInterval
+        let pollingInterval = runMode == .foreground ? max(flagPollingInterval, minima.flagPollingInterval) : max(backgroundFlagPollingInterval, minima.backgroundFlagPollingInterval)
+        Log.debug(typeName(and: #function, appending: ": ") + "\(pollingInterval)")
+        return pollingInterval
     }
 
     //Determines if the status code is a code that should cause the SDK to retry a failed HTTP Request that used the REPORT method. Retried requests will use the GET method.
@@ -212,11 +207,6 @@ public struct LDConfig {
     }
 }
 
-extension Int {
-    //Converts the Int milliseconds into a TimeInterval
-    var timeInterval: TimeInterval { return TimeInterval(self) / LDConfig.Constants.millisPerSecond }
-}
-
 extension LDConfig: Equatable {
     ///Compares the settable properties in 2 LDConfig structs
     public static func == (lhs: LDConfig, rhs: LDConfig) -> Bool {
@@ -224,10 +214,10 @@ extension LDConfig: Equatable {
             && lhs.eventsUrl == rhs.eventsUrl
             && lhs.streamUrl == rhs.streamUrl
             && lhs.eventCapacity == rhs.eventCapacity   //added
-            && lhs.connectionTimeoutMillis == rhs.connectionTimeoutMillis
-            && lhs.eventFlushIntervalMillis == rhs.eventFlushIntervalMillis
-            && lhs.pollIntervalMillis == rhs.pollIntervalMillis
-            && lhs.backgroundPollIntervalMillis == rhs.backgroundPollIntervalMillis
+            && lhs.connectionTimeout == rhs.connectionTimeout
+            && lhs.eventFlushInterval == rhs.eventFlushInterval
+            && lhs.flagPollingInterval == rhs.flagPollingInterval
+            && lhs.backgroundFlagPollingInterval == rhs.backgroundFlagPollingInterval
             && lhs.streamingMode == rhs.streamingMode
             && lhs.enableBackgroundUpdates == rhs.enableBackgroundUpdates
             && lhs.startOnline == rhs.startOnline

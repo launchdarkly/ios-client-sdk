@@ -52,6 +52,11 @@
                BlueprintName = "DarklyTests"
                ReferencedContainer = "container:Darkly.xcodeproj">
             </BuildableReference>
+            <SkippedTests>
+               <Test
+                  Identifier = "EnvironmentReporterSpec/shouldRunThrottled__Debug_Build__for_the_integration_harness__should_not_throttle_online_calls()">
+               </Test>
+            </SkippedTests>
             <LocationScenarioReference
                identifier = "com.apple.dt.IDEFoundation.CurrentLocationScenarioIdentifier"
                referenceType = "1">

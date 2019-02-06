@@ -24,6 +24,7 @@ protocol DarklyServiceProvider: class {
 protocol DarklyStreamingProvider: class {
     func onMessageEvent(_ handler: LDEventSourceEventHandler?)
     func onErrorEvent(_ handler: LDEventSourceEventHandler?)
+    func open()
     func close()
 }
 
@@ -59,19 +60,17 @@ final class DarklyService: DarklyServiceProvider {
         static let report = "REPORT"
     }
     
-    private let mobileKey: String
     let config: LDConfig
     let user: LDUser
     let httpHeaders: HTTPHeaders
     private (set) var serviceFactory: ClientServiceCreating
     private var session: URLSession
 
-    init(mobileKey: String, config: LDConfig, user: LDUser, serviceFactory: ClientServiceCreating) {
-        self.mobileKey = mobileKey
+    init(config: LDConfig, user: LDUser, serviceFactory: ClientServiceCreating) {
         self.config = config
         self.user = user
         self.serviceFactory = serviceFactory
-        self.httpHeaders = HTTPHeaders(mobileKey: mobileKey, environmentReporter: serviceFactory.makeEnvironmentReporter())
+        self.httpHeaders = HTTPHeaders(config: config, environmentReporter: serviceFactory.makeEnvironmentReporter())
 
         self.session = URLSession(configuration: URLSessionConfiguration.default)
     }
@@ -79,9 +78,16 @@ final class DarklyService: DarklyServiceProvider {
     // MARK: Feature Flags
     
     func getFeatureFlags(useReport: Bool, completion: ServiceCompletionHandler?) {
-        guard !mobileKey.isEmpty,
+        guard !config.mobileKey.isEmpty,
             let flagRequest = flagRequest(useReport: useReport)
-        else { return }
+        else {
+            if config.mobileKey.isEmpty {
+                Log.debug(typeName(and: #function, appending: ": ") + "Aborting. No mobileKey.")
+            } else {
+                Log.debug(typeName(and: #function, appending: ": ") + "Aborting. Unable to create flagRequest.")
+            }
+            return
+        }
         let dataTask = self.session.dataTask(with: flagRequest) { (data, response, error) in
             DispatchQueue.main.async {
                 completion?((data, response, error))
@@ -141,9 +147,16 @@ final class DarklyService: DarklyServiceProvider {
     // MARK: Publish Events
     
     func publishEventDictionaries(_ eventDictionaries: [[String: Any]], completion: ServiceCompletionHandler?) {
-        guard !mobileKey.isEmpty,
+        guard !config.mobileKey.isEmpty,
             !eventDictionaries.isEmpty
-        else { return }
+        else {
+            if config.mobileKey.isEmpty {
+                Log.debug(typeName(and: #function, appending: ": ") + "Aborting. No mobileKey.")
+            } else {
+                Log.debug(typeName(and: #function, appending: ": ") + "Aborting. No event dictionary.")
+            }
+            return
+        }
         let dataTask = self.session.dataTask(with: eventRequest(eventDictionaries: eventDictionaries)) { (data, response, error) in
             completion?((data, response, error))
         }
@@ -161,6 +174,8 @@ final class DarklyService: DarklyServiceProvider {
     
     private var eventUrl: URL { return config.eventsUrl.appendingPathComponent(EventRequestPath.bulk) }
 }
+
+extension DarklyService: TypeIdentifying { }
 
 extension URLRequest {
     mutating func appendHeaders(_ newHeaders: [String: String]) {

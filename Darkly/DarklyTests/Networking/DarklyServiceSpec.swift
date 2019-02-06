@@ -20,7 +20,6 @@ final class DarklyServiceSpec: QuickSpec {
         static let eventCount = 3
 
         static let emptyMobileKey = ""
-        static let mockMobileKey = "mockMobileKey"
     }
 
     struct TestContext {
@@ -39,11 +38,11 @@ final class DarklyServiceSpec: QuickSpec {
             if let operatingSystemName = operatingSystemName {
                 serviceFactoryMock.makeEnvironmentReporterReturnValue.systemName = operatingSystemName
             }
-            config = LDConfig.stub
+            config = LDConfig.stub(mobileKey: mobileKey, environmentReporter: EnvironmentReportingMock())
             config.useReport = useReport
             mockEventDictionaries = includeMockEventDictionaries ? Event.stubEventDictionaries(Constants.eventCount, user: user, config: config) : nil
             serviceMock = DarklyServiceMock(config: config)
-            service = DarklyService(mobileKey: mobileKey, config: config, user: user, serviceFactory: serviceFactoryMock)
+            service = DarklyService(config: config, user: user, serviceFactory: serviceFactoryMock)
         }
     }
     
@@ -63,7 +62,7 @@ final class DarklyServiceSpec: QuickSpec {
 
         describe("init httpHeader") {
             beforeEach {
-                testContext = TestContext(mobileKey: Constants.mockMobileKey, useReport: false, operatingSystemName: EnvironmentReportingMock.Constants.systemName)
+                testContext = TestContext(mobileKey: LDConfig.Constants.mockMobileKey, useReport: false, operatingSystemName: EnvironmentReportingMock.Constants.systemName)
             }
             it("creates a header with the specified user agent") {
                 expect(testContext.service.httpHeaders.userAgent.hasPrefix(EnvironmentReportingMock.Constants.systemName)).to(beTrue())
@@ -86,7 +85,7 @@ final class DarklyServiceSpec: QuickSpec {
 
             context("using GET method") {
                 beforeEach {
-                    testContext = TestContext(mobileKey: Constants.mockMobileKey, useReport: false)
+                    testContext = TestContext(mobileKey: LDConfig.Constants.mockMobileKey, useReport: false)
                 }
                 context("success") {
                     beforeEach {
@@ -164,7 +163,7 @@ final class DarklyServiceSpec: QuickSpec {
             }
             context("using REPORT method") {
                 beforeEach {
-                    testContext = TestContext(mobileKey: Constants.mockMobileKey, useReport: true)
+                    testContext = TestContext(mobileKey: LDConfig.Constants.mockMobileKey, useReport: true)
                 }
                 context("success") {
                     beforeEach {
@@ -250,7 +249,7 @@ final class DarklyServiceSpec: QuickSpec {
             var eventSource: DarklyStreamingProviderMock?
             context("when using GET method to connect") {
                 beforeEach {
-                    testContext = TestContext(mobileKey: Constants.mockMobileKey, useReport: false)
+                    testContext = TestContext(mobileKey: LDConfig.Constants.mockMobileKey, useReport: false)
                     eventSource = testContext.service.createEventSource(useReport: false) as? DarklyStreamingProviderMock
                 }
                 it("creates an event source that makes valid GET request") {
@@ -269,7 +268,7 @@ final class DarklyServiceSpec: QuickSpec {
             }
             context("when using REPORT method to connect") {
                 beforeEach {
-                    testContext = TestContext(mobileKey: Constants.mockMobileKey, useReport: true)
+                    testContext = TestContext(mobileKey: LDConfig.Constants.mockMobileKey, useReport: true)
                     eventSource = testContext.service.createEventSource(useReport: true) as? DarklyStreamingProviderMock
                 }
                 it("creates an event source that makes valid REPORT request") {
@@ -296,7 +295,7 @@ final class DarklyServiceSpec: QuickSpec {
 
             beforeEach {
                 eventRequest = nil
-                testContext = TestContext(mobileKey: Constants.mockMobileKey, useReport: false, includeMockEventDictionaries: true)
+                testContext = TestContext(mobileKey: LDConfig.Constants.mockMobileKey, useReport: false, includeMockEventDictionaries: true)
             }
             context("success") {
                 var responses: ServiceResponses!
@@ -368,7 +367,7 @@ final class DarklyServiceSpec: QuickSpec {
                 var eventsPublished = false
                 let emptyEventDictionaryList: [[String: Any]] = []
                 beforeEach {
-                    testContext = TestContext(mobileKey: Constants.emptyMobileKey, useReport: false, includeMockEventDictionaries: true)
+                    testContext = TestContext(mobileKey: LDConfig.Constants.mockMobileKey, useReport: false, includeMockEventDictionaries: true)
                     testContext.serviceMock.stubEventRequest(success: true) { (request, _, _) in
                         eventRequest = request
                     }
