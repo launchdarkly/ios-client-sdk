@@ -5,9 +5,6 @@ BCSymbolMap Version: 2.0
 -[LDEventSource initWithURL:httpHeaders:]
 -[LDEventSource initWithURL:httpHeaders:connectMethod:connectBody:]
 -[LDEventSource initWithURL:httpHeaders:timeoutInterval:connectMethod:connectBody:]
-___83-[LDEventSource initWithURL:httpHeaders:timeoutInterval:connectMethod:connectBody:]_block_invoke
-___copy_helper_block_
-___destroy_helper_block_
 -[LDEventSource addEventListener:handler:]
 -[LDEventSource onMessage:]
 -[LDEventSource onError:]
@@ -18,19 +15,19 @@ ___destroy_helper_block_
 -[LDEventSource URLSession:dataTask:didReceiveData:]
 -[LDEventSource parseEventString:]
 ___34-[LDEventSource parseEventString:]_block_invoke
-___copy_helper_block_.93
-___destroy_helper_block_.94
+___copy_helper_block_
+___destroy_helper_block_
 -[LDEventSource URLSession:task:didCompleteWithError:]
 ___54-[LDEventSource URLSession:task:didCompleteWithError:]_block_invoke
-___copy_helper_block_.120
-___destroy_helper_block_.121
+___copy_helper_block_.117
+___destroy_helper_block_.118
 -[LDEventSource eventErrorForTask:errorCode:underlyingError:]
 -[LDEventSource responseIsUnauthorizedForTask:]
--[LDEventSource _open]
+-[LDEventSource open]
 -[LDEventSource _dispatchEvent:type:]
 ___37-[LDEventSource _dispatchEvent:type:]_block_invoke
-___copy_helper_block_.193
-___destroy_helper_block_.194
+___copy_helper_block_.190
+___destroy_helper_block_.191
 -[LDEventSource _dispatchEvent:]
 -[LDEventSource increaseIntervalWithBackoff]
 -[LDEventSource eventURL]
@@ -73,13 +70,12 @@ ___destroy_helper_block_.194
 -[LDEvent .cxx_destruct]
 _OBJC_IVAR_$_LDEventSource.messageQueue
 _OBJC_IVAR_$_LDEventSource.connectionQueue
-_OBJC_IVAR_$_LDEventSource._retryInterval
-___block_descriptor_tmp
 _OBJC_IVAR_$_LDEventSource.wasClosed
 _OBJC_IVAR_$_LDEventSource._retryAttempt
-___block_descriptor_tmp.95
-___block_descriptor_tmp.122
-___block_descriptor_tmp.195
+___block_descriptor_tmp
+___block_descriptor_tmp.119
+___block_descriptor_tmp.192
+_OBJC_IVAR_$_LDEventSource._retryInterval
 _OBJC_IVAR_$_LDEventSource._eventURL
 _OBJC_IVAR_$_LDEventSource._eventSourceTask
 _OBJC_IVAR_$_LDEventSource._session
@@ -114,7 +110,6 @@ __copy_helper_block_
 __37-[LDEventSource _dispatchEvent:type:]_block_invoke
 __54-[LDEventSource URLSession:task:didCompleteWithError:]_block_invoke
 __34-[LDEventSource parseEventString:]_block_invoke
-__83-[LDEventSource initWithURL:httpHeaders:timeoutInterval:connectMethod:connectBody:]_block_invoke
 -[NSString(LDEventSource) lines]
 -[NSString(LDEventSource) hasEventPrefix]
 -[NSString(LDEventSource) hasEventTerminator]
@@ -153,4 +148,4 @@ _OBJC_IVAR_$_LDEventStringAccumulator._eventString
 /Users/markpokorny/Documents/Development/launchDarkly/ios-client-swift-private/Carthage/Checkouts/ios-eventsource/LDEventSource/NSArray+LDEventSource.m
 NSMakeRange
 /Applications/Xcode.app/Contents/Developer/Platforms/WatchOS.platform/Developer/SDKs/WatchOS5.1.sdk/System/Library/Frameworks/Foundation.framework/Headers/NSRange.h
-/Users/markpokorny/Library/Caches/org.carthage.CarthageKit/DerivedData/10.1_10B61/ios-eventsource/3.2.7/Build/Intermediates.noindex/ArchiveIntermediates/DarklyEventSource/IntermediateBuildFilesPath/LDEventSource.build/Release-watchos/DarklyEventSource.build/DerivedSources/DarklyEventSource_vers.c
+/Users/markpokorny/Library/Caches/org.carthage.CarthageKit/DerivedData/10.1_10B61/ios-eventsource/4.0.0/Build/Intermediates.noindex/ArchiveIntermediates/DarklyEventSource/IntermediateBuildFilesPath/LDEventSource.build/Release-watchos/DarklyEventSource.build/DerivedSources/DarklyEventSource_vers.c
