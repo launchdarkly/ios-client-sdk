@@ -106,7 +106,7 @@ source 'https://github.com/CocoaPods/Specs.git'
 platform :ios, '8.0'
 
 target 'TargetName' do
-pod 'DarklyEventSource', '~> 4.0.0'
+pod 'DarklyEventSource', '~> 4.0.1'
 end
 ```
 
@@ -130,7 +130,7 @@ $ brew install carthage
 To integrate EventSource into your Xcode project using Carthage, specify it in your `Cartfile`:
 
 ```ogdl
-github "launchdarkly/ios-eventsource" >= 4.0.0
+github "launchdarkly/ios-eventsource" >= 4.0.1
 ```
 
 Run `carthage` to build the framework and drag the built `EventSource.framework` into your Xcode project.

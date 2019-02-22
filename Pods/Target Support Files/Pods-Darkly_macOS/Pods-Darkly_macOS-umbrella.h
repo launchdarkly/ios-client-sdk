@@ -11,6 +11,6 @@
 #endif
 
 
-FOUNDATION_EXPORT double Pods_Darkly_osxVersionNumber;
-FOUNDATION_EXPORT const unsigned char Pods_Darkly_osxVersionString[];
+FOUNDATION_EXPORT double Pods_Darkly_macOSVersionNumber;
+FOUNDATION_EXPORT const unsigned char Pods_Darkly_macOSVersionString[];
 

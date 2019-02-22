@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Scheme
-   LastUpgradeVersion = "1000"
+   LastUpgradeVersion = "1010"
    version = "1.3">
    <BuildAction
       parallelizeBuildables = "YES"
@@ -16,7 +16,7 @@
                BuildableIdentifier = "primary"
                BlueprintIdentifier = "69A87E8E1E74458900B88B23"
                BuildableName = "Darkly.framework"
-               BlueprintName = "Darkly_osx"
+               BlueprintName = "Darkly_macOS"
                ReferencedContainer = "container:Darkly.xcodeproj">
             </BuildableReference>
          </BuildActionEntry>
@@ -47,7 +47,7 @@
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "69A87E8E1E74458900B88B23"
             BuildableName = "Darkly.framework"
-            BlueprintName = "Darkly_osx"
+            BlueprintName = "Darkly_macOS"
             ReferencedContainer = "container:Darkly.xcodeproj">
          </BuildableReference>
       </MacroExpansion>
@@ -65,7 +65,7 @@
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "69A87E8E1E74458900B88B23"
             BuildableName = "Darkly.framework"
-            BlueprintName = "Darkly_osx"
+            BlueprintName = "Darkly_macOS"
             ReferencedContainer = "container:Darkly.xcodeproj">
          </BuildableReference>
       </MacroExpansion>
