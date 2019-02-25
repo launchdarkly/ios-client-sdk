@@ -2,7 +2,7 @@
 
 All notable changes to the LaunchDarkly iOS SDK will be documented in this file. This project adheres to [Semantic Versioning](http://semver.org).
 
-## [2.14.3] - 2019-02-14
+## [2.14.3] - 2019-02-25
 ### Changed
 - Added support for integrating without a package manager
 - Updated to `DarklyEventSource` version `4.0.1`, which adds platform specific targets to support integration without a package manager.
