@@ -4,7 +4,7 @@
 
 #import "DarklyConstants.h"
 
-NSString * const kClientVersion = @"2.14.3";
+NSString * const kClientVersion = @"2.14.4";
 NSString * const kLDPrimaryEnvironmentName = @"LaunchDarkly.EnvironmentName.Primary";
 NSString * const kBaseUrl = @"https://app.launchdarkly.com";
 NSString * const kEventsUrl = @"https://mobile.launchdarkly.com";
