@@ -392,7 +392,6 @@
 		83F5B47D1F95096A00174DF7 /* NSHTTPURLResponse+LaunchDarkly.m in Sources */ = {isa = PBXBuildFile; fileRef = 83F5B4771F95096A00174DF7 /* NSHTTPURLResponse+LaunchDarkly.m */; };
 		83F5B47E1F95096A00174DF7 /* NSHTTPURLResponse+LaunchDarkly.m in Sources */ = {isa = PBXBuildFile; fileRef = 83F5B4771F95096A00174DF7 /* NSHTTPURLResponse+LaunchDarkly.m */; };
 		83F5B47F1F95096A00174DF7 /* NSHTTPURLResponse+LaunchDarkly.m in Sources */ = {isa = PBXBuildFile; fileRef = 83F5B4771F95096A00174DF7 /* NSHTTPURLResponse+LaunchDarkly.m */; };
-		8DE0698D3B7DEA19384C3A9F /* Pods_Darkly_osx.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 341AAE85536E2475F72AE06E /* Pods_Darkly_osx.framework */; };
 		DE785F81273AE3E88DB375AF /* Pods_DarklyTests.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = EFBD030F4970228B05E70E20 /* Pods_DarklyTests.framework */; };
 		ECA1CC85235BCF3622CBF81A /* Pods_Darkly_iOS.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 7E899F5F16EA49C1554A53E3 /* Pods_Darkly_iOS.framework */; };
 		F2A2FB2DE45DE3788D322D2C /* Pods_Darkly_macOS.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 016D29F6ACAADE0EB7D88703 /* Pods_Darkly_macOS.framework */; };
@@ -654,7 +653,6 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				8DE0698D3B7DEA19384C3A9F /* Pods_Darkly_osx.framework in Frameworks */,
 				F2A2FB2DE45DE3788D322D2C /* Pods_Darkly_macOS.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

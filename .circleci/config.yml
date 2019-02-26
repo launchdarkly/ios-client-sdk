@@ -1,4 +1,4 @@
-# config file version: 1.0.3
+# config file version: 1.1.0
 version: 2
 jobs:
   build:
@@ -46,8 +46,20 @@ jobs:
        command: instruments -s devices
 
     - run:
-        name: Clean, Build, & Test
-        command: set -o pipefail && xcodebuild clean build test -workspace 'Darkly.xcworkspace' -scheme 'Darkly_iOS' -sdk iphonesimulator -destination 'platform=iOS Simulator,name=iPhone 6,OS=latest' CODE_SIGNING_REQUIRED=NO CODE_SIGN_IDENTITY= PROVISIONING_PROFILE= | tee 'xcode_raw.log' | xcpretty --color --report html --output '/Users/distiller/launchdarkly/ios-client/tmp/output/report.html' --report junit --output '/Users/distiller/launchdarkly/ios-client/tmp/output/xcode/report.junit'
+        name: Clean, Build, & Test Darkly_iOS
+        command: set -o pipefail && xcodebuild clean build test -workspace 'Darkly.xcworkspace' -scheme 'Darkly_iOS' -sdk iphonesimulator -destination 'platform=iOS Simulator,name=iPhone XS,OS=latest' CODE_SIGNING_REQUIRED=NO CODE_SIGN_IDENTITY= PROVISIONING_PROFILE= | tee 'Darkly_iOS_xcode_raw.log' | xcpretty --color --report html --output '/Users/distiller/launchdarkly/ios-client/tmp/output/report.html' --report junit --output '/Users/distiller/launchdarkly/ios-client/tmp/output/xcode/report.junit'
+
+    - run:
+        name: Clean & Build Darkly_watchOS
+        command: set -o pipefail && xcodebuild clean build -workspace 'Darkly.xcworkspace' -scheme 'Darkly_watchOS' -sdk watchsimulator -destination 'platform=watchOS Simulator,name=Apple Watch Series 4 - 44mm,OS=latest' CODE_SIGNING_REQUIRED=NO CODE_SIGN_IDENTITY= PROVISIONING_PROFILE= | tee 'Darkly_watchOS_xcode_raw.log' | xcpretty --color
+
+    - run:
+        name: Clean & Build Darkly_macOS
+        command: set -o pipefail && xcodebuild clean build -workspace 'Darkly.xcworkspace' -scheme 'Darkly_macOS' -sdk macosx10.14 -destination 'platform=macOS' CODE_SIGNING_REQUIRED=NO CODE_SIGN_IDENTITY= PROVISIONING_PROFILE= | tee 'Darkly_macOS_xcode_raw.log' | xcpretty --color
+
+    - run:
+        name: Clean & Build Darkly_tvOS
+        command: set -o pipefail && xcodebuild clean build -workspace 'Darkly.xcworkspace' -scheme 'Darkly_tvOS' -sdk appletvsimulator -destination 'platform=tvOS Simulator,name=Apple TV,OS=latest' CODE_SIGNING_REQUIRED=NO CODE_SIGN_IDENTITY= PROVISIONING_PROFILE= | tee 'Darkly_tvOS_xcode_raw.log' | xcpretty --color
 
     - run:
         name: CocoaPods lib lint

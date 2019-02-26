@@ -2,6 +2,12 @@
 
 All notable changes to the LaunchDarkly iOS SDK will be documented in this file. This project adheres to [Semantic Versioning](http://semver.org).
 
+## [2.14.4] - 2019-02-26
+### Changed
+- Changed the following to repair macOS builds:
+  - Removed extraneous framework reference from Darkly_macOS target
+  - Deselected `Autocreate schemes` in Darkly.xcworkspace
+
 ## [2.14.3] - 2019-02-25
 ### Changed
 - Added support for integrating without a package manager
