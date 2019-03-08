@@ -1,0 +1,59 @@
+disabled_rules: # rule identifiers to exclude from running
+  - type_body_length
+  - function_body_length
+  - cyclomatic_complexity
+  - identifier_name
+  - force_cast
+  - file_length
+
+opt_in_rules: # some rules are only opt-in
+  # Find all the available rules by running:
+  # swiftlint rules
+# included: # paths to include during linting. `--path` is ignored if present.
+# #   - Source
+
+excluded: # paths to ignore during linting. Takes precedence over `included`.
+  - Pods
+
+# configurable rules can be customized from this configuration file
+# binary rules can set their severity level
+
+# force_cast: warning # implicitly
+# force_try:
+#   severity: warning # explicitly
+# # rules that have both warning and error levels, can set just the warning level
+# # implicitly
+# # line_length: 110
+# # they can set both implicitly with an array
+#
+
+# Set doesn't have isEmpty so using count seems to be our ownly option
+empty_count: warning
+
+function_body_length:
+  warning: 50
+  error: 70
+type_body_length:
+  - 300 # warning
+  - 500 # error
+# or they can set both explicitly
+file_length:
+  warning: 1000
+  error: 1500
+identifier_name:
+  min_length: # only min_length
+    error: 4 # only error
+  max_length: # warning and error
+    warning: 50
+    error: 60
+  excluded: # excluded via string array
+    - id
+    - URL
+    - url
+    - obj
+    - key
+    - all
+    - tag
+    - lhs
+    - rhs
+reporter: "xcode" # reporter type (xcode, json, csv, checkstyle)

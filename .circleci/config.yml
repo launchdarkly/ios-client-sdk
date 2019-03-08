@@ -1,8 +1,8 @@
-# config file version: 1.0.2
+# config file version: 1.1.0
 version: 2
 jobs:
   build:
-    working_directory: /Users/distiller/launchdarkly/ios-client-swift-private/tmp
+    working_directory: /Users/distiller/launchdarkly/ios-client/tmp
     parallelism: 1    # controls the # of containers for the job. In theory, adding another container should halve the number of tests run in each container, but instead appears to run all tests in both containers.
     shell: /bin/bash --login
 
@@ -46,8 +46,20 @@ jobs:
        command: instruments -s devices
 
     - run:
-        name: Clean, Build, & Test
-        command: set -o pipefail && xcodebuild clean build test -workspace 'Darkly.xcworkspace' -scheme 'Darkly_iOS' -sdk iphonesimulator -destination 'platform=iOS Simulator,name=iPhone 6,OS=latest' CODE_SIGNING_REQUIRED=NO CODE_SIGN_IDENTITY= PROVISIONING_PROFILE= | tee 'xcode_raw.log' | xcpretty --color --report html --output '/Users/distiller/launchdarkly/ios-client-swift-private/tmp/output/report.html' --report junit --output '/Users/distiller/launchdarkly/ios-client-swift-private/tmp/output/xcode/report.junit'
+        name: Clean, Build, & Test LaunchDarkly_iOS
+        command: set -o pipefail && xcodebuild clean build test -workspace 'LaunchDarkly.xcworkspace' -scheme 'LaunchDarkly_iOS' -sdk iphonesimulator -destination 'platform=iOS Simulator,name=iPhone XS,OS=latest' CODE_SIGNING_REQUIRED=NO CODE_SIGN_IDENTITY= PROVISIONING_PROFILE= | tee 'xcode_raw.log' | xcpretty --color --report html --output '/Users/distiller/launchdarkly/ios-client/tmp/output/report.html' --report junit --output '/Users/distiller/launchdarkly/ios-client/tmp/output/xcode/report.junit'
+
+    - run:
+        name: Clean & Build LaunchDarkly_watchOS
+        command: set -o pipefail && xcodebuild clean build -workspace 'LaunchDarkly.xcworkspace' -scheme 'LaunchDarkly_watchOS' -sdk watchsimulator -destination 'platform=watchOS Simulator,name=Apple Watch Series 4 - 44mm,OS=latest' CODE_SIGNING_REQUIRED=NO CODE_SIGN_IDENTITY= PROVISIONING_PROFILE= | tee 'LaunchDarkly_watchOS_xcode_raw.log' | xcpretty --color
+
+    - run:
+        name: Clean & Build LaunchDarkly_macOS
+        command: set -o pipefail && xcodebuild clean build -workspace 'LaunchDarkly.xcworkspace' -scheme 'LaunchDarkly_macOS' -sdk macosx -destination 'platform=macOS' CODE_SIGNING_REQUIRED=NO CODE_SIGN_IDENTITY= PROVISIONING_PROFILE= | tee 'LaunchDarkly_macOS_xcode_raw.log' | xcpretty --color
+
+    - run:
+        name: Clean & Build LaunchDarkly_tvOS
+        command: set -o pipefail && xcodebuild clean build -workspace 'LaunchDarkly.xcworkspace' -scheme 'LaunchDarkly_tvOS' -sdk appletvsimulator -destination 'platform=tvOS Simulator,name=Apple TV,OS=latest' CODE_SIGNING_REQUIRED=NO CODE_SIGN_IDENTITY= PROVISIONING_PROFILE= | tee 'LaunchDarkly_tvOS_xcode_raw.log' | xcpretty --color
 
     - run: 
         name: Copy XC Activity Log

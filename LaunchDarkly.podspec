@@ -1,7 +1,7 @@
 Pod::Spec.new do |ld|
 
   ld.name         = "LaunchDarkly"
-  ld.version      = "3.0.0-beta.2"
+  ld.version      = "3.0.0-beta.3"
   ld.summary      = "iOS SDK for LaunchDarkly"
 
   ld.description  = <<-DESC
@@ -25,15 +25,15 @@ Pod::Spec.new do |ld|
   ld.tvos.deployment_target    = "9.0"
   ld.osx.deployment_target     = "10.10"
 
-  ld.source       = { :git => "https://github.com/launchdarkly/ios-client-swift-private.git", :tag => '3.0.0-beta.2'}
+  ld.source       = { :git => "https://github.com/launchdarkly/ios-client.git", :tag => '3.0.0-beta.3'}
 
-  ld.source_files = "Darkly/Darkly/**/*.{h,m,swift}"
+  ld.source_files = "LaunchDarkly/LaunchDarkly/**/*.{h,m,swift}"
 
   ld.requires_arc = true
 
   ld.swift_version = '4.2'
 
   ld.subspec 'Core' do |es|
-    es.dependency 'DarklyEventSource', '~> 4.0.0'
+    es.dependency 'DarklyEventSource', '~> 4.0.1'
   end
 end

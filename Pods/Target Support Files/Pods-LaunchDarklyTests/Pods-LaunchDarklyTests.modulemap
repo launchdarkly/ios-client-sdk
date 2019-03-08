@@ -1,0 +1,6 @@
+framework module Pods_LaunchDarklyTests {
+  umbrella header "Pods-LaunchDarklyTests-umbrella.h"
+
+  export *
+  module * { export * }
+}

@@ -20,7 +20,7 @@ opt_in_rules: # some rules are only opt-in
 # #   - Source
 excluded: # paths to ignore during linting. Takes precedence over `included`.
 #   - Carthage
-  - Darkly/GeneratedCode
+  - LaunchDarkly/GeneratedCode
   - Pods
   - _iOS/Pods
 #   - Source/ExcludedFolder
@@ -51,7 +51,7 @@ type_body_length:
 file_length:
   warning: 1000
   error: 1500
-variable_name:
+identifier_name:
   min_length: # only min_length
     error: 3 # only error
   max_length: # warning and error

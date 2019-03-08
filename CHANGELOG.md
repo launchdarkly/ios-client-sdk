@@ -2,6 +2,19 @@
 
 All notable changes to the LaunchDarkly iOS SDK will be documented in this file. This project adheres to [Semantic Versioning](http://semver.org).
 
+## [3.0.0-beta.3] - 2019-03-07
+### Changed
+- Renames SDK frameworks to `LaunchDarkly.framework` for iOS, and `LaunchDarkly_<platform>.framework` for non-iOS platforms.
+- Renames targets to `LaunchDarkly_<platform>`.
+- Renames project and workspace to `LaunchDarkly`
+- Updates `DarklyEventSource` to version `4.0.1`
+- Updates several internal dependencies to their latest versions
+- Replaces `onServerUnavailable` with `observeError` on LDClient
+
+### Added
+- Instructions to integrate without a Package Manager to `README.md`
+- New log entries that tell when the SDK could not find a feature flag, and when the SDK could not convert a feature flag to the requested type
+
 ## [3.0.0-beta.2] - 2019-02-06
 ### Changed
 - `LDFlagValueSource` is a Swift `enum` the SDK uses to communicate the source of a feature flag (`server`, `cache`, `fallback`) to the client app. The Objective-C `enum` was changed to an object to provide Objective-C client apps access to the methods available to the enum.

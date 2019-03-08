@@ -1,0 +1,6 @@
+framework module Pods_LaunchDarkly_watchOS {
+  umbrella header "Pods-LaunchDarkly_watchOS-umbrella.h"
+
+  export *
+  module * { export * }
+}

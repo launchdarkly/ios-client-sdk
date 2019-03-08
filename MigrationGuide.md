@@ -29,12 +29,12 @@ Version 3.0.0 is built on Swift 4.2 using Xcode 10. The SDK will not build using
 #### CocoaPods
 - Add `use_frameworks!` to either the root or to any targets that include `LaunchDarkly`
 #### Carthage
-- Replace the `Darkly.framework` for each target with `LaunchDarkly.framework`. The `DarklyEventSource.framework` should also be present, just as with v2.x.
+- Replace the `Darkly.framework` for each target with `LaunchDarkly.framework`. Non-iOS platform frameworks include the platform in the framework name, e.g. `LaunchDarkly_tvOS.framework`. The `DarklyEventSource.framework` should also be present, just as with v2.x.
 - For Objective-C apps using Carthage, turn on `Always Embed Swift Standard Libraries` in Build Settings
-- If you use the copy frameworks carthage script, replace `Darkly.framework` with `LaunchDarkly.framework` in both the Input and Output files entries.
+- If you use the copy frameworks carthage script, replace `Darkly.framework` with `LaunchDarkly.framework` (or the framework with the platform name) in both the Input and Output files entries.
 
 ### Update imports to `LaunchDarkly`
-- The module was renamed from `Darkly` to `LaunchDarkly`. Replace any `#import` that has a LD header with a single `@import LaunchDarkly;` (Objective-C) or `import LaunchDarkly` (Swift)
+- The module was renamed from `Darkly` to `LaunchDarkly`. Replace any `#import` that has a LD header with a single `@import LaunchDarkly;` (Objective-C) or `import LaunchDarkly` (Swift). For non-iOS platforms built outside of CocoaPods, append the platform name to LaunchDarkly, e.g. `@import LaunchDarkly_macOS;` or `import LaunchDarkly_watchOS`.
 
 ### Update `LDUser` and properties
 - Replace any references to `LDUserBuilder` or `LDUserModel` with `LDUser`
@@ -80,7 +80,7 @@ For any object (Swift enum and struct cannot be feature flag observers) that con
   3. If the object watches all of the feature flags in an environment (available with a specific `mobileKey`) use `observeAll(owner: , handler:)`. Follow the guidance in #2 above to unpack changed feature flag details.
 - `userDidUpdate` was called whenever any feature flag changed. Follow the guidance under `featureFlagDidUpdate` to decide which observer method to call on the client.
 - `userUnchanged` was called in `.polling` mode when the response to a flag request did not change any feature flag value. If your app uses `.streaming` mode (whether you set it explicitly or accept the default value in `LDConfig`) you can ignore this method. If using `.polling` mode, call `observeFlagsUnchanged` and either call the delegate method from within the handler, or copy the delegate method code into the handler.
-- `serverConnectionUnavailable` was called when the SDK could not connect to LaunchDarkly servers. Set `onServerUnavailable` with a closure to execute when that occurs. Unlike the `observe` methods above, the SDK can only accept 1 `onServerUnavailable` closure. When the object that sets the closure no longer needs to watch for this condition, set `onServerUnavailable` to `nil` or set another closure from another interested object. If a client app has several objects that watch this condition, consider setting the observer in the `AppDelegate` and posting a notification from the closure.
+  4. `serverConnectionUnavailable` was called when the SDK could not connect to LaunchDarkly servers. Call `observeError(owner:, handler:)` with a handler to execute when an error occurs.
 
 See [Monitoring Feature Flags for changes](#monitoring-feature-flags-for-changes) for details.
 
@@ -92,7 +92,7 @@ See [Event Controls](#event-controls) for more details.
 #### Swift Client Apps
 Wrap calls to `trackEvent` into do-catch statements. If desired, catch `JSONSerialization.JSONError.invalidJsonObject` errors. Alternatively, add `throws` to any method calls `trackEvent` to allow the calling method to handle the error.
 #### Objective-C Client Apps
-Calls to `trackEvent` include a 3rd parameter `error`, which the SDK sets when a call receives invalid JSON data. To verify the `error` object set by `trackEvents` threw a `JSONSerialization.JSONError.invalidJsonObject` error, compare the `domain` to `LaunchDarklyJSONErrorDomain` and the `code` to `LaunchDarklyJSONErrorInvalidJsonObject`. 
+Calls to `trackEvent` include a 3rd parameter `error`, which the SDK sets when a call receives invalid JSON data. To verify the `error` object set by `trackEvents` threw a `JSONSerialization.JSONError.invalidJsonObject` error, compare the `domain` to `LaunchDarklyJSONErrorDomain` and the `code` to `LaunchDarklyJSONErrorInvalidJsonObject`.
 
 ---
 ## API Differences from v2.x
@@ -110,10 +110,10 @@ These properties have changed to `URL` objects. Set these properties by converti
 ##### `capacity`
 This property has changed to `eventCapacity`.
 ##### Time based properties (`connectionTimeout`, `flushInterval`, `pollingInterval`, and `backgroundFetchInterval`)
-These properties have changed to `TimeInterval` properties. 
+These properties have changed to `TimeInterval` properties.
 - `flushInterval` has changed to `eventFlushInterval`.
 - `pollingInterval` has changed to `flagPollingInterval`.
-- `backgroundFetchInterval` has changed to `backgroundFlagPollingInterval` 
+- `backgroundFetchInterval` has changed to `backgroundFlagPollingInterval`
 ##### `streaming`
 This property has changed to `streamingMode` and to an enum type `LDStreamingMode`. The default remains `.streaming`. To set polling mode, set this property to `.polling`.
 ##### `debugEnabled`
@@ -188,10 +188,6 @@ This method was renamed to `stop()`
 ##### `updateUser`
 This method was removed. Set the `user` property instead.
 
-#### New `LDClient` Properties
-##### `onServerUnavailable()`
-This property sets a closure called when the SDK is unable to contact the LaunchDarkly servers. The SDK keeps a strong reference to this closure. Remove this closure from the client before the owning object goes out of scope.
-
 #### Objective-C `LDClient` Compatibility
 `LDClient` does not inherit from NSObject, and is therefore not directly available to Objective-C. Instead, the class `ObjcLDClient` wraps the LDClient. Since the wrapper inherits from NSObject, Objective-C apps can access the LDClient. We have defined the Objective-C name for `ObjcLDClient` to `LDClient`, so you access the client through `LDClient` just as before.
 
@@ -207,7 +203,7 @@ Swift Generics allowed us to combine the `variation` methods that were used in t
 A new `variationAndSource()` method returns a tuple `(value, source)` that allows the client app to see what the source of the value was. `source` is an `LDFlagValueSource` enum with `.server`, `.cache`, and `.fallback`. As with the `variation` methods, there are two `variationAndSource` methods. The first returns a non-Optional type as the tuple's `value`, while the second returns an Optional type as the tuple's `value`. This second method requires the client to specify the Optional type when passing `nil` as the `fallback`. For this second method, the fallback parameter is defaulted to `nil`. When using this second method, set the type on the item holding the return value, e.g.
 ```swift
     let (boolFlagValue, boolFlagSource): (Bool?, LDFlagValueSource) = LDClient.shared.variationAndSource(forKey: "bool-flag-key")
-``` 
+```
 #### `allFlagValues`
 A new computed property `allFlagValues` returns a `[LDFlagKey: Any]` that has all feature flag keys and their values. This dictionary is a snapshot taken when `allFlagValues` was requested. The SDK does not try to keep these values up-to-date, and does not record any events when accessing the dictionary.
 #### Objective-C Feature Flag Value Compatibility
@@ -246,5 +242,5 @@ A new string constant `LaunchDarklyJSONErrorDomain` provides the ability for Obj
 The `observe` methods provide the ability to monitor feature flags individually, as a collection, or the whole environment. The SDK will release these observers when they go out of scope, so you can set and forget them. Of course if you need to stop observing you can do that also.
 ### `userUnchanged`
 The `observeFlagsUnchanged` method sets an observer called in `.polling` mode when a flag request leaves the flags unchanged, effectively replacing `userUnchanged`.
-### `onServerUnavailable`
-This property sets a closure the SDK will execute if it cannot connect to LaunchDarkly's servers, effectively replacing `serverConnectionUnavailable`. Only 1 closure can be set at a time, and the SDK keeps a strong reference to that closure.
+### `serverConnectionUnavailable`
+The `observeError(owner:, handler:)` method sets an observer called when an error occurs during flag processing. Replace the delegate method with a call to this method, or call the former delegate method from within the handler set with this method.

@@ -1,8 +1,8 @@
 sources:
-  - Darkly/
+  - LaunchDarkly/
 templates:
   - SourceryTemplates/
-output: Darkly/GeneratedCode/
+output: LaunchDarkly/GeneratedCode/
 
 args:
   app: LaunchDarkly

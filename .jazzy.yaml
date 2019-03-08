@@ -4,23 +4,23 @@ author_url: http://launchdarkly.com
 github_url: https://github.com/launchdarkly/ios-client
 clean: true
 include:
-  - "Darkly/Darkly/**"
+  - "LaunchDarkly/LaunchDarkly/**"
 exclude:
-  - "Darkly/Darkly/User/CacheableUserFlags.swift"
-  - "Darkly/Darkly/FeatureFlag/*"
-  - "Darkly/Darkly/FeatureFlag/FlagChange/Flag*"
-  - "Darkly/Darkly/FeatureFlag/FlagRequestTracking/*"
-  - "Darkly/Darkly/FeatureFlag/FlagValue/*"
-  - "Darkly/Darkly/ServiceObjects/*"
-  - "Darkly/Darkly/Networking/*"
-  - "Darkly/Darkly/Extensions/*"
+  - "LaunchDarkly/LaunchDarkly/User/CacheableUserFlags.swift"
+  - "LaunchDarkly/LaunchDarkly/FeatureFlag/*"
+  - "LaunchDarkly/LaunchDarkly/FeatureFlag/FlagChange/Flag*"
+  - "LaunchDarkly/LaunchDarkly/FeatureFlag/FlagRequestTracking/*"
+  - "LaunchDarkly/LaunchDarkly/FeatureFlag/FlagValue/*"
+  - "LaunchDarkly/LaunchDarkly/ServiceObjects/*"
+  - "LaunchDarkly/LaunchDarkly/Networking/*"
+  - "LaunchDarkly/LaunchDarkly/Extensions/*"
 
-copyright: 'Copyright © 2018 Catamorphic Co.'
+copyright: 'Copyright © 2019 Catamorphic Co.'
 
 theme: fullwidth
 
 custom_categories:
-  - name: Launch Darkly
+  - name: LaunchDarkly
     children:
     - LDClient
     - LDConfig
@@ -40,6 +40,7 @@ custom_categories:
     - LDFlagChangeHandler
     - LDFlagCollectionChangeHandler
     - LDFlagsUnchangedHandler
+    - LDErrorHandler
 
   - name: LD Protocols
     children:
