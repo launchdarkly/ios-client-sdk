@@ -6,5 +6,5 @@
 
 @interface NSDictionary (LaunchDarkly)
 -(nullable NSString*) jsonString;
--(nonnull NSDictionary*)compactMapUsingBlock:(nullable id (^)(_Nonnull id originalValue))mappingBlock;
+-(nonnull NSDictionary*)compactMapUsingBlock:(id _Nullable (^_Nullable)(_Nonnull id originalValue))mappingBlock;
 @end
