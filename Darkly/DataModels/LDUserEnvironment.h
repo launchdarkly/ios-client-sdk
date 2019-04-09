@@ -19,8 +19,8 @@
 +(nullable instancetype)userEnvironmentForUserWithKey:(nonnull NSString*)userKey environments:(nullable NSDictionary<NSString*, LDUserModel*>*)environments;
 -(nullable instancetype)initForUserWithKey:(nonnull NSString*)userKey environments:(nonnull NSDictionary<NSString*, LDUserModel*>*)environments;
 
--(nullable instancetype)initWithCoder:(NSCoder*)coder;
--(void)encodeWithCoder:(NSCoder*)coder;
+-(nullable instancetype)initWithCoder:(nonnull NSCoder*)coder;
+-(void)encodeWithCoder:(nonnull NSCoder*)coder;
 
 -(nullable instancetype)initWithDictionary:(nullable NSDictionary*)dictionary;
 -(nullable NSDictionary*)dictionaryValue;
