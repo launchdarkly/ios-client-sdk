@@ -24,6 +24,6 @@
 -(nonnull NSDictionary*)dictionaryValue;
 
 -(nonnull NSString*)description;
--(id)copyWithZone:(nullable NSZone*)zone;
+-(nonnull id)copyWithZone:(nullable NSZone*)zone;
 
 @end
