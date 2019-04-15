@@ -1394,11 +1394,12 @@
 			};
 			buildConfigurationList = 690346B81E6872EA00E45133 /* Build configuration list for PBXProject "Darkly" */;
 			compatibilityVersion = "Xcode 3.2";
-			developmentRegion = English;
+			developmentRegion = en;
 			hasScannedForEncodings = 0;
 			knownRegions = (
 				English,
 				en,
+				Base,
 			);
 			mainGroup = 690346B41E6872EA00E45133;
 			productRefGroup = 690346BF1E6872EA00E45133 /* Products */;
