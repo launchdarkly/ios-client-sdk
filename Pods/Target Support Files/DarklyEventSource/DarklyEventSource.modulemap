@@ -1,5 +1,5 @@
 framework module DarklyEventSource {
-  umbrella header "DarklyEventSource-macOS-umbrella.h"
+  umbrella header "DarklyEventSource-umbrella.h"
 
   export *
   module * { export * }

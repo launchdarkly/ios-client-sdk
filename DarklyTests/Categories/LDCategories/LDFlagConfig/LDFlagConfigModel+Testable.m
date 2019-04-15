@@ -13,7 +13,7 @@
 #import "LDEventTrackingContext.h"
 #import "LDEventTrackingContext+Testable.h"
 #import "NSJSONSerialization+Testable.h"
-#import "LDEventSource.h"
+#import <DarklyEventSource/LDEventSource.h>
 #import "LDEvent+EventTypes.h"
 
 @implementation LDFlagConfigModel(Testable)
