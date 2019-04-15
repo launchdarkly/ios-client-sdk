@@ -210,7 +210,7 @@ NSString * const kUserAttributePrivateAttributes = @"privateAttrs";
     return @[kUserAttributeIp, kUserAttributeCountry, kUserAttributeName, kUserAttributeFirstName, kUserAttributeLastName, kUserAttributeEmail, kUserAttributeAvatar, kUserAttributeCustom];
 }
 
--(LDUserModel*)copy {
+-(nonnull instancetype)copy {
     LDUserModel *copiedUser = [[LDUserModel alloc] initWithDictionary:[self dictionaryValueWithPrivateAttributesAndFlagConfig:NO]]; //omit the flag config because it excludes null items
     if (self.privateAttributes != nil) {
         copiedUser.privateAttributes = [NSArray arrayWithArray:self.privateAttributes]; //Private attributes are not placed into the dictionaryValue

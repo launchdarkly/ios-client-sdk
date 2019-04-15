@@ -8,8 +8,8 @@
 
 #import "LDConfig.h"
 
-extern NSString * const LDConfigTestEnvironmentNameMock;
-extern NSString * const LDConfigTestSecondaryMobileKeyMock;
+extern NSString * _Nonnull const LDConfigTestEnvironmentNameMock;
+extern NSString * _Nonnull const LDConfigTestSecondaryMobileKeyMock;
 
 NS_ASSUME_NONNULL_BEGIN
 

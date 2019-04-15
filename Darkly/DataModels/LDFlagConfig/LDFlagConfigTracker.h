@@ -25,5 +25,5 @@
                defaultValue:(nullable id)defaultValue;
 -(nonnull NSDictionary<NSString*, NSDictionary*>*)flagRequestSummary;
 -(nonnull NSString*)description;
--(id)copyWithZone:(nullable NSZone*)zone;
+-(nonnull instancetype)copyWithZone:(nullable NSZone*)zone;
 @end

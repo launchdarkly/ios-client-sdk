@@ -19,13 +19,13 @@
 -(nullable instancetype)initWithMobileKey:(nonnull NSString*)mobileKey config:(nonnull LDConfig*)config;
 
 //User Store
-+(void)convertToEnvironmentBasedCacheForUser:(LDUserModel*)user config:(LDConfig*)config;
++(void)convertToEnvironmentBasedCacheForUser:(nonnull LDUserModel*)user config:(nonnull LDConfig*)config;
 -(void)saveUser:(nonnull LDUserModel*)user;
 -(nullable LDUserModel*)findUserWithKey:(nonnull NSString*)key;
 -(nullable LDFlagConfigModel*)retrieveFlagConfigForUser:(nonnull LDUserModel*)user;
 
 //Events
--(void)allEventDictionaries:(void (^)(NSArray * _Nullable eventDictionaries))completion;
+-(void)allEventDictionaries:(void (^_Nonnull)(NSArray * _Nullable eventDictionaries))completion;
 -(void)recordFlagEvaluationEventsWithFlagKey:(nonnull NSString*)flagKey
                            reportedFlagValue:(nonnull id)reportedFlagValue
                              flagConfigValue:(nullable LDFlagConfigValue*)flagConfigValue

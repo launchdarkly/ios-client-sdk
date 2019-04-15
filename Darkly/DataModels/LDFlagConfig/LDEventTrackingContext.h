@@ -18,5 +18,5 @@
 -(void)encodeWithCoder:(nonnull NSCoder*)aCoder;
 -(nullable instancetype)initWithCoder:(nonnull NSCoder*)aDecoder;
 -(nonnull NSString*)description;
--(id)copyWithZone:(nullable NSZone*)zone;
+-(nonnull id)copyWithZone:(nullable NSZone*)zone;
 @end

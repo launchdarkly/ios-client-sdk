@@ -99,7 +99,7 @@ NSString * const kLDFlagCounterKeyCounters = @"counters";
             [self.flagValueCounters description]];
 }
 
--(id)copyWithZone:(nullable NSZone*)zone {
+-(instancetype)copyWithZone:(nullable NSZone*)zone {
     LDFlagCounter *copy = [[self class] new];
     copy.flagKey = self.flagKey;
     copy.defaultValue = [self.defaultValue copy];
