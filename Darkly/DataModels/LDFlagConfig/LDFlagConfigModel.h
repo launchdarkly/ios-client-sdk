@@ -33,6 +33,6 @@
 
 -(void)updateEventTrackingContextFromConfig:(nullable LDFlagConfigModel*)otherConfig;
 
--(nullable instancetype)copy;
+-(nonnull instancetype)copy;
 -(nonnull NSString*)description;
 @end
