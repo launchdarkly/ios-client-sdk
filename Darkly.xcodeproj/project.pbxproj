@@ -47,9 +47,6 @@
 		690347311E689B9F00E45133 /* LDFlagConfigModelTest.m in Sources */ = {isa = PBXBuildFile; fileRef = 690347211E689B9F00E45133 /* LDFlagConfigModelTest.m */; };
 		690347321E689B9F00E45133 /* DarklyXCTestCase.m in Sources */ = {isa = PBXBuildFile; fileRef = 690347221E689B9F00E45133 /* DarklyXCTestCase.m */; };
 		690347331E689B9F00E45133 /* NSArray+Testable.m in Sources */ = {isa = PBXBuildFile; fileRef = 690347251E689B9F00E45133 /* NSArray+Testable.m */; };
-		69071F7E1EA2A7CA00497F93 /* Darkly.h in Headers */ = {isa = PBXBuildFile; fileRef = 69BAF40B1E9AAB4800747613 /* Darkly.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		69071F7F1EA2A7CB00497F93 /* Darkly.h in Headers */ = {isa = PBXBuildFile; fileRef = 69BAF40B1E9AAB4800747613 /* Darkly.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		69071F801EA2A7CC00497F93 /* Darkly.h in Headers */ = {isa = PBXBuildFile; fileRef = 69BAF40B1E9AAB4800747613 /* Darkly.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		69A87E971E74712800B88B23 /* LDDataManager.h in Headers */ = {isa = PBXBuildFile; fileRef = 6903470F1E68994500E45133 /* LDDataManager.h */; };
 		69A87E981E74712800B88B23 /* LDDataManager.m in Sources */ = {isa = PBXBuildFile; fileRef = 690347101E68994500E45133 /* LDDataManager.m */; };
 		69A87E991E74712800B88B23 /* Darkly-Prefix.pch in Headers */ = {isa = PBXBuildFile; fileRef = 690346D81E68990000E45133 /* Darkly-Prefix.pch */; settings = {ATTRIBUTES = (Public, ); }; };
@@ -78,7 +75,6 @@
 		69A87EB01E74712800B88B23 /* NSDictionary+LaunchDarkly.h in Headers */ = {isa = PBXBuildFile; fileRef = 690346F21E68990000E45133 /* NSDictionary+LaunchDarkly.h */; };
 		69A87EB11E74712800B88B23 /* NSDictionary+LaunchDarkly.m in Sources */ = {isa = PBXBuildFile; fileRef = 690346F31E68990000E45133 /* NSDictionary+LaunchDarkly.m */; };
 		69B205D31EA92ECD00487CA3 /* LDRequestManagerTest.m in Sources */ = {isa = PBXBuildFile; fileRef = 690347141E689B9F00E45133 /* LDRequestManagerTest.m */; };
-		69BAF40D1E9AAB4800747613 /* Darkly.h in Headers */ = {isa = PBXBuildFile; fileRef = 69BAF40B1E9AAB4800747613 /* Darkly.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		69BD7E181E6C79910056D70F /* LDDataManager.h in Headers */ = {isa = PBXBuildFile; fileRef = 6903470F1E68994500E45133 /* LDDataManager.h */; };
 		69BD7E191E6C79910056D70F /* LDDataManager.m in Sources */ = {isa = PBXBuildFile; fileRef = 690347101E68994500E45133 /* LDDataManager.m */; };
 		69BD7E1A1E6C79910056D70F /* Darkly-Prefix.pch in Headers */ = {isa = PBXBuildFile; fileRef = 690346D81E68990000E45133 /* Darkly-Prefix.pch */; settings = {ATTRIBUTES = (Public, ); }; };
@@ -279,6 +275,10 @@
 		83889B1C1F8F28AB00A4EF69 /* NSURLResponse+LaunchDarkly.m in Sources */ = {isa = PBXBuildFile; fileRef = 83889B161F8F28AB00A4EF69 /* NSURLResponse+LaunchDarkly.m */; };
 		83889B1D1F8F28AB00A4EF69 /* NSURLResponse+LaunchDarkly.m in Sources */ = {isa = PBXBuildFile; fileRef = 83889B161F8F28AB00A4EF69 /* NSURLResponse+LaunchDarkly.m */; };
 		83889B1E1F8F28AB00A4EF69 /* NSURLResponse+LaunchDarkly.m in Sources */ = {isa = PBXBuildFile; fileRef = 83889B161F8F28AB00A4EF69 /* NSURLResponse+LaunchDarkly.m */; };
+		838AA0B6226628E200329204 /* Darkly_tvOS.h in Headers */ = {isa = PBXBuildFile; fileRef = 838AA0B5226628E200329204 /* Darkly_tvOS.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		838AA0BA22662C9900329204 /* Darkly_watchOS.h in Headers */ = {isa = PBXBuildFile; fileRef = 838AA0B922662C9900329204 /* Darkly_watchOS.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		838AA0BD22662D6200329204 /* Darkly_macOS.h in Headers */ = {isa = PBXBuildFile; fileRef = 838AA0BC22662D6200329204 /* Darkly_macOS.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		838AA0C022662DE500329204 /* Darkly.h in Headers */ = {isa = PBXBuildFile; fileRef = 838AA0BF22662DE500329204 /* Darkly.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		83926B1C219F68F300D46140 /* LDURLCache.h in Headers */ = {isa = PBXBuildFile; fileRef = 83926B1A219F68F300D46140 /* LDURLCache.h */; };
 		83926B1D219F68F300D46140 /* LDURLCache.h in Headers */ = {isa = PBXBuildFile; fileRef = 83926B1A219F68F300D46140 /* LDURLCache.h */; };
 		83926B1E219F68F300D46140 /* LDURLCache.h in Headers */ = {isa = PBXBuildFile; fileRef = 83926B1A219F68F300D46140 /* LDURLCache.h */; };
@@ -459,7 +459,6 @@
 		690347241E689B9F00E45133 /* NSArray+Testable.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "NSArray+Testable.h"; sourceTree = "<group>"; };
 		690347251E689B9F00E45133 /* NSArray+Testable.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "NSArray+Testable.m"; sourceTree = "<group>"; };
 		69A87E8F1E74458900B88B23 /* Darkly_macOS.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Darkly_macOS.framework; sourceTree = BUILT_PRODUCTS_DIR; };
-		69BAF40B1E9AAB4800747613 /* Darkly.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = Darkly.h; path = Framework/Darkly.h; sourceTree = SOURCE_ROOT; };
 		69BAF40C1E9AAB4800747613 /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; name = Info.plist; path = Framework/Info.plist; sourceTree = SOURCE_ROOT; };
 		69BD7E101E6C79550056D70F /* Darkly_watchOS.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Darkly_watchOS.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		69F3F67B1E6BF7C000079A09 /* Darkly_tvOS.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Darkly_tvOS.framework; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -561,6 +560,10 @@
 		83889B131F8E93A100A4EF69 /* LDEvent+Testable.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "LDEvent+Testable.m"; sourceTree = "<group>"; };
 		83889B151F8F28AB00A4EF69 /* NSURLResponse+LaunchDarkly.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "NSURLResponse+LaunchDarkly.h"; sourceTree = "<group>"; };
 		83889B161F8F28AB00A4EF69 /* NSURLResponse+LaunchDarkly.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "NSURLResponse+LaunchDarkly.m"; sourceTree = "<group>"; };
+		838AA0B5226628E200329204 /* Darkly_tvOS.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = Darkly_tvOS.h; path = Framework/tvOS/Darkly_tvOS.h; sourceTree = SOURCE_ROOT; };
+		838AA0B922662C9900329204 /* Darkly_watchOS.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = Darkly_watchOS.h; path = Framework/watchOS/Darkly_watchOS.h; sourceTree = SOURCE_ROOT; };
+		838AA0BC22662D6200329204 /* Darkly_macOS.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = Darkly_macOS.h; path = Framework/macOS/Darkly_macOS.h; sourceTree = SOURCE_ROOT; };
+		838AA0BF22662DE500329204 /* Darkly.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = Darkly.h; path = Framework/iOS/Darkly.h; sourceTree = SOURCE_ROOT; };
 		83926B1A219F68F300D46140 /* LDURLCache.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = LDURLCache.h; sourceTree = "<group>"; };
 		83926B1B219F68F300D46140 /* LDURLCache.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = LDURLCache.m; sourceTree = "<group>"; };
 		83926B24219FA85100D46140 /* LDURLCacheTest.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = LDURLCacheTest.m; sourceTree = "<group>"; };
@@ -917,6 +920,38 @@
 			path = LDFlagConfig;
 			sourceTree = "<group>";
 		};
+		838AA0B7226628EF00329204 /* tvOS */ = {
+			isa = PBXGroup;
+			children = (
+				838AA0B5226628E200329204 /* Darkly_tvOS.h */,
+			);
+			name = tvOS;
+			sourceTree = "<group>";
+		};
+		838AA0B822662B9900329204 /* watchOS */ = {
+			isa = PBXGroup;
+			children = (
+				838AA0B922662C9900329204 /* Darkly_watchOS.h */,
+			);
+			name = watchOS;
+			sourceTree = "<group>";
+		};
+		838AA0BB22662CF700329204 /* macOS */ = {
+			isa = PBXGroup;
+			children = (
+				838AA0BC22662D6200329204 /* Darkly_macOS.h */,
+			);
+			name = macOS;
+			sourceTree = "<group>";
+		};
+		838AA0BE22662DB300329204 /* iOS */ = {
+			isa = PBXGroup;
+			children = (
+				838AA0BF22662DE500329204 /* Darkly.h */,
+			);
+			name = iOS;
+			sourceTree = "<group>";
+		};
 		839D6D2D1FD1B6BF000BE6BD /* CarthageFrameworks */ = {
 			isa = PBXGroup;
 			children = (
@@ -979,9 +1014,12 @@
 		83F041912155175E00BEBA79 /* Support */ = {
 			isa = PBXGroup;
 			children = (
-				69BAF40B1E9AAB4800747613 /* Darkly.h */,
 				690346D81E68990000E45133 /* Darkly-Prefix.pch */,
 				69BAF40C1E9AAB4800747613 /* Info.plist */,
+				838AA0BE22662DB300329204 /* iOS */,
+				838AA0B822662B9900329204 /* watchOS */,
+				838AA0B7226628EF00329204 /* tvOS */,
+				838AA0BB22662CF700329204 /* macOS */,
 			);
 			path = Support;
 			sourceTree = "<group>";
@@ -1076,7 +1114,7 @@
 			isa = PBXHeadersBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				69BAF40D1E9AAB4800747613 /* Darkly.h in Headers */,
+				838AA0C022662DE500329204 /* Darkly.h in Headers */,
 				690346F51E68990000E45133 /* DarklyConstants.h in Headers */,
 				690346FB1E68990000E45133 /* LDConfig.h in Headers */,
 				690346F41E68990000E45133 /* Darkly-Prefix.pch in Headers */,
@@ -1121,7 +1159,6 @@
 			isa = PBXHeadersBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				69071F801EA2A7CC00497F93 /* Darkly.h in Headers */,
 				69A87E991E74712800B88B23 /* Darkly-Prefix.pch in Headers */,
 				69A87E9A1E74712800B88B23 /* DarklyConstants.h in Headers */,
 				69A87EA01E74712800B88B23 /* LDConfig.h in Headers */,
@@ -1156,6 +1193,7 @@
 				83ECCCA92088FBA80086F879 /* LDFlagConfigTracker.h in Headers */,
 				83889B1A1F8F28AB00A4EF69 /* NSURLResponse+LaunchDarkly.h in Headers */,
 				8342C836218B5594000BD8D8 /* NSString+LaunchDarkly.h in Headers */,
+				838AA0BD22662D6200329204 /* Darkly_macOS.h in Headers */,
 				69A87EAC1E74712800B88B23 /* LDUserModel.h in Headers */,
 				8365E50B2028F39E00DE8E2B /* LDEvent+EventTypes.h in Headers */,
 				832C78861F296F3400E334A2 /* NSMutableDictionary+NullRemovable.h in Headers */,
@@ -1166,8 +1204,8 @@
 			isa = PBXHeadersBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				69071F7F1EA2A7CB00497F93 /* Darkly.h in Headers */,
 				69BD7E1A1E6C79910056D70F /* Darkly-Prefix.pch in Headers */,
+				838AA0BA22662C9900329204 /* Darkly_watchOS.h in Headers */,
 				69BD7E211E6C79910056D70F /* LDConfig.h in Headers */,
 				69BD7E1B1E6C79910056D70F /* DarklyConstants.h in Headers */,
 				69BD7E2B1E6C79910056D70F /* LDUserBuilder.h in Headers */,
@@ -1211,7 +1249,6 @@
 			isa = PBXHeadersBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				69071F7E1EA2A7CA00497F93 /* Darkly.h in Headers */,
 				69F3F6AE1E6BF84B00079A09 /* Darkly-Prefix.pch in Headers */,
 				69F3F6951E6BF82100079A09 /* DarklyConstants.h in Headers */,
 				69F3F69B1E6BF82C00079A09 /* LDConfig.h in Headers */,
@@ -1229,6 +1266,7 @@
 				69F3F6991E6BF82C00079A09 /* LDEnvironmentController.h in Headers */,
 				83620B8620BDF36B00F1F28E /* NSNumber+LaunchDarkly.h in Headers */,
 				8340A42F2164F6D900418027 /* LDEnvironment.h in Headers */,
+				838AA0B6226628E200329204 /* Darkly_tvOS.h in Headers */,
 				69F3F6A91E6BF82C00079A09 /* LDUtil.h in Headers */,
 				83F569CE21A3428200FF7A5C /* NSURLSession+LaunchDarkly.h in Headers */,
 				69F3F69F1E6BF82C00079A09 /* LDFlagConfigModel.h in Headers */,
@@ -1905,7 +1943,7 @@
 				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
 				IPHONEOS_DEPLOYMENT_TARGET = 8.0;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";
-				MODULEMAP_FILE = "$(PROJECT_DIR)/Framework/module.modulemap";
+				MODULEMAP_FILE = "$(PROJECT_DIR)/Framework/iOS/module.modulemap";
 				PRODUCT_BUNDLE_IDENTIFIER = com.launchdarkly.Darkly;
 				PRODUCT_NAME = Darkly;
 				SKIP_INSTALL = YES;
@@ -1931,7 +1969,7 @@
 				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
 				IPHONEOS_DEPLOYMENT_TARGET = 8.0;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";
-				MODULEMAP_FILE = "$(PROJECT_DIR)/Framework/module.modulemap";
+				MODULEMAP_FILE = "$(PROJECT_DIR)/Framework/iOS/module.modulemap";
 				PRODUCT_BUNDLE_IDENTIFIER = com.launchdarkly.Darkly;
 				PRODUCT_NAME = Darkly;
 				SKIP_INSTALL = YES;
@@ -1987,7 +2025,7 @@
 				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks @loader_path/Frameworks";
 				MACOSX_DEPLOYMENT_TARGET = 10.10;
-				MODULEMAP_FILE = "$(PROJECT_DIR)/Framework/module.modulemap";
+				MODULEMAP_FILE = "$(PROJECT_DIR)/Framework/macOS/module.modulemap";
 				PRODUCT_BUNDLE_IDENTIFIER = "com.launchdarkly.Darkly-macOS";
 				PRODUCT_NAME = Darkly_macOS;
 				SDKROOT = macosx;
@@ -2014,7 +2052,7 @@
 				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks @loader_path/Frameworks";
 				MACOSX_DEPLOYMENT_TARGET = 10.10;
-				MODULEMAP_FILE = "$(PROJECT_DIR)/Framework/module.modulemap";
+				MODULEMAP_FILE = "$(PROJECT_DIR)/Framework/macOS/module.modulemap";
 				PRODUCT_BUNDLE_IDENTIFIER = "com.launchdarkly.Darkly-macOS";
 				PRODUCT_NAME = Darkly_macOS;
 				SDKROOT = macosx;
@@ -2039,7 +2077,7 @@
 				INFOPLIST_FILE = "$(SRCROOT)/Framework/Info.plist";
 				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";
-				MODULEMAP_FILE = "$(PROJECT_DIR)/Framework/module.modulemap";
+				MODULEMAP_FILE = "$(PROJECT_DIR)/Framework/watchOS/module.modulemap";
 				PRODUCT_BUNDLE_IDENTIFIER = "com.launchdarkly.Darkly-watchOS";
 				PRODUCT_NAME = Darkly_watchOS;
 				SDKROOT = watchos;
@@ -2066,7 +2104,7 @@
 				INFOPLIST_FILE = "$(SRCROOT)/Framework/Info.plist";
 				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";
-				MODULEMAP_FILE = "$(PROJECT_DIR)/Framework/module.modulemap";
+				MODULEMAP_FILE = "$(PROJECT_DIR)/Framework/watchOS/module.modulemap";
 				PRODUCT_BUNDLE_IDENTIFIER = "com.launchdarkly.Darkly-watchOS";
 				PRODUCT_NAME = Darkly_watchOS;
 				SDKROOT = watchos;
@@ -2093,7 +2131,7 @@
 				INFOPLIST_FILE = "$(SRCROOT)/Framework/Info.plist";
 				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";
-				MODULEMAP_FILE = "$(PROJECT_DIR)/Framework/module.modulemap";
+				MODULEMAP_FILE = "$(PROJECT_DIR)/Framework/tvOS/module.modulemap";
 				PRODUCT_BUNDLE_IDENTIFIER = "com.launchdarkly.Darkly-tvOS";
 				PRODUCT_NAME = Darkly_tvOS;
 				SDKROOT = appletvos;
@@ -2120,7 +2158,7 @@
 				INFOPLIST_FILE = "$(SRCROOT)/Framework/Info.plist";
 				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";
-				MODULEMAP_FILE = "$(PROJECT_DIR)/Framework/module.modulemap";
+				MODULEMAP_FILE = "$(PROJECT_DIR)/Framework/tvOS/module.modulemap";
 				PRODUCT_BUNDLE_IDENTIFIER = "com.launchdarkly.Darkly-tvOS";
 				PRODUCT_NAME = Darkly_tvOS;
 				SDKROOT = appletvos;
