@@ -2,6 +2,14 @@
 
 All notable changes to the LaunchDarkly iOS SDK will be documented in this file. This project adheres to [Semantic Versioning](http://semver.org).
 
+## [3.0.0] - 2019-04-17
+### Changed
+- Renamed the non-iOS Darkly frameworks to include the platform name. e.g. Darkly_watchOS. Because non-CocoaPods apps will need to update imports for the new modules, advanced to the next major version.
+- Removed DarklyEventSource as a CocoaPods dependency in the podfile. DarklyEventSource remains a dependency in the podspec.
+
+### Added
+- Nullability specifiers for items that caused new warnings with Xcode 10.2
+
 ## [2.14.4] - 2019-02-26
 ### Changed
 - Changed the following to repair macOS builds:
