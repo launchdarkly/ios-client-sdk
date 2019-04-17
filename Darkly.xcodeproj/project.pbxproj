@@ -17,7 +17,7 @@
 		690346FA1E68990000E45133 /* LDEnvironmentController.m in Sources */ = {isa = PBXBuildFile; fileRef = 690346DE1E68990000E45133 /* LDEnvironmentController.m */; };
 		690346FB1E68990000E45133 /* LDConfig.h in Headers */ = {isa = PBXBuildFile; fileRef = 690346DF1E68990000E45133 /* LDConfig.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		690346FC1E68990000E45133 /* LDConfig.m in Sources */ = {isa = PBXBuildFile; fileRef = 690346E01E68990000E45133 /* LDConfig.m */; };
-		690346FD1E68990000E45133 /* LDEventModel.h in Headers */ = {isa = PBXBuildFile; fileRef = 690346E11E68990000E45133 /* LDEventModel.h */; settings = {ATTRIBUTES = (Private, ); }; };
+		690346FD1E68990000E45133 /* LDEventModel.h in Headers */ = {isa = PBXBuildFile; fileRef = 690346E11E68990000E45133 /* LDEventModel.h */; };
 		690346FE1E68990000E45133 /* LDEventModel.m in Sources */ = {isa = PBXBuildFile; fileRef = 690346E21E68990000E45133 /* LDEventModel.m */; };
 		690346FF1E68990000E45133 /* LDFlagConfigModel.h in Headers */ = {isa = PBXBuildFile; fileRef = 690346E31E68990000E45133 /* LDFlagConfigModel.h */; };
 		690347001E68990000E45133 /* LDFlagConfigModel.m in Sources */ = {isa = PBXBuildFile; fileRef = 690346E41E68990000E45133 /* LDFlagConfigModel.m */; };
@@ -58,7 +58,7 @@
 		69A87E9F1E74712800B88B23 /* LDEnvironmentController.m in Sources */ = {isa = PBXBuildFile; fileRef = 690346DE1E68990000E45133 /* LDEnvironmentController.m */; };
 		69A87EA01E74712800B88B23 /* LDConfig.h in Headers */ = {isa = PBXBuildFile; fileRef = 690346DF1E68990000E45133 /* LDConfig.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		69A87EA11E74712800B88B23 /* LDConfig.m in Sources */ = {isa = PBXBuildFile; fileRef = 690346E01E68990000E45133 /* LDConfig.m */; };
-		69A87EA21E74712800B88B23 /* LDEventModel.h in Headers */ = {isa = PBXBuildFile; fileRef = 690346E11E68990000E45133 /* LDEventModel.h */; settings = {ATTRIBUTES = (Private, ); }; };
+		69A87EA21E74712800B88B23 /* LDEventModel.h in Headers */ = {isa = PBXBuildFile; fileRef = 690346E11E68990000E45133 /* LDEventModel.h */; };
 		69A87EA31E74712800B88B23 /* LDEventModel.m in Sources */ = {isa = PBXBuildFile; fileRef = 690346E21E68990000E45133 /* LDEventModel.m */; };
 		69A87EA41E74712800B88B23 /* LDFlagConfigModel.h in Headers */ = {isa = PBXBuildFile; fileRef = 690346E31E68990000E45133 /* LDFlagConfigModel.h */; };
 		69A87EA51E74712800B88B23 /* LDFlagConfigModel.m in Sources */ = {isa = PBXBuildFile; fileRef = 690346E41E68990000E45133 /* LDFlagConfigModel.m */; };
@@ -86,7 +86,7 @@
 		69BD7E201E6C79910056D70F /* LDEnvironmentController.m in Sources */ = {isa = PBXBuildFile; fileRef = 690346DE1E68990000E45133 /* LDEnvironmentController.m */; };
 		69BD7E211E6C79910056D70F /* LDConfig.h in Headers */ = {isa = PBXBuildFile; fileRef = 690346DF1E68990000E45133 /* LDConfig.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		69BD7E221E6C79910056D70F /* LDConfig.m in Sources */ = {isa = PBXBuildFile; fileRef = 690346E01E68990000E45133 /* LDConfig.m */; };
-		69BD7E231E6C79910056D70F /* LDEventModel.h in Headers */ = {isa = PBXBuildFile; fileRef = 690346E11E68990000E45133 /* LDEventModel.h */; settings = {ATTRIBUTES = (Private, ); }; };
+		69BD7E231E6C79910056D70F /* LDEventModel.h in Headers */ = {isa = PBXBuildFile; fileRef = 690346E11E68990000E45133 /* LDEventModel.h */; };
 		69BD7E241E6C79910056D70F /* LDEventModel.m in Sources */ = {isa = PBXBuildFile; fileRef = 690346E21E68990000E45133 /* LDEventModel.m */; };
 		69BD7E251E6C79910056D70F /* LDFlagConfigModel.h in Headers */ = {isa = PBXBuildFile; fileRef = 690346E31E68990000E45133 /* LDFlagConfigModel.h */; };
 		69BD7E261E6C79910056D70F /* LDFlagConfigModel.m in Sources */ = {isa = PBXBuildFile; fileRef = 690346E41E68990000E45133 /* LDFlagConfigModel.m */; };
@@ -113,7 +113,7 @@
 		69F3F69A1E6BF82C00079A09 /* LDEnvironmentController.m in Sources */ = {isa = PBXBuildFile; fileRef = 690346DE1E68990000E45133 /* LDEnvironmentController.m */; };
 		69F3F69B1E6BF82C00079A09 /* LDConfig.h in Headers */ = {isa = PBXBuildFile; fileRef = 690346DF1E68990000E45133 /* LDConfig.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		69F3F69C1E6BF82C00079A09 /* LDConfig.m in Sources */ = {isa = PBXBuildFile; fileRef = 690346E01E68990000E45133 /* LDConfig.m */; };
-		69F3F69D1E6BF82C00079A09 /* LDEventModel.h in Headers */ = {isa = PBXBuildFile; fileRef = 690346E11E68990000E45133 /* LDEventModel.h */; settings = {ATTRIBUTES = (Private, ); }; };
+		69F3F69D1E6BF82C00079A09 /* LDEventModel.h in Headers */ = {isa = PBXBuildFile; fileRef = 690346E11E68990000E45133 /* LDEventModel.h */; };
 		69F3F69E1E6BF82C00079A09 /* LDEventModel.m in Sources */ = {isa = PBXBuildFile; fileRef = 690346E21E68990000E45133 /* LDEventModel.m */; };
 		69F3F69F1E6BF82C00079A09 /* LDFlagConfigModel.h in Headers */ = {isa = PBXBuildFile; fileRef = 690346E31E68990000E45133 /* LDFlagConfigModel.h */; };
 		69F3F6A01E6BF82C00079A09 /* LDFlagConfigModel.m in Sources */ = {isa = PBXBuildFile; fileRef = 690346E41E68990000E45133 /* LDFlagConfigModel.m */; };
