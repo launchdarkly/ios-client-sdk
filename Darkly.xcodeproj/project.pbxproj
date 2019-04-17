@@ -279,6 +279,7 @@
 		838AA0BA22662C9900329204 /* Darkly_watchOS.h in Headers */ = {isa = PBXBuildFile; fileRef = 838AA0B922662C9900329204 /* Darkly_watchOS.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		838AA0BD22662D6200329204 /* Darkly_macOS.h in Headers */ = {isa = PBXBuildFile; fileRef = 838AA0BC22662D6200329204 /* Darkly_macOS.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		838AA0C022662DE500329204 /* Darkly.h in Headers */ = {isa = PBXBuildFile; fileRef = 838AA0BF22662DE500329204 /* Darkly.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		838AA0EE2267666A00329204 /* DarklyEventSource.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 83702D372265376100D0FFCC /* DarklyEventSource.framework */; };
 		83926B1C219F68F300D46140 /* LDURLCache.h in Headers */ = {isa = PBXBuildFile; fileRef = 83926B1A219F68F300D46140 /* LDURLCache.h */; };
 		83926B1D219F68F300D46140 /* LDURLCache.h in Headers */ = {isa = PBXBuildFile; fileRef = 83926B1A219F68F300D46140 /* LDURLCache.h */; };
 		83926B1E219F68F300D46140 /* LDURLCache.h in Headers */ = {isa = PBXBuildFile; fileRef = 83926B1A219F68F300D46140 /* LDURLCache.h */; };
@@ -644,6 +645,7 @@
 			files = (
 				690346C81E6872EA00E45133 /* Darkly.framework in Frameworks */,
 				DE785F81273AE3E88DB375AF /* Pods_DarklyTests.framework in Frameworks */,
+				838AA0EE2267666A00329204 /* DarklyEventSource.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1316,6 +1318,7 @@
 			buildConfigurationList = 690346D51E6872EA00E45133 /* Build configuration list for PBXNativeTarget "DarklyTests" */;
 			buildPhases = (
 				1B6A7FB4BC09527F451034A8 /* [CP] Check Pods Manifest.lock */,
+				838AA0EF22676BA300329204 /* ShellScript */,
 				690346C31E6872EA00E45133 /* Sources */,
 				690346C41E6872EA00E45133 /* Frameworks */,
 				690346C51E6872EA00E45133 /* Resources */,
@@ -1536,6 +1539,25 @@
 			shellScript = "diff \"${PODS_PODFILE_DIR_PATH}/Podfile.lock\" \"${PODS_ROOT}/Manifest.lock\" > /dev/null\nif [ $? != 0 ] ; then\n    # print error to STDERR\n    echo \"error: The sandbox is not in sync with the Podfile.lock. Run 'pod install' or update your CocoaPods installation.\" >&2\n    exit 1\nfi\n# This output is used by Xcode 'outputs' to avoid re-running this script phase.\necho \"SUCCESS\" > \"${SCRIPT_OUTPUT_FILE_0}\"\n";
 			showEnvVarsInLog = 0;
 		};
+		838AA0EF22676BA300329204 /* ShellScript */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+				"$(SRCROOT)/Carthage/Build/iOS/DarklyEventSource.framework",
+			);
+			outputFileListPaths = (
+			);
+			outputPaths = (
+				"$(BUILT_PRODUCTS_DIR)/$(FRAMEWORKS_FOLDER_PATH)/DarklyEventSource.framework",
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "/usr/local/bin/carthage copy-frameworks\n";
+		};
 		A006240445E74B9090D41996 /* [CP] Embed Pods Frameworks */ = {
 			isa = PBXShellScriptBuildPhase;
 			buildActionMask = 2147483647;
@@ -1545,7 +1567,6 @@
 			);
 			inputPaths = (
 				"${PODS_ROOT}/Target Support Files/Pods-DarklyTests/Pods-DarklyTests-frameworks.sh",
-				"${BUILT_PRODUCTS_DIR}/DarklyEventSource/DarklyEventSource.framework",
 				"${BUILT_PRODUCTS_DIR}/OCMock/OCMock.framework",
 				"${BUILT_PRODUCTS_DIR}/OHHTTPStubs/OHHTTPStubs.framework",
 			);
@@ -1553,7 +1574,6 @@
 			outputFileListPaths = (
 			);
 			outputPaths = (
-				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/DarklyEventSource.framework",
 				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/OCMock.framework",
 				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/OHHTTPStubs.framework",
 			);

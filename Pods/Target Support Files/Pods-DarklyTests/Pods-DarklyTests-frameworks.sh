@@ -153,12 +153,10 @@ strip_invalid_archs() {
 
 
 if [[ "$CONFIGURATION" == "Debug" ]]; then
-  install_framework "${BUILT_PRODUCTS_DIR}/DarklyEventSource/DarklyEventSource.framework"
   install_framework "${BUILT_PRODUCTS_DIR}/OCMock/OCMock.framework"
   install_framework "${BUILT_PRODUCTS_DIR}/OHHTTPStubs/OHHTTPStubs.framework"
 fi
 if [[ "$CONFIGURATION" == "Release" ]]; then
-  install_framework "${BUILT_PRODUCTS_DIR}/DarklyEventSource/DarklyEventSource.framework"
   install_framework "${BUILT_PRODUCTS_DIR}/OCMock/OCMock.framework"
   install_framework "${BUILT_PRODUCTS_DIR}/OHHTTPStubs/OHHTTPStubs.framework"
 fi
