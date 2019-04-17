@@ -281,7 +281,11 @@ NSString * const kUserDefaultsKeyUserEnvironments = @"com.launchdarkly.dataManag
 - (void)deprecatedStoreUserDictionary:(NSDictionary *)userDictionary {
     NSMutableDictionary *archiveDictionary = [[NSMutableDictionary alloc] init];
     for (NSString *key in userDictionary) {
+//TODO: When macOS fixes the incorrect method unavailable warning to include macOS 10.10, remove disabling of the warning
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wunguarded-availability"
         NSData *userEncodedObject = [NSKeyedArchiver archivedDataWithRootObject:(LDUserModel *)[userDictionary objectForKey:key]];
+#pragma clang diagnostic pop
         [archiveDictionary setObject:userEncodedObject forKey:key];
     }
     
