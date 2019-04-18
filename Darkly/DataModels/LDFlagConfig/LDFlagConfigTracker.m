@@ -73,7 +73,7 @@
     return [NSString stringWithFormat:@"<LDFlagConfigTracker: %p, flagCounters: %@, startDateMillis: %ld>", self, [self.mutableFlagCounters description], (long)self.startDateMillis];
 }
 
--(id)copyWithZone:(NSZone*)zone {
+-(instancetype)copyWithZone:(NSZone*)zone {
     LDFlagConfigTracker *copy = [[self class] new];
     copy.startDateMillis = self.startDateMillis;
     copy.mutableFlagCounters = [NSMutableDictionary dictionary];

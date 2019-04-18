@@ -12,5 +12,5 @@
 @interface NSDictionary(Testable)
 -(BOOL)boolValueForKey:(nullable NSString*)key;
 -(NSInteger)integerValueForKey:(nullable NSString*)key;
--(BOOL)isEqualToUserEnvironmentUsersDictionary:(NSDictionary*)otherDictionary;
+-(BOOL)isEqualToUserEnvironmentUsersDictionary:(nullable NSDictionary*)otherDictionary;
 @end

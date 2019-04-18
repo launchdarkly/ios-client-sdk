@@ -1,0 +1,5 @@
+framework module Darkly_macOS {
+    umbrella header "Darkly_macOS.h"
+    export *
+    module * { export * }
+}

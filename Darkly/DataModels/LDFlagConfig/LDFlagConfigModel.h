@@ -28,11 +28,11 @@
 -(void)deleteFromDictionary:(nullable NSDictionary*)eventDictionary;
 
 -(BOOL)isEqualToConfig:(nullable LDFlagConfigModel*)otherConfig;
--(NSArray<NSString*>*)differingFlagKeysFromConfig:(nullable LDFlagConfigModel*)otherConfig;
+-(nullable NSArray<NSString*>*)differingFlagKeysFromConfig:(nullable LDFlagConfigModel*)otherConfig;
 -(BOOL)hasFeaturesEqualToDictionary:(nullable NSDictionary*)otherDictionary;
 
 -(void)updateEventTrackingContextFromConfig:(nullable LDFlagConfigModel*)otherConfig;
 
--(LDFlagConfigModel*)copy;
+-(nonnull instancetype)copy;
 -(nonnull NSString*)description;
 @end

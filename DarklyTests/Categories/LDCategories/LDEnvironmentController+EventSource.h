@@ -7,7 +7,7 @@
 //
 
 #import "LDEnvironmentController.h"
-#import "LDEventSource.h"
+#import <DarklyEventSource/LDEventSource.h>
 
 @interface LDEnvironmentController (EventSource)
 -(LDEventSource*)eventSource;

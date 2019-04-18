@@ -25,7 +25,7 @@ To integrate LaunchDarkly into your Xcode project using CocoaPods, specify it in
 ```ruby
 target 'TargetName' do
     platform :ios, '8.0'
-    pod 'LaunchDarkly', '~> 2.14.4'
+    pod 'LaunchDarkly', '~> 3.0.0'
 end
 ```
 
@@ -49,11 +49,11 @@ $ brew install carthage
 To integrate LaunchDarkly into your Xcode project using Carthage, specify it in your `Cartfile`:
 
 ```ogdl
-github "launchdarkly/ios-client" "2.14.4"
+github "launchdarkly/ios-client" "3.0.0"
 ```
 
 Run `carthage update` to build the framework. Optionally, specify the `--platform` to build only the frameworks that support your platform(s).
-Drag the built `Darkly.framework` from your platform's Carthage/Build folder into your Xcode project.
+Drag the built `Darkly.framework` from your platform's Carthage/Build folder into your Xcode project under Embedded Binaries. For non-iOS frameworks the framework includes the platform, e.g. `Darkly_tvOS.framework`
 Follow the instructions at [Getting Started](https://github.com/Carthage/Carthage#getting-started) to finish the setup. Your app may not build until you add the run script phase to `copy-frameworks` to your target(s).
 
 ### Installation without a package manager
@@ -126,7 +126,7 @@ NOTE: If you want to install LaunchDarkly without using frameworks see [Install 
   * Select the target device.
   * Build.
   * Open `Products` in the *Project Navigator*.
-  * Ctrl-Click the `DarklyEventSource.framework` file just built.
+  * Ctrl-Click the `DarklyEventSource.framework` file just built. Note that DarklyEventSource does not include the platform in the framework name. Ensure the selected framework is for the correct platform.
   * Select `Show in Finder`.
   * Copy the `DarklyEventSource.framework` into the `Frameworks` sub-folder for the platform.
   * Repeat for each supported platform.
@@ -142,9 +142,9 @@ NOTE: If you want to install LaunchDarkly without using frameworks see [Install 
   * Add the path to the Frameworks sub-folder for the selected platform.
   * Build.
   * Open `Products` in the *Project Navigator*.
-  * Ctrl-Click the `Darkly.framework` file just built.
+  * Ctrl-Click the `Darkly.framework` file just built. For non-ios platforms, the framework name includes the platform, e.g. `Darkly_macOS.framework`.
   * Select `Show in Finder`.
-  * Copy the `Darkly.framework` into the `Frameworks` sub-folder for the platform.
+  * Copy the `Darkly.framework` or `Darkly_<platform>.framework` into the `Frameworks` sub-folder for the platform.
   * Repeat for each supported platform.
   * Close `Darkly.xcodeproj`.
 15. Add the frameworks to your project
@@ -152,7 +152,7 @@ NOTE: If you want to install LaunchDarkly without using frameworks see [Install 
   * Select your project in the *Project Navigator*.
   * Select the target for your app's platform.
   * Select the *General* tab.
-  * From the Frameworks folder created at step 11, drag the `DarklyEventSource.framework` and `Darkly.framework` for the matching platform into `Linked Frameworks and Libraries`.
+  * From the Frameworks folder created at step 11, drag the `DarklyEventSource.framework` and `Darkly.framework` or `Darkly_<platform>.framework` for the matching platform into `Linked Frameworks and Libraries`.
   * Remove the frameworks just added from `Linked Frameworks and Libraries`. The frameworks should remain visible in the `Frameworks` group in the *Project Navigator*.
   * Add the frameworks to the `Embedded Binaries`.
   * Repeat for each target that uses LaunchDarkly.
@@ -188,22 +188,23 @@ NOTE: If you want to install LaunchDarkly without using frameworks see [Install 
 
 #### Final setup instructions
 22. Import the SDK into your code.
-  * For Objective-C applications, add `#import <Darkly/Darkly.h>` to the source file that references LD classes.
-  * For Swift applications, add `#import <Darkly/Darkly.h>` to your app's Bridging-Header. If LaunchDarkly is the first Objective-C code in your app, follow Apple's instructions for creating a [Bridging Header](https://developer.apple.com/documentation/swift/imported_c_and_objective-c_apis/importing_objective-c_into_swift) and then add the import to it.
+  * For Objective-C applications, add `@import Darkly;` or `@import Darkly_<platform>;` to the source file that references LD classes.
+  * For Swift applications, add `@import Darkly;` or `import Darkly_<platform>;` to your app's Bridging-Header. If LaunchDarkly is the first Objective-C code in your app, follow Apple's instructions for creating a [Bridging Header](https://developer.apple.com/documentation/swift/imported_c_and_objective-c_apis/importing_objective-c_into_swift) and then add the import to it.
 23. Delete derived data for your project.
-24. Build your app for each target. If it fails, you may have skipped one of the steps above. Verify you have chosen the appropriate platform in each step.
-25. Run your app. If the app crashes, it is likely that either the incorrect platform was installed, or the `Darkly` or `DarklyEventSource` dependencies were incorrectly added.
+24. Clean the Build Folder for your project.
+25. Build your app for each target. If it fails, you may have skipped one of the steps above. Verify you have chosen the appropriate platform in each step.
+26. Run your app. If the app crashes, it is likely that either the incorrect platform was installed, or the `Darkly` or `DarklyEventSource` dependencies were incorrectly added.
 
 Quick setup
 -----------
 
 1. Add the SDK to your `Podfile`:
 
-        pod 'LaunchDarkly', '2.14.4'
+        pod 'LaunchDarkly', '3.0.0'
 
 2. Import the LaunchDarkly client:
 
-        #import "Darkly.h"
+        `@import LaunchDarkly;`
 
 3. Instantiate a new LDClient with your mobile key and user:
 

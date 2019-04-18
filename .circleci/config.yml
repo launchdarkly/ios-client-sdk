@@ -1,4 +1,4 @@
-# config file version: 1.1.0
+# config file version: 1.2.0
 version: 2
 jobs:
   build:
@@ -12,7 +12,7 @@ jobs:
       FL_OUTPUT_DIR: output
 
     macos:
-      xcode: '10.1.0'
+      xcode: '10.2.0'
 
     steps:
     - checkout
@@ -40,6 +40,10 @@ jobs:
         key: v1-dep-{{ .Branch }}-{{ epoch }}
         paths:
           - vendor/bundle
+
+    - run:
+        name: Build DarklyEventSource
+        command: carthage update
 
     - run:
        name: List Simulators

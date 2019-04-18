@@ -43,6 +43,6 @@ extern NSInteger const kLDFlagConfigValueItemDoesNotExist;
 -(BOOL)hasPropertiesMatchingDictionary:(nullable NSDictionary*)dictionary;
 
 -(nonnull NSString*)description;
--(id)copyWithZone:(nullable NSZone*)zone;
+-(nonnull instancetype)copyWithZone:(nullable NSZone*)zone;
 
 @end
