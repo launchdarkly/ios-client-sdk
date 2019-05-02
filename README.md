@@ -1,15 +1,26 @@
 LaunchDarkly SDK for iOS
 ========================
 
-![CircleCI](https://circleci.com/gh/launchdarkly/ios-client/tree/master.svg?style=svg)
+![CircleCI](https://circleci.com/gh/launchdarkly/ios-client-sdk/tree/master.svg?style=svg)
 [![CocoaPods Compatible](https://img.shields.io/cocoapods/v/LaunchDarkly.svg)](https://img.shields.io/cocoapods/v/LaunchDarkly.svg)
 [![Carthage compatible](https://img.shields.io/badge/Carthage-compatible-4BC51D.svg?style=flat)](https://github.com/Carthage/Carthage)
 [![Platform](https://img.shields.io/cocoapods/p/LaunchDarkly.svg?style=flat)](http://docs.launchdarkly.com/docs/ios-sdk-reference)
 
-Installation
-------------
+LaunchDarkly overview
+-------------------------
+[LaunchDarkly](https://www.launchdarkly.com) is a feature management platform that serves over 100 billion feature flags daily to help teams build better software, faster. [Get started](https://docs.launchdarkly.com/docs/getting-started) using LaunchDarkly today!
+ 
+[![Twitter Follow](https://img.shields.io/twitter/follow/launchdarkly.svg?style=social&label=Follow&maxAge=2592000)](https://twitter.com/intent/follow?screen_name=launchdarkly)
 
-LaunchDarkly supports multiple methods for installing the library in a project.
+Supported iOS versions
+-------------------------
+
+This version of the LaunchDarkly SDK has been tested with iOS 12 and across mobile, desktop, watch, and tv devices.
+
+Getting started
+-----------
+
+LaunchDarkly supports multiple methods for installing the library in a project. Once installed, head over to the [SDK documentation](https://docs.launchdarkly.com/docs/ios-sdk-reference#section-getting-started) for complete instructions on getting started with using the SDK.
 
 ### Installation with CocoaPods
 
@@ -18,6 +29,7 @@ LaunchDarkly supports multiple methods for installing the library in a project.
 ```bash
 $ gem install cocoapods
 ```
+
 #### Podfile
 
 To integrate LaunchDarkly into your Xcode project using CocoaPods, specify it in your `Podfile`:
@@ -25,7 +37,7 @@ To integrate LaunchDarkly into your Xcode project using CocoaPods, specify it in
 ```ruby
 target 'TargetName' do
     platform :ios, '8.0'
-    pod 'LaunchDarkly', '~> 3.0.0'
+    pod 'LaunchDarkly', '~> 3.0.1'
 end
 ```
 
@@ -49,7 +61,7 @@ $ brew install carthage
 To integrate LaunchDarkly into your Xcode project using Carthage, specify it in your `Cartfile`:
 
 ```ogdl
-github "launchdarkly/ios-client" "3.0.0"
+github "launchdarkly/ios-client" "3.0.1"
 ```
 
 Run `carthage update` to build the framework. Optionally, specify the `--platform` to build only the frameworks that support your platform(s).
@@ -195,84 +207,33 @@ NOTE: If you want to install LaunchDarkly without using frameworks see [Install 
 25. Build your app for each target. If it fails, you may have skipped one of the steps above. Verify you have chosen the appropriate platform in each step.
 26. Run your app. If the app crashes, it is likely that either the incorrect platform was installed, or the `Darkly` or `DarklyEventSource` dependencies were incorrectly added.
 
-Quick setup
------------
-
-1. Add the SDK to your `Podfile`:
-
-        pod 'LaunchDarkly', '3.0.0'
-
-2. Import the LaunchDarkly client:
-
-        `@import LaunchDarkly;`
-
-3. Instantiate a new LDClient with your mobile key and user:
-
-````objc
-        LDConfig *config = [[LDConfig alloc] initWithMobileKey: @"YOUR_MOBILE_KEY"];
-
-        LDUserBuilder *user = [[LDUserBuilder alloc] init];
-        user.key = @"aa0ceb";
-
-        [[LDClient sharedInstance] start:config withUserBuilder:user];
-````
-(Be sure to use a mobile key from your environments. Never embed a standard SDK key into a mobile application.)
-
-Your first feature flag
------------
-
-1. Create a new feature flag on your dashboard
-
-2. In your application code, use the feature’s key to check whether the flag is on for each user:
-
-        BOOL showFeature = [[LDClient sharedInstance] boolVariation:@"YOUR_FLAG_KEY" fallback:NO];
-        if (showFeature) {
-            NSLog(@"Showing feature for %@", user.key);
-        } else {
-            NSLog(@"Not showing feature for user %@", user.key);
-        }
-
-Manage the feature on your dashboard — control who sees the feature without re-deploying your application!
-
-
 Learn more
 -----------
-
-Check out our [documentation](http://docs.launchdarkly.com) for in-depth instructions on configuring and using LaunchDarkly. You can also head straight to the [complete reference guide for this SDK](http://docs.launchdarkly.com/docs/ios-sdk-reference).
-
+ 
+Check out our [documentation](https://docs.launchdarkly.com) for in-depth instructions on configuring and using LaunchDarkly. You can also head straight to the [complete reference guide for this SDK](https://docs.launchdarkly.com/docs/ios-sdk-reference).
+ 
 Testing
 -------
-
+ 
 We run integration tests for all our SDKs using a centralized test harness. This approach gives us the ability to test for consistency across SDKs, as well as test networking behavior in a long-running application. These tests cover each method in the SDK, and verify that event sending, flag evaluation, stream reconnection, and other aspects of the SDK all behave correctly.
-
+ 
 Contributing
 ------------
-
-See [Contributing](https://github.com/launchdarkly/ios-client/blob/master/CONTRIBUTING.md)
-
+ 
+We encourage pull requests and other contributions from the community. Check out our [contributing guidelines](https://github.com/launchdarkly/ios-client-sdk/blob/master/CONTRIBUTING.md) for instructions on how to contribute to this SDK.
+ 
 About LaunchDarkly
 -----------
-
+ 
 * LaunchDarkly is a continuous delivery platform that provides feature flags as a service and allows developers to iterate quickly and safely. We allow you to easily flag your features and manage them from the LaunchDarkly dashboard.  With LaunchDarkly, you can:
     * Roll out a new feature to a subset of your users (like a group of users who opt-in to a beta tester group), gathering feedback and bug reports from real-world use cases.
     * Gradually roll out a feature to an increasing percentage of users, and track the effect that the feature has on key metrics (for instance, how likely is a user to complete a purchase if they have feature A versus feature B?).
     * Turn off a feature that you realize is causing performance problems in production, without needing to re-deploy, or even restart the application with a changed configuration file.
     * Grant access to certain features based on user attributes, like payment plan (eg: users on the ‘gold’ plan get access to more features than users in the ‘silver’ plan). Disable parts of your application to facilitate maintenance, without taking everything offline.
-* LaunchDarkly provides feature flag SDKs for
-    * [Java](http://docs.launchdarkly.com/docs/java-sdk-reference "Java SDK")
-    * [JavaScript](http://docs.launchdarkly.com/docs/js-sdk-reference "LaunchDarkly JavaScript SDK")
-    * [PHP](http://docs.launchdarkly.com/docs/php-sdk-reference "LaunchDarkly PHP SDK")
-    * [Python](http://docs.launchdarkly.com/docs/python-sdk-reference "LaunchDarkly Python SDK")
-    * [Python Twisted](http://docs.launchdarkly.com/docs/python-twisted-sdk-reference "LaunchDarkly Python Twisted SDK")
-    * [Go](http://docs.launchdarkly.com/docs/go-sdk-reference "LaunchDarkly Go SDK")
-    * [Node.JS](http://docs.launchdarkly.com/docs/node-sdk-reference "LaunchDarkly Node SDK")
-    * [.NET](http://docs.launchdarkly.com/docs/dotnet-sdk-reference "LaunchDarkly .Net SDK")
-    * [Ruby](http://docs.launchdarkly.com/docs/ruby-sdk-reference "LaunchDarkly Ruby SDK")
-    * [iOS](http://docs.launchdarkly.com/docs/ios-sdk-reference "LaunchDarkly iOS SDK")
-    * [Android](http://docs.launchdarkly.com/docs/android-sdk-reference "LaunchDarkly Android SDK")
+* LaunchDarkly provides feature flag SDKs for a wide variety of languages and technologies. Check out [our documentation](https://docs.launchdarkly.com/docs) for a complete list.
 * Explore LaunchDarkly
-    * [launchdarkly.com](http://www.launchdarkly.com/ "LaunchDarkly Main Website") for more information
-    * [docs.launchdarkly.com](http://docs.launchdarkly.com/  "LaunchDarkly Documentation") for our documentation and SDKs
-    * [apidocs.launchdarkly.com](http://apidocs.launchdarkly.com/  "LaunchDarkly API Documentation") for our API documentation
-    * [blog.launchdarkly.com](http://blog.launchdarkly.com/  "LaunchDarkly Blog Documentation") for the latest product updates
+    * [launchdarkly.com](https://www.launchdarkly.com/ "LaunchDarkly Main Website") for more information
+    * [docs.launchdarkly.com](https://docs.launchdarkly.com/  "LaunchDarkly Documentation") for our documentation and SDK reference guides
+    * [apidocs.launchdarkly.com](https://apidocs.launchdarkly.com/  "LaunchDarkly API Documentation") for our API documentation
+    * [blog.launchdarkly.com](https://blog.launchdarkly.com/  "LaunchDarkly Blog Documentation") for the latest product updates
     * [Feature Flagging Guide](https://github.com/launchdarkly/featureflags/  "Feature Flagging Guide") for best practices and strategies

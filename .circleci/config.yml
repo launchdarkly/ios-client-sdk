@@ -2,7 +2,7 @@
 version: 2
 jobs:
   build:
-    working_directory: /Users/distiller/launchdarkly/ios-client/tmp
+    working_directory: /Users/distiller/launchdarkly/ios-client-sdk/tmp
     parallelism: 1    # controls the # of containers for the job. In theory, adding another container should halve the number of tests run in each container, but instead appears to run all tests in both containers.
     shell: /bin/bash --login
 
@@ -51,7 +51,7 @@ jobs:
 
     - run:
         name: Clean, Build, & Test Darkly_iOS
-        command: set -o pipefail && xcodebuild clean build test -workspace 'Darkly.xcworkspace' -scheme 'Darkly_iOS' -sdk iphonesimulator -destination 'platform=iOS Simulator,name=iPhone XS,OS=latest' CODE_SIGNING_REQUIRED=NO CODE_SIGN_IDENTITY= PROVISIONING_PROFILE= | tee 'Darkly_iOS_xcode_raw.log' | xcpretty --color --report html --output '/Users/distiller/launchdarkly/ios-client/tmp/output/report.html' --report junit --output '/Users/distiller/launchdarkly/ios-client/tmp/output/xcode/report.junit'
+        command: set -o pipefail && xcodebuild clean build test -workspace 'Darkly.xcworkspace' -scheme 'Darkly_iOS' -sdk iphonesimulator -destination 'platform=iOS Simulator,name=iPhone XS,OS=latest' CODE_SIGNING_REQUIRED=NO CODE_SIGN_IDENTITY= PROVISIONING_PROFILE= | tee 'Darkly_iOS_xcode_raw.log' | xcpretty --color --report html --output '/Users/distiller/launchdarkly/ios-client-sdk/tmp/output/report.html' --report junit --output '/Users/distiller/launchdarkly/ios-client-sdk/tmp/output/xcode/report.junit'
 
     - run:
         name: Clean & Build Darkly_watchOS
