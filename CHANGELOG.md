@@ -2,6 +2,10 @@
 
 All notable changes to the LaunchDarkly iOS SDK will be documented in this file. This project adheres to [Semantic Versioning](http://semver.org).
 
+## [3.0.1] - 2019-04-30
+### Changed
+- Deployed Carthage built DarklyEventSource frameworks as part of the Darkly project.
+
 ## [3.0.0] - 2019-04-17
 ### Changed
 - Renamed the non-iOS Darkly frameworks to include the platform name. e.g. Darkly_watchOS. Because non-CocoaPods apps will need to update imports for the new modules, advanced to the next major version.

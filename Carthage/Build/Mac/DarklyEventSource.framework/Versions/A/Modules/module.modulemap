@@ -1,0 +1,6 @@
+framework module DarklyEventSource {
+  umbrella header "DarklyEventSource.h"
+
+  export *
+  module * { export * }
+}
