@@ -8,14 +8,14 @@
 
 import Foundation
 
-//sourcery: AutoMockable
+//sourcery: autoMockable
 protocol FlagChangeNotifying {
     func addFlagChangeObserver(_ observer: FlagChangeObserver)
     func addFlagsUnchangedObserver(_ observer: FlagsUnchangedObserver)
-    //sourcery: NoMock
+    //sourcery: noMock
     func removeObserver(_ key: LDFlagKey, owner: LDObserverOwner)
     func removeObserver(_ keys: [LDFlagKey], owner: LDObserverOwner)
-    //sourcery: NoMock
+    //sourcery: noMock
     func removeObserver(owner: LDObserverOwner)
     func notifyObservers(user: LDUser, oldFlags: [LDFlagKey: FeatureFlag], oldFlagSource: LDFlagValueSource)
 }

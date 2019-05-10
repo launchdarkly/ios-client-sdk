@@ -11,7 +11,7 @@ import Foundation
 //Protocol to convert base LDFlagType into an LDFlagValue
 ///Protocol used by the SDK to limit feature flag types to those representable on LaunchDarkly servers. Client app developers should not need to use this protocol. The protocol is public because `LDClient.variation(forKey:fallback:)` and `LDClient.variationAndSource(forKey:fallback:)` return a type that conforms to this protocol. See `LDFlagValue` for types that LaunchDarkly feature flags can take.
 public protocol LDFlagValueConvertible {
-// This commented out code here and in each extension will be used to support automatic typing. Version `3.0.0` does not support that capability. When that capability is added, uncomment this code.
+// This commented out code here and in each extension will be used to support automatic typing. Version `4.0.0` does not support that capability. When that capability is added, uncomment this code.
 //    func toLDFlagValue() -> LDFlagValue
 }
 

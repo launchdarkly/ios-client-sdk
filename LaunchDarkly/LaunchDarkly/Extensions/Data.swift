@@ -12,4 +12,8 @@ extension Data {
     var base64UrlEncodedString: String {
         return base64EncodedString().replacingOccurrences(of: "+", with: "-").replacingOccurrences(of: "/", with: "_")
     }
+
+    var jsonDictionary: [String: Any]? {
+        return try? JSONSerialization.jsonDictionary(with: self, options: [.allowFragments])
+    }
 }

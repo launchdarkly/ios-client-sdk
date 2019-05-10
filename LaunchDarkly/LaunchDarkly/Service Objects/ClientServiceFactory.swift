@@ -11,51 +11,46 @@ import DarklyEventSource
 
 protocol ClientServiceCreating {
     func makeKeyedValueCache() -> KeyedValueCaching
-    func makeCacheConverter() -> UserCacheConverting
-    func makeCacheConverter(keyStore: KeyedValueCaching) -> UserCacheConverting
-    func makeFlagCollectionCache(keyStore: KeyedValueCaching) -> FlagCollectionCaching
-    func makeUserFlagCache() -> UserFlagCaching
-    func makeUserFlagCache(flagCollectionStore: FlagCollectionCaching) -> UserFlagCaching
+    func makeFeatureFlagCache() -> FeatureFlagCaching
+    func makeCacheConverter() -> CacheConverting
+    func makeDeprecatedCacheModel(_ model: DeprecatedCacheModel) -> DeprecatedCache
     func makeDarklyServiceProvider(config: LDConfig, user: LDUser) -> DarklyServiceProvider
-    mutating func makeFlagSynchronizer(streamingMode: LDStreamingMode, pollingInterval: TimeInterval, useReport: Bool, service: DarklyServiceProvider) -> LDFlagSynchronizing
-    mutating func makeFlagSynchronizer(streamingMode: LDStreamingMode,
-                                       pollingInterval: TimeInterval,
-                                       useReport: Bool,
-                                       service: DarklyServiceProvider,
-                                       onSyncComplete: FlagSyncCompleteClosure?) -> LDFlagSynchronizing
+    func makeFlagSynchronizer(streamingMode: LDStreamingMode, pollingInterval: TimeInterval, useReport: Bool, service: DarklyServiceProvider) -> LDFlagSynchronizing
+    func makeFlagSynchronizer(streamingMode: LDStreamingMode,
+                              pollingInterval: TimeInterval,
+                              useReport: Bool,
+                              service: DarklyServiceProvider,
+                              onSyncComplete: FlagSyncCompleteClosure?) -> LDFlagSynchronizing
     func makeFlagChangeNotifier() -> FlagChangeNotifying
-    mutating func makeEventReporter(config: LDConfig, service: DarklyServiceProvider) -> EventReporting
-    mutating func makeEventReporter(config: LDConfig, service: DarklyServiceProvider, onSyncComplete: EventSyncCompleteClosure?) -> EventReporting
-    mutating func makeStreamingProvider(url: URL, httpHeaders: [String: String]) -> DarklyStreamingProvider
-    mutating func makeStreamingProvider(url: URL, httpHeaders: [String: String], connectMethod: String?, connectBody: Data?) -> DarklyStreamingProvider
+    func makeEventReporter(config: LDConfig, service: DarklyServiceProvider) -> EventReporting
+    func makeEventReporter(config: LDConfig, service: DarklyServiceProvider, onSyncComplete: EventSyncCompleteClosure?) -> EventReporting
+    func makeStreamingProvider(url: URL, httpHeaders: [String: String]) -> DarklyStreamingProvider
+    func makeStreamingProvider(url: URL, httpHeaders: [String: String], connectMethod: String?, connectBody: Data?) -> DarklyStreamingProvider
     func makeEnvironmentReporter() -> EnvironmentReporting
     func makeThrottler(maxDelay: TimeInterval, environmentReporter: EnvironmentReporting) -> Throttling
     func makeErrorNotifier() -> ErrorNotifying
 }
 
-struct ClientServiceFactory: ClientServiceCreating {
+final class ClientServiceFactory: ClientServiceCreating {
     func makeKeyedValueCache() -> KeyedValueCaching {
         return UserDefaults.standard
     }
 
-    func makeCacheConverter() -> UserCacheConverting {
-        return makeCacheConverter(keyStore: makeKeyedValueCache())
+    func makeFeatureFlagCache() -> FeatureFlagCaching {
+        return UserEnvironmentFlagCache(withKeyedValueCache: makeKeyedValueCache())
     }
 
-    func makeCacheConverter(keyStore: KeyedValueCaching) -> UserCacheConverting {
-        return UserCacheConverter(keyStore: keyStore, flagCollectionCache: makeFlagCollectionCache(keyStore: keyStore))
+    func makeCacheConverter() -> CacheConverting {
+        return CacheConverter(serviceFactory: self)
     }
 
-    func makeFlagCollectionCache(keyStore: KeyedValueCaching) -> FlagCollectionCaching {
-        return FlagCollectionCache(keyStore: keyStore)
-    }
-
-    func makeUserFlagCache() -> UserFlagCaching {
-        return UserFlagCache(flagCollectionStore: makeFlagCollectionCache(keyStore: makeKeyedValueCache()))
-    }
-
-    func makeUserFlagCache(flagCollectionStore: FlagCollectionCaching) -> UserFlagCaching {
-        return UserFlagCache(flagCollectionStore: flagCollectionStore)
+    func makeDeprecatedCacheModel(_ model: DeprecatedCacheModel) -> DeprecatedCache {
+        switch model {
+        case .version2: return DeprecatedCacheModelV2(keyedValueCache: makeKeyedValueCache())
+        case .version3: return DeprecatedCacheModelV3(keyedValueCache: makeKeyedValueCache())
+        case .version4: return DeprecatedCacheModelV4(keyedValueCache: makeKeyedValueCache())
+        case .version5: return DeprecatedCacheModelV5(keyedValueCache: makeKeyedValueCache())
+        }
     }
 
     func makeDarklyServiceProvider(config: LDConfig, user: LDUser) -> DarklyServiceProvider {

@@ -30,11 +30,10 @@ final class AnyComparerSpec: QuickSpec {
                                                 "int-array-key": [1, 2, 3],
                                                 "dictionary-key": ["keyA": true, "keyB": -1, "keyC": "howdy"]]
         static let date = Date()
-        static let userFlags = CacheableUserFlags.stub()
         static let null = NSNull()
 
-        static let all: [Any] = [bool, int, double, string, array, dictionary, date, userFlags, null]
-        static let allThatCanBeInequal: [Any] = [bool, int, double, string, array, dictionary, date, userFlags]
+        static let all: [Any] = [bool, int, double, string, array, dictionary, date, null]
+        static let allThatCanBeInequal: [Any] = [bool, int, double, string, array, dictionary, date]
     }
 
     struct AltValues {
@@ -51,13 +50,10 @@ final class AnyComparerSpec: QuickSpec {
                                                 "int-array-key": [1, 2, 3],
                                                 "dictionary-key": ["keyA": true, "keyB": -1, "keyC": "howdy"]]
         static let date = Date().addingTimeInterval(-1.0)
-        static let userFlags = CacheableUserFlags(userKey: UUID().uuidString,
-                                                  flags: DarklyServiceMock.Constants.stubFeatureFlags(includeNullValue: false),
-                                                  lastUpdated: Date().addingTimeInterval(1.0))
         static let null = NSNull()
 
-        static let all: [Any] = [bool, int, double, string, array, dictionary, date, userFlags, null]
-        static let allThatCanBeInequal: [Any] = [bool, int, double, string, array, dictionary, date, userFlags]
+        static let all: [Any] = [bool, int, double, string, array, dictionary, date, null]
+        static let allThatCanBeInequal: [Any] = [bool, int, double, string, array, dictionary, date]
     }
 
     override func spec() {

@@ -1,7 +1,7 @@
 module: LaunchDarkly
 author: LaunchDarkly
 author_url: http://launchdarkly.com
-github_url: https://github.com/launchdarkly/ios-client
+github_url: https://github.com/launchdarkly/ios-client-sdk
 clean: true
 include:
   - "LaunchDarkly/LaunchDarkly/**"

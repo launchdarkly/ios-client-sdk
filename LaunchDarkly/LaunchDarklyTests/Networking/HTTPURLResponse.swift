@@ -16,3 +16,14 @@ extension HTTPURLResponse.StatusCodes {
         !LDConfig.reportRetryStatusCodes.contains(statusCode) && statusCode != ok
     }
 }
+
+extension HTTPURLResponse.HeaderKeys {
+    static let cacheControl = "Cache-Control"
+}
+
+extension HTTPURLResponse {
+    struct HeaderValues {
+        static let etagStub = "4806e"
+        static let maxAge = "max-age=0"
+    }
+}

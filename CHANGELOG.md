@@ -2,7 +2,25 @@
 
 All notable changes to the LaunchDarkly iOS SDK will be documented in this file. This project adheres to [Semantic Versioning](http://semver.org).
 
-## [3.0.0-beta.3] - 2019-03-07
+### Multiple Environment clients
+Version 4.0.0 does not support multiple environments. If you use version `2.14.0` or later and set `LDConfig`'s `secondaryMobileKeys` you will not be able to migrate to version `4.0.0`. Multiple Environments will be added in a future release to the Swift SDK.
+
+## [4.0.0] - 2019-04-18
+This is the non-beta first release of the Swift SDK. It follows the beta.3 release from 2019-03-07. Unlike previous Swift SDK releases, this release does not have a `3.0.0` companion tag.
+### Changed
+- Changes Feature Flag caching so that cached feature flags are associated with a user key and mobile key.
+- Clears new warnings that appear with Xcode 10.2
+
+### Added
+- Implements URL caching for REPORT requests.
+- Installs the ability to read cached data in all cached data schemas from `2.3.3` through `3.0.1` and store the feature flags in the `4.0.0` cached data schema.
+- Retains prior cached data for 90 days following upgrade to `4.0.0`. Does not keep older cached data up-to-date. Downgrading to a prior version within 90 days allows the downgraded app to read the last cached data from the downgraded version.
+
+### Fixed
+- Prevents a log message that incorrectly reported a network error on watchOS 
+
+## [4.0.0-beta.3] - 2019-03-07
+This is part of the Swift SDK beta and was originally released as  `3.0.0-beta.3`.
 ### Changed
 - Renames SDK frameworks to `LaunchDarkly.framework` for iOS, and `LaunchDarkly_<platform>.framework` for non-iOS platforms.
 - Renames targets to `LaunchDarkly_<platform>`.
@@ -15,7 +33,8 @@ All notable changes to the LaunchDarkly iOS SDK will be documented in this file.
 - Instructions to integrate without a Package Manager to `README.md`
 - New log entries that tell when the SDK could not find a feature flag, and when the SDK could not convert a feature flag to the requested type
 
-## [3.0.0-beta.2] - 2019-02-06
+## [4.0.0-beta.2] - 2019-02-06
+This is part of the Swift SDK beta and was originally released as  `3.0.0-beta.2`.
 ### Changed
 - `LDFlagValueSource` is a Swift `enum` the SDK uses to communicate the source of a feature flag (`server`, `cache`, `fallback`) to the client app. The Objective-C `enum` was changed to an object to provide Objective-C client apps access to the methods available to the enum.
 - `mobileKey` was restored to a property within the `LDConfig`. As a result, `LDClient.start()` no longer takes a `mobileKey` parameter, and the `config` parameter is now required.
@@ -24,7 +43,8 @@ All notable changes to the LaunchDarkly iOS SDK will be documented in this file.
 - `LDClient.trackEvent` now accepts any valid json object. If an invalid JSON object is passed, the SDK throws a `JSONSerialization.JSONError.invalidJsonObject` error at runtime.
 -`LDClient.variation` and `variationAndSource` now accept Optional types and `nil` for the fallback value. The client app must specify the Optional Type for the compiler. See the migration guide for details.
 
-## [3.0.0-beta.1] - 2018-12-11
+## [4.0.0-beta.1] - 2018-12-11
+This is part of the Swift SDK beta and was originally released as  `3.0.0-beta.1`.
 ### Added
 - `LDClient` can now provide information about the source of a feature flag, `cache`, `server`, and `fallback`.
 - `LDConfig` offers some new configuration properties: `eventCapacity`, `startOnline`, `enableBackgroundUpdates`
@@ -38,8 +58,49 @@ All notable changes to the LaunchDarkly iOS SDK will be documented in this file.
 - `LDClient` uses Swift generics to get feature flag values. Swift client apps use a `variation` method (without the type) to get flag values.
 - `LDClientDelegate` was removed. Observe feature flags using `observe` methods on `LDClient`. Set a closure the `LDClient` will execute when the server is unavailable.
 
-### Multiple Environment clients
-Version 3.0.0 does not support multiple environments. If you use version 2.14.0 or later and set `LDConfig`'s `secondaryMobileKeys` you will not be able to migrate to version 3.0.0. Multiple Environments will be added in a future release to the Swift SDK.
+## [3.0.1] - 2019-04-30
+### Changed
+- Deployed Carthage built DarklyEventSource frameworks as part of the Darkly project.
+
+## [3.0.0] - 2019-04-17
+### Changed
+- Renamed the non-iOS Darkly frameworks to include the platform name. e.g. Darkly_watchOS. Because non-CocoaPods apps will need to update imports for the new modules, advanced to the next major version.
+- Removed DarklyEventSource as a CocoaPods dependency in the podfile. DarklyEventSource remains a dependency in the podspec.
+
+### Added
+- Nullability specifiers for items that caused new warnings with Xcode 10.2
+
+## [3.0.0-beta.3] - 2019-03-07
+This is part of the Swift SDK beta and was renamed to `4.0.0-beta.1`. See [4.0.0-beta.3 - 2019-03-07](#4-0-0-beta-3-2019-03-07) for details
+
+## [3.0.0-beta.2] - 2019-02-06
+This is part of the Swift SDK beta and was renamed to `4.0.0-beta.2`. See [4.0.0-beta.2 - 2019-02-06](#4-0-0-beta-2-2019-02-06) for details
+
+## [3.0.0-beta.1] - 2018-12-11
+This is part of the Swift SDK beta and was renamed to `4.0.0-beta.1`. See [4.0.0-beta.1 - 2018-12-11](#4-0-0-beta-1-2018-12-11) for details
+
+## [2.14.4] - 2019-02-26
+### Changed
+- Changed the following to repair macOS builds:
+- Removed extraneous framework reference from Darkly_macOS target
+- Deselected `Autocreate schemes` in Darkly.xcworkspace
+
+## [2.14.3] - 2019-02-25
+### Changed
+- Added support for integrating without a package manager
+- Updated to `DarklyEventSource` version `4.0.1`, which adds platform specific targets to support integration without a package manager.
+
+## [2.14.2] - 2019-01-24
+### Added
+- Added nullability specifiers to public SDK classes.
+
+### Changed
+- Updated to `DarklyEventSource` version `4.0.0`, which eliminates a 1-second delay in SDK initialization.
+
+## [2.14.1] - 2018-12-21
+### Changed
+- Added copy methods to several objects involved in creating a summary event.
+- Added additional synchronization to creating a summary event in order to potentially prevent some crash scenarios.
 
 ## [2.14.0] - 2018-12-05
 ### Added

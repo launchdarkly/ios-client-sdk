@@ -2,21 +2,21 @@ LaunchDarkly Migration Guide for the iOS Swift SDK
 ==================================================
 
 # Getting Started
-Follow the steps below to migrate your app from v2.x to v3.0.0. Most of these steps will be required, your IDE will give you build errors if you don't take them. However some steps (such as converting time intervals to Millis) the compiler can't warn you about. We recommend reading through the guide before starting to get a feel for what you will need to do to migrate your app to v3.0.0.
+Follow the steps below to migrate your app from v2.x or v3.x to v4.0.0. Most of these steps will be required, your IDE will give you build errors if you don't take them. We recommend reading through the guide before starting to get a feel for what you will need to do to migrate your app to v4.0.0.
 
 ### Multiple Environments
-Version 3.0.0 does not support multiple environments. If you use version 2.14.0 or later and set LDConfig's `secondaryMobileKeys` you will not be able to migrate to version 3.0.0. Multiple Environments will be added in a future release to the Swift SDK.
+Version 4.0.0 does not support multiple environments. If you use version 2.14.0 or later and set LDConfig's `secondaryMobileKeys` you will not be able to migrate to version 4.0.0. Multiple Environments will be added in a future release to the Swift SDK.
 
 ### Swift Version
-Version 3.0.0 is built on Swift 4.2 using Xcode 10. The SDK will not build using previous Swift versions, and therefore you must use Xcode 10 or later to build.
+Version 4.0.0 is built on Swift 4.2 using Xcode 10. The SDK will not build using previous Swift versions, and therefore you must use Xcode 10 or later to build.
 
-[API Differences from v2.x](#api-differences-from-v2x) lists all of the changes to the API.
+[API Differences from v2.x or v3.x](#api-differences-from-v2x-or-v3x) lists all of the changes to the API.
 
 ## Migration Steps
-1. Integrate the v3.0.0 SDK into your app. (e.g. CocoaPods podfile or Carthage cartfile change to point to v3.0.0). See [Integrate the Swift SDK into your app using either CocoaPods or Carthage](#integrate-the-swift-sdk-into-your-app-using-either-cocoapods-or-carthage) for details.
+1. Integrate the v4.0.0 SDK into your app. (e.g. CocoaPods podfile or Carthage cartfile change to point to v4.0.0). See [Integrate the Swift SDK into your app using either CocoaPods or Carthage](#integrate-the-swift-sdk-into-your-app-using-either-cocoapods-or-carthage) for details.
 2. Clean, and delete Derived Data.
 3. Update imports to `LaunchDarkly`. See [Update imports to `LaunchDarkly`](#update-imports-to-launchdarkly) for details.
-4. In Swift code, replace instances of `LDClient.sharedInstance()` with `LDClient.shared`. Do not change Objective-C `[LDClient sharedInstance]` instances.
+4. In Swift code, replace instances of `LDClient.sharedInstance()` with `LDClient.shared`. Do not change Objective-C `[LDClient sharedInstance]` occurrences.
 5. Update `LDUser` and properties. See [Update `LDUser` and properties](#update-lduser-and-properties) for details.
 6. Update `LDConfig` and properties. See [Update `LDConfig` and properties](#update-ldconfig-and-properties) for details.
 7. Update `LDClient` Controls. See [Update `LDClient` Controls](#update-ldclient-controls) for details.
@@ -28,13 +28,18 @@ Version 3.0.0 is built on Swift 4.2 using Xcode 10. The SDK will not build using
 ### Integrate the Swift SDK into your app using either CocoaPods or Carthage
 #### CocoaPods
 - Add `use_frameworks!` to either the root or to any targets that include `LaunchDarkly`
+
 #### Carthage
 - Replace the `Darkly.framework` for each target with `LaunchDarkly.framework`. Non-iOS platform frameworks include the platform in the framework name, e.g. `LaunchDarkly_tvOS.framework`. The `DarklyEventSource.framework` should also be present, just as with v2.x.
 - For Objective-C apps using Carthage, turn on `Always Embed Swift Standard Libraries` in Build Settings
 - If you use the copy frameworks carthage script, replace `Darkly.framework` with `LaunchDarkly.framework` (or the framework with the platform name) in both the Input and Output files entries.
 
 ### Update imports to `LaunchDarkly`
-- The module was renamed from `Darkly` to `LaunchDarkly`. Replace any `#import` that has a LD header with a single `@import LaunchDarkly;` (Objective-C) or `import LaunchDarkly` (Swift). For non-iOS platforms built outside of CocoaPods, append the platform name to LaunchDarkly, e.g. `@import LaunchDarkly_macOS;` or `import LaunchDarkly_watchOS`.
+The module was renamed from `Darkly` to `LaunchDarkly`.
+- Objective-C apps replace any `#import` that has a LD header with a single `@import LaunchDarkly;`
+- Swift apps replace `import Darkly` with `import LaunchDarkly`.
+- CocoaPods users import `LaunchDarkly` for all platforms, similar to prior releases.
+- For non-iOS platforms built outside of CocoaPods, append the platform name to LaunchDarkly, e.g. `@import LaunchDarkly_macOS;` or `import LaunchDarkly_watchOS`.
 
 ### Update `LDUser` and properties
 - Replace any references to `LDUserBuilder` or `LDUserModel` with `LDUser`
@@ -48,7 +53,7 @@ See [Custom users with `LDUser`](#custom-users-with-lduser) for details.
 - Change lines that set `baseUrl`, `eventsUrl`, and `streamUrl` with strings to instead set these properties with `URL` objects.
 - Change lines that set `capacity` to set `eventCapacity`
 - Change lines that set time-based properties (`connectionTimeout`, `flushInterval`, `pollingInterval`, and `backgroundFetchInterval`) to their `TimeInterval` property (`connectionTimeout`, `eventFlushInterval`, `flagPollingInterval`, and `backgroundFlagPollingInterval`).
-- Change lines that set `streaming` to set `streamingMode`. For Swift apps, use the enum `.streaming` or `.polling`. For Objective-C apps, set to `YES` for streaming, and `NO` for polling as with the v2.x SDK. Note that if you do not have this property set, LDConfig sets it to streaming mode for you.
+- Change lines that set `streaming` to set `streamingMode`. For Swift apps, use the enum `.streaming` or `.polling`. For Objective-C apps, set to `YES` for streaming, and `NO` for polling as with the v2.x or v3.x SDK. Note that if you do not have this property set, LDConfig sets it to streaming mode for you.
 - Change lines that set `debugEnabled` to set `debugMode` instead.
 
 See [Configuration with LDConfig](#configuration-with-ldconfig) for details.
@@ -95,8 +100,8 @@ Wrap calls to `trackEvent` into do-catch statements. If desired, catch `JSONSeri
 Calls to `trackEvent` include a 3rd parameter `error`, which the SDK sets when a call receives invalid JSON data. To verify the `error` object set by `trackEvents` threw a `JSONSerialization.JSONError.invalidJsonObject` error, compare the `domain` to `LaunchDarklyJSONErrorDomain` and the `code` to `LaunchDarklyJSONErrorInvalidJsonObject`.
 
 ---
-## API Differences from v2.x
-This section details the changes between the v2.x and v3.0.0 APIs.
+## API Differences from v2.x or v3.x
+This section details the changes between the v2.x or v3.x and v4.0.0 APIs.
 
 ### Configuration with `LDConfig`
 LDConfig has changed to a `struct`, and therefore uses value semantics.
@@ -114,8 +119,9 @@ These properties have changed to `TimeInterval` properties.
 - `flushInterval` has changed to `eventFlushInterval`.
 - `pollingInterval` has changed to `flagPollingInterval`.
 - `backgroundFetchInterval` has changed to `backgroundFlagPollingInterval`
+
 ##### `streaming`
-This property has changed to `streamingMode` and to an enum type `LDStreamingMode`. The default remains `.streaming`. To set polling mode, set this property to `.polling`.
+This property has changed to `streamingMode` and to an enum type `LDStreamingMode`. Swift apps use the new API. The default remains `.streaming`. To set polling mode, set this property to `.polling`. Objective-C apps continue to use `streaming` set to `YES` or `NO`
 ##### `debugEnabled`
 This property has changed to `debugMode`.
 
@@ -132,13 +138,13 @@ LDConfig conforms to `Equatable`.
 
 #### `LDConfig` Objective-C Compatibility
 Since Objective-C does not represent `struct` items, the SDK wraps the LDConfig into a `NSObject` based wrapper with all the same properties as the Swift `struct`. The class `ObjcLDConfig` encapsulates the wrapper class. Objective-C client apps should refer to `LDConfig` and allow the Swift runtime to handle the conversion. Mixed apps can use the `LDConfig` var `objcLdConfig` to vend the Objective-C wrapper if needed to pass the `LDConfig` to an Objective-C method.
-The type changes mentioned above all apply to the Objective-C LDConfig. `Int` types become `NSInteger` types in Objective-C, replacing `NSNumber` objects from v2.x.
+The type changes mentioned above all apply to the Objective-C LDConfig. `Int` types become `NSInteger` types in Objective-C, replacing `NSNumber` objects from v2.x or v3.x.
 An Objective-C `isEqual` method provides LDConfig object comparison capability.
 
 ### Custom users with `LDUser`
-`LDUser` replaces `LDUserBuilder` and `LDUserModel` from v2.x. `LDUser` is a Swift `struct`, and therefore uses value semantics.
+`LDUser` replaces `LDUserBuilder` and `LDUserModel` from v2.x or v3.x. `LDUser` is a Swift `struct`, and therefore uses value semantics.
 #### Changed `LDUser` Properties
-Since the only required property is `key`, all other properties are Optional. While this is not really a change from v2.x, it is more explicit in Swift and may require some Optional handling that was not required in v2.x.
+Since the only required property is `key`, all other properties are Optional. While this is not really a change from v2.x or v3.x, it is more explicit in Swift and may require some Optional handling that was not required in v2.x or v3.x.
 ##### `ip`
 This property has changed to `ipAddress`.
 ##### `custom<JsonType>`
@@ -183,6 +189,7 @@ This property was removed. See [Replacing LDClient delegate methods](#replacing-
 - `withUserBuilder` has changed to `user` and its type changed to `LDUser`
 - `completion` was added to get a callback when the SDK has completed starting
 - The return value has been removed. Use `isOnline` to determine the SDK's online status.
+
 ##### `stopClient`
 This method was renamed to `stop()`
 ##### `updateUser`
@@ -195,7 +202,7 @@ This method was removed. Set the `user` property instead.
 
 ### Getting Feature Flag Values
 #### `variation()`
-Swift Generics allowed us to combine the `variation` methods that were used in the v2.x SDK. v3.0.0 has one `variation` method that returns a non-Optional type that matches the non-Optional type the client app provides in the `fallback` parameter. A second `variation` method allows the client app to use an Optional as the `fallback`. This method requires the client to specify the Optional type when passing `nil` as the `fallback`. For this second method, the fallback parameter is defaulted to `nil`. When using this second method, set the type on the item holding the return value, e.g.
+Swift Generics allowed us to combine the `variation` methods that were used in the v2.x or v3.x SDK. v4.0.0 has one `variation` method that returns a non-Optional type that matches the non-Optional type the client app provides in the `fallback` parameter. A second `variation` method allows the client app to use an Optional as the `fallback`. This method requires the client to specify the Optional type when passing `nil` as the `fallback`. For this second method, the fallback parameter is defaulted to `nil`. When using this second method, set the type on the item holding the return value, e.g.
 ```swift
     let boolFlagValue: Bool? = LDClient.shared.variation(forKey: "bool-flag-key")
 ```
@@ -207,12 +214,12 @@ A new `variationAndSource()` method returns a tuple `(value, source)` that allow
 #### `allFlagValues`
 A new computed property `allFlagValues` returns a `[LDFlagKey: Any]` that has all feature flag keys and their values. This dictionary is a snapshot taken when `allFlagValues` was requested. The SDK does not try to keep these values up-to-date, and does not record any events when accessing the dictionary.
 #### Objective-C Feature Flag Value Compatibility
-Swift generic functions cannot operate in Objective-C. The `ObjcLDClient` wrapper retains the type-based variation methods used in v2.x, except for `numberVariation`. A new `integerVariation` method reports NSInteger feature flags. NSNumbers that were decimal numbers should use `doubleVariation`.
+Swift generic functions cannot operate in Objective-C. The `ObjcLDClient` wrapper retains the type-based variation methods used in v2.x or v3.x, except for `numberVariation`. A new `integerVariation` method reports NSInteger feature flags. NSNumbers that were decimal numbers should use `doubleVariation`.
 
 The wrapper also includes new type-based `variationAndSource` methods that return a type-based `VariationValue` object (e.g. `LDBoolVariationValue`) that encapsulates the `value` and `source`. `source` is an `ObjcLDFlagValueSource` Objective-C int backed enum (accessed in Objective-C via `LDFlagValueSource`). In addition to `server`, `cache`, and `fallback`, other possible values could be `nilSource` and `typeMismatch`. Feature Flag types that are object types have value types that are nullable in the wrapper. Take care to verify a value exists before using it.
 
 ### Monitoring Feature Flags for changes
-v3.0.0 removes the `LDClientDelegate`, which included `featureFlagDidUpdate` and `userDidUpdate` that the SDK called to notify client apps of changes in the set of feature flags for a given mobile key (called the environment), and the `userUnchanged` that the SDK called in `.polling` mode when the response to a feature flag request did not change any feature flag value. In order to have the SDK notify the client app when feature flags change, we have provided a closure based observer API.
+v4.0.0 removes the `LDClientDelegate`, which included `featureFlagDidUpdate` and `userDidUpdate` that the SDK called to notify client apps of changes in the set of feature flags for a given mobile key (called the environment), and the `userUnchanged` that the SDK called in `.polling` mode when the response to a feature flag request did not change any feature flag value. In order to have the SDK notify the client app when feature flags change, we have provided a closure based observer API.
 #### Single-key `observe()`
 To monitor a single feature flag, set a callback handler using `observe(key:, owner:, handler:)`. The SDK will keep a weak reference to the `owner`. When an observed feature flag changes, the SDK executes the closure, passing into it an `LDChangedFlag` that provides the `key`, `oldValue`, `oldValueSource`, `newValue`, and `newValueSource`. The client app can use this to update itself with the new value, or use the closure as a trigger to make another `variation` request from the LDClient.
 #### Multiple-key `observe()`

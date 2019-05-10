@@ -5,17 +5,17 @@ import {{ argument }}
 
 {# Protocol Mocks #}
 {% for type in types.protocols %}
-{% if type.annotations.AutoMockable %}
+{% if type.annotations.autoMockable %}
 
 // MARK: - {{ type.name}}Mock
 final class {{ type.name }}Mock: {{ type.name }} {
-{% for variable in type.allVariables|!annotated:"NoMock" %}
+{% for variable in type.allVariables|!annotated:"noMock" %}
 {% if variable.writeAccess != "private" or variable.writeAccess != "fileprivate" %}
 
     // MARK: {{ variable.name }}
     var {{ variable.name }}SetCount = 0
     var set{{ variable.name|upperFirstLetter }}Callback: (() -> Void)?
-    var {{ variable.name }}: {{ variable.typeName }}{% if not variable.isOptional %}{% if variable.isArray %} = []{% endif %}{% if variable.isDictionary %} = [:]{% endif %}{% if variable|annotated:"DefaultMockValue" %} = {{ variable.annotations.DefaultMockValue }}{% endif %}{% endif %} {
+    var {{ variable.name }}: {{ variable.typeName }}{% if not variable.isOptional %}{% if variable|annotated:"defaultMockValue" %} = {{ variable.annotations.defaultMockValue }}{% else %}{% if variable.isArray %} = []{% endif %}{% if variable.isDictionary %} = [:]{% endif %}{% endif %}{% endif %} {
         didSet {
             {{ variable.name }}SetCount += 1
             set{{ variable.name|upperFirstLetter }}Callback?()
@@ -23,7 +23,7 @@ final class {{ type.name }}Mock: {{ type.name }} {
     }
 {% endif %}
 {% endfor %}
-{% for method in type.allMethods|!annotated:"NoMock" %}
+{% for method in type.allMethods|!annotated:"noMock" %}
 
     // MARK: {{ method.annotations.StubName|default:method.callName }}
 {% if not method.shortName == "init" %}    var {{ method.annotations.StubName|default:method.callName }}CallCount = 0{% endif %}
@@ -48,18 +48,18 @@ final class {{ type.name }}Mock: {{ type.name }} {
 {% endfor %}
 {# Class Mocks #}
 {% for type in types.classes %}
-{% if type.annotations.AutoMockable %}
+{% if type.annotations.autoMockable %}
     final class {{ type.name }}Mock: {% if type.annotations.MockBaseClass %}{{ type.annotations.MockBaseClass }}, {% endif %}{{ type.name }} {
 
 // MARK: - {{ type.name}}Mock
 final class {{ type.name }}Mock: {% if type.annotations.MockBaseClass %}{{ type.annotations.MockBaseClass }}, {% endif %}{{ type.name }} {
-{% for variable in type.allVariables|!annotated:"NoMock" %}
+{% for variable in type.allVariables|!annotated:"noMock" %}
 {% if variable.writeAccess == "public" or variable.writeAccess == "internal" %}
 
     // MARK: {{ variable.name }}
     public var {{ variable.name }}SetCount = 0
     public var {{ variable.name }}Callback:(() -> Void)?
-    public override var {{ variable.name }}: {{ variable.typeName }}{% if not variable.isOptional %}{% if variable.isArray %} = []{% endif %}{% if variable.isDictionary %} = [:]{% endif %}{% if variable|annotated:"DefaultMockValue" %} = {{ variable.annotations.DefaultMockValue }}{% endif %}{% endif %} {
+public override var {{ variable.name }}: {{ variable.typeName }}{% if not variable.isOptional %}{% if variable|annotated:"defaultMockValue" %} = {{ variable.annotations.defaultMockValue }}{% else %}{% if variable.isArray %} = []{% endif %}{% if variable.isDictionary %} = [:]{% endif %}{% endif %}{% endif %} {
         didSet {
             {{ variable.name }}SetCount += 1
             {{ variable.name }}Callback?()
@@ -74,7 +74,7 @@ public init() {
 }
 {% endif %}
 
-{% for method in type.allMethods|!annotated:"NoMock" %}
+{% for method in type.allMethods|!annotated:"noMock" %}
 {% if not method.shortName == "init" and not method.accessLevel == "private" and not method.accessLevel == "fileprivate" %}
 // MARK: - {{ method.annotations.StubName|default:method.callName }}
 public var {{ method.annotations.StubName|default:method.callName }}CallCount = 0

@@ -54,7 +54,6 @@ final class LDUserSpec: QuickSpec {
                         if let subjectCustom = user.custom {
                             expect(subjectCustom == LDUser.StubConstants.custom(includeSystemValues: true)).to(beTrue())
                         }
-                        expect(user.lastUpdated).toNot(beNil())
                         expect(user.privateAttributes).toNot(beNil())
                         if let privateAttributes = user.privateAttributes {
                             expect(privateAttributes) == LDUser.privatizableAttributes
@@ -83,7 +82,6 @@ final class LDUserSpec: QuickSpec {
                         if let subjectCustom = user.custom {
                             expect(subjectCustom == LDUser.StubConstants.custom(includeSystemValues: false)).to(beTrue())
                         }
-                        expect(user.lastUpdated).toNot(beNil())
                         expect(user.privateAttributes).toNot(beNil())
                         if let privateAttributes = user.privateAttributes {
                             expect(privateAttributes) == LDUser.privatizableAttributes
@@ -100,7 +98,6 @@ final class LDUserSpec: QuickSpec {
                 it("creates a LDUser without optional elements") {
                     expect(user.key) == LDUser.defaultKey(environmentReporter: environmentReporter)
                     expect(user.isAnonymous) == true
-                    expect(user.lastUpdated).toNot(beNil())
 
                     expect(user.name).to(beNil())
                     expect(user.firstName).to(beNil())
@@ -137,13 +134,11 @@ final class LDUserSpec: QuickSpec {
         describe("init from dictionary") {
             var user: LDUser!
             var originalUser: LDUser!
-            let mockLastUpdated = "2017-10-24T17:51:49.142Z"
             context("called with config") {
                 context("and optional elements") {
                     beforeEach {
                         originalUser = LDUser.stub()
                         var userDictionary = originalUser.dictionaryValue(includeFlagConfig: true, includePrivateAttributes: true, config: LDConfig.stub)
-                        userDictionary[LDUser.CodingKeys.lastUpdated.rawValue] = mockLastUpdated
                         userDictionary[LDUser.CodingKeys.privateAttributes.rawValue] = LDUser.privatizableAttributes
                         user = LDUser(userDictionary: userDictionary)
                     }
@@ -167,7 +162,6 @@ final class LDUserSpec: QuickSpec {
 
                         expect(user.device) == originalUser.device
                         expect(user.operatingSystem) == originalUser.operatingSystem
-                        expect(user.lastUpdated) == DateFormatter.ldDateFormatter.date(from: mockLastUpdated)
 
                         expect(user.privateAttributes).toNot(beNil())
                         if let privateAttributes = user.privateAttributes {
@@ -180,15 +174,11 @@ final class LDUserSpec: QuickSpec {
                 context("but without optional elements") {
                     beforeEach {
                         originalUser = LDUser(isAnonymous: true)
-                        var userDictionary = originalUser.dictionaryValueWithAllAttributes(includeFlagConfig: true)
-                        userDictionary[LDUser.CodingKeys.lastUpdated.rawValue] = mockLastUpdated
-                        user = LDUser(userDictionary: userDictionary)
-
+                        user = LDUser(userDictionary: originalUser.dictionaryValueWithAllAttributes(includeFlagConfig: true))
                     }
                     it("creates a user without optional elements and with feature flags") {
                         expect(user.key) == originalUser.key
                         expect(user.isAnonymous) == originalUser.isAnonymous
-                        expect(user.lastUpdated) == DateFormatter.ldDateFormatter.date(from: mockLastUpdated)
 
                         expect(user.name).to(beNil())
                         expect(user.firstName).to(beNil())
@@ -216,7 +206,6 @@ final class LDUserSpec: QuickSpec {
                         originalUser = LDUser.stub()
                         originalUser.privateAttributes = LDUser.privatizableAttributes
                         var userDictionary = originalUser.dictionaryValueWithAllAttributes(includeFlagConfig: false)
-                        userDictionary[LDUser.CodingKeys.lastUpdated.rawValue] = mockLastUpdated
                         userDictionary[LDUser.CodingKeys.privateAttributes.rawValue] = LDUser.privatizableAttributes
                         user = LDUser(userDictionary: userDictionary)
                     }
@@ -240,7 +229,6 @@ final class LDUserSpec: QuickSpec {
 
                         expect(user.device) == originalUser.device
                         expect(user.operatingSystem) == originalUser.operatingSystem
-                        expect(user.lastUpdated) == DateFormatter.ldDateFormatter.date(from: mockLastUpdated)
 
                         expect(user.privateAttributes).toNot(beNil())
                         if let privateAttributes = user.privateAttributes {
@@ -253,14 +241,11 @@ final class LDUserSpec: QuickSpec {
                 context("or optional elements") {
                     beforeEach {
                         originalUser = LDUser(isAnonymous: true)
-                        var userDictionary = originalUser.dictionaryValueWithAllAttributes(includeFlagConfig: false)
-                        userDictionary[LDUser.CodingKeys.lastUpdated.rawValue] = mockLastUpdated
-                        user = LDUser(userDictionary: userDictionary)
+                        user = LDUser(userDictionary: originalUser.dictionaryValueWithAllAttributes(includeFlagConfig: false))
                     }
                     it("creates a user without optional elements or feature flags") {
                         expect(user.key) == originalUser.key
                         expect(user.isAnonymous) == originalUser.isAnonymous
-                        expect(user.lastUpdated) == DateFormatter.ldDateFormatter.date(from: mockLastUpdated)
 
                         expect(user.name).to(beNil())
                         expect(user.firstName).to(beNil())
@@ -288,34 +273,6 @@ final class LDUserSpec: QuickSpec {
                         expect(user.key).toNot(beNil())
                         expect(user.key.isEmpty).to(beFalse())
                         expect(user.isAnonymous) == false
-                        expect(user.lastUpdated).toNot(beNil())
-
-                        expect(user.name).to(beNil())
-                        expect(user.firstName).to(beNil())
-                        expect(user.lastName).to(beNil())
-                        expect(user.country).to(beNil())
-                        expect(user.ipAddress).to(beNil())
-                        expect(user.email).to(beNil())
-                        expect(user.avatar).to(beNil())
-                        expect(user.device).to(beNil())
-                        expect(user.operatingSystem).to(beNil())
-                        expect(user.custom).to(beNil())
-                        expect(user.privateAttributes).to(beNil())
-
-                        expect(user.flagStore.featureFlags.isEmpty).to(beTrue())
-                    }
-                }
-                context("but with an incorrect last updated format") {
-                    let invalidLastUpdated = "2017-10-24T17:51:49Z"
-                    beforeEach {
-                        user = LDUser(userDictionary: [LDUser.CodingKeys.lastUpdated.rawValue: invalidLastUpdated])
-                    }
-                    it("creates a user without optional elements or feature flags") {
-                        expect(user.key).toNot(beNil())
-                        expect(user.key.isEmpty).to(beFalse())
-                        expect(user.isAnonymous) == false
-                        expect(user.lastUpdated).toNot(beNil())
-                        expect(DateFormatter.ldDateFormatter.string(from: user.lastUpdated)) != invalidLastUpdated
 
                         expect(user.name).to(beNil())
                         expect(user.firstName).to(beNil())
@@ -347,7 +304,6 @@ final class LDUserSpec: QuickSpec {
             it("creates a user with system values matching the environment reporter") {
                 expect(user.key) == LDUser.defaultKey(environmentReporter: environmentReporter)
                 expect(user.isAnonymous) == true
-                expect(user.lastUpdated).toNot(beNil())
 
                 expect(user.name).to(beNil())
                 expect(user.firstName).to(beNil())
@@ -1550,7 +1506,7 @@ final class LDUserSpec: QuickSpec {
 
 extension LDUser {
     static var requiredAttributes: [String] {
-        return [CodingKeys.key.rawValue, CodingKeys.lastUpdated.rawValue, CodingKeys.isAnonymous.rawValue]
+        return [CodingKeys.key.rawValue, CodingKeys.isAnonymous.rawValue]
     }
     static var optionalAttributes: [String] {
         return [CodingKeys.name.rawValue, CodingKeys.firstName.rawValue, CodingKeys.lastName.rawValue, CodingKeys.country.rawValue, CodingKeys.ipAddress.rawValue, CodingKeys.email.rawValue,
@@ -1573,11 +1529,6 @@ extension LDUser {
 
         LDUser.requiredAttributes.forEach { (attribute) in
             if let message = messageIfMissingValue(in: userDictionary, for: attribute) {
-                messages.append(message)
-            }
-
-            let value = attribute == CodingKeys.lastUpdated.rawValue ? DateFormatter.ldDateFormatter.string(from: lastUpdated) : self.value(forAttribute: attribute)
-            if let message = messageIfValueDoesntMatch(value: value, in: userDictionary, for: attribute) {
                 messages.append(message)
             }
         }

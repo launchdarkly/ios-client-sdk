@@ -154,6 +154,11 @@ public class LDClient {
             let wasOnline = isOnline
             setOnline(false)
 
+            convertCachedData(skipDuringStart: isStarting)
+            if let cachedFlags = flagCache.retrieveFeatureFlags(forUserWithKey: user.key, andMobileKey: config.mobileKey), !cachedFlags.isEmpty {
+                user.flagStore.replaceStore(newFlags: cachedFlags, source: .cache, completion: nil)
+            }
+
             service = serviceFactory.makeDarklyServiceProvider(config: config, user: user)
             eventReporter.config = config
 
@@ -179,11 +184,12 @@ public class LDClient {
             if hasStarted {
                 eventReporter.recordSummaryEvent()
             }
-
-            if let cachedFlags = flagCache.retrieveFlags(for: user), !cachedFlags.flags.isEmpty {
-                user.flagStore.replaceStore(newFlags: cachedFlags.flags, source: .cache, completion: nil)
+            convertCachedData(skipDuringStart: isStarting)
+            if let cachedFlags = flagCache.retrieveFeatureFlags(forUserWithKey: user.key, andMobileKey: config.mobileKey), !cachedFlags.isEmpty {
+                user.flagStore.replaceStore(newFlags: cachedFlags, source: .cache, completion: nil)
             }
             service = serviceFactory.makeDarklyServiceProvider(config: config, user: user)
+            service.clearFlagResponseCache()
 
             if hasStarted {
                 eventReporter.record(Event.identifyEvent(user: user))
@@ -205,6 +211,7 @@ public class LDClient {
         }
     }
 
+    private(set) var isStarting = false
     private(set) var hasStarted = false
 
     /**
@@ -226,17 +233,29 @@ public class LDClient {
         Log.debug(typeName(and: #function, appending: ": ") + "starting")
         let wasStarted = hasStarted
         let wasOnline = isOnline
+        isStarting = true
         hasStarted = true
 
         setOnline(false)
 
+        let startUser = user ?? self.user
+        cacheConverter.convertCacheData(for: startUser, and: config)        //Convert before updating the user so any deprecated cached data is converted to the current model
         self.config = config
-        self.user = user ?? self.user
+        self.user = startUser
 
         setOnline((wasStarted && wasOnline) || (!wasStarted && self.config.startOnline)) {
             Log.debug(self.typeName(and: #function, appending: ": ") + "started")
+            self.isStarting = false
             completion?()
         }
+    }
+
+    private func convertCachedData(skipDuringStart skip: Bool) {
+        guard !skip
+        else {
+            return
+        }
+        cacheConverter.convertCacheData(for: user, and: config)
     }
 
     private func effectiveStreamingMode(runMode: LDClientRunMode, config: LDConfig) -> LDStreamingMode {
@@ -482,9 +501,7 @@ public class LDClient {
         else {
             return nil
         }
-        return user.flagStore.featureFlags.compactMapValues { (featureFlag) -> Any? in
-            featureFlag.value
-        }
+        return user.flagStore.featureFlags.allFlagValues
     }
 
     private func valueAndSource<T>(from featureFlag: FeatureFlag?, fallback: T?, source: LDFlagValueSource?) -> (T?, LDFlagValueSource) {
@@ -653,15 +670,15 @@ public class LDClient {
             switch streamingEvent {
             case nil, .ping?, .put?:
                 user.flagStore.replaceStore(newFlags: flagDictionary, source: .server) {
-                    self.updateCacheAndReportChanges(flagCache: self.flagCache, changeNotifier: self.flagChangeNotifier, user: self.user, oldFlags: oldFlags, oldFlagSource: oldFlagSource)
+                    self.updateCacheAndReportChanges(user: self.user, oldFlags: oldFlags, oldFlagSource: oldFlagSource)
                 }
             case .patch?:
                 user.flagStore.updateStore(updateDictionary: flagDictionary, source: .server) {
-                    self.updateCacheAndReportChanges(flagCache: self.flagCache, changeNotifier: self.flagChangeNotifier, user: self.user, oldFlags: oldFlags, oldFlagSource: oldFlagSource)
+                    self.updateCacheAndReportChanges(user: self.user, oldFlags: oldFlags, oldFlagSource: oldFlagSource)
                 }
             case .delete?:
                 user.flagStore.deleteFlag(deleteDictionary: flagDictionary) {
-                    self.updateCacheAndReportChanges(flagCache: self.flagCache, changeNotifier: self.flagChangeNotifier, user: self.user, oldFlags: oldFlags, oldFlagSource: oldFlagSource)
+                    self.updateCacheAndReportChanges(user: self.user, oldFlags: oldFlags, oldFlagSource: oldFlagSource)
                 }
             default: break
             }
@@ -680,14 +697,11 @@ public class LDClient {
         }
     }
 
-    private func updateCacheAndReportChanges(flagCache: UserFlagCaching,
-                                             changeNotifier: FlagChangeNotifying,
-                                             user: LDUser,
+    private func updateCacheAndReportChanges(user: LDUser,
                                              oldFlags: [LDFlagKey: FeatureFlag],
                                              oldFlagSource: LDFlagValueSource) {
-
-        flagCache.cacheFlags(for: user)
-        changeNotifier.notifyObservers(user: user, oldFlags: oldFlags, oldFlagSource: oldFlagSource)
+        flagCache.storeFeatureFlags(user.flagStore.featureFlags, forUser: user, andMobileKey: config.mobileKey, lastUpdated: Date(), storeMode: .async)
+        flagChangeNotifier.notifyObservers(user: user, oldFlags: oldFlags, oldFlagSource: oldFlagSource)
     }
 
     // MARK: - Events
@@ -798,7 +812,8 @@ public class LDClient {
         return config.enableBackgroundUpdates && environmentReporter.operatingSystem.isBackgroundEnabled
     }
 
-    private(set) var flagCache: UserFlagCaching
+    private(set) var flagCache: FeatureFlagCaching
+    private(set) var cacheConverter: CacheConverting
     private(set) var flagSynchronizer: LDFlagSynchronizing
     private(set) var flagChangeNotifier: FlagChangeNotifying
     private(set) var eventReporter: EventReporting
@@ -810,9 +825,9 @@ public class LDClient {
             self.serviceFactory = serviceFactory
         }
         environmentReporter = self.serviceFactory.makeEnvironmentReporter()
-        flagCache = self.serviceFactory.makeUserFlagCache()
+        flagCache = self.serviceFactory.makeFeatureFlagCache()
         LDUserWrapper.configureKeyedArchiversToHandleVersion2_3_0AndOlderUserCacheFormat()
-        self.serviceFactory.makeCacheConverter().convertUserCacheToFlagCache()
+        cacheConverter = self.serviceFactory.makeCacheConverter()
         flagChangeNotifier = self.serviceFactory.makeFlagChangeNotifier()
         throttler = self.serviceFactory.makeThrottler(maxDelay: Throttler.Constants.defaultDelay, environmentReporter: environmentReporter)
 
@@ -878,5 +893,8 @@ private extension Optional {
             self.runMode = runMode
         }
 
+        func setIsStarting(_ isStarting: Bool) {
+            self.isStarting = isStarting
+        }
     }
 #endif

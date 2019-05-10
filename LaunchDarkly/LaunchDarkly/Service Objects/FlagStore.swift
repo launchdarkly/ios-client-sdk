@@ -8,23 +8,23 @@
 
 import Foundation
 
-//sourcery: AutoMockable
+//sourcery: autoMockable
 protocol FlagMaintaining {
     var featureFlags: [LDFlagKey: FeatureFlag] { get }
-    //sourcery: DefaultMockValue = .cache
+    //sourcery: defaultMockValue = .cache
     var flagValueSource: LDFlagValueSource { get }
     func replaceStore(newFlags: [LDFlagKey: Any]?, source: LDFlagValueSource, completion: CompletionClosure?)
     func updateStore(updateDictionary: [String: Any], source: LDFlagValueSource, completion: CompletionClosure?)
     func deleteFlag(deleteDictionary: [String: Any], completion: CompletionClosure?)
 
-    //sourcery: NoMock
+    //sourcery: noMock
     func featureFlag(for flagKey: LDFlagKey) -> FeatureFlag?
-    //sourcery: NoMock
+    //sourcery: noMock
     func featureFlagAndSource(for flagKey: LDFlagKey) -> (FeatureFlag?, LDFlagValueSource?)
 
-    //sourcery: NoMock
+    //sourcery: noMock
     func variation<T: LDFlagValueConvertible>(forKey key: LDFlagKey, fallback: T) -> T
-    //sourcery: NoMock
+    //sourcery: noMock
     func variationAndSource<T: LDFlagValueConvertible>(forKey key: LDFlagKey, fallback: T) -> (T, LDFlagValueSource)
 }
 
@@ -175,3 +175,11 @@ final class FlagStore: FlagMaintaining {
 }
 
 extension FlagStore: TypeIdentifying { }
+
+extension Dictionary where Key == LDFlagKey, Value == FeatureFlag {
+    var allFlagValues: [LDFlagKey: Any] {
+        return compactMapValues { (featureFlag) in
+            return featureFlag.value
+        }
+    }
+}

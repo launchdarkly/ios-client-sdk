@@ -39,27 +39,27 @@ enum OperatingSystem: String {
     }
 }
 
-//sourcery: AutoMockable
+//sourcery: autoMockable
 protocol EnvironmentReporting {
-    //sourcery: DefaultMockValue = true
+    //sourcery: defaultMockValue = true
     var isDebugBuild: Bool { get }
-    //sourcery: DefaultMockValue = Constants.deviceModel
+    //sourcery: defaultMockValue = Constants.deviceModel
     var deviceModel: String { get }
-    //sourcery: DefaultMockValue = Constants.systemVersion
+    //sourcery: defaultMockValue = Constants.systemVersion
     var systemVersion: String { get }
-    //sourcery: DefaultMockValue = Constants.systemName
+    //sourcery: defaultMockValue = Constants.systemName
     var systemName: String { get }
-    //sourcery: DefaultMockValue = .iOS
+    //sourcery: defaultMockValue = .iOS
     var operatingSystem: OperatingSystem { get }
-    // the code generator is not generating the default, not sure why not //sourcery: DefaultMockValue = .UIApplicationDidEnterBackground
+    // the code generator is not generating the default, not sure why not //sourcery: defaultMockValue = .UIApplicationDidEnterBackground
     var backgroundNotification: Notification.Name? { get }
-    // the code generator is not generating the default, not sure why not //sourcery: DefaultMockValue = .UIApplicationWillEnterForeground
+    // the code generator is not generating the default, not sure why not //sourcery: defaultMockValue = .UIApplicationWillEnterForeground
     var foregroundNotification: Notification.Name? { get }
-    //sourcery: DefaultMockValue = Constants.vendorUUID
+    //sourcery: defaultMockValue = Constants.vendorUUID
     var vendorUUID: String? { get }
-    //sourcery: DefaultMockValue = Constants.sdkVersion
+    //sourcery: defaultMockValue = Constants.sdkVersion
     var sdkVersion: String { get }
-    //sourcery: DefaultMockValue = true
+    //sourcery: defaultMockValue = true
     var shouldThrottleOnlineCalls: Bool { get }
 }
 
@@ -175,7 +175,7 @@ struct EnvironmentReporter: EnvironmentReporting {
     #endif
 
     var sdkVersion: String {
-        return Bundle(for: LDClient.self).infoDictionary?["CFBundleShortVersionString"] as? String ?? "3.x"
+        return Bundle(for: LDClient.self).infoDictionary?["CFBundleShortVersionString"] as? String ?? "4.x"
     }
 }
 

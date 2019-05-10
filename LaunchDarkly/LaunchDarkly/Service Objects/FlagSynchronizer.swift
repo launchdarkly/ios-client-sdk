@@ -10,13 +10,13 @@ import Foundation
 import Dispatch
 import DarklyEventSource
 
-//sourcery: AutoMockable
+//sourcery: autoMockable
 protocol LDFlagSynchronizing {
-    //sourcery: DefaultMockValue = false
+    //sourcery: defaultMockValue = false
     var isOnline: Bool { get set }
-    //sourcery: DefaultMockValue = .streaming
+    //sourcery: defaultMockValue = .streaming
     var streamingMode: LDStreamingMode { get }
-    //sourcery: DefaultMockValue = 60_000
+    //sourcery: defaultMockValue = 60_000
     var pollingInterval: TimeInterval { get }
 }
 
@@ -295,8 +295,7 @@ class FlagSynchronizer: LDFlagSynchronizing {
             reportSyncComplete(.error(.request(serviceResponseError)))
             return
         }
-        guard let httpResponse = serviceResponse.urlResponse as? HTTPURLResponse,
-            httpResponse.statusCode == HTTPURLResponse.StatusCodes.ok
+        guard serviceResponse.urlResponse?.httpStatusCode == HTTPURLResponse.StatusCodes.ok
         else {
             Log.debug(typeName(and: #function) + "response: \(String(describing: serviceResponse.urlResponse))")
             reportSyncComplete(.error(.response(serviceResponse.urlResponse)))
@@ -331,7 +330,7 @@ class FlagSynchronizer: LDFlagSynchronizing {
         }
     }
     
-    //sourcery: NoMock
+    //sourcery: noMock
     deinit {
         onSyncComplete = nil
         stopEventSource()

@@ -10,10 +10,10 @@ import Foundation
 
 extension EnvironmentReportingMock {
     struct Constants {
-        static let deviceModel = "deviceModelMock"
-        static let systemVersion = "systemVersionMock"
-        static let systemName = "systemNameMock"
-        static let vendorUUID = "vendorUUIDMock"
+        static let deviceModel = "deviceModelStub"
+        static let systemVersion = "systemVersionStub"
+        static let systemName = "systemNameStub"
+        static let vendorUUID = "vendorUUIDStub"
         static let sdkVersion = "sdkVersionStub"
     }
 }

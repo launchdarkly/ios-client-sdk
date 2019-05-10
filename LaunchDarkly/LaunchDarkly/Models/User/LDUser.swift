@@ -8,6 +8,8 @@
 
 import Foundation
 
+typealias UserKey = String  //use for identifying semantics for strings, particularly in dictionaries
+
 /**
  LDUser allows clients to collect information about users in order to refine the feature flag values sent to the SDK. For example, the client app may launch with the SDK defined anonymous user. As the user works with the client app, information may be collected as needed and sent to LaunchDarkly. The client app controls the information collected, which LaunchDarkly does not use except as the client directs to refine feature flags. Client apps should follow [Apple's Privacy Policy](apple.com/legal/privacy) when collecting user information.
 
@@ -20,7 +22,7 @@ public struct LDUser {
     ///String keys associated with LDUser properties.
     public enum CodingKeys: String, CodingKey {
         ///Key names match the corresponding LDUser property
-        case key, name, firstName, lastName, country, ipAddress = "ip", email, avatar, custom, isAnonymous = "anonymous", device, operatingSystem = "os", lastUpdated = "updatedAt", config, privateAttributes = "privateAttrs"
+        case key, name, firstName, lastName, country, ipAddress = "ip", email, avatar, custom, isAnonymous = "anonymous", device, operatingSystem = "os", config, privateAttributes = "privateAttrs"
     }
 
     /**
@@ -78,7 +80,6 @@ public struct LDUser {
         return ObjcLDUser(self)
     }
 
-    internal fileprivate(set) var lastUpdated: Date
     internal var flagStore: FlagMaintaining = FlagStore()
     
     /**
@@ -126,7 +127,6 @@ public struct LDUser {
         self.device = device ?? custom?[CodingKeys.device.rawValue] as? String ?? environmentReporter.deviceModel
         self.operatingSystem = operatingSystem ?? custom?[CodingKeys.operatingSystem.rawValue] as? String ?? environmentReporter.systemVersion
         self.privateAttributes = privateAttributes
-        lastUpdated = Date()
         Log.debug(typeName(and: #function) + "user: \(self)")
     }
     
@@ -151,7 +151,6 @@ public struct LDUser {
     public init(userDictionary: [String: Any]) {
         key = userDictionary[CodingKeys.key.rawValue] as? String ?? LDUser.defaultKey(environmentReporter: EnvironmentReporter())
         isAnonymous = userDictionary[CodingKeys.isAnonymous.rawValue] as? Bool ?? false
-        lastUpdated = (userDictionary[CodingKeys.lastUpdated.rawValue] as? String)?.dateValue ?? Date()
 
         name = userDictionary[CodingKeys.name.rawValue] as? String
         firstName = userDictionary[CodingKeys.firstName.rawValue] as? String
@@ -181,7 +180,6 @@ public struct LDUser {
     private func value(for attribute: String) -> Any? {
         switch attribute {
         case CodingKeys.key.rawValue: return key
-        case CodingKeys.lastUpdated.rawValue: return lastUpdated
         case CodingKeys.isAnonymous.rawValue: return isAnonymous
         case CodingKeys.name.rawValue: return name
         case CodingKeys.firstName.rawValue: return firstName
@@ -253,7 +251,6 @@ public struct LDUser {
         }
 
         dictionary[CodingKeys.isAnonymous.rawValue] = isAnonymous
-        dictionary[CodingKeys.lastUpdated.rawValue] = DateFormatter.ldDateFormatter.string(from: lastUpdated)
 
         if includeFlagConfig {
             dictionary[CodingKeys.config.rawValue] = flagStore.featureFlags
@@ -294,37 +291,6 @@ extension LDUser: Equatable {
     }
 }
 
-extension DateFormatter {
-    ///Date formatter configured to format dates to/from the format 2018-08-13T19:06:38.123Z
-    class var ldDateFormatter: DateFormatter {
-        let formatter = DateFormatter()
-        formatter.dateFormat = "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'"
-        formatter.timeZone = TimeZone(identifier: "UTC")
-        return formatter
-    }
-}
-
-extension Date {
-    ///Date string using the format 2018-08-13T19:06:38.123Z
-    var stringValue: String {
-        return DateFormatter.ldDateFormatter.string(from: self)
-    }
-
-    //When a date is converted to JSON, the resulting string is not as precise as the original date (only to the nearest .001s)
-    //By converting the date to json, then back into a date, the result can be compared with any date re-inflated from json
-    ///Date truncated to the nearest millisecond, which is the precision for string formatted dates
-    var stringEquivalentDate: Date {
-        return stringValue.dateValue
-    }
-}
-
-extension String {
-    ///Date converted from a string using the format 2018-08-13T19:06:38.123Z
-    var dateValue: Date {
-        return DateFormatter.ldDateFormatter.date(from: self) ?? Date()
-    }
-}
-
 extension Array where Element == String {
     fileprivate func isPrivate(_ attribute: String) -> Bool {
         return contains(attribute)
@@ -359,7 +325,6 @@ extension LDUserWrapper: NSCoding {
         encoder.encode(wrapped.isAnonymous, forKey: LDUser.CodingKeys.isAnonymous.rawValue)
         encoder.encode(wrapped.device, forKey: LDUser.CodingKeys.device.rawValue)
         encoder.encode(wrapped.operatingSystem, forKey: LDUser.CodingKeys.operatingSystem.rawValue)
-        encoder.encode(wrapped.lastUpdated, forKey: LDUser.CodingKeys.lastUpdated.rawValue)
         encoder.encode(wrapped.privateAttributes, forKey: LDUser.CodingKeys.privateAttributes.rawValue)
         encoder.encode([Keys.featureFlags: wrapped.flagStore.featureFlags.dictionaryValue.withNullValuesRemoved], forKey: LDUser.CodingKeys.config.rawValue)
     }
@@ -379,7 +344,6 @@ extension LDUserWrapper: NSCoding {
         )
         user.device = decoder.decodeObject(forKey: LDUser.CodingKeys.device.rawValue) as? String
         user.operatingSystem = decoder.decodeObject(forKey: LDUser.CodingKeys.operatingSystem.rawValue) as? String
-        user.lastUpdated = decoder.decodeObject(forKey: LDUser.CodingKeys.lastUpdated.rawValue) as? Date ?? Date()
         let wrappedFlags = decoder.decodeObject(forKey: LDUser.CodingKeys.config.rawValue) as? [String: Any]
         user.flagStore = FlagStore(featureFlagDictionary: wrappedFlags?[Keys.featureFlags] as? [String: Any], flagValueSource: .cache)
         self.init(user: user)
@@ -401,7 +365,7 @@ extension LDUser: TypeIdentifying { }
             return value(for: attribute)
         }
 
-        //Compares all user properties except lastUpdated. Excludes the composed FlagStore, which contains the users feature flags
+        //Compares all user properties. Excludes the composed FlagStore, which contains the users feature flags
         func isEqual(to otherUser: LDUser) -> Bool {
             return key == otherUser.key
                 && name == otherUser.name

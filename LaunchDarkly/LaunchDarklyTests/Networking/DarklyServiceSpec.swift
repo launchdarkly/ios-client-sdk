@@ -18,15 +18,16 @@ final class DarklyServiceSpec: QuickSpec {
     
     struct Constants {
         static let eventCount = 3
+        static let mobileKeyCount = 3
 
         static let emptyMobileKey = ""
+
+        static let useGetMethod = false
+        static let useReportMethod = true
     }
 
     struct TestContext {
         let user = LDUser.stub()
-        var featureFlags: [LDFlagKey: FeatureFlag]! {
-            return user.flagStore.featureFlags
-        }
         var config: LDConfig!
         let mockEventDictionaries: [[String: Any]]?
         var serviceMock: DarklyServiceMock!
@@ -34,8 +35,16 @@ final class DarklyServiceSpec: QuickSpec {
             return service.serviceFactory as? ClientServiceMockFactory
         }
         var service: DarklyService!
+        var flagRequestEtag: String?
+        var flagRequestEtags = [String: String]()
 
-        init(mobileKey: String, useReport: Bool, includeMockEventDictionaries: Bool = false, operatingSystemName: String? = nil) {
+        init(mobileKey: String = LDConfig.Constants.mockMobileKey,
+             useReport: Bool = Constants.useGetMethod,
+             includeMockEventDictionaries: Bool = false,
+             operatingSystemName: String? = nil,
+             flagRequestEtag: String? = nil,
+             mobileKeyCount: Int = 0) {
+
             let serviceFactoryMock = ClientServiceMockFactory()
             if let operatingSystemName = operatingSystemName {
                 serviceFactoryMock.makeEnvironmentReporterReturnValue.systemName = operatingSystemName
@@ -45,30 +54,30 @@ final class DarklyServiceSpec: QuickSpec {
             mockEventDictionaries = includeMockEventDictionaries ? Event.stubEventDictionaries(Constants.eventCount, user: user, config: config) : nil
             serviceMock = DarklyServiceMock(config: config)
             service = DarklyService(config: config, user: user, serviceFactory: serviceFactoryMock)
+            self.flagRequestEtag = flagRequestEtag
+            if let etag = flagRequestEtag {
+                HTTPHeaders.setFlagRequestEtag(etag, for: mobileKey)
+            }
+            while flagRequestEtags.count < mobileKeyCount {
+                if flagRequestEtags.isEmpty {
+                    flagRequestEtags[mobileKey] = flagRequestEtag ?? UUID().uuidString
+                } else {
+                    flagRequestEtags[UUID().uuidString] = UUID().uuidString
+                }
+            }
         }
     }
     
     override func spec() {
-        httpHeaderSpec()
         getFeatureFlagsSpec()
+        flagRequestEtagSpec()
+        clearFlagRequestCacheSpec()
         createEventSourceSpec()
         publishEventDictionariesSpec()
 
         afterEach {
             OHHTTPStubs.removeAllStubs()
-        }
-    }
-
-    private func httpHeaderSpec() {
-        var testContext: TestContext!
-
-        describe("init httpHeader") {
-            beforeEach {
-                testContext = TestContext(mobileKey: LDConfig.Constants.mockMobileKey, useReport: false, operatingSystemName: EnvironmentReportingMock.Constants.systemName)
-            }
-            it("creates a header with the specified user agent") {
-                expect(testContext.service.httpHeaders.userAgent.hasPrefix(EnvironmentReportingMock.Constants.systemName)).to(beTrue())
-            }
+            HTTPHeaders.removeFlagRequestEtags()
         }
     }
 
@@ -79,53 +88,157 @@ final class DarklyServiceSpec: QuickSpec {
             var responses: ServiceResponses?
             var getRequestCount = 0
             var reportRequestCount = 0
+            var urlRequest: URLRequest?
             beforeEach {
-                responses = nil
-                getRequestCount = 0
-                reportRequestCount = 0
+                (responses, getRequestCount, reportRequestCount, urlRequest) = (nil, 0, 0, nil)
             }
 
             context("using GET method") {
                 beforeEach {
-                    testContext = TestContext(mobileKey: LDConfig.Constants.mockMobileKey, useReport: false)
+                    testContext = TestContext(mobileKey: LDConfig.Constants.mockMobileKey, useReport: Constants.useGetMethod)
                 }
                 context("success") {
-                    beforeEach {
-                        waitUntil { done in
-                            testContext.serviceMock.stubFlagRequest(statusCode: HTTPURLResponse.StatusCodes.ok, featureFlags: testContext.featureFlags, useReport: true) { (_, _, _) in
-                                reportRequestCount += 1
+                    context("without flag request etag") {
+                        beforeEach {
+                            waitUntil { done in
+                                testContext.serviceMock.stubFlagRequest(statusCode: HTTPURLResponse.StatusCodes.ok,
+                                                                        featureFlags: testContext.user.featureFlags,
+                                                                        useReport: Constants.useReportMethod,
+                                                                        onActivation: { (_, _, _) in
+                                                                            reportRequestCount += 1
+                                })
+                                testContext.serviceMock.stubFlagRequest(statusCode: HTTPURLResponse.StatusCodes.ok,
+                                                                        featureFlags: testContext.user.featureFlags,
+                                                                        useReport: Constants.useGetMethod,
+                                                                        onActivation: { (request, _, _) in
+                                                                            getRequestCount += 1
+                                                                            urlRequest = request
+                                })
+                                testContext.service.getFeatureFlags(useReport: Constants.useGetMethod, completion: { (data, response, error) in
+                                    responses = (data, response, error)
+                                    done()
+                                })
                             }
-                            testContext.serviceMock.stubFlagRequest(statusCode: HTTPURLResponse.StatusCodes.ok, featureFlags: testContext.featureFlags, useReport: false) { (_, _, _) in
-                                getRequestCount += 1
+                        }
+                        it("makes exactly one valid GET request") {
+                            expect(getRequestCount) == 1
+                            expect(reportRequestCount) == 0
+                        }
+                        it("creates a GET request") {
+                            //GET request url has the form https://<host>/msdk/evalx/users/<base64encodedUser>
+                            expect(urlRequest?.url?.host) == testContext.config.baseUrl.host
+                            if let path = urlRequest?.url?.path {
+                                expect(path.hasPrefix("/\(DarklyService.FlagRequestPath.get)")).to(beTrue())
+                                if let encodedUserString = urlRequest?.url?.lastPathComponent,
+                                    let decodedUser = LDUser(base64urlEncodedString: encodedUserString) {
+                                    expect(decodedUser.isEqual(to: testContext.user)) == true
+                                } else {
+                                    fail("encoded user string did not create a user")
+                                }
+                            } else {
+                                fail("request path is missing")
                             }
-                            testContext.service.getFeatureFlags(useReport: false, completion: { (data, response, error) in
-                                responses = (data, response, error)
-                                done()
-                            })
+                            expect(urlRequest?.cachePolicy) == .reloadIgnoringLocalCacheData
+                            expect(urlRequest?.timeoutInterval) == testContext.config.connectionTimeout
+                            expect(urlRequest?.httpMethod) == URLRequest.HTTPMethods.get
+                            expect(urlRequest?.httpBody).to(beNil())
+                            expect(urlRequest?.httpBodyStream).to(beNil())
+                            guard let headers = urlRequest?.allHTTPHeaderFields
+                                else {
+                                    fail("request is missing HTTP headers")
+                                    return
+                            }
+                            expect(headers[HTTPHeaders.HeaderKey.authorization]) == "\(HTTPHeaders.HeaderValue.apiKey) \(testContext.config.mobileKey)"
+                            expect(headers[HTTPHeaders.HeaderKey.userAgent]) == "\(EnvironmentReportingMock.Constants.systemName)/\(EnvironmentReportingMock.Constants.sdkVersion)"
+                            expect(headers[HTTPHeaders.HeaderKey.ifNoneMatch]).to(beNil())
+                        }
+                        it("calls completion with data, response, and no error") {
+                            expect(responses).toNot(beNil())
+                            expect(responses?.data).toNot(beNil())
+                            expect(responses?.data?.flagCollection) == testContext.user.featureFlags
+                            expect(responses?.urlResponse?.httpStatusCode) == HTTPURLResponse.StatusCodes.ok
+                            expect(responses?.error).to(beNil())
                         }
                     }
-                    it("makes exactly one valid GET request") {
-                        expect(getRequestCount) == 1
-                        expect(reportRequestCount) == 0
-                    }
-                    it("calls completion with data, response, and no error") {
-                        expect(responses).toNot(beNil())
-                        expect(responses?.data).toNot(beNil())
-                        expect(responses?.data == testContext.featureFlags.dictionaryValue.jsonData).to(beTrue())
-                        expect(responses?.urlResponse?.httpStatusCode) == HTTPURLResponse.StatusCodes.ok
-                        expect(responses?.error).to(beNil())
+                    context("with flag request etag") {
+                        beforeEach {
+                            testContext = TestContext(mobileKey: LDConfig.Constants.mockMobileKey, useReport: Constants.useGetMethod, flagRequestEtag: UUID().uuidString)
+                            waitUntil { done in
+                                testContext.serviceMock.stubFlagRequest(statusCode: HTTPURLResponse.StatusCodes.ok,
+                                                                        featureFlags: testContext.user.featureFlags,
+                                                                        useReport: Constants.useReportMethod,
+                                                                        onActivation: { (_, _, _) in
+                                                                            reportRequestCount += 1
+                                })
+                                testContext.serviceMock.stubFlagRequest(statusCode: HTTPURLResponse.StatusCodes.ok,
+                                                                        featureFlags: testContext.user.featureFlags,
+                                                                        useReport: Constants.useGetMethod,
+                                                                        onActivation: { (request, _, _) in
+                                                                            getRequestCount += 1
+                                                                            urlRequest = request
+                                })
+                                testContext.service.getFeatureFlags(useReport: Constants.useGetMethod, completion: { (data, response, error) in
+                                    responses = (data, response, error)
+                                    done()
+                                })
+                            }
+                        }
+                        it("makes exactly one valid GET request") {
+                            expect(getRequestCount) == 1
+                            expect(reportRequestCount) == 0
+                        }
+                        it("creates a GET request") {
+                            //GET request url has the form https://<host>/msdk/evalx/users/<base64encodedUser>
+                            expect(urlRequest?.url?.host) == testContext.config.baseUrl.host
+                            if let path = urlRequest?.url?.path {
+                                expect(path.hasPrefix("/\(DarklyService.FlagRequestPath.get)")).to(beTrue())
+                                if let encodedUserString = urlRequest?.url?.lastPathComponent,
+                                    let decodedUser = LDUser(base64urlEncodedString: encodedUserString) {
+                                    expect(decodedUser.isEqual(to: testContext.user)) == true
+                                } else {
+                                    fail("encoded user string did not create a user")
+                                }
+                            } else {
+                                fail("request path is missing")
+                            }
+                            //the actually set policy is .reloadRevalidatingCacheData, but after setting that's changed to .reloadIgnoringLocalCacheData by the system
+                            expect(urlRequest?.cachePolicy) == .reloadIgnoringLocalCacheData
+                            expect(urlRequest?.timeoutInterval) == testContext.config.connectionTimeout
+                            expect(urlRequest?.httpMethod) == URLRequest.HTTPMethods.get
+                            expect(urlRequest?.httpBody).to(beNil())
+                            expect(urlRequest?.httpBodyStream).to(beNil())
+                            guard let headers = urlRequest?.allHTTPHeaderFields
+                                else {
+                                    fail("request is missing HTTP headers")
+                                    return
+                            }
+                            expect(headers[HTTPHeaders.HeaderKey.authorization]) == "\(HTTPHeaders.HeaderValue.apiKey) \(testContext.config.mobileKey)"
+                            expect(headers[HTTPHeaders.HeaderKey.userAgent]) == "\(EnvironmentReportingMock.Constants.systemName)/\(EnvironmentReportingMock.Constants.sdkVersion)"
+                            expect(headers[HTTPHeaders.HeaderKey.ifNoneMatch]) == testContext.flagRequestEtag
+                        }
+                        it("calls completion with data, response, and no error") {
+                            expect(responses).toNot(beNil())
+                            expect(responses?.data).toNot(beNil())
+                            expect(responses?.data?.flagCollection) == testContext.user.featureFlags
+                            expect(responses?.urlResponse?.httpStatusCode) == HTTPURLResponse.StatusCodes.ok
+                            expect(responses?.error).to(beNil())
+                        }
                     }
                 }
                 context("failure") {
                     beforeEach {
                         waitUntil { done in
-                            testContext.serviceMock.stubFlagRequest(statusCode: HTTPURLResponse.StatusCodes.internalServerError, useReport: true) { (_, _, _) in
-                                reportRequestCount += 1
-                            }
-                            testContext.serviceMock.stubFlagRequest(statusCode: HTTPURLResponse.StatusCodes.internalServerError, useReport: false) { (_, _, _) in
-                                getRequestCount += 1
-                            }
-                            testContext.service.getFeatureFlags(useReport: false, completion: { (data, response, error) in
+                            testContext.serviceMock.stubFlagRequest(statusCode: HTTPURLResponse.StatusCodes.internalServerError,
+                                                                    useReport: Constants.useReportMethod,
+                                                                    onActivation: { (_, _, _) in
+                                                                        reportRequestCount += 1
+                            })
+                            testContext.serviceMock.stubFlagRequest(statusCode: HTTPURLResponse.StatusCodes.internalServerError,
+                                                                    useReport: Constants.useGetMethod,
+                                                                    onActivation: { (_, _, _) in
+                                                                        getRequestCount += 1
+                            })
+                            testContext.service.getFeatureFlags(useReport: Constants.useGetMethod, completion: { (data, response, error) in
                                 responses = (data, response, error)
                                 done()
                             })
@@ -145,14 +258,18 @@ final class DarklyServiceSpec: QuickSpec {
                 }
                 context("empty mobile key") {
                     beforeEach {
-                        testContext = TestContext(mobileKey: Constants.emptyMobileKey, useReport: false)
-                        testContext.serviceMock.stubFlagRequest(statusCode: HTTPURLResponse.StatusCodes.ok, useReport: true) { (_, _, _) in
-                            reportRequestCount += 1
-                        }
-                        testContext.serviceMock.stubFlagRequest(statusCode: HTTPURLResponse.StatusCodes.ok, useReport: false) { (_, _, _) in
+                        testContext = TestContext(mobileKey: Constants.emptyMobileKey, useReport: Constants.useGetMethod)
+                        testContext.serviceMock.stubFlagRequest(statusCode: HTTPURLResponse.StatusCodes.ok,
+                                                                useReport: Constants.useReportMethod,
+                                                                onActivation: { (_, _, _) in
+                                                                    reportRequestCount += 1
+                        })
+                        testContext.serviceMock.stubFlagRequest(statusCode: HTTPURLResponse.StatusCodes.ok,
+                                                                useReport: Constants.useGetMethod,
+                                                                onActivation: { (_, _, _) in
                             getRequestCount += 1
-                        }
-                        testContext.service.getFeatureFlags(useReport: false, completion: { (data, response, error) in
+                        })
+                        testContext.service.getFeatureFlags(useReport: Constants.useGetMethod, completion: { (data, response, error) in
                             responses = (data, response, error)
                         })
                     }
@@ -165,45 +282,136 @@ final class DarklyServiceSpec: QuickSpec {
             }
             context("using REPORT method") {
                 beforeEach {
-                    testContext = TestContext(mobileKey: LDConfig.Constants.mockMobileKey, useReport: true)
+                    testContext = TestContext(mobileKey: LDConfig.Constants.mockMobileKey, useReport: Constants.useReportMethod)
                 }
                 context("success") {
-                    beforeEach {
-                        waitUntil { done in
-                            testContext.serviceMock.stubFlagRequest(statusCode: HTTPURLResponse.StatusCodes.ok, featureFlags: testContext.featureFlags, useReport: false) { (_, _, _) in
-                                getRequestCount += 1
+                    context("without a flag requesst etag") {
+                        beforeEach {
+                            waitUntil { done in
+                                testContext.serviceMock.stubFlagRequest(statusCode: HTTPURLResponse.StatusCodes.ok,
+                                                                        featureFlags: testContext.user.featureFlags,
+                                                                        useReport: Constants.useGetMethod,
+                                                                        onActivation: { (_, _, _) in
+                                                                            getRequestCount += 1
+                                })
+                                testContext.serviceMock.stubFlagRequest(statusCode: HTTPURLResponse.StatusCodes.ok,
+                                                                        featureFlags: testContext.user.featureFlags,
+                                                                        useReport: Constants.useReportMethod,
+                                                                        onActivation: { (request, _, _) in
+                                                                            reportRequestCount += 1
+                                                                            urlRequest = request
+                                })
+                                testContext.service.getFeatureFlags(useReport: Constants.useReportMethod, completion: { (data, response, error) in
+                                    responses = (data, response, error)
+                                    done()
+                                })
                             }
-                            testContext.serviceMock.stubFlagRequest(statusCode: HTTPURLResponse.StatusCodes.ok, featureFlags: testContext.featureFlags, useReport: true) { (_, _, _) in
-                                reportRequestCount += 1
+                        }
+                        it("makes exactly one valid REPORT request") {
+                            expect(getRequestCount) == 0
+                            expect(reportRequestCount) == 1
+                        }
+                        it("creates a REPORT request") {
+                            //REPORT request url has the form https://<host>/msdk/evalx/user; httpBody contains the user dictionary
+                            expect(urlRequest?.url?.host) == testContext.config.baseUrl.host
+                            if let path = urlRequest?.url?.path {
+                                expect(path.hasSuffix(DarklyService.FlagRequestPath.report)).to(beTrue())
+                            } else {
+                                fail("request path is missing")
                             }
-                            testContext.service.getFeatureFlags(useReport: true, completion: { (data, response, error) in
-                                responses = (data, response, error)
-                                done()
-                            })
+                            expect(urlRequest?.cachePolicy) == .reloadIgnoringLocalCacheData
+                            expect(urlRequest?.timeoutInterval) == testContext.config.connectionTimeout
+                            expect(urlRequest?.httpMethod) == URLRequest.HTTPMethods.report
+                            expect(urlRequest?.httpBodyStream).toNot(beNil())   //Although the service sets the httpBody, OHHTTPStubs seems to convert that into an InputStream, which should be ok
+                            guard let headers = urlRequest?.allHTTPHeaderFields
+                                else {
+                                    fail("request is missing HTTP headers")
+                                    return
+                            }
+                            expect(headers[HTTPHeaders.HeaderKey.authorization]) == "\(HTTPHeaders.HeaderValue.apiKey) \(testContext.config.mobileKey)"
+                            expect(headers[HTTPHeaders.HeaderKey.userAgent]) == "\(EnvironmentReportingMock.Constants.systemName)/\(EnvironmentReportingMock.Constants.sdkVersion)"
+                            expect(headers[HTTPHeaders.HeaderKey.ifNoneMatch]).to(beNil())
+                        }
+                        it("calls completion with data, response, and no error") {
+                            expect(responses).toNot(beNil())
+                            expect(responses?.data).toNot(beNil())
+                            expect(responses?.data?.flagCollection) == testContext.user.featureFlags
+                            expect(responses?.urlResponse?.httpStatusCode) == HTTPURLResponse.StatusCodes.ok
+                            expect(responses?.error).to(beNil())
                         }
                     }
-                    it("makes exactly one valid REPORT request") {
-                        expect(getRequestCount) == 0
-                        expect(reportRequestCount) == 1
-                    }
-                    it("calls completion with data, response, and no error") {
-                        expect(responses).toNot(beNil())
-                        expect(responses?.data).toNot(beNil())
-                        expect(responses?.data == testContext.featureFlags.dictionaryValue.jsonData).to(beTrue())
-                        expect(responses?.urlResponse?.httpStatusCode) == HTTPURLResponse.StatusCodes.ok
-                        expect(responses?.error).to(beNil())
+                    context("with a flag requesst etag") {
+                        beforeEach {
+                            testContext = TestContext(mobileKey: LDConfig.Constants.mockMobileKey, useReport: Constants.useReportMethod, flagRequestEtag: UUID().uuidString)
+                            waitUntil { done in
+                                testContext.serviceMock.stubFlagRequest(statusCode: HTTPURLResponse.StatusCodes.ok,
+                                                                        featureFlags: testContext.user.featureFlags,
+                                                                        useReport: Constants.useGetMethod,
+                                                                        onActivation: { (_, _, _) in
+                                                                            getRequestCount += 1
+                                })
+                                testContext.serviceMock.stubFlagRequest(statusCode: HTTPURLResponse.StatusCodes.ok,
+                                                                        featureFlags: testContext.user.featureFlags,
+                                                                        useReport: Constants.useReportMethod,
+                                                                        onActivation: { (request, _, _) in
+                                                                            reportRequestCount += 1
+                                                                            urlRequest = request
+                                })
+                                testContext.service.getFeatureFlags(useReport: Constants.useReportMethod, completion: { (data, response, error) in
+                                    responses = (data, response, error)
+                                    done()
+                                })
+                            }
+                        }
+                        it("makes exactly one valid REPORT request") {
+                            expect(getRequestCount) == 0
+                            expect(reportRequestCount) == 1
+                        }
+                        it("creates a REPORT request") {
+                            //REPORT request url has the form https://<host>/msdk/evalx/user; httpBody contains the user dictionary
+                            expect(urlRequest?.url?.host) == testContext.config.baseUrl.host
+                            if let path = urlRequest?.url?.path {
+                                expect(path.hasSuffix(DarklyService.FlagRequestPath.report)).to(beTrue())
+                            } else {
+                                fail("request path is missing")
+                            }
+                            //the actually set policy is .reloadRevalidatingCacheData, but after setting that's changed to .reloadIgnoringLocalCacheData by the system
+                            expect(urlRequest?.cachePolicy) == .reloadIgnoringLocalCacheData
+                            expect(urlRequest?.timeoutInterval) == testContext.config.connectionTimeout
+                            expect(urlRequest?.httpMethod) == URLRequest.HTTPMethods.report
+                            expect(urlRequest?.httpBodyStream).toNot(beNil())   //Although the service sets the httpBody, OHHTTPStubs seems to convert that into an InputStream, which should be ok
+                            guard let headers = urlRequest?.allHTTPHeaderFields
+                                else {
+                                    fail("request is missing HTTP headers")
+                                    return
+                            }
+                            expect(headers[HTTPHeaders.HeaderKey.authorization]) == "\(HTTPHeaders.HeaderValue.apiKey) \(testContext.config.mobileKey)"
+                            expect(headers[HTTPHeaders.HeaderKey.userAgent]) == "\(EnvironmentReportingMock.Constants.systemName)/\(EnvironmentReportingMock.Constants.sdkVersion)"
+                            expect(headers[HTTPHeaders.HeaderKey.ifNoneMatch]) == testContext.flagRequestEtag
+                        }
+                        it("calls completion with data, response, and no error") {
+                            expect(responses).toNot(beNil())
+                            expect(responses?.data).toNot(beNil())
+                            expect(responses?.data?.flagCollection) == testContext.user.featureFlags
+                            expect(responses?.urlResponse?.httpStatusCode) == HTTPURLResponse.StatusCodes.ok
+                            expect(responses?.error).to(beNil())
+                        }
                     }
                 }
                 context("failure") {
                     beforeEach {
                         waitUntil { done in
-                            testContext.serviceMock.stubFlagRequest(statusCode: HTTPURLResponse.StatusCodes.internalServerError, useReport: true) { (_, _, _) in
-                                reportRequestCount += 1
-                            }
-                            testContext.serviceMock.stubFlagRequest(statusCode: HTTPURLResponse.StatusCodes.internalServerError, useReport: false) { (_, _, _) in
-                                getRequestCount += 1
-                            }
-                            testContext.service.getFeatureFlags(useReport: true, completion: { (data, response, error) in
+                            testContext.serviceMock.stubFlagRequest(statusCode: HTTPURLResponse.StatusCodes.internalServerError,
+                                                                    useReport: Constants.useReportMethod,
+                                                                    onActivation: { (_, _, _) in
+                                                                        reportRequestCount += 1
+                            })
+                            testContext.serviceMock.stubFlagRequest(statusCode: HTTPURLResponse.StatusCodes.internalServerError,
+                                                                    useReport: Constants.useGetMethod,
+                                                                    onActivation: { (_, _, _) in
+                                                                        getRequestCount += 1
+                            })
+                            testContext.service.getFeatureFlags(useReport: Constants.useReportMethod, completion: { (data, response, error) in
                                 responses = (data, response, error)
                                 done()
                             })
@@ -223,14 +431,18 @@ final class DarklyServiceSpec: QuickSpec {
                 }
                 context("empty mobile key") {
                     beforeEach {
-                        testContext = TestContext(mobileKey: Constants.emptyMobileKey, useReport: true)
-                        testContext.serviceMock.stubFlagRequest(statusCode: HTTPURLResponse.StatusCodes.ok, useReport: false) { (_, _, _) in
-                            getRequestCount += 1
-                        }
-                        testContext.serviceMock.stubFlagRequest(statusCode: HTTPURLResponse.StatusCodes.ok, useReport: true) { (_, _, _) in
-                            reportRequestCount += 1
-                        }
-                        testContext.service.getFeatureFlags(useReport: true, completion: { (data, response, error) in
+                        testContext = TestContext(mobileKey: Constants.emptyMobileKey, useReport: Constants.useReportMethod)
+                        testContext.serviceMock.stubFlagRequest(statusCode: HTTPURLResponse.StatusCodes.ok,
+                                                                useReport: Constants.useGetMethod,
+                                                                onActivation: { (_, _, _) in
+                                                                    getRequestCount += 1
+                        })
+                        testContext.serviceMock.stubFlagRequest(statusCode: HTTPURLResponse.StatusCodes.ok,
+                                                                useReport: Constants.useReportMethod,
+                                                                onActivation: { (_, _, _) in
+                                                                    reportRequestCount += 1
+                        })
+                        testContext.service.getFeatureFlags(useReport: Constants.useReportMethod, completion: { (data, response, error) in
                             responses = (data, response, error)
                         })
                     }
@@ -244,6 +456,344 @@ final class DarklyServiceSpec: QuickSpec {
         }
     }
 
+    private func flagRequestEtagSpec() {
+        var testContext: TestContext!
+        var flagRequestEtag: String?
+        describe("flagRequestEtag") {
+            context("no original etag") {
+                context("on success") {
+                    context("response has etag") {
+                        beforeEach {
+                            testContext = TestContext()
+                            flagRequestEtag = UUID().uuidString
+                            testContext.serviceMock.stubFlagRequest(statusCode: HTTPURLResponse.StatusCodes.ok,
+                                                                    useReport: Constants.useGetMethod,
+                                                                    flagResponseEtag: flagRequestEtag,
+                                                                    onActivation: { (_, _, _) in
+                            })
+                            waitUntil { done in
+                                testContext.service.getFeatureFlags(useReport: Constants.useGetMethod, completion: { (_, _, _) in
+                                    done()
+                                })
+                            }
+                        }
+                        it("sets the response etag") {
+                            expect(HTTPHeaders.flagRequestEtags[testContext.config.mobileKey]) == flagRequestEtag
+                        }
+                    }
+                    context("response has no etag") {
+                        beforeEach {
+                            testContext = TestContext()
+                            testContext.serviceMock.stubFlagRequest(statusCode: HTTPURLResponse.StatusCodes.ok,
+                                                                    useReport: Constants.useGetMethod,
+                                                                    onActivation: { (_, _, _) in
+                            })
+                            waitUntil { done in
+                                testContext.service.getFeatureFlags(useReport: Constants.useGetMethod, completion: { (_, _, _) in
+                                    done()
+                                })
+                            }
+                        }
+                        it("leaves the etag empty") {
+                            expect(HTTPHeaders.flagRequestEtags[testContext.config.mobileKey]).to(beNil())
+                        }
+                    }
+                }
+                context("on not modified") {
+                    context("response has etag") {
+                        //This should never happen, without an original etag the server should not send a 304 NOT MODIFIED. If it does ignore it.
+                        beforeEach {
+                            testContext = TestContext()
+                            flagRequestEtag = UUID().uuidString
+                            testContext.serviceMock.stubFlagRequest(statusCode: HTTPURLResponse.StatusCodes.notModified,
+                                                                    featureFlags: [:],
+                                                                    useReport: Constants.useGetMethod,
+                                                                    flagResponseEtag: flagRequestEtag,
+                                                                    onActivation: { (_, _, _) in
+                            })
+                            waitUntil { done in
+                                testContext.service.getFeatureFlags(useReport: Constants.useGetMethod, completion: { (_, _, _) in
+                                    done()
+                                })
+                            }
+                        }
+                        it("leaves the etag empty") {
+                            expect(HTTPHeaders.flagRequestEtags[testContext.config.mobileKey]).to(beNil())
+                        }
+                    }
+                    context("response has no etag") {
+                        //This should never happen, without an original etag the server should not send a 304 NOT MODIFIED. If it does ignore it.
+                        beforeEach {
+                            testContext = TestContext()
+                            testContext.serviceMock.stubFlagRequest(statusCode: HTTPURLResponse.StatusCodes.notModified,
+                                                                    featureFlags: [:],
+                                                                    useReport: Constants.useGetMethod,
+                                                                    onActivation: { (_, _, _) in
+                            })
+                            waitUntil { done in
+                                testContext.service.getFeatureFlags(useReport: Constants.useGetMethod, completion: { (_, _, _) in
+                                    done()
+                                })
+                            }
+                        }
+                        it("leaves the etag empty") {
+                            expect(HTTPHeaders.flagRequestEtags[testContext.config.mobileKey]).to(beNil())
+                        }
+                    }
+                }
+                context("on failure") {
+                    context("response has etag") {
+                        //This should never happen. The server should not send an etag with a failure status code If it does ignore it.
+                        beforeEach {
+                            testContext = TestContext()
+                            flagRequestEtag = UUID().uuidString
+                            testContext.serviceMock.stubFlagRequest(statusCode: HTTPURLResponse.StatusCodes.internalServerError,
+                                                                    useReport: Constants.useGetMethod,
+                                                                    flagResponseEtag: flagRequestEtag,
+                                                                    onActivation: { (_, _, _) in
+                            })
+                            waitUntil { done in
+                                testContext.service.getFeatureFlags(useReport: Constants.useGetMethod, completion: { (_, _, _) in
+                                    done()
+                                })
+                            }
+                        }
+                        it("leaves the etag empty") {
+                            expect(HTTPHeaders.flagRequestEtags[testContext.config.mobileKey]).to(beNil())
+                        }
+                    }
+                    context("response has no etag") {
+                        beforeEach {
+                            testContext = TestContext()
+                            testContext.serviceMock.stubFlagRequest(statusCode: HTTPURLResponse.StatusCodes.internalServerError,
+                                                                    useReport: Constants.useGetMethod,
+                                                                    onActivation: { (_, _, _) in
+                            })
+                            waitUntil { done in
+                                testContext.service.getFeatureFlags(useReport: Constants.useGetMethod, completion: { (_, _, _) in
+                                    done()
+                                })
+                            }
+                        }
+                        it("leaves the etag empty") {
+                            expect(HTTPHeaders.flagRequestEtags[testContext.config.mobileKey]).to(beNil())
+                        }
+                    }
+                }
+            }
+            context("with original etag") {
+                var originalFlagRequestEtag: String!
+                context("on success") {
+                    context("response has an etag") {
+                        context("same as original etag") {
+                            beforeEach {
+                                testContext = TestContext(mobileKeyCount: Constants.mobileKeyCount)
+                                HTTPHeaders.loadFlagRequestEtags(testContext.flagRequestEtags)
+                                originalFlagRequestEtag = HTTPHeaders.flagRequestEtags[testContext.config.mobileKey]
+                                testContext.serviceMock.stubFlagRequest(statusCode: HTTPURLResponse.StatusCodes.ok,
+                                                                        useReport: Constants.useGetMethod,
+                                                                        flagResponseEtag: originalFlagRequestEtag,
+                                                                        onActivation: { (_, _, _) in
+                                })
+                                waitUntil { done in
+                                    testContext.service.getFeatureFlags(useReport: Constants.useGetMethod, completion: { (_, _, _) in
+                                        done()
+                                    })
+                                }
+                            }
+                            it("retains the original etag") {
+                                expect(HTTPHeaders.flagRequestEtags[testContext.config.mobileKey]) == originalFlagRequestEtag
+                            }
+                        }
+                        context("different from the original etag") {
+                            beforeEach {
+                                testContext = TestContext(mobileKeyCount: Constants.mobileKeyCount)
+                                HTTPHeaders.loadFlagRequestEtags(testContext.flagRequestEtags)
+                                flagRequestEtag = UUID().uuidString
+                                testContext.serviceMock.stubFlagRequest(statusCode: HTTPURLResponse.StatusCodes.ok,
+                                                                        useReport: Constants.useGetMethod,
+                                                                        flagResponseEtag: flagRequestEtag,
+                                                                        onActivation: { (_, _, _) in
+                                })
+                                waitUntil { done in
+                                    testContext.service.getFeatureFlags(useReport: Constants.useGetMethod, completion: { (_, _, _) in
+                                        done()
+                                    })
+                                }
+                            }
+                            it("replaces the etag") {
+                                expect(HTTPHeaders.flagRequestEtags[testContext.config.mobileKey]) == flagRequestEtag
+                            }
+                        }
+                    }
+                    context("response has no etag") {
+                        beforeEach {
+                            testContext = TestContext(mobileKeyCount: Constants.mobileKeyCount)
+                            HTTPHeaders.loadFlagRequestEtags(testContext.flagRequestEtags)
+                            testContext.serviceMock.stubFlagRequest(statusCode: HTTPURLResponse.StatusCodes.ok,
+                                                                    useReport: Constants.useGetMethod,
+                                                                    onActivation: { (_, _, _) in
+                            })
+                            waitUntil { done in
+                                testContext.service.getFeatureFlags(useReport: Constants.useGetMethod, completion: { (_, _, _) in
+                                    done()
+                                })
+                            }
+                        }
+                        it("clears the etag") {
+                            expect(HTTPHeaders.flagRequestEtags[testContext.config.mobileKey]).to(beNil())
+                        }
+                    }
+                }
+                context("on not modified") {
+                    context("response has etag") {
+                        context("that matches the original etag") {
+                            beforeEach {
+                                testContext = TestContext(mobileKeyCount: Constants.mobileKeyCount)
+                                HTTPHeaders.loadFlagRequestEtags(testContext.flagRequestEtags)
+                                originalFlagRequestEtag = HTTPHeaders.flagRequestEtags[testContext.config.mobileKey]
+                                testContext.serviceMock.stubFlagRequest(statusCode: HTTPURLResponse.StatusCodes.notModified,
+                                                                        useReport: Constants.useGetMethod,
+                                                                        flagResponseEtag: originalFlagRequestEtag,
+                                                                        onActivation: { (_, _, _) in
+                                })
+                                waitUntil { done in
+                                    testContext.service.getFeatureFlags(useReport: Constants.useGetMethod, completion: { (_, _, _) in
+                                        done()
+                                    })
+                                }
+                            }
+                            it("retains the etag") {
+                                expect(HTTPHeaders.flagRequestEtags[testContext.config.mobileKey]) == originalFlagRequestEtag
+                            }
+                        }
+                        context("that differs from the original etag") {
+                            //This should not happen. If the response was not modified then the etags should match. In that case ignore the new etag
+                            beforeEach {
+                                testContext = TestContext(mobileKeyCount: Constants.mobileKeyCount)
+                                HTTPHeaders.loadFlagRequestEtags(testContext.flagRequestEtags)
+                                originalFlagRequestEtag = HTTPHeaders.flagRequestEtags[testContext.config.mobileKey]
+                                flagRequestEtag = UUID().uuidString
+                                testContext.serviceMock.stubFlagRequest(statusCode: HTTPURLResponse.StatusCodes.notModified,
+                                                                        useReport: Constants.useGetMethod,
+                                                                        flagResponseEtag: flagRequestEtag,
+                                                                        onActivation: { (_, _, _) in
+                                })
+                                waitUntil { done in
+                                    testContext.service.getFeatureFlags(useReport: Constants.useGetMethod, completion: { (_, _, _) in
+                                        done()
+                                    })
+                                }
+                            }
+                            it("retains the original etag") {
+                                expect(HTTPHeaders.flagRequestEtags[testContext.config.mobileKey]) == originalFlagRequestEtag
+                            }
+                        }
+                    }
+                    context("response has no etag") {
+                        //This should not happen. If the response was not modified then the etags should match. In that case ignore the new etag
+                        beforeEach {
+                            testContext = TestContext(mobileKeyCount: Constants.mobileKeyCount)
+                            HTTPHeaders.loadFlagRequestEtags(testContext.flagRequestEtags)
+                            originalFlagRequestEtag = HTTPHeaders.flagRequestEtags[testContext.config.mobileKey]
+                            flagRequestEtag = UUID().uuidString
+                            testContext.serviceMock.stubFlagRequest(statusCode: HTTPURLResponse.StatusCodes.notModified,
+                                                                    useReport: Constants.useGetMethod,
+                                                                    onActivation: { (_, _, _) in
+                            })
+                            waitUntil { done in
+                                testContext.service.getFeatureFlags(useReport: Constants.useGetMethod, completion: { (_, _, _) in
+                                    done()
+                                })
+                            }
+                        }
+                        it("retains the original etag") {
+                            expect(HTTPHeaders.flagRequestEtags[testContext.config.mobileKey]) == originalFlagRequestEtag
+                        }
+                    }
+                }
+                context("on failure") {
+                    context("response has etag") {
+                        //This should not happen. If the response was an error then there should be no new etag. Because of the error, clear the etag
+                        beforeEach {
+                            testContext = TestContext(mobileKeyCount: Constants.mobileKeyCount)
+                            HTTPHeaders.loadFlagRequestEtags(testContext.flagRequestEtags)
+                            originalFlagRequestEtag = HTTPHeaders.flagRequestEtags[testContext.config.mobileKey]
+                            flagRequestEtag = UUID().uuidString
+                            testContext.serviceMock.stubFlagRequest(statusCode: HTTPURLResponse.StatusCodes.internalServerError,
+                                                                    useReport: Constants.useGetMethod,
+                                                                    flagResponseEtag: flagRequestEtag,
+                                                                    onActivation: { (_, _, _) in
+                            })
+                            waitUntil { done in
+                                testContext.service.getFeatureFlags(useReport: Constants.useGetMethod, completion: { (_, _, _) in
+                                    done()
+                                })
+                            }
+                        }
+                        it("clears the etag") {
+                            expect(HTTPHeaders.flagRequestEtags[testContext.config.mobileKey]).to(beNil())
+                        }
+                    }
+                    context("response has no etag") {
+                        beforeEach {
+                            testContext = TestContext(mobileKeyCount: Constants.mobileKeyCount)
+                            HTTPHeaders.loadFlagRequestEtags(testContext.flagRequestEtags)
+                            originalFlagRequestEtag = HTTPHeaders.flagRequestEtags[testContext.config.mobileKey]
+                            testContext.serviceMock.stubFlagRequest(statusCode: HTTPURLResponse.StatusCodes.internalServerError,
+                                                                    useReport: Constants.useGetMethod,
+                                                                    onActivation: { (_, _, _) in
+                            })
+                            waitUntil { done in
+                                testContext.service.getFeatureFlags(useReport: Constants.useGetMethod, completion: { (_, _, _) in
+                                    done()
+                                })
+                            }
+                        }
+                        it("clears the etag") {
+                            expect(HTTPHeaders.flagRequestEtags[testContext.config.mobileKey]).to(beNil())
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    private func clearFlagRequestCacheSpec() {
+        var testContext: TestContext!
+        var flagRequestEtag: String!
+        var urlRequest: URLRequest!
+        var serviceResponse: ServiceResponse!
+        describe("clearFlagResponseCache") {
+            context("cached responses and etags exist") {
+                beforeEach {
+                    testContext = TestContext(mobileKeyCount: Constants.mobileKeyCount)
+                    HTTPHeaders.loadFlagRequestEtags(testContext.flagRequestEtags)
+                    flagRequestEtag = UUID().uuidString
+                    testContext.serviceMock.stubFlagRequest(statusCode: HTTPURLResponse.StatusCodes.ok,
+                                                            useReport: Constants.useGetMethod,
+                                                            flagResponseEtag: flagRequestEtag,
+                                                            onActivation: { (request, _, _) in
+                                                                urlRequest = request
+                    })
+                    waitUntil { done in
+                        testContext.service.getFeatureFlags(useReport: Constants.useGetMethod, completion: { (error, response, data) in
+                            serviceResponse = (error, response, data)
+                            done()
+                        })
+                    }
+                    URLCache.shared.storeResponse(serviceResponse, for: urlRequest)
+
+                    testContext.service.clearFlagResponseCache()
+                }
+                it("removes cached responses and etags") {
+                    expect(HTTPHeaders.flagRequestEtags.isEmpty).to(beTrue())
+                    expect(URLCache.shared.cachedResponse(for: urlRequest)).to(beNil())
+                }
+            }
+        }
+    }
+
     private func createEventSourceSpec() {
         var testContext: TestContext!
 
@@ -251,8 +801,8 @@ final class DarklyServiceSpec: QuickSpec {
             var eventSource: DarklyStreamingProviderMock?
             context("when using GET method to connect") {
                 beforeEach {
-                    testContext = TestContext(mobileKey: LDConfig.Constants.mockMobileKey, useReport: false)
-                    eventSource = testContext.service.createEventSource(useReport: false) as? DarklyStreamingProviderMock
+                    testContext = TestContext(mobileKey: LDConfig.Constants.mockMobileKey, useReport: Constants.useGetMethod)
+                    eventSource = testContext.service.createEventSource(useReport: Constants.useGetMethod) as? DarklyStreamingProviderMock
                 }
                 it("creates an event source that makes valid GET request") {
                     expect(eventSource).toNot(beNil())
@@ -265,7 +815,7 @@ final class DarklyServiceSpec: QuickSpec {
                     expect(receivedArguments.url.host) == testContext.config.streamUrl.host
                     expect(receivedArguments.url.pathComponents.contains(DarklyService.StreamRequestPath.meval)).to(beTrue())
                     expect(receivedArguments.url.pathComponents.contains(DarklyService.StreamRequestPath.mping)).to(beFalse())
-                    expect(receivedArguments.url.lastPathComponent) == testContext.user.dictionaryValueWithAllAttributes(includeFlagConfig: false).base64UrlEncodedString
+                    expect(LDUser(base64urlEncodedString: receivedArguments.url.lastPathComponent)?.isEqual(to: testContext.user)) == true
                     expect(receivedArguments.httpHeaders).toNot(beEmpty())
                     expect(receivedArguments.connectMethod).to(beNil())
                     expect(receivedArguments.connectBody).to(beNil())
@@ -273,8 +823,8 @@ final class DarklyServiceSpec: QuickSpec {
             }
             context("when using REPORT method to connect") {
                 beforeEach {
-                    testContext = TestContext(mobileKey: LDConfig.Constants.mockMobileKey, useReport: true)
-                    eventSource = testContext.service.createEventSource(useReport: true) as? DarklyStreamingProviderMock
+                    testContext = TestContext(mobileKey: LDConfig.Constants.mockMobileKey, useReport: Constants.useReportMethod)
+                    eventSource = testContext.service.createEventSource(useReport: Constants.useReportMethod) as? DarklyStreamingProviderMock
                 }
                 it("creates an event source that makes valid REPORT request") {
                     expect(eventSource).toNot(beNil())
@@ -289,7 +839,7 @@ final class DarklyServiceSpec: QuickSpec {
                     expect(receivedArguments.url.pathComponents.contains(DarklyService.StreamRequestPath.mping)).to(beFalse())
                     expect(receivedArguments.httpHeaders).toNot(beEmpty())
                     expect(receivedArguments.connectMethod) == DarklyService.HTTPRequestMethod.report
-                    expect(receivedArguments.connectBody) == testContext.user.dictionaryValueWithAllAttributes(includeFlagConfig: false).jsonData
+                    expect(LDUser(data: receivedArguments.connectBody)?.isEqual(to: testContext.user)) == true
                 }
             }
         }
@@ -303,7 +853,7 @@ final class DarklyServiceSpec: QuickSpec {
 
             beforeEach {
                 eventRequest = nil
-                testContext = TestContext(mobileKey: LDConfig.Constants.mockMobileKey, useReport: false, includeMockEventDictionaries: true)
+                testContext = TestContext(mobileKey: LDConfig.Constants.mockMobileKey, useReport: Constants.useGetMethod, includeMockEventDictionaries: true)
             }
             context("success") {
                 var responses: ServiceResponses!
@@ -320,7 +870,7 @@ final class DarklyServiceSpec: QuickSpec {
                 }
                 it("makes a valid request") {
                     expect(eventRequest).toNot(beNil())
-                    expect(eventRequest?.allHTTPHeaderFields?[HTTPHeaders.HeaderKey.eventSchema]) == HTTPHeaders.HeaderValue.eventSchema
+                    expect(eventRequest?.allHTTPHeaderFields?[HTTPHeaders.HeaderKey.eventSchema]) == HTTPHeaders.HeaderValue.eventSchema3
                 }
                 it("calls completion with data, response, and no error") {
                     expect(responses.data).toNot(beNil())
@@ -343,7 +893,7 @@ final class DarklyServiceSpec: QuickSpec {
                 }
                 it("makes a valid request") {
                     expect(eventRequest).toNot(beNil())
-                    expect(eventRequest?.allHTTPHeaderFields?[HTTPHeaders.HeaderKey.eventSchema]) == HTTPHeaders.HeaderValue.eventSchema
+                    expect(eventRequest?.allHTTPHeaderFields?[HTTPHeaders.HeaderKey.eventSchema]) == HTTPHeaders.HeaderValue.eventSchema3
                 }
                 it("calls completion with error and no data or response") {
                     expect(responses.data?.isEmpty ?? true) == true
@@ -355,7 +905,7 @@ final class DarklyServiceSpec: QuickSpec {
                 var responses: ServiceResponses!
                 var eventsPublished = false
                 beforeEach {
-                    testContext = TestContext(mobileKey: Constants.emptyMobileKey, useReport: false, includeMockEventDictionaries: true)
+                    testContext = TestContext(mobileKey: Constants.emptyMobileKey, useReport: Constants.useGetMethod, includeMockEventDictionaries: true)
                     testContext.serviceMock.stubEventRequest(success: true) { (request, _, _) in
                         eventRequest = request
                     }
@@ -375,7 +925,7 @@ final class DarklyServiceSpec: QuickSpec {
                 var eventsPublished = false
                 let emptyEventDictionaryList: [[String: Any]] = []
                 beforeEach {
-                    testContext = TestContext(mobileKey: LDConfig.Constants.mockMobileKey, useReport: false, includeMockEventDictionaries: true)
+                    testContext = TestContext(mobileKey: LDConfig.Constants.mockMobileKey, useReport: Constants.useGetMethod, includeMockEventDictionaries: true)
                     testContext.serviceMock.stubEventRequest(success: true) { (request, _, _) in
                         eventRequest = request
                     }
@@ -396,4 +946,32 @@ final class DarklyServiceSpec: QuickSpec {
 
 extension DarklyService.StreamRequestPath {
     static let mping = "mping"
+}
+
+extension LDUser {
+    func base64encoded(using config: LDConfig) -> String? {
+        return dictionaryValue(includeFlagConfig: false, includePrivateAttributes: true, config: config).base64UrlEncodedString
+    }
+
+    init?(base64urlEncodedString: String) {
+        let base64encodedString = base64urlEncodedString.replacingOccurrences(of: "-", with: "+").replacingOccurrences(of: "_", with: "/")
+        self.init(data: Data(base64Encoded: base64encodedString))
+    }
+
+    init?(data: Data?) {
+        guard let data = data,
+            let userDictionary = try? JSONSerialization.jsonDictionary(with: data)
+        else {
+            return nil
+        }
+        self.init(userDictionary: userDictionary)
+    }
+}
+
+extension HTTPHeaders {
+    static func loadFlagRequestEtags(_ flagRequestEtags: [String: String]) {
+        flagRequestEtags.forEach { (mobileKey, etag) in
+            HTTPHeaders.setFlagRequestEtag(etag, for: mobileKey)
+        }
+    }
 }

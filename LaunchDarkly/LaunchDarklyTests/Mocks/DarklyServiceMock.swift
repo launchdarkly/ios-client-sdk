@@ -206,6 +206,11 @@ final class DarklyServiceMock: DarklyServiceProvider {
         getFeatureFlagsUseReportCalledValue.append(useReport)
         completion?(stubbedFlagResponse ?? (nil, nil, nil))
     }
+
+    var clearFlagResponseCacheCallCount = 0
+    func clearFlagResponseCache() {
+        clearFlagResponseCacheCallCount += 1
+    }
     
     var createdEventSource: DarklyStreamingProviderMock?
     var createEventSourceCallCount = 0
@@ -259,12 +264,18 @@ extension DarklyServiceMock {
     func stubFlagRequest(statusCode: Int,
                          featureFlags: [LDFlagKey: FeatureFlag]? = nil,
                          useReport: Bool,
+                         flagResponseEtag: String? = nil,
                          onActivation activate: ((URLRequest, OHHTTPStubsDescriptor, OHHTTPStubsResponse) -> Void)? = nil) {
 
         let stubbedFeatureFlags = featureFlags ?? Constants.stubFeatureFlags()
         let responseData = statusCode == HTTPURLResponse.StatusCodes.ok ? stubbedFeatureFlags.dictionaryValue.jsonData! : Data()
         let stubResponse: OHHTTPStubsResponseBlock = { (_) in
-            OHHTTPStubsResponse(data: responseData, statusCode: Int32(statusCode), headers: nil)
+            var headers = [String: String]()
+            if let flagResponseEtag = flagResponseEtag {
+                headers = [HTTPURLResponse.HeaderKeys.etag: flagResponseEtag,
+                           HTTPURLResponse.HeaderKeys.cacheControl: HTTPURLResponse.HeaderValues.maxAge]
+            }
+            return OHHTTPStubsResponse(data: responseData, statusCode: Int32(statusCode), headers: headers)
         }
         stubRequest(passingTest: useReport ? reportFlagRequestStubTest : getFlagRequestStubTest,
                     stub: stubResponse,

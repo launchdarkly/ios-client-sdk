@@ -10,9 +10,9 @@ import Foundation
 
 typealias RunClosure = () -> Void
 
-//sourcery: AutoMockable
+//sourcery: autoMockable
 protocol Throttling {
-    //sourcery: DefaultMockValue = 600.0
+    //sourcery: defaultMockValue = 600.0
     var maxDelay: TimeInterval { get }
 
     func runThrottled(_ runClosure: @escaping RunClosure)

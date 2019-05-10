@@ -1,34 +1,31 @@
 PODS:
-  - DarklyEventSource (4.0.1)
-  - Nimble (7.3.4)
-  - OHHTTPStubs/Core (6.1.0)
-  - OHHTTPStubs/Default (6.1.0):
+  - Nimble (8.0.1)
+  - OHHTTPStubs/Core (8.0.0)
+  - OHHTTPStubs/Default (8.0.0):
     - OHHTTPStubs/Core
     - OHHTTPStubs/JSON
     - OHHTTPStubs/NSURLSession
     - OHHTTPStubs/OHPathHelpers
-  - OHHTTPStubs/JSON (6.1.0):
+  - OHHTTPStubs/JSON (8.0.0):
     - OHHTTPStubs/Core
-  - OHHTTPStubs/NSURLSession (6.1.0):
+  - OHHTTPStubs/NSURLSession (8.0.0):
     - OHHTTPStubs/Core
-  - OHHTTPStubs/OHPathHelpers (6.1.0)
-  - OHHTTPStubs/Swift (6.1.0):
+  - OHHTTPStubs/OHPathHelpers (8.0.0)
+  - OHHTTPStubs/Swift (8.0.0):
     - OHHTTPStubs/Default
-  - Quick (1.3.4)
-  - Sourcery (0.15.0)
-  - SwiftLint (0.30.1)
+  - Quick (2.1.0)
+  - Sourcery (0.16.1)
+  - SwiftLint (0.32.0)
 
 DEPENDENCIES:
-  - DarklyEventSource (= 4.0.1)
-  - Nimble (= 7.3.4)
-  - OHHTTPStubs/Swift (= 6.1.0)
-  - Quick (= 1.3.4)
-  - Sourcery (= 0.15.0)
-  - SwiftLint (= 0.30.1)
+  - Nimble (= 8.0.1)
+  - OHHTTPStubs/Swift (= 8.0.0)
+  - Quick (= 2.1.0)
+  - Sourcery (= 0.16.1)
+  - SwiftLint (= 0.32.0)
 
 SPEC REPOS:
   https://github.com/cocoapods/specs.git:
-    - DarklyEventSource
     - Nimble
     - OHHTTPStubs
     - Quick
@@ -36,13 +33,12 @@ SPEC REPOS:
     - SwiftLint
 
 SPEC CHECKSUMS:
-  DarklyEventSource: d3a3482edd0451dc6d2b3844b8fc30e4ca73de30
-  Nimble: 051e3d8912d40138fa5591c78594f95fb172af37
-  OHHTTPStubs: 1e21c7d2c084b8153fc53d48400d8919d2d432d0
-  Quick: f4f7f063c524394c73ed93ac70983c609805d481
-  Sourcery: 5895672cae353cdbfa95f3f4aaeb75a664d76f6a
-  SwiftLint: a54bf1fe12b55c68560eb2a7689dfc81458508f7
+  Nimble: 45f786ae66faa9a709624227fae502db55a8bdd0
+  OHHTTPStubs: 9cbce6364bec557cc3439aa6bb7514670d780881
+  Quick: 4be43f6634acfa727dd106bdf3929ce125ffa79d
+  Sourcery: 16779170d35ee204666843b09031f36721a84bcc
+  SwiftLint: 009a898ef2a1c851f45e1b59349bf6ff2ddc990d
 
-PODFILE CHECKSUM: ad8201cc4846951a531af50ea118e6e519d8fc61
+PODFILE CHECKSUM: 4b809540cb8663a0123a391708f47a8e0cc7fcf8
 
-COCOAPODS: 1.6.0
+COCOAPODS: 1.6.1

@@ -14,13 +14,14 @@ typealias ServiceCompletionHandler = (ServiceResponse) -> Void
 
 protocol DarklyServiceProvider: class {
     func getFeatureFlags(useReport: Bool, completion: ServiceCompletionHandler?)
+    func clearFlagResponseCache()
     func createEventSource(useReport: Bool) -> DarklyStreamingProvider
     func publishEventDictionaries(_ eventDictionaries: [[String: Any]], completion: ServiceCompletionHandler?)
     var config: LDConfig { get }
     var user: LDUser { get }
 }
 
-//sourcery: AutoMockable
+//sourcery: autoMockable
 protocol DarklyStreamingProvider: class {
     func onMessageEvent(_ handler: LDEventSourceEventHandler?)
     func onErrorEvent(_ handler: LDEventSourceEventHandler?)
@@ -94,8 +95,9 @@ final class DarklyService: DarklyServiceProvider {
             }
             return
         }
-        let dataTask = self.session.dataTask(with: flagRequest) { (data, response, error) in
+        let dataTask = self.session.dataTask(with: flagRequest) { [weak self] (data, response, error) in
             DispatchQueue.main.async {
+                self?.processEtag(from: (data, response, error))
                 completion?((data, response, error))
             }
         }
@@ -107,7 +109,7 @@ final class DarklyService: DarklyServiceProvider {
         else {
             return nil
         }
-        var request = URLRequest(url: flagRequestUrl, cachePolicy: .useProtocolCachePolicy, timeoutInterval: config.connectionTimeout)
+        var request = URLRequest(url: flagRequestUrl, cachePolicy: flagRequestCachePolicy, timeoutInterval: config.connectionTimeout)
         request.appendHeaders(httpHeaders.flagRequestHeaders)
         if useReport {
             guard let userData = user.dictionaryValue(includeFlagConfig: false, includePrivateAttributes: true, config: config).jsonData
@@ -119,6 +121,13 @@ final class DarklyService: DarklyServiceProvider {
         }
        
         return request
+    }
+
+    //The flagRequestCachePolicy varies to allow the SDK to force a reload from the source on a user change. Both the SDK and iOS keep the etag from the last request. On a user change if we use .useProtocolCachePolicy, even though the SDK doesn't supply the etag, iOS does (despite clearing the URLCache!!!). In order to force iOS to ignore the etag, change the policy to .reloadIgnoringLocalCache when there is no etag.
+    //Note that after setting .reloadRevalidatingCacheData on the request, the property appears not to accept it, and instead sets .reloadIgnoringLocalCacheData. Despite this, there does appear to be a difference in cache policy, because the SDK behaves as expected: on a new user it requests flags without the cache, and on a request with an etag it requests flags allowing the cache. Although testing shows that we could always set .reloadIgnoringLocalCacheData here, because that is NOT symantecally the desired behavior, the method distinguishes between the use cases.
+    //watchOS logs an error when .useProtocolCachePolicy is set for flag requests with an etag. By setting .reloadRevalidatingCacheData, the SDK behaves correctly, but watchOS does not log an error.
+    private var flagRequestCachePolicy: URLRequest.CachePolicy {
+        return httpHeaders.hasFlagRequestEtag ? .reloadRevalidatingCacheData : .reloadIgnoringLocalCacheData
     }
     
     private func flagRequestUrl(useReport: Bool) -> URL? {
@@ -132,6 +141,25 @@ final class DarklyService: DarklyServiceProvider {
             return nil
         }
         return config.baseUrl.appendingPathComponent(FlagRequestPath.get).appendingPathComponent(encodedUser)
+    }
+
+    private func processEtag(from serviceResponse: ServiceResponse) {
+        guard serviceResponse.error == nil,
+            serviceResponse.urlResponse?.httpStatusCode == HTTPURLResponse.StatusCodes.ok,
+            serviceResponse.data?.jsonDictionary != nil
+        else {
+            if serviceResponse.urlResponse?.httpStatusCode != HTTPURLResponse.StatusCodes.notModified {
+                HTTPHeaders.setFlagRequestEtag(nil, for: config.mobileKey)
+            }
+            return
+        }
+        HTTPHeaders.setFlagRequestEtag(serviceResponse.urlResponse?.httpHeaderEtag, for: config.mobileKey)
+    }
+
+    //Although this does not need any info stored in the DarklyService instance, LDClient shouldn't have to distinguish between an actual and a mock. Making this an instance method does that.
+    func clearFlagResponseCache() {
+        URLCache.shared.removeAllCachedResponses()
+        HTTPHeaders.removeFlagRequestEtags()
     }
     
     // MARK: Streaming

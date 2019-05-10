@@ -30,5 +30,3 @@ extension LDFlagKey {
         return [anyKeyIdentifier]
     }
 }
-
-typealias UserKey = String

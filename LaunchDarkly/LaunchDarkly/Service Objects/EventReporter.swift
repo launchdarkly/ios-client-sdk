@@ -15,18 +15,18 @@ enum EventSyncResult {
 
 typealias EventSyncCompleteClosure = ((EventSyncResult) -> Void)
 
-//sourcery: AutoMockable
+//sourcery: autoMockable
 protocol EventReporting {
-    //sourcery: DefaultMockValue = LDConfig.stub
+    //sourcery: defaultMockValue = LDConfig.stub
     var config: LDConfig { get set }
-    //sourcery: DefaultMockValue = false
+    //sourcery: defaultMockValue = false
     var isOnline: Bool { get set }
-    //sourcery: DefaultMockValue = nil
+    //sourcery: defaultMockValue = nil
     var lastEventResponseDate: Date? { get }
-    //sourcery: DefaultMockValue = DarklyServiceMock()
+    //sourcery: defaultMockValue = DarklyServiceMock()
     var service: DarklyServiceProvider { get set }
     func record(_ event: Event, completion: CompletionClosure?)
-    //sourcery: NoMock
+    //sourcery: noMock
     func record(_ event: Event)
     func recordFlagEvaluationEvents(flagKey: LDFlagKey, value: Any?, defaultValue: Any?, featureFlag: FeatureFlag?, user: LDUser)
     func recordSummaryEvent()
@@ -36,7 +36,7 @@ protocol EventReporting {
 }
 
 extension EventReporting {
-    //sourcery: NoMock
+    //sourcery: noMock
     func record(_ event: Event) {
         record(event, completion: nil)
     }

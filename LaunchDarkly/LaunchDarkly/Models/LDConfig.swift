@@ -16,6 +16,8 @@ public enum LDStreamingMode {
     case polling
 }
 
+typealias MobileKey = String
+
 /**
  Use LDConfig to configure the LDClient. When initialized, a LDConfig contains the default values which can be changed as needed.
 

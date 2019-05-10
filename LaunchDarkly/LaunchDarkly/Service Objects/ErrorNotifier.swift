@@ -8,7 +8,7 @@
 
 import Foundation
 
-//sourcery: AutoMockable
+//sourcery: autoMockable
 protocol ErrorNotifying {
     func addErrorObserver(_ observer: ErrorObserver)
     func removeObservers(for owner: LDObserverOwner)

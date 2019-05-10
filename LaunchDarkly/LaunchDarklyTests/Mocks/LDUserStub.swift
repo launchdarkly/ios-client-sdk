@@ -79,20 +79,3 @@ extension LDUser {
         return userStubs
     }
 }
-
-extension Array where Element == LDUser {
-    var userFlags: [UserKey: CacheableUserFlags] {
-        var flags = [UserKey: CacheableUserFlags]()
-        self.forEach { (user) in
-            flags[user.key] = CacheableUserFlags(user: user)
-        }
-        return flags
-    }
-
-    var userFlagDictionaries: [UserKey: Any] {
-        let flags = userFlags
-        return flags.mapValues { (cacheableUserFlags) in
-            cacheableUserFlags.dictionaryValue
-        }
-    }
-}

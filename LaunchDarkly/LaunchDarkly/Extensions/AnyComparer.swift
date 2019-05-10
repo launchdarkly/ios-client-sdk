@@ -63,10 +63,6 @@ struct AnyComparer {
             if value != other {
                 return false
             }
-        case (let value as CacheableUserFlags, let other as CacheableUserFlags):
-            if value != other {
-                return false
-            }
         case (let value as FeatureFlag, let other as FeatureFlag):
             if value != other {
                 return false

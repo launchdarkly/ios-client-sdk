@@ -320,7 +320,7 @@ final class EventReporterSpec: QuickSpec {
             var testContext: TestContext!
             var eventStubResponseDate: Date!
             beforeEach {
-                eventStubResponseDate = Date().addingTimeInterval(-TimeInterval.oneSecond)
+                eventStubResponseDate = Date().addingTimeInterval(-TimeInterval(3))
             }
             afterEach {
                 testContext.eventReporter.isOnline = false

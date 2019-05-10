@@ -9,38 +9,36 @@
 @testable import LaunchDarkly
 import UIKit
 
-struct ClientServiceMockFactory: ClientServiceCreating {
+final class ClientServiceMockFactory: ClientServiceCreating {
     func makeKeyedValueCache() -> KeyedValueCaching {
         return KeyedValueCachingMock()
     }
 
-    func makeCacheConverter() -> UserCacheConverting {
-        return makeCacheConverter(keyStore: KeyedValueCachingMock())
+    var makeFeatureFlagCacheReturnValue = FeatureFlagCachingMock()
+    var makeFeatureFlagCacheCallCount = 0
+    func makeFeatureFlagCache() -> FeatureFlagCaching {
+        makeFeatureFlagCacheCallCount += 1
+        return makeFeatureFlagCacheReturnValue
     }
 
-    func makeCacheConverter(keyStore: KeyedValueCaching) -> UserCacheConverting {
-        return UserCacheConverter(keyStore: keyStore, flagCollectionCache: FlagCollectionCachingMock())
+    func makeCacheConverter() -> CacheConverting {
+        return CacheConvertingMock()
     }
 
-    func makeFlagCollectionCache(keyStore: KeyedValueCaching) -> FlagCollectionCaching {
-        return FlagCollectionCachingMock()
-    }
-
-    var userFlagCache = UserFlagCachingMock()
-    func makeUserFlagCache() -> UserFlagCaching {
-        return userFlagCache
-    }
-
-    func makeUserFlagCache(flagCollectionStore: FlagCollectionCaching) -> UserFlagCaching {
-        return userFlagCache
-    }
-
-    func makeFlagCache(maxCachedValues: Int) -> UserFlagCache {
-        return UserFlagCache(flagCollectionStore: FlagCollectionCachingMock())
-    }
-
-    func makeFlagCache() -> UserFlagCache {
-        return UserFlagCache(flagCollectionStore: FlagCollectionCachingMock())
+    var makeDeprecatedCacheModelReturnValue: DeprecatedCacheMock?
+    var makeDeprecatedCacheModelReturnedValues = [DeprecatedCacheModel: DeprecatedCacheMock]()
+    var makeDeprecatedCacheModelCallCount = 0
+    var makeDeprecatedCacheModelReceivedModels = [DeprecatedCacheModel]()
+    func makeDeprecatedCacheModel(_ model: DeprecatedCacheModel) -> DeprecatedCache {
+        makeDeprecatedCacheModelCallCount += 1
+        makeDeprecatedCacheModelReceivedModels.append(model)
+        var returnedCacheMock = makeDeprecatedCacheModelReturnValue
+        if returnedCacheMock == nil {
+            returnedCacheMock = DeprecatedCacheMock()
+            returnedCacheMock?.model = model
+        }
+        makeDeprecatedCacheModelReturnedValues[model] = returnedCacheMock!
+        return returnedCacheMock!
     }
 
     func makeDarklyServiceProvider(config: LDConfig, user: LDUser) -> DarklyServiceProvider {
@@ -50,11 +48,11 @@ struct ClientServiceMockFactory: ClientServiceCreating {
     var makeFlagSynchronizerCallCount = 0
     var makeFlagSynchronizerReceivedParameters: (streamingMode: LDStreamingMode, pollingInterval: TimeInterval, useReport: Bool, service: DarklyServiceProvider)? = nil
     var onFlagSyncComplete: FlagSyncCompleteClosure? = nil
-    mutating func makeFlagSynchronizer(streamingMode: LDStreamingMode,
-                                       pollingInterval: TimeInterval,
-                                       useReport: Bool,
-                                       service: DarklyServiceProvider,
-                                       onSyncComplete: FlagSyncCompleteClosure?) -> LDFlagSynchronizing {
+    func makeFlagSynchronizer(streamingMode: LDStreamingMode,
+                              pollingInterval: TimeInterval,
+                              useReport: Bool,
+                              service: DarklyServiceProvider,
+                              onSyncComplete: FlagSyncCompleteClosure?) -> LDFlagSynchronizing {
         makeFlagSynchronizerCallCount += 1
         makeFlagSynchronizerReceivedParameters = (streamingMode, pollingInterval, useReport, service)
         onFlagSyncComplete = onSyncComplete
@@ -65,7 +63,7 @@ struct ClientServiceMockFactory: ClientServiceCreating {
         return flagSynchronizingMock
     }
 
-    mutating func makeFlagSynchronizer(streamingMode: LDStreamingMode, pollingInterval: TimeInterval, useReport: Bool, service: DarklyServiceProvider) -> LDFlagSynchronizing {
+    func makeFlagSynchronizer(streamingMode: LDStreamingMode, pollingInterval: TimeInterval, useReport: Bool, service: DarklyServiceProvider) -> LDFlagSynchronizing {
         return makeFlagSynchronizer(streamingMode: streamingMode, pollingInterval: pollingInterval, useReport: useReport, service: service, onSyncComplete: nil)
     }
 
@@ -76,7 +74,7 @@ struct ClientServiceMockFactory: ClientServiceCreating {
     var makeEventReporterCallCount = 0
     var makeEventReporterReceivedParameters: (config: LDConfig, service: DarklyServiceProvider)? = nil
     var onEventSyncComplete: EventSyncCompleteClosure? = nil
-    mutating func makeEventReporter(config: LDConfig, service: DarklyServiceProvider, onSyncComplete: EventSyncCompleteClosure?) -> EventReporting {
+    func makeEventReporter(config: LDConfig, service: DarklyServiceProvider, onSyncComplete: EventSyncCompleteClosure?) -> EventReporting {
         makeEventReporterCallCount += 1
         makeEventReporterReceivedParameters = (config: config, service: service)
         onEventSyncComplete = onSyncComplete
@@ -86,19 +84,19 @@ struct ClientServiceMockFactory: ClientServiceCreating {
         return reporterMock
     }
 
-    mutating func makeEventReporter(config: LDConfig, service: DarklyServiceProvider) -> EventReporting {
+    func makeEventReporter(config: LDConfig, service: DarklyServiceProvider) -> EventReporting {
         return makeEventReporter(config: config, service: service, onSyncComplete: nil)
     }
 
     var makeStreamingProviderCallCount = 0
     var makeStreamingProviderReceivedArguments: (url: URL, httpHeaders: [String: String], connectMethod: String?, connectBody: Data?)?
-    mutating func makeStreamingProvider(url: URL, httpHeaders: [String: String]) -> DarklyStreamingProvider {
+    func makeStreamingProvider(url: URL, httpHeaders: [String: String]) -> DarklyStreamingProvider {
         makeStreamingProviderCallCount += 1
         makeStreamingProviderReceivedArguments = (url, httpHeaders, nil, nil)
         return DarklyStreamingProviderMock()
     }
 
-    mutating func makeStreamingProvider(url: URL, httpHeaders: [String: String], connectMethod: String?, connectBody: Data?) -> DarklyStreamingProvider {
+    func makeStreamingProvider(url: URL, httpHeaders: [String: String], connectMethod: String?, connectBody: Data?) -> DarklyStreamingProvider {
         makeStreamingProviderCallCount += 1
         makeStreamingProviderReceivedArguments = (url, httpHeaders, connectMethod, connectBody)
         return DarklyStreamingProviderMock()
@@ -106,8 +104,8 @@ struct ClientServiceMockFactory: ClientServiceCreating {
 
     var makeEnvironmentReporterReturnValue: EnvironmentReportingMock = EnvironmentReportingMock()
     func makeEnvironmentReporter() -> EnvironmentReporting {
-        // the code generator is not generating the default, not sure why not //sourcery: DefaultMockValue = .UIApplicationDidEnterBackground
-        // the code generator is not generating the default, not sure why not //sourcery: DefaultMockValue = .UIApplicationWillEnterForeground
+        // the code generator is not generating the default, not sure why not //sourcery: defaultMockValue = .UIApplicationDidEnterBackground
+        // the code generator is not generating the default, not sure why not //sourcery: defaultMockValue = .UIApplicationWillEnterForeground
         makeEnvironmentReporterReturnValue.backgroundNotification = UIApplication.didEnterBackgroundNotification
         makeEnvironmentReporterReturnValue.foregroundNotification = UIApplication.willEnterForegroundNotification
         return makeEnvironmentReporterReturnValue

@@ -1,10 +1,24 @@
-// Generated using Sourcery 0.15.0 — https://github.com/krzysztofzablocki/Sourcery
+// Generated using Sourcery 0.16.1 — https://github.com/krzysztofzablocki/Sourcery
 // DO NOT EDIT
 
 
 import DarklyEventSource
 @testable import LaunchDarkly
 
+
+// MARK: - CacheConvertingMock
+final class CacheConvertingMock: CacheConverting {
+
+    // MARK: convertCacheData
+    var convertCacheDataCallCount = 0
+    var convertCacheDataCallback: (() -> Void)?
+    var convertCacheDataReceivedArguments: (user: LDUser, config: LDConfig)?
+    func convertCacheData(for user: LDUser, and config: LDConfig) {
+        convertCacheDataCallCount += 1
+        convertCacheDataReceivedArguments = (user: user, config: config)
+        convertCacheDataCallback?()
+    }
+}
 
 // MARK: - DarklyStreamingProviderMock
 final class DarklyStreamingProviderMock: DarklyStreamingProvider {
@@ -43,6 +57,74 @@ final class DarklyStreamingProviderMock: DarklyStreamingProvider {
     func close() {
         closeCallCount += 1
         closeCallback?()
+    }
+}
+
+// MARK: - DeprecatedCacheMock
+final class DeprecatedCacheMock: DeprecatedCache {
+
+    // MARK: model
+    var modelSetCount = 0
+    var setModelCallback: (() -> Void)?
+    var model: DeprecatedCacheModel = .version5 {
+        didSet {
+            modelSetCount += 1
+            setModelCallback?()
+        }
+    }
+
+    // MARK: cachedDataKey
+    var cachedDataKeySetCount = 0
+    var setCachedDataKeyCallback: (() -> Void)?
+    var cachedDataKey: String = CacheConverter.CacheKeys.cachedDataKeyStub {
+        didSet {
+            cachedDataKeySetCount += 1
+            setCachedDataKeyCallback?()
+        }
+    }
+
+    // MARK: keyedValueCache
+    var keyedValueCacheSetCount = 0
+    var setKeyedValueCacheCallback: (() -> Void)?
+    var keyedValueCache: KeyedValueCaching = KeyedValueCachingMock() {
+        didSet {
+            keyedValueCacheSetCount += 1
+            setKeyedValueCacheCallback?()
+        }
+    }
+
+    // MARK: retrieveFlags
+    var retrieveFlagsCallCount = 0
+    var retrieveFlagsCallback: (() -> Void)?
+    var retrieveFlagsReceivedArguments: (userKey: UserKey, mobileKey: MobileKey)?
+    var retrieveFlagsReturnValue: (featureFlags: [LDFlagKey: FeatureFlag]?, lastUpdated: Date?)!
+    func retrieveFlags(for userKey: UserKey, and mobileKey: MobileKey) -> (featureFlags: [LDFlagKey: FeatureFlag]?, lastUpdated: Date?) {
+        retrieveFlagsCallCount += 1
+        retrieveFlagsReceivedArguments = (userKey: userKey, mobileKey: mobileKey)
+        retrieveFlagsCallback?()
+        return retrieveFlagsReturnValue
+    }
+
+    // MARK: userKeys
+    var userKeysCallCount = 0
+    var userKeysCallback: (() -> Void)?
+    var userKeysReceivedArguments: (cachedUserData: [UserKey: [String: Any]], olderThan: Date)?
+    var userKeysReturnValue: [UserKey]!
+    func userKeys(from cachedUserData: [UserKey: [String: Any]], olderThan: Date) -> [UserKey] {
+        userKeysCallCount += 1
+        userKeysReceivedArguments = (cachedUserData: cachedUserData, olderThan: olderThan)
+        userKeysCallback?()
+        return userKeysReturnValue
+    }
+
+    // MARK: removeData
+    var removeDataCallCount = 0
+    var removeDataCallback: (() -> Void)?
+    var removeDataReceivedExpirationDate: Date?
+    func removeData(olderThan expirationDate: Date) {
+        removeDataCallCount += 1
+        removeDataReceivedExpirationDate = expirationDate
+        removeDataCallback?()
     }
 }
 
@@ -273,6 +355,33 @@ final class EventReportingMock: EventReporting {
     }
 }
 
+// MARK: - FeatureFlagCachingMock
+final class FeatureFlagCachingMock: FeatureFlagCaching {
+
+    // MARK: retrieveFeatureFlags
+    var retrieveFeatureFlagsCallCount = 0
+    var retrieveFeatureFlagsCallback: (() -> Void)?
+    var retrieveFeatureFlagsReceivedArguments: (userKey: String, mobileKey: String)?
+    var retrieveFeatureFlagsReturnValue: [LDFlagKey: FeatureFlag]?
+    func retrieveFeatureFlags(forUserWithKey userKey: String, andMobileKey mobileKey: String) -> [LDFlagKey: FeatureFlag]? {
+        retrieveFeatureFlagsCallCount += 1
+        retrieveFeatureFlagsReceivedArguments = (userKey: userKey, mobileKey: mobileKey)
+        retrieveFeatureFlagsCallback?()
+        return retrieveFeatureFlagsReturnValue
+    }
+
+    // MARK: storeFeatureFlags
+    var storeFeatureFlagsCallCount = 0
+    var storeFeatureFlagsCallback: (() -> Void)?
+    //swiftlint:disable:next large_tuple 
+    var storeFeatureFlagsReceivedArguments: (featureFlags: [LDFlagKey: FeatureFlag], user: LDUser, mobileKey: String, lastUpdated: Date, storeMode: FlagCachingStoreMode)?
+    func storeFeatureFlags(_ featureFlags: [LDFlagKey: FeatureFlag], forUser user: LDUser, andMobileKey mobileKey: String, lastUpdated: Date, storeMode: FlagCachingStoreMode) {
+        storeFeatureFlagsCallCount += 1
+        storeFeatureFlagsReceivedArguments = (featureFlags: featureFlags, user: user, mobileKey: mobileKey, lastUpdated: lastUpdated, storeMode: storeMode)
+        storeFeatureFlagsCallback?()
+    }
+}
+
 // MARK: - FlagChangeNotifyingMock
 final class FlagChangeNotifyingMock: FlagChangeNotifying {
 
@@ -314,30 +423,6 @@ final class FlagChangeNotifyingMock: FlagChangeNotifying {
         notifyObserversCallCount += 1
         notifyObserversReceivedArguments = (user: user, oldFlags: oldFlags, oldFlagSource: oldFlagSource)
         notifyObserversCallback?()
-    }
-}
-
-// MARK: - FlagCollectionCachingMock
-final class FlagCollectionCachingMock: FlagCollectionCaching {
-
-    // MARK: retrieveFlags
-    var retrieveFlagsCallCount = 0
-    var retrieveFlagsCallback: (() -> Void)?
-    var retrieveFlagsReturnValue: [String: CacheableUserFlags]!
-    func retrieveFlags() -> [String: CacheableUserFlags] {
-        retrieveFlagsCallCount += 1
-        retrieveFlagsCallback?()
-        return retrieveFlagsReturnValue
-    }
-
-    // MARK: storeFlags
-    var storeFlagsCallCount = 0
-    var storeFlagsCallback: (() -> Void)?
-    var storeFlagsReceivedFlags: [String: CacheableUserFlags]?
-    func storeFlags(_ flags: [String: CacheableUserFlags]) {
-        storeFlagsCallCount += 1
-        storeFlagsReceivedFlags = flags
-        storeFlagsCallback?()
     }
 }
 
@@ -494,31 +579,5 @@ final class ThrottlingMock: Throttling {
     func cancelThrottledRun() {
         cancelThrottledRunCallCount += 1
         cancelThrottledRunCallback?()
-    }
-}
-
-// MARK: - UserFlagCachingMock
-final class UserFlagCachingMock: UserFlagCaching {
-
-    // MARK: cacheFlags
-    var cacheFlagsCallCount = 0
-    var cacheFlagsCallback: (() -> Void)?
-    var cacheFlagsReceivedUser: LDUser?
-    func cacheFlags(for user: LDUser) {
-        cacheFlagsCallCount += 1
-        cacheFlagsReceivedUser = user
-        cacheFlagsCallback?()
-    }
-
-    // MARK: retrieveFlags
-    var retrieveFlagsCallCount = 0
-    var retrieveFlagsCallback: (() -> Void)?
-    var retrieveFlagsReceivedUser: LDUser?
-    var retrieveFlagsReturnValue: CacheableUserFlags? = nil
-    func retrieveFlags(for user: LDUser) -> CacheableUserFlags? {
-        retrieveFlagsCallCount += 1
-        retrieveFlagsReceivedUser = user
-        retrieveFlagsCallback?()
-        return retrieveFlagsReturnValue
     }
 }
