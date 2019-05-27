@@ -2,6 +2,14 @@
 
 All notable changes to the LaunchDarkly iOS SDK will be documented in this file. This project adheres to [Semantic Versioning](http://semver.org).
 
+## [3.0.3] - 2019-05-27
+### Fixed
+- Added length check to `flagConfigValueForKey` to prevent dictionary access when key is nil.
+
+## [3.0.2] - 2019-05-15
+### Changed
+- Moved the timer that limits how often a client app can set the SDK online onto the main run loop.
+
 ## [3.0.1] - 2019-04-30
 ### Changed
 - Deployed Carthage built DarklyEventSource frameworks as part of the Darkly project.
