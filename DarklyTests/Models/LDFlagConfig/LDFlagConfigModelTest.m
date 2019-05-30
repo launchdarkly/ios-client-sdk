@@ -135,12 +135,11 @@ extern NSString *const kLDFlagConfigModelKeyKey;
     XCTAssertNil([subject flagConfigValueForFlagKey:@""]);
 }
 
-#pragma clang diagnostic ignored "-Wnonnull"
 -(void)testFlagConfigValueForNilFlagKey {
     LDFlagConfigModel *subject = [LDFlagConfigModel flagConfigFromJsonFileNamed:@"featureFlags"];
-    XCTAssertNil([subject flagConfigValueForFlagKey:nil]);
+    NSString *nilFlagKey = nil;
+    XCTAssertNil([subject flagConfigValueForFlagKey:nilFlagKey]);
 }
-#pragma clang diagnostic pop
 
 -(void)testFlagValueForFlagKey {
     LDFlagConfigModel *config = [LDFlagConfigModel flagConfigFromJsonFileNamed:@"featureFlags"];
