@@ -96,6 +96,9 @@ NSString * const kLDFlagConfigModelKeyKey = @"key";
 }
 
 -(LDFlagConfigValue*)flagConfigValueForFlagKey:(NSString*)flagKey {
+    if (flagKey.length == 0) {
+        return nil;
+    }
     return self.featuresJsonDictionary[flagKey];
 }
 

@@ -125,6 +125,22 @@ extern NSString *const kLDFlagConfigModelKeyKey;
     XCTAssertNil([subject flagValueForFlagKey:@"someMissingKey"]);
 }
 
+-(void)testFlagConfigValueForUnknownFlagKey {
+    LDFlagConfigModel *subject = [LDFlagConfigModel flagConfigFromJsonFileNamed:@"featureFlags"];
+    XCTAssertNil([subject flagConfigValueForFlagKey:@"someMissingKey"]);
+}
+
+-(void)testFlagConfigValueForEmptyStringFlagKey {
+    LDFlagConfigModel *subject = [LDFlagConfigModel flagConfigFromJsonFileNamed:@"featureFlags"];
+    XCTAssertNil([subject flagConfigValueForFlagKey:@""]);
+}
+
+-(void)testFlagConfigValueForNilFlagKey {
+    LDFlagConfigModel *subject = [LDFlagConfigModel flagConfigFromJsonFileNamed:@"featureFlags"];
+    NSString *nilFlagKey = nil;
+    XCTAssertNil([subject flagConfigValueForFlagKey:nilFlagKey]);
+}
+
 -(void)testFlagValueForFlagKey {
     LDFlagConfigModel *config = [LDFlagConfigModel flagConfigFromJsonFileNamed:@"featureFlags"];
     NSDictionary *flagValues = [NSJSONSerialization jsonObjectFromFileNamed:@"featureFlags"];
