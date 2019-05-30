@@ -2,7 +2,7 @@
 
 All notable changes to the LaunchDarkly iOS SDK will be documented in this file. This project adheres to [Semantic Versioning](http://semver.org).
 
-## [3.0.3] - 2019-05-27
+## [3.0.3] - 2019-05-30
 ### Changed
 - Added `nonnull` to `featureKey` parameters on exposed variation methods.
 
