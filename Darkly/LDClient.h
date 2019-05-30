@@ -91,7 +91,7 @@ NS_ASSUME_NONNULL_BEGIN
  * @param fallback  Fallback value for feature flag
  * @return the feature flag value
  */
-- (BOOL)boolVariation:(NSString *)featureKey fallback:(BOOL)fallback;
+- (BOOL)boolVariation:(nonnull NSString *)featureKey fallback:(BOOL)fallback;
 
 /**
  * Retrieve a feature flag value. If the configuration for this feature
@@ -102,7 +102,7 @@ NS_ASSUME_NONNULL_BEGIN
  * @param fallback   Fallback value for feature flag
  * @return the feature flag value
  */
-- (nullable NSNumber*)numberVariation:(NSString *)featureKey fallback:(nullable NSNumber*)fallback;
+- (nullable NSNumber*)numberVariation:(nonnull NSString *)featureKey fallback:(nullable NSNumber*)fallback;
 
 /**
  * Retrieve a feature flag value. If the configuration for this feature
@@ -113,7 +113,7 @@ NS_ASSUME_NONNULL_BEGIN
  * @param fallback   Fallback value for feature flag
  * @return the feature flag value
  */
-- (double)doubleVariation:(NSString *)featureKey fallback:(double)fallback;
+- (double)doubleVariation:(nonnull NSString *)featureKey fallback:(double)fallback;
 
 /**
  * Retrieve a feature flag value. If the configuration for this feature
@@ -124,7 +124,7 @@ NS_ASSUME_NONNULL_BEGIN
  * @param fallback   Fallback value for feature flag
  * @return the feature flag value
  */
-- (nullable NSString*)stringVariation:(NSString *)featureKey fallback:(nullable NSString*)fallback;
+- (nullable NSString*)stringVariation:(nonnull NSString *)featureKey fallback:(nullable NSString*)fallback;
 
 /**
  * Retrieve a feature flag value. If the configuration for this feature
@@ -135,7 +135,7 @@ NS_ASSUME_NONNULL_BEGIN
  * @param fallback   Fallback value for feature flag
  * @return the feature flag value
  */
-- (nullable NSArray*)arrayVariation:(NSString *)featureKey fallback:(nullable NSArray*)fallback;
+- (nullable NSArray*)arrayVariation:(nonnull NSString *)featureKey fallback:(nullable NSArray*)fallback;
 
 /**
  * Retrieve a feature flag value. If the configuration for this feature
@@ -146,7 +146,7 @@ NS_ASSUME_NONNULL_BEGIN
  * @param fallback   Fallback value for feature flag
  * @return the feature flag value
  */
-- (nullable NSDictionary*)dictionaryVariation:(NSString *)featureKey fallback:(nullable NSDictionary*)fallback;
+- (nullable NSDictionary*)dictionaryVariation:(nonnull NSString *)featureKey fallback:(nullable NSDictionary*)fallback;
 
 #pragma mark - Event
 
