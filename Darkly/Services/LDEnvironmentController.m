@@ -159,7 +159,7 @@ NSString * const kEventKey = @"key";
     }
 
     for (NSString *trackedKey in self.flags) {
-        if (trackedKey == dictionary[kEventKey]) {
+        if ([trackedKey isEqualToString:dictionary[kEventKey]]) {
             return YES;
         }
     }
