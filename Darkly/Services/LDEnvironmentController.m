@@ -15,11 +15,13 @@
 #import "LDEvent+EventTypes.h"
 
 NSString * const kLDStreamPath = @"meval";
+NSString * const kEventKey = @"key";
 
 @interface LDEnvironmentController()
 @property (nonatomic, copy) NSString *mobileKey;
 @property (nonatomic, strong) LDConfig *config;
 @property (nonatomic, strong) LDUserModel *user;
+@property (nonatomic, strong) NSArray<NSString*> *flags;
 
 @property(nonatomic, strong) LDEventSource *eventSource;
 @property(nonatomic, strong) NSDate *backgroundTime;
@@ -32,14 +34,15 @@ NSString * const kLDStreamPath = @"meval";
 
 #pragma mark - Lifecycle
 
-+(instancetype)controllerWithMobileKey:(NSString*)mobileKey config:(LDConfig*)config user:(LDUserModel*)user dataManager:(LDDataManager*)dataManager {
-    return [[LDEnvironmentController alloc] initWithMobileKey:mobileKey config:config user:user dataManager:dataManager];
++(instancetype)controllerWithMobileKey:(NSString*)mobileKey config:(LDConfig*)config user:(LDUserModel*)user dataManager:(LDDataManager*)dataManager flags:(NSArray<NSString*>*)flags {
+    return [[LDEnvironmentController alloc] initWithMobileKey:mobileKey config:config user:user dataManager:dataManager flags:flags];
 }
 
--(instancetype)initWithMobileKey:(NSString*)mobileKey config:(LDConfig*)config user:(LDUserModel*)user dataManager:(LDDataManager*)dataManager {
+-(instancetype)initWithMobileKey:(NSString*)mobileKey config:(LDConfig*)config user:(LDUserModel*)user dataManager:(LDDataManager*)dataManager flags:(NSArray<NSString*>*)flags {
     if (!(self = [super init])) {
         return nil;
     }
+    self.flags = flags;
     self.mobileKey = mobileKey;
     self.config = config;
     self.user = user;
@@ -140,6 +143,30 @@ NSString * const kLDStreamPath = @"meval";
 
 #pragma mark - Streaming
 
+-(BOOL)isEventTracked:(LDEvent *)event {
+    if (!event) {
+        return NO;
+    }
+
+    if (event.data.length == 0) {
+        return NO;
+    }
+
+    NSDictionary *dictionary = [NSJSONSerialization JSONObjectWithData:[event.data dataUsingEncoding:NSUTF8StringEncoding] options:kNilOptions error:nil];
+
+    if (!dictionary) {
+        return NO;
+    }
+
+    for (NSString *trackedKey in self.flags) {
+        if (trackedKey == dictionary[kEventKey]) {
+            return YES;
+        }
+    }
+
+    return NO;
+}
+
 - (void)configureEventSource {
     @synchronized (self) {
         if (!self.isOnline) {
@@ -156,6 +183,9 @@ NSString * const kLDStreamPath = @"meval";
         __weak typeof(self) weakSelf = self;
         [self.eventSource onMessage:^(LDEvent *event) {
             __strong typeof(weakSelf) strongSelf = weakSelf;
+            if (![self isEventTracked:event]) {
+                return;
+            }
             [strongSelf handlePingEvent:event];
             [strongSelf handlePutEvent:event];
             [strongSelf handlePatchEvent:event];

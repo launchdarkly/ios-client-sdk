@@ -22,6 +22,7 @@
 @property (nonatomic, copy) NSString *mobileKey;
 @property (nonatomic, strong) LDConfig *config;
 @property (nonatomic, strong) LDUserModel *user;
+@property (nonatomic, strong) NSArray<NSString*> *flags;
 @property (nonatomic, assign, getter=isStarted) BOOL start;
 
 @property (nonatomic, strong) LDEnvironmentController *environmentController;
@@ -31,23 +32,24 @@
 
 @implementation LDEnvironment
 #pragma mark Lifecycle
-+(instancetype)environmentForMobileKey:(NSString*)mobileKey config:(LDConfig*)config user:(LDUserModel*)user {
-    return [[LDEnvironment alloc] initForMobileKey:mobileKey config:config user:user];
++(instancetype)environmentForMobileKey:(NSString*)mobileKey config:(LDConfig*)config user:(LDUserModel*)user flags:(NSArray<NSString*>*)flags {
+    return [[LDEnvironment alloc] initForMobileKey:mobileKey config:config user:user flags:flags];
 }
 
--(instancetype)initForMobileKey:(NSString*)mobileKey config:(LDConfig*)config user:(LDUserModel*)user {
+-(instancetype)initForMobileKey:(NSString*)mobileKey config:(LDConfig*)config user:(LDUserModel*)user flags:(NSArray<NSString*>*)flags {
     if (!(self = [super init])) {
         return nil;
     }
 
+    self.flags = flags;
     self.mobileKey = mobileKey;
     self.config = config;
     self.user = [user copy];
     self.dataManager = [LDDataManager dataManagerWithMobileKey:self.mobileKey config:self.config];
-    self.environmentController = [LDEnvironmentController controllerWithMobileKey:self.mobileKey config:self.config user:self.user dataManager:self.dataManager];
+    self.environmentController = [LDEnvironmentController controllerWithMobileKey:self.mobileKey config:self.config user:self.user dataManager:self.dataManager flags:self.flags];
 
     [self registerForNotifications];
-    
+
     return self;
 }
 
@@ -276,7 +278,7 @@
     self.user.flagConfig = [self.dataManager retrieveFlagConfigForUser:self.user];
     [self.dataManager saveUser:self.user];
     [self.dataManager recordIdentifyEventWithUser:self.user];
-    self.environmentController = [LDEnvironmentController controllerWithMobileKey:self.mobileKey config:self.config user:self.user dataManager:self.dataManager];
+    self.environmentController = [LDEnvironmentController controllerWithMobileKey:self.mobileKey config:self.config user:self.user dataManager:self.dataManager flags:self.flags];
 
     self.online = wasOnline;
 }

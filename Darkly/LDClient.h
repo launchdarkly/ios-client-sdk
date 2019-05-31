@@ -24,6 +24,8 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nonatomic, strong, readonly) LDUserModel *ldUser;
 @property (nonatomic, strong, readonly) LDConfig *ldConfig;
 @property (nonatomic, copy, readonly) NSString *environmentName;
+@property (nonatomic, strong, readonly, nullable) NSArray<NSString*> *userFlags;
+
 @property (nonatomic, weak, nullable) id<ClientDelegate> delegate;
 @property (nonatomic, strong, readonly, nullable) NSDictionary<NSString*, id> *allFlags;
 
@@ -45,9 +47,10 @@ NS_ASSUME_NONNULL_BEGIN
  *
  * @param inputConfig Desired configuration for the client.
  * @param inputUserBuilder  Desired user for the client.
+ * @param userFlags Desired flags to track.
  * @return whether the client was able to be started.
  */
-- (BOOL)start:(LDConfig *)inputConfig withUserBuilder:(LDUserBuilder *)inputUserBuilder;
+- (BOOL)start:(LDConfig *)inputConfig withUserBuilder:(LDUserBuilder *)inputUserBuilder trackUserFlags:(NSArray<NSString*> *)userFlags;
 
 /**
  * Set the client to online/offline mode. When online events will be synced to server. (Default)

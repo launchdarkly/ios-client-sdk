@@ -28,9 +28,10 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nonatomic, copy, readonly) NSString *mobileKey;
 @property (nonatomic, strong, readonly) LDConfig *config;
 @property (nonatomic, strong, readonly) LDUserModel *user;
+@property (nonatomic, strong, readonly) NSArray<NSString*> *flags;
 
-+(instancetype)controllerWithMobileKey:(NSString*)mobileKey config:(LDConfig*)config user:(LDUserModel*)user dataManager:(LDDataManager*)dataManager;
--(instancetype)initWithMobileKey:(NSString*)mobileKey config:(LDConfig*)config user:(LDUserModel*)user dataManager:(LDDataManager*)dataManager;
++(instancetype)controllerWithMobileKey:(NSString*)mobileKey config:(LDConfig*)config user:(LDUserModel*)user dataManager:(LDDataManager*)dataManager flags:(NSArray<NSString*>*)flags;
+-(instancetype)initWithMobileKey:(NSString*)mobileKey config:(LDConfig*)config user:(LDUserModel*)user dataManager:(LDDataManager*)dataManager flags:(NSArray<NSString*>*)flags;
 
 -(void)flushEvents;
 
