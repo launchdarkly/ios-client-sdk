@@ -1,27 +1,8 @@
-# Xcode
 .DS_Store
-*/build/*
-build/
-*.pbxuser
-!default.pbxuser
-*.mode1v3
-!default.mode1v3
-*.mode2v3
-!default.mode2v3
-*.perspectivev3
-!default.perspectivev3
+*.xcuserstate
 xcuserdata
-profile
-*.moved-aside
-DerivedData
-.idea/
-*.hmap
-*.xccheckout
-*.xcscmblueprint
-
-# Git
-*.orig
-
-# Vim files
-*.swp
-Carthage/Checkouts
+*.playground
+/default.profraw
+/build
+/docs
+/Carthage/Checkouts
