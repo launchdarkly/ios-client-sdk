@@ -15,11 +15,13 @@
 #import "LDEvent+EventTypes.h"
 
 NSString * const kLDStreamPath = @"meval";
+NSString * const kEventKey = @"key";
 
 @interface LDEnvironmentController()
 @property (nonatomic, copy) NSString *mobileKey;
 @property (nonatomic, strong) LDConfig *config;
 @property (nonatomic, strong) LDUserModel *user;
+@property (nonatomic, strong) NSArray<NSString*> *trackedKeys;
 
 @property(nonatomic, strong) LDEventSource *eventSource;
 @property(nonatomic, strong) NSDate *backgroundTime;
@@ -32,14 +34,15 @@ NSString * const kLDStreamPath = @"meval";
 
 #pragma mark - Lifecycle
 
-+(instancetype)controllerWithMobileKey:(NSString*)mobileKey config:(LDConfig*)config user:(LDUserModel*)user dataManager:(LDDataManager*)dataManager {
-    return [[LDEnvironmentController alloc] initWithMobileKey:mobileKey config:config user:user dataManager:dataManager];
++(instancetype)controllerWithMobileKey:(NSString*)mobileKey config:(LDConfig*)config user:(LDUserModel*)user dataManager:(LDDataManager*)dataManager trackedKeys:(NSArray<NSString*>*)trackedKeys {
+    return [[LDEnvironmentController alloc] initWithMobileKey:mobileKey config:config user:user dataManager:dataManager trackedKeys:trackedKeys];
 }
 
--(instancetype)initWithMobileKey:(NSString*)mobileKey config:(LDConfig*)config user:(LDUserModel*)user dataManager:(LDDataManager*)dataManager {
+-(instancetype)initWithMobileKey:(NSString*)mobileKey config:(LDConfig*)config user:(LDUserModel*)user dataManager:(LDDataManager*)dataManager trackedKeys:(NSArray<NSString*>*)trackedKeys {
     if (!(self = [super init])) {
         return nil;
     }
+    self.trackedKeys = trackedKeys;
     self.mobileKey = mobileKey;
     self.config = config;
     self.user = user;
@@ -140,6 +143,14 @@ NSString * const kLDStreamPath = @"meval";
 
 #pragma mark - Streaming
 
+-(BOOL)isEventTracked:(NSDictionary *)dictionary {
+    if (![self.trackedKeys count]) {
+        return YES;
+    }
+
+    return ([self.trackedKeys containsObject: dictionary[kEventKey]]) ? YES : NO;
+}
+
 - (void)configureEventSource {
     @synchronized (self) {
         if (!self.isOnline) {
@@ -225,13 +236,19 @@ NSString * const kLDStreamPath = @"meval";
         return;
     }
 
-    LDFlagConfigModel *newConfig = [[LDFlagConfigModel alloc] initWithDictionary:newConfigDictionary];
+    if ([self isEventTracked:newConfigDictionary]) {
+        LDFlagConfigModel *newConfig = [[LDFlagConfigModel alloc] initWithDictionary:newConfigDictionary];
 
-    NSString *updateResultNotificationName = [self.user.flagConfig isEqualToConfig:newConfig] ? kLDUserNoChangeNotification : kLDUserUpdatedNotification;
-    [self postFeatureFlagsChangedNotificationForChangedFlagKeys:[self.user.flagConfig differingFlagKeysFromConfig:newConfig]];
-    self.user.flagConfig = newConfig;
-    [self.dataManager saveUser:self.user];
-    [self reportFlagConfigProcessingCompleteWithNotificationName:updateResultNotificationName message:@"SSE put event complete"];
+        NSString *updateResultNotificationName = [self.user.flagConfig isEqualToConfig:newConfig] ? kLDUserNoChangeNotification : kLDUserUpdatedNotification;
+        [self postFeatureFlagsChangedNotificationForChangedFlagKeys:[self.user.flagConfig differingFlagKeysFromConfig:newConfig]];
+        self.user.flagConfig = newConfig;
+
+
+        [self.dataManager saveUser:self.user];
+        [self reportFlagConfigProcessingCompleteWithNotificationName:updateResultNotificationName message:@"SSE put event complete"];
+    } else {
+        [self.dataManager saveUser:self.user];
+    }
 }
 
 - (void)handlePatchEvent:(LDEvent*)event {
@@ -246,16 +263,19 @@ NSString * const kLDStreamPath = @"meval";
         return;
     }
 
-    LDFlagConfigModel *originalFlagConfig = [self.user.flagConfig copy];
+    if ([self isEventTracked:patchDictionary]) {
+        LDFlagConfigModel *originalFlagConfig = [self.user.flagConfig copy];
 
-    [self.user.flagConfig addOrReplaceFromDictionary:patchDictionary];
+        [self.user.flagConfig addOrReplaceFromDictionary:patchDictionary];
 
-    if ([self.user.flagConfig hasFeaturesEqualToDictionary:originalFlagConfig.dictionaryValue]) {
-        [self reportFlagConfigProcessingCompleteWithNotificationName:kLDUserNoChangeNotification message:@"SSE patch event did not change feature flag value"];
-        return;
+        if ([self.user.flagConfig hasFeaturesEqualToDictionary:originalFlagConfig.dictionaryValue]) {
+            [self reportFlagConfigProcessingCompleteWithNotificationName:kLDUserNoChangeNotification message:@"SSE patch event did not change feature flag value"];
+            return;
+        }
+
+        [self postFeatureFlagsChangedNotificationForChangedFlagKeys:[originalFlagConfig differingFlagKeysFromConfig:self.user.flagConfig]];
     }
-
-    [self postFeatureFlagsChangedNotificationForChangedFlagKeys:[originalFlagConfig differingFlagKeysFromConfig:self.user.flagConfig]];
+    
     [self.dataManager saveUser:self.user];
     [self reportFlagConfigProcessingCompleteWithNotificationName:kLDUserUpdatedNotification message:@"SSE patch event complete"];
 }
@@ -272,13 +292,15 @@ NSString * const kLDStreamPath = @"meval";
         return;
     }
 
-    LDFlagConfigModel *originalFlagConfig = [self.user.flagConfig copy];
+    if ([self isEventTracked:deleteDictionary]) {
+        LDFlagConfigModel *originalFlagConfig = [self.user.flagConfig copy];
 
-    [self.user.flagConfig deleteFromDictionary:deleteDictionary];
+        [self.user.flagConfig deleteFromDictionary:deleteDictionary];
 
-    if ([self.user.flagConfig hasFeaturesEqualToDictionary:originalFlagConfig.dictionaryValue]) {
-        [self reportFlagConfigProcessingCompleteWithNotificationName:kLDUserNoChangeNotification message:@"SSE delete event did not change feature flags"];
-        return;
+        if ([self.user.flagConfig hasFeaturesEqualToDictionary:originalFlagConfig.dictionaryValue]) {
+            [self reportFlagConfigProcessingCompleteWithNotificationName:kLDUserNoChangeNotification message:@"SSE delete event did not change feature flags"];
+            return;
+        }
     }
 
     [self.dataManager saveUser:self.user];

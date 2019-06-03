@@ -2,6 +2,10 @@
 
 All notable changes to the LaunchDarkly iOS SDK will be documented in this file. This project adheres to [Semantic Versioning](http://semver.org).
 
+## [3.0.4] - 2019-05-31
+### Changed
+- Added ability to pass an array of keys for feature flags that an application observes (see  `trackedKeys` parameter in the `start:` method on `LDClient`). By providing this array of keys, the SDK avoids performing maintenance on feature flags that the application does not track.
+
 ## [3.0.3] - 2019-05-30
 ### Changed
 - Added `nonnull` to `featureKey` parameters on exposed variation methods.

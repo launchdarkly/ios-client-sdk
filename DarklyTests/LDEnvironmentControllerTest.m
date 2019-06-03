@@ -57,6 +57,7 @@ NSString *const kBoolFlagKey = @"isABawler";
 @property (nonatomic, strong) NSString *encodedUserString;
 @property (nonatomic, strong) NSData *encodedUserData;
 @property (nonatomic, strong) NSArray<NSDictionary*> *events;
+@property (nonatomic, strong) NSArray<NSString*> *trackedKeys;
 @property (nonatomic, strong) LDEnvironmentController *environmentController;
 @property (nonatomic) id requestManagerMock;
 @property (nonatomic) id dataManagerMock;
@@ -80,6 +81,8 @@ NSString *const kBoolFlagKey = @"isABawler";
     self.encodedUserData = [userJsonString dataUsingEncoding:NSUTF8StringEncoding];
 
     self.events = [LDEventModel stubEventDictionariesForUser:self.user config:self.config];
+    NSArray *emptyArray = [NSArray array];
+    self.trackedKeys = emptyArray;
 
     self.requestManagerMock = [OCMockObject niceMockForClass:[LDRequestManager class]];
     [[[self.requestManagerMock stub] andReturn:self.requestManagerMock] requestManagerForMobileKey:[OCMArg any] config:[OCMArg any] delegate:[OCMArg any] callbackQueue:[OCMArg any]];
@@ -92,7 +95,7 @@ NSString *const kBoolFlagKey = @"isABawler";
     self.eventSourceMock = [OCMockObject niceMockForClass:[LDEventSource class]];
     [[[self.eventSourceMock stub] andReturn: self.eventSourceMock] eventSourceWithURL:[OCMArg any] httpHeaders:[OCMArg any] connectMethod:[OCMArg any] connectBody:[OCMArg any]];
 
-    self.environmentController = [LDEnvironmentController controllerWithMobileKey:mockMobileKey config:self.config user:self.user dataManager:self.dataManagerMock];
+    self.environmentController = [LDEnvironmentController controllerWithMobileKey:mockMobileKey config:self.config user:self.user dataManager:self.dataManagerMock trackedKeys:self.trackedKeys];
     self.notificationUserInfo = @{kLDNotificationUserInfoKeyMobileKey: mockMobileKey};
 }
 
@@ -133,7 +136,7 @@ NSString *const kBoolFlagKey = @"isABawler";
         [notificationCenterMock stopMocking];
     };
 
-    self.environmentController = [LDEnvironmentController controllerWithMobileKey:mockMobileKey config:self.config user:self.user dataManager:self.dataManagerMock];
+    self.environmentController = [LDEnvironmentController controllerWithMobileKey:mockMobileKey config:self.config user:self.user dataManager:self.dataManagerMock trackedKeys:self.trackedKeys];
 
     XCTAssertEqualObjects(self.environmentController.mobileKey, self.config.mobileKey);
     XCTAssertEqualObjects(self.environmentController.config, self.config);
