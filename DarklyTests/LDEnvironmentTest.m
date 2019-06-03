@@ -47,6 +47,7 @@
 @property (nonatomic, copy) NSString *mobileKey;
 @property (nonatomic, strong) LDConfig *config;
 @property (nonatomic, strong) LDUserModel *user;
+@property (nonatomic, strong) NSArray<NSString*> *trackedKeys;
 @property (nonatomic, strong) id dataManagerMock;
 @property (nonatomic, strong) id environmentControllerMock;
 @property (nonatomic, strong) LDEnvironment *environment;
@@ -67,13 +68,15 @@ static NSString *const defaultStringFeatureFlagValue = @"LDEnvironmentTest.Featu
     self.config = [[LDConfig alloc] initWithMobileKey:self.mobileKey];
     self.user = [LDUserModel stubWithKey:[[NSUUID UUID] UUIDString]];
     self.dataManagerMock = [OCMockObject niceMockForClass:[LDDataManager class]];
+    NSArray *emptyArray = [NSArray array];
+    self.trackedKeys = emptyArray;
     [[[self.dataManagerMock stub] andReturn:self.dataManagerMock] dataManagerWithMobileKey:self.mobileKey config:self.config];
     self.environmentControllerMock = [OCMockObject niceMockForClass:[LDEnvironmentController class]];
     [[[self.environmentControllerMock stub] andReturn:self.environmentControllerMock] controllerWithMobileKey:self.mobileKey config:self.config user:[OCMArg checkWithBlock:^BOOL(id obj) {
         //Because the environment makes a copy of the user, this makes sure to serve the environmentControllerMock whenever the user passed into controllerWithMobileKey matches self.user
         return [obj isEqual:self.user ignoringAttributes:@[kUserAttributeUpdatedAt]];
-    }] dataManager:self.dataManagerMock];
-    self.environment = [LDEnvironment environmentForMobileKey:self.mobileKey config:self.config user:self.user];
+    }] dataManager:self.dataManagerMock trackedKeys:self.trackedKeys];
+    self.environment = [LDEnvironment environmentForMobileKey:self.mobileKey config:self.config user:self.user trackedKeys:self.trackedKeys];
     [[[self.dataManagerMock stub] andReturn:self.user.flagConfig] retrieveFlagConfigForUser:self.environment.user];
     self.environment.delegate = self.clientDelegateMock;
 }
@@ -105,7 +108,7 @@ static NSString *const defaultStringFeatureFlagValue = @"LDEnvironmentTest.Featu
 }
 
 -(void)testIsPrimary_mobileKeyDiffersFromConfigMobileKey {
-    self.environment = [LDEnvironment environmentForMobileKey:[NSUUID UUID].UUIDString config:self.config user:self.user];
+    self.environment = [LDEnvironment environmentForMobileKey:[NSUUID UUID].UUIDString config:self.config user:self.user trackedKeys:self.trackedKeys];
 
     XCTAssertFalse(self.environment.isPrimary);
 }
@@ -120,7 +123,7 @@ static NSString *const defaultStringFeatureFlagValue = @"LDEnvironmentTest.Featu
 
     for (NSString *keyName in secondaryMobileKeysMock.allKeys) {
         NSString *mobileKey = secondaryMobileKeysMock[keyName];
-        self.environment = [LDEnvironment environmentForMobileKey:mobileKey config:self.config user:self.user];
+        self.environment = [LDEnvironment environmentForMobileKey:mobileKey config:self.config user:self.user trackedKeys:self.trackedKeys];
 
         XCTAssertEqualObjects(self.environment.environmentName, keyName);
     }
@@ -131,7 +134,7 @@ static NSString *const defaultStringFeatureFlagValue = @"LDEnvironmentTest.Featu
 -(void)testStart {
     self.dataManagerMock = [OCMockObject niceMockForClass:[LDDataManager class]];
     [[[self.dataManagerMock stub] andReturn:self.dataManagerMock] dataManagerWithMobileKey:self.mobileKey config:self.config];
-    self.environment = [LDEnvironment environmentForMobileKey:self.mobileKey config:self.config user:self.user];
+    self.environment = [LDEnvironment environmentForMobileKey:self.mobileKey config:self.config user:self.user trackedKeys:self.trackedKeys];
     [[self.dataManagerMock expect] convertToEnvironmentBasedCacheForUser:self.environment.user config:self.config];
     [[[self.dataManagerMock expect] andReturn:self.user.flagConfig] retrieveFlagConfigForUser:self.environment.user];
     [[self.dataManagerMock expect] saveUser:self.environment.user];
@@ -147,7 +150,7 @@ static NSString *const defaultStringFeatureFlagValue = @"LDEnvironmentTest.Featu
     NSString *mobileKey = [NSUUID UUID].UUIDString;
     self.dataManagerMock = [OCMockObject niceMockForClass:[LDDataManager class]];
     [[[self.dataManagerMock stub] andReturn:self.dataManagerMock] dataManagerWithMobileKey:mobileKey config:self.config];
-    self.environment = [LDEnvironment environmentForMobileKey:mobileKey config:self.config user:self.user];
+    self.environment = [LDEnvironment environmentForMobileKey:mobileKey config:self.config user:self.user trackedKeys:self.trackedKeys];
     [[self.dataManagerMock reject] convertToEnvironmentBasedCacheForUser:[OCMArg any] config:[OCMArg any]];
     [[self.dataManagerMock expect] retrieveFlagConfigForUser:self.environment.user];
     [[self.dataManagerMock expect] saveUser:self.environment.user];
@@ -687,7 +690,7 @@ static NSString *const defaultStringFeatureFlagValue = @"LDEnvironmentTest.Featu
     [[self.dataManagerMock expect] retrieveFlagConfigForUser:newUser];
     [[self.dataManagerMock expect] recordIdentifyEventWithUser:newUser];
     [[self.dataManagerMock expect] saveUser:newUser];
-    [[[self.environmentControllerMock expect] andReturn:self.environmentControllerMock] controllerWithMobileKey:self.mobileKey config:self.config user:newUser dataManager:self.dataManagerMock];
+    [[[self.environmentControllerMock expect] andReturn:self.environmentControllerMock] controllerWithMobileKey:self.mobileKey config:self.config user:newUser dataManager:self.dataManagerMock trackedKeys:self.trackedKeys];
     [[self.environmentControllerMock expect] setOnline:YES];
 
     [self.environment updateUser:newUserMock];
@@ -714,8 +717,8 @@ static NSString *const defaultStringFeatureFlagValue = @"LDEnvironmentTest.Featu
         if (![obj isKindOfClass:[LDUserModel class]]) { return NO; }
         LDUserModel *user = obj;
         return [user isEqual:newUser ignoringAttributes:@[kUserAttributeUpdatedAt]];
-    }] dataManager:self.dataManagerMock];
-    self.environment = [LDEnvironment environmentForMobileKey:mobileKey config:self.config user:self.user];
+    }] dataManager:self.dataManagerMock trackedKeys: self.trackedKeys];
+    self.environment = [LDEnvironment environmentForMobileKey:mobileKey config:self.config user:self.user trackedKeys:self.trackedKeys];
 
     [self.environment start];
     self.environment.online = YES;
@@ -747,7 +750,7 @@ static NSString *const defaultStringFeatureFlagValue = @"LDEnvironmentTest.Featu
     [[self.dataManagerMock expect] retrieveFlagConfigForUser:newUser];
     [[self.dataManagerMock expect] recordIdentifyEventWithUser:newUser];
     [[self.dataManagerMock expect] saveUser:newUser];
-    [[[self.environmentControllerMock expect] andReturn:self.environmentControllerMock] controllerWithMobileKey:self.mobileKey config:self.config user:newUser dataManager:self.dataManagerMock];
+    [[[self.environmentControllerMock expect] andReturn:self.environmentControllerMock] controllerWithMobileKey:self.mobileKey config:self.config user:newUser dataManager:self.dataManagerMock trackedKeys:self.trackedKeys];
     [[self.environmentControllerMock reject] setOnline:YES];
 
     [self.environment updateUser:newUserMock];
@@ -768,7 +771,7 @@ static NSString *const defaultStringFeatureFlagValue = @"LDEnvironmentTest.Featu
     [[self.dataManagerMock reject] convertToEnvironmentBasedCacheForUser:[OCMArg any] config:[OCMArg any]];
     [[self.dataManagerMock reject] retrieveFlagConfigForUser:[OCMArg any]];
     [[self.dataManagerMock reject] recordIdentifyEventWithUser:[OCMArg any]];
-    [[self.environmentControllerMock reject] controllerWithMobileKey:[OCMArg any] config:[OCMArg any] user:[OCMArg any] dataManager:[OCMArg any]];
+    [[self.environmentControllerMock reject] controllerWithMobileKey:[OCMArg any] config:[OCMArg any] user:[OCMArg any] dataManager:[OCMArg any] trackedKeys:self.trackedKeys];
 
     [self.environment updateUser:nil];
 
@@ -786,7 +789,7 @@ static NSString *const defaultStringFeatureFlagValue = @"LDEnvironmentTest.Featu
     [[self.dataManagerMock reject] convertToEnvironmentBasedCacheForUser:[OCMArg any] config:[OCMArg any]];
     [[self.dataManagerMock reject] retrieveFlagConfigForUser:[OCMArg any]];
     [[self.dataManagerMock reject] recordIdentifyEventWithUser:[OCMArg any]];
-    [[self.environmentControllerMock reject] controllerWithMobileKey:[OCMArg any] config:[OCMArg any] user:[OCMArg any] dataManager:[OCMArg any]];
+    [[self.environmentControllerMock reject] controllerWithMobileKey:[OCMArg any] config:[OCMArg any] user:[OCMArg any] dataManager:[OCMArg any] trackedKeys:self.trackedKeys];
 
     [self.environment updateUser:newUser];
 

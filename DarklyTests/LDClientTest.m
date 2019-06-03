@@ -45,6 +45,7 @@
 @property (nonatomic, strong) LDUserBuilder *userBuilder;
 @property (nonatomic, strong) LDUserModel *user;
 @property (nonatomic, strong) LDConfig *config;
+@property (nonatomic, strong) NSArray<NSString*> *trackedKeys;
 @property (nonatomic, strong) NSDictionary<NSString*, NSString*> *secondaryMobileKeys;  // <environment-name: mobile-key>
 @property (nonatomic, strong) NSDictionary<NSString*, LDEnvironmentMock*> *secondaryEnvironmentMocks;  // <mobile-key: environment>
 @property (nonatomic, strong) NSArray<NSString*> *ignoredUserAttributes;
@@ -67,6 +68,8 @@ NSString *const kTestMobileKey = @"testMobileKey";
 
     self.user = [LDUserModel stubWithKey:nil];
     self.userBuilder = [LDUserBuilder currentBuilder:self.user];
+    NSArray *emptyArray = [NSArray array];
+    self.trackedKeys = emptyArray;
 
     self.config = [[LDConfig alloc] initWithMobileKey:kTestMobileKey];
 
@@ -77,7 +80,7 @@ NSString *const kTestMobileKey = @"testMobileKey";
     self.primaryEnvironmentMock = [OCMockObject niceMockForClass:[LDEnvironment class]];
     [[[self.primaryEnvironmentMock stub] andReturn:self.primaryEnvironmentMock] environmentForMobileKey:kTestMobileKey config:self.config user:[OCMArg checkWithBlock:^BOOL(id obj) {
         return [obj isEqual:self.user ignoringAttributes:self.ignoredUserAttributes];
-    }]];
+    }] trackedKeys:self.trackedKeys];
 }
 
 - (void)setupSecondaryEnvironments {
@@ -99,7 +102,7 @@ NSString *const kTestMobileKey = @"testMobileKey";
             return YES;
         }] config:self.config user:[OCMArg checkWithBlock:^BOOL(id obj) {
             return [obj isEqual:self.user ignoringAttributes:self.ignoredUserAttributes];
-        }]];
+        }] trackedKeys:self.trackedKeys];
     }
     self.secondaryEnvironmentMocks = [secondaryEnvironmentMocks copy];
 }
@@ -149,7 +152,7 @@ NSString *const kTestMobileKey = @"testMobileKey";
     [(LDEnvironment*)[self.primaryEnvironmentMock expect] start];
     [[self.primaryEnvironmentMock expect] setOnline:YES];
 
-    XCTAssertTrue([[LDClient sharedInstance] start:self.config withUserBuilder:self.userBuilder]);
+    XCTAssertTrue([[LDClient sharedInstance] start:self.config withUserBuilder:self.userBuilder trackedKeys:self.trackedKeys]);
 
     XCTAssertTrue([[LDClient sharedInstance].ldUser isEqual:self.user ignoringAttributes:self.ignoredUserAttributes]);
     XCTAssertEqualObjects([LDClient sharedInstance].primaryEnvironment, self.primaryEnvironmentMock);
@@ -166,7 +169,7 @@ NSString *const kTestMobileKey = @"testMobileKey";
     [(LDEnvironment*)[self.primaryEnvironmentMock expect] start];
     [[self.primaryEnvironmentMock expect] setOnline:YES];
 
-    XCTAssertTrue([[LDClient sharedInstance] start:self.config withUserBuilder:self.userBuilder]);
+    XCTAssertTrue([[LDClient sharedInstance] start:self.config withUserBuilder:self.userBuilder trackedKeys:self.trackedKeys]);
 
     XCTAssertTrue([[LDClient sharedInstance].ldUser isEqual:self.user ignoringAttributes:self.ignoredUserAttributes]);
     XCTAssertEqualObjects([LDClient sharedInstance].primaryEnvironment, self.primaryEnvironmentMock);  //self.environmentMock is configured to return self.environmentMock on a environmentForMobileKey msg
@@ -189,7 +192,7 @@ NSString *const kTestMobileKey = @"testMobileKey";
     LDConfig *emptyConfig = nil;
     LDUserBuilder *emptyUserBuilder = nil;
 
-    XCTAssertFalse([[LDClient sharedInstance] start:emptyConfig withUserBuilder:emptyUserBuilder]);
+    XCTAssertFalse([[LDClient sharedInstance] start:emptyConfig withUserBuilder:emptyUserBuilder trackedKeys:self.trackedKeys]);
 
     XCTAssertNil([LDClient sharedInstance].primaryEnvironment);
     [self.nsUrlSessionMock verify];
@@ -197,12 +200,12 @@ NSString *const kTestMobileKey = @"testMobileKey";
 }
 
 - (void)testStart_multipleStartCalls {
-    XCTAssertTrue([[LDClient sharedInstance] start:self.config withUserBuilder:self.userBuilder]);
+    XCTAssertTrue([[LDClient sharedInstance] start:self.config withUserBuilder:self.userBuilder trackedKeys:self.trackedKeys]);
     [[self.nsUrlSessionMock reject] setSharedLDSessionForConfig:[OCMArg any]];
     [(LDEnvironment*)[self.primaryEnvironmentMock reject] start];
     [[self.primaryEnvironmentMock reject] setOnline:[OCMArg any]];
 
-    XCTAssertFalse([[LDClient sharedInstance] start:self.config withUserBuilder:self.userBuilder]);
+    XCTAssertFalse([[LDClient sharedInstance] start:self.config withUserBuilder:self.userBuilder trackedKeys:self.trackedKeys]);
 
     XCTAssertEqualObjects([LDClient sharedInstance].primaryEnvironment, self.primaryEnvironmentMock);
     [self.nsUrlSessionMock verify];
@@ -214,12 +217,12 @@ NSString *const kTestMobileKey = @"testMobileKey";
     [[[self.nsUrlSessionMock stub] andReturn:self] sharedSession];
     [[self.nsUrlSessionMock expect] setSharedLDSessionForConfig:self.config];
     self.primaryEnvironmentMock = [OCMockObject niceMockForClass:[LDEnvironment class]];
-    [[[self.primaryEnvironmentMock stub] andReturn:self.primaryEnvironmentMock] environmentForMobileKey:kTestMobileKey config:self.config user:[OCMArg isKindOfClass:[LDUserModel class]]];
+    [[[self.primaryEnvironmentMock stub] andReturn:self.primaryEnvironmentMock] environmentForMobileKey:kTestMobileKey config:self.config user:[OCMArg isKindOfClass:[LDUserModel class]] trackedKeys:self.trackedKeys];
     [(LDEnvironment*)[self.primaryEnvironmentMock expect] start];
     [[self.primaryEnvironmentMock expect] setOnline:YES];
     LDUserBuilder *emptyUserBuilder = nil;
 
-    XCTAssertTrue([[LDClient sharedInstance] start:self.config withUserBuilder:emptyUserBuilder]);
+    XCTAssertTrue([[LDClient sharedInstance] start:self.config withUserBuilder:emptyUserBuilder trackedKeys:self.trackedKeys]);
 
     XCTAssertNotNil([LDClient sharedInstance].ldUser);
     XCTAssertEqualObjects([LDClient sharedInstance].primaryEnvironment, self.primaryEnvironmentMock);
@@ -229,7 +232,7 @@ NSString *const kTestMobileKey = @"testMobileKey";
 }
 
 - (void)testSetOnline_YES {
-    [[LDClient sharedInstance] start:self.config withUserBuilder:self.userBuilder];
+    [[LDClient sharedInstance] start:self.config withUserBuilder:self.userBuilder trackedKeys:self.trackedKeys];
     [[LDClient sharedInstance] setOnline:NO];
     //The throttler mock is set to execute blocks. Setting the expectation on the environment mock verifies that the client is calling the throttler
     [[self.primaryEnvironmentMock expect] setOnline:YES];
@@ -246,7 +249,7 @@ NSString *const kTestMobileKey = @"testMobileKey";
 
 - (void)testSetOnline_YES_withMultipleEnvironments {
     [self setupSecondaryEnvironments];
-    [[LDClient sharedInstance] start:self.config withUserBuilder:self.userBuilder];
+    [[LDClient sharedInstance] start:self.config withUserBuilder:self.userBuilder trackedKeys:self.trackedKeys];
     [[LDClient sharedInstance] setOnline:NO];
     //The throttler mock is set to execute blocks. Setting the expectation on the environment mock verifies that the client is calling the throttler
     [[self.primaryEnvironmentMock expect] setOnline:YES];
@@ -267,7 +270,7 @@ NSString *const kTestMobileKey = @"testMobileKey";
 
 - (void)testSetOnline_YES_withMultipleEnvironments_mismatchedPrimaryEnvironment {
     [self setupSecondaryEnvironments];
-    [[LDClient sharedInstance] start:self.config withUserBuilder:self.userBuilder];
+    [[LDClient sharedInstance] start:self.config withUserBuilder:self.userBuilder trackedKeys:self.trackedKeys];
     [[[self.primaryEnvironmentMock stub] andReturnValue:@NO] isOnline];
     //The throttler mock is set to execute blocks. Setting the expectation on the environment mock verifies that the client is calling the throttler
     [[self.primaryEnvironmentMock expect] setOnline:YES];
@@ -288,7 +291,7 @@ NSString *const kTestMobileKey = @"testMobileKey";
 
 - (void)testSetOnline_YES_withMultipleEnvironments_mismatchedSecondaryEnvironment {
     [self setupSecondaryEnvironments];
-    [[LDClient sharedInstance] start:self.config withUserBuilder:self.userBuilder];
+    [[LDClient sharedInstance] start:self.config withUserBuilder:self.userBuilder trackedKeys:self.trackedKeys];
     [[[self.primaryEnvironmentMock stub] andReturnValue:@YES] isOnline];
     for (LDEnvironmentMock *environmentMock in self.secondaryEnvironmentMocks.allValues) {
         environmentMock.reportOnline = YES;
@@ -313,7 +316,7 @@ NSString *const kTestMobileKey = @"testMobileKey";
 
 - (void)testSetOnline_YES_withMultipleEnvironments_alreadyOnline {
     [self setupSecondaryEnvironments];
-    [[LDClient sharedInstance] start:self.config withUserBuilder:self.userBuilder];
+    [[LDClient sharedInstance] start:self.config withUserBuilder:self.userBuilder trackedKeys:self.trackedKeys];
     [[[self.primaryEnvironmentMock stub] andReturnValue:@YES] isOnline];
     for (LDEnvironmentMock *environmentMock in self.secondaryEnvironmentMocks.allValues) {
         environmentMock.reportOnline = YES;
@@ -336,7 +339,7 @@ NSString *const kTestMobileKey = @"testMobileKey";
 }
 
 - (void)testSetOnline_NO {
-    [[LDClient sharedInstance] start:self.config withUserBuilder:self.userBuilder];
+    [[LDClient sharedInstance] start:self.config withUserBuilder:self.userBuilder trackedKeys:self.trackedKeys];
     [[self.throttlerMock reject] runThrottled:[OCMArg any]];
     [[self.primaryEnvironmentMock expect] setOnline:NO];
     __block NSInteger completionCallCount = 0;
@@ -353,7 +356,7 @@ NSString *const kTestMobileKey = @"testMobileKey";
 
 - (void)testSetOnline_NO_withMultipleEnvironments {
     [self setupSecondaryEnvironments];
-    [[LDClient sharedInstance] start:self.config withUserBuilder:self.userBuilder];
+    [[LDClient sharedInstance] start:self.config withUserBuilder:self.userBuilder trackedKeys:self.trackedKeys];
     [[self.throttlerMock reject] runThrottled:[OCMArg any]];
     [[self.primaryEnvironmentMock expect] setOnline:NO];
     __block NSInteger completionCallCount = 0;
@@ -374,7 +377,7 @@ NSString *const kTestMobileKey = @"testMobileKey";
 
 - (void)testSetOnline_NO_withMultipleEnvironments_mismatchedPrimaryEnvironment {
     [self setupSecondaryEnvironments];
-    [[LDClient sharedInstance] start:self.config withUserBuilder:self.userBuilder];
+    [[LDClient sharedInstance] start:self.config withUserBuilder:self.userBuilder trackedKeys:self.trackedKeys];
     [[LDClient sharedInstance] setOnline:NO];
     [[[self.primaryEnvironmentMock stub] andReturnValue:@YES] isOnline];
     for (LDEnvironmentMock *environmentMock in self.secondaryEnvironmentMocks.allValues) {
@@ -400,7 +403,7 @@ NSString *const kTestMobileKey = @"testMobileKey";
 
 - (void)testSetOnline_NO_withMultipleEnvironments_mismatchedSecondaryEnvironment {
     [self setupSecondaryEnvironments];
-    [[LDClient sharedInstance] start:self.config withUserBuilder:self.userBuilder];
+    [[LDClient sharedInstance] start:self.config withUserBuilder:self.userBuilder trackedKeys:self.trackedKeys];
     [[LDClient sharedInstance] setOnline:NO];
     [[[self.primaryEnvironmentMock stub] andReturnValue:@NO] isOnline];
     for (LDEnvironmentMock *environmentMock in self.secondaryEnvironmentMocks.allValues) {
@@ -427,7 +430,7 @@ NSString *const kTestMobileKey = @"testMobileKey";
 
 - (void)testSetOnline_NO_withMultipleEnvironments_alreadyOffline {
     [self setupSecondaryEnvironments];
-    [[LDClient sharedInstance] start:self.config withUserBuilder:self.userBuilder];
+    [[LDClient sharedInstance] start:self.config withUserBuilder:self.userBuilder trackedKeys:self.trackedKeys];
     [[LDClient sharedInstance] setOnline:NO];
     [[[self.primaryEnvironmentMock stub] andReturnValue:@NO] isOnline];
     for (LDEnvironmentMock *environmentMock in self.secondaryEnvironmentMocks.allValues) {
@@ -482,7 +485,7 @@ NSString *const kTestMobileKey = @"testMobileKey";
 }
 
 - (void)testFlush {
-    [[LDClient sharedInstance] start:self.config withUserBuilder:self.userBuilder];
+    [[LDClient sharedInstance] start:self.config withUserBuilder:self.userBuilder trackedKeys:self.trackedKeys];
     [[[self.primaryEnvironmentMock expect] andReturnValue:@YES] flush];
 
     XCTAssertTrue([[LDClient sharedInstance] flush]);
@@ -492,7 +495,7 @@ NSString *const kTestMobileKey = @"testMobileKey";
 
 - (void)testFlush_multipleEnvironments {
     [self setupSecondaryEnvironments];
-    [[LDClient sharedInstance] start:self.config withUserBuilder:self.userBuilder];
+    [[LDClient sharedInstance] start:self.config withUserBuilder:self.userBuilder trackedKeys:self.trackedKeys];
     [[[self.primaryEnvironmentMock expect] andReturnValue:@YES] flush];
 
     XCTAssertTrue([[LDClient sharedInstance] flush]);
@@ -512,7 +515,7 @@ NSString *const kTestMobileKey = @"testMobileKey";
 }
 
 - (void)testStopClient {
-    [[LDClient sharedInstance] start:self.config withUserBuilder:self.userBuilder];
+    [[LDClient sharedInstance] start:self.config withUserBuilder:self.userBuilder trackedKeys:self.trackedKeys];
     [[self.primaryEnvironmentMock expect] setOnline:NO];
     [[self.primaryEnvironmentMock expect] stop];
 
@@ -526,7 +529,7 @@ NSString *const kTestMobileKey = @"testMobileKey";
 
 - (void)testStopClient_withSecondaryEnvironments {
     [self setupSecondaryEnvironments];
-    [[LDClient sharedInstance] start:self.config withUserBuilder:self.userBuilder];
+    [[LDClient sharedInstance] start:self.config withUserBuilder:self.userBuilder trackedKeys:self.trackedKeys];
     [[self.primaryEnvironmentMock expect] setOnline:NO];
     [[self.primaryEnvironmentMock expect] stop];
 
@@ -575,7 +578,7 @@ NSString *const kTestMobileKey = @"testMobileKey";
 }
 
 - (void)testDeprecatedStartWithValidConfigMultipleTimes {
-    XCTAssertTrue([[LDClient sharedInstance] start:self.config withUserBuilder:self.userBuilder]);
+    XCTAssertTrue([[LDClient sharedInstance] start:self.config withUserBuilder:self.userBuilder trackedKeys:self.trackedKeys]);
     id configBuilderMock = [OCMockObject niceMockForClass:[LDConfigBuilder class]];
     [[[configBuilderMock expect] andReturn:self.config] build];
     [(LDEnvironment*)[self.primaryEnvironmentMock reject] start];
@@ -607,7 +610,7 @@ NSString *const kTestMobileKey = @"testMobileKey";
 #pragma mark - Variations
 #pragma mark Bool Variation
 - (void)testBoolVariation {
-    [[LDClient sharedInstance] start:self.config withUserBuilder:self.userBuilder];
+    [[LDClient sharedInstance] start:self.config withUserBuilder:self.userBuilder trackedKeys:self.trackedKeys];
     [[[self.primaryEnvironmentMock expect] andReturnValue:@YES] boolVariation:kLDFlagKeyIsABool fallback:NO];
 
     BOOL flagValue = [[LDClient sharedInstance] boolVariation:kLDFlagKeyIsABool fallback:NO];
@@ -627,7 +630,7 @@ NSString *const kTestMobileKey = @"testMobileKey";
 
 #pragma mark Number Variation
 - (void)testNumberVariation {
-    [[LDClient sharedInstance] start:self.config withUserBuilder:self.userBuilder];
+    [[LDClient sharedInstance] start:self.config withUserBuilder:self.userBuilder trackedKeys:self.trackedKeys];
     [[[self.primaryEnvironmentMock expect] andReturn:@7] numberVariation:kLDFlagKeyIsANumber fallback:@3];
 
     NSNumber *flagValue = [[LDClient sharedInstance] numberVariation:kLDFlagKeyIsANumber fallback:@3];
@@ -647,7 +650,7 @@ NSString *const kTestMobileKey = @"testMobileKey";
 
 #pragma mark Double Variation
 - (void)testDoubleVariation {
-    [[LDClient sharedInstance] start:self.config withUserBuilder:self.userBuilder];
+    [[LDClient sharedInstance] start:self.config withUserBuilder:self.userBuilder trackedKeys:self.trackedKeys];
     [[[self.primaryEnvironmentMock expect] andReturnValue:@(3.14159)] doubleVariation:kLDFlagKeyIsADouble fallback:2.71828];
 
     double flagValue = [[LDClient sharedInstance] doubleVariation:kLDFlagKeyIsADouble fallback:2.71828];
@@ -667,7 +670,7 @@ NSString *const kTestMobileKey = @"testMobileKey";
 
 #pragma mark String Variation
 - (void)testStringVariation {
-    [[LDClient sharedInstance] start:self.config withUserBuilder:self.userBuilder];
+    [[LDClient sharedInstance] start:self.config withUserBuilder:self.userBuilder trackedKeys:self.trackedKeys];
     [[[self.primaryEnvironmentMock expect] andReturn:@"targetValue"] stringVariation:kLDFlagKeyIsAString fallback:@"fallbackValue"];
 
     NSString *flagValue = [[LDClient sharedInstance] stringVariation:kLDFlagKeyIsAString fallback:@"fallbackValue"];
@@ -689,7 +692,7 @@ NSString *const kTestMobileKey = @"testMobileKey";
 - (void)testArrayVariation {
     NSArray *targetFlagValue = @[@3, @7];
     NSArray *fallbackFlagValue = @[@1, @2];
-    [[LDClient sharedInstance] start:self.config withUserBuilder:self.userBuilder];
+    [[LDClient sharedInstance] start:self.config withUserBuilder:self.userBuilder trackedKeys:self.trackedKeys];
     [[[self.primaryEnvironmentMock expect] andReturn:targetFlagValue] arrayVariation:kLDFlagKeyIsAnArray fallback:fallbackFlagValue];
 
     NSArray *flagValue = [[LDClient sharedInstance] arrayVariation:kLDFlagKeyIsAnArray fallback:fallbackFlagValue];
@@ -712,7 +715,7 @@ NSString *const kTestMobileKey = @"testMobileKey";
 - (void)testDictionaryVariation {
     NSDictionary *targetFlagValue = @{@"keyA":@YES, @"keyB":@[@1, @2, @3], @"keyC": @{@"keyD": @"someStringValue"}};
     NSDictionary *fallbackFlagValue = @{@"key1": @"value1", @"key2": @[@1, @2]};
-    [[LDClient sharedInstance] start:self.config withUserBuilder:self.userBuilder];
+    [[LDClient sharedInstance] start:self.config withUserBuilder:self.userBuilder trackedKeys:self.trackedKeys];
     [[[self.primaryEnvironmentMock expect] andReturn:targetFlagValue] dictionaryVariation:kLDFlagKeyIsADictionary fallback:fallbackFlagValue];
 
     NSDictionary *flagValue = [[LDClient sharedInstance] dictionaryVariation:kLDFlagKeyIsADictionary fallback:fallbackFlagValue];
@@ -733,7 +736,7 @@ NSString *const kTestMobileKey = @"testMobileKey";
 
 #pragma mark All Flags
 -(void)testAllFlags {
-    [[LDClient sharedInstance] start:self.config withUserBuilder:self.userBuilder];
+    [[LDClient sharedInstance] start:self.config withUserBuilder:self.userBuilder trackedKeys:self.trackedKeys];
     [[[self.primaryEnvironmentMock expect] andReturn:self.user.flagConfig.allFlagValues] allFlags];
 
     NSDictionary<NSString*, id> *allFlags = [LDClient sharedInstance].allFlags;
@@ -751,7 +754,7 @@ NSString *const kTestMobileKey = @"testMobileKey";
 #pragma mark - Event Tracking
 
 - (void)testTrack {
-    [[LDClient sharedInstance] start:self.config withUserBuilder:self.userBuilder];
+    [[LDClient sharedInstance] start:self.config withUserBuilder:self.userBuilder trackedKeys:self.trackedKeys];
     NSDictionary *customData = @{@"key": @"value"};
     [[[self.primaryEnvironmentMock expect] andReturnValue:@YES] track:@"test" data:customData];
 
@@ -771,7 +774,7 @@ NSString *const kTestMobileKey = @"testMobileKey";
 #pragma mark - User
 
 -(void)testUpdateUser {
-    [[LDClient sharedInstance] start:self.config withUserBuilder:self.userBuilder];
+    [[LDClient sharedInstance] start:self.config withUserBuilder:self.userBuilder trackedKeys:self.trackedKeys];
     LDUserModel *newUser = [LDUserModel stubWithKey:[[NSUUID UUID] UUIDString]];
     LDUserBuilder *newUserBuilder = [LDUserBuilder currentBuilder:newUser];
     [(LDEnvironment*)[self.primaryEnvironmentMock expect] updateUser:[OCMArg checkWithBlock:^BOOL(id obj) {
@@ -786,7 +789,7 @@ NSString *const kTestMobileKey = @"testMobileKey";
 
 -(void)testUpdateUser_withSecondaryEnvironments {
     [self setupSecondaryEnvironments];
-    [[LDClient sharedInstance] start:self.config withUserBuilder:self.userBuilder];
+    [[LDClient sharedInstance] start:self.config withUserBuilder:self.userBuilder trackedKeys:self.trackedKeys];
     LDUserModel *newUser = [LDUserModel stubWithKey:[[NSUUID UUID] UUIDString]];
     LDUserBuilder *newUserBuilder = [LDUserBuilder currentBuilder:newUser];
     [(LDEnvironment*)[self.primaryEnvironmentMock expect] updateUser:[OCMArg checkWithBlock:^BOOL(id obj) {
@@ -813,7 +816,7 @@ NSString *const kTestMobileKey = @"testMobileKey";
 }
 
 - (void)testUpdateUser_withoutBuilder {
-    [[LDClient sharedInstance] start:self.config withUserBuilder:self.userBuilder];
+    [[LDClient sharedInstance] start:self.config withUserBuilder:self.userBuilder trackedKeys:self.trackedKeys];
     [(LDEnvironment*)[self.primaryEnvironmentMock reject] updateUser:[OCMArg any]];
     LDUserBuilder *emptyUserBuilder = nil;
 
@@ -824,7 +827,7 @@ NSString *const kTestMobileKey = @"testMobileKey";
 }
 
 -(void)testCurrentUserBuilder {
-    [[LDClient sharedInstance] start:self.config withUserBuilder:self.userBuilder];
+    [[LDClient sharedInstance] start:self.config withUserBuilder:self.userBuilder trackedKeys:self.trackedKeys];
 
     LDUserBuilder *userBuilder = [[LDClient sharedInstance] currentUserBuilder];
 
@@ -840,7 +843,7 @@ NSString *const kTestMobileKey = @"testMobileKey";
 
 -(void)testEnvironmentForMobileKeyNamed {
     [self setupSecondaryEnvironments];
-    [[LDClient sharedInstance] start:self.config withUserBuilder:self.userBuilder];
+    [[LDClient sharedInstance] start:self.config withUserBuilder:self.userBuilder trackedKeys:self.trackedKeys];
 
     id<LDClientInterface> primaryEnvironment = [LDClient environmentForMobileKeyNamed:kLDPrimaryEnvironmentName];
     XCTAssertEqualObjects(primaryEnvironment, self.primaryEnvironmentMock);
@@ -852,7 +855,7 @@ NSString *const kTestMobileKey = @"testMobileKey";
 }
 
 -(void)testEnvironmentForMobileKeyNamed_singleEnvironment {
-    [[LDClient sharedInstance] start:self.config withUserBuilder:self.userBuilder];
+    [[LDClient sharedInstance] start:self.config withUserBuilder:self.userBuilder trackedKeys:self.trackedKeys];
 
     id<LDClientInterface> primaryEnvironment = [LDClient environmentForMobileKeyNamed:kLDPrimaryEnvironmentName];
     XCTAssertEqualObjects(primaryEnvironment, self.primaryEnvironmentMock);
@@ -860,14 +863,14 @@ NSString *const kTestMobileKey = @"testMobileKey";
 
 -(void)testEnvironmentForMobileKeyNamed_badEnvironmentName {
     [self setupSecondaryEnvironments];
-    [[LDClient sharedInstance] start:self.config withUserBuilder:self.userBuilder];
+    [[LDClient sharedInstance] start:self.config withUserBuilder:self.userBuilder trackedKeys:self.trackedKeys];
 
     XCTAssertThrowsSpecificNamed([LDClient environmentForMobileKeyNamed:@"dummy-environment-name"], NSException, NSInvalidArgumentException);
 }
 
 -(void)testEnvironmentForMobileKeyNamed_missingEnvironmentName {
     [self setupSecondaryEnvironments];
-    [[LDClient sharedInstance] start:self.config withUserBuilder:self.userBuilder];
+    [[LDClient sharedInstance] start:self.config withUserBuilder:self.userBuilder trackedKeys:self.trackedKeys];
     NSString *emptyEnvironmentName = nil;
 
     XCTAssertThrowsSpecificNamed([LDClient environmentForMobileKeyNamed:emptyEnvironmentName], NSException, NSInvalidArgumentException);
@@ -875,7 +878,7 @@ NSString *const kTestMobileKey = @"testMobileKey";
 
 -(void)testEnvironmentForMobileKeyNamed_emptyEnvironmentName {
     [self setupSecondaryEnvironments];
-    [[LDClient sharedInstance] start:self.config withUserBuilder:self.userBuilder];
+    [[LDClient sharedInstance] start:self.config withUserBuilder:self.userBuilder trackedKeys:self.trackedKeys];
 
     XCTAssertThrowsSpecificNamed([LDClient environmentForMobileKeyNamed:@""], NSException, NSInvalidArgumentException);
 }
