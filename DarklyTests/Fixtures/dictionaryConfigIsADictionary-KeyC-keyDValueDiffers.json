@@ -1,0 +1,12 @@
+{
+    "isADictionary": {
+        "value": {
+            "keyC": {
+                "keyD": "someStringValueA"
+            }
+        },
+        "variation": 5,
+        "version": 5,
+        "flagVersion": 4
+    }
+}
