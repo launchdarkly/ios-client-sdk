@@ -17,7 +17,7 @@
 @property (nonatomic, copy, readonly) NSString *mobileKey;
 @property (nonatomic, strong, readonly) LDConfig *config;
 @property (nonatomic, strong, readonly) LDUserModel *user;
-@property (nonatomic, strong, readonly) NSArray<NSString*> *flags;
+@property (nonatomic, strong, readonly) NSArray<NSString*> *trackedKeys;
 @property (nonatomic, assign, getter=isStarted, readonly) BOOL start;
 @property (nonatomic, assign, getter=isOnline) BOOL online;
 @property (nonatomic, weak) id<ClientDelegate> delegate;
@@ -25,8 +25,8 @@
 @property (nonatomic, assign, readonly) BOOL isPrimary;
 @property (nonatomic, copy, readonly) NSString *environmentName;
 
-+(instancetype)environmentForMobileKey:(NSString*)mobileKey config:(LDConfig*)config user:(LDUserModel*)user flags:(NSArray<NSString*>*)flags;
--(instancetype)initForMobileKey:(NSString*)mobileKey config:(LDConfig*)config user:(LDUserModel*)user flags:(NSArray<NSString*>*)flags;
++(instancetype)environmentForMobileKey:(NSString*)mobileKey config:(LDConfig*)config user:(LDUserModel*)user trackedKeys:(NSArray<NSString*>*)trackedKeys;
+-(instancetype)initForMobileKey:(NSString*)mobileKey config:(LDConfig*)config user:(LDUserModel*)user trackedKeys:(NSArray<NSString*>*)trackedKeys;
 
 -(void)start;
 -(void)stop;

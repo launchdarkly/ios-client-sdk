@@ -20,7 +20,7 @@
 @property (nonatomic, assign) BOOL isOnline;
 @property (nonatomic, strong) LDUserModel *ldUser;
 @property (nonatomic, strong) LDConfig *ldConfig;
-@property (nonatomic, strong) NSArray<NSString*> *userFlags;
+@property (nonatomic, strong) NSArray<NSString*> *trackedKeys;
 @property (nonatomic, assign) BOOL clientStarted;
 @property (nonatomic, strong) LDThrottler *throttler;
 @property (nonatomic, assign) BOOL willGoOnlineAfterDelay;
@@ -57,12 +57,11 @@
 #pragma mark - SDK Control
 
 -(BOOL)start:(LDConfigBuilder *)inputConfigBuilder userBuilder:(LDUserBuilder *)inputUserBuilder {
-    NSArray *userArray = [NSArray array];
-    self.userFlags = userArray;
-    return [self start:[inputConfigBuilder build] withUserBuilder:inputUserBuilder trackUserFlags:userArray];
+    NSArray *emptyArray = [NSArray array];
+    return [self start:[inputConfigBuilder build] withUserBuilder:inputUserBuilder trackedKeys:emptyArray];
 }
 
-- (BOOL)start:(LDConfig *)inputConfig withUserBuilder:(LDUserBuilder *)inputUserBuilder trackUserFlags:(NSArray<NSString*> *)userFlags {
+- (BOOL)start:(LDConfig *)inputConfig withUserBuilder:(LDUserBuilder *)inputUserBuilder trackedKeys:(NSArray<NSString*> *)trackedKeys {
     DEBUG_LOGX(@"LDClient start method called");
     if (self.clientStarted) {
         DEBUG_LOGX(@"LDClient client already started");
@@ -73,7 +72,7 @@
         return NO;
     }
     self.ldConfig = inputConfig;
-    self.userFlags = userFlags;
+    self.trackedKeys = trackedKeys;
     [LDUtil setLogLevel:[self.ldConfig debugEnabled] ? DarklyLogLevelDebug : DarklyLogLevelCriticalOnly];
     [NSURLSession setSharedLDSessionForConfig:self.ldConfig];
 
@@ -82,14 +81,14 @@
     inputUserBuilder = inputUserBuilder ?: [[LDUserBuilder alloc] init];
     self.ldUser = [inputUserBuilder build];
 
-    self.primaryEnvironment = [LDEnvironment environmentForMobileKey:self.ldConfig.mobileKey config:self.ldConfig user:self.ldUser flags:self.userFlags];
+    self.primaryEnvironment = [LDEnvironment environmentForMobileKey:self.ldConfig.mobileKey config:self.ldConfig user:self.ldUser trackedKeys:self.trackedKeys];
     self.primaryEnvironment.delegate = self.delegate;
     [self.primaryEnvironment start];
     if (self.ldConfig.secondaryMobileKeys.count > 0) {
         self.secondaryEnvironments = [NSMutableDictionary dictionaryWithCapacity:self.ldConfig.secondaryMobileKeys.count];
     }
     for (NSString *secondaryKey in self.ldConfig.secondaryMobileKeys.allValues) {
-        LDEnvironment *secondaryEnvironment = [LDEnvironment environmentForMobileKey:secondaryKey config:self.ldConfig user:self.ldUser flags:self.userFlags];
+        LDEnvironment *secondaryEnvironment = [LDEnvironment environmentForMobileKey:secondaryKey config:self.ldConfig user:self.ldUser trackedKeys:self.trackedKeys];
         [secondaryEnvironment start];
         self.secondaryEnvironments[secondaryKey] = secondaryEnvironment;
     }

@@ -1,7 +1,7 @@
 Pod::Spec.new do |s|
 
   s.name         = "LaunchDarkly"
-  s.version      = "3.0.3"
+  s.version      = "3.0.4"
   s.summary      = "iOS SDK for LaunchDarkly"
 
   s.description  = <<-DESC
@@ -12,7 +12,7 @@ Pod::Spec.new do |s|
                    * Grant access to certain features based on user attributes, like payment plan (eg: users on the ‘gold’ plan get access to more features than users in the ‘silver’ plan). Disable parts of your application to facilitate maintenance, without taking everything offline.
                    DESC
 
-  s.homepage     = "https://github.com/launchdarkly/ios-client-sdk"
+  s.homepage     = "https://github.com/rafastealth/ios-client-sdk"
 
   s.license      = { :type => "Apache License, Version 2.0", :file => "LICENSE.txt" }
 
@@ -23,7 +23,7 @@ Pod::Spec.new do |s|
   s.tvos.deployment_target    = "9.0"
   s.osx.deployment_target     = '10.10'
 
-  s.source       = { :git => "https://github.com/launchdarkly/ios-client-sdk.git", :tag => "3.0.3" }
+  s.source       = { :git => "https://github.com/rafastealth/ios-client-sdk.git", :tag => "3.0.4" }
 
   s.source_files  = 'Darkly/**/*.{h,m}'
 

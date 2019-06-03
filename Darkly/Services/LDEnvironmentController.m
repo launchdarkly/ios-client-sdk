@@ -21,7 +21,7 @@ NSString * const kEventKey = @"key";
 @property (nonatomic, copy) NSString *mobileKey;
 @property (nonatomic, strong) LDConfig *config;
 @property (nonatomic, strong) LDUserModel *user;
-@property (nonatomic, strong) NSArray<NSString*> *flags;
+@property (nonatomic, strong) NSArray<NSString*> *trackedKeys;
 
 @property(nonatomic, strong) LDEventSource *eventSource;
 @property(nonatomic, strong) NSDate *backgroundTime;
@@ -34,15 +34,15 @@ NSString * const kEventKey = @"key";
 
 #pragma mark - Lifecycle
 
-+(instancetype)controllerWithMobileKey:(NSString*)mobileKey config:(LDConfig*)config user:(LDUserModel*)user dataManager:(LDDataManager*)dataManager flags:(NSArray<NSString*>*)flags {
-    return [[LDEnvironmentController alloc] initWithMobileKey:mobileKey config:config user:user dataManager:dataManager flags:flags];
++(instancetype)controllerWithMobileKey:(NSString*)mobileKey config:(LDConfig*)config user:(LDUserModel*)user dataManager:(LDDataManager*)dataManager trackedKeys:(NSArray<NSString*>*)trackedKeys {
+    return [[LDEnvironmentController alloc] initWithMobileKey:mobileKey config:config user:user dataManager:dataManager trackedKeys:trackedKeys];
 }
 
--(instancetype)initWithMobileKey:(NSString*)mobileKey config:(LDConfig*)config user:(LDUserModel*)user dataManager:(LDDataManager*)dataManager flags:(NSArray<NSString*>*)flags {
+-(instancetype)initWithMobileKey:(NSString*)mobileKey config:(LDConfig*)config user:(LDUserModel*)user dataManager:(LDDataManager*)dataManager trackedKeys:(NSArray<NSString*>*)trackedKeys {
     if (!(self = [super init])) {
         return nil;
     }
-    self.flags = flags;
+    self.trackedKeys = trackedKeys;
     self.mobileKey = mobileKey;
     self.config = config;
     self.user = user;
@@ -143,28 +143,12 @@ NSString * const kEventKey = @"key";
 
 #pragma mark - Streaming
 
--(BOOL)isEventTracked:(LDEvent *)event {
-    if (!event) {
-        return NO;
+-(BOOL)isEventTracked:(NSDictionary *)dictionary {
+    if (![self.trackedKeys count]) {
+        return YES;
     }
 
-    if (event.data.length == 0) {
-        return NO;
-    }
-
-    NSDictionary *dictionary = [NSJSONSerialization JSONObjectWithData:[event.data dataUsingEncoding:NSUTF8StringEncoding] options:kNilOptions error:nil];
-
-    if (!dictionary) {
-        return NO;
-    }
-
-    for (NSString *trackedKey in self.flags) {
-        if ([trackedKey isEqualToString:dictionary[kEventKey]]) {
-            return YES;
-        }
-    }
-
-    return NO;
+    return ([self.trackedKeys containsObject: dictionary[kEventKey]]) ? YES : NO;
 }
 
 - (void)configureEventSource {
@@ -183,9 +167,6 @@ NSString * const kEventKey = @"key";
         __weak typeof(self) weakSelf = self;
         [self.eventSource onMessage:^(LDEvent *event) {
             __strong typeof(weakSelf) strongSelf = weakSelf;
-            if (![self isEventTracked:event]) {
-                return;
-            }
             [strongSelf handlePingEvent:event];
             [strongSelf handlePutEvent:event];
             [strongSelf handlePatchEvent:event];
@@ -255,13 +236,19 @@ NSString * const kEventKey = @"key";
         return;
     }
 
-    LDFlagConfigModel *newConfig = [[LDFlagConfigModel alloc] initWithDictionary:newConfigDictionary];
+    if ([self isEventTracked:newConfigDictionary]) {
+        LDFlagConfigModel *newConfig = [[LDFlagConfigModel alloc] initWithDictionary:newConfigDictionary];
 
-    NSString *updateResultNotificationName = [self.user.flagConfig isEqualToConfig:newConfig] ? kLDUserNoChangeNotification : kLDUserUpdatedNotification;
-    [self postFeatureFlagsChangedNotificationForChangedFlagKeys:[self.user.flagConfig differingFlagKeysFromConfig:newConfig]];
-    self.user.flagConfig = newConfig;
-    [self.dataManager saveUser:self.user];
-    [self reportFlagConfigProcessingCompleteWithNotificationName:updateResultNotificationName message:@"SSE put event complete"];
+        NSString *updateResultNotificationName = [self.user.flagConfig isEqualToConfig:newConfig] ? kLDUserNoChangeNotification : kLDUserUpdatedNotification;
+        [self postFeatureFlagsChangedNotificationForChangedFlagKeys:[self.user.flagConfig differingFlagKeysFromConfig:newConfig]];
+        self.user.flagConfig = newConfig;
+
+
+        [self.dataManager saveUser:self.user];
+        [self reportFlagConfigProcessingCompleteWithNotificationName:updateResultNotificationName message:@"SSE put event complete"];
+    } else {
+        [self.dataManager saveUser:self.user];
+    }
 }
 
 - (void)handlePatchEvent:(LDEvent*)event {
@@ -276,16 +263,19 @@ NSString * const kEventKey = @"key";
         return;
     }
 
-    LDFlagConfigModel *originalFlagConfig = [self.user.flagConfig copy];
+    if ([self isEventTracked:patchDictionary]) {
+        LDFlagConfigModel *originalFlagConfig = [self.user.flagConfig copy];
 
-    [self.user.flagConfig addOrReplaceFromDictionary:patchDictionary];
+        [self.user.flagConfig addOrReplaceFromDictionary:patchDictionary];
 
-    if ([self.user.flagConfig hasFeaturesEqualToDictionary:originalFlagConfig.dictionaryValue]) {
-        [self reportFlagConfigProcessingCompleteWithNotificationName:kLDUserNoChangeNotification message:@"SSE patch event did not change feature flag value"];
-        return;
+        if ([self.user.flagConfig hasFeaturesEqualToDictionary:originalFlagConfig.dictionaryValue]) {
+            [self reportFlagConfigProcessingCompleteWithNotificationName:kLDUserNoChangeNotification message:@"SSE patch event did not change feature flag value"];
+            return;
+        }
+
+        [self postFeatureFlagsChangedNotificationForChangedFlagKeys:[originalFlagConfig differingFlagKeysFromConfig:self.user.flagConfig]];
     }
-
-    [self postFeatureFlagsChangedNotificationForChangedFlagKeys:[originalFlagConfig differingFlagKeysFromConfig:self.user.flagConfig]];
+    
     [self.dataManager saveUser:self.user];
     [self reportFlagConfigProcessingCompleteWithNotificationName:kLDUserUpdatedNotification message:@"SSE patch event complete"];
 }
@@ -302,13 +292,15 @@ NSString * const kEventKey = @"key";
         return;
     }
 
-    LDFlagConfigModel *originalFlagConfig = [self.user.flagConfig copy];
+    if ([self isEventTracked:deleteDictionary]) {
+        LDFlagConfigModel *originalFlagConfig = [self.user.flagConfig copy];
 
-    [self.user.flagConfig deleteFromDictionary:deleteDictionary];
+        [self.user.flagConfig deleteFromDictionary:deleteDictionary];
 
-    if ([self.user.flagConfig hasFeaturesEqualToDictionary:originalFlagConfig.dictionaryValue]) {
-        [self reportFlagConfigProcessingCompleteWithNotificationName:kLDUserNoChangeNotification message:@"SSE delete event did not change feature flags"];
-        return;
+        if ([self.user.flagConfig hasFeaturesEqualToDictionary:originalFlagConfig.dictionaryValue]) {
+            [self reportFlagConfigProcessingCompleteWithNotificationName:kLDUserNoChangeNotification message:@"SSE delete event did not change feature flags"];
+            return;
+        }
     }
 
     [self.dataManager saveUser:self.user];

@@ -22,7 +22,7 @@
 @property (nonatomic, copy) NSString *mobileKey;
 @property (nonatomic, strong) LDConfig *config;
 @property (nonatomic, strong) LDUserModel *user;
-@property (nonatomic, strong) NSArray<NSString*> *flags;
+@property (nonatomic, strong) NSArray<NSString*> *trackedKeys;
 @property (nonatomic, assign, getter=isStarted) BOOL start;
 
 @property (nonatomic, strong) LDEnvironmentController *environmentController;
@@ -32,21 +32,21 @@
 
 @implementation LDEnvironment
 #pragma mark Lifecycle
-+(instancetype)environmentForMobileKey:(NSString*)mobileKey config:(LDConfig*)config user:(LDUserModel*)user flags:(NSArray<NSString*>*)flags {
-    return [[LDEnvironment alloc] initForMobileKey:mobileKey config:config user:user flags:flags];
++(instancetype)environmentForMobileKey:(NSString*)mobileKey config:(LDConfig*)config user:(LDUserModel*)user trackedKeys:(NSArray<NSString*>*)trackedKeys {
+    return [[LDEnvironment alloc] initForMobileKey:mobileKey config:config user:user trackedKeys:trackedKeys];
 }
 
--(instancetype)initForMobileKey:(NSString*)mobileKey config:(LDConfig*)config user:(LDUserModel*)user flags:(NSArray<NSString*>*)flags {
+-(instancetype)initForMobileKey:(NSString*)mobileKey config:(LDConfig*)config user:(LDUserModel*)user trackedKeys:(NSArray<NSString*>*)trackedKeys {
     if (!(self = [super init])) {
         return nil;
     }
 
-    self.flags = flags;
+    self.trackedKeys = trackedKeys;
     self.mobileKey = mobileKey;
     self.config = config;
     self.user = [user copy];
     self.dataManager = [LDDataManager dataManagerWithMobileKey:self.mobileKey config:self.config];
-    self.environmentController = [LDEnvironmentController controllerWithMobileKey:self.mobileKey config:self.config user:self.user dataManager:self.dataManager flags:self.flags];
+    self.environmentController = [LDEnvironmentController controllerWithMobileKey:self.mobileKey config:self.config user:self.user dataManager:self.dataManager trackedKeys:self.trackedKeys];
 
     [self registerForNotifications];
 
@@ -278,7 +278,7 @@
     self.user.flagConfig = [self.dataManager retrieveFlagConfigForUser:self.user];
     [self.dataManager saveUser:self.user];
     [self.dataManager recordIdentifyEventWithUser:self.user];
-    self.environmentController = [LDEnvironmentController controllerWithMobileKey:self.mobileKey config:self.config user:self.user dataManager:self.dataManager flags:self.flags];
+    self.environmentController = [LDEnvironmentController controllerWithMobileKey:self.mobileKey config:self.config user:self.user dataManager:self.dataManager trackedKeys:self.trackedKeys];
 
     self.online = wasOnline;
 }
