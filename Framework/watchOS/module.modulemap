@@ -1,5 +1,0 @@
-framework module Darkly_watchOS {
-    umbrella header "Darkly_watchOS.h"
-    export *
-    module * { export * }
-}

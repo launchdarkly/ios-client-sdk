@@ -1,5 +1,0 @@
-framework module Darkly_tvOS {
-    umbrella header "Darkly_tvOS.h"
-    export *
-    module * { export * }
-}
