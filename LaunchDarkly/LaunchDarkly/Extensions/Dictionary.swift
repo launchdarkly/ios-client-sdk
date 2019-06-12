@@ -43,12 +43,20 @@ extension Dictionary where Key == String {
     }
 
     func symmetricDifference(_ other: [String: Any]) -> [String] {
-        let leftKeys: Set<String> = Set(self.keys)
-        let rightKeys: Set<String> = Set(other.keys)
+        var currentDictionary = [String: Any]()
+        self.forEach { (key, value) in
+            currentDictionary[key] = value
+        }
+        var otherDictionary = [String: Any]()
+        other.forEach { (key, value) in
+            otherDictionary[key] = value
+        }
+        let leftKeys: Set<String> = Set(currentDictionary.keys)
+        let rightKeys: Set<String> = Set(otherDictionary.keys)
         let differingKeys = leftKeys.symmetricDifference(rightKeys)
         let matchingKeys = leftKeys.intersection(rightKeys)
         let matchingKeysWithDifferentValues = matchingKeys.filter { (key) -> Bool in
-            !AnyComparer.isEqual(self[key], to: other[key])
+            !AnyComparer.isEqual(currentDictionary[key], to: otherDictionary[key])
         }
         return differingKeys.union(matchingKeysWithDifferentValues).sorted()
     }

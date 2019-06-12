@@ -130,12 +130,20 @@ final class FlagChangeNotifier: FlagChangeNotifying {
     }
 
     private func findChangedFlagKeys(oldFlags: [LDFlagKey: FeatureFlag], newFlags: [LDFlagKey: FeatureFlag]) -> [LDFlagKey] {
-        return oldFlags.symmetricDifference(newFlags)     //symmetricDifference tests for equality, which includes version. Exclude version here.
+        var oldFlagsDictionary = [String: Any]()
+        oldFlags.forEach { (key, value) in
+            oldFlagsDictionary[key] = value
+        }
+        var newFlagsDictionary = [String: Any]()
+        newFlags.forEach { (key, value) in
+            newFlagsDictionary[key] = value
+        }
+        return oldFlagsDictionary.symmetricDifference(newFlagsDictionary)     //symmetricDifference tests for equality, which includes version. Exclude version here.
             .filter { (flagKey) in
-                guard let oldFeatureFlag = oldFlags[flagKey],
-                    let newFeatureFlag = newFlags[flagKey]
-                else {
-                    return true
+                guard let oldFeatureFlag = oldFlagsDictionary[flagKey] as? FeatureFlag,
+                    let newFeatureFlag = newFlagsDictionary[flagKey] as? FeatureFlag
+                    else {
+                        return true
                 }
                 return !oldFeatureFlag.matchesVariation(newFeatureFlag)
         }
