@@ -5,6 +5,10 @@ All notable changes to the LaunchDarkly iOS SDK will be documented in this file.
 ### Multiple Environment clients
 Version 4.0.0 does not support multiple environments. If you use version `2.14.0` or later and set `LDConfig`'s `secondaryMobileKeys` you will not be able to migrate to version `4.0.0`. Multiple Environments will be added in a future release to the Swift SDK.
 
+## [4.0.1] - 2019-06-18
+### Fixed
+- Fixed a concurreny bug in FlagStore.swift
+
 ## [4.0.0] - 2019-04-18
 This is the non-beta first release of the Swift SDK. It follows the beta.3 release from 2019-03-07. Unlike previous Swift SDK releases, this release does not have a `3.0.0` companion tag.
 ### Changed
