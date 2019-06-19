@@ -7,8 +7,8 @@ Version 4.0.0 does not support multiple environments. If you use version `2.14.0
 
 ## [4.1.0] - 2019-06-19
 ### Change
-- Installs new `deviceModel` into `EnvironmentReporter` and renames old `deviceModel` to `deviceType`
-- use `CwSysCtl` for macos model
+- Installs new `deviceModel` into `EnvironmentReporter` and renames old `deviceModel` to `deviceType`.
+- Updated MacOS model detection to use `CwSysCtl`.
 
 ### Fixed
 - Fixed a concurrency bug that caused crashes in FlagStore.swift. This bug could surface during rapid updates to local flags.
