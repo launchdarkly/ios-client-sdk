@@ -100,8 +100,12 @@ final class FlagStore: FlagMaintaining {
             }
 
             Log.debug(self.typeName(and: #function) + "succeeded. new flag: \(newFlag), " + "prior flag: \(String(describing: self.featureFlags[flagKey]))")
-            self.featureFlags[flagKey] = newFlag
-
+            var localFeatureFlags: [LDFlagKey: FeatureFlag] = [:]
+            self.featureFlags.forEach { key, value in
+                localFeatureFlags[key] = value
+            }
+            localFeatureFlags[flagKey] = newFlag
+            self.featureFlags = localFeatureFlags
         }
     }
     
@@ -136,7 +140,12 @@ final class FlagStore: FlagMaintaining {
             }
 
             Log.debug(self.typeName(and: #function) + "deleted flag with key: " + flagKey)
-            self.featureFlags.removeValue(forKey: flagKey)
+            var localFeatureFlags: [LDFlagKey: FeatureFlag] = [:]
+            self.featureFlags.forEach { key, value in
+                localFeatureFlags[key] = value
+            }
+            localFeatureFlags.removeValue(forKey: flagKey)
+            self.featureFlags = localFeatureFlags
         }
     }
 

@@ -74,8 +74,31 @@ struct EnvironmentReporter: EnvironmentReporting {
     }
     #endif
 
-    #if os(iOS)
+    struct Constants {
+        fileprivate static let simulatorModelIdentifier = "SIMULATOR_MODEL_IDENTIFIER"
+    }
+
     var deviceModel: String {
+        #if os(OSX)
+        return Sysctl.model
+        #else
+        //Obtaining the device model from https://stackoverflow.com/questions/26028918/how-to-determine-the-current-iphone-device-model answer by Jens Schwarzer
+        if let simulatorModelIdentifier = ProcessInfo().environment[Constants.simulatorModelIdentifier] {
+            return simulatorModelIdentifier
+        }
+        //the physical device code here is not automatically testable. Manual testing on physical devices is required.
+        var systemInfo = utsname()
+        _ = uname(&systemInfo)
+        guard let deviceModel = String(bytes: Data(bytes: &systemInfo.machine, count: Int(_SYS_NAMELEN)), encoding: .ascii)
+        else {
+            return deviceType
+        }
+        return deviceModel.trimmingCharacters(in: .controlCharacters)
+        #endif
+    }
+
+    #if os(iOS)
+    var deviceType: String {
         return UIDevice.current.model
     }
     var systemVersion: String {
@@ -97,7 +120,7 @@ struct EnvironmentReporter: EnvironmentReporting {
         return UIDevice.current.identifierForVendor?.uuidString
     }
     #elseif os(watchOS)
-    var deviceModel: String {
+    var deviceType: String {
         return WKInterfaceDevice.current().model
     }
     var systemVersion: String {
@@ -119,7 +142,7 @@ struct EnvironmentReporter: EnvironmentReporting {
         return nil
     }
     #elseif os(OSX)
-    var deviceModel: String {
+    var deviceType: String {
         return Sysctl.modelWithoutVersion
     }
     var systemVersion: String {
@@ -141,7 +164,7 @@ struct EnvironmentReporter: EnvironmentReporting {
         return nil
     }
     #elseif os(tvOS)
-    var deviceModel: String {
+    var deviceType: String {
         return UIDevice.current.model
     }
     var systemVersion: String {
