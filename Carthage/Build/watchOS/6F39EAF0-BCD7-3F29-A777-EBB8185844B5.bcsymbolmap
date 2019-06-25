@@ -150,4 +150,4 @@ _OBJC_IVAR_$_LDEventStringAccumulator._eventString
 -[NSArray(LDEventSource) indexOfFirstEmptyLine]
 -[NSArray(LDEventSource) subArrayFromIndex:]
 /Users/markpokorny/Documents/Development/launchDarkly/ios-client-swift-private/Carthage/Checkouts/ios-eventsource/LDEventSource/NSArray+LDEventSource.m
-/Users/markpokorny/Library/Caches/org.carthage.CarthageKit/DerivedData/10.2.1_10E1001/ios-eventsource/4.0.1/Build/Intermediates.noindex/ArchiveIntermediates/DarklyEventSource-watchOS/IntermediateBuildFilesPath/LDEventSource.build/Release-watchos/DarklyEventSource-watchOS.build/DerivedSources/DarklyEventSource_vers.c
+/Users/markpokorny/Library/Caches/org.carthage.CarthageKit/DerivedData/10.2.1_10E1001/ios-eventsource/4.0.2/Build/Intermediates.noindex/ArchiveIntermediates/DarklyEventSource-watchOS/IntermediateBuildFilesPath/LDEventSource.build/Release-watchos/DarklyEventSource-watchOS.build/DerivedSources/DarklyEventSource_vers.c

@@ -152,7 +152,7 @@ _OBJC_IVAR_$_LDEventStringAccumulator._eventString
 /Users/markpokorny/Documents/Development/launchDarkly/ios-client-swift-private/Carthage/Checkouts/ios-eventsource/LDEventSource/NSArray+LDEventSource.m
 NSMakeRange
 /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS12.2.sdk/System/Library/Frameworks/Foundation.framework/Headers/NSRange.h
-/Users/markpokorny/Library/Caches/org.carthage.CarthageKit/DerivedData/10.2.1_10E1001/ios-eventsource/4.0.1/Build/Intermediates.noindex/ArchiveIntermediates/DarklyEventSource-iOS/IntermediateBuildFilesPath/LDEventSource.build/Release-iphoneos/DarklyEventSource-iOS.build/DerivedSources/DarklyEventSource_vers.c
+/Users/markpokorny/Library/Caches/org.carthage.CarthageKit/DerivedData/10.2.1_10E1001/ios-eventsource/4.0.2/Build/Intermediates.noindex/ArchiveIntermediates/DarklyEventSource-iOS/IntermediateBuildFilesPath/LDEventSource.build/Release-iphoneos/DarklyEventSource-iOS.build/DerivedSources/DarklyEventSource_vers.c
 __ZL15__ARCLite__loadv
 __ZL58__arclite_NSMutableDictionary__setObject_forKeyedSubscriptP19NSMutableDictionaryP13objc_selectorP11objc_objectS4_
 __ZL22add_image_hook_swiftV1PK11mach_headerl

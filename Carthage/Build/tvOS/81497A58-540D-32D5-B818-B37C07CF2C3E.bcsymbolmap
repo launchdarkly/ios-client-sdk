@@ -15,19 +15,19 @@ BCSymbolMap Version: 2.0
 -[LDEventSource URLSession:dataTask:didReceiveData:]
 -[LDEventSource parseEventString:]
 ___34-[LDEventSource parseEventString:]_block_invoke
-___copy_helper_block_e4_20s24w
-___destroy_helper_block_e4_20s24w
+___copy_helper_block_e8_32s40w
+___destroy_helper_block_e8_32s40w
 -[LDEventSource URLSession:task:didCompleteWithError:]
 ___54-[LDEventSource URLSession:task:didCompleteWithError:]_block_invoke
-___copy_helper_block_e4_20w
-___destroy_helper_block_e4_20w
+___copy_helper_block_e8_32w
+___destroy_helper_block_e8_32w
 -[LDEventSource eventErrorForTask:errorCode:underlyingError:]
 -[LDEventSource responseIsUnauthorizedForTask:]
 -[LDEventSource open]
 -[LDEventSource _dispatchEvent:type:]
 ___37-[LDEventSource _dispatchEvent:type:]_block_invoke
-___copy_helper_block_e4_20b24s
-___destroy_helper_block_e4_20s24s
+___copy_helper_block_e8_32b40s
+___destroy_helper_block_e8_32s40s
 -[LDEventSource _dispatchEvent:]
 -[LDEventSource increaseIntervalWithBackoff]
 -[LDEventSource eventURL]
@@ -72,9 +72,9 @@ _OBJC_IVAR_$_LDEventSource.messageQueue
 _OBJC_IVAR_$_LDEventSource.connectionQueue
 _OBJC_IVAR_$_LDEventSource.wasClosed
 _OBJC_IVAR_$_LDEventSource._retryAttempt
-___block_descriptor_28_e4_20s24w_e5_v4@?0l
-___block_descriptor_24_e4_20w_e5_v4@?0l
-___block_descriptor_28_e4_20bs24s_e5_v4@?0l
+___block_descriptor_48_e8_32s40w_e5_v8@?0l
+___block_descriptor_40_e8_32w_e5_v8@?0l
+___block_descriptor_48_e8_32bs40s_e5_v8@?0l
 _OBJC_IVAR_$_LDEventSource._retryInterval
 _OBJC_IVAR_$_LDEventSource._eventURL
 _OBJC_IVAR_$_LDEventSource._eventSourceTask
@@ -105,14 +105,14 @@ Apple LLVM version 10.0.1 (clang-1001.0.46.4)
 /Users/markpokorny/Documents/Development/launchDarkly/ios-client-swift-private/Carthage/Checkouts/ios-eventsource/LDEventSource/LDEventSource.m
 /Users/markpokorny/Documents/Development/launchDarkly/ios-client-swift-private/Carthage/Checkouts/ios-eventsource
 /Users/markpokorny/Documents/Development/launchDarkly/ios-client-swift-private/Carthage/Checkouts/ios-eventsource/LDEventSource/LDEventSource.h
-__destroy_helper_block_e4_20s24s
-__copy_helper_block_e4_20b24s
+__destroy_helper_block_e8_32s40s
+__copy_helper_block_e8_32b40s
 __37-[LDEventSource _dispatchEvent:type:]_block_invoke
-__destroy_helper_block_e4_20w
-__copy_helper_block_e4_20w
+__destroy_helper_block_e8_32w
+__copy_helper_block_e8_32w
 __54-[LDEventSource URLSession:task:didCompleteWithError:]_block_invoke
-__destroy_helper_block_e4_20s24w
-__copy_helper_block_e4_20s24w
+__destroy_helper_block_e8_32s40w
+__copy_helper_block_e8_32s40w
 __34-[LDEventSource parseEventString:]_block_invoke
 -[NSString(LDEventSource) lines]
 -[NSString(LDEventSource) hasEventPrefix]
@@ -151,5 +151,5 @@ _OBJC_IVAR_$_LDEventStringAccumulator._eventString
 -[NSArray(LDEventSource) subArrayFromIndex:]
 /Users/markpokorny/Documents/Development/launchDarkly/ios-client-swift-private/Carthage/Checkouts/ios-eventsource/LDEventSource/NSArray+LDEventSource.m
 NSMakeRange
-/Applications/Xcode.app/Contents/Developer/Platforms/WatchOS.platform/Developer/SDKs/WatchOS5.2.sdk/System/Library/Frameworks/Foundation.framework/Headers/NSRange.h
-/Users/markpokorny/Library/Caches/org.carthage.CarthageKit/DerivedData/10.2.1_10E1001/ios-eventsource/4.0.1/Build/Intermediates.noindex/ArchiveIntermediates/DarklyEventSource-watchOS/IntermediateBuildFilesPath/LDEventSource.build/Release-watchos/DarklyEventSource-watchOS.build/DerivedSources/DarklyEventSource_vers.c
+/Applications/Xcode.app/Contents/Developer/Platforms/AppleTVOS.platform/Developer/SDKs/AppleTVOS12.2.sdk/System/Library/Frameworks/Foundation.framework/Headers/NSRange.h
+/Users/markpokorny/Library/Caches/org.carthage.CarthageKit/DerivedData/10.2.1_10E1001/ios-eventsource/4.0.2/Build/Intermediates.noindex/ArchiveIntermediates/DarklyEventSource-tvOS/IntermediateBuildFilesPath/LDEventSource.build/Release-appletvos/DarklyEventSource-tvOS.build/DerivedSources/DarklyEventSource_vers.c
