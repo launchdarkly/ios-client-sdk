@@ -2,18 +2,18 @@ LaunchDarkly Migration Guide for the iOS Swift SDK
 ==================================================
 
 # Getting Started
-Follow the steps below to migrate your app from v2.x or v3.x to v4.0.0. Most of these steps will be required, your IDE will give you build errors if you don't take them. We recommend reading through the guide before starting to get a feel for what you will need to do to migrate your app to v4.0.0.
+Follow the steps below to migrate your app from v2.x or v3.x to v4.x. Most of these steps will be required, your IDE will give you build errors if you don't take them. We recommend reading through the guide before starting to get a feel for what you will need to do to migrate your app to v4.x.
 
 ### Multiple Environments
-Version 4.0.0 does not support multiple environments. If you use version 2.14.0 or later and set LDConfig's `secondaryMobileKeys` you will not be able to migrate to version 4.0.0. Multiple Environments will be added in a future release to the Swift SDK.
+Version 4.1 does not support multiple environments. If you use version 2.14.0 or later and set LDConfig's `secondaryMobileKeys` you will not be able to migrate to version 4.1. Multiple Environments will be added in a future release to the Swift SDK.
 
 ### Swift Version
-Version 4.0.0 is built on Swift 4.2 using Xcode 10. The SDK will not build using previous Swift versions, and therefore you must use Xcode 10 or later to build.
+Version 4.x is built on Swift 5 using Xcode 10. The SDK will not build using previous Swift versions, and therefore you must use Xcode 10 or later to build.
 
 [API Differences from v2.x or v3.x](#api-differences-from-v2x-or-v3x) lists all of the changes to the API.
 
 ## Migration Steps
-1. Integrate the v4.0.0 SDK into your app. (e.g. CocoaPods podfile or Carthage cartfile change to point to v4.0.0). See [Integrate the Swift SDK into your app using either CocoaPods or Carthage](#integrate-the-swift-sdk-into-your-app-using-either-cocoapods-or-carthage) for details.
+1. Integrate the v4.x SDK into your app. (e.g. CocoaPods podfile or Carthage cartfile change to point to v4.1.1). See [Integrate the Swift SDK into your app using either CocoaPods or Carthage](#integrate-the-swift-sdk-into-your-app-using-either-cocoapods-or-carthage) for details.
 2. Clean, and delete Derived Data.
 3. Update imports to `LaunchDarkly`. See [Update imports to `LaunchDarkly`](#update-imports-to-launchdarkly) for details.
 4. In Swift code, replace instances of `LDClient.sharedInstance()` with `LDClient.shared`. Do not change Objective-C `[LDClient sharedInstance]` occurrences.
@@ -101,7 +101,7 @@ Calls to `trackEvent` include a 3rd parameter `error`, which the SDK sets when a
 
 ---
 ## API Differences from v2.x or v3.x
-This section details the changes between the v2.x or v3.x and v4.0.0 APIs.
+This section details the changes between the v2.x or v3.x and v4.x APIs.
 
 ### Configuration with `LDConfig`
 LDConfig has changed to a `struct`, and therefore uses value semantics.
@@ -202,7 +202,7 @@ This method was removed. Set the `user` property instead.
 
 ### Getting Feature Flag Values
 #### `variation()`
-Swift Generics allowed us to combine the `variation` methods that were used in the v2.x or v3.x SDK. v4.0.0 has one `variation` method that returns a non-Optional type that matches the non-Optional type the client app provides in the `fallback` parameter. A second `variation` method allows the client app to use an Optional as the `fallback`. This method requires the client to specify the Optional type when passing `nil` as the `fallback`. For this second method, the fallback parameter is defaulted to `nil`. When using this second method, set the type on the item holding the return value, e.g.
+Swift Generics allowed us to combine the `variation` methods that were used in the v2.x or v3.x SDK. v4.x has one `variation` method that returns a non-Optional type that matches the non-Optional type the client app provides in the `fallback` parameter. A second `variation` method allows the client app to use an Optional as the `fallback`. This method requires the client to specify the Optional type when passing `nil` as the `fallback`. For this second method, the fallback parameter is defaulted to `nil`. When using this second method, set the type on the item holding the return value, e.g.
 ```swift
     let boolFlagValue: Bool? = LDClient.shared.variation(forKey: "bool-flag-key")
 ```
@@ -219,7 +219,7 @@ Swift generic functions cannot operate in Objective-C. The `ObjcLDClient` wrappe
 The wrapper also includes new type-based `variationAndSource` methods that return a type-based `VariationValue` object (e.g. `LDBoolVariationValue`) that encapsulates the `value` and `source`. `source` is an `ObjcLDFlagValueSource` Objective-C int backed enum (accessed in Objective-C via `LDFlagValueSource`). In addition to `server`, `cache`, and `fallback`, other possible values could be `nilSource` and `typeMismatch`. Feature Flag types that are object types have value types that are nullable in the wrapper. Take care to verify a value exists before using it.
 
 ### Monitoring Feature Flags for changes
-v4.0.0 removes the `LDClientDelegate`, which included `featureFlagDidUpdate` and `userDidUpdate` that the SDK called to notify client apps of changes in the set of feature flags for a given mobile key (called the environment), and the `userUnchanged` that the SDK called in `.polling` mode when the response to a feature flag request did not change any feature flag value. In order to have the SDK notify the client app when feature flags change, we have provided a closure based observer API.
+v4.x removes the `LDClientDelegate`, which included `featureFlagDidUpdate` and `userDidUpdate` that the SDK called to notify client apps of changes in the set of feature flags for a given mobile key (called the environment), and the `userUnchanged` that the SDK called in `.polling` mode when the response to a feature flag request did not change any feature flag value. In order to have the SDK notify the client app when feature flags change, we have provided a closure based observer API.
 #### Single-key `observe()`
 To monitor a single feature flag, set a callback handler using `observe(key:, owner:, handler:)`. The SDK will keep a weak reference to the `owner`. When an observed feature flag changes, the SDK executes the closure, passing into it an `LDChangedFlag` that provides the `key`, `oldValue`, `oldValueSource`, `newValue`, and `newValueSource`. The client app can use this to update itself with the new value, or use the closure as a trigger to make another `variation` request from the LDClient.
 #### Multiple-key `observe()`
