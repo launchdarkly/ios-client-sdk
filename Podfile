@@ -2,22 +2,22 @@ use_frameworks!
 workspace 'LaunchDarkly.xcworkspace'
 target 'LaunchDarkly_iOS' do
     platform :ios, '8.0'
-    pod 'SwiftLint', '0.32.0'
+    pod 'SwiftLint', '0.33.0'
 end
 
 target 'LaunchDarkly_watchOS' do
     platform :watchos, '2.0'
-    pod 'SwiftLint', '0.32.0'
+    pod 'SwiftLint', '0.33.0'
 end
 
 target 'LaunchDarkly_macOS' do
     platform :osx, '10.10'
-    pod 'SwiftLint', '0.32.0'
+    pod 'SwiftLint', '0.33.0'
 end
 
 target 'LaunchDarkly_tvOS' do
     platform :tvos, '9.0'
-    pod 'SwiftLint', '0.32.0'
+    pod 'SwiftLint', '0.33.0'
 end
 
 target 'LaunchDarklyTests' do
