@@ -4,7 +4,7 @@ All notable changes to the LaunchDarkly iOS SDK will be documented in this file.
 
 ## [3.0.4] - 2019-07-09
 ### Changed
-- Advances `ios-eventsource` to `4.0.2`. This fixes a potential hang on LDClient start.
+- Updated to `ios-eventsource` version `4.0.2`. This fixes a potential hang on LDClient start.
 
 ## [3.0.3] - 2019-05-30
 ### Changed
