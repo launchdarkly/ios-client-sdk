@@ -1,4 +1,4 @@
-# config file version: 1.2.0
+# config file version: 1.2.1
 version: 2
 jobs:
   build:
@@ -12,7 +12,7 @@ jobs:
       FL_OUTPUT_DIR: output
 
     macos:
-      xcode: '10.2.0'
+      xcode: '10.2.1'
 
     steps:
     - checkout
