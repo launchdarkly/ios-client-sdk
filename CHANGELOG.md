@@ -7,7 +7,7 @@ Version 4.0.0 does not support multiple environments. If you use version `2.14.0
 
 ## [4.1.1] - 2019-07-09
 ### Change
-- Advances `ios-eventsource` to `4.0.2`. This fixes a potential hang on LDClient start.
+- Updated to `ios-eventsource` version `4.0.2`. This fixes a potential hang on LDClient start.
 
 ## [4.1.0] - 2019-06-19
 ### Change
