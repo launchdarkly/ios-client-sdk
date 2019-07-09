@@ -2,7 +2,7 @@
 
 All notable changes to the LaunchDarkly iOS SDK will be documented in this file. This project adheres to [Semantic Versioning](http://semver.org).
 
-## [3.0.4] - 2019-06-25
+## [3.0.4] - 2019-07-09
 ### Changed
 - Advanced `ios-eventsource` to version `4.0.2`
 
