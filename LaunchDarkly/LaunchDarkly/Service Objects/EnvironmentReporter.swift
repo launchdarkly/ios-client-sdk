@@ -8,8 +8,9 @@
 
 import Foundation
 
-#if os(iOS) || os(watchOS)
+#if os(iOS)
 import UIKit
+#elseif os(watchOS)
 import WatchKit
 #elseif os(OSX)
 import AppKit
