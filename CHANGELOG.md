@@ -5,12 +5,17 @@ All notable changes to the LaunchDarkly iOS SDK will be documented in this file.
 ### Multiple Environment clients
 Version 4.0.0 does not support multiple environments. If you use version `2.14.0` or later and set `LDConfig`'s `secondaryMobileKeys` you will not be able to migrate to version `4.0.0`. Multiple Environments will be added in a future release to the Swift SDK.
 
+## [4.1.2] - 2019-07-11
+### Fixed
+- WatchKit is now conditionally imported in WatchOS only, to fix an error in Xcode 11.
+- Comparing two nil objects of type `[String: Any]?` no longer causes a crash.
+
 ## [4.1.1] - 2019-07-09
-### Change
+### Changed
 - Updated to `ios-eventsource` version `4.0.2`. This fixes a potential hang on LDClient start.
 
 ## [4.1.0] - 2019-06-19
-### Change
+### Changed
 - Installs new `deviceModel` into `EnvironmentReporter` and renames old `deviceModel` to `deviceType`.
 - Updated MacOS model detection to use `CwSysCtl`.
 
