@@ -7,8 +7,8 @@ Version 4.0.0 does not support multiple environments. If you use version `2.14.0
 
 ## [4.1.2] - 2019-07-11
 ### Fixed
-- WatchKit is now conditionally imported in WatchOS only to fix an error in Xcode 11.
-- Comparing two nil objects of type [String: Any]? no longer causes a crash.
+- WatchKit is now conditionally imported in WatchOS only, to fix an error in Xcode 11.
+- Comparing two nil objects of type `[String: Any]?` no longer causes a crash.
 
 ## [4.1.1] - 2019-07-09
 ### Changed
