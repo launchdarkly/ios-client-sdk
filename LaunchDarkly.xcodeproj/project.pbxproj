@@ -298,6 +298,8 @@
 		83F0A5641FB5F33800550A95 /* LDConfigSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = 83F0A5631FB5F33800550A95 /* LDConfigSpec.swift */; };
 		83FEF8DD1F266742001CF12C /* FlagSynchronizer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 83FEF8DC1F266742001CF12C /* FlagSynchronizer.swift */; };
 		83FEF8DF1F2667E4001CF12C /* EventReporter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 83FEF8DE1F2667E4001CF12C /* EventReporter.swift */; };
+		C408884723033B3600420721 /* ConnectionInformationStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = C408884623033B3600420721 /* ConnectionInformationStore.swift */; };
+		C408884923033B7500420721 /* ConnectionInformation.swift in Sources */ = {isa = PBXBuildFile; fileRef = C408884823033B7500420721 /* ConnectionInformation.swift */; };
 		E48F5215B96AE48D10185962 /* Pods_LaunchDarkly_tvOS.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = DB95B7FEBDC1E23F47304829 /* Pods_LaunchDarkly_tvOS.framework */; };
 /* End PBXBuildFile section */
 
@@ -440,6 +442,8 @@
 		94D29EF04A706E975E771E84 /* Pods_LaunchDarkly_watchOS.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_LaunchDarkly_watchOS.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		AC953A896A624F4525C218E5 /* Pods-LaunchDarkly_watchOS.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-LaunchDarkly_watchOS.debug.xcconfig"; path = "Pods/Target Support Files/Pods-LaunchDarkly_watchOS/Pods-LaunchDarkly_watchOS.debug.xcconfig"; sourceTree = "<group>"; };
 		B0A56C29F8C0E59F338F9A07 /* Pods-LaunchDarkly_tvOS.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-LaunchDarkly_tvOS.release.xcconfig"; path = "Pods/Target Support Files/Pods-LaunchDarkly_tvOS/Pods-LaunchDarkly_tvOS.release.xcconfig"; sourceTree = "<group>"; };
+		C408884623033B3600420721 /* ConnectionInformationStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConnectionInformationStore.swift; sourceTree = "<group>"; };
+		C408884823033B7500420721 /* ConnectionInformation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConnectionInformation.swift; sourceTree = "<group>"; };
 		D58D143F8FD161584B3FF3AF /* Pods-LaunchDarklyTests.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-LaunchDarklyTests.release.xcconfig"; path = "Pods/Target Support Files/Pods-LaunchDarklyTests/Pods-LaunchDarklyTests.release.xcconfig"; sourceTree = "<group>"; };
 		D6840A437019F1CB72997480 /* Pods-LaunchDarkly_iOS.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-LaunchDarkly_iOS.release.xcconfig"; path = "Pods/Target Support Files/Pods-LaunchDarkly_iOS/Pods-LaunchDarkly_iOS.release.xcconfig"; sourceTree = "<group>"; };
 		D8204934C417AFCE089F38BC /* Pods-LaunchDarklyTests.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-LaunchDarklyTests.debug.xcconfig"; path = "Pods/Target Support Files/Pods-LaunchDarklyTests/Pods-LaunchDarklyTests.debug.xcconfig"; sourceTree = "<group>"; };
@@ -706,6 +710,7 @@
 				8354EFDE1F26380700C05156 /* Event.swift */,
 				83883DD4220B68A000EEAB95 /* ErrorObserver.swift */,
 				8354AC5F224150C300CDE602 /* Cache */,
+				C408884823033B7500420721 /* ConnectionInformation.swift */,
 			);
 			path = Models;
 			sourceTree = "<group>";
@@ -900,6 +905,7 @@
 				8347BB0B21F147E100E56BCD /* LDTimer.swift */,
 				83883DD9220B6A9A00EEAB95 /* ErrorNotifier.swift */,
 				8354AC742243168800CDE602 /* Cache */,
+				C408884623033B3600420721 /* ConnectionInformationStore.swift */,
 			);
 			path = "Service Objects";
 			sourceTree = "<group>";
@@ -1494,6 +1500,7 @@
 				8372668C20D4439600BD1088 /* DateFormatter.swift in Sources */,
 				83A2D6241F51CD7A00EA3BD4 /* LDUser.swift in Sources */,
 				8354EFE21F26380700C05156 /* Event.swift in Sources */,
+				C408884923033B7500420721 /* ConnectionInformation.swift in Sources */,
 				831D8B721F71D3E700ED65E8 /* DarklyService.swift in Sources */,
 				835E1D431F685AC900184DB4 /* ObjcLDChangedFlag.swift in Sources */,
 				8358F25E1F474E5900ECE1AF /* LDChangedFlag.swift in Sources */,
@@ -1518,6 +1525,7 @@
 				83B9A082204F6022000C3F17 /* FlagsUnchangedObserver.swift in Sources */,
 				8354EFE01F26380700C05156 /* LDClient.swift in Sources */,
 				831425B1206B030100F2EF36 /* EnvironmentReporter.swift in Sources */,
+				C408884723033B3600420721 /* ConnectionInformationStore.swift in Sources */,
 				83B6C4B61F4DE7630055351C /* LDCommon.swift in Sources */,
 				83EF678A1F97CFEC00403126 /* Dictionary.swift in Sources */,
 				8347BB0C21F147E100E56BCD /* LDTimer.swift in Sources */,

@@ -206,6 +206,7 @@ final class LDClientSpec: QuickSpec {
         streamingModeSpec()
         reportEventsSpec()
         allFlagValuesSpec()
+        connectionInformationSpec()
     }
 
     private func startSpec() {
@@ -1726,7 +1727,7 @@ final class LDClientSpec: QuickSpec {
                 })
             }
             it("registers a single flag observer") {
-                expect(testContext.changeNotifierMock.addFlagChangeObserverCallCount) == 1
+                expect(testContext.changeNotifierMock.addFlagChangeObserverCallCount) == 2 //The callcount is 2 instead of 1 because LDClient registers listeners for Connection Status
                 expect(testContext.flagChangeObserver?.flagKeys) == [DarklyServiceMock.FlagKeys.bool]
                 expect(testContext.flagChangeObserver?.owner) === self
                 testContext.flagChangeHandler?(changedFlag)
@@ -1753,7 +1754,7 @@ final class LDClientSpec: QuickSpec {
                 })
             }
             it("registers a multiple flag observer") {
-                expect(testContext.changeNotifierMock.addFlagChangeObserverCallCount) == 1
+                expect(testContext.changeNotifierMock.addFlagChangeObserverCallCount) == 2
                 expect(testContext.flagChangeObserver?.flagKeys) == [DarklyServiceMock.FlagKeys.bool]
                 expect(testContext.flagChangeObserver?.owner) === self
                 testContext.flagCollectionChangeHandler?(changedFlags)
@@ -1779,7 +1780,7 @@ final class LDClientSpec: QuickSpec {
                 })
             }
             it("registers a collection flag observer") {
-                expect(testContext.changeNotifierMock.addFlagChangeObserverCallCount) == 1
+                expect(testContext.changeNotifierMock.addFlagChangeObserverCallCount) == 2
                 expect(testContext.flagChangeObserver?.flagKeys) == LDFlagKey.anyKey
                 expect(testContext.flagChangeObserver?.owner) === self
                 expect(testContext.flagChangeObserver?.flagCollectionChangeHandler).toNot(beNil())
@@ -1799,7 +1800,7 @@ final class LDClientSpec: QuickSpec {
                 })
             }
             it("registers a flags unchanged observer") {
-                expect(testContext.changeNotifierMock.addFlagsUnchangedObserverCallCount) == 1
+                expect(testContext.changeNotifierMock.addFlagsUnchangedObserverCallCount) == 2
                 expect(testContext.flagsUnchangedObserver?.owner) === self
                 expect(testContext.flagsUnchangedHandler).toNot(beNil())
                 testContext.flagsUnchangedHandler?()
@@ -1818,7 +1819,7 @@ final class LDClientSpec: QuickSpec {
                 })
             }
             it("registers an error observer") {
-                expect(testContext.errorNotifierMock.addErrorObserverCallCount) == 1
+                expect(testContext.errorNotifierMock.addErrorObserverCallCount) == 2
                 expect(testContext.errorObserver).toNot(beNil())
                 guard let errorObserver = testContext.errorObserver
                 else {
@@ -2813,6 +2814,61 @@ final class LDClientSpec: QuickSpec {
                 }
                 it("returns nil") {
                     expect(featureFlagValues).to(beNil())
+                }
+            }
+        }
+    }
+    
+    private func connectionInformationSpec() {
+        var testContext: TestContext!
+        
+        describe("ConnectionInformation") {
+            context("when client was started in foreground") {
+                beforeEach {
+                    testContext = TestContext(startOnline: true, runMode: .foreground)
+                    testContext.config.streamingMode = .streaming
+                    testContext.subject.start(config: testContext.config)
+                }
+                it("returns a ConnectionInformation object with currentConnectionMode.streaming") {
+                    expect(testContext.subject.isOnline) == true
+                    expect(testContext.subject.connectionInformation.currentConnectionMode).to(equal(.streaming))
+                    expect(testContext.subject.connectionInformation.lastConnectionFailureReason.getValue()).to(equal("none"))
+                }
+                it("returns a String from toString") {
+                    expect(testContext.subject.connectionInformation.toString()).to(beAKindOf(String.self))
+                }
+            }
+            context("when client was started in background") {
+                beforeEach {
+                    testContext = TestContext(startOnline: true, runMode: .background)
+                    testContext.config.streamingMode = .streaming
+                    testContext.subject.start(config: testContext.config)
+                }
+                it("returns a ConnectionInformation object with currentConnectionMode.polling") {
+                    expect(testContext.subject.connectionInformation.currentConnectionMode).to(equal(.offline))
+                }
+                it("returns a String from toString") {
+                    expect(testContext.subject.connectionInformation.toString()).to(beAKindOf(String.self))
+                }
+            }
+            context("when offline and client started") {
+                beforeEach {
+                    testContext = TestContext(startOnline: false)
+                    testContext.subject.start(config: testContext.config)
+                }
+                it("leaves the sdk offline") {
+                    expect(testContext.subject.isOnline) == false
+                    expect(testContext.eventReporterMock.isOnline) == false
+                    expect(testContext.flagSynchronizerMock.isOnline) == false
+                    expect(testContext.subject.connectionInformation.currentConnectionMode).to(equal(.offline))
+                }
+            }
+            context("when client was not started") {
+                beforeEach {
+                    testContext = TestContext()
+                }
+                it("returns nil") {
+                    expect(testContext.subject.connectionInformation.currentConnectionMode).to(equal(.offline))
                 }
             }
         }

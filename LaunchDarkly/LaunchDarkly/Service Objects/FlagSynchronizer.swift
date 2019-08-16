@@ -26,6 +26,18 @@ enum SynchronizingError: Error {
     case response(URLResponse?)
     case data(Data?)
     case event(DarklyEventSource.LDEvent?)
+    
+    var getError: String {
+        switch self {
+        case .response(let urlResponse):
+            guard let httpResponse = urlResponse as? HTTPURLResponse
+                else {
+                    return "Unknown Error"
+            }
+            return "HTTP Error Code: \(String(httpResponse.statusCode))"
+        default: return "Unknown Error"
+        }
+    }
 
     var isClientUnauthorized: Bool {
         switch self {
@@ -142,6 +154,11 @@ class FlagSynchronizer: LDFlagSynchronizing {
             Log.debug(typeName(and: #function) + "aborted. " + reason)
             return
         }
+        
+        let connectionInformationVar = LDClient.shared.getConnectionInformation()
+        connectionInformationVar.currentConnectionMode = ConnectionInformation.ConnectionMode.establishingStreamingConnection
+        LDClient.shared.connectionInformation = connectionInformationVar
+        
         Log.debug(typeName(and: #function))
         eventSource = service.createEventSource(useReport: useReport)  //The LDConfig.connectionTimeout should NOT be set here. Heartbeat is sent every 3m. ES default timeout is 5m. This is an async operation.
         //LDEventSource reacts to connection errors by closing the connection and establishing a new one after an exponentially increasing wait. That makes it self healing.

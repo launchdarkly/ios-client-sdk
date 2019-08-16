@@ -63,11 +63,25 @@ public class LDClient {
         didSet {
             flagSynchronizer.isOnline = isOnline
             eventReporter.isOnline = isOnline
+            connectionInformation = ConnectionInformation.onlineSetCheck(flagSynchronizer: flagSynchronizer, connectionInformation: connectionInformation, ldClient: self, config: config)
         }
     }
 
     //Keeps the state of the last setOnline goOnline parameter, used for throttling calls to set the SDK online
     private var lastSetOnlineCallValue = false
+    
+    //Stores ConnectionInformation in UserDefaults on change
+    internal var connectionInformation: ConnectionInformation {
+        didSet {
+            Log.debug(connectionInformation.toString())
+            connectionInformationStore.storeConnectionInformation(connectionInformation: connectionInformation)
+        }
+    }
+    
+    //Returns an object containing information about successful and/or failed polling or streaming connections to LaunchDarkly
+    public func getConnectionInformation() -> ConnectionInformation {
+        return ConnectionInformation.lastSuccessfulConnectionCheck(flagSynchronizer: flagSynchronizer, connectionInformation: connectionInformation)
+    }
 
     /**
      Set the LDClient online/offline.
@@ -203,7 +217,7 @@ public class LDClient {
         didSet {
             Log.debug(typeName(and: #function) + "new service set")
             eventReporter.service = service
-            flagSynchronizer = serviceFactory.makeFlagSynchronizer(streamingMode: effectiveStreamingMode(runMode: runMode, config: config),
+            flagSynchronizer = serviceFactory.makeFlagSynchronizer(streamingMode: ConnectionInformation.effectiveStreamingMode(runMode: runMode, config: config, ldClient: self),
                                                                    pollingInterval: config.flagPollingInterval(runMode: runMode),
                                                                    useReport: config.useReport,
                                                                    service: service,
@@ -242,6 +256,7 @@ public class LDClient {
         cacheConverter.convertCacheData(for: startUser, and: config)        //Convert before updating the user so any deprecated cached data is converted to the current model
         self.config = config
         self.user = startUser
+        self.connectionInformation = ConnectionInformation.uncacheConnectionInformation(config: config, ldClient: self, connectionInformationStore: connectionInformationStore)
 
         setOnline((wasStarted && wasOnline) || (!wasStarted && self.config.startOnline)) {
             Log.debug(self.typeName(and: #function, appending: ": ") + "started")
@@ -256,20 +271,6 @@ public class LDClient {
             return
         }
         cacheConverter.convertCacheData(for: user, and: config)
-    }
-
-    private func effectiveStreamingMode(runMode: LDClientRunMode, config: LDConfig) -> LDStreamingMode {
-        var reason = ""
-        let streamingMode: LDStreamingMode = (runMode == .foreground || allowBackgroundFlagUpdates) && config.streamingMode == .streaming && config.allowStreamingMode ? .streaming : .polling
-        if config.streamingMode == .streaming && runMode != .foreground && !allowBackgroundFlagUpdates {
-            reason = " LDClient is in background mode with background updates disabled."
-        }
-        if reason.isEmpty && config.streamingMode == .streaming && !config.allowStreamingMode {
-            reason = " LDConfig disallowed streaming mode. "
-            reason += !environmentReporter.operatingSystem.isStreamingEnabled ? "Streaming is not allowed on \(environmentReporter.operatingSystem)." : "Unknown reason."
-        }
-        Log.debug(typeName(and: #function, appending: ": ") + "\(streamingMode)\(reason)")
-        return streamingMode
     }
 
     /**
@@ -692,6 +693,7 @@ public class LDClient {
             Log.debug(logPrefix + "LDClient is unauthorized")
             setOnline(false)
         }
+        connectionInformation = ConnectionInformation.synchronizingErrorCheck(synchronizingError: synchronizingError, connectionInformation: connectionInformation)
         DispatchQueue.main.async {
             self.errorNotifier.notifyObservers(of: synchronizingError)
         }
@@ -784,9 +786,11 @@ public class LDClient {
                 return
             }
             Log.debug(typeName(and: #function, appending: ": ") + "\(runMode)")
+            connectionInformation = ConnectionInformation.foregroundBackgroundBehavior(connectionInformation: connectionInformation, runMode: runMode, config: config, ldClient: self)
             if runMode == .background {
                 eventReporter.reportEvents()
             }
+            
             eventReporter.isOnline = isOnline && runMode == .foreground
 
             let willSetSynchronizerOnline = isOnline && isInSupportedRunMode
@@ -794,7 +798,7 @@ public class LDClient {
             //if it does match, keeping the synchronizer precludes an extra flag request
             if !flagSynchronizerConfigMatchesConfigAndRunMode {
                 flagSynchronizer.isOnline = false
-                flagSynchronizer = serviceFactory.makeFlagSynchronizer(streamingMode: effectiveStreamingMode(runMode: runMode, config: config),
+                flagSynchronizer = serviceFactory.makeFlagSynchronizer(streamingMode: ConnectionInformation.effectiveStreamingMode(runMode: runMode, config: config, ldClient: self),
                                                                        pollingInterval: config.flagPollingInterval(runMode: runMode),
                                                                        useReport: config.useReport,
                                                                        service: service,
@@ -803,12 +807,14 @@ public class LDClient {
             flagSynchronizer.isOnline = willSetSynchronizerOnline
         }
     }
+    
     private var flagSynchronizerConfigMatchesConfigAndRunMode: Bool {
-        return flagSynchronizer.streamingMode == effectiveStreamingMode(runMode: runMode, config: config)
+        return flagSynchronizer.streamingMode == ConnectionInformation.effectiveStreamingMode(runMode: runMode, config: config, ldClient: self)
             && (flagSynchronizer.streamingMode == .streaming
                 || flagSynchronizer.streamingMode == .polling && flagSynchronizer.pollingInterval == config.flagPollingInterval(runMode: runMode))
     }
-    private var allowBackgroundFlagUpdates: Bool {
+    
+    internal var allowBackgroundFlagUpdates: Bool {
         return config.enableBackgroundUpdates && environmentReporter.operatingSystem.isBackgroundEnabled
     }
 
@@ -817,8 +823,9 @@ public class LDClient {
     private(set) var flagSynchronizer: LDFlagSynchronizing
     private(set) var flagChangeNotifier: FlagChangeNotifying
     private(set) var eventReporter: EventReporting
-    private(set) var environmentReporter: EnvironmentReporting
+    internal private(set) var environmentReporter: EnvironmentReporting
     private(set) var throttler: Throttling
+    private(set) var connectionInformationStore: ConnectionInformationStore
 
     private init(serviceFactory: ClientServiceCreating? = nil) {
         if let serviceFactory = serviceFactory {
@@ -835,12 +842,14 @@ public class LDClient {
         config = LDConfig(mobileKey: "", environmentReporter: environmentReporter)
         user = LDUser(environmentReporter: environmentReporter)
         service = self.serviceFactory.makeDarklyServiceProvider(config: config, user: user)
+        eventReporter = self.serviceFactory.makeEventReporter(config: config, service: service)
+        errorNotifier = self.serviceFactory.makeErrorNotifier()
+        connectionInformation = self.serviceFactory.makeConnectionInformation()
+        connectionInformationStore = self.serviceFactory.makeConnectionInformationStore()
         flagSynchronizer = self.serviceFactory.makeFlagSynchronizer(streamingMode: .polling,
                                                                     pollingInterval: config.flagPollingInterval,
                                                                     useReport: config.useReport,
                                                                     service: service)
-        eventReporter = self.serviceFactory.makeEventReporter(config: config, service: service)
-        errorNotifier = self.serviceFactory.makeErrorNotifier()
 
         if let backgroundNotification = environmentReporter.backgroundNotification {
             NotificationCenter.default.addObserver(self, selector: #selector(didEnterBackground), name: backgroundNotification, object: nil)
@@ -848,8 +857,10 @@ public class LDClient {
         if let foregroundNotification = environmentReporter.foregroundNotification {
             NotificationCenter.default.addObserver(self, selector: #selector(willEnterForeground), name: foregroundNotification, object: nil)
         }
-
-        //Since eventReporter lasts the life of the singleton, we can configure it here...swift requires the client to be instantiated before we can pass the onSyncComplete method 
+        
+        ConnectionInformation.setupListeners(ldClient: self)
+        
+        //Since eventReporter lasts the life of the singleton, we can configure it here...swift requires the client to be instantiated before we can pass the onSyncComplete method
         eventReporter = self.serviceFactory.makeEventReporter(config: config, service: service, onSyncComplete: onEventSyncComplete)
     }
 
@@ -862,7 +873,7 @@ public class LDClient {
 
         //dummy objects replaced by client at start
         service = self.serviceFactory.makeDarklyServiceProvider(config: config, user: user)  //didSet not triggered here
-        flagSynchronizer = self.serviceFactory.makeFlagSynchronizer(streamingMode: effectiveStreamingMode(runMode: runMode, config: config),
+        flagSynchronizer = self.serviceFactory.makeFlagSynchronizer(streamingMode: ConnectionInformation.effectiveStreamingMode(runMode: runMode, config: config, ldClient: self),
                                                                     pollingInterval: config.flagPollingInterval(runMode: runMode),
                                                                     useReport: config.useReport,
                                                                     service: service,
