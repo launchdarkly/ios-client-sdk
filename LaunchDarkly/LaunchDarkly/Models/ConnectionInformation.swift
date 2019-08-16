@@ -8,7 +8,7 @@
 
 import Foundation
 
-public final class ConnectionInformation: NSObject, Codable {
+public struct ConnectionInformation: Codable {
     public enum ConnectionMode: String, Codable {
         case streaming, offline, establishingStreamingConnection, polling
     }
@@ -71,10 +71,11 @@ public final class ConnectionInformation: NSObject, Codable {
     
     //This function is used to ensure we switch from establishing a streaming connection to streaming once we are connected.
     static func checkEstablishingStreaming(connectionInformation: ConnectionInformation) -> ConnectionInformation {
-        if connectionInformation.currentConnectionMode == ConnectionInformation.ConnectionMode.establishingStreamingConnection {
-            connectionInformation.currentConnectionMode = ConnectionInformation.ConnectionMode.streaming
+        var connectionInformationVar = connectionInformation
+        if connectionInformationVar.currentConnectionMode == ConnectionInformation.ConnectionMode.establishingStreamingConnection {
+            connectionInformationVar.currentConnectionMode = ConnectionInformation.ConnectionMode.streaming
         }
-        return connectionInformation
+        return connectionInformationVar
     }
     
     //This function is used to decide what ConnectionMode to set.
@@ -94,7 +95,7 @@ public final class ConnectionInformation: NSObject, Codable {
     
     //Restores ConnectionInformation from UserDefaults if it exists
     static func uncacheConnectionInformation(config: LDConfig, ldClient: LDClient, connectionInformationStore: ConnectionInformationStore) -> ConnectionInformation {
-        if let maybeConnectionInformation = connectionInformationStore.retrieveStoredConnectionInformation() {
+        if var maybeConnectionInformation = connectionInformationStore.retrieveStoredConnectionInformation() {
             Log.debug("Retrieved ConnectionInformation from cache")
             maybeConnectionInformation.currentConnectionMode = connectionModeCheck(config: config, ldClient: ldClient)
             return maybeConnectionInformation
@@ -105,7 +106,7 @@ public final class ConnectionInformation: NSObject, Codable {
     
     //Used for updating lastSuccessfulConnection when connected to streaming
     static func lastSuccessfulConnectionCheck(flagSynchronizer: LDFlagSynchronizing, connectionInformation: ConnectionInformation) -> ConnectionInformation {
-        let connectionInformationVar = connectionInformation
+        var connectionInformationVar = connectionInformation
         if flagSynchronizer.isOnline && connectionInformationVar.currentConnectionMode == ConnectionInformation.ConnectionMode.streaming {
             connectionInformationVar.lastSuccessfulConnection = Date().timeIntervalSince1970
         }
@@ -114,7 +115,7 @@ public final class ConnectionInformation: NSObject, Codable {
     
     //Used for updating ConnectionInformation inside of LDClient.setOnline
     static func onlineSetCheck(flagSynchronizer: LDFlagSynchronizing, connectionInformation: ConnectionInformation, ldClient: LDClient, config: LDConfig) -> ConnectionInformation {
-        let connectionInformationVar = ConnectionInformation.lastSuccessfulConnectionCheck(flagSynchronizer: flagSynchronizer, connectionInformation: connectionInformation)
+        var connectionInformationVar = ConnectionInformation.lastSuccessfulConnectionCheck(flagSynchronizer: flagSynchronizer, connectionInformation: connectionInformation)
         if ldClient.isOnline {
             connectionInformationVar.currentConnectionMode = effectiveStreamingMode(runMode: ldClient.runMode, config: config, ldClient: ldClient) == LDStreamingMode.streaming ? ConnectionInformation.ConnectionMode.streaming : ConnectionInformation.ConnectionMode.polling
         } else {
@@ -125,7 +126,7 @@ public final class ConnectionInformation: NSObject, Codable {
     
     //Used for parsing SynchronizingError in LDClient.process
     static func synchronizingErrorCheck(synchronizingError: SynchronizingError, connectionInformation: ConnectionInformation) -> ConnectionInformation {
-        let connectionInformationVar = connectionInformation
+        var connectionInformationVar = connectionInformation
         if synchronizingError.isClientUnauthorized {
             connectionInformationVar.lastConnectionFailureReason = ConnectionInformation.LastConnectionFailureReason.unauthorized
         } else {
@@ -147,19 +148,19 @@ public final class ConnectionInformation: NSObject, Codable {
         //Creates a retain cycle that will need to change for multi environment
         ldClient.observeError(owner: ldClient, handler: { _ in
             Log.debug("LDClient error observer fired")
-            let connectionInformation = LDClient.shared.getConnectionInformation()
+            var connectionInformation = LDClient.shared.getConnectionInformation()
             connectionInformation.lastFailedConnection = Date().timeIntervalSince1970
             LDClient.shared.connectionInformation = connectionInformation
         })
         ldClient.observeAll(owner: ldClient, handler: { _ in
             Log.debug("LDClient all flags observer fired")
-            let connectionInformation = ConnectionInformation.checkEstablishingStreaming(connectionInformation: LDClient.shared.getConnectionInformation())
+            var connectionInformation = ConnectionInformation.checkEstablishingStreaming(connectionInformation: LDClient.shared.getConnectionInformation())
             connectionInformation.lastSuccessfulConnection = Date().timeIntervalSince1970
             LDClient.shared.connectionInformation = connectionInformation
         })
         ldClient.observeFlagsUnchanged(owner: ldClient, handler: {
             Log.debug("LDClient all flags unchanged observer fired")
-            let connectionInformation = ConnectionInformation.checkEstablishingStreaming(connectionInformation: LDClient.shared.getConnectionInformation())
+            var connectionInformation = ConnectionInformation.checkEstablishingStreaming(connectionInformation: LDClient.shared.getConnectionInformation())
             connectionInformation.lastSuccessfulConnection = Date().timeIntervalSince1970
             LDClient.shared.connectionInformation = connectionInformation
         })
@@ -180,7 +181,7 @@ public final class ConnectionInformation: NSObject, Codable {
     }
     
     internal static func foregroundBackgroundBehavior(connectionInformation: ConnectionInformation, runMode: LDClientRunMode, config: LDConfig, ldClient: LDClient) -> ConnectionInformation {
-        let connectionInformationVar = connectionInformation
+        var connectionInformationVar = connectionInformation
         if ConnectionInformation.effectiveStreamingMode(runMode: runMode, config: config, ldClient: ldClient) == LDStreamingMode.streaming && runMode == .background {
             connectionInformationVar.lastSuccessfulConnection = Date().timeIntervalSince1970
             connectionInformationVar.currentConnectionMode = .polling

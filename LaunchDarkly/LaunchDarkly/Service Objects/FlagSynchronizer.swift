@@ -155,7 +155,7 @@ class FlagSynchronizer: LDFlagSynchronizing {
             return
         }
         
-        let connectionInformationVar = LDClient.shared.getConnectionInformation()
+        var connectionInformationVar = LDClient.shared.getConnectionInformation()
         connectionInformationVar.currentConnectionMode = ConnectionInformation.ConnectionMode.establishingStreamingConnection
         LDClient.shared.connectionInformation = connectionInformationVar
         

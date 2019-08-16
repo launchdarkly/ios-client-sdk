@@ -78,11 +78,7 @@ extension Optional where Wrapped == [String: Any] {
     public static func == (lhs: [String: Any]?, rhs: [String: Any]?) -> Bool {
         guard let lhs = lhs
         else {
-            guard rhs != nil
-                else {
-                    return true
-                }
-            return false
+            return rhs == nil
         }
         guard let rhs = rhs
         else {
