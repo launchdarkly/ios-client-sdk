@@ -155,9 +155,7 @@ class FlagSynchronizer: LDFlagSynchronizing {
             return
         }
         
-        var connectionInformationVar = LDClient.shared.getConnectionInformation()
-        connectionInformationVar.currentConnectionMode = ConnectionInformation.ConnectionMode.establishingStreamingConnection
-        LDClient.shared.connectionInformation = connectionInformationVar
+        LDClient.shared.connectionInformation.currentConnectionMode = ConnectionInformation.ConnectionMode.establishingStreamingConnection
         
         Log.debug(typeName(and: #function))
         eventSource = service.createEventSource(useReport: useReport)  //The LDConfig.connectionTimeout should NOT be set here. Heartbeat is sent every 3m. ES default timeout is 5m. This is an async operation.

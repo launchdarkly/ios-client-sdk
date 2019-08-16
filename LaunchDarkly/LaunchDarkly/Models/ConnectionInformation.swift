@@ -70,12 +70,11 @@ public struct ConnectionInformation: Codable {
     }
     
     //This function is used to ensure we switch from establishing a streaming connection to streaming once we are connected.
-    static func checkEstablishingStreaming(connectionInformation: ConnectionInformation) -> ConnectionInformation {
-        var connectionInformationVar = connectionInformation
-        if connectionInformationVar.currentConnectionMode == ConnectionInformation.ConnectionMode.establishingStreamingConnection {
-            connectionInformationVar.currentConnectionMode = ConnectionInformation.ConnectionMode.streaming
+    static func checkEstablishingStreaming(connectionInformation: inout ConnectionInformation) -> ConnectionInformation {
+        if connectionInformation.currentConnectionMode == ConnectionInformation.ConnectionMode.establishingStreamingConnection {
+            connectionInformation.currentConnectionMode = ConnectionInformation.ConnectionMode.streaming
         }
-        return connectionInformationVar
+        return connectionInformation
     }
     
     //This function is used to decide what ConnectionMode to set.
@@ -105,17 +104,16 @@ public struct ConnectionInformation: Codable {
     }
     
     //Used for updating lastSuccessfulConnection when connected to streaming
-    static func lastSuccessfulConnectionCheck(flagSynchronizer: LDFlagSynchronizing, connectionInformation: ConnectionInformation) -> ConnectionInformation {
-        var connectionInformationVar = connectionInformation
-        if flagSynchronizer.isOnline && connectionInformationVar.currentConnectionMode == ConnectionInformation.ConnectionMode.streaming {
-            connectionInformationVar.lastSuccessfulConnection = Date().timeIntervalSince1970
+    static func lastSuccessfulConnectionCheck(flagSynchronizer: LDFlagSynchronizing, connectionInformation: inout ConnectionInformation) -> ConnectionInformation {
+        if flagSynchronizer.isOnline && connectionInformation.currentConnectionMode == ConnectionInformation.ConnectionMode.streaming {
+            connectionInformation.lastSuccessfulConnection = Date().timeIntervalSince1970
         }
-        return connectionInformationVar
+        return connectionInformation
     }
     
     //Used for updating ConnectionInformation inside of LDClient.setOnline
-    static func onlineSetCheck(flagSynchronizer: LDFlagSynchronizing, connectionInformation: ConnectionInformation, ldClient: LDClient, config: LDConfig) -> ConnectionInformation {
-        var connectionInformationVar = ConnectionInformation.lastSuccessfulConnectionCheck(flagSynchronizer: flagSynchronizer, connectionInformation: connectionInformation)
+    static func onlineSetCheck(flagSynchronizer: LDFlagSynchronizing, connectionInformation: inout ConnectionInformation, ldClient: LDClient, config: LDConfig) -> ConnectionInformation {
+        var connectionInformationVar = ConnectionInformation.lastSuccessfulConnectionCheck(flagSynchronizer: flagSynchronizer, connectionInformation: &connectionInformation)
         if ldClient.isOnline {
             connectionInformationVar.currentConnectionMode = effectiveStreamingMode(runMode: ldClient.runMode, config: config, ldClient: ldClient) == LDStreamingMode.streaming ? ConnectionInformation.ConnectionMode.streaming : ConnectionInformation.ConnectionMode.polling
         } else {
@@ -125,22 +123,21 @@ public struct ConnectionInformation: Codable {
     }
     
     //Used for parsing SynchronizingError in LDClient.process
-    static func synchronizingErrorCheck(synchronizingError: SynchronizingError, connectionInformation: ConnectionInformation) -> ConnectionInformation {
-        var connectionInformationVar = connectionInformation
+    static func synchronizingErrorCheck(synchronizingError: SynchronizingError, connectionInformation: inout ConnectionInformation) -> ConnectionInformation {
         if synchronizingError.isClientUnauthorized {
-            connectionInformationVar.lastConnectionFailureReason = ConnectionInformation.LastConnectionFailureReason.unauthorized
+            connectionInformation.lastConnectionFailureReason = ConnectionInformation.LastConnectionFailureReason.unauthorized
         } else {
             switch synchronizingError {
             case .request(let error):
                 let errorString = error as? String ?? Constants.unknownError
-                connectionInformationVar.lastConnectionFailureReason = ConnectionInformation.LastConnectionFailureReason.unknownError(errorString)
+                connectionInformation.lastConnectionFailureReason = ConnectionInformation.LastConnectionFailureReason.unknownError(errorString)
             case .response(let urlResponse):
                 let statusCode = (urlResponse as? HTTPURLResponse)?.statusCode
-                connectionInformationVar.lastConnectionFailureReason = ConnectionInformation.LastConnectionFailureReason.httpError(statusCode ?? ConnectionInformation.Constants.noCode)
+                connectionInformation.lastConnectionFailureReason = ConnectionInformation.LastConnectionFailureReason.httpError(statusCode ?? ConnectionInformation.Constants.noCode)
             default: break
             }
         }
-        return connectionInformationVar
+        return connectionInformation
     }
     
     //Used to create listeners for Connection Status inside the LDClient init
@@ -154,13 +151,15 @@ public struct ConnectionInformation: Codable {
         })
         ldClient.observeAll(owner: ldClient, handler: { _ in
             Log.debug("LDClient all flags observer fired")
-            var connectionInformation = ConnectionInformation.checkEstablishingStreaming(connectionInformation: LDClient.shared.getConnectionInformation())
+            var connInfo = LDClient.shared.getConnectionInformation()
+            var connectionInformation = ConnectionInformation.checkEstablishingStreaming(connectionInformation: &connInfo)
             connectionInformation.lastSuccessfulConnection = Date().timeIntervalSince1970
             LDClient.shared.connectionInformation = connectionInformation
         })
         ldClient.observeFlagsUnchanged(owner: ldClient, handler: {
             Log.debug("LDClient all flags unchanged observer fired")
-            var connectionInformation = ConnectionInformation.checkEstablishingStreaming(connectionInformation: LDClient.shared.getConnectionInformation())
+            var connInfo = LDClient.shared.getConnectionInformation()
+            var connectionInformation = ConnectionInformation.checkEstablishingStreaming(connectionInformation: &connInfo)
             connectionInformation.lastSuccessfulConnection = Date().timeIntervalSince1970
             LDClient.shared.connectionInformation = connectionInformation
         })
@@ -180,15 +179,14 @@ public struct ConnectionInformation: Codable {
         return streamingMode
     }
     
-    internal static func foregroundBackgroundBehavior(connectionInformation: ConnectionInformation, runMode: LDClientRunMode, config: LDConfig, ldClient: LDClient) -> ConnectionInformation {
-        var connectionInformationVar = connectionInformation
+    internal static func foregroundBackgroundBehavior(connectionInformation: inout ConnectionInformation, runMode: LDClientRunMode, config: LDConfig, ldClient: LDClient) -> ConnectionInformation {
         if ConnectionInformation.effectiveStreamingMode(runMode: runMode, config: config, ldClient: ldClient) == LDStreamingMode.streaming && runMode == .background {
-            connectionInformationVar.lastSuccessfulConnection = Date().timeIntervalSince1970
-            connectionInformationVar.currentConnectionMode = .polling
+            connectionInformation.lastSuccessfulConnection = Date().timeIntervalSince1970
+            connectionInformation.currentConnectionMode = .polling
         } else if ConnectionInformation.effectiveStreamingMode(runMode: runMode, config: config, ldClient: ldClient) == LDStreamingMode.streaming && runMode == .foreground {
-            connectionInformationVar.currentConnectionMode = .streaming
+            connectionInformation.currentConnectionMode = .streaming
         }
-        return connectionInformationVar
+        return connectionInformation
     }
 }
 

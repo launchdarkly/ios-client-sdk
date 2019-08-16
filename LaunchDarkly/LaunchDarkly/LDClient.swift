@@ -63,7 +63,7 @@ public class LDClient {
         didSet {
             flagSynchronizer.isOnline = isOnline
             eventReporter.isOnline = isOnline
-            connectionInformation = ConnectionInformation.onlineSetCheck(flagSynchronizer: flagSynchronizer, connectionInformation: connectionInformation, ldClient: self, config: config)
+            connectionInformation = ConnectionInformation.onlineSetCheck(flagSynchronizer: flagSynchronizer, connectionInformation: &connectionInformation, ldClient: self, config: config)
         }
     }
 
@@ -80,7 +80,7 @@ public class LDClient {
     
     //Returns an object containing information about successful and/or failed polling or streaming connections to LaunchDarkly
     public func getConnectionInformation() -> ConnectionInformation {
-        return ConnectionInformation.lastSuccessfulConnectionCheck(flagSynchronizer: flagSynchronizer, connectionInformation: connectionInformation)
+        return ConnectionInformation.lastSuccessfulConnectionCheck(flagSynchronizer: flagSynchronizer, connectionInformation: &connectionInformation)
     }
 
     /**
@@ -693,7 +693,7 @@ public class LDClient {
             Log.debug(logPrefix + "LDClient is unauthorized")
             setOnline(false)
         }
-        connectionInformation = ConnectionInformation.synchronizingErrorCheck(synchronizingError: synchronizingError, connectionInformation: connectionInformation)
+        connectionInformation = ConnectionInformation.synchronizingErrorCheck(synchronizingError: synchronizingError, connectionInformation: &connectionInformation)
         DispatchQueue.main.async {
             self.errorNotifier.notifyObservers(of: synchronizingError)
         }
@@ -786,7 +786,7 @@ public class LDClient {
                 return
             }
             Log.debug(typeName(and: #function, appending: ": ") + "\(runMode)")
-            connectionInformation = ConnectionInformation.foregroundBackgroundBehavior(connectionInformation: connectionInformation, runMode: runMode, config: config, ldClient: self)
+            connectionInformation = ConnectionInformation.foregroundBackgroundBehavior(connectionInformation: &connectionInformation, runMode: runMode, config: config, ldClient: self)
             if runMode == .background {
                 eventReporter.reportEvents()
             }
