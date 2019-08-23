@@ -786,7 +786,7 @@ public class LDClient {
                 return
             }
             Log.debug(typeName(and: #function, appending: ": ") + "\(runMode)")
-            connectionInformation = ConnectionInformation.foregroundBackgroundBehavior(connectionInformation: &connectionInformation, runMode: runMode, config: config, ldClient: self)
+            connectionInformation = ConnectionInformation.backgroundBehavior(connectionInformation: &connectionInformation, runMode: runMode, config: config, ldClient: self)
             if runMode == .background {
                 eventReporter.reportEvents()
             }

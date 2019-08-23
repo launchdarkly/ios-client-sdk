@@ -62,10 +62,10 @@ public struct ConnectionInformation: Codable {
     //Returns ConnectionInformation as a prettyfied string
     public func toString() -> String {
         var connInfoString: String = ""
-        connInfoString.append("Current Connection Mode: " + currentConnectionMode.rawValue)
-        connInfoString.append("Last Connection Failure Reason: " + lastConnectionFailureReason.getValue())
-        connInfoString.append("Last Successful Connection: " + lastSuccessfulConnection.stringFromTimeInterval())
-        connInfoString.append("Last Failed Connection: " + lastFailedConnection.stringFromTimeInterval())
+        connInfoString.append("Current Connection Mode: \(currentConnectionMode.rawValue) | ")
+        connInfoString.append("Last Connection Failure Reason: \(lastConnectionFailureReason.getValue()) | ")
+        connInfoString.append("Last Successful Connection: \(lastSuccessfulConnection.stringFromTimeInterval()) | ")
+        connInfoString.append("Last Failed Connection: \(lastFailedConnection.stringFromTimeInterval())")
         return connInfoString
     }
     
@@ -179,12 +179,12 @@ public struct ConnectionInformation: Codable {
         return streamingMode
     }
     
-    internal static func foregroundBackgroundBehavior(connectionInformation: inout ConnectionInformation, runMode: LDClientRunMode, config: LDConfig, ldClient: LDClient) -> ConnectionInformation {
+    internal static func backgroundBehavior(connectionInformation: inout ConnectionInformation, runMode: LDClientRunMode, config: LDConfig, ldClient: LDClient) -> ConnectionInformation {
         if ConnectionInformation.effectiveStreamingMode(runMode: runMode, config: config, ldClient: ldClient) == LDStreamingMode.streaming && runMode == .background {
             connectionInformation.lastSuccessfulConnection = Date().timeIntervalSince1970
             connectionInformation.currentConnectionMode = .polling
-        } else if ConnectionInformation.effectiveStreamingMode(runMode: runMode, config: config, ldClient: ldClient) == LDStreamingMode.streaming && runMode == .foreground {
-            connectionInformation.currentConnectionMode = .streaming
+        } else {
+            connectionInformation.currentConnectionMode = .polling
         }
         return connectionInformation
     }
