@@ -300,6 +300,12 @@
 		83FEF8DF1F2667E4001CF12C /* EventReporter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 83FEF8DE1F2667E4001CF12C /* EventReporter.swift */; };
 		C408884723033B3600420721 /* ConnectionInformationStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = C408884623033B3600420721 /* ConnectionInformationStore.swift */; };
 		C408884923033B7500420721 /* ConnectionInformation.swift in Sources */ = {isa = PBXBuildFile; fileRef = C408884823033B7500420721 /* ConnectionInformation.swift */; };
+		C443A40323145FB700145710 /* ConnectionInformation.swift in Sources */ = {isa = PBXBuildFile; fileRef = C408884823033B7500420721 /* ConnectionInformation.swift */; };
+		C443A40423145FBE00145710 /* ConnectionInformation.swift in Sources */ = {isa = PBXBuildFile; fileRef = C408884823033B7500420721 /* ConnectionInformation.swift */; };
+		C443A40523145FBF00145710 /* ConnectionInformation.swift in Sources */ = {isa = PBXBuildFile; fileRef = C408884823033B7500420721 /* ConnectionInformation.swift */; };
+		C443A40623145FED00145710 /* ConnectionInformationStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = C408884623033B3600420721 /* ConnectionInformationStore.swift */; };
+		C443A40723145FEE00145710 /* ConnectionInformationStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = C408884623033B3600420721 /* ConnectionInformationStore.swift */; };
+		C443A40823145FEE00145710 /* ConnectionInformationStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = C408884623033B3600420721 /* ConnectionInformationStore.swift */; };
 		E48F5215B96AE48D10185962 /* Pods_LaunchDarkly_tvOS.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = DB95B7FEBDC1E23F47304829 /* Pods_LaunchDarkly_tvOS.framework */; };
 /* End PBXBuildFile section */
 
@@ -1387,6 +1393,7 @@
 				8311886D2113AE6700D77CB5 /* ObjcLDVariationValue.swift in Sources */,
 				8354AC642241511D00CDE602 /* CacheableEnvironmentFlags.swift in Sources */,
 				83D1522E224D91B90054B6D4 /* DeprecatedCacheModelV3.swift in Sources */,
+				C443A40823145FEE00145710 /* ConnectionInformationStore.swift in Sources */,
 				831188662113AE4A00D77CB5 /* AnyComparer.swift in Sources */,
 				831188492113ADD400D77CB5 /* LDFlagBaseTypeConvertible.swift in Sources */,
 				8311885C2113AE2200D77CB5 /* HTTPHeaders.swift in Sources */,
@@ -1397,6 +1404,7 @@
 				8311884B2113ADDA00D77CB5 /* LDChangedFlag.swift in Sources */,
 				8311885E2113AE2900D77CB5 /* HTTPURLResponse.swift in Sources */,
 				8347BB0F21F147E100E56BCD /* LDTimer.swift in Sources */,
+				C443A40523145FBF00145710 /* ConnectionInformation.swift in Sources */,
 				8354AC732243166900CDE602 /* UserEnvironmentFlagCache.swift in Sources */,
 				8311885B2113AE1D00D77CB5 /* Throttler.swift in Sources */,
 				831188612113AE3700D77CB5 /* Optional.swift in Sources */,
@@ -1435,6 +1443,7 @@
 				831EF34A20655E730001C643 /* FeatureFlag.swift in Sources */,
 				831EF34B20655E730001C643 /* LDChangedFlag.swift in Sources */,
 				8354AC722243166900CDE602 /* UserEnvironmentFlagCache.swift in Sources */,
+				C443A40423145FBE00145710 /* ConnectionInformation.swift in Sources */,
 				832D68A4224A38FC005F052A /* CacheConverter.swift in Sources */,
 				831EF34C20655E730001C643 /* FlagChangeObserver.swift in Sources */,
 				831EF34D20655E730001C643 /* FlagsUnchangedObserver.swift in Sources */,
@@ -1454,6 +1463,7 @@
 				831EF35B20655E730001C643 /* DarklyService.swift in Sources */,
 				831EF35C20655E730001C643 /* HTTPURLResponse.swift in Sources */,
 				8354AC6B22418C0600CDE602 /* CacheableUserEnvironmentFlags.swift in Sources */,
+				C443A40723145FEE00145710 /* ConnectionInformationStore.swift in Sources */,
 				831EF35D20655E730001C643 /* HTTPURLRequest.swift in Sources */,
 				831EF35E20655E730001C643 /* Dictionary.swift in Sources */,
 				835E4C54206BDF8D004C6E6C /* EnvironmentReporter.swift in Sources */,
@@ -1638,6 +1648,7 @@
 				8354AC622241511D00CDE602 /* CacheableEnvironmentFlags.swift in Sources */,
 				83D9EC8C2062DEAB004D7FA6 /* HTTPHeaders.swift in Sources */,
 				83D1522C224D91B90054B6D4 /* DeprecatedCacheModelV3.swift in Sources */,
+				C443A40623145FED00145710 /* ConnectionInformationStore.swift in Sources */,
 				83D9EC8D2062DEAB004D7FA6 /* DarklyService.swift in Sources */,
 				83D9EC8E2062DEAB004D7FA6 /* HTTPURLResponse.swift in Sources */,
 				83D9EC8F2062DEAB004D7FA6 /* HTTPURLRequest.swift in Sources */,
@@ -1648,6 +1659,7 @@
 				83D9EC922062DEAB004D7FA6 /* Data.swift in Sources */,
 				8347BB0D21F147E100E56BCD /* LDTimer.swift in Sources */,
 				8354AC712243166900CDE602 /* UserEnvironmentFlagCache.swift in Sources */,
+				C443A40323145FB700145710 /* ConnectionInformation.swift in Sources */,
 				83D9EC932062DEAB004D7FA6 /* Array.swift in Sources */,
 				83D9EC942062DEAB004D7FA6 /* JSONSerialization.swift in Sources */,
 				83D9EC952062DEAB004D7FA6 /* Date.swift in Sources */,

@@ -7,7 +7,9 @@
 //
 
 import Foundation
+#if canImport(SystemConfiguration)
 import SystemConfiguration
+#endif
 
 public struct ConnectionInformation: Codable {
     public enum ConnectionMode: String, Codable {
@@ -112,6 +114,7 @@ public struct ConnectionInformation: Codable {
         return connectionInformation
     }
     
+    #if canImport(SystemConfiguration)
     //Sourced from: https://stackoverflow.com/a/39782859
     static func isConnectedToNetwork() -> Bool {
         var zeroAddress = sockaddr_in(sin_len: 0, sin_family: 0, sin_port: 0, sin_addr: in_addr(s_addr: 0), sin_zero: (0, 0, 0, 0, 0, 0, 0, 0))
@@ -135,17 +138,21 @@ public struct ConnectionInformation: Codable {
         
         return reachability
     }
+    #endif
     
     //Used for updating ConnectionInformation inside of LDClient.setOnline
     static func onlineSetCheck(flagSynchronizer: LDFlagSynchronizing, connectionInformation: inout ConnectionInformation, ldClient: LDClient, config: LDConfig) -> ConnectionInformation {
         var connectionInformationVar = ConnectionInformation.lastSuccessfulConnectionCheck(flagSynchronizer: flagSynchronizer, connectionInformation: &connectionInformation)
-        if !isConnectedToNetwork() {
-            connectionInformationVar.currentConnectionMode = ConnectionInformation.ConnectionMode.offline
-        } else if ldClient.isOnline {
+        if ldClient.isOnline {
             connectionInformationVar.currentConnectionMode = effectiveStreamingMode(runMode: ldClient.runMode, config: config, ldClient: ldClient) == LDStreamingMode.streaming ? ConnectionInformation.ConnectionMode.streaming : ConnectionInformation.ConnectionMode.polling
         } else {
             connectionInformationVar.currentConnectionMode = ConnectionInformation.ConnectionMode.offline
         }
+        #if canImport(SystemConfiguration)
+        if !isConnectedToNetwork() {
+            connectionInformationVar.currentConnectionMode = ConnectionInformation.ConnectionMode.offline
+        }
+        #endif
         return connectionInformationVar
     }
     
