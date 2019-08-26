@@ -7,6 +7,7 @@
 //
 
 import Foundation
+import SystemConfiguration
 
 public struct ConnectionInformation: Codable {
     public enum ConnectionMode: String, Codable {
@@ -47,16 +48,16 @@ public struct ConnectionInformation: Codable {
         static let decodeError: String =  "Unable to Decode error."
     }
     
-    public var lastSuccessfulConnection: TimeInterval
-    public var lastFailedConnection: TimeInterval
+    public var lastSuccessfulConnection: TimeInterval?
+    public var lastFailedConnection: TimeInterval?
     public var currentConnectionMode: ConnectionMode
     public var lastConnectionFailureReason: LastConnectionFailureReason
     
     init(currentConnectionMode: ConnectionMode, lastConnectionFailureReason: LastConnectionFailureReason, lastSuccessfulConnection: TimeInterval? = nil, lastFailedConnection: TimeInterval? = nil) {
         self.currentConnectionMode = currentConnectionMode
         self.lastConnectionFailureReason = lastConnectionFailureReason
-        self.lastSuccessfulConnection = lastSuccessfulConnection ?? Constants.noInterval
-        self.lastFailedConnection = lastFailedConnection ?? Constants.noInterval
+        self.lastSuccessfulConnection = lastSuccessfulConnection
+        self.lastFailedConnection = lastFailedConnection
     }
     
     //Returns ConnectionInformation as a prettyfied string
@@ -64,8 +65,8 @@ public struct ConnectionInformation: Codable {
         var connInfoString: String = ""
         connInfoString.append("Current Connection Mode: \(currentConnectionMode.rawValue) | ")
         connInfoString.append("Last Connection Failure Reason: \(lastConnectionFailureReason.getValue()) | ")
-        connInfoString.append("Last Successful Connection: \(lastSuccessfulConnection.stringFromTimeInterval()) | ")
-        connInfoString.append("Last Failed Connection: \(lastFailedConnection.stringFromTimeInterval())")
+        connInfoString.append("Last Successful Connection: \(lastSuccessfulConnection?.stringFromTimeInterval() ?? "NONE") | ")
+        connInfoString.append("Last Failed Connection: \(lastFailedConnection?.stringFromTimeInterval() ?? "NONE")")
         return connInfoString
     }
     
@@ -111,10 +112,36 @@ public struct ConnectionInformation: Codable {
         return connectionInformation
     }
     
+    //Sourced from: https://stackoverflow.com/a/39782859
+    static func isConnectedToNetwork() -> Bool {
+        var zeroAddress = sockaddr_in(sin_len: 0, sin_family: 0, sin_port: 0, sin_addr: in_addr(s_addr: 0), sin_zero: (0, 0, 0, 0, 0, 0, 0, 0))
+        zeroAddress.sin_len = UInt8(MemoryLayout.size(ofValue: zeroAddress))
+        zeroAddress.sin_family = sa_family_t(AF_INET)
+        
+        let defaultRouteReachability = withUnsafePointer(to: &zeroAddress) {
+            $0.withMemoryRebound(to: sockaddr.self, capacity: 1) {zeroSockAddress in
+                SCNetworkReachabilityCreateWithAddress(nil, zeroSockAddress)
+            }
+        }
+        
+        var flags: SCNetworkReachabilityFlags = SCNetworkReachabilityFlags(rawValue: 0)
+        if SCNetworkReachabilityGetFlags(defaultRouteReachability!, &flags) == false {
+            return false
+        }
+        
+        let isReachable = (flags.rawValue & UInt32(kSCNetworkFlagsReachable)) != 0
+        let needsConnection = (flags.rawValue & UInt32(kSCNetworkFlagsConnectionRequired)) != 0
+        let reachability = (isReachable && !needsConnection)
+        
+        return reachability
+    }
+    
     //Used for updating ConnectionInformation inside of LDClient.setOnline
     static func onlineSetCheck(flagSynchronizer: LDFlagSynchronizing, connectionInformation: inout ConnectionInformation, ldClient: LDClient, config: LDConfig) -> ConnectionInformation {
         var connectionInformationVar = ConnectionInformation.lastSuccessfulConnectionCheck(flagSynchronizer: flagSynchronizer, connectionInformation: &connectionInformation)
-        if ldClient.isOnline {
+        if !isConnectedToNetwork() {
+            connectionInformationVar.currentConnectionMode = ConnectionInformation.ConnectionMode.offline
+        } else if ldClient.isOnline {
             connectionInformationVar.currentConnectionMode = effectiveStreamingMode(runMode: ldClient.runMode, config: config, ldClient: ldClient) == LDStreamingMode.streaming ? ConnectionInformation.ConnectionMode.streaming : ConnectionInformation.ConnectionMode.polling
         } else {
             connectionInformationVar.currentConnectionMode = ConnectionInformation.ConnectionMode.offline
