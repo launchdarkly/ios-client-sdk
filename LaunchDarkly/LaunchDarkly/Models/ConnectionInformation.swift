@@ -204,13 +204,15 @@ extension ConnectionInformation.LastConnectionFailureReason {
         
         switch self {
         case .unknownError(let error):
-            try container.encode("error", forKey: .type)
+            try container.encode("unknownError", forKey: .type)
             try container.encode(error, forKey: .payload)
         case .httpError(let code):
-            try container.encode("code", forKey: .type)
+            try container.encode("httpError", forKey: .type)
             try container.encode(code, forKey: .payload)
-        case .unauthorized, .none:
-            break
+        case .unauthorized:
+            try container.encode("unauthorized", forKey: .type)
+        case .none:
+            try container.encode("none", forKey: .type)
         }
     }
 }
