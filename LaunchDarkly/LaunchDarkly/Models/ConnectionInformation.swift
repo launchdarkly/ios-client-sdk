@@ -68,14 +68,6 @@ public struct ConnectionInformation: Codable {
         return connInfoString
     }
     
-    //This function is used to ensure we switch from establishing a streaming connection to streaming once we are connected.
-    static func checkEstablishingStreaming(connectionInformation: inout ConnectionInformation) -> ConnectionInformation {
-        if connectionInformation.currentConnectionMode == ConnectionInformation.ConnectionMode.establishingStreamingConnection {
-            connectionInformation.currentConnectionMode = ConnectionInformation.ConnectionMode.streaming
-        }
-        return connectionInformation
-    }
-    
     //This function is used to decide what ConnectionMode to set.
     static func connectionModeCheck(config: LDConfig, ldClient: LDClient) -> ConnectionInformation.ConnectionMode {
         let connectionMode: ConnectionInformation.ConnectionMode
@@ -143,17 +135,22 @@ public struct ConnectionInformation: Codable {
         ldClient.observeAll(owner: ldClient, handler: { _ in
             Log.debug("LDClient all flags observer fired")
             var connInfo = ldClient.getConnectionInformation()
-            var connectionInformation = ConnectionInformation.checkEstablishingStreaming(connectionInformation: &connInfo)
-            connectionInformation.lastSuccessfulConnection = Date().timeIntervalSince1970
-            ldClient.connectionInformation = connectionInformation
+            ldClient.connectionInformation = ConnectionInformation.checkEstablishingStreaming(connectionInformation: &connInfo)
         })
         ldClient.observeFlagsUnchanged(owner: ldClient, handler: {
             Log.debug("LDClient all flags unchanged observer fired")
             var connInfo = ldClient.getConnectionInformation()
-            var connectionInformation = ConnectionInformation.checkEstablishingStreaming(connectionInformation: &connInfo)
-            connectionInformation.lastSuccessfulConnection = Date().timeIntervalSince1970
-            ldClient.connectionInformation = connectionInformation
+            ldClient.connectionInformation = ConnectionInformation.checkEstablishingStreaming(connectionInformation: &connInfo)
         })
+    }
+    
+    //This function is used to ensure we switch from establishing a streaming connection to streaming once we are connected.
+    static func checkEstablishingStreaming(connectionInformation: inout ConnectionInformation) -> ConnectionInformation {
+        if connectionInformation.currentConnectionMode == ConnectionInformation.ConnectionMode.establishingStreamingConnection {
+            connectionInformation.currentConnectionMode = ConnectionInformation.ConnectionMode.streaming
+        }
+        connectionInformation.lastSuccessfulConnection = Date().timeIntervalSince1970
+        return connectionInformation
     }
     
     static func effectiveStreamingMode(config: LDConfig, ldClient: LDClient) -> LDStreamingMode {
