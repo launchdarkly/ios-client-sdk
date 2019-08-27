@@ -8,22 +8,14 @@
 
 import Foundation
 
-//sourcery: autoMockable
-protocol ConnectionInformationCaching {
-    func retrieveStoredConnectionInformation() -> ConnectionInformation?
-    func storeConnectionInformation(connectionInformation: ConnectionInformation)
-}
-
-final class ConnectionInformationStore: ConnectionInformationCaching {
+final class ConnectionInformationStore {
     private static let connectionInformationKey = "com.launchDarkly.ConnectionInformationStore.connectionInformationKey"
     
-    init() {}
-    
-    func retrieveStoredConnectionInformation() -> ConnectionInformation? {
+    static func retrieveStoredConnectionInformation() -> ConnectionInformation? {
         return UserDefaults.standard.retrieve(object: ConnectionInformation.self, fromKey: ConnectionInformationStore.connectionInformationKey)
     }
     
-    func storeConnectionInformation(connectionInformation: ConnectionInformation) {
+    static func storeConnectionInformation(connectionInformation: ConnectionInformation) {
         UserDefaults.standard.save(customObject: connectionInformation, forKey: ConnectionInformationStore.connectionInformationKey)
     }
 }

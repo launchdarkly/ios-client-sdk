@@ -30,7 +30,6 @@ protocol ClientServiceCreating {
     func makeThrottler(maxDelay: TimeInterval, environmentReporter: EnvironmentReporting) -> Throttling
     func makeErrorNotifier() -> ErrorNotifying
     func makeConnectionInformation() -> ConnectionInformation
-    func makeConnectionInformationStore() -> ConnectionInformationStore
 }
 
 final class ClientServiceFactory: ClientServiceCreating {
@@ -105,9 +104,5 @@ final class ClientServiceFactory: ClientServiceCreating {
     
     func makeConnectionInformation() -> ConnectionInformation {
         return ConnectionInformation(currentConnectionMode: .offline, lastConnectionFailureReason: .none)
-    }
-    
-    func makeConnectionInformationStore() -> ConnectionInformationStore {
-        return ConnectionInformationStore()
     }
 }

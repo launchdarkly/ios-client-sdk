@@ -124,8 +124,4 @@ final class ClientServiceMockFactory: ClientServiceCreating {
     func makeConnectionInformation() -> ConnectionInformation {
         return ConnectionInformation(currentConnectionMode: .offline, lastConnectionFailureReason: .none)
     }
-    
-    func makeConnectionInformationStore() -> ConnectionInformationStore {
-        return ConnectionInformationStore()
-    }
 }

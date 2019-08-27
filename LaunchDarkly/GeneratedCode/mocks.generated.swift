@@ -20,30 +20,6 @@ final class CacheConvertingMock: CacheConverting {
     }
 }
 
-// MARK: - ConnectionInformationCachingMock
-final class ConnectionInformationCachingMock: ConnectionInformationCaching {
-
-    // MARK: retrieveStoredConnectionInformation
-    var retrieveStoredConnectionInformationCallCount = 0
-    var retrieveStoredConnectionInformationCallback: (() -> Void)?
-    var retrieveStoredConnectionInformationReturnValue: ConnectionInformation?
-    func retrieveStoredConnectionInformation() -> ConnectionInformation? {
-        retrieveStoredConnectionInformationCallCount += 1
-        retrieveStoredConnectionInformationCallback?()
-        return retrieveStoredConnectionInformationReturnValue
-    }
-
-    // MARK: storeConnectionInformation
-    var storeConnectionInformationCallCount = 0
-    var storeConnectionInformationCallback: (() -> Void)?
-    var storeConnectionInformationReceivedConnectionInformation: ConnectionInformation?
-    func storeConnectionInformation(connectionInformation: ConnectionInformation) {
-        storeConnectionInformationCallCount += 1
-        storeConnectionInformationReceivedConnectionInformation = connectionInformation
-        storeConnectionInformationCallback?()
-    }
-}
-
 // MARK: - DarklyStreamingProviderMock
 final class DarklyStreamingProviderMock: DarklyStreamingProvider {
 

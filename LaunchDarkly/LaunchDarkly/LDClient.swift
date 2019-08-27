@@ -74,7 +74,7 @@ public class LDClient {
     var connectionInformation: ConnectionInformation {
         didSet {
             Log.debug(connectionInformation.toString())
-            connectionInformationStore.storeConnectionInformation(connectionInformation: connectionInformation)
+            ConnectionInformationStore.storeConnectionInformation(connectionInformation: connectionInformation)
         }
     }
     
@@ -120,8 +120,8 @@ public class LDClient {
         return hasStarted && isInSupportedRunMode && !config.mobileKey.isEmpty
     }
 
-    private var isInSupportedRunMode: Bool {
-        return runMode == .foreground || allowBackgroundFlagUpdates
+    var isInSupportedRunMode: Bool {
+        return runMode == .foreground || config.enableBackgroundUpdates
     }
 
     private func go(online goOnline: Bool, reasonOnlineUnavailable: String, completion:(() -> Void)?) {
@@ -217,7 +217,7 @@ public class LDClient {
         didSet {
             Log.debug(typeName(and: #function) + "new service set")
             eventReporter.service = service
-            flagSynchronizer = serviceFactory.makeFlagSynchronizer(streamingMode: ConnectionInformation.effectiveStreamingMode(runMode: runMode, config: config, ldClient: self),
+            flagSynchronizer = serviceFactory.makeFlagSynchronizer(streamingMode: ConnectionInformation.effectiveStreamingMode(config: config, ldClient: self),
                                                                    pollingInterval: config.flagPollingInterval(runMode: runMode),
                                                                    useReport: config.useReport,
                                                                    service: service,
@@ -798,7 +798,7 @@ public class LDClient {
             //if it does match, keeping the synchronizer precludes an extra flag request
             if !flagSynchronizerConfigMatchesConfigAndRunMode {
                 flagSynchronizer.isOnline = false
-                flagSynchronizer = serviceFactory.makeFlagSynchronizer(streamingMode: ConnectionInformation.effectiveStreamingMode(runMode: runMode, config: config, ldClient: self),
+                flagSynchronizer = serviceFactory.makeFlagSynchronizer(streamingMode: ConnectionInformation.effectiveStreamingMode(config: config, ldClient: self),
                                                                        pollingInterval: config.flagPollingInterval(runMode: runMode),
                                                                        useReport: config.useReport,
                                                                        service: service,
@@ -809,13 +809,9 @@ public class LDClient {
     }
     
     private var flagSynchronizerConfigMatchesConfigAndRunMode: Bool {
-        return flagSynchronizer.streamingMode == ConnectionInformation.effectiveStreamingMode(runMode: runMode, config: config, ldClient: self)
+        return flagSynchronizer.streamingMode == ConnectionInformation.effectiveStreamingMode(config: config, ldClient: self)
             && (flagSynchronizer.streamingMode == .streaming
                 || flagSynchronizer.streamingMode == .polling && flagSynchronizer.pollingInterval == config.flagPollingInterval(runMode: runMode))
-    }
-    
-    var allowBackgroundFlagUpdates: Bool {
-        return config.enableBackgroundUpdates && environmentReporter.operatingSystem.isBackgroundEnabled
     }
 
     private(set) var flagCache: FeatureFlagCaching
@@ -825,7 +821,6 @@ public class LDClient {
     private(set) var eventReporter: EventReporting
     private(set) var environmentReporter: EnvironmentReporting
     private(set) var throttler: Throttling
-    private(set) var connectionInformationStore: ConnectionInformationStore
 
     private init(serviceFactory: ClientServiceCreating? = nil) {
         if let serviceFactory = serviceFactory {
@@ -845,7 +840,6 @@ public class LDClient {
         eventReporter = self.serviceFactory.makeEventReporter(config: config, service: service)
         errorNotifier = self.serviceFactory.makeErrorNotifier()
         connectionInformation = self.serviceFactory.makeConnectionInformation()
-        connectionInformationStore = self.serviceFactory.makeConnectionInformationStore()
         flagSynchronizer = self.serviceFactory.makeFlagSynchronizer(streamingMode: .polling,
                                                                     pollingInterval: config.flagPollingInterval,
                                                                     useReport: config.useReport,
@@ -873,7 +867,7 @@ public class LDClient {
 
         //dummy objects replaced by client at start
         service = self.serviceFactory.makeDarklyServiceProvider(config: config, user: user)  //didSet not triggered here
-        flagSynchronizer = self.serviceFactory.makeFlagSynchronizer(streamingMode: ConnectionInformation.effectiveStreamingMode(runMode: runMode, config: config, ldClient: self),
+        flagSynchronizer = self.serviceFactory.makeFlagSynchronizer(streamingMode: ConnectionInformation.effectiveStreamingMode(config: config, ldClient: self),
                                                                     pollingInterval: config.flagPollingInterval(runMode: runMode),
                                                                     useReport: config.useReport,
                                                                     service: service,
