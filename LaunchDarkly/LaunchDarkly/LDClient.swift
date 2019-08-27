@@ -71,7 +71,7 @@ public class LDClient {
     private var lastSetOnlineCallValue = false
     
     //Stores ConnectionInformation in UserDefaults on change
-    internal var connectionInformation: ConnectionInformation {
+    var connectionInformation: ConnectionInformation {
         didSet {
             Log.debug(connectionInformation.toString())
             connectionInformationStore.storeConnectionInformation(connectionInformation: connectionInformation)
@@ -256,7 +256,7 @@ public class LDClient {
         cacheConverter.convertCacheData(for: startUser, and: config)        //Convert before updating the user so any deprecated cached data is converted to the current model
         self.config = config
         self.user = startUser
-        self.connectionInformation = ConnectionInformation.uncacheConnectionInformation(config: config, ldClient: self, connectionInformationStore: connectionInformationStore)
+        self.connectionInformation = ConnectionInformation.uncacheConnectionInformation(config: config, ldClient: self, connectionInformationStore: connectionInformationStore, clientServiceFactory: serviceFactory)
 
         setOnline((wasStarted && wasOnline) || (!wasStarted && self.config.startOnline)) {
             Log.debug(self.typeName(and: #function, appending: ": ") + "started")
@@ -823,7 +823,7 @@ public class LDClient {
     private(set) var flagSynchronizer: LDFlagSynchronizing
     private(set) var flagChangeNotifier: FlagChangeNotifying
     private(set) var eventReporter: EventReporting
-    internal private(set) var environmentReporter: EnvironmentReporting
+    private(set) var environmentReporter: EnvironmentReporting
     private(set) var throttler: Throttling
     private(set) var connectionInformationStore: ConnectionInformationStore
 

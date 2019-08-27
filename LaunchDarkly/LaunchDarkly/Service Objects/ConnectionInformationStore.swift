@@ -15,15 +15,12 @@ protocol ConnectionInformationCaching {
 }
 
 final class ConnectionInformationStore: ConnectionInformationCaching {
-    fileprivate static let connectionInformationKey = "com.launchDarkly.ConnectionInformationStore.connectionInformationKey"
+    private static let connectionInformationKey = "com.launchDarkly.ConnectionInformationStore.connectionInformationKey"
     
     init() {}
     
     func retrieveStoredConnectionInformation() -> ConnectionInformation? {
-        if let storedConnectionInformation = UserDefaults.standard.retrieve(object: ConnectionInformation.self, fromKey: ConnectionInformationStore.connectionInformationKey) {
-            return storedConnectionInformation
-        }
-        return nil
+        return UserDefaults.standard.retrieve(object: ConnectionInformation.self, fromKey: ConnectionInformationStore.connectionInformationKey)
     }
     
     func storeConnectionInformation(connectionInformation: ConnectionInformation) {
@@ -31,8 +28,7 @@ final class ConnectionInformationStore: ConnectionInformationCaching {
     }
 }
 
-extension UserDefaults {
-    
+private extension UserDefaults {
     func save<T: Encodable>(customObject object: T, forKey key: String) {
         let encoder = JSONEncoder()
         if let encoded = try? encoder.encode(object) {
@@ -44,7 +40,7 @@ extension UserDefaults {
         guard let data = self.data(forKey: key),
             let object = try? JSONDecoder().decode(type, from: data)
             else {
-                Log.debug("Couldnt decode object")
+                Log.debug("Couldnt decode object: \(key)")
                 return nil
             }
         return object
