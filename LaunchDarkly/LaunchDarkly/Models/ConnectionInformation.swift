@@ -46,10 +46,10 @@ public struct ConnectionInformation: Codable {
         static let decodeError: String =  "Unable to Decode error."
     }
     
-    public var lastSuccessfulConnection: TimeInterval?
-    public var lastFailedConnection: TimeInterval?
-    public var currentConnectionMode: ConnectionMode
-    public var lastConnectionFailureReason: LastConnectionFailureReason
+    public internal(set) var lastSuccessfulConnection: TimeInterval?
+    public internal(set) var lastFailedConnection: TimeInterval?
+    public internal(set) var currentConnectionMode: ConnectionMode
+    public internal(set) var lastConnectionFailureReason: LastConnectionFailureReason
     
     init(currentConnectionMode: ConnectionMode, lastConnectionFailureReason: LastConnectionFailureReason, lastSuccessfulConnection: TimeInterval? = nil, lastFailedConnection: TimeInterval? = nil) {
         self.currentConnectionMode = currentConnectionMode
@@ -92,8 +92,8 @@ public struct ConnectionInformation: Codable {
     }
     
     //Restores ConnectionInformation from UserDefaults if it exists
-    static func uncacheConnectionInformation(config: LDConfig, ldClient: LDClient, connectionInformationStore: ConnectionInformationStore, clientServiceFactory: ClientServiceCreating) -> ConnectionInformation {
-        var connectionInformation = connectionInformationStore.retrieveStoredConnectionInformation() ?? clientServiceFactory.makeConnectionInformation()
+    static func uncacheConnectionInformation(config: LDConfig, ldClient: LDClient, clientServiceFactory: ClientServiceCreating) -> ConnectionInformation {
+        var connectionInformation = ldClient.connectionInformationStore.retrieveStoredConnectionInformation() ?? clientServiceFactory.makeConnectionInformation()
         connectionInformation.currentConnectionMode = connectionModeCheck(config: config, ldClient: ldClient)
         return connectionInformation
     }
@@ -143,20 +143,20 @@ public struct ConnectionInformation: Codable {
         //Creates a retain cycle that will need to change for multi environment
         ldClient.observeError(owner: ldClient, handler: { _ in
             Log.debug("LDClient error observer fired")
-            var connectionInformation = LDClient.shared.getConnectionInformation()
+            var connectionInformation = ldClient.getConnectionInformation()
             connectionInformation.lastFailedConnection = Date().timeIntervalSince1970
             LDClient.shared.connectionInformation = connectionInformation
         })
         ldClient.observeAll(owner: ldClient, handler: { _ in
             Log.debug("LDClient all flags observer fired")
-            var connInfo = LDClient.shared.getConnectionInformation()
+            var connInfo = ldClient.getConnectionInformation()
             var connectionInformation = ConnectionInformation.checkEstablishingStreaming(connectionInformation: &connInfo)
             connectionInformation.lastSuccessfulConnection = Date().timeIntervalSince1970
             LDClient.shared.connectionInformation = connectionInformation
         })
         ldClient.observeFlagsUnchanged(owner: ldClient, handler: {
             Log.debug("LDClient all flags unchanged observer fired")
-            var connInfo = LDClient.shared.getConnectionInformation()
+            var connInfo = ldClient.getConnectionInformation()
             var connectionInformation = ConnectionInformation.checkEstablishingStreaming(connectionInformation: &connInfo)
             connectionInformation.lastSuccessfulConnection = Date().timeIntervalSince1970
             LDClient.shared.connectionInformation = connectionInformation

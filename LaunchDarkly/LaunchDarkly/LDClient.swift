@@ -256,7 +256,7 @@ public class LDClient {
         cacheConverter.convertCacheData(for: startUser, and: config)        //Convert before updating the user so any deprecated cached data is converted to the current model
         self.config = config
         self.user = startUser
-        self.connectionInformation = ConnectionInformation.uncacheConnectionInformation(config: config, ldClient: self, connectionInformationStore: connectionInformationStore, clientServiceFactory: serviceFactory)
+        self.connectionInformation = ConnectionInformation.uncacheConnectionInformation(config: config, ldClient: self, clientServiceFactory: serviceFactory)
 
         setOnline((wasStarted && wasOnline) || (!wasStarted && self.config.startOnline)) {
             Log.debug(self.typeName(and: #function, appending: ": ") + "started")

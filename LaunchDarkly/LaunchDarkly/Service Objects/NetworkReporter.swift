@@ -37,7 +37,7 @@ class NetworkReporter {
         return reachability
     }
     #else
-    static func isConnectecToNetwork() -> Bool {
+    static func isConnectedToNetwork() -> Bool {
         return true
     }
     #endif
