@@ -110,9 +110,7 @@ public struct ConnectionInformation: Codable {
     static func onlineSetCheck(flagSynchronizer: LDFlagSynchronizing, connectionInformation: inout ConnectionInformation, ldClient: LDClient, config: LDConfig) -> ConnectionInformation {
         var connectionInformationVar = ConnectionInformation.lastSuccessfulConnectionCheck(flagSynchronizer: flagSynchronizer, connectionInformation: &connectionInformation)
         
-        if !NetworkReporter.isConnectedToNetwork() {
-            connectionInformationVar.currentConnectionMode = ConnectionInformation.ConnectionMode.offline
-        } else if ldClient.isOnline {
+        if ldClient.isOnline && NetworkReporter.isConnectedToNetwork() {
             connectionInformationVar.currentConnectionMode = effectiveStreamingMode(runMode: ldClient.runMode, config: config, ldClient: ldClient) == LDStreamingMode.streaming ? ConnectionInformation.ConnectionMode.streaming : ConnectionInformation.ConnectionMode.polling
         } else {
             connectionInformationVar.currentConnectionMode = ConnectionInformation.ConnectionMode.offline
@@ -163,7 +161,7 @@ public struct ConnectionInformation: Codable {
         })
     }
     
-    internal static func effectiveStreamingMode(runMode: LDClientRunMode, config: LDConfig, ldClient: LDClient) -> LDStreamingMode {
+    static func effectiveStreamingMode(runMode: LDClientRunMode, config: LDConfig, ldClient: LDClient) -> LDStreamingMode {
         var reason = ""
         let streamingMode: LDStreamingMode = (runMode == .foreground || ldClient.allowBackgroundFlagUpdates) && config.streamingMode == .streaming && config.allowStreamingMode ? .streaming : .polling
         if config.streamingMode == .streaming && runMode != .foreground && !ldClient.allowBackgroundFlagUpdates {
@@ -177,7 +175,7 @@ public struct ConnectionInformation: Codable {
         return streamingMode
     }
     
-    internal static func backgroundBehavior(connectionInformation: inout ConnectionInformation, runMode: LDClientRunMode, config: LDConfig, ldClient: LDClient) -> ConnectionInformation {
+    static func backgroundBehavior(connectionInformation: inout ConnectionInformation, runMode: LDClientRunMode, config: LDConfig, ldClient: LDClient) -> ConnectionInformation {
         if ConnectionInformation.effectiveStreamingMode(runMode: runMode, config: config, ldClient: ldClient) == LDStreamingMode.streaming && runMode == .background {
             connectionInformation.lastSuccessfulConnection = Date().timeIntervalSince1970
         }

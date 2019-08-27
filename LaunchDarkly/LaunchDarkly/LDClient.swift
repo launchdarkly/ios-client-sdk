@@ -814,7 +814,7 @@ public class LDClient {
                 || flagSynchronizer.streamingMode == .polling && flagSynchronizer.pollingInterval == config.flagPollingInterval(runMode: runMode))
     }
     
-    internal var allowBackgroundFlagUpdates: Bool {
+    var allowBackgroundFlagUpdates: Bool {
         return config.enableBackgroundUpdates && environmentReporter.operatingSystem.isBackgroundEnabled
     }
 
