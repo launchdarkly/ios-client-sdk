@@ -1819,7 +1819,7 @@ final class LDClientSpec: QuickSpec {
                 })
             }
             it("registers an error observer") {
-                expect(testContext.errorNotifierMock.addErrorObserverCallCount) == 2
+                expect(testContext.errorNotifierMock.addErrorObserverCallCount) == 1
                 expect(testContext.errorObserver).toNot(beNil())
                 guard let errorObserver = testContext.errorObserver
                 else {

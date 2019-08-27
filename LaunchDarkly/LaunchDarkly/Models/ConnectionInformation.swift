@@ -133,38 +133,33 @@ public struct ConnectionInformation: Codable {
             default: break
             }
         }
+        connectionInformation.lastFailedConnection = Date().timeIntervalSince1970
         return connectionInformation
     }
     
     //Used to create listeners for Connection Status inside the LDClient init
     static func setupListeners(ldClient: LDClient) {
         //Creates a retain cycle that will need to change for multi environment
-        ldClient.observeError(owner: ldClient, handler: { _ in
-            Log.debug("LDClient error observer fired")
-            var connectionInformation = ldClient.getConnectionInformation()
-            connectionInformation.lastFailedConnection = Date().timeIntervalSince1970
-            LDClient.shared.connectionInformation = connectionInformation
-        })
         ldClient.observeAll(owner: ldClient, handler: { _ in
             Log.debug("LDClient all flags observer fired")
             var connInfo = ldClient.getConnectionInformation()
             var connectionInformation = ConnectionInformation.checkEstablishingStreaming(connectionInformation: &connInfo)
             connectionInformation.lastSuccessfulConnection = Date().timeIntervalSince1970
-            LDClient.shared.connectionInformation = connectionInformation
+            ldClient.connectionInformation = connectionInformation
         })
         ldClient.observeFlagsUnchanged(owner: ldClient, handler: {
             Log.debug("LDClient all flags unchanged observer fired")
             var connInfo = ldClient.getConnectionInformation()
             var connectionInformation = ConnectionInformation.checkEstablishingStreaming(connectionInformation: &connInfo)
             connectionInformation.lastSuccessfulConnection = Date().timeIntervalSince1970
-            LDClient.shared.connectionInformation = connectionInformation
+            ldClient.connectionInformation = connectionInformation
         })
     }
     
     static func effectiveStreamingMode(config: LDConfig, ldClient: LDClient) -> LDStreamingMode {
         var reason = ""
         let streamingMode: LDStreamingMode = ldClient.isInSupportedRunMode && config.streamingMode == .streaming && config.allowStreamingMode ? .streaming : .polling
-        if config.streamingMode == .streaming && ldClient.isInSupportedRunMode {
+        if config.streamingMode == .streaming && !ldClient.isInSupportedRunMode {
             reason = " LDClient is in background mode with background updates disabled."
         }
         if reason.isEmpty && config.streamingMode == .streaming && !config.allowStreamingMode {
