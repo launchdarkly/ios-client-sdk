@@ -290,6 +290,7 @@ class FlagSynchronizer: LDFlagSynchronizing {
                     self?.processFlagResponse(serviceResponse: retryServiceResponse)
                 })
             } else {
+                LDClient.shared.connectionInformation.lastSuccessfulConnection = Date().timeIntervalSince1970
                 self?.processFlagResponse(serviceResponse: serviceResponse)
             }
             Log.debug(context.logPrefix + "complete")
