@@ -310,6 +310,10 @@
 		C443A40B2315AA4D00145710 /* NetworkReporter.swift in Sources */ = {isa = PBXBuildFile; fileRef = C443A4092315AA4D00145710 /* NetworkReporter.swift */; };
 		C443A40C2315AA4D00145710 /* NetworkReporter.swift in Sources */ = {isa = PBXBuildFile; fileRef = C443A4092315AA4D00145710 /* NetworkReporter.swift */; };
 		C443A40D2315AA4D00145710 /* NetworkReporter.swift in Sources */ = {isa = PBXBuildFile; fileRef = C443A4092315AA4D00145710 /* NetworkReporter.swift */; };
+		C443A40F23186A4F00145710 /* ConnectionModeChangeObserver.swift in Sources */ = {isa = PBXBuildFile; fileRef = C443A40E23186A4F00145710 /* ConnectionModeChangeObserver.swift */; };
+		C443A41023186A4F00145710 /* ConnectionModeChangeObserver.swift in Sources */ = {isa = PBXBuildFile; fileRef = C443A40E23186A4F00145710 /* ConnectionModeChangeObserver.swift */; };
+		C443A41123186A4F00145710 /* ConnectionModeChangeObserver.swift in Sources */ = {isa = PBXBuildFile; fileRef = C443A40E23186A4F00145710 /* ConnectionModeChangeObserver.swift */; };
+		C443A41223186A4F00145710 /* ConnectionModeChangeObserver.swift in Sources */ = {isa = PBXBuildFile; fileRef = C443A40E23186A4F00145710 /* ConnectionModeChangeObserver.swift */; };
 		E48F5215B96AE48D10185962 /* Pods_LaunchDarkly_tvOS.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = DB95B7FEBDC1E23F47304829 /* Pods_LaunchDarkly_tvOS.framework */; };
 /* End PBXBuildFile section */
 
@@ -455,6 +459,7 @@
 		C408884623033B3600420721 /* ConnectionInformationStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConnectionInformationStore.swift; sourceTree = "<group>"; };
 		C408884823033B7500420721 /* ConnectionInformation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConnectionInformation.swift; sourceTree = "<group>"; };
 		C443A4092315AA4D00145710 /* NetworkReporter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NetworkReporter.swift; sourceTree = "<group>"; };
+		C443A40E23186A4F00145710 /* ConnectionModeChangeObserver.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConnectionModeChangeObserver.swift; sourceTree = "<group>"; };
 		D58D143F8FD161584B3FF3AF /* Pods-LaunchDarklyTests.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-LaunchDarklyTests.release.xcconfig"; path = "Pods/Target Support Files/Pods-LaunchDarklyTests/Pods-LaunchDarklyTests.release.xcconfig"; sourceTree = "<group>"; };
 		D6840A437019F1CB72997480 /* Pods-LaunchDarkly_iOS.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-LaunchDarkly_iOS.release.xcconfig"; path = "Pods/Target Support Files/Pods-LaunchDarkly_iOS/Pods-LaunchDarkly_iOS.release.xcconfig"; sourceTree = "<group>"; };
 		D8204934C417AFCE089F38BC /* Pods-LaunchDarklyTests.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-LaunchDarklyTests.debug.xcconfig"; path = "Pods/Target Support Files/Pods-LaunchDarklyTests/Pods-LaunchDarklyTests.debug.xcconfig"; sourceTree = "<group>"; };
@@ -828,6 +833,7 @@
 				8358F25D1F474E5900ECE1AF /* LDChangedFlag.swift */,
 				8358F2611F47747F00ECE1AF /* FlagChangeObserver.swift */,
 				83B9A081204F6022000C3F17 /* FlagsUnchangedObserver.swift */,
+				C443A40E23186A4F00145710 /* ConnectionModeChangeObserver.swift */,
 			);
 			path = FlagChange;
 			sourceTree = "<group>";
@@ -1391,6 +1397,7 @@
 				8311886C2113AE6400D77CB5 /* ObjcLDChangedFlag.swift in Sources */,
 				83906A7921190B4000D7D3C5 /* FlagValueCounter.swift in Sources */,
 				8311884C2113ADDE00D77CB5 /* FlagChangeObserver.swift in Sources */,
+				C443A41223186A4F00145710 /* ConnectionModeChangeObserver.swift in Sources */,
 				831188592113AE1200D77CB5 /* FlagStore.swift in Sources */,
 				C443A40D2315AA4D00145710 /* NetworkReporter.swift in Sources */,
 				83906A7A21190B4E00D7D3C5 /* EventTrackingContext.swift in Sources */,
@@ -1456,6 +1463,7 @@
 				831EF34C20655E730001C643 /* FlagChangeObserver.swift in Sources */,
 				831EF34D20655E730001C643 /* FlagsUnchangedObserver.swift in Sources */,
 				831EF34E20655E730001C643 /* Event.swift in Sources */,
+				C443A41123186A4F00145710 /* ConnectionModeChangeObserver.swift in Sources */,
 				831EF35020655E730001C643 /* ClientServiceFactory.swift in Sources */,
 				831EF35120655E730001C643 /* KeyedValueCache.swift in Sources */,
 				831AAE2E20A9E4F600B46DBA /* Throttler.swift in Sources */,
@@ -1526,6 +1534,7 @@
 				83D559741FD87CC9002D10C8 /* KeyedValueCache.swift in Sources */,
 				831AAE2C20A9E4F600B46DBA /* Throttler.swift in Sources */,
 				8354EFE11F26380700C05156 /* LDConfig.swift in Sources */,
+				C443A40F23186A4F00145710 /* ConnectionModeChangeObserver.swift in Sources */,
 				83F0A5621FB4D66600550A95 /* AnyComparer.swift in Sources */,
 				C443A40A2315AA4D00145710 /* NetworkReporter.swift in Sources */,
 				83EBCBA320D9A1F3003A7142 /* FlagValueCounter.swift in Sources */,
@@ -1649,6 +1658,7 @@
 				831AAE2D20A9E4F600B46DBA /* Throttler.swift in Sources */,
 				83EBCBA420D9A1F3003A7142 /* FlagValueCounter.swift in Sources */,
 				83D9EC872062DEAB004D7FA6 /* FlagSynchronizer.swift in Sources */,
+				C443A41023186A4F00145710 /* ConnectionModeChangeObserver.swift in Sources */,
 				83D9EC882062DEAB004D7FA6 /* FlagChangeNotifier.swift in Sources */,
 				C443A40B2315AA4D00145710 /* NetworkReporter.swift in Sources */,
 				83D9EC892062DEAB004D7FA6 /* EventReporter.swift in Sources */,

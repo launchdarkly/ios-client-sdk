@@ -102,8 +102,15 @@ final class LDClientSpec: QuickSpec {
         var flagsUnchangedObserver: FlagsUnchangedObserver? {
             return changeNotifierMock?.addFlagsUnchangedObserverReceivedObserver
         }
+        var connectionModeChangedCallCount = 0
+        var connectionModeChangedObserver: ConnectionModeChangedObserver? {
+            return changeNotifierMock?.addConnectionModeChangedObserverReceivedObserver
+        }
         var flagsUnchangedHandler: LDFlagsUnchangedHandler? {
             return flagsUnchangedObserver?.flagsUnchangedHandler
+        }
+        var connectionModeChangedHandler: LDConnectionModeChangedHandler? {
+            return connectionModeChangedObserver?.connectionModeChangedHandler
         }
         var errorObserver: ErrorObserver? {
             return errorNotifierMock.addErrorObserverReceivedObserver
@@ -1805,6 +1812,25 @@ final class LDClientSpec: QuickSpec {
                 expect(testContext.flagsUnchangedHandler).toNot(beNil())
                 testContext.flagsUnchangedHandler?()
                 expect(testContext.flagsUnchangedCallCount) == 1
+            }
+        }
+        
+        describe("observeConnectionModeChanged") {
+            var testContext: TestContext!
+            beforeEach {
+                testContext = TestContext()
+                testContext.subject.start(config: testContext.config, user: testContext.user)
+                
+                testContext.subject.observeCurrentConnectionMode(owner: self, handler: {_ in
+                    testContext.connectionModeChangedCallCount += 1
+                })
+            }
+            it("registers a ConnectionModeChanged observer") {
+                expect(testContext.changeNotifierMock.addConnectionModeChangedObserverCallCount) == 1
+                expect(testContext.connectionModeChangedObserver?.owner) === self
+                expect(testContext.connectionModeChangedHandler).toNot(beNil())
+                testContext.connectionModeChangedHandler?(ConnectionInformation.ConnectionMode.offline)
+                expect(testContext.connectionModeChangedCallCount) == 1
             }
         }
 

@@ -405,6 +405,16 @@ final class FlagChangeNotifyingMock: FlagChangeNotifying {
         addFlagsUnchangedObserverCallback?()
     }
 
+    // MARK: addConnectionModeChangedObserver
+    var addConnectionModeChangedObserverCallCount = 0
+    var addConnectionModeChangedObserverCallback: (() -> Void)?
+    var addConnectionModeChangedObserverReceivedObserver: ConnectionModeChangedObserver?
+    func addConnectionModeChangedObserver(_ observer: ConnectionModeChangedObserver) {
+        addConnectionModeChangedObserverCallCount += 1
+        addConnectionModeChangedObserverReceivedObserver = observer
+        addConnectionModeChangedObserverCallback?()
+    }
+
     // MARK: removeObserver
     var removeObserverCallCount = 0
     var removeObserverCallback: (() -> Void)?
@@ -413,6 +423,16 @@ final class FlagChangeNotifyingMock: FlagChangeNotifying {
         removeObserverCallCount += 1
         removeObserverReceivedArguments = (keys: keys, owner: owner)
         removeObserverCallback?()
+    }
+
+    // MARK: notifyConnectionModeChangedObservers
+    var notifyConnectionModeChangedObserversCallCount = 0
+    var notifyConnectionModeChangedObserversCallback: (() -> Void)?
+    var notifyConnectionModeChangedObserversReceivedConnectionMode: ConnectionInformation.ConnectionMode?
+    func notifyConnectionModeChangedObservers(connectionMode: ConnectionInformation.ConnectionMode) {
+        notifyConnectionModeChangedObserversCallCount += 1
+        notifyConnectionModeChangedObserversReceivedConnectionMode = connectionMode
+        notifyConnectionModeChangedObserversCallback?()
     }
 
     // MARK: notifyObservers

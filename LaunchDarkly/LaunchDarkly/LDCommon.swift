@@ -19,6 +19,8 @@ public typealias LDFlagChangeHandler = (LDChangedFlag) -> Void
 public typealias LDFlagCollectionChangeHandler = ([LDFlagKey: LDChangedFlag]) -> Void
 ///A closure used to notify an observer owner that a feature flag request resulted in no changes to any feature flag.
 public typealias LDFlagsUnchangedHandler = () -> Void
+///A closure used to notify an observer owner that the current connection mode has changed.
+public typealias LDConnectionModeChangedHandler = (ConnectionInformation.ConnectionMode) -> Void
 ///A closure used to notify an observer owner that an error occurred during feature flag processing.
 public typealias LDErrorHandler = (Error) -> Void
 

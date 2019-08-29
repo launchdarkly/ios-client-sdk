@@ -75,6 +75,9 @@ public class LDClient {
         didSet {
             Log.debug(connectionInformation.toString())
             ConnectionInformationStore.storeConnectionInformation(connectionInformation: connectionInformation)
+            if connectionInformation.currentConnectionMode != oldValue.currentConnectionMode {
+                flagChangeNotifier.notifyConnectionModeChangedObservers(connectionMode: connectionInformation.currentConnectionMode)
+            }
         }
     }
     
@@ -549,7 +552,7 @@ public class LDClient {
      ````
 
      - parameter key: The LDFlagKey for the flag to observe.
-     - parameter owner: The LDFlagChangeOwner which will execute the handler. The SDK retains a weak reference to the owner.
+     - parameter owner: The LDObserverOwner which will execute the handler. The SDK retains a weak reference to the owner.
      - parameter handler: The closure the SDK will execute when the feature flag changes.
     */
     public func observe(key: LDFlagKey, owner: LDObserverOwner, handler: @escaping LDFlagChangeHandler) {
@@ -579,7 +582,7 @@ public class LDClient {
      ````
 
      - parameter keys: An array of LDFlagKeys for the flags to observe.
-     - parameter owner: The LDFlagChangeOwner which will execute the handler. The SDK retains a weak reference to the owner.
+     - parameter owner: The LDObserverOwner which will execute the handler. The SDK retains a weak reference to the owner.
      - parameter handler: The LDFlagCollectionChangeHandler the SDK will execute 1 time when any of the observed feature flags change.
      */
     public func observe(keys: [LDFlagKey], owner: LDObserverOwner, handler: @escaping LDFlagCollectionChangeHandler) {
@@ -608,7 +611,7 @@ public class LDClient {
      }
      ````
 
-     - parameter owner: The LDFlagChangeOwner which will execute the handler. The SDK retains a weak reference to the owner.
+     - parameter owner: The LDObserverOwner which will execute the handler. The SDK retains a weak reference to the owner.
      - parameter handler: The LDFlagCollectionChangeHandler the SDK will execute 1 time when any of the observed feature flags change.
      */
     public func observeAll(owner: LDObserverOwner, handler: @escaping LDFlagCollectionChangeHandler) {
@@ -634,12 +637,36 @@ public class LDClient {
      }
      ````
 
-     - parameter owner: The LDFlagChangeOwner which will execute the handler. The SDK retains a weak reference to the owner.
+     - parameter owner: The LDObserverOwner which will execute the handler. The SDK retains a weak reference to the owner.
      - parameter handler: The LDFlagsUnchangedHandler the SDK will execute 1 time when a flag request completes with no flags changed.
      */
     public func observeFlagsUnchanged(owner: LDObserverOwner, handler: @escaping LDFlagsUnchangedHandler) {
         Log.debug(typeName(and: #function) + " owner: \(String(describing: owner))")
         flagChangeNotifier.addFlagsUnchangedObserver(FlagsUnchangedObserver(owner: owner, flagsUnchangedHandler: handler))
+    }
+    
+    /**
+     Sets a handler executed when ConnectionInformation.currentConnectionMode changes.
+     
+     The SDK retains only weak references to owner, which allows the client app to freely destroy change owners without issues. Client apps should use a capture list specifying `[weak self]` inside handlers to avoid retain cycles causing a memory leak.
+     
+     The SDK executes handlers on the main thread.
+     
+     SeeAlso: `stopObserving(owner:)`
+     
+     ### Usage
+     ````
+     LDClient.shared.observeCurrentConnectionMode(owner: self) { [weak self] in
+        //do something after ConnectionMode was updated.
+     }
+     ````
+     
+     - parameter owner: The LDObserverOwner which will execute the handler. The SDK retains a weak reference to the owner.
+     - parameter handler: The LDConnectionModeChangedHandler the SDK will execute 1 time when ConnectionInformation.currentConnectionMode is changed.
+     */
+    public func observeCurrentConnectionMode(owner: LDObserverOwner, handler: @escaping LDConnectionModeChangedHandler) {
+        Log.debug(typeName(and: #function) + " owner: \(String(describing: owner))")
+        flagChangeNotifier.addConnectionModeChangedObserver(ConnectionModeChangedObserver(owner: owner, connectionModeChangedHandler: handler))
     }
 
     /**
@@ -852,7 +879,7 @@ public class LDClient {
         if let foregroundNotification = environmentReporter.foregroundNotification {
             NotificationCenter.default.addObserver(self, selector: #selector(willEnterForeground), name: foregroundNotification, object: nil)
         }
-        
+    
         //Since eventReporter lasts the life of the singleton, we can configure it here...swift requires the client to be instantiated before we can pass the onSyncComplete method
         eventReporter = self.serviceFactory.makeEventReporter(config: config, service: service, onSyncComplete: onEventSyncComplete)
     }
