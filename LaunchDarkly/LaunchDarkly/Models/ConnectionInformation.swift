@@ -8,7 +8,7 @@
 
 import Foundation
 
-public struct ConnectionInformation: Codable {
+public struct ConnectionInformation: Codable, CustomStringConvertible {
     public enum ConnectionMode: String, Codable {
         case streaming, offline, establishingStreamingConnection, polling
     }
@@ -59,7 +59,7 @@ public struct ConnectionInformation: Codable {
     }
     
     //Returns ConnectionInformation as a prettyfied string
-    public func description() -> String {
+    public var description: String {
         var connInfoString: String = ""
         connInfoString.append("Current Connection Mode: \(currentConnectionMode.rawValue) | ")
         connInfoString.append("Last Connection Failure Reason: \(lastConnectionFailureReason.description) | ")

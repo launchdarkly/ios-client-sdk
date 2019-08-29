@@ -75,7 +75,7 @@ public class LDClient {
     //Stores ConnectionInformation in UserDefaults on change
     var connectionInformation: ConnectionInformation {
         didSet {
-            Log.debug(connectionInformation.description())
+            Log.debug(connectionInformation.description)
             ConnectionInformationStore.storeConnectionInformation(connectionInformation: connectionInformation)
             if connectionInformation.currentConnectionMode != oldValue.currentConnectionMode {
                 flagChangeNotifier.notifyConnectionModeChangedObservers(connectionMode: connectionInformation.currentConnectionMode)
