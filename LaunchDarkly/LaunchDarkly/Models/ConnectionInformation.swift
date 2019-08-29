@@ -91,16 +91,16 @@ public struct ConnectionInformation: Codable {
     }
     
     //Used for updating lastSuccessfulConnection when connected to streaming
-    static func lastSuccessfulConnectionCheck(flagSynchronizer: LDFlagSynchronizing, connectionInformation: inout ConnectionInformation) -> ConnectionInformation {
-        if flagSynchronizer.isOnline && connectionInformation.currentConnectionMode == ConnectionInformation.ConnectionMode.streaming {
+    static func lastSuccessfulConnectionCheck(connectionInformation: inout ConnectionInformation) -> ConnectionInformation {
+        if connectionInformation.currentConnectionMode == ConnectionInformation.ConnectionMode.streaming {
             connectionInformation.lastSuccessfulConnection = Date()
         }
         return connectionInformation
     }
     
     //Used for updating ConnectionInformation inside of LDClient.setOnline
-    static func onlineSetCheck(flagSynchronizer: LDFlagSynchronizing, connectionInformation: inout ConnectionInformation, ldClient: LDClient, config: LDConfig) -> ConnectionInformation {
-        var connectionInformationVar = ConnectionInformation.lastSuccessfulConnectionCheck(flagSynchronizer: flagSynchronizer, connectionInformation: &connectionInformation)
+    static func onlineSetCheck(connectionInformation: inout ConnectionInformation, ldClient: LDClient, config: LDConfig) -> ConnectionInformation {
+        var connectionInformationVar = ConnectionInformation.lastSuccessfulConnectionCheck(connectionInformation: &connectionInformation)
         
         if ldClient.isOnline && NetworkReporter.isConnectedToNetwork() {
             connectionInformationVar.currentConnectionMode = effectiveStreamingMode(config: config, ldClient: ldClient) == LDStreamingMode.streaming ? ConnectionInformation.ConnectionMode.streaming : ConnectionInformation.ConnectionMode.polling

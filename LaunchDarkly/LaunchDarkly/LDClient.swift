@@ -63,7 +63,7 @@ public class LDClient {
         didSet {
             flagSynchronizer.isOnline = isOnline
             eventReporter.isOnline = isOnline
-            connectionInformation = ConnectionInformation.onlineSetCheck(flagSynchronizer: flagSynchronizer, connectionInformation: &connectionInformation, ldClient: self, config: config)
+            connectionInformation = ConnectionInformation.onlineSetCheck(connectionInformation: &connectionInformation, ldClient: self, config: config)
         }
     }
 
@@ -83,7 +83,7 @@ public class LDClient {
     
     //Returns an object containing information about successful and/or failed polling or streaming connections to LaunchDarkly
     public func getConnectionInformation() -> ConnectionInformation {
-        return ConnectionInformation.lastSuccessfulConnectionCheck(flagSynchronizer: flagSynchronizer, connectionInformation: &connectionInformation)
+        return ConnectionInformation.lastSuccessfulConnectionCheck(connectionInformation: &connectionInformation)
     }
 
     /**
@@ -531,7 +531,7 @@ public class LDClient {
     /**
      Sets a handler for the specified flag key executed on the specified owner. If the flag's value changes, executes the handler, passing in the `changedFlag` containing the old and new flag values, and old and new flag value source. See `LDChangedFlag` for details.
 
-     The SDK retains only weak references to the owner, which allows the client app to freely destroy owners without issues. Client apps should use a capture list specifying `[weak self]` inside handlers to avoid retain cycles causing a memory leak.
+     The SDK retains only weak references to the owner, which allows the client app to freely destroy observer owners without issues. Client apps should use a capture list specifying `[weak self]` inside handlers to avoid retain cycles causing a memory leak.
 
      The SDK executes handlers on the main thread.
 
@@ -563,7 +563,7 @@ public class LDClient {
     /**
      Sets a handler for the specified flag keys executed on the specified owner. If any observed flag's value changes, executes the handler 1 time, passing in a dictionary of [LDFlagKey: LDChangedFlag] containing the old and new flag values, and old and new flag value source. See `LDChangedFlag` for details.
 
-     The SDK retains only weak references to owner, which allows the client app to freely destroy change owners without issues. Client apps should use a capture list specifying `[weak self]` inside handlers to avoid retain cycles causing a memory leak.
+     The SDK retains only weak references to owner, which allows the client app to freely destroy observer owners without issues. Client apps should use a capture list specifying `[weak self]` inside handlers to avoid retain cycles causing a memory leak.
 
      The SDK executes handlers on the main thread.
 
@@ -593,7 +593,7 @@ public class LDClient {
     /**
      Sets a handler for all flag keys executed on the specified owner. If any flag's value changes, executes the handler 1 time, passing in a dictionary of [LDFlagKey: LDChangedFlag] containing the old and new flag values, and old and new flag value source. See `LDChangedFlag` for details.
 
-     The SDK retains only weak references to owner, which allows the client app to freely destroy change owners without issues. Client apps should use a capture list specifying `[weak self]` inside handlers to avoid retain cycles causing a memory leak.
+     The SDK retains only weak references to owner, which allows the client app to freely destroy observer owners without issues. Client apps should use a capture list specifying `[weak self]` inside handlers to avoid retain cycles causing a memory leak.
 
      The SDK executes handlers on the main thread.
 
@@ -624,7 +624,7 @@ public class LDClient {
 
      This handler can only ever be called when the LDClient is polling.
 
-     The SDK retains only weak references to owner, which allows the client app to freely destroy change owners without issues. Client apps should use a capture list specifying `[weak self]` inside handlers to avoid retain cycles causing a memory leak.
+     The SDK retains only weak references to owner, which allows the client app to freely destroy observer owners without issues. Client apps should use a capture list specifying `[weak self]` inside handlers to avoid retain cycles causing a memory leak.
 
      The SDK executes handlers on the main thread.
 
