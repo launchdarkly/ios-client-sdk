@@ -85,7 +85,8 @@ public class LDClient {
     
     //Returns an object containing information about successful and/or failed polling or streaming connections to LaunchDarkly
     public func getConnectionInformation() -> ConnectionInformation {
-        return ConnectionInformation.lastSuccessfulConnectionCheck(connectionInformation: connectionInformation)
+        connectionInformation = ConnectionInformation.lastSuccessfulConnectionCheck(connectionInformation: connectionInformation)
+        return connectionInformation
     }
 
     /**
@@ -816,7 +817,6 @@ public class LDClient {
                 return
             }
             Log.debug(typeName(and: #function, appending: ": ") + "\(runMode)")
-            connectionInformation = ConnectionInformation.backgroundBehavior(connectionInformation: connectionInformation, runMode: runMode, config: config, ldClient: self)
             if runMode == .background {
                 eventReporter.reportEvents()
             }
@@ -828,7 +828,9 @@ public class LDClient {
             //if it does match, keeping the synchronizer precludes an extra flag request
             if !flagSynchronizerConfigMatchesConfigAndRunMode {
                 flagSynchronizer.isOnline = false
-                flagSynchronizer = serviceFactory.makeFlagSynchronizer(streamingMode: ConnectionInformation.effectiveStreamingMode(config: config, ldClient: self),
+                let streamingModeVar = ConnectionInformation.effectiveStreamingMode(config: config, ldClient: self)
+                connectionInformation = ConnectionInformation.backgroundBehavior(connectionInformation: connectionInformation, streamingMode: streamingModeVar, goOnline: willSetSynchronizerOnline)
+                flagSynchronizer = serviceFactory.makeFlagSynchronizer(streamingMode: streamingModeVar,
                                                                        pollingInterval: config.flagPollingInterval(runMode: runMode),
                                                                        useReport: config.useReport,
                                                                        service: service,

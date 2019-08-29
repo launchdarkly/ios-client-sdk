@@ -140,12 +140,15 @@ public struct ConnectionInformation: Codable {
         return streamingMode
     }
     
-    static func backgroundBehavior(connectionInformation: ConnectionInformation, runMode: LDClientRunMode, config: LDConfig, ldClient: LDClient) -> ConnectionInformation {
-        var connectionInformationVar = connectionInformation
-        if ConnectionInformation.effectiveStreamingMode(config: config, ldClient: ldClient) == LDStreamingMode.streaming && runMode == .background {
-            connectionInformationVar.lastSuccessfulConnection = Date()
+    static func backgroundBehavior(connectionInformation: ConnectionInformation, streamingMode: LDStreamingMode, goOnline: Bool) -> ConnectionInformation {
+        var connectionInformationVar = lastSuccessfulConnectionCheck(connectionInformation: connectionInformation)
+        if !goOnline {
+            connectionInformationVar.currentConnectionMode = .offline
+        } else if streamingMode == .streaming {
+            connectionInformationVar.currentConnectionMode = .establishingStreamingConnection
+        } else if streamingMode == .polling {
+            connectionInformationVar.currentConnectionMode = .polling
         }
-        connectionInformationVar.currentConnectionMode = .polling
         return connectionInformationVar
     }
 }
