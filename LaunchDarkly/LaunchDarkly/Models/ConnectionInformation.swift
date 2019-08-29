@@ -46,12 +46,12 @@ public struct ConnectionInformation: Codable {
         static let decodeError: String =  "Unable to Decode error."
     }
     
-    public internal(set) var lastSuccessfulConnection: TimeInterval?
-    public internal(set) var lastFailedConnection: TimeInterval?
+    public internal(set) var lastSuccessfulConnection: Date?
+    public internal(set) var lastFailedConnection: Date?
     public internal(set) var currentConnectionMode: ConnectionMode
     public internal(set) var lastConnectionFailureReason: LastConnectionFailureReason
     
-    init(currentConnectionMode: ConnectionMode, lastConnectionFailureReason: LastConnectionFailureReason, lastSuccessfulConnection: TimeInterval? = nil, lastFailedConnection: TimeInterval? = nil) {
+    init(currentConnectionMode: ConnectionMode, lastConnectionFailureReason: LastConnectionFailureReason, lastSuccessfulConnection: Date? = nil, lastFailedConnection: Date? = nil) {
         self.currentConnectionMode = currentConnectionMode
         self.lastConnectionFailureReason = lastConnectionFailureReason
         self.lastSuccessfulConnection = lastSuccessfulConnection
@@ -63,8 +63,8 @@ public struct ConnectionInformation: Codable {
         var connInfoString: String = ""
         connInfoString.append("Current Connection Mode: \(currentConnectionMode.rawValue) | ")
         connInfoString.append("Last Connection Failure Reason: \(lastConnectionFailureReason.getValue()) | ")
-        connInfoString.append("Last Successful Connection: \(lastSuccessfulConnection?.stringFromTimeInterval() ?? "NONE") | ")
-        connInfoString.append("Last Failed Connection: \(lastFailedConnection?.stringFromTimeInterval() ?? "NONE")")
+        connInfoString.append("Last Successful Connection: \(lastSuccessfulConnection?.debugDescription ?? "NONE") | ")
+        connInfoString.append("Last Failed Connection: \(lastFailedConnection?.debugDescription ?? "NONE")")
         return connInfoString
     }
     
@@ -93,7 +93,7 @@ public struct ConnectionInformation: Codable {
     //Used for updating lastSuccessfulConnection when connected to streaming
     static func lastSuccessfulConnectionCheck(flagSynchronizer: LDFlagSynchronizing, connectionInformation: inout ConnectionInformation) -> ConnectionInformation {
         if flagSynchronizer.isOnline && connectionInformation.currentConnectionMode == ConnectionInformation.ConnectionMode.streaming {
-            connectionInformation.lastSuccessfulConnection = Date().timeIntervalSince1970
+            connectionInformation.lastSuccessfulConnection = Date()
         }
         return connectionInformation
     }
@@ -125,32 +125,18 @@ public struct ConnectionInformation: Codable {
             default: break
             }
         }
-        connectionInformation.lastFailedConnection = Date().timeIntervalSince1970
+        connectionInformation.lastFailedConnection = Date()
         return connectionInformation
-    }
-    
-    //Used to create listeners for Connection Status inside the LDClient init
-    static func setupListeners(ldClient: LDClient) {
-        //Creates a retain cycle that will need to change for multi environment
-        ldClient.observeAll(owner: ldClient, handler: { _ in
-            Log.debug("LDClient all flags observer fired")
-            var connInfo = ldClient.getConnectionInformation()
-            ldClient.connectionInformation = ConnectionInformation.checkEstablishingStreaming(connectionInformation: &connInfo)
-        })
-        ldClient.observeFlagsUnchanged(owner: ldClient, handler: {
-            Log.debug("LDClient all flags unchanged observer fired")
-            var connInfo = ldClient.getConnectionInformation()
-            ldClient.connectionInformation = ConnectionInformation.checkEstablishingStreaming(connectionInformation: &connInfo)
-        })
     }
     
     //This function is used to ensure we switch from establishing a streaming connection to streaming once we are connected.
-    static func checkEstablishingStreaming(connectionInformation: inout ConnectionInformation) -> ConnectionInformation {
-        if connectionInformation.currentConnectionMode == ConnectionInformation.ConnectionMode.establishingStreamingConnection {
-            connectionInformation.currentConnectionMode = ConnectionInformation.ConnectionMode.streaming
+    static func checkEstablishingStreaming(connectionInformation: ConnectionInformation) -> ConnectionInformation {
+        var connectionInformationVar = connectionInformation
+        if connectionInformationVar.currentConnectionMode == ConnectionInformation.ConnectionMode.establishingStreamingConnection {
+            connectionInformationVar.currentConnectionMode = ConnectionInformation.ConnectionMode.streaming
         }
-        connectionInformation.lastSuccessfulConnection = Date().timeIntervalSince1970
-        return connectionInformation
+        connectionInformationVar.lastSuccessfulConnection = Date()
+        return connectionInformationVar
     }
     
     static func effectiveStreamingMode(config: LDConfig, ldClient: LDClient) -> LDStreamingMode {
@@ -167,12 +153,13 @@ public struct ConnectionInformation: Codable {
         return streamingMode
     }
     
-    static func backgroundBehavior(connectionInformation: inout ConnectionInformation, runMode: LDClientRunMode, config: LDConfig, ldClient: LDClient) -> ConnectionInformation {
+    static func backgroundBehavior(connectionInformation: ConnectionInformation, runMode: LDClientRunMode, config: LDConfig, ldClient: LDClient) -> ConnectionInformation {
+        var connectionInformationVar = connectionInformation
         if ConnectionInformation.effectiveStreamingMode(config: config, ldClient: ldClient) == LDStreamingMode.streaming && runMode == .background {
-            connectionInformation.lastSuccessfulConnection = Date().timeIntervalSince1970
+            connectionInformationVar.lastSuccessfulConnection = Date()
         }
-        connectionInformation.currentConnectionMode = .polling
-        return connectionInformation
+        connectionInformationVar.currentConnectionMode = .polling
+        return connectionInformationVar
     }
 }
 
@@ -214,17 +201,5 @@ extension ConnectionInformation.LastConnectionFailureReason {
         case .none:
             try container.encode("none", forKey: .type)
         }
-    }
-}
-
-private extension TimeInterval {
-    func stringFromTimeInterval() -> String {
-        let time = NSInteger(self)
-        let milli = Int((self.truncatingRemainder(dividingBy: 1)) * 1000)
-        let seconds = time % 60
-        let minutes = (time / 60) % 60
-        let hours = (time / 3600)
-        
-        return String(format: "%0.2d:%0.2d:%0.2d.%0.3d", hours, minutes, seconds, milli)
     }
 }

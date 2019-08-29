@@ -668,6 +668,7 @@ public class LDClient {
         case let .success(flagDictionary, streamingEvent):
             let oldFlags = user.flagStore.featureFlags
             let oldFlagSource = user.flagStore.flagValueSource
+            connectionInformation = ConnectionInformation.checkEstablishingStreaming(connectionInformation: connectionInformation)
             switch streamingEvent {
             case nil, .ping?, .put?:
                 user.flagStore.replaceStore(newFlags: flagDictionary, source: .server) {
@@ -786,7 +787,7 @@ public class LDClient {
                 return
             }
             Log.debug(typeName(and: #function, appending: ": ") + "\(runMode)")
-            connectionInformation = ConnectionInformation.backgroundBehavior(connectionInformation: &connectionInformation, runMode: runMode, config: config, ldClient: self)
+            connectionInformation = ConnectionInformation.backgroundBehavior(connectionInformation: connectionInformation, runMode: runMode, config: config, ldClient: self)
             if runMode == .background {
                 eventReporter.reportEvents()
             }
@@ -851,8 +852,6 @@ public class LDClient {
         if let foregroundNotification = environmentReporter.foregroundNotification {
             NotificationCenter.default.addObserver(self, selector: #selector(willEnterForeground), name: foregroundNotification, object: nil)
         }
-        
-        ConnectionInformation.setupListeners(ldClient: self)
         
         //Since eventReporter lasts the life of the singleton, we can configure it here...swift requires the client to be instantiated before we can pass the onSyncComplete method
         eventReporter = self.serviceFactory.makeEventReporter(config: config, service: service, onSyncComplete: onEventSyncComplete)

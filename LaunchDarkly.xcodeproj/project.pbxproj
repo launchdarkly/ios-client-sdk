@@ -628,6 +628,7 @@
 		8354AC742243168800CDE602 /* Cache */ = {
 			isa = PBXGroup;
 			children = (
+				C408884623033B3600420721 /* ConnectionInformationStore.swift */,
 				83D559731FD87CC9002D10C8 /* KeyedValueCache.swift */,
 				8354AC6F2243166900CDE602 /* UserEnvironmentFlagCache.swift */,
 				832D68A1224A38FC005F052A /* CacheConverter.swift */,
@@ -916,7 +917,6 @@
 				8347BB0B21F147E100E56BCD /* LDTimer.swift */,
 				83883DD9220B6A9A00EEAB95 /* ErrorNotifier.swift */,
 				8354AC742243168800CDE602 /* Cache */,
-				C408884623033B3600420721 /* ConnectionInformationStore.swift */,
 				C443A4092315AA4D00145710 /* NetworkReporter.swift */,
 			);
 			path = "Service Objects";

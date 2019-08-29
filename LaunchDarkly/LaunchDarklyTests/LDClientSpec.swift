@@ -1727,7 +1727,7 @@ final class LDClientSpec: QuickSpec {
                 })
             }
             it("registers a single flag observer") {
-                expect(testContext.changeNotifierMock.addFlagChangeObserverCallCount) == 2 //The callcount is 2 instead of 1 because LDClient registers listeners for Connection Status
+                expect(testContext.changeNotifierMock.addFlagChangeObserverCallCount) == 1
                 expect(testContext.flagChangeObserver?.flagKeys) == [DarklyServiceMock.FlagKeys.bool]
                 expect(testContext.flagChangeObserver?.owner) === self
                 testContext.flagChangeHandler?(changedFlag)
@@ -1754,7 +1754,7 @@ final class LDClientSpec: QuickSpec {
                 })
             }
             it("registers a multiple flag observer") {
-                expect(testContext.changeNotifierMock.addFlagChangeObserverCallCount) == 2
+                expect(testContext.changeNotifierMock.addFlagChangeObserverCallCount) == 1
                 expect(testContext.flagChangeObserver?.flagKeys) == [DarklyServiceMock.FlagKeys.bool]
                 expect(testContext.flagChangeObserver?.owner) === self
                 testContext.flagCollectionChangeHandler?(changedFlags)
@@ -1780,7 +1780,7 @@ final class LDClientSpec: QuickSpec {
                 })
             }
             it("registers a collection flag observer") {
-                expect(testContext.changeNotifierMock.addFlagChangeObserverCallCount) == 2
+                expect(testContext.changeNotifierMock.addFlagChangeObserverCallCount) == 1
                 expect(testContext.flagChangeObserver?.flagKeys) == LDFlagKey.anyKey
                 expect(testContext.flagChangeObserver?.owner) === self
                 expect(testContext.flagChangeObserver?.flagCollectionChangeHandler).toNot(beNil())
@@ -1800,7 +1800,7 @@ final class LDClientSpec: QuickSpec {
                 })
             }
             it("registers a flags unchanged observer") {
-                expect(testContext.changeNotifierMock.addFlagsUnchangedObserverCallCount) == 2
+                expect(testContext.changeNotifierMock.addFlagsUnchangedObserverCallCount) == 1
                 expect(testContext.flagsUnchangedObserver?.owner) === self
                 expect(testContext.flagsUnchangedHandler).toNot(beNil())
                 testContext.flagsUnchangedHandler?()

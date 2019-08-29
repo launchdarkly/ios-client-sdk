@@ -26,18 +26,6 @@ enum SynchronizingError: Error {
     case response(URLResponse?)
     case data(Data?)
     case event(DarklyEventSource.LDEvent?)
-    
-    var getError: String {
-        switch self {
-        case .response(let urlResponse):
-            guard let httpResponse = urlResponse as? HTTPURLResponse
-                else {
-                    return "Unknown Error"
-            }
-            return "HTTP Error Code: \(String(httpResponse.statusCode))"
-        default: return "Unknown Error"
-        }
-    }
 
     var isClientUnauthorized: Bool {
         switch self {
@@ -290,7 +278,6 @@ class FlagSynchronizer: LDFlagSynchronizing {
                     self?.processFlagResponse(serviceResponse: retryServiceResponse)
                 })
             } else {
-                LDClient.shared.connectionInformation.lastSuccessfulConnection = Date().timeIntervalSince1970
                 self?.processFlagResponse(serviceResponse: serviceResponse)
             }
             Log.debug(context.logPrefix + "complete")
