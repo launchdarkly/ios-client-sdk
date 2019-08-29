@@ -26,16 +26,16 @@ public struct ConnectionInformation: Codable {
             return value
         }
         
-        func getValue() -> String {
+        func description() -> String {
             switch self {
             case .unauthorized:
                 return "unauthorized"
             case .none:
                 return "none"
             case .httpError:
-                return String(self.httpValue ?? ConnectionInformation.Constants.noCode)
+                return "httpError: " + String(self.httpValue ?? ConnectionInformation.Constants.noCode)
             case .unknownError:
-                return self.unknownValue ?? ConnectionInformation.Constants.unknownError
+                return "unknownError: " + (self.unknownValue ?? ConnectionInformation.Constants.unknownError)
             }
         }
     }
@@ -59,10 +59,10 @@ public struct ConnectionInformation: Codable {
     }
     
     //Returns ConnectionInformation as a prettyfied string
-    public func toString() -> String {
+    public func description() -> String {
         var connInfoString: String = ""
         connInfoString.append("Current Connection Mode: \(currentConnectionMode.rawValue) | ")
-        connInfoString.append("Last Connection Failure Reason: \(lastConnectionFailureReason.getValue()) | ")
+        connInfoString.append("Last Connection Failure Reason: \(lastConnectionFailureReason.description()) | ")
         connInfoString.append("Last Successful Connection: \(lastSuccessfulConnection?.debugDescription ?? "NONE") | ")
         connInfoString.append("Last Failed Connection: \(lastFailedConnection?.debugDescription ?? "NONE")")
         return connInfoString
