@@ -2855,9 +2855,9 @@ final class LDClientSpec: QuickSpec {
                     testContext.config.streamingMode = .streaming
                     testContext.subject.start(config: testContext.config)
                 }
-                it("returns a ConnectionInformation object with currentConnectionMode.streaming") {
+                it("returns a ConnectionInformation object with currentConnectionMode.establishingStreamingConnection") {
                     expect(testContext.subject.isOnline) == true
-                    expect(testContext.subject.connectionInformation.currentConnectionMode).to(equal(.streaming))
+                    expect(testContext.subject.connectionInformation.currentConnectionMode).to(equal(.establishingStreamingConnection))
                     expect(testContext.subject.connectionInformation.lastConnectionFailureReason.description).to(equal("none"))
                 }
                 it("returns a String from toString") {

@@ -63,7 +63,9 @@ public class LDClient {
         didSet {
             flagSynchronizer.isOnline = isOnline
             eventReporter.isOnline = isOnline
-            connectionInformation = ConnectionInformation.onlineSetCheck(connectionInformation: &connectionInformation, ldClient: self, config: config)
+            if isOnline != oldValue {
+                connectionInformation = ConnectionInformation.onlineSetCheck(connectionInformation: connectionInformation, ldClient: self, config: config)
+            }
         }
     }
 
@@ -83,7 +85,7 @@ public class LDClient {
     
     //Returns an object containing information about successful and/or failed polling or streaming connections to LaunchDarkly
     public func getConnectionInformation() -> ConnectionInformation {
-        return ConnectionInformation.lastSuccessfulConnectionCheck(connectionInformation: &connectionInformation)
+        return ConnectionInformation.lastSuccessfulConnectionCheck(connectionInformation: connectionInformation)
     }
 
     /**
@@ -721,7 +723,7 @@ public class LDClient {
             Log.debug(logPrefix + "LDClient is unauthorized")
             setOnline(false)
         }
-        connectionInformation = ConnectionInformation.synchronizingErrorCheck(synchronizingError: synchronizingError, connectionInformation: &connectionInformation)
+        connectionInformation = ConnectionInformation.synchronizingErrorCheck(synchronizingError: synchronizingError, connectionInformation: connectionInformation)
         DispatchQueue.main.async {
             self.errorNotifier.notifyObservers(of: synchronizingError)
         }

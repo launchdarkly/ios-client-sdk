@@ -143,8 +143,6 @@ class FlagSynchronizer: LDFlagSynchronizing {
             return
         }
         
-        LDClient.shared.connectionInformation.currentConnectionMode = ConnectionInformation.ConnectionMode.establishingStreamingConnection
-        
         Log.debug(typeName(and: #function))
         eventSource = service.createEventSource(useReport: useReport)  //The LDConfig.connectionTimeout should NOT be set here. Heartbeat is sent every 3m. ES default timeout is 5m. This is an async operation.
         //LDEventSource reacts to connection errors by closing the connection and establishing a new one after an exponentially increasing wait. That makes it self healing.
