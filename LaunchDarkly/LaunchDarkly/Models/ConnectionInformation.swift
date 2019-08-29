@@ -13,20 +13,8 @@ public struct ConnectionInformation: Codable {
         case streaming, offline, establishingStreamingConnection, polling
     }
     
-    public enum LastConnectionFailureReason: Codable {
-        case unauthorized, httpError(Int), unknownError(String), none //We need .none for a non-failable initializer to conform to Codable
-        
-        var unknownValue: String? {
-            guard case let .unknownError(value) = self else { return nil }
-            return value
-        }
-        
-        var httpValue: Int? {
-            guard case let .httpError(value) = self else { return nil }
-            return value
-        }
-        
-        func description() -> String {
+    public enum LastConnectionFailureReason: Codable, CustomStringConvertible {
+        public var description: String {
             switch self {
             case .unauthorized:
                 return "unauthorized"
@@ -37,6 +25,18 @@ public struct ConnectionInformation: Codable {
             case .unknownError:
                 return "unknownError: " + (self.unknownValue ?? ConnectionInformation.Constants.unknownError)
             }
+        }
+        
+        case unauthorized, httpError(Int), unknownError(String), none //We need .none for a non-failable initializer to conform to Codable
+        
+        var unknownValue: String? {
+            guard case let .unknownError(value) = self else { return nil }
+            return value
+        }
+        
+        var httpValue: Int? {
+            guard case let .httpError(value) = self else { return nil }
+            return value
         }
     }
     
@@ -62,7 +62,7 @@ public struct ConnectionInformation: Codable {
     public func description() -> String {
         var connInfoString: String = ""
         connInfoString.append("Current Connection Mode: \(currentConnectionMode.rawValue) | ")
-        connInfoString.append("Last Connection Failure Reason: \(lastConnectionFailureReason.description()) | ")
+        connInfoString.append("Last Connection Failure Reason: \(lastConnectionFailureReason.description) | ")
         connInfoString.append("Last Successful Connection: \(lastSuccessfulConnection?.debugDescription ?? "NONE") | ")
         connInfoString.append("Last Failed Connection: \(lastFailedConnection?.debugDescription ?? "NONE")")
         return connInfoString

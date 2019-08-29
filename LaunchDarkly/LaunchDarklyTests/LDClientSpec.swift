@@ -2858,7 +2858,7 @@ final class LDClientSpec: QuickSpec {
                 it("returns a ConnectionInformation object with currentConnectionMode.streaming") {
                     expect(testContext.subject.isOnline) == true
                     expect(testContext.subject.connectionInformation.currentConnectionMode).to(equal(.streaming))
-                    expect(testContext.subject.connectionInformation.lastConnectionFailureReason.description()).to(equal("none"))
+                    expect(testContext.subject.connectionInformation.lastConnectionFailureReason.description).to(equal("none"))
                 }
                 it("returns a String from toString") {
                     expect(testContext.subject.connectionInformation.description()).to(beAKindOf(String.self))
