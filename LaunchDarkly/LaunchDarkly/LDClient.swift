@@ -197,25 +197,55 @@ public class LDClient {
     */
     public var user: LDUser {
         didSet {
-            Log.debug(typeName(and: #function) + "new user set with key: " + user.key )
-            let wasOnline = isOnline
-            setOnline(false)
-
-            if hasStarted {
-                eventReporter.recordSummaryEvent()
-            }
-            convertCachedData(skipDuringStart: isStarting)
-            if let cachedFlags = flagCache.retrieveFeatureFlags(forUserWithKey: user.key, andMobileKey: config.mobileKey), !cachedFlags.isEmpty {
-                user.flagStore.replaceStore(newFlags: cachedFlags, source: .cache, completion: nil)
-            }
-            service = serviceFactory.makeDarklyServiceProvider(config: config, user: user)
-            service.clearFlagResponseCache()
-
-            if hasStarted {
-                eventReporter.record(Event.identifyEvent(user: user))
-            }
-
+            identifyInternal(user: user, internalSet: true)
+        }
+    }
+    
+    /**
+     The LDUser set into the LDClient may affect the set of feature flags returned by the LaunchDarkly server, and ties event tracking to the user. See `LDUser` for details about what information can be retained.
+     
+     Normally, the client app should create and set the LDUser and pass that into `start(config: user: completion:)`.
+     
+     The client app can change the LDUser by getting the `user`, adjusting the values, and passing it to the LDClient method identify. This allows client apps to collect information over time from the user and update as information is collected. Client apps should follow [Apple's Privacy Policy](apple.com/legal/privacy) when collecting user information. If the client app does not create a LDUser, LDClient creates an anonymous default user, which can affect the feature flags delivered to the LDClient.
+     
+     When a new user is set, the LDClient goes offline and sets the new user. If the client was online when the new user was set, it goes online again, subject to a throttling delay if in force (see `setOnline(_: completion:)` for details). To change both the `config` and `user`, set the LDClient offline, set both properties, then set the LDClient online. A completion may be passed
+         to the identify method to allow a client app to know when fresh flag values for the new user are ready.
+     
+     - parameter user: The LDUser set with the desired user.
+     - parameter completion: Closure called when the embedded `setOnline` call completes, subject to throttling delays. (Optional)
+    */
+    public func identify(user: LDUser, completion: (() -> Void)? = nil) {
+        identifyInternal(user: user, internalSet: false) {
+            completion?()
+        }
+    }
+    
+    private func identifyInternal(user: LDUser, internalSet: Bool, completion: (() -> Void)? = nil) {
+        Log.debug(typeName(and: #function) + "new user set with key: " + user.key )
+        let wasOnline = isOnline
+        setOnline(false)
+        
+        if hasStarted {
+            eventReporter.recordSummaryEvent()
+        }
+        convertCachedData(skipDuringStart: isStarting)
+        if let cachedFlags = flagCache.retrieveFeatureFlags(forUserWithKey: user.key, andMobileKey: config.mobileKey), !cachedFlags.isEmpty {
+            user.flagStore.replaceStore(newFlags: cachedFlags, source: .cache, completion: nil)
+        }
+        service = serviceFactory.makeDarklyServiceProvider(config: config, user: user)
+        service.clearFlagResponseCache()
+        
+        if hasStarted {
+            eventReporter.record(Event.identifyEvent(user: user))
+        }
+        
+        if internalSet {
+            Log.debug("Setting the user property is deprecated, please use the identify method instead")
             setOnline(wasOnline)
+        } else {
+            setOnline(wasOnline) {
+                completion?()
+            }
         }
     }
 

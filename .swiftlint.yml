@@ -10,6 +10,7 @@ disabled_rules: # rule identifiers to exclude from running
   - redundant_optional_initialization
   - redundant_void_return
   - large_tuple # this is flagging closure argument declarations, seems like a mistake
+  - type_body_length # LDClient has gotten quite large and there's not a lot of code that's reasonable to breakout into other files.
 opt_in_rules: # some rules are only opt-in
   - empty_count
   # - missing_docs
