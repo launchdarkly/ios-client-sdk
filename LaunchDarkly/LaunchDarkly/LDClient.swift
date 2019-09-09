@@ -63,11 +63,31 @@ public class LDClient {
         didSet {
             flagSynchronizer.isOnline = isOnline
             eventReporter.isOnline = isOnline
+            if isOnline != oldValue {
+                connectionInformation = ConnectionInformation.onlineSetCheck(connectionInformation: connectionInformation, ldClient: self, config: config)
+            }
         }
     }
 
     //Keeps the state of the last setOnline goOnline parameter, used for throttling calls to set the SDK online
     private var lastSetOnlineCallValue = false
+    
+    //Stores ConnectionInformation in UserDefaults on change
+    var connectionInformation: ConnectionInformation {
+        didSet {
+            Log.debug(connectionInformation.description)
+            ConnectionInformationStore.storeConnectionInformation(connectionInformation: connectionInformation)
+            if connectionInformation.currentConnectionMode != oldValue.currentConnectionMode {
+                flagChangeNotifier.notifyConnectionModeChangedObservers(connectionMode: connectionInformation.currentConnectionMode)
+            }
+        }
+    }
+    
+    //Returns an object containing information about successful and/or failed polling or streaming connections to LaunchDarkly
+    public func getConnectionInformation() -> ConnectionInformation {
+        connectionInformation = ConnectionInformation.lastSuccessfulConnectionCheck(connectionInformation: connectionInformation)
+        return connectionInformation
+    }
 
     /**
      Set the LDClient online/offline.
@@ -106,8 +126,8 @@ public class LDClient {
         return hasStarted && isInSupportedRunMode && !config.mobileKey.isEmpty
     }
 
-    private var isInSupportedRunMode: Bool {
-        return runMode == .foreground || allowBackgroundFlagUpdates
+    var isInSupportedRunMode: Bool {
+        return runMode == .foreground || config.enableBackgroundUpdates
     }
 
     private func go(online goOnline: Bool, reasonOnlineUnavailable: String, completion:(() -> Void)?) {
@@ -203,7 +223,7 @@ public class LDClient {
         didSet {
             Log.debug(typeName(and: #function) + "new service set")
             eventReporter.service = service
-            flagSynchronizer = serviceFactory.makeFlagSynchronizer(streamingMode: effectiveStreamingMode(runMode: runMode, config: config),
+            flagSynchronizer = serviceFactory.makeFlagSynchronizer(streamingMode: ConnectionInformation.effectiveStreamingMode(config: config, ldClient: self),
                                                                    pollingInterval: config.flagPollingInterval(runMode: runMode),
                                                                    useReport: config.useReport,
                                                                    service: service,
@@ -242,6 +262,7 @@ public class LDClient {
         cacheConverter.convertCacheData(for: startUser, and: config)        //Convert before updating the user so any deprecated cached data is converted to the current model
         self.config = config
         self.user = startUser
+        self.connectionInformation = ConnectionInformation.uncacheConnectionInformation(config: config, ldClient: self, clientServiceFactory: serviceFactory)
 
         setOnline((wasStarted && wasOnline) || (!wasStarted && self.config.startOnline)) {
             Log.debug(self.typeName(and: #function, appending: ": ") + "started")
@@ -256,20 +277,6 @@ public class LDClient {
             return
         }
         cacheConverter.convertCacheData(for: user, and: config)
-    }
-
-    private func effectiveStreamingMode(runMode: LDClientRunMode, config: LDConfig) -> LDStreamingMode {
-        var reason = ""
-        let streamingMode: LDStreamingMode = (runMode == .foreground || allowBackgroundFlagUpdates) && config.streamingMode == .streaming && config.allowStreamingMode ? .streaming : .polling
-        if config.streamingMode == .streaming && runMode != .foreground && !allowBackgroundFlagUpdates {
-            reason = " LDClient is in background mode with background updates disabled."
-        }
-        if reason.isEmpty && config.streamingMode == .streaming && !config.allowStreamingMode {
-            reason = " LDConfig disallowed streaming mode. "
-            reason += !environmentReporter.operatingSystem.isStreamingEnabled ? "Streaming is not allowed on \(environmentReporter.operatingSystem)." : "Unknown reason."
-        }
-        Log.debug(typeName(and: #function, appending: ": ") + "\(streamingMode)\(reason)")
-        return streamingMode
     }
 
     /**
@@ -527,7 +534,7 @@ public class LDClient {
     /**
      Sets a handler for the specified flag key executed on the specified owner. If the flag's value changes, executes the handler, passing in the `changedFlag` containing the old and new flag values, and old and new flag value source. See `LDChangedFlag` for details.
 
-     The SDK retains only weak references to the owner, which allows the client app to freely destroy owners without issues. Client apps should use a capture list specifying `[weak self]` inside handlers to avoid retain cycles causing a memory leak.
+     The SDK retains only weak references to the owner, which allows the client app to freely destroy observer owners without issues. Client apps should use a capture list specifying `[weak self]` inside handlers to avoid retain cycles causing a memory leak.
 
      The SDK executes handlers on the main thread.
 
@@ -548,7 +555,7 @@ public class LDClient {
      ````
 
      - parameter key: The LDFlagKey for the flag to observe.
-     - parameter owner: The LDFlagChangeOwner which will execute the handler. The SDK retains a weak reference to the owner.
+     - parameter owner: The LDObserverOwner which will execute the handler. The SDK retains a weak reference to the owner.
      - parameter handler: The closure the SDK will execute when the feature flag changes.
     */
     public func observe(key: LDFlagKey, owner: LDObserverOwner, handler: @escaping LDFlagChangeHandler) {
@@ -559,7 +566,7 @@ public class LDClient {
     /**
      Sets a handler for the specified flag keys executed on the specified owner. If any observed flag's value changes, executes the handler 1 time, passing in a dictionary of [LDFlagKey: LDChangedFlag] containing the old and new flag values, and old and new flag value source. See `LDChangedFlag` for details.
 
-     The SDK retains only weak references to owner, which allows the client app to freely destroy change owners without issues. Client apps should use a capture list specifying `[weak self]` inside handlers to avoid retain cycles causing a memory leak.
+     The SDK retains only weak references to owner, which allows the client app to freely destroy observer owners without issues. Client apps should use a capture list specifying `[weak self]` inside handlers to avoid retain cycles causing a memory leak.
 
      The SDK executes handlers on the main thread.
 
@@ -578,7 +585,7 @@ public class LDClient {
      ````
 
      - parameter keys: An array of LDFlagKeys for the flags to observe.
-     - parameter owner: The LDFlagChangeOwner which will execute the handler. The SDK retains a weak reference to the owner.
+     - parameter owner: The LDObserverOwner which will execute the handler. The SDK retains a weak reference to the owner.
      - parameter handler: The LDFlagCollectionChangeHandler the SDK will execute 1 time when any of the observed feature flags change.
      */
     public func observe(keys: [LDFlagKey], owner: LDObserverOwner, handler: @escaping LDFlagCollectionChangeHandler) {
@@ -589,7 +596,7 @@ public class LDClient {
     /**
      Sets a handler for all flag keys executed on the specified owner. If any flag's value changes, executes the handler 1 time, passing in a dictionary of [LDFlagKey: LDChangedFlag] containing the old and new flag values, and old and new flag value source. See `LDChangedFlag` for details.
 
-     The SDK retains only weak references to owner, which allows the client app to freely destroy change owners without issues. Client apps should use a capture list specifying `[weak self]` inside handlers to avoid retain cycles causing a memory leak.
+     The SDK retains only weak references to owner, which allows the client app to freely destroy observer owners without issues. Client apps should use a capture list specifying `[weak self]` inside handlers to avoid retain cycles causing a memory leak.
 
      The SDK executes handlers on the main thread.
 
@@ -607,7 +614,7 @@ public class LDClient {
      }
      ````
 
-     - parameter owner: The LDFlagChangeOwner which will execute the handler. The SDK retains a weak reference to the owner.
+     - parameter owner: The LDObserverOwner which will execute the handler. The SDK retains a weak reference to the owner.
      - parameter handler: The LDFlagCollectionChangeHandler the SDK will execute 1 time when any of the observed feature flags change.
      */
     public func observeAll(owner: LDObserverOwner, handler: @escaping LDFlagCollectionChangeHandler) {
@@ -620,7 +627,7 @@ public class LDClient {
 
      This handler can only ever be called when the LDClient is polling.
 
-     The SDK retains only weak references to owner, which allows the client app to freely destroy change owners without issues. Client apps should use a capture list specifying `[weak self]` inside handlers to avoid retain cycles causing a memory leak.
+     The SDK retains only weak references to owner, which allows the client app to freely destroy observer owners without issues. Client apps should use a capture list specifying `[weak self]` inside handlers to avoid retain cycles causing a memory leak.
 
      The SDK executes handlers on the main thread.
 
@@ -633,12 +640,36 @@ public class LDClient {
      }
      ````
 
-     - parameter owner: The LDFlagChangeOwner which will execute the handler. The SDK retains a weak reference to the owner.
+     - parameter owner: The LDObserverOwner which will execute the handler. The SDK retains a weak reference to the owner.
      - parameter handler: The LDFlagsUnchangedHandler the SDK will execute 1 time when a flag request completes with no flags changed.
      */
     public func observeFlagsUnchanged(owner: LDObserverOwner, handler: @escaping LDFlagsUnchangedHandler) {
         Log.debug(typeName(and: #function) + " owner: \(String(describing: owner))")
         flagChangeNotifier.addFlagsUnchangedObserver(FlagsUnchangedObserver(owner: owner, flagsUnchangedHandler: handler))
+    }
+    
+    /**
+     Sets a handler executed when ConnectionInformation.currentConnectionMode changes.
+     
+     The SDK retains only weak references to owner, which allows the client app to freely destroy change owners without issues. Client apps should use a capture list specifying `[weak self]` inside handlers to avoid retain cycles causing a memory leak.
+     
+     The SDK executes handlers on the main thread.
+     
+     SeeAlso: `stopObserving(owner:)`
+     
+     ### Usage
+     ````
+     LDClient.shared.observeCurrentConnectionMode(owner: self) { [weak self] in
+        //do something after ConnectionMode was updated.
+     }
+     ````
+     
+     - parameter owner: The LDObserverOwner which will execute the handler. The SDK retains a weak reference to the owner.
+     - parameter handler: The LDConnectionModeChangedHandler the SDK will execute 1 time when ConnectionInformation.currentConnectionMode is changed.
+     */
+    public func observeCurrentConnectionMode(owner: LDObserverOwner, handler: @escaping LDConnectionModeChangedHandler) {
+        Log.debug(typeName(and: #function) + " owner: \(String(describing: owner))")
+        flagChangeNotifier.addConnectionModeChangedObserver(ConnectionModeChangedObserver(owner: owner, connectionModeChangedHandler: handler))
     }
 
     /**
@@ -667,6 +698,7 @@ public class LDClient {
         case let .success(flagDictionary, streamingEvent):
             let oldFlags = user.flagStore.featureFlags
             let oldFlagSource = user.flagStore.flagValueSource
+            connectionInformation = ConnectionInformation.checkEstablishingStreaming(connectionInformation: connectionInformation)
             switch streamingEvent {
             case nil, .ping?, .put?:
                 user.flagStore.replaceStore(newFlags: flagDictionary, source: .server) {
@@ -692,6 +724,7 @@ public class LDClient {
             Log.debug(logPrefix + "LDClient is unauthorized")
             setOnline(false)
         }
+        connectionInformation = ConnectionInformation.synchronizingErrorCheck(synchronizingError: synchronizingError, connectionInformation: connectionInformation)
         DispatchQueue.main.async {
             self.errorNotifier.notifyObservers(of: synchronizingError)
         }
@@ -787,6 +820,7 @@ public class LDClient {
             if runMode == .background {
                 eventReporter.reportEvents()
             }
+            
             eventReporter.isOnline = isOnline && runMode == .foreground
 
             let willSetSynchronizerOnline = isOnline && isInSupportedRunMode
@@ -794,7 +828,9 @@ public class LDClient {
             //if it does match, keeping the synchronizer precludes an extra flag request
             if !flagSynchronizerConfigMatchesConfigAndRunMode {
                 flagSynchronizer.isOnline = false
-                flagSynchronizer = serviceFactory.makeFlagSynchronizer(streamingMode: effectiveStreamingMode(runMode: runMode, config: config),
+                let streamingModeVar = ConnectionInformation.effectiveStreamingMode(config: config, ldClient: self)
+                connectionInformation = ConnectionInformation.backgroundBehavior(connectionInformation: connectionInformation, streamingMode: streamingModeVar, goOnline: willSetSynchronizerOnline)
+                flagSynchronizer = serviceFactory.makeFlagSynchronizer(streamingMode: streamingModeVar,
                                                                        pollingInterval: config.flagPollingInterval(runMode: runMode),
                                                                        useReport: config.useReport,
                                                                        service: service,
@@ -803,13 +839,11 @@ public class LDClient {
             flagSynchronizer.isOnline = willSetSynchronizerOnline
         }
     }
+    
     private var flagSynchronizerConfigMatchesConfigAndRunMode: Bool {
-        return flagSynchronizer.streamingMode == effectiveStreamingMode(runMode: runMode, config: config)
+        return flagSynchronizer.streamingMode == ConnectionInformation.effectiveStreamingMode(config: config, ldClient: self)
             && (flagSynchronizer.streamingMode == .streaming
                 || flagSynchronizer.streamingMode == .polling && flagSynchronizer.pollingInterval == config.flagPollingInterval(runMode: runMode))
-    }
-    private var allowBackgroundFlagUpdates: Bool {
-        return config.enableBackgroundUpdates && environmentReporter.operatingSystem.isBackgroundEnabled
     }
 
     private(set) var flagCache: FeatureFlagCaching
@@ -835,12 +869,13 @@ public class LDClient {
         config = LDConfig(mobileKey: "", environmentReporter: environmentReporter)
         user = LDUser(environmentReporter: environmentReporter)
         service = self.serviceFactory.makeDarklyServiceProvider(config: config, user: user)
+        eventReporter = self.serviceFactory.makeEventReporter(config: config, service: service)
+        errorNotifier = self.serviceFactory.makeErrorNotifier()
+        connectionInformation = self.serviceFactory.makeConnectionInformation()
         flagSynchronizer = self.serviceFactory.makeFlagSynchronizer(streamingMode: .polling,
                                                                     pollingInterval: config.flagPollingInterval,
                                                                     useReport: config.useReport,
                                                                     service: service)
-        eventReporter = self.serviceFactory.makeEventReporter(config: config, service: service)
-        errorNotifier = self.serviceFactory.makeErrorNotifier()
 
         if let backgroundNotification = environmentReporter.backgroundNotification {
             NotificationCenter.default.addObserver(self, selector: #selector(didEnterBackground), name: backgroundNotification, object: nil)
@@ -848,8 +883,8 @@ public class LDClient {
         if let foregroundNotification = environmentReporter.foregroundNotification {
             NotificationCenter.default.addObserver(self, selector: #selector(willEnterForeground), name: foregroundNotification, object: nil)
         }
-
-        //Since eventReporter lasts the life of the singleton, we can configure it here...swift requires the client to be instantiated before we can pass the onSyncComplete method 
+    
+        //Since eventReporter lasts the life of the singleton, we can configure it here...swift requires the client to be instantiated before we can pass the onSyncComplete method
         eventReporter = self.serviceFactory.makeEventReporter(config: config, service: service, onSyncComplete: onEventSyncComplete)
     }
 
@@ -862,7 +897,7 @@ public class LDClient {
 
         //dummy objects replaced by client at start
         service = self.serviceFactory.makeDarklyServiceProvider(config: config, user: user)  //didSet not triggered here
-        flagSynchronizer = self.serviceFactory.makeFlagSynchronizer(streamingMode: effectiveStreamingMode(runMode: runMode, config: config),
+        flagSynchronizer = self.serviceFactory.makeFlagSynchronizer(streamingMode: ConnectionInformation.effectiveStreamingMode(config: config, ldClient: self),
                                                                     pollingInterval: config.flagPollingInterval(runMode: runMode),
                                                                     useReport: config.useReport,
                                                                     service: service,

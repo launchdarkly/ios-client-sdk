@@ -29,6 +29,7 @@ protocol ClientServiceCreating {
     func makeEnvironmentReporter() -> EnvironmentReporting
     func makeThrottler(maxDelay: TimeInterval, environmentReporter: EnvironmentReporting) -> Throttling
     func makeErrorNotifier() -> ErrorNotifying
+    func makeConnectionInformation() -> ConnectionInformation
 }
 
 final class ClientServiceFactory: ClientServiceCreating {
@@ -99,5 +100,9 @@ final class ClientServiceFactory: ClientServiceCreating {
 
     func makeErrorNotifier() -> ErrorNotifying {
         return ErrorNotifier()
+    }
+    
+    func makeConnectionInformation() -> ConnectionInformation {
+        return ConnectionInformation(currentConnectionMode: .offline, lastConnectionFailureReason: .none)
     }
 }

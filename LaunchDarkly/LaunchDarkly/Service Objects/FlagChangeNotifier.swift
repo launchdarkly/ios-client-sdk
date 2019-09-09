@@ -12,17 +12,20 @@ import Foundation
 protocol FlagChangeNotifying {
     func addFlagChangeObserver(_ observer: FlagChangeObserver)
     func addFlagsUnchangedObserver(_ observer: FlagsUnchangedObserver)
+    func addConnectionModeChangedObserver(_ observer: ConnectionModeChangedObserver)
     //sourcery: noMock
     func removeObserver(_ key: LDFlagKey, owner: LDObserverOwner)
     func removeObserver(_ keys: [LDFlagKey], owner: LDObserverOwner)
     //sourcery: noMock
     func removeObserver(owner: LDObserverOwner)
+    func notifyConnectionModeChangedObservers(connectionMode: ConnectionInformation.ConnectionMode)
     func notifyObservers(user: LDUser, oldFlags: [LDFlagKey: FeatureFlag], oldFlagSource: LDFlagValueSource)
 }
 
 final class FlagChangeNotifier: FlagChangeNotifying {
     private var flagChangeObservers = [FlagChangeObserver]()
     private var flagsUnchangedObservers = [FlagsUnchangedObserver]()
+    private var connectionModeChangedObservers = [ConnectionModeChangedObserver]()
     
     func addFlagChangeObserver(_ observer: FlagChangeObserver) {
         Log.debug(typeName(and: #function) + "observer: \(observer)")
@@ -32,6 +35,11 @@ final class FlagChangeNotifier: FlagChangeNotifying {
     func addFlagsUnchangedObserver(_ observer: FlagsUnchangedObserver) {
         Log.debug(typeName(and: #function) + "observer: \(observer)")
         flagsUnchangedObservers.append(observer)
+    }
+    
+    func addConnectionModeChangedObserver(_ observer: ConnectionModeChangedObserver) {
+        Log.debug(typeName(and: #function) + "observer: \(observer)")
+        connectionModeChangedObservers.append(observer)
     }
 
     ///Removes any change handling closures for flag.key from owner
@@ -56,6 +64,19 @@ final class FlagChangeNotifier: FlagChangeNotifying {
         }
         flagsUnchangedObservers = flagsUnchangedObservers.filter { (observer) in
             observer.owner !== owner
+        }
+        connectionModeChangedObservers = connectionModeChangedObservers.filter { (observer) in
+            observer.owner !== owner
+        }
+    }
+    
+    func notifyConnectionModeChangedObservers(connectionMode: ConnectionInformation.ConnectionMode) {
+        connectionModeChangedObservers.forEach { (connectionModeChangedObserver) in
+            if let connectionModeChangedHandler = connectionModeChangedObserver.connectionModeChangedHandler {
+                DispatchQueue.main.async {
+                    connectionModeChangedHandler(connectionMode)
+                }
+            }
         }
     }
     
