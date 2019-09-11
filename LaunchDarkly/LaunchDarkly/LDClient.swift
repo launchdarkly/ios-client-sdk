@@ -43,6 +43,7 @@ enum LDClientRunMode {
  ````
  The `changedFlag` passed in to the closure contains the old and new value, and the old and new valueSource.
  */
+// swiftlint:disable type_body_length
 public class LDClient {
 
     // MARK: - State Controls and Indicators
@@ -201,8 +202,7 @@ public class LDClient {
         }
         set {
             Log.debug("Setting the user property is deprecated, please use the identify method instead")
-            _user = newValue
-            identifyInternal(newUser: _user)
+            identifyInternal(newUser: newValue)
         }
     }
     
@@ -226,9 +226,7 @@ public class LDClient {
     }
     
     private func identifyInternal(newUser: LDUser, completion: (() -> Void)? = nil) {
-        if completion != nil {
-            _user = newUser
-        }
+        _user = newUser
         Log.debug(typeName(and: #function) + "new user set with key: " + _user.key )
         let wasOnline = isOnline
         setOnline(false)
