@@ -187,7 +187,7 @@ public class LDClient {
     }
     
     /**
-     The LDUser set into the LDClient may affect the set of feature flags returned by the LaunchDarkly server, and ties event tracking to the user. See `LDUser` for details about what information can be retained.
+     This method of changing the user is deprecated.The LDUser set into the LDClient may affect the set of feature flags returned by the LaunchDarkly server, and ties event tracking to the user. See `LDUser` for details about what information can be retained.
 
      Normally, the client app should create and set the LDUser and pass that into `start(config: user: completion:)`.
 
@@ -196,10 +196,17 @@ public class LDClient {
      When a new user is set, the LDClient goes offline and sets the new user. If the client was online when the new user was set, it goes online again, subject to a throttling delay if in force (see `setOnline(_: completion:)` for details). To change both the `config` and `user`, set the LDClient offline, set both properties, then set the LDClient online.
     */
     public var user: LDUser {
-        didSet {
-            identifyInternal(user: user, internalSet: true)
+        get {
+            return _user
+        }
+        set {
+            Log.debug("Setting the user property is deprecated, please use the identify method instead")
+            _user = newValue
+            identifyInternal(newUser: _user)
         }
     }
+    
+    private var _user: LDUser
     
     /**
      The LDUser set into the LDClient may affect the set of feature flags returned by the LaunchDarkly server, and ties event tracking to the user. See `LDUser` for details about what information can be retained.
@@ -215,13 +222,14 @@ public class LDClient {
      - parameter completion: Closure called when the embedded `setOnline` call completes, subject to throttling delays. (Optional)
     */
     public func identify(user: LDUser, completion: (() -> Void)? = nil) {
-        identifyInternal(user: user, internalSet: false) {
-            completion?()
-        }
+        identifyInternal(newUser: user, completion: completion)
     }
     
-    private func identifyInternal(user: LDUser, internalSet: Bool, completion: (() -> Void)? = nil) {
-        Log.debug(typeName(and: #function) + "new user set with key: " + user.key )
+    private func identifyInternal(newUser: LDUser, completion: (() -> Void)? = nil) {
+        if completion != nil {
+            _user = newUser
+        }
+        Log.debug(typeName(and: #function) + "new user set with key: " + _user.key )
         let wasOnline = isOnline
         setOnline(false)
         
@@ -229,24 +237,17 @@ public class LDClient {
             eventReporter.recordSummaryEvent()
         }
         convertCachedData(skipDuringStart: isStarting)
-        if let cachedFlags = flagCache.retrieveFeatureFlags(forUserWithKey: user.key, andMobileKey: config.mobileKey), !cachedFlags.isEmpty {
-            user.flagStore.replaceStore(newFlags: cachedFlags, source: .cache, completion: nil)
+        if let cachedFlags = flagCache.retrieveFeatureFlags(forUserWithKey: _user.key, andMobileKey: config.mobileKey), !cachedFlags.isEmpty {
+            _user.flagStore.replaceStore(newFlags: cachedFlags, source: .cache, completion: nil)
         }
-        service = serviceFactory.makeDarklyServiceProvider(config: config, user: user)
+        service = serviceFactory.makeDarklyServiceProvider(config: config, user: _user)
         service.clearFlagResponseCache()
         
         if hasStarted {
-            eventReporter.record(Event.identifyEvent(user: user))
+            eventReporter.record(Event.identifyEvent(user: _user))
         }
         
-        if internalSet {
-            Log.debug("Setting the user property is deprecated, please use the identify method instead")
-            setOnline(wasOnline)
-        } else {
-            setOnline(wasOnline) {
-                completion?()
-            }
-        }
+        setOnline(wasOnline, completion: completion)
     }
 
     private(set) var service: DarklyServiceProvider {
@@ -292,6 +293,7 @@ public class LDClient {
         cacheConverter.convertCacheData(for: startUser, and: config)        //Convert before updating the user so any deprecated cached data is converted to the current model
         self.config = config
         self.user = startUser
+        self._user = startUser
         self.connectionInformation = ConnectionInformation.uncacheConnectionInformation(config: config, ldClient: self, clientServiceFactory: serviceFactory)
 
         setOnline((wasStarted && wasOnline) || (!wasStarted && self.config.startOnline)) {
@@ -897,8 +899,8 @@ public class LDClient {
 
         //dummy objects replaced by client at start
         config = LDConfig(mobileKey: "", environmentReporter: environmentReporter)
-        user = LDUser(environmentReporter: environmentReporter)
-        service = self.serviceFactory.makeDarklyServiceProvider(config: config, user: user)
+        _user = LDUser(environmentReporter: environmentReporter)
+        service = self.serviceFactory.makeDarklyServiceProvider(config: config, user: _user)
         eventReporter = self.serviceFactory.makeEventReporter(config: config, service: service)
         errorNotifier = self.serviceFactory.makeErrorNotifier()
         connectionInformation = self.serviceFactory.makeConnectionInformation()
