@@ -128,7 +128,7 @@ public class LDClient {
         guard goOnline, canGoOnline
             else {
                 //go offline, which is not throttled
-                go(online: false, reasonOnlineUnavailable: reasonOnlineUnavailable(goOnline: goOnline), completion: completion)
+                goIdentify(online: false, reasonOnlineUnavailable: reasonOnlineUnavailable(goOnline: goOnline), completion: completion)
                 return
         }
         
