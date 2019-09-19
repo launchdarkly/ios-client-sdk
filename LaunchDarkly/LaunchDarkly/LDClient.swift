@@ -122,6 +122,38 @@ public class LDClient {
             self.go(online: self.lastSetOnlineCallValue && self.canGoOnline, reasonOnlineUnavailable: self.reasonOnlineUnavailable(goOnline: self.lastSetOnlineCallValue), completion: completion)
         }
     }
+    
+    private func setOnlineIdentify(_ goOnline: Bool, completion: (() -> Void)? = nil) {
+        lastSetOnlineCallValue = goOnline
+        guard goOnline, canGoOnline
+            else {
+                //go offline, which is not throttled
+                go(online: false, reasonOnlineUnavailable: reasonOnlineUnavailable(goOnline: goOnline), completion: completion)
+                return
+        }
+        
+        throttler.runThrottled {
+            //since going online was throttled, check the last called setOnline value and whether we can go online
+            self.goIdentify(online: self.lastSetOnlineCallValue && self.canGoOnline, reasonOnlineUnavailable: self.reasonOnlineUnavailable(goOnline: self.lastSetOnlineCallValue), completion: completion)
+        }
+    }
+    
+    private func goIdentify(online goOnline: Bool, reasonOnlineUnavailable: String, completion:(() -> Void)?) {
+        if !isOnline {
+            let owner = "SetOnlineOwner" as AnyObject
+            observeAll(owner: owner) { _ in
+                completion?()
+                self.stopObserving(owner: owner)
+            }
+            observeFlagsUnchanged(owner: owner) {
+                completion?()
+                self.stopObserving(owner: owner)
+            }
+        }
+        isOnline = goOnline
+        Log.debug(typeName(and: "setOnline", appending: ": ") + (reasonOnlineUnavailable.isEmpty ? "\(self.isOnline)." : "true aborted.") + reasonOnlineUnavailable)
+        completion?()
+    }
 
     private var canGoOnline: Bool {
         return hasStarted && isInSupportedRunMode && !config.mobileKey.isEmpty
@@ -245,7 +277,11 @@ public class LDClient {
             eventReporter.record(Event.identifyEvent(user: _user))
         }
         
-        setOnline(wasOnline, completion: completion)
+        if completion != nil {
+            setOnlineIdentify(wasOnline, completion: completion)
+        } else {
+            setOnline(wasOnline)
+        }
     }
 
     private(set) var service: DarklyServiceProvider {
