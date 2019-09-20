@@ -1053,6 +1053,197 @@ final class LDClientSpec: QuickSpec {
                 }
             }
         }
+        
+        describe("set user with identify") {
+            var newUser: LDUser!
+            beforeEach {
+                testContext = TestContext()
+            }
+            context("when the client is online") {
+                beforeEach {
+                    testContext.config.startOnline = true
+                    testContext.subject.start(config: testContext.config, user: testContext.user)
+                    testContext.eventReporterMock.recordSummaryEventCallCount = 0   //calling start sets the user, which calls eventReporter.recordSummaryEvent()
+                    testContext.featureFlagCachingMock.reset()
+                    testContext.cacheConvertingMock.reset()
+                    
+                    newUser = LDUser.stub()
+                    let group = DispatchGroup()
+                    group.enter()
+                    testContext.subject.identify(user: newUser) {
+                        group.leave()
+                    }
+                }
+                it("changes to the new user") {
+                    expect(testContext.subject.user) == newUser
+                    expect(testContext.subject.service.user) == newUser
+                    expect(testContext.serviceMock.clearFlagResponseCacheCallCount) == 1
+                    expect(testContext.makeFlagSynchronizerService?.user) == newUser
+                    expect(testContext.subject.eventReporter.service.user) == newUser
+                }
+                it("leaves the client online") {
+                    expect(testContext.subject.isOnline) == true
+                    expect(testContext.subject.eventReporter.isOnline) == true
+                    expect(testContext.subject.flagSynchronizer.isOnline) == true
+                }
+                it("uncaches the new users flags") {
+                    expect(testContext.featureFlagCachingMock.retrieveFeatureFlagsCallCount) == 1
+                    expect(testContext.featureFlagCachingMock.retrieveFeatureFlagsReceivedArguments?.userKey) == newUser.key
+                    expect(testContext.featureFlagCachingMock.retrieveFeatureFlagsReceivedArguments?.mobileKey) == testContext.config.mobileKey
+                }
+                it("records identify and summary events") {
+                    expect(testContext.eventReporterMock.recordSummaryEventCallCount) == 1
+                    expect(testContext.eventReporterMock.recordReceivedArguments?.event.kind == .identify).to(beTrue())
+                }
+                it("converts cached data") {
+                    expect(testContext.cacheConvertingMock.convertCacheDataCallCount) == 1
+                    expect(testContext.cacheConvertingMock.convertCacheDataReceivedArguments?.user) == newUser
+                    expect(testContext.cacheConvertingMock.convertCacheDataReceivedArguments?.config) == testContext.config
+                }
+            }
+            context("when the client is offline") {
+                beforeEach {
+                    testContext.config.startOnline = false
+                    testContext.subject.start(config: testContext.config, user: testContext.user)
+                    testContext.eventReporterMock.recordSummaryEventCallCount = 0   //calling start sets the user, which calls eventReporter.recordSummaryEvent()
+                    testContext.featureFlagCachingMock.reset()
+                    testContext.cacheConvertingMock.reset()
+                    
+                    newUser = LDUser.stub()
+                    let group = DispatchGroup()
+                    group.enter()
+                    testContext.subject.identify(user: newUser) {
+                        group.leave()
+                    }
+                }
+                it("changes to the new user") {
+                    expect(testContext.subject.user) == newUser
+                    expect(testContext.subject.service.user) == newUser
+                    expect(testContext.serviceMock.clearFlagResponseCacheCallCount) == 1
+                    expect(testContext.makeFlagSynchronizerService?.user) == newUser
+                    expect(testContext.subject.eventReporter.service.user) == newUser
+                }
+                it("leaves the client offline") {
+                    expect(testContext.subject.isOnline) == false
+                    expect(testContext.subject.eventReporter.isOnline) == false
+                    expect(testContext.subject.flagSynchronizer.isOnline) == false
+                }
+                it("uncaches the new users flags") {
+                    expect(testContext.featureFlagCachingMock.retrieveFeatureFlagsCallCount) == 1
+                    expect(testContext.featureFlagCachingMock.retrieveFeatureFlagsReceivedArguments?.userKey) == newUser.key
+                    expect(testContext.featureFlagCachingMock.retrieveFeatureFlagsReceivedArguments?.mobileKey) == testContext.config.mobileKey
+                }
+                it("records identify and summary events") {
+                    expect(testContext.eventReporterMock.recordSummaryEventCallCount) == 1
+                    expect(testContext.eventReporterMock.recordReceivedArguments?.event.kind == .identify).to(beTrue())
+                }
+                it("converts cached data") {
+                    expect(testContext.cacheConvertingMock.convertCacheDataCallCount) == 1
+                    expect(testContext.cacheConvertingMock.convertCacheDataReceivedArguments?.user) == newUser
+                    expect(testContext.cacheConvertingMock.convertCacheDataReceivedArguments?.config) == testContext.config
+                }
+            }
+            context("when the client is not started") {
+                beforeEach {
+                    newUser = LDUser.stub()
+                    let group = DispatchGroup()
+                    group.enter()
+                    testContext.subject.identify(user: newUser) {
+                        group.leave()
+                    }
+                }
+                it("changes to the new user") {
+                    expect(testContext.subject.user) == newUser
+                    expect(testContext.subject.service.user) == newUser
+                    expect(testContext.serviceMock.clearFlagResponseCacheCallCount) == 1
+                    expect(testContext.makeFlagSynchronizerService?.user) == newUser
+                    expect(testContext.subject.eventReporter.service.user) == newUser
+                }
+                it("leaves the client offline") {
+                    expect(testContext.subject.isOnline) == false
+                    expect(testContext.subject.eventReporter.isOnline) == false
+                    expect(testContext.subject.flagSynchronizer.isOnline) == false
+                }
+                it("uncaches the new users flags") {
+                    expect(testContext.featureFlagCachingMock.retrieveFeatureFlagsCallCount) == 1
+                    expect(testContext.featureFlagCachingMock.retrieveFeatureFlagsReceivedArguments?.userKey) == newUser.key
+                    expect(testContext.featureFlagCachingMock.retrieveFeatureFlagsReceivedArguments?.mobileKey) == testContext.config.mobileKey
+                }
+                it("does not record any event") {
+                    expect(testContext.eventReporterMock.recordSummaryEventCallCount) == 0
+                    expect(testContext.eventReporterMock.recordCallCount) == 0
+                }
+                it("converts cached data") {
+                    expect(testContext.cacheConvertingMock.convertCacheDataCallCount) == 2
+                    expect(testContext.cacheConvertingMock.convertCacheDataReceivedArguments?.user) == newUser
+                    expect(testContext.cacheConvertingMock.convertCacheDataReceivedArguments?.config) == testContext.config
+                }
+            }
+            context("when the new user has cached feature flags") {
+                beforeEach {
+                    testContext.config.startOnline = false  //offline makes no request to update flags...
+                    testContext.subject.start(config: testContext.config, user: testContext.user)
+                    testContext.eventReporterMock.recordSummaryEventCallCount = 0   //calling start sets the user, which calls eventReporter.recordSummaryEvent()
+                    testContext.featureFlagCachingMock.reset()
+                    newUser = LDUser.stub()
+                    testContext.featureFlagCachingMock.retrieveFeatureFlagsReturnValue = newUser.featureFlags
+                    testContext.cacheConvertingMock.reset()
+                    
+                    let group = DispatchGroup()
+                    group.enter()
+                    testContext.subject.identify(user: newUser) {
+                        group.leave()
+                    }
+                }
+                it("restores the cached users feature flags") {
+                    expect(testContext.subject.user) == newUser
+                    expect(newUser.flagStoreMock.replaceStoreCallCount) == 1
+                    expect(newUser.flagStoreMock.replaceStoreReceivedArguments?.newFlags?.flagCollection) == newUser.featureFlags
+                    expect(newUser.flagStoreMock.replaceStoreReceivedArguments?.source) == .cache
+                }
+                it("converts cached data") {
+                    expect(testContext.cacheConvertingMock.convertCacheDataCallCount) == 1
+                    expect(testContext.cacheConvertingMock.convertCacheDataReceivedArguments?.user) == newUser
+                    expect(testContext.cacheConvertingMock.convertCacheDataReceivedArguments?.config) == testContext.config
+                }
+            }
+            context("when the client is starting") {
+                beforeEach {
+                    testContext.subject.setIsStarting(true)
+                    newUser = LDUser.stub()
+                    
+                    let group = DispatchGroup()
+                    group.enter()
+                    testContext.subject.identify(user: newUser) {
+                        group.leave()
+                    }
+                }
+                it("changes to the new user") {
+                    expect(testContext.subject.user) == newUser
+                    expect(testContext.subject.service.user) == newUser
+                    expect(testContext.serviceMock.clearFlagResponseCacheCallCount) == 1
+                    expect(testContext.makeFlagSynchronizerService?.user) == newUser
+                    expect(testContext.subject.eventReporter.service.user) == newUser
+                }
+                it("uncaches the new users flags") {
+                    expect(testContext.featureFlagCachingMock.retrieveFeatureFlagsCallCount) == 1
+                    expect(testContext.featureFlagCachingMock.retrieveFeatureFlagsReceivedArguments?.userKey) == newUser.key
+                    expect(testContext.featureFlagCachingMock.retrieveFeatureFlagsReceivedArguments?.mobileKey) == testContext.config.mobileKey
+                }
+                it("leaves the client offline") {
+                    expect(testContext.subject.isOnline) == false
+                    expect(testContext.subject.eventReporter.isOnline) == false
+                    expect(testContext.subject.flagSynchronizer.isOnline) == false
+                }
+                it("does not record any event") {
+                    expect(testContext.eventReporterMock.recordSummaryEventCallCount) == 0
+                    expect(testContext.eventReporterMock.recordCallCount) == 0
+                }
+                it("does not convert cached data") {
+                    expect(testContext.cacheConvertingMock.convertCacheDataCallCount) == 1
+                }
+            }
+        }
     }
 
     private func setOnlineSpec() {
