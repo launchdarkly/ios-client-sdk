@@ -279,8 +279,6 @@ public class LDClient {
         
         if completion != nil {
             setOnlineIdentify(wasOnline, completion: completion)
-        } else if !wasOnline {
-            return
         } else {
             setOnline(wasOnline)
         }
