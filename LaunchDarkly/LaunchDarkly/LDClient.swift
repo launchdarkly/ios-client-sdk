@@ -139,20 +139,17 @@ public class LDClient {
     }
     
     private func goIdentify(online goOnline: Bool, reasonOnlineUnavailable: String, completion:(() -> Void)?) {
-        if !isOnline {
-            let owner = "SetOnlineOwner" as AnyObject
-            observeAll(owner: owner) { _ in
-                completion?()
-                self.stopObserving(owner: owner)
-            }
-            observeFlagsUnchanged(owner: owner) {
-                completion?()
-                self.stopObserving(owner: owner)
-            }
+        let owner = "SetOnlineOwner" as AnyObject
+        observeAll(owner: owner) { _ in
+            completion?()
+            self.stopObserving(owner: owner)
+        }
+        observeFlagsUnchanged(owner: owner) {
+            completion?()
+            self.stopObserving(owner: owner)
         }
         isOnline = goOnline
         Log.debug(typeName(and: "setOnline", appending: ": ") + (reasonOnlineUnavailable.isEmpty ? "\(self.isOnline)." : "true aborted.") + reasonOnlineUnavailable)
-        completion?()
     }
 
     private var canGoOnline: Bool {
@@ -232,6 +229,7 @@ public class LDClient {
         get {
             return _user
         }
+        @available(*, deprecated, message: "Please use the identify method instead")
         set {
             Log.debug("Setting the user property is deprecated, please use the identify method instead")
             identifyInternal(newUser: newValue)
@@ -247,8 +245,7 @@ public class LDClient {
      
      The client app can change the LDUser by getting the `user`, adjusting the values, and passing it to the LDClient method identify. This allows client apps to collect information over time from the user and update as information is collected. Client apps should follow [Apple's Privacy Policy](apple.com/legal/privacy) when collecting user information. If the client app does not create a LDUser, LDClient creates an anonymous default user, which can affect the feature flags delivered to the LDClient.
      
-     When a new user is set, the LDClient goes offline and sets the new user. If the client was online when the new user was set, it goes online again, subject to a throttling delay if in force (see `setOnline(_: completion:)` for details). To change both the `config` and `user`, set the LDClient offline, set both properties, then set the LDClient online. A completion may be passed
-         to the identify method to allow a client app to know when fresh flag values for the new user are ready.
+     When a new user is set, the LDClient goes offline and sets the new user. If the client was online when the new user was set, it goes online again, subject to a throttling delay if in force (see `setOnline(_: completion:)` for details). To change both the `config` and `user`, set the LDClient offline, set both properties, then set the LDClient online. A completion may be passed to the identify method to allow a client app to know when fresh flag values for the new user are ready.
      
      - parameter user: The LDUser set with the desired user.
      - parameter completion: Closure called when the embedded `setOnline` call completes, subject to throttling delays. (Optional)
@@ -326,7 +323,7 @@ public class LDClient {
         let startUser = user ?? self.user
         cacheConverter.convertCacheData(for: startUser, and: config)        //Convert before updating the user so any deprecated cached data is converted to the current model
         self.config = config
-        self.user = startUser
+        identify(user: startUser)
         self.connectionInformation = ConnectionInformation.uncacheConnectionInformation(config: config, ldClient: self, clientServiceFactory: serviceFactory)
 
         setOnline((wasStarted && wasOnline) || (!wasStarted && self.config.startOnline)) {
@@ -958,7 +955,7 @@ public class LDClient {
         //Setting these inside the init do not trigger the didSet closures
         self.runMode = runMode
         self.config = config
-        self.user = user
+        identify(user: user)
 
         //dummy objects replaced by client at start
         service = self.serviceFactory.makeDarklyServiceProvider(config: config, user: user)  //didSet not triggered here
