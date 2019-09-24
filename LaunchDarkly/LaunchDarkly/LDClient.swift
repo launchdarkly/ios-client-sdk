@@ -140,13 +140,15 @@ public class LDClient {
     
     private func goIdentify(online goOnline: Bool, reasonOnlineUnavailable: String, completion:(() -> Void)?) {
         let owner = "SetOnlineOwner" as AnyObject
-        observeAll(owner: owner) { _ in
-            completion?()
-            self.stopObserving(owner: owner)
-        }
-        observeFlagsUnchanged(owner: owner) {
-            completion?()
-            self.stopObserving(owner: owner)
+        if completion != nil {
+            observeAll(owner: owner) { _ in
+                completion?()
+                self.stopObserving(owner: owner)
+            }
+            observeFlagsUnchanged(owner: owner) {
+                completion?()
+                self.stopObserving(owner: owner)
+            }
         }
         isOnline = goOnline
         Log.debug(typeName(and: "setOnline", appending: ": ") + (reasonOnlineUnavailable.isEmpty ? "\(self.isOnline)." : "true aborted.") + reasonOnlineUnavailable)
@@ -203,7 +205,6 @@ public class LDClient {
             Log.debug(typeName(and: #function) + "new config set")
             let wasOnline = isOnline
             setOnline(false)
-
             convertCachedData(skipDuringStart: isStarting)
             if let cachedFlags = flagCache.retrieveFeatureFlags(forUserWithKey: user.key, andMobileKey: config.mobileKey), !cachedFlags.isEmpty {
                 user.flagStore.replaceStore(newFlags: cachedFlags, source: .cache, completion: nil)
@@ -232,7 +233,7 @@ public class LDClient {
         @available(*, deprecated, message: "Please use the identify method instead")
         set {
             Log.debug("Setting the user property is deprecated, please use the identify method instead")
-            identifyInternal(newUser: newValue)
+            identify(user: newValue)
         }
     }
     
@@ -248,14 +249,10 @@ public class LDClient {
      When a new user is set, the LDClient goes offline and sets the new user. If the client was online when the new user was set, it goes online again, subject to a throttling delay if in force (see `setOnline(_: completion:)` for details). To change both the `config` and `user`, set the LDClient offline, set both properties, then set the LDClient online. A completion may be passed to the identify method to allow a client app to know when fresh flag values for the new user are ready.
      
      - parameter user: The LDUser set with the desired user.
-     - parameter completion: Closure called when the embedded `setOnline` call completes, subject to throttling delays. (Optional)
+     - parameter completion: Closure called when the embedded `setOnlineIdentify` call completes, subject to throttling delays. (Optional)
     */
     public func identify(user: LDUser, completion: (() -> Void)? = nil) {
-        identifyInternal(newUser: user, completion: completion)
-    }
-    
-    private func identifyInternal(newUser: LDUser, completion: (() -> Void)? = nil) {
-        _user = newUser
+        _user = user
         Log.debug(typeName(and: #function) + "new user set with key: " + _user.key )
         let wasOnline = isOnline
         setOnline(false)
@@ -274,11 +271,7 @@ public class LDClient {
             eventReporter.record(Event.identifyEvent(user: _user))
         }
         
-        if completion != nil {
-            setOnlineIdentify(wasOnline, completion: completion)
-        } else {
-            setOnline(wasOnline)
-        }
+        setOnlineIdentify(wasOnline, completion: completion)
     }
 
     private(set) var service: DarklyServiceProvider {
@@ -955,6 +948,7 @@ public class LDClient {
         //Setting these inside the init do not trigger the didSet closures
         self.runMode = runMode
         self.config = config
+        self.isStarting = true
         identify(user: user)
 
         //dummy objects replaced by client at start
@@ -965,6 +959,7 @@ public class LDClient {
                                                                     service: service,
                                                                     onSyncComplete: onFlagSyncComplete)
         eventReporter = self.serviceFactory.makeEventReporter(config: config, service: service, onSyncComplete: onEventSyncComplete)
+        self.isStarting = false
     }
 }
 

@@ -261,7 +261,7 @@ final class LDClientSpec: QuickSpec {
                     expect(testContext.recordedEvent?.key) == testContext.user.key
                 }
                 it("converts cached data") {
-                    expect(testContext.cacheConvertingMock.convertCacheDataCallCount) == 2
+                    expect(testContext.cacheConvertingMock.convertCacheDataCallCount) == 1
                     expect(testContext.cacheConvertingMock.convertCacheDataReceivedArguments?.user) == testContext.user
                     expect(testContext.cacheConvertingMock.convertCacheDataReceivedArguments?.config) == testContext.config
                 }
@@ -305,7 +305,7 @@ final class LDClientSpec: QuickSpec {
                     expect(testContext.recordedEvent?.key) == testContext.user.key
                 }
                 it("converts cached data") {
-                    expect(testContext.cacheConvertingMock.convertCacheDataCallCount) == 2
+                    expect(testContext.cacheConvertingMock.convertCacheDataCallCount) == 1
                     expect(testContext.cacheConvertingMock.convertCacheDataReceivedArguments?.user) == testContext.user
                     expect(testContext.cacheConvertingMock.convertCacheDataReceivedArguments?.config) == testContext.config
                 }
@@ -352,7 +352,7 @@ final class LDClientSpec: QuickSpec {
                             expect(testContext.recordedEvent?.key) == testContext.user.key
                         }
                         it("converts cached data") {
-                            expect(testContext.cacheConvertingMock.convertCacheDataCallCount) == 2
+                            expect(testContext.cacheConvertingMock.convertCacheDataCallCount) == 1
                             expect(testContext.cacheConvertingMock.convertCacheDataReceivedArguments?.user) == testContext.user
                             expect(testContext.cacheConvertingMock.convertCacheDataReceivedArguments?.config) == testContext.config
                         }
@@ -402,7 +402,7 @@ final class LDClientSpec: QuickSpec {
                             expect(testContext.recordedEvent?.key) == testContext.user.key
                         }
                         it("converts cached data") {
-                            expect(testContext.cacheConvertingMock.convertCacheDataCallCount) == 2
+                            expect(testContext.cacheConvertingMock.convertCacheDataCallCount) == 1
                             expect(testContext.cacheConvertingMock.convertCacheDataReceivedArguments?.user) == testContext.user
                             expect(testContext.cacheConvertingMock.convertCacheDataReceivedArguments?.config) == testContext.config
                         }
@@ -460,7 +460,7 @@ final class LDClientSpec: QuickSpec {
                         expect(testContext.recordedEvent?.key) == newUser.key
                     }
                     it("converts cached data") {
-                        expect(testContext.cacheConvertingMock.convertCacheDataCallCount) == 3
+                        expect(testContext.cacheConvertingMock.convertCacheDataCallCount) == 2
                         expect(testContext.cacheConvertingMock.convertCacheDataReceivedArguments?.user) == newUser
                         expect(testContext.cacheConvertingMock.convertCacheDataReceivedArguments?.config) == newConfig
                     }
@@ -513,7 +513,7 @@ final class LDClientSpec: QuickSpec {
                         expect(testContext.recordedEvent?.key) == newUser.key
                     }
                     it("converts cached data") {
-                        expect(testContext.cacheConvertingMock.convertCacheDataCallCount) == 3
+                        expect(testContext.cacheConvertingMock.convertCacheDataCallCount) == 2
                         expect(testContext.cacheConvertingMock.convertCacheDataReceivedArguments?.user) == newUser
                         expect(testContext.cacheConvertingMock.convertCacheDataReceivedArguments?.config) == newConfig
                     }
@@ -557,7 +557,7 @@ final class LDClientSpec: QuickSpec {
                         expect(testContext.recordedEvent?.key) == testContext.user.key
                     }
                     it("converts cached data") {
-                        expect(testContext.cacheConvertingMock.convertCacheDataCallCount) == 3
+                        expect(testContext.cacheConvertingMock.convertCacheDataCallCount) == 2
                         expect(testContext.cacheConvertingMock.convertCacheDataReceivedArguments?.user) == testContext.user
                         expect(testContext.cacheConvertingMock.convertCacheDataReceivedArguments?.config) == testContext.config
                     }
@@ -595,7 +595,7 @@ final class LDClientSpec: QuickSpec {
                         expect(testContext.recordedEvent?.key) == testContext.user.key
                     }
                     it("converts cached data") {
-                        expect(testContext.cacheConvertingMock.convertCacheDataCallCount) == 2
+                        expect(testContext.cacheConvertingMock.convertCacheDataCallCount) == 1
                         expect(testContext.cacheConvertingMock.convertCacheDataReceivedArguments?.user) == testContext.user
                         expect(testContext.cacheConvertingMock.convertCacheDataReceivedArguments?.config) == testContext.config
                     }
@@ -623,7 +623,7 @@ final class LDClientSpec: QuickSpec {
                     expect(testContext.flagStoreMock.replaceStoreReceivedArguments?.newFlags?.flagCollection) == retrievedFlags
                 }
                 it("converts cached data") {
-                    expect(testContext.cacheConvertingMock.convertCacheDataCallCount) == 2
+                    expect(testContext.cacheConvertingMock.convertCacheDataCallCount) == 1
                     expect(testContext.cacheConvertingMock.convertCacheDataReceivedArguments?.user) == testContext.user
                     expect(testContext.cacheConvertingMock.convertCacheDataReceivedArguments?.config) == testContext.config
                 }
@@ -647,7 +647,7 @@ final class LDClientSpec: QuickSpec {
                     expect(testContext.flagStoreMock.replaceStoreCallCount) == 0
                 }
                 it("converts cached data") {
-                    expect(testContext.cacheConvertingMock.convertCacheDataCallCount) == 2
+                    expect(testContext.cacheConvertingMock.convertCacheDataCallCount) == 1
                     expect(testContext.cacheConvertingMock.convertCacheDataReceivedArguments?.user) == testContext.user
                     expect(testContext.cacheConvertingMock.convertCacheDataReceivedArguments?.config) == testContext.config
                 }
@@ -839,7 +839,7 @@ final class LDClientSpec: QuickSpec {
                     expect(testContext.eventReporterMock.isOnline) == testContext.subject.isOnline
                 }
                 it("converts cached data") {
-                    expect(testContext.cacheConvertingMock.convertCacheDataCallCount) == 2
+                    expect(testContext.cacheConvertingMock.convertCacheDataCallCount) == 1
                     expect(testContext.cacheConvertingMock.convertCacheDataReceivedArguments?.user) == testContext.user
                     expect(testContext.cacheConvertingMock.convertCacheDataReceivedArguments?.config) == newConfig
                 }
@@ -874,7 +874,7 @@ final class LDClientSpec: QuickSpec {
                     expect(testContext.eventReporterMock.isOnline) == testContext.subject.isOnline
                 }
                 it("does not convert cached data") {
-                    expect(testContext.cacheConvertingMock.convertCacheDataCallCount) == 1
+                    expect(testContext.cacheConvertingMock.convertCacheDataCallCount) == 0
                 }
             }
         }
@@ -991,7 +991,7 @@ final class LDClientSpec: QuickSpec {
                     expect(testContext.eventReporterMock.recordCallCount) == 0
                 }
                 it("converts cached data") {
-                    expect(testContext.cacheConvertingMock.convertCacheDataCallCount) == 2
+                    expect(testContext.cacheConvertingMock.convertCacheDataCallCount) == 1
                     expect(testContext.cacheConvertingMock.convertCacheDataReceivedArguments?.user) == newUser
                     expect(testContext.cacheConvertingMock.convertCacheDataReceivedArguments?.config) == testContext.config
                 }
@@ -1049,7 +1049,7 @@ final class LDClientSpec: QuickSpec {
                     expect(testContext.eventReporterMock.recordCallCount) == 0
                 }
                 it("does not convert cached data") {
-                    expect(testContext.cacheConvertingMock.convertCacheDataCallCount) == 1
+                    expect(testContext.cacheConvertingMock.convertCacheDataCallCount) == 0
                 }
             }
         }
@@ -1174,7 +1174,7 @@ final class LDClientSpec: QuickSpec {
                     expect(testContext.eventReporterMock.recordCallCount) == 0
                 }
                 it("converts cached data") {
-                    expect(testContext.cacheConvertingMock.convertCacheDataCallCount) == 2
+                    expect(testContext.cacheConvertingMock.convertCacheDataCallCount) == 1
                     expect(testContext.cacheConvertingMock.convertCacheDataReceivedArguments?.user) == newUser
                     expect(testContext.cacheConvertingMock.convertCacheDataReceivedArguments?.config) == testContext.config
                 }
@@ -1240,7 +1240,7 @@ final class LDClientSpec: QuickSpec {
                     expect(testContext.eventReporterMock.recordCallCount) == 0
                 }
                 it("does not convert cached data") {
-                    expect(testContext.cacheConvertingMock.convertCacheDataCallCount) == 1
+                    expect(testContext.cacheConvertingMock.convertCacheDataCallCount) == 0
                 }
             }
         }
