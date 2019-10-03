@@ -195,7 +195,9 @@ public class LDClient {
                 eventReporter.record(Event.identifyEvent(user: user))
             }
 
-            setOnline(wasOnline)
+            if wasOnline {
+                self.setOnline(true)
+            }
         }
     }
 
