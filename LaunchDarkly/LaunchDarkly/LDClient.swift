@@ -128,7 +128,7 @@ public class LDClient {
         guard goOnline, canGoOnline
             else {
                 //go offline, which is not throttled
-                goIdentify(online: false, reasonOnlineUnavailable: reasonOnlineUnavailable(goOnline: goOnline), completion: completion)
+                go(online: false, reasonOnlineUnavailable: reasonOnlineUnavailable(goOnline: goOnline), completion: completion)
                 return
         }
         
@@ -247,6 +247,8 @@ public class LDClient {
      The client app can change the LDUser by getting the `user`, adjusting the values, and passing it to the LDClient method identify. This allows client apps to collect information over time from the user and update as information is collected. Client apps should follow [Apple's Privacy Policy](apple.com/legal/privacy) when collecting user information. If the client app does not create a LDUser, LDClient creates an anonymous default user, which can affect the feature flags delivered to the LDClient.
      
      When a new user is set, the LDClient goes offline and sets the new user. If the client was online when the new user was set, it goes online again, subject to a throttling delay if in force (see `setOnline(_: completion:)` for details). To change both the `config` and `user`, set the LDClient offline, set both properties, then set the LDClient online. A completion may be passed to the identify method to allow a client app to know when fresh flag values for the new user are ready.
+     
+     This operation is not thread safe. You may want to use a DispatchQueue if calling `identify` from multiple threads.
      
      - parameter user: The LDUser set with the desired user.
      - parameter completion: Closure called when the embedded `setOnlineIdentify` call completes, subject to throttling delays. (Optional)

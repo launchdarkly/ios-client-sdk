@@ -1068,11 +1068,7 @@ final class LDClientSpec: QuickSpec {
                     testContext.cacheConvertingMock.reset()
                     
                     newUser = LDUser.stub()
-                    let group = DispatchGroup()
-                    group.enter()
-                    testContext.subject.identify(user: newUser) {
-                        group.leave()
-                    }
+                    testContext.subject.identify(user: newUser)
                 }
                 it("changes to the new user") {
                     expect(testContext.subject.user) == newUser
@@ -1110,11 +1106,7 @@ final class LDClientSpec: QuickSpec {
                     testContext.cacheConvertingMock.reset()
                     
                     newUser = LDUser.stub()
-                    let group = DispatchGroup()
-                    group.enter()
-                    testContext.subject.identify(user: newUser) {
-                        group.leave()
-                    }
+                    testContext.subject.identify(user: newUser)
                 }
                 it("changes to the new user") {
                     expect(testContext.subject.user) == newUser
@@ -1146,11 +1138,7 @@ final class LDClientSpec: QuickSpec {
             context("when the client is not started") {
                 beforeEach {
                     newUser = LDUser.stub()
-                    let group = DispatchGroup()
-                    group.enter()
-                    testContext.subject.identify(user: newUser) {
-                        group.leave()
-                    }
+                    testContext.subject.identify(user: newUser)
                 }
                 it("changes to the new user") {
                     expect(testContext.subject.user) == newUser
@@ -1188,12 +1176,7 @@ final class LDClientSpec: QuickSpec {
                     newUser = LDUser.stub()
                     testContext.featureFlagCachingMock.retrieveFeatureFlagsReturnValue = newUser.featureFlags
                     testContext.cacheConvertingMock.reset()
-                    
-                    let group = DispatchGroup()
-                    group.enter()
-                    testContext.subject.identify(user: newUser) {
-                        group.leave()
-                    }
+                    testContext.subject.identify(user: newUser)
                 }
                 it("restores the cached users feature flags") {
                     expect(testContext.subject.user) == newUser
@@ -1211,12 +1194,7 @@ final class LDClientSpec: QuickSpec {
                 beforeEach {
                     testContext.subject.setIsStarting(true)
                     newUser = LDUser.stub()
-                    
-                    let group = DispatchGroup()
-                    group.enter()
-                    testContext.subject.identify(user: newUser) {
-                        group.leave()
-                    }
+                    testContext.subject.identify(user: newUser)
                 }
                 it("changes to the new user") {
                     expect(testContext.subject.user) == newUser
