@@ -131,9 +131,14 @@ public final class ObjcLDClient: NSObject {
         get {
             return LDClient.shared.user.objcLdUser
         }
+        @available(*, deprecated, message: "Please use the identify method instead")
         set {
-            LDClient.shared.user = newValue.user
+            LDClient.shared.identify(user: newValue.user)
         }
+    }
+    
+    @objc public func identify(user: ObjcLDUser) {
+        LDClient.shared.identify(user: user.user)
     }
 
     /**
