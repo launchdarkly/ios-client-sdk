@@ -43,6 +43,16 @@ final class DarklyStreamingProviderMock: DarklyStreamingProvider {
         onErrorEventCallback?()
     }
 
+    // MARK: onReadyStateChangedEvent
+    var onReadyStateChangedEventCallCount = 0
+    var onReadyStateChangedEventCallback: (() -> Void)?
+    var onReadyStateChangedEventReceivedHandler: LDEventSourceEventHandler?
+    func onReadyStateChangedEvent(_ handler: LDEventSourceEventHandler?) {
+        onReadyStateChangedEventCallCount += 1
+        onReadyStateChangedEventReceivedHandler = handler
+        onReadyStateChangedEventCallback?()
+    }
+
     // MARK: open
     var openCallCount = 0
     var openCallback: (() -> Void)?
@@ -566,6 +576,16 @@ final class LDFlagSynchronizingMock: LDFlagSynchronizing {
         didSet {
             pollingIntervalSetCount += 1
             setPollingIntervalCallback?()
+        }
+    }
+
+    // MARK: eventSource
+    var eventSourceSetCount = 0
+    var setEventSourceCallback: (() -> Void)?
+    var eventSource: DarklyStreamingProvider? {
+        didSet {
+            eventSourceSetCount += 1
+            setEventSourceCallback?()
         }
     }
 }

@@ -18,6 +18,8 @@ protocol LDFlagSynchronizing {
     var streamingMode: LDStreamingMode { get }
     //sourcery: defaultMockValue = 60_000
     var pollingInterval: TimeInterval { get }
+    //sourcery: defaultMockValue = nil
+    var eventSource: DarklyStreamingProvider? { get }
 }
 
 enum SynchronizingError: Error {
@@ -71,7 +73,7 @@ class FlagSynchronizer: LDFlagSynchronizing {
     }
 
     let service: DarklyServiceProvider
-    private var eventSource: DarklyStreamingProvider?
+    var eventSource: DarklyStreamingProvider?
     private var flagRequestTimer: TimeResponding?
     var onSyncComplete: FlagSyncCompleteClosure?
 
