@@ -122,6 +122,7 @@ public struct ConnectionInformation: Codable, CustomStringConvertible {
         var connectionInformationVar = connectionInformation
         if connectionInformationVar.currentConnectionMode == ConnectionInformation.ConnectionMode.establishingStreamingConnection {
             connectionInformationVar.currentConnectionMode = ConnectionInformation.ConnectionMode.streaming
+            connectionInformationVar.lastKnownFlagValidity = nil
         }
         if connectionInformationVar.currentConnectionMode == ConnectionInformation.ConnectionMode.polling {
             connectionInformationVar.lastKnownFlagValidity = Date()
