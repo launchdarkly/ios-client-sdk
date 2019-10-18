@@ -7,7 +7,6 @@
 //
 
 import Foundation
-import DarklyEventSource
 
 enum LDClientRunMode {
     case foreground, background
