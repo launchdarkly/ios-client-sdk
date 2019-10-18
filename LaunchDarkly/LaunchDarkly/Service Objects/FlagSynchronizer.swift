@@ -70,6 +70,7 @@ extension DarklyEventSource.LDEvent {
 class FlagSynchronizer: LDFlagSynchronizing {
     struct Constants {
         fileprivate static let queueName = "LaunchDarkly.FlagSynchronizer.syncQueue"
+        static let didCloseEventSourceName = "didCloseEventSource"
     }
 
     let service: DarklyServiceProvider
@@ -149,6 +150,17 @@ class FlagSynchronizer: LDFlagSynchronizing {
         eventSource = service.createEventSource(useReport: useReport)  //The LDConfig.connectionTimeout should NOT be set here. Heartbeat is sent every 3m. ES default timeout is 5m. This is an async operation.
         //LDEventSource reacts to connection errors by closing the connection and establishing a new one after an exponentially increasing wait. That makes it self healing.
         //While we could keep the LDEventSource state, there's not much we can do to help it connect. If it can't connect, it's likely we won't be able to poll the server either...so it seems best to just do nothing and let it heal itself.
+        eventSource?.onReadyStateChangedEvent { [self] (event) in
+            guard let event = event
+                else {
+                    Log.debug(self.typeName(and: #function) + "onReadyStateChangedEvent handler aborted. No streaming event.")
+                    return
+            }
+            if event.readyState == DarklyEventSource.kEventStateClosed {
+                Log.debug(self.typeName(and: #function) + "EventSource closed")
+                NotificationCenter.default.post(name: Notification.Name(FlagSynchronizer.Constants.didCloseEventSourceName), object: nil)
+            }
+        }
         eventSource?.onMessageEvent { [weak self] (event) in
             self?.process(event)
         }

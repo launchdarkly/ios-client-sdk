@@ -847,6 +847,11 @@ public class LDClient {
             process(synchronizingError, logPrefix: typeName(and: #function, appending: ": "))
         }
     }
+    
+    @objc private func didCloseEventSource() {
+        Log.debug(typeName(and: #function))
+        self.connectionInformation = ConnectionInformation.lastSuccessfulConnectionCheck(connectionInformation: self.connectionInformation)
+    }
 
     // MARK: - Foreground / Background notification
 
@@ -942,16 +947,7 @@ public class LDClient {
             NotificationCenter.default.addObserver(self, selector: #selector(willEnterForeground), name: foregroundNotification, object: nil)
         }
         
-        flagSynchronizer.eventSource?.onReadyStateChangedEvent { [self] (event) in
-            guard let event = event
-                else {
-                    Log.debug("onReadyStateChangedEvent handler aborted. No streaming event.")
-                    return
-            }
-            if event.readyState == DarklyEventSource.kEventStateClosed {
-                self.connectionInformation = ConnectionInformation.lastSuccessfulConnectionCheck(connectionInformation: self.connectionInformation)
-            }
-        }
+        NotificationCenter.default.addObserver(self, selector: #selector(didCloseEventSource), name: Notification.Name(FlagSynchronizer.Constants.didCloseEventSourceName), object: nil)
     
         //Since eventReporter lasts the life of the singleton, we can configure it here...swift requires the client to be instantiated before we can pass the onSyncComplete method
         eventReporter = self.serviceFactory.makeEventReporter(config: config, service: service, onSyncComplete: onEventSyncComplete)
