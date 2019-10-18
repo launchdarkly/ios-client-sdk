@@ -46,7 +46,7 @@ public struct ConnectionInformation: Codable, CustomStringConvertible {
         static let decodeError: String =  "Unable to Decode error."
     }
     
-    //lastKnownFlagValidity is nil if either no connection has ever been successfully made or if the SDK has an active streaming connection. It will have a value if in polling mode or if the streaming connection has been closed.
+    //lastKnownFlagValidity is nil if either no connection has ever been successfully made or if the SDK has an active streaming connection. It will have a value if 1) in polling mode and at least one poll has completed successfully, or 2) if in streaming mode whenever the streaming connection closes.
     public internal(set) var lastKnownFlagValidity: Date?
     public internal(set) var lastFailedConnection: Date?
     public internal(set) var currentConnectionMode: ConnectionMode
