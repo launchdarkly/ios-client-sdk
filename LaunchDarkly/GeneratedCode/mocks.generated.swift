@@ -578,16 +578,6 @@ final class LDFlagSynchronizingMock: LDFlagSynchronizing {
             setPollingIntervalCallback?()
         }
     }
-
-    // MARK: eventSource
-    var eventSourceSetCount = 0
-    var setEventSourceCallback: (() -> Void)?
-    var eventSource: DarklyStreamingProvider? {
-        didSet {
-            eventSourceSetCount += 1
-            setEventSourceCallback?()
-        }
-    }
 }
 
 // MARK: - ThrottlingMock
