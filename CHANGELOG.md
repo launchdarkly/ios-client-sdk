@@ -5,6 +5,14 @@ All notable changes to the LaunchDarkly iOS SDK will be documented in this file.
 ### Multiple Environment clients
 Version 4.0.0 does not support multiple environments. If you use version `2.14.0` or later and set `LDConfig`'s `secondaryMobileKeys` you will not be able to migrate to version `4.0.0`. Multiple Environments will be added in a future release to the Swift SDK.
 
+## [4.2.0] - 2019-10-25
+## Changed
+- The `user` property is now deprecated in favor of the `identify` function.
+
+### Added
+- The `identify` function allows a completion to be called after a user is updated.
+- The Connection Status API allows greater introspection into the current LaunchDarkly connection and the health of local flags.
+
 ## [4.1.2] - 2019-07-11
 ### Fixed
 - WatchKit is now conditionally imported in WatchOS only, to fix an error in Xcode 11.
