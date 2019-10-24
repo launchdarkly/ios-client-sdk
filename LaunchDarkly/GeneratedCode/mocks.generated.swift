@@ -43,6 +43,16 @@ final class DarklyStreamingProviderMock: DarklyStreamingProvider {
         onErrorEventCallback?()
     }
 
+    // MARK: onReadyStateChangedEvent
+    var onReadyStateChangedEventCallCount = 0
+    var onReadyStateChangedEventCallback: (() -> Void)?
+    var onReadyStateChangedEventReceivedHandler: LDEventSourceEventHandler?
+    func onReadyStateChangedEvent(_ handler: LDEventSourceEventHandler?) {
+        onReadyStateChangedEventCallCount += 1
+        onReadyStateChangedEventReceivedHandler = handler
+        onReadyStateChangedEventCallback?()
+    }
+
     // MARK: open
     var openCallCount = 0
     var openCallback: (() -> Void)?

@@ -46,15 +46,16 @@ public struct ConnectionInformation: Codable, CustomStringConvertible {
         static let decodeError: String =  "Unable to Decode error."
     }
     
-    public internal(set) var lastSuccessfulConnection: Date?
+    //lastKnownFlagValidity is nil if either no connection has ever been successfully made or if the SDK has an active streaming connection. It will have a value if 1) in polling mode and at least one poll has completed successfully, or 2) if in streaming mode whenever the streaming connection closes.
+    public internal(set) var lastKnownFlagValidity: Date?
     public internal(set) var lastFailedConnection: Date?
     public internal(set) var currentConnectionMode: ConnectionMode
     public internal(set) var lastConnectionFailureReason: LastConnectionFailureReason
     
-    init(currentConnectionMode: ConnectionMode, lastConnectionFailureReason: LastConnectionFailureReason, lastSuccessfulConnection: Date? = nil, lastFailedConnection: Date? = nil) {
+    init(currentConnectionMode: ConnectionMode, lastConnectionFailureReason: LastConnectionFailureReason, lastKnownFlagValidity: Date? = nil, lastFailedConnection: Date? = nil) {
         self.currentConnectionMode = currentConnectionMode
         self.lastConnectionFailureReason = lastConnectionFailureReason
-        self.lastSuccessfulConnection = lastSuccessfulConnection
+        self.lastKnownFlagValidity = lastKnownFlagValidity
         self.lastFailedConnection = lastFailedConnection
     }
     
@@ -63,7 +64,7 @@ public struct ConnectionInformation: Codable, CustomStringConvertible {
         var connInfoString: String = ""
         connInfoString.append("Current Connection Mode: \(currentConnectionMode.rawValue) | ")
         connInfoString.append("Last Connection Failure Reason: \(lastConnectionFailureReason.description) | ")
-        connInfoString.append("Last Successful Connection: \(lastSuccessfulConnection?.debugDescription ?? "NONE") | ")
+        connInfoString.append("Last Successful Connection: \(lastKnownFlagValidity?.debugDescription ?? "NONE") | ")
         connInfoString.append("Last Failed Connection: \(lastFailedConnection?.debugDescription ?? "NONE")")
         return connInfoString
     }
@@ -75,19 +76,18 @@ public struct ConnectionInformation: Codable, CustomStringConvertible {
         return connectionInformation
     }
     
-    //Used for updating lastSuccessfulConnection when connected to streaming
+    //Used for updating lastSuccessfulConnection when connected to streaming and connection closes
     static func lastSuccessfulConnectionCheck(connectionInformation: ConnectionInformation) -> ConnectionInformation {
         var connectionInformationVar = connectionInformation
         if connectionInformationVar.currentConnectionMode == ConnectionInformation.ConnectionMode.streaming {
-            connectionInformationVar.lastSuccessfulConnection = Date()
+            connectionInformationVar.lastKnownFlagValidity = Date()
         }
         return connectionInformationVar
     }
     
     //Used for updating ConnectionInformation inside of LDClient.setOnline
     static func onlineSetCheck(connectionInformation: ConnectionInformation, ldClient: LDClient, config: LDConfig) -> ConnectionInformation {
-        var connectionInformationVar = ConnectionInformation.lastSuccessfulConnectionCheck(connectionInformation: connectionInformation)
-        
+        var connectionInformationVar = connectionInformation
         if ldClient.isOnline && NetworkReporter.isConnectedToNetwork() {
             connectionInformationVar.currentConnectionMode = effectiveStreamingMode(config: config, ldClient: ldClient) == LDStreamingMode.streaming ? ConnectionInformation.ConnectionMode.establishingStreamingConnection : ConnectionInformation.ConnectionMode.polling
         } else {
@@ -121,8 +121,11 @@ public struct ConnectionInformation: Codable, CustomStringConvertible {
         var connectionInformationVar = connectionInformation
         if connectionInformationVar.currentConnectionMode == ConnectionInformation.ConnectionMode.establishingStreamingConnection {
             connectionInformationVar.currentConnectionMode = ConnectionInformation.ConnectionMode.streaming
+            connectionInformationVar.lastKnownFlagValidity = nil
         }
-        connectionInformationVar.lastSuccessfulConnection = Date()
+        if connectionInformationVar.currentConnectionMode == ConnectionInformation.ConnectionMode.polling {
+            connectionInformationVar.lastKnownFlagValidity = Date()
+        }
         return connectionInformationVar
     }
     
@@ -141,7 +144,7 @@ public struct ConnectionInformation: Codable, CustomStringConvertible {
     }
     
     static func backgroundBehavior(connectionInformation: ConnectionInformation, streamingMode: LDStreamingMode, goOnline: Bool) -> ConnectionInformation {
-        var connectionInformationVar = lastSuccessfulConnectionCheck(connectionInformation: connectionInformation)
+        var connectionInformationVar = connectionInformation
         if !goOnline {
             connectionInformationVar.currentConnectionMode = .offline
         } else if streamingMode == .streaming {

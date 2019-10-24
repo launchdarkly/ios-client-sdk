@@ -44,6 +44,7 @@ enum LDClientRunMode {
  The `changedFlag` passed in to the closure contains the old and new value, and the old and new valueSource.
  */
 // swiftlint:disable type_body_length
+// swiftlint:disable file_length
 public class LDClient {
 
     // MARK: - State Controls and Indicators
@@ -86,7 +87,6 @@ public class LDClient {
     
     //Returns an object containing information about successful and/or failed polling or streaming connections to LaunchDarkly
     public func getConnectionInformation() -> ConnectionInformation {
-        connectionInformation = ConnectionInformation.lastSuccessfulConnectionCheck(connectionInformation: connectionInformation)
         return connectionInformation
     }
 
@@ -846,6 +846,11 @@ public class LDClient {
             process(synchronizingError, logPrefix: typeName(and: #function, appending: ": "))
         }
     }
+    
+    @objc private func didCloseEventSource() {
+        Log.debug(typeName(and: #function))
+        self.connectionInformation = ConnectionInformation.lastSuccessfulConnectionCheck(connectionInformation: self.connectionInformation)
+    }
 
     // MARK: - Foreground / Background notification
 
@@ -940,6 +945,8 @@ public class LDClient {
         if let foregroundNotification = environmentReporter.foregroundNotification {
             NotificationCenter.default.addObserver(self, selector: #selector(willEnterForeground), name: foregroundNotification, object: nil)
         }
+        
+        NotificationCenter.default.addObserver(self, selector: #selector(didCloseEventSource), name: Notification.Name(FlagSynchronizer.Constants.didCloseEventSourceName), object: nil)
     
         //Since eventReporter lasts the life of the singleton, we can configure it here...swift requires the client to be instantiated before we can pass the onSyncComplete method
         eventReporter = self.serviceFactory.makeEventReporter(config: config, service: service, onSyncComplete: onEventSyncComplete)
