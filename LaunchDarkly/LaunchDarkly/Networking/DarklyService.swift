@@ -25,25 +25,28 @@ protocol DarklyServiceProvider: class {
 protocol DarklyStreamingProvider: class {
     func onMessageEvent(_ handler: LDEventSourceEventHandler?)
     func onErrorEvent(_ handler: LDEventSourceEventHandler?)
+    func onReadyStateChangedEvent(_ handler: LDEventSourceEventHandler?)
     func open()
     func close()
 }
 
 extension LDEventSource: DarklyStreamingProvider {
     func onMessageEvent(_ handler: LDEventSourceEventHandler?) {
-        guard let handler = handler
-        else {
-            return
+        if let handler = handler {
+            self.onMessage(handler)
         }
-        self.onMessage(handler)
     }
 
     func onErrorEvent(_ handler: LDEventSourceEventHandler?) {
-        guard let handler = handler
-        else {
-            return
+        if let handler = handler {
+            self.onError(handler)
         }
-        self.onError(handler)
+    }
+    
+    func onReadyStateChangedEvent(_ handler: LDEventSourceEventHandler?) {
+        if let handler = handler {
+            self.onReadyStateChanged(handler)
+        }
     }
 }
 
