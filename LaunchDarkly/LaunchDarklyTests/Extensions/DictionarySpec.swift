@@ -173,6 +173,19 @@ final class DictionarySpec: QuickSpec {
             }
         }
     }
+
+    private func dictionarySpec() {
+        describe("Optional extension") {
+            context("when both are null") {
+                let dict1: [String: Any]? = nil
+                let dict2: [String: Any]? = nil
+
+                it("does not stack overflow") {
+                    expect(dict1 == dict2).to(beTrue())
+                }
+            }
+        }
+    }
 }
 
 fileprivate extension Dictionary where Key == String, Value == Any {
