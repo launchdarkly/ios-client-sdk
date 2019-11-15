@@ -5,6 +5,13 @@ All notable changes to the LaunchDarkly iOS SDK will be documented in this file.
 ### Multiple Environment clients
 Version 4.0.0 does not support multiple environments. If you use version `2.14.0` or later and set `LDConfig`'s `secondaryMobileKeys` you will not be able to migrate to version `4.0.0`. Multiple Environments will be added in a future release to the Swift SDK.
 
+## [4.2.1] - 2019-11-15
+### Changed
+- Updated to `ios-eventsource` version `4.0.3`. This appends a platform name to bundle identifiers. (Thanks, [cswelin](https://github.com/launchdarkly/ios-eventsource/pull/28)!)
+
+### Fixed
+- Comparing two nil objects of type `[String: Any]?` no longer causes a crash. ([#197](https://github.com/launchdarkly/ios-client-sdk/issues/197))
+
 ## [4.2.0] - 2019-10-25
 ### Added
 - The `identify` function allows a completion to be called after a user is updated.
