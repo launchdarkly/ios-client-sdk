@@ -393,8 +393,34 @@ public class LDClient {
 
      - returns: The requested feature flag value, or the fallback if the flag is missing or cannot be cast to the fallback type, or the client is not started
     */
+    /// - Tag: variationWithFallback
     public func variation<T: LDFlagValueConvertible>(forKey flagKey: LDFlagKey, fallback: T) -> T {
         return variation(forKey: flagKey, fallback: fallback as T?) ?? fallback     //the fallback cast to 'as T?' directs the call to the Optional-returning variation method
+    }
+    
+    /**
+     Returns the EvaluationDetail for the given feature flag. EvaluationDetail gives you more insight into why your variation contains the specified value. If the flag does not exist, cannot be cast to the correct return type, or the LDClient is not started, returns EvaluationDetail with the fallback value. Use this method when the fallback value is a non-Optional type. See `variationDetail` with the Optional return value when the fallback value can be nil. See [variationWithFallback](x-source-tag://variationWithFallback)
+     
+     - parameter forKey: The LDFlagKey for the requested feature flag.
+     - parameter fallback: The fallback value to return if the feature flag key does not exist.
+     
+     - returns: EvaluationDetail which wraps the requested feature flag value, or the fallback, which variation was served, and the evaluation reason.
+     */
+    public func variationDetail<T: LDFlagValueConvertible>(forKey flagKey: LDFlagKey, fallback: T) -> EvaluationDetail<T> {
+        let featureFlag = user.flagStore.featureFlag(for: flagKey)
+        let reason = checkErrorKinds(featureFlag: featureFlag) ?? featureFlag?.reason
+        let (value, _) = variationAndSourceInternal(forKey: flagKey, fallback: fallback, reason: true)
+        return EvaluationDetail(value: value ?? fallback, variationIndex: featureFlag?.variation, reason: reason)
+    }
+    
+    private func checkErrorKinds(featureFlag: FeatureFlag?) -> Dictionary<String, Any>? {
+        if !hasStarted {
+            return ["kind": "ERROR", "errorKind": "CLIENT_NOT_READY"]
+        } else if featureFlag == nil {
+            return ["kind": "ERROR", "errorKind": "FLAG_NOT_FOUND"]
+        } else {
+            return nil
+        }
     }
 
     /**
@@ -438,9 +464,25 @@ public class LDClient {
 
      - returns: The requested feature flag value, or the fallback if the flag is missing or cannot be cast to the fallback type, or the client is not started
      */
+    /// - Tag: variationWithoutFallback
     public func variation<T: LDFlagValueConvertible>(forKey flagKey: LDFlagKey, fallback: T? = nil) -> T? {
-        let (value, _) = variationAndSource(forKey: flagKey, fallback: fallback)
+        let (value, _) = variationAndSourceInternal(forKey: flagKey, fallback: fallback, reason: false)
         return value
+    }
+    
+    /**
+     Returns the EvaluationDetail for the given feature flag. EvaluationDetail gives you more insight into why your variation contains the specified value. If the flag does not exist, cannot be cast to the correct return type, or the LDClient is not started, returns EvaluationDetail with the fallback value, which may be `nil`. Use this method when the fallback value is a Optional type. See [variationWithoutFallback](x-source-tag://variationWithoutFallback)
+     
+     - parameter forKey: The LDFlagKey for the requested feature flag.
+     - parameter fallback: The fallback value to return if the feature flag key does not exist. If omitted, the fallback value is `nil`. (Optional)
+     
+     - returns: EvaluationDetail which wraps the requested feature flag value, or the fallback, which variation was served, and the evaluation reason.
+     */
+    public func variationDetail<T: LDFlagValueConvertible>(forKey flagKey: LDFlagKey, fallback: T? = nil) -> EvaluationDetail<T?> {
+        let featureFlag = user.flagStore.featureFlag(for: flagKey)
+        let reason = checkErrorKinds(featureFlag: featureFlag) ?? featureFlag?.reason
+        let (value, _) = variationAndSourceInternal(forKey: flagKey, fallback: fallback, reason: true)
+        return EvaluationDetail(value: value, variationIndex: featureFlag?.variation, reason: reason)
     }
 
     /**
@@ -480,6 +522,7 @@ public class LDClient {
 
      - returns: A tuple containing the requested feature flag value and source, or the fallback if the flag is missing or cannot be cast to the fallback type, or the client is not started. If the fallback value is returned, the source is `.fallback`
      */
+    @available(*, deprecated, message: "Please use the variationDetail method for additional insight into flag evaluation.")
     public func variationAndSource<T: LDFlagValueConvertible>(forKey flagKey: LDFlagKey, fallback: T) -> (T, LDFlagValueSource) {
         let (value, source) = variationAndSource(forKey: flagKey, fallback: fallback as T?)
         return (value ?? fallback, source)  //Because the fallback is wrapped into an Optional, the nil coalescing right side should never be called
@@ -526,7 +569,17 @@ public class LDClient {
 
      - returns: A tuple containing the requested feature flag value and source, or the fallback if the flag is missing or cannot be cast to the fallback type, or the client is not started. If the fallback value is returned, the source is `.fallback`
      */
+    @available(*, deprecated, message: "Please use the variationDetail method for additional insight into flag evaluation.")
     public func variationAndSource<T: LDFlagValueConvertible>(forKey flagKey: LDFlagKey, fallback: T? = nil) -> (T?, LDFlagValueSource) {
+        return variationAndSourceInternal(forKey: flagKey, fallback: fallback, reason: false)
+    }
+    
+    internal func variationAndSourceInternal<T: LDFlagValueConvertible>(forKey flagKey: LDFlagKey, fallback: T) -> (T, LDFlagValueSource) {
+        let (value, source) = variationAndSourceInternal(forKey: flagKey, fallback: fallback as T?, reason: false)
+        return (value ?? fallback, source)  //Because the fallback is wrapped into an Optional, the nil coalescing right side should never be called
+    }
+    
+    internal func variationAndSourceInternal<T: LDFlagValueConvertible>(forKey flagKey: LDFlagKey, fallback: T? = nil, reason: Bool? = false) -> (T?, LDFlagValueSource) {
         guard hasStarted
         else {
             Log.debug(typeName(and: #function) + "returning fallback: \(fallback.stringValue), source: \(LDFlagValueSource.fallback)." + " LDClient not started.")
@@ -535,9 +588,9 @@ public class LDClient {
         let (featureFlag, flagStoreSource) = user.flagStore.featureFlagAndSource(for: flagKey)
         let (value, source): (T?, LDFlagValueSource) = valueAndSource(from: featureFlag, fallback: fallback, source: flagStoreSource)
         let failedConversionMessage = self.failedConversionMessage(featureFlag: featureFlag, source: source, fallback: fallback)
-        Log.debug(typeName(and: #function) + "flagKey: \(flagKey), value: \(value.stringValue), fallback: \(fallback.stringValue), featureFlag: \(featureFlag.stringValue), source: \(source)."
+        Log.debug(typeName(and: #function) + "flagKey: \(flagKey), value: \(value.stringValue), fallback: \(fallback.stringValue), featureFlag: \(featureFlag.stringValue), source: \(source), reason: \(featureFlag?.reason?.description ?? "No evaluation reason")."
             + "\(failedConversionMessage)")
-        eventReporter.recordFlagEvaluationEvents(flagKey: flagKey, value: value, defaultValue: fallback, featureFlag: featureFlag, user: user)
+        eventReporter.recordFlagEvaluationEvents(flagKey: flagKey, value: value, defaultValue: fallback, featureFlag: featureFlag, user: user, reason: reason)
         return (value, source)
     }
 

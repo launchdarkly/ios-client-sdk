@@ -72,8 +72,9 @@ final class FlagStore: FlagMaintaining {
             "key": <flag-key>,
             "value": <new-flag-value>,
             "variation": <new-flag-variation>,
-            "version": <new-flag-version>
-            "flagVersion": <new-flag-flagVersion>
+            "version": <new-flag-version>,
+            "flagVersion": <new-flag-flagVersion>,
+            "reason": <new-flag-reason>
         }
     */
     func updateStore(updateDictionary: [String: Any], source: LDFlagValueSource, completion: CompletionClosure?) {

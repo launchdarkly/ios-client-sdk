@@ -51,6 +51,7 @@ final class ClientServiceFactory: ClientServiceCreating {
         case .version3: return DeprecatedCacheModelV3(keyedValueCache: makeKeyedValueCache())
         case .version4: return DeprecatedCacheModelV4(keyedValueCache: makeKeyedValueCache())
         case .version5: return DeprecatedCacheModelV5(keyedValueCache: makeKeyedValueCache())
+        case .version6: return DeprecatedCacheModelV6(keyedValueCache: makeKeyedValueCache())
         }
     }
 

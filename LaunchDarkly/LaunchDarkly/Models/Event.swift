@@ -10,7 +10,7 @@ import Foundation
 
 struct Event { //sdk internal, not publically accessible
     enum CodingKeys: String, CodingKey {
-        case key, kind, creationDate, user, userKey, value, defaultValue = "default", variation, version, data, endDate
+        case key, kind, creationDate, user, userKey, value, defaultValue = "default", variation, version, data, endDate, reason
     }
 
     enum Kind: String {
@@ -43,6 +43,7 @@ struct Event { //sdk internal, not publically accessible
     let data: Any?
     let flagRequestTracker: FlagRequestTracker?
     let endDate: Date?
+    let reason: Bool?
 
     init(kind: Kind = .custom,
          key: String? = nil,
@@ -52,8 +53,8 @@ struct Event { //sdk internal, not publically accessible
          featureFlag: FeatureFlag? = nil,
          data: Any? = nil,
          flagRequestTracker: FlagRequestTracker? = nil,
-         endDate: Date? = nil) {
-
+         endDate: Date? = nil,
+         reason: Bool? = false) {
         self.kind = kind
         self.key = key
         self.creationDate = kind == .summary ? nil : Date()
@@ -64,18 +65,19 @@ struct Event { //sdk internal, not publically accessible
         self.data = data
         self.flagRequestTracker = flagRequestTracker
         self.endDate = endDate
+        self.reason = reason
     }
 
-    static func featureEvent(key: String, value: Any?, defaultValue: Any?, featureFlag: FeatureFlag?, user: LDUser) -> Event {
-        Log.debug(typeName(and: #function) + "key: " + key + ", value: \(String(describing: value)), " + "fallback: \(String(describing: defaultValue)), "
+    static func featureEvent(key: String, value: Any?, defaultValue: Any?, featureFlag: FeatureFlag?, user: LDUser, reason: Bool? = false) -> Event {
+        Log.debug(typeName(and: #function) + "key: " + key + ", value: \(String(describing: value)), " + "fallback: \(String(describing: defaultValue) + "reason: \(String(describing: reason))"), "
             + "featureFlag: \(String(describing: featureFlag))")
-        return Event(kind: .feature, key: key, user: user, value: value, defaultValue: defaultValue, featureFlag: featureFlag)
+        return Event(kind: .feature, key: key, user: user, value: value, defaultValue: defaultValue, featureFlag: featureFlag, reason: reason)
     }
 
-    static func debugEvent(key: String, value: Any?, defaultValue: Any?, featureFlag: FeatureFlag, user: LDUser) -> Event {
-        Log.debug(typeName(and: #function) + "key: " + key + ", value: \(String(describing: value)), " + "fallback: \(String(describing: defaultValue)), "
+    static func debugEvent(key: String, value: Any?, defaultValue: Any?, featureFlag: FeatureFlag, user: LDUser, reason: Bool? = false) -> Event {
+        Log.debug(typeName(and: #function) + "key: " + key + ", value: \(String(describing: value)), " + "fallback: \(String(describing: defaultValue) + "reason: \(String(describing: reason))"), "
             + "featureFlag: \(String(describing: featureFlag))")
-        return Event(kind: .debug, key: key, user: user, value: value, defaultValue: defaultValue, featureFlag: featureFlag)
+        return Event(kind: .debug, key: key, user: user, value: value, defaultValue: defaultValue, featureFlag: featureFlag, reason: reason)
     }
 
     static func customEvent(key: String, user: LDUser, data: Any? = nil) throws -> Event {
@@ -127,6 +129,7 @@ struct Event { //sdk internal, not publically accessible
             }
         }
         eventDictionary[CodingKeys.endDate.rawValue] = endDate?.millisSince1970
+        eventDictionary[CodingKeys.reason.rawValue] = reason == false ? nil : featureFlag?.reason
 
         return eventDictionary
     }
