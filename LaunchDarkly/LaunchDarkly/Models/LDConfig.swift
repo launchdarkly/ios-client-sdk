@@ -66,6 +66,9 @@ public struct LDConfig {
 
         /// The default setting controlling information logged to the console, and modifying some setting ranges to facilitate debugging. (false)
         static let debugMode = false
+        
+        /// The default setting for whether we request evaluation reasons for all flags.
+        static let evaluationReasons = false
     }
 
     /// The minimum values allowed to be set into LDConfig.
@@ -171,13 +174,16 @@ public struct LDConfig {
     */
     public var inlineUserInEvents: Bool = Defaults.inlineUserInEvents
 
-    ///Enables logging for debugging. (Default: false)
+    /// Enables logging for debugging. (Default: false)
     public var isDebugMode: Bool = Defaults.debugMode
+    
+    /// Enables requesting evaluation reasons for all flags. (Default: false)
+    public var evaluationReasons: Bool = Defaults.evaluationReasons
 
-    ///LaunchDarkly defined minima for selected configurable items
+    /// LaunchDarkly defined minima for selected configurable items
     public let minima: Minima
 
-    ///An NSObject wrapper for the Swift LDConfig struct. Intended for use in mixed apps when Swift code needs to pass a config into an Objective-C method.
+    /// An NSObject wrapper for the Swift LDConfig struct. Intended for use in mixed apps when Swift code needs to pass a config into an Objective-C method.
     public var objcLdConfig: ObjcLDConfig {
         return ObjcLDConfig(self)
     }
@@ -234,6 +240,7 @@ extension LDConfig: Equatable {
             && lhs.useReport == rhs.useReport
             && lhs.inlineUserInEvents == rhs.inlineUserInEvents
             && lhs.isDebugMode == rhs.isDebugMode
+            && lhs.evaluationReasons == rhs.evaluationReasons
     }
 }
 

@@ -597,7 +597,9 @@ extension FeatureFlag {
                            variation: DarklyServiceMock.Constants.variation,
                            version: DarklyServiceMock.Constants.version,
                            flagVersion: DarklyServiceMock.Constants.flagVersion,
-                           eventTrackingContext: EventTrackingContext.stub())
+                           eventTrackingContext: EventTrackingContext.stub(),
+                           reason: DarklyServiceMock.Constants.reason,
+                           trackReason: false)
     }
 }
 

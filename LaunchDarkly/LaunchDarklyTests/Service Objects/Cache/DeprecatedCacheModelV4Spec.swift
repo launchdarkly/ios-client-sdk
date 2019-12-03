@@ -233,8 +233,14 @@ extension Dictionary where Key == LDFlagKey, Value == FeatureFlag {
             else {
                 return nil
             }
-            return originalFeatureFlag
+            return originalFeatureFlag.modelV4FeatureFlag
         }
+    }
+}
+
+extension FeatureFlag {
+    var modelV4FeatureFlag: FeatureFlag {
+        return FeatureFlag(flagKey: flagKey, value: value, variation: variation, version: version, flagVersion: flagVersion, eventTrackingContext: eventTrackingContext, reason: nil, trackReason: nil)
     }
 }
 
@@ -268,6 +274,8 @@ extension FeatureFlag {
         }
         var flagDictionary = dictionaryValue
         flagDictionary.removeValue(forKey: FeatureFlag.CodingKeys.flagKey.rawValue)
+        flagDictionary.removeValue(forKey: FeatureFlag.CodingKeys.reason.rawValue)
+        flagDictionary.removeValue(forKey: FeatureFlag.CodingKeys.trackReason.rawValue)
         return flagDictionary
     }
 }

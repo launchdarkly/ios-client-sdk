@@ -10,7 +10,7 @@ import Foundation
 
 //sourcery: autoMockable
 protocol DeprecatedCache {
-    //sourcery: defaultMockValue = .version5
+    //sourcery: defaultMockValue = .version6
     var model: DeprecatedCacheModel { get }
     //sourcery: defaultMockValue = CacheConverter.CacheKeys.cachedDataKeyStub
     var cachedDataKey: String { get }
@@ -45,7 +45,7 @@ extension DeprecatedCache {
 }
 
 enum DeprecatedCacheModel: String, CaseIterable {
-    case version5, version4, version3, version2     //version1 is not supported
+    case version6, version5, version4, version3, version2     //version1 is not supported
 }
 
 // updatedAt in cached data was used as the LDUser.lastUpdated, which is deprecated in the Swift SDK

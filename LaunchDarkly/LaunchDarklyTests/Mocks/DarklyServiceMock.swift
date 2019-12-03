@@ -105,6 +105,8 @@ final class DarklyServiceMock: DarklyServiceProvider {
         static let variation = 2
         static let version = 4
         static let flagVersion = 3
+        static let reason = Optional(["kind": "OFF"])
+        
         static func stubFeatureFlags(includeNullValue: Bool = true,
                                      includeVariations: Bool = true,
                                      includeVersions: Bool = true,
@@ -170,6 +172,9 @@ final class DarklyServiceMock: DarklyServiceProvider {
             }
             return useAlternateFlagVersion ? flagVersion + 1 : flagVersion
         }
+        private static func reason(includeEvaluationReason: Bool) -> Dictionary<String, Any>? {
+            return includeEvaluationReason ? reason : nil
+        }
 
         static func stubFeatureFlag(for flagKey: LDFlagKey,
                                     includeVariation: Bool = true,
@@ -178,13 +183,17 @@ final class DarklyServiceMock: DarklyServiceProvider {
                                     useAlternateValue: Bool = false,
                                     useAlternateVersion: Bool = false,
                                     useAlternateFlagVersion: Bool = false,
-                                    eventTrackingContext: EventTrackingContext? = EventTrackingContext.stub()) -> FeatureFlag {
+                                    eventTrackingContext: EventTrackingContext? = EventTrackingContext.stub(),
+                                    includeEvaluationReason: Bool = false,
+                                    includeTrackReason: Bool = false) -> FeatureFlag {
             return FeatureFlag(flagKey: flagKey,
                                value: value(for: flagKey, useAlternateValue: useAlternateValue),
                                variation: variation(for: flagKey, includeVariation: includeVariation, useAlternateValue: useAlternateValue),
                                version: version(for: flagKey, includeVersion: includeVersion, useAlternateVersion: useAlternateValue || useAlternateVersion),
                                flagVersion: flagVersion(for: flagKey, includeFlagVersion: includeFlagVersion, useAlternateFlagVersion: useAlternateValue || useAlternateFlagVersion),
-                               eventTrackingContext: eventTrackingContext)
+                               eventTrackingContext: eventTrackingContext,
+                               reason: reason(includeEvaluationReason: includeEvaluationReason),
+                               trackReason: includeTrackReason)
         }
     }
 

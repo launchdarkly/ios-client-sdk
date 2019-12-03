@@ -119,7 +119,7 @@ final class EventSpec: QuickSpec {
         }
         describe("featureEvent") {
             beforeEach {
-                event = Event.featureEvent(key: Constants.eventKey, value: true, defaultValue: false, featureFlag: featureFlag, user: user)
+                event = Event.featureEvent(key: Constants.eventKey, value: true, defaultValue: false, featureFlag: featureFlag, user: user, includeReason: false)
             }
             it("creates a feature event with matching data") {
                 expect(event.kind) == Event.Kind.feature
@@ -147,7 +147,7 @@ final class EventSpec: QuickSpec {
         }
         describe("debugEvent") {
             beforeEach {
-                event = Event.debugEvent(key: Constants.eventKey, value: true, defaultValue: false, featureFlag: featureFlag, user: user)
+                event = Event.debugEvent(key: Constants.eventKey, value: true, defaultValue: false, featureFlag: featureFlag, user: user, includeReason: false)
             }
             it("creates a debug event with matching data") {
                 expect(event.kind) == Event.Kind.debug
@@ -300,9 +300,10 @@ final class EventSpec: QuickSpec {
                 config = LDConfig.stub
                 featureFlag = DarklyServiceMock.Constants.stubFeatureFlag(for: DarklyServiceMock.FlagKeys.bool)
             }
-            context("without inlining user") {
+            context("without inlining user and with reason") {
                 beforeEach {
-                    event = Event.featureEvent(key: Constants.eventKey, value: true, defaultValue: false, featureFlag: featureFlag, user: user)
+                    let featureFlagWithReason = DarklyServiceMock.Constants.stubFeatureFlag(for: DarklyServiceMock.FlagKeys.bool, includeEvaluationReason: true, includeTrackReason: true)
+                    event = Event.featureEvent(key: Constants.eventKey, value: true, defaultValue: false, featureFlag: featureFlagWithReason, user: user, includeReason: true)
                     config.inlineUserInEvents = false   //Default value, here for clarity
                     eventDictionary = event.dictionaryValue(config: config)
                 }
@@ -315,15 +316,16 @@ final class EventSpec: QuickSpec {
                     expect(eventDictionary.eventVariation) == featureFlag.variation
                     expect(eventDictionary.eventVersion) == featureFlag.flagVersion     //Since feature flags include the flag version, it should be used.
                     expect(eventDictionary.eventData).to(beNil())
+                    expect(AnyComparer.isEqual(eventDictionary.reason, to: DarklyServiceMock.Constants.reason)).to(beTrue())
                 }
                 it("creates a dictionary with the user key only") {
                     expect(eventDictionary.eventUserKey) == user.key
                     expect(eventDictionary.eventUser).to(beNil())
                 }
             }
-            context("inlining user") {
+            context("inlining user and without reason") {
                 beforeEach {
-                    event = Event.featureEvent(key: Constants.eventKey, value: true, defaultValue: false, featureFlag: featureFlag, user: user)
+                    event = Event.featureEvent(key: Constants.eventKey, value: true, defaultValue: false, featureFlag: featureFlag, user: user, includeReason: false)
                     config.inlineUserInEvents = true
                     eventDictionary = event.dictionaryValue(config: config)
                 }
@@ -336,6 +338,7 @@ final class EventSpec: QuickSpec {
                     expect(eventDictionary.eventVariation) == featureFlag.variation
                     expect(eventDictionary.eventVersion) == featureFlag.flagVersion     //Since feature flags include the flag version, it should be used.
                     expect(eventDictionary.eventData).to(beNil())
+                    expect(eventDictionary.reason).to(beNil())
                 }
                 it("creates a dictionary with the full user") {
                     expect(eventDictionary.eventUser).toNot(beNil())
@@ -359,8 +362,8 @@ final class EventSpec: QuickSpec {
             }
             context("omitting the flagVersion") {
                 beforeEach {
-                    featureFlag = DarklyServiceMock.Constants.stubFeatureFlag(for: DarklyServiceMock.FlagKeys.bool, includeFlagVersion: false)
-                    event = Event.featureEvent(key: Constants.eventKey, value: true, defaultValue: false, featureFlag: featureFlag, user: user)
+                    featureFlag = DarklyServiceMock.Constants.stubFeatureFlag(for: DarklyServiceMock.FlagKeys.bool, includeFlagVersion: false, includeEvaluationReason: true)
+                    event = Event.featureEvent(key: Constants.eventKey, value: true, defaultValue: false, featureFlag: featureFlag, user: user, includeReason: false)
                     eventDictionary = event.dictionaryValue(config: config)
                 }
                 it("creates a dictionary with the version") {
@@ -378,8 +381,8 @@ final class EventSpec: QuickSpec {
             }
             context("omitting flagVersion and version") {
                 beforeEach {
-                    featureFlag = DarklyServiceMock.Constants.stubFeatureFlag(for: DarklyServiceMock.FlagKeys.bool, includeVersion: false, includeFlagVersion: false)
-                    event = Event.featureEvent(key: Constants.eventKey, value: true, defaultValue: false, featureFlag: featureFlag, user: user)
+                    featureFlag = DarklyServiceMock.Constants.stubFeatureFlag(for: DarklyServiceMock.FlagKeys.bool, includeVersion: false, includeFlagVersion: false, includeEvaluationReason: true, includeTrackReason: false)
+                    event = Event.featureEvent(key: Constants.eventKey, value: true, defaultValue: false, featureFlag: featureFlag, user: user, includeReason: false)
                     eventDictionary = event.dictionaryValue(config: config)
                 }
                 it("creates a dictionary without the version") {
@@ -398,7 +401,7 @@ final class EventSpec: QuickSpec {
             context("without value or defaultValue") {
                 beforeEach {
                     featureFlag = DarklyServiceMock.Constants.stubFeatureFlag(for: DarklyServiceMock.FlagKeys.null)
-                    event = Event.featureEvent(key: Constants.eventKey, value: nil, defaultValue: nil, featureFlag: featureFlag, user: user)
+                    event = Event.featureEvent(key: Constants.eventKey, value: nil, defaultValue: nil, featureFlag: featureFlag, user: user, includeReason: false)
                     eventDictionary = event.dictionaryValue(config: config)
                 }
                 it("creates a dictionary with matching non-user elements") {
@@ -468,15 +471,17 @@ final class EventSpec: QuickSpec {
         let user = LDUser.stub()
         var event: Event!
         var eventDictionary: [String: Any]!
+        var metricValue: Double!
         context("custom event") {
             beforeEach {
                 config = LDConfig.stub
             }
+            metricValue = 0.5
             for eventData in CustomEvent.allData {
                 context("with valid json data") {
                     beforeEach {
                         do {
-                            event = try Event.customEvent(key: Constants.eventKey, user: user, data: eventData)
+                            event = try Event.customEvent(key: Constants.eventKey, user: user, data: eventData, metricValue: metricValue)
                         } catch JSONSerialization.JSONError.invalidJsonObject {
                             fail("customEvent threw an invalidJsonObject exception")
                         } catch {
@@ -494,6 +499,7 @@ final class EventSpec: QuickSpec {
                         expect(eventDictionary.eventVariation).to(beNil())
                         expect(eventDictionary.eventUserKey) == user.key
                         expect(eventDictionary.eventUser).to(beNil())
+                        expect(eventDictionary.eventMetricValue) == metricValue
                     }
                 }
             }
@@ -603,7 +609,7 @@ final class EventSpec: QuickSpec {
             }
             context("regardless of inlining user") {
                 beforeEach {
-                    event = Event.debugEvent(key: Constants.eventKey, value: true, defaultValue: false, featureFlag: featureFlag, user: user)
+                    event = Event.debugEvent(key: Constants.eventKey, value: true, defaultValue: false, featureFlag: featureFlag, user: user, includeReason: false)
                 }
                 [true, false].forEach { (inlineUser) in
                     it("creates a dictionary with matching non-user elements") {
@@ -646,7 +652,7 @@ final class EventSpec: QuickSpec {
             context("omitting the flagVersion") {
                 beforeEach {
                     featureFlag = DarklyServiceMock.Constants.stubFeatureFlag(for: DarklyServiceMock.FlagKeys.bool, includeFlagVersion: false)
-                    event = Event.debugEvent(key: Constants.eventKey, value: true, defaultValue: false, featureFlag: featureFlag, user: user)
+                    event = Event.debugEvent(key: Constants.eventKey, value: true, defaultValue: false, featureFlag: featureFlag, user: user, includeReason: false)
                     eventDictionary = event.dictionaryValue(config: config)
                 }
                 it("creates a dictionary with the version") {
@@ -680,7 +686,7 @@ final class EventSpec: QuickSpec {
             context("omitting flagVersion and version") {
                 beforeEach {
                     featureFlag = DarklyServiceMock.Constants.stubFeatureFlag(for: DarklyServiceMock.FlagKeys.bool, includeVersion: false, includeFlagVersion: false)
-                    event = Event.debugEvent(key: Constants.eventKey, value: true, defaultValue: false, featureFlag: featureFlag, user: user)
+                    event = Event.debugEvent(key: Constants.eventKey, value: true, defaultValue: false, featureFlag: featureFlag, user: user, includeReason: false)
                     eventDictionary = event.dictionaryValue(config: config)
                 }
                 it("creates a dictionary without the version") {
@@ -714,7 +720,7 @@ final class EventSpec: QuickSpec {
             context("without value or defaultValue") {
                 beforeEach {
                     featureFlag = DarklyServiceMock.Constants.stubFeatureFlag(for: DarklyServiceMock.FlagKeys.null)
-                    event = Event.debugEvent(key: Constants.eventKey, value: nil, defaultValue: nil, featureFlag: featureFlag, user: user)
+                    event = Event.debugEvent(key: Constants.eventKey, value: nil, defaultValue: nil, featureFlag: featureFlag, user: user, includeReason: false)
                     eventDictionary = event.dictionaryValue(config: config)
                 }
                 it("creates a dictionary with matching non-user elements") {
@@ -1279,6 +1285,9 @@ extension Dictionary where Key == String, Value == Any {
     var eventFeatures: [String: Any]? {
         return self[FlagRequestTracker.CodingKeys.features.rawValue] as? [String: Any]
     }
+    var eventMetricValue: Double? {
+        return self[Event.CodingKeys.metricValue.rawValue] as? Double
+    }
 }
 
 extension Array where Element == [String: Any] {
@@ -1308,10 +1317,10 @@ extension Event {
         switch eventKind {
         case .feature:
             let featureFlag = DarklyServiceMock.Constants.stubFeatureFlag(for: DarklyServiceMock.FlagKeys.bool)
-            return Event.featureEvent(key: UUID().uuidString, value: true, defaultValue: false, featureFlag: featureFlag, user: user)
+            return Event.featureEvent(key: UUID().uuidString, value: true, defaultValue: false, featureFlag: featureFlag, user: user, includeReason: false)
         case .debug:
             let featureFlag = DarklyServiceMock.Constants.stubFeatureFlag(for: DarklyServiceMock.FlagKeys.bool)
-            return Event.debugEvent(key: UUID().uuidString, value: true, defaultValue: false, featureFlag: featureFlag, user: user)
+            return Event.debugEvent(key: UUID().uuidString, value: true, defaultValue: false, featureFlag: featureFlag, user: user, includeReason: false)
         case .identify: return Event.identifyEvent(user: user)
         case .custom: return (try? Event.customEvent(key: UUID().uuidString, user: user, data: ["custom": UUID().uuidString]))!
         case .summary: return Event.summaryEvent(flagRequestTracker: FlagRequestTracker.stub())!
@@ -1319,7 +1328,7 @@ extension Event {
     }
 
     static func stubFeatureEvent(_ featureFlag: FeatureFlag, with user: LDUser) -> Event {
-        return Event.featureEvent(key: UUID().uuidString, value: true, defaultValue: false, featureFlag: featureFlag, user: user)
+        return Event.featureEvent(key: UUID().uuidString, value: true, defaultValue: false, featureFlag: featureFlag, user: user, includeReason: false)
     }
 
     static func stubEvents(eventCount: Int = Event.Kind.allKinds.count, for user: LDUser) -> [Event] {

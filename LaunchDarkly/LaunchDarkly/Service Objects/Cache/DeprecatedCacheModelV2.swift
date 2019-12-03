@@ -47,7 +47,7 @@ final class DeprecatedCacheModelV2: DeprecatedCache {
             return (nil, nil)
         }
         let featureFlags = Dictionary(uniqueKeysWithValues: featureFlagDictionaries.compactMap { (flagKey, value) in
-            return (flagKey, FeatureFlag(flagKey: flagKey, value: value, variation: nil, version: nil, flagVersion: nil, eventTrackingContext: nil))
+            return (flagKey, FeatureFlag(flagKey: flagKey, value: value, variation: nil, version: nil, flagVersion: nil, eventTrackingContext: nil, reason: nil, trackReason: nil))
         })
         return (featureFlags, cachedUserDictionary.lastUpdated)
     }

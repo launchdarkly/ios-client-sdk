@@ -214,6 +214,7 @@ final class LDClientSpec: QuickSpec {
         reportEventsSpec()
         allFlagValuesSpec()
         connectionInformationSpec()
+        variationDetailSpec()
     }
 
     private func startSpec() {
@@ -3064,6 +3065,37 @@ final class LDClientSpec: QuickSpec {
                 }
                 it("returns nil") {
                     expect(testContext.subject.connectionInformation.currentConnectionMode).to(equal(.offline))
+                }
+            }
+        }
+    }
+    
+    private func variationDetailSpec() {
+        var testContext: TestContext!
+        
+        describe("variationDetail") {
+            context("when client was started and flag key doesn't exist") {
+                beforeEach {
+                    testContext = TestContext(startOnline: true, runMode: .foreground)
+                    testContext.config.streamingMode = .streaming
+                    testContext.subject.start(config: testContext.config)
+                }
+                it("returns FLAG_NOT_FOUND") {
+                    let detail = testContext.subject.variationDetail(forKey: BadFlagKeys.bool, fallback: DefaultFlagValues.bool).reason
+                    if let errorKind = detail?["errorKind"] as? String {
+                        expect(errorKind) == "FLAG_NOT_FOUND"
+                    }
+                }
+            }
+            context("when client was not started") {
+                beforeEach {
+                    testContext = TestContext()
+                }
+                it("returns CLIENT_NOT_READY") {
+                    let detail = testContext.subject.variationDetail(forKey: BadFlagKeys.bool, fallback: DefaultFlagValues.bool).reason
+                    if let errorKind = detail?["errorKind"] as? String {
+                        expect(errorKind) == "CLIENT_NOT_READY"
+                    }
                 }
             }
         }

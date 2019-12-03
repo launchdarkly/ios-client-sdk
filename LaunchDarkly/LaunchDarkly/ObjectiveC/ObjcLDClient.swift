@@ -47,6 +47,7 @@ import Foundation
  ````
  The `changedFlag` passed in to the block contains the old and new value, and the old and new valueSource. See the typed `LDChangedFlag` classes in the **Obj-C Changed Flags**.
  */
+// swiftlint:disable file_length
 @objc(LDClient)
 public final class ObjcLDClient: NSObject {
 
@@ -210,8 +211,22 @@ public final class ObjcLDClient: NSObject {
 
      - returns: The requested BOOL feature flag value, or the fallback if the flag is missing or cannot be cast to a BOOL, or the client is not started
      */
+    /// - Tag: boolVariation
     @objc public func boolVariation(forKey key: LDFlagKey, fallback: Bool) -> Bool {
         return LDClient.shared.variation(forKey: key, fallback: fallback)
+    }
+    
+    /**
+     See [boolVariation](x-source-tag://boolVariation) for more information on variation methods.
+ 
+     - parameter key: The LDFlagKey for the requested feature flag.
+     - parameter fallback: The fallback value to return if the feature flag key does not exist.
+     
+     - returns: ObjCBoolEvaluationDetail: This class contains your value as well as useful information on why that value was returned.
+    */
+    @objc public func boolVariationDetail(forKey key: LDFlagKey, fallback: Bool) -> ObjCBoolEvaluationDetail {
+        let evaluationDetail = LDClient.shared.variationDetail(forKey: key, fallback: fallback)
+        return ObjCBoolEvaluationDetail(value: evaluationDetail.value, variationIndex: evaluationDetail.variationIndex, reason: evaluationDetail.reason)
     }
     
     /**
@@ -239,8 +254,9 @@ public final class ObjcLDClient: NSObject {
 
      - returns: A `LDBoolVariationValue` (`ObjcLDBoolVariationValue`) containing the requested feature flag value and source, or the fallback if the flag is missing or cannot be cast to a BOOL, or the client is not started. If the fallback value is returned, the source is `LDFlagValueSourceFallback`
      */
+    @available(*, deprecated, message: "Please use the boolVariationDetail method for additional insight into flag evaluation.")
     @objc public func boolVariationAndSource(forKey key: LDFlagKey, fallback: Bool) -> ObjcLDBoolVariationValue {
-        return ObjcLDBoolVariationValue(LDClient.shared.variationAndSource(forKey: key, fallback: fallback))
+        return ObjcLDBoolVariationValue(LDClient.shared.variationAndSourceInternal(forKey: key, fallback: fallback))
     }
 
     /**
@@ -266,8 +282,22 @@ public final class ObjcLDClient: NSObject {
 
      - returns: The requested NSInteger feature flag value, or the fallback if the flag is missing or cannot be cast to a NSInteger, or the client is not started
      */
+    /// - Tag: integerVariation
     @objc public func integerVariation(forKey key: LDFlagKey, fallback: Int) -> Int {
         return LDClient.shared.variation(forKey: key, fallback: fallback)
+    }
+    
+    /**
+     See [integerVariation](x-source-tag://integerVariation) for more information on variation methods.
+     
+     - parameter key: The LDFlagKey for the requested feature flag.
+     - parameter fallback: The fallback value to return if the feature flag key does not exist.
+     
+     - returns: ObjCIntegerEvaluationDetail: This class contains your value as well as useful information on why that value was returned.
+     */
+    @objc public func integerVariationDetail(forKey key: LDFlagKey, fallback: Int) -> ObjCIntegerEvaluationDetail {
+        let evaluationDetail = LDClient.shared.variationDetail(forKey: key, fallback: fallback)
+        return ObjCIntegerEvaluationDetail(value: evaluationDetail.value, variationIndex: evaluationDetail.variationIndex, reason: evaluationDetail.reason)
     }
 
     /**
@@ -295,8 +325,9 @@ public final class ObjcLDClient: NSObject {
 
      - returns: A `LDIntegerVariationValue` (`ObjcLDIntegerVariationValue`) containing the requested feature flag value and source, or the fallback if the flag is missing or cannot be cast to a NSInteger, or the client is not started. If the fallback value is returned, the source is `LDFlagValueSourceFallback`
      */
+    @available(*, deprecated, message: "Please use the integerVariationDetail method for additional insight into flag evaluation.")
     @objc public func integerVariationAndSource(forKey key: LDFlagKey, fallback: Int) -> ObjcLDIntegerVariationValue {
-        return ObjcLDIntegerVariationValue(LDClient.shared.variationAndSource(forKey: key, fallback: fallback))
+        return ObjcLDIntegerVariationValue(LDClient.shared.variationAndSourceInternal(forKey: key, fallback: fallback))
     }
 
     /**
@@ -322,8 +353,22 @@ public final class ObjcLDClient: NSObject {
 
      - returns: The requested double feature flag value, or the fallback if the flag is missing or cannot be cast to a double, or the client is not started
      */
+    /// - Tag: doubleVariation
     @objc public func doubleVariation(forKey key: LDFlagKey, fallback: Double) -> Double {
         return LDClient.shared.variation(forKey: key, fallback: fallback)
+    }
+    
+    /**
+     See [doubleVariation](x-source-tag://doubleVariation) for more information on variation methods.
+     
+     - parameter key: The LDFlagKey for the requested feature flag.
+     - parameter fallback: The fallback value to return if the feature flag key does not exist.
+     
+     - returns: ObjCDoubleEvaluationDetail: This class contains your value as well as useful information on why that value was returned.
+     */
+    @objc public func doubleVariationDetail(forKey key: LDFlagKey, fallback: Double) -> ObjCDoubleEvaluationDetail {
+        let evaluationDetail = LDClient.shared.variationDetail(forKey: key, fallback: fallback)
+        return ObjCDoubleEvaluationDetail(value: evaluationDetail.value, variationIndex: evaluationDetail.variationIndex, reason: evaluationDetail.reason)
     }
 
     /**
@@ -351,8 +396,9 @@ public final class ObjcLDClient: NSObject {
 
      - returns: A `LDDoubleVariationValue` (`ObjcLDDoubleVariationValue`) containing the requested feature flag value and source, or the fallback if the flag is missing or cannot be cast to a double, or the client is not started. If the fallback value is returned, the source is `LDFlagValueSourceFallback`
      */
+    @available(*, deprecated, message: "Please use the doubleVariationDetail method for additional insight into flag evaluation.")
     @objc public func doubleVariationAndSource(forKey key: LDFlagKey, fallback: Double) -> ObjcLDDoubleVariationValue {
-        return ObjcLDDoubleVariationValue(LDClient.shared.variationAndSource(forKey: key, fallback: fallback))
+        return ObjcLDDoubleVariationValue(LDClient.shared.variationAndSourceInternal(forKey: key, fallback: fallback))
     }
 
     /**
@@ -378,8 +424,22 @@ public final class ObjcLDClient: NSObject {
 
      - returns: The requested NSString feature flag value, or the fallback value (which may be nil) if the flag is missing or cannot be cast to a NSString, or the client is not started.
      */
+    /// - Tag: stringVariation
     @objc public func stringVariation(forKey key: LDFlagKey, fallback: String?) -> String? {
         return LDClient.shared.variation(forKey: key, fallback: fallback)
+    }
+    
+    /**
+     See [stringVariation](x-source-tag://stringVariation) for more information on variation methods.
+     
+     - parameter key: The LDFlagKey for the requested feature flag.
+     - parameter fallback: The fallback value to return if the feature flag key does not exist. The fallback value may be nil.
+     
+     - returns: ObjCStringEvaluationDetail: This class contains your value as well as useful information on why that value was returned.
+     */
+    @objc public func stringVariationDetail(forKey key: LDFlagKey, fallback: String?) -> ObjCStringEvaluationDetail {
+        let evaluationDetail = LDClient.shared.variationDetail(forKey: key, fallback: fallback)
+        return ObjCStringEvaluationDetail(value: evaluationDetail.value, variationIndex: evaluationDetail.variationIndex, reason: evaluationDetail.reason)
     }
 
     /**
@@ -407,8 +467,9 @@ public final class ObjcLDClient: NSObject {
 
      - returns: A `LDStringVariationValue` (`ObjcLDStringVariationValue`) containing the requested feature flag value and source, or the fallback value (which may be nil) if the flag is missing or cannot be cast to a NSString, or the client is not started. If the fallback value is returned, the source is `LDFlagValueSourceFallback`
      */
+    @available(*, deprecated, message: "Please use the stringVariationDetail method for additional insight into flag evaluation.")
     @objc public func stringVariationAndSource(forKey key: LDFlagKey, fallback: String?) -> ObjcLDStringVariationValue {
-        return ObjcLDStringVariationValue(LDClient.shared.variationAndSource(forKey: key, fallback: fallback))
+        return ObjcLDStringVariationValue(LDClient.shared.variationAndSourceInternal(forKey: key, fallback: fallback))
     }
 
     /**
@@ -434,8 +495,22 @@ public final class ObjcLDClient: NSObject {
 
      - returns: The requested NSArray feature flag value, or the fallback value (which may be nil) if the flag is missing or cannot be cast to a NSArray, or the client is not started
      */
+    /// - Tag: arrayVariation
     @objc public func arrayVariation(forKey key: LDFlagKey, fallback: [Any]?) -> [Any]? {
         return LDClient.shared.variation(forKey: key, fallback: fallback)
+    }
+    
+    /**
+     See [arrayVariation](x-source-tag://arrayVariation) for more information on variation methods.
+     
+     - parameter key: The LDFlagKey for the requested feature flag.
+     - parameter fallback: The fallback value to return if the feature flag key does not exist. The fallback value may be nil.
+     
+     - returns: ObjCArrayEvaluationDetail: This class contains your value as well as useful information on why that value was returned.
+     */
+    @objc public func arrayVariationDetail(forKey key: LDFlagKey, fallback: [Any]?) -> ObjCArrayEvaluationDetail {
+        let evaluationDetail = LDClient.shared.variationDetail(forKey: key, fallback: fallback)
+        return ObjCArrayEvaluationDetail(value: evaluationDetail.value, variationIndex: evaluationDetail.variationIndex, reason: evaluationDetail.reason)
     }
     
     /**
@@ -463,8 +538,9 @@ public final class ObjcLDClient: NSObject {
 
      - returns: A `LDArrayVariationValue` (`ObjcLDArrayVariationValue`) containing the requested feature flag value and source, or the fallback value (which may be nil) if the flag is missing or cannot be cast to a NSArray, or the client is not started. If the fallback value is returned, the source is `LDFlagValueSourceFallback`
      */
+    @available(*, deprecated, message: "Please use the arrayVariationDetail method for additional insight into flag evaluation.")
     @objc public func arrayVariationAndSource(forKey key: LDFlagKey, fallback: [Any]?) -> ObjcLDArrayVariationValue {
-        return ObjcLDArrayVariationValue(LDClient.shared.variationAndSource(forKey: key, fallback: fallback))
+        return ObjcLDArrayVariationValue(LDClient.shared.variationAndSourceInternal(forKey: key, fallback: fallback))
     }
 
     /**
@@ -490,8 +566,22 @@ public final class ObjcLDClient: NSObject {
 
      - returns: The requested NSDictionary feature flag value, or the fallback value (which may be nil) if the flag is missing or cannot be cast to a NSDictionary, or the client is not started
      */
+    /// - Tag: dictionaryVariation
     @objc public func dictionaryVariation(forKey key: LDFlagKey, fallback: [String: Any]?) -> [String: Any]? {
         return LDClient.shared.variation(forKey: key, fallback: fallback)
+    }
+    
+    /**
+     See [dictionaryVariation](x-source-tag://dictionaryVariation) for more information on variation methods.
+     
+     - parameter key: The LDFlagKey for the requested feature flag.
+     - parameter fallback: The fallback value to return if the feature flag key does not exist. The fallback value may be nil.
+     
+     - returns: ObjCDictionaryEvaluationDetail: This class contains your value as well as useful information on why that value was returned.
+     */
+    @objc public func dictionaryVariationDetail(forKey key: LDFlagKey, fallback: [String: Any]?) -> ObjCDictionaryEvaluationDetail {
+        let evaluationDetail = LDClient.shared.variationDetail(forKey: key, fallback: fallback)
+        return ObjCDictionaryEvaluationDetail(value: evaluationDetail.value, variationIndex: evaluationDetail.variationIndex, reason: evaluationDetail.reason)
     }
     
     /**
@@ -519,8 +609,9 @@ public final class ObjcLDClient: NSObject {
 
      - returns: A `LDDictionaryVariationValue` (`ObjcLDDictionaryVariationValue`) containing the requested feature flag value and source, or the fallback value (which may be nil) if the flag is missing or cannot be cast to a NSDictionary, or the client is not started. If the fallback value is returned, the source is `LDFlagValueSourceFallback`
      */
+    @available(*, deprecated, message: "Please use the dictionaryVariationDetail method for additional insight into flag evaluation.")
     @objc public func dictionaryVariationAndSource(forKey key: LDFlagKey, fallback: [String: Any]?) -> ObjcLDDictionaryVariationValue {
-        return ObjcLDDictionaryVariationValue(LDClient.shared.variationAndSource(forKey: key, fallback: fallback))
+        return ObjcLDDictionaryVariationValue(LDClient.shared.variationAndSourceInternal(forKey: key, fallback: fallback))
     }
 
     /**
@@ -896,8 +987,21 @@ public final class ObjcLDClient: NSObject {
      - parameter data: The data for the event. The SDK does nothing with the data, which can be any valid JSON item the client app sends. (Optional)
      - parameter error: NSError object to hold the invalidJsonObject error if the data is not a valid JSON item. (Optional)
      */
+    /// - Tag: trackEvent
     @objc public func trackEvent(key: String, data: Any? = nil) throws {
-        try LDClient.shared.trackEvent(key: key, data: data)
+        try LDClient.shared.trackEvent(key: key, data: data, metricValue: nil)
+    }
+    
+    /**
+     See (trackEvent)[x-source-tag://trackEvent] for full documentation.
+     
+     - parameter key: The key for the event. The SDK does nothing with the key, which can be any string the client app sends
+     - parameter data: The data for the event. The SDK does nothing with the data, which can be any valid JSON item the client app sends. (Optional)
+     - parameter metricValue: A numeric value used by the LaunchDarkly experimentation feature in numeric custom metrics. Can be omitted if this event is used by only non-numeric metrics. This field will also be returned as part of the custom event for Data Export.
+     - parameter error: NSError object to hold the invalidJsonObject error if the data is not a valid JSON item. (Optional)
+     */
+    @objc public func trackEvent(key: String, data: Any? = nil, metricValue: Double) throws {
+        try LDClient.shared.trackEvent(key: key, data: data, metricValue: metricValue)
     }
 
     /**
