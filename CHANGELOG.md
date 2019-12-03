@@ -5,6 +5,11 @@ All notable changes to the LaunchDarkly iOS SDK will be documented in this file.
 ### Multiple Environment clients
 Version 4.0.0 does not support multiple environments. If you use version `2.14.0` or later and set `LDConfig`'s `secondaryMobileKeys` you will not be able to migrate to version `4.0.0`. Multiple Environments will be added in a future release to the Swift SDK.
 
+## [4.3.0] - 2019-12-3
+### Added
+- Implemented `variationDetail` which returns an Evaluation Reason giving developers greater insight into why a value was returned.
+- Added support for the latest Experimentation features allowing increased value from A/B/n testing. The `track` method now supports an additional `metricValue` parameter.
+
 ## [4.2.1] - 2019-11-15
 ### Changed
 - Updated to `ios-eventsource` version `4.0.3`. This appends a platform name to bundle identifiers. (Thanks, [cswelin](https://github.com/launchdarkly/ios-eventsource/pull/28)!)
