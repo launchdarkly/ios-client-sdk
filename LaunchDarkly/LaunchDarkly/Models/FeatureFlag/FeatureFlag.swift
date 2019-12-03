@@ -11,7 +11,7 @@ import Foundation
 struct FeatureFlag {
 
     enum CodingKeys: String, CodingKey, CaseIterable {
-        case flagKey = "key", value, variation, version, flagVersion, reason
+        case flagKey = "key", value, variation, version, flagVersion, reason, trackReason
     }
 
     let flagKey: LDFlagKey
@@ -23,8 +23,9 @@ struct FeatureFlag {
     let flagVersion: Int?
     let eventTrackingContext: EventTrackingContext?
     let reason: Dictionary<String, Any>?
+    let trackReason: Bool?
 
-    init(flagKey: LDFlagKey, value: Any?, variation: Int?, version: Int?, flagVersion: Int?, eventTrackingContext: EventTrackingContext?, reason: Dictionary<String, Any>?) {
+    init(flagKey: LDFlagKey, value: Any?, variation: Int?, version: Int?, flagVersion: Int?, eventTrackingContext: EventTrackingContext?, reason: Dictionary<String, Any>?, trackReason: Bool?) {
         self.flagKey = flagKey
         self.value = value is NSNull ? nil : value
         self.variation = variation
@@ -32,6 +33,7 @@ struct FeatureFlag {
         self.flagVersion = flagVersion
         self.eventTrackingContext = eventTrackingContext
         self.reason = reason
+        self.trackReason = trackReason
     }
 
     init?(dictionary: [String: Any]?) {
@@ -46,7 +48,8 @@ struct FeatureFlag {
                   version: dictionary.version,
                   flagVersion: dictionary.flagVersion,
                   eventTrackingContext: EventTrackingContext(dictionary: dictionary),
-                  reason: dictionary.reason)
+                  reason: dictionary.reason,
+                  trackReason: dictionary.trackReason)
     }
 
     var dictionaryValue: [String: Any] {
@@ -57,6 +60,7 @@ struct FeatureFlag {
         dictionaryValue[CodingKeys.version.rawValue] = version ?? NSNull()
         dictionaryValue[CodingKeys.flagVersion.rawValue] = flagVersion ?? NSNull()
         dictionaryValue[CodingKeys.reason.rawValue] = reason ?? NSNull()
+        dictionaryValue[CodingKeys.trackReason.rawValue] = trackReason ?? NSNull()
         if let eventTrackingContext = eventTrackingContext {
             dictionaryValue.merge(eventTrackingContext.dictionaryValue) { (_, eventTrackingContextValue) in
                 return eventTrackingContextValue    //this should never happen since the feature flag dictionary does not have any keys also used by the eventTrackingContext dictionary
@@ -72,25 +76,16 @@ extension FeatureFlag: Equatable {
         if lhs.flagKey != rhs.flagKey {
             return false
         }
-        if lhs.variation == nil {
-            if rhs.variation != nil {
-                return false
-            }
-        } else {
-            if lhs.variation != rhs.variation {
-                return false
-            }
+        if lhs.variation == nil && rhs.variation != nil || lhs.variation != rhs.variation {
+            return false
         }
-        if lhs.version == nil {
-            if rhs.version != nil {
-                return false
-            }
-        } else {
-            if lhs.version != rhs.version {
-                return false
-            }
+        if lhs.version == nil && rhs.version != nil || lhs.version != rhs.version {
+            return false
         }
         if lhs.reason == nil && rhs.reason != nil || lhs.reason != rhs.reason {
+            return false
+        }
+        if lhs.trackReason == nil && rhs.trackReason != nil || lhs.trackReason != rhs.trackReason {
             return false
         }
         return true
@@ -138,6 +133,10 @@ extension Dictionary where Key == String, Value == Any {
     
     var reason: Dictionary<String, Any>? {
         return self[FeatureFlag.CodingKeys.reason.rawValue] as? Dictionary<String, Any>
+    }
+    
+    var trackReason: Bool? {
+        return self[FeatureFlag.CodingKeys.trackReason.rawValue] as? Bool
     }
 
     var flagCollection: [LDFlagKey: FeatureFlag]? {

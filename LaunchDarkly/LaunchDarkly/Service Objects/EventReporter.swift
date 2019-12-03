@@ -28,7 +28,7 @@ protocol EventReporting {
     func record(_ event: Event, completion: CompletionClosure?)
     //sourcery: noMock
     func record(_ event: Event)
-    func recordFlagEvaluationEvents(flagKey: LDFlagKey, value: Any?, defaultValue: Any?, featureFlag: FeatureFlag?, user: LDUser, reason: Bool?)
+    func recordFlagEvaluationEvents(flagKey: LDFlagKey, value: Any?, defaultValue: Any?, featureFlag: FeatureFlag?, user: LDUser, includeReason: Bool)
     func recordSummaryEvent()
     func resetFlagRequestTracker()
 
@@ -96,11 +96,11 @@ class EventReporter: EventReporting {
         }
     }
     
-    func recordFlagEvaluationEvents(flagKey: LDFlagKey, value: Any?, defaultValue: Any?, featureFlag: FeatureFlag?, user: LDUser, reason: Bool?) {
-        recordFlagEvaluationEvents(flagKey: flagKey, value: value, defaultValue: defaultValue, featureFlag: featureFlag, user: user, reason: reason, completion: nil)
+    func recordFlagEvaluationEvents(flagKey: LDFlagKey, value: Any?, defaultValue: Any?, featureFlag: FeatureFlag?, user: LDUser, includeReason: Bool) {
+        recordFlagEvaluationEvents(flagKey: flagKey, value: value, defaultValue: defaultValue, featureFlag: featureFlag, user: user, includeReason: includeReason, completion: nil)
     }
 
-    func recordFlagEvaluationEvents(flagKey: LDFlagKey, value: Any?, defaultValue: Any?, featureFlag: FeatureFlag?, user: LDUser, reason: Bool?, completion: CompletionClosure? = nil) {
+    func recordFlagEvaluationEvents(flagKey: LDFlagKey, value: Any?, defaultValue: Any?, featureFlag: FeatureFlag?, user: LDUser, includeReason: Bool, completion: CompletionClosure? = nil) {
         let recordingFeatureEvent = featureFlag?.eventTrackingContext?.trackEvents == true
         let recordingDebugEvent = featureFlag?.eventTrackingContext?.shouldCreateDebugEvents(lastEventReportResponseTime: lastEventResponseDate) ?? false
         let dispatchGroup = DispatchGroup()
@@ -114,7 +114,7 @@ class EventReporter: EventReporting {
         }
 
         if recordingFeatureEvent {
-            let featureEvent = Event.featureEvent(key: flagKey, value: value, defaultValue: defaultValue, featureFlag: featureFlag, user: user, reason: reason)
+            let featureEvent = Event.featureEvent(key: flagKey, value: value, defaultValue: defaultValue, featureFlag: featureFlag, user: user, includeReason: includeReason)
             dispatchGroup.enter()
             record(featureEvent) {
                 dispatchGroup.leave()
@@ -122,7 +122,7 @@ class EventReporter: EventReporting {
         }
 
         if recordingDebugEvent, let featureFlag = featureFlag {
-            let debugEvent = Event.debugEvent(key: flagKey, value: value, defaultValue: defaultValue, featureFlag: featureFlag, user: user, reason: reason)
+            let debugEvent = Event.debugEvent(key: flagKey, value: value, defaultValue: defaultValue, featureFlag: featureFlag, user: user, includeReason: includeReason)
             dispatchGroup.enter()
             record(debugEvent) {
                 dispatchGroup.leave()

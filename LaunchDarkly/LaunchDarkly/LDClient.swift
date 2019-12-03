@@ -409,7 +409,7 @@ public class LDClient {
     public func variationDetail<T: LDFlagValueConvertible>(forKey flagKey: LDFlagKey, fallback: T) -> EvaluationDetail<T> {
         let featureFlag = user.flagStore.featureFlag(for: flagKey)
         let reason = checkErrorKinds(featureFlag: featureFlag) ?? featureFlag?.reason
-        let (value, _) = variationAndSourceInternal(forKey: flagKey, fallback: fallback, reason: true)
+        let (value, _) = variationAndSourceInternal(forKey: flagKey, fallback: fallback, includeReason: true)
         return EvaluationDetail(value: value ?? fallback, variationIndex: featureFlag?.variation, reason: reason)
     }
     
@@ -466,7 +466,7 @@ public class LDClient {
      */
     /// - Tag: variationWithoutFallback
     public func variation<T: LDFlagValueConvertible>(forKey flagKey: LDFlagKey, fallback: T? = nil) -> T? {
-        let (value, _) = variationAndSourceInternal(forKey: flagKey, fallback: fallback, reason: false)
+        let (value, _) = variationAndSourceInternal(forKey: flagKey, fallback: fallback, includeReason: false)
         return value
     }
     
@@ -481,7 +481,7 @@ public class LDClient {
     public func variationDetail<T: LDFlagValueConvertible>(forKey flagKey: LDFlagKey, fallback: T? = nil) -> EvaluationDetail<T?> {
         let featureFlag = user.flagStore.featureFlag(for: flagKey)
         let reason = checkErrorKinds(featureFlag: featureFlag) ?? featureFlag?.reason
-        let (value, _) = variationAndSourceInternal(forKey: flagKey, fallback: fallback, reason: true)
+        let (value, _) = variationAndSourceInternal(forKey: flagKey, fallback: fallback, includeReason: true)
         return EvaluationDetail(value: value, variationIndex: featureFlag?.variation, reason: reason)
     }
 
@@ -571,15 +571,15 @@ public class LDClient {
      */
     @available(*, deprecated, message: "Please use the variationDetail method for additional insight into flag evaluation.")
     public func variationAndSource<T: LDFlagValueConvertible>(forKey flagKey: LDFlagKey, fallback: T? = nil) -> (T?, LDFlagValueSource) {
-        return variationAndSourceInternal(forKey: flagKey, fallback: fallback, reason: false)
+        return variationAndSourceInternal(forKey: flagKey, fallback: fallback, includeReason: false)
     }
     
     internal func variationAndSourceInternal<T: LDFlagValueConvertible>(forKey flagKey: LDFlagKey, fallback: T) -> (T, LDFlagValueSource) {
-        let (value, source) = variationAndSourceInternal(forKey: flagKey, fallback: fallback as T?, reason: false)
+        let (value, source) = variationAndSourceInternal(forKey: flagKey, fallback: fallback as T?, includeReason: false)
         return (value ?? fallback, source)  //Because the fallback is wrapped into an Optional, the nil coalescing right side should never be called
     }
     
-    internal func variationAndSourceInternal<T: LDFlagValueConvertible>(forKey flagKey: LDFlagKey, fallback: T? = nil, reason: Bool? = false) -> (T?, LDFlagValueSource) {
+    internal func variationAndSourceInternal<T: LDFlagValueConvertible>(forKey flagKey: LDFlagKey, fallback: T? = nil, includeReason: Bool? = false) -> (T?, LDFlagValueSource) {
         guard hasStarted
         else {
             Log.debug(typeName(and: #function) + "returning fallback: \(fallback.stringValue), source: \(LDFlagValueSource.fallback)." + " LDClient not started.")
@@ -590,7 +590,7 @@ public class LDClient {
         let failedConversionMessage = self.failedConversionMessage(featureFlag: featureFlag, source: source, fallback: fallback)
         Log.debug(typeName(and: #function) + "flagKey: \(flagKey), value: \(value.stringValue), fallback: \(fallback.stringValue), featureFlag: \(featureFlag.stringValue), source: \(source), reason: \(featureFlag?.reason?.description ?? "No evaluation reason")."
             + "\(failedConversionMessage)")
-        eventReporter.recordFlagEvaluationEvents(flagKey: flagKey, value: value, defaultValue: fallback, featureFlag: featureFlag, user: user, reason: reason)
+        eventReporter.recordFlagEvaluationEvents(flagKey: flagKey, value: value, defaultValue: fallback, featureFlag: featureFlag, user: user, includeReason: includeReason ?? false)
         return (value, source)
     }
 
@@ -869,17 +869,18 @@ public class LDClient {
 
      - parameter key: The key for the event. The SDK does nothing with the key, which can be any string the client app sends
      - parameter data: The data for the event. The SDK does nothing with the data, which can be any valid JSON item the client app sends. (Optional)
+     - parameter metricValue: A numeric value used by the LaunchDarkly experimentation feature in numeric custom metrics. Can be omitted if this event is used by only non-numeric metrics. This field will also be returned as part of the custom event for Data Export. (Optional)
 
      - throws: JSONSerialization.JSONError.invalidJsonObject if the data is not a valid JSON item
     */
-    public func trackEvent(key: String, data: Any? = nil) throws {
+    public func trackEvent(key: String, data: Any? = nil, metricValue: Double? = nil) throws {
         guard hasStarted
         else {
             Log.debug(typeName(and: #function) + "aborted. LDClient not started")
             return
         }
-        let event = try Event.customEvent(key: key, user: user, data: data)
-        Log.debug(typeName(and: #function) + "event: \(event), data: \(String(describing: data))")
+        let event = try Event.customEvent(key: key, user: user, data: data, metricValue: metricValue)
+        Log.debug(typeName(and: #function) + "event: \(event), data: \(String(describing: data)), metricValue: \(String(describing: metricValue))")
         eventReporter.record(event)
     }
 

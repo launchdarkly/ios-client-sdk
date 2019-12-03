@@ -987,8 +987,21 @@ public final class ObjcLDClient: NSObject {
      - parameter data: The data for the event. The SDK does nothing with the data, which can be any valid JSON item the client app sends. (Optional)
      - parameter error: NSError object to hold the invalidJsonObject error if the data is not a valid JSON item. (Optional)
      */
+    /// - Tag: trackEvent
     @objc public func trackEvent(key: String, data: Any? = nil) throws {
-        try LDClient.shared.trackEvent(key: key, data: data)
+        try LDClient.shared.trackEvent(key: key, data: data, metricValue: nil)
+    }
+    
+    /**
+     See (trackEvent)[x-source-tag://trackEvent] for full documentation.
+     
+     - parameter key: The key for the event. The SDK does nothing with the key, which can be any string the client app sends
+     - parameter data: The data for the event. The SDK does nothing with the data, which can be any valid JSON item the client app sends. (Optional)
+     - parameter metricValue: A numeric value used by the LaunchDarkly experimentation feature in numeric custom metrics. Can be omitted if this event is used by only non-numeric metrics. This field will also be returned as part of the custom event for Data Export.
+     - parameter error: NSError object to hold the invalidJsonObject error if the data is not a valid JSON item. (Optional)
+     */
+    @objc public func trackEvent(key: String, data: Any? = nil, metricValue: Double) throws {
+        try LDClient.shared.trackEvent(key: key, data: data, metricValue: metricValue)
     }
 
     /**

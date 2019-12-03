@@ -126,7 +126,7 @@ final class AnyComparerSpec: QuickSpec {
                     }
                     it("returns true") {
                         featureFlags.forEach { (flagKey, featureFlag) in
-                            otherFlag = FeatureFlag(flagKey: flagKey, value: featureFlag.value, variation: nil, version: nil, flagVersion: nil, eventTrackingContext: nil, reason: nil)
+                            otherFlag = FeatureFlag(flagKey: flagKey, value: featureFlag.value, variation: nil, version: nil, flagVersion: nil, eventTrackingContext: nil, reason: nil, trackReason: false)
 
                             expect(AnyComparer.isEqual(featureFlag, to: otherFlag)).to(beTrue())
                         }

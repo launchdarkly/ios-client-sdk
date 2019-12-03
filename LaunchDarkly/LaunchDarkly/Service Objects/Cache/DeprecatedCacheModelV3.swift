@@ -58,7 +58,8 @@ final class DeprecatedCacheModelV3: DeprecatedCache {
                                          version: flagValueDictionary.version,
                                          flagVersion: nil,
                                          eventTrackingContext: nil,
-                                         reason: nil))
+                                         reason: nil,
+                                         trackReason: nil))
         })
         return (featureFlags, cachedUserDictionary.lastUpdated)
     }

@@ -39,12 +39,13 @@ final class FeatureFlagSpec: QuickSpec {
                 }
                 let eventTrackingContext = EventTrackingContext.stub()
                 let reason = DarklyServiceMock.Constants.reason
+                let trackReason = false
                 it("creates a feature flag with matching elements") {
                     DarklyServiceMock.FlagKeys.knownFlags.forEach { (flagKey) in
                         let value = DarklyServiceMock.FlagValues.value(from: flagKey)
                         variation += 1
 
-                        featureFlag = FeatureFlag(flagKey: flagKey, value: value, variation: variation, version: version, flagVersion: flagVersion, eventTrackingContext: eventTrackingContext, reason: reason)
+                        featureFlag = FeatureFlag(flagKey: flagKey, value: value, variation: variation, version: version, flagVersion: flagVersion, eventTrackingContext: eventTrackingContext, reason: reason, trackReason: trackReason)
 
                         expect(featureFlag.flagKey) == flagKey
                         expect(AnyComparer.isEqual(featureFlag.value, to: value, considerNilAndNullEqual: true)).to(beTrue())
@@ -57,7 +58,7 @@ final class FeatureFlagSpec: QuickSpec {
             }
             context("when elements don't exist") {
                 beforeEach {
-                    featureFlag = FeatureFlag(flagKey: DarklyServiceMock.FlagKeys.unknown, value: nil, variation: nil, version: nil, flagVersion: nil, eventTrackingContext: nil, reason: nil)
+                    featureFlag = FeatureFlag(flagKey: DarklyServiceMock.FlagKeys.unknown, value: nil, variation: nil, version: nil, flagVersion: nil, eventTrackingContext: nil, reason: nil, trackReason: nil)
                 }
                 it("creates a feature flag with nil elements") {
                     expect(featureFlag).toNot(beNil())
@@ -316,7 +317,8 @@ final class FeatureFlagSpec: QuickSpec {
                                                   version: DarklyServiceMock.Constants.version,
                                                   flagVersion: DarklyServiceMock.Constants.flagVersion,
                                                   eventTrackingContext: eventTrackingContext,
-                                                  reason: DarklyServiceMock.Constants.reason)
+                                                  reason: DarklyServiceMock.Constants.reason,
+                                                  trackReason: false)
 
                     reinflatedFlag = FeatureFlag(dictionary: featureFlag.dictionaryValue)
                 }
@@ -352,7 +354,7 @@ final class FeatureFlagSpec: QuickSpec {
                 context("when keys differ") {
                     it("returns false") {
                         originalFlags.forEach { (_, originalFlag) in
-                            otherFlag = FeatureFlag(flagKey: "dummyFlagKey", value: originalFlag.value, variation: originalFlag.variation, version: originalFlag.version, flagVersion: originalFlag.flagVersion, eventTrackingContext: originalFlag.eventTrackingContext, reason: DarklyServiceMock.Constants.reason)
+                            otherFlag = FeatureFlag(flagKey: "dummyFlagKey", value: originalFlag.value, variation: originalFlag.variation, version: originalFlag.version, flagVersion: originalFlag.flagVersion, eventTrackingContext: originalFlag.eventTrackingContext, reason: DarklyServiceMock.Constants.reason, trackReason: false)
 
                             expect(originalFlag == otherFlag).to(beFalse())
                         }
@@ -442,7 +444,7 @@ final class FeatureFlagSpec: QuickSpec {
                 }
                 it("returns true") {
                     originalFlags.forEach { (flagKey, originalFlag) in
-                        otherFlag = FeatureFlag(flagKey: flagKey, value: originalFlag.value, variation: nil, version: nil, flagVersion: nil, eventTrackingContext: nil, reason: nil)
+                        otherFlag = FeatureFlag(flagKey: flagKey, value: originalFlag.value, variation: nil, version: nil, flagVersion: nil, eventTrackingContext: nil, reason: nil, trackReason: false)
 
                         expect(originalFlag == otherFlag).to(beTrue())
                     }
@@ -490,7 +492,8 @@ final class FeatureFlagSpec: QuickSpec {
                                                 version: originalFlag.version,
                                                 flagVersion: originalFlag.flagVersion,
                                                 eventTrackingContext: originalFlag.eventTrackingContext,
-                                                reason: DarklyServiceMock.Constants.reason)
+                                                reason: DarklyServiceMock.Constants.reason,
+                                                trackReason: false)
 
                         expect(originalFlag.matchesVariation(otherFlag)).to(beTrue())
                     }
@@ -707,13 +710,14 @@ extension FeatureFlag {
             && flagVersion ?? FeatureFlag.nilPlaceholder == otherFlag.flagVersion ?? FeatureFlag.nilPlaceholder
     }
 
-    init(copying featureFlag: FeatureFlag, value: Any? = nil, variation: Int? = nil, version: Int? = nil, flagVersion: Int? = nil, eventTrackingContext: EventTrackingContext? = nil, reason: Dictionary<String, Any>? = nil) {
+    init(copying featureFlag: FeatureFlag, value: Any? = nil, variation: Int? = nil, version: Int? = nil, flagVersion: Int? = nil, eventTrackingContext: EventTrackingContext? = nil, reason: Dictionary<String, Any>? = nil, trackReason: Bool? = nil) {
         self.init(flagKey: featureFlag.flagKey,
                   value: value ?? featureFlag.value,
                   variation: variation ?? featureFlag.variation,
                   version: version ?? featureFlag.version,
                   flagVersion: flagVersion ?? featureFlag.flagVersion,
                   eventTrackingContext: eventTrackingContext ?? featureFlag.eventTrackingContext,
-                  reason: reason ?? featureFlag.reason)
+                  reason: reason ?? featureFlag.reason,
+                  trackReason: trackReason ?? featureFlag.trackReason)
     }
 }

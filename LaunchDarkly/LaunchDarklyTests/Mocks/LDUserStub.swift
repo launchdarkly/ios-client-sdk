@@ -68,7 +68,8 @@ extension LDUser {
                                                    version: includeVersions ? DarklyServiceMock.Constants.version : nil,
                                                    flagVersion: DarklyServiceMock.Constants.flagVersion,
                                                    eventTrackingContext: EventTrackingContext.stub(),
-                                                   reason: DarklyServiceMock.Constants.reason)
+                                                   reason: DarklyServiceMock.Constants.reason,
+                                                   trackReason: false)
         return flags
     }
 

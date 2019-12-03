@@ -184,14 +184,16 @@ final class DarklyServiceMock: DarklyServiceProvider {
                                     useAlternateVersion: Bool = false,
                                     useAlternateFlagVersion: Bool = false,
                                     eventTrackingContext: EventTrackingContext? = EventTrackingContext.stub(),
-                                    includeEvaluationReason: Bool = false) -> FeatureFlag {
+                                    includeEvaluationReason: Bool = false,
+                                    includeTrackReason: Bool = false) -> FeatureFlag {
             return FeatureFlag(flagKey: flagKey,
                                value: value(for: flagKey, useAlternateValue: useAlternateValue),
                                variation: variation(for: flagKey, includeVariation: includeVariation, useAlternateValue: useAlternateValue),
                                version: version(for: flagKey, includeVersion: includeVersion, useAlternateVersion: useAlternateValue || useAlternateVersion),
                                flagVersion: flagVersion(for: flagKey, includeFlagVersion: includeFlagVersion, useAlternateFlagVersion: useAlternateValue || useAlternateFlagVersion),
                                eventTrackingContext: eventTrackingContext,
-                               reason: reason(includeEvaluationReason: includeEvaluationReason))
+                               reason: reason(includeEvaluationReason: includeEvaluationReason),
+                               trackReason: includeTrackReason)
         }
     }
 

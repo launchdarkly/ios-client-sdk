@@ -36,7 +36,8 @@ import Foundation
                     “value”: <value>,
                     “trackEvents”: <trackEvents>,       //LDEventTrackingContext
                     “debugEventsUntilDate”: <debugEventsUntilDate>,
-                    "reason": <reason>
+                    "reason": <reason>,
+                    "trackReason": <trackReason>
                     ]
                 ],
             “privateAttrs”: <privateAttributes>
@@ -76,7 +77,8 @@ final class DeprecatedCacheModelV6: DeprecatedCache {
                                          version: featureFlagDictionary.version,
                                          flagVersion: featureFlagDictionary.flagVersion,
                                          eventTrackingContext: EventTrackingContext(dictionary: featureFlagDictionary),
-                                         reason: featureFlagDictionary.reason))
+                                         reason: featureFlagDictionary.reason,
+                                         trackReason: featureFlagDictionary.trackReason))
         })
         return (featureFlags, cachedUserDictionary.lastUpdated)
     }

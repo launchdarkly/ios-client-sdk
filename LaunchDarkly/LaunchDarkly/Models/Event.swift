@@ -10,7 +10,7 @@ import Foundation
 
 struct Event { //sdk internal, not publically accessible
     enum CodingKeys: String, CodingKey {
-        case key, kind, creationDate, user, userKey, value, defaultValue = "default", variation, version, data, endDate, reason
+        case key, kind, creationDate, user, userKey, value, defaultValue = "default", variation, version, data, endDate, reason, metricValue
     }
 
     enum Kind: String {
@@ -43,7 +43,8 @@ struct Event { //sdk internal, not publically accessible
     let data: Any?
     let flagRequestTracker: FlagRequestTracker?
     let endDate: Date?
-    let reason: Bool?
+    let includeReason: Bool
+    let metricValue: Double?
 
     init(kind: Kind = .custom,
          key: String? = nil,
@@ -54,7 +55,8 @@ struct Event { //sdk internal, not publically accessible
          data: Any? = nil,
          flagRequestTracker: FlagRequestTracker? = nil,
          endDate: Date? = nil,
-         reason: Bool? = false) {
+         includeReason: Bool = false,
+         metricValue: Double? = nil) {
         self.kind = kind
         self.key = key
         self.creationDate = kind == .summary ? nil : Date()
@@ -65,30 +67,32 @@ struct Event { //sdk internal, not publically accessible
         self.data = data
         self.flagRequestTracker = flagRequestTracker
         self.endDate = endDate
-        self.reason = reason
+        self.includeReason = includeReason
+        self.metricValue = metricValue
     }
 
-    static func featureEvent(key: String, value: Any?, defaultValue: Any?, featureFlag: FeatureFlag?, user: LDUser, reason: Bool? = false) -> Event {
-        Log.debug(typeName(and: #function) + "key: " + key + ", value: \(String(describing: value)), " + "fallback: \(String(describing: defaultValue) + "reason: \(String(describing: reason))"), "
+    // swiftlint:disable function_parameter_count
+    static func featureEvent(key: String, value: Any?, defaultValue: Any?, featureFlag: FeatureFlag?, user: LDUser, includeReason: Bool) -> Event {
+        Log.debug(typeName(and: #function) + "key: " + key + ", value: \(String(describing: value)), " + "fallback: \(String(describing: defaultValue) + "reason: \(String(describing: includeReason))"), "
             + "featureFlag: \(String(describing: featureFlag))")
-        return Event(kind: .feature, key: key, user: user, value: value, defaultValue: defaultValue, featureFlag: featureFlag, reason: reason)
+        return Event(kind: .feature, key: key, user: user, value: value, defaultValue: defaultValue, featureFlag: featureFlag, includeReason: includeReason)
     }
 
-    static func debugEvent(key: String, value: Any?, defaultValue: Any?, featureFlag: FeatureFlag, user: LDUser, reason: Bool? = false) -> Event {
-        Log.debug(typeName(and: #function) + "key: " + key + ", value: \(String(describing: value)), " + "fallback: \(String(describing: defaultValue) + "reason: \(String(describing: reason))"), "
+    static func debugEvent(key: String, value: Any?, defaultValue: Any?, featureFlag: FeatureFlag, user: LDUser, includeReason: Bool) -> Event {
+        Log.debug(typeName(and: #function) + "key: " + key + ", value: \(String(describing: value)), " + "fallback: \(String(describing: defaultValue) + "reason: \(String(describing: includeReason))"), "
             + "featureFlag: \(String(describing: featureFlag))")
-        return Event(kind: .debug, key: key, user: user, value: value, defaultValue: defaultValue, featureFlag: featureFlag, reason: reason)
+        return Event(kind: .debug, key: key, user: user, value: value, defaultValue: defaultValue, featureFlag: featureFlag, includeReason: includeReason)
     }
 
-    static func customEvent(key: String, user: LDUser, data: Any? = nil) throws -> Event {
-        Log.debug(typeName(and: #function) + "key: " + key + ", data: \(String(describing: data))")
+    static func customEvent(key: String, user: LDUser, data: Any? = nil, metricValue: Double? = nil) throws -> Event {
+        Log.debug(typeName(and: #function) + "key: " + key + ", data: \(String(describing: data)), metricValue: \(String(describing: metricValue))")
         if let data = data {
             guard JSONSerialization.isValidJSONObject([CodingKeys.data.rawValue: data]) //the top level object must be either an array or an object for isValidJSONObject to work correctly
             else {
                 throw JSONSerialization.JSONError.invalidJsonObject
             }
         }
-        return Event(kind: .custom, key: key, user: user, data: data)
+        return Event(kind: .custom, key: key, user: user, data: data, metricValue: metricValue)
     }
 
     static func identifyEvent(user: LDUser) -> Event {
@@ -129,7 +133,8 @@ struct Event { //sdk internal, not publically accessible
             }
         }
         eventDictionary[CodingKeys.endDate.rawValue] = endDate?.millisSince1970
-        eventDictionary[CodingKeys.reason.rawValue] = reason == false ? nil : featureFlag?.reason
+        eventDictionary[CodingKeys.reason.rawValue] = includeReason || featureFlag?.trackReason ?? false ? featureFlag?.reason : nil
+        eventDictionary[CodingKeys.metricValue.rawValue] = metricValue
 
         return eventDictionary
     }
