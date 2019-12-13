@@ -5,6 +5,10 @@ All notable changes to the LaunchDarkly iOS SDK will be documented in this file.
 ### Multiple Environment clients
 Version 4.0.0 does not support multiple environments. If you use version `2.14.0` or later and set `LDConfig`'s `secondaryMobileKeys` you will not be able to migrate to version `4.0.0`. Multiple Environments will be added in a future release to the Swift SDK.
 
+## [4.3.1] - 2019-12-12
+### Changed
+- Updated to `ios-eventsource` version `4.1.0`. This negates the need to `use_frameworks!` when using the React Native SDK. This change does not affect the iOS SDK.
+
 ## [4.3.0] - 2019-12-3
 ### Added
 - Implemented `variationDetail` which returns an Evaluation Reason giving developers greater insight into why a value was returned.
