@@ -69,6 +69,7 @@ jobs:
         name: CocoaPods lib lint
         command: |
             curl https://cocoapods-specs.circleci.com/fetch-cocoapods-repo-from-s3.sh | bash -s cf
+            pod repo update
             bundle exec pod lib lint
 
     - run:
