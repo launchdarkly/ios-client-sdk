@@ -111,6 +111,8 @@ final class DarklyServiceMock: DarklyServiceProvider {
                                      includeVariations: Bool = true,
                                      includeVersions: Bool = true,
                                      includeFlagVersions: Bool = true,
+                                     alternateVariationNumber: Bool = true,
+                                     bumpFlagVersions: Bool = false,
                                      alternateValuesForKeys alternateValueKeys: [LDFlagKey] = [],
                                      eventTrackingContext: EventTrackingContext? = EventTrackingContext.stub()) -> [LDFlagKey: FeatureFlag] {
 
@@ -121,6 +123,9 @@ final class DarklyServiceMock: DarklyServiceProvider {
                                                  includeVersion: includeVersions,
                                                  includeFlagVersion: includeFlagVersions,
                                                  useAlternateValue: useAlternateValue(for: flagKey, alternateValueKeys: alternateValueKeys),
+                                                 useAlternateVersion: bumpFlagVersions && useAlternateValue(for: flagKey, alternateValueKeys: alternateValueKeys),
+                                                 useAlternateFlagVersion: bumpFlagVersions && useAlternateValue(for: flagKey, alternateValueKeys: alternateValueKeys),
+                                                 useAlternateVariationNumber: alternateVariationNumber,
                                                  eventTrackingContext: eventTrackingContext))
             }
 
@@ -149,6 +154,14 @@ final class DarklyServiceMock: DarklyServiceProvider {
                 return nil
             }
             return useAlternateValue ? variation + 1 : variation
+        }
+
+        private static func variation(for flagKey: LDFlagKey, includeVariation: Bool) -> Int? {
+            guard includeVariation
+                else {
+                    return nil
+            }
+            return variation
         }
 
         private static func version(for flagKey: LDFlagKey, includeVersion: Bool, alternateValueKeys: [LDFlagKey]) -> Int? {
@@ -183,12 +196,13 @@ final class DarklyServiceMock: DarklyServiceProvider {
                                     useAlternateValue: Bool = false,
                                     useAlternateVersion: Bool = false,
                                     useAlternateFlagVersion: Bool = false,
+                                    useAlternateVariationNumber: Bool = true,
                                     eventTrackingContext: EventTrackingContext? = EventTrackingContext.stub(),
                                     includeEvaluationReason: Bool = false,
                                     includeTrackReason: Bool = false) -> FeatureFlag {
             return FeatureFlag(flagKey: flagKey,
                                value: value(for: flagKey, useAlternateValue: useAlternateValue),
-                               variation: variation(for: flagKey, includeVariation: includeVariation, useAlternateValue: useAlternateValue),
+                               variation: useAlternateVariationNumber ? variation(for: flagKey, includeVariation: includeVariation, useAlternateValue: useAlternateValue) : variation(for: flagKey, includeVariation: includeVariation),
                                version: version(for: flagKey, includeVersion: includeVersion, useAlternateVersion: useAlternateValue || useAlternateVersion),
                                flagVersion: flagVersion(for: flagKey, includeFlagVersion: includeFlagVersion, useAlternateFlagVersion: useAlternateValue || useAlternateFlagVersion),
                                eventTrackingContext: eventTrackingContext,

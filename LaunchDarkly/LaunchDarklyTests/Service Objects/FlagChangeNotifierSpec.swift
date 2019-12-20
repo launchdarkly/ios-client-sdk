@@ -483,6 +483,39 @@ final class FlagChangeNotifierSpec: QuickSpec {
 
                             expect(testContext.flagChangeHandlerCallCount) == 1
                             expect(testContext.changedFlag) == targetChangedFlag
+                            let newValue = testContext.changedFlag?.newValue as? String
+                            let newValueFromChangedFlag = targetChangedFlag?.newValue as? String
+                            if newValue != nil || newValueFromChangedFlag != nil {
+                                expect(newValue) == newValueFromChangedFlag
+                            }
+                            expect(testContext.flagsUnchangedHandlerCallCount) == 0
+                        }
+                    }
+                    it("activates the change handler when the value changes but not the variation number") {
+                        DarklyServiceMock.FlagKeys.flagsWithAnAlternateValue.forEach { (key) in
+                            testContext = TestContext(
+                                keys: DarklyServiceMock.FlagKeys.knownFlags,
+                                flagChangeHandler: { (changedFlag) in
+                                    testContext.flagChangeHandlerCallCount += 1
+                                    testContext.changedFlag = changedFlag
+                            },
+                                flagsUnchangedHandler: {
+                                    testContext.flagsUnchangedHandlerCallCount += 1
+                            })
+                            oldFlags = DarklyServiceMock.Constants.stubFeatureFlags(alternateVariationNumber: false, bumpFlagVersions: true, alternateValuesForKeys: [key])
+                            targetChangedFlag = LDChangedFlag.stub(key: key, oldFlags: oldFlags, newFlags: testContext.user.flagStore.featureFlags)
+
+                            waitUntil { done in
+                                testContext.subject.notifyObservers(user: testContext.user, oldFlags: oldFlags, oldFlagSource: .server, completion: done)
+                            }
+
+                            expect(testContext.flagChangeHandlerCallCount) == 1
+                            expect(testContext.changedFlag) == targetChangedFlag
+                            let newValue = testContext.changedFlag?.newValue as? String
+                            let newValueFromChangedFlag = targetChangedFlag?.newValue as? String
+                            if newValue != nil || newValueFromChangedFlag != nil {
+                                expect(newValue) == newValueFromChangedFlag
+                            }
                             expect(testContext.flagsUnchangedHandlerCallCount) == 0
                         }
                     }

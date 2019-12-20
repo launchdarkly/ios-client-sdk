@@ -35,7 +35,7 @@ $ gem install cocoapods
 ```ruby
 use_frameworks!
 target 'YourTargetName' do
-  pod 'LaunchDarkly', '4.3.1'
+  pod 'LaunchDarkly', '4.3.2'
 end
 ```
 
@@ -70,7 +70,7 @@ $ brew install carthage
 To integrate LaunchDarkly into your Xcode project using Carthage, specify it in your `Cartfile`:
 
 ```ogdl
-github "launchdarkly/ios-client-sdk" "4.3.1"
+github "launchdarkly/ios-client-sdk" "4.3.2"
 ```
 
 Run `carthage update` to build the framework. Optionally, specify the `--platform` to build only the frameworks that support your platform(s).
