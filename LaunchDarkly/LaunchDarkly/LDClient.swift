@@ -306,6 +306,8 @@ public class LDClient {
      - parameter user: The LDUser set with the desired user. If omitted, LDClient retains the previously set user, or default if one was never set. (Optional)
      - parameter completion: Closure called when the embedded `setOnline` call completes, subject to throttling delays. (Optional)
     */
+    /// - Tag: start
+    @available(*, deprecated, message: "Please use the startCompleteWhenFlagsReceived method instead")
     public func start(config: LDConfig, user: LDUser? = nil, completion: (() -> Void)? = nil) {
         Log.debug(typeName(and: #function, appending: ": ") + "starting")
         let wasStarted = hasStarted
@@ -322,6 +324,37 @@ public class LDClient {
         self.connectionInformation = ConnectionInformation.uncacheConnectionInformation(config: config, ldClient: self, clientServiceFactory: serviceFactory)
 
         setOnline((wasStarted && wasOnline) || (!wasStarted && self.config.startOnline)) {
+            Log.debug(self.typeName(and: #function, appending: ": ") + "started")
+            self.isStarting = false
+            completion?()
+        }
+    }
+    
+    /**
+     See [start](x-source-tag://start) for more information on starting the SDK.
+     
+     This method listens for flag updates so the completion will only return once an update has occurred.
+     
+     - parameter config: The LDConfig that contains the desired configuration. (Required)
+     - parameter user: The LDUser set with the desired user. If omitted, LDClient retains the previously set user, or default if one was never set. (Optional)
+     - parameter completion: Closure called when the embedded `setOnlineIdentify` call completes, subject to throttling delays. (Optional)
+     */
+    public func startCompleteWhenFlagsReceived(config: LDConfig, user: LDUser? = nil, completion: (() -> Void)? = nil) {
+        Log.debug(typeName(and: #function, appending: ": ") + "starting")
+        let wasStarted = hasStarted
+        let wasOnline = isOnline
+        isStarting = true
+        hasStarted = true
+        
+        setOnline(false)
+        
+        let startUser = user ?? self.user
+        cacheConverter.convertCacheData(for: startUser, and: config)        //Convert before updating the user so any deprecated cached data is converted to the current model
+        self.config = config
+        identify(user: startUser)
+        self.connectionInformation = ConnectionInformation.uncacheConnectionInformation(config: config, ldClient: self, clientServiceFactory: serviceFactory)
+        
+        setOnlineIdentify((wasStarted && wasOnline) || (!wasStarted && self.config.startOnline)) {
             Log.debug(self.typeName(and: #function, appending: ": ") + "started")
             self.isStarting = false
             completion?()

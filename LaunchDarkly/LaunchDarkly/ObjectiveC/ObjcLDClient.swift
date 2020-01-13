@@ -173,8 +173,23 @@ public final class ObjcLDClient: NSObject {
      - parameter userWrapper: The LDUser set with the desired user. If omitted, LDClient retains the previously set user, or default if one was never set. (Optional)
      - parameter completion: Closure called when the embedded `setOnline` call completes, subject to throttling delays. (Optional)
      */
+    /// - Tag: start
+    @available(*, deprecated, message: "Please use the startCompleteWhenFlagsReceived method instead")
     @objc public func start(config configWrapper: ObjcLDConfig, user userWrapper: ObjcLDUser? = nil, completion: (() -> Void)? = nil) {
         LDClient.shared.start(config: configWrapper.config, user: userWrapper?.user, completion: completion)
+    }
+    
+    /**
+     See [start](x-source-tag://start) for more information on starting the SDK.
+     
+     This method listens for flag updates so the completion will only return once an update has occurred.
+     
+     - parameter configWrapper: The LDConfig that contains the desired configuration. (Required)
+     - parameter userWrapper: The LDUser set with the desired user. If omitted, LDClient retains the previously set user, or default if one was never set. (Optional)
+     - parameter completion: Closure called when the embedded `setOnlineIdentify` call completes, subject to throttling delays. (Optional)
+     */
+    @objc public func startCompleteWhenFlagsReceived(config configWrapper: ObjcLDConfig, user userWrapper: ObjcLDUser? = nil, completion: (() -> Void)? = nil) {
+        LDClient.shared.startCompleteWhenFlagsReceived(config: configWrapper.config, user: userWrapper?.user, completion: completion)
     }
 
     /**
