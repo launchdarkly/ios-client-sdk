@@ -17,6 +17,7 @@ struct HTTPHeaders {
         static let accept = "Accept"
         static let eventSchema = "X-LaunchDarkly-Event-Schema"
         static let ifNoneMatch = "If-None-Match"
+        static let eventPayloadIDHeader = "X-LaunchDarkly-Payload-ID"
     }
 
     struct HeaderValue {

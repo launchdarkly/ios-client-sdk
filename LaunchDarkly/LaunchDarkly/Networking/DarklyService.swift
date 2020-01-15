@@ -226,6 +226,7 @@ final class DarklyService: DarklyServiceProvider {
     private func eventRequest(eventDictionaries: [[String: Any]]) -> URLRequest {
         var request = URLRequest(url: eventUrl, cachePolicy: .useProtocolCachePolicy, timeoutInterval: config.connectionTimeout)
         request.appendHeaders(httpHeaders.eventRequestHeaders)
+        request.appendHeaders([HTTPHeaders.HeaderKey.eventPayloadIDHeader: UUID().uuidString])
         request.httpMethod = URLRequest.HTTPMethods.post
         request.httpBody = eventDictionaries.jsonData
 
