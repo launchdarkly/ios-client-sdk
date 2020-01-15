@@ -8,7 +8,7 @@ Version 4.0.0 does not support multiple environments. If you use version `2.14.0
 ## [4.4.0] - 2019-12-19
 ### Added
 - Added `startCompleteWhenFlagsReceived` function which contains modified completion behavior. This new function's completion will only return after flag values are received. Previously the `start` completion returned when the SDK went online.
-- Added `X-LaunchDarkly-Payload-ID` HTTP request header to event requests to prevent duplicate experimentation event processing.
+- The SDK now specifies a uniquely identifiable request header when sending events to LaunchDarkly to ensure that events are only processed once, even if the SDK sends them two times due to a failed initial attempt.
 
 ## [4.3.2] - 2019-12-19
 ### Fixed
