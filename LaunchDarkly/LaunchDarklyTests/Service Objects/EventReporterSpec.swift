@@ -440,7 +440,7 @@ final class EventReporterSpec: QuickSpec {
                 context("failure") {
                     context("server error") {
                         beforeEach {
-                            waitUntil { syncComplete in
+                            waitUntil(timeout: 10) { syncComplete in
                                 testContext = TestContext(stubResponseSuccess: false, eventStubResponseDate: eventStubResponseDate, onSyncComplete: { (result) in
                                     testContext.syncResult = result
                                     syncComplete()
@@ -456,7 +456,7 @@ final class EventReporterSpec: QuickSpec {
                         it("retains reported events after the failure") {
                             expect(testContext.eventReporter.isOnline) == true
                             expect(testContext.eventReporter.isReportingActive) == true
-                            expect(testContext.serviceMock.publishEventDictionariesCallCount) == 1
+                            expect(testContext.serviceMock.publishEventDictionariesCallCount) == 2 //1 retry attempt
                             expect(testContext.eventReporter.eventStoreKeys) == testContext.eventKeys
                             expect(testContext.eventReporter.eventStoreKinds.contains(.summary)) == true
                             expect(testContext.serviceMock.publishedEventDictionaryKeys) == testContext.eventKeys
@@ -496,7 +496,7 @@ final class EventReporterSpec: QuickSpec {
                     }
                     context("error only") {
                         beforeEach {
-                            waitUntil { syncComplete in
+                            waitUntil(timeout: 10) { syncComplete in
                                 testContext = TestContext(stubResponseSuccess: false, stubResponseErrorOnly: true, eventStubResponseDate: eventStubResponseDate, onSyncComplete: { (result) in
                                     testContext.syncResult = result
                                     syncComplete()
@@ -512,7 +512,7 @@ final class EventReporterSpec: QuickSpec {
                         it("retains reported events after the failure") {
                             expect(testContext.eventReporter.isOnline) == true
                             expect(testContext.eventReporter.isReportingActive) == true
-                            expect(testContext.serviceMock.publishEventDictionariesCallCount) == 1
+                            expect(testContext.serviceMock.publishEventDictionariesCallCount) == 2 //1 retry attempt
                             expect(testContext.eventReporter.eventStoreKeys) == testContext.eventKeys
                             expect(testContext.eventReporter.eventStoreKinds.contains(.summary)) == true
                             expect(testContext.serviceMock.publishedEventDictionaryKeys) == testContext.eventKeys

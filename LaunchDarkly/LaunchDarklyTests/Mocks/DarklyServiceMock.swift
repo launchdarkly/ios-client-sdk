@@ -259,7 +259,7 @@ final class DarklyServiceMock: DarklyServiceProvider {
             eventDictionary.eventKind
         }
     }
-    func publishEventDictionaries(_ eventDictionaries: [[String: Any]], completion: ServiceCompletionHandler?) {
+    func publishEventDictionaries(_ eventDictionaries: [[String: Any]], _ payloadId: String, completion: ServiceCompletionHandler?) {
         publishEventDictionariesCallCount += 1
         publishedEventDictionaries = eventDictionaries
         completion?(stubbedEventResponse ?? (nil, nil, nil))
