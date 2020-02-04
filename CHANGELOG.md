@@ -5,9 +5,9 @@ All notable changes to the LaunchDarkly iOS SDK will be documented in this file.
 ### Multiple Environment clients
 Version 4.0.0 does not support multiple environments. If you use version `2.14.0` or later and set `LDConfig`'s `secondaryMobileKeys` you will not be able to migrate to version `4.0.0`. Multiple Environments will be added in a future release to the Swift SDK.
 
-## [4.4.1] - 2019-12-19
-### Added
-- Added a single retry attempt when sending events to LaunchDarkly.
+## [4.4.1] - 2020-02-04
+### Changed
+- A single retry attempt will now be made when sending events to LaunchDarkly. The SDK will not retry an event send when the initial request fails.
 
 ## [4.4.0] - 2019-12-19
 ### Added
