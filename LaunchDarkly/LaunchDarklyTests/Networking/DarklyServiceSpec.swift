@@ -862,7 +862,7 @@ final class DarklyServiceSpec: QuickSpec {
                         testContext.serviceMock.stubEventRequest(success: true) { (request, _, _) in
                             eventRequest = request
                         }
-                        testContext.service.publishEventDictionaries(testContext.mockEventDictionaries!) { (data, response, error) in
+                        testContext.service.publishEventDictionaries(testContext.mockEventDictionaries!, UUID().uuidString) { (data, response, error) in
                             responses = (data, response, error)
                             done()
                         }
@@ -886,7 +886,7 @@ final class DarklyServiceSpec: QuickSpec {
                         testContext.serviceMock.stubEventRequest(success: false) { (request, _, _) in
                             eventRequest = request
                         }
-                        testContext.service.publishEventDictionaries(testContext.mockEventDictionaries!) { (data, response, error) in
+                        testContext.service.publishEventDictionaries(testContext.mockEventDictionaries!, UUID().uuidString) { (data, response, error) in
                             responses = (data, response, error)
                             done()
                         }
@@ -911,7 +911,7 @@ final class DarklyServiceSpec: QuickSpec {
                     testContext.serviceMock.stubEventRequest(success: true) { (request, _, _) in
                         eventRequest = request
                     }
-                    testContext.service.publishEventDictionaries(testContext.mockEventDictionaries!) { (data, response, error) in
+                    testContext.service.publishEventDictionaries(testContext.mockEventDictionaries!, UUID().uuidString) { (data, response, error) in
                         responses = (data, response, error)
                         eventsPublished = true
                     }
@@ -931,7 +931,7 @@ final class DarklyServiceSpec: QuickSpec {
                     testContext.serviceMock.stubEventRequest(success: true) { (request, _, _) in
                         eventRequest = request
                     }
-                    testContext.service.publishEventDictionaries(emptyEventDictionaryList) { (data, response, error) in
+                    testContext.service.publishEventDictionaries(emptyEventDictionaryList, "") { (data, response, error) in
                         responses = (data, response, error)
                         eventsPublished = true
                     }
