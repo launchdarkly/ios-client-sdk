@@ -198,26 +198,24 @@ class EventReporter: EventReporting {
         let payloadId = UUID().uuidString
         var breakOut = false
         DispatchQueue.main.async {
-            attemptLoop: for attempts in 1...2 {
+            func retryEventPost() {
                 self.service.publishEventDictionaries(eventDictionaries, payloadId) { serviceResponse in
-                    switch serviceResponse.urlResponse?.httpStatusCode {
-                    case 400, 408, 429: //bad request, request timeout, too many requests
-                        if attempts == 2 {
-                            self.processEventResponse(reportedEventDictionaries: eventDictionaries, serviceResponse: serviceResponse, attempt: attempts)
-                        }
-                    default:
-                        self.processEventResponse(reportedEventDictionaries: eventDictionaries, serviceResponse: serviceResponse, attempt: attempts)
-                        if serviceResponse.error == nil {
-                            breakOut = true
-                        }
+                    Log.debug("Retrying event post.")
+                    sleep(1)
+                    self.processEventResponse(reportedEventDictionaries: eventDictionaries, serviceResponse: serviceResponse, attempt: 2)
+                }
+            }
+            self.service.publishEventDictionaries(eventDictionaries, payloadId) { serviceResponse in
+                switch serviceResponse.urlResponse?.httpStatusCode {
+                case 400, 408, 429: //bad request, request timeout, too many requests
+                    retryEventPost()
+                default:
+                    if serviceResponse.error != nil {
+                        retryEventPost()
+                    } else {
+                        self.processEventResponse(reportedEventDictionaries: eventDictionaries, serviceResponse: serviceResponse, attempt: 1)
                     }
                 }
-                if breakOut {
-                    break attemptLoop
-                }
-                
-                Log.debug("Retrying event post.")
-                sleep(1)
             }
         }
     }
