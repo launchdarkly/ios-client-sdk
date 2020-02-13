@@ -195,15 +195,37 @@ class EventReporter: EventReporting {
 
     private func publish(_ eventDictionaries: [[String: Any]]) {
         //The eventReporter is created when the LDClient singleton is created, and kept for the app's lifetime. So while the use of self in the async block does setup a retain cycle, it's not going to cause a memory leak
-        service.publishEventDictionaries(eventDictionaries) { serviceResponse in
-            self.processEventResponse(reportedEventDictionaries: eventDictionaries, serviceResponse: serviceResponse)
+        let payloadId = UUID().uuidString
+        var breakOut = false
+        DispatchQueue.main.async {
+            func retryEventPost() {
+                self.service.publishEventDictionaries(eventDictionaries, payloadId) { serviceResponse in
+                    Log.debug("Retrying event post.")
+                    sleep(1)
+                    self.processEventResponse(reportedEventDictionaries: eventDictionaries, serviceResponse: serviceResponse, attempt: 2)
+                }
+            }
+            self.service.publishEventDictionaries(eventDictionaries, payloadId) { serviceResponse in
+                switch serviceResponse.urlResponse?.httpStatusCode {
+                case 400, 408, 429: //bad request, request timeout, too many requests
+                    retryEventPost()
+                default:
+                    if serviceResponse.error != nil {
+                        retryEventPost()
+                    } else {
+                        self.processEventResponse(reportedEventDictionaries: eventDictionaries, serviceResponse: serviceResponse, attempt: 1)
+                    }
+                }
+            }
         }
     }
     
-    private func processEventResponse(reportedEventDictionaries: [[String: Any]], serviceResponse: ServiceResponse) {
+    private func processEventResponse(reportedEventDictionaries: [[String: Any]], serviceResponse: ServiceResponse, attempt: Int) {
         if let serviceResponseError = serviceResponse.error {
             Log.debug(typeName(and: #function) + "error: \(String(describing: serviceResponseError))")
-            reportSyncComplete(.error(.request(serviceResponseError)))
+            if attempt == 2 {
+                reportSyncComplete(.error(.request(serviceResponseError)))
+            }
             return
         }
 

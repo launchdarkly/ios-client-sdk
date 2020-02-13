@@ -5,6 +5,10 @@ All notable changes to the LaunchDarkly iOS SDK will be documented in this file.
 ### Multiple Environment clients
 Version 4.0.0 does not support multiple environments. If you use version `2.14.0` or later and set `LDConfig`'s `secondaryMobileKeys` you will not be able to migrate to version `4.0.0`. Multiple Environments will be added in a future release to the Swift SDK.
 
+## [4.4.1] - 2020-02-04
+### Changed
+- The SDK will now retry an event send once when the initial request fails.
+
 ## [4.4.0] - 2019-12-19
 ### Added
 - Added `startCompleteWhenFlagsReceived` function which contains modified completion behavior. This new function's completion will only return after flag values are received. Previously the `start` completion returned when the SDK went online.

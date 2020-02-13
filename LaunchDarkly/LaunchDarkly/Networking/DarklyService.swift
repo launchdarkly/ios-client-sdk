@@ -16,7 +16,7 @@ protocol DarklyServiceProvider: class {
     func getFeatureFlags(useReport: Bool, completion: ServiceCompletionHandler?)
     func clearFlagResponseCache()
     func createEventSource(useReport: Bool) -> DarklyStreamingProvider
-    func publishEventDictionaries(_ eventDictionaries: [[String: Any]], completion: ServiceCompletionHandler?)
+    func publishEventDictionaries(_ eventDictionaries: [[String: Any]], _ payloadId: String, completion: ServiceCompletionHandler?)
     var config: LDConfig { get }
     var user: LDUser { get }
 }
@@ -206,7 +206,7 @@ final class DarklyService: DarklyServiceProvider {
 
     // MARK: Publish Events
     
-    func publishEventDictionaries(_ eventDictionaries: [[String: Any]], completion: ServiceCompletionHandler?) {
+    func publishEventDictionaries(_ eventDictionaries: [[String: Any]], _ payloadId: String, completion: ServiceCompletionHandler?) {
         guard !config.mobileKey.isEmpty,
             !eventDictionaries.isEmpty
         else {
@@ -217,16 +217,16 @@ final class DarklyService: DarklyServiceProvider {
             }
             return
         }
-        let dataTask = self.session.dataTask(with: eventRequest(eventDictionaries: eventDictionaries)) { (data, response, error) in
+        let dataTask = self.session.dataTask(with: eventRequest(eventDictionaries: eventDictionaries, payloadId: payloadId)) { (data, response, error) in
             completion?((data, response, error))
         }
         dataTask.resume()
     }
     
-    private func eventRequest(eventDictionaries: [[String: Any]]) -> URLRequest {
+    private func eventRequest(eventDictionaries: [[String: Any]], payloadId: String) -> URLRequest {
         var request = URLRequest(url: eventUrl, cachePolicy: .useProtocolCachePolicy, timeoutInterval: config.connectionTimeout)
         request.appendHeaders(httpHeaders.eventRequestHeaders)
-        request.appendHeaders([HTTPHeaders.HeaderKey.eventPayloadIDHeader: UUID().uuidString])
+        request.appendHeaders([HTTPHeaders.HeaderKey.eventPayloadIDHeader: payloadId])
         request.httpMethod = URLRequest.HTTPMethods.post
         request.httpBody = eventDictionaries.jsonData
 
