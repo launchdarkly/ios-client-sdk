@@ -7,7 +7,7 @@ Version 4.0.0 does not support multiple environments. If you use version `2.14.0
 
 ## [4.4.1] - 2020-02-04
 ### Changed
-- The SDK will now retry an event send when the initial request fails.
+- The SDK will now retry an event send once when the initial request fails.
 
 ## [4.4.0] - 2019-12-19
 ### Added
