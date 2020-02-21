@@ -196,7 +196,6 @@ class EventReporter: EventReporting {
     private func publish(_ eventDictionaries: [[String: Any]]) {
         //The eventReporter is created when the LDClient singleton is created, and kept for the app's lifetime. So while the use of self in the async block does setup a retain cycle, it's not going to cause a memory leak
         let payloadId = UUID().uuidString
-        var breakOut = false
         DispatchQueue.main.async {
             func retryEventPost() {
                 self.service.publishEventDictionaries(eventDictionaries, payloadId) { serviceResponse in

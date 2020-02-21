@@ -104,7 +104,7 @@ public struct ConnectionInformation: Codable, CustomStringConvertible {
         } else {
             switch synchronizingError {
             case .request(let error):
-                let errorString = error as? String ?? Constants.unknownError
+                let errorString = error.localizedDescription != "" ? error.localizedDescription : Constants.unknownError
                 connectionInformationVar.lastConnectionFailureReason = ConnectionInformation.LastConnectionFailureReason.unknownError(errorString)
             case .response(let urlResponse):
                 let statusCode = (urlResponse as? HTTPURLResponse)?.statusCode
