@@ -636,7 +636,17 @@ public class LDClient {
             return ""
         }
         return " LDClient was unable to convert the feature flag to the requested type (\(T.self))."
-            + (fallback is Collection ? " The fallback value type is a collection. Make sure the element of the fallback value's type is not too restrictive for the actual feature flag type." : "")
+            + (isCollection(fallback) ? " The fallback value type is a collection. Make sure the element of the fallback value's type is not too restrictive for the actual feature flag type." : "")
+    }
+    
+    private func isCollection<T>(_ object: T) -> Bool {
+        let collectionsTypes = ["Set", "Array", "Dictionary"]
+        let typeString = String(describing: type(of: object))
+
+        for type in collectionsTypes {
+            if typeString.contains(type) { return true }
+        }
+        return false
     }
 
     /**
