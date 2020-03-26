@@ -323,6 +323,7 @@
 		C443A41023186A4F00145710 /* ConnectionModeChangeObserver.swift in Sources */ = {isa = PBXBuildFile; fileRef = C443A40E23186A4F00145710 /* ConnectionModeChangeObserver.swift */; };
 		C443A41123186A4F00145710 /* ConnectionModeChangeObserver.swift in Sources */ = {isa = PBXBuildFile; fileRef = C443A40E23186A4F00145710 /* ConnectionModeChangeObserver.swift */; };
 		C443A41223186A4F00145710 /* ConnectionModeChangeObserver.swift in Sources */ = {isa = PBXBuildFile; fileRef = C443A40E23186A4F00145710 /* ConnectionModeChangeObserver.swift */; };
+		C48ED691242D27E200464F5F /* DeprecatedCacheMock.swift in Sources */ = {isa = PBXBuildFile; fileRef = C48ED690242D27E200464F5F /* DeprecatedCacheMock.swift */; };
 		C4A6B65F23949AA20028C074 /* ObjCEvaluationDetail.swift in Sources */ = {isa = PBXBuildFile; fileRef = C4A6B65E23949AA20028C074 /* ObjCEvaluationDetail.swift */; };
 		C4A6B6602395207D0028C074 /* ObjCEvaluationDetail.swift in Sources */ = {isa = PBXBuildFile; fileRef = C4A6B65E23949AA20028C074 /* ObjCEvaluationDetail.swift */; };
 		C4A6B6612395207E0028C074 /* ObjCEvaluationDetail.swift in Sources */ = {isa = PBXBuildFile; fileRef = C4A6B65E23949AA20028C074 /* ObjCEvaluationDetail.swift */; };
@@ -476,6 +477,7 @@
 		C43C37E4238C8FCD003C1624 /* DeprecatedCacheModelV6Spec.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeprecatedCacheModelV6Spec.swift; sourceTree = "<group>"; };
 		C443A4092315AA4D00145710 /* NetworkReporter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NetworkReporter.swift; sourceTree = "<group>"; };
 		C443A40E23186A4F00145710 /* ConnectionModeChangeObserver.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConnectionModeChangeObserver.swift; sourceTree = "<group>"; };
+		C48ED690242D27E200464F5F /* DeprecatedCacheMock.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeprecatedCacheMock.swift; sourceTree = "<group>"; };
 		C4A6B65E23949AA20028C074 /* ObjCEvaluationDetail.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ObjCEvaluationDetail.swift; sourceTree = "<group>"; };
 		D58D143F8FD161584B3FF3AF /* Pods-LaunchDarklyTests.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-LaunchDarklyTests.release.xcconfig"; path = "Pods/Target Support Files/Pods-LaunchDarklyTests/Pods-LaunchDarklyTests.release.xcconfig"; sourceTree = "<group>"; };
 		D6840A437019F1CB72997480 /* Pods-LaunchDarkly_iOS.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-LaunchDarkly_iOS.release.xcconfig"; path = "Pods/Target Support Files/Pods-LaunchDarkly_iOS/Pods-LaunchDarkly_iOS.release.xcconfig"; sourceTree = "<group>"; };
@@ -796,6 +798,7 @@
 				8335299D1FC37727001166F8 /* FlagMaintainingMock.swift */,
 				83B8C2481FE84D4F0082B8A9 /* FlagChangeNotifyingMock.swift */,
 				831425AE206ABB5300F2EF36 /* EnvironmentReportingMock.swift */,
+				C48ED690242D27E200464F5F /* DeprecatedCacheMock.swift */,
 			);
 			path = Mocks;
 			sourceTree = "<group>";
@@ -1054,7 +1057,6 @@
 				1FA213ED5FFF0867372C59D0 /* [CP] Check Pods Manifest.lock */,
 				8399B57E2278E7FA00D9C950 /* ShellScript */,
 				83411A561FABCA2200E5CF39 /* ShellScript */,
-				C48ED68F242B0A4D00464F5F /* ShellScript */,
 				8354EFC71F22491C00C05156 /* Sources */,
 				97C0831603CBCF1C1595C417 /* [CP] Embed Pods Frameworks */,
 				8354EFC81F22491C00C05156 /* Frameworks */,
@@ -1370,23 +1372,6 @@
 			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-LaunchDarklyTests/Pods-LaunchDarklyTests-frameworks.sh\"\n";
 			showEnvVarsInLog = 0;
 		};
-		C48ED68F242B0A4D00464F5F /* ShellScript */ = {
-			isa = PBXShellScriptBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			inputFileListPaths = (
-			);
-			inputPaths = (
-			);
-			outputFileListPaths = (
-			);
-			outputPaths = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-			shellPath = /bin/sh;
-			shellScript = "$PROJECT_DIR/SourceryTemplates/remove_sourcery_duplicates.sh\n";
-		};
 		D6B5A95DA5B96EE0C1402473 /* [CP] Check Pods Manifest.lock */ = {
 			isa = PBXShellScriptBuildPhase;
 			buildActionMask = 2147483647;
@@ -1643,6 +1628,7 @@
 				837E38C921E804ED0008A50C /* EnvironmentReporterSpec.swift in Sources */,
 				83B6E3F1222EFA3800FF2A6A /* ThreadSpec.swift in Sources */,
 				831AAE3020A9E75D00B46DBA /* ThrottlerSpec.swift in Sources */,
+				C48ED691242D27E200464F5F /* DeprecatedCacheMock.swift in Sources */,
 				832D68AC224B3321005F052A /* CacheConverterSpec.swift in Sources */,
 				838F96741FB9F024009CFC45 /* LDClientSpec.swift in Sources */,
 				83E2E2061F9E7AC7007514E9 /* LDUserSpec.swift in Sources */,

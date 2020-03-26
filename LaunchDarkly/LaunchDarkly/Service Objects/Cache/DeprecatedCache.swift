@@ -8,13 +8,9 @@
 
 import Foundation
 
-//sourcery: autoMockable
 protocol DeprecatedCache {
-    //sourcery: defaultMockValue = .version6
     var model: DeprecatedCacheModel { get }
-    //sourcery: defaultMockValue = CacheConverter.CacheKeys.cachedDataKeyStub
     var cachedDataKey: String { get }
-    //sourcery: defaultMockValue = KeyedValueCachingMock()
     var keyedValueCache: KeyedValueCaching { get }
     func retrieveFlags(for userKey: UserKey, and mobileKey: MobileKey) -> (featureFlags: [LDFlagKey: FeatureFlag]?, lastUpdated: Date?)
     func userKeys(from cachedUserData: [UserKey: [String: Any]], olderThan: Date) -> [UserKey]
