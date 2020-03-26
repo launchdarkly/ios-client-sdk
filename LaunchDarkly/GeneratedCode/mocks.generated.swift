@@ -127,17 +127,6 @@ final class DeprecatedCacheMock: DeprecatedCache {
         return userKeysReturnValue
     }
 
-    // MARK: removeData
-    var removeDataCallCount = 0
-    var removeDataCallback: (() -> Void)?
-    var removeDataReceivedExpirationDate: Date?
-    func removeData(olderThan expirationDate: Date) {
-        removeDataCallCount += 1
-        removeDataReceivedExpirationDate = expirationDate
-        removeDataCallback?()
-    }
-
-    // MARK: removeData
     var removeDataCallCount = 0
     var removeDataCallback: (() -> Void)?
     var removeDataReceivedExpirationDate: Date?

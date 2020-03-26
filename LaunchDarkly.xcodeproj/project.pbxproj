@@ -1054,10 +1054,11 @@
 				1FA213ED5FFF0867372C59D0 /* [CP] Check Pods Manifest.lock */,
 				8399B57E2278E7FA00D9C950 /* ShellScript */,
 				83411A561FABCA2200E5CF39 /* ShellScript */,
+				C48ED68F242B0A4D00464F5F /* ShellScript */,
 				8354EFC71F22491C00C05156 /* Sources */,
+				97C0831603CBCF1C1595C417 /* [CP] Embed Pods Frameworks */,
 				8354EFC81F22491C00C05156 /* Frameworks */,
 				8354EFC91F22491C00C05156 /* Resources */,
-				97C0831603CBCF1C1595C417 /* [CP] Embed Pods Frameworks */,
 			);
 			buildRules = (
 			);
@@ -1368,6 +1369,23 @@
 			shellPath = /bin/sh;
 			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-LaunchDarklyTests/Pods-LaunchDarklyTests-frameworks.sh\"\n";
 			showEnvVarsInLog = 0;
+		};
+		C48ED68F242B0A4D00464F5F /* ShellScript */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+			);
+			outputFileListPaths = (
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "$PROJECT_DIR/SourceryTemplates/remove_sourcery_duplicates.sh\n";
 		};
 		D6B5A95DA5B96EE0C1402473 /* [CP] Check Pods Manifest.lock */ = {
 			isa = PBXShellScriptBuildPhase;
