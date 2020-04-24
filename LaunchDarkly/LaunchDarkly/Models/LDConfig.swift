@@ -2,7 +2,6 @@
 //  LDConfig.swift
 //  LaunchDarkly
 //
-//  Created by Mark Pokorny on 7/12/17. +JMJ
 //  Copyright © 2017 Catamorphic Co. All rights reserved.
 //
 
@@ -69,6 +68,9 @@ public struct LDConfig {
         
         /// The default setting for whether we request evaluation reasons for all flags.
         static let evaluationReasons = false
+        
+        /// The dafault environment name that must be present in a single or multiple environment configuration
+        static let primaryEnvironmentName = "default"
     }
 
     /// The minimum values allowed to be set into LDConfig.
@@ -188,6 +190,43 @@ public struct LDConfig {
         return ObjcLDConfig(self)
     }
 
+    /// A Dictionary of identifying names to unique mobile keys for all environments
+    private var mobileKeys: [String: String] {
+        var internalMobileKeys = secondaryMobileKeys
+        internalMobileKeys?[LDConfig.Defaults.primaryEnvironmentName] = mobileKey
+        return internalMobileKeys ?? [LDConfig.Defaults.primaryEnvironmentName: mobileKey]
+    }
+    
+    /// A Dictionary of identifying names to unique mobile keys to access secondary environments
+    public var secondaryMobileKeys: [String: String]? {
+        get {
+            return _secondaryMobileKeys
+        }
+        set(newSecondaryMobileKeys) {
+            let mobileKeyPresentInSecondaryMobileKeys = newSecondaryMobileKeys?.values.contains { (value) -> Bool in
+                value as String == mobileKey
+                } ?? false
+            let primaryEnvironmentNamePresentInSecondaryMobileKeys = newSecondaryMobileKeys?.keys.contains { (key) -> Bool in
+                key as String == LDConfig.Defaults.primaryEnvironmentName
+                } ?? false
+            let mobileKeysUsedOnlyOnce = Set(newSecondaryMobileKeys?.values.shuffled() ?? [])
+            if mobileKeyPresentInSecondaryMobileKeys {
+                Log.debug("The primary environment key cannot be in the secondary mobile keys.")
+            }
+            if primaryEnvironmentNamePresentInSecondaryMobileKeys {
+                Log.debug("The primary environment name is not a valid key.")
+            }
+            if mobileKeysUsedOnlyOnce.count != newSecondaryMobileKeys?.count {
+                Log.debug("A key can only be used once.")
+            }
+            
+            _secondaryMobileKeys = newSecondaryMobileKeys
+        }
+    }
+    
+    /// Internal variable for secondaryMobileKeys computed property
+    private var _secondaryMobileKeys: [String: String]?
+    
     //Internal constructor to enable automated testing
     init(mobileKey: String, environmentReporter: EnvironmentReporting) {
         self.mobileKey = mobileKey
