@@ -46,6 +46,7 @@ import Foundation
  ````
  The `changedFlag` passed in to the block contains the old and new value, and the old and new valueSource. See the typed `LDChangedFlag` classes in the **Obj-C Changed Flags**.
  */
+// swiftlint:disable file_length
 @objc(LDClient)
 public final class ObjcLDClient: NSObject {
 
@@ -147,6 +148,43 @@ public final class ObjcLDClient: NSObject {
      */
     @objc public func close() {
         ldClient.close()
+    }
+    
+    /**
+     Changes the internal LDClient variable to the primary LDClient instance.
+    
+     - returns: A Bool based on whether ldClient was successfully changed.
+    */
+    @objc public func get() -> Bool {
+        if let optionalClient = ldClient.get() {
+            ldClient = optionalClient
+            return true
+        } else {
+            return false
+        }
+    }
+
+    /**
+     Returns all environment names.
+     
+     - returns: All environment names as an Array of Strings.
+    */
+    @objc public func getEnvironmentNames() -> Array<String>? {
+        ldClient.getEnvironmentNames()
+    }
+  
+    /**
+     Changes the internal LDClient variable to the LDClient instance associated with the keyName.
+    
+     - returns: A Bool based on whether ldClient was successfully changed.
+    */
+    @objc public func getForMobileKey(keyName: String) -> Bool {
+        if let optionalClient = ldClient.getForMobileKey(keyName: keyName) {
+            ldClient = optionalClient
+            return true
+        } else {
+            return false
+        }
     }
 
     // MARK: Feature Flag values

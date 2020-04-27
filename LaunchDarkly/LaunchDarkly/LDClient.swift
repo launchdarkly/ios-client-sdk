@@ -280,6 +280,8 @@ public class LDClient {
     
     /**
      Returns the singleton instance.
+     
+     - returns: The primary LDClient instance if it is initialized.
      */
     public func get() -> LDClient? {
         guard let internalInstances = instances else {
@@ -291,17 +293,23 @@ public class LDClient {
     
     /**
      Returns all environment names.
+     
+     - returns: All environment names as an Array of Strings.
     */
-    public func getEnvironmentNames() -> Dictionary<String, LDClient>.Keys? {
+    public func getEnvironmentNames() -> Array<String>? {
         guard let internalInstances = instances else {
             Log.debug("LDClient.getEnvironmentNames() was called before init()!")
             return nil
         }
-        return internalInstances.keys
+        return internalInstances.keys.shuffled()
     }
     
     /**
      Returns an instance of LDClient for the given environment name.
+     
+     - parameter keyName: An environment name provided in LDConfig.secondaryMobileKeys during initialization.
+     
+     - returns: An LDClient instance if one exists and if the primary instance is initialized.
      */
     public func getForMobileKey(keyName: String) -> LDClient? {
         return instances?[keyName]
