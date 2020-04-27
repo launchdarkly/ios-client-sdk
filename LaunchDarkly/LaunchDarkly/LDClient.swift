@@ -271,6 +271,7 @@ public class LDClient {
     
     private func internalClose() {
         Log.debug(typeName(and: #function, appending: "- ") + "stopping")
+        internalFlush()
         setOnline(false)
         instances = nil
         hasStarted = false
@@ -961,9 +962,19 @@ public class LDClient {
         cacheConverter.convertCacheData(for: user, and: config)
     }
     
+    /**
+     Starts the LDClient using the passed in `config` & `user`. Call this before requesting feature flag values. The LDClient will not go online until you call this method.
+     Starting the LDClient means setting the `config` & `user`, setting the client online if `config.startOnline` is true (the default setting), and starting event recording. The client app must start the LDClient before it will report feature flag values. If a client does not call init, the LDClient will only report fallback values, and no events will be recorded.
+     If the init call omits the `user`, the LDClient uses the previously set `user`, or the default `user` if it was never set.
+     If theinit call includes the optional `completion` closure, LDClient calls the `completion` closure when `setOnline(_: completion:)` embedded in the init method completes. This method listens for flag updates so the completion will only return once an update has occurred. The start call is subject to throttling delays, therefore the `completion` closure call may be delayed.
+     Subsequent calls to this method cause the LDClient to throw an error. Normally there should only be one call to init. To change `config` or `user`, set them directly on LDClient.
+     - parameter configuration: The LDConfig that contains the desired configuration. (Required)
+     - parameter startUser: The LDUser set with the desired user. If omitted, LDClient retains the previously set user, or default if one was never set. (Optional)
+     - parameter completion: Closure called when the embedded `setOnline` call completes, subject to throttling delays. (Optional)
+    */
     // swiftlint:disable function_body_length
     public init(configuration: LDConfig, startUser: LDUser?, completion: (() -> Void)? = nil) throws {
-        if instances != nil {
+        guard instances != nil else {
             throw "LDClient.init() was called more than once!"
         }
         Log.debug("LDClient starting")
@@ -1035,60 +1046,31 @@ public class LDClient {
             }
         }
     }
-
-    private init(serviceFactory: ClientServiceCreating? = nil) {
-        if let serviceFactory = serviceFactory {
-            self.serviceFactory = serviceFactory
-        }
-        environmentReporter = self.serviceFactory.makeEnvironmentReporter()
-        flagCache = self.serviceFactory.makeFeatureFlagCache()
-        LDUserWrapper.configureKeyedArchiversToHandleVersion2_3_0AndOlderUserCacheFormat()
-        cacheConverter = self.serviceFactory.makeCacheConverter()
-        flagChangeNotifier = self.serviceFactory.makeFlagChangeNotifier()
-        throttler = self.serviceFactory.makeThrottler(maxDelay: Throttler.Constants.defaultDelay, environmentReporter: environmentReporter)
-
-        //dummy objects replaced by client at start
-        config = LDConfig(mobileKey: "", environmentReporter: environmentReporter)
-        user = LDUser(environmentReporter: environmentReporter)
-        service = self.serviceFactory.makeDarklyServiceProvider(config: config, user: user)
-        eventReporter = self.serviceFactory.makeEventReporter(config: config, service: service)
-        errorNotifier = self.serviceFactory.makeErrorNotifier()
-        connectionInformation = self.serviceFactory.makeConnectionInformation()
-        flagSynchronizer = self.serviceFactory.makeFlagSynchronizer(streamingMode: .polling,
-                                                                    pollingInterval: config.flagPollingInterval,
-                                                                    useReport: config.useReport,
-                                                                    service: service)
-
-        if let backgroundNotification = environmentReporter.backgroundNotification {
-            NotificationCenter.default.addObserver(self, selector: #selector(didEnterBackground), name: backgroundNotification, object: nil)
-        }
-        if let foregroundNotification = environmentReporter.foregroundNotification {
-            NotificationCenter.default.addObserver(self, selector: #selector(willEnterForeground), name: foregroundNotification, object: nil)
-        }
-        
-        NotificationCenter.default.addObserver(self, selector: #selector(didCloseEventSource), name: Notification.Name(FlagSynchronizer.Constants.didCloseEventSourceName), object: nil)
     
-        //Since eventReporter lasts the life of the singleton, we can configure it here...swift requires the client to be instantiated before we can pass the onSyncComplete method
-        eventReporter = self.serviceFactory.makeEventReporter(config: config, service: service, onSyncComplete: onEventSyncComplete)
-    }
+    private convenience init(config: LDConfig, startUser: LDUser?, runMode: LDClientRunMode, completion: (() -> Void)? = nil) {
+        do {
+            try self.init(configuration: config, startUser: startUser, completion: completion)
+            //Setting these inside the init do not trigger the didSet closures
+            self.runMode = runMode
+            self.config = config
+            self.isStarting = true
+            let internalUser = startUser ?? user
+            identify(user: internalUser)
 
-    private convenience init(serviceFactory: ClientServiceCreating, config: LDConfig, user: LDUser, runMode: LDClientRunMode) {
-        self.init(serviceFactory: serviceFactory)
-        //Setting these inside the init do not trigger the didSet closures
-        self.runMode = runMode
-        self.config = config
-        self.isStarting = true
-        identify(user: user)
-
-        //dummy objects replaced by client at start
-        service = self.serviceFactory.makeDarklyServiceProvider(config: config, user: user)  //didSet not triggered here
-        flagSynchronizer = self.serviceFactory.makeFlagSynchronizer(streamingMode: ConnectionInformation.effectiveStreamingMode(config: config, ldClient: self),
-                                                                    pollingInterval: config.flagPollingInterval(runMode: runMode),
-                                                                    useReport: config.useReport,
-                                                                    service: service,
-                                                                    onSyncComplete: onFlagSyncComplete)
-        eventReporter = self.serviceFactory.makeEventReporter(config: config, service: service, onSyncComplete: onEventSyncComplete)
-        self.isStarting = false
+            //dummy objects replaced by client at start
+            service = self.serviceFactory.makeDarklyServiceProvider(config: config, user: internalUser)  //didSet not triggered here
+            flagSynchronizer = self.serviceFactory.makeFlagSynchronizer(streamingMode: ConnectionInformation.effectiveStreamingMode(config: config, ldClient: self),
+                                                                        pollingInterval: config.flagPollingInterval(runMode: runMode),
+                                                                        useReport: config.useReport,
+                                                                        service: service,
+                                                                        onSyncComplete: onFlagSyncComplete)
+            eventReporter = self.serviceFactory.makeEventReporter(config: config, service: service, onSyncComplete: onEventSyncComplete)
+            self.isStarting = false
+        } catch {
+            Log.debug("Failed to start LDClient for unit testing.")
+            // swiftlint:disable force_try
+            try! self.init(configuration: config, startUser: startUser, completion: completion)
+        }
     }
 }
 
@@ -1110,8 +1092,8 @@ private extension Optional {
 
 #if DEBUG
     extension LDClient {
-        class func makeClient(with serviceFactory: ClientServiceCreating, config: LDConfig, user: LDUser, runMode: LDClientRunMode = .foreground) -> LDClient {
-            return LDClient(serviceFactory: serviceFactory, config: config, user: user, runMode: runMode)
+        class func makeClient(config: LDConfig, user: LDUser? = nil, runMode: LDClientRunMode = .foreground, completion: (() -> Void)? = nil) -> LDClient {
+            return LDClient(config: config, startUser: user, runMode: runMode, completion: completion)
         }
 
         func setRunMode(_ runMode: LDClientRunMode) {
