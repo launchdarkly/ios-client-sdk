@@ -47,7 +47,12 @@ enum LDClientRunMode {
 public class LDClient {
 
     // MARK: - State Controls and Indicators
-
+    
+    private static var instances: [String: LDClient]? = nil
+    private static var internalInstances: [String: LDClient] {
+        return instances ?? [:]
+    }
+    
     /**
      Reports the online/offline state of the LDClient.
 
@@ -105,10 +110,15 @@ public class LDClient {
      - parameter completion:  Completion closure called when setOnline completes (Optional)
      */
     public func setOnline(_ goOnline: Bool, completion: (() -> Void)? = nil) {
-        for (_, instance) in internalInstances {
-            instance.internalSetOnline(goOnline, completion: completion)
+        var internalCount = 0
+        for (_, instance) in LDClient.internalInstances {
+            instance.internalSetOnline(goOnline) {
+                internalCount += 1
+                if internalCount >= LDClient.internalInstances.count {
+                    completion?()
+                }
+            }
         }
-        internalSetOnline(goOnline, completion: completion)
     }
     
     private func internalSetOnline(_ goOnline: Bool, completion: (() -> Void)? = nil) {
@@ -216,10 +226,15 @@ public class LDClient {
      - parameter completion: Closure called when the embedded `setOnlineIdentify` call completes, subject to throttling delays. (Optional)
     */
     public func identify(user: LDUser, completion: (() -> Void)? = nil) {
-        for (_, instance) in internalInstances {
-            instance.internalIdentify(newUser: user, completion: completion)
+        var internalCount = 0
+        for (_, instance) in LDClient.internalInstances {
+            instance.internalIdentify(newUser: user) {
+                internalCount += 1
+                if internalCount >= LDClient.internalInstances.count {
+                    completion?()
+                }
+            }
         }
-        internalIdentify(newUser: user, completion: completion)
     }
     
     private func internalIdentify(newUser: LDUser, completion: (() -> Void)? = nil) {
@@ -263,17 +278,16 @@ public class LDClient {
      There is almost no reason to stop the LDClient. Normally, set the LDClient offline to stop communication with the LaunchDarkly servers. Stop the LDClient to stop recording events. There is no need to stop the LDClient prior to suspending, moving to the background, or terminating the app. The SDK will respond to these events as the system requires and as configured in LDConfig.
     */
     public func close() {
-        for (_, instance) in internalInstances {
+        for (_, instance) in LDClient.internalInstances {
             instance.internalClose()
         }
-        internalClose()
     }
     
     private func internalClose() {
         Log.debug(typeName(and: #function, appending: "- ") + "stopping")
         internalFlush()
         setOnline(false)
-        instances = nil
+        LDClient.instances = nil
         hasStarted = false
         Log.debug(typeName(and: #function, appending: "- ") + "stopped")
     }
@@ -283,8 +297,8 @@ public class LDClient {
      
      - returns: The primary LDClient instance if it is initialized.
      */
-    public func get() -> LDClient? {
-        guard let internalInstances = instances else {
+    public static func get() -> LDClient? {
+        guard let internalInstances = LDClient.instances else {
             Log.debug("LDClient.get() was called before init()!")
             return nil
         }
@@ -296,12 +310,12 @@ public class LDClient {
      
      - returns: All environment names as an Array of Strings.
     */
-    public func getEnvironmentNames() -> Array<String>? {
-        guard let internalInstances = instances else {
+    public static func getEnvironmentNames() -> Array<String>? {
+        guard let internalInstances = LDClient.instances else {
             Log.debug("LDClient.getEnvironmentNames() was called before init()!")
             return nil
         }
-        return internalInstances.keys.shuffled()
+        return internalInstances.map { key, _ in key }
     }
     
     /**
@@ -311,8 +325,8 @@ public class LDClient {
      
      - returns: An LDClient instance if one exists and if the primary instance is initialized.
      */
-    public func getForMobileKey(keyName: String) -> LDClient? {
-        return instances?[keyName]
+    public static func getForMobileKey(keyName: String) -> LDClient? {
+        return LDClient.instances?[keyName]
     }
     
     // MARK: Feature Flag values
@@ -776,10 +790,9 @@ public class LDClient {
     Report events to LaunchDarkly servers. While online, the LDClient automatically reports events on the `LDConfig.eventFlushInterval`, and whenever the client app moves to the background. There should normally not be a need to call reportEvents.
     */
     public func flush() {
-        for (_, instance) in internalInstances {
+        for (_, instance) in LDClient.internalInstances {
             instance.internalFlush()
         }
-        internalFlush()
     }
     
     private func internalFlush() {
@@ -864,11 +877,6 @@ public class LDClient {
     private(set) var eventReporter: EventReporting
     private(set) var environmentReporter: EnvironmentReporting
     private(set) var throttler: Throttling
-    
-    private var instances: [String: LDClient]? = nil
-    private var internalInstances: [String: LDClient] {
-        return instances ?? [:]
-    }
 
     private(set) var isStarting = false
     private(set) var hasStarted = false
@@ -891,11 +899,32 @@ public class LDClient {
      - parameter startUser: The LDUser set with the desired user. If omitted, LDClient retains the previously set user, or default if one was never set. (Optional)
      - parameter completion: Closure called when the embedded `setOnline` call completes, subject to throttling delays. (Optional)
     */
-    // swiftlint:disable function_body_length
-    public init(configuration: LDConfig, startUser: LDUser?, completion: (() -> Void)? = nil) {
+    public static func start(config: LDConfig, startUser: LDUser?, completion: (() -> Void)? = nil) {
         Log.debug("LDClient starting")
         print("XANADU")
         
+        let anonymousUser = LDUser(environmentReporter: EnvironmentReporter())
+        let internalUser = startUser ?? anonymousUser
+        
+        var mobileKeys = config.secondaryMobileKeys ?? [:]
+        var internalCount = 0
+        mobileKeys[LDConfig.Defaults.primaryEnvironmentName] = config.mobileKey
+        for (name, mobileKey) in mobileKeys {
+            print("XANADU YES")
+            var internalConfig = config
+            internalConfig.mobileKey = mobileKey
+            let instance = LDClient(configuration: internalConfig, startUser: internalUser) {
+                internalCount += 1
+                if internalCount >= mobileKeys.count {
+                    completion?()
+                }
+            }
+            LDClient.instances?[name] = instance
+        }
+        print("XANADU4")
+    }
+    
+    private init(configuration: LDConfig, startUser: LDUser?, completion: (() -> Void)? = nil) {
         let wasStarted = hasStarted
         let wasOnline = isOnline
         isStarting = true
@@ -932,38 +961,19 @@ public class LDClient {
         NotificationCenter.default.addObserver(self, selector: #selector(didCloseEventSource), name: Notification.Name(FlagSynchronizer.Constants.didCloseEventSourceName), object: nil)
 
         eventReporter = self.serviceFactory.makeEventReporter(config: config, service: service, onSyncComplete: onEventSyncComplete)
-        print("XANADU2")
-        let mobileKeys = configuration.secondaryMobileKeys ?? [:]
-        for (index, nameMobileKey) in mobileKeys.enumerated() {
-            print("XANADU NO")
-            var internalConfig = configuration
-            internalConfig.secondaryMobileKeys = nil
-            internalConfig.mobileKey = nameMobileKey.value
-            var instance: LDClient?
-            if index >= mobileKeys.capacity {
-                instance = LDClient(configuration: internalConfig, startUser: user, completion: completion)
-            } else {
-                instance = LDClient(configuration: internalConfig, startUser: user)
-            }
-            instances?[nameMobileKey.key] = instance
-        }
-
         setOnline(false)
-        
         cacheConverter.convertCacheData(for: user, and: config)
         identify(user: user)
         self.connectionInformation = ConnectionInformation.uncacheConnectionInformation(config: config, ldClient: self, clientServiceFactory: serviceFactory)
-        
         setOnline((wasStarted && wasOnline) || (!wasStarted && self.config.startOnline)) {
             Log.debug("LDClient started")
-            print("XANADU3")
             self.isStarting = false
             print("XANADU5")
             print("XANADU ALL: " + (self.allFlags?.description ?? "nil all"))
             print("XANADU CONFIG: " + self.config.mobileKey + " " + (self.config.secondaryMobileKeys?.description ?? "nil secondary"))
             completion?()
         }
-        print("XANADU4")
+        print("XANADU2")
     }
     
     private convenience init(config: LDConfig, startUser: LDUser?, runMode: LDClientRunMode, completion: (() -> Void)? = nil) {

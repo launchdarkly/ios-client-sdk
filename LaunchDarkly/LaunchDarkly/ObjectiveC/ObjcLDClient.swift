@@ -46,7 +46,6 @@ import Foundation
  ````
  The `changedFlag` passed in to the block contains the old and new value, and the old and new valueSource. See the typed `LDChangedFlag` classes in the **Obj-C Changed Flags**.
  */
-// swiftlint:disable file_length
 @objc(LDClient)
 public final class ObjcLDClient: NSObject {
 
@@ -156,7 +155,7 @@ public final class ObjcLDClient: NSObject {
      - returns: A Bool based on whether ldClient was successfully changed.
     */
     @objc public func get() -> Bool {
-        if let optionalClient = ldClient.get() {
+        if let optionalClient = LDClient.get() {
             ldClient = optionalClient
             return true
         } else {
@@ -170,7 +169,7 @@ public final class ObjcLDClient: NSObject {
      - returns: All environment names as an Array of Strings.
     */
     @objc public func getEnvironmentNames() -> Array<String>? {
-        ldClient.getEnvironmentNames()
+        LDClient.getEnvironmentNames()
     }
   
     /**
@@ -179,7 +178,7 @@ public final class ObjcLDClient: NSObject {
      - returns: A Bool based on whether ldClient was successfully changed.
     */
     @objc public func getForMobileKey(keyName: String) -> Bool {
-        if let optionalClient = ldClient.getForMobileKey(keyName: keyName) {
+        if let optionalClient = LDClient.getForMobileKey(keyName: keyName) {
             ldClient = optionalClient
             return true
         } else {
@@ -848,7 +847,7 @@ public final class ObjcLDClient: NSObject {
     - parameter completion: Closure called when the embedded `setOnline` call completes, subject to throttling delays. (Optional)
     */
     @objc public init(configuration: ObjcLDConfig, user: ObjcLDUser, completion: (() -> Void)? = nil) {
-        let client = LDClient(configuration: configuration.config, startUser: user.user, completion: completion)
-        ldClient = client.get()!
+        LDClient.start(config: configuration.config, startUser: user.user, completion: completion)
+        ldClient = LDClient.get()!
     }
 }
