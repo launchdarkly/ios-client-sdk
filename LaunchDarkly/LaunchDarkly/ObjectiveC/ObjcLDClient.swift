@@ -229,36 +229,6 @@ public final class ObjcLDClient: NSObject {
         let evaluationDetail = ldClient.variationDetail(forKey: key, fallback: fallback)
         return ObjCBoolEvaluationDetail(value: evaluationDetail.value, variationIndex: evaluationDetail.variationIndex, reason: evaluationDetail.reason)
     }
-    
-    /**
-     Returns the `LDBoolVariationValue` (`ObjcLDBoolVariationValue`) containing the value and source for the given feature flag. If the flag does not exist, cannot be cast to a BOOL, or the LDClient is not started, returns the fallback value and `LDFlagValueSourceFallback` for the source.
-
-     A *variation* is a specific flag value. For example a boolean feature flag has 2 variations, *true* and *false*. You can create feature flags with more than 2 variations using other feature flag types. See `LDFlagValue` for the available types.
-
-     The LDClient must be started in order to return feature flag values. If the LDClient is not started, it will always return the fallback value. The LDClient must be online to keep the feature flag values up-to-date.
-
-     See `LDStreamingMode` for details about the modes the LDClient uses to update feature flags.
-
-     When offline, LDClient closes the clientstream connection and no longer requests feature flags. The LDClient will return feature flag values (assuming the LDClient was started), which may not match the values set on the LaunchDarkly server.
-
-     A call to `boolVariationAndSource` records events reported later. Recorded events allow clients to analyze usage and assist in debugging issues.
-
-     ### Usage
-     ````
-     LDBoolVariationValue *boolValueAndSource = [ldClientInstance boolVariationAndSourceForKey:"my-bool-flag" fallback:YES];
-     BOOL boolFeatureFlagValue = boolValueAndSource.value;
-     LDFlagValueSource boolFeatureFlagSource = boolValueAndSource.source;
-     ````
-
-     - parameter key: The LDFlagKey for the requested feature flag.
-     - parameter fallback: The fallback value to return if the feature flag key does not exist.
-
-     - returns: A `LDBoolVariationValue` (`ObjcLDBoolVariationValue`) containing the requested feature flag value and source, or the fallback if the flag is missing or cannot be cast to a BOOL, or the client is not started. If the fallback value is returned, the source is `LDFlagValueSourceFallback`
-     */
-    @available(*, deprecated, message: "Please use the boolVariationDetail method for additional insight into flag evaluation.")
-    @objc public func boolVariationAndSource(forKey key: LDFlagKey, fallback: Bool) -> ObjcLDBoolVariationValue {
-        return ObjcLDBoolVariationValue(ldClient.variationAndSourceInternal(forKey: key, fallback: fallback))
-    }
 
     /**
      Returns the NSInteger variation for the given feature flag. If the flag does not exist, cannot be cast to a NSInteger, or the LDClient is not started, returns the fallback value.
@@ -299,36 +269,6 @@ public final class ObjcLDClient: NSObject {
     @objc public func integerVariationDetail(forKey key: LDFlagKey, fallback: Int) -> ObjCIntegerEvaluationDetail {
         let evaluationDetail = ldClient.variationDetail(forKey: key, fallback: fallback)
         return ObjCIntegerEvaluationDetail(value: evaluationDetail.value, variationIndex: evaluationDetail.variationIndex, reason: evaluationDetail.reason)
-    }
-
-    /**
-     Returns the `LDIntegerVariationValue` (`ObjcLDIntegerVariationValue`) containing the value and source for the given feature flag. If the flag does not exist, cannot be cast to a NSInteger, or the LDClient is not started, returns the fallback value and `LDFlagValueSourceFallback` for the source.
-
-     A *variation* is a specific flag value. For example a boolean feature flag has 2 variations, *true* and *false*. You can create feature flags with more than 2 variations using other feature flag types. See `LDFlagValue` for the available types.
-
-     The LDClient must be started in order to return feature flag values. If the LDClient is not started, it will always return the fallback value. The LDClient must be online to keep the feature flag values up-to-date.
-
-     See `LDStreamingMode` for details about the modes the LDClient uses to update feature flags.
-
-     When offline, LDClient closes the clientstream connection and no longer requests feature flags. The LDClient will return feature flag values (assuming the LDClient was started), which may not match the values set on the LaunchDarkly server.
-
-     A call to `integerVariationAndSource` records events reported later. Recorded events allow clients to analyze usage and assist in debugging issues.
-
-     ### Usage
-     ````
-     LDIntegerVariationValue *integerValueAndSource = [ldClientInstance integerVariationAndSourceForKey:"my-integer-flag" fallback:YES];
-     NSInteger integerFeatureFlagValue = integerValueAndSource.value;
-     LDFlagValueSource integerFeatureFlagSource = integerValueAndSource.source;
-     ````
-
-     - parameter key: The LDFlagKey for the requested feature flag.
-     - parameter fallback: The fallback value to return if the feature flag key does not exist.
-
-     - returns: A `LDIntegerVariationValue` (`ObjcLDIntegerVariationValue`) containing the requested feature flag value and source, or the fallback if the flag is missing or cannot be cast to a NSInteger, or the client is not started. If the fallback value is returned, the source is `LDFlagValueSourceFallback`
-     */
-    @available(*, deprecated, message: "Please use the integerVariationDetail method for additional insight into flag evaluation.")
-    @objc public func integerVariationAndSource(forKey key: LDFlagKey, fallback: Int) -> ObjcLDIntegerVariationValue {
-        return ObjcLDIntegerVariationValue(ldClient.variationAndSourceInternal(forKey: key, fallback: fallback))
     }
 
     /**
@@ -373,36 +313,6 @@ public final class ObjcLDClient: NSObject {
     }
 
     /**
-     Returns the `LDDoubleVariationValue` (`ObjcLDDoubleVariationValue`) containing the value and source for the given feature flag. If the flag does not exist, cannot be cast to a double, or the LDClient is not started, returns the fallback value and `LDFlagValueSourceFallback` for the source.
-
-     A *variation* is a specific flag value. For example a boolean feature flag has 2 variations, *true* and *false*. You can create feature flags with more than 2 variations using other feature flag types. See `LDFlagValue` for the available types.
-
-     The LDClient must be started in order to return feature flag values. If the LDClient is not started, it will always return the fallback value. The LDClient must be online to keep the feature flag values up-to-date.
-
-     See `LDStreamingMode` for details about the modes the LDClient uses to update feature flags.
-
-     When offline, LDClient closes the clientstream connection and no longer requests feature flags. The LDClient will return feature flag values (assuming the LDClient was started), which may not match the values set on the LaunchDarkly server.
-
-     A call to `doubleVariationAndSource` records events reported later. Recorded events allow clients to analyze usage and assist in debugging issues.
-
-     ### Usage
-     ````
-     LDDoubleVariationValue *doubleValueAndSource = [ldClientInstance doubleVariationAndSourceForKey:"my-double-flag" fallback:2.71828];
-     double doubleFeatureFlagValue = doubleValueAndSource.value;
-     LDFlagValueSource doubleFeatureFlagSource = doubleValueAndSource.source;
-     ````
-
-     - parameter key: The LDFlagKey for the requested feature flag.
-     - parameter fallback: The fallback value to return if the feature flag key does not exist.
-
-     - returns: A `LDDoubleVariationValue` (`ObjcLDDoubleVariationValue`) containing the requested feature flag value and source, or the fallback if the flag is missing or cannot be cast to a double, or the client is not started. If the fallback value is returned, the source is `LDFlagValueSourceFallback`
-     */
-    @available(*, deprecated, message: "Please use the doubleVariationDetail method for additional insight into flag evaluation.")
-    @objc public func doubleVariationAndSource(forKey key: LDFlagKey, fallback: Double) -> ObjcLDDoubleVariationValue {
-        return ObjcLDDoubleVariationValue(ldClient.variationAndSourceInternal(forKey: key, fallback: fallback))
-    }
-
-    /**
      Returns the NSString variation for the given feature flag. If the flag does not exist, cannot be cast to a NSString, or the LDClient is not started, returns the fallback value, which may be nil.
 
      A *variation* is a specific flag value. For example a boolean feature flag has 2 variations, *YES* and *NO*. You can create feature flags with more than 2 variations using other feature flag types. See `LDFlagValue` for the available types.
@@ -441,36 +351,6 @@ public final class ObjcLDClient: NSObject {
     @objc public func stringVariationDetail(forKey key: LDFlagKey, fallback: String?) -> ObjCStringEvaluationDetail {
         let evaluationDetail = ldClient.variationDetail(forKey: key, fallback: fallback)
         return ObjCStringEvaluationDetail(value: evaluationDetail.value, variationIndex: evaluationDetail.variationIndex, reason: evaluationDetail.reason)
-    }
-
-    /**
-     Returns the `LDStringVariationValue` (`ObjcLDStringVariationValue`) containing the value and source for the given feature flag. If the flag does not exist, cannot be cast to a NSString, or the LDClient is not started, returns the fallback value (which may be nil) and `LDFlagValueSourceFallback` for the source.
-
-     A *variation* is a specific flag value. For example a boolean feature flag has 2 variations, *true* and *false*. You can create feature flags with more than 2 variations using other feature flag types. See `LDFlagValue` for the available types.
-
-     The LDClient must be started in order to return feature flag values. If the LDClient is not started, it will always return the fallback value. The LDClient must be online to keep the feature flag values up-to-date.
-
-     See `LDStreamingMode` for details about the modes the LDClient uses to update feature flags.
-
-     When offline, LDClient closes the clientstream connection and no longer requests feature flags. The LDClient will return feature flag values (assuming the LDClient was started), which may not match the values set on the LaunchDarkly server.
-
-     A call to `doubleVariationAndSource` records events reported later. Recorded events allow clients to analyze usage and assist in debugging issues.
-
-     ### Usage
-     ````
-     LDStringVariationValue *stringValueAndSource = [ldClientInstance stringVariationAndSourceForKey:"my-string-flag" fallback:@"<fallback>"];
-     NSString *stringFeatureFlagValue = stringValueAndSource.value;
-     LDFlagValueSource stringFeatureFlagSource = stringValueAndSource.source;
-     ````
-
-     - parameter key: The LDFlagKey for the requested feature flag.
-     - parameter fallback: The fallback value to return if the feature flag key does not exist. The fallback value may be nil.
-
-     - returns: A `LDStringVariationValue` (`ObjcLDStringVariationValue`) containing the requested feature flag value and source, or the fallback value (which may be nil) if the flag is missing or cannot be cast to a NSString, or the client is not started. If the fallback value is returned, the source is `LDFlagValueSourceFallback`
-     */
-    @available(*, deprecated, message: "Please use the stringVariationDetail method for additional insight into flag evaluation.")
-    @objc public func stringVariationAndSource(forKey key: LDFlagKey, fallback: String?) -> ObjcLDStringVariationValue {
-        return ObjcLDStringVariationValue(ldClient.variationAndSourceInternal(forKey: key, fallback: fallback))
     }
 
     /**
@@ -515,36 +395,6 @@ public final class ObjcLDClient: NSObject {
     }
     
     /**
-     Returns the `LDArrayVariationValue` (`ObjcLDArrayVariationValue`) containing the value and source for the given feature flag. If the flag does not exist, cannot be cast to a NSArray, or the LDClient is not started, returns the fallback value (which may be nil) and `LDFlagValueSourceFallback` for the source.
-
-     A *variation* is a specific flag value. For example a boolean feature flag has 2 variations, *true* and *false*. You can create feature flags with more than 2 variations using other feature flag types. See `LDFlagValue` for the available types.
-
-     The LDClient must be started in order to return feature flag values. If the LDClient is not started, it will always return the fallback value. The LDClient must be online to keep the feature flag values up-to-date.
-
-     See `LDStreamingMode` for details about the modes the LDClient uses to update feature flags.
-
-     When offline, LDClient closes the clientstream connection and no longer requests feature flags. The LDClient will return feature flag values (assuming the LDClient was started), which may not match the values set on the LaunchDarkly server.
-
-     A call to `arrayVariationAndSource` records events reported later. Recorded events allow clients to analyze usage and assist in debugging issues.
-
-     ### Usage
-     ````
-     LDArrayVariationValue *arrayValueAndSource = [ldClientInstance arrayVariationAndSourceForKey:"my-array-flag" fallback:@[@1,@2,@3]];
-     NSArray *arrayFeatureFlagValue = arrayValueAndSource.value;
-     LDFlagValueSource arrayFeatureFlagSource = arrayValueAndSource.source;
-     ````
-
-     - parameter key: The LDFlagKey for the requested feature flag.
-     - parameter fallback: The fallback value to return if the feature flag key does not exist. The fallback value may be nil.
-
-     - returns: A `LDArrayVariationValue` (`ObjcLDArrayVariationValue`) containing the requested feature flag value and source, or the fallback value (which may be nil) if the flag is missing or cannot be cast to a NSArray, or the client is not started. If the fallback value is returned, the source is `LDFlagValueSourceFallback`
-     */
-    @available(*, deprecated, message: "Please use the arrayVariationDetail method for additional insight into flag evaluation.")
-    @objc public func arrayVariationAndSource(forKey key: LDFlagKey, fallback: [Any]?) -> ObjcLDArrayVariationValue {
-        return ObjcLDArrayVariationValue(ldClient.variationAndSourceInternal(forKey: key, fallback: fallback))
-    }
-
-    /**
      Returns the NSDictionary variation for the given feature flag. If the flag does not exist, cannot be cast to a NSDictionary, or the LDClient is not started, returns the fallback value, which may be nil..
 
      A *variation* is a specific flag value. For example a boolean feature flag has 2 variations, *YES* and *NO*. You can create feature flags with more than 2 variations using other feature flag types. See `LDFlagValue` for the available types.
@@ -585,36 +435,6 @@ public final class ObjcLDClient: NSObject {
         return ObjCDictionaryEvaluationDetail(value: evaluationDetail.value, variationIndex: evaluationDetail.variationIndex, reason: evaluationDetail.reason)
     }
     
-    /**
-     Returns the `LDDictionaryVariationValue` (`ObjcLDDictionaryVariationValue`) containing the value and source for the given feature flag. If the flag does not exist, cannot be cast to a NSDictionary, or the LDClient is not started, returns the fallback value (which may be nil) and `LDFlagValueSourceFallback` for the source.
-
-     A *variation* is a specific flag value. For example a boolean feature flag has 2 variations, *true* and *false*. You can create feature flags with more than 2 variations using other feature flag types. See `LDFlagValue` for the available types.
-
-     The LDClient must be started in order to return feature flag values. If the LDClient is not started, it will always return the fallback value. The LDClient must be online to keep the feature flag values up-to-date.
-
-     See `LDStreamingMode` for details about the modes the LDClient uses to update feature flags.
-
-     When offline, LDClient closes the clientstream connection and no longer requests feature flags. The LDClient will return feature flag values (assuming the LDClient was started), which may not match the values set on the LaunchDarkly server.
-
-     A call to `dictionaryVariationAndSource` records events reported later. Recorded events allow clients to analyze usage and assist in debugging issues.
-
-     ### Usage
-     ````
-     LDDictionaryVariationValue *dictionaryValueAndSource = [ldClientInstance dictionaryVariationAndSourceForKey:"my-dictionary-flag" fallback:@{@"dictionary":@"fallback"}];
-     NSDictionary *dictionaryFeatureFlagValue = dictionaryValueAndSource.value;
-     LDFlagValueSource dictionaryFeatureFlagSource = dictionaryValueAndSource.source;
-     ````
-
-     - parameter key: The LDFlagKey for the requested feature flag.
-     - parameter fallback: The fallback value to return if the feature flag key does not exist. The fallback value may be nil.
-
-     - returns: A `LDDictionaryVariationValue` (`ObjcLDDictionaryVariationValue`) containing the requested feature flag value and source, or the fallback value (which may be nil) if the flag is missing or cannot be cast to a NSDictionary, or the client is not started. If the fallback value is returned, the source is `LDFlagValueSourceFallback`
-     */
-    @available(*, deprecated, message: "Please use the dictionaryVariationDetail method for additional insight into flag evaluation.")
-    @objc public func dictionaryVariationAndSource(forKey key: LDFlagKey, fallback: [String: Any]?) -> ObjcLDDictionaryVariationValue {
-        return ObjcLDDictionaryVariationValue(ldClient.variationAndSourceInternal(forKey: key, fallback: fallback))
-    }
-
     /**
      Returns a dictionary with the flag keys and their values. If the LDClient is not started, returns nil.
 
@@ -1028,7 +848,7 @@ public final class ObjcLDClient: NSObject {
     - parameter completion: Closure called when the embedded `setOnline` call completes, subject to throttling delays. (Optional)
     */
     @objc public init(configuration: ObjcLDConfig, user: ObjcLDUser, completion: (() -> Void)? = nil) {
-        let client = try? LDClient(configuration: configuration.config, startUser: user.user, completion: completion)
-        ldClient = client!.get()!
+        let client = LDClient(configuration: configuration.config, startUser: user.user, completion: completion)
+        ldClient = client.get()!
     }
 }

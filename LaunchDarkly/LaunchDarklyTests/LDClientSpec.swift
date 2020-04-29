@@ -40,7 +40,7 @@ final class LDClientSpec: QuickSpec {
         static let dictionary: [String: Any] = ["sub-flag-x": true, "sub-flag-y": 1, "sub-flag-z": 42.42]
     }
 
-    struct TestContext {
+    class TestContext {
         var config: LDConfig!
         var user: LDUser!
         var subject: LDClient!
@@ -143,7 +143,8 @@ final class LDClientSpec: QuickSpec {
              streamingMode: LDStreamingMode = .streaming,
              enableBackgroundUpdates: Bool = true,
              runMode: LDClientRunMode = .foreground,
-             operatingSystem: OperatingSystem? = nil) {
+             operatingSystem: OperatingSystem? = nil,
+             completion: (() -> Void)? = nil) {
 
             let clientServiceFactory = ClientServiceMockFactory()
             if let operatingSystem = operatingSystem {
@@ -155,19 +156,31 @@ final class LDClientSpec: QuickSpec {
             config.streamingMode = streamingMode
             config.enableBackgroundUpdates = enableBackgroundUpdates
             config.eventFlushInterval = 300.0   //5 min...don't want this to trigger
-
             user = LDUser.stub()
             oldFlags = user.flagStore.featureFlags
             oldFlagSource = user.flagStore.flagValueSource
 
             //In order to setup the client for background operation correctly, make it for the foreground, then set the runMode to background after start
             //Note that although LDClient is a singleton, calling makeClient here gets a fresh client
-            //subject = LDClient.makeClient(config: config, user: user, runMode: .foreground)
+            subject = LDClient.makeClient(config: config, user: user, runMode: .foreground) {
+                self.afterCompletion(runMode: runMode)
+                /*self.featureFlagCachingMock.reset()
+                self.setFlagStoreCallbackToMimicRealFlagStore()
 
-            //featureFlagCachingMock.reset()
+                self.setThrottlerToExecuteRunClosure()
+
+                if runMode == .background {
+                    self.subject.setRunMode(.background)
+                }*/
+                completion?()
+            }
+        }
+        
+        private func afterCompletion(runMode: LDClientRunMode) {
+            featureFlagCachingMock.reset()
             setFlagStoreCallbackToMimicRealFlagStore()
 
-            //setThrottlerToExecuteRunClosure()
+            setThrottlerToExecuteRunClosure()
 
             if runMode == .background {
                 subject.setRunMode(.background)
@@ -202,7 +215,6 @@ final class LDClientSpec: QuickSpec {
         stopSpec()
         trackEventSpec()
         variationSpec()
-        variationAndSourceSpec()
         observeSpec()
         onSyncCompleteSpec()
         runModeSpec()
@@ -219,12 +231,8 @@ final class LDClientSpec: QuickSpec {
 
             context("when configured to start online") {
                 beforeEach {
-                    testContext = TestContext()
-                    testContext.config.startOnline = true
-
                     waitUntil { done in
-                        testContext.subject = nil
-                        testContext.subject = LDClient.makeClient(config: testContext.config, user: testContext.user, completion: done)
+                        testContext = TestContext(startOnline: true, completion: done)
                     }
                 }
                 it("takes the client and service objects online") {
@@ -266,9 +274,8 @@ final class LDClientSpec: QuickSpec {
             }
             context("when configured to start offline") {
                 beforeEach {
-                    testContext = TestContext()
                     waitUntil { done in
-                        testContext.subject = LDClient.makeClient(config: testContext.config, user: testContext.user, completion: done)
+                        testContext = TestContext(completion: done)
                     }
                 }
                 it("leaves the client and service objects offline") {
@@ -312,10 +319,8 @@ final class LDClientSpec: QuickSpec {
                 OperatingSystem.allOperatingSystems.forEach { (os) in
                     context("on \(os)") {
                         beforeEach {
-                            testContext = TestContext(startOnline: true, runMode: .background, operatingSystem: os)
-
                             waitUntil { done in
-                                testContext.subject = LDClient.makeClient(config: testContext.config, user: testContext.user, completion: done)
+                                testContext = TestContext(startOnline: true, runMode: .background, operatingSystem: os, completion: done)
                             }
                         }
                         it("takes the client and service objects online when background enabled") {
@@ -361,11 +366,8 @@ final class LDClientSpec: QuickSpec {
                 OperatingSystem.allOperatingSystems.forEach { (os) in
                     context("on \(os)") {
                         beforeEach {
-                            testContext = TestContext(startOnline: true, enableBackgroundUpdates: false, runMode: .background, operatingSystem: os)
-                            testContext.config.enableBackgroundUpdates = false
-
                             waitUntil { done in
-                                testContext.subject = LDClient.makeClient(config: testContext.config, user: testContext.user, completion: done)
+                                testContext = TestContext(startOnline: true, enableBackgroundUpdates: false, runMode: .background, operatingSystem: os, completion: done)
                             }
                         }
                         it("leaves the client and service objects offline") {
@@ -412,10 +414,8 @@ final class LDClientSpec: QuickSpec {
                 var newUser: LDUser!
                 context("while online") {
                     beforeEach {
-                        testContext = TestContext()
-                        testContext.config.startOnline = true
                         waitUntil { done in
-                            testContext.subject = LDClient.makeClient(config: testContext.config, user: testContext.user, completion: done)
+                            testContext = TestContext(startOnline: true, completion: done)
                         }
                         testContext.featureFlagCachingMock.reset()
 
@@ -465,10 +465,8 @@ final class LDClientSpec: QuickSpec {
                 }
                 context("while offline") {
                     beforeEach {
-                        testContext = TestContext()
-                        testContext.config.startOnline = false
                         waitUntil { done in
-                            testContext.subject = LDClient.makeClient(config: testContext.config, user: testContext.user, completion: done)
+                            testContext = TestContext(startOnline: false, completion: done)
                         }
                         testContext.featureFlagCachingMock.reset()
 
@@ -1631,255 +1629,6 @@ final class LDClientSpec: QuickSpec {
                 }
                 it("does not record a flag evaluation event") {
                     _ = testContext.subject.variation(forKey: DarklyServiceMock.FlagKeys.bool, fallback: DefaultFlagValues.bool)
-                    expect(testContext.eventReporterMock.recordFlagEvaluationEventsCallCount) == 0
-                }
-            }
-        }
-    }
-
-    private func variationAndSourceSpec() {
-        describe("variation and source") {
-            var testContext: TestContext!
-            beforeEach {
-                testContext = TestContext()
-            }
-            context("flag store contains the requested value") {
-                beforeEach {
-                    testContext.flagStoreMock.flagValueSource = .server
-                    testContext.subject = LDClient.makeClient(config: testContext.config, user: testContext.user)
-                }
-                context("non-Optional fallback value") {
-                    var arrayValue: (value: [Int], source: LDFlagValueSource)!
-                    var dictionaryValue: (value: [String: Any], source: LDFlagValueSource)!
-                    it("returns the flag value and source") {
-                        expect(testContext.subject.variationAndSource(forKey: DarklyServiceMock.FlagKeys.bool, fallback: DefaultFlagValues.bool)
-                            == (DarklyServiceMock.FlagValues.bool, LDFlagValueSource.server)).to(beTrue())
-                        expect(testContext.subject.variationAndSource(forKey: DarklyServiceMock.FlagKeys.int, fallback: DefaultFlagValues.int)
-                            == (DarklyServiceMock.FlagValues.int, LDFlagValueSource.server)).to(beTrue())
-                        expect(testContext.subject.variationAndSource(forKey: DarklyServiceMock.FlagKeys.double, fallback: DefaultFlagValues.double)
-                            == (DarklyServiceMock.FlagValues.double, LDFlagValueSource.server)).to(beTrue())
-                        expect(testContext.subject.variationAndSource(forKey: DarklyServiceMock.FlagKeys.string, fallback: DefaultFlagValues.string) == (DarklyServiceMock.FlagValues.string, LDFlagValueSource.server)).to(beTrue())
-                        arrayValue = testContext.subject.variationAndSource(forKey: DarklyServiceMock.FlagKeys.array, fallback: DefaultFlagValues.array)
-                        expect(arrayValue.value == DarklyServiceMock.FlagValues.array).to(beTrue())
-                        expect(arrayValue.source) == LDFlagValueSource.server
-                        dictionaryValue = testContext.subject.variationAndSource(forKey: DarklyServiceMock.FlagKeys.dictionary, fallback: DefaultFlagValues.dictionary)
-                        expect(dictionaryValue.value == DarklyServiceMock.FlagValues.dictionary).to(beTrue())
-                        expect(dictionaryValue.source) == LDFlagValueSource.server
-                    }
-                    it("records a flag evaluation event") {
-                        _ = testContext.subject.variationAndSource(forKey: DarklyServiceMock.FlagKeys.bool, fallback: DefaultFlagValues.bool)
-                        expect(testContext.eventReporterMock.recordFlagEvaluationEventsCallCount) == 1
-                        expect(testContext.eventReporterMock.recordFlagEvaluationEventsReceivedArguments?.flagKey) == DarklyServiceMock.FlagKeys.bool
-                        expect(AnyComparer.isEqual(testContext.eventReporterMock.recordFlagEvaluationEventsReceivedArguments?.value, to: DarklyServiceMock.FlagValues.bool)).to(beTrue())
-                        expect(AnyComparer.isEqual(testContext.eventReporterMock.recordFlagEvaluationEventsReceivedArguments?.defaultValue, to: DefaultFlagValues.bool)).to(beTrue())
-                        expect(testContext.eventReporterMock.recordFlagEvaluationEventsReceivedArguments?.featureFlag) == testContext.flagStoreMock.featureFlags[DarklyServiceMock.FlagKeys.bool]
-                        expect(testContext.eventReporterMock.recordFlagEvaluationEventsReceivedArguments?.user) == testContext.user
-                    }
-                }
-                context("Optional fallback value") {
-                    var arrayValue: (value: [Int]?, source: LDFlagValueSource)!
-                    var dictionaryValue: (value: [String: Any]?, source: LDFlagValueSource)!
-                    it("returns the flag value and source") {
-                        //The casts in the expect() calls allow the compiler to determine which variation method to use. This test calls the Optional variation method
-                        expect(testContext.subject.variationAndSource(forKey: DarklyServiceMock.FlagKeys.bool, fallback: DefaultFlagValues.bool as Bool?)
-                            == (DarklyServiceMock.FlagValues.bool, LDFlagValueSource.server)).to(beTrue())
-                        expect(testContext.subject.variationAndSource(forKey: DarklyServiceMock.FlagKeys.int, fallback: DefaultFlagValues.int as Int?)
-                            == (DarklyServiceMock.FlagValues.int, LDFlagValueSource.server)).to(beTrue())
-                        expect(testContext.subject.variationAndSource(forKey: DarklyServiceMock.FlagKeys.double, fallback: DefaultFlagValues.double as Double?)
-                            == (DarklyServiceMock.FlagValues.double, LDFlagValueSource.server)).to(beTrue())
-                        expect(testContext.subject.variationAndSource(forKey: DarklyServiceMock.FlagKeys.string, fallback: DefaultFlagValues.string as String?)
-                            == (DarklyServiceMock.FlagValues.string, LDFlagValueSource.server)).to(beTrue())
-                        arrayValue = testContext.subject.variationAndSource(forKey: DarklyServiceMock.FlagKeys.array, fallback: DefaultFlagValues.array as Array?)
-                        expect(arrayValue.value == DarklyServiceMock.FlagValues.array).to(beTrue())
-                        expect(arrayValue.source) == LDFlagValueSource.server
-                        dictionaryValue = testContext.subject.variationAndSource(forKey: DarklyServiceMock.FlagKeys.dictionary, fallback: DefaultFlagValues.dictionary as [String: Any]?)
-                        expect(dictionaryValue.value == DarklyServiceMock.FlagValues.dictionary).to(beTrue())
-                        expect(dictionaryValue.source) == LDFlagValueSource.server
-                    }
-                    it("records a flag evaluation event") {
-                        //The cast in the variation call directs the compiler to the Optional variation method
-                        _ = testContext.subject.variationAndSource(forKey: DarklyServiceMock.FlagKeys.bool, fallback: DefaultFlagValues.bool as Bool?)
-                        expect(testContext.eventReporterMock.recordFlagEvaluationEventsCallCount) == 1
-                        expect(testContext.eventReporterMock.recordFlagEvaluationEventsReceivedArguments?.flagKey) == DarklyServiceMock.FlagKeys.bool
-                        expect(AnyComparer.isEqual(testContext.eventReporterMock.recordFlagEvaluationEventsReceivedArguments?.value, to: DarklyServiceMock.FlagValues.bool)).to(beTrue())
-                        expect(AnyComparer.isEqual(testContext.eventReporterMock.recordFlagEvaluationEventsReceivedArguments?.defaultValue, to: DefaultFlagValues.bool)).to(beTrue())
-                        expect(testContext.eventReporterMock.recordFlagEvaluationEventsReceivedArguments?.featureFlag) == testContext.flagStoreMock.featureFlags[DarklyServiceMock.FlagKeys.bool]
-                        expect(testContext.eventReporterMock.recordFlagEvaluationEventsReceivedArguments?.user) == testContext.user
-                    }
-                }
-                context("No fallback value") {
-                    var arrayValue: (value: [Int]?, source: LDFlagValueSource)!
-                    var dictionaryValue: (value: [String: Any]?, source: LDFlagValueSource)!
-                    it("returns the flag value and source") {
-                        expect(testContext.subject.variationAndSource(forKey: DarklyServiceMock.FlagKeys.bool, fallback: nil as Bool?)
-                            == (DarklyServiceMock.FlagValues.bool, LDFlagValueSource.server)).to(beTrue())
-                        expect(testContext.subject.variationAndSource(forKey: DarklyServiceMock.FlagKeys.int, fallback: nil as Int?)
-                            == (DarklyServiceMock.FlagValues.int, LDFlagValueSource.server)).to(beTrue())
-                        expect(testContext.subject.variationAndSource(forKey: DarklyServiceMock.FlagKeys.double, fallback: nil as Double?)
-                            == (DarklyServiceMock.FlagValues.double, LDFlagValueSource.server)).to(beTrue())
-                        expect(testContext.subject.variationAndSource(forKey: DarklyServiceMock.FlagKeys.string, fallback: nil as String?)
-                            == (DarklyServiceMock.FlagValues.string, LDFlagValueSource.server)).to(beTrue())
-                        arrayValue = testContext.subject.variationAndSource(forKey: DarklyServiceMock.FlagKeys.array, fallback: nil as Array?)
-                        expect(arrayValue.value == DarklyServiceMock.FlagValues.array).to(beTrue())
-                        expect(arrayValue.source) == LDFlagValueSource.server
-                        dictionaryValue = testContext.subject.variationAndSource(forKey: DarklyServiceMock.FlagKeys.dictionary, fallback: nil as [String: Any]?)
-                        expect(dictionaryValue.value == DarklyServiceMock.FlagValues.dictionary).to(beTrue())
-                        expect(dictionaryValue.source) == LDFlagValueSource.server
-                    }
-                    it("records a flag evaluation event") {
-                        _ = testContext.subject.variationAndSource(forKey: DarklyServiceMock.FlagKeys.bool, fallback: nil as Bool?)
-                        expect(testContext.eventReporterMock.recordFlagEvaluationEventsCallCount) == 1
-                        expect(testContext.eventReporterMock.recordFlagEvaluationEventsReceivedArguments?.flagKey) == DarklyServiceMock.FlagKeys.bool
-                        expect(AnyComparer.isEqual(testContext.eventReporterMock.recordFlagEvaluationEventsReceivedArguments?.value, to: DarklyServiceMock.FlagValues.bool)).to(beTrue())
-                        expect(testContext.eventReporterMock.recordFlagEvaluationEventsReceivedArguments?.defaultValue).to(beNil())
-                        expect(testContext.eventReporterMock.recordFlagEvaluationEventsReceivedArguments?.featureFlag) == testContext.flagStoreMock.featureFlags[DarklyServiceMock.FlagKeys.bool]
-                        expect(testContext.eventReporterMock.recordFlagEvaluationEventsReceivedArguments?.user) == testContext.user
-                    }
-                }
-                context("flag value is null") {
-                    var arrayValue: (value: [Int], source: LDFlagValueSource)!
-                    var dictionaryValue: (value: [String: Any], source: LDFlagValueSource)!
-                    it("returns the fallback value and source") {
-                        expect(testContext.subject.variationAndSource(forKey: DarklyServiceMock.FlagKeys.null, fallback: DefaultFlagValues.bool)
-                            == (DefaultFlagValues.bool, LDFlagValueSource.fallback)).to(beTrue())
-                        expect(testContext.subject.variationAndSource(forKey: DarklyServiceMock.FlagKeys.null, fallback: DefaultFlagValues.int)
-                            == (DefaultFlagValues.int, LDFlagValueSource.fallback)).to(beTrue())
-                        expect(testContext.subject.variationAndSource(forKey: DarklyServiceMock.FlagKeys.null, fallback: DefaultFlagValues.double)
-                            == (DefaultFlagValues.double, LDFlagValueSource.fallback)).to(beTrue())
-                        expect(testContext.subject.variationAndSource(forKey: DarklyServiceMock.FlagKeys.null, fallback: DefaultFlagValues.string)
-                            == (DefaultFlagValues.string, LDFlagValueSource.fallback)).to(beTrue())
-                        arrayValue = testContext.subject.variationAndSource(forKey: DarklyServiceMock.FlagKeys.null, fallback: DefaultFlagValues.array)
-                        expect(arrayValue.value == DefaultFlagValues.array).to(beTrue())
-                        expect(arrayValue.source) == LDFlagValueSource.fallback
-                        dictionaryValue = testContext.subject.variationAndSource(forKey: DarklyServiceMock.FlagKeys.null, fallback: DefaultFlagValues.dictionary)
-                        expect(dictionaryValue.value == DefaultFlagValues.dictionary).to(beTrue())
-                        expect(dictionaryValue.source) == LDFlagValueSource.fallback
-                    }
-                    it("records a flag evaluation event") {
-                        _ = testContext.subject.variationAndSource(forKey: DarklyServiceMock.FlagKeys.null, fallback: DefaultFlagValues.bool)
-                        expect(testContext.eventReporterMock.recordFlagEvaluationEventsCallCount) == 1
-                        expect(testContext.eventReporterMock.recordFlagEvaluationEventsReceivedArguments?.flagKey) == DarklyServiceMock.FlagKeys.null
-                        expect(AnyComparer.isEqual(testContext.eventReporterMock.recordFlagEvaluationEventsReceivedArguments?.value, to: DefaultFlagValues.bool)).to(beTrue())
-                        expect(AnyComparer.isEqual(testContext.eventReporterMock.recordFlagEvaluationEventsReceivedArguments?.defaultValue, to: DefaultFlagValues.bool)).to(beTrue())
-                        expect(testContext.eventReporterMock.recordFlagEvaluationEventsReceivedArguments?.featureFlag) == testContext.flagStoreMock.featureFlags[DarklyServiceMock.FlagKeys.null]
-                        expect(testContext.eventReporterMock.recordFlagEvaluationEventsReceivedArguments?.user) == testContext.user
-                    }
-                }
-            }
-            context("flag store does not contain the requested value") {
-                beforeEach {
-                    testContext.subject = LDClient.makeClient(config: testContext.config, user: testContext.user)
-                }
-                context("non-Optional fallback value") {
-                    var arrayValue: (value: [Int], source: LDFlagValueSource)!
-                    var dictionaryValue: (value: [String: Any], source: LDFlagValueSource)!
-                    it("returns the fallback value and fallback source") {
-                        expect(testContext.subject.variationAndSource(forKey: BadFlagKeys.bool, fallback: DefaultFlagValues.bool) == (DefaultFlagValues.bool, .fallback)).to(beTrue())
-                        expect(testContext.subject.variationAndSource(forKey: BadFlagKeys.int, fallback: DefaultFlagValues.int) == (DefaultFlagValues.int, .fallback)).to(beTrue())
-                        expect(testContext.subject.variationAndSource(forKey: BadFlagKeys.double, fallback: DefaultFlagValues.double) == (DefaultFlagValues.double, .fallback)).to(beTrue())
-                        expect(testContext.subject.variationAndSource(forKey: BadFlagKeys.string, fallback: DefaultFlagValues.string) == (DefaultFlagValues.string, .fallback)).to(beTrue())
-                        arrayValue = testContext.subject.variationAndSource(forKey: BadFlagKeys.array, fallback: DefaultFlagValues.array)
-                        expect(arrayValue.value == DefaultFlagValues.array).to(beTrue())
-                        expect(arrayValue.source) == LDFlagValueSource.fallback
-                        dictionaryValue = testContext.subject.variationAndSource(forKey: BadFlagKeys.dictionary, fallback: DefaultFlagValues.dictionary)
-                        expect(dictionaryValue.value == DefaultFlagValues.dictionary).to(beTrue())
-                        expect(dictionaryValue.source) == LDFlagValueSource.fallback
-                    }
-                    it("records a flag evaluation event") {
-                        _ = testContext.subject.variationAndSource(forKey: BadFlagKeys.bool, fallback: DefaultFlagValues.bool)
-                        expect(testContext.eventReporterMock.recordFlagEvaluationEventsCallCount) == 1
-                        expect(testContext.eventReporterMock.recordFlagEvaluationEventsReceivedArguments?.flagKey) == BadFlagKeys.bool
-                        expect(AnyComparer.isEqual(testContext.eventReporterMock.recordFlagEvaluationEventsReceivedArguments?.value, to: DefaultFlagValues.bool)).to(beTrue())
-                        expect(AnyComparer.isEqual(testContext.eventReporterMock.recordFlagEvaluationEventsReceivedArguments?.defaultValue, to: DefaultFlagValues.bool)).to(beTrue())
-                        expect(testContext.eventReporterMock.recordFlagEvaluationEventsReceivedArguments?.featureFlag).to(beNil())
-                        expect(testContext.eventReporterMock.recordFlagEvaluationEventsReceivedArguments?.user) == testContext.user
-                    }
-                }
-                context("Optional fallback value") {
-                    var arrayValue: (value: [Int]?, source: LDFlagValueSource)!
-                    var dictionaryValue: (value: [String: Any]?, source: LDFlagValueSource)!
-                    it("returns the fallback value and fallback source") {
-                        //The casts in the expect() calls allow the compiler to determine which variation method to use. This test calls the non-Optional variation method
-                        expect(testContext.subject.variationAndSource(forKey: BadFlagKeys.bool, fallback: DefaultFlagValues.bool as Bool?)
-                            == (DefaultFlagValues.bool, .fallback)).to(beTrue())
-                        expect(testContext.subject.variationAndSource(forKey: BadFlagKeys.int, fallback: DefaultFlagValues.int as Int?)
-                            == (DefaultFlagValues.int, .fallback)).to(beTrue())
-                        expect(testContext.subject.variationAndSource(forKey: BadFlagKeys.double, fallback: DefaultFlagValues.double as Double?)
-                            == (DefaultFlagValues.double, .fallback)).to(beTrue())
-                        expect(testContext.subject.variationAndSource(forKey: BadFlagKeys.string, fallback: DefaultFlagValues.string as String?)
-                            == (DefaultFlagValues.string, .fallback)).to(beTrue())
-                        arrayValue = testContext.subject.variationAndSource(forKey: BadFlagKeys.array, fallback: DefaultFlagValues.array as Array?)
-                        expect(arrayValue.value == DefaultFlagValues.array).to(beTrue())
-                        expect(arrayValue.source) == LDFlagValueSource.fallback
-                        dictionaryValue = testContext.subject.variationAndSource(forKey: BadFlagKeys.dictionary, fallback: DefaultFlagValues.dictionary as [String: Any]?)
-                        expect(dictionaryValue.value == DefaultFlagValues.dictionary).to(beTrue())
-                        expect(dictionaryValue.source) == LDFlagValueSource.fallback
-                    }
-                    it("records a flag evaluation event") {
-                        //The cast in the variation call directs the compiler to the Optional variation method
-                        _ = testContext.subject.variationAndSource(forKey: BadFlagKeys.bool, fallback: DefaultFlagValues.bool as Bool?)
-                        expect(testContext.eventReporterMock.recordFlagEvaluationEventsCallCount) == 1
-                        expect(testContext.eventReporterMock.recordFlagEvaluationEventsReceivedArguments?.flagKey) == BadFlagKeys.bool
-                        expect(AnyComparer.isEqual(testContext.eventReporterMock.recordFlagEvaluationEventsReceivedArguments?.value, to: DefaultFlagValues.bool)).to(beTrue())
-                        expect(AnyComparer.isEqual(testContext.eventReporterMock.recordFlagEvaluationEventsReceivedArguments?.defaultValue, to: DefaultFlagValues.bool)).to(beTrue())
-                        expect(testContext.eventReporterMock.recordFlagEvaluationEventsReceivedArguments?.featureFlag).to(beNil())
-                        expect(testContext.eventReporterMock.recordFlagEvaluationEventsReceivedArguments?.user) == testContext.user
-                    }
-                }
-                context("no fallback value") {
-                    var arrayValue: (value: [Int]?, source: LDFlagValueSource)!
-                    var dictionaryValue: (value: [String: Any]?, source: LDFlagValueSource)!
-                    it("returns the fallback value and fallback source") {
-                        //The casts in the expect() calls allow the compiler to determine which variation method to use. This test calls the non-Optional variation method
-                        expect(testContext.subject.variationAndSource(forKey: BadFlagKeys.bool, fallback: nil as Bool?)
-                            == (nil, .fallback)).to(beTrue())
-                        expect(testContext.subject.variationAndSource(forKey: BadFlagKeys.int, fallback: nil as Int?)
-                            == (nil, .fallback)).to(beTrue())
-                        expect(testContext.subject.variationAndSource(forKey: BadFlagKeys.double, fallback: nil as Double?)
-                            == (nil, .fallback)).to(beTrue())
-                        expect(testContext.subject.variationAndSource(forKey: BadFlagKeys.string, fallback: nil as String?)
-                            == (nil, .fallback)).to(beTrue())
-                        arrayValue = testContext.subject.variationAndSource(forKey: BadFlagKeys.array, fallback: nil as Array?)
-                        expect(arrayValue.value).to(beNil())
-                        expect(arrayValue.source) == LDFlagValueSource.fallback
-                        dictionaryValue = testContext.subject.variationAndSource(forKey: BadFlagKeys.dictionary, fallback: nil as [String: Any]?)
-                        expect(dictionaryValue.value).to(beNil())
-                        expect(dictionaryValue.source) == LDFlagValueSource.fallback
-                    }
-                    it("records a flag evaluation event") {
-                        //The cast in the variation call directs the compiler to the Optional variation method
-                        _ = testContext.subject.variationAndSource(forKey: BadFlagKeys.bool, fallback: nil as Bool?)
-                        expect(testContext.eventReporterMock.recordFlagEvaluationEventsCallCount) == 1
-                        expect(testContext.eventReporterMock.recordFlagEvaluationEventsReceivedArguments?.flagKey) == BadFlagKeys.bool
-                        expect(testContext.eventReporterMock.recordFlagEvaluationEventsReceivedArguments?.value).to(beNil())
-                        expect(testContext.eventReporterMock.recordFlagEvaluationEventsReceivedArguments?.defaultValue).to(beNil())
-                        expect(testContext.eventReporterMock.recordFlagEvaluationEventsReceivedArguments?.featureFlag).to(beNil())
-                        expect(testContext.eventReporterMock.recordFlagEvaluationEventsReceivedArguments?.user) == testContext.user
-                    }
-                }
-            }
-            context("when it hasnt started") {
-                var arrayValue: (value: [Int], source: LDFlagValueSource)!
-                var dictionaryValue: (value: [String: Any], source: LDFlagValueSource)!
-                beforeEach {
-                    testContext = TestContext(startOnline: false)
-                }
-                it("returns the fallback value and fallback source") {
-                    expect(testContext.subject.variationAndSource(forKey: BadFlagKeys.bool, fallback: DefaultFlagValues.bool) == (DefaultFlagValues.bool, .fallback)).to(beTrue())
-                    expect(testContext.subject.variationAndSource(forKey: BadFlagKeys.int, fallback: DefaultFlagValues.int) == (DefaultFlagValues.int, LDFlagValueSource.fallback)).to(beTrue())
-                    expect(testContext.subject.variationAndSource(forKey: BadFlagKeys.double, fallback: DefaultFlagValues.double)
-                        == (DefaultFlagValues.double, LDFlagValueSource.fallback)).to(beTrue())
-                    expect(testContext.subject.variationAndSource(forKey: BadFlagKeys.string, fallback: DefaultFlagValues.string)
-                        == (DefaultFlagValues.string, LDFlagValueSource.fallback)).to(beTrue())
-                    arrayValue = testContext.subject.variationAndSource(forKey: BadFlagKeys.array, fallback: DefaultFlagValues.array)
-                    expect(arrayValue.value == DefaultFlagValues.array).to(beTrue())
-                    expect(arrayValue.source) == LDFlagValueSource.fallback
-                    dictionaryValue = testContext.subject.variationAndSource(forKey: BadFlagKeys.dictionary, fallback: DefaultFlagValues.dictionary)
-                    expect(dictionaryValue.value == DefaultFlagValues.dictionary).to(beTrue())
-                    expect(dictionaryValue.source) == LDFlagValueSource.fallback
-                }
-                it("does not record a flag evaluation event") {
-                    _ = testContext.subject.variationAndSource(forKey: DarklyServiceMock.FlagKeys.bool, fallback: DefaultFlagValues.bool)
                     expect(testContext.eventReporterMock.recordFlagEvaluationEventsCallCount) == 0
                 }
             }
