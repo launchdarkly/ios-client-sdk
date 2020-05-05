@@ -80,7 +80,11 @@ public struct LDUser {
         return ObjcLDUser(self)
     }
 
-    internal var flagStore: FlagMaintaining = FlagStore()
+    internal var flagStore: FlagMaintaining = FlagStore() {
+        didSet {
+            print("XANADU USER FLAGS: " + flagStore.featureFlags.description)
+        }
+    }
     
     /**
      Initializer to create a LDUser. Client configurable attributes each have an optional parameter to facilitate setting user information into the LDUser. The SDK will automatically set `key`, `device`, `operatingSystem`, and `isAnonymous` attributes if the client does not provide them. The SDK embeds `device` and `operatingSystem` into the `custom` dictionary for transmission to LaunchDarkly.
@@ -166,6 +170,7 @@ public struct LDUser {
         operatingSystem = custom?[CodingKeys.operatingSystem.rawValue] as? String
 
         flagStore = FlagStore(featureFlagDictionary: userDictionary[CodingKeys.config.rawValue] as? [String: Any], flagValueSource: .cache)
+        print("XANADU USER FLAGS: " + flagStore.featureFlags.description)
         Log.debug(typeName(and: #function) + "user: \(self)")
     }
 
@@ -346,6 +351,7 @@ extension LDUserWrapper: NSCoding {
         user.operatingSystem = decoder.decodeObject(forKey: LDUser.CodingKeys.operatingSystem.rawValue) as? String
         let wrappedFlags = decoder.decodeObject(forKey: LDUser.CodingKeys.config.rawValue) as? [String: Any]
         user.flagStore = FlagStore(featureFlagDictionary: wrappedFlags?[Keys.featureFlags] as? [String: Any], flagValueSource: .cache)
+        print("XANADU USER FLAGS: " + user.flagStore.featureFlags.description)
         self.init(user: user)
     }
 

@@ -67,7 +67,6 @@ extension DarklyEventSource.LDEvent {
 
 class FlagSynchronizer: LDFlagSynchronizing {
     struct Constants {
-        fileprivate static let queueName = "LaunchDarkly.FlagSynchronizer.syncQueue"
         static let didCloseEventSourceName = "didCloseEventSource"
     }
 
@@ -75,6 +74,7 @@ class FlagSynchronizer: LDFlagSynchronizing {
     private var eventSource: DarklyStreamingProvider?
     private var flagRequestTimer: TimeResponding?
     var onSyncComplete: FlagSyncCompleteClosure?
+    fileprivate let queueName: String
 
     let streamingMode: LDStreamingMode
     
@@ -94,7 +94,7 @@ class FlagSynchronizer: LDFlagSynchronizing {
     var pollingActive: Bool {
         return flagRequestTimer != nil
     }
-    private var syncQueue = DispatchQueue(label: Constants.queueName, qos: .utility)
+    private var syncQueue: DispatchQueue
 
     init(streamingMode: LDStreamingMode, pollingInterval: TimeInterval, useReport: Bool, service: DarklyServiceProvider, onSyncComplete: FlagSyncCompleteClosure?) {
         Log.debug(FlagSynchronizer.typeName(and: #function) + "streamingMode: \(streamingMode), " + "pollingInterval: \(pollingInterval), " + "useReport: \(useReport)")
@@ -103,6 +103,9 @@ class FlagSynchronizer: LDFlagSynchronizing {
         self.useReport = useReport
         self.service = service
         self.onSyncComplete = onSyncComplete
+        
+        self.queueName = UUID().uuidString
+        self.syncQueue = DispatchQueue(label: queueName, qos: .utility)
 
         configureCommunications()
     }

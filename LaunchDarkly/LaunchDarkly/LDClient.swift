@@ -140,10 +140,12 @@ public class LDClient {
         let owner = "SetOnlineOwner" as AnyObject
         if completion != nil {
             observeAll(owner: owner) { _ in
+                print("XANADU ALL")
                 completion?()
                 self.stopObserving(owner: owner)
             }
             observeFlagsUnchanged(owner: owner) {
+                print("XANADU NONE")
                 completion?()
                 self.stopObserving(owner: owner)
             }
@@ -199,6 +201,8 @@ public class LDClient {
             setOnline(false)
             convertCachedData(skipDuringStart: isStarting)
             if let cachedFlags = flagCache.retrieveFeatureFlags(forUserWithKey: user.key, andMobileKey: config.mobileKey), !cachedFlags.isEmpty {
+                print("XANADU CONFIG MOBILE KEY: " + config.mobileKey)
+                print("XANADU CONFIG FLAGS: " + cachedFlags.description)
                 user.flagStore.replaceStore(newFlags: cachedFlags, source: .cache, completion: nil)
             }
 
@@ -248,6 +252,8 @@ public class LDClient {
         }
         convertCachedData(skipDuringStart: isStarting)
         if let cachedFlags = flagCache.retrieveFeatureFlags(forUserWithKey: user.key, andMobileKey: config.mobileKey), !cachedFlags.isEmpty {
+            print("XANADU IDENTIFY MOBILE KEY: " + config.mobileKey)
+            print("XANADU IDENTIFY FLAGS: " + cachedFlags.description)
             user.flagStore.replaceStore(newFlags: cachedFlags, source: .cache, completion: nil)
         }
         service = serviceFactory.makeDarklyServiceProvider(config: config, user: user)
@@ -478,6 +484,7 @@ public class LDClient {
             return (fallback, .fallback)
         }
         let (featureFlag, flagStoreSource) = user.flagStore.featureFlagAndSource(for: flagKey)
+        print("XANADU FF: " + featureFlag.stringValue)
         let (value, source): (T?, LDFlagValueSource) = valueAndSource(from: featureFlag, fallback: fallback, source: flagStoreSource)
         let failedConversionMessage = self.failedConversionMessage(featureFlag: featureFlag, source: source, fallback: fallback)
         Log.debug(typeName(and: #function) + "flagKey: \(flagKey), value: \(value.stringValue), fallback: \(fallback.stringValue), featureFlag: \(featureFlag.stringValue), source: \(source), reason: \(featureFlag?.reason?.description ?? "No evaluation reason")."
@@ -901,30 +908,35 @@ public class LDClient {
     */
     public static func start(config: LDConfig, startUser: LDUser?, completion: (() -> Void)? = nil) {
         Log.debug("LDClient starting")
-        print("XANADU")
+        if instances != nil {
+            Log.debug("LDClient.start() was called more than once!")
+            return
+        }
         
         let anonymousUser = LDUser(environmentReporter: EnvironmentReporter())
         let internalUser = startUser ?? anonymousUser
         
+        LDClient.instances = [:]
+        let cache = UserEnvironmentFlagCache(withKeyedValueCache: ClientServiceFactory().makeKeyedValueCache())
         var mobileKeys = config.secondaryMobileKeys ?? [:]
         var internalCount = 0
         mobileKeys[LDConfig.Defaults.primaryEnvironmentName] = config.mobileKey
         for (name, mobileKey) in mobileKeys {
-            print("XANADU YES")
+            print("XANADU MOBILE KEYS")
             var internalConfig = config
             internalConfig.mobileKey = mobileKey
-            let instance = LDClient(configuration: internalConfig, startUser: internalUser) {
+            let instance = LDClient(configuration: internalConfig, startUser: internalUser, flagCache: cache) {
                 internalCount += 1
                 if internalCount >= mobileKeys.count {
                     completion?()
+                    print("XANADU COMPLETE")
                 }
             }
             LDClient.instances?[name] = instance
         }
-        print("XANADU4")
     }
     
-    private init(configuration: LDConfig, startUser: LDUser?, completion: (() -> Void)? = nil) {
+    private init(configuration: LDConfig, startUser: LDUser?, flagCache: UserEnvironmentFlagCache, completion: (() -> Void)? = nil) {
         let wasStarted = hasStarted
         let wasOnline = isOnline
         isStarting = true
@@ -932,7 +944,7 @@ public class LDClient {
         
         serviceFactory = ClientServiceFactory()
         environmentReporter = EnvironmentReporter()
-        flagCache = UserEnvironmentFlagCache(withKeyedValueCache: serviceFactory.makeKeyedValueCache())
+        self.flagCache = flagCache
         LDUserWrapper.configureKeyedArchiversToHandleVersion2_3_0AndOlderUserCacheFormat()
         cacheConverter = CacheConverter(serviceFactory: serviceFactory)
         flagChangeNotifier = FlagChangeNotifier()
@@ -961,23 +973,22 @@ public class LDClient {
         NotificationCenter.default.addObserver(self, selector: #selector(didCloseEventSource), name: Notification.Name(FlagSynchronizer.Constants.didCloseEventSourceName), object: nil)
 
         eventReporter = self.serviceFactory.makeEventReporter(config: config, service: service, onSyncComplete: onEventSyncComplete)
-        setOnline(false)
+        internalSetOnline(false)
         cacheConverter.convertCacheData(for: user, and: config)
-        identify(user: user)
+        internalIdentify(newUser: user)
         self.connectionInformation = ConnectionInformation.uncacheConnectionInformation(config: config, ldClient: self, clientServiceFactory: serviceFactory)
-        setOnline((wasStarted && wasOnline) || (!wasStarted && self.config.startOnline)) {
+
+        internalSetOnline((wasStarted && wasOnline) || (!wasStarted && self.config.startOnline)) {
             Log.debug("LDClient started")
             self.isStarting = false
-            print("XANADU5")
             print("XANADU ALL: " + (self.allFlags?.description ?? "nil all"))
             print("XANADU CONFIG: " + self.config.mobileKey + " " + (self.config.secondaryMobileKeys?.description ?? "nil secondary"))
             completion?()
         }
-        print("XANADU2")
     }
     
     private convenience init(config: LDConfig, startUser: LDUser?, runMode: LDClientRunMode, completion: (() -> Void)? = nil) {
-        self.init(configuration: config, startUser: startUser, completion: completion)
+        self.init(configuration: config, startUser: startUser, flagCache: UserEnvironmentFlagCache(withKeyedValueCache: ClientServiceFactory().makeKeyedValueCache()), completion: completion)
         //Setting these inside the init do not trigger the didSet closures
         self.runMode = runMode
         self.config = config
