@@ -146,29 +146,36 @@ class FlagSynchronizer: LDFlagSynchronizing {
             Log.debug(typeName(and: #function) + "aborted. " + reason)
             return
         }
-        
+        print("XANADU STARTEVENTSOURCE")
         Log.debug(typeName(and: #function))
         eventSource = service.createEventSource(useReport: useReport)  //The LDConfig.connectionTimeout should NOT be set here. Heartbeat is sent every 3m. ES default timeout is 5m. This is an async operation.
         //LDEventSource reacts to connection errors by closing the connection and establishing a new one after an exponentially increasing wait. That makes it self healing.
         //While we could keep the LDEventSource state, there's not much we can do to help it connect. If it can't connect, it's likely we won't be able to poll the server either...so it seems best to just do nothing and let it heal itself.
+        print("XANADU EVENTSOURCE IS: " + (eventSource == nil ? "nil" : "not nil"))
+        let esId = UUID().uuidString
         eventSource?.onReadyStateChangedEvent { [self] (event) in
+            print("XANADU READYSTATECHANGED " + esId)
             guard let event = event
                 else {
                     Log.debug(self.typeName(and: #function) + "onReadyStateChangedEvent handler aborted. No streaming event.")
                     return
             }
             if event.readyState == DarklyEventSource.kEventStateClosed {
+                print("XANADU CLOSED")
                 Log.debug(self.typeName(and: #function) + "EventSource closed")
                 NotificationCenter.default.post(name: Notification.Name(FlagSynchronizer.Constants.didCloseEventSourceName), object: nil)
             }
         }
         eventSource?.onMessageEvent { [weak self] (event) in
+            print("XANADU MESSAGEVENT " + esId)
             self?.process(event)
         }
         eventSource?.onErrorEvent { [weak self] (event) in
+            print("XANADU ERROREVENT " + esId)
             self?.process(event)
         }
         eventSource?.open()
+        print("XANADU STARTEVENTSOURCE END")
     }
     
     private func stopEventSource() {
@@ -183,6 +190,7 @@ class FlagSynchronizer: LDFlagSynchronizing {
     
     private func process(_ event: DarklyEventSource.LDEvent?) {
         //Because this method is called asynchronously by the LDEventSource, need to check these conditions prior to processing the event.
+        print("XANADU PROCESS")
         if !isOnline {
             Log.debug(typeName(and: #function) + "aborted. " + "Flag Synchronizer is offline.")
             reportSyncComplete(.error(.isOffline))
@@ -226,6 +234,7 @@ class FlagSynchronizer: LDFlagSynchronizing {
     }
 
     private func process(_ event: DarklyEventSource.LDEvent, eventType: DarklyEventSource.LDEvent.EventType) {
+         print("XANADU PROCESS2")
         guard let data = event.data?.data(using: .utf8),
             let flagDictionary = try? JSONSerialization.jsonDictionary(with: data, options: .allowFragments)
         else {

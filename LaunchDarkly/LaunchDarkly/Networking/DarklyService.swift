@@ -32,18 +32,21 @@ protocol DarklyStreamingProvider: class {
 
 extension LDEventSource: DarklyStreamingProvider {
     func onMessageEvent(_ handler: LDEventSourceEventHandler?) {
+        print("XANADU MESSAGE HANDLER")
         if let handler = handler {
             self.onMessage(handler)
         }
     }
 
     func onErrorEvent(_ handler: LDEventSourceEventHandler?) {
+        print("XANADU ERROR HANDLER")
         if let handler = handler {
             self.onError(handler)
         }
     }
     
     func onReadyStateChangedEvent(_ handler: LDEventSourceEventHandler?) {
+        print("XANADU READY HANDLER")
         if let handler = handler {
             self.onReadyStateChanged(handler)
         }
@@ -85,7 +88,6 @@ final class DarklyService: DarklyServiceProvider {
         self.user = user
         self.serviceFactory = serviceFactory
         self.httpHeaders = HTTPHeaders(config: config, environmentReporter: serviceFactory.makeEnvironmentReporter())
-
         self.session = URLSession(configuration: URLSessionConfiguration.default)
     }
     
@@ -182,6 +184,7 @@ final class DarklyService: DarklyServiceProvider {
     // MARK: Streaming
     
     func createEventSource(useReport: Bool) -> DarklyStreamingProvider {
+        print("XANADU CREATEEVENTSOURCE")
         if useReport {
             return serviceFactory.makeStreamingProvider(url: reportStreamRequestUrl,
                                                         httpHeaders: httpHeaders.eventSourceHeaders,

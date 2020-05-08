@@ -201,8 +201,6 @@ public class LDClient {
             setOnline(false)
             convertCachedData(skipDuringStart: isStarting)
             if let cachedFlags = flagCache.retrieveFeatureFlags(forUserWithKey: user.key, andMobileKey: config.mobileKey), !cachedFlags.isEmpty {
-                print("XANADU CONFIG MOBILE KEY: " + config.mobileKey)
-                print("XANADU CONFIG FLAGS: " + cachedFlags.description)
                 user.flagStore.replaceStore(newFlags: cachedFlags, source: .cache, completion: nil)
             }
 
@@ -242,7 +240,9 @@ public class LDClient {
     }
     
     private func internalIdentify(newUser: LDUser, completion: (() -> Void)? = nil) {
-        user = newUser
+        var internalUser = newUser
+        internalUser.flagStore = FlagStore(featureFlagDictionary: newUser.flagStore.featureFlags, flagValueSource: newUser.flagStore.flagValueSource)
+        user = internalUser
         Log.debug(typeName(and: #function) + "new user set with key: " + user.key )
         let wasOnline = isOnline
         setOnline(false)
@@ -252,8 +252,6 @@ public class LDClient {
         }
         convertCachedData(skipDuringStart: isStarting)
         if let cachedFlags = flagCache.retrieveFeatureFlags(forUserWithKey: user.key, andMobileKey: config.mobileKey), !cachedFlags.isEmpty {
-            print("XANADU IDENTIFY MOBILE KEY: " + config.mobileKey)
-            print("XANADU IDENTIFY FLAGS: " + cachedFlags.description)
             user.flagStore.replaceStore(newFlags: cachedFlags, source: .cache, completion: nil)
         }
         service = serviceFactory.makeDarklyServiceProvider(config: config, user: user)
@@ -720,14 +718,17 @@ public class LDClient {
             connectionInformation = ConnectionInformation.checkEstablishingStreaming(connectionInformation: connectionInformation)
             switch streamingEvent {
             case nil, .ping?, .put?:
+                print("XANADU UPDATECACHE: " + flagDictionary.description)
                 user.flagStore.replaceStore(newFlags: flagDictionary, source: .server) {
                     self.updateCacheAndReportChanges(user: self.user, oldFlags: oldFlags, oldFlagSource: oldFlagSource)
                 }
             case .patch?:
+                print("XANADU UPDATECACHE: " + flagDictionary.description)
                 user.flagStore.updateStore(updateDictionary: flagDictionary, source: .server) {
                     self.updateCacheAndReportChanges(user: self.user, oldFlags: oldFlags, oldFlagSource: oldFlagSource)
                 }
             case .delete?:
+                print("XANADU UPDATECACHE: " + flagDictionary.description)
                 user.flagStore.deleteFlag(deleteDictionary: flagDictionary) {
                     self.updateCacheAndReportChanges(user: self.user, oldFlags: oldFlags, oldFlagSource: oldFlagSource)
                 }
@@ -982,6 +983,8 @@ public class LDClient {
             Log.debug("LDClient started")
             self.isStarting = false
             print("XANADU ALL: " + (self.allFlags?.description ?? "nil all"))
+            print("XANADU PRIMARY ALL: " + (LDClient.get()?.allFlags?.description ?? "nil all"))
+            print("XANADU TEST ALL: " + (LDClient.getForMobileKey(keyName: "test")?.allFlags?.description ?? "nil all"))
             print("XANADU CONFIG: " + self.config.mobileKey + " " + (self.config.secondaryMobileKeys?.description ?? "nil secondary"))
             completion?()
         }
