@@ -2,7 +2,6 @@
 //  ThrottlerSpec.swift
 //  LaunchDarklyTests
 //
-//  Created by Mark Pokorny on 5/14/18. +JMJ
 //  Copyright © 2018 Catamorphic Co. All rights reserved.
 //
 
@@ -122,9 +121,7 @@ final class ThrottlerSpec: QuickSpec {
     }
 
     //The upper bound on the max delay is always 2^runAttempt, exclusive.
-    func maxDelay(runAttempt: Int) -> TimeInterval {
-        return pow(2, runAttempt).timeInterval
-    }
+    func maxDelay(runAttempt: Int) -> TimeInterval { pow(2, runAttempt).timeInterval }
 
     func runSpec() {
         describe("runThrottled") {

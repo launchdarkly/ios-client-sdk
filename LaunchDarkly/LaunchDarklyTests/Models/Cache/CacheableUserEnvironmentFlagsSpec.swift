@@ -2,7 +2,6 @@
 //  CacheableUserEnvironmentsSpec.swift
 //  LaunchDarklyTests
 //
-//  Created by Mark Pokorny on 3/19/19. +JMJ
 //  Copyright © 2019 Catamorphic Co. All rights reserved.
 //
 
@@ -123,8 +122,8 @@ final class CacheableUserEnvironmentFlagsSpec: QuickSpec {
                 beforeEach {
                     testContext = TestContext()
                     cacheableUserEnvironmentsDictionary = testContext.cacheableUserEnvironmentFlags.dictionaryValue
-                    cacheableUserEnvironmentsDictionary.merge(testContext.user.dictionaryValueWithAllAttributes(includeFlagConfig: true), uniquingKeysWith: { (original, _) in
-                        return original
+                    cacheableUserEnvironmentsDictionary.merge(testContext.user.dictionaryValueWithAllAttributes(includeFlagConfig: true), uniquingKeysWith: { original, _ in
+                        original
                     })
 
                     cacheableUserEnvironments = CacheableUserEnvironmentFlags(dictionary: cacheableUserEnvironmentsDictionary)
@@ -260,7 +259,7 @@ final class CacheableUserEnvironmentFlagsSpec: QuickSpec {
                     cacheableUserEnvironmentsCollectionDictionary = testContext.userEnvironmentFlagsCollection.dictionaryValues
                 }
                 it("creates a matching dictionary") {
-                    testContext.userEnvironmentFlagsCollection.forEach { (userKey, cacheableUserEnvironments) in
+                    testContext.userEnvironmentFlagsCollection.forEach { userKey, cacheableUserEnvironments in
                         let cacheableUserEnvironmentsDictionary = cacheableUserEnvironmentsCollectionDictionary[userKey] as? [String: Any]
                         expect(cacheableUserEnvironmentsDictionary?.userKey) == userKey
                         expect(cacheableUserEnvironmentsDictionary?.environmentFlags) == cacheableUserEnvironments.environmentFlags
@@ -270,7 +269,7 @@ final class CacheableUserEnvironmentFlagsSpec: QuickSpec {
             context("with no environments") {
                 beforeEach {
                     let cacheableUserEnvironmentsCollection = [UserKey: CacheableUserEnvironmentFlags]()
-                    
+
                     cacheableUserEnvironmentsCollectionDictionary = cacheableUserEnvironmentsCollection.dictionaryValues
                 }
                 it("creates an empty dictionary") {
@@ -283,7 +282,7 @@ final class CacheableUserEnvironmentFlagsSpec: QuickSpec {
     private func makeCacheableUserEnvironmentsCollectionSpec() {
         var testContext: TestContext!
         var cacheableUserEnvironmentsCollectionDictionary: [String: Any]!
-        var cacheableUserEnvironmentsCollection: [UserKey: CacheableUserEnvironmentFlags]?
+        var cacheableUserEnvironmentsCollection: [UserKey: CacheableUserEnvironmentFlags]!
         describe("makeCacheableUserEnvironmentsCollection") {
             context("with multiple CacheableUserEnvironments dictionaries") {
                 beforeEach {
@@ -293,9 +292,9 @@ final class CacheableUserEnvironmentFlagsSpec: QuickSpec {
                     cacheableUserEnvironmentsCollection = CacheableUserEnvironmentFlags.makeCollection(from: cacheableUserEnvironmentsCollectionDictionary)
                 }
                 it("creates a matching CacheableUserEnvironments collection") {
-                    expect(cacheableUserEnvironmentsCollection?.count) == testContext.userEnvironmentFlagsCollection.count
-                    testContext.userEnvironmentFlagsCollection.forEach { (userKey, originalCacheableUserEnvironments) in
-                        let reinflatedCacheableUserEnvironment = cacheableUserEnvironmentsCollection?[userKey]
+                    expect(cacheableUserEnvironmentsCollection.count) == testContext.userEnvironmentFlagsCollection.count
+                    testContext.userEnvironmentFlagsCollection.forEach { userKey, originalCacheableUserEnvironments in
+                        let reinflatedCacheableUserEnvironment = cacheableUserEnvironmentsCollection[userKey]
                         expect(reinflatedCacheableUserEnvironment?.userKey) == userKey
                         expect(reinflatedCacheableUserEnvironment?.environmentFlags) == originalCacheableUserEnvironments.environmentFlags
                     }
@@ -306,15 +305,15 @@ final class CacheableUserEnvironmentFlagsSpec: QuickSpec {
                     cacheableUserEnvironmentsCollection = CacheableUserEnvironmentFlags.makeCollection(from: [:])
                 }
                 it("creates an empty CacheableUserEnvironments collection") {
-                    expect(cacheableUserEnvironmentsCollection?.isEmpty) == true
+                    expect(cacheableUserEnvironmentsCollection.isEmpty) == true
                 }
             }
             context("with no well-formed dictionaries") {
                 beforeEach {
                     cacheableUserEnvironmentsCollection = CacheableUserEnvironmentFlags.makeCollection(from: [0.userKey: [0.mobileKey: "dummy"]])
                 }
-                it("returns nil") {
-                    expect(cacheableUserEnvironmentsCollection).to(beNil())
+                it("returns empty dictionary") {
+                    expect(cacheableUserEnvironmentsCollection.isEmpty) == true
                 }
             }
             context("with missing sub-dictionary element") {
@@ -333,10 +332,10 @@ final class CacheableUserEnvironmentFlagsSpec: QuickSpec {
                         cacheableUserEnvironmentsCollection = CacheableUserEnvironmentFlags.makeCollection(from: cacheableUserEnvironmentsCollectionDictionary)
                     }
                     it("creates a CacheableUserEnvironments collection omitting the malformed sub-dictionary") {
-                        expect(cacheableUserEnvironmentsCollection?.count) == testContext.userEnvironmentFlagsCollection.count
-                        expect(cacheableUserEnvironmentsCollection?.keys.contains(badUserKey)) == false
-                        testContext.userEnvironmentFlagsCollection.forEach { (userKey, originalCacheableUserEnvironments) in
-                            let reinflatedCacheableUserEnvironment = cacheableUserEnvironmentsCollection?[userKey]
+                        expect(cacheableUserEnvironmentsCollection.count) == testContext.userEnvironmentFlagsCollection.count
+                        expect(cacheableUserEnvironmentsCollection.keys.contains(badUserKey)) == false
+                        testContext.userEnvironmentFlagsCollection.forEach { userKey, originalCacheableUserEnvironments in
+                            let reinflatedCacheableUserEnvironment = cacheableUserEnvironmentsCollection[userKey]
                             expect(reinflatedCacheableUserEnvironment?.userKey) == userKey
                             expect(reinflatedCacheableUserEnvironment?.environmentFlags) == originalCacheableUserEnvironments.environmentFlags
                         }
@@ -356,10 +355,10 @@ final class CacheableUserEnvironmentFlagsSpec: QuickSpec {
                         cacheableUserEnvironmentsCollection = CacheableUserEnvironmentFlags.makeCollection(from: cacheableUserEnvironmentsCollectionDictionary)
                     }
                     it("creates a CacheableUserEnvironments collection omitting the malformed sub-dictionary") {
-                        expect(cacheableUserEnvironmentsCollection?.count) == testContext.userEnvironmentFlagsCollection.count
-                        expect(cacheableUserEnvironmentsCollection?.keys.contains(badUserKey)) == false
-                        testContext.userEnvironmentFlagsCollection.forEach { (userKey, originalCacheableUserEnvironments) in
-                            let reinflatedCacheableUserEnvironment = cacheableUserEnvironmentsCollection?[userKey]
+                    expect(cacheableUserEnvironmentsCollection.count) == testContext.userEnvironmentFlagsCollection.count
+                        expect(cacheableUserEnvironmentsCollection.keys.contains(badUserKey)) == false
+                        testContext.userEnvironmentFlagsCollection.forEach { userKey, originalCacheableUserEnvironments in
+                            let reinflatedCacheableUserEnvironment = cacheableUserEnvironmentsCollection[userKey]
                             expect(reinflatedCacheableUserEnvironment?.userKey) == userKey
                             expect(reinflatedCacheableUserEnvironment?.environmentFlags) == originalCacheableUserEnvironments.environmentFlags
                         }
@@ -382,10 +381,10 @@ final class CacheableUserEnvironmentFlagsSpec: QuickSpec {
                         cacheableUserEnvironmentsCollection = CacheableUserEnvironmentFlags.makeCollection(from: cacheableUserEnvironmentsCollectionDictionary)
                     }
                     it("creates a CacheableUserEnvironments collection omitting the malformed sub-dictionary") {
-                        expect(cacheableUserEnvironmentsCollection?.count) == testContext.userEnvironmentFlagsCollection.count
-                        expect(cacheableUserEnvironmentsCollection?.keys.contains(badUserKey)) == false
-                        testContext.userEnvironmentFlagsCollection.forEach { (userKey, originalCacheableUserEnvironments) in
-                            let reinflatedCacheableUserEnvironment = cacheableUserEnvironmentsCollection?[userKey]
+                        expect(cacheableUserEnvironmentsCollection.count) == testContext.userEnvironmentFlagsCollection.count
+                        expect(cacheableUserEnvironmentsCollection.keys.contains(badUserKey)) == false
+                        testContext.userEnvironmentFlagsCollection.forEach { userKey, originalCacheableUserEnvironments in
+                            let reinflatedCacheableUserEnvironment = cacheableUserEnvironmentsCollection[userKey]
                             expect(reinflatedCacheableUserEnvironment?.userKey) == userKey
                             expect(reinflatedCacheableUserEnvironment?.environmentFlags) == originalCacheableUserEnvironments.environmentFlags
                         }
@@ -405,10 +404,10 @@ final class CacheableUserEnvironmentFlagsSpec: QuickSpec {
                         cacheableUserEnvironmentsCollection = CacheableUserEnvironmentFlags.makeCollection(from: cacheableUserEnvironmentsCollectionDictionary)
                     }
                     it("creates a CacheableUserEnvironments collection omitting the malformed sub-dictionary") {
-                        expect(cacheableUserEnvironmentsCollection?.count) == testContext.userEnvironmentFlagsCollection.count
-                        expect(cacheableUserEnvironmentsCollection?.keys.contains(badUserKey)) == false
-                        testContext.userEnvironmentFlagsCollection.forEach { (userKey, originalCacheableUserEnvironments) in
-                            let reinflatedCacheableUserEnvironment = cacheableUserEnvironmentsCollection?[userKey]
+                        expect(cacheableUserEnvironmentsCollection.count) == testContext.userEnvironmentFlagsCollection.count
+                        expect(cacheableUserEnvironmentsCollection.keys.contains(badUserKey)) == false
+                        testContext.userEnvironmentFlagsCollection.forEach { userKey, originalCacheableUserEnvironments in
+                            let reinflatedCacheableUserEnvironment = cacheableUserEnvironmentsCollection[userKey]
                             expect(reinflatedCacheableUserEnvironment?.userKey) == userKey
                             expect(reinflatedCacheableUserEnvironment?.environmentFlags) == originalCacheableUserEnvironments.environmentFlags
                         }
@@ -453,13 +452,8 @@ extension Date {
 
 extension Dictionary where Key == String, Value == Any {
     var environmentFlags: [MobileKey: CacheableEnvironmentFlags]? {
-        guard let environmentFlagsDictionary = self[CacheableUserEnvironmentFlags.CodingKeys.environmentFlags.rawValue] as? [MobileKey: Any]
-        else {
-            return nil
-        }
-        return environmentFlagsDictionary.compactMapValues({ (cacheableEnvironmentFlagsDictionary) -> CacheableEnvironmentFlags? in
-            return CacheableEnvironmentFlags(object: cacheableEnvironmentFlagsDictionary)
-        })
+        let environmentFlagsDictionary = self[CacheableUserEnvironmentFlags.CodingKeys.environmentFlags.rawValue] as? [MobileKey: Any]
+        return environmentFlagsDictionary?.compactMapValues({ CacheableEnvironmentFlags(object: $0) })
     }
 }
 
@@ -467,12 +461,8 @@ extension Int {
     static let userKeyPrefix = "User."
     static let mobileKeyPrefix = "MobileKey."
 
-    var userKey: String {
-        return "\(Int.userKeyPrefix)\(self)"
-    }
-    var mobileKey: String {
-        return "\(Int.mobileKeyPrefix)\(self)"
-    }
+    var userKey: String { "\(Int.userKeyPrefix)\(self)" }
+    var mobileKey: String { "\(Int.mobileKeyPrefix)\(self)" }
 }
 
 extension CacheableUserEnvironmentFlags {
@@ -485,15 +475,11 @@ extension CacheableUserEnvironmentFlags {
                                userCount: Int = Constants.userCount) -> (users: [LDUser], collection: [UserKey: CacheableUserEnvironmentFlags], mobileKeys: [MobileKey]) {
         var pastSeconds = 0.0
 
-        var users = [LDUser]()
-        while users.count < userCount {
-            let user = LDUser.stub(key: (users.count + 1).userKey)
-            users.append(user)
-        }
+        let users = (0..<userCount).map { i in LDUser.stub(key: (i + 1).userKey) }
 
         var userEnvironmentsCollection = [UserKey: CacheableUserEnvironmentFlags]()
         var mobileKeys = [MobileKey]()
-        users.forEach { (user) in
+        users.forEach { user in
             let environmentFlags: [MobileKey: CacheableEnvironmentFlags]
             environmentFlags = CacheableEnvironmentFlags.stubCollection(userKey: user.key, environmentCount: environmentCount)
             if mobileKeys.isEmpty && environmentCount > 0 {

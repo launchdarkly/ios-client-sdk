@@ -2,7 +2,6 @@
 //  FlagStore.swift
 //  LaunchDarkly
 //
-//  Created by Mark Pokorny on 9/20/17. JMJ
 //  Copyright © 2017 Catamorphic Co. All rights reserved.
 //
 
@@ -32,7 +31,7 @@ final class FlagStore: FlagMaintaining {
     struct Constants {
         fileprivate static let flagQueueLabel = "com.launchdarkly.flagStore.flagQueue"
     }
-    
+
     struct Keys {
         static let flagKey = "key"
     }
@@ -107,7 +106,7 @@ final class FlagStore: FlagMaintaining {
             self._featureFlags.updateValue(newFlag, forKey: flagKey)
         }
     }
-    
+
     /* deleteDictionary should have the form:
         {
             "key": <flag-key>,

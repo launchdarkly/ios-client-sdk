@@ -2,7 +2,6 @@
 //  KeyedValueCacheSpec.swift
 //  LaunchDarklyTests
 //
-//  Created by Mark Pokorny on 12/7/17. +JMJ
 //  Copyright © 2017 Catamorphic Co. All rights reserved.
 //
 
@@ -51,11 +50,11 @@ final class KeyedValueCacheSpec: QuickSpec {
                 }
                 it("retrieves matching flags") {
                     expect(retrievedUserEnvironmentCollectionDictionary).toNot(beNil())
-                    let retrievedUserEnvironmentsCollection = retrievedUserEnvironmentCollectionDictionary?.compactMapValues { (retrievedObject) in
-                        return CacheableUserEnvironmentFlags(object: retrievedObject)
+                    let retrievedUserEnvironmentsCollection = retrievedUserEnvironmentCollectionDictionary?.compactMapValues { retrievedObject in
+                        CacheableUserEnvironmentFlags(object: retrievedObject)
                     }
                     expect(retrievedUserEnvironmentsCollection).toNot(beNil())
-                    testContext.userEnvironmentFlagsCollection.keys.forEach { (userKey) in
+                    testContext.userEnvironmentFlagsCollection.keys.forEach { userKey in
                         let cacheableUserEnvironments = testContext.userEnvironmentFlagsCollection[userKey]!
                         let retrievedCacheableUserEnvironments = retrievedUserEnvironmentsCollection?[userKey]
                         expect(retrievedCacheableUserEnvironments?.userKey) == userKey

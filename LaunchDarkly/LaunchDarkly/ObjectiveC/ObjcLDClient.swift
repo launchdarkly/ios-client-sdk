@@ -2,7 +2,6 @@
 //  LDClientWrapper.swift
 //  LaunchDarkly
 //
-//  Created by Mark Pokorny on 9/7/17. +JMJ
 //  Copyright © 2017 Catamorphic Co. All rights reserved.
 //
 
@@ -64,9 +63,7 @@ public final class ObjcLDClient: NSObject {
 
      Use `-[LDClient setOnline: completion:]` (`ObjcLDClient.setOnline(_:completion:)`) to change the online/offline state.
      */
-    @objc public var isOnline: Bool {
-        return LDClient.shared.isOnline
-    }
+    @objc public var isOnline: Bool { LDClient.shared.isOnline }
     /**
      Set the LDClient online/offline.
 
@@ -112,12 +109,8 @@ public final class ObjcLDClient: NSObject {
      When a new config is set, the LDClient goes offline and reconfigures using the new config. If the client was online when the new config was set, it goes online again, subject to a throttling delay if in force (see `ObjcLDClient.setOnline(_:completion:)` for details). To change both the `config` and `user`, set the LDClient offline, set both properties, then set the LDClient online.
      */
     @objc public var config: ObjcLDConfig {
-        get {
-            return LDClient.shared.config.objcLdConfig
-        }
-        set {
-            LDClient.shared.config = newValue.config
-        }
+        get { LDClient.shared.config.objcLdConfig }
+        set { LDClient.shared.config = newValue.config }
     }
     /**
      The LDUser set into the LDClient may affect the set of feature flags returned by the LaunchDarkly server, and ties event tracking to the user. See `LDUser` (`ObjcLDUser`) for details about what information can be retained.
@@ -129,15 +122,11 @@ public final class ObjcLDClient: NSObject {
      When a new user is set, the LDClient goes offline and sets the new user. If the client was online when the new user was set, it goes online again, subject to a throttling delay if in force (see `ObjcLDClient.setOnline(_:completion:)` for details). To change both the `config` and `user`, set the LDClient offline, set both properties, then set the LDClient online.
      */
     @objc public var user: ObjcLDUser {
-        get {
-            return LDClient.shared.user.objcLdUser
-        }
+        get { LDClient.shared.user.objcLdUser }
         @available(*, deprecated, message: "Please use the identify method instead")
-        set {
-            LDClient.shared.identify(user: newValue.user)
-        }
+        set { LDClient.shared.identify(user: newValue.user) }
     }
-    
+
     @objc public func identify(user: ObjcLDUser) {
         LDClient.shared.identify(user: user.user)
     }
@@ -178,12 +167,12 @@ public final class ObjcLDClient: NSObject {
     @objc public func start(config configWrapper: ObjcLDConfig, user userWrapper: ObjcLDUser? = nil, completion: (() -> Void)? = nil) {
         LDClient.shared.start(config: configWrapper.config, user: userWrapper?.user, completion: completion)
     }
-    
+
     /**
      See [start](x-source-tag://start) for more information on starting the SDK.
-     
+
      This method listens for flag updates so the completion will only return once an update has occurred.
-     
+
      - parameter configWrapper: The LDConfig that contains the desired configuration. (Required)
      - parameter userWrapper: The LDUser set with the desired user. If omitted, LDClient retains the previously set user, or default if one was never set. (Optional)
      - parameter completion: Closure called when the embedded `setOnlineIdentify` call completes, subject to throttling delays. (Optional)
@@ -228,22 +217,22 @@ public final class ObjcLDClient: NSObject {
      */
     /// - Tag: boolVariation
     @objc public func boolVariation(forKey key: LDFlagKey, fallback: Bool) -> Bool {
-        return LDClient.shared.variation(forKey: key, fallback: fallback)
+        LDClient.shared.variation(forKey: key, fallback: fallback)
     }
-    
+
     /**
      See [boolVariation](x-source-tag://boolVariation) for more information on variation methods.
- 
+
      - parameter key: The LDFlagKey for the requested feature flag.
      - parameter fallback: The fallback value to return if the feature flag key does not exist.
-     
+
      - returns: ObjCBoolEvaluationDetail: This class contains your value as well as useful information on why that value was returned.
     */
     @objc public func boolVariationDetail(forKey key: LDFlagKey, fallback: Bool) -> ObjCBoolEvaluationDetail {
         let evaluationDetail = LDClient.shared.variationDetail(forKey: key, fallback: fallback)
         return ObjCBoolEvaluationDetail(value: evaluationDetail.value, variationIndex: evaluationDetail.variationIndex, reason: evaluationDetail.reason)
     }
-    
+
     /**
      Returns the `LDBoolVariationValue` (`ObjcLDBoolVariationValue`) containing the value and source for the given feature flag. If the flag does not exist, cannot be cast to a BOOL, or the LDClient is not started, returns the fallback value and `LDFlagValueSourceFallback` for the source.
 
@@ -271,7 +260,7 @@ public final class ObjcLDClient: NSObject {
      */
     @available(*, deprecated, message: "Please use the boolVariationDetail method for additional insight into flag evaluation.")
     @objc public func boolVariationAndSource(forKey key: LDFlagKey, fallback: Bool) -> ObjcLDBoolVariationValue {
-        return ObjcLDBoolVariationValue(LDClient.shared.variationAndSourceInternal(forKey: key, fallback: fallback))
+        ObjcLDBoolVariationValue(LDClient.shared.variationAndSourceInternal(forKey: key, fallback: fallback))
     }
 
     /**
@@ -299,7 +288,7 @@ public final class ObjcLDClient: NSObject {
      */
     /// - Tag: integerVariation
     @objc public func integerVariation(forKey key: LDFlagKey, fallback: Int) -> Int {
-        return LDClient.shared.variation(forKey: key, fallback: fallback)
+        LDClient.shared.variation(forKey: key, fallback: fallback)
     }
     
     /**
@@ -342,7 +331,7 @@ public final class ObjcLDClient: NSObject {
      */
     @available(*, deprecated, message: "Please use the integerVariationDetail method for additional insight into flag evaluation.")
     @objc public func integerVariationAndSource(forKey key: LDFlagKey, fallback: Int) -> ObjcLDIntegerVariationValue {
-        return ObjcLDIntegerVariationValue(LDClient.shared.variationAndSourceInternal(forKey: key, fallback: fallback))
+        ObjcLDIntegerVariationValue(LDClient.shared.variationAndSourceInternal(forKey: key, fallback: fallback))
     }
 
     /**
@@ -370,7 +359,7 @@ public final class ObjcLDClient: NSObject {
      */
     /// - Tag: doubleVariation
     @objc public func doubleVariation(forKey key: LDFlagKey, fallback: Double) -> Double {
-        return LDClient.shared.variation(forKey: key, fallback: fallback)
+        LDClient.shared.variation(forKey: key, fallback: fallback)
     }
     
     /**
@@ -413,7 +402,7 @@ public final class ObjcLDClient: NSObject {
      */
     @available(*, deprecated, message: "Please use the doubleVariationDetail method for additional insight into flag evaluation.")
     @objc public func doubleVariationAndSource(forKey key: LDFlagKey, fallback: Double) -> ObjcLDDoubleVariationValue {
-        return ObjcLDDoubleVariationValue(LDClient.shared.variationAndSourceInternal(forKey: key, fallback: fallback))
+        ObjcLDDoubleVariationValue(LDClient.shared.variationAndSourceInternal(forKey: key, fallback: fallback))
     }
 
     /**
@@ -441,7 +430,7 @@ public final class ObjcLDClient: NSObject {
      */
     /// - Tag: stringVariation
     @objc public func stringVariation(forKey key: LDFlagKey, fallback: String?) -> String? {
-        return LDClient.shared.variation(forKey: key, fallback: fallback)
+        LDClient.shared.variation(forKey: key, fallback: fallback)
     }
     
     /**
@@ -484,7 +473,7 @@ public final class ObjcLDClient: NSObject {
      */
     @available(*, deprecated, message: "Please use the stringVariationDetail method for additional insight into flag evaluation.")
     @objc public func stringVariationAndSource(forKey key: LDFlagKey, fallback: String?) -> ObjcLDStringVariationValue {
-        return ObjcLDStringVariationValue(LDClient.shared.variationAndSourceInternal(forKey: key, fallback: fallback))
+        ObjcLDStringVariationValue(LDClient.shared.variationAndSourceInternal(forKey: key, fallback: fallback))
     }
 
     /**
@@ -512,7 +501,7 @@ public final class ObjcLDClient: NSObject {
      */
     /// - Tag: arrayVariation
     @objc public func arrayVariation(forKey key: LDFlagKey, fallback: [Any]?) -> [Any]? {
-        return LDClient.shared.variation(forKey: key, fallback: fallback)
+        LDClient.shared.variation(forKey: key, fallback: fallback)
     }
     
     /**
@@ -555,7 +544,7 @@ public final class ObjcLDClient: NSObject {
      */
     @available(*, deprecated, message: "Please use the arrayVariationDetail method for additional insight into flag evaluation.")
     @objc public func arrayVariationAndSource(forKey key: LDFlagKey, fallback: [Any]?) -> ObjcLDArrayVariationValue {
-        return ObjcLDArrayVariationValue(LDClient.shared.variationAndSourceInternal(forKey: key, fallback: fallback))
+        ObjcLDArrayVariationValue(LDClient.shared.variationAndSourceInternal(forKey: key, fallback: fallback))
     }
 
     /**
@@ -583,7 +572,7 @@ public final class ObjcLDClient: NSObject {
      */
     /// - Tag: dictionaryVariation
     @objc public func dictionaryVariation(forKey key: LDFlagKey, fallback: [String: Any]?) -> [String: Any]? {
-        return LDClient.shared.variation(forKey: key, fallback: fallback)
+        LDClient.shared.variation(forKey: key, fallback: fallback)
     }
     
     /**
@@ -626,7 +615,7 @@ public final class ObjcLDClient: NSObject {
      */
     @available(*, deprecated, message: "Please use the dictionaryVariationDetail method for additional insight into flag evaluation.")
     @objc public func dictionaryVariationAndSource(forKey key: LDFlagKey, fallback: [String: Any]?) -> ObjcLDDictionaryVariationValue {
-        return ObjcLDDictionaryVariationValue(LDClient.shared.variationAndSourceInternal(forKey: key, fallback: fallback))
+        ObjcLDDictionaryVariationValue(LDClient.shared.variationAndSourceInternal(forKey: key, fallback: fallback))
     }
 
     /**
@@ -636,9 +625,7 @@ public final class ObjcLDClient: NSObject {
 
      LDClient will not provide any source or change information, only flag keys and flag values. The client app should convert the feature flag value into the desired type.
      */
-    @objc public var allFlagValues: [LDFlagKey: Any]? {
-        return LDClient.shared.allFlagValues
-    }
+    @objc public var allFlagValues: [LDFlagKey: Any]? { LDClient.shared.allFlagValues }
 
     // MARK: - Feature Flag Updates
 
@@ -665,7 +652,7 @@ public final class ObjcLDClient: NSObject {
      - parameter handler: The block the SDK will execute when the feature flag changes.
      */
     @objc public func observeBool(_ key: LDFlagKey, owner: LDObserverOwner, handler: @escaping ObjcLDBoolChangedFlagHandler) {
-        LDClient.shared.observe(key: key, owner: owner) { (changedFlag) in handler(ObjcLDBoolChangedFlag(changedFlag)) }
+        LDClient.shared.observe(key: key, owner: owner) { changedFlag in handler(ObjcLDBoolChangedFlag(changedFlag)) }
     }
 
     /**
@@ -691,7 +678,7 @@ public final class ObjcLDClient: NSObject {
      - parameter handler: The block the SDK will execute when the feature flag changes.
      */
     @objc public func observeInteger(_ key: LDFlagKey, owner: LDObserverOwner, handler: @escaping ObjcLDIntegerChangedFlagHandler) {
-        LDClient.shared.observe(key: key, owner: owner) { (changedFlag) in
+        LDClient.shared.observe(key: key, owner: owner) { changedFlag in
             handler(ObjcLDIntegerChangedFlag(changedFlag))
         }
     }
@@ -719,7 +706,7 @@ public final class ObjcLDClient: NSObject {
      - parameter handler: The block the SDK will execute when the feature flag changes.
      */
     @objc public func observeDouble(_ key: LDFlagKey, owner: LDObserverOwner, handler: @escaping ObjcLDDoubleChangedFlagHandler) {
-        LDClient.shared.observe(key: key, owner: owner) { (changedFlag) in
+        LDClient.shared.observe(key: key, owner: owner) { changedFlag in
             handler(ObjcLDDoubleChangedFlag(changedFlag))
         }
     }
@@ -747,7 +734,7 @@ public final class ObjcLDClient: NSObject {
      - parameter handler: The block the SDK will execute when the feature flag changes.
      */
     @objc public func observeString(_ key: LDFlagKey, owner: LDObserverOwner, handler: @escaping ObjcLDStringChangedFlagHandler) {
-        LDClient.shared.observe(key: key, owner: owner) { (changedFlag) in
+        LDClient.shared.observe(key: key, owner: owner) { changedFlag in
             handler(ObjcLDStringChangedFlag(changedFlag))
         }
     }
@@ -775,7 +762,7 @@ public final class ObjcLDClient: NSObject {
      - parameter handler: The block the SDK will execute when the feature flag changes.
     */
     @objc public func observeArray(_ key: LDFlagKey, owner: LDObserverOwner, handler: @escaping ObjcLDArrayChangedFlagHandler) {
-        LDClient.shared.observe(key: key, owner: owner) { (changedFlag) in
+        LDClient.shared.observe(key: key, owner: owner) { changedFlag in
             handler(ObjcLDArrayChangedFlag(changedFlag))
         }
     }
@@ -803,7 +790,7 @@ public final class ObjcLDClient: NSObject {
      - parameter handler: The block the SDK will execute when the feature flag changes.
      */
     @objc public func observeDictionary(_ key: LDFlagKey, owner: LDObserverOwner, handler: @escaping ObjcLDDictionaryChangedFlagHandler) {
-        LDClient.shared.observe(key: key, owner: owner) { (changedFlag) in
+        LDClient.shared.observe(key: key, owner: owner) { changedFlag in
             handler(ObjcLDDictionaryChangedFlag(changedFlag))
         }
     }
@@ -832,8 +819,8 @@ public final class ObjcLDClient: NSObject {
      - parameter handler: The LDFlagCollectionChangeHandler the SDK will execute 1 time when any of the observed feature flags change.
      */
     @objc public func observeKeys(_ keys: [LDFlagKey], owner: LDObserverOwner, handler: @escaping ObjcLDChangedFlagCollectionHandler) {
-        LDClient.shared.observe(keys: keys, owner: owner) { (changedFlags) in
-            let objcChangedFlags = changedFlags.mapValues { (changedFlag) -> ObjcLDChangedFlag in
+        LDClient.shared.observe(keys: keys, owner: owner) { changedFlags in
+            let objcChangedFlags = changedFlags.mapValues { changedFlag -> ObjcLDChangedFlag in
                 changedFlag.objcChangedFlag
             }
             handler(objcChangedFlags)
@@ -863,8 +850,8 @@ public final class ObjcLDClient: NSObject {
      - parameter handler: The LDFlagCollectionChangeHandler the SDK will execute 1 time when any of the observed feature flags change.
      */
     @objc public func observeAllKeys(owner: LDObserverOwner, handler: @escaping ObjcLDChangedFlagCollectionHandler) {
-        LDClient.shared.observeAll(owner: owner) { (changedFlags) in
-            let objcChangedFlags = changedFlags.mapValues { (changedFlag) -> ObjcLDChangedFlag in
+        LDClient.shared.observeAll(owner: owner) { changedFlags in
+            let objcChangedFlags = changedFlags.mapValues { changedFlag -> ObjcLDChangedFlag in
                 changedFlag.objcChangedFlag
             }
             handler(objcChangedFlags)
@@ -1006,10 +993,10 @@ public final class ObjcLDClient: NSObject {
     @objc public func trackEvent(key: String, data: Any? = nil) throws {
         try LDClient.shared.trackEvent(key: key, data: data, metricValue: nil)
     }
-    
+
     /**
      See (trackEvent)[x-source-tag://trackEvent] for full documentation.
-     
+
      - parameter key: The key for the event. The SDK does nothing with the key, which can be any string the client app sends
      - parameter data: The data for the event. The SDK does nothing with the data, which can be any valid JSON item the client app sends. (Optional)
      - parameter metricValue: A numeric value used by the LaunchDarkly experimentation feature in numeric custom metrics. Can be omitted if this event is used by only non-numeric metrics. This field will also be returned as part of the custom event for Data Export.
@@ -1028,7 +1015,7 @@ public final class ObjcLDClient: NSObject {
 
     // MARK: - Private
 
-    private override init() {
+    override private init() {
         _ = LDClient.shared
     }
 }

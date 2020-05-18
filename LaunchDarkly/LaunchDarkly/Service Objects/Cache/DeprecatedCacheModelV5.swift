@@ -2,7 +2,6 @@
 //  UserEnvironmentCacheModel.swift
 //  LaunchDarkly
 //
-//  Created by Mark Pokorny on 3/26/19. +JMJ
 //  Copyright © 2019 Catamorphic Co. All rights reserved.
 //
 
@@ -82,11 +81,9 @@ final class DeprecatedCacheModelV5: DeprecatedCache {
     }
 
     func userKeys(from cachedUserData: [UserKey: [String: Any]], olderThan expirationDate: Date) -> [UserKey] {
-        return cachedUserData.filter { (_, userEnvironmentsDictionary) in
-            let lastUpdated = userEnvironmentsDictionary.environments?.lastUpdatedDates?.youngest ?? Date.distantFuture
-            return lastUpdated.isExpired(expirationDate: expirationDate)
-        }.map { (userKey, _) in
-            return userKey
+        cachedUserData.compactMap { userKey, userEnvsDictionary in
+            let lastUpdated = userEnvsDictionary.environments?.lastUpdatedDates?.youngest ?? Date.distantFuture
+            return lastUpdated.isExpired(expirationDate: expirationDate) ? userKey : nil
         }
     }
 }

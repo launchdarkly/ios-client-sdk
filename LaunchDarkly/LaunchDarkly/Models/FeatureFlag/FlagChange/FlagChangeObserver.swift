@@ -2,14 +2,13 @@
 //  LDFlagObserver.swift
 //  LaunchDarkly
 //
-//  Created by Mark Pokorny on 8/18/17. +JMJ
 //  Copyright © 2017 Catamorphic Co. All rights reserved.
 //
 
 import Foundation
 
 struct FlagChangeObserver {
-    weak private(set) var owner: LDObserverOwner?
+    private(set) weak var owner: LDObserverOwner?
     let flagKeys: [LDFlagKey]
     let flagChangeHandler: LDFlagChangeHandler?
     let flagCollectionChangeHandler: LDFlagCollectionChangeHandler?
@@ -31,6 +30,6 @@ struct FlagChangeObserver {
 
 extension FlagChangeObserver: Equatable {
     static func == (lhs: FlagChangeObserver, rhs: FlagChangeObserver) -> Bool {
-        return lhs.flagKeys == rhs.flagKeys && lhs.owner === rhs.owner
+        lhs.flagKeys == rhs.flagKeys && lhs.owner === rhs.owner
     }
 }

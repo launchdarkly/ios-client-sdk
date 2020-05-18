@@ -2,7 +2,6 @@
 //  LDFlagValue.swift
 //  LaunchDarkly
 //
-//  Created by Mark Pokorny on 9/5/17. +JMJ
 //  Copyright © 2017 Catamorphic Co. All rights reserved.
 //
 
@@ -20,7 +19,7 @@ public enum LDFlagValueSource: CaseIterable {
 }
 
 ///Defines the types and values of a feature flag. The SDK limits feature flags to these types by use of the `LDFlagValueConvertible` protocol, which uses this type. Client app developers should not construct an LDFlagValue.
-public enum LDFlagValue {
+public enum LDFlagValue: Equatable {
     ///Bool flag value
     case bool(Bool)
     ///Int flag value
@@ -38,7 +37,7 @@ public enum LDFlagValue {
 
     ///An NSObject wrapper for the Swift LDFlagValue enum. Intended for use in mixed apps when Swift code needs to pass a LDFlagValue into an Objective-C method.
     public var objcLdFlagValue: ObjcLDFlagValue {
-        return ObjcLDFlagValue(self)
+        ObjcLDFlagValue(self)
     }
 }
 
@@ -115,9 +114,7 @@ public enum LDFlagValue {
 extension LDFlagValue {
     var flagValueArray: [LDFlagValue]? {
         guard case let .array(array) = self
-        else {
-            return nil
-        }
+        else { return nil }
         return array
     }
 }
@@ -148,64 +145,13 @@ extension LDFlagValue {
 extension LDFlagValue {
     var flagValueDictionary: [LDFlagKey: LDFlagValue]? {
         guard case let .dictionary(value) = self
-        else {
-            return nil
-        }
+        else { return nil }
         return value
     }
 }
 
-extension LDFlagValue: Equatable {
-    public static func == (lhs: LDFlagValue, rhs: LDFlagValue) -> Bool {
-        switch (lhs, rhs) {
-        case let (.bool(leftValue), .bool(rightValue)): return leftValue == rightValue
-        case let (.int(leftValue), .int(rightValue)): return leftValue == rightValue
-        case let (.double(leftValue), .double(rightValue)): return leftValue == rightValue
-        case let (.string(leftValue), .string(rightValue)): return leftValue == rightValue
-        case let (.array(leftValue), .array(rightValue)): return leftValue == rightValue
-        case let (.dictionary(leftValue), .dictionary(rightValue)): return leftValue == rightValue
-        case (.null, .null): return true
-        default: return false
-        }
-    }
-}
-
 extension Array where Element == LDFlagValue {
-    static func == (lhs: [LDFlagValue], rhs: [LDFlagValue]) -> Bool {
-        guard lhs.count == rhs.count
-        else {
-            return false
-        }
-        //the idea for this came from https://stackoverflow.com/questions/39161168/how-to-compare-two-array-of-objects
-        return zip(lhs, rhs).enumerated().filter { (item) -> Bool in
-            let (_, (left, right)) = item
-            return left != right
-        }.isEmpty
-    }
-
     func isEqual(to other: [LDFlagValue]) -> Bool {
-        return self == other
-    }
-}
-
-extension Dictionary where Key == LDFlagKey, Value == LDFlagValue {
-    static func == (lhs: [LDFlagKey: LDFlagValue], rhs: [LDFlagKey: LDFlagValue]) -> Bool {
-        guard lhs.count == rhs.count
-        else {
-            return false
-        }
-        let leftKeys = lhs.keys.sorted()
-        let rightKeys = rhs.keys.sorted()
-        guard leftKeys == rightKeys
-        else {
-            return false
-        }
-        let leftValues = leftKeys.map { (key) -> LDFlagValue in
-            return lhs[key] ?? .null
-        }
-        let rightValues = rightKeys.map { (key) -> LDFlagValue in
-            return rhs[key] ?? .null
-        }
-        return leftValues == rightValues
+        self == other
     }
 }

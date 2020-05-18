@@ -2,7 +2,6 @@
 //  FlagChangeNotifyingMock.swift
 //  LaunchDarklyTests
 //
-//  Created by Mark Pokorny on 12/18/17. +JMJ
 //  Copyright © 2017 Catamorphic Co. All rights reserved.
 //
 

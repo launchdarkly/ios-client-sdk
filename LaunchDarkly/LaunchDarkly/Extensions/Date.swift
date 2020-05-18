@@ -10,7 +10,7 @@ import Foundation
 
 extension Date {
     var millisSince1970: Int64 {
-        return Int64(floor(self.timeIntervalSince1970 * 1000))
+        Int64(floor(self.timeIntervalSince1970 * 1_000))
     }
 
     init?(millisSince1970: Int64?) {
@@ -18,7 +18,7 @@ extension Date {
         else {
             return nil
         }
-        self = Date(timeIntervalSince1970: Double(millisSince1970) / 1000)
+        self = Date(timeIntervalSince1970: Double(millisSince1970) / 1_000)
     }
 
     func isWithin(_ timeInterval: TimeInterval, of otherDate: Date?) -> Bool {
@@ -30,7 +30,6 @@ extension Date {
     }
 
     func isEarlierThan(_ otherDate: Date) -> Bool {
-        let timeDifference = self.timeIntervalSince(otherDate)
-        return timeDifference < 0.0
+        self.timeIntervalSince(otherDate) < 0.0
     }
 }

@@ -2,7 +2,6 @@
 //  FlagSynchronizerSpec.swift
 //  LaunchDarkly
 //
-//  Created by Mark Pokorny on 9/20/17. +JMJ
 //  Copyright © 2017 Catamorphic Co. All rights reserved.
 //
 
@@ -21,11 +20,11 @@ final class FlagSynchronizerSpec: QuickSpec {
         var config: LDConfig!
         var user: LDUser!
         var flagStoreMock: FlagMaintainingMock! {
-            return user.flagStore as? FlagMaintainingMock
+            user.flagStore as? FlagMaintainingMock
         }
         var serviceMock: DarklyServiceMock!
         var eventSourceMock: DarklyStreamingProviderMock? {
-            return serviceMock.createdEventSource
+            serviceMock.createdEventSource
         }
         var flagSynchronizer: FlagSynchronizer!
         var syncErrorEvent: DarklyEventSource.LDEvent?
@@ -43,10 +42,10 @@ final class FlagSynchronizerSpec: QuickSpec {
         }
 
         private func isStreamingActive(online: Bool, streamingMode: LDStreamingMode) -> Bool {
-            return online && (streamingMode == .streaming)
+            online && (streamingMode == .streaming)
         }
         private func isPollingActive(online: Bool, streamingMode: LDStreamingMode) -> Bool {
-            return online && (streamingMode == .polling)
+            online && (streamingMode == .polling)
         }
 
         fileprivate func synchronizerState(synchronizerOnline isOnline: Bool,
@@ -343,7 +342,7 @@ final class FlagSynchronizerSpec: QuickSpec {
                                                            streamCreated: true,
                                                            streamOpened: true,
                                                            streamClosed: false) }).to(match())
-                    expect(newFlags == DarklyServiceMock.Constants.stubFeatureFlags(includeNullValue: false)).to(beTrue())
+                    expect(newFlags) == DarklyServiceMock.Constants.stubFeatureFlags(includeNullValue: false)
                     expect(streamingEvent) == .ping
                 }
             }
@@ -351,7 +350,7 @@ final class FlagSynchronizerSpec: QuickSpec {
                 var synchronizingError: SynchronizingError?
                 beforeEach {
                     waitUntil { done in
-                        testContext = TestContext(streamingMode: .streaming, useReport: false, onSyncComplete: { (result) in
+                        testContext = TestContext(streamingMode: .streaming, useReport: false, onSyncComplete: { result in
                             if case let .error(syncError) = result {
                                 synchronizingError = syncError
                             }
@@ -370,14 +369,14 @@ final class FlagSynchronizerSpec: QuickSpec {
                                                            streamCreated: true,
                                                            streamOpened: true,
                                                            streamClosed: false) }).to(match())
-                    expect(synchronizingError == .data(DarklyServiceMock.Constants.errorData)).to(beTrue())
+                    expect(synchronizingError) == .data(DarklyServiceMock.Constants.errorData)
                 }
             }
             context("failure response") {
                 var urlResponse: URLResponse?
                 beforeEach {
                     waitUntil { done in
-                        testContext = TestContext(streamingMode: .streaming, useReport: false, onSyncComplete: { (result) in
+                        testContext = TestContext(streamingMode: .streaming, useReport: false, onSyncComplete: { result in
                             if case let .error(syncError) = result, case .response(let syncErrorResponse) = syncError {
                                 urlResponse = syncErrorResponse
                             }
@@ -406,7 +405,7 @@ final class FlagSynchronizerSpec: QuickSpec {
                 var synchronizingError: SynchronizingError?
                 beforeEach {
                     waitUntil { done in
-                        testContext = TestContext(streamingMode: .streaming, useReport: false, onSyncComplete: { (result) in
+                        testContext = TestContext(streamingMode: .streaming, useReport: false, onSyncComplete: { result in
                             if case let .error(syncError) = result {
                                 synchronizingError = syncError
                             }
@@ -425,7 +424,7 @@ final class FlagSynchronizerSpec: QuickSpec {
                                                            streamCreated: true,
                                                            streamOpened: true,
                                                            streamClosed: false) }).to(match())
-                    expect(synchronizingError == .request(DarklyServiceMock.Constants.error)).to(beTrue())
+                    expect(synchronizingError) == .request(DarklyServiceMock.Constants.error)
                 }
             }
         }
@@ -462,7 +461,7 @@ final class FlagSynchronizerSpec: QuickSpec {
                                                            streamCreated: true,
                                                            streamOpened: true,
                                                            streamClosed: false) }).to(match())
-                    expect(newFlags == DarklyServiceMock.Constants.stubFeatureFlags(includeNullValue: false)).to(beTrue())
+                    expect(newFlags) == DarklyServiceMock.Constants.stubFeatureFlags(includeNullValue: false)
                     expect(streamingEvent) == .put
                 }
             }
@@ -488,7 +487,7 @@ final class FlagSynchronizerSpec: QuickSpec {
                                                            streamCreated: true,
                                                            streamOpened: true,
                                                            streamClosed: false) }).to(match())
-                    expect(syncError == .data(DarklyServiceMock.Constants.errorData)).to(beTrue())
+                    expect(syncError) == .data(DarklyServiceMock.Constants.errorData)
                 }
             }
             context("missing data") {
@@ -513,7 +512,7 @@ final class FlagSynchronizerSpec: QuickSpec {
                                                            streamCreated: true,
                                                            streamOpened: true,
                                                            streamClosed: false) }).to(match())
-                    expect(syncError == .data(nil)).to(beTrue())
+                    expect(syncError) == .data(nil)
                 }
             }
         }
@@ -579,7 +578,7 @@ final class FlagSynchronizerSpec: QuickSpec {
                                                            streamCreated: true,
                                                            streamOpened: true,
                                                            streamClosed: false) }).to(match())
-                    expect(syncError == .data(DarklyServiceMock.Constants.errorData)).to(beTrue())
+                    expect(syncError) == .data(DarklyServiceMock.Constants.errorData)
                 }
             }
             context("missing data") {
@@ -604,7 +603,7 @@ final class FlagSynchronizerSpec: QuickSpec {
                                                            streamCreated: true,
                                                            streamOpened: true,
                                                            streamClosed: false) }).to(match())
-                    expect(syncError == .data(nil)).to(beTrue())
+                    expect(syncError) == .data(nil)
                 }
             }
         }
@@ -667,7 +666,7 @@ final class FlagSynchronizerSpec: QuickSpec {
                                                            streamCreated: true,
                                                            streamOpened: true,
                                                            streamClosed: false) }).to(match())
-                    expect(syncError == .data(DarklyServiceMock.Constants.errorData)).to(beTrue())
+                    expect(syncError) == .data(DarklyServiceMock.Constants.errorData)
                 }
             }
             context("missing data") {
@@ -692,7 +691,7 @@ final class FlagSynchronizerSpec: QuickSpec {
                                                            streamCreated: true,
                                                            streamOpened: true,
                                                            streamClosed: false) }).to(match())
-                    expect(syncError == .data(nil)).to(beTrue())
+                    expect(syncError) == .data(nil)
                 }
             }
         }
@@ -703,14 +702,14 @@ final class FlagSynchronizerSpec: QuickSpec {
             var testContext: TestContext!
 
             beforeEach {
-                testContext = TestContext(streamingMode: .streaming, useReport: false, onSyncComplete: { (_) in
+                testContext = TestContext(streamingMode: .streaming, useReport: false, onSyncComplete: { _ in
                     testContext.onSyncCompleteCallCount += 1
                 })
             }
             context("error event") {
                 beforeEach {
                     waitUntil { done in
-                        testContext = TestContext(streamingMode: .streaming, useReport: false, onSyncComplete: { (syncResult) in
+                        testContext = TestContext(streamingMode: .streaming, useReport: false, onSyncComplete: { syncResult in
                             if case .error(let errorResult) = syncResult, case .event(let errorEvent) = errorResult {
                                 testContext.syncErrorEvent = errorEvent
                             }
@@ -735,7 +734,7 @@ final class FlagSynchronizerSpec: QuickSpec {
             context("unauthorized error event") {
                 beforeEach {
                     waitUntil { done in
-                        testContext = TestContext(streamingMode: .streaming, useReport: false, onSyncComplete: { (syncResult) in
+                        testContext = TestContext(streamingMode: .streaming, useReport: false, onSyncComplete: { syncResult in
                             if case .error(let errorResult) = syncResult, case .event(let errorEvent) = errorResult {
                                 testContext.syncErrorEvent = errorEvent
                             }
@@ -841,7 +840,7 @@ final class FlagSynchronizerSpec: QuickSpec {
                 var syncErrorEvent: DarklyEventSource.LDEvent?
                 beforeEach {
                     waitUntil { done in
-                        testContext = TestContext(streamingMode: .streaming, useReport: false, onSyncComplete: { (syncResult) in
+                    testContext = TestContext(streamingMode: .streaming, useReport: false, onSyncComplete: { syncResult in
                             if case .error(let errorResult) = syncResult,
                                case .event(let errorEvent) = errorResult {
                                 syncErrorEvent = errorEvent
@@ -958,7 +957,7 @@ final class FlagSynchronizerSpec: QuickSpec {
 
                     waitUntil(timeout: 2) { done in
                         //In polling mode, the flagSynchronizer makes a flag request when set online right away. To verify the timer this test waits the polling interval (1s) for a second flag request
-                        testContext.flagSynchronizer.onSyncComplete = { (result) in
+                        testContext.flagSynchronizer.onSyncComplete = { result in
                             if case .success(let flags, let streamEvent) = result {
                                 (newFlags, streamingEvent) = (flags.flagCollection, streamEvent)
                             }
@@ -1108,7 +1107,7 @@ final class FlagSynchronizerSpec: QuickSpec {
                 var synchronizingError: SynchronizingError?
                 beforeEach {
                     waitUntil { done in
-                        testContext = TestContext(streamingMode: .streaming, useReport: false, onSyncComplete: { (result) in
+                        testContext = TestContext(streamingMode: .streaming, useReport: false, onSyncComplete: { result in
                             if case .error(let syncError) = result {
                                 synchronizingError = syncError
                             }
@@ -1149,18 +1148,6 @@ extension SynchronizingError: Equatable {
             return left == right
         default:
             return false
-        }
-    }
-}
-
-extension Optional where Wrapped == SynchronizingError {
-    static func == (lhs: SynchronizingError?, rhs: SynchronizingError?) -> Bool {
-        switch (lhs, rhs) {
-        case let (.some(left), .some(right)):
-            return left == right
-        case (.none, .none):
-            return true
-        default: return false
         }
     }
 }

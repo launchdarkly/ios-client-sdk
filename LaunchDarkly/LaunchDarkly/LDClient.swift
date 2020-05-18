@@ -2,7 +2,6 @@
 //  LDClient.swift
 //  LaunchDarkly
 //
-//  Created by Mark Pokorny on 7/11/17. +JMJ
 //  Copyright © 2017 Catamorphic Co. All rights reserved.
 //
 
@@ -71,10 +70,10 @@ public class LDClient {
         }
     }
 
-    //Keeps the state of the last setOnline goOnline parameter, used for throttling calls to set the SDK online
+    // Keeps the state of the last setOnline goOnline parameter, used for throttling calls to set the SDK online
     private var lastSetOnlineCallValue = false
-    
-    //Stores ConnectionInformation in UserDefaults on change
+
+    // Stores ConnectionInformation in UserDefaults on change
     var connectionInformation: ConnectionInformation {
         didSet {
             Log.debug(connectionInformation.description)
@@ -84,11 +83,9 @@ public class LDClient {
             }
         }
     }
-    
-    //Returns an object containing information about successful and/or failed polling or streaming connections to LaunchDarkly
-    public func getConnectionInformation() -> ConnectionInformation {
-        return connectionInformation
-    }
+
+    // Returns an object containing information about successful and/or failed polling or streaming connections to LaunchDarkly
+    public func getConnectionInformation() -> ConnectionInformation { connectionInformation }
 
     /**
      Set the LDClient online/offline.

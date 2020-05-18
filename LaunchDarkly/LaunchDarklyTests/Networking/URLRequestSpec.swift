@@ -2,7 +2,6 @@
 //  URLRequestSpec.swift
 //  LaunchDarklyTests
 //
-//  Created by Mark Pokorny on 9/28/17. +JMJ
 //  Copyright © 2017 Catamorphic Co. All rights reserved.
 //
 
@@ -27,7 +26,7 @@ final class URLRequestSpec: QuickSpec {
             context("no new headers exist in original") {
                 var targetHeaders = Constants.startingHeaders
                 beforeEach {
-                    Constants.newHeaders.forEach { (key, value) in
+                    Constants.newHeaders.forEach { key, value in
                         targetHeaders[key] = value
                     }
 
@@ -48,7 +47,7 @@ final class URLRequestSpec: QuickSpec {
                     startingHeaders["headerA"] = "wrongValue"
 
                     targetHeaders = startingHeaders
-                    Constants.newHeaders.forEach { (key, value) in
+                    Constants.newHeaders.forEach { key, value in
                         targetHeaders[key] = value
                     }
 

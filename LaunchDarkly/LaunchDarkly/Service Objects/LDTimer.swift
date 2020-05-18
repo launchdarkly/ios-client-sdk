@@ -2,7 +2,6 @@
 //  LDTimer.swift
 //  LaunchDarkly
 //
-//  Created by Mark Pokorny on 1/17/19. +JMJ
 //  Copyright © 2019 Catamorphic Co. All rights reserved.
 //
 
@@ -18,14 +17,12 @@ protocol TimeResponding {
 
 final class LDTimer: TimeResponding {
 
-    weak private (set) var timer: Timer?
+    private (set) weak var timer: Timer?
     private let fireQueue: DispatchQueue
     private let execute: () -> Void
     private (set) var isRepeating: Bool
     private (set) var isCancelled: Bool = false
-    var fireDate: Date? {
-        return timer?.fireDate
-    }
+    var fireDate: Date? { timer?.fireDate }
 
     init(withTimeInterval timeInterval: TimeInterval, repeats: Bool, fireQueue: DispatchQueue = DispatchQueue.main, execute: @escaping () -> Void) {
         isRepeating = repeats
@@ -45,9 +42,7 @@ final class LDTimer: TimeResponding {
     @objc private func timerFired() {
         fireQueue.async { [weak self] in
             guard (self?.isCancelled ?? true) == false
-            else {
-                return
-            }
+            else { return }
             self?.execute()
         }
     }
@@ -60,8 +55,6 @@ final class LDTimer: TimeResponding {
 
 #if DEBUG
 extension LDTimer {
-    var testFireQueue: DispatchQueue {
-        return fireQueue
-    }
+    var testFireQueue: DispatchQueue { fireQueue }
 }
 #endif
