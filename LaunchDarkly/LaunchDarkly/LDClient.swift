@@ -2,7 +2,6 @@
 //  LDClient.swift
 //  LaunchDarkly
 //
-//  Created by Mark Pokorny on 7/11/17. +JMJ
 //  Copyright © 2017 Catamorphic Co. All rights reserved.
 //
 
@@ -71,10 +70,10 @@ public class LDClient {
         }
     }
 
-    //Keeps the state of the last setOnline goOnline parameter, used for throttling calls to set the SDK online
+    // Keeps the state of the last setOnline goOnline parameter, used for throttling calls to set the SDK online
     private var lastSetOnlineCallValue = false
-    
-    //Stores ConnectionInformation in UserDefaults on change
+
+    // Stores ConnectionInformation in UserDefaults on change
     var connectionInformation: ConnectionInformation {
         didSet {
             Log.debug(connectionInformation.description)
@@ -84,11 +83,9 @@ public class LDClient {
             }
         }
     }
-    
-    //Returns an object containing information about successful and/or failed polling or streaming connections to LaunchDarkly
-    public func getConnectionInformation() -> ConnectionInformation {
-        return connectionInformation
-    }
+
+    // Returns an object containing information about successful and/or failed polling or streaming connections to LaunchDarkly
+    public func getConnectionInformation() -> ConnectionInformation { connectionInformation }
 
     /**
      Set the LDClient online/offline.
@@ -310,6 +307,8 @@ public class LDClient {
     @available(*, deprecated, message: "Please use the startCompleteWhenFlagsReceived method instead")
     public func start(config: LDConfig, user: LDUser? = nil, completion: (() -> Void)? = nil) {
         Log.debug(typeName(and: #function, appending: ": ") + "starting")
+        flagCache.maxCachedUsers = config.maxCachedUsers
+        cacheConverter = self.serviceFactory.makeCacheConverter(maxCachedUsers: config.maxCachedUsers)
         let wasStarted = hasStarted
         let wasOnline = isOnline
         isStarting = true
@@ -341,6 +340,8 @@ public class LDClient {
      */
     public func startCompleteWhenFlagsReceived(config: LDConfig, user: LDUser? = nil, completion: (() -> Void)? = nil) {
         Log.debug(typeName(and: #function, appending: ": ") + "starting")
+        flagCache.maxCachedUsers = config.maxCachedUsers
+        cacheConverter = self.serviceFactory.makeCacheConverter(maxCachedUsers: config.maxCachedUsers)
         let wasStarted = hasStarted
         let wasOnline = isOnline
         isStarting = true
@@ -1018,9 +1019,9 @@ public class LDClient {
             self.serviceFactory = serviceFactory
         }
         environmentReporter = self.serviceFactory.makeEnvironmentReporter()
-        flagCache = self.serviceFactory.makeFeatureFlagCache()
+        flagCache = self.serviceFactory.makeFeatureFlagCache(maxCachedUsers: LDConfig.Defaults.maxCachedUsers)
         LDUserWrapper.configureKeyedArchiversToHandleVersion2_3_0AndOlderUserCacheFormat()
-        cacheConverter = self.serviceFactory.makeCacheConverter()
+        cacheConverter = self.serviceFactory.makeCacheConverter(maxCachedUsers: LDConfig.Defaults.maxCachedUsers)
         flagChangeNotifier = self.serviceFactory.makeFlagChangeNotifier()
         throttler = self.serviceFactory.makeThrottler(maxDelay: Throttler.Constants.defaultDelay, environmentReporter: environmentReporter)
 

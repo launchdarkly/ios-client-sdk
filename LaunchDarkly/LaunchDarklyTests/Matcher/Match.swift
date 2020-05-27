@@ -2,7 +2,6 @@
 //  Match.swift
 //  LaunchDarklyTests
 //
-//  Created by Mark Pokorny on 10/4/17. +JMJ
 //  Copyright © 2017 Catamorphic Co. All rights reserved.
 //
 
@@ -25,7 +24,7 @@ public enum ToMatchResult {
  Return `.failed` with a failure reason when the validation fails.
  */
 public func match() -> Predicate<() -> ToMatchResult> {
-    return Predicate.define { actualExpression in
+    Predicate.define { actualExpression in
         let optActual = try actualExpression.evaluate()
         guard let actual = optActual
         else {

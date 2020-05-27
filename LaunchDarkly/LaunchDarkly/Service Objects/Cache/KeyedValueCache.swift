@@ -2,7 +2,6 @@
 //  KeyedValueCache.swift
 //  LaunchDarkly
 //
-//  Created by Mark Pokorny on 12/6/17. +JMJ
 //  Copyright © 2017 Catamorphic Co. All rights reserved.
 //
 

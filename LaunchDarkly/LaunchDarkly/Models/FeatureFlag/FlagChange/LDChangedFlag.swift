@@ -2,7 +2,6 @@
 //  LDChangedFlag.swift
 //  LaunchDarkly
 //
-//  Created by Mark Pokorny on 8/18/17. +JMJ
 //  Copyright © 2017 Catamorphic Co. All rights reserved.
 //
 
@@ -22,7 +21,7 @@ public struct LDChangedFlag {
     public let newValue: Any?
     ///The feature flag value's source after the change
     public let newValueSource: LDFlagValueSource?
-    
+
     init(key: LDFlagKey, oldValue: Any?, oldValueSource: LDFlagValueSource?, newValue: Any?, newValueSource: LDFlagValueSource?) {
         self.key = key
         self.oldValue = oldValue

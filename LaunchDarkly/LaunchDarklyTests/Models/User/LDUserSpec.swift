@@ -2,7 +2,6 @@
 //  LDUserSpec.swift
 //  LaunchDarklyTests
 //
-//  Created by Mark Pokorny on 10/23/17. +JMJ
 //  Copyright © 2017 Catamorphic Co. All rights reserved.
 //
 
@@ -19,6 +18,7 @@ final class LDUserSpec: QuickSpec {
     override func spec() {
         initSpec()
         dictionaryValueSpec()
+        isEqualSpec()
     }
 
     private func initSpec() {
@@ -121,7 +121,7 @@ final class LDUserSpec: QuickSpec {
                 }
                 it("creates each LDUser with the default key and isAnonymous set") {
                     let environmentReporter = EnvironmentReporter()
-                    users.forEach { (user) in
+                    users.forEach { user in
                         expect(user.key) == LDUser.defaultKey(environmentReporter: environmentReporter)
                         expect(user.isAnonymous) == true
                     }
@@ -323,57 +323,47 @@ final class LDUserSpec: QuickSpec {
         }
     }
 
+    private func includeFlagConfigHelp(includeFlagConfig: Bool, user: LDUser, userDictionary: [String: Any]) {
+        includeFlagConfig ? expect({ user.flagConfigMatches(userDictionary: userDictionary) }).to(match())
+            : expect(userDictionary.flagConfig).to(beNil())
+    }
+
+    private func dictionaryValueInvariants(includeFlagConfig: Bool, user: LDUser, userDictionary: [String: Any]) {
+        // Always has required attributes
+        expect({ user.requiredAttributeKeyValuePairsMatch(userDictionary: userDictionary) }).to(match())
+        // Optional attributes with nil value should never be included in user dictionary
+        expect({ user.optionalAttributeMissingValueKeysDontExist(userDictionary: userDictionary) }).to(match())
+        // If flag config requested, flag config should be included and match flag store
+        includeFlagConfig ? expect({ user.flagConfigMatches(userDictionary: userDictionary) }).to(match())
+            : expect(userDictionary.flagConfig).to(beNil())
+    }
+
     private func dictionaryValueSpec() {
         describe("dictionaryValue") {
             var user: LDUser!
             var config: LDConfig!
             var userDictionary: [String: Any]!
             var privateAttributes: [String]!
-            context("including private attributes") {
-                context("with individual private attributes") {
-                    context("contained in the config") {
-                        beforeEach {
-                            config = LDConfig.stub
-                            user = LDUser.stub()
-                            privateAttributes = LDUser.privatizableAttributes + user.customAttributes!
-                        }
-                        it("creates a matching dictionary") {
-                            privateAttributes.forEach { (attribute) in
-                                config.privateUserAttributes = [attribute]
-                                [true, false].forEach { (includeFlagConfig) in
-                                    userDictionary = user.dictionaryValue(includeFlagConfig: includeFlagConfig, includePrivateAttributes: true, config: config)
 
-                                    //creates a dictionary with matching key value pairs
-                                    expect({ user.requiredAttributeKeyValuePairsMatch(userDictionary: userDictionary) }).to(match())
-                                    expect({ user.optionalAttributePublicKeyValuePairsMatch(userDictionary: userDictionary, privateAttributes: []) }).to(match())
-                                    expect({ user.sdkSetAttributesKeyValuePairsMatch(userDictionary: userDictionary) }).to(match())
-                                    expect({ user.customDictionaryPublicKeyValuePairsMatch(userDictionary: userDictionary, privateAttributes: []) }).to(match())
+            beforeEach {
+                config = LDConfig.stub
+                user = LDUser.stub()
+            }
 
-                                    //creates a dictionary without redacted attributes
-                                    expect(userDictionary.redactedAttributes).to(beNil())
-
-                                    //creates a dictionary with or without a matching flag config
-                                    includeFlagConfig ? expect({ user.flagConfigMatches(userDictionary: userDictionary) }).to(match())
-                                        : expect(userDictionary.flagConfig).to(beNil())
+            [true, false].forEach { includeFlagConfig in
+                context(includeFlagConfig ? "with flag config" : "without flag config") {
+                    context("including private attributes") {
+                        context("with individual private attributes") {
+                            context("contained in the config") {
+                                beforeEach {
+                                    privateAttributes = LDUser.privatizableAttributes + user.customAttributes!
                                 }
-                            }
-                        }
-                    }
-                    context("contained in the user") {
-                        context("on a populated user") {
-                            beforeEach {
-                                config = LDConfig.stub
-                                user = LDUser.stub()
-                                privateAttributes = LDUser.privatizableAttributes + user.customAttributes!
-                            }
-                            it("creates a matching dictionary") {
-                                privateAttributes.forEach { (attribute) in
-                                    user.privateAttributes = [attribute]
-                                    [true, false].forEach { (includeFlagConfig) in
+                                it("creates a matching dictionary") {
+                                    privateAttributes.forEach { attribute in
+                                        config.privateUserAttributes = [attribute]
                                         userDictionary = user.dictionaryValue(includeFlagConfig: includeFlagConfig, includePrivateAttributes: true, config: config)
 
                                         //creates a dictionary with matching key value pairs
-                                        expect({ user.requiredAttributeKeyValuePairsMatch(userDictionary: userDictionary) }).to(match())
                                         expect({ user.optionalAttributePublicKeyValuePairsMatch(userDictionary: userDictionary, privateAttributes: []) }).to(match())
                                         expect({ user.sdkSetAttributesKeyValuePairsMatch(userDictionary: userDictionary) }).to(match())
                                         expect({ user.customDictionaryPublicKeyValuePairsMatch(userDictionary: userDictionary, privateAttributes: []) }).to(match())
@@ -381,413 +371,203 @@ final class LDUserSpec: QuickSpec {
                                         //creates a dictionary without redacted attributes
                                         expect(userDictionary.redactedAttributes).to(beNil())
 
-                                        //creates a dictionary with or without a matching flag config
-                                        includeFlagConfig ? expect({ user.flagConfigMatches(userDictionary: userDictionary) }).to(match())
-                                            : expect(userDictionary.flagConfig).to(beNil())
+                                        self.dictionaryValueInvariants(includeFlagConfig: includeFlagConfig, user: user, userDictionary: userDictionary)
+                                    }
+                                }
+                            }
+                            context("contained in the user") {
+                                context("on a populated user") {
+                                    beforeEach {
+                                        privateAttributes = LDUser.privatizableAttributes + user.customAttributes!
+                                    }
+                                    it("creates a matching dictionary") {
+                                        privateAttributes.forEach { attribute in
+                                            user.privateAttributes = [attribute]
+                                            userDictionary = user.dictionaryValue(includeFlagConfig: includeFlagConfig, includePrivateAttributes: true, config: config)
+
+                                            //creates a dictionary with matching key value pairs
+                                            expect({ user.optionalAttributePublicKeyValuePairsMatch(userDictionary: userDictionary, privateAttributes: []) }).to(match())
+                                            expect({ user.sdkSetAttributesKeyValuePairsMatch(userDictionary: userDictionary) }).to(match())
+                                            expect({ user.customDictionaryPublicKeyValuePairsMatch(userDictionary: userDictionary, privateAttributes: []) }).to(match())
+
+                                            //creates a dictionary without redacted attributes
+                                            expect(userDictionary.redactedAttributes).to(beNil())
+
+                                            self.dictionaryValueInvariants(includeFlagConfig: includeFlagConfig, user: user, userDictionary: userDictionary)
+                                        }
+                                    }
+                                }
+                                context("on an empty user") {
+                                    beforeEach {
+                                        user = LDUser()
+                                        privateAttributes = LDUser.privatizableAttributes
+                                    }
+                                    it("creates a matching dictionary") {
+                                        privateAttributes.forEach { attribute in
+                                            user.privateAttributes = [attribute]
+                                            userDictionary = user.dictionaryValue(includeFlagConfig: includeFlagConfig, includePrivateAttributes: true, config: config)
+
+                                            //creates a dictionary with matching key value pairs
+                                            expect({ user.optionalAttributeMissingValueKeysDontExist(userDictionary: userDictionary) }).to(match())
+                                            expect({ user.sdkSetAttributesKeyValuePairsMatch(userDictionary: userDictionary) }).to(match())
+                                            expect({ user.customDictionaryContainsOnlySdkSetAttributes(userDictionary: userDictionary) }).to(match())
+
+                                            //creates a dictionary without redacted attributes
+                                            expect(userDictionary.redactedAttributes).to(beNil())
+
+                                            self.dictionaryValueInvariants(includeFlagConfig: includeFlagConfig, user: user, userDictionary: userDictionary)
+                                        }
                                     }
                                 }
                             }
                         }
-                        context("on an empty user") {
-                            beforeEach {
-                                config = LDConfig.stub
-                                user = LDUser()
-                                privateAttributes = LDUser.privatizableAttributes
-                            }
-                            it("creates a matching dictionary") {
-                                privateAttributes.forEach { (attribute) in
-                                    user.privateAttributes = [attribute]
-                                    [true, false].forEach { (includeFlagConfig) in
-                                        userDictionary = user.dictionaryValue(includeFlagConfig: includeFlagConfig, includePrivateAttributes: true, config: config)
-
-                                        //creates a dictionary with matching key value pairs
-                                        expect({ user.requiredAttributeKeyValuePairsMatch(userDictionary: userDictionary) }).to(match())
-                                        expect({ user.optionalAttributeMissingValueKeysDontExist(userDictionary: userDictionary) }).to(match())
-                                        expect({ user.sdkSetAttributesKeyValuePairsMatch(userDictionary: userDictionary) }).to(match())
-                                        expect({ user.customDictionaryContainsOnlySdkSetAttributes(userDictionary: userDictionary) }).to(match())
-
-                                        //creates a dictionary without redacted attributes
-                                        expect(userDictionary.redactedAttributes).to(beNil())
-
-                                        //creates a dictionary with or without a matching flag config
-                                        includeFlagConfig ? expect({ user.flagConfigMatches(userDictionary: userDictionary) }).to(match())
-                                            : expect(userDictionary.flagConfig).to(beNil())
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-                context("with all private attributes") {
-                    context("using the config flag") {
-                        beforeEach {
-                            config = LDConfig.stub
-                            config.allUserAttributesPrivate = true
-                            user = LDUser.stub()
-                        }
-                        it("creates a dictionary with matching key value pairs") {
-                            [true, false].forEach { (includeFlagConfig) in
-                                userDictionary = user.dictionaryValue(includeFlagConfig: includeFlagConfig, includePrivateAttributes: true, config: config)
-
-                                expect({ user.requiredAttributeKeyValuePairsMatch(userDictionary: userDictionary) }).to(match())
-                                expect({ user.optionalAttributePublicKeyValuePairsMatch(userDictionary: userDictionary, privateAttributes: []) }).to(match())
-                                expect({ user.sdkSetAttributesKeyValuePairsMatch(userDictionary: userDictionary) }).to(match())
-                                expect({ user.customDictionaryPublicKeyValuePairsMatch(userDictionary: userDictionary, privateAttributes: []) }).to(match())
-                            }
-                        }
-                        it("creates a dictionary without redacted attributes") {
-                            [true, false].forEach { (includeFlagConfig) in
-                                userDictionary = user.dictionaryValue(includeFlagConfig: includeFlagConfig, includePrivateAttributes: true, config: config)
-
-                                expect(userDictionary.redactedAttributes).to(beNil())
-                            }
-                        }
-                        it("creates a dictionary with or without a matching flag config") {
-                            [true, false].forEach { (includeFlagConfig) in
-                                userDictionary = user.dictionaryValue(includeFlagConfig: includeFlagConfig, includePrivateAttributes: true, config: config)
-
-                                includeFlagConfig ? expect({ user.flagConfigMatches(userDictionary: userDictionary) }).to(match())
-                                    : expect(userDictionary.flagConfig).to(beNil())
-                            }
-                        }
-                    }
-                    context("contained in the config") {
-                        beforeEach {
-                            config = LDConfig.stub
-                            config.privateUserAttributes = LDUser.privatizableAttributes
-                            user = LDUser.stub()
-                        }
-                        it("creates a dictionary with matching key value pairs") {
-                            [true, false].forEach { (includeFlagConfig) in
-                                userDictionary = user.dictionaryValue(includeFlagConfig: includeFlagConfig, includePrivateAttributes: true, config: config)
-
-                                expect({ user.requiredAttributeKeyValuePairsMatch(userDictionary: userDictionary) }).to(match())
-                                expect({ user.optionalAttributePublicKeyValuePairsMatch(userDictionary: userDictionary, privateAttributes: []) }).to(match())
-                                expect({ user.sdkSetAttributesKeyValuePairsMatch(userDictionary: userDictionary) }).to(match())
-                                expect({ user.customDictionaryPublicKeyValuePairsMatch(userDictionary: userDictionary, privateAttributes: []) }).to(match())
-                            }
-                        }
-                        it("creates a dictionary without redacted attributes") {
-                            [true, false].forEach { (includeFlagConfig) in
-                                userDictionary = user.dictionaryValue(includeFlagConfig: includeFlagConfig, includePrivateAttributes: true, config: config)
-
-                                expect(userDictionary.redactedAttributes).to(beNil())
-                            }
-                        }
-                        it("creates a dictionary with or without a matching flag config") {
-                            [true, false].forEach { (includeFlagConfig) in
-                                userDictionary = user.dictionaryValue(includeFlagConfig: includeFlagConfig, includePrivateAttributes: true, config: config)
-
-                                includeFlagConfig ? expect({ user.flagConfigMatches(userDictionary: userDictionary) }).to(match())
-                                    : expect(userDictionary.flagConfig).to(beNil())
-                            }
-                        }
-                    }
-                    context("contained in the user") {
-                        beforeEach {
-                            config = LDConfig.stub
-                            user = LDUser.stub()
-                            user.privateAttributes = LDUser.privatizableAttributes
-                        }
-                        it("creates a dictionary with matching key value pairs") {
-                            [true, false].forEach { (includeFlagConfig) in
-                                userDictionary = user.dictionaryValue(includeFlagConfig: includeFlagConfig, includePrivateAttributes: true, config: config)
-
-                                expect({ user.requiredAttributeKeyValuePairsMatch(userDictionary: userDictionary) }).to(match())
-                                expect({ user.optionalAttributePublicKeyValuePairsMatch(userDictionary: userDictionary, privateAttributes: []) }).to(match())
-                                expect({ user.sdkSetAttributesKeyValuePairsMatch(userDictionary: userDictionary) }).to(match())
-                                expect({ user.customDictionaryPublicKeyValuePairsMatch(userDictionary: userDictionary, privateAttributes: []) }).to(match())
-                            }
-                        }
-                        it("creates a dictionary without redacted attributes") {
-                            [true, false].forEach { (includeFlagConfig) in
-                                userDictionary = user.dictionaryValue(includeFlagConfig: includeFlagConfig, includePrivateAttributes: true, config: config)
-
-                                expect(userDictionary.redactedAttributes).to(beNil())
-                            }
-                        }
-                        it("creates a dictionary with or without a matching flag config") {
-                            [true, false].forEach { (includeFlagConfig) in
-                                userDictionary = user.dictionaryValue(includeFlagConfig: includeFlagConfig, includePrivateAttributes: true, config: config)
-
-                                includeFlagConfig ? expect({ user.flagConfigMatches(userDictionary: userDictionary) }).to(match())
-                                    : expect(userDictionary.flagConfig).to(beNil())
-                            }
-                        }
-                    }
-                }
-                context("with no private attributes") {
-                    context("by setting private attributes to nil") {
-                        beforeEach {
-                            config = LDConfig.stub
-                            user = LDUser.stub()
-                        }
-                        it("creates a dictionary with matching key value pairs") {
-                            [true, false].forEach { (includeFlagConfig) in
-                                userDictionary = user.dictionaryValue(includeFlagConfig: includeFlagConfig, includePrivateAttributes: true, config: config)
-
-                                expect({ user.requiredAttributeKeyValuePairsMatch(userDictionary: userDictionary) }).to(match())
-                                expect({ user.optionalAttributePublicKeyValuePairsMatch(userDictionary: userDictionary, privateAttributes: []) }).to(match())
-                                expect({ user.sdkSetAttributesKeyValuePairsMatch(userDictionary: userDictionary) }).to(match())
-                                expect({ user.customDictionaryPublicKeyValuePairsMatch(userDictionary: userDictionary, privateAttributes: []) }).to(match())
-                            }
-                        }
-                        it("creates a dictionary without redacted attributes") {
-                            [true, false].forEach { (includeFlagConfig) in
-                                userDictionary = user.dictionaryValue(includeFlagConfig: includeFlagConfig, includePrivateAttributes: true, config: config)
-
-                                expect(userDictionary.redactedAttributes).to(beNil())
-                            }
-                        }
-                        it("creates a dictionary with or without a matching flag config") {
-                            [true, false].forEach { (includeFlagConfig) in
-                                userDictionary = user.dictionaryValue(includeFlagConfig: includeFlagConfig, includePrivateAttributes: true, config: config)
-
-                                includeFlagConfig ? expect({ user.flagConfigMatches(userDictionary: userDictionary) }).to(match())
-                                    : expect(userDictionary.flagConfig).to(beNil())
-                            }
-                        }
-                    }
-                    context("by setting config private attributes to empty") {
-                        beforeEach {
-                            config = LDConfig.stub
-                            config.privateUserAttributes = []
-                            user = LDUser.stub()
-                        }
-                        it("creates a dictionary with matching key value pairs") {
-                            [true, false].forEach { (includeFlagConfig) in
-                                userDictionary = user.dictionaryValue(includeFlagConfig: includeFlagConfig, includePrivateAttributes: true, config: config)
-
-                                expect({ user.requiredAttributeKeyValuePairsMatch(userDictionary: userDictionary) }).to(match())
-                                expect({ user.optionalAttributePublicKeyValuePairsMatch(userDictionary: userDictionary, privateAttributes: []) }).to(match())
-                                expect({ user.sdkSetAttributesKeyValuePairsMatch(userDictionary: userDictionary) }).to(match())
-                                expect({ user.customDictionaryPublicKeyValuePairsMatch(userDictionary: userDictionary, privateAttributes: []) }).to(match())
-                            }
-                        }
-                        it("creates a dictionary without redacted attributes") {
-                            [true, false].forEach { (includeFlagConfig) in
-                                userDictionary = user.dictionaryValue(includeFlagConfig: includeFlagConfig, includePrivateAttributes: true, config: config)
-
-                                expect(userDictionary.redactedAttributes).to(beNil())
-                            }
-                        }
-                        it("creates a dictionary with or without a matching flag config") {
-                            [true, false].forEach { (includeFlagConfig) in
-                                userDictionary = user.dictionaryValue(includeFlagConfig: includeFlagConfig, includePrivateAttributes: true, config: config)
-
-                                includeFlagConfig ? expect({ user.flagConfigMatches(userDictionary: userDictionary) }).to(match()) : expect(userDictionary.flagConfig).to(beNil())
-                            }
-                        }
-                    }
-                    context("by setting user private attributes to empty") {
-                        beforeEach {
-                            config = LDConfig.stub
-                            user = LDUser.stub()
-                            user.privateAttributes = []
-                        }
-                        it("creates a dictionary with matching key value pairs") {
-                            [true, false].forEach { (includeFlagConfig) in
-                                userDictionary = user.dictionaryValue(includeFlagConfig: includeFlagConfig, includePrivateAttributes: true, config: config)
-
-                                expect({ user.requiredAttributeKeyValuePairsMatch(userDictionary: userDictionary) }).to(match())
-                                expect({ user.optionalAttributePublicKeyValuePairsMatch(userDictionary: userDictionary, privateAttributes: []) }).to(match())
-                                expect({ user.sdkSetAttributesKeyValuePairsMatch(userDictionary: userDictionary) }).to(match())
-                                expect({ user.customDictionaryPublicKeyValuePairsMatch(userDictionary: userDictionary, privateAttributes: []) }).to(match())
-                            }
-                        }
-                        it("creates a dictionary without redacted attributes") {
-                            [true, false].forEach { (includeFlagConfig) in
-                                userDictionary = user.dictionaryValue(includeFlagConfig: includeFlagConfig, includePrivateAttributes: true, config: config)
-                                expect(userDictionary.redactedAttributes).to(beNil())
-                            }
-                        }
-                        it("creates a dictionary with or without a matching flag config") {
-                            [true, false].forEach { (includeFlagConfig) in
-                                userDictionary = user.dictionaryValue(includeFlagConfig: includeFlagConfig, includePrivateAttributes: true, config: config)
-
-                                includeFlagConfig ? expect({ user.flagConfigMatches(userDictionary: userDictionary) }).to(match())
-                                    : expect(userDictionary.flagConfig).to(beNil())
-                            }
-                        }
-                    }
-                }
-                context("with custom as the private attribute") {
-                    context("on a user with no custom dictionary") {
-                        context("with a device and os") {
-                            beforeEach {
-                                config = LDConfig.stub
-                                user = LDUser.stub()
-                                user.custom = nil
-                                user.privateAttributes = [LDUser.CodingKeys.custom.rawValue]
-                            }
-                            it("creates a dictionary with matching key value pairs") {
-                                [true, false].forEach { (includeFlagConfig) in
-                                    userDictionary = user.dictionaryValue(includeFlagConfig: includeFlagConfig, includePrivateAttributes: true, config: config)
-
-                                    expect({ user.requiredAttributeKeyValuePairsMatch(userDictionary: userDictionary) }).to(match())
+                        context("with all private attributes") {
+                            let allPrivateAssertions = {
+                                it("creates a dictionary with matching key value pairs") {
                                     expect({ user.optionalAttributePublicKeyValuePairsMatch(userDictionary: userDictionary, privateAttributes: []) }).to(match())
                                     expect({ user.sdkSetAttributesKeyValuePairsMatch(userDictionary: userDictionary) }).to(match())
-                                    expect({ user.customDictionaryContainsOnlySdkSetAttributes(userDictionary: userDictionary) }).to(match())
-                                }
-                            }
-                            it("creates a dictionary without redacted attributes") {
-                                [true, false].forEach { (includeFlagConfig) in
-                                    userDictionary = user.dictionaryValue(includeFlagConfig: includeFlagConfig, includePrivateAttributes: true, config: config)
-
-                                    expect(userDictionary.redactedAttributes).to(beNil())
-                                }
-                            }
-                            it("creates a dictionary with or without a matching flag config") {
-                                [true, false].forEach { (includeFlagConfig) in
-                                    userDictionary = user.dictionaryValue(includeFlagConfig: includeFlagConfig, includePrivateAttributes: true, config: config)
-
-                                    includeFlagConfig ? expect({ user.flagConfigMatches(userDictionary: userDictionary) }).to(match())
-                                        : expect(userDictionary.flagConfig).to(beNil())
-                                }
-                            }
-                        }
-                        context("without a device and os") {
-                            beforeEach {
-                                config = LDConfig.stub
-                                user = LDUser.stub()
-                                user.custom = nil
-                                user.operatingSystem = nil
-                                user.device = nil
-                                user.privateAttributes = [LDUser.CodingKeys.custom.rawValue]
-                            }
-                            it("creates a dictionary with matching key value pairs") {
-                                [true, false].forEach { (includeFlagConfig) in
-                                    userDictionary = user.dictionaryValue(includeFlagConfig: includeFlagConfig, includePrivateAttributes: true, config: config)
-
-                                    expect({ user.requiredAttributeKeyValuePairsMatch(userDictionary: userDictionary) }).to(match())
-                                    expect({ user.optionalAttributePublicKeyValuePairsMatch(userDictionary: userDictionary, privateAttributes: []) }).to(match())
-                                }
-                            }
-                            it("creates a dictionary without redacted attributes") {
-                                [true, false].forEach { (includeFlagConfig) in
-                                    userDictionary = user.dictionaryValue(includeFlagConfig: includeFlagConfig, includePrivateAttributes: true, config: config)
-
-                                    expect(userDictionary.redactedAttributes).to(beNil())
-                                }
-                            }
-                            it("creates a dictionary without a custom dictionary") {
-                                [true, false].forEach { (includeFlagConfig) in
-                                    userDictionary = user.dictionaryValue(includeFlagConfig: includeFlagConfig, includePrivateAttributes: true, config: config)
-
-                                    expect(userDictionary.customDictionary(includeSdkSetAttributes: true)).to(beNil())
-                                }
-                            }
-                            it("creates a dictionary with or without a matching flag config") {
-                                [true, false].forEach { (includeFlagConfig) in
-                                    userDictionary = user.dictionaryValue(includeFlagConfig: includeFlagConfig, includePrivateAttributes: true, config: config)
-
-                                    includeFlagConfig ? expect({ user.flagConfigMatches(userDictionary: userDictionary) }).to(match())
-                                        : expect(userDictionary.flagConfig).to(beNil())
-                                }
-                            }
-                        }
-                    }
-                    context("on a user with a custom dictionary") {
-                        context("without a device and os") {
-                            beforeEach {
-                                config = LDConfig.stub
-                                user = LDUser.stub() //The user stub puts device & operating system in both the user attributes and the custom dictionary
-                                user.custom = user.customWithoutSdkSetAttributes
-                                user.device = nil
-                                user.operatingSystem = nil
-                                user.privateAttributes = [LDUser.CodingKeys.custom.rawValue]
-                            }
-                            it("creates a dictionary with matching key value pairs") {
-                                [true, false].forEach { (includeFlagConfig) in
-                                    userDictionary = user.dictionaryValue(includeFlagConfig: includeFlagConfig, includePrivateAttributes: true, config: config)
-
-                                    expect({ user.requiredAttributeKeyValuePairsMatch(userDictionary: userDictionary) }).to(match())
-                                    expect({ user.optionalAttributePublicKeyValuePairsMatch(userDictionary: userDictionary, privateAttributes: []) }).to(match())
-                                    expect({ user.sdkSetAttributesDontExist(userDictionary: userDictionary) }).to(match())
                                     expect({ user.customDictionaryPublicKeyValuePairsMatch(userDictionary: userDictionary, privateAttributes: []) }).to(match())
                                 }
-                            }
-                            it("creates a dictionary without redacted attributes") {
-                                [true, false].forEach { (includeFlagConfig) in
-                                    userDictionary = user.dictionaryValue(includeFlagConfig: includeFlagConfig, includePrivateAttributes: true, config: config)
-
+                                it("creates a dictionary without redacted attributes") {
                                     expect(userDictionary.redactedAttributes).to(beNil())
                                 }
+                                it("maintains invariants") {
+                                    self.dictionaryValueInvariants(includeFlagConfig: includeFlagConfig, user: user, userDictionary: userDictionary)
+                                }
                             }
-                            it("creates a dictionary with or without a matching flag config") {
-                                [true, false].forEach { (includeFlagConfig) in
+                            context("using the config flag") {
+                                beforeEach {
+                                    config.allUserAttributesPrivate = true
                                     userDictionary = user.dictionaryValue(includeFlagConfig: includeFlagConfig, includePrivateAttributes: true, config: config)
-
-                                    includeFlagConfig ? expect({ user.flagConfigMatches(userDictionary: userDictionary) }).to(match())
-                                        : expect(userDictionary.flagConfig).to(beNil())
                                 }
+                                allPrivateAssertions()
+                            }
+                            context("contained in the config") {
+                                beforeEach {
+                                    config.privateUserAttributes = LDUser.privatizableAttributes
+                                    userDictionary = user.dictionaryValue(includeFlagConfig: includeFlagConfig, includePrivateAttributes: true, config: config)
+                                }
+                                allPrivateAssertions()
+                            }
+                            context("contained in the user") {
+                                beforeEach {
+                                    user.privateAttributes = LDUser.privatizableAttributes
+                                    userDictionary = user.dictionaryValue(includeFlagConfig: includeFlagConfig, includePrivateAttributes: true, config: config)
+                                }
+                                allPrivateAssertions()
                             }
                         }
-                    }
-                }
-            }
-            context("excluding private attributes") {
-                context("with individual private attributes") {
-                    context("contained in the config") {
-                        beforeEach {
-                            config = LDConfig.stub
-                            user = LDUser.stub()
-                            privateAttributes = LDUser.privatizableAttributes + user.customAttributes!
-                        }
-                        it("creates a matching dictionary") {
-                            privateAttributes.forEach { (attribute) in
-                                let privateAttributesForTest = [attribute]
-                                config.privateUserAttributes = privateAttributesForTest
-                                [true, false].forEach { (includeFlagConfig) in
-                                    userDictionary = user.dictionaryValue(includeFlagConfig: includeFlagConfig, includePrivateAttributes: false, config: config)
-
-                                    //creates a dictionary with matching key value pairs
-                                    expect({ user.requiredAttributeKeyValuePairsMatch(userDictionary: userDictionary) }).to(match())
-                                    expect({ user.optionalAttributePublicKeyValuePairsMatch(userDictionary: userDictionary, privateAttributes: privateAttributesForTest) }).to(match())
+                        context("with no private attributes") {
+                            let noPrivateAssertions = {
+                                it("creates a dictionary with matching key value pairs") {
+                                    expect({ user.optionalAttributePublicKeyValuePairsMatch(userDictionary: userDictionary, privateAttributes: []) }).to(match())
                                     expect({ user.sdkSetAttributesKeyValuePairsMatch(userDictionary: userDictionary) }).to(match())
-
-                                    //creates a dictionary without private keys
-                                    expect({ user.optionalAttributePrivateKeysDontExist(userDictionary: userDictionary, privateAttributes: privateAttributesForTest) }).to(match())
-
-                                    //creates a dictionary with redacted attributes
-                                    expect({ user.optionalAttributePrivateKeysAppearInPrivateAttrsWhenRedacted(userDictionary: userDictionary,
-                                                                                                                  privateAttributes: privateAttributesForTest) }).to(match())
-                                    expect({ user.optionalAttributePublicOrMissingKeysDontAppearInPrivateAttrs(userDictionary: userDictionary,
-                                                                                                                  privateAttributes: privateAttributesForTest) }).to(match())
-
-                                    //creates a custom dictionary with matching key value pairs, without private keys, and with redacted attributes
-                                    if privateAttributesForTest.contains(LDUser.CodingKeys.custom.rawValue) {
-                                        expect({ user.customDictionaryContainsOnlySdkSetAttributes(userDictionary: userDictionary) }).to(match())
-                                        expect(user.privateAttrsContainsCustom(userDictionary: userDictionary)).to(beTrue())
-                                    } else {
-                                        expect({ user.customDictionaryPublicKeyValuePairsMatch(userDictionary: userDictionary, privateAttributes: privateAttributesForTest) }).to(match())
-                                        expect({ user.customDictionaryPrivateKeysDontExist(userDictionary: userDictionary, privateAttributes: privateAttributesForTest) }).to(match())
-
-                                        expect({ user.customPrivateKeysAppearInPrivateAttrsWhenRedacted(userDictionary: userDictionary,
-                                                                                                           privateAttributes: privateAttributesForTest) }).to(match())
-                                        expect({ user.customPublicOrMissingKeysDontAppearInPrivateAttrs(userDictionary: userDictionary,
-                                                                                                           privateAttributes: privateAttributesForTest) }).to(match())
+                                    expect({ user.customDictionaryPublicKeyValuePairsMatch(userDictionary: userDictionary, privateAttributes: []) }).to(match())
+                                }
+                                it("creates a dictionary without redacted attributes") {
+                                    expect(userDictionary.redactedAttributes).to(beNil())
+                                }
+                                it("maintains invariants") {
+                                    self.dictionaryValueInvariants(includeFlagConfig: includeFlagConfig, user: user, userDictionary: userDictionary)
+                                }
+                            }
+                            context("by setting private attributes to nil") {
+                                beforeEach {
+                                    userDictionary = user.dictionaryValue(includeFlagConfig: includeFlagConfig, includePrivateAttributes: true, config: config)
+                                }
+                                noPrivateAssertions()
+                            }
+                            context("by setting config private attributes to empty") {
+                                beforeEach {
+                                    config.privateUserAttributes = []
+                                    userDictionary = user.dictionaryValue(includeFlagConfig: includeFlagConfig, includePrivateAttributes: true, config: config)
+                                }
+                                noPrivateAssertions()
+                            }
+                            context("by setting user private attributes to empty") {
+                                beforeEach {
+                                    user.privateAttributes = []
+                                    userDictionary = user.dictionaryValue(includeFlagConfig: includeFlagConfig, includePrivateAttributes: true, config: config)
+                                }
+                                noPrivateAssertions()
+                            }
+                        }
+                        context("with custom as the private attribute") {
+                            context("on a user with no custom dictionary") {
+                                context("with a device and os") {
+                                    beforeEach {
+                                        user.custom = nil
+                                        user.privateAttributes = [LDUser.CodingKeys.custom.rawValue]
+                                        userDictionary = user.dictionaryValue(includeFlagConfig: includeFlagConfig, includePrivateAttributes: true, config: config)
                                     }
-
-                                    //creates a dictionary with or without matching flag config
-                                    includeFlagConfig ? expect({ user.flagConfigMatches(userDictionary: userDictionary) }).to(match())
-                                        : expect(userDictionary.flagConfig).to(beNil())
+                                    it("creates a dictionary with matching key value pairs") {
+                                        expect({ user.optionalAttributePublicKeyValuePairsMatch(userDictionary: userDictionary, privateAttributes: []) }).to(match())
+                                        expect({ user.sdkSetAttributesKeyValuePairsMatch(userDictionary: userDictionary) }).to(match())
+                                        expect({ user.customDictionaryContainsOnlySdkSetAttributes(userDictionary: userDictionary) }).to(match())
+                                    }
+                                    it("creates a dictionary without redacted attributes") {
+                                        expect(userDictionary.redactedAttributes).to(beNil())
+                                    }
+                                    it("maintains invariants") {
+                                        self.dictionaryValueInvariants(includeFlagConfig: includeFlagConfig, user: user, userDictionary: userDictionary)
+                                    }
+                                }
+                                context("without a device and os") {
+                                    beforeEach {
+                                        user.custom = nil
+                                        user.operatingSystem = nil
+                                        user.device = nil
+                                        user.privateAttributes = [LDUser.CodingKeys.custom.rawValue]
+                                        userDictionary = user.dictionaryValue(includeFlagConfig: includeFlagConfig, includePrivateAttributes: true, config: config)
+                                    }
+                                    it("creates a dictionary with matching key value pairs") {
+                                        expect({ user.optionalAttributePublicKeyValuePairsMatch(userDictionary: userDictionary, privateAttributes: []) }).to(match())
+                                    }
+                                    it("creates a dictionary without redacted attributes") {
+                                        expect(userDictionary.redactedAttributes).to(beNil())
+                                    }
+                                    it("creates a dictionary without a custom dictionary") {
+                                        expect(userDictionary.customDictionary(includeSdkSetAttributes: true)).to(beNil())
+                                    }
+                                    it("maintains invariants") {
+                                        self.dictionaryValueInvariants(includeFlagConfig: includeFlagConfig, user: user, userDictionary: userDictionary)
+                                    }
+                                }
+                            }
+                            context("on a user with a custom dictionary") {
+                                context("without a device and os") {
+                                    beforeEach {
+                                        user.custom = user.customWithoutSdkSetAttributes
+                                        user.device = nil
+                                        user.operatingSystem = nil
+                                        user.privateAttributes = [LDUser.CodingKeys.custom.rawValue]
+                                        userDictionary = user.dictionaryValue(includeFlagConfig: includeFlagConfig, includePrivateAttributes: true, config: config)
+                                    }
+                                    it("creates a dictionary with matching key value pairs") {
+                                        expect({ user.optionalAttributePublicKeyValuePairsMatch(userDictionary: userDictionary, privateAttributes: []) }).to(match())
+                                        expect({ user.sdkSetAttributesDontExist(userDictionary: userDictionary) }).to(match())
+                                        expect({ user.customDictionaryPublicKeyValuePairsMatch(userDictionary: userDictionary, privateAttributes: []) }).to(match())
+                                    }
+                                    it("creates a dictionary without redacted attributes") {
+                                        expect(userDictionary.redactedAttributes).to(beNil())
+                                    }
+                                    it("maintains invariants") {
+                                        self.dictionaryValueInvariants(includeFlagConfig: includeFlagConfig, user: user, userDictionary: userDictionary)
+                                    }
                                 }
                             }
                         }
                     }
-                    context("contained in the user") {
-                        context("on a populated user") {
-                            beforeEach {
-                                config = LDConfig.stub
-                                user = LDUser.stub()
-                                privateAttributes = LDUser.privatizableAttributes + user.customAttributes!
-                            }
-                            it("creates a matching dictionary") {
-                                privateAttributes.forEach { (attribute) in
-                                    let privateAttributesForTest = [attribute]
-                                    user.privateAttributes = privateAttributesForTest
-                                    [true, false].forEach { (includeFlagConfig) in
+                    context("excluding private attributes") {
+                        context("with individual private attributes") {
+                            context("contained in the config") {
+                                beforeEach {
+                                    privateAttributes = LDUser.privatizableAttributes + user.customAttributes!
+                                }
+                                it("creates a matching dictionary") {
+                                    privateAttributes.forEach { attribute in
+                                        let privateAttributesForTest = [attribute]
+                                        config.privateUserAttributes = privateAttributesForTest
                                         userDictionary = user.dictionaryValue(includeFlagConfig: includeFlagConfig, includePrivateAttributes: false, config: config)
 
                                         //creates a dictionary with matching key value pairs
@@ -800,408 +580,246 @@ final class LDUserSpec: QuickSpec {
 
                                         //creates a dictionary with redacted attributes
                                         expect({ user.optionalAttributePrivateKeysAppearInPrivateAttrsWhenRedacted(userDictionary: userDictionary,
-                                                                                                                      privateAttributes: privateAttributesForTest) }).to(match())
+                                                                                                                   privateAttributes: privateAttributesForTest) }).to(match())
                                         expect({ user.optionalAttributePublicOrMissingKeysDontAppearInPrivateAttrs(userDictionary: userDictionary,
-                                                                                                                      privateAttributes: privateAttributesForTest) }).to(match())
+                                                                                                                   privateAttributes: privateAttributesForTest) }).to(match())
 
                                         //creates a custom dictionary with matching key value pairs, without private keys, and with redacted attributes
                                         if privateAttributesForTest.contains(LDUser.CodingKeys.custom.rawValue) {
                                             expect({ user.customDictionaryContainsOnlySdkSetAttributes(userDictionary: userDictionary) }).to(match())
                                             expect(user.privateAttrsContainsCustom(userDictionary: userDictionary)).to(beTrue())
                                         } else {
-                                            expect({ user.customDictionaryPublicKeyValuePairsMatch(userDictionary: userDictionary,
-                                                                                                      privateAttributes: privateAttributesForTest) }).to(match())
-                                            expect({ user.customDictionaryPrivateKeysDontExist(userDictionary: userDictionary,
-                                                                                                  privateAttributes: privateAttributesForTest) }).to(match())
+                                            expect({ user.customDictionaryPublicKeyValuePairsMatch(userDictionary: userDictionary, privateAttributes: privateAttributesForTest) }).to(match())
+                                            expect({ user.customDictionaryPrivateKeysDontExist(userDictionary: userDictionary, privateAttributes: privateAttributesForTest) }).to(match())
 
                                             expect({ user.customPrivateKeysAppearInPrivateAttrsWhenRedacted(userDictionary: userDictionary,
-                                                                                                               privateAttributes: privateAttributesForTest) }).to(match())
+                                                                                                            privateAttributes: privateAttributesForTest) }).to(match())
                                             expect({ user.customPublicOrMissingKeysDontAppearInPrivateAttrs(userDictionary: userDictionary,
-                                                                                                               privateAttributes: privateAttributesForTest) }).to(match())
+                                                                                                            privateAttributes: privateAttributesForTest) }).to(match())
                                         }
 
                                         //creates a dictionary with or without matching flag config
-                                        includeFlagConfig ? expect({ user.flagConfigMatches(userDictionary: userDictionary) }).to(match())
-                                            : expect(userDictionary.flagConfig).to(beNil())
+                                        self.includeFlagConfigHelp(includeFlagConfig: includeFlagConfig, user: user, userDictionary: userDictionary)
+                                    }
+                                }
+                            }
+                            context("contained in the user") {
+                                context("on a populated user") {
+                                    beforeEach {
+                                        privateAttributes = LDUser.privatizableAttributes + user.customAttributes!
+                                    }
+                                    it("creates a matching dictionary") {
+                                        privateAttributes.forEach { attribute in
+                                            let privateAttributesForTest = [attribute]
+                                            user.privateAttributes = privateAttributesForTest
+                                            userDictionary = user.dictionaryValue(includeFlagConfig: includeFlagConfig, includePrivateAttributes: false, config: config)
+
+                                            //creates a dictionary with matching key value pairs
+                                            expect({ user.requiredAttributeKeyValuePairsMatch(userDictionary: userDictionary) }).to(match())
+                                            expect({ user.optionalAttributePublicKeyValuePairsMatch(userDictionary: userDictionary, privateAttributes: privateAttributesForTest) }).to(match())
+                                            expect({ user.sdkSetAttributesKeyValuePairsMatch(userDictionary: userDictionary) }).to(match())
+
+                                            //creates a dictionary without private keys
+                                            expect({ user.optionalAttributePrivateKeysDontExist(userDictionary: userDictionary, privateAttributes: privateAttributesForTest) }).to(match())
+
+                                            //creates a dictionary with redacted attributes
+                                            expect({ user.optionalAttributePrivateKeysAppearInPrivateAttrsWhenRedacted(userDictionary: userDictionary,
+                                                                                                                       privateAttributes: privateAttributesForTest) }).to(match())
+                                            expect({ user.optionalAttributePublicOrMissingKeysDontAppearInPrivateAttrs(userDictionary: userDictionary,
+                                                                                                                       privateAttributes: privateAttributesForTest) }).to(match())
+
+                                            //creates a custom dictionary with matching key value pairs, without private keys, and with redacted attributes
+                                            if privateAttributesForTest.contains(LDUser.CodingKeys.custom.rawValue) {
+                                                expect({ user.customDictionaryContainsOnlySdkSetAttributes(userDictionary: userDictionary) }).to(match())
+                                                expect(user.privateAttrsContainsCustom(userDictionary: userDictionary)).to(beTrue())
+                                            } else {
+                                                expect({ user.customDictionaryPublicKeyValuePairsMatch(userDictionary: userDictionary,
+                                                                                                       privateAttributes: privateAttributesForTest) }).to(match())
+                                                expect({ user.customDictionaryPrivateKeysDontExist(userDictionary: userDictionary,
+                                                                                                   privateAttributes: privateAttributesForTest) }).to(match())
+
+                                                expect({ user.customPrivateKeysAppearInPrivateAttrsWhenRedacted(userDictionary: userDictionary,
+                                                                                                                privateAttributes: privateAttributesForTest) }).to(match())
+                                                expect({ user.customPublicOrMissingKeysDontAppearInPrivateAttrs(userDictionary: userDictionary,
+                                                                                                                privateAttributes: privateAttributesForTest) }).to(match())
+                                            }
+
+                                            //creates a dictionary with or without matching flag config
+                                            self.includeFlagConfigHelp(includeFlagConfig: includeFlagConfig, user: user, userDictionary: userDictionary)
+                                        }
+                                    }
+                                }
+                                context("on an empty user") {
+                                    beforeEach {
+                                        user = LDUser()
+                                        privateAttributes = LDUser.privatizableAttributes
+                                    }
+                                    it("creates a matching dictionary") {
+                                        privateAttributes.forEach { attribute in
+                                            let privateAttributesForTest = [attribute]
+                                            user.privateAttributes = privateAttributesForTest
+                                            userDictionary = user.dictionaryValue(includeFlagConfig: includeFlagConfig, includePrivateAttributes: false, config: config)
+
+                                            //creates a dictionary with matching key value pairs
+                                            expect({ user.requiredAttributeKeyValuePairsMatch(userDictionary: userDictionary) }).to(match())
+                                            expect({ user.optionalAttributeMissingValueKeysDontExist(userDictionary: userDictionary) }).to(match())
+                                            expect({ user.sdkSetAttributesKeyValuePairsMatch(userDictionary: userDictionary) }).to(match())
+
+                                            //creates a dictionary without private keys
+                                            expect({ user.customDictionaryContainsOnlySdkSetAttributes(userDictionary: userDictionary) }).to(match())
+
+                                            //creates a dictionary without redacted attributes
+                                            expect(userDictionary.redactedAttributes).to(beNil())
+
+                                            //creates a dictionary with or without matching flag config
+                                            self.includeFlagConfigHelp(includeFlagConfig: includeFlagConfig, user: user, userDictionary: userDictionary)
+                                        }
                                     }
                                 }
                             }
                         }
-                        context("on an empty user") {
-                            beforeEach {
-                                config = LDConfig.stub
-                                user = LDUser()
-                                privateAttributes = LDUser.privatizableAttributes
-                            }
-                            it("creates a matching dictionary") {
-                                privateAttributes.forEach { (attribute) in
-                                    let privateAttributesForTest = [attribute]
-                                    user.privateAttributes = privateAttributesForTest
-                                    [true, false].forEach { (includeFlagConfig) in
-                                        userDictionary = user.dictionaryValue(includeFlagConfig: includeFlagConfig, includePrivateAttributes: false, config: config)
-
-                                        //creates a dictionary with matching key value pairs
-                                        expect({ user.requiredAttributeKeyValuePairsMatch(userDictionary: userDictionary) }).to(match())
-                                        expect({ user.optionalAttributeMissingValueKeysDontExist(userDictionary: userDictionary) }).to(match())
-                                        expect({ user.sdkSetAttributesKeyValuePairsMatch(userDictionary: userDictionary) }).to(match())
-
-                                        //creates a dictionary without private keys
-                                        expect({ user.customDictionaryContainsOnlySdkSetAttributes(userDictionary: userDictionary) }).to(match())
-
-                                        //creates a dictionary without redacted attributes
-                                        expect(userDictionary.redactedAttributes).to(beNil())
-
-                                        //creates a dictionary with or without matching flag config
-                                        includeFlagConfig ? expect({ user.flagConfigMatches(userDictionary: userDictionary) }).to(match())
-                                            : expect(userDictionary.flagConfig).to(beNil())
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-                context("with all private attributes") {
-                    context("using the config flag") {
-                        beforeEach {
-                            config = LDConfig.stub
-                            config.allUserAttributesPrivate = true
-                            user = LDUser.stub()
-                        }
-                        it("creates a dictionary with matching key value pairs") {
-                            [true, false].forEach { (includeFlagConfig) in
-                                userDictionary = user.dictionaryValue(includeFlagConfig: includeFlagConfig, includePrivateAttributes: false, config: config)
-
-                                expect({ user.requiredAttributeKeyValuePairsMatch(userDictionary: userDictionary) }).to(match())
-                                expect({ user.optionalAttributePublicKeyValuePairsMatch(userDictionary: userDictionary, privateAttributes: LDUser.privatizableAttributes) }).to(match())
-                                expect({ user.sdkSetAttributesKeyValuePairsMatch(userDictionary: userDictionary) }).to(match())
-                            }
-                        }
-                        it("creates a dictionary without private keys") {
-                            [true, false].forEach { (includeFlagConfig) in
-                                userDictionary = user.dictionaryValue(includeFlagConfig: includeFlagConfig, includePrivateAttributes: false, config: config)
-
-                                expect({ user.optionalAttributePrivateKeysDontExist(userDictionary: userDictionary, privateAttributes: LDUser.privatizableAttributes) }).to(match())
-                                expect({ user.customDictionaryContainsOnlySdkSetAttributes(userDictionary: userDictionary) }).to(match())
-                            }
-                        }
-                        it("creates a dictionary with redacted attributes") {
-                            [true, false].forEach { (includeFlagConfig) in
-                                userDictionary = user.dictionaryValue(includeFlagConfig: includeFlagConfig, includePrivateAttributes: false, config: config)
-
-                                expect({ user.optionalAttributePrivateKeysAppearInPrivateAttrsWhenRedacted(userDictionary: userDictionary,
-                                                                                                              privateAttributes: LDUser.privatizableAttributes) }).to(match())
-                                expect({ user.optionalAttributePublicOrMissingKeysDontAppearInPrivateAttrs(userDictionary: userDictionary,
-                                                                                                              privateAttributes: LDUser.privatizableAttributes) }).to(match())
-                                expect(user.privateAttrsContainsCustom(userDictionary: userDictionary)).to(beTrue())
-                            }
-                        }
-                        it("creates a dictionary with or without matching flag config") {
-                            [true, false].forEach { (includeFlagConfig) in
-                                userDictionary = user.dictionaryValue(includeFlagConfig: includeFlagConfig, includePrivateAttributes: false, config: config)
-
-                                includeFlagConfig ? expect({ user.flagConfigMatches(userDictionary: userDictionary) }).to(match())
-                                    : expect(userDictionary.flagConfig).to(beNil())
-                            }
-                        }
-                    }
-                    context("contained in the config") {
-                        beforeEach {
-                            config = LDConfig.stub
-                            config.privateUserAttributes = LDUser.privatizableAttributes
-                            user = LDUser.stub()
-                        }
-                        it("creates a dictionary with matching key value pairs") {
-                            [true, false].forEach { (includeFlagConfig) in
-                                userDictionary = user.dictionaryValue(includeFlagConfig: includeFlagConfig, includePrivateAttributes: false, config: config)
-
-                                expect({ user.requiredAttributeKeyValuePairsMatch(userDictionary: userDictionary) }).to(match())
-                                expect({ user.optionalAttributePublicKeyValuePairsMatch(userDictionary: userDictionary, privateAttributes: LDUser.privatizableAttributes) }).to(match())
-                                expect({ user.sdkSetAttributesKeyValuePairsMatch(userDictionary: userDictionary) }).to(match())
-                            }
-                        }
-                        it("creates a dictionary without private keys") {
-                            [true, false].forEach { (includeFlagConfig) in
-                                userDictionary = user.dictionaryValue(includeFlagConfig: includeFlagConfig, includePrivateAttributes: false, config: config)
-
-                                expect({ user.optionalAttributePrivateKeysDontExist(userDictionary: userDictionary, privateAttributes: LDUser.privatizableAttributes) }).to(match())
-                                expect({ user.customDictionaryContainsOnlySdkSetAttributes(userDictionary: userDictionary) }).to(match())
-                            }
-                        }
-                        it("creates a dictionary with redacted attributes") {
-                            [true, false].forEach { (includeFlagConfig) in
-                                userDictionary = user.dictionaryValue(includeFlagConfig: includeFlagConfig, includePrivateAttributes: false, config: config)
-
-                                expect({ user.optionalAttributePrivateKeysAppearInPrivateAttrsWhenRedacted(userDictionary: userDictionary,
-                                                                                                              privateAttributes: LDUser.privatizableAttributes) }).to(match())
-                                expect({ user.optionalAttributePublicOrMissingKeysDontAppearInPrivateAttrs(userDictionary: userDictionary,
-                                                                                                              privateAttributes: LDUser.privatizableAttributes) }).to(match())
-                                expect(user.privateAttrsContainsCustom(userDictionary: userDictionary)).to(beTrue())
-                            }
-                        }
-                        it("creates a dictionary with or without matching flag config") {
-                            [true, false].forEach { (includeFlagConfig) in
-                                userDictionary = user.dictionaryValue(includeFlagConfig: includeFlagConfig, includePrivateAttributes: false, config: config)
-
-                                includeFlagConfig ? expect({ user.flagConfigMatches(userDictionary: userDictionary) }).to(match())
-                                    : expect(userDictionary.flagConfig).to(beNil())
-                            }
-                        }
-                    }
-                    context("contained in the user") {
-                        beforeEach {
-                            config = LDConfig.stub
-                            user = LDUser.stub()
-                            user.privateAttributes = LDUser.privatizableAttributes
-                        }
-                        it("creates a dictionary with matching key value pairs") {
-                            [true, false].forEach { (includeFlagConfig) in
-                                userDictionary = user.dictionaryValue(includeFlagConfig: includeFlagConfig, includePrivateAttributes: false, config: config)
-
-                                expect({ user.requiredAttributeKeyValuePairsMatch(userDictionary: userDictionary) }).to(match())
-                                expect({ user.optionalAttributePublicKeyValuePairsMatch(userDictionary: userDictionary, privateAttributes: LDUser.privatizableAttributes) }).to(match())
-                                expect({ user.sdkSetAttributesKeyValuePairsMatch(userDictionary: userDictionary) }).to(match())
-                            }
-                        }
-                        it("creates a dictionary without private keys") {
-                            [true, false].forEach { (includeFlagConfig) in
-                                userDictionary = user.dictionaryValue(includeFlagConfig: includeFlagConfig, includePrivateAttributes: false, config: config)
-
-                                expect({ user.optionalAttributePrivateKeysDontExist(userDictionary: userDictionary, privateAttributes: LDUser.privatizableAttributes) }).to(match())
-                                expect({ user.customDictionaryContainsOnlySdkSetAttributes(userDictionary: userDictionary) }).to(match())
-                            }
-                        }
-                        it("creates a dictionary with redacted attributes") {
-                            [true, false].forEach { (includeFlagConfig) in
-                                userDictionary = user.dictionaryValue(includeFlagConfig: includeFlagConfig, includePrivateAttributes: false, config: config)
-
-                                expect({ user.optionalAttributePrivateKeysAppearInPrivateAttrsWhenRedacted(userDictionary: userDictionary,
-                                                                                                              privateAttributes: LDUser.privatizableAttributes) }).to(match())
-                                expect({ user.optionalAttributePublicOrMissingKeysDontAppearInPrivateAttrs(userDictionary: userDictionary,
-                                                                                                              privateAttributes: LDUser.privatizableAttributes) }).to(match())
-                                expect(user.privateAttrsContainsCustom(userDictionary: userDictionary)).to(beTrue())
-                            }
-                        }
-                        it("creates a dictionary with or without matching flag config") {
-                            [true, false].forEach { (includeFlagConfig) in
-                                userDictionary = user.dictionaryValue(includeFlagConfig: includeFlagConfig, includePrivateAttributes: false, config: config)
-
-                                includeFlagConfig ? expect({ user.flagConfigMatches(userDictionary: userDictionary) }).to(match()) : expect(userDictionary.flagConfig).to(beNil())
-                            }
-                        }
-                    }
-                }
-                context("with no private attributes") {
-                    context("by setting private attributes to nil") {
-                        beforeEach {
-                            config = LDConfig.stub
-                            user = LDUser.stub()
-                        }
-                        it("creates a dictionary with matching key value pairs") {
-                            [true, false].forEach { (includeFlagConfig) in
-                                userDictionary = user.dictionaryValue(includeFlagConfig: includeFlagConfig, includePrivateAttributes: false, config: config)
-
-                                expect({ user.requiredAttributeKeyValuePairsMatch(userDictionary: userDictionary) }).to(match())
-                                expect({ user.optionalAttributePublicKeyValuePairsMatch(userDictionary: userDictionary, privateAttributes: []) }).to(match())
-                                expect({ user.sdkSetAttributesKeyValuePairsMatch(userDictionary: userDictionary) }).to(match())
-                                expect({ user.customDictionaryPublicKeyValuePairsMatch(userDictionary: userDictionary, privateAttributes: []) }).to(match())
-                            }
-                        }
-                        it("creates a dictionary without redacted attributes") {
-                            [true, false].forEach { (includeFlagConfig) in
-                                userDictionary = user.dictionaryValue(includeFlagConfig: includeFlagConfig, includePrivateAttributes: false, config: config)
-
-                                expect(userDictionary.redactedAttributes).to(beNil())
-                            }
-                        }
-                        it("creates a dictionary with or without matching flag config") {
-                            [true, false].forEach { (includeFlagConfig) in
-                                userDictionary = user.dictionaryValue(includeFlagConfig: includeFlagConfig, includePrivateAttributes: false, config: config)
-
-                                includeFlagConfig ? expect({ user.flagConfigMatches(userDictionary: userDictionary) }).to(match())
-                                    : expect(userDictionary.flagConfig).to(beNil())
-                            }
-                        }
-                    }
-                    context("by setting config private attributes to empty") {
-                        beforeEach {
-                            config = LDConfig.stub
-                            config.privateUserAttributes = []
-                            user = LDUser.stub()
-                        }
-                        it("creates a dictionary with matching key value pairs") {
-                            [true, false].forEach { (includeFlagConfig) in
-                                userDictionary = user.dictionaryValue(includeFlagConfig: includeFlagConfig, includePrivateAttributes: false, config: config)
-
-                                expect({ user.requiredAttributeKeyValuePairsMatch(userDictionary: userDictionary) }).to(match())
-                                expect({ user.optionalAttributePublicKeyValuePairsMatch(userDictionary: userDictionary, privateAttributes: []) }).to(match())
-                                expect({ user.sdkSetAttributesKeyValuePairsMatch(userDictionary: userDictionary) }).to(match())
-                                expect({ user.customDictionaryPublicKeyValuePairsMatch(userDictionary: userDictionary, privateAttributes: []) }).to(match())
-                            }
-                        }
-                        it("creates a dictionary without redacted attributes") {
-                            [true, false].forEach { (includeFlagConfig) in
-                                userDictionary = user.dictionaryValue(includeFlagConfig: includeFlagConfig, includePrivateAttributes: false, config: config)
-
-                                expect(userDictionary.redactedAttributes).to(beNil())
-                            }
-                        }
-                        it("creates a dictionary with or without matching flag config") {
-                            [true, false].forEach { (includeFlagConfig) in
-                                userDictionary = user.dictionaryValue(includeFlagConfig: includeFlagConfig, includePrivateAttributes: false, config: config)
-
-                                includeFlagConfig ? expect({ user.flagConfigMatches(userDictionary: userDictionary) }).to(match())
-                                    : expect(userDictionary.flagConfig).to(beNil())
-                            }
-                        }
-                    }
-                    context("by setting user private attributes to empty") {
-                        beforeEach {
-                            config = LDConfig.stub
-                            user = LDUser.stub()
-                            user.privateAttributes = []
-                        }
-                        it("creates a dictionary with matching key value pairs") {
-                            [true, false].forEach { (includeFlagConfig) in
-                                userDictionary = user.dictionaryValue(includeFlagConfig: includeFlagConfig, includePrivateAttributes: false, config: config)
-
-                                expect({ user.requiredAttributeKeyValuePairsMatch(userDictionary: userDictionary) }).to(match())
-                                expect({ user.optionalAttributePublicKeyValuePairsMatch(userDictionary: userDictionary, privateAttributes: []) }).to(match())
-                                expect({ user.sdkSetAttributesKeyValuePairsMatch(userDictionary: userDictionary) }).to(match())
-                                expect({ user.customDictionaryPublicKeyValuePairsMatch(userDictionary: userDictionary, privateAttributes: []) }).to(match())
-                            }
-                        }
-                        it("creates a dictionary without redacted attributes") {
-                            [true, false].forEach { (includeFlagConfig) in
-                                userDictionary = user.dictionaryValue(includeFlagConfig: includeFlagConfig, includePrivateAttributes: false, config: config)
-
-                                expect(userDictionary.redactedAttributes).to(beNil())
-                            }
-                        }
-                        it("creates a dictionary with or without matching flag config") {
-                            [true, false].forEach { (includeFlagConfig) in
-                                userDictionary = user.dictionaryValue(includeFlagConfig: includeFlagConfig, includePrivateAttributes: false, config: config)
-
-                                includeFlagConfig ? expect({ user.flagConfigMatches(userDictionary: userDictionary) }).to(match())
-                                    : expect(userDictionary.flagConfig).to(beNil())
-                            }
-                        }
-                    }
-                }
-                context("with custom as the private attribute") {
-                    context("on a user with no custom dictionary") {
-                        context("with a device and os") {
-                            beforeEach {
-                                config = LDConfig.stub
-                                user = LDUser.stub()
-                                user.custom = nil
-                                user.privateAttributes = [LDUser.CodingKeys.custom.rawValue]
-                            }
-                            it("creates a dictionary with matching key value pairs") {
-                                [true, false].forEach { (includeFlagConfig) in
-                                    userDictionary = user.dictionaryValue(includeFlagConfig: includeFlagConfig, includePrivateAttributes: false, config: config)
-
-                                    expect({ user.requiredAttributeKeyValuePairsMatch(userDictionary: userDictionary) }).to(match())
-                                    expect({ user.optionalAttributePublicKeyValuePairsMatch(userDictionary: userDictionary, privateAttributes: []) }).to(match())
+                        context("with all private attributes") {
+                            let allPrivateAssertions = {
+                                it("creates a dictionary with matching key value pairs") {
+                                    expect({ user.optionalAttributePublicKeyValuePairsMatch(userDictionary: userDictionary, privateAttributes: LDUser.privatizableAttributes) }).to(match())
                                     expect({ user.sdkSetAttributesKeyValuePairsMatch(userDictionary: userDictionary) }).to(match())
+                                }
+                                it("creates a dictionary without private keys") {
+                                    expect({ user.optionalAttributePrivateKeysDontExist(userDictionary: userDictionary, privateAttributes: LDUser.privatizableAttributes) }).to(match())
                                     expect({ user.customDictionaryContainsOnlySdkSetAttributes(userDictionary: userDictionary) }).to(match())
                                 }
-                            }
-                            it("creates a dictionary without redacted attributes") {
-                                [true, false].forEach { (includeFlagConfig) in
-                                    userDictionary = user.dictionaryValue(includeFlagConfig: includeFlagConfig, includePrivateAttributes: false, config: config)
-
-                                    expect(userDictionary.redactedAttributes).to(beNil())
+                                it("creates a dictionary with redacted attributes") {
+                                    expect({ user.optionalAttributePrivateKeysAppearInPrivateAttrsWhenRedacted(userDictionary: userDictionary,
+                                                                                                               privateAttributes: LDUser.privatizableAttributes) }).to(match())
+                                    expect({ user.optionalAttributePublicOrMissingKeysDontAppearInPrivateAttrs(userDictionary: userDictionary,
+                                                                                                               privateAttributes: LDUser.privatizableAttributes) }).to(match())
+                                    expect(user.privateAttrsContainsCustom(userDictionary: userDictionary)).to(beTrue())
+                                }
+                                it("maintains invariants") {
+                                    self.dictionaryValueInvariants(includeFlagConfig: includeFlagConfig, user: user, userDictionary: userDictionary)
                                 }
                             }
-                            it("creates a dictionary with or without matching flag config") {
-                                [true, false].forEach { (includeFlagConfig) in
+                            context("using the config flag") {
+                                beforeEach {
+                                    config.allUserAttributesPrivate = true
                                     userDictionary = user.dictionaryValue(includeFlagConfig: includeFlagConfig, includePrivateAttributes: false, config: config)
-
-                                    includeFlagConfig ? expect({ user.flagConfigMatches(userDictionary: userDictionary) }).to(match())
-                                        : expect(userDictionary.flagConfig).to(beNil())
                                 }
+                                allPrivateAssertions()
+                            }
+                            context("contained in the config") {
+                                beforeEach {
+                                    config.privateUserAttributes = LDUser.privatizableAttributes
+                                    userDictionary = user.dictionaryValue(includeFlagConfig: includeFlagConfig, includePrivateAttributes: false, config: config)
+                                }
+                                allPrivateAssertions()
+                            }
+                            context("contained in the user") {
+                                beforeEach {
+                                    user.privateAttributes = LDUser.privatizableAttributes
+                                    userDictionary = user.dictionaryValue(includeFlagConfig: includeFlagConfig, includePrivateAttributes: false, config: config)
+                                }
+                                allPrivateAssertions()
                             }
                         }
-                        context("without a device and os") {
-                            beforeEach {
-                                config = LDConfig.stub
-                                user = LDUser.stub()
-                                user.custom = nil
-                                user.operatingSystem = nil
-                                user.device = nil
-                                user.privateAttributes = [LDUser.CodingKeys.custom.rawValue]
-                            }
-                            it("creates a dictionary with matching key value pairs") {
-                                [true, false].forEach { (includeFlagConfig) in
-                                    userDictionary = user.dictionaryValue(includeFlagConfig: includeFlagConfig, includePrivateAttributes: false, config: config)
-
-                                    expect({ user.requiredAttributeKeyValuePairsMatch(userDictionary: userDictionary) }).to(match())
+                        context("with no private attributes") {
+                            let noPrivateAssertions = {
+                                it("creates a dictionary with matching key value pairs") {
                                     expect({ user.optionalAttributePublicKeyValuePairsMatch(userDictionary: userDictionary, privateAttributes: []) }).to(match())
+                                    expect({ user.sdkSetAttributesKeyValuePairsMatch(userDictionary: userDictionary) }).to(match())
+                                    expect({ user.customDictionaryPublicKeyValuePairsMatch(userDictionary: userDictionary, privateAttributes: []) }).to(match())
                                 }
-                            }
-                            it("creates a dictionary without redacted attributes") {
-                                [true, false].forEach { (includeFlagConfig) in
-                                    userDictionary = user.dictionaryValue(includeFlagConfig: includeFlagConfig, includePrivateAttributes: false, config: config)
-
+                                it("creates a dictionary without redacted attributes") {
                                     expect(userDictionary.redactedAttributes).to(beNil())
                                 }
-                            }
-                            it("creates a dictionary without a custom dictionary") {
-                                [true, false].forEach { (includeFlagConfig) in
-                                    userDictionary = user.dictionaryValue(includeFlagConfig: includeFlagConfig, includePrivateAttributes: false, config: config)
-
-                                    expect(userDictionary.customDictionary(includeSdkSetAttributes: true)).to(beNil())
+                                it("maintains invariants") {
+                                    self.dictionaryValueInvariants(includeFlagConfig: includeFlagConfig, user: user, userDictionary: userDictionary)
                                 }
                             }
-                            it("creates a dictionary with or without matching flag config") {
-                                [true, false].forEach { (includeFlagConfig) in
+                            context("by setting private attributes to nil") {
+                                beforeEach {
                                     userDictionary = user.dictionaryValue(includeFlagConfig: includeFlagConfig, includePrivateAttributes: false, config: config)
-
-                                    includeFlagConfig ? expect({ user.flagConfigMatches(userDictionary: userDictionary) }).to(match())
-                                        : expect(userDictionary.flagConfig).to(beNil())
                                 }
+                                noPrivateAssertions()
+                            }
+                            context("by setting config private attributes to empty") {
+                                beforeEach {
+                                    config.privateUserAttributes = []
+                                    userDictionary = user.dictionaryValue(includeFlagConfig: includeFlagConfig, includePrivateAttributes: false, config: config)
+                                }
+                                noPrivateAssertions()
+                            }
+                            context("by setting user private attributes to empty") {
+                                beforeEach {
+                                    user.privateAttributes = []
+                                    userDictionary = user.dictionaryValue(includeFlagConfig: includeFlagConfig, includePrivateAttributes: false, config: config)
+                                }
+                                noPrivateAssertions()
                             }
                         }
-                    }
-                    context("on a user with a custom dictionary") {
-                        context("without a device and os") {
-                            beforeEach {
-                                config = LDConfig.stub
-                                user = LDUser.stub() //The user stub puts device & operating system in both the user attributes and the custom dictionary
-                                user.custom = user.customWithoutSdkSetAttributes
-                                user.device = nil
-                                user.operatingSystem = nil
-                                user.privateAttributes = [LDUser.CodingKeys.custom.rawValue]
-                            }
-                            it("creates a dictionary with matching key value pairs") {
-                                [true, false].forEach { (includeFlagConfig) in
-                                    userDictionary = user.dictionaryValue(includeFlagConfig: includeFlagConfig, includePrivateAttributes: false, config: config)
-
-                                    expect({ user.requiredAttributeKeyValuePairsMatch(userDictionary: userDictionary) }).to(match())
-                                    expect({ user.optionalAttributePublicKeyValuePairsMatch(userDictionary: userDictionary, privateAttributes: []) }).to(match())
-                                    expect({ user.sdkSetAttributesDontExist(userDictionary: userDictionary) }).to(match())
+                        context("with custom as the private attribute") {
+                            context("on a user with no custom dictionary") {
+                                context("with a device and os") {
+                                    beforeEach {
+                                        user.custom = nil
+                                        user.privateAttributes = [LDUser.CodingKeys.custom.rawValue]
+                                        userDictionary = user.dictionaryValue(includeFlagConfig: includeFlagConfig, includePrivateAttributes: false, config: config)
+                                    }
+                                    it("creates a dictionary with matching key value pairs") {
+                                        expect({ user.optionalAttributePublicKeyValuePairsMatch(userDictionary: userDictionary, privateAttributes: []) }).to(match())
+                                        expect({ user.sdkSetAttributesKeyValuePairsMatch(userDictionary: userDictionary) }).to(match())
+                                        expect({ user.customDictionaryContainsOnlySdkSetAttributes(userDictionary: userDictionary) }).to(match())
+                                    }
+                                    it("creates a dictionary without redacted attributes") {
+                                        expect(userDictionary.redactedAttributes).to(beNil())
+                                    }
+                                    it("maintains invariants") {
+                                        self.dictionaryValueInvariants(includeFlagConfig: includeFlagConfig, user: user, userDictionary: userDictionary)
+                                    }
+                                }
+                                context("without a device and os") {
+                                    beforeEach {
+                                        user.custom = nil
+                                        user.operatingSystem = nil
+                                        user.device = nil
+                                        user.privateAttributes = [LDUser.CodingKeys.custom.rawValue]
+                                        userDictionary = user.dictionaryValue(includeFlagConfig: includeFlagConfig, includePrivateAttributes: false, config: config)
+                                    }
+                                    it("creates a dictionary with matching key value pairs") {
+                                        expect({ user.optionalAttributePublicKeyValuePairsMatch(userDictionary: userDictionary, privateAttributes: []) }).to(match())
+                                    }
+                                    it("creates a dictionary without redacted attributes") {
+                                        expect(userDictionary.redactedAttributes).to(beNil())
+                                    }
+                                    it("creates a dictionary without a custom dictionary") {
+                                        expect(userDictionary.customDictionary(includeSdkSetAttributes: true)).to(beNil())
+                                    }
+                                    it("maintains invariants") {
+                                        self.dictionaryValueInvariants(includeFlagConfig: includeFlagConfig, user: user, userDictionary: userDictionary)
+                                    }
                                 }
                             }
-                            it("creates a dictionary with custom redacted") {
-                                [true, false].forEach { (includeFlagConfig) in
-                                    userDictionary = user.dictionaryValue(includeFlagConfig: includeFlagConfig, includePrivateAttributes: false, config: config)
-
-                                    expect(user.privateAttrsContainsOnlyCustom(userDictionary: userDictionary)) == true
-                                }
-                            }
-                            it("creates a dictionary without a custom dictionary") {
-                                [true, false].forEach { (includeFlagConfig) in
-                                    userDictionary = user.dictionaryValue(includeFlagConfig: includeFlagConfig, includePrivateAttributes: false, config: config)
-
-                                    expect(userDictionary.customDictionary(includeSdkSetAttributes: true)).to(beNil())
-                                }
-                            }
-                            it("creates a dictionary with or without matching flag config") {
-                                [true, false].forEach { (includeFlagConfig) in
-                                    userDictionary = user.dictionaryValue(includeFlagConfig: includeFlagConfig, includePrivateAttributes: false, config: config)
-
-                                    includeFlagConfig ? expect({ user.flagConfigMatches(userDictionary: userDictionary) }).to(match())
-                                        : expect(userDictionary.flagConfig).to(beNil())
+                            context("on a user with a custom dictionary") {
+                                context("without a device and os") {
+                                    beforeEach {
+                                        user.custom = user.customWithoutSdkSetAttributes
+                                        user.device = nil
+                                        user.operatingSystem = nil
+                                        user.privateAttributes = [LDUser.CodingKeys.custom.rawValue]
+                                        userDictionary = user.dictionaryValue(includeFlagConfig: includeFlagConfig, includePrivateAttributes: false, config: config)
+                                    }
+                                    it("creates a dictionary with matching key value pairs") {
+                                        expect({ user.optionalAttributePublicKeyValuePairsMatch(userDictionary: userDictionary, privateAttributes: []) }).to(match())
+                                        expect({ user.sdkSetAttributesDontExist(userDictionary: userDictionary) }).to(match())
+                                    }
+                                    it("creates a dictionary with custom redacted") {
+                                        expect(user.privateAttrsContainsOnlyCustom(userDictionary: userDictionary)) == true
+                                    }
+                                    it("creates a dictionary without a custom dictionary") {
+                                        expect(userDictionary.customDictionary(includeSdkSetAttributes: true)).to(beNil())
+                                    }
+                                    it("maintains invariants") {
+                                        self.dictionaryValueInvariants(includeFlagConfig: includeFlagConfig, user: user, userDictionary: userDictionary)
+                                    }
                                 }
                             }
                         }
@@ -1218,284 +836,61 @@ final class LDUserSpec: QuickSpec {
         describe("isEqual") {
             context("when users are equal") {
                 context("with all properties set") {
-                    beforeEach {
+                    it("returns true") {
                         user = LDUser.stub()
                         otherUser = user
-                    }
-                    it("returns true") {
                         expect(user.isEqual(to: otherUser)) == true
                     }
                 }
                 context("with no properties set") {
-                    beforeEach {
+                    it("returns true") {
                         user = LDUser()
                         otherUser = user
-                    }
-                    it("returns true") {
                         expect(user.isEqual(to: otherUser)) == true
                     }
                 }
             }
             context("when users are not equal") {
-                context("keys differ") {
-                    beforeEach {
-                        user = LDUser.stub()
-                        otherUser = user
-                        otherUser.key = "dummy"
-                    }
-                    it("returns false") {
-                        expect(user.isEqual(to: otherUser)) == false
-                    }
-                }
-                context("names differ") {
-                    context("other name exists") {
+                let testFields: [(String, Bool, Any, (inout LDUser, Any?) -> Void)] =
+                    [("key", false, "dummy", { u, v in u.key = v as! String }),
+                     ("name", true, "dummy", { u, v in u.name = v as! String? }),
+                     ("firstName", true, "dummy", { u, v in u.firstName = v as! String? }),
+                     ("lastName", true, "dummy", { u, v in u.lastName = v as! String? }),
+                     ("country", true, "dummy", { u, v in u.country = v as! String? }),
+                     ("ipAddress", true, "dummy", { u, v in u.ipAddress = v as! String? }),
+                     ("email address", true, "dummy", { u, v in u.email = v as! String? }),
+                     ("avatar", true, "dummy", { u, v in u.avatar = v as! String? }),
+                     ("custom", true, ["dummy": true], { u, v in u.custom = v as! [String: Any]? }),
+                     ("isAnonymous", false, true, { u, v in u.isAnonymous = v as! Bool }),
+                     ("device", true, "dummy", { u, v in u.device = v as! String? }),
+                     ("operatingSystem", true, "dummy", { u, v in u.operatingSystem = v as! String? }),
+                     ("privateAttributes", false, ["dummy"], { u, v in u.privateAttributes = v as! [String]? })]
+                testFields.forEach { name, isOptional, otherVal, setter in
+                    context("\(name) differs") {
                         beforeEach {
                             user = LDUser.stub()
                             otherUser = user
-                            otherUser.name = "dummy"
                         }
-                        it("returns false") {
-                            expect(user.isEqual(to: otherUser)) == false
+                        context("and both exist") {
+                            it("returns false") {
+                                setter(&otherUser, otherVal)
+                                expect(user.isEqual(to: otherUser)) == false
+                                expect(otherUser.isEqual(to: user)) == false
+                            }
                         }
-                    }
-                    context("other name does not exist") {
-                        beforeEach {
-                            user = LDUser.stub()
-                            otherUser = user
-                            otherUser.name = nil
-                        }
-                        it("returns false") {
-                            expect(user.isEqual(to: otherUser)) == false
-                        }
-                    }
-                }
-                context("firstNames differ") {
-                    context("other firstName exists") {
-                        beforeEach {
-                            user = LDUser.stub()
-                            otherUser = user
-                            otherUser.firstName = "dummy"
-                        }
-                        it("returns false") {
-                            expect(user.isEqual(to: otherUser)) == false
-                        }
-                    }
-                    context("other firstName does not exist") {
-                        beforeEach {
-                            user = LDUser.stub()
-                            otherUser = user
-                            otherUser.firstName = nil
-                        }
-                        it("returns false") {
-                            expect(user.isEqual(to: otherUser)) == false
-                        }
-                    }
-                }
-                context("lastNames differ") {
-                    context("other lastName exists") {
-                        beforeEach {
-                            user = LDUser.stub()
-                            otherUser = user
-                            otherUser.lastName = "dummy"
-                        }
-                        it("returns false") {
-                            expect(user.isEqual(to: otherUser)) == false
-                        }
-                    }
-                    context("other lastName does not exist") {
-                        beforeEach {
-                            user = LDUser.stub()
-                            otherUser = user
-                            otherUser.lastName = nil
-                        }
-                        it("returns false") {
-                            expect(user.isEqual(to: otherUser)) == false
-                        }
-                    }
-                }
-                context("countries differ") {
-                    context("other country exists") {
-                        beforeEach {
-                            user = LDUser.stub()
-                            otherUser = user
-                            otherUser.country = "dummy"
-                        }
-                        it("returns false") {
-                            expect(user.isEqual(to: otherUser)) == false
-                        }
-                    }
-                    context("other country does not exist") {
-                        beforeEach {
-                            user = LDUser.stub()
-                            otherUser = user
-                            otherUser.country = nil
-                        }
-                        it("returns false") {
-                            expect(user.isEqual(to: otherUser)) == false
-                        }
-                    }
-                }
-                context("ipAddresses differ") {
-                    context("other ipAddress exists") {
-                        beforeEach {
-                            user = LDUser.stub()
-                            otherUser = user
-                            otherUser.ipAddress = "dummy"
-                        }
-                        it("returns false") {
-                            expect(user.isEqual(to: otherUser)) == false
-                        }
-                    }
-                    context("other ipAddress does not exist") {
-                        beforeEach {
-                            user = LDUser.stub()
-                            otherUser = user
-                            otherUser.ipAddress = nil
-                        }
-                        it("returns false") {
-                            expect(user.isEqual(to: otherUser)) == false
-                        }
-                    }
-                }
-                context("email addresses differ") {
-                    context("other email exists") {
-                        beforeEach {
-                            user = LDUser.stub()
-                            otherUser = user
-                            otherUser.email = "dummy"
-                        }
-                        it("returns false") {
-                            expect(user.isEqual(to: otherUser)) == false
-                        }
-                    }
-                    context("other email does not exist") {
-                        beforeEach {
-                            user = LDUser.stub()
-                            otherUser = user
-                            otherUser.email = nil
-                        }
-                        it("returns false") {
-                            expect(user.isEqual(to: otherUser)) == false
-                        }
-                    }
-                }
-                context("avatars differ") {
-                    context("other avatar exists") {
-                        beforeEach {
-                            user = LDUser.stub()
-                            otherUser = user
-                            otherUser.avatar = "dummy"
-                        }
-                        it("returns false") {
-                            expect(user.isEqual(to: otherUser)) == false
-                        }
-                    }
-                    context("other avatar does not exist") {
-                        beforeEach {
-                            user = LDUser.stub()
-                            otherUser = user
-                            otherUser.avatar = nil
-                        }
-                        it("returns false") {
-                            expect(user.isEqual(to: otherUser)) == false
-                        }
-                    }
-                }
-                context("custom dictionaries differ") {
-                    context("other custom dictionary exists") {
-                        beforeEach {
-                            user = LDUser.stub()
-                            otherUser = user
-                            otherUser.custom = ["dummy": true]
-                        }
-                        it("returns false") {
-                            expect(user.isEqual(to: otherUser)) == false
-                        }
-                    }
-                    context("other custom dictionary does not exist") {
-                        beforeEach {
-                            user = LDUser.stub()
-                            otherUser = user
-                            otherUser.custom = nil
-                        }
-                        it("returns false") {
-                            expect(user.isEqual(to: otherUser)) == false
-                        }
-                    }
-                }
-                context("isAnonymous differs") {
-                    beforeEach {
-                        user = LDUser.stub()
-                        otherUser = user
-                        otherUser.isAnonymous = !user.isAnonymous
-                    }
-                    it("returns false") {
-                        expect(user.isEqual(to: otherUser)) == false
-                    }
-                }
-                context("devices differ") {
-                    context("other device exists") {
-                        beforeEach {
-                            user = LDUser.stub()
-                            otherUser = user
-                            otherUser.device = "dummy"
-                        }
-                        it("returns false") {
-                            expect(user.isEqual(to: otherUser)) == false
-                        }
-                    }
-                    context("other device does not exist") {
-                        beforeEach {
-                            user = LDUser.stub()
-                            otherUser = user
-                            otherUser.device = nil
-                        }
-                        it("returns false") {
-                            expect(user.isEqual(to: otherUser)) == false
-                        }
-                    }
-                }
-                context("operatingSystems differ") {
-                    context("other operatingSystem exists") {
-                        beforeEach {
-                            user = LDUser.stub()
-                            otherUser = user
-                            otherUser.operatingSystem = "dummy"
-                        }
-                        it("returns false") {
-                            expect(user.isEqual(to: otherUser)) == false
-                        }
-                    }
-                    context("other operatingSystem does not exist") {
-                        beforeEach {
-                            user = LDUser.stub()
-                            otherUser = user
-                            otherUser.operatingSystem = nil
-                        }
-                        it("returns false") {
-                            expect(user.isEqual(to: otherUser)) == false
-                        }
-                    }
-                }
-                context("privateAttributes differ") {
-                    context("other privateAttributes exists") {
-                        beforeEach {
-                            user = LDUser.stub()
-                            otherUser = user
-                            otherUser.privateAttributes = ["dummy"]
-                        }
-                        it("returns false") {
-                            expect(user.isEqual(to: otherUser)) == false
-                        }
-                    }
-                    context("other privateAttributes does not exist") {
-                        beforeEach {
-                            user = LDUser.stub()
-                            otherUser = user
-                            otherUser.privateAttributes = nil
-                        }
-                        it("returns false") {
-                            expect(user.isEqual(to: otherUser)) == false
+                        if isOptional {
+                            context("self \(name) nil") {
+                                it("returns false") {
+                                    setter(&user, nil)
+                                    expect(user.isEqual(to: otherUser)) == false
+                                }
+                            }
+                            context("other \(name) nil") {
+                                it("returns false") {
+                                    setter(&otherUser, nil)
+                                    expect(user.isEqual(to: otherUser)) == false
+                                }
+                            }
                         }
                     }
                 }
@@ -1506,14 +901,14 @@ final class LDUserSpec: QuickSpec {
 
 extension LDUser {
     static var requiredAttributes: [String] {
-        return [CodingKeys.key.rawValue, CodingKeys.isAnonymous.rawValue]
+        [CodingKeys.key.rawValue, CodingKeys.isAnonymous.rawValue]
     }
     static var optionalAttributes: [String] {
-        return [CodingKeys.name.rawValue, CodingKeys.firstName.rawValue, CodingKeys.lastName.rawValue, CodingKeys.country.rawValue, CodingKeys.ipAddress.rawValue, CodingKeys.email.rawValue,
-                CodingKeys.avatar.rawValue]
+        [CodingKeys.name.rawValue, CodingKeys.firstName.rawValue, CodingKeys.lastName.rawValue, CodingKeys.country.rawValue, CodingKeys.ipAddress.rawValue, CodingKeys.email.rawValue,
+         CodingKeys.avatar.rawValue]
     }
     var customAttributes: [String]? {
-        return custom?.keys.filter { (key) in !LDUser.sdkSetAttributes.contains(key) }
+        custom?.keys.filter { key in !LDUser.sdkSetAttributes.contains(key) }
     }
 
     struct MatcherMessages {
@@ -1524,115 +919,72 @@ extension LDUser {
         static let attributeListShouldContain = "private attributes list does not contain attribute "
     }
 
+    private func failsToMatch(fails: [String]) -> ToMatchResult {
+        fails.isEmpty ? .matched : .failed(reason: fails.joined(separator: ", "))
+    }
+
     fileprivate func requiredAttributeKeyValuePairsMatch(userDictionary: [String: Any]) -> ToMatchResult {
-        var messages = [String]()
-
-        LDUser.requiredAttributes.forEach { (attribute) in
-            if let message = messageIfMissingValue(in: userDictionary, for: attribute) {
-                messages.append(message)
-            }
-        }
-
-        return messages.isEmpty ? .matched : .failed(reason: messages.joined(separator: ", "))
+        failsToMatch(fails: LDUser.requiredAttributes.compactMap { attribute in
+            messageIfMissingValue(in: userDictionary, for: attribute)
+        })
     }
 
     fileprivate func optionalAttributePublicKeyValuePairsMatch(userDictionary: [String: Any], privateAttributes: [String]) -> ToMatchResult {
-        var messages = [String]()
-
-        LDUser.optionalAttributes.forEach { (attribute) in
-            if !privateAttributes.contains(attribute) {
-                if let message = messageIfValueDoesntMatch(value: value(forAttribute: attribute), in: userDictionary, for: attribute) {
-                    messages.append(message)
-                }
-            }
-        }
-
-        return messages.isEmpty ? .matched : .failed(reason: messages.joined(separator: ", "))
+        failsToMatch(fails: LDUser.optionalAttributes.compactMap { attribute in
+            privateAttributes.contains(attribute) ? nil : messageIfValueDoesntMatch(value: value(forAttribute: attribute), in: userDictionary, for: attribute)
+        })
     }
 
     fileprivate func optionalAttributePrivateKeysDontExist(userDictionary: [String: Any], privateAttributes: [String]) -> ToMatchResult {
-        var messages = [String]()
-
-        LDUser.optionalAttributes.forEach { (attribute) in
-            if privateAttributes.contains(attribute) {
-                if let message = messageIfAttributeExists(in: userDictionary, for: attribute) {
-                    messages.append(message)
-                }
-            }
-        }
-
-        return messages.isEmpty ? .matched : .failed(reason: messages.joined(separator: ", "))
+        failsToMatch(fails: LDUser.optionalAttributes.compactMap { attribute in
+            !privateAttributes.contains(attribute) ? nil : messageIfAttributeExists(in: userDictionary, for: attribute)
+        })
     }
 
     fileprivate func optionalAttributeMissingValueKeysDontExist(userDictionary: [String: Any]) -> ToMatchResult {
-        var messages = [String]()
-
-        LDUser.optionalAttributes.forEach { (attribute) in
-            if value(forAttribute: attribute) == nil {
-                if let message = messageIfAttributeExists(in: userDictionary, for: attribute) {
-                    messages.append(message)
-                }
-            }
-        }
-
-        return messages.isEmpty ? .matched : .failed(reason: messages.joined(separator: ", "))
+        failsToMatch(fails: LDUser.optionalAttributes.compactMap { attribute in
+            value(forAttribute: attribute) != nil ? nil : messageIfAttributeExists(in: userDictionary, for: attribute)
+        })
     }
 
     fileprivate func optionalAttributePrivateKeysAppearInPrivateAttrsWhenRedacted(userDictionary: [String: Any], privateAttributes: [String]) -> ToMatchResult {
-        var messages = [String]()
-
         let redactedAttributes = userDictionary.redactedAttributes
-
-        LDUser.optionalAttributes.forEach { (attribute) in
+        let messages: [String] = LDUser.optionalAttributes.compactMap { attribute in
             if value(forAttribute: attribute) != nil && privateAttributes.contains(attribute) {
-                if let message = messageIfRedactedAttributeDoesNotExist(in: redactedAttributes, for: attribute) {
-                    messages.append(message)
-                }
+                return messageIfRedactedAttributeDoesNotExist(in: redactedAttributes, for: attribute)
             }
+            return nil
         }
-
-        return messages.isEmpty ? .matched : .failed(reason: messages.joined(separator: ", "))
+        return failsToMatch(fails: messages)
     }
 
     fileprivate func optionalAttributeKeysDontAppearInPrivateAttrs(userDictionary: [String: Any]) -> ToMatchResult {
-        var messages = [String]()
-
         let redactedAttributes = userDictionary.redactedAttributes
-
-        LDUser.optionalAttributes.forEach { (attribute) in
-            if let message = messageIfAttributeExists(in: redactedAttributes, for: attribute) {
-                messages.append(message)
-            }
-        }
-
-        return messages.isEmpty ? .matched : .failed(reason: messages.joined(separator: ", "))
+        return failsToMatch(fails: LDUser.optionalAttributes.compactMap { attribute in
+            messageIfAttributeExists(in: redactedAttributes, for: attribute)
+        })
     }
 
     fileprivate func optionalAttributePublicOrMissingKeysDontAppearInPrivateAttrs(userDictionary: [String: Any], privateAttributes: [String]) -> ToMatchResult {
-        var messages = [String]()
-
         let redactedAttributes = userDictionary.redactedAttributes
-
-        LDUser.optionalAttributes.forEach { (attribute) in
+        let messages: [String] = LDUser.optionalAttributes.compactMap { attribute in
             if value(forAttribute: attribute) == nil || !privateAttributes.contains(attribute) {
-                if let message = messageIfPublicOrMissingAttributeIsRedacted(in: redactedAttributes, for: attribute) {
-                    messages.append(message)
-                }
+                return messageIfPublicOrMissingAttributeIsRedacted(in: redactedAttributes, for: attribute)
             }
+            return nil
         }
-
-        return messages.isEmpty ? .matched : .failed(reason: messages.joined(separator: ", "))
+        return failsToMatch(fails: messages)
     }
 
     fileprivate func sdkSetAttributesKeyValuePairsMatch(userDictionary: [String: Any]) -> ToMatchResult {
         guard let customDictionary = userDictionary.customDictionary(includeSdkSetAttributes: true)
-        else {
-            return .failed(reason: MatcherMessages.dictionaryShouldContain + CodingKeys.custom.rawValue)
+            else {
+                return .failed(reason: MatcherMessages.dictionaryShouldContain + CodingKeys.custom.rawValue)
         }
 
         var messages = [String]()
 
-        LDUser.sdkSetAttributes.forEach { (attribute) in
+        LDUser.sdkSetAttributes.forEach { attribute in
             if let message = messageIfMissingValue(in: customDictionary, for: attribute) {
                 messages.append(message)
             }
@@ -1641,7 +993,7 @@ extension LDUser {
             }
         }
 
-        return messages.isEmpty ? .matched : .failed(reason: messages.joined(separator: ", "))
+        return failsToMatch(fails: messages)
     }
 
     fileprivate func sdkSetAttributesDontExist(userDictionary: [String: Any]) -> ToMatchResult {
@@ -1649,21 +1001,17 @@ extension LDUser {
             return .matched
         }
 
-        var messages = [String]()
-
-        LDUser.sdkSetAttributes.forEach { (attribute) in
-            if let message = messageIfAttributeExists(in: customDictionary, for: attribute) {
-                messages.append(message)
-            }
+        let messages = LDUser.sdkSetAttributes.compactMap { attribute in
+            messageIfAttributeExists(in: customDictionary, for: attribute)
         }
 
-        return messages.isEmpty ? .matched : .failed(reason: messages.joined(separator: ", "))
+        return failsToMatch(fails: messages)
     }
 
     fileprivate func customDictionaryContainsOnlySdkSetAttributes(userDictionary: [String: Any]) -> ToMatchResult {
         guard let customDictionary = userDictionary.customDictionary(includeSdkSetAttributes: false)
-        else {
-            return .failed(reason: MatcherMessages.dictionaryShouldContain + CodingKeys.custom.rawValue)
+            else {
+                return .failed(reason: MatcherMessages.dictionaryShouldContain + CodingKeys.custom.rawValue)
         }
 
         if !customDictionary.isEmpty {
@@ -1674,35 +1022,27 @@ extension LDUser {
     }
 
     fileprivate func privateAttrsContainsCustom(userDictionary: [String: Any]) -> Bool {
-        guard let redactedAttributes = userDictionary.redactedAttributes
-        else {
-            return false
-        }
-        return redactedAttributes.contains(CodingKeys.custom.rawValue)
+        userDictionary.redactedAttributes?.contains(CodingKeys.custom.rawValue) == true
     }
 
     fileprivate func privateAttrsContainsOnlyCustom(userDictionary: [String: Any]) -> Bool {
-        guard let redactedAttributes = userDictionary.redactedAttributes, redactedAttributes.contains(CodingKeys.custom.rawValue)
-        else {
-            return false
-        }
-        return redactedAttributes.count == 1
+        privateAttrsContainsCustom(userDictionary: userDictionary) && userDictionary.redactedAttributes?.count == 1
     }
 
     fileprivate func customDictionaryPublicKeyValuePairsMatch(userDictionary: [String: Any], privateAttributes: [String]) -> ToMatchResult {
         guard let custom = custom
-        else {
-            return userDictionary.customDictionary(includeSdkSetAttributes: false).isNilOrEmpty ? .matched
-                : .failed(reason: MatcherMessages.dictionaryShouldNotContain + CodingKeys.custom.rawValue)
+            else {
+                return userDictionary.customDictionary(includeSdkSetAttributes: false).isNilOrEmpty ? .matched
+                    : .failed(reason: MatcherMessages.dictionaryShouldNotContain + CodingKeys.custom.rawValue)
         }
         guard let customDictionary = userDictionary.customDictionary(includeSdkSetAttributes: false)
-        else {
-            return .failed(reason: MatcherMessages.dictionaryShouldContain + CodingKeys.custom.rawValue)
+            else {
+                return .failed(reason: MatcherMessages.dictionaryShouldContain + CodingKeys.custom.rawValue)
         }
 
         var messages = [String]()
 
-        customAttributes?.forEach { (customAttribute) in
+        customAttributes?.forEach { customAttribute in
             if !privateAttributes.contains(customAttribute) {
                 if let message = messageIfMissingValue(in: customDictionary, for: customAttribute) {
                     messages.append(message)
@@ -1713,134 +1053,93 @@ extension LDUser {
             }
         }
 
-        return messages.isEmpty ? .matched : .failed(reason: messages.joined(separator: ", "))
+        return failsToMatch(fails: messages)
     }
 
     fileprivate func customDictionaryPrivateKeysDontExist(userDictionary: [String: Any], privateAttributes: [String]) -> ToMatchResult {
         guard let customDictionary = userDictionary.customDictionary(includeSdkSetAttributes: false)
-        else {
-            return .failed(reason: MatcherMessages.dictionaryShouldContain + CodingKeys.custom.rawValue)
+            else {
+                return .failed(reason: MatcherMessages.dictionaryShouldContain + CodingKeys.custom.rawValue)
         }
 
-        var messages = [String]()
-
-        customAttributes?.forEach { (customAttribute) in
+        let messages = customAttributes?.compactMap { customAttribute in
             if privateAttributes.contains(customAttribute) {
-                if let message = messageIfAttributeExists(in: customDictionary, for: customAttribute) {
-                    messages.append(message)
-                }
+                return messageIfAttributeExists(in: customDictionary, for: customAttribute)
             }
-        }
+            return nil
+            } ?? [String]()
 
-        return messages.isEmpty ? .matched : .failed(reason: messages.joined(separator: ", "))
+        return failsToMatch(fails: messages)
     }
 
     fileprivate func customPrivateKeysAppearInPrivateAttrsWhenRedacted(userDictionary: [String: Any], privateAttributes: [String]) -> ToMatchResult {
         guard let custom = custom
-        else {
-            return userDictionary.customDictionary(includeSdkSetAttributes: false).isNilOrEmpty ? .matched
-                : .failed(reason: MatcherMessages.dictionaryShouldNotContain + CodingKeys.custom.rawValue)
+            else {
+                return userDictionary.customDictionary(includeSdkSetAttributes: false).isNilOrEmpty ? .matched
+                    : .failed(reason: MatcherMessages.dictionaryShouldNotContain + CodingKeys.custom.rawValue)
         }
 
-        var messages = [String]()
-
-        customAttributes?.forEach { (customAttribute) in
+        return failsToMatch(fails: customAttributes?.compactMap { customAttribute in
             if privateAttributes.contains(customAttribute) && custom[customAttribute] != nil {
-                if let message = messageIfRedactedAttributeDoesNotExist(in: userDictionary.redactedAttributes, for: customAttribute) {
-                    messages.append(message)
-                }
+                return messageIfRedactedAttributeDoesNotExist(in: userDictionary.redactedAttributes, for: customAttribute)
             }
-        }
-
-        return messages.isEmpty ? .matched : .failed(reason: messages.joined(separator: ", "))
+            return nil
+            } ?? [String]())
     }
 
     fileprivate func customPublicOrMissingKeysDontAppearInPrivateAttrs(userDictionary: [String: Any], privateAttributes: [String]) -> ToMatchResult {
         guard let custom = custom
-        else {
-            return userDictionary.customDictionary(includeSdkSetAttributes: false).isNilOrEmpty ? .matched
-                : .failed(reason: MatcherMessages.dictionaryShouldNotContain + CodingKeys.custom.rawValue)
+            else {
+                return userDictionary.customDictionary(includeSdkSetAttributes: false).isNilOrEmpty ? .matched
+                    : .failed(reason: MatcherMessages.dictionaryShouldNotContain + CodingKeys.custom.rawValue)
         }
 
-        var messages = [String]()
-
-        customAttributes?.forEach { (customAttribute) in
+        return failsToMatch(fails: customAttributes?.compactMap { customAttribute in
             if !privateAttributes.contains(customAttribute) || custom[customAttribute] == nil {
-                if let message = messageIfPublicOrMissingAttributeIsRedacted(in: userDictionary.redactedAttributes, for: customAttribute) {
-                    messages.append(message)
-                }
+                return messageIfPublicOrMissingAttributeIsRedacted(in: userDictionary.redactedAttributes, for: customAttribute)
             }
-        }
-
-        return messages.isEmpty ? .matched : .failed(reason: messages.joined(separator: ", "))
+            return nil
+            } ?? [String]())
     }
 
     fileprivate func flagConfigMatches(userDictionary: [String: Any]) -> ToMatchResult {
         let flagConfig = flagStore.featureFlags
         guard let flagConfigDictionary = userDictionary.flagConfig
-        else {
-            return .failed(reason: MatcherMessages.dictionaryShouldContain + CodingKeys.config.rawValue)
+            else {
+                return .failed(reason: MatcherMessages.dictionaryShouldContain + CodingKeys.config.rawValue)
         }
         if flagConfig != flagConfigDictionary {
             return .failed(reason: MatcherMessages.valuesDontMatch + CodingKeys.config.rawValue)
-
         }
         return .matched
     }
 
     private func messageIfMissingValue(in dictionary: [String: Any], for attribute: String) -> String? {
-        guard dictionary[attribute] != nil
-        else {
-            return MatcherMessages.dictionaryShouldContain + attribute
-        }
-        return nil
+        dictionary[attribute] != nil ? nil : MatcherMessages.dictionaryShouldContain + attribute
     }
 
     private func messageIfValueDoesntMatch(value: Any?, in dictionary: [String: Any], for attribute: String) -> String? {
-        if !AnyComparer.isEqual(value, to: dictionary[attribute]) {
-            return MatcherMessages.valuesDontMatch + attribute
-        }
-        return nil
+        AnyComparer.isEqual(value, to: dictionary[attribute]) ? nil : MatcherMessages.valuesDontMatch + attribute
     }
 
     private func messageIfAttributeExists(in dictionary: [String: Any], for attribute: String) -> String? {
-        if dictionary[attribute] != nil {
-            return MatcherMessages.dictionaryShouldNotContain + attribute
-        }
-        return nil
+        dictionary[attribute] == nil ? nil : MatcherMessages.dictionaryShouldNotContain + attribute
     }
 
     private func messageIfRedactedAttributeDoesNotExist(in redactedAttributes: [String]?, for attribute: String) -> String? {
         guard let redactedAttributes = redactedAttributes
-        else {
-            return MatcherMessages.dictionaryShouldContain + CodingKeys.privateAttributes.rawValue
+            else {
+                return MatcherMessages.dictionaryShouldContain + CodingKeys.privateAttributes.rawValue
         }
-        if !redactedAttributes.contains(attribute) {
-            return MatcherMessages.attributeListShouldContain + attribute
-        }
-        return nil
+        return redactedAttributes.contains(attribute) ? nil : MatcherMessages.attributeListShouldContain + attribute
     }
 
     private func messageIfAttributeExists(in redactedAttributes: [String]?, for attribute: String) -> String? {
-        guard let redactedAttributes = redactedAttributes
-        else {
-            return nil
-        }
-        if redactedAttributes.contains(attribute) {
-            return MatcherMessages.attributeListShouldNotContain + attribute
-        }
-        return nil
+        redactedAttributes?.contains(attribute) != true ? nil : MatcherMessages.attributeListShouldNotContain + attribute
     }
 
     private func messageIfPublicOrMissingAttributeIsRedacted(in redactedAttributes: [String]?, for attribute: String) -> String? {
-        guard let redactedAttributes = redactedAttributes
-        else {
-            return nil
-        }
-        if redactedAttributes.contains(attribute) {
-            return MatcherMessages.attributeListShouldNotContain + attribute
-        }
-        return nil
+        redactedAttributes?.contains(attribute) != true ? nil : MatcherMessages.attributeListShouldNotContain + attribute
     }
 
     public func dictionaryValueWithAllAttributes(includeFlagConfig: Bool) -> [String: Any] {
@@ -1850,20 +1149,24 @@ extension LDUser {
     }
 }
 
+extension Optional where Wrapped: Collection {
+    var isNilOrEmpty: Bool { self?.isEmpty ?? true }
+}
+
 extension Dictionary where Key == String, Value == Any {
     fileprivate var redactedAttributes: [String]? {
-        return self[LDUser.CodingKeys.privateAttributes.rawValue] as? [String]
+        self[LDUser.CodingKeys.privateAttributes.rawValue] as? [String]
     }
     fileprivate func customDictionary(includeSdkSetAttributes: Bool) -> [String: Any]? {
         var customDictionary = self[LDUser.CodingKeys.custom.rawValue] as? [String: Any]
         if !includeSdkSetAttributes {
-            customDictionary = customDictionary?.filter { (key, _) in
+            customDictionary = customDictionary?.filter { key, _ in
                 !LDUser.sdkSetAttributes.contains(key)
             }
         }
         return customDictionary
     }
     fileprivate var flagConfig: [String: Any]? {
-        return self[LDUser.CodingKeys.config.rawValue] as? [LDFlagKey: Any]
+        self[LDUser.CodingKeys.config.rawValue] as? [LDFlagKey: Any]
     }
 }

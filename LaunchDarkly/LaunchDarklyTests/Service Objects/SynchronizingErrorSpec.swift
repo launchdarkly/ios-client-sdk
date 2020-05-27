@@ -2,7 +2,6 @@
 //  SynchronizingErrorSpec.swift
 //  LaunchDarklyTests
 //
-//  Created by Mark Pokorny on 2/27/18. +JMJ
 //  Copyright © 2018 Catamorphic Co. All rights reserved.
 //
 

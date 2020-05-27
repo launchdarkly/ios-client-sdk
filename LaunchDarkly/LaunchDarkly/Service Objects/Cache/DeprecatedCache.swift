@@ -2,7 +2,6 @@
 //  DeprecatedCache.swift
 //  LaunchDarkly
 //
-//  Created by Mark Pokorny on 4/10/19. +JMJ
 //  Copyright © 2019 Catamorphic Co. All rights reserved.
 //
 
@@ -20,21 +19,17 @@ protocol DeprecatedCache {
 extension DeprecatedCache {
     func removeData(olderThan expirationDate: Date) {
         guard let cachedUserData = keyedValueCache.dictionary(forKey: cachedDataKey) as? [UserKey: [String: Any]], !cachedUserData.isEmpty
-        else {
-            return      //no cached data
-        }
+        else { return } // no cached data
         let expiredUserKeys = userKeys(from: cachedUserData, olderThan: expirationDate)
         guard !expiredUserKeys.isEmpty
-        else {
-            return  //no expired user cached data, leave the cache alone
-        }
+        else { return } // no expired user cached data, leave the cache alone
         guard expiredUserKeys.count != cachedUserData.count
         else {
-                keyedValueCache.removeObject(forKey: cachedDataKey)        //all user cached data is expired, remove the cache key & values
+            keyedValueCache.removeObject(forKey: cachedDataKey)        //all user cached data is expired, remove the cache key & values
             return
         }
         let unexpiredUserData: [UserKey: [String: Any]] = cachedUserData.filter { (userKey, _) in
-            return !expiredUserKeys.contains(userKey)
+            !expiredUserKeys.contains(userKey)
         }
         keyedValueCache.set(unexpiredUserData, forKey: cachedDataKey)
     }
@@ -51,7 +46,7 @@ private extension LDUser.CodingKeys {
 
 extension Dictionary where Key == String, Value == Any {
     var lastUpdated: Date? {
-        return (self[LDUser.CodingKeys.lastUpdated] as? String)?.dateValue
+        (self[LDUser.CodingKeys.lastUpdated] as? String)?.dateValue
     }
 }
 

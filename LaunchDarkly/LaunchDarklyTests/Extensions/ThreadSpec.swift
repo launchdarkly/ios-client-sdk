@@ -2,7 +2,6 @@
 //  ThreadSpec.swift
 //  LaunchDarklyTests
 //
-//  Created by Mark Pokorny on 3/5/19.
 //  Copyright © 2019 Catamorphic Co. All rights reserved.
 //
 

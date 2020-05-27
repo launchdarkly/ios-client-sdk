@@ -300,6 +300,16 @@ final class EventReportingMock: EventReporting {
 // MARK: - FeatureFlagCachingMock
 final class FeatureFlagCachingMock: FeatureFlagCaching {
 
+    // MARK: maxCachedUsers
+    var maxCachedUsersSetCount = 0
+    var setMaxCachedUsersCallback: (() -> Void)?
+    var maxCachedUsers: Int = 5 {
+        didSet {
+            maxCachedUsersSetCount += 1
+            setMaxCachedUsersCallback?()
+        }
+    }
+
     // MARK: retrieveFeatureFlags
     var retrieveFeatureFlagsCallCount = 0
     var retrieveFeatureFlagsCallback: (() -> Void)?

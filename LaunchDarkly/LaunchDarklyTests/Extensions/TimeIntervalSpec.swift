@@ -2,7 +2,6 @@
 //  TimeIntervalSpec.swift
 //  LaunchDarklyTests
 //
-//  Created by Mark Pokorny on 3/27/19.
 //  Copyright © 2019 Catamorphic Co. All rights reserved.
 //
 

@@ -2,7 +2,6 @@
 //  ErrorNotifyingSpec.swift
 //  LaunchDarklyTests
 //
-//  Created by Mark Pokorny on 2/18/19.
 //  Copyright © 2019 Catamorphic Co. All rights reserved.
 //
 
@@ -38,7 +37,7 @@ final class ErrorNotifierSpec: QuickSpec {
 
         init(observerCount: Int) {
             self.init()
-            errorObservers.append(contentsOf: ErrorObserver.createObservers(count: observerCount))
+            errorObservers = ErrorObserver.createObservers(count: observerCount)
             errorNotifier = ErrorNotifier(observers: errorObservers)
             originalObserverCount = errorObservers.count
             observersPerOwner = observerCount
@@ -46,15 +45,13 @@ final class ErrorNotifierSpec: QuickSpec {
 
         init(ownerCount: Int, observersPerOwner: Int) {
             self.init()
-            var owners = [ErrorOwnerMock]()
-            while owners.count < ownerCount {
-                owners.append(ErrorOwnerMock())
+
+            // create ownerCount owners, then observersPerOwner observers for each owner
+            let owners = (0..<ownerCount).map { _ in ErrorOwnerMock() }
+            owners.forEach { owner in
+                errorObservers += ErrorObserver.createObservers(count: observersPerOwner, using: owner)
             }
-            for _ in 1...observersPerOwner {
-                owners.forEach { (owner) in
-                    errorObservers.append(ErrorObserver(owner: owner, errorHandler: owner.handle))
-                }
-            }
+
             errorNotifier = ErrorNotifier(observers: errorObservers)
             originalObserverCount = errorObservers.count
             self.observersPerOwner = observersPerOwner
@@ -100,33 +97,21 @@ final class ErrorNotifierSpec: QuickSpec {
             context("first observer") {
                 beforeEach {
                     testContext = TestContext()
-
                     testContext.errorNotifier.addErrorObserver(testContext.nextErrorObserver)
                 }
                 it("adds the observer") {
                     expect(testContext.errorNotifier.errorObservers.count) == 1
-                    expect(testContext.errorNotifier.errorObservers.last).toNot(beNil())
-                    guard let lastObserver = testContext.errorNotifier.errorObservers.last
-                    else {
-                        return
-                    }
-                    expect(lastObserver) == testContext.nextErrorObserver
+                    expect(testContext.errorNotifier.errorObservers.last) == testContext.nextErrorObserver
                 }
             }
             context("not the first observer") {
                 beforeEach {
                     testContext = TestContext(observerCount: Constants.errorObserverCount)
-
                     testContext.errorNotifier.addErrorObserver(testContext.nextErrorObserver)
                 }
                 it("adds the observer") {
                     expect(testContext.errorNotifier.errorObservers.count) == Constants.errorObserverCount + 1
-                    expect(testContext.errorNotifier.errorObservers.last).toNot(beNil())
-                    guard let lastObserver = testContext.errorNotifier.errorObservers.last
-                    else {
-                        return
-                    }
-                    expect(lastObserver) == testContext.nextErrorObserver
+                    expect(testContext.errorNotifier.errorObservers.last) == testContext.nextErrorObserver
                 }
             }
         }
@@ -214,16 +199,9 @@ final class ErrorNotifierSpec: QuickSpec {
                     testContext.errorNotifier.notifyObservers(of: testContext.errorMock)
                 }
                 it("notifies each observer") {
-                    testContext.errorNotifier.errorOwners.forEach { (owner) in
+                    testContext.errorNotifier.errorOwners.forEach { owner in
                         expect(owner.errors.count) == testContext.observersPerOwner
-                        owner.errors.forEach { (error) in
-                            expect(error as? ErrorMock).toNot(beNil())
-                            guard let errorMock = error as? ErrorMock
-                            else {
-                                return
-                            }
-                            expect(errorMock.identifier) == Constants.errorIdentifier
-                        }
+                        owner.errors.forEach { expect(($0 as? ErrorMock)?.identifier) == Constants.errorIdentifier }
                     }
                 }
             }
@@ -236,19 +214,12 @@ final class ErrorNotifierSpec: QuickSpec {
                     testContext.errorNotifier.notifyObservers(of: testContext.errorMock)
                 }
                 it("notifies existing owner observers") {
-                    testContext.errorNotifier.errorOwners.forEach { (owner) in
+                    testContext.errorNotifier.errorOwners.forEach { owner in
                         if owner === ownerToRemove {
                             expect(owner.errors.count) == 0
                         } else {
                             expect(owner.errors.count) == testContext.observersPerOwner
-                            owner.errors.forEach { (error) in
-                                expect(error as? ErrorMock).toNot(beNil())
-                                guard let errorMock = error as? ErrorMock
-                                else {
-                                    return
-                                }
-                                expect(errorMock.identifier) == Constants.errorIdentifier
-                            }
+                            owner.errors.forEach { expect(($0 as? ErrorMock)?.identifier) == Constants.errorIdentifier }
                         }
                     }
                 }
@@ -258,17 +229,9 @@ final class ErrorNotifierSpec: QuickSpec {
 }
 
 extension ErrorNotifier {
-    var errorOwners: [ErrorOwnerMock] {
-        let allOwners = errorObservers.compactMap { (observer) in
-            return observer.owner as? ErrorOwnerMock
-        }
-        return NSOrderedSet(array: allOwners).array as? [ErrorOwnerMock] ?? []
-    }
-
+    var errorOwners: [ErrorOwnerMock] { errorObservers.compactMap { $0.owner as? ErrorOwnerMock } }
     func observers(for owner: ErrorOwnerMock) -> [ErrorObserver] {
-        return errorObservers.filter { (observer) in
-            return observer.owner === owner
-        }
+        errorObservers.filter { $0.owner === owner }
     }
 }
 

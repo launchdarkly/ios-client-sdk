@@ -2,7 +2,6 @@
 //  LDConfigStub.swift
 //  LaunchDarklyTests
 //
-//  Created by Mark Pokorny on 9/29/17. +JMJ
 //  Copyright © 2017 Catamorphic Co. All rights reserved.
 //
 
@@ -16,7 +15,7 @@ extension LDConfig {
     }
 
     static var stub: LDConfig {
-        return stub(mobileKey: Constants.mockMobileKey, environmentReporter: EnvironmentReportingMock())
+        stub(mobileKey: Constants.mockMobileKey, environmentReporter: EnvironmentReportingMock())
     }
 
     static func stub(mobileKey: String, environmentReporter: EnvironmentReportingMock) -> LDConfig {
@@ -26,8 +25,6 @@ extension LDConfig {
         config.streamUrl = DarklyServiceMock.Constants.mockStreamUrl
 
         config.flagPollingInterval = 1.0
-
-        config.enableBackgroundUpdates = true
 
         return config
     }

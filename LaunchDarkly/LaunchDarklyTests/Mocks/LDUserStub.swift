@@ -2,7 +2,6 @@
 //  LDUserStub.swift
 //  LaunchDarklyTests
 //
-//  Created by Mark Pokorny on 10/19/17. +JMJ
 //  Copyright © 2017 Catamorphic Co. All rights reserved.
 //
 
@@ -74,10 +73,6 @@ extension LDUser {
     }
 
     static func stubUsers(_ count: Int) -> [LDUser] {
-        var userStubs = [LDUser]()
-        while userStubs.count < count {
-            userStubs.append(LDUser.stub())
-        }
-        return userStubs
+        (0..<count).map { _ in LDUser.stub() }
     }
 }

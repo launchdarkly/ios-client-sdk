@@ -2,7 +2,6 @@
 //  LDCommon.swift
 //  LaunchDarkly
 //
-//  Created by Mark Pokorny on 8/23/17. +JMJ
 //  Copyright © 2017 Catamorphic Co. All rights reserved.
 //
 
@@ -25,10 +24,6 @@ public typealias LDConnectionModeChangedHandler = (ConnectionInformation.Connect
 public typealias LDErrorHandler = (Error) -> Void
 
 extension LDFlagKey {
-    private static var anyKeyIdentifier: LDFlagKey {
-        return "Darkly.FlagKeyList.Any"
-    }
-    static var anyKey: [LDFlagKey] {
-        return [anyKeyIdentifier]
-    }
+    private static var anyKeyIdentifier: LDFlagKey { "Darkly.FlagKeyList.Any" }
+    static var anyKey: [LDFlagKey] { [anyKeyIdentifier] }
 }
