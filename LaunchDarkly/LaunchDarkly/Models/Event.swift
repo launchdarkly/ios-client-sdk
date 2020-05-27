@@ -2,7 +2,6 @@
 //  Event.swift
 //  LaunchDarkly
 //
-//  Created by Mark Pokorny on 7/11/17. +JMJ
 //  Copyright © 2017 Catamorphic Co. All rights reserved.
 //
 
@@ -17,19 +16,19 @@ struct Event { //sdk internal, not publically accessible
         case feature, debug, identify, custom, summary
 
         static var allKinds: [Kind] {
-            return [feature, debug, identify, custom, summary]
+            [feature, debug, identify, custom, summary]
         }
         static var alwaysInlineUserKinds: [Kind] {
-            return [identify, debug]
+            [identify, debug]
         }
         var isAlwaysInlineUserKind: Bool {
-            return Kind.alwaysInlineUserKinds.contains(self)
+            Kind.alwaysInlineUserKinds.contains(self)
         }
         static var alwaysIncludeValueKinds: [Kind] {
-            return [feature, debug]
+            [feature, debug]
         }
         var isAlwaysIncludeValueKinds: Bool {
-            return Kind.alwaysIncludeValueKinds.contains(self)
+            Kind.alwaysIncludeValueKinds.contains(self)
         }
     }
 
@@ -128,8 +127,8 @@ struct Event { //sdk internal, not publically accessible
         eventDictionary[CodingKeys.version.rawValue] = featureFlag?.flagVersion ?? featureFlag?.version
         eventDictionary[CodingKeys.data.rawValue] = data
         if let flagRequestTracker = flagRequestTracker {
-            eventDictionary.merge(flagRequestTracker.dictionaryValue) { (_, trackerItem) in
-                return trackerItem  //This should never happen because the eventDictionary does not use any conflicting keys with the flagRequestTracker
+            eventDictionary.merge(flagRequestTracker.dictionaryValue) { _, trackerItem in
+                trackerItem  // This should never happen because the eventDictionary does not use any conflicting keys with the flagRequestTracker
             }
         }
         eventDictionary[CodingKeys.endDate.rawValue] = endDate?.millisSince1970
@@ -142,67 +141,53 @@ struct Event { //sdk internal, not publically accessible
 
 extension Array where Element == Event {
     func dictionaryValues(config: LDConfig) -> [[String: Any]] {
-        return self.map { (event) in
-            event.dictionaryValue(config: config)
-        }
+        self.map { $0.dictionaryValue(config: config) }
     }
 }
 
 extension Array where Element == [String: Any] {
     var jsonData: Data? {
         guard JSONSerialization.isValidJSONObject(self)
-        else {
-            return nil
-        }
+        else { return nil }
         return try? JSONSerialization.data(withJSONObject: self, options: [])
     }
 
     func contains(_ eventDictionary: [String: Any]) -> Bool {
-        return !self.filter { (element) in
-            element.matches(eventDictionary: eventDictionary)
-        }.isEmpty
+        !self.filter { $0.matches(eventDictionary: eventDictionary) }.isEmpty
     }
 }
 
 extension Dictionary where Key == String, Value == Any {
     private var eventKindString: String? {
-        return self[Event.CodingKeys.kind.rawValue] as? String
+        self[Event.CodingKeys.kind.rawValue] as? String
     }
     var eventKind: Event.Kind? {
         guard let eventKindString = eventKindString
-        else {
-            return nil
-        }
+        else { return nil }
         return Event.Kind(rawValue: eventKindString)
     }
     var eventKey: String? {
-        return self[Event.CodingKeys.key.rawValue] as? String
+        self[Event.CodingKeys.key.rawValue] as? String
     }
     var eventCreationDateMillis: Int64? {
-        return self[Event.CodingKeys.creationDate.rawValue] as? Int64
+        self[Event.CodingKeys.creationDate.rawValue] as? Int64
     }
     var eventEndDate: Date? {
-        return Date(millisSince1970: self[Event.CodingKeys.endDate.rawValue] as? Int64)
+        Date(millisSince1970: self[Event.CodingKeys.endDate.rawValue] as? Int64)
     }
 
     func matches(eventDictionary other: [String: Any]) -> Bool {
         guard let kind = eventKind
-        else {
-            return false
-        }
+        else { return false }
         if kind == .summary {
             guard kind == other.eventKind,
                 let eventEndDate = eventEndDate, eventEndDate.isWithin(0.001, of: other.eventEndDate)
-            else {
-                return false
-            }
+            else { return false }
             return true
         }
         guard let key = eventKey, let creationDateMillis = eventCreationDateMillis,
             let otherKey = other.eventKey, let otherCreationDateMillis = other.eventCreationDateMillis
-        else {
-            return false
-        }
+        else { return false }
         return key == otherKey && creationDateMillis == otherCreationDateMillis
     }
 }

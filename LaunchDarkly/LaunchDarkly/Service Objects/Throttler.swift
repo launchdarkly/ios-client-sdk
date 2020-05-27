@@ -2,7 +2,6 @@
 //  Throttler.swift
 //  LaunchDarkly
 //
-//  Created by Mark Pokorny on 5/14/18. +JMJ
 //  Copyright © 2018 Catamorphic Co. All rights reserved.
 //
 
@@ -26,13 +25,13 @@ final class Throttler: Throttling {
     }
 
     class func maxAttempts(forDelay delayInterval: TimeInterval) -> Int {
-        return Int(ceil(log2(delayInterval)))
+        Int(ceil(log2(delayInterval)))
     }
 
     let throttlingEnabled: Bool
     private (set) var maxDelay: TimeInterval
     var maxAttempts: Int {
-        return Throttler.maxAttempts(forDelay: maxDelay)
+        Throttler.maxAttempts(forDelay: maxDelay)
     }
     private (set) var runAttempts: Int
     private (set) var delay: TimeInterval
@@ -94,23 +93,17 @@ final class Throttler: Throttling {
 
     private func delayForAttempt(_ attempt: Int) -> TimeInterval {
         guard throttlingEnabled
-        else {
-            return 0.0
-        }
+        else { return 0.0 }
         guard Double(attempt) <= log2(maxDelay)
-        else {
-            return maxDelay
-        }
+        else { return maxDelay }
         let exponentialBackoff = min(maxDelay, pow(2, attempt).timeInterval)        //pow(x, y) returns x^y
         let jitterBackoff = Double(arc4random_uniform(UInt32(exponentialBackoff)))  // arc4random_uniform(upperBound) returns an Int uniformly randomized between 0..<upperBound
-        return exponentialBackoff/2 + jitterBackoff/2                               //half of each should yield [2^(runAttempts-1), 2^runAttempts)
+        return exponentialBackoff / 2 + jitterBackoff / 2                           //half of each should yield [2^(runAttempts-1), 2^runAttempts)
     }
 
     private func delayTimer(for delay: TimeInterval) -> TimeResponding? {
         guard throttlingEnabled
-        else {
-            return nil
-        }
+        else { return nil }
         timerStart = timerStart ?? Date()
         let timer = LDTimer(withTimeInterval: delay, repeats: false, fireQueue: runQueue, execute: timerFired)
         return timer
@@ -136,25 +129,19 @@ extension Throttler: TypeIdentifying { }
 
 extension Decimal {
     var timeInterval: TimeInterval {
-        return NSDecimalNumber(decimal: self).doubleValue
+        NSDecimalNumber(decimal: self).doubleValue
     }
 }
 
 #if DEBUG
     extension Throttler {
-        var runClosureForTesting: RunClosure? {
-            return runClosure
-        }
+        var runClosureForTesting: RunClosure? { runClosure }
         var timerFiredCallback: RunClosure? {
-            set {
-                runPostTimer = newValue
-            }
-            get {
-                return runPostTimer
-            }
+            get { runPostTimer }
+            set { runPostTimer = newValue }
         }
         func test_delayForAttempt(_ attempt: Int) -> TimeInterval {
-            return delayForAttempt(attempt)
+            delayForAttempt(attempt)
         }
     }
 #endif

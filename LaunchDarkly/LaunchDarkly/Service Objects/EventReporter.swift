@@ -2,7 +2,6 @@
 //  EventReporter.swift
 //  LaunchDarkly
 //
-//  Created by Mark Pokorny on 7/24/17. +JMJ
 //  Copyright © 2017 Catamorphic Co. All rights reserved.
 //
 
@@ -46,7 +45,7 @@ class EventReporter: EventReporting {
     fileprivate struct Constants {
         static let eventQueueLabel = "com.launchdarkly.eventSyncQueue"
     }
-    
+
     var config: LDConfig {
         didSet {
             Log.debug(typeName(and: #function, appending: ": ") + "\(config)")
@@ -65,11 +64,9 @@ class EventReporter: EventReporting {
     var service: DarklyServiceProvider
     private(set) var eventStore = [[String: Any]]()
     private(set) var flagRequestTracker = FlagRequestTracker()
-    
+
     private var eventReportTimer: TimeResponding?
-    var isReportingActive: Bool {
-        return eventReportTimer != nil
-    }
+    var isReportingActive: Bool { eventReportTimer != nil }
 
     private let onSyncComplete: EventSyncCompleteClosure?
 
@@ -87,15 +84,14 @@ class EventReporter: EventReporting {
                     completion?()
                 }
             }
-            guard !self.isEventStoreFull
-            else {
+            if self.eventStore.count >= self.config.eventCapacity {
                 Log.debug(self.typeName(and: #function) + "aborted. Event store is full")
                 return
             }
             self.eventStore.append(event.dictionaryValue(config: self.config))
         }
     }
-    
+
     func recordFlagEvaluationEvents(flagKey: LDFlagKey, value: Any?, defaultValue: Any?, featureFlag: FeatureFlag?, user: LDUser, includeReason: Bool) {
         recordFlagEvaluationEvents(flagKey: flagKey, value: value, defaultValue: defaultValue, featureFlag: featureFlag, user: user, includeReason: includeReason, completion: nil)
     }
@@ -157,17 +153,13 @@ class EventReporter: EventReporting {
 
     private func startReporting() {
         guard isOnline && !isReportingActive
-        else {
-            return
-        }
+        else { return }
         eventReportTimer = LDTimer(withTimeInterval: config.eventFlushInterval, repeats: true, fireQueue: eventQueue, execute: reportEvents)
     }
     
     private func stopReporting() {
         guard isReportingActive
-        else {
-            return
-        }
+        else { return }
         eventReportTimer?.cancel()
         eventReportTimer = nil
     }
@@ -218,7 +210,7 @@ class EventReporter: EventReporting {
             }
         }
     }
-    
+
     private func processEventResponse(reportedEventDictionaries: [[String: Any]], serviceResponse: ServiceResponse, attempt: Int) {
         if let serviceResponseError = serviceResponse.error {
             Log.debug(typeName(and: #function) + "error: \(String(describing: serviceResponseError))")
@@ -240,46 +232,31 @@ class EventReporter: EventReporting {
         Log.debug(typeName(and: #function) + " completed for keys: " + reportedEventDictionaries.eventKeys)
         reportSyncComplete(.success(reportedEventDictionaries))
     }
-    
+
     private func reportSyncComplete(_ result: EventSyncResult) {
         //The eventReporter is created when the LDClient singleton is created, and kept for the app's lifetime. So while the use of self in the async block does setup a retain cycle, it's not going to cause a memory leak
         guard let onSyncComplete = onSyncComplete
-        else {
-            return
-        }
+        else { return }
         DispatchQueue.main.async {
             onSyncComplete(result)
         }
     }
-    
+
     private func updateEventStore(reportedEventDictionaries: [[String: Any]]) {
         //The eventReporter is created when the LDClient singleton is created, and kept for the app's lifetime. So while the use of self in the async block does setup a retain cycle, it's not going to cause a memory leak
         eventQueue.async {
-            let remainingEventDictionaries = self.eventStore.filter { (eventDictionary) in
+            let remainingEventDictionaries = self.eventStore.filter { eventDictionary in
                 !reportedEventDictionaries.contains(eventDictionary)
             }
             self.eventStore = remainingEventDictionaries
         }
-    }
-    
-    private var isEventStoreFull: Bool {
-        return eventStore.count >= config.eventCapacity
     }
 }
 
 extension EventReporter: TypeIdentifying { }
 
 extension Array where Element == [String: Any] {
-    var eventKeys: String {
-        let keys = compactMap { (eventDictionary) in
-            eventDictionary.eventKey
-        }
-        guard !keys.isEmpty
-        else {
-            return ""
-        }
-        return keys.joined(separator: ", ")
-    }
+    var eventKeys: String { compactMap { $0.eventKey }.joined(separator: ", ") }
 }
 
 #if DEBUG
@@ -298,9 +275,7 @@ extension Array where Element == [String: Any] {
             }
         }
 
-        var testOnSyncComplete: EventSyncCompleteClosure? {
-            return onSyncComplete
-        }
+        var testOnSyncComplete: EventSyncCompleteClosure? { onSyncComplete }
 
         func add(_ events: [Event]) {
             eventStore.append(contentsOf: events.dictionaryValues(config: config))

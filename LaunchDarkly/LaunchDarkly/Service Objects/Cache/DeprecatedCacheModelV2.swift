@@ -2,7 +2,6 @@
 //  UserDictionaryCacheModel.swift
 //  LaunchDarkly
 //
-//  Created by Mark Pokorny on 3/26/19. +JMJ
 //  Copyright © 2019 Catamorphic Co. All rights reserved.
 //
 
@@ -46,18 +45,16 @@ final class DeprecatedCacheModelV2: DeprecatedCache {
         else {
             return (nil, nil)
         }
-        let featureFlags = Dictionary(uniqueKeysWithValues: featureFlagDictionaries.compactMap { (flagKey, value) in
-            return (flagKey, FeatureFlag(flagKey: flagKey, value: value, variation: nil, version: nil, flagVersion: nil, eventTrackingContext: nil, reason: nil, trackReason: nil))
+        let featureFlags = Dictionary(uniqueKeysWithValues: featureFlagDictionaries.compactMap { flagKey, value in
+            (flagKey, FeatureFlag(flagKey: flagKey, value: value, variation: nil, version: nil, flagVersion: nil, eventTrackingContext: nil, reason: nil, trackReason: nil))
         })
         return (featureFlags, cachedUserDictionary.lastUpdated)
     }
 
     func userKeys(from cachedUserData: [UserKey: [String: Any]], olderThan expirationDate: Date) -> [UserKey] {
-        return cachedUserData.filter { (_, userDictionary) in
+        cachedUserData.compactMap { userKey, userDictionary in
             let lastUpdated = userDictionary.lastUpdated ?? Date.distantFuture
-            return lastUpdated.isExpired(expirationDate: expirationDate)
-            }.map { (userKey, _) in
-                return userKey
+            return lastUpdated.isExpired(expirationDate: expirationDate) ? userKey : nil
         }
     }
 }

@@ -2,7 +2,6 @@
 //  LDTimerSpec.swift
 //  LaunchDarklyTests
 //
-//  Created by Mark Pokorny on 1/22/19. +JMJ
 //  Copyright © 2019 Catamorphic Co. All rights reserved.
 //
 
@@ -159,6 +158,6 @@ final class LDTimerSpec: QuickSpec {
 
 extension DispatchQueue {
     class var currentQueueLabel: String? {
-        return String(validatingUTF8: __dispatch_queue_get_label(nil))    //from https://gitlab.com/theswiftdev/swift/snippets/1741827/raw
+        String(validatingUTF8: __dispatch_queue_get_label(nil))    //from https://gitlab.com/theswiftdev/swift/snippets/1741827/raw
     }
 }

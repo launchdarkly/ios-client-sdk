@@ -2,7 +2,6 @@
 //  LDEventSourceMock.swift
 //  LaunchDarklyTests
 //
-//  Created by Mark Pokorny on 9/28/17. +JMJ
 //  Copyright © 2017 Catamorphic Co. All rights reserved.
 //
 
@@ -57,7 +56,7 @@ extension DarklyEventSource.LDEvent {
         event.readyState = kEventStateOpen
         return event
     }
-    
+
     class func stubHeartbeatEvent() -> DarklyEventSource.LDEvent {
         let event = DarklyEventSource.LDEvent()
         event.event = EventType.heartbeat.rawValue

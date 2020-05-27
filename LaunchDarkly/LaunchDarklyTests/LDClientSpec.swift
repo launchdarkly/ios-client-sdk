@@ -461,7 +461,7 @@ final class LDClientSpec: QuickSpec {
                         expect(testContext.recordedEvent?.key) == newUser.key
                     }
                     it("converts cached data") {
-                        expect(testContext.cacheConvertingMock.convertCacheDataCallCount) == 2
+                        expect(testContext.cacheConvertingMock.convertCacheDataCallCount) == 1 //only called once because CacheConverter is replaced during start
                         expect(testContext.cacheConvertingMock.convertCacheDataReceivedArguments?.user) == newUser
                         expect(testContext.cacheConvertingMock.convertCacheDataReceivedArguments?.config) == newConfig
                     }
@@ -514,7 +514,7 @@ final class LDClientSpec: QuickSpec {
                         expect(testContext.recordedEvent?.key) == newUser.key
                     }
                     it("converts cached data") {
-                        expect(testContext.cacheConvertingMock.convertCacheDataCallCount) == 2
+                        expect(testContext.cacheConvertingMock.convertCacheDataCallCount) == 1 //only called once because CacheConverter is replaced during start
                         expect(testContext.cacheConvertingMock.convertCacheDataReceivedArguments?.user) == newUser
                         expect(testContext.cacheConvertingMock.convertCacheDataReceivedArguments?.config) == newConfig
                     }
@@ -558,7 +558,7 @@ final class LDClientSpec: QuickSpec {
                         expect(testContext.recordedEvent?.key) == testContext.user.key
                     }
                     it("converts cached data") {
-                        expect(testContext.cacheConvertingMock.convertCacheDataCallCount) == 2
+                        expect(testContext.cacheConvertingMock.convertCacheDataCallCount) == 1 //only called once because CacheConverter is replaced during start
                         expect(testContext.cacheConvertingMock.convertCacheDataReceivedArguments?.user) == testContext.user
                         expect(testContext.cacheConvertingMock.convertCacheDataReceivedArguments?.config) == testContext.config
                     }

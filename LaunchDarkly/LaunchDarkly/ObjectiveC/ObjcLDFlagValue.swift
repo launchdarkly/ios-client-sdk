@@ -2,7 +2,6 @@
 //  ObjcLDFlagValue.swift
 //  LaunchDarkly
 //
-//  Created by Mark Pokorny on 9/12/17. +JMJ
 //  Copyright © 2017 Catamorphic Co. All rights reserved.
 //
 
@@ -12,10 +11,10 @@ import Foundation
 @objc(LDFlagValue)
 public final class ObjcLDFlagValue: NSObject {
     let flagVal: LDFlagValue
-    
+
     ///String representation of the type of the feature flag.
     @objc public var flagValueType: String? {
-        return flagVal.typeString
+        flagVal.typeString
     }
 
     init(_ flagValue: LDFlagValue) {
@@ -68,9 +67,7 @@ public class ObjcLDFlagValueSource: NSObject {
     ///Initializer that takes an integer and returns the LDFlagValueSource provided the integer matches one of the LDFlagValueSource constants. Otherwise, returns nil.
     @objc public init?(rawValue: Int) {
         guard rawValue >= ObjcLDFlagValueSource.nilSource && rawValue <= ObjcLDFlagValueSource.typeMismatch
-        else {
-            return nil
-        }
+        else { return nil }
         self.typeMismatch = rawValue == ObjcLDFlagValueSource.typeMismatch
         self.flagValueSource = LDFlagValueSource(rawValue: rawValue)
         super.init()
@@ -111,16 +108,14 @@ public class ObjcLDFlagValueSource: NSObject {
 
     ///Compares a LDFlagValueSource to an Int, returning true when the receiver has the same raw value as the constantValue.
     @objc public func isEqual(toConstant constantValue: Int) -> Bool {
-        return rawValue == constantValue
+        rawValue == constantValue
     }
 }
 
 private extension LDFlagValueSource {
     init?(rawValue: Int) {
         guard rawValue >= ObjcLDFlagValueSource.server && rawValue <= ObjcLDFlagValueSource.fallback
-        else {
-            return nil
-        }
+        else { return nil }
         switch rawValue {
         case ObjcLDFlagValueSource.server:
             self = .server
@@ -148,7 +143,7 @@ extension LDFlagValueSource {
         self.init(rawValue: intValue)
     }
     var intRawValue: Int {
-        return self.intValue
+        self.intValue
     }
 }
 #endif

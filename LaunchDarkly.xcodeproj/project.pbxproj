@@ -44,7 +44,6 @@
 		8311885E2113AE2900D77CB5 /* HTTPURLResponse.swift in Sources */ = {isa = PBXBuildFile; fileRef = 83B8C2461FE4071F0082B8A9 /* HTTPURLResponse.swift */; };
 		8311885F2113AE2D00D77CB5 /* HTTPURLRequest.swift in Sources */ = {isa = PBXBuildFile; fileRef = 830BF932202D188E006DF9B1 /* HTTPURLRequest.swift */; };
 		831188602113AE3400D77CB5 /* Dictionary.swift in Sources */ = {isa = PBXBuildFile; fileRef = 83EF67891F97CFEC00403126 /* Dictionary.swift */; };
-		831188612113AE3700D77CB5 /* Optional.swift in Sources */ = {isa = PBXBuildFile; fileRef = 83E2E2081F9FF9E1007514E9 /* Optional.swift */; };
 		831188622113AE3A00D77CB5 /* Data.swift in Sources */ = {isa = PBXBuildFile; fileRef = 83DDBEF51FA24A7E00E428B6 /* Data.swift */; };
 		831188632113AE3F00D77CB5 /* Array.swift in Sources */ = {isa = PBXBuildFile; fileRef = 83DDBEF91FA24AFB00E428B6 /* Array.swift */; };
 		831188642113AE4200D77CB5 /* JSONSerialization.swift in Sources */ = {isa = PBXBuildFile; fileRef = 83DDBEFB1FA24B2700E428B6 /* JSONSerialization.swift */; };
@@ -97,7 +96,6 @@
 		831EF35C20655E730001C643 /* HTTPURLResponse.swift in Sources */ = {isa = PBXBuildFile; fileRef = 83B8C2461FE4071F0082B8A9 /* HTTPURLResponse.swift */; };
 		831EF35D20655E730001C643 /* HTTPURLRequest.swift in Sources */ = {isa = PBXBuildFile; fileRef = 830BF932202D188E006DF9B1 /* HTTPURLRequest.swift */; };
 		831EF35E20655E730001C643 /* Dictionary.swift in Sources */ = {isa = PBXBuildFile; fileRef = 83EF67891F97CFEC00403126 /* Dictionary.swift */; };
-		831EF35F20655E730001C643 /* Optional.swift in Sources */ = {isa = PBXBuildFile; fileRef = 83E2E2081F9FF9E1007514E9 /* Optional.swift */; };
 		831EF36020655E730001C643 /* Data.swift in Sources */ = {isa = PBXBuildFile; fileRef = 83DDBEF51FA24A7E00E428B6 /* Data.swift */; };
 		831EF36120655E730001C643 /* Array.swift in Sources */ = {isa = PBXBuildFile; fileRef = 83DDBEF91FA24AFB00E428B6 /* Array.swift */; };
 		831EF36220655E730001C643 /* JSONSerialization.swift in Sources */ = {isa = PBXBuildFile; fileRef = 83DDBEFB1FA24B2700E428B6 /* JSONSerialization.swift */; };
@@ -259,7 +257,6 @@
 		83D9EC8E2062DEAB004D7FA6 /* HTTPURLResponse.swift in Sources */ = {isa = PBXBuildFile; fileRef = 83B8C2461FE4071F0082B8A9 /* HTTPURLResponse.swift */; };
 		83D9EC8F2062DEAB004D7FA6 /* HTTPURLRequest.swift in Sources */ = {isa = PBXBuildFile; fileRef = 830BF932202D188E006DF9B1 /* HTTPURLRequest.swift */; };
 		83D9EC902062DEAB004D7FA6 /* Dictionary.swift in Sources */ = {isa = PBXBuildFile; fileRef = 83EF67891F97CFEC00403126 /* Dictionary.swift */; };
-		83D9EC912062DEAB004D7FA6 /* Optional.swift in Sources */ = {isa = PBXBuildFile; fileRef = 83E2E2081F9FF9E1007514E9 /* Optional.swift */; };
 		83D9EC922062DEAB004D7FA6 /* Data.swift in Sources */ = {isa = PBXBuildFile; fileRef = 83DDBEF51FA24A7E00E428B6 /* Data.swift */; };
 		83D9EC932062DEAB004D7FA6 /* Array.swift in Sources */ = {isa = PBXBuildFile; fileRef = 83DDBEF91FA24AFB00E428B6 /* Array.swift */; };
 		83D9EC942062DEAB004D7FA6 /* JSONSerialization.swift in Sources */ = {isa = PBXBuildFile; fileRef = 83DDBEFB1FA24B2700E428B6 /* JSONSerialization.swift */; };
@@ -278,7 +275,6 @@
 		83DDBEFE1FA24F9600E428B6 /* Date.swift in Sources */ = {isa = PBXBuildFile; fileRef = 83DDBEFD1FA24F9600E428B6 /* Date.swift */; };
 		83DDBF001FA2589900E428B6 /* FlagStoreSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = 83DDBEFF1FA2589900E428B6 /* FlagStoreSpec.swift */; };
 		83E2E2061F9E7AC7007514E9 /* LDUserSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = 83E2E2051F9E7AC7007514E9 /* LDUserSpec.swift */; };
-		83E2E2091F9FF9E1007514E9 /* Optional.swift in Sources */ = {isa = PBXBuildFile; fileRef = 83E2E2081F9FF9E1007514E9 /* Optional.swift */; };
 		83EBCBA320D9A1F3003A7142 /* FlagValueCounter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 83EBCBA220D9A1F3003A7142 /* FlagValueCounter.swift */; };
 		83EBCBA420D9A1F3003A7142 /* FlagValueCounter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 83EBCBA220D9A1F3003A7142 /* FlagValueCounter.swift */; };
 		83EBCBA520D9A1F3003A7142 /* FlagValueCounter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 83EBCBA220D9A1F3003A7142 /* FlagValueCounter.swift */; };
@@ -453,7 +449,6 @@
 		83DDBEFD1FA24F9600E428B6 /* Date.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Date.swift; sourceTree = "<group>"; };
 		83DDBEFF1FA2589900E428B6 /* FlagStoreSpec.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FlagStoreSpec.swift; sourceTree = "<group>"; };
 		83E2E2051F9E7AC7007514E9 /* LDUserSpec.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LDUserSpec.swift; sourceTree = "<group>"; };
-		83E2E2081F9FF9E1007514E9 /* Optional.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Optional.swift; sourceTree = "<group>"; };
 		83EBCBA220D9A1F3003A7142 /* FlagValueCounter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FlagValueCounter.swift; sourceTree = "<group>"; };
 		83EBCBA920D9A451003A7142 /* FlagValueCounterSpec.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FlagValueCounterSpec.swift; sourceTree = "<group>"; };
 		83EBCBAB20D9C6A6003A7142 /* FlagCounter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FlagCounter.swift; sourceTree = "<group>"; };
@@ -818,7 +813,6 @@
 			isa = PBXGroup;
 			children = (
 				83EF67891F97CFEC00403126 /* Dictionary.swift */,
-				83E2E2081F9FF9E1007514E9 /* Optional.swift */,
 				83DDBEF51FA24A7E00E428B6 /* Data.swift */,
 				83DDBEF91FA24AFB00E428B6 /* Array.swift */,
 				83DDBEFB1FA24B2700E428B6 /* JSONSerialization.swift */,
@@ -1447,7 +1441,6 @@
 				C443A40523145FBF00145710 /* ConnectionInformation.swift in Sources */,
 				8354AC732243166900CDE602 /* UserEnvironmentFlagCache.swift in Sources */,
 				8311885B2113AE1D00D77CB5 /* Throttler.swift in Sources */,
-				831188612113AE3700D77CB5 /* Optional.swift in Sources */,
 				8311884E2113ADE500D77CB5 /* Event.swift in Sources */,
 				832D68A5224A38FC005F052A /* CacheConverter.swift in Sources */,
 				831188482113ADD100D77CB5 /* LDFlagValueConvertible.swift in Sources */,
@@ -1515,7 +1508,6 @@
 				8370DF6E225E40B800F84810 /* DeprecatedCache.swift in Sources */,
 				C43C37E7238DF22C003C1624 /* EvaluationDetail.swift in Sources */,
 				835F43D320D0309A0070DE51 /* EventTrackingContext.swift in Sources */,
-				831EF35F20655E730001C643 /* Optional.swift in Sources */,
 				831EF36020655E730001C643 /* Data.swift in Sources */,
 				83EBCBB520DABE1B003A7142 /* FlagRequestTracker.swift in Sources */,
 				831EF36120655E730001C643 /* Array.swift in Sources */,
@@ -1548,7 +1540,6 @@
 				837EF3742059C237009D628A /* Log.swift in Sources */,
 				835F43D120D0309A0070DE51 /* EventTrackingContext.swift in Sources */,
 				83FEF8DD1F266742001CF12C /* FlagSynchronizer.swift in Sources */,
-				83E2E2091F9FF9E1007514E9 /* Optional.swift in Sources */,
 				835E1D471F68B3EC00184DB4 /* ObjcLDFlagValue.swift in Sources */,
 				83883DD5220B68A000EEAB95 /* ErrorObserver.swift in Sources */,
 				830BF933202D188E006DF9B1 /* HTTPURLRequest.swift in Sources */,
@@ -1712,7 +1703,6 @@
 				C43C37EA238DF238003C1624 /* DeprecatedCacheModelV6.swift in Sources */,
 				83D9EC902062DEAB004D7FA6 /* Dictionary.swift in Sources */,
 				831425B2206B030100F2EF36 /* EnvironmentReporter.swift in Sources */,
-				83D9EC912062DEAB004D7FA6 /* Optional.swift in Sources */,
 				83D9EC922062DEAB004D7FA6 /* Data.swift in Sources */,
 				8347BB0D21F147E100E56BCD /* LDTimer.swift in Sources */,
 				8354AC712243166900CDE602 /* UserEnvironmentFlagCache.swift in Sources */,

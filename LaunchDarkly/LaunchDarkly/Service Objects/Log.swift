@@ -2,7 +2,6 @@
 //  Log.swift
 //  LaunchDarkly
 //
-//  Created by Mark Pokorny on 3/14/18. +JMJ
 //  Copyright © 2018 Catamorphic Co. All rights reserved.
 //
 
@@ -47,15 +46,15 @@ protocol TypeIdentifying { }
 
 extension TypeIdentifying {
     var typeName: String {
-        return String(describing: type(of: self))
+        String(describing: type(of: self))
     }
     func typeName(and method: String, appending suffix: String = " ") -> String {
-        return typeName + "." + method + suffix
+        typeName + "." + method + suffix
     }
     static var typeName: String {
-        return String(describing: self)
+        String(describing: self)
     }
     static func typeName(and method: String, appending suffix: String = " ") -> String {
-        return typeName + "." + method + suffix
+        typeName + "." + method + suffix
     }
 }

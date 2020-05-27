@@ -2,7 +2,6 @@
 //  FlagValueCounter.swift
 //  LaunchDarkly
 //
-//  Created by Mark Pokorny on 6/19/18. +JMJ
 //  Copyright © 2018 Catamorphic Co. All rights reserved.
 //
 

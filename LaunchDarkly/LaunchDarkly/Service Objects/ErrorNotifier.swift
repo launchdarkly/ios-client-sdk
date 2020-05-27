@@ -2,7 +2,6 @@
 //  ErrorNotifier.swift
 //  Darkly
 //
-//  Created by Mark Pokorny on 2/6/19. +JMJ
 //  Copyright © 2019 Catamorphic Co. All rights reserved.
 //
 
@@ -23,22 +22,16 @@ final class ErrorNotifier: ErrorNotifying {
     }
 
     func removeObservers(for owner: LDObserverOwner) {
-        errorObservers = errorObservers.filter { (observer) in
-            return observer.owner !== owner
-        }
+        errorObservers = errorObservers.filter { $0.owner !== owner }
     }
 
     func notifyObservers(of error: Error) {
         removeOldObservers()
-        errorObservers.forEach { (errorObserver) in
-            errorObserver.errorHandler?(error)
-        }
+        errorObservers.forEach { $0.errorHandler?(error) }
     }
 
     private func removeOldObservers() {
-        errorObservers = errorObservers.filter { (errorObserver) in
-            return errorObserver.owner != nil
-        }
+        errorObservers = errorObservers.filter { $0.owner != nil }
     }
 }
 

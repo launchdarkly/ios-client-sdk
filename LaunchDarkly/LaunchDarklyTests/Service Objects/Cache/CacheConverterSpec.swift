@@ -2,7 +2,6 @@
 //  CacheConverterSpec.swift
 //  LaunchDarklyTests
 //
-//  Created by Mark Pokorny on 3/26/19. +JMJ
 //  Copyright © 2019 Catamorphic Co. All rights reserved.
 //
 
@@ -24,16 +23,16 @@ final class CacheConverterSpec: QuickSpec {
         var user: LDUser
         var config: LDConfig
         var featureFlagCachingMock: FeatureFlagCachingMock {
-            return clientServiceFactoryMock.makeFeatureFlagCacheReturnValue
+            clientServiceFactoryMock.makeFeatureFlagCacheReturnValue
         }
         var expiredCacheThreshold: Date
         var modelsToSearch = [DeprecatedCacheModel]()
 
         init(maxAge: TimeInterval? = nil, createCacheData: Bool = false, deprecatedCacheData: DeprecatedCacheModel? = nil) {
             if let maxAge = maxAge {
-                cacheConverter = CacheConverter(serviceFactory: clientServiceFactoryMock, maxAge: maxAge)
+                cacheConverter = CacheConverter(serviceFactory: clientServiceFactoryMock, maxCachedUsers: LDConfig.Defaults.maxCachedUsers, maxAge: maxAge)
             } else {
-                cacheConverter = CacheConverter(serviceFactory: clientServiceFactoryMock)
+                cacheConverter = CacheConverter(serviceFactory: clientServiceFactoryMock, maxCachedUsers: LDConfig.Defaults.maxCachedUsers)
             }
             expiredCacheThreshold = Date().addingTimeInterval(maxAge ?? CacheConverter.Constants.maxAge)
             if createCacheData {
@@ -46,7 +45,7 @@ final class CacheConverterSpec: QuickSpec {
                 config = LDConfig.stub
                 featureFlagCachingMock.retrieveFeatureFlagsReturnValue = nil
             }
-            DeprecatedCacheModel.allCases.forEach { (model) in
+            DeprecatedCacheModel.allCases.forEach { model in
                 deprecatedCacheMock(for: model).retrieveFlagsReturnValue = (nil, nil)
             }
             if let deprecatedCacheData = deprecatedCacheData {
@@ -71,11 +70,11 @@ final class CacheConverterSpec: QuickSpec {
         }
 
         func deprecatedCacheMock(for version: DeprecatedCacheModel) -> DeprecatedCacheMock {
-            return cacheConverter.deprecatedCaches[version] as! DeprecatedCacheMock
+            cacheConverter.deprecatedCaches[version] as! DeprecatedCacheMock
         }
 
         func expectedretrieveFlagsCallCount(for model: DeprecatedCacheModel) -> Int {
-            return (modelsToSearch.contains(model) ? 1 : 0)
+            modelsToSearch.contains(model) ? 1 : 0
         }
     }
 
@@ -95,7 +94,7 @@ final class CacheConverterSpec: QuickSpec {
                     expect(testContext.cacheConverter.maxAge) == Constants.maxAgeAlternate
                     expect(testContext.clientServiceFactoryMock.makeFeatureFlagCacheCallCount) == 1
                     expect(testContext.cacheConverter.currentCache) === testContext.clientServiceFactoryMock.makeFeatureFlagCacheReturnValue
-                    DeprecatedCacheModel.allCases.forEach { (deprecatedCacheModel) in
+                    DeprecatedCacheModel.allCases.forEach { deprecatedCacheModel in
                         expect(testContext.cacheConverter.deprecatedCaches[deprecatedCacheModel]).toNot(beNil())
                         expect(testContext.clientServiceFactoryMock.makeDeprecatedCacheModelReceivedModels.contains(deprecatedCacheModel)) == true
                     }
@@ -109,7 +108,7 @@ final class CacheConverterSpec: QuickSpec {
                     expect(testContext.cacheConverter.maxAge) == CacheConverter.Constants.maxAge
                     expect(testContext.clientServiceFactoryMock.makeFeatureFlagCacheCallCount) == 1
                     expect(testContext.cacheConverter.currentCache) === testContext.clientServiceFactoryMock.makeFeatureFlagCacheReturnValue
-                    DeprecatedCacheModel.allCases.forEach { (deprecatedCacheModel) in
+                    DeprecatedCacheModel.allCases.forEach { deprecatedCacheModel in
                         expect(testContext.cacheConverter.deprecatedCaches[deprecatedCacheModel]).toNot(beNil())
                         expect(testContext.clientServiceFactoryMock.makeDeprecatedCacheModelReceivedModels.contains(deprecatedCacheModel)) == true
                     }
@@ -129,7 +128,7 @@ final class CacheConverterSpec: QuickSpec {
                         testContext.cacheConverter.convertCacheData(for: testContext.user, and: testContext.config)
                     }
                     it("does not look in the deprecated caches for data") {
-                        DeprecatedCacheModel.allCases.forEach { (model) in
+                        DeprecatedCacheModel.allCases.forEach { model in
                             expect(testContext.deprecatedCacheMock(for: model).retrieveFlagsCallCount) == 0
                         }
                     }
@@ -137,7 +136,7 @@ final class CacheConverterSpec: QuickSpec {
                         expect(testContext.featureFlagCachingMock.storeFeatureFlagsCallCount) == 0
                     }
                     it("removes expired deprecated cache data") {
-                        DeprecatedCacheModel.allCases.forEach { (model) in
+                        DeprecatedCacheModel.allCases.forEach { model in
                             expect(testContext.deprecatedCacheMock(for: model).removeDataCallCount) == 1
                             expect(testContext.deprecatedCacheMock(for: model).removeDataReceivedExpirationDate?
                                 .isWithin(Constants.acceptableInterval, of: testContext.expiredCacheThreshold)) == true
@@ -151,7 +150,7 @@ final class CacheConverterSpec: QuickSpec {
                         testContext.cacheConverter.convertCacheData(for: testContext.user, and: testContext.config)
                     }
                     it("does not look in the deprecated caches for data") {
-                        DeprecatedCacheModel.allCases.forEach { (model) in
+                        DeprecatedCacheModel.allCases.forEach { model in
                             expect(testContext.deprecatedCacheMock(for: model).retrieveFlagsCallCount) == 0
                         }
                     }
@@ -159,7 +158,7 @@ final class CacheConverterSpec: QuickSpec {
                         expect(testContext.featureFlagCachingMock.storeFeatureFlagsCallCount) == 0
                     }
                     it("removes expired deprecated cache data") {
-                        DeprecatedCacheModel.allCases.forEach { (model) in
+                        DeprecatedCacheModel.allCases.forEach { model in
                             expect(testContext.deprecatedCacheMock(for: model).removeDataCallCount) == 1
                             expect(testContext.deprecatedCacheMock(for: model).removeDataReceivedExpirationDate?
                                 .isWithin(Constants.acceptableInterval, of: testContext.expiredCacheThreshold)) == true
@@ -173,7 +172,7 @@ final class CacheConverterSpec: QuickSpec {
                         testContext.cacheConverter.convertCacheData(for: testContext.user, and: testContext.config)
                     }
                     it("does not look in the deprecated caches for data") {
-                        DeprecatedCacheModel.allCases.forEach { (model) in
+                        DeprecatedCacheModel.allCases.forEach { model in
                             expect(testContext.deprecatedCacheMock(for: model).retrieveFlagsCallCount) == 0
                         }
                     }
@@ -181,7 +180,7 @@ final class CacheConverterSpec: QuickSpec {
                         expect(testContext.featureFlagCachingMock.storeFeatureFlagsCallCount) == 0
                     }
                     it("removes expired deprecated cache data") {
-                        DeprecatedCacheModel.allCases.forEach { (model) in
+                        DeprecatedCacheModel.allCases.forEach { model in
                             expect(testContext.deprecatedCacheMock(for: model).removeDataCallCount) == 1
                             expect(testContext.deprecatedCacheMock(for: model).removeDataReceivedExpirationDate?
                                 .isWithin(Constants.acceptableInterval, of: testContext.expiredCacheThreshold)) == true
@@ -195,7 +194,7 @@ final class CacheConverterSpec: QuickSpec {
                         testContext.cacheConverter.convertCacheData(for: testContext.user, and: testContext.config)
                     }
                     it("does not look in the deprecated caches for data") {
-                        DeprecatedCacheModel.allCases.forEach { (model) in
+                        DeprecatedCacheModel.allCases.forEach { model in
                             expect(testContext.deprecatedCacheMock(for: model).retrieveFlagsCallCount) == 0
                         }
                     }
@@ -203,7 +202,7 @@ final class CacheConverterSpec: QuickSpec {
                         expect(testContext.featureFlagCachingMock.storeFeatureFlagsCallCount) == 0
                     }
                     it("removes expired deprecated cache data") {
-                        DeprecatedCacheModel.allCases.forEach { (model) in
+                        DeprecatedCacheModel.allCases.forEach { model in
                             expect(testContext.deprecatedCacheMock(for: model).removeDataCallCount) == 1
                             expect(testContext.deprecatedCacheMock(for: model).removeDataReceivedExpirationDate?
                                 .isWithin(Constants.acceptableInterval, of: testContext.expiredCacheThreshold)) == true
@@ -218,7 +217,7 @@ final class CacheConverterSpec: QuickSpec {
                         testContext.cacheConverter.convertCacheData(for: testContext.user, and: testContext.config)
                     }
                     it("does not look in the deprecated caches for data") {
-                        DeprecatedCacheModel.allCases.forEach { (model) in
+                        DeprecatedCacheModel.allCases.forEach { model in
                             expect(testContext.deprecatedCacheMock(for: model).retrieveFlagsCallCount) == 0
                         }
                     }
@@ -226,7 +225,7 @@ final class CacheConverterSpec: QuickSpec {
                         expect(testContext.featureFlagCachingMock.storeFeatureFlagsCallCount) == 0
                     }
                     it("removes expired deprecated cache data") {
-                        DeprecatedCacheModel.allCases.forEach { (model) in
+                        DeprecatedCacheModel.allCases.forEach { model in
                             expect(testContext.deprecatedCacheMock(for: model).removeDataCallCount) == 1
                             expect(testContext.deprecatedCacheMock(for: model).removeDataReceivedExpirationDate?
                                 .isWithin(Constants.acceptableInterval, of: testContext.expiredCacheThreshold)) == true
@@ -242,7 +241,7 @@ final class CacheConverterSpec: QuickSpec {
                         testContext.cacheConverter.convertCacheData(for: testContext.user, and: testContext.config)
                     }
                     it("looks in the deprecated caches for data") {
-                        DeprecatedCacheModel.allCases.forEach { (model) in
+                        DeprecatedCacheModel.allCases.forEach { model in
                             expect(testContext.deprecatedCacheMock(for: model).retrieveFlagsCallCount) == 1
                         }
                     }
@@ -250,7 +249,7 @@ final class CacheConverterSpec: QuickSpec {
                         expect(testContext.featureFlagCachingMock.storeFeatureFlagsCallCount) == 0
                     }
                     it("removes expired deprecated cache data") {
-                        DeprecatedCacheModel.allCases.forEach { (model) in
+                        DeprecatedCacheModel.allCases.forEach { model in
                             expect(testContext.deprecatedCacheMock(for: model).removeDataCallCount) == 1
                             expect(testContext.deprecatedCacheMock(for: model).removeDataReceivedExpirationDate?
                                 .isWithin(Constants.acceptableInterval, of: testContext.expiredCacheThreshold)) == true
@@ -260,11 +259,11 @@ final class CacheConverterSpec: QuickSpec {
                 context("deprecated version 6 cache data exists") {
                     beforeEach {
                         testContext = TestContext(maxAge: Constants.maxAgeAlternate, createCacheData: false, deprecatedCacheData: .version6)
-                        
+
                         testContext.cacheConverter.convertCacheData(for: testContext.user, and: testContext.config)
                     }
                     it("looks in the version 6 cache for data") {
-                        DeprecatedCacheModel.allCases.forEach { (model) in
+                        DeprecatedCacheModel.allCases.forEach { model in
                             expect(testContext.deprecatedCacheMock(for: model).retrieveFlagsCallCount) == testContext.expectedretrieveFlagsCallCount(for: model)
                         }
                     }
@@ -279,7 +278,7 @@ final class CacheConverterSpec: QuickSpec {
                         expect(testContext.featureFlagCachingMock.storeFeatureFlagsReceivedArguments?.storeMode) == .sync
                     }
                     it("removes expired deprecated cache data") {
-                        DeprecatedCacheModel.allCases.forEach { (model) in
+                        DeprecatedCacheModel.allCases.forEach { model in
                             expect(testContext.deprecatedCacheMock(for: model).removeDataCallCount) == 1
                             expect(testContext.deprecatedCacheMock(for: model).removeDataReceivedExpirationDate?
                                 .isWithin(Constants.acceptableInterval, of: testContext.expiredCacheThreshold)) == true
@@ -293,7 +292,7 @@ final class CacheConverterSpec: QuickSpec {
                         testContext.cacheConverter.convertCacheData(for: testContext.user, and: testContext.config)
                     }
                     it("looks in the version 5 cache for data") {
-                        DeprecatedCacheModel.allCases.forEach { (model) in
+                        DeprecatedCacheModel.allCases.forEach { model in
                             expect(testContext.deprecatedCacheMock(for: model).retrieveFlagsCallCount) == testContext.expectedretrieveFlagsCallCount(for: model)
                         }
                     }
@@ -308,7 +307,7 @@ final class CacheConverterSpec: QuickSpec {
                         expect(testContext.featureFlagCachingMock.storeFeatureFlagsReceivedArguments?.storeMode) == .sync
                     }
                     it("removes expired deprecated cache data") {
-                        DeprecatedCacheModel.allCases.forEach { (model) in
+                        DeprecatedCacheModel.allCases.forEach { model in
                             expect(testContext.deprecatedCacheMock(for: model).removeDataCallCount) == 1
                             expect(testContext.deprecatedCacheMock(for: model).removeDataReceivedExpirationDate?
                                 .isWithin(Constants.acceptableInterval, of: testContext.expiredCacheThreshold)) == true
@@ -322,7 +321,7 @@ final class CacheConverterSpec: QuickSpec {
                         testContext.cacheConverter.convertCacheData(for: testContext.user, and: testContext.config)
                     }
                     it("looks in the versions 5 and 4 caches for data") {
-                        DeprecatedCacheModel.allCases.forEach { (model) in
+                        DeprecatedCacheModel.allCases.forEach { model in
                             expect(testContext.deprecatedCacheMock(for: model).retrieveFlagsCallCount) == testContext.expectedretrieveFlagsCallCount(for: model)
                         }
                     }
@@ -337,7 +336,7 @@ final class CacheConverterSpec: QuickSpec {
                         expect(testContext.featureFlagCachingMock.storeFeatureFlagsReceivedArguments?.storeMode) == .sync
                     }
                     it("removes expired deprecated cache data") {
-                        DeprecatedCacheModel.allCases.forEach { (model) in
+                        DeprecatedCacheModel.allCases.forEach { model in
                             expect(testContext.deprecatedCacheMock(for: model).removeDataCallCount) == 1
                             expect(testContext.deprecatedCacheMock(for: model).removeDataReceivedExpirationDate?
                                 .isWithin(Constants.acceptableInterval, of: testContext.expiredCacheThreshold)) == true
@@ -351,7 +350,7 @@ final class CacheConverterSpec: QuickSpec {
                         testContext.cacheConverter.convertCacheData(for: testContext.user, and: testContext.config)
                     }
                     it("looks in the versions 5, 4, and 3 caches for data") {
-                        DeprecatedCacheModel.allCases.forEach { (model) in
+                        DeprecatedCacheModel.allCases.forEach { model in
                             expect(testContext.deprecatedCacheMock(for: model).retrieveFlagsCallCount) == testContext.expectedretrieveFlagsCallCount(for: model)
                         }
                     }
@@ -366,7 +365,7 @@ final class CacheConverterSpec: QuickSpec {
                         expect(testContext.featureFlagCachingMock.storeFeatureFlagsReceivedArguments?.storeMode) == .sync
                     }
                     it("removes expired deprecated cache data") {
-                        DeprecatedCacheModel.allCases.forEach { (model) in
+                        DeprecatedCacheModel.allCases.forEach { model in
                             expect(testContext.deprecatedCacheMock(for: model).removeDataCallCount) == 1
                             expect(testContext.deprecatedCacheMock(for: model).removeDataReceivedExpirationDate?
                                 .isWithin(Constants.acceptableInterval, of: testContext.expiredCacheThreshold)) == true
@@ -380,7 +379,7 @@ final class CacheConverterSpec: QuickSpec {
                         testContext.cacheConverter.convertCacheData(for: testContext.user, and: testContext.config)
                     }
                     it("looks in the deprecated caches for data") {
-                        DeprecatedCacheModel.allCases.forEach { (model) in
+                        DeprecatedCacheModel.allCases.forEach { model in
                             expect(testContext.deprecatedCacheMock(for: model).retrieveFlagsCallCount) == 1
                         }
                     }
@@ -395,7 +394,7 @@ final class CacheConverterSpec: QuickSpec {
                         expect(testContext.featureFlagCachingMock.storeFeatureFlagsReceivedArguments?.storeMode) == .sync
                     }
                     it("removes expired deprecated cache data") {
-                        DeprecatedCacheModel.allCases.forEach { (model) in
+                        DeprecatedCacheModel.allCases.forEach { model in
                             expect(testContext.deprecatedCacheMock(for: model).removeDataCallCount) == 1
                             expect(testContext.deprecatedCacheMock(for: model).removeDataReceivedExpirationDate?
                                 .isWithin(Constants.acceptableInterval, of: testContext.expiredCacheThreshold)) == true
