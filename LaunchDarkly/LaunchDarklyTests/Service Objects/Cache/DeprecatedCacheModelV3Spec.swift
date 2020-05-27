@@ -107,7 +107,7 @@ final class DeprecatedCacheModelV3Spec: QuickSpec {
             context("when cached data exists") {
                 context("and a cached user is requested") {
                     beforeEach {
-                        testContext = TestContext(userCount: UserEnvironmentFlagCache.Constants.maxCachedUsers)
+                        testContext = TestContext(userCount: LDConfig.Defaults.maxCachedUsers)
                     }
                     it("retrieves the cached data") {
                         testContext.users.forEach { user in
@@ -123,7 +123,7 @@ final class DeprecatedCacheModelV3Spec: QuickSpec {
                 }
                 context("and an uncached user is requested") {
                     beforeEach {
-                        testContext = TestContext(userCount: UserEnvironmentFlagCache.Constants.maxCachedUsers)
+                        testContext = TestContext(userCount: LDConfig.Defaults.maxCachedUsers)
 
                         cachedData = testContext.modelV3cache.retrieveFlags(for: testContext.uncachedUser.key, and: testContext.uncachedMobileKey)
                     }
@@ -142,7 +142,7 @@ final class DeprecatedCacheModelV3Spec: QuickSpec {
         describe("removeData") {
             context("no modelV3 cached data expired") {
                 beforeEach {
-                    testContext = TestContext(userCount: UserEnvironmentFlagCache.Constants.maxCachedUsers)
+                    testContext = TestContext(userCount: LDConfig.Defaults.maxCachedUsers)
                     let oldestLastUpdatedDate = testContext.sortedLastUpdatedDates.first!
                     expirationDate = oldestLastUpdatedDate.lastUpdated.addingTimeInterval(-Constants.offsetInterval)
 
@@ -154,7 +154,7 @@ final class DeprecatedCacheModelV3Spec: QuickSpec {
             }
             context("some modelV3 cached data expired") {
                 beforeEach {
-                    testContext = TestContext(userCount: UserEnvironmentFlagCache.Constants.maxCachedUsers)
+                    testContext = TestContext(userCount: LDConfig.Defaults.maxCachedUsers)
                     let selectedLastUpdatedDate = testContext.sortedLastUpdatedDates[testContext.users.count / 2]
                     expirationDate = selectedLastUpdatedDate.lastUpdated.addingTimeInterval(-Constants.offsetInterval)
 
@@ -172,7 +172,7 @@ final class DeprecatedCacheModelV3Spec: QuickSpec {
             }
             context("all modelV3 cached data expired") {
                 beforeEach {
-                    testContext = TestContext(userCount: UserEnvironmentFlagCache.Constants.maxCachedUsers)
+                    testContext = TestContext(userCount: LDConfig.Defaults.maxCachedUsers)
                     let newestLastUpdatedDate = testContext.sortedLastUpdatedDates.last!
                     expirationDate = newestLastUpdatedDate.lastUpdated.addingTimeInterval(Constants.offsetInterval)
 
@@ -185,7 +185,7 @@ final class DeprecatedCacheModelV3Spec: QuickSpec {
             }
             context("no modelV3 cached data exists") {
                 beforeEach {
-                    testContext = TestContext(userCount: UserEnvironmentFlagCache.Constants.maxCachedUsers)
+                    testContext = TestContext(userCount: LDConfig.Defaults.maxCachedUsers)
                     let newestLastUpdatedDate = testContext.sortedLastUpdatedDates.last!
                     expirationDate = newestLastUpdatedDate.lastUpdated.addingTimeInterval(Constants.offsetInterval)
                     testContext.keyedValueCacheMock.dictionaryReturnValue = nil     //mock simulates no modelV3 cached data

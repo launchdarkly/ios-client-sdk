@@ -307,6 +307,8 @@ public class LDClient {
     @available(*, deprecated, message: "Please use the startCompleteWhenFlagsReceived method instead")
     public func start(config: LDConfig, user: LDUser? = nil, completion: (() -> Void)? = nil) {
         Log.debug(typeName(and: #function, appending: ": ") + "starting")
+        flagCache.maxCachedUsers = config.maxCachedUsers
+        cacheConverter = self.serviceFactory.makeCacheConverter(maxCachedUsers: config.maxCachedUsers)
         let wasStarted = hasStarted
         let wasOnline = isOnline
         isStarting = true
@@ -338,6 +340,8 @@ public class LDClient {
      */
     public func startCompleteWhenFlagsReceived(config: LDConfig, user: LDUser? = nil, completion: (() -> Void)? = nil) {
         Log.debug(typeName(and: #function, appending: ": ") + "starting")
+        flagCache.maxCachedUsers = config.maxCachedUsers
+        cacheConverter = self.serviceFactory.makeCacheConverter(maxCachedUsers: config.maxCachedUsers)
         let wasStarted = hasStarted
         let wasOnline = isOnline
         isStarting = true
@@ -1015,9 +1019,9 @@ public class LDClient {
             self.serviceFactory = serviceFactory
         }
         environmentReporter = self.serviceFactory.makeEnvironmentReporter()
-        flagCache = self.serviceFactory.makeFeatureFlagCache()
+        flagCache = self.serviceFactory.makeFeatureFlagCache(maxCachedUsers: LDConfig.Defaults.maxCachedUsers)
         LDUserWrapper.configureKeyedArchiversToHandleVersion2_3_0AndOlderUserCacheFormat()
-        cacheConverter = self.serviceFactory.makeCacheConverter()
+        cacheConverter = self.serviceFactory.makeCacheConverter(maxCachedUsers: LDConfig.Defaults.maxCachedUsers)
         flagChangeNotifier = self.serviceFactory.makeFlagChangeNotifier()
         throttler = self.serviceFactory.makeThrottler(maxDelay: Throttler.Constants.defaultDelay, environmentReporter: environmentReporter)
 
