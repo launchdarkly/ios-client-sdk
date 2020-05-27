@@ -139,6 +139,12 @@ public final class ObjcLDConfig: NSObject {
         set { config.isDebugMode = newValue }
     }
     
+    ///An Integer that tells UserEnvironmentFlagCache the maximum number of users to locally cache. Can be set to -1 for unlimited cached users. (Default: 5)
+    @objc public var maxCachedUsers: Int {
+        get { config.maxCachedUsers }
+        set { config.maxCachedUsers = newValue }
+    }
+    
     ///LDConfig constructor. Configurable values are all set to their default values. The client app can modify these values as desired. Note that client app developers may prefer to get the LDConfig from `LDClient.config` (`ObjcLDClient.config`) in order to retain previously set values.
     @objc public init(mobileKey: String) {
         config = LDConfig(mobileKey: mobileKey)
