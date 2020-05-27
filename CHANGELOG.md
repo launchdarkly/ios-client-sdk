@@ -5,6 +5,14 @@ All notable changes to the LaunchDarkly iOS SDK will be documented in this file.
 ### Multiple Environment clients
 Version 4.0.0 does not support multiple environments. If you use version `2.14.0` or later and set `LDConfig`'s `secondaryMobileKeys` you will not be able to migrate to version `4.0.0`. Multiple Environments will be added in a future release to the Swift SDK.
 
+
+## [4.6.0] - 2020-05-26
+### Added
+- Added `maxCachedUsers` option to `LDConfig`. You can now specify the number of users to be cached or use `-1` for unlimited cached users.
+
+### Fixed
+- `FlagStore` properly synchronizes reads and writes to prevent a potential race condition.
+
 ## [4.5.0] - 2020-03-26
 ### Changed
 - Updated SDK code to build, run, and test on Xcode 11.4.
