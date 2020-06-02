@@ -17,64 +17,56 @@ jobs:
     steps:
     - checkout
 
+    # So Cocoapods can clone the private SDK repo
+    - add_ssh_keys:
+        fingerprints: ["22:79:25:a9:2e:73:56:ff:92:b4:43:99:b5:21:91:92"]
+
     - run:
         name: Show xcodebuild Version
         command: xcodebuild -version
 
-    # Restore the dependency cache
-    - restore_cache:
-        keys:
-        - v1-dep-{{ .Branch }}-    # This branch if available
-        - v1-dep-master-           # Default branch if not
-
-    - run:
-        name: Check Gemfile Dependencies
-        command: 'bundle check --path=vendor/bundle || bundle install --path=vendor/bundle --jobs=4 --retry=3'
-
     - run: 
         name: Show CocoaPods Version
-        command: bundle exec pod --version
-
-    # Save dependency cache
-    - save_cache:
-        key: v1-dep-{{ .Branch }}-{{ epoch }}
-        paths:
-          - vendor/bundle
+        command: pod --version
 
     - run:
        name: List Simulators
        command: instruments -s devices
 
     - run:
+        name: Pod install
+        command: SSH_AUTH_SOCK= GIT_SSH_COMMAND='ssh -i ~/.ssh/id_rsa_227925a92e7356ff92b44399b5219192' pod install --verbose
+
+    - run:
         name: Clean, Build, & Test LaunchDarkly_iOS
-        command: set -o pipefail && xcodebuild clean build test -workspace 'LaunchDarkly.xcworkspace' -scheme 'LaunchDarkly_iOS' -sdk iphonesimulator -destination 'platform=iOS Simulator,name=iPhone Xs,OS=12.4' CODE_SIGNING_REQUIRED=NO CODE_SIGN_IDENTITY= PROVISIONING_PROFILE= | tee 'xcode_raw.log' | xcpretty --color --report html --output '/Users/distiller/launchdarkly/ios-swift-client-sdk-private/tmp/output/report.html' --report junit --output '/Users/distiller/launchdarkly/ios-swift-client-sdk-private/tmp/output/xcode/report.junit'
+        command: set -o pipefail && xcodebuild clean build test -workspace 'LaunchDarkly.xcworkspace' -scheme 'LaunchDarkly_iOS' -destination 'platform=iOS Simulator,name=iPhone Xs,OS=12.4' CODE_SIGNING_REQUIRED=NO CODE_SIGN_IDENTITY= PROVISIONING_PROFILE= | tee 'xcode_raw.log' | xcpretty --color --report html --output '/Users/distiller/launchdarkly/ios-swift-client-sdk-private/tmp/output/report.html' --report junit --output '/Users/distiller/launchdarkly/ios-swift-client-sdk-private/tmp/output/xcode/report.junit'
 
     - run:
         name: Clean & Build LaunchDarkly_watchOS
-        command: set -o pipefail && xcodebuild clean build -workspace 'LaunchDarkly.xcworkspace' -scheme 'LaunchDarkly_watchOS' -sdk watchsimulator -destination 'platform=watchOS Simulator,name=Apple Watch Series 4 - 44mm,OS=latest' CODE_SIGNING_REQUIRED=NO CODE_SIGN_IDENTITY= PROVISIONING_PROFILE= | tee 'LaunchDarkly_watchOS_xcode_raw.log' | xcpretty --color
+        command: set -o pipefail && xcodebuild clean build -workspace 'LaunchDarkly.xcworkspace' -scheme 'LaunchDarkly_watchOS' -destination 'platform=watchOS Simulator,name=Apple Watch Series 4 - 44mm,OS=latest' CODE_SIGNING_REQUIRED=NO CODE_SIGN_IDENTITY= PROVISIONING_PROFILE= | tee 'LaunchDarkly_watchOS_xcode_raw.log' | xcpretty --color
 
     - run:
         name: Clean & Build LaunchDarkly_macOS
-        command: set -o pipefail && xcodebuild clean build -workspace 'LaunchDarkly.xcworkspace' -scheme 'LaunchDarkly_macOS' -sdk macosx -destination 'platform=macOS' CODE_SIGNING_REQUIRED=NO CODE_SIGN_IDENTITY= PROVISIONING_PROFILE= | tee 'LaunchDarkly_macOS_xcode_raw.log' | xcpretty --color
+        command: set -o pipefail && xcodebuild clean build -workspace 'LaunchDarkly.xcworkspace' -scheme 'LaunchDarkly_macOS' -destination 'platform=macOS' CODE_SIGNING_REQUIRED=NO CODE_SIGN_IDENTITY= PROVISIONING_PROFILE= | tee 'LaunchDarkly_macOS_xcode_raw.log' | xcpretty --color
 
     - run:
         name: Clean & Build LaunchDarkly_tvOS
-        command: set -o pipefail && xcodebuild clean build -workspace 'LaunchDarkly.xcworkspace' -scheme 'LaunchDarkly_tvOS' -sdk appletvsimulator -destination 'platform=tvOS Simulator,name=Apple TV,OS=latest' CODE_SIGNING_REQUIRED=NO CODE_SIGN_IDENTITY= PROVISIONING_PROFILE= | tee 'LaunchDarkly_tvOS_xcode_raw.log' | xcpretty --color
+        command: set -o pipefail && xcodebuild clean build -workspace 'LaunchDarkly.xcworkspace' -scheme 'LaunchDarkly_tvOS' -destination 'platform=tvOS Simulator,name=Apple TV,OS=latest' CODE_SIGNING_REQUIRED=NO CODE_SIGN_IDENTITY= PROVISIONING_PROFILE= | tee 'LaunchDarkly_tvOS_xcode_raw.log' | xcpretty --color
 
     - run: 
         name: Copy XC Activity Log
         command: find "${HOME}/Library/Developer/Xcode/DerivedData" -name '*.xcactivitylog' -exec cp {} output/xcactivitylog \; || true
 
     - run:
-        name: CocoaPods lib lint
-        command: |
-            curl https://cocoapods-specs.circleci.com/fetch-cocoapods-repo-from-s3.sh | bash -s cf
-            pod repo update
-            bundle exec pod lib lint --allow-warnings
-
-    - run:
         name: CocoaPods spec lint
-        command: if [ "$CIRCLE_BRANCH" = 'master' ]; then bundle exec pod spec lint; fi
+        command: |
+          export SSH_AUTH_SOCK=
+          export GIT_SSH_COMMAND='ssh -i ~/.ssh/id_rsa_227925a92e7356ff92b44399b5219192'
+          if [ "$CIRCLE_BRANCH" = 'master' ]; then
+            pod spec lint --sources='https://github.com/launchdarkly/pod-specs-private.git','https://github.com/CocoaPods/Specs.git'
+          else
+            pod lib lint --sources='https://github.com/launchdarkly/pod-specs-private.git','https://github.com/CocoaPods/Specs.git' --allow-warnings
+          fi
 
     - store_test_results:
         path: output

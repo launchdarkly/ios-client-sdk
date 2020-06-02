@@ -6,6 +6,7 @@
 //  Copyright © 2017 Catamorphic Co. All rights reserved.
 //
 
+import LDSwiftEventSource
 @testable import LaunchDarkly
 import UIKit
 
@@ -89,16 +90,16 @@ final class ClientServiceMockFactory: ClientServiceCreating {
     }
 
     var makeStreamingProviderCallCount = 0
-    var makeStreamingProviderReceivedArguments: (url: URL, httpHeaders: [String: String], connectMethod: String?, connectBody: Data?)?
-    func makeStreamingProvider(url: URL, httpHeaders: [String: String]) -> DarklyStreamingProvider {
+    var makeStreamingProviderReceivedArguments: (url: URL, httpHeaders: [String: String], connectMethod: String?, connectBody: Data?, handler: EventHandler, errorHandler: ConnectionErrorHandler?)?
+    func makeStreamingProvider(url: URL, httpHeaders: [String: String], handler: EventHandler, errorHandler: ConnectionErrorHandler?) -> DarklyStreamingProvider {
         makeStreamingProviderCallCount += 1
-        makeStreamingProviderReceivedArguments = (url, httpHeaders, nil, nil)
+        makeStreamingProviderReceivedArguments = (url, httpHeaders, nil, nil, handler, errorHandler)
         return DarklyStreamingProviderMock()
     }
 
-    func makeStreamingProvider(url: URL, httpHeaders: [String: String], connectMethod: String?, connectBody: Data?) -> DarklyStreamingProvider {
+    func makeStreamingProvider(url: URL, httpHeaders: [String: String], connectMethod: String?, connectBody: Data?, handler: EventHandler, errorHandler: ConnectionErrorHandler?) -> DarklyStreamingProvider {
         makeStreamingProviderCallCount += 1
-        makeStreamingProviderReceivedArguments = (url, httpHeaders, connectMethod, connectBody)
+        makeStreamingProviderReceivedArguments = (url, httpHeaders, connectMethod, connectBody, handler, errorHandler)
         return DarklyStreamingProviderMock()
     }
 

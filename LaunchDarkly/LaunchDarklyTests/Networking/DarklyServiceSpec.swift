@@ -9,7 +9,7 @@
 import Quick
 import Nimble
 import OHHTTPStubs
-import DarklyEventSource
+import LDSwiftEventSource
 @testable import LaunchDarkly
 
 final class DarklyServiceSpec: QuickSpec {
@@ -802,44 +802,38 @@ final class DarklyServiceSpec: QuickSpec {
             context("when using GET method to connect") {
                 beforeEach {
                     testContext = TestContext(mobileKey: LDConfig.Constants.mockMobileKey, useReport: Constants.useGetMethod)
-                    eventSource = testContext.service.createEventSource(useReport: Constants.useGetMethod) as? DarklyStreamingProviderMock
+                    eventSource = testContext.service.createEventSource(useReport: Constants.useGetMethod, handler: EventHandlerMock(), errorHandler: nil) as? DarklyStreamingProviderMock
                 }
                 it("creates an event source that makes valid GET request") {
                     expect(eventSource).toNot(beNil())
                     expect(testContext.serviceFactoryMock?.makeStreamingProviderCallCount) == 1
                     expect(testContext.serviceFactoryMock?.makeStreamingProviderReceivedArguments).toNot(beNil())
-                    guard let receivedArguments = testContext.serviceFactoryMock?.makeStreamingProviderReceivedArguments
-                    else {
-                        return
-                    }
-                    expect(receivedArguments.url.host) == testContext.config.streamUrl.host
-                    expect(receivedArguments.url.pathComponents.contains(DarklyService.StreamRequestPath.meval)).to(beTrue())
-                    expect(receivedArguments.url.pathComponents.contains(DarklyService.StreamRequestPath.mping)).to(beFalse())
-                    expect(LDUser(base64urlEncodedString: receivedArguments.url.lastPathComponent)?.isEqual(to: testContext.user)) == true
-                    expect(receivedArguments.httpHeaders).toNot(beEmpty())
-                    expect(receivedArguments.connectMethod).to(beNil())
-                    expect(receivedArguments.connectBody).to(beNil())
+                    let receivedArguments = testContext.serviceFactoryMock?.makeStreamingProviderReceivedArguments
+                    expect(receivedArguments!.url.host) == testContext.config.streamUrl.host
+                    expect(receivedArguments!.url.pathComponents.contains(DarklyService.StreamRequestPath.meval)).to(beTrue())
+                    expect(receivedArguments!.url.pathComponents.contains(DarklyService.StreamRequestPath.mping)).to(beFalse())
+                    expect(LDUser(base64urlEncodedString: receivedArguments!.url.lastPathComponent)?.isEqual(to: testContext.user)) == true
+                    expect(receivedArguments!.httpHeaders).toNot(beEmpty())
+                    expect(receivedArguments!.connectMethod).to(beNil())
+                    expect(receivedArguments!.connectBody).to(beNil())
                 }
             }
             context("when using REPORT method to connect") {
                 beforeEach {
                     testContext = TestContext(mobileKey: LDConfig.Constants.mockMobileKey, useReport: Constants.useReportMethod)
-                    eventSource = testContext.service.createEventSource(useReport: Constants.useReportMethod) as? DarklyStreamingProviderMock
+                    eventSource = testContext.service.createEventSource(useReport: Constants.useReportMethod, handler: EventHandlerMock(), errorHandler: nil) as? DarklyStreamingProviderMock
                 }
                 it("creates an event source that makes valid REPORT request") {
                     expect(eventSource).toNot(beNil())
                     expect(testContext.serviceFactoryMock?.makeStreamingProviderCallCount) == 1
                     expect(testContext.serviceFactoryMock?.makeStreamingProviderReceivedArguments).toNot(beNil())
-                    guard let receivedArguments = testContext.serviceFactoryMock?.makeStreamingProviderReceivedArguments
-                    else {
-                        return
-                    }
-                    expect(receivedArguments.url.host) == testContext.config.streamUrl.host
-                    expect(receivedArguments.url.lastPathComponent) == DarklyService.StreamRequestPath.meval
-                    expect(receivedArguments.url.pathComponents.contains(DarklyService.StreamRequestPath.mping)).to(beFalse())
-                    expect(receivedArguments.httpHeaders).toNot(beEmpty())
-                    expect(receivedArguments.connectMethod) == DarklyService.HTTPRequestMethod.report
-                    expect(LDUser(data: receivedArguments.connectBody)?.isEqual(to: testContext.user)) == true
+                    let receivedArguments = testContext.serviceFactoryMock?.makeStreamingProviderReceivedArguments
+                    expect(receivedArguments!.url.host) == testContext.config.streamUrl.host
+                    expect(receivedArguments!.url.lastPathComponent) == DarklyService.StreamRequestPath.meval
+                    expect(receivedArguments!.url.pathComponents.contains(DarklyService.StreamRequestPath.mping)).to(beFalse())
+                    expect(receivedArguments!.httpHeaders).toNot(beEmpty())
+                    expect(receivedArguments!.connectMethod) == DarklyService.HTTPRequestMethod.report
+                    expect(LDUser(data: receivedArguments!.connectBody)?.isEqual(to: testContext.user)) == true
                 }
             }
         }

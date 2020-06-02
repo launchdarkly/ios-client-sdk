@@ -5,114 +5,84 @@
 //  Copyright © 2017 Catamorphic Co. All rights reserved.
 //
 
-import DarklyEventSource
+import LDSwiftEventSource
 @testable import LaunchDarkly
 
-extension DarklyStreamingProviderMock {
+extension EventHandler {
+    func send(event: FlagUpdateType, dict: [String: Any]) {
+        send(event: event, string: dict.jsonString!)
+    }
+
+    func send(event: FlagUpdateType, string: String) {
+        onMessage(event: event.rawValue, messageEvent: MessageEvent(data: string))
+    }
+
     func sendPing() {
-        sendEvent(DarklyEventSource.LDEvent.stubPingEvent())
-    }
-
-    func sendHeartbeat() {
-        sendEvent(DarklyEventSource.LDEvent.stubHeartbeatEvent())
-    }
-
-    func sendNullEvent() {
-        sendEvent(nil)
+        onMessage(event: FlagUpdateType.ping.rawValue, messageEvent: MessageEvent(data: ""))
     }
 
     func sendPut() {
-        sendEvent(DarklyEventSource.LDEvent.stubPutEvent(data: DarklyServiceMock.Constants.stubFeatureFlags(includeNullValue: false, includeVariations: true, includeVersions: true)
+        let data = DarklyServiceMock.Constants.stubFeatureFlags(includeNullValue: false, includeVariations: true, includeVersions: true)
             .dictionaryValue
-            .jsonString))
+        send(event: .put, dict: data)
     }
 
     func sendPatch() {
-        sendEvent(DarklyEventSource.LDEvent.stubPatchEvent(data: FlagMaintainingMock.stubPatchDictionary(key: DarklyServiceMock.FlagKeys.int,
-                                                                                                         value: DarklyServiceMock.FlagValues.int + 1,
-                                                                                                         variation: DarklyServiceMock.Constants.variation + 1,
-                                                                                                         version: DarklyServiceMock.Constants.version + 1).jsonString))
+        let data = FlagMaintainingMock.stubPatchDictionary(key: DarklyServiceMock.FlagKeys.int,
+                                                           value: DarklyServiceMock.FlagValues.int + 1,
+                                                           variation: DarklyServiceMock.Constants.variation + 1,
+                                                           version: DarklyServiceMock.Constants.version + 1)
+        send(event: .patch, dict: data)
     }
 
     func sendDelete() {
-        sendEvent(DarklyEventSource.LDEvent.stubDeleteEvent(data: FlagMaintainingMock.stubDeleteDictionary(key: DarklyServiceMock.FlagKeys.int,
-                                                                                                           version: DarklyServiceMock.Constants.version + 1).jsonString))
+        let data = FlagMaintainingMock.stubDeleteDictionary(key: DarklyServiceMock.FlagKeys.int,
+                                                            version: DarklyServiceMock.Constants.version + 1)
+        send(event: .delete, dict: data)
     }
 
-    func sendEvent(_ event: DarklyEventSource.LDEvent?) {
-        guard let messageHandler = onMessageEventReceivedHandler
-        else {
-            return
-        }
-        messageHandler(event)
+    func sendUnauthorizedError() {
+        onError(error: UnsuccessfulResponseError(responseCode: HTTPURLResponse.StatusCodes.unauthorized))
+    }
+
+    func sendServerError() {
+        onError(error: UnsuccessfulResponseError(responseCode: HTTPURLResponse.StatusCodes.internalServerError))
+    }
+
+    func sendNonResponseError() {
+        onError(error: DummyError())
     }
 }
 
-extension DarklyEventSource.LDEvent {
-    class func stubPingEvent() -> DarklyEventSource.LDEvent {
-        let event = DarklyEventSource.LDEvent()
-        event.event = EventType.ping.rawValue
-        event.data = ""
-        event.readyState = kEventStateOpen
-        return event
+class EventHandlerMock: EventHandler {
+    var onOpenedCallCount = 0
+    func onOpened() {
+        onOpenedCallCount += 1
     }
 
-    class func stubHeartbeatEvent() -> DarklyEventSource.LDEvent {
-        let event = DarklyEventSource.LDEvent()
-        event.event = EventType.heartbeat.rawValue
-        event.data = ""
-        event.readyState = kEventStateOpen
-        return event
+    var onClosedCallCount = 0
+    func onClosed() {
+        onClosedCallCount += 1
     }
 
-    class func stubPutEvent(data: String?) -> DarklyEventSource.LDEvent {
-        let event = DarklyEventSource.LDEvent()
-        event.event = EventType.put.rawValue
-        event.data = data
-        event.readyState = kEventStateOpen
-        return event
+    var onMessageCallCount = 0
+    var onMessageReceivedArguments: (event: String, messageEvent: MessageEvent)?
+    func onMessage(event: String, messageEvent: MessageEvent) {
+        onMessageCallCount += 1
+        onMessageReceivedArguments = (event, messageEvent)
     }
 
-    class func stubPatchEvent(data: String?) -> DarklyEventSource.LDEvent {
-        let event = DarklyEventSource.LDEvent()
-        event.event = EventType.patch.rawValue
-        event.data = data
-        event.readyState = kEventStateOpen
-        return event
+    var onCommentCallCount = 0
+    var onCommentReceivedComment: String?
+    func onComment(comment: String) {
+        onCommentCallCount += 1
+        onCommentReceivedComment = comment
     }
 
-    class func stubDeleteEvent(data: String?) -> DarklyEventSource.LDEvent {
-        let event = DarklyEventSource.LDEvent()
-        event.event = EventType.delete.rawValue
-        event.data = data
-        event.readyState = kEventStateOpen
-        return event
-    }
-
-    class func stubUnauthorizedEvent() -> DarklyEventSource.LDEvent {
-        let event = DarklyEventSource.LDEvent()
-        event.error = NSError(domain: DarklyEventSource.LDEventSourceErrorDomain, code: -HTTPURLResponse.StatusCodes.unauthorized, userInfo: nil)
-        event.readyState = kEventStateClosed
-        return event
-    }
-
-    class func stubErrorEvent() -> DarklyEventSource.LDEvent {
-        let event = DarklyEventSource.LDEvent()
-        event.error = NSError(domain: "", code: HTTPURLResponse.StatusCodes.internalServerError, userInfo: nil)
-        event.readyState = kEventStateClosed
-        return event
-    }
-
-    class func stubNonNSErrorEvent() -> DarklyEventSource.LDEvent {
-        let event = DarklyEventSource.LDEvent()
-        event.error = DummyError()
-        event.readyState = kEventStateClosed
-        return event
-    }
-
-    class func stubReadyStateEvent(eventState: DarklyEventSource.LDEventState) -> DarklyEventSource.LDEvent {
-        let event = DarklyEventSource.LDEvent()
-        event.readyState = eventState
-        return event
+    var onErrorCallCount = 0
+    var onErrorReceivedError: Error?
+    func onError(error: Error) {
+        onErrorCallCount += 1
+        onErrorReceivedError = error
     }
 }

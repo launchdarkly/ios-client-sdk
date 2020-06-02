@@ -6,7 +6,7 @@
 //
 
 import Foundation
-import DarklyEventSource
+import LDSwiftEventSource
 
 protocol ClientServiceCreating {
     func makeKeyedValueCache() -> KeyedValueCaching
@@ -23,8 +23,8 @@ protocol ClientServiceCreating {
     func makeFlagChangeNotifier() -> FlagChangeNotifying
     func makeEventReporter(config: LDConfig, service: DarklyServiceProvider) -> EventReporting
     func makeEventReporter(config: LDConfig, service: DarklyServiceProvider, onSyncComplete: EventSyncCompleteClosure?) -> EventReporting
-    func makeStreamingProvider(url: URL, httpHeaders: [String: String]) -> DarklyStreamingProvider
-    func makeStreamingProvider(url: URL, httpHeaders: [String: String], connectMethod: String?, connectBody: Data?) -> DarklyStreamingProvider
+    func makeStreamingProvider(url: URL, httpHeaders: [String: String], handler: EventHandler, errorHandler: ConnectionErrorHandler?) -> DarklyStreamingProvider
+    func makeStreamingProvider(url: URL, httpHeaders: [String: String], connectMethod: String?, connectBody: Data?, handler: EventHandler, errorHandler: ConnectionErrorHandler?) -> DarklyStreamingProvider
     func makeEnvironmentReporter() -> EnvironmentReporting
     func makeThrottler(maxDelay: TimeInterval, environmentReporter: EnvironmentReporting) -> Throttling
     func makeErrorNotifier() -> ErrorNotifying
@@ -82,12 +82,28 @@ final class ClientServiceFactory: ClientServiceCreating {
         EventReporter(config: config, service: service, onSyncComplete: onSyncComplete)
     }
 
-    func makeStreamingProvider(url: URL, httpHeaders: [String: String]) -> DarklyStreamingProvider {
-        LDEventSource(url: url, httpHeaders: httpHeaders)
+    func makeStreamingProvider(url: URL, httpHeaders: [String: String], handler: EventHandler, errorHandler: ConnectionErrorHandler?) -> DarklyStreamingProvider {
+        var config: EventSource.Config = EventSource.Config(handler: handler, url: url)
+        config.headers = httpHeaders
+        if let errorHandler = errorHandler {
+            config.connectionErrorHandler = errorHandler
+        }
+        return EventSource(config: config)
     }
 
-    func makeStreamingProvider(url: URL, httpHeaders: [String: String], connectMethod: String?, connectBody: Data?) -> DarklyStreamingProvider {
-        LDEventSource(url: url, httpHeaders: httpHeaders, connectMethod: connectMethod, connectBody: connectBody)
+    func makeStreamingProvider(url: URL, httpHeaders: [String: String], connectMethod: String?, connectBody: Data?, handler: EventHandler, errorHandler: ConnectionErrorHandler?) -> DarklyStreamingProvider {
+        var config: EventSource.Config = EventSource.Config(handler: handler, url: url)
+        config.headers = httpHeaders
+        if let errorHandler = errorHandler {
+            config.connectionErrorHandler = errorHandler
+        }
+        if let method = connectMethod {
+            config.method = method
+        }
+        if let body = connectBody {
+            config.body = body
+        }
+        return EventSource(config: config)
     }
 
     func makeEnvironmentReporter() -> EnvironmentReporting {

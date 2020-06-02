@@ -1,3 +1,4 @@
+# coding: utf-8
 Pod::Spec.new do |ld|
 
   ld.name         = "LaunchDarkly"
@@ -20,10 +21,10 @@ Pod::Spec.new do |ld|
 
   ld.author       = { "LaunchDarkly" => "team@launchdarkly.com" }
 
-  ld.ios.deployment_target     = "8.0"
-  ld.watchos.deployment_target = "2.0"
-  ld.tvos.deployment_target    = "9.0"
-  ld.osx.deployment_target     = "10.10"
+  ld.ios.deployment_target     = "10.0"
+  ld.watchos.deployment_target = "3.0"
+  ld.tvos.deployment_target    = "10.0"
+  ld.osx.deployment_target     = "10.12"
 
   ld.source       = { :git => "https://github.com/launchdarkly/ios-client-sdk.git", :tag => '4.5.0'}
 
@@ -34,6 +35,6 @@ Pod::Spec.new do |ld|
   ld.swift_version = '5.0'
 
   ld.subspec 'Core' do |es|
-    es.dependency 'DarklyEventSource', '~> 4.1.0'
+    es.dependency 'LDSwiftEventSource', '0.3.0'
   end
 end

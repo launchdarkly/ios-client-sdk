@@ -337,8 +337,14 @@ final class EventReporterSpec: QuickSpec {
                             expect(testContext.eventReporter.eventStore.isEmpty) == true
                             expect(testContext.eventReporter.lastEventResponseDate) == testContext.eventStubResponseDate
                             expect(testContext.eventReporter.flagRequestTracker.hasLoggedRequests) == false
-                            expect(testContext.syncResult) == .success(testContext.serviceMock.publishedEventDictionaries!)
+                            guard case let .success(result) = testContext.syncResult
+                            else {
+                                fail("Expected event dictionaries in sync result")
+                                return
+                            }
+                            expect(result == testContext.serviceMock.publishedEventDictionaries!).to(beTrue())
                         }
+
                     }
                     context("with events only") {
                         beforeEach {
@@ -364,7 +370,12 @@ final class EventReporterSpec: QuickSpec {
                             expect(testContext.eventReporter.eventStore.isEmpty) == true
                             expect(testContext.eventReporter.lastEventResponseDate) == testContext.eventStubResponseDate
                             expect(testContext.eventReporter.flagRequestTracker.hasLoggedRequests) == false
-                            expect(testContext.syncResult) == .success(testContext.serviceMock.publishedEventDictionaries!)
+                            guard case let .success(result) = testContext.syncResult
+                            else {
+                                fail("Expected event dictionaries in sync result")
+                                return
+                            }
+                            expect(result == testContext.serviceMock.publishedEventDictionaries!).to(beTrue())
                         }
                     }
                     context("with tracked requests only") {
@@ -391,7 +402,12 @@ final class EventReporterSpec: QuickSpec {
                             expect(testContext.eventReporter.eventStore.isEmpty) == true
                             expect(testContext.eventReporter.lastEventResponseDate) == testContext.eventStubResponseDate
                             expect(testContext.eventReporter.flagRequestTracker.hasLoggedRequests) == false
-                            expect(testContext.syncResult) == .success(testContext.serviceMock.publishedEventDictionaries!)
+                            guard case let .success(result) = testContext.syncResult
+                            else {
+                                fail("Expected event dictionaries in sync result")
+                                return
+                            }
+                            expect(result == testContext.serviceMock.publishedEventDictionaries!).to(beTrue())
                         }
                     }
                     context("without events or tracked requests") {
@@ -413,7 +429,12 @@ final class EventReporterSpec: QuickSpec {
                             expect(testContext.eventReporter.eventStore.isEmpty) == true
                             expect(testContext.eventReporter.lastEventResponseDate).to(beNil())
                             expect(testContext.eventReporter.flagRequestTracker.hasLoggedRequests) == false
-                            expect(testContext.syncResult) == .success([[String: Any]]())
+                            guard case let .success(result) = testContext.syncResult
+                            else {
+                                fail("Expected event dictionaries in sync result")
+                                return
+                            }
+                            expect(result == [[String: Any]]()).to(beTrue())
                         }
                     }
                 }
@@ -443,7 +464,12 @@ final class EventReporterSpec: QuickSpec {
                             expect(testContext.serviceMock.publishedEventDictionaryKinds?.contains(.summary)) == true
                             expect(testContext.eventReporter.lastEventResponseDate).to(beNil())
                             expect(testContext.eventReporter.flagRequestTracker.hasLoggedRequests) == false
-                            expect(testContext.syncResult) == .error(.request(DarklyServiceMock.Constants.error))
+                            guard case let .error(.request(error)) = testContext.syncResult
+                            else {
+                                fail("Expected error result for event send")
+                                return
+                            }
+                            expect(error as NSError?) == DarklyServiceMock.Constants.error
                         }
                     }
                     context("response only") {
@@ -471,7 +497,15 @@ final class EventReporterSpec: QuickSpec {
                             expect(testContext.serviceMock.publishedEventDictionaryKinds?.contains(.summary)) == true
                             expect(testContext.eventReporter.lastEventResponseDate).to(beNil())
                             expect(testContext.eventReporter.flagRequestTracker.hasLoggedRequests) == false
-                            expect(testContext.syncResult) == .error(.response(testContext.serviceMock.errorEventHTTPURLResponse))
+                            let expectedError = testContext.serviceMock.errorEventHTTPURLResponse
+                            guard case let .error(.response(error)) = testContext.syncResult
+                            else {
+                                fail("Expected error result for event send")
+                                return
+                            }
+                            let httpError = error as? HTTPURLResponse
+                            expect(httpError?.url) == expectedError?.url
+                            expect(httpError?.statusCode) == expectedError?.statusCode
                         }
                     }
                     context("error only") {
@@ -499,7 +533,12 @@ final class EventReporterSpec: QuickSpec {
                             expect(testContext.serviceMock.publishedEventDictionaryKinds?.contains(.summary)) == true
                             expect(testContext.eventReporter.lastEventResponseDate).to(beNil())
                             expect(testContext.eventReporter.flagRequestTracker.hasLoggedRequests) == false
-                            expect(testContext.syncResult) == .error(.request(DarklyServiceMock.Constants.error))
+                            guard case let .error(.request(error)) = testContext.syncResult
+                            else {
+                                fail("Expected error result for event send")
+                                return
+                            }
+                            expect(error as NSError?) == DarklyServiceMock.Constants.error
                         }
                     }
                 }
@@ -526,7 +565,11 @@ final class EventReporterSpec: QuickSpec {
                     expect(testContext.eventReporter.eventStoreKinds.contains(.summary)) == false
                     expect(testContext.eventReporter.lastEventResponseDate).to(beNil())
                     expect(testContext.eventReporter.flagRequestTracker.hasLoggedRequests) == true
-                    expect(testContext.syncResult) == .error(.isOffline)
+                    guard case .error(.isOffline) = testContext.syncResult
+                    else {
+                        fail("Expected error .isOffline result for event send")
+                        return
+                    }
                 }
             }
         }
@@ -1053,18 +1096,6 @@ private extension Date {
 extension Event.Kind {
     static var nonSummaryKinds: [Event.Kind] {
         [feature, debug, identify, custom]
-    }
-}
-
-extension EventSyncResult: Equatable {
-    public static func == (_ lhs: EventSyncResult, _ rhs: EventSyncResult) -> Bool {
-        switch (lhs, rhs) {
-        case let (.success(left), .success(right)):
-            return left == right
-        case let (.error(left), .error(right)):
-            return left == right
-        default: return false
-        }
     }
 }
 

@@ -8,7 +8,7 @@
 
 import Quick
 import Nimble
-import DarklyEventSource
+import LDSwiftEventSource
 @testable import LaunchDarkly
 
 final class LDClientSpec: QuickSpec {
@@ -2509,10 +2509,10 @@ final class LDClientSpec: QuickSpec {
 
     /* The concept of the onSyncCompleteSuccess tests is to configure the flags & mocks to simulate the intended change, prep the callbacks to trigger done() to end the async wait, and then call onFlagSyncComplete with the parameters for the area under test. onFlagSyncComplete will call a flagStore method which has an async closure, and so the test has to trigger that closure to get the correct code to execute in onFlagSyncComplete. Once the async flagStore closure runs for the appropriate update method, the result can be measured in the mocks. While setting up each test is slightly different, measuring the result is largely the same.
      */
-    private func onSyncCompleteSuccessReplacingFlagsSpec(streamingMode: LDStreamingMode, eventType: DarklyEventSource.LDEvent.EventType? = nil) {
+    private func onSyncCompleteSuccessReplacingFlagsSpec(streamingMode: LDStreamingMode, eventType: FlagUpdateType? = nil) {
         var testContext: TestContext!
         var newFlags: [LDFlagKey: FeatureFlag]!
-        var eventType: DarklyEventSource.LDEvent.EventType?
+        var eventType: FlagUpdateType?
         var updateDate: Date!
 
         beforeEach {
@@ -2992,7 +2992,7 @@ final class LDClientSpec: QuickSpec {
                     }
                     testContext.subject.start(config: testContext.config, user: testContext.user)
 
-                    testContext.onSyncComplete?(.error(.event(DarklyEventSource.LDEvent.stubNonNSErrorEvent())))
+                    testContext.onSyncComplete?(.error(.streamError(DummyError())))
                 }
             }
             it("does not take the client offline") {
@@ -3004,16 +3004,15 @@ final class LDClientSpec: QuickSpec {
             it("does not call the flag change notifier") {
                 expect(testContext.changeNotifierMock.notifyObserversCallCount) == 0
             }
-            it("calls the errorNotifier with a .event SynchronizingError") {
+            it("calls the errorNotifier with a .streamError SynchronizingError") {
                 expect(testContext.errorNotifierMock.notifyObserversCallCount) == 1
                 expect(testContext.observedError as? SynchronizingError).toNot(beNil())
-                guard case .event(let event)? = testContext.observedError as? SynchronizingError,
-                    let eventSourceEvent = event
+                guard case .streamError(let error)? = testContext.observedError as? SynchronizingError
                 else {
                     fail("unexpected error reported")
                     return
                 }
-                expect(eventSourceEvent.error is DummyError).to(beTrue())
+                expect(error is DummyError).to(beTrue())
             }
         }
     }

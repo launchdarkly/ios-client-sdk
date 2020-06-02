@@ -7,7 +7,7 @@
 
 import Quick
 import Nimble
-import DarklyEventSource
+import LDSwiftEventSource
 @testable import LaunchDarkly
 
 final class SynchronizingErrorSpec: QuickSpec {
@@ -15,56 +15,41 @@ final class SynchronizingErrorSpec: QuickSpec {
         isUnauthorizedSpec()
     }
 
+    private let falseCases: [SynchronizingError] =
+        [.isOffline,
+         .streamEventWhilePolling,
+         .data(nil),
+         .data("data".data(using: .utf8)),
+         .request(DummyError()),
+         .unknownEventType("update"),
+         .response(HTTPURLResponse(url: LDConfig.stub.streamUrl,
+                                   statusCode: HTTPURLResponse.StatusCodes.internalServerError,
+                                   httpVersion: "1.1",
+                                   headerFields: nil)),
+         .streamError(UnsuccessfulResponseError(responseCode: 500))
+         ]
+    private let trueCases: [SynchronizingError] =
+        [.response(HTTPURLResponse(url: LDConfig.stub.streamUrl,
+                                   statusCode: HTTPURLResponse.StatusCodes.unauthorized,
+                                   httpVersion: "1.1",
+                                   headerFields: nil)),
+         .streamError(UnsuccessfulResponseError(responseCode: 401))
+         ]
+
     func isUnauthorizedSpec() {
-        let config = LDConfig.stub
-        var subject: SynchronizingError!
         describe("isUnauthorized") {
-            context("when created with a 401 URL response") {
-                beforeEach {
-                    subject = .response(HTTPURLResponse(url: config.streamUrl, statusCode: HTTPURLResponse.StatusCodes.unauthorized, httpVersion: "1.1", headerFields: nil))
-                }
-                it("returns true") {
-                    expect(subject.isClientUnauthorized) == true
-                }
-            }
-            context("when created with a isUnauthorized event") {
-                beforeEach {
-                    subject = .event(DarklyEventSource.LDEvent.stubUnauthorizedEvent())
-                }
-                it("returns true") {
-                    expect(subject.isClientUnauthorized) == true
+            falseCases.forEach { testValue in
+                context("with error: \(testValue)") {
+                    it("returns false") {
+                        expect(testValue.isClientUnauthorized) == false
+                    }
                 }
             }
-            context("when created with a request error") {
-                beforeEach {
-                    subject = .request(DummyError())
-                }
-                it("returns false") {
-                    expect(subject.isClientUnauthorized) == false
-                }
-            }
-            context("when created with a 500 URL response") {
-                beforeEach {
-                    subject = .response(HTTPURLResponse(url: config.streamUrl, statusCode: HTTPURLResponse.StatusCodes.internalServerError, httpVersion: "1.1", headerFields: nil))
-                }
-                it("returns false") {
-                    expect(subject.isClientUnauthorized) == false
-                }
-            }
-            context("when created with a data error") {
-                beforeEach {
-                    subject = .data(nil)
-                }
-                it("returns false") {
-                    expect(subject.isClientUnauthorized) == false
-                }
-            }
-            context("when created with a non-isUnauthorized event") {
-                beforeEach {
-                    subject = .event(DarklyEventSource.LDEvent.stubErrorEvent())
-                }
-                it("returns false") {
-                    expect(subject.isClientUnauthorized) == false
+            trueCases.forEach { testValue in
+                context("with error: \(testValue)") {
+                    it("returns true") {
+                        expect(testValue.isClientUnauthorized) == true
+                    }
                 }
             }
         }
