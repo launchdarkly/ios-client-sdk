@@ -17,12 +17,12 @@ final class ClientServiceMockFactory: ClientServiceCreating {
 
     var makeFeatureFlagCacheReturnValue = FeatureFlagCachingMock()
     var makeFeatureFlagCacheCallCount = 0
-    func makeFeatureFlagCache() -> FeatureFlagCaching {
+    func makeFeatureFlagCache(maxCachedUsers: Int = 5) -> FeatureFlagCaching {
         makeFeatureFlagCacheCallCount += 1
         return makeFeatureFlagCacheReturnValue
     }
 
-    func makeCacheConverter() -> CacheConverting {
+    func makeCacheConverter(maxCachedUsers: Int = 5) -> CacheConverting {
         return CacheConvertingMock()
     }
 

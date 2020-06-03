@@ -10,8 +10,8 @@ import LDSwiftEventSource
 
 protocol ClientServiceCreating {
     func makeKeyedValueCache() -> KeyedValueCaching
-    func makeFeatureFlagCache() -> FeatureFlagCaching
-    func makeCacheConverter() -> CacheConverting
+    func makeFeatureFlagCache(maxCachedUsers: Int) -> FeatureFlagCaching
+    func makeCacheConverter(maxCachedUsers: Int) -> CacheConverting
     func makeDeprecatedCacheModel(_ model: DeprecatedCacheModel) -> DeprecatedCache
     func makeDarklyServiceProvider(config: LDConfig, user: LDUser) -> DarklyServiceProvider
     func makeFlagSynchronizer(streamingMode: LDStreamingMode, pollingInterval: TimeInterval, useReport: Bool, service: DarklyServiceProvider) -> LDFlagSynchronizing
@@ -36,12 +36,12 @@ final class ClientServiceFactory: ClientServiceCreating {
         UserDefaults.standard
     }
 
-    func makeFeatureFlagCache() -> FeatureFlagCaching {
-        UserEnvironmentFlagCache(withKeyedValueCache: makeKeyedValueCache())
+    func makeFeatureFlagCache(maxCachedUsers: Int) -> FeatureFlagCaching {
+        UserEnvironmentFlagCache(withKeyedValueCache: makeKeyedValueCache(), maxCachedUsers: maxCachedUsers)
     }
 
-    func makeCacheConverter() -> CacheConverting {
-        CacheConverter(serviceFactory: self)
+    func makeCacheConverter(maxCachedUsers: Int) -> CacheConverting {
+        CacheConverter(serviceFactory: self, maxCachedUsers: maxCachedUsers)
     }
 
     func makeDeprecatedCacheModel(_ model: DeprecatedCacheModel) -> DeprecatedCache {

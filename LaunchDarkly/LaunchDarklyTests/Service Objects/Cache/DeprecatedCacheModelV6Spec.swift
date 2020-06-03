@@ -120,7 +120,7 @@ final class DeprecatedCacheModelV6Spec: QuickSpec {
             context("when cached data exists") {
                 context("and a cached user is requested") {
                     beforeEach {
-                        testContext = TestContext(userCount: UserEnvironmentFlagCache.Constants.maxCachedUsers)
+                        testContext = TestContext(userCount: LDConfig.Defaults.maxCachedUsers)
                     }
                     it("retrieves the cached data") {
                         testContext.users.forEach { user in
@@ -136,7 +136,7 @@ final class DeprecatedCacheModelV6Spec: QuickSpec {
                 }
                 context("and an uncached mobileKey is requested") {
                     beforeEach {
-                        testContext = TestContext(userCount: UserEnvironmentFlagCache.Constants.maxCachedUsers)
+                        testContext = TestContext(userCount: LDConfig.Defaults.maxCachedUsers)
 
                         cachedData = testContext.modelV6cache.retrieveFlags(for: testContext.users.first!.key, and: testContext.uncachedMobileKey)
                     }
@@ -147,7 +147,7 @@ final class DeprecatedCacheModelV6Spec: QuickSpec {
                 }
                 context("and an uncached user is requested") {
                     beforeEach {
-                        testContext = TestContext(userCount: UserEnvironmentFlagCache.Constants.maxCachedUsers)
+                        testContext = TestContext(userCount: LDConfig.Defaults.maxCachedUsers)
 
                         cachedData = testContext.modelV6cache.retrieveFlags(for: testContext.uncachedUser.key, and: testContext.mobileKeys.first!)
                     }
@@ -166,7 +166,7 @@ final class DeprecatedCacheModelV6Spec: QuickSpec {
         describe("removeData") {
             context("no modelV6 cached data expired") {
                 beforeEach {
-                    testContext = TestContext(userCount: UserEnvironmentFlagCache.Constants.maxCachedUsers)
+                    testContext = TestContext(userCount: LDConfig.Defaults.maxCachedUsers)
                     let oldestLastUpdatedDate = testContext.sortedLastUpdatedDates.first!
                     expirationDate = oldestLastUpdatedDate.lastUpdated.addingTimeInterval(-Constants.offsetInterval)
 
@@ -178,7 +178,7 @@ final class DeprecatedCacheModelV6Spec: QuickSpec {
             }
             context("some modelV6 cached data expired") {
                 beforeEach {
-                    testContext = TestContext(userCount: UserEnvironmentFlagCache.Constants.maxCachedUsers)
+                    testContext = TestContext(userCount: LDConfig.Defaults.maxCachedUsers)
                     let selectedLastUpdatedDate = testContext.sortedLastUpdatedDates[testContext.users.count / 2]
                     expirationDate = selectedLastUpdatedDate.lastUpdated.addingTimeInterval(-Constants.offsetInterval)
 
@@ -196,7 +196,7 @@ final class DeprecatedCacheModelV6Spec: QuickSpec {
             }
             context("all modelV6 cached data expired") {
                 beforeEach {
-                    testContext = TestContext(userCount: UserEnvironmentFlagCache.Constants.maxCachedUsers)
+                    testContext = TestContext(userCount: LDConfig.Defaults.maxCachedUsers)
                     let newestLastUpdatedDate = testContext.sortedLastUpdatedDates.last!
                     expirationDate = newestLastUpdatedDate.lastUpdated.addingTimeInterval(Constants.offsetInterval)
 
@@ -209,7 +209,7 @@ final class DeprecatedCacheModelV6Spec: QuickSpec {
             }
             context("no modelV6 cached data exists") {
                 beforeEach {
-                    testContext = TestContext(userCount: UserEnvironmentFlagCache.Constants.maxCachedUsers)
+                    testContext = TestContext(userCount: LDConfig.Defaults.maxCachedUsers)
                     let newestLastUpdatedDate = testContext.sortedLastUpdatedDates.last!
                     expirationDate = newestLastUpdatedDate.lastUpdated.addingTimeInterval(Constants.offsetInterval)
                     testContext.keyedValueCacheMock.dictionaryReturnValue = nil     //mock simulates no modelV6 cached data

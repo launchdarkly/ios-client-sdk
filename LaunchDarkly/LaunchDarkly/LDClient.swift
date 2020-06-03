@@ -307,6 +307,8 @@ public class LDClient {
     @available(*, deprecated, message: "Please use the startCompleteWhenFlagsReceived method instead")
     public func start(config: LDConfig, user: LDUser? = nil, completion: (() -> Void)? = nil) {
         Log.debug(typeName(and: #function, appending: ": ") + "starting")
+        flagCache.maxCachedUsers = config.maxCachedUsers
+        cacheConverter = self.serviceFactory.makeCacheConverter(maxCachedUsers: config.maxCachedUsers)
         let wasStarted = hasStarted
         let wasOnline = isOnline
         isStarting = true
@@ -338,6 +340,8 @@ public class LDClient {
      */
     public func startCompleteWhenFlagsReceived(config: LDConfig, user: LDUser? = nil, completion: (() -> Void)? = nil) {
         Log.debug(typeName(and: #function, appending: ": ") + "starting")
+        flagCache.maxCachedUsers = config.maxCachedUsers
+        cacheConverter = self.serviceFactory.makeCacheConverter(maxCachedUsers: config.maxCachedUsers)
         let wasStarted = hasStarted
         let wasOnline = isOnline
         isStarting = true
@@ -357,7 +361,44 @@ public class LDClient {
             completion?()
         }
     }
+    
+    /**
+     See [start](x-source-tag://start) for more information on starting the SDK.
+    
+     This method listens for flag updates so the completion will only return once an update has occurred. If the SDK is configured to start offline the method will ignore the timeout and call the completion with True without awaiting a flag update.
+    
+     - parameter config: The LDConfig that contains the desired configuration. (Required)
+     - parameter user: The LDUser set with the desired user. If omitted, LDClient retains the previously set user, or default if one was never set. (Optional)
+     - parameter startWaitSeconds: An Int representing how long to wait for flags before returning true in the completion to indicate that it timed out.
+     - parameter completion: Closure called when the embedded `setOnlineIdentify` call completes, subject to throttling delays. Takes a Bool as a parameter that indicates whether the SDK did not come online within startWaitSeconds. (Optional)
+     */
+    public func startCompleteWhenFlagsReceived(config: LDConfig, user: LDUser? = nil, startWaitSeconds: Int, completion: ((_ timedOut: Bool) -> Void)? = nil) {
+        if !config.startOnline {
+            startCompleteWhenFlagsReceived(config: config, user: user)
+            completion?(timeOutCheck)
+        } else {
+            let startTime = Date().timeIntervalSince1970
+            startCompleteWhenFlagsReceived(config: config, user: user) {
+                if startTime + Double(startWaitSeconds) > Date().timeIntervalSince1970 {
+                    self.internalTimeOutCheckQueue.sync {
+                        self.timeOutCheck = false
+                        completion?(self.timeOutCheck)
+                    }
+                }
+            }
+            DispatchQueue.global().asyncAfter(deadline: .now() + DispatchTimeInterval.seconds(startWaitSeconds)) {
+                self.internalTimeOutCheckQueue.sync {
+                    if self.timeOutCheck {
+                        completion?(self.timeOutCheck)
+                    }
+                }
+            }
+        }
+    }
 
+    private var timeOutCheck = true
+    private let internalTimeOutCheckQueue: DispatchQueue = DispatchQueue(label: "TimeOutQueue")
+    
     private func convertCachedData(skipDuringStart skip: Bool) {
         guard !skip
         else {
@@ -1005,7 +1046,7 @@ public class LDClient {
     private(set) var flagCache: FeatureFlagCaching
     private(set) var cacheConverter: CacheConverting
     private(set) var flagSynchronizer: LDFlagSynchronizing
-    private(set) var flagChangeNotifier: FlagChangeNotifying
+    var flagChangeNotifier: FlagChangeNotifying
     private(set) var eventReporter: EventReporting
     private(set) var environmentReporter: EnvironmentReporting
     private(set) var throttler: Throttling
@@ -1015,9 +1056,9 @@ public class LDClient {
             self.serviceFactory = serviceFactory
         }
         environmentReporter = self.serviceFactory.makeEnvironmentReporter()
-        flagCache = self.serviceFactory.makeFeatureFlagCache()
+        flagCache = self.serviceFactory.makeFeatureFlagCache(maxCachedUsers: LDConfig.Defaults.maxCachedUsers)
         LDUserWrapper.configureKeyedArchiversToHandleVersion2_3_0AndOlderUserCacheFormat()
-        cacheConverter = self.serviceFactory.makeCacheConverter()
+        cacheConverter = self.serviceFactory.makeCacheConverter(maxCachedUsers: LDConfig.Defaults.maxCachedUsers)
         flagChangeNotifier = self.serviceFactory.makeFlagChangeNotifier()
         throttler = self.serviceFactory.makeThrottler(maxDelay: Throttler.Constants.defaultDelay, environmentReporter: environmentReporter)
 

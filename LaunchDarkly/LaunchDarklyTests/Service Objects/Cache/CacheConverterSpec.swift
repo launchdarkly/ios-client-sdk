@@ -30,9 +30,9 @@ final class CacheConverterSpec: QuickSpec {
 
         init(maxAge: TimeInterval? = nil, createCacheData: Bool = false, deprecatedCacheData: DeprecatedCacheModel? = nil) {
             if let maxAge = maxAge {
-                cacheConverter = CacheConverter(serviceFactory: clientServiceFactoryMock, maxAge: maxAge)
+                cacheConverter = CacheConverter(serviceFactory: clientServiceFactoryMock, maxCachedUsers: LDConfig.Defaults.maxCachedUsers, maxAge: maxAge)
             } else {
-                cacheConverter = CacheConverter(serviceFactory: clientServiceFactoryMock)
+                cacheConverter = CacheConverter(serviceFactory: clientServiceFactoryMock, maxCachedUsers: LDConfig.Defaults.maxCachedUsers)
             }
             expiredCacheThreshold = Date().addingTimeInterval(maxAge ?? CacheConverter.Constants.maxAge)
             if createCacheData {

@@ -254,7 +254,7 @@ final class CacheableUserEnvironmentFlagsSpec: QuickSpec {
         describe("dictionaryValues") {
             context("with multiple CacheableUserEnvironments") {
                 beforeEach {
-                    testContext = TestContext(userCount: UserEnvironmentFlagCache.Constants.maxCachedUsers)
+                    testContext = TestContext(userCount: LDConfig.Defaults.maxCachedUsers)
 
                     cacheableUserEnvironmentsCollectionDictionary = testContext.userEnvironmentFlagsCollection.dictionaryValues
                 }
@@ -286,7 +286,7 @@ final class CacheableUserEnvironmentFlagsSpec: QuickSpec {
         describe("makeCacheableUserEnvironmentsCollection") {
             context("with multiple CacheableUserEnvironments dictionaries") {
                 beforeEach {
-                    testContext = TestContext(userCount: UserEnvironmentFlagCache.Constants.maxCachedUsers)
+                    testContext = TestContext(userCount: LDConfig.Defaults.maxCachedUsers)
                     cacheableUserEnvironmentsCollectionDictionary = testContext.userEnvironmentFlagsCollection.dictionaryValues
 
                     cacheableUserEnvironmentsCollection = CacheableUserEnvironmentFlags.makeCollection(from: cacheableUserEnvironmentsCollectionDictionary)
@@ -320,7 +320,7 @@ final class CacheableUserEnvironmentFlagsSpec: QuickSpec {
                 var badUserKey: String!
                 context("missing userKey") {
                     beforeEach {
-                        testContext = TestContext(userCount: UserEnvironmentFlagCache.Constants.maxCachedUsers)
+                        testContext = TestContext(userCount: LDConfig.Defaults.maxCachedUsers)
                         cacheableUserEnvironmentsCollectionDictionary = testContext.userEnvironmentFlagsCollection.dictionaryValues
 
                         //Create a new CacheableUserEnvironment
@@ -343,7 +343,7 @@ final class CacheableUserEnvironmentFlagsSpec: QuickSpec {
                 }
                 context("missing environmentFlags") {
                     beforeEach {
-                        testContext = TestContext(userCount: UserEnvironmentFlagCache.Constants.maxCachedUsers)
+                        testContext = TestContext(userCount: LDConfig.Defaults.maxCachedUsers)
                         cacheableUserEnvironmentsCollectionDictionary = testContext.userEnvironmentFlagsCollection.dictionaryValues
 
                         //Create a new CacheableUserEnvironment
@@ -369,7 +369,7 @@ final class CacheableUserEnvironmentFlagsSpec: QuickSpec {
                 var badUserKey: String!
                 context("type mismatched userKey") {
                     beforeEach {
-                        testContext = TestContext(userCount: UserEnvironmentFlagCache.Constants.maxCachedUsers)
+                        testContext = TestContext(userCount: LDConfig.Defaults.maxCachedUsers)
                         cacheableUserEnvironmentsCollectionDictionary = testContext.userEnvironmentFlagsCollection.dictionaryValues
 
                         //Create a new CacheableUserEnvironment
@@ -392,7 +392,7 @@ final class CacheableUserEnvironmentFlagsSpec: QuickSpec {
                 }
                 context("type mismatched environmentFlags") {
                     beforeEach {
-                        testContext = TestContext(userCount: UserEnvironmentFlagCache.Constants.maxCachedUsers)
+                        testContext = TestContext(userCount: LDConfig.Defaults.maxCachedUsers)
                         cacheableUserEnvironmentsCollectionDictionary = testContext.userEnvironmentFlagsCollection.dictionaryValues
 
                         //Create a new CacheableUserEnvironment
@@ -468,7 +468,7 @@ extension Int {
 extension CacheableUserEnvironmentFlags {
     struct Constants {
         static let environmentCount = 3
-        static let userCount = UserEnvironmentFlagCache.Constants.maxCachedUsers
+        static let userCount = LDConfig.Defaults.maxCachedUsers
     }
 
     static func stubCollection(environmentCount: Int = Constants.environmentCount,

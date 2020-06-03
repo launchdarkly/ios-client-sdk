@@ -53,8 +53,8 @@ final class UserEnvironmentFlagCacheSpec: QuickSpec {
             }.first!
         }
 
-        init(userCount: Int = 1) {
-            userEnvironmentFlagCache = UserEnvironmentFlagCache(withKeyedValueCache: keyedValueCacheMock)
+        init(userCount: Int = 1, maxUsers: Int = 5) {
+            userEnvironmentFlagCache = UserEnvironmentFlagCache(withKeyedValueCache: keyedValueCacheMock, maxCachedUsers: maxUsers)
             let mobileKeys: [MobileKey]
             (users, userEnvironmentsCollection, mobileKeys) = CacheableUserEnvironmentFlags.stubCollection(userCount: userCount)
             self.mobileKeys.formUnion(Set(mobileKeys))
@@ -96,7 +96,9 @@ final class UserEnvironmentFlagCacheSpec: QuickSpec {
     override func spec() {
         initSpec()
         retrieveFeatureFlagsSpec()
-        storeFeatureFlagsSpec()
+        storeFeatureFlagsSpec(maxUsers: LDConfig.Defaults.maxCachedUsers)
+        storeFeatureFlagsSpec(maxUsers: 3)
+        storeUnlimitedUsersSpec(maxUsers: -1)
     }
 
     private func initSpec() {
@@ -135,7 +137,7 @@ final class UserEnvironmentFlagCacheSpec: QuickSpec {
                 context("the user is stored") {
                     context("and the environment is stored") {
                         beforeEach {
-                            testContext = TestContext(userCount: UserEnvironmentFlagCache.Constants.maxCachedUsers)
+                            testContext = TestContext(userCount: LDConfig.Defaults.maxCachedUsers)
                             retrievingUser = testContext.selectedUser
                             retrievingMobileKey = testContext.selectedMobileKey
 
@@ -147,7 +149,7 @@ final class UserEnvironmentFlagCacheSpec: QuickSpec {
                     }
                     context("and the environment is not stored") {
                         beforeEach {
-                            testContext = TestContext(userCount: UserEnvironmentFlagCache.Constants.maxCachedUsers)
+                            testContext = TestContext(userCount: LDConfig.Defaults.maxCachedUsers)
                             retrievingUser = testContext.selectedUser
                             retrievingMobileKey = (CacheableUserEnvironmentFlags.Constants.environmentCount + 1).mobileKey
 
@@ -160,7 +162,7 @@ final class UserEnvironmentFlagCacheSpec: QuickSpec {
                 }
                 context("the user is not stored") {
                     beforeEach {
-                        testContext = TestContext(userCount: UserEnvironmentFlagCache.Constants.maxCachedUsers)
+                        testContext = TestContext(userCount: LDConfig.Defaults.maxCachedUsers)
                         retrievingUser = LDUser.stub()
                         retrievingMobileKey = testContext.selectedMobileKey
 
@@ -173,8 +175,80 @@ final class UserEnvironmentFlagCacheSpec: QuickSpec {
             }
         }
     }
+    
+    private func storeUnlimitedUsersSpec(maxUsers: Int) {
+        var testContext: TestContext!
+        var storingUser: LDUser!
+        var storingMobileKey: String!
+        var storingLastUpdated: Date!
+        var userCount: Int!
+        var newFeatureFlags: [LDFlagKey: FeatureFlag]!
+        
+        context("and an existing user adds a new environment") {
+            beforeEach {
+                userCount = 5
+                testContext = TestContext(userCount: userCount, maxUsers: maxUsers)
+                storingUser = testContext.selectedUser
+                storingMobileKey = (CacheableUserEnvironmentFlags.Constants.environmentCount + 1).mobileKey
+                newFeatureFlags = [Constants.newFlagKey: FeatureFlag.stub(flagKey: Constants.newFlagKey, flagValue: Constants.newFlagValue)]
+                storingUser.flagStore = FlagMaintainingMock(flags: newFeatureFlags)
+                storingLastUpdated = Date()
+            }
+            it("stores the users flags") {
+                FlagCachingStoreMode.allCases.forEach { (storeMode) in
+                    testContext.storeFlags(newFeatureFlags,
+                                           forUser: storingUser,
+                                           andMobileKey: storingMobileKey,
+                                           lastUpdated: storingLastUpdated,
+                                           storeMode: storeMode)
 
-    private func storeFeatureFlagsSpec() {
+                    expect(testContext.keyedValueCacheMock.setReceivedArguments?.forKey) == UserEnvironmentFlagCache.CacheKeys.cachedUserEnvironmentFlags
+
+                    let setCachedUserEnvironmentsCollection = testContext.keyedValueCacheMock.setReceivedArguments?.value as? [UserKey: [String: Any]]
+                    expect(setCachedUserEnvironmentsCollection?.count) == userCount
+                    testContext.users.forEach { (user) in
+                        expect(setCachedUserEnvironmentsCollection?.keys.contains(user.key)) == true
+
+                        let setCachedUserEnvironments = setCachedUserEnvironmentsCollection?[user.key]
+                        expect(setCachedUserEnvironments?.userKey) == user.key
+                        if user.key == storingUser.key {
+                            expect(setCachedUserEnvironments?.cacheableLastUpdated) == storingLastUpdated.stringEquivalentDate
+                        } else {
+                            expect(setCachedUserEnvironments?.cacheableLastUpdated) == testContext.userEnvironmentsCollection.lastUpdated(forKey: user.key)?.stringEquivalentDate
+                        }
+
+                        let setCachedEnvironmentFlagsCollection = setCachedUserEnvironments?.environmentFlags
+                        if user.key == storingUser.key {
+                            expect(setCachedEnvironmentFlagsCollection?.count) == CacheableUserEnvironmentFlags.Constants.environmentCount + 1
+                        } else {
+                            expect(setCachedEnvironmentFlagsCollection?.count) == CacheableUserEnvironmentFlags.Constants.environmentCount
+                        }
+
+                        var mobileKeys = [MobileKey](testContext.mobileKeys)
+                        mobileKeys.append(storingMobileKey)
+                        mobileKeys.forEach { (mobileKey) in
+                            guard mobileKey != storingMobileKey || user.key == storingUser.key
+                                else {
+                                    return
+                            }
+                            expect(setCachedEnvironmentFlagsCollection?.keys.contains(mobileKey)) == true
+
+                            let setCachedEnvironmentFlags = setCachedEnvironmentFlagsCollection?[mobileKey]
+                            expect(setCachedEnvironmentFlags?.userKey) == user.key
+                            expect(setCachedEnvironmentFlags?.mobileKey) == mobileKey
+                            if user.key == storingUser.key && mobileKey == storingMobileKey {
+                                expect(setCachedEnvironmentFlags?.featureFlags) == newFeatureFlags
+                            } else {
+                                expect(setCachedEnvironmentFlags?.featureFlags) == testContext.featureFlags(forUserKey: user.key, andMobileKey: mobileKey)
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    private func storeFeatureFlagsSpec(maxUsers: Int) {
         var testContext: TestContext!
         var storingUser: LDUser!
         var storingMobileKey: String!
@@ -186,7 +260,7 @@ final class UserEnvironmentFlagCacheSpec: QuickSpec {
             context("when no user flags are stored") {
                 beforeEach {
                     userCount = 0
-                    testContext = TestContext(userCount: userCount)
+                    testContext = TestContext(userCount: userCount, maxUsers: maxUsers)
                     storingUser = LDUser.stub()
                     storingLastUpdated = Date().addingTimeInterval(TimeInterval(days: -1))
                     storingMobileKey = UUID().uuidString
@@ -223,8 +297,8 @@ final class UserEnvironmentFlagCacheSpec: QuickSpec {
             context("when less than the max number of users flags are stored") {
                 context("and an existing users flags are changed") {
                     beforeEach {
-                        userCount = UserEnvironmentFlagCache.Constants.maxCachedUsers - 1
-                        testContext = TestContext(userCount: userCount)
+                        userCount = maxUsers - 1
+                        testContext = TestContext(userCount: userCount, maxUsers: maxUsers)
                         storingUser = testContext.selectedUser
                         storingMobileKey = testContext.selectedMobileKey
                         newFeatureFlags = [Constants.newFlagKey: FeatureFlag.stub(flagKey: Constants.newFlagKey, flagValue: Constants.newFlagValue)]
@@ -275,8 +349,8 @@ final class UserEnvironmentFlagCacheSpec: QuickSpec {
                 }
                 context("and an existing user adds a new environment") {
                     beforeEach {
-                        userCount = UserEnvironmentFlagCache.Constants.maxCachedUsers - 1
-                        testContext = TestContext(userCount: userCount)
+                        userCount = maxUsers - 1
+                        testContext = TestContext(userCount: userCount, maxUsers: maxUsers)
                         storingUser = testContext.selectedUser
                         storingMobileKey = (CacheableUserEnvironmentFlags.Constants.environmentCount + 1).mobileKey
                         newFeatureFlags = [Constants.newFlagKey: FeatureFlag.stub(flagKey: Constants.newFlagKey, flagValue: Constants.newFlagValue)]
@@ -337,8 +411,8 @@ final class UserEnvironmentFlagCacheSpec: QuickSpec {
                 }
                 context("and a new users flags are stored") {
                     beforeEach {
-                        userCount = UserEnvironmentFlagCache.Constants.maxCachedUsers - 1
-                        testContext = TestContext(userCount: userCount)
+                        userCount = maxUsers - 1
+                        testContext = TestContext(userCount: userCount, maxUsers: maxUsers)
                         storingUser = LDUser.stub(key: (userCount + 1).userKey)
                         storingMobileKey = 1.mobileKey
                         newFeatureFlags = [Constants.newFlagKey: FeatureFlag.stub(flagKey: Constants.newFlagKey, flagValue: Constants.newFlagValue)]
@@ -398,8 +472,8 @@ final class UserEnvironmentFlagCacheSpec: QuickSpec {
             context("when max number of users flags are stored") {
                 context("and an existing users flags are changed") {
                     beforeEach {
-                        userCount = UserEnvironmentFlagCache.Constants.maxCachedUsers
-                        testContext = TestContext(userCount: userCount)
+                        userCount = maxUsers
+                        testContext = TestContext(userCount: userCount, maxUsers: maxUsers)
                         storingUser = testContext.selectedUser
                         storingMobileKey = testContext.selectedMobileKey
                         newFeatureFlags = [Constants.newFlagKey: FeatureFlag.stub(flagKey: Constants.newFlagKey, flagValue: Constants.newFlagValue)]
@@ -450,8 +524,8 @@ final class UserEnvironmentFlagCacheSpec: QuickSpec {
                 }
                 context("and an existing user adds a new environment") {
                     beforeEach {
-                        userCount = UserEnvironmentFlagCache.Constants.maxCachedUsers
-                        testContext = TestContext(userCount: userCount)
+                        userCount = maxUsers
+                        testContext = TestContext(userCount: userCount, maxUsers: maxUsers)
                         storingUser = testContext.selectedUser
                         storingMobileKey = (CacheableUserEnvironmentFlags.Constants.environmentCount + 1).mobileKey
                         newFeatureFlags = [Constants.newFlagKey: FeatureFlag.stub(flagKey: Constants.newFlagKey, flagValue: Constants.newFlagValue)]
@@ -512,8 +586,8 @@ final class UserEnvironmentFlagCacheSpec: QuickSpec {
                 }
                 context("and a new users flags are stored") {
                     beforeEach {
-                        userCount = UserEnvironmentFlagCache.Constants.maxCachedUsers
-                        testContext = TestContext(userCount: userCount)
+                        userCount = maxUsers
+                        testContext = TestContext(userCount: userCount, maxUsers: maxUsers)
                         storingUser = LDUser.stub(key: (userCount + 1).userKey)
                         storingMobileKey = 1.mobileKey
                         newFeatureFlags = [Constants.newFlagKey: FeatureFlag.stub(flagKey: Constants.newFlagKey, flagValue: Constants.newFlagValue)]

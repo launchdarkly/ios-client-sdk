@@ -200,6 +200,8 @@ final class LDClientSpec: QuickSpec {
 
     override func spec() {
         startSpec()
+        startAwaitingFlagsSpec()
+        startAwaitingFlagsWithTimeoutSpec()
         setConfigSpec()
         setUserSpec()
         setOnlineSpec()
@@ -461,7 +463,7 @@ final class LDClientSpec: QuickSpec {
                         expect(testContext.recordedEvent?.key) == newUser.key
                     }
                     it("converts cached data") {
-                        expect(testContext.cacheConvertingMock.convertCacheDataCallCount) == 2
+                        expect(testContext.cacheConvertingMock.convertCacheDataCallCount) == 1 //only called once because CacheConverter is replaced during start
                         expect(testContext.cacheConvertingMock.convertCacheDataReceivedArguments?.user) == newUser
                         expect(testContext.cacheConvertingMock.convertCacheDataReceivedArguments?.config) == newConfig
                     }
@@ -514,7 +516,7 @@ final class LDClientSpec: QuickSpec {
                         expect(testContext.recordedEvent?.key) == newUser.key
                     }
                     it("converts cached data") {
-                        expect(testContext.cacheConvertingMock.convertCacheDataCallCount) == 2
+                        expect(testContext.cacheConvertingMock.convertCacheDataCallCount) == 1 //only called once because CacheConverter is replaced during start
                         expect(testContext.cacheConvertingMock.convertCacheDataReceivedArguments?.user) == newUser
                         expect(testContext.cacheConvertingMock.convertCacheDataReceivedArguments?.config) == newConfig
                     }
@@ -558,7 +560,7 @@ final class LDClientSpec: QuickSpec {
                         expect(testContext.recordedEvent?.key) == testContext.user.key
                     }
                     it("converts cached data") {
-                        expect(testContext.cacheConvertingMock.convertCacheDataCallCount) == 2
+                        expect(testContext.cacheConvertingMock.convertCacheDataCallCount) == 1 //only called once because CacheConverter is replaced during start
                         expect(testContext.cacheConvertingMock.convertCacheDataReceivedArguments?.user) == testContext.user
                         expect(testContext.cacheConvertingMock.convertCacheDataReceivedArguments?.config) == testContext.config
                     }
@@ -665,8 +667,10 @@ final class LDClientSpec: QuickSpec {
                     testContext = TestContext()
                     testContext.config.startOnline = true
                     
-                    waitUntil { done in
+                    waitUntil(timeout: 10) { done in
+                        testContext.subject.flagChangeNotifier = ClientServiceFactory().makeFlagChangeNotifier()
                         testContext.subject.startCompleteWhenFlagsReceived(config: testContext.config, user: testContext.user, completion: done)
+                        testContext.subject.flagChangeNotifier.notifyObservers(user: testContext.user, oldFlags: testContext.oldFlags, oldFlagSource: testContext.oldFlagSource)
                     }
                 }
                 it("takes the client and service objects online") {
@@ -756,8 +760,10 @@ final class LDClientSpec: QuickSpec {
                         beforeEach {
                             testContext = TestContext(startOnline: true, runMode: .background, operatingSystem: os)
                             
-                            waitUntil { done in
+                            waitUntil(timeout: 10) { done in
+                                testContext.subject.flagChangeNotifier = ClientServiceFactory().makeFlagChangeNotifier()
                                 testContext.subject.startCompleteWhenFlagsReceived(config: testContext.config, user: testContext.user, completion: done)
+                                testContext.subject.flagChangeNotifier.notifyObservers(user: testContext.user, oldFlags: testContext.oldFlags, oldFlagSource: testContext.oldFlagSource)
                             }
                         }
                         it("takes the client and service objects online when background enabled") {
@@ -806,7 +812,7 @@ final class LDClientSpec: QuickSpec {
                             testContext = TestContext(startOnline: true, enableBackgroundUpdates: false, runMode: .background, operatingSystem: os)
                             testContext.config.enableBackgroundUpdates = false
                             
-                            waitUntil { done in
+                            waitUntil(timeout: 10) { done in
                                 testContext.subject.startCompleteWhenFlagsReceived(config: testContext.config, user: testContext.user, completion: done)
                             }
                         }
@@ -856,8 +862,10 @@ final class LDClientSpec: QuickSpec {
                     beforeEach {
                         testContext = TestContext()
                         testContext.config.startOnline = true
-                        waitUntil { done in
+                        waitUntil(timeout: 10) { done in
+                            testContext.subject.flagChangeNotifier = ClientServiceFactory().makeFlagChangeNotifier()
                             testContext.subject.startCompleteWhenFlagsReceived(config: testContext.config, user: testContext.user, completion: done)
+                            testContext.subject.flagChangeNotifier.notifyObservers(user: testContext.user, oldFlags: testContext.oldFlags, oldFlagSource: testContext.oldFlagSource)
                         }
                         testContext.featureFlagCachingMock.reset()
                         
@@ -900,7 +908,7 @@ final class LDClientSpec: QuickSpec {
                         expect(testContext.recordedEvent?.key) == newUser.key
                     }
                     it("converts cached data") {
-                        expect(testContext.cacheConvertingMock.convertCacheDataCallCount) == 2
+                        expect(testContext.cacheConvertingMock.convertCacheDataCallCount) == 1
                         expect(testContext.cacheConvertingMock.convertCacheDataReceivedArguments?.user) == newUser
                         expect(testContext.cacheConvertingMock.convertCacheDataReceivedArguments?.config) == newConfig
                     }
@@ -953,7 +961,7 @@ final class LDClientSpec: QuickSpec {
                         expect(testContext.recordedEvent?.key) == newUser.key
                     }
                     it("converts cached data") {
-                        expect(testContext.cacheConvertingMock.convertCacheDataCallCount) == 2
+                        expect(testContext.cacheConvertingMock.convertCacheDataCallCount) == 1
                         expect(testContext.cacheConvertingMock.convertCacheDataReceivedArguments?.user) == newUser
                         expect(testContext.cacheConvertingMock.convertCacheDataReceivedArguments?.config) == newConfig
                     }
@@ -997,7 +1005,7 @@ final class LDClientSpec: QuickSpec {
                         expect(testContext.recordedEvent?.key) == testContext.user.key
                     }
                     it("converts cached data") {
-                        expect(testContext.cacheConvertingMock.convertCacheDataCallCount) == 2
+                        expect(testContext.cacheConvertingMock.convertCacheDataCallCount) == 1
                         expect(testContext.cacheConvertingMock.convertCacheDataReceivedArguments?.user) == testContext.user
                         expect(testContext.cacheConvertingMock.convertCacheDataReceivedArguments?.config) == testContext.config
                     }
@@ -1050,7 +1058,7 @@ final class LDClientSpec: QuickSpec {
                     testContext.flagStoreMock.featureFlags = [:]
                     
                     testContext.config.startOnline = false
-                    waitUntil { done in
+                    waitUntil(timeout: 10) { done in
                         testContext.subject.startCompleteWhenFlagsReceived(config: testContext.config, user: testContext.user, completion: done)
                     }
                 }
@@ -1074,8 +1082,499 @@ final class LDClientSpec: QuickSpec {
                     testContext.flagStoreMock.featureFlags = [:]
                     
                     testContext.config.startOnline = false
-                    waitUntil { done in
+                    waitUntil(timeout: 10) { done in
                         testContext.subject.startCompleteWhenFlagsReceived(config: testContext.config, user: testContext.user, completion: done)
+                    }
+                }
+                it("checks the flag cache for the user and environment") {
+                    expect(testContext.featureFlagCachingMock.retrieveFeatureFlagsCallCount) == 1
+                    expect(testContext.featureFlagCachingMock.retrieveFeatureFlagsReceivedArguments?.userKey) == testContext.user.key
+                    expect(testContext.featureFlagCachingMock.retrieveFeatureFlagsReceivedArguments?.mobileKey) == testContext.config.mobileKey
+                }
+                it("does not restore user flags from cache") {
+                    expect(testContext.flagStoreMock.replaceStoreCallCount) == 0
+                }
+                it("converts cached data") {
+                    expect(testContext.cacheConvertingMock.convertCacheDataCallCount) == 1
+                    expect(testContext.cacheConvertingMock.convertCacheDataReceivedArguments?.user) == testContext.user
+                    expect(testContext.cacheConvertingMock.convertCacheDataReceivedArguments?.config) == testContext.config
+                }
+            }
+        }
+    }
+
+    private func startAwaitingFlagsWithTimeoutSpec() {
+        describe("startAwaitingFlagsWithTimeout") {
+            var testContext: TestContext!
+            
+            context("when configured to start online") {
+                beforeEach {
+                    testContext = TestContext()
+                    testContext.config.startOnline = true
+                    
+                    waitUntil(timeout: 10) { done in
+                        testContext.subject.flagChangeNotifier = ClientServiceFactory().makeFlagChangeNotifier()
+                        testContext.subject.startCompleteWhenFlagsReceived(config: testContext.config, user: testContext.user, startWaitSeconds: 10) { timedOut in
+                            expect(timedOut) == false
+                            done()
+                        }
+                        testContext.subject.flagChangeNotifier.notifyObservers(user: testContext.user, oldFlags: testContext.oldFlags, oldFlagSource: testContext.oldFlagSource)
+                    }
+                }
+                it("takes the client and service objects online") {
+                    expect(testContext.subject.isOnline) == true
+                    expect(testContext.subject.flagSynchronizer.isOnline) == testContext.subject.isOnline
+                    expect(testContext.subject.eventReporter.isOnline) == testContext.subject.isOnline
+                }
+                it("saves the config") {
+                    expect(testContext.subject.config) == testContext.config
+                    expect(testContext.subject.service.config) == testContext.config
+                    expect(testContext.makeFlagSynchronizerStreamingMode) == testContext.config.streamingMode
+                    expect(testContext.makeFlagSynchronizerPollingInterval) == testContext.config.flagPollingInterval(runMode: testContext.subject.runMode)
+                    expect(testContext.subject.eventReporter.config) == testContext.config
+                }
+                it("saves the user") {
+                    expect(testContext.subject.user) == testContext.user
+                    expect(testContext.subject.service.user) == testContext.user
+                    expect(testContext.serviceFactoryMock.makeFlagSynchronizerReceivedParameters).toNot(beNil())
+                    if let makeFlagSynchronizerReceivedParameters = testContext.serviceFactoryMock.makeFlagSynchronizerReceivedParameters {
+                        expect(makeFlagSynchronizerReceivedParameters.service) === testContext.subject.service
+                    }
+                    expect(testContext.subject.eventReporter.service.user) == testContext.user
+                }
+                it("uncaches the new users flags") {
+                    expect(testContext.featureFlagCachingMock.retrieveFeatureFlagsCallCount) == 2       //called on both setConfig and setUser
+                    expect(testContext.featureFlagCachingMock.retrieveFeatureFlagsReceivedArguments?.userKey) == testContext.user.key
+                    expect(testContext.featureFlagCachingMock.retrieveFeatureFlagsReceivedArguments?.mobileKey) == testContext.config.mobileKey
+                }
+                it("records an identify event") {
+                    expect(testContext.eventReporterMock.recordCallCount) == 1
+                    expect(testContext.recordedEvent?.kind) == .identify
+                    expect(testContext.recordedEvent?.key) == testContext.user.key
+                }
+                it("converts cached data") {
+                    expect(testContext.cacheConvertingMock.convertCacheDataCallCount) == 1
+                    expect(testContext.cacheConvertingMock.convertCacheDataReceivedArguments?.user) == testContext.user
+                    expect(testContext.cacheConvertingMock.convertCacheDataReceivedArguments?.config) == testContext.config
+                }
+            }
+            context("when configured to start online") {
+                beforeEach {
+                    testContext = TestContext()
+                    testContext.config.startOnline = true
+                    
+                    waitUntil(timeout: 10) { done in
+                        testContext.subject.startCompleteWhenFlagsReceived(config: testContext.config, user: testContext.user, startWaitSeconds: 1) { timedOut in
+                            expect(timedOut) == true
+                            done()
+                        }
+                    }
+                }
+                it("times out properly") {
+                    expect(testContext.subject.isOnline) == true
+                }
+            }
+            context("when configured to start offline") {
+                beforeEach {
+                    testContext = TestContext()
+                    waitUntil(timeout: 3) { done in
+                        testContext.subject.startCompleteWhenFlagsReceived(config: testContext.config, user: testContext.user, startWaitSeconds: 2) { timedOut in
+                            expect(timedOut) == true
+                            done()
+                        }
+                    }
+                }
+                it("leaves the client and service objects offline") {
+                    expect(testContext.subject.isOnline) == false
+                    expect(testContext.subject.flagSynchronizer.isOnline) == testContext.subject.isOnline
+                    expect(testContext.subject.eventReporter.isOnline) == testContext.subject.isOnline
+                }
+                it("saves the config") {
+                    expect(testContext.subject.config) == testContext.config
+                    expect(testContext.subject.service.config) == testContext.config
+                    expect(testContext.makeFlagSynchronizerStreamingMode) == testContext.config.streamingMode
+                    expect(testContext.makeFlagSynchronizerPollingInterval) == testContext.config.flagPollingInterval(runMode: testContext.subject.runMode)
+                    expect(testContext.subject.eventReporter.config) == testContext.config
+                }
+                it("saves the user") {
+                    expect(testContext.subject.user) == testContext.user
+                    expect(testContext.subject.service.user) == testContext.user
+                    expect(testContext.serviceFactoryMock.makeFlagSynchronizerReceivedParameters).toNot(beNil())
+                    if let makeFlagSynchronizerReceivedParameters = testContext.serviceFactoryMock.makeFlagSynchronizerReceivedParameters {
+                        expect(makeFlagSynchronizerReceivedParameters.service) === testContext.subject.service
+                    }
+                    expect(testContext.subject.eventReporter.service.user) == testContext.user
+                }
+                it("uncaches the new users flags") {
+                    expect(testContext.featureFlagCachingMock.retrieveFeatureFlagsCallCount) == 1       //because config is already set by TestConfig.init, only user.didSet calls this
+                    expect(testContext.featureFlagCachingMock.retrieveFeatureFlagsReceivedArguments?.userKey) == testContext.user.key
+                    expect(testContext.featureFlagCachingMock.retrieveFeatureFlagsReceivedArguments?.mobileKey) == testContext.config.mobileKey
+                }
+                it("records an identify event") {
+                    expect(testContext.eventReporterMock.recordCallCount) == 1
+                    expect(testContext.recordedEvent?.kind) == .identify
+                    expect(testContext.recordedEvent?.key) == testContext.user.key
+                }
+                it("converts cached data") {
+                    expect(testContext.cacheConvertingMock.convertCacheDataCallCount) == 1
+                    expect(testContext.cacheConvertingMock.convertCacheDataReceivedArguments?.user) == testContext.user
+                    expect(testContext.cacheConvertingMock.convertCacheDataReceivedArguments?.config) == testContext.config
+                }
+            }
+            context("when configured to allow background updates and running in background mode") {
+                OperatingSystem.allOperatingSystems.forEach { (os) in
+                    context("on \(os)") {
+                        beforeEach {
+                            testContext = TestContext(startOnline: true, runMode: .background, operatingSystem: os)
+                            
+                            waitUntil(timeout: 10) { done in
+                                testContext.subject.flagChangeNotifier = ClientServiceFactory().makeFlagChangeNotifier()
+                                testContext.subject.startCompleteWhenFlagsReceived(config: testContext.config, user: testContext.user, startWaitSeconds: 10) { timedOut in
+                                    expect(timedOut) == false
+                                    done()
+                                }
+                                testContext.subject.flagChangeNotifier.notifyObservers(user: testContext.user, oldFlags: testContext.oldFlags, oldFlagSource: testContext.oldFlagSource)
+                            }
+                        }
+                        it("takes the client and service objects online when background enabled") {
+                            expect(testContext.subject.isOnline) == os.isBackgroundEnabled
+                            expect(testContext.subject.flagSynchronizer.isOnline) == testContext.subject.isOnline
+                            expect(testContext.subject.eventReporter.isOnline) == testContext.subject.isOnline
+                        }
+                        it("saves the config") {
+                            expect(testContext.subject.config) == testContext.config
+                            expect(testContext.subject.service.config) == testContext.config
+                            expect(testContext.makeFlagSynchronizerStreamingMode) == os.backgroundStreamingMode
+                            expect(testContext.makeFlagSynchronizerPollingInterval) == testContext.config.flagPollingInterval(runMode: .background)
+                            expect(testContext.subject.eventReporter.config) == testContext.config
+                        }
+                        it("saves the user") {
+                            expect(testContext.subject.user) == testContext.user
+                            expect(testContext.subject.service.user) == testContext.user
+                            expect(testContext.serviceFactoryMock.makeFlagSynchronizerReceivedParameters).toNot(beNil())
+                            if let makeFlagSynchronizerReceivedParameters = testContext.serviceFactoryMock.makeFlagSynchronizerReceivedParameters {
+                                expect(makeFlagSynchronizerReceivedParameters.service) === testContext.subject.service
+                            }
+                            expect(testContext.subject.eventReporter.service.user) == testContext.user
+                        }
+                        it("uncaches the new users flags") {
+                            expect(testContext.featureFlagCachingMock.retrieveFeatureFlagsCallCount) == 1   //because config is already set by TestConfig.init, only user.didSet calls this
+                            expect(testContext.featureFlagCachingMock.retrieveFeatureFlagsReceivedArguments?.userKey) == testContext.user.key
+                            expect(testContext.featureFlagCachingMock.retrieveFeatureFlagsReceivedArguments?.mobileKey) == testContext.config.mobileKey
+                        }
+                        it("records an identify event") {
+                            expect(testContext.eventReporterMock.recordCallCount) == 1
+                            expect(testContext.recordedEvent?.kind) == .identify
+                            expect(testContext.recordedEvent?.key) == testContext.user.key
+                        }
+                        it("converts cached data") {
+                            expect(testContext.cacheConvertingMock.convertCacheDataCallCount) == 1
+                            expect(testContext.cacheConvertingMock.convertCacheDataReceivedArguments?.user) == testContext.user
+                            expect(testContext.cacheConvertingMock.convertCacheDataReceivedArguments?.config) == testContext.config
+                        }
+                    }
+                }
+            }
+            context("when configured to not allow background updates and running in background mode") {
+                OperatingSystem.allOperatingSystems.forEach { (os) in
+                    context("on \(os)") {
+                        beforeEach {
+                            testContext = TestContext(startOnline: true, enableBackgroundUpdates: false, runMode: .background, operatingSystem: os)
+                            testContext.config.enableBackgroundUpdates = false
+                            
+                            waitUntil { done in
+                                testContext.subject.startCompleteWhenFlagsReceived(config: testContext.config, user: testContext.user, startWaitSeconds: 10) { timedOut in
+                                    expect(timedOut) == false
+                                    done()
+                                }
+                            }
+                        }
+                        it("leaves the client and service objects offline") {
+                            expect(testContext.subject.isOnline) == false
+                            expect(testContext.subject.flagSynchronizer.isOnline) == testContext.subject.isOnline
+                            expect(testContext.subject.eventReporter.isOnline) == testContext.subject.isOnline
+                        }
+                        it("saves the config") {
+                            expect(testContext.subject.config) == testContext.config
+                            expect(testContext.subject.service.config) == testContext.config
+                            expect(testContext.makeFlagSynchronizerStreamingMode) == LDStreamingMode.polling
+                            expect(testContext.makeFlagSynchronizerPollingInterval) == testContext.config.flagPollingInterval(runMode: .background)
+                            expect(testContext.subject.eventReporter.config) == testContext.config
+                        }
+                        it("saves the user") {
+                            expect(testContext.subject.user) == testContext.user
+                            expect(testContext.subject.service.user) == testContext.user
+                            expect(testContext.serviceFactoryMock.makeFlagSynchronizerReceivedParameters).toNot(beNil())
+                            if let makeFlagSynchronizerReceivedParameters = testContext.serviceFactoryMock.makeFlagSynchronizerReceivedParameters {
+                                expect(makeFlagSynchronizerReceivedParameters.service.user) == testContext.user
+                            }
+                            expect(testContext.subject.eventReporter.service.user) == testContext.user
+                        }
+                        it("uncaches the new users flags") {
+                            expect(testContext.featureFlagCachingMock.retrieveFeatureFlagsCallCount) == 1       //because config is already set by TestConfig.init, only user.didSet calls this
+                            expect(testContext.featureFlagCachingMock.retrieveFeatureFlagsReceivedArguments?.userKey) == testContext.user.key
+                            expect(testContext.featureFlagCachingMock.retrieveFeatureFlagsReceivedArguments?.mobileKey) == testContext.config.mobileKey
+                        }
+                        it("records an identify event") {
+                            expect(testContext.eventReporterMock.recordCallCount) == 1
+                            expect(testContext.recordedEvent?.kind) == .identify
+                            expect(testContext.recordedEvent?.key) == testContext.user.key
+                        }
+                        it("converts cached data") {
+                            expect(testContext.cacheConvertingMock.convertCacheDataCallCount) == 1
+                            expect(testContext.cacheConvertingMock.convertCacheDataReceivedArguments?.user) == testContext.user
+                            expect(testContext.cacheConvertingMock.convertCacheDataReceivedArguments?.config) == testContext.config
+                        }
+                    }
+                }
+            }
+            context("when called more than once") {
+                var newConfig: LDConfig!
+                var newUser: LDUser!
+                context("while online") {
+                    beforeEach {
+                        testContext = TestContext()
+                        testContext.config.startOnline = true
+                        waitUntil(timeout: 10) { done in
+                            testContext.subject.flagChangeNotifier = ClientServiceFactory().makeFlagChangeNotifier()
+                            testContext.subject.startCompleteWhenFlagsReceived(config: testContext.config, user: testContext.user, startWaitSeconds: 10) { timedOut in
+                                expect(timedOut) == false
+                                done()
+                            }
+                            testContext.subject.flagChangeNotifier.notifyObservers(user: testContext.user, oldFlags: testContext.oldFlags, oldFlagSource: testContext.oldFlagSource)
+                        }
+                        testContext.featureFlagCachingMock.reset()
+                        
+                        newConfig = testContext.subject.config.copyReplacingMobileKey(Constants.alternateMockMobileKey)
+                        newConfig.baseUrl = Constants.alternateMockUrl
+                        
+                        newUser = LDUser.stub()
+                        
+                        testContext.subject.startCompleteWhenFlagsReceived(config: newConfig, user: newUser)
+                    }
+                    it("takes the client and service objects online") {
+                        expect(testContext.subject.isOnline) == true
+                        expect(testContext.subject.flagSynchronizer.isOnline) == testContext.subject.isOnline
+                        expect(testContext.subject.eventReporter.isOnline) == testContext.subject.isOnline
+                    }
+                    it("saves the config") {
+                        expect(testContext.subject.config) == newConfig
+                        expect(testContext.subject.service.config) == newConfig
+                        expect(testContext.makeFlagSynchronizerStreamingMode) == newConfig.streamingMode
+                        expect(testContext.makeFlagSynchronizerPollingInterval) == newConfig.flagPollingInterval(runMode: testContext.subject.runMode)
+                        expect(testContext.subject.eventReporter.config) == newConfig
+                    }
+                    it("saves the user") {
+                        expect(testContext.subject.user) == newUser
+                        expect(testContext.subject.service.user) == newUser
+                        expect(testContext.serviceFactoryMock.makeFlagSynchronizerReceivedParameters).toNot(beNil())
+                        if let makeFlagSynchronizerReceivedParameters = testContext.serviceFactoryMock.makeFlagSynchronizerReceivedParameters {
+                            expect(makeFlagSynchronizerReceivedParameters.service.user) == newUser
+                        }
+                        expect(testContext.subject.eventReporter.service.user) == newUser
+                    }
+                    it("uncaches the new users flags") {
+                        expect(testContext.featureFlagCachingMock.retrieveFeatureFlagsCallCount) == 2       //called on both setConfig and setUser
+                        expect(testContext.featureFlagCachingMock.retrieveFeatureFlagsReceivedArguments?.userKey) == newUser.key
+                        expect(testContext.featureFlagCachingMock.retrieveFeatureFlagsReceivedArguments?.mobileKey) == newConfig.mobileKey
+                    }
+                    it("records an identify event") {
+                        expect(testContext.eventReporterMock.recordCallCount) == 2
+                        expect(testContext.recordedEvent?.kind) == .identify
+                        expect(testContext.recordedEvent?.key) == newUser.key
+                    }
+                    it("converts cached data") {
+                        expect(testContext.cacheConvertingMock.convertCacheDataCallCount) == 1
+                        expect(testContext.cacheConvertingMock.convertCacheDataReceivedArguments?.user) == newUser
+                        expect(testContext.cacheConvertingMock.convertCacheDataReceivedArguments?.config) == newConfig
+                    }
+                }
+                context("while offline") {
+                    beforeEach {
+                        testContext = TestContext()
+                        testContext.config.startOnline = false
+                        waitUntil { done in
+                            testContext.subject.startCompleteWhenFlagsReceived(config: testContext.config, user: testContext.user, startWaitSeconds: 10) { timedOut in
+                                expect(timedOut) == true
+                                done()
+                            }
+                        }
+                        testContext.featureFlagCachingMock.reset()
+                        
+                        newConfig = testContext.subject.config.copyReplacingMobileKey(Constants.alternateMockMobileKey)
+                        newConfig.baseUrl = Constants.alternateMockUrl
+                        
+                        newUser = LDUser.stub()
+                        
+                        testContext.subject.startCompleteWhenFlagsReceived(config: newConfig, user: newUser)
+                    }
+                    it("leaves the client and service objects offline") {
+                        expect(testContext.subject.isOnline) == false
+                        expect(testContext.subject.flagSynchronizer.isOnline) == testContext.subject.isOnline
+                        expect(testContext.subject.eventReporter.isOnline) == testContext.subject.isOnline
+                    }
+                    it("saves the config") {
+                        expect(testContext.subject.config) == newConfig
+                        expect(testContext.subject.service.config) == newConfig
+                        expect(testContext.makeFlagSynchronizerStreamingMode) == newConfig.streamingMode
+                        expect(testContext.makeFlagSynchronizerPollingInterval) == newConfig.flagPollingInterval(runMode: testContext.subject.runMode)
+                        expect(testContext.subject.eventReporter.config) == newConfig
+                    }
+                    it("saves the user") {
+                        expect(testContext.subject.user) == newUser
+                        expect(testContext.subject.service.user) == newUser
+                        expect(testContext.serviceFactoryMock.makeFlagSynchronizerReceivedParameters).toNot(beNil())
+                        if let makeFlagSynchronizerReceivedParameters = testContext.serviceFactoryMock.makeFlagSynchronizerReceivedParameters {
+                            expect(makeFlagSynchronizerReceivedParameters.service.user) == newUser
+                        }
+                        expect(testContext.subject.eventReporter.service.user) == newUser
+                    }
+                    it("uncaches the new users flags") {
+                        expect(testContext.featureFlagCachingMock.retrieveFeatureFlagsCallCount) == 2       //called on both setConfig and setUser
+                        expect(testContext.featureFlagCachingMock.retrieveFeatureFlagsReceivedArguments?.userKey) == newUser.key
+                        expect(testContext.featureFlagCachingMock.retrieveFeatureFlagsReceivedArguments?.mobileKey) == newConfig.mobileKey
+                    }
+                    it("records an identify event") {
+                        expect(testContext.eventReporterMock.recordCallCount) == 2
+                        expect(testContext.recordedEvent?.kind) == .identify
+                        expect(testContext.recordedEvent?.key) == newUser.key
+                    }
+                    it("converts cached data") {
+                        expect(testContext.cacheConvertingMock.convertCacheDataCallCount) == 1
+                        expect(testContext.cacheConvertingMock.convertCacheDataReceivedArguments?.user) == newUser
+                        expect(testContext.cacheConvertingMock.convertCacheDataReceivedArguments?.config) == newConfig
+                    }
+                }
+            }
+            context("when called without user") {
+                context("after setting user") {
+                    beforeEach {
+                        testContext = TestContext()
+                        testContext.subject.user = testContext.user
+                        testContext.featureFlagCachingMock.reset()
+                        
+                        waitUntil { done in
+                            testContext.subject.startCompleteWhenFlagsReceived(config: testContext.config, startWaitSeconds: 3) { timedOut in
+                                expect(timedOut) == true
+                                done()
+                            }
+                        }
+                    }
+                    it("saves the config") {
+                        expect(testContext.subject.config) == testContext.config
+                        expect(testContext.subject.service.config) == testContext.config
+                        expect(testContext.makeFlagSynchronizerStreamingMode) == testContext.config.streamingMode
+                        expect(testContext.makeFlagSynchronizerPollingInterval) == testContext.config.flagPollingInterval(runMode: testContext.subject.runMode)
+                        expect(testContext.subject.eventReporter.config) == testContext.config
+                    }
+                    it("saves the user") {
+                        expect(testContext.subject.user) == testContext.user
+                        expect(testContext.subject.service.user) == testContext.user
+                        expect(testContext.serviceFactoryMock.makeFlagSynchronizerReceivedParameters).toNot(beNil())
+                        if let makeFlagSynchronizerReceivedParameters = testContext.serviceFactoryMock.makeFlagSynchronizerReceivedParameters {
+                            expect(makeFlagSynchronizerReceivedParameters.service.user) == testContext.user
+                        }
+                        expect(testContext.subject.eventReporter.service.user) == testContext.user
+                    }
+                    it("uncaches the new users flags") {
+                        expect(testContext.featureFlagCachingMock.retrieveFeatureFlagsCallCount) == 1
+                        expect(testContext.featureFlagCachingMock.retrieveFeatureFlagsReceivedArguments?.userKey) == testContext.user.key
+                        expect(testContext.featureFlagCachingMock.retrieveFeatureFlagsReceivedArguments?.mobileKey) == testContext.config.mobileKey
+                    }
+                    it("records an identify event") {
+                        expect(testContext.eventReporterMock.recordCallCount) == 1
+                        expect(testContext.recordedEvent?.kind) == .identify
+                        expect(testContext.recordedEvent?.key) == testContext.user.key
+                    }
+                    it("converts cached data") {
+                        expect(testContext.cacheConvertingMock.convertCacheDataCallCount) == 1
+                        expect(testContext.cacheConvertingMock.convertCacheDataReceivedArguments?.user) == testContext.user
+                        expect(testContext.cacheConvertingMock.convertCacheDataReceivedArguments?.config) == testContext.config
+                    }
+                }
+                context("without setting user") {
+                    beforeEach {
+                        testContext = TestContext()
+                        waitUntil { done in
+                            testContext.subject.startCompleteWhenFlagsReceived(config: testContext.config, startWaitSeconds: 3) { timedOut in
+                                expect(timedOut) == true
+                                done()
+                            }
+                        }
+                        testContext.config = testContext.subject.config
+                        testContext.user = testContext.subject.user
+                    }
+                    it("saves the config") {
+                        expect(testContext.subject.config) == testContext.config
+                        expect(testContext.subject.service.config) == testContext.config
+                        expect(testContext.makeFlagSynchronizerStreamingMode) == testContext.config.streamingMode
+                        expect(testContext.makeFlagSynchronizerPollingInterval) == testContext.config.flagPollingInterval(runMode: testContext.subject.runMode)
+                        expect(testContext.subject.eventReporter.config) == testContext.config
+                    }
+                    it("saves the user") {
+                        expect(testContext.subject.user) == testContext.user
+                        expect(testContext.subject.service.user) == testContext.user
+                        expect(testContext.makeFlagSynchronizerService?.user) == testContext.user
+                        expect(testContext.subject.eventReporter.service.user) == testContext.user
+                    }
+                    it("uncaches the new users flags") {
+                        expect(testContext.featureFlagCachingMock.retrieveFeatureFlagsCallCount) == 1
+                        expect(testContext.featureFlagCachingMock.retrieveFeatureFlagsReceivedArguments?.userKey) == testContext.user.key
+                        expect(testContext.featureFlagCachingMock.retrieveFeatureFlagsReceivedArguments?.mobileKey) == testContext.config.mobileKey
+                    }
+                    it("records an identify event") {
+                        expect(testContext.eventReporterMock.recordCallCount) == 1
+                        expect(testContext.recordedEvent?.kind) == .identify
+                        expect(testContext.recordedEvent?.key) == testContext.user.key
+                    }
+                    it("converts cached data") {
+                        expect(testContext.cacheConvertingMock.convertCacheDataCallCount) == 1
+                        expect(testContext.cacheConvertingMock.convertCacheDataReceivedArguments?.user) == testContext.user
+                        expect(testContext.cacheConvertingMock.convertCacheDataReceivedArguments?.config) == testContext.config
+                    }
+                }
+            }
+            context("when called with cached flags for the user and environment") {
+                var retrievedFlags: [LDFlagKey: FeatureFlag]!
+                beforeEach {
+                    testContext = TestContext()
+                    testContext.featureFlagCachingMock.retrieveFeatureFlagsReturnValue = testContext.user.flagStore.featureFlags
+                    retrievedFlags = testContext.user.flagStore.featureFlags
+                    testContext.flagStoreMock.featureFlags = [:]
+                    
+                    testContext.config.startOnline = false
+                    waitUntil { done in
+                        testContext.subject.startCompleteWhenFlagsReceived(config: testContext.config, user: testContext.user, startWaitSeconds: 10) { timedOut in
+                            expect(timedOut) == true
+                            done()
+                        }
+                    }
+                }
+                it("checks the flag cache for the user and environment") {
+                    expect(testContext.featureFlagCachingMock.retrieveFeatureFlagsCallCount) == 1
+                    expect(testContext.featureFlagCachingMock.retrieveFeatureFlagsReceivedArguments?.userKey) == testContext.user.key
+                    expect(testContext.featureFlagCachingMock.retrieveFeatureFlagsReceivedArguments?.mobileKey) == testContext.config.mobileKey
+                }
+                it("restores user flags from cache") {
+                    expect(testContext.flagStoreMock.replaceStoreReceivedArguments?.newFlags?.flagCollection) == retrievedFlags
+                }
+                it("converts cached data") {
+                    expect(testContext.cacheConvertingMock.convertCacheDataCallCount) == 1
+                    expect(testContext.cacheConvertingMock.convertCacheDataReceivedArguments?.user) == testContext.user
+                    expect(testContext.cacheConvertingMock.convertCacheDataReceivedArguments?.config) == testContext.config
+                }
+            }
+            context("when called without cached flags for the user") {
+                beforeEach {
+                    testContext = TestContext()
+                    testContext.flagStoreMock.featureFlags = [:]
+                    
+                    testContext.config.startOnline = false
+                    waitUntil { done in
+                        testContext.subject.startCompleteWhenFlagsReceived(config: testContext.config, user: testContext.user, startWaitSeconds: 10) { timedOut in
+                            expect(timedOut) == true
+                            done()
+                        }
                     }
                 }
                 it("checks the flag cache for the user and environment") {

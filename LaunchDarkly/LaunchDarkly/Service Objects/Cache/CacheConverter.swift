@@ -28,8 +28,8 @@ final class CacheConverter: CacheConverting {
     private(set) var deprecatedCaches = [DeprecatedCacheModel: DeprecatedCache]()
     let maxAge: TimeInterval
 
-    init(serviceFactory: ClientServiceCreating, maxAge: TimeInterval = Constants.maxAge) {
-        currentCache = serviceFactory.makeFeatureFlagCache()
+    init(serviceFactory: ClientServiceCreating, maxCachedUsers: Int, maxAge: TimeInterval = Constants.maxAge) {
+        currentCache = serviceFactory.makeFeatureFlagCache(maxCachedUsers: maxCachedUsers)
         self.maxAge = maxAge
         DeprecatedCacheModel.allCases.forEach { version in
             deprecatedCaches[version] = serviceFactory.makeDeprecatedCacheModel(version)
