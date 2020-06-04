@@ -5,6 +5,9 @@ All notable changes to the LaunchDarkly iOS SDK will be documented in this file.
 ### Multiple Environment clients
 Version 4.0.0 does not support multiple environments. If you use version `2.14.0` or later and set `LDConfig`'s `secondaryMobileKeys` you will not be able to migrate to version `4.0.0`. Multiple Environments will be added in a future release to the Swift SDK.
 
+## [4.7.0] - 2020-06-03
+### Added
+- You can now specify a timeout for the closure that is returned when flag values are obtained from LaunchDarkly. If network conditions are poor or for performance reasons you can set a timeout and will not be blocked by SDK startup. Use the `startWaitSeconds` parameter for `startCompleteWhenFlagsReceived`.
 
 ## [4.6.0] - 2020-05-26
 ### Added
