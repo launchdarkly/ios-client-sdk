@@ -191,7 +191,7 @@ public final class ObjcLDClient: NSObject {
      - parameter startWaitSeconds: An Int representing how long to wait for flags before returning true in the completion to indicate that it timed out.
      - parameter completion: Closure called when the embedded `setOnlineIdentify` call completes, subject to throttling delays. Takes a Bool as a parameter that indicates whether the SDK did not come online within startWaitSeconds. (Optional)
      */
-    @objc public func startCompleteWhenFlagsReceived(config configWrapper: ObjcLDConfig, user userWrapper: ObjcLDUser? = nil, startWaitSeconds: Int, completion: ((_ timedOut: Bool) -> Void)? = nil) {
+    @objc public func startCompleteWhenFlagsReceived(config configWrapper: ObjcLDConfig, user userWrapper: ObjcLDUser? = nil, startWaitSeconds: TimeInterval, completion: ((_ timedOut: Bool) -> Void)? = nil) {
         LDClient.shared.startCompleteWhenFlagsReceived(config: configWrapper.config, user: userWrapper?.user, startWaitSeconds: startWaitSeconds, completion: completion)
     }
 
