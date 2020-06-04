@@ -963,7 +963,9 @@ public class LDClient {
                                             useReport: config.useReport,
                                             service: service,
                                             onSyncComplete: nil)
-
+        
+        Log.level = environmentReporter.isDebugBuild && configuration.isDebugMode ? .debug : .noLogging
+        
         if let backgroundNotification = environmentReporter.backgroundNotification {
             NotificationCenter.default.addObserver(self, selector: #selector(didEnterBackground), name: backgroundNotification, object: nil)
         }
