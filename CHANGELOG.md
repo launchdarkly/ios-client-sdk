@@ -7,7 +7,7 @@ Version 4.0.0 does not support multiple environments. If you use version `2.14.0
 
 ## [4.7.0] - 2020-06-03
 ### Added
-- You can now specify a timeout for the closure that is returned when flag values are obtained from LaunchDarkly. If network conditions are poor or for performance reasons you can set a timeout and will not be blocked by SDK startup. Use the `startWaitSeconds` parameter for `startCompleteWhenFlagsReceived`.
+- Added a new method signature for `startCompleteWhenFlagsReceived` that accepts an additional argument specifying a maximum time to wait for flags to be received before calling the completion closure. The completion closure on this method will be passed a `Bool` on completion indication whether the operation timed out.
 
 ## [4.6.0] - 2020-05-26
 ### Added
