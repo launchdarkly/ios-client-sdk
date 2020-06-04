@@ -369,24 +369,24 @@ public class LDClient {
     
      - parameter config: The LDConfig that contains the desired configuration. (Required)
      - parameter user: The LDUser set with the desired user. If omitted, LDClient retains the previously set user, or default if one was never set. (Optional)
-     - parameter startWaitSeconds: An Int representing how long to wait for flags before returning true in the completion to indicate that it timed out.
+     - parameter startWaitSeconds: A TimeInterval representing how long to wait for flags before returning true in the completion to indicate that it timed out.
      - parameter completion: Closure called when the embedded `setOnlineIdentify` call completes, subject to throttling delays. Takes a Bool as a parameter that indicates whether the SDK did not come online within startWaitSeconds. (Optional)
      */
-    public func startCompleteWhenFlagsReceived(config: LDConfig, user: LDUser? = nil, startWaitSeconds: Int, completion: ((_ timedOut: Bool) -> Void)? = nil) {
+    public func startCompleteWhenFlagsReceived(config: LDConfig, user: LDUser? = nil, startWaitSeconds: TimeInterval, completion: ((_ timedOut: Bool) -> Void)? = nil) {
         if !config.startOnline {
             startCompleteWhenFlagsReceived(config: config, user: user)
             completion?(timeOutCheck)
         } else {
             let startTime = Date().timeIntervalSince1970
             startCompleteWhenFlagsReceived(config: config, user: user) {
-                if startTime + Double(startWaitSeconds) > Date().timeIntervalSince1970 {
+                if startTime + startWaitSeconds > Date().timeIntervalSince1970 {
                     self.internalTimeOutCheckQueue.sync {
                         self.timeOutCheck = false
                         completion?(self.timeOutCheck)
                     }
                 }
             }
-            DispatchQueue.global().asyncAfter(deadline: .now() + DispatchTimeInterval.seconds(startWaitSeconds)) {
+            DispatchQueue.global().asyncAfter(deadline: .now() + startWaitSeconds) {
                 self.internalTimeOutCheckQueue.sync {
                     if self.timeOutCheck {
                         completion?(self.timeOutCheck)
