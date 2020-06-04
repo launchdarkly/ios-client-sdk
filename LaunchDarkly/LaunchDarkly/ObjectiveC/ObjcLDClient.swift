@@ -180,6 +180,20 @@ public final class ObjcLDClient: NSObject {
     @objc public func startCompleteWhenFlagsReceived(config configWrapper: ObjcLDConfig, user userWrapper: ObjcLDUser? = nil, completion: (() -> Void)? = nil) {
         LDClient.shared.startCompleteWhenFlagsReceived(config: configWrapper.config, user: userWrapper?.user, completion: completion)
     }
+    
+    /**
+     See [start](x-source-tag://start) for more information on starting the SDK.
+
+     This method listens for flag updates so the completion will only return once an update has occurred. If the SDK is configured to start offline the method will ignore the timeout and call the completion with True without awaiting a flag update.
+
+     - parameter configWrapper: The LDConfig that contains the desired configuration. (Required)
+     - parameter userWrapper: The LDUser set with the desired user. If omitted, LDClient retains the previously set user, or default if one was never set. (Optional)
+     - parameter startWaitSeconds: A TimeInterval representing how long to wait for flags before returning true in the completion to indicate that it timed out.
+     - parameter completion: Closure called when the embedded `setOnlineIdentify` call completes, subject to throttling delays. Takes a Bool as a parameter that indicates whether the SDK did not come online within startWaitSeconds. (Optional)
+     */
+    @objc public func startCompleteWhenFlagsReceived(config configWrapper: ObjcLDConfig, user userWrapper: ObjcLDUser? = nil, startWaitSeconds: TimeInterval, completion: ((_ timedOut: Bool) -> Void)? = nil) {
+        LDClient.shared.startCompleteWhenFlagsReceived(config: configWrapper.config, user: userWrapper?.user, startWaitSeconds: startWaitSeconds, completion: completion)
+    }
 
     /**
      Stops the LDClient. Stopping the client means the LDClient goes offline and stops recording events. LDClient will no longer provide feature flag values, only returning fallback values.
