@@ -2,7 +2,6 @@
 //  DeprecatedCacheModelV4Spec.swift
 //  LaunchDarklyTests
 //
-//  Created by Mark Pokorny on 4/2/19. +JMJ
 //  Copyright © 2019 Catamorphic Co. All rights reserved.
 //
 
@@ -26,26 +25,13 @@ final class DeprecatedCacheModelV4Spec: QuickSpec {
         var uncachedUser: LDUser
         var mobileKeys: [MobileKey]
         var uncachedMobileKey: MobileKey
-        var firstMobileKey: MobileKey {
-            return mobileKeys.first!
-        }
-        var lastUpdatedDates: [UserKey: Date] {
-            return userEnvironmentsCollection.compactMapValues { (cacheableUserFlags)  in
-                return cacheableUserFlags.lastUpdated
-            }
-        }
+        var firstMobileKey: MobileKey { mobileKeys.first! }
         var sortedLastUpdatedDates: [(userKey: UserKey, lastUpdated: Date)] {
-            return lastUpdatedDates.map { (userKey, lastUpdated) in
-                return (userKey, lastUpdated)
-            }.sorted { (tuple1, tuple2) in
-                return tuple1.lastUpdated.isEarlierThan(tuple2.lastUpdated)
+            userEnvironmentsCollection.map { ($0, $1.lastUpdated) }.sorted { tuple1, tuple2 in
+                tuple1.lastUpdated.isEarlierThan(tuple2.lastUpdated)
             }
         }
-        var userKeys: [UserKey] {
-            return users.map { (user) in
-                return user.key
-            }
-        }
+        var userKeys: [UserKey] { users.map { $0.key } }
 
         init(userCount: Int = 0) {
             keyedValueCacheMock = clientServiceFactoryMock.makeKeyedValueCache() as! KeyedValueCachingMock
@@ -60,12 +46,7 @@ final class DeprecatedCacheModelV4Spec: QuickSpec {
         }
 
         func featureFlags(for userKey: UserKey) -> [LDFlagKey: FeatureFlag]? {
-            guard !mobileKeys.isEmpty
-            else {
-                return nil
-            }
-
-            return userEnvironmentsCollection[userKey]?.environmentFlags[firstMobileKey]?.featureFlags.modelV4flagCollection
+            userEnvironmentsCollection[userKey]?.environmentFlags[firstMobileKey]?.featureFlags.modelV4flagCollection
         }
 
         func modelV4Dictionary(for users: [LDUser], and userEnvironmentsCollection: [UserKey: CacheableUserEnvironmentFlags], storingMobileKey: MobileKey?) -> [UserKey: Any]? {
@@ -74,7 +55,7 @@ final class DeprecatedCacheModelV4Spec: QuickSpec {
                 return nil
             }
 
-            return Dictionary(uniqueKeysWithValues: users.map { (user) in
+            return Dictionary(uniqueKeysWithValues: users.map { user in
                 let featureFlags = userEnvironmentsCollection[user.key]?.environmentFlags[mobileKey]?.featureFlags
                 let lastUpdated = userEnvironmentsCollection[user.key]?.lastUpdated
                 return (user.key, user.modelV4DictionaryValue(including: featureFlags!, using: lastUpdated))
@@ -82,12 +63,8 @@ final class DeprecatedCacheModelV4Spec: QuickSpec {
         }
 
         func expiredUserKeys(for expirationDate: Date) -> [UserKey] {
-            return sortedLastUpdatedDates.compactMap { (tuple) in
-                guard tuple.lastUpdated.isEarlierThan(expirationDate)
-                else {
-                    return nil
-                }
-                return tuple.userKey
+            sortedLastUpdatedDates.compactMap { tuple in
+                tuple.lastUpdated.isEarlierThan(expirationDate) ? tuple.userKey : nil
             }
         }
     }
@@ -130,13 +107,13 @@ final class DeprecatedCacheModelV4Spec: QuickSpec {
             context("when cached data exists") {
                 context("and a cached user is requested") {
                     beforeEach {
-                        testContext = TestContext(userCount: UserEnvironmentFlagCache.Constants.maxCachedUsers)
+                        testContext = TestContext(userCount: LDConfig.Defaults.maxCachedUsers)
                     }
                     it("retrieves the cached data") {
-                        testContext.users.forEach { (user) in
+                        testContext.users.forEach { user in
                             let expectedFlags = testContext.featureFlags(for: user.key)
                             let expectedLastUpdated = testContext.userEnvironmentsCollection.lastUpdated(forKey: user.key)?.stringEquivalentDate
-                            testContext.mobileKeys.forEach { (mobileKey) in
+                            testContext.mobileKeys.forEach { mobileKey in
                                 cachedData = testContext.modelV4cache.retrieveFlags(for: user.key, and: mobileKey)
                                 expect(cachedData.featureFlags) == expectedFlags
                                 expect(cachedData.lastUpdated) == expectedLastUpdated
@@ -146,7 +123,7 @@ final class DeprecatedCacheModelV4Spec: QuickSpec {
                 }
                 context("and an uncached user is requested") {
                     beforeEach {
-                        testContext = TestContext(userCount: UserEnvironmentFlagCache.Constants.maxCachedUsers)
+                        testContext = TestContext(userCount: LDConfig.Defaults.maxCachedUsers)
 
                         cachedData = testContext.modelV4cache.retrieveFlags(for: testContext.uncachedUser.key, and: testContext.uncachedMobileKey)
                     }
@@ -165,7 +142,7 @@ final class DeprecatedCacheModelV4Spec: QuickSpec {
         describe("removeData") {
             context("no modelV4 cached data expired") {
                 beforeEach {
-                    testContext = TestContext(userCount: UserEnvironmentFlagCache.Constants.maxCachedUsers)
+                    testContext = TestContext(userCount: LDConfig.Defaults.maxCachedUsers)
                     let oldestLastUpdatedDate = testContext.sortedLastUpdatedDates.first!
                     expirationDate = oldestLastUpdatedDate.lastUpdated.addingTimeInterval(-Constants.offsetInterval)
 
@@ -177,7 +154,7 @@ final class DeprecatedCacheModelV4Spec: QuickSpec {
             }
             context("some modelV4 cached data expired") {
                 beforeEach {
-                    testContext = TestContext(userCount: UserEnvironmentFlagCache.Constants.maxCachedUsers)
+                    testContext = TestContext(userCount: LDConfig.Defaults.maxCachedUsers)
                     let selectedLastUpdatedDate = testContext.sortedLastUpdatedDates[testContext.users.count / 2]
                     expirationDate = selectedLastUpdatedDate.lastUpdated.addingTimeInterval(-Constants.offsetInterval)
 
@@ -188,14 +165,14 @@ final class DeprecatedCacheModelV4Spec: QuickSpec {
                     expect(testContext.keyedValueCacheMock.setReceivedArguments?.forKey) == CacheConverter.CacheKeys.ldUserModelDictionary
                     let recachedData = testContext.keyedValueCacheMock.setReceivedArguments?.value as? [String: Any]
                     let expiredUserKeys = testContext.expiredUserKeys(for: expirationDate)
-                    testContext.userKeys.forEach { (userKey) in
+                    testContext.userKeys.forEach { userKey in
                         expect(recachedData?.keys.contains(userKey)) == !expiredUserKeys.contains(userKey)
                     }
                 }
             }
             context("all modelV4 cached data expired") {
                 beforeEach {
-                    testContext = TestContext(userCount: UserEnvironmentFlagCache.Constants.maxCachedUsers)
+                    testContext = TestContext(userCount: LDConfig.Defaults.maxCachedUsers)
                     let newestLastUpdatedDate = testContext.sortedLastUpdatedDates.last!
                     expirationDate = newestLastUpdatedDate.lastUpdated.addingTimeInterval(Constants.offsetInterval)
 
@@ -208,7 +185,7 @@ final class DeprecatedCacheModelV4Spec: QuickSpec {
             }
             context("no modelV4 cached data exists") {
                 beforeEach {
-                    testContext = TestContext(userCount: UserEnvironmentFlagCache.Constants.maxCachedUsers)
+                    testContext = TestContext(userCount: LDConfig.Defaults.maxCachedUsers)
                     let newestLastUpdatedDate = testContext.sortedLastUpdatedDates.last!
                     expirationDate = newestLastUpdatedDate.lastUpdated.addingTimeInterval(Constants.offsetInterval)
                     testContext.keyedValueCacheMock.dictionaryReturnValue = nil     //mock simulates no modelV4 cached data
@@ -221,26 +198,17 @@ final class DeprecatedCacheModelV4Spec: QuickSpec {
             }
         }
     }
-
 }
 
 // MARK: Expected value from conversion
 
 extension Dictionary where Key == LDFlagKey, Value == FeatureFlag {
-    var modelV4flagCollection: [LDFlagKey: FeatureFlag] {
-        return compactMapValues { (originalFeatureFlag) in
-            guard originalFeatureFlag.value != nil
-            else {
-                return nil
-            }
-            return originalFeatureFlag.modelV4FeatureFlag
-        }
-    }
+    var modelV4flagCollection: [LDFlagKey: FeatureFlag] { compactMapValues { $0.value != nil ? $0.modelV4FeatureFlag : nil } }
 }
 
 extension FeatureFlag {
     var modelV4FeatureFlag: FeatureFlag {
-        return FeatureFlag(flagKey: flagKey, value: value, variation: variation, version: version, flagVersion: flagVersion, eventTrackingContext: eventTrackingContext, reason: nil, trackReason: nil)
+        FeatureFlag(flagKey: flagKey, value: value, variation: variation, version: version, flagVersion: flagVersion, eventTrackingContext: eventTrackingContext, reason: nil, trackReason: nil)
     }
 }
 
@@ -250,9 +218,7 @@ extension LDUser {
     func modelV4DictionaryValue(including featureFlags: [LDFlagKey: FeatureFlag], using lastUpdated: Date?) -> [String: Any] {
         var userDictionary = dictionaryValueWithAllAttributes(includeFlagConfig: false)
         userDictionary.setLastUpdated(lastUpdated)
-        userDictionary[LDUser.CodingKeys.config.rawValue] = featureFlags.compactMapValues { (featureFlag) in
-            return featureFlag.modelV4dictionaryValue
-        }
+        userDictionary[LDUser.CodingKeys.config.rawValue] = featureFlags.compactMapValues { $0.modelV4dictionaryValue }
 
         return userDictionary
     }

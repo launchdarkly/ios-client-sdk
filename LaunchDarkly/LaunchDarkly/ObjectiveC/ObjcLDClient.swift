@@ -62,9 +62,7 @@ public final class ObjcLDClient: NSObject {
 
      Use `-[LDClient setOnline: completion:]` (`ObjcLDClient.setOnline(_:completion:)`) to change the online/offline state.
      */
-    @objc public var isOnline: Bool {
-        return ldClient.isOnline
-    }
+    @objc public var isOnline: Bool { ldClient.isOnline }
     /**
      Set the LDClient online/offline.
 
@@ -110,32 +108,10 @@ public final class ObjcLDClient: NSObject {
      When a new config is set, the LDClient goes offline and reconfigures using the new config. If the client was online when the new config was set, it goes online again, subject to a throttling delay if in force (see `ObjcLDClient.setOnline(_:completion:)` for details). To change both the `config` and `user`, set the LDClient offline, set both properties, then set the LDClient online.
      */
     @objc public var config: ObjcLDConfig {
-        get {
-            return ldClient.config.objcLdConfig
-        }
-        set {
-            ldClient.config = newValue.config
-        }
+        get { ldClient.config.objcLdConfig }
+        set { ldClient.config = newValue.config }
     }
-    /**
-     The LDUser set into the LDClient may affect the set of feature flags returned by the LaunchDarkly server, and ties event tracking to the user. See `LDUser` (`ObjcLDUser`) for details about what information can be retained.
 
-     Normally, the client app should create and set the LDUser and pass that into `[ldClientInstance startWithMobileKey: config: user: completion:]` (`ObjcLDClient.startWithMobileKey(_:config:user:completion:)`).
-
-     The client app can change the LDUser by getting the `user`, adjusting the values, and setting it into the LDClient. This allows client apps to collect information over time from the user and update as information is collected. Client apps should follow [Apple's Privacy Policy](apple.com/legal/privacy) when collecting user information. If the client app does not create a LDUser, LDClient creates an anonymous default user, which can affect the feature flags delivered to the LDClient.
-
-     When a new user is set, the LDClient goes offline and sets the new user. If the client was online when the new user was set, it goes online again, subject to a throttling delay if in force (see `ObjcLDClient.setOnline(_:completion:)` for details). To change both the `config` and `user`, set the LDClient offline, set both properties, then set the LDClient online.
-     */
-    @objc public var user: ObjcLDUser {
-        get {
-            return ldClient.user.objcLdUser
-        }
-        @available(*, deprecated, message: "Please use the identify method instead")
-        set {
-            ldClient.identify(user: newValue.user)
-        }
-    }
-    
     @objc public func identify(user: ObjcLDUser) {
         ldClient.identify(user: user.user)
     }
@@ -215,13 +191,13 @@ public final class ObjcLDClient: NSObject {
     @objc public func boolVariation(forKey key: LDFlagKey, fallback: Bool) -> Bool {
         return ldClient.variation(forKey: key, fallback: fallback)
     }
-    
+
     /**
      See [boolVariation](x-source-tag://boolVariation) for more information on variation methods.
- 
+
      - parameter key: The LDFlagKey for the requested feature flag.
      - parameter fallback: The fallback value to return if the feature flag key does not exist.
-     
+
      - returns: ObjCBoolEvaluationDetail: This class contains your value as well as useful information on why that value was returned.
     */
     @objc public func boolVariationDetail(forKey key: LDFlagKey, fallback: Bool) -> ObjCBoolEvaluationDetail {
@@ -441,9 +417,7 @@ public final class ObjcLDClient: NSObject {
 
      LDClient will not provide any source or change information, only flag keys and flag values. The client app should convert the feature flag value into the desired type.
      */
-    @objc public var allFlags: [LDFlagKey: Any]? {
-        return ldClient.allFlags
-    }
+    @objc public var allFlags: [LDFlagKey: Any]? { return ldClient.allFlags }
 
     // MARK: - Feature Flag Updates
 
@@ -470,7 +444,7 @@ public final class ObjcLDClient: NSObject {
      - parameter handler: The block the SDK will execute when the feature flag changes.
      */
     @objc public func observeBool(_ key: LDFlagKey, owner: LDObserverOwner, handler: @escaping ObjcLDBoolChangedFlagHandler) {
-        ldClient.observe(key: key, owner: owner) { (changedFlag) in handler(ObjcLDBoolChangedFlag(changedFlag)) }
+        ldClient.observe(key: key, owner: owner) { changedFlag in handler(ObjcLDBoolChangedFlag(changedFlag)) }
     }
 
     /**
@@ -496,9 +470,7 @@ public final class ObjcLDClient: NSObject {
      - parameter handler: The block the SDK will execute when the feature flag changes.
      */
     @objc public func observeInteger(_ key: LDFlagKey, owner: LDObserverOwner, handler: @escaping ObjcLDIntegerChangedFlagHandler) {
-        ldClient.observe(key: key, owner: owner) { (changedFlag) in
-            handler(ObjcLDIntegerChangedFlag(changedFlag))
-        }
+        ldClient.observe(key: key, owner: owner) { changedFlag in handler(ObjcLDIntegerChangedFlag(changedFlag)) }
     }
     
     /**
@@ -524,9 +496,7 @@ public final class ObjcLDClient: NSObject {
      - parameter handler: The block the SDK will execute when the feature flag changes.
      */
     @objc public func observeDouble(_ key: LDFlagKey, owner: LDObserverOwner, handler: @escaping ObjcLDDoubleChangedFlagHandler) {
-        ldClient.observe(key: key, owner: owner) { (changedFlag) in
-            handler(ObjcLDDoubleChangedFlag(changedFlag))
-        }
+        ldClient.observe(key: key, owner: owner) { changedFlag in handler(ObjcLDDoubleChangedFlag(changedFlag)) }
     }
 
     /**
@@ -552,9 +522,7 @@ public final class ObjcLDClient: NSObject {
      - parameter handler: The block the SDK will execute when the feature flag changes.
      */
     @objc public func observeString(_ key: LDFlagKey, owner: LDObserverOwner, handler: @escaping ObjcLDStringChangedFlagHandler) {
-        ldClient.observe(key: key, owner: owner) { (changedFlag) in
-            handler(ObjcLDStringChangedFlag(changedFlag))
-        }
+        ldClient.observe(key: key, owner: owner) { changedFlag in handler(ObjcLDStringChangedFlag(changedFlag)) }
     }
     
     /**
@@ -580,9 +548,7 @@ public final class ObjcLDClient: NSObject {
      - parameter handler: The block the SDK will execute when the feature flag changes.
     */
     @objc public func observeArray(_ key: LDFlagKey, owner: LDObserverOwner, handler: @escaping ObjcLDArrayChangedFlagHandler) {
-        ldClient.observe(key: key, owner: owner) { (changedFlag) in
-            handler(ObjcLDArrayChangedFlag(changedFlag))
-        }
+        ldClient.observe(key: key, owner: owner) { changedFlag in handler(ObjcLDArrayChangedFlag(changedFlag)) }
     }
     
     /**
@@ -608,9 +574,7 @@ public final class ObjcLDClient: NSObject {
      - parameter handler: The block the SDK will execute when the feature flag changes.
      */
     @objc public func observeDictionary(_ key: LDFlagKey, owner: LDObserverOwner, handler: @escaping ObjcLDDictionaryChangedFlagHandler) {
-        ldClient.observe(key: key, owner: owner) { (changedFlag) in
-            handler(ObjcLDDictionaryChangedFlag(changedFlag))
-        }
+        ldClient.observe(key: key, owner: owner) { changedFlag in handler(ObjcLDDictionaryChangedFlag(changedFlag)) }
     }
     
     /**
@@ -637,8 +601,8 @@ public final class ObjcLDClient: NSObject {
      - parameter handler: The LDFlagCollectionChangeHandler the SDK will execute 1 time when any of the observed feature flags change.
      */
     @objc public func observeKeys(_ keys: [LDFlagKey], owner: LDObserverOwner, handler: @escaping ObjcLDChangedFlagCollectionHandler) {
-        ldClient.observe(keys: keys, owner: owner) { (changedFlags) in
-            let objcChangedFlags = changedFlags.mapValues { (changedFlag) -> ObjcLDChangedFlag in
+        ldClient.observe(keys: keys, owner: owner) { changedFlags in
+            let objcChangedFlags = changedFlags.mapValues { changedFlag -> ObjcLDChangedFlag in
                 changedFlag.objcChangedFlag
             }
             handler(objcChangedFlags)
@@ -668,8 +632,8 @@ public final class ObjcLDClient: NSObject {
      - parameter handler: The LDFlagCollectionChangeHandler the SDK will execute 1 time when any of the observed feature flags change.
      */
     @objc public func observeAllKeys(owner: LDObserverOwner, handler: @escaping ObjcLDChangedFlagCollectionHandler) {
-        ldClient.observeAll(owner: owner) { (changedFlags) in
-            let objcChangedFlags = changedFlags.mapValues { (changedFlag) -> ObjcLDChangedFlag in
+        ldClient.observeAll(owner: owner) { changedFlags in
+            let objcChangedFlags = changedFlags.mapValues { changedFlag -> ObjcLDChangedFlag in
                 changedFlag.objcChangedFlag
             }
             handler(objcChangedFlags)
@@ -811,10 +775,10 @@ public final class ObjcLDClient: NSObject {
     @objc public func trackEvent(key: String, data: Any? = nil) throws {
         try ldClient.trackEvent(key: key, data: data, metricValue: nil)
     }
-    
+
     /**
      See (trackEvent)[x-source-tag://trackEvent] for full documentation.
-     
+
      - parameter key: The key for the event. The SDK does nothing with the key, which can be any string the client app sends
      - parameter data: The data for the event. The SDK does nothing with the data, which can be any valid JSON item the client app sends. (Optional)
      - parameter metricValue: A numeric value used by the LaunchDarkly experimentation feature in numeric custom metrics. Can be omitted if this event is used by only non-numeric metrics. This field will also be returned as part of the custom event for Data Export.

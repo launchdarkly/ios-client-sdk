@@ -5,6 +5,17 @@ All notable changes to the LaunchDarkly iOS SDK will be documented in this file.
 ### Multiple Environment clients
 Version 4.0.0 does not support multiple environments. If you use version `2.14.0` or later and set `LDConfig`'s `secondaryMobileKeys` you will not be able to migrate to version `4.0.0`. Multiple Environments will be added in a future release to the Swift SDK.
 
+## [4.7.0] - 2020-06-03
+### Added
+- Added a new method signature for `startCompleteWhenFlagsReceived` that accepts an additional argument specifying a maximum time to wait for flags to be received before calling the completion closure. The completion closure on this method will be passed a `Bool` on completion indication whether the operation timed out.
+
+## [4.6.0] - 2020-05-26
+### Added
+- Added `maxCachedUsers` option to `LDConfig`. You can now specify the number of users to be cached or use `-1` for unlimited cached users.
+
+### Fixed
+- `FlagStore` properly synchronizes reads and writes to prevent a potential race condition.
+
 ## [4.5.0] - 2020-03-26
 ### Changed
 - Updated SDK code to build, run, and test on Xcode 11.4.

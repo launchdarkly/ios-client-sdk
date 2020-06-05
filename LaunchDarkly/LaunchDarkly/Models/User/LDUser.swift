@@ -2,7 +2,6 @@
 //  LDUser.swift
 //  LaunchDarkly
 //
-//  Created by Mark Pokorny on 7/11/17. +JMJ
 //  Copyright © 2017 Catamorphic Co. All rights reserved.
 //
 
@@ -18,7 +17,7 @@ typealias UserKey = String  //use for identifying semantics for strings, particu
  The SDK does not cache user information collected, except for the user key. The user key is used to identify the cached feature flags for that user. Client app developers should use caution not to use sensitive user information as the user-key.
  */
 public struct LDUser {
-    
+
     ///String keys associated with LDUser properties.
     public enum CodingKeys: String, CodingKey {
         ///Key names match the corresponding LDUser property
@@ -33,10 +32,10 @@ public struct LDUser {
      See Also: `LDConfig.allUserAttributesPrivate`, `LDConfig.privateUserAttributes`, and `privateAttributes`.
     */
     public static var privatizableAttributes: [String] {
-        return [CodingKeys.name.rawValue, CodingKeys.firstName.rawValue, CodingKeys.lastName.rawValue, CodingKeys.country.rawValue, CodingKeys.ipAddress.rawValue, CodingKeys.email.rawValue, CodingKeys.avatar.rawValue, CodingKeys.custom.rawValue]
+        [CodingKeys.name.rawValue, CodingKeys.firstName.rawValue, CodingKeys.lastName.rawValue, CodingKeys.country.rawValue, CodingKeys.ipAddress.rawValue, CodingKeys.email.rawValue, CodingKeys.avatar.rawValue, CodingKeys.custom.rawValue]
     }
     static var sdkSetAttributes: [String] {
-        return [CodingKeys.device.rawValue, CodingKeys.operatingSystem.rawValue]
+        [CodingKeys.device.rawValue, CodingKeys.operatingSystem.rawValue]
     }
 
     ///Client app defined string that uniquely identifies the user. If the client app does not define a key, the SDK will assign an identifier associated with the anonymous user. The key cannot be made private.
@@ -74,14 +73,14 @@ public struct LDUser {
 
     */
     public var privateAttributes: [String]?
-    
+
     ///An NSObject wrapper for the Swift LDUser struct. Intended for use in mixed apps when Swift code needs to pass a user into an Objective-C method.
     public var objcLdUser: ObjcLDUser {
         return ObjcLDUser(self)
     }
 
     internal var flagStore: FlagMaintaining = FlagStore()
-    
+
     /**
      Initializer to create a LDUser. Client configurable attributes each have an optional parameter to facilitate setting user information into the LDUser. The SDK will automatically set `key`, `device`, `operatingSystem`, and `isAnonymous` attributes if the client does not provide them. The SDK embeds `device` and `operatingSystem` into the `custom` dictionary for transmission to LaunchDarkly.
 
@@ -129,7 +128,7 @@ public struct LDUser {
         self.privateAttributes = privateAttributes
         Log.debug(typeName(and: #function) + "user: \(self)")
     }
-    
+
     /**
      Failable Initializer that takes any object and attempts to create a LDUser from the object. If the object is a [String: Any], constructs the LDUser via `init(userDictionary:)`
 
@@ -137,9 +136,7 @@ public struct LDUser {
     */
     public init?(object: Any?) {
         guard let userDictionary = object as? [String: Any]
-        else {
-            return nil
-        }
+        else { return nil }
         self = LDUser(userDictionary: userDictionary)
     }
 
@@ -198,9 +195,7 @@ public struct LDUser {
     }
     ///Returns the custom dictionary without the SDK set device and operatingSystem attributes
     var customWithoutSdkSetAttributes: [String: Any]? {
-        return custom?.filter { (key, _) in
-            !LDUser.sdkSetAttributes.contains(key)
-        }
+        custom?.filter { key, _ in !LDUser.sdkSetAttributes.contains(key) }
     }
 
     ///Dictionary with LDUser attribute keys and values, with options to include feature flags and private attributes. LDConfig object used to help resolving what attributes should be private.
@@ -215,12 +210,12 @@ public struct LDUser {
 
         dictionary[CodingKeys.key.rawValue] = key
 
-        let optionalAttributes = LDUser.privatizableAttributes.filter { (attribute) in
+        let optionalAttributes = LDUser.privatizableAttributes.filter { attribute in
             attribute != CodingKeys.custom.rawValue
         }
-        optionalAttributes.forEach { (attribute) in
+        optionalAttributes.forEach { attribute in
             let value = self.value(for: attribute)
-            if !includePrivate && combinedPrivateAttributes.isPrivate(attribute) && value != nil {
+            if !includePrivate && combinedPrivateAttributes.contains(attribute) && value != nil {
                 redactedAttributes.append(attribute)
             } else {
                 dictionary[attribute] = value
@@ -228,12 +223,12 @@ public struct LDUser {
         }
 
         var customDictionary = [String: Any]()
-        if !includePrivate && combinedPrivateAttributes.isPrivate(CodingKeys.custom.rawValue) && !customWithoutSdkSetAttributes.isNilOrEmpty {
+        if !includePrivate && combinedPrivateAttributes.contains(CodingKeys.custom.rawValue) && !(customWithoutSdkSetAttributes?.isEmpty ?? true) {
             redactedAttributes.append(CodingKeys.custom.rawValue)
         } else {
             if let custom = customWithoutSdkSetAttributes, !custom.isEmpty {
-                custom.keys.forEach { (customAttribute) in
-                    if !includePrivate && combinedPrivateAttributes.isPrivate(customAttribute) && custom[customAttribute] != nil {
+                custom.keys.forEach { customAttribute in
+                    if !includePrivate && combinedPrivateAttributes.contains(customAttribute) && custom[customAttribute] != nil {
                         redactedAttributes.append(customAttribute)
                     } else {
                         customDictionary[customAttribute] = custom[customAttribute]
@@ -287,13 +282,7 @@ extension UserDefaults {
 extension LDUser: Equatable {
     ///Compares users by comparing their user keys only, to allow the client app to collect user information over time
     public static func == (lhs: LDUser, rhs: LDUser) -> Bool {
-        return lhs.key == rhs.key
-    }
-}
-
-extension Array where Element == String {
-    fileprivate func isPrivate(_ attribute: String) -> Bool {
-        return contains(attribute)
+        lhs.key == rhs.key
     }
 }
 
@@ -362,12 +351,12 @@ extension LDUser: TypeIdentifying { }
     extension LDUser {
         ///Testing method to get the user attribute value from a LDUser struct
         func value(forAttribute attribute: String) -> Any? {
-            return value(for: attribute)
+            value(for: attribute)
         }
 
         //Compares all user properties. Excludes the composed FlagStore, which contains the users feature flags
         func isEqual(to otherUser: LDUser) -> Bool {
-            return key == otherUser.key
+            key == otherUser.key
                 && name == otherUser.name
                 && firstName == otherUser.firstName
                 && lastName == otherUser.lastName
@@ -379,7 +368,7 @@ extension LDUser: TypeIdentifying { }
                 && isAnonymous == otherUser.isAnonymous
                 && device == otherUser.device
                 && operatingSystem == otherUser.operatingSystem
-                && AnyComparer.isEqual(privateAttributes, to: otherUser.privateAttributes)
+                && privateAttributes == otherUser.privateAttributes
         }
     }
 #endif

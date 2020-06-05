@@ -2,7 +2,7 @@
 // DO NOT EDIT
 
 
-import DarklyEventSource
+import LDSwiftEventSource
 @testable import LaunchDarkly
 
 
@@ -23,50 +23,20 @@ final class CacheConvertingMock: CacheConverting {
 // MARK: - DarklyStreamingProviderMock
 final class DarklyStreamingProviderMock: DarklyStreamingProvider {
 
-    // MARK: onMessageEvent
-    var onMessageEventCallCount = 0
-    var onMessageEventCallback: (() -> Void)?
-    var onMessageEventReceivedHandler: LDEventSourceEventHandler?
-    func onMessageEvent(_ handler: LDEventSourceEventHandler?) {
-        onMessageEventCallCount += 1
-        onMessageEventReceivedHandler = handler
-        onMessageEventCallback?()
+    // MARK: start
+    var startCallCount = 0
+    var startCallback: (() -> Void)?
+    func start() {
+        startCallCount += 1
+        startCallback?()
     }
 
-    // MARK: onErrorEvent
-    var onErrorEventCallCount = 0
-    var onErrorEventCallback: (() -> Void)?
-    var onErrorEventReceivedHandler: LDEventSourceEventHandler?
-    func onErrorEvent(_ handler: LDEventSourceEventHandler?) {
-        onErrorEventCallCount += 1
-        onErrorEventReceivedHandler = handler
-        onErrorEventCallback?()
-    }
-
-    // MARK: onReadyStateChangedEvent
-    var onReadyStateChangedEventCallCount = 0
-    var onReadyStateChangedEventCallback: (() -> Void)?
-    var onReadyStateChangedEventReceivedHandler: LDEventSourceEventHandler?
-    func onReadyStateChangedEvent(_ handler: LDEventSourceEventHandler?) {
-        onReadyStateChangedEventCallCount += 1
-        onReadyStateChangedEventReceivedHandler = handler
-        onReadyStateChangedEventCallback?()
-    }
-
-    // MARK: open
-    var openCallCount = 0
-    var openCallback: (() -> Void)?
-    func open() {
-        openCallCount += 1
-        openCallback?()
-    }
-
-    // MARK: close
-    var closeCallCount = 0
-    var closeCallback: (() -> Void)?
-    func close() {
-        closeCallCount += 1
-        closeCallback?()
+    // MARK: stop
+    var stopCallCount = 0
+    var stopCallback: (() -> Void)?
+    func stop() {
+        stopCallCount += 1
+        stopCallback?()
     }
 }
 
@@ -299,6 +269,16 @@ final class EventReportingMock: EventReporting {
 
 // MARK: - FeatureFlagCachingMock
 final class FeatureFlagCachingMock: FeatureFlagCaching {
+
+    // MARK: maxCachedUsers
+    var maxCachedUsersSetCount = 0
+    var setMaxCachedUsersCallback: (() -> Void)?
+    var maxCachedUsers: Int = 5 {
+        didSet {
+            maxCachedUsersSetCount += 1
+            setMaxCachedUsersCallback?()
+        }
+    }
 
     // MARK: retrieveFeatureFlags
     var retrieveFeatureFlagsCallCount = 0

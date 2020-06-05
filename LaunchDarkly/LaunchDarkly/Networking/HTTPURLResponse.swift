@@ -2,7 +2,6 @@
 //  HTTPURLResponse.swift
 //  LaunchDarkly
 //
-//  Created by Mark Pokorny on 12/15/17. +JMJ
 //  Copyright © 2017 Catamorphic Co. All rights reserved.
 //
 
@@ -29,13 +28,11 @@ extension HTTPURLResponse {
 
     var headerDate: Date? {
         guard let dateHeader = self.allHeaderFields[HeaderKeys.date] as? String
-        else {
-            return nil
-        }
+        else { return nil }
         return DateFormatter.httpUrlHeaderFormatter.date(from: dateHeader)
     }
 
     var headerEtag: String? {
-        return self.allHeaderFields[HeaderKeys.etag] as? String
+        self.allHeaderFields[HeaderKeys.etag] as? String
     }
 }

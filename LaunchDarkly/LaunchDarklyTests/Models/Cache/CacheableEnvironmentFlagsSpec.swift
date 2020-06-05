@@ -2,7 +2,6 @@
 //  CacheableEnvironmentFlagsSpec.swift
 //  LaunchDarklyTests
 //
-//  Created by Mark Pokorny on 3/19/19. +JMJ
 //  Copyright © 2019 Catamorphic Co. All rights reserved.
 //
 
@@ -23,7 +22,7 @@ final class CacheableEnvironmentFlagsSpec: QuickSpec {
         var cacheableEnvironmentFlags: CacheableEnvironmentFlags
 
         init(includeNullValue: Bool = true, emptyFeatureFlags: Bool = false) {
-            user  = LDUser.stub(includeNullValue: includeNullValue)
+            user = LDUser.stub(includeNullValue: includeNullValue)
             if emptyFeatureFlags {
                 user.flagStore = FlagMaintainingMock(flags: [:])
             }
@@ -81,8 +80,8 @@ final class CacheableEnvironmentFlagsSpec: QuickSpec {
                 beforeEach {
                     testContext = TestContext()
                     otherDictionary = testContext.cacheableEnvironmentFlags.dictionaryValue
-                    otherDictionary.merge(testContext.user.dictionaryValueWithAllAttributes(includeFlagConfig: false), uniquingKeysWith: { (current, _) in
-                        return current
+                    otherDictionary.merge(testContext.user.dictionaryValueWithAllAttributes(includeFlagConfig: false), uniquingKeysWith: { current, _ in
+                        current
                     })
 
                     other = CacheableEnvironmentFlags(dictionary: otherDictionary)
@@ -292,10 +291,10 @@ final class CacheableEnvironmentFlagsSpec: QuickSpec {
 
 extension Dictionary where Key == String, Value == Any {
     var userKey: String? {
-        return self[CacheableEnvironmentFlags.CodingKeys.userKey.rawValue] as? String
+        self[CacheableEnvironmentFlags.CodingKeys.userKey.rawValue] as? String
     }
     var mobileKey: String? {
-        return self[CacheableEnvironmentFlags.CodingKeys.mobileKey.rawValue] as? String
+        self[CacheableEnvironmentFlags.CodingKeys.mobileKey.rawValue] as? String
     }
     var featureFlags: [LDFlagKey: FeatureFlag]? {
         let flagDictionary = self[CacheableEnvironmentFlags.CodingKeys.featureFlags.rawValue] as? [LDFlagKey: Any]

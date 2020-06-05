@@ -2,7 +2,6 @@
 //  FlagStore.swift
 //  LaunchDarkly
 //
-//  Created by Mark Pokorny on 9/20/17. JMJ
 //  Copyright © 2017 Catamorphic Co. All rights reserved.
 //
 
@@ -33,9 +32,12 @@ final class FlagStore: FlagMaintaining {
         static let flagKey = "key"
     }
 
-    private(set) var featureFlags: [LDFlagKey: FeatureFlag] = [:]
-    private(set) var flagValueSource = LDFlagValueSource.fallback
-    // Used with .barrier as reader writer lock on featureFlags, flagValueSource
+    var featureFlags: [LDFlagKey: FeatureFlag] { flagQueue.sync { _featureFlags } }
+    var flagValueSource: LDFlagValueSource { flagQueue.sync { _flagValueSource } }
+
+    private var _featureFlags: [LDFlagKey: FeatureFlag] = [:]
+    private var _flagValueSource = LDFlagValueSource.fallback
+    // Used with .barrier as reader writer lock on _featureFlags, _flagValueSource
     private var flagQueue: DispatchQueue
     fileprivate var flagQueueName: String
 
@@ -48,8 +50,8 @@ final class FlagStore: FlagMaintaining {
         self.flagQueueName = UUID().uuidString
         self.flagQueue = DispatchQueue(label: flagQueueName, attributes: .concurrent)
         Log.debug(typeName(and: #function) + "featureFlags: \(String(describing: featureFlags)), " + "flagValueSource: \(flagValueSource)")
-        self.featureFlags = featureFlags ?? [:]
-        self.flagValueSource = flagValueSource
+        self._featureFlags = featureFlags ?? [:]
+        self._flagValueSource = flagValueSource
     }
 
     convenience init(featureFlagDictionary: [LDFlagKey: Any]?, flagValueSource: LDFlagValueSource = .fallback) {
@@ -60,8 +62,8 @@ final class FlagStore: FlagMaintaining {
     func replaceStore(newFlags: [LDFlagKey: Any]?, source: LDFlagValueSource, completion: CompletionClosure?) {
         Log.debug(typeName(and: #function) + "newFlags: \(String(describing: newFlags)), " + "source: \(source)")
         flagQueue.async(flags: .barrier) {
-            self.featureFlags = newFlags?.flagCollection ?? [:]
-            self.flagValueSource = source
+            self._featureFlags = newFlags?.flagCollection ?? [:]
+            self._flagValueSource = source
             if let completion = completion {
                 DispatchQueue.main.async {
                     completion()
@@ -98,15 +100,15 @@ final class FlagStore: FlagMaintaining {
             guard self.isValidVersion(for: flagKey, newVersion: newFlag.version)
             else {
                 Log.debug(self.typeName(and: #function) + "aborted. Invalid version. updateDictionary: \(String(describing: updateDictionary)) "
-                    + "existing flag: \(String(describing: self.featureFlags[flagKey]))")
+                    + "existing flag: \(String(describing: self._featureFlags[flagKey]))")
                 return
             }
 
-            Log.debug(self.typeName(and: #function) + "succeeded. new flag: \(newFlag), " + "prior flag: \(String(describing: self.featureFlags[flagKey]))")
-            self.featureFlags.updateValue(newFlag, forKey: flagKey)
+            Log.debug(self.typeName(and: #function) + "succeeded. new flag: \(newFlag), " + "prior flag: \(String(describing: self._featureFlags[flagKey]))")
+            self._featureFlags.updateValue(newFlag, forKey: flagKey)
         }
     }
-    
+
     /* deleteDictionary should have the form:
         {
             "key": <flag-key>,
@@ -132,19 +134,19 @@ final class FlagStore: FlagMaintaining {
             guard self.isValidVersion(for: flagKey, newVersion: newVersion)
             else {
                 Log.debug(self.typeName(and: #function) + "aborted. Invalid version. deleteDictionary: \(String(describing: deleteDictionary)) "
-                    + "existing flag: \(String(describing: self.featureFlags[flagKey]))")
+                    + "existing flag: \(String(describing: self._featureFlags[flagKey]))")
                 return
             }
 
             Log.debug(self.typeName(and: #function) + "deleted flag with key: " + flagKey)
-            self.featureFlags.removeValue(forKey: flagKey)
+            self._featureFlags.removeValue(forKey: flagKey)
         }
     }
 
     private func isValidVersion(for flagKey: LDFlagKey, newVersion: Int?) -> Bool {
         // Currently only called from within barrier, only call on flagQueue
         // Use only the version, here called "environmentVersion" for comparison. The flagVersion is only used for event reporting.
-        if let environmentVersion = featureFlags[flagKey]?.version,
+        if let environmentVersion = _featureFlags[flagKey]?.version,
            let newEnvironmentVersion = newVersion {
             return newEnvironmentVersion > environmentVersion
         }
@@ -158,8 +160,8 @@ final class FlagStore: FlagMaintaining {
 
     func featureFlagAndSource(for flagKey: LDFlagKey) -> (FeatureFlag?, LDFlagValueSource?) {
         flagQueue.sync {
-            let featureFlag = featureFlags[flagKey]
-            return (featureFlag, featureFlag == nil ? nil : flagValueSource)
+            let featureFlag = _featureFlags[flagKey]
+            return (featureFlag, featureFlag == nil ? nil : _flagValueSource)
         }
     }
 
@@ -169,8 +171,8 @@ final class FlagStore: FlagMaintaining {
 
     func variationAndSource<T: LDFlagValueConvertible>(forKey key: LDFlagKey, fallback: T) -> (T, LDFlagValueSource) {
         flagQueue.sync {
-            let foundValue = featureFlags[key]?.value as? T
-            return (foundValue ?? fallback, foundValue == nil ? .fallback : flagValueSource)
+            let foundValue = _featureFlags[key]?.value as? T
+            return (foundValue ?? fallback, foundValue == nil ? .fallback : _flagValueSource)
         }
     }
 }

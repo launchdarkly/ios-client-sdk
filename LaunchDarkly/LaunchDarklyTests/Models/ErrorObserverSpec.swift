@@ -2,7 +2,6 @@
 //  ErrorObserverSpec.swift
 //  DarklyTests
 //
-//  Created by Mark Pokorny on 2/6/19. +JMJ
 //  Copyright © 2019 Catamorphic Co. All rights reserved.
 //
 
@@ -20,13 +19,7 @@ final class ErrorOwnerMock {
 
 extension ErrorObserver {
     static func createObservers(count: Int, using owner: ErrorOwnerMock = ErrorOwnerMock()) -> [ErrorObserver] {
-        var errorObservers = [ErrorObserver]()
-        let errorObserverOwner = owner
-        while errorObservers.count < count {
-            let errorObserver = ErrorObserver(owner: errorObserverOwner, errorHandler: errorObserverOwner.handle)
-            errorObservers.append(errorObserver)
-        }
-        return errorObservers
+        (0..<count).map { _ in ErrorObserver(owner: owner, errorHandler: owner.handle) }
     }
 }
 

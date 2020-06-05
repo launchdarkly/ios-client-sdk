@@ -2,7 +2,6 @@
 //  CacheConverter.swift
 //  LaunchDarkly
 //
-//  Created by Mark Pokorny on 3/26/19. +JMJ
 //  Copyright © 2019 Catamorphic Co. All rights reserved.
 //
 
@@ -29,10 +28,10 @@ final class CacheConverter: CacheConverting {
     private(set) var deprecatedCaches = [DeprecatedCacheModel: DeprecatedCache]()
     let maxAge: TimeInterval
 
-    init(serviceFactory: ClientServiceCreating, maxAge: TimeInterval = Constants.maxAge) {
-        currentCache = serviceFactory.makeFeatureFlagCache()
+    init(serviceFactory: ClientServiceCreating, maxCachedUsers: Int, maxAge: TimeInterval = Constants.maxAge) {
+        currentCache = serviceFactory.makeFeatureFlagCache(maxCachedUsers: maxCachedUsers)
         self.maxAge = maxAge
-        DeprecatedCacheModel.allCases.forEach { (version) in
+        DeprecatedCacheModel.allCases.forEach { version in
             deprecatedCaches[version] = serviceFactory.makeDeprecatedCacheModel(version)
         }
     }
@@ -40,7 +39,7 @@ final class CacheConverter: CacheConverting {
     func convertCacheData(for user: LDUser, and config: LDConfig) {
         var mobileKeys = [MobileKey]()  //TODO: When implementing Multiple Environments, initialize this with the secondary mobile keys
         mobileKeys.insert(config.mobileKey, at: 0)
-        mobileKeys.forEach { (mobileKey) in
+        mobileKeys.forEach { mobileKey in
             convertCacheData(for: user, mobileKey: mobileKey)
         }
         removeData()
@@ -65,7 +64,7 @@ final class CacheConverter: CacheConverting {
 
     private func removeData() {
         let maxAge = Date().addingTimeInterval(self.maxAge)
-        deprecatedCaches.values.forEach { (deprecatedCache) in
+        deprecatedCaches.values.forEach { deprecatedCache in
             deprecatedCache.removeData(olderThan: maxAge)
         }
     }

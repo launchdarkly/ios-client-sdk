@@ -2,7 +2,6 @@
 //  Thread.swift
 //  LaunchDarkly
 //
-//  Created by Mark Pokorny on 3/20/18. +JMJ
 //  Copyright © 2018 Catamorphic Co. All rights reserved.
 //
 

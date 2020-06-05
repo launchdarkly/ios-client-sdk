@@ -9,6 +9,7 @@
 import Quick
 import Nimble
 import OHHTTPStubs
+import LDSwiftEventSource
 @testable import LaunchDarkly
 
 final class DarklyServiceMock: DarklyServiceProvider {
@@ -238,12 +239,16 @@ final class DarklyServiceMock: DarklyServiceProvider {
     var createdEventSource: DarklyStreamingProviderMock?
     var createEventSourceCallCount = 0
     var createEventSourceReceivedUseReport: Bool?
-    func createEventSource(useReport: Bool) -> DarklyStreamingProvider {
+    var createEventSourceReceivedHandler: EventHandler?
+    var createEventSourceReceivedConnectionErrorHandler: ConnectionErrorHandler?
+    func createEventSource(useReport: Bool, handler: EventHandler, errorHandler: ConnectionErrorHandler?) -> DarklyStreamingProvider {
         createEventSourceCallCount += 1
         createEventSourceReceivedUseReport = useReport
-        let source = DarklyStreamingProviderMock()
-        createdEventSource = source
-        return source
+        createEventSourceReceivedHandler = handler
+        createEventSourceReceivedConnectionErrorHandler = errorHandler
+        let mock = DarklyStreamingProviderMock()
+        createdEventSource = mock
+        return mock
     }
     
     var stubbedEventResponse: ServiceResponse?
@@ -401,9 +406,7 @@ extension DarklyServiceMock {
     // MARK: Stub
 
     var anyRequestStubTest: OHHTTPStubsTestBlock {
-        return {_ in
-            return true
-        }
+        { _ in true }
     }
 
     private func stubRequest(passingTest test: @escaping OHHTTPStubsTestBlock,

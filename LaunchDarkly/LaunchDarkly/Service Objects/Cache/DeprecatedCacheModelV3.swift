@@ -2,7 +2,6 @@
 //  DeprecatedCacheModelV3.swift
 //  LaunchDarkly
 //
-//  Created by Mark Pokorny on 3/28/19. +JMJ
 //  Copyright © 2019 Catamorphic Co. All rights reserved.
 //
 
@@ -52,24 +51,22 @@ final class DeprecatedCacheModelV3: DeprecatedCache {
             return (nil, nil)
         }
         let featureFlags = Dictionary(uniqueKeysWithValues: featureFlagDictionaries.compactMap { (flagKey, flagValueDictionary) in
-            return (flagKey, FeatureFlag(flagKey: flagKey,
-                                         value: flagValueDictionary.value,
-                                         variation: nil,
-                                         version: flagValueDictionary.version,
-                                         flagVersion: nil,
-                                         eventTrackingContext: nil,
-                                         reason: nil,
-                                         trackReason: nil))
+            (flagKey, FeatureFlag(flagKey: flagKey,
+                                  value: flagValueDictionary.value,
+                                  variation: nil,
+                                  version: flagValueDictionary.version,
+                                  flagVersion: nil,
+                                  eventTrackingContext: nil,
+                                  reason: nil,
+                                  trackReason: nil))
         })
         return (featureFlags, cachedUserDictionary.lastUpdated)
     }
 
     func userKeys(from cachedUserData: [UserKey: [String: Any]], olderThan expirationDate: Date) -> [UserKey] {
-        return cachedUserData.filter { (_, userDictionary) in
+        cachedUserData.compactMap { userKey, userDictionary in
             let lastUpdated = userDictionary.lastUpdated ?? Date.distantFuture
-            return lastUpdated.isExpired(expirationDate: expirationDate)
-        }.map { (userKey, _) in
-            return userKey
+            return lastUpdated.isExpired(expirationDate: expirationDate) ? userKey : nil
         }
     }
 }

@@ -2,17 +2,16 @@
 //  ClientServiceFactory.swift
 //  LaunchDarkly
 //
-//  Created by Mark Pokorny on 11/13/17. +JMJ
 //  Copyright © 2017 Catamorphic Co. All rights reserved.
 //
 
 import Foundation
-import DarklyEventSource
+import LDSwiftEventSource
 
 protocol ClientServiceCreating {
     func makeKeyedValueCache() -> KeyedValueCaching
-    func makeFeatureFlagCache() -> FeatureFlagCaching
-    func makeCacheConverter() -> CacheConverting
+    func makeFeatureFlagCache(maxCachedUsers: Int) -> FeatureFlagCaching
+    func makeCacheConverter(maxCachedUsers: Int) -> CacheConverting
     func makeDeprecatedCacheModel(_ model: DeprecatedCacheModel) -> DeprecatedCache
     func makeDarklyServiceProvider(config: LDConfig, user: LDUser) -> DarklyServiceProvider
     func makeFlagSynchronizer(streamingMode: LDStreamingMode, pollingInterval: TimeInterval, useReport: Bool, service: DarklyServiceProvider) -> LDFlagSynchronizing
@@ -24,8 +23,8 @@ protocol ClientServiceCreating {
     func makeFlagChangeNotifier() -> FlagChangeNotifying
     func makeEventReporter(config: LDConfig, service: DarklyServiceProvider) -> EventReporting
     func makeEventReporter(config: LDConfig, service: DarklyServiceProvider, onSyncComplete: EventSyncCompleteClosure?) -> EventReporting
-    func makeStreamingProvider(url: URL, httpHeaders: [String: String]) -> DarklyStreamingProvider
-    func makeStreamingProvider(url: URL, httpHeaders: [String: String], connectMethod: String?, connectBody: Data?) -> DarklyStreamingProvider
+    func makeStreamingProvider(url: URL, httpHeaders: [String: String], handler: EventHandler, errorHandler: ConnectionErrorHandler?) -> DarklyStreamingProvider
+    func makeStreamingProvider(url: URL, httpHeaders: [String: String], connectMethod: String?, connectBody: Data?, handler: EventHandler, errorHandler: ConnectionErrorHandler?) -> DarklyStreamingProvider
     func makeEnvironmentReporter() -> EnvironmentReporting
     func makeThrottler(maxDelay: TimeInterval, environmentReporter: EnvironmentReporting) -> Throttling
     func makeErrorNotifier() -> ErrorNotifying
@@ -34,15 +33,15 @@ protocol ClientServiceCreating {
 
 final class ClientServiceFactory: ClientServiceCreating {
     func makeKeyedValueCache() -> KeyedValueCaching {
-        return UserDefaults.standard
+        UserDefaults.standard
     }
 
-    func makeFeatureFlagCache() -> FeatureFlagCaching {
-        return UserEnvironmentFlagCache(withKeyedValueCache: makeKeyedValueCache())
+    func makeFeatureFlagCache(maxCachedUsers: Int) -> FeatureFlagCaching {
+        UserEnvironmentFlagCache(withKeyedValueCache: makeKeyedValueCache(), maxCachedUsers: maxCachedUsers)
     }
 
-    func makeCacheConverter() -> CacheConverting {
-        return CacheConverter(serviceFactory: self)
+    func makeCacheConverter(maxCachedUsers: Int) -> CacheConverting {
+        CacheConverter(serviceFactory: self, maxCachedUsers: maxCachedUsers)
     }
 
     func makeDeprecatedCacheModel(_ model: DeprecatedCacheModel) -> DeprecatedCache {
@@ -56,11 +55,11 @@ final class ClientServiceFactory: ClientServiceCreating {
     }
 
     func makeDarklyServiceProvider(config: LDConfig, user: LDUser) -> DarklyServiceProvider {
-        return DarklyService(config: config, user: user, serviceFactory: self)
+        DarklyService(config: config, user: user, serviceFactory: self)
     }
 
     func makeFlagSynchronizer(streamingMode: LDStreamingMode, pollingInterval: TimeInterval, useReport: Bool, service: DarklyServiceProvider) -> LDFlagSynchronizing {
-        return makeFlagSynchronizer(streamingMode: streamingMode, pollingInterval: pollingInterval, useReport: useReport, service: service, onSyncComplete: nil)
+        makeFlagSynchronizer(streamingMode: streamingMode, pollingInterval: pollingInterval, useReport: useReport, service: service, onSyncComplete: nil)
     }
 
     func makeFlagSynchronizer(streamingMode: LDStreamingMode,
@@ -68,42 +67,58 @@ final class ClientServiceFactory: ClientServiceCreating {
                               useReport: Bool,
                               service: DarklyServiceProvider,
                               onSyncComplete: FlagSyncCompleteClosure?) -> LDFlagSynchronizing {
-        return FlagSynchronizer(streamingMode: streamingMode, pollingInterval: pollingInterval, useReport: useReport, service: service, onSyncComplete: onSyncComplete)
+        FlagSynchronizer(streamingMode: streamingMode, pollingInterval: pollingInterval, useReport: useReport, service: service, onSyncComplete: onSyncComplete)
     }
 
     func makeFlagChangeNotifier() -> FlagChangeNotifying {
-        return FlagChangeNotifier()
+        FlagChangeNotifier()
     }
 
     func makeEventReporter(config: LDConfig, service: DarklyServiceProvider) -> EventReporting {
-        return makeEventReporter(config: config, service: service, onSyncComplete: nil)
+        makeEventReporter(config: config, service: service, onSyncComplete: nil)
     }
 
     func makeEventReporter(config: LDConfig, service: DarklyServiceProvider, onSyncComplete: EventSyncCompleteClosure? = nil) -> EventReporting {
-        return EventReporter(config: config, service: service, onSyncComplete: onSyncComplete)
+        EventReporter(config: config, service: service, onSyncComplete: onSyncComplete)
     }
 
-    func makeStreamingProvider(url: URL, httpHeaders: [String: String]) -> DarklyStreamingProvider {
-        return LDEventSource(url: url, httpHeaders: httpHeaders)
+    func makeStreamingProvider(url: URL, httpHeaders: [String: String], handler: EventHandler, errorHandler: ConnectionErrorHandler?) -> DarklyStreamingProvider {
+        var config: EventSource.Config = EventSource.Config(handler: handler, url: url)
+        config.headers = httpHeaders
+        if let errorHandler = errorHandler {
+            config.connectionErrorHandler = errorHandler
+        }
+        return EventSource(config: config)
     }
 
-    func makeStreamingProvider(url: URL, httpHeaders: [String: String], connectMethod: String?, connectBody: Data?) -> DarklyStreamingProvider {
-        return LDEventSource(url: url, httpHeaders: httpHeaders, connectMethod: connectMethod, connectBody: connectBody)
+    func makeStreamingProvider(url: URL, httpHeaders: [String: String], connectMethod: String?, connectBody: Data?, handler: EventHandler, errorHandler: ConnectionErrorHandler?) -> DarklyStreamingProvider {
+        var config: EventSource.Config = EventSource.Config(handler: handler, url: url)
+        config.headers = httpHeaders
+        if let errorHandler = errorHandler {
+            config.connectionErrorHandler = errorHandler
+        }
+        if let method = connectMethod {
+            config.method = method
+        }
+        if let body = connectBody {
+            config.body = body
+        }
+        return EventSource(config: config)
     }
 
     func makeEnvironmentReporter() -> EnvironmentReporting {
-        return EnvironmentReporter()
+        EnvironmentReporter()
     }
 
     func makeThrottler(maxDelay: TimeInterval, environmentReporter: EnvironmentReporting) -> Throttling {
-        return Throttler(maxDelay: maxDelay, environmentReporter: environmentReporter)
+        Throttler(maxDelay: maxDelay, environmentReporter: environmentReporter)
     }
 
     func makeErrorNotifier() -> ErrorNotifying {
-        return ErrorNotifier()
+        ErrorNotifier()
     }
     
     func makeConnectionInformation() -> ConnectionInformation {
-        return ConnectionInformation(currentConnectionMode: .offline, lastConnectionFailureReason: .none)
+        ConnectionInformation(currentConnectionMode: .offline, lastConnectionFailureReason: .none)
     }
 }

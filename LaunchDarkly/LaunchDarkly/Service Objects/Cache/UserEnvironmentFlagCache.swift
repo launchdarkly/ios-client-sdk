@@ -2,7 +2,6 @@
 //  UserEnvironmentCache.swift
 //  LaunchDarkly
 //
-//  Created by Mark Pokorny on 3/20/19. +JMJ
 //  Copyright © 2019 Catamorphic Co. All rights reserved.
 //
 
@@ -14,6 +13,8 @@ enum FlagCachingStoreMode: CaseIterable {
 
 //sourcery: autoMockable
 protocol FeatureFlagCaching {
+    //sourcery: defaultMockValue = 5
+    var maxCachedUsers: Int { get set }
     func retrieveFeatureFlags(forUserWithKey userKey: String, andMobileKey mobileKey: String) -> [LDFlagKey: FeatureFlag]?
     func storeFeatureFlags(_ featureFlags: [LDFlagKey: FeatureFlag], forUser user: LDUser, andMobileKey mobileKey: String, lastUpdated: Date, storeMode: FlagCachingStoreMode)
 }
@@ -22,7 +23,6 @@ final class UserEnvironmentFlagCache: FeatureFlagCaching {
 
     struct Constants {
         static let cacheStoreOperationQueueLabel = "com.launchDarkly.FeatureFlagCaching.cacheStoreOperationQueue"
-        static let maxCachedUsers = 5
     }
 
     struct CacheKeys {
@@ -30,11 +30,13 @@ final class UserEnvironmentFlagCache: FeatureFlagCaching {
     }
 
     private(set) var keyedValueCache: KeyedValueCaching
+    var maxCachedUsers: Int
 
-    static private let cacheStoreOperationQueue = DispatchQueue(label: Constants.cacheStoreOperationQueueLabel, qos: .background)
+    private static let cacheStoreOperationQueue = DispatchQueue(label: Constants.cacheStoreOperationQueueLabel, qos: .background)
 
-    init(withKeyedValueCache keyedValueCache: KeyedValueCaching) {
+    init(withKeyedValueCache keyedValueCache: KeyedValueCaching, maxCachedUsers: Int) {
         self.keyedValueCache = keyedValueCache
+        self.maxCachedUsers = maxCachedUsers
     }
 
     func retrieveFeatureFlags(forUserWithKey userKey: String, andMobileKey mobileKey: String) -> [LDFlagKey: FeatureFlag]? {
@@ -86,28 +88,23 @@ final class UserEnvironmentFlagCache: FeatureFlagCaching {
     }
 
     private func removeOldestUsersIfNeeded(from cacheableUserEnvironmentsCollection: [UserKey: CacheableUserEnvironmentFlags]) -> [UserKey: CacheableUserEnvironmentFlags] {
-        guard cacheableUserEnvironmentsCollection.count > Constants.maxCachedUsers
+        guard cacheableUserEnvironmentsCollection.count > maxCachedUsers && maxCachedUsers >= 0
         else {
             return cacheableUserEnvironmentsCollection
         }
         //sort collection into key-value pairs in descending order...youngest to oldest
-        var userEnvironmentsCollection = cacheableUserEnvironmentsCollection.sorted { (pair1, pair2) -> Bool in
-            return pair2.value.lastUpdated.isEarlierThan(pair1.value.lastUpdated)
+        var userEnvironmentsCollection = cacheableUserEnvironmentsCollection.sorted { pair1, pair2 -> Bool in
+            pair2.value.lastUpdated.isEarlierThan(pair1.value.lastUpdated)
         }
-        while userEnvironmentsCollection.count > Constants.maxCachedUsers {
+        while userEnvironmentsCollection.count > maxCachedUsers && maxCachedUsers >= 0 {
             userEnvironmentsCollection.removeLast()
         }
-        return [UserKey: CacheableUserEnvironmentFlags](userEnvironmentsCollection, uniquingKeysWith: { (value1, _) in
-            return value1
+        return [UserKey: CacheableUserEnvironmentFlags](userEnvironmentsCollection, uniquingKeysWith: { value1, _ in
+            value1
         })
     }
 
     private func retrieveCacheableUserEnvironmentsCollection() -> [UserKey: CacheableUserEnvironmentFlags] {
-        guard let retrievedCollection = keyedValueCache.dictionary(forKey: CacheKeys.cachedUserEnvironmentFlags),
-            let cacheableUserEnvironmentsCollection = CacheableUserEnvironmentFlags.makeCollection(from: retrievedCollection)
-        else {
-            return [:]
-        }
-        return cacheableUserEnvironmentsCollection
+        CacheableUserEnvironmentFlags.makeCollection(from: keyedValueCache.dictionary(forKey: CacheKeys.cachedUserEnvironmentFlags) ?? [:])
     }
 }

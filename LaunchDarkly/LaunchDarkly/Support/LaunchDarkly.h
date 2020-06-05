@@ -2,7 +2,6 @@
 //  LaunchDarkly.h
 //  LaunchDarkly
 //
-//  Created by Mark Pokorny on 7/21/17. +JMJ
 //  Copyright © 2017 Catamorphic Co. All rights reserved.
 //
 

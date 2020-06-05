@@ -2,7 +2,6 @@
 //  EnvironmentReporterSpec.swift
 //  LaunchDarklyTests
 //
-//  Created by Mark Pokorny on 1/10/19. +JMJ
 //  Copyright © 2019 Catamorphic Co. All rights reserved.
 //
 

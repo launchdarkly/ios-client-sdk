@@ -2,14 +2,13 @@
 //  HTTPHeaders.swift
 //  LaunchDarkly
 //
-//  Created by Mark Pokorny on 9/19/17. +JMJ
 //  Copyright © 2017 Catamorphic Co. All rights reserved.
 //
 
 import Foundation
 
 struct HTTPHeaders {
-    
+
     struct HeaderKey {
         static let authorization = "Authorization"
         static let userAgent = "User-Agent"
@@ -63,7 +62,7 @@ struct HTTPHeaders {
         return headers
     }
     var hasFlagRequestEtag: Bool {
-        return HTTPHeaders.flagRequestEtags[mobileKey] != nil
+        HTTPHeaders.flagRequestEtags[mobileKey] != nil
     }
     var eventRequestHeaders: [String: String] {
         return [HeaderKey.authorization: authKey,

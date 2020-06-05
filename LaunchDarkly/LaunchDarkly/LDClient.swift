@@ -72,10 +72,10 @@ public class LDClient {
         }
     }
 
-    //Keeps the state of the last setOnline goOnline parameter, used for throttling calls to set the SDK online
+    // Keeps the state of the last setOnline goOnline parameter, used for throttling calls to set the SDK online
     private var lastSetOnlineCallValue = false
-    
-    //Stores ConnectionInformation in UserDefaults on change
+
+    // Stores ConnectionInformation in UserDefaults on change
     var connectionInformation: ConnectionInformation {
         didSet {
             Log.debug(connectionInformation.description)
@@ -85,11 +85,9 @@ public class LDClient {
             }
         }
     }
-    
-    //Returns an object containing information about successful and/or failed polling or streaming connections to LaunchDarkly
-    public func getConnectionInformation() -> ConnectionInformation {
-        return connectionInformation
-    }
+
+    // Returns an object containing information about successful and/or failed polling or streaming connections to LaunchDarkly
+    public func getConnectionInformation() -> ConnectionInformation { connectionInformation }
 
     /**
      Set the LDClient online/offline.
@@ -881,7 +879,7 @@ public class LDClient {
     private(set) var flagCache: FeatureFlagCaching
     private(set) var cacheConverter: CacheConverting
     private(set) var flagSynchronizer: LDFlagSynchronizing
-    private(set) var flagChangeNotifier: FlagChangeNotifying
+    var flagChangeNotifier: FlagChangeNotifying
     private(set) var eventReporter: EventReporting
     private(set) var environmentReporter: EnvironmentReporting
     private(set) var throttler: Throttling
@@ -918,7 +916,7 @@ public class LDClient {
         let internalUser = startUser ?? anonymousUser
         
         LDClient.instances = [:]
-        let cache = UserEnvironmentFlagCache(withKeyedValueCache: ClientServiceFactory().makeKeyedValueCache())
+        let cache = UserEnvironmentFlagCache(withKeyedValueCache: ClientServiceFactory().makeKeyedValueCache(), maxCachedUsers: config.maxCachedUsers)
         var mobileKeys = config.secondaryMobileKeys ?? [:]
         var internalCount = 0
         mobileKeys[LDConfig.Defaults.primaryEnvironmentName] = config.mobileKey
@@ -947,7 +945,7 @@ public class LDClient {
         environmentReporter = EnvironmentReporter()
         self.flagCache = flagCache
         LDUserWrapper.configureKeyedArchiversToHandleVersion2_3_0AndOlderUserCacheFormat()
-        cacheConverter = CacheConverter(serviceFactory: serviceFactory)
+        cacheConverter = CacheConverter(serviceFactory: serviceFactory, maxCachedUsers: configuration.maxCachedUsers)
         flagChangeNotifier = FlagChangeNotifier()
         throttler = Throttler(maxDelay: Throttler.Constants.defaultDelay, environmentReporter: environmentReporter)
 
@@ -993,7 +991,7 @@ public class LDClient {
     }
     
     private convenience init(config: LDConfig, startUser: LDUser?, runMode: LDClientRunMode, completion: (() -> Void)? = nil) {
-        self.init(configuration: config, startUser: startUser, flagCache: UserEnvironmentFlagCache(withKeyedValueCache: ClientServiceFactory().makeKeyedValueCache()), completion: completion)
+        self.init(configuration: config, startUser: startUser, flagCache: UserEnvironmentFlagCache(withKeyedValueCache: ClientServiceFactory().makeKeyedValueCache(), maxCachedUsers: config.maxCachedUsers), completion: completion)
         //Setting these inside the init do not trigger the didSet closures
         self.runMode = runMode
         self.config = config

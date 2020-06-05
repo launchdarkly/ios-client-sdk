@@ -2,7 +2,6 @@
 //  EventReporterSpec.swift
 //  LaunchDarklyTests
 //
-//  Created by Mark Pokorny on 9/26/17.
 //  Copyright © 2017 Catamorphic Co. All rights reserved.
 //
 
@@ -17,23 +16,15 @@ final class EventReporterSpec: QuickSpec {
         static let eventFlushIntervalHalfSecond: TimeInterval = 0.5
         static let defaultValue = false
     }
-    
+
     struct TestContext {
         var eventReporter: EventReporter!
         var config: LDConfig!
         var user: LDUser!
         var serviceMock: DarklyServiceMock!
         var events: [Event]!
-        var eventKeys: [String]! {
-            return events.compactMap { (event) in
-                event.key
-            }
-        }
-        var eventKinds: [Event.Kind]! {
-            return events.compactMap { (event) in
-                event.kind
-            }
-        }
+        var eventKeys: [String]! { events.compactMap { $0.key } }
+        var eventKinds: [Event.Kind]! { events.compactMap { $0.kind } }
         var lastEventResponseDate: Date?
         var flagKey: LDFlagKey!
         var eventTrackingContext: EventTrackingContext!
@@ -42,9 +33,7 @@ final class EventReporterSpec: QuickSpec {
         var featureFlagWithReasonAndTrackReason: FeatureFlag!
         var eventStubResponseDate: Date?
         var flagRequestTracker: FlagRequestTracker?
-        var reportersTracker: FlagRequestTracker? {
-            return eventReporter.flagRequestTracker
-        }
+        var reportersTracker: FlagRequestTracker? { eventReporter.flagRequestTracker }
         var flagRequestCount: Int
         var syncResult: EventSyncResult? = nil
 
@@ -71,11 +60,7 @@ final class EventReporterSpec: QuickSpec {
             serviceMock = DarklyServiceMock()
             serviceMock.stubEventResponse(success: stubResponseSuccess, responseOnly: stubResponseOnly, errorOnly: stubResponseErrorOnly, responseDate: self.eventStubResponseDate)
 
-            events = []
-            while events.count < eventCount {
-                let event = Event.stub(Event.eventKind(for: events.count), with: user)
-                events.append(event)
-            }
+            events = (0..<eventCount).map { [user] in Event.stub(Event.eventKind(for: $0), with: user!) }
 
             self.lastEventResponseDate = lastEventResponseDate?.adjustedForHttpUrlHeaderUse
             self.flagRequestTracker = flagRequestTracker
@@ -120,22 +105,19 @@ final class EventReporterSpec: QuickSpec {
         }
 
         mutating func addEvents(_ eventCount: Int) {
-            for _ in 0..<eventCount {
-                let event = Event.stub(Event.eventKind(for: events.count), with: user)
-                events.append(event)
-            }
+            events += (events.count..<eventCount + events.count).map { Event.stub(Event.eventKind(for: $0), with: user) }
             eventReporter?.add(events)
         }
 
         func flagCounter(for key: LDFlagKey) -> FlagCounter? {
-            return reportersTracker?.flagCounters[key]
+            reportersTracker?.flagCounters[key]
         }
 
         func flagValueCounter(for key: LDFlagKey, and featureFlag: FeatureFlag?) -> FlagValueCounter? {
-            return flagCounter(for: key)?.flagValueCounters.flagValueCounter(for: featureFlag)
+            flagCounter(for: key)?.flagValueCounters.flagValueCounter(for: featureFlag)
         }
     }
-    
+
     override func spec() {
         initSpec()
         isOnlineSpec()
@@ -155,9 +137,7 @@ final class EventReporterSpec: QuickSpec {
             beforeEach {
                 testContext = TestContext()
 
-                testContext.eventReporter = EventReporter(config: testContext.config, service: testContext.serviceMock) { (_) in
-
-                }
+                testContext.eventReporter = EventReporter(config: testContext.config, service: testContext.serviceMock) { _ in }
             }
             it("starts offline without reporting events") {
                 expect(testContext.eventReporter.config) == testContext.config
@@ -335,7 +315,7 @@ final class EventReporterSpec: QuickSpec {
                         beforeEach {
                             //The EventReporter will try to report events if it's started online with events. By starting online without events, then adding them, we "beat the timer" by reporting them right away
                             waitUntil { syncComplete in
-                                testContext = TestContext(eventStubResponseDate: eventStubResponseDate, onSyncComplete: { (result) in
+                                testContext = TestContext(eventStubResponseDate: eventStubResponseDate, onSyncComplete: { result in
                                     testContext.syncResult = result
                                     syncComplete()
                                 })
@@ -357,14 +337,20 @@ final class EventReporterSpec: QuickSpec {
                             expect(testContext.eventReporter.eventStore.isEmpty) == true
                             expect(testContext.eventReporter.lastEventResponseDate) == testContext.eventStubResponseDate
                             expect(testContext.eventReporter.flagRequestTracker.hasLoggedRequests) == false
-                            expect(testContext.syncResult) == .success(testContext.serviceMock.publishedEventDictionaries!)
+                            guard case let .success(result) = testContext.syncResult
+                            else {
+                                fail("Expected event dictionaries in sync result")
+                                return
+                            }
+                            expect(result == testContext.serviceMock.publishedEventDictionaries!).to(beTrue())
                         }
+
                     }
                     context("with events only") {
                         beforeEach {
                             //The EventReporter will try to report events if it's started online with events. By starting online without events, then adding them, we "beat the timer" by reporting them right away
                             waitUntil { syncComplete in
-                                testContext = TestContext(eventStubResponseDate: eventStubResponseDate, onSyncComplete: { (result) in
+                                testContext = TestContext(eventStubResponseDate: eventStubResponseDate, onSyncComplete: { result in
                                     testContext.syncResult = result
                                     syncComplete()
                                 })
@@ -384,14 +370,19 @@ final class EventReporterSpec: QuickSpec {
                             expect(testContext.eventReporter.eventStore.isEmpty) == true
                             expect(testContext.eventReporter.lastEventResponseDate) == testContext.eventStubResponseDate
                             expect(testContext.eventReporter.flagRequestTracker.hasLoggedRequests) == false
-                            expect(testContext.syncResult) == .success(testContext.serviceMock.publishedEventDictionaries!)
+                            guard case let .success(result) = testContext.syncResult
+                            else {
+                                fail("Expected event dictionaries in sync result")
+                                return
+                            }
+                            expect(result == testContext.serviceMock.publishedEventDictionaries!).to(beTrue())
                         }
                     }
                     context("with tracked requests only") {
                         beforeEach {
                             //The EventReporter will try to report events if it's started online with events. By starting online without events, then adding them, we "beat the timer" by reporting them right away
                             waitUntil { syncComplete in
-                                testContext = TestContext(eventStubResponseDate: eventStubResponseDate, onSyncComplete: { (result) in
+                                testContext = TestContext(eventStubResponseDate: eventStubResponseDate, onSyncComplete: { result in
                                     testContext.syncResult = result
                                     syncComplete()
                                 })
@@ -411,13 +402,18 @@ final class EventReporterSpec: QuickSpec {
                             expect(testContext.eventReporter.eventStore.isEmpty) == true
                             expect(testContext.eventReporter.lastEventResponseDate) == testContext.eventStubResponseDate
                             expect(testContext.eventReporter.flagRequestTracker.hasLoggedRequests) == false
-                            expect(testContext.syncResult) == .success(testContext.serviceMock.publishedEventDictionaries!)
+                            guard case let .success(result) = testContext.syncResult
+                            else {
+                                fail("Expected event dictionaries in sync result")
+                                return
+                            }
+                            expect(result == testContext.serviceMock.publishedEventDictionaries!).to(beTrue())
                         }
                     }
                     context("without events or tracked requests") {
                         beforeEach {
                             waitUntil { syncComplete in
-                                testContext = TestContext(eventStubResponseDate: eventStubResponseDate, onSyncComplete: { (result) in
+                                testContext = TestContext(eventStubResponseDate: eventStubResponseDate, onSyncComplete: { result in
                                     testContext.syncResult = result
                                     syncComplete()
                                 })
@@ -433,7 +429,12 @@ final class EventReporterSpec: QuickSpec {
                             expect(testContext.eventReporter.eventStore.isEmpty) == true
                             expect(testContext.eventReporter.lastEventResponseDate).to(beNil())
                             expect(testContext.eventReporter.flagRequestTracker.hasLoggedRequests) == false
-                            expect(testContext.syncResult) == .success([[String: Any]]())
+                            guard case let .success(result) = testContext.syncResult
+                            else {
+                                fail("Expected event dictionaries in sync result")
+                                return
+                            }
+                            expect(result == [[String: Any]]()).to(beTrue())
                         }
                     }
                 }
@@ -441,7 +442,7 @@ final class EventReporterSpec: QuickSpec {
                     context("server error") {
                         beforeEach {
                             waitUntil(timeout: 10) { syncComplete in
-                                testContext = TestContext(stubResponseSuccess: false, eventStubResponseDate: eventStubResponseDate, onSyncComplete: { (result) in
+                                testContext = TestContext(stubResponseSuccess: false, eventStubResponseDate: eventStubResponseDate, onSyncComplete: { result in
                                     testContext.syncResult = result
                                     syncComplete()
                                 })
@@ -463,13 +464,18 @@ final class EventReporterSpec: QuickSpec {
                             expect(testContext.serviceMock.publishedEventDictionaryKinds?.contains(.summary)) == true
                             expect(testContext.eventReporter.lastEventResponseDate).to(beNil())
                             expect(testContext.eventReporter.flagRequestTracker.hasLoggedRequests) == false
-                            expect(testContext.syncResult) == .error(.request(DarklyServiceMock.Constants.error))
+                            guard case let .error(.request(error)) = testContext.syncResult
+                            else {
+                                fail("Expected error result for event send")
+                                return
+                            }
+                            expect(error as NSError?) == DarklyServiceMock.Constants.error
                         }
                     }
                     context("response only") {
                         beforeEach {
                             waitUntil { syncComplete in
-                                testContext = TestContext(stubResponseSuccess: false, stubResponseOnly: true, eventStubResponseDate: eventStubResponseDate, onSyncComplete: { (result) in
+                                testContext = TestContext(stubResponseSuccess: false, stubResponseOnly: true, eventStubResponseDate: eventStubResponseDate, onSyncComplete: { result in
                                     testContext.syncResult = result
                                     syncComplete()
                                 })
@@ -491,13 +497,21 @@ final class EventReporterSpec: QuickSpec {
                             expect(testContext.serviceMock.publishedEventDictionaryKinds?.contains(.summary)) == true
                             expect(testContext.eventReporter.lastEventResponseDate).to(beNil())
                             expect(testContext.eventReporter.flagRequestTracker.hasLoggedRequests) == false
-                            expect(testContext.syncResult) == .error(.response(testContext.serviceMock.errorEventHTTPURLResponse))
+                            let expectedError = testContext.serviceMock.errorEventHTTPURLResponse
+                            guard case let .error(.response(error)) = testContext.syncResult
+                            else {
+                                fail("Expected error result for event send")
+                                return
+                            }
+                            let httpError = error as? HTTPURLResponse
+                            expect(httpError?.url) == expectedError?.url
+                            expect(httpError?.statusCode) == expectedError?.statusCode
                         }
                     }
                     context("error only") {
                         beforeEach {
                             waitUntil(timeout: 10) { syncComplete in
-                                testContext = TestContext(stubResponseSuccess: false, stubResponseErrorOnly: true, eventStubResponseDate: eventStubResponseDate, onSyncComplete: { (result) in
+                                testContext = TestContext(stubResponseSuccess: false, stubResponseErrorOnly: true, eventStubResponseDate: eventStubResponseDate, onSyncComplete: { result in
                                     testContext.syncResult = result
                                     syncComplete()
                                 })
@@ -519,7 +533,12 @@ final class EventReporterSpec: QuickSpec {
                             expect(testContext.serviceMock.publishedEventDictionaryKinds?.contains(.summary)) == true
                             expect(testContext.eventReporter.lastEventResponseDate).to(beNil())
                             expect(testContext.eventReporter.flagRequestTracker.hasLoggedRequests) == false
-                            expect(testContext.syncResult) == .error(.request(DarklyServiceMock.Constants.error))
+                            guard case let .error(.request(error)) = testContext.syncResult
+                            else {
+                                fail("Expected error result for event send")
+                                return
+                            }
+                            expect(error as NSError?) == DarklyServiceMock.Constants.error
                         }
                     }
                 }
@@ -527,7 +546,7 @@ final class EventReporterSpec: QuickSpec {
             context("offline") {
                 beforeEach {
                     waitUntil { syncComplete in
-                        testContext = TestContext(eventStubResponseDate: eventStubResponseDate, onSyncComplete: { (result) in
+                        testContext = TestContext(eventStubResponseDate: eventStubResponseDate, onSyncComplete: { result in
                             testContext.syncResult = result
                             syncComplete()
                         })
@@ -546,7 +565,11 @@ final class EventReporterSpec: QuickSpec {
                     expect(testContext.eventReporter.eventStoreKinds.contains(.summary)) == false
                     expect(testContext.eventReporter.lastEventResponseDate).to(beNil())
                     expect(testContext.eventReporter.flagRequestTracker.hasLoggedRequests) == true
-                    expect(testContext.syncResult) == .error(.isOffline)
+                    guard case .error(.isOffline) = testContext.syncResult
+                    else {
+                        fail("Expected error .isOffline result for event send")
+                        return
+                    }
                 }
             }
         }
@@ -593,7 +616,7 @@ final class EventReporterSpec: QuickSpec {
             context("when a reason is present and reason is false but trackReason is true") {
                 beforeEach {
                     testContext = TestContext(trackEvents: true)
-                    
+
                     waitUntil { done in
                         testContext.eventReporter.recordFlagEvaluationEvents(flagKey: testContext.flagKey,
                                                                              value: testContext.featureFlag.value!,
@@ -744,7 +767,7 @@ final class EventReporterSpec: QuickSpec {
                 }
                 it("records a feature and debug event") {
                     expect(testContext.eventReporter.eventStore.count == 2).to(beTrue())
-                    expect(testContext.eventReporter.eventStoreKeys.filter { (eventKey) in
+                    expect(testContext.eventReporter.eventStoreKeys.filter { eventKey in
                         eventKey == testContext.flagKey
                         }.count == 2).to(beTrue())
                     expect(Set(testContext.eventReporter.eventStore.eventKinds)).to(equal(Set([.feature, .debug])))
@@ -761,16 +784,16 @@ final class EventReporterSpec: QuickSpec {
             context("when both trackEvents is true, debugEventsUntilDate is later than lastEventResponseDate, reason is false, and track reason is true") {
                 beforeEach {
                     testContext = TestContext(lastEventResponseDate: Date(), trackEvents: true, debugEventsUntilDate: Date().addingTimeInterval(TimeInterval.oneSecond))
-                    
+
                     waitUntil { done in
                         testContext.eventReporter.recordFlagEvaluationEvents(flagKey: testContext.flagKey, value: testContext.featureFlag.value!, defaultValue: Constants.defaultValue, featureFlag: testContext.featureFlagWithReasonAndTrackReason, user: testContext.user, includeReason: false, completion: done)
                     }
                 }
                 it("records a feature and debug event") {
                     expect(testContext.eventReporter.eventStore.count == 2).to(beTrue())
-                    expect(testContext.eventReporter.eventStore[0]["reason"] as? Dictionary<String, Any> == DarklyServiceMock.Constants.reason).to(beTrue())
-                    expect(testContext.eventReporter.eventStore[1]["reason"] as? Dictionary<String, Any> == DarklyServiceMock.Constants.reason).to(beTrue())
-                    expect(testContext.eventReporter.eventStoreKeys.filter { (eventKey) in
+                    expect(testContext.eventReporter.eventStore[0]["reason"] as? [String: Any] == DarklyServiceMock.Constants.reason).to(beTrue())
+                    expect(testContext.eventReporter.eventStore[1]["reason"] as? [String: Any] == DarklyServiceMock.Constants.reason).to(beTrue())
+                    expect(testContext.eventReporter.eventStoreKeys.filter { eventKey in
                         eventKey == testContext.flagKey
                         }.count == 2).to(beTrue())
                     expect(Set(testContext.eventReporter.eventStore.eventKinds)).to(equal(Set([.feature, .debug])))
@@ -1010,7 +1033,7 @@ final class EventReporterSpec: QuickSpec {
                     testContext.eventReporter.isOnline = true
                 }
                 it("doesn't report events") {
-                    waitUntil { (done) in
+                    waitUntil { done in
                         DispatchQueue.main.asyncAfter(deadline: DispatchTime.now() + Constants.eventFlushIntervalHalfSecond) {
                             expect(testContext.serviceMock.publishEventDictionariesCallCount) == 0
                             done()
@@ -1034,7 +1057,7 @@ final class EventReporterSpec: QuickSpec {
                 it("creates a list of keys that match the event keys") {
                     expect(eventKeys.isEmpty).to(beFalse())
                     expect(eventKeys.components(separatedBy: ", ").count) == Event.Kind.allKinds.count - 1  //summary events don't have a key
-                    testContext.eventKeys.forEach { (eventKey) in
+                    testContext.eventKeys.forEach { eventKey in
                         expect(eventKeys.contains(eventKey)).to(beTrue())
                     }
                 }
@@ -1054,16 +1077,8 @@ final class EventReporterSpec: QuickSpec {
 }
 
 extension EventReporter {
-    var eventStoreKeys: [String] {
-        return eventStore.compactMap { (eventDictionary) in
-            return eventDictionary.eventKey
-        }
-    }
-    var eventStoreKinds: [Event.Kind] {
-        return eventStore.compactMap { (eventDictionary) in
-            return eventDictionary.eventKind
-        }
-    }
+    var eventStoreKeys: [String] { eventStore.compactMap { $0.eventKey } }
+    var eventStoreKinds: [Event.Kind] { eventStore.compactMap { $0.eventKind } }
 }
 
 extension TimeInterval {
@@ -1080,42 +1095,14 @@ private extension Date {
 
 extension Event.Kind {
     static var nonSummaryKinds: [Event.Kind] {
-        return [feature, debug, identify, custom]
+        [feature, debug, identify, custom]
     }
 }
 
-extension EventSyncResult: Equatable {
-    public static func == (_ lhs: EventSyncResult, _ rhs: EventSyncResult) -> Bool {
-        switch (lhs, rhs) {
-        case (.success(let left), .success(let right)):
-            return left == right
-        case (.error(let left), .error(let right)):
-            return left == right
-        default: return false
-        }
-    }
-}
-
-extension Optional where Wrapped == EventSyncResult {
-    public static func == (_ lhs: EventSyncResult?, _ rhs: EventSyncResult?) -> Bool {
-        switch (lhs, rhs) {
-        case (.some(let left), .some(let right)):
-            return left == right
-        case (.none, .none):
-            return true
-        default: return false
-        }
-    }
-}
-
+// Performs set-wise equality, without ordering
 extension Array where Element == [String: Any] {
     static func == (_ lhs: [[String: Any]], _ rhs: [[String: Any]]) -> Bool {
-        guard lhs.count == rhs.count
-        else {
-            return false
-        }
-        return lhs.filter { (leftEvent) in
-            !rhs.contains(leftEvent)
-        }.isEmpty
+        // Same length and the left hand side does not contain any elements not in the right hand side
+        return lhs.count == rhs.count && !lhs.contains { !rhs.contains($0) }
     }
 }

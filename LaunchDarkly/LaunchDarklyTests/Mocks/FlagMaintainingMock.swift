@@ -2,7 +2,6 @@
 //  FlagMaintainingMock.swift
 //  LaunchDarklyTests
 //
-//  Created by Mark Pokorny on 11/20/17. +JMJ
 //  Copyright © 2017 Catamorphic Co. All rights reserved.
 //
 
@@ -22,7 +21,7 @@ extension FlagMaintainingMock {
     }
 
     func featureFlag(for flagKey: LDFlagKey) -> FeatureFlag? {
-        return featureFlags[flagKey]
+        featureFlags[flagKey]
     }
 
     func featureFlagAndSource(for flagKey: LDFlagKey) -> (FeatureFlag?, LDFlagValueSource?) {
@@ -31,7 +30,7 @@ extension FlagMaintainingMock {
     }
 
     func variation<T: LDFlagValueConvertible>(forKey key: String, fallback: T) -> T {
-        return featureFlags[key]?.value as? T ?? fallback
+        featureFlags[key]?.value as? T ?? fallback
     }
 
     func variationAndSource<T: LDFlagValueConvertible>(forKey key: String, fallback: T) -> (T, LDFlagValueSource) {

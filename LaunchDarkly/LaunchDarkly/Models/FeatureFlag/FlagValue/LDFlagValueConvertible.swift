@@ -2,7 +2,6 @@
 //  LDFlagValueConvertible.swift
 //  LaunchDarkly
 //
-//  Created by Mark Pokorny on 9/5/17. +JMJ
 //  Copyright © 2017 Catamorphic Co. All rights reserved.
 //
 

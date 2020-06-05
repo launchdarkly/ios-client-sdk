@@ -7,50 +7,28 @@
 //
 
 import Foundation
-import DarklyEventSource
+import LDSwiftEventSource
 
 typealias ServiceResponse = (data: Data?, urlResponse: URLResponse?, error: Error?)
 typealias ServiceCompletionHandler = (ServiceResponse) -> Void
 
+//sourcery: autoMockable
+protocol DarklyStreamingProvider: class {
+    func start()
+    func stop()
+}
+
+extension EventSource: DarklyStreamingProvider {
+    func stop() {} //This was introduced after the 5.0 -> multi-environment merge, FIGURE THIS OUT BEFORE 5.0 RELEASE
+}
+
 protocol DarklyServiceProvider: class {
     func getFeatureFlags(useReport: Bool, completion: ServiceCompletionHandler?)
     func clearFlagResponseCache()
-    func createEventSource(useReport: Bool) -> DarklyStreamingProvider
+    func createEventSource(useReport: Bool, handler: EventHandler, errorHandler: ConnectionErrorHandler?) -> DarklyStreamingProvider
     func publishEventDictionaries(_ eventDictionaries: [[String: Any]], _ payloadId: String, completion: ServiceCompletionHandler?)
     var config: LDConfig { get }
     var user: LDUser { get }
-}
-
-//sourcery: autoMockable
-protocol DarklyStreamingProvider: class {
-    func onMessageEvent(_ handler: LDEventSourceEventHandler?)
-    func onErrorEvent(_ handler: LDEventSourceEventHandler?)
-    func onReadyStateChangedEvent(_ handler: LDEventSourceEventHandler?)
-    func open()
-    func close()
-}
-
-extension LDEventSource: DarklyStreamingProvider {
-    func onMessageEvent(_ handler: LDEventSourceEventHandler?) {
-        print("XANADU MESSAGE HANDLER")
-        if let handler = handler {
-            self.onMessage(handler)
-        }
-    }
-
-    func onErrorEvent(_ handler: LDEventSourceEventHandler?) {
-        print("XANADU ERROR HANDLER")
-        if let handler = handler {
-            self.onError(handler)
-        }
-    }
-    
-    func onReadyStateChangedEvent(_ handler: LDEventSourceEventHandler?) {
-        print("XANADU READY HANDLER")
-        if let handler = handler {
-            self.onReadyStateChanged(handler)
-        }
-    }
 }
 
 final class DarklyService: DarklyServiceProvider {
@@ -183,18 +161,22 @@ final class DarklyService: DarklyServiceProvider {
     
     // MARK: Streaming
     
-    func createEventSource(useReport: Bool) -> DarklyStreamingProvider {
-        print("XANADU CREATEEVENTSOURCE")
+    func createEventSource(useReport: Bool, handler: EventHandler, errorHandler: ConnectionErrorHandler?) -> DarklyStreamingProvider {
         if useReport {
             return serviceFactory.makeStreamingProvider(url: reportStreamRequestUrl,
                                                         httpHeaders: httpHeaders.eventSourceHeaders,
                                                         connectMethod: DarklyService.HTTPRequestMethod.report,
                                                         connectBody: user
                                                             .dictionaryValue(includeFlagConfig: false, includePrivateAttributes: true, config: config)
-                                                            .jsonData)
+                                                            .jsonData,
+                                                        handler: handler,
+                                                        errorHandler: errorHandler)
 
         }
-        return serviceFactory.makeStreamingProvider(url: getStreamRequestUrl, httpHeaders: httpHeaders.eventSourceHeaders)
+        return serviceFactory.makeStreamingProvider(url: getStreamRequestUrl,
+                                                    httpHeaders: httpHeaders.eventSourceHeaders,
+                                                    handler: handler,
+                                                    errorHandler: errorHandler)
     }
 
     private var getStreamRequestUrl: URL {

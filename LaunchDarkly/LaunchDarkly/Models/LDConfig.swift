@@ -68,9 +68,12 @@ public struct LDConfig {
         
         /// The default setting for whether we request evaluation reasons for all flags.
         static let evaluationReasons = false
-        
+
         /// The dafault environment name that must be present in a single or multiple environment configuration
         static let primaryEnvironmentName = "default"
+
+        /// The default setting for the maximum number of locally cached users.
+        static let maxCachedUsers = 5
     }
 
     /// The minimum values allowed to be set into LDConfig.
@@ -181,6 +184,9 @@ public struct LDConfig {
     
     /// Enables requesting evaluation reasons for all flags. (Default: false)
     public var evaluationReasons: Bool = Defaults.evaluationReasons
+    
+    /// An Integer that tells UserEnvironmentFlagCache the maximum number of users to locally cache. Can be set to -1 for unlimited cached users.
+    public var maxCachedUsers: Int = Defaults.maxCachedUsers
 
     /// LaunchDarkly defined minima for selected configurable items
     public let minima: Minima
@@ -280,6 +286,7 @@ extension LDConfig: Equatable {
             && lhs.inlineUserInEvents == rhs.inlineUserInEvents
             && lhs.isDebugMode == rhs.isDebugMode
             && lhs.evaluationReasons == rhs.evaluationReasons
+            && lhs.maxCachedUsers == rhs.maxCachedUsers
     }
 }
 
