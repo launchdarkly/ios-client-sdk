@@ -18,9 +18,7 @@ protocol DarklyStreamingProvider: class {
     func stop()
 }
 
-extension EventSource: DarklyStreamingProvider {
-    func stop() {} //This was introduced after the 5.0 -> multi-environment merge, FIGURE THIS OUT BEFORE 5.0 RELEASE
-}
+extension EventSource: DarklyStreamingProvider {}
 
 protocol DarklyServiceProvider: class {
     func getFeatureFlags(useReport: Bool, completion: ServiceCompletionHandler?)

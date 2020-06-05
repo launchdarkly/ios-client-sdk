@@ -730,7 +730,6 @@ public class LDClient {
                 user.flagStore.deleteFlag(deleteDictionary: flagDictionary) {
                     self.updateCacheAndReportChanges(user: self.user, oldFlags: oldFlags, oldFlagSource: oldFlagSource)
                 }
-            default: break
             }
         case .error(let synchronizingError):
             process(synchronizingError, logPrefix: typeName(and: #function, appending: ": "))
