@@ -59,7 +59,7 @@ final class ClientServiceFactory: ClientServiceCreating {
     }
 
     func makeFlagSynchronizer(streamingMode: LDStreamingMode, pollingInterval: TimeInterval, useReport: Bool, service: DarklyServiceProvider) -> LDFlagSynchronizing {
-        makeFlagSynchronizer(streamingMode: streamingMode, pollingInterval: pollingInterval, useReport: useReport, service: service, onSyncComplete: nil)
+        return makeFlagSynchronizer(streamingMode: streamingMode, pollingInterval: pollingInterval, useReport: useReport, service: service, onSyncComplete: nil)
     }
 
     func makeFlagSynchronizer(streamingMode: LDStreamingMode,
@@ -67,7 +67,7 @@ final class ClientServiceFactory: ClientServiceCreating {
                               useReport: Bool,
                               service: DarklyServiceProvider,
                               onSyncComplete: FlagSyncCompleteClosure?) -> LDFlagSynchronizing {
-        FlagSynchronizer(streamingMode: streamingMode, pollingInterval: pollingInterval, useReport: useReport, service: service, onSyncComplete: onSyncComplete)
+        return FlagSynchronizer(streamingMode: streamingMode, pollingInterval: pollingInterval, useReport: useReport, service: service, onSyncComplete: onSyncComplete)
     }
 
     func makeFlagChangeNotifier() -> FlagChangeNotifying {

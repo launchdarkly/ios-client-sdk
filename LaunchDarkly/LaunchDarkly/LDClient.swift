@@ -64,6 +64,7 @@ public class LDClient {
     */
     public private (set) var isOnline: Bool = false {
         didSet {
+            print("XANADU ISONLINE " + config.mobileKey + " " + String(isOnline))
             flagSynchronizer.isOnline = isOnline
             eventReporter.isOnline = isOnline
             if isOnline != oldValue {
@@ -138,12 +139,12 @@ public class LDClient {
         let owner = "SetOnlineOwner" as AnyObject
         if completion != nil {
             observeAll(owner: owner) { _ in
-                print("XANADU ALL")
+                print("XANADU ALL " + self.config.mobileKey)
                 completion?()
                 self.stopObserving(owner: owner)
             }
             observeFlagsUnchanged(owner: owner) {
-                print("XANADU NONE")
+                print("XANADU NONE " + self.config.mobileKey)
                 completion?()
                 self.stopObserving(owner: owner)
             }
@@ -480,7 +481,6 @@ public class LDClient {
             return (fallback, .fallback)
         }
         let (featureFlag, flagStoreSource) = user.flagStore.featureFlagAndSource(for: flagKey)
-        print("XANADU FF: " + featureFlag.stringValue)
         let (value, source): (T?, LDFlagValueSource) = valueAndSource(from: featureFlag, fallback: fallback, source: flagStoreSource)
         let failedConversionMessage = self.failedConversionMessage(featureFlag: featureFlag, source: source, fallback: fallback)
         Log.debug(typeName(and: #function) + "flagKey: \(flagKey), value: \(value.stringValue), fallback: \(fallback.stringValue), featureFlag: \(featureFlag.stringValue), source: \(source), reason: \(featureFlag?.reason?.description ?? "No evaluation reason")."
@@ -716,17 +716,14 @@ public class LDClient {
             connectionInformation = ConnectionInformation.checkEstablishingStreaming(connectionInformation: connectionInformation)
             switch streamingEvent {
             case nil, .ping?, .put?:
-                print("XANADU UPDATECACHE: " + flagDictionary.description)
                 user.flagStore.replaceStore(newFlags: flagDictionary, source: .server) {
                     self.updateCacheAndReportChanges(user: self.user, oldFlags: oldFlags, oldFlagSource: oldFlagSource)
                 }
             case .patch?:
-                print("XANADU UPDATECACHE: " + flagDictionary.description)
                 user.flagStore.updateStore(updateDictionary: flagDictionary, source: .server) {
                     self.updateCacheAndReportChanges(user: self.user, oldFlags: oldFlags, oldFlagSource: oldFlagSource)
                 }
             case .delete?:
-                print("XANADU UPDATECACHE: " + flagDictionary.description)
                 user.flagStore.deleteFlag(deleteDictionary: flagDictionary) {
                     self.updateCacheAndReportChanges(user: self.user, oldFlags: oldFlags, oldFlagSource: oldFlagSource)
                 }
@@ -834,7 +831,73 @@ public class LDClient {
             runMode = .foreground
         }
     }
-
+    
+    /**
+     Starts the LDClient using the passed in `config` & `user`. Call this before requesting feature flag values. The LDClient will not go online until you call this method.
+     Starting the LDClient means setting the `config` & `user`, setting the client online if `config.startOnline` is true (the default setting), and starting event recording. The client app must start the LDClient before it will report feature flag values. If a client does not call init, the LDClient will only report fallback values, and no events will be recorded.
+     If the init call omits the `user`, the LDClient uses the previously set `user`, or the default `user` if it was never set.
+     If theinit call includes the optional `completion` closure, LDClient calls the `completion` closure when `setOnline(_: completion:)` embedded in the init method completes. This method listens for flag updates so the completion will only return once an update has occurred. The start call is subject to throttling delays, therefore the `completion` closure call may be delayed.
+     Subsequent calls to this method cause the LDClient to throw an error. Normally there should only be one call to init. To change `config` or `user`, set them directly on LDClient.
+     - parameter configuration: The LDConfig that contains the desired configuration. (Required)
+     - parameter startUser: The LDUser set with the desired user. If omitted, LDClient retains the previously set user, or default if one was never set. (Optional)
+     - parameter completion: Closure called when the embedded `setOnline` call completes, subject to throttling delays. (Optional)
+    */
+    public static func start(config: LDConfig, startUser: LDUser?, completion: (() -> Void)? = nil) {
+        Log.debug("LDClient starting")
+        if instances != nil {
+            Log.debug("LDClient.start() was called more than once!")
+            return
+        }
+        
+        let anonymousUser = LDUser(environmentReporter: EnvironmentReporter())
+        let internalUser = startUser ?? anonymousUser
+        
+        LDClient.instances = [:]
+        let cache = UserEnvironmentFlagCache(withKeyedValueCache: ClientServiceFactory().makeKeyedValueCache(), maxCachedUsers: config.maxCachedUsers)
+        var mobileKeys = config.secondaryMobileKeys ?? [:]
+        var internalCount = 0
+        mobileKeys[LDConfig.Defaults.primaryEnvironmentName] = config.mobileKey
+        for (name, mobileKey) in mobileKeys {
+            var internalConfig = config
+            internalConfig.mobileKey = mobileKey
+            let instance = LDClient(configuration: internalConfig, startUser: internalUser, flagCache: cache) {
+                internalCount += 1
+                if internalCount >= mobileKeys.count {
+                    completion?()
+                    print("XANADU COMPLETE")
+                }
+            }
+            LDClient.instances?[name] = instance
+        }
+    }
+    
+    public static func start(config: LDConfig, startUser: LDUser?, startWaitSeconds: TimeInterval, completion: ((_ timedOut: Bool) -> Void)? = nil) {
+        if !config.startOnline {
+            start(config: config, startUser: startUser)
+            completion?(timeOutCheck)
+        } else {
+            let startTime = Date().timeIntervalSince1970
+            start(config: config, startUser: startUser) {
+                if startTime + startWaitSeconds > Date().timeIntervalSince1970 {
+                    self.internalTimeOutCheckQueue.sync {
+                        self.timeOutCheck = false
+                        completion?(self.timeOutCheck)
+                    }
+                }
+            }
+            DispatchQueue.global().asyncAfter(deadline: .now() + startWaitSeconds) {
+                self.internalTimeOutCheckQueue.sync {
+                    if self.timeOutCheck {
+                        completion?(self.timeOutCheck)
+                    }
+                }
+            }
+        }
+    }
+    
+    private static var timeOutCheck = true
+    private static let internalTimeOutCheckQueue: DispatchQueue = DispatchQueue(label: "TimeOutQueue")
+    
     // MARK: - Private
     private(set) var serviceFactory: ClientServiceCreating = ClientServiceFactory()
 
@@ -856,6 +919,7 @@ public class LDClient {
             //The only time the flag synchronizer configuration WILL match is if the client sets flag polling with the polling interval set to the background polling interval.
             //if it does match, keeping the synchronizer precludes an extra flag request
             if !flagSynchronizerConfigMatchesConfigAndRunMode {
+                print("XANADU SET FLAG SYNCH")
                 flagSynchronizer.isOnline = false
                 let streamingModeVar = ConnectionInformation.effectiveStreamingMode(config: config, ldClient: self)
                 connectionInformation = ConnectionInformation.backgroundBehavior(connectionInformation: connectionInformation, streamingMode: streamingModeVar, goOnline: willSetSynchronizerOnline)
@@ -894,46 +958,6 @@ public class LDClient {
         cacheConverter.convertCacheData(for: user, and: config)
     }
     
-    /**
-     Starts the LDClient using the passed in `config` & `user`. Call this before requesting feature flag values. The LDClient will not go online until you call this method.
-     Starting the LDClient means setting the `config` & `user`, setting the client online if `config.startOnline` is true (the default setting), and starting event recording. The client app must start the LDClient before it will report feature flag values. If a client does not call init, the LDClient will only report fallback values, and no events will be recorded.
-     If the init call omits the `user`, the LDClient uses the previously set `user`, or the default `user` if it was never set.
-     If theinit call includes the optional `completion` closure, LDClient calls the `completion` closure when `setOnline(_: completion:)` embedded in the init method completes. This method listens for flag updates so the completion will only return once an update has occurred. The start call is subject to throttling delays, therefore the `completion` closure call may be delayed.
-     Subsequent calls to this method cause the LDClient to throw an error. Normally there should only be one call to init. To change `config` or `user`, set them directly on LDClient.
-     - parameter configuration: The LDConfig that contains the desired configuration. (Required)
-     - parameter startUser: The LDUser set with the desired user. If omitted, LDClient retains the previously set user, or default if one was never set. (Optional)
-     - parameter completion: Closure called when the embedded `setOnline` call completes, subject to throttling delays. (Optional)
-    */
-    public static func start(config: LDConfig, startUser: LDUser?, completion: (() -> Void)? = nil) {
-        Log.debug("LDClient starting")
-        if instances != nil {
-            Log.debug("LDClient.start() was called more than once!")
-            return
-        }
-        
-        let anonymousUser = LDUser(environmentReporter: EnvironmentReporter())
-        let internalUser = startUser ?? anonymousUser
-        
-        LDClient.instances = [:]
-        let cache = UserEnvironmentFlagCache(withKeyedValueCache: ClientServiceFactory().makeKeyedValueCache(), maxCachedUsers: config.maxCachedUsers)
-        var mobileKeys = config.secondaryMobileKeys ?? [:]
-        var internalCount = 0
-        mobileKeys[LDConfig.Defaults.primaryEnvironmentName] = config.mobileKey
-        for (name, mobileKey) in mobileKeys {
-            print("XANADU MOBILE KEYS")
-            var internalConfig = config
-            internalConfig.mobileKey = mobileKey
-            let instance = LDClient(configuration: internalConfig, startUser: internalUser, flagCache: cache) {
-                internalCount += 1
-                if internalCount >= mobileKeys.count {
-                    completion?()
-                    print("XANADU COMPLETE")
-                }
-            }
-            LDClient.instances?[name] = instance
-        }
-    }
-    
     private init(configuration: LDConfig, startUser: LDUser?, flagCache: UserEnvironmentFlagCache, completion: (() -> Void)? = nil) {
         let wasStarted = hasStarted
         let wasOnline = isOnline
@@ -955,7 +979,7 @@ public class LDClient {
         eventReporter = EventReporter(config: config, service: service, onSyncComplete: nil)
         errorNotifier = ErrorNotifier()
         connectionInformation = ConnectionInformation(currentConnectionMode: .offline, lastConnectionFailureReason: .none)
-        flagSynchronizer = FlagSynchronizer(streamingMode: .polling,
+        flagSynchronizer = FlagSynchronizer(streamingMode: config.streamingMode,
                                             pollingInterval: config.flagPollingInterval,
                                             useReport: config.useReport,
                                             service: service,
@@ -981,10 +1005,6 @@ public class LDClient {
         internalSetOnline((wasStarted && wasOnline) || (!wasStarted && self.config.startOnline)) {
             Log.debug("LDClient started")
             self.isStarting = false
-            print("XANADU ALL: " + (self.allFlags?.description ?? "nil all"))
-            print("XANADU PRIMARY ALL: " + (LDClient.get()?.allFlags?.description ?? "nil all"))
-            print("XANADU TEST ALL: " + (LDClient.getForMobileKey(keyName: "test")?.allFlags?.description ?? "nil all"))
-            print("XANADU CONFIG: " + self.config.mobileKey + " " + (self.config.secondaryMobileKeys?.description ?? "nil secondary"))
             completion?()
         }
     }
