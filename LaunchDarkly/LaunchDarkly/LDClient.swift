@@ -64,7 +64,6 @@ public class LDClient {
     */
     public private (set) var isOnline: Bool = false {
         didSet {
-            print("XANADU ISONLINE " + config.mobileKey + " " + String(isOnline))
             flagSynchronizer.isOnline = isOnline
             eventReporter.isOnline = isOnline
             if isOnline != oldValue {
@@ -139,12 +138,10 @@ public class LDClient {
         let owner = "SetOnlineOwner" as AnyObject
         if completion != nil {
             observeAll(owner: owner) { _ in
-                print("XANADU ALL " + self.config.mobileKey)
                 completion?()
                 self.stopObserving(owner: owner)
             }
             observeFlagsUnchanged(owner: owner) {
-                print("XANADU NONE " + self.config.mobileKey)
                 completion?()
                 self.stopObserving(owner: owner)
             }
@@ -239,29 +236,33 @@ public class LDClient {
     }
     
     private func internalIdentify(newUser: LDUser, completion: (() -> Void)? = nil) {
-        var internalUser = newUser
-        internalUser.flagStore = FlagStore(featureFlagDictionary: newUser.flagStore.featureFlags, flagValueSource: newUser.flagStore.flagValueSource)
-        user = internalUser
-        Log.debug(typeName(and: #function) + "new user set with key: " + user.key )
-        let wasOnline = isOnline
-        setOnline(false)
-        
-        if hasStarted {
-            eventReporter.recordSummaryEvent()
+        LDClient.identifyQueue.async {
+            var internalUser = newUser
+            internalUser.flagStore = FlagStore(featureFlagDictionary: newUser.flagStore.featureFlags, flagValueSource: newUser.flagStore.flagValueSource)
+            self.user = internalUser
+            Log.debug(self.typeName(and: #function) + "new user set with key: " + self.user.key )
+            let wasOnline = self.isOnline
+            self.setOnline(false)
+            
+            if self.hasStarted {
+                self.eventReporter.recordSummaryEvent()
+            }
+            self.convertCachedData(skipDuringStart: self.isStarting)
+            if let cachedFlags = self.flagCache.retrieveFeatureFlags(forUserWithKey: self.user.key, andMobileKey: self.config.mobileKey), !cachedFlags.isEmpty {
+                self.user.flagStore.replaceStore(newFlags: cachedFlags, source: .cache, completion: nil)
+            }
+            self.service = self.serviceFactory.makeDarklyServiceProvider(config: self.config, user: self.user)
+            self.service.clearFlagResponseCache()
+            
+            if self.hasStarted {
+                self.eventReporter.record(Event.identifyEvent(user: self.user))
+            }
+            
+            self.setOnline(wasOnline, completion: completion)
         }
-        convertCachedData(skipDuringStart: isStarting)
-        if let cachedFlags = flagCache.retrieveFeatureFlags(forUserWithKey: user.key, andMobileKey: config.mobileKey), !cachedFlags.isEmpty {
-            user.flagStore.replaceStore(newFlags: cachedFlags, source: .cache, completion: nil)
-        }
-        service = serviceFactory.makeDarklyServiceProvider(config: config, user: user)
-        service.clearFlagResponseCache()
-        
-        if hasStarted {
-            eventReporter.record(Event.identifyEvent(user: user))
-        }
-        
-        setOnline(wasOnline, completion: completion)
     }
+    
+    private static let identifyQueue: DispatchQueue = DispatchQueue(label: "IdentifyQueue")
 
     private(set) var service: DarklyServiceProvider {
         didSet {
@@ -863,8 +864,8 @@ public class LDClient {
             let instance = LDClient(configuration: internalConfig, startUser: internalUser, flagCache: cache) {
                 internalCount += 1
                 if internalCount >= mobileKeys.count {
+                    Log.debug("All LDClients finished starting")
                     completion?()
-                    print("XANADU COMPLETE")
                 }
             }
             LDClient.instances?[name] = instance
@@ -919,7 +920,6 @@ public class LDClient {
             //The only time the flag synchronizer configuration WILL match is if the client sets flag polling with the polling interval set to the background polling interval.
             //if it does match, keeping the synchronizer precludes an extra flag request
             if !flagSynchronizerConfigMatchesConfigAndRunMode {
-                print("XANADU SET FLAG SYNCH")
                 flagSynchronizer.isOnline = false
                 let streamingModeVar = ConnectionInformation.effectiveStreamingMode(config: config, ldClient: self)
                 connectionInformation = ConnectionInformation.backgroundBehavior(connectionInformation: connectionInformation, streamingMode: streamingModeVar, goOnline: willSetSynchronizerOnline)

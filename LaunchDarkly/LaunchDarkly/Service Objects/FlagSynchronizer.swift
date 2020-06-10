@@ -96,7 +96,6 @@ class FlagSynchronizer: LDFlagSynchronizing, EventHandler {
 
     private func configureCommunications() {
         if isOnline {
-            print(queueName.suffix(5) + " XANADU FLAG SYNCH ONLINE")
             switch streamingMode {
             case .streaming:
                 stopPolling()
@@ -106,7 +105,6 @@ class FlagSynchronizer: LDFlagSynchronizing, EventHandler {
                 startPolling()
             }
         } else {
-            print(queueName.suffix(5) + " XANADU FLAG SYNCH OFFLINE")
             stopEventSource()
             stopPolling()
         }
@@ -129,7 +127,6 @@ class FlagSynchronizer: LDFlagSynchronizing, EventHandler {
             if reason.isEmpty && streamingActive {
                 reason  = "Clientstream already connected."
             }
-            print("XANADU " + reason)
             Log.debug(typeName(and: #function) + "aborted. " + reason)
             return
         }
@@ -143,9 +140,7 @@ class FlagSynchronizer: LDFlagSynchronizing, EventHandler {
     }
 
     private func stopEventSource() {
-        print(queueName.suffix(5) + " XANADU STOP")
         guard streamingActive else {
-            print(queueName.suffix(5) + " XANADU STOP NOT ACTIVE")
             Log.debug(typeName(and: #function) + "aborted. Clientstream is not connected.")
             return
         }
@@ -273,7 +268,6 @@ class FlagSynchronizer: LDFlagSynchronizing, EventHandler {
     func eventSourceErrorHandler(error: Error) -> ConnectionErrorAction {
         guard let unsuccessfulResponseError = error as? UnsuccessfulResponseError
         else {
-            print("XANADU PROCEED")
             return .proceed }
         // Now we know that we received an error HTTP response code
         let responseCode: Int = unsuccessfulResponseError.responseCode
@@ -281,30 +275,25 @@ class FlagSynchronizer: LDFlagSynchronizing, EventHandler {
             // Not a invalid request, timeout, or too many requests error
             // We will not retry in this case
             reportSyncComplete(.error(.streamError(error)))
-            print("XANADU BAD")
             return .shutdown
         }
         // Otherwise we will retry
-        print("XANADU PROCEED")
         return .proceed
     }
 
     func shouldAbortStreamUpdate() -> Bool {
         //Because this method is called asynchronously by the LDEventSource, need to check these conditions prior to processing the event.
         if !isOnline {
-            print("XANADU BAD OFFLINE")
             Log.debug(typeName(and: #function) + "aborted. " + "Flag Synchronizer is offline.")
             reportSyncComplete(.error(.isOffline))
             return true
         }
         if streamingMode == .polling {
-            print("XANADU BAD POLLING")
             Log.debug(typeName(and: #function) + "aborted. " + "Flag Synchronizer is in polling mode.")
             reportSyncComplete(.error(.streamEventWhilePolling))
             return true
         }
         if !streamingActive {
-            print("XANADU BAD NO STREAM")
             //Since eventSource.close() is async, this prevents responding to events after .close() is called, but before it's actually closed
             Log.debug(typeName(and: #function) + "aborted. " + "Clientstream is not active.")
             reportSyncComplete(.error(.isOffline))
@@ -350,7 +339,6 @@ class FlagSynchronizer: LDFlagSynchronizing, EventHandler {
     }
 
     public func onError(error: Error) {
-        print("XANADU BAD ERROR")
         guard !shouldAbortStreamUpdate()
         else { return }
 
