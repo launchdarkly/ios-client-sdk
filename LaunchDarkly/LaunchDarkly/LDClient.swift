@@ -843,7 +843,7 @@ public class LDClient {
      - parameter startUser: The LDUser set with the desired user. If omitted, LDClient retains the previously set user, or default if one was never set. (Optional)
      - parameter completion: Closure called when the embedded `setOnline` call completes, subject to throttling delays. (Optional)
     */
-    public static func start(config: LDConfig, startUser: LDUser?, completion: (() -> Void)? = nil) {
+    public static func start(config: LDConfig, startUser: LDUser? = nil, completion: (() -> Void)? = nil) {
         Log.debug("LDClient starting")
         if instances != nil {
             Log.debug("LDClient.start() was called more than once!")
@@ -872,7 +872,7 @@ public class LDClient {
         }
     }
     
-    public static func start(config: LDConfig, startUser: LDUser?, startWaitSeconds: TimeInterval, completion: ((_ timedOut: Bool) -> Void)? = nil) {
+    public static func start(config: LDConfig, startUser: LDUser? = nil, startWaitSeconds: TimeInterval, completion: ((_ timedOut: Bool) -> Void)? = nil) {
         if !config.startOnline {
             start(config: config, startUser: startUser)
             completion?(timeOutCheck)
