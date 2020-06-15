@@ -224,10 +224,10 @@ final class EventReportingMock: EventReporting {
     // MARK: record
     var recordCallCount = 0
     var recordCallback: (() -> Void)?
-    var recordReceivedArguments: (event: Event, completion: CompletionClosure?)?
-    func record(_ event: Event, completion: CompletionClosure?) {
+    var recordReceivedEvent: Event?
+    func record(_ event: Event) {
         recordCallCount += 1
-        recordReceivedArguments = (event: event, completion: completion)
+        recordReceivedEvent = event
         recordCallback?()
     }
 
@@ -242,28 +242,14 @@ final class EventReportingMock: EventReporting {
         recordFlagEvaluationEventsCallback?()
     }
 
-    // MARK: recordSummaryEvent
-    var recordSummaryEventCallCount = 0
-    var recordSummaryEventCallback: (() -> Void)?
-    func recordSummaryEvent() {
-        recordSummaryEventCallCount += 1
-        recordSummaryEventCallback?()
-    }
-
-    // MARK: resetFlagRequestTracker
-    var resetFlagRequestTrackerCallCount = 0
-    var resetFlagRequestTrackerCallback: (() -> Void)?
-    func resetFlagRequestTracker() {
-        resetFlagRequestTrackerCallCount += 1
-        resetFlagRequestTrackerCallback?()
-    }
-
-    // MARK: reportEvents
-    var reportEventsCallCount = 0
-    var reportEventsCallback: (() -> Void)?
-    func reportEvents() {
-        reportEventsCallCount += 1
-        reportEventsCallback?()
+    // MARK: flush
+    var flushCallCount = 0
+    var flushCallback: (() -> Void)?
+    var flushReceivedCompletion: CompletionClosure?
+    func flush(completion: CompletionClosure?) {
+        flushCallCount += 1
+        flushReceivedCompletion = completion
+        flushCallback?()
     }
 }
 

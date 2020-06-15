@@ -129,7 +129,7 @@ final class LDClientSpec: QuickSpec {
             return flagStoreMock.deleteFlagReceivedArguments?.completion
         }
         var recordedEvent: LaunchDarkly.Event? {
-            return eventReporterMock.recordReceivedArguments?.event
+            eventReporterMock.recordReceivedEvent
         }
         // user flags
         var oldFlags: [LDFlagKey: FeatureFlag]!
@@ -1831,7 +1831,6 @@ final class LDClientSpec: QuickSpec {
                 beforeEach {
                     testContext.config.startOnline = true
                     testContext.subject.start(config: testContext.config, user: testContext.user)
-                    testContext.eventReporterMock.recordSummaryEventCallCount = 0   //calling start sets the user, which calls eventReporter.recordSummaryEvent()
                     testContext.featureFlagCachingMock.reset()
                     testContext.cacheConvertingMock.reset()
 
@@ -1856,8 +1855,7 @@ final class LDClientSpec: QuickSpec {
                     expect(testContext.featureFlagCachingMock.retrieveFeatureFlagsReceivedArguments?.mobileKey) == testContext.config.mobileKey
                 }
                 it("records identify and summary events") {
-                    expect(testContext.eventReporterMock.recordSummaryEventCallCount) == 1
-                    expect(testContext.eventReporterMock.recordReceivedArguments?.event.kind == .identify).to(beTrue())
+                    expect(testContext.eventReporterMock.recordReceivedEvent?.kind == .identify).to(beTrue())
                 }
                 it("converts cached data") {
                     expect(testContext.cacheConvertingMock.convertCacheDataCallCount) == 1
@@ -1869,7 +1867,6 @@ final class LDClientSpec: QuickSpec {
                 beforeEach {
                     testContext.config.startOnline = false
                     testContext.subject.start(config: testContext.config, user: testContext.user)
-                    testContext.eventReporterMock.recordSummaryEventCallCount = 0   //calling start sets the user, which calls eventReporter.recordSummaryEvent()
                     testContext.featureFlagCachingMock.reset()
                     testContext.cacheConvertingMock.reset()
 
@@ -1894,8 +1891,7 @@ final class LDClientSpec: QuickSpec {
                     expect(testContext.featureFlagCachingMock.retrieveFeatureFlagsReceivedArguments?.mobileKey) == testContext.config.mobileKey
                 }
                 it("records identify and summary events") {
-                    expect(testContext.eventReporterMock.recordSummaryEventCallCount) == 1
-                    expect(testContext.eventReporterMock.recordReceivedArguments?.event.kind == .identify).to(beTrue())
+                    expect(testContext.eventReporterMock.recordReceivedEvent?.kind == .identify).to(beTrue())
                 }
                 it("converts cached data") {
                     expect(testContext.cacheConvertingMock.convertCacheDataCallCount) == 1
@@ -1926,7 +1922,6 @@ final class LDClientSpec: QuickSpec {
                     expect(testContext.featureFlagCachingMock.retrieveFeatureFlagsReceivedArguments?.mobileKey) == testContext.config.mobileKey
                 }
                 it("does not record any event") {
-                    expect(testContext.eventReporterMock.recordSummaryEventCallCount) == 0
                     expect(testContext.eventReporterMock.recordCallCount) == 0
                 }
                 it("converts cached data") {
@@ -1939,7 +1934,6 @@ final class LDClientSpec: QuickSpec {
                 beforeEach {
                     testContext.config.startOnline = false  //offline makes no request to update flags...
                     testContext.subject.start(config: testContext.config, user: testContext.user)
-                    testContext.eventReporterMock.recordSummaryEventCallCount = 0   //calling start sets the user, which calls eventReporter.recordSummaryEvent()
                     testContext.featureFlagCachingMock.reset()
                     newUser = LDUser.stub()
                     testContext.featureFlagCachingMock.retrieveFeatureFlagsReturnValue = newUser.featureFlags
@@ -1984,7 +1978,6 @@ final class LDClientSpec: QuickSpec {
                     expect(testContext.subject.flagSynchronizer.isOnline) == false
                 }
                 it("does not record any event") {
-                    expect(testContext.eventReporterMock.recordSummaryEventCallCount) == 0
                     expect(testContext.eventReporterMock.recordCallCount) == 0
                 }
                 it("does not convert cached data") {
@@ -2002,7 +1995,6 @@ final class LDClientSpec: QuickSpec {
                 beforeEach {
                     testContext.config.startOnline = true
                     testContext.subject.start(config: testContext.config, user: testContext.user)
-                    testContext.eventReporterMock.recordSummaryEventCallCount = 0   //calling start sets the user, which calls eventReporter.recordSummaryEvent()
                     testContext.featureFlagCachingMock.reset()
                     testContext.cacheConvertingMock.reset()
                     
@@ -2027,8 +2019,7 @@ final class LDClientSpec: QuickSpec {
                     expect(testContext.featureFlagCachingMock.retrieveFeatureFlagsReceivedArguments?.mobileKey) == testContext.config.mobileKey
                 }
                 it("records identify and summary events") {
-                    expect(testContext.eventReporterMock.recordSummaryEventCallCount) == 1
-                    expect(testContext.eventReporterMock.recordReceivedArguments?.event.kind == .identify).to(beTrue())
+                    expect(testContext.eventReporterMock.recordReceivedEvent?.kind == .identify).to(beTrue())
                 }
                 it("converts cached data") {
                     expect(testContext.cacheConvertingMock.convertCacheDataCallCount) == 1
@@ -2040,7 +2031,6 @@ final class LDClientSpec: QuickSpec {
                 beforeEach {
                     testContext.config.startOnline = false
                     testContext.subject.start(config: testContext.config, user: testContext.user)
-                    testContext.eventReporterMock.recordSummaryEventCallCount = 0   //calling start sets the user, which calls eventReporter.recordSummaryEvent()
                     testContext.featureFlagCachingMock.reset()
                     testContext.cacheConvertingMock.reset()
                     
@@ -2065,8 +2055,7 @@ final class LDClientSpec: QuickSpec {
                     expect(testContext.featureFlagCachingMock.retrieveFeatureFlagsReceivedArguments?.mobileKey) == testContext.config.mobileKey
                 }
                 it("records identify and summary events") {
-                    expect(testContext.eventReporterMock.recordSummaryEventCallCount) == 1
-                    expect(testContext.eventReporterMock.recordReceivedArguments?.event.kind == .identify).to(beTrue())
+                    expect(testContext.eventReporterMock.recordReceivedEvent?.kind == .identify).to(beTrue())
                 }
                 it("converts cached data") {
                     expect(testContext.cacheConvertingMock.convertCacheDataCallCount) == 1
@@ -2097,7 +2086,6 @@ final class LDClientSpec: QuickSpec {
                     expect(testContext.featureFlagCachingMock.retrieveFeatureFlagsReceivedArguments?.mobileKey) == testContext.config.mobileKey
                 }
                 it("does not record any event") {
-                    expect(testContext.eventReporterMock.recordSummaryEventCallCount) == 0
                     expect(testContext.eventReporterMock.recordCallCount) == 0
                 }
                 it("converts cached data") {
@@ -2110,7 +2098,6 @@ final class LDClientSpec: QuickSpec {
                 beforeEach {
                     testContext.config.startOnline = false  //offline makes no request to update flags...
                     testContext.subject.start(config: testContext.config, user: testContext.user)
-                    testContext.eventReporterMock.recordSummaryEventCallCount = 0   //calling start sets the user, which calls eventReporter.recordSummaryEvent()
                     testContext.featureFlagCachingMock.reset()
                     newUser = LDUser.stub()
                     testContext.featureFlagCachingMock.retrieveFeatureFlagsReturnValue = newUser.featureFlags
@@ -2153,7 +2140,6 @@ final class LDClientSpec: QuickSpec {
                     expect(testContext.subject.flagSynchronizer.isOnline) == false
                 }
                 it("does not record any event") {
-                    expect(testContext.eventReporterMock.recordSummaryEventCallCount) == 0
                     expect(testContext.eventReporterMock.recordCallCount) == 0
                 }
                 it("does not convert cached data") {
@@ -2382,10 +2368,10 @@ final class LDClientSpec: QuickSpec {
                     try! testContext.subject.trackEvent(key: event.key!, data: event.data)
                 }
                 it("records a custom event") {
-                    expect(testContext.eventReporterMock.recordReceivedArguments?.event.key) == event.key
-                    expect(testContext.eventReporterMock.recordReceivedArguments?.event.user) == event.user
-                    expect(testContext.eventReporterMock.recordReceivedArguments?.event.data).toNot(beNil())
-                    expect(AnyComparer.isEqual(testContext.eventReporterMock.recordReceivedArguments?.event.data, to: event.data)).to(beTrue())
+                    expect(testContext.eventReporterMock.recordReceivedEvent?.key) == event.key
+                    expect(testContext.eventReporterMock.recordReceivedEvent?.user) == event.user
+                    expect(testContext.eventReporterMock.recordReceivedEvent?.data).toNot(beNil())
+                    expect(AnyComparer.isEqual(testContext.eventReporterMock.recordReceivedEvent?.data, to: event.data)).to(beTrue())
                 }
             }
             context("when client was not started") {
@@ -3530,11 +3516,10 @@ final class LDClientSpec: QuickSpec {
 
                                     NotificationCenter.default.post(name: testContext.environmentReporterMock.backgroundNotification!, object: self)
                                 }
-                                it("takes the sdk offline and reports events") {
+                                it("takes the sdk offline") {
                                     expect(testContext.subject.isOnline) == true
                                     expect(testContext.subject.runMode) == LDClientRunMode.background
-                                    expect(testContext.eventReporterMock.reportEventsCallCount) == 1
-                                    expect(testContext.eventReporterMock.isOnline) == false
+                                    expect(testContext.eventReporterMock.isOnline) == true
                                     expect(testContext.flagSynchronizerMock.isOnline) == false
                                 }
                             }
@@ -3544,11 +3529,10 @@ final class LDClientSpec: QuickSpec {
 
                                     NotificationCenter.default.post(name: testContext.environmentReporterMock.backgroundNotification!, object: self)
                                 }
-                                it("leaves the sdk online and reports events") {
+                                it("leaves the sdk online") {
                                     expect(testContext.subject.isOnline) == true
                                     expect(testContext.subject.runMode) == LDClientRunMode.background
-                                    expect(testContext.eventReporterMock.reportEventsCallCount) == 1
-                                    expect(testContext.eventReporterMock.isOnline) == false
+                                    expect(testContext.eventReporterMock.isOnline) == true
                                     expect(testContext.flagSynchronizerMock.isOnline) == os.isBackgroundEnabled
                                     expect(testContext.flagSynchronizerMock.streamingMode) == os.backgroundStreamingMode
                                 }
@@ -3562,10 +3546,9 @@ final class LDClientSpec: QuickSpec {
 
                         NotificationCenter.default.post(name: testContext.environmentReporterMock.backgroundNotification!, object: self)
                     }
-                    it("leaves the sdk offline and reports events") {
+                    it("leaves the sdk offline") {
                         expect(testContext.subject.isOnline) == false
                         expect(testContext.subject.runMode) == LDClientRunMode.background
-                        expect(testContext.eventReporterMock.reportEventsCallCount) == 1    //LDClient expects the EventReporter to ignore the report() request when offline
                         expect(testContext.eventReporterMock.isOnline) == false
                         expect(testContext.flagSynchronizerMock.isOnline) == false
                     }
@@ -3577,10 +3560,9 @@ final class LDClientSpec: QuickSpec {
 
                     NotificationCenter.default.post(name: testContext.environmentReporterMock.backgroundNotification!, object: self)
                 }
-                it("leaves the sdk offline and reports events") {
+                it("leaves the sdk offline") {
                     expect(testContext.subject.isOnline) == false
                     expect(testContext.subject.runMode) == LDClientRunMode.background
-                    expect(testContext.eventReporterMock.reportEventsCallCount) == 1    //LDClient expects the EventReporter to ignore the report() request when offline
                     expect(testContext.eventReporterMock.isOnline) == false
                     expect(testContext.flagSynchronizerMock.isOnline) == false
                 }
@@ -3648,8 +3630,8 @@ final class LDClientSpec: QuickSpec {
 
                                     testContext.subject.setRunMode(.background)
                                 }
-                                it("takes the event reporter offline") {
-                                    expect(testContext.eventReporterMock.isOnline) == false
+                                it("leaves the event reporter online") {
+                                    expect(testContext.eventReporterMock.isOnline) == true
                                 }
                                 it("sets the flag synchronizer for background streaming online") {
                                     expect(testContext.flagSynchronizerMock.isOnline) == true
@@ -3663,8 +3645,8 @@ final class LDClientSpec: QuickSpec {
 
                                     testContext.subject.setRunMode(.background)
                                 }
-                                it("takes the event reporter offline") {
-                                    expect(testContext.eventReporterMock.isOnline) == false
+                                it("leaves the event reporter online") {
+                                    expect(testContext.eventReporterMock.isOnline) == true
                                 }
                                 it("sets the flag synchronizer for background polling online") {
                                     expect(testContext.flagSynchronizerMock.isOnline) == true
@@ -3680,8 +3662,8 @@ final class LDClientSpec: QuickSpec {
 
                                 testContext.subject.setRunMode(.background)
                             }
-                            it("takes the event reporter offline") {
-                                expect(testContext.eventReporterMock.isOnline) == false
+                            it("leaves the event reporter online") {
+                                expect(testContext.eventReporterMock.isOnline) == true
                             }
                             it("sets the flag synchronizer for background polling offline") {
                                 expect(testContext.flagSynchronizerMock.isOnline) == false
@@ -3914,7 +3896,7 @@ final class LDClientSpec: QuickSpec {
                 testContext.subject.reportEvents()
             }
             it("tells the event reporter to report events") {
-                expect(testContext.eventReporterMock.reportEventsCallCount) == 1
+                expect(testContext.eventReporterMock.flushCallCount) == 1
             }
         }
     }

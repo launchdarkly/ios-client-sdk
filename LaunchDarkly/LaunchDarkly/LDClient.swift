@@ -255,10 +255,7 @@ public class LDClient {
         Log.debug(typeName(and: #function) + "new user set with key: " + _user.key )
         let wasOnline = isOnline
         setOnline(false)
-        
-        if hasStarted {
-            eventReporter.recordSummaryEvent()
-        }
+
         convertCachedData(skipDuringStart: isStarting)
         if let cachedFlags = flagCache.retrieveFeatureFlags(forUserWithKey: _user.key, andMobileKey: config.mobileKey), !cachedFlags.isEmpty {
             _user.flagStore.replaceStore(newFlags: cachedFlags, source: .cache, completion: nil)
@@ -969,7 +966,7 @@ public class LDClient {
     Report events to LaunchDarkly servers. While online, the LDClient automatically reports events on the `LDConfig.eventFlushInterval`, and whenever the client app moves to the background. There should normally not be a need to call reportEvents.
     */
     public func reportEvents() {
-        eventReporter.reportEvents()
+        eventReporter.flush(completion: nil)
     }
 
     private func onEventSyncComplete(result: EventSyncResult) {
@@ -1014,11 +1011,6 @@ public class LDClient {
                 return
             }
             Log.debug(typeName(and: #function, appending: ": ") + "\(runMode)")
-            if runMode == .background {
-                eventReporter.reportEvents()
-            }
-            
-            eventReporter.isOnline = isOnline && runMode == .foreground
 
             let willSetSynchronizerOnline = isOnline && isInSupportedRunMode
             //The only time the flag synchronizer configuration WILL match is if the client sets flag polling with the polling interval set to the background polling interval.

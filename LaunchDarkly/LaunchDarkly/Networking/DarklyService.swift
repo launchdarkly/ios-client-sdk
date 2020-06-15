@@ -2,7 +2,6 @@
 //  DarklyService.swift
 //  LaunchDarkly
 //
-//  Created by Mark Pokorny on 9/19/17. +JMJ
 //  Copyright © 2017 Catamorphic Co. All rights reserved.
 //
 

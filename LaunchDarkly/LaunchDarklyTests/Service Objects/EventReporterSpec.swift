@@ -85,23 +85,12 @@ final class EventReporterSpec: QuickSpec {
         }
 
         mutating func recordEvents(_ eventCount: Int, completion: CompletionClosure? = nil) {
-            guard eventCount > 0
-            else {
-                completion?()
-                return
-            }
-            let eventRecordingGroup = DispatchGroup()
             for _ in 0..<eventCount {
                 let event = Event.stub(Event.eventKind(for: events.count), with: user)
                 events.append(event)
-                eventRecordingGroup.enter()
-                eventReporter.record(event) {
-                    eventRecordingGroup.leave()
-                }
+                eventReporter.record(event)
             }
-            eventRecordingGroup.notify(queue: DispatchQueue.main) {
-                completion?()
-            }
+            completion?()
         }
 
         mutating func addEvents(_ eventCount: Int) {
@@ -124,8 +113,6 @@ final class EventReporterSpec: QuickSpec {
         changeConfigSpec()
         recordEventSpec()
         recordFlagEvaluationEventsSpec()
-        recordSummaryEventSpec()
-        resetFlagRequestTrackerSpec()
         reportEventsSpec()
         reportTimerSpec()
         eventKeysSpec()
@@ -323,8 +310,7 @@ final class EventReporterSpec: QuickSpec {
                                 testContext.addEvents(Event.Kind.nonSummaryKinds.count)
                                 testContext.flagRequestTracker = FlagRequestTracker.stub()
                                 testContext.eventReporter.setFlagRequestTracker(testContext.flagRequestTracker!)
-
-                                testContext.eventReporter.reportEvents()
+                                testContext.eventReporter.flush(completion: nil)
                             }
                         }
                         it("reports events and a summary event") {
@@ -356,8 +342,7 @@ final class EventReporterSpec: QuickSpec {
                                 })
                                 testContext.eventReporter.isOnline = true
                                 testContext.addEvents(Event.Kind.nonSummaryKinds.count)
-
-                                testContext.eventReporter.reportEvents()
+                                testContext.eventReporter.flush(completion: nil)
                             }
                         }
                         it("reports events without a summary event") {
@@ -389,8 +374,7 @@ final class EventReporterSpec: QuickSpec {
                                 testContext.eventReporter.isOnline = true
                                 testContext.flagRequestTracker = FlagRequestTracker.stub()
                                 testContext.eventReporter.setFlagRequestTracker(testContext.flagRequestTracker!)
-
-                                testContext.eventReporter.reportEvents()
+                                testContext.eventReporter.flush(completion: nil)
                             }
                         }
                         it("reports only a summary event") {
@@ -418,8 +402,7 @@ final class EventReporterSpec: QuickSpec {
                                     syncComplete()
                                 })
                                 testContext.eventReporter.isOnline = true
-
-                                testContext.eventReporter.reportEvents()
+                                testContext.eventReporter.flush(completion: nil)
                             }
                         }
                         it("does not report events") {
@@ -450,16 +433,15 @@ final class EventReporterSpec: QuickSpec {
                                 testContext.addEvents(Event.Kind.nonSummaryKinds.count)
                                 testContext.flagRequestTracker = FlagRequestTracker.stub()
                                 testContext.eventReporter.setFlagRequestTracker(testContext.flagRequestTracker!)
-
-                                testContext.eventReporter.reportEvents()
+                                testContext.eventReporter.flush(completion: nil)
                             }
                         }
-                        it("retains reported events after the failure") {
+                        it("drops events after the failure") {
                             expect(testContext.eventReporter.isOnline) == true
                             expect(testContext.eventReporter.isReportingActive) == true
                             expect(testContext.serviceMock.publishEventDictionariesCallCount) == 2 //1 retry attempt
-                            expect(testContext.eventReporter.eventStoreKeys) == testContext.eventKeys
-                            expect(testContext.eventReporter.eventStoreKinds.contains(.summary)) == true
+                            expect(testContext.eventReporter.eventStoreKeys) == []
+                            expect(testContext.eventReporter.eventStoreKinds.contains(.summary)) == false
                             expect(testContext.serviceMock.publishedEventDictionaryKeys) == testContext.eventKeys
                             expect(testContext.serviceMock.publishedEventDictionaryKinds?.contains(.summary)) == true
                             expect(testContext.eventReporter.lastEventResponseDate).to(beNil())
@@ -474,7 +456,7 @@ final class EventReporterSpec: QuickSpec {
                     }
                     context("response only") {
                         beforeEach {
-                            waitUntil { syncComplete in
+                            waitUntil(timeout: 10) { syncComplete in
                                 testContext = TestContext(stubResponseSuccess: false, stubResponseOnly: true, eventStubResponseDate: eventStubResponseDate, onSyncComplete: { result in
                                     testContext.syncResult = result
                                     syncComplete()
@@ -483,16 +465,15 @@ final class EventReporterSpec: QuickSpec {
                                 testContext.addEvents(Event.Kind.nonSummaryKinds.count)
                                 testContext.flagRequestTracker = FlagRequestTracker.stub()
                                 testContext.eventReporter.setFlagRequestTracker(testContext.flagRequestTracker!)
-
-                                testContext.eventReporter.reportEvents()
+                                testContext.eventReporter.flush(completion: nil)
                             }
                         }
-                        it("retains reported events after the failure") {
+                        it("drops events after the failure") {
                             expect(testContext.eventReporter.isOnline) == true
                             expect(testContext.eventReporter.isReportingActive) == true
-                            expect(testContext.serviceMock.publishEventDictionariesCallCount) == 1
-                            expect(testContext.eventReporter.eventStoreKeys) == testContext.eventKeys
-                            expect(testContext.eventReporter.eventStoreKinds.contains(.summary)) == true
+                            expect(testContext.serviceMock.publishEventDictionariesCallCount) == 2 //1 retry attempt
+                            expect(testContext.eventReporter.eventStoreKeys) == []
+                            expect(testContext.eventReporter.eventStoreKinds.contains(.summary)) == false
                             expect(testContext.serviceMock.publishedEventDictionaryKeys) == testContext.eventKeys
                             expect(testContext.serviceMock.publishedEventDictionaryKinds?.contains(.summary)) == true
                             expect(testContext.eventReporter.lastEventResponseDate).to(beNil())
@@ -519,16 +500,15 @@ final class EventReporterSpec: QuickSpec {
                                 testContext.addEvents(Event.Kind.nonSummaryKinds.count)
                                 testContext.flagRequestTracker = FlagRequestTracker.stub()
                                 testContext.eventReporter.setFlagRequestTracker(testContext.flagRequestTracker!)
-
-                                testContext.eventReporter.reportEvents()
+                                testContext.eventReporter.flush(completion: nil)
                             }
                         }
-                        it("retains reported events after the failure") {
+                        it("drops events events after the failure") {
                             expect(testContext.eventReporter.isOnline) == true
                             expect(testContext.eventReporter.isReportingActive) == true
                             expect(testContext.serviceMock.publishEventDictionariesCallCount) == 2 //1 retry attempt
-                            expect(testContext.eventReporter.eventStoreKeys) == testContext.eventKeys
-                            expect(testContext.eventReporter.eventStoreKinds.contains(.summary)) == true
+                            expect(testContext.eventReporter.eventStoreKeys) == []
+                            expect(testContext.eventReporter.eventStoreKinds.contains(.summary)) == false
                             expect(testContext.serviceMock.publishedEventDictionaryKeys) == testContext.eventKeys
                             expect(testContext.serviceMock.publishedEventDictionaryKinds?.contains(.summary)) == true
                             expect(testContext.eventReporter.lastEventResponseDate).to(beNil())
@@ -553,8 +533,7 @@ final class EventReporterSpec: QuickSpec {
                         testContext.addEvents(Event.Kind.nonSummaryKinds.count)
                         testContext.flagRequestTracker = FlagRequestTracker.stub()
                         testContext.eventReporter.setFlagRequestTracker(testContext.flagRequestTracker!)
-
-                        testContext.eventReporter.reportEvents()
+                        testContext.eventReporter.flush(completion: nil)
                     }
                 }
                 it("doesn't report events") {
@@ -588,16 +567,12 @@ final class EventReporterSpec: QuickSpec {
             context("when trackEvents is on and a reason is present") {
                 beforeEach {
                     testContext = TestContext(trackEvents: true)
-
-                    waitUntil { done in
-                        testContext.eventReporter.recordFlagEvaluationEvents(flagKey: testContext.flagKey,
-                                                                             value: testContext.featureFlag.value!,
-                                                                             defaultValue: Constants.defaultValue,
-                                                                             featureFlag: testContext.featureFlagWithReason,
-                                                                             user: testContext.user,
-                                                                             includeReason: true,
-                                                                             completion: done)
-                    }
+                    testContext.eventReporter.recordFlagEvaluationEvents(flagKey: testContext.flagKey,
+                                                                         value: testContext.featureFlag.value!,
+                                                                         defaultValue: Constants.defaultValue,
+                                                                         featureFlag: testContext.featureFlagWithReason,
+                                                                         user: testContext.user,
+                                                                         includeReason: true)
                 }
                 it("records a feature event") {
                     expect(testContext.eventReporter.eventStore.count) == 1
@@ -616,16 +591,12 @@ final class EventReporterSpec: QuickSpec {
             context("when a reason is present and reason is false but trackReason is true") {
                 beforeEach {
                     testContext = TestContext(trackEvents: true)
-
-                    waitUntil { done in
-                        testContext.eventReporter.recordFlagEvaluationEvents(flagKey: testContext.flagKey,
-                                                                             value: testContext.featureFlag.value!,
-                                                                             defaultValue: Constants.defaultValue,
-                                                                             featureFlag: testContext.featureFlagWithReasonAndTrackReason,
-                                                                             user: testContext.user,
-                                                                             includeReason: false,
-                                                                             completion: done)
-                    }
+                    testContext.eventReporter.recordFlagEvaluationEvents(flagKey: testContext.flagKey,
+                                                                         value: testContext.featureFlag.value!,
+                                                                         defaultValue: Constants.defaultValue,
+                                                                         featureFlag: testContext.featureFlagWithReasonAndTrackReason,
+                                                                         user: testContext.user,
+                                                                         includeReason: false)
                 }
                 it("records a feature event") {
                     expect(testContext.eventReporter.eventStore.count) == 1
@@ -644,16 +615,12 @@ final class EventReporterSpec: QuickSpec {
             context("when trackEvents is off") {
                 beforeEach {
                     testContext = TestContext(trackEvents: false)
-
-                    waitUntil { done in
-                        testContext.eventReporter.recordFlagEvaluationEvents(flagKey: testContext.flagKey,
-                                                                             value: testContext.featureFlag.value!,
-                                                                             defaultValue: Constants.defaultValue,
-                                                                             featureFlag: testContext.featureFlag,
-                                                                             user: testContext.user,
-                                                                             includeReason: false,
-                                                                             completion: done)
-                    }
+                    testContext.eventReporter.recordFlagEvaluationEvents(flagKey: testContext.flagKey,
+                                                                         value: testContext.featureFlag.value!,
+                                                                         defaultValue: Constants.defaultValue,
+                                                                         featureFlag: testContext.featureFlag,
+                                                                         user: testContext.user,
+                                                                         includeReason: false)
                 }
                 it("does not record a feature event") {
                     expect(testContext.eventReporter.eventStore).to(beEmpty())
@@ -672,10 +639,7 @@ final class EventReporterSpec: QuickSpec {
                     context("and debugEventsUntilDate is later") {
                         beforeEach {
                             testContext = TestContext(lastEventResponseDate: Date(), trackEvents: false, debugEventsUntilDate: Date().addingTimeInterval(TimeInterval.oneSecond))
-
-                            waitUntil { done in
-                                testContext.eventReporter.recordFlagEvaluationEvents(flagKey: testContext.flagKey, value: testContext.featureFlag.value!, defaultValue: Constants.defaultValue, featureFlag: testContext.featureFlag, user: testContext.user, includeReason: false, completion: done)
-                            }
+                            testContext.eventReporter.recordFlagEvaluationEvents(flagKey: testContext.flagKey, value: testContext.featureFlag.value!, defaultValue: Constants.defaultValue, featureFlag: testContext.featureFlag, user: testContext.user, includeReason: false)
                         }
                         it("records a debug event") {
                             expect(testContext.eventReporter.eventStore.count) == 1
@@ -694,10 +658,7 @@ final class EventReporterSpec: QuickSpec {
                     context("and debugEventsUntilDate is earlier") {
                         beforeEach {
                             testContext = TestContext(lastEventResponseDate: Date(), trackEvents: false, debugEventsUntilDate: Date().addingTimeInterval(-TimeInterval.oneSecond))
-
-                            waitUntil { done in
-                                testContext.eventReporter.recordFlagEvaluationEvents(flagKey: testContext.flagKey, value: testContext.featureFlag.value!, defaultValue: Constants.defaultValue, featureFlag: testContext.featureFlag, user: testContext.user, includeReason: false, completion: done)
-                            }
+                            testContext.eventReporter.recordFlagEvaluationEvents(flagKey: testContext.flagKey, value: testContext.featureFlag.value!, defaultValue: Constants.defaultValue, featureFlag: testContext.featureFlag, user: testContext.user, includeReason: false)
                         }
                         it("does not record a debug event") {
                             expect(testContext.eventReporter.eventStore).to(beEmpty())
@@ -716,10 +677,7 @@ final class EventReporterSpec: QuickSpec {
                     context("and debugEventsUntilDate is later than current time") {
                         beforeEach {
                             testContext = TestContext(lastEventResponseDate: nil, trackEvents: false, debugEventsUntilDate: Date().addingTimeInterval(TimeInterval.oneSecond))
-
-                            waitUntil { done in
-                                testContext.eventReporter.recordFlagEvaluationEvents(flagKey: testContext.flagKey, value: testContext.featureFlag.value!, defaultValue: Constants.defaultValue, featureFlag: testContext.featureFlag, user: testContext.user, includeReason: false, completion: done)
-                            }
+                            testContext.eventReporter.recordFlagEvaluationEvents(flagKey: testContext.flagKey, value: testContext.featureFlag.value!, defaultValue: Constants.defaultValue, featureFlag: testContext.featureFlag, user: testContext.user, includeReason: false)
                         }
                         it("records a debug event") {
                             expect(testContext.eventReporter.eventStore.count) == 1
@@ -738,10 +696,7 @@ final class EventReporterSpec: QuickSpec {
                     context("and debugEventsUntilDate is earlier than current time") {
                         beforeEach {
                             testContext = TestContext(lastEventResponseDate: nil, trackEvents: false, debugEventsUntilDate: Date().addingTimeInterval(-TimeInterval.oneSecond))
-
-                            waitUntil { done in
-                                testContext.eventReporter.recordFlagEvaluationEvents(flagKey: testContext.flagKey, value: testContext.featureFlag.value!, defaultValue: Constants.defaultValue, featureFlag: testContext.featureFlag, user: testContext.user, includeReason: false, completion: done)
-                            }
+                            testContext.eventReporter.recordFlagEvaluationEvents(flagKey: testContext.flagKey, value: testContext.featureFlag.value!, defaultValue: Constants.defaultValue, featureFlag: testContext.featureFlag, user: testContext.user, includeReason: false)
                         }
                         it("does not record a debug event") {
                             expect(testContext.eventReporter.eventStore).to(beEmpty())
@@ -760,10 +715,7 @@ final class EventReporterSpec: QuickSpec {
             context("when both trackEvents is true and debugEventsUntilDate is later than lastEventResponseDate") {
                 beforeEach {
                     testContext = TestContext(lastEventResponseDate: Date(), trackEvents: true, debugEventsUntilDate: Date().addingTimeInterval(TimeInterval.oneSecond))
-
-                    waitUntil { done in
-                        testContext.eventReporter.recordFlagEvaluationEvents(flagKey: testContext.flagKey, value: testContext.featureFlag.value!, defaultValue: Constants.defaultValue, featureFlag: testContext.featureFlag, user: testContext.user, includeReason: false, completion: done)
-                    }
+                    testContext.eventReporter.recordFlagEvaluationEvents(flagKey: testContext.flagKey, value: testContext.featureFlag.value!, defaultValue: Constants.defaultValue, featureFlag: testContext.featureFlag, user: testContext.user, includeReason: false)
                 }
                 it("records a feature and debug event") {
                     expect(testContext.eventReporter.eventStore.count == 2).to(beTrue())
@@ -784,10 +736,7 @@ final class EventReporterSpec: QuickSpec {
             context("when both trackEvents is true, debugEventsUntilDate is later than lastEventResponseDate, reason is false, and track reason is true") {
                 beforeEach {
                     testContext = TestContext(lastEventResponseDate: Date(), trackEvents: true, debugEventsUntilDate: Date().addingTimeInterval(TimeInterval.oneSecond))
-
-                    waitUntil { done in
-                        testContext.eventReporter.recordFlagEvaluationEvents(flagKey: testContext.flagKey, value: testContext.featureFlag.value!, defaultValue: Constants.defaultValue, featureFlag: testContext.featureFlagWithReasonAndTrackReason, user: testContext.user, includeReason: false, completion: done)
-                    }
+                    testContext.eventReporter.recordFlagEvaluationEvents(flagKey: testContext.flagKey, value: testContext.featureFlag.value!, defaultValue: Constants.defaultValue, featureFlag: testContext.featureFlagWithReasonAndTrackReason, user: testContext.user, includeReason: false)
                 }
                 it("records a feature and debug event") {
                     expect(testContext.eventReporter.eventStore.count == 2).to(beTrue())
@@ -810,10 +759,7 @@ final class EventReporterSpec: QuickSpec {
             context("when debugEventsUntilDate is nil") {
                 beforeEach {
                     testContext = TestContext(lastEventResponseDate: Date(), trackEvents: false, debugEventsUntilDate: nil)
-
-                    waitUntil { done in
-                        testContext.eventReporter.recordFlagEvaluationEvents(flagKey: testContext.flagKey, value: testContext.featureFlag.value!, defaultValue: Constants.defaultValue, featureFlag: testContext.featureFlag, user: testContext.user, includeReason: false, completion: done)
-                    }
+                    testContext.eventReporter.recordFlagEvaluationEvents(flagKey: testContext.flagKey, value: testContext.featureFlag.value!, defaultValue: Constants.defaultValue, featureFlag: testContext.featureFlag, user: testContext.user, includeReason: false)
                 }
                 it("does not record an event") {
                     expect(testContext.eventReporter.eventStore).to(beEmpty())
@@ -830,16 +776,12 @@ final class EventReporterSpec: QuickSpec {
             context("when eventTrackingContext is nil") {
                 beforeEach {
                     testContext = TestContext(trackEvents: nil)
-
-                    waitUntil { done in
-                        testContext.eventReporter.recordFlagEvaluationEvents(flagKey: testContext.flagKey,
-                                                                             value: testContext.featureFlag.value!,
-                                                                             defaultValue: Constants.defaultValue,
-                                                                             featureFlag: testContext.featureFlag,
-                                                                             user: testContext.user,
-                                                                             includeReason: false,
-                                                                             completion: done)
-                    }
+                    testContext.eventReporter.recordFlagEvaluationEvents(flagKey: testContext.flagKey,
+                                                                         value: testContext.featureFlag.value!,
+                                                                         defaultValue: Constants.defaultValue,
+                                                                         featureFlag: testContext.featureFlag,
+                                                                         user: testContext.user,
+                                                                         includeReason: false)
                 }
                 it("does not record an event") {
                     expect(testContext.eventReporter.eventStore).to(beEmpty())
@@ -857,17 +799,13 @@ final class EventReporterSpec: QuickSpec {
                 context("serially") {
                     beforeEach {
                         testContext = TestContext(flagRequestCount: 3, trackEvents: false)
-
-                        waitUntil { done in
-                            for index in 1...testContext.flagRequestCount {
-                                testContext.eventReporter.recordFlagEvaluationEvents(flagKey: testContext.flagKey,
-                                                                                     value: testContext.featureFlag.value!,
-                                                                                     defaultValue: Constants.defaultValue,
-                                                                                     featureFlag: testContext.featureFlag,
-                                                                                     user: testContext.user,
-                                                                                     includeReason: false,
-                                                                                     completion: index == testContext.flagRequestCount ? done : nil)
-                            }
+                        for _ in 1...testContext.flagRequestCount {
+                            testContext.eventReporter.recordFlagEvaluationEvents(flagKey: testContext.flagKey,
+                                                                                 value: testContext.featureFlag.value!,
+                                                                                 defaultValue: Constants.defaultValue,
+                                                                                 featureFlag: testContext.featureFlag,
+                                                                                 user: testContext.user,
+                                                                                 includeReason: false)
                         }
                     }
                     it("tracks the flag request") {
@@ -903,8 +841,8 @@ final class EventReporterSpec: QuickSpec {
                                                                                          defaultValue: Constants.defaultValue,
                                                                                          featureFlag: testContext.featureFlag,
                                                                                          user: testContext.user,
-                                                                                         includeReason: false,
-                                                                                         completion: recordFlagEvaluationCompletion)
+                                                                                         includeReason: false)
+                                    recordFlagEvaluationCompletion()
                                 }
                             }
                         }
@@ -927,10 +865,7 @@ final class EventReporterSpec: QuickSpec {
             var testContext: TestContext!
             beforeEach {
                 testContext = TestContext()
-
-                waitUntil { done in
-                    testContext.eventReporter.recordFlagEvaluationEvents(flagKey: testContext.flagKey, value: testContext.featureFlag.value, defaultValue: testContext.featureFlag.value, featureFlag: testContext.featureFlag, user: testContext.user, includeReason: false, completion: done)
-                }
+                testContext.eventReporter.recordFlagEvaluationEvents(flagKey: testContext.flagKey, value: testContext.featureFlag.value, defaultValue: testContext.featureFlag.value, featureFlag: testContext.featureFlag, user: testContext.user, includeReason: false)
             }
             it("tracks flag requests") {
                 let flagCounter = testContext.flagCounter(for: testContext.flagKey)
@@ -944,64 +879,6 @@ final class EventReporterSpec: QuickSpec {
                 expect(flagValueCounter?.featureFlag) == testContext.featureFlag
                 expect(flagValueCounter?.isKnown) == true
                 expect(flagValueCounter?.count) == testContext.flagRequestCount
-            }
-        }
-    }
-
-    private func recordSummaryEventSpec() {
-        describe("recordSummaryEvent") {
-            var testContext: TestContext!
-            afterEach {
-                testContext.eventReporter.isOnline = false
-            }
-            context("with tracked requests") {
-                beforeEach {
-                    testContext = TestContext()
-                    testContext.eventReporter.isOnline = true
-                    testContext.flagRequestTracker = FlagRequestTracker.stub()  //Delay setting tracked requests to avoid triggering a reportEvents call
-                    testContext.eventReporter.setFlagRequestTracker(testContext.flagRequestTracker!)
-
-                    waitUntil { done in
-                        testContext.eventReporter.recordSummaryEvent(completion: done)
-                    }
-                }
-                it("records a summary event") {
-                    expect(testContext.eventReporter.isOnline) == true
-                    expect(testContext.eventReporter.isReportingActive) == true
-                    expect(testContext.eventReporter.eventStore.count) == 1
-                    expect(testContext.eventReporter.eventStoreKinds.contains(.summary)) == true
-                    expect(testContext.eventReporter.flagRequestTracker.hasLoggedRequests) == false
-                }
-            }
-            context("without tracked requests") {
-                beforeEach {
-                    testContext = TestContext()
-                    testContext.eventReporter.isOnline = true
-
-                    waitUntil { done in
-                        testContext.eventReporter.recordSummaryEvent(completion: done)
-                    }
-                }
-                it("does not record a summary event") {
-                    expect(testContext.eventReporter.isOnline) == true
-                    expect(testContext.eventReporter.isReportingActive) == true
-                    expect(testContext.eventReporter.eventStore.count) == 0
-                    expect(testContext.eventReporter.flagRequestTracker.hasLoggedRequests) == false
-                }
-            }
-        }
-    }
-
-    private func resetFlagRequestTrackerSpec() {
-        describe("resetFlagRequestTracker") {
-            var testContext: TestContext!
-            beforeEach {
-                testContext = TestContext(flagRequestTracker: FlagRequestTracker.stub())
-
-                testContext.eventReporter.resetFlagRequestTracker()
-            }
-            it("resets the flagRequestTracker") {
-                expect(testContext.eventReporter.flagRequestTracker.hasLoggedRequests) == false
             }
         }
     }
