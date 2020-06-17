@@ -360,10 +360,11 @@ final class FlagChangeNotifyingMock: FlagChangeNotifying {
     // MARK: notifyObservers
     var notifyObserversCallCount = 0
     var notifyObserversCallback: (() -> Void)?
-    var notifyObserversReceivedArguments: (user: LDUser, oldFlags: [LDFlagKey: FeatureFlag], oldFlagSource: LDFlagValueSource)?
-    func notifyObservers(user: LDUser, oldFlags: [LDFlagKey: FeatureFlag], oldFlagSource: LDFlagValueSource) {
+    //swiftlint:disable:next large_tuple 
+    var notifyObserversReceivedArguments: (user: LDUser, oldFlags: [LDFlagKey: FeatureFlag], oldFlagSource: LDFlagValueSource, debug: String)?
+    func notifyObservers(user: LDUser, oldFlags: [LDFlagKey: FeatureFlag], oldFlagSource: LDFlagValueSource, debug: String) {
         notifyObserversCallCount += 1
-        notifyObserversReceivedArguments = (user: user, oldFlags: oldFlags, oldFlagSource: oldFlagSource)
+        notifyObserversReceivedArguments = (user: user, oldFlags: oldFlags, oldFlagSource: oldFlagSource, debug: debug)
         notifyObserversCallback?()
     }
 }

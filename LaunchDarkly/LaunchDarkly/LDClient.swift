@@ -138,10 +138,12 @@ public class LDClient {
         let owner = "SetOnlineOwner" as AnyObject
         if completion != nil {
             observeAll(owner: owner) { _ in
+                print("BUFFALO COMPLETE")
                 completion?()
                 self.stopObserving(owner: owner)
             }
             observeFlagsUnchanged(owner: owner) {
+                print("BUFFALO COMPLETE")
                 completion?()
                 self.stopObserving(owner: owner)
             }
@@ -749,7 +751,7 @@ public class LDClient {
                                              oldFlags: [LDFlagKey: FeatureFlag],
                                              oldFlagSource: LDFlagValueSource) {
         flagCache.storeFeatureFlags(user.flagStore.featureFlags, forUser: user, andMobileKey: config.mobileKey, lastUpdated: Date(), storeMode: .async)
-        flagChangeNotifier.notifyObservers(user: user, oldFlags: oldFlags, oldFlagSource: oldFlagSource)
+        flagChangeNotifier.notifyObservers(user: user, oldFlags: oldFlags, oldFlagSource: oldFlagSource, debug: "client")
     }
 
     // MARK: - Events
@@ -855,13 +857,14 @@ public class LDClient {
         
         LDClient.instances = [:]
         let cache = UserEnvironmentFlagCache(withKeyedValueCache: ClientServiceFactory().makeKeyedValueCache(), maxCachedUsers: config.maxCachedUsers)
+        let flagChangeNotifier = FlagChangeNotifier()
         var mobileKeys = config.secondaryMobileKeys ?? [:]
         var internalCount = 0
         mobileKeys[LDConfig.Defaults.primaryEnvironmentName] = config.mobileKey
         for (name, mobileKey) in mobileKeys {
             var internalConfig = config
             internalConfig.mobileKey = mobileKey
-            let instance = LDClient(configuration: internalConfig, startUser: internalUser, flagCache: cache) {
+            let instance = LDClient(configuration: internalConfig, startUser: internalUser, flagCache: cache, flagNotifier: flagChangeNotifier) {
                 internalCount += 1
                 if internalCount >= mobileKeys.count {
                     Log.debug("All LDClients finished starting")
@@ -958,32 +961,34 @@ public class LDClient {
         cacheConverter.convertCacheData(for: user, and: config)
     }
     
-    private init(configuration: LDConfig, startUser: LDUser?, flagCache: UserEnvironmentFlagCache, completion: (() -> Void)? = nil) {
+    private init(serviceFactory: ClientServiceCreating? = nil, configuration: LDConfig, startUser: LDUser?, flagCache: FeatureFlagCaching, flagNotifier: FlagChangeNotifying, completion: (() -> Void)? = nil) {
+        print("BUFFALO INIT REAL")
         let wasStarted = hasStarted
         let wasOnline = isOnline
         isStarting = true
         hasStarted = true
         
-        serviceFactory = ClientServiceFactory()
-        environmentReporter = EnvironmentReporter()
+        if let serviceFactory = serviceFactory {
+            self.serviceFactory = serviceFactory
+        }
+        environmentReporter = self.serviceFactory.makeEnvironmentReporter()
         self.flagCache = flagCache
         LDUserWrapper.configureKeyedArchiversToHandleVersion2_3_0AndOlderUserCacheFormat()
-        cacheConverter = CacheConverter(serviceFactory: serviceFactory, maxCachedUsers: configuration.maxCachedUsers)
-        flagChangeNotifier = FlagChangeNotifier()
-        throttler = Throttler(maxDelay: Throttler.Constants.defaultDelay, environmentReporter: environmentReporter)
+        cacheConverter = self.serviceFactory.makeCacheConverter(maxCachedUsers: configuration.maxCachedUsers)
+        flagChangeNotifier = flagNotifier
+        throttler = self.serviceFactory.makeThrottler(maxDelay: Throttler.Constants.defaultDelay, environmentReporter: environmentReporter)
 
         config = configuration
         let anonymousUser = LDUser(environmentReporter: environmentReporter)
         user = startUser ?? anonymousUser
-        service = DarklyService(config: config, user: user, serviceFactory: serviceFactory)
-        eventReporter = EventReporter(config: config, service: service, onSyncComplete: nil)
-        errorNotifier = ErrorNotifier()
-        connectionInformation = ConnectionInformation(currentConnectionMode: .offline, lastConnectionFailureReason: .none)
-        flagSynchronizer = FlagSynchronizer(streamingMode: config.streamingMode,
-                                            pollingInterval: config.flagPollingInterval,
-                                            useReport: config.useReport,
-                                            service: service,
-                                            onSyncComplete: nil)
+        service = self.serviceFactory.makeDarklyServiceProvider(config: config, user: user)
+        eventReporter = self.serviceFactory.makeEventReporter(config: config, service: service)
+        errorNotifier = self.serviceFactory.makeErrorNotifier()
+        connectionInformation = self.serviceFactory.makeConnectionInformation()
+        flagSynchronizer = self.serviceFactory.makeFlagSynchronizer(streamingMode: config.streamingMode,
+                                                                    pollingInterval: config.flagPollingInterval,
+                                                                    useReport: config.useReport,
+                                                                    service: service)
         
         Log.level = environmentReporter.isDebugBuild && configuration.isDebugMode ? .debug : .noLogging
         
@@ -1000,17 +1005,19 @@ public class LDClient {
         internalSetOnline(false)
         cacheConverter.convertCacheData(for: user, and: config)
         internalIdentify(newUser: user)
-        self.connectionInformation = ConnectionInformation.uncacheConnectionInformation(config: config, ldClient: self, clientServiceFactory: serviceFactory)
+        self.connectionInformation = ConnectionInformation.uncacheConnectionInformation(config: config, ldClient: self, clientServiceFactory: self.serviceFactory)
 
         internalSetOnline((wasStarted && wasOnline) || (!wasStarted && self.config.startOnline)) {
             Log.debug("LDClient started")
             self.isStarting = false
             completion?()
         }
+        print("BUFFALO INIT REAL END")
     }
     
-    private convenience init(config: LDConfig, startUser: LDUser?, runMode: LDClientRunMode, completion: (() -> Void)? = nil) {
-        self.init(configuration: config, startUser: startUser, flagCache: UserEnvironmentFlagCache(withKeyedValueCache: ClientServiceFactory().makeKeyedValueCache(), maxCachedUsers: config.maxCachedUsers), completion: completion)
+    private convenience init(serviceFactory: ClientServiceCreating, config: LDConfig, startUser: LDUser?, runMode: LDClientRunMode, flagCache: FeatureFlagCaching, flagNotifier: FlagChangeNotifying, completion: (() -> Void)? = nil) {
+        print("BUFFALO INIT UNREAL")
+        self.init(serviceFactory: serviceFactory, configuration: config, startUser: startUser, flagCache: flagCache, flagNotifier: flagNotifier, completion: completion)
         //Setting these inside the init do not trigger the didSet closures
         self.runMode = runMode
         self.config = config
@@ -1027,6 +1034,7 @@ public class LDClient {
                                                                     onSyncComplete: onFlagSyncComplete)
         eventReporter = self.serviceFactory.makeEventReporter(config: config, service: service, onSyncComplete: onEventSyncComplete)
         self.isStarting = false
+        print("BUFFALO INIT UNREAL END")
     }
 }
 
@@ -1048,10 +1056,59 @@ private extension Optional {
 
 #if DEBUG
     extension LDClient {
-        class func makeClient(config: LDConfig, user: LDUser? = nil, runMode: LDClientRunMode = .foreground, completion: (() -> Void)? = nil) -> LDClient {
-            return LDClient(config: config, startUser: user, runMode: runMode, completion: completion)
+        static func start(serviceFactory: ClientServiceCreating, config: LDConfig, startUser: LDUser? = nil, runMode: LDClientRunMode = .foreground, flagCache: FeatureFlagCaching, flagNotifier: FlagChangeNotifier, completion: (() -> Void)? = nil) {
+            Log.debug("LDClient starting")
+            if instances != nil {
+                Log.debug("LDClient.start() was called more than once!")
+                return
+            }
+            print("BUFFALO START")
+            let anonymousUser = LDUser(environmentReporter: EnvironmentReporter())
+            let internalUser = startUser ?? anonymousUser
+            
+            LDClient.instances = [:]
+            var mobileKeys = config.secondaryMobileKeys ?? [:]
+            var internalCount = 0
+            mobileKeys[LDConfig.Defaults.primaryEnvironmentName] = config.mobileKey
+            for (name, mobileKey) in mobileKeys {
+                var internalConfig = config
+                internalConfig.mobileKey = mobileKey
+                let instance = LDClient(serviceFactory: serviceFactory, config: internalConfig, startUser: internalUser, runMode: runMode, flagCache: flagCache, flagNotifier: flagNotifier) {
+                    internalCount += 1
+                    if internalCount >= mobileKeys.count {
+                        print("BUFFALO END")
+                        Log.debug("All LDClients finished starting")
+                        completion?()
+                    }
+                }
+                LDClient.instances?[name] = instance
+            }
         }
-
+        
+        static func start(serviceFactory: ClientServiceCreating, config: LDConfig, startUser: LDUser? = nil, startWaitSeconds: TimeInterval, runMode: LDClientRunMode = .foreground, flagCache: FeatureFlagCaching, flagNotifier: FlagChangeNotifier, completion: ((_ timedOut: Bool) -> Void)? = nil) {
+            if !config.startOnline {
+                start(serviceFactory: serviceFactory, config: config, startUser: startUser, runMode: runMode, flagCache: flagCache, flagNotifier: flagNotifier)
+                completion?(timeOutCheck)
+            } else {
+                let startTime = Date().timeIntervalSince1970
+                start(serviceFactory: serviceFactory, config: config, startUser: startUser, runMode: runMode, flagCache: flagCache, flagNotifier: flagNotifier) {
+                    if startTime + startWaitSeconds > Date().timeIntervalSince1970 {
+                        self.internalTimeOutCheckQueue.sync {
+                            self.timeOutCheck = false
+                            completion?(self.timeOutCheck)
+                        }
+                    }
+                }
+                DispatchQueue.global().asyncAfter(deadline: .now() + startWaitSeconds) {
+                    self.internalTimeOutCheckQueue.sync {
+                        if self.timeOutCheck {
+                            completion?(self.timeOutCheck)
+                        }
+                    }
+                }
+            }
+        }
+        
         func setRunMode(_ runMode: LDClientRunMode) {
             self.runMode = runMode
         }
