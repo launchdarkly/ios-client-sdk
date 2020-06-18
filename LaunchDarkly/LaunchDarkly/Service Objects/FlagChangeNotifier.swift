@@ -18,7 +18,7 @@ protocol FlagChangeNotifying {
     //sourcery: noMock
     func removeObserver(owner: LDObserverOwner)
     func notifyConnectionModeChangedObservers(connectionMode: ConnectionInformation.ConnectionMode)
-    func notifyObservers(user: LDUser, oldFlags: [LDFlagKey: FeatureFlag], oldFlagSource: LDFlagValueSource, debug: String)
+    func notifyObservers(user: LDUser, oldFlags: [LDFlagKey: FeatureFlag], oldFlagSource: LDFlagValueSource)
 }
 
 final class FlagChangeNotifier: FlagChangeNotifying {
@@ -33,6 +33,7 @@ final class FlagChangeNotifier: FlagChangeNotifying {
 
     func addFlagsUnchangedObserver(_ observer: FlagsUnchangedObserver) {
         Log.debug(typeName(and: #function) + "observer: \(observer)")
+        print("BUFFALO UNCHANGED SET")
         flagsUnchangedObservers.append(observer)
     }
 
@@ -73,23 +74,23 @@ final class FlagChangeNotifier: FlagChangeNotifying {
         }
     }
 
-    func notifyObservers(user: LDUser, oldFlags: [LDFlagKey: FeatureFlag], oldFlagSource: LDFlagValueSource, debug: String) {
+    func notifyObservers(user: LDUser, oldFlags: [LDFlagKey: FeatureFlag], oldFlagSource: LDFlagValueSource) {
         removeOldObservers()
-        print("BUFFALO NOTIFY START: " + debug)
+        print("BUFFALO NOTIFY START")
 
         let changedFlagKeys = findChangedFlagKeys(oldFlags: oldFlags, newFlags: user.flagStore.featureFlags)
         guard !changedFlagKeys.isEmpty
         else {
             let logMessage: String
             if flagsUnchangedObservers.isEmpty {
-                print("BUFFALO NOTIFY if: " + debug)
+                print("BUFFALO NOTIFY if")
                 logMessage = "aborted. Flags unchanged and no flagsUnchanged observers set."
             } else {
                 logMessage = "notifying observers that flags are unchanged."
             }
             Log.debug(typeName(and: #function) + logMessage)
             flagsUnchangedObservers.forEach { flagsUnchangedObserver in
-                print("BUFFALO NOTIFY unchanged: " + debug)
+                print("BUFFALO NOTIFY unchanged")
                 if let flagsUnchangedHandler = flagsUnchangedObserver.flagsUnchangedHandler {
                     DispatchQueue.main.async {
                         flagsUnchangedHandler()
@@ -115,7 +116,7 @@ final class FlagChangeNotifier: FlagChangeNotifying {
         })
         Log.debug(typeName(and: #function) + "notifying observers for changes to flags: \(changedFlags.keys.joined(separator: ", ")).")
         selectedObservers.forEach { observer in
-            print("BUFFALO NOTIFY selected: " + debug)
+            print("BUFFALO NOTIFY selected")
             let filteredChangedFlags = changedFlags.filter { flagKey, _ -> Bool in
                 observer.flagKeys == LDFlagKey.anyKey || observer.flagKeys.contains(flagKey)
             }
@@ -182,7 +183,7 @@ extension FlagChangeNotifier: TypeIdentifying { }
         }
 
         func notifyObservers(user: LDUser, oldFlags: [LDFlagKey: FeatureFlag], oldFlagSource: LDFlagValueSource, completion: @escaping () -> Void) {
-            notifyObservers(user: user, oldFlags: oldFlags, oldFlagSource: oldFlagSource, debug: "debug")
+            notifyObservers(user: user, oldFlags: oldFlags, oldFlagSource: oldFlagSource)
             DispatchQueue.main.async {
                 completion()
             }

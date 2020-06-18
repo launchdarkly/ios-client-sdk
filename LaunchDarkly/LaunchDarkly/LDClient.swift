@@ -120,9 +120,11 @@ public class LDClient {
     }
     
     private func internalSetOnline(_ goOnline: Bool, completion: (() -> Void)? = nil) {
+        print("BUFFALO SETONLINE")
         lastSetOnlineCallValue = goOnline
         guard goOnline, canGoOnline
             else {
+                print("BUFFALO UNTHROTTLED")
                 //go offline, which is not throttled
                 go(online: false, reasonOnlineUnavailable: reasonOnlineUnavailable(goOnline: goOnline), completion: completion)
                 return
@@ -130,13 +132,17 @@ public class LDClient {
         
         throttler.runThrottled {
             //since going online was throttled, check the last called setOnline value and whether we can go online
+            print("BUFFALO THROTTLED")
             self.go(online: self.lastSetOnlineCallValue && self.canGoOnline, reasonOnlineUnavailable: self.reasonOnlineUnavailable(goOnline: self.lastSetOnlineCallValue), completion: completion)
         }
+        print("BUFFALO SETONLINE END")
     }
     
     private func go(online goOnline: Bool, reasonOnlineUnavailable: String, completion:(() -> Void)?) {
+        print("BUFFALO GO: " + (completion == nil ? "nil" : "not nil"))
         let owner = "SetOnlineOwner" as AnyObject
         if completion != nil {
+            print("BUFFALO COMPLETION GO")
             observeAll(owner: owner) { _ in
                 print("BUFFALO COMPLETE")
                 completion?()
@@ -239,6 +245,7 @@ public class LDClient {
     
     private func internalIdentify(newUser: LDUser, completion: (() -> Void)? = nil) {
         LDClient.identifyQueue.async {
+            print("BUFFALO IDENTIFY START")
             var internalUser = newUser
             internalUser.flagStore = FlagStore(featureFlagDictionary: newUser.flagStore.featureFlags, flagValueSource: newUser.flagStore.flagValueSource)
             self.user = internalUser
@@ -261,6 +268,7 @@ public class LDClient {
             }
             
             self.setOnline(wasOnline, completion: completion)
+            print("BUFFALO IDENTIFY END")
         }
     }
     
@@ -637,6 +645,7 @@ public class LDClient {
      */
     public func observeAll(owner: LDObserverOwner, handler: @escaping LDFlagCollectionChangeHandler) {
         Log.debug(typeName(and: #function) + " owner: \(String(describing: owner))")
+        print("BUFFALO ALL")
         flagChangeNotifier.addFlagChangeObserver(FlagChangeObserver(keys: LDFlagKey.anyKey, owner: owner, flagCollectionChangeHandler: handler))
     }
     
@@ -663,6 +672,7 @@ public class LDClient {
      */
     public func observeFlagsUnchanged(owner: LDObserverOwner, handler: @escaping LDFlagsUnchangedHandler) {
         Log.debug(typeName(and: #function) + " owner: \(String(describing: owner))")
+        print("BUFFALO UNCHANGED")
         flagChangeNotifier.addFlagsUnchangedObserver(FlagsUnchangedObserver(owner: owner, flagsUnchangedHandler: handler))
     }
     
@@ -751,7 +761,7 @@ public class LDClient {
                                              oldFlags: [LDFlagKey: FeatureFlag],
                                              oldFlagSource: LDFlagValueSource) {
         flagCache.storeFeatureFlags(user.flagStore.featureFlags, forUser: user, andMobileKey: config.mobileKey, lastUpdated: Date(), storeMode: .async)
-        flagChangeNotifier.notifyObservers(user: user, oldFlags: oldFlags, oldFlagSource: oldFlagSource, debug: "client")
+        flagChangeNotifier.notifyObservers(user: user, oldFlags: oldFlags, oldFlagSource: oldFlagSource)
     }
 
     // MARK: - Events
@@ -1002,12 +1012,16 @@ public class LDClient {
         NotificationCenter.default.addObserver(self, selector: #selector(didCloseEventSource), name: Notification.Name(FlagSynchronizer.Constants.didCloseEventSourceName), object: nil)
 
         eventReporter = self.serviceFactory.makeEventReporter(config: config, service: service, onSyncComplete: onEventSyncComplete)
+        print("BUFFALO BEFORE FALSE")
         internalSetOnline(false)
+        print("BUFFALO AFTER FALSE")
         cacheConverter.convertCacheData(for: user, and: config)
+        print("BUFFALO BEFORE IDENTIFY")
         internalIdentify(newUser: user)
         self.connectionInformation = ConnectionInformation.uncacheConnectionInformation(config: config, ldClient: self, clientServiceFactory: self.serviceFactory)
-
+        print("BUFFALO AFTER IDENTIFY: " + ((wasStarted && wasOnline) || (!wasStarted && self.config.startOnline) ? "true" : "false"))
         internalSetOnline((wasStarted && wasOnline) || (!wasStarted && self.config.startOnline)) {
+            print("BUFFALO LAST ONLINE COMPLETE")
             Log.debug("LDClient started")
             self.isStarting = false
             completion?()
