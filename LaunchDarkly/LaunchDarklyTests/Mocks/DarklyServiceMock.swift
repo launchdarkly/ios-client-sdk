@@ -107,6 +107,8 @@ final class DarklyServiceMock: DarklyServiceProvider {
         static let variation = 2
         static let version = 4
         static let flagVersion = 3
+        static let trackEvents = true
+        static let debugEventsUntilDate = Date().addingTimeInterval(30.0)
         static let reason = Optional(["kind": "OFF"])
         
         static func stubFeatureFlags(includeNullValue: Bool = true,
@@ -116,7 +118,8 @@ final class DarklyServiceMock: DarklyServiceProvider {
                                      alternateVariationNumber: Bool = true,
                                      bumpFlagVersions: Bool = false,
                                      alternateValuesForKeys alternateValueKeys: [LDFlagKey] = [],
-                                     eventTrackingContext: EventTrackingContext? = EventTrackingContext.stub()) -> [LDFlagKey: FeatureFlag] {
+                                     trackEvents: Bool? = true,
+                                     debugEventsUntilDate: Date? = Date().addingTimeInterval(30.0)) -> [LDFlagKey: FeatureFlag] {
 
             let flagKeys = includeNullValue ? FlagKeys.knownFlags : FlagKeys.flagsWithAnAlternateValue
             let featureFlagTuples = flagKeys.map { (flagKey) in
@@ -128,7 +131,8 @@ final class DarklyServiceMock: DarklyServiceProvider {
                                                  useAlternateVersion: bumpFlagVersions && useAlternateValue(for: flagKey, alternateValueKeys: alternateValueKeys),
                                                  useAlternateFlagVersion: bumpFlagVersions && useAlternateValue(for: flagKey, alternateValueKeys: alternateValueKeys),
                                                  useAlternateVariationNumber: alternateVariationNumber,
-                                                 eventTrackingContext: eventTrackingContext))
+                                                 trackEvents: trackEvents,
+                                                 debugEventsUntilDate: debugEventsUntilDate))
             }
 
             return Dictionary(uniqueKeysWithValues: featureFlagTuples)
@@ -199,7 +203,8 @@ final class DarklyServiceMock: DarklyServiceProvider {
                                     useAlternateVersion: Bool = false,
                                     useAlternateFlagVersion: Bool = false,
                                     useAlternateVariationNumber: Bool = true,
-                                    eventTrackingContext: EventTrackingContext? = EventTrackingContext.stub(),
+                                    trackEvents: Bool? = true,
+                                    debugEventsUntilDate: Date? = Date().addingTimeInterval(30.0),
                                     includeEvaluationReason: Bool = false,
                                     includeTrackReason: Bool = false) -> FeatureFlag {
             return FeatureFlag(flagKey: flagKey,
@@ -207,7 +212,8 @@ final class DarklyServiceMock: DarklyServiceProvider {
                                variation: useAlternateVariationNumber ? variation(for: flagKey, includeVariation: includeVariation, useAlternateValue: useAlternateValue) : variation(for: flagKey, includeVariation: includeVariation),
                                version: version(for: flagKey, includeVersion: includeVersion, useAlternateVersion: useAlternateValue || useAlternateVersion),
                                flagVersion: flagVersion(for: flagKey, includeFlagVersion: includeFlagVersion, useAlternateFlagVersion: useAlternateValue || useAlternateFlagVersion),
-                               eventTrackingContext: eventTrackingContext,
+                               trackEvents: trackEvents,
+                               debugEventsUntilDate: debugEventsUntilDate,
                                reason: reason(includeEvaluationReason: includeEvaluationReason),
                                trackReason: includeTrackReason)
         }
