@@ -237,10 +237,12 @@ public class LDClient {
         }
     }
     
-    private func internalIdentify(newUser: LDUser, completion: (() -> Void)? = nil) {
+    private func internalIdentify(newUser: LDUser, testing: Bool = false, completion: (() -> Void)? = nil) {
         LDClient.identifyQueue.async {
             var internalUser = newUser
-            internalUser.flagStore = FlagStore(featureFlagDictionary: newUser.flagStore.featureFlags, flagValueSource: newUser.flagStore.flagValueSource)
+            if !testing {
+                internalUser.flagStore = FlagStore(featureFlagDictionary: newUser.flagStore.featureFlags, flagValueSource: newUser.flagStore.flagValueSource)
+            }
             self.user = internalUser
             Log.debug(self.typeName(and: #function) + "new user set with key: " + self.user.key )
             let wasOnline = self.isOnline
@@ -963,7 +965,7 @@ public class LDClient {
         cacheConverter.convertCacheData(for: user, and: config)
     }
     
-    private init(serviceFactory: ClientServiceCreating? = nil, configuration: LDConfig, startUser: LDUser?, flagCache: FeatureFlagCaching, flagNotifier: FlagChangeNotifying, completion: (() -> Void)? = nil) {
+    private init(serviceFactory: ClientServiceCreating? = nil, configuration: LDConfig, startUser: LDUser?, flagCache: FeatureFlagCaching, flagNotifier: FlagChangeNotifying, testing: Bool = false, completion: (() -> Void)? = nil) {
         isStarting = true
         hasStarted = true
         
@@ -1003,7 +1005,7 @@ public class LDClient {
         eventReporter = self.serviceFactory.makeEventReporter(config: config, service: service, onSyncComplete: onEventSyncComplete)
         internalSetOnline(false)
         cacheConverter.convertCacheData(for: user, and: config)
-        internalIdentify(newUser: user)
+        internalIdentify(newUser: user, testing: testing)
         self.connectionInformation = ConnectionInformation.uncacheConnectionInformation(config: config, ldClient: self, clientServiceFactory: self.serviceFactory)
 
         internalSetOnline(configuration.startOnline) {
@@ -1014,7 +1016,7 @@ public class LDClient {
     }
     
     private convenience init(serviceFactory: ClientServiceCreating, config: LDConfig, startUser: LDUser?, runMode: LDClientRunMode, flagCache: FeatureFlagCaching, flagNotifier: FlagChangeNotifying, completion: (() -> Void)? = nil) {
-        self.init(serviceFactory: serviceFactory, configuration: config, startUser: startUser, flagCache: flagCache, flagNotifier: flagNotifier, completion: completion)
+        self.init(serviceFactory: serviceFactory, configuration: config, startUser: startUser, flagCache: flagCache, flagNotifier: flagNotifier, testing: true, completion: completion)
         //Setting these inside the init do not trigger the didSet closures
         self.runMode = runMode
         self.config = config
