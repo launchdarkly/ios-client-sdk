@@ -81,14 +81,12 @@ final class FlagChangeNotifier: FlagChangeNotifying {
         else {
             let logMessage: String
             if flagsUnchangedObservers.isEmpty {
-                print("BUFFALO NOTIFY if")
                 logMessage = "aborted. Flags unchanged and no flagsUnchanged observers set."
             } else {
                 logMessage = "notifying observers that flags are unchanged."
             }
             Log.debug(typeName(and: #function) + logMessage)
             flagsUnchangedObservers.forEach { flagsUnchangedObserver in
-                print("BUFFALO NOTIFY unchanged")
                 if let flagsUnchangedHandler = flagsUnchangedObserver.flagsUnchangedHandler {
                     DispatchQueue.main.async {
                         flagsUnchangedHandler()

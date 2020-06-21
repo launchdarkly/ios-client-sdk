@@ -137,17 +137,13 @@ public class LDClient {
     private func go(online goOnline: Bool, reasonOnlineUnavailable: String, completion:(() -> Void)?) {
         let owner = "SetOnlineOwner" as AnyObject
         if completion != nil && !goOnline {
-            print("BUFFALO GO OFFLINE COMPLETION")
             completion?()
         } else if completion != nil {
-            print("BUFFALO COMPLETION GO")
             observeAll(owner: owner) { _ in
-                print("BUFFALO COMPLETE")
                 completion?()
                 self.stopObserving(owner: owner)
             }
             observeFlagsUnchanged(owner: owner) {
-                print("BUFFALO COMPLETE")
                 completion?()
                 self.stopObserving(owner: owner)
             }
@@ -189,7 +185,7 @@ public class LDClient {
 
      When a new config is set, the LDClient goes offline and reconfigures using the new config. If the client was online when the new config was set, it goes online again, subject to a throttling delay if in force (see `setOnline(_: completion:)` for details). To change both the `config` and `user`, set the LDClient offline, set both properties, then set the LDClient online.
     */
-    public var config: LDConfig {
+    private(set) var config: LDConfig {
         didSet {
             guard config != oldValue
             else {
@@ -1011,7 +1007,6 @@ public class LDClient {
         self.connectionInformation = ConnectionInformation.uncacheConnectionInformation(config: config, ldClient: self, clientServiceFactory: self.serviceFactory)
 
         internalSetOnline(configuration.startOnline) {
-            print("BUFFALO LAST ONLINE COMPLETE")
             Log.debug("LDClient started")
             self.isStarting = false
             completion?()
@@ -1072,7 +1067,6 @@ private extension Optional {
             let completionCheck = {
                 internalCount += 1
                 if internalCount > mobileKeys.count {
-                    print("BUFFALO END")
                     Log.debug("All LDClients finished starting")
                     completion?()
                 }

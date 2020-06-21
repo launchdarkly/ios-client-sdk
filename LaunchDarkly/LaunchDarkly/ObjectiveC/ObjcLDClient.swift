@@ -109,7 +109,6 @@ public final class ObjcLDClient: NSObject {
      */
     @objc public var config: ObjcLDConfig {
         get { ldClient.config.objcLdConfig }
-        set { ldClient.config = newValue.config }
     }
 
     @objc public func identify(user: ObjcLDUser) {
