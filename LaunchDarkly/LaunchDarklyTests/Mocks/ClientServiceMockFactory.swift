@@ -2,7 +2,6 @@
 //  ClientServiceMockFactory.swift
 //  LaunchDarklyTests
 //
-//  Created by Mark Pokorny on 11/13/17. +JMJ
 //  Copyright © 2017 Catamorphic Co. All rights reserved.
 //
 
@@ -12,7 +11,7 @@ import UIKit
 
 final class ClientServiceMockFactory: ClientServiceCreating {
     func makeKeyedValueCache() -> KeyedValueCaching {
-        return KeyedValueCachingMock()
+        KeyedValueCachingMock()
     }
 
     var makeFeatureFlagCacheReturnValue = FeatureFlagCachingMock()
@@ -23,7 +22,7 @@ final class ClientServiceMockFactory: ClientServiceCreating {
     }
 
     func makeCacheConverter(maxCachedUsers: Int = 5) -> CacheConverting {
-        return CacheConvertingMock()
+        CacheConvertingMock()
     }
 
     var makeDeprecatedCacheModelReturnValue: DeprecatedCacheMock?
@@ -43,7 +42,7 @@ final class ClientServiceMockFactory: ClientServiceCreating {
     }
 
     func makeDarklyServiceProvider(config: LDConfig, user: LDUser) -> DarklyServiceProvider {
-        return DarklyServiceMock(config: config, user: user)
+        DarklyServiceMock(config: config, user: user)
     }
 
     var makeFlagSynchronizerCallCount = 0
@@ -65,11 +64,11 @@ final class ClientServiceMockFactory: ClientServiceCreating {
     }
 
     func makeFlagSynchronizer(streamingMode: LDStreamingMode, pollingInterval: TimeInterval, useReport: Bool, service: DarklyServiceProvider) -> LDFlagSynchronizing {
-        return makeFlagSynchronizer(streamingMode: streamingMode, pollingInterval: pollingInterval, useReport: useReport, service: service, onSyncComplete: nil)
+        makeFlagSynchronizer(streamingMode: streamingMode, pollingInterval: pollingInterval, useReport: useReport, service: service, onSyncComplete: nil)
     }
 
     func makeFlagChangeNotifier() -> FlagChangeNotifying {
-        return FlagChangeNotifyingMock()
+        FlagChangeNotifyingMock()
     }
 
     var makeEventReporterCallCount = 0
@@ -103,6 +102,22 @@ final class ClientServiceMockFactory: ClientServiceCreating {
         return DarklyStreamingProviderMock()
     }
 
+    var makeDiagnosticCacheCallCount = 0
+    var makeDiagnosticCacheReceivedSdkKey: String? = nil
+    func makeDiagnosticCache(sdkKey: String) -> DiagnosticCaching {
+        makeDiagnosticCacheCallCount += 1
+        makeDiagnosticCacheReceivedSdkKey = sdkKey
+        return DiagnosticCachingMock()
+    }
+
+    var makeDiagnosticReporterCallCount = 0
+    var makeDiagnosticReporterReceivedParameters: (service: DarklyServiceProvider, runMode: LDClientRunMode)? = nil
+    func makeDiagnosticReporter(service: DarklyServiceProvider, runMode: LDClientRunMode) -> DiagnosticReporting {
+        makeDiagnosticReporterCallCount += 1
+        makeDiagnosticReporterReceivedParameters = (service: service, runMode: runMode)
+        return DiagnosticReportingMock()
+    }
+
     var makeEnvironmentReporterReturnValue: EnvironmentReportingMock = EnvironmentReportingMock()
     func makeEnvironmentReporter() -> EnvironmentReporting {
         // the code generator is not generating the default, not sure why not //sourcery: defaultMockValue = .UIApplicationDidEnterBackground
@@ -119,10 +134,10 @@ final class ClientServiceMockFactory: ClientServiceCreating {
     }
 
     func makeErrorNotifier() -> ErrorNotifying {
-        return ErrorNotifyingMock()
+        ErrorNotifyingMock()
     }
     
     func makeConnectionInformation() -> ConnectionInformation {
-        return ConnectionInformation(currentConnectionMode: .offline, lastConnectionFailureReason: .none)
+        ConnectionInformation(currentConnectionMode: .offline, lastConnectionFailureReason: .none)
     }
 }

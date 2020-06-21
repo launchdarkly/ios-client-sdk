@@ -29,6 +29,8 @@ protocol ClientServiceCreating {
     func makeThrottler(maxDelay: TimeInterval, environmentReporter: EnvironmentReporting) -> Throttling
     func makeErrorNotifier() -> ErrorNotifying
     func makeConnectionInformation() -> ConnectionInformation
+    func makeDiagnosticCache(sdkKey: String) -> DiagnosticCaching
+    func makeDiagnosticReporter(service: DarklyServiceProvider, runMode: LDClientRunMode) -> DiagnosticReporting
 }
 
 final class ClientServiceFactory: ClientServiceCreating {
@@ -120,5 +122,13 @@ final class ClientServiceFactory: ClientServiceCreating {
     
     func makeConnectionInformation() -> ConnectionInformation {
         ConnectionInformation(currentConnectionMode: .offline, lastConnectionFailureReason: .none)
+    }
+
+    func makeDiagnosticCache(sdkKey: String) -> DiagnosticCaching {
+        DiagnosticCache(sdkKey: sdkKey)
+    }
+
+    func makeDiagnosticReporter(service: DarklyServiceProvider, runMode: LDClientRunMode) -> DiagnosticReporting {
+        DiagnosticReporter(service: service, runMode: runMode)
     }
 }

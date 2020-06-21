@@ -74,6 +74,7 @@ class EventReporter: EventReporting {
     func recordNoSync(_ event: Event) {
         if self.eventStore.count >= self.config.eventCapacity {
             Log.debug(self.typeName(and: #function) + "aborted. Event store is full")
+            self.service.diagnosticCache?.incrementDroppedEventCount()
             return
         }
         self.eventStore.append(event.dictionaryValue(config: self.config))
@@ -143,6 +144,8 @@ class EventReporter: EventReporting {
 
         let toPublish = self.eventStore
         self.eventStore = []
+
+        service.diagnosticCache?.recordEventsInLastBatch(eventsInLastBatch: toPublish.count)
 
         DispatchQueue.main.async {
             self.publish(toPublish, UUID().uuidString, completion)

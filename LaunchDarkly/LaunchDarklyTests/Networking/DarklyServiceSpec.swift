@@ -32,18 +32,20 @@ final class DarklyServiceSpec: QuickSpec {
         let mockEventDictionaries: [[String: Any]]?
         var serviceMock: DarklyServiceMock!
         var serviceFactoryMock: ClientServiceMockFactory? {
-            return service.serviceFactory as? ClientServiceMockFactory
+            service.serviceFactory as? ClientServiceMockFactory
         }
         var service: DarklyService!
         var flagRequestEtag: String?
         var flagRequestEtags = [String: String]()
+        var httpHeaders: HTTPHeaders
 
         init(mobileKey: String = LDConfig.Constants.mockMobileKey,
              useReport: Bool = Constants.useGetMethod,
              includeMockEventDictionaries: Bool = false,
              operatingSystemName: String? = nil,
              flagRequestEtag: String? = nil,
-             mobileKeyCount: Int = 0) {
+             mobileKeyCount: Int = 0,
+             diagnosticOptOut: Bool = false) {
 
             let serviceFactoryMock = ClientServiceMockFactory()
             if let operatingSystemName = operatingSystemName {
@@ -51,9 +53,11 @@ final class DarklyServiceSpec: QuickSpec {
             }
             config = LDConfig.stub(mobileKey: mobileKey, environmentReporter: EnvironmentReportingMock())
             config.useReport = useReport
+            config.diagnosticOptOut = diagnosticOptOut
             mockEventDictionaries = includeMockEventDictionaries ? Event.stubEventDictionaries(Constants.eventCount, user: user, config: config) : nil
             serviceMock = DarklyServiceMock(config: config)
             service = DarklyService(config: config, user: user, serviceFactory: serviceFactoryMock)
+            httpHeaders = HTTPHeaders(config: config, environmentReporter: config.environmentReporter)
             self.flagRequestEtag = flagRequestEtag
             if let etag = flagRequestEtag {
                 HTTPHeaders.setFlagRequestEtag(etag, for: mobileKey)
@@ -74,6 +78,8 @@ final class DarklyServiceSpec: QuickSpec {
         clearFlagRequestCacheSpec()
         createEventSourceSpec()
         publishEventDictionariesSpec()
+        diagnosticCacheSpec()
+        publishDiagnosticSpec()
 
         afterEach {
             OHHTTPStubs.removeAllStubs()
@@ -934,6 +940,132 @@ final class DarklyServiceSpec: QuickSpec {
                     expect(eventRequest).to(beNil())
                     expect(eventsPublished) == false
                     expect(responses).to(beNil())
+                }
+            }
+        }
+    }
+
+    private func diagnosticCacheSpec() {
+        var testContext: TestContext!
+        describe("diagnosticCache") {
+            context("empty mobileKey") {
+                it("does not create cache") {
+                    testContext = TestContext(mobileKey: "")
+                    expect(testContext.service.diagnosticCache).to(beNil())
+                    expect(testContext.serviceFactoryMock?.makeDiagnosticCacheCallCount) == 0
+                }
+            }
+            context("diagnosticOptOut true") {
+                it("does not create cache") {
+                    testContext = TestContext(diagnosticOptOut: true)
+                    expect(testContext.service.diagnosticCache).to(beNil())
+                    expect(testContext.serviceFactoryMock?.makeDiagnosticCacheCallCount) == 0
+                }
+            }
+            context("diagnosticOptOut false") {
+                it("creates a cache with the mobile key") {
+                    testContext = TestContext(diagnosticOptOut: false)
+                    expect(testContext.service.diagnosticCache).toNot(beNil())
+                    expect(testContext.serviceFactoryMock?.makeDiagnosticCacheCallCount) == 1
+                    expect(testContext.serviceFactoryMock?.makeDiagnosticCacheReceivedSdkKey) == LDConfig.Constants.mockMobileKey
+                }
+            }
+        }
+    }
+
+    private func stubDiagnostic() -> DiagnosticStats {
+        DiagnosticStats(id: DiagnosticId(diagnosticId: "test-id", sdkKey: LDConfig.Constants.mockMobileKey), creationDate: 1000, dataSinceDate: 100, droppedEvents: 0, eventsInLastBatch: 0, streamInits: [])
+    }
+
+    private func publishDiagnosticSpec() {
+        var testContext: TestContext!
+
+        describe("publishDiagnostic") {
+            var diagnosticRequest: URLRequest?
+
+            beforeEach {
+                diagnosticRequest = nil
+                testContext = TestContext(mobileKey: LDConfig.Constants.mockMobileKey)
+            }
+            context("success") {
+                var responses: ServiceResponses!
+                beforeEach {
+                    waitUntil { done in
+                        testContext.serviceMock.stubDiagnosticRequest(success: true) { (request, _, _) in
+                            diagnosticRequest = request
+                        }
+                        testContext.service.publishDiagnostic(diagnosticEvent: self.stubDiagnostic()) { (data, response, error) in
+                            responses = (data, response, error)
+                            done()
+                        }
+                    }
+                }
+                it("makes a valid request") {
+                    let expectedData = try? JSONEncoder().encode(self.stubDiagnostic())
+                    expect(diagnosticRequest).toNot(beNil())
+                    expect(diagnosticRequest?.httpMethod) == URLRequest.HTTPMethods.post
+                    // Unfortunately, we can't actually test the body here, see:
+                    // https://github.com/AliSoftware/OHHTTPStubs#known-limitations
+                    //expect(diagnosticRequest?.httpBody) == expectedData
+
+                    // Actual header values are tested in HTTPHeadersSpec
+                    for (key, value) in testContext.httpHeaders.diagnosticRequestHeaders {
+                        expect(diagnosticRequest?.allHTTPHeaderFields?[key]) == value
+                    }
+                }
+                it("calls completion with data, response, and no error") {
+                    expect(responses.data).toNot(beNil())
+                    expect(responses.urlResponse).toNot(beNil())
+                    expect(responses.error).to(beNil())
+                }
+            }
+            context("failure") {
+                var responses: ServiceResponses!
+                beforeEach {
+                    waitUntil { done in
+                        testContext.serviceMock.stubEventRequest(success: false) { (request, _, _) in
+                            diagnosticRequest = request
+                        }
+                        testContext.service.publishDiagnostic(diagnosticEvent: self.stubDiagnostic()) { (data, response, error) in
+                            responses = (data, response, error)
+                            done()
+                        }
+                    }
+                }
+                it("makes a valid request") {
+                    let expectedData = try? JSONEncoder().encode(self.stubDiagnostic())
+                    expect(diagnosticRequest).toNot(beNil())
+                    expect(diagnosticRequest?.httpMethod) == URLRequest.HTTPMethods.post
+                    // Unfortunately, we can't actually test the body here, see:
+                    // https://github.com/AliSoftware/OHHTTPStubs#known-limitations
+                    //expect(diagnosticRequest?.httpBody) == expectedData
+
+                    // Actual header values are tested in HTTPHeadersSpec
+                    for (key, value) in testContext.httpHeaders.diagnosticRequestHeaders {
+                        expect(diagnosticRequest?.allHTTPHeaderFields?[key]) == value
+                    }
+                }
+                it("calls completion with error and no data or response") {
+                    expect(responses.data?.isEmpty ?? true) == true
+                    expect(responses.urlResponse).to(beNil())
+                    expect(responses.error).toNot(beNil())
+                }
+            }
+            context("empty mobile key") {
+                var responses: ServiceResponses!
+                var diagnosticPublished = false
+                beforeEach {
+                    testContext = TestContext(mobileKey: Constants.emptyMobileKey)
+                    testContext.serviceMock.stubDiagnosticRequest(success: true) { (request, _, _) in
+                        diagnosticRequest = request
+                    }
+                    testContext.service.publishDiagnostic(diagnosticEvent: self.stubDiagnostic()) { _ in
+                        diagnosticPublished = true
+                    }
+                }
+                it("does not make a request") {
+                    expect(diagnosticRequest).to(beNil())
+                    expect(diagnosticPublished) == false
                 }
             }
         }

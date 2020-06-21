@@ -2,7 +2,6 @@
 //  EnvironmentReporter.swift
 //  LaunchDarkly
 //
-//  Created by Mark Pokorny on 3/27/18. +JMJ
 //  Copyright © 2018 Catamorphic Co. All rights reserved.
 //
 
@@ -44,6 +43,8 @@ enum OperatingSystem: String {
 protocol EnvironmentReporting {
     //sourcery: defaultMockValue = true
     var isDebugBuild: Bool { get }
+    //sourcery: defaultMockValue = Constants.deviceType
+    var deviceType: String { get }
     //sourcery: defaultMockValue = Constants.deviceModel
     var deviceModel: String { get }
     //sourcery: defaultMockValue = Constants.systemVersion

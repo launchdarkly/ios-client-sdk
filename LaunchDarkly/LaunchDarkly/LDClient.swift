@@ -64,6 +64,7 @@ public class LDClient {
         didSet {
             flagSynchronizer.isOnline = isOnline
             eventReporter.isOnline = isOnline
+            diagnosticReporter.isOnline = isOnline
             if isOnline != oldValue {
                 connectionInformation = ConnectionInformation.onlineSetCheck(connectionInformation: connectionInformation, ldClient: self, config: config)
             }
@@ -274,6 +275,7 @@ public class LDClient {
         didSet {
             Log.debug(typeName(and: #function) + "new service set")
             eventReporter.service = service
+            diagnosticReporter.service = service
             flagSynchronizer = serviceFactory.makeFlagSynchronizer(streamingMode: ConnectionInformation.effectiveStreamingMode(config: config, ldClient: self),
                                                                    pollingInterval: config.flagPollingInterval(runMode: runMode),
                                                                    useReport: config.useReport,
@@ -1026,6 +1028,7 @@ public class LDClient {
                                                                        onSyncComplete: onFlagSyncComplete)
             }
             flagSynchronizer.isOnline = willSetSynchronizerOnline
+            diagnosticReporter.runMode = runMode
         }
     }
     
@@ -1042,6 +1045,7 @@ public class LDClient {
     private(set) var eventReporter: EventReporting
     private(set) var environmentReporter: EnvironmentReporting
     private(set) var throttler: Throttling
+    private(set) var diagnosticReporter: DiagnosticReporting
 
     private init(serviceFactory: ClientServiceCreating? = nil) {
         if let serviceFactory = serviceFactory {
@@ -1058,6 +1062,7 @@ public class LDClient {
         config = LDConfig(mobileKey: "", environmentReporter: environmentReporter)
         _user = LDUser(environmentReporter: environmentReporter)
         service = self.serviceFactory.makeDarklyServiceProvider(config: config, user: _user)
+        diagnosticReporter = self.serviceFactory.makeDiagnosticReporter(service: service, runMode: runMode)
         eventReporter = self.serviceFactory.makeEventReporter(config: config, service: service)
         errorNotifier = self.serviceFactory.makeErrorNotifier()
         connectionInformation = self.serviceFactory.makeConnectionInformation()

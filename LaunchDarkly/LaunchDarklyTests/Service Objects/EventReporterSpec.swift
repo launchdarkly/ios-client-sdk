@@ -36,6 +36,7 @@ final class EventReporterSpec: QuickSpec {
         var reportersTracker: FlagRequestTracker? { eventReporter.flagRequestTracker }
         var flagRequestCount: Int
         var syncResult: EventSyncResult? = nil
+        var diagnosticCache: DiagnosticCachingMock
 
         init(eventCount: Int = 0,
              eventFlushInterval: TimeInterval? = nil,
@@ -59,6 +60,9 @@ final class EventReporterSpec: QuickSpec {
             self.eventStubResponseDate = eventStubResponseDate?.adjustedForHttpUrlHeaderUse
             serviceMock = DarklyServiceMock()
             serviceMock.stubEventResponse(success: stubResponseSuccess, responseOnly: stubResponseOnly, errorOnly: stubResponseErrorOnly, responseDate: self.eventStubResponseDate)
+
+            diagnosticCache = DiagnosticCachingMock()
+            serviceMock.diagnosticCache = diagnosticCache
 
             events = (0..<eventCount).map { [user] in Event.stub(Event.eventKind(for: $0), with: user!) }
 
@@ -84,13 +88,12 @@ final class EventReporterSpec: QuickSpec {
             self.flagRequestCount = flagRequestCount
         }
 
-        mutating func recordEvents(_ eventCount: Int, completion: CompletionClosure? = nil) {
+        mutating func recordEvents(_ eventCount: Int) {
             for _ in 0..<eventCount {
                 let event = Event.stub(Event.eventKind(for: events.count), with: user)
                 events.append(event)
                 eventReporter.record(event)
             }
-            completion?()
         }
 
         mutating func addEvents(_ eventCount: Int) {
@@ -255,16 +258,16 @@ final class EventReporterSpec: QuickSpec {
             context("event store empty") {
                 beforeEach {
                     testContext = TestContext()
-
-                    waitUntil { done in
-                        testContext.recordEvents(Event.Kind.allKinds.count, completion: done) // Stub events, call testContext.eventReporter.recordEvent, and keeps them in testContext.events
-                    }
+                    testContext.recordEvents(Event.Kind.allKinds.count) // Stub events, call testContext.eventReporter.recordEvent, and keeps them in testContext.events
                 }
                 it("records events up to event capacity") {
                     expect(testContext.eventReporter.isOnline) == false
                     expect(testContext.eventReporter.isReportingActive) == false
                     expect(testContext.serviceMock.publishEventDictionariesCallCount) == 0
                     expect(testContext.eventReporter.eventStoreKeys) == testContext.eventKeys
+                }
+                it("does not record a dropped event to diagnosticCache") {
+                    expect(testContext.diagnosticCache.incrementDroppedEventCountCallCount) == 0
                 }
             }
             context("event store full") {
@@ -281,6 +284,9 @@ final class EventReporterSpec: QuickSpec {
                     expect(testContext.serviceMock.publishEventDictionariesCallCount) == 0
                     expect(testContext.eventReporter.eventStoreKeys) == testContext.eventKeys
                     expect(testContext.eventReporter.eventStoreKeys.contains(extraEvent.key!)) == false
+                }
+                it("records a dropped event to diagnosticCache") {
+                    expect(testContext.diagnosticCache.incrementDroppedEventCountCallCount) == 1
                 }
             }
         }
@@ -320,6 +326,8 @@ final class EventReporterSpec: QuickSpec {
                             expect(testContext.serviceMock.publishedEventDictionaries?.count) == Event.Kind.nonSummaryKinds.count + 1
                             expect(testContext.serviceMock.publishedEventDictionaryKeys) == testContext.eventKeys //summary events have no key, this verifies non-summary events
                             expect(testContext.serviceMock.publishedEventDictionaryKinds?.contains(.summary)) == true
+                            expect(testContext.diagnosticCache.recordEventsInLastBatchCallCount) == 1
+                            expect(testContext.diagnosticCache.recordEventsInLastBatchReceivedEventsInLastBatch) == Event.Kind.nonSummaryKinds.count + 1
                             expect(testContext.eventReporter.eventStore.isEmpty) == true
                             expect(testContext.eventReporter.lastEventResponseDate) == testContext.eventStubResponseDate
                             expect(testContext.eventReporter.flagRequestTracker.hasLoggedRequests) == false
@@ -352,6 +360,8 @@ final class EventReporterSpec: QuickSpec {
                             expect(testContext.serviceMock.publishedEventDictionaries?.count) == Event.Kind.nonSummaryKinds.count
                             expect(testContext.serviceMock.publishedEventDictionaryKeys) == testContext.eventKeys //summary events have no key, this verifies non-summary events
                             expect(testContext.serviceMock.publishedEventDictionaryKinds?.contains(.summary)) == false
+                            expect(testContext.diagnosticCache.recordEventsInLastBatchCallCount) == 1
+                            expect(testContext.diagnosticCache.recordEventsInLastBatchReceivedEventsInLastBatch) == Event.Kind.nonSummaryKinds.count
                             expect(testContext.eventReporter.eventStore.isEmpty) == true
                             expect(testContext.eventReporter.lastEventResponseDate) == testContext.eventStubResponseDate
                             expect(testContext.eventReporter.flagRequestTracker.hasLoggedRequests) == false
@@ -383,6 +393,8 @@ final class EventReporterSpec: QuickSpec {
                             expect(testContext.serviceMock.publishEventDictionariesCallCount) == 1
                             expect(testContext.serviceMock.publishedEventDictionaries?.count) == 1
                             expect(testContext.serviceMock.publishedEventDictionaryKinds?.contains(.summary)) == true
+                            expect(testContext.diagnosticCache.recordEventsInLastBatchCallCount) == 1
+                            expect(testContext.diagnosticCache.recordEventsInLastBatchReceivedEventsInLastBatch) == 1
                             expect(testContext.eventReporter.eventStore.isEmpty) == true
                             expect(testContext.eventReporter.lastEventResponseDate) == testContext.eventStubResponseDate
                             expect(testContext.eventReporter.flagRequestTracker.hasLoggedRequests) == false
@@ -409,6 +421,7 @@ final class EventReporterSpec: QuickSpec {
                             expect(testContext.eventReporter.isOnline) == true
                             expect(testContext.eventReporter.isReportingActive) == true
                             expect(testContext.serviceMock.publishEventDictionariesCallCount) == 0
+                            expect(testContext.diagnosticCache.recordEventsInLastBatchCallCount) == 0
                             expect(testContext.eventReporter.eventStore.isEmpty) == true
                             expect(testContext.eventReporter.lastEventResponseDate).to(beNil())
                             expect(testContext.eventReporter.flagRequestTracker.hasLoggedRequests) == false
@@ -444,6 +457,8 @@ final class EventReporterSpec: QuickSpec {
                             expect(testContext.eventReporter.eventStoreKinds.contains(.summary)) == false
                             expect(testContext.serviceMock.publishedEventDictionaryKeys) == testContext.eventKeys
                             expect(testContext.serviceMock.publishedEventDictionaryKinds?.contains(.summary)) == true
+                            expect(testContext.diagnosticCache.recordEventsInLastBatchCallCount) == 1
+                            expect(testContext.diagnosticCache.recordEventsInLastBatchReceivedEventsInLastBatch) == Event.Kind.nonSummaryKinds.count + 1
                             expect(testContext.eventReporter.lastEventResponseDate).to(beNil())
                             expect(testContext.eventReporter.flagRequestTracker.hasLoggedRequests) == false
                             guard case let .error(.request(error)) = testContext.syncResult
@@ -476,6 +491,8 @@ final class EventReporterSpec: QuickSpec {
                             expect(testContext.eventReporter.eventStoreKinds.contains(.summary)) == false
                             expect(testContext.serviceMock.publishedEventDictionaryKeys) == testContext.eventKeys
                             expect(testContext.serviceMock.publishedEventDictionaryKinds?.contains(.summary)) == true
+                            expect(testContext.diagnosticCache.recordEventsInLastBatchCallCount) == 1
+                            expect(testContext.diagnosticCache.recordEventsInLastBatchReceivedEventsInLastBatch) == Event.Kind.nonSummaryKinds.count + 1
                             expect(testContext.eventReporter.lastEventResponseDate).to(beNil())
                             expect(testContext.eventReporter.flagRequestTracker.hasLoggedRequests) == false
                             let expectedError = testContext.serviceMock.errorEventHTTPURLResponse
@@ -511,6 +528,8 @@ final class EventReporterSpec: QuickSpec {
                             expect(testContext.eventReporter.eventStoreKinds.contains(.summary)) == false
                             expect(testContext.serviceMock.publishedEventDictionaryKeys) == testContext.eventKeys
                             expect(testContext.serviceMock.publishedEventDictionaryKinds?.contains(.summary)) == true
+                            expect(testContext.diagnosticCache.recordEventsInLastBatchCallCount) == 1
+                            expect(testContext.diagnosticCache.recordEventsInLastBatchReceivedEventsInLastBatch) == Event.Kind.nonSummaryKinds.count + 1
                             expect(testContext.eventReporter.lastEventResponseDate).to(beNil())
                             expect(testContext.eventReporter.flagRequestTracker.hasLoggedRequests) == false
                             guard case let .error(.request(error)) = testContext.syncResult
@@ -540,6 +559,7 @@ final class EventReporterSpec: QuickSpec {
                     expect(testContext.eventReporter.isOnline) == false
                     expect(testContext.eventReporter.isReportingActive) == false
                     expect(testContext.serviceMock.publishEventDictionariesCallCount) == 0
+                    expect(testContext.diagnosticCache.recordEventsInLastBatchCallCount) == 0
                     expect(testContext.eventReporter.eventStoreKeys) == testContext.eventKeys
                     expect(testContext.eventReporter.eventStoreKinds.contains(.summary)) == false
                     expect(testContext.eventReporter.lastEventResponseDate).to(beNil())
@@ -893,15 +913,15 @@ final class EventReporterSpec: QuickSpec {
                 beforeEach {
                     testContext = TestContext(eventFlushInterval: Constants.eventFlushIntervalHalfSecond)
                     testContext.eventReporter.isOnline = true
-                    waitUntil { done in
-                        testContext.recordEvents(Event.Kind.allKinds.count, completion: done)
-                    }
+                    testContext.recordEvents(Event.Kind.allKinds.count)
                 }
                 it("reports events") {
                     expect(testContext.serviceMock.publishEventDictionariesCallCount).toEventually(equal(1))
                     expect(testContext.serviceMock.publishedEventDictionaries?.count).toEventually(equal(testContext.events.count))
                     expect(testContext.serviceMock.publishedEventDictionaryKeys).toEventually(equal(testContext.eventKeys))
-                    expect( testContext.eventReporter.eventStore.isEmpty).toEventually(beTrue())
+                    expect(testContext.eventReporter.eventStore.isEmpty).toEventually(beTrue())
+                    expect(testContext.diagnosticCache.recordEventsInLastBatchCallCount).toEventually(equal(1))
+                    expect(testContext.diagnosticCache.recordEventsInLastBatchReceivedEventsInLastBatch).toEventually(equal(testContext.events.count))
                 }
             }
             context("without events") {
@@ -980,6 +1000,6 @@ extension Event.Kind {
 extension Array where Element == [String: Any] {
     static func == (_ lhs: [[String: Any]], _ rhs: [[String: Any]]) -> Bool {
         // Same length and the left hand side does not contain any elements not in the right hand side
-        return lhs.count == rhs.count && !lhs.contains { !rhs.contains($0) }
+        lhs.count == rhs.count && !lhs.contains { !rhs.contains($0) }
     }
 }

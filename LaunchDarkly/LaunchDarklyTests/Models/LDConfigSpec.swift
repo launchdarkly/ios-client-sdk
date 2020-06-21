@@ -2,7 +2,6 @@
 //  LDConfigSpec.swift
 //  LaunchDarklyTests
 //
-//  Created by Mark Pokorny on 11/10/17. +JMJ
 //  Copyright © 2017 Catamorphic Co. All rights reserved.
 //
 
@@ -31,6 +30,12 @@ final class LDConfigSpec: QuickSpec {
         fileprivate static let inlineUserInEvents = true
 
         fileprivate static let debugMode = true
+        fileprivate static let evaluationReasons = true
+        fileprivate static let maxCachedUsers = -1
+        fileprivate static let diagnosticOptOut = true
+        fileprivate static let diagnosticRecordingInterval: TimeInterval = 600.0
+        fileprivate static let wrapperName = "ReactNative"
+        fileprivate static let wrapperVersion = "0.1.0"
     }
 
     struct TestContext {
@@ -54,6 +59,7 @@ final class LDConfigSpec: QuickSpec {
         initSpec()
         flagPollingIntervalSpec()
         equalsSpec()
+        diagnosticReportingIntervalSpec()
         isReportRetryStatusCodeSpec()
         allowStreamingModeSpec()
         allowBackgroundUpdatesSpec()
@@ -84,13 +90,19 @@ final class LDConfigSpec: QuickSpec {
                     expect(config.useReport) == LDConfig.Defaults.useReport
                     expect(config.inlineUserInEvents) == LDConfig.Defaults.inlineUserInEvents
                     expect(config.isDebugMode) == LDConfig.Defaults.debugMode
+                    expect(config.evaluationReasons) == LDConfig.Defaults.evaluationReasons
+                    expect(config.maxCachedUsers) == LDConfig.Defaults.maxCachedUsers
+                    expect(config.diagnosticOptOut) == LDConfig.Defaults.diagnosticOptOut
+                    expect(config.diagnosticRecordingInterval) == LDConfig.Defaults.diagnosticRecordingInterval
+                    expect(config.wrapperName == LDConfig.Defaults.wrapperName) == true
+                    expect(config.wrapperVersion == LDConfig.Defaults.wrapperVersion) == true
                 }
             }
             context("changing the config values") {
                 var testElements: [(OperatingSystem, LDConfig)]!
                 beforeEach {
                     testElements = [(OperatingSystem, LDConfig)]()
-                    OperatingSystem.allOperatingSystems.forEach { (os) in   //iOS, watchOS, & tvOS don't allow enableBackgroundUpdates to change, macOS should
+                    OperatingSystem.allOperatingSystems.forEach { os in   //iOS, watchOS, & tvOS don't allow enableBackgroundUpdates to change, macOS should
                         let testContext = TestContext(operatingSystem: os)
                         config = testContext.subject
 
@@ -110,12 +122,18 @@ final class LDConfigSpec: QuickSpec {
                         config.useReport = Constants.useReport
                         config.inlineUserInEvents = Constants.inlineUserInEvents
                         config.isDebugMode = Constants.debugMode
+                        config.evaluationReasons = Constants.evaluationReasons
+                        config.maxCachedUsers = Constants.maxCachedUsers
+                        config.diagnosticOptOut = Constants.diagnosticOptOut
+                        config.diagnosticRecordingInterval = Constants.diagnosticRecordingInterval
+                        config.wrapperName = Constants.wrapperName
+                        config.wrapperVersion = Constants.wrapperVersion
 
                         testElements.append((os, config))
                     }
                 }
                 it("has the changed config values") {
-                    testElements.forEach { (os, config) in
+                    testElements.forEach { os, config in
                         expect(config.baseUrl) == Constants.alternateMockUrl
                         expect(config.eventsUrl) == Constants.alternateMockUrl
                         expect(config.streamUrl) == Constants.alternateMockUrl
@@ -132,6 +150,12 @@ final class LDConfigSpec: QuickSpec {
                         expect(config.useReport) == Constants.useReport
                         expect(config.inlineUserInEvents) == Constants.inlineUserInEvents
                         expect(config.isDebugMode) == Constants.debugMode
+                        expect(config.evaluationReasons) == Constants.evaluationReasons
+                        expect(config.maxCachedUsers) == Constants.maxCachedUsers
+                        expect(config.diagnosticOptOut) == Constants.diagnosticOptOut
+                        expect(config.diagnosticRecordingInterval) == Constants.diagnosticRecordingInterval
+                        expect(config.wrapperName) == Constants.wrapperName
+                        expect(config.wrapperVersion) == Constants.wrapperVersion
                     }
                 }
             }
@@ -150,6 +174,7 @@ final class LDConfigSpec: QuickSpec {
                 it("has the production minima") {
                     expect(minima.flagPollingInterval) == LDConfig.Minima.Production.flagPollingInterval
                     expect(minima.backgroundFlagPollingInterval) == LDConfig.Minima.Production.backgroundFlagPollingInterval
+                    expect(minima.diagnosticRecordingInterval) == LDConfig.Minima.Production.diagnosticRecordingInterval
                 }
             }
             context("for debug builds") {
@@ -160,6 +185,7 @@ final class LDConfigSpec: QuickSpec {
                 it("has the debug minima") {
                     expect(minima.flagPollingInterval) == LDConfig.Minima.Debug.flagPollingInterval
                     expect(minima.backgroundFlagPollingInterval) == LDConfig.Minima.Debug.backgroundFlagPollingInterval
+                    expect(minima.diagnosticRecordingInterval) == LDConfig.Minima.Debug.diagnosticRecordingInterval
                 }
             }
         }
@@ -241,13 +267,34 @@ final class LDConfigSpec: QuickSpec {
         }
     }
 
+    func diagnosticReportingIntervalSpec() {
+        var testContext: TestContext!
+        describe("diagnosticReportingIntervalSpec") {
+            beforeEach {
+                testContext = TestContext()
+            }
+            context("set below minimal value") {
+                it("sets to minimal value") {
+                    testContext.subject.diagnosticRecordingInterval = testContext.subject.minima.diagnosticRecordingInterval - 0.001
+                    expect(testContext.subject.diagnosticRecordingInterval) == testContext.subject.minima.diagnosticRecordingInterval
+                }
+            }
+            context("set above minimal value") {
+                it("sets to expected value") {
+                    testContext.subject.diagnosticRecordingInterval = testContext.subject.minima.diagnosticRecordingInterval + 0.001
+                    expect(testContext.subject.diagnosticRecordingInterval) == testContext.subject.minima.diagnosticRecordingInterval + 0.001
+                }
+            }
+        }
+    }
+
     func equalsSpec() {
         var testContext: TestContext!
         var otherConfig: LDConfig!
 
         beforeEach {
-            testContext = TestContext(useStub: true)
-            testContext.subject.useReport = true
+            //must use a background enabled OS to test inequality of background enabled
+            testContext = TestContext(useStub: true, operatingSystem: OperatingSystem.backgroundEnabledOperatingSystems.first!)
         }
 
         describe("equals") {
@@ -262,130 +309,48 @@ final class LDConfigSpec: QuickSpec {
             context("when the mobile keys differ") {
                 beforeEach {
                     otherConfig = LDConfig.stub(mobileKey: LDConfig.Constants.alternateMobileKey, environmentReporter: testContext.environmentReporter)
-                    otherConfig.useReport = testContext.subject.useReport
                 }
                 it("returns false") {
                     expect(testContext.subject) != otherConfig
                 }
             }
-            context("when the base URLs differ") {
-                beforeEach {
-                    otherConfig = testContext.subject
-                    otherConfig.baseUrl = Constants.alternateMockUrl
-                }
-                it("returns false") {
-                    expect(testContext.subject) != otherConfig
-                }
-            }
-            context("when the event URLs differ") {
-                beforeEach {
-                    otherConfig = testContext.subject
-                    otherConfig.eventsUrl = Constants.alternateMockUrl
-                }
-                it("returns false") {
-                    expect(testContext.subject) != otherConfig
-                }
-            }
-            context("when the stream URLs differ") {
-                beforeEach {
-                    otherConfig = testContext.subject
-                    otherConfig.streamUrl = Constants.alternateMockUrl
-                }
-                it("returns false") {
-                    expect(testContext.subject) != otherConfig
-                }
-            }
-            context("when the event capacities differ") {
-                beforeEach {
-                    otherConfig = testContext.subject
-                    otherConfig.eventCapacity = testContext.subject.eventCapacity + 1
-                }
-                it("returns false") {
-                    expect(testContext.subject) != otherConfig
-                }
-            }
-            context("when the connection timeouts differ") {
-                beforeEach {
-                    otherConfig = testContext.subject
-                    otherConfig.connectionTimeout = testContext.subject.connectionTimeout + 0.001
-                }
-                it("returns false") {
-                    expect(testContext.subject) != otherConfig
-                }
-            }
-            context("when the event flush intervals differ") {
-                beforeEach {
-                    otherConfig = testContext.subject
-                    otherConfig.eventFlushInterval = testContext.subject.eventFlushInterval + 0.001
-                }
-                it("returns false") {
-                    expect(testContext.subject) != otherConfig
-                }
-            }
-            context("when the poll intervals differ") {
-                beforeEach {
-                    otherConfig = testContext.subject
-                    otherConfig.flagPollingInterval = testContext.subject.flagPollingInterval + 0.001
-                }
-                it("returns false") {
-                    expect(testContext.subject) != otherConfig
-                }
-            }
-            context("when the background poll intervals differ") {
-                beforeEach {
-                    otherConfig = testContext.subject
-                    otherConfig.backgroundFlagPollingInterval = testContext.subject.backgroundFlagPollingInterval + 0.001
-                }
-                it("returns false") {
-                    expect(testContext.subject) != otherConfig
-                }
-            }
-            context("when the streaming modes differ") {
-                beforeEach {
-                    otherConfig = testContext.subject
-                    otherConfig.streamingMode = testContext.subject.streamingMode == .streaming ? .polling : .streaming
-                }
-                it("returns false") {
-                    expect(testContext.subject) != otherConfig
-                }
-            }
-            context("when enable background updates differ") {
-                beforeEach {
-                    testContext = TestContext(useStub: true, operatingSystem: OperatingSystem.backgroundEnabledOperatingSystems.first!) //must use a background enabled OS to test inequality
-                    testContext.subject.useReport = true
 
-                    otherConfig = testContext.subject
-                    otherConfig.enableBackgroundUpdates = !testContext.subject.enableBackgroundUpdates
-                }
-                it("returns false") {
-                    expect(testContext.subject) != otherConfig
-                }
-            }
-            context("when start online differs") {
-                beforeEach {
-                    otherConfig = testContext.subject
-                    otherConfig.startOnline = !testContext.subject.startOnline
-                }
-                it("returns false") {
-                    expect(testContext.subject) != otherConfig
-                }
-            }
-            context("when debug modes differ") {
-                beforeEach {
-                    otherConfig = testContext.subject
-                    otherConfig.isDebugMode = !testContext.subject.isDebugMode
-                }
-                it("returns false") {
-                    expect(testContext.subject) != otherConfig
-                }
-            }
-            context("when allUserAttributesPrivate differs") {
-                beforeEach {
-                    otherConfig = testContext.subject
-                    otherConfig.allUserAttributesPrivate = !testContext.subject.allUserAttributesPrivate
-                }
-                it("returns false") {
-                    expect(testContext.subject) != otherConfig
+            context("when values are different") {
+                let testFields: [(String, Any, (inout LDConfig, Any?) -> Void)] =
+                    [("base URL", Constants.alternateMockUrl, { c, v in c.baseUrl = v as! URL }),
+                     ("event URL", Constants.alternateMockUrl, { c, v in c.eventsUrl = v as! URL }),
+                     ("stream URL", Constants.alternateMockUrl, { c, v in c.streamUrl = v as! URL }),
+                     ("event capacity", Constants.eventCapacity, { c, v in c.eventCapacity = v as! Int }),
+                     ("connection timeout", Constants.connectionTimeout, { c, v in c.connectionTimeout = v as! TimeInterval }),
+                     ("event flush interval", Constants.eventFlushInterval, { c, v in c.eventFlushInterval = v as! TimeInterval }),
+                     ("poll interval", Constants.flagPollingInterval, { c, v in c.flagPollingInterval = v as! TimeInterval }),
+                     ("background poll interval", Constants.backgroundFlagPollingInterval, { c, v in c.backgroundFlagPollingInterval = v as! TimeInterval }),
+                     ("streaming mode", Constants.streamingMode, { c, v in c.streamingMode = v as! LDStreamingMode }),
+                     ("enable background updates", Constants.enableBackgroundUpdates, { c, v in c.enableBackgroundUpdates = v as! Bool }),
+                     ("start online", Constants.startOnline, { c, v in c.startOnline = v as! Bool }),
+                     ("debug mode", Constants.debugMode, { c, v in c.isDebugMode = v as! Bool }),
+                     ("all user attributes private", Constants.allUserAttributesPrivate, { c, v in c.allUserAttributesPrivate = v as! Bool }),
+                     ("use report", Constants.useReport, { c, v in c.useReport = v as! Bool }),
+                     ("inline user in events", Constants.inlineUserInEvents, { c, v in c.inlineUserInEvents = v as! Bool }),
+                     ("evaluation reasons", Constants.evaluationReasons, { c, v in c.evaluationReasons = v as! Bool }),
+                     ("max cached users", Constants.maxCachedUsers, { c, v in c.maxCachedUsers = v as! Int }),
+                     ("diagnostic opt out", Constants.diagnosticOptOut, { c, v in c.diagnosticOptOut = v as! Bool }),
+                     ("diagnostic recording interval", Constants.diagnosticRecordingInterval, { c, v in c.diagnosticRecordingInterval = v as! TimeInterval }),
+                     ("wrapper name", Constants.wrapperName, { c, v in c.wrapperName = v as! String? }),
+                     ("wrapper version", Constants.wrapperVersion, { c, v in c.wrapperVersion = v as! String? })]
+                testFields.forEach { name, otherVal, setter in
+                    context("when \(name) differs") {
+                        beforeEach {
+                            otherConfig = testContext.subject
+                        }
+                        context("and both exist") {
+                            it("returns false") {
+                                setter(&otherConfig, otherVal)
+                                expect(testContext.subject) != otherConfig
+                                expect(otherConfig) != testContext.subject
+                            }
+                        }
+                    }
                 }
             }
             context("when privateUserAttributes differ") {
@@ -394,30 +359,12 @@ final class LDConfigSpec: QuickSpec {
                     otherConfig = testContext.subject
                 }
                 it("returns false") {
-                    LDUser.privatizableAttributes.forEach { (attribute) in
+                    LDUser.privatizableAttributes.forEach { attribute in
                         otherConfig.privateUserAttributes = LDUser.privatizableAttributes.filter {
                             $0 != attribute
                         }
                         expect(testContext.subject) != otherConfig
                     }
-                }
-            }
-            context("when useReport differs") {
-                beforeEach {
-                    otherConfig = testContext.subject
-                    otherConfig.useReport = !testContext.subject.useReport
-                }
-                it("returns false") {
-                    expect(testContext.subject) != otherConfig
-                }
-            }
-            context("when inlineUserInEvents differs") {
-                beforeEach {
-                    otherConfig = testContext.subject
-                    otherConfig.inlineUserInEvents = !testContext.subject.inlineUserInEvents
-                }
-                it("returns false") {
-                    expect(testContext.subject) != otherConfig
                 }
             }
         }
@@ -431,19 +378,19 @@ final class LDConfigSpec: QuickSpec {
                     testStatusCodes = LDConfig.reportRetryStatusCodes
                 }
                 it("returns true") {
-                    testStatusCodes.forEach { (testCode) in
+                    testStatusCodes.forEach { testCode in
                         expect(LDConfig.isReportRetryStatusCode(testCode)) == true
                     }
                 }
             }
             context("when status code is not a retry status code") {
                 beforeEach {
-                    testStatusCodes = HTTPURLResponse.StatusCodes.all.filter { (code) in
+                    testStatusCodes = HTTPURLResponse.StatusCodes.all.filter { code in
                         !LDConfig.reportRetryStatusCodes.contains(code)
                     }
                 }
                 it("returns false") {
-                    testStatusCodes.forEach { (testCode) in
+                    testStatusCodes.forEach { testCode in
                         expect(LDConfig.isReportRetryStatusCode(testCode)) == false
                     }
                 }
