@@ -33,7 +33,6 @@ final class FlagChangeNotifier: FlagChangeNotifying {
 
     func addFlagsUnchangedObserver(_ observer: FlagsUnchangedObserver) {
         Log.debug(typeName(and: #function) + "observer: \(observer)")
-        print("BUFFALO UNCHANGED SET")
         flagsUnchangedObservers.append(observer)
     }
 
@@ -76,7 +75,6 @@ final class FlagChangeNotifier: FlagChangeNotifying {
 
     func notifyObservers(user: LDUser, oldFlags: [LDFlagKey: FeatureFlag], oldFlagSource: LDFlagValueSource) {
         removeOldObservers()
-        print("BUFFALO NOTIFY START")
 
         let changedFlagKeys = findChangedFlagKeys(oldFlags: oldFlags, newFlags: user.flagStore.featureFlags)
         guard !changedFlagKeys.isEmpty
@@ -116,7 +114,6 @@ final class FlagChangeNotifier: FlagChangeNotifying {
         })
         Log.debug(typeName(and: #function) + "notifying observers for changes to flags: \(changedFlags.keys.joined(separator: ", ")).")
         selectedObservers.forEach { observer in
-            print("BUFFALO NOTIFY selected")
             let filteredChangedFlags = changedFlags.filter { flagKey, _ -> Bool in
                 observer.flagKeys == LDFlagKey.anyKey || observer.flagKeys.contains(flagKey)
             }

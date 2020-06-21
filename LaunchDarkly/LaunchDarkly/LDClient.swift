@@ -120,11 +120,9 @@ public class LDClient {
     }
     
     private func internalSetOnline(_ goOnline: Bool, completion: (() -> Void)? = nil) {
-        print("BUFFALO SETONLINE")
         lastSetOnlineCallValue = goOnline
         guard goOnline, canGoOnline
             else {
-                print("BUFFALO UNTHROTTLED")
                 //go offline, which is not throttled
                 go(online: false, reasonOnlineUnavailable: reasonOnlineUnavailable(goOnline: goOnline), completion: completion)
                 return
@@ -132,16 +130,16 @@ public class LDClient {
         
         throttler.runThrottled {
             //since going online was throttled, check the last called setOnline value and whether we can go online
-            print("BUFFALO THROTTLED")
             self.go(online: self.lastSetOnlineCallValue && self.canGoOnline, reasonOnlineUnavailable: self.reasonOnlineUnavailable(goOnline: self.lastSetOnlineCallValue), completion: completion)
         }
-        print("BUFFALO SETONLINE END")
     }
     
     private func go(online goOnline: Bool, reasonOnlineUnavailable: String, completion:(() -> Void)?) {
-        print("BUFFALO GO: " + (completion == nil ? "nil" : "not nil"))
         let owner = "SetOnlineOwner" as AnyObject
-        if completion != nil {
+        if completion != nil && !goOnline {
+            print("BUFFALO GO OFFLINE COMPLETION")
+            completion?()
+        } else if completion != nil {
             print("BUFFALO COMPLETION GO")
             observeAll(owner: owner) { _ in
                 print("BUFFALO COMPLETE")
@@ -245,7 +243,6 @@ public class LDClient {
     
     private func internalIdentify(newUser: LDUser, completion: (() -> Void)? = nil) {
         LDClient.identifyQueue.async {
-            print("BUFFALO IDENTIFY START")
             var internalUser = newUser
             internalUser.flagStore = FlagStore(featureFlagDictionary: newUser.flagStore.featureFlags, flagValueSource: newUser.flagStore.flagValueSource)
             self.user = internalUser
@@ -268,7 +265,6 @@ public class LDClient {
             }
             
             self.setOnline(wasOnline, completion: completion)
-            print("BUFFALO IDENTIFY END")
         }
     }
     
@@ -645,7 +641,6 @@ public class LDClient {
      */
     public func observeAll(owner: LDObserverOwner, handler: @escaping LDFlagCollectionChangeHandler) {
         Log.debug(typeName(and: #function) + " owner: \(String(describing: owner))")
-        print("BUFFALO ALL")
         flagChangeNotifier.addFlagChangeObserver(FlagChangeObserver(keys: LDFlagKey.anyKey, owner: owner, flagCollectionChangeHandler: handler))
     }
     
@@ -672,7 +667,6 @@ public class LDClient {
      */
     public func observeFlagsUnchanged(owner: LDObserverOwner, handler: @escaping LDFlagsUnchangedHandler) {
         Log.debug(typeName(and: #function) + " owner: \(String(describing: owner))")
-        print("BUFFALO UNCHANGED")
         flagChangeNotifier.addFlagsUnchangedObserver(FlagsUnchangedObserver(owner: owner, flagsUnchangedHandler: handler))
     }
     
@@ -870,19 +864,21 @@ public class LDClient {
         let flagChangeNotifier = FlagChangeNotifier()
         var mobileKeys = config.secondaryMobileKeys ?? [:]
         var internalCount = 0
+        let completionCheck = {
+            internalCount += 1
+            if internalCount > mobileKeys.count {
+                Log.debug("All LDClients finished starting")
+                completion?()
+            }
+        }
         mobileKeys[LDConfig.Defaults.primaryEnvironmentName] = config.mobileKey
         for (name, mobileKey) in mobileKeys {
             var internalConfig = config
             internalConfig.mobileKey = mobileKey
-            let instance = LDClient(configuration: internalConfig, startUser: internalUser, flagCache: cache, flagNotifier: flagChangeNotifier) {
-                internalCount += 1
-                if internalCount >= mobileKeys.count {
-                    Log.debug("All LDClients finished starting")
-                    completion?()
-                }
-            }
+            let instance = LDClient(configuration: internalConfig, startUser: internalUser, flagCache: cache, flagNotifier: flagChangeNotifier, completion: completionCheck)
             LDClient.instances?[name] = instance
         }
+        completionCheck()
     }
     
     public static func start(config: LDConfig, startUser: LDUser? = nil, startWaitSeconds: TimeInterval, completion: ((_ timedOut: Bool) -> Void)? = nil) {
@@ -972,9 +968,6 @@ public class LDClient {
     }
     
     private init(serviceFactory: ClientServiceCreating? = nil, configuration: LDConfig, startUser: LDUser?, flagCache: FeatureFlagCaching, flagNotifier: FlagChangeNotifying, completion: (() -> Void)? = nil) {
-        print("BUFFALO INIT REAL")
-        let wasStarted = hasStarted
-        let wasOnline = isOnline
         isStarting = true
         hasStarted = true
         
@@ -1012,25 +1005,20 @@ public class LDClient {
         NotificationCenter.default.addObserver(self, selector: #selector(didCloseEventSource), name: Notification.Name(FlagSynchronizer.Constants.didCloseEventSourceName), object: nil)
 
         eventReporter = self.serviceFactory.makeEventReporter(config: config, service: service, onSyncComplete: onEventSyncComplete)
-        print("BUFFALO BEFORE FALSE")
         internalSetOnline(false)
-        print("BUFFALO AFTER FALSE")
         cacheConverter.convertCacheData(for: user, and: config)
-        print("BUFFALO BEFORE IDENTIFY")
         internalIdentify(newUser: user)
         self.connectionInformation = ConnectionInformation.uncacheConnectionInformation(config: config, ldClient: self, clientServiceFactory: self.serviceFactory)
-        print("BUFFALO AFTER IDENTIFY: " + ((wasStarted && wasOnline) || (!wasStarted && self.config.startOnline) ? "true" : "false"))
-        internalSetOnline((wasStarted && wasOnline) || (!wasStarted && self.config.startOnline)) {
+
+        internalSetOnline(configuration.startOnline) {
             print("BUFFALO LAST ONLINE COMPLETE")
             Log.debug("LDClient started")
             self.isStarting = false
             completion?()
         }
-        print("BUFFALO INIT REAL END")
     }
     
     private convenience init(serviceFactory: ClientServiceCreating, config: LDConfig, startUser: LDUser?, runMode: LDClientRunMode, flagCache: FeatureFlagCaching, flagNotifier: FlagChangeNotifying, completion: (() -> Void)? = nil) {
-        print("BUFFALO INIT UNREAL")
         self.init(serviceFactory: serviceFactory, configuration: config, startUser: startUser, flagCache: flagCache, flagNotifier: flagNotifier, completion: completion)
         //Setting these inside the init do not trigger the didSet closures
         self.runMode = runMode
@@ -1048,7 +1036,6 @@ public class LDClient {
                                                                     onSyncComplete: onFlagSyncComplete)
         eventReporter = self.serviceFactory.makeEventReporter(config: config, service: service, onSyncComplete: onEventSyncComplete)
         self.isStarting = false
-        print("BUFFALO INIT UNREAL END")
     }
 }
 
@@ -1073,30 +1060,31 @@ private extension Optional {
         static func start(serviceFactory: ClientServiceCreating, config: LDConfig, startUser: LDUser? = nil, runMode: LDClientRunMode = .foreground, flagCache: FeatureFlagCaching, flagNotifier: FlagChangeNotifier, completion: (() -> Void)? = nil) {
             Log.debug("LDClient starting")
             if instances != nil {
-                Log.debug("LDClient.start() was called more than once!")
-                return
+                instances = nil
             }
-            print("BUFFALO START")
+            
             let anonymousUser = LDUser(environmentReporter: EnvironmentReporter())
             let internalUser = startUser ?? anonymousUser
             
             LDClient.instances = [:]
             var mobileKeys = config.secondaryMobileKeys ?? [:]
             var internalCount = 0
+            let completionCheck = {
+                internalCount += 1
+                if internalCount > mobileKeys.count {
+                    print("BUFFALO END")
+                    Log.debug("All LDClients finished starting")
+                    completion?()
+                }
+            }
             mobileKeys[LDConfig.Defaults.primaryEnvironmentName] = config.mobileKey
             for (name, mobileKey) in mobileKeys {
                 var internalConfig = config
                 internalConfig.mobileKey = mobileKey
-                let instance = LDClient(serviceFactory: serviceFactory, config: internalConfig, startUser: internalUser, runMode: runMode, flagCache: flagCache, flagNotifier: flagNotifier) {
-                    internalCount += 1
-                    if internalCount >= mobileKeys.count {
-                        print("BUFFALO END")
-                        Log.debug("All LDClients finished starting")
-                        completion?()
-                    }
-                }
+                let instance = LDClient(serviceFactory: serviceFactory, config: internalConfig, startUser: internalUser, runMode: runMode, flagCache: flagCache, flagNotifier: flagNotifier, completion: completionCheck)
                 LDClient.instances?[name] = instance
             }
+            completionCheck()
         }
         
         static func start(serviceFactory: ClientServiceCreating, config: LDConfig, startUser: LDUser? = nil, startWaitSeconds: TimeInterval, runMode: LDClientRunMode = .foreground, flagCache: FeatureFlagCaching, flagNotifier: FlagChangeNotifier, completion: ((_ timedOut: Bool) -> Void)? = nil) {

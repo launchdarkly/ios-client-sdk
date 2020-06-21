@@ -139,15 +139,44 @@ final class LDClientSpec: QuickSpec {
         }
 
         init(newUser: LDUser? = nil,
-             noUser: Bool = false,
              newConfig: LDConfig? = nil,
              startOnline: Bool = false,
              streamingMode: LDStreamingMode = .streaming,
              enableBackgroundUpdates: Bool = true,
              runMode: LDClientRunMode = .foreground,
              operatingSystem: OperatingSystem? = nil,
-             timeOut: TimeInterval? = nil,
-             completion: (() -> Void)? = nil,
+             completion: (() -> Void)? = nil) {
+
+            let clientServiceFactory = ClientServiceMockFactory()
+            if let operatingSystem = operatingSystem {
+                clientServiceFactory.makeEnvironmentReporterReturnValue.operatingSystem = operatingSystem
+            }
+
+            config = newConfig != nil ? newConfig : LDConfig.stub(mobileKey: LDConfig.Constants.mockMobileKey, environmentReporter: clientServiceFactory.makeEnvironmentReporterReturnValue)
+            config.startOnline = startOnline
+            config.streamingMode = streamingMode
+            config.enableBackgroundUpdates = enableBackgroundUpdates
+            config.eventFlushInterval = 300.0   //5 min...don't want this to trigger
+            user = newUser == nil ? LDUser.stub() : newUser
+            oldFlags = user.flagStore.featureFlags
+            oldFlagSource = user.flagStore.flagValueSource
+
+            let flagNotifier = (ClientServiceFactory().makeFlagChangeNotifier() as! FlagChangeNotifier)
+            
+            LDClient.start(serviceFactory: clientServiceFactory, config: config, startUser: user, flagCache: clientServiceFactory.makeFeatureFlagCache(), flagNotifier: flagNotifier) {
+                    self.startCompletion(runMode: runMode, completion: completion)
+            }
+            flagNotifier.notifyObservers(user: self.user, oldFlags: self.oldFlags, oldFlagSource: self.oldFlagSource)
+        }
+        
+        init(newUser: LDUser? = nil,
+             newConfig: LDConfig? = nil,
+             startOnline: Bool = false,
+             streamingMode: LDStreamingMode = .streaming,
+             enableBackgroundUpdates: Bool = true,
+             runMode: LDClientRunMode = .foreground,
+             operatingSystem: OperatingSystem? = nil,
+             timeOut: TimeInterval,
              timeOutCompletion: ((_ timedOut: Bool) -> Void)? = nil) {
 
             let clientServiceFactory = ClientServiceMockFactory()
@@ -160,20 +189,14 @@ final class LDClientSpec: QuickSpec {
             config.streamingMode = streamingMode
             config.enableBackgroundUpdates = enableBackgroundUpdates
             config.eventFlushInterval = 300.0   //5 min...don't want this to trigger
-            user = newUser == nil && !noUser ? LDUser.stub() : newUser
+            user = newUser == nil ? LDUser.stub() : newUser
             oldFlags = user.flagStore.featureFlags
             oldFlagSource = user.flagStore.flagValueSource
 
             let flagNotifier = (ClientServiceFactory().makeFlagChangeNotifier() as! FlagChangeNotifier)
             
-            if timeOut != nil {
-                LDClient.start(serviceFactory: clientServiceFactory, config: config, startUser: user, startWaitSeconds: timeOut!, flagCache: clientServiceFactory.makeFeatureFlagCache(), flagNotifier: flagNotifier) { timedOut in
-                    self.startCompletion(runMode: runMode, timedOut: timedOut, timeOutCompletion: timeOutCompletion)
-                }
-            } else {
-                LDClient.start(serviceFactory: clientServiceFactory, config: config, startUser: user, flagCache: clientServiceFactory.makeFeatureFlagCache(), flagNotifier: flagNotifier) {
-                    self.startCompletion(runMode: runMode, completion: completion)
-                }
+            LDClient.start(serviceFactory: clientServiceFactory, config: config, startUser: user, startWaitSeconds: timeOut, flagCache: clientServiceFactory.makeFeatureFlagCache(), flagNotifier: flagNotifier) { timedOut in
+                self.startCompletion(runMode: runMode, timedOut: timedOut, timeOutCompletion: timeOutCompletion)
             }
             flagNotifier.notifyObservers(user: self.user, oldFlags: self.oldFlags, oldFlagSource: self.oldFlagSource)
         }
@@ -182,8 +205,6 @@ final class LDClientSpec: QuickSpec {
             subject = LDClient.get()
             featureFlagCachingMock.reset()
             setFlagStoreCallbackToMimicRealFlagStore()
-
-            setThrottlerToExecuteRunClosure()
 
             if runMode == .background {
                 subject.setRunMode(.background)
@@ -205,18 +226,12 @@ final class LDClientSpec: QuickSpec {
                 self.flagStoreMock!.featureFlags = newFlags ?? self.flagStoreMock!.featureFlags
             }
         }
-
-        func setThrottlerToExecuteRunClosure() {
-            throttlerMock?.runThrottledCallback = {
-                self.throttlerMock?.runThrottledReceivedRunClosure?()
-            }
-        }
     }
 
     override func spec() {
         startSpec()
-        /*startWithTimeoutSpec()
-        setConfigSpec()
+        startWithTimeoutSpec()
+        /*setConfigSpec()
         setUserSpec()
         setOnlineSpec()
         closeSpec()
@@ -280,7 +295,7 @@ final class LDClientSpec: QuickSpec {
                     expect(testContext.cacheConvertingMock.convertCacheDataReceivedArguments?.config) == testContext.config
                 }
             }
-            /*context("when configured to start offline") {
+            context("when configured to start offline") {
                 beforeEach {
                     waitUntil { done in
                         testContext = TestContext(startOnline: false, completion: done)
@@ -476,17 +491,11 @@ final class LDClientSpec: QuickSpec {
                 context("while offline") {
                     beforeEach {
                         waitUntil { done in
-                            testContext = TestContext(startOnline: false, completion: done)
-                        }
-                        testContext.featureFlagCachingMock.reset()
+                            newConfig = LDConfig(mobileKey: Constants.alternateMockMobileKey)
+                            newConfig.baseUrl = Constants.alternateMockUrl
 
-                        newConfig = testContext.subject.config.copyReplacingMobileKey(Constants.alternateMockMobileKey)
-                        newConfig.baseUrl = Constants.alternateMockUrl
-
-                        newUser = LDUser.stub()
-
-                        LDClient.start(config: newConfig, startUser: newUser) {
-                            testContext.subject = LDClient.get()
+                            newUser = LDUser.stub()
+                            testContext = TestContext(newUser: newUser, newConfig: newConfig, startOnline: false, completion: done)
                         }
                     }
                     it("leaves the client and service objects offline") {
@@ -530,7 +539,7 @@ final class LDClientSpec: QuickSpec {
             context("when called without user") {
                 context("after setting user") {
                     beforeEach {waitUntil { done in
-                            testContext = TestContext(noUser: true, startOnline: true) {
+                            testContext = TestContext(startOnline: true) {
                                 //testContext.subject.user = testContext.user
                                 testContext.subject.identify(user: testContext.user)
                                 testContext.featureFlagCachingMock.reset()
@@ -573,7 +582,7 @@ final class LDClientSpec: QuickSpec {
                 context("without setting user") {
                     beforeEach {
                         waitUntil { done in
-                            testContext = TestContext(noUser: true, startOnline: true) {
+                            testContext = TestContext(startOnline: true) {
                                 //testContext.subject.user = testContext.user
                                 testContext.config = testContext.subject.config
                                 testContext.subject.identify(user: testContext.user)
@@ -615,13 +624,11 @@ final class LDClientSpec: QuickSpec {
                 var retrievedFlags: [LDFlagKey: FeatureFlag]!
                 beforeEach {
                     waitUntil { done in
-                        testContext = TestContext(startOnline: false) {
-                            testContext.featureFlagCachingMock.retrieveFeatureFlagsReturnValue = testContext.user.flagStore.featureFlags
-                            retrievedFlags = testContext.user.flagStore.featureFlags
-                            testContext.flagStoreMock.featureFlags = [:]
-                            done()
-                        }
+                        testContext = TestContext(startOnline: false, completion: done)
                     }
+                    testContext.featureFlagCachingMock.retrieveFeatureFlagsReturnValue = testContext.user.flagStore.featureFlags
+                    retrievedFlags = testContext.user.flagStore.featureFlags
+                    testContext.flagStoreMock.featureFlags = [:]
                 }
                 it("checks the flag cache for the user and environment") {
                     expect(testContext.featureFlagCachingMock.retrieveFeatureFlagsCallCount) == 1
@@ -659,11 +666,9 @@ final class LDClientSpec: QuickSpec {
                     expect(testContext.cacheConvertingMock.convertCacheDataReceivedArguments?.user) == testContext.user
                     expect(testContext.cacheConvertingMock.convertCacheDataReceivedArguments?.config) == testContext.config
                 }
-            }*/
+            }
         }
     }
-    
-    
 
     private func startWithTimeoutSpec() {
         describe("startWithTimeout") {
@@ -1037,7 +1042,7 @@ final class LDClientSpec: QuickSpec {
                 context("without setting user") {
                     beforeEach {
                         waitUntil { done in
-                            testContext = TestContext(noUser: true, startOnline: false, timeOut: 3) { timedOut in
+                            testContext = TestContext(startOnline: false, timeOut: 3) { timedOut in
                                 expect(timedOut) == true
                                 done()
                             }
@@ -2282,7 +2287,6 @@ final class LDClientSpec: QuickSpec {
             var testContext: TestContext!
             beforeEach {
                 testContext = TestContext {
-                    testContext.subject = LDClient.get()
                     testContext.subject.flagChangeNotifier = ClientServiceMockFactory().makeFlagChangeNotifier()
                 }
                 changedFlag = LDChangedFlag(key: DarklyServiceMock.FlagKeys.bool, oldValue: false, oldValueSource: .cache, newValue: true, newValueSource: .server)
@@ -2306,8 +2310,7 @@ final class LDClientSpec: QuickSpec {
             var testContext: TestContext!
 
             beforeEach {
-                testContext = TestContext() {
-                    testContext.subject = LDClient.get()
+                testContext = TestContext {
                     testContext.subject.flagChangeNotifier = ClientServiceMockFactory().makeFlagChangeNotifier()
                 }
                 changedFlags = [DarklyServiceMock.FlagKeys.bool: LDChangedFlag(key: DarklyServiceMock.FlagKeys.bool,
@@ -2334,8 +2337,7 @@ final class LDClientSpec: QuickSpec {
             var receivedChangedFlags: [LDFlagKey: LDChangedFlag]?
             var testContext: TestContext!
             beforeEach {
-                testContext = TestContext() {
-                    testContext.subject = LDClient.get()
+                testContext = TestContext {
                     testContext.subject.flagChangeNotifier = ClientServiceMockFactory().makeFlagChangeNotifier()
                 }
                 changedFlags = [DarklyServiceMock.FlagKeys.bool: LDChangedFlag(key: DarklyServiceMock.FlagKeys.bool,
@@ -2361,8 +2363,7 @@ final class LDClientSpec: QuickSpec {
         describe("observeFlagsUnchanged") {
             var testContext: TestContext!
             beforeEach {
-                testContext = TestContext() {
-                    testContext.subject = LDClient.get()
+                testContext = TestContext {
                     testContext.subject.flagChangeNotifier = ClientServiceMockFactory().makeFlagChangeNotifier()
                 }
 
@@ -2382,8 +2383,7 @@ final class LDClientSpec: QuickSpec {
         describe("observeConnectionModeChanged") {
             var testContext: TestContext!
             beforeEach {
-                testContext = TestContext() {
-                    testContext.subject = LDClient.get()
+                testContext = TestContext {
                     testContext.subject.flagChangeNotifier = ClientServiceMockFactory().makeFlagChangeNotifier()
                 }
                 
@@ -2403,8 +2403,7 @@ final class LDClientSpec: QuickSpec {
         describe("observeError") {
             var testContext: TestContext!
             beforeEach {
-                testContext = TestContext() {
-                    testContext.subject = LDClient.get()
+                testContext = TestContext {
                     testContext.subject.flagChangeNotifier = ClientServiceMockFactory().makeFlagChangeNotifier()
                 }
 
@@ -2427,8 +2426,7 @@ final class LDClientSpec: QuickSpec {
         describe("stopObserving") {
             var testContext: TestContext!
             beforeEach {
-                testContext = TestContext() {
-                    testContext.subject = LDClient.get()
+                testContext = TestContext {
                     testContext.subject.flagChangeNotifier = ClientServiceMockFactory().makeFlagChangeNotifier()
                 }
 
@@ -3133,12 +3131,9 @@ final class LDClientSpec: QuickSpec {
                         context("with background updates enabled") {
                             context("streaming mode") {
                                 beforeEach {
-                                    testContext = TestContext(startOnline: true, streamingMode: .streaming, enableBackgroundUpdates: true, runMode: .foreground, operatingSystem: .macOS)
-                                    LDClient.start(config: testContext.config) {
-                                        testContext.subject = LDClient.get()
+                                    testContext = TestContext(startOnline: true, streamingMode: .streaming, enableBackgroundUpdates: true, runMode: .foreground, operatingSystem: .macOS) {
+                                        testContext.subject.setRunMode(.background)
                                     }
-
-                                    testContext.subject.setRunMode(.background)
                                 }
                                 it("takes the event reporter offline") {
                                     expect(testContext.eventReporterMock.isOnline) == false
@@ -3150,12 +3145,9 @@ final class LDClientSpec: QuickSpec {
                             }
                             context("polling mode") {
                                 beforeEach {
-                                    testContext = TestContext(startOnline: true, streamingMode: .polling, enableBackgroundUpdates: true, runMode: .foreground, operatingSystem: .macOS)
-                                    LDClient.start(config: testContext.config) {
-                                        testContext.subject = LDClient.get()
+                                    testContext = TestContext(startOnline: true, streamingMode: .polling, enableBackgroundUpdates: true, runMode: .foreground, operatingSystem: .macOS) {
+                                        testContext.subject.setRunMode(.background)
                                     }
-
-                                    testContext.subject.setRunMode(.background)
                                 }
                                 it("takes the event reporter offline") {
                                     expect(testContext.eventReporterMock.isOnline) == false
@@ -3169,12 +3161,9 @@ final class LDClientSpec: QuickSpec {
                         }
                         context("with background updates disabled") {
                             beforeEach {
-                                testContext = TestContext(startOnline: true, enableBackgroundUpdates: false, runMode: .foreground, operatingSystem: .macOS)
-                                LDClient.start(config: testContext.config) {
-                                    testContext.subject = LDClient.get()
+                                testContext = TestContext(startOnline: true, enableBackgroundUpdates: false, runMode: .foreground, operatingSystem: .macOS) {
+                                    testContext.subject.setRunMode(.background)
                                 }
-
-                                testContext.subject.setRunMode(.background)
                             }
                             it("takes the event reporter offline") {
                                 expect(testContext.eventReporterMock.isOnline) == false
@@ -3191,15 +3180,13 @@ final class LDClientSpec: QuickSpec {
                         var flagSynchronizerIsOnlineSetCount: Int!
                         var makeFlagSynchronizerCallCount: Int!
                         beforeEach {
-                            testContext = TestContext(startOnline: true, runMode: .foreground, operatingSystem: .macOS)
-                            LDClient.start(config: testContext.config) {
-                                testContext.subject = LDClient.get()
-                            }
-                            eventReporterIsOnlineSetCount = testContext.eventReporterMock.isOnlineSetCount
-                            flagSynchronizerIsOnlineSetCount = testContext.flagSynchronizerMock.isOnlineSetCount
-                            makeFlagSynchronizerCallCount = testContext.serviceFactoryMock.makeFlagSynchronizerCallCount
+                            testContext = TestContext(startOnline: true, runMode: .foreground, operatingSystem: .macOS) {
+                                eventReporterIsOnlineSetCount = testContext.eventReporterMock.isOnlineSetCount
+                                flagSynchronizerIsOnlineSetCount = testContext.flagSynchronizerMock.isOnlineSetCount
+                                makeFlagSynchronizerCallCount = testContext.serviceFactoryMock.makeFlagSynchronizerCallCount
 
-                            testContext.subject.setRunMode(.foreground)
+                                testContext.subject.setRunMode(.foreground)
+                            }
                         }
                         it("makes no changes") {
                             expect(testContext.eventReporterMock.isOnline) == true
@@ -3216,16 +3203,14 @@ final class LDClientSpec: QuickSpec {
                         var flagSynchronizerIsOnlineSetCount: Int!
                         var makeFlagSynchronizerCallCount: Int!
                         beforeEach {
-                            testContext = TestContext(startOnline: true, enableBackgroundUpdates: true, runMode: .background, operatingSystem: .macOS)
-                            LDClient.start(config: testContext.config) {
-                                testContext.subject = LDClient.get()
-                            }
-                            NotificationCenter.default.post(name: testContext.environmentReporterMock.backgroundNotification!, object: self)
-                            eventReporterIsOnlineSetCount = testContext.eventReporterMock.isOnlineSetCount
-                            flagSynchronizerIsOnlineSetCount = testContext.flagSynchronizerMock.isOnlineSetCount
-                            makeFlagSynchronizerCallCount = testContext.serviceFactoryMock.makeFlagSynchronizerCallCount
+                            testContext = TestContext(startOnline: true, enableBackgroundUpdates: true, runMode: .background, operatingSystem: .macOS) {
+                                NotificationCenter.default.post(name: testContext.environmentReporterMock.backgroundNotification!, object: self)
+                                eventReporterIsOnlineSetCount = testContext.eventReporterMock.isOnlineSetCount
+                                flagSynchronizerIsOnlineSetCount = testContext.flagSynchronizerMock.isOnlineSetCount
+                                makeFlagSynchronizerCallCount = testContext.serviceFactoryMock.makeFlagSynchronizerCallCount
 
-                            testContext.subject.setRunMode(.background)
+                                testContext.subject.setRunMode(.background)
+                            }
                         }
                         it("makes no changes") {
                             expect(testContext.eventReporterMock.isOnline) == true
@@ -3238,12 +3223,9 @@ final class LDClientSpec: QuickSpec {
                     context("set foreground") {
                         context("streaming mode") {
                             beforeEach {
-                                testContext = TestContext(startOnline: true, streamingMode: .streaming, runMode: .background, operatingSystem: .macOS)
-                                LDClient.start(config: testContext.config) {
-                                    testContext.subject = LDClient.get()
+                                testContext = TestContext(startOnline: true, streamingMode: .streaming, runMode: .background, operatingSystem: .macOS) {
+                                    testContext.subject.setRunMode(.foreground)
                                 }
-
-                                testContext.subject.setRunMode(.foreground)
                             }
                             it("takes the event reporter online") {
                                 expect(testContext.eventReporterMock.isOnline) == true
@@ -3255,12 +3237,9 @@ final class LDClientSpec: QuickSpec {
                         }
                         context("polling mode") {
                             beforeEach {
-                                testContext = TestContext(startOnline: true, streamingMode: .polling, runMode: .background, operatingSystem: .macOS)
-                                LDClient.start(config: testContext.config) {
-                                    testContext.subject = LDClient.get()
+                                testContext = TestContext(startOnline: true, streamingMode: .polling, runMode: .background, operatingSystem: .macOS) {
+                                    testContext.subject.setRunMode(.foreground)
                                 }
-
-                                testContext.subject.setRunMode(.foreground)
                             }
                             it("takes the event reporter online") {
                                 expect(testContext.eventReporterMock.isOnline) == true
@@ -3279,12 +3258,9 @@ final class LDClientSpec: QuickSpec {
                     context("set background") {
                         context("with background updates enabled") {
                             beforeEach {
-                                testContext = TestContext(startOnline: false, enableBackgroundUpdates: true, runMode: .foreground, operatingSystem: .macOS)
-                                LDClient.start(config: testContext.config) {
-                                    testContext.subject = LDClient.get()
+                                testContext = TestContext(startOnline: false, enableBackgroundUpdates: true, runMode: .foreground, operatingSystem: .macOS) {
+                                    testContext.subject.setRunMode(.background)
                                 }
-
-                                testContext.subject.setRunMode(.background)
                             }
                             it("leaves the event reporter offline") {
                                 expect(testContext.eventReporterMock.isOnline) == false
@@ -3296,12 +3272,9 @@ final class LDClientSpec: QuickSpec {
                         }
                         context("with background updates disabled") {
                             beforeEach {
-                                testContext = TestContext(startOnline: false, enableBackgroundUpdates: false, runMode: .foreground, operatingSystem: .macOS)
-                                LDClient.start(config: testContext.config) {
-                                    testContext.subject = LDClient.get()
+                                testContext = TestContext(startOnline: false, enableBackgroundUpdates: false, runMode: .foreground, operatingSystem: .macOS) {
+                                    testContext.subject.setRunMode(.background)
                                 }
-
-                                testContext.subject.setRunMode(.background)
                             }
                             it("leaves the event reporter offline") {
                                 expect(testContext.eventReporterMock.isOnline) == false
@@ -3318,15 +3291,13 @@ final class LDClientSpec: QuickSpec {
                         var flagSynchronizerIsOnlineSetCount: Int!
                         var makeFlagSynchronizerCallCount: Int!
                         beforeEach {
-                            testContext = TestContext(startOnline: false, runMode: .foreground, operatingSystem: .macOS)
-                            LDClient.start(config: testContext.config) {
-                                testContext.subject = LDClient.get()
-                            }
-                            eventReporterIsOnlineSetCount = testContext.eventReporterMock.isOnlineSetCount
-                            flagSynchronizerIsOnlineSetCount = testContext.flagSynchronizerMock.isOnlineSetCount
-                            makeFlagSynchronizerCallCount = testContext.serviceFactoryMock.makeFlagSynchronizerCallCount
+                            testContext = TestContext(startOnline: false, runMode: .foreground, operatingSystem: .macOS) {
+                                eventReporterIsOnlineSetCount = testContext.eventReporterMock.isOnlineSetCount
+                                flagSynchronizerIsOnlineSetCount = testContext.flagSynchronizerMock.isOnlineSetCount
+                                makeFlagSynchronizerCallCount = testContext.serviceFactoryMock.makeFlagSynchronizerCallCount
 
-                            testContext.subject.setRunMode(.foreground)
+                                testContext.subject.setRunMode(.foreground)
+                            }
                         }
                         it("makes no changes") {
                             expect(testContext.eventReporterMock.isOnline) == false
@@ -3343,15 +3314,13 @@ final class LDClientSpec: QuickSpec {
                         var flagSynchronizerIsOnlineSetCount: Int!
                         var makeFlagSynchronizerCallCount: Int!
                         beforeEach {
-                            testContext = TestContext(startOnline: false, runMode: .background, operatingSystem: .macOS)
-                            LDClient.start(config: testContext.config) {
-                                testContext.subject = LDClient.get()
-                            }
-                            eventReporterIsOnlineSetCount = testContext.eventReporterMock.isOnlineSetCount
-                            flagSynchronizerIsOnlineSetCount = testContext.flagSynchronizerMock.isOnlineSetCount
-                            makeFlagSynchronizerCallCount = testContext.serviceFactoryMock.makeFlagSynchronizerCallCount
+                            testContext = TestContext(startOnline: false, runMode: .background, operatingSystem: .macOS) {
+                                eventReporterIsOnlineSetCount = testContext.eventReporterMock.isOnlineSetCount
+                                flagSynchronizerIsOnlineSetCount = testContext.flagSynchronizerMock.isOnlineSetCount
+                                makeFlagSynchronizerCallCount = testContext.serviceFactoryMock.makeFlagSynchronizerCallCount
 
-                            testContext.subject.setRunMode(.background)
+                                testContext.subject.setRunMode(.background)
+                            }
                         }
                         it("makes no changes") {
                             expect(testContext.eventReporterMock.isOnline) == false
@@ -3364,12 +3333,9 @@ final class LDClientSpec: QuickSpec {
                     context("set foreground") {
                         context("streaming mode") {
                             beforeEach {
-                                testContext = TestContext(startOnline: false, streamingMode: .streaming, runMode: .background, operatingSystem: .macOS)
-                                LDClient.start(config: testContext.config) {
-                                    testContext.subject = LDClient.get()
+                                testContext = TestContext(startOnline: false, streamingMode: .streaming, runMode: .background, operatingSystem: .macOS) {
+                                    testContext.subject.setRunMode(.foreground)
                                 }
-
-                                testContext.subject.setRunMode(.foreground)
                             }
                             it("leaves the event reporter offline") {
                                 expect(testContext.eventReporterMock.isOnline) == false
@@ -3381,12 +3347,9 @@ final class LDClientSpec: QuickSpec {
                         }
                         context("polling mode") {
                             beforeEach {
-                                testContext = TestContext(startOnline: false, streamingMode: .polling, runMode: .background, operatingSystem: .macOS)
-                                LDClient.start(config: testContext.config) {
-                                    testContext.subject = LDClient.get()
+                                testContext = TestContext(startOnline: false, streamingMode: .polling, runMode: .background, operatingSystem: .macOS) {
+                                    testContext.subject.setRunMode(.foreground)
                                 }
-
-                                testContext.subject.setRunMode(.foreground)
                             }
                             it("leaves the event reporter offline") {
                                 expect(testContext.eventReporterMock.isOnline) == false
@@ -3425,14 +3388,25 @@ final class LDClientSpec: QuickSpec {
 
         describe("reportEvents") {
             beforeEach {
-                testContext = TestContext()
-
-                testContext.subject.flush()
+                testContext = TestContext() {
+                    testContext.subject.flush()
+                }
             }
             it("tells the event reporter to report events") {
                 expect(testContext.eventReporterMock.reportEventsCallCount) == 1
             }
         }
+        
+        describe("reportEvents when closing") {
+           beforeEach {
+               testContext = TestContext() {
+                   testContext.subject.close()
+               }
+           }
+           it("tells the event reporter to report events") {
+               expect(testContext.eventReporterMock.reportEventsCallCount) == 1
+           }
+       }
     }
 
     private func allFlagValuesSpec() {
@@ -3442,13 +3416,11 @@ final class LDClientSpec: QuickSpec {
             context("when client was started") {
                 var featureFlags: [LDFlagKey: FeatureFlag]!
                 beforeEach {
-                    testContext = TestContext()
-                    LDClient.start(config: testContext.config) {
-                        testContext.subject = LDClient.get()
-                    }
-                    featureFlags = testContext.subject.user.flagStore.featureFlags
+                    testContext = TestContext() {
+                        featureFlags = testContext.subject.user.flagStore.featureFlags
 
-                    featureFlagValues = testContext.subject.allFlags
+                        featureFlagValues = testContext.subject.allFlags
+                    }
                 }
                 it("returns a matching dictionary of flag keys and values") {
                     expect(featureFlagValues?.count) == featureFlags.count - 1 //nil is omitted
@@ -3460,7 +3432,6 @@ final class LDClientSpec: QuickSpec {
             context("when client was not started") {
                 beforeEach {
                     testContext = TestContext()
-
                     featureFlagValues = testContext.subject.allFlags
                 }
                 it("returns nil") {
@@ -3476,11 +3447,7 @@ final class LDClientSpec: QuickSpec {
         describe("ConnectionInformation") {
             context("when client was started in foreground") {
                 beforeEach {
-                    testContext = TestContext(startOnline: true, runMode: .foreground)
-                    testContext.config.streamingMode = .streaming
-                    LDClient.start(config: testContext.config) {
-                        testContext.subject = LDClient.get()
-                    }
+                    testContext = TestContext(startOnline: true, streamingMode: .streaming, runMode: .foreground)
                 }
                 it("returns a ConnectionInformation object with currentConnectionMode.establishingStreamingConnection") {
                     expect(testContext.subject.isOnline) == true
@@ -3493,11 +3460,7 @@ final class LDClientSpec: QuickSpec {
             }
             context("when client was started in background") {
                 beforeEach {
-                    testContext = TestContext(startOnline: true, runMode: .background)
-                    testContext.config.streamingMode = .streaming
-                    LDClient.start(config: testContext.config) {
-                        testContext.subject = LDClient.get()
-                    }
+                    testContext = TestContext(startOnline: true, streamingMode: .streaming, runMode: .background)
                 }
                 it("returns a ConnectionInformation object with currentConnectionMode.offline") {
                     expect(testContext.subject.connectionInformation.currentConnectionMode).to(equal(.offline))
@@ -3509,9 +3472,6 @@ final class LDClientSpec: QuickSpec {
             context("when offline and client started") {
                 beforeEach {
                     testContext = TestContext(startOnline: false)
-                    LDClient.start(config: testContext.config) {
-                        testContext.subject = LDClient.get()
-                    }
                 }
                 it("leaves the sdk offline") {
                     expect(testContext.subject.isOnline) == false
@@ -3537,11 +3497,7 @@ final class LDClientSpec: QuickSpec {
         describe("variationDetail") {
             context("when client was started and flag key doesn't exist") {
                 beforeEach {
-                    testContext = TestContext(startOnline: true, runMode: .foreground)
-                    testContext.config.streamingMode = .streaming
-                    LDClient.start(config: testContext.config) {
-                        testContext.subject = LDClient.get()
-                    }
+                    testContext = TestContext(startOnline: true, streamingMode: .streaming, runMode: .foreground)
                 }
                 it("returns FLAG_NOT_FOUND") {
                     let detail = testContext.subject.variationDetail(forKey: BadFlagKeys.bool, fallback: DefaultFlagValues.bool).reason
