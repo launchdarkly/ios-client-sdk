@@ -234,9 +234,9 @@ final class LDClientSpec: QuickSpec {
         setOnlineSpec()
         closeSpec()
         trackEventSpec()
-        //variationSpec()
+        variationSpec()
         observeSpec()
-        //onSyncCompleteSpec()
+        onSyncCompleteSpec()
         runModeSpec()
         streamingModeSpec()
         reportEventsSpec()
@@ -1715,14 +1715,11 @@ final class LDClientSpec: QuickSpec {
         describe("variation") {
             var testContext: TestContext!
             beforeEach {
-                testContext = TestContext()
+                waitUntil { done in
+                    testContext = TestContext(completion: done)
+                }
             }
             context("flag store contains the requested value") {
-                beforeEach {
-                    LDClient.start(config: testContext.config, startUser: testContext.user) {
-                        testContext.subject = LDClient.get()
-                    }
-                }
                 context("non-Optional fallback value") {
                     it("returns the flag value") {
                         //The casts in the expect() calls allow the compiler to determine which variation method to use. This test calls the non-Optional variation method
@@ -1790,11 +1787,6 @@ final class LDClientSpec: QuickSpec {
                 }
             }
             context("flag store does not contain the requested value") {
-                beforeEach {
-                    LDClient.start(config: testContext.config, startUser: testContext.user) {
-                        testContext.subject = LDClient.get()
-                    }
-                }
                 context("non-Optional fallback value") {
                     it("returns the fallback value") {
                         //The casts in the expect() calls allow the compiler to determine which variation method to use. This test calls the non-Optional variation method
@@ -2088,7 +2080,9 @@ final class LDClientSpec: QuickSpec {
         var updateDate: Date!
 
         beforeEach {
-            testContext = TestContext(startOnline: true)
+            waitUntil { done in
+                testContext = TestContext(startOnline: true, completion: done)
+            }
             eventType = streamingMode == .streaming ? eventType : nil
         }
 
@@ -2099,11 +2093,9 @@ final class LDClientSpec: QuickSpec {
                 newFlags[DarklyServiceMock.FlagKeys.bool] = newBoolFeatureFlag
                 testContext.setFlagStoreCallbackToMimicRealFlagStore(newFlags: newFlags)
 
+                testContext.subject.flagChangeNotifier = ClientServiceMockFactory().makeFlagChangeNotifier()
                 waitUntil { done in
                     testContext.changeNotifierMock.notifyObserversCallback = done
-                    LDClient.start(config: testContext.config, startUser: testContext.user) {
-                        testContext.subject = LDClient.get()
-                    }
                     updateDate = Date()
 
                     testContext.onSyncComplete?(.success(newFlags, eventType))
@@ -2136,12 +2128,10 @@ final class LDClientSpec: QuickSpec {
                 newFlags = testContext.user.flagStore.featureFlags
                 newFlags[Constants.newFlagKey] = DarklyServiceMock.Constants.stubFeatureFlag(for: DarklyServiceMock.FlagKeys.string, useAlternateValue: true)
                 testContext.setFlagStoreCallbackToMimicRealFlagStore(newFlags: newFlags)
-
+                
+                testContext.subject.flagChangeNotifier = ClientServiceMockFactory().makeFlagChangeNotifier()
                 waitUntil { done in
                     testContext.changeNotifierMock.notifyObserversCallback = done
-                    LDClient.start(config: testContext.config, startUser: testContext.user) {
-                        testContext.subject = LDClient.get()
-                    }
                     updateDate = Date()
 
                     testContext.onSyncComplete?(.success(newFlags, eventType))
@@ -2175,11 +2165,9 @@ final class LDClientSpec: QuickSpec {
                 newFlags.removeValue(forKey: DarklyServiceMock.FlagKeys.dictionary)
                 testContext.setFlagStoreCallbackToMimicRealFlagStore(newFlags: newFlags)
 
+                testContext.subject.flagChangeNotifier = ClientServiceMockFactory().makeFlagChangeNotifier()
                 waitUntil { done in
                     testContext.changeNotifierMock.notifyObserversCallback = done
-                    LDClient.start(config: testContext.config, startUser: testContext.user) {
-                        testContext.subject = LDClient.get()
-                    }
                     updateDate = Date()
 
                     testContext.onSyncComplete?(.success(newFlags, eventType))
@@ -2211,11 +2199,9 @@ final class LDClientSpec: QuickSpec {
             beforeEach {
                 newFlags = testContext.user.flagStore.featureFlags
 
+                testContext.subject.flagChangeNotifier = ClientServiceMockFactory().makeFlagChangeNotifier()
                 waitUntil { done in
                     testContext.changeNotifierMock.notifyObserversCallback = done
-                    LDClient.start(config: testContext.config, startUser: testContext.user) {
-                        testContext.subject = LDClient.get()
-                    }
                     updateDate = Date()
 
                     testContext.onSyncComplete?(.success(newFlags, eventType))
@@ -2253,7 +2239,9 @@ final class LDClientSpec: QuickSpec {
         var updateDate: Date!
 
         beforeEach {
-            testContext = TestContext(startOnline: true)
+            waitUntil { done in
+                testContext = TestContext(startOnline: true, completion: done)
+            }
         }
 
         context("update changes flags") {
@@ -2268,11 +2256,9 @@ final class LDClientSpec: QuickSpec {
                 newFlags[DarklyServiceMock.FlagKeys.int] = newIntFlag
                 testContext.setFlagStoreCallbackToMimicRealFlagStore(newFlags: newFlags)
 
+                testContext.subject.flagChangeNotifier = ClientServiceMockFactory().makeFlagChangeNotifier()
                 waitUntil { done in
                     testContext.changeNotifierMock.notifyObserversCallback = done
-                    LDClient.start(config: testContext.config, startUser: testContext.user) {
-                        testContext.subject = LDClient.get()
-                    }
                     updateDate = Date()
 
                     testContext.onSyncComplete?(.success(flagUpdateDictionary, .patch))
@@ -2309,11 +2295,9 @@ final class LDClientSpec: QuickSpec {
                                                                                version: DarklyServiceMock.Constants.version)
                 newFlags = oldFlags
 
+                testContext.subject.flagChangeNotifier = ClientServiceMockFactory().makeFlagChangeNotifier()
                 waitUntil { done in
                     testContext.changeNotifierMock.notifyObserversCallback = done
-                    LDClient.start(config: testContext.config, startUser: testContext.user) {
-                        testContext.subject = LDClient.get()
-                    }
                     updateDate = Date()
 
                     testContext.onSyncComplete?(.success(flagUpdateDictionary, .patch))
@@ -2351,7 +2335,9 @@ final class LDClientSpec: QuickSpec {
         var updateDate: Date!
 
         beforeEach {
-            testContext = TestContext(startOnline: true)
+            waitUntil { done in
+                testContext = TestContext(startOnline: true, completion: done)
+            }
         }
 
         context("delete changes flags") {
@@ -2362,11 +2348,9 @@ final class LDClientSpec: QuickSpec {
                 newFlags.removeValue(forKey: DarklyServiceMock.FlagKeys.int)
                 testContext.setFlagStoreCallbackToMimicRealFlagStore(newFlags: newFlags)
 
+                testContext.subject.flagChangeNotifier = ClientServiceMockFactory().makeFlagChangeNotifier()
                 waitUntil { done in
                     testContext.changeNotifierMock.notifyObserversCallback = done
-                    LDClient.start(config: testContext.config, startUser: testContext.user) {
-                        testContext.subject = LDClient.get()
-                    }
                     updateDate = Date()
 
                     testContext.onSyncComplete?(.success(flagUpdateDictionary, .delete))
@@ -2399,11 +2383,9 @@ final class LDClientSpec: QuickSpec {
                 oldFlags = testContext.flagStoreMock.featureFlags
                 flagUpdateDictionary = FlagMaintainingMock.stubDeleteDictionary(key: DarklyServiceMock.FlagKeys.int, version: DarklyServiceMock.Constants.version)
 
+                testContext.subject.flagChangeNotifier = ClientServiceMockFactory().makeFlagChangeNotifier()
                 waitUntil { done in
                     testContext.changeNotifierMock.notifyObserversCallback = done
-                    LDClient.start(config: testContext.config, startUser: testContext.user) {
-                        testContext.subject = LDClient.get()
-                    }
                     updateDate = Date()
 
                     testContext.onSyncComplete?(.success(flagUpdateDictionary, .delete))
@@ -2436,17 +2418,17 @@ final class LDClientSpec: QuickSpec {
     func onSyncCompleteErrorSpec() {
         var testContext: TestContext!
         beforeEach {
-            testContext = TestContext(startOnline: true)
+            waitUntil { done in
+                testContext = TestContext(startOnline: true, completion: done)
+            }
         }
 
         context("there was an internal server error") {
             beforeEach {
+                testContext.subject.flagChangeNotifier = ClientServiceMockFactory().makeFlagChangeNotifier()
                 waitUntil { done in
                     testContext.errorNotifierMock.notifyObserversCallback = {
                         done()
-                    }
-                    LDClient.start(config: testContext.config, startUser: testContext.user) {
-                        testContext.subject = LDClient.get()
                     }
 
                     testContext.onSyncComplete?(.error(.response(HTTPURLResponse(url: testContext.config.baseUrl,
@@ -2478,12 +2460,10 @@ final class LDClientSpec: QuickSpec {
         }
         context("there was a request error") {
             beforeEach {
+                testContext.subject.flagChangeNotifier = ClientServiceMockFactory().makeFlagChangeNotifier()
                 waitUntil { done in
                     testContext.errorNotifierMock.notifyObserversCallback = {
                         done()
-                    }
-                    LDClient.start(config: testContext.config, startUser: testContext.user) {
-                        testContext.subject = LDClient.get()
                     }
 
                     testContext.onSyncComplete?(.error(.request(DarklyServiceMock.Constants.error)))
@@ -2511,12 +2491,10 @@ final class LDClientSpec: QuickSpec {
         }
         context("there was a data error") {
             beforeEach {
+                testContext.subject.flagChangeNotifier = ClientServiceMockFactory().makeFlagChangeNotifier()
                 waitUntil { done in
                     testContext.errorNotifierMock.notifyObserversCallback = {
                         done()
-                    }
-                    LDClient.start(config: testContext.config, startUser: testContext.user) {
-                        testContext.subject = LDClient.get()
                     }
 
                     testContext.onSyncComplete?(.error(.data(DarklyServiceMock.Constants.errorData)))
@@ -2545,12 +2523,10 @@ final class LDClientSpec: QuickSpec {
         }
         context("there was a client unauthorized error") {
             beforeEach {
+                testContext.subject.flagChangeNotifier = ClientServiceMockFactory().makeFlagChangeNotifier()
                 waitUntil { done in
                     testContext.errorNotifierMock.notifyObserversCallback = {
                         done()
-                    }
-                    LDClient.start(config: testContext.config, startUser: testContext.user) {
-                        testContext.subject = LDClient.get()
                     }
 
                     testContext.onSyncComplete?(.error(.response(HTTPURLResponse(url: testContext.config.baseUrl,
@@ -2582,12 +2558,10 @@ final class LDClientSpec: QuickSpec {
         }
         context("there was a non-NSError error") {
             beforeEach {
+                testContext.subject.flagChangeNotifier = ClientServiceMockFactory().makeFlagChangeNotifier()
                 waitUntil { done in
                     testContext.errorNotifierMock.notifyObserversCallback = {
                         done()
-                    }
-                    LDClient.start(config: testContext.config, startUser: testContext.user) {
-                        testContext.subject = LDClient.get()
                     }
 
                     testContext.onSyncComplete?(.error(.streamError(DummyError())))
