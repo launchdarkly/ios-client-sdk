@@ -1024,11 +1024,6 @@ public class LDClient {
 
         //dummy objects replaced by client at start
         service = self.serviceFactory.makeDarklyServiceProvider(config: config, user: internalUser)  //didSet not triggered here
-        flagSynchronizer = self.serviceFactory.makeFlagSynchronizer(streamingMode: ConnectionInformation.effectiveStreamingMode(config: config, ldClient: self),
-                                                                    pollingInterval: config.flagPollingInterval(runMode: runMode),
-                                                                    useReport: config.useReport,
-                                                                    service: service,
-                                                                    onSyncComplete: onFlagSyncComplete)
         eventReporter = self.serviceFactory.makeEventReporter(config: config, service: service, onSyncComplete: onEventSyncComplete)
         self.isStarting = false
     }
@@ -1055,7 +1050,9 @@ private extension Optional {
         static func start(serviceFactory: ClientServiceCreating, config: LDConfig, startUser: LDUser? = nil, runMode: LDClientRunMode = .foreground, flagCache: FeatureFlagCaching, flagNotifier: FlagChangeNotifier, completion: (() -> Void)? = nil) {
             Log.debug("LDClient starting")
             if instances != nil {
-                instances = nil
+                for (_, instance) in (instances ?? [:]) {
+                    instance.close()
+                }
             }
             
             let anonymousUser = LDUser(environmentReporter: EnvironmentReporter())

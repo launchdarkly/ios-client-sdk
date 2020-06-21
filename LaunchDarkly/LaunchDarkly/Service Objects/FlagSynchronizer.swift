@@ -260,9 +260,11 @@ class FlagSynchronizer: LDFlagSynchronizing, EventHandler {
     
     //sourcery: noMock
     deinit {
+        #if !DEBUG
         onSyncComplete = nil
         stopEventSource()
         stopPolling()
+        #endif
     }
 
     func eventSourceErrorHandler(error: Error) -> ConnectionErrorAction {
