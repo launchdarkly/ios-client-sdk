@@ -27,14 +27,14 @@ extension DeprecatedCache {
             keyedValueCache.removeObject(forKey: cachedDataKey)        //all user cached data is expired, remove the cache key & values
             return
         }
-        let unexpiredUserData: [UserKey: [String: Any]] = cachedUserData.filter { (userKey, _) in
+        let unexpiredUserData: [UserKey: [String: Any]] = cachedUserData.filter { userKey, _ in
             !expiredUserKeys.contains(userKey)
         }
         keyedValueCache.set(unexpiredUserData, forKey: cachedDataKey)
     }
 }
 
-enum DeprecatedCacheModel: String, CaseIterable {
+enum DeprecatedCacheModel: CaseIterable {
     case version5, version4, version3, version2     //version1 is not supported
 }
 

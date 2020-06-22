@@ -66,7 +66,7 @@ final class DeprecatedCacheModelV5: DeprecatedCache {
         else {
             return (nil, nil)
         }
-        let featureFlags = Dictionary(uniqueKeysWithValues: featureFlagDictionaries.compactMap { (flagKey, featureFlagDictionary) in
+        let featureFlags = Dictionary(uniqueKeysWithValues: featureFlagDictionaries.compactMap { flagKey, featureFlagDictionary in
             return (flagKey, FeatureFlag(flagKey: flagKey,
                                          value: featureFlagDictionary.value,
                                          variation: featureFlagDictionary.variation,
@@ -81,30 +81,10 @@ final class DeprecatedCacheModelV5: DeprecatedCache {
     }
 
     func userKeys(from cachedUserData: [UserKey: [String: Any]], olderThan expirationDate: Date) -> [UserKey] {
-        cachedUserData.compactMap { userKey, userEnvsDictionary in
-            let lastUpdated = userEnvsDictionary.environments?.lastUpdatedDates?.youngest ?? Date.distantFuture
+        cachedUserData.compactMap { userKey, userDictionary in
+            let envsDictionary = userDictionary[CacheKeys.environments] as? [MobileKey: [String: Any]]
+            let lastUpdated = envsDictionary?.compactMap { $1.lastUpdated }.max() ?? Date.distantFuture
             return lastUpdated.isExpired(expirationDate: expirationDate) ? userKey : nil
-        }
-    }
-}
-
-extension Dictionary where Key == String, Value == Any {
-    var environments: [MobileKey: [String: Any]]? {
-        self[DeprecatedCacheModelV5.CacheKeys.environments] as? [MobileKey: [String: Any]]
-    }
-}
-
-extension Dictionary where Key == MobileKey, Value == [String: Any] {
-    var lastUpdatedDates: [Date]? {
-        compactMap { (_, userDictionary) in userDictionary.lastUpdated }
-    }
-}
-
-extension Array where Element == Date {
-    var youngest: Date? { sorted.last }
-    var sorted: [Date] {
-        self.sorted { date1, date2 -> Bool in
-            date1.isEarlierThan(date2)
         }
     }
 }

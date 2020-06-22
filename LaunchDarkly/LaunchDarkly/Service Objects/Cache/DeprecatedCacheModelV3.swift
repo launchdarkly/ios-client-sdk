@@ -49,7 +49,7 @@ final class DeprecatedCacheModelV3: DeprecatedCache {
         else {
             return (nil, nil)
         }
-        let featureFlags = Dictionary(uniqueKeysWithValues: featureFlagDictionaries.compactMap { (flagKey, flagValueDictionary) in
+        let featureFlags = Dictionary(uniqueKeysWithValues: featureFlagDictionaries.compactMap { flagKey, flagValueDictionary in
             (flagKey, FeatureFlag(flagKey: flagKey,
                                   value: flagValueDictionary.value,
                                   variation: nil,
