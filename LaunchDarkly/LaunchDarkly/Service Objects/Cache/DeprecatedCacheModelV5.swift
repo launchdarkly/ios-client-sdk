@@ -1,5 +1,5 @@
 //
-//  UserEnvironmentCacheModel.swift
+//  DeprecatedCacheModelV5.swift
 //  LaunchDarkly
 //
 //  Copyright © 2019 Catamorphic Co. All rights reserved.
@@ -7,8 +7,8 @@
 
 import Foundation
 
-//Cache model in use from 2.14.0 up to 4.2.0
-/*
+//Cache model in use from 2.14.0 up to 4.0.0
+/* Cache model v5 schema
 [<userKey>: [
     “userKey”: <userKey>,                               //LDUserEnvironment dictionary
     “environments”: [
@@ -33,7 +33,7 @@ import Foundation
                     “flagVersion”: <flagVersion>,
                     “variation”: <variation>,
                     “value”: <value>,
-                    “trackEvents”: <trackEvents>,       //LDEventTrackingContext
+                    “trackEvents”: <trackEvents>,
                     “debugEventsUntilDate”: <debugEventsUntilDate>
                     ]
                 ],
@@ -50,7 +50,6 @@ final class DeprecatedCacheModelV5: DeprecatedCache {
         static let environments = "environments"
     }
 
-    let model = DeprecatedCacheModel.version5
     let keyedValueCache: KeyedValueCaching
     let cachedDataKey = CacheKeys.userEnvironments
 
@@ -85,6 +84,27 @@ final class DeprecatedCacheModelV5: DeprecatedCache {
         cachedUserData.compactMap { userKey, userEnvsDictionary in
             let lastUpdated = userEnvsDictionary.environments?.lastUpdatedDates?.youngest ?? Date.distantFuture
             return lastUpdated.isExpired(expirationDate: expirationDate) ? userKey : nil
+        }
+    }
+}
+
+extension Dictionary where Key == String, Value == Any {
+    var environments: [MobileKey: [String: Any]]? {
+        self[DeprecatedCacheModelV5.CacheKeys.environments] as? [MobileKey: [String: Any]]
+    }
+}
+
+extension Dictionary where Key == MobileKey, Value == [String: Any] {
+    var lastUpdatedDates: [Date]? {
+        compactMap { (_, userDictionary) in userDictionary.lastUpdated }
+    }
+}
+
+extension Array where Element == Date {
+    var youngest: Date? { sorted.last }
+    var sorted: [Date] {
+        self.sorted { date1, date2 -> Bool in
+            date1.isEarlierThan(date2)
         }
     }
 }

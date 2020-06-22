@@ -30,7 +30,7 @@ import Foundation
             “version”: <modelVersion>,
             “flagVersion”: <flagVersion>,
             “variation”: <variation>,
-            “trackEvents”: <trackEvents>,       //LDEventTrackingContext
+            “trackEvents”: <trackEvents>,
             “debugEventsUntilDate”: <debugEventsUntilDate>
             ]
         ],
@@ -39,7 +39,6 @@ import Foundation
 ]
  */
 final class DeprecatedCacheModelV4: DeprecatedCache {
-    let model = DeprecatedCacheModel.version4
     let keyedValueCache: KeyedValueCaching
     let cachedDataKey = CacheConverter.CacheKeys.ldUserModelDictionary
 
