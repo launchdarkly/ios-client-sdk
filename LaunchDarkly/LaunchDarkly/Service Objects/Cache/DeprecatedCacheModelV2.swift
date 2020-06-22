@@ -1,5 +1,5 @@
 //
-//  UserDictionaryCacheModel.swift
+//  DeprecatedCacheModelV2.swift
 //  LaunchDarkly
 //
 //  Copyright © 2019 Catamorphic Co. All rights reserved.
@@ -8,29 +8,27 @@
 import Foundation
 
 //Cache model in use from 2.3.3 up to 2.11.0
-/*  Cache model v2 schema
-    [<userKey>: [
-        “key: <userKey>,                        //LDUserModel dictionary
-        “ip”: <ipAddress>,
-        “country”: <country>,
-        “email”: <email>,
-        “name”: <name>,
-        “firstName”: <firstName>,
-        “lastName”: <lastName>,
-        “avatar”: <avatar>,
-        “custom”: [
-            “device”: <device>,
-            “os”: <os>,
-            ...],
-        “anonymous”: <anonymous>,
-        “updatedAt: <updatedAt>,
-        ”config”: [<flagKey>: <flagValue>]
-        ]
+/* Cache model v2 schema
+[<userKey>: [
+    “key: <userKey>,                            //LDUserModel dictionary
+    “ip”: <ipAddress>,
+    “country”: <country>,
+    “email”: <email>,
+    “name”: <name>,
+    “firstName”: <firstName>,
+    “lastName”: <lastName>,
+    “avatar”: <avatar>,
+    “custom”: [
+        “device”: <device>,
+        “os”: <os>,
+        ...],
+    “anonymous”: <anonymous>,
+    “updatedAt: <updatedAt>,
+    ”config”: [<flagKey>: <flagValue>]
     ]
- ]
+]
  */
 final class DeprecatedCacheModelV2: DeprecatedCache {
-    let model = DeprecatedCacheModel.version2
     let keyedValueCache: KeyedValueCaching
     let cachedDataKey = CacheConverter.CacheKeys.ldUserModelDictionary
 

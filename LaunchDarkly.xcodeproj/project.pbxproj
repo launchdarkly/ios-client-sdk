@@ -302,14 +302,9 @@
 		C408884723033B3600420721 /* ConnectionInformationStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = C408884623033B3600420721 /* ConnectionInformationStore.swift */; };
 		C408884923033B7500420721 /* ConnectionInformation.swift in Sources */ = {isa = PBXBuildFile; fileRef = C408884823033B7500420721 /* ConnectionInformation.swift */; };
 		C43C37E1236BA050003C1624 /* EvaluationDetail.swift in Sources */ = {isa = PBXBuildFile; fileRef = C43C37E0236BA050003C1624 /* EvaluationDetail.swift */; };
-		C43C37E32370DC7C003C1624 /* DeprecatedCacheModelV6.swift in Sources */ = {isa = PBXBuildFile; fileRef = C43C37E22370DC7C003C1624 /* DeprecatedCacheModelV6.swift */; };
-		C43C37E5238C8FCD003C1624 /* DeprecatedCacheModelV6Spec.swift in Sources */ = {isa = PBXBuildFile; fileRef = C43C37E4238C8FCD003C1624 /* DeprecatedCacheModelV6Spec.swift */; };
 		C43C37E6238DF22B003C1624 /* EvaluationDetail.swift in Sources */ = {isa = PBXBuildFile; fileRef = C43C37E0236BA050003C1624 /* EvaluationDetail.swift */; };
 		C43C37E7238DF22C003C1624 /* EvaluationDetail.swift in Sources */ = {isa = PBXBuildFile; fileRef = C43C37E0236BA050003C1624 /* EvaluationDetail.swift */; };
 		C43C37E8238DF22D003C1624 /* EvaluationDetail.swift in Sources */ = {isa = PBXBuildFile; fileRef = C43C37E0236BA050003C1624 /* EvaluationDetail.swift */; };
-		C43C37EA238DF238003C1624 /* DeprecatedCacheModelV6.swift in Sources */ = {isa = PBXBuildFile; fileRef = C43C37E22370DC7C003C1624 /* DeprecatedCacheModelV6.swift */; };
-		C43C37EB238DF238003C1624 /* DeprecatedCacheModelV6.swift in Sources */ = {isa = PBXBuildFile; fileRef = C43C37E22370DC7C003C1624 /* DeprecatedCacheModelV6.swift */; };
-		C43C37EC238DF239003C1624 /* DeprecatedCacheModelV6.swift in Sources */ = {isa = PBXBuildFile; fileRef = C43C37E22370DC7C003C1624 /* DeprecatedCacheModelV6.swift */; };
 		C443A40323145FB700145710 /* ConnectionInformation.swift in Sources */ = {isa = PBXBuildFile; fileRef = C408884823033B7500420721 /* ConnectionInformation.swift */; };
 		C443A40423145FBE00145710 /* ConnectionInformation.swift in Sources */ = {isa = PBXBuildFile; fileRef = C408884823033B7500420721 /* ConnectionInformation.swift */; };
 		C443A40523145FBF00145710 /* ConnectionInformation.swift in Sources */ = {isa = PBXBuildFile; fileRef = C408884823033B7500420721 /* ConnectionInformation.swift */; };
@@ -472,8 +467,6 @@
 		C408884623033B3600420721 /* ConnectionInformationStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConnectionInformationStore.swift; sourceTree = "<group>"; };
 		C408884823033B7500420721 /* ConnectionInformation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConnectionInformation.swift; sourceTree = "<group>"; };
 		C43C37E0236BA050003C1624 /* EvaluationDetail.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EvaluationDetail.swift; sourceTree = "<group>"; };
-		C43C37E22370DC7C003C1624 /* DeprecatedCacheModelV6.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeprecatedCacheModelV6.swift; sourceTree = "<group>"; };
-		C43C37E4238C8FCD003C1624 /* DeprecatedCacheModelV6Spec.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeprecatedCacheModelV6Spec.swift; sourceTree = "<group>"; };
 		C443A4092315AA4D00145710 /* NetworkReporter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NetworkReporter.swift; sourceTree = "<group>"; };
 		C443A40E23186A4F00145710 /* ConnectionModeChangeObserver.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConnectionModeChangeObserver.swift; sourceTree = "<group>"; };
 		C48ED690242D27E200464F5F /* DeprecatedCacheMock.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeprecatedCacheMock.swift; sourceTree = "<group>"; };
@@ -656,7 +649,6 @@
 				83D1522F224D92D30054B6D4 /* DeprecatedCacheModelV4.swift */,
 				83D1522A224D91B90054B6D4 /* DeprecatedCacheModelV3.swift */,
 				832D68A6224A4668005F052A /* DeprecatedCacheModelV2.swift */,
-				C43C37E22370DC7C003C1624 /* DeprecatedCacheModelV6.swift */,
 				B4C9D4322489C8FD004A9B03 /* DiagnosticCache.swift */,
 			);
 			path = Cache;
@@ -672,7 +664,6 @@
 				83D15238225455D40054B6D4 /* DeprecatedCacheModelV4Spec.swift */,
 				83D15236225400CE0054B6D4 /* DeprecatedCacheModelV3Spec.swift */,
 				83D15234225299890054B6D4 /* DeprecatedCacheModelV2Spec.swift */,
-				C43C37E4238C8FCD003C1624 /* DeprecatedCacheModelV6Spec.swift */,
 				B40B419B249ADA6B00CD0726 /* DiagnosticCacheSpec.swift */,
 			);
 			path = Cache;
@@ -1404,7 +1395,6 @@
 				831188492113ADD400D77CB5 /* LDFlagBaseTypeConvertible.swift in Sources */,
 				8311885C2113AE2200D77CB5 /* HTTPHeaders.swift in Sources */,
 				832D68AA224A4668005F052A /* DeprecatedCacheModelV2.swift in Sources */,
-				C43C37EC238DF239003C1624 /* DeprecatedCacheModelV6.swift in Sources */,
 				831188562113AE0800D77CB5 /* FlagSynchronizer.swift in Sources */,
 				8311884A2113ADD700D77CB5 /* FeatureFlag.swift in Sources */,
 				8311885A2113AE1500D77CB5 /* Log.swift in Sources */,
@@ -1494,7 +1484,6 @@
 				831EF36520655E730001C643 /* Thread.swift in Sources */,
 				83B1D7C92073F354006D1B1C /* CwlSysctl.swift in Sources */,
 				831EF36620655E730001C643 /* ObjcLDClient.swift in Sources */,
-				C43C37EB238DF238003C1624 /* DeprecatedCacheModelV6.swift in Sources */,
 				831EF36720655E730001C643 /* ObjcLDConfig.swift in Sources */,
 				831EF36820655E730001C643 /* ObjcLDUser.swift in Sources */,
 				B4C9D43A2489E20A004A9B03 /* DiagnosticReporter.swift in Sources */,
@@ -1548,7 +1537,6 @@
 				8354AC612241511D00CDE602 /* CacheableEnvironmentFlags.swift in Sources */,
 				83FEF8DF1F2667E4001CF12C /* EventReporter.swift in Sources */,
 				832D68A7224A4668005F052A /* DeprecatedCacheModelV2.swift in Sources */,
-				C43C37E32370DC7C003C1624 /* DeprecatedCacheModelV6.swift in Sources */,
 				831D2AAF2061AAA000B4AC3C /* Thread.swift in Sources */,
 				83B9A082204F6022000C3F17 /* FlagsUnchangedObserver.swift in Sources */,
 				8354EFE01F26380700C05156 /* LDClient.swift in Sources */,
@@ -1594,7 +1582,6 @@
 				B4F689142497B2FC004D3CE0 /* DiagnosticEventSpec.swift in Sources */,
 				83D15237225400CE0054B6D4 /* DeprecatedCacheModelV3Spec.swift in Sources */,
 				83396BC91F7C3711000E256E /* DarklyServiceSpec.swift in Sources */,
-				C43C37E5238C8FCD003C1624 /* DeprecatedCacheModelV6Spec.swift in Sources */,
 				83EF67931F9945E800403126 /* EventSpec.swift in Sources */,
 				837E38C921E804ED0008A50C /* EnvironmentReporterSpec.swift in Sources */,
 				83B6E3F1222EFA3800FF2A6A /* ThreadSpec.swift in Sources */,
@@ -1680,7 +1667,6 @@
 				83D9EC8E2062DEAB004D7FA6 /* HTTPURLResponse.swift in Sources */,
 				83D9EC8F2062DEAB004D7FA6 /* HTTPURLRequest.swift in Sources */,
 				832D68A8224A4668005F052A /* DeprecatedCacheModelV2.swift in Sources */,
-				C43C37EA238DF238003C1624 /* DeprecatedCacheModelV6.swift in Sources */,
 				83D9EC902062DEAB004D7FA6 /* Dictionary.swift in Sources */,
 				831425B2206B030100F2EF36 /* EnvironmentReporter.swift in Sources */,
 				83D9EC922062DEAB004D7FA6 /* Data.swift in Sources */,
