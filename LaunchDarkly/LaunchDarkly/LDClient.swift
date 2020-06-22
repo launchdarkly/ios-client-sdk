@@ -202,7 +202,6 @@ public class LDClient {
         Log.debug(typeName(and: #function) + "new config set")
         let wasOnline = isOnline
         setOnline(false)
-        print("BULGARIA CONFIG:: \(type(of: flagCache))")
         convertCachedData(skipDuringStart: isStarting)
         if let cachedFlags = flagCache.retrieveFeatureFlags(forUserWithKey: user.key, andMobileKey: config.mobileKey), !cachedFlags.isEmpty {
             user.flagStore.replaceStore(newFlags: cachedFlags, source: .cache, completion: nil)
@@ -256,7 +255,6 @@ public class LDClient {
             if self.hasStarted {
                 self.eventReporter.recordSummaryEvent()
             }
-            print("BULGARIA IDENTIFY: \(type(of: self.flagCache))")
             self.convertCachedData(skipDuringStart: self.isStarting)
             if let cachedFlags = self.flagCache.retrieveFeatureFlags(forUserWithKey: self.user.key, andMobileKey: self.config.mobileKey), !cachedFlags.isEmpty {
                 self.user.flagStore.replaceStore(newFlags: cachedFlags, source: .cache, completion: nil)
