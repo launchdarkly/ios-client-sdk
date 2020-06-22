@@ -75,7 +75,8 @@ final class DeprecatedCacheModelV6: DeprecatedCache {
                                   variation: featureFlagDictionary.variation,
                                   version: featureFlagDictionary.version,
                                   flagVersion: featureFlagDictionary.flagVersion,
-                                  eventTrackingContext: EventTrackingContext(dictionary: featureFlagDictionary),
+                                  trackEvents: featureFlagDictionary.trackEvents,
+                                  debugEventsUntilDate: Date(millisSince1970: featureFlagDictionary.debugEventsUntilDate),
                                   reason: featureFlagDictionary.reason,
                                   trackReason: featureFlagDictionary.trackReason))
         })

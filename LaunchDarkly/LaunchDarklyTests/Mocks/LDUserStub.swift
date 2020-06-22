@@ -66,7 +66,8 @@ extension LDUser {
                                                    variation: DarklyServiceMock.Constants.variation,
                                                    version: includeVersions ? DarklyServiceMock.Constants.version : nil,
                                                    flagVersion: DarklyServiceMock.Constants.flagVersion,
-                                                   eventTrackingContext: EventTrackingContext.stub(),
+                                                   trackEvents: true,
+                                                   debugEventsUntilDate: Date().addingTimeInterval(30.0),
                                                    reason: DarklyServiceMock.Constants.reason,
                                                    trackReason: false)
         return flags

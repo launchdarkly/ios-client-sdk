@@ -165,10 +165,6 @@
 		835E1D471F68B3EC00184DB4 /* ObjcLDFlagValue.swift in Sources */ = {isa = PBXBuildFile; fileRef = 835E1D461F68B3EC00184DB4 /* ObjcLDFlagValue.swift */; };
 		835E4C54206BDF8D004C6E6C /* EnvironmentReporter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 831425B0206B030100F2EF36 /* EnvironmentReporter.swift */; };
 		835E4C57206BF7E3004C6E6C /* LaunchDarkly.h in Headers */ = {isa = PBXBuildFile; fileRef = 8354EFC51F22491C00C05156 /* LaunchDarkly.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		835F43D120D0309A0070DE51 /* EventTrackingContext.swift in Sources */ = {isa = PBXBuildFile; fileRef = 835F43D020D0309A0070DE51 /* EventTrackingContext.swift */; };
-		835F43D220D0309A0070DE51 /* EventTrackingContext.swift in Sources */ = {isa = PBXBuildFile; fileRef = 835F43D020D0309A0070DE51 /* EventTrackingContext.swift */; };
-		835F43D320D0309A0070DE51 /* EventTrackingContext.swift in Sources */ = {isa = PBXBuildFile; fileRef = 835F43D020D0309A0070DE51 /* EventTrackingContext.swift */; };
-		835F43D520D031740070DE51 /* EventTrackingContextSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = 835F43D420D031740070DE51 /* EventTrackingContextSpec.swift */; };
 		8370DF6C225E40B800F84810 /* DeprecatedCache.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8370DF6B225E40B800F84810 /* DeprecatedCache.swift */; };
 		8370DF6D225E40B800F84810 /* DeprecatedCache.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8370DF6B225E40B800F84810 /* DeprecatedCache.swift */; };
 		8370DF6E225E40B800F84810 /* DeprecatedCache.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8370DF6B225E40B800F84810 /* DeprecatedCache.swift */; };
@@ -198,7 +194,6 @@
 		83906A7721190B1900D7D3C5 /* FlagRequestTracker.swift in Sources */ = {isa = PBXBuildFile; fileRef = 83EBCBB220DABE1B003A7142 /* FlagRequestTracker.swift */; };
 		83906A7821190B2F00D7D3C5 /* FlagCounter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 83EBCBAB20D9C6A6003A7142 /* FlagCounter.swift */; };
 		83906A7921190B4000D7D3C5 /* FlagValueCounter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 83EBCBA220D9A1F3003A7142 /* FlagValueCounter.swift */; };
-		83906A7A21190B4E00D7D3C5 /* EventTrackingContext.swift in Sources */ = {isa = PBXBuildFile; fileRef = 835F43D020D0309A0070DE51 /* EventTrackingContext.swift */; };
 		83906A7B21190B7700D7D3C5 /* DateFormatter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8372668B20D4439600BD1088 /* DateFormatter.swift */; };
 		8392FFA32033565700320914 /* HTTPURLResponse.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8392FFA22033565700320914 /* HTTPURLResponse.swift */; };
 		83A0E6B1203B557F00224298 /* FeatureFlagSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = 83A0E6B0203B557F00224298 /* FeatureFlagSpec.swift */; };
@@ -408,8 +403,6 @@
 		835E1D3E1F63450A00184DB4 /* ObjcLDUser.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ObjcLDUser.swift; sourceTree = "<group>"; };
 		835E1D421F685AC900184DB4 /* ObjcLDChangedFlag.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ObjcLDChangedFlag.swift; sourceTree = "<group>"; };
 		835E1D461F68B3EC00184DB4 /* ObjcLDFlagValue.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ObjcLDFlagValue.swift; sourceTree = "<group>"; };
-		835F43D020D0309A0070DE51 /* EventTrackingContext.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EventTrackingContext.swift; sourceTree = "<group>"; };
-		835F43D420D031740070DE51 /* EventTrackingContextSpec.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EventTrackingContextSpec.swift; sourceTree = "<group>"; };
 		8370DF6B225E40B800F84810 /* DeprecatedCache.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeprecatedCache.swift; sourceTree = "<group>"; };
 		8372668B20D4439600BD1088 /* DateFormatter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DateFormatter.swift; sourceTree = "<group>"; };
 		837406D321F760640087B22B /* LDTimerSpec.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LDTimerSpec.swift; sourceTree = "<group>"; };
@@ -826,7 +819,6 @@
 			isa = PBXGroup;
 			children = (
 				8354EFE41F263DAC00C05156 /* FeatureFlag.swift */,
-				835F43D020D0309A0070DE51 /* EventTrackingContext.swift */,
 				83EBCB9F20D9A143003A7142 /* FlagChange */,
 				83EBCBA120D9A1BA003A7142 /* FlagRequestTracking */,
 				83EBCBA020D9A168003A7142 /* FlagValue */,
@@ -886,7 +878,6 @@
 			isa = PBXGroup;
 			children = (
 				83A0E6B0203B557F00224298 /* FeatureFlagSpec.swift */,
-				835F43D420D031740070DE51 /* EventTrackingContextSpec.swift */,
 				83EBCBA820D9A297003A7142 /* FlagChange */,
 				83EBCBAF20D9C78D003A7142 /* FlagRequestTracking */,
 			);
@@ -1402,7 +1393,6 @@
 				C443A41223186A4F00145710 /* ConnectionModeChangeObserver.swift in Sources */,
 				831188592113AE1200D77CB5 /* FlagStore.swift in Sources */,
 				C443A40D2315AA4D00145710 /* NetworkReporter.swift in Sources */,
-				83906A7A21190B4E00D7D3C5 /* EventTrackingContext.swift in Sources */,
 				831188652113AE4600D77CB5 /* Date.swift in Sources */,
 				831188672113AE4D00D77CB5 /* Thread.swift in Sources */,
 				832D68A0224A3896005F052A /* DeprecatedCacheModelV5.swift in Sources */,
@@ -1494,7 +1484,6 @@
 				8372668E20D4439600BD1088 /* DateFormatter.swift in Sources */,
 				8370DF6E225E40B800F84810 /* DeprecatedCache.swift in Sources */,
 				C43C37E7238DF22C003C1624 /* EvaluationDetail.swift in Sources */,
-				835F43D320D0309A0070DE51 /* EventTrackingContext.swift in Sources */,
 				831EF36020655E730001C643 /* Data.swift in Sources */,
 				83EBCBB520DABE1B003A7142 /* FlagRequestTracker.swift in Sources */,
 				831EF36120655E730001C643 /* Array.swift in Sources */,
@@ -1526,7 +1515,6 @@
 				83EBCBB320DABE1B003A7142 /* FlagRequestTracker.swift in Sources */,
 				83883DDA220B6A9A00EEAB95 /* ErrorNotifier.swift in Sources */,
 				837EF3742059C237009D628A /* Log.swift in Sources */,
-				835F43D120D0309A0070DE51 /* EventTrackingContext.swift in Sources */,
 				83FEF8DD1F266742001CF12C /* FlagSynchronizer.swift in Sources */,
 				835E1D471F68B3EC00184DB4 /* ObjcLDFlagValue.swift in Sources */,
 				83883DD5220B68A000EEAB95 /* ErrorObserver.swift in Sources */,
@@ -1626,7 +1614,6 @@
 				83CFE7D11F7AD8DC0010544E /* DarklyServiceMock.swift in Sources */,
 				832EA061203D03B700A93C0E /* AnyComparerSpec.swift in Sources */,
 				832307AA1F7ECA630029815A /* LDConfigStub.swift in Sources */,
-				835F43D520D031740070DE51 /* EventTrackingContextSpec.swift in Sources */,
 				8354AC77224316F800CDE602 /* UserEnvironmentFlagCacheSpec.swift in Sources */,
 				83EBCBB120D9C7B5003A7142 /* FlagCounterSpec.swift in Sources */,
 				83B8C2451FE360CF0082B8A9 /* FlagChangeNotifierSpec.swift in Sources */,
@@ -1659,7 +1646,6 @@
 				83EBCBB420DABE1B003A7142 /* FlagRequestTracker.swift in Sources */,
 				83883DDB220B6A9A00EEAB95 /* ErrorNotifier.swift in Sources */,
 				83D9EC772062DEAB004D7FA6 /* LDClient.swift in Sources */,
-				835F43D220D0309A0070DE51 /* EventTrackingContext.swift in Sources */,
 				83D9EC782062DEAB004D7FA6 /* LDUser.swift in Sources */,
 				83D9EC792062DEAB004D7FA6 /* LDFlagValue.swift in Sources */,
 				83D9EC7A2062DEAB004D7FA6 /* LDFlagValueConvertible.swift in Sources */,

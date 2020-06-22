@@ -208,7 +208,7 @@ extension Dictionary where Key == LDFlagKey, Value == FeatureFlag {
 
 extension FeatureFlag {
     var modelV3FeatureFlag: FeatureFlag {
-        FeatureFlag(flagKey: flagKey, value: value, variation: nil, version: version, flagVersion: nil, eventTrackingContext: nil, reason: nil, trackReason: nil)
+        FeatureFlag(flagKey: flagKey, value: value, variation: nil, version: version, flagVersion: nil, trackEvents: nil, debugEventsUntilDate: nil, reason: nil, trackReason: nil)
     }
 }
 
@@ -238,8 +238,8 @@ extension FeatureFlag {
         flagDictionary.removeValue(forKey: FeatureFlag.CodingKeys.flagKey.rawValue)
         flagDictionary.removeValue(forKey: FeatureFlag.CodingKeys.variation.rawValue)
         flagDictionary.removeValue(forKey: FeatureFlag.CodingKeys.flagVersion.rawValue)
-        flagDictionary.removeValue(forKey: EventTrackingContext.CodingKeys.trackEvents.rawValue)
-        flagDictionary.removeValue(forKey: EventTrackingContext.CodingKeys.debugEventsUntilDate.rawValue)
+        flagDictionary.removeValue(forKey: FeatureFlag.CodingKeys.trackEvents.rawValue)
+        flagDictionary.removeValue(forKey: FeatureFlag.CodingKeys.debugEventsUntilDate.rawValue)
         flagDictionary.removeValue(forKey: FeatureFlag.CodingKeys.reason.rawValue)
         return flagDictionary
     }

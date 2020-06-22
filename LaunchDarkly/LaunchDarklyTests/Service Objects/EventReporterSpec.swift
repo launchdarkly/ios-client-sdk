@@ -27,7 +27,6 @@ final class EventReporterSpec: QuickSpec {
         var eventKinds: [Event.Kind]! { events.compactMap { $0.kind } }
         var lastEventResponseDate: Date?
         var flagKey: LDFlagKey!
-        var eventTrackingContext: EventTrackingContext!
         var featureFlag: FeatureFlag!
         var featureFlagWithReason: FeatureFlag!
         var featureFlagWithReasonAndTrackReason: FeatureFlag!
@@ -76,15 +75,9 @@ final class EventReporterSpec: QuickSpec {
                                           onSyncComplete: onSyncComplete)
 
             flagKey = UUID().uuidString
-            if let trackEvents = trackEvents {
-                eventTrackingContext = EventTrackingContext(trackEvents: trackEvents)
-            }
-            if let debugEventsUntilDate = debugEventsUntilDate {
-                eventTrackingContext = EventTrackingContext(trackEvents: self.eventTrackingContext?.trackEvents ?? false, debugEventsUntilDate: debugEventsUntilDate)
-            }
-            featureFlag = DarklyServiceMock.Constants.stubFeatureFlag(for: DarklyServiceMock.FlagKeys.bool, eventTrackingContext: eventTrackingContext)
-            featureFlagWithReason = DarklyServiceMock.Constants.stubFeatureFlag(for: DarklyServiceMock.FlagKeys.bool, eventTrackingContext: eventTrackingContext, includeEvaluationReason: true)
-            featureFlagWithReasonAndTrackReason = DarklyServiceMock.Constants.stubFeatureFlag(for: DarklyServiceMock.FlagKeys.bool, eventTrackingContext: eventTrackingContext, includeEvaluationReason: true, includeTrackReason: true)
+            featureFlag = DarklyServiceMock.Constants.stubFeatureFlag(for: DarklyServiceMock.FlagKeys.bool, trackEvents: trackEvents, debugEventsUntilDate: debugEventsUntilDate)
+            featureFlagWithReason = DarklyServiceMock.Constants.stubFeatureFlag(for: DarklyServiceMock.FlagKeys.bool, trackEvents: trackEvents, debugEventsUntilDate: debugEventsUntilDate, includeEvaluationReason: true)
+            featureFlagWithReasonAndTrackReason = DarklyServiceMock.Constants.stubFeatureFlag(for: DarklyServiceMock.FlagKeys.bool, trackEvents: trackEvents, debugEventsUntilDate: debugEventsUntilDate, includeEvaluationReason: true, includeTrackReason: true)
             self.flagRequestCount = flagRequestCount
         }
 

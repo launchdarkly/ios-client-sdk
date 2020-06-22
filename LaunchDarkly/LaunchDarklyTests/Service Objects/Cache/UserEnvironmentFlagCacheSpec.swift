@@ -2,7 +2,6 @@
 //  UserEnvironmentCacheSpec.swift
 //  LaunchDarklyTests
 //
-//  Created by Mark Pokorny on 3/20/19. +JMJ
 //  Copyright © 2019 Catamorphic Co. All rights reserved.
 //
 
@@ -671,7 +670,8 @@ extension FeatureFlag {
                            variation: DarklyServiceMock.Constants.variation,
                            version: DarklyServiceMock.Constants.version,
                            flagVersion: DarklyServiceMock.Constants.flagVersion,
-                           eventTrackingContext: EventTrackingContext.stub(),
+                           trackEvents: true,
+                           debugEventsUntilDate: Date().addingTimeInterval(30.0),
                            reason: DarklyServiceMock.Constants.reason,
                            trackReason: false)
     }

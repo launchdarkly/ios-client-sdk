@@ -60,7 +60,8 @@ final class DeprecatedCacheModelV4: DeprecatedCache {
                                   variation: flagValueDictionary.variation,
                                   version: flagValueDictionary.version,
                                   flagVersion: flagValueDictionary.flagVersion,
-                                  eventTrackingContext: EventTrackingContext(dictionary: flagValueDictionary),
+                                  trackEvents: flagValueDictionary.trackEvents,
+                                  debugEventsUntilDate: Date(millisSince1970: flagValueDictionary.debugEventsUntilDate),
                                   reason: nil,
                                   trackReason: nil))
         })
