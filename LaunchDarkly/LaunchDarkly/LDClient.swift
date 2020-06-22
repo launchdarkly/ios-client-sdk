@@ -187,26 +187,31 @@ public class LDClient {
     */
     private(set) var config: LDConfig {
         didSet {
-            guard config != oldValue
-            else {
-                Log.debug(typeName(and: #function) + "aborted. New config matches old config")
-                return
-            }
-
-            Log.level = environmentReporter.isDebugBuild && config.isDebugMode ? .debug : .noLogging
-            Log.debug(typeName(and: #function) + "new config set")
-            let wasOnline = isOnline
-            setOnline(false)
-            convertCachedData(skipDuringStart: isStarting)
-            if let cachedFlags = flagCache.retrieveFeatureFlags(forUserWithKey: user.key, andMobileKey: config.mobileKey), !cachedFlags.isEmpty {
-                user.flagStore.replaceStore(newFlags: cachedFlags, source: .cache, completion: nil)
-            }
-
-            service = serviceFactory.makeDarklyServiceProvider(config: config, user: user)
-            eventReporter.config = config
-
-            setOnline(wasOnline)
+            configDidSet(oldValue: oldValue)
         }
+    }
+    
+    private func configDidSet(oldValue: LDConfig) {
+        guard config != oldValue
+        else {
+            Log.debug(typeName(and: #function) + "aborted. New config matches old config")
+            return
+        }
+
+        Log.level = environmentReporter.isDebugBuild && config.isDebugMode ? .debug : .noLogging
+        Log.debug(typeName(and: #function) + "new config set")
+        let wasOnline = isOnline
+        setOnline(false)
+        print("BULGARIA CONFIG:: \(type(of: flagCache))")
+        convertCachedData(skipDuringStart: isStarting)
+        if let cachedFlags = flagCache.retrieveFeatureFlags(forUserWithKey: user.key, andMobileKey: config.mobileKey), !cachedFlags.isEmpty {
+            user.flagStore.replaceStore(newFlags: cachedFlags, source: .cache, completion: nil)
+        }
+
+        service = serviceFactory.makeDarklyServiceProvider(config: config, user: user)
+        eventReporter.config = config
+
+        setOnline(wasOnline)
     }
     
     private(set) var user: LDUser
@@ -237,7 +242,7 @@ public class LDClient {
         }
     }
     
-    private func internalIdentify(newUser: LDUser, testing: Bool = false, completion: (() -> Void)? = nil) {
+    func internalIdentify(newUser: LDUser, testing: Bool = false, completion: (() -> Void)? = nil) {
         LDClient.identifyQueue.async {
             var internalUser = newUser
             if !testing {
@@ -251,6 +256,7 @@ public class LDClient {
             if self.hasStarted {
                 self.eventReporter.recordSummaryEvent()
             }
+            print("BULGARIA IDENTIFY: \(type(of: self.flagCache))")
             self.convertCachedData(skipDuringStart: self.isStarting)
             if let cachedFlags = self.flagCache.retrieveFeatureFlags(forUserWithKey: self.user.key, andMobileKey: self.config.mobileKey), !cachedFlags.isEmpty {
                 self.user.flagStore.replaceStore(newFlags: cachedFlags, source: .cache, completion: nil)
@@ -873,7 +879,7 @@ public class LDClient {
         for (name, mobileKey) in mobileKeys {
             var internalConfig = config
             internalConfig.mobileKey = mobileKey
-            let instance = LDClient(configuration: internalConfig, startUser: internalUser, flagCache: cache, flagNotifier: flagChangeNotifier, completion: completionCheck)
+            let instance = LDClient(configuration: internalConfig, startUser: internalUser, newCache: cache, flagNotifier: flagChangeNotifier, completion: completionCheck)
             LDClient.instances?[name] = instance
         }
         completionCheck()
@@ -965,7 +971,7 @@ public class LDClient {
         cacheConverter.convertCacheData(for: user, and: config)
     }
     
-    private init(serviceFactory: ClientServiceCreating? = nil, configuration: LDConfig, startUser: LDUser?, flagCache: FeatureFlagCaching, flagNotifier: FlagChangeNotifying, testing: Bool = false, completion: (() -> Void)? = nil) {
+    private init(serviceFactory: ClientServiceCreating? = nil, configuration: LDConfig, startUser: LDUser?, newCache: FeatureFlagCaching, flagNotifier: FlagChangeNotifying, testing: Bool = false, completion: (() -> Void)? = nil) {
         isStarting = true
         hasStarted = true
         
@@ -973,7 +979,7 @@ public class LDClient {
             self.serviceFactory = serviceFactory
         }
         environmentReporter = self.serviceFactory.makeEnvironmentReporter()
-        self.flagCache = flagCache
+        flagCache = newCache
         LDUserWrapper.configureKeyedArchiversToHandleVersion2_3_0AndOlderUserCacheFormat()
         cacheConverter = self.serviceFactory.makeCacheConverter(maxCachedUsers: configuration.maxCachedUsers)
         flagChangeNotifier = flagNotifier
@@ -991,8 +997,6 @@ public class LDClient {
                                                                     useReport: config.useReport,
                                                                     service: service)
         
-        Log.level = environmentReporter.isDebugBuild && configuration.isDebugMode ? .debug : .noLogging
-        
         if let backgroundNotification = environmentReporter.backgroundNotification {
             NotificationCenter.default.addObserver(self, selector: #selector(didEnterBackground), name: backgroundNotification, object: nil)
         }
@@ -1005,6 +1009,7 @@ public class LDClient {
         eventReporter = self.serviceFactory.makeEventReporter(config: config, service: service, onSyncComplete: onEventSyncComplete)
         internalSetOnline(false)
         cacheConverter.convertCacheData(for: user, and: config)
+        configDidSet(oldValue: LDConfig(mobileKey: "INITIAL_VALUE"))
         internalIdentify(newUser: user, testing: testing)
         self.connectionInformation = ConnectionInformation.uncacheConnectionInformation(config: config, ldClient: self, clientServiceFactory: self.serviceFactory)
 
@@ -1016,18 +1021,9 @@ public class LDClient {
     }
     
     private convenience init(serviceFactory: ClientServiceCreating, config: LDConfig, startUser: LDUser?, runMode: LDClientRunMode, flagCache: FeatureFlagCaching, flagNotifier: FlagChangeNotifying, completion: (() -> Void)? = nil) {
-        self.init(serviceFactory: serviceFactory, configuration: config, startUser: startUser, flagCache: flagCache, flagNotifier: flagNotifier, testing: true, completion: completion)
+        self.init(serviceFactory: serviceFactory, configuration: config, startUser: startUser, newCache: flagCache, flagNotifier: flagNotifier, testing: true, completion: completion)
         //Setting these inside the init do not trigger the didSet closures
         self.runMode = runMode
-        self.config = config
-        self.isStarting = true
-        let internalUser = startUser ?? user
-        identify(user: internalUser)
-
-        //dummy objects replaced by client at start
-        service = self.serviceFactory.makeDarklyServiceProvider(config: config, user: internalUser)  //didSet not triggered here
-        eventReporter = self.serviceFactory.makeEventReporter(config: config, service: service, onSyncComplete: onEventSyncComplete)
-        self.isStarting = false
     }
 }
 
