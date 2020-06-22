@@ -220,7 +220,7 @@ final class DiagnosticEventSpec: QuickSpec {
         customConfig.enableBackgroundUpdates = true
         customConfig.evaluationReasons = true
         customConfig.maxCachedUsers = -2
-        // TODO: When adding Multi-environment, add additional keys
+        customConfig.secondaryMobileKeys = ["test": "foobar1", "debug": "foobar2"]
         customConfig.diagnosticRecordingInterval = 600.0
         customConfig.wrapperName = "ReactNative"
         customConfig.wrapperVersion = "0.1.0"
@@ -274,8 +274,7 @@ final class DiagnosticEventSpec: QuickSpec {
                     expect(diagnosticConfig.evaluationReasonsRequested) == true
                     // All negative values become -1 for consistency
                     expect(diagnosticConfig.maxCachedUsers) == -1
-                    // TODO: When adding Multi-environment, update count here
-                    expect(diagnosticConfig.mobileKeyCount) == 1
+                    expect(diagnosticConfig.mobileKeyCount) == 3
                     expect(diagnosticConfig.diagnosticRecordingIntervalMillis) == 600_000
                 }
             }
