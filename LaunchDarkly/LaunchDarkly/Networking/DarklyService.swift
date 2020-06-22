@@ -2,7 +2,6 @@
 //  DarklyService.swift
 //  LaunchDarkly
 //
-//  Created by Mark Pokorny on 9/19/17. +JMJ
 //  Copyright © 2017 Catamorphic Co. All rights reserved.
 //
 
@@ -25,14 +24,17 @@ protocol DarklyServiceProvider: class {
     func clearFlagResponseCache()
     func createEventSource(useReport: Bool, handler: EventHandler, errorHandler: ConnectionErrorHandler?) -> DarklyStreamingProvider
     func publishEventDictionaries(_ eventDictionaries: [[String: Any]], _ payloadId: String, completion: ServiceCompletionHandler?)
+    func publishDiagnostic<T: DiagnosticEvent & Encodable>(diagnosticEvent: T, completion: ServiceCompletionHandler?)
     var config: LDConfig { get }
     var user: LDUser { get }
+    var diagnosticCache: DiagnosticCaching? { get }
 }
 
 final class DarklyService: DarklyServiceProvider {
-    
+
     struct EventRequestPath {
         static let bulk = "mobile/events/bulk"
+        static let diagnostic = "mobile/events/diagnostic"
     }
 
     struct FlagRequestPath {
@@ -48,14 +50,15 @@ final class DarklyService: DarklyServiceProvider {
         static let get = "GET"
         static let report = "REPORT"
     }
-    
+
     struct ReasonsPath {
         static let reasons = URLQueryItem(name: "withReasons", value: "true")
     }
-    
+
     let config: LDConfig
     let user: LDUser
     let httpHeaders: HTTPHeaders
+    let diagnosticCache: DiagnosticCaching?
     private (set) var serviceFactory: ClientServiceCreating
     private var session: URLSession
 
@@ -63,12 +66,19 @@ final class DarklyService: DarklyServiceProvider {
         self.config = config
         self.user = user
         self.serviceFactory = serviceFactory
+
+        if !config.mobileKey.isEmpty && !config.diagnosticOptOut {
+            self.diagnosticCache = serviceFactory.makeDiagnosticCache(sdkKey: config.mobileKey)
+        } else {
+            self.diagnosticCache = nil
+        }
+
         self.httpHeaders = HTTPHeaders(config: config, environmentReporter: serviceFactory.makeEnvironmentReporter())
         self.session = URLSession(configuration: URLSessionConfiguration.default)
     }
-    
+
     // MARK: Feature Flags
-    
+
     func getFeatureFlags(useReport: Bool, completion: ServiceCompletionHandler?) {
         guard !config.mobileKey.isEmpty,
             let flagRequest = flagRequest(useReport: useReport)
@@ -80,7 +90,7 @@ final class DarklyService: DarklyServiceProvider {
             }
             return
         }
-        let dataTask = self.session.dataTask(with: flagRequest) { [weak self] (data, response, error) in
+        let dataTask = self.session.dataTask(with: flagRequest) { [weak self] data, response, error in
             DispatchQueue.main.async {
                 self?.processEtag(from: (data, response, error))
                 completion?((data, response, error))
@@ -88,7 +98,7 @@ final class DarklyService: DarklyServiceProvider {
         }
         dataTask.resume()
     }
-    
+
     private func flagRequest(useReport: Bool) -> URLRequest? {
         guard let flagRequestUrl = flagRequestUrl(useReport: useReport)
         else {
@@ -104,7 +114,7 @@ final class DarklyService: DarklyServiceProvider {
             request.httpMethod = URLRequest.HTTPMethods.report
             request.httpBody = userData
         }
-       
+
         return request
     }
 
@@ -156,9 +166,9 @@ final class DarklyService: DarklyServiceProvider {
         URLCache.shared.removeAllCachedResponses()
         HTTPHeaders.removeFlagRequestEtags()
     }
-    
+
     // MARK: Streaming
-    
+
     func createEventSource(useReport: Bool, handler: EventHandler, errorHandler: ConnectionErrorHandler?) -> DarklyStreamingProvider {
         if useReport {
             return serviceFactory.makeStreamingProvider(url: reportStreamRequestUrl,
@@ -178,17 +188,17 @@ final class DarklyService: DarklyServiceProvider {
     }
 
     private var getStreamRequestUrl: URL {
-        return shouldGetReasons(url: config.streamUrl.appendingPathComponent(StreamRequestPath.meval)
+        shouldGetReasons(url: config.streamUrl.appendingPathComponent(StreamRequestPath.meval)
             .appendingPathComponent(user
                 .dictionaryValue(includeFlagConfig: false, includePrivateAttributes: true, config: config)
                 .base64UrlEncodedString ?? ""))
     }
     private var reportStreamRequestUrl: URL {
-        return shouldGetReasons(url: config.streamUrl.appendingPathComponent(StreamRequestPath.meval))
+        shouldGetReasons(url: config.streamUrl.appendingPathComponent(StreamRequestPath.meval))
     }
 
     // MARK: Publish Events
-    
+
     func publishEventDictionaries(_ eventDictionaries: [[String: Any]], _ payloadId: String, completion: ServiceCompletionHandler?) {
         guard !config.mobileKey.isEmpty,
             !eventDictionaries.isEmpty
@@ -205,7 +215,7 @@ final class DarklyService: DarklyServiceProvider {
         }
         dataTask.resume()
     }
-    
+
     private func eventRequest(eventDictionaries: [[String: Any]], payloadId: String) -> URLRequest {
         var request = URLRequest(url: eventUrl, cachePolicy: .useProtocolCachePolicy, timeoutInterval: config.connectionTimeout)
         request.appendHeaders(httpHeaders.eventRequestHeaders)
@@ -215,9 +225,33 @@ final class DarklyService: DarklyServiceProvider {
 
         return request
     }
-    
+
     private var eventUrl: URL {
-        return config.eventsUrl.appendingPathComponent(EventRequestPath.bulk)
+        config.eventsUrl.appendingPathComponent(EventRequestPath.bulk)
+    }
+
+    func publishDiagnostic<T: DiagnosticEvent & Encodable>(diagnosticEvent: T, completion: ServiceCompletionHandler?) {
+        guard !config.mobileKey.isEmpty
+        else {
+            Log.debug(typeName(and: #function, appending: ": ") + "Aborting. No mobile key.")
+            return
+        }
+        let dataTask = self.session.dataTask(with: diagnosticRequest(diagnosticEvent: diagnosticEvent)) { data, response, error in
+            completion?((data, response, error))
+        }
+        dataTask.resume()
+    }
+
+    private func diagnosticRequest<T: DiagnosticEvent & Encodable>(diagnosticEvent: T) -> URLRequest {
+        var request = URLRequest(url: diagnosticUrl, cachePolicy: .useProtocolCachePolicy, timeoutInterval: config.connectionTimeout)
+        request.appendHeaders(httpHeaders.diagnosticRequestHeaders)
+        request.httpMethod = URLRequest.HTTPMethods.post
+        request.httpBody = try? JSONEncoder().encode(diagnosticEvent)
+        return request
+    }
+
+    private var diagnosticUrl: URL {
+        config.eventsUrl.appendingPathComponent(EventRequestPath.diagnostic)
     }
 }
 
@@ -226,7 +260,7 @@ extension DarklyService: TypeIdentifying { }
 extension URLRequest {
     mutating func appendHeaders(_ newHeaders: [String: String]) {
         var headers = self.allHTTPHeaderFields ?? [:]
-        headers.merge(newHeaders) { (_, newValue) in
+        headers.merge(newHeaders) { _, newValue in
             newValue
         }
         self.allHTTPHeaderFields = headers

@@ -79,6 +79,7 @@ class FlagSynchronizer: LDFlagSynchronizing, EventHandler {
     var streamingActive: Bool { eventSource != nil }
     var pollingActive: Bool { flagRequestTimer != nil }
     private var syncQueue: DispatchQueue
+    private var eventSourceStarted: Date?
 
     init(streamingMode: LDStreamingMode, pollingInterval: TimeInterval, useReport: Bool, service: DarklyServiceProvider, onSyncComplete: FlagSyncCompleteClosure?) {
         Log.debug(FlagSynchronizer.typeName(and: #function) + "streamingMode: \(streamingMode), " + "pollingInterval: \(pollingInterval), " + "useReport: \(useReport)")
@@ -132,6 +133,7 @@ class FlagSynchronizer: LDFlagSynchronizing, EventHandler {
         }
 
         Log.debug(typeName(and: #function))
+        eventSourceStarted = Date()
         //The LDConfig.connectionTimeout should NOT be set here. Heartbeat is sent every 3m. ES default timeout is 5m. This is an async operation.
         //LDEventSource reacts to connection errors by closing the connection and establishing a new one after an exponentially increasing wait. That makes it self healing.
         //While we could keep the LDEventSource state, there's not much we can do to help it connect. If it can't connect, it's likely we won't be able to poll the server either...so it seems best to just do nothing and let it heal itself.
@@ -266,6 +268,13 @@ class FlagSynchronizer: LDFlagSynchronizing, EventHandler {
     }
 
     func eventSourceErrorHandler(error: Error) -> ConnectionErrorAction {
+        let now = Date()
+        if let startedAt = eventSourceStarted?.millisSince1970 {
+            let streamInit = DiagnosticStreamInit(timestamp: now.millisSince1970, durationMillis: Int(now.millisSince1970 - startedAt), failed: true)
+            service.diagnosticCache?.addStreamInit(streamInit: streamInit)
+        }
+        eventSourceStarted = now
+
         guard let unsuccessfulResponseError = error as? UnsuccessfulResponseError
         else {
             return .proceed }
@@ -304,7 +313,12 @@ class FlagSynchronizer: LDFlagSynchronizing, EventHandler {
 
     // MARK: EventHandler methods
     public func onOpened() {
-
+        Log.debug(self.typeName(and: #function) + "EventSource opened")
+        if let startedAt = eventSourceStarted?.millisSince1970 {
+            let now = Date().millisSince1970
+            let streamInit = DiagnosticStreamInit(timestamp: now, durationMillis: Int(now - startedAt), failed: false)
+            service.diagnosticCache?.addStreamInit(streamInit: streamInit)
+        }
     }
 
     public func onClosed() {

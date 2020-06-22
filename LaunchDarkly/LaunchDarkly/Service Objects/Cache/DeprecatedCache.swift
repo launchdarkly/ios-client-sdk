@@ -8,7 +8,6 @@
 import Foundation
 
 protocol DeprecatedCache {
-    var model: DeprecatedCacheModel { get }
     var cachedDataKey: String { get }
     var keyedValueCache: KeyedValueCaching { get }
     func retrieveFlags(for userKey: UserKey, and mobileKey: MobileKey) -> (featureFlags: [LDFlagKey: FeatureFlag]?, lastUpdated: Date?)
@@ -28,15 +27,15 @@ extension DeprecatedCache {
             keyedValueCache.removeObject(forKey: cachedDataKey)        //all user cached data is expired, remove the cache key & values
             return
         }
-        let unexpiredUserData: [UserKey: [String: Any]] = cachedUserData.filter { (userKey, _) in
+        let unexpiredUserData: [UserKey: [String: Any]] = cachedUserData.filter { userKey, _ in
             !expiredUserKeys.contains(userKey)
         }
         keyedValueCache.set(unexpiredUserData, forKey: cachedDataKey)
     }
 }
 
-enum DeprecatedCacheModel: String, CaseIterable {
-    case version6, version5, version4, version3, version2     //version1 is not supported
+enum DeprecatedCacheModel: CaseIterable {
+    case version5, version4, version3, version2     //version1 is not supported
 }
 
 // updatedAt in cached data was used as the LDUser.lastUpdated, which is deprecated in the Swift SDK

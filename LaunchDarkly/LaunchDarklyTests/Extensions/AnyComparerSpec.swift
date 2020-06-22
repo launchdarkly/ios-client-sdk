@@ -126,7 +126,7 @@ final class AnyComparerSpec: QuickSpec {
                     }
                     it("returns true") {
                         featureFlags.forEach { (flagKey, featureFlag) in
-                            otherFlag = FeatureFlag(flagKey: flagKey, value: featureFlag.value, variation: nil, version: nil, flagVersion: nil, eventTrackingContext: nil, reason: nil, trackReason: false)
+                            otherFlag = FeatureFlag(flagKey: flagKey, value: featureFlag.value, variation: nil, version: nil, flagVersion: nil, trackEvents: nil, debugEventsUntilDate: nil, reason: nil, trackReason: false)
 
                             expect(AnyComparer.isEqual(featureFlag, to: otherFlag)).to(beTrue())
                         }
@@ -167,14 +167,19 @@ final class AnyComparerSpec: QuickSpec {
                             }
                         }
                     }
-                    context("with differing eventTrackingContext") {
-                        var eventTrackingContext: EventTrackingContext!
-                        beforeEach {
-                            eventTrackingContext = EventTrackingContext(trackEvents: false)
-                        }
+                    context("with differing trackEvents") {
                         it("returns true") {
                             featureFlags.forEach { (_, featureFlag) in
-                                otherFlag = FeatureFlag(copying: featureFlag, eventTrackingContext: eventTrackingContext)
+                                otherFlag = FeatureFlag(copying: featureFlag, trackEvents: false)
+
+                                expect(AnyComparer.isEqual(featureFlag, to: otherFlag)).to(beTrue())
+                            }
+                        }
+                    }
+                    context("with differing debugEventsUntilDate") {
+                        it("returns true") {
+                            featureFlags.forEach { (_, featureFlag) in
+                                otherFlag = FeatureFlag(copying: featureFlag, debugEventsUntilDate: Date())
 
                                 expect(AnyComparer.isEqual(featureFlag, to: otherFlag)).to(beTrue())
                             }
