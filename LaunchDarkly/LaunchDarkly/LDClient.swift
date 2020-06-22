@@ -66,6 +66,7 @@ public class LDClient {
         didSet {
             flagSynchronizer.isOnline = isOnline
             eventReporter.isOnline = isOnline
+            diagnosticReporter.isOnline = isOnline
             if isOnline != oldValue {
                 connectionInformation = ConnectionInformation.onlineSetCheck(connectionInformation: connectionInformation, ldClient: self, config: config)
             }
@@ -240,7 +241,7 @@ public class LDClient {
             }
         }
     }
-    
+
     func internalIdentify(newUser: LDUser, testing: Bool = false, completion: (() -> Void)? = nil) {
         LDClient.identifyQueue.async {
             var internalUser = newUser
@@ -251,21 +252,18 @@ public class LDClient {
             Log.debug(self.typeName(and: #function) + "new user set with key: " + self.user.key )
             let wasOnline = self.isOnline
             self.setOnline(false)
-            
-            if self.hasStarted {
-                self.eventReporter.recordSummaryEvent()
-            }
+
             self.convertCachedData(skipDuringStart: self.isStarting)
             if let cachedFlags = self.flagCache.retrieveFeatureFlags(forUserWithKey: self.user.key, andMobileKey: self.config.mobileKey), !cachedFlags.isEmpty {
                 self.user.flagStore.replaceStore(newFlags: cachedFlags, source: .cache, completion: nil)
             }
             self.service = self.serviceFactory.makeDarklyServiceProvider(config: self.config, user: self.user)
             self.service.clearFlagResponseCache()
-            
+
             if self.hasStarted {
                 self.eventReporter.record(Event.identifyEvent(user: self.user))
             }
-            
+
             self.setOnline(wasOnline, completion: completion)
         }
     }
@@ -276,6 +274,7 @@ public class LDClient {
         didSet {
             Log.debug(typeName(and: #function) + "new service set")
             eventReporter.service = service
+            diagnosticReporter.service = service
             flagSynchronizer = serviceFactory.makeFlagSynchronizer(streamingMode: ConnectionInformation.effectiveStreamingMode(config: config, ldClient: self),
                                                                    pollingInterval: config.flagPollingInterval(runMode: runMode),
                                                                    useReport: config.useReport,
@@ -807,7 +806,7 @@ public class LDClient {
     }
     
     private func internalFlush() {
-        eventReporter.reportEvents()
+        eventReporter.flush(completion: nil)
     }
 
     private func onEventSyncComplete(result: EventSyncResult) {
@@ -921,11 +920,6 @@ public class LDClient {
                 return
             }
             Log.debug(typeName(and: #function, appending: ": ") + "\(runMode)")
-            if runMode == .background {
-                eventReporter.reportEvents()
-            }
-            
-            eventReporter.isOnline = isOnline && runMode == .foreground
 
             let willSetSynchronizerOnline = isOnline && isInSupportedRunMode
             //The only time the flag synchronizer configuration WILL match is if the client sets flag polling with the polling interval set to the background polling interval.
@@ -941,6 +935,7 @@ public class LDClient {
                                                                        onSyncComplete: onFlagSyncComplete)
             }
             flagSynchronizer.isOnline = willSetSynchronizerOnline
+            diagnosticReporter.runMode = runMode
         }
     }
     
@@ -957,6 +952,7 @@ public class LDClient {
     private(set) var eventReporter: EventReporting
     private(set) var environmentReporter: EnvironmentReporting
     private(set) var throttler: Throttling
+    private(set) var diagnosticReporter: DiagnosticReporting
 
     private(set) var isStarting = false
     private(set) var hasStarted = false
@@ -987,6 +983,7 @@ public class LDClient {
         let anonymousUser = LDUser(environmentReporter: environmentReporter)
         user = startUser ?? anonymousUser
         service = self.serviceFactory.makeDarklyServiceProvider(config: config, user: user)
+        diagnosticReporter = self.serviceFactory.makeDiagnosticReporter(service: service, runMode: runMode)
         eventReporter = self.serviceFactory.makeEventReporter(config: config, service: service)
         errorNotifier = self.serviceFactory.makeErrorNotifier()
         connectionInformation = self.serviceFactory.makeConnectionInformation()
