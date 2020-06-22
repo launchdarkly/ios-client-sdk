@@ -177,6 +177,7 @@ final class LDClientSpec: QuickSpec {
              runMode: LDClientRunMode = .foreground,
              operatingSystem: OperatingSystem? = nil,
              timeOut: TimeInterval,
+             forceTimeout: Bool = false,
              timeOutCompletion: ((_ timedOut: Bool) -> Void)? = nil) {
 
             let clientServiceFactory = ClientServiceMockFactory()
@@ -198,7 +199,9 @@ final class LDClientSpec: QuickSpec {
             LDClient.start(serviceFactory: clientServiceFactory, config: config, startUser: user, startWaitSeconds: timeOut, flagCache: clientServiceFactory.makeFeatureFlagCache(), flagNotifier: flagNotifier) { timedOut in
                 self.startCompletion(runMode: runMode, timedOut: timedOut, timeOutCompletion: timeOutCompletion)
             }
-            flagNotifier.notifyObservers(user: self.user, oldFlags: self.oldFlags, oldFlagSource: self.oldFlagSource)
+            if !forceTimeout {
+                flagNotifier.notifyObservers(user: self.user, oldFlags: self.oldFlags, oldFlagSource: self.oldFlagSource)
+            }
         }
 
         func startCompletion(runMode: LDClientRunMode = .foreground, timedOut: Bool = false, completion: (() -> Void)? = nil, timeOutCompletion: ((_ timedOut: Bool) -> Void)? = nil) {
@@ -610,7 +613,7 @@ final class LDClientSpec: QuickSpec {
             context("when configured to start online") {
                 beforeEach {
                     waitUntil(timeout: 10) { done in
-                        testContext = TestContext(startOnline: true, timeOut: 0.1) { timedOut in
+                        testContext = TestContext(startOnline: true, timeOut: 1.0/*, forceTimeout: true*/) { timedOut in
                             expect(timedOut) == true
                             done()
                         }
@@ -1019,6 +1022,10 @@ final class LDClientSpec: QuickSpec {
                         testContext = TestContext(startOnline: false, completion: done)
                     }
                     testContext.subject.setIsStarting(true)
+                    testContext.eventReporterMock.recordCallCount = 0
+                    testContext.eventReporterMock.recordSummaryEventCallCount = 0   //calling start sets the user, which calls eventReporter.recordSummaryEvent()
+                    testContext.featureFlagCachingMock.reset()
+                    testContext.cacheConvertingMock.reset()
                     newUser = LDUser.stub()
                     
                     testContext.subject.internalIdentify(newUser: newUser, testing: true)
@@ -1159,6 +1166,7 @@ final class LDClientSpec: QuickSpec {
                     waitUntil { done in
                         testContext = TestContext(startOnline: false, completion: done)
                     }
+                    testContext.eventReporterMock.recordCallCount = 0
                     testContext.eventReporterMock.recordSummaryEventCallCount = 0   //calling start sets the user, which calls eventReporter.recordSummaryEvent()
                     testContext.featureFlagCachingMock.reset()
                     testContext.cacheConvertingMock.reset()
@@ -1240,9 +1248,6 @@ final class LDClientSpec: QuickSpec {
             context("when the client runs in the background") {
                 OperatingSystem.allOperatingSystems.forEach { (os) in
                     context("on \(os)") {
-                        /*beforeEach {
-                            testContext = TestContext(runMode: .background, operatingSystem: os)
-                        }*/
                         context("while configured to enable background updates") {
                             context("and setting online") {
                                 var targetRunThrottledCalls: Int!
@@ -1251,8 +1256,9 @@ final class LDClientSpec: QuickSpec {
                                         testContext = TestContext(runMode: .background, operatingSystem: os, completion: done)
                                     }
                                     targetRunThrottledCalls = os.isBackgroundEnabled ? 1 : 0
-                                    waitUntil { done in
+                                    waitUntil(timeout: 10) { done in
                                         testContext.subject.setOnline(true, completion: done)
+                                        testContext.subject.flagChangeNotifier.notifyObservers(user: testContext.user, oldFlags: testContext.oldFlags, oldFlagSource: testContext.oldFlagSource)
                                     }
                                 }
                                 it("takes the client and service objects online") {
