@@ -143,7 +143,7 @@ public final class ObjcLDClient: NSObject {
      
      - returns: All environment names as an Array of Strings.
     */
-    @objc public func getEnvironmentNames() -> Array<String>? {
+    @objc public func getEnvironmentNames() -> [String]? {
         LDClient.getEnvironmentNames()
     }
   

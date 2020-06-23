@@ -297,7 +297,7 @@ public class LDClient {
     private func internalClose() {
         Log.debug(typeName(and: #function, appending: "- ") + "stopping")
         internalFlush()
-        setOnline(false)
+        internalSetOnline(false)
         LDClient.instances = nil
         hasStarted = false
         Log.debug(typeName(and: #function, appending: "- ") + "stopped")
@@ -321,12 +321,12 @@ public class LDClient {
      
      - returns: All environment names as an Array of Strings.
     */
-    public static func getEnvironmentNames() -> Array<String>? {
+    public static func getEnvironmentNames() -> [String]? {
         guard let internalInstances = LDClient.instances else {
             Log.debug("LDClient.getEnvironmentNames() was called before init()!")
             return nil
         }
-        return internalInstances.map { key, _ in key }
+        return Array(internalInstances.keys)
     }
     
     /**
