@@ -1100,5 +1100,9 @@ private extension Optional {
         func setIsStarting(_ isStarting: Bool) {
             self.isStarting = isStarting
         }
+
+        func setHasStarted(_ hasStarted: Bool) {
+            self.hasStarted = hasStarted
+        }
     }
 #endif

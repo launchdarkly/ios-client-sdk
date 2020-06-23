@@ -624,11 +624,10 @@ final class LDClientSpec: QuickSpec {
             context("when configured to start online") {
                 beforeEach {
                     waitUntil(timeout: 10) { done in
-                        testContext = TestContext(startOnline: true, timeOut: 1.0/*, forceTimeout: true*/) { timedOut in
+                        testContext = TestContext(startOnline: true, timeOut: 1.0, forceTimeout: true) { timedOut in
                             expect(timedOut) == true
                             done()
                         }
-                        //testContext.subject.flagChangeNotifier = ClientServiceMockFactory().makeFlagChangeNotifier()
                     }
                 }
                 it("times out properly") {
@@ -1050,6 +1049,7 @@ final class LDClientSpec: QuickSpec {
                         testContext = TestContext(startOnline: false, completion: done)
                     }
                     testContext.subject.setIsStarting(true)
+                    testContext.subject.setHasStarted(false)
                     testContext.eventReporterMock.recordCallCount = 0
                     testContext.featureFlagCachingMock.reset()
                     testContext.cacheConvertingMock.reset()
@@ -1203,6 +1203,7 @@ final class LDClientSpec: QuickSpec {
                     testContext.featureFlagCachingMock.reset()
                     testContext.cacheConvertingMock.reset()
                     testContext.subject.setIsStarting(true)
+                    testContext.subject.setHasStarted(false)
                     newUser = LDUser.stub()
                     waitUntil { done in
                         testContext.subject.internalIdentify(newUser: newUser, testing: true, completion: done)
