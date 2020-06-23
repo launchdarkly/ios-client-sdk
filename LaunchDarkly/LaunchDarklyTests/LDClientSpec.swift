@@ -345,6 +345,7 @@ final class LDClientSpec: QuickSpec {
                                 testContext = TestContext(startOnline: true, runMode: .background, operatingSystem: os, completion: done)
                             }
                             waitUntil(timeout: 10) { done in
+                                testContext.subject.setService(ClientServiceMockFactory().makeDarklyServiceProvider(config: testContext.subject.config, user: testContext.subject.user))
                                 testContext.subject.setOnline(true, completion: done)
                                 testContext.subject.flagChangeNotifier.notifyObservers(user: testContext.user, oldFlags: testContext.oldFlags, oldFlagSource: testContext.oldFlagSource)
                             }
@@ -624,7 +625,7 @@ final class LDClientSpec: QuickSpec {
             context("when configured to start online") {
                 beforeEach {
                     waitUntil(timeout: 10) { done in
-                        testContext = TestContext(startOnline: true, timeOut: 1.0, forceTimeout: true) { timedOut in
+                        testContext = TestContext(startOnline: true, timeOut: 3.0, forceTimeout: true) { timedOut in
                             expect(timedOut) == true
                             done()
                         }
@@ -636,9 +637,9 @@ final class LDClientSpec: QuickSpec {
             }
             context("when configured to start offline") {
                 beforeEach {
-                    waitUntil(timeout: 3) { done in
+                    waitUntil(timeout: 10) { done in
                         testContext = TestContext(startOnline: false, timeOut: 10) { timedOut in
-                            expect(timedOut) == false
+                            expect(timedOut) == true
                             done()
                         }
                     }
@@ -691,6 +692,7 @@ final class LDClientSpec: QuickSpec {
                                 }
                             }
                             waitUntil(timeout: 10) { done in
+                                testContext.subject.setService(ClientServiceMockFactory().makeDarklyServiceProvider(config: testContext.subject.config, user: testContext.subject.user))
                                 testContext.subject.setOnline(true, completion: done)
                                 testContext.subject.flagChangeNotifier.notifyObservers(user: testContext.user, oldFlags: testContext.oldFlags, oldFlagSource: testContext.oldFlagSource)
                             }
@@ -1291,6 +1293,7 @@ final class LDClientSpec: QuickSpec {
                                     }
                                     targetRunThrottledCalls = os.isBackgroundEnabled ? 1 : 0
                                     waitUntil(timeout: 10) { done in
+                                        testContext.subject.setService(ClientServiceMockFactory().makeDarklyServiceProvider(config: testContext.subject.config, user: testContext.subject.user))
                                         testContext.subject.setOnline(true, completion: done)
                                         testContext.subject.flagChangeNotifier.notifyObservers(user: testContext.user, oldFlags: testContext.oldFlags, oldFlagSource: testContext.oldFlagSource)
                                     }

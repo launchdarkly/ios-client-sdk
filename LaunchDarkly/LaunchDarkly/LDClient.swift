@@ -883,6 +883,7 @@ public class LDClient {
     }
     
     public static func start(config: LDConfig, startUser: LDUser? = nil, startWaitSeconds: TimeInterval, completion: ((_ timedOut: Bool) -> Void)? = nil) {
+        timeOutCheck = true
         if !config.startOnline {
             start(config: config, startUser: startUser)
             completion?(timeOutCheck)
@@ -1070,6 +1071,7 @@ private extension Optional {
         }
         
         static func start(serviceFactory: ClientServiceCreating, config: LDConfig, startUser: LDUser? = nil, startWaitSeconds: TimeInterval, flagCache: FeatureFlagCaching, flagNotifier: FlagChangeNotifier, completion: ((_ timedOut: Bool) -> Void)? = nil) {
+            timeOutCheck = true
             if !config.startOnline {
                 start(serviceFactory: serviceFactory, config: config, startUser: startUser, flagCache: flagCache, flagNotifier: flagNotifier)
                 completion?(timeOutCheck)
@@ -1103,6 +1105,10 @@ private extension Optional {
 
         func setHasStarted(_ hasStarted: Bool) {
             self.hasStarted = hasStarted
+        }
+
+        func setService(_ service: DarklyServiceProvider) {
+            self.service = service
         }
     }
 #endif
