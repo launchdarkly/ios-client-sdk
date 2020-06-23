@@ -292,13 +292,13 @@ public class LDClient {
         for (_, instance) in LDClient.internalInstances {
             instance.internalClose()
         }
+        LDClient.instances = nil
     }
     
     private func internalClose() {
         Log.debug(typeName(and: #function, appending: "- ") + "stopping")
         internalFlush()
         internalSetOnline(false)
-        LDClient.instances = nil
         hasStarted = false
         Log.debug(typeName(and: #function, appending: "- ") + "stopped")
     }
