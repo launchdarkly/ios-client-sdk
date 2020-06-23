@@ -1015,7 +1015,7 @@ public class LDClient {
         }
     }
     
-    private convenience init(serviceFactory: ClientServiceCreating, config: LDConfig, startUser: LDUser?, runMode: LDClientRunMode, flagCache: FeatureFlagCaching, flagNotifier: FlagChangeNotifying, completion: (() -> Void)? = nil) {
+    private convenience init(serviceFactory: ClientServiceCreating, config: LDConfig, startUser: LDUser?, flagCache: FeatureFlagCaching, flagNotifier: FlagChangeNotifying, completion: (() -> Void)? = nil) {
         self.init(serviceFactory: serviceFactory, configuration: config, startUser: startUser, newCache: flagCache, flagNotifier: flagNotifier, testing: true, completion: completion)
     }
 }
@@ -1038,7 +1038,7 @@ private extension Optional {
 
 #if DEBUG
     extension LDClient {
-        static func start(serviceFactory: ClientServiceCreating, config: LDConfig, startUser: LDUser? = nil, runMode: LDClientRunMode = .foreground, flagCache: FeatureFlagCaching, flagNotifier: FlagChangeNotifier, completion: (() -> Void)? = nil) {
+        static func start(serviceFactory: ClientServiceCreating, config: LDConfig, startUser: LDUser? = nil, flagCache: FeatureFlagCaching, flagNotifier: FlagChangeNotifier, completion: (() -> Void)? = nil) {
             Log.debug("LDClient starting for tests")
             if instances != nil {
                 for (_, instance) in (instances ?? [:]) {
@@ -1063,19 +1063,19 @@ private extension Optional {
             for (name, mobileKey) in mobileKeys {
                 var internalConfig = config
                 internalConfig.mobileKey = mobileKey
-                let instance = LDClient(serviceFactory: serviceFactory, config: internalConfig, startUser: internalUser, runMode: runMode, flagCache: flagCache, flagNotifier: flagNotifier, completion: completionCheck)
+                let instance = LDClient(serviceFactory: serviceFactory, config: internalConfig, startUser: internalUser, flagCache: flagCache, flagNotifier: flagNotifier, completion: completionCheck)
                 LDClient.instances?[name] = instance
             }
             completionCheck()
         }
         
-        static func start(serviceFactory: ClientServiceCreating, config: LDConfig, startUser: LDUser? = nil, startWaitSeconds: TimeInterval, runMode: LDClientRunMode = .foreground, flagCache: FeatureFlagCaching, flagNotifier: FlagChangeNotifier, completion: ((_ timedOut: Bool) -> Void)? = nil) {
+        static func start(serviceFactory: ClientServiceCreating, config: LDConfig, startUser: LDUser? = nil, startWaitSeconds: TimeInterval, flagCache: FeatureFlagCaching, flagNotifier: FlagChangeNotifier, completion: ((_ timedOut: Bool) -> Void)? = nil) {
             if !config.startOnline {
-                start(serviceFactory: serviceFactory, config: config, startUser: startUser, runMode: runMode, flagCache: flagCache, flagNotifier: flagNotifier)
+                start(serviceFactory: serviceFactory, config: config, startUser: startUser, flagCache: flagCache, flagNotifier: flagNotifier)
                 completion?(timeOutCheck)
             } else {
                 let startTime = Date().timeIntervalSince1970
-                start(serviceFactory: serviceFactory, config: config, startUser: startUser, runMode: runMode, flagCache: flagCache, flagNotifier: flagNotifier) {
+                start(serviceFactory: serviceFactory, config: config, startUser: startUser, flagCache: flagCache, flagNotifier: flagNotifier) {
                     if startTime + startWaitSeconds > Date().timeIntervalSince1970 {
                         self.internalTimeOutCheckQueue.sync {
                             self.timeOutCheck = false

@@ -344,6 +344,10 @@ final class LDClientSpec: QuickSpec {
                             waitUntil { done in
                                 testContext = TestContext(startOnline: true, runMode: .background, operatingSystem: os, completion: done)
                             }
+                            waitUntil(timeout: 10) { done in
+                                testContext.subject.setOnline(true, completion: done)
+                                testContext.subject.flagChangeNotifier.notifyObservers(user: testContext.user, oldFlags: testContext.oldFlags, oldFlagSource: testContext.oldFlagSource)
+                            }
                         }
                         it("takes the client and service objects online when background enabled") {
                             expect(testContext.subject.isOnline) == os.isBackgroundEnabled
@@ -390,6 +394,10 @@ final class LDClientSpec: QuickSpec {
                         beforeEach {
                             waitUntil { done in
                                 testContext = TestContext(startOnline: true, enableBackgroundUpdates: false, runMode: .background, operatingSystem: os, completion: done)
+                            }
+                            waitUntil(timeout: 10) { done in
+                                testContext.subject.setOnline(true, completion: done)
+                                testContext.subject.flagChangeNotifier.notifyObservers(user: testContext.user, oldFlags: testContext.oldFlags, oldFlagSource: testContext.oldFlagSource)
                             }
                         }
                         it("leaves the client and service objects offline") {
@@ -683,6 +691,10 @@ final class LDClientSpec: QuickSpec {
                                     done()
                                 }
                             }
+                            waitUntil(timeout: 10) { done in
+                                testContext.subject.setOnline(true, completion: done)
+                                testContext.subject.flagChangeNotifier.notifyObservers(user: testContext.user, oldFlags: testContext.oldFlags, oldFlagSource: testContext.oldFlagSource)
+                            }
                         }
                         it("takes the client and service objects online when background enabled") {
                             expect(testContext.subject.isOnline) == os.isBackgroundEnabled
@@ -732,6 +744,10 @@ final class LDClientSpec: QuickSpec {
                                     expect(timedOut) == false
                                     done()
                                 }
+                            }
+                            waitUntil(timeout: 10) { done in
+                                testContext.subject.setOnline(true, completion: done)
+                                testContext.subject.flagChangeNotifier.notifyObservers(user: testContext.user, oldFlags: testContext.oldFlags, oldFlagSource: testContext.oldFlagSource)
                             }
                         }
                         it("leaves the client and service objects offline") {
