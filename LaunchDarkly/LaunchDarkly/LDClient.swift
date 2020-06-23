@@ -1020,8 +1020,6 @@ public class LDClient {
     
     private convenience init(serviceFactory: ClientServiceCreating, config: LDConfig, startUser: LDUser?, runMode: LDClientRunMode, flagCache: FeatureFlagCaching, flagNotifier: FlagChangeNotifying, completion: (() -> Void)? = nil) {
         self.init(serviceFactory: serviceFactory, configuration: config, startUser: startUser, newCache: flagCache, flagNotifier: flagNotifier, testing: true, completion: completion)
-        //Setting these inside the init do not trigger the didSet closures
-        self.runMode = runMode
     }
 }
 
@@ -1044,7 +1042,7 @@ private extension Optional {
 #if DEBUG
     extension LDClient {
         static func start(serviceFactory: ClientServiceCreating, config: LDConfig, startUser: LDUser? = nil, runMode: LDClientRunMode = .foreground, flagCache: FeatureFlagCaching, flagNotifier: FlagChangeNotifier, completion: (() -> Void)? = nil) {
-            Log.debug("LDClient starting")
+            Log.debug("LDClient starting for tests")
             if instances != nil {
                 for (_, instance) in (instances ?? [:]) {
                     instance.close()
@@ -1060,7 +1058,7 @@ private extension Optional {
             let completionCheck = {
                 internalCount += 1
                 if internalCount > mobileKeys.count {
-                    Log.debug("All LDClients finished starting")
+                    Log.debug("All LDClients finished starting for tests")
                     completion?()
                 }
             }
