@@ -22,7 +22,7 @@ final class FeatureFlagSpec: QuickSpec {
         initSpec()
         dictionaryValueSpec()
         equalsSpec()
-        matchesVariationSpec()
+        shouldCreateDebugEventsSpec()
         collectionSpec()
     }
 
@@ -37,28 +37,32 @@ final class FeatureFlagSpec: QuickSpec {
                 var version: Int {
                     return flagVersion + 1
                 }
-                let eventTrackingContext = EventTrackingContext.stub()
+                let trackEvents = true
+                let debugEventsUntilDate = Date().addingTimeInterval(30.0)
                 let reason = DarklyServiceMock.Constants.reason
                 let trackReason = false
                 it("creates a feature flag with matching elements") {
-                    DarklyServiceMock.FlagKeys.knownFlags.forEach { (flagKey) in
+                    DarklyServiceMock.FlagKeys.knownFlags.forEach { flagKey in
                         let value = DarklyServiceMock.FlagValues.value(from: flagKey)
                         variation += 1
 
-                        featureFlag = FeatureFlag(flagKey: flagKey, value: value, variation: variation, version: version, flagVersion: flagVersion, eventTrackingContext: eventTrackingContext, reason: reason, trackReason: trackReason)
+                        featureFlag = FeatureFlag(flagKey: flagKey, value: value, variation: variation, version: version, flagVersion: flagVersion, trackEvents: trackEvents, debugEventsUntilDate: debugEventsUntilDate, reason: reason, trackReason: trackReason)
 
                         expect(featureFlag.flagKey) == flagKey
                         expect(AnyComparer.isEqual(featureFlag.value, to: value, considerNilAndNullEqual: true)).to(beTrue())
                         expect(featureFlag.variation) == variation
                         expect(featureFlag.version) == version
                         expect(featureFlag.flagVersion) == flagVersion
-                        expect(featureFlag.eventTrackingContext?.trackEvents) == eventTrackingContext.trackEvents
+                        expect(featureFlag.trackEvents) == trackEvents
+                        expect(featureFlag.debugEventsUntilDate) == debugEventsUntilDate
+                        expect(AnyComparer.isEqual(featureFlag.reason, to: reason, considerNilAndNullEqual: true)).to(beTrue())
+                        expect(featureFlag.trackReason) == trackReason
                     }
                 }
             }
             context("when elements don't exist") {
                 beforeEach {
-                    featureFlag = FeatureFlag(flagKey: DarklyServiceMock.FlagKeys.unknown, value: nil, variation: nil, version: nil, flagVersion: nil, eventTrackingContext: nil, reason: nil, trackReason: nil)
+                    featureFlag = FeatureFlag(flagKey: DarklyServiceMock.FlagKeys.unknown, value: nil, variation: nil, version: nil, flagVersion: nil, trackEvents: nil, debugEventsUntilDate: nil, reason: nil, trackReason: nil)
                 }
                 it("creates a feature flag with nil elements") {
                     expect(featureFlag).toNot(beNil())
@@ -66,7 +70,10 @@ final class FeatureFlagSpec: QuickSpec {
                     expect(featureFlag.value).to(beNil())
                     expect(featureFlag.variation).to(beNil())
                     expect(featureFlag.version).to(beNil())
-                    expect(featureFlag.eventTrackingContext).to(beNil())
+                    expect(featureFlag.trackEvents).to(beNil())
+                    expect(featureFlag.debugEventsUntilDate).to(beNil())
+                    expect(featureFlag.reason).to(beNil())
+                    expect(featureFlag.trackReason).to(beNil())
                 }
             }
         }
@@ -95,7 +102,7 @@ final class FeatureFlagSpec: QuickSpec {
                         expect(featureFlag?.variation) == variation
                         expect(featureFlag?.version) == version
                         expect(featureFlag?.flagVersion) == flagVersion
-                        expect(featureFlag?.eventTrackingContext?.trackEvents) == trackEvents
+                        expect(featureFlag?.trackEvents) == trackEvents
                     }
                 }
             }
@@ -119,7 +126,7 @@ final class FeatureFlagSpec: QuickSpec {
                         expect(featureFlag?.variation) == variation
                         expect(featureFlag?.version) == version
                         expect(featureFlag?.flagVersion) == flagVersion
-                        expect(featureFlag?.eventTrackingContext?.trackEvents) == trackEvents
+                        expect(featureFlag?.trackEvents) == trackEvents
                     }
                 }
             }
@@ -136,7 +143,7 @@ final class FeatureFlagSpec: QuickSpec {
                         expect(featureFlag?.variation).to(beNil())
                         expect(featureFlag?.version).to(beNil())
                         expect(featureFlag?.flagVersion).to(beNil())
-                        expect(featureFlag?.eventTrackingContext).to(beNil())
+                        expect(featureFlag?.trackEvents).to(beNil())
                     }
                 }
             }
@@ -157,7 +164,7 @@ final class FeatureFlagSpec: QuickSpec {
                     expect(featureFlag?.variation) == DarklyServiceMock.Constants.variation
                     expect(featureFlag?.version).to(beNil())
                     expect(featureFlag?.flagVersion).to(beNil())
-                    expect(featureFlag?.eventTrackingContext).to(beNil())
+                    expect(featureFlag?.trackEvents).to(beNil())
                 }
             }
             context("when dictionary only contains the key and version") {
@@ -176,7 +183,7 @@ final class FeatureFlagSpec: QuickSpec {
                     expect(featureFlag?.variation).to(beNil())
                     expect(featureFlag?.version) == DarklyServiceMock.Constants.version
                     expect(featureFlag?.flagVersion).to(beNil())
-                    expect(featureFlag?.eventTrackingContext).to(beNil())
+                    expect(featureFlag?.trackEvents).to(beNil())
                 }
             }
             context("when dictionary only contains the key and flagVersion") {
@@ -196,7 +203,7 @@ final class FeatureFlagSpec: QuickSpec {
                     expect(featureFlag?.variation).to(beNil())
                     expect(featureFlag?.version).to(beNil())
                     expect(featureFlag?.flagVersion) == DarklyServiceMock.Constants.flagVersion
-                    expect(featureFlag?.eventTrackingContext).to(beNil())
+                    expect(featureFlag?.trackEvents).to(beNil())
                 }
             }
             context("when dictionary only contains the key and trackEvents") {
@@ -211,7 +218,7 @@ final class FeatureFlagSpec: QuickSpec {
                     expect(featureFlag?.variation).to(beNil())
                     expect(featureFlag?.version).to(beNil())
                     expect(featureFlag?.flagVersion).to(beNil())
-                    expect(featureFlag?.eventTrackingContext?.trackEvents) == trackEvents
+                    expect(featureFlag?.trackEvents) == trackEvents
                 }
             }
             context("when dictionary does not contain the flag key") {
@@ -264,13 +271,13 @@ final class FeatureFlagSpec: QuickSpec {
                         expect(featureFlagDictionary.variation) == featureFlag.variation
                         expect(featureFlagDictionary.version) == featureFlag.version
                         expect(featureFlagDictionary.flagVersion) == featureFlag.flagVersion
-                        expect(featureFlagDictionary.trackEvents) == featureFlag.eventTrackingContext?.trackEvents
+                        expect(featureFlagDictionary.trackEvents) == featureFlag.trackEvents
                     }
                 }
             }
             context("without elements") {
                 beforeEach {
-                    featureFlags = DarklyServiceMock.Constants.stubFeatureFlags(includeVariations: false, includeVersions: false, includeFlagVersions: false, eventTrackingContext: nil)
+                    featureFlags = DarklyServiceMock.Constants.stubFeatureFlags(includeVariations: false, includeVersions: false, includeFlagVersions: false, trackEvents: nil, debugEventsUntilDate: nil)
                 }
                 it("creates a dictionary with the value including nil value and version representations") {
                     featureFlags.forEach { (flagKey, featureFlag) in
@@ -303,20 +310,20 @@ final class FeatureFlagSpec: QuickSpec {
                         expect(AnyComparer.isEqual(reinflatedFlag?.value, to: featureFlag.value, considerNilAndNullEqual: true)).to(beTrue())
                         expect(reinflatedFlag?.version) == featureFlag.version
                         expect(reinflatedFlag?.flagVersion) == featureFlag.flagVersion
-                        expect(reinflatedFlag?.eventTrackingContext?.trackEvents) == featureFlag.eventTrackingContext?.trackEvents
+                        expect(reinflatedFlag?.trackEvents) == featureFlag.trackEvents
                     }
                 }
             }
             context("dictionary has null value") {
                 var reinflatedFlag: FeatureFlag?
-                let eventTrackingContext = EventTrackingContext.stub()
                 beforeEach {
                     let featureFlag = FeatureFlag(flagKey: DarklyServiceMock.FlagKeys.dictionary,
                                                   value: DarklyServiceMock.FlagValues.dictionary.appendNull(),
                                                   variation: DarklyServiceMock.Constants.variation,
                                                   version: DarklyServiceMock.Constants.version,
                                                   flagVersion: DarklyServiceMock.Constants.flagVersion,
-                                                  eventTrackingContext: eventTrackingContext,
+                                                  trackEvents: DarklyServiceMock.Constants.trackEvents,
+                                                  debugEventsUntilDate: DarklyServiceMock.Constants.debugEventsUntilDate,
                                                   reason: DarklyServiceMock.Constants.reason,
                                                   trackReason: false)
 
@@ -328,7 +335,7 @@ final class FeatureFlagSpec: QuickSpec {
                     expect(AnyComparer.isEqual(reinflatedFlag?.value, to: DarklyServiceMock.FlagValues.dictionary.appendNull())).to(beTrue())
                     expect(reinflatedFlag?.version) == DarklyServiceMock.Constants.version
                     expect(reinflatedFlag?.flagVersion) == DarklyServiceMock.Constants.flagVersion
-                    expect(reinflatedFlag?.eventTrackingContext?.trackEvents) == eventTrackingContext.trackEvents
+                    expect(reinflatedFlag?.trackEvents) == DarklyServiceMock.Constants.trackEvents
                 }
             }
         }
@@ -354,7 +361,15 @@ final class FeatureFlagSpec: QuickSpec {
                 context("when keys differ") {
                     it("returns false") {
                         originalFlags.forEach { (_, originalFlag) in
-                            otherFlag = FeatureFlag(flagKey: "dummyFlagKey", value: originalFlag.value, variation: originalFlag.variation, version: originalFlag.version, flagVersion: originalFlag.flagVersion, eventTrackingContext: originalFlag.eventTrackingContext, reason: DarklyServiceMock.Constants.reason, trackReason: false)
+                            otherFlag = FeatureFlag(flagKey: "dummyFlagKey",
+                                                    value: originalFlag.value,
+                                                    variation: originalFlag.variation,
+                                                    version: originalFlag.version,
+                                                    flagVersion: originalFlag.flagVersion,
+                                                    trackEvents: originalFlag.trackEvents,
+                                                    debugEventsUntilDate: originalFlag.debugEventsUntilDate,
+                                                    reason: DarklyServiceMock.Constants.reason,
+                                                    trackReason: false)
 
                             expect(originalFlag == otherFlag).to(beFalse())
                         }
@@ -427,11 +442,19 @@ final class FeatureFlagSpec: QuickSpec {
                         }
                     }
                 }
-                context("when event tracking contexts differ") {
+                context("when trackEvents differ") {
                     it("returns true") {
-                        let eventTrackingContext = EventTrackingContext(trackEvents: false)
                         originalFlags.forEach { (_, originalFlag) in
-                            otherFlag = FeatureFlag(copying: originalFlag, eventTrackingContext: eventTrackingContext)
+                            otherFlag = FeatureFlag(copying: originalFlag, trackEvents: false)
+
+                            expect(originalFlag == otherFlag).to(beTrue())
+                        }
+                    }
+                }
+                context("when debugEventsUntilDate differ") {
+                    it("returns true") {
+                        originalFlags.forEach { (_, originalFlag) in
+                            otherFlag = FeatureFlag(copying: originalFlag, debugEventsUntilDate: Date())
 
                             expect(originalFlag == otherFlag).to(beTrue())
                         }
@@ -444,7 +467,7 @@ final class FeatureFlagSpec: QuickSpec {
                 }
                 it("returns true") {
                     originalFlags.forEach { (flagKey, originalFlag) in
-                        otherFlag = FeatureFlag(flagKey: flagKey, value: originalFlag.value, variation: nil, version: nil, flagVersion: nil, eventTrackingContext: nil, reason: nil, trackReason: false)
+                        otherFlag = FeatureFlag(flagKey: flagKey, value: originalFlag.value, variation: nil, version: nil, flagVersion: nil, trackEvents: nil, debugEventsUntilDate: nil, reason: nil, trackReason: false)
 
                         expect(originalFlag == otherFlag).to(beTrue())
                     }
@@ -453,50 +476,83 @@ final class FeatureFlagSpec: QuickSpec {
         }
     }
 
-    func matchesVariationSpec() {
-        var featureFlags: [LDFlagKey: FeatureFlag]!
-        var otherFlag: FeatureFlag!
-        describe("matchesVariation") {
-            context("when elements exist") {
-                beforeEach {
-                    featureFlags = DarklyServiceMock.Constants.stubFeatureFlags()
-                }
-                context("and variations match") {
+    private func shouldCreateDebugEventsSpec() {
+        describe("shouldCreateDebugEventsSpec") {
+            var lastEventResponseDate: Date!
+            var shouldCreateDebugEvents: Bool!
+            var flag: FeatureFlag!
+            beforeEach {
+                flag = FeatureFlag(flagKey: "test-key", value: nil, variation: nil, version: nil, flagVersion: nil, trackEvents: nil, debugEventsUntilDate: nil, reason: nil, trackReason: nil)
+            }
+            context("lastEventResponseDate exists") {
+                context("debugEventsUntilDate hasn't passed lastEventResponseDate") {
+                    beforeEach {
+                        lastEventResponseDate = Date().addingTimeInterval(-1.0)
+                        flag = FeatureFlag(copying: flag, trackEvents: true, debugEventsUntilDate: Date())
+                        shouldCreateDebugEvents = flag.shouldCreateDebugEvents(lastEventReportResponseTime: lastEventResponseDate)
+                    }
                     it("returns true") {
-                        featureFlags.forEach { (_, originalFlag) in
-                            otherFlag = FeatureFlag(copying: originalFlag)
-
-                            expect(originalFlag.matchesVariation(otherFlag)).to(beTrue())
-                        }
+                        expect(shouldCreateDebugEvents) == true
                     }
                 }
-                context("and variations do not match") {
+                context("debugEventsUntilDate is lastEventResponseDate") {
+                    beforeEach {
+                        lastEventResponseDate = Date()
+                        flag = FeatureFlag(copying: flag, trackEvents: true, debugEventsUntilDate: lastEventResponseDate)
+                        shouldCreateDebugEvents = flag.shouldCreateDebugEvents(lastEventReportResponseTime: lastEventResponseDate)
+                    }
+                    it("returns true") {
+                        expect(shouldCreateDebugEvents) == true
+                    }
+                }
+                context("debugEventsUntilDate has passed lastEventResponseDate") {
+                    beforeEach {
+                        lastEventResponseDate = Date().addingTimeInterval(1.0)
+                        flag = FeatureFlag(copying: flag, trackEvents: true, debugEventsUntilDate: Date())
+                        shouldCreateDebugEvents = flag.shouldCreateDebugEvents(lastEventReportResponseTime: lastEventResponseDate)
+                    }
                     it("returns false") {
-                        featureFlags.forEach { (_, originalFlag) in
-                            otherFlag = FeatureFlag(copying: originalFlag, variation: originalFlag.variation! + 1)
-
-                            expect(originalFlag.matchesVariation(otherFlag)).to(beFalse())
-                        }
+                        expect(shouldCreateDebugEvents) == false
                     }
                 }
             }
-            context("when variation does not exist") {
-                beforeEach {
-                    featureFlags = DarklyServiceMock.Constants.stubFeatureFlags(includeVariations: false, includeVersions: true)
-                }
-                it("compares value and check version is nil") {
-                    featureFlags.forEach { (flagKey, originalFlag) in
-                        otherFlag = FeatureFlag(flagKey: flagKey,
-                                                value: originalFlag.value,
-                                                variation: nil,
-                                                version: originalFlag.version,
-                                                flagVersion: originalFlag.flagVersion,
-                                                eventTrackingContext: originalFlag.eventTrackingContext,
-                                                reason: DarklyServiceMock.Constants.reason,
-                                                trackReason: false)
-
-                        expect(originalFlag.matchesVariation(otherFlag)).to(beTrue())
+            context("lastEventResponseDate does not exist") {
+                context("debugEventsUntilDate hasn't passed system date") {
+                    beforeEach {
+                        flag = FeatureFlag(copying: flag, trackEvents: true, debugEventsUntilDate: Date().addingTimeInterval(1.0))
+                        shouldCreateDebugEvents = flag.shouldCreateDebugEvents(lastEventReportResponseTime: nil)
                     }
+                    it("returns true") {
+                        expect(shouldCreateDebugEvents) == true
+                    }
+                }
+                context("debugEventsUntilDate is system date") {
+                    beforeEach {
+                        //Without creating a SystemDateServiceMock and corresponding service protocol, this is really difficult to test, but the level of accuracy is not crucial. Since the debugEventsUntilDate comes in millisSince1970, setting the debugEventsUntilDate to 1 millisecond beyond the date seems like it will get "close enough" to the current date
+                        flag = FeatureFlag(copying: flag, trackEvents: true, debugEventsUntilDate: Date().addingTimeInterval(0.001))
+                        shouldCreateDebugEvents = flag.shouldCreateDebugEvents(lastEventReportResponseTime: nil)
+                    }
+                    it("returns true") {
+                        expect(shouldCreateDebugEvents) == true
+                    }
+                }
+                context("debugEventsUntilDate has passed system date") {
+                    beforeEach {
+                        flag = FeatureFlag(copying: flag, trackEvents: true, debugEventsUntilDate: Date().addingTimeInterval(-1.0))
+                        shouldCreateDebugEvents = flag.shouldCreateDebugEvents(lastEventReportResponseTime: nil)
+                    }
+                    it("returns false") {
+                        expect(shouldCreateDebugEvents) == false
+                    }
+                }
+            }
+            context("debugEventsUntilDate doesn't exist") {
+                beforeEach {
+                    flag = FeatureFlag(copying: flag, trackEvents: true, debugEventsUntilDate: nil)
+                    shouldCreateDebugEvents = flag.shouldCreateDebugEvents(lastEventReportResponseTime: Date())
+                }
+                it("returns false") {
+                    expect(shouldCreateDebugEvents) == false
                 }
             }
         }
@@ -681,7 +737,7 @@ extension Dictionary where Key == String, Value == Any {
             self[FeatureFlag.CodingKeys.flagVersion.rawValue] = flagVersion
         }
         if let trackEvents = trackEvents {
-            self[EventTrackingContext.CodingKeys.trackEvents.rawValue] = trackEvents
+            self[FeatureFlag.CodingKeys.trackEvents.rawValue] = trackEvents
         }
         if includeExtraDictionaryItems {
             self[FeatureFlagSpec.Constants.extraDictionaryKey] = FeatureFlagSpec.Constants.extraDictionaryValue
@@ -702,21 +758,21 @@ extension AnyComparer {
 }
 
 extension FeatureFlag {
-    static let nilPlaceholder = -1
     func allPropertiesMatch(_ otherFlag: FeatureFlag) -> Bool {
         return AnyComparer.isEqual(self.value, to: otherFlag.value, considerNilAndNullEqual: true)
-            && variation ?? FeatureFlag.nilPlaceholder == otherFlag.variation ?? FeatureFlag.nilPlaceholder
-            && version ?? FeatureFlag.nilPlaceholder == otherFlag.version ?? FeatureFlag.nilPlaceholder
-            && flagVersion ?? FeatureFlag.nilPlaceholder == otherFlag.flagVersion ?? FeatureFlag.nilPlaceholder
+            && variation == otherFlag.variation
+            && version == otherFlag.version
+            && flagVersion == otherFlag.flagVersion
     }
 
-    init(copying featureFlag: FeatureFlag, value: Any? = nil, variation: Int? = nil, version: Int? = nil, flagVersion: Int? = nil, eventTrackingContext: EventTrackingContext? = nil, reason: Dictionary<String, Any>? = nil, trackReason: Bool? = nil) {
+    init(copying featureFlag: FeatureFlag, value: Any? = nil, variation: Int? = nil, version: Int? = nil, flagVersion: Int? = nil, trackEvents: Bool? = nil, debugEventsUntilDate: Date? = nil, reason: Dictionary<String, Any>? = nil, trackReason: Bool? = nil) {
         self.init(flagKey: featureFlag.flagKey,
                   value: value ?? featureFlag.value,
                   variation: variation ?? featureFlag.variation,
                   version: version ?? featureFlag.version,
                   flagVersion: flagVersion ?? featureFlag.flagVersion,
-                  eventTrackingContext: eventTrackingContext ?? featureFlag.eventTrackingContext,
+                  trackEvents: trackEvents ?? featureFlag.trackEvents,
+                  debugEventsUntilDate: debugEventsUntilDate ?? featureFlag.debugEventsUntilDate,
                   reason: reason ?? featureFlag.reason,
                   trackReason: trackReason ?? featureFlag.trackReason)
     }

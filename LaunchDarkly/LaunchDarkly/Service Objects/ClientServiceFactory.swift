@@ -29,6 +29,8 @@ protocol ClientServiceCreating {
     func makeThrottler(maxDelay: TimeInterval, environmentReporter: EnvironmentReporting) -> Throttling
     func makeErrorNotifier() -> ErrorNotifying
     func makeConnectionInformation() -> ConnectionInformation
+    func makeDiagnosticCache(sdkKey: String) -> DiagnosticCaching
+    func makeDiagnosticReporter(service: DarklyServiceProvider, runMode: LDClientRunMode) -> DiagnosticReporting
 }
 
 final class ClientServiceFactory: ClientServiceCreating {
@@ -50,7 +52,6 @@ final class ClientServiceFactory: ClientServiceCreating {
         case .version3: return DeprecatedCacheModelV3(keyedValueCache: makeKeyedValueCache())
         case .version4: return DeprecatedCacheModelV4(keyedValueCache: makeKeyedValueCache())
         case .version5: return DeprecatedCacheModelV5(keyedValueCache: makeKeyedValueCache())
-        case .version6: return DeprecatedCacheModelV6(keyedValueCache: makeKeyedValueCache())
         }
     }
 
@@ -120,5 +121,13 @@ final class ClientServiceFactory: ClientServiceCreating {
     
     func makeConnectionInformation() -> ConnectionInformation {
         ConnectionInformation(currentConnectionMode: .offline, lastConnectionFailureReason: .none)
+    }
+
+    func makeDiagnosticCache(sdkKey: String) -> DiagnosticCaching {
+        DiagnosticCache(sdkKey: sdkKey)
+    }
+
+    func makeDiagnosticReporter(service: DarklyServiceProvider, runMode: LDClientRunMode) -> DiagnosticReporting {
+        DiagnosticReporter(service: service, runMode: runMode)
     }
 }

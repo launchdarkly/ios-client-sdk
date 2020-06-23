@@ -30,7 +30,7 @@ import Foundation
             “version”: <modelVersion>,
             “flagVersion”: <flagVersion>,
             “variation”: <variation>,
-            “trackEvents”: <trackEvents>,       //LDEventTrackingContext
+            “trackEvents”: <trackEvents>,
             “debugEventsUntilDate”: <debugEventsUntilDate>
             ]
         ],
@@ -39,7 +39,6 @@ import Foundation
 ]
  */
 final class DeprecatedCacheModelV4: DeprecatedCache {
-    let model = DeprecatedCacheModel.version4
     let keyedValueCache: KeyedValueCaching
     let cachedDataKey = CacheConverter.CacheKeys.ldUserModelDictionary
 
@@ -54,13 +53,14 @@ final class DeprecatedCacheModelV4: DeprecatedCache {
         else {
             return (nil, nil)
         }
-        let featureFlags = Dictionary(uniqueKeysWithValues: featureFlagDictionaries.compactMap { (flagKey, flagValueDictionary) in
+        let featureFlags = Dictionary(uniqueKeysWithValues: featureFlagDictionaries.compactMap { flagKey, flagValueDictionary in
             (flagKey, FeatureFlag(flagKey: flagKey,
                                   value: flagValueDictionary.value,
                                   variation: flagValueDictionary.variation,
                                   version: flagValueDictionary.version,
                                   flagVersion: flagValueDictionary.flagVersion,
-                                  eventTrackingContext: EventTrackingContext(dictionary: flagValueDictionary),
+                                  trackEvents: flagValueDictionary.trackEvents,
+                                  debugEventsUntilDate: Date(millisSince1970: flagValueDictionary.debugEventsUntilDate),
                                   reason: nil,
                                   trackReason: nil))
         })

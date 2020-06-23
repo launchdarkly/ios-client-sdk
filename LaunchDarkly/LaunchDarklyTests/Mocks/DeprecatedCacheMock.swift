@@ -14,7 +14,7 @@ final class DeprecatedCacheMock: DeprecatedCache {
     var modelSetCount = 0
     var setModelCallback: (() -> Void)?
     // This may need to be updated when new cache versions are introduced
-    var model: DeprecatedCacheModel = .version6 {
+    var model: DeprecatedCacheModel = .version5 {
         didSet {
             modelSetCount += 1
             setModelCallback?()

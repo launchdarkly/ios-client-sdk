@@ -29,13 +29,19 @@ final class FlagSynchronizerSpec: QuickSpec {
         var providedEventHandler: EventHandler? {
             serviceMock.createEventSourceReceivedHandler
         }
+        var providedErrorHandler: ConnectionErrorHandler? {
+            serviceMock.createEventSourceReceivedConnectionErrorHandler
+        }
         var flagSynchronizer: FlagSynchronizer!
         var onSyncCompleteCallCount = 0
+        var diagnosticCacheMock: DiagnosticCachingMock
 
         init(streamingMode: LDStreamingMode, useReport: Bool, onSyncComplete: FlagSyncCompleteClosure? = nil) {
             config = LDConfig.stub
             user = LDUser.stub()
             serviceMock = DarklyServiceMock()
+            diagnosticCacheMock = DiagnosticCachingMock()
+            serviceMock.diagnosticCache = diagnosticCacheMock
             flagSynchronizer = FlagSynchronizer(streamingMode: streamingMode,
                                                 pollingInterval: Constants.pollingInterval,
                                                 useReport: useReport,
@@ -675,6 +681,53 @@ final class FlagSynchronizerSpec: QuickSpec {
                         return
                     }
                 }
+                it("does not record stream init diagnostic") {
+                    expect(testContext.diagnosticCacheMock.addStreamInitCallCount) == 0
+                    expect(testContext.diagnosticCacheMock.addStreamInitReceivedStreamInit).to(beNil())
+                }
+            }
+            context("eventSourceErrorHandler error event") {
+                var returnedAction: ConnectionErrorAction!
+                beforeEach {
+                    waitUntil { done in
+                        testContext = TestContext(streamingMode: .streaming, useReport: false, onSyncComplete: { syncResult in
+                            if case .error(let errorResult) = syncResult {
+                                syncError = errorResult
+                            }
+                            done()
+                        })
+                        testContext.flagSynchronizer.isOnline = true
+                        returnedAction = testContext.providedErrorHandler!(UnsuccessfulResponseError(responseCode: 418))
+                    }
+                }
+                it("does not request flags & reports the error via onSyncComplete") {
+                    expect({ testContext.synchronizerState(synchronizerOnline: true,
+                                                           streamingMode: .streaming,
+                                                           flagRequests: 0,
+                                                           streamCreated: true,
+                                                           streamOpened: true,
+                                                           streamClosed: false) }).to(match())
+                    expect(syncError).toNot(beNil())
+                    expect(syncError?.isClientUnauthorized).to(beFalse())
+                    guard case .streamError = syncError
+                    else {
+                        fail("Expected stream error")
+                        return
+                    }
+                }
+                it("does not record stream init diagnostic") {
+                    expect(returnedAction) == .shutdown
+                    expect(testContext.diagnosticCacheMock.addStreamInitCallCount) == 1
+                    if let receivedStreamInit = testContext.diagnosticCacheMock.addStreamInitReceivedStreamInit {
+                        expect(receivedStreamInit.timestamp) >= Date().millisSince1970 - 1_000
+                        expect(receivedStreamInit.timestamp) <= Date().millisSince1970
+                        expect(receivedStreamInit.durationMillis) <= 1_000
+                        expect(receivedStreamInit.durationMillis) >= 0
+                        expect(receivedStreamInit.failed) == true
+                    } else {
+                        fail("expected to receive stream init")
+                    }
+                }
             }
             context("unauthorized error event") {
                 beforeEach {
@@ -705,6 +758,10 @@ final class FlagSynchronizerSpec: QuickSpec {
                         return
                     }
                 }
+                it("does not record stream init diagnostic") {
+                    expect(testContext.diagnosticCacheMock.addStreamInitCallCount) == 0
+                    expect(testContext.diagnosticCacheMock.addStreamInitReceivedStreamInit).to(beNil())
+                }
             }
             context("heartbeat") {
                 beforeEach {
@@ -720,6 +777,10 @@ final class FlagSynchronizerSpec: QuickSpec {
                                                            streamOpened: true,
                                                            streamClosed: false) }).to(match())
                     expect(testContext.onSyncCompleteCallCount) == 0
+                }
+                it("does not record stream init diagnostic") {
+                    expect(testContext.diagnosticCacheMock.addStreamInitCallCount) == 0
+                    expect(testContext.diagnosticCacheMock.addStreamInitReceivedStreamInit).to(beNil())
                 }
             }
             context("comment") {
@@ -737,6 +798,10 @@ final class FlagSynchronizerSpec: QuickSpec {
                                                            streamClosed: false) }).to(match())
                     expect(testContext.onSyncCompleteCallCount) == 0
                 }
+                it("does not record stream init diagnostic") {
+                    expect(testContext.diagnosticCacheMock.addStreamInitCallCount) == 0
+                    expect(testContext.diagnosticCacheMock.addStreamInitReceivedStreamInit).to(beNil())
+                }
             }
             context("open event") {
                 beforeEach {
@@ -753,6 +818,18 @@ final class FlagSynchronizerSpec: QuickSpec {
                                                            streamClosed: false) }).to(match())
                     expect(testContext.onSyncCompleteCallCount) == 0
                 }
+                it("records stream init diagnostic") {
+                    expect(testContext.diagnosticCacheMock.addStreamInitCallCount) == 1
+                    if let receivedStreamInit = testContext.diagnosticCacheMock.addStreamInitReceivedStreamInit {
+                        expect(receivedStreamInit.timestamp) >= Date().millisSince1970 - 1_000
+                        expect(receivedStreamInit.timestamp) <= Date().millisSince1970
+                        expect(receivedStreamInit.durationMillis) <= 1_000
+                        expect(receivedStreamInit.durationMillis) >= 0
+                        expect(receivedStreamInit.failed) == false
+                    } else {
+                        fail("expected to receive stream init")
+                    }
+                }
             }
             context("closed event") {
                 beforeEach {
@@ -768,6 +845,10 @@ final class FlagSynchronizerSpec: QuickSpec {
                                                            streamOpened: true,
                                                            streamClosed: false) }).to(match())
                     expect(testContext.onSyncCompleteCallCount) == 0
+                }
+                it("does not record stream init diagnostic") {
+                    expect(testContext.diagnosticCacheMock.addStreamInitCallCount) == 0
+                    expect(testContext.diagnosticCacheMock.addStreamInitReceivedStreamInit).to(beNil())
                 }
             }
             context("non NSError event") {
@@ -799,6 +880,10 @@ final class FlagSynchronizerSpec: QuickSpec {
                         fail("Expected stream error")
                         return
                     }
+                }
+                it("does not record stream init diagnostic") {
+                    expect(testContext.diagnosticCacheMock.addStreamInitCallCount) == 0
+                    expect(testContext.diagnosticCacheMock.addStreamInitReceivedStreamInit).to(beNil())
                 }
             }
         }

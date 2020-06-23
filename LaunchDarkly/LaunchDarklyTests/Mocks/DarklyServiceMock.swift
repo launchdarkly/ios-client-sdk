@@ -102,10 +102,13 @@ final class DarklyServiceMock: DarklyServiceProvider {
         static let stubNameFlag = "Flag Request Stub"
         static let stubNameStream = "Stream Connect Stub"
         static let stubNameEvent = "Event Report Stub"
+        static let stubNameDiagnostic = "Diagnostic Report Stub"
 
         static let variation = 2
         static let version = 4
         static let flagVersion = 3
+        static let trackEvents = true
+        static let debugEventsUntilDate = Date().addingTimeInterval(30.0)
         static let reason = Optional(["kind": "OFF"])
         
         static func stubFeatureFlags(includeNullValue: Bool = true,
@@ -115,7 +118,8 @@ final class DarklyServiceMock: DarklyServiceProvider {
                                      alternateVariationNumber: Bool = true,
                                      bumpFlagVersions: Bool = false,
                                      alternateValuesForKeys alternateValueKeys: [LDFlagKey] = [],
-                                     eventTrackingContext: EventTrackingContext? = EventTrackingContext.stub()) -> [LDFlagKey: FeatureFlag] {
+                                     trackEvents: Bool? = true,
+                                     debugEventsUntilDate: Date? = Date().addingTimeInterval(30.0)) -> [LDFlagKey: FeatureFlag] {
 
             let flagKeys = includeNullValue ? FlagKeys.knownFlags : FlagKeys.flagsWithAnAlternateValue
             let featureFlagTuples = flagKeys.map { (flagKey) in
@@ -127,7 +131,8 @@ final class DarklyServiceMock: DarklyServiceProvider {
                                                  useAlternateVersion: bumpFlagVersions && useAlternateValue(for: flagKey, alternateValueKeys: alternateValueKeys),
                                                  useAlternateFlagVersion: bumpFlagVersions && useAlternateValue(for: flagKey, alternateValueKeys: alternateValueKeys),
                                                  useAlternateVariationNumber: alternateVariationNumber,
-                                                 eventTrackingContext: eventTrackingContext))
+                                                 trackEvents: trackEvents,
+                                                 debugEventsUntilDate: debugEventsUntilDate))
             }
 
             return Dictionary(uniqueKeysWithValues: featureFlagTuples)
@@ -198,7 +203,8 @@ final class DarklyServiceMock: DarklyServiceProvider {
                                     useAlternateVersion: Bool = false,
                                     useAlternateFlagVersion: Bool = false,
                                     useAlternateVariationNumber: Bool = true,
-                                    eventTrackingContext: EventTrackingContext? = EventTrackingContext.stub(),
+                                    trackEvents: Bool? = true,
+                                    debugEventsUntilDate: Date? = Date().addingTimeInterval(30.0),
                                     includeEvaluationReason: Bool = false,
                                     includeTrackReason: Bool = false) -> FeatureFlag {
             return FeatureFlag(flagKey: flagKey,
@@ -206,7 +212,8 @@ final class DarklyServiceMock: DarklyServiceProvider {
                                variation: useAlternateVariationNumber ? variation(for: flagKey, includeVariation: includeVariation, useAlternateValue: useAlternateValue) : variation(for: flagKey, includeVariation: includeVariation),
                                version: version(for: flagKey, includeVersion: includeVersion, useAlternateVersion: useAlternateValue || useAlternateVersion),
                                flagVersion: flagVersion(for: flagKey, includeFlagVersion: includeFlagVersion, useAlternateFlagVersion: useAlternateValue || useAlternateFlagVersion),
-                               eventTrackingContext: eventTrackingContext,
+                               trackEvents: trackEvents,
+                               debugEventsUntilDate: debugEventsUntilDate,
                                reason: reason(includeEvaluationReason: includeEvaluationReason),
                                trackReason: includeTrackReason)
         }
@@ -214,6 +221,7 @@ final class DarklyServiceMock: DarklyServiceProvider {
 
     var config: LDConfig
     var user: LDUser
+    var diagnosticCache: DiagnosticCaching? = nil
 
     var activationBlocks = [(testBlock: OHHTTPStubsTestBlock, callback: ((URLRequest, OHHTTPStubsDescriptor, OHHTTPStubsResponse) -> Void))]()
 
@@ -269,6 +277,15 @@ final class DarklyServiceMock: DarklyServiceProvider {
         publishedEventDictionaries = eventDictionaries
         completion?(stubbedEventResponse ?? (nil, nil, nil))
     }
+
+    var stubbedDiagnosticResponse: ServiceResponse?
+    var publishDiagnosticCallCount = 0
+    var publishedDiagnostic: DiagnosticEvent?
+    func publishDiagnostic<T: DiagnosticEvent & Encodable>(diagnosticEvent: T, completion: ServiceCompletionHandler?) {
+        publishDiagnosticCallCount += 1
+        publishedDiagnostic = diagnosticEvent
+        completion?(stubbedDiagnosticResponse ?? (nil, nil, nil))
+    }
 }
 
 extension DarklyServiceMock {
@@ -276,16 +293,16 @@ extension DarklyServiceMock {
     // MARK: Flag Request
 
     var flagHost: String? {
-        return config.baseUrl.host
+        config.baseUrl.host
     }
     var flagRequestStubTest: OHHTTPStubsTestBlock {
-        return isScheme(Constants.schemeHttps) && isHost(flagHost!)
+        isScheme(Constants.schemeHttps) && isHost(flagHost!)
     }
     var getFlagRequestStubTest: OHHTTPStubsTestBlock {
-        return flagRequestStubTest && isMethodGET()
+        flagRequestStubTest && isMethodGET()
     }
     var reportFlagRequestStubTest: OHHTTPStubsTestBlock {
-        return flagRequestStubTest && isMethodREPORT()
+        flagRequestStubTest && isMethodREPORT()
     }
 
     ///Use when testing requires the mock service to actually make a flag request
@@ -333,19 +350,19 @@ extension DarklyServiceMock {
     }
 
     func flagStubName(statusCode: Int, useReport: Bool) -> String {
-        return "\(Constants.stubNameFlag) using method \(useReport ? URLRequest.HTTPMethods.report : URLRequest.HTTPMethods.get) with response status code \(statusCode)"
+        "\(Constants.stubNameFlag) using method \(useReport ? URLRequest.HTTPMethods.report : URLRequest.HTTPMethods.get) with response status code \(statusCode)"
     }
 
     // MARK: Stream
 
     var streamHost: String? {
-        return config.streamUrl.host
+        config.streamUrl.host
     }
     var getStreamRequestStubTest: OHHTTPStubsTestBlock {
-        return isScheme(Constants.schemeHttps) && isHost(streamHost!) && isMethodGET()
+        isScheme(Constants.schemeHttps) && isHost(streamHost!) && isMethodGET()
     }
     var reportStreamRequestStubTest: OHHTTPStubsTestBlock {
-        return isScheme(Constants.schemeHttps) && isHost(streamHost!) && isMethodREPORT()
+        isScheme(Constants.schemeHttps) && isHost(streamHost!) && isMethodREPORT()
     }
 
     ///Use when testing requires the mock service to actually make an event source connection request
@@ -364,10 +381,10 @@ extension DarklyServiceMock {
     // MARK: Publish Event
 
     var eventHost: String? {
-        return config.eventsUrl.host
+        config.eventsUrl.host
     }
     var eventRequestStubTest: OHHTTPStubsTestBlock {
-        return isScheme(Constants.schemeHttps) && isHost(eventHost!) && isMethodPOST()
+        isScheme(Constants.schemeHttps) && isHost(eventHost!) && isMethodPOST()
     }
 
     ///Use when testing requires the mock service to actually make an event request
@@ -400,14 +417,47 @@ extension DarklyServiceMock {
         }
     }
     var errorEventHTTPURLResponse: HTTPURLResponse! {
-        return HTTPURLResponse(url: config.eventsUrl, statusCode: HTTPURLResponse.StatusCodes.internalServerError, httpVersion: Constants.httpVersion, headerFields: nil)
+        HTTPURLResponse(url: config.eventsUrl, statusCode: HTTPURLResponse.StatusCodes.internalServerError, httpVersion: Constants.httpVersion, headerFields: nil)
+    }
+
+    // MARK: Publish Diagnostic
+
+    ///Use when testing requires the mock service to actually make an diagnostic request
+    func stubDiagnosticRequest(success: Bool, onActivation activate: ((URLRequest, OHHTTPStubsDescriptor, OHHTTPStubsResponse) -> Void)? = nil) {
+        let stubResponse: OHHTTPStubsResponseBlock = success ? { (_) in
+            OHHTTPStubsResponse(data: Data(), statusCode: Int32(HTTPURLResponse.StatusCodes.accepted), headers: nil)
+        } : { (_) in
+            OHHTTPStubsResponse(error: Constants.error)
+        }
+        stubRequest(passingTest: eventRequestStubTest, stub: stubResponse, name: Constants.stubNameDiagnostic, onActivation: activate)
+    }
+
+    ///Use when testing requires the mock service to provide a service response to the diagnostic request callback
+    func stubDiagnosticResponse(success: Bool, responseOnly: Bool = false, errorOnly: Bool = false) {
+        if success {
+            let response = HTTPURLResponse(url: config.eventsUrl,
+                                           statusCode: HTTPURLResponse.StatusCodes.accepted,
+                                           httpVersion: Constants.httpVersion,
+                                           headerFields: [:])
+            stubbedDiagnosticResponse = (nil, response, nil)
+            return
+        }
+
+        if responseOnly {
+            stubbedDiagnosticResponse = (nil, errorDiagnosticHTTPURLResponse, nil)
+        } else if errorOnly {
+            stubbedDiagnosticResponse = (nil, nil, Constants.error)
+        } else {
+            stubbedDiagnosticResponse = (nil, errorDiagnosticHTTPURLResponse, Constants.error)
+        }
+    }
+    var errorDiagnosticHTTPURLResponse: HTTPURLResponse! {
+        HTTPURLResponse(url: config.eventsUrl, statusCode: HTTPURLResponse.StatusCodes.internalServerError, httpVersion: Constants.httpVersion, headerFields: nil)
     }
 
     // MARK: Stub
 
-    var anyRequestStubTest: OHHTTPStubsTestBlock {
-        { _ in true }
-    }
+    var anyRequestStubTest: OHHTTPStubsTestBlock { { _ in true } }
 
     private func stubRequest(passingTest test: @escaping OHHTTPStubsTestBlock,
                              stub: @escaping OHHTTPStubsResponseBlock,
@@ -433,9 +483,7 @@ extension DarklyServiceMock {
 
 extension OHHTTPStubs {
     class func stub(named name: String) -> OHHTTPStubsDescriptor? {
-        return (OHHTTPStubs.allStubs() as? [OHHTTPStubsDescriptor])?.filter { (stub) in
-            stub.name == name
-            }.first
+        (OHHTTPStubs.allStubs() as? [OHHTTPStubsDescriptor])?.first { $0.name == name }
     }
 }
 
@@ -445,27 +493,21 @@ extension OHHTTPStubs {
  * - Returns: a matcher (OHHTTPStubsTestBlock) that succeeds only if the request
  *            is using the REPORT method
  */
-public func isMethodREPORT() -> OHHTTPStubsTestBlock {
-    return { request in
-        request.httpMethod == URLRequest.HTTPMethods.report
-    }
-}
+public func isMethodREPORT() -> OHHTTPStubsTestBlock { { $0.httpMethod == URLRequest.HTTPMethods.report } }
 
 extension HTTPURLResponse {
     static func dateHeader(from date: Date?) -> [String: String]? {
         guard let date = date
-        else {
-            return nil
-        }
+        else { return nil }
         return [HTTPURLResponse.HeaderKeys.date: DateFormatter.httpUrlHeaderFormatter.string(from: date)]
     }
 }
 
 extension LDFlagKey {
     var isKnownFlagKey: Bool {
-        return DarklyServiceMock.FlagKeys.knownFlags.contains(self)
+        DarklyServiceMock.FlagKeys.knownFlags.contains(self)
     }
     var hasAlternateValue: Bool {
-        return DarklyServiceMock.FlagKeys.flagsWithAnAlternateValue.contains(self)
+        DarklyServiceMock.FlagKeys.flagsWithAnAlternateValue.contains(self)
     }
 }
