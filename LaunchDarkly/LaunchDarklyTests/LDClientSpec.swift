@@ -889,10 +889,12 @@ final class LDClientSpec: QuickSpec {
                     testContext.featureFlagCachingMock.retrieveFeatureFlagsReturnValue = testContext.user.flagStore.featureFlags
                     retrievedFlags = testContext.user.flagStore.featureFlags
                     testContext.flagStoreMock.featureFlags = [:]
-                    testContext.subject.internalIdentify(newUser: testContext.user, testing: true)
+                    waitUntil { done in
+                        testContext.subject.internalIdentify(newUser: testContext.user, testing: true, completion: done)
+                    }
                 }
                 it("checks the flag cache for the user and environment") {
-                    expect(testContext.featureFlagCachingMock.retrieveFeatureFlagsCallCount) == 2 //both config.didSet and user identify are called
+                    expect(testContext.featureFlagCachingMock.retrieveFeatureFlagsCallCount) == 3 //both config.didSet and user identify in start are called as well as internalIdentify
                     expect(testContext.featureFlagCachingMock.retrieveFeatureFlagsReceivedArguments?.userKey) == testContext.user.key
                     expect(testContext.featureFlagCachingMock.retrieveFeatureFlagsReceivedArguments?.mobileKey) == testContext.config.mobileKey
                 }
@@ -900,7 +902,7 @@ final class LDClientSpec: QuickSpec {
                     expect(testContext.flagStoreMock.replaceStoreReceivedArguments?.newFlags?.flagCollection) == retrievedFlags
                 }
                 it("converts cached data") {
-                    expect(testContext.cacheConvertingMock.convertCacheDataCallCount) == 1
+                    expect(testContext.cacheConvertingMock.convertCacheDataCallCount) == 2 // both start and internalIdentify
                     expect(testContext.cacheConvertingMock.convertCacheDataReceivedArguments?.user) == testContext.user
                     expect(testContext.cacheConvertingMock.convertCacheDataReceivedArguments?.config) == testContext.config
                 }
