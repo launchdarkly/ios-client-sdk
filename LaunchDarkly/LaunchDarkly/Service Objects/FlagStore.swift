@@ -41,6 +41,8 @@ final class FlagStore: FlagMaintaining {
     // Used with .barrier as reader writer lock on _featureFlags, _flagValueSource
     private var flagQueue = DispatchQueue(label: Keys.flagQueueLabel, attributes: .concurrent)
 
+    init() { }
+
     init(featureFlags: [LDFlagKey: FeatureFlag]?, flagValueSource: LDFlagValueSource = .fallback) {
         Log.debug(typeName(and: #function) + "featureFlags: \(String(describing: featureFlags)), " + "flagValueSource: \(flagValueSource)")
         self._featureFlags = featureFlags ?? [:]
