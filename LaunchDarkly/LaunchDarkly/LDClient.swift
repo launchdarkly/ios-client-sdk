@@ -213,6 +213,10 @@ public class LDClient {
 
         setOnline(wasOnline)
     }
+
+    public func setAllUserAttributesPrivate(_ allUserAttributesPrivate: Bool) {
+        self.config.allUserAttributesPrivate = allUserAttributesPrivate
+    }
     
     private(set) var user: LDUser
     
@@ -1109,10 +1113,6 @@ private extension Optional {
 
         func setService(_ service: DarklyServiceProvider) {
             self.service = service
-        }
-
-        public func setAllUserAttributesPrivate(_ allUserAttributesPrivate: Bool) {
-            self.config.allUserAttributesPrivate = allUserAttributesPrivate
         }
     }
 #endif
