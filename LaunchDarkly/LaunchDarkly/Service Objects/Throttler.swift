@@ -21,6 +21,7 @@ protocol Throttling {
 final class Throttler: Throttling {
     struct Constants {
         static let defaultDelay: TimeInterval = 600.0
+        fileprivate static let runQueueName = "LaunchDarkly.Throttler.runQueue"
     }
 
     class func maxAttempts(forDelay delayInterval: TimeInterval) -> Int {
@@ -38,17 +39,13 @@ final class Throttler: Throttling {
     private (set) var delayTimer: TimeResponding?
     private var runClosure: RunClosure?
     private var runPostTimer: RunClosure?
-    fileprivate let runQueueName: String
-    private var runQueue: DispatchQueue
+    private var runQueue = DispatchQueue(label: Constants.runQueueName, qos: .userInitiated)
 
     init(maxDelay: TimeInterval = Constants.defaultDelay, environmentReporter: EnvironmentReporting = EnvironmentReporter()) {
         self.maxDelay = maxDelay
         runAttempts = 0
         delay = 0.0
         throttlingEnabled = environmentReporter.shouldThrottleOnlineCalls
-        
-        runQueueName = UUID().uuidString
-        runQueue = DispatchQueue(label: runQueueName, qos: .userInitiated)
     }
 
     func runThrottled(_ runClosure: @escaping RunClosure) {

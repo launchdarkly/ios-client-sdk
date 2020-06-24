@@ -56,13 +56,13 @@ enum FlagUpdateType: String {
 class FlagSynchronizer: LDFlagSynchronizing, EventHandler {
     struct Constants {
         static let didCloseEventSourceName = "didCloseEventSource"
+        fileprivate static let queueName = "LaunchDarkly.FlagSynchronizer.syncQueue"
     }
 
     let service: DarklyServiceProvider
     private var eventSource: DarklyStreamingProvider?
     private var flagRequestTimer: TimeResponding?
     var onSyncComplete: FlagSyncCompleteClosure?
-    fileprivate let queueName: String
 
     let streamingMode: LDStreamingMode
 
@@ -78,7 +78,7 @@ class FlagSynchronizer: LDFlagSynchronizing, EventHandler {
     
     var streamingActive: Bool { eventSource != nil }
     var pollingActive: Bool { flagRequestTimer != nil }
-    private var syncQueue: DispatchQueue
+    private var syncQueue = DispatchQueue(label: Constants.queueName, qos: .utility)
     private var eventSourceStarted: Date?
 
     init(streamingMode: LDStreamingMode, pollingInterval: TimeInterval, useReport: Bool, service: DarklyServiceProvider, onSyncComplete: FlagSyncCompleteClosure?) {
@@ -88,9 +88,6 @@ class FlagSynchronizer: LDFlagSynchronizing, EventHandler {
         self.useReport = useReport
         self.service = service
         self.onSyncComplete = onSyncComplete
-        
-        self.queueName = UUID().uuidString
-        self.syncQueue = DispatchQueue(label: queueName, qos: .utility)
 
         configureCommunications()
     }

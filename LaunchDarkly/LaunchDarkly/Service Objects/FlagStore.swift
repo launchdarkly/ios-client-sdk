@@ -30,6 +30,7 @@ protocol FlagMaintaining {
 final class FlagStore: FlagMaintaining {
     struct Keys {
         static let flagKey = "key"
+        fileprivate static let flagQueueLabel = "com.launchdarkly.flagStore.flagQueue"
     }
 
     var featureFlags: [LDFlagKey: FeatureFlag] { flagQueue.sync { _featureFlags } }
@@ -38,17 +39,9 @@ final class FlagStore: FlagMaintaining {
     private var _featureFlags: [LDFlagKey: FeatureFlag] = [:]
     private var _flagValueSource = LDFlagValueSource.fallback
     // Used with .barrier as reader writer lock on _featureFlags, _flagValueSource
-    private var flagQueue: DispatchQueue
-    fileprivate var flagQueueName: String
-
-    init() {
-        self.flagQueueName = UUID().uuidString
-        self.flagQueue = DispatchQueue(label: flagQueueName, attributes: .concurrent)
-    }
+    private var flagQueue = DispatchQueue(label: Keys.flagQueueLabel, attributes: .concurrent)
 
     init(featureFlags: [LDFlagKey: FeatureFlag]?, flagValueSource: LDFlagValueSource = .fallback) {
-        self.flagQueueName = UUID().uuidString
-        self.flagQueue = DispatchQueue(label: flagQueueName, attributes: .concurrent)
         Log.debug(typeName(and: #function) + "featureFlags: \(String(describing: featureFlags)), " + "flagValueSource: \(flagValueSource)")
         self._featureFlags = featureFlags ?? [:]
         self._flagValueSource = flagValueSource
