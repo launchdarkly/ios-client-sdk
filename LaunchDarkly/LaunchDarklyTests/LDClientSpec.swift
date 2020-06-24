@@ -594,6 +594,12 @@ final class LDClientSpec: QuickSpec {
                             done()
                         }
                     }
+                    waitUntil(timeout: 5) { done in
+                        testContext.subject.setOnline(true, completion: done)
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                            testContext.subject.flagChangeNotifier.notifyObservers(user: testContext.user, oldFlags: testContext.oldFlags, oldFlagSource: testContext.oldFlagSource)
+                        }
+                    }
                 }
                 it("takes the client and service objects online") {
                     expect(testContext.subject.isOnline) == true
