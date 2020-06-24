@@ -1111,7 +1111,7 @@ private extension Optional {
             self.service = service
         }
 
-        func setAllUserAttributesPrivate(_ allUserAttributesPrivate: Bool) {
+        public func setAllUserAttributesPrivate(_ allUserAttributesPrivate: Bool) {
             self.config.allUserAttributesPrivate = allUserAttributesPrivate
         }
     }
