@@ -446,8 +446,13 @@ final class LDClientSpec: QuickSpec {
                         waitUntil { done in
                             testContext = TestContext(startOnline: true, completion: done)
                         }
-                        
-                        testContext.subject.internalIdentify(newUser: testContext.user, testing: true)
+
+                        waitUntil { done in
+                            testContext.subject.internalIdentify(newUser: testContext.user, testing: true, completion: done)
+                            DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                                testContext.subject.flagChangeNotifier.notifyObservers(user: testContext.user, oldFlags: testContext.oldFlags, oldFlagSource: testContext.oldFlagSource)
+                            }
+                        }
                     }
                     it("saves the config") {
                         expect(testContext.subject.config) == testContext.config
@@ -466,17 +471,17 @@ final class LDClientSpec: QuickSpec {
                         expect(testContext.subject.eventReporter.service.user) == testContext.user
                     }
                     it("uncaches the new users flags") {
-                        expect(testContext.featureFlagCachingMock.retrieveFeatureFlagsCallCount) == 2 //both config.didSet and user identify are called
+                        expect(testContext.featureFlagCachingMock.retrieveFeatureFlagsCallCount) == 3 //both config.didSet and user identify are called and internalIdentify
                         expect(testContext.featureFlagCachingMock.retrieveFeatureFlagsReceivedArguments?.userKey) == testContext.user.key
                         expect(testContext.featureFlagCachingMock.retrieveFeatureFlagsReceivedArguments?.mobileKey) == testContext.config.mobileKey
                     }
                     it("records an identify event") {
-                        expect(testContext.eventReporterMock.recordCallCount) == 1
+                        expect(testContext.eventReporterMock.recordCallCount) == 2 //both start and internalIdentify
                         expect(testContext.recordedEvent?.kind) == .identify
                         expect(testContext.recordedEvent?.key) == testContext.user.key
                     }
                     it("converts cached data") {
-                        expect(testContext.cacheConvertingMock.convertCacheDataCallCount) == 1 //only called once because CacheConverter is replaced during start
+                        expect(testContext.cacheConvertingMock.convertCacheDataCallCount) == 2 //Both start and internalIdentify
                         expect(testContext.cacheConvertingMock.convertCacheDataReceivedArguments?.user) == testContext.user
                         expect(testContext.cacheConvertingMock.convertCacheDataReceivedArguments?.config) == testContext.config
                     }
@@ -487,7 +492,12 @@ final class LDClientSpec: QuickSpec {
                             testContext = TestContext(startOnline: true, completion: done)
                         }
                         testContext.config = testContext.subject.config
-                        testContext.subject.internalIdentify(newUser: testContext.user, testing: true)
+                        waitUntil { done in
+                            testContext.subject.internalIdentify(newUser: testContext.user, testing: true, completion: done)
+                            DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                                testContext.subject.flagChangeNotifier.notifyObservers(user: testContext.user, oldFlags: testContext.oldFlags, oldFlagSource: testContext.oldFlagSource)
+                            }
+                        }
                     }
                     it("saves the config") {
                         expect(testContext.subject.config) == testContext.config
@@ -503,17 +513,17 @@ final class LDClientSpec: QuickSpec {
                         expect(testContext.subject.eventReporter.service.user) == testContext.user
                     }
                     it("uncaches the new users flags") {
-                        expect(testContext.featureFlagCachingMock.retrieveFeatureFlagsCallCount) == 2 //both config.didSet and user identify are called
+                        expect(testContext.featureFlagCachingMock.retrieveFeatureFlagsCallCount) == 3 //both config.didSet and user identify are called and internalIdentify
                         expect(testContext.featureFlagCachingMock.retrieveFeatureFlagsReceivedArguments?.userKey) == testContext.user.key
                         expect(testContext.featureFlagCachingMock.retrieveFeatureFlagsReceivedArguments?.mobileKey) == testContext.config.mobileKey
                     }
                     it("records an identify event") {
-                        expect(testContext.eventReporterMock.recordCallCount) == 1
+                        expect(testContext.eventReporterMock.recordCallCount) == 2 //both start and internalIdentify
                         expect(testContext.recordedEvent?.kind) == .identify
                         expect(testContext.recordedEvent?.key) == testContext.user.key
                     }
                     it("converts cached data") {
-                        expect(testContext.cacheConvertingMock.convertCacheDataCallCount) == 1
+                        expect(testContext.cacheConvertingMock.convertCacheDataCallCount) == 2 //both start and internalIdentify
                         expect(testContext.cacheConvertingMock.convertCacheDataReceivedArguments?.user) == testContext.user
                         expect(testContext.cacheConvertingMock.convertCacheDataReceivedArguments?.config) == testContext.config
                     }
