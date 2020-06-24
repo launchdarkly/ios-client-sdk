@@ -51,7 +51,7 @@ public final class ObjcLDClient: NSObject {
 
     // MARK: - State Controls and Indicators
 
-    public var ldClient: LDClient
+    private(set) var ldClient: LDClient
     
     /**
      Reports the online/offline state of the LDClient.
