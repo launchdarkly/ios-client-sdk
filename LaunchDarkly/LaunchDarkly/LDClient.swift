@@ -1110,5 +1110,9 @@ private extension Optional {
         func setService(_ service: DarklyServiceProvider) {
             self.service = service
         }
+
+        func setAllUserAttributesPrivate(_ allUserAttributesPrivate: Bool) {
+            self.config.allUserAttributesPrivate = allUserAttributesPrivate
+        }
     }
 #endif
