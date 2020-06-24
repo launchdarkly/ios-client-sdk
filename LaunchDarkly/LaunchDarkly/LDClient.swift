@@ -62,7 +62,7 @@ public class LDClient {
 
      Use `setOnline(_: completion:)` to change the online/offline state.
     */
-    public private (set) var isOnline: Bool = false {
+    public private(set) var isOnline: Bool = false {
         didSet {
             flagSynchronizer.isOnline = isOnline
             eventReporter.isOnline = isOnline
@@ -186,7 +186,7 @@ public class LDClient {
 
      When a new config is set, the LDClient goes offline and reconfigures using the new config. If the client was online when the new config was set, it goes online again, subject to a throttling delay if in force (see `setOnline(_: completion:)` for details). To change both the `config` and `user`, set the LDClient offline, set both properties, then set the LDClient online.
     */
-    private(set) var config: LDConfig {
+    public private(set) var config: LDConfig {
         didSet {
             configDidSet(oldValue: oldValue)
         }
