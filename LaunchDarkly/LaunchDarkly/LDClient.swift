@@ -202,7 +202,7 @@ public class LDClient {
         Log.level = environmentReporter.isDebugBuild && config.isDebugMode ? .debug : .noLogging
         Log.debug(typeName(and: #function) + "new config set")
         let wasOnline = isOnline
-        setOnline(false)
+        internalSetOnline(false)
         convertCachedData(skipDuringStart: isStarting)
         if let cachedFlags = flagCache.retrieveFeatureFlags(forUserWithKey: user.key, andMobileKey: config.mobileKey), !cachedFlags.isEmpty {
             user.flagStore.replaceStore(newFlags: cachedFlags, source: .cache, completion: nil)
@@ -215,6 +215,12 @@ public class LDClient {
     }
 
     public func setAllUserAttributesPrivate(_ allUserAttributesPrivate: Bool) {
+        for (_, instance) in LDClient.internalInstances {
+            instance.internalSetAllUserAttributesPrivate(allUserAttributesPrivate)
+        }
+    }
+
+    private func internalSetAllUserAttributesPrivate(_ allUserAttributesPrivate: Bool) {
         self.config.allUserAttributesPrivate = allUserAttributesPrivate
     }
     
