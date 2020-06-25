@@ -1082,8 +1082,8 @@ private extension Optional {
             } else {
                 let startTime = Date().timeIntervalSince1970
                 start(serviceFactory: serviceFactory, config: config, startUser: startUser, flagCache: flagCache, flagNotifier: flagNotifier) {
-                    if startTime + startWaitSeconds > Date().timeIntervalSince1970 {
-                        self.internalTimeOutCheckQueue.sync {
+                    self.internalTimeOutCheckQueue.sync {
+                        if startTime + startWaitSeconds > Date().timeIntervalSince1970 && self.timeOutCheck {
                             self.timeOutCheck = false
                             completion?(self.timeOutCheck)
                         }
