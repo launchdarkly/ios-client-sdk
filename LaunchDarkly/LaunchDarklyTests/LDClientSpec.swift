@@ -589,15 +589,9 @@ final class LDClientSpec: QuickSpec {
             context("when configured to start online") {
                 beforeEach {
                     waitUntil(timeout: 10) { done in
-                        testContext = TestContext(startOnline: true, timeOut: 10) { timedOut in
+                        testContext = TestContext(startOnline: true, timeOut: 3) { timedOut in
                             expect(timedOut) == false
                             done()
-                        }
-                    }
-                    waitUntil(timeout: 5) { done in
-                        testContext.subject.setOnline(true, completion: done)
-                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
-                            testContext.subject.flagChangeNotifier.notifyObservers(user: testContext.user, oldFlags: testContext.oldFlags, oldFlagSource: testContext.oldFlagSource)
                         }
                     }
                 }
