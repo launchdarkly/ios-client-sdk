@@ -112,13 +112,17 @@ public class LDClient {
         var internalCount = 0
         for (_, instance) in LDClient.internalInstances {
             instance.internalSetOnline(goOnline) {
-                internalCount += 1
-                if internalCount >= LDClient.internalInstances.count {
-                    completion?()
+                LDClient.setOnlineQueue.async {
+                    internalCount += 1
+                    if internalCount >= LDClient.internalInstances.count {
+                        completion?()
+                    }
                 }
             }
         }
     }
+
+    private static let setOnlineQueue: DispatchQueue = DispatchQueue(label: "SetOnlineQueue")
     
     private func internalSetOnline(_ goOnline: Bool, completion: (() -> Void)? = nil) {
         lastSetOnlineCallValue = goOnline
@@ -244,16 +248,18 @@ public class LDClient {
         var internalCount = 0
         for (_, instance) in LDClient.internalInstances {
             instance.internalIdentify(newUser: user) {
-                internalCount += 1
-                if internalCount >= LDClient.internalInstances.count {
-                    completion?()
+                LDClient.identifyQueue.async {
+                    internalCount += 1
+                    if internalCount >= LDClient.internalInstances.count {
+                        completion?()
+                    }
                 }
             }
         }
     }
 
     func internalIdentify(newUser: LDUser, testing: Bool = false, completion: (() -> Void)? = nil) {
-        LDClient.identifyQueue.async {
+        LDClient.internalIdentifyQueue.async {
             var internalUser = newUser
             if !testing {
                 internalUser.flagStore = FlagStore(featureFlagDictionary: newUser.flagStore.featureFlags, flagValueSource: newUser.flagStore.flagValueSource)
@@ -278,6 +284,7 @@ public class LDClient {
         }
     }
     
+    private static let internalIdentifyQueue: DispatchQueue = DispatchQueue(label: "InternalIdentifyQueue")
     private static let identifyQueue: DispatchQueue = DispatchQueue(label: "IdentifyQueue")
 
     private(set) var service: DarklyServiceProvider {
@@ -900,7 +907,7 @@ public class LDClient {
         } else {
             let startTime = Date().timeIntervalSince1970
             start(config: config, startUser: startUser) {
-                synced(self.timeOutCheck) {
+                self.internalTimeOutCheckQueue.sync {
                     if startTime + startWaitSeconds > Date().timeIntervalSince1970 && self.timeOutCheck {
                         self.timeOutCheck = false
                         completion?(self.timeOutCheck)
@@ -908,7 +915,7 @@ public class LDClient {
                 }
             }
             DispatchQueue.global().asyncAfter(deadline: .now() + startWaitSeconds) {
-                synced(self.timeOutCheck) {
+                self.internalTimeOutCheckQueue.sync {
                     if self.timeOutCheck {
                         completion?(self.timeOutCheck)
                     }
@@ -917,13 +924,8 @@ public class LDClient {
         }
     }
 
-    private static func synced(_ lock: Any, closure: () -> Void) {
-        objc_sync_enter(lock)
-        closure()
-        objc_sync_exit(lock)
-    }
-
     private static var timeOutCheck = true
+    private static let internalTimeOutCheckQueue: DispatchQueue = DispatchQueue(label: "TimeOutQueue")
     
     // MARK: - Private
     private(set) var serviceFactory: ClientServiceCreating = ClientServiceFactory()
@@ -1093,7 +1095,7 @@ private extension Optional {
             } else {
                 let startTime = Date().timeIntervalSince1970
                 start(serviceFactory: serviceFactory, config: config, startUser: startUser, flagCache: flagCache, flagNotifier: flagNotifier) {
-                    synced(self.timeOutCheck) {
+                    self.internalTimeOutCheckQueue.sync {
                         if startTime + startWaitSeconds > Date().timeIntervalSince1970 && self.timeOutCheck {
                             self.timeOutCheck = false
                             completion?(self.timeOutCheck)
@@ -1101,7 +1103,7 @@ private extension Optional {
                     }
                 }
                 DispatchQueue.global().asyncAfter(deadline: .now() + startWaitSeconds) {
-                    synced(self.timeOutCheck) {
+                    self.internalTimeOutCheckQueue.sync {
                         if self.timeOutCheck {
                             completion?(self.timeOutCheck)
                         }
