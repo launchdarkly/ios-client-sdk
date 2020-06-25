@@ -211,7 +211,7 @@ public class LDClient {
         service = serviceFactory.makeDarklyServiceProvider(config: config, user: user)
         eventReporter.config = config
 
-        setOnline(wasOnline)
+        internalSetOnline(wasOnline)
     }
 
     public func setAllUserAttributesPrivate(_ allUserAttributesPrivate: Bool) {
@@ -261,7 +261,7 @@ public class LDClient {
             self.user = internalUser
             Log.debug(self.typeName(and: #function) + "new user set with key: " + self.user.key )
             let wasOnline = self.isOnline
-            self.setOnline(false)
+            self.internalSetOnline(false)
 
             self.convertCachedData(skipDuringStart: self.isStarting)
             if let cachedFlags = self.flagCache.retrieveFeatureFlags(forUserWithKey: self.user.key, andMobileKey: self.config.mobileKey), !cachedFlags.isEmpty {
@@ -274,7 +274,7 @@ public class LDClient {
                 self.eventReporter.record(Event.identifyEvent(user: self.user))
             }
 
-            self.setOnline(wasOnline, completion: completion)
+            self.internalSetOnline(wasOnline, completion: completion)
         }
     }
     
@@ -754,7 +754,7 @@ public class LDClient {
     private func process(_ synchronizingError: SynchronizingError, logPrefix: String) {
         if synchronizingError.isClientUnauthorized {
             Log.debug(logPrefix + "LDClient is unauthorized")
-            setOnline(false)
+            internalSetOnline(false)
         }
         connectionInformation = ConnectionInformation.synchronizingErrorCheck(synchronizingError: synchronizingError, connectionInformation: connectionInformation)
         DispatchQueue.main.async {
