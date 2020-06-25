@@ -894,7 +894,7 @@ public class LDClient {
         } else {
             let startTime = Date().timeIntervalSince1970
             start(config: config, startUser: startUser) {
-                self.internalTimeOutCheckQueue.sync {
+                synced(self.timeOutCheck) {
                     if startTime + startWaitSeconds > Date().timeIntervalSince1970 && self.timeOutCheck {
                         self.timeOutCheck = false
                         completion?(self.timeOutCheck)
@@ -902,7 +902,7 @@ public class LDClient {
                 }
             }
             DispatchQueue.global().asyncAfter(deadline: .now() + startWaitSeconds) {
-                self.internalTimeOutCheckQueue.sync {
+                synced(self.timeOutCheck) {
                     if self.timeOutCheck {
                         completion?(self.timeOutCheck)
                     }
@@ -910,9 +910,14 @@ public class LDClient {
             }
         }
     }
-    
+
+    private static func synced(_ lock: Any, closure: () -> Void) {
+        objc_sync_enter(lock)
+        closure()
+        objc_sync_exit(lock)
+    }
+
     private static var timeOutCheck = true
-    private static let internalTimeOutCheckQueue: DispatchQueue = DispatchQueue(label: "TimeOutQueue")
     
     // MARK: - Private
     private(set) var serviceFactory: ClientServiceCreating = ClientServiceFactory()
@@ -1082,7 +1087,7 @@ private extension Optional {
             } else {
                 let startTime = Date().timeIntervalSince1970
                 start(serviceFactory: serviceFactory, config: config, startUser: startUser, flagCache: flagCache, flagNotifier: flagNotifier) {
-                    self.internalTimeOutCheckQueue.sync {
+                    synced(self.timeOutCheck) {
                         if startTime + startWaitSeconds > Date().timeIntervalSince1970 && self.timeOutCheck {
                             self.timeOutCheck = false
                             completion?(self.timeOutCheck)
@@ -1090,7 +1095,7 @@ private extension Optional {
                     }
                 }
                 DispatchQueue.global().asyncAfter(deadline: .now() + startWaitSeconds) {
-                    self.internalTimeOutCheckQueue.sync {
+                    synced(self.timeOutCheck) {
                         if self.timeOutCheck {
                             completion?(self.timeOutCheck)
                         }
