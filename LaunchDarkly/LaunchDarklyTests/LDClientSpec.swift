@@ -590,7 +590,7 @@ final class LDClientSpec: QuickSpec {
                 beforeEach {
                     waitUntil(timeout: 10) { done in
                         testContext = TestContext(startOnline: true, timeOut: 10) { timedOut in
-                            expect(timedOut) == true
+                            expect(timedOut) == false
                             done()
                         }
                     }
