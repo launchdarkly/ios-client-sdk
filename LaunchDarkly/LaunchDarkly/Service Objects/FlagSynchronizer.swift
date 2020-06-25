@@ -55,8 +55,8 @@ enum FlagUpdateType: String {
 
 class FlagSynchronizer: LDFlagSynchronizing, EventHandler {
     struct Constants {
-        static let didCloseEventSourceName = "didCloseEventSource"
         fileprivate static let queueName = "LaunchDarkly.FlagSynchronizer.syncQueue"
+        static let didCloseEventSourceName = "didCloseEventSource"
     }
 
     let service: DarklyServiceProvider
@@ -273,8 +273,7 @@ class FlagSynchronizer: LDFlagSynchronizing, EventHandler {
         eventSourceStarted = now
 
         guard let unsuccessfulResponseError = error as? UnsuccessfulResponseError
-        else {
-            return .proceed }
+        else { return .proceed }
         // Now we know that we received an error HTTP response code
         let responseCode: Int = unsuccessfulResponseError.responseCode
         if ![400, 408, 429].contains(responseCode) {
