@@ -112,7 +112,7 @@ public class LDClient {
         var internalCount = 0
         for (_, instance) in LDClient.internalInstances {
             instance.internalSetOnline(goOnline) {
-                LDClient.setOnlineQueue.sync {
+                self.setOnlineQueue.sync {
                     internalCount += 1
                     if internalCount >= LDClient.internalInstances.count {
                         completion?()
@@ -122,7 +122,7 @@ public class LDClient {
         }
     }
 
-    private static let setOnlineQueue: DispatchQueue = DispatchQueue(label: "SetOnlineQueue")
+    private let setOnlineQueue: DispatchQueue = DispatchQueue(label: "SetOnlineQueue")
     
     private func internalSetOnline(_ goOnline: Bool, completion: (() -> Void)? = nil) {
         lastSetOnlineCallValue = goOnline
@@ -248,7 +248,7 @@ public class LDClient {
         var internalCount = 0
         for (_, instance) in LDClient.internalInstances {
             instance.internalIdentify(newUser: user) {
-                LDClient.identifyQueue.sync {
+                self.identifyQueue.sync {
                     internalCount += 1
                     if internalCount >= LDClient.internalInstances.count {
                         completion?()
@@ -259,7 +259,7 @@ public class LDClient {
     }
 
     func internalIdentify(newUser: LDUser, testing: Bool = false, completion: (() -> Void)? = nil) {
-        LDClient.internalIdentifyQueue.async {
+        internalIdentifyQueue.async {
             var internalUser = newUser
             if !testing {
                 internalUser.flagStore = FlagStore(featureFlagDictionary: newUser.flagStore.featureFlags, flagValueSource: newUser.flagStore.flagValueSource)
@@ -284,8 +284,8 @@ public class LDClient {
         }
     }
     
-    private static let internalIdentifyQueue: DispatchQueue = DispatchQueue(label: "InternalIdentifyQueue")
-    private static let identifyQueue: DispatchQueue = DispatchQueue(label: "IdentifyQueue")
+    private let internalIdentifyQueue: DispatchQueue = DispatchQueue(label: "InternalIdentifyQueue")
+    private let identifyQueue: DispatchQueue = DispatchQueue(label: "IdentifyQueue")
 
     private(set) var service: DarklyServiceProvider {
         didSet {
