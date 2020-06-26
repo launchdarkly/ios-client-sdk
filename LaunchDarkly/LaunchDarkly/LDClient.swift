@@ -898,7 +898,7 @@ public class LDClient {
         }
         completionCheck()
     }
-    
+
     public static func start(config: LDConfig, startUser: LDUser? = nil, startWaitSeconds: TimeInterval, completion: ((_ timedOut: Bool) -> Void)? = nil) {
         timeOutCheck = true
         if !config.startOnline {
@@ -908,7 +908,7 @@ public class LDClient {
             let startTime = Date().timeIntervalSince1970
             start(config: config, startUser: startUser) {
                 self.internalTimeOutCheckQueue.sync {
-                    if startTime + startWaitSeconds > Date().timeIntervalSince1970 && self.timeOutCheck {
+                    if startTime + startWaitSeconds > Date().timeIntervalSince1970 {
                         self.timeOutCheck = false
                         completion?(self.timeOutCheck)
                     }
@@ -1096,7 +1096,7 @@ private extension Optional {
                 let startTime = Date().timeIntervalSince1970
                 start(serviceFactory: serviceFactory, config: config, startUser: startUser, flagCache: flagCache, flagNotifier: flagNotifier) {
                     self.internalTimeOutCheckQueue.sync {
-                        if startTime + startWaitSeconds > Date().timeIntervalSince1970 && self.timeOutCheck {
+                        if startTime + startWaitSeconds > Date().timeIntervalSince1970 {
                             self.timeOutCheck = false
                             completion?(self.timeOutCheck)
                         }
