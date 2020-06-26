@@ -907,8 +907,8 @@ public class LDClient {
         } else {
             let startTime = Date().timeIntervalSince1970
             start(config: config, startUser: startUser) {
-                self.internalTimeOutCheckQueue.sync {
-                    if startTime + startWaitSeconds > Date().timeIntervalSince1970 {
+                if startTime + startWaitSeconds > Date().timeIntervalSince1970 && timeOutCheck {
+                    self.internalTimeOutCheckQueue.sync {
                         self.timeOutCheck = false
                         completion?(self.timeOutCheck)
                     }
@@ -1095,8 +1095,8 @@ private extension Optional {
             } else {
                 let startTime = Date().timeIntervalSince1970
                 start(serviceFactory: serviceFactory, config: config, startUser: startUser, flagCache: flagCache, flagNotifier: flagNotifier) {
-                    self.internalTimeOutCheckQueue.sync {
-                        if startTime + startWaitSeconds > Date().timeIntervalSince1970 {
+                    if startTime + startWaitSeconds > Date().timeIntervalSince1970 && timeOutCheck {
+                        self.internalTimeOutCheckQueue.sync {
                             self.timeOutCheck = false
                             completion?(self.timeOutCheck)
                         }
