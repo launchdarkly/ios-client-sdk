@@ -112,12 +112,12 @@ public class LDClient {
         var internalCount = 0
         for (_, instance) in LDClient.internalInstances {
             instance.internalSetOnline(goOnline) {
-                //LDClient.setOnlineQueue.async {
+                LDClient.setOnlineQueue.sync {
                     internalCount += 1
                     if internalCount >= LDClient.internalInstances.count {
                         completion?()
                     }
-                //}
+                }
             }
         }
     }
@@ -248,12 +248,12 @@ public class LDClient {
         var internalCount = 0
         for (_, instance) in LDClient.internalInstances {
             instance.internalIdentify(newUser: user) {
-                //LDClient.identifyQueue.async {
+                LDClient.identifyQueue.sync {
                     internalCount += 1
                     if internalCount >= LDClient.internalInstances.count {
                         completion?()
                     }
-                //}
+                }
             }
         }
     }
