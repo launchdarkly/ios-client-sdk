@@ -907,15 +907,15 @@ public class LDClient {
         } else {
             let startTime = Date().timeIntervalSince1970
             start(config: config, startUser: startUser) {
-                if startTime + startWaitSeconds > Date().timeIntervalSince1970 && timeOutCheck {
-                    self.internalTimeOutCheckQueue.sync {
+                self.internalTimeOutCheckQueue.async {
+                    if startTime + startWaitSeconds > Date().timeIntervalSince1970 && timeOutCheck {
                         self.timeOutCheck = false
                         completion?(self.timeOutCheck)
                     }
                 }
             }
             DispatchQueue.global().asyncAfter(deadline: .now() + startWaitSeconds) {
-                self.internalTimeOutCheckQueue.sync {
+                self.internalTimeOutCheckQueue.async {
                     if self.timeOutCheck {
                         completion?(self.timeOutCheck)
                     }
@@ -1095,15 +1095,15 @@ private extension Optional {
             } else {
                 let startTime = Date().timeIntervalSince1970
                 start(serviceFactory: serviceFactory, config: config, startUser: startUser, flagCache: flagCache, flagNotifier: flagNotifier) {
-                    if startTime + startWaitSeconds > Date().timeIntervalSince1970 && timeOutCheck {
-                        self.internalTimeOutCheckQueue.sync {
+                    self.internalTimeOutCheckQueue.async {
+                        if startTime + startWaitSeconds > Date().timeIntervalSince1970 && timeOutCheck {
                             self.timeOutCheck = false
                             completion?(self.timeOutCheck)
                         }
                     }
                 }
                 DispatchQueue.global().asyncAfter(deadline: .now() + startWaitSeconds) {
-                    self.internalTimeOutCheckQueue.sync {
+                    self.internalTimeOutCheckQueue.async {
                         if self.timeOutCheck {
                             completion?(self.timeOutCheck)
                         }
