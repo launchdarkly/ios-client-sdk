@@ -900,32 +900,30 @@ public class LDClient {
     }
 
     public static func start(config: LDConfig, startUser: LDUser? = nil, startWaitSeconds: TimeInterval, completion: ((_ timedOut: Bool) -> Void)? = nil) {
-        timeOutCheck = true
+        var timeOutCheck = true
+        let internalTimeOutCheckQueue: DispatchQueue = DispatchQueue(label: "TimeOutQueue")
         if !config.startOnline {
             start(config: config, startUser: startUser)
             completion?(timeOutCheck)
         } else {
             let startTime = Date().timeIntervalSince1970
             start(config: config, startUser: startUser) {
-                self.internalTimeOutCheckQueue.async {
+                internalTimeOutCheckQueue.async {
                     if startTime + startWaitSeconds > Date().timeIntervalSince1970 && timeOutCheck {
-                        self.timeOutCheck = false
-                        completion?(self.timeOutCheck)
+                        timeOutCheck = false
+                        completion?(timeOutCheck)
                     }
                 }
             }
             DispatchQueue.global().asyncAfter(deadline: .now() + startWaitSeconds) {
-                self.internalTimeOutCheckQueue.async {
-                    if self.timeOutCheck {
-                        completion?(self.timeOutCheck)
+                internalTimeOutCheckQueue.async {
+                    if timeOutCheck {
+                        completion?(timeOutCheck)
                     }
                 }
             }
         }
     }
-
-    private static var timeOutCheck = true
-    private static let internalTimeOutCheckQueue: DispatchQueue = DispatchQueue(label: "TimeOutQueue")
     
     // MARK: - Private
     private(set) var serviceFactory: ClientServiceCreating = ClientServiceFactory()
@@ -1088,24 +1086,25 @@ private extension Optional {
         }
         
         static func start(serviceFactory: ClientServiceCreating, config: LDConfig, startUser: LDUser? = nil, startWaitSeconds: TimeInterval, flagCache: FeatureFlagCaching, flagNotifier: FlagChangeNotifier, completion: ((_ timedOut: Bool) -> Void)? = nil) {
-            timeOutCheck = true
+            var timeOutCheck = true
+            let internalTimeOutCheckQueue: DispatchQueue = DispatchQueue(label: "TimeOutQueue")
             if !config.startOnline {
                 start(serviceFactory: serviceFactory, config: config, startUser: startUser, flagCache: flagCache, flagNotifier: flagNotifier)
                 completion?(timeOutCheck)
             } else {
                 let startTime = Date().timeIntervalSince1970
                 start(serviceFactory: serviceFactory, config: config, startUser: startUser, flagCache: flagCache, flagNotifier: flagNotifier) {
-                    self.internalTimeOutCheckQueue.async {
+                    internalTimeOutCheckQueue.async {
                         if startTime + startWaitSeconds > Date().timeIntervalSince1970 && timeOutCheck {
-                            self.timeOutCheck = false
-                            completion?(self.timeOutCheck)
+                            timeOutCheck = false
+                            completion?(timeOutCheck)
                         }
                     }
                 }
                 DispatchQueue.global().asyncAfter(deadline: .now() + startWaitSeconds) {
-                    self.internalTimeOutCheckQueue.async {
-                        if self.timeOutCheck {
-                            completion?(self.timeOutCheck)
+                    internalTimeOutCheckQueue.async {
+                        if timeOutCheck {
+                            completion?(timeOutCheck)
                         }
                     }
                 }
