@@ -914,7 +914,7 @@ public class LDClient {
                     }
                 }
             }
-            DispatchQueue.main.asyncAfter(deadline: .now() + startWaitSeconds) {
+            DispatchQueue(label: "StartTimeoutQueue").asyncAfter(deadline: .now() + startWaitSeconds) {
                 self.internalTimeOutCheckQueue.async {
                     if self.timeOutCheck {
                         completion?(self.timeOutCheck)
@@ -1102,7 +1102,7 @@ private extension Optional {
                         }
                     }
                 }
-                DispatchQueue.main.asyncAfter(deadline: .now() + startWaitSeconds) {
+                DispatchQueue(label: "StartTimeoutQueue").asyncAfter(deadline: .now() + startWaitSeconds) {
                     self.internalTimeOutCheckQueue.async {
                         if self.timeOutCheck {
                             completion?(self.timeOutCheck)
