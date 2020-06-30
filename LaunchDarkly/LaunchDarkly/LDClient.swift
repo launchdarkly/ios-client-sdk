@@ -259,7 +259,7 @@ public class LDClient {
     }
 
     func internalIdentify(newUser: LDUser, testing: Bool = false, completion: (() -> Void)? = nil) {
-        //internalIdentifyQueue.async {
+        internalIdentifyQueue.async {
             var internalUser = newUser
             if !testing {
                 internalUser.flagStore = FlagStore(featureFlagDictionary: newUser.flagStore.featureFlags, flagValueSource: newUser.flagStore.flagValueSource)
@@ -281,10 +281,10 @@ public class LDClient {
             }
 
             self.internalSetOnline(wasOnline, completion: completion)
-        //}
+        }
     }
     
-    //private let internalIdentifyQueue: DispatchQueue = DispatchQueue(label: "InternalIdentifyQueue")
+    private let internalIdentifyQueue: DispatchQueue = DispatchQueue(label: "InternalIdentifyQueue")
     private let identifyQueue: DispatchQueue = DispatchQueue(label: "IdentifyQueue")
 
     private(set) var service: DarklyServiceProvider {
@@ -914,7 +914,7 @@ public class LDClient {
                     }
                 }
             }
-            DispatchQueue(label: "StartTimeoutQueue").asyncAfter(deadline: .now() + startWaitSeconds) {
+            DispatchQueue.global().asyncAfter(deadline: .now() + startWaitSeconds) {
                 self.internalTimeOutCheckQueue.async {
                     if self.timeOutCheck {
                         completion?(self.timeOutCheck)
@@ -1102,7 +1102,7 @@ private extension Optional {
                         }
                     }
                 }
-                DispatchQueue(label: "StartTimeoutQueue").asyncAfter(deadline: .now() + startWaitSeconds) {
+                DispatchQueue.global().asyncAfter(deadline: .now() + startWaitSeconds) {
                     self.internalTimeOutCheckQueue.async {
                         if self.timeOutCheck {
                             completion?(self.timeOutCheck)
