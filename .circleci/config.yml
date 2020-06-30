@@ -39,7 +39,7 @@ jobs:
 
     - run:
         name: Clean, Build, & Test LaunchDarkly_iOS
-        command: set -o pipefail && xcodebuild clean build test -workspace 'LaunchDarkly.xcworkspace' -scheme 'LaunchDarkly_iOS' -destination 'platform=iOS Simulator,name=iPhone 11 Pro Max,OS=13.4.1' CODE_SIGNING_REQUIRED=NO CODE_SIGN_IDENTITY= PROVISIONING_PROFILE= | tee 'xcode_raw.log' | xcpretty --color --report html --output '/Users/distiller/launchdarkly/ios-swift-client-sdk-private/tmp/output/report.html' --report junit --output '/Users/distiller/launchdarkly/ios-swift-client-sdk-private/tmp/output/xcode/report.junit'
+        command: set -o pipefail && xcodebuild clean build test -workspace 'LaunchDarkly.xcworkspace' -scheme 'LaunchDarkly_iOS' -destination 'platform=iOS Simulator,name=iPhone 11 Pro Max,OS=13.4.1' CODE_SIGNING_REQUIRED=NO CODE_SIGN_IDENTITY= PROVISIONING_PROFILE= -parallel-testing-enabled NO | tee 'xcode_raw.log' | xcpretty --color --report html --output '/Users/distiller/launchdarkly/ios-swift-client-sdk-private/tmp/output/report.html' --report junit --output '/Users/distiller/launchdarkly/ios-swift-client-sdk-private/tmp/output/xcode/report.junit'
 
     - run:
         name: Clean & Build LaunchDarkly_watchOS
