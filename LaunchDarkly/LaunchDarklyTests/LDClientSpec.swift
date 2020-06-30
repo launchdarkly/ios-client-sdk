@@ -449,7 +449,7 @@ final class LDClientSpec: QuickSpec {
 
                         waitUntil { done in
                             testContext.subject.internalIdentify(newUser: testContext.user, testing: true, completion: done)
-                            DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                            DispatchQueue(label: "AfterSettingUser").asyncAfter(deadline: .now() + 0.5) {
                                 testContext.subject.flagChangeNotifier.notifyObservers(user: testContext.user, oldFlags: testContext.oldFlags, oldFlagSource: testContext.oldFlagSource)
                             }
                         }
@@ -494,7 +494,7 @@ final class LDClientSpec: QuickSpec {
                         testContext.config = testContext.subject.config
                         waitUntil { done in
                             testContext.subject.internalIdentify(newUser: testContext.user, testing: true, completion: done)
-                            DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                            DispatchQueue(label: "WithoutSettingUser").asyncAfter(deadline: .now() + 0.5) {
                                 testContext.subject.flagChangeNotifier.notifyObservers(user: testContext.user, oldFlags: testContext.oldFlags, oldFlagSource: testContext.oldFlagSource)
                             }
                         }
@@ -960,7 +960,7 @@ final class LDClientSpec: QuickSpec {
                     newUser = LDUser.stub()
                     waitUntil(timeout: 5.0) { done in
                         testContext.subject.internalIdentify(newUser: newUser, testing: true, completion: done)
-                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                        DispatchQueue(label: "WhenTheClientIsOnline").asyncAfter(deadline: .now() + 0.5) {
                             testContext.subject.flagChangeNotifier.notifyObservers(user: testContext.user, oldFlags: testContext.oldFlags, oldFlagSource: testContext.oldFlagSource)
                         }
                     }
@@ -1111,7 +1111,7 @@ final class LDClientSpec: QuickSpec {
                     newUser = LDUser.stub()
                     waitUntil(timeout: 5.0) { done in
                         testContext.subject.internalIdentify(newUser: newUser, testing: true, completion: done)
-                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                        DispatchQueue(label: "WhenTheClientIsOnline").asyncAfter(deadline: .now() + 0.5) {
                             testContext.subject.flagChangeNotifier.notifyObservers(user: testContext.user, oldFlags: testContext.oldFlags, oldFlagSource: testContext.oldFlagSource)
                         }
                     }
