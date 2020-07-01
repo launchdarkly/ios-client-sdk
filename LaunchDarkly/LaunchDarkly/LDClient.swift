@@ -982,12 +982,12 @@ public class LDClient {
         get { isStartingQueue.sync { _isStarting } }
         set { isStartingQueue.sync { _isStarting = newValue } }
     }
-    private var _isStarting = false
+    private var _isStarting = true
     private(set) var hasStarted: Bool {
         get { hasStartedQueue.sync { _hasStarted } }
         set { hasStartedQueue.sync { _hasStarted = newValue } }
     }
-    private var _hasStarted = false
+    private var _hasStarted = true
     private var isStartingQueue = DispatchQueue(label: "com.launchdarkly.LDClient.isStartingQueue")
     private var hasStartedQueue = DispatchQueue(label: "com.launchdarkly.LDClient.hasStartedQueue")
 
@@ -1000,9 +1000,6 @@ public class LDClient {
     }
     
     private init(serviceFactory: ClientServiceCreating? = nil, configuration: LDConfig, startUser: LDUser?, newCache: FeatureFlagCaching, flagNotifier: FlagChangeNotifying, testing: Bool = false, completion: (() -> Void)? = nil) {
-        _isStarting = true
-        _hasStarted = true
-        
         if let serviceFactory = serviceFactory {
             self.serviceFactory = serviceFactory
         }
