@@ -62,19 +62,28 @@ public class LDClient {
 
      Use `setOnline(_: completion:)` to change the online/offline state.
     */
-    public private(set) var isOnline: Bool = false {
-        didSet {
-            flagSynchronizer.isOnline = isOnline
-            eventReporter.isOnline = isOnline
-            diagnosticReporter.isOnline = isOnline
-            if isOnline != oldValue {
-                connectionInformation = ConnectionInformation.onlineSetCheck(connectionInformation: connectionInformation, ldClient: self, config: config)
+    public private(set) var isOnline: Bool {
+        get {
+            isOnlineQueue.sync {
+                _isOnline
+            }
+        }
+        set {
+            isOnlineQueue.sync {
+                let oldValue = _isOnline
+                _isOnline = newValue
+                flagSynchronizer.isOnline = _isOnline
+                eventReporter.isOnline = _isOnline
+                diagnosticReporter.isOnline = _isOnline
+                if _isOnline != oldValue {
+                    connectionInformation = ConnectionInformation.onlineSetCheck(connectionInformation: connectionInformation, ldClient: self, config: config, online: _isOnline)
+                }
             }
         }
     }
 
-    // Keeps the state of the last setOnline goOnline parameter, used for throttling calls to set the SDK online
-    private var lastSetOnlineCallValue = false
+    private var _isOnline = false
+    private var isOnlineQueue = DispatchQueue(label: "com.launchdarkly.LDClient.isOnlineQueue")
 
     // Stores ConnectionInformation in UserDefaults on change
     var connectionInformation: ConnectionInformation {
@@ -112,7 +121,7 @@ public class LDClient {
         var internalCount = 0
         for (_, instance) in LDClient.internalInstances {
             instance.internalSetOnline(goOnline) {
-                self.setOnlineQueue.sync {
+                self.setOnlineQueue.async {
                     internalCount += 1
                     if internalCount >= LDClient.internalInstances.count {
                         completion?()
@@ -125,7 +134,6 @@ public class LDClient {
     private let setOnlineQueue: DispatchQueue = DispatchQueue(label: "SetOnlineQueue")
     
     private func internalSetOnline(_ goOnline: Bool, completion: (() -> Void)? = nil) {
-        lastSetOnlineCallValue = goOnline
         guard goOnline, canGoOnline
             else {
                 //go offline, which is not throttled
@@ -135,7 +143,7 @@ public class LDClient {
         
         throttler.runThrottled {
             //since going online was throttled, check the last called setOnline value and whether we can go online
-            self.go(online: self.lastSetOnlineCallValue && self.canGoOnline, reasonOnlineUnavailable: self.reasonOnlineUnavailable(goOnline: self.lastSetOnlineCallValue), completion: completion)
+            self.go(online: goOnline && self.canGoOnline, reasonOnlineUnavailable: self.reasonOnlineUnavailable(goOnline: goOnline), completion: completion)
         }
     }
     
@@ -248,7 +256,7 @@ public class LDClient {
         var internalCount = 0
         for (_, instance) in LDClient.internalInstances {
             instance.internalIdentify(newUser: user) {
-                self.identifyQueue.sync {
+                self.identifyQueue.async {
                     internalCount += 1
                     if internalCount >= LDClient.internalInstances.count {
                         completion?()

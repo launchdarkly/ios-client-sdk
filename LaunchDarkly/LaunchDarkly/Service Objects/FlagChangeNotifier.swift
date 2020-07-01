@@ -22,9 +22,24 @@ protocol FlagChangeNotifying {
 }
 
 final class FlagChangeNotifier: FlagChangeNotifying {
-    private var flagChangeObservers = [FlagChangeObserver]()
-    private var flagsUnchangedObservers = [FlagsUnchangedObserver]()
-    private var connectionModeChangedObservers = [ConnectionModeChangedObserver]()
+    private var flagChangeObservers: [FlagChangeObserver] {
+        get { flagChangeQueue.sync { _flagChangeObservers } }
+        set { flagChangeQueue.sync { _flagChangeObservers = newValue } }
+    }
+    private var _flagChangeObservers = [FlagChangeObserver]()
+    private var flagsUnchangedObservers: [FlagsUnchangedObserver] {
+        get { flagsUnchangedQueue.sync { _flagsUnchangedObservers } }
+        set { flagsUnchangedQueue.sync { _flagsUnchangedObservers = newValue } }
+    }
+    private var _flagsUnchangedObservers = [FlagsUnchangedObserver]()
+    private var connectionModeChangedObservers: [ConnectionModeChangedObserver] {
+        get { connectionModeChangedQueue.sync { _connectionModeChangedObservers } }
+        set { connectionModeChangedQueue.sync { _connectionModeChangedObservers = newValue } }
+    }
+    private var _connectionModeChangedObservers = [ConnectionModeChangedObserver]()
+    private var flagChangeQueue = DispatchQueue(label: "com.launchdarkly.FlagChangeNotifier.FlagChangeQueue")
+    private var flagsUnchangedQueue = DispatchQueue(label: "com.launchdarkly.FlagChangeNotifier.FlagsUnchangedQueue")
+    private var connectionModeChangedQueue = DispatchQueue(label: "com.launchdarkly.FlagChangeNotifier.ConnectionModeChangedQueue")
 
     func addFlagChangeObserver(_ observer: FlagChangeObserver) {
         Log.debug(typeName(and: #function) + "observer: \(observer)")
