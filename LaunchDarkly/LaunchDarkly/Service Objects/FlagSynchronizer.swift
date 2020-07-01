@@ -72,7 +72,7 @@ class FlagSynchronizer: LDFlagSynchronizing, EventHandler {
             isOnlineQueue.sync {
                 _isOnline = newValue
                 Log.debug(typeName(and: #function, appending: ": ") + "\(isOnline)")
-                configureCommunications()
+                configureCommunications(isOnline: _isOnline)
             }
         }
     }
@@ -95,18 +95,18 @@ class FlagSynchronizer: LDFlagSynchronizing, EventHandler {
         self.service = service
         self.onSyncComplete = onSyncComplete
 
-        configureCommunications()
+        configureCommunications(isOnline: isOnline)
     }
 
-    private func configureCommunications() {
+    private func configureCommunications(isOnline: Bool) {
         if isOnline {
             switch streamingMode {
             case .streaming:
                 stopPolling()
-                startEventSource()
+                startEventSource(isOnline: isOnline)
             case .polling:
                 stopEventSource()
-                startPolling()
+                startPolling(isOnline: isOnline)
             }
         } else {
             stopEventSource()
@@ -116,7 +116,7 @@ class FlagSynchronizer: LDFlagSynchronizing, EventHandler {
 
     // MARK: Streaming
 
-    private func startEventSource() {
+    private func startEventSource(isOnline: Bool) {
         guard isOnline,
             streamingMode == .streaming,
             !streamingActive
@@ -156,7 +156,7 @@ class FlagSynchronizer: LDFlagSynchronizing, EventHandler {
 
     // MARK: Polling
 
-    private func startPolling() {
+    private func startPolling(isOnline: Bool) {
         guard isOnline,
             streamingMode == .polling,
             !pollingActive
@@ -174,7 +174,7 @@ class FlagSynchronizer: LDFlagSynchronizing, EventHandler {
         }
         Log.debug(typeName(and: #function))
         flagRequestTimer = LDTimer(withTimeInterval: pollingInterval, repeats: true, fireQueue: syncQueue, execute: processTimer)
-        makeFlagRequest()
+        makeFlagRequest(isOnline: isOnline)
     }
 
     private func stopPolling() {
@@ -188,12 +188,12 @@ class FlagSynchronizer: LDFlagSynchronizing, EventHandler {
     }
 
     @objc private func processTimer() {
-        makeFlagRequest()
+        makeFlagRequest(isOnline: isOnline)
     }
 
     // MARK: Flag Request
 
-    private func makeFlagRequest() {
+    private func makeFlagRequest(isOnline: Bool) {
         guard isOnline
         else {
             Log.debug(typeName(and: #function) + "aborted. Flag Synchronizer is offline.")
@@ -334,7 +334,7 @@ class FlagSynchronizer: LDFlagSynchronizing, EventHandler {
 
         let eventType: FlagUpdateType? = FlagUpdateType(rawValue: event)
         switch eventType {
-        case .ping: makeFlagRequest()
+        case .ping: makeFlagRequest(isOnline: isOnline)
         case .put, .patch, .delete:
             guard let data = messageEvent.data.data(using: .utf8),
                   let flagDictionary = try? JSONSerialization.jsonDictionary(with: data)
@@ -373,7 +373,7 @@ extension FlagSynchronizer {
     }
 
     func testMakeFlagRequest() {
-        makeFlagRequest()
+        makeFlagRequest(isOnline: isOnline)
     }
 
     func testStreamOnOpened() {

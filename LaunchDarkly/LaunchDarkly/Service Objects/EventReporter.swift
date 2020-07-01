@@ -47,7 +47,7 @@ class EventReporter: EventReporting {
             isOnlineQueue.sync {
                 _isOnline = newValue
                 Log.debug(typeName(and: #function, appending: ": ") + "\(isOnline)")
-                _isOnline ? startReporting() : stopReporting()
+                _isOnline ? startReporting(isOnline: _isOnline) : stopReporting()
             }
         }
     }
@@ -104,7 +104,7 @@ class EventReporter: EventReporting {
         }
     }
 
-    private func startReporting() {
+    private func startReporting(isOnline: Bool) {
         guard isOnline && !isReportingActive
         else { return }
         eventReportTimer = LDTimer(withTimeInterval: config.eventFlushInterval, repeats: true, fireQueue: eventQueue, execute: reportEvents)
