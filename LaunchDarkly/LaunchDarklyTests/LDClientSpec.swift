@@ -210,9 +210,14 @@ final class LDClientSpec: QuickSpec {
 
             if runMode == .background {
                 subject.setRunMode(.background)
+                DispatchQueue(label: "StartCompletionBackground").asyncAfter(deadline: .now() + 0.1) {
+                    completion?()
+                    timeOutCompletion?(timedOut)
+                }
+            } else {
+                completion?()
+                timeOutCompletion?(timedOut)
             }
-            completion?()
-            timeOutCompletion?(timedOut)
         }
         
         ///Pass nil to leave the flags unchanged
@@ -253,6 +258,8 @@ final class LDClientSpec: QuickSpec {
 
             context("when configured to start online") {
                 beforeEach {
+                    //TODO
+                    //testContext = nil
                     waitUntil(timeout: 10) { done in
                         testContext = TestContext(startOnline: true, completion: done)
                     }
@@ -2337,7 +2344,10 @@ final class LDClientSpec: QuickSpec {
                                         testContext = TestContext(startOnline: true, enableBackgroundUpdates: false, runMode: .foreground, operatingSystem: os, completion: done)
                                     }
 
-                                    NotificationCenter.default.post(name: testContext.environmentReporterMock.backgroundNotification!, object: self)
+                                    waitUntil { done in
+                                        NotificationCenter.default.post(name: testContext.environmentReporterMock.backgroundNotification!, object: self)
+                                        DispatchQueue(label: "BackgroundUpdatesDisabled").asyncAfter(deadline: .now() + 0.1, execute: done)
+                                    }
                                 }
                                 it("takes the sdk offline") {
                                     expect(testContext.subject.isOnline) == true
@@ -2352,7 +2362,10 @@ final class LDClientSpec: QuickSpec {
                                         testContext = TestContext(startOnline: true, enableBackgroundUpdates: true, runMode: .foreground, operatingSystem: os, completion: done)
                                     }
 
-                                    NotificationCenter.default.post(name: testContext.environmentReporterMock.backgroundNotification!, object: self)
+                                    waitUntil { done in
+                                        NotificationCenter.default.post(name: testContext.environmentReporterMock.backgroundNotification!, object: self)
+                                        DispatchQueue(label: "BackgroundUpdatesEnabled").asyncAfter(deadline: .now() + 0.1, execute: done)
+                                    }
                                 }
                                 it("leaves the sdk online") {
                                     expect(testContext.subject.isOnline) == true
@@ -2428,8 +2441,11 @@ final class LDClientSpec: QuickSpec {
                                     waitUntil { done in
                                         testContext = TestContext(startOnline: true, streamingMode: .streaming, enableBackgroundUpdates: true, runMode: .foreground, operatingSystem: .macOS, completion: done)
                                     }
-                                    
-                                    testContext.subject.setRunMode(.background)
+
+                                    waitUntil { done in
+                                        testContext.subject.setRunMode(.background)
+                                        DispatchQueue(label: "BackgroundEnableStreamingMode").asyncAfter(deadline: .now() + 0.1, execute: done)
+                                    }
                                 }
                                 it("leaves the event reporter online") {
                                     expect(testContext.eventReporterMock.isOnline) == true
@@ -2444,7 +2460,10 @@ final class LDClientSpec: QuickSpec {
                                     waitUntil { done in
                                         testContext = TestContext(startOnline: true, streamingMode: .polling, enableBackgroundUpdates: true, runMode: .foreground, operatingSystem: .macOS, completion: done)
                                     }
-                                    testContext.subject.setRunMode(.background)
+                                    waitUntil { done in
+                                        testContext.subject.setRunMode(.background)
+                                        DispatchQueue(label: "BackgroundEnabledPollingMode").asyncAfter(deadline: .now() + 0.1, execute: done)
+                                    }
                                 }
                                 it("leaves the event reporter online") {
                                     expect(testContext.eventReporterMock.isOnline) == true
@@ -2461,7 +2480,11 @@ final class LDClientSpec: QuickSpec {
                                 waitUntil { done in
                                     testContext = TestContext(startOnline: true, enableBackgroundUpdates: false, runMode: .foreground, operatingSystem: .macOS, completion: done)
                                 }
-                                testContext.subject.setRunMode(.background)
+
+                                waitUntil { done in
+                                    testContext.subject.setRunMode(.background)
+                                    DispatchQueue(label: "BackgroundDisabled").asyncAfter(deadline: .now() + 0.1, execute: done)
+                                }
                             }
                             it("leaves the event reporter online") {
                                 expect(testContext.eventReporterMock.isOnline) == true
@@ -2485,7 +2508,10 @@ final class LDClientSpec: QuickSpec {
                             flagSynchronizerIsOnlineSetCount = testContext.flagSynchronizerMock.isOnlineSetCount
                             makeFlagSynchronizerCallCount = testContext.serviceFactoryMock.makeFlagSynchronizerCallCount
 
-                            testContext.subject.setRunMode(.foreground)
+                            waitUntil { done in
+                                testContext.subject.setRunMode(.foreground)
+                                DispatchQueue(label: "SetForeground").asyncAfter(deadline: .now() + 0.1, execute: done)
+                            }
                         }
                         it("makes no changes") {
                             expect(testContext.eventReporterMock.isOnline) == true
@@ -2511,7 +2537,10 @@ final class LDClientSpec: QuickSpec {
                             flagSynchronizerIsOnlineSetCount = testContext.flagSynchronizerMock.isOnlineSetCount
                             makeFlagSynchronizerCallCount = testContext.serviceFactoryMock.makeFlagSynchronizerCallCount
 
-                            testContext.subject.setRunMode(.background)
+                            waitUntil { done in
+                                testContext.subject.setRunMode(.background)
+                                DispatchQueue(label: "RunningInTheBackgroundSetBackground").asyncAfter(deadline: .now() + 0.1, execute: done)
+                            }
                         }
                         it("makes no changes") {
                             expect(testContext.eventReporterMock.isOnline) == true
@@ -2527,8 +2556,11 @@ final class LDClientSpec: QuickSpec {
                                 waitUntil { done in
                                     testContext = TestContext(startOnline: true, streamingMode: .streaming, runMode: .background, operatingSystem: .macOS, completion: done)
                                 }
-                                    
-                                testContext.subject.setRunMode(.foreground)
+
+                                waitUntil { done in
+                                    testContext.subject.setRunMode(.foreground)
+                                    DispatchQueue(label: "SetForegroundStreamingMode").asyncAfter(deadline: .now() + 0.1, execute: done)
+                                }
                             }
                             it("takes the event reporter online") {
                                 expect(testContext.eventReporterMock.isOnline) == true
@@ -2543,8 +2575,11 @@ final class LDClientSpec: QuickSpec {
                                 waitUntil { done in
                                     testContext = TestContext(startOnline: true, streamingMode: .polling, runMode: .background, operatingSystem: .macOS, completion: done)
                                 }
-                                
-                                testContext.subject.setRunMode(.foreground)
+
+                                waitUntil { done in
+                                    testContext.subject.setRunMode(.foreground)
+                                    DispatchQueue(label: "SetForegroundPollingMode").asyncAfter(deadline: .now() + 0.1, execute: done)
+                                }
                             }
                             it("takes the event reporter online") {
                                 expect(testContext.eventReporterMock.isOnline) == true
@@ -2566,7 +2601,11 @@ final class LDClientSpec: QuickSpec {
                                 waitUntil { done in
                                     testContext = TestContext(startOnline: false, enableBackgroundUpdates: true, runMode: .foreground, operatingSystem: .macOS, completion: done)
                                 }
-                                testContext.subject.setRunMode(.background)
+
+                                waitUntil { done in
+                                    testContext.subject.setRunMode(.background)
+                                    DispatchQueue(label: "SetBackgroundWithBackgroundEnabled").asyncAfter(deadline: .now() + 0.1, execute: done)
+                                }
                             }
                             it("leaves the event reporter offline") {
                                 expect(testContext.eventReporterMock.isOnline) == false
@@ -2581,8 +2620,11 @@ final class LDClientSpec: QuickSpec {
                                 waitUntil { done in
                                     testContext = TestContext(startOnline: false, enableBackgroundUpdates: false, runMode: .foreground, operatingSystem: .macOS, completion: done)
                                 }
-                                
-                                testContext.subject.setRunMode(.background)
+
+                                waitUntil { done in
+                                    testContext.subject.setRunMode(.background)
+                                    DispatchQueue(label: "SetBackgroundWithBackgroundDisabled").asyncAfter(deadline: .now() + 0.1, execute: done)
+                                }
                             }
                             it("leaves the event reporter offline") {
                                 expect(testContext.eventReporterMock.isOnline) == false
@@ -2607,7 +2649,10 @@ final class LDClientSpec: QuickSpec {
                             flagSynchronizerIsOnlineSetCount = testContext.flagSynchronizerMock.isOnlineSetCount
                             makeFlagSynchronizerCallCount = testContext.serviceFactoryMock.makeFlagSynchronizerCallCount
 
-                            testContext.subject.setRunMode(.foreground)
+                            waitUntil { done in
+                                testContext.subject.setRunMode(.foreground)
+                                DispatchQueue(label: "SetForegroundNoChange").asyncAfter(deadline: .now() + 0.1, execute: done)
+                            }
                         }
                         it("makes no changes") {
                             expect(testContext.eventReporterMock.isOnline) == false
@@ -2632,7 +2677,10 @@ final class LDClientSpec: QuickSpec {
                             flagSynchronizerIsOnlineSetCount = testContext.flagSynchronizerMock.isOnlineSetCount
                             makeFlagSynchronizerCallCount = testContext.serviceFactoryMock.makeFlagSynchronizerCallCount
 
-                            testContext.subject.setRunMode(.background)
+                            waitUntil { done in
+                                testContext.subject.setRunMode(.background)
+                                DispatchQueue(label: "SetBackground").asyncAfter(deadline: .now() + 0.1, execute: done)
+                            }
                         }
                         it("makes no changes") {
                             expect(testContext.eventReporterMock.isOnline) == false
@@ -2648,8 +2696,11 @@ final class LDClientSpec: QuickSpec {
                                 waitUntil { done in
                                     testContext = TestContext(startOnline: false, streamingMode: .streaming, runMode: .background, operatingSystem: .macOS, completion: done)
                                 }
-                                
-                                testContext.subject.setRunMode(.foreground)
+
+                                waitUntil { done in
+                                    testContext.subject.setRunMode(.foreground)
+                                    DispatchQueue(label: "StreamingMode").asyncAfter(deadline: .now() + 0.1, execute: done)
+                                }
                             }
                             it("leaves the event reporter offline") {
                                 expect(testContext.eventReporterMock.isOnline) == false
@@ -2664,8 +2715,11 @@ final class LDClientSpec: QuickSpec {
                                 waitUntil { done in
                                     testContext = TestContext(startOnline: false, streamingMode: .polling, runMode: .background, operatingSystem: .macOS, completion: done)
                                 }
-                                
-                                testContext.subject.setRunMode(.foreground)
+
+                                waitUntil { done in
+                                    testContext.subject.setRunMode(.foreground)
+                                    DispatchQueue(label: "ForegroundPollingMode").asyncAfter(deadline: .now() + 0.1, execute: done)
+                                }
                             }
                             it("leaves the event reporter offline") {
                                 expect(testContext.eventReporterMock.isOnline) == false
