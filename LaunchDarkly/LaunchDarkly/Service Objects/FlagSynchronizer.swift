@@ -66,13 +66,19 @@ class FlagSynchronizer: LDFlagSynchronizing, EventHandler {
 
     let streamingMode: LDStreamingMode
 
-    var isOnline: Bool = false {
-        didSet {
-            Log.debug(typeName(and: #function, appending: ": ") + "\(isOnline)")
-            configureCommunications()
+    var isOnline: Bool {
+        get { isOnlineQueue.sync { _isOnline } }
+        set {
+            isOnlineQueue.sync {
+                _isOnline = newValue
+                Log.debug(typeName(and: #function, appending: ": ") + "\(isOnline)")
+                configureCommunications()
+            }
         }
     }
 
+    private var _isOnline = false
+    private var isOnlineQueue = DispatchQueue(label: "com.launchdarkly.DiagnosticReporter.isOnlineQueue")
     let pollingInterval: TimeInterval
     let useReport: Bool
     

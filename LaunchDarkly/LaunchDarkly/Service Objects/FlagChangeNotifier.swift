@@ -73,9 +73,15 @@ final class FlagChangeNotifier: FlagChangeNotifying {
     ///Removes all change handling closures from owner
     func removeObserver(owner: LDObserverOwner) {
         Log.debug(typeName(and: #function) + "owner: \(owner)")
-        flagChangeObservers = flagChangeObservers.filter { $0.owner !== owner }
-        flagsUnchangedObservers = flagsUnchangedObservers.filter { $0.owner !== owner }
-        connectionModeChangedObservers = connectionModeChangedObservers.filter { $0.owner !== owner }
+        flagChangeQueue.sync {
+            _flagChangeObservers = _flagChangeObservers.filter { $0.owner !== owner }
+        }
+        flagsUnchangedQueue.sync {
+            _flagsUnchangedObservers = _flagsUnchangedObservers.filter { $0.owner !== owner }
+        }
+        connectionModeChangedQueue.sync {
+            _connectionModeChangedObservers = _connectionModeChangedObservers.filter { $0.owner !== owner }
+        }
     }
 
     func notifyConnectionModeChangedObservers(connectionMode: ConnectionInformation.ConnectionMode) {
@@ -148,8 +154,15 @@ final class FlagChangeNotifier: FlagChangeNotifying {
     
     private func removeOldObservers() {
         Log.debug(typeName(and: #function))
-        flagChangeObservers = flagChangeObservers.filter { $0.owner != nil }
-        flagsUnchangedObservers = flagsUnchangedObservers.filter { $0.owner != nil }
+        flagChangeQueue.sync {
+            _flagChangeObservers = _flagChangeObservers.filter { $0.owner != nil }
+        }
+        flagsUnchangedQueue.sync {
+            _flagsUnchangedObservers = _flagsUnchangedObservers.filter { $0.owner != nil }
+        }
+        connectionModeChangedQueue.sync {
+            _connectionModeChangedObservers = _connectionModeChangedObservers.filter { $0.owner != nil }
+        }
     }
 
     private func findChangedFlagKeys(oldFlags: [LDFlagKey: FeatureFlag], newFlags: [LDFlagKey: FeatureFlag]) -> [LDFlagKey] {

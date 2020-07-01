@@ -978,8 +978,18 @@ public class LDClient {
     private(set) var throttler: Throttling
     private(set) var diagnosticReporter: DiagnosticReporting
 
-    private(set) var isStarting = false
-    private(set) var hasStarted = false
+    private(set) var isStarting: Bool {
+        get { isStartingQueue.sync { _isStarting } }
+        set { isStartingQueue.sync { _isStarting = newValue } }
+    }
+    private var _isStarting = false
+    private(set) var hasStarted: Bool {
+        get { hasStartedQueue.sync { _hasStarted } }
+        set { hasStartedQueue.sync { _hasStarted = newValue } }
+    }
+    private var _hasStarted = false
+    private var isStartingQueue = DispatchQueue(label: "com.launchdarkly.LDClient.isStartingQueue")
+    private var hasStartedQueue = DispatchQueue(label: "com.launchdarkly.LDClient.hasStartedQueue")
 
     private func convertCachedData(skipDuringStart skip: Bool) {
         guard !skip
@@ -990,8 +1000,8 @@ public class LDClient {
     }
     
     private init(serviceFactory: ClientServiceCreating? = nil, configuration: LDConfig, startUser: LDUser?, newCache: FeatureFlagCaching, flagNotifier: FlagChangeNotifying, testing: Bool = false, completion: (() -> Void)? = nil) {
-        isStarting = true
-        hasStarted = true
+        _isStarting = true
+        _hasStarted = true
         
         if let serviceFactory = serviceFactory {
             self.serviceFactory = serviceFactory

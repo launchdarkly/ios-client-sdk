@@ -41,16 +41,24 @@ class DiagnosticReporter: DiagnosticReporting {
         }
     }
 
-    var isOnline: Bool = false {
-        didSet {
-            guard isOnline != oldValue
-            else { return }
-            stateQueue.async {
-                self.stopReporting()
-                self.maybeStartReporting()
+    var isOnline: Bool {
+        get { isOnlineQueue.sync { _isOnline } }
+        set {
+            isOnlineQueue.sync {
+                let oldValue = _isOnline
+                _isOnline = newValue
+                guard isOnline != oldValue
+                else { return }
+                stateQueue.async {
+                    self.stopReporting()
+                    self.maybeStartReporting()
+                }
             }
         }
     }
+
+    private var _isOnline = false
+    private var isOnlineQueue = DispatchQueue(label: "com.launchdarkly.DiagnosticReporter.isOnlineQueue")
 
     private var timer: TimeResponding?
     private var sentInit: Bool
