@@ -210,7 +210,7 @@ final class LDClientSpec: QuickSpec {
 
             if runMode == .background {
                 subject.setRunMode(.background)
-                DispatchQueue(label: "StartCompletionBackground").asyncAfter(deadline: .now() + 0.1) {
+                DispatchQueue(label: "StartCompletionBackground").asyncAfter(deadline: .now() + 0.2) {
                     completion?()
                     timeOutCompletion?(timedOut)
                 }
@@ -258,8 +258,6 @@ final class LDClientSpec: QuickSpec {
 
             context("when configured to start online") {
                 beforeEach {
-                    //TODO
-                    //testContext = nil
                     waitUntil(timeout: 10) { done in
                         testContext = TestContext(startOnline: true, completion: done)
                     }
@@ -456,7 +454,7 @@ final class LDClientSpec: QuickSpec {
 
                         waitUntil { done in
                             testContext.subject.internalIdentify(newUser: testContext.user, testing: true, completion: done)
-                            DispatchQueue(label: "AfterSettingUser").asyncAfter(deadline: .now() + 0.5) {
+                            DispatchQueue(label: "AfterSettingUser").asyncAfter(deadline: .now() + 0.2) {
                                 testContext.subject.flagChangeNotifier.notifyObservers(user: testContext.user, oldFlags: testContext.oldFlags, oldFlagSource: testContext.oldFlagSource)
                             }
                         }
@@ -501,7 +499,7 @@ final class LDClientSpec: QuickSpec {
                         testContext.config = testContext.subject.config
                         waitUntil { done in
                             testContext.subject.internalIdentify(newUser: testContext.user, testing: true, completion: done)
-                            DispatchQueue(label: "WithoutSettingUser").asyncAfter(deadline: .now() + 0.5) {
+                            DispatchQueue(label: "WithoutSettingUser").asyncAfter(deadline: .now() + 0.2) {
                                 testContext.subject.flagChangeNotifier.notifyObservers(user: testContext.user, oldFlags: testContext.oldFlags, oldFlagSource: testContext.oldFlagSource)
                             }
                         }
@@ -967,7 +965,7 @@ final class LDClientSpec: QuickSpec {
                     newUser = LDUser.stub()
                     waitUntil(timeout: 5.0) { done in
                         testContext.subject.internalIdentify(newUser: newUser, testing: true, completion: done)
-                        DispatchQueue(label: "WhenTheClientIsOnline").asyncAfter(deadline: .now() + 0.5) {
+                        DispatchQueue(label: "WhenTheClientIsOnline").asyncAfter(deadline: .now() + 0.2) {
                             testContext.subject.flagChangeNotifier.notifyObservers(user: testContext.user, oldFlags: testContext.oldFlags, oldFlagSource: testContext.oldFlagSource)
                         }
                     }
@@ -1118,7 +1116,7 @@ final class LDClientSpec: QuickSpec {
                     newUser = LDUser.stub()
                     waitUntil(timeout: 5.0) { done in
                         testContext.subject.internalIdentify(newUser: newUser, testing: true, completion: done)
-                        DispatchQueue(label: "WhenTheClientIsOnline").asyncAfter(deadline: .now() + 0.5) {
+                        DispatchQueue(label: "WhenTheClientIsOnline").asyncAfter(deadline: .now() + 0.2) {
                             testContext.subject.flagChangeNotifier.notifyObservers(user: testContext.user, oldFlags: testContext.oldFlags, oldFlagSource: testContext.oldFlagSource)
                         }
                     }
@@ -2346,7 +2344,7 @@ final class LDClientSpec: QuickSpec {
 
                                     waitUntil { done in
                                         NotificationCenter.default.post(name: testContext.environmentReporterMock.backgroundNotification!, object: self)
-                                        DispatchQueue(label: "BackgroundUpdatesDisabled").asyncAfter(deadline: .now() + 0.1, execute: done)
+                                        DispatchQueue(label: "BackgroundUpdatesDisabled").asyncAfter(deadline: .now() + 0.2, execute: done)
                                     }
                                 }
                                 it("takes the sdk offline") {
@@ -2364,7 +2362,7 @@ final class LDClientSpec: QuickSpec {
 
                                     waitUntil { done in
                                         NotificationCenter.default.post(name: testContext.environmentReporterMock.backgroundNotification!, object: self)
-                                        DispatchQueue(label: "BackgroundUpdatesEnabled").asyncAfter(deadline: .now() + 0.1, execute: done)
+                                        DispatchQueue(label: "BackgroundUpdatesEnabled").asyncAfter(deadline: .now() + 0.2, execute: done)
                                     }
                                 }
                                 it("leaves the sdk online") {
@@ -2444,7 +2442,7 @@ final class LDClientSpec: QuickSpec {
 
                                     waitUntil { done in
                                         testContext.subject.setRunMode(.background)
-                                        DispatchQueue(label: "BackgroundEnableStreamingMode").asyncAfter(deadline: .now() + 0.1, execute: done)
+                                        DispatchQueue(label: "BackgroundEnableStreamingMode").asyncAfter(deadline: .now() + 0.2, execute: done)
                                     }
                                 }
                                 it("leaves the event reporter online") {
@@ -2462,7 +2460,7 @@ final class LDClientSpec: QuickSpec {
                                     }
                                     waitUntil { done in
                                         testContext.subject.setRunMode(.background)
-                                        DispatchQueue(label: "BackgroundEnabledPollingMode").asyncAfter(deadline: .now() + 0.1, execute: done)
+                                        DispatchQueue(label: "BackgroundEnabledPollingMode").asyncAfter(deadline: .now() + 0.2, execute: done)
                                     }
                                 }
                                 it("leaves the event reporter online") {
@@ -2483,7 +2481,7 @@ final class LDClientSpec: QuickSpec {
 
                                 waitUntil { done in
                                     testContext.subject.setRunMode(.background)
-                                    DispatchQueue(label: "BackgroundDisabled").asyncAfter(deadline: .now() + 0.1, execute: done)
+                                    DispatchQueue(label: "BackgroundDisabled").asyncAfter(deadline: .now() + 0.2, execute: done)
                                 }
                             }
                             it("leaves the event reporter online") {
@@ -2510,7 +2508,7 @@ final class LDClientSpec: QuickSpec {
 
                             waitUntil { done in
                                 testContext.subject.setRunMode(.foreground)
-                                DispatchQueue(label: "SetForeground").asyncAfter(deadline: .now() + 0.1, execute: done)
+                                DispatchQueue(label: "SetForeground").asyncAfter(deadline: .now() + 0.2, execute: done)
                             }
                         }
                         it("makes no changes") {
@@ -2539,7 +2537,7 @@ final class LDClientSpec: QuickSpec {
 
                             waitUntil { done in
                                 testContext.subject.setRunMode(.background)
-                                DispatchQueue(label: "RunningInTheBackgroundSetBackground").asyncAfter(deadline: .now() + 0.1, execute: done)
+                                DispatchQueue(label: "RunningInTheBackgroundSetBackground").asyncAfter(deadline: .now() + 0.2, execute: done)
                             }
                         }
                         it("makes no changes") {
@@ -2559,7 +2557,7 @@ final class LDClientSpec: QuickSpec {
 
                                 waitUntil { done in
                                     testContext.subject.setRunMode(.foreground)
-                                    DispatchQueue(label: "SetForegroundStreamingMode").asyncAfter(deadline: .now() + 0.1, execute: done)
+                                    DispatchQueue(label: "SetForegroundStreamingMode").asyncAfter(deadline: .now() + 0.2, execute: done)
                                 }
                             }
                             it("takes the event reporter online") {
@@ -2578,7 +2576,7 @@ final class LDClientSpec: QuickSpec {
 
                                 waitUntil { done in
                                     testContext.subject.setRunMode(.foreground)
-                                    DispatchQueue(label: "SetForegroundPollingMode").asyncAfter(deadline: .now() + 0.1, execute: done)
+                                    DispatchQueue(label: "SetForegroundPollingMode").asyncAfter(deadline: .now() + 0.2, execute: done)
                                 }
                             }
                             it("takes the event reporter online") {
@@ -2604,7 +2602,7 @@ final class LDClientSpec: QuickSpec {
 
                                 waitUntil { done in
                                     testContext.subject.setRunMode(.background)
-                                    DispatchQueue(label: "SetBackgroundWithBackgroundEnabled").asyncAfter(deadline: .now() + 0.1, execute: done)
+                                    DispatchQueue(label: "SetBackgroundWithBackgroundEnabled").asyncAfter(deadline: .now() + 0.2, execute: done)
                                 }
                             }
                             it("leaves the event reporter offline") {
@@ -2623,7 +2621,7 @@ final class LDClientSpec: QuickSpec {
 
                                 waitUntil { done in
                                     testContext.subject.setRunMode(.background)
-                                    DispatchQueue(label: "SetBackgroundWithBackgroundDisabled").asyncAfter(deadline: .now() + 0.1, execute: done)
+                                    DispatchQueue(label: "SetBackgroundWithBackgroundDisabled").asyncAfter(deadline: .now() + 0.2, execute: done)
                                 }
                             }
                             it("leaves the event reporter offline") {
@@ -2651,7 +2649,7 @@ final class LDClientSpec: QuickSpec {
 
                             waitUntil { done in
                                 testContext.subject.setRunMode(.foreground)
-                                DispatchQueue(label: "SetForegroundNoChange").asyncAfter(deadline: .now() + 0.1, execute: done)
+                                DispatchQueue(label: "SetForegroundNoChange").asyncAfter(deadline: .now() + 0.2, execute: done)
                             }
                         }
                         it("makes no changes") {
@@ -2679,7 +2677,7 @@ final class LDClientSpec: QuickSpec {
 
                             waitUntil { done in
                                 testContext.subject.setRunMode(.background)
-                                DispatchQueue(label: "SetBackground").asyncAfter(deadline: .now() + 0.1, execute: done)
+                                DispatchQueue(label: "SetBackground").asyncAfter(deadline: .now() + 0.2, execute: done)
                             }
                         }
                         it("makes no changes") {
@@ -2699,7 +2697,7 @@ final class LDClientSpec: QuickSpec {
 
                                 waitUntil { done in
                                     testContext.subject.setRunMode(.foreground)
-                                    DispatchQueue(label: "StreamingMode").asyncAfter(deadline: .now() + 0.1, execute: done)
+                                    DispatchQueue(label: "StreamingMode").asyncAfter(deadline: .now() + 0.2, execute: done)
                                 }
                             }
                             it("leaves the event reporter offline") {
@@ -2718,7 +2716,7 @@ final class LDClientSpec: QuickSpec {
 
                                 waitUntil { done in
                                     testContext.subject.setRunMode(.foreground)
-                                    DispatchQueue(label: "ForegroundPollingMode").asyncAfter(deadline: .now() + 0.1, execute: done)
+                                    DispatchQueue(label: "ForegroundPollingMode").asyncAfter(deadline: .now() + 0.2, execute: done)
                                 }
                             }
                             it("leaves the event reporter offline") {
