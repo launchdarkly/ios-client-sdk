@@ -134,18 +134,22 @@ public class LDClient {
     private let setOnlineQueue: DispatchQueue = DispatchQueue(label: "SetOnlineQueue")
     
     private func internalSetOnline(_ goOnline: Bool, completion: (() -> Void)? = nil) {
-        guard goOnline, canGoOnline
-            else {
-                //go offline, which is not throttled
-                go(online: false, reasonOnlineUnavailable: reasonOnlineUnavailable(goOnline: goOnline), completion: completion)
-                return
-        }
-        
-        throttler.runThrottled {
-            //since going online was throttled, check the last called setOnline value and whether we can go online
-            self.go(online: goOnline && self.canGoOnline, reasonOnlineUnavailable: self.reasonOnlineUnavailable(goOnline: goOnline), completion: completion)
+        internalSetOnlineQueue.sync {
+            guard goOnline, self.canGoOnline
+                else {
+                    //go offline, which is not throttled
+                    self.go(online: false, reasonOnlineUnavailable: self.reasonOnlineUnavailable(goOnline: goOnline), completion: completion)
+                    return
+            }
+
+            self.throttler.runThrottled {
+                //since going online was throttled, check the last called setOnline value and whether we can go online
+                self.go(online: goOnline && self.canGoOnline, reasonOnlineUnavailable: self.reasonOnlineUnavailable(goOnline: goOnline), completion: completion)
+            }
         }
     }
+
+    private let internalSetOnlineQueue: DispatchQueue = DispatchQueue(label: "InternalSetOnlineQueue")
     
     private func go(online goOnline: Bool, reasonOnlineUnavailable: String, completion:(() -> Void)?) {
         let owner = "SetOnlineOwner" as AnyObject
@@ -267,7 +271,7 @@ public class LDClient {
     }
 
     func internalIdentify(newUser: LDUser, testing: Bool = false, completion: (() -> Void)? = nil) {
-        internalIdentifyQueue.async {
+        internalIdentifyQueue.sync {
             var internalUser = newUser
             if !testing {
                 internalUser.flagStore = FlagStore(featureFlagDictionary: newUser.flagStore.featureFlags, flagValueSource: newUser.flagStore.flagValueSource)
