@@ -37,14 +37,7 @@ final class CacheConverter: CacheConverting {
     }
 
     func convertCacheData(for user: LDUser, and config: LDConfig) {
-        var mobileKeys = [MobileKey]()
-        mobileKeys.insert(config.mobileKey, at: 0)
-        for (index, secondaryKey) in (config.secondaryMobileKeys?.enumerated() ?? [:].enumerated()) {
-            mobileKeys.insert(secondaryKey.value, at: (index + 1))
-        }
-        mobileKeys.forEach { mobileKey in
-            convertCacheData(for: user, mobileKey: mobileKey)
-        }
+        convertCacheData(for: user, mobileKey: config.mobileKey)
         removeData()
     }
 
