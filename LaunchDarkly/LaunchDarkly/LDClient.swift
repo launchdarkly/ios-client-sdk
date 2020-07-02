@@ -1049,10 +1049,6 @@ public class LDClient {
             completion?()
         }
     }
-    
-    private convenience init(serviceFactory: ClientServiceCreating, config: LDConfig, startUser: LDUser?, flagCache: FeatureFlagCaching, flagNotifier: FlagChangeNotifying, completion: (() -> Void)? = nil) {
-        self.init(serviceFactory: serviceFactory, configuration: config, startUser: startUser, newCache: flagCache, flagNotifier: flagNotifier, testing: true, completion: completion)
-    }
 }
 
 extension LDClient: TypeIdentifying { }
@@ -1098,7 +1094,7 @@ private extension Optional {
             for (name, mobileKey) in mobileKeys {
                 var internalConfig = config
                 internalConfig.mobileKey = mobileKey
-                let instance = LDClient(serviceFactory: serviceFactory, config: internalConfig, startUser: internalUser, flagCache: flagCache, flagNotifier: flagNotifier, completion: completionCheck)
+                let instance = LDClient(serviceFactory: serviceFactory, configuration: internalConfig, startUser: internalUser, newCache: flagCache, flagNotifier: flagNotifier, completion: completionCheck)
                 LDClient.instances?[name] = instance
             }
             completionCheck()
