@@ -1667,6 +1667,12 @@ final class LDClientSpec: QuickSpec {
                 testContext = TestContext(startOnline: true, completion: done)
             }
             eventType = streamingMode == .streaming ? eventType : nil
+            waitUntil { done in
+                testContext.subject.internalIdentify(newUser: testContext.user, testing: true, completion: done)
+                DispatchQueue(label: "OnSyncCompleteSuccessReplacingFlags").asyncAfter(deadline: .now() + 0.2) {
+                    testContext.subject.flagChangeNotifier.notifyObservers(user: testContext.user, oldFlags: testContext.oldFlags, oldFlagSource: testContext.oldFlagSource)
+                }
+            }
         }
 
         context("flags have different values") {
@@ -1825,6 +1831,12 @@ final class LDClientSpec: QuickSpec {
             waitUntil { done in
                 testContext = TestContext(startOnline: true, completion: done)
             }
+            waitUntil { done in
+                testContext.subject.internalIdentify(newUser: testContext.user, testing: true, completion: done)
+                DispatchQueue(label: "OnSyncCompleteStreamingPatch").asyncAfter(deadline: .now() + 0.2) {
+                    testContext.subject.flagChangeNotifier.notifyObservers(user: testContext.user, oldFlags: testContext.oldFlags, oldFlagSource: testContext.oldFlagSource)
+                }
+            }
         }
 
         context("update changes flags") {
@@ -1920,6 +1932,12 @@ final class LDClientSpec: QuickSpec {
         beforeEach {
             waitUntil { done in
                 testContext = TestContext(startOnline: true, completion: done)
+            }
+            waitUntil { done in
+                testContext.subject.internalIdentify(newUser: testContext.user, testing: true, completion: done)
+                DispatchQueue(label: "OnSyncCompleteDelete").asyncAfter(deadline: .now() + 0.2) {
+                    testContext.subject.flagChangeNotifier.notifyObservers(user: testContext.user, oldFlags: testContext.oldFlags, oldFlagSource: testContext.oldFlagSource)
+                }
             }
         }
 
@@ -2600,7 +2618,7 @@ final class LDClientSpec: QuickSpec {
     private func flushSpec() {
         var testContext: TestContext!
 
-        describe("reportEvents") {
+        describe("flush") {
             beforeEach {
                 waitUntil { done in
                     testContext = TestContext(completion: done)
@@ -2612,7 +2630,7 @@ final class LDClientSpec: QuickSpec {
             }
         }
         
-        describe("reportEvents when closing") {
+        describe("flush when closing") {
            beforeEach {
                 waitUntil { done in
                     testContext = TestContext(completion: done)
