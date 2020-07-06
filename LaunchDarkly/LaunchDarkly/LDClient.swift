@@ -118,21 +118,16 @@ public class LDClient {
      - parameter completion:  Completion closure called when setOnline completes (Optional)
      */
     public func setOnline(_ goOnline: Bool, completion: (() -> Void)? = nil) {
-        var internalCount = 0
-        for (_, instance) in LDClient.internalInstances {
-            instance.internalSetOnline(goOnline) {
-                self.setOnlineQueue.async {
-                    internalCount += 1
-                    if internalCount >= LDClient.internalInstances.count {
-                        completion?()
-                    }
-                }
-            }
+        let dispatch = DispatchGroup()
+        LDClient.instances?.forEach { _, instance in
+            dispatch.enter()
+            instance.internalSetOnline(goOnline, completion: dispatch.leave)
+        }
+        if let completion = completion {
+            dispatch.notify(queue: DispatchQueue.global(), execute: completion)
         }
     }
 
-    private let setOnlineQueue: DispatchQueue = DispatchQueue(label: "SetOnlineQueue")
-    
     private func internalSetOnline(_ goOnline: Bool, completion: (() -> Void)? = nil) {
         internalSetOnlineQueue.sync {
             guard goOnline, self.canGoOnline
@@ -231,9 +226,7 @@ public class LDClient {
     }
 
     public func setAllUserAttributesPrivate(_ allUserAttributesPrivate: Bool) {
-        for (_, instance) in LDClient.internalInstances {
-            instance.internalSetAllUserAttributesPrivate(allUserAttributesPrivate)
-        }
+        LDClient.instances?.forEach { $1.internalSetAllUserAttributesPrivate(allUserAttributesPrivate)}
     }
 
     private func internalSetAllUserAttributesPrivate(_ allUserAttributesPrivate: Bool) {
@@ -257,16 +250,13 @@ public class LDClient {
      - parameter completion: Closure called when the embedded `setOnlineIdentify` call completes, subject to throttling delays. (Optional)
     */
     public func identify(user: LDUser, completion: (() -> Void)? = nil) {
-        var internalCount = 0
-        for (_, instance) in LDClient.internalInstances {
-            instance.internalIdentify(newUser: user) {
-                self.identifyQueue.async {
-                    internalCount += 1
-                    if internalCount >= LDClient.internalInstances.count {
-                        completion?()
-                    }
-                }
-            }
+        let dispatch = DispatchGroup()
+        LDClient.instances?.forEach { _, instance in
+            dispatch.enter()
+            instance.internalIdentify(newUser: user, completion: dispatch.leave)
+        }
+        if let completion = completion {
+            dispatch.notify(queue: DispatchQueue.global(), execute: completion)
         }
     }
 
@@ -297,7 +287,6 @@ public class LDClient {
     }
     
     private let internalIdentifyQueue: DispatchQueue = DispatchQueue(label: "InternalIdentifyQueue")
-    private let identifyQueue: DispatchQueue = DispatchQueue(label: "IdentifyQueue")
 
     private(set) var service: DarklyServiceProvider {
         didSet {
@@ -318,9 +307,7 @@ public class LDClient {
      There is almost no reason to stop the LDClient. Normally, set the LDClient offline to stop communication with the LaunchDarkly servers. Stop the LDClient to stop recording events. There is no need to stop the LDClient prior to suspending, moving to the background, or terminating the app. The SDK will respond to these events as the system requires and as configured in LDConfig.
     */
     public func close() {
-        for (_, instance) in LDClient.internalInstances {
-            instance.internalClose()
-        }
+        LDClient.instances?.forEach { $1.internalClose() }
         LDClient.instances = nil
     }
     
@@ -815,9 +802,7 @@ public class LDClient {
     Report events to LaunchDarkly servers. While online, the LDClient automatically reports events on the `LDConfig.eventFlushInterval`, and whenever the client app moves to the background. There should normally not be a need to call reportEvents.
     */
     public func flush() {
-        for (_, instance) in LDClient.internalInstances {
-            instance.internalFlush()
-        }
+        LDClient.instances?.forEach { $1.internalFlush() }
     }
     
     private func internalFlush() {
