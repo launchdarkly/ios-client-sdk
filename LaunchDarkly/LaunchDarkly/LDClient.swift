@@ -23,13 +23,13 @@ enum LDClientRunMode {
  3. Because the LDClient is a singleton, you do not have to keep a reference to it in your code.
 
 ### Getting Feature Flags
- Once the LDClient has started, it makes your feature flags available using the `variation` and `variationAndSource` methods. A `variation` is a specific flag value. For example a boolean feature flag has 2 variations, `true` and `false`. You can create feature flags with more than 2 variations using other feature flag types. See `LDFlagValue` for the available types.
+ Once the LDClient has started, it makes your feature flags available using the `variation` and `variationDetail` methods. A `variation` is a specific flag value. For example a boolean feature flag has 2 variations, `true` and `false`. You can create feature flags with more than 2 variations using other feature flag types. See `LDFlagValue` for the available types.
  ````
- let boolFlag = LDClient.shared.variation(forKey: "my-bool-flag", fallback: false)
+ let boolFlag = LDClient.get().variation(forKey: "my-bool-flag", fallback: false)
  ````
- If you need to know the source of the variation provided to you for a specific feature flag, the `variationAndSource` method returns a tuple with the (value, source) in a single call.
+ If you need to know more information about why a given value is returned, use `variationDetail`.
 
- See `variation(forKey: fallback:)` or `variationAndSource(forKey: fallback:)` for details
+ See `variation(forKey: fallback:)` or `variationDetail(forKey: fallback:)` for details
 
 ### Observing Feature Flags
  You might need to know when a feature flag value changes. This is not required, you can check the flag's value when you need it.
@@ -40,7 +40,7 @@ enum LDClientRunMode {
     self?.updateFlag(key: "flag-key", changedFlag: changedFlag)
  }
  ````
- The `changedFlag` passed in to the closure contains the old and new value, and the old and new valueSource.
+ The `changedFlag` passed in to the closure contains the old and new value of the flag.
  */
 // swiftlint:disable type_body_length
 // swiftlint:disable file_length
@@ -221,7 +221,7 @@ public class LDClient {
         internalSetOnline(false)
         convertCachedData(skipDuringStart: isStarting)
         if let cachedFlags = flagCache.retrieveFeatureFlags(forUserWithKey: user.key, andMobileKey: config.mobileKey), !cachedFlags.isEmpty {
-            user.flagStore.replaceStore(newFlags: cachedFlags, source: .cache, completion: nil)
+            user.flagStore.replaceStore(newFlags: cachedFlags, completion: nil)
         }
 
         service = serviceFactory.makeDarklyServiceProvider(config: config, user: user)
@@ -274,7 +274,7 @@ public class LDClient {
         internalIdentifyQueue.sync {
             var internalUser = newUser
             if !testing {
-                internalUser.flagStore = FlagStore(featureFlagDictionary: newUser.flagStore.featureFlags, flagValueSource: newUser.flagStore.flagValueSource)
+                internalUser.flagStore = FlagStore(featureFlagDictionary: newUser.flagStore.featureFlags)
             }
             self.user = internalUser
             Log.debug(self.typeName(and: #function) + "new user set with key: " + self.user.key )
@@ -283,7 +283,7 @@ public class LDClient {
 
             self.convertCachedData(skipDuringStart: self.isStarting)
             if let cachedFlags = self.flagCache.retrieveFeatureFlags(forUserWithKey: self.user.key, andMobileKey: self.config.mobileKey), !cachedFlags.isEmpty {
-                self.user.flagStore.replaceStore(newFlags: cachedFlags, source: .cache, completion: nil)
+                self.user.flagStore.replaceStore(newFlags: cachedFlags, completion: nil)
             }
             self.service = self.serviceFactory.makeDarklyServiceProvider(config: self.config, user: self.user)
             self.service.clearFlagResponseCache()
@@ -374,7 +374,7 @@ public class LDClient {
     /* FF Value Requests
      Conceptual Model
      The LDClient is the focal point for flag value requests. It should appear to the app that the client contains a store of [key: value] pairs where the keys are all strings and the values any of the supported LD flag types (Bool, Int, Double, String, Array, Dictionary).
-     When asked for a variation value, the LDClient provides either the value, or the value and LDVariationSource as a tuple.
+     When asked for a variation value, the LDClient provides either the value, or the value along with an explanation.
     */
     
     /**
@@ -416,7 +416,7 @@ public class LDClient {
     */
     /// - Tag: variationWithFallback
     public func variation<T: LDFlagValueConvertible>(forKey flagKey: LDFlagKey, fallback: T) -> T {
-        return variation(forKey: flagKey, fallback: fallback as T?) ?? fallback     //the fallback cast to 'as T?' directs the call to the Optional-returning variation method
+        variation(forKey: flagKey, fallback: fallback as T?) ?? fallback     //the fallback cast to 'as T?' directs the call to the Optional-returning variation method
     }
     
     /**
@@ -430,7 +430,7 @@ public class LDClient {
     public func variationDetail<T: LDFlagValueConvertible>(forKey flagKey: LDFlagKey, fallback: T) -> EvaluationDetail<T> {
         let featureFlag = user.flagStore.featureFlag(for: flagKey)
         let reason = checkErrorKinds(featureFlag: featureFlag) ?? featureFlag?.reason
-        let (value, _) = variationAndSourceInternal(forKey: flagKey, fallback: fallback, includeReason: true)
+        let value = variationInternal(forKey: flagKey, fallback: fallback, includeReason: true)
         return EvaluationDetail(value: value ?? fallback, variationIndex: featureFlag?.variation, reason: reason)
     }
     
@@ -487,8 +487,7 @@ public class LDClient {
      */
     /// - Tag: variationWithoutFallback
     public func variation<T: LDFlagValueConvertible>(forKey flagKey: LDFlagKey, fallback: T? = nil) -> T? {
-        let (value, _) = variationAndSourceInternal(forKey: flagKey, fallback: fallback, includeReason: false)
-        return value
+        variationInternal(forKey: flagKey, fallback: fallback, includeReason: false)
     }
     
     /**
@@ -502,37 +501,33 @@ public class LDClient {
     public func variationDetail<T: LDFlagValueConvertible>(forKey flagKey: LDFlagKey, fallback: T? = nil) -> EvaluationDetail<T?> {
         let featureFlag = user.flagStore.featureFlag(for: flagKey)
         let reason = checkErrorKinds(featureFlag: featureFlag) ?? featureFlag?.reason
-        let (value, _) = variationAndSourceInternal(forKey: flagKey, fallback: fallback, includeReason: true)
+        let value = variationInternal(forKey: flagKey, fallback: fallback, includeReason: true)
         return EvaluationDetail(value: value, variationIndex: featureFlag?.variation, reason: reason)
     }
     
-    internal func variationAndSourceInternal<T: LDFlagValueConvertible>(forKey flagKey: LDFlagKey, fallback: T) -> (T, LDFlagValueSource) {
-        let (value, source) = variationAndSourceInternal(forKey: flagKey, fallback: fallback as T?, includeReason: false)
-        return (value ?? fallback, source)  //Because the fallback is wrapped into an Optional, the nil coalescing right side should never be called
+    internal func variationInternal<T: LDFlagValueConvertible>(forKey flagKey: LDFlagKey, fallback: T) -> T {
+        let value = variationInternal(forKey: flagKey, fallback: fallback as T?, includeReason: false)
+        return value ?? fallback //Because the fallback is wrapped into an Optional, the nil coalescing right side should never be called
     }
     
-    internal func variationAndSourceInternal<T: LDFlagValueConvertible>(forKey flagKey: LDFlagKey, fallback: T? = nil, includeReason: Bool? = false) -> (T?, LDFlagValueSource) {
+    internal func variationInternal<T: LDFlagValueConvertible>(forKey flagKey: LDFlagKey, fallback: T? = nil, includeReason: Bool? = false) -> T? {
         guard hasStarted
         else {
-            Log.debug(typeName(and: #function) + "returning fallback: \(fallback.stringValue), source: \(LDFlagValueSource.fallback)." + " LDClient not started.")
-            return (fallback, .fallback)
+            Log.debug(typeName(and: #function) + "returning fallback: \(fallback.stringValue)." + " LDClient not started.")
+            return fallback
         }
-        let (featureFlag, flagStoreSource) = user.flagStore.featureFlagAndSource(for: flagKey)
-        let (value, source): (T?, LDFlagValueSource) = valueAndSource(from: featureFlag, fallback: fallback, source: flagStoreSource)
-        let failedConversionMessage = self.failedConversionMessage(featureFlag: featureFlag, source: source, fallback: fallback)
-        Log.debug(typeName(and: #function) + "flagKey: \(flagKey), value: \(value.stringValue), fallback: \(fallback.stringValue), featureFlag: \(featureFlag.stringValue), source: \(source), reason: \(featureFlag?.reason?.description ?? "No evaluation reason")."
+        let featureFlag = user.flagStore.featureFlag(for: flagKey)
+        let value = (featureFlag?.value as? T) ?? fallback
+        let failedConversionMessage = self.failedConversionMessage(featureFlag: featureFlag, fallback: fallback)
+        Log.debug(typeName(and: #function) + "flagKey: \(flagKey), value: \(value.stringValue), fallback: \(fallback.stringValue), featureFlag: \(featureFlag.stringValue), reason: \(featureFlag?.reason?.description ?? "No evaluation reason")."
             + "\(failedConversionMessage)")
         eventReporter.recordFlagEvaluationEvents(flagKey: flagKey, value: value, defaultValue: fallback, featureFlag: featureFlag, user: user, includeReason: includeReason ?? false)
-        return (value, source)
+        return value
     }
 
-    private func failedConversionMessage<T>(featureFlag: FeatureFlag?, source: LDFlagValueSource, fallback: T?) -> String {
+    private func failedConversionMessage<T>(featureFlag: FeatureFlag?, fallback: T?) -> String {
         if featureFlag == nil {
             return " Feature flag not found."
-        }
-        guard source == .fallback
-        else {
-            return ""
         }
         return " LDClient was unable to convert the feature flag to the requested type (\(T.self))."
             + (isCollection(fallback) ? " The fallback value type is a collection. Make sure the element of the fallback value's type is not too restrictive for the actual feature flag type." : "")
@@ -563,14 +558,6 @@ public class LDClient {
         return user.flagStore.featureFlags.allFlagValues
     }
 
-    private func valueAndSource<T>(from featureFlag: FeatureFlag?, fallback: T?, source: LDFlagValueSource?) -> (T?, LDFlagValueSource) {
-        guard let value = featureFlag?.value as? T
-        else {
-            return (fallback, .fallback)
-        }
-        return (value, source ?? .fallback)
-    }
-
     // MARK: Feature Flag Updates
     
     /* FF Change Notification
@@ -584,7 +571,7 @@ public class LDClient {
     */
     
     /**
-     Sets a handler for the specified flag key executed on the specified owner. If the flag's value changes, executes the handler, passing in the `changedFlag` containing the old and new flag values, and old and new flag value source. See `LDChangedFlag` for details.
+     Sets a handler for the specified flag key executed on the specified owner. If the flag's value changes, executes the handler, passing in the `changedFlag` containing the old and new flag values. See `LDChangedFlag` for details.
 
      The SDK retains only weak references to the owner, which allows the client app to freely destroy observer owners without issues. Client apps should use a capture list specifying `[weak self]` inside handlers to avoid retain cycles causing a memory leak.
 
@@ -616,7 +603,7 @@ public class LDClient {
     }
     
     /**
-     Sets a handler for the specified flag keys executed on the specified owner. If any observed flag's value changes, executes the handler 1 time, passing in a dictionary of [LDFlagKey: LDChangedFlag] containing the old and new flag values, and old and new flag value source. See `LDChangedFlag` for details.
+     Sets a handler for the specified flag keys executed on the specified owner. If any observed flag's value changes, executes the handler 1 time, passing in a dictionary of [LDFlagKey: LDChangedFlag] containing the old and new flag values. See `LDChangedFlag` for details.
 
      The SDK retains only weak references to owner, which allows the client app to freely destroy observer owners without issues. Client apps should use a capture list specifying `[weak self]` inside handlers to avoid retain cycles causing a memory leak.
 
@@ -646,7 +633,7 @@ public class LDClient {
     }
 
     /**
-     Sets a handler for all flag keys executed on the specified owner. If any flag's value changes, executes the handler 1 time, passing in a dictionary of [LDFlagKey: LDChangedFlag] containing the old and new flag values, and old and new flag value source. See `LDChangedFlag` for details.
+     Sets a handler for all flag keys executed on the specified owner. If any flag's value changes, executes the handler 1 time, passing in a dictionary of [LDFlagKey: LDChangedFlag] containing the old and new flag values. See `LDChangedFlag` for details.
 
      The SDK retains only weak references to owner, which allows the client app to freely destroy observer owners without issues. Client apps should use a capture list specifying `[weak self]` inside handlers to avoid retain cycles causing a memory leak.
 
@@ -749,20 +736,19 @@ public class LDClient {
         switch result {
         case let .success(flagDictionary, streamingEvent):
             let oldFlags = user.flagStore.featureFlags
-            let oldFlagSource = user.flagStore.flagValueSource
             connectionInformation = ConnectionInformation.checkEstablishingStreaming(connectionInformation: connectionInformation)
             switch streamingEvent {
             case nil, .ping?, .put?:
-                user.flagStore.replaceStore(newFlags: flagDictionary, source: .server) {
-                    self.updateCacheAndReportChanges(user: self.user, oldFlags: oldFlags, oldFlagSource: oldFlagSource)
+                user.flagStore.replaceStore(newFlags: flagDictionary) {
+                    self.updateCacheAndReportChanges(user: self.user, oldFlags: oldFlags)
                 }
             case .patch?:
-                user.flagStore.updateStore(updateDictionary: flagDictionary, source: .server) {
-                    self.updateCacheAndReportChanges(user: self.user, oldFlags: oldFlags, oldFlagSource: oldFlagSource)
+                user.flagStore.updateStore(updateDictionary: flagDictionary) {
+                    self.updateCacheAndReportChanges(user: self.user, oldFlags: oldFlags)
                 }
             case .delete?:
                 user.flagStore.deleteFlag(deleteDictionary: flagDictionary) {
-                    self.updateCacheAndReportChanges(user: self.user, oldFlags: oldFlags, oldFlagSource: oldFlagSource)
+                    self.updateCacheAndReportChanges(user: self.user, oldFlags: oldFlags)
                 }
             }
         case .error(let synchronizingError):
@@ -782,10 +768,9 @@ public class LDClient {
     }
 
     private func updateCacheAndReportChanges(user: LDUser,
-                                             oldFlags: [LDFlagKey: FeatureFlag],
-                                             oldFlagSource: LDFlagValueSource) {
+                                             oldFlags: [LDFlagKey: FeatureFlag]) {
         flagCache.storeFeatureFlags(user.flagStore.featureFlags, forUser: user, andMobileKey: config.mobileKey, lastUpdated: Date(), storeMode: .async)
-        flagChangeNotifier.notifyObservers(user: user, oldFlags: oldFlags, oldFlagSource: oldFlagSource)
+        flagChangeNotifier.notifyObservers(user: user, oldFlags: oldFlags)
     }
 
     // MARK: - Events

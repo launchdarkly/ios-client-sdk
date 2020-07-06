@@ -32,13 +32,9 @@ public class ObjcLDChangedFlag: NSObject {
     fileprivate init(_ changedFlag: LDChangedFlag) {
         self.changedFlag = changedFlag
     }
-
-    fileprivate func sourceString(forSource source: LDFlagValueSource?, typeMismatch: Bool) -> String {
-        typeMismatch ? ObjcLDChangedFlag.typeMismatch : LDFlagValueSource.toString(source)
-    }
 }
 
-///Wraps the changed feature flag's BOOL values and sources.
+///Wraps the changed feature flag's BOOL values.
 ///
 ///If the flag is not actually a BOOL the SDK sets the old and new value to false, and old and new valueSource to 'type mismatch'.
 @objc(LDBoolChangedFlag)
@@ -51,14 +47,6 @@ public final class ObjcLDBoolChangedFlag: ObjcLDChangedFlag {
     @objc public var newValue: Bool {
         (changedFlag.newValue as? Bool) ?? false
     }
-    ///The changed flag value's source before it changed
-    @objc public var oldValueSource: ObjcLDFlagValueSource {
-        ObjcLDFlagValueSource(changedFlag.oldValueSource, typeMismatch: typeMismatch)
-    }
-    ///The changed flag value's source after it changed
-    @objc public var newValueSource: ObjcLDFlagValueSource {
-        ObjcLDFlagValueSource(changedFlag.newValueSource, typeMismatch: typeMismatch)
-    }
 
     override init(_ changedFlag: LDChangedFlag) {
         super.init(changedFlag)
@@ -69,7 +57,7 @@ public final class ObjcLDBoolChangedFlag: ObjcLDChangedFlag {
     }
 }
 
-///Wraps the changed feature flag's NSInteger values and sources.
+///Wraps the changed feature flag's NSInteger values.
 ///
 ///If the flag is not actually an NSInteger the SDK sets the old and new value to 0, and old and new valueSource to 'type mismatch'.
 @objc(LDIntegerChangedFlag)
@@ -82,14 +70,6 @@ public final class ObjcLDIntegerChangedFlag: ObjcLDChangedFlag {
     @objc public var newValue: Int {
         (changedFlag.newValue as? Int) ?? 0
     }
-    ///The changed flag value's source before it changed
-    @objc public var oldValueSource: ObjcLDFlagValueSource {
-        ObjcLDFlagValueSource(changedFlag.oldValueSource, typeMismatch: typeMismatch)
-    }
-    ///The changed flag value's source after it changed
-    @objc public var newValueSource: ObjcLDFlagValueSource {
-        ObjcLDFlagValueSource(changedFlag.newValueSource, typeMismatch: typeMismatch)
-    }
 
     override init(_ changedFlag: LDChangedFlag) {
         super.init(changedFlag)
@@ -100,7 +80,7 @@ public final class ObjcLDIntegerChangedFlag: ObjcLDChangedFlag {
     }
 }
 
-///Wraps the changed feature flag's double values and sources.
+///Wraps the changed feature flag's double values.
 ///
 ///If the flag is not actually a double the SDK sets the old and new value to 0.0, and old and new valueSource to 'type mismatch'.
 @objc(LDDoubleChangedFlag)
@@ -113,14 +93,6 @@ public final class ObjcLDDoubleChangedFlag: ObjcLDChangedFlag {
     @objc public var newValue: Double {
         (changedFlag.newValue as? Double) ?? 0.0
     }
-    ///The changed flag value's source before it changed
-    @objc public var oldValueSource: ObjcLDFlagValueSource {
-        ObjcLDFlagValueSource(changedFlag.oldValueSource, typeMismatch: typeMismatch)
-    }
-    ///The changed flag value's source after it changed
-    @objc public var newValueSource: ObjcLDFlagValueSource {
-        ObjcLDFlagValueSource(changedFlag.newValueSource, typeMismatch: typeMismatch)
-    }
 
     override init(_ changedFlag: LDChangedFlag) {
         super.init(changedFlag)
@@ -131,7 +103,7 @@ public final class ObjcLDDoubleChangedFlag: ObjcLDChangedFlag {
     }
 }
 
-///Wraps the changed feature flag's NSString values and sources.
+///Wraps the changed feature flag's NSString values.
 ///
 ///If the flag is not actually an NSString the SDK sets the old and new value to nil, and old and new valueSource to 'type mismatch'.
 @objc(LDStringChangedFlag)
@@ -144,14 +116,6 @@ public final class ObjcLDStringChangedFlag: ObjcLDChangedFlag {
     @objc public var newValue: String? {
         (changedFlag.newValue as? String)
     }
-    ///The changed flag value's source before it changed
-    @objc public var oldValueSource: ObjcLDFlagValueSource {
-        ObjcLDFlagValueSource(changedFlag.oldValueSource, typeMismatch: typeMismatch)
-    }
-    ///The changed flag value's source after it changed
-    @objc public var newValueSource: ObjcLDFlagValueSource {
-        ObjcLDFlagValueSource(changedFlag.newValueSource, typeMismatch: typeMismatch)
-    }
     
     override init(_ changedFlag: LDChangedFlag) {
         super.init(changedFlag)
@@ -162,7 +126,7 @@ public final class ObjcLDStringChangedFlag: ObjcLDChangedFlag {
     }
 }
 
-///Wraps the changed feature flag's NSArray values and sources.
+///Wraps the changed feature flag's NSArray values.
 ///
 ///If the flag is not actually a NSArray the SDK sets the old and new value to nil, and old and new valueSource to 'type mismatch'.
 @objc(LDArrayChangedFlag)
@@ -175,14 +139,6 @@ public final class ObjcLDArrayChangedFlag: ObjcLDChangedFlag {
     @objc public var newValue: [Any]? {
         changedFlag.newValue as? [Any]
     }
-    ///The changed flag value's source before it changed
-    @objc public var oldValueSource: ObjcLDFlagValueSource {
-        ObjcLDFlagValueSource(changedFlag.oldValueSource, typeMismatch: typeMismatch)
-    }
-    ///The changed flag value's source after it changed
-    @objc public var newValueSource: ObjcLDFlagValueSource {
-        ObjcLDFlagValueSource(changedFlag.newValueSource, typeMismatch: typeMismatch)
-    }
 
     override init(_ changedFlag: LDChangedFlag) {
         super.init(changedFlag)
@@ -193,7 +149,7 @@ public final class ObjcLDArrayChangedFlag: ObjcLDChangedFlag {
     }
 }
 
-///Wraps the changed feature flag's NSDictionary values and sources.
+///Wraps the changed feature flag's NSDictionary values.
 ///
 ///If the flag is not actually an NSDictionary the SDK sets the old and new value to nil, and old and new valueSource to 'type mismatch'.
 @objc(LDDictionaryChangedFlag)
@@ -206,14 +162,6 @@ public final class ObjcLDDictionaryChangedFlag: ObjcLDChangedFlag {
     @objc public var newValue: [String: Any]? {
         changedFlag.newValue as? [String: Any]
     }
-    ///The changed flag value's source before it changed
-    @objc public var oldValueSource: ObjcLDFlagValueSource {
-        ObjcLDFlagValueSource(changedFlag.oldValueSource, typeMismatch: typeMismatch)
-    }
-    ///The changed flag value's source after it changed
-    @objc public var newValueSource: ObjcLDFlagValueSource {
-        ObjcLDFlagValueSource(changedFlag.newValueSource, typeMismatch: typeMismatch)
-    }
 
     override init(_ changedFlag: LDChangedFlag) {
         super.init(changedFlag)
@@ -221,16 +169,6 @@ public final class ObjcLDDictionaryChangedFlag: ObjcLDChangedFlag {
 
     private var typeMismatch: Bool {
         !(sourceValue is [String: Any])
-    }
-}
-
-extension LDFlagValueSource {
-    static func toString(_ source: LDFlagValueSource?) -> String {
-        guard let source = source
-        else {
-            return ObjcLDChangedFlag.nilSource
-        }
-        return "\(source)"
     }
 }
 
