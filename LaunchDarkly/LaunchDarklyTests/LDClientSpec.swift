@@ -18,7 +18,7 @@ final class LDClientSpec: QuickSpec {
         fileprivate static let newFlagKey = "LDClientSpec.newFlagKey"
         fileprivate static let newFlagValue = "LDClientSpec.newFlagValue"
 
-        fileprivate static let updateThreshold: TimeInterval = 0.01
+        fileprivate static let updateThreshold: TimeInterval = 0.05
     }
 
     struct BadFlagKeys {
