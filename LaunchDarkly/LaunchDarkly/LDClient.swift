@@ -16,16 +16,16 @@ enum LDClientRunMode {
 ## Usage
 ### Startup
  1. To customize, configure a `LDConfig` and `LDUser`. The `config` is required, the `user` is optional. Both give you additional control over the feature flags delivered to the LDClient. See `LDConfig` & `LDUser` for more details.
-    - The mobileKey set into the `LDConfig` comes from your LaunchDarkly Account settings (on the left, at the bottom). If you have multiple projects be sure to choose the correct Mobile key.
- 2. Call `LDClient.shared.start(config: user: completion:)`
+    - The mobileKey set into the `LDConfig` comes from your LaunchDarkly Account settings. If you have multiple projects be sure to choose the correct Mobile key.
+ 2. Call `LDClient.start(config: user: completion:)`
     - If you do not pass in a LDUser, LDCLient will create a default for you.
-    - The optional completion closure allows the LDClient to notify your app when it has gone online.
- 3. Because the LDClient is a singleton, you do not have to keep a reference to it in your code.
+    - The optional completion closure allows the LDClient to notify your app when it received flag values.
+ 3. Because LDClient instances are stored statically, you do not have to keep a reference to it in your code. Get the primary instances with `LDClient.get()`
 
 ### Getting Feature Flags
  Once the LDClient has started, it makes your feature flags available using the `variation` and `variationDetail` methods. A `variation` is a specific flag value. For example a boolean feature flag has 2 variations, `true` and `false`. You can create feature flags with more than 2 variations using other feature flag types. See `LDFlagValue` for the available types.
  ````
- let boolFlag = LDClient.get().variation(forKey: "my-bool-flag", fallback: false)
+ let boolFlag = LDClient.get()?.variation(forKey: "my-bool-flag", fallback: false)
  ````
  If you need to know more information about why a given value is returned, use `variationDetail`.
 
@@ -36,7 +36,7 @@ enum LDClientRunMode {
 
  If you want to know when a feature flag value changes, you can check the flag's value. You can also use one of several `observe` methods to have the LDClient notify you when a change occurs. There are several options--you can set up notificiations based on when a specific flag changes, when any flag in a collection changes, or when a flag doesn't change.
  ````
- LDClient.shared.observe("flag-key", owner: self, observer: { [weak self] (changedFlag) in
+ LDClient.get()?.observe("flag-key", owner: self, observer: { [weak self] (changedFlag) in
     self?.updateFlag(key: "flag-key", changedFlag: changedFlag)
  }
  ````
@@ -394,19 +394,19 @@ public class LDClient {
 
      ### Usage
      ````
-     let boolFeatureFlagValue = LDClient.shared.variation(forKey: "bool-flag-key", fallback: false) //boolFeatureFlagValue is a Bool
+     let boolFeatureFlagValue = LDClient.get()!.variation(forKey: "bool-flag-key", fallback: false) //boolFeatureFlagValue is a Bool
      ````
      **Important** The fallback value tells the SDK the type of the feature flag. In several cases, the feature flag type cannot be determined by the values sent from the server. It is possible to provide a fallback value with a type that does not match the feature flag value's type. The SDK will attempt to convert the feature flag's value into the type of the fallback value in the variation request. If that cast fails, the SDK will not be able to determine the correct return type, and will always return the fallback value.
 
-     Pay close attention to the type of the fallback value for collections. If the fallback collection type is more restrictive than the feature flag, the sdk will return the fallback even though the feature flag is present because it cannot convert the feature flag into the type requested via the fallback value. For example, if the feature flag has the type `[LDFlagKey: Any]`, but the fallback has the type `[LDFlagKey: Int]`, the sdk will not be able to convert the flags into the requested type, and will return the fallback value.
+     Pay close attention to the type of the fallback value for collections. If the fallback collection type is more restrictive than the feature flag, the sdk will return the fallback even though the feature flag is present because it cannot convert the feature flag into the type requested via the fallback value. For example, if the feature flag has the type `[String: Any]`, but the fallback has the type `[String: Int]`, the sdk will not be able to convert the flags into the requested type, and will return the fallback value.
 
-     To avoid this, make sure the fallback type matches the expected feature flag type. Either specify the fallback value type to be the feature flag type, or cast the fallback value to the feature flag type prior to making the variation request. In the above example, either specify that the fallback value's type is [LDFlagKey: Any]:
+     To avoid this, make sure the fallback type matches the expected feature flag type. Either specify the fallback value type to be the feature flag type, or cast the fallback value to the feature flag type prior to making the variation request. In the above example, either specify that the fallback value's type is [String: Any]:
      ````
-     let fallbackValue: [LDFlagKey: Any] = ["a": 1, "b": 2]     //dictionary type would be [String: Int] without the type specifier
+     let fallbackValue: [String: Any] = ["a": 1, "b": 2]     //dictionary type would be [String: Int] without the type specifier
      ````
      or cast the fallback value into the feature flag type prior to calling variation:
      ````
-     let dictionaryFlagValue = LDClient.shared.variation(forKey: "dictionary-key", fallback: ["a": 1, "b": 2] as [LDFlagKey: Any])  //cast always succeeds since the destination type is less restrictive
+     let dictionaryFlagValue = LDClient.get()!.variation(forKey: "dictionary-key", fallback: ["a": 1, "b": 2] as [String: Any])
      ````
 
      - parameter forKey: The LDFlagKey for the requested feature flag.
@@ -461,7 +461,7 @@ public class LDClient {
 
      ### Usage
      ````
-     let boolFeatureFlagValue: Bool? = LDClient.shared.variation(forKey: "bool-flag-key", fallback: nil) //boolFeatureFlagValue is a Bool?
+     let boolFeatureFlagValue: Bool? = LDClient.get()!.variation(forKey: "bool-flag-key", fallback: nil) //boolFeatureFlagValue is a Bool?
      ````
      **Important** The fallback value tells the SDK the type of the feature flag. In several cases, the feature flag type cannot be determined by the values sent from the server. It is possible to provide a fallback value with a type that does not match the feature flag value's type. The SDK will attempt to convert the feature flag's value into the type of the fallback value in the variation request. If that cast fails, the SDK will not be able to determine the correct return type, and will always return the fallback value.
 
@@ -469,15 +469,15 @@ public class LDClient {
 
      For this method, the fallback value is defaulted to `nil`, allowing the call site to omit the fallback value.
 
-     Pay close attention to the type of the fallback value for collections. If the fallback collection type is more restrictive than the feature flag, the sdk will return the fallback even though the feature flag is present because it cannot convert the feature flag into the type requested via the fallback value. For example, if the feature flag has the type `[LDFlagKey: Any]`, but the fallback has the type `[LDFlagKey: Int]`, the sdk will not be able to convert the flags into the requested type, and will return the fallback value.
+     Pay close attention to the type of the fallback value for collections. If the fallback collection type is more restrictive than the feature flag, the sdk will return the fallback even though the feature flag is present because it cannot convert the feature flag into the type requested via the fallback value. For example, if the feature flag has the type `[String: Any]`, but the fallback has the type `[String: Int]`, the sdk will not be able to convert the flags into the requested type, and will return the fallback value.
 
-     To avoid this, make sure the fallback type matches the expected feature flag type. Either specify the fallback value type to be the feature flag type, or cast the fallback value to the feature flag type prior to making the variation request. In the above example, either specify that the fallback value's type is [LDFlagKey: Any]:
+     To avoid this, make sure the fallback type matches the expected feature flag type. Either specify the fallback value type to be the feature flag type, or cast the fallback value to the feature flag type prior to making the variation request. In the above example, either specify that the fallback value's type is [String: Any]:
      ````
-     let fallbackValue: [LDFlagKey: Any]? = ["a": 1, "b": 2]     //dictionary type would be [String: Int] without the type specifier
+     let fallbackValue: [String: Any]? = ["a": 1, "b": 2]     //dictionary type would be [String: Int] without the type specifier
      ````
      or cast the fallback value into the feature flag type prior to calling variation:
      ````
-     let dictionaryFlagValue = LDClient.shared.variation(forKey: "dictionary-key", fallback: ["a": 1, "b": 2] as [LDFlagKey: Any]?)  //cast always succeeds since the destination type is less restrictive
+     let dictionaryFlagValue = LDClient.get()!.variation(forKey: "dictionary-key", fallback: ["a": 1, "b": 2] as [String: Any]?)
      ````
 
      - parameter forKey: The LDFlagKey for the requested feature flag.
@@ -586,14 +586,10 @@ public class LDClient {
 
      ### Usage
      ````
-     LDClient.shared.observe("flag-key", owner: self) { [weak self] (changedFlag) in
+     LDClient.get()?.observe("flag-key", owner: self) { [weak self] (changedFlag) in
         if let newValue = changedFlag.newValue as? Bool {
             //do something with the newValue
         }
-    ///The LDClient will report events on the LDConfig.eventFlushInterval and when the client app moves to the background. There should normally not be a need to call reportEvents.
-    public func reportEvents() {
-        eventReporter.reportEvents()
-     }
      ````
 
      - parameter key: The LDFlagKey for the flag to observe.
@@ -618,7 +614,7 @@ public class LDClient {
 
      ### Usage
      ````
-     LDClient.shared.observe(flagKeys, owner: self) { [weak self] (changedFlags) in     // changedFlags is a [LDFlagKey: LDChangedFlag]
+     LDClient.get()?.observe(flagKeys, owner: self) { [weak self] (changedFlags) in     // changedFlags is a [LDFlagKey: LDChangedFlag]
         //There will be an LDChangedFlag entry in changedFlags for each changed flag. The closure will only be called once regardless of how many flags changed.
         if let someChangedFlag = changedFlags["some-flag-key"] {    // someChangedFlag is a LDChangedFlag
             //do something with someChangedFlag
@@ -648,7 +644,7 @@ public class LDClient {
 
      ### Usage
      ````
-     LDClient.shared.observeAll(owner: self) { [weak self] (changedFlags) in     // changedFlags is a [LDFlagKey: LDChangedFlag]
+     LDClient.get()?.observeAll(owner: self) { [weak self] (changedFlags) in     // changedFlags is a [LDFlagKey: LDChangedFlag]
         //There will be an LDChangedFlag entry in changedFlags for each changed flag. The closure will only be called once regardless of how many flags changed.
         if let someChangedFlag = changedFlags["some-flag-key"] {    // someChangedFlag is a LDChangedFlag
             //do something with someChangedFlag
@@ -677,8 +673,9 @@ public class LDClient {
 
      ### Usage
      ````
-     LDClient.shared.observeFlagsUnchanged(owner: self) { [weak self] in
-        //do something after the flags were not updated. The closure will be called once on the main thread if the client is polling and the poll did not change any flag values.
+     LDClient.get()?.observeFlagsUnchanged(owner: self) { [weak self] in
+         // Do something after an update was received that did not update any flag values.
+         //The closure will be called once on the main thread after the update.
      }
      ````
 
@@ -701,7 +698,7 @@ public class LDClient {
      
      ### Usage
      ````
-     LDClient.shared.observeCurrentConnectionMode(owner: self) { [weak self] in
+     LDClient.get()?.observeCurrentConnectionMode(owner: self) { [weak self] in
         //do something after ConnectionMode was updated.
      }
      ````
@@ -793,7 +790,7 @@ public class LDClient {
      ### Usage
      ````
      let appEventData = ["some-custom-key: "some-custom-value", "another-custom-key": 7]
-     LDClient.shared.trackEvent(key: "app-event-key", data: appEventData)
+     LDClient.get()?.trackEvent(key: "app-event-key", data: appEventData)
      ````
 
      - parameter key: The key for the event. The SDK does nothing with the key, which can be any string the client app sends
