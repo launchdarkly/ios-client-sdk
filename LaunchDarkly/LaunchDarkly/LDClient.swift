@@ -529,6 +529,9 @@ public class LDClient {
         if featureFlag == nil {
             return " Feature flag not found."
         }
+        if (featureFlag?.value as? T) != nil {
+            return ""
+        }
         return " LDClient was unable to convert the feature flag to the requested type (\(T.self))."
             + (isCollection(fallback) ? " The fallback value type is a collection. Make sure the element of the fallback value's type is not too restrictive for the actual feature flag type." : "")
     }
