@@ -416,7 +416,8 @@ public class LDClient {
     */
     /// - Tag: variationWithFallback
     public func variation<T: LDFlagValueConvertible>(forKey flagKey: LDFlagKey, fallback: T) -> T {
-        variation(forKey: flagKey, fallback: fallback as T?) ?? fallback     //the fallback cast to 'as T?' directs the call to the Optional-returning variation method
+        //the fallback cast to 'as T?' directs the call to the Optional-returning variation method
+        variation(forKey: flagKey, fallback: fallback as T?) ?? fallback
     }
     
     /**
@@ -506,8 +507,8 @@ public class LDClient {
     }
     
     internal func variationInternal<T: LDFlagValueConvertible>(forKey flagKey: LDFlagKey, fallback: T) -> T {
-        let value = variationInternal(forKey: flagKey, fallback: fallback as T?, includeReason: false)
-        return value ?? fallback //Because the fallback is wrapped into an Optional, the nil coalescing right side should never be called
+        //Because the fallback is wrapped into an Optional, the nil coalescing right side should never be called
+        variationInternal(forKey: flagKey, fallback: fallback as T?, includeReason: false) ?? fallback
     }
     
     internal func variationInternal<T: LDFlagValueConvertible>(forKey flagKey: LDFlagKey, fallback: T? = nil, includeReason: Bool? = false) -> T? {
@@ -529,7 +530,7 @@ public class LDClient {
         if featureFlag == nil {
             return " Feature flag not found."
         }
-        if (featureFlag?.value as? T) != nil {
+        if featureFlag?.value is T {
             return ""
         }
         return " LDClient was unable to convert the feature flag to the requested type (\(T.self))."
