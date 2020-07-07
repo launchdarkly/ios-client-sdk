@@ -452,10 +452,10 @@ final class FlagChangeNotifyingMock: FlagChangeNotifying {
     // MARK: notifyObservers
     var notifyObserversCallCount = 0
     var notifyObserversCallback: (() -> Void)?
-    var notifyObserversReceivedArguments: (user: LDUser, oldFlags: [LDFlagKey: FeatureFlag], oldFlagSource: LDFlagValueSource)?
-    func notifyObservers(user: LDUser, oldFlags: [LDFlagKey: FeatureFlag], oldFlagSource: LDFlagValueSource) {
+    var notifyObserversReceivedArguments: (user: LDUser, oldFlags: [LDFlagKey: FeatureFlag])?
+    func notifyObservers(user: LDUser, oldFlags: [LDFlagKey: FeatureFlag]) {
         notifyObserversCallCount += 1
-        notifyObserversReceivedArguments = (user: user, oldFlags: oldFlags, oldFlagSource: oldFlagSource)
+        notifyObserversReceivedArguments = (user: user, oldFlags: oldFlags)
         notifyObserversCallback?()
     }
 }
@@ -473,33 +473,23 @@ final class FlagMaintainingMock: FlagMaintaining {
         }
     }
 
-    // MARK: flagValueSource
-    var flagValueSourceSetCount = 0
-    var setFlagValueSourceCallback: (() -> Void)?
-    var flagValueSource: LDFlagValueSource = .cache {
-        didSet {
-            flagValueSourceSetCount += 1
-            setFlagValueSourceCallback?()
-        }
-    }
-
     // MARK: replaceStore
     var replaceStoreCallCount = 0
     var replaceStoreCallback: (() -> Void)?
-    var replaceStoreReceivedArguments: (newFlags: [LDFlagKey: Any]?, source: LDFlagValueSource, completion: CompletionClosure?)?
-    func replaceStore(newFlags: [LDFlagKey: Any]?, source: LDFlagValueSource, completion: CompletionClosure?) {
+    var replaceStoreReceivedArguments: (newFlags: [LDFlagKey: Any]?, completion: CompletionClosure?)?
+    func replaceStore(newFlags: [LDFlagKey: Any]?, completion: CompletionClosure?) {
         replaceStoreCallCount += 1
-        replaceStoreReceivedArguments = (newFlags: newFlags, source: source, completion: completion)
+        replaceStoreReceivedArguments = (newFlags: newFlags, completion: completion)
         replaceStoreCallback?()
     }
 
     // MARK: updateStore
     var updateStoreCallCount = 0
     var updateStoreCallback: (() -> Void)?
-    var updateStoreReceivedArguments: (updateDictionary: [String: Any], source: LDFlagValueSource, completion: CompletionClosure?)?
-    func updateStore(updateDictionary: [String: Any], source: LDFlagValueSource, completion: CompletionClosure?) {
+    var updateStoreReceivedArguments: (updateDictionary: [String: Any], completion: CompletionClosure?)?
+    func updateStore(updateDictionary: [String: Any], completion: CompletionClosure?) {
         updateStoreCallCount += 1
-        updateStoreReceivedArguments = (updateDictionary: updateDictionary, source: source, completion: completion)
+        updateStoreReceivedArguments = (updateDictionary: updateDictionary, completion: completion)
         updateStoreCallback?()
     }
 

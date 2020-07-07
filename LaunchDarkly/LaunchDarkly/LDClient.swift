@@ -16,31 +16,31 @@ enum LDClientRunMode {
 ## Usage
 ### Startup
  1. To customize, configure a `LDConfig` and `LDUser`. The `config` is required, the `user` is optional. Both give you additional control over the feature flags delivered to the LDClient. See `LDConfig` & `LDUser` for more details.
-    - The mobileKey set into the `LDConfig` comes from your LaunchDarkly Account settings (on the left, at the bottom). If you have multiple projects be sure to choose the correct Mobile key.
- 2. Call `LDClient.shared.start(config: user: completion:)`
+    - The mobileKey set into the `LDConfig` comes from your LaunchDarkly Account settings. If you have multiple projects be sure to choose the correct Mobile key.
+ 2. Call `LDClient.start(config: user: completion:)`
     - If you do not pass in a LDUser, LDCLient will create a default for you.
-    - The optional completion closure allows the LDClient to notify your app when it has gone online.
- 3. Because the LDClient is a singleton, you do not have to keep a reference to it in your code.
+    - The optional completion closure allows the LDClient to notify your app when it received flag values.
+ 3. Because LDClient instances are stored statically, you do not have to keep a reference to it in your code. Get the primary instances with `LDClient.get()`
 
 ### Getting Feature Flags
- Once the LDClient has started, it makes your feature flags available using the `variation` and `variationAndSource` methods. A `variation` is a specific flag value. For example a boolean feature flag has 2 variations, `true` and `false`. You can create feature flags with more than 2 variations using other feature flag types. See `LDFlagValue` for the available types.
+ Once the LDClient has started, it makes your feature flags available using the `variation` and `variationDetail` methods. A `variation` is a specific flag value. For example a boolean feature flag has 2 variations, `true` and `false`. You can create feature flags with more than 2 variations using other feature flag types. See `LDFlagValue` for the available types.
  ````
- let boolFlag = LDClient.shared.variation(forKey: "my-bool-flag", fallback: false)
+ let boolFlag = LDClient.get()?.variation(forKey: "my-bool-flag", fallback: false)
  ````
- If you need to know the source of the variation provided to you for a specific feature flag, the `variationAndSource` method returns a tuple with the (value, source) in a single call.
+ If you need to know more information about why a given value is returned, use `variationDetail`.
 
- See `variation(forKey: fallback:)` or `variationAndSource(forKey: fallback:)` for details
+ See `variation(forKey: fallback:)` or `variationDetail(forKey: fallback:)` for details
 
 ### Observing Feature Flags
  You might need to know when a feature flag value changes. This is not required, you can check the flag's value when you need it.
 
  If you want to know when a feature flag value changes, you can check the flag's value. You can also use one of several `observe` methods to have the LDClient notify you when a change occurs. There are several options--you can set up notificiations based on when a specific flag changes, when any flag in a collection changes, or when a flag doesn't change.
  ````
- LDClient.shared.observe("flag-key", owner: self, observer: { [weak self] (changedFlag) in
+ LDClient.get()?.observe("flag-key", owner: self, observer: { [weak self] (changedFlag) in
     self?.updateFlag(key: "flag-key", changedFlag: changedFlag)
  }
  ````
- The `changedFlag` passed in to the closure contains the old and new value, and the old and new valueSource.
+ The `changedFlag` passed in to the closure contains the old and new value of the flag.
  */
 // swiftlint:disable type_body_length
 // swiftlint:disable file_length
@@ -118,21 +118,16 @@ public class LDClient {
      - parameter completion:  Completion closure called when setOnline completes (Optional)
      */
     public func setOnline(_ goOnline: Bool, completion: (() -> Void)? = nil) {
-        var internalCount = 0
-        for (_, instance) in LDClient.internalInstances {
-            instance.internalSetOnline(goOnline) {
-                self.setOnlineQueue.async {
-                    internalCount += 1
-                    if internalCount >= LDClient.internalInstances.count {
-                        completion?()
-                    }
-                }
-            }
+        let dispatch = DispatchGroup()
+        LDClient.instances?.forEach { _, instance in
+            dispatch.enter()
+            instance.internalSetOnline(goOnline, completion: dispatch.leave)
+        }
+        if let completion = completion {
+            dispatch.notify(queue: DispatchQueue.global(), execute: completion)
         }
     }
 
-    private let setOnlineQueue: DispatchQueue = DispatchQueue(label: "SetOnlineQueue")
-    
     private func internalSetOnline(_ goOnline: Bool, completion: (() -> Void)? = nil) {
         internalSetOnlineQueue.sync {
             guard goOnline, self.canGoOnline
@@ -216,7 +211,7 @@ public class LDClient {
             internalSetOnline(false)
             cacheConverter.convertCacheData(for: user, and: config)
             if let cachedFlags = flagCache.retrieveFeatureFlags(forUserWithKey: user.key, andMobileKey: config.mobileKey), !cachedFlags.isEmpty {
-                user.flagStore.replaceStore(newFlags: cachedFlags, source: .cache, completion: nil)
+                user.flagStore.replaceStore(newFlags: cachedFlags, completion: nil)
             }
 
             service = serviceFactory.makeDarklyServiceProvider(config: config, user: user)
@@ -227,9 +222,7 @@ public class LDClient {
     }
 
     public func setAllUserAttributesPrivate(_ allUserAttributesPrivate: Bool) {
-        for (_, instance) in LDClient.internalInstances {
-            instance.internalSetAllUserAttributesPrivate(allUserAttributesPrivate)
-        }
+        LDClient.instances?.forEach { $1.internalSetAllUserAttributesPrivate(allUserAttributesPrivate)}
     }
 
     private func internalSetAllUserAttributesPrivate(_ allUserAttributesPrivate: Bool) {
@@ -253,16 +246,13 @@ public class LDClient {
      - parameter completion: Closure called when the embedded `setOnlineIdentify` call completes, subject to throttling delays. (Optional)
     */
     public func identify(user: LDUser, completion: (() -> Void)? = nil) {
-        var internalCount = 0
-        for (_, instance) in LDClient.internalInstances {
-            instance.internalIdentify(newUser: user) {
-                self.identifyQueue.async {
-                    internalCount += 1
-                    if internalCount >= LDClient.internalInstances.count {
-                        completion?()
-                    }
-                }
-            }
+        let dispatch = DispatchGroup()
+        LDClient.instances?.forEach { _, instance in
+            dispatch.enter()
+            instance.internalIdentify(newUser: user, completion: dispatch.leave)
+        }
+        if let completion = completion {
+            dispatch.notify(queue: DispatchQueue.global(), execute: completion)
         }
     }
 
@@ -270,7 +260,7 @@ public class LDClient {
         internalIdentifyQueue.sync {
             var internalUser = newUser
             if !testing {
-                internalUser.flagStore = FlagStore(featureFlagDictionary: newUser.flagStore.featureFlags, flagValueSource: newUser.flagStore.flagValueSource)
+                internalUser.flagStore = FlagStore(featureFlagDictionary: newUser.flagStore.featureFlags)
             }
             self.user = internalUser
             Log.debug(self.typeName(and: #function) + "new user set with key: " + self.user.key )
@@ -279,7 +269,7 @@ public class LDClient {
 
             cacheConverter.convertCacheData(for: user, and: config)
             if let cachedFlags = self.flagCache.retrieveFeatureFlags(forUserWithKey: self.user.key, andMobileKey: self.config.mobileKey), !cachedFlags.isEmpty {
-                self.user.flagStore.replaceStore(newFlags: cachedFlags, source: .cache, completion: nil)
+                self.user.flagStore.replaceStore(newFlags: cachedFlags, completion: nil)
             }
             self.service = self.serviceFactory.makeDarklyServiceProvider(config: self.config, user: self.user)
             self.service.clearFlagResponseCache()
@@ -293,7 +283,6 @@ public class LDClient {
     }
     
     private let internalIdentifyQueue: DispatchQueue = DispatchQueue(label: "InternalIdentifyQueue")
-    private let identifyQueue: DispatchQueue = DispatchQueue(label: "IdentifyQueue")
 
     private(set) var service: DarklyServiceProvider {
         didSet {
@@ -314,9 +303,7 @@ public class LDClient {
      There is almost no reason to stop the LDClient. Normally, set the LDClient offline to stop communication with the LaunchDarkly servers. Stop the LDClient to stop recording events. There is no need to stop the LDClient prior to suspending, moving to the background, or terminating the app. The SDK will respond to these events as the system requires and as configured in LDConfig.
     */
     public func close() {
-        for (_, instance) in LDClient.internalInstances {
-            instance.internalClose()
-        }
+        LDClient.instances?.forEach { $1.internalClose() }
         LDClient.instances = nil
     }
     
@@ -370,7 +357,7 @@ public class LDClient {
     /* FF Value Requests
      Conceptual Model
      The LDClient is the focal point for flag value requests. It should appear to the app that the client contains a store of [key: value] pairs where the keys are all strings and the values any of the supported LD flag types (Bool, Int, Double, String, Array, Dictionary).
-     When asked for a variation value, the LDClient provides either the value, or the value and LDVariationSource as a tuple.
+     When asked for a variation value, the LDClient provides either the value, or the value along with an explanation.
     */
     
     /**
@@ -390,19 +377,19 @@ public class LDClient {
 
      ### Usage
      ````
-     let boolFeatureFlagValue = LDClient.shared.variation(forKey: "bool-flag-key", fallback: false) //boolFeatureFlagValue is a Bool
+     let boolFeatureFlagValue = LDClient.get()!.variation(forKey: "bool-flag-key", fallback: false) //boolFeatureFlagValue is a Bool
      ````
      **Important** The fallback value tells the SDK the type of the feature flag. In several cases, the feature flag type cannot be determined by the values sent from the server. It is possible to provide a fallback value with a type that does not match the feature flag value's type. The SDK will attempt to convert the feature flag's value into the type of the fallback value in the variation request. If that cast fails, the SDK will not be able to determine the correct return type, and will always return the fallback value.
 
-     Pay close attention to the type of the fallback value for collections. If the fallback collection type is more restrictive than the feature flag, the sdk will return the fallback even though the feature flag is present because it cannot convert the feature flag into the type requested via the fallback value. For example, if the feature flag has the type `[LDFlagKey: Any]`, but the fallback has the type `[LDFlagKey: Int]`, the sdk will not be able to convert the flags into the requested type, and will return the fallback value.
+     Pay close attention to the type of the fallback value for collections. If the fallback collection type is more restrictive than the feature flag, the sdk will return the fallback even though the feature flag is present because it cannot convert the feature flag into the type requested via the fallback value. For example, if the feature flag has the type `[String: Any]`, but the fallback has the type `[String: Int]`, the sdk will not be able to convert the flags into the requested type, and will return the fallback value.
 
-     To avoid this, make sure the fallback type matches the expected feature flag type. Either specify the fallback value type to be the feature flag type, or cast the fallback value to the feature flag type prior to making the variation request. In the above example, either specify that the fallback value's type is [LDFlagKey: Any]:
+     To avoid this, make sure the fallback type matches the expected feature flag type. Either specify the fallback value type to be the feature flag type, or cast the fallback value to the feature flag type prior to making the variation request. In the above example, either specify that the fallback value's type is [String: Any]:
      ````
-     let fallbackValue: [LDFlagKey: Any] = ["a": 1, "b": 2]     //dictionary type would be [String: Int] without the type specifier
+     let fallbackValue: [String: Any] = ["a": 1, "b": 2]     //dictionary type would be [String: Int] without the type specifier
      ````
      or cast the fallback value into the feature flag type prior to calling variation:
      ````
-     let dictionaryFlagValue = LDClient.shared.variation(forKey: "dictionary-key", fallback: ["a": 1, "b": 2] as [LDFlagKey: Any])  //cast always succeeds since the destination type is less restrictive
+     let dictionaryFlagValue = LDClient.get()!.variation(forKey: "dictionary-key", fallback: ["a": 1, "b": 2] as [String: Any])
      ````
 
      - parameter forKey: The LDFlagKey for the requested feature flag.
@@ -412,7 +399,8 @@ public class LDClient {
     */
     /// - Tag: variationWithFallback
     public func variation<T: LDFlagValueConvertible>(forKey flagKey: LDFlagKey, fallback: T) -> T {
-        return variation(forKey: flagKey, fallback: fallback as T?) ?? fallback     //the fallback cast to 'as T?' directs the call to the Optional-returning variation method
+        //the fallback cast to 'as T?' directs the call to the Optional-returning variation method
+        variation(forKey: flagKey, fallback: fallback as T?) ?? fallback
     }
     
     /**
@@ -426,7 +414,7 @@ public class LDClient {
     public func variationDetail<T: LDFlagValueConvertible>(forKey flagKey: LDFlagKey, fallback: T) -> EvaluationDetail<T> {
         let featureFlag = user.flagStore.featureFlag(for: flagKey)
         let reason = checkErrorKinds(featureFlag: featureFlag) ?? featureFlag?.reason
-        let (value, _) = variationAndSourceInternal(forKey: flagKey, fallback: fallback, includeReason: true)
+        let value = variationInternal(forKey: flagKey, fallback: fallback, includeReason: true)
         return EvaluationDetail(value: value ?? fallback, variationIndex: featureFlag?.variation, reason: reason)
     }
     
@@ -457,7 +445,7 @@ public class LDClient {
 
      ### Usage
      ````
-     let boolFeatureFlagValue: Bool? = LDClient.shared.variation(forKey: "bool-flag-key", fallback: nil) //boolFeatureFlagValue is a Bool?
+     let boolFeatureFlagValue: Bool? = LDClient.get()!.variation(forKey: "bool-flag-key", fallback: nil) //boolFeatureFlagValue is a Bool?
      ````
      **Important** The fallback value tells the SDK the type of the feature flag. In several cases, the feature flag type cannot be determined by the values sent from the server. It is possible to provide a fallback value with a type that does not match the feature flag value's type. The SDK will attempt to convert the feature flag's value into the type of the fallback value in the variation request. If that cast fails, the SDK will not be able to determine the correct return type, and will always return the fallback value.
 
@@ -465,15 +453,15 @@ public class LDClient {
 
      For this method, the fallback value is defaulted to `nil`, allowing the call site to omit the fallback value.
 
-     Pay close attention to the type of the fallback value for collections. If the fallback collection type is more restrictive than the feature flag, the sdk will return the fallback even though the feature flag is present because it cannot convert the feature flag into the type requested via the fallback value. For example, if the feature flag has the type `[LDFlagKey: Any]`, but the fallback has the type `[LDFlagKey: Int]`, the sdk will not be able to convert the flags into the requested type, and will return the fallback value.
+     Pay close attention to the type of the fallback value for collections. If the fallback collection type is more restrictive than the feature flag, the sdk will return the fallback even though the feature flag is present because it cannot convert the feature flag into the type requested via the fallback value. For example, if the feature flag has the type `[String: Any]`, but the fallback has the type `[String: Int]`, the sdk will not be able to convert the flags into the requested type, and will return the fallback value.
 
-     To avoid this, make sure the fallback type matches the expected feature flag type. Either specify the fallback value type to be the feature flag type, or cast the fallback value to the feature flag type prior to making the variation request. In the above example, either specify that the fallback value's type is [LDFlagKey: Any]:
+     To avoid this, make sure the fallback type matches the expected feature flag type. Either specify the fallback value type to be the feature flag type, or cast the fallback value to the feature flag type prior to making the variation request. In the above example, either specify that the fallback value's type is [String: Any]:
      ````
-     let fallbackValue: [LDFlagKey: Any]? = ["a": 1, "b": 2]     //dictionary type would be [String: Int] without the type specifier
+     let fallbackValue: [String: Any]? = ["a": 1, "b": 2]     //dictionary type would be [String: Int] without the type specifier
      ````
      or cast the fallback value into the feature flag type prior to calling variation:
      ````
-     let dictionaryFlagValue = LDClient.shared.variation(forKey: "dictionary-key", fallback: ["a": 1, "b": 2] as [LDFlagKey: Any]?)  //cast always succeeds since the destination type is less restrictive
+     let dictionaryFlagValue = LDClient.get()!.variation(forKey: "dictionary-key", fallback: ["a": 1, "b": 2] as [String: Any]?)
      ````
 
      - parameter forKey: The LDFlagKey for the requested feature flag.
@@ -483,8 +471,7 @@ public class LDClient {
      */
     /// - Tag: variationWithoutFallback
     public func variation<T: LDFlagValueConvertible>(forKey flagKey: LDFlagKey, fallback: T? = nil) -> T? {
-        let (value, _) = variationAndSourceInternal(forKey: flagKey, fallback: fallback, includeReason: false)
-        return value
+        variationInternal(forKey: flagKey, fallback: fallback, includeReason: false)
     }
     
     /**
@@ -498,36 +485,35 @@ public class LDClient {
     public func variationDetail<T: LDFlagValueConvertible>(forKey flagKey: LDFlagKey, fallback: T? = nil) -> EvaluationDetail<T?> {
         let featureFlag = user.flagStore.featureFlag(for: flagKey)
         let reason = checkErrorKinds(featureFlag: featureFlag) ?? featureFlag?.reason
-        let (value, _) = variationAndSourceInternal(forKey: flagKey, fallback: fallback, includeReason: true)
+        let value = variationInternal(forKey: flagKey, fallback: fallback, includeReason: true)
         return EvaluationDetail(value: value, variationIndex: featureFlag?.variation, reason: reason)
     }
     
-    internal func variationAndSourceInternal<T: LDFlagValueConvertible>(forKey flagKey: LDFlagKey, fallback: T) -> (T, LDFlagValueSource) {
-        let (value, source) = variationAndSourceInternal(forKey: flagKey, fallback: fallback as T?, includeReason: false)
-        return (value ?? fallback, source)  //Because the fallback is wrapped into an Optional, the nil coalescing right side should never be called
+    internal func variationInternal<T: LDFlagValueConvertible>(forKey flagKey: LDFlagKey, fallback: T) -> T {
+        //Because the fallback is wrapped into an Optional, the nil coalescing right side should never be called
+        variationInternal(forKey: flagKey, fallback: fallback as T?, includeReason: false) ?? fallback
     }
     
-    internal func variationAndSourceInternal<T: LDFlagValueConvertible>(forKey flagKey: LDFlagKey, fallback: T? = nil, includeReason: Bool? = false) -> (T?, LDFlagValueSource) {
+    internal func variationInternal<T: LDFlagValueConvertible>(forKey flagKey: LDFlagKey, fallback: T? = nil, includeReason: Bool? = false) -> T? {
         guard hasStarted
         else {
-            Log.debug(typeName(and: #function) + "returning fallback: \(fallback.stringValue), source: \(LDFlagValueSource.fallback)." + " LDClient not started.")
-            return (fallback, .fallback)
+            Log.debug(typeName(and: #function) + "returning fallback: \(fallback.stringValue)." + " LDClient not started.")
+            return fallback
         }
-        let (featureFlag, flagStoreSource) = user.flagStore.featureFlagAndSource(for: flagKey)
-        let (value, source): (T?, LDFlagValueSource) = valueAndSource(from: featureFlag, fallback: fallback, source: flagStoreSource)
-        let failedConversionMessage = self.failedConversionMessage(featureFlag: featureFlag, source: source, fallback: fallback)
-        Log.debug(typeName(and: #function) + "flagKey: \(flagKey), value: \(value.stringValue), fallback: \(fallback.stringValue), featureFlag: \(featureFlag.stringValue), source: \(source), reason: \(featureFlag?.reason?.description ?? "No evaluation reason")."
+        let featureFlag = user.flagStore.featureFlag(for: flagKey)
+        let value = (featureFlag?.value as? T) ?? fallback
+        let failedConversionMessage = self.failedConversionMessage(featureFlag: featureFlag, fallback: fallback)
+        Log.debug(typeName(and: #function) + "flagKey: \(flagKey), value: \(value.stringValue), fallback: \(fallback.stringValue), featureFlag: \(featureFlag.stringValue), reason: \(featureFlag?.reason?.description ?? "No evaluation reason")."
             + "\(failedConversionMessage)")
         eventReporter.recordFlagEvaluationEvents(flagKey: flagKey, value: value, defaultValue: fallback, featureFlag: featureFlag, user: user, includeReason: includeReason ?? false)
-        return (value, source)
+        return value
     }
 
-    private func failedConversionMessage<T>(featureFlag: FeatureFlag?, source: LDFlagValueSource, fallback: T?) -> String {
+    private func failedConversionMessage<T>(featureFlag: FeatureFlag?, fallback: T?) -> String {
         if featureFlag == nil {
             return " Feature flag not found."
         }
-        guard source == .fallback
-        else {
+        if featureFlag?.value is T {
             return ""
         }
         return " LDClient was unable to convert the feature flag to the requested type (\(T.self))."
@@ -559,14 +545,6 @@ public class LDClient {
         return user.flagStore.featureFlags.allFlagValues
     }
 
-    private func valueAndSource<T>(from featureFlag: FeatureFlag?, fallback: T?, source: LDFlagValueSource?) -> (T?, LDFlagValueSource) {
-        guard let value = featureFlag?.value as? T
-        else {
-            return (fallback, .fallback)
-        }
-        return (value, source ?? .fallback)
-    }
-
     // MARK: Feature Flag Updates
     
     /* FF Change Notification
@@ -580,7 +558,7 @@ public class LDClient {
     */
     
     /**
-     Sets a handler for the specified flag key executed on the specified owner. If the flag's value changes, executes the handler, passing in the `changedFlag` containing the old and new flag values, and old and new flag value source. See `LDChangedFlag` for details.
+     Sets a handler for the specified flag key executed on the specified owner. If the flag's value changes, executes the handler, passing in the `changedFlag` containing the old and new flag values. See `LDChangedFlag` for details.
 
      The SDK retains only weak references to the owner, which allows the client app to freely destroy observer owners without issues. Client apps should use a capture list specifying `[weak self]` inside handlers to avoid retain cycles causing a memory leak.
 
@@ -592,14 +570,10 @@ public class LDClient {
 
      ### Usage
      ````
-     LDClient.shared.observe("flag-key", owner: self) { [weak self] (changedFlag) in
+     LDClient.get()?.observe("flag-key", owner: self) { [weak self] (changedFlag) in
         if let newValue = changedFlag.newValue as? Bool {
             //do something with the newValue
         }
-    ///The LDClient will report events on the LDConfig.eventFlushInterval and when the client app moves to the background. There should normally not be a need to call reportEvents.
-    public func reportEvents() {
-        eventReporter.reportEvents()
-     }
      ````
 
      - parameter key: The LDFlagKey for the flag to observe.
@@ -612,7 +586,7 @@ public class LDClient {
     }
     
     /**
-     Sets a handler for the specified flag keys executed on the specified owner. If any observed flag's value changes, executes the handler 1 time, passing in a dictionary of [LDFlagKey: LDChangedFlag] containing the old and new flag values, and old and new flag value source. See `LDChangedFlag` for details.
+     Sets a handler for the specified flag keys executed on the specified owner. If any observed flag's value changes, executes the handler 1 time, passing in a dictionary of [LDFlagKey: LDChangedFlag] containing the old and new flag values. See `LDChangedFlag` for details.
 
      The SDK retains only weak references to owner, which allows the client app to freely destroy observer owners without issues. Client apps should use a capture list specifying `[weak self]` inside handlers to avoid retain cycles causing a memory leak.
 
@@ -624,7 +598,7 @@ public class LDClient {
 
      ### Usage
      ````
-     LDClient.shared.observe(flagKeys, owner: self) { [weak self] (changedFlags) in     // changedFlags is a [LDFlagKey: LDChangedFlag]
+     LDClient.get()?.observe(flagKeys, owner: self) { [weak self] (changedFlags) in     // changedFlags is a [LDFlagKey: LDChangedFlag]
         //There will be an LDChangedFlag entry in changedFlags for each changed flag. The closure will only be called once regardless of how many flags changed.
         if let someChangedFlag = changedFlags["some-flag-key"] {    // someChangedFlag is a LDChangedFlag
             //do something with someChangedFlag
@@ -642,7 +616,7 @@ public class LDClient {
     }
 
     /**
-     Sets a handler for all flag keys executed on the specified owner. If any flag's value changes, executes the handler 1 time, passing in a dictionary of [LDFlagKey: LDChangedFlag] containing the old and new flag values, and old and new flag value source. See `LDChangedFlag` for details.
+     Sets a handler for all flag keys executed on the specified owner. If any flag's value changes, executes the handler 1 time, passing in a dictionary of [LDFlagKey: LDChangedFlag] containing the old and new flag values. See `LDChangedFlag` for details.
 
      The SDK retains only weak references to owner, which allows the client app to freely destroy observer owners without issues. Client apps should use a capture list specifying `[weak self]` inside handlers to avoid retain cycles causing a memory leak.
 
@@ -654,7 +628,7 @@ public class LDClient {
 
      ### Usage
      ````
-     LDClient.shared.observeAll(owner: self) { [weak self] (changedFlags) in     // changedFlags is a [LDFlagKey: LDChangedFlag]
+     LDClient.get()?.observeAll(owner: self) { [weak self] (changedFlags) in     // changedFlags is a [LDFlagKey: LDChangedFlag]
         //There will be an LDChangedFlag entry in changedFlags for each changed flag. The closure will only be called once regardless of how many flags changed.
         if let someChangedFlag = changedFlags["some-flag-key"] {    // someChangedFlag is a LDChangedFlag
             //do something with someChangedFlag
@@ -683,8 +657,9 @@ public class LDClient {
 
      ### Usage
      ````
-     LDClient.shared.observeFlagsUnchanged(owner: self) { [weak self] in
-        //do something after the flags were not updated. The closure will be called once on the main thread if the client is polling and the poll did not change any flag values.
+     LDClient.get()?.observeFlagsUnchanged(owner: self) { [weak self] in
+         // Do something after an update was received that did not update any flag values.
+         //The closure will be called once on the main thread after the update.
      }
      ````
 
@@ -707,7 +682,7 @@ public class LDClient {
      
      ### Usage
      ````
-     LDClient.shared.observeCurrentConnectionMode(owner: self) { [weak self] in
+     LDClient.get()?.observeCurrentConnectionMode(owner: self) { [weak self] in
         //do something after ConnectionMode was updated.
      }
      ````
@@ -745,20 +720,19 @@ public class LDClient {
         switch result {
         case let .success(flagDictionary, streamingEvent):
             let oldFlags = user.flagStore.featureFlags
-            let oldFlagSource = user.flagStore.flagValueSource
             connectionInformation = ConnectionInformation.checkEstablishingStreaming(connectionInformation: connectionInformation)
             switch streamingEvent {
             case nil, .ping?, .put?:
-                user.flagStore.replaceStore(newFlags: flagDictionary, source: .server) {
-                    self.updateCacheAndReportChanges(user: self.user, oldFlags: oldFlags, oldFlagSource: oldFlagSource)
+                user.flagStore.replaceStore(newFlags: flagDictionary) {
+                    self.updateCacheAndReportChanges(user: self.user, oldFlags: oldFlags)
                 }
             case .patch?:
-                user.flagStore.updateStore(updateDictionary: flagDictionary, source: .server) {
-                    self.updateCacheAndReportChanges(user: self.user, oldFlags: oldFlags, oldFlagSource: oldFlagSource)
+                user.flagStore.updateStore(updateDictionary: flagDictionary) {
+                    self.updateCacheAndReportChanges(user: self.user, oldFlags: oldFlags)
                 }
             case .delete?:
                 user.flagStore.deleteFlag(deleteDictionary: flagDictionary) {
-                    self.updateCacheAndReportChanges(user: self.user, oldFlags: oldFlags, oldFlagSource: oldFlagSource)
+                    self.updateCacheAndReportChanges(user: self.user, oldFlags: oldFlags)
                 }
             }
         case .error(let synchronizingError):
@@ -778,10 +752,9 @@ public class LDClient {
     }
 
     private func updateCacheAndReportChanges(user: LDUser,
-                                             oldFlags: [LDFlagKey: FeatureFlag],
-                                             oldFlagSource: LDFlagValueSource) {
+                                             oldFlags: [LDFlagKey: FeatureFlag]) {
         flagCache.storeFeatureFlags(user.flagStore.featureFlags, forUser: user, andMobileKey: config.mobileKey, lastUpdated: Date(), storeMode: .async)
-        flagChangeNotifier.notifyObservers(user: user, oldFlags: oldFlags, oldFlagSource: oldFlagSource)
+        flagChangeNotifier.notifyObservers(user: user, oldFlags: oldFlags)
     }
 
     // MARK: - Events
@@ -801,7 +774,7 @@ public class LDClient {
      ### Usage
      ````
      let appEventData = ["some-custom-key: "some-custom-value", "another-custom-key": 7]
-     LDClient.shared.trackEvent(key: "app-event-key", data: appEventData)
+     LDClient.get()?.trackEvent(key: "app-event-key", data: appEventData)
      ````
 
      - parameter key: The key for the event. The SDK does nothing with the key, which can be any string the client app sends
@@ -825,9 +798,7 @@ public class LDClient {
     Report events to LaunchDarkly servers. While online, the LDClient automatically reports events on the `LDConfig.eventFlushInterval`, and whenever the client app moves to the background. There should normally not be a need to call reportEvents.
     */
     public func flush() {
-        for (_, instance) in LDClient.internalInstances {
-            instance.internalFlush()
-        }
+        LDClient.instances?.forEach { $1.internalFlush() }
     }
     
     private func internalFlush() {
@@ -1030,7 +1001,7 @@ public class LDClient {
         Log.level = environmentReporter.isDebugBuild && config.isDebugMode ? .debug : .noLogging
         cacheConverter.convertCacheData(for: user, and: config)
         if let cachedFlags = flagCache.retrieveFeatureFlags(forUserWithKey: user.key, andMobileKey: config.mobileKey), !cachedFlags.isEmpty {
-            user.flagStore.replaceStore(newFlags: cachedFlags, source: .cache, completion: nil)
+            user.flagStore.replaceStore(newFlags: cachedFlags, completion: nil)
         }
 
         eventReporter.record(Event.identifyEvent(user: user))

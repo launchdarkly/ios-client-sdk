@@ -7,17 +7,6 @@
 
 import Foundation
 
-///Defines the sources for feature flag values.
-///See also: `LDClient.variationAndSource(forKey:fallback:)` and `LDChangedFlag`
-public enum LDFlagValueSource: CaseIterable {
-    ///Feature flag comes from the server, either the `clientstream` or a feature flag request
-    case server
-    ///Feature flag comes from the cache. Cached feature flags are used on app launch until the SDK gets the first feature flag update
-    case cache
-    ///Feature flag comes from the client provided fallback. The SDK will serve fallback values when the flag key is not found, or when the SDK cannot convert the feature flag to the client provided type. Since the client provides this value in the `LDClient.variationAndSource(forKey:fallback:)`, an LDChangedFlag will not contain a `fallback` valueSource
-    case fallback
-}
-
 ///Defines the types and values of a feature flag. The SDK limits feature flags to these types by use of the `LDFlagValueConvertible` protocol, which uses this type. Client app developers should not construct an LDFlagValue.
 public enum LDFlagValue: Equatable {
     ///Bool flag value
