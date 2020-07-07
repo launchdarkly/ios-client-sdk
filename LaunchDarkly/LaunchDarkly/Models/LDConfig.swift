@@ -250,7 +250,7 @@ public struct LDConfig {
         }
         set(newSecondaryMobileKeys) {
             let mobileKeyPresentInSecondaryMobileKeys = newSecondaryMobileKeys?.values.contains { (value) -> Bool in
-                value as String == mobileKey
+                value == mobileKey
                 } ?? false
             let primaryEnvironmentNamePresentInSecondaryMobileKeys = newSecondaryMobileKeys?.keys.contains { (key) -> Bool in
                 key as String == LDConfig.Defaults.primaryEnvironmentName

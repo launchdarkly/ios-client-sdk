@@ -912,25 +912,25 @@ public class LDClient {
     }
 
     public static func start(config: LDConfig, startUser: LDUser? = nil, startWaitSeconds: TimeInterval, completion: ((_ timedOut: Bool) -> Void)? = nil) {
-        var timeOutCheck = true
-        let internalTimeOutCheckQueue: DispatchQueue = DispatchQueue(label: "TimeOutQueue")
+        var completed = true
+        let internalCompletedQueue: DispatchQueue = DispatchQueue(label: "TimeOutQueue")
         if !config.startOnline {
             start(config: config, startUser: startUser)
-            completion?(timeOutCheck)
+            completion?(completed)
         } else {
             let startTime = Date().timeIntervalSince1970
             start(config: config, startUser: startUser) {
-                internalTimeOutCheckQueue.async {
-                    if startTime + startWaitSeconds > Date().timeIntervalSince1970 && timeOutCheck {
-                        timeOutCheck = false
-                        completion?(timeOutCheck)
+                internalCompletedQueue.async {
+                    if startTime + startWaitSeconds > Date().timeIntervalSince1970 && completed {
+                        completed = false
+                        completion?(completed)
                     }
                 }
             }
             DispatchQueue.global().asyncAfter(deadline: .now() + startWaitSeconds) {
-                internalTimeOutCheckQueue.async {
-                    if timeOutCheck {
-                        completion?(timeOutCheck)
+                internalCompletedQueue.async {
+                    if completed {
+                        completion?(completed)
                     }
                 }
             }
@@ -1072,9 +1072,7 @@ private extension Optional {
         static func start(serviceFactory: ClientServiceCreating, config: LDConfig, startUser: LDUser? = nil, flagCache: FeatureFlagCaching, flagNotifier: FlagChangeNotifier, completion: (() -> Void)? = nil) {
             Log.debug("LDClient starting for tests")
             if instances != nil {
-                for (_, instance) in (instances ?? [:]) {
-                    instance.close()
-                }
+                get()?.close()
             }
             
             let anonymousUser = LDUser(environmentReporter: EnvironmentReporter())
@@ -1101,25 +1099,25 @@ private extension Optional {
         }
         
         static func start(serviceFactory: ClientServiceCreating, config: LDConfig, startUser: LDUser? = nil, startWaitSeconds: TimeInterval, flagCache: FeatureFlagCaching, flagNotifier: FlagChangeNotifier, completion: ((_ timedOut: Bool) -> Void)? = nil) {
-            var timeOutCheck = true
-            let internalTimeOutCheckQueue: DispatchQueue = DispatchQueue(label: "TimeOutQueue")
+            var completed = true
+            let internalCompletedQueue: DispatchQueue = DispatchQueue(label: "TimeOutQueue")
             if !config.startOnline {
                 start(serviceFactory: serviceFactory, config: config, startUser: startUser, flagCache: flagCache, flagNotifier: flagNotifier)
-                completion?(timeOutCheck)
+                completion?(completed)
             } else {
                 let startTime = Date().timeIntervalSince1970
                 start(serviceFactory: serviceFactory, config: config, startUser: startUser, flagCache: flagCache, flagNotifier: flagNotifier) {
-                    internalTimeOutCheckQueue.async {
-                        if startTime + startWaitSeconds > Date().timeIntervalSince1970 && timeOutCheck {
-                            timeOutCheck = false
-                            completion?(timeOutCheck)
+                    internalCompletedQueue.async {
+                        if startTime + startWaitSeconds > Date().timeIntervalSince1970 && completed {
+                            completed = false
+                            completion?(completed)
                         }
                     }
                 }
                 DispatchQueue.global().asyncAfter(deadline: .now() + startWaitSeconds) {
-                    internalTimeOutCheckQueue.async {
-                        if timeOutCheck {
-                            completion?(timeOutCheck)
+                    internalCompletedQueue.async {
+                        if completed {
+                            completion?(completed)
                         }
                     }
                 }
