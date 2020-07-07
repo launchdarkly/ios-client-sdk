@@ -13,6 +13,7 @@ final class ThrottlerSpec: QuickSpec {
 
     struct Constants {
         static let maxDelay: TimeInterval = 10.0
+        static let testThreshold: TimeInterval = 0.15
     }
 
     override func spec() {
@@ -114,7 +115,7 @@ final class ThrottlerSpec: QuickSpec {
                 expect(runExecuted).toNot(beNil())
                 guard let runExecuted = runExecuted
                 else { return }
-                expect(runExecuted.timeIntervalSince(runCalled)) <= 0.1
+                expect(runExecuted.timeIntervalSince(runCalled)) <= Constants.testThreshold
             }
             it("resets itself for the next runThrottled call when the timer fires") {
                 expect(throttler.runAttempts) == 1
@@ -151,14 +152,15 @@ final class ThrottlerSpec: QuickSpec {
                 expect(runExecuted.first).toNot(beNil())
                 guard let firstRunExecuted = runExecuted.first
                 else { return }
-                expect(firstRunExecuted.timeIntervalSince(runCalled)) <= 0.1    //0.1s is arbitrary, the min throttling delay is 1.0s. Anything less verifies unthrottled execution.
+                expect(firstRunExecuted.timeIntervalSince(runCalled)) <= Constants.testThreshold
 
                 //calls the run closure a second time after a delay
                 expect(runExecuted.count) == 2
                 guard let secondRunExecuted = runExecuted.last
                 else { return }
-                expect(secondRunExecuted.timeIntervalSince(runCalled)) >= 1.0   //The delay is a random interval in the range [1.0, 2.0) seconds
-                expect(secondRunExecuted.timeIntervalSince(runCalled)) <= 2.0   //as above, this must be < 2.0 seconds
+                //The delay is a random interval in the range [1.0, 2.0) seconds, with a test threshold on the upper limit to account for delay in executing the task.
+                expect(secondRunExecuted.timeIntervalSince(runCalled)) >= 1.0
+                expect(secondRunExecuted.timeIntervalSince(runCalled)) <= 2.0 + Constants.testThreshold
 
                 //resets itself for the next runThrottled call
                 expect(throttler.runAttempts) == 0

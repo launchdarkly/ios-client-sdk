@@ -81,6 +81,7 @@ final class ClientServiceMockFactory: ClientServiceCreating {
 
         let reporterMock = EventReportingMock()
         reporterMock.config = config
+        reporterMock.service = service
         return reporterMock
     }
 
