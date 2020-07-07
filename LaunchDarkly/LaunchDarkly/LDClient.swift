@@ -1001,7 +1001,7 @@ public class LDClient {
         Log.level = environmentReporter.isDebugBuild && config.isDebugMode ? .debug : .noLogging
         cacheConverter.convertCacheData(for: user, and: config)
         if let cachedFlags = flagCache.retrieveFeatureFlags(forUserWithKey: user.key, andMobileKey: config.mobileKey), !cachedFlags.isEmpty {
-            user.flagStore.replaceStore(newFlags: cachedFlags, source: .cache, completion: nil)
+            user.flagStore.replaceStore(newFlags: cachedFlags, completion: nil)
         }
 
         eventReporter.record(Event.identifyEvent(user: user))
