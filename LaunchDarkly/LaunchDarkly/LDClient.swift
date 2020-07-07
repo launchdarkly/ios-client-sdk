@@ -1071,9 +1071,7 @@ private extension Optional {
     extension LDClient {
         static func start(serviceFactory: ClientServiceCreating, config: LDConfig, startUser: LDUser? = nil, flagCache: FeatureFlagCaching, flagNotifier: FlagChangeNotifier, completion: (() -> Void)? = nil) {
             Log.debug("LDClient starting for tests")
-            if instances != nil {
-                get()?.close()
-            }
+            get()?.close()
             
             let anonymousUser = LDUser(environmentReporter: EnvironmentReporter())
             let internalUser = startUser ?? anonymousUser
