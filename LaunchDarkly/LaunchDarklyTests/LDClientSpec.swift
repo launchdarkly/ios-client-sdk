@@ -239,7 +239,7 @@ final class LDClientSpec: QuickSpec {
     override func spec() {
         startSpec()
         startWithTimeoutSpec()
-        setUserSpec()
+        identifySpec()
         setOnlineSpec()
         closeSpec()
         trackEventSpec()
@@ -946,10 +946,10 @@ final class LDClientSpec: QuickSpec {
         }
     }
 
-    private func setUserSpec() {
+    private func identifySpec() {
         var testContext: TestContext!
 
-        describe("set user") {
+        describe("identify") {
             var newUser: LDUser!
             context("when the client is online") {
                 beforeEach {

@@ -331,7 +331,7 @@ public class LDClient {
     /**
      Returns the singleton instance.
      
-     - returns: The primary LDClient instance if it is initialized.
+     - returns: The primary LDClient instance.
      */
     public static func get() -> LDClient? {
         guard let internalInstances = LDClient.instances else {
@@ -359,7 +359,7 @@ public class LDClient {
      
      - parameter keyName: An environment name provided in LDConfig.secondaryMobileKeys during initialization.
      
-     - returns: An LDClient instance if one exists and if the primary instance is initialized.
+     - returns: An LDClient instance if one exists and `start(config: user: completion:)` has been called.
      */
     public static func getForMobileKey(keyName: String) -> LDClient? {
         return LDClient.instances?[keyName]
