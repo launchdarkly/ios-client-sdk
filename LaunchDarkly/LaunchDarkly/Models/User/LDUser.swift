@@ -162,7 +162,7 @@ public struct LDUser {
         device = custom?[CodingKeys.device.rawValue] as? String
         operatingSystem = custom?[CodingKeys.operatingSystem.rawValue] as? String
 
-        flagStore = FlagStore(featureFlagDictionary: userDictionary[CodingKeys.config.rawValue] as? [String: Any], flagValueSource: .cache)
+        flagStore = FlagStore(featureFlagDictionary: userDictionary[CodingKeys.config.rawValue] as? [String: Any])
         Log.debug(typeName(and: #function) + "user: \(self)")
     }
 
@@ -334,7 +334,7 @@ extension LDUserWrapper: NSCoding {
         user.device = decoder.decodeObject(forKey: LDUser.CodingKeys.device.rawValue) as? String
         user.operatingSystem = decoder.decodeObject(forKey: LDUser.CodingKeys.operatingSystem.rawValue) as? String
         let wrappedFlags = decoder.decodeObject(forKey: LDUser.CodingKeys.config.rawValue) as? [String: Any]
-        user.flagStore = FlagStore(featureFlagDictionary: wrappedFlags?[Keys.featureFlags] as? [String: Any], flagValueSource: .cache)
+        user.flagStore = FlagStore(featureFlagDictionary: wrappedFlags?[Keys.featureFlags] as? [String: Any])
         self.init(user: user)
     }
 
