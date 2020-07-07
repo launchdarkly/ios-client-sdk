@@ -204,30 +204,26 @@ public class LDClient {
     */
     public private(set) var config: LDConfig {
         didSet {
-            configDidSet(oldValue: oldValue)
-        }
-    }
-    
-    private func configDidSet(oldValue: LDConfig) {
-        guard config != oldValue
-        else {
-            Log.debug(typeName(and: #function) + "aborted. New config matches old config")
-            return
-        }
+            guard config != oldValue
+            else {
+                Log.debug(typeName(and: #function) + "aborted. New config matches old config")
+                return
+            }
 
-        Log.level = environmentReporter.isDebugBuild && config.isDebugMode ? .debug : .noLogging
-        Log.debug(typeName(and: #function) + "new config set")
-        let wasOnline = isOnline
-        internalSetOnline(false)
-        convertCachedData(skipDuringStart: isStarting)
-        if let cachedFlags = flagCache.retrieveFeatureFlags(forUserWithKey: user.key, andMobileKey: config.mobileKey), !cachedFlags.isEmpty {
-            user.flagStore.replaceStore(newFlags: cachedFlags, source: .cache, completion: nil)
+            Log.level = environmentReporter.isDebugBuild && config.isDebugMode ? .debug : .noLogging
+            Log.debug(typeName(and: #function) + "new config set")
+            let wasOnline = isOnline
+            internalSetOnline(false)
+            cacheConverter.convertCacheData(for: user, and: config)
+            if let cachedFlags = flagCache.retrieveFeatureFlags(forUserWithKey: user.key, andMobileKey: config.mobileKey), !cachedFlags.isEmpty {
+                user.flagStore.replaceStore(newFlags: cachedFlags, source: .cache, completion: nil)
+            }
+
+            service = serviceFactory.makeDarklyServiceProvider(config: config, user: user)
+            eventReporter.config = config
+
+            internalSetOnline(wasOnline)
         }
-
-        service = serviceFactory.makeDarklyServiceProvider(config: config, user: user)
-        eventReporter.config = config
-
-        internalSetOnline(wasOnline)
     }
 
     public func setAllUserAttributesPrivate(_ allUserAttributesPrivate: Bool) {
@@ -281,7 +277,7 @@ public class LDClient {
             let wasOnline = self.isOnline
             self.internalSetOnline(false)
 
-            self.convertCachedData(skipDuringStart: self.isStarting)
+            cacheConverter.convertCacheData(for: user, and: config)
             if let cachedFlags = self.flagCache.retrieveFeatureFlags(forUserWithKey: self.user.key, andMobileKey: self.config.mobileKey), !cachedFlags.isEmpty {
                 self.user.flagStore.replaceStore(newFlags: cachedFlags, source: .cache, completion: nil)
             }
@@ -885,6 +881,8 @@ public class LDClient {
             Log.debug("LDClient.start() was called more than once!")
             return
         }
+
+        HTTPHeaders.removeFlagRequestEtags()
         
         let anonymousUser = LDUser(environmentReporter: EnvironmentReporter())
         let internalUser = startUser ?? anonymousUser
@@ -982,26 +980,12 @@ public class LDClient {
     private(set) var throttler: Throttling
     private(set) var diagnosticReporter: DiagnosticReporting
 
-    private(set) var isStarting: Bool {
-        get { isStartingQueue.sync { _isStarting } }
-        set { isStartingQueue.sync { _isStarting = newValue } }
-    }
-    private var _isStarting = true
     private(set) var hasStarted: Bool {
         get { hasStartedQueue.sync { _hasStarted } }
         set { hasStartedQueue.sync { _hasStarted = newValue } }
     }
     private var _hasStarted = true
-    private var isStartingQueue = DispatchQueue(label: "com.launchdarkly.LDClient.isStartingQueue")
     private var hasStartedQueue = DispatchQueue(label: "com.launchdarkly.LDClient.hasStartedQueue")
-
-    private func convertCachedData(skipDuringStart skip: Bool) {
-        guard !skip
-        else {
-            return
-        }
-        cacheConverter.convertCacheData(for: user, and: config)
-    }
     
     private init(serviceFactory: ClientServiceCreating? = nil, configuration: LDConfig, startUser: LDUser?, newCache: FeatureFlagCaching, flagNotifier: FlagChangeNotifying, testing: Bool = false, completion: (() -> Void)? = nil) {
         if let serviceFactory = serviceFactory {
@@ -1022,8 +1006,8 @@ public class LDClient {
         eventReporter = self.serviceFactory.makeEventReporter(config: config, service: service)
         errorNotifier = self.serviceFactory.makeErrorNotifier()
         connectionInformation = self.serviceFactory.makeConnectionInformation()
-        flagSynchronizer = self.serviceFactory.makeFlagSynchronizer(streamingMode: config.streamingMode,
-                                                                    pollingInterval: config.flagPollingInterval,
+        flagSynchronizer = self.serviceFactory.makeFlagSynchronizer(streamingMode: config.allowStreamingMode ? config.streamingMode : .polling,
+                                                                    pollingInterval: config.flagPollingInterval(runMode: runMode),
                                                                     useReport: config.useReport,
                                                                     service: service)
         
@@ -1037,15 +1021,23 @@ public class LDClient {
         NotificationCenter.default.addObserver(self, selector: #selector(didCloseEventSource), name: Notification.Name(FlagSynchronizer.Constants.didCloseEventSourceName), object: nil)
 
         eventReporter = self.serviceFactory.makeEventReporter(config: config, service: service, onSyncComplete: onEventSyncComplete)
-        internalSetOnline(false)
+        flagSynchronizer = self.serviceFactory.makeFlagSynchronizer(streamingMode: config.allowStreamingMode ? config.streamingMode : .polling,
+                                                                    pollingInterval: config.flagPollingInterval(runMode: runMode),
+                                                                    useReport: config.useReport,
+                                                                    service: service,
+                                                                    onSyncComplete: onFlagSyncComplete)
+
+        Log.level = environmentReporter.isDebugBuild && config.isDebugMode ? .debug : .noLogging
         cacheConverter.convertCacheData(for: user, and: config)
-        configDidSet(oldValue: LDConfig(mobileKey: "INITIAL_VALUE"))
-        internalIdentify(newUser: user, testing: testing)
+        if let cachedFlags = flagCache.retrieveFeatureFlags(forUserWithKey: user.key, andMobileKey: config.mobileKey), !cachedFlags.isEmpty {
+            user.flagStore.replaceStore(newFlags: cachedFlags, source: .cache, completion: nil)
+        }
+
+        eventReporter.record(Event.identifyEvent(user: user))
         self.connectionInformation = ConnectionInformation.uncacheConnectionInformation(config: config, ldClient: self, clientServiceFactory: self.serviceFactory)
 
         internalSetOnline(configuration.startOnline) {
             Log.debug("LDClient started")
-            self.isStarting = false
             completion?()
         }
     }
@@ -1126,10 +1118,6 @@ private extension Optional {
         
         func setRunMode(_ runMode: LDClientRunMode) {
             self.runMode = runMode
-        }
-
-        func setIsStarting(_ isStarting: Bool) {
-            self.isStarting = isStarting
         }
 
         func setHasStarted(_ hasStarted: Bool) {
