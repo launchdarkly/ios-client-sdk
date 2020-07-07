@@ -590,8 +590,8 @@ final class LDClientSpec: QuickSpec {
             
             context("when configured to start online") {
                 beforeEach {
-                    waitUntil(timeout: 10) { done in
-                        testContext = TestContext(startOnline: true, timeOut: 15) { timedOut in
+                    waitUntil(timeout: 15) { done in
+                        testContext = TestContext(startOnline: true, timeOut: 10) { timedOut in
                             expect(timedOut) == false
                             done()
                         }
@@ -649,7 +649,7 @@ final class LDClientSpec: QuickSpec {
             }
             context("when configured to start offline") {
                 beforeEach {
-                    waitUntil(timeout: 10) { done in
+                    waitUntil(timeout: 15) { done in
                         testContext = TestContext(startOnline: false, timeOut: 10) { timedOut in
                             expect(timedOut) == true
                             done()
@@ -697,7 +697,7 @@ final class LDClientSpec: QuickSpec {
                 OperatingSystem.allOperatingSystems.forEach { (os) in
                     context("on \(os)") {
                         beforeEach {
-                            waitUntil(timeout: 10) { done in
+                            waitUntil(timeout: 15) { done in
                                 testContext = TestContext(startOnline: true, runMode: .background, operatingSystem: os, timeOut: 10) { timedOut in
                                     expect(timedOut) == false
                                     done()

@@ -253,7 +253,7 @@ public struct LDConfig {
                 value == mobileKey
                 } ?? false
             let primaryEnvironmentNamePresentInSecondaryMobileKeys = newSecondaryMobileKeys?.keys.contains { (key) -> Bool in
-                key as String == LDConfig.Defaults.primaryEnvironmentName
+                key == LDConfig.Defaults.primaryEnvironmentName
                 } ?? false
             let mobileKeysUsedOnlyOnce = Set(newSecondaryMobileKeys?.values.shuffled() ?? [])
             if mobileKeyPresentInSecondaryMobileKeys {
