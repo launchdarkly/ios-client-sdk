@@ -4,5 +4,6 @@ xcuserdata
 *.playground
 /default.profraw
 /build
+/.build
 /docs
 /Carthage/Checkouts

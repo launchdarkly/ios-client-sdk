@@ -22,14 +22,14 @@ final class EnvironmentReporterSpec: QuickSpec {
             context("Debug Build") {
                 //This test is disabled. Configure the build for the integration harness before enabling & running this test.
                 //If you enable this test, you might want to disable the test that follows "not for the integration harness", which should fail when the SDK is configured for the integration harness.
-                context("for the integration harness") {
-                    beforeEach {
-                        environmentReporter = EnvironmentReporter()
-                    }
-                    it("should not throttle online calls") {
-                        expect(environmentReporter.shouldThrottleOnlineCalls) == false
-                    }
-                }
+//                context("for the integration harness") {
+//                    beforeEach {
+//                        environmentReporter = EnvironmentReporter()
+//                    }
+//                    it("should not throttle online calls") {
+//                        expect(environmentReporter.shouldThrottleOnlineCalls) == false
+//                    }
+//                }
                 context("not for the integration harness") {
                     beforeEach {
                         environmentReporter = EnvironmentReporter()
