@@ -49,9 +49,6 @@ public class LDClient {
     // MARK: - State Controls and Indicators
     
     private static var instances: [String: LDClient]? = nil
-    private static var internalInstances: [String: LDClient] {
-        return instances ?? [:]
-    }
     
     /**
      Reports the online/offline state of the LDClient.
