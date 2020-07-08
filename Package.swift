@@ -17,10 +17,11 @@ let package = Package(
             targets: ["LaunchDarkly"]),
     ],
     dependencies: [
-        .package(url: "https://github.com/AliSoftware/OHHTTPStubs.git", from: "9.0.0"),
-        .package(url: "https://github.com/Quick/Quick.git", from: "2.1.0"),
-        .package(url: "https://github.com/Quick/Nimble.git", from: "8.0.2"),
-        .package(url: "https://github.com/LaunchDarkly/swift-eventsource.git", from: "0.3.0")
+        // TODO change these to HTTPS once swift-eventsource is public.
+        .package(url: "git@github.com:AliSoftware/OHHTTPStubs.git", from: "9.0.0"),
+        .package(url: "git@github.com:Quick/Quick.git", from: "2.1.0"),
+        .package(url: "git@github.com:Quick/Nimble.git", from: "8.0.2"),
+        .package(url: "git@github.com:LaunchDarkly/swift-eventsource.git", from: "0.3.0")
     ],
     targets: [
         // Targets are the basic building blocks of a package. A target can define a module or a test suite.
