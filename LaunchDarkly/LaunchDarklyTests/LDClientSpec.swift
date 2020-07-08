@@ -630,7 +630,7 @@ final class LDClientSpec: QuickSpec {
             context("when configured to start online") {
                 beforeEach {
                     waitUntil(timeout: 10) { done in
-                        testContext = TestContext(startOnline: true, timeOut: 3.0, forceTimeout: true) { timedOut in
+                        testContext = TestContext(startOnline: true, timeOut: 2.0, forceTimeout: true) { timedOut in
                             expect(timedOut) == true
                             done()
                         }
