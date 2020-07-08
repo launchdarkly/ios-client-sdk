@@ -27,6 +27,15 @@
           "revision": "09b3becb37cb2163919a3842a4c5fa6ec7130792",
           "version": "2.2.1"
         }
+      },
+      {
+        "package": "LDSwiftEventSource",
+        "repositoryURL": "https://github.com/LaunchDarkly/swift-eventsource.git",
+        "state": {
+          "branch": null,
+          "revision": "9335390060a7bac038b92f6d3f0407190f5470f2",
+          "version": "0.3.0"
+        }
       }
     ]
   },
