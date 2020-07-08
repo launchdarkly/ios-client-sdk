@@ -6,5 +6,6 @@ output: LaunchDarkly/GeneratedCode/
 
 args:
   app: LaunchDarkly
-  imports: 
+  imports:
+  - Foundation
   - LDSwiftEventSource

@@ -5,6 +5,7 @@
 //  Copyright © 2019 Catamorphic Co. All rights reserved.
 //
 
+import Foundation
 import Quick
 import Nimble
 @testable import LaunchDarkly
