@@ -6,6 +6,7 @@
 //  Copyright © 2017 Catamorphic Co. All rights reserved.
 //
 
+import Foundation
 import Quick
 import Nimble
 import OHHTTPStubs
@@ -82,7 +83,7 @@ final class DarklyServiceSpec: QuickSpec {
         publishDiagnosticSpec()
 
         afterEach {
-            OHHTTPStubs.removeAllStubs()
+            HTTPStubs.removeAllStubs()
             HTTPHeaders.removeFlagRequestEtags()
         }
     }
@@ -1001,12 +1002,11 @@ final class DarklyServiceSpec: QuickSpec {
                     }
                 }
                 it("makes a valid request") {
-                    let expectedData = try? JSONEncoder().encode(self.stubDiagnostic())
                     expect(diagnosticRequest).toNot(beNil())
                     expect(diagnosticRequest?.httpMethod) == URLRequest.HTTPMethods.post
                     // Unfortunately, we can't actually test the body here, see:
                     // https://github.com/AliSoftware/OHHTTPStubs#known-limitations
-                    //expect(diagnosticRequest?.httpBody) == expectedData
+                    //expect(diagnosticRequest?.httpBody) == try? JSONEncoder().encode(self.stubDiagnostic())
 
                     // Actual header values are tested in HTTPHeadersSpec
                     for (key, value) in testContext.httpHeaders.diagnosticRequestHeaders {
@@ -1033,12 +1033,11 @@ final class DarklyServiceSpec: QuickSpec {
                     }
                 }
                 it("makes a valid request") {
-                    let expectedData = try? JSONEncoder().encode(self.stubDiagnostic())
                     expect(diagnosticRequest).toNot(beNil())
                     expect(diagnosticRequest?.httpMethod) == URLRequest.HTTPMethods.post
                     // Unfortunately, we can't actually test the body here, see:
                     // https://github.com/AliSoftware/OHHTTPStubs#known-limitations
-                    //expect(diagnosticRequest?.httpBody) == expectedData
+                    //expect(diagnosticRequest?.httpBody) == try? JSONEncoder().encode(self.stubDiagnostic())
 
                     // Actual header values are tested in HTTPHeadersSpec
                     for (key, value) in testContext.httpHeaders.diagnosticRequestHeaders {
@@ -1052,7 +1051,6 @@ final class DarklyServiceSpec: QuickSpec {
                 }
             }
             context("empty mobile key") {
-                var responses: ServiceResponses!
                 var diagnosticPublished = false
                 beforeEach {
                     testContext = TestContext(mobileKey: Constants.emptyMobileKey)
