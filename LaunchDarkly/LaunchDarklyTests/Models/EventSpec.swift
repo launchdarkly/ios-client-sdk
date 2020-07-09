@@ -6,6 +6,7 @@
 //  Copyright © 2017 Catamorphic Co. All rights reserved.
 //
 
+import Foundation
 import Quick
 import Nimble
 @testable import LaunchDarkly
@@ -771,20 +772,20 @@ final class EventSpec: QuickSpec {
                 expect(eventDictionary.eventEndDate?.isWithin(0.001, of: event.endDate)).to(beTrue())
                 guard let features = eventDictionary.eventFeatures
                     else {
-                        XCTFail("expected eventDictionary features to not be nil, got nil")
+                        fail("expected eventDictionary features to not be nil, got nil")
                         return
                 }
                 expect(features.count) == event.flagRequestTracker?.flagCounters.count
                 event.flagRequestTracker?.flagCounters.forEach { (flagKey, flagCounter) in
                     guard let flagCounterDictionary = features[flagKey] as? [String: Any]
                     else {
-                        XCTFail("expected features to contain flag counter for \(flagKey), got nil")
+                        fail("expected features to contain flag counter for \(flagKey), got nil")
                         return
                     }
                     expect(AnyComparer.isEqual(flagCounterDictionary.flagCounterDefaultValue, to: flagCounter.defaultValue, considerNilAndNullEqual: true)).to(beTrue())
                     guard let flagValueCounters = flagCounterDictionary.flagCounterFlagValueCounters, flagValueCounters.count == flagCounter.flagValueCounters.count
                     else {
-                        XCTFail("expected flag value counters for \(flagKey) to have \(flagCounter.flagValueCounters.count) entries, got \(flagCounterDictionary.flagCounterFlagValueCounters?.count ?? 0)")
+                        fail("expected flag value counters for \(flagKey) to have \(flagCounter.flagValueCounters.count) entries, got \(flagCounterDictionary.flagCounterFlagValueCounters?.count ?? 0)")
                         return
                     }
                     for (index, flagValueCounter) in flagCounter.flagValueCounters.enumerated() {

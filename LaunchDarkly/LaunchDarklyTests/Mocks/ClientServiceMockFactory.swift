@@ -5,9 +5,9 @@
 //  Copyright © 2017 Catamorphic Co. All rights reserved.
 //
 
+import Foundation
 import LDSwiftEventSource
 @testable import LaunchDarkly
-import UIKit
 
 final class ClientServiceMockFactory: ClientServiceCreating {
     func makeKeyedValueCache() -> KeyedValueCaching {
@@ -120,10 +120,6 @@ final class ClientServiceMockFactory: ClientServiceCreating {
 
     var makeEnvironmentReporterReturnValue: EnvironmentReportingMock = EnvironmentReportingMock()
     func makeEnvironmentReporter() -> EnvironmentReporting {
-        // the code generator is not generating the default, not sure why not //sourcery: defaultMockValue = .UIApplicationDidEnterBackground
-        // the code generator is not generating the default, not sure why not //sourcery: defaultMockValue = .UIApplicationWillEnterForeground
-        makeEnvironmentReporterReturnValue.backgroundNotification = UIApplication.didEnterBackgroundNotification
-        makeEnvironmentReporterReturnValue.foregroundNotification = UIApplication.willEnterForegroundNotification
         return makeEnvironmentReporterReturnValue
     }
 

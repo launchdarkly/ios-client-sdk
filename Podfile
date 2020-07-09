@@ -29,7 +29,7 @@ end
 
 target 'LaunchDarklyTests' do
     platform :ios, '10.0'
-    pod 'OHHTTPStubs/Swift', '8.0.0'
+    pod 'OHHTTPStubs/Swift', '9.0.0'
     pod 'Quick', '2.1.0'
     pod 'Nimble', '8.0.2'
     pod 'Sourcery', '0.16.1'

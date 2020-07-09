@@ -53,9 +53,9 @@ protocol EnvironmentReporting {
     var systemName: String { get }
     //sourcery: defaultMockValue = .iOS
     var operatingSystem: OperatingSystem { get }
-    // the code generator is not generating the default, not sure why not //sourcery: defaultMockValue = .UIApplicationDidEnterBackground
+    //sourcery: defaultMockValue = EnvironmentReporter().backgroundNotification
     var backgroundNotification: Notification.Name? { get }
-    // the code generator is not generating the default, not sure why not //sourcery: defaultMockValue = .UIApplicationWillEnterForeground
+    //sourcery: defaultMockValue = EnvironmentReporter().foregroundNotification
     var foregroundNotification: Notification.Name? { get }
     //sourcery: defaultMockValue = Constants.vendorUUID
     var vendorUUID: String? { get }

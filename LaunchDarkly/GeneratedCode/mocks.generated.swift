@@ -2,6 +2,7 @@
 // DO NOT EDIT
 
 
+import Foundation
 import LDSwiftEventSource
 @testable import LaunchDarkly
 
@@ -46,7 +47,7 @@ final class DiagnosticCachingMock: DiagnosticCaching {
     // MARK: lastStats
     var lastStatsSetCount = 0
     var setLastStatsCallback: (() -> Void)?
-    var lastStats: DiagnosticStats? {
+    var lastStats: DiagnosticStats? = nil {
         didSet {
             lastStatsSetCount += 1
             setLastStatsCallback?()
@@ -202,7 +203,7 @@ final class EnvironmentReportingMock: EnvironmentReporting {
     // MARK: backgroundNotification
     var backgroundNotificationSetCount = 0
     var setBackgroundNotificationCallback: (() -> Void)?
-    var backgroundNotification: Notification.Name? {
+    var backgroundNotification: Notification.Name? = EnvironmentReporter().backgroundNotification {
         didSet {
             backgroundNotificationSetCount += 1
             setBackgroundNotificationCallback?()
@@ -212,7 +213,7 @@ final class EnvironmentReportingMock: EnvironmentReporting {
     // MARK: foregroundNotification
     var foregroundNotificationSetCount = 0
     var setForegroundNotificationCallback: (() -> Void)?
-    var foregroundNotification: Notification.Name? {
+    var foregroundNotification: Notification.Name? = EnvironmentReporter().foregroundNotification {
         didSet {
             foregroundNotificationSetCount += 1
             setForegroundNotificationCallback?()
@@ -222,7 +223,7 @@ final class EnvironmentReportingMock: EnvironmentReporting {
     // MARK: vendorUUID
     var vendorUUIDSetCount = 0
     var setVendorUUIDCallback: (() -> Void)?
-    var vendorUUID: String? {
+    var vendorUUID: String? = Constants.vendorUUID {
         didSet {
             vendorUUIDSetCount += 1
             setVendorUUIDCallback?()
@@ -310,7 +311,7 @@ final class EventReportingMock: EventReporting {
     // MARK: lastEventResponseDate
     var lastEventResponseDateSetCount = 0
     var setLastEventResponseDateCallback: (() -> Void)?
-    var lastEventResponseDate: Date? {
+    var lastEventResponseDate: Date? = nil {
         didSet {
             lastEventResponseDateSetCount += 1
             setLastEventResponseDateCallback?()

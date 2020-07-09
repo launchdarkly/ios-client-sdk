@@ -5,9 +5,9 @@
 //  Copyright © 2017 Catamorphic Co. All rights reserved.
 //
 
+import Foundation
 import Quick
 import Nimble
-import Foundation
 @testable import LaunchDarkly
 
 final class KeyedValueCacheSpec: QuickSpec {

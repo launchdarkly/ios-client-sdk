@@ -5,6 +5,7 @@
 //  Copyright © 2017 Catamorphic Co. All rights reserved.
 //
 
+import Foundation
 import LDSwiftEventSource
 @testable import LaunchDarkly
 
