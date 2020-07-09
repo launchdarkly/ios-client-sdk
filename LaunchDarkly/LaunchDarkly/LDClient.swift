@@ -217,14 +217,6 @@ public class LDClient {
             internalSetOnline(wasOnline)
         }
     }
-
-    public func setAllUserAttributesPrivate(_ allUserAttributesPrivate: Bool) {
-        LDClient.instances?.forEach { $1.internalSetAllUserAttributesPrivate(allUserAttributesPrivate)}
-    }
-
-    private func internalSetAllUserAttributesPrivate(_ allUserAttributesPrivate: Bool) {
-        self.config.allUserAttributesPrivate = allUserAttributesPrivate
-    }
     
     private(set) var user: LDUser
     
