@@ -52,7 +52,7 @@ public final class ObjcLDClient: NSObject {
 
     // MARK: - State Controls and Indicators
 
-    private(set) var ldClient: LDClient
+    private var ldClient: LDClient
     
     /**
      Reports the online/offline state of the LDClient.
@@ -128,12 +128,11 @@ public final class ObjcLDClient: NSObject {
     
      - returns: A Bool based on whether ldClient was successfully changed.
     */
-    @objc public func get() -> Bool {
+    @objc public static func get() -> ObjcLDClient? {
         if let optionalClient = LDClient.get() {
-            ldClient = optionalClient
-            return true
+            return ObjcLDClient(client: optionalClient)
         } else {
-            return false
+            return nil
         }
     }
 
@@ -142,7 +141,7 @@ public final class ObjcLDClient: NSObject {
      
      - returns: All environment names as an Array of Strings.
     */
-    @objc public func getEnvironmentNames() -> [String]? {
+    @objc public static func getEnvironmentNames() -> [String]? {
         LDClient.getEnvironmentNames()
     }
   
@@ -151,12 +150,11 @@ public final class ObjcLDClient: NSObject {
     
      - returns: A Bool based on whether ldClient was successfully changed.
     */
-    @objc public func getForMobileKey(keyName: String) -> Bool {
+    @objc public static func getForMobileKey(keyName: String) -> ObjcLDClient? {
         if let optionalClient = LDClient.getForMobileKey(keyName: keyName) {
-            ldClient = optionalClient
-            return true
+            return ObjcLDClient(client: optionalClient)
         } else {
-            return false
+            return nil
         }
     }
 
@@ -808,8 +806,26 @@ public final class ObjcLDClient: NSObject {
     - parameter userWrapper: The LDUser set with the desired user. If omitted, LDClient retains the previously set user, or default if one was never set. (Optional)
     - parameter completion: Closure called when the embedded `setOnline` call completes, subject to throttling delays. (Optional)
     */
-    @objc public init(configuration: ObjcLDConfig, user: ObjcLDUser, completion: (() -> Void)? = nil) {
+    /// - Tag: init
+    public init(configuration: ObjcLDConfig, user: ObjcLDUser, completion: (() -> Void)? = nil) {
         LDClient.start(config: configuration.config, startUser: user.user, completion: completion)
         ldClient = LDClient.get()!
+    }
+
+    /**
+    See [stringVariation](x-source-tag://init) for more information on starting the SDK.
+
+    - parameter configuration: The LDConfig that contains the desired configuration. (Required)
+    - parameter startUser: The LDUser set with the desired user. If omitted, LDClient retains the previously set user, or default if one was never set. (Optional)
+    - parameter startWaitSeconds: A TimeInterval that determines when the completion will return if no flags have been returned from the network.
+    - parameter completion: Closure called when the embedded `setOnline` call completes, subject to throttling delays. Takes a Bool that indicates whether the completion timedout as a parameter. (Optional)
+    */
+    public init(configuration: ObjcLDConfig, user: ObjcLDUser, startWaitSeconds: TimeInterval, completion: ((_ timedOut: Bool) -> Void)? = nil) {
+        LDClient.start(config: configuration.config, startUser: user.user, startWaitSeconds: startWaitSeconds, completion: completion)
+        ldClient = LDClient.get()!
+    }
+
+    private init(client: LDClient) {
+        ldClient = client
     }
 }

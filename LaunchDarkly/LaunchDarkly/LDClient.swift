@@ -827,14 +827,15 @@ public class LDClient {
     
     /**
      Starts the LDClient using the passed in `config` & `user`. Call this before requesting feature flag values. The LDClient will not go online until you call this method.
-     Starting the LDClient means setting the `config` & `user`, setting the client online if `config.startOnline` is true (the default setting), and starting event recording. The client app must start the LDClient before it will report feature flag values. If a client does not call init, the LDClient will only report fallback values, and no events will be recorded.
-     If the init call omits the `user`, the LDClient uses the previously set `user`, or the default `user` if it was never set.
-     If theinit call includes the optional `completion` closure, LDClient calls the `completion` closure when `setOnline(_: completion:)` embedded in the init method completes. This method listens for flag updates so the completion will only return once an update has occurred. The start call is subject to throttling delays, therefore the `completion` closure call may be delayed.
-     Subsequent calls to this method cause the LDClient to throw an error. Normally there should only be one call to init. To change `config` or `user`, set them directly on LDClient.
+     Starting the LDClient means setting the `config` & `user`, setting the client online if `config.startOnline` is true (the default setting), and starting event recording. The client app must start the LDClient before it will report feature flag values. If a client does not call `start`, no methods will work.
+     If the `start` call omits the `user`, the LDClient uses the previously set `user`, or the default `user` if it was never set.
+     If the` start` call includes the optional `completion` closure, LDClient calls the `completion` closure when `setOnline(_: completion:)` embedded in the `init` method completes. This method listens for flag updates so the completion will only return once an update has occurred. The `start` call is subject to throttling delays, therefore the `completion` closure call may be delayed.
+     Subsequent calls to this method cause the LDClient to return. Normally there should only be one call to start. To change `user`, use `identify`.
      - parameter configuration: The LDConfig that contains the desired configuration. (Required)
      - parameter startUser: The LDUser set with the desired user. If omitted, LDClient retains the previously set user, or default if one was never set. (Optional)
      - parameter completion: Closure called when the embedded `setOnline` call completes, subject to throttling delays. (Optional)
     */
+    /// - Tag: start
     public static func start(config: LDConfig, startUser: LDUser? = nil, completion: (() -> Void)? = nil) {
         Log.debug("LDClient starting")
         if instances != nil {
@@ -869,6 +870,14 @@ public class LDClient {
         completionCheck()
     }
 
+    /**
+    See [stringVariation](x-source-tag://start) for more information on starting the SDK.
+
+    - parameter configuration: The LDConfig that contains the desired configuration. (Required)
+    - parameter startUser: The LDUser set with the desired user. If omitted, LDClient retains the previously set user, or default if one was never set. (Optional)
+    - parameter startWaitSeconds: A TimeInterval that determines when the completion will return if no flags have been returned from the network.
+    - parameter completion: Closure called when the embedded `setOnline` call completes, subject to throttling delays. Takes a Bool that indicates whether the completion timedout as a parameter. (Optional)
+    */
     public static func start(config: LDConfig, startUser: LDUser? = nil, startWaitSeconds: TimeInterval, completion: ((_ timedOut: Bool) -> Void)? = nil) {
         var completed = true
         let internalCompletedQueue: DispatchQueue = DispatchQueue(label: "TimeOutQueue")
