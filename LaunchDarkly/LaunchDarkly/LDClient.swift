@@ -228,10 +228,6 @@ public class LDClient {
      The LDConfig that configures the LDClient. See `LDConfig` for details about what can be configured.
 
      Normally, the client app should set desired values into a LDConfig and pass that into `start(config: user: completion:)`. If the client does not pass a LDConfig to the LDClient, the LDClient creates a LDConfig using all default values.
-
-     The client app can change the LDConfig by getting the `config`, adjusting the values, and setting it into the LDClient.
-
-     When a new config is set, the LDClient goes offline and reconfigures using the new config. If the client was online when the new config was set, it goes online again, subject to a throttling delay if in force (see `setOnline(_: completion:)` for details). To change both the `config` and `user`, set the LDClient offline, set both properties, then set the LDClient online.
     */
     public let config: LDConfig
     
@@ -875,7 +871,7 @@ public class LDClient {
     See [start](x-source-tag://start) for more information on starting the SDK.
 
     - parameter configuration: The LDConfig that contains the desired configuration. (Required)
-    - parameter startUser: The LDUser set with the desired user. If omitted, LDClient sets a default user.. (Optional)
+    - parameter startUser: The LDUser set with the desired user. If omitted, LDClient sets a default user. (Optional)
     - parameter startWaitSeconds: A TimeInterval that determines when the completion will return if no flags have been returned from the network.
     - parameter completion: Closure called when the embedded `setOnline` call completes. Takes a Bool that indicates whether the completion timedout as a parameter. (Optional)
     */
