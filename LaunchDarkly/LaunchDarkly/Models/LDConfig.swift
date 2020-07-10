@@ -256,15 +256,12 @@ public struct LDConfig {
         let primaryEnvironmentNamePresentInSecondaryMobileKeys = newSecondaryMobileKeys.keys.contains(LDConfig.Defaults.primaryEnvironmentName)
         let mobileKeysUsedOnlyOnce = Set(newSecondaryMobileKeys.values.shuffled())
         if mobileKeyPresentInSecondaryMobileKeys {
-            Log.debug("The primary environment key cannot be in the secondary mobile keys.")
             throw("The primary environment key cannot be in the secondary mobile keys.")
         }
         if primaryEnvironmentNamePresentInSecondaryMobileKeys {
-            Log.debug("The primary environment name is not a valid key.")
             throw("The primary environment name is not a valid key.")
         }
         if mobileKeysUsedOnlyOnce.count != newSecondaryMobileKeys.count {
-            Log.debug("A key can only be used once.")
             throw("A key can only be used once.")
         }
 
