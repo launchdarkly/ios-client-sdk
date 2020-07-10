@@ -15,7 +15,14 @@ LaunchDarkly overview
 Supported iOS and Xcode versions
 -------------------------
 
-This version of the LaunchDarkly SDK has been tested with iOS 12 and across mobile, desktop, watch, and tv devices. The SDK is built with Xcode 11.4.
+This version of the LaunchDarkly SDK has been tested with iOS 13.5 and across mobile, desktop, watch, and tv devices. The SDK is built with Xcode 11.5. The minimum platform versions are:
+
+| Platform      | Version       |
+| ------------- | ------------- |
+| iOS           | 10.0          |
+| watchOS       | 3.0           |
+| tvOS          | 10.0          |
+| mac  OS       | 10.12         |
 
 Getting started
 -----------
@@ -35,7 +42,7 @@ $ gem install cocoapods
 ```ruby
 use_frameworks!
 target 'YourTargetName' do
-  pod 'LaunchDarkly', '4.7.0'
+  pod 'LaunchDarkly', '5.0.0'
 end
 ```
 
@@ -70,7 +77,7 @@ $ brew install carthage
 To integrate LaunchDarkly into your Xcode project using Carthage, specify it in your `Cartfile`:
 
 ```ogdl
-github "launchdarkly/ios-client-sdk" "4.7.0"
+github "launchdarkly/ios-client-sdk" "5.0.0"
 ```
 
 Run `carthage update` to build the framework. Optionally, specify the `--platform` to build only the frameworks that support your platform(s).
