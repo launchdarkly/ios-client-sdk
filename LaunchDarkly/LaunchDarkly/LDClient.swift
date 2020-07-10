@@ -25,11 +25,11 @@ enum LDClientRunMode {
 ### Getting Feature Flags
  Once the LDClient has started, it makes your feature flags available using the `variation` and `variationDetail` methods. A `variation` is a specific flag value. For example a boolean feature flag has 2 variations, `true` and `false`. You can create feature flags with more than 2 variations using other feature flag types. See `LDFlagValue` for the available types.
  ````
- let boolFlag = LDClient.get()?.variation(forKey: "my-bool-flag", fallback: false)
+ let boolFlag = LDClient.get()?.variation(forKey: "my-bool-flag", defaultValue: false)
  ````
  If you need to know more information about why a given value is returned, use `variationDetail`.
 
- See `variation(forKey: fallback:)` or `variationDetail(forKey: fallback:)` for details
+ See `variation(forKey: defaultValue:)` or `variationDetail(forKey: defaultValue:)` for details
 
 ### Observing Feature Flags
  You might need to know when a feature flag value changes. This is not required, you can check the flag's value when you need it.
@@ -300,7 +300,7 @@ public class LDClient {
     }
 
     /**
-     Stops the LDClient. Stopping the client means the LDClient goes offline and stops recording events. LDClient will no longer provide feature flag values, only returning fallback values.
+     Stops the LDClient. Stopping the client means the LDClient goes offline and stops recording events. LDClient will no longer provide feature flag values, only returning default values.
 
      There is almost no reason to stop the LDClient. Normally, set the LDClient offline to stop communication with the LaunchDarkly servers. Stop the LDClient to stop recording events. There is no need to stop the LDClient prior to suspending, moving to the background, or terminating the app. The SDK will respond to these events as the system requires and as configured in LDConfig.
     */
@@ -363,11 +363,11 @@ public class LDClient {
     */
     
     /**
-     Returns the variation for the given feature flag. If the flag does not exist, cannot be cast to the correct return type, or the LDClient is not started, returns the fallback value. Use this method when the fallback value is a non-Optional type. See `variation` with the Optional return value when the fallback value can be nil.
+     Returns the variation for the given feature flag. If the flag does not exist, cannot be cast to the correct return type, or the LDClient is not started, returns the default value. Use this method when the default value is a non-Optional type. See `variation` with the Optional return value when the default value can be nil.
 
      A *variation* is a specific flag value. For example a boolean feature flag has 2 variations, *true* and *false*. You can create feature flags with more than 2 variations using other feature flag types. See `LDFlagValue` for the available types.
 
-     The LDClient must be started in order to return feature flag values. If the LDClient is not started, it will always return the fallback value. The LDClient must be online to keep the feature flag values up-to-date.
+     The LDClient must be started in order to return feature flag values. If the LDClient is not started, it will always return the default value. The LDClient must be online to keep the feature flag values up-to-date.
 
      When online, the LDClient has two modes for maintaining feature flag values: *streaming* and *polling*. The client app requests the mode by setting the `config.streamingMode`, see `LDConfig` for details.
      - In streaming mode, the LDClient opens a long-running connection to LaunchDarkly's streaming server (called *clientstream*). When a flag value changes on the server, the clientstream notifies the SDK to update the value. Streaming mode is not available on watchOS. On iOS and tvOS, the client app must be running in the foreground to connect to clientstream. On macOS the client app may run in either foreground or background to connect to clientstream. If streaming mode is not available, the SDK reverts to polling mode.
@@ -379,45 +379,45 @@ public class LDClient {
 
      ### Usage
      ````
-     let boolFeatureFlagValue = LDClient.get()!.variation(forKey: "bool-flag-key", fallback: false) //boolFeatureFlagValue is a Bool
+     let boolFeatureFlagValue = LDClient.get()!.variation(forKey: "bool-flag-key", defaultValue: false) //boolFeatureFlagValue is a Bool
      ````
-     **Important** The fallback value tells the SDK the type of the feature flag. In several cases, the feature flag type cannot be determined by the values sent from the server. It is possible to provide a fallback value with a type that does not match the feature flag value's type. The SDK will attempt to convert the feature flag's value into the type of the fallback value in the variation request. If that cast fails, the SDK will not be able to determine the correct return type, and will always return the fallback value.
+     **Important** The default value tells the SDK the type of the feature flag. In several cases, the feature flag type cannot be determined by the values sent from the server. It is possible to provide a default value with a type that does not match the feature flag value's type. The SDK will attempt to convert the feature flag's value into the type of the default value in the variation request. If that cast fails, the SDK will not be able to determine the correct return type, and will always return the default value.
 
-     Pay close attention to the type of the fallback value for collections. If the fallback collection type is more restrictive than the feature flag, the sdk will return the fallback even though the feature flag is present because it cannot convert the feature flag into the type requested via the fallback value. For example, if the feature flag has the type `[String: Any]`, but the fallback has the type `[String: Int]`, the sdk will not be able to convert the flags into the requested type, and will return the fallback value.
+     Pay close attention to the type of the default value for collections. If the default value collection type is more restrictive than the feature flag, the sdk will return the default value even though the feature flag is present because it cannot convert the feature flag into the type requested via the default value. For example, if the feature flag has the type `[String: Any]`, but the default value has the type `[String: Int]`, the sdk will not be able to convert the flags into the requested type, and will return the default value.
 
-     To avoid this, make sure the fallback type matches the expected feature flag type. Either specify the fallback value type to be the feature flag type, or cast the fallback value to the feature flag type prior to making the variation request. In the above example, either specify that the fallback value's type is [String: Any]:
+     To avoid this, make sure the default value type matches the expected feature flag type. Either specify the default value type to be the feature flag type, or cast the default value to the feature flag type prior to making the variation request. In the above example, either specify that the default value's type is [String: Any]:
      ````
-     let fallbackValue: [String: Any] = ["a": 1, "b": 2]     //dictionary type would be [String: Int] without the type specifier
+     let defaultValue: [String: Any] = ["a": 1, "b": 2]     //dictionary type would be [String: Int] without the type specifier
      ````
-     or cast the fallback value into the feature flag type prior to calling variation:
+     or cast the default value into the feature flag type prior to calling variation:
      ````
-     let dictionaryFlagValue = LDClient.get()!.variation(forKey: "dictionary-key", fallback: ["a": 1, "b": 2] as [String: Any])
+     let dictionaryFlagValue = LDClient.get()!.variation(forKey: "dictionary-key", defaultValue: ["a": 1, "b": 2] as [String: Any])
      ````
 
      - parameter forKey: The LDFlagKey for the requested feature flag.
-     - parameter fallback: The fallback value to return if the feature flag key does not exist.
+     - parameter defaultValue: The default value to return if the feature flag key does not exist.
 
-     - returns: The requested feature flag value, or the fallback if the flag is missing or cannot be cast to the fallback type, or the client is not started
+     - returns: The requested feature flag value, or the default value if the flag is missing or cannot be cast to the default value type, or the client is not started
     */
-    /// - Tag: variationWithFallback
-    public func variation<T: LDFlagValueConvertible>(forKey flagKey: LDFlagKey, fallback: T) -> T {
-        //the fallback cast to 'as T?' directs the call to the Optional-returning variation method
-        variation(forKey: flagKey, fallback: fallback as T?) ?? fallback
+    /// - Tag: variationWithdefaultValue
+    public func variation<T: LDFlagValueConvertible>(forKey flagKey: LDFlagKey, defaultValue: T) -> T {
+        //the defaultValue cast to 'as T?' directs the call to the Optional-returning variation method
+        variation(forKey: flagKey, defaultValue: defaultValue as T?) ?? defaultValue
     }
     
     /**
-     Returns the EvaluationDetail for the given feature flag. EvaluationDetail gives you more insight into why your variation contains the specified value. If the flag does not exist, cannot be cast to the correct return type, or the LDClient is not started, returns EvaluationDetail with the fallback value. Use this method when the fallback value is a non-Optional type. See `variationDetail` with the Optional return value when the fallback value can be nil. See [variationWithFallback](x-source-tag://variationWithFallback)
+     Returns the EvaluationDetail for the given feature flag. EvaluationDetail gives you more insight into why your variation contains the specified value. If the flag does not exist, cannot be cast to the correct return type, or the LDClient is not started, returns EvaluationDetail with the default value. Use this method when the default value is a non-Optional type. See `variationDetail` with the Optional return value when the default  value can be nil. See [variationWithdefaultValue](x-source-tag://variationWithdefaultValue)
      
      - parameter forKey: The LDFlagKey for the requested feature flag.
-     - parameter fallback: The fallback value to return if the feature flag key does not exist.
+     - parameter defaultValue: The default value value to return if the feature flag key does not exist.
      
-     - returns: EvaluationDetail which wraps the requested feature flag value, or the fallback, which variation was served, and the evaluation reason.
+     - returns: EvaluationDetail which wraps the requested feature flag value, or the default value, which variation was served, and the evaluation reason.
      */
-    public func variationDetail<T: LDFlagValueConvertible>(forKey flagKey: LDFlagKey, fallback: T) -> EvaluationDetail<T> {
+    public func variationDetail<T: LDFlagValueConvertible>(forKey flagKey: LDFlagKey, defaultValue: T) -> EvaluationDetail<T> {
         let featureFlag = user.flagStore.featureFlag(for: flagKey)
         let reason = checkErrorKinds(featureFlag: featureFlag) ?? featureFlag?.reason
-        let value = variationInternal(forKey: flagKey, fallback: fallback, includeReason: true)
-        return EvaluationDetail(value: value ?? fallback, variationIndex: featureFlag?.variation, reason: reason)
+        let value = variationInternal(forKey: flagKey, defaultValue: defaultValue, includeReason: true)
+        return EvaluationDetail(value: value ?? defaultValue, variationIndex: featureFlag?.variation, reason: reason)
     }
     
     private func checkErrorKinds(featureFlag: FeatureFlag?) -> Dictionary<String, Any>? {
@@ -431,11 +431,11 @@ public class LDClient {
     }
 
     /**
-     Returns the variation for the given feature flag. If the flag does not exist, cannot be cast to the correct return type, or the LDClient is not started, returns the fallback value, which may be `nil`. Use this method when the fallback value is an Optional type. See `variation` with the non-Optional return value when the fallback value cannot be nil.
+     Returns the variation for the given feature flag. If the flag does not exist, cannot be cast to the correct return type, or the LDClient is not started, returns the default value, which may be `nil`. Use this method when the default value is an Optional type. See `variation` with the non-Optional return value when the default value cannot be nil.
 
      A *variation* is a specific flag value. For example a boolean feature flag has 2 variations, *true* and *false*. You can create feature flags with more than 2 variations using other feature flag types. See `LDFlagValue` for the available types.
 
-     The LDClient must be started in order to return feature flag values. If the LDClient is not started, it will always return the fallback value. The LDClient must be online to keep the feature flag values up-to-date.
+     The LDClient must be started in order to return feature flag values. If the LDClient is not started, it will always return the default value. The LDClient must be online to keep the feature flag values up-to-date.
 
      When online, the LDClient has two modes for maintaining feature flag values: *streaming* and *polling*. The client app requests the mode by setting the `config.streamingMode`, see `LDConfig` for details.
      - In streaming mode, the LDClient opens a long-running connection to LaunchDarkly's streaming server (called *clientstream*). When a flag value changes on the server, the clientstream notifies the SDK to update the value. Streaming mode is not available on watchOS. On iOS and tvOS, the client app must be running in the foreground to connect to clientstream. On macOS the client app may run in either foreground or background to connect to clientstream. If streaming mode is not available, the SDK reverts to polling mode.
@@ -447,71 +447,71 @@ public class LDClient {
 
      ### Usage
      ````
-     let boolFeatureFlagValue: Bool? = LDClient.get()!.variation(forKey: "bool-flag-key", fallback: nil) //boolFeatureFlagValue is a Bool?
+     let boolFeatureFlagValue: Bool? = LDClient.get()!.variation(forKey: "bool-flag-key", defaultValue: nil) //boolFeatureFlagValue is a Bool?
      ````
-     **Important** The fallback value tells the SDK the type of the feature flag. In several cases, the feature flag type cannot be determined by the values sent from the server. It is possible to provide a fallback value with a type that does not match the feature flag value's type. The SDK will attempt to convert the feature flag's value into the type of the fallback value in the variation request. If that cast fails, the SDK will not be able to determine the correct return type, and will always return the fallback value.
+     **Important** The default value tells the SDK the type of the feature flag. In several cases, the feature flag type cannot be determined by the values sent from the server. It is possible to provide a default value with a type that does not match the feature flag value's type. The SDK will attempt to convert the feature flag's value into the type of the default value in the variation request. If that cast fails, the SDK will not be able to determine the correct return type, and will always return the default value.
 
-     When specifying `nil` as the fallback value, the compiler must also know the type of the optional. Without this information, the compiler will give the error "'nil' requires a contextual type". There are several ways to provide this information, by setting the type on the item holding the return value, by casting the return value to the desired type, or by casting `nil` to the desired type. We recommend following the above example and setting the type on the return value item.
+     When specifying `nil` as the default value, the compiler must also know the type of the optional. Without this information, the compiler will give the error "'nil' requires a contextual type". There are several ways to provide this information, by setting the type on the item holding the return value, by casting the return value to the desired type, or by casting `nil` to the desired type. We recommend following the above example and setting the type on the return value item.
 
-     For this method, the fallback value is defaulted to `nil`, allowing the call site to omit the fallback value.
+     For this method, the default value is defaulted to `nil`, allowing the call site to omit the default value.
 
-     Pay close attention to the type of the fallback value for collections. If the fallback collection type is more restrictive than the feature flag, the sdk will return the fallback even though the feature flag is present because it cannot convert the feature flag into the type requested via the fallback value. For example, if the feature flag has the type `[String: Any]`, but the fallback has the type `[String: Int]`, the sdk will not be able to convert the flags into the requested type, and will return the fallback value.
+     Pay close attention to the type of the default value for collections. If the default value collection type is more restrictive than the feature flag, the sdk will return the default value even though the feature flag is present because it cannot convert the feature flag into the type requested via the default value. For example, if the feature flag has the type `[String: Any]`, but the default value has the type `[String: Int]`, the sdk will not be able to convert the flags into the requested type, and will return the default value.
 
-     To avoid this, make sure the fallback type matches the expected feature flag type. Either specify the fallback value type to be the feature flag type, or cast the fallback value to the feature flag type prior to making the variation request. In the above example, either specify that the fallback value's type is [String: Any]:
+     To avoid this, make sure the default value type matches the expected feature flag type. Either specify the default value value type to be the feature flag type, or cast the default value value to the feature flag type prior to making the variation request. In the above example, either specify that the default value's type is [String: Any]:
      ````
-     let fallbackValue: [String: Any]? = ["a": 1, "b": 2]     //dictionary type would be [String: Int] without the type specifier
+     let defaultValue: [String: Any]? = ["a": 1, "b": 2]     //dictionary type would be [String: Int] without the type specifier
      ````
-     or cast the fallback value into the feature flag type prior to calling variation:
+     or cast the default value into the feature flag type prior to calling variation:
      ````
-     let dictionaryFlagValue = LDClient.get()!.variation(forKey: "dictionary-key", fallback: ["a": 1, "b": 2] as [String: Any]?)
+     let dictionaryFlagValue = LDClient.get()!.variation(forKey: "dictionary-key", defaultValue: ["a": 1, "b": 2] as [String: Any]?)
      ````
 
      - parameter forKey: The LDFlagKey for the requested feature flag.
-     - parameter fallback: The fallback value to return if the feature flag key does not exist. If omitted, the fallback value is `nil`. (Optional)
+     - parameter defaultValue: The default value to return if the feature flag key does not exist. If omitted, the default  value is `nil`. (Optional)
 
-     - returns: The requested feature flag value, or the fallback if the flag is missing or cannot be cast to the fallback type, or the client is not started
+     - returns: The requested feature flag value, or the default value if the flag is missing or cannot be cast to the default value type, or the client is not started
      */
-    /// - Tag: variationWithoutFallback
-    public func variation<T: LDFlagValueConvertible>(forKey flagKey: LDFlagKey, fallback: T? = nil) -> T? {
-        variationInternal(forKey: flagKey, fallback: fallback, includeReason: false)
+    /// - Tag: variationWithoutdefaultValue
+    public func variation<T: LDFlagValueConvertible>(forKey flagKey: LDFlagKey, defaultValue: T? = nil) -> T? {
+        variationInternal(forKey: flagKey, defaultValue: defaultValue, includeReason: false)
     }
     
     /**
-     Returns the EvaluationDetail for the given feature flag. EvaluationDetail gives you more insight into why your variation contains the specified value. If the flag does not exist, cannot be cast to the correct return type, or the LDClient is not started, returns EvaluationDetail with the fallback value, which may be `nil`. Use this method when the fallback value is a Optional type. See [variationWithoutFallback](x-source-tag://variationWithoutFallback)
+     Returns the EvaluationDetail for the given feature flag. EvaluationDetail gives you more insight into why your variation contains the specified value. If the flag does not exist, cannot be cast to the correct return type, or the LDClient is not started, returns EvaluationDetail with the default value, which may be `nil`. Use this method when the default value is a Optional type. See [variationWithoutdefaultValue](x-source-tag://variationWithoutdefaultValue)
      
      - parameter forKey: The LDFlagKey for the requested feature flag.
-     - parameter fallback: The fallback value to return if the feature flag key does not exist. If omitted, the fallback value is `nil`. (Optional)
+     - parameter defaultValue: The default value to return if the feature flag key does not exist. If omitted, the default value is `nil`. (Optional)
      
-     - returns: EvaluationDetail which wraps the requested feature flag value, or the fallback, which variation was served, and the evaluation reason.
+     - returns: EvaluationDetail which wraps the requested feature flag value, or the default value, which variation was served, and the evaluation reason.
      */
-    public func variationDetail<T: LDFlagValueConvertible>(forKey flagKey: LDFlagKey, fallback: T? = nil) -> EvaluationDetail<T?> {
+    public func variationDetail<T: LDFlagValueConvertible>(forKey flagKey: LDFlagKey, defaultValue: T? = nil) -> EvaluationDetail<T?> {
         let featureFlag = user.flagStore.featureFlag(for: flagKey)
         let reason = checkErrorKinds(featureFlag: featureFlag) ?? featureFlag?.reason
-        let value = variationInternal(forKey: flagKey, fallback: fallback, includeReason: true)
+        let value = variationInternal(forKey: flagKey, defaultValue: defaultValue, includeReason: true)
         return EvaluationDetail(value: value, variationIndex: featureFlag?.variation, reason: reason)
     }
     
-    internal func variationInternal<T: LDFlagValueConvertible>(forKey flagKey: LDFlagKey, fallback: T) -> T {
-        //Because the fallback is wrapped into an Optional, the nil coalescing right side should never be called
-        variationInternal(forKey: flagKey, fallback: fallback as T?, includeReason: false) ?? fallback
+    internal func variationInternal<T: LDFlagValueConvertible>(forKey flagKey: LDFlagKey, defaultValue: T) -> T {
+        //Because the defaultValue is wrapped into an Optional, the nil coalescing right side should never be called
+        variationInternal(forKey: flagKey, defaultValue: defaultValue as T?, includeReason: false) ?? defaultValue
     }
     
-    internal func variationInternal<T: LDFlagValueConvertible>(forKey flagKey: LDFlagKey, fallback: T? = nil, includeReason: Bool? = false) -> T? {
+    internal func variationInternal<T: LDFlagValueConvertible>(forKey flagKey: LDFlagKey, defaultValue: T? = nil, includeReason: Bool? = false) -> T? {
         guard hasStarted
         else {
-            Log.debug(typeName(and: #function) + "returning fallback: \(fallback.stringValue)." + " LDClient not started.")
-            return fallback
+            Log.debug(typeName(and: #function) + "returning defaultValue: \(defaultValue.stringValue)." + " LDClient not started.")
+            return defaultValue
         }
         let featureFlag = user.flagStore.featureFlag(for: flagKey)
-        let value = (featureFlag?.value as? T) ?? fallback
-        let failedConversionMessage = self.failedConversionMessage(featureFlag: featureFlag, fallback: fallback)
-        Log.debug(typeName(and: #function) + "flagKey: \(flagKey), value: \(value.stringValue), fallback: \(fallback.stringValue), featureFlag: \(featureFlag.stringValue), reason: \(featureFlag?.reason?.description ?? "No evaluation reason")."
+        let value = (featureFlag?.value as? T) ?? defaultValue
+        let failedConversionMessage = self.failedConversionMessage(featureFlag: featureFlag, defaultValue: defaultValue)
+        Log.debug(typeName(and: #function) + "flagKey: \(flagKey), value: \(value.stringValue), defaultValue: \(defaultValue.stringValue), featureFlag: \(featureFlag.stringValue), reason: \(featureFlag?.reason?.description ?? "No evaluation reason")."
             + "\(failedConversionMessage)")
-        eventReporter.recordFlagEvaluationEvents(flagKey: flagKey, value: value, defaultValue: fallback, featureFlag: featureFlag, user: user, includeReason: includeReason ?? false)
+        eventReporter.recordFlagEvaluationEvents(flagKey: flagKey, value: value, defaultValue: defaultValue, featureFlag: featureFlag, user: user, includeReason: includeReason ?? false)
         return value
     }
 
-    private func failedConversionMessage<T>(featureFlag: FeatureFlag?, fallback: T?) -> String {
+    private func failedConversionMessage<T>(featureFlag: FeatureFlag?, defaultValue: T?) -> String {
         if featureFlag == nil {
             return " Feature flag not found."
         }
@@ -519,7 +519,7 @@ public class LDClient {
             return ""
         }
         return " LDClient was unable to convert the feature flag to the requested type (\(T.self))."
-            + (isCollection(fallback) ? " The fallback value type is a collection. Make sure the element of the fallback value's type is not too restrictive for the actual feature flag type." : "")
+            + (isCollection(defaultValue) ? " The defaultValue type is a collection. Make sure the element of the defaultValue's type is not too restrictive for the actual feature flag type." : "")
     }
     
     private func isCollection<T>(_ object: T) -> Bool {
@@ -566,7 +566,7 @@ public class LDClient {
 
      The SDK executes handlers on the main thread.
 
-     LDChangedFlag does not know the type of oldValue or newValue. The client app should cast the value into the type needed. See `variation(forKey: fallback:)` for details about the SDK and feature flag types.
+     LDChangedFlag does not know the type of oldValue or newValue. The client app should cast the value into the type needed. See `variation(forKey: defaultValue:)` for details about the SDK and feature flag types.
 
      SeeAlso: `LDChangedFlag` and `stopObserving(owner:)`
 
@@ -594,7 +594,7 @@ public class LDClient {
 
      The SDK executes handlers on the main thread.
 
-     LDChangedFlag does not know the type of oldValue or newValue. The client app should cast the value into the type needed. See `variation(forKey: fallback:)` for details about the SDK and feature flag types.
+     LDChangedFlag does not know the type of oldValue or newValue. The client app should cast the value into the type needed. See `variation(forKey: defaultValue:)` for details about the SDK and feature flag types.
 
      SeeAlso: `LDChangedFlag` and `stopObserving(owner:)`
 
@@ -624,7 +624,7 @@ public class LDClient {
 
      The SDK executes handlers on the main thread.
 
-     LDChangedFlag does not know the type of oldValue or newValue. The client app should cast the value into the type needed. See `variation(forKey: fallback:)` for details about the SDK and feature flag types.
+     LDChangedFlag does not know the type of oldValue or newValue. The client app should cast the value into the type needed. See `variation(forKey: defaultValue:)` for details about the SDK and feature flag types.
 
      SeeAlso: `LDChangedFlag` and `stopObserving(owner:)`
 

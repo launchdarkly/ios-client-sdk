@@ -24,8 +24,8 @@ extension FlagMaintainingMock {
         featureFlags[flagKey]
     }
 
-    func variation<T: LDFlagValueConvertible>(forKey key: String, fallback: T) -> T {
-        featureFlags[key]?.value as? T ?? fallback
+    func variation<T: LDFlagValueConvertible>(forKey key: String, defaultValue: T) -> T {
+        featureFlags[key]?.value as? T ?? defaultValue
     }
 
     static func stubPatchDictionary(key: LDFlagKey?, value: Any?, variation: Int?, version: Int?, includeExtraKey: Bool = false) -> [String: Any] {

@@ -18,7 +18,7 @@ protocol FlagMaintaining {
     func featureFlag(for flagKey: LDFlagKey) -> FeatureFlag?
 
     //sourcery: noMock
-    func variation<T: LDFlagValueConvertible>(forKey key: LDFlagKey, fallback: T) -> T
+    func variation<T: LDFlagValueConvertible>(forKey key: LDFlagKey, defaultValue: T) -> T
 }
 
 final class FlagStore: FlagMaintaining {
@@ -146,9 +146,9 @@ final class FlagStore: FlagMaintaining {
         flagQueue.sync { _featureFlags[flagKey] }
     }
 
-    func variation<T: LDFlagValueConvertible>(forKey key: LDFlagKey, fallback: T) -> T {
+    func variation<T: LDFlagValueConvertible>(forKey key: LDFlagKey, defaultValue: T) -> T {
         flagQueue.sync {
-            (_featureFlags[key]?.value as? T) ?? fallback
+            (_featureFlags[key]?.value as? T) ?? defaultValue
         }
     }
 }

@@ -16,11 +16,11 @@ final class FlagStoreSpec: QuickSpec {
         static let newInt = "new-int-flag"
     }
 
-    struct FallbackValues {
+    struct DefaultValues {
         static let bool = false
         static let int = 3
         static let double = 2.71828
-        static let string = "fallback string"
+        static let string = "defaultValue string"
         static let array = [0]
         static let dictionary: [String: Any] = [DarklyServiceMock.FlagKeys.string: DarklyServiceMock.FlagValues.string]
     }
@@ -431,15 +431,15 @@ final class FlagStoreSpec: QuickSpec {
                     subject = FlagStore(featureFlags: DarklyServiceMock.Constants.stubFeatureFlags())
                 }
                 it("causes the FlagStore to provide the flag value") {
-                    expect(subject.variation(forKey: DarklyServiceMock.FlagKeys.bool, fallback: FallbackValues.bool)) == DarklyServiceMock.FlagValues.bool
-                    expect(subject.variation(forKey: DarklyServiceMock.FlagKeys.int, fallback: FallbackValues.int)) == DarklyServiceMock.FlagValues.int
-                    expect(subject.variation(forKey: DarklyServiceMock.FlagKeys.double, fallback: FallbackValues.double)) == DarklyServiceMock.FlagValues.double
-                    expect(subject.variation(forKey: DarklyServiceMock.FlagKeys.string, fallback: FallbackValues.string)) == DarklyServiceMock.FlagValues.string
+                    expect(subject.variation(forKey: DarklyServiceMock.FlagKeys.bool, defaultValue: DefaultValues.bool)) == DarklyServiceMock.FlagValues.bool
+                    expect(subject.variation(forKey: DarklyServiceMock.FlagKeys.int, defaultValue: DefaultValues.int)) == DarklyServiceMock.FlagValues.int
+                    expect(subject.variation(forKey: DarklyServiceMock.FlagKeys.double, defaultValue: DefaultValues.double)) == DarklyServiceMock.FlagValues.double
+                    expect(subject.variation(forKey: DarklyServiceMock.FlagKeys.string, defaultValue: DefaultValues.string)) == DarklyServiceMock.FlagValues.string
 
-                    let arrayValue = subject.variation(forKey: DarklyServiceMock.FlagKeys.array, fallback: FallbackValues.array)
+                    let arrayValue = subject.variation(forKey: DarklyServiceMock.FlagKeys.array, defaultValue: DefaultValues.array)
                     expect(arrayValue) == DarklyServiceMock.FlagValues.array
 
-                    let dictionaryValue = subject.variation(forKey: DarklyServiceMock.FlagKeys.dictionary, fallback: FallbackValues.dictionary)
+                    let dictionaryValue = subject.variation(forKey: DarklyServiceMock.FlagKeys.dictionary, defaultValue: DefaultValues.dictionary)
                     expect(dictionaryValue == DarklyServiceMock.FlagValues.dictionary).to(beTrue())
                 }
             }
@@ -447,20 +447,20 @@ final class FlagStoreSpec: QuickSpec {
                 beforeEach {
                     subject = FlagStore()
                 }
-                it("causes the FlagStore to provide the fallback flag value") {
-                    expect(subject.variation(forKey: DarklyServiceMock.FlagKeys.bool, fallback: FallbackValues.bool)) == FallbackValues.bool
-                    expect(subject.variation(forKey: DarklyServiceMock.FlagKeys.int, fallback: FallbackValues.int)) == FallbackValues.int
-                    expect(subject.variation(forKey: DarklyServiceMock.FlagKeys.double, fallback: FallbackValues.double)) == FallbackValues.double
-                    expect(subject.variation(forKey: DarklyServiceMock.FlagKeys.string, fallback: FallbackValues.string)) == FallbackValues.string
+                it("causes the FlagStore to provide the defaultValue flag value") {
+                    expect(subject.variation(forKey: DarklyServiceMock.FlagKeys.bool, defaultValue: DefaultValues.bool)) == DefaultValues.bool
+                    expect(subject.variation(forKey: DarklyServiceMock.FlagKeys.int, defaultValue: DefaultValues.int)) == DefaultValues.int
+                    expect(subject.variation(forKey: DarklyServiceMock.FlagKeys.double, defaultValue: DefaultValues.double)) == DefaultValues.double
+                    expect(subject.variation(forKey: DarklyServiceMock.FlagKeys.string, defaultValue: DefaultValues.string)) == DefaultValues.string
 
-                    let arrayValue = subject.variation(forKey: DarklyServiceMock.FlagKeys.array, fallback: FallbackValues.array)
-                    expect(arrayValue) == FallbackValues.array
+                    let arrayValue = subject.variation(forKey: DarklyServiceMock.FlagKeys.array, defaultValue: DefaultValues.array)
+                    expect(arrayValue) == DefaultValues.array
 
-                    let dictionaryValue = subject.variation(forKey: DarklyServiceMock.FlagKeys.dictionary, fallback: FallbackValues.dictionary)
-                    expect(dictionaryValue == FallbackValues.dictionary).to(beTrue())
+                    let dictionaryValue = subject.variation(forKey: DarklyServiceMock.FlagKeys.dictionary, defaultValue: DefaultValues.dictionary)
+                    expect(dictionaryValue == DefaultValues.dictionary).to(beTrue())
 
-                    let nullValue = subject.variation(forKey: DarklyServiceMock.FlagKeys.null, fallback: FallbackValues.int)
-                    expect(nullValue) == FallbackValues.int
+                    let nullValue = subject.variation(forKey: DarklyServiceMock.FlagKeys.null, defaultValue: DefaultValues.int)
+                    expect(nullValue) == DefaultValues.int
                 }
             }
         }

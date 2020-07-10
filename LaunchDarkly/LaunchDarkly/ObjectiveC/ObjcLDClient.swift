@@ -24,17 +24,17 @@ import Foundation
  ### Getting Feature Flags
  Once the LDClient has started, it makes your feature flags available using the `variation` and `variationDetail` methods. A `variation` is a specific flag value. For example, a boolean feature flag has 2 variations, `YES` and `NO`. You can create feature flags with more than 2 variations using other feature flag types. See `LDFlagValue` for the available types.
  ````
- BOOL boolFlag = [ldClientInstance boolVariationForKey:@"my-bool-flag" fallback:NO];
+ BOOL boolFlag = [ldClientInstance boolVariationForKey:@"my-bool-flag" defaultValue:NO];
  ````
  If you need to know more information about why a given value is returned, the typed `variationDetail` methods return an EvaluationDetail with an detail about the evaluation.
  ````
- LDBoolEvaluationDetail *boolVariationDetail = [ldClientInstance boolVariationDetail:@"my-bool-flag" fallback:NO];
+ LDBoolEvaluationDetail *boolVariationDetail = [ldClientInstance boolVariationDetail:@"my-bool-flag" defaultValue:NO];
  BOOL boolFlagValue = boolVariationDetail.value;
  NSInteger boolFlagVariation = boolVariationDetail.variationIndex
  NSDictionary boolFlagReason = boolVariationValue.reason;
  ````
 
- See the typed `-[LDCLient variationForKey: fallback:]` or `-[LDClient variationDetailForKey: fallback:]` methods in the section **Feature Flag values** for details.
+ See the typed `-[LDCLient variationForKey: defaultValue:]` or `-[LDClient variationDetailForKey: defaultValue:]` methods in the section **Feature Flag values** for details.
 
  ### Observing Feature Flags
  If you want to know when a feature flag value changes, you can check the flag's value. You can also use one of several `observe` methods to have the LDClient notify you when a change occurs. There are several options-- you can setup notifications based on when a specific flag changes, when any flag in a collection changes, or when a flag doesn't change.
@@ -114,7 +114,7 @@ public final class ObjcLDClient: NSObject {
     }
 
     /**
-     Stops the LDClient. Stopping the client means the LDClient goes offline and stops recording events. LDClient will no longer provide feature flag values, only returning fallback values.
+     Stops the LDClient. Stopping the client means the LDClient goes offline and stops recording events. LDClient will no longer provide feature flag values, only returning default values.
 
      There is almost no reason to stop the LDClient. Normally, set the LDClient offline to stop communication with the LaunchDarkly servers. Stop the LDClient to stop recording events. There is no need to stop the LDClient prior to suspending, moving to the background, or terminating the app. The SDK will respond to these events as the system requires and as configured in LDConfig.
      */
@@ -160,11 +160,11 @@ public final class ObjcLDClient: NSObject {
     // MARK: Feature Flag values
 
     /**
-     Returns the BOOL variation for the given feature flag. If the flag does not exist, cannot be cast to a BOOL, or the LDClient is not started, returns the fallback value.
+     Returns the BOOL variation for the given feature flag. If the flag does not exist, cannot be cast to a BOOL, or the LDClient is not started, returns the default value.
 
      A *variation* is a specific flag value. For example a boolean feature flag has 2 variations, *YES* and *NO*. You can create feature flags with more than 2 variations using other feature flag types. See `LDFlagValue` for the available types.
 
-     The LDClient must be started in order to return feature flag values. If the LDClient is not started, it will always return the fallback value. The LDClient must be online to keep the feature flag values up-to-date.
+     The LDClient must be started in order to return feature flag values. If the LDClient is not started, it will always return the default  value. The LDClient must be online to keep the feature flag values up-to-date.
 
      See `LDStreamingMode` for details about the modes the LDClient uses to update feature flags.
 
@@ -174,38 +174,38 @@ public final class ObjcLDClient: NSObject {
 
      ### Usage
      ````
-     BOOL boolFeatureFlagValue = [ldClientInstance boolVariationForKey:@"my-bool-flag" fallback:NO];
+     BOOL boolFeatureFlagValue = [ldClientInstance boolVariationForKey:@"my-bool-flag" defaultValue:NO];
      ````
 
      - parameter key: The LDFlagKey for the requested feature flag.
-     - parameter fallback: The fallback value to return if the feature flag key does not exist.
+     - parameter defaultValue: The default value to return if the feature flag key does not exist.
 
-     - returns: The requested BOOL feature flag value, or the fallback if the flag is missing or cannot be cast to a BOOL, or the client is not started
+     - returns: The requested BOOL feature flag value, or the default value if the flag is missing or cannot be cast to a BOOL, or the client is not started
      */
     /// - Tag: boolVariation
-    @objc public func boolVariation(forKey key: LDFlagKey, fallback: Bool) -> Bool {
-        return ldClient.variation(forKey: key, fallback: fallback)
+    @objc public func boolVariation(forKey key: LDFlagKey, defaultValue: Bool) -> Bool {
+        return ldClient.variation(forKey: key, defaultValue: defaultValue)
     }
 
     /**
      See [boolVariation](x-source-tag://boolVariation) for more information on variation methods.
 
      - parameter key: The LDFlagKey for the requested feature flag.
-     - parameter fallback: The fallback value to return if the feature flag key does not exist.
+     - parameter defaultValue: The default value to return if the feature flag key does not exist.
 
      - returns: ObjcLDBoolEvaluationDetail containing your value as well as useful information on why that value was returned.
     */
-    @objc public func boolVariationDetail(forKey key: LDFlagKey, fallback: Bool) -> ObjCBoolEvaluationDetail {
-        let evaluationDetail = ldClient.variationDetail(forKey: key, fallback: fallback)
+    @objc public func boolVariationDetail(forKey key: LDFlagKey, defaultValue: Bool) -> ObjCBoolEvaluationDetail {
+        let evaluationDetail = ldClient.variationDetail(forKey: key, defaultValue: defaultValue)
         return ObjCBoolEvaluationDetail(value: evaluationDetail.value, variationIndex: evaluationDetail.variationIndex, reason: evaluationDetail.reason)
     }
 
     /**
-     Returns the NSInteger variation for the given feature flag. If the flag does not exist, cannot be cast to a NSInteger, or the LDClient is not started, returns the fallback value.
+     Returns the NSInteger variation for the given feature flag. If the flag does not exist, cannot be cast to a NSInteger, or the LDClient is not started, returns the default value.
 
      A *variation* is a specific flag value. For example a boolean feature flag has 2 variations, *YES* and *NO*. You can create feature flags with more than 2 variations using other feature flag types. See `LDFlagValue` for the available types.
 
-     The LDClient must be started in order to return feature flag values. If the LDClient is not started, it will always return the fallback value. The LDClient must be online to keep the feature flag values up-to-date.
+     The LDClient must be started in order to return feature flag values. If the LDClient is not started, it will always return the default value. The LDClient must be online to keep the feature flag values up-to-date.
 
      See `LDStreamingMode` for details about the modes the LDClient uses to update feature flags.
 
@@ -215,38 +215,38 @@ public final class ObjcLDClient: NSObject {
 
      ### Usage
      ````
-     NSInteger integerFeatureFlagValue = [ldClientInstance integerVariationForKey:@"my-integer-flag" fallback:5];
+     NSInteger integerFeatureFlagValue = [ldClientInstance integerVariationForKey:@"my-integer-flag" defaultValue:5];
      ````
 
      - parameter key: The LDFlagKey for the requested feature flag.
-     - parameter fallback: The fallback value to return if the feature flag key does not exist.
+     - parameter defaultValue: The default value to return if the feature flag key does not exist.
 
-     - returns: The requested NSInteger feature flag value, or the fallback if the flag is missing or cannot be cast to a NSInteger, or the client is not started
+     - returns: The requested NSInteger feature flag value, or the default value if the flag is missing or cannot be cast to a NSInteger, or the client is not started
      */
     /// - Tag: integerVariation
-    @objc public func integerVariation(forKey key: LDFlagKey, fallback: Int) -> Int {
-        return ldClient.variation(forKey: key, fallback: fallback)
+    @objc public func integerVariation(forKey key: LDFlagKey, defaultValue: Int) -> Int {
+        return ldClient.variation(forKey: key, defaultValue: defaultValue)
     }
     
     /**
      See [integerVariation](x-source-tag://integerVariation) for more information on variation methods.
      
      - parameter key: The LDFlagKey for the requested feature flag.
-     - parameter fallback: The fallback value to return if the feature flag key does not exist.
+     - parameter defaultValue: The default value to return if the feature flag key does not exist.
      
      - returns: ObjcLDIntegerEvaluationDetail containing your value as well as useful information on why that value was returned.
      */
-    @objc public func integerVariationDetail(forKey key: LDFlagKey, fallback: Int) -> ObjCIntegerEvaluationDetail {
-        let evaluationDetail = ldClient.variationDetail(forKey: key, fallback: fallback)
+    @objc public func integerVariationDetail(forKey key: LDFlagKey, defaultValue: Int) -> ObjCIntegerEvaluationDetail {
+        let evaluationDetail = ldClient.variationDetail(forKey: key, defaultValue: defaultValue)
         return ObjCIntegerEvaluationDetail(value: evaluationDetail.value, variationIndex: evaluationDetail.variationIndex, reason: evaluationDetail.reason)
     }
 
     /**
-     Returns the double variation for the given feature flag. If the flag does not exist, cannot be cast to a double, or the LDClient is not started, returns the fallback value.
+     Returns the double variation for the given feature flag. If the flag does not exist, cannot be cast to a double, or the LDClient is not started, returns the default value.
 
      A *variation* is a specific flag value. For example a boolean feature flag has 2 variations, *YES* and *NO*. You can create feature flags with more than 2 variations using other feature flag types. See `LDFlagValue` for the available types.
 
-     The LDClient must be started in order to return feature flag values. If the LDClient is not started, it will always return the fallback value. The LDClient must be online to keep the feature flag values up-to-date.
+     The LDClient must be started in order to return feature flag values. If the LDClient is not started, it will always return the default value. The LDClient must be online to keep the feature flag values up-to-date.
 
      See `LDStreamingMode` for details about the modes the LDClient uses to update feature flags.
 
@@ -256,38 +256,38 @@ public final class ObjcLDClient: NSObject {
 
      ### Usage
      ````
-     double doubleFeatureFlagValue = [ldClientInstance doubleVariationForKey:@"my-double-flag" fallback:2.71828];
+     double doubleFeatureFlagValue = [ldClientInstance doubleVariationForKey:@"my-double-flag" defaultValue:2.71828];
      ````
 
      - parameter key: The LDFlagKey for the requested feature flag.
-     - parameter fallback: The fallback value to return if the feature flag key does not exist.
+     - parameter defaultValue: The default value to return if the feature flag key does not exist.
 
-     - returns: The requested double feature flag value, or the fallback if the flag is missing or cannot be cast to a double, or the client is not started
+     - returns: The requested double feature flag value, or the default value if the flag is missing or cannot be cast to a double, or the client is not started
      */
     /// - Tag: doubleVariation
-    @objc public func doubleVariation(forKey key: LDFlagKey, fallback: Double) -> Double {
-        return ldClient.variation(forKey: key, fallback: fallback)
+    @objc public func doubleVariation(forKey key: LDFlagKey, defaultValue: Double) -> Double {
+        return ldClient.variation(forKey: key, defaultValue: defaultValue)
     }
     
     /**
      See [doubleVariation](x-source-tag://doubleVariation) for more information on variation methods.
      
      - parameter key: The LDFlagKey for the requested feature flag.
-     - parameter fallback: The fallback value to return if the feature flag key does not exist.
+     - parameter defaultValue: The default value to return if the feature flag key does not exist.
      
      - returns: ObjcLDDoubleEvaluationDetail containing your value as well as useful information on why that value was returned.
      */
-    @objc public func doubleVariationDetail(forKey key: LDFlagKey, fallback: Double) -> ObjCDoubleEvaluationDetail {
-        let evaluationDetail = ldClient.variationDetail(forKey: key, fallback: fallback)
+    @objc public func doubleVariationDetail(forKey key: LDFlagKey, defaultValue: Double) -> ObjCDoubleEvaluationDetail {
+        let evaluationDetail = ldClient.variationDetail(forKey: key, defaultValue: defaultValue)
         return ObjCDoubleEvaluationDetail(value: evaluationDetail.value, variationIndex: evaluationDetail.variationIndex, reason: evaluationDetail.reason)
     }
 
     /**
-     Returns the NSString variation for the given feature flag. If the flag does not exist, cannot be cast to a NSString, or the LDClient is not started, returns the fallback value, which may be nil.
+     Returns the NSString variation for the given feature flag. If the flag does not exist, cannot be cast to a NSString, or the LDClient is not started, returns the default value, which may be nil.
 
      A *variation* is a specific flag value. For example a boolean feature flag has 2 variations, *YES* and *NO*. You can create feature flags with more than 2 variations using other feature flag types. See `LDFlagValue` for the available types.
 
-     The LDClient must be started in order to return feature flag values. If the LDClient is not started, it will always return the fallback value. The LDClient must be online to keep the feature flag values up-to-date.
+     The LDClient must be started in order to return feature flag values. If the LDClient is not started, it will always return the default value. The LDClient must be online to keep the feature flag values up-to-date.
 
      See `LDStreamingMode` for details about the modes the LDClient uses to update feature flags.
 
@@ -297,38 +297,38 @@ public final class ObjcLDClient: NSObject {
 
      ### Usage
      ````
-     NSString *stringFeatureFlagValue = [ldClientInstance stringVariationForKey:@"my-string-flag" fallback:@"<fallback>"];
+     NSString *stringFeatureFlagValue = [ldClientInstance stringVariationForKey:@"my-string-flag" defaultValue:@"<defaultValue>"];
      ````
 
      - parameter key: The LDFlagKey for the requested feature flag.
-     - parameter fallback: The fallback value to return if the feature flag key does not exist. The fallback value may be nil.
+     - parameter defaultValue: The default value to return if the feature flag key does not exist. The default value may be nil.
 
-     - returns: The requested NSString feature flag value, or the fallback value (which may be nil) if the flag is missing or cannot be cast to a NSString, or the client is not started.
+     - returns: The requested NSString feature flag value, or the default value (which may be nil) if the flag is missing or cannot be cast to a NSString, or the client is not started.
      */
     /// - Tag: stringVariation
-    @objc public func stringVariation(forKey key: LDFlagKey, fallback: String?) -> String? {
-        return ldClient.variation(forKey: key, fallback: fallback)
+    @objc public func stringVariation(forKey key: LDFlagKey, defaultValue: String?) -> String? {
+        return ldClient.variation(forKey: key, defaultValue: defaultValue)
     }
     
     /**
      See [stringVariation](x-source-tag://stringVariation) for more information on variation methods.
      
      - parameter key: The LDFlagKey for the requested feature flag.
-     - parameter fallback: The fallback value to return if the feature flag key does not exist. The fallback value may be nil.
+     - parameter defaultValue: The default value to return if the feature flag key does not exist. The default value may be nil.
      
      - returns: ObjcLDStringEvaluationDetail containing your value as well as useful information on why that value was returned.
      */
-    @objc public func stringVariationDetail(forKey key: LDFlagKey, fallback: String?) -> ObjCStringEvaluationDetail {
-        let evaluationDetail = ldClient.variationDetail(forKey: key, fallback: fallback)
+    @objc public func stringVariationDetail(forKey key: LDFlagKey, defaultValue: String?) -> ObjCStringEvaluationDetail {
+        let evaluationDetail = ldClient.variationDetail(forKey: key, defaultValue: defaultValue)
         return ObjCStringEvaluationDetail(value: evaluationDetail.value, variationIndex: evaluationDetail.variationIndex, reason: evaluationDetail.reason)
     }
 
     /**
-     Returns the NSArray variation for the given feature flag. If the flag does not exist, cannot be cast to a NSArray, or the LDClient is not started, returns the fallback value, which may be nil..
+     Returns the NSArray variation for the given feature flag. If the flag does not exist, cannot be cast to a NSArray, or the LDClient is not started, returns the default value, which may be nil..
 
      A *variation* is a specific flag value. For example a boolean feature flag has 2 variations, *YES* and *NO*. You can create feature flags with more than 2 variations using other feature flag types. See `LDFlagValue` for the available types.
 
-     The LDClient must be started in order to return feature flag values. If the LDClient is not started, it will always return the fallback value. The LDClient must be online to keep the feature flag values up-to-date.
+     The LDClient must be started in order to return feature flag values. If the LDClient is not started, it will always return the default value. The LDClient must be online to keep the feature flag values up-to-date.
 
      See `LDStreamingMode` for details about the modes the LDClient uses to update feature flags.
 
@@ -338,38 +338,38 @@ public final class ObjcLDClient: NSObject {
 
      ### Usage
      ````
-     NSArray *arrayFeatureFlagValue = [ldClientInstance arrayVariationForKey:@"my-array-flag" fallback:@[@1,@2,@3]];
+     NSArray *arrayFeatureFlagValue = [ldClientInstance arrayVariationForKey:@"my-array-flag" defaultValue:@[@1,@2,@3]];
      ````
 
      - parameter key: The LDFlagKey for the requested feature flag.
-     - parameter fallback: The fallback value to return if the feature flag key does not exist. The fallback value may be nil.
+     - parameter defaultValue: The default value to return if the feature flag key does not exist. The default value may be nil.
 
-     - returns: The requested NSArray feature flag value, or the fallback value (which may be nil) if the flag is missing or cannot be cast to a NSArray, or the client is not started
+     - returns: The requested NSArray feature flag value, or the default value (which may be nil) if the flag is missing or cannot be cast to a NSArray, or the client is not started
      */
     /// - Tag: arrayVariation
-    @objc public func arrayVariation(forKey key: LDFlagKey, fallback: [Any]?) -> [Any]? {
-        return ldClient.variation(forKey: key, fallback: fallback)
+    @objc public func arrayVariation(forKey key: LDFlagKey, defaultValue: [Any]?) -> [Any]? {
+        return ldClient.variation(forKey: key, defaultValue: defaultValue)
     }
     
     /**
      See [arrayVariation](x-source-tag://arrayVariation) for more information on variation methods.
      
      - parameter key: The LDFlagKey for the requested feature flag.
-     - parameter fallback: The fallback value to return if the feature flag key does not exist. The fallback value may be nil.
+     - parameter defaultValue: The default value to return if the feature flag key does not exist. The default value may be nil.
      
      - returns: ObjcLDArrayEvaluationDetail containing your value as well as useful information on why that value was returned.
      */
-    @objc public func arrayVariationDetail(forKey key: LDFlagKey, fallback: [Any]?) -> ObjCArrayEvaluationDetail {
-        let evaluationDetail = ldClient.variationDetail(forKey: key, fallback: fallback)
+    @objc public func arrayVariationDetail(forKey key: LDFlagKey, defaultValue: [Any]?) -> ObjCArrayEvaluationDetail {
+        let evaluationDetail = ldClient.variationDetail(forKey: key, defaultValue: defaultValue)
         return ObjCArrayEvaluationDetail(value: evaluationDetail.value, variationIndex: evaluationDetail.variationIndex, reason: evaluationDetail.reason)
     }
     
     /**
-     Returns the NSDictionary variation for the given feature flag. If the flag does not exist, cannot be cast to a NSDictionary, or the LDClient is not started, returns the fallback value, which may be nil..
+     Returns the NSDictionary variation for the given feature flag. If the flag does not exist, cannot be cast to a NSDictionary, or the LDClient is not started, returns the default value, which may be nil..
 
      A *variation* is a specific flag value. For example a boolean feature flag has 2 variations, *YES* and *NO*. You can create feature flags with more than 2 variations using other feature flag types. See `LDFlagValue` for the available types.
 
-     The LDClient must be started in order to return feature flag values. If the LDClient is not started, it will always return the fallback value. The LDClient must be online to keep the feature flag values up-to-date.
+     The LDClient must be started in order to return feature flag values. If the LDClient is not started, it will always return the default value. The LDClient must be online to keep the feature flag values up-to-date.
 
      See `LDStreamingMode` for details about the modes the LDClient uses to update feature flags.
 
@@ -379,29 +379,29 @@ public final class ObjcLDClient: NSObject {
 
      ### Usage
      ````
-     NSDictionary *dictionaryFeatureFlagValue = [ldClientInstance dictionaryVariationForKey:@"my-dictionary-flag" fallback:@{@"dictionary":@"fallback"}];
+     NSDictionary *dictionaryFeatureFlagValue = [ldClientInstance dictionaryVariationForKey:@"my-dictionary-flag" defaultValue:@{@"dictionary":@"defaultValue"}];
      ````
 
      - parameter key: The LDFlagKey for the requested feature flag.
-     - parameter fallback: The fallback value to return if the feature flag key does not exist. The fallback value may be nil.
+     - parameter defaultValue: The default value to return if the feature flag key does not exist. The default value may be nil.
 
-     - returns: The requested NSDictionary feature flag value, or the fallback value (which may be nil) if the flag is missing or cannot be cast to a NSDictionary, or the client is not started
+     - returns: The requested NSDictionary feature flag value, or the default value (which may be nil) if the flag is missing or cannot be cast to a NSDictionary, or the client is not started
      */
     /// - Tag: dictionaryVariation
-    @objc public func dictionaryVariation(forKey key: LDFlagKey, fallback: [String: Any]?) -> [String: Any]? {
-        return ldClient.variation(forKey: key, fallback: fallback)
+    @objc public func dictionaryVariation(forKey key: LDFlagKey, defaultValue: [String: Any]?) -> [String: Any]? {
+        return ldClient.variation(forKey: key, defaultValue: defaultValue)
     }
     
     /**
      See [dictionaryVariation](x-source-tag://dictionaryVariation) for more information on variation methods.
      
      - parameter key: The LDFlagKey for the requested feature flag.
-     - parameter fallback: The fallback value to return if the feature flag key does not exist. The fallback value may be nil.
+     - parameter defaultValue: The default value to return if the feature flag key does not exist. The default value may be nil.
      
      - returns: ObjcLDDictionaryEvaluationDetail containing your value as well as useful information on why that value was returned.
      */
-    @objc public func dictionaryVariationDetail(forKey key: LDFlagKey, fallback: [String: Any]?) -> ObjCDictionaryEvaluationDetail {
-        let evaluationDetail = ldClient.variationDetail(forKey: key, fallback: fallback)
+    @objc public func dictionaryVariationDetail(forKey key: LDFlagKey, defaultValue: [String: Any]?) -> ObjCDictionaryEvaluationDetail {
+        let evaluationDetail = ldClient.variationDetail(forKey: key, defaultValue: defaultValue)
         return ObjCDictionaryEvaluationDetail(value: evaluationDetail.value, variationIndex: evaluationDetail.variationIndex, reason: evaluationDetail.reason)
     }
     
