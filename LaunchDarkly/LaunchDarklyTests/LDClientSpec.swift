@@ -1162,16 +1162,16 @@ final class LDClientSpec: QuickSpec {
         describe("stop") {
             var event: LaunchDarkly.Event!
             var priorRecordedEvents: Int!
-            beforeEach {
-                testContext = TestContext()
-                event = Event.stub(.custom, with: testContext.user)
-            }
             context("when started") {
                 beforeEach {
                     priorRecordedEvents = 0
                 }
                 context("and online") {
                     beforeEach {
+                        waitUntil { done in
+                            testContext = TestContext(startOnline: true, completion: done)
+                        }
+                        event = Event.stub(.custom, with: testContext.user)
                         priorRecordedEvents = testContext.eventReporterMock.recordCallCount
 
                         testContext.subject.close()
@@ -1186,6 +1186,10 @@ final class LDClientSpec: QuickSpec {
                 }
                 context("and offline") {
                     beforeEach {
+                        waitUntil { done in
+                            testContext = TestContext(startOnline: false, completion: done)
+                        }
+                        event = Event.stub(.custom, with: testContext.user)
                         priorRecordedEvents = testContext.eventReporterMock.recordCallCount
 
                         testContext.subject.close()
@@ -1201,6 +1205,10 @@ final class LDClientSpec: QuickSpec {
             }
             context("when already stopped") {
                 beforeEach {
+                    waitUntil { done in
+                        testContext = TestContext(completion: done)
+                    }
+                    event = Event.stub(.custom, with: testContext.user)
                     testContext.subject.close()
                     priorRecordedEvents = testContext.eventReporterMock.recordCallCount
 

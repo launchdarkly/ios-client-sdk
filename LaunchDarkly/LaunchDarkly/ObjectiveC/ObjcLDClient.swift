@@ -16,7 +16,7 @@ import Foundation
  ### Startup
  1. To customize, configure a LDConfig (`ObjcLDConfig`) and LDUser (`ObjcLDUser`). The `config` is required, the `user` is optional. Both give you additional control over the feature flags delivered to the LDClient. See `ObjcLDConfig` & `ObjcLDUser` for more details.
  - The mobileKey set into the `LDConfig` comes from your LaunchDarkly Account settings (on the left, at the bottom). If you have multiple projects be sure to choose the correct Mobile key.
- 2. Call `[ldClientInstance startWithConfig: user: completion:]` (`ObjcLDClient.startWithConfig(_:config:user:completion:)`)
+ 2. Call `[ObjcLDClient startWithConfig: user: completion:]` (`ObjcLDClient.startWithConfig(_:config:user:completion:)`)
  - If you do not pass in a LDUser, LDCLient will create a default for you.
  - The optional completion closure allows the LDClient to notify your app when it has gone online.
  3. Because the LDClient is a singleton, you do not have to keep a reference to it in your code.
@@ -64,22 +64,7 @@ public final class ObjcLDClient: NSObject {
      Use `-[LDClient setOnline: completion:]` (`ObjcLDClient.setOnline(_:completion:)`) to change the online/offline state.
      */
     @objc public var isOnline: Bool { ldClient.isOnline }
-    /**
-     Set the LDClient online/offline.
 
-     When online, the SDK communicates with LaunchDarkly servers for feature flag values and event reporting.
-
-     When offline, the SDK does not attempt to communicate with LaunchDarkly servers. Client apps can request feature flag values and set/change feature flag observers while offline. The SDK will collect events while offline.
-
-     The SDK protects itself from multiple rapid calls to `setOnline:YES` by enforcing an increasing delay (called *throttling*) each time `setOnline:YES` is called within a short time. The first time, the call proceeds normally. For each subsequent call the delay is enforced, and if waiting, increased to a maximum delay. When the delay has elapsed, the `setOnline:YES` will proceed, assuming that the client app has not called `setOnline:NO` during the delay. Therefore a call to `setOnline:YES` may not immediately result in the LDClient going online. Client app developers should consider this situation abnormal, and take steps to prevent the client app from making multiple rapid `setOnline:YES` calls. Calls to `setOnline:NO` are not throttled. Note that calls to `start(config: user: completion:)`, and setting the `config` or `user` can also call `setOnline:YES` under certain conditions. After the delay, the SDK resets and the client app can make a susequent call to `setOnline:YES` without being throttled.
-
-     Use `isOnline` to get the online/offline state.
-
-     - parameter goOnline:    Desired online/offline mode for the LDClient
-    */
-    @objc public func setOnline(_ goOnline: Bool) {
-        ldClient.setOnline(goOnline, completion: nil)
-    }
     /**
      Set the LDClient online/offline.
 
@@ -94,9 +79,9 @@ public final class ObjcLDClient: NSObject {
      Use `isOnline` (`ObjcLDClient.isOnline`)to get the online/offline state.
 
      - parameter goOnline:    Desired online/offline mode for the LDClient
-     - parameter completion:  Completion block called when setOnline completes
+     - parameter completion:  Completion block called when setOnline completes. (Optional)
      */
-    @objc public func setOnline(_ goOnline: Bool, completion:(() -> Void)?) {
+    @objc public func setOnline(_ goOnline: Bool, completion:(() -> Void)? = nil) {
         ldClient.setOnline(goOnline, completion: completion)
     }
     /**
@@ -110,8 +95,22 @@ public final class ObjcLDClient: NSObject {
      */
     @objc public var config: ObjcLDConfig { ldClient.config.objcLdConfig }
 
-    @objc public func identify(user: ObjcLDUser) {
-        ldClient.identify(user: user.user)
+    /**
+        The LDUser set into the LDClient may affect the set of feature flags returned by the LaunchDarkly server, and ties event tracking to the user. See `LDUser` for details about what information can be retained.
+
+        Normally, the client app should create and set the LDUser and pass that into `start(config: user: completion:)`.
+
+        The client app can change the LDUser by getting the `user`, adjusting the values, and passing it to the LDClient method identify. This allows client apps to collect information over time from the user and update as information is collected. Client apps should follow [Apple's Privacy Policy](apple.com/legal/privacy) when collecting user information. If the client app does not create a LDUser, LDClient creates an anonymous default user, which can affect the feature flags delivered to the LDClient.
+
+        When a new user is set, the LDClient goes offline and sets the new user. If the client was online when the new user was set, it goes online again, subject to a throttling delay if in force (see `setOnline(_: completion:)` for details). To change both the `config` and `user`, set the LDClient offline, set both properties, then set the LDClient online. A completion may be passed to the identify method to allow a client app to know when fresh flag values for the new user are ready.
+
+        This operation is not thread safe. You may want to use a DispatchQueue if calling `identify` from multiple threads.
+
+        - parameter user: The ObjcLDUser set with the desired user.
+        - parameter completion: Closure called when the embedded `setOnlineIdentify` call completes, subject to throttling delays. (Optional)
+       */
+    @objc public func identify(user: ObjcLDUser, completion: (() -> Void)? = nil) {
+        ldClient.identify(user: user.user, completion: completion)
     }
 
     /**
@@ -124,9 +123,9 @@ public final class ObjcLDClient: NSObject {
     }
     
     /**
-     Changes the internal LDClient variable to the primary LDClient instance.
+     Returns an ObjcLDClient wrapper that contains an LDClient primary instance..
     
-     - returns: A Bool based on whether ldClient was successfully changed.
+     - returns: An ObjcLDClient. (Optional)
     */
     @objc public static func get() -> ObjcLDClient? {
         if let optionalClient = LDClient.get() {
@@ -139,16 +138,16 @@ public final class ObjcLDClient: NSObject {
     /**
      Returns all environment names.
      
-     - returns: All environment names as an Array of Strings.
+     - returns: All environment names as an Array of Strings. (Optional)
     */
     @objc public static func getEnvironmentNames() -> [String]? {
         LDClient.getEnvironmentNames()
     }
   
     /**
-     Changes the internal LDClient variable to the LDClient instance associated with the keyName.
+     Returns the LDClient instance associated with the keyName wrapped in ObjcLDClient.
     
-     - returns: A Bool based on whether ldClient was successfully changed.
+     - returns: An ObjcLDClient. (Optional)
     */
     @objc public static func getForMobileKey(keyName: String) -> ObjcLDClient? {
         if let optionalClient = LDClient.getForMobileKey(keyName: keyName) {

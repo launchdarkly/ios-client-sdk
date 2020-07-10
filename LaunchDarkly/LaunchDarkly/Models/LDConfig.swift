@@ -86,6 +86,9 @@ public struct LDConfig {
 
         /// The default wrapper version. (nil)
         static let wrapperVersion: String? = nil
+
+        /// The default secondary mobile keys. ([:])
+        static let secondaryMobileKeys: [String: String] = [:]
     }
 
     /// The minimum values allowed to be set into LDConfig.
@@ -239,41 +242,19 @@ public struct LDConfig {
     /// A Dictionary of identifying names to unique mobile keys for all environments
     private var mobileKeys: [String: String] {
         var internalMobileKeys = getSecondaryMobileKeys()
-        internalMobileKeys?[LDConfig.Defaults.primaryEnvironmentName] = mobileKey
-        return internalMobileKeys ?? [LDConfig.Defaults.primaryEnvironmentName: mobileKey]
+        internalMobileKeys[LDConfig.Defaults.primaryEnvironmentName] = mobileKey
+        return internalMobileKeys
     }
-    
-    /// A Dictionary of identifying names to unique mobile keys to access secondary environments
-    /*public var secondaryMobileKeys: [String: String]? {
-        get {
-            return _secondaryMobileKeys
-        }
-        set(newSecondaryMobileKeys) {
-            let mobileKeyPresentInSecondaryMobileKeys = newSecondaryMobileKeys?.values.contains { (value) -> Bool in
-                value == mobileKey
-                } ?? false
-            let primaryEnvironmentNamePresentInSecondaryMobileKeys = newSecondaryMobileKeys?.keys.contains { (key) -> Bool in
-                key == LDConfig.Defaults.primaryEnvironmentName
-                } ?? false
-            let mobileKeysUsedOnlyOnce = Set(newSecondaryMobileKeys?.values.shuffled() ?? [])
-            if mobileKeyPresentInSecondaryMobileKeys {
-                Log.debug("The primary environment key cannot be in the secondary mobile keys.")
-            }
-            if primaryEnvironmentNamePresentInSecondaryMobileKeys {
-                Log.debug("The primary environment name is not a valid key.")
-            }
-            if mobileKeysUsedOnlyOnce.count != newSecondaryMobileKeys?.count {
-                Log.debug("A key can only be used once.")
-            }
-            
-            _secondaryMobileKeys = newSecondaryMobileKeys
-        }
-    }*/
 
-    public mutating func setSecondaryMobileKeys(_ newSecondaryMobileKeys: [String: String]?) throws {
-        let mobileKeyPresentInSecondaryMobileKeys = newSecondaryMobileKeys?.values.contains(mobileKey) ?? false
-        let primaryEnvironmentNamePresentInSecondaryMobileKeys = newSecondaryMobileKeys?.keys.contains(LDConfig.Defaults.primaryEnvironmentName) ?? false
-        let mobileKeysUsedOnlyOnce = Set(newSecondaryMobileKeys?.values.shuffled() ?? [])
+    /**
+     Sets a Dictionary of identifying names to unique mobile keys to access secondary environments in the LDConfig. Throws if you try to add duplicate keys or put the primary key or name in secondaryMobileKeys.
+
+     - parameter newSecondaryMobileKeys: A Dictionary of String to String.
+     */
+    public mutating func setSecondaryMobileKeys(_ newSecondaryMobileKeys: [String: String]) throws {
+        let mobileKeyPresentInSecondaryMobileKeys = newSecondaryMobileKeys.values.contains(mobileKey)
+        let primaryEnvironmentNamePresentInSecondaryMobileKeys = newSecondaryMobileKeys.keys.contains(LDConfig.Defaults.primaryEnvironmentName)
+        let mobileKeysUsedOnlyOnce = Set(newSecondaryMobileKeys.values.shuffled())
         if mobileKeyPresentInSecondaryMobileKeys {
             Log.debug("The primary environment key cannot be in the secondary mobile keys.")
             throw("The primary environment key cannot be in the secondary mobile keys.")
@@ -282,7 +263,7 @@ public struct LDConfig {
             Log.debug("The primary environment name is not a valid key.")
             throw("The primary environment name is not a valid key.")
         }
-        if mobileKeysUsedOnlyOnce.count != newSecondaryMobileKeys?.count {
+        if mobileKeysUsedOnlyOnce.count != newSecondaryMobileKeys.count {
             Log.debug("A key can only be used once.")
             throw("A key can only be used once.")
         }
@@ -290,12 +271,17 @@ public struct LDConfig {
         _secondaryMobileKeys = newSecondaryMobileKeys
     }
 
-    public func getSecondaryMobileKeys() -> [String: String]? {
+    /**
+     Returns a Dictionary of identifying names to unique mobile keys to access secondary environments.
+
+     - returns: A Dictionary of String to String.
+     */
+    public func getSecondaryMobileKeys() -> [String: String] {
         return _secondaryMobileKeys
     }
     
     /// Internal variable for secondaryMobileKeys computed property
-    private var _secondaryMobileKeys: [String: String]?
+    private var _secondaryMobileKeys: [String: String]
     
     //Internal constructor to enable automated testing
     init(mobileKey: String, environmentReporter: EnvironmentReporting) {
@@ -304,6 +290,7 @@ public struct LDConfig {
         minima = Minima(environmentReporter: environmentReporter)
         allowStreamingMode = environmentReporter.operatingSystem.isStreamingEnabled
         allowBackgroundUpdates = environmentReporter.operatingSystem.isBackgroundEnabled
+        _secondaryMobileKeys = Defaults.secondaryMobileKeys
         if mobileKey.isEmpty {
             Log.debug(typeName(and: #function, appending: ": ") + "mobileKey is empty. The SDK will not operate correctly without a valid mobile key.")
         }

@@ -851,7 +851,7 @@ public class LDClient {
         
         LDClient.instances = [:]
         let cache = UserEnvironmentFlagCache(withKeyedValueCache: ClientServiceFactory().makeKeyedValueCache(), maxCachedUsers: config.maxCachedUsers)
-        var mobileKeys = config.getSecondaryMobileKeys() ?? [:]
+        var mobileKeys = config.getSecondaryMobileKeys()
         var internalCount = 0
         let completionCheck = {
             internalCount += 1
@@ -1006,7 +1006,7 @@ private extension Optional {
             let internalUser = startUser ?? anonymousUser
             
             LDClient.instances = [:]
-            var mobileKeys = config.getSecondaryMobileKeys() ?? [:]
+            var mobileKeys = config.getSecondaryMobileKeys()
             var internalCount = 0
             let completionCheck = {
                 internalCount += 1
