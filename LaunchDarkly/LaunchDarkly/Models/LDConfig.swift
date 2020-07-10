@@ -238,13 +238,13 @@ public struct LDConfig {
 
     /// A Dictionary of identifying names to unique mobile keys for all environments
     private var mobileKeys: [String: String] {
-        var internalMobileKeys = secondaryMobileKeys
+        var internalMobileKeys = getSecondaryMobileKeys()
         internalMobileKeys?[LDConfig.Defaults.primaryEnvironmentName] = mobileKey
         return internalMobileKeys ?? [LDConfig.Defaults.primaryEnvironmentName: mobileKey]
     }
     
     /// A Dictionary of identifying names to unique mobile keys to access secondary environments
-    public var secondaryMobileKeys: [String: String]? {
+    /*public var secondaryMobileKeys: [String: String]? {
         get {
             return _secondaryMobileKeys
         }
@@ -268,6 +268,30 @@ public struct LDConfig {
             
             _secondaryMobileKeys = newSecondaryMobileKeys
         }
+    }*/
+
+    public mutating func setSecondaryMobileKeys(_ newSecondaryMobileKeys: [String: String]?) throws {
+        let mobileKeyPresentInSecondaryMobileKeys = newSecondaryMobileKeys?.values.contains(mobileKey) ?? false
+        let primaryEnvironmentNamePresentInSecondaryMobileKeys = newSecondaryMobileKeys?.keys.contains(LDConfig.Defaults.primaryEnvironmentName) ?? false
+        let mobileKeysUsedOnlyOnce = Set(newSecondaryMobileKeys?.values.shuffled() ?? [])
+        if mobileKeyPresentInSecondaryMobileKeys {
+            Log.debug("The primary environment key cannot be in the secondary mobile keys.")
+            throw("The primary environment key cannot be in the secondary mobile keys.")
+        }
+        if primaryEnvironmentNamePresentInSecondaryMobileKeys {
+            Log.debug("The primary environment name is not a valid key.")
+            throw("The primary environment name is not a valid key.")
+        }
+        if mobileKeysUsedOnlyOnce.count != newSecondaryMobileKeys?.count {
+            Log.debug("A key can only be used once.")
+            throw("A key can only be used once.")
+        }
+
+        _secondaryMobileKeys = newSecondaryMobileKeys
+    }
+
+    public func getSecondaryMobileKeys() -> [String: String]? {
+        return _secondaryMobileKeys
     }
     
     /// Internal variable for secondaryMobileKeys computed property

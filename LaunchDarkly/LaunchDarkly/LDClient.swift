@@ -185,6 +185,45 @@ public class LDClient {
         return ""
     }
 
+    private(set) var runMode: LDClientRunMode = .foreground {
+        didSet {
+            guard runMode != oldValue
+            else {
+                Log.debug(typeName(and: #function) + " aborted. Old runMode equals new runMode.")
+                return
+            }
+            Log.debug(typeName(and: #function, appending: ": ") + "\(runMode)")
+
+            let willSetSynchronizerOnline = isOnline && isInSupportedRunMode
+            flagSynchronizer.isOnline = false
+            let streamingModeVar = ConnectionInformation.effectiveStreamingMode(config: config, ldClient: self)
+            connectionInformation = ConnectionInformation.backgroundBehavior(connectionInformation: connectionInformation, streamingMode: streamingModeVar, goOnline: willSetSynchronizerOnline)
+            flagSynchronizer = serviceFactory.makeFlagSynchronizer(streamingMode: streamingModeVar,
+                                                                   pollingInterval: config.flagPollingInterval(runMode: runMode),
+                                                                   useReport: config.useReport,
+                                                                   service: service,
+                                                                   onSyncComplete: onFlagSyncComplete)
+            flagSynchronizer.isOnline = willSetSynchronizerOnline
+            diagnosticReporter.runMode = runMode
+        }
+    }
+
+    // MARK: - Foreground / Background notification
+
+    @objc private func didEnterBackground() {
+        Log.debug(typeName(and: #function))
+        Thread.performOnMain {
+            runMode = .background
+        }
+    }
+
+    @objc private func willEnterForeground() {
+        Log.debug(typeName(and: #function))
+        Thread.performOnMain {
+            runMode = .foreground
+        }
+    }
+
     /**
      The LDConfig that configures the LDClient. See `LDConfig` for details about what can be configured.
 
@@ -194,29 +233,7 @@ public class LDClient {
 
      When a new config is set, the LDClient goes offline and reconfigures using the new config. If the client was online when the new config was set, it goes online again, subject to a throttling delay if in force (see `setOnline(_: completion:)` for details). To change both the `config` and `user`, set the LDClient offline, set both properties, then set the LDClient online.
     */
-    public private(set) var config: LDConfig {
-        didSet {
-            guard config != oldValue
-            else {
-                Log.debug(typeName(and: #function) + "aborted. New config matches old config")
-                return
-            }
-
-            Log.level = environmentReporter.isDebugBuild && config.isDebugMode ? .debug : .noLogging
-            Log.debug(typeName(and: #function) + "new config set")
-            let wasOnline = isOnline
-            internalSetOnline(false)
-            cacheConverter.convertCacheData(for: user, and: config)
-            if let cachedFlags = flagCache.retrieveFeatureFlags(forUserWithKey: user.key, andMobileKey: config.mobileKey), !cachedFlags.isEmpty {
-                user.flagStore.replaceStore(newFlags: cachedFlags, completion: nil)
-            }
-
-            service = serviceFactory.makeDarklyServiceProvider(config: config, user: user)
-            eventReporter.config = config
-
-            internalSetOnline(wasOnline)
-        }
-    }
+    public let config: LDConfig
     
     private(set) var user: LDUser
     
@@ -808,32 +825,16 @@ public class LDClient {
         Log.debug(typeName(and: #function))
         self.connectionInformation = ConnectionInformation.lastSuccessfulConnectionCheck(connectionInformation: self.connectionInformation)
     }
-
-    // MARK: - Foreground / Background notification
-
-    @objc private func didEnterBackground() {
-        Log.debug(typeName(and: #function))
-        Thread.performOnMain {
-            runMode = .background
-        }
-    }
-
-    @objc private func willEnterForeground() {
-        Log.debug(typeName(and: #function))
-        Thread.performOnMain {
-            runMode = .foreground
-        }
-    }
     
     /**
-     Starts the LDClient using the passed in `config` & `user`. Call this before requesting feature flag values. The LDClient will not go online until you call this method.
-     Starting the LDClient means setting the `config` & `user`, setting the client online if `config.startOnline` is true (the default setting), and starting event recording. The client app must start the LDClient before it will report feature flag values. If a client does not call `start`, no methods will work.
-     If the `start` call omits the `user`, the LDClient uses the previously set `user`, or the default `user` if it was never set.
+     Starts the LDClient using the passed in `config` & `startUser`. Call this before requesting feature flag values. The LDClient will not go online until you call this method.
+     Starting the LDClient means setting the `config` & `startUser`, setting the client online if `config.startOnline` is true (the default setting), and starting event recording. The client app must start the LDClient before it will report feature flag values. If a client does not call `start`, no methods will work.
+     If the `start` call omits the `startUser`, the LDClient uses the default `user` if it was never set.
      If the` start` call includes the optional `completion` closure, LDClient calls the `completion` closure when `setOnline(_: completion:)` embedded in the `init` method completes. This method listens for flag updates so the completion will only return once an update has occurred. The `start` call is subject to throttling delays, therefore the `completion` closure call may be delayed.
      Subsequent calls to this method cause the LDClient to return. Normally there should only be one call to start. To change `user`, use `identify`.
      - parameter configuration: The LDConfig that contains the desired configuration. (Required)
-     - parameter startUser: The LDUser set with the desired user. If omitted, LDClient retains the previously set user, or default if one was never set. (Optional)
-     - parameter completion: Closure called when the embedded `setOnline` call completes, subject to throttling delays. (Optional)
+     - parameter startUser: The LDUser set with the desired user. If omitted, LDClient sets a default user. (Optional)
+     - parameter completion: Closure called when the embedded `setOnline` call completes. (Optional)
     */
     /// - Tag: start
     public static func start(config: LDConfig, startUser: LDUser? = nil, completion: (() -> Void)? = nil) {
@@ -850,8 +851,7 @@ public class LDClient {
         
         LDClient.instances = [:]
         let cache = UserEnvironmentFlagCache(withKeyedValueCache: ClientServiceFactory().makeKeyedValueCache(), maxCachedUsers: config.maxCachedUsers)
-        let flagChangeNotifier = FlagChangeNotifier()
-        var mobileKeys = config.secondaryMobileKeys ?? [:]
+        var mobileKeys = config.getSecondaryMobileKeys() ?? [:]
         var internalCount = 0
         let completionCheck = {
             internalCount += 1
@@ -864,6 +864,7 @@ public class LDClient {
         for (name, mobileKey) in mobileKeys {
             var internalConfig = config
             internalConfig.mobileKey = mobileKey
+            let flagChangeNotifier = FlagChangeNotifier()
             let instance = LDClient(configuration: internalConfig, startUser: internalUser, newCache: cache, flagNotifier: flagChangeNotifier, completion: completionCheck)
             LDClient.instances?[name] = instance
         }
@@ -871,12 +872,12 @@ public class LDClient {
     }
 
     /**
-    See [stringVariation](x-source-tag://start) for more information on starting the SDK.
+    See [start](x-source-tag://start) for more information on starting the SDK.
 
     - parameter configuration: The LDConfig that contains the desired configuration. (Required)
-    - parameter startUser: The LDUser set with the desired user. If omitted, LDClient retains the previously set user, or default if one was never set. (Optional)
+    - parameter startUser: The LDUser set with the desired user. If omitted, LDClient sets a default user.. (Optional)
     - parameter startWaitSeconds: A TimeInterval that determines when the completion will return if no flags have been returned from the network.
-    - parameter completion: Closure called when the embedded `setOnline` call completes, subject to throttling delays. Takes a Bool that indicates whether the completion timedout as a parameter. (Optional)
+    - parameter completion: Closure called when the embedded `setOnline` call completes. Takes a Bool that indicates whether the completion timedout as a parameter. (Optional)
     */
     public static func start(config: LDConfig, startUser: LDUser? = nil, startWaitSeconds: TimeInterval, completion: ((_ timedOut: Bool) -> Void)? = nil) {
         var completed = true
@@ -906,39 +907,6 @@ public class LDClient {
     
     // MARK: - Private
     private(set) var serviceFactory: ClientServiceCreating = ClientServiceFactory()
-
-    private(set) var runMode: LDClientRunMode = .foreground {
-        didSet {
-            guard runMode != oldValue
-            else {
-                Log.debug(typeName(and: #function) + " aborted. Old runMode equals new runMode.")
-                return
-            }
-            Log.debug(typeName(and: #function, appending: ": ") + "\(runMode)")
-
-            let willSetSynchronizerOnline = isOnline && isInSupportedRunMode
-            //The only time the flag synchronizer configuration WILL match is if the client sets flag polling with the polling interval set to the background polling interval.
-            //if it does match, keeping the synchronizer precludes an extra flag request
-            if !flagSynchronizerConfigMatchesConfigAndRunMode {
-                flagSynchronizer.isOnline = false
-                let streamingModeVar = ConnectionInformation.effectiveStreamingMode(config: config, ldClient: self)
-                connectionInformation = ConnectionInformation.backgroundBehavior(connectionInformation: connectionInformation, streamingMode: streamingModeVar, goOnline: willSetSynchronizerOnline)
-                flagSynchronizer = serviceFactory.makeFlagSynchronizer(streamingMode: streamingModeVar,
-                                                                       pollingInterval: config.flagPollingInterval(runMode: runMode),
-                                                                       useReport: config.useReport,
-                                                                       service: service,
-                                                                       onSyncComplete: onFlagSyncComplete)
-            }
-            flagSynchronizer.isOnline = willSetSynchronizerOnline
-            diagnosticReporter.runMode = runMode
-        }
-    }
-    
-    private var flagSynchronizerConfigMatchesConfigAndRunMode: Bool {
-        return flagSynchronizer.streamingMode == ConnectionInformation.effectiveStreamingMode(config: config, ldClient: self)
-            && (flagSynchronizer.streamingMode == .streaming
-                || flagSynchronizer.streamingMode == .polling && flagSynchronizer.pollingInterval == config.flagPollingInterval(runMode: runMode))
-    }
 
     private(set) var flagCache: FeatureFlagCaching
     private(set) var cacheConverter: CacheConverting
@@ -1038,7 +1006,7 @@ private extension Optional {
             let internalUser = startUser ?? anonymousUser
             
             LDClient.instances = [:]
-            var mobileKeys = config.secondaryMobileKeys ?? [:]
+            var mobileKeys = config.getSecondaryMobileKeys() ?? [:]
             var internalCount = 0
             let completionCheck = {
                 internalCount += 1

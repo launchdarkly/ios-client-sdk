@@ -133,7 +133,7 @@ struct DiagnosticConfig: Codable {
         evaluationReasonsRequested = config.evaluationReasons
         // While the SDK treats all negative values as unlimited, for consistency we only send -1 for diagnostics
         maxCachedUsers = config.maxCachedUsers >= 0 ? config.maxCachedUsers : -1
-        mobileKeyCount = 1 + (config.secondaryMobileKeys?.count ?? 0)
+        mobileKeyCount = 1 + (config.getSecondaryMobileKeys()?.count ?? 0)
         diagnosticRecordingIntervalMillis = Int(round(config.diagnosticRecordingInterval * 1_000))
     }
 }

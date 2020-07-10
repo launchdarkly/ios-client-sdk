@@ -180,9 +180,12 @@ public final class ObjcLDConfig: NSObject {
     }
 
     /// A Dictionary of identifying names to unique mobile keys to access secondary environments
-    @objc public var secondaryMobileKeys: [String: String]? {
-        get { config.secondaryMobileKeys }
-        set { config.secondaryMobileKeys = newValue }
+    @objc public func getSecondaryMobileKeys() -> [String: String]? {
+        return config.getSecondaryMobileKeys()
+    }
+
+    @objc public func setSecondaryMobileKeys(_ keys: [String: String]?) throws {
+        try config.setSecondaryMobileKeys(keys)
     }
     
     ///LDConfig constructor. Configurable values are all set to their default values. The client app can modify these values as desired. Note that client app developers may prefer to get the LDConfig from `LDClient.config` (`ObjcLDClient.config`) in order to retain previously set values.

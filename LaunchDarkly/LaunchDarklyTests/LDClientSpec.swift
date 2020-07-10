@@ -346,15 +346,10 @@ final class LDClientSpec: QuickSpec {
                             waitUntil { done in
                                 testContext = TestContext(startOnline: true, runMode: .background, operatingSystem: os, completion: done)
                             }
-                            waitUntil(timeout: 10) { done in
-                                testContext.subject.setService(ClientServiceMockFactory().makeDarklyServiceProvider(config: testContext.subject.config, user: testContext.subject.user))
-                                testContext.subject.setOnline(true, completion: done)
-                                testContext.subject.flagChangeNotifier.notifyObservers(user: testContext.user, oldFlags: testContext.oldFlags)
-                            }
                         }
                         it("takes the client and service objects online when background enabled") {
-                            expect(testContext.subject.isOnline) == os.isBackgroundEnabled
-                            expect(testContext.subject.flagSynchronizer.isOnline) == testContext.subject.isOnline
+                            expect(testContext.subject.isOnline) == true
+                            expect(testContext.subject.flagSynchronizer.isOnline) == os.isBackgroundEnabled
                             expect(testContext.subject.eventReporter.isOnline) == testContext.subject.isOnline
                         }
                         it("saves the config") {
@@ -398,15 +393,11 @@ final class LDClientSpec: QuickSpec {
                             waitUntil { done in
                                 testContext = TestContext(startOnline: true, enableBackgroundUpdates: false, runMode: .background, operatingSystem: os, completion: done)
                             }
-                            waitUntil(timeout: 10) { done in
-                                testContext.subject.setOnline(true, completion: done)
-                                testContext.subject.flagChangeNotifier.notifyObservers(user: testContext.user, oldFlags: testContext.oldFlags)
-                            }
                         }
                         it("leaves the client and service objects offline") {
-                            expect(testContext.subject.isOnline) == false
-                            expect(testContext.subject.flagSynchronizer.isOnline) == testContext.subject.isOnline
-                            expect(testContext.subject.eventReporter.isOnline) == testContext.subject.isOnline
+                            expect(testContext.subject.isOnline) == true
+                            expect(testContext.subject.flagSynchronizer.isOnline) == false
+                            expect(testContext.subject.eventReporter.isOnline) == true
                         }
                         it("saves the config") {
                             expect(testContext.subject.config) == testContext.config
