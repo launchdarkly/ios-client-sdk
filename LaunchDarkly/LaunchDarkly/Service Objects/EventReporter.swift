@@ -41,12 +41,19 @@ class EventReporter: EventReporting {
         }
     }
     private let eventQueue = DispatchQueue(label: Constants.eventQueueLabel, qos: .userInitiated)
-    var isOnline: Bool = false {
-        didSet {
-            Log.debug(typeName(and: #function, appending: ": ") + "\(isOnline)")
-            isOnline ? startReporting() : stopReporting()
+    var isOnline: Bool {
+        get { isOnlineQueue.sync { _isOnline } }
+        set {
+            isOnlineQueue.sync {
+                _isOnline = newValue
+                Log.debug(typeName(and: #function, appending: ": ") + "\(isOnline)")
+                _isOnline ? startReporting(isOnline: _isOnline) : stopReporting()
+            }
         }
     }
+
+    private var _isOnline = false
+    private var isOnlineQueue = DispatchQueue(label: "com.launchdarkly.EventReporter.isOnlineQueue")
     private (set) var lastEventResponseDate: Date? = nil
 
     var service: DarklyServiceProvider
@@ -97,7 +104,7 @@ class EventReporter: EventReporting {
         }
     }
 
-    private func startReporting() {
+    private func startReporting(isOnline: Bool) {
         guard isOnline && !isReportingActive
         else { return }
         eventReportTimer = LDTimer(withTimeInterval: config.eventFlushInterval, repeats: true, fireQueue: eventQueue, execute: reportEvents)
