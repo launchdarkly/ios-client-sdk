@@ -18,8 +18,10 @@ Build instructions
  
 ### Prerequisites
  
-This SDK is built with [XCode](https://developer.apple.com/xcode/). This version is compatible with XCode 10.2.
- 
+This SDK is built with [XCode](https://developer.apple.com/xcode/). This version is built and tested with XCode 11.4.
+
+[Mint](https://github.com/yonaskolb/Mint) is used to manage dev tooling ([SwiftLint](https://github.com/realm/SwiftLint) and [Sourcery](https://github.com/krzysztofzablocki/Sourcery)). The build is setup so these are not required for building the current code in the repository, but Sourcery is used to regenerate test mocks so may be required when building the test target after changes to the SDK code. Install `mint` with `brew install mint`.
+
 ### Building
  
 The exact command used to build the SDK depends on where you want to use it (for example -- iOS, watchOS, etc.). Refer to the `xcodebuild` commands in the SDK's [continuous integration build configuration](.circleci/config.yml) for examples on how to build for the different platforms.
