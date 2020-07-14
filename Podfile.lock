@@ -15,24 +15,18 @@ PODS:
   - OHHTTPStubs/Swift (9.0.0):
     - OHHTTPStubs/Default
   - Quick (2.1.0)
-  - Sourcery (0.16.1)
-  - SwiftLint (0.33.0)
 
 DEPENDENCIES:
   - LDSwiftEventSource (= 0.3.0)
   - Nimble (= 8.0.2)
   - OHHTTPStubs/Swift (= 9.0.0)
   - Quick (= 2.1.0)
-  - Sourcery (= 0.16.1)
-  - SwiftLint (= 0.33.0)
 
 SPEC REPOS:
   https://github.com/CocoaPods/Specs.git:
     - Nimble
     - OHHTTPStubs
     - Quick
-    - Sourcery
-    - SwiftLint
   https://github.com/launchdarkly/pod-specs-private.git:
     - LDSwiftEventSource
 
@@ -41,9 +35,7 @@ SPEC CHECKSUMS:
   Nimble: 622629381bda1dd5678162f21f1368cec7cbba60
   OHHTTPStubs: cb29d2a9d09a828ecb93349a2b0c64f99e0db89f
   Quick: 4be43f6634acfa727dd106bdf3929ce125ffa79d
-  Sourcery: 16779170d35ee204666843b09031f36721a84bcc
-  SwiftLint: fed9c66336e41fc74dc48a73678380718f0c8b0e
 
-PODFILE CHECKSUM: 0cb1310e01d774543d726c53ff6c86d4f2fa89e0
+PODFILE CHECKSUM: 5f544bc605b2787657e65367ebbd79bcae05ef33
 
 COCOAPODS: 1.9.1
