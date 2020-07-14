@@ -801,7 +801,7 @@ public final class ObjcLDClient: NSObject {
      - parameter completion: Closure called when the embedded `setOnline` call completes. (Optional)
     */
     /// - Tag: start
-    public static func start(configuration: ObjcLDConfig, startUser: ObjcLDUser, completion: (() -> Void)? = nil) {
+    @objc public static func start(configuration: ObjcLDConfig, startUser: ObjcLDUser, completion: (() -> Void)? = nil) {
         LDClient.start(config: configuration.config, startUser: startUser.user, completion: completion)
     }
 
@@ -813,7 +813,7 @@ public final class ObjcLDClient: NSObject {
     - parameter startWaitSeconds: A TimeInterval that determines when the completion will return if no flags have been returned from the network.
     - parameter completion: Closure called when the embedded `setOnline` call completes. Takes a Bool that indicates whether the completion timedout as a parameter. (Optional)
     */
-    public static func start(configuration: ObjcLDConfig, startUser: ObjcLDUser, startWaitSeconds: TimeInterval, completion: ((_ timedOut: Bool) -> Void)? = nil) {
+    @objc public static func start(configuration: ObjcLDConfig, startUser: ObjcLDUser, startWaitSeconds: TimeInterval, completion: ((_ timedOut: Bool) -> Void)? = nil) {
         LDClient.start(config: configuration.config, startUser: startUser.user, startWaitSeconds: startWaitSeconds, completion: completion)
     }
 
