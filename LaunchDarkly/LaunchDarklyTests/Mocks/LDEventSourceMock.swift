@@ -15,11 +15,11 @@ extension EventHandler {
     }
 
     func send(event: FlagUpdateType, string: String) {
-        onMessage(event: event.rawValue, messageEvent: MessageEvent(data: string))
+        onMessage(eventType: event.rawValue, messageEvent: MessageEvent(data: string))
     }
 
     func sendPing() {
-        onMessage(event: FlagUpdateType.ping.rawValue, messageEvent: MessageEvent(data: ""))
+        onMessage(eventType: FlagUpdateType.ping.rawValue, messageEvent: MessageEvent(data: ""))
     }
 
     func sendPut() {
@@ -68,9 +68,9 @@ class EventHandlerMock: EventHandler {
 
     var onMessageCallCount = 0
     var onMessageReceivedArguments: (event: String, messageEvent: MessageEvent)?
-    func onMessage(event: String, messageEvent: MessageEvent) {
+    func onMessage(eventType: String, messageEvent: MessageEvent) {
         onMessageCallCount += 1
-        onMessageReceivedArguments = (event, messageEvent)
+        onMessageReceivedArguments = (eventType, messageEvent)
     }
 
     var onCommentCallCount = 0

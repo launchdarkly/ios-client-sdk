@@ -328,12 +328,12 @@ class FlagSynchronizer: LDFlagSynchronizing, EventHandler {
         NotificationCenter.default.post(name: Notification.Name(FlagSynchronizer.Constants.didCloseEventSourceName), object: nil)
     }
 
-    public func onMessage(event: String, messageEvent: MessageEvent) {
+    public func onMessage(eventType: String, messageEvent: MessageEvent) {
         guard !shouldAbortStreamUpdate()
         else { return }
 
-        let eventType: FlagUpdateType? = FlagUpdateType(rawValue: event)
-        switch eventType {
+        let updateType: FlagUpdateType? = FlagUpdateType(rawValue: eventType)
+        switch updateType {
         case .ping: makeFlagRequest(isOnline: isOnline)
         case .put, .patch, .delete:
             guard let data = messageEvent.data.data(using: .utf8),
@@ -342,10 +342,10 @@ class FlagSynchronizer: LDFlagSynchronizing, EventHandler {
                 reportDataError(messageEvent.data.data(using: .utf8))
                 return
             }
-            reportSuccess(flagDictionary: flagDictionary, eventType: eventType)
+            reportSuccess(flagDictionary: flagDictionary, eventType: updateType)
         case nil:
             Log.debug(typeName(and: #function) + "aborted. Unknown event type.")
-            reportSyncComplete(.error(.unknownEventType(event)))
+            reportSyncComplete(.error(.unknownEventType(eventType)))
             return
         }
     }
@@ -385,7 +385,7 @@ extension FlagSynchronizer {
     }
 
     func testStreamOnMessage(event: String, messageEvent: MessageEvent) {
-        onMessage(event: event, messageEvent: messageEvent)
+        onMessage(eventType: event, messageEvent: messageEvent)
     }
 
     func testStreamOnError(error: Error) {

@@ -10,9 +10,7 @@ import Foundation
 import Quick
 import Nimble
 import OHHTTPStubs
-#if SWIFT_PACKAGE
 import OHHTTPStubsSwift
-#endif
 import LDSwiftEventSource
 @testable import LaunchDarkly
 

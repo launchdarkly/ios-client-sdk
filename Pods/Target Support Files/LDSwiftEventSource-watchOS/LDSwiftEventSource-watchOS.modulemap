@@ -1,6 +1,0 @@
-framework module LDSwiftEventSource {
-  umbrella header "LDSwiftEventSource-watchOS-umbrella.h"
-
-  export *
-  module * { export * }
-}

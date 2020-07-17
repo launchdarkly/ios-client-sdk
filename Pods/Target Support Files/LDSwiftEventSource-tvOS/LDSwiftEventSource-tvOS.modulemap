@@ -1,6 +1,0 @@
-framework module LDSwiftEventSource {
-  umbrella header "LDSwiftEventSource-tvOS-umbrella.h"
-
-  export *
-  module * { export * }
-}
