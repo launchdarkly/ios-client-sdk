@@ -26,18 +26,8 @@ final class UserEnvironmentFlagCacheSpec: QuickSpec {
         var selectedUser: LDUser {
             return users.selectedUser
         }
-        var unchangedUsers: [LDUser] {
-            var remainingUsers = users
-            remainingUsers.remove(at: users.firstIndex(of: selectedUser)!)
-            return remainingUsers
-        }
         var selectedMobileKey: String {
             return userEnvironmentsCollection[selectedUser.key]!.environmentFlags.keys.selectedMobileKey
-        }
-        var unchangedEnvironments: [MobileKey: CacheableEnvironmentFlags] {
-            var remainingEnvironments = userEnvironmentsCollection[selectedUser.key]!.environmentFlags
-            remainingEnvironments.removeValue(forKey: selectedMobileKey)
-            return remainingEnvironments
         }
         var oldestUser: LDUser {
             //sort <userKey, lastUpdated> pairs youngest to oldest

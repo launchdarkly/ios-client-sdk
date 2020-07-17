@@ -118,16 +118,6 @@ final class LDClientSpec: QuickSpec {
         var onSyncComplete: FlagSyncCompleteClosure? {
             return serviceFactoryMock.onFlagSyncComplete
         }
-        // flag maintaining mock accessors
-        var replaceStoreComplete: CompletionClosure? {
-            return flagStoreMock.replaceStoreReceivedArguments?.completion
-        }
-        var updateStoreComplete: CompletionClosure? {
-            return flagStoreMock.updateStoreReceivedArguments?.completion
-        }
-        var deleteFlagComplete: CompletionClosure? {
-            return flagStoreMock.deleteFlagReceivedArguments?.completion
-        }
         var recordedEvent: LaunchDarkly.Event? {
             eventReporterMock.recordReceivedEvent
         }
@@ -2595,29 +2585,5 @@ extension CacheConvertingMock {
     func reset() {
         convertCacheDataCallCount = 0
         convertCacheDataReceivedArguments = nil
-    }
-}
-
-extension LDConfig {
-    func copyReplacingMobileKey(_ mobileKey: MobileKey) -> LDConfig {
-        var newConfig = LDConfig(mobileKey: mobileKey)
-        newConfig.baseUrl = baseUrl
-        newConfig.eventsUrl = eventsUrl
-        newConfig.streamUrl = streamUrl
-        newConfig.eventCapacity = eventCapacity
-        newConfig.connectionTimeout = connectionTimeout
-        newConfig.eventFlushInterval = eventFlushInterval
-        newConfig.flagPollingInterval = flagPollingInterval
-        newConfig.backgroundFlagPollingInterval = backgroundFlagPollingInterval
-        newConfig.streamingMode = streamingMode
-        newConfig.enableBackgroundUpdates = enableBackgroundUpdates
-        newConfig.startOnline = startOnline
-        newConfig.allUserAttributesPrivate = allUserAttributesPrivate
-        newConfig.privateUserAttributes = privateUserAttributes
-        newConfig.useReport = useReport
-        newConfig.inlineUserInEvents = inlineUserInEvents
-        newConfig.isDebugMode = isDebugMode
-
-        return newConfig
     }
 }

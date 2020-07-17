@@ -37,15 +37,6 @@ final class ErrorNotifier: ErrorNotifying {
 
 #if DEBUG
 extension ErrorNotifier {
-    convenience init(observers: [ErrorObserver]? = nil) {
-        self.init()
-        guard let observers = observers, observers.isEmpty == false
-        else {
-            return
-        }
-        errorObservers.append(contentsOf: observers)
-    }
-
     func erase(owner: LDObserverOwner) {
         for index in 0..<errorObservers.count {
             guard errorObservers[index].owner === owner

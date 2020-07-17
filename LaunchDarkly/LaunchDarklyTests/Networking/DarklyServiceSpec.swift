@@ -1073,10 +1073,6 @@ extension DarklyService.StreamRequestPath {
 }
 
 extension LDUser {
-    func base64encoded(using config: LDConfig) -> String? {
-        return dictionaryValue(includeFlagConfig: false, includePrivateAttributes: true, config: config).base64UrlEncodedString
-    }
-
     init?(base64urlEncodedString: String) {
         let base64encodedString = base64urlEncodedString.replacingOccurrences(of: "-", with: "+").replacingOccurrences(of: "_", with: "/")
         self.init(data: Data(base64Encoded: base64encodedString))

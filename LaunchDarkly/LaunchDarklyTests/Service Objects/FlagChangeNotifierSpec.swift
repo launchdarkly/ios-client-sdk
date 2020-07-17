@@ -27,9 +27,7 @@ final class FlagChangeNotifierSpec: QuickSpec {
         var flagsUnchangedOwnerKey: String?
         var featureFlags: [LDFlagKey: FeatureFlag] = DarklyServiceMock.Constants.stubFeatureFlags()
         var user: LDUser = LDUser.stub(key: Constants.userKey, includeNullValue: true)
-        var flagStoreMock: FlagMaintainingMock! {
-            (user.flagStore as! FlagMaintainingMock)
-        }
+
         let alternateFlagKeys = ["flag-key-1", "flag-key-2", "flag-key-3"]
 
         //Use this initializer when stubbing observers for observer add & remove tests

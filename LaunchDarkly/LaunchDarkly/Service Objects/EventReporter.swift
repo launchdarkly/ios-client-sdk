@@ -46,7 +46,7 @@ class EventReporter: EventReporting {
         set {
             isOnlineQueue.sync {
                 _isOnline = newValue
-                Log.debug(typeName(and: #function, appending: ": ") + "\(isOnline)")
+                Log.debug(typeName(and: #function, appending: ": ") + "\(_isOnline)")
                 _isOnline ? startReporting(isOnline: _isOnline) : stopReporting()
             }
         }

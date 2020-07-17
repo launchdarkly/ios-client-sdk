@@ -1306,13 +1306,6 @@ extension Array where Element == [String: Any] {
     }
 }
 
-extension Event.Kind {
-    static var random: Event.Kind {
-        let index = Int(arc4random_uniform(UInt32(Event.Kind.allKinds.count) - 1))
-        return Event.Kind.allKinds[index]
-    }
-}
-
 extension Event {
     static func stub(_ eventKind: Kind, with user: LDUser) -> Event {
         switch eventKind {
@@ -1326,10 +1319,6 @@ extension Event {
         case .custom: return (try? Event.customEvent(key: UUID().uuidString, user: user, data: ["custom": UUID().uuidString]))!
         case .summary: return Event.summaryEvent(flagRequestTracker: FlagRequestTracker.stub())!
         }
-    }
-
-    static func stubFeatureEvent(_ featureFlag: FeatureFlag, with user: LDUser) -> Event {
-        return Event.featureEvent(key: UUID().uuidString, value: true, defaultValue: false, featureFlag: featureFlag, user: user, includeReason: false)
     }
 
     static func stubEvents(eventCount: Int = Event.Kind.allKinds.count, for user: LDUser) -> [Event] {
@@ -1349,49 +1338,5 @@ extension Event {
         return eventStubs.map { (event) in
             event.dictionaryValue(config: config)
         }
-    }
-
-    func matches(eventDictionary: [String: Any]?) -> Bool {
-        guard let eventDictionary = eventDictionary
-        else {
-            return false
-        }
-        if kind == .summary {
-            return kind == eventDictionary.eventKind && endDate?.isWithin(0.001, of: eventDictionary.eventEndDate) ?? false
-        }
-        guard let eventDictionaryKey = eventDictionary.eventKey,
-            let eventDictionaryCreationDateMillis = eventDictionary.eventCreationDateMillis
-        else {
-            return false
-        }
-        return key == eventDictionaryKey && creationDate?.millisSince1970 == eventDictionaryCreationDateMillis
-    }
-}
-
-extension Array where Element == Event {
-    func matches(eventDictionaries: [[String: Any]]) -> Bool {
-        guard self.count == eventDictionaries.count else {
-            return false
-        }
-        for index in self.indices {
-            if !self[index].matches(eventDictionary: eventDictionaries[index]) {
-                return false
-            }
-        }
-        return true
-    }
-}
-
-extension Array where Element == [String: Any] {
-    func matches(events: [Event]) -> Bool {
-        guard self.count == events.count else {
-            return false
-        }
-        for index in self.indices {
-            if !events[index].matches(eventDictionary: self[index]) {
-                return false
-            }
-        }
-        return true
     }
 }

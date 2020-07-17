@@ -20,9 +20,6 @@ final class FlagSynchronizerSpec: QuickSpec {
     struct TestContext {
         var config: LDConfig!
         var user: LDUser!
-        var flagStoreMock: FlagMaintainingMock! {
-            user.flagStore as? FlagMaintainingMock
-        }
         var serviceMock: DarklyServiceMock!
         var eventSourceMock: DarklyStreamingProviderMock? {
             serviceMock.createdEventSource

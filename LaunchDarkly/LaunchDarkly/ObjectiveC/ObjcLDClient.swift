@@ -784,7 +784,11 @@ public final class ObjcLDClient: NSObject {
     }
 
     /**
-     Report events to LaunchDarkly servers. While online, the LDClient automatically reports events on the `LDConfig.eventFlushInterval`, and whenever the client app moves to the background. There should normally not be a need to call reportEvents.
+     Tells the SDK to immediately send any currently queued events to LaunchDarkly.
+
+     There should not normally be a need to call this function. While online, the LDClient automatically reports events
+     on an interval defined by `LDConfig.eventFlushInterval`. Note that this function does not block until events are
+     sent, it only triggers a background task to send events immediately.
      */
     @objc public func flush() {
         ldClient.flush()

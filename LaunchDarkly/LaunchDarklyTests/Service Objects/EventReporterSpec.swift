@@ -25,7 +25,6 @@ final class EventReporterSpec: QuickSpec {
         var serviceMock: DarklyServiceMock!
         var events: [Event]!
         var eventKeys: [String]! { events.compactMap { $0.key } }
-        var eventKinds: [Event.Kind]! { events.compactMap { $0.kind } }
         var lastEventResponseDate: Date?
         var flagKey: LDFlagKey!
         var featureFlag: FeatureFlag!
