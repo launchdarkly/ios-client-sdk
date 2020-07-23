@@ -175,20 +175,20 @@ final class FlagRequestTrackerSpec: QuickSpec {
                 expect(trackerDictionary.flagRequestTrackerFeatures).toNot(beNil())
                 guard let trackerDictionaryFeatures = trackerDictionary.flagRequestTrackerFeatures
                 else {
-                    XCTFail("expected trackerDictionaryFeatures to not be nil, got nil")
+                    fail("expected trackerDictionaryFeatures to not be nil, got nil")
                     return
                 }
                 flagRequestTracker.flagCounters.forEach { (flagKey, flagCounter) in
                     guard let flagCounterDictionary = trackerDictionaryFeatures[flagKey] as? [String: Any]
                     else {
-                        XCTFail("expected flagCounterDictionary to not be nil, got nil")
+                        fail("expected flagCounterDictionary to not be nil, got nil")
                         return
                     }
                     expect(AnyComparer.isEqual(flagCounterDictionary.flagCounterDefaultValue, to: flagCounter.defaultValue, considerNilAndNullEqual: true)).to(beTrue())
                     expect(flagCounterDictionary.flagCounterFlagValueCounters?.count) == 1
                     guard let flagValueCounterDictionary = flagCounterDictionary.flagCounterFlagValueCounters?.first
                     else {
-                        XCTFail("expected flagValueCounterDictionary to not be nil, got nil")
+                        fail("expected flagValueCounterDictionary to not be nil, got nil")
                         return
                     }
                     let flagValueCounter = flagCounter.flagValueCounters.first!

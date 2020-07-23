@@ -7,19 +7,8 @@
 
 import Foundation
 
-///Defines the sources for feature flag values.
-///See also: `LDClient.variationAndSource(forKey:fallback:)` and `LDChangedFlag`
-public enum LDFlagValueSource: CaseIterable {
-    ///Feature flag comes from the server, either the `clientstream` or a feature flag request
-    case server
-    ///Feature flag comes from the cache. Cached feature flags are used on app launch until the SDK gets the first feature flag update
-    case cache
-    ///Feature flag comes from the client provided fallback. The SDK will serve fallback values when the flag key is not found, or when the SDK cannot convert the feature flag to the client provided type. Since the client provides this value in the `LDClient.variationAndSource(forKey:fallback:)`, an LDChangedFlag will not contain a `fallback` valueSource
-    case fallback
-}
-
 ///Defines the types and values of a feature flag. The SDK limits feature flags to these types by use of the `LDFlagValueConvertible` protocol, which uses this type. Client app developers should not construct an LDFlagValue.
-public enum LDFlagValue: Equatable {
+enum LDFlagValue: Equatable {
     ///Bool flag value
     case bool(Bool)
     ///Int flag value
@@ -34,11 +23,6 @@ public enum LDFlagValue: Equatable {
     case dictionary([LDFlagKey: LDFlagValue])
     ///Null flag value
     case null
-
-    ///An NSObject wrapper for the Swift LDFlagValue enum. Intended for use in mixed apps when Swift code needs to pass a LDFlagValue into an Objective-C method.
-    public var objcLdFlagValue: ObjcLDFlagValue {
-        ObjcLDFlagValue(self)
-    }
 }
 
 // The commented out code in this file is intended to support automated typing from the json, which is not implemented in the 4.0.0 release. When that capability can be supported with later Swift versions, uncomment this code to support it.

@@ -208,7 +208,7 @@ extension Dictionary where Key == LDFlagKey, Value == FeatureFlag {
 
 extension FeatureFlag {
     var modelV4FeatureFlag: FeatureFlag {
-        FeatureFlag(flagKey: flagKey, value: value, variation: variation, version: version, flagVersion: flagVersion, eventTrackingContext: eventTrackingContext, reason: nil, trackReason: nil)
+        FeatureFlag(flagKey: flagKey, value: value, variation: variation, version: version, flagVersion: flagVersion, trackEvents: trackEvents, debugEventsUntilDate: debugEventsUntilDate, reason: nil, trackReason: nil)
     }
 }
 

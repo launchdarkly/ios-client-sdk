@@ -72,13 +72,13 @@ struct Event { //sdk internal, not publically accessible
 
     // swiftlint:disable function_parameter_count
     static func featureEvent(key: String, value: Any?, defaultValue: Any?, featureFlag: FeatureFlag?, user: LDUser, includeReason: Bool) -> Event {
-        Log.debug(typeName(and: #function) + "key: " + key + ", value: \(String(describing: value)), " + "fallback: \(String(describing: defaultValue) + "reason: \(String(describing: includeReason))"), "
+        Log.debug(typeName(and: #function) + "key: " + key + ", value: \(String(describing: value)), " + "defaultValue: \(String(describing: defaultValue) + "reason: \(String(describing: includeReason))"), "
             + "featureFlag: \(String(describing: featureFlag))")
         return Event(kind: .feature, key: key, user: user, value: value, defaultValue: defaultValue, featureFlag: featureFlag, includeReason: includeReason)
     }
 
     static func debugEvent(key: String, value: Any?, defaultValue: Any?, featureFlag: FeatureFlag, user: LDUser, includeReason: Bool) -> Event {
-        Log.debug(typeName(and: #function) + "key: " + key + ", value: \(String(describing: value)), " + "fallback: \(String(describing: defaultValue) + "reason: \(String(describing: includeReason))"), "
+        Log.debug(typeName(and: #function) + "key: " + key + ", value: \(String(describing: value)), " + "defaultValue: \(String(describing: defaultValue) + "reason: \(String(describing: includeReason))"), "
             + "featureFlag: \(String(describing: featureFlag))")
         return Event(kind: .debug, key: key, user: user, value: value, defaultValue: defaultValue, featureFlag: featureFlag, includeReason: includeReason)
     }
@@ -88,7 +88,7 @@ struct Event { //sdk internal, not publically accessible
         if let data = data {
             guard JSONSerialization.isValidJSONObject([CodingKeys.data.rawValue: data]) //the top level object must be either an array or an object for isValidJSONObject to work correctly
             else {
-                throw JSONSerialization.JSONError.invalidJsonObject
+                throw LDInvalidArgumentError("data is not a JSON convertible value")
             }
         }
         return Event(kind: .custom, key: key, user: user, data: data, metricValue: metricValue)

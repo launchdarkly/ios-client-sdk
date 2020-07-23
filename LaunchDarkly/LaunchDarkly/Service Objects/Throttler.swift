@@ -11,9 +11,6 @@ typealias RunClosure = () -> Void
 
 //sourcery: autoMockable
 protocol Throttling {
-    //sourcery: defaultMockValue = 600.0
-    var maxDelay: TimeInterval { get }
-
     func runThrottled(_ runClosure: @escaping RunClosure)
     func cancelThrottledRun()
 }
@@ -24,124 +21,79 @@ final class Throttler: Throttling {
         fileprivate static let runQueueName = "LaunchDarkly.Throttler.runQueue"
     }
 
-    class func maxAttempts(forDelay delayInterval: TimeInterval) -> Int {
-        Int(ceil(log2(delayInterval)))
-    }
+    private let runQueue = DispatchQueue(label: Constants.runQueueName, qos: .userInitiated)
 
     let throttlingEnabled: Bool
-    private (set) var maxDelay: TimeInterval
-    var maxAttempts: Int {
-        Throttler.maxAttempts(forDelay: maxDelay)
-    }
-    private (set) var runAttempts: Int
-    private (set) var delay: TimeInterval
-    private (set) var timerStart: Date?
+    let maxDelay: TimeInterval
+
+    private (set) var runAttempts: Int = 0
+    private (set) var delay: TimeInterval = 0.0
     private (set) var delayTimer: TimeResponding?
+
+    private var maxAttemptsReached: Bool = false
     private var runClosure: RunClosure?
-    private var runPostTimer: RunClosure?
-    private var runQueue = DispatchQueue(label: Constants.runQueueName, qos: .userInitiated)
 
     init(maxDelay: TimeInterval = Constants.defaultDelay, environmentReporter: EnvironmentReporting = EnvironmentReporter()) {
+        self.throttlingEnabled = environmentReporter.shouldThrottleOnlineCalls
         self.maxDelay = maxDelay
-        runAttempts = 0
-        delay = 0.0
-        throttlingEnabled = environmentReporter.shouldThrottleOnlineCalls
     }
 
     func runThrottled(_ runClosure: @escaping RunClosure) {
-        guard delay < maxDelay
-        else {
-            runAttempts += 1
+        if let logMsg = runThrottledSync(runClosure) { Log.debug(logMsg) }
+    }
+
+    func runThrottledSync(_ runClosure: @escaping RunClosure) -> String? {
+        runQueue.sync {
+            if !throttlingEnabled || runAttempts == 0 {
+                runAttempts = 1
+                DispatchQueue.global(qos: .userInitiated).async(execute: runClosure)
+                return typeName(and: #function) + "Executing run closure unthrottled. Run Attempts: \(runAttempts). throttlingEnabled: \(throttlingEnabled)."
+            }
+
             self.runClosure = runClosure
-            Log.debug(typeName(and: #function) + "Delay interval at max, allowing delay timer to expire. Run Attempts: \(runAttempts)")
-            return
-        }
 
-        runQueue.sync { [weak self] in
-            self?.delayTimer?.cancel()
-            self?.delayTimer = nil
-        }
+            if maxAttemptsReached {
+                return typeName(and: #function) + "Delay interval at max, allowing delay timer to expire. Run Attempts: \(runAttempts)"
+            }
 
-        if runAttempts == 0 || !throttlingEnabled {
-            Log.debug(typeName(and: #function) + "Executing run closure unthrottled. Run Attempts: \(runAttempts). throttlingEnabled: \(throttlingEnabled).")
-            runClosure()
-        } else {
-            self.runClosure = runClosure
-        }
+            self.delay = delayForAttempt(runAttempts)
+            self.runAttempts += 1
+            self.delayTimer?.cancel()
+            self.delayTimer = LDTimer(withTimeInterval: delay, repeats: false, fireQueue: runQueue, execute: timerFired)
 
-        runAttempts += throttlingEnabled ? 1 : 0
-        delay = delayForAttempt(runAttempts)
-        delayTimer = delayTimer(for: delay)
-        if runAttempts > 1 {
-            Log.debug(typeName(and: #function) + "Throttling run closure. Run attempts: \(runAttempts), Delay: \(delay)")
+            return typeName(and: #function) + "Throttling run closure. Run attempts: \(runAttempts), Delay: \(delay)"
         }
     }
 
     func cancelThrottledRun() {
-        delayTimer?.cancel()
-        runClosure = nil
-        resetTimingData()
-        runPostTimer = nil
+        runQueue.sync {
+            delayTimer?.cancel()
+            reset()
+        }
     }
 
-    private func resetTimingData() {
+    private func reset() {
         runAttempts = 0
         delay = 0.0
+        maxAttemptsReached = false
         delayTimer = nil
-        timerStart = nil
+        runClosure = nil
     }
 
     private func delayForAttempt(_ attempt: Int) -> TimeInterval {
-        guard throttlingEnabled
-        else { return 0.0 }
-        guard Double(attempt) <= log2(maxDelay)
-        else { return maxDelay }
-        let exponentialBackoff = min(maxDelay, pow(2, attempt).timeInterval)        //pow(x, y) returns x^y
-        let jitterBackoff = Double(arc4random_uniform(UInt32(exponentialBackoff)))  // arc4random_uniform(upperBound) returns an Int uniformly randomized between 0..<upperBound
-        return exponentialBackoff / 2 + jitterBackoff / 2                           //half of each should yield [2^(runAttempts-1), 2^runAttempts)
-    }
-
-    private func delayTimer(for delay: TimeInterval) -> TimeResponding? {
-        guard throttlingEnabled
-        else { return nil }
-        timerStart = timerStart ?? Date()
-        let timer = LDTimer(withTimeInterval: delay, repeats: false, fireQueue: runQueue, execute: timerFired)
-        return timer
+        let exponential = pow(2.0, Double(attempt))
+        if exponential >= maxDelay { self.maxAttemptsReached = true }
+        let exponentialBackoff = min(maxDelay, exponential) / 2
+        let jitterBackoff = Double.random(in: 0.0...exponentialBackoff)
+        return exponentialBackoff + jitterBackoff
     }
 
     @objc func timerFired() {
-        //This code should be run in the runQueue. When the LDTimer fires, it will run this code in the runQueue.
-        if runAttempts > 1 {
-            DispatchQueue.main.async {
-                self.runClosure?()
-                self.runClosure = nil
-            }
+        if let run = runClosure {
+            DispatchQueue.global(qos: .userInitiated).async(execute: run)
         }
-
-        resetTimingData()
-
-        runPostTimer?()
-        runPostTimer = nil
+        reset()
     }
 }
 
 extension Throttler: TypeIdentifying { }
-
-extension Decimal {
-    var timeInterval: TimeInterval {
-        NSDecimalNumber(decimal: self).doubleValue
-    }
-}
-
-#if DEBUG
-    extension Throttler {
-        var runClosureForTesting: RunClosure? { runClosure }
-        var timerFiredCallback: RunClosure? {
-            get { runPostTimer }
-            set { runPostTimer = newValue }
-        }
-        func test_delayForAttempt(_ attempt: Int) -> TimeInterval {
-            delayForAttempt(attempt)
-        }
-    }
-#endif

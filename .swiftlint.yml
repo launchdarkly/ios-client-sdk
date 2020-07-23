@@ -10,21 +10,19 @@ disabled_rules: # rule identifiers to exclude from running
   - redundant_optional_initialization
   - redundant_void_return
   - large_tuple # this is flagging closure argument declarations, seems like a mistake
+
 opt_in_rules: # some rules are only opt-in
   - empty_count
   # - missing_docs
   # - force_unwrapping
   # Find all the available rules by running:
   # swiftlint rules
-# included: # paths to include during linting. `--path` is ignored if present.
-# #   - Source
+
+included:
+  - LaunchDarkly/LaunchDarkly
+  - LaunchDarkly/LaunchDarklyTests
+
 excluded: # paths to ignore during linting. Takes precedence over `included`.
-#   - Carthage
-  - LaunchDarkly/GeneratedCode
-  - Pods
-  - _iOS/Pods
-#   - Source/ExcludedFolder
-#   - Source/ExcludedFile.swift
 
 # configurable rules can be customized from this configuration file
 # binary rules can set their severity level
@@ -53,7 +51,7 @@ file_length:
   error: 1500
 identifier_name:
   min_length: # only min_length
-    error: 3 # only error
+    warning: 3 # only warning
   max_length: # warning and error
     warning: 50
     error: 60

@@ -36,25 +36,25 @@ final class ErrorNotifierSpec: QuickSpec {
         }
 
         init(observerCount: Int) {
-            self.init()
-            errorObservers = ErrorObserver.createObservers(count: observerCount)
-            errorNotifier = ErrorNotifier(observers: errorObservers)
-            originalObserverCount = errorObservers.count
-            observersPerOwner = observerCount
+            self.init(ownerCount: observerCount, observersPerOwner: 1)
         }
 
         init(ownerCount: Int, observersPerOwner: Int) {
-            self.init()
+            errorMock = ErrorMock(with: Constants.errorIdentifier)
+            nextErrorObserver = ErrorObserver(owner: nextErrorObserverOwner, errorHandler: nextErrorObserverOwner.handle)
+            errorNotifier = ErrorNotifier()
 
-            // create ownerCount owners, then observersPerOwner observers for each owner
-            let owners = (0..<ownerCount).map { _ in ErrorOwnerMock() }
-            owners.forEach { owner in
-                errorObservers += ErrorObserver.createObservers(count: observersPerOwner, using: owner)
+            for _ in 0..<ownerCount {
+                let owner = ErrorOwnerMock()
+                for _ in 0..<observersPerOwner {
+                    let observer = ErrorObserver(owner: owner, errorHandler: owner.handle)
+                    errorNotifier.addErrorObserver(observer)
+                    errorObservers.append(observer)
+                }
             }
 
-            errorNotifier = ErrorNotifier(observers: errorObservers)
-            originalObserverCount = errorObservers.count
             self.observersPerOwner = observersPerOwner
+            originalObserverCount = errorObservers.count
         }
 
         var ownerToRemove: ErrorOwnerMock? {

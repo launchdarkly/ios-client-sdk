@@ -10,21 +10,15 @@ import Foundation
 //sourcery: autoMockable
 protocol FlagMaintaining {
     var featureFlags: [LDFlagKey: FeatureFlag] { get }
-    //sourcery: defaultMockValue = .cache
-    var flagValueSource: LDFlagValueSource { get }
-    func replaceStore(newFlags: [LDFlagKey: Any]?, source: LDFlagValueSource, completion: CompletionClosure?)
-    func updateStore(updateDictionary: [String: Any], source: LDFlagValueSource, completion: CompletionClosure?)
+    func replaceStore(newFlags: [LDFlagKey: Any]?, completion: CompletionClosure?)
+    func updateStore(updateDictionary: [String: Any], completion: CompletionClosure?)
     func deleteFlag(deleteDictionary: [String: Any], completion: CompletionClosure?)
 
     //sourcery: noMock
     func featureFlag(for flagKey: LDFlagKey) -> FeatureFlag?
-    //sourcery: noMock
-    func featureFlagAndSource(for flagKey: LDFlagKey) -> (FeatureFlag?, LDFlagValueSource?)
 
     //sourcery: noMock
-    func variation<T: LDFlagValueConvertible>(forKey key: LDFlagKey, fallback: T) -> T
-    //sourcery: noMock
-    func variationAndSource<T: LDFlagValueConvertible>(forKey key: LDFlagKey, fallback: T) -> (T, LDFlagValueSource)
+    func variation<T: LDFlagValueConvertible>(forKey key: LDFlagKey, defaultValue: T) -> T
 }
 
 final class FlagStore: FlagMaintaining {
@@ -37,31 +31,27 @@ final class FlagStore: FlagMaintaining {
     }
 
     var featureFlags: [LDFlagKey: FeatureFlag] { flagQueue.sync { _featureFlags } }
-    var flagValueSource: LDFlagValueSource { flagQueue.sync { _flagValueSource } }
 
     private var _featureFlags: [LDFlagKey: FeatureFlag] = [:]
-    private var _flagValueSource = LDFlagValueSource.fallback
-    // Used with .barrier as reader writer lock on _featureFlags, _flagValueSource
+    // Used with .barrier as reader writer lock on _featureFlags
     private var flagQueue = DispatchQueue(label: Constants.flagQueueLabel, attributes: .concurrent)
 
     init() { }
 
-    init(featureFlags: [LDFlagKey: FeatureFlag]?, flagValueSource: LDFlagValueSource = .fallback) {
-        Log.debug(typeName(and: #function) + "featureFlags: \(String(describing: featureFlags)), " + "flagValueSource: \(flagValueSource)")
+    init(featureFlags: [LDFlagKey: FeatureFlag]?) {
+        Log.debug(typeName(and: #function) + "featureFlags: \(String(describing: featureFlags))")
         self._featureFlags = featureFlags ?? [:]
-        self._flagValueSource = flagValueSource
     }
 
-    convenience init(featureFlagDictionary: [LDFlagKey: Any]?, flagValueSource: LDFlagValueSource = .fallback) {
-        self.init(featureFlags: featureFlagDictionary?.flagCollection, flagValueSource: flagValueSource)
+    convenience init(featureFlagDictionary: [LDFlagKey: Any]?) {
+        self.init(featureFlags: featureFlagDictionary?.flagCollection)
     }
 
     ///Replaces all feature flags with new flags. Pass nil to reset to an empty flag store
-    func replaceStore(newFlags: [LDFlagKey: Any]?, source: LDFlagValueSource, completion: CompletionClosure?) {
-        Log.debug(typeName(and: #function) + "newFlags: \(String(describing: newFlags)), " + "source: \(source)")
+    func replaceStore(newFlags: [LDFlagKey: Any]?, completion: CompletionClosure?) {
+        Log.debug(typeName(and: #function) + "newFlags: \(String(describing: newFlags))")
         flagQueue.async(flags: .barrier) {
             self._featureFlags = newFlags?.flagCollection ?? [:]
-            self._flagValueSource = source
             if let completion = completion {
                 DispatchQueue.main.async {
                     completion()
@@ -80,7 +70,7 @@ final class FlagStore: FlagMaintaining {
             "reason": <new-flag-reason>
         }
     */
-    func updateStore(updateDictionary: [String: Any], source: LDFlagValueSource, completion: CompletionClosure?) {
+    func updateStore(updateDictionary: [String: Any], completion: CompletionClosure?) {
         flagQueue.async(flags: .barrier) {
             defer {
                 if let completion = completion {
@@ -153,24 +143,12 @@ final class FlagStore: FlagMaintaining {
     }
 
     func featureFlag(for flagKey: LDFlagKey) -> FeatureFlag? {
-        featureFlagAndSource(for: flagKey).0
+        flagQueue.sync { _featureFlags[flagKey] }
     }
 
-    func featureFlagAndSource(for flagKey: LDFlagKey) -> (FeatureFlag?, LDFlagValueSource?) {
+    func variation<T: LDFlagValueConvertible>(forKey key: LDFlagKey, defaultValue: T) -> T {
         flagQueue.sync {
-            let featureFlag = _featureFlags[flagKey]
-            return (featureFlag, featureFlag == nil ? nil : _flagValueSource)
-        }
-    }
-
-    func variation<T: LDFlagValueConvertible>(forKey key: LDFlagKey, fallback: T) -> T {
-        variationAndSource(forKey: key, fallback: fallback).0
-    }
-
-    func variationAndSource<T: LDFlagValueConvertible>(forKey key: LDFlagKey, fallback: T) -> (T, LDFlagValueSource) {
-        flagQueue.sync {
-            let foundValue = _featureFlags[key]?.value as? T
-            return (foundValue ?? fallback, foundValue == nil ? .fallback : _flagValueSource)
+            (_featureFlags[key]?.value as? T) ?? defaultValue
         }
     }
 }

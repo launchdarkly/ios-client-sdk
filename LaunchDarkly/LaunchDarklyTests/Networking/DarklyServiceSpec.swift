@@ -6,10 +6,11 @@
 //  Copyright © 2017 Catamorphic Co. All rights reserved.
 //
 
+import Foundation
 import Quick
 import Nimble
 import OHHTTPStubs
-import DarklyEventSource
+import LDSwiftEventSource
 @testable import LaunchDarkly
 
 final class DarklyServiceSpec: QuickSpec {
@@ -32,18 +33,20 @@ final class DarklyServiceSpec: QuickSpec {
         let mockEventDictionaries: [[String: Any]]?
         var serviceMock: DarklyServiceMock!
         var serviceFactoryMock: ClientServiceMockFactory? {
-            return service.serviceFactory as? ClientServiceMockFactory
+            service.serviceFactory as? ClientServiceMockFactory
         }
         var service: DarklyService!
         var flagRequestEtag: String?
         var flagRequestEtags = [String: String]()
+        var httpHeaders: HTTPHeaders
 
         init(mobileKey: String = LDConfig.Constants.mockMobileKey,
              useReport: Bool = Constants.useGetMethod,
              includeMockEventDictionaries: Bool = false,
              operatingSystemName: String? = nil,
              flagRequestEtag: String? = nil,
-             mobileKeyCount: Int = 0) {
+             mobileKeyCount: Int = 0,
+             diagnosticOptOut: Bool = false) {
 
             let serviceFactoryMock = ClientServiceMockFactory()
             if let operatingSystemName = operatingSystemName {
@@ -51,9 +54,11 @@ final class DarklyServiceSpec: QuickSpec {
             }
             config = LDConfig.stub(mobileKey: mobileKey, environmentReporter: EnvironmentReportingMock())
             config.useReport = useReport
+            config.diagnosticOptOut = diagnosticOptOut
             mockEventDictionaries = includeMockEventDictionaries ? Event.stubEventDictionaries(Constants.eventCount, user: user, config: config) : nil
             serviceMock = DarklyServiceMock(config: config)
             service = DarklyService(config: config, user: user, serviceFactory: serviceFactoryMock)
+            httpHeaders = HTTPHeaders(config: config, environmentReporter: config.environmentReporter)
             self.flagRequestEtag = flagRequestEtag
             if let etag = flagRequestEtag {
                 HTTPHeaders.setFlagRequestEtag(etag, for: mobileKey)
@@ -74,9 +79,11 @@ final class DarklyServiceSpec: QuickSpec {
         clearFlagRequestCacheSpec()
         createEventSourceSpec()
         publishEventDictionariesSpec()
+        diagnosticCacheSpec()
+        publishDiagnosticSpec()
 
         afterEach {
-            OHHTTPStubs.removeAllStubs()
+            HTTPStubs.removeAllStubs()
             HTTPHeaders.removeFlagRequestEtags()
         }
     }
@@ -201,8 +208,7 @@ final class DarklyServiceSpec: QuickSpec {
                             } else {
                                 fail("request path is missing")
                             }
-                            //the actually set policy is .reloadRevalidatingCacheData, but after setting that's changed to .reloadIgnoringLocalCacheData by the system
-                            expect(urlRequest?.cachePolicy) == .reloadIgnoringLocalCacheData
+                            expect(urlRequest?.cachePolicy) == .reloadRevalidatingCacheData
                             expect(urlRequest?.timeoutInterval) == testContext.config.connectionTimeout
                             expect(urlRequest?.httpMethod) == URLRequest.HTTPMethods.get
                             expect(urlRequest?.httpBody).to(beNil())
@@ -375,8 +381,7 @@ final class DarklyServiceSpec: QuickSpec {
                             } else {
                                 fail("request path is missing")
                             }
-                            //the actually set policy is .reloadRevalidatingCacheData, but after setting that's changed to .reloadIgnoringLocalCacheData by the system
-                            expect(urlRequest?.cachePolicy) == .reloadIgnoringLocalCacheData
+                            expect(urlRequest?.cachePolicy) == .reloadRevalidatingCacheData
                             expect(urlRequest?.timeoutInterval) == testContext.config.connectionTimeout
                             expect(urlRequest?.httpMethod) == URLRequest.HTTPMethods.report
                             expect(urlRequest?.httpBodyStream).toNot(beNil())   //Although the service sets the httpBody, OHHTTPStubs seems to convert that into an InputStream, which should be ok
@@ -802,44 +807,38 @@ final class DarklyServiceSpec: QuickSpec {
             context("when using GET method to connect") {
                 beforeEach {
                     testContext = TestContext(mobileKey: LDConfig.Constants.mockMobileKey, useReport: Constants.useGetMethod)
-                    eventSource = testContext.service.createEventSource(useReport: Constants.useGetMethod) as? DarklyStreamingProviderMock
+                    eventSource = testContext.service.createEventSource(useReport: Constants.useGetMethod, handler: EventHandlerMock(), errorHandler: nil) as? DarklyStreamingProviderMock
                 }
                 it("creates an event source that makes valid GET request") {
                     expect(eventSource).toNot(beNil())
                     expect(testContext.serviceFactoryMock?.makeStreamingProviderCallCount) == 1
                     expect(testContext.serviceFactoryMock?.makeStreamingProviderReceivedArguments).toNot(beNil())
-                    guard let receivedArguments = testContext.serviceFactoryMock?.makeStreamingProviderReceivedArguments
-                    else {
-                        return
-                    }
-                    expect(receivedArguments.url.host) == testContext.config.streamUrl.host
-                    expect(receivedArguments.url.pathComponents.contains(DarklyService.StreamRequestPath.meval)).to(beTrue())
-                    expect(receivedArguments.url.pathComponents.contains(DarklyService.StreamRequestPath.mping)).to(beFalse())
-                    expect(LDUser(base64urlEncodedString: receivedArguments.url.lastPathComponent)?.isEqual(to: testContext.user)) == true
-                    expect(receivedArguments.httpHeaders).toNot(beEmpty())
-                    expect(receivedArguments.connectMethod).to(beNil())
-                    expect(receivedArguments.connectBody).to(beNil())
+                    let receivedArguments = testContext.serviceFactoryMock?.makeStreamingProviderReceivedArguments
+                    expect(receivedArguments!.url.host) == testContext.config.streamUrl.host
+                    expect(receivedArguments!.url.pathComponents.contains(DarklyService.StreamRequestPath.meval)).to(beTrue())
+                    expect(receivedArguments!.url.pathComponents.contains(DarklyService.StreamRequestPath.mping)).to(beFalse())
+                    expect(LDUser(base64urlEncodedString: receivedArguments!.url.lastPathComponent)?.isEqual(to: testContext.user)) == true
+                    expect(receivedArguments!.httpHeaders).toNot(beEmpty())
+                    expect(receivedArguments!.connectMethod).to(beNil())
+                    expect(receivedArguments!.connectBody).to(beNil())
                 }
             }
             context("when using REPORT method to connect") {
                 beforeEach {
                     testContext = TestContext(mobileKey: LDConfig.Constants.mockMobileKey, useReport: Constants.useReportMethod)
-                    eventSource = testContext.service.createEventSource(useReport: Constants.useReportMethod) as? DarklyStreamingProviderMock
+                    eventSource = testContext.service.createEventSource(useReport: Constants.useReportMethod, handler: EventHandlerMock(), errorHandler: nil) as? DarklyStreamingProviderMock
                 }
                 it("creates an event source that makes valid REPORT request") {
                     expect(eventSource).toNot(beNil())
                     expect(testContext.serviceFactoryMock?.makeStreamingProviderCallCount) == 1
                     expect(testContext.serviceFactoryMock?.makeStreamingProviderReceivedArguments).toNot(beNil())
-                    guard let receivedArguments = testContext.serviceFactoryMock?.makeStreamingProviderReceivedArguments
-                    else {
-                        return
-                    }
-                    expect(receivedArguments.url.host) == testContext.config.streamUrl.host
-                    expect(receivedArguments.url.lastPathComponent) == DarklyService.StreamRequestPath.meval
-                    expect(receivedArguments.url.pathComponents.contains(DarklyService.StreamRequestPath.mping)).to(beFalse())
-                    expect(receivedArguments.httpHeaders).toNot(beEmpty())
-                    expect(receivedArguments.connectMethod) == DarklyService.HTTPRequestMethod.report
-                    expect(LDUser(data: receivedArguments.connectBody)?.isEqual(to: testContext.user)) == true
+                    let receivedArguments = testContext.serviceFactoryMock?.makeStreamingProviderReceivedArguments
+                    expect(receivedArguments!.url.host) == testContext.config.streamUrl.host
+                    expect(receivedArguments!.url.lastPathComponent) == DarklyService.StreamRequestPath.meval
+                    expect(receivedArguments!.url.pathComponents.contains(DarklyService.StreamRequestPath.mping)).to(beFalse())
+                    expect(receivedArguments!.httpHeaders).toNot(beEmpty())
+                    expect(receivedArguments!.connectMethod) == DarklyService.HTTPRequestMethod.report
+                    expect(LDUser(data: receivedArguments!.connectBody)?.isEqual(to: testContext.user)) == true
                 }
             }
         }
@@ -944,6 +943,129 @@ final class DarklyServiceSpec: QuickSpec {
             }
         }
     }
+
+    private func diagnosticCacheSpec() {
+        var testContext: TestContext!
+        describe("diagnosticCache") {
+            context("empty mobileKey") {
+                it("does not create cache") {
+                    testContext = TestContext(mobileKey: "")
+                    expect(testContext.service.diagnosticCache).to(beNil())
+                    expect(testContext.serviceFactoryMock?.makeDiagnosticCacheCallCount) == 0
+                }
+            }
+            context("diagnosticOptOut true") {
+                it("does not create cache") {
+                    testContext = TestContext(diagnosticOptOut: true)
+                    expect(testContext.service.diagnosticCache).to(beNil())
+                    expect(testContext.serviceFactoryMock?.makeDiagnosticCacheCallCount) == 0
+                }
+            }
+            context("diagnosticOptOut false") {
+                it("creates a cache with the mobile key") {
+                    testContext = TestContext(diagnosticOptOut: false)
+                    expect(testContext.service.diagnosticCache).toNot(beNil())
+                    expect(testContext.serviceFactoryMock?.makeDiagnosticCacheCallCount) == 1
+                    expect(testContext.serviceFactoryMock?.makeDiagnosticCacheReceivedSdkKey) == LDConfig.Constants.mockMobileKey
+                }
+            }
+        }
+    }
+
+    private func stubDiagnostic() -> DiagnosticStats {
+        DiagnosticStats(id: DiagnosticId(diagnosticId: "test-id", sdkKey: LDConfig.Constants.mockMobileKey), creationDate: 1000, dataSinceDate: 100, droppedEvents: 0, eventsInLastBatch: 0, streamInits: [])
+    }
+
+    private func publishDiagnosticSpec() {
+        var testContext: TestContext!
+
+        describe("publishDiagnostic") {
+            var diagnosticRequest: URLRequest?
+
+            beforeEach {
+                diagnosticRequest = nil
+                testContext = TestContext(mobileKey: LDConfig.Constants.mockMobileKey)
+            }
+            context("success") {
+                var responses: ServiceResponses!
+                beforeEach {
+                    waitUntil { done in
+                        testContext.serviceMock.stubDiagnosticRequest(success: true) { (request, _, _) in
+                            diagnosticRequest = request
+                        }
+                        testContext.service.publishDiagnostic(diagnosticEvent: self.stubDiagnostic()) { (data, response, error) in
+                            responses = (data, response, error)
+                            done()
+                        }
+                    }
+                }
+                it("makes a valid request") {
+                    expect(diagnosticRequest).toNot(beNil())
+                    expect(diagnosticRequest?.httpMethod) == URLRequest.HTTPMethods.post
+                    // Unfortunately, we can't actually test the body here, see:
+                    // https://github.com/AliSoftware/OHHTTPStubs#known-limitations
+                    //expect(diagnosticRequest?.httpBody) == try? JSONEncoder().encode(self.stubDiagnostic())
+
+                    // Actual header values are tested in HTTPHeadersSpec
+                    for (key, value) in testContext.httpHeaders.diagnosticRequestHeaders {
+                        expect(diagnosticRequest?.allHTTPHeaderFields?[key]) == value
+                    }
+                }
+                it("calls completion with data, response, and no error") {
+                    expect(responses.data).toNot(beNil())
+                    expect(responses.urlResponse).toNot(beNil())
+                    expect(responses.error).to(beNil())
+                }
+            }
+            context("failure") {
+                var responses: ServiceResponses!
+                beforeEach {
+                    waitUntil { done in
+                        testContext.serviceMock.stubEventRequest(success: false) { (request, _, _) in
+                            diagnosticRequest = request
+                        }
+                        testContext.service.publishDiagnostic(diagnosticEvent: self.stubDiagnostic()) { (data, response, error) in
+                            responses = (data, response, error)
+                            done()
+                        }
+                    }
+                }
+                it("makes a valid request") {
+                    expect(diagnosticRequest).toNot(beNil())
+                    expect(diagnosticRequest?.httpMethod) == URLRequest.HTTPMethods.post
+                    // Unfortunately, we can't actually test the body here, see:
+                    // https://github.com/AliSoftware/OHHTTPStubs#known-limitations
+                    //expect(diagnosticRequest?.httpBody) == try? JSONEncoder().encode(self.stubDiagnostic())
+
+                    // Actual header values are tested in HTTPHeadersSpec
+                    for (key, value) in testContext.httpHeaders.diagnosticRequestHeaders {
+                        expect(diagnosticRequest?.allHTTPHeaderFields?[key]) == value
+                    }
+                }
+                it("calls completion with error and no data or response") {
+                    expect(responses.data?.isEmpty ?? true) == true
+                    expect(responses.urlResponse).to(beNil())
+                    expect(responses.error).toNot(beNil())
+                }
+            }
+            context("empty mobile key") {
+                var diagnosticPublished = false
+                beforeEach {
+                    testContext = TestContext(mobileKey: Constants.emptyMobileKey)
+                    testContext.serviceMock.stubDiagnosticRequest(success: true) { (request, _, _) in
+                        diagnosticRequest = request
+                    }
+                    testContext.service.publishDiagnostic(diagnosticEvent: self.stubDiagnostic()) { _ in
+                        diagnosticPublished = true
+                    }
+                }
+                it("does not make a request") {
+                    expect(diagnosticRequest).to(beNil())
+                    expect(diagnosticPublished) == false
+                }
+            }
+        }
+    }
 }
 
 extension DarklyService.StreamRequestPath {
@@ -951,10 +1073,6 @@ extension DarklyService.StreamRequestPath {
 }
 
 extension LDUser {
-    func base64encoded(using config: LDConfig) -> String? {
-        return dictionaryValue(includeFlagConfig: false, includePrivateAttributes: true, config: config).base64UrlEncodedString
-    }
-
     init?(base64urlEncodedString: String) {
         let base64encodedString = base64urlEncodedString.replacingOccurrences(of: "-", with: "+").replacingOccurrences(of: "_", with: "/")
         self.init(data: Data(base64Encoded: base64encodedString))

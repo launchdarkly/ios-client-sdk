@@ -12,7 +12,7 @@ struct AnyComparer {
 
     //If editing this method to add classes here, update AnySpec with tests that verify the comparison for that class
     //swiftlint:disable:next cyclomatic_complexity
-    public static func isEqual(_ value: Any, to other: Any) -> Bool {
+    static func isEqual(_ value: Any, to other: Any) -> Bool {
         switch (value, other) {
         case let (value, other) as (Bool, Bool):
             if value != other {
@@ -73,7 +73,7 @@ struct AnyComparer {
         return true
     }
 
-    public static func isEqual(_ value: Any?, to other: Any?) -> Bool {
+    static func isEqual(_ value: Any?, to other: Any?) -> Bool {
         guard let nonNilValue = value, let nonNilOther = other
         else {
             return value == nil && other == nil
@@ -81,7 +81,7 @@ struct AnyComparer {
         return isEqual(nonNilValue, to: nonNilOther)
     }
 
-    public static func isEqual(_ value: Any, to other: Any?) -> Bool {
+    static func isEqual(_ value: Any, to other: Any?) -> Bool {
         guard let other = other
         else {
             return false
@@ -89,7 +89,7 @@ struct AnyComparer {
         return isEqual(value, to: other)
     }
 
-    public static func isEqual(_ value: Any?, to other: Any) -> Bool {
+    static func isEqual(_ value: Any?, to other: Any) -> Bool {
         guard let value = value
         else {
             return false

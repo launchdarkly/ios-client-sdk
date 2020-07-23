@@ -8,7 +8,7 @@
 import Foundation
 
 extension Array {
-    public func isEqual(to other: [Any]) -> Bool {
+    func isEqual(to other: [Any]) -> Bool {
         guard self.count == other.count
         else {
             return false

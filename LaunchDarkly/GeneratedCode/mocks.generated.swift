@@ -2,7 +2,8 @@
 // DO NOT EDIT
 
 
-import DarklyEventSource
+import Foundation
+import LDSwiftEventSource
 @testable import LaunchDarkly
 
 
@@ -23,50 +24,116 @@ final class CacheConvertingMock: CacheConverting {
 // MARK: - DarklyStreamingProviderMock
 final class DarklyStreamingProviderMock: DarklyStreamingProvider {
 
-    // MARK: onMessageEvent
-    var onMessageEventCallCount = 0
-    var onMessageEventCallback: (() -> Void)?
-    var onMessageEventReceivedHandler: LDEventSourceEventHandler?
-    func onMessageEvent(_ handler: LDEventSourceEventHandler?) {
-        onMessageEventCallCount += 1
-        onMessageEventReceivedHandler = handler
-        onMessageEventCallback?()
+    // MARK: start
+    var startCallCount = 0
+    var startCallback: (() -> Void)?
+    func start() {
+        startCallCount += 1
+        startCallback?()
     }
 
-    // MARK: onErrorEvent
-    var onErrorEventCallCount = 0
-    var onErrorEventCallback: (() -> Void)?
-    var onErrorEventReceivedHandler: LDEventSourceEventHandler?
-    func onErrorEvent(_ handler: LDEventSourceEventHandler?) {
-        onErrorEventCallCount += 1
-        onErrorEventReceivedHandler = handler
-        onErrorEventCallback?()
+    // MARK: stop
+    var stopCallCount = 0
+    var stopCallback: (() -> Void)?
+    func stop() {
+        stopCallCount += 1
+        stopCallback?()
+    }
+}
+
+// MARK: - DiagnosticCachingMock
+final class DiagnosticCachingMock: DiagnosticCaching {
+
+    // MARK: lastStats
+    var lastStatsSetCount = 0
+    var setLastStatsCallback: (() -> Void)?
+    var lastStats: DiagnosticStats? = nil {
+        didSet {
+            lastStatsSetCount += 1
+            setLastStatsCallback?()
+        }
     }
 
-    // MARK: onReadyStateChangedEvent
-    var onReadyStateChangedEventCallCount = 0
-    var onReadyStateChangedEventCallback: (() -> Void)?
-    var onReadyStateChangedEventReceivedHandler: LDEventSourceEventHandler?
-    func onReadyStateChangedEvent(_ handler: LDEventSourceEventHandler?) {
-        onReadyStateChangedEventCallCount += 1
-        onReadyStateChangedEventReceivedHandler = handler
-        onReadyStateChangedEventCallback?()
+    // MARK: getDiagnosticId
+    var getDiagnosticIdCallCount = 0
+    var getDiagnosticIdCallback: (() -> Void)?
+    var getDiagnosticIdReturnValue: DiagnosticId!
+    func getDiagnosticId() -> DiagnosticId {
+        getDiagnosticIdCallCount += 1
+        getDiagnosticIdCallback?()
+        return getDiagnosticIdReturnValue
     }
 
-    // MARK: open
-    var openCallCount = 0
-    var openCallback: (() -> Void)?
-    func open() {
-        openCallCount += 1
-        openCallback?()
+    // MARK: getCurrentStatsAndReset
+    var getCurrentStatsAndResetCallCount = 0
+    var getCurrentStatsAndResetCallback: (() -> Void)?
+    var getCurrentStatsAndResetReturnValue: DiagnosticStats!
+    func getCurrentStatsAndReset() -> DiagnosticStats {
+        getCurrentStatsAndResetCallCount += 1
+        getCurrentStatsAndResetCallback?()
+        return getCurrentStatsAndResetReturnValue
     }
 
-    // MARK: close
-    var closeCallCount = 0
-    var closeCallback: (() -> Void)?
-    func close() {
-        closeCallCount += 1
-        closeCallback?()
+    // MARK: incrementDroppedEventCount
+    var incrementDroppedEventCountCallCount = 0
+    var incrementDroppedEventCountCallback: (() -> Void)?
+    func incrementDroppedEventCount() {
+        incrementDroppedEventCountCallCount += 1
+        incrementDroppedEventCountCallback?()
+    }
+
+    // MARK: recordEventsInLastBatch
+    var recordEventsInLastBatchCallCount = 0
+    var recordEventsInLastBatchCallback: (() -> Void)?
+    var recordEventsInLastBatchReceivedEventsInLastBatch: Int?
+    func recordEventsInLastBatch(eventsInLastBatch: Int) {
+        recordEventsInLastBatchCallCount += 1
+        recordEventsInLastBatchReceivedEventsInLastBatch = eventsInLastBatch
+        recordEventsInLastBatchCallback?()
+    }
+
+    // MARK: addStreamInit
+    var addStreamInitCallCount = 0
+    var addStreamInitCallback: (() -> Void)?
+    var addStreamInitReceivedStreamInit: DiagnosticStreamInit?
+    func addStreamInit(streamInit: DiagnosticStreamInit) {
+        addStreamInitCallCount += 1
+        addStreamInitReceivedStreamInit = streamInit
+        addStreamInitCallback?()
+    }
+}
+
+// MARK: - DiagnosticReportingMock
+final class DiagnosticReportingMock: DiagnosticReporting {
+
+    // MARK: service
+    var serviceSetCount = 0
+    var setServiceCallback: (() -> Void)?
+    var service: DarklyServiceProvider = DarklyServiceMock() {
+        didSet {
+            serviceSetCount += 1
+            setServiceCallback?()
+        }
+    }
+
+    // MARK: runMode
+    var runModeSetCount = 0
+    var setRunModeCallback: (() -> Void)?
+    var runMode: LDClientRunMode = .foreground {
+        didSet {
+            runModeSetCount += 1
+            setRunModeCallback?()
+        }
+    }
+
+    // MARK: isOnline
+    var isOnlineSetCount = 0
+    var setIsOnlineCallback: (() -> Void)?
+    var isOnline: Bool = false {
+        didSet {
+            isOnlineSetCount += 1
+            setIsOnlineCallback?()
+        }
     }
 }
 
@@ -80,6 +147,16 @@ final class EnvironmentReportingMock: EnvironmentReporting {
         didSet {
             isDebugBuildSetCount += 1
             setIsDebugBuildCallback?()
+        }
+    }
+
+    // MARK: deviceType
+    var deviceTypeSetCount = 0
+    var setDeviceTypeCallback: (() -> Void)?
+    var deviceType: String = Constants.deviceType {
+        didSet {
+            deviceTypeSetCount += 1
+            setDeviceTypeCallback?()
         }
     }
 
@@ -126,7 +203,7 @@ final class EnvironmentReportingMock: EnvironmentReporting {
     // MARK: backgroundNotification
     var backgroundNotificationSetCount = 0
     var setBackgroundNotificationCallback: (() -> Void)?
-    var backgroundNotification: Notification.Name? {
+    var backgroundNotification: Notification.Name? = EnvironmentReporter().backgroundNotification {
         didSet {
             backgroundNotificationSetCount += 1
             setBackgroundNotificationCallback?()
@@ -136,7 +213,7 @@ final class EnvironmentReportingMock: EnvironmentReporting {
     // MARK: foregroundNotification
     var foregroundNotificationSetCount = 0
     var setForegroundNotificationCallback: (() -> Void)?
-    var foregroundNotification: Notification.Name? {
+    var foregroundNotification: Notification.Name? = EnvironmentReporter().foregroundNotification {
         didSet {
             foregroundNotificationSetCount += 1
             setForegroundNotificationCallback?()
@@ -146,7 +223,7 @@ final class EnvironmentReportingMock: EnvironmentReporting {
     // MARK: vendorUUID
     var vendorUUIDSetCount = 0
     var setVendorUUIDCallback: (() -> Void)?
-    var vendorUUID: String? {
+    var vendorUUID: String? = Constants.vendorUUID {
         didSet {
             vendorUUIDSetCount += 1
             setVendorUUIDCallback?()
@@ -234,7 +311,7 @@ final class EventReportingMock: EventReporting {
     // MARK: lastEventResponseDate
     var lastEventResponseDateSetCount = 0
     var setLastEventResponseDateCallback: (() -> Void)?
-    var lastEventResponseDate: Date? {
+    var lastEventResponseDate: Date? = nil {
         didSet {
             lastEventResponseDateSetCount += 1
             setLastEventResponseDateCallback?()
@@ -254,10 +331,10 @@ final class EventReportingMock: EventReporting {
     // MARK: record
     var recordCallCount = 0
     var recordCallback: (() -> Void)?
-    var recordReceivedArguments: (event: Event, completion: CompletionClosure?)?
-    func record(_ event: Event, completion: CompletionClosure?) {
+    var recordReceivedEvent: Event?
+    func record(_ event: Event) {
         recordCallCount += 1
-        recordReceivedArguments = (event: event, completion: completion)
+        recordReceivedEvent = event
         recordCallback?()
     }
 
@@ -272,28 +349,14 @@ final class EventReportingMock: EventReporting {
         recordFlagEvaluationEventsCallback?()
     }
 
-    // MARK: recordSummaryEvent
-    var recordSummaryEventCallCount = 0
-    var recordSummaryEventCallback: (() -> Void)?
-    func recordSummaryEvent() {
-        recordSummaryEventCallCount += 1
-        recordSummaryEventCallback?()
-    }
-
-    // MARK: resetFlagRequestTracker
-    var resetFlagRequestTrackerCallCount = 0
-    var resetFlagRequestTrackerCallback: (() -> Void)?
-    func resetFlagRequestTracker() {
-        resetFlagRequestTrackerCallCount += 1
-        resetFlagRequestTrackerCallback?()
-    }
-
-    // MARK: reportEvents
-    var reportEventsCallCount = 0
-    var reportEventsCallback: (() -> Void)?
-    func reportEvents() {
-        reportEventsCallCount += 1
-        reportEventsCallback?()
+    // MARK: flush
+    var flushCallCount = 0
+    var flushCallback: (() -> Void)?
+    var flushReceivedCompletion: CompletionClosure?
+    func flush(completion: CompletionClosure?) {
+        flushCallCount += 1
+        flushReceivedCompletion = completion
+        flushCallback?()
     }
 }
 
@@ -390,10 +453,10 @@ final class FlagChangeNotifyingMock: FlagChangeNotifying {
     // MARK: notifyObservers
     var notifyObserversCallCount = 0
     var notifyObserversCallback: (() -> Void)?
-    var notifyObserversReceivedArguments: (user: LDUser, oldFlags: [LDFlagKey: FeatureFlag], oldFlagSource: LDFlagValueSource)?
-    func notifyObservers(user: LDUser, oldFlags: [LDFlagKey: FeatureFlag], oldFlagSource: LDFlagValueSource) {
+    var notifyObserversReceivedArguments: (user: LDUser, oldFlags: [LDFlagKey: FeatureFlag])?
+    func notifyObservers(user: LDUser, oldFlags: [LDFlagKey: FeatureFlag]) {
         notifyObserversCallCount += 1
-        notifyObserversReceivedArguments = (user: user, oldFlags: oldFlags, oldFlagSource: oldFlagSource)
+        notifyObserversReceivedArguments = (user: user, oldFlags: oldFlags)
         notifyObserversCallback?()
     }
 }
@@ -411,33 +474,23 @@ final class FlagMaintainingMock: FlagMaintaining {
         }
     }
 
-    // MARK: flagValueSource
-    var flagValueSourceSetCount = 0
-    var setFlagValueSourceCallback: (() -> Void)?
-    var flagValueSource: LDFlagValueSource = .cache {
-        didSet {
-            flagValueSourceSetCount += 1
-            setFlagValueSourceCallback?()
-        }
-    }
-
     // MARK: replaceStore
     var replaceStoreCallCount = 0
     var replaceStoreCallback: (() -> Void)?
-    var replaceStoreReceivedArguments: (newFlags: [LDFlagKey: Any]?, source: LDFlagValueSource, completion: CompletionClosure?)?
-    func replaceStore(newFlags: [LDFlagKey: Any]?, source: LDFlagValueSource, completion: CompletionClosure?) {
+    var replaceStoreReceivedArguments: (newFlags: [LDFlagKey: Any]?, completion: CompletionClosure?)?
+    func replaceStore(newFlags: [LDFlagKey: Any]?, completion: CompletionClosure?) {
         replaceStoreCallCount += 1
-        replaceStoreReceivedArguments = (newFlags: newFlags, source: source, completion: completion)
+        replaceStoreReceivedArguments = (newFlags: newFlags, completion: completion)
         replaceStoreCallback?()
     }
 
     // MARK: updateStore
     var updateStoreCallCount = 0
     var updateStoreCallback: (() -> Void)?
-    var updateStoreReceivedArguments: (updateDictionary: [String: Any], source: LDFlagValueSource, completion: CompletionClosure?)?
-    func updateStore(updateDictionary: [String: Any], source: LDFlagValueSource, completion: CompletionClosure?) {
+    var updateStoreReceivedArguments: (updateDictionary: [String: Any], completion: CompletionClosure?)?
+    func updateStore(updateDictionary: [String: Any], completion: CompletionClosure?) {
         updateStoreCallCount += 1
-        updateStoreReceivedArguments = (updateDictionary: updateDictionary, source: source, completion: completion)
+        updateStoreReceivedArguments = (updateDictionary: updateDictionary, completion: completion)
         updateStoreCallback?()
     }
 
@@ -524,16 +577,6 @@ final class LDFlagSynchronizingMock: LDFlagSynchronizing {
 
 // MARK: - ThrottlingMock
 final class ThrottlingMock: Throttling {
-
-    // MARK: maxDelay
-    var maxDelaySetCount = 0
-    var setMaxDelayCallback: (() -> Void)?
-    var maxDelay: TimeInterval = 600 {
-        didSet {
-            maxDelaySetCount += 1
-            setMaxDelayCallback?()
-        }
-    }
 
     // MARK: runThrottled
     var runThrottledCallCount = 0

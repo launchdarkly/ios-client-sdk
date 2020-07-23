@@ -24,21 +24,8 @@ extension FlagMaintainingMock {
         featureFlags[flagKey]
     }
 
-    func featureFlagAndSource(for flagKey: LDFlagKey) -> (FeatureFlag?, LDFlagValueSource?) {
-        let featureFlag = featureFlags[flagKey]
-        return (featureFlag, featureFlag == nil ? nil : flagValueSource)
-    }
-
-    func variation<T: LDFlagValueConvertible>(forKey key: String, fallback: T) -> T {
-        featureFlags[key]?.value as? T ?? fallback
-    }
-
-    func variationAndSource<T: LDFlagValueConvertible>(forKey key: String, fallback: T) -> (T, LDFlagValueSource) {
-        guard let value = featureFlags[key]?.value as? T
-        else {
-            return (fallback, .fallback)
-        }
-        return (value, flagValueSource)
+    func variation<T: LDFlagValueConvertible>(forKey key: String, defaultValue: T) -> T {
+        featureFlags[key]?.value as? T ?? defaultValue
     }
 
     static func stubPatchDictionary(key: LDFlagKey?, value: Any?, variation: Int?, version: Int?, includeExtraKey: Bool = false) -> [String: Any] {

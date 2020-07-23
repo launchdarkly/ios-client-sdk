@@ -5,9 +5,9 @@
 //  Copyright © 2017 Catamorphic Co. All rights reserved.
 //
 
+import Foundation
 import Quick
 import Nimble
-import Foundation
 @testable import LaunchDarkly
 
 final class FlagChangeNotifierSpec: QuickSpec {
@@ -27,9 +27,7 @@ final class FlagChangeNotifierSpec: QuickSpec {
         var flagsUnchangedOwnerKey: String?
         var featureFlags: [LDFlagKey: FeatureFlag] = DarklyServiceMock.Constants.stubFeatureFlags()
         var user: LDUser = LDUser.stub(key: Constants.userKey, includeNullValue: true)
-        var flagStoreMock: FlagMaintainingMock! {
-            (user.flagStore as! FlagMaintainingMock)
-        }
+
         let alternateFlagKeys = ["flag-key-1", "flag-key-2", "flag-key-3"]
 
         //Use this initializer when stubbing observers for observer add & remove tests
@@ -67,7 +65,6 @@ final class FlagChangeNotifierSpec: QuickSpec {
 
         //Use this initializer when stubbing observers that should execute a LDFlagChangeHandler during the test
         init(keys: [LDFlagKey], flagChangeHandler: @escaping LDFlagChangeHandler, flagsUnchangedHandler: @escaping LDFlagsUnchangedHandler) {
-            flagStoreMock.flagValueSource = .server
             subject = FlagChangeNotifier()
             guard !keys.isEmpty
             else {
@@ -92,7 +89,6 @@ final class FlagChangeNotifierSpec: QuickSpec {
         //Use this initializer when stubbing observers that should execute a LDFlagCollectionChangeHandler during the test
         //This initializer sets 2 observers, one for the specified flags, and a second for a disjoint set of flags. That way tests verify the notifier is choosing the correct observers
         init(keys: [LDFlagKey], flagCollectionChangeHandler: @escaping LDFlagCollectionChangeHandler, flagsUnchangedHandler: @escaping LDFlagsUnchangedHandler) {
-            flagStoreMock.flagValueSource = .server
             subject = FlagChangeNotifier()
             guard !keys.isEmpty
             else {
@@ -477,7 +473,7 @@ final class FlagChangeNotifierSpec: QuickSpec {
                             targetChangedFlag = LDChangedFlag.stub(key: key, oldFlags: oldFlags, newFlags: testContext.user.flagStore.featureFlags)
 
                             waitUntil { done in
-                                testContext.subject.notifyObservers(user: testContext.user, oldFlags: oldFlags, oldFlagSource: .server, completion: done)
+                                testContext.subject.notifyObservers(user: testContext.user, oldFlags: oldFlags, completion: done)
                             }
 
                             expect(testContext.flagChangeHandlerCallCount) == 1
@@ -505,7 +501,7 @@ final class FlagChangeNotifierSpec: QuickSpec {
                             targetChangedFlag = LDChangedFlag.stub(key: key, oldFlags: oldFlags, newFlags: testContext.user.flagStore.featureFlags)
 
                             waitUntil { done in
-                                testContext.subject.notifyObservers(user: testContext.user, oldFlags: oldFlags, oldFlagSource: .server, completion: done)
+                                testContext.subject.notifyObservers(user: testContext.user, oldFlags: oldFlags, completion: done)
                             }
 
                             expect(testContext.flagChangeHandlerCallCount) == 1
@@ -532,7 +528,7 @@ final class FlagChangeNotifierSpec: QuickSpec {
                         oldFlags = testContext.user.flagStore.featureFlags
 
                         waitUntil { done in
-                            testContext.subject.notifyObservers(user: testContext.user, oldFlags: oldFlags, oldFlagSource: .server, completion: done)
+                            testContext.subject.notifyObservers(user: testContext.user, oldFlags: oldFlags, completion: done)
                         }
                     }
                     it("activates the flags unchanged handler") {
@@ -558,7 +554,7 @@ final class FlagChangeNotifierSpec: QuickSpec {
                             testContext.owners[key] = nil
 
                             waitUntil { done in
-                                testContext.subject.notifyObservers(user: testContext.user, oldFlags: oldFlags, oldFlagSource: .server, completion: done)
+                                testContext.subject.notifyObservers(user: testContext.user, oldFlags: oldFlags, completion: done)
                             }
 
                             expect(testContext.flagChangeHandlerCallCount) == 0
@@ -580,7 +576,7 @@ final class FlagChangeNotifierSpec: QuickSpec {
                         testContext.owners[testContext.flagsUnchangedOwnerKey!] = nil
 
                         waitUntil { done in
-                            testContext.subject.notifyObservers(user: testContext.user, oldFlags: oldFlags, oldFlagSource: .server, completion: done)
+                            testContext.subject.notifyObservers(user: testContext.user, oldFlags: oldFlags, completion: done)
                         }
                     }
                     it("does nothing") {
@@ -615,7 +611,7 @@ final class FlagChangeNotifierSpec: QuickSpec {
                             targetChangedFlags = [key: LDChangedFlag.stub(key: key, oldFlags: oldFlags, newFlags: testContext.user.flagStore.featureFlags)]
 
                             waitUntil { done in
-                                testContext.subject.notifyObservers(user: testContext.user, oldFlags: oldFlags, oldFlagSource: .server, completion: done)
+                                testContext.subject.notifyObservers(user: testContext.user, oldFlags: oldFlags, completion: done)
                             }
 
                             expect(testContext.flagCollectionChangeHandlerCallCount) == 1
@@ -642,7 +638,7 @@ final class FlagChangeNotifierSpec: QuickSpec {
                         })
 
                         waitUntil { done in
-                            testContext.subject.notifyObservers(user: testContext.user, oldFlags: oldFlags, oldFlagSource: .server, completion: done)
+                            testContext.subject.notifyObservers(user: testContext.user, oldFlags: oldFlags, completion: done)
                         }
                     }
                     it("activates the change handler") {
@@ -665,7 +661,7 @@ final class FlagChangeNotifierSpec: QuickSpec {
                         oldFlags = testContext.user.flagStore.featureFlags
 
                         waitUntil { done in
-                            testContext.subject.notifyObservers(user: testContext.user, oldFlags: oldFlags, oldFlagSource: .server, completion: done)
+                            testContext.subject.notifyObservers(user: testContext.user, oldFlags: oldFlags, completion: done)
                         }
                     }
                     it("activates the flags unchanged handler") {
@@ -691,7 +687,7 @@ final class FlagChangeNotifierSpec: QuickSpec {
                         testContext.owners[DarklyServiceMock.FlagKeys.knownFlags.observerKey] = nil
 
                         waitUntil { done in
-                            testContext.subject.notifyObservers(user: testContext.user, oldFlags: oldFlags, oldFlagSource: .server, completion: done)
+                            testContext.subject.notifyObservers(user: testContext.user, oldFlags: oldFlags, completion: done)
                         }
                     }
                     it("does nothing") {
@@ -714,7 +710,7 @@ final class FlagChangeNotifierSpec: QuickSpec {
                         testContext.owners[testContext.flagsUnchangedOwnerKey!] = nil
 
                         waitUntil { done in
-                            testContext.subject.notifyObservers(user: testContext.user, oldFlags: oldFlags, oldFlagSource: .server, completion: done)
+                            testContext.subject.notifyObservers(user: testContext.user, oldFlags: oldFlags, completion: done)
                         }
                     }
                     it("does nothing") {
@@ -752,7 +748,7 @@ final class FlagChangeNotifierSpec: QuickSpec {
                                                                                                    newFlags: testContext.user.flagStore.featureFlags)
 
                             waitUntil { done in
-                                testContext.subject.notifyObservers(user: testContext.user, oldFlags: oldFlags, oldFlagSource: .server, completion: done)
+                                testContext.subject.notifyObservers(user: testContext.user, oldFlags: oldFlags, completion: done)
                             }
 
                             expect(testContext.flagCollectionChangeHandlerCallCount) == 1
@@ -782,7 +778,7 @@ final class FlagChangeNotifierSpec: QuickSpec {
                                                                                                newFlags: testContext.user.flagStore.featureFlags)
 
                         waitUntil { done in
-                            testContext.subject.notifyObservers(user: testContext.user, oldFlags: oldFlags, oldFlagSource: .server, completion: done)
+                            testContext.subject.notifyObservers(user: testContext.user, oldFlags: oldFlags, completion: done)
                         }
                     }
                     it("activates the change handler") {
@@ -805,7 +801,7 @@ final class FlagChangeNotifierSpec: QuickSpec {
                         oldFlags = testContext.user.flagStore.featureFlags
 
                         waitUntil { done in
-                            testContext.subject.notifyObservers(user: testContext.user, oldFlags: oldFlags, oldFlagSource: .server, completion: done)
+                            testContext.subject.notifyObservers(user: testContext.user, oldFlags: oldFlags, completion: done)
                         }
                     }
                     it("activates the flags unchanged handler") {
@@ -831,7 +827,7 @@ final class FlagChangeNotifierSpec: QuickSpec {
                         testContext.owners[LDFlagKey.anyKey.observerKey] = nil
 
                         waitUntil { done in
-                            testContext.subject.notifyObservers(user: testContext.user, oldFlags: oldFlags, oldFlagSource: .server, completion: done)
+                            testContext.subject.notifyObservers(user: testContext.user, oldFlags: oldFlags, completion: done)
                         }
                     }
                     it("does nothing") {
@@ -854,7 +850,7 @@ final class FlagChangeNotifierSpec: QuickSpec {
                         testContext.owners[testContext.flagsUnchangedOwnerKey!] = nil
 
                         waitUntil { done in
-                            testContext.subject.notifyObservers(user: testContext.user, oldFlags: oldFlags, oldFlagSource: .server, completion: done)
+                            testContext.subject.notifyObservers(user: testContext.user, oldFlags: oldFlags, completion: done)
                         }
                     }
                     it("does nothing") {
@@ -877,7 +873,7 @@ fileprivate extension DarklyServiceMock.FlagValues {
 
 fileprivate extension LDChangedFlag {
     static func stub(key: LDFlagKey, oldFlags: [LDFlagKey: FeatureFlag], newFlags: [LDFlagKey: FeatureFlag]) -> LDChangedFlag {
-        LDChangedFlag(key: key, oldValue: oldFlags[key]?.value, oldValueSource: .server, newValue: newFlags[key]?.value, newValueSource: .server)
+        LDChangedFlag(key: key, oldValue: oldFlags[key]?.value, newValue: newFlags[key]?.value)
     }
 }
 
@@ -885,9 +881,7 @@ extension LDChangedFlag: Equatable {
     public static func == (lhs: LDChangedFlag, rhs: LDChangedFlag) -> Bool {
         lhs.key == rhs.key
             && AnyComparer.isEqual(lhs.oldValue, to: rhs.oldValue)
-            && lhs.oldValueSource == rhs.oldValueSource
             && AnyComparer.isEqual(lhs.newValue, to: rhs.newValue)
-            && lhs.newValueSource == rhs.newValueSource
     }
 }
 

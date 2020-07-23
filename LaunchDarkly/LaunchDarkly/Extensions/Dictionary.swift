@@ -61,7 +61,7 @@ extension Dictionary where Key == String, Value == Any {
 }
 
 extension Optional where Wrapped == [String: Any] {
-    public static func == (lhs: [String: Any]?, rhs: [String: Any]?) -> Bool {
+    static func == (lhs: [String: Any]?, rhs: [String: Any]?) -> Bool {
         guard let lhs = lhs
         else {
             // swiftlint:disable unused_optional_binding
@@ -78,7 +78,7 @@ extension Optional where Wrapped == [String: Any] {
         return lhs.isEqual(to: rhs)
     }
 
-    public static func != (lhs: [String: Any]?, rhs: [String: Any]?) -> Bool {
+    static func != (lhs: [String: Any]?, rhs: [String: Any]?) -> Bool {
         !(lhs == rhs)
     }
 }

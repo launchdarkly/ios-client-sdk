@@ -37,11 +37,7 @@ final class CacheConverter: CacheConverting {
     }
 
     func convertCacheData(for user: LDUser, and config: LDConfig) {
-        var mobileKeys = [MobileKey]()  //TODO: When implementing Multiple Environments, initialize this with the secondary mobile keys
-        mobileKeys.insert(config.mobileKey, at: 0)
-        mobileKeys.forEach { mobileKey in
-            convertCacheData(for: user, mobileKey: mobileKey)
-        }
+        convertCacheData(for: user, mobileKey: config.mobileKey)
         removeData()
     }
 

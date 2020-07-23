@@ -430,7 +430,8 @@ extension FeatureFlag {
                                                                    variation: DarklyServiceMock.Constants.variation,
                                                                    version: DarklyServiceMock.Constants.version,
                                                                    flagVersion: DarklyServiceMock.Constants.flagVersion,
-                                                                   eventTrackingContext: EventTrackingContext.stub(),
+                                                                   trackEvents: true,
+                                                                   debugEventsUntilDate: Date().addingTimeInterval(30.0),
                                                                    reason: DarklyServiceMock.Constants.reason,
                                                                    trackReason: false)
         flagCollection[StubConstants.mobileKey] = FeatureFlag(flagKey: StubConstants.mobileKey,
@@ -438,7 +439,8 @@ extension FeatureFlag {
                                                               variation: DarklyServiceMock.Constants.variation,
                                                               version: DarklyServiceMock.Constants.version,
                                                               flagVersion: DarklyServiceMock.Constants.flagVersion,
-                                                              eventTrackingContext: EventTrackingContext.stub(),
+                                                              trackEvents: true,
+                                                              debugEventsUntilDate: Date().addingTimeInterval(30.0),
                                                               reason: DarklyServiceMock.Constants.reason,
                                                               trackReason: false)
         return flagCollection

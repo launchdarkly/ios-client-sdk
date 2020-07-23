@@ -2,7 +2,6 @@
 //  UserEnvironmentCacheSpec.swift
 //  LaunchDarklyTests
 //
-//  Created by Mark Pokorny on 3/20/19. +JMJ
 //  Copyright © 2019 Catamorphic Co. All rights reserved.
 //
 
@@ -27,18 +26,8 @@ final class UserEnvironmentFlagCacheSpec: QuickSpec {
         var selectedUser: LDUser {
             return users.selectedUser
         }
-        var unchangedUsers: [LDUser] {
-            var remainingUsers = users
-            remainingUsers.remove(at: users.firstIndex(of: selectedUser)!)
-            return remainingUsers
-        }
         var selectedMobileKey: String {
             return userEnvironmentsCollection[selectedUser.key]!.environmentFlags.keys.selectedMobileKey
-        }
-        var unchangedEnvironments: [MobileKey: CacheableEnvironmentFlags] {
-            var remainingEnvironments = userEnvironmentsCollection[selectedUser.key]!.environmentFlags
-            remainingEnvironments.removeValue(forKey: selectedMobileKey)
-            return remainingEnvironments
         }
         var oldestUser: LDUser {
             //sort <userKey, lastUpdated> pairs youngest to oldest
@@ -671,7 +660,8 @@ extension FeatureFlag {
                            variation: DarklyServiceMock.Constants.variation,
                            version: DarklyServiceMock.Constants.version,
                            flagVersion: DarklyServiceMock.Constants.flagVersion,
-                           eventTrackingContext: EventTrackingContext.stub(),
+                           trackEvents: true,
+                           debugEventsUntilDate: Date().addingTimeInterval(30.0),
                            reason: DarklyServiceMock.Constants.reason,
                            trackReason: false)
     }

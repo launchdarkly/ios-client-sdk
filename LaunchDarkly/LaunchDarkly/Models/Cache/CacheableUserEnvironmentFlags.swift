@@ -11,7 +11,7 @@ import Foundation
 //Cache model in use from 4.0.0
 /*
 [<userKey>: [
-    “userKey”: <userKey>,                               //CacheableUserEnvironment dictionary
+    “userKey”: <userKey>,                               //CacheableUserEnvironmentFlags dictionary
     “environmentFlags”: [
         <mobileKey>: [
             “userKey”: <userKey>,                       //CacheableEnvironmentFlags dictionary
@@ -23,8 +23,10 @@ import Foundation
                     “flagVersion”: <flagVersion>,
                     “variation”: <variation>,
                     “value”: <value>,
-                    “trackEvents”: <trackEvents>,       //EventTrackingContext
-                    “debugEventsUntilDate”: <debugEventsUntilDate>
+                    “trackEvents”: <trackEvents>,
+                    “debugEventsUntilDate”: <debugEventsUntilDate>,
+                    "reason: <reason>,
+                    "trackReason": <trackReason>
                     ]
                 ]
             ]

@@ -27,3 +27,11 @@ extension LDFlagKey {
     private static var anyKeyIdentifier: LDFlagKey { "Darkly.FlagKeyList.Any" }
     static var anyKey: [LDFlagKey] { [anyKeyIdentifier] }
 }
+
+@objc public class LDInvalidArgumentError: NSObject, Error {
+    public let localizedDescription: String
+
+    init(_ description: String) {
+        self.localizedDescription = description
+    }
+}
