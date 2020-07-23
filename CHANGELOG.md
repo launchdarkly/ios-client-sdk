@@ -2,7 +2,7 @@
 
 All notable changes to the LaunchDarkly iOS SDK will be documented in this file. This project adheres to [Semantic Versioning](http://semver.org).
 
-## [5.0.0] - 2020-07-20
+## [5.0.0] - 2020-07-23
 
 This major version has an accompanying [Migration Guide](https://docs.launchdarkly.com/sdk/client-side/ios/migration-4-to-5). Please see the guide for more information on updating to this version of the SDK, as the following is just a summary of the changes.
 
