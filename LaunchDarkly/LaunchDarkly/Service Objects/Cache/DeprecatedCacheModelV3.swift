@@ -8,9 +8,9 @@
 import Foundation
 
 //Cache model in use from 2.11.0 up to 2.13.0
-/*  Cache model v3 schema
+/* Cache model v3 schema
 [<userKey>: [
-    “key: <userKey>,                        //LDUserModel dictionary
+    “key: <userKey>,                            //LDUserModel dictionary
     “ip”: <ipAddress>,
     “country”: <country>,
     “email”: <email>,
@@ -24,18 +24,17 @@ import Foundation
         ...],
     “anonymous”: <anonymous>,
     “updatedAt: <updatedAt>,
-    ”config”: [                            //LDFlagConfigModel dictionary
-        <flagKey>: [                        //LDFlagConfigValue dictionary
+    ”config”: [                                 //LDFlagConfigModel dictionary
+        <flagKey>: [                            //LDFlagConfigValue dictionary
             “value”: <flagValue>,
             “version”: <modelVersion>
-        ]
-    ],
+            ]
+        ],
     “privateAttrs”: <privateAttributes>        (from 2.10.0 forward)
     ]
 ]
  */
 final class DeprecatedCacheModelV3: DeprecatedCache {
-    let model = DeprecatedCacheModel.version3
     let keyedValueCache: KeyedValueCaching
     let cachedDataKey = CacheConverter.CacheKeys.ldUserModelDictionary
 
@@ -50,13 +49,14 @@ final class DeprecatedCacheModelV3: DeprecatedCache {
         else {
             return (nil, nil)
         }
-        let featureFlags = Dictionary(uniqueKeysWithValues: featureFlagDictionaries.compactMap { (flagKey, flagValueDictionary) in
+        let featureFlags = Dictionary(uniqueKeysWithValues: featureFlagDictionaries.compactMap { flagKey, flagValueDictionary in
             (flagKey, FeatureFlag(flagKey: flagKey,
                                   value: flagValueDictionary.value,
                                   variation: nil,
                                   version: flagValueDictionary.version,
                                   flagVersion: nil,
-                                  eventTrackingContext: nil,
+                                  trackEvents: nil,
+                                  debugEventsUntilDate: nil,
                                   reason: nil,
                                   trackReason: nil))
         })

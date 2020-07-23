@@ -1,1 +1,1 @@
-github "launchdarkly/ios-eventsource" >= 4.1.0
+github "launchdarkly/swift-eventsource" ~> 1.1.0

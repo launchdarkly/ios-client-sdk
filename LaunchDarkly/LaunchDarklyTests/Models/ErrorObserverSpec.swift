@@ -17,12 +17,6 @@ final class ErrorOwnerMock {
     }
 }
 
-extension ErrorObserver {
-    static func createObservers(count: Int, using owner: ErrorOwnerMock = ErrorOwnerMock()) -> [ErrorObserver] {
-        (0..<count).map { _ in ErrorObserver(owner: owner, errorHandler: owner.handle) }
-    }
-}
-
 final class ErrorObserverSpec: QuickSpec {
 
     override func spec() {

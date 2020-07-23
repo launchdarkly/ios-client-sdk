@@ -22,16 +22,16 @@
 import Foundation
 
 /// A "static"-only namespace around a series of functions that operate on buffers returned from the `Darwin.sysctl` function
-public struct Sysctl {
+struct Sysctl {
     /// Possible errors.
-    public enum Error: Swift.Error {
+    enum Error: Swift.Error {
         case unknown
         case malformedUTF8
         case posixError(POSIXErrorCode)
     }
 
     /// Access the raw data for an array of sysctl identifiers.
-    public static func dataForKeys(_ keys: [Int32]) throws -> [Int8] {
+    static func dataForKeys(_ keys: [Int32]) throws -> [Int8] {
         return try keys.withUnsafeBufferPointer { keysPointer throws -> [Int8] in
             // Preflight the request to get the required data size
             var requiredSize = 0
@@ -59,7 +59,7 @@ public struct Sysctl {
     }
 
     /// Invoke `sysctl` with an array of identifers, interpreting the returned buffer as a `String`. This function will throw `Error.malformedUTF8` if the buffer returned from `sysctl` cannot be interpreted as a UTF8 buffer.
-    public static func stringForKeys(_ keys: [Int32]) throws -> String {
+    static func stringForKeys(_ keys: [Int32]) throws -> String {
         let optionalString = try dataForKeys(keys).withUnsafeBufferPointer { dataPointer -> String? in
             dataPointer.baseAddress.flatMap {
                 String(validatingUTF8: $0)
@@ -73,7 +73,7 @@ public struct Sysctl {
     }
 
     /// e.g. "MacPro4,1"
-    public static var model: String {
+    static var model: String {
         //swiftlint:disable:next force_try
         return try! Sysctl.stringForKeys([CTL_HW, HW_MODEL])
     }

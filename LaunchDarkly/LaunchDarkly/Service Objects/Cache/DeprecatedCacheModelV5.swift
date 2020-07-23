@@ -1,5 +1,5 @@
 //
-//  UserEnvironmentCacheModel.swift
+//  DeprecatedCacheModelV5.swift
 //  LaunchDarkly
 //
 //  Copyright © 2019 Catamorphic Co. All rights reserved.
@@ -7,8 +7,8 @@
 
 import Foundation
 
-//Cache model in use from 2.14.0 up to 4.2.0
-/*
+//Cache model in use from 2.14.0 up to 4.0.0
+/* Cache model v5 schema
 [<userKey>: [
     “userKey”: <userKey>,                               //LDUserEnvironment dictionary
     “environments”: [
@@ -33,7 +33,7 @@ import Foundation
                     “flagVersion”: <flagVersion>,
                     “variation”: <variation>,
                     “value”: <value>,
-                    “trackEvents”: <trackEvents>,       //LDEventTrackingContext
+                    “trackEvents”: <trackEvents>,
                     “debugEventsUntilDate”: <debugEventsUntilDate>
                     ]
                 ],
@@ -50,7 +50,6 @@ final class DeprecatedCacheModelV5: DeprecatedCache {
         static let environments = "environments"
     }
 
-    let model = DeprecatedCacheModel.version5
     let keyedValueCache: KeyedValueCaching
     let cachedDataKey = CacheKeys.userEnvironments
 
@@ -67,13 +66,14 @@ final class DeprecatedCacheModelV5: DeprecatedCache {
         else {
             return (nil, nil)
         }
-        let featureFlags = Dictionary(uniqueKeysWithValues: featureFlagDictionaries.compactMap { (flagKey, featureFlagDictionary) in
+        let featureFlags = Dictionary(uniqueKeysWithValues: featureFlagDictionaries.compactMap { flagKey, featureFlagDictionary in
             return (flagKey, FeatureFlag(flagKey: flagKey,
                                          value: featureFlagDictionary.value,
                                          variation: featureFlagDictionary.variation,
                                          version: featureFlagDictionary.version,
                                          flagVersion: featureFlagDictionary.flagVersion,
-                                         eventTrackingContext: EventTrackingContext(dictionary: featureFlagDictionary),
+                                         trackEvents: featureFlagDictionary.trackEvents,
+                                         debugEventsUntilDate: Date(millisSince1970: featureFlagDictionary.debugEventsUntilDate),
                                          reason: nil,
                                          trackReason: nil))
         })
@@ -81,8 +81,9 @@ final class DeprecatedCacheModelV5: DeprecatedCache {
     }
 
     func userKeys(from cachedUserData: [UserKey: [String: Any]], olderThan expirationDate: Date) -> [UserKey] {
-        cachedUserData.compactMap { userKey, userEnvsDictionary in
-            let lastUpdated = userEnvsDictionary.environments?.lastUpdatedDates?.youngest ?? Date.distantFuture
+        cachedUserData.compactMap { userKey, userDictionary in
+            let envsDictionary = userDictionary[CacheKeys.environments] as? [MobileKey: [String: Any]]
+            let lastUpdated = envsDictionary?.compactMap { $1.lastUpdated }.max() ?? Date.distantFuture
             return lastUpdated.isExpired(expirationDate: expirationDate) ? userKey : nil
         }
     }

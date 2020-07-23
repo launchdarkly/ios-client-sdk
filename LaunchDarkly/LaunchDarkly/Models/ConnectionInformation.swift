@@ -73,7 +73,7 @@ public struct ConnectionInformation: Codable, CustomStringConvertible {
     // Restores ConnectionInformation from UserDefaults if it exists
     static func uncacheConnectionInformation(config: LDConfig, ldClient: LDClient, clientServiceFactory: ClientServiceCreating) -> ConnectionInformation {
         var connectionInformation = ConnectionInformationStore.retrieveStoredConnectionInformation() ?? clientServiceFactory.makeConnectionInformation()
-        connectionInformation = onlineSetCheck(connectionInformation: connectionInformation, ldClient: ldClient, config: config)
+        connectionInformation = onlineSetCheck(connectionInformation: connectionInformation, ldClient: ldClient, config: config, online: ldClient.isOnline)
         return connectionInformation
     }
 
@@ -87,9 +87,9 @@ public struct ConnectionInformation: Codable, CustomStringConvertible {
     }
 
     // Used for updating ConnectionInformation inside of LDClient.setOnline
-    static func onlineSetCheck(connectionInformation: ConnectionInformation, ldClient: LDClient, config: LDConfig) -> ConnectionInformation {
+    static func onlineSetCheck(connectionInformation: ConnectionInformation, ldClient: LDClient, config: LDConfig, online: Bool) -> ConnectionInformation {
         var connectionInformationVar = connectionInformation
-        if ldClient.isOnline && NetworkReporter.isConnectedToNetwork() {
+        if online && NetworkReporter.isConnectedToNetwork() {
             connectionInformationVar.currentConnectionMode = effectiveStreamingMode(config: config, ldClient: ldClient) == LDStreamingMode.streaming ? .establishingStreamingConnection : .polling
         } else {
             connectionInformationVar.currentConnectionMode = .offline

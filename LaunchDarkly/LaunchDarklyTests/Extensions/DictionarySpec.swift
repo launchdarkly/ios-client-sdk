@@ -15,6 +15,7 @@ final class DictionarySpec: QuickSpec {
     public override func spec() {
         symmetricDifferenceSpec()
         withNullValuesRemovedSpec()
+        dictionarySpec()
     }
 
     private func symmetricDifferenceSpec() {
@@ -211,10 +212,6 @@ fileprivate extension Dictionary where Key == String, Value == Any {
         static var null: String {
             return "null-key"
         }
-
-        static var all: [String] {
-            return [bool, int, double, string, array, dictionary, null]
-        }
     }
 
     struct Values {
@@ -238,10 +235,6 @@ fileprivate extension Dictionary where Key == String, Value == Any {
         }
         static var null: NSNull {
             return NSNull()
-        }
-
-        static var all: [Any] {
-            return [bool, int, double, string, array, dictionary, null]
         }
     }
 

@@ -21,9 +21,7 @@ struct FlagRequestTracker {
             flagCounters[flagKey] = FlagCounter()
         }
         guard let flagCounter = flagCounters[flagKey]
-        else {
-            return
-        }
+        else { return }
         flagCounter.trackRequest(reportedValue: reportedValue, featureFlag: featureFlag, defaultValue: defaultValue)
 
         Log.debug(typeName(and: #function) + "\n\tflagKey: \(flagKey)"
@@ -31,25 +29,18 @@ struct FlagRequestTracker {
             + "\n\tvariation: \(String(describing: featureFlag?.variation)), "
             + "\n\tversion: \(String(describing: featureFlag?.flagVersion ?? featureFlag?.version)), "
             + "\n\tdefaultValue: \(String(describing: defaultValue))\n")
-
     }
 
     var dictionaryValue: [String: Any] {
-        return [CodingKeys.startDate.rawValue: startDate.millisSince1970,
-                CodingKeys.features.rawValue: flagCounters.dictionaryValues]
+        [CodingKeys.startDate.rawValue: startDate.millisSince1970,
+         CodingKeys.features.rawValue: flagCounters.dictionaryValues]
     }
 
-    var hasLoggedRequests: Bool {
-        return !flagCounters.isEmpty
-    }
+    var hasLoggedRequests: Bool { !flagCounters.isEmpty }
 }
 
 extension FlagRequestTracker: TypeIdentifying { }
 
 extension Dictionary where Key == String, Value == FlagCounter {
-    var dictionaryValues: [LDFlagKey: Any] {
-        return mapValues { (flagCounter) in
-            return flagCounter.dictionaryValue
-        }
-    }
+    var dictionaryValues: [LDFlagKey: Any] { mapValues { $0.dictionaryValue } }
 }

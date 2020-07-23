@@ -6,6 +6,7 @@
 //  Copyright © 2017 Catamorphic Co. All rights reserved.
 //
 
+import Foundation
 import Quick
 import Nimble
 @testable import LaunchDarkly
@@ -192,7 +193,7 @@ final class EventSpec: QuickSpec {
             }
             context("with invalid json data") {
                 it("throws an invalidJsonObject error") {
-                    expect { event = try Event.customEvent(key: Constants.eventKey, user: user, data: Date()) }.to(throwError(JSONSerialization.JSONError.invalidJsonObject))
+                    expect { event = try Event.customEvent(key: Constants.eventKey, user: user, data: Date()) }.to(throwError(errorType: LDInvalidArgumentError.self))
                 }
             }
             context("without data") {
@@ -482,8 +483,8 @@ final class EventSpec: QuickSpec {
                     beforeEach {
                         do {
                             event = try Event.customEvent(key: Constants.eventKey, user: user, data: eventData, metricValue: metricValue)
-                        } catch JSONSerialization.JSONError.invalidJsonObject {
-                            fail("customEvent threw an invalidJsonObject exception")
+                        } catch is LDInvalidArgumentError {
+                            fail("customEvent threw an invalid argument exception")
                         } catch {
                             fail("customEvent threw an exception")
                         }
@@ -507,8 +508,8 @@ final class EventSpec: QuickSpec {
                 beforeEach {
                     do {
                         event = try Event.customEvent(key: Constants.eventKey, user: user, data: nil)
-                    } catch JSONSerialization.JSONError.invalidJsonObject {
-                        fail("customEvent threw an invalidJsonObject exception")
+                    } catch is LDInvalidArgumentError {
+                        fail("customEvent threw an invalid argument exception")
                     } catch {
                         fail("customEvent threw an exception")
                     }
@@ -530,8 +531,8 @@ final class EventSpec: QuickSpec {
                 beforeEach {
                     do {
                         event = try Event.customEvent(key: Constants.eventKey, user: user, data: CustomEvent.dictionaryData)
-                    } catch JSONSerialization.JSONError.invalidJsonObject {
-                        fail("customEvent threw an invalidJsonObject exception")
+                    } catch is LDInvalidArgumentError {
+                        fail("customEvent threw an invalid argument exception")
                     } catch {
                         fail("customEvent threw an exception")
                     }
@@ -556,8 +557,8 @@ final class EventSpec: QuickSpec {
                 beforeEach {
                     do {
                         event = try Event.customEvent(key: Constants.eventKey, user: user, data: CustomEvent.dictionaryData)
-                    } catch JSONSerialization.JSONError.invalidJsonObject {
-                        fail("customEvent threw an invalidJsonObject exception")
+                    } catch is LDInvalidArgumentError {
+                        fail("customEvent threw an invalid argument exception")
                     } catch {
                         fail("customEvent threw an exception")
                     }
@@ -771,20 +772,20 @@ final class EventSpec: QuickSpec {
                 expect(eventDictionary.eventEndDate?.isWithin(0.001, of: event.endDate)).to(beTrue())
                 guard let features = eventDictionary.eventFeatures
                     else {
-                        XCTFail("expected eventDictionary features to not be nil, got nil")
+                        fail("expected eventDictionary features to not be nil, got nil")
                         return
                 }
                 expect(features.count) == event.flagRequestTracker?.flagCounters.count
                 event.flagRequestTracker?.flagCounters.forEach { (flagKey, flagCounter) in
                     guard let flagCounterDictionary = features[flagKey] as? [String: Any]
                     else {
-                        XCTFail("expected features to contain flag counter for \(flagKey), got nil")
+                        fail("expected features to contain flag counter for \(flagKey), got nil")
                         return
                     }
                     expect(AnyComparer.isEqual(flagCounterDictionary.flagCounterDefaultValue, to: flagCounter.defaultValue, considerNilAndNullEqual: true)).to(beTrue())
                     guard let flagValueCounters = flagCounterDictionary.flagCounterFlagValueCounters, flagValueCounters.count == flagCounter.flagValueCounters.count
                     else {
-                        XCTFail("expected flag value counters for \(flagKey) to have \(flagCounter.flagValueCounters.count) entries, got \(flagCounterDictionary.flagCounterFlagValueCounters?.count ?? 0)")
+                        fail("expected flag value counters for \(flagKey) to have \(flagCounter.flagValueCounters.count) entries, got \(flagCounterDictionary.flagCounterFlagValueCounters?.count ?? 0)")
                         return
                     }
                     for (index, flagValueCounter) in flagCounter.flagValueCounters.enumerated() {
@@ -1259,7 +1260,10 @@ extension Dictionary where Key == String, Value == Any {
         return self[Event.CodingKeys.userKey.rawValue] as? String
     }
     var eventUser: LDUser? {
-        return LDUser(object: self[Event.CodingKeys.user.rawValue])
+        if let userDictionary = self[Event.CodingKeys.user.rawValue] as? [String: Any] {
+            return LDUser(userDictionary: userDictionary)
+        }
+        return nil
     }
     var eventValue: Any? {
         return self[Event.CodingKeys.value.rawValue]
@@ -1305,13 +1309,6 @@ extension Array where Element == [String: Any] {
     }
 }
 
-extension Event.Kind {
-    static var random: Event.Kind {
-        let index = Int(arc4random_uniform(UInt32(Event.Kind.allKinds.count) - 1))
-        return Event.Kind.allKinds[index]
-    }
-}
-
 extension Event {
     static func stub(_ eventKind: Kind, with user: LDUser) -> Event {
         switch eventKind {
@@ -1325,10 +1322,6 @@ extension Event {
         case .custom: return (try? Event.customEvent(key: UUID().uuidString, user: user, data: ["custom": UUID().uuidString]))!
         case .summary: return Event.summaryEvent(flagRequestTracker: FlagRequestTracker.stub())!
         }
-    }
-
-    static func stubFeatureEvent(_ featureFlag: FeatureFlag, with user: LDUser) -> Event {
-        return Event.featureEvent(key: UUID().uuidString, value: true, defaultValue: false, featureFlag: featureFlag, user: user, includeReason: false)
     }
 
     static func stubEvents(eventCount: Int = Event.Kind.allKinds.count, for user: LDUser) -> [Event] {
@@ -1348,49 +1341,5 @@ extension Event {
         return eventStubs.map { (event) in
             event.dictionaryValue(config: config)
         }
-    }
-
-    func matches(eventDictionary: [String: Any]?) -> Bool {
-        guard let eventDictionary = eventDictionary
-        else {
-            return false
-        }
-        if kind == .summary {
-            return kind == eventDictionary.eventKind && endDate?.isWithin(0.001, of: eventDictionary.eventEndDate) ?? false
-        }
-        guard let eventDictionaryKey = eventDictionary.eventKey,
-            let eventDictionaryCreationDateMillis = eventDictionary.eventCreationDateMillis
-        else {
-            return false
-        }
-        return key == eventDictionaryKey && creationDate?.millisSince1970 == eventDictionaryCreationDateMillis
-    }
-}
-
-extension Array where Element == Event {
-    func matches(eventDictionaries: [[String: Any]]) -> Bool {
-        guard self.count == eventDictionaries.count else {
-            return false
-        }
-        for index in self.indices {
-            if !self[index].matches(eventDictionary: eventDictionaries[index]) {
-                return false
-            }
-        }
-        return true
-    }
-}
-
-extension Array where Element == [String: Any] {
-    func matches(events: [Event]) -> Bool {
-        guard self.count == events.count else {
-            return false
-        }
-        for index in self.indices {
-            if !events[index].matches(eventDictionary: self[index]) {
-                return false
-            }
-        }
-        return true
     }
 }

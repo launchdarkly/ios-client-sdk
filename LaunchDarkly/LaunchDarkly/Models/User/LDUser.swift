@@ -130,17 +130,6 @@ public struct LDUser {
     }
 
     /**
-     Failable Initializer that takes any object and attempts to create a LDUser from the object. If the object is a [String: Any], constructs the LDUser via `init(userDictionary:)`
-
-     - parameter object: Any object. The initializer will attempt to convert the object into [String: Any] and construct the LDUser
-    */
-    public init?(object: Any?) {
-        guard let userDictionary = object as? [String: Any]
-        else { return nil }
-        self = LDUser(userDictionary: userDictionary)
-    }
-
-    /**
      Initializer that takes a [String: Any] and creates a LDUser from the contents. Uses any keys present to define corresponding attribute values. Initializes attributes not present in the dictionary to their default value. Attempts to set `device` and `operatingSystem` from corresponding values embedded in `custom`. Attempts to set feature flags from values set in `config`.
 
      - parameter userDictionary: Dictionary with LDUser attribute keys and values.
@@ -162,7 +151,7 @@ public struct LDUser {
         device = custom?[CodingKeys.device.rawValue] as? String
         operatingSystem = custom?[CodingKeys.operatingSystem.rawValue] as? String
 
-        flagStore = FlagStore(featureFlagDictionary: userDictionary[CodingKeys.config.rawValue] as? [String: Any], flagValueSource: .cache)
+        flagStore = FlagStore(featureFlagDictionary: userDictionary[CodingKeys.config.rawValue] as? [String: Any])
         Log.debug(typeName(and: #function) + "user: \(self)")
     }
 
@@ -334,7 +323,7 @@ extension LDUserWrapper: NSCoding {
         user.device = decoder.decodeObject(forKey: LDUser.CodingKeys.device.rawValue) as? String
         user.operatingSystem = decoder.decodeObject(forKey: LDUser.CodingKeys.operatingSystem.rawValue) as? String
         let wrappedFlags = decoder.decodeObject(forKey: LDUser.CodingKeys.config.rawValue) as? [String: Any]
-        user.flagStore = FlagStore(featureFlagDictionary: wrappedFlags?[Keys.featureFlags] as? [String: Any], flagValueSource: .cache)
+        user.flagStore = FlagStore(featureFlagDictionary: wrappedFlags?[Keys.featureFlags] as? [String: Any])
         self.init(user: user)
     }
 
