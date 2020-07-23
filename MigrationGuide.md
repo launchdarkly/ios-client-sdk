@@ -2,6 +2,8 @@ LaunchDarkly Migration Guide for the iOS Swift SDK
 ==================================================
 
 # Getting Started
+**This documentation is for migrating from the v2.x or v3.x Objective-C implementations of the SDK to the previous major version of the SDK. For information on upgrading from 4.x to the 5.0 major release, see the [Migration Guide](https://docs.launchdarkly.com/sdk/client-side/ios/migration-4-to-5) on the documentation site.**
+
 Follow the steps below to migrate your app from v2.x or v3.x to v4.x. Most of these steps will be required, your IDE will give you build errors if you don't take them. We recommend reading through the guide before starting to get a feel for what you will need to do to migrate your app to v4.x.
 
 ### Multiple Environments
