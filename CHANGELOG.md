@@ -3,6 +3,8 @@
 All notable changes to the LaunchDarkly iOS SDK will be documented in this file. This project adheres to [Semantic Versioning](http://semver.org).
 
 ## [5.0.1] - 2020-07-23
+Note that this release contains the notes for the 5.0.0 release as that release is broken.
+
 This major version has an accompanying [Migration Guide](https://docs.launchdarkly.com/sdk/client-side/ios/migration-4-to-5). Please see the guide for more information on updating to this version of the SDK, as the following is just a summary of the changes.
 
 ### Added
@@ -61,7 +63,7 @@ This major version has an accompanying [Migration Guide](https://docs.launchdark
 - Removed `Sysctl` struct (only available on macOS) which was only intended for internal SDK use.
 
 ## [5.0.0] - 2020-07-23
-**Please use the 5.0.1 instead. This release incorrectly specifies it's version and is unavailable on CocoaPods**
+**Please use the 5.0.1 instead. This release incorrectly specifies its version and is unavailable on CocoaPods**
 
 ## [4.7.0] - 2020-06-03
 ### Added
