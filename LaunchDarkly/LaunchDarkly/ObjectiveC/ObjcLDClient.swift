@@ -26,7 +26,7 @@ import Foundation
  ````
  BOOL boolFlag = [ldClientInstance boolVariationForKey:@"my-bool-flag" defaultValue:NO];
  ````
- If you need to know more information about why a given value is returned, the typed `variationDetail` methods return an EvaluationDetail with an detail about the evaluation.
+ If you need to know more information about why a given value is returned, the typed `variationDetail` methods return an `LD<T>EvaluationDetail` with an detail about the evaluation.
  ````
  LDBoolEvaluationDetail *boolVariationDetail = [ldClientInstance boolVariationDetail:@"my-bool-flag" defaultValue:NO];
  BOOL boolFlagValue = boolVariationDetail.value;
@@ -69,6 +69,20 @@ public final class ObjcLDClient: NSObject {
      Set the LDClient online/offline.
 
      When online, the SDK communicates with LaunchDarkly servers for feature flag values and event reporting.
+     When offline, the SDK does not attempt to communicate with LaunchDarkly servers. Client apps can request feature flag values and set/change feature flag observers while offline. The SDK will collect events while offline.
+     The SDK protects itself from multiple rapid calls to `setOnline:YES` by enforcing an increasing delay (called *throttling*) each time `setOnline:YES` is called within a short time. The first time, the call proceeds normally. For each subsequent call the delay is enforced, and if waiting, increased to a maximum delay. When the delay has elapsed, the `setOnline:YES` will proceed, assuming that the client app has not called `setOnline:NO` during the delay. Therefore a call to `setOnline:YES` may not immediately result in the LDClient going online. Client app developers should consider this situation abnormal, and take steps to prevent the client app from making multiple rapid `setOnline:YES` calls. Calls to `setOnline:NO` are not throttled. After the delay, the SDK resets and the client app can make a susequent call to `setOnline:YES` without being throttled.
+     Use `isOnline` to get the online/offline state.
+
+     - parameter goOnline:    Desired online/offline mode for the LDClient
+    */
+    @objc public func setOnline(_ goOnline: Bool) {
+        ldClient.setOnline(goOnline, completion: nil)
+    }
+
+    /**
+     Set the LDClient online/offline.
+
+     When online, the SDK communicates with LaunchDarkly servers for feature flag values and event reporting.
 
      When offline, the SDK does not attempt to communicate with LaunchDarkly servers. Client apps can request feature flag values and set/change feature flag observers while offline. The SDK will collect events while offline.
 
@@ -84,16 +98,17 @@ public final class ObjcLDClient: NSObject {
     @objc public func setOnline(_ goOnline: Bool, completion:(() -> Void)? = nil) {
         ldClient.setOnline(goOnline, completion: completion)
     }
+
     /**
-     The LDConfig that configures the LDClient. See `LDConfig` (`ObjcLDConfig`) for details about what can be configured.
+        The LDUser set into the LDClient may affect the set of feature flags returned by the LaunchDarkly server, and ties event tracking to the user. See `LDUser` for details about what information can be retained.
 
-     Normally, the client app should set desired values into a LDConfig and pass that into `[ldClientInstance startWithMobileKey: config: user: completion:]` (`ObjcLDClient.startWithMobileKey(_:config:user:completion:)`). If the client does not pass a LDConfig to the LDClient, the LDClient creates a LDConfig using all default values.
+        The client app can change the current LDUser by calling this method. Client apps should follow [Apple's Privacy Policy](apple.com/legal/privacy) when collecting user information. When a new user is set, the LDClient goes offline and sets the new user. If the client was online when the new user was set, it goes online again, subject to a throttling delay if in force (see `setOnline(_: completion:)` for details).
 
-     The client app can change the LDConfig by getting the `config`, adjusting the values, and setting it into the LDClient.
-
-     When a new config is set, the LDClient goes offline and reconfigures using the new config. If the client was online when the new config was set, it goes online again, subject to a throttling delay if in force (see `ObjcLDClient.setOnline(_:completion:)` for details). To change both the `config` and `user`, set the LDClient offline, set both properties, then set the LDClient online.
-     */
-    @objc public var config: ObjcLDConfig { ldClient.config.objcLdConfig }
+        - parameter user: The ObjcLDUser set with the desired user.
+       */
+    @objc public func identify(user: ObjcLDUser) {
+        ldClient.identify(user: user.user, completion: nil)
+    }
 
     /**
         The LDUser set into the LDClient may affect the set of feature flags returned by the LaunchDarkly server, and ties event tracking to the user. See `LDUser` for details about what information can be retained.
@@ -121,40 +136,27 @@ public final class ObjcLDClient: NSObject {
     @objc public func close() {
         ldClient.close()
     }
-    
+
     /**
-     Returns an ObjcLDClient wrapper that contains an LDClient primary instance..
-    
-     - returns: An ObjcLDClient. (Optional)
+     Returns an ObjcLDClient wrapper that contains the primary LDClient instance.
+
+     - returns: An ObjcLDClient.
     */
     @objc public static func get() -> ObjcLDClient? {
-        if let optionalClient = LDClient.get() {
-            return ObjcLDClient(client: optionalClient)
-        } else {
-            return nil
-        }
+        guard let instance = LDClient.get() else { return nil }
+        return ObjcLDClient(client: instance)
     }
 
     /**
-     Returns all environment names.
-     
-     - returns: All environment names as an Array of Strings. (Optional)
-    */
-    @objc public static func getEnvironmentNames() -> [String]? {
-        LDClient.getEnvironmentNames()
-    }
-  
-    /**
-     Returns the LDClient instance associated with the keyName wrapped in ObjcLDClient.
-    
-     - returns: An ObjcLDClient. (Optional)
-    */
-    @objc public static func getForMobileKey(keyName: String) -> ObjcLDClient? {
-        if let optionalClient = LDClient.getForMobileKey(keyName: keyName) {
-            return ObjcLDClient(client: optionalClient)
-        } else {
-            return nil
-        }
+     Returns an LDClient instance for a given environment.
+
+     - parameter environment: The name of an environment provided in LDConfig.secondaryMobileKeys, defaults to `LDConfig.Constants.primaryEnvironmentName`, which is always associated with the `LDConfig.mobileKey` environment.
+
+     - returns: The requested LDClient instance.
+     */
+    @objc public static func get(environment: String = LDConfig.Constants.primaryEnvironmentName) -> ObjcLDClient? {
+        guard let instance = LDClient.get(environment: environment) else { return nil }
+        return ObjcLDClient(client: instance)
     }
 
     // MARK: Feature Flag values
@@ -195,9 +197,9 @@ public final class ObjcLDClient: NSObject {
 
      - returns: ObjcLDBoolEvaluationDetail containing your value as well as useful information on why that value was returned.
     */
-    @objc public func boolVariationDetail(forKey key: LDFlagKey, defaultValue: Bool) -> ObjCBoolEvaluationDetail {
+    @objc public func boolVariationDetail(forKey key: LDFlagKey, defaultValue: Bool) -> ObjcLDBoolEvaluationDetail {
         let evaluationDetail = ldClient.variationDetail(forKey: key, defaultValue: defaultValue)
-        return ObjCBoolEvaluationDetail(value: evaluationDetail.value, variationIndex: evaluationDetail.variationIndex, reason: evaluationDetail.reason)
+        return ObjcLDBoolEvaluationDetail(value: evaluationDetail.value, variationIndex: evaluationDetail.variationIndex, reason: evaluationDetail.reason)
     }
 
     /**
@@ -236,9 +238,9 @@ public final class ObjcLDClient: NSObject {
      
      - returns: ObjcLDIntegerEvaluationDetail containing your value as well as useful information on why that value was returned.
      */
-    @objc public func integerVariationDetail(forKey key: LDFlagKey, defaultValue: Int) -> ObjCIntegerEvaluationDetail {
+    @objc public func integerVariationDetail(forKey key: LDFlagKey, defaultValue: Int) -> ObjcLDIntegerEvaluationDetail {
         let evaluationDetail = ldClient.variationDetail(forKey: key, defaultValue: defaultValue)
-        return ObjCIntegerEvaluationDetail(value: evaluationDetail.value, variationIndex: evaluationDetail.variationIndex, reason: evaluationDetail.reason)
+        return ObjcLDIntegerEvaluationDetail(value: evaluationDetail.value, variationIndex: evaluationDetail.variationIndex, reason: evaluationDetail.reason)
     }
 
     /**
@@ -277,9 +279,9 @@ public final class ObjcLDClient: NSObject {
      
      - returns: ObjcLDDoubleEvaluationDetail containing your value as well as useful information on why that value was returned.
      */
-    @objc public func doubleVariationDetail(forKey key: LDFlagKey, defaultValue: Double) -> ObjCDoubleEvaluationDetail {
+    @objc public func doubleVariationDetail(forKey key: LDFlagKey, defaultValue: Double) -> ObjcLDDoubleEvaluationDetail {
         let evaluationDetail = ldClient.variationDetail(forKey: key, defaultValue: defaultValue)
-        return ObjCDoubleEvaluationDetail(value: evaluationDetail.value, variationIndex: evaluationDetail.variationIndex, reason: evaluationDetail.reason)
+        return ObjcLDDoubleEvaluationDetail(value: evaluationDetail.value, variationIndex: evaluationDetail.variationIndex, reason: evaluationDetail.reason)
     }
 
     /**
@@ -318,9 +320,9 @@ public final class ObjcLDClient: NSObject {
      
      - returns: ObjcLDStringEvaluationDetail containing your value as well as useful information on why that value was returned.
      */
-    @objc public func stringVariationDetail(forKey key: LDFlagKey, defaultValue: String?) -> ObjCStringEvaluationDetail {
+    @objc public func stringVariationDetail(forKey key: LDFlagKey, defaultValue: String?) -> ObjcLDStringEvaluationDetail {
         let evaluationDetail = ldClient.variationDetail(forKey: key, defaultValue: defaultValue)
-        return ObjCStringEvaluationDetail(value: evaluationDetail.value, variationIndex: evaluationDetail.variationIndex, reason: evaluationDetail.reason)
+        return ObjcLDStringEvaluationDetail(value: evaluationDetail.value, variationIndex: evaluationDetail.variationIndex, reason: evaluationDetail.reason)
     }
 
     /**
@@ -359,9 +361,9 @@ public final class ObjcLDClient: NSObject {
      
      - returns: ObjcLDArrayEvaluationDetail containing your value as well as useful information on why that value was returned.
      */
-    @objc public func arrayVariationDetail(forKey key: LDFlagKey, defaultValue: [Any]?) -> ObjCArrayEvaluationDetail {
+    @objc public func arrayVariationDetail(forKey key: LDFlagKey, defaultValue: [Any]?) -> ObjcLDArrayEvaluationDetail {
         let evaluationDetail = ldClient.variationDetail(forKey: key, defaultValue: defaultValue)
-        return ObjCArrayEvaluationDetail(value: evaluationDetail.value, variationIndex: evaluationDetail.variationIndex, reason: evaluationDetail.reason)
+        return ObjcLDArrayEvaluationDetail(value: evaluationDetail.value, variationIndex: evaluationDetail.variationIndex, reason: evaluationDetail.reason)
     }
     
     /**
@@ -400,9 +402,9 @@ public final class ObjcLDClient: NSObject {
      
      - returns: ObjcLDDictionaryEvaluationDetail containing your value as well as useful information on why that value was returned.
      */
-    @objc public func dictionaryVariationDetail(forKey key: LDFlagKey, defaultValue: [String: Any]?) -> ObjCDictionaryEvaluationDetail {
+    @objc public func dictionaryVariationDetail(forKey key: LDFlagKey, defaultValue: [String: Any]?) -> ObjcLDDictionaryEvaluationDetail {
         let evaluationDetail = ldClient.variationDetail(forKey: key, defaultValue: defaultValue)
-        return ObjCDictionaryEvaluationDetail(value: evaluationDetail.value, variationIndex: evaluationDetail.variationIndex, reason: evaluationDetail.reason)
+        return ObjcLDDictionaryEvaluationDetail(value: evaluationDetail.value, variationIndex: evaluationDetail.variationIndex, reason: evaluationDetail.reason)
     }
     
     /**
@@ -751,7 +753,7 @@ public final class ObjcLDClient: NSObject {
     // MARK: - Events
 
     /**
-     Adds a custom event to the LDClient event store. A client app can set a tracking event to allow client customized data analysis. Once an app has called `trackEvent`, the app cannot remove the event from the event store.
+     Adds a custom event to the LDClient event store. A client app can set a tracking event to allow client customized data analysis. Once an app has called `track`, the app cannot remove the event from the event store.
 
      LDClient periodically transmits events to LaunchDarkly based on the frequency set in LDConfig.eventFlushInterval. The LDClient must be started and online. Ths SDK stores events tracked while the LDClient is offline, but started.
 
@@ -759,28 +761,28 @@ public final class ObjcLDClient: NSObject {
 
      ### Usage
      ````
-     [ldClientInstance trackEventWithKey:@"event-key" data:@{@"event-data-key":7}];
+     [ldClientInstance trackWithKey:@"event-key" data:@{@"event-data-key":7}];
      ````
 
      - parameter key: The key for the event. The SDK does nothing with the key, which can be any string the client app sends
      - parameter data: The data for the event. The SDK does nothing with the data, which can be any valid JSON item the client app sends. (Optional)
      - parameter error: NSError object to hold the invalidJsonObject error if the data is not a valid JSON item. (Optional)
      */
-    /// - Tag: trackEvent
-    @objc public func trackEvent(key: String, data: Any? = nil) throws {
-        try ldClient.trackEvent(key: key, data: data, metricValue: nil)
+    /// - Tag: track
+    @objc public func track(key: String, data: Any? = nil) throws {
+        try ldClient.track(key: key, data: data, metricValue: nil)
     }
 
     /**
-     See (trackEvent)[x-source-tag://trackEvent] for full documentation.
+     See (track)[x-source-tag://track] for full documentation.
 
      - parameter key: The key for the event. The SDK does nothing with the key, which can be any string the client app sends
      - parameter data: The data for the event. The SDK does nothing with the data, which can be any valid JSON item the client app sends. (Optional)
      - parameter metricValue: A numeric value used by the LaunchDarkly experimentation feature in numeric custom metrics. Can be omitted if this event is used by only non-numeric metrics. This field will also be returned as part of the custom event for Data Export.
      - parameter error: NSError object to hold the invalidJsonObject error if the data is not a valid JSON item. (Optional)
      */
-    @objc public func trackEvent(key: String, data: Any? = nil, metricValue: Double) throws {
-        try ldClient.trackEvent(key: key, data: data, metricValue: metricValue)
+    @objc public func track(key: String, data: Any? = nil, metricValue: Double) throws {
+        try ldClient.track(key: key, data: data, metricValue: metricValue)
     }
 
     /**
@@ -795,30 +797,30 @@ public final class ObjcLDClient: NSObject {
     }
 
    /**
-     Starts the LDClient using the passed in `config` & `startUser`. Call this before requesting feature flag values. The LDClient will not go online until you call this method.
-     Starting the LDClient means setting the `config` & `startUser`, setting the client online if `config.startOnline` is true (the default setting), and starting event recording. The client app must start the LDClient before it will report feature flag values. If a client does not call `start`, no methods will work.
-     If the `start` call omits the `startUser`, the LDClient uses the default `user` if it was never set.
+     Starts the LDClient using the passed in `config` & `user`. Call this before requesting feature flag values. The LDClient will not go online until you call this method.
+     Starting the LDClient means setting the `config` & `user`, setting the client online if `config.startOnline` is true (the default setting), and starting event recording. The client app must start the LDClient before it will report feature flag values. If a client does not call `start`, no methods will work.
+     If the `start` call omits the `user`, the LDClient uses the default `user` if it was never set.
      If the` start` call includes the optional `completion` closure, LDClient calls the `completion` closure when `setOnline(_: completion:)` embedded in the `init` method completes. This method listens for flag updates so the completion will only return once an update has occurred. The `start` call is subject to throttling delays, therefore the `completion` closure call may be delayed.
      Subsequent calls to this method cause the LDClient to return. Normally there should only be one call to start. To change `user`, use `identify`.
      - parameter configuration: The LDConfig that contains the desired configuration. (Required)
-     - parameter startUser: The LDUser set with the desired user. If omitted, LDClient sets a default user. (Optional)
+     - parameter user: The LDUser set with the desired user. If omitted, LDClient sets a default user. (Optional)
      - parameter completion: Closure called when the embedded `setOnline` call completes. (Optional)
     */
     /// - Tag: start
-    @objc public static func start(configuration: ObjcLDConfig, startUser: ObjcLDUser, completion: (() -> Void)? = nil) {
-        LDClient.start(config: configuration.config, startUser: startUser.user, completion: completion)
+    @objc public static func start(configuration: ObjcLDConfig, user: ObjcLDUser, completion: (() -> Void)? = nil) {
+        LDClient.start(config: configuration.config, user: user.user, completion: completion)
     }
 
     /**
     See [start](x-source-tag://start) for more information on starting the SDK.
 
     - parameter configuration: The LDConfig that contains the desired configuration. (Required)
-    - parameter startUser: The LDUser set with the desired user. If omitted, LDClient sets a default user.. (Optional)
+    - parameter user: The LDUser set with the desired user. If omitted, LDClient sets a default user.. (Optional)
     - parameter startWaitSeconds: A TimeInterval that determines when the completion will return if no flags have been returned from the network.
     - parameter completion: Closure called when the embedded `setOnline` call completes. Takes a Bool that indicates whether the completion timedout as a parameter. (Optional)
     */
-    @objc public static func start(configuration: ObjcLDConfig, startUser: ObjcLDUser, startWaitSeconds: TimeInterval, completion: ((_ timedOut: Bool) -> Void)? = nil) {
-        LDClient.start(config: configuration.config, startUser: startUser.user, startWaitSeconds: startWaitSeconds, completion: completion)
+    @objc public static func start(configuration: ObjcLDConfig, user: ObjcLDUser, startWaitSeconds: TimeInterval, completion: ((_ timedOut: Bool) -> Void)? = nil) {
+        LDClient.start(config: configuration.config, user: user.user, startWaitSeconds: startWaitSeconds, completion: completion)
     }
 
     private init(client: LDClient) {

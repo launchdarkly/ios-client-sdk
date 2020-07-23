@@ -157,17 +157,6 @@ public final class ObjcLDUser: NSObject {
     }
 
     /**
-     Failable Initializer that takes any object and attempts to create a LDUser from the object. If the object is a NSDictionary, constructs the LDUser via -[LDUser initWithUserDictionary:]
-
-     - parameter object: Any object. The initializer will attempt to convert the object into a NSDictionary and construct the LDUser
-     */
-    @objc public init?(object: Any?) {
-        guard let userDictionary = object as? [String: Any]
-        else { return nil }
-        self.user = LDUser(userDictionary: userDictionary)
-    }
-
-    /**
      Initializer that takes a NSDictionary and creates a LDUser from the contents. Uses any keys present to define corresponding attribute values. Initializes attributes not present in the dictionary to their default value. The initializer attempts to set `device` and `operatingSystem` from corresponding values embedded in `custom`. The initializer attempts to set feature flags from values set in `config`.
 
      - parameter userDictionary: NSDictionary with LDUser attribute keys and values.

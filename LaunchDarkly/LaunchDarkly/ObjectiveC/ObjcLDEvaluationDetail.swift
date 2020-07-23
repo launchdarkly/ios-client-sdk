@@ -1,5 +1,5 @@
 //
-//  ObjCEvaluationDetail.swift
+//  ObjcLDEvaluationDetail.swift
 //  LaunchDarkly_iOS
 //
 //  Copyright © 2019 Catamorphic Co. All rights reserved.
@@ -7,8 +7,8 @@
 
 import Foundation
 
-@objc(LDBoolVariationDetail)
-public final class ObjCBoolEvaluationDetail: NSObject {
+@objc(LDBoolEvaluationDetail)
+public final class ObjcLDBoolEvaluationDetail: NSObject {
     @objc public let value: Bool
     @objc public let variationIndex: Int
     @objc public let reason: [String: Any]?
@@ -20,8 +20,8 @@ public final class ObjCBoolEvaluationDetail: NSObject {
     }
 }
 
-@objc(LDDoubleVariationDetail)
-public final class ObjCDoubleEvaluationDetail: NSObject {
+@objc(LDDoubleEvaluationDetail)
+public final class ObjcLDDoubleEvaluationDetail: NSObject {
     @objc public let value: Double
     @objc public let variationIndex: Int
     @objc public let reason: [String: Any]?
@@ -33,8 +33,8 @@ public final class ObjCDoubleEvaluationDetail: NSObject {
     }
 }
 
-@objc(LDIntegerVariationDetail)
-public final class ObjCIntegerEvaluationDetail: NSObject {
+@objc(LDIntegerEvaluationDetail)
+public final class ObjcLDIntegerEvaluationDetail: NSObject {
     @objc public let value: Int
     @objc public let variationIndex: Int
     @objc public let reason: [String: Any]?
@@ -46,8 +46,8 @@ public final class ObjCIntegerEvaluationDetail: NSObject {
     }
 }
 
-@objc(LDStringVariationDetail)
-public final class ObjCStringEvaluationDetail: NSObject {
+@objc(LDStringEvaluationDetail)
+public final class ObjcLDStringEvaluationDetail: NSObject {
     @objc public let value: String?
     @objc public let variationIndex: Int
     @objc public let reason: [String: Any]?
@@ -59,8 +59,8 @@ public final class ObjCStringEvaluationDetail: NSObject {
     }
 }
 
-@objc(LDArrayVariationDetail)
-public final class ObjCArrayEvaluationDetail: NSObject {
+@objc(ArrayEvaluationDetail)
+public final class ObjcLDArrayEvaluationDetail: NSObject {
     @objc public let value: [Any]?
     @objc public let variationIndex: Int
     @objc public let reason: [String: Any]?
@@ -72,8 +72,8 @@ public final class ObjCArrayEvaluationDetail: NSObject {
     }
 }
 
-@objc(LDDictionaryVariationDetail)
-public final class ObjCDictionaryEvaluationDetail: NSObject {
+@objc(DictionaryEvaluationDetail)
+public final class ObjcLDDictionaryEvaluationDetail: NSObject {
     @objc public let value: [String: Any]?
     @objc public let variationIndex: Int
     @objc public let reason: [String: Any]?

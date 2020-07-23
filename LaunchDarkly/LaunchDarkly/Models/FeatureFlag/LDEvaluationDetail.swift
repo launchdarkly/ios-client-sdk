@@ -1,5 +1,5 @@
 //
-//  EvaluationDetail.swift
+//  LDEvaluationDetail.swift
 //  LaunchDarkly_iOS
 //
 //  Copyright © 2019 Catamorphic Co. All rights reserved.
@@ -7,7 +7,7 @@
 
 import Foundation
 
-public final class EvaluationDetail<T> {
+public final class LDEvaluationDetail<T> {
     public internal(set) var value: T
     public internal(set) var variationIndex: Int?
     public internal(set) var reason: [String: Any]?

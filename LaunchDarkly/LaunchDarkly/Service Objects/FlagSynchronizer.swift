@@ -282,7 +282,7 @@ class FlagSynchronizer: LDFlagSynchronizing, EventHandler {
         else { return .proceed }
         // Now we know that we received an error HTTP response code
         let responseCode: Int = unsuccessfulResponseError.responseCode
-        if ![400, 408, 429].contains(responseCode) {
+        if (400..<500).contains(responseCode) && ![400, 408, 429].contains(responseCode) {
             // Not a invalid request, timeout, or too many requests error
             // We will not retry in this case
             reportSyncComplete(.error(.streamError(error)))

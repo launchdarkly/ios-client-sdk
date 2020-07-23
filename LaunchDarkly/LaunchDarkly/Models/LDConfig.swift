@@ -69,9 +69,6 @@ public struct LDConfig {
         /// The default setting for whether we request evaluation reasons for all flags. (false)
         static let evaluationReasons = false
 
-        /// The dafault environment name that must be present in a single or multiple environment configuration
-        static let primaryEnvironmentName = "default"
-
         /// The default setting for the maximum number of locally cached users. (5)
         static let maxCachedUsers = 5
 
@@ -89,6 +86,11 @@ public struct LDConfig {
 
         /// The default secondary mobile keys. ([:])
         static let secondaryMobileKeys: [String: String] = [:]
+    }
+
+    public struct Constants {
+        /// The dafault environment name that must be present in a single or multiple environment configuration
+        public static let primaryEnvironmentName = "default"
     }
 
     /// The minimum values allowed to be set into LDConfig.
@@ -242,27 +244,27 @@ public struct LDConfig {
     /// A Dictionary of identifying names to unique mobile keys for all environments
     private var mobileKeys: [String: String] {
         var internalMobileKeys = getSecondaryMobileKeys()
-        internalMobileKeys[LDConfig.Defaults.primaryEnvironmentName] = mobileKey
+        internalMobileKeys[LDConfig.Constants.primaryEnvironmentName] = mobileKey
         return internalMobileKeys
     }
 
     /**
-     Sets a Dictionary of identifying names to unique mobile keys to access secondary environments in the LDConfig. Throws if you try to add duplicate keys or put the primary key or name in secondaryMobileKeys.
+     Sets a Dictionary of identifying names to unique mobile keys to access secondary environments in the LDConfig. Throws `LDInvalidArgumentError` if you try to add duplicate keys or put the primary key or name in secondaryMobileKeys.
 
      - parameter newSecondaryMobileKeys: A Dictionary of String to String.
      */
     public mutating func setSecondaryMobileKeys(_ newSecondaryMobileKeys: [String: String]) throws {
         let mobileKeyPresentInSecondaryMobileKeys = newSecondaryMobileKeys.values.contains(mobileKey)
-        let primaryEnvironmentNamePresentInSecondaryMobileKeys = newSecondaryMobileKeys.keys.contains(LDConfig.Defaults.primaryEnvironmentName)
-        let mobileKeysUsedOnlyOnce = Set(newSecondaryMobileKeys.values.shuffled())
+        let primaryEnvironmentNamePresentInSecondaryMobileKeys = newSecondaryMobileKeys.keys.contains(LDConfig.Constants.primaryEnvironmentName)
+        let mobileKeysUsedOnlyOnce = Set(newSecondaryMobileKeys.values)
         if mobileKeyPresentInSecondaryMobileKeys {
-            throw("The primary environment key cannot be in the secondary mobile keys.")
+            throw(LDInvalidArgumentError("The primary environment key cannot be in the secondary mobile keys."))
         }
         if primaryEnvironmentNamePresentInSecondaryMobileKeys {
-            throw("The primary environment name is not a valid key.")
+            throw(LDInvalidArgumentError("The primary environment name is not a valid key."))
         }
         if mobileKeysUsedOnlyOnce.count != newSecondaryMobileKeys.count {
-            throw("A key can only be used once.")
+            throw(LDInvalidArgumentError("A key can only be used once."))
         }
 
         _secondaryMobileKeys = newSecondaryMobileKeys

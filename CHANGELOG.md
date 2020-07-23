@@ -2,8 +2,64 @@
 
 All notable changes to the LaunchDarkly iOS SDK will be documented in this file. This project adheres to [Semantic Versioning](http://semver.org).
 
-### Multiple Environment clients
-Version 4.0.0 does not support multiple environments. If you use version `2.14.0` or later and set `LDConfig`'s `secondaryMobileKeys` you will not be able to migrate to version `4.0.0`. Multiple Environments will be added in a future release to the Swift SDK.
+## [5.0.0] - 2020-07-20
+
+This major version has an accompanying [Migration Guide](https://docs.launchdarkly.com/sdk/client-side/ios/migration-4-to-5). Please see the guide for more information on updating to this version of the SDK, as the following is just a summary of the changes.
+
+### Added
+- Support for multiple LaunchDarkly projects or environments. Each set of feature flags associated with a mobile key is called an environment. This adds:
+  * `LDConfig.setSecondaryMobileKeys` and `LDConfig.getSecondaryMobileKeys` which allows configuring a mapping of names to the SDK keys for each additional environment. `LDConfig.mobileKey` is still required, and represents the primary environment.
+  * `LDClient.get(environment: )` which allows retrieving an LDClient instance for a given environment after the SDK has been initialized.
+  * Equivalent methods have been added to the Objective-C bindings for `LDConfig` and `LDClient`.
+- The SDK now periodically sends diagnostic data to LaunchDarkly, describing the version and configuration of the SDK, the operating system the SDK is running on, the device type (such as "iPad"), and performance statistics. No credentials, device IDs, or other identifiable values are included. This behavior can be disabled or configured with the new `LDConfig` properties `diagnosticOptOut` and `diagnosticRecordingInterval`.
+- The SDK can now be configured with `LDConfig.wrapperName` and `LDConfig.wrapperVersion` to send an additional header (`X-LaunchDarkly-Wrapper`) in requests to LaunchDarkly. This was added so that the usage of wrapper libraries (such as the [React Native SDK](https://github.com/launchdarkly/react-native-client-sdk)) could be recorded independently.
+- Added the `evaluationReasons` field to the Objective-C bindings for `LDConfig` to allow configuring the SDK to request evaluation reasons when the application is written in Objective-C.
+- The SDK now supports using the [Swift Package Manager](https://swift.org/package-manager/) to include the SDK as a dependency.
+- `LDInvalidArgumentError` that is thrown on incorrect API usage.
+- Added `typeMismatch` field to `ObjcLD<T>ChangedFlag` classes (bound to `LD<T>ChangedFlag` in Objective-C) that is `true`/`YES` when the flag value did not match the registered observer.
+
+### Changed (build)
+- Minimum deployment targets have been changed as follows:
+  * iOS 8.0 -> 10.0
+  * macOS 10.10 -> 10.12
+  * tvOS 9.0 -> 10.0
+  * watchOS 2.0 -> 3.0
+- The SDK has replaced the internal dependency on the Objective-C eventsource implementation [DarklyEventSource](https://github.com/launchdarkly/ios-eventsource) with a pure Swift implementation [LDSwiftEventSource](https://github.com/launchdarkly/swift-eventsource). Build configurations that manually specify the DarklyEventSource dependency framework may require additional upgrade steps. See the [Migration Guide](https://docs.launchdarkly.com/sdk/client-side/ios/migration-4-to-5) for more information.
+- Internally, the SDK no longer includes its dependencies using CocoaPods and Carthage. This simplifies including the SDK as a subproject of your application for integrating the SDK without a package manager.
+
+### Changed (API)
+- The `LDClient` instance method `start` has been replaced with a static method `LDClient.start` for initializing all configured environments.
+- `LDChangedFlag` no longer includes the `oldValueSource` and `newValueSource` properties, as `LDFlagValueSource` was removed.
+- The following were renamed for consistency internally and with other SDKs:
+  * `LDClient.reportEvents()` has been renamed to `LDClient.flush()`.
+  * `LDClient.stop()` has been renamed to `LDClient.close()`.
+  * `LDClient.trackEvent(key: data: )` method have been renamed to `LDClient.track(key: data: )`
+  * `LDClient.allFlagValues` has been renamed to `LDClient.allFlags`.
+  * `EvaluationDetail` has been renamed to `LDEvaluationDetail`.
+  * The `ObjC<T>EvaluationDetail` classes have been renamed to corresponding `ObjcLD<T>EvaluationDetail`. The names when exposed in Objective-C have been updated to replace the `ObjC` prefix with `LD`, e.g. `ObjCStringEvaluationDetail` to `LDStringEvaluationDetail`.
+- `LDClient.track` no longer throws `JSONError` and instead throws `LDInvalidArgumentError`.
+- The `fallback` parameter of all `LDClient` and `ObjcLDClient` variation methods has been renamed to `defaultValue` to help distinguish it from `fallback` values in rules specified in the LaunchDarkly dashboard.
+
+### Changed (behavioral)
+- The maximum backoff delay between failed streaming connections has been reduced from an hour to 30 seconds. This is to prevent being unable to receive new flag values for up to an hour if the SDK has reached its maximum backoff due to a period of network connectivity loss.
+- The backoff on streaming connections will not be reset after just a successful connection, rather waiting for a healthy connection for one minute after receiving flags. This is to reduce congestion in poor network conditions or if extreme load prevents the LaunchDarkly service from maintaining an active streaming connection.
+- When sending events to LaunchDarkly, the SDK will now retry the request after a one second delay if it fails.
+- When events fail to be sent to LaunchDarkly, the SDK will no longer retain the events. This prevents double recording events when the LaunchDarkly service received the event but the SDK failed to receive the acknowledgement.
+- The `LDClient.identify`, `LDClient.flush`, `LDClient.setOnline`, and `LDClient.close` instance methods now operate on all configured environments. Any completion arguments will complete when the operation has completed for all configured environments.
+
+### Removed
+- The `LDClient.shared` static property and its `ObjcLDClient.sharedInstance` wrapper property has been removed. After calling `LDClient.start`, the initialized instances can be retrieved with `LDClient.get(environment: )`.
+- The `LDClient.config` and its `ObjcLDClient.config` wrapper property has been removed, configuration of the SDK should be done with `LDClient.start`.
+- The `LDClient.user` and its `ObjcLDClient.user` wrapper property has been removed. The initial user should be configured with `LDClient.start`, and updates to the user should be performed with `LDClient.identify`.
+- `LDFlagValueSource` and `ObjcLDFlagValueSource` were removed in favor of using `LDEvaluationDetail` and `ObjcLD<T>EvaluationDetail`.
+- The Objective-C wrapper classes `ObjcLD<T>VariationValue` (bound in Objective-C to `LD<T>VariationValue`), which wrapped a flag value and its source, have been removed.
+- `variationAndSource` methods were removed from `LDClient` and its `ObjcLDClient` wrapper in favor of `variationDetail` methods.
+- `LDUser.init?(object: )` and corresponding `ObjcLDUser` failable initializers were removed.
+- `JSONError` and `JSONErrorDomain` extensions on `JSONSerialization` were removed.
+- Removed `isEqual` extension to `Array`, this was only intended for internal SDK use.
+- Removed `==` and `!=` extension to `Optional<[String: Any]>` (note that this was not declared as `Equatable` conformance). This extension was only intended for internal SDK use.
+- Removed `LDFlagValue` enum and the `ObjcLDFlagValue` wrapper which were exposed but not used in any public APIs.
+- Removed `Sysctl` struct (only available on macOS) which was only intended for internal SDK use.
 
 ## [4.7.0] - 2020-06-03
 ### Added

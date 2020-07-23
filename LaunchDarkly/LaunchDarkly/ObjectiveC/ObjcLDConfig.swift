@@ -180,18 +180,18 @@ public final class ObjcLDConfig: NSObject {
     }
 
     /**
-     Sets a Dictionary of identifying names to unique mobile keys to access secondary environments in the LDConfig. Throws if you try to add duplicate keys or put the primary key or name in secondaryMobileKeys.
+     Returns a Dictionary of identifying names to unique mobile keys to access secondary environments.
 
-     - parameter newSecondaryMobileKeys: A Dictionary of String to String.
+     - returns: A Dictionary of String to String.
      */
     @objc public func getSecondaryMobileKeys() -> [String: String] {
         return config.getSecondaryMobileKeys()
     }
 
     /**
-     Returns a Dictionary of identifying names to unique mobile keys to access secondary environments.
+     Sets a Dictionary of identifying names to unique mobile keys to access secondary environments in the LDConfig. Throws if you try to add duplicate keys or put the primary key or name in secondaryMobileKeys.
 
-     - returns: A Dictionary of String to String.
+     - parameter keys: A Dictionary of String to String.
      */
     @objc public func setSecondaryMobileKeys(_ keys: [String: String]) throws {
         try config.setSecondaryMobileKeys(keys)

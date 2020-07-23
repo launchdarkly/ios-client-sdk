@@ -193,7 +193,7 @@ final class EventSpec: QuickSpec {
             }
             context("with invalid json data") {
                 it("throws an invalidJsonObject error") {
-                    expect { event = try Event.customEvent(key: Constants.eventKey, user: user, data: Date()) }.to(throwError(JSONSerialization.JSONError.invalidJsonObject))
+                    expect { event = try Event.customEvent(key: Constants.eventKey, user: user, data: Date()) }.to(throwError(errorType: LDInvalidArgumentError.self))
                 }
             }
             context("without data") {
@@ -483,8 +483,8 @@ final class EventSpec: QuickSpec {
                     beforeEach {
                         do {
                             event = try Event.customEvent(key: Constants.eventKey, user: user, data: eventData, metricValue: metricValue)
-                        } catch JSONSerialization.JSONError.invalidJsonObject {
-                            fail("customEvent threw an invalidJsonObject exception")
+                        } catch is LDInvalidArgumentError {
+                            fail("customEvent threw an invalid argument exception")
                         } catch {
                             fail("customEvent threw an exception")
                         }
@@ -508,8 +508,8 @@ final class EventSpec: QuickSpec {
                 beforeEach {
                     do {
                         event = try Event.customEvent(key: Constants.eventKey, user: user, data: nil)
-                    } catch JSONSerialization.JSONError.invalidJsonObject {
-                        fail("customEvent threw an invalidJsonObject exception")
+                    } catch is LDInvalidArgumentError {
+                        fail("customEvent threw an invalid argument exception")
                     } catch {
                         fail("customEvent threw an exception")
                     }
@@ -531,8 +531,8 @@ final class EventSpec: QuickSpec {
                 beforeEach {
                     do {
                         event = try Event.customEvent(key: Constants.eventKey, user: user, data: CustomEvent.dictionaryData)
-                    } catch JSONSerialization.JSONError.invalidJsonObject {
-                        fail("customEvent threw an invalidJsonObject exception")
+                    } catch is LDInvalidArgumentError {
+                        fail("customEvent threw an invalid argument exception")
                     } catch {
                         fail("customEvent threw an exception")
                     }
@@ -557,8 +557,8 @@ final class EventSpec: QuickSpec {
                 beforeEach {
                     do {
                         event = try Event.customEvent(key: Constants.eventKey, user: user, data: CustomEvent.dictionaryData)
-                    } catch JSONSerialization.JSONError.invalidJsonObject {
-                        fail("customEvent threw an invalidJsonObject exception")
+                    } catch is LDInvalidArgumentError {
+                        fail("customEvent threw an invalid argument exception")
                     } catch {
                         fail("customEvent threw an exception")
                     }
@@ -1260,7 +1260,10 @@ extension Dictionary where Key == String, Value == Any {
         return self[Event.CodingKeys.userKey.rawValue] as? String
     }
     var eventUser: LDUser? {
-        return LDUser(object: self[Event.CodingKeys.user.rawValue])
+        if let userDictionary = self[Event.CodingKeys.user.rawValue] as? [String: Any] {
+            return LDUser(userDictionary: userDictionary)
+        }
+        return nil
     }
     var eventValue: Any? {
         return self[Event.CodingKeys.value.rawValue]

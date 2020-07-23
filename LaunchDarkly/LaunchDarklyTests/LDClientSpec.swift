@@ -153,7 +153,7 @@ final class LDClientSpec: QuickSpec {
 
             let flagNotifier = (ClientServiceFactory().makeFlagChangeNotifier() as! FlagChangeNotifier)
             
-            LDClient.start(serviceFactory: clientServiceFactory, config: config, startUser: noUser ? nil : user, flagCache: clientServiceFactory.makeFeatureFlagCache(), flagNotifier: flagNotifier) {
+            LDClient.start(serviceFactory: clientServiceFactory, config: config, user: noUser ? nil : user, flagCache: clientServiceFactory.makeFeatureFlagCache(), flagNotifier: flagNotifier) {
                 self.startCompletion(runMode: runMode, completion: completion)
             }
             flagNotifier.notifyObservers(user: self.user, oldFlags: self.oldFlags)
@@ -186,7 +186,7 @@ final class LDClientSpec: QuickSpec {
 
             let flagNotifier = (ClientServiceFactory().makeFlagChangeNotifier() as! FlagChangeNotifier)
             
-            LDClient.start(serviceFactory: clientServiceFactory, config: config, startUser: noUser ? nil : user, startWaitSeconds: timeOut, flagCache: clientServiceFactory.makeFeatureFlagCache(), flagNotifier: flagNotifier) { timedOut in
+            LDClient.start(serviceFactory: clientServiceFactory, config: config, user: noUser ? nil : user, startWaitSeconds: timeOut, flagCache: clientServiceFactory.makeFeatureFlagCache(), flagNotifier: flagNotifier) { timedOut in
                 self.startCompletion(runMode: runMode, timedOut: timedOut, timeOutCompletion: timeOutCompletion)
             }
             if !forceTimeout {
@@ -1170,7 +1170,7 @@ final class LDClientSpec: QuickSpec {
                         expect(testContext.subject.isOnline) == false
                     }
                     it("stops recording events") {
-                        expect { try testContext.subject.trackEvent(key: event.key!) }.toNot(throwError())
+                        expect { try testContext.subject.track(key: event.key!) }.toNot(throwError())
                         expect(testContext.eventReporterMock.recordCallCount) == priorRecordedEvents
                     }
                 }
@@ -1188,7 +1188,7 @@ final class LDClientSpec: QuickSpec {
                         expect(testContext.subject.isOnline) == false
                     }
                     it("stops recording events") {
-                        expect { try testContext.subject.trackEvent(key: event.key!) }.toNot(throwError())
+                        expect { try testContext.subject.track(key: event.key!) }.toNot(throwError())
                         expect(testContext.eventReporterMock.recordCallCount) == priorRecordedEvents
                     }
                 }
@@ -1208,7 +1208,7 @@ final class LDClientSpec: QuickSpec {
                     expect(testContext.subject.isOnline) == false
                 }
                 it("stops recording events") {
-                    expect { try testContext.subject.trackEvent(key: event.key!) }.toNot(throwError())
+                    expect { try testContext.subject.track(key: event.key!) }.toNot(throwError())
                     expect(testContext.eventReporterMock.recordCallCount) == priorRecordedEvents
                 }
             }
@@ -1227,7 +1227,7 @@ final class LDClientSpec: QuickSpec {
             context("when client was started") {
                 beforeEach {
                     //swiftlint:disable:next force_try
-                    try! testContext.subject.trackEvent(key: event.key!, data: event.data)
+                    try! testContext.subject.track(key: event.key!, data: event.data)
                 }
                 it("records a custom event") {
                     expect(testContext.eventReporterMock.recordReceivedEvent?.key) == event.key
@@ -1243,7 +1243,7 @@ final class LDClientSpec: QuickSpec {
                     priorRecordedEvents = testContext.eventReporterMock.recordCallCount
 
                     //swiftlint:disable:next force_try
-                    try! testContext.subject.trackEvent(key: event.key!, data: event.data)
+                    try! testContext.subject.track(key: event.key!, data: event.data)
                 }
                 it("does not record any more events") {
                     expect(testContext.eventReporterMock.recordCallCount) == priorRecordedEvents

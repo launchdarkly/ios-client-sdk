@@ -88,7 +88,7 @@ struct Event { //sdk internal, not publically accessible
         if let data = data {
             guard JSONSerialization.isValidJSONObject([CodingKeys.data.rawValue: data]) //the top level object must be either an array or an object for isValidJSONObject to work correctly
             else {
-                throw JSONSerialization.JSONError.invalidJsonObject
+                throw LDInvalidArgumentError("data is not a JSON convertible value")
             }
         }
         return Event(kind: .custom, key: key, user: user, data: data, metricValue: metricValue)

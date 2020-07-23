@@ -8,7 +8,7 @@
 import Foundation
 
 ///Defines the types and values of a feature flag. The SDK limits feature flags to these types by use of the `LDFlagValueConvertible` protocol, which uses this type. Client app developers should not construct an LDFlagValue.
-public enum LDFlagValue: Equatable {
+enum LDFlagValue: Equatable {
     ///Bool flag value
     case bool(Bool)
     ///Int flag value
@@ -23,11 +23,6 @@ public enum LDFlagValue: Equatable {
     case dictionary([LDFlagKey: LDFlagValue])
     ///Null flag value
     case null
-
-    ///An NSObject wrapper for the Swift LDFlagValue enum. Intended for use in mixed apps when Swift code needs to pass a LDFlagValue into an Objective-C method.
-    public var objcLdFlagValue: ObjcLDFlagValue {
-        ObjcLDFlagValue(self)
-    }
 }
 
 // The commented out code in this file is intended to support automated typing from the json, which is not implemented in the 4.0.0 release. When that capability can be supported with later Swift versions, uncomment this code to support it.

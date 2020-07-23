@@ -18,12 +18,12 @@ enum LDClientRunMode {
  1. To customize, configure a `LDConfig` and `LDUser`. The `config` is required, the `user` is optional. Both give you additional control over the feature flags delivered to the LDClient. See `LDConfig` & `LDUser` for more details.
     - The mobileKey set into the `LDConfig` comes from your LaunchDarkly Account settings. If you have multiple projects be sure to choose the correct Mobile key.
  2. Call `LDClient.start(config: user: completion:)`
-    - If you do not pass in a LDUser, LDCLient will create a default for you.
+    - If you do not pass in a LDUser, LDClient will create a default for you.
     - The optional completion closure allows the LDClient to notify your app when it received flag values.
  3. Because LDClient instances are stored statically, you do not have to keep a reference to it in your code. Get the primary instances with `LDClient.get()`
 
 ### Getting Feature Flags
- Once the LDClient has started, it makes your feature flags available using the `variation` and `variationDetail` methods. A `variation` is a specific flag value. For example a boolean feature flag has 2 variations, `true` and `false`. You can create feature flags with more than 2 variations using other feature flag types. See `LDFlagValue` for the available types.
+ Once the LDClient has started, it makes your feature flags available using the `variation` and `variationDetail` methods. A `variation` is a specific flag value. For example a boolean feature flag has 2 variations, `true` and `false`. You can create feature flags with more than 2 variations using other feature flag types.
  ````
  let boolFlag = LDClient.get()?.variation(forKey: "my-bool-flag", defaultValue: false)
  ````
@@ -224,13 +224,7 @@ public class LDClient {
         }
     }
 
-    /**
-     The LDConfig that configures the LDClient. See `LDConfig` for details about what can be configured.
-
-     Normally, the client app should set desired values into a LDConfig and pass that into `start(config: user: completion:)`. If the client does not pass a LDConfig to the LDClient, the LDClient creates a LDConfig using all default values.
-    */
-    public let config: LDConfig
-    
+    let config: LDConfig
     private(set) var user: LDUser
     
     /**
@@ -318,40 +312,18 @@ public class LDClient {
     }
     
     /**
-     Returns the singleton instance.
-     
-     - returns: The primary LDClient instance.
+     Returns the LDClient instance for a given environment.
+
+     - parameter environment: The name of an environment provided in LDConfig.secondaryMobileKeys, defaults to `LDConfig.Constants.primaryEnvironmentName` which is always associated with the `LDConfig.mobileKey` environment.
+
+     - returns: The requested LDClient instance.
      */
-    public static func get() -> LDClient? {
+    public static func get(environment: String = LDConfig.Constants.primaryEnvironmentName) -> LDClient? {
         guard let internalInstances = LDClient.instances else {
             Log.debug("LDClient.get() was called before init()!")
             return nil
         }
-        return internalInstances[LDConfig.Defaults.primaryEnvironmentName]
-    }
-    
-    /**
-     Returns all environment names.
-     
-     - returns: All environment names as an Array of Strings.
-    */
-    public static func getEnvironmentNames() -> [String]? {
-        guard let internalInstances = LDClient.instances else {
-            Log.debug("LDClient.getEnvironmentNames() was called before init()!")
-            return nil
-        }
-        return Array(internalInstances.keys)
-    }
-    
-    /**
-     Returns an instance of LDClient for the given environment name.
-     
-     - parameter keyName: An environment name provided in LDConfig.secondaryMobileKeys during initialization.
-     
-     - returns: An LDClient instance if one exists and `start(config: user: completion:)` has been called.
-     */
-    public static func getForMobileKey(keyName: String) -> LDClient? {
-        return LDClient.instances?[keyName]
+        return internalInstances[environment]
     }
     
     // MARK: Feature Flag values
@@ -406,18 +378,18 @@ public class LDClient {
     }
     
     /**
-     Returns the EvaluationDetail for the given feature flag. EvaluationDetail gives you more insight into why your variation contains the specified value. If the flag does not exist, cannot be cast to the correct return type, or the LDClient is not started, returns EvaluationDetail with the default value. Use this method when the default value is a non-Optional type. See `variationDetail` with the Optional return value when the default  value can be nil. See [variationWithdefaultValue](x-source-tag://variationWithdefaultValue)
+     Returns the LDEvaluationDetail for the given feature flag. LDEvaluationDetail gives you more insight into why your variation contains the specified value. If the flag does not exist, cannot be cast to the correct return type, or the LDClient is not started, returns an LDEvaluationDetail with the default value. Use this method when the default value is a non-Optional type. See `variationDetail` with the Optional return value when the default value can be nil. See [variationWithdefaultValue](x-source-tag://variationWithdefaultValue)
      
      - parameter forKey: The LDFlagKey for the requested feature flag.
      - parameter defaultValue: The default value value to return if the feature flag key does not exist.
      
-     - returns: EvaluationDetail which wraps the requested feature flag value, or the default value, which variation was served, and the evaluation reason.
+     - returns: LDEvaluationDetail which wraps the requested feature flag value, or the default value, which variation was served, and the evaluation reason.
      */
-    public func variationDetail<T: LDFlagValueConvertible>(forKey flagKey: LDFlagKey, defaultValue: T) -> EvaluationDetail<T> {
+    public func variationDetail<T: LDFlagValueConvertible>(forKey flagKey: LDFlagKey, defaultValue: T) -> LDEvaluationDetail<T> {
         let featureFlag = user.flagStore.featureFlag(for: flagKey)
         let reason = checkErrorKinds(featureFlag: featureFlag) ?? featureFlag?.reason
         let value = variationInternal(forKey: flagKey, defaultValue: defaultValue, includeReason: true)
-        return EvaluationDetail(value: value ?? defaultValue, variationIndex: featureFlag?.variation, reason: reason)
+        return LDEvaluationDetail(value: value ?? defaultValue, variationIndex: featureFlag?.variation, reason: reason)
     }
     
     private func checkErrorKinds(featureFlag: FeatureFlag?) -> Dictionary<String, Any>? {
@@ -477,18 +449,18 @@ public class LDClient {
     }
     
     /**
-     Returns the EvaluationDetail for the given feature flag. EvaluationDetail gives you more insight into why your variation contains the specified value. If the flag does not exist, cannot be cast to the correct return type, or the LDClient is not started, returns EvaluationDetail with the default value, which may be `nil`. Use this method when the default value is a Optional type. See [variationWithoutdefaultValue](x-source-tag://variationWithoutdefaultValue)
+     Returns the LDEvaluationDetail for the given feature flag. LDEvaluationDetail gives you more insight into why your variation contains the specified value. If the flag does not exist, cannot be cast to the correct return type, or the LDClient is not started, returns an LDEvaluationDetail with the default value, which may be `nil`. Use this method when the default value is a Optional type. See [variationWithoutdefaultValue](x-source-tag://variationWithoutdefaultValue)
      
      - parameter forKey: The LDFlagKey for the requested feature flag.
      - parameter defaultValue: The default value to return if the feature flag key does not exist. If omitted, the default value is `nil`. (Optional)
      
-     - returns: EvaluationDetail which wraps the requested feature flag value, or the default value, which variation was served, and the evaluation reason.
+     - returns: LDEvaluationDetail which wraps the requested feature flag value, or the default value, which variation was served, and the evaluation reason.
      */
-    public func variationDetail<T: LDFlagValueConvertible>(forKey flagKey: LDFlagKey, defaultValue: T? = nil) -> EvaluationDetail<T?> {
+    public func variationDetail<T: LDFlagValueConvertible>(forKey flagKey: LDFlagKey, defaultValue: T? = nil) -> LDEvaluationDetail<T?> {
         let featureFlag = user.flagStore.featureFlag(for: flagKey)
         let reason = checkErrorKinds(featureFlag: featureFlag) ?? featureFlag?.reason
         let value = variationInternal(forKey: flagKey, defaultValue: defaultValue, includeReason: true)
-        return EvaluationDetail(value: value, variationIndex: featureFlag?.variation, reason: reason)
+        return LDEvaluationDetail(value: value, variationIndex: featureFlag?.variation, reason: reason)
     }
     
     internal func variationInternal<T: LDFlagValueConvertible>(forKey flagKey: LDFlagKey, defaultValue: T) -> T {
@@ -763,11 +735,11 @@ public class LDClient {
 
     /* Event tracking
      Conceptual model
-     The LDClient appears to keep an event store that it transmits periodically to LD. An app sends an event and optional data by calling trackEvent(key:, data:) supplying at least the key.
+     The LDClient keeps an event store that it transmits periodically to LD. An app sends an event and optional data by calling track(key: data:) supplying at least the key.
      */
 
     /**
-     Adds a custom event to the LDClient event store. A client app can set a tracking event to allow client customized data analysis. Once an app has called `trackEvent`, the app cannot remove the event from the event store.
+     Adds a custom event to the LDClient event store. A client app can set a tracking event to allow client customized data analysis. Once an app has called `track`, the app cannot remove the event from the event store.
 
      LDClient periodically transmits events to LaunchDarkly based on the frequency set in LDConfig.eventFlushInterval. The LDClient must be started and online. Ths SDK stores events tracked while the LDClient is offline, but started.
 
@@ -776,16 +748,16 @@ public class LDClient {
      ### Usage
      ````
      let appEventData = ["some-custom-key: "some-custom-value", "another-custom-key": 7]
-     LDClient.get()?.trackEvent(key: "app-event-key", data: appEventData)
+     LDClient.get()?.track(key: "app-event-key", data: appEventData)
      ````
 
      - parameter key: The key for the event. The SDK does nothing with the key, which can be any string the client app sends
      - parameter data: The data for the event. The SDK does nothing with the data, which can be any valid JSON item the client app sends. (Optional)
      - parameter metricValue: A numeric value used by the LaunchDarkly experimentation feature in numeric custom metrics. Can be omitted if this event is used by only non-numeric metrics. This field will also be returned as part of the custom event for Data Export. (Optional)
 
-     - throws: JSONSerialization.JSONError.invalidJsonObject if the data is not a valid JSON item
+     - throws: LDInvalidArgumentError if the data is not a valid JSON item
     */
-    public func trackEvent(key: String, data: Any? = nil, metricValue: Double? = nil) throws {
+    public func track(key: String, data: Any? = nil, metricValue: Double? = nil) throws {
         guard hasStarted
         else {
             Log.debug(typeName(and: #function) + "aborted. LDClient not started")
@@ -827,17 +799,17 @@ public class LDClient {
     }
     
     /**
-     Starts the LDClient using the passed in `config` & `startUser`. Call this before requesting feature flag values. The LDClient will not go online until you call this method.
-     Starting the LDClient means setting the `config` & `startUser`, setting the client online if `config.startOnline` is true (the default setting), and starting event recording. The client app must start the LDClient before it will report feature flag values. If a client does not call `start`, no methods will work.
-     If the `start` call omits the `startUser`, the LDClient uses the default `user` if it was never set.
+     Starts the LDClient using the passed in `config` & `user`. Call this before requesting feature flag values. The LDClient will not go online until you call this method.
+     Starting the LDClient means setting the `config` & `user`, setting the client online if `config.startOnline` is true (the default setting), and starting event recording. The client app must start the LDClient before it will report feature flag values. If a client does not call `start`, no methods will work.
+     If the `start` call omits the `user`, the LDClient uses a default `LDUser`.
      If the` start` call includes the optional `completion` closure, LDClient calls the `completion` closure when `setOnline(_: completion:)` embedded in the `init` method completes. This method listens for flag updates so the completion will only return once an update has occurred. The `start` call is subject to throttling delays, therefore the `completion` closure call may be delayed.
      Subsequent calls to this method cause the LDClient to return. Normally there should only be one call to start. To change `user`, use `identify`.
      - parameter configuration: The LDConfig that contains the desired configuration. (Required)
-     - parameter startUser: The LDUser set with the desired user. If omitted, LDClient sets a default user. (Optional)
+     - parameter user: The LDUser set with the desired user. If omitted, LDClient sets a default user. (Optional)
      - parameter completion: Closure called when the embedded `setOnline` call completes. (Optional)
     */
     /// - Tag: start
-    public static func start(config: LDConfig, startUser: LDUser? = nil, completion: (() -> Void)? = nil) {
+    public static func start(config: LDConfig, user: LDUser? = nil, completion: (() -> Void)? = nil) {
         Log.debug("LDClient starting")
         if instances != nil {
             Log.debug("LDClient.start() was called more than once!")
@@ -847,7 +819,7 @@ public class LDClient {
         HTTPHeaders.removeFlagRequestEtags()
         
         let anonymousUser = LDUser(environmentReporter: EnvironmentReporter())
-        let internalUser = startUser ?? anonymousUser
+        let internalUser = user ?? anonymousUser
         
         LDClient.instances = [:]
         let cache = UserEnvironmentFlagCache(withKeyedValueCache: ClientServiceFactory().makeKeyedValueCache(), maxCachedUsers: config.maxCachedUsers)
@@ -860,7 +832,7 @@ public class LDClient {
                 completion?()
             }
         }
-        mobileKeys[LDConfig.Defaults.primaryEnvironmentName] = config.mobileKey
+        mobileKeys[LDConfig.Constants.primaryEnvironmentName] = config.mobileKey
         for (name, mobileKey) in mobileKeys {
             var internalConfig = config
             internalConfig.mobileKey = mobileKey
@@ -875,19 +847,19 @@ public class LDClient {
     See [start](x-source-tag://start) for more information on starting the SDK.
 
     - parameter configuration: The LDConfig that contains the desired configuration. (Required)
-    - parameter startUser: The LDUser set with the desired user. If omitted, LDClient sets a default user. (Optional)
+    - parameter user: The LDUser set with the desired user. If omitted, LDClient sets a default user. (Optional)
     - parameter startWaitSeconds: A TimeInterval that determines when the completion will return if no flags have been returned from the network.
     - parameter completion: Closure called when the embedded `setOnline` call completes. Takes a Bool that indicates whether the completion timedout as a parameter. (Optional)
     */
-    public static func start(config: LDConfig, startUser: LDUser? = nil, startWaitSeconds: TimeInterval, completion: ((_ timedOut: Bool) -> Void)? = nil) {
+    public static func start(config: LDConfig, user: LDUser? = nil, startWaitSeconds: TimeInterval, completion: ((_ timedOut: Bool) -> Void)? = nil) {
         var completed = true
         let internalCompletedQueue: DispatchQueue = DispatchQueue(label: "TimeOutQueue")
         if !config.startOnline {
-            start(config: config, startUser: startUser)
+            start(config: config, user: user)
             completion?(completed)
         } else {
             let startTime = Date().timeIntervalSince1970
-            start(config: config, startUser: startUser) {
+            start(config: config, user: user) {
                 internalCompletedQueue.async {
                     if startTime + startWaitSeconds > Date().timeIntervalSince1970 && completed {
                         completed = false
@@ -982,10 +954,6 @@ public class LDClient {
 
 extension LDClient: TypeIdentifying { }
 
-extension String: LocalizedError {
-    public var errorDescription: String? { return self }
-}
-
 private extension Optional {
     var stringValue: String {
         guard let value = self
@@ -998,12 +966,12 @@ private extension Optional {
 
 #if DEBUG
     extension LDClient {
-        static func start(serviceFactory: ClientServiceCreating, config: LDConfig, startUser: LDUser? = nil, flagCache: FeatureFlagCaching, flagNotifier: FlagChangeNotifier, completion: (() -> Void)? = nil) {
+        static func start(serviceFactory: ClientServiceCreating, config: LDConfig, user: LDUser? = nil, flagCache: FeatureFlagCaching, flagNotifier: FlagChangeNotifier, completion: (() -> Void)? = nil) {
             Log.debug("LDClient starting for tests")
             get()?.close()
             
             let anonymousUser = LDUser(environmentReporter: EnvironmentReporter())
-            let internalUser = startUser ?? anonymousUser
+            let internalUser = user ?? anonymousUser
             
             LDClient.instances = [:]
             var mobileKeys = config.getSecondaryMobileKeys()
@@ -1015,7 +983,7 @@ private extension Optional {
                     completion?()
                 }
             }
-            mobileKeys[LDConfig.Defaults.primaryEnvironmentName] = config.mobileKey
+            mobileKeys[LDConfig.Constants.primaryEnvironmentName] = config.mobileKey
             for (name, mobileKey) in mobileKeys {
                 var internalConfig = config
                 internalConfig.mobileKey = mobileKey
@@ -1025,15 +993,15 @@ private extension Optional {
             completionCheck()
         }
         
-        static func start(serviceFactory: ClientServiceCreating, config: LDConfig, startUser: LDUser? = nil, startWaitSeconds: TimeInterval, flagCache: FeatureFlagCaching, flagNotifier: FlagChangeNotifier, completion: ((_ timedOut: Bool) -> Void)? = nil) {
+        static func start(serviceFactory: ClientServiceCreating, config: LDConfig, user: LDUser? = nil, startWaitSeconds: TimeInterval, flagCache: FeatureFlagCaching, flagNotifier: FlagChangeNotifier, completion: ((_ timedOut: Bool) -> Void)? = nil) {
             var completed = true
             let internalCompletedQueue: DispatchQueue = DispatchQueue(label: "TimeOutQueue")
             if !config.startOnline {
-                start(serviceFactory: serviceFactory, config: config, startUser: startUser, flagCache: flagCache, flagNotifier: flagNotifier)
+                start(serviceFactory: serviceFactory, config: config, user: user, flagCache: flagCache, flagNotifier: flagNotifier)
                 completion?(completed)
             } else {
                 let startTime = Date().timeIntervalSince1970
-                start(serviceFactory: serviceFactory, config: config, startUser: startUser, flagCache: flagCache, flagNotifier: flagNotifier) {
+                start(serviceFactory: serviceFactory, config: config, user: user, flagCache: flagCache, flagNotifier: flagNotifier) {
                     internalCompletedQueue.async {
                         if startTime + startWaitSeconds > Date().timeIntervalSince1970 && completed {
                             completed = false
