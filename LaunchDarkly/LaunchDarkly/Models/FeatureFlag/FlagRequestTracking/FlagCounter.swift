@@ -116,11 +116,7 @@ extension Array where Element == FlagValueCounter {
         return selectedFlagValueCounters.first
     }
 
-    var dictionaryValues: [[String: Any]] {
-        return map { (flagValueCounter) in
-            return flagValueCounter.dictionaryValue
-        }
-    }
+    var dictionaryValues: [[String: Any]] { map { $0.dictionaryValue } }
 }
 
 extension Array: TypeIdentifying { }

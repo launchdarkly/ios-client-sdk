@@ -86,6 +86,9 @@ public struct LDConfig {
 
         /// The default secondary mobile keys. ([:])
         static let secondaryMobileKeys: [String: String] = [:]
+
+        /// The default additional headers that should be added to all HTTP requests from SDK components to LaunchDarkly services
+        static let additionalHeaders: [String: String] = [:]
     }
 
     public struct Constants {
@@ -233,6 +236,9 @@ public struct LDConfig {
     /// For use by wrapper libraries to report the version of the library in use. If the `wrapperName` has not been set this field will be ignored. Otherwise the version string will be included with the `wrapperName` in the "X-LaunchDarkly-Wrapper" header on requests to the LaunchDarkly servers. (Default: nil)
     public var wrapperVersion: String? = Defaults.wrapperVersion
 
+    /// Additional headers that should be added to all HTTP requests from SDK components to LaunchDarkly services
+    public var additionalHeaders: [String: String] = [:]
+
     /// LaunchDarkly defined minima for selected configurable items
     public let minima: Minima
 
@@ -342,6 +348,7 @@ extension LDConfig: Equatable {
             && lhs.diagnosticRecordingInterval == rhs.diagnosticRecordingInterval
             && lhs.wrapperName == rhs.wrapperName
             && lhs.wrapperVersion == rhs.wrapperVersion
+            && lhs.additionalHeaders == rhs.additionalHeaders
     }
 }
 

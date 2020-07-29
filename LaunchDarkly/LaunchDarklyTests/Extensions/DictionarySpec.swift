@@ -191,60 +191,55 @@ final class DictionarySpec: QuickSpec {
 
 fileprivate extension Dictionary where Key == String, Value == Any {
     struct Keys {
-        static var bool: String {
-            return "bool-key"
-        }
-        static var int: String {
-            return "int-key"
-        }
-        static var double: String {
-            return "double-key"
-        }
-        static var string: String {
-            return "string-key"
-        }
-        static var array: String {
-            return "array-key"
-        }
-        static var dictionary: String {
-            return "dictionary-key"
-        }
-        static var null: String {
-            return "null-key"
-        }
+        static let bool: String = "bool-key"
+        static let int: String = "int-key"
+        static let double: String = "double-key"
+        static let string: String = "string-key"
+        static let array: String = "array-key"
+        static let dictionary: String = "dictionary-key"
+        static let null: String = "null-key"
     }
 
     struct Values {
-        static var bool: Bool {
-            return true
-        }
-        static var int: Int {
-            return 7
-        }
-        static var double: Double {
-            return 3.14159
-        }
-        static var string: String {
-            return "string value"
-        }
-        static var array: [Int] {
-            return [1, 2, 3]
-        }
-        static var dictionary: [String: Any] {
-            return ["sub-flag-a": false, "sub-flag-b": 3, "sub-flag-c": 2.71828]
-        }
-        static var null: NSNull {
-            return NSNull()
-        }
+        static let bool: Bool = true
+        static let int: Int = 7
+        static let double: Double = 3.14159
+        static let string: String = "string value"
+        static let array: [Int] = [1, 2, 3]
+        static let dictionary: [String: Any] = ["sub-flag-a": false, "sub-flag-b": 3, "sub-flag-c": 2.71828]
+        static let null: NSNull = NSNull()
     }
 
     static func stub() -> [String: Any] {
-        return [Keys.bool: Values.bool,
-                Keys.int: Values.int,
-                Keys.double: Values.double,
-                Keys.string: Values.string,
-                Keys.array: Values.array,
-                Keys.dictionary: Values.dictionary]
+        [Keys.bool: Values.bool,
+         Keys.int: Values.int,
+         Keys.double: Values.double,
+         Keys.string: Values.string,
+         Keys.array: Values.array,
+         Keys.dictionary: Values.dictionary]
+    }
+}
+
+extension Optional where Wrapped == [String: Any] {
+    static func == (lhs: [String: Any]?, rhs: [String: Any]?) -> Bool {
+        guard let lhs = lhs
+        else {
+            // swiftlint:disable unused_optional_binding
+            guard let _ = rhs
+            else {
+                return true
+            }
+            return false
+        }
+        guard let rhs = rhs
+        else {
+            return false
+        }
+        return lhs.isEqual(to: rhs)
+    }
+
+    static func != (lhs: [String: Any]?, rhs: [String: Any]?) -> Bool {
+        !(lhs == rhs)
     }
 }
 
