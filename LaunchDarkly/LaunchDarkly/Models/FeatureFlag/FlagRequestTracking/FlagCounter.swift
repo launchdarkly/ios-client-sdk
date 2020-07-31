@@ -2,7 +2,6 @@
 //  FlagCounter.swift
 //  LaunchDarkly
 //
-//  Created by Mark Pokorny on 6/19/18. +JMJ
 //  Copyright © 2018 Catamorphic Co. All rights reserved.
 //
 
@@ -13,7 +12,7 @@ final class FlagCounter {
         case defaultValue = "default", counters
     }
 
-    var defaultValue: Any? = nil
+    var defaultValue: Any?
     var flagValueCounters = [FlagValueCounter]()
 
     func trackRequest(reportedValue: Any?, featureFlag: FeatureFlag?, defaultValue: Any?) {

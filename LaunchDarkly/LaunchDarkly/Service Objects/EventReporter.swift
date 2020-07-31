@@ -13,18 +13,18 @@ enum EventSyncResult {
 }
 
 typealias EventSyncCompleteClosure = ((EventSyncResult) -> Void)
-//swiftlint:disable function_parameter_count
 //sourcery: autoMockable
 protocol EventReporting {
     //sourcery: defaultMockValue = LDConfig.stub
     var config: LDConfig { get set }
     //sourcery: defaultMockValue = false
     var isOnline: Bool { get set }
-    //sourcery: defaultMockValue = nil
-    var lastEventResponseDate: Date? { get }
     //sourcery: defaultMockValue = DarklyServiceMock()
     var service: DarklyServiceProvider { get set }
+    var lastEventResponseDate: Date? { get }
+
     func record(_ event: Event)
+    // swiftlint:disable:next function_parameter_count
     func recordFlagEvaluationEvents(flagKey: LDFlagKey, value: Any?, defaultValue: Any?, featureFlag: FeatureFlag?, user: LDUser, includeReason: Bool)
     func flush(completion: CompletionClosure?)
 }
@@ -54,7 +54,7 @@ class EventReporter: EventReporting {
 
     private var _isOnline = false
     private var isOnlineQueue = DispatchQueue(label: "com.launchdarkly.EventReporter.isOnlineQueue")
-    private (set) var lastEventResponseDate: Date? = nil
+    private (set) var lastEventResponseDate: Date?
 
     var service: DarklyServiceProvider
 
@@ -87,6 +87,7 @@ class EventReporter: EventReporting {
         self.eventStore.append(event.dictionaryValue(config: self.config))
     }
 
+    // swiftlint:disable:next function_parameter_count
     func recordFlagEvaluationEvents(flagKey: LDFlagKey, value: Any?, defaultValue: Any?, featureFlag: FeatureFlag?, user: LDUser, includeReason: Bool) {
         let recordingFeatureEvent = featureFlag?.trackEvents == true
         let recordingDebugEvent = featureFlag?.shouldCreateDebugEvents(lastEventReportResponseTime: lastEventResponseDate) ?? false

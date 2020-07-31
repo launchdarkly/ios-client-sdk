@@ -13,7 +13,6 @@ import Nimble
 
 final class AnyComparerSpec: QuickSpec {
     struct Constants {
-        
     }
 
     struct Values {

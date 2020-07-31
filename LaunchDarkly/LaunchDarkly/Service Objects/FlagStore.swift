@@ -10,6 +10,7 @@ import Foundation
 //sourcery: autoMockable
 protocol FlagMaintaining {
     var featureFlags: [LDFlagKey: FeatureFlag] { get }
+
     func replaceStore(newFlags: [LDFlagKey: Any]?, completion: CompletionClosure?)
     func updateStore(updateDictionary: [String: Any], completion: CompletionClosure?)
     func deleteFlag(deleteDictionary: [String: Any], completion: CompletionClosure?)

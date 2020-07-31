@@ -56,6 +56,12 @@ jobs:
         when: always
 
     - run:
+        name: Build Documentation
+        command: |
+          sudo gem install jazzy
+          jazzy -o artifacts/docs
+
+    - run:
         name: CocoaPods spec lint
         command: |
           if [ "$CIRCLE_BRANCH" = 'master' ]; then

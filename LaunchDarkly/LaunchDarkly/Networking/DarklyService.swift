@@ -20,14 +20,15 @@ protocol DarklyStreamingProvider: class {
 extension EventSource: DarklyStreamingProvider {}
 
 protocol DarklyServiceProvider: class {
+    var config: LDConfig { get }
+    var user: LDUser { get }
+    var diagnosticCache: DiagnosticCaching? { get }
+
     func getFeatureFlags(useReport: Bool, completion: ServiceCompletionHandler?)
     func clearFlagResponseCache()
     func createEventSource(useReport: Bool, handler: EventHandler, errorHandler: ConnectionErrorHandler?) -> DarklyStreamingProvider
     func publishEventDictionaries(_ eventDictionaries: [[String: Any]], _ payloadId: String, completion: ServiceCompletionHandler?)
     func publishDiagnostic<T: DiagnosticEvent & Encodable>(diagnosticEvent: T, completion: ServiceCompletionHandler?)
-    var config: LDConfig { get }
-    var user: LDUser { get }
-    var diagnosticCache: DiagnosticCaching? { get }
 }
 
 final class DarklyService: DarklyServiceProvider {
@@ -179,7 +180,6 @@ final class DarklyService: DarklyServiceProvider {
                                                             .jsonData,
                                                         handler: handler,
                                                         errorHandler: errorHandler)
-
         }
         return serviceFactory.makeStreamingProvider(url: getStreamRequestUrl,
                                                     httpHeaders: httpHeaders.eventSourceHeaders,

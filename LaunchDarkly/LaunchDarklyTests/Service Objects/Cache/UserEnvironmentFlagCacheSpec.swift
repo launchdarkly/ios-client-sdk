@@ -37,9 +37,9 @@ final class UserEnvironmentFlagCacheSpec: QuickSpec {
                 return pair2.value.isEarlierThan(pair1.value)
             }
             let oldestUserKey = sortedLastUpdatedPairs.last!.key
-            return users.filter { (user) in
-                return user.key == oldestUserKey
-            }.first!
+            return users.first { user in
+                user.key == oldestUserKey
+            }!
         }
 
         init(userCount: Int = 1, maxUsers: Int = 5) {

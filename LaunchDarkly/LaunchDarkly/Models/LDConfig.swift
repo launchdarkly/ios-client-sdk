@@ -91,8 +91,9 @@ public struct LDConfig {
         static let additionalHeaders: [String: String] = [:]
     }
 
+    /// Constants relevant to setting up an `LDConfig`
     public struct Constants {
-        /// The dafault environment name that must be present in a single or multiple environment configuration
+        /// The default environment name that must be present in a single or multiple environment configuration
         public static let primaryEnvironmentName = "default"
     }
 
@@ -140,8 +141,6 @@ public struct LDConfig {
 
     /// The maximum number of analytics events the LDClient can store. When the LDClient event store reaches the eventCapacity, the SDK discards events until it successfully reports them to LaunchDarkly. (Default: 100)
     public var eventCapacity: Int = Defaults.eventCapacity
-
-    // MARK: Time configuration
 
     /// The timeout interval for flag requests and event reports. (Default: 10 seconds)
     public var connectionTimeout: TimeInterval = Defaults.connectionTimeout

@@ -7,47 +7,41 @@
 
 import Foundation
 
-//Protocol to convert base LDFlagType into an LDFlagValue
 ///Protocol used by the SDK to limit feature flag types to those representable on LaunchDarkly servers. Client app developers should not need to use this protocol. The protocol is public because `LDClient.variation(forKey:defaultValue:)` and `LDClient.variationDetail(forKey:defaultValue:)` return a type that conforms to this protocol. See `LDFlagValue` for types that LaunchDarkly feature flags can take.
 public protocol LDFlagValueConvertible {
 // This commented out code here and in each extension will be used to support automatic typing. Version `4.0.0` does not support that capability. When that capability is added, uncomment this code.
 //    func toLDFlagValue() -> LDFlagValue
 }
 
-// MARK: - Bool
-
+/// :nodoc:
 extension Bool: LDFlagValueConvertible {
 //    public func toLDFlagValue() -> LDFlagValue {
 //        return .bool(self)
 //    }
 }
 
-// MARK: - Int
-
+/// :nodoc:
 extension Int: LDFlagValueConvertible {
 //    public func toLDFlagValue() -> LDFlagValue {
 //        return .int(self)
 //    }
 }
 
-// MARK: - Double
-
+/// :nodoc:
 extension Double: LDFlagValueConvertible {
 //    public func toLDFlagValue() -> LDFlagValue {
 //        return .double(self)
 //    }
 }
 
-// MARK: - String
-
+/// :nodoc:
 extension String: LDFlagValueConvertible {
 //    public func toLDFlagValue() -> LDFlagValue {
 //        return .string(self)
 //    }
 }
 
-// MARK: - Array
-
+/// :nodoc:
 extension Array where Element: LDFlagValueConvertible {
 //    func toLDFlagValue() -> LDFlagValue {
 //        let flagValues = self.map { (element) in
@@ -57,6 +51,7 @@ extension Array where Element: LDFlagValueConvertible {
 //    }
 }
 
+/// :nodoc:
 extension Array: LDFlagValueConvertible {
 //    public func toLDFlagValue() -> LDFlagValue {
 //        guard let flags = self as? [LDFlagValueConvertible]
@@ -70,8 +65,7 @@ extension Array: LDFlagValueConvertible {
 //    }
 }
 
-// MARK: - Dictionary
-
+/// :nodoc:
 extension Dictionary where Value: LDFlagValueConvertible {
 //    func toLDFlagValue() -> LDFlagValue {
 //        var flagValues = [LDFlagKey: LDFlagValue]()
@@ -82,6 +76,7 @@ extension Dictionary where Value: LDFlagValueConvertible {
 //    }
 }
 
+/// :nodoc:
 extension Dictionary: LDFlagValueConvertible {
 //    public func toLDFlagValue() -> LDFlagValue {
 //        if let flagValueDictionary = self as? [LDFlagKey: LDFlagValue] {
@@ -107,6 +102,7 @@ extension Dictionary: LDFlagValueConvertible {
 //    }
 }
 
+/// :nodoc:
 extension NSNull: LDFlagValueConvertible {
 //    public func toLDFlagValue() -> LDFlagValue {
 //        return .null

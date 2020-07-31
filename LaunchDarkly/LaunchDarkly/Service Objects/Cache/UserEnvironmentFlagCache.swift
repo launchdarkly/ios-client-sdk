@@ -15,6 +15,7 @@ enum FlagCachingStoreMode: CaseIterable {
 protocol FeatureFlagCaching {
     //sourcery: defaultMockValue = 5
     var maxCachedUsers: Int { get set }
+
     func retrieveFeatureFlags(forUserWithKey userKey: String, andMobileKey mobileKey: String) -> [LDFlagKey: FeatureFlag]?
     func storeFeatureFlags(_ featureFlags: [LDFlagKey: FeatureFlag], forUser user: LDUser, andMobileKey mobileKey: String, lastUpdated: Date, storeMode: FlagCachingStoreMode)
 }

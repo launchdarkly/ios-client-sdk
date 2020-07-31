@@ -48,12 +48,15 @@ extension TypeIdentifying {
     var typeName: String {
         String(describing: type(of: self))
     }
+
     func typeName(and method: String, appending suffix: String = " ") -> String {
         typeName + "." + method + suffix
     }
+
     static var typeName: String {
         String(describing: self)
     }
+
     static func typeName(and method: String, appending suffix: String = " ") -> String {
         typeName + "." + method + suffix
     }

@@ -74,7 +74,7 @@ struct CacheableUserEnvironmentFlags {
     var dictionaryValue: [String: Any] {
         [CodingKeys.userKey.rawValue: userKey,
          CodingKeys.lastUpdated.rawValue: lastUpdated.stringValue,
-         CodingKeys.environmentFlags.rawValue: environmentFlags.compactMapValues({ $0.dictionaryValue }) ]
+         CodingKeys.environmentFlags.rawValue: environmentFlags.compactMapValues { $0.dictionaryValue } ]
     }
 }
 

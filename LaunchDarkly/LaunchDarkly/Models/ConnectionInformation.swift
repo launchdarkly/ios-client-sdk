@@ -162,6 +162,7 @@ extension ConnectionInformation.LastConnectionFailureReason {
         case type, payload
     }
 
+    /// Decode a ConnectionInformation.LastConnectionFailureReason enum using Codable
     public init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         let type = try container.decode(String.self, forKey: .type)
@@ -180,6 +181,7 @@ extension ConnectionInformation.LastConnectionFailureReason {
         }
     }
 
+    /// Encode a ConnectionInformation.LastConnectionFailureReason enum using Codable
     public func encode(to encoder: Encoder) throws {
         var container = encoder.container(keyedBy: CodingKeys.self)
 
