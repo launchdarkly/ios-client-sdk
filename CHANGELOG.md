@@ -6,10 +6,10 @@ All notable changes to the LaunchDarkly iOS SDK will be documented in this file.
 
 ### Added
 - The ability to specify additional headers to be included on HTTP requests to LaunchDarkly services using `LDConfig.additionalHeaders`. This feature is to enable certain proxy configurations, and is not needed for normal use.
-- Support for building docs with [jazzy](https://github.com/realm/jazzy).
+- Support for building docs with [jazzy](https://github.com/realm/jazzy). These docs will be available through [GitHub Pages](https://launchdarkly.github.io/ios-client-sdk/).
 ### Fixed
-- SDK causing nested bundles in archived product when including the SDK through Carthage. This caused rejections when submitted to the App Store. Thanks to @spr for reporting this issue.
-- SDK causing application to expect LDSwiftEventSource dynamic framework when built with SwiftPM, which does not include the dynamic framework in the resulting application. This causes the application to be rejected when submitted to the App Store. Thanks to @spr for reporting this issue.
+- SDK causing nested bundles in archived product when including the SDK through Carthage. This caused rejections when submitted to the App Store. Thanks to @spr for reporting ([#217](https://github.com/launchdarkly/ios-client-sdk/issues/217)).
+- SDK causing application to expect LDSwiftEventSource dynamic framework when built with SwiftPM, which does not include the dynamic framework in the resulting application. This causes the application to be rejected when submitted to the App Store. Thanks to @spr for reporting ([#216](https://github.com/launchdarkly/ios-client-sdk/issues/216)).
 
 ## [5.0.1] - 2020-07-23
 **Note that this release contains the notes for the 5.0.0 release, which should not be used.**
