@@ -273,16 +273,10 @@
 		83FEF8DD1F266742001CF12C /* FlagSynchronizer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 83FEF8DC1F266742001CF12C /* FlagSynchronizer.swift */; };
 		83FEF8DF1F2667E4001CF12C /* EventReporter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 83FEF8DE1F2667E4001CF12C /* EventReporter.swift */; };
 		B40B419C249ADA6B00CD0726 /* DiagnosticCacheSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = B40B419B249ADA6B00CD0726 /* DiagnosticCacheSpec.swift */; };
-		B445A6EC24C0D210000BAD6D /* LDSwiftEventSource in Frameworks */ = {isa = PBXBuildFile; productRef = B445A6EB24C0D210000BAD6D /* LDSwiftEventSource */; };
-		B445A6ED24C0D210000BAD6D /* LDSwiftEventSource in Embed Frameworks */ = {isa = PBXBuildFile; productRef = B445A6EB24C0D210000BAD6D /* LDSwiftEventSource */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
-		B445A6EF24C0D218000BAD6D /* LDSwiftEventSource in Frameworks */ = {isa = PBXBuildFile; productRef = B445A6EE24C0D218000BAD6D /* LDSwiftEventSource */; };
-		B445A6F024C0D218000BAD6D /* LDSwiftEventSource in Embed Frameworks */ = {isa = PBXBuildFile; productRef = B445A6EE24C0D218000BAD6D /* LDSwiftEventSource */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
-		B445A6F524C0D22C000BAD6D /* LDSwiftEventSource in Frameworks */ = {isa = PBXBuildFile; productRef = B445A6F424C0D22C000BAD6D /* LDSwiftEventSource */; };
-		B445A6F624C0D22C000BAD6D /* LDSwiftEventSource in Embed Frameworks */ = {isa = PBXBuildFile; productRef = B445A6F424C0D22C000BAD6D /* LDSwiftEventSource */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
-		B445A70124C0D64C000BAD6D /* LDSwiftEventSource in Frameworks */ = {isa = PBXBuildFile; productRef = B445A70024C0D64C000BAD6D /* LDSwiftEventSource */; };
-		B445A70224C0D64C000BAD6D /* LDSwiftEventSource in Embed Frameworks */ = {isa = PBXBuildFile; productRef = B445A70024C0D64C000BAD6D /* LDSwiftEventSource */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
-		B445A70424C0D6E8000BAD6D /* LDSwiftEventSource in Frameworks */ = {isa = PBXBuildFile; productRef = B445A70324C0D6E8000BAD6D /* LDSwiftEventSource */; };
-		B445A70524C0D6E8000BAD6D /* LDSwiftEventSource in Embed Frameworks */ = {isa = PBXBuildFile; productRef = B445A70324C0D6E8000BAD6D /* LDSwiftEventSource */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
+		B467791324D8AEEC00897F00 /* LDSwiftEventSourceStatic in Frameworks */ = {isa = PBXBuildFile; productRef = B467791224D8AEEC00897F00 /* LDSwiftEventSourceStatic */; };
+		B467791524D8AEF300897F00 /* LDSwiftEventSourceStatic in Frameworks */ = {isa = PBXBuildFile; productRef = B467791424D8AEF300897F00 /* LDSwiftEventSourceStatic */; };
+		B467791724D8AEF800897F00 /* LDSwiftEventSourceStatic in Frameworks */ = {isa = PBXBuildFile; productRef = B467791624D8AEF800897F00 /* LDSwiftEventSourceStatic */; };
+		B467791924D8AEFC00897F00 /* LDSwiftEventSourceStatic in Frameworks */ = {isa = PBXBuildFile; productRef = B467791824D8AEFC00897F00 /* LDSwiftEventSourceStatic */; };
 		B468E71024B3C3AC00E0C883 /* ObjcLDEvaluationDetail.swift in Sources */ = {isa = PBXBuildFile; fileRef = B468E70F24B3C3AC00E0C883 /* ObjcLDEvaluationDetail.swift */; };
 		B468E71124B3C3AC00E0C883 /* ObjcLDEvaluationDetail.swift in Sources */ = {isa = PBXBuildFile; fileRef = B468E70F24B3C3AC00E0C883 /* ObjcLDEvaluationDetail.swift */; };
 		B468E71224B3C3AC00E0C883 /* ObjcLDEvaluationDetail.swift in Sources */ = {isa = PBXBuildFile; fileRef = B468E70F24B3C3AC00E0C883 /* ObjcLDEvaluationDetail.swift */; };
@@ -343,7 +337,6 @@
 			dstPath = "";
 			dstSubfolderSpec = 10;
 			files = (
-				B445A6ED24C0D210000BAD6D /* LDSwiftEventSource in Embed Frameworks */,
 			);
 			name = "Embed Frameworks";
 			runOnlyForDeploymentPostprocessing = 0;
@@ -354,7 +347,6 @@
 			dstPath = "";
 			dstSubfolderSpec = 10;
 			files = (
-				B445A6F024C0D218000BAD6D /* LDSwiftEventSource in Embed Frameworks */,
 			);
 			name = "Embed Frameworks";
 			runOnlyForDeploymentPostprocessing = 0;
@@ -365,7 +357,6 @@
 			dstPath = "";
 			dstSubfolderSpec = 10;
 			files = (
-				B445A6F624C0D22C000BAD6D /* LDSwiftEventSource in Embed Frameworks */,
 			);
 			name = "Embed Frameworks";
 			runOnlyForDeploymentPostprocessing = 0;
@@ -376,7 +367,6 @@
 			dstPath = "";
 			dstSubfolderSpec = 10;
 			files = (
-				B445A70524C0D6E8000BAD6D /* LDSwiftEventSource in Embed Frameworks */,
 			);
 			name = "Embed Frameworks";
 			runOnlyForDeploymentPostprocessing = 0;
@@ -387,7 +377,6 @@
 			dstPath = "";
 			dstSubfolderSpec = 10;
 			files = (
-				B445A70224C0D64C000BAD6D /* LDSwiftEventSource in Embed Frameworks */,
 			);
 			name = "Embed Frameworks";
 			runOnlyForDeploymentPostprocessing = 0;
@@ -523,7 +512,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				B445A70424C0D6E8000BAD6D /* LDSwiftEventSource in Frameworks */,
+				B467791924D8AEFC00897F00 /* LDSwiftEventSourceStatic in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -531,7 +520,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				B445A6F524C0D22C000BAD6D /* LDSwiftEventSource in Frameworks */,
+				B467791724D8AEF800897F00 /* LDSwiftEventSourceStatic in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -539,7 +528,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				B445A6EC24C0D210000BAD6D /* LDSwiftEventSource in Frameworks */,
+				B467791324D8AEEC00897F00 /* LDSwiftEventSourceStatic in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -547,7 +536,6 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				B445A70124C0D64C000BAD6D /* LDSwiftEventSource in Frameworks */,
 				B4903D9E24BD61EF00F087C4 /* Quick in Frameworks */,
 				B4903D9B24BD61D000F087C4 /* Nimble in Frameworks */,
 				B4903D9824BD61B200F087C4 /* OHHTTPStubsSwift in Frameworks */,
@@ -559,7 +547,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				B445A6EF24C0D218000BAD6D /* LDSwiftEventSource in Frameworks */,
+				B467791524D8AEF300897F00 /* LDSwiftEventSourceStatic in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -681,6 +669,7 @@
 				8354EFCF1F22491C00C05156 /* LaunchDarklyTests */,
 				83411A5C1FABDA5E00E5CF39 /* GeneratedCode */,
 				8354EFC31F22491C00C05156 /* Products */,
+				B467790E24D8AECA00897F00 /* Frameworks */,
 			);
 			sourceTree = "<group>";
 		};
@@ -928,6 +917,13 @@
 			path = "Service Objects";
 			sourceTree = "<group>";
 		};
+		B467790E24D8AECA00897F00 /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
 /* End PBXGroup section */
 
 /* Begin PBXHeadersBuildPhase section */
@@ -984,7 +980,7 @@
 			);
 			name = LaunchDarkly_tvOS;
 			packageProductDependencies = (
-				B445A70324C0D6E8000BAD6D /* LDSwiftEventSource */,
+				B467791824D8AEFC00897F00 /* LDSwiftEventSourceStatic */,
 			);
 			productName = Darkly_tvOS;
 			productReference = 831188382113A16900D77CB5 /* LaunchDarkly_tvOS.framework */;
@@ -1008,7 +1004,7 @@
 			);
 			name = LaunchDarkly_macOS;
 			packageProductDependencies = (
-				B445A6F424C0D22C000BAD6D /* LDSwiftEventSource */,
+				B467791624D8AEF800897F00 /* LDSwiftEventSourceStatic */,
 			);
 			productName = Darkly_macOS;
 			productReference = 831EF33B20655D700001C643 /* LaunchDarkly_macOS.framework */;
@@ -1032,7 +1028,7 @@
 			);
 			name = LaunchDarkly_iOS;
 			packageProductDependencies = (
-				B445A6EB24C0D210000BAD6D /* LDSwiftEventSource */,
+				B467791224D8AEEC00897F00 /* LDSwiftEventSourceStatic */,
 			);
 			productName = Darkly;
 			productReference = 8354EFC21F22491C00C05156 /* LaunchDarkly.framework */;
@@ -1058,7 +1054,6 @@
 				B4903D9724BD61B200F087C4 /* OHHTTPStubsSwift */,
 				B4903D9A24BD61D000F087C4 /* Nimble */,
 				B4903D9D24BD61EF00F087C4 /* Quick */,
-				B445A70024C0D64C000BAD6D /* LDSwiftEventSource */,
 			);
 			productName = DarklyTests;
 			productReference = 8354EFCB1F22491C00C05156 /* LaunchDarklyTests.xctest */;
@@ -1082,7 +1077,7 @@
 			);
 			name = LaunchDarkly_watchOS;
 			packageProductDependencies = (
-				B445A6EE24C0D218000BAD6D /* LDSwiftEventSource */,
+				B467791424D8AEF300897F00 /* LDSwiftEventSourceStatic */,
 			);
 			productName = "Darkly-watchOS";
 			productReference = 83D9EC6B2062DBB7004D7FA6 /* LaunchDarkly_watchOS.framework */;
@@ -2052,22 +2047,7 @@
 			package = B445A6DE24C0D1CD000BAD6D /* XCRemoteSwiftPackageReference "swift-eventsource" */;
 			productName = LDSwiftEventSource;
 		};
-		B445A6EB24C0D210000BAD6D /* LDSwiftEventSource */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = B445A6DE24C0D1CD000BAD6D /* XCRemoteSwiftPackageReference "swift-eventsource" */;
-			productName = LDSwiftEventSource;
-		};
-		B445A6EE24C0D218000BAD6D /* LDSwiftEventSource */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = B445A6DE24C0D1CD000BAD6D /* XCRemoteSwiftPackageReference "swift-eventsource" */;
-			productName = LDSwiftEventSource;
-		};
 		B445A6F224C0D21E000BAD6D /* LDSwiftEventSource */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = B445A6DE24C0D1CD000BAD6D /* XCRemoteSwiftPackageReference "swift-eventsource" */;
-			productName = LDSwiftEventSource;
-		};
-		B445A6F424C0D22C000BAD6D /* LDSwiftEventSource */ = {
 			isa = XCSwiftPackageProductDependency;
 			package = B445A6DE24C0D1CD000BAD6D /* XCRemoteSwiftPackageReference "swift-eventsource" */;
 			productName = LDSwiftEventSource;
@@ -2082,15 +2062,25 @@
 			package = B445A6DE24C0D1CD000BAD6D /* XCRemoteSwiftPackageReference "swift-eventsource" */;
 			productName = LDSwiftEventSource;
 		};
-		B445A70024C0D64C000BAD6D /* LDSwiftEventSource */ = {
+		B467791224D8AEEC00897F00 /* LDSwiftEventSourceStatic */ = {
 			isa = XCSwiftPackageProductDependency;
 			package = B445A6DE24C0D1CD000BAD6D /* XCRemoteSwiftPackageReference "swift-eventsource" */;
-			productName = LDSwiftEventSource;
+			productName = LDSwiftEventSourceStatic;
 		};
-		B445A70324C0D6E8000BAD6D /* LDSwiftEventSource */ = {
+		B467791424D8AEF300897F00 /* LDSwiftEventSourceStatic */ = {
 			isa = XCSwiftPackageProductDependency;
 			package = B445A6DE24C0D1CD000BAD6D /* XCRemoteSwiftPackageReference "swift-eventsource" */;
-			productName = LDSwiftEventSource;
+			productName = LDSwiftEventSourceStatic;
+		};
+		B467791624D8AEF800897F00 /* LDSwiftEventSourceStatic */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = B445A6DE24C0D1CD000BAD6D /* XCRemoteSwiftPackageReference "swift-eventsource" */;
+			productName = LDSwiftEventSourceStatic;
+		};
+		B467791824D8AEFC00897F00 /* LDSwiftEventSourceStatic */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = B445A6DE24C0D1CD000BAD6D /* XCRemoteSwiftPackageReference "swift-eventsource" */;
+			productName = LDSwiftEventSourceStatic;
 		};
 		B4903D9724BD61B200F087C4 /* OHHTTPStubsSwift */ = {
 			isa = XCSwiftPackageProductDependency;
