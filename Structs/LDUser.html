@@ -1,0 +1,956 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <title>LDUser Structure Reference</title>
+    <link rel="stylesheet" type="text/css" href="../css/jazzy.css" />
+    <link rel="stylesheet" type="text/css" href="../css/highlight.css" />
+    <meta charset='utf-8'>
+    <script src="../js/jquery.min.js" defer></script>
+    <script src="../js/jazzy.js" defer></script>
+    
+    <script src="../js/lunr.min.js" defer></script>
+    <script src="../js/typeahead.jquery.js" defer></script>
+    <script src="../js/jazzy.search.js" defer></script>
+  </head>
+  <body>
+    <a name="//apple_ref/swift/Struct/LDUser" class="dashAnchor"></a>
+    <a title="LDUser Structure Reference"></a>
+    <header>
+      <div class="content-wrapper">
+        <p><a href="../index.html">LaunchDarkly 5.1.0 Docs</a> (83% documented)</p>
+        <p class="header-right"><a href="https://github.com/launchdarkly/ios-client-sdk"><img src="../img/gh.png"/>View on GitHub</a></p>
+        <p class="header-right">
+          <form role="search" action="../search.json">
+            <input type="text" placeholder="Search documentation" data-typeahead>
+          </form>
+        </p>
+      </div>
+    </header>
+    <div class="content-wrapper">
+      <p id="breadcrumbs">
+        <a href="../index.html">LaunchDarkly Reference</a>
+        <img id="carat" src="../img/carat.png" />
+        LDUser Structure Reference
+      </p>
+    </div>
+    <div class="content-wrapper">
+      <nav class="sidebar">
+        <ul class="nav-groups">
+          <li class="nav-group-name">
+            <a href="../Core%20Classes.html">Core Classes</a>
+            <ul class="nav-group-tasks">
+              <li class="nav-group-task">
+                <a href="../Classes/LDClient.html">LDClient</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Structs/LDConfig.html">LDConfig</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Structs/LDConfig/Constants.html">– Constants</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Structs/LDConfig/Minima.html">– Minima</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Structs/LDUser.html">LDUser</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Structs/LDUser/CodingKeys.html">– CodingKeys</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Classes/LDEvaluationDetail.html">LDEvaluationDetail</a>
+              </li>
+            </ul>
+          </li>
+          <li class="nav-group-name">
+            <a href="../Flag%20Change%20Observers.html">Flag Change Observers</a>
+            <ul class="nav-group-tasks">
+              <li class="nav-group-task">
+                <a href="../Flag%20Change%20Observers.html#/s:12LaunchDarkly15LDObserverOwnera">LDObserverOwner</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Structs/LDChangedFlag.html">LDChangedFlag</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Flag%20Change%20Observers.html#/s:12LaunchDarkly19LDFlagChangeHandlera">LDFlagChangeHandler</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Flag%20Change%20Observers.html#/s:12LaunchDarkly29LDFlagCollectionChangeHandlera">LDFlagCollectionChangeHandler</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Flag%20Change%20Observers.html#/s:12LaunchDarkly23LDFlagsUnchangedHandlera">LDFlagsUnchangedHandler</a>
+              </li>
+            </ul>
+          </li>
+          <li class="nav-group-name">
+            <a href="../Connection%20Information.html">Connection Information</a>
+            <ul class="nav-group-tasks">
+              <li class="nav-group-task">
+                <a href="../Structs/ConnectionInformation.html">ConnectionInformation</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Structs/ConnectionInformation/ConnectionMode.html">– ConnectionMode</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Structs/ConnectionInformation/LastConnectionFailureReason.html">– LastConnectionFailureReason</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Structs/ConnectionInformation.html#/s:12LaunchDarkly21ConnectionInformationV9ConstantsV">– Constants</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Connection%20Information.html#/s:12LaunchDarkly30LDConnectionModeChangedHandlera">LDConnectionModeChangedHandler</a>
+              </li>
+            </ul>
+          </li>
+          <li class="nav-group-name">
+            <a href="../Other%20Types.html">Other Types</a>
+            <ul class="nav-group-tasks">
+              <li class="nav-group-task">
+                <a href="../Enums/LDStreamingMode.html">LDStreamingMode</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Other%20Types.html#/s:12LaunchDarkly22LDFlagValueConvertibleP">LDFlagValueConvertible</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Other%20Types.html#/s:12LaunchDarkly9LDFlagKeya">LDFlagKey</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Classes/LDInvalidArgumentError.html">LDInvalidArgumentError</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Other%20Types.html#/s:12LaunchDarkly14LDErrorHandlera">LDErrorHandler</a>
+              </li>
+            </ul>
+          </li>
+          <li class="nav-group-name">
+            <a href="../Objective-C%20Core%20Interfaces.html">Objective-C Core Interfaces</a>
+            <ul class="nav-group-tasks">
+              <li class="nav-group-task">
+                <a href="../Classes/ObjcLDClient.html">ObjcLDClient</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Classes/ObjcLDConfig.html">ObjcLDConfig</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Classes/ObjcLDUser.html">ObjcLDUser</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Classes/ObjcLDChangedFlag.html">ObjcLDChangedFlag</a>
+              </li>
+            </ul>
+          </li>
+          <li class="nav-group-name">
+            <a href="../Objective-C%20EvaluationDetail%20Wrappers.html">Objective-C EvaluationDetail Wrappers</a>
+            <ul class="nav-group-tasks">
+              <li class="nav-group-task">
+                <a href="../Classes/ObjcLDBoolEvaluationDetail.html">ObjcLDBoolEvaluationDetail</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Classes/ObjcLDIntegerEvaluationDetail.html">ObjcLDIntegerEvaluationDetail</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Classes/ObjcLDDoubleEvaluationDetail.html">ObjcLDDoubleEvaluationDetail</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Classes/ObjcLDStringEvaluationDetail.html">ObjcLDStringEvaluationDetail</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Classes/ObjcLDArrayEvaluationDetail.html">ObjcLDArrayEvaluationDetail</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Classes/ObjcLDDictionaryEvaluationDetail.html">ObjcLDDictionaryEvaluationDetail</a>
+              </li>
+            </ul>
+          </li>
+          <li class="nav-group-name">
+            <a href="../Objective-C%20ChangedFlag%20Wrappers.html">Objective-C ChangedFlag Wrappers</a>
+            <ul class="nav-group-tasks">
+              <li class="nav-group-task">
+                <a href="../Classes/ObjcLDBoolChangedFlag.html">ObjcLDBoolChangedFlag</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Classes/ObjcLDIntegerChangedFlag.html">ObjcLDIntegerChangedFlag</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Classes/ObjcLDDoubleChangedFlag.html">ObjcLDDoubleChangedFlag</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Classes/ObjcLDStringChangedFlag.html">ObjcLDStringChangedFlag</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Classes/ObjcLDArrayChangedFlag.html">ObjcLDArrayChangedFlag</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Classes/ObjcLDDictionaryChangedFlag.html">ObjcLDDictionaryChangedFlag</a>
+              </li>
+            </ul>
+          </li>
+          <li class="nav-group-name">
+            <a href="../Other%20Guides.html">Other Guides</a>
+            <ul class="nav-group-tasks">
+              <li class="nav-group-task">
+                <a href="../changelog.html">CHANGELOG</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../contributing.html">CONTRIBUTING</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../licensetxt.html">LICENSE.txt</a>
+              </li>
+            </ul>
+          </li>
+        </ul>
+      </nav>
+      <article class="main-content">
+        <section>
+          <section class="section">
+            <h1>LDUser</h1>
+              <div class="declaration">
+                <div class="language">
+                  
+                  <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">struct</span> <span class="kt">LDUser</span></code></pre>
+<pre class="highlight swift"><code><span class="kd">extension</span> <span class="kt">LDUser</span><span class="p">:</span> <span class="kt">Equatable</span></code></pre>
+
+                </div>
+              </div>
+            <p>LDUser allows clients to collect information about users in order to refine the feature flag values sent to the SDK. For example, the client app may launch with the SDK defined anonymous user. As the user works with the client app, information may be collected as needed and sent to LaunchDarkly. The client app controls the information collected, which LaunchDarkly does not use except as the client directs to refine feature flags. Client apps should follow <a href="apple.com/legal/privacy">Apple&rsquo;s Privacy Policy</a> when collecting user information.</p>
+
+<p>The SDK caches last known feature flags for use on app startup to provide continuity with the last app run. Provided the LDClient is online and can establish a connection with LaunchDarkly servers, cached information will only be used a very short time. Once the latest feature flags arrive at the SDK, the SDK no longer uses cached feature flags. The SDK retains feature flags on the last 5 client defined users. The SDK will retain feature flags until they are overwritten by a different user&rsquo;s feature flags, or until the user removes the app from the device.</p>
+
+<p>The SDK does not cache user information collected, except for the user key. The user key is used to identify the cached feature flags for that user. Client app developers should use caution not to use sensitive user information as the user-key.</p>
+
+          </section>
+          <section class="section task-group-section">
+            <div class="task-group">
+              <ul>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:12LaunchDarkly6LDUserV10CodingKeysO"></a>
+                    <a name="//apple_ref/swift/Enum/CodingKeys" class="dashAnchor"></a>
+                    <a class="token" href="#/s:12LaunchDarkly6LDUserV10CodingKeysO">CodingKeys</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>String keys associated with LDUser properties.</p>
+
+                        <a href="../Structs/LDUser/CodingKeys.html" class="slightly-smaller">See more</a>
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">enum</span> <span class="kt">CodingKeys</span> <span class="p">:</span> <span class="kt">String</span><span class="p">,</span> <span class="kt">CodingKey</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:12LaunchDarkly6LDUserV22privatizableAttributesSaySSGvpZ"></a>
+                    <a name="//apple_ref/swift/Variable/privatizableAttributes" class="dashAnchor"></a>
+                    <a class="token" href="#/s:12LaunchDarkly6LDUserV22privatizableAttributesSaySSGvpZ">privatizableAttributes</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>LDUser attributes that can be marked private.</p>
+
+<p>The SDK will not include private attribute values in analytics events, but private attribute names will be sent.</p>
+
+<p>See Also: <code><a href="../Structs/LDConfig.html#/s:12LaunchDarkly8LDConfigV24allUserAttributesPrivateSbvp">LDConfig.allUserAttributesPrivate</a></code>, <code><a href="../Structs/LDConfig.html#/s:12LaunchDarkly8LDConfigV21privateUserAttributesSaySSGSgvp">LDConfig.privateUserAttributes</a></code>, and <code><a href="../Structs/LDUser.html#/s:12LaunchDarkly6LDUserV17privateAttributesSaySSGSgvp">privateAttributes</a></code>.</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">static</span> <span class="k">var</span> <span class="nv">privatizableAttributes</span><span class="p">:</span> <span class="p">[</span><span class="kt">String</span><span class="p">]</span> <span class="p">{</span> <span class="k">get</span> <span class="p">}</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:12LaunchDarkly6LDUserV3keySSvp"></a>
+                    <a name="//apple_ref/swift/Property/key" class="dashAnchor"></a>
+                    <a class="token" href="#/s:12LaunchDarkly6LDUserV3keySSvp">key</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Client app defined string that uniquely identifies the user. If the client app does not define a key, the SDK will assign an identifier associated with the anonymous user. The key cannot be made private.</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="k">var</span> <span class="nv">key</span><span class="p">:</span> <span class="kt">String</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:12LaunchDarkly6LDUserV4nameSSSgvp"></a>
+                    <a name="//apple_ref/swift/Property/name" class="dashAnchor"></a>
+                    <a class="token" href="#/s:12LaunchDarkly6LDUserV4nameSSSgvp">name</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Client app defined name for the user. (Default: nil)</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="k">var</span> <span class="nv">name</span><span class="p">:</span> <span class="kt">String</span><span class="p">?</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:12LaunchDarkly6LDUserV9firstNameSSSgvp"></a>
+                    <a name="//apple_ref/swift/Property/firstName" class="dashAnchor"></a>
+                    <a class="token" href="#/s:12LaunchDarkly6LDUserV9firstNameSSSgvp">firstName</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Client app defined first name for the user. (Default: nil)</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="k">var</span> <span class="nv">firstName</span><span class="p">:</span> <span class="kt">String</span><span class="p">?</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:12LaunchDarkly6LDUserV8lastNameSSSgvp"></a>
+                    <a name="//apple_ref/swift/Property/lastName" class="dashAnchor"></a>
+                    <a class="token" href="#/s:12LaunchDarkly6LDUserV8lastNameSSSgvp">lastName</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Client app defined last name for the user. (Default: nil)</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="k">var</span> <span class="nv">lastName</span><span class="p">:</span> <span class="kt">String</span><span class="p">?</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:12LaunchDarkly6LDUserV7countrySSSgvp"></a>
+                    <a name="//apple_ref/swift/Property/country" class="dashAnchor"></a>
+                    <a class="token" href="#/s:12LaunchDarkly6LDUserV7countrySSSgvp">country</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Client app defined country for the user. (Default: nil)</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="k">var</span> <span class="nv">country</span><span class="p">:</span> <span class="kt">String</span><span class="p">?</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:12LaunchDarkly6LDUserV9ipAddressSSSgvp"></a>
+                    <a name="//apple_ref/swift/Property/ipAddress" class="dashAnchor"></a>
+                    <a class="token" href="#/s:12LaunchDarkly6LDUserV9ipAddressSSSgvp">ipAddress</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Client app defined ipAddress for the user. (Default: nil)</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="k">var</span> <span class="nv">ipAddress</span><span class="p">:</span> <span class="kt">String</span><span class="p">?</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:12LaunchDarkly6LDUserV5emailSSSgvp"></a>
+                    <a name="//apple_ref/swift/Property/email" class="dashAnchor"></a>
+                    <a class="token" href="#/s:12LaunchDarkly6LDUserV5emailSSSgvp">email</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Client app defined email address for the user. (Default: nil)</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="k">var</span> <span class="nv">email</span><span class="p">:</span> <span class="kt">String</span><span class="p">?</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:12LaunchDarkly6LDUserV6avatarSSSgvp"></a>
+                    <a name="//apple_ref/swift/Property/avatar" class="dashAnchor"></a>
+                    <a class="token" href="#/s:12LaunchDarkly6LDUserV6avatarSSSgvp">avatar</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Client app defined avatar for the user. (Default: nil)</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="k">var</span> <span class="nv">avatar</span><span class="p">:</span> <span class="kt">String</span><span class="p">?</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:12LaunchDarkly6LDUserV6customSDySSypGSgvp"></a>
+                    <a name="//apple_ref/swift/Property/custom" class="dashAnchor"></a>
+                    <a class="token" href="#/s:12LaunchDarkly6LDUserV6customSDySSypGSgvp">custom</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Client app defined dictionary for the user. The client app may declare top level dictionary items as private. If the client app defines custom as private, the SDK considers the dictionary private except for device &amp; operatingSystem (which cannot be made private). See <code><a href="../Structs/LDUser.html#/s:12LaunchDarkly6LDUserV17privateAttributesSaySSGSgvp">privateAttributes</a></code> for details. (Default: nil)</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="k">var</span> <span class="nv">custom</span><span class="p">:</span> <span class="p">[</span><span class="kt">String</span> <span class="p">:</span> <span class="kt">Any</span><span class="p">]?</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:12LaunchDarkly6LDUserV11isAnonymousSbvp"></a>
+                    <a name="//apple_ref/swift/Property/isAnonymous" class="dashAnchor"></a>
+                    <a class="token" href="#/s:12LaunchDarkly6LDUserV11isAnonymousSbvp">isAnonymous</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Client app defined isAnonymous for the user. If the client app does not define isAnonymous, the SDK will use the <code><a href="../Structs/LDUser.html#/s:12LaunchDarkly6LDUserV3keySSvp">key</a></code> to set this attribute. isAnonymous cannot be made private. (Default: true)</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="k">var</span> <span class="nv">isAnonymous</span><span class="p">:</span> <span class="kt">Bool</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:12LaunchDarkly6LDUserV6deviceSSSgvp"></a>
+                    <a name="//apple_ref/swift/Property/device" class="dashAnchor"></a>
+                    <a class="token" href="#/s:12LaunchDarkly6LDUserV6deviceSSSgvp">device</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Client app defined device for the user. The SDK will determine the device automatically, however the client app can override the value. The SDK will insert the device into the <code><a href="../Structs/LDUser.html#/s:12LaunchDarkly6LDUserV6customSDySSypGSgvp">custom</a></code> dictionary. The device cannot be made private. (Default: the system identified device)</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="k">var</span> <span class="nv">device</span><span class="p">:</span> <span class="kt">String</span><span class="p">?</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:12LaunchDarkly6LDUserV15operatingSystemSSSgvp"></a>
+                    <a name="//apple_ref/swift/Property/operatingSystem" class="dashAnchor"></a>
+                    <a class="token" href="#/s:12LaunchDarkly6LDUserV15operatingSystemSSSgvp">operatingSystem</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Client app defined operatingSystem for the user. The SDK will determine the operatingSystem automatically, however the client app can override the value. The SDK will insert the operatingSystem into the <code><a href="../Structs/LDUser.html#/s:12LaunchDarkly6LDUserV6customSDySSypGSgvp">custom</a></code> dictionary. The operatingSystem cannot be made private. (Default: the system identified operating system)</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="k">var</span> <span class="nv">operatingSystem</span><span class="p">:</span> <span class="kt">String</span><span class="p">?</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:12LaunchDarkly6LDUserV17privateAttributesSaySSGSgvp"></a>
+                    <a name="//apple_ref/swift/Property/privateAttributes" class="dashAnchor"></a>
+                    <a class="token" href="#/s:12LaunchDarkly6LDUserV17privateAttributesSaySSGSgvp">privateAttributes</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Client app defined privateAttributes for the user.</p>
+
+<p>The SDK will not include private attribute values in analytics events, but private attribute names will be sent.</p>
+
+<p>This attribute is ignored if <code><a href="../Structs/LDConfig.html#/s:12LaunchDarkly8LDConfigV24allUserAttributesPrivateSbvp">LDConfig.allUserAttributesPrivate</a></code> is true. Combined with <code><a href="../Structs/LDConfig.html#/s:12LaunchDarkly8LDConfigV21privateUserAttributesSaySSGSgvp">LDConfig.privateUserAttributes</a></code>. The SDK considers attributes appearing in either list as private. Client apps may define attributes found in <code><a href="../Structs/LDUser.html#/s:12LaunchDarkly6LDUserV22privatizableAttributesSaySSGvpZ">privatizableAttributes</a></code> and top level <code><a href="../Structs/LDUser.html#/s:12LaunchDarkly6LDUserV6customSDySSypGSgvp">custom</a></code> dictionary keys here. (Default: nil)</p>
+
+<p>See Also: <code><a href="../Structs/LDConfig.html#/s:12LaunchDarkly8LDConfigV24allUserAttributesPrivateSbvp">LDConfig.allUserAttributesPrivate</a></code> and <code><a href="../Structs/LDConfig.html#/s:12LaunchDarkly8LDConfigV21privateUserAttributesSaySSGSgvp">LDConfig.privateUserAttributes</a></code>.</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="k">var</span> <span class="nv">privateAttributes</span><span class="p">:</span> <span class="p">[</span><span class="kt">String</span><span class="p">]?</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:12LaunchDarkly6LDUserV10objcLdUserAA04ObjcC0Cvp"></a>
+                    <a name="//apple_ref/swift/Property/objcLdUser" class="dashAnchor"></a>
+                    <a class="token" href="#/s:12LaunchDarkly6LDUserV10objcLdUserAA04ObjcC0Cvp">objcLdUser</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>An NSObject wrapper for the Swift LDUser struct. Intended for use in mixed apps when Swift code needs to pass a user into an Objective-C method.</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="k">var</span> <span class="nv">objcLdUser</span><span class="p">:</span> <span class="kt"><a href="../Classes/ObjcLDUser.html">ObjcLDUser</a></span> <span class="p">{</span> <span class="k">get</span> <span class="p">}</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:12LaunchDarkly6LDUserV3key4name9firstName04lastG07country9ipAddress5email6avatar6custom11isAnonymous6device15operatingSystem17privateAttributesACSSSg_A7QSDySSypGSgSbSgA2QSaySSGSgtcfc"></a>
+                    <a name="//apple_ref/swift/Method/init(key:name:firstName:lastName:country:ipAddress:email:avatar:custom:isAnonymous:device:operatingSystem:privateAttributes:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:12LaunchDarkly6LDUserV3key4name9firstName04lastG07country9ipAddress5email6avatar6custom11isAnonymous6device15operatingSystem17privateAttributesACSSSg_A7QSDySSypGSgSbSgA2QSaySSGSgtcfc">init(key:<wbr>name:<wbr>firstName:<wbr>lastName:<wbr>country:<wbr>ipAddress:<wbr>email:<wbr>avatar:<wbr>custom:<wbr>isAnonymous:<wbr>device:<wbr>operatingSystem:<wbr>privateAttributes:<wbr>)</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Initializer to create a LDUser. Client configurable attributes each have an optional parameter to facilitate setting user information into the LDUser. The SDK will automatically set <code><a href="../Structs/LDUser.html#/s:12LaunchDarkly6LDUserV3keySSvp">key</a></code>, <code><a href="../Structs/LDUser.html#/s:12LaunchDarkly6LDUserV6deviceSSSgvp">device</a></code>, <code><a href="../Structs/LDUser.html#/s:12LaunchDarkly6LDUserV15operatingSystemSSSgvp">operatingSystem</a></code>, and <code><a href="../Structs/LDUser.html#/s:12LaunchDarkly6LDUserV11isAnonymousSbvp">isAnonymous</a></code> attributes if the client does not provide them. The SDK embeds <code><a href="../Structs/LDUser.html#/s:12LaunchDarkly6LDUserV6deviceSSSgvp">device</a></code> and <code><a href="../Structs/LDUser.html#/s:12LaunchDarkly6LDUserV15operatingSystemSSSgvp">operatingSystem</a></code> into the <code><a href="../Structs/LDUser.html#/s:12LaunchDarkly6LDUserV6customSDySSypGSgvp">custom</a></code> dictionary for transmission to LaunchDarkly.</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="nf">init</span><span class="p">(</span><span class="nv">key</span><span class="p">:</span> <span class="kt">String</span><span class="p">?</span> <span class="o">=</span> <span class="kc">nil</span><span class="p">,</span>
+            <span class="nv">name</span><span class="p">:</span> <span class="kt">String</span><span class="p">?</span> <span class="o">=</span> <span class="kc">nil</span><span class="p">,</span>
+            <span class="nv">firstName</span><span class="p">:</span> <span class="kt">String</span><span class="p">?</span> <span class="o">=</span> <span class="kc">nil</span><span class="p">,</span>
+            <span class="nv">lastName</span><span class="p">:</span> <span class="kt">String</span><span class="p">?</span> <span class="o">=</span> <span class="kc">nil</span><span class="p">,</span>
+            <span class="nv">country</span><span class="p">:</span> <span class="kt">String</span><span class="p">?</span> <span class="o">=</span> <span class="kc">nil</span><span class="p">,</span>
+            <span class="nv">ipAddress</span><span class="p">:</span> <span class="kt">String</span><span class="p">?</span> <span class="o">=</span> <span class="kc">nil</span><span class="p">,</span>
+            <span class="nv">email</span><span class="p">:</span> <span class="kt">String</span><span class="p">?</span> <span class="o">=</span> <span class="kc">nil</span><span class="p">,</span>
+            <span class="nv">avatar</span><span class="p">:</span> <span class="kt">String</span><span class="p">?</span> <span class="o">=</span> <span class="kc">nil</span><span class="p">,</span>
+            <span class="nv">custom</span><span class="p">:</span> <span class="p">[</span><span class="kt">String</span><span class="p">:</span> <span class="kt">Any</span><span class="p">]?</span> <span class="o">=</span> <span class="kc">nil</span><span class="p">,</span>
+            <span class="nv">isAnonymous</span><span class="p">:</span> <span class="kt">Bool</span><span class="p">?</span> <span class="o">=</span> <span class="kc">nil</span><span class="p">,</span>
+            <span class="nv">device</span><span class="p">:</span> <span class="kt">String</span><span class="p">?</span> <span class="o">=</span> <span class="kc">nil</span><span class="p">,</span>
+            <span class="nv">operatingSystem</span><span class="p">:</span> <span class="kt">String</span><span class="p">?</span> <span class="o">=</span> <span class="kc">nil</span><span class="p">,</span>
+            <span class="nv">privateAttributes</span><span class="p">:</span> <span class="p">[</span><span class="kt">String</span><span class="p">]?</span> <span class="o">=</span> <span class="kc">nil</span><span class="p">)</span></code></pre>
+
+                        </div>
+                      </div>
+                      <div>
+                        <h4>Parameters</h4>
+                        <table class="graybox">
+                          <tbody>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>key</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>String that uniquely identifies the user. If the client app does not define a key, the SDK will assign an identifier associated with the anonymous user.</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>name</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>Client app defined name for the user. (Default: nil)</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>firstName</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>Client app defined first name for the user. (Default: nil)</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>lastName</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>Client app defined last name for the user. (Default: nil)</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>country</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>Client app defined country for the user. (Default: nil)</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>ipAddress</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>Client app defined ipAddress for the user. (Default: nil)</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>email</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>Client app defined email address for the user. (Default: nil)</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>avatar</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>Client app defined avatar for the user. (Default: nil)</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>custom</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>Client app defined dictionary for the user. The client app may declare top level dictionary items as private. If the client app defines custom as private, the SDK considers the dictionary private except for device &amp; operatingSystem (which cannot be made private). See <code><a href="../Structs/LDUser.html#/s:12LaunchDarkly6LDUserV17privateAttributesSaySSGSgvp">privateAttributes</a></code> for details. (Default: nil)</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>isAnonymous</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>Client app defined isAnonymous for the user. If the client app does not define isAnonymous, the SDK will use the <code><a href="../Structs/LDUser.html#/s:12LaunchDarkly6LDUserV3keySSvp">key</a></code> to set this attribute. (Default: nil)</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>device</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>Client app defined device for the user. The SDK will determine the device automatically, however the client app can override the value. The SDK will insert the device into the <code><a href="../Structs/LDUser.html#/s:12LaunchDarkly6LDUserV6customSDySSypGSgvp">custom</a></code> dictionary. (Default: nil)</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>operatingSystem</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>Client app defined operatingSystem for the user. The SDK will determine the operatingSystem automatically, however the client app can override the value. The SDK will insert the operatingSystem into the <code><a href="../Structs/LDUser.html#/s:12LaunchDarkly6LDUserV6customSDySSypGSgvp">custom</a></code> dictionary. (Default: nil)</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>privateAttributes</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>Client app defined privateAttributes for the user. (Default: nil)</p>
+                                </div>
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:12LaunchDarkly6LDUserV14userDictionaryACSDySSypG_tcfc"></a>
+                    <a name="//apple_ref/swift/Method/init(userDictionary:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:12LaunchDarkly6LDUserV14userDictionaryACSDySSypG_tcfc">init(userDictionary:<wbr>)</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Initializer that takes a [String: Any] and creates a LDUser from the contents. Uses any keys present to define corresponding attribute values. Initializes attributes not present in the dictionary to their default value. Attempts to set <code><a href="../Structs/LDUser.html#/s:12LaunchDarkly6LDUserV6deviceSSSgvp">device</a></code> and <code><a href="../Structs/LDUser.html#/s:12LaunchDarkly6LDUserV15operatingSystemSSSgvp">operatingSystem</a></code> from corresponding values embedded in <code><a href="../Structs/LDUser.html#/s:12LaunchDarkly6LDUserV6customSDySSypGSgvp">custom</a></code>. Attempts to set feature flags from values set in <code>config</code>.</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="nf">init</span><span class="p">(</span><span class="nv">userDictionary</span><span class="p">:</span> <span class="p">[</span><span class="kt">String</span> <span class="p">:</span> <span class="kt">Any</span><span class="p">])</span></code></pre>
+
+                        </div>
+                      </div>
+                      <div>
+                        <h4>Parameters</h4>
+                        <table class="graybox">
+                          <tbody>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>userDictionary</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>Dictionary with LDUser attribute keys and values.</p>
+                                </div>
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:12LaunchDarkly6LDUserV2eeoiySbAC_ACtFZ"></a>
+                    <a name="//apple_ref/swift/Method/==(_:_:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:12LaunchDarkly6LDUserV2eeoiySbAC_ACtFZ">==(_:<wbr>_:<wbr>)</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Compares users by comparing their user keys only, to allow the client app to collect user information over time</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">static</span> <span class="kd">func</span> <span class="o">==</span> <span class="p">(</span><span class="nv">lhs</span><span class="p">:</span> <span class="kt">LDUser</span><span class="p">,</span> <span class="nv">rhs</span><span class="p">:</span> <span class="kt">LDUser</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kt">Bool</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+              </ul>
+            </div>
+          </section>
+        </section>
+        <section id="footer">
+          <p>Copyright © 2019 Catamorphic Co.</p>
+          <p>Generated by <a class="link" href="https://github.com/realm/jazzy" target="_blank" rel="external">jazzy ♪♫ v0.13.5</a>, a <a class="link" href="https://realm.io" target="_blank" rel="external">Realm</a> project.</p>
+        </section>
+      </article>
+    </div>
+  </body>
+</div>
+</html>
