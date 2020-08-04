@@ -203,17 +203,16 @@ class FlagSynchronizer: LDFlagSynchronizing, EventHandler {
         Log.debug(typeName(and: #function, appending: " - ") + "starting")
         let context = (useReport: useReport,
                        logPrefix: typeName(and: #function, appending: " - "))
-        service.getFeatureFlags(useReport: useReport, completion: { [weak self] serviceResponse in
+        service.getFeatureFlags(useReport: useReport) { [weak self] serviceResponse in
             if FlagSynchronizer.shouldRetryFlagRequest(useReport: context.useReport, statusCode: (serviceResponse.urlResponse as? HTTPURLResponse)?.statusCode) {
                 Log.debug(context.logPrefix + "retrying via GET")
-                self?.service.getFeatureFlags(useReport: false, completion: { retryServiceResponse in
+                self?.service.getFeatureFlags(useReport: false) { retryServiceResponse in
                     self?.processFlagResponse(serviceResponse: retryServiceResponse)
-                })
+                }
             } else {
                 self?.processFlagResponse(serviceResponse: serviceResponse)
             }
-            Log.debug(context.logPrefix + "complete")
-        })
+        }
     }
 
     private class func shouldRetryFlagRequest(useReport: Bool, statusCode: Int?) -> Bool {
@@ -351,7 +350,6 @@ class FlagSynchronizer: LDFlagSynchronizing, EventHandler {
     }
 
     public func onComment(comment: String) {
-
     }
 
     public func onError(error: Error) {

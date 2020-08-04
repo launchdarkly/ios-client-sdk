@@ -78,7 +78,7 @@ public final class ObjcLDDictionaryEvaluationDetail: NSObject {
     @objc public let variationIndex: Int
     @objc public let reason: [String: Any]?
     
-    internal init(value: Dictionary<String, Any>?, variationIndex: Int?, reason: [String: Any]?) {
+    internal init(value: [String: Any]?, variationIndex: Int?, reason: [String: Any]?) {
         self.value = value
         self.variationIndex = variationIndex ?? -1
         self.reason = reason

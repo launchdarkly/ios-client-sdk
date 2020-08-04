@@ -193,7 +193,7 @@ final class DarklyServiceMock: DarklyServiceProvider {
             }
             return useAlternateFlagVersion ? flagVersion + 1 : flagVersion
         }
-        private static func reason(includeEvaluationReason: Bool) -> Dictionary<String, Any>? {
+        private static func reason(includeEvaluationReason: Bool) -> [String: Any]? {
             return includeEvaluationReason ? reason : nil
         }
 

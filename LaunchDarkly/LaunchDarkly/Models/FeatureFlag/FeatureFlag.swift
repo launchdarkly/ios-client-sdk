@@ -79,7 +79,7 @@ extension FeatureFlag: Equatable {
         lhs.flagKey == rhs.flagKey &&
         lhs.variation == rhs.variation &&
         lhs.version == rhs.version &&
-        lhs.reason == rhs.reason &&
+        AnyComparer.isEqual(lhs.reason, to: rhs.reason) &&
         lhs.trackReason == rhs.trackReason
     }
 }

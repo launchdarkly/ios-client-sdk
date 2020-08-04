@@ -1226,7 +1226,6 @@ final class LDClientSpec: QuickSpec {
             }
             context("when client was started") {
                 beforeEach {
-                    //swiftlint:disable:next force_try
                     try! testContext.subject.track(key: event.key!, data: event.data)
                 }
                 it("records a custom event") {
@@ -1242,7 +1241,6 @@ final class LDClientSpec: QuickSpec {
                     testContext.subject.close()
                     priorRecordedEvents = testContext.eventReporterMock.recordCallCount
 
-                    //swiftlint:disable:next force_try
                     try! testContext.subject.track(key: event.key!, data: event.data)
                 }
                 it("does not record any more events") {
@@ -1530,7 +1528,6 @@ final class LDClientSpec: QuickSpec {
                 testContext.subject.flagChangeNotifier = ClientServiceMockFactory().makeFlagChangeNotifier()
 
                 testContext.subject.observeError(owner: self, handler: { (_) in
-
                 })
             }
             it("registers an error observer") {

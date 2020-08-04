@@ -1,61 +1,52 @@
-disabled_rules: # rule identifiers to exclude from running
+# See test subconfiguration at `LaunchDarkly/LaunchDarklyTests/.swiftlint.yml`
+
+disabled_rules:
   - line_length
   - trailing_whitespace
-  - todo # temporarily disabled. In general they should be treated as warnings
-#   - type_body_length # temporarily disabled.
-#   - file_length # temporarily disabled
-  - statement_position # wish we could support both uncuddled_else and default (but not others)
-  - trailing_comma
-  - syntactic_sugar
-  - redundant_optional_initialization
-  - redundant_void_return
-  - large_tuple # this is flagging closure argument declarations, seems like a mistake
 
-opt_in_rules: # some rules are only opt-in
+opt_in_rules:
+  - contains_over_filter_count
+  - contains_over_filter_is_empty
+  - contains_over_first_not_nil
+  - contains_over_range_nil_comparison
   - empty_count
-  # - missing_docs
-  # - force_unwrapping
-  # Find all the available rules by running:
-  # swiftlint rules
+  - first_where
+  - flatmap_over_map_reduce
+  - implicitly_unwrapped_optional
+  - let_var_whitespace
+  - missing_docs
+  - redundant_nil_coalescing
+  - sorted_first_last
+  - trailing_closure
+  - unused_declaration
+  - unused_import
+  - vertical_whitespace_closing_braces
 
 included:
   - LaunchDarkly/LaunchDarkly
   - LaunchDarkly/LaunchDarklyTests
 
-excluded: # paths to ignore during linting. Takes precedence over `included`.
-
-# configurable rules can be customized from this configuration file
-# binary rules can set their severity level
-
-# force_cast: warning # implicitly
-# force_try:
-#   severity: warning # explicitly
-# # rules that have both warning and error levels, can set just the warning level
-# # implicitly
-# # line_length: 110
-# # they can set both implicitly with an array
-#
-
-# Set doesn't have isEmpty so using count seems to be our ownly option
-empty_count: warning
+excluded:
 
 function_body_length:
   warning: 50
   error: 70
+
 type_body_length:
-  - 300 # warning
-  - 500 # error
-# or they can set both explicitly
+  warning: 300
+  error: 500
+
 file_length:
   warning: 1000
   error: 1500
+
 identifier_name:
   min_length: # only min_length
     warning: 3 # only warning
-  max_length: # warning and error
+  max_length:
     warning: 50
     error: 60
-  excluded: # excluded via string array
+  excluded:
     - id
     - URL
     - url
@@ -65,4 +56,5 @@ identifier_name:
     - tag
     - lhs
     - rhs
-reporter: "xcode" # reporter type (xcode, json, csv, checkstyle)
+
+reporter: "xcode"

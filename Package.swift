@@ -24,7 +24,7 @@ let package = Package(
     targets: [
         .target(
             name: "LaunchDarkly",
-            dependencies: ["LDSwiftEventSource"],
+            dependencies: ["LDSwiftEventSourceStatic"],
             path: "LaunchDarkly/LaunchDarkly",
             exclude: ["Support"]),
         .testTarget(

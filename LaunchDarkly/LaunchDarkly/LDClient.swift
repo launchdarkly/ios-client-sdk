@@ -11,6 +11,9 @@ enum LDClientRunMode {
     case foreground, background
 }
 
+// swiftlint:disable type_body_length
+// swiftlint:disable file_length
+
 /**
  The LDClient is the heart of the SDK, providing client apps running iOS, watchOS, macOS, or tvOS access to LaunchDarkly services. This singleton provides the ability to set a configuration (LDConfig) that controls how the LDClient talks to LaunchDarkly servers, and a user (LDUser) that provides finer control on the feature flag values delivered to LDClient. Once the LDClient has started, it connects to LaunchDarkly's servers to get the feature flag values you set in the Dashboard.
 ## Usage
@@ -42,13 +45,11 @@ enum LDClientRunMode {
  ````
  The `changedFlag` passed in to the closure contains the old and new value of the flag.
  */
-// swiftlint:disable type_body_length
-// swiftlint:disable file_length
 public class LDClient {
 
     // MARK: - State Controls and Indicators
     
-    private static var instances: [String: LDClient]? = nil
+    private static var instances: [String: LDClient]?
     
     /**
      Reports the online/offline state of the LDClient.
@@ -81,20 +82,6 @@ public class LDClient {
 
     private var _isOnline = false
     private var isOnlineQueue = DispatchQueue(label: "com.launchdarkly.LDClient.isOnlineQueue")
-
-    // Stores ConnectionInformation in UserDefaults on change
-    var connectionInformation: ConnectionInformation {
-        didSet {
-            Log.debug(connectionInformation.description)
-            ConnectionInformationStore.storeConnectionInformation(connectionInformation: connectionInformation)
-            if connectionInformation.currentConnectionMode != oldValue.currentConnectionMode {
-                flagChangeNotifier.notifyConnectionModeChangedObservers(connectionMode: connectionInformation.currentConnectionMode)
-            }
-        }
-    }
-
-    // Returns an object containing information about successful and/or failed polling or streaming connections to LaunchDarkly
-    public func getConnectionInformation() -> ConnectionInformation { connectionInformation }
 
     /**
      Set the LDClient online/offline.
@@ -208,7 +195,37 @@ public class LDClient {
         }
     }
 
-    // MARK: - Foreground / Background notification
+    // Stores ConnectionInformation in UserDefaults on change
+    var connectionInformation: ConnectionInformation {
+        didSet {
+            Log.debug(connectionInformation.description)
+            ConnectionInformationStore.storeConnectionInformation(connectionInformation: connectionInformation)
+            if connectionInformation.currentConnectionMode != oldValue.currentConnectionMode {
+                flagChangeNotifier.notifyConnectionModeChangedObservers(connectionMode: connectionInformation.currentConnectionMode)
+            }
+        }
+    }
+
+    /// Returns an object containing information about successful and/or failed polling or streaming connections to LaunchDarkly
+    public func getConnectionInformation() -> ConnectionInformation { connectionInformation }
+
+    /**
+     Stops the LDClient. Stopping the client means the LDClient goes offline and stops recording events. LDClient will no longer provide feature flag values, only returning default values.
+
+     There is almost no reason to stop the LDClient. Normally, set the LDClient offline to stop communication with the LaunchDarkly servers. Stop the LDClient to stop recording events. There is no need to stop the LDClient prior to suspending, moving to the background, or terminating the app. The SDK will respond to these events as the system requires and as configured in LDConfig.
+    */
+    public func close() {
+        LDClient.instances?.forEach { $1.internalClose() }
+        LDClient.instances = nil
+    }
+
+    private func internalClose() {
+        Log.debug(typeName(and: #function, appending: "- ") + "stopping")
+        internalFlush()
+        internalSetOnline(false)
+        hasStarted = false
+        Log.debug(typeName(and: #function, appending: "- ") + "stopped")
+    }
 
     @objc private func didEnterBackground() {
         Log.debug(typeName(and: #function))
@@ -293,40 +310,7 @@ public class LDClient {
         }
     }
 
-    /**
-     Stops the LDClient. Stopping the client means the LDClient goes offline and stops recording events. LDClient will no longer provide feature flag values, only returning default values.
-
-     There is almost no reason to stop the LDClient. Normally, set the LDClient offline to stop communication with the LaunchDarkly servers. Stop the LDClient to stop recording events. There is no need to stop the LDClient prior to suspending, moving to the background, or terminating the app. The SDK will respond to these events as the system requires and as configured in LDConfig.
-    */
-    public func close() {
-        LDClient.instances?.forEach { $1.internalClose() }
-        LDClient.instances = nil
-    }
-    
-    private func internalClose() {
-        Log.debug(typeName(and: #function, appending: "- ") + "stopping")
-        internalFlush()
-        internalSetOnline(false)
-        hasStarted = false
-        Log.debug(typeName(and: #function, appending: "- ") + "stopped")
-    }
-    
-    /**
-     Returns the LDClient instance for a given environment.
-
-     - parameter environment: The name of an environment provided in LDConfig.secondaryMobileKeys, defaults to `LDConfig.Constants.primaryEnvironmentName` which is always associated with the `LDConfig.mobileKey` environment.
-
-     - returns: The requested LDClient instance.
-     */
-    public static func get(environment: String = LDConfig.Constants.primaryEnvironmentName) -> LDClient? {
-        guard let internalInstances = LDClient.instances else {
-            Log.debug("LDClient.get() was called before init()!")
-            return nil
-        }
-        return internalInstances[environment]
-    }
-    
-    // MARK: Feature Flag values
+    // MARK: Retrieving Flag Values
     
     /* FF Value Requests
      Conceptual Model
@@ -392,7 +376,7 @@ public class LDClient {
         return LDEvaluationDetail(value: value ?? defaultValue, variationIndex: featureFlag?.variation, reason: reason)
     }
     
-    private func checkErrorKinds(featureFlag: FeatureFlag?) -> Dictionary<String, Any>? {
+    private func checkErrorKinds(featureFlag: FeatureFlag?) -> [String: Any]? {
         if !hasStarted {
             return ["kind": "ERROR", "errorKind": "CLIENT_NOT_READY"]
         } else if featureFlag == nil {
@@ -519,7 +503,7 @@ public class LDClient {
         return user.flagStore.featureFlags.allFlagValues
     }
 
-    // MARK: Feature Flag Updates
+    // MARK: Observing Updates
     
     /* FF Change Notification
      Conceptual Model
@@ -731,7 +715,7 @@ public class LDClient {
         flagChangeNotifier.notifyObservers(user: user, oldFlags: oldFlags)
     }
 
-    // MARK: - Events
+    // MARK: Events
 
     /* Event tracking
      Conceptual model
@@ -797,7 +781,9 @@ public class LDClient {
         Log.debug(typeName(and: #function))
         self.connectionInformation = ConnectionInformation.lastSuccessfulConnectionCheck(connectionInformation: self.connectionInformation)
     }
-    
+
+    // MARK: Initializing and Accessing
+
     /**
      Starts the LDClient using the passed in `config` & `user`. Call this before requesting feature flag values. The LDClient will not go online until you call this method.
      Starting the LDClient means setting the `config` & `user`, setting the client online if `config.startOnline` is true (the default setting), and starting event recording. The client app must start the LDClient before it will report feature flag values. If a client does not call `start`, no methods will work.
@@ -875,6 +861,21 @@ public class LDClient {
                 }
             }
         }
+    }
+
+    /**
+     Returns the LDClient instance for a given environment.
+
+     - parameter environment: The name of an environment provided in LDConfig.secondaryMobileKeys, defaults to `LDConfig.Constants.primaryEnvironmentName` which is always associated with the `LDConfig.mobileKey` environment.
+
+     - returns: The requested LDClient instance.
+     */
+    public static func get(environment: String = LDConfig.Constants.primaryEnvironmentName) -> LDClient? {
+        guard let internalInstances = LDClient.instances else {
+            Log.debug("LDClient.get() was called before init()!")
+            return nil
+        }
+        return internalInstances[environment]
     }
     
     // MARK: - Private

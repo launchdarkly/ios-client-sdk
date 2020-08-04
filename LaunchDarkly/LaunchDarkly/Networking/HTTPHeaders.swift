@@ -37,12 +37,14 @@ struct HTTPHeaders {
     }
 
     private let mobileKey: String
+    private let additionalHeaders: [String: String]
     private let authKey: String
     private let userAgent: String
     private let wrapperHeaderVal: String?
 
     init(config: LDConfig, environmentReporter: EnvironmentReporting) {
         self.mobileKey = config.mobileKey
+        self.additionalHeaders = config.additionalHeaders
         self.userAgent = "\(environmentReporter.systemName)/\(environmentReporter.sdkVersion)"
         self.authKey = "\(HeaderValue.apiKey) \(config.mobileKey)"
 
@@ -68,14 +70,14 @@ struct HTTPHeaders {
         return headers
     }
 
-    var eventSourceHeaders: [String: String] { baseHeaders }
+    var eventSourceHeaders: [String: String] { withAdditionalHeaders(baseHeaders) }
 
     var flagRequestHeaders: [String: String] {
         var headers = baseHeaders
         if let etag = HTTPHeaders.flagRequestEtags[mobileKey] {
             headers[HeaderKey.ifNoneMatch] = etag
         }
-        return headers
+        return withAdditionalHeaders(headers)
     }
 
     var hasFlagRequestEtag: Bool {
@@ -87,13 +89,17 @@ struct HTTPHeaders {
         headers[HeaderKey.contentType] = HeaderValue.applicationJson
         headers[HeaderKey.accept] = HeaderValue.applicationJson
         headers[HeaderKey.eventSchema] = HeaderValue.eventSchema3
-        return headers
+        return withAdditionalHeaders(headers)
     }
 
     var diagnosticRequestHeaders: [String: String] {
         var headers = baseHeaders
         headers[HeaderKey.contentType] = HeaderValue.applicationJson
         headers[HeaderKey.accept] = HeaderValue.applicationJson
-        return headers
+        return withAdditionalHeaders(headers)
+    }
+
+    private func withAdditionalHeaders(_ headers: [String: String]) -> [String: String] {
+        headers.merging(additionalHeaders, uniquingKeysWith: { $1 })
     }
 }

@@ -43,9 +43,9 @@ final class HTTPHeadersSpec: QuickSpec {
 
     private func eventSourceHeadersSpec() {
         var testContext: TestContext!
+        var headers: [String: String]!
         describe("eventSourceHeaders") {
             context("with basic elements") {
-                var headers: [String: String]!
                 beforeEach {
                     testContext = TestContext()
                     headers = testContext.httpHeaders.eventSourceHeaders
@@ -56,7 +56,6 @@ final class HTTPHeadersSpec: QuickSpec {
                 }
             }
             context("with wrapperName set") {
-                var headers: [String: String]!
                 beforeEach {
                     var config = LDConfig.stub
                     config.wrapperName = "test-wrapper"
@@ -68,7 +67,6 @@ final class HTTPHeadersSpec: QuickSpec {
                 }
             }
             context("with wrapperVersion set") {
-                var headers: [String: String]!
                 beforeEach {
                     var config = LDConfig.stub
                     config.wrapperVersion = "0.1.0"
@@ -80,7 +78,6 @@ final class HTTPHeadersSpec: QuickSpec {
                 }
             }
             context("with wrapperName and wrapperVersion set") {
-                var headers: [String: String]!
                 beforeEach {
                     var config = LDConfig.stub
                     config.wrapperName = "test-wrapper"
@@ -92,17 +89,32 @@ final class HTTPHeadersSpec: QuickSpec {
                     expect(headers["X-LaunchDarkly-Wrapper"]) == "test-wrapper/0.1.0"
                 }
             }
+            context("with additional headers") {
+                beforeEach {
+                    var config = LDConfig.stub
+                    config.additionalHeaders = ["Proxy-Authorization": "token",
+                                                HTTPHeaders.HeaderKey.authorization: "feh"]
+                    testContext = TestContext(config: config)
+                    headers = testContext.httpHeaders.eventSourceHeaders
+                }
+                it("creates headers including new headers") {
+                    expect(headers["Proxy-Authorization"]) == "token"
+                }
+                it("overrides SDK set headers") {
+                    expect(headers[HTTPHeaders.HeaderKey.authorization]) == "feh"
+                }
+            }
         }
     }
 
     private func flagRequestHeadersSpec() {
         var testContext: TestContext!
+        var headers: [String: String]!
         describe("flagRequestHeaders") {
             afterEach {
                 HTTPHeaders.removeFlagRequestEtags()
             }
             context("without etags") {
-                var headers: [String: String]!
                 beforeEach {
                     testContext = TestContext()
 
@@ -116,7 +128,6 @@ final class HTTPHeadersSpec: QuickSpec {
             }
             context("with an etag for the selected environment") {
                 var etag: String!
-                var headers: [String: String]!
                 beforeEach {
                     testContext = TestContext()
                     etag = UUID().uuidString
@@ -134,7 +145,6 @@ final class HTTPHeadersSpec: QuickSpec {
                 }
             }
             context("with wrapperName set") {
-                var headers: [String: String]!
                 beforeEach {
                     var config = LDConfig.stub
                     config.wrapperName = "test-wrapper"
@@ -146,7 +156,6 @@ final class HTTPHeadersSpec: QuickSpec {
                 }
             }
             context("with wrapperVersion set") {
-                var headers: [String: String]!
                 beforeEach {
                     var config = LDConfig.stub
                     config.wrapperVersion = "0.1.0"
@@ -158,7 +167,6 @@ final class HTTPHeadersSpec: QuickSpec {
                 }
             }
             context("with wrapperName and wrapperVersion set") {
-                var headers: [String: String]!
                 beforeEach {
                     var config = LDConfig.stub
                     config.wrapperName = "test-wrapper"
@@ -168,6 +176,21 @@ final class HTTPHeadersSpec: QuickSpec {
                 }
                 it("creates headers with wrapper set to combined values") {
                     expect(headers["X-LaunchDarkly-Wrapper"]) == "test-wrapper/0.1.0"
+                }
+            }
+            context("with additional headers") {
+                beforeEach {
+                    var config = LDConfig.stub
+                    config.additionalHeaders = ["Proxy-Authorization": "token",
+                                                HTTPHeaders.HeaderKey.authorization: "feh"]
+                    testContext = TestContext(config: config)
+                    headers = testContext.httpHeaders.flagRequestHeaders
+                }
+                it("creates headers including new headers") {
+                    expect(headers["Proxy-Authorization"]) == "token"
+                }
+                it("overrides SDK set headers") {
+                    expect(headers[HTTPHeaders.HeaderKey.authorization]) == "feh"
                 }
             }
         }
@@ -262,9 +285,9 @@ final class HTTPHeadersSpec: QuickSpec {
 
     private func eventRequestHeadersSpec() {
         var testContext: TestContext!
+        var headers: [String: String]!
         describe("eventRequestHeaders") {
             context("with basic elements") {
-                var headers: [String: String]!
                 beforeEach {
                     testContext = TestContext()
 
@@ -279,7 +302,6 @@ final class HTTPHeadersSpec: QuickSpec {
                 }
             }
             context("with wrapperName set") {
-                var headers: [String: String]!
                 beforeEach {
                     var config = LDConfig.stub
                     config.wrapperName = "test-wrapper"
@@ -291,7 +313,6 @@ final class HTTPHeadersSpec: QuickSpec {
                 }
             }
             context("with wrapperVersion set") {
-                var headers: [String: String]!
                 beforeEach {
                     var config = LDConfig.stub
                     config.wrapperVersion = "0.1.0"
@@ -303,7 +324,6 @@ final class HTTPHeadersSpec: QuickSpec {
                 }
             }
             context("with wrapperName and wrapperVersion set") {
-                var headers: [String: String]!
                 beforeEach {
                     var config = LDConfig.stub
                     config.wrapperName = "test-wrapper"
@@ -315,14 +335,29 @@ final class HTTPHeadersSpec: QuickSpec {
                     expect(headers["X-LaunchDarkly-Wrapper"]) == "test-wrapper/0.1.0"
                 }
             }
+            context("with additional headers") {
+                beforeEach {
+                    var config = LDConfig.stub
+                    config.additionalHeaders = ["Proxy-Authorization": "token",
+                                                HTTPHeaders.HeaderKey.authorization: "feh"]
+                    testContext = TestContext(config: config)
+                    headers = testContext.httpHeaders.flagRequestHeaders
+                }
+                it("creates headers including new headers") {
+                    expect(headers["Proxy-Authorization"]) == "token"
+                }
+                it("overrides SDK set headers") {
+                    expect(headers[HTTPHeaders.HeaderKey.authorization]) == "feh"
+                }
+            }
         }
     }
 
     private func diagnosticRequestHeadersSpec() {
         var testContext: TestContext!
+        var headers: [String: String]!
         describe("diagnosticRequestHeaders") {
             context("with basic elements") {
-                var headers: [String: String]!
                 beforeEach {
                     testContext = TestContext()
                     headers = testContext.httpHeaders.diagnosticRequestHeaders
@@ -336,7 +371,6 @@ final class HTTPHeadersSpec: QuickSpec {
                 }
             }
             context("with wrapperName set") {
-                var headers: [String: String]!
                 beforeEach {
                     var config = LDConfig.stub
                     config.wrapperName = "test-wrapper"
@@ -348,7 +382,6 @@ final class HTTPHeadersSpec: QuickSpec {
                 }
             }
             context("with wrapperVersion set") {
-                var headers: [String: String]!
                 beforeEach {
                     var config = LDConfig.stub
                     config.wrapperVersion = "0.1.0"
@@ -360,7 +393,6 @@ final class HTTPHeadersSpec: QuickSpec {
                 }
             }
             context("with wrapperName and wrapperVersion set") {
-                var headers: [String: String]!
                 beforeEach {
                     var config = LDConfig.stub
                     config.wrapperName = "test-wrapper"
@@ -370,6 +402,21 @@ final class HTTPHeadersSpec: QuickSpec {
                 }
                 it("creates headers with wrapper set to combined values") {
                     expect(headers["X-LaunchDarkly-Wrapper"]) == "test-wrapper/0.1.0"
+                }
+            }
+            context("with additional headers") {
+                beforeEach {
+                    var config = LDConfig.stub
+                    config.additionalHeaders = ["Proxy-Authorization": "token",
+                                                HTTPHeaders.HeaderKey.authorization: "feh"]
+                    testContext = TestContext(config: config)
+                    headers = testContext.httpHeaders.flagRequestHeaders
+                }
+                it("creates headers including new headers") {
+                    expect(headers["Proxy-Authorization"]) == "token"
+                }
+                it("overrides SDK set headers") {
+                    expect(headers[HTTPHeaders.HeaderKey.authorization]) == "feh"
                 }
             }
         }

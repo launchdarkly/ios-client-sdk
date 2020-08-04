@@ -86,10 +86,14 @@ public struct LDConfig {
 
         /// The default secondary mobile keys. ([:])
         static let secondaryMobileKeys: [String: String] = [:]
+
+        /// The default additional headers that should be added to all HTTP requests from SDK components to LaunchDarkly services
+        static let additionalHeaders: [String: String] = [:]
     }
 
+    /// Constants relevant to setting up an `LDConfig`
     public struct Constants {
-        /// The dafault environment name that must be present in a single or multiple environment configuration
+        /// The default environment name that must be present in a single or multiple environment configuration
         public static let primaryEnvironmentName = "default"
     }
 
@@ -137,8 +141,6 @@ public struct LDConfig {
 
     /// The maximum number of analytics events the LDClient can store. When the LDClient event store reaches the eventCapacity, the SDK discards events until it successfully reports them to LaunchDarkly. (Default: 100)
     public var eventCapacity: Int = Defaults.eventCapacity
-
-    // MARK: Time configuration
 
     /// The timeout interval for flag requests and event reports. (Default: 10 seconds)
     public var connectionTimeout: TimeInterval = Defaults.connectionTimeout
@@ -232,6 +234,9 @@ public struct LDConfig {
 
     /// For use by wrapper libraries to report the version of the library in use. If the `wrapperName` has not been set this field will be ignored. Otherwise the version string will be included with the `wrapperName` in the "X-LaunchDarkly-Wrapper" header on requests to the LaunchDarkly servers. (Default: nil)
     public var wrapperVersion: String? = Defaults.wrapperVersion
+
+    /// Additional headers that should be added to all HTTP requests from SDK components to LaunchDarkly services
+    public var additionalHeaders: [String: String] = [:]
 
     /// LaunchDarkly defined minima for selected configurable items
     public let minima: Minima
@@ -342,6 +347,7 @@ extension LDConfig: Equatable {
             && lhs.diagnosticRecordingInterval == rhs.diagnosticRecordingInterval
             && lhs.wrapperName == rhs.wrapperName
             && lhs.wrapperVersion == rhs.wrapperVersion
+            && lhs.additionalHeaders == rhs.additionalHeaders
     }
 }
 

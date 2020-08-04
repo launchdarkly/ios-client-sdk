@@ -308,16 +308,6 @@ final class EventReportingMock: EventReporting {
         }
     }
 
-    // MARK: lastEventResponseDate
-    var lastEventResponseDateSetCount = 0
-    var setLastEventResponseDateCallback: (() -> Void)?
-    var lastEventResponseDate: Date? = nil {
-        didSet {
-            lastEventResponseDateSetCount += 1
-            setLastEventResponseDateCallback?()
-        }
-    }
-
     // MARK: service
     var serviceSetCount = 0
     var setServiceCallback: (() -> Void)?
@@ -325,6 +315,16 @@ final class EventReportingMock: EventReporting {
         didSet {
             serviceSetCount += 1
             setServiceCallback?()
+        }
+    }
+
+    // MARK: lastEventResponseDate
+    var lastEventResponseDateSetCount = 0
+    var setLastEventResponseDateCallback: (() -> Void)?
+    var lastEventResponseDate: Date? = nil {
+        didSet {
+            lastEventResponseDateSetCount += 1
+            setLastEventResponseDateCallback?()
         }
     }
 
