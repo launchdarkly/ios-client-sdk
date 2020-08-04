@@ -221,7 +221,6 @@ final class DiagnosticEventSpec: QuickSpec {
         customConfig.enableBackgroundUpdates = true
         customConfig.evaluationReasons = true
         customConfig.maxCachedUsers = -2
-        // swiftlint:disable force_try
         try! customConfig.setSecondaryMobileKeys(["test": "foobar1", "debug": "foobar2"])
         customConfig.diagnosticRecordingInterval = 600.0
         customConfig.wrapperName = "ReactNative"

@@ -331,7 +331,6 @@ final class EventReporterSpec: QuickSpec {
                             }
                             expect(result == testContext.serviceMock.publishedEventDictionaries!).to(beTrue())
                         }
-
                     }
                     context("with events only") {
                         beforeEach {

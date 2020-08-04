@@ -142,7 +142,8 @@ final class FlagChangeNotifier: FlagChangeNotifying {
                 else {
                     return true
                 }
-                return !(oldFeatureFlag.variation == newFeatureFlag.variation && ["value": oldFeatureFlag.value as Any] == ["value": newFeatureFlag.value as Any])
+                return !(oldFeatureFlag.variation == newFeatureFlag.variation &&
+                         AnyComparer.isEqual(oldFeatureFlag.value, to: newFeatureFlag.value))
         }
     }
 }

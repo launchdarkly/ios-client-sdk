@@ -10,6 +10,7 @@ import Foundation
 protocol DeprecatedCache {
     var cachedDataKey: String { get }
     var keyedValueCache: KeyedValueCaching { get }
+
     func retrieveFlags(for userKey: UserKey, and mobileKey: MobileKey) -> (featureFlags: [LDFlagKey: FeatureFlag]?, lastUpdated: Date?)
     func userKeys(from cachedUserData: [UserKey: [String: Any]], olderThan: Date) -> [UserKey]
     func removeData(olderThan expirationDate: Date)     //provided for testing, to allow the mock to override the protocol extension

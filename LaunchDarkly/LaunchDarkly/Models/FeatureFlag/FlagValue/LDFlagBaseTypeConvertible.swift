@@ -43,7 +43,6 @@ extension Bool: LDFlagBaseTypeConvertible {
 
 extension Int: LDFlagBaseTypeConvertible {
     init?(_ flag: LDFlagValue?) {
-        //TODO: Assess whether we need to initialize with a double or string too
         guard case let .int(value) = flag
         else { return nil }
         self = value
@@ -54,7 +53,6 @@ extension Int: LDFlagBaseTypeConvertible {
 
 extension Double: LDFlagBaseTypeConvertible {
     init?(_ flag: LDFlagValue?) {
-        //TODO: Assess whether we need to initialize with an int or string too
         guard case let .double(value) = flag
         else { return nil }
         self = value

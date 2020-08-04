@@ -37,6 +37,7 @@ final class LDConfigSpec: QuickSpec {
         fileprivate static let diagnosticRecordingInterval: TimeInterval = 600.0
         fileprivate static let wrapperName = "ReactNative"
         fileprivate static let wrapperVersion = "0.1.0"
+        fileprivate static let additionalHeaders = ["Proxy-Authorization": "creds"]
     }
 
     struct TestContext {
@@ -97,6 +98,7 @@ final class LDConfigSpec: QuickSpec {
                     expect(config.diagnosticRecordingInterval) == LDConfig.Defaults.diagnosticRecordingInterval
                     expect(config.wrapperName == LDConfig.Defaults.wrapperName) == true
                     expect(config.wrapperVersion == LDConfig.Defaults.wrapperVersion) == true
+                    expect(config.additionalHeaders) == LDConfig.Defaults.additionalHeaders
                 }
             }
             context("changing the config values") {
@@ -129,6 +131,7 @@ final class LDConfigSpec: QuickSpec {
                         config.diagnosticRecordingInterval = Constants.diagnosticRecordingInterval
                         config.wrapperName = Constants.wrapperName
                         config.wrapperVersion = Constants.wrapperVersion
+                        config.additionalHeaders = Constants.additionalHeaders
 
                         testElements.append((os, config))
                     }
@@ -157,6 +160,7 @@ final class LDConfigSpec: QuickSpec {
                         expect(config.diagnosticRecordingInterval) == Constants.diagnosticRecordingInterval
                         expect(config.wrapperName) == Constants.wrapperName
                         expect(config.wrapperVersion) == Constants.wrapperVersion
+                        expect(config.additionalHeaders) == Constants.additionalHeaders
                     }
                 }
             }
@@ -338,7 +342,8 @@ final class LDConfigSpec: QuickSpec {
                      ("diagnostic opt out", Constants.diagnosticOptOut, { c, v in c.diagnosticOptOut = v as! Bool }),
                      ("diagnostic recording interval", Constants.diagnosticRecordingInterval, { c, v in c.diagnosticRecordingInterval = v as! TimeInterval }),
                      ("wrapper name", Constants.wrapperName, { c, v in c.wrapperName = v as! String? }),
-                     ("wrapper version", Constants.wrapperVersion, { c, v in c.wrapperVersion = v as! String? })]
+                     ("wrapper version", Constants.wrapperVersion, { c, v in c.wrapperVersion = v as! String? }),
+                     ("additional headers", Constants.additionalHeaders, { c, v in c.additionalHeaders = v as! [String: String]})]
                 testFields.forEach { name, otherVal, setter in
                     context("when \(name) differs") {
                         beforeEach {

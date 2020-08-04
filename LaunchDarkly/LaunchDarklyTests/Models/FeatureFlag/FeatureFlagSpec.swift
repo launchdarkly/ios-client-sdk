@@ -765,7 +765,7 @@ extension FeatureFlag {
             && flagVersion == otherFlag.flagVersion
     }
 
-    init(copying featureFlag: FeatureFlag, value: Any? = nil, variation: Int? = nil, version: Int? = nil, flagVersion: Int? = nil, trackEvents: Bool? = nil, debugEventsUntilDate: Date? = nil, reason: Dictionary<String, Any>? = nil, trackReason: Bool? = nil) {
+    init(copying featureFlag: FeatureFlag, value: Any? = nil, variation: Int? = nil, version: Int? = nil, flagVersion: Int? = nil, trackEvents: Bool? = nil, debugEventsUntilDate: Date? = nil, reason: [String: Any]? = nil, trackReason: Bool? = nil) {
         self.init(flagKey: featureFlag.flagKey,
                   value: value ?? featureFlag.value,
                   variation: variation ?? featureFlag.variation,

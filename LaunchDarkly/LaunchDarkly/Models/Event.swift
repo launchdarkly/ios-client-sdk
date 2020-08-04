@@ -70,13 +70,14 @@ struct Event { //sdk internal, not publically accessible
         self.metricValue = metricValue
     }
 
-    // swiftlint:disable function_parameter_count
+    // swiftlint:disable:next function_parameter_count
     static func featureEvent(key: String, value: Any?, defaultValue: Any?, featureFlag: FeatureFlag?, user: LDUser, includeReason: Bool) -> Event {
         Log.debug(typeName(and: #function) + "key: " + key + ", value: \(String(describing: value)), " + "defaultValue: \(String(describing: defaultValue) + "reason: \(String(describing: includeReason))"), "
             + "featureFlag: \(String(describing: featureFlag))")
         return Event(kind: .feature, key: key, user: user, value: value, defaultValue: defaultValue, featureFlag: featureFlag, includeReason: includeReason)
     }
 
+    // swiftlint:disable:next function_parameter_count
     static func debugEvent(key: String, value: Any?, defaultValue: Any?, featureFlag: FeatureFlag, user: LDUser, includeReason: Bool) -> Event {
         Log.debug(typeName(and: #function) + "key: " + key + ", value: \(String(describing: value)), " + "defaultValue: \(String(describing: defaultValue) + "reason: \(String(describing: includeReason))"), "
             + "featureFlag: \(String(describing: featureFlag))")
@@ -153,7 +154,7 @@ extension Array where Element == [String: Any] {
     }
 
     func contains(_ eventDictionary: [String: Any]) -> Bool {
-        !self.filter { $0.matches(eventDictionary: eventDictionary) }.isEmpty
+        self.contains { $0.matches(eventDictionary: eventDictionary) }
     }
 }
 

@@ -1,75 +1,64 @@
 module: LaunchDarkly
 author: LaunchDarkly
-author_url: http://launchdarkly.com
+author_url: https://launchdarkly.com
 github_url: https://github.com/launchdarkly/ios-client-sdk
 clean: true
-include:
-  - "LaunchDarkly/LaunchDarkly/**"
-exclude:
-  - "LaunchDarkly/LaunchDarkly/User/CacheableUserFlags.swift"
-  - "LaunchDarkly/LaunchDarkly/FeatureFlag/*"
-  - "LaunchDarkly/LaunchDarkly/FeatureFlag/FlagChange/Flag*"
-  - "LaunchDarkly/LaunchDarkly/FeatureFlag/FlagRequestTracking/*"
-  - "LaunchDarkly/LaunchDarkly/FeatureFlag/FlagValue/*"
-  - "LaunchDarkly/LaunchDarkly/ServiceObjects/*"
-  - "LaunchDarkly/LaunchDarkly/Networking/*"
-  - "LaunchDarkly/LaunchDarkly/Extensions/*"
+swift_build_tool: spm
+readme: README.md
+documentation:
+  - CHANGELOG.md
+  - CONTRIBUTING.md
+  - LICENSE.txt
 
 copyright: 'Copyright © 2019 Catamorphic Co.'
 
-theme: fullwidth
-
 custom_categories:
-  - name: LaunchDarkly
+  - name: Core Classes
     children:
     - LDClient
     - LDConfig
     - LDUser
-    - LDFlagKey
+    - LDEvaluationDetail
 
-  - name: Enumerations
+  - name: Flag Change Observers
     children:
-    - LDStreamingMode
-    - LDFlagValueSource
-    - LDFlagValue
-
-  - name: Flag Changes
-    children:
+    - LDObserverOwner
     - LDChangedFlag
-    - LDFlagChangeOwner
     - LDFlagChangeHandler
     - LDFlagCollectionChangeHandler
     - LDFlagsUnchangedHandler
+
+  - name: Connection Information
+    children:
+    - ConnectionInformation
+    - LDConnectionModeChangedHandler
+
+  - name: Other Types
+    children:
+    - LDStreamingMode
+    - LDFlagValueConvertible
+    - LDFlagKey
+    - LDInvalidArgumentError
     - LDErrorHandler
 
-  - name: LD Protocols
-    children:
-    - LDFlagValueConvertible
-
-  - name: Objective-C
+  - name: Objective-C Core Interfaces
     children:
     - ObjcLDClient
     - ObjcLDConfig
     - ObjcLDUser
-
-  - name: Obj-C Enumerations
-    children:
-    - ObjcLDFlagValue
-    - ObjcLDFlagValueSource
-    - NSString
-
-  - name: Obj-C Variation Values
-    children:
-    - ObjcLDBoolVariationValue
-    - ObjcLDIntegerVariationValue
-    - ObjcLDDoubleVariationValue
-    - ObjcLDStringVariationValue
-    - ObjcLDArrayVariationValue
-    - ObjcLDDictionaryVariationValue
-
-  - name: Obj-C Changed Flags
-    children:
     - ObjcLDChangedFlag
+
+  - name: Objective-C EvaluationDetail Wrappers
+    children:
+    - ObjcLDBoolEvaluationDetail
+    - ObjcLDIntegerEvaluationDetail
+    - ObjcLDDoubleEvaluationDetail
+    - ObjcLDStringEvaluationDetail
+    - ObjcLDArrayEvaluationDetail
+    - ObjcLDDictionaryEvaluationDetail
+
+  - name: Objective-C ChangedFlag Wrappers
+    children:
     - ObjcLDBoolChangedFlag
     - ObjcLDIntegerChangedFlag
     - ObjcLDDoubleChangedFlag
