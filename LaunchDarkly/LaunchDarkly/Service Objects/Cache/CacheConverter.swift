@@ -16,7 +16,7 @@ protocol CacheConverting {
 final class CacheConverter: CacheConverting {
 
     struct Constants {
-        static let maxAge: TimeInterval = TimeInterval(days: -90)
+        static let maxAge: TimeInterval = -90.0 * 24 * 60 * 60 // 90 days
     }
 
     struct CacheKeys {
@@ -43,16 +43,12 @@ final class CacheConverter: CacheConverting {
 
     private func convertCacheData(for user: LDUser, mobileKey: String) {
         guard currentCache.retrieveFeatureFlags(forUserWithKey: user.key, andMobileKey: mobileKey) == nil
-        else {
-            return
-        }
+        else { return }
         for deprecatedCacheModel in DeprecatedCacheModel.allCases {
             let deprecatedCache = deprecatedCaches[deprecatedCacheModel]
             guard let cachedData = deprecatedCache?.retrieveFlags(for: user.key, and: mobileKey),
                 let cachedFlags = cachedData.featureFlags
-            else {
-                continue
-            }
+            else { continue }
             currentCache.storeFeatureFlags(cachedFlags, forUser: user, andMobileKey: mobileKey, lastUpdated: cachedData.lastUpdated ?? Date(), storeMode: .sync)
             return  //If we hit on a cached user, bailout since we converted the flags for that userKey-mobileKey combination; This prefers newer caches over older
         }
@@ -63,12 +59,6 @@ final class CacheConverter: CacheConverting {
         deprecatedCaches.values.forEach { deprecatedCache in
             deprecatedCache.removeData(olderThan: maxAge)
         }
-    }
-}
-
-extension TimeInterval {
-    init(days: Int) {
-        self.init(Double(days) * 60 * 60 * 24)
     }
 }
 

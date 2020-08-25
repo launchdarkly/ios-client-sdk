@@ -75,9 +75,7 @@ public struct LDUser {
     public var privateAttributes: [String]?
 
     ///An NSObject wrapper for the Swift LDUser struct. Intended for use in mixed apps when Swift code needs to pass a user into an Objective-C method.
-    public var objcLdUser: ObjcLDUser {
-        return ObjcLDUser(self)
-    }
+    public var objcLdUser: ObjcLDUser { ObjcLDUser(self) }
 
     internal var flagStore: FlagMaintaining = FlagStore()
 

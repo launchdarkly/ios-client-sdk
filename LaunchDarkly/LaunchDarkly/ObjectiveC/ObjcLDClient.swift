@@ -186,7 +186,7 @@ public final class ObjcLDClient: NSObject {
      */
     /// - Tag: boolVariation
     @objc public func boolVariation(forKey key: LDFlagKey, defaultValue: Bool) -> Bool {
-        return ldClient.variation(forKey: key, defaultValue: defaultValue)
+        ldClient.variation(forKey: key, defaultValue: defaultValue)
     }
 
     /**
@@ -227,7 +227,7 @@ public final class ObjcLDClient: NSObject {
      */
     /// - Tag: integerVariation
     @objc public func integerVariation(forKey key: LDFlagKey, defaultValue: Int) -> Int {
-        return ldClient.variation(forKey: key, defaultValue: defaultValue)
+        ldClient.variation(forKey: key, defaultValue: defaultValue)
     }
     
     /**
@@ -268,7 +268,7 @@ public final class ObjcLDClient: NSObject {
      */
     /// - Tag: doubleVariation
     @objc public func doubleVariation(forKey key: LDFlagKey, defaultValue: Double) -> Double {
-        return ldClient.variation(forKey: key, defaultValue: defaultValue)
+        ldClient.variation(forKey: key, defaultValue: defaultValue)
     }
     
     /**
@@ -309,7 +309,7 @@ public final class ObjcLDClient: NSObject {
      */
     /// - Tag: stringVariation
     @objc public func stringVariation(forKey key: LDFlagKey, defaultValue: String?) -> String? {
-        return ldClient.variation(forKey: key, defaultValue: defaultValue)
+        ldClient.variation(forKey: key, defaultValue: defaultValue)
     }
     
     /**
@@ -350,7 +350,7 @@ public final class ObjcLDClient: NSObject {
      */
     /// - Tag: arrayVariation
     @objc public func arrayVariation(forKey key: LDFlagKey, defaultValue: [Any]?) -> [Any]? {
-        return ldClient.variation(forKey: key, defaultValue: defaultValue)
+        ldClient.variation(forKey: key, defaultValue: defaultValue)
     }
     
     /**
@@ -391,7 +391,7 @@ public final class ObjcLDClient: NSObject {
      */
     /// - Tag: dictionaryVariation
     @objc public func dictionaryVariation(forKey key: LDFlagKey, defaultValue: [String: Any]?) -> [String: Any]? {
-        return ldClient.variation(forKey: key, defaultValue: defaultValue)
+        ldClient.variation(forKey: key, defaultValue: defaultValue)
     }
     
     /**
@@ -414,7 +414,7 @@ public final class ObjcLDClient: NSObject {
 
      LDClient will not provide any source or change information, only flag keys and flag values. The client app should convert the feature flag value into the desired type.
      */
-    @objc public var allFlags: [LDFlagKey: Any]? { return ldClient.allFlags }
+    @objc public var allFlags: [LDFlagKey: Any]? { ldClient.allFlags }
 
     // MARK: - Feature Flag Updates
 

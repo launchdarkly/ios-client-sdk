@@ -34,9 +34,7 @@ final class FlagChangeNotifierSpec: QuickSpec {
         init(observers observerCount: Int = 0, observerType: ObserverType = .any, repeatFirstObserver: Bool = false) {
             subject = FlagChangeNotifier()
             guard observerCount > 0
-            else {
-                return
-            }
+            else { return }
             var flagChangeObservers = [FlagChangeObserver]()
             while flagChangeObservers.count < observerCount {
                 if observerType == .singleKey || (observerType == .any && flagChangeObservers.count.isMultiple(of: 2)) {
@@ -67,9 +65,7 @@ final class FlagChangeNotifierSpec: QuickSpec {
         init(keys: [LDFlagKey], flagChangeHandler: @escaping LDFlagChangeHandler, flagsUnchangedHandler: @escaping LDFlagsUnchangedHandler) {
             subject = FlagChangeNotifier()
             guard !keys.isEmpty
-            else {
-                return
-            }
+            else { return }
             var flagChangeObservers = [FlagChangeObserver]()
             keys.forEach { key in
                 flagChangeObservers.append(FlagChangeObserver(key: key,
@@ -91,9 +87,7 @@ final class FlagChangeNotifierSpec: QuickSpec {
         init(keys: [LDFlagKey], flagCollectionChangeHandler: @escaping LDFlagCollectionChangeHandler, flagsUnchangedHandler: @escaping LDFlagsUnchangedHandler) {
             subject = FlagChangeNotifier()
             guard !keys.isEmpty
-            else {
-                return
-            }
+            else { return }
             var observers = [FlagChangeObserver]()
             observers.append(FlagChangeObserver(keys: keys,
                                                 owner: self.stubOwner(keys: keys),
@@ -107,14 +101,14 @@ final class FlagChangeNotifierSpec: QuickSpec {
             originalFlagChangeObservers = subject.flagObservers
         }
 
-        mutating func stubOwner(key: String) -> FlagChangeHandlerOwnerMock {
+        fileprivate mutating func stubOwner(key: String) -> FlagChangeHandlerOwnerMock {
             let owner = FlagChangeHandlerOwnerMock()
             owners[key] = owner
 
             return owner
         }
 
-        mutating func stubOwner(keys: [String]) -> FlagChangeHandlerOwnerMock {
+        fileprivate mutating func stubOwner(keys: [String]) -> FlagChangeHandlerOwnerMock {
             stubOwner(key: keys.observerKey)
         }
 
@@ -862,6 +856,8 @@ final class FlagChangeNotifierSpec: QuickSpec {
         }
     }
 }
+
+private final class FlagChangeHandlerOwnerMock { }
 
 fileprivate extension DarklyServiceMock.FlagKeys {
     static let extra = "extra-key"

@@ -6,16 +6,12 @@
 //
 
 import Foundation
-import Quick
-import Nimble
+import XCTest
+
 import LDSwiftEventSource
 @testable import LaunchDarkly
 
-final class SynchronizingErrorSpec: QuickSpec {
-    override func spec() {
-        isUnauthorizedSpec()
-    }
-
+final class SynchronizingErrorSpec: XCTestCase {
     private let falseCases: [SynchronizingError] =
         [.isOffline,
          .streamEventWhilePolling,
@@ -37,22 +33,15 @@ final class SynchronizingErrorSpec: QuickSpec {
          .streamError(UnsuccessfulResponseError(responseCode: 401))
          ]
 
-    func isUnauthorizedSpec() {
-        describe("isUnauthorized") {
-            falseCases.forEach { testValue in
-                context("with error: \(testValue)") {
-                    it("returns false") {
-                        expect(testValue.isClientUnauthorized) == false
-                    }
-                }
-            }
-            trueCases.forEach { testValue in
-                context("with error: \(testValue)") {
-                    it("returns true") {
-                        expect(testValue.isClientUnauthorized) == true
-                    }
-                }
-            }
+    func testErrorShouldBeUnauthorized() {
+        trueCases.forEach { testValue in
+            XCTAssertTrue(testValue.isClientUnauthorized, "\(testValue) should be unauthorized")
+        }
+    }
+
+    func testErrorShouldNotBeUnauthorized() {
+        falseCases.forEach { testValue in
+            XCTAssertFalse(testValue.isClientUnauthorized, "\(testValue) should not be unauthorized")
         }
     }
 }

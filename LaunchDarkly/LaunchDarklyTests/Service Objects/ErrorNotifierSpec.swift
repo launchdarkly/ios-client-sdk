@@ -6,239 +6,85 @@
 //
 
 import Foundation
-import Quick
-import Nimble
+import XCTest
+
 @testable import LaunchDarkly
 
-final class ErrorNotifierSpec: QuickSpec {
+final class ErrorNotifierSpec: XCTestCase {
 
-    struct Constants {
-        static let errorObserverCount = 3
-        static let errorIdentifier = "com.launchdarkly.test.errorNotifierSpec.errorIdentifier"
+    func testInit() {
+        let errorNotifier = ErrorNotifier()
+        XCTAssertEqual(errorNotifier.errorObservers.count, 0)
     }
 
-    struct TestContext {
-        var errorNotifier: ErrorNotifier
-        var errorObservers = [ErrorObserver]()
-
-        var nextErrorObserverOwner = ErrorOwnerMock()
-        var nextErrorObserver: ErrorObserver
-
-        var originalObserverCount = 0
-        var observersPerOwner = 0
-
-        fileprivate var errorMock: ErrorMock
-
-        init() {
-            errorNotifier = ErrorNotifier()
-            nextErrorObserver = ErrorObserver(owner: nextErrorObserverOwner, errorHandler: nextErrorObserverOwner.handle)
-            errorMock = ErrorMock(with: Constants.errorIdentifier)
-        }
-
-        init(observerCount: Int) {
-            self.init(ownerCount: observerCount, observersPerOwner: 1)
-        }
-
-        init(ownerCount: Int, observersPerOwner: Int) {
-            errorMock = ErrorMock(with: Constants.errorIdentifier)
-            nextErrorObserver = ErrorObserver(owner: nextErrorObserverOwner, errorHandler: nextErrorObserverOwner.handle)
-            errorNotifier = ErrorNotifier()
-
-            for _ in 0..<ownerCount {
-                let owner = ErrorOwnerMock()
-                for _ in 0..<observersPerOwner {
-                    let observer = ErrorObserver(owner: owner, errorHandler: owner.handle)
-                    errorNotifier.addErrorObserver(observer)
-                    errorObservers.append(observer)
-                }
-            }
-
-            self.observersPerOwner = observersPerOwner
-            originalObserverCount = errorObservers.count
-        }
-
-        var ownerToRemove: ErrorOwnerMock? {
-            let owners = errorNotifier.errorOwners
-            guard !owners.isEmpty
-            else {
-                return nil
-            }
-            if owners.count <= 2 {
-                return owners.last
-            }
-            return owners[owners.count / 2] //pick an owner near the middle
+    func testAddErrorObserver() {
+        let errorNotifier = ErrorNotifier()
+        for index in 0..<4 {
+            let owner = ErrorOwnerMock()
+            errorNotifier.addErrorObserver(ErrorObserver(owner: owner, errorHandler: { _ in }))
+            XCTAssertEqual(errorNotifier.errorObservers.count, index + 1)
+            XCTAssert(errorNotifier.errorObservers[index].owner === owner)
         }
     }
 
-    override func spec() {
-        initSpec()
-        addSpec()
-        removeObserversSpec()
-        notifyObserversSpec()
+    func testRemoveObserversNoObservers() {
+        let errorNotifier = ErrorNotifier()
+        let owner = ErrorOwnerMock()
+        errorNotifier.removeObservers(for: owner)
+        XCTAssertEqual(errorNotifier.errorObservers.count, 0)
     }
 
-    private func initSpec() {
-        var testContext: TestContext!
-        describe("init") {
-            context("without error observers") {
-                beforeEach {
-                    testContext = TestContext()
-                }
-                it("creates an empty observers list") {
-                    expect(testContext.errorNotifier.errorObservers.isEmpty).to(beTrue())
-                }
-            }
+    func testRemoveObserversMatchingAll() {
+        let errorNotifier = ErrorNotifier()
+        let owner = ErrorOwnerMock()
+        errorNotifier.addErrorObserver(ErrorObserver(owner: owner, errorHandler: { _ in }))
+        errorNotifier.removeObservers(for: owner)
+        XCTAssertEqual(errorNotifier.errorObservers.count, 0)
+    }
+
+    func testRemoveObserversMatchingNone() {
+        let errorNotifier = ErrorNotifier()
+        (0..<4).forEach { _ in
+            errorNotifier.addErrorObserver(ErrorObserver(owner: ErrorOwnerMock(), errorHandler: { _ in }))
         }
+        let owner = ErrorOwnerMock()
+        errorNotifier.removeObservers(for: owner)
+        XCTAssertEqual(errorNotifier.errorObservers.count, 4)
     }
 
-    private func addSpec() {
-        var testContext: TestContext!
-        describe("addErrorObserver") {
-            context("first observer") {
-                beforeEach {
-                    testContext = TestContext()
-                    testContext.errorNotifier.addErrorObserver(testContext.nextErrorObserver)
-                }
-                it("adds the observer") {
-                    expect(testContext.errorNotifier.errorObservers.count) == 1
-                    expect(testContext.errorNotifier.errorObservers.last) == testContext.nextErrorObserver
-                }
-            }
-            context("not the first observer") {
-                beforeEach {
-                    testContext = TestContext(observerCount: Constants.errorObserverCount)
-                    testContext.errorNotifier.addErrorObserver(testContext.nextErrorObserver)
-                }
-                it("adds the observer") {
-                    expect(testContext.errorNotifier.errorObservers.count) == Constants.errorObserverCount + 1
-                    expect(testContext.errorNotifier.errorObservers.last) == testContext.nextErrorObserver
-                }
-            }
+    func testRemoveObserversMatchingSome() {
+        let errorNotifier = ErrorNotifier()
+        let owner = ErrorOwnerMock()
+        (0..<4).forEach { _ in
+            errorNotifier.addErrorObserver(ErrorObserver(owner: ErrorOwnerMock(), errorHandler: { _ in }))
+            errorNotifier.addErrorObserver(ErrorObserver(owner: owner, errorHandler: { _ in }))
         }
+        errorNotifier.removeObservers(for: owner)
+        XCTAssertEqual(errorNotifier.errorObservers.count, 4)
+        XCTAssert(!errorNotifier.errorObservers.contains { $0.owner === owner })
     }
 
-    private func removeObserversSpec() {
-        var testContext: TestContext!
-        var ownerToRemove: ErrorOwnerMock!
-        describe("removeObservers") {
-            context("observer owner is observing") {
-                context("one observer") {
-                    context("without other observers") {
-                        beforeEach {
-                            testContext = TestContext(ownerCount: 1, observersPerOwner: 1)
-                            ownerToRemove = testContext.ownerToRemove!
-
-                            testContext.errorNotifier.removeObservers(for: ownerToRemove)
-                        }
-                        it("empties the observer list") {
-                            expect(testContext.errorNotifier.errorObservers.isEmpty).to(beTrue())
-                        }
-                    }
-                    context("among other observers") {
-                        beforeEach {
-                            testContext = TestContext(ownerCount: 3, observersPerOwner: 1)
-                            ownerToRemove = testContext.ownerToRemove!
-
-                            testContext.errorNotifier.removeObservers(for: ownerToRemove)
-                        }
-                        it("removes the observer from the observer list") {
-                            expect(testContext.errorNotifier.errorObservers.count) == testContext.originalObserverCount - testContext.observersPerOwner
-                            expect(testContext.errorNotifier.observers(for: ownerToRemove).isEmpty).to(beTrue())
-                        }
-                    }
-                }
-                context("multiple observers") {
-                    context("without other observers") {
-                        beforeEach {
-                            testContext = TestContext(ownerCount: 1, observersPerOwner: 3)
-                            ownerToRemove = testContext.ownerToRemove!
-
-                            testContext.errorNotifier.removeObservers(for: ownerToRemove)
-                        }
-                        it("empties the observer list") {
-                            expect(testContext.errorNotifier.errorObservers.isEmpty).to(beTrue())
-                        }
-                    }
-                    context("among other observers") {
-                        beforeEach {
-                            testContext = TestContext(ownerCount: 3, observersPerOwner: 3)
-                            ownerToRemove = testContext.ownerToRemove!
-
-                            testContext.errorNotifier.removeObservers(for: ownerToRemove)
-                        }
-                        it("removes the observer from the observer list") {
-                            expect(testContext.errorNotifier.errorObservers.count) == testContext.originalObserverCount - testContext.observersPerOwner
-                            expect(testContext.errorNotifier.observers(for: ownerToRemove).isEmpty).to(beTrue())
-                        }
-                    }
-                }
-            }
-            context("observer owner is not observing") {
-                beforeEach {
-                    testContext = TestContext(ownerCount: 3, observersPerOwner: 3)
-                    ownerToRemove = ErrorOwnerMock()
-
-                    testContext.errorNotifier.removeObservers(for: ownerToRemove)
-                }
-                it("does nothing to the observer list") {
-                    expect(testContext.errorNotifier.errorObservers.count) == testContext.originalObserverCount
-                    expect(testContext.errorNotifier.observers(for: ownerToRemove).isEmpty).to(beTrue())
-                }
-            }
+    func testNotifyObservers() {
+        let errorNotifier = ErrorNotifier()
+        let owner = ErrorOwnerMock()
+        var otherOwners: [ErrorOwnerMock] = []
+        (0..<4).forEach { _ in
+            let newOwner = ErrorOwnerMock()
+            otherOwners.append(newOwner)
+            errorNotifier.addErrorObserver(ErrorObserver(owner: newOwner, errorHandler: newOwner.handle))
+            errorNotifier.addErrorObserver(ErrorObserver(owner: owner, errorHandler: owner.handle))
         }
-    }
-
-    private func notifyObserversSpec() {
-        var testContext: TestContext!
-        var ownerToRemove: ErrorOwnerMock!
-        describe("notifyObservers") {
-            context("observer owners all exist") {
-                beforeEach {
-                    testContext = TestContext(ownerCount: 3, observersPerOwner: 3)
-
-                    testContext.errorNotifier.notifyObservers(of: testContext.errorMock)
-                }
-                it("notifies each observer") {
-                    testContext.errorNotifier.errorOwners.forEach { owner in
-                        expect(owner.errors.count) == testContext.observersPerOwner
-                        owner.errors.forEach { expect(($0 as? ErrorMock)?.identifier) == Constants.errorIdentifier }
-                    }
-                }
-            }
-            context("an observer owner doesn't exist") {
-                beforeEach {
-                    testContext = TestContext(ownerCount: 3, observersPerOwner: 3)
-                    ownerToRemove = testContext.ownerToRemove!
-                    testContext.errorNotifier.erase(owner: ownerToRemove)
-
-                    testContext.errorNotifier.notifyObservers(of: testContext.errorMock)
-                }
-                it("notifies existing owner observers") {
-                    testContext.errorNotifier.errorOwners.forEach { owner in
-                        if owner === ownerToRemove {
-                            expect(owner.errors.count) == 0
-                        } else {
-                            expect(owner.errors.count) == testContext.observersPerOwner
-                            owner.errors.forEach { expect(($0 as? ErrorMock)?.identifier) == Constants.errorIdentifier }
-                        }
-                    }
-                }
-            }
+        errorNotifier.erase(owner: owner)
+        let errorMock = ErrorMock()
+        errorNotifier.notifyObservers(of: errorMock)
+        XCTAssertEqual(errorNotifier.errorObservers.count, 4)
+        XCTAssert(!errorNotifier.errorObservers.contains { $0.owner === owner })
+        XCTAssertEqual(owner.errors.count, 0)
+        for owner in otherOwners {
+            XCTAssertEqual(owner.errors.count, 1)
+            XCTAssert(owner.errors[0] as? ErrorMock === errorMock)
         }
     }
 }
 
-extension ErrorNotifier {
-    var errorOwners: [ErrorOwnerMock] { errorObservers.compactMap { $0.owner as? ErrorOwnerMock } }
-    func observers(for owner: ErrorOwnerMock) -> [ErrorObserver] {
-        errorObservers.filter { $0.owner === owner }
-    }
-}
-
-private struct ErrorMock: Error {
-    let identifier: String
-
-    init(with identifier: String) {
-        self.identifier = identifier
-    }
-}
+private class ErrorMock: Error { }

@@ -222,7 +222,8 @@ final class FlagSynchronizerSpec: QuickSpec {
                                                                streamOpened: true,
                                                                streamClosed: false) }).to(match())
                         expect(testContext.serviceMock.createEventSourceCallCount) == 1
-                        expect(testContext.eventSourceMock!.startCallCount) == 1                    }
+                        expect(testContext.eventSourceMock!.startCallCount) == 1
+                    }
                 }
                 context("polling") {
                     beforeEach {

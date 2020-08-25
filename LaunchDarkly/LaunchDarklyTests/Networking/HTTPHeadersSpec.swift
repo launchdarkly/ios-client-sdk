@@ -6,419 +6,167 @@
 //
 
 import Foundation
-import Quick
-import Nimble
+import XCTest
+
 @testable import LaunchDarkly
 
-final class HTTPHeadersSpec: QuickSpec {
+final class HTTPHeadersSpec: XCTestCase {
 
-    struct Constants {
-        static let mobileKeyCount = 3
+    private static var stubEtags: [String: String] = {
+        var etags: [String: String] = [:]
+        (0..<3).forEach { _ in etags[UUID().uuidString] = UUID().uuidString }
+        return etags
+    }()
+
+    override func tearDown() {
+        HTTPHeaders.removeFlagRequestEtags()
     }
 
-    struct TestContext {
-        var config: LDConfig
-        var httpHeaders: HTTPHeaders
-        var flagRequestEtags = [String: String]()
+    func testSettingFlagRequestEtags() {
+        HTTPHeadersSpec.stubEtags.forEach { mobileKey, etag in
+            HTTPHeaders.setFlagRequestEtag(etag, for: mobileKey)
+        }
+        XCTAssertEqual(HTTPHeaders.flagRequestEtags, HTTPHeadersSpec.stubEtags)
+    }
 
-        init(config: LDConfig? = nil, mobileKeyCount: Int = Constants.mobileKeyCount) {
-            self.config = config ?? LDConfig.stub
+    func testClearingIndividialFlagRequestEtags() {
+        HTTPHeadersSpec.stubEtags.forEach { mobileKey, etag in
+            HTTPHeaders.setFlagRequestEtag(etag, for: mobileKey)
+        }
+        HTTPHeadersSpec.stubEtags.forEach { mobileKey, _ in
+            HTTPHeaders.setFlagRequestEtag(nil, for: mobileKey)
+        }
+        XCTAssert(HTTPHeaders.flagRequestEtags.isEmpty)
+    }
 
-            httpHeaders = HTTPHeaders(config: self.config, environmentReporter: EnvironmentReportingMock())
+    func testClearingAllFlagRequestEtags() {
+        HTTPHeadersSpec.stubEtags.forEach { mobileKey, etag in
+            HTTPHeaders.setFlagRequestEtag(etag, for: mobileKey)
+        }
+        HTTPHeaders.removeFlagRequestEtags()
+        XCTAssert(HTTPHeaders.flagRequestEtags.isEmpty)
+    }
 
-            while flagRequestEtags.count < mobileKeyCount {
-                flagRequestEtags[UUID().uuidString] = UUID().uuidString
-            }
+    func testHasFlagRequestEtag() {
+        let config = LDConfig(mobileKey: "with-etag")
+        HTTPHeaders.setFlagRequestEtag("foo", for: "with-etag")
+        let withoutEtag = HTTPHeaders(config: LDConfig.stub, environmentReporter: EnvironmentReportingMock())
+        let withEtag = HTTPHeaders(config: config, environmentReporter: EnvironmentReportingMock())
+        XCTAssertFalse(withoutEtag.hasFlagRequestEtag)
+        XCTAssert(withEtag.hasFlagRequestEtag)
+    }
+
+    func testFlagRequestDefaultHeaders() {
+        let config = LDConfig.stub
+        let httpHeaders = HTTPHeaders(config: config, environmentReporter: EnvironmentReportingMock())
+        let headers = httpHeaders.flagRequestHeaders
+        XCTAssertEqual(headers[HTTPHeaders.HeaderKey.authorization],
+                       "\(HTTPHeaders.HeaderValue.apiKey) \(config.mobileKey)")
+        XCTAssertEqual(headers[HTTPHeaders.HeaderKey.userAgent],
+               "\(EnvironmentReportingMock.Constants.systemName)/\(EnvironmentReportingMock.Constants.sdkVersion)")
+        XCTAssertNil(headers[HTTPHeaders.HeaderKey.ifNoneMatch])
+    }
+
+    func testFlagRequestHeadersWithEtag() {
+        let config = LDConfig.stub
+        HTTPHeaders.setFlagRequestEtag("etag", for: config.mobileKey)
+        let httpHeaders = HTTPHeaders(config: config, environmentReporter: EnvironmentReportingMock())
+        let headers = httpHeaders.flagRequestHeaders
+        XCTAssertEqual(headers[HTTPHeaders.HeaderKey.authorization],
+                       "\(HTTPHeaders.HeaderValue.apiKey) \(config.mobileKey)")
+        XCTAssertEqual(headers[HTTPHeaders.HeaderKey.userAgent],
+               "\(EnvironmentReportingMock.Constants.systemName)/\(EnvironmentReportingMock.Constants.sdkVersion)")
+        XCTAssertEqual(headers[HTTPHeaders.HeaderKey.ifNoneMatch], "etag")
+    }
+
+    func testEventSourceDefaultHeaders() {
+        let config = LDConfig.stub
+        let httpHeaders = HTTPHeaders(config: config, environmentReporter: EnvironmentReportingMock())
+        let headers = httpHeaders.eventSourceHeaders
+        XCTAssertEqual(headers[HTTPHeaders.HeaderKey.authorization],
+                       "\(HTTPHeaders.HeaderValue.apiKey) \(config.mobileKey)")
+        XCTAssertEqual(headers[HTTPHeaders.HeaderKey.userAgent],
+                       "\(EnvironmentReportingMock.Constants.systemName)/\(EnvironmentReportingMock.Constants.sdkVersion)")
+    }
+
+    func testEventRequestDefaultHeaders() {
+        let config = LDConfig.stub
+        let httpHeaders = HTTPHeaders(config: config, environmentReporter: EnvironmentReportingMock())
+        let headers = httpHeaders.eventRequestHeaders
+        XCTAssertEqual(headers[HTTPHeaders.HeaderKey.authorization],
+                       "\(HTTPHeaders.HeaderValue.apiKey) \(config.mobileKey)")
+        XCTAssertEqual(headers[HTTPHeaders.HeaderKey.userAgent],
+                       "\(EnvironmentReportingMock.Constants.systemName)/\(EnvironmentReportingMock.Constants.sdkVersion)")
+        XCTAssertEqual(headers[HTTPHeaders.HeaderKey.contentType], HTTPHeaders.HeaderValue.applicationJson)
+        XCTAssertEqual(headers[HTTPHeaders.HeaderKey.accept], HTTPHeaders.HeaderValue.applicationJson)
+        XCTAssertEqual(headers[HTTPHeaders.HeaderKey.eventSchema], HTTPHeaders.HeaderValue.eventSchema3)
+    }
+
+    func testDiagnosticRequestDefaultHeaders() {
+        let config = LDConfig.stub
+        let httpHeaders = HTTPHeaders(config: config, environmentReporter: EnvironmentReportingMock())
+        let headers = httpHeaders.diagnosticRequestHeaders
+        XCTAssertEqual(headers[HTTPHeaders.HeaderKey.authorization],
+                       "\(HTTPHeaders.HeaderValue.apiKey) \(config.mobileKey)")
+        XCTAssertEqual(headers[HTTPHeaders.HeaderKey.userAgent],
+                       "\(EnvironmentReportingMock.Constants.systemName)/\(EnvironmentReportingMock.Constants.sdkVersion)")
+        XCTAssertEqual(headers[HTTPHeaders.HeaderKey.contentType], HTTPHeaders.HeaderValue.applicationJson)
+        XCTAssertEqual(headers[HTTPHeaders.HeaderKey.accept], HTTPHeaders.HeaderValue.applicationJson)
+        XCTAssertNil(headers[HTTPHeaders.HeaderKey.eventSchema])
+    }
+
+    func testWrapperNameIncludedInHeaders() {
+        var config = LDConfig.stub
+        config.wrapperName = "test-wrapper"
+        let httpHeaders = HTTPHeaders(config: config, environmentReporter: EnvironmentReportingMock())
+        let allRequestTypes = [httpHeaders.flagRequestHeaders,
+                               httpHeaders.eventSourceHeaders,
+                               httpHeaders.eventRequestHeaders,
+                               httpHeaders.diagnosticRequestHeaders]
+        allRequestTypes.forEach { headers in
+            XCTAssertEqual(headers["X-LaunchDarkly-Wrapper"], "test-wrapper")
         }
     }
 
-    override func spec() {
-        eventSourceHeadersSpec()
-        flagRequestHeadersSpec()
-        flagRequestEtagsSpec()
-        hasFlagRequestEtagSpec()
-        eventRequestHeadersSpec()
-        diagnosticRequestHeadersSpec()
-    }
-
-    private func eventSourceHeadersSpec() {
-        var testContext: TestContext!
-        var headers: [String: String]!
-        describe("eventSourceHeaders") {
-            context("with basic elements") {
-                beforeEach {
-                    testContext = TestContext()
-                    headers = testContext.httpHeaders.eventSourceHeaders
-                }
-                it("creates headers with authorization and user agent") {
-                    expect(headers[HTTPHeaders.HeaderKey.authorization]) == "\(HTTPHeaders.HeaderValue.apiKey) \(testContext.config.mobileKey)"
-                    expect(headers[HTTPHeaders.HeaderKey.userAgent]) == "\(EnvironmentReportingMock.Constants.systemName)/\(EnvironmentReportingMock.Constants.sdkVersion)"
-                }
-            }
-            context("with wrapperName set") {
-                beforeEach {
-                    var config = LDConfig.stub
-                    config.wrapperName = "test-wrapper"
-                    testContext = TestContext(config: config)
-                    headers = testContext.httpHeaders.eventSourceHeaders
-                }
-                it("creates headers with wrapper set") {
-                    expect(headers["X-LaunchDarkly-Wrapper"]) == "test-wrapper"
-                }
-            }
-            context("with wrapperVersion set") {
-                beforeEach {
-                    var config = LDConfig.stub
-                    config.wrapperVersion = "0.1.0"
-                    testContext = TestContext(config: config)
-                    headers = testContext.httpHeaders.eventSourceHeaders
-                }
-                it("creates headers without wrapper set") {
-                    expect(headers["X-LaunchDarkly-Wrapper"]).to(beNil())
-                }
-            }
-            context("with wrapperName and wrapperVersion set") {
-                beforeEach {
-                    var config = LDConfig.stub
-                    config.wrapperName = "test-wrapper"
-                    config.wrapperVersion = "0.1.0"
-                    testContext = TestContext(config: config)
-                    headers = testContext.httpHeaders.eventSourceHeaders
-                }
-                it("creates headers with wrapper set to combined values") {
-                    expect(headers["X-LaunchDarkly-Wrapper"]) == "test-wrapper/0.1.0"
-                }
-            }
-            context("with additional headers") {
-                beforeEach {
-                    var config = LDConfig.stub
-                    config.additionalHeaders = ["Proxy-Authorization": "token",
-                                                HTTPHeaders.HeaderKey.authorization: "feh"]
-                    testContext = TestContext(config: config)
-                    headers = testContext.httpHeaders.eventSourceHeaders
-                }
-                it("creates headers including new headers") {
-                    expect(headers["Proxy-Authorization"]) == "token"
-                }
-                it("overrides SDK set headers") {
-                    expect(headers[HTTPHeaders.HeaderKey.authorization]) == "feh"
-                }
-            }
+    func testOnlyWrapperVersionNotIncludedInHeaders() {
+        var config = LDConfig.stub
+        config.wrapperVersion = "0.1.0"
+        let httpHeaders = HTTPHeaders(config: config, environmentReporter: EnvironmentReportingMock())
+        let allRequestTypes = [httpHeaders.flagRequestHeaders,
+                               httpHeaders.eventSourceHeaders,
+                               httpHeaders.eventRequestHeaders,
+                               httpHeaders.diagnosticRequestHeaders]
+        allRequestTypes.forEach { headers in
+            XCTAssertNil(headers["X-LaunchDarkly-Wrapper"])
         }
     }
 
-    private func flagRequestHeadersSpec() {
-        var testContext: TestContext!
-        var headers: [String: String]!
-        describe("flagRequestHeaders") {
-            afterEach {
-                HTTPHeaders.removeFlagRequestEtags()
-            }
-            context("without etags") {
-                beforeEach {
-                    testContext = TestContext()
-
-                    headers = testContext.httpHeaders.flagRequestHeaders
-                }
-                it("creates headers with authorization and user agent") {
-                    expect(headers[HTTPHeaders.HeaderKey.authorization]) == "\(HTTPHeaders.HeaderValue.apiKey) \(testContext.config.mobileKey)"
-                    expect(headers[HTTPHeaders.HeaderKey.userAgent]) == "\(EnvironmentReportingMock.Constants.systemName)/\(EnvironmentReportingMock.Constants.sdkVersion)"
-                    expect(headers[HTTPHeaders.HeaderKey.ifNoneMatch]).to(beNil())
-                }
-            }
-            context("with an etag for the selected environment") {
-                var etag: String!
-                beforeEach {
-                    testContext = TestContext()
-                    etag = UUID().uuidString
-                    HTTPHeaders.setFlagRequestEtag(etag, for: testContext.config.mobileKey)
-                    testContext.flagRequestEtags.forEach { mobileKey, otherEtag in
-                        HTTPHeaders.setFlagRequestEtag(otherEtag, for: mobileKey)
-                    }
-
-                    headers = testContext.httpHeaders.flagRequestHeaders
-                }
-                it("creates headers with authorization and user agent") {
-                    expect(headers[HTTPHeaders.HeaderKey.authorization]) == "\(HTTPHeaders.HeaderValue.apiKey) \(testContext.config.mobileKey)"
-                    expect(headers[HTTPHeaders.HeaderKey.userAgent]) == "\(EnvironmentReportingMock.Constants.systemName)/\(EnvironmentReportingMock.Constants.sdkVersion)"
-                    expect(headers[HTTPHeaders.HeaderKey.ifNoneMatch]) == etag
-                }
-            }
-            context("with wrapperName set") {
-                beforeEach {
-                    var config = LDConfig.stub
-                    config.wrapperName = "test-wrapper"
-                    testContext = TestContext(config: config)
-                    headers = testContext.httpHeaders.flagRequestHeaders
-                }
-                it("creates headers with wrapper set") {
-                    expect(headers["X-LaunchDarkly-Wrapper"]) == "test-wrapper"
-                }
-            }
-            context("with wrapperVersion set") {
-                beforeEach {
-                    var config = LDConfig.stub
-                    config.wrapperVersion = "0.1.0"
-                    testContext = TestContext(config: config)
-                    headers = testContext.httpHeaders.flagRequestHeaders
-                }
-                it("creates headers without wrapper set") {
-                    expect(headers["X-LaunchDarkly-Wrapper"]).to(beNil())
-                }
-            }
-            context("with wrapperName and wrapperVersion set") {
-                beforeEach {
-                    var config = LDConfig.stub
-                    config.wrapperName = "test-wrapper"
-                    config.wrapperVersion = "0.1.0"
-                    testContext = TestContext(config: config)
-                    headers = testContext.httpHeaders.flagRequestHeaders
-                }
-                it("creates headers with wrapper set to combined values") {
-                    expect(headers["X-LaunchDarkly-Wrapper"]) == "test-wrapper/0.1.0"
-                }
-            }
-            context("with additional headers") {
-                beforeEach {
-                    var config = LDConfig.stub
-                    config.additionalHeaders = ["Proxy-Authorization": "token",
-                                                HTTPHeaders.HeaderKey.authorization: "feh"]
-                    testContext = TestContext(config: config)
-                    headers = testContext.httpHeaders.flagRequestHeaders
-                }
-                it("creates headers including new headers") {
-                    expect(headers["Proxy-Authorization"]) == "token"
-                }
-                it("overrides SDK set headers") {
-                    expect(headers[HTTPHeaders.HeaderKey.authorization]) == "feh"
-                }
-            }
+    func testWrapperNameAndVersionIncludedInHeaders() {
+        var config = LDConfig.stub
+        config.wrapperName = "test-wrapper"
+        config.wrapperVersion = "0.1.0"
+        let httpHeaders = HTTPHeaders(config: config, environmentReporter: EnvironmentReportingMock())
+        let allRequestTypes = [httpHeaders.flagRequestHeaders,
+                               httpHeaders.eventSourceHeaders,
+                               httpHeaders.eventRequestHeaders,
+                               httpHeaders.diagnosticRequestHeaders]
+        allRequestTypes.forEach { headers in
+            XCTAssertEqual(headers["X-LaunchDarkly-Wrapper"], "test-wrapper/0.1.0")
         }
     }
 
-    private func flagRequestEtagsSpec() {
-        var testContext: TestContext!
-        describe("flagRequestEtags") {
-            afterEach {
-                HTTPHeaders.removeFlagRequestEtags()
-            }
-            context("setting tags") {
-                beforeEach {
-                    testContext = TestContext()
-
-                    testContext.flagRequestEtags.forEach { mobileKey, etag in
-                        HTTPHeaders.setFlagRequestEtag(etag, for: mobileKey)
-                    }
-                }
-                it("sets the etag for each mobileKey") {
-                    expect(HTTPHeaders.flagRequestEtags.count) == testContext.flagRequestEtags.count
-                    testContext.flagRequestEtags.forEach { mobileKey, etag in
-                        expect(HTTPHeaders.flagRequestEtags[mobileKey]) == etag
-                    }
-                }
-            }
-            context("clearing all tags") {
-                beforeEach {
-                    testContext = TestContext()
-
-                    testContext.flagRequestEtags.forEach { mobileKey, etag in
-                        HTTPHeaders.setFlagRequestEtag(etag, for: mobileKey)
-                    }
-
-                    HTTPHeaders.removeFlagRequestEtags()
-                }
-                it("removes all etags") {
-                    expect(HTTPHeaders.flagRequestEtags.count) == 0
-                }
-            }
-            context("clearing single tags") {
-                beforeEach {
-                    testContext = TestContext()
-                    testContext.flagRequestEtags.forEach { mobileKey, etag in
-                        HTTPHeaders.setFlagRequestEtag(etag, for: mobileKey)
-                    }
-
-                    testContext.flagRequestEtags.keys.forEach { mobileKey in
-                        HTTPHeaders.setFlagRequestEtag(nil, for: mobileKey)
-                    }
-                }
-                it("removes all etags") {
-                    expect(HTTPHeaders.flagRequestEtags.count) == 0
-                }
-            }
-        }
-    }
-
-    private func hasFlagRequestEtagSpec() {
-        var testContext: TestContext!
-        describe("hasFlagRequestEtag") {
-            afterEach {
-                HTTPHeaders.removeFlagRequestEtags()
-            }
-            context("when etag exists") {
-                beforeEach {
-                    testContext = TestContext()
-                    //while not really needed, sets a population of etags to pick from for the test
-                    testContext.flagRequestEtags.forEach { mobileKey, etag in
-                        HTTPHeaders.setFlagRequestEtag(etag, for: mobileKey)
-                    }
-                    HTTPHeaders.setFlagRequestEtag(UUID().uuidString, for: testContext.config.mobileKey)
-                }
-                it("returns true") {
-                    expect(testContext.httpHeaders.hasFlagRequestEtag) == true
-                }
-            }
-            context("when etag does not exist") {
-                beforeEach {
-                    testContext = TestContext()
-                    //while not really needed, sets a population of etags to pick from for the test
-                    testContext.flagRequestEtags.forEach { mobileKey, etag in
-                        HTTPHeaders.setFlagRequestEtag(etag, for: mobileKey)
-                    }
-                }
-                it("returns false") {
-                    expect(testContext.httpHeaders.hasFlagRequestEtag) == false
-                }
-            }
-        }
-    }
-
-    private func eventRequestHeadersSpec() {
-        var testContext: TestContext!
-        var headers: [String: String]!
-        describe("eventRequestHeaders") {
-            context("with basic elements") {
-                beforeEach {
-                    testContext = TestContext()
-
-                    headers = testContext.httpHeaders.eventRequestHeaders
-                }
-                it("creates headers with elements") {
-                    expect(headers[HTTPHeaders.HeaderKey.authorization]) == "\(HTTPHeaders.HeaderValue.apiKey) \(testContext.config.mobileKey)"
-                    expect(headers[HTTPHeaders.HeaderKey.userAgent]) == "\(EnvironmentReportingMock.Constants.systemName)/\(EnvironmentReportingMock.Constants.sdkVersion)"
-                    expect(headers[HTTPHeaders.HeaderKey.contentType]) == HTTPHeaders.HeaderValue.applicationJson
-                    expect(headers[HTTPHeaders.HeaderKey.accept]) == HTTPHeaders.HeaderValue.applicationJson
-                    expect(headers[HTTPHeaders.HeaderKey.eventSchema]) == HTTPHeaders.HeaderValue.eventSchema3
-                }
-            }
-            context("with wrapperName set") {
-                beforeEach {
-                    var config = LDConfig.stub
-                    config.wrapperName = "test-wrapper"
-                    testContext = TestContext(config: config)
-                    headers = testContext.httpHeaders.eventRequestHeaders
-                }
-                it("creates headers with wrapper set") {
-                    expect(headers["X-LaunchDarkly-Wrapper"]) == "test-wrapper"
-                }
-            }
-            context("with wrapperVersion set") {
-                beforeEach {
-                    var config = LDConfig.stub
-                    config.wrapperVersion = "0.1.0"
-                    testContext = TestContext(config: config)
-                    headers = testContext.httpHeaders.eventRequestHeaders
-                }
-                it("creates headers without wrapper set") {
-                    expect(headers["X-LaunchDarkly-Wrapper"]).to(beNil())
-                }
-            }
-            context("with wrapperName and wrapperVersion set") {
-                beforeEach {
-                    var config = LDConfig.stub
-                    config.wrapperName = "test-wrapper"
-                    config.wrapperVersion = "0.1.0"
-                    testContext = TestContext(config: config)
-                    headers = testContext.httpHeaders.eventRequestHeaders
-                }
-                it("creates headers with wrapper set to combined values") {
-                    expect(headers["X-LaunchDarkly-Wrapper"]) == "test-wrapper/0.1.0"
-                }
-            }
-            context("with additional headers") {
-                beforeEach {
-                    var config = LDConfig.stub
-                    config.additionalHeaders = ["Proxy-Authorization": "token",
-                                                HTTPHeaders.HeaderKey.authorization: "feh"]
-                    testContext = TestContext(config: config)
-                    headers = testContext.httpHeaders.flagRequestHeaders
-                }
-                it("creates headers including new headers") {
-                    expect(headers["Proxy-Authorization"]) == "token"
-                }
-                it("overrides SDK set headers") {
-                    expect(headers[HTTPHeaders.HeaderKey.authorization]) == "feh"
-                }
-            }
-        }
-    }
-
-    private func diagnosticRequestHeadersSpec() {
-        var testContext: TestContext!
-        var headers: [String: String]!
-        describe("diagnosticRequestHeaders") {
-            context("with basic elements") {
-                beforeEach {
-                    testContext = TestContext()
-                    headers = testContext.httpHeaders.diagnosticRequestHeaders
-                }
-                it("creates headers with elements") {
-                    expect(headers[HTTPHeaders.HeaderKey.authorization]) == "\(HTTPHeaders.HeaderValue.apiKey) \(testContext.config.mobileKey)"
-                    expect(headers[HTTPHeaders.HeaderKey.userAgent]) == "\(EnvironmentReportingMock.Constants.systemName)/\(EnvironmentReportingMock.Constants.sdkVersion)"
-                    expect(headers[HTTPHeaders.HeaderKey.contentType]) == HTTPHeaders.HeaderValue.applicationJson
-                    expect(headers[HTTPHeaders.HeaderKey.accept]) == HTTPHeaders.HeaderValue.applicationJson
-                    expect(headers[HTTPHeaders.HeaderKey.eventSchema]).to(beNil())
-                }
-            }
-            context("with wrapperName set") {
-                beforeEach {
-                    var config = LDConfig.stub
-                    config.wrapperName = "test-wrapper"
-                    testContext = TestContext(config: config)
-                    headers = testContext.httpHeaders.diagnosticRequestHeaders
-                }
-                it("creates headers with wrapper set") {
-                    expect(headers["X-LaunchDarkly-Wrapper"]) == "test-wrapper"
-                }
-            }
-            context("with wrapperVersion set") {
-                beforeEach {
-                    var config = LDConfig.stub
-                    config.wrapperVersion = "0.1.0"
-                    testContext = TestContext(config: config)
-                    headers = testContext.httpHeaders.diagnosticRequestHeaders
-                }
-                it("creates headers without wrapper set") {
-                    expect(headers["X-LaunchDarkly-Wrapper"]).to(beNil())
-                }
-            }
-            context("with wrapperName and wrapperVersion set") {
-                beforeEach {
-                    var config = LDConfig.stub
-                    config.wrapperName = "test-wrapper"
-                    config.wrapperVersion = "0.1.0"
-                    testContext = TestContext(config: config)
-                    headers = testContext.httpHeaders.diagnosticRequestHeaders
-                }
-                it("creates headers with wrapper set to combined values") {
-                    expect(headers["X-LaunchDarkly-Wrapper"]) == "test-wrapper/0.1.0"
-                }
-            }
-            context("with additional headers") {
-                beforeEach {
-                    var config = LDConfig.stub
-                    config.additionalHeaders = ["Proxy-Authorization": "token",
-                                                HTTPHeaders.HeaderKey.authorization: "feh"]
-                    testContext = TestContext(config: config)
-                    headers = testContext.httpHeaders.flagRequestHeaders
-                }
-                it("creates headers including new headers") {
-                    expect(headers["Proxy-Authorization"]) == "token"
-                }
-                it("overrides SDK set headers") {
-                    expect(headers[HTTPHeaders.HeaderKey.authorization]) == "feh"
-                }
-            }
+    func testAdditionalHeadersInConfig() {
+        var config = LDConfig.stub
+        config.additionalHeaders = ["Proxy-Authorization": "token",
+                                    HTTPHeaders.HeaderKey.authorization: "feh"]
+        let httpHeaders = HTTPHeaders(config: config, environmentReporter: EnvironmentReportingMock())
+        let allRequestTypes = [httpHeaders.flagRequestHeaders,
+                               httpHeaders.eventSourceHeaders,
+                               httpHeaders.eventRequestHeaders,
+                               httpHeaders.diagnosticRequestHeaders]
+        allRequestTypes.forEach { headers in
+            XCTAssertEqual(headers["Proxy-Authorization"], "token", "Should include additional headers")
+            XCTAssertEqual(headers[HTTPHeaders.HeaderKey.authorization], "feh", "Should overwrite headers")
         }
     }
 }

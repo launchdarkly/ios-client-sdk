@@ -979,8 +979,8 @@ extension LDUser {
 
     fileprivate func sdkSetAttributesKeyValuePairsMatch(userDictionary: [String: Any]) -> ToMatchResult {
         guard let customDictionary = userDictionary.customDictionary(includeSdkSetAttributes: true)
-            else {
-                return .failed(reason: MatcherMessages.dictionaryShouldContain + CodingKeys.custom.rawValue)
+        else {
+            return .failed(reason: MatcherMessages.dictionaryShouldContain + CodingKeys.custom.rawValue)
         }
 
         var messages = [String]()
@@ -1011,8 +1011,8 @@ extension LDUser {
 
     fileprivate func customDictionaryContainsOnlySdkSetAttributes(userDictionary: [String: Any]) -> ToMatchResult {
         guard let customDictionary = userDictionary.customDictionary(includeSdkSetAttributes: false)
-            else {
-                return .failed(reason: MatcherMessages.dictionaryShouldContain + CodingKeys.custom.rawValue)
+        else {
+            return .failed(reason: MatcherMessages.dictionaryShouldContain + CodingKeys.custom.rawValue)
         }
 
         if !customDictionary.isEmpty {
@@ -1032,13 +1032,13 @@ extension LDUser {
 
     fileprivate func customDictionaryPublicKeyValuePairsMatch(userDictionary: [String: Any], privateAttributes: [String]) -> ToMatchResult {
         guard let custom = custom
-            else {
-                return userDictionary.customDictionary(includeSdkSetAttributes: false).isNilOrEmpty ? .matched
-                    : .failed(reason: MatcherMessages.dictionaryShouldNotContain + CodingKeys.custom.rawValue)
+        else {
+            return userDictionary.customDictionary(includeSdkSetAttributes: false).isNilOrEmpty ? .matched
+                : .failed(reason: MatcherMessages.dictionaryShouldNotContain + CodingKeys.custom.rawValue)
         }
         guard let customDictionary = userDictionary.customDictionary(includeSdkSetAttributes: false)
-            else {
-                return .failed(reason: MatcherMessages.dictionaryShouldContain + CodingKeys.custom.rawValue)
+        else {
+            return .failed(reason: MatcherMessages.dictionaryShouldContain + CodingKeys.custom.rawValue)
         }
 
         var messages = [String]()
@@ -1059,8 +1059,8 @@ extension LDUser {
 
     fileprivate func customDictionaryPrivateKeysDontExist(userDictionary: [String: Any], privateAttributes: [String]) -> ToMatchResult {
         guard let customDictionary = userDictionary.customDictionary(includeSdkSetAttributes: false)
-            else {
-                return .failed(reason: MatcherMessages.dictionaryShouldContain + CodingKeys.custom.rawValue)
+        else {
+            return .failed(reason: MatcherMessages.dictionaryShouldContain + CodingKeys.custom.rawValue)
         }
 
         let messages = customAttributes?.compactMap { customAttribute in
@@ -1075,9 +1075,9 @@ extension LDUser {
 
     fileprivate func customPrivateKeysAppearInPrivateAttrsWhenRedacted(userDictionary: [String: Any], privateAttributes: [String]) -> ToMatchResult {
         guard let custom = custom
-            else {
-                return userDictionary.customDictionary(includeSdkSetAttributes: false).isNilOrEmpty ? .matched
-                    : .failed(reason: MatcherMessages.dictionaryShouldNotContain + CodingKeys.custom.rawValue)
+        else {
+            return userDictionary.customDictionary(includeSdkSetAttributes: false).isNilOrEmpty ? .matched
+                : .failed(reason: MatcherMessages.dictionaryShouldNotContain + CodingKeys.custom.rawValue)
         }
 
         return failsToMatch(fails: customAttributes?.compactMap { customAttribute in
@@ -1090,9 +1090,9 @@ extension LDUser {
 
     fileprivate func customPublicOrMissingKeysDontAppearInPrivateAttrs(userDictionary: [String: Any], privateAttributes: [String]) -> ToMatchResult {
         guard let custom = custom
-            else {
-                return userDictionary.customDictionary(includeSdkSetAttributes: false).isNilOrEmpty ? .matched
-                    : .failed(reason: MatcherMessages.dictionaryShouldNotContain + CodingKeys.custom.rawValue)
+        else {
+        return userDictionary.customDictionary(includeSdkSetAttributes: false).isNilOrEmpty ? .matched
+            : .failed(reason: MatcherMessages.dictionaryShouldNotContain + CodingKeys.custom.rawValue)
         }
 
         return failsToMatch(fails: customAttributes?.compactMap { customAttribute in
@@ -1106,10 +1106,10 @@ extension LDUser {
     fileprivate func flagConfigMatches(userDictionary: [String: Any]) -> ToMatchResult {
         let flagConfig = flagStore.featureFlags
         guard let flagConfigDictionary = userDictionary.flagConfig
-            else {
-                return .failed(reason: MatcherMessages.dictionaryShouldContain + CodingKeys.config.rawValue)
+        else {
+            return .failed(reason: MatcherMessages.dictionaryShouldContain + CodingKeys.config.rawValue)
         }
-        if flagConfig != flagConfigDictionary {
+        if !AnyComparer.isEqual(flagConfig, to: flagConfigDictionary) {
             return .failed(reason: MatcherMessages.valuesDontMatch + CodingKeys.config.rawValue)
         }
         return .matched
@@ -1129,8 +1129,8 @@ extension LDUser {
 
     private func messageIfRedactedAttributeDoesNotExist(in redactedAttributes: [String]?, for attribute: String) -> String? {
         guard let redactedAttributes = redactedAttributes
-            else {
-                return MatcherMessages.dictionaryShouldContain + CodingKeys.privateAttributes.rawValue
+        else {
+            return MatcherMessages.dictionaryShouldContain + CodingKeys.privateAttributes.rawValue
         }
         return redactedAttributes.contains(attribute) ? nil : MatcherMessages.attributeListShouldContain + attribute
     }

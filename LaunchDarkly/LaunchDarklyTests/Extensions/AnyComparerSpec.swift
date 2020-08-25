@@ -2,7 +2,6 @@
 //  AnyComparerSpec.swift
 //  LaunchDarklyTests
 //
-//  Created by Mark Pokorny on 2/20/18. +JMJ
 //  Copyright © 2018 Catamorphic Co. All rights reserved.
 //
 
@@ -68,7 +67,7 @@ final class AnyComparerSpec: QuickSpec {
             context("when values match") {
                 context("and are the same type") {
                     it("returns true") {
-                        Values.all.forEach { (value) in
+                        Values.all.forEach { value in
                             other = value
 
                             expect(AnyComparer.isEqual(value, to: other)).to(beTrue())
@@ -112,7 +111,7 @@ final class AnyComparerSpec: QuickSpec {
                         featureFlags = DarklyServiceMock.Constants.stubFeatureFlags()
                     }
                     it("returns true") {
-                        featureFlags.forEach { (_, featureFlag) in
+                        featureFlags.forEach { _, featureFlag in
                             otherFlag = FeatureFlag(copying: featureFlag)
 
                             expect(AnyComparer.isEqual(featureFlag, to: otherFlag)).to(beTrue())
@@ -124,8 +123,8 @@ final class AnyComparerSpec: QuickSpec {
                         featureFlags = DarklyServiceMock.Constants.stubFeatureFlags(includeVariations: false, includeVersions: false, includeFlagVersions: false)
                     }
                     it("returns true") {
-                        featureFlags.forEach { (flagKey, featureFlag) in
-                            otherFlag = FeatureFlag(flagKey: flagKey, value: featureFlag.value, variation: nil, version: nil, flagVersion: nil, trackEvents: nil, debugEventsUntilDate: nil, reason: nil, trackReason: false)
+                        featureFlags.forEach { flagKey, featureFlag in
+                            otherFlag = FeatureFlag(flagKey: flagKey, value: featureFlag.value, trackReason: false)
 
                             expect(AnyComparer.isEqual(featureFlag, to: otherFlag)).to(beTrue())
                         }
@@ -141,7 +140,7 @@ final class AnyComparerSpec: QuickSpec {
                     }
                     context("with differing variation") {
                         it("returns false") {
-                            featureFlags.forEach { (_, featureFlag) in
+                            featureFlags.forEach { _, featureFlag in
                                 otherFlag = FeatureFlag(copying: featureFlag, variation: featureFlag.variation! + 1)
 
                                 expect(AnyComparer.isEqual(featureFlag, to: otherFlag)).to(beFalse())
@@ -150,7 +149,7 @@ final class AnyComparerSpec: QuickSpec {
                     }
                     context("with differing version") {
                         it("returns false") {
-                            featureFlags.forEach { (_, featureFlag) in
+                            featureFlags.forEach { _, featureFlag in
                                 otherFlag = FeatureFlag(copying: featureFlag, version: featureFlag.version! + 1)
 
                                 expect(AnyComparer.isEqual(featureFlag, to: otherFlag)).to(beFalse())
@@ -159,7 +158,7 @@ final class AnyComparerSpec: QuickSpec {
                     }
                     context("with differing flagVersion") {
                         it("returns true") {
-                            featureFlags.forEach { (_, featureFlag) in
+                            featureFlags.forEach { _, featureFlag in
                                 otherFlag = FeatureFlag(copying: featureFlag, flagVersion: featureFlag.flagVersion! + 1)
 
                                 expect(AnyComparer.isEqual(featureFlag, to: otherFlag)).to(beTrue())
@@ -168,7 +167,7 @@ final class AnyComparerSpec: QuickSpec {
                     }
                     context("with differing trackEvents") {
                         it("returns true") {
-                            featureFlags.forEach { (_, featureFlag) in
+                            featureFlags.forEach { _, featureFlag in
                                 otherFlag = FeatureFlag(copying: featureFlag, trackEvents: false)
 
                                 expect(AnyComparer.isEqual(featureFlag, to: otherFlag)).to(beTrue())
@@ -177,7 +176,7 @@ final class AnyComparerSpec: QuickSpec {
                     }
                     context("with differing debugEventsUntilDate") {
                         it("returns true") {
-                            featureFlags.forEach { (_, featureFlag) in
+                            featureFlags.forEach { _, featureFlag in
                                 otherFlag = FeatureFlag(copying: featureFlag, debugEventsUntilDate: Date())
 
                                 expect(AnyComparer.isEqual(featureFlag, to: otherFlag)).to(beTrue())
@@ -191,7 +190,7 @@ final class AnyComparerSpec: QuickSpec {
                     }
                     context("with differing value") {
                         it("returns true") {    //Yeah, this is weird. Since the variation is missing the comparison succeeds
-                            featureFlags.forEach { (flagKey, featureFlag) in
+                            featureFlags.forEach { flagKey, featureFlag in
                                 otherFlag = DarklyServiceMock.Constants.stubFeatureFlag(for: flagKey,
                                                                                         includeVariation: false,
                                                                                         includeVersion: false,
@@ -213,7 +212,7 @@ final class AnyComparerSpec: QuickSpec {
         describe("isEqual(to:)") {
             context("when values match") {
                 it("returns true") {
-                    Values.all.forEach { (value) in
+                    Values.all.forEach { value in
                         other = value
 
                         expect(AnyComparer.isEqual(value, to: other)).to(beTrue())
@@ -223,7 +222,7 @@ final class AnyComparerSpec: QuickSpec {
             }
             context("when values dont match") {
                 it("returns false") {
-                    zip(Values.all, AltValues.all).forEach { (value, altValue) in
+                    zip(Values.all, AltValues.all).forEach { value, altValue in
                         other = altValue
 
                         if !(value is NSNull) {
@@ -235,7 +234,7 @@ final class AnyComparerSpec: QuickSpec {
             }
             context("when one value is nil") {
                 it("returns false") {
-                    Values.all.forEach { (value) in
+                    Values.all.forEach { value in
                         expect(AnyComparer.isEqual(value, to: nil)).to(beFalse())
                         expect(AnyComparer.isEqual(nil, to: value)).to(beFalse())
                     }
@@ -251,7 +250,7 @@ final class AnyComparerSpec: QuickSpec {
         describe("isEqual(to:)") {
             context("when values match") {
                 it("returns true") {
-                    Values.all.forEach { (value) in
+                    Values.all.forEach { value in
                         optionalValue = value
                         other = value
 
@@ -261,7 +260,7 @@ final class AnyComparerSpec: QuickSpec {
             }
             context("when values dont match") {
                 it("returns false") {
-                    zip(Values.all, AltValues.all).forEach { (value, altValue) in
+                    zip(Values.all, AltValues.all).forEach { value, altValue in
                         optionalValue = value
                         other = altValue
 
@@ -273,7 +272,7 @@ final class AnyComparerSpec: QuickSpec {
             }
             context("when one value is nil") {
                 it("returns false") {
-                    Values.all.forEach { (value) in
+                    Values.all.forEach { value in
                         optionalValue = value
 
                         expect(AnyComparer.isEqual(optionalValue, to: nil)).to(beFalse())

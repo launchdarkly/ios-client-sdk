@@ -33,10 +33,6 @@ final class KeyedValueCacheSpec: QuickSpec {
     }
 
     override func spec() {
-        storeAndRetrieveFeatureFlagsSpec()
-    }
-
-    private func storeAndRetrieveFeatureFlagsSpec() {
         var testContext: TestContext!
         var retrievedUserEnvironmentCollectionDictionary: [UserKey: Any]?
         describe("store and retrieve flags using user defaults") {

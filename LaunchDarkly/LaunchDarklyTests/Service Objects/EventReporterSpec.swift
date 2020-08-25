@@ -98,20 +98,18 @@ final class EventReporterSpec: QuickSpec {
             reportersTracker?.flagCounters[key]
         }
 
-        func flagValueCounter(for key: LDFlagKey, and featureFlag: FeatureFlag?) -> FlagValueCounter? {
-            flagCounter(for: key)?.flagValueCounters.flagValueCounter(for: featureFlag)
+        func flagValueCounter(for key: LDFlagKey, and featureFlag: FeatureFlag?) -> CounterValue? {
+            flagCounter(for: key)?.flagValueCounters[CounterKey(variation: featureFlag?.variation, version: featureFlag?.versionForEvents)]
         }
     }
 
     override func spec() {
         initSpec()
         isOnlineSpec()
-        changeConfigSpec()
         recordEventSpec()
         recordFlagEvaluationEventsSpec()
         reportEventsSpec()
         reportTimerSpec()
-        eventKeysSpec()
     }
 
     private func initSpec() {
@@ -204,42 +202,6 @@ final class EventReporterSpec: QuickSpec {
                     expect(testContext.eventReporter.isReportingActive) == false
                     expect(testContext.serviceMock.publishEventDictionariesCallCount) == 0
                     expect(testContext.eventReporter.eventStoreKeys) == testContext.eventKeys
-                }
-            }
-        }
-    }
-
-    private func changeConfigSpec() {
-        describe("change config") {
-            var config: LDConfig!
-            var testContext: TestContext!
-            beforeEach {
-                testContext = TestContext()
-                config = LDConfig.stub
-                config.streamingMode = .polling //using this to verify the config was changed...could be any value different from the setup
-            }
-            context("while offline") {
-                beforeEach {
-                    testContext.eventReporter.config = config
-                }
-                it("changes the config") {
-                    expect(testContext.eventReporter.isOnline) == false
-                    expect(testContext.eventReporter.isReportingActive) == false
-                    expect(testContext.serviceMock.publishEventDictionariesCallCount) == 0
-                    expect(testContext.eventReporter.config.streamingMode) == config.streamingMode
-                }
-            }
-            context("while online") {
-                beforeEach {
-                    testContext.eventReporter.isOnline = true
-
-                    testContext.eventReporter.config = config
-                }
-                it("takes the reporter offline and changes the config") {
-                    expect(testContext.eventReporter.isOnline) == false
-                    expect(testContext.eventReporter.isReportingActive) == false
-                    expect(testContext.serviceMock.publishEventDictionariesCallCount) == 0
-                    expect(testContext.eventReporter.config) == config
                 }
             }
         }
@@ -594,9 +556,7 @@ final class EventReporterSpec: QuickSpec {
                 it("tracks the flag request") {
                     let flagValueCounter = testContext.flagValueCounter(for: testContext.flagKey, and: testContext.featureFlag)
                     expect(flagValueCounter).toNot(beNil())
-                    expect(AnyComparer.isEqual(flagValueCounter?.reportedValue, to: testContext.featureFlag.value)).to(beTrue())
-                    expect(flagValueCounter?.featureFlag) == testContext.featureFlagWithReason
-                    expect(flagValueCounter?.isKnown) == true
+                    expect(AnyComparer.isEqual(flagValueCounter?.value, to: testContext.featureFlag.value)).to(beTrue())
                     expect(flagValueCounter?.count) == 1
                 }
             }
@@ -618,9 +578,7 @@ final class EventReporterSpec: QuickSpec {
                 it("tracks the flag request") {
                     let flagValueCounter = testContext.flagValueCounter(for: testContext.flagKey, and: testContext.featureFlag)
                     expect(flagValueCounter).toNot(beNil())
-                    expect(AnyComparer.isEqual(flagValueCounter?.reportedValue, to: testContext.featureFlag.value)).to(beTrue())
-                    expect(flagValueCounter?.featureFlag) == testContext.featureFlagWithReasonAndTrackReason
-                    expect(flagValueCounter?.isKnown) == true
+                    expect(AnyComparer.isEqual(flagValueCounter?.value, to: testContext.featureFlag.value)).to(beTrue())
                     expect(flagValueCounter?.count) == 1
                 }
             }
@@ -640,9 +598,7 @@ final class EventReporterSpec: QuickSpec {
                 it("tracks the flag request") {
                     let flagValueCounter = testContext.flagValueCounter(for: testContext.flagKey, and: testContext.featureFlag)
                     expect(flagValueCounter).toNot(beNil())
-                    expect(AnyComparer.isEqual(flagValueCounter?.reportedValue, to: testContext.featureFlag.value)).to(beTrue())
-                    expect(flagValueCounter?.featureFlag) == testContext.featureFlag
-                    expect(flagValueCounter?.isKnown) == true
+                    expect(AnyComparer.isEqual(flagValueCounter?.value, to: testContext.featureFlag.value)).to(beTrue())
                     expect(flagValueCounter?.count) == 1
                 }
             }
@@ -661,9 +617,7 @@ final class EventReporterSpec: QuickSpec {
                         it("tracks the flag request") {
                             let flagValueCounter = testContext.flagValueCounter(for: testContext.flagKey, and: testContext.featureFlag)
                             expect(flagValueCounter).toNot(beNil())
-                            expect(AnyComparer.isEqual(flagValueCounter?.reportedValue, to: testContext.featureFlag.value)).to(beTrue())
-                            expect(flagValueCounter?.featureFlag) == testContext.featureFlag
-                            expect(flagValueCounter?.isKnown) == true
+                            expect(AnyComparer.isEqual(flagValueCounter?.value, to: testContext.featureFlag.value)).to(beTrue())
                             expect(flagValueCounter?.count) == 1
                         }
                     }
@@ -678,9 +632,7 @@ final class EventReporterSpec: QuickSpec {
                         it("tracks the flag request") {
                             let flagValueCounter = testContext.flagValueCounter(for: testContext.flagKey, and: testContext.featureFlag)
                             expect(flagValueCounter).toNot(beNil())
-                            expect(AnyComparer.isEqual(flagValueCounter?.reportedValue, to: testContext.featureFlag.value)).to(beTrue())
-                            expect(flagValueCounter?.featureFlag) == testContext.featureFlag
-                            expect(flagValueCounter?.isKnown) == true
+                            expect(AnyComparer.isEqual(flagValueCounter?.value, to: testContext.featureFlag.value)).to(beTrue())
                             expect(flagValueCounter?.count) == 1
                         }
                     }
@@ -699,9 +651,7 @@ final class EventReporterSpec: QuickSpec {
                         it("tracks the flag request") {
                             let flagValueCounter = testContext.flagValueCounter(for: testContext.flagKey, and: testContext.featureFlag)
                             expect(flagValueCounter).toNot(beNil())
-                            expect(AnyComparer.isEqual(flagValueCounter?.reportedValue, to: testContext.featureFlag.value)).to(beTrue())
-                            expect(flagValueCounter?.featureFlag) == testContext.featureFlag
-                            expect(flagValueCounter?.isKnown) == true
+                            expect(AnyComparer.isEqual(flagValueCounter?.value, to: testContext.featureFlag.value)).to(beTrue())
                             expect(flagValueCounter?.count) == 1
                         }
                     }
@@ -716,9 +666,7 @@ final class EventReporterSpec: QuickSpec {
                         it("tracks the flag request") {
                             let flagValueCounter = testContext.flagValueCounter(for: testContext.flagKey, and: testContext.featureFlag)
                             expect(flagValueCounter).toNot(beNil())
-                            expect(AnyComparer.isEqual(flagValueCounter?.reportedValue, to: testContext.featureFlag.value)).to(beTrue())
-                            expect(flagValueCounter?.featureFlag) == testContext.featureFlag
-                            expect(flagValueCounter?.isKnown) == true
+                            expect(AnyComparer.isEqual(flagValueCounter?.value, to: testContext.featureFlag.value)).to(beTrue())
                             expect(flagValueCounter?.count) == 1
                         }
                     }
@@ -734,14 +682,12 @@ final class EventReporterSpec: QuickSpec {
                     expect(testContext.eventReporter.eventStoreKeys.filter { eventKey in
                         eventKey == testContext.flagKey
                         }.count == 2).to(beTrue())
-                    expect(Set(testContext.eventReporter.eventStore.eventKinds)).to(equal(Set([.feature, .debug])))
+                    expect(testContext.eventReporter.eventStore.eventKinds).to(contain([.feature, .debug]))
                 }
                 it("tracks the flag request") {
                     let flagValueCounter = testContext.flagValueCounter(for: testContext.flagKey, and: testContext.featureFlag)
                     expect(flagValueCounter).toNot(beNil())
-                    expect(AnyComparer.isEqual(flagValueCounter?.reportedValue, to: testContext.featureFlag.value)).to(beTrue())
-                    expect(flagValueCounter?.featureFlag) == testContext.featureFlag
-                    expect(flagValueCounter?.isKnown) == true
+                    expect(AnyComparer.isEqual(flagValueCounter?.value, to: testContext.featureFlag.value)).to(beTrue())
                     expect(flagValueCounter?.count) == 1
                 }
             }
@@ -757,14 +703,12 @@ final class EventReporterSpec: QuickSpec {
                     expect(testContext.eventReporter.eventStoreKeys.filter { eventKey in
                         eventKey == testContext.flagKey
                         }.count == 2).to(beTrue())
-                    expect(Set(testContext.eventReporter.eventStore.eventKinds)).to(equal(Set([.feature, .debug])))
+                    expect(testContext.eventReporter.eventStore.eventKinds).to(contain([.feature, .debug]))
                 }
                 it("tracks the flag request") {
                     let flagValueCounter = testContext.flagValueCounter(for: testContext.flagKey, and: testContext.featureFlag)
                     expect(flagValueCounter).toNot(beNil())
-                    expect(AnyComparer.isEqual(flagValueCounter?.reportedValue, to: testContext.featureFlag.value)).to(beTrue())
-                    expect(flagValueCounter?.featureFlag) == testContext.featureFlagWithReasonAndTrackReason
-                    expect(flagValueCounter?.isKnown) == true
+                    expect(AnyComparer.isEqual(flagValueCounter?.value, to: testContext.featureFlag.value)).to(beTrue())
                     expect(flagValueCounter?.count) == 1
                 }
             }
@@ -779,9 +723,7 @@ final class EventReporterSpec: QuickSpec {
                 it("tracks the flag request") {
                     let flagValueCounter = testContext.flagValueCounter(for: testContext.flagKey, and: testContext.featureFlag)
                     expect(flagValueCounter).toNot(beNil())
-                    expect(AnyComparer.isEqual(flagValueCounter?.reportedValue, to: testContext.featureFlag.value)).to(beTrue())
-                    expect(flagValueCounter?.featureFlag) == testContext.featureFlag
-                    expect(flagValueCounter?.isKnown) == true
+                    expect(AnyComparer.isEqual(flagValueCounter?.value, to: testContext.featureFlag.value)).to(beTrue())
                     expect(flagValueCounter?.count) == 1
                 }
             }
@@ -801,9 +743,7 @@ final class EventReporterSpec: QuickSpec {
                 it("tracks the flag request") {
                     let flagValueCounter = testContext.flagValueCounter(for: testContext.flagKey, and: testContext.featureFlag)
                     expect(flagValueCounter).toNot(beNil())
-                    expect(AnyComparer.isEqual(flagValueCounter?.reportedValue, to: testContext.featureFlag.value)).to(beTrue())
-                    expect(flagValueCounter?.featureFlag) == testContext.featureFlag
-                    expect(flagValueCounter?.isKnown) == true
+                    expect(AnyComparer.isEqual(flagValueCounter?.value, to: testContext.featureFlag.value)).to(beTrue())
                     expect(flagValueCounter?.count) == 1
                 }
             }
@@ -823,9 +763,7 @@ final class EventReporterSpec: QuickSpec {
                     it("tracks the flag request") {
                         let flagValueCounter = testContext.flagValueCounter(for: testContext.flagKey, and: testContext.featureFlag)
                         expect(flagValueCounter).toNot(beNil())
-                        expect(AnyComparer.isEqual(flagValueCounter?.reportedValue, to: testContext.featureFlag.value)).to(beTrue())
-                        expect(flagValueCounter?.featureFlag) == testContext.featureFlag
-                        expect(flagValueCounter?.isKnown) == true
+                        expect(AnyComparer.isEqual(flagValueCounter?.value, to: testContext.featureFlag.value)).to(beTrue())
                         expect(flagValueCounter?.count) == testContext.flagRequestCount
                     }
                 }
@@ -862,9 +800,7 @@ final class EventReporterSpec: QuickSpec {
                     it("tracks the flag request") {
                         let flagValueCounter = testContext.flagValueCounter(for: testContext.flagKey, and: testContext.featureFlag)
                         expect(flagValueCounter).toNot(beNil())
-                        expect(AnyComparer.isEqual(flagValueCounter?.reportedValue, to: testContext.featureFlag.value)).to(beTrue())
-                        expect(flagValueCounter?.featureFlag) == testContext.featureFlag
-                        expect(flagValueCounter?.isKnown) == true
+                        expect(AnyComparer.isEqual(flagValueCounter?.value, to: testContext.featureFlag.value)).to(beTrue())
                         expect(flagValueCounter?.count) == testContext.flagRequestCount
                     }
                 }
@@ -887,9 +823,7 @@ final class EventReporterSpec: QuickSpec {
 
                 let flagValueCounter = testContext.flagValueCounter(for: testContext.flagKey, and: testContext.featureFlag)
                 expect(flagValueCounter).toNot(beNil())
-                expect(AnyComparer.isEqual(flagValueCounter?.reportedValue, to: testContext.featureFlag.value)).to(beTrue())
-                expect(flagValueCounter?.featureFlag) == testContext.featureFlag
-                expect(flagValueCounter?.isKnown) == true
+                expect(AnyComparer.isEqual(flagValueCounter?.value, to: testContext.featureFlag.value)).to(beTrue())
                 expect(flagValueCounter?.count) == testContext.flagRequestCount
             }
         }
@@ -932,37 +866,6 @@ final class EventReporterSpec: QuickSpec {
             }
         }
     }
-
-    private func eventKeysSpec() {
-        describe("eventKeys") {
-            var testContext: TestContext!
-            var eventKeys: String!
-            context("when events exist") {
-                beforeEach {
-                    testContext = TestContext(eventCount: Event.Kind.allKinds.count)
-
-                    eventKeys = testContext.eventReporter.eventStore.eventKeys
-                }
-                it("creates a list of keys that match the event keys") {
-                    expect(eventKeys.isEmpty).to(beFalse())
-                    expect(eventKeys.components(separatedBy: ", ").count) == Event.Kind.allKinds.count - 1  //summary events don't have a key
-                    testContext.eventKeys.forEach { eventKey in
-                        expect(eventKeys.contains(eventKey)).to(beTrue())
-                    }
-                }
-            }
-            context("when events do not exist") {
-                beforeEach {
-                    testContext = TestContext()
-
-                    eventKeys = testContext.eventReporter.eventStore.eventKeys
-                }
-                it("returns an empty string") {
-                    expect(eventKeys.isEmpty).to(beTrue())
-                }
-            }
-        }
-    }
 }
 
 extension EventReporter {
@@ -992,6 +895,6 @@ extension Event.Kind {
 extension Array where Element == [String: Any] {
     static func == (_ lhs: [[String: Any]], _ rhs: [[String: Any]]) -> Bool {
         // Same length and the left hand side does not contain any elements not in the right hand side
-        lhs.count == rhs.count && !lhs.contains { !rhs.contains($0) }
+        lhs.count == rhs.count && !lhs.contains { lhse in !rhs.contains { AnyComparer.isEqual($0, to: lhse) } }
     }
 }

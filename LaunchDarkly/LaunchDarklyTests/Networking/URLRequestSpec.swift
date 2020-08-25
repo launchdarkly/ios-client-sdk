@@ -6,61 +6,28 @@
 //
 
 import Foundation
-import Quick
-import Nimble
+import XCTest
+
 @testable import LaunchDarkly
 
-final class URLRequestSpec: QuickSpec {
-
-    struct Constants {
-        static let dummyUrl = URL(string: "https://dummy.urlRequest.com")!
-        static let startingHeaders = ["header1": "value1", "header2": "value2", "header3": "value3"]
-        static let newHeaders = ["headerA": "valueA", "headerB": "valueB"]
+final class URLRequestSpec: XCTestCase {
+    func testAppendHeadersNoInitial() {
+        var request: URLRequest = URLRequest(url: URL(string: "https://dummy.urlRequest.com")!)
+        request.appendHeaders(["headerA": "valueA", "headerB": "valueB"])
+        XCTAssertEqual(request.allHTTPHeaderFields, ["headerA": "valueA", "headerB": "valueB"])
     }
 
-    var subject: URLRequest!
+    func testAppendHeaders() {
+        var request: URLRequest = URLRequest(url: URL(string: "https://dummy.urlRequest.com")!)
+        request.allHTTPHeaderFields = ["header1": "value1"]
+        request.appendHeaders(["headerA": "valueA"])
+        XCTAssertEqual(request.allHTTPHeaderFields, ["header1": "value1", "headerA": "valueA"])
+    }
 
-    override func spec() {
-
-        describe("appendHeaders") {
-            context("no new headers exist in original") {
-                var targetHeaders = Constants.startingHeaders
-                beforeEach {
-                    Constants.newHeaders.forEach { key, value in
-                        targetHeaders[key] = value
-                    }
-
-                    self.subject = URLRequest(url: Constants.dummyUrl)
-                    self.subject.allHTTPHeaderFields = Constants.startingHeaders
-                    expect(self.subject.allHTTPHeaderFields) == Constants.startingHeaders
-
-                    self.subject.appendHeaders(Constants.newHeaders)
-                }
-                it("adds new headers") {
-                    expect(self.subject.allHTTPHeaderFields) == targetHeaders
-                }
-            }
-            context("some new headers exist in original") {
-                var targetHeaders = Constants.startingHeaders
-                beforeEach {
-                    var startingHeaders = Constants.startingHeaders
-                    startingHeaders["headerA"] = "wrongValue"
-
-                    targetHeaders = startingHeaders
-                    Constants.newHeaders.forEach { key, value in
-                        targetHeaders[key] = value
-                    }
-
-                    self.subject = URLRequest(url: Constants.dummyUrl)
-                    self.subject.allHTTPHeaderFields = startingHeaders
-                    expect(self.subject.allHTTPHeaderFields) == startingHeaders
-
-                    self.subject.appendHeaders(Constants.newHeaders)
-                }
-                it("adds new headers") {
-                    expect(self.subject.allHTTPHeaderFields) == targetHeaders
-                }
-            }
-        }
+    func testAppendHeadersOverrides() {
+        var request: URLRequest = URLRequest(url: URL(string: "https://dummy.urlRequest.com")!)
+        request.allHTTPHeaderFields = ["header1": "value1", "header2": "value2"]
+        request.appendHeaders(["header1": "value3"])
+        XCTAssertEqual(request.allHTTPHeaderFields, ["header1": "value3", "header2": "value2"])
     }
 }

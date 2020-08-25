@@ -149,11 +149,11 @@ public class LDClient {
     }
 
     private var canGoOnline: Bool {
-        return hasStarted && isInSupportedRunMode && !config.mobileKey.isEmpty
+        hasStarted && isInSupportedRunMode && !config.mobileKey.isEmpty
     }
 
     var isInSupportedRunMode: Bool {
-        return runMode == .foreground || config.enableBackgroundUpdates
+        runMode == .foreground || config.enableBackgroundUpdates
     }
 
     private func reasonOnlineUnavailable(goOnline: Bool) -> String {
@@ -294,7 +294,7 @@ public class LDClient {
             self.internalSetOnline(wasOnline, completion: completion)
         }
     }
-    
+
     private let internalIdentifyQueue: DispatchQueue = DispatchQueue(label: "InternalIdentifyQueue")
 
     private(set) var service: DarklyServiceProvider {
@@ -360,7 +360,7 @@ public class LDClient {
         //the defaultValue cast to 'as T?' directs the call to the Optional-returning variation method
         variation(forKey: flagKey, defaultValue: defaultValue as T?) ?? defaultValue
     }
-    
+
     /**
      Returns the LDEvaluationDetail for the given feature flag. LDEvaluationDetail gives you more insight into why your variation contains the specified value. If the flag does not exist, cannot be cast to the correct return type, or the LDClient is not started, returns an LDEvaluationDetail with the default value. Use this method when the default value is a non-Optional type. See `variationDetail` with the Optional return value when the default value can be nil. See [variationWithdefaultValue](x-source-tag://variationWithdefaultValue)
      
@@ -375,7 +375,7 @@ public class LDClient {
         let value = variationInternal(forKey: flagKey, defaultValue: defaultValue, includeReason: true)
         return LDEvaluationDetail(value: value ?? defaultValue, variationIndex: featureFlag?.variation, reason: reason)
     }
-    
+
     private func checkErrorKinds(featureFlag: FeatureFlag?) -> [String: Any]? {
         if !hasStarted {
             return ["kind": "ERROR", "errorKind": "CLIENT_NOT_READY"]
@@ -431,7 +431,7 @@ public class LDClient {
     public func variation<T: LDFlagValueConvertible>(forKey flagKey: LDFlagKey, defaultValue: T? = nil) -> T? {
         variationInternal(forKey: flagKey, defaultValue: defaultValue, includeReason: false)
     }
-    
+
     /**
      Returns the LDEvaluationDetail for the given feature flag. LDEvaluationDetail gives you more insight into why your variation contains the specified value. If the flag does not exist, cannot be cast to the correct return type, or the LDClient is not started, returns an LDEvaluationDetail with the default value, which may be `nil`. Use this method when the default value is a Optional type. See [variationWithoutdefaultValue](x-source-tag://variationWithoutdefaultValue)
      
@@ -446,12 +446,7 @@ public class LDClient {
         let value = variationInternal(forKey: flagKey, defaultValue: defaultValue, includeReason: true)
         return LDEvaluationDetail(value: value, variationIndex: featureFlag?.variation, reason: reason)
     }
-    
-    internal func variationInternal<T: LDFlagValueConvertible>(forKey flagKey: LDFlagKey, defaultValue: T) -> T {
-        //Because the defaultValue is wrapped into an Optional, the nil coalescing right side should never be called
-        variationInternal(forKey: flagKey, defaultValue: defaultValue as T?, includeReason: false) ?? defaultValue
-    }
-    
+
     internal func variationInternal<T: LDFlagValueConvertible>(forKey flagKey: LDFlagKey, defaultValue: T? = nil, includeReason: Bool? = false) -> T? {
         guard hasStarted
         else {
@@ -497,9 +492,7 @@ public class LDClient {
     */
     public var allFlags: [LDFlagKey: Any]? {
         guard hasStarted
-        else {
-            return nil
-        }
+        else { return nil }
         return user.flagStore.featureFlags.allFlagValues
     }
 
@@ -1022,10 +1015,6 @@ private extension Optional {
         
         func setRunMode(_ runMode: LDClientRunMode) {
             self.runMode = runMode
-        }
-
-        func setHasStarted(_ hasStarted: Bool) {
-            self.hasStarted = hasStarted
         }
 
         func setService(_ service: DarklyServiceProvider) {
