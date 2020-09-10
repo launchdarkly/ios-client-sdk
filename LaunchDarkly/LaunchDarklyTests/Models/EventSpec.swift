@@ -336,22 +336,7 @@ final class EventSpec: QuickSpec {
                     expect(eventDictionary.reason).to(beNil())
                 }
                 it("creates a dictionary with the full user") {
-                    expect(eventDictionary.eventUser).toNot(beNil())
-                    if let eventDictionaryUser = eventDictionary.eventUser {
-                        expect(eventDictionaryUser.key) == user.key
-                        expect(eventDictionaryUser.name) == user.name
-                        expect(eventDictionaryUser.firstName) == user.firstName
-                        expect(eventDictionaryUser.lastName) == user.lastName
-                        expect(eventDictionaryUser.country) == user.country
-                        expect(eventDictionaryUser.ipAddress) == user.ipAddress
-                        expect(eventDictionaryUser.email) == user.email
-                        expect(eventDictionaryUser.avatar) == user.avatar
-                        expect(AnyComparer.isEqual(eventDictionaryUser.custom, to: user.custom)).to(beTrue())
-                        expect(eventDictionaryUser.device) == user.device
-                        expect(eventDictionaryUser.operatingSystem) == user.operatingSystem
-                        expect(eventDictionaryUser.isAnonymous) == user.isAnonymous
-                        expect(eventDictionaryUser.privateAttributes).to(beNil())
-                    }
+                    expect(AnyComparer.isEqual(eventDictionary.eventUserDictionary, to: user.dictionaryValue(includePrivateAttributes: false, config: config))).to(beTrue())
                     expect(eventDictionary.eventUserKey).to(beNil())
                 }
             }
@@ -439,22 +424,7 @@ final class EventSpec: QuickSpec {
                     expect(eventDictionary.eventDefaultValue).to(beNil())
                     expect(eventDictionary.eventVariation).to(beNil())
                     expect(eventDictionary.eventData).to(beNil())
-                    expect(eventDictionary.eventUser).toNot(beNil())
-                    if let eventDictionaryUser = eventDictionary.eventUser {
-                        expect(eventDictionaryUser.key) == user.key
-                        expect(eventDictionaryUser.name) == user.name
-                        expect(eventDictionaryUser.firstName) == user.firstName
-                        expect(eventDictionaryUser.lastName) == user.lastName
-                        expect(eventDictionaryUser.country) == user.country
-                        expect(eventDictionaryUser.ipAddress) == user.ipAddress
-                        expect(eventDictionaryUser.email) == user.email
-                        expect(eventDictionaryUser.avatar) == user.avatar
-                        expect(AnyComparer.isEqual(eventDictionaryUser.custom, to: user.custom)).to(beTrue())
-                        expect(eventDictionaryUser.device) == user.device
-                        expect(eventDictionaryUser.operatingSystem) == user.operatingSystem
-                        expect(eventDictionaryUser.isAnonymous) == user.isAnonymous
-                        expect(eventDictionaryUser.privateAttributes).to(beNil())
-                    }
+                    expect(AnyComparer.isEqual(eventDictionary.eventUserDictionary, to: user.dictionaryValue(includePrivateAttributes: false, config: config))).to(beTrue())
                     expect(eventDictionary.eventUserKey).to(beNil())
                 }
             }
@@ -569,22 +539,7 @@ final class EventSpec: QuickSpec {
                     expect(eventDictionary.eventVariation).to(beNil())
                 }
                 it("creates a dictionary with the full user") {
-                    expect(eventDictionary.eventUser).toNot(beNil())
-                    if let eventDictionaryUser = eventDictionary.eventUser {
-                        expect(eventDictionaryUser.key) == user.key
-                        expect(eventDictionaryUser.name) == user.name
-                        expect(eventDictionaryUser.firstName) == user.firstName
-                        expect(eventDictionaryUser.lastName) == user.lastName
-                        expect(eventDictionaryUser.country) == user.country
-                        expect(eventDictionaryUser.ipAddress) == user.ipAddress
-                        expect(eventDictionaryUser.email) == user.email
-                        expect(eventDictionaryUser.avatar) == user.avatar
-                        expect(AnyComparer.isEqual(eventDictionaryUser.custom, to: user.custom)).to(beTrue())
-                        expect(eventDictionaryUser.device) == user.device
-                        expect(eventDictionaryUser.operatingSystem) == user.operatingSystem
-                        expect(eventDictionaryUser.isAnonymous) == user.isAnonymous
-                        expect(eventDictionaryUser.privateAttributes).to(beNil())
-                    }
+                    expect(AnyComparer.isEqual(eventDictionary.eventUserDictionary, to: user.dictionaryValue(includePrivateAttributes: false, config: config))).to(beTrue())
                     expect(eventDictionary.eventUserKey).to(beNil())
                 }
             }
@@ -624,22 +579,7 @@ final class EventSpec: QuickSpec {
                         config.inlineUserInEvents = inlineUser
                         eventDictionary = event.dictionaryValue(config: config)
 
-                        expect(eventDictionary.eventUser).toNot(beNil())
-                        if let eventDictionaryUser = eventDictionary.eventUser {
-                            expect(eventDictionaryUser.key) == user.key
-                            expect(eventDictionaryUser.name) == user.name
-                            expect(eventDictionaryUser.firstName) == user.firstName
-                            expect(eventDictionaryUser.lastName) == user.lastName
-                            expect(eventDictionaryUser.country) == user.country
-                            expect(eventDictionaryUser.ipAddress) == user.ipAddress
-                            expect(eventDictionaryUser.email) == user.email
-                            expect(eventDictionaryUser.avatar) == user.avatar
-                            expect(AnyComparer.isEqual(eventDictionaryUser.custom, to: user.custom)).to(beTrue())
-                            expect(eventDictionaryUser.device) == user.device
-                            expect(eventDictionaryUser.operatingSystem) == user.operatingSystem
-                            expect(eventDictionaryUser.isAnonymous) == user.isAnonymous
-                            expect(eventDictionaryUser.privateAttributes).to(beNil())
-                        }
+                        expect(AnyComparer.isEqual(eventDictionary.eventUserDictionary, to: user.dictionaryValue(includePrivateAttributes: false, config: config))).to(beTrue())
                         expect(eventDictionary.eventUserKey).to(beNil())
                     }
                 }
@@ -656,22 +596,7 @@ final class EventSpec: QuickSpec {
                     expect(eventDictionary.eventCreationDate?.isWithin(0.001, of: event.creationDate!)).to(beTrue())
                     expect(AnyComparer.isEqual(eventDictionary.eventValue, to: true)).to(beTrue())
                     expect(AnyComparer.isEqual(eventDictionary.eventDefaultValue, to: false)).to(beTrue())
-                    expect(eventDictionary.eventUser).toNot(beNil())
-                    if let eventDictionaryUser = eventDictionary.eventUser {
-                        expect(eventDictionaryUser.key) == user.key
-                        expect(eventDictionaryUser.name) == user.name
-                        expect(eventDictionaryUser.firstName) == user.firstName
-                        expect(eventDictionaryUser.lastName) == user.lastName
-                        expect(eventDictionaryUser.country) == user.country
-                        expect(eventDictionaryUser.ipAddress) == user.ipAddress
-                        expect(eventDictionaryUser.email) == user.email
-                        expect(eventDictionaryUser.avatar) == user.avatar
-                        expect(AnyComparer.isEqual(eventDictionaryUser.custom, to: user.custom)).to(beTrue())
-                        expect(eventDictionaryUser.device) == user.device
-                        expect(eventDictionaryUser.operatingSystem) == user.operatingSystem
-                        expect(eventDictionaryUser.isAnonymous) == user.isAnonymous
-                        expect(eventDictionaryUser.privateAttributes).to(beNil())
-                    }
+                    expect(AnyComparer.isEqual(eventDictionary.eventUserDictionary, to: user.dictionaryValue(includePrivateAttributes: false, config: config))).to(beTrue())
                     expect(eventDictionary.eventUserKey).to(beNil())
                     expect(eventDictionary.eventVariation) == featureFlag.variation
                     expect(eventDictionary.eventVersion) == featureFlag.version
@@ -690,22 +615,7 @@ final class EventSpec: QuickSpec {
                     expect(eventDictionary.eventCreationDate?.isWithin(0.001, of: event.creationDate!)).to(beTrue())
                     expect(AnyComparer.isEqual(eventDictionary.eventValue, to: true)).to(beTrue())
                     expect(AnyComparer.isEqual(eventDictionary.eventDefaultValue, to: false)).to(beTrue())
-                    expect(eventDictionary.eventUser).toNot(beNil())
-                    if let eventDictionaryUser = eventDictionary.eventUser {
-                        expect(eventDictionaryUser.key) == user.key
-                        expect(eventDictionaryUser.name) == user.name
-                        expect(eventDictionaryUser.firstName) == user.firstName
-                        expect(eventDictionaryUser.lastName) == user.lastName
-                        expect(eventDictionaryUser.country) == user.country
-                        expect(eventDictionaryUser.ipAddress) == user.ipAddress
-                        expect(eventDictionaryUser.email) == user.email
-                        expect(eventDictionaryUser.avatar) == user.avatar
-                        expect(AnyComparer.isEqual(eventDictionaryUser.custom, to: user.custom)).to(beTrue())
-                        expect(eventDictionaryUser.device) == user.device
-                        expect(eventDictionaryUser.operatingSystem) == user.operatingSystem
-                        expect(eventDictionaryUser.isAnonymous) == user.isAnonymous
-                        expect(eventDictionaryUser.privateAttributes).to(beNil())
-                    }
+                    expect(AnyComparer.isEqual(eventDictionary.eventUserDictionary, to: user.dictionaryValue(includePrivateAttributes: false, config: config))).to(beTrue())
                     expect(eventDictionary.eventUserKey).to(beNil())
                     expect(eventDictionary.eventVariation) == featureFlag.variation
                     expect(eventDictionary.eventVersion).to(beNil())
@@ -724,22 +634,7 @@ final class EventSpec: QuickSpec {
                     expect(eventDictionary.eventCreationDate?.isWithin(0.001, of: event.creationDate!)).to(beTrue())
                     expect(AnyComparer.isEqual(eventDictionary.eventValue, to: NSNull())).to(beTrue())
                     expect(AnyComparer.isEqual(eventDictionary.eventDefaultValue, to: NSNull())).to(beTrue())
-                    expect(eventDictionary.eventUser).toNot(beNil())
-                    if let eventDictionaryUser = eventDictionary.eventUser {
-                        expect(eventDictionaryUser.key) == user.key
-                        expect(eventDictionaryUser.name) == user.name
-                        expect(eventDictionaryUser.firstName) == user.firstName
-                        expect(eventDictionaryUser.lastName) == user.lastName
-                        expect(eventDictionaryUser.country) == user.country
-                        expect(eventDictionaryUser.ipAddress) == user.ipAddress
-                        expect(eventDictionaryUser.email) == user.email
-                        expect(eventDictionaryUser.avatar) == user.avatar
-                        expect(AnyComparer.isEqual(eventDictionaryUser.custom, to: user.custom)).to(beTrue())
-                        expect(eventDictionaryUser.device) == user.device
-                        expect(eventDictionaryUser.operatingSystem) == user.operatingSystem
-                        expect(eventDictionaryUser.isAnonymous) == user.isAnonymous
-                        expect(eventDictionaryUser.privateAttributes).to(beNil())
-                    }
+                    expect(AnyComparer.isEqual(eventDictionary.eventUserDictionary, to: user.dictionaryValue(includePrivateAttributes: false, config: config))).to(beTrue())
                     expect(eventDictionary.eventUserKey).to(beNil())
                     expect(eventDictionary.eventVariation) == featureFlag.variation
                     expect(eventDictionary.eventVersion) == featureFlag.flagVersion     //Since feature flags include the flag version, it should be used.
@@ -814,22 +709,7 @@ final class EventSpec: QuickSpec {
                         expect(eventDictionary.eventCreationDate?.isWithin(0.001, of: eventCreationDate)).to(beTrue())
                     }
                     if event.kind.isAlwaysInlineUserKind {
-                        expect(eventDictionary.eventUser).toNot(beNil())
-                        if let eventDictionaryUser = eventDictionary.eventUser {
-                            expect(eventDictionaryUser.key) == user.key
-                            expect(eventDictionaryUser.name) == user.name
-                            expect(eventDictionaryUser.firstName) == user.firstName
-                            expect(eventDictionaryUser.lastName) == user.lastName
-                            expect(eventDictionaryUser.country) == user.country
-                            expect(eventDictionaryUser.ipAddress) == user.ipAddress
-                            expect(eventDictionaryUser.email) == user.email
-                            expect(eventDictionaryUser.avatar) == user.avatar
-                            expect(AnyComparer.isEqual(eventDictionaryUser.custom, to: user.custom)).to(beTrue())
-                            expect(eventDictionaryUser.device) == user.device
-                            expect(eventDictionaryUser.operatingSystem) == user.operatingSystem
-                            expect(eventDictionaryUser.isAnonymous) == user.isAnonymous
-                            expect(eventDictionaryUser.privateAttributes).to(beNil())
-                        }
+                        expect(AnyComparer.isEqual(eventDictionary.eventUserDictionary, to: user.dictionaryValue(includePrivateAttributes: false, config: config))).to(beTrue())
                         expect(eventDictionary.eventUserKey).to(beNil())
                     } else {
                         if let eventUserKey = event.user?.key {
@@ -1095,10 +975,13 @@ extension Dictionary where Key == String, Value == Any {
         self[Event.CodingKeys.userKey.rawValue] as? String
     }
     var eventUser: LDUser? {
-        if let userDictionary = self[Event.CodingKeys.user.rawValue] as? [String: Any] {
+        if let userDictionary = eventUserDictionary {
             return LDUser(userDictionary: userDictionary)
         }
         return nil
+    }
+    var eventUserDictionary: [String: Any]? {
+        self[Event.CodingKeys.user.rawValue] as? [String: Any]
     }
     var eventValue: Any? {
         self[Event.CodingKeys.value.rawValue]

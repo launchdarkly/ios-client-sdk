@@ -28,6 +28,10 @@ public final class ObjcLDUser: NSObject {
     @objc public class var privatizableAttributes: [String] {
         LDUser.privatizableAttributes
     }
+    ///LDUser secondary attribute used to make `secondary` private
+    @objc public class var attributeSecondary: String {
+        LDUser.CodingKeys.secondary.rawValue
+    }
     ///LDUser name attribute used to make `name` private
     @objc public class var attributeName: String {
         LDUser.CodingKeys.name.rawValue
@@ -64,6 +68,11 @@ public final class ObjcLDUser: NSObject {
     ///Client app defined string that uniquely identifies the user. If the client app does not define a key, the SDK will assign an identifier associated with the anonymous user. The key cannot be made private.
     @objc public var key: String {
         return user.key
+    }
+    ///The secondary key for the user. See the [documentation](https://docs.launchdarkly.com/home/managing-flags/targeting-users#percentage-rollout-logic) for more information on it's use for percentage rollout bucketing.
+    @objc public var secondary: String? {
+        get { user.secondary }
+        set { user.secondary = newValue }
     }
     ///Client app defined name for the user. (Default: nil)
     @objc public var name: String? {

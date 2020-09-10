@@ -11,6 +11,7 @@ import Foundation
 extension LDUser {
     struct StubConstants {
         static let key = "stub.user.key"
+        static let secondary = "stub.user.secondary"
         static let userKey = "userKey"
         static let name = "stub.user.name"
         static let firstName = "stub.user.firstName"
@@ -54,7 +55,8 @@ extension LDUser {
                           custom: StubConstants.custom(includeSystemValues: true),
                           isAnonymous: StubConstants.isAnonymous,
                           device: environmentReporter?.deviceModel,
-                          operatingSystem: environmentReporter?.systemVersion)
+                          operatingSystem: environmentReporter?.systemVersion,
+                          secondary: StubConstants.secondary)
         user.flagStore = FlagMaintainingMock(flags: user.stubFlags(includeNullValue: includeNullValue, includeVersions: includeVersions))
         return user
     }
