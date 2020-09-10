@@ -31,9 +31,10 @@ public struct LDUser {
 
      See Also: `LDConfig.allUserAttributesPrivate`, `LDConfig.privateUserAttributes`, and `privateAttributes`.
     */
-    public static var privatizableAttributes: [String] {
-        [CodingKeys.name.rawValue, CodingKeys.firstName.rawValue, CodingKeys.lastName.rawValue, CodingKeys.country.rawValue, CodingKeys.ipAddress.rawValue, CodingKeys.email.rawValue, CodingKeys.avatar.rawValue, CodingKeys.custom.rawValue]
-    }
+    public static var privatizableAttributes: [String] { optionalAttributes + [CodingKeys.custom.rawValue] }
+
+    static let optionalAttributes = [CodingKeys.name.rawValue, CodingKeys.firstName.rawValue, CodingKeys.lastName.rawValue, CodingKeys.country.rawValue, CodingKeys.ipAddress.rawValue, CodingKeys.email.rawValue, CodingKeys.avatar.rawValue]
+
     static var sdkSetAttributes: [String] {
         [CodingKeys.device.rawValue, CodingKeys.operatingSystem.rawValue]
     }
@@ -181,26 +182,23 @@ public struct LDUser {
         }
     }
     ///Returns the custom dictionary without the SDK set device and operatingSystem attributes
-    var customWithoutSdkSetAttributes: [String: Any]? {
-        custom?.filter { key, _ in !LDUser.sdkSetAttributes.contains(key) }
+    var customWithoutSdkSetAttributes: [String: Any] {
+        custom?.filter { key, _ in !LDUser.sdkSetAttributes.contains(key) } ?? [:]
     }
 
     ///Dictionary with LDUser attribute keys and values, with options to include feature flags and private attributes. LDConfig object used to help resolving what attributes should be private.
-    /// - parameter includeFlagConfig: Controls whether the resulting dictionary includes feature flags under the `config` key
     /// - parameter includePrivateAttributes: Controls whether the resulting dictionary includes private attributes
     /// - parameter config: Provides supporting information for defining private attributes
-    func dictionaryValue(includeFlagConfig: Bool, includePrivateAttributes includePrivate: Bool, config: LDConfig) -> [String: Any] {
+    func dictionaryValue(includePrivateAttributes includePrivate: Bool, config: LDConfig) -> [String: Any] {
         var dictionary = [String: Any]()
         var redactedAttributes = [String]()
         let combinedPrivateAttributes = config.allUserAttributesPrivate ? LDUser.privatizableAttributes
             : (privateAttributes ?? []) + (config.privateUserAttributes ?? [])
 
         dictionary[CodingKeys.key.rawValue] = key
+        dictionary[CodingKeys.isAnonymous.rawValue] = isAnonymous
 
-        let optionalAttributes = LDUser.privatizableAttributes.filter { attribute in
-            attribute != CodingKeys.custom.rawValue
-        }
-        optionalAttributes.forEach { attribute in
+        LDUser.optionalAttributes.forEach { attribute in
             let value = self.value(for: attribute)
             if !includePrivate && combinedPrivateAttributes.contains(attribute) && value != nil {
                 redactedAttributes.append(attribute)
@@ -210,17 +208,11 @@ public struct LDUser {
         }
 
         var customDictionary = [String: Any]()
-        if !includePrivate && combinedPrivateAttributes.contains(CodingKeys.custom.rawValue) && !(customWithoutSdkSetAttributes?.isEmpty ?? true) {
-            redactedAttributes.append(CodingKeys.custom.rawValue)
-        } else {
-            if let custom = customWithoutSdkSetAttributes, !custom.isEmpty {
-                custom.keys.forEach { customAttribute in
-                    if !includePrivate && combinedPrivateAttributes.contains(customAttribute) && custom[customAttribute] != nil {
-                        redactedAttributes.append(customAttribute)
-                    } else {
-                        customDictionary[customAttribute] = custom[customAttribute]
-                    }
-                }
+        customWithoutSdkSetAttributes.forEach { attrName, attrVal in
+            if !includePrivate && combinedPrivateAttributes.contains(where: [CodingKeys.custom.rawValue, attrName].contains ) {
+                redactedAttributes.append(attrName)
+            } else {
+                customDictionary[attrName] = attrVal
             }
         }
         customDictionary[CodingKeys.device.rawValue] = device
@@ -230,12 +222,6 @@ public struct LDUser {
         if !includePrivate && !redactedAttributes.isEmpty {
             let redactedAttributeSet: Set<String> = Set(redactedAttributes)
             dictionary[CodingKeys.privateAttributes.rawValue] = redactedAttributeSet.sorted()
-        }
-
-        dictionary[CodingKeys.isAnonymous.rawValue] = isAnonymous
-
-        if includeFlagConfig {
-            dictionary[CodingKeys.config.rawValue] = flagStore.featureFlags
         }
 
         return dictionary

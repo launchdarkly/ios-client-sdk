@@ -214,7 +214,7 @@ extension FeatureFlag {
 
 extension LDUser {
     func modelV2DictionaryValue(including featureFlags: [LDFlagKey: FeatureFlag], using lastUpdated: Date?) -> [String: Any] {
-        var userDictionary = dictionaryValueWithAllAttributes(includeFlagConfig: false)
+        var userDictionary = dictionaryValueWithAllAttributes()
         userDictionary.removeValue(forKey: LDUser.CodingKeys.privateAttributes.rawValue)
         userDictionary.setLastUpdated(lastUpdated)
         userDictionary[LDUser.CodingKeys.config.rawValue] = featureFlags.allFlagValues.withNullValuesRemoved

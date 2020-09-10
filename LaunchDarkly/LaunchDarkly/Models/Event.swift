@@ -113,7 +113,7 @@ struct Event {
         eventDictionary[CodingKeys.key.rawValue] = key
         eventDictionary[CodingKeys.creationDate.rawValue] = creationDate?.millisSince1970
         if kind.isAlwaysInlineUserKind || config.inlineUserInEvents {
-            eventDictionary[CodingKeys.user.rawValue] = user?.dictionaryValue(includeFlagConfig: false, includePrivateAttributes: false, config: config)
+            eventDictionary[CodingKeys.user.rawValue] = user?.dictionaryValue(includePrivateAttributes: false, config: config)
         } else {
             eventDictionary[CodingKeys.userKey.rawValue] = user?.key
         }

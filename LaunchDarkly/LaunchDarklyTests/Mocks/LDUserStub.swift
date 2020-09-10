@@ -22,12 +22,12 @@ extension LDUser {
         static let avatar = "stub.user.avatar"
         static let device = "stub.user.custom.device"
         static let operatingSystem = "stub.user.custom.operatingSystem"
-        private static let custom: [String: Any] = ["stub.user.custom.keyA": "stub.user.custom.valueA",
-                                                    "stub.user.custom.keyB": true,
-                                                    "stub.user.custom.keyC": 1027,
-                                                    "stub.user.custom.keyD": 2.71828,
-                                                    "stub.user.custom.keyE": [0, 1, 2],
-                                                    "stub.user.custom.keyF": ["1": 1, "2": 2, "3": 3]]
+        static let custom: [String: Any] = ["stub.user.custom.keyA": "stub.user.custom.valueA",
+                                            "stub.user.custom.keyB": true,
+                                            "stub.user.custom.keyC": 1027,
+                                            "stub.user.custom.keyD": 2.71828,
+                                            "stub.user.custom.keyE": [0, 1, 2],
+                                            "stub.user.custom.keyF": ["1": 1, "2": 2, "3": 3]]
 
         static func custom(includeSystemValues: Bool) -> [String: Any] {
             var custom = StubConstants.custom
@@ -59,7 +59,7 @@ extension LDUser {
         return user
     }
 
-    private func stubFlags(includeNullValue: Bool, includeVersions: Bool = true) -> [String: FeatureFlag] {
+    func stubFlags(includeNullValue: Bool, includeVersions: Bool = true) -> [String: FeatureFlag] {
         var flags = DarklyServiceMock.Constants.stubFeatureFlags(includeNullValue: includeNullValue, includeVersions: includeVersions)
         flags[StubConstants.userKey] = FeatureFlag(flagKey: StubConstants.userKey,
                                                    value: key,
@@ -71,9 +71,5 @@ extension LDUser {
                                                    reason: DarklyServiceMock.Constants.reason,
                                                    trackReason: false)
         return flags
-    }
-
-    static func stubUsers(_ count: Int) -> [LDUser] {
-        (0..<count).map { _ in LDUser.stub() }
     }
 }
