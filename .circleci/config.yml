@@ -4,10 +4,21 @@ jobs:
     shell: /bin/bash --login -eo pipefail
 
     macos:
-      xcode: '11.5.0'
+      xcode: '12.0.0'
 
     steps:
     - checkout
+
+    # This hack shouldn't be necessary, as we don't actually use SSH
+    # to get any dependencies, but for some reason starting in the
+    # '12.0.0' Xcode image it's become necessary.
+    - run:
+        name: SSH fingerprint fix
+        command: |
+          sudo defaults write com.apple.dt.Xcode IDEPackageSupportUseBuiltinSCM YES
+          rm ~/.ssh/id_rsa || true
+          for ip in $(dig @8.8.8.8 bitbucket.org +short); do ssh-keyscan bitbucket.org,$ip; ssh-keyscan $ip; done 2>/dev/null >> ~/.ssh/known_hosts || true 
+          for ip in $(dig @8.8.8.8 github.com +short); do ssh-keyscan github.com,$ip; ssh-keyscan $ip; done 2>/dev/null >> ~/.ssh/known_hosts || true
 
     - run:
         name: Setup for builds

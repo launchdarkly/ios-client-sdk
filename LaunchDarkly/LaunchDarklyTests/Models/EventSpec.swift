@@ -170,7 +170,7 @@ final class EventSpec: QuickSpec {
             for eventData in CustomEvent.allData {
                 context("with valid json data") {
                     it("creates a custom event with matching data") {
-                        expect { event = try Event.customEvent(key: Constants.eventKey, user: user, data: eventData) }.toNot(throwError())
+                        expect(event = try Event.customEvent(key: Constants.eventKey, user: user, data: eventData)).toNot(throwError())
 
                         expect(event.kind) == Event.Kind.custom
                         expect(event.key) == Constants.eventKey
@@ -187,12 +187,12 @@ final class EventSpec: QuickSpec {
             }
             context("with invalid json data") {
                 it("throws an invalidJsonObject error") {
-                    expect { event = try Event.customEvent(key: Constants.eventKey, user: user, data: Date()) }.to(throwError(errorType: LDInvalidArgumentError.self))
+                    expect(event = try Event.customEvent(key: Constants.eventKey, user: user, data: Date())).to(throwError(errorType: LDInvalidArgumentError.self))
                 }
             }
             context("without data") {
                 it("creates a custom event with matching data") {
-                    expect { event = try Event.customEvent(key: Constants.eventKey, user: user, data: nil) }.toNot(throwError())
+                    expect(event = try Event.customEvent(key: Constants.eventKey, user: user, data: nil)).toNot(throwError())
 
                     expect(event.kind) == Event.Kind.custom
                     expect(event.key) == Constants.eventKey

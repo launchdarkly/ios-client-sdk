@@ -391,7 +391,7 @@ final class EventReporterSpec: QuickSpec {
                 context("failure") {
                     context("server error") {
                         beforeEach {
-                            waitUntil(timeout: 10) { syncComplete in
+                            waitUntil(timeout: .seconds(10)) { syncComplete in
                                 testContext = TestContext(stubResponseSuccess: false, eventStubResponseDate: eventStubResponseDate, onSyncComplete: { result in
                                     testContext.syncResult = result
                                     syncComplete()
@@ -425,7 +425,7 @@ final class EventReporterSpec: QuickSpec {
                     }
                     context("response only") {
                         beforeEach {
-                            waitUntil(timeout: 10) { syncComplete in
+                            waitUntil(timeout: .seconds(10)) { syncComplete in
                                 testContext = TestContext(stubResponseSuccess: false, stubResponseOnly: true, eventStubResponseDate: eventStubResponseDate, onSyncComplete: { result in
                                     testContext.syncResult = result
                                     syncComplete()
@@ -462,7 +462,7 @@ final class EventReporterSpec: QuickSpec {
                     }
                     context("error only") {
                         beforeEach {
-                            waitUntil(timeout: 10) { syncComplete in
+                            waitUntil(timeout: .seconds(10)) { syncComplete in
                                 testContext = TestContext(stubResponseSuccess: false, stubResponseErrorOnly: true, eventStubResponseDate: eventStubResponseDate, onSyncComplete: { result in
                                     testContext.syncResult = result
                                     syncComplete()

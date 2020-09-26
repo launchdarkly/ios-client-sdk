@@ -107,14 +107,6 @@ final class DiagnosticEventSpec: QuickSpec {
                                 let expectedKeys = ["name", "version", "wrapperName", "wrapperVersion"]
                                 expect(decoded.keys.allSatisfy(expectedKeys.contains)) == true
                             }
-                            it("can load and restore through codable protocol") {
-                                let diagnosticSdk = DiagnosticSdk(config: config)
-                                let decoded = self.loadAndRestore(scheme, diagnosticSdk)
-                                expect(decoded?.name) == diagnosticSdk.name
-                                expect(decoded?.version) == diagnosticSdk.version
-                                expect(decoded?.wrapperName == diagnosticSdk.wrapperName) == true
-                                expect(decoded?.wrapperVersion == diagnosticSdk.wrapperVersion) == true
-                            }
                         }
                     }
                 }
@@ -153,15 +145,6 @@ final class DiagnosticEventSpec: QuickSpec {
                                 expect((decoded["backgroundEnabled"] as! Bool)) == diagnosticPlatform.backgroundEnabled
                                 expect((decoded["streamingEnabled"] as! Bool)) == diagnosticPlatform.streamingEnabled
                                 expect((decoded["deviceType"] as! String)) == diagnosticPlatform.deviceType
-                            }
-                            it("can load and restore through codable protocol") {
-                                let decoded = self.loadAndRestore(scheme, diagnosticPlatform)
-                                expect(decoded?.name) == diagnosticPlatform.name
-                                expect(decoded?.systemName) == diagnosticPlatform.systemName
-                                expect(decoded?.systemVersion) == diagnosticPlatform.systemVersion
-                                expect(decoded?.backgroundEnabled) == diagnosticPlatform.backgroundEnabled
-                                expect(decoded?.streamingEnabled) == diagnosticPlatform.streamingEnabled
-                                expect(decoded?.deviceType) == diagnosticPlatform.deviceType
                             }
                         }
                     }
@@ -400,17 +383,6 @@ final class DiagnosticEventSpec: QuickSpec {
                         expect(AnyComparer.isEqual(decoded["configuration"], to: expectedConfig)) == true
                         expect(AnyComparer.isEqual(decoded["platform"], to: expectedPlatform)) == true
                     }
-                    it("can load and restore through codable protocol") {
-                        let decoded = self.loadAndRestore(scheme, diagnosticInit)
-                        expect(decoded?.kind) == diagnosticInit.kind
-                        expect(decoded?.id.diagnosticId) == diagnosticInit.id.diagnosticId
-                        expect(decoded?.id.sdkKeySuffix) == diagnosticInit.id.sdkKeySuffix
-                        expect(decoded?.creationDate) == diagnosticInit.creationDate
-                        // Spot check sub objects, actual coding is testing separately
-                        expect(decoded?.sdk.wrapperName) == diagnosticInit.sdk.wrapperName
-                        expect(decoded?.configuration.customBaseURI) == diagnosticInit.configuration.customBaseURI
-                        expect(decoded?.platform.backgroundEnabled) == diagnosticInit.platform.backgroundEnabled
-                    }
                 }
             }
         }
@@ -456,20 +428,6 @@ final class DiagnosticEventSpec: QuickSpec {
                                 expect((decoded["droppedEvents"] as! Int64)) == 5
                                 expect((decoded["eventsInLastBatch"] as! Int64)) == 10
                                 expect(AnyComparer.isEqual(decoded["streamInits"], to: expectedInits)) == true
-                            }
-                            it("can load and restore through codable protocol") {
-                                let decoded = self.loadAndRestore(scheme, diagnosticStats)
-                                expect(decoded?.kind) == diagnosticStats.kind
-                                expect(decoded?.id.diagnosticId) == diagnosticStats.id.diagnosticId
-                                expect(decoded?.id.sdkKeySuffix) == diagnosticStats.id.sdkKeySuffix
-                                expect(decoded?.creationDate) == diagnosticStats.creationDate
-                                expect(decoded?.dataSinceDate) == diagnosticStats.dataSinceDate
-                                expect(decoded?.droppedEvents) == diagnosticStats.droppedEvents
-                                expect(decoded?.eventsInLastBatch) == diagnosticStats.eventsInLastBatch
-                                expect(decoded?.streamInits.count) == diagnosticStats.streamInits.count
-                                for i in 0..<diagnosticStats.streamInits.count {
-                                    expect(decoded?.streamInits[i].timestamp) == diagnosticStats.streamInits[i].timestamp
-                                }
                             }
                         }
                     }

@@ -18,7 +18,7 @@ protocol DiagnosticEvent {
     var id: DiagnosticId { get }
 }
 
-struct DiagnosticInit: DiagnosticEvent, Codable {
+struct DiagnosticInit: DiagnosticEvent, Encodable {
     let kind = DiagnosticKind.diagnosticInit
     let id: DiagnosticId
     let creationDate: Int64
@@ -37,7 +37,7 @@ struct DiagnosticInit: DiagnosticEvent, Codable {
     }
 }
 
-struct DiagnosticStats: DiagnosticEvent, Codable {
+struct DiagnosticStats: DiagnosticEvent, Encodable {
     let kind = DiagnosticKind.diagnosticStats
     let id: DiagnosticId
     let creationDate: Int64
@@ -65,7 +65,7 @@ struct DiagnosticId: Codable {
     }
 }
 
-struct DiagnosticPlatform: Codable {
+struct DiagnosticPlatform: Encodable {
     let name: String = "swift"
     let systemName: String
     let systemVersion: String
@@ -84,7 +84,7 @@ struct DiagnosticPlatform: Codable {
     }
 }
 
-struct DiagnosticSdk: Codable {
+struct DiagnosticSdk: Encodable {
     let name: String = "ios-client-sdk"
     let version: String
     let wrapperName: String?

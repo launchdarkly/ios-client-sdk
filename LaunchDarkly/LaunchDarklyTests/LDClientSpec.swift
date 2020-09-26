@@ -218,7 +218,7 @@ final class LDClientSpec: QuickSpec {
 
             context("when configured to start online") {
                 beforeEach {
-                    waitUntil(timeout: 10) { done in
+                    waitUntil(timeout: .seconds(10)) { done in
                         testContext = TestContext(startOnline: true, completion: done)
                     }
                 }
@@ -537,7 +537,7 @@ final class LDClientSpec: QuickSpec {
             
             context("when configured to start online") {
                 beforeEach {
-                    waitUntil(timeout: 15) { done in
+                    waitUntil(timeout: .seconds(15)) { done in
                         testContext = TestContext(startOnline: true, timeOut: 10) { timedOut in
                             expect(timedOut) == false
                             done()
@@ -583,7 +583,7 @@ final class LDClientSpec: QuickSpec {
             }
             context("when configured to start online") {
                 beforeEach {
-                    waitUntil(timeout: 10) { done in
+                    waitUntil(timeout: .seconds(10)) { done in
                         testContext = TestContext(startOnline: true, timeOut: 2.0, forceTimeout: true) { timedOut in
                             expect(timedOut) == true
                             done()
@@ -596,7 +596,7 @@ final class LDClientSpec: QuickSpec {
             }
             context("when configured to start offline") {
                 beforeEach {
-                    waitUntil(timeout: 15) { done in
+                    waitUntil(timeout: .seconds(15)) { done in
                         testContext = TestContext(startOnline: false, timeOut: 10) { timedOut in
                             expect(timedOut) == true
                             done()
@@ -644,13 +644,13 @@ final class LDClientSpec: QuickSpec {
                 OperatingSystem.allOperatingSystems.forEach { os in
                     context("on \(os)") {
                         beforeEach {
-                            waitUntil(timeout: 15) { done in
+                            waitUntil(timeout: .seconds(15)) { done in
                                 testContext = TestContext(startOnline: true, runMode: .background, operatingSystem: os, timeOut: 10) { timedOut in
                                     expect(timedOut) == false
                                     done()
                                 }
                             }
-                            waitUntil(timeout: 10) { done in
+                            waitUntil(timeout: .seconds(10)) { done in
                                 testContext.subject.setService(ClientServiceMockFactory().makeDarklyServiceProvider(config: testContext.subject.config, user: testContext.subject.user))
                                 testContext.subject.setOnline(true, completion: done)
                                 testContext.subject.flagChangeNotifier.notifyObservers(user: testContext.user, oldFlags: testContext.oldFlags)
@@ -705,7 +705,7 @@ final class LDClientSpec: QuickSpec {
                                     done()
                                 }
                             }
-                            waitUntil(timeout: 10) { done in
+                            waitUntil(timeout: .seconds(10)) { done in
                                 testContext.subject.setOnline(true, completion: done)
                                 testContext.subject.flagChangeNotifier.notifyObservers(user: testContext.user, oldFlags: testContext.oldFlags)
                             }
@@ -907,7 +907,7 @@ final class LDClientSpec: QuickSpec {
                     testContext.cacheConvertingMock.reset()
                     
                     newUser = LDUser.stub()
-                    waitUntil(timeout: 5.0) { done in
+                    waitUntil(timeout: .seconds(5)) { done in
                         testContext.subject.internalIdentify(newUser: newUser, testing: true, completion: done)
                         testContext.subject.flagChangeNotifier.notifyObservers(user: testContext.user, oldFlags: testContext.oldFlags)
                     }
@@ -1061,7 +1061,7 @@ final class LDClientSpec: QuickSpec {
                                         testContext = TestContext(runMode: .background, operatingSystem: os, completion: done)
                                     }
                                     targetRunThrottledCalls = os.isBackgroundEnabled ? 1 : 0
-                                    waitUntil(timeout: 10) { done in
+                                    waitUntil(timeout: .seconds(10)) { done in
                                         testContext.subject.setService(ClientServiceMockFactory().makeDarklyServiceProvider(config: testContext.subject.config, user: testContext.subject.user))
                                         testContext.subject.setOnline(true, completion: done)
                                         testContext.subject.flagChangeNotifier.notifyObservers(user: testContext.user, oldFlags: testContext.oldFlags)
@@ -1143,7 +1143,7 @@ final class LDClientSpec: QuickSpec {
                         expect(testContext.subject.isOnline) == false
                     }
                     it("stops recording events") {
-                        expect { try testContext.subject.track(key: event.key!) }.toNot(throwError())
+                        expect(try testContext.subject.track(key: event.key!)).toNot(throwError())
                         expect(testContext.eventReporterMock.recordCallCount) == priorRecordedEvents
                     }
                     it("flushes the event reporter") {
@@ -1164,7 +1164,7 @@ final class LDClientSpec: QuickSpec {
                         expect(testContext.subject.isOnline) == false
                     }
                     it("stops recording events") {
-                        expect { try testContext.subject.track(key: event.key!) }.toNot(throwError())
+                        expect(try testContext.subject.track(key: event.key!)).toNot(throwError())
                         expect(testContext.eventReporterMock.recordCallCount) == priorRecordedEvents
                     }
                     it("flushes the event reporter") {
@@ -1187,7 +1187,7 @@ final class LDClientSpec: QuickSpec {
                     expect(testContext.subject.isOnline) == false
                 }
                 it("stops recording events") {
-                    expect { try testContext.subject.track(key: event.key!) }.toNot(throwError())
+                    expect(try testContext.subject.track(key: event.key!)).toNot(throwError())
                     expect(testContext.eventReporterMock.recordCallCount) == priorRecordedEvents
                 }
                 it("flushes the event reporter") {
