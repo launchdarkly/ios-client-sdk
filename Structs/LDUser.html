@@ -17,7 +17,7 @@
     <a title="LDUser Structure Reference"></a>
     <header>
       <div class="content-wrapper">
-        <p><a href="../index.html">LaunchDarkly 5.1.0 Docs</a> (83% documented)</p>
+        <p><a href="../index.html">LaunchDarkly 5.2.0 Docs</a> (83% documented)</p>
         <p class="header-right"><a href="https://github.com/launchdarkly/ios-client-sdk"><img src="../img/gh.png"/>View on GitHub</a></p>
         <p class="header-right">
           <form role="search" action="../search.json">
@@ -303,6 +303,33 @@
                         <div class="language">
                           <p class="aside-title">Swift</p>
                           <pre class="highlight swift"><code><span class="kd">public</span> <span class="k">var</span> <span class="nv">key</span><span class="p">:</span> <span class="kt">String</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:12LaunchDarkly6LDUserV9secondarySSSgvp"></a>
+                    <a name="//apple_ref/swift/Property/secondary" class="dashAnchor"></a>
+                    <a class="token" href="#/s:12LaunchDarkly6LDUserV9secondarySSSgvp">secondary</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>The secondary key for the user. See the <a href="https://docs.launchdarkly.com/home/managing-flags/targeting-users#percentage-rollout-logic">documentation</a> for more information on it&rsquo;s use for percentage rollout bucketing.</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="k">var</span> <span class="nv">secondary</span><span class="p">:</span> <span class="kt">String</span><span class="p">?</span></code></pre>
 
                         </div>
                       </div>
@@ -669,9 +696,9 @@
                 <li class="item">
                   <div>
                     <code>
-                    <a name="/s:12LaunchDarkly6LDUserV3key4name9firstName04lastG07country9ipAddress5email6avatar6custom11isAnonymous6device15operatingSystem17privateAttributesACSSSg_A7QSDySSypGSgSbSgA2QSaySSGSgtcfc"></a>
-                    <a name="//apple_ref/swift/Method/init(key:name:firstName:lastName:country:ipAddress:email:avatar:custom:isAnonymous:device:operatingSystem:privateAttributes:)" class="dashAnchor"></a>
-                    <a class="token" href="#/s:12LaunchDarkly6LDUserV3key4name9firstName04lastG07country9ipAddress5email6avatar6custom11isAnonymous6device15operatingSystem17privateAttributesACSSSg_A7QSDySSypGSgSbSgA2QSaySSGSgtcfc">init(key:<wbr>name:<wbr>firstName:<wbr>lastName:<wbr>country:<wbr>ipAddress:<wbr>email:<wbr>avatar:<wbr>custom:<wbr>isAnonymous:<wbr>device:<wbr>operatingSystem:<wbr>privateAttributes:<wbr>)</a>
+                    <a name="/s:12LaunchDarkly6LDUserV3key4name9firstName04lastG07country9ipAddress5email6avatar6custom11isAnonymous6device15operatingSystem17privateAttributes9secondaryACSSSg_A7RSDySSypGSgSbSgA2RSaySSGSgARtcfc"></a>
+                    <a name="//apple_ref/swift/Method/init(key:name:firstName:lastName:country:ipAddress:email:avatar:custom:isAnonymous:device:operatingSystem:privateAttributes:secondary:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:12LaunchDarkly6LDUserV3key4name9firstName04lastG07country9ipAddress5email6avatar6custom11isAnonymous6device15operatingSystem17privateAttributes9secondaryACSSSg_A7RSDySSypGSgSbSgA2RSaySSGSgARtcfc">init(key:<wbr>name:<wbr>firstName:<wbr>lastName:<wbr>country:<wbr>ipAddress:<wbr>email:<wbr>avatar:<wbr>custom:<wbr>isAnonymous:<wbr>device:<wbr>operatingSystem:<wbr>privateAttributes:<wbr>secondary:<wbr>)</a>
                     </code>
                   </div>
                   <div class="height-container">
@@ -698,7 +725,8 @@
             <span class="nv">isAnonymous</span><span class="p">:</span> <span class="kt">Bool</span><span class="p">?</span> <span class="o">=</span> <span class="kc">nil</span><span class="p">,</span>
             <span class="nv">device</span><span class="p">:</span> <span class="kt">String</span><span class="p">?</span> <span class="o">=</span> <span class="kc">nil</span><span class="p">,</span>
             <span class="nv">operatingSystem</span><span class="p">:</span> <span class="kt">String</span><span class="p">?</span> <span class="o">=</span> <span class="kc">nil</span><span class="p">,</span>
-            <span class="nv">privateAttributes</span><span class="p">:</span> <span class="p">[</span><span class="kt">String</span><span class="p">]?</span> <span class="o">=</span> <span class="kc">nil</span><span class="p">)</span></code></pre>
+            <span class="nv">privateAttributes</span><span class="p">:</span> <span class="p">[</span><span class="kt">String</span><span class="p">]?</span> <span class="o">=</span> <span class="kc">nil</span><span class="p">,</span>
+            <span class="nv">secondary</span><span class="p">:</span> <span class="kt">String</span><span class="p">?</span> <span class="o">=</span> <span class="kc">nil</span><span class="p">)</span></code></pre>
 
                         </div>
                       </div>
@@ -859,6 +887,18 @@
                               <td>
                                 <div>
                                   <p>Client app defined privateAttributes for the user. (Default: nil)</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>secondary</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>Secondary attribute value. (Default: nil)</p>
                                 </div>
                               </td>
                             </tr>

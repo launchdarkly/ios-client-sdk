@@ -17,7 +17,7 @@
     <a title="ObjcLDClient Class Reference"></a>
     <header>
       <div class="content-wrapper">
-        <p><a href="../index.html">LaunchDarkly 5.1.0 Docs</a> (83% documented)</p>
+        <p><a href="../index.html">LaunchDarkly 5.2.0 Docs</a> (83% documented)</p>
         <p class="header-right"><a href="https://github.com/launchdarkly/ios-client-sdk"><img src="../img/gh.png"/>View on GitHub</a></p>
         <p class="header-right">
           <form role="search" action="../search.json">
@@ -488,11 +488,9 @@ Use <code><a href="../Classes/ObjcLDClient.html#/c:@M@LaunchDarkly@objc(cs)LDCli
 
 <p>Normally, the client app should create and set the LDUser and pass that into <code>start(config: user: completion:)</code>.</p>
 
-<p>The client app can change the LDUser by getting the <code>user</code>, adjusting the values, and passing it to the LDClient method identify. This allows client apps to collect information over time from the user and update as information is collected. Client apps should follow <a href="apple.com/legal/privacy">Apple&rsquo;s Privacy Policy</a> when collecting user information. If the client app does not create a LDUser, LDClient creates an anonymous default user, which can affect the feature flags delivered to the LDClient.</p>
+<p>The client app can change the active <code>user</code> by calling identify with a new or updated LDUser. Client apps should follow <a href="apple.com/legal/privacy">Apple&rsquo;s Privacy Policy</a> when collecting user information. If the client app does not create a LDUser, LDClient creates an anonymous default user, which can affect the feature flags delivered to the LDClient.</p>
 
 <p>When a new user is set, the LDClient goes offline and sets the new user. If the client was online when the new user was set, it goes online again, subject to a throttling delay if in force (see <code>setOnline(_: completion:)</code> for details). To change both the <code>config</code> and <code>user</code>, set the LDClient offline, set both properties, then set the LDClient online. A completion may be passed to the identify method to allow a client app to know when fresh flag values for the new user are ready.</p>
-
-<p>This operation is not thread safe. You may want to use a DispatchQueue if calling <code>identify</code> from multiple threads.</p>
 
                       </div>
                       <div class="declaration">

@@ -16,7 +16,7 @@
     <a title="CHANGELOG  Reference"></a>
     <header>
       <div class="content-wrapper">
-        <p><a href="index.html">LaunchDarkly 5.1.0 Docs</a> (83% documented)</p>
+        <p><a href="index.html">LaunchDarkly 5.2.0 Docs</a> (83% documented)</p>
         <p class="header-right"><a href="https://github.com/launchdarkly/ios-client-sdk"><img src="img/gh.png"/>View on GitHub</a></p>
         <p class="header-right">
           <form role="search" action="search.json">
@@ -207,6 +207,19 @@
             <h1 id='change-log' class='heading'>Change log</h1>
 
 <p>All notable changes to the LaunchDarkly iOS SDK will be documented in this file. This project adheres to <a href="http://semver.org">Semantic Versioning</a>.</p>
+<h2 id='5-2-0-2020-10-09' class='heading'>[5.2.0] - 2020-10-09</h2>
+<h3 id='added' class='heading'>Added</h3>
+
+<ul>
+<li><code><a href="Structs/LDUser.html">LDUser</a></code> now has an optional <code>secondary</code> attribute to match other LaunchDarkly SDKs. For more on the behavior of this attribute see <a href="https://docs.launchdarkly.com/home/managing-flags/targeting-users">the documentation on targeting users</a>.</li>
+</ul>
+<h3 id='fixed' class='heading'>Fixed</h3>
+
+<ul>
+<li>Corrected a bug preventing private custom attribute names being recorded in events when all custom attributes are set to be private by including &ldquo;custom&rdquo; in the <code><a href="Structs/LDUser.html#/s:12LaunchDarkly6LDUserV17privateAttributesSaySSGSgvp">LDUser.privateAttributes</a></code> or <code><a href="Structs/LDConfig.html#/s:12LaunchDarkly8LDConfigV21privateUserAttributesSaySSGSgvp">LDConfig.privateUserAttributes</a></code> properties.</li>
+<li>Update Nimble to 9.0 and Quick to 3.0 to fix tests when run with Swift 5.3.</li>
+<li>Fixes build warnings in Xcode 12.0.0.</li>
+</ul>
 <h2 id='5-1-0-2020-08-04' class='heading'>[5.1.0] - 2020-08-04</h2>
 <h3 id='added' class='heading'>Added</h3>
 
