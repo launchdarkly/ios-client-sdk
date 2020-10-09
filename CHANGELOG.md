@@ -4,7 +4,7 @@ All notable changes to the LaunchDarkly iOS SDK will be documented in this file.
 
 ## [5.2.0] - 2020-10-09
 ### Added
-- `LDUser` now has an optional `secondary` attribute to match other LaunchDarkly SDKs. For more on the behavior of this attribute see (the documentation on targeting users)[https://docs.launchdarkly.com/home/managing-flags/targeting-users].
+- `LDUser` now has an optional `secondary` attribute to match other LaunchDarkly SDKs. For more on the behavior of this attribute see [the documentation on targeting users](https://docs.launchdarkly.com/home/managing-flags/targeting-users).
 
 ### Fixed
 - Corrected a bug preventing private custom attribute names being recorded in events when all custom attributes are set to be private by including "custom" in the `LDUser.privateAttributes` or `LDConfig.privateUserAttributes` properties.
