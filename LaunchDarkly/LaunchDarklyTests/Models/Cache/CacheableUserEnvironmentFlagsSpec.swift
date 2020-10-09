@@ -455,7 +455,7 @@ extension Date {
 extension Dictionary where Key == String, Value == Any {
     var environmentFlags: [MobileKey: CacheableEnvironmentFlags]? {
         let environmentFlagsDictionary = self[CacheableUserEnvironmentFlags.CodingKeys.environmentFlags.rawValue] as? [MobileKey: Any]
-        return environmentFlagsDictionary?.compactMapValues({ CacheableEnvironmentFlags(object: $0) })
+        return environmentFlagsDictionary?.compactMapValues { CacheableEnvironmentFlags(dictionary: $0 as! [String: Any]) }
     }
 }
 

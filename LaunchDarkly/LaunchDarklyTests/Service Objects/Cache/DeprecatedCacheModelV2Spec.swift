@@ -51,9 +51,7 @@ final class DeprecatedCacheModelV2Spec: QuickSpec {
 
         func modelV2Dictionary(for users: [LDUser], and userEnvironmentsCollection: [UserKey: CacheableUserEnvironmentFlags], storingMobileKey: MobileKey?) -> [UserKey: Any]? {
             guard let mobileKey = storingMobileKey, !users.isEmpty
-            else {
-                return nil
-            }
+            else { return nil }
 
             return Dictionary(uniqueKeysWithValues: users.map { user in
                 let featureFlags = userEnvironmentsCollection[user.key]?.environmentFlags[mobileKey]?.featureFlags
@@ -208,7 +206,7 @@ extension Dictionary where Key == LDFlagKey, Value == FeatureFlag {
 
 extension FeatureFlag {
     var modelV2FeatureFlag: FeatureFlag {
-        FeatureFlag(flagKey: flagKey, value: value, variation: nil, version: nil, flagVersion: nil, trackEvents: nil, debugEventsUntilDate: nil, reason: nil, trackReason: nil)
+        FeatureFlag(flagKey: flagKey, value: value)
     }
 }
 
@@ -216,7 +214,7 @@ extension FeatureFlag {
 
 extension LDUser {
     func modelV2DictionaryValue(including featureFlags: [LDFlagKey: FeatureFlag], using lastUpdated: Date?) -> [String: Any] {
-        var userDictionary = dictionaryValueWithAllAttributes(includeFlagConfig: false)
+        var userDictionary = dictionaryValueWithAllAttributes()
         userDictionary.removeValue(forKey: LDUser.CodingKeys.privateAttributes.rawValue)
         userDictionary.setLastUpdated(lastUpdated)
         userDictionary[LDUser.CodingKeys.config.rawValue] = featureFlags.allFlagValues.withNullValuesRemoved

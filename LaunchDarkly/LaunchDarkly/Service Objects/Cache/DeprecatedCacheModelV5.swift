@@ -73,9 +73,7 @@ final class DeprecatedCacheModelV5: DeprecatedCache {
                                          version: featureFlagDictionary.version,
                                          flagVersion: featureFlagDictionary.flagVersion,
                                          trackEvents: featureFlagDictionary.trackEvents,
-                                         debugEventsUntilDate: Date(millisSince1970: featureFlagDictionary.debugEventsUntilDate),
-                                         reason: nil,
-                                         trackReason: nil))
+                                         debugEventsUntilDate: Date(millisSince1970: featureFlagDictionary.debugEventsUntilDate)))
         })
         return (featureFlags, cachedUserDictionary.lastUpdated)
     }

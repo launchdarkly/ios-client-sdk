@@ -133,9 +133,3 @@ extension LDFlagValue {
         return value
     }
 }
-
-extension Array where Element == LDFlagValue {
-    func isEqual(to other: [LDFlagValue]) -> Bool {
-        self == other
-    }
-}

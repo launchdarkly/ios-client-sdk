@@ -2,7 +2,6 @@
 //  EventSpec.swift
 //  LaunchDarklyTests
 //
-//  Created by Mark Pokorny on 10/19/17. +JMJ
 //  Copyright © 2017 Catamorphic Co. All rights reserved.
 //
 
@@ -13,9 +12,6 @@ import Nimble
 
 final class EventSpec: QuickSpec {
     struct Constants {
-        static var eventCapacity: Int {
-            return Event.Kind.allKinds.count
-        }
         static let eventKey = "EventSpec.Event.Key"
     }
 
@@ -47,9 +43,7 @@ final class EventSpec: QuickSpec {
         summaryEventSpec()
         dictionaryValueSpec()
         dictionaryValuesSpec()
-        containsSpec()
         eventDictionarySpec()
-        equalsSpec()
     }
 
     private func initSpec() {
@@ -176,7 +170,7 @@ final class EventSpec: QuickSpec {
             for eventData in CustomEvent.allData {
                 context("with valid json data") {
                     it("creates a custom event with matching data") {
-                        expect { event = try Event.customEvent(key: Constants.eventKey, user: user, data: eventData) }.toNot(throwError())
+                        expect(event = try Event.customEvent(key: Constants.eventKey, user: user, data: eventData)).toNot(throwError())
 
                         expect(event.kind) == Event.Kind.custom
                         expect(event.key) == Constants.eventKey
@@ -193,12 +187,12 @@ final class EventSpec: QuickSpec {
             }
             context("with invalid json data") {
                 it("throws an invalidJsonObject error") {
-                    expect { event = try Event.customEvent(key: Constants.eventKey, user: user, data: Date()) }.to(throwError(errorType: LDInvalidArgumentError.self))
+                    expect(event = try Event.customEvent(key: Constants.eventKey, user: user, data: Date())).to(throwError(errorType: LDInvalidArgumentError.self))
                 }
             }
             context("without data") {
                 it("creates a custom event with matching data") {
-                    expect { event = try Event.customEvent(key: Constants.eventKey, user: user, data: nil) }.toNot(throwError())
+                    expect(event = try Event.customEvent(key: Constants.eventKey, user: user, data: nil)).toNot(throwError())
 
                     expect(event.kind) == Event.Kind.custom
                     expect(event.key) == Constants.eventKey
@@ -342,22 +336,7 @@ final class EventSpec: QuickSpec {
                     expect(eventDictionary.reason).to(beNil())
                 }
                 it("creates a dictionary with the full user") {
-                    expect(eventDictionary.eventUser).toNot(beNil())
-                    if let eventDictionaryUser = eventDictionary.eventUser {
-                        expect(eventDictionaryUser.key) == user.key
-                        expect(eventDictionaryUser.name) == user.name
-                        expect(eventDictionaryUser.firstName) == user.firstName
-                        expect(eventDictionaryUser.lastName) == user.lastName
-                        expect(eventDictionaryUser.country) == user.country
-                        expect(eventDictionaryUser.ipAddress) == user.ipAddress
-                        expect(eventDictionaryUser.email) == user.email
-                        expect(eventDictionaryUser.avatar) == user.avatar
-                        expect(AnyComparer.isEqual(eventDictionaryUser.custom, to: user.custom)).to(beTrue())
-                        expect(eventDictionaryUser.device) == user.device
-                        expect(eventDictionaryUser.operatingSystem) == user.operatingSystem
-                        expect(eventDictionaryUser.isAnonymous) == user.isAnonymous
-                        expect(eventDictionaryUser.privateAttributes).to(beNil())
-                    }
+                    expect(AnyComparer.isEqual(eventDictionary.eventUserDictionary, to: user.dictionaryValue(includePrivateAttributes: false, config: config))).to(beTrue())
                     expect(eventDictionary.eventUserKey).to(beNil())
                 }
             }
@@ -445,22 +424,7 @@ final class EventSpec: QuickSpec {
                     expect(eventDictionary.eventDefaultValue).to(beNil())
                     expect(eventDictionary.eventVariation).to(beNil())
                     expect(eventDictionary.eventData).to(beNil())
-                    expect(eventDictionary.eventUser).toNot(beNil())
-                    if let eventDictionaryUser = eventDictionary.eventUser {
-                        expect(eventDictionaryUser.key) == user.key
-                        expect(eventDictionaryUser.name) == user.name
-                        expect(eventDictionaryUser.firstName) == user.firstName
-                        expect(eventDictionaryUser.lastName) == user.lastName
-                        expect(eventDictionaryUser.country) == user.country
-                        expect(eventDictionaryUser.ipAddress) == user.ipAddress
-                        expect(eventDictionaryUser.email) == user.email
-                        expect(eventDictionaryUser.avatar) == user.avatar
-                        expect(AnyComparer.isEqual(eventDictionaryUser.custom, to: user.custom)).to(beTrue())
-                        expect(eventDictionaryUser.device) == user.device
-                        expect(eventDictionaryUser.operatingSystem) == user.operatingSystem
-                        expect(eventDictionaryUser.isAnonymous) == user.isAnonymous
-                        expect(eventDictionaryUser.privateAttributes).to(beNil())
-                    }
+                    expect(AnyComparer.isEqual(eventDictionary.eventUserDictionary, to: user.dictionaryValue(includePrivateAttributes: false, config: config))).to(beTrue())
                     expect(eventDictionary.eventUserKey).to(beNil())
                 }
             }
@@ -575,22 +539,7 @@ final class EventSpec: QuickSpec {
                     expect(eventDictionary.eventVariation).to(beNil())
                 }
                 it("creates a dictionary with the full user") {
-                    expect(eventDictionary.eventUser).toNot(beNil())
-                    if let eventDictionaryUser = eventDictionary.eventUser {
-                        expect(eventDictionaryUser.key) == user.key
-                        expect(eventDictionaryUser.name) == user.name
-                        expect(eventDictionaryUser.firstName) == user.firstName
-                        expect(eventDictionaryUser.lastName) == user.lastName
-                        expect(eventDictionaryUser.country) == user.country
-                        expect(eventDictionaryUser.ipAddress) == user.ipAddress
-                        expect(eventDictionaryUser.email) == user.email
-                        expect(eventDictionaryUser.avatar) == user.avatar
-                        expect(AnyComparer.isEqual(eventDictionaryUser.custom, to: user.custom)).to(beTrue())
-                        expect(eventDictionaryUser.device) == user.device
-                        expect(eventDictionaryUser.operatingSystem) == user.operatingSystem
-                        expect(eventDictionaryUser.isAnonymous) == user.isAnonymous
-                        expect(eventDictionaryUser.privateAttributes).to(beNil())
-                    }
+                    expect(AnyComparer.isEqual(eventDictionary.eventUserDictionary, to: user.dictionaryValue(includePrivateAttributes: false, config: config))).to(beTrue())
                     expect(eventDictionary.eventUserKey).to(beNil())
                 }
             }
@@ -612,7 +561,7 @@ final class EventSpec: QuickSpec {
                 beforeEach {
                     event = Event.debugEvent(key: Constants.eventKey, value: true, defaultValue: false, featureFlag: featureFlag, user: user, includeReason: false)
                 }
-                [true, false].forEach { (inlineUser) in
+                [true, false].forEach { inlineUser in
                     it("creates a dictionary with matching non-user elements") {
                         config.inlineUserInEvents = inlineUser
                         eventDictionary = event.dictionaryValue(config: config)
@@ -630,22 +579,7 @@ final class EventSpec: QuickSpec {
                         config.inlineUserInEvents = inlineUser
                         eventDictionary = event.dictionaryValue(config: config)
 
-                        expect(eventDictionary.eventUser).toNot(beNil())
-                        if let eventDictionaryUser = eventDictionary.eventUser {
-                            expect(eventDictionaryUser.key) == user.key
-                            expect(eventDictionaryUser.name) == user.name
-                            expect(eventDictionaryUser.firstName) == user.firstName
-                            expect(eventDictionaryUser.lastName) == user.lastName
-                            expect(eventDictionaryUser.country) == user.country
-                            expect(eventDictionaryUser.ipAddress) == user.ipAddress
-                            expect(eventDictionaryUser.email) == user.email
-                            expect(eventDictionaryUser.avatar) == user.avatar
-                            expect(AnyComparer.isEqual(eventDictionaryUser.custom, to: user.custom)).to(beTrue())
-                            expect(eventDictionaryUser.device) == user.device
-                            expect(eventDictionaryUser.operatingSystem) == user.operatingSystem
-                            expect(eventDictionaryUser.isAnonymous) == user.isAnonymous
-                            expect(eventDictionaryUser.privateAttributes).to(beNil())
-                        }
+                        expect(AnyComparer.isEqual(eventDictionary.eventUserDictionary, to: user.dictionaryValue(includePrivateAttributes: false, config: config))).to(beTrue())
                         expect(eventDictionary.eventUserKey).to(beNil())
                     }
                 }
@@ -662,22 +596,7 @@ final class EventSpec: QuickSpec {
                     expect(eventDictionary.eventCreationDate?.isWithin(0.001, of: event.creationDate!)).to(beTrue())
                     expect(AnyComparer.isEqual(eventDictionary.eventValue, to: true)).to(beTrue())
                     expect(AnyComparer.isEqual(eventDictionary.eventDefaultValue, to: false)).to(beTrue())
-                    expect(eventDictionary.eventUser).toNot(beNil())
-                    if let eventDictionaryUser = eventDictionary.eventUser {
-                        expect(eventDictionaryUser.key) == user.key
-                        expect(eventDictionaryUser.name) == user.name
-                        expect(eventDictionaryUser.firstName) == user.firstName
-                        expect(eventDictionaryUser.lastName) == user.lastName
-                        expect(eventDictionaryUser.country) == user.country
-                        expect(eventDictionaryUser.ipAddress) == user.ipAddress
-                        expect(eventDictionaryUser.email) == user.email
-                        expect(eventDictionaryUser.avatar) == user.avatar
-                        expect(AnyComparer.isEqual(eventDictionaryUser.custom, to: user.custom)).to(beTrue())
-                        expect(eventDictionaryUser.device) == user.device
-                        expect(eventDictionaryUser.operatingSystem) == user.operatingSystem
-                        expect(eventDictionaryUser.isAnonymous) == user.isAnonymous
-                        expect(eventDictionaryUser.privateAttributes).to(beNil())
-                    }
+                    expect(AnyComparer.isEqual(eventDictionary.eventUserDictionary, to: user.dictionaryValue(includePrivateAttributes: false, config: config))).to(beTrue())
                     expect(eventDictionary.eventUserKey).to(beNil())
                     expect(eventDictionary.eventVariation) == featureFlag.variation
                     expect(eventDictionary.eventVersion) == featureFlag.version
@@ -696,22 +615,7 @@ final class EventSpec: QuickSpec {
                     expect(eventDictionary.eventCreationDate?.isWithin(0.001, of: event.creationDate!)).to(beTrue())
                     expect(AnyComparer.isEqual(eventDictionary.eventValue, to: true)).to(beTrue())
                     expect(AnyComparer.isEqual(eventDictionary.eventDefaultValue, to: false)).to(beTrue())
-                    expect(eventDictionary.eventUser).toNot(beNil())
-                    if let eventDictionaryUser = eventDictionary.eventUser {
-                        expect(eventDictionaryUser.key) == user.key
-                        expect(eventDictionaryUser.name) == user.name
-                        expect(eventDictionaryUser.firstName) == user.firstName
-                        expect(eventDictionaryUser.lastName) == user.lastName
-                        expect(eventDictionaryUser.country) == user.country
-                        expect(eventDictionaryUser.ipAddress) == user.ipAddress
-                        expect(eventDictionaryUser.email) == user.email
-                        expect(eventDictionaryUser.avatar) == user.avatar
-                        expect(AnyComparer.isEqual(eventDictionaryUser.custom, to: user.custom)).to(beTrue())
-                        expect(eventDictionaryUser.device) == user.device
-                        expect(eventDictionaryUser.operatingSystem) == user.operatingSystem
-                        expect(eventDictionaryUser.isAnonymous) == user.isAnonymous
-                        expect(eventDictionaryUser.privateAttributes).to(beNil())
-                    }
+                    expect(AnyComparer.isEqual(eventDictionary.eventUserDictionary, to: user.dictionaryValue(includePrivateAttributes: false, config: config))).to(beTrue())
                     expect(eventDictionary.eventUserKey).to(beNil())
                     expect(eventDictionary.eventVariation) == featureFlag.variation
                     expect(eventDictionary.eventVersion).to(beNil())
@@ -730,22 +634,7 @@ final class EventSpec: QuickSpec {
                     expect(eventDictionary.eventCreationDate?.isWithin(0.001, of: event.creationDate!)).to(beTrue())
                     expect(AnyComparer.isEqual(eventDictionary.eventValue, to: NSNull())).to(beTrue())
                     expect(AnyComparer.isEqual(eventDictionary.eventDefaultValue, to: NSNull())).to(beTrue())
-                    expect(eventDictionary.eventUser).toNot(beNil())
-                    if let eventDictionaryUser = eventDictionary.eventUser {
-                        expect(eventDictionaryUser.key) == user.key
-                        expect(eventDictionaryUser.name) == user.name
-                        expect(eventDictionaryUser.firstName) == user.firstName
-                        expect(eventDictionaryUser.lastName) == user.lastName
-                        expect(eventDictionaryUser.country) == user.country
-                        expect(eventDictionaryUser.ipAddress) == user.ipAddress
-                        expect(eventDictionaryUser.email) == user.email
-                        expect(eventDictionaryUser.avatar) == user.avatar
-                        expect(AnyComparer.isEqual(eventDictionaryUser.custom, to: user.custom)).to(beTrue())
-                        expect(eventDictionaryUser.device) == user.device
-                        expect(eventDictionaryUser.operatingSystem) == user.operatingSystem
-                        expect(eventDictionaryUser.isAnonymous) == user.isAnonymous
-                        expect(eventDictionaryUser.privateAttributes).to(beNil())
-                    }
+                    expect(AnyComparer.isEqual(eventDictionary.eventUserDictionary, to: user.dictionaryValue(includePrivateAttributes: false, config: config))).to(beTrue())
                     expect(eventDictionary.eventUserKey).to(beNil())
                     expect(eventDictionary.eventVariation) == featureFlag.variation
                     expect(eventDictionary.eventVersion) == featureFlag.flagVersion     //Since feature flags include the flag version, it should be used.
@@ -771,37 +660,18 @@ final class EventSpec: QuickSpec {
                 expect(eventDictionary.eventStartDate?.isWithin(0.001, of: event.flagRequestTracker?.startDate)).to(beTrue())
                 expect(eventDictionary.eventEndDate?.isWithin(0.001, of: event.endDate)).to(beTrue())
                 guard let features = eventDictionary.eventFeatures
-                    else {
-                        fail("expected eventDictionary features to not be nil, got nil")
-                        return
+                else {
+                    fail("expected eventDictionary features to not be nil, got nil")
+                    return
                 }
                 expect(features.count) == event.flagRequestTracker?.flagCounters.count
-                event.flagRequestTracker?.flagCounters.forEach { (flagKey, flagCounter) in
+                event.flagRequestTracker?.flagCounters.forEach { flagKey, flagCounter in
                     guard let flagCounterDictionary = features[flagKey] as? [String: Any]
                     else {
                         fail("expected features to contain flag counter for \(flagKey), got nil")
                         return
                     }
-                    expect(AnyComparer.isEqual(flagCounterDictionary.flagCounterDefaultValue, to: flagCounter.defaultValue, considerNilAndNullEqual: true)).to(beTrue())
-                    guard let flagValueCounters = flagCounterDictionary.flagCounterFlagValueCounters, flagValueCounters.count == flagCounter.flagValueCounters.count
-                    else {
-                        fail("expected flag value counters for \(flagKey) to have \(flagCounter.flagValueCounters.count) entries, got \(flagCounterDictionary.flagCounterFlagValueCounters?.count ?? 0)")
-                        return
-                    }
-                    for (index, flagValueCounter) in flagCounter.flagValueCounters.enumerated() {
-                        let flagValueCounterDictionary = flagValueCounters[index]
-                        expect(AnyComparer.isEqual(flagValueCounterDictionary.value, to: flagValueCounter.reportedValue, considerNilAndNullEqual: true)).to(beTrue())
-                        if let featureFlag = flagValueCounter.featureFlag {
-                            expect(flagValueCounterDictionary.valueCounterVariation) == featureFlag.variation
-                            expect(flagValueCounterDictionary.valueCounterVersion) == featureFlag.flagVersion
-                            expect(flagValueCounterDictionary.valueCounterIsUnknown).to(beNil())
-                        } else {
-                            expect(flagValueCounterDictionary.valueCounterVariation).to(beNil())
-                            expect(flagValueCounterDictionary.valueCounterVersion).to(beNil())
-                            expect(flagValueCounterDictionary.valueCounterIsUnknown) == true
-                        }
-                        expect(flagValueCounterDictionary.valueCounterCount) == flagValueCounter.count
-                    }
+                    expect(AnyComparer.isEqual(flagCounterDictionary, to: flagCounter.dictionaryValue, considerNilAndNullEqual: true)).to(beTrue())
                 }
 
                 expect(eventDictionary.eventKey).to(beNil())
@@ -830,32 +700,16 @@ final class EventSpec: QuickSpec {
             }
             it("creates an array of event dictionaries with matching elements") {
                 expect(eventDictionaries.count) == events.count
-                events.forEach { (event) in
+                events.forEach { event in
                     expect(eventDictionaries.eventDictionary(for: event)).toNot(beNil())
-                    guard let eventDictionary = eventDictionaries.eventDictionary(for: event) else {
-                        return
-                    }
+                    guard let eventDictionary = eventDictionaries.eventDictionary(for: event)
+                    else { return }
                     expect(eventDictionary.eventKind) == event.kind
                     if let eventCreationDate = event.creationDate {
                         expect(eventDictionary.eventCreationDate?.isWithin(0.001, of: eventCreationDate)).to(beTrue())
                     }
                     if event.kind.isAlwaysInlineUserKind {
-                        expect(eventDictionary.eventUser).toNot(beNil())
-                        if let eventDictionaryUser = eventDictionary.eventUser {
-                            expect(eventDictionaryUser.key) == user.key
-                            expect(eventDictionaryUser.name) == user.name
-                            expect(eventDictionaryUser.firstName) == user.firstName
-                            expect(eventDictionaryUser.lastName) == user.lastName
-                            expect(eventDictionaryUser.country) == user.country
-                            expect(eventDictionaryUser.ipAddress) == user.ipAddress
-                            expect(eventDictionaryUser.email) == user.email
-                            expect(eventDictionaryUser.avatar) == user.avatar
-                            expect(AnyComparer.isEqual(eventDictionaryUser.custom, to: user.custom)).to(beTrue())
-                            expect(eventDictionaryUser.device) == user.device
-                            expect(eventDictionaryUser.operatingSystem) == user.operatingSystem
-                            expect(eventDictionaryUser.isAnonymous) == user.isAnonymous
-                            expect(eventDictionaryUser.privateAttributes).to(beNil())
-                        }
+                        expect(AnyComparer.isEqual(eventDictionary.eventUserDictionary, to: user.dictionaryValue(includePrivateAttributes: false, config: config))).to(beTrue())
                         expect(eventDictionary.eventUserKey).to(beNil())
                     } else {
                         if let eventUserKey = event.user?.key {
@@ -896,71 +750,6 @@ final class EventSpec: QuickSpec {
         }
     }
 
-    private func containsSpec() {
-        let config = LDConfig.stub
-        let user = LDUser.stub()
-        describe("array contains eventDictionary") {
-            var eventDictionaries: [[String: Any]]!
-            var targetDictionary: [String: Any]!
-            beforeEach {
-                eventDictionaries = Event.stubEventDictionaries(Constants.eventCapacity, user: user, config: config)
-            }
-            context("when the event dictionary is in the array") {
-                context("at the first item") {
-                    beforeEach {
-                        targetDictionary = eventDictionaries.first
-                    }
-                    it("returns true") {
-                        expect(eventDictionaries.contains(targetDictionary)) == true
-                    }
-                }
-                context("at a middle item") {
-                    beforeEach {
-                        targetDictionary = eventDictionaries[eventDictionaries.startIndex.advanced(by: 1)]
-                    }
-                    it("returns true") {
-                        expect(eventDictionaries.contains(targetDictionary)) == true
-                    }
-                }
-                context("at the last item") {
-                    beforeEach {
-                        targetDictionary = eventDictionaries.last
-                    }
-                    it("returns true") {
-                        expect(eventDictionaries.contains(targetDictionary)) == true
-                    }
-                }
-            }
-            context("when the event dictionary is not in the array") {
-                beforeEach {
-                    targetDictionary = Event.stub(.feature, with: user).dictionaryValue(config: config)
-                }
-                it("returns false") {
-                    expect(eventDictionaries.contains(targetDictionary)) == false
-                }
-            }
-            context("when the target dictionary is not an event dictionary") {
-                beforeEach {
-                    targetDictionary = user.dictionaryValue(includeFlagConfig: false, includePrivateAttributes: true, config: config)
-                }
-                it("returns false") {
-                    expect(eventDictionaries.contains(targetDictionary)) == false
-                }
-            }
-            context("when the array doesn't contain event dictionaries") {
-                beforeEach {
-                    eventDictionaries = LDUser.stubUsers(Constants.eventCapacity).map { (user) in
-                        user.dictionaryValue(includeFlagConfig: false, includePrivateAttributes: true, config: config)
-                    }
-                    targetDictionary = Event.stub(.identify, with: user).dictionaryValue(config: config)
-                }
-                it("returns false") {
-                    expect(eventDictionaries.contains(targetDictionary)) == false
-                }
-            }
-        }
-    }
-
     //Dictionary extension methods that extract an event key, or creationDateMillis, and compare them with another dictionary
     private func eventDictionarySpec() {
         let config = LDConfig.stub
@@ -974,7 +763,7 @@ final class EventSpec: QuickSpec {
                         events = Event.stubEvents(for: user)
                     }
                     it("returns the event kind") {
-                        events.forEach { (event) in
+                        events.forEach { event in
                             eventDictionary = event.dictionaryValue(config: config)
 
                             expect(eventDictionary.eventKind) == event.kind
@@ -1176,136 +965,93 @@ final class EventSpec: QuickSpec {
             }
         }
     }
-
-    private func equalsSpec() {
-        let user = LDUser.stub()
-        describe("equals") {
-            var event1: Event!
-            var event2: Event!
-            context("on the same event") {
-                beforeEach {
-                    event1 = Event(kind: .feature, key: Constants.eventKey, user: user, value: true, defaultValue: false, data: CustomEvent.dictionaryData)
-                    event2 = event1
-                }
-                it("returns true") {
-                    expect(event1) == event2
-                }
-            }
-            context("when only the keys match") {
-                let eventKey = UUID().uuidString
-                beforeEach {
-                    event1 = Event(kind: .feature, key: eventKey, user: LDUser.stub(key: UUID().uuidString), value: true, defaultValue: false)
-                    event2 = Event(kind: .custom, key: eventKey, user: LDUser.stub(key: UUID().uuidString), data: CustomEvent.dictionaryData)
-                }
-                it("returns false") {
-                    expect(event1) != event2
-                }
-            }
-            context("when only the keys differ") {
-                beforeEach {
-                    event1 = Event(kind: .feature, key: UUID().uuidString, user: user, value: true, defaultValue: false, data: CustomEvent.dictionaryData)
-                    event2 = Event(kind: .feature, key: UUID().uuidString, user: user, value: true, defaultValue: false, data: CustomEvent.dictionaryData)
-                }
-                it("returns false") {
-                    expect(event1) != event2
-                }
-            }
-            context("on different events") {
-                beforeEach {
-                    event1 = Event(kind: .feature, key: UUID().uuidString, user: user, value: true, defaultValue: false, data: CustomEvent.dictionaryData)
-                    event2 = Event(kind: .identify, key: UUID().uuidString, user: LDUser.stub(key: UUID().uuidString))
-                }
-                it("returns false") {
-                    expect(event1) != event2
-                }
-            }
-            context("summary events") {
-                beforeEach {
-                    event1 = Event.stub(.summary, with: user)
-                }
-                context("when events match") {
-                    beforeEach {
-                        event2 = event1
-                    }
-                    it("returns true") {
-                        expect(event1) == event2
-                    }
-                }
-                context("when kinds differ") {
-                    beforeEach {
-                        event2 = Event(kind: .custom, flagRequestTracker: event1.flagRequestTracker, endDate: event1.endDate)
-                    }
-                    it("returns false") {
-                        expect(event1) != event2
-                    }
-                }
-                context("when endDates differ") {
-                    beforeEach {
-                        event2 = Event(kind: .summary, flagRequestTracker: event1.flagRequestTracker, endDate: event1.endDate?.addingTimeInterval(0.0011))
-                    }
-                    it("returns false") {
-                        expect(event1) != event2
-                    }
-                }
-            }
-        }
-    }
 }
 
 extension Dictionary where Key == String, Value == Any {
     var eventCreationDate: Date? {
-        return Date(millisSince1970: self[Event.CodingKeys.creationDate.rawValue] as? Int64)
+        Date(millisSince1970: self[Event.CodingKeys.creationDate.rawValue] as? Int64)
     }
     var eventUserKey: String? {
-        return self[Event.CodingKeys.userKey.rawValue] as? String
+        self[Event.CodingKeys.userKey.rawValue] as? String
     }
     var eventUser: LDUser? {
-        if let userDictionary = self[Event.CodingKeys.user.rawValue] as? [String: Any] {
+        if let userDictionary = eventUserDictionary {
             return LDUser(userDictionary: userDictionary)
         }
         return nil
     }
+    var eventUserDictionary: [String: Any]? {
+        self[Event.CodingKeys.user.rawValue] as? [String: Any]
+    }
     var eventValue: Any? {
-        return self[Event.CodingKeys.value.rawValue]
+        self[Event.CodingKeys.value.rawValue]
     }
     var eventDefaultValue: Any? {
-        return self[Event.CodingKeys.defaultValue.rawValue]
+        self[Event.CodingKeys.defaultValue.rawValue]
     }
     var eventVariation: Int? {
-        return self[Event.CodingKeys.variation.rawValue] as? Int
+        self[Event.CodingKeys.variation.rawValue] as? Int
     }
     var eventVersion: Int? {
-        return self[Event.CodingKeys.version.rawValue] as? Int
+        self[Event.CodingKeys.version.rawValue] as? Int
     }
     var eventData: Any? {
-        return self[Event.CodingKeys.data.rawValue]
+        self[Event.CodingKeys.data.rawValue]
     }
     var eventStartDate: Date? {
-        return Date(millisSince1970: self[FlagRequestTracker.CodingKeys.startDate.rawValue] as? Int64)
+        Date(millisSince1970: self[FlagRequestTracker.CodingKeys.startDate.rawValue] as? Int64)
     }
     var eventEndDate: Date? {
-        return Date(millisSince1970: self[Event.CodingKeys.endDate.rawValue] as? Int64)
+        Date(millisSince1970: self[Event.CodingKeys.endDate.rawValue] as? Int64)
     }
     var eventFeatures: [String: Any]? {
-        return self[FlagRequestTracker.CodingKeys.features.rawValue] as? [String: Any]
+        self[FlagRequestTracker.CodingKeys.features.rawValue] as? [String: Any]
     }
     var eventMetricValue: Double? {
-        return self[Event.CodingKeys.metricValue.rawValue] as? Double
+        self[Event.CodingKeys.metricValue.rawValue] as? Double
+    }
+    private var eventKindString: String? {
+        self[Event.CodingKeys.kind.rawValue] as? String
+    }
+    var eventKind: Event.Kind? {
+        guard let eventKindString = eventKindString
+        else { return nil }
+        return Event.Kind(rawValue: eventKindString)
+    }
+    var eventKey: String? {
+        self[Event.CodingKeys.key.rawValue] as? String
+    }
+    var eventCreationDateMillis: Int64? {
+        self[Event.CodingKeys.creationDate.rawValue] as? Int64
+    }
+
+    func matches(eventDictionary other: [String: Any]) -> Bool {
+        guard let kind = eventKind
+            else { return false }
+        if kind == .summary {
+            guard kind == other.eventKind,
+                let eventEndDate = eventEndDate, eventEndDate.isWithin(0.001, of: other.eventEndDate)
+                else { return false }
+            return true
+        }
+        guard let key = eventKey, let creationDateMillis = eventCreationDateMillis,
+            let otherKey = other.eventKey, let otherCreationDateMillis = other.eventCreationDateMillis
+            else { return false }
+        return key == otherKey && creationDateMillis == otherCreationDateMillis
     }
 }
 
 extension Array where Element == [String: Any] {
     func eventDictionary(for event: Event) -> [String: Any]? {
-        let selectedDictionaries = self.filter { (eventDictionary) -> Bool in
+        let selectedDictionaries = self.filter { eventDictionary -> Bool in
             event.key == eventDictionary.eventKey
         }
-        guard selectedDictionaries.count == 1 else {
-            return nil
-        }
+        guard selectedDictionaries.count == 1
+        else { return nil }
         return selectedDictionaries.first
     }
     var eventKinds: [Event.Kind] {
-        return self.compactMap { (eventDictionary) in return eventDictionary.eventKind }
+        self.compactMap { $0.eventKind }
     }
 }
 
@@ -1333,12 +1079,12 @@ extension Event {
     }
 
     static func eventKind(for count: Int) -> Kind {
-        return Event.Kind.allKinds[count % Event.Kind.allKinds.count]
+        Event.Kind.allKinds[count % Event.Kind.allKinds.count]
     }
 
     static func stubEventDictionaries(_ eventCount: Int, user: LDUser, config: LDConfig) -> [[String: Any]] {
         let eventStubs = stubEvents(eventCount: eventCount, for: user)
-        return eventStubs.map { (event) in
+        return eventStubs.map { event in
             event.dictionaryValue(config: config)
         }
     }

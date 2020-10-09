@@ -7,7 +7,7 @@
 
 import Foundation
 
-struct Event { //sdk internal, not publically accessible
+struct Event {
     enum CodingKeys: String, CodingKey {
         case key, kind, creationDate, user, userKey, value, defaultValue = "default", variation, version, data, endDate, reason, metricValue
     }
@@ -103,9 +103,7 @@ struct Event { //sdk internal, not publically accessible
     static func summaryEvent(flagRequestTracker: FlagRequestTracker, endDate: Date = Date()) -> Event? {
         Log.debug(typeName(and: #function))
         guard flagRequestTracker.hasLoggedRequests
-        else {
-            return nil
-        }
+        else { return nil }
         return Event(kind: .summary, flagRequestTracker: flagRequestTracker, endDate: endDate)
     }
 
@@ -115,7 +113,7 @@ struct Event { //sdk internal, not publically accessible
         eventDictionary[CodingKeys.key.rawValue] = key
         eventDictionary[CodingKeys.creationDate.rawValue] = creationDate?.millisSince1970
         if kind.isAlwaysInlineUserKind || config.inlineUserInEvents {
-            eventDictionary[CodingKeys.user.rawValue] = user?.dictionaryValue(includeFlagConfig: false, includePrivateAttributes: false, config: config)
+            eventDictionary[CodingKeys.user.rawValue] = user?.dictionaryValue(includePrivateAttributes: false, config: config)
         } else {
             eventDictionary[CodingKeys.userKey.rawValue] = user?.key
         }
@@ -151,54 +149,6 @@ extension Array where Element == [String: Any] {
         guard JSONSerialization.isValidJSONObject(self)
         else { return nil }
         return try? JSONSerialization.data(withJSONObject: self, options: [])
-    }
-
-    func contains(_ eventDictionary: [String: Any]) -> Bool {
-        self.contains { $0.matches(eventDictionary: eventDictionary) }
-    }
-}
-
-extension Dictionary where Key == String, Value == Any {
-    private var eventKindString: String? {
-        self[Event.CodingKeys.kind.rawValue] as? String
-    }
-    var eventKind: Event.Kind? {
-        guard let eventKindString = eventKindString
-        else { return nil }
-        return Event.Kind(rawValue: eventKindString)
-    }
-    var eventKey: String? {
-        self[Event.CodingKeys.key.rawValue] as? String
-    }
-    var eventCreationDateMillis: Int64? {
-        self[Event.CodingKeys.creationDate.rawValue] as? Int64
-    }
-    var eventEndDate: Date? {
-        Date(millisSince1970: self[Event.CodingKeys.endDate.rawValue] as? Int64)
-    }
-
-    func matches(eventDictionary other: [String: Any]) -> Bool {
-        guard let kind = eventKind
-        else { return false }
-        if kind == .summary {
-            guard kind == other.eventKind,
-                let eventEndDate = eventEndDate, eventEndDate.isWithin(0.001, of: other.eventEndDate)
-            else { return false }
-            return true
-        }
-        guard let key = eventKey, let creationDateMillis = eventCreationDateMillis,
-            let otherKey = other.eventKey, let otherCreationDateMillis = other.eventCreationDateMillis
-        else { return false }
-        return key == otherKey && creationDateMillis == otherCreationDateMillis
-    }
-}
-
-extension Event: Equatable {
-    static func == (lhs: Event, rhs: Event) -> Bool {
-        if lhs.kind == .summary {
-            return lhs.kind == rhs.kind && lhs.endDate?.isWithin(0.001, of: rhs.endDate) ?? false
-        }
-        return lhs.kind == rhs.kind && lhs.key == rhs.key && lhs.creationDate == rhs.creationDate
     }
 }
 

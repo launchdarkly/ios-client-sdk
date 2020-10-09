@@ -50,23 +50,17 @@ final class DeprecatedCacheModelV5Spec: QuickSpec {
 
         func modelV5Dictionary(for users: [LDUser], and userEnvironmentsCollection: [UserKey: CacheableUserEnvironmentFlags], mobileKeys: [MobileKey]) -> [UserKey: Any]? {
             guard !users.isEmpty
-            else {
-                return nil
-            }
+            else { return nil }
 
             var cacheDictionary = [UserKey: [String: Any]]()
             users.forEach { user in
                 guard let userEnvironment = userEnvironmentsCollection[user.key]
-                else {
-                    return
-                }
+                else { return }
                 var environmentsDictionary = [MobileKey: Any]()
                 let lastUpdated = userEnvironmentsCollection[user.key]?.lastUpdated
                 mobileKeys.forEach { mobileKey in
                     guard let featureFlags = userEnvironment.environmentFlags[mobileKey]?.featureFlags
-                    else {
-                        return
-                    }
+                    else { return }
                     environmentsDictionary[mobileKey] = user.modelV5DictionaryValue(including: featureFlags, using: lastUpdated)
                 }
                 cacheDictionary[user.key] = [CacheableEnvironmentFlags.CodingKeys.userKey.rawValue: user.key,
@@ -232,7 +226,7 @@ extension Dictionary where Key == LDFlagKey, Value == FeatureFlag {
 
 extension FeatureFlag {
     var modelV5FeatureFlag: FeatureFlag {
-        FeatureFlag(flagKey: flagKey, value: value, variation: variation, version: version, flagVersion: flagVersion, trackEvents: trackEvents, debugEventsUntilDate: debugEventsUntilDate, reason: nil, trackReason: nil)
+        FeatureFlag(flagKey: flagKey, value: value, variation: variation, version: version, flagVersion: flagVersion, trackEvents: trackEvents, debugEventsUntilDate: debugEventsUntilDate)
     }
 }
 
@@ -240,7 +234,7 @@ extension FeatureFlag {
 
 extension LDUser {
     func modelV5DictionaryValue(including featureFlags: [LDFlagKey: FeatureFlag], using lastUpdated: Date?) -> [String: Any] {
-        var userDictionary = dictionaryValueWithAllAttributes(includeFlagConfig: false)
+        var userDictionary = dictionaryValueWithAllAttributes()
         userDictionary.setLastUpdated(lastUpdated)
         userDictionary[LDUser.CodingKeys.config.rawValue] = featureFlags.compactMapValues { $0.modelV5dictionaryValue }
 
@@ -259,9 +253,7 @@ extension FeatureFlag {
 */
     var modelV5dictionaryValue: [String: Any]? {
         guard value != nil
-        else {
-            return nil
-        }
+        else { return nil }
         var flagDictionary = dictionaryValue
         flagDictionary.removeValue(forKey: FeatureFlag.CodingKeys.flagKey.rawValue)
         flagDictionary.removeValue(forKey: FeatureFlag.CodingKeys.reason.rawValue)

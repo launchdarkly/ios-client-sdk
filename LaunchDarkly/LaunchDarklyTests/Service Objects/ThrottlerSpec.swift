@@ -80,7 +80,7 @@ final class ThrottlerSpec: QuickSpec {
     }
 
     //The upper bound on the max delay is always 2^runAttempt, exclusive.
-    func maxDelay(runAttempt: Int) -> TimeInterval { pow(2.0, Double(runAttempt)) }
+    func maxDelay(runAttempt: Int) -> DispatchTimeInterval { .seconds(Int(pow(2.0, Double(runAttempt)))) }
 
     func runSpec() {
         describe("runThrottled") {
@@ -136,7 +136,7 @@ final class ThrottlerSpec: QuickSpec {
                 throttler = Throttler(maxDelay: Constants.maxDelay, environmentReporter: EnvironmentReportingMock())
 
                 runCalled = Date()
-                waitUntil(timeout: 5) { done in
+                waitUntil(timeout: .seconds(5)) { done in
                     for _ in 0..<2 {
                         throttler.runThrottled({
                             runExecuted.append(Date())
@@ -225,7 +225,7 @@ final class ThrottlerSpec: QuickSpec {
         for _ in 0..<5 {
             context("max runThrottled calls") {
                 beforeEach {
-                    waitUntil(timeout: 0.1) { done in
+                    waitUntil(timeout: .milliseconds(100)) { done in
                         throttler.runThrottled(done)
                     }
                 }

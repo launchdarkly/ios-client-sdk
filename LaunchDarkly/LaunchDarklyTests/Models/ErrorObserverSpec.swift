@@ -6,8 +6,8 @@
 //
 
 import Foundation
-import Quick
-import Nimble
+import XCTest
+
 @testable import LaunchDarkly
 
 final class ErrorOwnerMock {
@@ -17,53 +17,18 @@ final class ErrorOwnerMock {
     }
 }
 
-final class ErrorObserverSpec: QuickSpec {
+private class ErrorMock: Error { }
 
-    override func spec() {
-        initSpec()
-        equalSpec()
-    }
+final class ErrorObserverSpec: XCTestCase {
+    func testInit() {
+        let errorOwner = ErrorOwnerMock()
+        let errorObserver = ErrorObserver(owner: errorOwner, errorHandler: errorOwner.handle)
+        XCTAssert(errorObserver.owner === errorOwner)
 
-    private func initSpec() {
-        var errorOwner: ErrorOwnerMock?
-        var errorObserver: ErrorObserver!
-        describe("init") {
-            beforeEach {
-                errorOwner = ErrorOwnerMock()
-                errorObserver = ErrorObserver(owner: errorOwner!, errorHandler: errorOwner!.handle)
-            }
-            it("sets the error owner") {
-                expect(errorObserver.key).toNot(beNil())
-                expect(errorObserver.owner) === errorOwner
-                expect(errorObserver.errorHandler).toNot(beNil())
-            }
-        }
-    }
-
-    private func equalSpec() {
-        var errorOwner: ErrorOwnerMock?
-        var errorObserver: ErrorObserver!
-        describe("equals") {
-            context("same observer") {
-                beforeEach {
-                    errorOwner = ErrorOwnerMock()
-                    errorObserver = ErrorObserver(owner: errorOwner!, errorHandler: errorOwner!.handle)
-                }
-                it("returns true") {
-                    expect(errorObserver == errorObserver) == true
-                }
-            }
-            context("same observer") {
-                var otherErrorObserver: ErrorObserver!
-                beforeEach {
-                    errorOwner = ErrorOwnerMock()
-                    errorObserver = ErrorObserver(owner: errorOwner!, errorHandler: errorOwner!.handle)
-                    otherErrorObserver = ErrorObserver(owner: errorOwner!, errorHandler: errorOwner!.handle)
-                }
-                it("returns false") {
-                    expect(errorObserver == otherErrorObserver) == false
-                }
-            }
-        }
+        let errorMock = ErrorMock()
+        XCTAssertNotNil(errorObserver.errorHandler)
+        errorObserver.errorHandler?(errorMock)
+        XCTAssertEqual(errorOwner.errors.count, 1)
+        XCTAssert(errorOwner.errors[0] as? ErrorMock === errorMock)
     }
 }

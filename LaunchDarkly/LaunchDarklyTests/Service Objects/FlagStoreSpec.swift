@@ -94,7 +94,7 @@ final class FlagStoreSpec: QuickSpec {
                 beforeEach {
                     featureFlags = DarklyServiceMock.Constants.stubFeatureFlags(includeNullValue: false)
                     flagStore = FlagStore()
-                    waitUntil(timeout: 1) { done in
+                    waitUntil(timeout: .seconds(1)) { done in
                         flagStore.replaceStore(newFlags: featureFlags, completion: done)
                     }
                 }
@@ -106,7 +106,7 @@ final class FlagStoreSpec: QuickSpec {
                 beforeEach {
                     featureFlags = DarklyServiceMock.Constants.stubFeatureFlags(includeNullValue: false)
                     flagStore = FlagStore()
-                    waitUntil(timeout: 1) { done in
+                    waitUntil(timeout: .seconds(1)) { done in
                         flagStore.replaceStore(newFlags: featureFlags.dictionaryValue, completion: done)
                     }
                 }
@@ -119,7 +119,7 @@ final class FlagStoreSpec: QuickSpec {
                     featureFlags = DarklyServiceMock.Constants.stubFeatureFlags(includeNullValue: false)
                     flagStore = FlagStore(featureFlags: featureFlags)
 
-                    waitUntil(timeout: 1) { done in
+                    waitUntil(timeout: .seconds(1)) { done in
                         flagStore.replaceStore(newFlags: nil, completion: done)
                     }
                 }

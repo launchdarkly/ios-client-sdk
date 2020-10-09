@@ -25,7 +25,17 @@ struct FeatureFlag {
     let reason: [String: Any]?
     let trackReason: Bool?
 
-    init(flagKey: LDFlagKey, value: Any?, variation: Int?, version: Int?, flagVersion: Int?, trackEvents: Bool?, debugEventsUntilDate: Date?, reason: [String: Any]?, trackReason: Bool?) {
+    var versionForEvents: Int? { flagVersion ?? version }
+
+    init(flagKey: LDFlagKey,
+         value: Any? = nil,
+         variation: Int? = nil,
+         version: Int? = nil,
+         flagVersion: Int? = nil,
+         trackEvents: Bool? = nil,
+         debugEventsUntilDate: Date? = nil,
+         reason: [String: Any]? = nil,
+         trackReason: Bool? = nil) {
         self.flagKey = flagKey
         self.value = value is NSNull ? nil : value
         self.variation = variation
@@ -136,15 +146,11 @@ extension Dictionary where Key == String, Value == Any {
                 elementDictionary?[FeatureFlag.CodingKeys.flagKey.rawValue] = flagKey
             }
             guard let featureFlag = FeatureFlag(dictionary: elementDictionary)
-            else {
-                return nil
-            }
+            else { return nil }
             return (flagKey, featureFlag)
         })
         guard flagCollection.count == self.count
-        else {
-            return nil
-        }
+        else { return nil }
         return flagCollection
     }
 }

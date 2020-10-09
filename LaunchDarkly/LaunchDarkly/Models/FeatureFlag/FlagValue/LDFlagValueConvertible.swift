@@ -123,10 +123,3 @@ extension NSNull: LDFlagValueConvertible {
 //        }
 //    }
 //}
-
-//extension Optional where Wrapped == LDFlagValueConvertible {
-//    func isEqual(to other: LDFlagValueConvertible?) -> Bool {
-//        guard case .some(let value) = self, case .some(let otherValue) = other else { return false }
-//        return value.isEqual(to: otherValue)
-//    }
-//}

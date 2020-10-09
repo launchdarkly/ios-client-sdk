@@ -2,7 +2,6 @@
 //  URLCache.swift
 //  LaunchDarklyTests
 //
-//  Created by Mark Pokorny on 3/9/19. +JMJ
 //  Copyright © 2019 Catamorphic Co. All rights reserved.
 //
 
@@ -28,7 +27,7 @@ final class URLCacheSpec: QuickSpec {
         //per user
         var userServiceObjects = [String: (user: LDUser, service: DarklyService, serviceMock: DarklyServiceMock)]()
         var userKeys: Dictionary<String, (user: LDUser, service: DarklyService, serviceMock: DarklyServiceMock)>.Keys {
-            return userServiceObjects.keys
+            userServiceObjects.keys
         }
 
         init(userCount: Int = 1, useReport: Bool = false) {
@@ -46,15 +45,15 @@ final class URLCacheSpec: QuickSpec {
         }
 
         func user(for key: String) -> LDUser? {
-            return userServiceObjects[key]?.user
+            userServiceObjects[key]?.user
         }
 
         func service(for key: String) -> DarklyService? {
-            return userServiceObjects[key]?.service
+            userServiceObjects[key]?.service
         }
 
         func serviceMock(for key: String) -> DarklyServiceMock? {
-            return userServiceObjects[key]?.serviceMock
+            userServiceObjects[key]?.serviceMock
         }
     }
 
@@ -82,12 +81,12 @@ final class URLCacheSpec: QuickSpec {
                         serviceMock.stubFlagRequest(statusCode: HTTPURLResponse.StatusCodes.ok,
                                                     featureFlags: user.featureFlags,
                                                     useReport: Constants.useGetMethod,
-                                                    onActivation: { (request, _, _) in
+                                                    onActivation: { request, _, _ in
                                                         urlRequest = request
                         })
                         var serviceResponse: ServiceResponse!
                         waitUntil { done in
-                            service.getFeatureFlags(useReport: Constants.useGetMethod, completion: { (response) in
+                            service.getFeatureFlags(useReport: Constants.useGetMethod, completion: { response in
                                 serviceResponse = response
                                 done()
                             })
@@ -116,20 +115,20 @@ final class URLCacheSpec: QuickSpec {
                         guard let user = testContext.user(for: userKey),
                             let service = testContext.service(for: userKey),
                             let serviceMock = testContext.serviceMock(for: userKey)
-                            else {
-                                fail("test setup failed to create user service objects")
-                                return
+                        else {
+                            fail("test setup failed to create user service objects")
+                            return
                         }
                         var urlRequest: URLRequest!
                         serviceMock.stubFlagRequest(statusCode: HTTPURLResponse.StatusCodes.ok,
                                                     featureFlags: user.featureFlags,
                                                     useReport: Constants.useReportMethod,
-                                                    onActivation: { (request, _, _) in
+                                                    onActivation: { request, _, _ in
                                                         urlRequest = request
                         })
                         var serviceResponse: ServiceResponse!
                         waitUntil { done in
-                            service.getFeatureFlags(useReport: Constants.useReportMethod, completion: { (response) in
+                            service.getFeatureFlags(useReport: Constants.useReportMethod, completion: { response in
                                 serviceResponse = response
                                 done()
                             })
@@ -142,9 +141,9 @@ final class URLCacheSpec: QuickSpec {
                     for userKey in testContext.userKeys {
                         guard let user = testContext.user(for: userKey),
                             let urlRequest = urlRequests[userKey]
-                            else {
-                                fail("test setup failed to set user or urlRequest for user: \(userKey)")
-                                return
+                        else {
+                            fail("test setup failed to set user or urlRequest for user: \(userKey)")
+                            return
                         }
                         expect(URLCache.shared.cachedResponse(for: urlRequest)?.flagCollection) == user.featureFlags
                     }
@@ -157,16 +156,14 @@ final class URLCacheSpec: QuickSpec {
 extension Data {
     var flagCollection: [LDFlagKey: FeatureFlag]? {
         guard let flagDictionary = try? JSONSerialization.jsonDictionary(with: self, options: .allowFragments)
-        else {
-            return nil
-        }
+        else { return nil }
         return flagDictionary.flagCollection
     }
 }
 
 extension CachedURLResponse {
     var flagCollection: [LDFlagKey: FeatureFlag]? {
-        return data.flagCollection
+        data.flagCollection
     }
 }
 
@@ -175,23 +172,19 @@ extension URLCache {
         guard let urlResponse = serviceResponse?.urlResponse,
             let data = serviceResponse?.data,
             let request = request
-        else {
-            return
-        }
+        else { return }
         URLCache.shared.storeCachedResponse(CachedURLResponse(response: urlResponse, data: data), for: request)
     }
 
     func cachedResponse(for request: URLRequest?) -> CachedURLResponse? {
         guard let request = request
-        else {
-            return nil
-        }
+        else { return nil }
         return URLCache.shared.cachedResponse(for: request)
     }
 }
 
 extension LDUser {
     var featureFlags: [LDFlagKey: FeatureFlag] {
-        return flagStore.featureFlags
+        flagStore.featureFlags
     }
 }

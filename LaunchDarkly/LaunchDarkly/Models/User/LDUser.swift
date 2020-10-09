@@ -21,7 +21,7 @@ public struct LDUser {
     ///String keys associated with LDUser properties.
     public enum CodingKeys: String, CodingKey {
         ///Key names match the corresponding LDUser property
-        case key, name, firstName, lastName, country, ipAddress = "ip", email, avatar, custom, isAnonymous = "anonymous", device, operatingSystem = "os", config, privateAttributes = "privateAttrs"
+        case key, name, firstName, lastName, country, ipAddress = "ip", email, avatar, custom, isAnonymous = "anonymous", device, operatingSystem = "os", config, privateAttributes = "privateAttrs", secondary
     }
 
     /**
@@ -31,15 +31,21 @@ public struct LDUser {
 
      See Also: `LDConfig.allUserAttributesPrivate`, `LDConfig.privateUserAttributes`, and `privateAttributes`.
     */
-    public static var privatizableAttributes: [String] {
-        [CodingKeys.name.rawValue, CodingKeys.firstName.rawValue, CodingKeys.lastName.rawValue, CodingKeys.country.rawValue, CodingKeys.ipAddress.rawValue, CodingKeys.email.rawValue, CodingKeys.avatar.rawValue, CodingKeys.custom.rawValue]
-    }
+    public static var privatizableAttributes: [String] { optionalAttributes + [CodingKeys.custom.rawValue] }
+
+    static let optionalAttributes = [CodingKeys.name.rawValue, CodingKeys.firstName.rawValue,
+                                     CodingKeys.lastName.rawValue, CodingKeys.country.rawValue,
+                                     CodingKeys.ipAddress.rawValue, CodingKeys.email.rawValue,
+                                     CodingKeys.avatar.rawValue, CodingKeys.secondary.rawValue]
+
     static var sdkSetAttributes: [String] {
         [CodingKeys.device.rawValue, CodingKeys.operatingSystem.rawValue]
     }
 
     ///Client app defined string that uniquely identifies the user. If the client app does not define a key, the SDK will assign an identifier associated with the anonymous user. The key cannot be made private.
     public var key: String
+    ///The secondary key for the user. See the [documentation](https://docs.launchdarkly.com/home/managing-flags/targeting-users#percentage-rollout-logic) for more information on it's use for percentage rollout bucketing.
+    public var secondary: String?
     ///Client app defined name for the user. (Default: nil)
     public var name: String?
     ///Client app defined first name for the user. (Default: nil)
@@ -75,9 +81,7 @@ public struct LDUser {
     public var privateAttributes: [String]?
 
     ///An NSObject wrapper for the Swift LDUser struct. Intended for use in mixed apps when Swift code needs to pass a user into an Objective-C method.
-    public var objcLdUser: ObjcLDUser {
-        return ObjcLDUser(self)
-    }
+    public var objcLdUser: ObjcLDUser { ObjcLDUser(self) }
 
     internal var flagStore: FlagMaintaining = FlagStore()
 
@@ -97,6 +101,7 @@ public struct LDUser {
      - parameter device: Client app defined device for the user. The SDK will determine the device automatically, however the client app can override the value. The SDK will insert the device into the `custom` dictionary. (Default: nil)
      - parameter operatingSystem: Client app defined operatingSystem for the user. The SDK will determine the operatingSystem automatically, however the client app can override the value. The SDK will insert the operatingSystem into the `custom` dictionary. (Default: nil)
      - parameter privateAttributes: Client app defined privateAttributes for the user. (Default: nil)
+     - parameter secondary: Secondary attribute value. (Default: nil)
      */
     public init(key: String? = nil,
                 name: String? = nil,
@@ -110,10 +115,12 @@ public struct LDUser {
                 isAnonymous: Bool? = nil,
                 device: String? = nil,
                 operatingSystem: String? = nil,
-                privateAttributes: [String]? = nil) {
+                privateAttributes: [String]? = nil,
+                secondary: String? = nil) {
         let environmentReporter = EnvironmentReporter()
         let selectedKey = key ?? LDUser.defaultKey(environmentReporter: environmentReporter)
         self.key = selectedKey
+        self.secondary = secondary
         self.name = name
         self.firstName = firstName
         self.lastName = lastName
@@ -136,6 +143,7 @@ public struct LDUser {
      */
     public init(userDictionary: [String: Any]) {
         key = userDictionary[CodingKeys.key.rawValue] as? String ?? LDUser.defaultKey(environmentReporter: EnvironmentReporter())
+        secondary = userDictionary[CodingKeys.secondary.rawValue] as? String
         isAnonymous = userDictionary[CodingKeys.isAnonymous.rawValue] as? Bool ?? false
 
         name = userDictionary[CodingKeys.name.rawValue] as? String
@@ -166,6 +174,7 @@ public struct LDUser {
     private func value(for attribute: String) -> Any? {
         switch attribute {
         case CodingKeys.key.rawValue: return key
+        case CodingKeys.secondary.rawValue: return secondary
         case CodingKeys.isAnonymous.rawValue: return isAnonymous
         case CodingKeys.name.rawValue: return name
         case CodingKeys.firstName.rawValue: return firstName
@@ -183,26 +192,23 @@ public struct LDUser {
         }
     }
     ///Returns the custom dictionary without the SDK set device and operatingSystem attributes
-    var customWithoutSdkSetAttributes: [String: Any]? {
-        custom?.filter { key, _ in !LDUser.sdkSetAttributes.contains(key) }
+    var customWithoutSdkSetAttributes: [String: Any] {
+        custom?.filter { key, _ in !LDUser.sdkSetAttributes.contains(key) } ?? [:]
     }
 
     ///Dictionary with LDUser attribute keys and values, with options to include feature flags and private attributes. LDConfig object used to help resolving what attributes should be private.
-    /// - parameter includeFlagConfig: Controls whether the resulting dictionary includes feature flags under the `config` key
     /// - parameter includePrivateAttributes: Controls whether the resulting dictionary includes private attributes
     /// - parameter config: Provides supporting information for defining private attributes
-    func dictionaryValue(includeFlagConfig: Bool, includePrivateAttributes includePrivate: Bool, config: LDConfig) -> [String: Any] {
+    func dictionaryValue(includePrivateAttributes includePrivate: Bool, config: LDConfig) -> [String: Any] {
         var dictionary = [String: Any]()
         var redactedAttributes = [String]()
         let combinedPrivateAttributes = config.allUserAttributesPrivate ? LDUser.privatizableAttributes
             : (privateAttributes ?? []) + (config.privateUserAttributes ?? [])
 
         dictionary[CodingKeys.key.rawValue] = key
+        dictionary[CodingKeys.isAnonymous.rawValue] = isAnonymous
 
-        let optionalAttributes = LDUser.privatizableAttributes.filter { attribute in
-            attribute != CodingKeys.custom.rawValue
-        }
-        optionalAttributes.forEach { attribute in
+        LDUser.optionalAttributes.forEach { attribute in
             let value = self.value(for: attribute)
             if !includePrivate && combinedPrivateAttributes.contains(attribute) && value != nil {
                 redactedAttributes.append(attribute)
@@ -212,17 +218,11 @@ public struct LDUser {
         }
 
         var customDictionary = [String: Any]()
-        if !includePrivate && combinedPrivateAttributes.contains(CodingKeys.custom.rawValue) && !(customWithoutSdkSetAttributes?.isEmpty ?? true) {
-            redactedAttributes.append(CodingKeys.custom.rawValue)
-        } else {
-            if let custom = customWithoutSdkSetAttributes, !custom.isEmpty {
-                custom.keys.forEach { customAttribute in
-                    if !includePrivate && combinedPrivateAttributes.contains(customAttribute) && custom[customAttribute] != nil {
-                        redactedAttributes.append(customAttribute)
-                    } else {
-                        customDictionary[customAttribute] = custom[customAttribute]
-                    }
-                }
+        customWithoutSdkSetAttributes.forEach { attrName, attrVal in
+            if !includePrivate && combinedPrivateAttributes.contains(where: [CodingKeys.custom.rawValue, attrName].contains ) {
+                redactedAttributes.append(attrName)
+            } else {
+                customDictionary[attrName] = attrVal
             }
         }
         customDictionary[CodingKeys.device.rawValue] = device
@@ -232,12 +232,6 @@ public struct LDUser {
         if !includePrivate && !redactedAttributes.isEmpty {
             let redactedAttributeSet: Set<String> = Set(redactedAttributes)
             dictionary[CodingKeys.privateAttributes.rawValue] = redactedAttributeSet.sorted()
-        }
-
-        dictionary[CodingKeys.isAnonymous.rawValue] = isAnonymous
-
-        if includeFlagConfig {
-            dictionary[CodingKeys.config.rawValue] = flagStore.featureFlags
         }
 
         return dictionary
@@ -292,6 +286,7 @@ extension LDUserWrapper: NSCoding {
 
     func encode(with encoder: NSCoder) {
         encoder.encode(wrapped.key, forKey: LDUser.CodingKeys.key.rawValue)
+        encoder.encode(wrapped.secondary, forKey: LDUser.CodingKeys.secondary.rawValue)
         encoder.encode(wrapped.name, forKey: LDUser.CodingKeys.name.rawValue)
         encoder.encode(wrapped.firstName, forKey: LDUser.CodingKeys.firstName.rawValue)
         encoder.encode(wrapped.lastName, forKey: LDUser.CodingKeys.lastName.rawValue)
@@ -318,7 +313,8 @@ extension LDUserWrapper: NSCoding {
                           avatar: decoder.decodeObject(forKey: LDUser.CodingKeys.avatar.rawValue) as? String,
                           custom: decoder.decodeObject(forKey: LDUser.CodingKeys.custom.rawValue) as? [String: Any],
                           isAnonymous: decoder.decodeBool(forKey: LDUser.CodingKeys.isAnonymous.rawValue),
-                          privateAttributes: decoder.decodeObject(forKey: LDUser.CodingKeys.privateAttributes.rawValue) as? [String]
+                          privateAttributes: decoder.decodeObject(forKey: LDUser.CodingKeys.privateAttributes.rawValue) as? [String],
+                          secondary: decoder.decodeObject(forKey: LDUser.CodingKeys.secondary.rawValue) as? String
         )
         user.device = decoder.decodeObject(forKey: LDUser.CodingKeys.device.rawValue) as? String
         user.operatingSystem = decoder.decodeObject(forKey: LDUser.CodingKeys.operatingSystem.rawValue) as? String
@@ -346,6 +342,7 @@ extension LDUser: TypeIdentifying { }
         //Compares all user properties. Excludes the composed FlagStore, which contains the users feature flags
         func isEqual(to otherUser: LDUser) -> Bool {
             key == otherUser.key
+                && secondary == otherUser.secondary
                 && name == otherUser.name
                 && firstName == otherUser.firstName
                 && lastName == otherUser.lastName

@@ -217,9 +217,7 @@ class FlagSynchronizer: LDFlagSynchronizing, EventHandler {
 
     private class func shouldRetryFlagRequest(useReport: Bool, statusCode: Int?) -> Bool {
         guard let statusCode = statusCode
-        else {
-            return false
-        }
+        else { return false }
         return useReport && LDConfig.isReportRetryStatusCode(statusCode)
     }
 

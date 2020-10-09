@@ -24,16 +24,16 @@ final class UserEnvironmentFlagCacheSpec: QuickSpec {
         var userEnvironmentsCollection: [UserKey: CacheableUserEnvironmentFlags]
         var mobileKeys = Set<MobileKey>()
         var selectedUser: LDUser {
-            return users.selectedUser
+            users.selectedUser
         }
         var selectedMobileKey: String {
-            return userEnvironmentsCollection[selectedUser.key]!.environmentFlags.keys.selectedMobileKey
+            userEnvironmentsCollection[selectedUser.key]!.environmentFlags.keys.selectedMobileKey
         }
         var oldestUser: LDUser {
             //sort <userKey, lastUpdated> pairs youngest to oldest
-            let sortedLastUpdatedPairs = userEnvironmentsCollection.compactMapValues { (cacheableUserEnvironments) in
+            let sortedLastUpdatedPairs = userEnvironmentsCollection.compactMapValues { cacheableUserEnvironments in
                 return cacheableUserEnvironments.lastUpdated
-            }.sorted { (pair1, pair2) -> Bool in
+            }.sorted { pair1, pair2 -> Bool in
                 return pair2.value.isEarlierThan(pair1.value)
             }
             let oldestUserKey = sortedLastUpdatedPairs.last!.key
@@ -51,7 +51,7 @@ final class UserEnvironmentFlagCacheSpec: QuickSpec {
         }
 
         func featureFlags(forUserKey userKey: UserKey, andMobileKey mobileKey: MobileKey) -> [LDFlagKey: FeatureFlag]? {
-            return userEnvironmentsCollection[userKey]?.environmentFlags[mobileKey]?.featureFlags
+            userEnvironmentsCollection[userKey]?.environmentFlags[mobileKey]?.featureFlags
         }
 
         func storeFlags(_ featureFlags: [LDFlagKey: FeatureFlag],
@@ -184,7 +184,7 @@ final class UserEnvironmentFlagCacheSpec: QuickSpec {
                 storingLastUpdated = Date()
             }
             it("stores the users flags") {
-                FlagCachingStoreMode.allCases.forEach { (storeMode) in
+                FlagCachingStoreMode.allCases.forEach { storeMode in
                     testContext.storeFlags(newFeatureFlags,
                                            forUser: storingUser,
                                            andMobileKey: storingMobileKey,
@@ -195,7 +195,7 @@ final class UserEnvironmentFlagCacheSpec: QuickSpec {
 
                     let setCachedUserEnvironmentsCollection = testContext.keyedValueCacheMock.setReceivedArguments?.value as? [UserKey: [String: Any]]
                     expect(setCachedUserEnvironmentsCollection?.count) == userCount
-                    testContext.users.forEach { (user) in
+                    testContext.users.forEach { user in
                         expect(setCachedUserEnvironmentsCollection?.keys.contains(user.key)) == true
 
                         let setCachedUserEnvironments = setCachedUserEnvironmentsCollection?[user.key]
@@ -215,11 +215,9 @@ final class UserEnvironmentFlagCacheSpec: QuickSpec {
 
                         var mobileKeys = [MobileKey](testContext.mobileKeys)
                         mobileKeys.append(storingMobileKey)
-                        mobileKeys.forEach { (mobileKey) in
+                        mobileKeys.forEach { mobileKey in
                             guard mobileKey != storingMobileKey || user.key == storingUser.key
-                                else {
-                                    return
-                            }
+                            else { return }
                             expect(setCachedEnvironmentFlagsCollection?.keys.contains(mobileKey)) == true
 
                             let setCachedEnvironmentFlags = setCachedEnvironmentFlagsCollection?[mobileKey]
@@ -251,11 +249,11 @@ final class UserEnvironmentFlagCacheSpec: QuickSpec {
                     userCount = 0
                     testContext = TestContext(userCount: userCount, maxUsers: maxUsers)
                     storingUser = LDUser.stub()
-                    storingLastUpdated = Date().addingTimeInterval(TimeInterval(days: -1))
+                    storingLastUpdated = Date().addingTimeInterval(-1.0 * 24 * 60 * 60) // one day
                     storingMobileKey = UUID().uuidString
                 }
                 it("stores the users flags") {
-                    FlagCachingStoreMode.allCases.forEach { (storeMode) in
+                    FlagCachingStoreMode.allCases.forEach { storeMode in
                         testContext.storeFlags(storingUser.flagStore.featureFlags,
                                                forUser: storingUser,
                                                andMobileKey: storingMobileKey,
@@ -295,7 +293,7 @@ final class UserEnvironmentFlagCacheSpec: QuickSpec {
                         storingLastUpdated = Date()
                     }
                     it("stores the users flags") {
-                        FlagCachingStoreMode.allCases.forEach { (storeMode) in
+                        FlagCachingStoreMode.allCases.forEach { storeMode in
                             testContext.storeFlags(storingUser.flagStore.featureFlags,
                                                    forUser: storingUser,
                                                    andMobileKey: storingMobileKey,
@@ -306,7 +304,7 @@ final class UserEnvironmentFlagCacheSpec: QuickSpec {
 
                             let setCachedUserEnvironmentsCollection = testContext.keyedValueCacheMock.setReceivedArguments?.value as? [UserKey: [String: Any]]
                             expect(setCachedUserEnvironmentsCollection?.count) == userCount
-                            testContext.users.forEach { (user) in
+                            testContext.users.forEach { user in
                                 expect(setCachedUserEnvironmentsCollection?.keys.contains(user.key)) == true
 
                                 let setCachedUserEnvironments = setCachedUserEnvironmentsCollection?[user.key]
@@ -319,7 +317,7 @@ final class UserEnvironmentFlagCacheSpec: QuickSpec {
 
                                 let setCachedEnvironmentFlagsCollection = setCachedUserEnvironments?.environmentFlags
                                 expect(setCachedEnvironmentFlagsCollection?.count) == CacheableUserEnvironmentFlags.Constants.environmentCount
-                                testContext.mobileKeys.forEach { (mobileKey) in
+                                testContext.mobileKeys.forEach { mobileKey in
                                     expect(setCachedEnvironmentFlagsCollection?.keys.contains(mobileKey)) == true
 
                                     let setCachedEnvironmentFlags = setCachedEnvironmentFlagsCollection?[mobileKey]
@@ -347,7 +345,7 @@ final class UserEnvironmentFlagCacheSpec: QuickSpec {
                         storingLastUpdated = Date()
                     }
                     it("stores the users flags") {
-                        FlagCachingStoreMode.allCases.forEach { (storeMode) in
+                        FlagCachingStoreMode.allCases.forEach { storeMode in
                             testContext.storeFlags(newFeatureFlags,
                                                    forUser: storingUser,
                                                    andMobileKey: storingMobileKey,
@@ -358,7 +356,7 @@ final class UserEnvironmentFlagCacheSpec: QuickSpec {
 
                             let setCachedUserEnvironmentsCollection = testContext.keyedValueCacheMock.setReceivedArguments?.value as? [UserKey: [String: Any]]
                             expect(setCachedUserEnvironmentsCollection?.count) == userCount
-                            testContext.users.forEach { (user) in
+                            testContext.users.forEach { user in
                                 expect(setCachedUserEnvironmentsCollection?.keys.contains(user.key)) == true
 
                                 let setCachedUserEnvironments = setCachedUserEnvironmentsCollection?[user.key]
@@ -378,11 +376,9 @@ final class UserEnvironmentFlagCacheSpec: QuickSpec {
 
                                 var mobileKeys = [MobileKey](testContext.mobileKeys)
                                 mobileKeys.append(storingMobileKey)
-                                mobileKeys.forEach { (mobileKey) in
+                                mobileKeys.forEach { mobileKey in
                                     guard mobileKey != storingMobileKey || user.key == storingUser.key
-                                        else {
-                                            return
-                                    }
+                                    else { return }
                                     expect(setCachedEnvironmentFlagsCollection?.keys.contains(mobileKey)) == true
 
                                     let setCachedEnvironmentFlags = setCachedEnvironmentFlagsCollection?[mobileKey]
@@ -409,7 +405,7 @@ final class UserEnvironmentFlagCacheSpec: QuickSpec {
                         storingLastUpdated = Date()
                     }
                     it("stores the users flags") {
-                        FlagCachingStoreMode.allCases.forEach { (storeMode) in
+                        FlagCachingStoreMode.allCases.forEach { storeMode in
                             testContext.storeFlags(newFeatureFlags,
                                                    forUser: storingUser,
                                                    andMobileKey: storingMobileKey,
@@ -423,7 +419,7 @@ final class UserEnvironmentFlagCacheSpec: QuickSpec {
 
                             var users = testContext.users
                             users.append(storingUser)
-                            users.forEach { (user) in
+                            users.forEach { user in
                                 expect(setCachedUserEnvironmentsCollection?.keys.contains(user.key)) == true
 
                                 let setCachedUserEnvironments = setCachedUserEnvironmentsCollection?[user.key]
@@ -436,11 +432,9 @@ final class UserEnvironmentFlagCacheSpec: QuickSpec {
 
                                 let setCachedEnvironmentFlagsCollection = setCachedUserEnvironments?.environmentFlags
                                 expect(setCachedEnvironmentFlagsCollection?.count) == (user.key != storingUser.key ? CacheableUserEnvironmentFlags.Constants.environmentCount : 1)
-                                testContext.mobileKeys.forEach { (mobileKey) in
+                                testContext.mobileKeys.forEach { mobileKey in
                                     guard user.key != storingUser.key || mobileKey == storingMobileKey
-                                        else {
-                                            return
-                                    }
+                                    else { return }
                                     expect(setCachedEnvironmentFlagsCollection?.keys.contains(mobileKey)) == true
 
                                     let setCachedEnvironmentFlags = setCachedEnvironmentFlagsCollection?[mobileKey]
@@ -470,7 +464,7 @@ final class UserEnvironmentFlagCacheSpec: QuickSpec {
                         storingLastUpdated = Date()
                     }
                     it("stores the users flags") {
-                        FlagCachingStoreMode.allCases.forEach { (storeMode) in
+                        FlagCachingStoreMode.allCases.forEach { storeMode in
                             testContext.storeFlags(newFeatureFlags,
                                                    forUser: storingUser,
                                                    andMobileKey: storingMobileKey,
@@ -481,7 +475,7 @@ final class UserEnvironmentFlagCacheSpec: QuickSpec {
 
                             let setCachedUserEnvironmentsCollection = testContext.keyedValueCacheMock.setReceivedArguments?.value as? [UserKey: [String: Any]]
                             expect(setCachedUserEnvironmentsCollection?.count) == userCount
-                            testContext.users.forEach { (user) in
+                            testContext.users.forEach { user in
                                 expect(setCachedUserEnvironmentsCollection?.keys.contains(user.key)) == true
 
                                 let setCachedUserEnvironments = setCachedUserEnvironmentsCollection?[user.key]
@@ -494,7 +488,7 @@ final class UserEnvironmentFlagCacheSpec: QuickSpec {
 
                                 let setCachedEnvironmentFlagsCollection = setCachedUserEnvironments?.environmentFlags
                                 expect(setCachedEnvironmentFlagsCollection?.count) == CacheableUserEnvironmentFlags.Constants.environmentCount
-                                testContext.mobileKeys.forEach { (mobileKey) in
+                                testContext.mobileKeys.forEach { mobileKey in
                                     expect(setCachedEnvironmentFlagsCollection?.keys.contains(mobileKey)) == true
 
                                     let setCachedEnvironmentFlags = setCachedEnvironmentFlagsCollection?[mobileKey]
@@ -522,7 +516,7 @@ final class UserEnvironmentFlagCacheSpec: QuickSpec {
                         storingLastUpdated = Date()
                     }
                     it("stores the users flags") {
-                        FlagCachingStoreMode.allCases.forEach { (storeMode) in
+                        FlagCachingStoreMode.allCases.forEach { storeMode in
                             testContext.storeFlags(newFeatureFlags,
                                                    forUser: storingUser,
                                                    andMobileKey: storingMobileKey,
@@ -533,7 +527,7 @@ final class UserEnvironmentFlagCacheSpec: QuickSpec {
 
                             let setCachedUserEnvironmentsCollection = testContext.keyedValueCacheMock.setReceivedArguments?.value as? [UserKey: [String: Any]]
                             expect(setCachedUserEnvironmentsCollection?.count) == userCount
-                            testContext.users.forEach { (user) in
+                            testContext.users.forEach { user in
                                 expect(setCachedUserEnvironmentsCollection?.keys.contains(user.key)) == true
 
                                 let setCachedUserEnvironments = setCachedUserEnvironmentsCollection?[user.key]
@@ -553,11 +547,9 @@ final class UserEnvironmentFlagCacheSpec: QuickSpec {
 
                                 var mobileKeys = [MobileKey](testContext.mobileKeys)
                                 mobileKeys.append(storingMobileKey)
-                                mobileKeys.forEach { (mobileKey) in
+                                mobileKeys.forEach { mobileKey in
                                     guard mobileKey != storingMobileKey || user.key == storingUser.key
-                                        else {
-                                            return
-                                    }
+                                    else { return }
                                     expect(setCachedEnvironmentFlagsCollection?.keys.contains(mobileKey)) == true
 
                                     let setCachedEnvironmentFlags = setCachedEnvironmentFlagsCollection?[mobileKey]
@@ -584,7 +576,7 @@ final class UserEnvironmentFlagCacheSpec: QuickSpec {
                         storingLastUpdated = Date()
                     }
                     it("stores the youngest users flags") {
-                        FlagCachingStoreMode.allCases.forEach { (storeMode) in
+                        FlagCachingStoreMode.allCases.forEach { storeMode in
                             testContext.storeFlags(newFeatureFlags,
                                                    forUser: storingUser,
                                                    andMobileKey: storingMobileKey,
@@ -598,7 +590,7 @@ final class UserEnvironmentFlagCacheSpec: QuickSpec {
 
                             var users = testContext.users
                             users.append(storingUser)
-                            users.forEach { (user) in
+                            users.forEach { user in
                                 if user.key == testContext.oldestUser.key {
                                     expect(setCachedUserEnvironmentsCollection?.keys.contains(user.key)) == false
                                     return
@@ -615,11 +607,9 @@ final class UserEnvironmentFlagCacheSpec: QuickSpec {
 
                                 let setCachedEnvironmentFlagsCollection = setCachedUserEnvironments?.environmentFlags
                                 expect(setCachedEnvironmentFlagsCollection?.count) == (user.key != storingUser.key ? CacheableUserEnvironmentFlags.Constants.environmentCount : 1)
-                                testContext.mobileKeys.forEach { (mobileKey) in
+                                testContext.mobileKeys.forEach { mobileKey in
                                     guard user.key != storingUser.key || mobileKey == storingMobileKey
-                                    else {
-                                        return
-                                    }
+                                    else { return }
                                     expect(setCachedEnvironmentFlagsCollection?.keys.contains(mobileKey)) == true
 
                                     let setCachedEnvironmentFlags = setCachedEnvironmentFlagsCollection?[mobileKey]
@@ -642,7 +632,7 @@ final class UserEnvironmentFlagCacheSpec: QuickSpec {
 
 private extension Array where Element == LDUser {
     var selectedUser: LDUser {
-        return self[count / 2]
+        self[count / 2]
     }
 }
 
@@ -669,12 +659,12 @@ extension FeatureFlag {
 
 extension Dictionary where Key == String {
     var cacheableLastUpdated: Date? {
-        return (self[CacheableUserEnvironmentFlags.CodingKeys.lastUpdated.rawValue] as? String)?.dateValue
+        (self[CacheableUserEnvironmentFlags.CodingKeys.lastUpdated.rawValue] as? String)?.dateValue
     }
 }
 
 extension Dictionary where Key == UserKey, Value == CacheableUserEnvironmentFlags {
     func lastUpdated(forKey key: UserKey) -> Date? {
-        return self[key]?.lastUpdated
+        self[key]?.lastUpdated
     }
 }

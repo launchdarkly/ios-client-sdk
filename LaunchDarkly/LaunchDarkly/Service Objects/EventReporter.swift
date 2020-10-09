@@ -16,7 +16,7 @@ typealias EventSyncCompleteClosure = ((EventSyncResult) -> Void)
 //sourcery: autoMockable
 protocol EventReporting {
     //sourcery: defaultMockValue = LDConfig.stub
-    var config: LDConfig { get set }
+    var config: LDConfig { get }
     //sourcery: defaultMockValue = false
     var isOnline: Bool { get set }
     //sourcery: defaultMockValue = DarklyServiceMock()
@@ -34,12 +34,7 @@ class EventReporter: EventReporting {
         static let eventQueueLabel = "com.launchdarkly.eventSyncQueue"
     }
 
-    var config: LDConfig {
-        didSet {
-            Log.debug(typeName(and: #function, appending: ": ") + "\(config)")
-            isOnline = false
-        }
-    }
+    let config: LDConfig
     private let eventQueue = DispatchQueue(label: Constants.eventQueueLabel, qos: .userInitiated)
     var isOnline: Bool {
         get { isOnlineQueue.sync { _isOnline } }
@@ -180,7 +175,7 @@ class EventReporter: EventReporting {
     private func processEventResponse(sentEvents: [[String: Any]], response: HTTPURLResponse?, error: Error?, isRetry: Bool) -> Bool {
         if error == nil && (200..<300).contains(response?.statusCode ?? 0) {
             self.lastEventResponseDate = response?.headerDate ?? self.lastEventResponseDate
-            Log.debug(self.typeName(and: #function) + " completed for keys: " + sentEvents.eventKeys)
+            Log.debug(self.typeName(and: #function) + "Completed sending \(sentEvents.count) event(s)")
             self.reportSyncComplete(.success(sentEvents))
             return false
         }
@@ -217,10 +212,6 @@ class EventReporter: EventReporting {
 }
 
 extension EventReporter: TypeIdentifying { }
-
-extension Array where Element == [String: Any] {
-    var eventKeys: String { compactMap { $0.eventKey }.joined(separator: ", ") }
-}
 
 #if DEBUG
     extension EventReporter {

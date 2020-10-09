@@ -20,19 +20,6 @@ extension Dictionary where Key == String {
         return try? JSONSerialization.data(withJSONObject: self, options: [])
     }
 
-    func isEqual(to other: [String: Any]) -> Bool {
-        guard self.count == other.count
-        else { return false }
-        guard self.keys.sorted() == other.keys.sorted()
-        else { return false }
-        for key in self.keys {
-            if !AnyComparer.isEqual(self[key], to: other[key]) {
-                return false
-            }
-        }
-        return true
-    }
-
     func symmetricDifference(_ other: [String: Any]) -> [String] {
         let leftKeys: Set<String> = Set(self.keys)
         let rightKeys: Set<String> = Set(other.keys)

@@ -2,7 +2,6 @@
 //  DarklyServiceMock.swift
 //  LaunchDarklyTests
 //
-//  Created by Mark Pokorny on 9/26/17. +JMJ
 //  Copyright © 2017 Catamorphic Co. All rights reserved.
 //
 
@@ -26,10 +25,10 @@ final class DarklyServiceMock: DarklyServiceProvider {
         static let unknown = "unknown-flag"
 
         static var knownFlags: [LDFlagKey] {        //known means the SDK has the feature flag value
-            return [bool, int, double, string, array, dictionary, null]
+            [bool, int, double, string, array, dictionary, null]
         }
         static var flagsWithAnAlternateValue: [LDFlagKey] {
-            return [bool, int, double, string, array, dictionary]
+            [bool, int, double, string, array, dictionary]
         }
     }
 
@@ -43,7 +42,7 @@ final class DarklyServiceMock: DarklyServiceProvider {
         static let null = NSNull()
 
         static var knownFlags: [Any] {
-            return [bool, int, double, string, array, dictionary, null]
+            [bool, int, double, string, array, dictionary, null]
         }
 
         static func value(from flagKey: LDFlagKey) -> Any? {
@@ -60,7 +59,7 @@ final class DarklyServiceMock: DarklyServiceProvider {
         }
 
         static func alternateValue(from flagKey: LDFlagKey) -> Any? {
-            return alternate(value(from: flagKey))
+            alternate(value(from: flagKey))
         }
 
         static func alternate<T>(_ value: T) -> T {
@@ -124,7 +123,7 @@ final class DarklyServiceMock: DarklyServiceProvider {
                                      debugEventsUntilDate: Date? = Date().addingTimeInterval(30.0)) -> [LDFlagKey: FeatureFlag] {
 
             let flagKeys = includeNullValue ? FlagKeys.knownFlags : FlagKeys.flagsWithAnAlternateValue
-            let featureFlagTuples = flagKeys.map { (flagKey) in
+            let featureFlagTuples = flagKeys.map { flagKey in
                 return (flagKey, stubFeatureFlag(for: flagKey,
                                                  includeVariation: includeVariations,
                                                  includeVersion: includeVersions,
@@ -141,60 +140,52 @@ final class DarklyServiceMock: DarklyServiceProvider {
         }
 
         private static func useAlternateValue(for flagKey: LDFlagKey, alternateValueKeys: [LDFlagKey]) -> Bool {
-            return alternateValueKeys.contains(flagKey)
+            alternateValueKeys.contains(flagKey)
         }
 
         private static func value(for flagKey: LDFlagKey, alternateValueKeys: [LDFlagKey]) -> Any? {
-            return value(for: flagKey, useAlternateValue: useAlternateValue(for: flagKey, alternateValueKeys: alternateValueKeys))
+            value(for: flagKey, useAlternateValue: useAlternateValue(for: flagKey, alternateValueKeys: alternateValueKeys))
         }
 
         private static func value(for flagKey: LDFlagKey, useAlternateValue: Bool) -> Any? {
-            return  useAlternateValue ? FlagValues.alternateValue(from: flagKey) : FlagValues.value(from: flagKey)
+            useAlternateValue ? FlagValues.alternateValue(from: flagKey) : FlagValues.value(from: flagKey)
         }
 
         private static func variation(for flagKey: LDFlagKey, includeVariation: Bool, alternateValueKeys: [LDFlagKey]) -> Int? {
-            return variation(for: flagKey, includeVariation: includeVariation, useAlternateValue: useAlternateValue(for: flagKey, alternateValueKeys: alternateValueKeys))
+            variation(for: flagKey, includeVariation: includeVariation, useAlternateValue: useAlternateValue(for: flagKey, alternateValueKeys: alternateValueKeys))
         }
 
         private static func variation(for flagKey: LDFlagKey, includeVariation: Bool, useAlternateValue: Bool) -> Int? {
             guard includeVariation
-            else {
-                return nil
-            }
+            else { return nil }
             return useAlternateValue ? variation + 1 : variation
         }
 
         private static func variation(for flagKey: LDFlagKey, includeVariation: Bool) -> Int? {
             guard includeVariation
-                else {
-                    return nil
-            }
+            else { return nil }
             return variation
         }
 
         private static func version(for flagKey: LDFlagKey, includeVersion: Bool, alternateValueKeys: [LDFlagKey]) -> Int? {
-            return version(for: flagKey, includeVersion: includeVersion, useAlternateVersion: useAlternateValue(for: flagKey, alternateValueKeys: alternateValueKeys))
+            version(for: flagKey, includeVersion: includeVersion, useAlternateVersion: useAlternateValue(for: flagKey, alternateValueKeys: alternateValueKeys))
         }
         private static func version(for flagKey: LDFlagKey, includeVersion: Bool, useAlternateVersion: Bool) -> Int? {
             guard includeVersion
-            else {
-                return nil
-            }
+            else { return nil }
             return useAlternateVersion ? version + 1 : version
         }
 
         private static func flagVersion(for flagKey: LDFlagKey, includeFlagVersion: Bool, alternateValueKeys: [LDFlagKey]) -> Int? {
-            return flagVersion(for: flagKey, includeFlagVersion: includeFlagVersion, useAlternateFlagVersion: useAlternateValue(for: flagKey, alternateValueKeys: alternateValueKeys))
+            flagVersion(for: flagKey, includeFlagVersion: includeFlagVersion, useAlternateFlagVersion: useAlternateValue(for: flagKey, alternateValueKeys: alternateValueKeys))
         }
         private static func flagVersion(for flagKey: LDFlagKey, includeFlagVersion: Bool, useAlternateFlagVersion: Bool) -> Int? {
             guard includeFlagVersion
-            else {
-                return nil
-            }
+            else { return nil }
             return useAlternateFlagVersion ? flagVersion + 1 : flagVersion
         }
         private static func reason(includeEvaluationReason: Bool) -> [String: Any]? {
-            return includeEvaluationReason ? reason : nil
+            includeEvaluationReason ? reason : nil
         }
 
         static func stubFeatureFlag(for flagKey: LDFlagKey,
@@ -209,15 +200,15 @@ final class DarklyServiceMock: DarklyServiceProvider {
                                     debugEventsUntilDate: Date? = Date().addingTimeInterval(30.0),
                                     includeEvaluationReason: Bool = false,
                                     includeTrackReason: Bool = false) -> FeatureFlag {
-            return FeatureFlag(flagKey: flagKey,
-                               value: value(for: flagKey, useAlternateValue: useAlternateValue),
-                               variation: useAlternateVariationNumber ? variation(for: flagKey, includeVariation: includeVariation, useAlternateValue: useAlternateValue) : variation(for: flagKey, includeVariation: includeVariation),
-                               version: version(for: flagKey, includeVersion: includeVersion, useAlternateVersion: useAlternateValue || useAlternateVersion),
-                               flagVersion: flagVersion(for: flagKey, includeFlagVersion: includeFlagVersion, useAlternateFlagVersion: useAlternateValue || useAlternateFlagVersion),
-                               trackEvents: trackEvents,
-                               debugEventsUntilDate: debugEventsUntilDate,
-                               reason: reason(includeEvaluationReason: includeEvaluationReason),
-                               trackReason: includeTrackReason)
+            FeatureFlag(flagKey: flagKey,
+                        value: value(for: flagKey, useAlternateValue: useAlternateValue),
+                         variation: useAlternateVariationNumber ? variation(for: flagKey, includeVariation: includeVariation, useAlternateValue: useAlternateValue) : variation(for: flagKey, includeVariation: includeVariation),
+                         version: version(for: flagKey, includeVersion: includeVersion, useAlternateVersion: useAlternateValue || useAlternateVersion),
+                         flagVersion: flagVersion(for: flagKey, includeFlagVersion: includeFlagVersion, useAlternateFlagVersion: useAlternateValue || useAlternateFlagVersion),
+                         trackEvents: trackEvents,
+                         debugEventsUntilDate: debugEventsUntilDate,
+                         reason: reason(includeEvaluationReason: includeEvaluationReason),
+                         trackReason: includeTrackReason)
         }
     }
 
@@ -265,14 +256,10 @@ final class DarklyServiceMock: DarklyServiceProvider {
     var publishEventDictionariesCallCount = 0
     var publishedEventDictionaries: [[String: Any]]?
     var publishedEventDictionaryKeys: [String]? {
-        return publishedEventDictionaries?.compactMap { (eventDictionary) in
-            eventDictionary.eventKey
-        }
+        publishedEventDictionaries?.compactMap { $0.eventKey }
     }
     var publishedEventDictionaryKinds: [Event.Kind]? {
-        return publishedEventDictionaries?.compactMap { (eventDictionary) in
-            eventDictionary.eventKind
-        }
+        publishedEventDictionaries?.compactMap { $0.eventKind }
     }
     func publishEventDictionaries(_ eventDictionaries: [[String: Any]], _ payloadId: String, completion: ServiceCompletionHandler?) {
         publishEventDictionariesCallCount += 1
@@ -316,7 +303,7 @@ extension DarklyServiceMock {
 
         let stubbedFeatureFlags = featureFlags ?? Constants.stubFeatureFlags()
         let responseData = statusCode == HTTPURLResponse.StatusCodes.ok ? stubbedFeatureFlags.dictionaryValue.jsonData! : Data()
-        let stubResponse: HTTPStubsResponseBlock = { (_) in
+        let stubResponse: HTTPStubsResponseBlock = { _ in
             var headers = [String: String]()
             if let flagResponseEtag = flagResponseEtag {
                 headers = [HTTPURLResponse.HeaderKeys.etag: flagResponseEtag,
@@ -369,11 +356,11 @@ extension DarklyServiceMock {
 
     ///Use when testing requires the mock service to actually make an event source connection request
     func stubStreamRequest(useReport: Bool, success: Bool, onActivation activate: ((URLRequest, HTTPStubsDescriptor, HTTPStubsResponse) -> Void)? = nil) {
-        var stubResponse: HTTPStubsResponseBlock = { (_) in
+        var stubResponse: HTTPStubsResponseBlock = { _ in
             HTTPStubsResponse(error: Constants.error)
         }
         if success {
-            stubResponse = { (_) in
+            stubResponse = { _ in
                 HTTPStubsResponse(data: Constants.streamData, statusCode: Int32(HTTPURLResponse.StatusCodes.ok), headers: nil)
             }
         }
@@ -391,9 +378,9 @@ extension DarklyServiceMock {
 
     ///Use when testing requires the mock service to actually make an event request
     func stubEventRequest(success: Bool, onActivation activate: ((URLRequest, HTTPStubsDescriptor, HTTPStubsResponse) -> Void)? = nil) {
-        let stubResponse: HTTPStubsResponseBlock = success ? { (_) in
+        let stubResponse: HTTPStubsResponseBlock = success ? { _ in
             HTTPStubsResponse(data: Data(), statusCode: Int32(HTTPURLResponse.StatusCodes.accepted), headers: nil)
-        } : { (_) in
+        } : { _ in
             HTTPStubsResponse(error: Constants.error)
         }
         stubRequest(passingTest: eventRequestStubTest, stub: stubResponse, name: Constants.stubNameEvent, onActivation: activate)
@@ -426,9 +413,9 @@ extension DarklyServiceMock {
 
     ///Use when testing requires the mock service to actually make an diagnostic request
     func stubDiagnosticRequest(success: Bool, onActivation activate: ((URLRequest, HTTPStubsDescriptor, HTTPStubsResponse) -> Void)? = nil) {
-        let stubResponse: HTTPStubsResponseBlock = success ? { (_) in
+        let stubResponse: HTTPStubsResponseBlock = success ? { _ in
             HTTPStubsResponse(data: Data(), statusCode: Int32(HTTPURLResponse.StatusCodes.accepted), headers: nil)
-        } : { (_) in
+        } : { _ in
             HTTPStubsResponse(error: Constants.error)
         }
         stubRequest(passingTest: eventRequestStubTest, stub: stubResponse, name: Constants.stubNameDiagnostic, onActivation: activate)

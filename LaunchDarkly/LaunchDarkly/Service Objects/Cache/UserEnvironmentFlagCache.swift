@@ -45,10 +45,6 @@ final class UserEnvironmentFlagCache: FeatureFlagCaching {
         return cacheableUserEnvironmentsCollection[userKey]?.environmentFlags[mobileKey]?.featureFlags
     }
 
-    func storeFeatureFlags(_ featureFlags: [LDFlagKey: FeatureFlag], forUser user: LDUser, andMobileKey mobileKey: String, lastUpdated: Date) {
-        storeFeatureFlags(featureFlags, forUser: user, andMobileKey: mobileKey, lastUpdated: lastUpdated, completion: nil)
-    }
-
     func storeFeatureFlags(_ featureFlags: [LDFlagKey: FeatureFlag], forUser user: LDUser, andMobileKey mobileKey: String, lastUpdated: Date, storeMode: FlagCachingStoreMode) {
         storeFeatureFlags(featureFlags, forUser: user, andMobileKey: mobileKey, lastUpdated: lastUpdated, storeMode: storeMode, completion: nil)
     }

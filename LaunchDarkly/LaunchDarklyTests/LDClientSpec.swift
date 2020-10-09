@@ -46,77 +46,50 @@ final class LDClientSpec: QuickSpec {
         var subject: LDClient!
         // mock getters based on setting up the user & subject
         var serviceFactoryMock: ClientServiceMockFactory! {
-            return subject.serviceFactory as? ClientServiceMockFactory
+            subject.serviceFactory as? ClientServiceMockFactory
         }
         var serviceMock: DarklyServiceMock! {
-            return subject.service as? DarklyServiceMock
+            subject.service as? DarklyServiceMock
         }
         var featureFlagCachingMock: FeatureFlagCachingMock! {
-            return subject.flagCache as? FeatureFlagCachingMock
+            subject.flagCache as? FeatureFlagCachingMock
         }
         var cacheConvertingMock: CacheConvertingMock! {
-            return subject.cacheConverter as? CacheConvertingMock
+            subject.cacheConverter as? CacheConvertingMock
         }
         var flagStoreMock: FlagMaintainingMock! {
-            return user.flagStore as? FlagMaintainingMock
+            user.flagStore as? FlagMaintainingMock
         }
         var flagSynchronizerMock: LDFlagSynchronizingMock! {
-            return subject.flagSynchronizer as? LDFlagSynchronizingMock
+            subject.flagSynchronizer as? LDFlagSynchronizingMock
         }
         var eventReporterMock: EventReportingMock! {
-            return subject.eventReporter as? EventReportingMock
+            subject.eventReporter as? EventReportingMock
         }
         var changeNotifierMock: FlagChangeNotifyingMock! {
-            return subject.flagChangeNotifier as? FlagChangeNotifyingMock
+            subject.flagChangeNotifier as? FlagChangeNotifyingMock
         }
         var errorNotifierMock: ErrorNotifyingMock! {
-            return subject.errorNotifier as? ErrorNotifyingMock
+            subject.errorNotifier as? ErrorNotifyingMock
         }
         var environmentReporterMock: EnvironmentReportingMock! {
-            return subject.environmentReporter as? EnvironmentReportingMock
+            subject.environmentReporter as? EnvironmentReportingMock
         }
         // makeFlagSynchronizer getters
         var makeFlagSynchronizerStreamingMode: LDStreamingMode? {
-            return serviceFactoryMock.makeFlagSynchronizerReceivedParameters?.streamingMode
+            serviceFactoryMock.makeFlagSynchronizerReceivedParameters?.streamingMode
         }
         var makeFlagSynchronizerPollingInterval: TimeInterval? {
-            return serviceFactoryMock.makeFlagSynchronizerReceivedParameters?.pollingInterval
+            serviceFactoryMock.makeFlagSynchronizerReceivedParameters?.pollingInterval
         }
         var makeFlagSynchronizerService: DarklyServiceProvider? {
-            return serviceFactoryMock.makeFlagSynchronizerReceivedParameters?.service
+            serviceFactoryMock.makeFlagSynchronizerReceivedParameters?.service
         }
-        // flag observing getters
-        var flagChangeObserver: FlagChangeObserver? {
-            return changeNotifierMock.addFlagChangeObserverReceivedObserver
-        }
-        var flagChangeHandler: LDFlagChangeHandler? {
-            return flagChangeObserver?.flagChangeHandler
-        }
-        var flagCollectionChangeHandler: LDFlagCollectionChangeHandler? {
-            return flagChangeObserver?.flagCollectionChangeHandler
-        }
-        var flagsUnchangedCallCount = 0
         var observedError: Error? {
-            return errorNotifierMock.notifyObserversReceivedError
-        }
-        var flagsUnchangedObserver: FlagsUnchangedObserver? {
-            return changeNotifierMock?.addFlagsUnchangedObserverReceivedObserver
-        }
-        var connectionModeChangedCallCount = 0
-        var connectionModeChangedObserver: ConnectionModeChangedObserver? {
-            return changeNotifierMock?.addConnectionModeChangedObserverReceivedObserver
-        }
-        var flagsUnchangedHandler: LDFlagsUnchangedHandler? {
-            return flagsUnchangedObserver?.flagsUnchangedHandler
-        }
-        var connectionModeChangedHandler: LDConnectionModeChangedHandler? {
-            return connectionModeChangedObserver?.connectionModeChangedHandler
-        }
-        var errorObserver: ErrorObserver? {
-            return errorNotifierMock.addErrorObserverReceivedObserver
+            errorNotifierMock.notifyObserversReceivedError
         }
         var onSyncComplete: FlagSyncCompleteClosure? {
-            return serviceFactoryMock.onFlagSyncComplete
+            serviceFactoryMock.onFlagSyncComplete
         }
         var recordedEvent: LaunchDarkly.Event? {
             eventReporterMock.recordReceivedEvent
@@ -125,7 +98,7 @@ final class LDClientSpec: QuickSpec {
         var oldFlags: [LDFlagKey: FeatureFlag]!
         // throttler
         var throttlerMock: ThrottlingMock? {
-            return subject.throttler as? ThrottlingMock
+            subject.throttler as? ThrottlingMock
         }
 
         init(newUser: LDUser? = nil,
@@ -245,7 +218,7 @@ final class LDClientSpec: QuickSpec {
 
             context("when configured to start online") {
                 beforeEach {
-                    waitUntil(timeout: 10) { done in
+                    waitUntil(timeout: .seconds(10)) { done in
                         testContext = TestContext(startOnline: true, completion: done)
                     }
                 }
@@ -330,7 +303,7 @@ final class LDClientSpec: QuickSpec {
                 }
             }
             context("when configured to allow background updates and running in background mode") {
-                OperatingSystem.allOperatingSystems.forEach { (os) in
+                OperatingSystem.allOperatingSystems.forEach { os in
                     context("on \(os)") {
                         beforeEach {
                             waitUntil { done in
@@ -377,7 +350,7 @@ final class LDClientSpec: QuickSpec {
                 }
             }
             context("when configured to not allow background updates and running in background mode") {
-                OperatingSystem.allOperatingSystems.forEach { (os) in
+                OperatingSystem.allOperatingSystems.forEach { os in
                     context("on \(os)") {
                         beforeEach {
                             waitUntil { done in
@@ -564,7 +537,7 @@ final class LDClientSpec: QuickSpec {
             
             context("when configured to start online") {
                 beforeEach {
-                    waitUntil(timeout: 15) { done in
+                    waitUntil(timeout: .seconds(15)) { done in
                         testContext = TestContext(startOnline: true, timeOut: 10) { timedOut in
                             expect(timedOut) == false
                             done()
@@ -610,7 +583,7 @@ final class LDClientSpec: QuickSpec {
             }
             context("when configured to start online") {
                 beforeEach {
-                    waitUntil(timeout: 10) { done in
+                    waitUntil(timeout: .seconds(10)) { done in
                         testContext = TestContext(startOnline: true, timeOut: 2.0, forceTimeout: true) { timedOut in
                             expect(timedOut) == true
                             done()
@@ -623,7 +596,7 @@ final class LDClientSpec: QuickSpec {
             }
             context("when configured to start offline") {
                 beforeEach {
-                    waitUntil(timeout: 15) { done in
+                    waitUntil(timeout: .seconds(15)) { done in
                         testContext = TestContext(startOnline: false, timeOut: 10) { timedOut in
                             expect(timedOut) == true
                             done()
@@ -668,16 +641,16 @@ final class LDClientSpec: QuickSpec {
                 }
             }
             context("when configured to allow background updates and running in background mode") {
-                OperatingSystem.allOperatingSystems.forEach { (os) in
+                OperatingSystem.allOperatingSystems.forEach { os in
                     context("on \(os)") {
                         beforeEach {
-                            waitUntil(timeout: 15) { done in
+                            waitUntil(timeout: .seconds(15)) { done in
                                 testContext = TestContext(startOnline: true, runMode: .background, operatingSystem: os, timeOut: 10) { timedOut in
                                     expect(timedOut) == false
                                     done()
                                 }
                             }
-                            waitUntil(timeout: 10) { done in
+                            waitUntil(timeout: .seconds(10)) { done in
                                 testContext.subject.setService(ClientServiceMockFactory().makeDarklyServiceProvider(config: testContext.subject.config, user: testContext.subject.user))
                                 testContext.subject.setOnline(true, completion: done)
                                 testContext.subject.flagChangeNotifier.notifyObservers(user: testContext.user, oldFlags: testContext.oldFlags)
@@ -723,7 +696,7 @@ final class LDClientSpec: QuickSpec {
                 }
             }
             context("when configured to not allow background updates and running in background mode") {
-                OperatingSystem.allOperatingSystems.forEach { (os) in
+                OperatingSystem.allOperatingSystems.forEach { os in
                     context("on \(os)") {
                         beforeEach {
                             waitUntil { done in
@@ -732,7 +705,7 @@ final class LDClientSpec: QuickSpec {
                                     done()
                                 }
                             }
-                            waitUntil(timeout: 10) { done in
+                            waitUntil(timeout: .seconds(10)) { done in
                                 testContext.subject.setOnline(true, completion: done)
                                 testContext.subject.flagChangeNotifier.notifyObservers(user: testContext.user, oldFlags: testContext.oldFlags)
                             }
@@ -934,7 +907,7 @@ final class LDClientSpec: QuickSpec {
                     testContext.cacheConvertingMock.reset()
                     
                     newUser = LDUser.stub()
-                    waitUntil(timeout: 5.0) { done in
+                    waitUntil(timeout: .seconds(5)) { done in
                         testContext.subject.internalIdentify(newUser: newUser, testing: true, completion: done)
                         testContext.subject.flagChangeNotifier.notifyObservers(user: testContext.user, oldFlags: testContext.oldFlags)
                     }
@@ -1052,7 +1025,7 @@ final class LDClientSpec: QuickSpec {
                         }
                     }
                     it("sets the client and service objects online") {
-                        expect(testContext.throttlerMock?.runThrottledCallCount ?? 0) == 1
+                        expect(testContext.throttlerMock?.runThrottledCallCount) == 1
                         expect(testContext.subject.isOnline) == true
                         expect(testContext.subject.flagSynchronizer.isOnline) == testContext.subject.isOnline
                         expect(testContext.subject.eventReporter.isOnline) == testContext.subject.isOnline
@@ -1070,7 +1043,7 @@ final class LDClientSpec: QuickSpec {
                         testContext.subject.setOnline(false)
                     }
                     it("takes the client and service objects offline") {
-                        expect(testContext.throttlerMock?.runThrottledCallCount ?? 0) == 0
+                        expect(testContext.throttlerMock?.runThrottledCallCount) == 0
                         expect(testContext.subject.isOnline) == false
                         expect(testContext.subject.flagSynchronizer.isOnline) == testContext.subject.isOnline
                         expect(testContext.subject.eventReporter.isOnline) == testContext.subject.isOnline
@@ -1078,7 +1051,7 @@ final class LDClientSpec: QuickSpec {
                 }
             }
             context("when the client runs in the background") {
-                OperatingSystem.allOperatingSystems.forEach { (os) in
+                OperatingSystem.allOperatingSystems.forEach { os in
                     context("on \(os)") {
                         context("while configured to enable background updates") {
                             context("and setting online") {
@@ -1088,14 +1061,14 @@ final class LDClientSpec: QuickSpec {
                                         testContext = TestContext(runMode: .background, operatingSystem: os, completion: done)
                                     }
                                     targetRunThrottledCalls = os.isBackgroundEnabled ? 1 : 0
-                                    waitUntil(timeout: 10) { done in
+                                    waitUntil(timeout: .seconds(10)) { done in
                                         testContext.subject.setService(ClientServiceMockFactory().makeDarklyServiceProvider(config: testContext.subject.config, user: testContext.subject.user))
                                         testContext.subject.setOnline(true, completion: done)
                                         testContext.subject.flagChangeNotifier.notifyObservers(user: testContext.user, oldFlags: testContext.oldFlags)
                                     }
                                 }
                                 it("takes the client and service objects online") {
-                                    expect(testContext.throttlerMock?.runThrottledCallCount ?? 0) == targetRunThrottledCalls
+                                    expect(testContext.throttlerMock?.runThrottledCallCount) == targetRunThrottledCalls
                                     expect(testContext.subject.isOnline) == os.isBackgroundEnabled
                                     expect(testContext.subject.flagSynchronizer.isOnline) == testContext.subject.isOnline
                                     expect(testContext.makeFlagSynchronizerStreamingMode) == os.backgroundStreamingMode
@@ -1115,7 +1088,7 @@ final class LDClientSpec: QuickSpec {
                                     testContext.subject.setOnline(true)
                                 }
                                 it("leaves the client and service objects offline") {
-                                    expect(testContext.throttlerMock?.runThrottledCallCount ?? 0) == 0
+                                    expect(testContext.throttlerMock?.runThrottledCallCount) == 0
                                     expect(testContext.subject.isOnline) == false
                                     expect(testContext.subject.flagSynchronizer.isOnline) == testContext.subject.isOnline
                                     expect(testContext.makeFlagSynchronizerStreamingMode) == LDStreamingMode.polling
@@ -1137,7 +1110,7 @@ final class LDClientSpec: QuickSpec {
                     testContext.subject.setOnline(true)
                 }
                 it("leaves the client and service objects offline") {
-                    expect(testContext.throttlerMock?.runThrottledCallCount ?? 0) == 0
+                    expect(testContext.throttlerMock?.runThrottledCallCount) == 0
                     expect(testContext.subject.isOnline) == false
                     expect(testContext.subject.flagSynchronizer.isOnline) == testContext.subject.isOnline
                     expect(testContext.subject.eventReporter.isOnline) == testContext.subject.isOnline
@@ -1170,8 +1143,11 @@ final class LDClientSpec: QuickSpec {
                         expect(testContext.subject.isOnline) == false
                     }
                     it("stops recording events") {
-                        expect { try testContext.subject.track(key: event.key!) }.toNot(throwError())
+                        expect(try testContext.subject.track(key: event.key!)).toNot(throwError())
                         expect(testContext.eventReporterMock.recordCallCount) == priorRecordedEvents
+                    }
+                    it("flushes the event reporter") {
+                        expect(testContext.eventReporterMock.flushCallCount) == 1
                     }
                 }
                 context("and offline") {
@@ -1188,8 +1164,11 @@ final class LDClientSpec: QuickSpec {
                         expect(testContext.subject.isOnline) == false
                     }
                     it("stops recording events") {
-                        expect { try testContext.subject.track(key: event.key!) }.toNot(throwError())
+                        expect(try testContext.subject.track(key: event.key!)).toNot(throwError())
                         expect(testContext.eventReporterMock.recordCallCount) == priorRecordedEvents
+                    }
+                    it("flushes the event reporter") {
+                        expect(testContext.eventReporterMock.flushCallCount) == 1
                     }
                 }
             }
@@ -1208,8 +1187,11 @@ final class LDClientSpec: QuickSpec {
                     expect(testContext.subject.isOnline) == false
                 }
                 it("stops recording events") {
-                    expect { try testContext.subject.track(key: event.key!) }.toNot(throwError())
+                    expect(try testContext.subject.track(key: event.key!)).toNot(throwError())
                     expect(testContext.eventReporterMock.recordCallCount) == priorRecordedEvents
+                }
+                it("flushes the event reporter") {
+                    expect(testContext.eventReporterMock.flushCallCount) == 1
                 }
             }
         }
@@ -1394,33 +1376,32 @@ final class LDClientSpec: QuickSpec {
 
     private func observeSpec() {
         describe("observe") {
-            var changedFlag: LDChangedFlag!
-            var receivedChangedFlag: LDChangedFlag?
+            let mockNotifier = ClientServiceMockFactory().makeFlagChangeNotifier() as! FlagChangeNotifyingMock
+            var receivedChangedFlag: Bool = false
             var testContext: TestContext!
             beforeEach {
                 waitUntil { done in
                     testContext = TestContext(completion: done)
                 }
                 
-                testContext.subject.flagChangeNotifier = ClientServiceMockFactory().makeFlagChangeNotifier()
-                changedFlag = LDChangedFlag(key: DarklyServiceMock.FlagKeys.bool, oldValue: false, newValue: true)
-
-                testContext.subject.observe(key: DarklyServiceMock.FlagKeys.bool, owner: self, handler: { (change) in
-                    receivedChangedFlag = change
+                testContext.subject.flagChangeNotifier = mockNotifier
+                testContext.subject.observe(key: "test-key", owner: self, handler: { _ in
+                    receivedChangedFlag = true
                 })
             }
             it("registers a single flag observer") {
-                expect(testContext.changeNotifierMock.addFlagChangeObserverCallCount) == 1
-                expect(testContext.flagChangeObserver?.flagKeys) == [DarklyServiceMock.FlagKeys.bool]
-                expect(testContext.flagChangeObserver?.owner) === self
-                testContext.flagChangeHandler?(changedFlag)
-                expect(receivedChangedFlag?.key) == changedFlag.key
+                let receivedObserver = mockNotifier.addFlagChangeObserverReceivedObserver
+                expect(mockNotifier.addFlagChangeObserverCallCount) == 1
+                expect(receivedObserver?.flagKeys) == ["test-key"]
+                expect(receivedObserver?.owner) === self
+                receivedObserver?.flagChangeHandler?(LDChangedFlag(key: "", oldValue: nil, newValue: nil))
+                expect(receivedChangedFlag) == true
             }
         }
 
         describe("observeKeys") {
-            var changedFlags: [LDFlagKey: LDChangedFlag]!
-            var receivedChangedFlags: [LDFlagKey: LDChangedFlag]?
+            let mockNotifier = ClientServiceMockFactory().makeFlagChangeNotifier() as! FlagChangeNotifyingMock
+            var receivedChangedFlags: Bool = false
             var testContext: TestContext!
 
             beforeEach {
@@ -1428,134 +1409,128 @@ final class LDClientSpec: QuickSpec {
                     testContext = TestContext(completion: done)
                 }
                     
-                testContext.subject.flagChangeNotifier = ClientServiceMockFactory().makeFlagChangeNotifier()
-                changedFlags = [DarklyServiceMock.FlagKeys.bool: LDChangedFlag(key: DarklyServiceMock.FlagKeys.bool,
-                                                                               oldValue: false,
-                                                                               newValue: true)]
-
-                testContext.subject.observe(keys: [DarklyServiceMock.FlagKeys.bool], owner: self, handler: { (changes) in
-                    receivedChangedFlags = changes
+                testContext.subject.flagChangeNotifier = mockNotifier
+                testContext.subject.observe(keys: ["test-key"], owner: self, handler: { _ in
+                    receivedChangedFlags = true
                 })
             }
             it("registers a multiple flag observer") {
-                expect(testContext.changeNotifierMock.addFlagChangeObserverCallCount) == 1
-                expect(testContext.flagChangeObserver?.flagKeys) == [DarklyServiceMock.FlagKeys.bool]
-                expect(testContext.flagChangeObserver?.owner) === self
-                testContext.flagCollectionChangeHandler?(changedFlags)
-                expect(receivedChangedFlags?.keys == changedFlags.keys).to(beTrue())
+                let receivedObserver = mockNotifier.addFlagChangeObserverReceivedObserver
+                expect(mockNotifier.addFlagChangeObserverCallCount) == 1
+                expect(receivedObserver?.flagKeys) == ["test-key"]
+                expect(receivedObserver?.owner) === self
+                let changedFlags = ["test-key": LDChangedFlag(key: "", oldValue: nil, newValue: nil)]
+                receivedObserver?.flagCollectionChangeHandler?(changedFlags)
+                expect(receivedChangedFlags) == true
             }
         }
 
         describe("observeAll") {
-            var changedFlags: [LDFlagKey: LDChangedFlag]!
-            var receivedChangedFlags: [LDFlagKey: LDChangedFlag]?
+            let mockNotifier = ClientServiceMockFactory().makeFlagChangeNotifier() as! FlagChangeNotifyingMock
+            var receivedChangedFlags: Bool = false
             var testContext: TestContext!
+
             beforeEach {
                 waitUntil { done in
                     testContext = TestContext(completion: done)
                 }
                 
-                testContext.subject.flagChangeNotifier = ClientServiceMockFactory().makeFlagChangeNotifier()
-                changedFlags = [DarklyServiceMock.FlagKeys.bool: LDChangedFlag(key: DarklyServiceMock.FlagKeys.bool,
-                                                                               oldValue: false,
-                                                                               newValue: true)]
-
-                testContext.subject.observeAll(owner: self, handler: { (changes) in
-                    receivedChangedFlags = changes
+                testContext.subject.flagChangeNotifier = mockNotifier
+                testContext.subject.observeAll(owner: self, handler: { _ in
+                    receivedChangedFlags = true
                 })
             }
             it("registers a collection flag observer") {
-                expect(testContext.changeNotifierMock.addFlagChangeObserverCallCount) == 1
-                expect(testContext.flagChangeObserver?.flagKeys) == LDFlagKey.anyKey
-                expect(testContext.flagChangeObserver?.owner) === self
-                expect(testContext.flagChangeObserver?.flagCollectionChangeHandler).toNot(beNil())
-                testContext.flagCollectionChangeHandler?(changedFlags)
-                expect(receivedChangedFlags?.keys == changedFlags.keys).to(beTrue())
+                let receivedObserver = mockNotifier.addFlagChangeObserverReceivedObserver
+                expect(mockNotifier.addFlagChangeObserverCallCount) == 1
+                expect(receivedObserver?.flagKeys) == LDFlagKey.anyKey
+                expect(receivedObserver?.owner) === self
+                let changedFlags = ["test-key": LDChangedFlag(key: "", oldValue: nil, newValue: nil)]
+                receivedObserver?.flagCollectionChangeHandler?(changedFlags)
+                expect(receivedChangedFlags) == true
             }
         }
 
         describe("observeFlagsUnchanged") {
+            let mockNotifier = ClientServiceMockFactory().makeFlagChangeNotifier() as! FlagChangeNotifyingMock
+            var receivedFlagsUnchanged: Bool = false
             var testContext: TestContext!
             beforeEach {
                 waitUntil { done in
                     testContext = TestContext(completion: done)
                 }
                 
-                testContext.subject.flagChangeNotifier = ClientServiceMockFactory().makeFlagChangeNotifier()
-
+                testContext.subject.flagChangeNotifier = mockNotifier
                 testContext.subject.observeFlagsUnchanged(owner: self, handler: {
-                    testContext.flagsUnchangedCallCount += 1
+                    receivedFlagsUnchanged = true
                 })
             }
             it("registers a flags unchanged observer") {
-                expect(testContext.changeNotifierMock.addFlagsUnchangedObserverCallCount) == 1
-                expect(testContext.flagsUnchangedObserver?.owner) === self
-                expect(testContext.flagsUnchangedHandler).toNot(beNil())
-                testContext.flagsUnchangedHandler?()
-                expect(testContext.flagsUnchangedCallCount) == 1
+                let receivedObserver = mockNotifier.addFlagsUnchangedObserverReceivedObserver
+                expect(mockNotifier.addFlagsUnchangedObserverCallCount) == 1
+                expect(receivedObserver?.owner) === self
+                receivedObserver?.flagsUnchangedHandler?()
+                expect(receivedFlagsUnchanged) == true
             }
         }
         
         describe("observeConnectionModeChanged") {
             var testContext: TestContext!
+            let mockNotifier = ClientServiceMockFactory().makeFlagChangeNotifier() as! FlagChangeNotifyingMock
+            var receivedConnectionModeChanged: Bool = false
             beforeEach {
                 waitUntil { done in
                     testContext = TestContext(completion: done)
                 }
-                
-                testContext.subject.flagChangeNotifier = ClientServiceMockFactory().makeFlagChangeNotifier()
-                
-                testContext.subject.observeCurrentConnectionMode(owner: self, handler: {_ in
-                    testContext.connectionModeChangedCallCount += 1
+
+                testContext.subject.flagChangeNotifier = mockNotifier
+                testContext.subject.observeCurrentConnectionMode(owner: self, handler: { _ in
+                    receivedConnectionModeChanged = true
                 })
             }
             it("registers a ConnectionModeChanged observer") {
-                expect(testContext.changeNotifierMock.addConnectionModeChangedObserverCallCount) == 1
-                expect(testContext.connectionModeChangedObserver?.owner) === self
-                expect(testContext.connectionModeChangedHandler).toNot(beNil())
-                testContext.connectionModeChangedHandler?(ConnectionInformation.ConnectionMode.offline)
-                expect(testContext.connectionModeChangedCallCount) == 1
+                let receivedObserver = mockNotifier.addConnectionModeChangedObserverReceivedObserver
+                expect(mockNotifier.addConnectionModeChangedObserverCallCount) == 1
+                expect(receivedObserver?.owner) === self
+                receivedObserver?.connectionModeChangedHandler?(ConnectionInformation.ConnectionMode.offline)
+                expect(receivedConnectionModeChanged) == true
             }
         }
 
         describe("observeError") {
             var testContext: TestContext!
+            var receivedError: Bool = false
             beforeEach {
                 waitUntil { done in
                     testContext = TestContext(completion: done)
                 }
-                
-                testContext.subject.flagChangeNotifier = ClientServiceMockFactory().makeFlagChangeNotifier()
 
-                testContext.subject.observeError(owner: self, handler: { (_) in
+                testContext.subject.observeError(owner: self, handler: { _ in
+                    receivedError = true
                 })
             }
             it("registers an error observer") {
                 expect(testContext.errorNotifierMock.addErrorObserverCallCount) == 1
-                expect(testContext.errorObserver).toNot(beNil())
-                guard let errorObserver = testContext.errorObserver
-                else {
-                    return
-                }
-                expect(errorObserver.owner) === self
-                expect(errorObserver.errorHandler).toNot(beNil())
+                expect(testContext.errorNotifierMock.addErrorObserverReceivedObserver?.owner) === self
+                testContext.errorNotifierMock.addErrorObserverReceivedObserver?.errorHandler?(ErrorMock())
+                expect(receivedError) == true
             }
         }
 
         describe("stopObserving") {
+            let mockFlagNotifier = ClientServiceMockFactory().makeFlagChangeNotifier() as! FlagChangeNotifyingMock
             var testContext: TestContext!
             beforeEach {
                 waitUntil { done in
                     testContext = TestContext(completion: done)
                 }
                 
-                testContext.subject.flagChangeNotifier = ClientServiceMockFactory().makeFlagChangeNotifier()
-
+                testContext.subject.flagChangeNotifier = mockFlagNotifier
                 testContext.subject.stopObserving(owner: self)
             }
             it("unregisters the owner") {
-                expect(testContext.changeNotifierMock.removeObserverCallCount) == 1
-                expect(testContext.changeNotifierMock.removeObserverReceivedArguments?.owner) === self
+                expect(mockFlagNotifier.removeObserverCallCount) == 1
+                expect(mockFlagNotifier.removeObserverReceivedArguments?.owner) === self
                 expect(testContext.errorNotifierMock.removeObserversCallCount) == 1
                 expect(testContext.errorNotifierMock.removeObserversReceivedOwner) === self
             }
@@ -2068,7 +2043,7 @@ final class LDClientSpec: QuickSpec {
         describe("didEnterBackground notification") {
             context("after starting client") {
                 context("when online") {
-                    OperatingSystem.allOperatingSystems.forEach { (os) in
+                    OperatingSystem.allOperatingSystems.forEach { os in
                         context("on \(os)") {
                             context("background updates disabled") {
                                 beforeEach {
@@ -2125,7 +2100,7 @@ final class LDClientSpec: QuickSpec {
 
         describe("willEnterForeground notification") {
             context("after starting client") {
-                OperatingSystem.allOperatingSystems.forEach { (os) in
+                OperatingSystem.allOperatingSystems.forEach { os in
                     context("on \(os)") {
                         context("when online at foreground notification") {
                             beforeEach {
@@ -2416,7 +2391,7 @@ final class LDClientSpec: QuickSpec {
         var testContext: TestContext!
 
         describe("flag synchronizer streaming mode") {
-            OperatingSystem.allOperatingSystems.forEach { (os) in
+            OperatingSystem.allOperatingSystems.forEach { os in
                 context("when running on \(os)") {
                     beforeEach {
                         waitUntil { done in
@@ -2445,18 +2420,6 @@ final class LDClientSpec: QuickSpec {
                 expect(testContext.eventReporterMock.flushCallCount) == 1
             }
         }
-        
-        describe("flush when closing") {
-           beforeEach {
-                waitUntil { done in
-                    testContext = TestContext(completion: done)
-                }
-               testContext.subject.close()
-           }
-           it("tells the event reporter to report events") {
-               expect(testContext.eventReporterMock.flushCallCount) == 1
-           }
-       }
     }
 
     private func allFlagValuesSpec() {
@@ -2474,7 +2437,7 @@ final class LDClientSpec: QuickSpec {
                 }
                 it("returns a matching dictionary of flag keys and values") {
                     expect(featureFlagValues?.count) == featureFlags.count - 1 //nil is omitted
-                    featureFlags.keys.forEach { (flagKey) in
+                    featureFlags.keys.forEach { flagKey in
                         expect(AnyComparer.isEqual(featureFlagValues?[flagKey], to: featureFlags[flagKey]?.value)).to(beTrue())
                     }
                 }
@@ -2568,15 +2531,17 @@ extension FeatureFlagCachingMock {
 
 extension OperatingSystem {
     var backgroundStreamingMode: LDStreamingMode {
-        return self == .macOS ? .streaming : .polling
+        self == .macOS ? .streaming : .polling
     }
 }
 
 extension LDUser {
     var flagStoreMock: FlagMaintainingMock {
-        return flagStore as! FlagMaintainingMock
+        flagStore as! FlagMaintainingMock
     }
 }
+
+private class ErrorMock: Error { }
 
 extension CacheConvertingMock {
     func reset() {

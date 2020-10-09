@@ -51,12 +51,23 @@ struct AnyComparer {
                 return false
             }
         case let (value, other) as ([Any], [Any]):
-            if !value.isEqual(to: other) {
+            if value.count != other.count {
+                return false
+            }
+            for index in 0..<value.count where !AnyComparer.isEqual(value[index], to: other[index]) {
                 return false
             }
         case let (value, other) as ([String: Any], [String: Any]):
-            if !value.isEqual(to: other) {
+            if value.count != other.count {
                 return false
+            }
+            if value.keys.sorted() != other.keys.sorted() {
+                return false
+            }
+            for key in value.keys {
+                if !AnyComparer.isEqual(value[key], to: other[key]) {
+                    return false
+                }
             }
         case let (value, other) as (Date, Date):
             if value != other {
