@@ -222,7 +222,8 @@ final class FlagSynchronizerSpec: QuickSpec {
                                                                streamOpened: true,
                                                                streamClosed: false) }).to(match())
                         expect(testContext.serviceMock.createEventSourceCallCount) == 1
-                        expect(testContext.eventSourceMock!.startCallCount) == 1                    }
+                        expect(testContext.eventSourceMock!.startCallCount) == 1
+                    }
                 }
                 context("polling") {
                     beforeEach {
@@ -995,7 +996,7 @@ final class FlagSynchronizerSpec: QuickSpec {
                     testContext.serviceMock.stubFlagResponse(statusCode: HTTPURLResponse.StatusCodes.ok)
                     testContext.flagSynchronizer.isOnline = true
 
-                    waitUntil(timeout: 2) { done in
+                    waitUntil(timeout: .seconds(2)) { done in
                         //In polling mode, the flagSynchronizer makes a flag request when set online right away. To verify the timer this test waits the polling interval (1s) for a second flag request
                         testContext.flagSynchronizer.onSyncComplete = { result in
                             if case .success(let flags, let streamEvent) = result {

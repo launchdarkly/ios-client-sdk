@@ -115,11 +115,9 @@ public final class ObjcLDClient: NSObject {
 
         Normally, the client app should create and set the LDUser and pass that into `start(config: user: completion:)`.
 
-        The client app can change the LDUser by getting the `user`, adjusting the values, and passing it to the LDClient method identify. This allows client apps to collect information over time from the user and update as information is collected. Client apps should follow [Apple's Privacy Policy](apple.com/legal/privacy) when collecting user information. If the client app does not create a LDUser, LDClient creates an anonymous default user, which can affect the feature flags delivered to the LDClient.
+        The client app can change the active `user` by calling identify with a new or updated LDUser. Client apps should follow [Apple's Privacy Policy](apple.com/legal/privacy) when collecting user information. If the client app does not create a LDUser, LDClient creates an anonymous default user, which can affect the feature flags delivered to the LDClient.
 
         When a new user is set, the LDClient goes offline and sets the new user. If the client was online when the new user was set, it goes online again, subject to a throttling delay if in force (see `setOnline(_: completion:)` for details). To change both the `config` and `user`, set the LDClient offline, set both properties, then set the LDClient online. A completion may be passed to the identify method to allow a client app to know when fresh flag values for the new user are ready.
-
-        This operation is not thread safe. You may want to use a DispatchQueue if calling `identify` from multiple threads.
 
         - parameter user: The ObjcLDUser set with the desired user.
         - parameter completion: Closure called when the embedded `setOnlineIdentify` call completes, subject to throttling delays. (Optional)
@@ -186,7 +184,7 @@ public final class ObjcLDClient: NSObject {
      */
     /// - Tag: boolVariation
     @objc public func boolVariation(forKey key: LDFlagKey, defaultValue: Bool) -> Bool {
-        return ldClient.variation(forKey: key, defaultValue: defaultValue)
+        ldClient.variation(forKey: key, defaultValue: defaultValue)
     }
 
     /**
@@ -227,7 +225,7 @@ public final class ObjcLDClient: NSObject {
      */
     /// - Tag: integerVariation
     @objc public func integerVariation(forKey key: LDFlagKey, defaultValue: Int) -> Int {
-        return ldClient.variation(forKey: key, defaultValue: defaultValue)
+        ldClient.variation(forKey: key, defaultValue: defaultValue)
     }
     
     /**
@@ -268,7 +266,7 @@ public final class ObjcLDClient: NSObject {
      */
     /// - Tag: doubleVariation
     @objc public func doubleVariation(forKey key: LDFlagKey, defaultValue: Double) -> Double {
-        return ldClient.variation(forKey: key, defaultValue: defaultValue)
+        ldClient.variation(forKey: key, defaultValue: defaultValue)
     }
     
     /**
@@ -309,7 +307,7 @@ public final class ObjcLDClient: NSObject {
      */
     /// - Tag: stringVariation
     @objc public func stringVariation(forKey key: LDFlagKey, defaultValue: String?) -> String? {
-        return ldClient.variation(forKey: key, defaultValue: defaultValue)
+        ldClient.variation(forKey: key, defaultValue: defaultValue)
     }
     
     /**
@@ -350,7 +348,7 @@ public final class ObjcLDClient: NSObject {
      */
     /// - Tag: arrayVariation
     @objc public func arrayVariation(forKey key: LDFlagKey, defaultValue: [Any]?) -> [Any]? {
-        return ldClient.variation(forKey: key, defaultValue: defaultValue)
+        ldClient.variation(forKey: key, defaultValue: defaultValue)
     }
     
     /**
@@ -391,7 +389,7 @@ public final class ObjcLDClient: NSObject {
      */
     /// - Tag: dictionaryVariation
     @objc public func dictionaryVariation(forKey key: LDFlagKey, defaultValue: [String: Any]?) -> [String: Any]? {
-        return ldClient.variation(forKey: key, defaultValue: defaultValue)
+        ldClient.variation(forKey: key, defaultValue: defaultValue)
     }
     
     /**
@@ -414,7 +412,7 @@ public final class ObjcLDClient: NSObject {
 
      LDClient will not provide any source or change information, only flag keys and flag values. The client app should convert the feature flag value into the desired type.
      */
-    @objc public var allFlags: [LDFlagKey: Any]? { return ldClient.allFlags }
+    @objc public var allFlags: [LDFlagKey: Any]? { ldClient.allFlags }
 
     // MARK: - Feature Flag Updates
 

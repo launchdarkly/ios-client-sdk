@@ -27,9 +27,3 @@ struct FlagChangeObserver {
         self.flagCollectionChangeHandler = flagCollectionChangeHandler
     }
 }
-
-extension FlagChangeObserver: Equatable {
-    static func == (lhs: FlagChangeObserver, rhs: FlagChangeObserver) -> Bool {
-        lhs.flagKeys == rhs.flagKeys && lhs.owner === rhs.owner
-    }
-}

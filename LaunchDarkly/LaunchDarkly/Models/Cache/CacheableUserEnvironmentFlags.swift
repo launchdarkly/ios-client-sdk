@@ -61,9 +61,7 @@ struct CacheableUserEnvironmentFlags {
 
     init?(object: Any) {
         guard let dictionary = object as? [String: Any]
-        else {
-            return nil
-        }
+        else { return nil }
         self.init(dictionary: dictionary)
     }
 

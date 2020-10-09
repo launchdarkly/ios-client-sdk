@@ -102,16 +102,12 @@ final class DarklyService: DarklyServiceProvider {
 
     private func flagRequest(useReport: Bool) -> URLRequest? {
         guard let flagRequestUrl = flagRequestUrl(useReport: useReport)
-        else {
-            return nil
-        }
+        else { return nil }
         var request = URLRequest(url: flagRequestUrl, cachePolicy: flagRequestCachePolicy, timeoutInterval: config.connectionTimeout)
         request.appendHeaders(httpHeaders.flagRequestHeaders)
         if useReport {
-            guard let userData = user.dictionaryValue(includeFlagConfig: false, includePrivateAttributes: true, config: config).jsonData
-            else {
-                return nil
-            }
+            guard let userData = user.dictionaryValue(includePrivateAttributes: true, config: config).jsonData
+            else { return nil }
             request.httpMethod = URLRequest.HTTPMethods.report
             request.httpBody = userData
         }
@@ -131,7 +127,7 @@ final class DarklyService: DarklyServiceProvider {
             return shouldGetReasons(url: config.baseUrl.appendingPathComponent(FlagRequestPath.report))
         }
         guard let encodedUser = user
-            .dictionaryValue(includeFlagConfig: false, includePrivateAttributes: true, config: config)
+            .dictionaryValue(includePrivateAttributes: true, config: config)
             .base64UrlEncodedString
         else {
             return nil
@@ -176,7 +172,7 @@ final class DarklyService: DarklyServiceProvider {
                                                         httpHeaders: httpHeaders.eventSourceHeaders,
                                                         connectMethod: DarklyService.HTTPRequestMethod.report,
                                                         connectBody: user
-                                                            .dictionaryValue(includeFlagConfig: false, includePrivateAttributes: true, config: config)
+                                                            .dictionaryValue(includePrivateAttributes: true, config: config)
                                                             .jsonData,
                                                         handler: handler,
                                                         errorHandler: errorHandler)
@@ -190,7 +186,7 @@ final class DarklyService: DarklyServiceProvider {
     private var getStreamRequestUrl: URL {
         shouldGetReasons(url: config.streamUrl.appendingPathComponent(StreamRequestPath.meval)
             .appendingPathComponent(user
-                .dictionaryValue(includeFlagConfig: false, includePrivateAttributes: true, config: config)
+                .dictionaryValue(includePrivateAttributes: true, config: config)
                 .base64UrlEncodedString ?? ""))
     }
     private var reportStreamRequestUrl: URL {

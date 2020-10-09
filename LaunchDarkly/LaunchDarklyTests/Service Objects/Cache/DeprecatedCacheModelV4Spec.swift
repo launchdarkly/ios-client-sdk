@@ -51,9 +51,7 @@ final class DeprecatedCacheModelV4Spec: QuickSpec {
 
         func modelV4Dictionary(for users: [LDUser], and userEnvironmentsCollection: [UserKey: CacheableUserEnvironmentFlags], storingMobileKey: MobileKey?) -> [UserKey: Any]? {
             guard let mobileKey = storingMobileKey, !users.isEmpty
-            else {
-                return nil
-            }
+            else { return nil }
 
             return Dictionary(uniqueKeysWithValues: users.map { user in
                 let featureFlags = userEnvironmentsCollection[user.key]?.environmentFlags[mobileKey]?.featureFlags
@@ -208,7 +206,7 @@ extension Dictionary where Key == LDFlagKey, Value == FeatureFlag {
 
 extension FeatureFlag {
     var modelV4FeatureFlag: FeatureFlag {
-        FeatureFlag(flagKey: flagKey, value: value, variation: variation, version: version, flagVersion: flagVersion, trackEvents: trackEvents, debugEventsUntilDate: debugEventsUntilDate, reason: nil, trackReason: nil)
+        FeatureFlag(flagKey: flagKey, value: value, variation: variation, version: version, flagVersion: flagVersion, trackEvents: trackEvents, debugEventsUntilDate: debugEventsUntilDate)
     }
 }
 
@@ -216,7 +214,7 @@ extension FeatureFlag {
 
 extension LDUser {
     func modelV4DictionaryValue(including featureFlags: [LDFlagKey: FeatureFlag], using lastUpdated: Date?) -> [String: Any] {
-        var userDictionary = dictionaryValueWithAllAttributes(includeFlagConfig: false)
+        var userDictionary = dictionaryValueWithAllAttributes()
         userDictionary.setLastUpdated(lastUpdated)
         userDictionary[LDUser.CodingKeys.config.rawValue] = featureFlags.compactMapValues { $0.modelV4dictionaryValue }
 
@@ -235,9 +233,7 @@ extension FeatureFlag {
 */
     var modelV4dictionaryValue: [String: Any]? {
         guard value != nil
-        else {
-            return nil
-        }
+        else { return nil }
         var flagDictionary = dictionaryValue
         flagDictionary.removeValue(forKey: FeatureFlag.CodingKeys.flagKey.rawValue)
         flagDictionary.removeValue(forKey: FeatureFlag.CodingKeys.reason.rawValue)

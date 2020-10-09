@@ -97,7 +97,7 @@ extension LDFlagValue {
     }
     
     var baseDictionary: [String: LDFlagBaseTypeConvertible]? {
-        return flagValueDictionary?.compactMapValues { $0.baseValue }
+        flagValueDictionary?.compactMapValues { $0.baseValue }
     }
 }
 

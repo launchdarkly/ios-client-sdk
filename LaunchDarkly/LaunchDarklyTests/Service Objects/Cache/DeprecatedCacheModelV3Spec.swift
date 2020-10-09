@@ -51,9 +51,7 @@ final class DeprecatedCacheModelV3Spec: QuickSpec {
 
         func modelV3Dictionary(for users: [LDUser], and userEnvironmentsCollection: [UserKey: CacheableUserEnvironmentFlags], storingMobileKey: MobileKey?) -> [UserKey: Any]? {
             guard let mobileKey = storingMobileKey, !users.isEmpty
-            else {
-                return nil
-            }
+            else { return nil }
 
             return Dictionary(uniqueKeysWithValues: users.map { user in
                 let featureFlags = userEnvironmentsCollection[user.key]?.environmentFlags[mobileKey]?.featureFlags
@@ -208,7 +206,7 @@ extension Dictionary where Key == LDFlagKey, Value == FeatureFlag {
 
 extension FeatureFlag {
     var modelV3FeatureFlag: FeatureFlag {
-        FeatureFlag(flagKey: flagKey, value: value, variation: nil, version: version, flagVersion: nil, trackEvents: nil, debugEventsUntilDate: nil, reason: nil, trackReason: nil)
+        FeatureFlag(flagKey: flagKey, value: value, version: version)
     }
 }
 
@@ -216,7 +214,7 @@ extension FeatureFlag {
 
 extension LDUser {
     func modelV3DictionaryValue(including featureFlags: [LDFlagKey: FeatureFlag], using lastUpdated: Date?) -> [String: Any] {
-        var userDictionary = dictionaryValueWithAllAttributes(includeFlagConfig: false)
+        var userDictionary = dictionaryValueWithAllAttributes()
         userDictionary.setLastUpdated(lastUpdated)
         userDictionary[LDUser.CodingKeys.config.rawValue] = featureFlags.compactMapValues { $0.modelV3dictionaryValue }
 
@@ -231,9 +229,7 @@ extension FeatureFlag {
 */
     var modelV3dictionaryValue: [String: Any]? {
         guard value != nil
-        else {
-            return nil
-        }
+        else { return nil }
         var flagDictionary = dictionaryValue
         flagDictionary.removeValue(forKey: FeatureFlag.CodingKeys.flagKey.rawValue)
         flagDictionary.removeValue(forKey: FeatureFlag.CodingKeys.variation.rawValue)

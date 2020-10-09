@@ -6,11 +6,11 @@
 //
 
 import Foundation
-import Quick
-import Nimble
+import XCTest
+
 @testable import LaunchDarkly
 
-final class LDConfigSpec: QuickSpec {
+final class LDConfigSpec: XCTestCase {
     struct Constants {
         fileprivate static let alternateMockUrl = URL(string: "https://dummy.alternate.com")!
         fileprivate static let eventCapacity = 10
@@ -24,7 +24,7 @@ final class LDConfigSpec: QuickSpec {
         fileprivate static let startOnline = false
 
         fileprivate static let allUserAttributesPrivate = true
-        fileprivate static let privateUserAttributes: [String]? = ["dummy"]
+        fileprivate static let privateUserAttributes: [String] = ["dummy"]
 
         fileprivate static let useReport = true
 
@@ -40,392 +40,197 @@ final class LDConfigSpec: QuickSpec {
         fileprivate static let additionalHeaders = ["Proxy-Authorization": "creds"]
     }
 
-    struct TestContext {
-        var subject: LDConfig!
-        var environmentReporter: EnvironmentReportingMock!
+    let testFields: [(String, Any, (inout LDConfig, Any?) -> Void)] =
+        [("mobile key", LDConfig.Constants.alternateMobileKey, { c, v in c.mobileKey = v as! String }),
+         ("base URL", Constants.alternateMockUrl, { c, v in c.baseUrl = v as! URL }),
+         ("event URL", Constants.alternateMockUrl, { c, v in c.eventsUrl = v as! URL }),
+         ("stream URL", Constants.alternateMockUrl, { c, v in c.streamUrl = v as! URL }),
+         ("event capacity", Constants.eventCapacity, { c, v in c.eventCapacity = v as! Int }),
+         ("connection timeout", Constants.connectionTimeout, { c, v in c.connectionTimeout = v as! TimeInterval }),
+         ("event flush interval", Constants.eventFlushInterval, { c, v in c.eventFlushInterval = v as! TimeInterval }),
+         ("poll interval", Constants.flagPollingInterval, { c, v in c.flagPollingInterval = v as! TimeInterval }),
+         ("background poll interval", Constants.backgroundFlagPollingInterval, { c, v in c.backgroundFlagPollingInterval = v as! TimeInterval }),
+         ("streaming mode", Constants.streamingMode, { c, v in c.streamingMode = v as! LDStreamingMode }),
+         ("enable background updates", Constants.enableBackgroundUpdates, { c, v in c.enableBackgroundUpdates = v as! Bool }),
+         ("start online", Constants.startOnline, { c, v in c.startOnline = v as! Bool }),
+         ("debug mode", Constants.debugMode, { c, v in c.isDebugMode = v as! Bool }),
+         ("all user attributes private", Constants.allUserAttributesPrivate, { c, v in c.allUserAttributesPrivate = v as! Bool }),
+         ("private user attributes", Constants.privateUserAttributes, { c, v in c.privateUserAttributes = (v as! [String])}),
+         ("use report", Constants.useReport, { c, v in c.useReport = v as! Bool }),
+         ("inline user in events", Constants.inlineUserInEvents, { c, v in c.inlineUserInEvents = v as! Bool }),
+         ("evaluation reasons", Constants.evaluationReasons, { c, v in c.evaluationReasons = v as! Bool }),
+         ("max cached users", Constants.maxCachedUsers, { c, v in c.maxCachedUsers = v as! Int }),
+         ("diagnostic opt out", Constants.diagnosticOptOut, { c, v in c.diagnosticOptOut = v as! Bool }),
+         ("diagnostic recording interval", Constants.diagnosticRecordingInterval, { c, v in c.diagnosticRecordingInterval = v as! TimeInterval }),
+         ("wrapper name", Constants.wrapperName, { c, v in c.wrapperName = v as! String? }),
+         ("wrapper version", Constants.wrapperVersion, { c, v in c.wrapperVersion = v as! String? }),
+         ("additional headers", Constants.additionalHeaders, { c, v in c.additionalHeaders = v as! [String: String]})]
 
-        init(useStub: Bool = false, operatingSystem: OperatingSystem? = nil, isDebugBuild: Bool? = nil) {
-            self.environmentReporter = EnvironmentReportingMock()
-            if let operatingSystem = operatingSystem {
-                self.environmentReporter.operatingSystem = operatingSystem
+    func testInitDefault() {
+        let config = LDConfig(mobileKey: LDConfig.Constants.mockMobileKey)
+        XCTAssertEqual(config.mobileKey, LDConfig.Constants.mockMobileKey)
+        XCTAssertEqual(config.baseUrl, LDConfig.Defaults.baseUrl)
+        XCTAssertEqual(config.eventsUrl, LDConfig.Defaults.eventsUrl)
+        XCTAssertEqual(config.streamUrl, LDConfig.Defaults.streamUrl)
+        XCTAssertEqual(config.eventCapacity, LDConfig.Defaults.eventCapacity)
+        XCTAssertEqual(config.connectionTimeout, LDConfig.Defaults.connectionTimeout)
+        XCTAssertEqual(config.eventFlushInterval, LDConfig.Defaults.eventFlushInterval)
+        XCTAssertEqual(config.flagPollingInterval, LDConfig.Defaults.flagPollingInterval)
+        XCTAssertEqual(config.backgroundFlagPollingInterval, LDConfig.Defaults.backgroundFlagPollingInterval)
+        XCTAssertEqual(config.streamingMode, LDConfig.Defaults.streamingMode)
+        XCTAssertEqual(config.enableBackgroundUpdates, LDConfig.Defaults.enableBackgroundUpdates)
+        XCTAssertEqual(config.startOnline, LDConfig.Defaults.startOnline)
+        XCTAssertEqual(config.allUserAttributesPrivate, LDConfig.Defaults.allUserAttributesPrivate)
+        XCTAssertEqual(config.privateUserAttributes, nil)
+        XCTAssertEqual(config.useReport, LDConfig.Defaults.useReport)
+        XCTAssertEqual(config.inlineUserInEvents, LDConfig.Defaults.inlineUserInEvents)
+        XCTAssertEqual(config.isDebugMode, LDConfig.Defaults.debugMode)
+        XCTAssertEqual(config.evaluationReasons, LDConfig.Defaults.evaluationReasons)
+        XCTAssertEqual(config.maxCachedUsers, LDConfig.Defaults.maxCachedUsers)
+        XCTAssertEqual(config.diagnosticOptOut, LDConfig.Defaults.diagnosticOptOut)
+        XCTAssertEqual(config.diagnosticRecordingInterval, LDConfig.Defaults.diagnosticRecordingInterval)
+        XCTAssertEqual(config.wrapperName, LDConfig.Defaults.wrapperName)
+        XCTAssertEqual(config.wrapperVersion, LDConfig.Defaults.wrapperVersion)
+        XCTAssertEqual(config.additionalHeaders, LDConfig.Defaults.additionalHeaders)
+    }
+
+    func testInitUpdate() {
+        OperatingSystem.allOperatingSystems.forEach { os in
+            let environmentReporter = EnvironmentReportingMock()
+            environmentReporter.operatingSystem = os
+            var config = LDConfig(mobileKey: LDConfig.Constants.mockMobileKey, environmentReporter: environmentReporter)
+            testFields.forEach { _, otherVal, setter in
+                setter(&config, otherVal)
             }
-            if let isDebugBuild = isDebugBuild {
-                self.environmentReporter.isDebugBuild = isDebugBuild
-            }
-            subject = useStub ? LDConfig.stub(mobileKey: LDConfig.Constants.mockMobileKey, environmentReporter: self.environmentReporter) :
-                LDConfig(mobileKey: LDConfig.Constants.mockMobileKey, environmentReporter: self.environmentReporter)
+            XCTAssertEqual(config.mobileKey, LDConfig.Constants.alternateMobileKey, "\(os)")
+            XCTAssertEqual(config.baseUrl, Constants.alternateMockUrl, "\(os)")
+            XCTAssertEqual(config.eventsUrl, Constants.alternateMockUrl, "\(os)")
+            XCTAssertEqual(config.streamUrl, Constants.alternateMockUrl, "\(os)")
+            XCTAssertEqual(config.eventCapacity, Constants.eventCapacity, "\(os)")
+            XCTAssertEqual(config.connectionTimeout, Constants.connectionTimeout, "\(os)")
+            XCTAssertEqual(config.eventFlushInterval, Constants.eventFlushInterval, "\(os)")
+            XCTAssertEqual(config.flagPollingInterval, Constants.flagPollingInterval, "\(os)")
+            XCTAssertEqual(config.backgroundFlagPollingInterval, Constants.backgroundFlagPollingInterval, "\(os)")
+            XCTAssertEqual(config.streamingMode, Constants.streamingMode, "\(os)")
+            XCTAssertEqual(config.enableBackgroundUpdates, os.isBackgroundEnabled, "\(os)")
+            XCTAssertEqual(config.startOnline, Constants.startOnline, "\(os)")
+            XCTAssertEqual(config.allUserAttributesPrivate, Constants.allUserAttributesPrivate, "\(os)")
+            XCTAssertEqual(config.privateUserAttributes, Constants.privateUserAttributes, "\(os)")
+            XCTAssertEqual(config.useReport, Constants.useReport, "\(os)")
+            XCTAssertEqual(config.inlineUserInEvents, Constants.inlineUserInEvents, "\(os)")
+            XCTAssertEqual(config.isDebugMode, Constants.debugMode, "\(os)")
+            XCTAssertEqual(config.evaluationReasons, Constants.evaluationReasons, "\(os)")
+            XCTAssertEqual(config.maxCachedUsers, Constants.maxCachedUsers, "\(os)")
+            XCTAssertEqual(config.diagnosticOptOut, Constants.diagnosticOptOut, "\(os)")
+            XCTAssertEqual(config.diagnosticRecordingInterval, Constants.diagnosticRecordingInterval, "\(os)")
+            XCTAssertEqual(config.wrapperName, Constants.wrapperName, "\(os)")
+            XCTAssertEqual(config.wrapperVersion, Constants.wrapperVersion, "\(os)")
+            XCTAssertEqual(config.additionalHeaders, Constants.additionalHeaders, "\(os)")
         }
     }
 
-    override func spec() {
-        initSpec()
-        flagPollingIntervalSpec()
-        equalsSpec()
-        diagnosticReportingIntervalSpec()
-        isReportRetryStatusCodeSpec()
-        allowStreamingModeSpec()
-        allowBackgroundUpdatesSpec()
+    func testMinimaInitDebug() {
+        let environmentReporter = EnvironmentReportingMock()
+        environmentReporter.isDebugBuild = true
+        let config = LDConfig(mobileKey: LDConfig.Constants.mockMobileKey, environmentReporter: environmentReporter)
+        XCTAssertEqual(config.minima.flagPollingInterval, LDConfig.Minima.Debug.flagPollingInterval)
+        XCTAssertEqual(config.minima.backgroundFlagPollingInterval, LDConfig.Minima.Debug.backgroundFlagPollingInterval)
+        XCTAssertEqual(config.minima.diagnosticRecordingInterval, LDConfig.Minima.Debug.diagnosticRecordingInterval)
     }
 
-    func initSpec() {
-        describe("init") {
-            var config: LDConfig!
-            beforeEach {
-                config = LDConfig(mobileKey: LDConfig.Constants.mockMobileKey)
-            }
-            context("without changing config values") {
-                it("has the default config values") {
-                    expect(config.mobileKey) == LDConfig.Constants.mockMobileKey
-                    expect(config.baseUrl) == LDConfig.Defaults.baseUrl
-                    expect(config.eventsUrl) == LDConfig.Defaults.eventsUrl
-                    expect(config.streamUrl) == LDConfig.Defaults.streamUrl
-                    expect(config.eventCapacity) == LDConfig.Defaults.eventCapacity
-                    expect(config.connectionTimeout) == LDConfig.Defaults.connectionTimeout
-                    expect(config.eventFlushInterval) == LDConfig.Defaults.eventFlushInterval
-                    expect(config.flagPollingInterval) == LDConfig.Defaults.flagPollingInterval
-                    expect(config.backgroundFlagPollingInterval) == LDConfig.Defaults.backgroundFlagPollingInterval
-                    expect(config.streamingMode) == LDConfig.Defaults.streamingMode
-                    expect(config.enableBackgroundUpdates) == LDConfig.Defaults.enableBackgroundUpdates
-                    expect(config.startOnline) == LDConfig.Defaults.startOnline
-                    expect(config.allUserAttributesPrivate) == LDConfig.Defaults.allUserAttributesPrivate
-                    expect(config.privateUserAttributes).to(beNil())
-                    expect(config.useReport) == LDConfig.Defaults.useReport
-                    expect(config.inlineUserInEvents) == LDConfig.Defaults.inlineUserInEvents
-                    expect(config.isDebugMode) == LDConfig.Defaults.debugMode
-                    expect(config.evaluationReasons) == LDConfig.Defaults.evaluationReasons
-                    expect(config.maxCachedUsers) == LDConfig.Defaults.maxCachedUsers
-                    expect(config.diagnosticOptOut) == LDConfig.Defaults.diagnosticOptOut
-                    expect(config.diagnosticRecordingInterval) == LDConfig.Defaults.diagnosticRecordingInterval
-                    expect(config.wrapperName == LDConfig.Defaults.wrapperName) == true
-                    expect(config.wrapperVersion == LDConfig.Defaults.wrapperVersion) == true
-                    expect(config.additionalHeaders) == LDConfig.Defaults.additionalHeaders
-                }
-            }
-            context("changing the config values") {
-                var testElements: [(OperatingSystem, LDConfig)]!
-                beforeEach {
-                    testElements = [(OperatingSystem, LDConfig)]()
-                    OperatingSystem.allOperatingSystems.forEach { os in   //iOS, watchOS, & tvOS don't allow enableBackgroundUpdates to change, macOS should
-                        let testContext = TestContext(operatingSystem: os)
-                        config = testContext.subject
+    func testMinimaInitRelease() {
+        let environmentReporter = EnvironmentReportingMock()
+        environmentReporter.isDebugBuild = false
+        let config = LDConfig(mobileKey: LDConfig.Constants.mockMobileKey, environmentReporter: environmentReporter)
+        XCTAssertEqual(config.minima.flagPollingInterval, LDConfig.Minima.Production.flagPollingInterval)
+        XCTAssertEqual(config.minima.backgroundFlagPollingInterval, LDConfig.Minima.Production.backgroundFlagPollingInterval)
+        XCTAssertEqual(config.minima.diagnosticRecordingInterval, LDConfig.Minima.Production.diagnosticRecordingInterval)
+    }
 
-                        config.baseUrl = Constants.alternateMockUrl
-                        config.eventsUrl = Constants.alternateMockUrl
-                        config.streamUrl = Constants.alternateMockUrl
-                        config.eventCapacity = Constants.eventCapacity
-                        config.connectionTimeout = Constants.connectionTimeout
-                        config.eventFlushInterval = Constants.eventFlushInterval
-                        config.flagPollingInterval = Constants.flagPollingInterval
-                        config.backgroundFlagPollingInterval = Constants.backgroundFlagPollingInterval
-                        config.streamingMode = Constants.streamingMode
-                        config.enableBackgroundUpdates = Constants.enableBackgroundUpdates
-                        config.startOnline = Constants.startOnline
-                        config.allUserAttributesPrivate = Constants.allUserAttributesPrivate
-                        config.privateUserAttributes = Constants.privateUserAttributes
-                        config.useReport = Constants.useReport
-                        config.inlineUserInEvents = Constants.inlineUserInEvents
-                        config.isDebugMode = Constants.debugMode
-                        config.evaluationReasons = Constants.evaluationReasons
-                        config.maxCachedUsers = Constants.maxCachedUsers
-                        config.diagnosticOptOut = Constants.diagnosticOptOut
-                        config.diagnosticRecordingInterval = Constants.diagnosticRecordingInterval
-                        config.wrapperName = Constants.wrapperName
-                        config.wrapperVersion = Constants.wrapperVersion
-                        config.additionalHeaders = Constants.additionalHeaders
-
-                        testElements.append((os, config))
-                    }
-                }
-                it("has the changed config values") {
-                    testElements.forEach { os, config in
-                        expect(config.baseUrl) == Constants.alternateMockUrl
-                        expect(config.eventsUrl) == Constants.alternateMockUrl
-                        expect(config.streamUrl) == Constants.alternateMockUrl
-                        expect(config.eventCapacity) == Constants.eventCapacity
-                        expect(config.connectionTimeout) == Constants.connectionTimeout
-                        expect(config.eventFlushInterval) == Constants.eventFlushInterval
-                        expect(config.flagPollingInterval) == Constants.flagPollingInterval
-                        expect(config.backgroundFlagPollingInterval) == Constants.backgroundFlagPollingInterval
-                        expect(config.streamingMode) == Constants.streamingMode
-                        expect(config.enableBackgroundUpdates) == os.isBackgroundEnabled    //iOS, watchOS, & tvOS don't allow this to change, macOS should
-                        expect(config.startOnline) == Constants.startOnline
-                        expect(config.allUserAttributesPrivate) == Constants.allUserAttributesPrivate
-                        expect(config.privateUserAttributes) == Constants.privateUserAttributes
-                        expect(config.useReport) == Constants.useReport
-                        expect(config.inlineUserInEvents) == Constants.inlineUserInEvents
-                        expect(config.isDebugMode) == Constants.debugMode
-                        expect(config.evaluationReasons) == Constants.evaluationReasons
-                        expect(config.maxCachedUsers) == Constants.maxCachedUsers
-                        expect(config.diagnosticOptOut) == Constants.diagnosticOptOut
-                        expect(config.diagnosticRecordingInterval) == Constants.diagnosticRecordingInterval
-                        expect(config.wrapperName) == Constants.wrapperName
-                        expect(config.wrapperVersion) == Constants.wrapperVersion
-                        expect(config.additionalHeaders) == Constants.additionalHeaders
-                    }
-                }
-            }
-        }
-        describe("Minima init") {
-            var environmentReporter: EnvironmentReportingMock!
-            var minima: LDConfig.Minima!
-            beforeEach {
-                environmentReporter = EnvironmentReportingMock()
-            }
-            context("for production builds") {
-                beforeEach {
-                    environmentReporter.isDebugBuild = false
-                    minima = LDConfig.Minima(environmentReporter: environmentReporter)
-                }
-                it("has the production minima") {
-                    expect(minima.flagPollingInterval) == LDConfig.Minima.Production.flagPollingInterval
-                    expect(minima.backgroundFlagPollingInterval) == LDConfig.Minima.Production.backgroundFlagPollingInterval
-                    expect(minima.diagnosticRecordingInterval) == LDConfig.Minima.Production.diagnosticRecordingInterval
-                }
-            }
-            context("for debug builds") {
-                beforeEach {
-                    environmentReporter.isDebugBuild = true
-                    minima = LDConfig.Minima(environmentReporter: environmentReporter)
-                }
-                it("has the debug minima") {
-                    expect(minima.flagPollingInterval) == LDConfig.Minima.Debug.flagPollingInterval
-                    expect(minima.backgroundFlagPollingInterval) == LDConfig.Minima.Debug.backgroundFlagPollingInterval
-                    expect(minima.diagnosticRecordingInterval) == LDConfig.Minima.Debug.diagnosticRecordingInterval
-                }
-            }
+    func testFlagPollingInterval() {
+        [false, true].forEach { debugMode in
+            let environmentReporter = EnvironmentReportingMock()
+            environmentReporter.isDebugBuild = debugMode
+            var config = LDConfig(mobileKey: LDConfig.Constants.mockMobileKey, environmentReporter: environmentReporter)
+            // polling interval above minimum.
+            var interval = config.minima.flagPollingInterval + 0.001
+            config.flagPollingInterval = interval
+            XCTAssertEqual(config.flagPollingInterval(runMode: .foreground), interval, "debugMode: \(debugMode)")
+            // polling interval at minimum
+            interval = config.minima.flagPollingInterval
+            config.flagPollingInterval = interval
+            XCTAssertEqual(config.flagPollingInterval(runMode: .foreground), interval, "debugMode: \(debugMode)")
+            // polling interval below minimum
+            interval = config.minima.flagPollingInterval - 0.001
+            config.flagPollingInterval = interval
+            XCTAssertEqual(config.flagPollingInterval(runMode: .foreground), config.minima.flagPollingInterval, "debugMode: \(debugMode)")
+            // background polling interval above minimum.
+            interval = config.minima.backgroundFlagPollingInterval + 0.001
+            config.backgroundFlagPollingInterval = interval
+            XCTAssertEqual(config.flagPollingInterval(runMode: .background), interval, "debugMode: \(debugMode)")
+            // background polling interval at minimum
+            interval = config.minima.backgroundFlagPollingInterval
+            config.backgroundFlagPollingInterval = interval
+            XCTAssertEqual(config.flagPollingInterval(runMode: .background), interval, "debugMode: \(debugMode)")
+            // background polling interval below minimum
+            interval = config.minima.backgroundFlagPollingInterval - 0.001
+            config.backgroundFlagPollingInterval = interval
+            XCTAssertEqual(config.flagPollingInterval(runMode: .background), config.minima.backgroundFlagPollingInterval, "debugMode: \(debugMode)")
         }
     }
 
-    func flagPollingIntervalSpec() {
-        var testContext: TestContext!
-        var effectivePollingInterval: TimeInterval!
+    func testDiagnosticReportingInterval() {
+        var config = LDConfig(mobileKey: LDConfig.Constants.mockMobileKey, environmentReporter: EnvironmentReportingMock())
+        // set below minimum value
+        config.diagnosticRecordingInterval = config.minima.diagnosticRecordingInterval - 0.001
+        XCTAssertEqual(config.diagnosticRecordingInterval, config.minima.diagnosticRecordingInterval)
+        // set above minimum value
+        config.diagnosticRecordingInterval = config.minima.diagnosticRecordingInterval + 0.001
+        XCTAssertEqual(config.diagnosticRecordingInterval, config.minima.diagnosticRecordingInterval + 0.001)
+    }
 
-        beforeEach {
-            testContext = TestContext()
-        }
-
-        describe("flagPollingInterval") {
-            context("when running in foreground mode") {
-                context("polling interval above the minimum") {
-                    beforeEach {
-                        testContext.subject.flagPollingInterval = testContext.subject.minima.flagPollingInterval + 0.001
-
-                        effectivePollingInterval = testContext.subject.flagPollingInterval(runMode: .foreground)
-                    }
-                    it("returns flagPollingInterval") {
-                        expect(effectivePollingInterval) == testContext.subject.flagPollingInterval
-                    }
-                }
-                context("polling interval at the minimum") {
-                    beforeEach {
-                        testContext.subject.flagPollingInterval = testContext.subject.minima.flagPollingInterval
-
-                        effectivePollingInterval = testContext.subject.flagPollingInterval(runMode: .foreground)
-                    }
-                    it("returns flagPollingInterval") {
-                        expect(effectivePollingInterval) == testContext.subject.flagPollingInterval
-                    }
-                }
-                context("polling interval below the minimum") {
-                    beforeEach {
-                        testContext.subject.flagPollingInterval = testContext.subject.minima.flagPollingInterval - 0.001
-
-                        effectivePollingInterval = testContext.subject.flagPollingInterval(runMode: .foreground)
-                    }
-                    it("returns Minima.flagPollingInterval") {
-                        expect(effectivePollingInterval) == testContext.subject.minima.flagPollingInterval
-                    }
-                }
-            }
-            context("when running in background mode") {
-                context("polling interval above the minimum") {
-                    beforeEach {
-                        testContext.subject.backgroundFlagPollingInterval = testContext.subject.minima.backgroundFlagPollingInterval + 0.001
-
-                        effectivePollingInterval = testContext.subject.flagPollingInterval(runMode: .background)
-                    }
-                    it("returns backgroundFlagPollingInterval") {
-                        expect(effectivePollingInterval) == testContext.subject.backgroundFlagPollingInterval
-                    }
-                }
-                context("polling interval at the minimum") {
-                    beforeEach {
-                        testContext.subject.backgroundFlagPollingInterval = testContext.subject.minima.backgroundFlagPollingInterval
-
-                        effectivePollingInterval = testContext.subject.flagPollingInterval(runMode: .background)
-                    }
-                    it("returns backgroundFlagPollingInterval") {
-                        expect(effectivePollingInterval) == testContext.subject.backgroundFlagPollingInterval
-                    }
-                }
-                context("polling interval below the minimum") {
-                    beforeEach {
-                        testContext.subject.backgroundFlagPollingInterval = testContext.subject.minima.backgroundFlagPollingInterval - 0.001
-
-                        effectivePollingInterval = testContext.subject.flagPollingInterval(runMode: .background)
-                    }
-                    it("returns Minima.backgroundFlagPollingInterval") {
-                        expect(effectivePollingInterval) == testContext.subject.minima.backgroundFlagPollingInterval
-                    }
-                }
-            }
+    func testEquals() {
+        let environmentReporter = EnvironmentReportingMock()
+        //must use a background enabled OS to test inequality of background enabled
+        environmentReporter.operatingSystem = OperatingSystem.backgroundEnabledOperatingSystems.first!
+        let defaultConfig = LDConfig(mobileKey: LDConfig.Constants.mockMobileKey, environmentReporter: environmentReporter)
+        // same config
+        symmetricAssertEqual(defaultConfig, defaultConfig)
+        // equivalent config
+        symmetricAssertEqual(defaultConfig, LDConfig(mobileKey: LDConfig.Constants.mockMobileKey))
+        // different mobile key
+        symmetricAssertNotEqual(defaultConfig, LDConfig(mobileKey: LDConfig.Constants.alternateMobileKey))
+        testFields.forEach { name, otherVal, setter in
+            var otherConfig = LDConfig(mobileKey: LDConfig.Constants.mockMobileKey, environmentReporter: environmentReporter)
+            setter(&otherConfig, otherVal)
+            symmetricAssertNotEqual(defaultConfig, otherConfig, "\(name) differs")
         }
     }
 
-    func diagnosticReportingIntervalSpec() {
-        var testContext: TestContext!
-        describe("diagnosticReportingIntervalSpec") {
-            beforeEach {
-                testContext = TestContext()
-            }
-            context("set below minimal value") {
-                it("sets to minimal value") {
-                    testContext.subject.diagnosticRecordingInterval = testContext.subject.minima.diagnosticRecordingInterval - 0.001
-                    expect(testContext.subject.diagnosticRecordingInterval) == testContext.subject.minima.diagnosticRecordingInterval
-                }
-            }
-            context("set above minimal value") {
-                it("sets to expected value") {
-                    testContext.subject.diagnosticRecordingInterval = testContext.subject.minima.diagnosticRecordingInterval + 0.001
-                    expect(testContext.subject.diagnosticRecordingInterval) == testContext.subject.minima.diagnosticRecordingInterval + 0.001
-                }
-            }
+    func testIsReportRetryStatusCode() {
+        HTTPURLResponse.StatusCodes.all.forEach { statusCode in
+            XCTAssertEqual(LDConfig.isReportRetryStatusCode(statusCode),
+                           LDConfig.reportRetryStatusCodes.contains(statusCode),
+                           "statusCode: \(statusCode)")
         }
     }
 
-    func equalsSpec() {
-        var testContext: TestContext!
-        var otherConfig: LDConfig!
-
-        beforeEach {
-            //must use a background enabled OS to test inequality of background enabled
-            testContext = TestContext(useStub: true, operatingSystem: OperatingSystem.backgroundEnabledOperatingSystems.first!)
-        }
-
-        describe("equals") {
-            context("when settable values are all the same") {
-                beforeEach {
-                    otherConfig = testContext.subject
-                }
-                it("returns true") {
-                    expect(testContext.subject) == otherConfig
-                }
-            }
-            context("when the mobile keys differ") {
-                beforeEach {
-                    otherConfig = LDConfig.stub(mobileKey: LDConfig.Constants.alternateMobileKey, environmentReporter: testContext.environmentReporter)
-                }
-                it("returns false") {
-                    expect(testContext.subject) != otherConfig
-                }
-            }
-
-            context("when values are different") {
-                let testFields: [(String, Any, (inout LDConfig, Any?) -> Void)] =
-                    [("base URL", Constants.alternateMockUrl, { c, v in c.baseUrl = v as! URL }),
-                     ("event URL", Constants.alternateMockUrl, { c, v in c.eventsUrl = v as! URL }),
-                     ("stream URL", Constants.alternateMockUrl, { c, v in c.streamUrl = v as! URL }),
-                     ("event capacity", Constants.eventCapacity, { c, v in c.eventCapacity = v as! Int }),
-                     ("connection timeout", Constants.connectionTimeout, { c, v in c.connectionTimeout = v as! TimeInterval }),
-                     ("event flush interval", Constants.eventFlushInterval, { c, v in c.eventFlushInterval = v as! TimeInterval }),
-                     ("poll interval", Constants.flagPollingInterval, { c, v in c.flagPollingInterval = v as! TimeInterval }),
-                     ("background poll interval", Constants.backgroundFlagPollingInterval, { c, v in c.backgroundFlagPollingInterval = v as! TimeInterval }),
-                     ("streaming mode", Constants.streamingMode, { c, v in c.streamingMode = v as! LDStreamingMode }),
-                     ("enable background updates", Constants.enableBackgroundUpdates, { c, v in c.enableBackgroundUpdates = v as! Bool }),
-                     ("start online", Constants.startOnline, { c, v in c.startOnline = v as! Bool }),
-                     ("debug mode", Constants.debugMode, { c, v in c.isDebugMode = v as! Bool }),
-                     ("all user attributes private", Constants.allUserAttributesPrivate, { c, v in c.allUserAttributesPrivate = v as! Bool }),
-                     ("use report", Constants.useReport, { c, v in c.useReport = v as! Bool }),
-                     ("inline user in events", Constants.inlineUserInEvents, { c, v in c.inlineUserInEvents = v as! Bool }),
-                     ("evaluation reasons", Constants.evaluationReasons, { c, v in c.evaluationReasons = v as! Bool }),
-                     ("max cached users", Constants.maxCachedUsers, { c, v in c.maxCachedUsers = v as! Int }),
-                     ("diagnostic opt out", Constants.diagnosticOptOut, { c, v in c.diagnosticOptOut = v as! Bool }),
-                     ("diagnostic recording interval", Constants.diagnosticRecordingInterval, { c, v in c.diagnosticRecordingInterval = v as! TimeInterval }),
-                     ("wrapper name", Constants.wrapperName, { c, v in c.wrapperName = v as! String? }),
-                     ("wrapper version", Constants.wrapperVersion, { c, v in c.wrapperVersion = v as! String? }),
-                     ("additional headers", Constants.additionalHeaders, { c, v in c.additionalHeaders = v as! [String: String]})]
-                testFields.forEach { name, otherVal, setter in
-                    context("when \(name) differs") {
-                        beforeEach {
-                            otherConfig = testContext.subject
-                        }
-                        context("and both exist") {
-                            it("returns false") {
-                                setter(&otherConfig, otherVal)
-                                expect(testContext.subject) != otherConfig
-                                expect(otherConfig) != testContext.subject
-                            }
-                        }
-                    }
-                }
-            }
-            context("when privateUserAttributes differ") {
-                beforeEach {
-                    testContext.subject.privateUserAttributes = LDUser.privatizableAttributes
-                    otherConfig = testContext.subject
-                }
-                it("returns false") {
-                    LDUser.privatizableAttributes.forEach { attribute in
-                        otherConfig.privateUserAttributes = LDUser.privatizableAttributes.filter {
-                            $0 != attribute
-                        }
-                        expect(testContext.subject) != otherConfig
-                    }
-                }
-            }
+    func testAllowStreamingModeSpec() {
+        for operatingSystem in OperatingSystem.allOperatingSystems {
+            let environmenReporter = EnvironmentReportingMock()
+            environmenReporter.operatingSystem = operatingSystem
+            let config = LDConfig(mobileKey: LDConfig.Constants.mockMobileKey, environmentReporter: environmenReporter)
+            XCTAssertEqual(config.allowStreamingMode, operatingSystem.isStreamingEnabled)
         }
     }
 
-    func isReportRetryStatusCodeSpec() {
-        describe("isReportRetryStatusCode") {
-            var testStatusCodes: [Int]!
-            context("when status code is a retry status code") {
-                beforeEach {
-                    testStatusCodes = LDConfig.reportRetryStatusCodes
-                }
-                it("returns true") {
-                    testStatusCodes.forEach { testCode in
-                        expect(LDConfig.isReportRetryStatusCode(testCode)) == true
-                    }
-                }
-            }
-            context("when status code is not a retry status code") {
-                beforeEach {
-                    testStatusCodes = HTTPURLResponse.StatusCodes.all.filter { code in
-                        !LDConfig.reportRetryStatusCodes.contains(code)
-                    }
-                }
-                it("returns false") {
-                    testStatusCodes.forEach { testCode in
-                        expect(LDConfig.isReportRetryStatusCode(testCode)) == false
-                    }
-                }
-            }
-        }
-    }
-
-    private func allowStreamingModeSpec() {
-        var testContext: TestContext!
-        describe("allowStreamingMode") {
-            it("allows streaming mode only on selected operating systems") {
-                for operatingSystem in OperatingSystem.allOperatingSystems {
-                    testContext = TestContext(useStub: true, operatingSystem: operatingSystem)
-                    expect(testContext.subject.allowStreamingMode) == operatingSystem.isStreamingEnabled
-                }
-            }
-        }
-    }
-
-    private func allowBackgroundUpdatesSpec() {
-        var testContext: TestContext!
-        describe("enableBackgroundUpdates") {
-            it("enables background updates only on selected operating systems") {
-                for operatingSystem in OperatingSystem.allOperatingSystems {
-                    testContext = TestContext(useStub: true, operatingSystem: operatingSystem)
-                    testContext.subject.enableBackgroundUpdates = true
-                    expect(testContext.subject.enableBackgroundUpdates) == operatingSystem.isBackgroundEnabled
-                }
-            }
+    func testAllowBackgroundUpdatesSpec() {
+        for operatingSystem in OperatingSystem.allOperatingSystems {
+            let environmenReporter = EnvironmentReportingMock()
+            environmenReporter.operatingSystem = operatingSystem
+            var config = LDConfig(mobileKey: LDConfig.Constants.mockMobileKey, environmentReporter: environmenReporter)
+            config.enableBackgroundUpdates = true
+            XCTAssertEqual(config.enableBackgroundUpdates, operatingSystem.isBackgroundEnabled)
         }
     }
 }

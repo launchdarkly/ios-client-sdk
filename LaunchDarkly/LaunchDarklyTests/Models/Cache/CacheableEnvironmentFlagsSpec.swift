@@ -39,7 +39,6 @@ final class CacheableEnvironmentFlagsSpec: QuickSpec {
     private func initSpec() {
         initWithElementsSpec()
         initWithDictionarySpec()
-        initWithObjectSpec()
     }
 
     private func initWithElementsSpec() {
@@ -80,7 +79,7 @@ final class CacheableEnvironmentFlagsSpec: QuickSpec {
                 beforeEach {
                     testContext = TestContext()
                     otherDictionary = testContext.cacheableEnvironmentFlags.dictionaryValue
-                    otherDictionary.merge(testContext.user.dictionaryValueWithAllAttributes(includeFlagConfig: false), uniquingKeysWith: { current, _ in
+                    otherDictionary.merge(testContext.user.dictionaryValueWithAllAttributes(), uniquingKeysWith: { current, _ in
                         current
                     })
 
@@ -166,37 +165,6 @@ final class CacheableEnvironmentFlagsSpec: QuickSpec {
                     it("returns nil") {
                         expect(other).to(beNil())
                     }
-                }
-            }
-        }
-    }
-
-    private func initWithObjectSpec() {
-        var testContext: TestContext!
-        var object: Any!
-        var other: CacheableEnvironmentFlags?
-        describe("initWithObject") {
-            context("object is a well-formed dictionary") {
-                beforeEach {
-                    testContext = TestContext()
-                    object = testContext.cacheableEnvironmentFlags.dictionaryValue
-
-                    other = CacheableEnvironmentFlags(object: object!)
-                }
-                it("creates a new CacheableEnvironmentFlags") {
-                    expect(other?.userKey) == testContext.user.key
-                    expect(other?.mobileKey) == testContext.mobileKey
-                    expect(other?.featureFlags) == testContext.user.flagStore.featureFlags
-                }
-            }
-            context("object is not a dictionary") {
-                beforeEach {
-                    object = Constants.int
-
-                    other = CacheableEnvironmentFlags(object: object!)
-                }
-                it("returns nil") {
-                    expect(other).to(beNil())
                 }
             }
         }

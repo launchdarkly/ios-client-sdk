@@ -40,10 +40,8 @@ extension ErrorNotifier {
     func erase(owner: LDObserverOwner) {
         for index in 0..<errorObservers.count {
             guard errorObservers[index].owner === owner
-            else {
-                continue
-            }
-            errorObservers[index].clearOwner()
+            else { continue }
+            errorObservers[index].owner = nil
         }
     }
 }

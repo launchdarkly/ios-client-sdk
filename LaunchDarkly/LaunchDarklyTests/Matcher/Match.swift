@@ -36,12 +36,12 @@ public func match() -> Predicate<() -> ToMatchResult> {
         case .matched:
             return PredicateResult(
                 bool: true,
-                message: .expectedCustomValueTo("match", "<matched>")
+                message: .expectedCustomValueTo("match", actual: "<matched>")
             )
         case .failed(let reason):
             return PredicateResult(
                 bool: false,
-                message: .expectedCustomValueTo("match", "<failed> because <\(reason)>")
+                message: .expectedCustomValueTo("match", actual: "<failed> because <\(reason)>")
             )
         }
     }
