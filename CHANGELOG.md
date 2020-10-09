@@ -2,6 +2,15 @@
 
 All notable changes to the LaunchDarkly iOS SDK will be documented in this file. This project adheres to [Semantic Versioning](http://semver.org).
 
+## [5.2.0] - 2020-10-09
+### Added
+- `LDUser` now has an optional `secondary` attribute to match other LaunchDarkly SDKs. For more on the behavior of this attribute see (the documentation on targeting users)[https://docs.launchdarkly.com/home/managing-flags/targeting-users].
+
+### Fixed
+- Corrected a bug preventing private custom attribute names being recorded in events when all custom attributes are set to be private by including "custom" in the `LDUser.privateAttributes` or `LDConfig.privateUserAttributes` properties.
+- Update Nimble to 9.0 and Quick to 3.0 to fix tests when run with Swift 5.3.
+- Fixes build warnings in Xcode 12.0.0.
+
 ## [5.1.0] - 2020-08-04
 
 ### Added
