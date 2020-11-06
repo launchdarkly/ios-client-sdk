@@ -557,7 +557,7 @@
 			path = Networking;
 			sourceTree = "<group>";
 		};
-		831D8B751F72A48900ED65E8 /* Service Objects */ = {
+		831D8B751F72A48900ED65E8 /* ServiceObjects */ = {
 			isa = PBXGroup;
 			children = (
 				831D8B761F72A4B400ED65E8 /* FlagSynchronizerSpec.swift */,
@@ -571,7 +571,7 @@
 				833631CA221B5DFA00BA53EE /* ErrorNotifierSpec.swift */,
 				8354AC75224316C700CDE602 /* Cache */,
 			);
-			path = "ServiceObjects";
+			path = ServiceObjects;
 			sourceTree = "<group>";
 		};
 		83396BC71F7C3688000E256E /* Networking */ = {
@@ -674,7 +674,7 @@
 				83B6C4B51F4DE7630055351C /* LDCommon.swift */,
 				8354EFDC1F26380700C05156 /* LDClient.swift */,
 				8354EFE61F263E4200C05156 /* Models */,
-				83FEF8D91F2666BF001CF12C /* Service Objects */,
+				83FEF8D91F2666BF001CF12C /* ServiceObjects */,
 				831D8B701F71D3A600ED65E8 /* Networking */,
 				83E2E2071F9FF9A0007514E9 /* Extensions */,
 				835E1D341F63332C00184DB4 /* ObjectiveC */,
@@ -690,7 +690,7 @@
 				838F96731FB9F024009CFC45 /* LDClientSpec.swift */,
 				83EF67911F9945CE00403126 /* Models */,
 				83CFE7CF1F7AD89D0010544E /* Mocks */,
-				831D8B751F72A48900ED65E8 /* Service Objects */,
+				831D8B751F72A48900ED65E8 /* ServiceObjects */,
 				83396BC71F7C3688000E256E /* Networking */,
 				83D17EA81FCDA16300B2823C /* Extensions */,
 				831CE0671F853CB700A13A3A /* Matcher */,
@@ -867,7 +867,7 @@
 			path = Models;
 			sourceTree = "<group>";
 		};
-		83FEF8D91F2666BF001CF12C /* Service Objects */ = {
+		83FEF8D91F2666BF001CF12C /* ServiceObjects */ = {
 			isa = PBXGroup;
 			children = (
 				8354AC742243168800CDE602 /* Cache */,
@@ -885,7 +885,7 @@
 				C443A4092315AA4D00145710 /* NetworkReporter.swift */,
 				831AAE2B20A9E4F600B46DBA /* Throttler.swift */,
 			);
-			path = "ServiceObjects";
+			path = ServiceObjects;
 			sourceTree = "<group>";
 		};
 		B467790E24D8AECA00897F00 /* Frameworks */ = {
@@ -1591,7 +1591,7 @@
 				GCC_C_LANGUAGE_STANDARD = gnu11;
 				INFOPLIST_FILE = "$(PROJECT_DIR)/LaunchDarkly/LaunchDarkly/Support/Info.plist";
 				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
-				MARKETING_VERSION = 5.2.0;
+				MARKETING_VERSION = 5.3.0;
 				MODULEMAP_FILE = "";
 				PRODUCT_BUNDLE_IDENTIFIER = "com.launchdarkly.Darkly-tvOS";
 				PRODUCT_NAME = LaunchDarkly_tvOS;
@@ -1614,7 +1614,7 @@
 				GCC_C_LANGUAGE_STANDARD = gnu11;
 				INFOPLIST_FILE = "$(PROJECT_DIR)/LaunchDarkly/LaunchDarkly/Support/Info.plist";
 				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
-				MARKETING_VERSION = 5.2.0;
+				MARKETING_VERSION = 5.3.0;
 				MODULEMAP_FILE = "";
 				PRODUCT_BUNDLE_IDENTIFIER = "com.launchdarkly.Darkly-tvOS";
 				PRODUCT_NAME = LaunchDarkly_tvOS;
@@ -1637,7 +1637,7 @@
 				GCC_C_LANGUAGE_STANDARD = gnu11;
 				INFOPLIST_FILE = "$(PROJECT_DIR)/LaunchDarkly/LaunchDarkly/Support/Info.plist";
 				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
-				MARKETING_VERSION = 5.2.0;
+				MARKETING_VERSION = 5.3.0;
 				PRODUCT_BUNDLE_IDENTIFIER = "com.launchdarkly.Darkly-macOS";
 				PRODUCT_NAME = LaunchDarkly_macOS;
 				SDKROOT = macosx;
@@ -1658,7 +1658,7 @@
 				GCC_C_LANGUAGE_STANDARD = gnu11;
 				INFOPLIST_FILE = "$(PROJECT_DIR)/LaunchDarkly/LaunchDarkly/Support/Info.plist";
 				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
-				MARKETING_VERSION = 5.2.0;
+				MARKETING_VERSION = 5.3.0;
 				PRODUCT_BUNDLE_IDENTIFIER = "com.launchdarkly.Darkly-macOS";
 				PRODUCT_NAME = LaunchDarkly_macOS;
 				SDKROOT = macosx;
@@ -1701,8 +1701,8 @@
 				COPY_PHASE_STRIP = NO;
 				CURRENT_PROJECT_VERSION = 1;
 				DEBUG_INFORMATION_FORMAT = dwarf;
-				DYLIB_COMPATIBILITY_VERSION = 5.2.0;
-				DYLIB_CURRENT_VERSION = 5.2.0;
+				DYLIB_COMPATIBILITY_VERSION = 5.3.0;
+				DYLIB_CURRENT_VERSION = 5.3.0;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				ENABLE_TESTABILITY = YES;
 				FRAMEWORK_VERSION = B;
@@ -1772,8 +1772,8 @@
 				COPY_PHASE_STRIP = NO;
 				CURRENT_PROJECT_VERSION = 1;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
-				DYLIB_COMPATIBILITY_VERSION = 5.2.0;
-				DYLIB_CURRENT_VERSION = 5.2.0;
+				DYLIB_COMPATIBILITY_VERSION = 5.3.0;
+				DYLIB_CURRENT_VERSION = 5.3.0;
 				ENABLE_NS_ASSERTIONS = NO;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				FRAMEWORK_VERSION = B;
@@ -1812,7 +1812,7 @@
 				INFOPLIST_FILE = "$(PROJECT_DIR)/LaunchDarkly/LaunchDarkly/Support/Info.plist";
 				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
 				LD_DYLIB_INSTALL_NAME = "$(DYLIB_INSTALL_NAME_BASE:standardizepath)/$(EXECUTABLE_PATH)";
-				MARKETING_VERSION = 5.2.0;
+				MARKETING_VERSION = 5.3.0;
 				MODULEMAP_FILE = "$(PROJECT_DIR)/Framework/module.modulemap";
 				PRODUCT_BUNDLE_IDENTIFIER = com.launchdarkly.Darkly;
 				PRODUCT_NAME = LaunchDarkly;
@@ -1832,7 +1832,7 @@
 				INFOPLIST_FILE = "$(PROJECT_DIR)/LaunchDarkly/LaunchDarkly/Support/Info.plist";
 				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
 				LD_DYLIB_INSTALL_NAME = "$(DYLIB_INSTALL_NAME_BASE:standardizepath)/$(EXECUTABLE_PATH)";
-				MARKETING_VERSION = 5.2.0;
+				MARKETING_VERSION = 5.3.0;
 				MODULEMAP_FILE = "$(PROJECT_DIR)/Framework/module.modulemap";
 				PRODUCT_BUNDLE_IDENTIFIER = com.launchdarkly.Darkly;
 				PRODUCT_NAME = LaunchDarkly;
@@ -1874,7 +1874,7 @@
 				GCC_C_LANGUAGE_STANDARD = gnu11;
 				INFOPLIST_FILE = "$(PROJECT_DIR)/LaunchDarkly/LaunchDarkly/Support/Info.plist";
 				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
-				MARKETING_VERSION = 5.2.0;
+				MARKETING_VERSION = 5.3.0;
 				PRODUCT_BUNDLE_IDENTIFIER = "com.launchdarkly.Darkly-watchOS";
 				PRODUCT_NAME = LaunchDarkly_watchOS;
 				SDKROOT = watchos;
@@ -1896,7 +1896,7 @@
 				GCC_C_LANGUAGE_STANDARD = gnu11;
 				INFOPLIST_FILE = "$(PROJECT_DIR)/LaunchDarkly/LaunchDarkly/Support/Info.plist";
 				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
-				MARKETING_VERSION = 5.2.0;
+				MARKETING_VERSION = 5.3.0;
 				PRODUCT_BUNDLE_IDENTIFIER = "com.launchdarkly.Darkly-watchOS";
 				PRODUCT_NAME = LaunchDarkly_watchOS;
 				SDKROOT = watchos;
