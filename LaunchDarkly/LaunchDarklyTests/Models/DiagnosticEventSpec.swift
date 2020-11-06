@@ -238,6 +238,7 @@ final class DiagnosticEventSpec: QuickSpec {
                     expect(diagnosticConfig.maxCachedUsers) == 5
                     expect(diagnosticConfig.mobileKeyCount) == 1
                     expect(diagnosticConfig.diagnosticRecordingIntervalMillis) == 900_000
+                    expect(diagnosticConfig.customHeaders) == false
                 }
             }
             context("init with custom config") {
@@ -261,6 +262,7 @@ final class DiagnosticEventSpec: QuickSpec {
                     expect(diagnosticConfig.maxCachedUsers) == -1
                     expect(diagnosticConfig.mobileKeyCount) == 3
                     expect(diagnosticConfig.diagnosticRecordingIntervalMillis) == 600_000
+                    expect(diagnosticConfig.customHeaders) == false
                 }
             }
             var diagnosticConfig: DiagnosticConfig!
@@ -273,7 +275,7 @@ final class DiagnosticEventSpec: QuickSpec {
                         context("using \(desc) encoding") {
                             it("encodes correct values to keys") {
                                 let decoded = self.loadAndRestoreRaw(scheme, diagnosticConfig)
-                                expect(decoded.count) == 17
+                                expect(decoded.count) == 18
                                 expect((decoded["customBaseURI"] as! Bool)) == diagnosticConfig.customBaseURI
                                 expect((decoded["customEventsURI"] as! Bool)) == diagnosticConfig.customEventsURI
                                 expect((decoded["customStreamURI"] as! Bool)) == diagnosticConfig.customStreamURI

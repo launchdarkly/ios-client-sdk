@@ -80,6 +80,17 @@ final class DarklyService: DarklyServiceProvider {
 
     // MARK: Feature Flags
 
+    private func requestTask(with: URLRequest, 
+                             completionHandler: @escaping (Data?, URLResponse?, Error?) -> Void
+                             ) -> URLSessionDataTask {
+        // copying the request is needed because swift passes by const reference without any real way of changing that
+        var req = with
+        if let headerDelegate = config.headerDelegate {
+            req.allHTTPHeaderFields = headerDelegate(with.url!, req.allHTTPHeaderFields ?? [:])
+        }
+        return self.session.dataTask(with: req, completionHandler: completionHandler)
+    }
+
     func getFeatureFlags(useReport: Bool, completion: ServiceCompletionHandler?) {
         guard !config.mobileKey.isEmpty,
             let flagRequest = flagRequest(useReport: useReport)
@@ -91,7 +102,7 @@ final class DarklyService: DarklyServiceProvider {
             }
             return
         }
-        let dataTask = self.session.dataTask(with: flagRequest) { [weak self] data, response, error in
+        let dataTask = requestTask(with: flagRequest) { [weak self] data, response, error in
             DispatchQueue.main.async {
                 self?.processEtag(from: (data, response, error))
                 completion?((data, response, error))
@@ -166,7 +177,9 @@ final class DarklyService: DarklyServiceProvider {
 
     // MARK: Streaming
 
-    func createEventSource(useReport: Bool, handler: EventHandler, errorHandler: ConnectionErrorHandler?) -> DarklyStreamingProvider {
+    func createEventSource(useReport: Bool, 
+                           handler: EventHandler, 
+                           errorHandler: ConnectionErrorHandler?) -> DarklyStreamingProvider {
         if useReport {
             return serviceFactory.makeStreamingProvider(url: reportStreamRequestUrl,
                                                         httpHeaders: httpHeaders.eventSourceHeaders,
@@ -175,11 +188,13 @@ final class DarklyService: DarklyServiceProvider {
                                                             .dictionaryValue(includePrivateAttributes: true, config: config)
                                                             .jsonData,
                                                         handler: handler,
+                                                        delegate: config.headerDelegate,
                                                         errorHandler: errorHandler)
         }
         return serviceFactory.makeStreamingProvider(url: getStreamRequestUrl,
                                                     httpHeaders: httpHeaders.eventSourceHeaders,
                                                     handler: handler,
+                                                    delegate: config.headerDelegate,
                                                     errorHandler: errorHandler)
     }
 
@@ -206,7 +221,7 @@ final class DarklyService: DarklyServiceProvider {
             }
             return
         }
-        let dataTask = self.session.dataTask(with: eventRequest(eventDictionaries: eventDictionaries, payloadId: payloadId)) { (data, response, error) in
+        let dataTask = requestTask(with: eventRequest(eventDictionaries: eventDictionaries, payloadId: payloadId)) { (data, response, error) in
             completion?((data, response, error))
         }
         dataTask.resume()
@@ -232,7 +247,7 @@ final class DarklyService: DarklyServiceProvider {
             Log.debug(typeName(and: #function, appending: ": ") + "Aborting. No mobile key.")
             return
         }
-        let dataTask = self.session.dataTask(with: diagnosticRequest(diagnosticEvent: diagnosticEvent)) { data, response, error in
+        let dataTask = requestTask(with: diagnosticRequest(diagnosticEvent: diagnosticEvent)) { data, response, error in
             completion?((data, response, error))
         }
         dataTask.resume()
@@ -256,9 +271,7 @@ extension DarklyService: TypeIdentifying { }
 extension URLRequest {
     mutating func appendHeaders(_ newHeaders: [String: String]) {
         var headers = self.allHTTPHeaderFields ?? [:]
-        headers.merge(newHeaders) { _, newValue in
-            newValue
-        }
+        headers.merge(newHeaders) { $1 }
         self.allHTTPHeaderFields = headers
     }
 }

@@ -100,6 +100,6 @@ struct HTTPHeaders {
     }
 
     private func withAdditionalHeaders(_ headers: [String: String]) -> [String: String] {
-        headers.merging(additionalHeaders, uniquingKeysWith: { $1 })
+        headers.merging(additionalHeaders) { $1 }
     }
 }

@@ -51,8 +51,8 @@
         "repositoryURL": "https://github.com/LaunchDarkly/swift-eventsource.git",
         "state": {
           "branch": null,
-          "revision": "4f817e1a6ce5f8bc90e06b4f19dcd999db099210",
-          "version": "1.1.0"
+          "revision": "9e224016ec5dfda7d66e0f825152f97cbe44ccb8",
+          "version": "1.2.0"
         }
       }
     ]
