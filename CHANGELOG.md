@@ -2,6 +2,10 @@
 
 All notable changes to the LaunchDarkly iOS SDK will be documented in this file. This project adheres to [Semantic Versioning](http://semver.org).
 
+## [5.3.0] - 2020-11-06
+### Added
+- Adds to `LDConfig` the ability to dynamically configure the HTTP headers on requests through the `headerDelegate` property, which has the type `RequestHeaderTransform`.
+
 ## [5.2.0] - 2020-10-09
 ### Added
 - `LDUser` now has an optional `secondary` attribute to match other LaunchDarkly SDKs. For more on the behavior of this attribute see [the documentation on targeting users](https://docs.launchdarkly.com/home/managing-flags/targeting-users).
