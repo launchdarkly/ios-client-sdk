@@ -115,6 +115,7 @@ struct DiagnosticConfig: Codable {
     let maxCachedUsers: Int
     let mobileKeyCount: Int
     let diagnosticRecordingIntervalMillis: Int
+    let customHeaders: Bool
 
     init(config: LDConfig) {
         customBaseURI = config.baseUrl != LDConfig.Defaults.baseUrl
@@ -135,5 +136,6 @@ struct DiagnosticConfig: Codable {
         maxCachedUsers = config.maxCachedUsers >= 0 ? config.maxCachedUsers : -1
         mobileKeyCount = 1 + (config.getSecondaryMobileKeys().count)
         diagnosticRecordingIntervalMillis = Int(round(config.diagnosticRecordingInterval * 1_000))
+        customHeaders = !config.additionalHeaders.isEmpty || config.headerDelegate != nil
     }
 }

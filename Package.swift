@@ -19,7 +19,7 @@ let package = Package(
         .package(url: "https://github.com/AliSoftware/OHHTTPStubs.git", .upToNextMinor(from: "9.0.0")),
         .package(url: "https://github.com/Quick/Quick.git", .upToNextMinor(from: "3.0.0")),
         .package(url: "https://github.com/Quick/Nimble.git", .upToNextMinor(from: "9.0.0")),
-        .package(url: "https://github.com/LaunchDarkly/swift-eventsource.git", .upToNextMinor(from: "1.1.0"))
+        .package(url: "https://github.com/LaunchDarkly/swift-eventsource.git", .upToNextMinor(from: "1.2.0"))
     ],
     targets: [
         .target(
@@ -32,6 +32,6 @@ let package = Package(
             dependencies: ["LaunchDarkly", "OHHTTPStubsSwift", "Quick", "Nimble"],
             path: "LaunchDarkly",
             exclude: ["LaunchDarklyTests/Info.plist", "LaunchDarklyTests/.swiftlint.yml"],
-            sources: ["GeneratedCode", "LaunchDarklyTests"])
+            sources: ["GeneratedCode", "LaunchDarklyTests"]),
     ],
     swiftLanguageVersions: [.v5])

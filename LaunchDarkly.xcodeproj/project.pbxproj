@@ -571,7 +571,7 @@
 				833631CA221B5DFA00BA53EE /* ErrorNotifierSpec.swift */,
 				8354AC75224316C700CDE602 /* Cache */,
 			);
-			path = "Service Objects";
+			path = "ServiceObjects";
 			sourceTree = "<group>";
 		};
 		83396BC71F7C3688000E256E /* Networking */ = {
@@ -885,7 +885,7 @@
 				C443A4092315AA4D00145710 /* NetworkReporter.swift */,
 				831AAE2B20A9E4F600B46DBA /* Throttler.swift */,
 			);
-			path = "Service Objects";
+			path = "ServiceObjects";
 			sourceTree = "<group>";
 		};
 		B467790E24D8AECA00897F00 /* Frameworks */ = {
@@ -1970,7 +1970,7 @@
 			repositoryURL = "https://github.com/LaunchDarkly/swift-eventsource.git";
 			requirement = {
 				kind = upToNextMinorVersion;
-				minimumVersion = 1.1.0;
+				minimumVersion = 1.2.0;
 			};
 		};
 		B4903D9624BD61B200F087C4 /* XCRemoteSwiftPackageReference "OHHTTPStubs" */ = {
