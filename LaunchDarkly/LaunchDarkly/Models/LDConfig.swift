@@ -17,6 +17,19 @@ public enum LDStreamingMode {
 
 typealias MobileKey = String
 
+
+/**
+ A callback for dynamically setting http headers when connection & reconnecting to a stream
+ or on every poll request. This function should return a copy of the headers recieved with
+ any modifications or additions needed. Removing headers is discouraged as it may cause 
+ requests to fail.
+
+ - parameter url: The endpoint that is being connected to
+ - parameter headers: The default headers that would be used
+ - returns: The headers that will be used in the request
+ */
+public typealias RequestHeaderTransform = (_ url: URL, _ headers: [String: String]) -> [String: String]
+
 /**
  Use LDConfig to configure the LDClient. When initialized, a LDConfig contains the default values which can be changed as needed.
 
@@ -89,6 +102,9 @@ public struct LDConfig {
 
         /// The default additional headers that should be added to all HTTP requests from SDK components to LaunchDarkly services
         static let additionalHeaders: [String: String] = [:]
+
+        /// a closure to allow dynamic changes of headers on connect & reconnect
+        static let headerDelegate: RequestHeaderTransform? = nil
     }
 
     /// Constants relevant to setting up an `LDConfig`
@@ -237,6 +253,9 @@ public struct LDConfig {
 
     /// Additional headers that should be added to all HTTP requests from SDK components to LaunchDarkly services
     public var additionalHeaders: [String: String] = [:]
+
+    /// a closure to allow dynamic changes of headers on connect & reconnect
+    public var headerDelegate: RequestHeaderTransform?
 
     /// LaunchDarkly defined minima for selected configurable items
     public let minima: Minima

@@ -90,16 +90,22 @@ final class ClientServiceMockFactory: ClientServiceCreating {
     }
 
     var makeStreamingProviderCallCount = 0
-    var makeStreamingProviderReceivedArguments: (url: URL, httpHeaders: [String: String], connectMethod: String?, connectBody: Data?, handler: EventHandler, errorHandler: ConnectionErrorHandler?)?
-    func makeStreamingProvider(url: URL, httpHeaders: [String: String], handler: EventHandler, errorHandler: ConnectionErrorHandler?) -> DarklyStreamingProvider {
+    var makeStreamingProviderReceivedArguments: (url: URL, 
+                                                 httpHeaders: [String: String], 
+                                                 connectMethod: String?, 
+                                                 connectBody: Data?, 
+                                                 handler: EventHandler, 
+                                                 delegate: RequestHeaderTransform?, 
+                                                 errorHandler: ConnectionErrorHandler?)?
+    func makeStreamingProvider(url: URL, httpHeaders: [String: String], handler: EventHandler, delegate: RequestHeaderTransform?, errorHandler: ConnectionErrorHandler?) -> DarklyStreamingProvider {
         makeStreamingProviderCallCount += 1
-        makeStreamingProviderReceivedArguments = (url, httpHeaders, nil, nil, handler, errorHandler)
+        makeStreamingProviderReceivedArguments = (url, httpHeaders, nil, nil, handler, delegate, errorHandler)
         return DarklyStreamingProviderMock()
     }
 
-    func makeStreamingProvider(url: URL, httpHeaders: [String: String], connectMethod: String?, connectBody: Data?, handler: EventHandler, errorHandler: ConnectionErrorHandler?) -> DarklyStreamingProvider {
+    func makeStreamingProvider(url: URL, httpHeaders: [String: String], connectMethod: String?, connectBody: Data?, handler: EventHandler, delegate: RequestHeaderTransform?, errorHandler: ConnectionErrorHandler?) -> DarklyStreamingProvider {
         makeStreamingProviderCallCount += 1
-        makeStreamingProviderReceivedArguments = (url, httpHeaders, connectMethod, connectBody, handler, errorHandler)
+        makeStreamingProviderReceivedArguments = (url, httpHeaders, connectMethod, connectBody, handler, delegate, errorHandler)
         return DarklyStreamingProviderMock()
     }
 

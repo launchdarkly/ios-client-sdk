@@ -23,8 +23,8 @@ protocol ClientServiceCreating {
     func makeFlagChangeNotifier() -> FlagChangeNotifying
     func makeEventReporter(config: LDConfig, service: DarklyServiceProvider) -> EventReporting
     func makeEventReporter(config: LDConfig, service: DarklyServiceProvider, onSyncComplete: EventSyncCompleteClosure?) -> EventReporting
-    func makeStreamingProvider(url: URL, httpHeaders: [String: String], handler: EventHandler, errorHandler: ConnectionErrorHandler?) -> DarklyStreamingProvider
-    func makeStreamingProvider(url: URL, httpHeaders: [String: String], connectMethod: String?, connectBody: Data?, handler: EventHandler, errorHandler: ConnectionErrorHandler?) -> DarklyStreamingProvider
+    func makeStreamingProvider(url: URL, httpHeaders: [String: String], handler: EventHandler, delegate: RequestHeaderTransform?, errorHandler: ConnectionErrorHandler?) -> DarklyStreamingProvider
+    func makeStreamingProvider(url: URL, httpHeaders: [String: String], connectMethod: String?, connectBody: Data?, handler: EventHandler, delegate: RequestHeaderTransform?, errorHandler: ConnectionErrorHandler?) -> DarklyStreamingProvider
     func makeEnvironmentReporter() -> EnvironmentReporting
     func makeThrottler(maxDelay: TimeInterval, environmentReporter: EnvironmentReporting) -> Throttling
     func makeErrorNotifier() -> ErrorNotifying
@@ -83,17 +83,29 @@ final class ClientServiceFactory: ClientServiceCreating {
         EventReporter(config: config, service: service, onSyncComplete: onSyncComplete)
     }
 
-    func makeStreamingProvider(url: URL, httpHeaders: [String: String], handler: EventHandler, errorHandler: ConnectionErrorHandler?) -> DarklyStreamingProvider {
+    func makeStreamingProvider(url: URL, 
+                               httpHeaders: [String: String],
+                               handler: EventHandler,
+                               delegate: RequestHeaderTransform?,
+                               errorHandler: ConnectionErrorHandler?) -> DarklyStreamingProvider {
         var config: EventSource.Config = EventSource.Config(handler: handler, url: url)
         config.headers = httpHeaders
+        config.headerTransform = { delegate?(url, $0) ?? $0 }
         if let errorHandler = errorHandler {
             config.connectionErrorHandler = errorHandler
         }
         return EventSource(config: config)
     }
 
-    func makeStreamingProvider(url: URL, httpHeaders: [String: String], connectMethod: String?, connectBody: Data?, handler: EventHandler, errorHandler: ConnectionErrorHandler?) -> DarklyStreamingProvider {
+    func makeStreamingProvider(url: URL, 
+                               httpHeaders: [String: String], 
+                               connectMethod: String?, 
+                               connectBody: Data?, 
+                               handler: EventHandler, 
+                               delegate: RequestHeaderTransform?,
+                               errorHandler: ConnectionErrorHandler?) -> DarklyStreamingProvider {
         var config: EventSource.Config = EventSource.Config(handler: handler, url: url)
+        config.headerTransform = { delegate?(url, $0) ?? $0 }
         config.headers = httpHeaders
         if let errorHandler = errorHandler {
             config.connectionErrorHandler = errorHandler
