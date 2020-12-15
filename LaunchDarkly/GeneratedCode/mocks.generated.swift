@@ -453,10 +453,10 @@ final class FlagChangeNotifyingMock: FlagChangeNotifying {
     // MARK: notifyObservers
     var notifyObserversCallCount = 0
     var notifyObserversCallback: (() -> Void)?
-    var notifyObserversReceivedArguments: (user: LDUser, oldFlags: [LDFlagKey: FeatureFlag])?
-    func notifyObservers(user: LDUser, oldFlags: [LDFlagKey: FeatureFlag]) {
+    var notifyObserversReceivedArguments: (flagStore: FlagMaintaining, oldFlags: [LDFlagKey: FeatureFlag])?
+    func notifyObservers(flagStore: FlagMaintaining, oldFlags: [LDFlagKey : FeatureFlag]) {
         notifyObserversCallCount += 1
-        notifyObserversReceivedArguments = (user: user, oldFlags: oldFlags)
+        notifyObserversReceivedArguments = (flagStore: flagStore, oldFlags: oldFlags)
         notifyObserversCallback?()
     }
 }

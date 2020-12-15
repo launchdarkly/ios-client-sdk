@@ -122,7 +122,7 @@ final class CacheableUserEnvironmentFlagsSpec: QuickSpec {
                 beforeEach {
                     testContext = TestContext()
                     cacheableUserEnvironmentsDictionary = testContext.cacheableUserEnvironmentFlags.dictionaryValue
-                    cacheableUserEnvironmentsDictionary.merge(testContext.user.dictionaryValueWithAllAttributes(includeFlagConfig: true), uniquingKeysWith: { original, _ in
+                    cacheableUserEnvironmentsDictionary.merge(testContext.user.dictionaryValueWithAllAttributes(), uniquingKeysWith: { original, _ in
                         original
                     })
 

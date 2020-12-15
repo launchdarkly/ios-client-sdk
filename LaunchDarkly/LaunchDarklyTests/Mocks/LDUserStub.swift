@@ -41,10 +41,8 @@ extension LDUser {
     }
 
     static func stub(key: String? = nil,
-                     includeNullValue: Bool = true,
-                     includeVersions: Bool = true,
                      environmentReporter: EnvironmentReportingMock? = nil) -> LDUser {
-        var user = LDUser(key: key ?? UUID().uuidString,
+        let user = LDUser(key: key ?? UUID().uuidString,
                           name: StubConstants.name,
                           firstName: StubConstants.firstName,
                           lastName: StubConstants.lastName,
@@ -57,21 +55,6 @@ extension LDUser {
                           device: environmentReporter?.deviceModel,
                           operatingSystem: environmentReporter?.systemVersion,
                           secondary: StubConstants.secondary)
-        user.flagStore = FlagMaintainingMock(flags: user.stubFlags(includeNullValue: includeNullValue, includeVersions: includeVersions))
         return user
-    }
-
-    func stubFlags(includeNullValue: Bool, includeVersions: Bool = true) -> [String: FeatureFlag] {
-        var flags = DarklyServiceMock.Constants.stubFeatureFlags(includeNullValue: includeNullValue, includeVersions: includeVersions)
-        flags[StubConstants.userKey] = FeatureFlag(flagKey: StubConstants.userKey,
-                                                   value: key,
-                                                   variation: DarklyServiceMock.Constants.variation,
-                                                   version: includeVersions ? DarklyServiceMock.Constants.version : nil,
-                                                   flagVersion: DarklyServiceMock.Constants.flagVersion,
-                                                   trackEvents: true,
-                                                   debugEventsUntilDate: Date().addingTimeInterval(30.0),
-                                                   reason: DarklyServiceMock.Constants.reason,
-                                                   trackReason: false)
-        return flags
     }
 }

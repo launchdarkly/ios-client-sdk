@@ -17,16 +17,17 @@ final class CacheableEnvironmentFlagsSpec: QuickSpec {
     }
 
     private struct TestContext {
-        var user: LDUser
+        var flagStore: FlagMaintaining
         var mobileKey = UUID().uuidString
         var cacheableEnvironmentFlags: CacheableEnvironmentFlags
+        let key = "stub.user.key"
 
         init(includeNullValue: Bool = true, emptyFeatureFlags: Bool = false) {
-            user = LDUser.stub(includeNullValue: includeNullValue)
+            flagStore = FlagMaintainingMock(flags: FlagMaintainingMock.stubFlags(includeNullValue: includeNullValue, includeVersions: true))
             if emptyFeatureFlags {
-                user.flagStore = FlagMaintainingMock(flags: [:])
+                flagStore = FlagMaintainingMock(flags: [:])
             }
-            cacheableEnvironmentFlags = CacheableEnvironmentFlags(userKey: user.key, mobileKey: mobileKey, featureFlags: user.flagStore.featureFlags)
+            cacheableEnvironmentFlags = CacheableEnvironmentFlags(userKey: key, mobileKey: mobileKey, featureFlags: flagStore.featureFlags)
         }
     }
 
@@ -49,9 +50,9 @@ final class CacheableEnvironmentFlagsSpec: QuickSpec {
                     testContext = TestContext()
                 }
                 it("creates a CacheableEnvironmentFlags with the elements") {
-                    expect(testContext.cacheableEnvironmentFlags.userKey) == testContext.user.key
+                    expect(testContext.cacheableEnvironmentFlags.userKey) == testContext.key
                     expect(testContext.cacheableEnvironmentFlags.mobileKey) == testContext.mobileKey
-                    expect(testContext.cacheableEnvironmentFlags.featureFlags) == testContext.user.flagStore.featureFlags
+                    expect(testContext.cacheableEnvironmentFlags.featureFlags) == testContext.flagStore.featureFlags
                 }
             }
         }
@@ -70,25 +71,26 @@ final class CacheableEnvironmentFlagsSpec: QuickSpec {
                     other = CacheableEnvironmentFlags(dictionary: otherDictionary)
                 }
                 it("creates a new CacheableEnvironmentFlags") {
-                    expect(other?.userKey) == testContext.user.key
+                    expect(other?.userKey) == testContext.key
                     expect(other?.mobileKey) == testContext.mobileKey
-                    expect(other?.featureFlags) == testContext.user.flagStore.featureFlags
+                    expect(other?.featureFlags) == testContext.flagStore.featureFlags
                 }
             }
             context("has other keys") {
                 beforeEach {
                     testContext = TestContext()
                     otherDictionary = testContext.cacheableEnvironmentFlags.dictionaryValue
-                    otherDictionary.merge(testContext.user.dictionaryValueWithAllAttributes(), uniquingKeysWith: { current, _ in
+                    let user = LDUser.stub()
+                    otherDictionary.merge(user.dictionaryValueWithAllAttributes(), uniquingKeysWith: { current, _ in
                         current
                     })
 
                     other = CacheableEnvironmentFlags(dictionary: otherDictionary)
                 }
                 it("creates a new CacheableEnvironmentFlags") {
-                    expect(other?.userKey) == testContext.user.key
+                    expect(other?.userKey) == testContext.key
                     expect(other?.mobileKey) == testContext.mobileKey
-                    expect(other?.featureFlags) == testContext.user.flagStore.featureFlags
+                    expect(other?.featureFlags) == testContext.flagStore.featureFlags
                 }
             }
             context("missing an element") {
@@ -181,9 +183,9 @@ final class CacheableEnvironmentFlagsSpec: QuickSpec {
                     cacheableEnvironmentFlagsDictionary = testContext.cacheableEnvironmentFlags.dictionaryValue
                 }
                 it("creates a dictionary with the elements") {
-                    expect(cacheableEnvironmentFlagsDictionary.userKey) == testContext.user.key
+                    expect(cacheableEnvironmentFlagsDictionary.userKey) == testContext.key
                     expect(cacheableEnvironmentFlagsDictionary.mobileKey) == testContext.mobileKey
-                    expect(cacheableEnvironmentFlagsDictionary.featureFlags) == testContext.user.flagStore.featureFlags
+                    expect(cacheableEnvironmentFlagsDictionary.featureFlags) == testContext.flagStore.featureFlags
                 }
             }
             context("without feature flags") {
@@ -193,7 +195,7 @@ final class CacheableEnvironmentFlagsSpec: QuickSpec {
                     cacheableEnvironmentFlagsDictionary = testContext.cacheableEnvironmentFlags.dictionaryValue
                 }
                 it("creates a dictionary with the elements") {
-                    expect(cacheableEnvironmentFlagsDictionary.userKey) == testContext.user.key
+                    expect(cacheableEnvironmentFlagsDictionary.userKey) == testContext.key
                     expect(cacheableEnvironmentFlagsDictionary.mobileKey) == testContext.mobileKey
                     expect(cacheableEnvironmentFlagsDictionary.featureFlags?.isEmpty) == true
                 }
@@ -208,9 +210,9 @@ final class CacheableEnvironmentFlagsSpec: QuickSpec {
             context("when elements are equal") {
                 beforeEach {
                     testContext = TestContext()
-                    other = CacheableEnvironmentFlags(userKey: testContext.user.key,
+                    other = CacheableEnvironmentFlags(userKey: testContext.key,
                                                       mobileKey: testContext.mobileKey,
-                                                      featureFlags: testContext.user.flagStore.featureFlags)
+                                                      featureFlags: testContext.flagStore.featureFlags)
                 }
                 it("returns true") {
                     expect(testContext.cacheableEnvironmentFlags == other) == true
@@ -222,7 +224,7 @@ final class CacheableEnvironmentFlagsSpec: QuickSpec {
                         testContext = TestContext()
                         other = CacheableEnvironmentFlags(userKey: UUID().uuidString,
                                                           mobileKey: testContext.mobileKey,
-                                                          featureFlags: testContext.user.flagStore.featureFlags)
+                                                          featureFlags: testContext.flagStore.featureFlags)
                     }
                     it("returns false") {
                         expect(testContext.cacheableEnvironmentFlags == other) == false
@@ -231,9 +233,9 @@ final class CacheableEnvironmentFlagsSpec: QuickSpec {
                 context("when the mobileKey differs") {
                     beforeEach {
                         testContext = TestContext()
-                        other = CacheableEnvironmentFlags(userKey: testContext.user.key,
+                        other = CacheableEnvironmentFlags(userKey: testContext.key,
                                                           mobileKey: UUID().uuidString,
-                                                          featureFlags: testContext.user.flagStore.featureFlags)
+                                                          featureFlags: testContext.flagStore.featureFlags)
                     }
                     it("returns false") {
                         expect(testContext.cacheableEnvironmentFlags == other) == false
@@ -242,9 +244,9 @@ final class CacheableEnvironmentFlagsSpec: QuickSpec {
                 context("when the featureFlags differ") {
                     beforeEach {
                         testContext = TestContext()
-                        var otherFlags = testContext.user.flagStore.featureFlags
+                        var otherFlags = testContext.flagStore.featureFlags
                         otherFlags.removeValue(forKey: otherFlags.first!.key)
-                        other = CacheableEnvironmentFlags(userKey: testContext.user.key,
+                        other = CacheableEnvironmentFlags(userKey: testContext.key,
                                                           mobileKey: testContext.mobileKey,
                                                           featureFlags: otherFlags)
                     }
