@@ -8,22 +8,14 @@
     <script src="../js/jquery.min.js" defer></script>
     <script src="../js/jazzy.js" defer></script>
     
-    <script src="../js/lunr.min.js" defer></script>
-    <script src="../js/typeahead.jquery.js" defer></script>
-    <script src="../js/jazzy.search.js" defer></script>
   </head>
   <body>
     <a name="//apple_ref/swift/Struct/LDUser" class="dashAnchor"></a>
     <a title="LDUser Structure Reference"></a>
     <header>
       <div class="content-wrapper">
-        <p><a href="../index.html">LaunchDarkly 5.3.0 Docs</a> (83% documented)</p>
+        <p><a href="../index.html">LaunchDarkly 5.3.1 Docs</a> (83% documented)</p>
         <p class="header-right"><a href="https://github.com/launchdarkly/ios-client-sdk"><img src="../img/gh.png"/>View on GitHub</a></p>
-        <p class="header-right">
-          <form role="search" action="../search.json">
-            <input type="text" placeholder="Search documentation" data-typeahead>
-          </form>
-        </p>
       </div>
     </header>
     <div class="content-wrapper">
@@ -215,17 +207,14 @@
             <h1>LDUser</h1>
               <div class="declaration">
                 <div class="language">
-                  
                   <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">struct</span> <span class="kt">LDUser</span></code></pre>
 <pre class="highlight swift"><code><span class="kd">extension</span> <span class="kt">LDUser</span><span class="p">:</span> <span class="kt">Equatable</span></code></pre>
 
                 </div>
               </div>
-            <p>LDUser allows clients to collect information about users in order to refine the feature flag values sent to the SDK. For example, the client app may launch with the SDK defined anonymous user. As the user works with the client app, information may be collected as needed and sent to LaunchDarkly. The client app controls the information collected, which LaunchDarkly does not use except as the client directs to refine feature flags. Client apps should follow <a href="apple.com/legal/privacy">Apple&rsquo;s Privacy Policy</a> when collecting user information.</p>
-
-<p>The SDK caches last known feature flags for use on app startup to provide continuity with the last app run. Provided the LDClient is online and can establish a connection with LaunchDarkly servers, cached information will only be used a very short time. Once the latest feature flags arrive at the SDK, the SDK no longer uses cached feature flags. The SDK retains feature flags on the last 5 client defined users. The SDK will retain feature flags until they are overwritten by a different user&rsquo;s feature flags, or until the user removes the app from the device.</p>
-
-<p>The SDK does not cache user information collected, except for the user key. The user key is used to identify the cached feature flags for that user. Client app developers should use caution not to use sensitive user information as the user-key.</p>
+            <p>LDUser allows clients to collect information about users in order to refine the feature flag values sent to the SDK. For example, the client app may launch with the SDK defined anonymous user. As the user works with the client app, information may be collected as needed and sent to LaunchDarkly. The client app controls the information collected, which LaunchDarkly does not use except as the client directs to refine feature flags. Client apps should follow <a href="apple.com/legal/privacy">Apple&rsquo;s Privacy Policy</a> when collecting user information.
+The SDK caches last known feature flags for use on app startup to provide continuity with the last app run. Provided the LDClient is online and can establish a connection with LaunchDarkly servers, cached information will only be used a very short time. Once the latest feature flags arrive at the SDK, the SDK no longer uses cached feature flags. The SDK retains feature flags on the last 5 client defined users. The SDK will retain feature flags until they are overwritten by a different user&rsquo;s feature flags, or until the user removes the app from the device.
+The SDK does not cache user information collected, except for the user key. The user key is used to identify the cached feature flags for that user. Client app developers should use caution not to use sensitive user information as the user-key.</p>
 
           </section>
           <section class="section task-group-section">
@@ -272,11 +261,9 @@
                     <section class="section">
                       <div class="pointer"></div>
                       <div class="abstract">
-                        <p>LDUser attributes that can be marked private.</p>
-
-<p>The SDK will not include private attribute values in analytics events, but private attribute names will be sent.</p>
-
-<p>See Also: <code><a href="../Structs/LDConfig.html#/s:12LaunchDarkly8LDConfigV24allUserAttributesPrivateSbvp">LDConfig.allUserAttributesPrivate</a></code>, <code><a href="../Structs/LDConfig.html#/s:12LaunchDarkly8LDConfigV21privateUserAttributesSaySSGSgvp">LDConfig.privateUserAttributes</a></code>, and <code><a href="../Structs/LDUser.html#/s:12LaunchDarkly6LDUserV17privateAttributesSaySSGSgvp">privateAttributes</a></code>.</p>
+                        <p>LDUser attributes that can be marked private.
+The SDK will not include private attribute values in analytics events, but private attribute names will be sent.
+See Also: <code><a href="../Structs/LDConfig.html#/s:12LaunchDarkly8LDConfigV24allUserAttributesPrivateSbvp">LDConfig.allUserAttributesPrivate</a></code>, <code><a href="../Structs/LDConfig.html#/s:12LaunchDarkly8LDConfigV21privateUserAttributesSaySSGSgvp">LDConfig.privateUserAttributes</a></code>, and <code><a href="../Structs/LDUser.html#/s:12LaunchDarkly6LDUserV17privateAttributesSaySSGSgvp">privateAttributes</a></code>.</p>
 
                       </div>
                       <div class="declaration">
@@ -654,13 +641,10 @@
                     <section class="section">
                       <div class="pointer"></div>
                       <div class="abstract">
-                        <p>Client app defined privateAttributes for the user.</p>
-
-<p>The SDK will not include private attribute values in analytics events, but private attribute names will be sent.</p>
-
-<p>This attribute is ignored if <code><a href="../Structs/LDConfig.html#/s:12LaunchDarkly8LDConfigV24allUserAttributesPrivateSbvp">LDConfig.allUserAttributesPrivate</a></code> is true. Combined with <code><a href="../Structs/LDConfig.html#/s:12LaunchDarkly8LDConfigV21privateUserAttributesSaySSGSgvp">LDConfig.privateUserAttributes</a></code>. The SDK considers attributes appearing in either list as private. Client apps may define attributes found in <code><a href="../Structs/LDUser.html#/s:12LaunchDarkly6LDUserV22privatizableAttributesSaySSGvpZ">privatizableAttributes</a></code> and top level <code><a href="../Structs/LDUser.html#/s:12LaunchDarkly6LDUserV6customSDySSypGSgvp">custom</a></code> dictionary keys here. (Default: nil)</p>
-
-<p>See Also: <code><a href="../Structs/LDConfig.html#/s:12LaunchDarkly8LDConfigV24allUserAttributesPrivateSbvp">LDConfig.allUserAttributesPrivate</a></code> and <code><a href="../Structs/LDConfig.html#/s:12LaunchDarkly8LDConfigV21privateUserAttributesSaySSGSgvp">LDConfig.privateUserAttributes</a></code>.</p>
+                        <p>Client app defined privateAttributes for the user.
+The SDK will not include private attribute values in analytics events, but private attribute names will be sent.
+This attribute is ignored if <code><a href="../Structs/LDConfig.html#/s:12LaunchDarkly8LDConfigV24allUserAttributesPrivateSbvp">LDConfig.allUserAttributesPrivate</a></code> is true. Combined with <code><a href="../Structs/LDConfig.html#/s:12LaunchDarkly8LDConfigV21privateUserAttributesSaySSGSgvp">LDConfig.privateUserAttributes</a></code>. The SDK considers attributes appearing in either list as private. Client apps may define attributes found in <code><a href="../Structs/LDUser.html#/s:12LaunchDarkly6LDUserV22privatizableAttributesSaySSGvpZ">privatizableAttributes</a></code> and top level <code><a href="../Structs/LDUser.html#/s:12LaunchDarkly6LDUserV6customSDySSypGSgvp">custom</a></code> dictionary keys here. (Default: nil)
+See Also: <code><a href="../Structs/LDConfig.html#/s:12LaunchDarkly8LDConfigV24allUserAttributesPrivateSbvp">LDConfig.allUserAttributesPrivate</a></code> and <code><a href="../Structs/LDConfig.html#/s:12LaunchDarkly8LDConfigV21privateUserAttributesSaySSGSgvp">LDConfig.privateUserAttributes</a></code>.</p>
 
                       </div>
                       <div class="declaration">
@@ -929,7 +913,7 @@
                     <section class="section">
                       <div class="pointer"></div>
                       <div class="abstract">
-                        <p>Initializer that takes a [String: Any] and creates a LDUser from the contents. Uses any keys present to define corresponding attribute values. Initializes attributes not present in the dictionary to their default value. Attempts to set <code><a href="../Structs/LDUser.html#/s:12LaunchDarkly6LDUserV6deviceSSSgvp">device</a></code> and <code><a href="../Structs/LDUser.html#/s:12LaunchDarkly6LDUserV15operatingSystemSSSgvp">operatingSystem</a></code> from corresponding values embedded in <code><a href="../Structs/LDUser.html#/s:12LaunchDarkly6LDUserV6customSDySSypGSgvp">custom</a></code>. Attempts to set feature flags from values set in <code>config</code>.</p>
+                        <p>Initializer that takes a [String: Any] and creates a LDUser from the contents. Uses any keys present to define corresponding attribute values. Initializes attributes not present in the dictionary to their default value. Attempts to set <code><a href="../Structs/LDUser.html#/s:12LaunchDarkly6LDUserV6deviceSSSgvp">device</a></code> and <code><a href="../Structs/LDUser.html#/s:12LaunchDarkly6LDUserV15operatingSystemSSSgvp">operatingSystem</a></code> from corresponding values embedded in <code><a href="../Structs/LDUser.html#/s:12LaunchDarkly6LDUserV6customSDySSypGSgvp">custom</a></code>. DEPRECATED: Attempts to set feature flags from values set in <code>config</code>. </p>
 
                       </div>
                       <div class="declaration">
@@ -995,7 +979,7 @@
         </section>
         <section id="footer">
           <p>Copyright © 2019 Catamorphic Co.</p>
-          <p>Generated by <a class="link" href="https://github.com/realm/jazzy" target="_blank" rel="external">jazzy ♪♫ v0.13.5</a>, a <a class="link" href="https://realm.io" target="_blank" rel="external">Realm</a> project.</p>
+          <p>Generated by <a class="link" href="https://github.com/realm/jazzy" target="_blank" rel="external">jazzy ♪♫ v0.13.3</a>, a <a class="link" href="https://realm.io" target="_blank" rel="external">Realm</a> project.</p>
         </section>
       </article>
     </div>
