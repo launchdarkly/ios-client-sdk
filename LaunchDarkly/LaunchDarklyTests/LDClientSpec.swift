@@ -58,7 +58,7 @@ final class LDClientSpec: QuickSpec {
             subject.cacheConverter as? CacheConvertingMock
         }
         var flagStoreMock: FlagMaintainingMock! {
-            user.flagStore as? FlagMaintainingMock
+            subject.flagStore as? FlagMaintainingMock
         }
         var flagSynchronizerMock: LDFlagSynchronizingMock! {
             subject.flagSynchronizer as? LDFlagSynchronizingMock
@@ -122,14 +122,16 @@ final class LDClientSpec: QuickSpec {
             config.enableBackgroundUpdates = enableBackgroundUpdates
             config.eventFlushInterval = 300.0   //5 min...don't want this to trigger
             user = newUser ?? LDUser.stub()
-            oldFlags = user.flagStore.featureFlags
+            let stubFlags = FlagMaintainingMock(flags: FlagMaintainingMock.stubFlags(includeNullValue: true, includeVersions: true))
+            clientServiceFactory.makeFlagStoreReturnValue = stubFlags
+            oldFlags = stubFlags.featureFlags
 
             let flagNotifier = (ClientServiceFactory().makeFlagChangeNotifier() as! FlagChangeNotifier)
             
             LDClient.start(serviceFactory: clientServiceFactory, config: config, user: noUser ? nil : user, flagCache: clientServiceFactory.makeFeatureFlagCache(), flagNotifier: flagNotifier) {
                 self.startCompletion(runMode: runMode, completion: completion)
             }
-            flagNotifier.notifyObservers(user: self.user, oldFlags: self.oldFlags)
+            flagNotifier.notifyObservers(flagStore: stubFlags, oldFlags: self.oldFlags)
         }
         
         init(newUser: LDUser? = nil,
@@ -155,7 +157,9 @@ final class LDClientSpec: QuickSpec {
             config.enableBackgroundUpdates = enableBackgroundUpdates
             config.eventFlushInterval = 300.0   //5 min...don't want this to trigger
             user = newUser ?? LDUser.stub()
-            oldFlags = user.flagStore.featureFlags
+            let stubFlags = FlagMaintainingMock(flags: FlagMaintainingMock.stubFlags(includeNullValue: true, includeVersions: true))
+            clientServiceFactory.makeFlagStoreReturnValue = stubFlags
+            oldFlags = stubFlags.featureFlags
 
             let flagNotifier = (ClientServiceFactory().makeFlagChangeNotifier() as! FlagChangeNotifier)
             
@@ -163,7 +167,7 @@ final class LDClientSpec: QuickSpec {
                 self.startCompletion(runMode: runMode, timedOut: timedOut, timeOutCompletion: timeOutCompletion)
             }
             if !forceTimeout {
-                flagNotifier.notifyObservers(user: self.user, oldFlags: self.oldFlags)
+                flagNotifier.notifyObservers(flagStore: stubFlags, oldFlags: self.oldFlags)
             }
         }
 
@@ -404,8 +408,8 @@ final class LDClientSpec: QuickSpec {
                         }
 
                         waitUntil { done in
-                            testContext.subject.internalIdentify(newUser: testContext.user, testing: true, completion: done)
-                            testContext.subject.flagChangeNotifier.notifyObservers(user: testContext.user, oldFlags: testContext.oldFlags)
+                            testContext.subject.internalIdentify(newUser: testContext.user, completion: done)
+                            testContext.subject.flagChangeNotifier.notifyObservers(flagStore: testContext.flagStoreMock, oldFlags: testContext.oldFlags)
                         }
                     }
                     it("saves the config") {
@@ -484,11 +488,11 @@ final class LDClientSpec: QuickSpec {
                     waitUntil { done in
                         testContext = TestContext(startOnline: false, completion: done)
                     }
-                    testContext.featureFlagCachingMock.retrieveFeatureFlagsReturnValue = testContext.user.flagStore.featureFlags
-                    retrievedFlags = testContext.user.flagStore.featureFlags
+                    testContext.featureFlagCachingMock.retrieveFeatureFlagsReturnValue = testContext.flagStoreMock.featureFlags
+                    retrievedFlags = testContext.flagStoreMock.featureFlags
                     testContext.flagStoreMock.featureFlags = [:]
                     waitUntil { done in
-                        testContext.subject.internalIdentify(newUser: testContext.user, testing: true, completion: done)
+                        testContext.subject.internalIdentify(newUser: testContext.user, completion: done)
                     }
                 }
                 it("checks the flag cache for the user and environment") {
@@ -653,7 +657,7 @@ final class LDClientSpec: QuickSpec {
                             waitUntil(timeout: .seconds(10)) { done in
                                 testContext.subject.setService(ClientServiceMockFactory().makeDarklyServiceProvider(config: testContext.subject.config, user: testContext.subject.user))
                                 testContext.subject.setOnline(true, completion: done)
-                                testContext.subject.flagChangeNotifier.notifyObservers(user: testContext.user, oldFlags: testContext.oldFlags)
+                                testContext.subject.flagChangeNotifier.notifyObservers(flagStore: testContext.flagStoreMock, oldFlags: testContext.oldFlags)
                             }
                         }
                         it("takes the client and service objects online when background enabled") {
@@ -707,7 +711,7 @@ final class LDClientSpec: QuickSpec {
                             }
                             waitUntil(timeout: .seconds(10)) { done in
                                 testContext.subject.setOnline(true, completion: done)
-                                testContext.subject.flagChangeNotifier.notifyObservers(user: testContext.user, oldFlags: testContext.oldFlags)
+                                testContext.subject.flagChangeNotifier.notifyObservers(flagStore: testContext.flagStoreMock, oldFlags: testContext.oldFlags)
                             }
                         }
                         it("leaves the client and service objects offline") {
@@ -760,7 +764,7 @@ final class LDClientSpec: QuickSpec {
                         }
                         
                         waitUntil { done in
-                            testContext.subject.internalIdentify(newUser: testContext.user, testing: true, completion: done)
+                            testContext.subject.internalIdentify(newUser: testContext.user, completion: done)
                         }
                     }
                     it("saves the config") {
@@ -845,11 +849,11 @@ final class LDClientSpec: QuickSpec {
                             done()
                         }
                     }
-                    testContext.featureFlagCachingMock.retrieveFeatureFlagsReturnValue = testContext.user.flagStore.featureFlags
-                    retrievedFlags = testContext.user.flagStore.featureFlags
+                    testContext.featureFlagCachingMock.retrieveFeatureFlagsReturnValue = testContext.flagStoreMock.featureFlags
+                    retrievedFlags = testContext.flagStoreMock.featureFlags
                     testContext.flagStoreMock.featureFlags = [:]
                     waitUntil { done in
-                        testContext.subject.internalIdentify(newUser: testContext.user, testing: true, completion: done)
+                        testContext.subject.internalIdentify(newUser: testContext.user, completion: done)
                     }
                 }
                 it("checks the flag cache for the user and environment") {
@@ -898,6 +902,7 @@ final class LDClientSpec: QuickSpec {
 
         describe("identify") {
             var newUser: LDUser!
+            var stubFlags: FlagMaintainingMock!
             context("when the client is online") {
                 beforeEach {
                     waitUntil { done in
@@ -908,8 +913,8 @@ final class LDClientSpec: QuickSpec {
                     
                     newUser = LDUser.stub()
                     waitUntil(timeout: .seconds(5)) { done in
-                        testContext.subject.internalIdentify(newUser: newUser, testing: true, completion: done)
-                        testContext.subject.flagChangeNotifier.notifyObservers(user: testContext.user, oldFlags: testContext.oldFlags)
+                        testContext.subject.internalIdentify(newUser: newUser, completion: done)
+                        testContext.subject.flagChangeNotifier.notifyObservers(flagStore: testContext.flagStoreMock, oldFlags: testContext.oldFlags)
                     }
                 }
                 it("changes to the new user") {
@@ -948,7 +953,7 @@ final class LDClientSpec: QuickSpec {
 
                     newUser = LDUser.stub()
                     waitUntil { done in
-                        testContext.subject.internalIdentify(newUser: newUser, testing: true, completion: done)
+                        testContext.subject.internalIdentify(newUser: newUser, completion: done)
                     }
                 }
                 it("changes to the new user") {
@@ -985,17 +990,19 @@ final class LDClientSpec: QuickSpec {
                     }
                     testContext.featureFlagCachingMock.reset()
                     newUser = LDUser.stub()
-                    testContext.featureFlagCachingMock.retrieveFeatureFlagsReturnValue = newUser.featureFlags
+                    stubFlags = FlagMaintainingMock(flags: FlagMaintainingMock.stubFlags(includeNullValue: true, includeVersions: true))
+
+                    testContext.featureFlagCachingMock.retrieveFeatureFlagsReturnValue = stubFlags.featureFlags
                     testContext.cacheConvertingMock.reset()
 
                     waitUntil { done in
-                        testContext.subject.internalIdentify(newUser: newUser, testing: true, completion: done)
+                        testContext.subject.internalIdentify(newUser: newUser, completion: done)
                     }
                 }
                 it("restores the cached users feature flags") {
                     expect(testContext.subject.user) == newUser
-                    expect(newUser.flagStoreMock.replaceStoreCallCount) == 1
-                    expect(newUser.flagStoreMock.replaceStoreReceivedArguments?.newFlags?.flagCollection) == newUser.featureFlags
+                    expect(testContext.flagStoreMock.replaceStoreCallCount) == 1
+                    expect(testContext.flagStoreMock.replaceStoreReceivedArguments?.newFlags?.flagCollection) == stubFlags?.featureFlags
                 }
                 it("converts cached data") {
                     expect(testContext.cacheConvertingMock.convertCacheDataCallCount) == 1
@@ -1021,7 +1028,7 @@ final class LDClientSpec: QuickSpec {
                             testContext.subject.setOnline(true) {
                                 done()
                             }
-                            testContext.subject.flagChangeNotifier.notifyObservers(user: testContext.user, oldFlags: testContext.oldFlags)
+                            testContext.subject.flagChangeNotifier.notifyObservers(flagStore: testContext.flagStoreMock, oldFlags: testContext.oldFlags)
                         }
                     }
                     it("sets the client and service objects online") {
@@ -1064,7 +1071,7 @@ final class LDClientSpec: QuickSpec {
                                     waitUntil(timeout: .seconds(10)) { done in
                                         testContext.subject.setService(ClientServiceMockFactory().makeDarklyServiceProvider(config: testContext.subject.config, user: testContext.subject.user))
                                         testContext.subject.setOnline(true, completion: done)
-                                        testContext.subject.flagChangeNotifier.notifyObservers(user: testContext.user, oldFlags: testContext.oldFlags)
+                                        testContext.subject.flagChangeNotifier.notifyObservers(flagStore: testContext.flagStoreMock, oldFlags: testContext.oldFlags)
                                     }
                                 }
                                 it("takes the client and service objects online") {
@@ -1579,7 +1586,7 @@ final class LDClientSpec: QuickSpec {
         context("flags have different values") {
             beforeEach {
                 let newBoolFeatureFlag = DarklyServiceMock.Constants.stubFeatureFlag(for: DarklyServiceMock.FlagKeys.bool, useAlternateValue: true)
-                newFlags = testContext.user.flagStore.featureFlags
+                newFlags = testContext.flagStoreMock.featureFlags
                 newFlags[DarklyServiceMock.FlagKeys.bool] = newBoolFeatureFlag
                 testContext.setFlagStoreCallbackToMimicRealFlagStore(newFlags: newFlags)
 
@@ -1590,7 +1597,7 @@ final class LDClientSpec: QuickSpec {
                 }
             }
             it("updates the flag store") {
-                expect(testContext.subject.user.flagStoreMock.replaceStoreCallCount) == 1
+                expect(testContext.flagStoreMock.replaceStoreCallCount) == 1
                 expect(testContext.flagStoreMock.replaceStoreReceivedArguments?.newFlags == newFlags).to(beTrue())
             }
             it("caches the new flags") {
@@ -1603,13 +1610,13 @@ final class LDClientSpec: QuickSpec {
             }
             it("informs the flag change notifier of the changed flags") {
                 expect(testContext.changeNotifierMock.notifyObserversCallCount) == 1
-                expect(testContext.changeNotifierMock.notifyObserversReceivedArguments?.user) == testContext.user
+                expect(testContext.changeNotifierMock.notifyObserversReceivedArguments?.flagStore.featureFlags) == testContext.flagStoreMock.featureFlags
                 expect(testContext.changeNotifierMock.notifyObserversReceivedArguments?.oldFlags == testContext.oldFlags).to(beTrue())
             }
         }
         context("a flag was added") {
             beforeEach {
-                newFlags = testContext.user.flagStore.featureFlags
+                newFlags = testContext.flagStoreMock.featureFlags
                 newFlags[Constants.newFlagKey] = DarklyServiceMock.Constants.stubFeatureFlag(for: DarklyServiceMock.FlagKeys.string, useAlternateValue: true)
                 testContext.setFlagStoreCallbackToMimicRealFlagStore(newFlags: newFlags)
                 
@@ -1633,13 +1640,13 @@ final class LDClientSpec: QuickSpec {
             }
             it("informs the flag change notifier of the changed flags") {
                 expect(testContext.changeNotifierMock.notifyObserversCallCount) == 1
-                expect(testContext.changeNotifierMock.notifyObserversReceivedArguments?.user) == testContext.user
+                expect(testContext.changeNotifierMock.notifyObserversReceivedArguments?.flagStore.featureFlags) == testContext.flagStoreMock.featureFlags
                 expect(testContext.changeNotifierMock.notifyObserversReceivedArguments?.oldFlags == testContext.oldFlags).to(beTrue())
             }
         }
         context("a flag was removed") {
             beforeEach {
-                newFlags = testContext.user.flagStore.featureFlags
+                newFlags = testContext.flagStoreMock.featureFlags
                 newFlags.removeValue(forKey: DarklyServiceMock.FlagKeys.dictionary)
                 testContext.setFlagStoreCallbackToMimicRealFlagStore(newFlags: newFlags)
 
@@ -1663,13 +1670,13 @@ final class LDClientSpec: QuickSpec {
             }
             it("informs the flag change notifier of the changed flags") {
                 expect(testContext.changeNotifierMock.notifyObserversCallCount) == 1
-                expect(testContext.changeNotifierMock.notifyObserversReceivedArguments?.user) == testContext.user
+                expect(testContext.changeNotifierMock.notifyObserversReceivedArguments?.flagStore.featureFlags) == testContext.flagStoreMock.featureFlags
                 expect(testContext.changeNotifierMock.notifyObserversReceivedArguments?.oldFlags == testContext.oldFlags).to(beTrue())
             }
         }
         context("there were no changes to the flags") {
             beforeEach {
-                newFlags = testContext.user.flagStore.featureFlags
+                newFlags = testContext.flagStoreMock.featureFlags
                 testContext.setFlagStoreCallbackToMimicRealFlagStore(newFlags: newFlags)
 
                 testContext.subject.flagChangeNotifier = ClientServiceMockFactory().makeFlagChangeNotifier()
@@ -1693,7 +1700,7 @@ final class LDClientSpec: QuickSpec {
             }
             it("informs the flag change notifier of the unchanged flags") {
                 expect(testContext.changeNotifierMock.notifyObserversCallCount) == 1
-                expect(testContext.changeNotifierMock.notifyObserversReceivedArguments?.user) == testContext.user
+                expect(testContext.changeNotifierMock.notifyObserversReceivedArguments?.flagStore.featureFlags) == testContext.flagStoreMock.featureFlags
                 expect(testContext.changeNotifierMock.notifyObserversReceivedArguments?.oldFlags == testContext.oldFlags).to(beTrue())
             }
         }
@@ -1745,7 +1752,7 @@ final class LDClientSpec: QuickSpec {
             }
             it("informs the flag change notifier of the changed flag") {
                 expect(testContext.changeNotifierMock.notifyObserversCallCount) == 1
-                expect(testContext.changeNotifierMock.notifyObserversReceivedArguments?.user) == testContext.user
+                expect(testContext.changeNotifierMock.notifyObserversReceivedArguments?.flagStore.featureFlags) == testContext.flagStoreMock.featureFlags
                 expect(testContext.changeNotifierMock.notifyObserversReceivedArguments?.oldFlags == oldFlags).to(beTrue())
             }
         }
@@ -1779,7 +1786,7 @@ final class LDClientSpec: QuickSpec {
             }
             it("informs the flag change notifier of the unchanged flag") {
                 expect(testContext.changeNotifierMock.notifyObserversCallCount) == 1
-                expect(testContext.changeNotifierMock.notifyObserversReceivedArguments?.user) == testContext.user
+                expect(testContext.changeNotifierMock.notifyObserversReceivedArguments?.flagStore.featureFlags) == testContext.flagStoreMock.featureFlags
                 expect(testContext.changeNotifierMock.notifyObserversReceivedArguments?.oldFlags == oldFlags).to(beTrue())
             }
         }
@@ -1827,7 +1834,7 @@ final class LDClientSpec: QuickSpec {
             }
             it("informs the flag change notifier of the changed flag") {
                 expect(testContext.changeNotifierMock.notifyObserversCallCount) == 1
-                expect(testContext.changeNotifierMock.notifyObserversReceivedArguments?.user) == testContext.user
+                expect(testContext.changeNotifierMock.notifyObserversReceivedArguments?.flagStore.featureFlags) == testContext.flagStoreMock.featureFlags
                 expect(testContext.changeNotifierMock.notifyObserversReceivedArguments?.oldFlags == oldFlags).to(beTrue())
             }
         }
@@ -1857,7 +1864,7 @@ final class LDClientSpec: QuickSpec {
             }
             it("informs the flag change notifier of the unchanged flag") {
                 expect(testContext.changeNotifierMock.notifyObserversCallCount) == 1
-                expect(testContext.changeNotifierMock.notifyObserversReceivedArguments?.user) == testContext.user
+                expect(testContext.changeNotifierMock.notifyObserversReceivedArguments?.flagStore.featureFlags) == testContext.flagStoreMock.featureFlags
                 expect(testContext.changeNotifierMock.notifyObserversReceivedArguments?.oldFlags == oldFlags).to(beTrue())
             }
         }
@@ -2432,7 +2439,7 @@ final class LDClientSpec: QuickSpec {
                     waitUntil { done in
                         testContext = TestContext(completion: done)
                     }
-                    featureFlags = testContext.subject.user.flagStore.featureFlags
+                    featureFlags = testContext.subject.flagStore.featureFlags
                     featureFlagValues = testContext.subject.allFlags
                 }
                 it("returns a matching dictionary of flag keys and values") {
@@ -2532,12 +2539,6 @@ extension FeatureFlagCachingMock {
 extension OperatingSystem {
     var backgroundStreamingMode: LDStreamingMode {
         self == .macOS ? .streaming : .polling
-    }
-}
-
-extension LDUser {
-    var flagStoreMock: FlagMaintainingMock {
-        flagStore as! FlagMaintainingMock
     }
 }
 

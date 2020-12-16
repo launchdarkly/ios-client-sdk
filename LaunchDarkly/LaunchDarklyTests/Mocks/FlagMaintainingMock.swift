@@ -58,4 +58,19 @@ extension FlagMaintainingMock {
         }
         return deleteDictionary
     }
+
+
+    static func stubFlags(includeNullValue: Bool = true, includeVersions: Bool = true) -> [String: FeatureFlag] {
+        var flags = DarklyServiceMock.Constants.stubFeatureFlags(includeNullValue: includeNullValue, includeVersions: includeVersions)
+        flags["userKey"] = FeatureFlag(flagKey: "userKey",
+                                       value: UUID().uuidString,
+                                       variation: DarklyServiceMock.Constants.variation,
+                                       version: includeVersions ? DarklyServiceMock.Constants.version : nil,
+                                       flagVersion: DarklyServiceMock.Constants.flagVersion,
+                                       trackEvents: true,
+                                       debugEventsUntilDate: Date().addingTimeInterval(30.0),
+                                       reason: DarklyServiceMock.Constants.reason,
+                                       trackReason: false)
+        return flags
+    }
 }

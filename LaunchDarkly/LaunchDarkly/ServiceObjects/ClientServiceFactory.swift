@@ -31,6 +31,7 @@ protocol ClientServiceCreating {
     func makeConnectionInformation() -> ConnectionInformation
     func makeDiagnosticCache(sdkKey: String) -> DiagnosticCaching
     func makeDiagnosticReporter(service: DarklyServiceProvider, runMode: LDClientRunMode) -> DiagnosticReporting
+    func makeFlagStore() -> FlagMaintaining
 }
 
 final class ClientServiceFactory: ClientServiceCreating {
@@ -141,5 +142,9 @@ final class ClientServiceFactory: ClientServiceCreating {
 
     func makeDiagnosticReporter(service: DarklyServiceProvider, runMode: LDClientRunMode) -> DiagnosticReporting {
         DiagnosticReporter(service: service, runMode: runMode)
+    }
+
+    func makeFlagStore() -> FlagMaintaining {
+        FlagStore()
     }
 }

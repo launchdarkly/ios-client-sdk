@@ -180,7 +180,6 @@ final class UserEnvironmentFlagCacheSpec: QuickSpec {
                 storingUser = testContext.selectedUser
                 storingMobileKey = (CacheableUserEnvironmentFlags.Constants.environmentCount + 1).mobileKey
                 newFeatureFlags = [Constants.newFlagKey: FeatureFlag.stub(flagKey: Constants.newFlagKey, flagValue: Constants.newFlagValue)]
-                storingUser.flagStore = FlagMaintainingMock(flags: newFeatureFlags)
                 storingLastUpdated = Date()
             }
             it("stores the users flags") {
@@ -242,6 +241,7 @@ final class UserEnvironmentFlagCacheSpec: QuickSpec {
         var storingLastUpdated: Date!
         var userCount: Int!
         var newFeatureFlags: [LDFlagKey: FeatureFlag]!
+        var flagStore: FlagMaintaining!
 
         describe("storeFeatureFlags") {
             context("when no user flags are stored") {
@@ -249,12 +249,13 @@ final class UserEnvironmentFlagCacheSpec: QuickSpec {
                     userCount = 0
                     testContext = TestContext(userCount: userCount, maxUsers: maxUsers)
                     storingUser = LDUser.stub()
+                    flagStore = FlagMaintainingMock(flags: FlagMaintainingMock.stubFlags())
                     storingLastUpdated = Date().addingTimeInterval(-1.0 * 24 * 60 * 60) // one day
                     storingMobileKey = UUID().uuidString
                 }
                 it("stores the users flags") {
                     FlagCachingStoreMode.allCases.forEach { storeMode in
-                        testContext.storeFlags(storingUser.flagStore.featureFlags,
+                        testContext.storeFlags(flagStore.featureFlags,
                                                forUser: storingUser,
                                                andMobileKey: storingMobileKey,
                                                lastUpdated: storingLastUpdated,
@@ -277,7 +278,7 @@ final class UserEnvironmentFlagCacheSpec: QuickSpec {
                         let setCachedEnvironmentFlags = setCachedEnvironmentFlagsCollection?[storingMobileKey]
                         expect(setCachedEnvironmentFlags?.userKey) == storingUser.key
                         expect(setCachedEnvironmentFlags?.mobileKey) == storingMobileKey
-                        expect(setCachedEnvironmentFlags?.featureFlags) == storingUser.flagStore.featureFlags
+                        expect(setCachedEnvironmentFlags?.featureFlags) == flagStore.featureFlags
                     }
                 }
             }
@@ -289,12 +290,12 @@ final class UserEnvironmentFlagCacheSpec: QuickSpec {
                         storingUser = testContext.selectedUser
                         storingMobileKey = testContext.selectedMobileKey
                         newFeatureFlags = [Constants.newFlagKey: FeatureFlag.stub(flagKey: Constants.newFlagKey, flagValue: Constants.newFlagValue)]
-                        storingUser.flagStore = FlagMaintainingMock(flags: newFeatureFlags)
+                        flagStore = FlagMaintainingMock(flags: newFeatureFlags)
                         storingLastUpdated = Date()
                     }
                     it("stores the users flags") {
                         FlagCachingStoreMode.allCases.forEach { storeMode in
-                            testContext.storeFlags(storingUser.flagStore.featureFlags,
+                            testContext.storeFlags(flagStore.featureFlags,
                                                    forUser: storingUser,
                                                    andMobileKey: storingMobileKey,
                                                    lastUpdated: storingLastUpdated,
@@ -341,7 +342,7 @@ final class UserEnvironmentFlagCacheSpec: QuickSpec {
                         storingUser = testContext.selectedUser
                         storingMobileKey = (CacheableUserEnvironmentFlags.Constants.environmentCount + 1).mobileKey
                         newFeatureFlags = [Constants.newFlagKey: FeatureFlag.stub(flagKey: Constants.newFlagKey, flagValue: Constants.newFlagValue)]
-                        storingUser.flagStore = FlagMaintainingMock(flags: newFeatureFlags)
+                        flagStore = FlagMaintainingMock(flags: newFeatureFlags)
                         storingLastUpdated = Date()
                     }
                     it("stores the users flags") {
@@ -401,7 +402,7 @@ final class UserEnvironmentFlagCacheSpec: QuickSpec {
                         storingUser = LDUser.stub(key: (userCount + 1).userKey)
                         storingMobileKey = 1.mobileKey
                         newFeatureFlags = [Constants.newFlagKey: FeatureFlag.stub(flagKey: Constants.newFlagKey, flagValue: Constants.newFlagValue)]
-                        storingUser.flagStore = FlagMaintainingMock(flags: newFeatureFlags)
+                        flagStore = FlagMaintainingMock(flags: newFeatureFlags)
                         storingLastUpdated = Date()
                     }
                     it("stores the users flags") {
@@ -460,7 +461,7 @@ final class UserEnvironmentFlagCacheSpec: QuickSpec {
                         storingUser = testContext.selectedUser
                         storingMobileKey = testContext.selectedMobileKey
                         newFeatureFlags = [Constants.newFlagKey: FeatureFlag.stub(flagKey: Constants.newFlagKey, flagValue: Constants.newFlagValue)]
-                        storingUser.flagStore = FlagMaintainingMock(flags: newFeatureFlags)
+                        flagStore = FlagMaintainingMock(flags: newFeatureFlags)
                         storingLastUpdated = Date()
                     }
                     it("stores the users flags") {
@@ -512,7 +513,7 @@ final class UserEnvironmentFlagCacheSpec: QuickSpec {
                         storingUser = testContext.selectedUser
                         storingMobileKey = (CacheableUserEnvironmentFlags.Constants.environmentCount + 1).mobileKey
                         newFeatureFlags = [Constants.newFlagKey: FeatureFlag.stub(flagKey: Constants.newFlagKey, flagValue: Constants.newFlagValue)]
-                        storingUser.flagStore = FlagMaintainingMock(flags: newFeatureFlags)
+                        flagStore = FlagMaintainingMock(flags: newFeatureFlags)
                         storingLastUpdated = Date()
                     }
                     it("stores the users flags") {
@@ -572,7 +573,7 @@ final class UserEnvironmentFlagCacheSpec: QuickSpec {
                         storingUser = LDUser.stub(key: (userCount + 1).userKey)
                         storingMobileKey = 1.mobileKey
                         newFeatureFlags = [Constants.newFlagKey: FeatureFlag.stub(flagKey: Constants.newFlagKey, flagValue: Constants.newFlagValue)]
-                        storingUser.flagStore = FlagMaintainingMock(flags: newFeatureFlags)
+                        flagStore = FlagMaintainingMock(flags: newFeatureFlags)
                         storingLastUpdated = Date()
                     }
                     it("stores the youngest users flags") {

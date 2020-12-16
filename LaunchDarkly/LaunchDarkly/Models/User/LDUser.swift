@@ -4,16 +4,12 @@
 //
 //  Copyright © 2017 Catamorphic Co. All rights reserved.
 //
-
 import Foundation
 
 typealias UserKey = String  //use for identifying semantics for strings, particularly in dictionaries
-
 /**
  LDUser allows clients to collect information about users in order to refine the feature flag values sent to the SDK. For example, the client app may launch with the SDK defined anonymous user. As the user works with the client app, information may be collected as needed and sent to LaunchDarkly. The client app controls the information collected, which LaunchDarkly does not use except as the client directs to refine feature flags. Client apps should follow [Apple's Privacy Policy](apple.com/legal/privacy) when collecting user information.
-
  The SDK caches last known feature flags for use on app startup to provide continuity with the last app run. Provided the LDClient is online and can establish a connection with LaunchDarkly servers, cached information will only be used a very short time. Once the latest feature flags arrive at the SDK, the SDK no longer uses cached feature flags. The SDK retains feature flags on the last 5 client defined users. The SDK will retain feature flags until they are overwritten by a different user's feature flags, or until the user removes the app from the device.
-
  The SDK does not cache user information collected, except for the user key. The user key is used to identify the cached feature flags for that user. Client app developers should use caution not to use sensitive user information as the user-key.
  */
 public struct LDUser {
@@ -26,9 +22,7 @@ public struct LDUser {
 
     /**
      LDUser attributes that can be marked private.
-
      The SDK will not include private attribute values in analytics events, but private attribute names will be sent.
-
      See Also: `LDConfig.allUserAttributesPrivate`, `LDConfig.privateUserAttributes`, and `privateAttributes`.
     */
     public static var privatizableAttributes: [String] { optionalAttributes + [CodingKeys.custom.rawValue] }
@@ -70,24 +64,19 @@ public struct LDUser {
     public var operatingSystem: String?
     /**
      Client app defined privateAttributes for the user.
-
      The SDK will not include private attribute values in analytics events, but private attribute names will be sent.
-
      This attribute is ignored if `LDConfig.allUserAttributesPrivate` is true. Combined with `LDConfig.privateUserAttributes`. The SDK considers attributes appearing in either list as private. Client apps may define attributes found in `privatizableAttributes` and top level `custom` dictionary keys here. (Default: nil)
-
      See Also: `LDConfig.allUserAttributesPrivate` and `LDConfig.privateUserAttributes`.
-
     */
     public var privateAttributes: [String]?
 
     ///An NSObject wrapper for the Swift LDUser struct. Intended for use in mixed apps when Swift code needs to pass a user into an Objective-C method.
     public var objcLdUser: ObjcLDUser { ObjcLDUser(self) }
 
-    internal var flagStore: FlagMaintaining = FlagStore()
+    internal var flagStore: FlagMaintaining?
 
     /**
      Initializer to create a LDUser. Client configurable attributes each have an optional parameter to facilitate setting user information into the LDUser. The SDK will automatically set `key`, `device`, `operatingSystem`, and `isAnonymous` attributes if the client does not provide them. The SDK embeds `device` and `operatingSystem` into the `custom` dictionary for transmission to LaunchDarkly.
-
      - parameter key: String that uniquely identifies the user. If the client app does not define a key, the SDK will assign an identifier associated with the anonymous user.
      - parameter name: Client app defined name for the user. (Default: nil)
      - parameter firstName: Client app defined first name for the user. (Default: nil)
@@ -137,8 +126,7 @@ public struct LDUser {
     }
 
     /**
-     Initializer that takes a [String: Any] and creates a LDUser from the contents. Uses any keys present to define corresponding attribute values. Initializes attributes not present in the dictionary to their default value. Attempts to set `device` and `operatingSystem` from corresponding values embedded in `custom`. Attempts to set feature flags from values set in `config`.
-
+     Initializer that takes a [String: Any] and creates a LDUser from the contents. Uses any keys present to define corresponding attribute values. Initializes attributes not present in the dictionary to their default value. Attempts to set `device` and `operatingSystem` from corresponding values embedded in `custom`. DEPRECATED: Attempts to set feature flags from values set in `config`. 
      - parameter userDictionary: Dictionary with LDUser attribute keys and values.
      */
     public init(userDictionary: [String: Any]) {
@@ -186,7 +174,7 @@ public struct LDUser {
         case CodingKeys.custom.rawValue: return custom
         case CodingKeys.device.rawValue: return device
         case CodingKeys.operatingSystem.rawValue: return operatingSystem
-        case CodingKeys.config.rawValue: return flagStore.featureFlags
+        case CodingKeys.config.rawValue: return flagStore?.featureFlags
         case CodingKeys.privateAttributes.rawValue: return privateAttributes
         default: return nil
         }
@@ -299,7 +287,7 @@ extension LDUserWrapper: NSCoding {
         encoder.encode(wrapped.device, forKey: LDUser.CodingKeys.device.rawValue)
         encoder.encode(wrapped.operatingSystem, forKey: LDUser.CodingKeys.operatingSystem.rawValue)
         encoder.encode(wrapped.privateAttributes, forKey: LDUser.CodingKeys.privateAttributes.rawValue)
-        encoder.encode([Keys.featureFlags: wrapped.flagStore.featureFlags.dictionaryValue.withNullValuesRemoved], forKey: LDUser.CodingKeys.config.rawValue)
+        encoder.encode([Keys.featureFlags: wrapped.flagStore?.featureFlags.dictionaryValue.withNullValuesRemoved], forKey: LDUser.CodingKeys.config.rawValue)
     }
 
     convenience init?(coder decoder: NSCoder) {

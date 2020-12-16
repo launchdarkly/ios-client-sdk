@@ -145,4 +145,9 @@ final class ClientServiceMockFactory: ClientServiceCreating {
     func makeConnectionInformation() -> ConnectionInformation {
         ConnectionInformation(currentConnectionMode: .offline, lastConnectionFailureReason: .none)
     }
+
+    var makeFlagStoreReturnValue = FlagMaintainingMock()
+    func makeFlagStore() -> FlagMaintaining {
+        return makeFlagStoreReturnValue
+    }
 }

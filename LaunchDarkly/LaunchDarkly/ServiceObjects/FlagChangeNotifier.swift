@@ -18,7 +18,7 @@ protocol FlagChangeNotifying {
     //sourcery: noMock
     func removeObserver(owner: LDObserverOwner)
     func notifyConnectionModeChangedObservers(connectionMode: ConnectionInformation.ConnectionMode)
-    func notifyObservers(user: LDUser, oldFlags: [LDFlagKey: FeatureFlag])
+    func notifyObservers(flagStore: FlagMaintaining, oldFlags: [LDFlagKey: FeatureFlag])
 }
 
 final class FlagChangeNotifier: FlagChangeNotifying {
@@ -76,10 +76,10 @@ final class FlagChangeNotifier: FlagChangeNotifying {
         }
     }
 
-    func notifyObservers(user: LDUser, oldFlags: [LDFlagKey: FeatureFlag]) {
+    func notifyObservers(flagStore: FlagMaintaining, oldFlags: [LDFlagKey: FeatureFlag]) {
         removeOldObservers()
 
-        let changedFlagKeys = findChangedFlagKeys(oldFlags: oldFlags, newFlags: user.flagStore.featureFlags)
+        let changedFlagKeys = findChangedFlagKeys(oldFlags: oldFlags, newFlags: flagStore.featureFlags)
         guard !changedFlagKeys.isEmpty
         else {
             if flagsUnchangedObservers.isEmpty {
@@ -111,7 +111,7 @@ final class FlagChangeNotifier: FlagChangeNotifying {
         let changedFlags = [LDFlagKey: LDChangedFlag](uniqueKeysWithValues: changedFlagKeys.map { flagKey in
             (flagKey, LDChangedFlag(key: flagKey,
                                     oldValue: oldFlags[flagKey]?.value,
-                                    newValue: user.flagStore.featureFlags[flagKey]?.value))
+                                    newValue: flagStore.featureFlags[flagKey]?.value))
         })
         Log.debug(typeName(and: #function) + "notifying observers for changes to flags: \(changedFlags.keys.joined(separator: ", ")).")
         selectedObservers.forEach { observer in
@@ -161,8 +161,8 @@ extension FlagChangeNotifier: TypeIdentifying { }
             self.flagsUnchangedObservers = flagsUnchangedObservers
         }
 
-        func notifyObservers(user: LDUser, oldFlags: [LDFlagKey: FeatureFlag], completion: @escaping () -> Void) {
-            notifyObservers(user: user, oldFlags: oldFlags)
+        func notifyObservers(flagStore: FlagMaintaining, oldFlags: [LDFlagKey: FeatureFlag], completion: @escaping () -> Void) {
+            notifyObservers(flagStore: flagStore, oldFlags: oldFlags)
             DispatchQueue.main.async {
                 completion()
             }

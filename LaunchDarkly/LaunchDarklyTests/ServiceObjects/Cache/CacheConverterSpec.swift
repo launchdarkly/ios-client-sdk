@@ -50,7 +50,7 @@ final class CacheConverterSpec: QuickSpec {
             }
             if let deprecatedCacheData = deprecatedCacheData {
                 let age = Date().addingTimeInterval(cacheConverter.maxAge + 1.0)
-                deprecatedCacheMock(for: deprecatedCacheData).retrieveFlagsReturnValue = (user.flagStore.featureFlags, age)
+                deprecatedCacheMock(for: deprecatedCacheData).retrieveFlagsReturnValue = (FlagMaintainingMock.stubFlags(), age)
                 switch deprecatedCacheData {
                 case .version5:
                     modelsToSearch.append(contentsOf: [.version5])
