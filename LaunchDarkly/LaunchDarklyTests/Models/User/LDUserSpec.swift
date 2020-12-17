@@ -134,80 +134,63 @@ final class LDUserSpec: QuickSpec {
         describe("init from dictionary") {
             var user: LDUser!
             var originalUser: LDUser!
-            var stubConfig: [String: FeatureFlag]!
-            context("with optional elements") {
-                [false, true].forEach { withConfig in
-                    context(withConfig ? "and config" : "without config") {
-                        beforeEach {
-                            originalUser = LDUser.stub()
-                            var userDictionary = originalUser.dictionaryValue(includePrivateAttributes: true, config: LDConfig.stub)
-                            userDictionary[LDUser.CodingKeys.privateAttributes.rawValue] = LDUser.privatizableAttributes
-                            stubConfig = withConfig ? originalUser.stubFlags(includeNullValue: true, includeVersions: true) : nil
-                            userDictionary[LDUser.CodingKeys.config.rawValue] = stubConfig
-                            user = LDUser(userDictionary: userDictionary)
-                        }
-                        it("creates a user with optional elements and feature flags") {
-                            expect(user.key) == originalUser.key
-                            expect(user.secondary) == originalUser.secondary
-                            expect(user.name) == originalUser.name
-                            expect(user.firstName) == originalUser.firstName
-                            expect(user.lastName) == originalUser.lastName
-                            expect(user.isAnonymous) == originalUser.isAnonymous
-                            expect(user.country) == originalUser.country
-                            expect(user.ipAddress) == originalUser.ipAddress
-                            expect(user.email) == originalUser.email
-                            expect(user.avatar) == originalUser.avatar
+            context("and optional elements") {
+                beforeEach {
+                    originalUser = LDUser.stub()
+                    var userDictionary = originalUser.dictionaryValue(includePrivateAttributes: true, config: LDConfig.stub)
+                    userDictionary[LDUser.CodingKeys.privateAttributes.rawValue] = LDUser.privatizableAttributes
+                    user = LDUser(userDictionary: userDictionary)
+                }
+                it("creates a user with optional elements and feature flags") {
+                    expect(user.key) == originalUser.key
+                    expect(user.secondary) == originalUser.secondary
+                    expect(user.name) == originalUser.name
+                    expect(user.firstName) == originalUser.firstName
+                    expect(user.lastName) == originalUser.lastName
+                    expect(user.isAnonymous) == originalUser.isAnonymous
+                    expect(user.country) == originalUser.country
+                    expect(user.ipAddress) == originalUser.ipAddress
+                    expect(user.email) == originalUser.email
+                    expect(user.avatar) == originalUser.avatar
 
-                            expect(originalUser.custom).toNot(beNil())
-                            expect(user.custom).toNot(beNil())
-                            if let originalCustom = originalUser.custom,
-                                let subjectCustom = user.custom {
-                                expect(subjectCustom == originalCustom).to(beTrue())
-                            }
-
-                            expect(user.device) == originalUser.device
-                            expect(user.operatingSystem) == originalUser.operatingSystem
-
-                            expect(user.privateAttributes) == LDUser.privatizableAttributes
-
-                            expect(user.flagStore.featureFlags == stubConfig ?? [:]).to(beTrue())
-                        }
+                    expect(originalUser.custom).toNot(beNil())
+                    expect(user.custom).toNot(beNil())
+                    if let originalCustom = originalUser.custom,
+                        let subjectCustom = user.custom {
+                        expect(subjectCustom == originalCustom).to(beTrue())
                     }
+
+                    expect(user.device) == originalUser.device
+                    expect(user.operatingSystem) == originalUser.operatingSystem
+
+                    expect(user.privateAttributes) == LDUser.privatizableAttributes
                 }
             }
-            context("without optional eleements") {
-                [false, true].forEach { withConfig in
-                    context(withConfig ? "and config" : "without config") {
-                        beforeEach {
-                            originalUser = LDUser(isAnonymous: true)
-                            var userDictionary = originalUser.dictionaryValue(includePrivateAttributes: true, config: LDConfig.stub)
-                            userDictionary[LDUser.CodingKeys.privateAttributes.rawValue] = originalUser.privateAttributes
-                            stubConfig = withConfig ? originalUser.stubFlags(includeNullValue: true, includeVersions: true) : nil
-                            userDictionary[LDUser.CodingKeys.config.rawValue] = stubConfig
-                            user = LDUser(userDictionary: userDictionary)
-                        }
-                        it("creates a user without optional elements") {
-                            expect(user.key) == originalUser.key
-                            expect(user.isAnonymous) == originalUser.isAnonymous
+            context("without optional elements") {
+                beforeEach {
+                    originalUser = LDUser(isAnonymous: true)
+                    var userDictionary = originalUser.dictionaryValue(includePrivateAttributes: true, config: LDConfig.stub)
+                    userDictionary[LDUser.CodingKeys.privateAttributes.rawValue] = originalUser.privateAttributes
+                    user = LDUser(userDictionary: userDictionary)
+                }
+                it("creates a user without optional elements") {
+                    expect(user.key) == originalUser.key
+                    expect(user.isAnonymous) == originalUser.isAnonymous
 
-                            expect(user.name).to(beNil())
-                            expect(user.firstName).to(beNil())
-                            expect(user.lastName).to(beNil())
-                            expect(user.country).to(beNil())
-                            expect(user.ipAddress).to(beNil())
-                            expect(user.email).to(beNil())
-                            expect(user.avatar).to(beNil())
-                            expect(user.secondary).to(beNil())
-                            expect(user.device).toNot(beNil())
-                            expect(user.operatingSystem).toNot(beNil())
+                    expect(user.name).to(beNil())
+                    expect(user.firstName).to(beNil())
+                    expect(user.lastName).to(beNil())
+                    expect(user.country).to(beNil())
+                    expect(user.ipAddress).to(beNil())
+                    expect(user.email).to(beNil())
+                    expect(user.avatar).to(beNil())
+                    expect(user.secondary).to(beNil())
+                    expect(user.device).toNot(beNil())
+                    expect(user.operatingSystem).toNot(beNil())
 
-                            expect(user.custom).toNot(beNil())
-                            expect(user.customWithoutSdkSetAttributes.isEmpty) == true
-                            expect(user.privateAttributes).to(beNil())
-
-                            expect(user.flagStore.featureFlags == stubConfig ?? [:]).to(beTrue())
-                        }
-                    }
+                    expect(user.custom).toNot(beNil())
+                    expect(user.customWithoutSdkSetAttributes.isEmpty) == true
+                    expect(user.privateAttributes).to(beNil())
                 }
             }
             context("with empty dictionary") {
@@ -229,8 +212,6 @@ final class LDUserSpec: QuickSpec {
                     expect(user.operatingSystem).to(beNil())
                     expect(user.custom).to(beNil())
                     expect(user.privateAttributes).to(beNil())
-
-                    expect(user.flagStore.featureFlags.isEmpty).to(beTrue())
                 }
             }
         }
@@ -261,8 +242,6 @@ final class LDUserSpec: QuickSpec {
 
                 expect(user.custom).to(beNil())
                 expect(user.privateAttributes).to(beNil())
-
-                expect(user.flagStore.featureFlags.isEmpty).to(beTrue())
             }
         }
     }
@@ -1027,12 +1006,9 @@ extension LDUser {
         redactedAttributes?.contains(attribute) != true ? nil : MatcherMessages.attributeListShouldNotContain + attribute
     }
 
-    public func dictionaryValueWithAllAttributes(includeFlagConfig: Bool = false) -> [String: Any] {
+    public func dictionaryValueWithAllAttributes() -> [String: Any] {
         var dictionary = dictionaryValue(includePrivateAttributes: true, config: LDConfig.stub)
         dictionary[CodingKeys.privateAttributes.rawValue] = privateAttributes
-        if includeFlagConfig {
-            dictionary[LDUser.CodingKeys.config.rawValue] = stubFlags(includeNullValue: true, includeVersions: true)
-        }
         return dictionary
     }
 }

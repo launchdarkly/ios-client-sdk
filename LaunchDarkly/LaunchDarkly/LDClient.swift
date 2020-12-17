@@ -267,20 +267,22 @@ public class LDClient {
         }
     }
 
-    func internalIdentify(newUser: LDUser, testing: Bool = false, completion: (() -> Void)? = nil) {
+    func internalIdentify(newUser: LDUser, completion: (() -> Void)? = nil) {
         internalIdentifyQueue.sync {
-            var internalUser = newUser
-            if !testing {
-                internalUser.flagStore = FlagStore(featureFlagDictionary: newUser.flagStore.featureFlags)
-            }
-            self.user = internalUser
+            self.user = newUser
             Log.debug(self.typeName(and: #function) + "new user set with key: " + self.user.key )
             let wasOnline = self.isOnline
             self.internalSetOnline(false)
 
             cacheConverter.convertCacheData(for: user, and: config)
             if let cachedFlags = self.flagCache.retrieveFeatureFlags(forUserWithKey: self.user.key, andMobileKey: self.config.mobileKey), !cachedFlags.isEmpty {
-                self.user.flagStore.replaceStore(newFlags: cachedFlags, completion: nil)
+                flagStore.replaceStore(newFlags: cachedFlags, completion: nil)
+            } else {
+                if let userFlagStore = user.flagStore {
+                    flagStore.replaceStore(newFlags: userFlagStore.featureFlags, completion: nil)
+                } else {
+                    flagStore.replaceStore(newFlags: [:], completion: nil)
+                }
             }
             self.service = self.serviceFactory.makeDarklyServiceProvider(config: self.config, user: self.user)
             self.service.clearFlagResponseCache()
@@ -368,7 +370,7 @@ public class LDClient {
      - returns: LDEvaluationDetail which wraps the requested feature flag value, or the default value, which variation was served, and the evaluation reason.
      */
     public func variationDetail<T: LDFlagValueConvertible>(forKey flagKey: LDFlagKey, defaultValue: T) -> LDEvaluationDetail<T> {
-        let featureFlag = user.flagStore.featureFlag(for: flagKey)
+        let featureFlag = flagStore.featureFlag(for: flagKey)
         let reason = checkErrorKinds(featureFlag: featureFlag) ?? featureFlag?.reason
         let value = variationInternal(forKey: flagKey, defaultValue: defaultValue, includeReason: true)
         return LDEvaluationDetail(value: value ?? defaultValue, variationIndex: featureFlag?.variation, reason: reason)
@@ -439,7 +441,7 @@ public class LDClient {
      - returns: LDEvaluationDetail which wraps the requested feature flag value, or the default value, which variation was served, and the evaluation reason.
      */
     public func variationDetail<T: LDFlagValueConvertible>(forKey flagKey: LDFlagKey, defaultValue: T? = nil) -> LDEvaluationDetail<T?> {
-        let featureFlag = user.flagStore.featureFlag(for: flagKey)
+        let featureFlag = flagStore.featureFlag(for: flagKey)
         let reason = checkErrorKinds(featureFlag: featureFlag) ?? featureFlag?.reason
         let value = variationInternal(forKey: flagKey, defaultValue: defaultValue, includeReason: true)
         return LDEvaluationDetail(value: value, variationIndex: featureFlag?.variation, reason: reason)
@@ -451,7 +453,7 @@ public class LDClient {
             Log.debug(typeName(and: #function) + "returning defaultValue: \(defaultValue.stringValue)." + " LDClient not started.")
             return defaultValue
         }
-        let featureFlag = user.flagStore.featureFlag(for: flagKey)
+        let featureFlag = flagStore.featureFlag(for: flagKey)
         let value = (featureFlag?.value as? T) ?? defaultValue
         let failedConversionMessage = self.failedConversionMessage(featureFlag: featureFlag, defaultValue: defaultValue)
         Log.debug(typeName(and: #function) + "flagKey: \(flagKey), value: \(value.stringValue), defaultValue: \(defaultValue.stringValue), featureFlag: \(featureFlag.stringValue), reason: \(featureFlag?.reason?.description ?? "No evaluation reason")."
@@ -491,7 +493,7 @@ public class LDClient {
     public var allFlags: [LDFlagKey: Any]? {
         guard hasStarted
         else { return nil }
-        return user.flagStore.featureFlags.allFlagValues
+        return flagStore.featureFlags.allFlagValues
     }
 
     // MARK: Observing Updates
@@ -668,19 +670,19 @@ public class LDClient {
         Log.debug(typeName(and: #function) + "result: \(result)")
         switch result {
         case let .success(flagDictionary, streamingEvent):
-            let oldFlags = user.flagStore.featureFlags
+            let oldFlags = flagStore.featureFlags
             connectionInformation = ConnectionInformation.checkEstablishingStreaming(connectionInformation: connectionInformation)
             switch streamingEvent {
             case nil, .ping?, .put?:
-                user.flagStore.replaceStore(newFlags: flagDictionary) {
+                flagStore.replaceStore(newFlags: flagDictionary) {
                     self.updateCacheAndReportChanges(user: self.user, oldFlags: oldFlags)
                 }
             case .patch?:
-                user.flagStore.updateStore(updateDictionary: flagDictionary) {
+                flagStore.updateStore(updateDictionary: flagDictionary) {
                     self.updateCacheAndReportChanges(user: self.user, oldFlags: oldFlags)
                 }
             case .delete?:
-                user.flagStore.deleteFlag(deleteDictionary: flagDictionary) {
+                flagStore.deleteFlag(deleteDictionary: flagDictionary) {
                     self.updateCacheAndReportChanges(user: self.user, oldFlags: oldFlags)
                 }
             }
@@ -702,8 +704,8 @@ public class LDClient {
 
     private func updateCacheAndReportChanges(user: LDUser,
                                              oldFlags: [LDFlagKey: FeatureFlag]) {
-        flagCache.storeFeatureFlags(user.flagStore.featureFlags, forUser: user, andMobileKey: config.mobileKey, lastUpdated: Date(), storeMode: .async)
-        flagChangeNotifier.notifyObservers(user: user, oldFlags: oldFlags)
+        flagCache.storeFeatureFlags(flagStore.featureFlags, forUser: user, andMobileKey: config.mobileKey, lastUpdated: Date(), storeMode: .async)
+        flagChangeNotifier.notifyObservers(flagStore: flagStore, oldFlags: oldFlags)
     }
 
     // MARK: Events
@@ -880,6 +882,7 @@ public class LDClient {
     private(set) var environmentReporter: EnvironmentReporting
     private(set) var throttler: Throttling
     private(set) var diagnosticReporter: DiagnosticReporting
+    let flagStore: FlagMaintaining
 
     private(set) var hasStarted: Bool {
         get { hasStartedQueue.sync { _hasStarted } }
@@ -894,6 +897,10 @@ public class LDClient {
         }
         environmentReporter = self.serviceFactory.makeEnvironmentReporter()
         flagCache = newCache
+        flagStore = self.serviceFactory.makeFlagStore()
+        if let userFlagStore = startUser?.flagStore {
+            flagStore.replaceStore(newFlags: userFlagStore.featureFlags, completion: nil)
+        }
         LDUserWrapper.configureKeyedArchiversToHandleVersion2_3_0AndOlderUserCacheFormat()
         cacheConverter = self.serviceFactory.makeCacheConverter(maxCachedUsers: configuration.maxCachedUsers)
         flagChangeNotifier = flagNotifier
@@ -931,7 +938,7 @@ public class LDClient {
         Log.level = environmentReporter.isDebugBuild && config.isDebugMode ? .debug : .noLogging
         cacheConverter.convertCacheData(for: user, and: config)
         if let cachedFlags = flagCache.retrieveFeatureFlags(forUserWithKey: user.key, andMobileKey: config.mobileKey), !cachedFlags.isEmpty {
-            user.flagStore.replaceStore(newFlags: cachedFlags, completion: nil)
+            flagStore.replaceStore(newFlags: cachedFlags, completion: nil)
         }
 
         eventReporter.record(Event.identifyEvent(user: user))
