@@ -132,15 +132,27 @@ public class LDClient {
     
     private func go(online goOnline: Bool, reasonOnlineUnavailable: String, completion:(() -> Void)?) {
         let owner = "SetOnlineOwner" as AnyObject
+        var completed = false
+        let internalCompletedQueue = DispatchQueue(label: "com.launchdarkly.LDClient.goCompletedQueue")
+
+        let completionCheck = { (completion: (() -> Void)?) in
+            internalCompletedQueue.sync {
+                if completed == false {
+                    completion?()
+                    completed = true
+                }
+            }
+        }
+
         if completion != nil && !goOnline {
             completion?()
         } else if completion != nil {
             observeAll(owner: owner) { _ in
-                completion?()
+                completionCheck(completion)
                 self.stopObserving(owner: owner)
             }
             observeFlagsUnchanged(owner: owner) {
-                completion?()
+                completionCheck(completion)
                 self.stopObserving(owner: owner)
             }
         }
