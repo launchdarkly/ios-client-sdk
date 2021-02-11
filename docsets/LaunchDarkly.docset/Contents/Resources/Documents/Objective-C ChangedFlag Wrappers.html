@@ -8,14 +8,22 @@
     <script src="js/jquery.min.js" defer></script>
     <script src="js/jazzy.js" defer></script>
     
+    <script src="js/lunr.min.js" defer></script>
+    <script src="js/typeahead.jquery.js" defer></script>
+    <script src="js/jazzy.search.js" defer></script>
   </head>
   <body>
     <a name="//apple_ref/swift/Section/Objective-C ChangedFlag Wrappers" class="dashAnchor"></a>
     <a title="Objective-C ChangedFlag Wrappers  Reference"></a>
     <header>
       <div class="content-wrapper">
-        <p><a href="index.html">LaunchDarkly 5.3.1 Docs</a> (83% documented)</p>
+        <p><a href="index.html">LaunchDarkly 5.3.2 Docs</a> (83% documented)</p>
         <p class="header-right"><a href="https://github.com/launchdarkly/ios-client-sdk"><img src="img/gh.png"/>View on GitHub</a></p>
+        <p class="header-right">
+          <form role="search" action="search.json">
+            <input type="text" placeholder="Search documentation" data-typeahead>
+          </form>
+        </p>
       </div>
     </header>
     <div class="content-wrapper">
@@ -233,7 +241,7 @@
                         <h4>Declaration</h4>
                         <div class="language">
                           <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="kd">@objc</span><span class="p">(</span><span class="kt">LDBoolChangedFlag</span><span class="p">)</span>
+                          <pre class="highlight swift"><code><span class="kd">@objc(LDBoolChangedFlag)</span>
 <span class="kd">public</span> <span class="kd">final</span> <span class="kd">class</span> <span class="kt">ObjcLDBoolChangedFlag</span> <span class="p">:</span> <span class="kt"><a href="Classes/ObjcLDChangedFlag.html">ObjcLDChangedFlag</a></span></code></pre>
 
                         </div>
@@ -264,7 +272,7 @@
                         <h4>Declaration</h4>
                         <div class="language">
                           <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="kd">@objc</span><span class="p">(</span><span class="kt">LDIntegerChangedFlag</span><span class="p">)</span>
+                          <pre class="highlight swift"><code><span class="kd">@objc(LDIntegerChangedFlag)</span>
 <span class="kd">public</span> <span class="kd">final</span> <span class="kd">class</span> <span class="kt">ObjcLDIntegerChangedFlag</span> <span class="p">:</span> <span class="kt"><a href="Classes/ObjcLDChangedFlag.html">ObjcLDChangedFlag</a></span></code></pre>
 
                         </div>
@@ -295,7 +303,7 @@
                         <h4>Declaration</h4>
                         <div class="language">
                           <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="kd">@objc</span><span class="p">(</span><span class="kt">LDDoubleChangedFlag</span><span class="p">)</span>
+                          <pre class="highlight swift"><code><span class="kd">@objc(LDDoubleChangedFlag)</span>
 <span class="kd">public</span> <span class="kd">final</span> <span class="kd">class</span> <span class="kt">ObjcLDDoubleChangedFlag</span> <span class="p">:</span> <span class="kt"><a href="Classes/ObjcLDChangedFlag.html">ObjcLDChangedFlag</a></span></code></pre>
 
                         </div>
@@ -326,7 +334,7 @@
                         <h4>Declaration</h4>
                         <div class="language">
                           <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="kd">@objc</span><span class="p">(</span><span class="kt">LDStringChangedFlag</span><span class="p">)</span>
+                          <pre class="highlight swift"><code><span class="kd">@objc(LDStringChangedFlag)</span>
 <span class="kd">public</span> <span class="kd">final</span> <span class="kd">class</span> <span class="kt">ObjcLDStringChangedFlag</span> <span class="p">:</span> <span class="kt"><a href="Classes/ObjcLDChangedFlag.html">ObjcLDChangedFlag</a></span></code></pre>
 
                         </div>
@@ -357,7 +365,7 @@
                         <h4>Declaration</h4>
                         <div class="language">
                           <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="kd">@objc</span><span class="p">(</span><span class="kt">LDArrayChangedFlag</span><span class="p">)</span>
+                          <pre class="highlight swift"><code><span class="kd">@objc(LDArrayChangedFlag)</span>
 <span class="kd">public</span> <span class="kd">final</span> <span class="kd">class</span> <span class="kt">ObjcLDArrayChangedFlag</span> <span class="p">:</span> <span class="kt"><a href="Classes/ObjcLDChangedFlag.html">ObjcLDChangedFlag</a></span></code></pre>
 
                         </div>
@@ -388,7 +396,7 @@
                         <h4>Declaration</h4>
                         <div class="language">
                           <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="kd">@objc</span><span class="p">(</span><span class="kt">LDDictionaryChangedFlag</span><span class="p">)</span>
+                          <pre class="highlight swift"><code><span class="kd">@objc(LDDictionaryChangedFlag)</span>
 <span class="kd">public</span> <span class="kd">final</span> <span class="kd">class</span> <span class="kt">ObjcLDDictionaryChangedFlag</span> <span class="p">:</span> <span class="kt"><a href="Classes/ObjcLDChangedFlag.html">ObjcLDChangedFlag</a></span></code></pre>
 
                         </div>
@@ -402,7 +410,7 @@
         </section>
         <section id="footer">
           <p>Copyright © 2019 Catamorphic Co.</p>
-          <p>Generated by <a class="link" href="https://github.com/realm/jazzy" target="_blank" rel="external">jazzy ♪♫ v0.13.3</a>, a <a class="link" href="https://realm.io" target="_blank" rel="external">Realm</a> project.</p>
+          <p>Generated by <a class="link" href="https://github.com/realm/jazzy" target="_blank" rel="external">jazzy ♪♫ v0.13.6</a>, a <a class="link" href="https://realm.io" target="_blank" rel="external">Realm</a> project.</p>
         </section>
       </article>
     </div>

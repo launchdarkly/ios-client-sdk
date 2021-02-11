@@ -1,355 +1,355 @@
 {
   "warnings": [
     {
-      "file": "/Users/joecieslik/code/ios-swift-client-sdk-private/LaunchDarkly/LaunchDarkly/LDClient.swift",
-      "line": 664,
+      "file": "/Users/demo/SDKs/ios-swift-client-sdk-private/LaunchDarkly/LaunchDarkly/LDClient.swift",
+      "line": 676,
       "symbol": "LDClient.observeError(owner:handler:)",
       "symbol_kind": "source.lang.swift.decl.function.method.instance",
       "warning": "undocumented"
     },
     {
-      "file": "/Users/joecieslik/code/ios-swift-client-sdk-private/LaunchDarkly/LaunchDarkly/LDCommon.swift",
+      "file": "/Users/demo/SDKs/ios-swift-client-sdk-private/LaunchDarkly/LaunchDarkly/LDCommon.swift",
       "line": 31,
       "symbol": "LDInvalidArgumentError",
       "symbol_kind": "source.lang.swift.decl.class",
       "warning": "undocumented"
     },
     {
-      "file": "/Users/joecieslik/code/ios-swift-client-sdk-private/LaunchDarkly/LaunchDarkly/LDCommon.swift",
+      "file": "/Users/demo/SDKs/ios-swift-client-sdk-private/LaunchDarkly/LaunchDarkly/LDCommon.swift",
       "line": 32,
       "symbol": "LDInvalidArgumentError.localizedDescription",
       "symbol_kind": "source.lang.swift.decl.var.instance",
       "warning": "undocumented"
     },
     {
-      "file": "/Users/joecieslik/code/ios-swift-client-sdk-private/LaunchDarkly/LaunchDarkly/Models/ConnectionInformation.swift",
+      "file": "/Users/demo/SDKs/ios-swift-client-sdk-private/LaunchDarkly/LaunchDarkly/Models/ConnectionInformation.swift",
       "line": 10,
       "symbol": "ConnectionInformation",
       "symbol_kind": "source.lang.swift.decl.struct",
       "warning": "undocumented"
     },
     {
-      "file": "/Users/joecieslik/code/ios-swift-client-sdk-private/LaunchDarkly/LaunchDarkly/Models/ConnectionInformation.swift",
+      "file": "/Users/demo/SDKs/ios-swift-client-sdk-private/LaunchDarkly/LaunchDarkly/Models/ConnectionInformation.swift",
       "line": 11,
       "symbol": "ConnectionInformation.ConnectionMode",
       "symbol_kind": "source.lang.swift.decl.enum",
       "warning": "undocumented"
     },
     {
-      "file": "/Users/joecieslik/code/ios-swift-client-sdk-private/LaunchDarkly/LaunchDarkly/Models/ConnectionInformation.swift",
+      "file": "/Users/demo/SDKs/ios-swift-client-sdk-private/LaunchDarkly/LaunchDarkly/Models/ConnectionInformation.swift",
       "line": 12,
       "symbol": "ConnectionInformation.ConnectionMode.establishingStreamingConnection",
       "symbol_kind": "source.lang.swift.decl.enumelement",
       "warning": "undocumented"
     },
     {
-      "file": "/Users/joecieslik/code/ios-swift-client-sdk-private/LaunchDarkly/LaunchDarkly/Models/ConnectionInformation.swift",
+      "file": "/Users/demo/SDKs/ios-swift-client-sdk-private/LaunchDarkly/LaunchDarkly/Models/ConnectionInformation.swift",
       "line": 12,
       "symbol": "ConnectionInformation.ConnectionMode.offline",
       "symbol_kind": "source.lang.swift.decl.enumelement",
       "warning": "undocumented"
     },
     {
-      "file": "/Users/joecieslik/code/ios-swift-client-sdk-private/LaunchDarkly/LaunchDarkly/Models/ConnectionInformation.swift",
+      "file": "/Users/demo/SDKs/ios-swift-client-sdk-private/LaunchDarkly/LaunchDarkly/Models/ConnectionInformation.swift",
       "line": 12,
       "symbol": "ConnectionInformation.ConnectionMode.polling",
       "symbol_kind": "source.lang.swift.decl.enumelement",
       "warning": "undocumented"
     },
     {
-      "file": "/Users/joecieslik/code/ios-swift-client-sdk-private/LaunchDarkly/LaunchDarkly/Models/ConnectionInformation.swift",
+      "file": "/Users/demo/SDKs/ios-swift-client-sdk-private/LaunchDarkly/LaunchDarkly/Models/ConnectionInformation.swift",
       "line": 12,
       "symbol": "ConnectionInformation.ConnectionMode.streaming",
       "symbol_kind": "source.lang.swift.decl.enumelement",
       "warning": "undocumented"
     },
     {
-      "file": "/Users/joecieslik/code/ios-swift-client-sdk-private/LaunchDarkly/LaunchDarkly/Models/ConnectionInformation.swift",
+      "file": "/Users/demo/SDKs/ios-swift-client-sdk-private/LaunchDarkly/LaunchDarkly/Models/ConnectionInformation.swift",
       "line": 15,
       "symbol": "ConnectionInformation.LastConnectionFailureReason",
       "symbol_kind": "source.lang.swift.decl.enum",
       "warning": "undocumented"
     },
     {
-      "file": "/Users/joecieslik/code/ios-swift-client-sdk-private/LaunchDarkly/LaunchDarkly/Models/ConnectionInformation.swift",
+      "file": "/Users/demo/SDKs/ios-swift-client-sdk-private/LaunchDarkly/LaunchDarkly/Models/ConnectionInformation.swift",
       "line": 29,
       "symbol": "ConnectionInformation.LastConnectionFailureReason.httpError(_:)",
       "symbol_kind": "source.lang.swift.decl.enumelement",
       "warning": "undocumented"
     },
     {
-      "file": "/Users/joecieslik/code/ios-swift-client-sdk-private/LaunchDarkly/LaunchDarkly/Models/ConnectionInformation.swift",
+      "file": "/Users/demo/SDKs/ios-swift-client-sdk-private/LaunchDarkly/LaunchDarkly/Models/ConnectionInformation.swift",
       "line": 29,
       "symbol": "ConnectionInformation.LastConnectionFailureReason.none",
       "symbol_kind": "source.lang.swift.decl.enumelement",
       "warning": "undocumented"
     },
     {
-      "file": "/Users/joecieslik/code/ios-swift-client-sdk-private/LaunchDarkly/LaunchDarkly/Models/ConnectionInformation.swift",
+      "file": "/Users/demo/SDKs/ios-swift-client-sdk-private/LaunchDarkly/LaunchDarkly/Models/ConnectionInformation.swift",
       "line": 29,
       "symbol": "ConnectionInformation.LastConnectionFailureReason.unauthorized",
       "symbol_kind": "source.lang.swift.decl.enumelement",
       "warning": "undocumented"
     },
     {
-      "file": "/Users/joecieslik/code/ios-swift-client-sdk-private/LaunchDarkly/LaunchDarkly/Models/ConnectionInformation.swift",
+      "file": "/Users/demo/SDKs/ios-swift-client-sdk-private/LaunchDarkly/LaunchDarkly/Models/ConnectionInformation.swift",
       "line": 29,
       "symbol": "ConnectionInformation.LastConnectionFailureReason.unknownError(_:)",
       "symbol_kind": "source.lang.swift.decl.enumelement",
       "warning": "undocumented"
     },
     {
-      "file": "/Users/joecieslik/code/ios-swift-client-sdk-private/LaunchDarkly/LaunchDarkly/Models/ConnectionInformation.swift",
+      "file": "/Users/demo/SDKs/ios-swift-client-sdk-private/LaunchDarkly/LaunchDarkly/Models/ConnectionInformation.swift",
       "line": 44,
       "symbol": "ConnectionInformation.Constants",
       "symbol_kind": "source.lang.swift.decl.struct",
       "warning": "undocumented"
     },
     {
-      "file": "/Users/joecieslik/code/ios-swift-client-sdk-private/LaunchDarkly/LaunchDarkly/Models/ConnectionInformation.swift",
+      "file": "/Users/demo/SDKs/ios-swift-client-sdk-private/LaunchDarkly/LaunchDarkly/Models/ConnectionInformation.swift",
       "line": 51,
       "symbol": "ConnectionInformation.lastKnownFlagValidity",
       "symbol_kind": "source.lang.swift.decl.var.instance",
       "warning": "undocumented"
     },
     {
-      "file": "/Users/joecieslik/code/ios-swift-client-sdk-private/LaunchDarkly/LaunchDarkly/Models/ConnectionInformation.swift",
+      "file": "/Users/demo/SDKs/ios-swift-client-sdk-private/LaunchDarkly/LaunchDarkly/Models/ConnectionInformation.swift",
       "line": 52,
       "symbol": "ConnectionInformation.lastFailedConnection",
       "symbol_kind": "source.lang.swift.decl.var.instance",
       "warning": "undocumented"
     },
     {
-      "file": "/Users/joecieslik/code/ios-swift-client-sdk-private/LaunchDarkly/LaunchDarkly/Models/ConnectionInformation.swift",
+      "file": "/Users/demo/SDKs/ios-swift-client-sdk-private/LaunchDarkly/LaunchDarkly/Models/ConnectionInformation.swift",
       "line": 53,
       "symbol": "ConnectionInformation.currentConnectionMode",
       "symbol_kind": "source.lang.swift.decl.var.instance",
       "warning": "undocumented"
     },
     {
-      "file": "/Users/joecieslik/code/ios-swift-client-sdk-private/LaunchDarkly/LaunchDarkly/Models/ConnectionInformation.swift",
+      "file": "/Users/demo/SDKs/ios-swift-client-sdk-private/LaunchDarkly/LaunchDarkly/Models/ConnectionInformation.swift",
       "line": 54,
       "symbol": "ConnectionInformation.lastConnectionFailureReason",
       "symbol_kind": "source.lang.swift.decl.var.instance",
       "warning": "undocumented"
     },
     {
-      "file": "/Users/joecieslik/code/ios-swift-client-sdk-private/LaunchDarkly/LaunchDarkly/Models/ConnectionInformation.swift",
+      "file": "/Users/demo/SDKs/ios-swift-client-sdk-private/LaunchDarkly/LaunchDarkly/Models/ConnectionInformation.swift",
       "line": 160,
       "symbol": "ConnectionInformation.LastConnectionFailureReason",
       "symbol_kind": "source.lang.swift.decl.extension",
       "warning": "undocumented"
     },
     {
-      "file": "/Users/joecieslik/code/ios-swift-client-sdk-private/LaunchDarkly/LaunchDarkly/ObjectiveC/ObjcLDChangedFlag.swift",
+      "file": "/Users/demo/SDKs/ios-swift-client-sdk-private/LaunchDarkly/LaunchDarkly/ObjectiveC/ObjcLDChangedFlag.swift",
       "line": 50,
       "symbol": "ObjcLDBoolChangedFlag.typeMismatch",
       "symbol_kind": "source.lang.swift.decl.var.instance",
       "warning": "undocumented"
     },
     {
-      "file": "/Users/joecieslik/code/ios-swift-client-sdk-private/LaunchDarkly/LaunchDarkly/ObjectiveC/ObjcLDChangedFlag.swift",
+      "file": "/Users/demo/SDKs/ios-swift-client-sdk-private/LaunchDarkly/LaunchDarkly/ObjectiveC/ObjcLDChangedFlag.swift",
       "line": 73,
       "symbol": "ObjcLDIntegerChangedFlag.typeMismatch",
       "symbol_kind": "source.lang.swift.decl.var.instance",
       "warning": "undocumented"
     },
     {
-      "file": "/Users/joecieslik/code/ios-swift-client-sdk-private/LaunchDarkly/LaunchDarkly/ObjectiveC/ObjcLDChangedFlag.swift",
+      "file": "/Users/demo/SDKs/ios-swift-client-sdk-private/LaunchDarkly/LaunchDarkly/ObjectiveC/ObjcLDChangedFlag.swift",
       "line": 96,
       "symbol": "ObjcLDDoubleChangedFlag.typeMismatch",
       "symbol_kind": "source.lang.swift.decl.var.instance",
       "warning": "undocumented"
     },
     {
-      "file": "/Users/joecieslik/code/ios-swift-client-sdk-private/LaunchDarkly/LaunchDarkly/ObjectiveC/ObjcLDChangedFlag.swift",
+      "file": "/Users/demo/SDKs/ios-swift-client-sdk-private/LaunchDarkly/LaunchDarkly/ObjectiveC/ObjcLDChangedFlag.swift",
       "line": 119,
       "symbol": "ObjcLDStringChangedFlag.typeMismatch",
       "symbol_kind": "source.lang.swift.decl.var.instance",
       "warning": "undocumented"
     },
     {
-      "file": "/Users/joecieslik/code/ios-swift-client-sdk-private/LaunchDarkly/LaunchDarkly/ObjectiveC/ObjcLDChangedFlag.swift",
+      "file": "/Users/demo/SDKs/ios-swift-client-sdk-private/LaunchDarkly/LaunchDarkly/ObjectiveC/ObjcLDChangedFlag.swift",
       "line": 142,
       "symbol": "ObjcLDArrayChangedFlag.typeMismatch",
       "symbol_kind": "source.lang.swift.decl.var.instance",
       "warning": "undocumented"
     },
     {
-      "file": "/Users/joecieslik/code/ios-swift-client-sdk-private/LaunchDarkly/LaunchDarkly/ObjectiveC/ObjcLDChangedFlag.swift",
+      "file": "/Users/demo/SDKs/ios-swift-client-sdk-private/LaunchDarkly/LaunchDarkly/ObjectiveC/ObjcLDChangedFlag.swift",
       "line": 165,
       "symbol": "ObjcLDDictionaryChangedFlag.typeMismatch",
       "symbol_kind": "source.lang.swift.decl.var.instance",
       "warning": "undocumented"
     },
     {
-      "file": "/Users/joecieslik/code/ios-swift-client-sdk-private/LaunchDarkly/LaunchDarkly/ObjectiveC/ObjcLDEvaluationDetail.swift",
+      "file": "/Users/demo/SDKs/ios-swift-client-sdk-private/LaunchDarkly/LaunchDarkly/ObjectiveC/ObjcLDEvaluationDetail.swift",
       "line": 11,
       "symbol": "ObjcLDBoolEvaluationDetail",
       "symbol_kind": "source.lang.swift.decl.class",
       "warning": "undocumented"
     },
     {
-      "file": "/Users/joecieslik/code/ios-swift-client-sdk-private/LaunchDarkly/LaunchDarkly/ObjectiveC/ObjcLDEvaluationDetail.swift",
+      "file": "/Users/demo/SDKs/ios-swift-client-sdk-private/LaunchDarkly/LaunchDarkly/ObjectiveC/ObjcLDEvaluationDetail.swift",
       "line": 12,
       "symbol": "ObjcLDBoolEvaluationDetail.value",
       "symbol_kind": "source.lang.swift.decl.var.instance",
       "warning": "undocumented"
     },
     {
-      "file": "/Users/joecieslik/code/ios-swift-client-sdk-private/LaunchDarkly/LaunchDarkly/ObjectiveC/ObjcLDEvaluationDetail.swift",
+      "file": "/Users/demo/SDKs/ios-swift-client-sdk-private/LaunchDarkly/LaunchDarkly/ObjectiveC/ObjcLDEvaluationDetail.swift",
       "line": 13,
       "symbol": "ObjcLDBoolEvaluationDetail.variationIndex",
       "symbol_kind": "source.lang.swift.decl.var.instance",
       "warning": "undocumented"
     },
     {
-      "file": "/Users/joecieslik/code/ios-swift-client-sdk-private/LaunchDarkly/LaunchDarkly/ObjectiveC/ObjcLDEvaluationDetail.swift",
+      "file": "/Users/demo/SDKs/ios-swift-client-sdk-private/LaunchDarkly/LaunchDarkly/ObjectiveC/ObjcLDEvaluationDetail.swift",
       "line": 14,
       "symbol": "ObjcLDBoolEvaluationDetail.reason",
       "symbol_kind": "source.lang.swift.decl.var.instance",
       "warning": "undocumented"
     },
     {
-      "file": "/Users/joecieslik/code/ios-swift-client-sdk-private/LaunchDarkly/LaunchDarkly/ObjectiveC/ObjcLDEvaluationDetail.swift",
+      "file": "/Users/demo/SDKs/ios-swift-client-sdk-private/LaunchDarkly/LaunchDarkly/ObjectiveC/ObjcLDEvaluationDetail.swift",
       "line": 24,
       "symbol": "ObjcLDDoubleEvaluationDetail",
       "symbol_kind": "source.lang.swift.decl.class",
       "warning": "undocumented"
     },
     {
-      "file": "/Users/joecieslik/code/ios-swift-client-sdk-private/LaunchDarkly/LaunchDarkly/ObjectiveC/ObjcLDEvaluationDetail.swift",
+      "file": "/Users/demo/SDKs/ios-swift-client-sdk-private/LaunchDarkly/LaunchDarkly/ObjectiveC/ObjcLDEvaluationDetail.swift",
       "line": 25,
       "symbol": "ObjcLDDoubleEvaluationDetail.value",
       "symbol_kind": "source.lang.swift.decl.var.instance",
       "warning": "undocumented"
     },
     {
-      "file": "/Users/joecieslik/code/ios-swift-client-sdk-private/LaunchDarkly/LaunchDarkly/ObjectiveC/ObjcLDEvaluationDetail.swift",
+      "file": "/Users/demo/SDKs/ios-swift-client-sdk-private/LaunchDarkly/LaunchDarkly/ObjectiveC/ObjcLDEvaluationDetail.swift",
       "line": 26,
       "symbol": "ObjcLDDoubleEvaluationDetail.variationIndex",
       "symbol_kind": "source.lang.swift.decl.var.instance",
       "warning": "undocumented"
     },
     {
-      "file": "/Users/joecieslik/code/ios-swift-client-sdk-private/LaunchDarkly/LaunchDarkly/ObjectiveC/ObjcLDEvaluationDetail.swift",
+      "file": "/Users/demo/SDKs/ios-swift-client-sdk-private/LaunchDarkly/LaunchDarkly/ObjectiveC/ObjcLDEvaluationDetail.swift",
       "line": 27,
       "symbol": "ObjcLDDoubleEvaluationDetail.reason",
       "symbol_kind": "source.lang.swift.decl.var.instance",
       "warning": "undocumented"
     },
     {
-      "file": "/Users/joecieslik/code/ios-swift-client-sdk-private/LaunchDarkly/LaunchDarkly/ObjectiveC/ObjcLDEvaluationDetail.swift",
+      "file": "/Users/demo/SDKs/ios-swift-client-sdk-private/LaunchDarkly/LaunchDarkly/ObjectiveC/ObjcLDEvaluationDetail.swift",
       "line": 37,
       "symbol": "ObjcLDIntegerEvaluationDetail",
       "symbol_kind": "source.lang.swift.decl.class",
       "warning": "undocumented"
     },
     {
-      "file": "/Users/joecieslik/code/ios-swift-client-sdk-private/LaunchDarkly/LaunchDarkly/ObjectiveC/ObjcLDEvaluationDetail.swift",
+      "file": "/Users/demo/SDKs/ios-swift-client-sdk-private/LaunchDarkly/LaunchDarkly/ObjectiveC/ObjcLDEvaluationDetail.swift",
       "line": 38,
       "symbol": "ObjcLDIntegerEvaluationDetail.value",
       "symbol_kind": "source.lang.swift.decl.var.instance",
       "warning": "undocumented"
     },
     {
-      "file": "/Users/joecieslik/code/ios-swift-client-sdk-private/LaunchDarkly/LaunchDarkly/ObjectiveC/ObjcLDEvaluationDetail.swift",
+      "file": "/Users/demo/SDKs/ios-swift-client-sdk-private/LaunchDarkly/LaunchDarkly/ObjectiveC/ObjcLDEvaluationDetail.swift",
       "line": 39,
       "symbol": "ObjcLDIntegerEvaluationDetail.variationIndex",
       "symbol_kind": "source.lang.swift.decl.var.instance",
       "warning": "undocumented"
     },
     {
-      "file": "/Users/joecieslik/code/ios-swift-client-sdk-private/LaunchDarkly/LaunchDarkly/ObjectiveC/ObjcLDEvaluationDetail.swift",
+      "file": "/Users/demo/SDKs/ios-swift-client-sdk-private/LaunchDarkly/LaunchDarkly/ObjectiveC/ObjcLDEvaluationDetail.swift",
       "line": 40,
       "symbol": "ObjcLDIntegerEvaluationDetail.reason",
       "symbol_kind": "source.lang.swift.decl.var.instance",
       "warning": "undocumented"
     },
     {
-      "file": "/Users/joecieslik/code/ios-swift-client-sdk-private/LaunchDarkly/LaunchDarkly/ObjectiveC/ObjcLDEvaluationDetail.swift",
+      "file": "/Users/demo/SDKs/ios-swift-client-sdk-private/LaunchDarkly/LaunchDarkly/ObjectiveC/ObjcLDEvaluationDetail.swift",
       "line": 50,
       "symbol": "ObjcLDStringEvaluationDetail",
       "symbol_kind": "source.lang.swift.decl.class",
       "warning": "undocumented"
     },
     {
-      "file": "/Users/joecieslik/code/ios-swift-client-sdk-private/LaunchDarkly/LaunchDarkly/ObjectiveC/ObjcLDEvaluationDetail.swift",
+      "file": "/Users/demo/SDKs/ios-swift-client-sdk-private/LaunchDarkly/LaunchDarkly/ObjectiveC/ObjcLDEvaluationDetail.swift",
       "line": 51,
       "symbol": "ObjcLDStringEvaluationDetail.value",
       "symbol_kind": "source.lang.swift.decl.var.instance",
       "warning": "undocumented"
     },
     {
-      "file": "/Users/joecieslik/code/ios-swift-client-sdk-private/LaunchDarkly/LaunchDarkly/ObjectiveC/ObjcLDEvaluationDetail.swift",
+      "file": "/Users/demo/SDKs/ios-swift-client-sdk-private/LaunchDarkly/LaunchDarkly/ObjectiveC/ObjcLDEvaluationDetail.swift",
       "line": 52,
       "symbol": "ObjcLDStringEvaluationDetail.variationIndex",
       "symbol_kind": "source.lang.swift.decl.var.instance",
       "warning": "undocumented"
     },
     {
-      "file": "/Users/joecieslik/code/ios-swift-client-sdk-private/LaunchDarkly/LaunchDarkly/ObjectiveC/ObjcLDEvaluationDetail.swift",
+      "file": "/Users/demo/SDKs/ios-swift-client-sdk-private/LaunchDarkly/LaunchDarkly/ObjectiveC/ObjcLDEvaluationDetail.swift",
       "line": 53,
       "symbol": "ObjcLDStringEvaluationDetail.reason",
       "symbol_kind": "source.lang.swift.decl.var.instance",
       "warning": "undocumented"
     },
     {
-      "file": "/Users/joecieslik/code/ios-swift-client-sdk-private/LaunchDarkly/LaunchDarkly/ObjectiveC/ObjcLDEvaluationDetail.swift",
+      "file": "/Users/demo/SDKs/ios-swift-client-sdk-private/LaunchDarkly/LaunchDarkly/ObjectiveC/ObjcLDEvaluationDetail.swift",
       "line": 63,
       "symbol": "ObjcLDArrayEvaluationDetail",
       "symbol_kind": "source.lang.swift.decl.class",
       "warning": "undocumented"
     },
     {
-      "file": "/Users/joecieslik/code/ios-swift-client-sdk-private/LaunchDarkly/LaunchDarkly/ObjectiveC/ObjcLDEvaluationDetail.swift",
+      "file": "/Users/demo/SDKs/ios-swift-client-sdk-private/LaunchDarkly/LaunchDarkly/ObjectiveC/ObjcLDEvaluationDetail.swift",
       "line": 64,
       "symbol": "ObjcLDArrayEvaluationDetail.value",
       "symbol_kind": "source.lang.swift.decl.var.instance",
       "warning": "undocumented"
     },
     {
-      "file": "/Users/joecieslik/code/ios-swift-client-sdk-private/LaunchDarkly/LaunchDarkly/ObjectiveC/ObjcLDEvaluationDetail.swift",
+      "file": "/Users/demo/SDKs/ios-swift-client-sdk-private/LaunchDarkly/LaunchDarkly/ObjectiveC/ObjcLDEvaluationDetail.swift",
       "line": 65,
       "symbol": "ObjcLDArrayEvaluationDetail.variationIndex",
       "symbol_kind": "source.lang.swift.decl.var.instance",
       "warning": "undocumented"
     },
     {
-      "file": "/Users/joecieslik/code/ios-swift-client-sdk-private/LaunchDarkly/LaunchDarkly/ObjectiveC/ObjcLDEvaluationDetail.swift",
+      "file": "/Users/demo/SDKs/ios-swift-client-sdk-private/LaunchDarkly/LaunchDarkly/ObjectiveC/ObjcLDEvaluationDetail.swift",
       "line": 66,
       "symbol": "ObjcLDArrayEvaluationDetail.reason",
       "symbol_kind": "source.lang.swift.decl.var.instance",
       "warning": "undocumented"
     },
     {
-      "file": "/Users/joecieslik/code/ios-swift-client-sdk-private/LaunchDarkly/LaunchDarkly/ObjectiveC/ObjcLDEvaluationDetail.swift",
+      "file": "/Users/demo/SDKs/ios-swift-client-sdk-private/LaunchDarkly/LaunchDarkly/ObjectiveC/ObjcLDEvaluationDetail.swift",
       "line": 76,
       "symbol": "ObjcLDDictionaryEvaluationDetail",
       "symbol_kind": "source.lang.swift.decl.class",
       "warning": "undocumented"
     },
     {
-      "file": "/Users/joecieslik/code/ios-swift-client-sdk-private/LaunchDarkly/LaunchDarkly/ObjectiveC/ObjcLDEvaluationDetail.swift",
+      "file": "/Users/demo/SDKs/ios-swift-client-sdk-private/LaunchDarkly/LaunchDarkly/ObjectiveC/ObjcLDEvaluationDetail.swift",
       "line": 77,
       "symbol": "ObjcLDDictionaryEvaluationDetail.value",
       "symbol_kind": "source.lang.swift.decl.var.instance",
       "warning": "undocumented"
     },
     {
-      "file": "/Users/joecieslik/code/ios-swift-client-sdk-private/LaunchDarkly/LaunchDarkly/ObjectiveC/ObjcLDEvaluationDetail.swift",
+      "file": "/Users/demo/SDKs/ios-swift-client-sdk-private/LaunchDarkly/LaunchDarkly/ObjectiveC/ObjcLDEvaluationDetail.swift",
       "line": 78,
       "symbol": "ObjcLDDictionaryEvaluationDetail.variationIndex",
       "symbol_kind": "source.lang.swift.decl.var.instance",
       "warning": "undocumented"
     },
     {
-      "file": "/Users/joecieslik/code/ios-swift-client-sdk-private/LaunchDarkly/LaunchDarkly/ObjectiveC/ObjcLDEvaluationDetail.swift",
+      "file": "/Users/demo/SDKs/ios-swift-client-sdk-private/LaunchDarkly/LaunchDarkly/ObjectiveC/ObjcLDEvaluationDetail.swift",
       "line": 79,
       "symbol": "ObjcLDDictionaryEvaluationDetail.reason",
       "symbol_kind": "source.lang.swift.decl.var.instance",
       "warning": "undocumented"
     }
   ],
-  "source_directory": "/Users/joecieslik/code/ios-swift-client-sdk-private"
+  "source_directory": "/Users/demo/SDKs/ios-swift-client-sdk-private"
 }
