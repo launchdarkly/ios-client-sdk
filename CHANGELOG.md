@@ -4,7 +4,7 @@ All notable changes to the LaunchDarkly iOS SDK will be documented in this file.
 
 ## [5.3.2] - 2021-02-11
 ### Fixed
-- Updated to prevent crash in `dispatch_group_leave.cold.1` that would rarely occur as the SDK transitioned to an online state for a given configuration or user. This issue may have been exacerbated for a short period due to a temporary change in the behavior of the LaunchDarkly service streaming endpoint. Thanks to all the users who reported ([#235](https://github.com/launchdarkly/ios-client-sdk/issues/235)).
+- Updated to prevent a crash in `dispatch_group_leave.cold.1` that would rarely occur as the SDK transitioned to an online state for a given configuration or user. This issue may have been exacerbated for a short period due to a temporary change in the behavior of the LaunchDarkly service streaming endpoint. Thanks to all the users who reported ([#235](https://github.com/launchdarkly/ios-client-sdk/issues/235)).
 - Updated `LDSwiftEventSource` dependency to correct an issue where a streaming connection could sometimes reconnect after being set offline.
 
 ## [5.3.1] - 2020-12-15
