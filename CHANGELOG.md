@@ -2,6 +2,11 @@
 
 All notable changes to the LaunchDarkly iOS SDK will be documented in this file. This project adheres to [Semantic Versioning](http://semver.org).
 
+## [5.3.2] - 2021-02-11
+### Fixed
+- Updated to prevent a crash in `dispatch_group_leave.cold.1` that would rarely occur as the SDK transitioned to an online state for a given configuration or user. This issue may have been exacerbated for a short period due to a temporary change in the behavior of the LaunchDarkly service streaming endpoint. Thanks to all the users who reported ([#235](https://github.com/launchdarkly/ios-client-sdk/issues/235)).
+- Updated `LDSwiftEventSource` dependency to correct an issue where a streaming connection could sometimes reconnect after being set offline.
+
 ## [5.3.1] - 2020-12-15
 ### Fixed
 - Decoupled `FlagStore` from `LDUser` to fix a bug where multiple environments could overwrite each other's flag values.
@@ -24,6 +29,7 @@ All notable changes to the LaunchDarkly iOS SDK will be documented in this file.
 ### Added
 - The ability to specify additional headers to be included on HTTP requests to LaunchDarkly services using `LDConfig.additionalHeaders`. This feature is to enable certain proxy configurations, and is not needed for normal use.
 - Support for building docs with [jazzy](https://github.com/realm/jazzy). These docs will be available through [GitHub Pages](https://launchdarkly.github.io/ios-client-sdk/).
+
 ### Fixed
 - SDK causing nested bundles in archived product when including the SDK through Carthage. This caused rejections when submitted to the App Store. Thanks to @spr for reporting ([#217](https://github.com/launchdarkly/ios-client-sdk/issues/217)).
 - SDK causing application to expect LDSwiftEventSource dynamic framework when built with SwiftPM, which does not include the dynamic framework in the resulting application. This causes the application to be rejected when submitted to the App Store. Thanks to @spr for reporting ([#216](https://github.com/launchdarkly/ios-client-sdk/issues/216)).
