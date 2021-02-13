@@ -184,22 +184,6 @@ final class LDClientSpec: QuickSpec {
             completion?()
             timeOutCompletion?(timedOut)
         }
-
-        ///Pass nil to leave the flags unchanged
-        func setFlagStoreCallbackToMimicRealFlagStore(newFlags: [LDFlagKey: FeatureFlag]? = nil) {
-            flagStoreMock.replaceStoreCallback = {
-                self.flagStoreMock!.featureFlags = newFlags ?? self.flagStoreMock!.featureFlags
-                self.flagStoreMock!.replaceStoreReceivedArguments?.completion?()
-            }
-            flagStoreMock.updateStoreCallback = {
-                self.flagStoreMock!.featureFlags = newFlags ?? self.flagStoreMock!.featureFlags
-                self.flagStoreMock!.updateStoreReceivedArguments?.completion?()
-            }
-            flagStoreMock.deleteFlagCallback = {
-                self.flagStoreMock!.featureFlags = newFlags ?? self.flagStoreMock!.featureFlags
-                self.flagStoreMock!.deleteFlagReceivedArguments?.completion?()
-            }
-        }
     }
 
     override func spec() {
@@ -555,7 +539,6 @@ final class LDClientSpec: QuickSpec {
                     }
                     testContext.featureFlagCachingMock.retrieveFeatureFlagsReturnValue = testContext.flagStoreMock.featureFlags
                     retrievedFlags = testContext.flagStoreMock.featureFlags
-                    testContext.flagStoreMock.featureFlags = [:]
                     waitUntil { done in
                         testContext.subject.internalIdentify(newUser: testContext.user, completion: done)
                     }
@@ -566,7 +549,7 @@ final class LDClientSpec: QuickSpec {
                     expect(testContext.featureFlagCachingMock.retrieveFeatureFlagsReceivedArguments?.mobileKey) == testContext.config.mobileKey
                 }
                 it("restores user flags from cache") {
-                    expect(testContext.flagStoreMock.replaceStoreReceivedArguments?.newFlags?.flagCollection) == retrievedFlags
+                    expect(testContext.flagStoreMock.replaceStoreReceivedArguments?.newFlags.flagCollection) == retrievedFlags
                 }
                 it("converts cached data") {
                     expect(testContext.cacheConvertingMock.convertCacheDataCallCount) == 2 // both start and identify
@@ -577,10 +560,7 @@ final class LDClientSpec: QuickSpec {
             context("when called without cached flags for the user") {
                 beforeEach {
                     waitUntil { done in
-                        testContext = TestContext {
-                            testContext.flagStoreMock.featureFlags = [:]
-                            done()
-                        }
+                        testContext = TestContext(completion: done)
                     }
                 }
                 it("checks the flag cache for the user and environment") {
@@ -916,7 +896,6 @@ final class LDClientSpec: QuickSpec {
                     }
                     testContext.featureFlagCachingMock.retrieveFeatureFlagsReturnValue = testContext.flagStoreMock.featureFlags
                     retrievedFlags = testContext.flagStoreMock.featureFlags
-                    testContext.flagStoreMock.featureFlags = [:]
                     waitUntil { done in
                         testContext.subject.internalIdentify(newUser: testContext.user, completion: done)
                     }
@@ -927,7 +906,7 @@ final class LDClientSpec: QuickSpec {
                     expect(testContext.featureFlagCachingMock.retrieveFeatureFlagsReceivedArguments?.mobileKey) == testContext.config.mobileKey
                 }
                 it("restores user flags from cache") {
-                    expect(testContext.flagStoreMock.replaceStoreReceivedArguments?.newFlags?.flagCollection) == retrievedFlags
+                    expect(testContext.flagStoreMock.replaceStoreReceivedArguments?.newFlags.flagCollection) == retrievedFlags
                 }
                 it("converts cached data") {
                     expect(testContext.cacheConvertingMock.convertCacheDataCallCount) == 2 // both start and internalIdentify
@@ -943,7 +922,6 @@ final class LDClientSpec: QuickSpec {
                             done()
                         }
                     }
-                    testContext.flagStoreMock.featureFlags = [:]
                 }
                 it("checks the flag cache for the user and environment") {
                     expect(testContext.featureFlagCachingMock.retrieveFeatureFlagsCallCount) == 1
@@ -1067,7 +1045,7 @@ final class LDClientSpec: QuickSpec {
                 it("restores the cached users feature flags") {
                     expect(testContext.subject.user) == newUser
                     expect(testContext.flagStoreMock.replaceStoreCallCount) == 1
-                    expect(testContext.flagStoreMock.replaceStoreReceivedArguments?.newFlags?.flagCollection) == stubFlags?.featureFlags
+                    expect(testContext.flagStoreMock.replaceStoreReceivedArguments?.newFlags.flagCollection) == stubFlags?.featureFlags
                 }
                 it("converts cached data") {
                     expect(testContext.cacheConvertingMock.convertCacheDataCallCount) == 1
@@ -1653,7 +1631,6 @@ final class LDClientSpec: QuickSpec {
                 let newBoolFeatureFlag = DarklyServiceMock.Constants.stubFeatureFlag(for: DarklyServiceMock.FlagKeys.bool, useAlternateValue: true)
                 newFlags = testContext.flagStoreMock.featureFlags
                 newFlags[DarklyServiceMock.FlagKeys.bool] = newBoolFeatureFlag
-                testContext.setFlagStoreCallbackToMimicRealFlagStore(newFlags: newFlags)
 
                 waitUntil { done in
                     testContext.changeNotifierMock.notifyObserversCallback = done
@@ -1683,8 +1660,7 @@ final class LDClientSpec: QuickSpec {
             beforeEach {
                 newFlags = testContext.flagStoreMock.featureFlags
                 newFlags[Constants.newFlagKey] = DarklyServiceMock.Constants.stubFeatureFlag(for: DarklyServiceMock.FlagKeys.string, useAlternateValue: true)
-                testContext.setFlagStoreCallbackToMimicRealFlagStore(newFlags: newFlags)
-                
+
                 waitUntil { done in
                     testContext.changeNotifierMock.notifyObserversCallback = done
                     updateDate = Date()
@@ -1713,7 +1689,6 @@ final class LDClientSpec: QuickSpec {
             beforeEach {
                 newFlags = testContext.flagStoreMock.featureFlags
                 newFlags.removeValue(forKey: DarklyServiceMock.FlagKeys.dictionary)
-                testContext.setFlagStoreCallbackToMimicRealFlagStore(newFlags: newFlags)
 
                 waitUntil { done in
                     testContext.changeNotifierMock.notifyObserversCallback = done
@@ -1742,7 +1717,6 @@ final class LDClientSpec: QuickSpec {
         context("there were no changes to the flags") {
             beforeEach {
                 newFlags = testContext.flagStoreMock.featureFlags
-                testContext.setFlagStoreCallbackToMimicRealFlagStore(newFlags: newFlags)
 
                 testContext.subject.flagChangeNotifier = ClientServiceMockFactory().makeFlagChangeNotifier()
                 waitUntil { done in
@@ -1774,8 +1748,6 @@ final class LDClientSpec: QuickSpec {
     func onSyncCompleteStreamingPatchSpec() {
         var testContext: TestContext!
         var flagUpdateDictionary: [String: Any]!
-        var oldFlags: [LDFlagKey: FeatureFlag]!
-        var newFlags: [LDFlagKey: FeatureFlag]!
         var updateDate: Date!
 
         beforeEach {
@@ -1787,15 +1759,13 @@ final class LDClientSpec: QuickSpec {
 
         context("update changes flags") {
             beforeEach {
-                oldFlags = testContext.flagStoreMock.featureFlags
+                waitUntil { done in
+                    testContext.flagStoreMock.replaceStore(newFlags: testContext.oldFlags, completion: done)
+                }
                 flagUpdateDictionary = FlagMaintainingMock.stubPatchDictionary(key: DarklyServiceMock.FlagKeys.int,
                                                                                value: DarklyServiceMock.FlagValues.int + 1,
                                                                                variation: DarklyServiceMock.Constants.variation + 1,
                                                                                version: DarklyServiceMock.Constants.version + 1)
-                let newIntFlag = DarklyServiceMock.Constants.stubFeatureFlag(for: DarklyServiceMock.FlagKeys.int, useAlternateValue: true)
-                newFlags = oldFlags
-                newFlags[DarklyServiceMock.FlagKeys.int] = newIntFlag
-                testContext.setFlagStoreCallbackToMimicRealFlagStore(newFlags: newFlags)
 
                 waitUntil { done in
                     testContext.changeNotifierMock.notifyObserversCallback = done
@@ -1809,7 +1779,7 @@ final class LDClientSpec: QuickSpec {
             }
             it("caches the updated flags") {
                 expect(testContext.featureFlagCachingMock.storeFeatureFlagsCallCount) == 1
-                expect(testContext.featureFlagCachingMock.storeFeatureFlagsReceivedArguments?.featureFlags) == newFlags
+                expect(testContext.featureFlagCachingMock.storeFeatureFlagsReceivedArguments?.featureFlags) == testContext.flagStoreMock.featureFlags
                 expect(testContext.featureFlagCachingMock.storeFeatureFlagsReceivedArguments?.user) == testContext.user
                 expect(testContext.featureFlagCachingMock.storeFeatureFlagsReceivedArguments?.mobileKey) == testContext.config.mobileKey
                 expect(testContext.featureFlagCachingMock.storeFeatureFlagsReceivedArguments?.lastUpdated.isWithin(Constants.updateThreshold, of: updateDate)) == true
@@ -1818,18 +1788,15 @@ final class LDClientSpec: QuickSpec {
             it("informs the flag change notifier of the changed flag") {
                 expect(testContext.changeNotifierMock.notifyObserversCallCount) == 1
                 expect(testContext.changeNotifierMock.notifyObserversReceivedArguments?.flagStore.featureFlags) == testContext.flagStoreMock.featureFlags
-                expect(testContext.changeNotifierMock.notifyObserversReceivedArguments?.oldFlags == oldFlags).to(beTrue())
+                expect(testContext.changeNotifierMock.notifyObserversReceivedArguments?.oldFlags == testContext.oldFlags).to(beTrue())
             }
         }
         context("update does not change flags") {
             beforeEach {
-                oldFlags = testContext.flagStoreMock.featureFlags
                 flagUpdateDictionary = FlagMaintainingMock.stubPatchDictionary(key: DarklyServiceMock.FlagKeys.int,
                                                                                value: DarklyServiceMock.FlagValues.int + 1,
                                                                                variation: DarklyServiceMock.Constants.variation,
                                                                                version: DarklyServiceMock.Constants.version)
-                newFlags = oldFlags
-                testContext.setFlagStoreCallbackToMimicRealFlagStore(newFlags: newFlags)
 
                 waitUntil { done in
                     testContext.changeNotifierMock.notifyObserversCallback = done
@@ -1843,7 +1810,7 @@ final class LDClientSpec: QuickSpec {
             }
             it("caches the updated flags") {
                 expect(testContext.featureFlagCachingMock.storeFeatureFlagsCallCount) == 1
-                expect(testContext.featureFlagCachingMock.storeFeatureFlagsReceivedArguments?.featureFlags) == newFlags
+                expect(testContext.featureFlagCachingMock.storeFeatureFlagsReceivedArguments?.featureFlags) == testContext.oldFlags
                 expect(testContext.featureFlagCachingMock.storeFeatureFlagsReceivedArguments?.user) == testContext.user
                 expect(testContext.featureFlagCachingMock.storeFeatureFlagsReceivedArguments?.mobileKey) == testContext.config.mobileKey
                 expect(testContext.featureFlagCachingMock.storeFeatureFlagsReceivedArguments?.lastUpdated.isWithin(Constants.updateThreshold, of: updateDate)) == true
@@ -1852,7 +1819,7 @@ final class LDClientSpec: QuickSpec {
             it("informs the flag change notifier of the unchanged flag") {
                 expect(testContext.changeNotifierMock.notifyObserversCallCount) == 1
                 expect(testContext.changeNotifierMock.notifyObserversReceivedArguments?.flagStore.featureFlags) == testContext.flagStoreMock.featureFlags
-                expect(testContext.changeNotifierMock.notifyObserversReceivedArguments?.oldFlags == oldFlags).to(beTrue())
+                expect(testContext.changeNotifierMock.notifyObserversReceivedArguments?.oldFlags == testContext.oldFlags).to(beTrue())
             }
         }
     }
@@ -1877,7 +1844,6 @@ final class LDClientSpec: QuickSpec {
                 flagUpdateDictionary = FlagMaintainingMock.stubDeleteDictionary(key: DarklyServiceMock.FlagKeys.int, version: DarklyServiceMock.Constants.version + 1)
                 newFlags = oldFlags
                 newFlags.removeValue(forKey: DarklyServiceMock.FlagKeys.int)
-                testContext.setFlagStoreCallbackToMimicRealFlagStore(newFlags: newFlags)
 
                 waitUntil { done in
                     testContext.changeNotifierMock.notifyObserversCallback = done
@@ -1907,7 +1873,6 @@ final class LDClientSpec: QuickSpec {
             beforeEach {
                 oldFlags = testContext.flagStoreMock.featureFlags
                 flagUpdateDictionary = FlagMaintainingMock.stubDeleteDictionary(key: DarklyServiceMock.FlagKeys.int, version: DarklyServiceMock.Constants.version)
-                testContext.setFlagStoreCallbackToMimicRealFlagStore(newFlags: oldFlags)
 
                 waitUntil { done in
                     testContext.changeNotifierMock.notifyObserversCallback = done

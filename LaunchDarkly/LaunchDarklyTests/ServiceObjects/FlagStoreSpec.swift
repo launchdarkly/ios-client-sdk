@@ -87,12 +87,11 @@ final class FlagStoreSpec: QuickSpec {
     }
 
     func replaceStoreSpec() {
-        var featureFlags: [LDFlagKey: FeatureFlag]!
+        let featureFlags: [LDFlagKey: FeatureFlag] = DarklyServiceMock.Constants.stubFeatureFlags(includeNullValue: false)
         var flagStore: FlagStore!
         describe("replaceStore") {
             context("with new flag values") {
                 beforeEach {
-                    featureFlags = DarklyServiceMock.Constants.stubFeatureFlags(includeNullValue: false)
                     flagStore = FlagStore()
                     waitUntil(timeout: .seconds(1)) { done in
                         flagStore.replaceStore(newFlags: featureFlags, completion: done)
@@ -104,7 +103,6 @@ final class FlagStoreSpec: QuickSpec {
             }
             context("with new flag value dictionary") {
                 beforeEach {
-                    featureFlags = DarklyServiceMock.Constants.stubFeatureFlags(includeNullValue: false)
                     flagStore = FlagStore()
                     waitUntil(timeout: .seconds(1)) { done in
                         flagStore.replaceStore(newFlags: featureFlags.dictionaryValue, completion: done)
@@ -114,16 +112,15 @@ final class FlagStoreSpec: QuickSpec {
                     expect(flagStore.featureFlags) == featureFlags
                 }
             }
-            context("with nil flag values") {
+            context("with invalid dictionary") {
                 beforeEach {
-                    featureFlags = DarklyServiceMock.Constants.stubFeatureFlags(includeNullValue: false)
                     flagStore = FlagStore(featureFlags: featureFlags)
 
                     waitUntil(timeout: .seconds(1)) { done in
-                        flagStore.replaceStore(newFlags: nil, completion: done)
+                        flagStore.replaceStore(newFlags: ["fakeKey": "Not a flag dict"], completion: done)
                     }
                 }
-                it("causes FlagStore to empty the flag values and replace the source") {
+                it("causes FlagStore to empty the flag values") {
                     expect(flagStore.featureFlags.isEmpty).to(beTrue())
                 }
             }

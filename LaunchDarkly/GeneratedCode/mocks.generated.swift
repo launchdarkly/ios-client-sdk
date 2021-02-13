@@ -418,46 +418,6 @@ final class FlagChangeNotifyingMock: FlagChangeNotifying {
     }
 }
 
-// MARK: - FlagMaintainingMock
-final class FlagMaintainingMock: FlagMaintaining {
-
-    var featureFlagsSetCount = 0
-    var setFeatureFlagsCallback: (() -> Void)?
-    var featureFlags: [LDFlagKey: FeatureFlag] = [:] {
-        didSet {
-            featureFlagsSetCount += 1
-            setFeatureFlagsCallback?()
-        }
-    }
-
-    var replaceStoreCallCount = 0
-    var replaceStoreCallback: (() -> Void)?
-    var replaceStoreReceivedArguments: (newFlags: [LDFlagKey: Any]?, completion: CompletionClosure?)?
-    func replaceStore(newFlags: [LDFlagKey: Any]?, completion: CompletionClosure?) {
-        replaceStoreCallCount += 1
-        replaceStoreReceivedArguments = (newFlags: newFlags, completion: completion)
-        replaceStoreCallback?()
-    }
-
-    var updateStoreCallCount = 0
-    var updateStoreCallback: (() -> Void)?
-    var updateStoreReceivedArguments: (updateDictionary: [String: Any], completion: CompletionClosure?)?
-    func updateStore(updateDictionary: [String: Any], completion: CompletionClosure?) {
-        updateStoreCallCount += 1
-        updateStoreReceivedArguments = (updateDictionary: updateDictionary, completion: completion)
-        updateStoreCallback?()
-    }
-
-    var deleteFlagCallCount = 0
-    var deleteFlagCallback: (() -> Void)?
-    var deleteFlagReceivedArguments: (deleteDictionary: [String: Any], completion: CompletionClosure?)?
-    func deleteFlag(deleteDictionary: [String: Any], completion: CompletionClosure?) {
-        deleteFlagCallCount += 1
-        deleteFlagReceivedArguments = (deleteDictionary: deleteDictionary, completion: completion)
-        deleteFlagCallback?()
-    }
-}
-
 // MARK: - KeyedValueCachingMock
 final class KeyedValueCachingMock: KeyedValueCaching {
 
