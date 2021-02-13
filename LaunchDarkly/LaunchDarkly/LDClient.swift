@@ -329,13 +329,7 @@ public class LDClient {
     }
 
     // MARK: Retrieving Flag Values
-    
-    /* FF Value Requests
-     Conceptual Model
-     The LDClient is the focal point for flag value requests. It should appear to the app that the client contains a store of [key: value] pairs where the keys are all strings and the values any of the supported LD flag types (Bool, Int, Double, String, Array, Dictionary).
-     When asked for a variation value, the LDClient provides either the value, or the value along with an explanation.
-    */
-    
+
     /**
      Returns the variation for the given feature flag. If the flag does not exist, cannot be cast to the correct return type, or the LDClient is not started, returns the default value. Use this method when the default value is a non-Optional type. See `variation` with the Optional return value when the default value can be nil.
 
@@ -515,17 +509,7 @@ public class LDClient {
     }
 
     // MARK: Observing Updates
-    
-    /* FF Change Notification
-     Conceptual Model
-     LDClient keeps a list of two types of closure observers, either Flag Change Observers or Flags Unchanged Observers.
-     There are 3 types of Flag Change Observers, Individual Flag Change Observers, Flag Collection Change Observers, and All Flags Change Observers. LDClient executes Individual Flag observers when it detects a change to a single flag being observed. LDClient executes Flag Collection Change Observers one time when it detects a change to any flag in the observed flag collection. LDClient executes All Flags observers one time when it detects a change to any flag. The Individual Flag Change Observer has closure that takes a LDChangedFlag input parameter which communicates the flag's old & new value. Flag Collection and All Flags Observers will have a closure that takes a dictionary of [LDFlagKey: LDChangeFlag] that communicates all of the changed flags.
-     An app registers an Individual Flag observer using observe(key:, owner:, handler:). An app registers a Flag Collection Observer using observe(keys: owner: handler), An app registers an All Flags observer using observeAll(owner:, handler:). An app can register multiple closures for each type by calling these methods multiple times. When the value of a flag changes, LDClient calls each registered closure 1 time.
-     Flags Unchanged Observers allow the LDClient to communicate to the app when it receives flags from the LD server that doesn't change any values from what the LDClient had already. For example, at launch the LDClient restores cached flag values before requesting flags from the LD server. If there has been no change to the flag values, the LDClient will execute the Flags Unchanged Observers that the app has registered. An app registers a Flags Unchanged Observer using observeFlagsUnchanged(owner: handler:).
-     LDClient will automatically remove observers when the owner is nil. This means an app does not need to stop observing flags, the LDClient will remove the observer after it has gone out of scope. An app can stop observers explicitly using stopObserver(owner:).
-     LDClient executes observers on the main thread.
-    */
-    
+
     /**
      Sets a handler for the specified flag key executed on the specified owner. If the flag's value changes, executes the handler, passing in the `changedFlag` containing the old and new flag values. See `LDChangedFlag` for details.
 
@@ -727,11 +711,6 @@ public class LDClient {
     }
 
     // MARK: Events
-
-    /* Event tracking
-     Conceptual model
-     The LDClient keeps an event store that it transmits periodically to LD. An app sends an event and optional data by calling track(key: data:) supplying at least the key.
-     */
 
     /**
      Adds a custom event to the LDClient event store. A client app can set a tracking event to allow client customized data analysis. Once an app has called `track`, the app cannot remove the event from the event store.
