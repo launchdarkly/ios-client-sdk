@@ -392,10 +392,10 @@ final class FlagChangeNotifyingMock: FlagChangeNotifying {
 
     var removeObserverCallCount = 0
     var removeObserverCallback: (() -> Void)?
-    var removeObserverReceivedArguments: (keys: [LDFlagKey], owner: LDObserverOwner)?
-    func removeObserver(_ keys: [LDFlagKey], owner: LDObserverOwner) {
+    var removeObserverReceivedOwner: LDObserverOwner?
+    func removeObserver(owner: LDObserverOwner) {
         removeObserverCallCount += 1
-        removeObserverReceivedArguments = (keys: keys, owner: owner)
+        removeObserverReceivedOwner = owner
         removeObserverCallback?()
     }
 

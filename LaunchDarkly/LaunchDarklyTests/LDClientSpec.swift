@@ -1602,7 +1602,7 @@ final class LDClientSpec: QuickSpec {
             }
             it("unregisters the owner") {
                 expect(mockFlagNotifier.removeObserverCallCount) == 1
-                expect(mockFlagNotifier.removeObserverReceivedArguments?.owner) === self
+                expect(mockFlagNotifier.removeObserverReceivedOwner) === self
                 expect(testContext.errorNotifierMock.removeObserversCallCount) == 1
                 expect(testContext.errorNotifierMock.removeObserversReceivedOwner) === self
             }
