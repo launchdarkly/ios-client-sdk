@@ -62,6 +62,7 @@ public struct LDUser {
     public var device: String?
     ///Client app defined operatingSystem for the user. The SDK will determine the operatingSystem automatically, however the client app can override the value. The SDK will insert the operatingSystem into the `custom` dictionary. The operatingSystem cannot be made private. (Default: the system identified operating system)
     public var operatingSystem: String?
+
     /**
      Client app defined privateAttributes for the user.
      The SDK will not include private attribute values in analytics events, but private attribute names will be sent.

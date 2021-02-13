@@ -281,6 +281,7 @@ public class LDClient {
 
     func internalIdentify(newUser: LDUser, completion: (() -> Void)? = nil) {
         internalIdentifyQueue.sync {
+            let previousUser = self.user
             self.user = newUser
             Log.debug(self.typeName(and: #function) + "new user set with key: " + self.user.key )
             let wasOnline = self.isOnline
@@ -297,13 +298,18 @@ public class LDClient {
                 }
             }
             self.service = self.serviceFactory.makeDarklyServiceProvider(config: self.config, user: self.user)
-            self.service.clearFlagResponseCache()
 
             if self.hasStarted {
                 self.eventReporter.record(Event.identifyEvent(user: self.user))
             }
 
             self.internalSetOnline(wasOnline, completion: completion)
+
+            if !config.autoAliasingOptOut && previousUser.isAnonymous && !newUser.isAnonymous {
+                self.internalAlias(context: newUser, previousContext: previousUser)
+            }
+
+            self.service.clearFlagResponseCache()
         }
     }
 
@@ -758,6 +764,33 @@ public class LDClient {
     }
 
     /**
+     Tells the SDK to generate an alias event.
+
+     Associates two users for analytics purposes. 
+     
+     This can be helpful in the situation where a person is represented by multiple 
+     LaunchDarkly users. This may happen, for example, when a person initially logs into 
+     an application-- the person might be represented by an anonymous user prior to logging
+     in and a different user after logging in, as denoted by a different user key.
+
+     - parameter context: the user that will be aliased to
+     - parameter previousContext: the user that will be bound to the new context
+     */
+    public func alias(context new: LDUser, previousContext old: LDUser) {
+        guard hasStarted
+        else {
+            Log.debug(typeName(and: #function) + "aborted. LDClient not started")
+            return
+        }
+
+        internalAlias(context: new, previousContext: old)
+    }
+
+    private func internalAlias(context new: LDUser, previousContext old: LDUser) {
+        self.eventReporter.record(Event.aliasEvent(newUser: new, oldUser: old))
+    }
+
+    /**
      Tells the SDK to immediately send any currently queued events to LaunchDarkly.
 
      There should not normally be a need to call this function. While online, the LDClient automatically reports events
@@ -903,7 +936,7 @@ public class LDClient {
     private var _hasStarted = true
     private var hasStartedQueue = DispatchQueue(label: "com.launchdarkly.LDClient.hasStartedQueue")
     
-    private init(serviceFactory: ClientServiceCreating? = nil, configuration: LDConfig, startUser: LDUser?, newCache: FeatureFlagCaching, flagNotifier: FlagChangeNotifying, testing: Bool = false, completion: (() -> Void)? = nil) {
+    private init(serviceFactory: ClientServiceCreating? = nil, configuration: LDConfig, startUser: LDUser?, newCache: FeatureFlagCaching, flagNotifier: FlagChangeNotifying, completion: (() -> Void)? = nil) {
         if let serviceFactory = serviceFactory {
             self.serviceFactory = serviceFactory
         }

@@ -35,7 +35,7 @@ final class EventSpec: QuickSpec {
 
     override func spec() {
         initSpec()
-        kindSpec()
+        aliasSpec()
         featureEventSpec()
         debugEventSpec()
         customEventSpec()
@@ -94,11 +94,32 @@ final class EventSpec: QuickSpec {
         }
     }
 
-    private func kindSpec() {
-        describe("isAlwaysInlineUserKind") {
-            it("returns true when event kind should inline user") {
-                for kind in Event.Kind.allKinds {
-                    expect(kind.isAlwaysInlineUserKind) == Event.Kind.alwaysInlineUserKinds.contains(kind)
+    private func aliasSpec() {
+        describe("alias events") {
+            var event: Event!
+            context("aliasing users") {
+                it("has correct fields") {
+                    event = Event.aliasEvent(newUser: LDUser(), oldUser: LDUser())
+
+                    expect(event.kind) == Event.Kind.alias
+                }
+
+                it("from user to user") {
+                    event = Event.aliasEvent(newUser: LDUser(key: "new"), oldUser: LDUser(key: "old"))
+
+                    expect(event.key) == "new"
+                    expect(event.previousKey) == "old"
+                    expect(event.contextKind) == "user"
+                    expect(event.previousContextKind) == "user"
+                }
+
+                it("from anon to anon") {
+                    event = Event.aliasEvent(newUser: LDUser(key: "new", isAnonymous: true), oldUser: LDUser(key: "old", isAnonymous: true))
+
+                    expect(event.key) == "new"
+                    expect(event.previousKey) == "old"
+                    expect(event.contextKind) == "anonymousUser"
+                    expect(event.previousContextKind) == "anonymousUser"
                 }
             }
         }
@@ -1067,6 +1088,7 @@ extension Event {
         case .identify: return Event.identifyEvent(user: user)
         case .custom: return (try? Event.customEvent(key: UUID().uuidString, user: user, data: ["custom": UUID().uuidString]))!
         case .summary: return Event.summaryEvent(flagRequestTracker: FlagRequestTracker.stub())!
+        case .alias: return Event.aliasEvent(newUser: LDUser(), oldUser: LDUser())
         }
     }
 

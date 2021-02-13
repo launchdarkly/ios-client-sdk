@@ -109,6 +109,7 @@ final class LDClientSpec: QuickSpec {
              enableBackgroundUpdates: Bool = true,
              runMode: LDClientRunMode = .foreground,
              operatingSystem: OperatingSystem? = nil,
+             autoAliasingOptOut: Bool = true,
              completion: (() -> Void)? = nil) {
 
             let clientServiceFactory = ClientServiceMockFactory()
@@ -121,6 +122,7 @@ final class LDClientSpec: QuickSpec {
             config.streamingMode = streamingMode
             config.enableBackgroundUpdates = enableBackgroundUpdates
             config.eventFlushInterval = 300.0   //5 min...don't want this to trigger
+            config.autoAliasingOptOut = autoAliasingOptOut
             user = newUser ?? LDUser.stub()
             let stubFlags = FlagMaintainingMock(flags: FlagMaintainingMock.stubFlags(includeNullValue: true, includeVersions: true))
             clientServiceFactory.makeFlagStoreReturnValue = stubFlags
@@ -144,6 +146,7 @@ final class LDClientSpec: QuickSpec {
              operatingSystem: OperatingSystem? = nil,
              timeOut: TimeInterval,
              forceTimeout: Bool = false,
+             autoAliasingOptOut: Bool = true,
              timeOutCompletion: ((_ timedOut: Bool) -> Void)? = nil) {
 
             let clientServiceFactory = ClientServiceMockFactory()
@@ -156,6 +159,7 @@ final class LDClientSpec: QuickSpec {
             config.streamingMode = streamingMode
             config.enableBackgroundUpdates = enableBackgroundUpdates
             config.eventFlushInterval = 300.0   //5 min...don't want this to trigger
+            config.autoAliasingOptOut = autoAliasingOptOut
             user = newUser ?? LDUser.stub()
             let stubFlags = FlagMaintainingMock(flags: FlagMaintainingMock.stubFlags(includeNullValue: true, includeVersions: true))
             clientServiceFactory.makeFlagStoreReturnValue = stubFlags
@@ -214,6 +218,67 @@ final class LDClientSpec: QuickSpec {
         allFlagValuesSpec()
         connectionInformationSpec()
         variationDetailSpec()
+        aliasingSpec()
+    }
+
+    private func aliasingSpec() {
+        describe("aliasing") {
+            var ctx: TestContext!
+
+            context("automatic aliasing from anonymous to user") {
+                beforeEach {
+                    waitUntil { done in 
+                        ctx = TestContext(newUser: LDUser(isAnonymous: true), autoAliasingOptOut: false, completion: done)
+                    }
+                    let notAnonymous = LDUser(key: "something", isAnonymous: false)
+                    waitUntil { done in 
+                        ctx.subject.internalIdentify(newUser: notAnonymous, completion: done)
+                    }
+                }
+
+                it("records an alias and identify event") {
+                    // init, identify, and alias event
+                    expect(ctx.eventReporterMock.recordCallCount) == 3
+                    expect(ctx.recordedEvent?.kind) == .alias
+                }
+            }
+
+            context("automatic aliasing from user to user") {
+                beforeEach {
+                    waitUntil { done in 
+                        ctx = TestContext(newUser: LDUser(isAnonymous: false), completion: done)
+                    }
+                    let notAnonymous = LDUser(key: "something", isAnonymous: false)
+                    waitUntil { done in 
+                        ctx.subject.internalIdentify(newUser: notAnonymous, completion: done)
+                    }
+                }
+
+                it("doesnt record an alias event") {
+                    // init and identify event
+                    expect(ctx.eventReporterMock.recordCallCount) == 2
+                    expect(ctx.recordedEvent?.kind) == .identify
+                }
+            }
+
+            context("automatic aliasing from anonymous to anonymous") {
+                beforeEach {
+                    waitUntil { done in 
+                        ctx = TestContext(newUser: LDUser(isAnonymous: false), completion: done)
+                    }
+                    let notAnonymous = LDUser(key: "something", isAnonymous: false)
+                    waitUntil { done in 
+                        ctx.subject.internalIdentify(newUser: notAnonymous, completion: done)
+                    }
+                }
+
+                it("doesnt record an alias event") {
+                    // init and identify event
+                    expect(ctx.eventReporterMock.recordCallCount) == 2
+                    expect(ctx.recordedEvent?.kind) == .identify
+                }
+            }
+        }
     }
 
     private func startSpec() {

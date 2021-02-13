@@ -773,6 +773,7 @@ final class DarklyServiceSpec: QuickSpec {
         describe("clearFlagResponseCache") {
             context("cached responses and etags exist") {
                 beforeEach {
+                    URLCache.shared.diskCapacity = 0
                     testContext = TestContext(mobileKeyCount: Constants.mobileKeyCount)
                     HTTPHeaders.loadFlagRequestEtags(testContext.flagRequestEtags)
                     flagRequestEtag = UUID().uuidString

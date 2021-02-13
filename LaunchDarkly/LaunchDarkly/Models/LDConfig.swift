@@ -105,6 +105,9 @@ public struct LDConfig {
 
         /// a closure to allow dynamic changes of headers on connect & reconnect
         static let headerDelegate: RequestHeaderTransform? = nil
+    
+        /// should anonymous users automatically be aliased when identifying
+        static let autoAliasingOptOut: Bool = false
     }
 
     /// Constants relevant to setting up an `LDConfig`
@@ -254,6 +257,7 @@ public struct LDConfig {
     /// Additional headers that should be added to all HTTP requests from SDK components to LaunchDarkly services
     public var additionalHeaders: [String: String] = [:]
 
+    /* TODO: find a way to make delegates equatable */
     /// a closure to allow dynamic changes of headers on connect & reconnect
     public var headerDelegate: RequestHeaderTransform?
 
@@ -264,6 +268,9 @@ public struct LDConfig {
     public var objcLdConfig: ObjcLDConfig { ObjcLDConfig(self) }
 
     let environmentReporter: EnvironmentReporting
+
+    /// should anonymous users automatically be aliased when identifying
+    public var autoAliasingOptOut: Bool = Defaults.autoAliasingOptOut
 
     /// A Dictionary of identifying names to unique mobile keys for all environments
     private var mobileKeys: [String: String] {
@@ -367,6 +374,7 @@ extension LDConfig: Equatable {
             && lhs.wrapperName == rhs.wrapperName
             && lhs.wrapperVersion == rhs.wrapperVersion
             && lhs.additionalHeaders == rhs.additionalHeaders
+            && lhs.autoAliasingOptOut == rhs.autoAliasingOptOut
     }
 }
 
