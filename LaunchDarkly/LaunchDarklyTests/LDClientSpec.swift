@@ -1612,8 +1612,6 @@ final class LDClientSpec: QuickSpec {
         }
     }
 
-    /* The concept of the onSyncCompleteSuccess tests is to configure the flags & mocks to simulate the intended change, prep the callbacks to trigger done() to end the async wait, and then call onFlagSyncComplete with the parameters for the area under test. onFlagSyncComplete will call a flagStore method which has an async closure, and so the test has to trigger that closure to get the correct code to execute in onFlagSyncComplete. Once the async flagStore closure runs for the appropriate update method, the result can be measured in the mocks. While setting up each test is slightly different, measuring the result is largely the same.
-     */
     private func onSyncCompleteSuccessReplacingFlagsSpec(streamingMode: LDStreamingMode, eventType: FlagUpdateType? = nil) {
         var testContext: TestContext!
         var newFlags: [LDFlagKey: FeatureFlag]!
@@ -1624,124 +1622,32 @@ final class LDClientSpec: QuickSpec {
                 testContext = TestContext(startOnline: true, completion: done)
             }
             testContext.subject.flagChangeNotifier = ClientServiceMockFactory().makeFlagChangeNotifier()
-        }
 
-        context("flags have different values") {
-            beforeEach {
-                let newBoolFeatureFlag = DarklyServiceMock.Constants.stubFeatureFlag(for: DarklyServiceMock.FlagKeys.bool, useAlternateValue: true)
-                newFlags = testContext.flagStoreMock.featureFlags
-                newFlags[DarklyServiceMock.FlagKeys.bool] = newBoolFeatureFlag
+            newFlags = testContext.flagStoreMock.featureFlags
+            newFlags[Constants.newFlagKey] = DarklyServiceMock.Constants.stubFeatureFlag(for: DarklyServiceMock.FlagKeys.string, useAlternateValue: true)
 
-                waitUntil { done in
-                    testContext.changeNotifierMock.notifyObserversCallback = done
-                    updateDate = Date()
-                    testContext.onSyncComplete?(.success(newFlags, eventType))
-                }
-            }
-            it("updates the flag store") {
-                expect(testContext.flagStoreMock.replaceStoreCallCount) == 1
-                expect(testContext.flagStoreMock.replaceStoreReceivedArguments?.newFlags == newFlags).to(beTrue())
-            }
-            it("caches the new flags") {
-                expect(testContext.featureFlagCachingMock.storeFeatureFlagsCallCount) == 1
-                expect(testContext.featureFlagCachingMock.storeFeatureFlagsReceivedArguments?.featureFlags) == newFlags
-                expect(testContext.featureFlagCachingMock.storeFeatureFlagsReceivedArguments?.user) == testContext.user
-                expect(testContext.featureFlagCachingMock.storeFeatureFlagsReceivedArguments?.mobileKey) == testContext.config.mobileKey
-                expect(testContext.featureFlagCachingMock.storeFeatureFlagsReceivedArguments?.lastUpdated.isWithin(Constants.updateThreshold, of: updateDate)) == true
-                expect(testContext.featureFlagCachingMock.storeFeatureFlagsReceivedArguments?.storeMode) == .async
-            }
-            it("informs the flag change notifier of the changed flags") {
-                expect(testContext.changeNotifierMock.notifyObserversCallCount) == 1
-                expect(testContext.changeNotifierMock.notifyObserversReceivedArguments?.flagStore.featureFlags) == testContext.flagStoreMock.featureFlags
-                expect(testContext.changeNotifierMock.notifyObserversReceivedArguments?.oldFlags == testContext.oldFlags).to(beTrue())
+            waitUntil { done in
+                testContext.changeNotifierMock.notifyObserversCallback = done
+                updateDate = Date()
+                testContext.onSyncComplete?(.success(newFlags, eventType))
             }
         }
-        context("a flag was added") {
-            beforeEach {
-                newFlags = testContext.flagStoreMock.featureFlags
-                newFlags[Constants.newFlagKey] = DarklyServiceMock.Constants.stubFeatureFlag(for: DarklyServiceMock.FlagKeys.string, useAlternateValue: true)
-
-                waitUntil { done in
-                    testContext.changeNotifierMock.notifyObserversCallback = done
-                    updateDate = Date()
-                    testContext.onSyncComplete?(.success(newFlags, eventType))
-                }
-            }
-            it("updates the flag store") {
-                expect(testContext.flagStoreMock.replaceStoreCallCount) == 1
-                expect(testContext.flagStoreMock.replaceStoreReceivedArguments?.newFlags == newFlags).to(beTrue())
-            }
-            it("caches the new flags") {
-                expect(testContext.featureFlagCachingMock.storeFeatureFlagsCallCount) == 1
-                expect(testContext.featureFlagCachingMock.storeFeatureFlagsReceivedArguments?.featureFlags) == newFlags
-                expect(testContext.featureFlagCachingMock.storeFeatureFlagsReceivedArguments?.user) == testContext.user
-                expect(testContext.featureFlagCachingMock.storeFeatureFlagsReceivedArguments?.mobileKey) == testContext.config.mobileKey
-                expect(testContext.featureFlagCachingMock.storeFeatureFlagsReceivedArguments?.lastUpdated.isWithin(Constants.updateThreshold, of: updateDate)) == true
-                expect(testContext.featureFlagCachingMock.storeFeatureFlagsReceivedArguments?.storeMode) == .async
-            }
-            it("informs the flag change notifier of the changed flags") {
-                expect(testContext.changeNotifierMock.notifyObserversCallCount) == 1
-                expect(testContext.changeNotifierMock.notifyObserversReceivedArguments?.flagStore.featureFlags) == testContext.flagStoreMock.featureFlags
-                expect(testContext.changeNotifierMock.notifyObserversReceivedArguments?.oldFlags == testContext.oldFlags).to(beTrue())
-            }
+        it("updates the flag store") {
+            expect(testContext.flagStoreMock.replaceStoreCallCount) == 1
+            expect(testContext.flagStoreMock.replaceStoreReceivedArguments?.newFlags == newFlags).to(beTrue())
         }
-        context("a flag was removed") {
-            beforeEach {
-                newFlags = testContext.flagStoreMock.featureFlags
-                newFlags.removeValue(forKey: DarklyServiceMock.FlagKeys.dictionary)
-
-                waitUntil { done in
-                    testContext.changeNotifierMock.notifyObserversCallback = done
-                    updateDate = Date()
-                    testContext.onSyncComplete?(.success(newFlags, eventType))
-                }
-            }
-            it("updates the flag store") {
-                expect(testContext.flagStoreMock.replaceStoreCallCount) == 1
-                expect(testContext.flagStoreMock.replaceStoreReceivedArguments?.newFlags == newFlags).to(beTrue())
-            }
-            it("caches the new flags") {
-                expect(testContext.featureFlagCachingMock.storeFeatureFlagsCallCount) == 1
-                expect(testContext.featureFlagCachingMock.storeFeatureFlagsReceivedArguments?.featureFlags) == newFlags
-                expect(testContext.featureFlagCachingMock.storeFeatureFlagsReceivedArguments?.user) == testContext.user
-                expect(testContext.featureFlagCachingMock.storeFeatureFlagsReceivedArguments?.mobileKey) == testContext.config.mobileKey
-                expect(testContext.featureFlagCachingMock.storeFeatureFlagsReceivedArguments?.lastUpdated.isWithin(Constants.updateThreshold, of: updateDate)) == true
-                expect(testContext.featureFlagCachingMock.storeFeatureFlagsReceivedArguments?.storeMode) == .async
-            }
-            it("informs the flag change notifier of the changed flags") {
-                expect(testContext.changeNotifierMock.notifyObserversCallCount) == 1
-                expect(testContext.changeNotifierMock.notifyObserversReceivedArguments?.flagStore.featureFlags) == testContext.flagStoreMock.featureFlags
-                expect(testContext.changeNotifierMock.notifyObserversReceivedArguments?.oldFlags == testContext.oldFlags).to(beTrue())
-            }
+        it("caches the new flags") {
+            expect(testContext.featureFlagCachingMock.storeFeatureFlagsCallCount) == 1
+            expect(testContext.featureFlagCachingMock.storeFeatureFlagsReceivedArguments?.featureFlags) == newFlags
+            expect(testContext.featureFlagCachingMock.storeFeatureFlagsReceivedArguments?.user) == testContext.user
+            expect(testContext.featureFlagCachingMock.storeFeatureFlagsReceivedArguments?.mobileKey) == testContext.config.mobileKey
+            expect(testContext.featureFlagCachingMock.storeFeatureFlagsReceivedArguments?.lastUpdated.isWithin(Constants.updateThreshold, of: updateDate)) == true
+            expect(testContext.featureFlagCachingMock.storeFeatureFlagsReceivedArguments?.storeMode) == .async
         }
-        context("there were no changes to the flags") {
-            beforeEach {
-                newFlags = testContext.flagStoreMock.featureFlags
-
-                testContext.subject.flagChangeNotifier = ClientServiceMockFactory().makeFlagChangeNotifier()
-                waitUntil { done in
-                    testContext.changeNotifierMock.notifyObserversCallback = done
-                    updateDate = Date()
-                    testContext.onSyncComplete?(.success(newFlags, eventType))
-                }
-            }
-            it("updates the flag store") {
-                expect(testContext.flagStoreMock.replaceStoreCallCount) == 1
-                expect(testContext.flagStoreMock.replaceStoreReceivedArguments?.newFlags == newFlags).to(beTrue())
-            }
-            it("caches the new flags") {
-                expect(testContext.featureFlagCachingMock.storeFeatureFlagsCallCount) == 1
-                expect(testContext.featureFlagCachingMock.storeFeatureFlagsReceivedArguments?.featureFlags) == newFlags
-                expect(testContext.featureFlagCachingMock.storeFeatureFlagsReceivedArguments?.user) == testContext.user
-                expect(testContext.featureFlagCachingMock.storeFeatureFlagsReceivedArguments?.mobileKey) == testContext.config.mobileKey
-                expect(testContext.featureFlagCachingMock.storeFeatureFlagsReceivedArguments?.lastUpdated.isWithin(Constants.updateThreshold, of: updateDate)) == true
-                expect(testContext.featureFlagCachingMock.storeFeatureFlagsReceivedArguments?.storeMode) == .async
-            }
-            it("informs the flag change notifier of the unchanged flags") {
-                expect(testContext.changeNotifierMock.notifyObserversCallCount) == 1
-                expect(testContext.changeNotifierMock.notifyObserversReceivedArguments?.flagStore.featureFlags) == testContext.flagStoreMock.featureFlags
-                expect(testContext.changeNotifierMock.notifyObserversReceivedArguments?.oldFlags == testContext.oldFlags).to(beTrue())
-            }
+        it("informs the flag change notifier of the changed flags") {
+            expect(testContext.changeNotifierMock.notifyObserversCallCount) == 1
+            expect(testContext.changeNotifierMock.notifyObserversReceivedArguments?.flagStore.featureFlags) == testContext.flagStoreMock.featureFlags
+            expect(testContext.changeNotifierMock.notifyObserversReceivedArguments?.oldFlags == testContext.oldFlags).to(beTrue())
         }
     }
 
@@ -1749,86 +1655,47 @@ final class LDClientSpec: QuickSpec {
         var testContext: TestContext!
         var flagUpdateDictionary: [String: Any]!
         var updateDate: Date!
-
         beforeEach {
             waitUntil { done in
                 testContext = TestContext(startOnline: true, completion: done)
             }
             testContext.subject.flagChangeNotifier = ClientServiceMockFactory().makeFlagChangeNotifier()
-        }
+            waitUntil { done in
+                testContext.flagStoreMock.replaceStore(newFlags: testContext.oldFlags, completion: done)
+            }
+            flagUpdateDictionary = FlagMaintainingMock.stubPatchDictionary(key: DarklyServiceMock.FlagKeys.int,
+                                                                           value: DarklyServiceMock.FlagValues.int + 1,
+                                                                           variation: DarklyServiceMock.Constants.variation + 1,
+                                                                           version: DarklyServiceMock.Constants.version + 1)
 
-        context("update changes flags") {
-            beforeEach {
-                waitUntil { done in
-                    testContext.flagStoreMock.replaceStore(newFlags: testContext.oldFlags, completion: done)
-                }
-                flagUpdateDictionary = FlagMaintainingMock.stubPatchDictionary(key: DarklyServiceMock.FlagKeys.int,
-                                                                               value: DarklyServiceMock.FlagValues.int + 1,
-                                                                               variation: DarklyServiceMock.Constants.variation + 1,
-                                                                               version: DarklyServiceMock.Constants.version + 1)
-
-                waitUntil { done in
-                    testContext.changeNotifierMock.notifyObserversCallback = done
-                    updateDate = Date()
-                    testContext.onSyncComplete?(.success(flagUpdateDictionary, .patch))
-                }
-            }
-            it("updates the flag store") {
-                expect(testContext.flagStoreMock.updateStoreCallCount) == 1
-                expect(testContext.flagStoreMock.updateStoreReceivedArguments?.updateDictionary == flagUpdateDictionary).to(beTrue())
-            }
-            it("caches the updated flags") {
-                expect(testContext.featureFlagCachingMock.storeFeatureFlagsCallCount) == 1
-                expect(testContext.featureFlagCachingMock.storeFeatureFlagsReceivedArguments?.featureFlags) == testContext.flagStoreMock.featureFlags
-                expect(testContext.featureFlagCachingMock.storeFeatureFlagsReceivedArguments?.user) == testContext.user
-                expect(testContext.featureFlagCachingMock.storeFeatureFlagsReceivedArguments?.mobileKey) == testContext.config.mobileKey
-                expect(testContext.featureFlagCachingMock.storeFeatureFlagsReceivedArguments?.lastUpdated.isWithin(Constants.updateThreshold, of: updateDate)) == true
-                expect(testContext.featureFlagCachingMock.storeFeatureFlagsReceivedArguments?.storeMode) == .async
-            }
-            it("informs the flag change notifier of the changed flag") {
-                expect(testContext.changeNotifierMock.notifyObserversCallCount) == 1
-                expect(testContext.changeNotifierMock.notifyObserversReceivedArguments?.flagStore.featureFlags) == testContext.flagStoreMock.featureFlags
-                expect(testContext.changeNotifierMock.notifyObserversReceivedArguments?.oldFlags == testContext.oldFlags).to(beTrue())
+            waitUntil { done in
+                testContext.changeNotifierMock.notifyObserversCallback = done
+                updateDate = Date()
+                testContext.onSyncComplete?(.success(flagUpdateDictionary, .patch))
             }
         }
-        context("update does not change flags") {
-            beforeEach {
-                flagUpdateDictionary = FlagMaintainingMock.stubPatchDictionary(key: DarklyServiceMock.FlagKeys.int,
-                                                                               value: DarklyServiceMock.FlagValues.int + 1,
-                                                                               variation: DarklyServiceMock.Constants.variation,
-                                                                               version: DarklyServiceMock.Constants.version)
-
-                waitUntil { done in
-                    testContext.changeNotifierMock.notifyObserversCallback = done
-                    updateDate = Date()
-                    testContext.onSyncComplete?(.success(flagUpdateDictionary, .patch))
-                }
-            }
-            it("updates the flag store") {
-                expect(testContext.flagStoreMock.updateStoreCallCount) == 1
-                expect(testContext.flagStoreMock.updateStoreReceivedArguments?.updateDictionary == flagUpdateDictionary).to(beTrue())
-            }
-            it("caches the updated flags") {
-                expect(testContext.featureFlagCachingMock.storeFeatureFlagsCallCount) == 1
-                expect(testContext.featureFlagCachingMock.storeFeatureFlagsReceivedArguments?.featureFlags) == testContext.oldFlags
-                expect(testContext.featureFlagCachingMock.storeFeatureFlagsReceivedArguments?.user) == testContext.user
-                expect(testContext.featureFlagCachingMock.storeFeatureFlagsReceivedArguments?.mobileKey) == testContext.config.mobileKey
-                expect(testContext.featureFlagCachingMock.storeFeatureFlagsReceivedArguments?.lastUpdated.isWithin(Constants.updateThreshold, of: updateDate)) == true
-                expect(testContext.featureFlagCachingMock.storeFeatureFlagsReceivedArguments?.storeMode) == .async
-            }
-            it("informs the flag change notifier of the unchanged flag") {
-                expect(testContext.changeNotifierMock.notifyObserversCallCount) == 1
-                expect(testContext.changeNotifierMock.notifyObserversReceivedArguments?.flagStore.featureFlags) == testContext.flagStoreMock.featureFlags
-                expect(testContext.changeNotifierMock.notifyObserversReceivedArguments?.oldFlags == testContext.oldFlags).to(beTrue())
-            }
+        it("updates the flag store") {
+            expect(testContext.flagStoreMock.updateStoreCallCount) == 1
+            expect(testContext.flagStoreMock.updateStoreReceivedArguments?.updateDictionary == flagUpdateDictionary).to(beTrue())
+        }
+        it("caches the updated flags") {
+            expect(testContext.featureFlagCachingMock.storeFeatureFlagsCallCount) == 1
+            expect(testContext.featureFlagCachingMock.storeFeatureFlagsReceivedArguments?.featureFlags) == testContext.flagStoreMock.featureFlags
+            expect(testContext.featureFlagCachingMock.storeFeatureFlagsReceivedArguments?.user) == testContext.user
+            expect(testContext.featureFlagCachingMock.storeFeatureFlagsReceivedArguments?.mobileKey) == testContext.config.mobileKey
+            expect(testContext.featureFlagCachingMock.storeFeatureFlagsReceivedArguments?.lastUpdated.isWithin(Constants.updateThreshold, of: updateDate)) == true
+            expect(testContext.featureFlagCachingMock.storeFeatureFlagsReceivedArguments?.storeMode) == .async
+        }
+        it("informs the flag change notifier of the changed flag") {
+            expect(testContext.changeNotifierMock.notifyObserversCallCount) == 1
+            expect(testContext.changeNotifierMock.notifyObserversReceivedArguments?.flagStore.featureFlags) == testContext.flagStoreMock.featureFlags
+            expect(testContext.changeNotifierMock.notifyObserversReceivedArguments?.oldFlags == testContext.oldFlags).to(beTrue())
         }
     }
 
     func onSyncCompleteDeleteFlagSpec() {
         var testContext: TestContext!
         var flagUpdateDictionary: [String: Any]!
-        var oldFlags: [LDFlagKey: FeatureFlag]!
-        var newFlags: [LDFlagKey: FeatureFlag]!
         var updateDate: Date!
 
         beforeEach {
@@ -1836,67 +1703,33 @@ final class LDClientSpec: QuickSpec {
                 testContext = TestContext(startOnline: true, completion: done)
             }
             testContext.subject.flagChangeNotifier = ClientServiceMockFactory().makeFlagChangeNotifier()
-        }
+            waitUntil { done in
+                testContext.flagStoreMock.replaceStore(newFlags: testContext.oldFlags, completion: done)
+            }
+            flagUpdateDictionary = FlagMaintainingMock.stubDeleteDictionary(key: DarklyServiceMock.FlagKeys.int, version: DarklyServiceMock.Constants.version + 1)
 
-        context("delete changes flags") {
-            beforeEach {
-                oldFlags = testContext.flagStoreMock.featureFlags
-                flagUpdateDictionary = FlagMaintainingMock.stubDeleteDictionary(key: DarklyServiceMock.FlagKeys.int, version: DarklyServiceMock.Constants.version + 1)
-                newFlags = oldFlags
-                newFlags.removeValue(forKey: DarklyServiceMock.FlagKeys.int)
-
-                waitUntil { done in
-                    testContext.changeNotifierMock.notifyObserversCallback = done
-                    updateDate = Date()
-                    testContext.onSyncComplete?(.success(flagUpdateDictionary, .delete))
-                }
-            }
-            it("updates the flag store") {
-                expect(testContext.flagStoreMock.deleteFlagCallCount) == 1
-                expect(testContext.flagStoreMock.deleteFlagReceivedArguments?.deleteDictionary == flagUpdateDictionary).to(beTrue())
-            }
-            it("caches the updated flags") {
-                expect(testContext.featureFlagCachingMock.storeFeatureFlagsCallCount) == 1
-                expect(testContext.featureFlagCachingMock.storeFeatureFlagsReceivedArguments?.featureFlags) == newFlags
-                expect(testContext.featureFlagCachingMock.storeFeatureFlagsReceivedArguments?.user) == testContext.user
-                expect(testContext.featureFlagCachingMock.storeFeatureFlagsReceivedArguments?.mobileKey) == testContext.config.mobileKey
-                expect(testContext.featureFlagCachingMock.storeFeatureFlagsReceivedArguments?.lastUpdated.isWithin(Constants.updateThreshold, of: updateDate)) == true
-                expect(testContext.featureFlagCachingMock.storeFeatureFlagsReceivedArguments?.storeMode) == .async
-            }
-            it("informs the flag change notifier of the changed flag") {
-                expect(testContext.changeNotifierMock.notifyObserversCallCount) == 1
-                expect(testContext.changeNotifierMock.notifyObserversReceivedArguments?.flagStore.featureFlags) == testContext.flagStoreMock.featureFlags
-                expect(testContext.changeNotifierMock.notifyObserversReceivedArguments?.oldFlags == oldFlags).to(beTrue())
+            waitUntil { done in
+                testContext.changeNotifierMock.notifyObserversCallback = done
+                updateDate = Date()
+                testContext.onSyncComplete?(.success(flagUpdateDictionary, .delete))
             }
         }
-        context("delete does not change flags") {
-            beforeEach {
-                oldFlags = testContext.flagStoreMock.featureFlags
-                flagUpdateDictionary = FlagMaintainingMock.stubDeleteDictionary(key: DarklyServiceMock.FlagKeys.int, version: DarklyServiceMock.Constants.version)
-
-                waitUntil { done in
-                    testContext.changeNotifierMock.notifyObserversCallback = done
-                    updateDate = Date()
-                    testContext.onSyncComplete?(.success(flagUpdateDictionary, .delete))
-                }
-            }
-            it("updates the flag store") {
-                expect(testContext.flagStoreMock.deleteFlagCallCount) == 1
-                expect(testContext.flagStoreMock.deleteFlagReceivedArguments?.deleteDictionary == flagUpdateDictionary).to(beTrue())
-            }
-            it("caches the updated flags") {
-                expect(testContext.featureFlagCachingMock.storeFeatureFlagsCallCount) == 1
-                expect(testContext.featureFlagCachingMock.storeFeatureFlagsReceivedArguments?.featureFlags) == oldFlags
-                expect(testContext.featureFlagCachingMock.storeFeatureFlagsReceivedArguments?.user) == testContext.user
-                expect(testContext.featureFlagCachingMock.storeFeatureFlagsReceivedArguments?.mobileKey) == testContext.config.mobileKey
-                expect(testContext.featureFlagCachingMock.storeFeatureFlagsReceivedArguments?.lastUpdated.isWithin(Constants.updateThreshold, of: updateDate)) == true
-                expect(testContext.featureFlagCachingMock.storeFeatureFlagsReceivedArguments?.storeMode) == .async
-            }
-            it("informs the flag change notifier of the unchanged flag") {
-                expect(testContext.changeNotifierMock.notifyObserversCallCount) == 1
-                expect(testContext.changeNotifierMock.notifyObserversReceivedArguments?.flagStore.featureFlags) == testContext.flagStoreMock.featureFlags
-                expect(testContext.changeNotifierMock.notifyObserversReceivedArguments?.oldFlags == oldFlags).to(beTrue())
-            }
+        it("updates the flag store") {
+            expect(testContext.flagStoreMock.deleteFlagCallCount) == 1
+            expect(testContext.flagStoreMock.deleteFlagReceivedArguments?.deleteDictionary == flagUpdateDictionary).to(beTrue())
+        }
+        it("caches the updated flags") {
+            expect(testContext.featureFlagCachingMock.storeFeatureFlagsCallCount) == 1
+            expect(testContext.featureFlagCachingMock.storeFeatureFlagsReceivedArguments?.featureFlags) == testContext.flagStoreMock.featureFlags
+            expect(testContext.featureFlagCachingMock.storeFeatureFlagsReceivedArguments?.user) == testContext.user
+            expect(testContext.featureFlagCachingMock.storeFeatureFlagsReceivedArguments?.mobileKey) == testContext.config.mobileKey
+            expect(testContext.featureFlagCachingMock.storeFeatureFlagsReceivedArguments?.lastUpdated.isWithin(Constants.updateThreshold, of: updateDate)) == true
+            expect(testContext.featureFlagCachingMock.storeFeatureFlagsReceivedArguments?.storeMode) == .async
+        }
+        it("informs the flag change notifier of the changed flag") {
+            expect(testContext.changeNotifierMock.notifyObserversCallCount) == 1
+            expect(testContext.changeNotifierMock.notifyObserversReceivedArguments?.flagStore.featureFlags) == testContext.flagStoreMock.featureFlags
+            expect(testContext.changeNotifierMock.notifyObserversReceivedArguments?.oldFlags == testContext.oldFlags).to(beTrue())
         }
     }
 
