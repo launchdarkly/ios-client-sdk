@@ -6,11 +6,11 @@ import Foundation
 import LDSwiftEventSource
 @testable import LaunchDarkly
 
+// swiftlint:disable large_tuple
 
 // MARK: - CacheConvertingMock
 final class CacheConvertingMock: CacheConverting {
 
-    // MARK: convertCacheData
     var convertCacheDataCallCount = 0
     var convertCacheDataCallback: (() -> Void)?
     var convertCacheDataReceivedArguments: (user: LDUser, config: LDConfig)?
@@ -24,7 +24,6 @@ final class CacheConvertingMock: CacheConverting {
 // MARK: - DarklyStreamingProviderMock
 final class DarklyStreamingProviderMock: DarklyStreamingProvider {
 
-    // MARK: start
     var startCallCount = 0
     var startCallback: (() -> Void)?
     func start() {
@@ -32,7 +31,6 @@ final class DarklyStreamingProviderMock: DarklyStreamingProvider {
         startCallback?()
     }
 
-    // MARK: stop
     var stopCallCount = 0
     var stopCallback: (() -> Void)?
     func stop() {
@@ -44,7 +42,6 @@ final class DarklyStreamingProviderMock: DarklyStreamingProvider {
 // MARK: - DiagnosticCachingMock
 final class DiagnosticCachingMock: DiagnosticCaching {
 
-    // MARK: lastStats
     var lastStatsSetCount = 0
     var setLastStatsCallback: (() -> Void)?
     var lastStats: DiagnosticStats? = nil {
@@ -54,7 +51,6 @@ final class DiagnosticCachingMock: DiagnosticCaching {
         }
     }
 
-    // MARK: getDiagnosticId
     var getDiagnosticIdCallCount = 0
     var getDiagnosticIdCallback: (() -> Void)?
     var getDiagnosticIdReturnValue: DiagnosticId!
@@ -64,7 +60,6 @@ final class DiagnosticCachingMock: DiagnosticCaching {
         return getDiagnosticIdReturnValue
     }
 
-    // MARK: getCurrentStatsAndReset
     var getCurrentStatsAndResetCallCount = 0
     var getCurrentStatsAndResetCallback: (() -> Void)?
     var getCurrentStatsAndResetReturnValue: DiagnosticStats!
@@ -74,7 +69,6 @@ final class DiagnosticCachingMock: DiagnosticCaching {
         return getCurrentStatsAndResetReturnValue
     }
 
-    // MARK: incrementDroppedEventCount
     var incrementDroppedEventCountCallCount = 0
     var incrementDroppedEventCountCallback: (() -> Void)?
     func incrementDroppedEventCount() {
@@ -82,7 +76,6 @@ final class DiagnosticCachingMock: DiagnosticCaching {
         incrementDroppedEventCountCallback?()
     }
 
-    // MARK: recordEventsInLastBatch
     var recordEventsInLastBatchCallCount = 0
     var recordEventsInLastBatchCallback: (() -> Void)?
     var recordEventsInLastBatchReceivedEventsInLastBatch: Int?
@@ -92,7 +85,6 @@ final class DiagnosticCachingMock: DiagnosticCaching {
         recordEventsInLastBatchCallback?()
     }
 
-    // MARK: addStreamInit
     var addStreamInitCallCount = 0
     var addStreamInitCallback: (() -> Void)?
     var addStreamInitReceivedStreamInit: DiagnosticStreamInit?
@@ -106,7 +98,6 @@ final class DiagnosticCachingMock: DiagnosticCaching {
 // MARK: - DiagnosticReportingMock
 final class DiagnosticReportingMock: DiagnosticReporting {
 
-    // MARK: service
     var serviceSetCount = 0
     var setServiceCallback: (() -> Void)?
     var service: DarklyServiceProvider = DarklyServiceMock() {
@@ -116,7 +107,6 @@ final class DiagnosticReportingMock: DiagnosticReporting {
         }
     }
 
-    // MARK: runMode
     var runModeSetCount = 0
     var setRunModeCallback: (() -> Void)?
     var runMode: LDClientRunMode = .foreground {
@@ -126,7 +116,6 @@ final class DiagnosticReportingMock: DiagnosticReporting {
         }
     }
 
-    // MARK: isOnline
     var isOnlineSetCount = 0
     var setIsOnlineCallback: (() -> Void)?
     var isOnline: Bool = false {
@@ -140,7 +129,6 @@ final class DiagnosticReportingMock: DiagnosticReporting {
 // MARK: - EnvironmentReportingMock
 final class EnvironmentReportingMock: EnvironmentReporting {
 
-    // MARK: isDebugBuild
     var isDebugBuildSetCount = 0
     var setIsDebugBuildCallback: (() -> Void)?
     var isDebugBuild: Bool = true {
@@ -150,7 +138,6 @@ final class EnvironmentReportingMock: EnvironmentReporting {
         }
     }
 
-    // MARK: deviceType
     var deviceTypeSetCount = 0
     var setDeviceTypeCallback: (() -> Void)?
     var deviceType: String = Constants.deviceType {
@@ -160,7 +147,6 @@ final class EnvironmentReportingMock: EnvironmentReporting {
         }
     }
 
-    // MARK: deviceModel
     var deviceModelSetCount = 0
     var setDeviceModelCallback: (() -> Void)?
     var deviceModel: String = Constants.deviceModel {
@@ -170,7 +156,6 @@ final class EnvironmentReportingMock: EnvironmentReporting {
         }
     }
 
-    // MARK: systemVersion
     var systemVersionSetCount = 0
     var setSystemVersionCallback: (() -> Void)?
     var systemVersion: String = Constants.systemVersion {
@@ -180,7 +165,6 @@ final class EnvironmentReportingMock: EnvironmentReporting {
         }
     }
 
-    // MARK: systemName
     var systemNameSetCount = 0
     var setSystemNameCallback: (() -> Void)?
     var systemName: String = Constants.systemName {
@@ -190,7 +174,6 @@ final class EnvironmentReportingMock: EnvironmentReporting {
         }
     }
 
-    // MARK: operatingSystem
     var operatingSystemSetCount = 0
     var setOperatingSystemCallback: (() -> Void)?
     var operatingSystem: OperatingSystem = .iOS {
@@ -200,7 +183,6 @@ final class EnvironmentReportingMock: EnvironmentReporting {
         }
     }
 
-    // MARK: backgroundNotification
     var backgroundNotificationSetCount = 0
     var setBackgroundNotificationCallback: (() -> Void)?
     var backgroundNotification: Notification.Name? = EnvironmentReporter().backgroundNotification {
@@ -210,7 +192,6 @@ final class EnvironmentReportingMock: EnvironmentReporting {
         }
     }
 
-    // MARK: foregroundNotification
     var foregroundNotificationSetCount = 0
     var setForegroundNotificationCallback: (() -> Void)?
     var foregroundNotification: Notification.Name? = EnvironmentReporter().foregroundNotification {
@@ -220,7 +201,6 @@ final class EnvironmentReportingMock: EnvironmentReporting {
         }
     }
 
-    // MARK: vendorUUID
     var vendorUUIDSetCount = 0
     var setVendorUUIDCallback: (() -> Void)?
     var vendorUUID: String? = Constants.vendorUUID {
@@ -230,7 +210,6 @@ final class EnvironmentReportingMock: EnvironmentReporting {
         }
     }
 
-    // MARK: sdkVersion
     var sdkVersionSetCount = 0
     var setSdkVersionCallback: (() -> Void)?
     var sdkVersion: String = Constants.sdkVersion {
@@ -240,7 +219,6 @@ final class EnvironmentReportingMock: EnvironmentReporting {
         }
     }
 
-    // MARK: shouldThrottleOnlineCalls
     var shouldThrottleOnlineCallsSetCount = 0
     var setShouldThrottleOnlineCallsCallback: (() -> Void)?
     var shouldThrottleOnlineCalls: Bool = true {
@@ -254,7 +232,6 @@ final class EnvironmentReportingMock: EnvironmentReporting {
 // MARK: - ErrorNotifyingMock
 final class ErrorNotifyingMock: ErrorNotifying {
 
-    // MARK: addErrorObserver
     var addErrorObserverCallCount = 0
     var addErrorObserverCallback: (() -> Void)?
     var addErrorObserverReceivedObserver: ErrorObserver?
@@ -264,7 +241,6 @@ final class ErrorNotifyingMock: ErrorNotifying {
         addErrorObserverCallback?()
     }
 
-    // MARK: removeObservers
     var removeObserversCallCount = 0
     var removeObserversCallback: (() -> Void)?
     var removeObserversReceivedOwner: LDObserverOwner?
@@ -274,7 +250,6 @@ final class ErrorNotifyingMock: ErrorNotifying {
         removeObserversCallback?()
     }
 
-    // MARK: notifyObservers
     var notifyObserversCallCount = 0
     var notifyObserversCallback: (() -> Void)?
     var notifyObserversReceivedError: Error?
@@ -288,7 +263,6 @@ final class ErrorNotifyingMock: ErrorNotifying {
 // MARK: - EventReportingMock
 final class EventReportingMock: EventReporting {
 
-    // MARK: config
     var configSetCount = 0
     var setConfigCallback: (() -> Void)?
     var config: LDConfig = LDConfig.stub {
@@ -298,7 +272,6 @@ final class EventReportingMock: EventReporting {
         }
     }
 
-    // MARK: isOnline
     var isOnlineSetCount = 0
     var setIsOnlineCallback: (() -> Void)?
     var isOnline: Bool = false {
@@ -308,7 +281,6 @@ final class EventReportingMock: EventReporting {
         }
     }
 
-    // MARK: service
     var serviceSetCount = 0
     var setServiceCallback: (() -> Void)?
     var service: DarklyServiceProvider = DarklyServiceMock() {
@@ -318,7 +290,6 @@ final class EventReportingMock: EventReporting {
         }
     }
 
-    // MARK: lastEventResponseDate
     var lastEventResponseDateSetCount = 0
     var setLastEventResponseDateCallback: (() -> Void)?
     var lastEventResponseDate: Date? = nil {
@@ -328,7 +299,6 @@ final class EventReportingMock: EventReporting {
         }
     }
 
-    // MARK: record
     var recordCallCount = 0
     var recordCallback: (() -> Void)?
     var recordReceivedEvent: Event?
@@ -338,10 +308,8 @@ final class EventReportingMock: EventReporting {
         recordCallback?()
     }
 
-    // MARK: recordFlagEvaluationEvents
     var recordFlagEvaluationEventsCallCount = 0
     var recordFlagEvaluationEventsCallback: (() -> Void)?
-    //swiftlint:disable:next large_tuple 
     var recordFlagEvaluationEventsReceivedArguments: (flagKey: LDFlagKey, value: Any?, defaultValue: Any?, featureFlag: FeatureFlag?, user: LDUser, includeReason: Bool)?
     func recordFlagEvaluationEvents(flagKey: LDFlagKey, value: Any?, defaultValue: Any?, featureFlag: FeatureFlag?, user: LDUser, includeReason: Bool) {
         recordFlagEvaluationEventsCallCount += 1
@@ -349,7 +317,6 @@ final class EventReportingMock: EventReporting {
         recordFlagEvaluationEventsCallback?()
     }
 
-    // MARK: flush
     var flushCallCount = 0
     var flushCallback: (() -> Void)?
     var flushReceivedCompletion: CompletionClosure?
@@ -363,7 +330,6 @@ final class EventReportingMock: EventReporting {
 // MARK: - FeatureFlagCachingMock
 final class FeatureFlagCachingMock: FeatureFlagCaching {
 
-    // MARK: maxCachedUsers
     var maxCachedUsersSetCount = 0
     var setMaxCachedUsersCallback: (() -> Void)?
     var maxCachedUsers: Int = 5 {
@@ -373,7 +339,6 @@ final class FeatureFlagCachingMock: FeatureFlagCaching {
         }
     }
 
-    // MARK: retrieveFeatureFlags
     var retrieveFeatureFlagsCallCount = 0
     var retrieveFeatureFlagsCallback: (() -> Void)?
     var retrieveFeatureFlagsReceivedArguments: (userKey: String, mobileKey: String)?
@@ -385,10 +350,8 @@ final class FeatureFlagCachingMock: FeatureFlagCaching {
         return retrieveFeatureFlagsReturnValue
     }
 
-    // MARK: storeFeatureFlags
     var storeFeatureFlagsCallCount = 0
     var storeFeatureFlagsCallback: (() -> Void)?
-    //swiftlint:disable:next large_tuple 
     var storeFeatureFlagsReceivedArguments: (featureFlags: [LDFlagKey: FeatureFlag], user: LDUser, mobileKey: String, lastUpdated: Date, storeMode: FlagCachingStoreMode)?
     func storeFeatureFlags(_ featureFlags: [LDFlagKey: FeatureFlag], forUser user: LDUser, andMobileKey mobileKey: String, lastUpdated: Date, storeMode: FlagCachingStoreMode) {
         storeFeatureFlagsCallCount += 1
@@ -400,7 +363,6 @@ final class FeatureFlagCachingMock: FeatureFlagCaching {
 // MARK: - FlagChangeNotifyingMock
 final class FlagChangeNotifyingMock: FlagChangeNotifying {
 
-    // MARK: addFlagChangeObserver
     var addFlagChangeObserverCallCount = 0
     var addFlagChangeObserverCallback: (() -> Void)?
     var addFlagChangeObserverReceivedObserver: FlagChangeObserver?
@@ -410,7 +372,6 @@ final class FlagChangeNotifyingMock: FlagChangeNotifying {
         addFlagChangeObserverCallback?()
     }
 
-    // MARK: addFlagsUnchangedObserver
     var addFlagsUnchangedObserverCallCount = 0
     var addFlagsUnchangedObserverCallback: (() -> Void)?
     var addFlagsUnchangedObserverReceivedObserver: FlagsUnchangedObserver?
@@ -420,7 +381,6 @@ final class FlagChangeNotifyingMock: FlagChangeNotifying {
         addFlagsUnchangedObserverCallback?()
     }
 
-    // MARK: addConnectionModeChangedObserver
     var addConnectionModeChangedObserverCallCount = 0
     var addConnectionModeChangedObserverCallback: (() -> Void)?
     var addConnectionModeChangedObserverReceivedObserver: ConnectionModeChangedObserver?
@@ -430,7 +390,6 @@ final class FlagChangeNotifyingMock: FlagChangeNotifying {
         addConnectionModeChangedObserverCallback?()
     }
 
-    // MARK: removeObserver
     var removeObserverCallCount = 0
     var removeObserverCallback: (() -> Void)?
     var removeObserverReceivedArguments: (keys: [LDFlagKey], owner: LDObserverOwner)?
@@ -440,7 +399,6 @@ final class FlagChangeNotifyingMock: FlagChangeNotifying {
         removeObserverCallback?()
     }
 
-    // MARK: notifyConnectionModeChangedObservers
     var notifyConnectionModeChangedObserversCallCount = 0
     var notifyConnectionModeChangedObserversCallback: (() -> Void)?
     var notifyConnectionModeChangedObserversReceivedConnectionMode: ConnectionInformation.ConnectionMode?
@@ -450,7 +408,6 @@ final class FlagChangeNotifyingMock: FlagChangeNotifying {
         notifyConnectionModeChangedObserversCallback?()
     }
 
-    // MARK: notifyObservers
     var notifyObserversCallCount = 0
     var notifyObserversCallback: (() -> Void)?
     var notifyObserversReceivedArguments: (flagStore: FlagMaintaining, oldFlags: [LDFlagKey: FeatureFlag])?
@@ -464,7 +421,6 @@ final class FlagChangeNotifyingMock: FlagChangeNotifying {
 // MARK: - FlagMaintainingMock
 final class FlagMaintainingMock: FlagMaintaining {
 
-    // MARK: featureFlags
     var featureFlagsSetCount = 0
     var setFeatureFlagsCallback: (() -> Void)?
     var featureFlags: [LDFlagKey: FeatureFlag] = [:] {
@@ -474,7 +430,6 @@ final class FlagMaintainingMock: FlagMaintaining {
         }
     }
 
-    // MARK: replaceStore
     var replaceStoreCallCount = 0
     var replaceStoreCallback: (() -> Void)?
     var replaceStoreReceivedArguments: (newFlags: [LDFlagKey: Any]?, completion: CompletionClosure?)?
@@ -484,7 +439,6 @@ final class FlagMaintainingMock: FlagMaintaining {
         replaceStoreCallback?()
     }
 
-    // MARK: updateStore
     var updateStoreCallCount = 0
     var updateStoreCallback: (() -> Void)?
     var updateStoreReceivedArguments: (updateDictionary: [String: Any], completion: CompletionClosure?)?
@@ -494,7 +448,6 @@ final class FlagMaintainingMock: FlagMaintaining {
         updateStoreCallback?()
     }
 
-    // MARK: deleteFlag
     var deleteFlagCallCount = 0
     var deleteFlagCallback: (() -> Void)?
     var deleteFlagReceivedArguments: (deleteDictionary: [String: Any], completion: CompletionClosure?)?
@@ -508,7 +461,6 @@ final class FlagMaintainingMock: FlagMaintaining {
 // MARK: - KeyedValueCachingMock
 final class KeyedValueCachingMock: KeyedValueCaching {
 
-    // MARK: set
     var setCallCount = 0
     var setCallback: (() -> Void)?
     var setReceivedArguments: (value: Any?, forKey: String)?
@@ -518,7 +470,6 @@ final class KeyedValueCachingMock: KeyedValueCaching {
         setCallback?()
     }
 
-    // MARK: dictionary
     var dictionaryCallCount = 0
     var dictionaryCallback: (() -> Void)?
     var dictionaryReceivedForKey: String?
@@ -530,7 +481,6 @@ final class KeyedValueCachingMock: KeyedValueCaching {
         return dictionaryReturnValue
     }
 
-    // MARK: removeObject
     var removeObjectCallCount = 0
     var removeObjectCallback: (() -> Void)?
     var removeObjectReceivedForKey: String?
@@ -544,7 +494,6 @@ final class KeyedValueCachingMock: KeyedValueCaching {
 // MARK: - LDFlagSynchronizingMock
 final class LDFlagSynchronizingMock: LDFlagSynchronizing {
 
-    // MARK: isOnline
     var isOnlineSetCount = 0
     var setIsOnlineCallback: (() -> Void)?
     var isOnline: Bool = false {
@@ -554,7 +503,6 @@ final class LDFlagSynchronizingMock: LDFlagSynchronizing {
         }
     }
 
-    // MARK: streamingMode
     var streamingModeSetCount = 0
     var setStreamingModeCallback: (() -> Void)?
     var streamingMode: LDStreamingMode = .streaming {
@@ -564,7 +512,6 @@ final class LDFlagSynchronizingMock: LDFlagSynchronizing {
         }
     }
 
-    // MARK: pollingInterval
     var pollingIntervalSetCount = 0
     var setPollingIntervalCallback: (() -> Void)?
     var pollingInterval: TimeInterval = 60_000 {
@@ -578,7 +525,6 @@ final class LDFlagSynchronizingMock: LDFlagSynchronizing {
 // MARK: - ThrottlingMock
 final class ThrottlingMock: Throttling {
 
-    // MARK: runThrottled
     var runThrottledCallCount = 0
     var runThrottledCallback: (() -> Void)?
     var runThrottledReceivedRunClosure: RunClosure?
@@ -588,7 +534,6 @@ final class ThrottlingMock: Throttling {
         runThrottledCallback?()
     }
 
-    // MARK: cancelThrottledRun
     var cancelThrottledRunCallCount = 0
     var cancelThrottledRunCallback: (() -> Void)?
     func cancelThrottledRun() {
