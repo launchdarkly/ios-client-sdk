@@ -73,10 +73,8 @@ final class FlagChangeNotifier: FlagChangeNotifying {
             }
             flagsUnchangedQueue.sync {
                 flagsUnchangedObservers.forEach { flagsUnchangedObserver in
-                    if let flagsUnchangedHandler = flagsUnchangedObserver.flagsUnchangedHandler {
-                        DispatchQueue.main.async {
-                            flagsUnchangedHandler()
-                        }
+                    DispatchQueue.main.async {
+                        flagsUnchangedObserver.flagsUnchangedHandler()
                     }
                 }
             }

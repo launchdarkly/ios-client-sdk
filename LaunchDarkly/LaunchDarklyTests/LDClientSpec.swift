@@ -1541,7 +1541,7 @@ final class LDClientSpec: QuickSpec {
                 let receivedObserver = mockNotifier.addFlagsUnchangedObserverReceivedObserver
                 expect(mockNotifier.addFlagsUnchangedObserverCallCount) == 1
                 expect(receivedObserver?.owner) === self
-                receivedObserver?.flagsUnchangedHandler?()
+                receivedObserver?.flagsUnchangedHandler()
                 expect(receivedFlagsUnchanged) == true
             }
         }
