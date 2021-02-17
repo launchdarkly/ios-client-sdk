@@ -67,8 +67,9 @@ final class ClientServiceMockFactory: ClientServiceCreating {
         makeFlagSynchronizer(streamingMode: streamingMode, pollingInterval: pollingInterval, useReport: useReport, service: service, onSyncComplete: nil)
     }
 
+    var makeFlagChangeNotifierReturnValue: FlagChangeNotifying = FlagChangeNotifyingMock()
     func makeFlagChangeNotifier() -> FlagChangeNotifying {
-        FlagChangeNotifyingMock()
+        return makeFlagChangeNotifierReturnValue
     }
 
     var makeEventReporterCallCount = 0

@@ -12,7 +12,6 @@ enum LDClientRunMode {
 }
 
 // swiftlint:disable type_body_length
-// swiftlint:disable file_length
 
 /**
  The LDClient is the heart of the SDK, providing client apps running iOS, watchOS, macOS, or tvOS access to LaunchDarkly services. This singleton provides the ability to set a configuration (LDConfig) that controls how the LDClient talks to LaunchDarkly servers, and a user (LDUser) that provides finer control on the feature flag values delivered to LDClient. Once the LDClient has started, it connects to LaunchDarkly's servers to get the feature flag values you set in the Dashboard.
@@ -297,7 +296,12 @@ public class LDClient {
                     flagStore.replaceStore(newFlags: [:], completion: nil)
                 }
             }
-            self.service = self.serviceFactory.makeDarklyServiceProvider(config: self.config, user: self.user)
+            self.service.user = self.user
+            flagSynchronizer = serviceFactory.makeFlagSynchronizer(streamingMode: ConnectionInformation.effectiveStreamingMode(config: config, ldClient: self),
+                                                                   pollingInterval: config.flagPollingInterval(runMode: runMode),
+                                                                   useReport: config.useReport,
+                                                                   service: self.service,
+                                                                   onSyncComplete: self.onFlagSyncComplete)
 
             if self.hasStarted {
                 self.eventReporter.record(Event.identifyEvent(user: self.user))
@@ -315,18 +319,7 @@ public class LDClient {
 
     private let internalIdentifyQueue: DispatchQueue = DispatchQueue(label: "InternalIdentifyQueue")
 
-    private(set) var service: DarklyServiceProvider {
-        didSet {
-            Log.debug(typeName(and: #function) + "new service set")
-            eventReporter.service = service
-            diagnosticReporter.service = service
-            flagSynchronizer = serviceFactory.makeFlagSynchronizer(streamingMode: ConnectionInformation.effectiveStreamingMode(config: config, ldClient: self),
-                                                                   pollingInterval: config.flagPollingInterval(runMode: runMode),
-                                                                   useReport: config.useReport,
-                                                                   service: service,
-                                                                   onSyncComplete: onFlagSyncComplete)
-        }
-    }
+    let service: DarklyServiceProvider
 
     // MARK: Retrieving Flag Values
 
@@ -813,19 +806,24 @@ public class LDClient {
     */
     /// - Tag: start
     public static func start(config: LDConfig, user: LDUser? = nil, completion: (() -> Void)? = nil) {
+        start(serviceFactory: nil, config: config, user: user, completion: completion)
+    }
+
+    static func start(serviceFactory: ClientServiceCreating?, config: LDConfig, user: LDUser? = nil, completion: (() -> Void)? = nil) {
         Log.debug("LDClient starting")
+        if serviceFactory != nil {
+            get()?.close()
+        }
         if instances != nil {
             Log.debug("LDClient.start() was called more than once!")
             return
         }
 
         HTTPHeaders.removeFlagRequestEtags()
-        
-        let anonymousUser = LDUser(environmentReporter: EnvironmentReporter())
-        let internalUser = user ?? anonymousUser
-        
+
+        let internalUser = user
+
         LDClient.instances = [:]
-        let cache = UserEnvironmentFlagCache(withKeyedValueCache: ClientServiceFactory().makeKeyedValueCache(), maxCachedUsers: config.maxCachedUsers)
         var mobileKeys = config.getSecondaryMobileKeys()
         var internalCount = 0
         let completionCheck = {
@@ -839,8 +837,7 @@ public class LDClient {
         for (name, mobileKey) in mobileKeys {
             var internalConfig = config
             internalConfig.mobileKey = mobileKey
-            let flagChangeNotifier = FlagChangeNotifier()
-            let instance = LDClient(configuration: internalConfig, startUser: internalUser, newCache: cache, flagNotifier: flagChangeNotifier, completion: completionCheck)
+            let instance = LDClient(serviceFactory: serviceFactory ?? ClientServiceFactory(), configuration: internalConfig, startUser: internalUser, completion: completionCheck)
             LDClient.instances?[name] = instance
         }
         completionCheck()
@@ -855,14 +852,18 @@ public class LDClient {
     - parameter completion: Closure called when the embedded `setOnline` call completes. Takes a Bool that indicates whether the completion timedout as a parameter. (Optional)
     */
     public static func start(config: LDConfig, user: LDUser? = nil, startWaitSeconds: TimeInterval, completion: ((_ timedOut: Bool) -> Void)? = nil) {
+        start(serviceFactory: nil, config: config, user: user, startWaitSeconds: startWaitSeconds, completion: completion)
+    }
+
+    static func start(serviceFactory: ClientServiceCreating?, config: LDConfig, user: LDUser? = nil, startWaitSeconds: TimeInterval, completion: ((_ timedOut: Bool) -> Void)? = nil) {
         var completed = true
         let internalCompletedQueue: DispatchQueue = DispatchQueue(label: "TimeOutQueue")
         if !config.startOnline {
-            start(config: config, user: user)
+            start(serviceFactory: serviceFactory, config: config, user: user)
             completion?(completed)
         } else {
             let startTime = Date().timeIntervalSince1970
-            start(config: config, user: user) {
+            start(serviceFactory: serviceFactory, config: config, user: user) {
                 internalCompletedQueue.async {
                     if startTime + startWaitSeconds > Date().timeIntervalSince1970 && completed {
                         completed = false
@@ -896,7 +897,7 @@ public class LDClient {
     }
     
     // MARK: - Private
-    private(set) var serviceFactory: ClientServiceCreating = ClientServiceFactory()
+    let serviceFactory: ClientServiceCreating
 
     private(set) var flagCache: FeatureFlagCaching
     private(set) var cacheConverter: CacheConverting
@@ -915,19 +916,17 @@ public class LDClient {
     private var _hasStarted = true
     private var hasStartedQueue = DispatchQueue(label: "com.launchdarkly.LDClient.hasStartedQueue")
     
-    private init(serviceFactory: ClientServiceCreating? = nil, configuration: LDConfig, startUser: LDUser?, newCache: FeatureFlagCaching, flagNotifier: FlagChangeNotifying, completion: (() -> Void)? = nil) {
-        if let serviceFactory = serviceFactory {
-            self.serviceFactory = serviceFactory
-        }
+    private init(serviceFactory: ClientServiceCreating, configuration: LDConfig, startUser: LDUser?, completion: (() -> Void)? = nil) {
+        self.serviceFactory = serviceFactory
         environmentReporter = self.serviceFactory.makeEnvironmentReporter()
-        flagCache = newCache
+        flagCache = self.serviceFactory.makeFeatureFlagCache(maxCachedUsers: configuration.maxCachedUsers)
         flagStore = self.serviceFactory.makeFlagStore()
         if let userFlagStore = startUser?.flagStore {
             flagStore.replaceStore(newFlags: userFlagStore.featureFlags, completion: nil)
         }
         LDUserWrapper.configureKeyedArchiversToHandleVersion2_3_0AndOlderUserCacheFormat()
         cacheConverter = self.serviceFactory.makeCacheConverter(maxCachedUsers: configuration.maxCachedUsers)
-        flagChangeNotifier = flagNotifier
+        flagChangeNotifier = self.serviceFactory.makeFlagChangeNotifier()
         throttler = self.serviceFactory.makeThrottler(maxDelay: Throttler.Constants.defaultDelay, environmentReporter: environmentReporter)
 
         config = configuration
@@ -988,66 +987,9 @@ private extension Optional {
 }
 
 #if DEBUG
-    extension LDClient {
-        static func start(serviceFactory: ClientServiceCreating, config: LDConfig, user: LDUser? = nil, flagCache: FeatureFlagCaching, flagNotifier: FlagChangeNotifier, completion: (() -> Void)? = nil) {
-            Log.debug("LDClient starting for tests")
-            get()?.close()
-            
-            let anonymousUser = LDUser(environmentReporter: EnvironmentReporter())
-            let internalUser = user ?? anonymousUser
-            
-            LDClient.instances = [:]
-            var mobileKeys = config.getSecondaryMobileKeys()
-            var internalCount = 0
-            let completionCheck = {
-                internalCount += 1
-                if internalCount > mobileKeys.count {
-                    Log.debug("All LDClients finished starting for tests")
-                    completion?()
-                }
-            }
-            mobileKeys[LDConfig.Constants.primaryEnvironmentName] = config.mobileKey
-            for (name, mobileKey) in mobileKeys {
-                var internalConfig = config
-                internalConfig.mobileKey = mobileKey
-                let instance = LDClient(serviceFactory: serviceFactory, configuration: internalConfig, startUser: internalUser, newCache: flagCache, flagNotifier: flagNotifier, completion: completionCheck)
-                LDClient.instances?[name] = instance
-            }
-            completionCheck()
-        }
-        
-        static func start(serviceFactory: ClientServiceCreating, config: LDConfig, user: LDUser? = nil, startWaitSeconds: TimeInterval, flagCache: FeatureFlagCaching, flagNotifier: FlagChangeNotifier, completion: ((_ timedOut: Bool) -> Void)? = nil) {
-            var completed = true
-            let internalCompletedQueue: DispatchQueue = DispatchQueue(label: "TimeOutQueue")
-            if !config.startOnline {
-                start(serviceFactory: serviceFactory, config: config, user: user, flagCache: flagCache, flagNotifier: flagNotifier)
-                completion?(completed)
-            } else {
-                let startTime = Date().timeIntervalSince1970
-                start(serviceFactory: serviceFactory, config: config, user: user, flagCache: flagCache, flagNotifier: flagNotifier) {
-                    internalCompletedQueue.async {
-                        if startTime + startWaitSeconds > Date().timeIntervalSince1970 && completed {
-                            completed = false
-                            completion?(completed)
-                        }
-                    }
-                }
-                DispatchQueue.global().asyncAfter(deadline: .now() + startWaitSeconds) {
-                    internalCompletedQueue.async {
-                        if completed {
-                            completion?(completed)
-                        }
-                    }
-                }
-            }
-        }
-        
-        func setRunMode(_ runMode: LDClientRunMode) {
-            self.runMode = runMode
-        }
-
-        func setService(_ service: DarklyServiceProvider) {
-            self.service = service
-        }
+extension LDClient {
+    func setRunMode(_ runMode: LDClientRunMode) {
+        self.runMode = runMode
     }
+}
 #endif

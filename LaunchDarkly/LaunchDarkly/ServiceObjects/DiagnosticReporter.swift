@@ -10,7 +10,7 @@ import Foundation
 //sourcery: autoMockable
 protocol DiagnosticReporting {
     //sourcery: defaultMockValue = DarklyServiceMock()
-    var service: DarklyServiceProvider { get set }
+    var service: DarklyServiceProvider { get }
     //sourcery: defaultMockValue = .foreground
     var runMode: LDClientRunMode { get set }
     //sourcery: defaultMockValue = false
@@ -18,18 +18,7 @@ protocol DiagnosticReporting {
 }
 
 class DiagnosticReporter: DiagnosticReporting {
-    var service: DarklyServiceProvider {
-        didSet {
-            guard service.config != oldValue.config
-            else { return }
-            stateQueue.async {
-                self.stopReporting()
-                self.sentInit = false
-                self.maybeStartReporting()
-            }
-        }
-    }
-
+    let service: DarklyServiceProvider
     var runMode: LDClientRunMode {
         didSet {
             guard runMode != oldValue
