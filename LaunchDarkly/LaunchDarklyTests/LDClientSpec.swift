@@ -1734,176 +1734,68 @@ final class LDClientSpec: QuickSpec {
     }
 
     func onSyncCompleteErrorSpec() {
-        var testContext: TestContext!
-        beforeEach {
-            waitUntil { done in
-                testContext = TestContext(startOnline: true, completion: done)
+        func runTest(_ ctx: String, _ err: SynchronizingError, testError: @escaping ((SynchronizingError) -> Void)) {
+            var testContext: TestContext!
+            context(ctx) {
+                beforeEach {
+                    waitUntil { done in
+                        testContext = TestContext(startOnline: true) {
+                            testContext.subject.flagChangeNotifier = ClientServiceMockFactory().makeFlagChangeNotifier()
+                            testContext.errorNotifierMock.notifyObserversCallback = done
+                            testContext.onSyncComplete?(.error(err))
+                        }
+                    }
+                }
+                it("takes the client offline when unauthed") {
+                    expect(testContext.subject.isOnline) == !err.isClientUnauthorized
+                }
+                it("does not cache the users flags") {
+                    expect(testContext.featureFlagCachingMock.storeFeatureFlagsCallCount) == 0
+                }
+                it("does not call the flag change notifier") {
+                    expect(testContext.changeNotifierMock.notifyObserversCallCount) == 0
+                }
+                it("informs the error notifier") {
+                    expect(testContext.errorNotifierMock.notifyObserversCallCount) == 1
+                    expect(testContext.observedError).to(beAnInstanceOf(SynchronizingError.self))
+                    if let err = testContext.observedError as? SynchronizingError { testError(err) }
+                }
             }
         }
 
-        context("there was an internal server error") {
-            beforeEach {
-                testContext.subject.flagChangeNotifier = ClientServiceMockFactory().makeFlagChangeNotifier()
-                waitUntil { done in
-                    testContext.errorNotifierMock.notifyObserversCallback = {
-                        done()
-                    }
-
-                    testContext.onSyncComplete?(.error(.response(HTTPURLResponse(url: testContext.config.baseUrl,
-                                                                                 statusCode: HTTPURLResponse.StatusCodes.internalServerError,
-                                                                                 httpVersion: DarklyServiceMock.Constants.httpVersion,
-                                                                                 headerFields: nil))))
-                }
-            }
-            it("does not take the client offline") {
-                expect(testContext.subject.isOnline) == true
-            }
-            it("does not cache the users flags") {
-                expect(testContext.featureFlagCachingMock.storeFeatureFlagsCallCount) == 0
-            }
-            it("does not call the flag change notifier") {
-                expect(testContext.changeNotifierMock.notifyObserversCallCount) == 0
-            }
-            it("calls the errorNotifier with a .response SynchronizingError") {
-                expect(testContext.errorNotifierMock.notifyObserversCallCount) == 1
-                expect(testContext.observedError as? SynchronizingError).toNot(beNil())
-                guard case .response(let urlResponse)? = testContext.observedError as? SynchronizingError,
-                    let httpUrlResponse = urlResponse as? HTTPURLResponse
-                else {
-                    fail("unexpected error reported")
-                    return
-                }
-                expect(httpUrlResponse.statusCode) == HTTPURLResponse.StatusCodes.internalServerError
-            }
+        let serverError = HTTPURLResponse(url: DarklyServiceMock.Constants.mockBaseUrl,
+                                          statusCode: HTTPURLResponse.StatusCodes.internalServerError,
+                                          httpVersion: DarklyServiceMock.Constants.httpVersion,
+                                          headerFields: nil)
+        runTest("there was an internal server error", .response(serverError)) { error in
+            if case .response(let urlResponse as HTTPURLResponse) = error {
+                expect(urlResponse).to(beIdenticalTo(serverError))
+            } else { fail("Incorrect error given to error notifier") }
         }
-        context("there was a request error") {
-            beforeEach {
-                testContext.subject.flagChangeNotifier = ClientServiceMockFactory().makeFlagChangeNotifier()
-                waitUntil { done in
-                    testContext.errorNotifierMock.notifyObserversCallback = {
-                        done()
-                    }
 
-                    testContext.onSyncComplete?(.error(.request(DarklyServiceMock.Constants.error)))
-                }
-            }
-            it("does not take the client offline") {
-                expect(testContext.subject.isOnline) == true
-            }
-            it("does not cache the users flags") {
-                expect(testContext.featureFlagCachingMock.storeFeatureFlagsCallCount) == 0
-            }
-            it("does not call the flag change notifier") {
-                expect(testContext.changeNotifierMock.notifyObserversCallCount) == 0
-            }
-            it("calls the errorNotifier with a .request SynchronizingError") {
-                expect(testContext.errorNotifierMock.notifyObserversCallCount) == 1
-                expect(testContext.observedError as? SynchronizingError).toNot(beNil())
-                guard case .request(let error as NSError)? = testContext.observedError as? SynchronizingError
-                else {
-                    fail("unexpected error reported")
-                    return
-                }
-                expect(error.code) == Int(CFNetworkErrors.cfurlErrorResourceUnavailable.rawValue)
-            }
+        let unauthedError = HTTPURLResponse(url: DarklyServiceMock.Constants.mockBaseUrl,
+                                            statusCode: HTTPURLResponse.StatusCodes.unauthorized,
+                                            httpVersion: DarklyServiceMock.Constants.httpVersion,
+                                            headerFields: nil)
+        runTest("there was a client unauthorized error", .response(unauthedError)) { error in
+            if case .response(let urlResponse as HTTPURLResponse) = error {
+                expect(urlResponse).to(beIdenticalTo(unauthedError))
+            } else { fail("Incorrect error given to error notifier") }
         }
-        context("there was a data error") {
-            beforeEach {
-                testContext.subject.flagChangeNotifier = ClientServiceMockFactory().makeFlagChangeNotifier()
-                waitUntil { done in
-                    testContext.errorNotifierMock.notifyObserversCallback = {
-                        done()
-                    }
-
-                    testContext.onSyncComplete?(.error(.data(DarklyServiceMock.Constants.errorData)))
-                }
-            }
-            it("does not take the client offline") {
-                expect(testContext.subject.isOnline) == true
-            }
-            it("does not cache the users flags") {
-                expect(testContext.featureFlagCachingMock.storeFeatureFlagsCallCount) == 0
-            }
-            it("does not call the flag change notifier") {
-                expect(testContext.changeNotifierMock.notifyObserversCallCount) == 0
-            }
-            it("calls the errorNotifier with a .data SynchronizingError") {
-                expect(testContext.errorNotifierMock.notifyObserversCallCount) == 1
-                expect(testContext.observedError as? SynchronizingError).toNot(beNil())
-                guard case .data(let data)? = testContext.observedError as? SynchronizingError,
-                    let errorData = data
-                else {
-                    fail("unexpected error reported")
-                    return
-                }
-                expect(errorData) == DarklyServiceMock.Constants.errorData
-            }
+        runTest("there was a request error", .request(DarklyServiceMock.Constants.error)) { error in
+            if case .request(let nsError as NSError) = error {
+                expect(nsError).to(beIdenticalTo(DarklyServiceMock.Constants.error))
+            } else { fail("Incorrect error given to error notifier") }
         }
-        context("there was a client unauthorized error") {
-            beforeEach {
-                testContext.subject.flagChangeNotifier = ClientServiceMockFactory().makeFlagChangeNotifier()
-                waitUntil { done in
-                    testContext.errorNotifierMock.notifyObserversCallback = {
-                        done()
-                    }
-
-                    testContext.onSyncComplete?(.error(.response(HTTPURLResponse(url: testContext.config.baseUrl,
-                                                                                 statusCode: HTTPURLResponse.StatusCodes.unauthorized,
-                                                                                 httpVersion: DarklyServiceMock.Constants.httpVersion,
-                                                                                 headerFields: nil))))
-                }
-            }
-            it("takes the client offline") {
-                expect(testContext.subject.isOnline) == false
-            }
-            it("does not cache the users flags") {
-                expect(testContext.featureFlagCachingMock.storeFeatureFlagsCallCount) == 0
-            }
-            it("does not call the flag change notifier") {
-                expect(testContext.changeNotifierMock.notifyObserversCallCount) == 0
-            }
-            it("calls the errorNotifier with a .response SynchronizingError") {
-                expect(testContext.errorNotifierMock.notifyObserversCallCount) == 1
-                expect(testContext.observedError as? SynchronizingError).toNot(beNil())
-                guard case .response(let urlResponse)? = testContext.observedError as? SynchronizingError,
-                    let httpUrlResponse = urlResponse as? HTTPURLResponse
-                else {
-                    fail("unexpected error reported")
-                    return
-                }
-                expect(httpUrlResponse.statusCode) == HTTPURLResponse.StatusCodes.unauthorized
-            }
+        runTest("there was a data error", .data(DarklyServiceMock.Constants.errorData)) { error in
+            if case .data(let data) = error {
+                expect(data) == DarklyServiceMock.Constants.errorData
+            } else { fail("Incorrect error given to error notifier") }
         }
-        context("there was a non-NSError error") {
-            beforeEach {
-                testContext.subject.flagChangeNotifier = ClientServiceMockFactory().makeFlagChangeNotifier()
-                waitUntil { done in
-                    testContext.errorNotifierMock.notifyObserversCallback = {
-                        done()
-                    }
-
-                    testContext.onSyncComplete?(.error(.streamError(DummyError())))
-                }
-            }
-            it("does not take the client offline") {
-                expect(testContext.subject.isOnline) == true
-            }
-            it("does not cache the users flags") {
-                expect(testContext.featureFlagCachingMock.storeFeatureFlagsCallCount) == 0
-            }
-            it("does not call the flag change notifier") {
-                expect(testContext.changeNotifierMock.notifyObserversCallCount) == 0
-            }
-            it("calls the errorNotifier with a .streamError SynchronizingError") {
-                expect(testContext.errorNotifierMock.notifyObserversCallCount) == 1
-                expect(testContext.observedError as? SynchronizingError).toNot(beNil())
-                guard case .streamError(let error)? = testContext.observedError as? SynchronizingError
-                else {
-                    fail("unexpected error reported")
-                    return
-                }
-                expect(error is DummyError).to(beTrue())
-            }
+        runTest("there was a non-NSError error", .streamError(DummyError())) { error in
+            if case .streamError(let dummy) = error {
+                expect(dummy is DummyError).to(beTrue())
+            } else { fail("Incorrect error given to error notifier") }
         }
     }
 
