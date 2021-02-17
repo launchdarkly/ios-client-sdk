@@ -2000,23 +2000,22 @@ final class LDClientSpec: QuickSpec {
 
     private func allFlagsSpec() {
         var testContext: TestContext!
-        var featureFlagValues: [LDFlagKey: Any]?
         describe("allFlags") {
-            context("when client was started") {
-                var featureFlags: [LDFlagKey: FeatureFlag]!
-                beforeEach {
-                    waitUntil { done in
-                        testContext = TestContext(completion: done)
-                    }
-                    featureFlags = testContext.subject.flagStore.featureFlags
-                    featureFlagValues = testContext.subject.allFlags
+            beforeEach {
+                waitUntil { done in
+                    testContext = TestContext(completion: done)
                 }
-                it("returns a matching dictionary of flag keys and values") {
-                    expect(featureFlagValues?.count) == featureFlags.count - 1 //nil is omitted
-                    featureFlags.keys.forEach { flagKey in
-                        expect(AnyComparer.isEqual(featureFlagValues?[flagKey], to: featureFlags[flagKey]?.value)).to(beTrue())
-                    }
+            }
+            it("returns all non-null flag values from store") {
+                let stubFlags = FlagMaintainingMock.stubFlags()
+                waitUntil { done in
+                    testContext.flagStoreMock.replaceStore(newFlags: stubFlags, completion: done)
                 }
+                expect(AnyComparer.isEqual(testContext.subject.allFlags, to: stubFlags.compactMapValues { $0.value })).to(beTrue())
+            }
+            it("returns nil when client is closed") {
+                testContext.subject.close()
+                expect(testContext.subject.allFlags).to(beNil())
             }
         }
     }
