@@ -1331,165 +1331,73 @@ final class LDClientSpec: QuickSpec {
     }
 
     private func observeSpec() {
-        describe("observe") {
-            let mockNotifier = ClientServiceMockFactory().makeFlagChangeNotifier() as! FlagChangeNotifyingMock
-            var receivedChangedFlag: Bool = false
-            var testContext: TestContext!
-            beforeEach {
-                waitUntil { done in
-                    testContext = TestContext(completion: done)
-                }
-                
-                testContext.subject.flagChangeNotifier = mockNotifier
-                testContext.subject.observe(key: "test-key", owner: self, handler: { _ in
-                    receivedChangedFlag = true
-                })
-            }
-            it("registers a single flag observer") {
-                let receivedObserver = mockNotifier.addFlagChangeObserverReceivedObserver
-                expect(mockNotifier.addFlagChangeObserverCallCount) == 1
-                expect(receivedObserver?.flagKeys) == ["test-key"]
-                expect(receivedObserver?.owner) === self
-                receivedObserver?.flagChangeHandler?(LDChangedFlag(key: "", oldValue: nil, newValue: nil))
-                expect(receivedChangedFlag) == true
-            }
+        var testContext: TestContext!
+        var mockNotifier: FlagChangeNotifyingMock!
+        var callCount: Int = 0
+        beforeEach {
+            testContext = TestContext()
+            mockNotifier = FlagChangeNotifyingMock()
+            testContext.subject.flagChangeNotifier = mockNotifier
+            callCount = 0
         }
-
-        describe("observeKeys") {
-            let mockNotifier = ClientServiceMockFactory().makeFlagChangeNotifier() as! FlagChangeNotifyingMock
-            var receivedChangedFlags: Bool = false
-            var testContext: TestContext!
-
-            beforeEach {
-                waitUntil { done in
-                    testContext = TestContext(completion: done)
-                }
-                    
-                testContext.subject.flagChangeNotifier = mockNotifier
-                testContext.subject.observe(keys: ["test-key"], owner: self, handler: { _ in
-                    receivedChangedFlags = true
-                })
-            }
-            it("registers a multiple flag observer") {
-                let receivedObserver = mockNotifier.addFlagChangeObserverReceivedObserver
-                expect(mockNotifier.addFlagChangeObserverCallCount) == 1
-                expect(receivedObserver?.flagKeys) == ["test-key"]
-                expect(receivedObserver?.owner) === self
-                let changedFlags = ["test-key": LDChangedFlag(key: "", oldValue: nil, newValue: nil)]
-                receivedObserver?.flagCollectionChangeHandler?(changedFlags)
-                expect(receivedChangedFlags) == true
-            }
+        it("observe") {
+            testContext.subject.observe(key: "test-key", owner: self) { _ in callCount += 1 }
+            let receivedObserver = mockNotifier.addFlagChangeObserverReceivedObserver
+            expect(mockNotifier.addFlagChangeObserverCallCount) == 1
+            expect(receivedObserver?.flagKeys) == ["test-key"]
+            expect(receivedObserver?.owner) === self
+            receivedObserver?.flagChangeHandler?(LDChangedFlag(key: "", oldValue: nil, newValue: nil))
+            expect(callCount) == 1
         }
-
-        describe("observeAll") {
-            let mockNotifier = ClientServiceMockFactory().makeFlagChangeNotifier() as! FlagChangeNotifyingMock
-            var receivedChangedFlags: Bool = false
-            var testContext: TestContext!
-
-            beforeEach {
-                waitUntil { done in
-                    testContext = TestContext(completion: done)
-                }
-                
-                testContext.subject.flagChangeNotifier = mockNotifier
-                testContext.subject.observeAll(owner: self, handler: { _ in
-                    receivedChangedFlags = true
-                })
-            }
-            it("registers a collection flag observer") {
-                let receivedObserver = mockNotifier.addFlagChangeObserverReceivedObserver
-                expect(mockNotifier.addFlagChangeObserverCallCount) == 1
-                expect(receivedObserver?.flagKeys) == LDFlagKey.anyKey
-                expect(receivedObserver?.owner) === self
-                let changedFlags = ["test-key": LDChangedFlag(key: "", oldValue: nil, newValue: nil)]
-                receivedObserver?.flagCollectionChangeHandler?(changedFlags)
-                expect(receivedChangedFlags) == true
-            }
+        it("observeKeys") {
+            testContext.subject.observe(keys: ["test-key"], owner: self) { _ in callCount += 1 }
+            let receivedObserver = mockNotifier.addFlagChangeObserverReceivedObserver
+            expect(mockNotifier.addFlagChangeObserverCallCount) == 1
+            expect(receivedObserver?.flagKeys) == ["test-key"]
+            expect(receivedObserver?.owner) === self
+            let changedFlags = ["test-key": LDChangedFlag(key: "", oldValue: nil, newValue: nil)]
+            receivedObserver?.flagCollectionChangeHandler?(changedFlags)
+            expect(callCount) == 1
         }
-
-        describe("observeFlagsUnchanged") {
-            let mockNotifier = ClientServiceMockFactory().makeFlagChangeNotifier() as! FlagChangeNotifyingMock
-            var receivedFlagsUnchanged: Bool = false
-            var testContext: TestContext!
-            beforeEach {
-                waitUntil { done in
-                    testContext = TestContext(completion: done)
-                }
-                
-                testContext.subject.flagChangeNotifier = mockNotifier
-                testContext.subject.observeFlagsUnchanged(owner: self, handler: {
-                    receivedFlagsUnchanged = true
-                })
-            }
-            it("registers a flags unchanged observer") {
-                let receivedObserver = mockNotifier.addFlagsUnchangedObserverReceivedObserver
-                expect(mockNotifier.addFlagsUnchangedObserverCallCount) == 1
-                expect(receivedObserver?.owner) === self
-                receivedObserver?.flagsUnchangedHandler()
-                expect(receivedFlagsUnchanged) == true
-            }
+        it("observeAll") {
+            testContext.subject.observeAll(owner: self) { _ in callCount += 1 }
+            let receivedObserver = mockNotifier.addFlagChangeObserverReceivedObserver
+            expect(mockNotifier.addFlagChangeObserverCallCount) == 1
+            expect(receivedObserver?.flagKeys) == LDFlagKey.anyKey
+            expect(receivedObserver?.owner) === self
+            let changedFlags = ["test-key": LDChangedFlag(key: "", oldValue: nil, newValue: nil)]
+            receivedObserver?.flagCollectionChangeHandler?(changedFlags)
+            expect(callCount) == 1
         }
-        
-        describe("observeConnectionModeChanged") {
-            var testContext: TestContext!
-            let mockNotifier = ClientServiceMockFactory().makeFlagChangeNotifier() as! FlagChangeNotifyingMock
-            var receivedConnectionModeChanged: Bool = false
-            beforeEach {
-                waitUntil { done in
-                    testContext = TestContext(completion: done)
-                }
-
-                testContext.subject.flagChangeNotifier = mockNotifier
-                testContext.subject.observeCurrentConnectionMode(owner: self, handler: { _ in
-                    receivedConnectionModeChanged = true
-                })
-            }
-            it("registers a ConnectionModeChanged observer") {
-                let receivedObserver = mockNotifier.addConnectionModeChangedObserverReceivedObserver
-                expect(mockNotifier.addConnectionModeChangedObserverCallCount) == 1
-                expect(receivedObserver?.owner) === self
-                receivedObserver?.connectionModeChangedHandler?(ConnectionInformation.ConnectionMode.offline)
-                expect(receivedConnectionModeChanged) == true
-            }
+        it("observeFlagsUnchanged") {
+            testContext.subject.observeFlagsUnchanged(owner: self) { callCount += 1 }
+            let receivedObserver = mockNotifier.addFlagsUnchangedObserverReceivedObserver
+            expect(mockNotifier.addFlagsUnchangedObserverCallCount) == 1
+            expect(receivedObserver?.owner) === self
+            receivedObserver?.flagsUnchangedHandler()
+            expect(callCount) == 1
         }
-
-        describe("observeError") {
-            var testContext: TestContext!
-            var receivedError: Bool = false
-            beforeEach {
-                waitUntil { done in
-                    testContext = TestContext(completion: done)
-                }
-
-                testContext.subject.observeError(owner: self, handler: { _ in
-                    receivedError = true
-                })
-            }
-            it("registers an error observer") {
-                expect(testContext.errorNotifierMock.addErrorObserverCallCount) == 1
-                expect(testContext.errorNotifierMock.addErrorObserverReceivedObserver?.owner) === self
-                testContext.errorNotifierMock.addErrorObserverReceivedObserver?.errorHandler?(ErrorMock())
-                expect(receivedError) == true
-            }
+        it("observeConnectionModeChanged") {
+            testContext.subject.observeCurrentConnectionMode(owner: self) { _ in callCount += 1 }
+            let receivedObserver = mockNotifier.addConnectionModeChangedObserverReceivedObserver
+            expect(mockNotifier.addConnectionModeChangedObserverCallCount) == 1
+            expect(receivedObserver?.owner) === self
+            receivedObserver?.connectionModeChangedHandler?(ConnectionInformation.ConnectionMode.offline)
+            expect(callCount) == 1
         }
-
-        describe("stopObserving") {
-            let mockFlagNotifier = ClientServiceMockFactory().makeFlagChangeNotifier() as! FlagChangeNotifyingMock
-            var testContext: TestContext!
-            beforeEach {
-                waitUntil { done in
-                    testContext = TestContext(completion: done)
-                }
-                
-                testContext.subject.flagChangeNotifier = mockFlagNotifier
-                testContext.subject.stopObserving(owner: self)
-            }
-            it("unregisters the owner") {
-                expect(mockFlagNotifier.removeObserverCallCount) == 1
-                expect(mockFlagNotifier.removeObserverReceivedOwner) === self
-                expect(testContext.errorNotifierMock.removeObserversCallCount) == 1
-                expect(testContext.errorNotifierMock.removeObserversReceivedOwner) === self
-            }
+        it("observeError") {
+            testContext.subject.observeError(owner: self) { _ in callCount += 1 }
+            expect(testContext.errorNotifierMock.addErrorObserverCallCount) == 1
+            expect(testContext.errorNotifierMock.addErrorObserverReceivedObserver?.owner) === self
+            testContext.errorNotifierMock.addErrorObserverReceivedObserver?.errorHandler?(ErrorMock())
+            expect(callCount) == 1
+        }
+        it("stopObserving") {
+            testContext.subject.stopObserving(owner: self)
+            expect(mockNotifier.removeObserverCallCount) == 1
+            expect(mockNotifier.removeObserverReceivedOwner) === self
+            expect(testContext.errorNotifierMock.removeObserversCallCount) == 1
+            expect(testContext.errorNotifierMock.removeObserversReceivedOwner) === self
         }
     }
 
