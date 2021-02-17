@@ -14,7 +14,6 @@ protocol FlagMaintaining {
     func updateStore(updateDictionary: [LDFlagKey: Any], completion: CompletionClosure?)
     func deleteFlag(deleteDictionary: [LDFlagKey: Any], completion: CompletionClosure?)
     func featureFlag(for flagKey: LDFlagKey) -> FeatureFlag?
-    func variation<T: LDFlagValueConvertible>(forKey key: LDFlagKey, defaultValue: T) -> T
 }
 
 final class FlagStore: FlagMaintaining {
@@ -140,12 +139,6 @@ final class FlagStore: FlagMaintaining {
 
     func featureFlag(for flagKey: LDFlagKey) -> FeatureFlag? {
         flagQueue.sync { _featureFlags[flagKey] }
-    }
-
-    func variation<T: LDFlagValueConvertible>(forKey key: LDFlagKey, defaultValue: T) -> T {
-        flagQueue.sync {
-            (_featureFlags[key]?.value as? T) ?? defaultValue
-        }
     }
 }
 

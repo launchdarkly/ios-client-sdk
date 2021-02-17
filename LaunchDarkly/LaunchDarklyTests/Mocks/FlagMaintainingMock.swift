@@ -56,10 +56,6 @@ final class FlagMaintainingMock: FlagMaintaining {
         innerStore.featureFlag(for: flagKey)
     }
 
-    func variation<T: LDFlagValueConvertible>(forKey key: String, defaultValue: T) -> T {
-        innerStore.variation(forKey: key, defaultValue: defaultValue)
-    }
-
     static func stubPatchDictionary(key: LDFlagKey?, value: Any?, variation: Int?, version: Int?, includeExtraKey: Bool = false) -> [String: Any] {
         var updateDictionary = [String: Any]()
         if let key = key {
