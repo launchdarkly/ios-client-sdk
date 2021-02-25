@@ -100,6 +100,17 @@ public final class ObjcLDClient: NSObject {
     }
 
     /**
+     Reports the initialization state of the LDClient.
+
+     When true, the SDK has either communicated with LaunchDarkly servers for feature flag values or the SDK has been set offline.
+
+     When false, the SDK has not been able to communicate with LaunchDarkly servers. Client apps can request feature flag values and set/change feature flag observers but flags might not exist or be stale.
+    */
+    @objc public func isInitialized() -> Bool {
+        ldClient.isInitialized()
+    }
+
+    /**
         The LDUser set into the LDClient may affect the set of feature flags returned by the LaunchDarkly server, and ties event tracking to the user. See `LDUser` for details about what information can be retained.
 
         The client app can change the current LDUser by calling this method. Client apps should follow [Apple's Privacy Policy](apple.com/legal/privacy) when collecting user information. When a new user is set, the LDClient goes offline and sets the new user. If the client was online when the new user was set, it goes online again, subject to a throttling delay if in force (see `setOnline(_: completion:)` for details).

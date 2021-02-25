@@ -83,6 +83,17 @@ public class LDClient {
     private var isOnlineQueue = DispatchQueue(label: "com.launchdarkly.LDClient.isOnlineQueue")
 
     /**
+     Reports the initialization state of the LDClient.
+
+     When true, the SDK has either communicated with LaunchDarkly servers for feature flag values or the SDK has been set offline.
+
+     When false, the SDK has not been able to communicate with LaunchDarkly servers. Client apps can request feature flag values and set/change feature flag observers but flags might not exist or be stale.
+    */
+    public func isInitialized() -> Bool {
+        hasStarted && (!isOnline || initialized)
+    }
+
+    /**
      Set the LDClient online/offline.
 
      When online, the SDK communicates with LaunchDarkly servers for feature flag values and event reporting.
@@ -134,6 +145,9 @@ public class LDClient {
         var completed = false
         let internalCompletedQueue = DispatchQueue(label: "com.launchdarkly.LDClient.goCompletedQueue")
 
+        if !goOnline {
+            initialized = true
+        }
         let completionCheck = { (completion: (() -> Void)?) in
             internalCompletedQueue.sync {
                 if completed == false {
@@ -147,10 +161,12 @@ public class LDClient {
             completion?()
         } else if completion != nil {
             observeAll(owner: owner) { _ in
+                self.initialized = true
                 completionCheck(completion)
                 self.stopObserving(owner: owner)
             }
             observeFlagsUnchanged(owner: owner) {
+                self.initialized = true
                 completionCheck(completion)
                 self.stopObserving(owner: owner)
             }
@@ -915,6 +931,12 @@ public class LDClient {
     }
     private var _hasStarted = true
     private var hasStartedQueue = DispatchQueue(label: "com.launchdarkly.LDClient.hasStartedQueue")
+    private(set) var initialized: Bool {
+        get { initializedQueue.sync { _initialized } }
+        set { initializedQueue.sync { _initialized = newValue } }
+    }
+    private var _initialized = false
+    private var initializedQueue = DispatchQueue(label: "com.launchdarkly.LDClient.initializedQueue")
     
     private init(serviceFactory: ClientServiceCreating, configuration: LDConfig, startUser: LDUser?, completion: (() -> Void)? = nil) {
         self.serviceFactory = serviceFactory

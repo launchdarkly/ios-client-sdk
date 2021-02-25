@@ -172,6 +172,7 @@ final class LDClientSpec: QuickSpec {
         connectionInformationSpec()
         variationDetailSpec()
         aliasingSpec()
+        isInitializedSpec()
     }
 
     private func aliasingSpec() {
@@ -1128,71 +1129,73 @@ final class LDClientSpec: QuickSpec {
         var testContext: TestContext!
         var mockNotifier: FlagChangeNotifyingMock!
         var callCount: Int = 0
-        beforeEach {
-            testContext = TestContext()
-            testContext.start()
-            mockNotifier = FlagChangeNotifyingMock()
-            testContext.subject.flagChangeNotifier = mockNotifier
-            callCount = 0
-        }
-        it("observe") {
-            testContext.subject.observe(key: "test-key", owner: self) { _ in callCount += 1 }
-            let receivedObserver = mockNotifier.addFlagChangeObserverReceivedObserver
-            expect(mockNotifier.addFlagChangeObserverCallCount) == 1
-            expect(receivedObserver?.flagKeys) == ["test-key"]
-            expect(receivedObserver?.owner) === self
-            receivedObserver?.flagChangeHandler?(LDChangedFlag(key: "", oldValue: nil, newValue: nil))
-            expect(callCount) == 1
-        }
-        it("observeKeys") {
-            testContext.subject.observe(keys: ["test-key"], owner: self) { _ in callCount += 1 }
-            let receivedObserver = mockNotifier.addFlagChangeObserverReceivedObserver
-            expect(mockNotifier.addFlagChangeObserverCallCount) == 1
-            expect(receivedObserver?.flagKeys) == ["test-key"]
-            expect(receivedObserver?.owner) === self
-            let changedFlags = ["test-key": LDChangedFlag(key: "", oldValue: nil, newValue: nil)]
-            receivedObserver?.flagCollectionChangeHandler?(changedFlags)
-            expect(callCount) == 1
-        }
-        it("observeAll") {
-            testContext.subject.observeAll(owner: self) { _ in callCount += 1 }
-            let receivedObserver = mockNotifier.addFlagChangeObserverReceivedObserver
-            expect(mockNotifier.addFlagChangeObserverCallCount) == 1
-            expect(receivedObserver?.flagKeys) == LDFlagKey.anyKey
-            expect(receivedObserver?.owner) === self
-            let changedFlags = ["test-key": LDChangedFlag(key: "", oldValue: nil, newValue: nil)]
-            receivedObserver?.flagCollectionChangeHandler?(changedFlags)
-            expect(callCount) == 1
-        }
-        it("observeFlagsUnchanged") {
-            testContext.subject.observeFlagsUnchanged(owner: self) { callCount += 1 }
-            let receivedObserver = mockNotifier.addFlagsUnchangedObserverReceivedObserver
-            expect(mockNotifier.addFlagsUnchangedObserverCallCount) == 1
-            expect(receivedObserver?.owner) === self
-            receivedObserver?.flagsUnchangedHandler()
-            expect(callCount) == 1
-        }
-        it("observeConnectionModeChanged") {
-            testContext.subject.observeCurrentConnectionMode(owner: self) { _ in callCount += 1 }
-            let receivedObserver = mockNotifier.addConnectionModeChangedObserverReceivedObserver
-            expect(mockNotifier.addConnectionModeChangedObserverCallCount) == 1
-            expect(receivedObserver?.owner) === self
-            receivedObserver?.connectionModeChangedHandler?(ConnectionInformation.ConnectionMode.offline)
-            expect(callCount) == 1
-        }
-        it("observeError") {
-            testContext.subject.observeError(owner: self) { _ in callCount += 1 }
-            expect(testContext.errorNotifierMock.addErrorObserverCallCount) == 1
-            expect(testContext.errorNotifierMock.addErrorObserverReceivedObserver?.owner) === self
-            testContext.errorNotifierMock.addErrorObserverReceivedObserver?.errorHandler?(ErrorMock())
-            expect(callCount) == 1
-        }
-        it("stopObserving") {
-            testContext.subject.stopObserving(owner: self)
-            expect(mockNotifier.removeObserverCallCount) == 1
-            expect(mockNotifier.removeObserverReceivedOwner) === self
-            expect(testContext.errorNotifierMock.removeObserversCallCount) == 1
-            expect(testContext.errorNotifierMock.removeObserversReceivedOwner) === self
+        describe("observe") {
+            beforeEach {
+                testContext = TestContext()
+                testContext.start()
+                mockNotifier = FlagChangeNotifyingMock()
+                testContext.subject.flagChangeNotifier = mockNotifier
+                callCount = 0
+            }
+            it("observe") {
+                testContext.subject.observe(key: "test-key", owner: self) { _ in callCount += 1 }
+                let receivedObserver = mockNotifier.addFlagChangeObserverReceivedObserver
+                expect(mockNotifier.addFlagChangeObserverCallCount) == 1
+                expect(receivedObserver?.flagKeys) == ["test-key"]
+                expect(receivedObserver?.owner) === self
+                receivedObserver?.flagChangeHandler?(LDChangedFlag(key: "", oldValue: nil, newValue: nil))
+                expect(callCount) == 1
+            }
+            it("observeKeys") {
+                testContext.subject.observe(keys: ["test-key"], owner: self) { _ in callCount += 1 }
+                let receivedObserver = mockNotifier.addFlagChangeObserverReceivedObserver
+                expect(mockNotifier.addFlagChangeObserverCallCount) == 1
+                expect(receivedObserver?.flagKeys) == ["test-key"]
+                expect(receivedObserver?.owner) === self
+                let changedFlags = ["test-key": LDChangedFlag(key: "", oldValue: nil, newValue: nil)]
+                receivedObserver?.flagCollectionChangeHandler?(changedFlags)
+                expect(callCount) == 1
+            }
+            it("observeAll") {
+                testContext.subject.observeAll(owner: self) { _ in callCount += 1 }
+                let receivedObserver = mockNotifier.addFlagChangeObserverReceivedObserver
+                expect(mockNotifier.addFlagChangeObserverCallCount) == 1
+                expect(receivedObserver?.flagKeys) == LDFlagKey.anyKey
+                expect(receivedObserver?.owner) === self
+                let changedFlags = ["test-key": LDChangedFlag(key: "", oldValue: nil, newValue: nil)]
+                receivedObserver?.flagCollectionChangeHandler?(changedFlags)
+                expect(callCount) == 1
+            }
+            it("observeFlagsUnchanged") {
+                testContext.subject.observeFlagsUnchanged(owner: self) { callCount += 1 }
+                let receivedObserver = mockNotifier.addFlagsUnchangedObserverReceivedObserver
+                expect(mockNotifier.addFlagsUnchangedObserverCallCount) == 1
+                expect(receivedObserver?.owner) === self
+                receivedObserver?.flagsUnchangedHandler()
+                expect(callCount) == 1
+            }
+            it("observeConnectionModeChanged") {
+                testContext.subject.observeCurrentConnectionMode(owner: self) { _ in callCount += 1 }
+                let receivedObserver = mockNotifier.addConnectionModeChangedObserverReceivedObserver
+                expect(mockNotifier.addConnectionModeChangedObserverCallCount) == 1
+                expect(receivedObserver?.owner) === self
+                receivedObserver?.connectionModeChangedHandler?(ConnectionInformation.ConnectionMode.offline)
+                expect(callCount) == 1
+            }
+            it("observeError") {
+                testContext.subject.observeError(owner: self) { _ in callCount += 1 }
+                expect(testContext.errorNotifierMock.addErrorObserverCallCount) == 1
+                expect(testContext.errorNotifierMock.addErrorObserverReceivedObserver?.owner) === self
+                testContext.errorNotifierMock.addErrorObserverReceivedObserver?.errorHandler?(ErrorMock())
+                expect(callCount) == 1
+            }
+            it("stopObserving") {
+                testContext.subject.stopObserving(owner: self)
+                expect(mockNotifier.removeObserverCallCount) == 1
+                expect(mockNotifier.removeObserverReceivedOwner) === self
+                expect(testContext.errorNotifierMock.removeObserversCallCount) == 1
+                expect(testContext.errorNotifierMock.removeObserversReceivedOwner) === self
+            }
         }
     }
 
@@ -1844,6 +1847,55 @@ final class LDClientSpec: QuickSpec {
                     let detail = testContext.subject.variationDetail(forKey: DarklyServiceMock.FlagKeys.bool, defaultValue: DefaultFlagValues.bool).reason
                     if let errorKind = detail?["errorKind"] as? String {
                         expect(errorKind) == "FLAG_NOT_FOUND"
+                    }
+                }
+            }
+        }
+    }
+
+    private func isInitializedSpec() {
+        var testContext: TestContext!
+
+        describe("isInitialized") {
+            context("when client was started but no flag update") {
+                beforeEach {
+                    testContext = TestContext(startOnline: true)
+                    testContext.start()
+                }
+                it("returns false") {
+                    expect(testContext.subject.isInitialized) == false
+                }
+                it("and then stopped returns false") {
+                    testContext.subject.close()
+                    expect(testContext.subject.isInitialized) == false
+                }
+            }
+            context("when client was started offline") {
+                beforeEach {
+                    testContext = TestContext()
+                    testContext.start()
+                }
+                it("returns true") {
+                    expect(testContext.subject.isInitialized) == true
+                }
+                it("and then stopped returns false") {
+                    testContext.subject.close()
+                    expect(testContext.subject.isInitialized) == false
+                }
+            }
+            for eventType in [nil, FlagUpdateType.ping, FlagUpdateType.put] {
+                context("when client was started and after receiving flags as " + (eventType?.rawValue ?? "poll")) {
+                    beforeEach {
+                        testContext = TestContext(startOnline: true)
+                        testContext.start()
+                        testContext.onSyncComplete?(.success([:], eventType))
+                    }
+                    it("returns true") {
+                        expect(testContext.subject.isInitialized).toEventually(beTrue(), timeout: DispatchTimeInterval.seconds(2))
+                    }
+                    it("and then stopped returns false") {
+                        testContext.subject.close()
+                        expect(testContext.subject.isInitialized) == false
                     }
                 }
             }
