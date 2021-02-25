@@ -22,15 +22,6 @@ final class LDClientSpec: QuickSpec {
         fileprivate static let updateThreshold: TimeInterval = 0.05
     }
 
-    struct BadFlagKeys {
-        static let bool = "bool-flag-bad"
-        static let int = "int-flag-bad"
-        static let double = "double-flag-bad"
-        static let string = "string-flag-bad"
-        static let array = "array-flag-bad"
-        static let dictionary = "dictionary-flag-bad"
-    }
-
     struct DefaultFlagValues {
         static let bool = false
         static let int = 5
@@ -1070,17 +1061,17 @@ final class LDClientSpec: QuickSpec {
                 context("non-Optional default value") {
                     it("returns the default value") {
                         //The casts in the expect() calls allow the compiler to determine which variation method to use. This test calls the non-Optional variation method
-                        expect(testContext.subject.variation(forKey: BadFlagKeys.bool, defaultValue: DefaultFlagValues.bool) as Bool) == DefaultFlagValues.bool
-                        expect(testContext.subject.variation(forKey: BadFlagKeys.int, defaultValue: DefaultFlagValues.int) as Int) == DefaultFlagValues.int
-                        expect(testContext.subject.variation(forKey: BadFlagKeys.double, defaultValue: DefaultFlagValues.double) as Double) == DefaultFlagValues.double
-                        expect(testContext.subject.variation(forKey: BadFlagKeys.string, defaultValue: DefaultFlagValues.string) as String) == DefaultFlagValues.string
-                        expect(testContext.subject.variation(forKey: BadFlagKeys.array, defaultValue: DefaultFlagValues.array) == DefaultFlagValues.array).to(beTrue())
-                        expect(testContext.subject.variation(forKey: BadFlagKeys.dictionary, defaultValue: DefaultFlagValues.dictionary) as [String: Any] == DefaultFlagValues.dictionary).to(beTrue())
+                        expect(testContext.subject.variation(forKey: DarklyServiceMock.FlagKeys.bool, defaultValue: DefaultFlagValues.bool) as Bool) == DefaultFlagValues.bool
+                        expect(testContext.subject.variation(forKey: DarklyServiceMock.FlagKeys.int, defaultValue: DefaultFlagValues.int) as Int) == DefaultFlagValues.int
+                        expect(testContext.subject.variation(forKey: DarklyServiceMock.FlagKeys.double, defaultValue: DefaultFlagValues.double) as Double) == DefaultFlagValues.double
+                        expect(testContext.subject.variation(forKey: DarklyServiceMock.FlagKeys.string, defaultValue: DefaultFlagValues.string) as String) == DefaultFlagValues.string
+                        expect(testContext.subject.variation(forKey: DarklyServiceMock.FlagKeys.array, defaultValue: DefaultFlagValues.array) == DefaultFlagValues.array).to(beTrue())
+                        expect(testContext.subject.variation(forKey: DarklyServiceMock.FlagKeys.dictionary, defaultValue: DefaultFlagValues.dictionary) as [String: Any] == DefaultFlagValues.dictionary).to(beTrue())
                     }
                     it("records a flag evaluation event") {
-                        _ = testContext.subject.variation(forKey: BadFlagKeys.bool, defaultValue: DefaultFlagValues.bool)
+                        _ = testContext.subject.variation(forKey: DarklyServiceMock.FlagKeys.bool, defaultValue: DefaultFlagValues.bool)
                         expect(testContext.eventReporterMock.recordFlagEvaluationEventsCallCount) == 1
-                        expect(testContext.eventReporterMock.recordFlagEvaluationEventsReceivedArguments?.flagKey) == BadFlagKeys.bool
+                        expect(testContext.eventReporterMock.recordFlagEvaluationEventsReceivedArguments?.flagKey) == DarklyServiceMock.FlagKeys.bool
                         expect(AnyComparer.isEqual(testContext.eventReporterMock.recordFlagEvaluationEventsReceivedArguments?.value, to: DefaultFlagValues.bool)).to(beTrue())
                         expect(AnyComparer.isEqual(testContext.eventReporterMock.recordFlagEvaluationEventsReceivedArguments?.defaultValue, to: DefaultFlagValues.bool)).to(beTrue())
                         expect(testContext.eventReporterMock.recordFlagEvaluationEventsReceivedArguments?.featureFlag).to(beNil())
@@ -1090,18 +1081,18 @@ final class LDClientSpec: QuickSpec {
                 context("Optional default value") {
                     it("returns the default value") {
                         //The casts in the expect() calls allow the compiler to determine which variation method to use. This test calls the non-Optional variation method
-                        expect(testContext.subject.variation(forKey: BadFlagKeys.bool, defaultValue: DefaultFlagValues.bool as Bool?)) == DefaultFlagValues.bool
-                        expect(testContext.subject.variation(forKey: BadFlagKeys.int, defaultValue: DefaultFlagValues.int as Int?)) == DefaultFlagValues.int
-                        expect(testContext.subject.variation(forKey: BadFlagKeys.double, defaultValue: DefaultFlagValues.double as Double?)) == DefaultFlagValues.double
-                        expect(testContext.subject.variation(forKey: BadFlagKeys.string, defaultValue: DefaultFlagValues.string as String?)) == DefaultFlagValues.string
-                        expect(testContext.subject.variation(forKey: BadFlagKeys.array, defaultValue: DefaultFlagValues.array as Array?) == DefaultFlagValues.array).to(beTrue())
-                        expect(testContext.subject.variation(forKey: BadFlagKeys.dictionary, defaultValue: DefaultFlagValues.dictionary as [String: Any]?) == DefaultFlagValues.dictionary).to(beTrue())
+                        expect(testContext.subject.variation(forKey: DarklyServiceMock.FlagKeys.bool, defaultValue: DefaultFlagValues.bool as Bool?)) == DefaultFlagValues.bool
+                        expect(testContext.subject.variation(forKey: DarklyServiceMock.FlagKeys.int, defaultValue: DefaultFlagValues.int as Int?)) == DefaultFlagValues.int
+                        expect(testContext.subject.variation(forKey: DarklyServiceMock.FlagKeys.double, defaultValue: DefaultFlagValues.double as Double?)) == DefaultFlagValues.double
+                        expect(testContext.subject.variation(forKey: DarklyServiceMock.FlagKeys.string, defaultValue: DefaultFlagValues.string as String?)) == DefaultFlagValues.string
+                        expect(testContext.subject.variation(forKey: DarklyServiceMock.FlagKeys.array, defaultValue: DefaultFlagValues.array as Array?) == DefaultFlagValues.array).to(beTrue())
+                        expect(testContext.subject.variation(forKey: DarklyServiceMock.FlagKeys.dictionary, defaultValue: DefaultFlagValues.dictionary as [String: Any]?) == DefaultFlagValues.dictionary).to(beTrue())
                     }
                     it("records a flag evaluation event") {
                         //The cast in the variation call directs the compiler to the Optional variation method
-                        _ = testContext.subject.variation(forKey: BadFlagKeys.bool, defaultValue: DefaultFlagValues.bool as Bool?)
+                        _ = testContext.subject.variation(forKey: DarklyServiceMock.FlagKeys.bool, defaultValue: DefaultFlagValues.bool as Bool?)
                         expect(testContext.eventReporterMock.recordFlagEvaluationEventsCallCount) == 1
-                        expect(testContext.eventReporterMock.recordFlagEvaluationEventsReceivedArguments?.flagKey) == BadFlagKeys.bool
+                        expect(testContext.eventReporterMock.recordFlagEvaluationEventsReceivedArguments?.flagKey) == DarklyServiceMock.FlagKeys.bool
                         expect(AnyComparer.isEqual(testContext.eventReporterMock.recordFlagEvaluationEventsReceivedArguments?.value, to: DefaultFlagValues.bool)).to(beTrue())
                         expect(AnyComparer.isEqual(testContext.eventReporterMock.recordFlagEvaluationEventsReceivedArguments?.defaultValue, to: DefaultFlagValues.bool)).to(beTrue())
                         expect(testContext.eventReporterMock.recordFlagEvaluationEventsReceivedArguments?.featureFlag).to(beNil())
@@ -1111,18 +1102,18 @@ final class LDClientSpec: QuickSpec {
                 context("no default value") {
                     it("returns nil") {
                         //The casts in the expect() calls allow the compiler to determine which variation method to use. This test calls the non-Optional variation method
-                        expect(testContext.subject.variation(forKey: BadFlagKeys.bool, defaultValue: nil as Bool?)).to(beNil())
-                        expect(testContext.subject.variation(forKey: BadFlagKeys.int, defaultValue: nil as Int?)).to(beNil())
-                        expect(testContext.subject.variation(forKey: BadFlagKeys.double, defaultValue: nil as Double?)).to(beNil())
-                        expect(testContext.subject.variation(forKey: BadFlagKeys.string, defaultValue: nil as String?)).to(beNil())
-                        expect(testContext.subject.variation(forKey: BadFlagKeys.array, defaultValue: nil as [Any]?)).to(beNil())
-                        expect(testContext.subject.variation(forKey: BadFlagKeys.dictionary, defaultValue: nil as [String: Any]?)).to(beNil())
+                        expect(testContext.subject.variation(forKey: DarklyServiceMock.FlagKeys.bool, defaultValue: nil as Bool?)).to(beNil())
+                        expect(testContext.subject.variation(forKey: DarklyServiceMock.FlagKeys.int, defaultValue: nil as Int?)).to(beNil())
+                        expect(testContext.subject.variation(forKey: DarklyServiceMock.FlagKeys.double, defaultValue: nil as Double?)).to(beNil())
+                        expect(testContext.subject.variation(forKey: DarklyServiceMock.FlagKeys.string, defaultValue: nil as String?)).to(beNil())
+                        expect(testContext.subject.variation(forKey: DarklyServiceMock.FlagKeys.array, defaultValue: nil as [Any]?)).to(beNil())
+                        expect(testContext.subject.variation(forKey: DarklyServiceMock.FlagKeys.dictionary, defaultValue: nil as [String: Any]?)).to(beNil())
                     }
                     it("records a flag evaluation event") {
                         //The cast in the variation call directs the compiler to the Optional variation method
-                        _ = testContext.subject.variation(forKey: BadFlagKeys.bool, defaultValue: nil as Bool?)
+                        _ = testContext.subject.variation(forKey: DarklyServiceMock.FlagKeys.bool, defaultValue: nil as Bool?)
                         expect(testContext.eventReporterMock.recordFlagEvaluationEventsCallCount) == 1
-                        expect(testContext.eventReporterMock.recordFlagEvaluationEventsReceivedArguments?.flagKey) == BadFlagKeys.bool
+                        expect(testContext.eventReporterMock.recordFlagEvaluationEventsReceivedArguments?.flagKey) == DarklyServiceMock.FlagKeys.bool
                         expect(testContext.eventReporterMock.recordFlagEvaluationEventsReceivedArguments?.value).to(beNil())
                         expect(testContext.eventReporterMock.recordFlagEvaluationEventsReceivedArguments?.defaultValue).to(beNil())
                         expect(testContext.eventReporterMock.recordFlagEvaluationEventsReceivedArguments?.featureFlag).to(beNil())
@@ -1761,50 +1752,35 @@ final class LDClientSpec: QuickSpec {
 
         describe("flag synchronizer streaming mode") {
             OperatingSystem.allOperatingSystems.forEach { os in
-                context("when running on \(os)") {
-                    beforeEach {
-                        testContext = TestContext(startOnline: true, operatingSystem: os)
-                        testContext.start()
-                    }
-                    it("sets the flag synchronizer streaming mode") {
-                        expect(testContext.makeFlagSynchronizerStreamingMode) == (os.isStreamingEnabled ? LDStreamingMode.streaming : LDStreamingMode.polling)
-                    }
+                it("on \(os) sets the flag synchronizer streaming mode") {
+                    testContext = TestContext(startOnline: true, operatingSystem: os)
+                    testContext.start()
+                    expect(testContext.makeFlagSynchronizerStreamingMode) == (os.isStreamingEnabled ? LDStreamingMode.streaming : LDStreamingMode.polling)
                 }
             }
         }
     }
 
     private func flushSpec() {
-        var testContext: TestContext!
-
         describe("flush") {
-            beforeEach {
-                waitUntil { done in
-                    testContext = TestContext()
-                    testContext.start(completion: done)
-                }
-                testContext.subject.flush()
-            }
             it("tells the event reporter to report events") {
+                let testContext = TestContext()
+                testContext.start()
+                testContext.subject.flush()
                 expect(testContext.eventReporterMock.flushCallCount) == 1
             }
         }
     }
 
     private func allFlagsSpec() {
+        let stubFlags = FlagMaintainingMock.stubFlags()
         var testContext: TestContext!
         describe("allFlags") {
             beforeEach {
-                waitUntil { done in
-                    testContext = TestContext()
-                    testContext.start(completion: done)
-                }
+                testContext = TestContext().withCached(flags: stubFlags)
+                testContext.start()
             }
             it("returns all non-null flag values from store") {
-                let stubFlags = FlagMaintainingMock.stubFlags()
-                waitUntil { done in
-                    testContext.flagStoreMock.replaceStore(newFlags: stubFlags, completion: done)
-                }
                 expect(AnyComparer.isEqual(testContext.subject.allFlags, to: stubFlags.compactMapValues { $0.value })).to(beTrue())
             }
             it("returns nil when client is closed") {
@@ -1860,16 +1836,12 @@ final class LDClientSpec: QuickSpec {
     }
     
     private func variationDetailSpec() {
-        var testContext: TestContext!
-        
         describe("variationDetail") {
             context("when client was started and flag key doesn't exist") {
-                beforeEach {
-                    testContext = TestContext()
-                    testContext.start()
-                }
                 it("returns FLAG_NOT_FOUND") {
-                    let detail = testContext.subject.variationDetail(forKey: BadFlagKeys.bool, defaultValue: DefaultFlagValues.bool).reason
+                    let testContext = TestContext()
+                    testContext.start()
+                    let detail = testContext.subject.variationDetail(forKey: DarklyServiceMock.FlagKeys.bool, defaultValue: DefaultFlagValues.bool).reason
                     if let errorKind = detail?["errorKind"] as? String {
                         expect(errorKind) == "FLAG_NOT_FOUND"
                     }

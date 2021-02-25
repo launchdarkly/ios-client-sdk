@@ -48,38 +48,30 @@ final class FlagStoreSpec: QuickSpec {
         var featureFlags: [LDFlagKey: FeatureFlag]!
         describe("init") {
             context("without an initial flag store") {
-                beforeEach {
-                    subject = FlagStore()
-                }
                 it("has no feature flags") {
-                    expect(subject.featureFlags.isEmpty).to(beTrue())
+                    subject = FlagStore()
+                    expect(subject.featureFlags.isEmpty) == true
                 }
             }
             context("with an initial flag store") {
-                beforeEach {
+                it("has matching feature flags") {
                     featureFlags = DarklyServiceMock.Constants.stubFeatureFlags()
                     subject = FlagStore(featureFlags: featureFlags)
-                }
-                it("has matching feature flags") {
-                    expect(subject.featureFlags == featureFlags).to(beTrue())
+                    expect(subject.featureFlags) == featureFlags
                 }
             }
             context("with an initial flag store without elements") {
-                beforeEach {
+                it("has matching feature flags") {
                     featureFlags = DarklyServiceMock.Constants.stubFeatureFlags(includeVariations: false, includeVersions: false, includeFlagVersions: false)
                     subject = FlagStore(featureFlags: featureFlags)
-                }
-                it("has matching feature flags") {
-                    expect(subject.featureFlags == featureFlags).to(beTrue())
+                    expect(subject.featureFlags) == featureFlags
                 }
             }
             context("with an initial flag dictionary") {
-                beforeEach {
+                it("has the feature flags") {
                     featureFlags = DarklyServiceMock.Constants.stubFeatureFlags()
                     subject = FlagStore(featureFlagDictionary: featureFlags.dictionaryValue)
-                }
-                it("has the feature flags") {
-                    expect(subject.featureFlags == featureFlags).to(beTrue())
+                    expect(subject.featureFlags) == featureFlags
                 }
             }
         }
@@ -90,36 +82,29 @@ final class FlagStoreSpec: QuickSpec {
         var flagStore: FlagStore!
         describe("replaceStore") {
             context("with new flag values") {
-                beforeEach {
+                it("causes FlagStore to replace the flag values") {
                     flagStore = FlagStore()
                     waitUntil(timeout: .seconds(1)) { done in
                         flagStore.replaceStore(newFlags: featureFlags, completion: done)
                     }
-                }
-                it("causes FlagStore to replace the flag values") {
                     expect(flagStore.featureFlags) == featureFlags
                 }
             }
             context("with new flag value dictionary") {
-                beforeEach {
+                it("causes FlagStore to replace the flag values") {
                     flagStore = FlagStore()
                     waitUntil(timeout: .seconds(1)) { done in
                         flagStore.replaceStore(newFlags: featureFlags.dictionaryValue, completion: done)
                     }
-                }
-                it("causes FlagStore to replace the flag values") {
                     expect(flagStore.featureFlags) == featureFlags
                 }
             }
             context("with invalid dictionary") {
-                beforeEach {
+                it("causes FlagStore to empty the flag values") {
                     flagStore = FlagStore(featureFlags: featureFlags)
-
                     waitUntil(timeout: .seconds(1)) { done in
                         flagStore.replaceStore(newFlags: ["fakeKey": "Not a flag dict"], completion: done)
                     }
-                }
-                it("causes FlagStore to empty the flag values") {
                     expect(flagStore.featureFlags.isEmpty).to(beTrue())
                 }
             }
@@ -408,11 +393,8 @@ final class FlagStoreSpec: QuickSpec {
                 }
             }
             context("when flag key doesn't exist") {
-                var featureFlag: FeatureFlag?
-                beforeEach {
-                    featureFlag = flagStore.featureFlag(for: DarklyServiceMock.FlagKeys.unknown)
-                }
                 it("returns nil") {
+                    let featureFlag = flagStore.featureFlag(for: DarklyServiceMock.FlagKeys.unknown)
                     expect(featureFlag).to(beNil())
                 }
             }

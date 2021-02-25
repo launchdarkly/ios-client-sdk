@@ -119,10 +119,10 @@ final class ClientServiceMockFactory: ClientServiceCreating {
     }
 
     var makeDiagnosticReporterCallCount = 0
-    var makeDiagnosticReporterReceivedParameters: (service: DarklyServiceProvider, runMode: LDClientRunMode)? = nil
-    func makeDiagnosticReporter(service: DarklyServiceProvider, runMode: LDClientRunMode) -> DiagnosticReporting {
+    var makeDiagnosticReporterReceivedService: DarklyServiceProvider? = nil
+    func makeDiagnosticReporter(service: DarklyServiceProvider) -> DiagnosticReporting {
         makeDiagnosticReporterCallCount += 1
-        makeDiagnosticReporterReceivedParameters = (service: service, runMode: runMode)
+        makeDiagnosticReporterReceivedService = service
         return DiagnosticReportingMock()
     }
 

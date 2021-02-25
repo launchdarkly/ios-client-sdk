@@ -267,6 +267,7 @@
 		B468E71124B3C3AC00E0C883 /* ObjcLDEvaluationDetail.swift in Sources */ = {isa = PBXBuildFile; fileRef = B468E70F24B3C3AC00E0C883 /* ObjcLDEvaluationDetail.swift */; };
 		B468E71224B3C3AC00E0C883 /* ObjcLDEvaluationDetail.swift in Sources */ = {isa = PBXBuildFile; fileRef = B468E70F24B3C3AC00E0C883 /* ObjcLDEvaluationDetail.swift */; };
 		B468E71324B3C3AC00E0C883 /* ObjcLDEvaluationDetail.swift in Sources */ = {isa = PBXBuildFile; fileRef = B468E70F24B3C3AC00E0C883 /* ObjcLDEvaluationDetail.swift */; };
+		B46F344125E6DB7D0078D45F /* DiagnosticReporterSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = B46F344025E6DB7D0078D45F /* DiagnosticReporterSpec.swift */; };
 		B4903D9824BD61B200F087C4 /* OHHTTPStubsSwift in Frameworks */ = {isa = PBXBuildFile; productRef = B4903D9724BD61B200F087C4 /* OHHTTPStubsSwift */; };
 		B4903D9B24BD61D000F087C4 /* Nimble in Frameworks */ = {isa = PBXBuildFile; productRef = B4903D9A24BD61D000F087C4 /* Nimble */; };
 		B4903D9E24BD61EF00F087C4 /* Quick in Frameworks */ = {isa = PBXBuildFile; productRef = B4903D9D24BD61EF00F087C4 /* Quick */; };
@@ -476,6 +477,7 @@
 		B40B419B249ADA6B00CD0726 /* DiagnosticCacheSpec.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiagnosticCacheSpec.swift; sourceTree = "<group>"; };
 		B4265EB024E7390C001CFD2C /* TestUtil.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TestUtil.swift; sourceTree = "<group>"; };
 		B468E70F24B3C3AC00E0C883 /* ObjcLDEvaluationDetail.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ObjcLDEvaluationDetail.swift; sourceTree = "<group>"; };
+		B46F344025E6DB7D0078D45F /* DiagnosticReporterSpec.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiagnosticReporterSpec.swift; sourceTree = "<group>"; };
 		B4C9D42D2489B5FF004A9B03 /* DiagnosticEvent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiagnosticEvent.swift; sourceTree = "<group>"; };
 		B4C9D4322489C8FD004A9B03 /* DiagnosticCache.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiagnosticCache.swift; sourceTree = "<group>"; };
 		B4C9D4372489E20A004A9B03 /* DiagnosticReporter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiagnosticReporter.swift; sourceTree = "<group>"; };
@@ -558,15 +560,16 @@
 		831D8B751F72A48900ED65E8 /* ServiceObjects */ = {
 			isa = PBXGroup;
 			children = (
-				831D8B761F72A4B400ED65E8 /* FlagSynchronizerSpec.swift */,
-				83CFE7CD1F7AD81D0010544E /* EventReporterSpec.swift */,
-				83DDBEFF1FA2589900E428B6 /* FlagStoreSpec.swift */,
-				83B8C2441FE360CF0082B8A9 /* FlagChangeNotifierSpec.swift */,
-				83383A5020460DD30024D975 /* SynchronizingErrorSpec.swift */,
-				831AAE2F20A9E75D00B46DBA /* ThrottlerSpec.swift */,
+				B46F344025E6DB7D0078D45F /* DiagnosticReporterSpec.swift */,
 				837E38C821E804ED0008A50C /* EnvironmentReporterSpec.swift */,
-				837406D321F760640087B22B /* LDTimerSpec.swift */,
 				833631CA221B5DFA00BA53EE /* ErrorNotifierSpec.swift */,
+				83CFE7CD1F7AD81D0010544E /* EventReporterSpec.swift */,
+				83B8C2441FE360CF0082B8A9 /* FlagChangeNotifierSpec.swift */,
+				83DDBEFF1FA2589900E428B6 /* FlagStoreSpec.swift */,
+				831D8B761F72A4B400ED65E8 /* FlagSynchronizerSpec.swift */,
+				83383A5020460DD30024D975 /* SynchronizingErrorSpec.swift */,
+				837406D321F760640087B22B /* LDTimerSpec.swift */,
+				831AAE2F20A9E75D00B46DBA /* ThrottlerSpec.swift */,
 				8354AC75224316C700CDE602 /* Cache */,
 			);
 			path = ServiceObjects;
@@ -1453,6 +1456,7 @@
 				83EBCBB720DABE93003A7142 /* FlagRequestTrackerSpec.swift in Sources */,
 				8354AC662241586100CDE602 /* CacheableEnvironmentFlagsSpec.swift in Sources */,
 				B4265EB124E7390C001CFD2C /* TestUtil.swift in Sources */,
+				B46F344125E6DB7D0078D45F /* DiagnosticReporterSpec.swift in Sources */,
 				83D1523B22545BB20054B6D4 /* DeprecatedCacheModelV5Spec.swift in Sources */,
 				83EF67951F994BAD00403126 /* LDUserStub.swift in Sources */,
 				B40B419C249ADA6B00CD0726 /* DiagnosticCacheSpec.swift in Sources */,

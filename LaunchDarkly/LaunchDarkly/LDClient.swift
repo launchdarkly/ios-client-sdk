@@ -71,7 +71,7 @@ public class LDClient {
                 _isOnline = newValue
                 flagSynchronizer.isOnline = _isOnline
                 eventReporter.isOnline = _isOnline
-                diagnosticReporter.isOnline = _isOnline
+                diagnosticReporter.setMode(runMode, online: _isOnline)
                 if _isOnline != oldValue {
                     connectionInformation = ConnectionInformation.onlineSetCheck(connectionInformation: connectionInformation, ldClient: self, config: config, online: _isOnline)
                 }
@@ -202,7 +202,7 @@ public class LDClient {
                                                                    service: service,
                                                                    onSyncComplete: onFlagSyncComplete)
             flagSynchronizer.isOnline = willSetSynchronizerOnline
-            diagnosticReporter.runMode = runMode
+            diagnosticReporter.setMode(runMode, online: _isOnline)
         }
     }
 
@@ -933,7 +933,7 @@ public class LDClient {
         let anonymousUser = LDUser(environmentReporter: environmentReporter)
         user = startUser ?? anonymousUser
         service = self.serviceFactory.makeDarklyServiceProvider(config: config, user: user)
-        diagnosticReporter = self.serviceFactory.makeDiagnosticReporter(service: service, runMode: runMode)
+        diagnosticReporter = self.serviceFactory.makeDiagnosticReporter(service: service)
         eventReporter = self.serviceFactory.makeEventReporter(config: config, service: service)
         errorNotifier = self.serviceFactory.makeErrorNotifier()
         connectionInformation = self.serviceFactory.makeConnectionInformation()

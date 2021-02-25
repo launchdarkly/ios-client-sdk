@@ -98,31 +98,13 @@ final class DiagnosticCachingMock: DiagnosticCaching {
 // MARK: - DiagnosticReportingMock
 final class DiagnosticReportingMock: DiagnosticReporting {
 
-    var serviceSetCount = 0
-    var setServiceCallback: (() -> Void)?
-    var service: DarklyServiceProvider = DarklyServiceMock() {
-        didSet {
-            serviceSetCount += 1
-            setServiceCallback?()
-        }
-    }
-
-    var runModeSetCount = 0
-    var setRunModeCallback: (() -> Void)?
-    var runMode: LDClientRunMode = .foreground {
-        didSet {
-            runModeSetCount += 1
-            setRunModeCallback?()
-        }
-    }
-
-    var isOnlineSetCount = 0
-    var setIsOnlineCallback: (() -> Void)?
-    var isOnline: Bool = false {
-        didSet {
-            isOnlineSetCount += 1
-            setIsOnlineCallback?()
-        }
+    var setModeCallCount = 0
+    var setModeCallback: (() -> Void)?
+    var setModeReceivedArguments: (runMode: LDClientRunMode, online: Bool)?
+    func setMode(_ runMode: LDClientRunMode, online: Bool) {
+        setModeCallCount += 1
+        setModeReceivedArguments = (runMode: runMode, online: online)
+        setModeCallback?()
     }
 }
 
