@@ -100,6 +100,17 @@ public final class ObjcLDClient: NSObject {
     }
 
     /**
+     Reports the initialization state of the LDClient.
+
+     When true, the SDK has either communicated with LaunchDarkly servers for feature flag values or the SDK has been set offline.
+
+     When false, the SDK has not been able to communicate with LaunchDarkly servers. Client apps can request feature flag values and set/change feature flag observers but flags might not exist or be stale.
+    */
+    @objc public var isInitialized: Bool {
+        ldClient.isInitialized
+    }
+
+    /**
         The LDUser set into the LDClient may affect the set of feature flags returned by the LaunchDarkly server, and ties event tracking to the user. See `LDUser` for details about what information can be retained.
 
         The client app can change the current LDUser by calling this method. Client apps should follow [Apple's Privacy Policy](apple.com/legal/privacy) when collecting user information. When a new user is set, the LDClient goes offline and sets the new user. If the client was online when the new user was set, it goes online again, subject to a throttling delay if in force (see `setOnline(_: completion:)` for details).
@@ -792,6 +803,23 @@ public final class ObjcLDClient: NSObject {
      */
     @objc public func flush() {
         ldClient.flush()
+    }
+
+    /**
+     Tells the SDK to generate an alias event.
+
+     Associates two users for analytics purposes. 
+     
+     This can be helpful in the situation where a person is represented by multiple 
+     LaunchDarkly users. This may happen, for example, when a person initially logs into 
+     an application-- the person might be represented by an anonymous user prior to logging
+     in and a different user after logging in, as denoted by a different user key.
+
+     - parameter context: the user that will be aliased to
+     - parameter previousContext: the user that will be bound to the new context
+     */
+    @objc public func alias(context: ObjcLDUser, previousContext: ObjcLDUser) {
+        ldClient.alias(context: context.user, previousContext: previousContext.user)
     }
 
    /**

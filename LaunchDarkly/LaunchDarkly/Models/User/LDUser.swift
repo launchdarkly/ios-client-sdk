@@ -36,6 +36,8 @@ public struct LDUser {
         [CodingKeys.device.rawValue, CodingKeys.operatingSystem.rawValue]
     }
 
+    static let storedIdKey: String = "ldDeviceIdentifier"
+
     ///Client app defined string that uniquely identifies the user. If the client app does not define a key, the SDK will assign an identifier associated with the anonymous user. The key cannot be made private.
     public var key: String
     ///The secondary key for the user. See the [documentation](https://docs.launchdarkly.com/home/managing-flags/targeting-users#percentage-rollout-logic) for more information on it's use for percentage rollout bucketing.
@@ -62,6 +64,7 @@ public struct LDUser {
     public var device: String?
     ///Client app defined operatingSystem for the user. The SDK will determine the operatingSystem automatically, however the client app can override the value. The SDK will insert the operatingSystem into the `custom` dictionary. The operatingSystem cannot be made private. (Default: the system identified operating system)
     public var operatingSystem: String?
+
     /**
      Client app defined privateAttributes for the user.
      The SDK will not include private attribute values in analytics events, but private attribute names will be sent.
@@ -230,22 +233,14 @@ public struct LDUser {
     static func defaultKey(environmentReporter: EnvironmentReporting) -> String {
         //For iOS & tvOS, this should be UIDevice.current.identifierForVendor.UUIDString
         //For macOS & watchOS, this should be a UUID that the sdk creates and stores so that the value returned here should be always the same
-        return environmentReporter.vendorUUID ?? UserDefaults.standard.installationKey
-    }
-}
-
-extension UserDefaults {
-    struct Keys {
-        fileprivate static let deviceIdentifier = "ldDeviceIdentifier"
-    }
-
-    fileprivate var installationKey: String {
-        if let key = self.string(forKey: Keys.deviceIdentifier) {
-            return key
+        if let vendorUUID = environmentReporter.vendorUUID {
+            return vendorUUID
         }
-
+        if let storedId = UserDefaults.standard.string(forKey: storedIdKey) {
+            return storedId
+        }
         let key = UUID().uuidString
-        self.set(key, forKey: Keys.deviceIdentifier)
+        UserDefaults.standard.set(key, forKey: storedIdKey)
         return key
     }
 }

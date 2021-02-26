@@ -21,7 +21,7 @@ extension EventSource: DarklyStreamingProvider {}
 
 protocol DarklyServiceProvider: class {
     var config: LDConfig { get }
-    var user: LDUser { get }
+    var user: LDUser { get set }
     var diagnosticCache: DiagnosticCaching? { get }
 
     func getFeatureFlags(useReport: Bool, completion: ServiceCompletionHandler?)
@@ -57,7 +57,7 @@ final class DarklyService: DarklyServiceProvider {
     }
 
     let config: LDConfig
-    let user: LDUser
+    var user: LDUser
     let httpHeaders: HTTPHeaders
     let diagnosticCache: DiagnosticCaching?
     private (set) var serviceFactory: ClientServiceCreating

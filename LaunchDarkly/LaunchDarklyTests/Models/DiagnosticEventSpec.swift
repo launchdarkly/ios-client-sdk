@@ -275,7 +275,8 @@ final class DiagnosticEventSpec: QuickSpec {
                         context("using \(desc) encoding") {
                             it("encodes correct values to keys") {
                                 let decoded = self.loadAndRestoreRaw(scheme, diagnosticConfig)
-                                expect(decoded.count) == 18
+                                expect(decoded.count) == 19
+                                expect((decoded["autoAliasingOptOut"] as! Bool)) == diagnosticConfig.autoAliasingOptOut
                                 expect((decoded["customBaseURI"] as! Bool)) == diagnosticConfig.customBaseURI
                                 expect((decoded["customEventsURI"] as! Bool)) == diagnosticConfig.customEventsURI
                                 expect((decoded["customStreamURI"] as! Bool)) == diagnosticConfig.customStreamURI

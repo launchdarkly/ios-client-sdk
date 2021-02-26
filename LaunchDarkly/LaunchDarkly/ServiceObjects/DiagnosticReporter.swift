@@ -9,86 +9,56 @@ import Foundation
 
 //sourcery: autoMockable
 protocol DiagnosticReporting {
-    //sourcery: defaultMockValue = DarklyServiceMock()
-    var service: DarklyServiceProvider { get set }
-    //sourcery: defaultMockValue = .foreground
-    var runMode: LDClientRunMode { get set }
-    //sourcery: defaultMockValue = false
-    var isOnline: Bool { get set }
+    func setMode(_ runMode: LDClientRunMode, online: Bool)
 }
 
 class DiagnosticReporter: DiagnosticReporting {
-    var service: DarklyServiceProvider {
-        didSet {
-            guard service.config != oldValue.config
-            else { return }
-            stateQueue.async {
-                self.stopReporting()
-                self.sentInit = false
-                self.maybeStartReporting()
-            }
-        }
-    }
-
-    var runMode: LDClientRunMode {
-        didSet {
-            guard runMode != oldValue
-            else { return }
-            stateQueue.async {
-                self.stopReporting()
-                self.maybeStartReporting()
-            }
-        }
-    }
-
-    var isOnline: Bool = false {
-        didSet {
-            guard isOnline != oldValue
-            else { return }
-            stateQueue.async {
-                self.stopReporting()
-                self.maybeStartReporting()
-            }
-        }
-    }
-
+    private let service: DarklyServiceProvider
     private var timer: TimeResponding?
     private var sentInit: Bool
     private let stateQueue = DispatchQueue(label: "com.launchdarkly.diagnosticReporter.state", qos: .background)
     private let workQueue = DispatchQueue(label: "com.launchdarkly.diagnosticReporter.work", qos: .background)
 
-    init(service: DarklyServiceProvider, runMode: LDClientRunMode) {
+    init(service: DarklyServiceProvider) {
         self.service = service
-        self.runMode = runMode
         self.sentInit = false
-        maybeStartReporting()
     }
 
-    private func maybeStartReporting() {
-        guard isOnline && runMode == .foreground
-        else { return }
-        timer?.cancel()
-        if let cache = self.service.diagnosticCache {
-            if !sentInit {
-                sentInit = true
-                if let lastStats = cache.lastStats {
-                    sendDiagnosticEventAsync(diagnosticEvent: lastStats)
-                }
-                let initEvent = DiagnosticInit(config: service.config,
-                                               diagnosticId: cache.getDiagnosticId(),
-                                               creationDate: Date().millisSince1970)
-                sendDiagnosticEventAsync(diagnosticEvent: initEvent)
-            }
+    func setMode(_ runMode: LDClientRunMode, online: Bool) {
+        if online && runMode == .foreground {
+            startReporting()
+        } else {
+            stopReporting()
+        }
+    }
 
-            timer = LDTimer(withTimeInterval: service.config.diagnosticRecordingInterval, repeats: true, fireQueue: workQueue) {
-                self.sendDiagnosticEventSync(diagnosticEvent: cache.getCurrentStatsAndReset())
+    private func startReporting() {
+        stateQueue.sync {
+            timer?.cancel()
+            if let cache = self.service.diagnosticCache {
+                if !sentInit {
+                    sentInit = true
+                    if let lastStats = cache.lastStats {
+                        sendDiagnosticEventAsync(diagnosticEvent: lastStats)
+                    }
+                    let initEvent = DiagnosticInit(config: service.config,
+                                                   diagnosticId: cache.getDiagnosticId(),
+                                                   creationDate: Date().millisSince1970)
+                    sendDiagnosticEventAsync(diagnosticEvent: initEvent)
+                }
+
+                timer = LDTimer(withTimeInterval: service.config.diagnosticRecordingInterval, repeats: true, fireQueue: workQueue) {
+                    self.sendDiagnosticEventSync(diagnosticEvent: cache.getCurrentStatsAndReset())
+                }
             }
         }
     }
 
     private func stopReporting() {
-        timer?.cancel()
-        timer = nil
+        stateQueue.sync {
+            timer?.cancel()
+            timer = nil
+        }
     }
 
     private func sendDiagnosticEventAsync<T: DiagnosticEvent & Encodable>(diagnosticEvent: T) {

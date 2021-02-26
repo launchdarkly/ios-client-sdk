@@ -41,7 +41,6 @@ final class FlagStoreSpec: QuickSpec {
         updateStoreSpec()
         deleteFlagSpec()
         featureFlagSpec()
-        variationSpec()
     }
 
     func initSpec() {
@@ -49,81 +48,63 @@ final class FlagStoreSpec: QuickSpec {
         var featureFlags: [LDFlagKey: FeatureFlag]!
         describe("init") {
             context("without an initial flag store") {
-                beforeEach {
-                    subject = FlagStore()
-                }
                 it("has no feature flags") {
-                    expect(subject.featureFlags.isEmpty).to(beTrue())
+                    subject = FlagStore()
+                    expect(subject.featureFlags.isEmpty) == true
                 }
             }
             context("with an initial flag store") {
-                beforeEach {
+                it("has matching feature flags") {
                     featureFlags = DarklyServiceMock.Constants.stubFeatureFlags()
                     subject = FlagStore(featureFlags: featureFlags)
-                }
-                it("has matching feature flags") {
-                    expect(subject.featureFlags == featureFlags).to(beTrue())
+                    expect(subject.featureFlags) == featureFlags
                 }
             }
             context("with an initial flag store without elements") {
-                beforeEach {
+                it("has matching feature flags") {
                     featureFlags = DarklyServiceMock.Constants.stubFeatureFlags(includeVariations: false, includeVersions: false, includeFlagVersions: false)
                     subject = FlagStore(featureFlags: featureFlags)
-                }
-                it("has matching feature flags") {
-                    expect(subject.featureFlags == featureFlags).to(beTrue())
+                    expect(subject.featureFlags) == featureFlags
                 }
             }
             context("with an initial flag dictionary") {
-                beforeEach {
+                it("has the feature flags") {
                     featureFlags = DarklyServiceMock.Constants.stubFeatureFlags()
                     subject = FlagStore(featureFlagDictionary: featureFlags.dictionaryValue)
-                }
-                it("has the feature flags") {
-                    expect(subject.featureFlags == featureFlags).to(beTrue())
+                    expect(subject.featureFlags) == featureFlags
                 }
             }
         }
     }
 
     func replaceStoreSpec() {
-        var featureFlags: [LDFlagKey: FeatureFlag]!
+        let featureFlags: [LDFlagKey: FeatureFlag] = DarklyServiceMock.Constants.stubFeatureFlags(includeNullValue: false)
         var flagStore: FlagStore!
         describe("replaceStore") {
             context("with new flag values") {
-                beforeEach {
-                    featureFlags = DarklyServiceMock.Constants.stubFeatureFlags(includeNullValue: false)
+                it("causes FlagStore to replace the flag values") {
                     flagStore = FlagStore()
                     waitUntil(timeout: .seconds(1)) { done in
                         flagStore.replaceStore(newFlags: featureFlags, completion: done)
                     }
-                }
-                it("causes FlagStore to replace the flag values") {
                     expect(flagStore.featureFlags) == featureFlags
                 }
             }
             context("with new flag value dictionary") {
-                beforeEach {
-                    featureFlags = DarklyServiceMock.Constants.stubFeatureFlags(includeNullValue: false)
+                it("causes FlagStore to replace the flag values") {
                     flagStore = FlagStore()
                     waitUntil(timeout: .seconds(1)) { done in
                         flagStore.replaceStore(newFlags: featureFlags.dictionaryValue, completion: done)
                     }
-                }
-                it("causes FlagStore to replace the flag values") {
                     expect(flagStore.featureFlags) == featureFlags
                 }
             }
-            context("with nil flag values") {
-                beforeEach {
-                    featureFlags = DarklyServiceMock.Constants.stubFeatureFlags(includeNullValue: false)
+            context("with invalid dictionary") {
+                it("causes FlagStore to empty the flag values") {
                     flagStore = FlagStore(featureFlags: featureFlags)
-
                     waitUntil(timeout: .seconds(1)) { done in
-                        flagStore.replaceStore(newFlags: nil, completion: done)
+                        flagStore.replaceStore(newFlags: ["fakeKey": "Not a flag dict"], completion: done)
                     }
-                }
-                it("causes FlagStore to empty the flag values and replace the source") {
                     expect(flagStore.featureFlags.isEmpty).to(beTrue())
                 }
             }
@@ -412,55 +393,9 @@ final class FlagStoreSpec: QuickSpec {
                 }
             }
             context("when flag key doesn't exist") {
-                var featureFlag: FeatureFlag?
-                beforeEach {
-                    featureFlag = flagStore.featureFlag(for: DarklyServiceMock.FlagKeys.unknown)
-                }
                 it("returns nil") {
+                    let featureFlag = flagStore.featureFlag(for: DarklyServiceMock.FlagKeys.unknown)
                     expect(featureFlag).to(beNil())
-                }
-            }
-        }
-    }
-
-    func variationSpec() {
-        var subject: FlagStore!
-        describe("variation") {
-            context("when flags exist") {
-                beforeEach {
-                    subject = FlagStore(featureFlags: DarklyServiceMock.Constants.stubFeatureFlags())
-                }
-                it("causes the FlagStore to provide the flag value") {
-                    expect(subject.variation(forKey: DarklyServiceMock.FlagKeys.bool, defaultValue: DefaultValues.bool)) == DarklyServiceMock.FlagValues.bool
-                    expect(subject.variation(forKey: DarklyServiceMock.FlagKeys.int, defaultValue: DefaultValues.int)) == DarklyServiceMock.FlagValues.int
-                    expect(subject.variation(forKey: DarklyServiceMock.FlagKeys.double, defaultValue: DefaultValues.double)) == DarklyServiceMock.FlagValues.double
-                    expect(subject.variation(forKey: DarklyServiceMock.FlagKeys.string, defaultValue: DefaultValues.string)) == DarklyServiceMock.FlagValues.string
-
-                    let arrayValue = subject.variation(forKey: DarklyServiceMock.FlagKeys.array, defaultValue: DefaultValues.array)
-                    expect(arrayValue) == DarklyServiceMock.FlagValues.array
-
-                    let dictionaryValue = subject.variation(forKey: DarklyServiceMock.FlagKeys.dictionary, defaultValue: DefaultValues.dictionary)
-                    expect(dictionaryValue == DarklyServiceMock.FlagValues.dictionary).to(beTrue())
-                }
-            }
-            context("when flags do not exist") {
-                beforeEach {
-                    subject = FlagStore()
-                }
-                it("causes the FlagStore to provide the defaultValue flag value") {
-                    expect(subject.variation(forKey: DarklyServiceMock.FlagKeys.bool, defaultValue: DefaultValues.bool)) == DefaultValues.bool
-                    expect(subject.variation(forKey: DarklyServiceMock.FlagKeys.int, defaultValue: DefaultValues.int)) == DefaultValues.int
-                    expect(subject.variation(forKey: DarklyServiceMock.FlagKeys.double, defaultValue: DefaultValues.double)) == DefaultValues.double
-                    expect(subject.variation(forKey: DarklyServiceMock.FlagKeys.string, defaultValue: DefaultValues.string)) == DefaultValues.string
-
-                    let arrayValue = subject.variation(forKey: DarklyServiceMock.FlagKeys.array, defaultValue: DefaultValues.array)
-                    expect(arrayValue) == DefaultValues.array
-
-                    let dictionaryValue = subject.variation(forKey: DarklyServiceMock.FlagKeys.dictionary, defaultValue: DefaultValues.dictionary)
-                    expect(dictionaryValue == DefaultValues.dictionary).to(beTrue())
-
-                    let nullValue = subject.variation(forKey: DarklyServiceMock.FlagKeys.null, defaultValue: DefaultValues.int)
-                    expect(nullValue) == DefaultValues.int
                 }
             }
         }

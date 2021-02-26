@@ -124,16 +124,16 @@ final class DarklyServiceMock: DarklyServiceProvider {
 
             let flagKeys = includeNullValue ? FlagKeys.knownFlags : FlagKeys.flagsWithAnAlternateValue
             let featureFlagTuples = flagKeys.map { flagKey in
-                return (flagKey, stubFeatureFlag(for: flagKey,
-                                                 includeVariation: includeVariations,
-                                                 includeVersion: includeVersions,
-                                                 includeFlagVersion: includeFlagVersions,
-                                                 useAlternateValue: useAlternateValue(for: flagKey, alternateValueKeys: alternateValueKeys),
-                                                 useAlternateVersion: bumpFlagVersions && useAlternateValue(for: flagKey, alternateValueKeys: alternateValueKeys),
-                                                 useAlternateFlagVersion: bumpFlagVersions && useAlternateValue(for: flagKey, alternateValueKeys: alternateValueKeys),
-                                                 useAlternateVariationNumber: alternateVariationNumber,
-                                                 trackEvents: trackEvents,
-                                                 debugEventsUntilDate: debugEventsUntilDate))
+                (flagKey, stubFeatureFlag(for: flagKey,
+                                          includeVariation: includeVariations,
+                                          includeVersion: includeVersions,
+                                          includeFlagVersion: includeFlagVersions,
+                                          useAlternateValue: useAlternateValue(for: flagKey, alternateValueKeys: alternateValueKeys),
+                                          useAlternateVersion: bumpFlagVersions && useAlternateValue(for: flagKey, alternateValueKeys: alternateValueKeys),
+                                          useAlternateFlagVersion: bumpFlagVersions && useAlternateValue(for: flagKey, alternateValueKeys: alternateValueKeys),
+                                          useAlternateVariationNumber: alternateVariationNumber,
+                                          trackEvents: trackEvents,
+                                          debugEventsUntilDate: debugEventsUntilDate))
             }
 
             return Dictionary(uniqueKeysWithValues: featureFlagTuples)
@@ -270,9 +270,11 @@ final class DarklyServiceMock: DarklyServiceProvider {
     var stubbedDiagnosticResponse: ServiceResponse?
     var publishDiagnosticCallCount = 0
     var publishedDiagnostic: DiagnosticEvent?
+    var publishDiagnosticCallback: (() -> Void)?
     func publishDiagnostic<T: DiagnosticEvent & Encodable>(diagnosticEvent: T, completion: ServiceCompletionHandler?) {
         publishDiagnosticCallCount += 1
         publishedDiagnostic = diagnosticEvent
+        publishDiagnosticCallback?()
         completion?(stubbedDiagnosticResponse ?? (nil, nil, nil))
     }
 }
@@ -421,29 +423,6 @@ extension DarklyServiceMock {
         stubRequest(passingTest: eventRequestStubTest, stub: stubResponse, name: Constants.stubNameDiagnostic, onActivation: activate)
     }
 
-    ///Use when testing requires the mock service to provide a service response to the diagnostic request callback
-    func stubDiagnosticResponse(success: Bool, responseOnly: Bool = false, errorOnly: Bool = false) {
-        if success {
-            let response = HTTPURLResponse(url: config.eventsUrl,
-                                           statusCode: HTTPURLResponse.StatusCodes.accepted,
-                                           httpVersion: Constants.httpVersion,
-                                           headerFields: [:])
-            stubbedDiagnosticResponse = (nil, response, nil)
-            return
-        }
-
-        if responseOnly {
-            stubbedDiagnosticResponse = (nil, errorDiagnosticHTTPURLResponse, nil)
-        } else if errorOnly {
-            stubbedDiagnosticResponse = (nil, nil, Constants.error)
-        } else {
-            stubbedDiagnosticResponse = (nil, errorDiagnosticHTTPURLResponse, Constants.error)
-        }
-    }
-    var errorDiagnosticHTTPURLResponse: HTTPURLResponse! {
-        HTTPURLResponse(url: config.eventsUrl, statusCode: HTTPURLResponse.StatusCodes.internalServerError, httpVersion: Constants.httpVersion, headerFields: nil)
-    }
-
     // MARK: Stub
 
     var anyRequestStubTest: HTTPStubsTestBlock { { _ in true } }
@@ -489,14 +468,5 @@ extension HTTPURLResponse {
         guard let date = date
         else { return nil }
         return [HTTPURLResponse.HeaderKeys.date: DateFormatter.httpUrlHeaderFormatter.string(from: date)]
-    }
-}
-
-extension LDFlagKey {
-    var isKnownFlagKey: Bool {
-        DarklyServiceMock.FlagKeys.knownFlags.contains(self)
-    }
-    var hasAlternateValue: Bool {
-        DarklyServiceMock.FlagKeys.flagsWithAnAlternateValue.contains(self)
     }
 }

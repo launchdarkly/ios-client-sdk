@@ -12,10 +12,6 @@ protocol FlagChangeNotifying {
     func addFlagChangeObserver(_ observer: FlagChangeObserver)
     func addFlagsUnchangedObserver(_ observer: FlagsUnchangedObserver)
     func addConnectionModeChangedObserver(_ observer: ConnectionModeChangedObserver)
-    //sourcery: noMock
-    func removeObserver(_ key: LDFlagKey, owner: LDObserverOwner)
-    func removeObserver(_ keys: [LDFlagKey], owner: LDObserverOwner)
-    //sourcery: noMock
     func removeObserver(owner: LDObserverOwner)
     func notifyConnectionModeChangedObservers(connectionMode: ConnectionInformation.ConnectionMode)
     func notifyObservers(flagStore: FlagMaintaining, oldFlags: [LDFlagKey: FeatureFlag])
@@ -42,18 +38,6 @@ final class FlagChangeNotifier: FlagChangeNotifying {
     func addConnectionModeChangedObserver(_ observer: ConnectionModeChangedObserver) {
         Log.debug(typeName(and: #function) + "observer: \(observer)")
         connectionModeChangedQueue.sync { connectionModeChangedObservers.append(observer) }
-    }
-
-    ///Removes any change handling closures for flag.key from owner
-    func removeObserver(_ key: LDFlagKey, owner: LDObserverOwner) {
-        Log.debug(typeName(and: #function) + "key: \(key), owner: \(owner)")
-        removeObserver([key], owner: owner)
-    }
-
-    ///Removes any change handling closures for flag keys from owner
-    func removeObserver(_ keys: [LDFlagKey], owner: LDObserverOwner) {
-        Log.debug(typeName(and: #function) + "keys: \(keys), owner: \(owner)")
-        flagChangeQueue.sync { flagChangeObservers.removeAll { $0.flagKeys == keys && $0.owner === owner } }
     }
 
     ///Removes all change handling closures from owner
@@ -89,10 +73,8 @@ final class FlagChangeNotifier: FlagChangeNotifying {
             }
             flagsUnchangedQueue.sync {
                 flagsUnchangedObservers.forEach { flagsUnchangedObserver in
-                    if let flagsUnchangedHandler = flagsUnchangedObserver.flagsUnchangedHandler {
-                        DispatchQueue.main.async {
-                            flagsUnchangedHandler()
-                        }
+                    DispatchQueue.main.async {
+                        flagsUnchangedObserver.flagsUnchangedHandler()
                     }
                 }
             }
