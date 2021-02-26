@@ -5,11 +5,11 @@ All notable changes to the LaunchDarkly iOS SDK will be documented in this file.
 ## [5.4.0] - 2021-02-26
 ### Added
 - Added the `alias` method to `LDClient`. This can be used to associate two user objects for analytics purposes with an alias event.
-- Added the `autoAliasingOptOut` configuration option. This can be used to control the new automatic aliasing behavior of the identify method; by setting `autoAliasingOptOut` to true, identify will not automatically generate alias events.
+- Added the `autoAliasingOptOut` configuration option. This can be used to control the new automatic aliasing behavior of the `identify` method; by setting `autoAliasingOptOut` to true, `identify` will not automatically generate alias events.
 - Added the `isInitialized` property to `LDClient`. Unless the client has been set offline, this property's value is `false` until the client receives an initial set of flag values from the LaunchDarkly service. If the client is offline, the value will be `true` after initialization.
 
 ### Changed
-- The identify method will now automatically generate an alias event when switching from an anonymous to a known user. This event associates the two users for analytics purposes as they most likely represent a single person.
+- The `identify` method will now automatically generate an alias event when switching from an anonymous to a known user. This event associates the two users for analytics purposes as they most likely represent a single person.
 
 ### Fixed
 - Some users reported synchronization issues with the internal `DiagnosticReporter` implementation, which has been reworked to address these issues. Thanks to @provanandparanjape for one such report ([#238](https://github.com/launchdarkly/ios-client-sdk/issues/238)).
