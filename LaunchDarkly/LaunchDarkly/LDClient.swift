@@ -89,7 +89,7 @@ public class LDClient {
 
      When false, the SDK has not been able to communicate with LaunchDarkly servers. Client apps can request feature flag values and set/change feature flag observers but flags might not exist or be stale.
     */
-    public func isInitialized() -> Bool {
+    public var isInitialized: Bool {
         hasStarted && (!isOnline || initialized)
     }
 

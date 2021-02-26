@@ -106,8 +106,8 @@ public final class ObjcLDClient: NSObject {
 
      When false, the SDK has not been able to communicate with LaunchDarkly servers. Client apps can request feature flag values and set/change feature flag observers but flags might not exist or be stale.
     */
-    @objc public func isInitialized() -> Bool {
-        ldClient.isInitialized()
+    @objc public var isInitialized: Bool {
+        ldClient.isInitialized
     }
 
     /**
