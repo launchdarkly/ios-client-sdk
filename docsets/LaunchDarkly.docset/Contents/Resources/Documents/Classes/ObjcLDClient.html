@@ -17,7 +17,7 @@
     <a title="ObjcLDClient Class Reference"></a>
     <header>
       <div class="content-wrapper">
-        <p><a href="../index.html">LaunchDarkly 5.3.2 Docs</a> (83% documented)</p>
+        <p><a href="../index.html">LaunchDarkly 5.4.0 Docs</a> (84% documented)</p>
         <p class="header-right"><a href="https://github.com/launchdarkly/ios-client-sdk"><img src="../img/gh.png"/>View on GitHub</a></p>
         <p class="header-right">
           <form role="search" action="../search.json">
@@ -426,6 +426,38 @@ Use <code><a href="../Classes/ObjcLDClient.html#/c:@M@LaunchDarkly@objc(cs)LDCli
                             </tr>
                           </tbody>
                         </table>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/c:@M@LaunchDarkly@objc(cs)LDClient(py)isInitialized"></a>
+                    <a name="//apple_ref/swift/Property/isInitialized" class="dashAnchor"></a>
+                    <a class="token" href="#/c:@M@LaunchDarkly@objc(cs)LDClient(py)isInitialized">isInitialized</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Reports the initialization state of the LDClient.</p>
+
+<p>When true, the SDK has either communicated with LaunchDarkly servers for feature flag values or the SDK has been set offline.</p>
+
+<p>When false, the SDK has not been able to communicate with LaunchDarkly servers. Client apps can request feature flag values and set/change feature flag observers but flags might not exist or be stale.</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">@objc</span>
+<span class="kd">public</span> <span class="k">var</span> <span class="nv">isInitialized</span><span class="p">:</span> <span class="kt">Bool</span> <span class="p">{</span> <span class="k">get</span> <span class="p">}</span></code></pre>
+
+                        </div>
                       </div>
                     </section>
                   </div>
@@ -2931,6 +2963,72 @@ sent, it only triggers a background task to send events immediately.</p>
 <span class="kd">public</span> <span class="kd">func</span> <span class="nf">flush</span><span class="p">()</span></code></pre>
 
                         </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/c:@M@LaunchDarkly@objc(cs)LDClient(im)aliasWithContext:previousContext:"></a>
+                    <a name="//apple_ref/swift/Method/alias(context:previousContext:)" class="dashAnchor"></a>
+                    <a class="token" href="#/c:@M@LaunchDarkly@objc(cs)LDClient(im)aliasWithContext:previousContext:">alias(context:<wbr>previousContext:<wbr>)</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Tells the SDK to generate an alias event.</p>
+
+<p>Associates two users for analytics purposes. </p>
+
+<p>This can be helpful in the situation where a person is represented by multiple 
+LaunchDarkly users. This may happen, for example, when a person initially logs into 
+an application&ndash; the person might be represented by an anonymous user prior to logging
+in and a different user after logging in, as denoted by a different user key.</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">@objc</span>
+<span class="kd">public</span> <span class="kd">func</span> <span class="nf">alias</span><span class="p">(</span><span class="nv">context</span><span class="p">:</span> <span class="kt"><a href="../Classes/ObjcLDUser.html">ObjcLDUser</a></span><span class="p">,</span> <span class="nv">previousContext</span><span class="p">:</span> <span class="kt"><a href="../Classes/ObjcLDUser.html">ObjcLDUser</a></span><span class="p">)</span></code></pre>
+
+                        </div>
+                      </div>
+                      <div>
+                        <h4>Parameters</h4>
+                        <table class="graybox">
+                          <tbody>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>context</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>the user that will be aliased to</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>previousContext</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>the user that will be bound to the new context</p>
+                                </div>
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
                       </div>
                     </section>
                   </div>

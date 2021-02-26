@@ -16,7 +16,7 @@
     <a title="CHANGELOG  Reference"></a>
     <header>
       <div class="content-wrapper">
-        <p><a href="index.html">LaunchDarkly 5.3.2 Docs</a> (83% documented)</p>
+        <p><a href="index.html">LaunchDarkly 5.4.0 Docs</a> (84% documented)</p>
         <p class="header-right"><a href="https://github.com/launchdarkly/ios-client-sdk"><img src="img/gh.png"/>View on GitHub</a></p>
         <p class="header-right">
           <form role="search" action="search.json">
@@ -215,6 +215,24 @@
             <h1 id='change-log' class='heading'>Change log</h1>
 
 <p>All notable changes to the LaunchDarkly iOS SDK will be documented in this file. This project adheres to <a href="http://semver.org">Semantic Versioning</a>.</p>
+<h2 id='5-4-0-2021-02-26' class='heading'>[5.4.0] - 2021-02-26</h2>
+<h3 id='added' class='heading'>Added</h3>
+
+<ul>
+<li>Added the <code>alias</code> method to <code><a href="Classes/LDClient.html">LDClient</a></code>. This can be used to associate two user objects for analytics purposes with an alias event.</li>
+<li>Added the <code>autoAliasingOptOut</code> configuration option. This can be used to control the new automatic aliasing behavior of the <code>identify</code> method; by setting <code>autoAliasingOptOut</code> to true, <code>identify</code> will not automatically generate alias events.</li>
+<li>Added the <code>isInitialized</code> property to <code><a href="Classes/LDClient.html">LDClient</a></code>. Unless the client has been set offline, this property&rsquo;s value is <code>false</code> until the client receives an initial set of flag values from the LaunchDarkly service. If the client is offline, the value will be <code>true</code> after initialization.</li>
+</ul>
+<h3 id='changed' class='heading'>Changed</h3>
+
+<ul>
+<li>The <code>identify</code> method will now automatically generate an alias event when switching from an anonymous to a known user. This event associates the two users for analytics purposes as they most likely represent a single person.</li>
+</ul>
+<h3 id='fixed' class='heading'>Fixed</h3>
+
+<ul>
+<li>Some users reported synchronization issues with the internal <code>DiagnosticReporter</code> implementation, which has been reworked to address these issues. Thanks to @provanandparanjape for one such report (<a href="https://github.com/launchdarkly/ios-client-sdk/issues/238">#238</a>).</li>
+</ul>
 <h2 id='5-3-2-2021-02-11' class='heading'>[5.3.2] - 2021-02-11</h2>
 <h3 id='fixed' class='heading'>Fixed</h3>
 

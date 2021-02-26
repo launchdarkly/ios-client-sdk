@@ -17,7 +17,7 @@
     <a title="LDClient Class Reference"></a>
     <header>
       <div class="content-wrapper">
-        <p><a href="../index.html">LaunchDarkly 5.3.2 Docs</a> (83% documented)</p>
+        <p><a href="../index.html">LaunchDarkly 5.4.0 Docs</a> (84% documented)</p>
         <p class="header-right"><a href="https://github.com/launchdarkly/ios-client-sdk"><img src="../img/gh.png"/>View on GitHub</a></p>
         <p class="header-right">
           <form role="search" action="../search.json">
@@ -299,6 +299,37 @@
                         <div class="language">
                           <p class="aside-title">Swift</p>
                           <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">private(set)</span> <span class="k">var</span> <span class="nv">isOnline</span><span class="p">:</span> <span class="kt">Bool</span> <span class="p">{</span> <span class="k">get</span> <span class="k">set</span> <span class="p">}</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:12LaunchDarkly8LDClientC13isInitializedSbvp"></a>
+                    <a name="//apple_ref/swift/Property/isInitialized" class="dashAnchor"></a>
+                    <a class="token" href="#/s:12LaunchDarkly8LDClientC13isInitializedSbvp">isInitialized</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Reports the initialization state of the LDClient.</p>
+
+<p>When true, the SDK has either communicated with LaunchDarkly servers for feature flag values or the SDK has been set offline.</p>
+
+<p>When false, the SDK has not been able to communicate with LaunchDarkly servers. Client apps can request feature flag values and set/change feature flag observers but flags might not exist or be stale.</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="k">var</span> <span class="nv">isInitialized</span><span class="p">:</span> <span class="kt">Bool</span> <span class="p">{</span> <span class="k">get</span> <span class="p">}</span></code></pre>
 
                         </div>
                       </div>
@@ -1411,6 +1442,71 @@ LDClient.get()?.track(key: "</span><span class="n">app</span><span class="o">-</
                               <td>
                                 <div>
                                   <p>A numeric value used by the LaunchDarkly experimentation feature in numeric custom metrics. Can be omitted if this event is used by only non-numeric metrics. This field will also be returned as part of the custom event for Data Export. (Optional)</p>
+                                </div>
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:12LaunchDarkly8LDClientC5alias7context15previousContextyAA6LDUserV_AHtF"></a>
+                    <a name="//apple_ref/swift/Method/alias(context:previousContext:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:12LaunchDarkly8LDClientC5alias7context15previousContextyAA6LDUserV_AHtF">alias(context:<wbr>previousContext:<wbr>)</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Tells the SDK to generate an alias event.</p>
+
+<p>Associates two users for analytics purposes. </p>
+
+<p>This can be helpful in the situation where a person is represented by multiple 
+LaunchDarkly users. This may happen, for example, when a person initially logs into 
+an application&ndash; the person might be represented by an anonymous user prior to logging
+in and a different user after logging in, as denoted by a different user key.</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">func</span> <span class="nf">alias</span><span class="p">(</span><span class="n">context</span> <span class="nv">new</span><span class="p">:</span> <span class="kt"><a href="../Structs/LDUser.html">LDUser</a></span><span class="p">,</span> <span class="n">previousContext</span> <span class="nv">old</span><span class="p">:</span> <span class="kt"><a href="../Structs/LDUser.html">LDUser</a></span><span class="p">)</span></code></pre>
+
+                        </div>
+                      </div>
+                      <div>
+                        <h4>Parameters</h4>
+                        <table class="graybox">
+                          <tbody>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>context</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>the user that will be aliased to</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>previousContext</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>the user that will be bound to the new context</p>
                                 </div>
                               </td>
                             </tr>
