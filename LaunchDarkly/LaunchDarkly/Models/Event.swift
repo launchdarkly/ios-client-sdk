@@ -38,9 +38,6 @@ struct Event {
         var needsContextKind: Bool { 
             [.feature, .custom].contains(self)
         }
-
-        // true if the contextKind and previousContextKind fields are required
-        var needsContext: Bool { self == .alias }
     }
 
     let kind: Kind
@@ -86,12 +83,7 @@ struct Event {
         self.endDate = endDate
         self.includeReason = includeReason
         self.metricValue = metricValue
-
-        if contextKind == nil {
-            self.contextKind = userType(user ?? LDUser(isAnonymous: true))
-        } else {
-            self.contextKind = contextKind
-        }
+        self.contextKind = contextKind
         self.previousContextKind = previousContextKind
     }
 
@@ -165,12 +157,11 @@ struct Event {
         eventDictionary[CodingKeys.reason.rawValue] = includeReason || featureFlag?.trackReason ?? false ? featureFlag?.reason : nil
         eventDictionary[CodingKeys.metricValue.rawValue] = metricValue
 
-        if kind.needsContextKind {
-            eventDictionary[CodingKeys.contextKind.rawValue] = self.contextKind
+        if kind.needsContextKind && (user?.isAnonymous == true) {
+            eventDictionary[CodingKeys.contextKind.rawValue] = "anonymousUser"
         }
 
-        // alias events override the contextKind field set earlier
-        if kind.needsContext {
+        if kind == .alias {
             eventDictionary[CodingKeys.contextKind.rawValue] = self.contextKind
             eventDictionary[CodingKeys.previousContextKind.rawValue] = self.previousContextKind
         }
