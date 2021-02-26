@@ -188,7 +188,6 @@
 		83B6E3F1222EFA3800FF2A6A /* ThreadSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = 83B6E3F0222EFA3800FF2A6A /* ThreadSpec.swift */; };
 		83B8C2451FE360CF0082B8A9 /* FlagChangeNotifierSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = 83B8C2441FE360CF0082B8A9 /* FlagChangeNotifierSpec.swift */; };
 		83B8C2471FE4071F0082B8A9 /* HTTPURLResponse.swift in Sources */ = {isa = PBXBuildFile; fileRef = 83B8C2461FE4071F0082B8A9 /* HTTPURLResponse.swift */; };
-		83B8C2491FE84D4F0082B8A9 /* FlagChangeNotifyingMock.swift in Sources */ = {isa = PBXBuildFile; fileRef = 83B8C2481FE84D4F0082B8A9 /* FlagChangeNotifyingMock.swift */; };
 		83B9A080204F56F4000C3F17 /* FlagChangeObserverSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = 83B9A07F204F56F4000C3F17 /* FlagChangeObserverSpec.swift */; };
 		83B9A082204F6022000C3F17 /* FlagsUnchangedObserver.swift in Sources */ = {isa = PBXBuildFile; fileRef = 83B9A081204F6022000C3F17 /* FlagsUnchangedObserver.swift */; };
 		83CFE7CE1F7AD81D0010544E /* EventReporterSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = 83CFE7CD1F7AD81D0010544E /* EventReporterSpec.swift */; };
@@ -268,6 +267,7 @@
 		B468E71124B3C3AC00E0C883 /* ObjcLDEvaluationDetail.swift in Sources */ = {isa = PBXBuildFile; fileRef = B468E70F24B3C3AC00E0C883 /* ObjcLDEvaluationDetail.swift */; };
 		B468E71224B3C3AC00E0C883 /* ObjcLDEvaluationDetail.swift in Sources */ = {isa = PBXBuildFile; fileRef = B468E70F24B3C3AC00E0C883 /* ObjcLDEvaluationDetail.swift */; };
 		B468E71324B3C3AC00E0C883 /* ObjcLDEvaluationDetail.swift in Sources */ = {isa = PBXBuildFile; fileRef = B468E70F24B3C3AC00E0C883 /* ObjcLDEvaluationDetail.swift */; };
+		B46F344125E6DB7D0078D45F /* DiagnosticReporterSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = B46F344025E6DB7D0078D45F /* DiagnosticReporterSpec.swift */; };
 		B4903D9824BD61B200F087C4 /* OHHTTPStubsSwift in Frameworks */ = {isa = PBXBuildFile; productRef = B4903D9724BD61B200F087C4 /* OHHTTPStubsSwift */; };
 		B4903D9B24BD61D000F087C4 /* Nimble in Frameworks */ = {isa = PBXBuildFile; productRef = B4903D9A24BD61D000F087C4 /* Nimble */; };
 		B4903D9E24BD61EF00F087C4 /* Quick in Frameworks */ = {isa = PBXBuildFile; productRef = B4903D9D24BD61EF00F087C4 /* Quick */; };
@@ -445,7 +445,6 @@
 		83B6E3F0222EFA3800FF2A6A /* ThreadSpec.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ThreadSpec.swift; sourceTree = "<group>"; };
 		83B8C2441FE360CF0082B8A9 /* FlagChangeNotifierSpec.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FlagChangeNotifierSpec.swift; sourceTree = "<group>"; };
 		83B8C2461FE4071F0082B8A9 /* HTTPURLResponse.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HTTPURLResponse.swift; sourceTree = "<group>"; };
-		83B8C2481FE84D4F0082B8A9 /* FlagChangeNotifyingMock.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FlagChangeNotifyingMock.swift; sourceTree = "<group>"; };
 		83B9A07F204F56F4000C3F17 /* FlagChangeObserverSpec.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FlagChangeObserverSpec.swift; sourceTree = "<group>"; };
 		83B9A081204F6022000C3F17 /* FlagsUnchangedObserver.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FlagsUnchangedObserver.swift; sourceTree = "<group>"; };
 		83CFE7CD1F7AD81D0010544E /* EventReporterSpec.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EventReporterSpec.swift; sourceTree = "<group>"; };
@@ -478,6 +477,7 @@
 		B40B419B249ADA6B00CD0726 /* DiagnosticCacheSpec.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiagnosticCacheSpec.swift; sourceTree = "<group>"; };
 		B4265EB024E7390C001CFD2C /* TestUtil.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TestUtil.swift; sourceTree = "<group>"; };
 		B468E70F24B3C3AC00E0C883 /* ObjcLDEvaluationDetail.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ObjcLDEvaluationDetail.swift; sourceTree = "<group>"; };
+		B46F344025E6DB7D0078D45F /* DiagnosticReporterSpec.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiagnosticReporterSpec.swift; sourceTree = "<group>"; };
 		B4C9D42D2489B5FF004A9B03 /* DiagnosticEvent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiagnosticEvent.swift; sourceTree = "<group>"; };
 		B4C9D4322489C8FD004A9B03 /* DiagnosticCache.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiagnosticCache.swift; sourceTree = "<group>"; };
 		B4C9D4372489E20A004A9B03 /* DiagnosticReporter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiagnosticReporter.swift; sourceTree = "<group>"; };
@@ -560,15 +560,16 @@
 		831D8B751F72A48900ED65E8 /* ServiceObjects */ = {
 			isa = PBXGroup;
 			children = (
-				831D8B761F72A4B400ED65E8 /* FlagSynchronizerSpec.swift */,
-				83CFE7CD1F7AD81D0010544E /* EventReporterSpec.swift */,
-				83DDBEFF1FA2589900E428B6 /* FlagStoreSpec.swift */,
-				83B8C2441FE360CF0082B8A9 /* FlagChangeNotifierSpec.swift */,
-				83383A5020460DD30024D975 /* SynchronizingErrorSpec.swift */,
-				831AAE2F20A9E75D00B46DBA /* ThrottlerSpec.swift */,
+				B46F344025E6DB7D0078D45F /* DiagnosticReporterSpec.swift */,
 				837E38C821E804ED0008A50C /* EnvironmentReporterSpec.swift */,
-				837406D321F760640087B22B /* LDTimerSpec.swift */,
 				833631CA221B5DFA00BA53EE /* ErrorNotifierSpec.swift */,
+				83CFE7CD1F7AD81D0010544E /* EventReporterSpec.swift */,
+				83B8C2441FE360CF0082B8A9 /* FlagChangeNotifierSpec.swift */,
+				83DDBEFF1FA2589900E428B6 /* FlagStoreSpec.swift */,
+				831D8B761F72A4B400ED65E8 /* FlagSynchronizerSpec.swift */,
+				83383A5020460DD30024D975 /* SynchronizingErrorSpec.swift */,
+				837406D321F760640087B22B /* LDTimerSpec.swift */,
+				831AAE2F20A9E75D00B46DBA /* ThrottlerSpec.swift */,
 				8354AC75224316C700CDE602 /* Cache */,
 			);
 			path = ServiceObjects;
@@ -746,7 +747,6 @@
 				83EF67941F994BAD00403126 /* LDUserStub.swift */,
 				838F96791FBA551A009CFC45 /* ClientServiceMockFactory.swift */,
 				8335299D1FC37727001166F8 /* FlagMaintainingMock.swift */,
-				83B8C2481FE84D4F0082B8A9 /* FlagChangeNotifyingMock.swift */,
 				831425AE206ABB5300F2EF36 /* EnvironmentReportingMock.swift */,
 				C48ED690242D27E200464F5F /* DeprecatedCacheMock.swift */,
 			);
@@ -1436,7 +1436,6 @@
 				83CFE7CE1F7AD81D0010544E /* EventReporterSpec.swift in Sources */,
 				833631CB221B5DFA00BA53EE /* ErrorNotifierSpec.swift in Sources */,
 				8392FFA32033565700320914 /* HTTPURLResponse.swift in Sources */,
-				83B8C2491FE84D4F0082B8A9 /* FlagChangeNotifyingMock.swift in Sources */,
 				83411A5F1FABDA8700E5CF39 /* mocks.generated.swift in Sources */,
 				83D5597E1FDA01F9002D10C8 /* KeyedValueCacheSpec.swift in Sources */,
 				831CE0661F853A1700A13A3A /* Match.swift in Sources */,
@@ -1457,6 +1456,7 @@
 				83EBCBB720DABE93003A7142 /* FlagRequestTrackerSpec.swift in Sources */,
 				8354AC662241586100CDE602 /* CacheableEnvironmentFlagsSpec.swift in Sources */,
 				B4265EB124E7390C001CFD2C /* TestUtil.swift in Sources */,
+				B46F344125E6DB7D0078D45F /* DiagnosticReporterSpec.swift in Sources */,
 				83D1523B22545BB20054B6D4 /* DeprecatedCacheModelV5Spec.swift in Sources */,
 				83EF67951F994BAD00403126 /* LDUserStub.swift in Sources */,
 				B40B419C249ADA6B00CD0726 /* DiagnosticCacheSpec.swift in Sources */,
@@ -1591,7 +1591,7 @@
 				GCC_C_LANGUAGE_STANDARD = gnu11;
 				INFOPLIST_FILE = "$(PROJECT_DIR)/LaunchDarkly/LaunchDarkly/Support/Info.plist";
 				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
-				MARKETING_VERSION = 5.3.2;
+				MARKETING_VERSION = 5.4.0;
 				MODULEMAP_FILE = "";
 				PRODUCT_BUNDLE_IDENTIFIER = "com.launchdarkly.Darkly-tvOS";
 				PRODUCT_NAME = LaunchDarkly_tvOS;
@@ -1614,7 +1614,7 @@
 				GCC_C_LANGUAGE_STANDARD = gnu11;
 				INFOPLIST_FILE = "$(PROJECT_DIR)/LaunchDarkly/LaunchDarkly/Support/Info.plist";
 				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
-				MARKETING_VERSION = 5.3.2;
+				MARKETING_VERSION = 5.4.0;
 				MODULEMAP_FILE = "";
 				PRODUCT_BUNDLE_IDENTIFIER = "com.launchdarkly.Darkly-tvOS";
 				PRODUCT_NAME = LaunchDarkly_tvOS;
@@ -1637,7 +1637,7 @@
 				GCC_C_LANGUAGE_STANDARD = gnu11;
 				INFOPLIST_FILE = "$(PROJECT_DIR)/LaunchDarkly/LaunchDarkly/Support/Info.plist";
 				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
-				MARKETING_VERSION = 5.3.2;
+				MARKETING_VERSION = 5.4.0;
 				PRODUCT_BUNDLE_IDENTIFIER = "com.launchdarkly.Darkly-macOS";
 				PRODUCT_NAME = LaunchDarkly_macOS;
 				SDKROOT = macosx;
@@ -1658,7 +1658,7 @@
 				GCC_C_LANGUAGE_STANDARD = gnu11;
 				INFOPLIST_FILE = "$(PROJECT_DIR)/LaunchDarkly/LaunchDarkly/Support/Info.plist";
 				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
-				MARKETING_VERSION = 5.3.2;
+				MARKETING_VERSION = 5.4.0;
 				PRODUCT_BUNDLE_IDENTIFIER = "com.launchdarkly.Darkly-macOS";
 				PRODUCT_NAME = LaunchDarkly_macOS;
 				SDKROOT = macosx;
@@ -1701,8 +1701,8 @@
 				COPY_PHASE_STRIP = NO;
 				CURRENT_PROJECT_VERSION = 1;
 				DEBUG_INFORMATION_FORMAT = dwarf;
-				DYLIB_COMPATIBILITY_VERSION = 5.3.0;
-				DYLIB_CURRENT_VERSION = 5.3.2;
+				DYLIB_COMPATIBILITY_VERSION = 5.4.0;
+				DYLIB_CURRENT_VERSION = 5.4.0;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				ENABLE_TESTABILITY = YES;
 				FRAMEWORK_VERSION = B;
@@ -1772,8 +1772,8 @@
 				COPY_PHASE_STRIP = NO;
 				CURRENT_PROJECT_VERSION = 1;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
-				DYLIB_COMPATIBILITY_VERSION = 5.3.0;
-				DYLIB_CURRENT_VERSION = 5.3.2;
+				DYLIB_COMPATIBILITY_VERSION = 5.4.0;
+				DYLIB_CURRENT_VERSION = 5.4.0;
 				ENABLE_NS_ASSERTIONS = NO;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				FRAMEWORK_VERSION = B;
@@ -1812,7 +1812,7 @@
 				INFOPLIST_FILE = "$(PROJECT_DIR)/LaunchDarkly/LaunchDarkly/Support/Info.plist";
 				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
 				LD_DYLIB_INSTALL_NAME = "$(DYLIB_INSTALL_NAME_BASE:standardizepath)/$(EXECUTABLE_PATH)";
-				MARKETING_VERSION = 5.3.2;
+				MARKETING_VERSION = 5.4.0;
 				MODULEMAP_FILE = "$(PROJECT_DIR)/Framework/module.modulemap";
 				PRODUCT_BUNDLE_IDENTIFIER = com.launchdarkly.Darkly;
 				PRODUCT_NAME = LaunchDarkly;
@@ -1832,7 +1832,7 @@
 				INFOPLIST_FILE = "$(PROJECT_DIR)/LaunchDarkly/LaunchDarkly/Support/Info.plist";
 				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
 				LD_DYLIB_INSTALL_NAME = "$(DYLIB_INSTALL_NAME_BASE:standardizepath)/$(EXECUTABLE_PATH)";
-				MARKETING_VERSION = 5.3.2;
+				MARKETING_VERSION = 5.4.0;
 				MODULEMAP_FILE = "$(PROJECT_DIR)/Framework/module.modulemap";
 				PRODUCT_BUNDLE_IDENTIFIER = com.launchdarkly.Darkly;
 				PRODUCT_NAME = LaunchDarkly;
@@ -1874,7 +1874,7 @@
 				GCC_C_LANGUAGE_STANDARD = gnu11;
 				INFOPLIST_FILE = "$(PROJECT_DIR)/LaunchDarkly/LaunchDarkly/Support/Info.plist";
 				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
-				MARKETING_VERSION = 5.3.2;
+				MARKETING_VERSION = 5.4.0;
 				PRODUCT_BUNDLE_IDENTIFIER = "com.launchdarkly.Darkly-watchOS";
 				PRODUCT_NAME = LaunchDarkly_watchOS;
 				SDKROOT = watchos;
@@ -1896,7 +1896,7 @@
 				GCC_C_LANGUAGE_STANDARD = gnu11;
 				INFOPLIST_FILE = "$(PROJECT_DIR)/LaunchDarkly/LaunchDarkly/Support/Info.plist";
 				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
-				MARKETING_VERSION = 5.3.2;
+				MARKETING_VERSION = 5.4.0;
 				PRODUCT_BUNDLE_IDENTIFIER = "com.launchdarkly.Darkly-watchOS";
 				PRODUCT_NAME = LaunchDarkly_watchOS;
 				SDKROOT = watchos;

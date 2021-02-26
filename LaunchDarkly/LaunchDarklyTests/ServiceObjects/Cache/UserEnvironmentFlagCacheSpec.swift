@@ -93,13 +93,9 @@ final class UserEnvironmentFlagCacheSpec: QuickSpec {
     private func initSpec() {
         var testContext: TestContext!
         describe("init") {
-            context("with keyedValueCache") {
-                beforeEach {
-                    testContext = TestContext()
-                }
-                it("creates a UserEnvironmentCache with the passed in keyedValueCache") {
-                    expect(testContext.userEnvironmentFlagCache.keyedValueCache) === testContext.keyedValueCacheMock
-                }
+            it("creates a UserEnvironmentCache with the passed in keyedValueCache") {
+                testContext = TestContext()
+                expect(testContext.userEnvironmentFlagCache.keyedValueCache) === testContext.keyedValueCacheMock
             }
         }
     }

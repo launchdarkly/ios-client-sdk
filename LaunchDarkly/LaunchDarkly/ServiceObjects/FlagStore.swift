@@ -7,19 +7,13 @@
 
 import Foundation
 
-//sourcery: autoMockable
 protocol FlagMaintaining {
     var featureFlags: [LDFlagKey: FeatureFlag] { get }
 
-    func replaceStore(newFlags: [LDFlagKey: Any]?, completion: CompletionClosure?)
-    func updateStore(updateDictionary: [String: Any], completion: CompletionClosure?)
-    func deleteFlag(deleteDictionary: [String: Any], completion: CompletionClosure?)
-
-    //sourcery: noMock
+    func replaceStore(newFlags: [LDFlagKey: Any], completion: CompletionClosure?)
+    func updateStore(updateDictionary: [LDFlagKey: Any], completion: CompletionClosure?)
+    func deleteFlag(deleteDictionary: [LDFlagKey: Any], completion: CompletionClosure?)
     func featureFlag(for flagKey: LDFlagKey) -> FeatureFlag?
-
-    //sourcery: noMock
-    func variation<T: LDFlagValueConvertible>(forKey key: LDFlagKey, defaultValue: T) -> T
 }
 
 final class FlagStore: FlagMaintaining {
@@ -49,10 +43,10 @@ final class FlagStore: FlagMaintaining {
     }
 
     ///Replaces all feature flags with new flags. Pass nil to reset to an empty flag store
-    func replaceStore(newFlags: [LDFlagKey: Any]?, completion: CompletionClosure?) {
+    func replaceStore(newFlags: [LDFlagKey: Any], completion: CompletionClosure?) {
         Log.debug(typeName(and: #function) + "newFlags: \(String(describing: newFlags))")
         flagQueue.async(flags: .barrier) {
-            self._featureFlags = newFlags?.flagCollection ?? [:]
+            self._featureFlags = newFlags.flagCollection ?? [:]
             if let completion = completion {
                 DispatchQueue.main.async {
                     completion()
@@ -71,7 +65,7 @@ final class FlagStore: FlagMaintaining {
             "reason": <new-flag-reason>
         }
     */
-    func updateStore(updateDictionary: [String: Any], completion: CompletionClosure?) {
+    func updateStore(updateDictionary: [LDFlagKey: Any], completion: CompletionClosure?) {
         flagQueue.async(flags: .barrier) {
             defer {
                 if let completion = completion {
@@ -104,7 +98,7 @@ final class FlagStore: FlagMaintaining {
             "version": <new-flag-version>
         }
      */
-    func deleteFlag(deleteDictionary: [String: Any], completion: CompletionClosure?) {
+    func deleteFlag(deleteDictionary: [LDFlagKey: Any], completion: CompletionClosure?) {
         flagQueue.async(flags: .barrier) {
             defer {
                 if let completion = completion {
@@ -145,12 +139,6 @@ final class FlagStore: FlagMaintaining {
 
     func featureFlag(for flagKey: LDFlagKey) -> FeatureFlag? {
         flagQueue.sync { _featureFlags[flagKey] }
-    }
-
-    func variation<T: LDFlagValueConvertible>(forKey key: LDFlagKey, defaultValue: T) -> T {
-        flagQueue.sync {
-            (_featureFlags[key]?.value as? T) ?? defaultValue
-        }
     }
 }
 

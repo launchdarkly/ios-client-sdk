@@ -8,24 +8,52 @@
 import Foundation
 @testable import LaunchDarkly
 
-extension FlagMaintainingMock {
+final class FlagMaintainingMock: FlagMaintaining {
     struct Constants {
         static let updateDictionaryExtraKey = "FlagMaintainingMock.UpdateDictionary.extraKey"
         static let updateDictionaryExtraValue = "FlagMaintainingMock.UpdateDictionary.extraValue"
     }
 
-    convenience init(flags: [LDFlagKey: FeatureFlag]) {
-        self.init()
-        featureFlags = flags
-        featureFlagsSetCount = 0
+    let innerStore: FlagStore
+
+    init() {
+        innerStore = FlagStore()
+    }
+
+    init(flags: [LDFlagKey: FeatureFlag]) {
+        innerStore = FlagStore(featureFlags: flags)
+    }
+
+    var featureFlags: [LDFlagKey: FeatureFlag] {
+        innerStore.featureFlags
+    }
+
+    var replaceStoreCallCount = 0
+    var replaceStoreReceivedArguments: (newFlags: [LDFlagKey: Any], completion: CompletionClosure?)?
+    func replaceStore(newFlags: [LDFlagKey: Any], completion: CompletionClosure?) {
+        replaceStoreCallCount += 1
+        replaceStoreReceivedArguments = (newFlags: newFlags, completion: completion)
+        innerStore.replaceStore(newFlags: newFlags, completion: completion)
+    }
+
+    var updateStoreCallCount = 0
+    var updateStoreReceivedArguments: (updateDictionary: [String: Any], completion: CompletionClosure?)?
+    func updateStore(updateDictionary: [String: Any], completion: CompletionClosure?) {
+        updateStoreCallCount += 1
+        updateStoreReceivedArguments = (updateDictionary: updateDictionary, completion: completion)
+        innerStore.updateStore(updateDictionary: updateDictionary, completion: completion)
+    }
+
+    var deleteFlagCallCount = 0
+    var deleteFlagReceivedArguments: (deleteDictionary: [String: Any], completion: CompletionClosure?)?
+    func deleteFlag(deleteDictionary: [String: Any], completion: CompletionClosure?) {
+        deleteFlagCallCount += 1
+        deleteFlagReceivedArguments = (deleteDictionary: deleteDictionary, completion: completion)
+        innerStore.deleteFlag(deleteDictionary: deleteDictionary, completion: completion)
     }
 
     func featureFlag(for flagKey: LDFlagKey) -> FeatureFlag? {
-        featureFlags[flagKey]
-    }
-
-    func variation<T: LDFlagValueConvertible>(forKey key: String, defaultValue: T) -> T {
-        featureFlags[key]?.value as? T ?? defaultValue
+        innerStore.featureFlag(for: flagKey)
     }
 
     static func stubPatchDictionary(key: LDFlagKey?, value: Any?, variation: Int?, version: Int?, includeExtraKey: Bool = false) -> [String: Any] {
@@ -58,7 +86,6 @@ extension FlagMaintainingMock {
         }
         return deleteDictionary
     }
-
 
     static func stubFlags(includeNullValue: Bool = true, includeVersions: Bool = true) -> [String: FeatureFlag] {
         var flags = DarklyServiceMock.Constants.stubFeatureFlags(includeNullValue: includeNullValue, includeVersions: includeVersions)

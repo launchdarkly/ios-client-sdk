@@ -98,6 +98,7 @@ struct DiagnosticSdk: Encodable {
 }
 
 struct DiagnosticConfig: Codable {
+    let autoAliasingOptOut: Bool
     let customBaseURI: Bool
     let customEventsURI: Bool
     let customStreamURI: Bool
@@ -118,6 +119,7 @@ struct DiagnosticConfig: Codable {
     let customHeaders: Bool
 
     init(config: LDConfig) {
+        autoAliasingOptOut = config.autoAliasingOptOut
         customBaseURI = config.baseUrl != LDConfig.Defaults.baseUrl
         customEventsURI = config.eventsUrl != LDConfig.Defaults.eventsUrl
         customStreamURI = config.streamUrl != LDConfig.Defaults.streamUrl

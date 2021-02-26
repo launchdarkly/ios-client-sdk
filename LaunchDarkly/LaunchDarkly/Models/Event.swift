@@ -7,33 +7,42 @@
 
 import Foundation
 
+func userType(_ user: LDUser) -> String { 
+    return user.isAnonymous ? "anonymousUser" : "user" 
+}
+
 struct Event {
     enum CodingKeys: String, CodingKey {
-        case key, kind, creationDate, user, userKey, value, defaultValue = "default", variation, version, data, endDate, reason, metricValue
+        case key, previousKey, kind, creationDate, user, userKey, 
+             value, defaultValue = "default", variation, version, 
+             data, endDate, reason, metricValue,
+             // for aliasing
+             contextKind, previousContextKind
     }
 
     enum Kind: String {
-        case feature, debug, identify, custom, summary
+        case feature, debug, identify, custom, summary, alias
 
         static var allKinds: [Kind] {
-            [feature, debug, identify, custom, summary]
+            [feature, debug, identify, custom, summary, alias]
         }
-        static var alwaysInlineUserKinds: [Kind] {
-            [identify, debug]
-        }
+        
         var isAlwaysInlineUserKind: Bool {
-            Kind.alwaysInlineUserKinds.contains(self)
+            [.identify, .debug].contains(self)
         }
-        static var alwaysIncludeValueKinds: [Kind] {
-            [feature, debug]
-        }
+        
         var isAlwaysIncludeValueKinds: Bool {
-            Kind.alwaysIncludeValueKinds.contains(self)
+            [.feature, .debug].contains(self)
+        }
+
+        var needsContextKind: Bool { 
+            [.feature, .custom].contains(self)
         }
     }
 
     let kind: Kind
     let key: String?
+    let previousKey: String?
     let creationDate: Date?
     let user: LDUser?
     let value: Any?
@@ -44,9 +53,14 @@ struct Event {
     let endDate: Date?
     let includeReason: Bool
     let metricValue: Double?
+    let contextKind: String?
+    let previousContextKind: String?
 
     init(kind: Kind = .custom,
          key: String? = nil,
+         previousKey: String? = nil,
+         contextKind: String? = nil,
+         previousContextKind: String? = nil,
          user: LDUser? = nil,
          value: Any? = nil,
          defaultValue: Any? = nil,
@@ -58,6 +72,7 @@ struct Event {
          metricValue: Double? = nil) {
         self.kind = kind
         self.key = key
+        self.previousKey = previousKey
         self.creationDate = kind == .summary ? nil : Date()
         self.user = user
         self.value = value
@@ -68,6 +83,8 @@ struct Event {
         self.endDate = endDate
         self.includeReason = includeReason
         self.metricValue = metricValue
+        self.contextKind = contextKind
+        self.previousContextKind = previousContextKind
     }
 
     // swiftlint:disable:next function_parameter_count
@@ -107,10 +124,16 @@ struct Event {
         return Event(kind: .summary, flagRequestTracker: flagRequestTracker, endDate: endDate)
     }
 
+    static func aliasEvent(newUser new: LDUser, oldUser old: LDUser) -> Event {
+        Log.debug("\(typeName(and: #function)) key: \(new.key), previousKey: \(old.key)")
+        return Event(kind: .alias, key: new.key, previousKey: old.key, contextKind: userType(new), previousContextKind: userType(old))
+    }
+
     func dictionaryValue(config: LDConfig) -> [String: Any] {
         var eventDictionary = [String: Any]()
         eventDictionary[CodingKeys.kind.rawValue] = kind.rawValue
         eventDictionary[CodingKeys.key.rawValue] = key
+        eventDictionary[CodingKeys.previousKey.rawValue] = previousKey
         eventDictionary[CodingKeys.creationDate.rawValue] = creationDate?.millisSince1970
         if kind.isAlwaysInlineUserKind || config.inlineUserInEvents {
             eventDictionary[CodingKeys.user.rawValue] = user?.dictionaryValue(includePrivateAttributes: false, config: config)
@@ -133,6 +156,15 @@ struct Event {
         eventDictionary[CodingKeys.endDate.rawValue] = endDate?.millisSince1970
         eventDictionary[CodingKeys.reason.rawValue] = includeReason || featureFlag?.trackReason ?? false ? featureFlag?.reason : nil
         eventDictionary[CodingKeys.metricValue.rawValue] = metricValue
+
+        if kind.needsContextKind && (user?.isAnonymous == true) {
+            eventDictionary[CodingKeys.contextKind.rawValue] = "anonymousUser"
+        }
+
+        if kind == .alias {
+            eventDictionary[CodingKeys.contextKind.rawValue] = self.contextKind
+            eventDictionary[CodingKeys.previousContextKind.rawValue] = self.previousContextKind
+        }
 
         return eventDictionary
     }
