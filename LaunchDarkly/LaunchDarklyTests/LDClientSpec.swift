@@ -268,7 +268,7 @@ final class LDClientSpec: QuickSpec {
                 expect(testContext.subject.service.config) == testContext.config
                 expect(testContext.makeFlagSynchronizerStreamingMode) == testContext.config.streamingMode
                 expect(testContext.makeFlagSynchronizerPollingInterval) == testContext.config.flagPollingInterval(runMode: testContext.subject.runMode)
-                expect(testContext.subject.eventReporter.config) == testContext.config
+                expect(testContext.serviceFactoryMock.makeEventReporterReceivedService?.config) == testContext.config
             }
             it("saves the user") {
                 expect(testContext.subject.user) == testContext.user
@@ -277,7 +277,7 @@ final class LDClientSpec: QuickSpec {
                 if let makeFlagSynchronizerReceivedParameters = testContext.serviceFactoryMock.makeFlagSynchronizerReceivedParameters {
                     expect(makeFlagSynchronizerReceivedParameters.service) === testContext.subject.service
                 }
-                expect(testContext.subject.eventReporter.service.user) == testContext.user
+                expect(testContext.serviceFactoryMock.makeEventReporterReceivedService?.user) == testContext.user
             }
             it("uncaches the new users flags") {
                 expect(testContext.featureFlagCachingMock.retrieveFeatureFlagsCallCount) == 1
@@ -313,7 +313,7 @@ final class LDClientSpec: QuickSpec {
                 expect(testContext.subject.service.config) == testContext.config
                 expect(testContext.makeFlagSynchronizerStreamingMode) == testContext.config.streamingMode
                 expect(testContext.makeFlagSynchronizerPollingInterval) == testContext.config.flagPollingInterval(runMode: testContext.subject.runMode)
-                expect(testContext.subject.eventReporter.config) == testContext.config
+                expect(testContext.serviceFactoryMock.makeEventReporterReceivedService?.config) == testContext.config
             }
             it("saves the user") {
                 expect(testContext.subject.user) == testContext.user
@@ -322,7 +322,7 @@ final class LDClientSpec: QuickSpec {
                 if let makeFlagSynchronizerReceivedParameters = testContext.serviceFactoryMock.makeFlagSynchronizerReceivedParameters {
                     expect(makeFlagSynchronizerReceivedParameters.service) === testContext.subject.service
                 }
-                expect(testContext.subject.eventReporter.service.user) == testContext.user
+                expect(testContext.serviceFactoryMock.makeEventReporterReceivedService?.user) == testContext.user
             }
             it("uncaches the new users flags") {
                 expect(testContext.featureFlagCachingMock.retrieveFeatureFlagsCallCount) == 1
@@ -357,7 +357,7 @@ final class LDClientSpec: QuickSpec {
                     expect(testContext.subject.service.config) == testContext.config
                     expect(testContext.makeFlagSynchronizerStreamingMode) == testContext.config.streamingMode
                     expect(testContext.makeFlagSynchronizerPollingInterval) == testContext.config.flagPollingInterval(runMode: testContext.subject.runMode)
-                    expect(testContext.subject.eventReporter.config) == testContext.config
+                    expect(testContext.serviceFactoryMock.makeEventReporterReceivedService?.config) == testContext.config
                 }
                 it("saves the user") {
                     expect(testContext.subject.user) == testContext.user
@@ -366,7 +366,7 @@ final class LDClientSpec: QuickSpec {
                     if let makeFlagSynchronizerReceivedParameters = testContext.serviceFactoryMock.makeFlagSynchronizerReceivedParameters {
                         expect(makeFlagSynchronizerReceivedParameters.service.user) == testContext.user
                     }
-                    expect(testContext.subject.eventReporter.service.user) == testContext.user
+                    expect(testContext.serviceFactoryMock.makeEventReporterReceivedService?.user) == testContext.user
                 }
                 it("uncaches the new users flags") {
                     expect(testContext.featureFlagCachingMock.retrieveFeatureFlagsCallCount) == 2 //called on init and subsequent identify
@@ -394,14 +394,14 @@ final class LDClientSpec: QuickSpec {
                     expect(testContext.subject.service.config) == testContext.config
                     expect(testContext.makeFlagSynchronizerStreamingMode) == testContext.config.streamingMode
                     expect(testContext.makeFlagSynchronizerPollingInterval) == testContext.config.flagPollingInterval(runMode: testContext.subject.runMode)
-                    expect(testContext.subject.eventReporter.config) == testContext.config
+                    expect(testContext.serviceFactoryMock.makeEventReporterReceivedService?.config) == testContext.config
                 }
                 it("uses anonymous user") {
                     expect(testContext.subject.user.key) == LDUser.defaultKey(environmentReporter: testContext.environmentReporterMock)
                     expect(testContext.subject.user.isAnonymous).to(beTrue())
                     expect(testContext.subject.service.user) == testContext.subject.user
                     expect(testContext.makeFlagSynchronizerService?.user) == testContext.subject.user
-                    expect(testContext.subject.eventReporter.service.user) == testContext.subject.user
+                    expect(testContext.serviceFactoryMock.makeEventReporterReceivedService?.user) == testContext.subject.user
                 }
                 it("uncaches the new users flags") {
                     expect(testContext.featureFlagCachingMock.retrieveFeatureFlagsCallCount) == 1
@@ -577,7 +577,7 @@ final class LDClientSpec: QuickSpec {
                             expect(testContext.subject.service.config) == testContext.config
                             expect(testContext.makeFlagSynchronizerStreamingMode) == os.backgroundStreamingMode
                             expect(testContext.makeFlagSynchronizerPollingInterval) == testContext.config.flagPollingInterval(runMode: .background)
-                            expect(testContext.subject.eventReporter.config) == testContext.config
+                            expect(testContext.serviceFactoryMock.makeEventReporterReceivedService?.config) == testContext.config
                         }
                         it("saves the user") {
                             expect(testContext.subject.user) == testContext.user
@@ -586,7 +586,7 @@ final class LDClientSpec: QuickSpec {
                             if let makeFlagSynchronizerReceivedParameters = testContext.serviceFactoryMock.makeFlagSynchronizerReceivedParameters {
                                 expect(makeFlagSynchronizerReceivedParameters.service) === testContext.subject.service
                             }
-                            expect(testContext.subject.eventReporter.service.user) == testContext.user
+                            expect(testContext.serviceFactoryMock.makeEventReporterReceivedService?.user) == testContext.user
                         }
                         it("uncaches the new users flags") {
                             expect(testContext.featureFlagCachingMock.retrieveFeatureFlagsCallCount) == 1
@@ -624,7 +624,7 @@ final class LDClientSpec: QuickSpec {
                             expect(testContext.subject.service.config) == testContext.config
                             expect(testContext.makeFlagSynchronizerStreamingMode) == LDStreamingMode.polling
                             expect(testContext.makeFlagSynchronizerPollingInterval) == testContext.config.flagPollingInterval(runMode: .background)
-                            expect(testContext.subject.eventReporter.config) == testContext.config
+                            expect(testContext.serviceFactoryMock.makeEventReporterReceivedService?.config) == testContext.config
                         }
                         it("saves the user") {
                             expect(testContext.subject.user) == testContext.user
@@ -633,7 +633,7 @@ final class LDClientSpec: QuickSpec {
                             if let makeFlagSynchronizerReceivedParameters = testContext.serviceFactoryMock.makeFlagSynchronizerReceivedParameters {
                                 expect(makeFlagSynchronizerReceivedParameters.service.user) == testContext.user
                             }
-                            expect(testContext.subject.eventReporter.service.user) == testContext.user
+                            expect(testContext.serviceFactoryMock.makeEventReporterReceivedService?.user) == testContext.user
                         }
                         it("uncaches the new users flags") {
                             expect(testContext.featureFlagCachingMock.retrieveFeatureFlagsCallCount) == 1
@@ -676,7 +676,6 @@ final class LDClientSpec: QuickSpec {
                     expect(testContext.subject.service.user) == newUser
                     expect(testContext.serviceMock.clearFlagResponseCacheCallCount) == 1
                     expect(testContext.makeFlagSynchronizerService?.user) == newUser
-                    expect(testContext.subject.eventReporter.service.user) == newUser
                 }
                 it("leaves the client online") {
                     expect(testContext.subject.isOnline) == true
@@ -712,7 +711,6 @@ final class LDClientSpec: QuickSpec {
                     expect(testContext.subject.service.user) == newUser
                     expect(testContext.serviceMock.clearFlagResponseCacheCallCount) == 1
                     expect(testContext.makeFlagSynchronizerService?.user) == newUser
-                    expect(testContext.subject.eventReporter.service.user) == newUser
                 }
                 it("leaves the client offline") {
                     expect(testContext.subject.isOnline) == false

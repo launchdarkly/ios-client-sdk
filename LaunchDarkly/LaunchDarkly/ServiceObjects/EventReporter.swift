@@ -15,12 +15,8 @@ enum EventSyncResult {
 typealias EventSyncCompleteClosure = ((EventSyncResult) -> Void)
 //sourcery: autoMockable
 protocol EventReporting {
-    //sourcery: defaultMockValue = LDConfig.stub
-    var config: LDConfig { get }
     //sourcery: defaultMockValue = false
     var isOnline: Bool { get set }
-    //sourcery: defaultMockValue = DarklyServiceMock()
-    var service: DarklyServiceProvider { get set }
     var lastEventResponseDate: Date? { get }
 
     func record(_ event: Event)
@@ -34,7 +30,6 @@ class EventReporter: EventReporting {
         static let eventQueueLabel = "com.launchdarkly.eventSyncQueue"
     }
 
-    let config: LDConfig
     private let eventQueue = DispatchQueue(label: Constants.eventQueueLabel, qos: .userInitiated)
     var isOnline: Bool {
         get { isOnlineQueue.sync { _isOnline } }
@@ -51,10 +46,10 @@ class EventReporter: EventReporting {
     private var isOnlineQueue = DispatchQueue(label: "com.launchdarkly.EventReporter.isOnlineQueue")
     private (set) var lastEventResponseDate: Date?
 
-    var service: DarklyServiceProvider
+    let service: DarklyServiceProvider
 
     // These fields should only be used synchronized on the eventQueue
-    private(set) var eventStore: [[String: Any]] = []
+    private(set) var eventStore: [Event] = []
     private(set) var flagRequestTracker = FlagRequestTracker()
 
     private var eventReportTimer: TimeResponding?
@@ -62,8 +57,7 @@ class EventReporter: EventReporting {
 
     private let onSyncComplete: EventSyncCompleteClosure?
 
-    init(config: LDConfig, service: DarklyServiceProvider, onSyncComplete: EventSyncCompleteClosure?) {
-        self.config = config
+    init(service: DarklyServiceProvider, onSyncComplete: EventSyncCompleteClosure?) {
         self.service = service
         self.onSyncComplete = onSyncComplete
     }
@@ -74,12 +68,12 @@ class EventReporter: EventReporting {
     }
 
     func recordNoSync(_ event: Event) {
-        if self.eventStore.count >= self.config.eventCapacity {
+        if self.eventStore.count >= self.service.config.eventCapacity {
             Log.debug(self.typeName(and: #function) + "aborted. Event store is full")
             self.service.diagnosticCache?.incrementDroppedEventCount()
             return
         }
-        self.eventStore.append(event.dictionaryValue(config: self.config))
+        self.eventStore.append(event)
     }
 
     // swiftlint:disable:next function_parameter_count
@@ -103,7 +97,7 @@ class EventReporter: EventReporting {
     private func startReporting(isOnline: Bool) {
         guard isOnline && !isReportingActive
         else { return }
-        eventReportTimer = LDTimer(withTimeInterval: config.eventFlushInterval, repeats: true, fireQueue: eventQueue, execute: reportEvents)
+        eventReportTimer = LDTimer(withTimeInterval: service.config.eventFlushInterval, repeats: true, fireQueue: eventQueue, execute: reportEvents)
     }
     
     private func stopReporting() {
@@ -155,7 +149,8 @@ class EventReporter: EventReporting {
         }
     }
 
-    private func publish(_ eventDictionaries: [[String: Any]], _ payloadId: String, _ completion: CompletionClosure?) {
+    private func publish(_ events: [Event], _ payloadId: String, _ completion: CompletionClosure?) {
+        let eventDictionaries = events.map { $0.dictionaryValue(config: service.config) }
         self.service.publishEventDictionaries(eventDictionaries, payloadId) { _, urlResponse, error in
             let shouldRetry = self.processEventResponse(sentEvents: eventDictionaries, response: urlResponse as? HTTPURLResponse, error: error, isRetry: false)
             if shouldRetry {
@@ -215,24 +210,8 @@ extension EventReporter: TypeIdentifying { }
 
 #if DEBUG
     extension EventReporter {
-        convenience init(config: LDConfig,
-                         service: DarklyServiceProvider,
-                         events: [Event],
-                         lastEventResponseDate: Date?,
-                         flagRequestTracker: FlagRequestTracker? = nil,
-                         onSyncComplete: EventSyncCompleteClosure?) {
-            self.init(config: config, service: service, onSyncComplete: onSyncComplete)
-            eventStore.append(contentsOf: events.dictionaryValues(config: config))
-            self.lastEventResponseDate = lastEventResponseDate
-            if let flagRequestTracker = flagRequestTracker {
-                self.flagRequestTracker = flagRequestTracker
-            }
-        }
-
-        var testOnSyncComplete: EventSyncCompleteClosure? { onSyncComplete }
-
-        func add(_ events: [Event]) {
-            eventStore.append(contentsOf: events.dictionaryValues(config: config))
+        func setLastEventResponseDate(_ date: Date?) {
+            lastEventResponseDate = date
         }
 
         func setFlagRequestTracker(_ tracker: FlagRequestTracker) {

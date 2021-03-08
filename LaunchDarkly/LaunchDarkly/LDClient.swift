@@ -956,7 +956,7 @@ public class LDClient {
         user = startUser ?? anonymousUser
         service = self.serviceFactory.makeDarklyServiceProvider(config: config, user: user)
         diagnosticReporter = self.serviceFactory.makeDiagnosticReporter(service: service)
-        eventReporter = self.serviceFactory.makeEventReporter(config: config, service: service)
+        eventReporter = self.serviceFactory.makeEventReporter(service: service)
         errorNotifier = self.serviceFactory.makeErrorNotifier()
         connectionInformation = self.serviceFactory.makeConnectionInformation()
         flagSynchronizer = self.serviceFactory.makeFlagSynchronizer(streamingMode: config.allowStreamingMode ? config.streamingMode : .polling,
@@ -973,7 +973,7 @@ public class LDClient {
         
         NotificationCenter.default.addObserver(self, selector: #selector(didCloseEventSource), name: Notification.Name(FlagSynchronizer.Constants.didCloseEventSourceName), object: nil)
 
-        eventReporter = self.serviceFactory.makeEventReporter(config: config, service: service, onSyncComplete: onEventSyncComplete)
+        eventReporter = self.serviceFactory.makeEventReporter(service: service, onSyncComplete: onEventSyncComplete)
         flagSynchronizer = self.serviceFactory.makeFlagSynchronizer(streamingMode: config.allowStreamingMode ? config.streamingMode : .polling,
                                                                     pollingInterval: config.flagPollingInterval(runMode: runMode),
                                                                     useReport: config.useReport,

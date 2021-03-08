@@ -245,30 +245,12 @@ final class ErrorNotifyingMock: ErrorNotifying {
 // MARK: - EventReportingMock
 final class EventReportingMock: EventReporting {
 
-    var configSetCount = 0
-    var setConfigCallback: (() -> Void)?
-    var config: LDConfig = LDConfig.stub {
-        didSet {
-            configSetCount += 1
-            setConfigCallback?()
-        }
-    }
-
     var isOnlineSetCount = 0
     var setIsOnlineCallback: (() -> Void)?
     var isOnline: Bool = false {
         didSet {
             isOnlineSetCount += 1
             setIsOnlineCallback?()
-        }
-    }
-
-    var serviceSetCount = 0
-    var setServiceCallback: (() -> Void)?
-    var service: DarklyServiceProvider = DarklyServiceMock() {
-        didSet {
-            serviceSetCount += 1
-            setServiceCallback?()
         }
     }
 
