@@ -316,10 +316,10 @@ final class FeatureFlagCachingMock: FeatureFlagCaching {
 
     var storeFeatureFlagsCallCount = 0
     var storeFeatureFlagsCallback: (() -> Void)?
-    var storeFeatureFlagsReceivedArguments: (featureFlags: [LDFlagKey: FeatureFlag], user: LDUser, mobileKey: String, lastUpdated: Date, storeMode: FlagCachingStoreMode)?
-    func storeFeatureFlags(_ featureFlags: [LDFlagKey: FeatureFlag], forUser user: LDUser, andMobileKey mobileKey: String, lastUpdated: Date, storeMode: FlagCachingStoreMode) {
+    var storeFeatureFlagsReceivedArguments: (featureFlags: [LDFlagKey: FeatureFlag], userKey: String, mobileKey: String, lastUpdated: Date, storeMode: FlagCachingStoreMode)?
+    func storeFeatureFlags(_ featureFlags: [LDFlagKey: FeatureFlag], userKey: String, mobileKey: String, lastUpdated: Date, storeMode: FlagCachingStoreMode) {
         storeFeatureFlagsCallCount += 1
-        storeFeatureFlagsReceivedArguments = (featureFlags: featureFlags, user: user, mobileKey: mobileKey, lastUpdated: lastUpdated, storeMode: storeMode)
+        storeFeatureFlagsReceivedArguments = (featureFlags: featureFlags, userKey: userKey, mobileKey: mobileKey, lastUpdated: lastUpdated, storeMode: storeMode)
         storeFeatureFlagsCallback?()
     }
 }

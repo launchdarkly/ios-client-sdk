@@ -26,11 +26,9 @@ final class CacheConverter: CacheConverting {
 
     let currentCache: FeatureFlagCaching
     private(set) var deprecatedCaches = [DeprecatedCacheModel: DeprecatedCache]()
-    let maxAge: TimeInterval
 
-    init(serviceFactory: ClientServiceCreating, maxCachedUsers: Int, maxAge: TimeInterval = Constants.maxAge) {
+    init(serviceFactory: ClientServiceCreating, maxCachedUsers: Int) {
         currentCache = serviceFactory.makeFeatureFlagCache(maxCachedUsers: maxCachedUsers)
-        self.maxAge = maxAge
         DeprecatedCacheModel.allCases.forEach { version in
             deprecatedCaches[version] = serviceFactory.makeDeprecatedCacheModel(version)
         }
@@ -49,13 +47,13 @@ final class CacheConverter: CacheConverting {
             guard let cachedData = deprecatedCache?.retrieveFlags(for: user.key, and: mobileKey),
                 let cachedFlags = cachedData.featureFlags
             else { continue }
-            currentCache.storeFeatureFlags(cachedFlags, forUser: user, andMobileKey: mobileKey, lastUpdated: cachedData.lastUpdated ?? Date(), storeMode: .sync)
+            currentCache.storeFeatureFlags(cachedFlags, userKey: user.key, mobileKey: mobileKey, lastUpdated: cachedData.lastUpdated ?? Date(), storeMode: .sync)
             return  //If we hit on a cached user, bailout since we converted the flags for that userKey-mobileKey combination; This prefers newer caches over older
         }
     }
 
     private func removeData() {
-        let maxAge = Date().addingTimeInterval(self.maxAge)
+        let maxAge = Date().addingTimeInterval(Constants.maxAge)
         deprecatedCaches.values.forEach { deprecatedCache in
             deprecatedCache.removeData(olderThan: maxAge)
         }

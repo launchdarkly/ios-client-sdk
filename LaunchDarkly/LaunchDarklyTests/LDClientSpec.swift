@@ -176,59 +176,40 @@ final class LDClientSpec: QuickSpec {
     }
 
     private func aliasingSpec() {
+        let anonUser = LDUser(key: "unknown", isAnonymous: true)
+        let knownUser = LDUser(key: "known", isAnonymous: false)
         describe("aliasing") {
             var ctx: TestContext!
-
+            beforeEach {
+                ctx = TestContext(autoAliasingOptOut: false)
+            }
             context("automatic aliasing from anonymous to user") {
                 beforeEach {
-                    waitUntil { done in 
-                        ctx = TestContext(autoAliasingOptOut: false).withUser(LDUser(isAnonymous: true))
-                        ctx.start(completion: done)
-                    }
-                    let notAnonymous = LDUser(key: "something", isAnonymous: false)
-                    waitUntil { done in 
-                        ctx.subject.internalIdentify(newUser: notAnonymous, completion: done)
-                    }
+                    ctx.withUser(anonUser).start()
+                    ctx.subject.internalIdentify(newUser: knownUser)
                 }
-
                 it("records an alias and identify event") {
                     // init, identify, and alias event
                     expect(ctx.eventReporterMock.recordCallCount) == 3
                     expect(ctx.recordedEvent?.kind) == .alias
                 }
             }
-
             context("automatic aliasing from user to user") {
                 beforeEach {
-                    waitUntil { done in 
-                        ctx = TestContext().withUser(LDUser(isAnonymous: false))
-                        ctx.start(completion: done)
-                    }
-                    let notAnonymous = LDUser(key: "something", isAnonymous: false)
-                    waitUntil { done in 
-                        ctx.subject.internalIdentify(newUser: notAnonymous, completion: done)
-                    }
+                    ctx.withUser(knownUser).start()
+                    ctx.subject.internalIdentify(newUser: knownUser)
                 }
-
                 it("doesnt record an alias event") {
                     // init and identify event
                     expect(ctx.eventReporterMock.recordCallCount) == 2
                     expect(ctx.recordedEvent?.kind) == .identify
                 }
             }
-
             context("automatic aliasing from anonymous to anonymous") {
                 beforeEach {
-                    waitUntil { done in 
-                        ctx = TestContext().withUser(LDUser(isAnonymous: false))
-                        ctx.start(completion: done)
-                    }
-                    let notAnonymous = LDUser(key: "something", isAnonymous: false)
-                    waitUntil { done in 
-                        ctx.subject.internalIdentify(newUser: notAnonymous, completion: done)
-                    }
+                    ctx.withUser(anonUser).start()
+                    ctx.subject.internalIdentify(newUser: anonUser)
                 }
-
                 it("doesnt record an alias event") {
                     // init and identify event
                     expect(ctx.eventReporterMock.recordCallCount) == 2
@@ -1248,7 +1229,7 @@ final class LDClientSpec: QuickSpec {
         it("caches the new flags") {
             expect(testContext.featureFlagCachingMock.storeFeatureFlagsCallCount) == 1
             expect(testContext.featureFlagCachingMock.storeFeatureFlagsReceivedArguments?.featureFlags) == newFlags
-            expect(testContext.featureFlagCachingMock.storeFeatureFlagsReceivedArguments?.user) == testContext.user
+            expect(testContext.featureFlagCachingMock.storeFeatureFlagsReceivedArguments?.userKey) == testContext.user.key
             expect(testContext.featureFlagCachingMock.storeFeatureFlagsReceivedArguments?.mobileKey) == testContext.config.mobileKey
             expect(testContext.featureFlagCachingMock.storeFeatureFlagsReceivedArguments?.lastUpdated.isWithin(Constants.updateThreshold, of: updateDate)) == true
             expect(testContext.featureFlagCachingMock.storeFeatureFlagsReceivedArguments?.storeMode) == .async
@@ -1287,7 +1268,7 @@ final class LDClientSpec: QuickSpec {
         it("caches the updated flags") {
             expect(testContext.featureFlagCachingMock.storeFeatureFlagsCallCount) == 1
             expect(testContext.featureFlagCachingMock.storeFeatureFlagsReceivedArguments?.featureFlags) == testContext.flagStoreMock.featureFlags
-            expect(testContext.featureFlagCachingMock.storeFeatureFlagsReceivedArguments?.user) == testContext.user
+            expect(testContext.featureFlagCachingMock.storeFeatureFlagsReceivedArguments?.userKey) == testContext.user.key
             expect(testContext.featureFlagCachingMock.storeFeatureFlagsReceivedArguments?.mobileKey) == testContext.config.mobileKey
             expect(testContext.featureFlagCachingMock.storeFeatureFlagsReceivedArguments?.lastUpdated.isWithin(Constants.updateThreshold, of: updateDate)) == true
             expect(testContext.featureFlagCachingMock.storeFeatureFlagsReceivedArguments?.storeMode) == .async
@@ -1323,7 +1304,7 @@ final class LDClientSpec: QuickSpec {
         it("caches the updated flags") {
             expect(testContext.featureFlagCachingMock.storeFeatureFlagsCallCount) == 1
             expect(testContext.featureFlagCachingMock.storeFeatureFlagsReceivedArguments?.featureFlags) == testContext.flagStoreMock.featureFlags
-            expect(testContext.featureFlagCachingMock.storeFeatureFlagsReceivedArguments?.user) == testContext.user
+            expect(testContext.featureFlagCachingMock.storeFeatureFlagsReceivedArguments?.userKey) == testContext.user.key
             expect(testContext.featureFlagCachingMock.storeFeatureFlagsReceivedArguments?.mobileKey) == testContext.config.mobileKey
             expect(testContext.featureFlagCachingMock.storeFeatureFlagsReceivedArguments?.lastUpdated.isWithin(Constants.updateThreshold, of: updateDate)) == true
             expect(testContext.featureFlagCachingMock.storeFeatureFlagsReceivedArguments?.storeMode) == .async

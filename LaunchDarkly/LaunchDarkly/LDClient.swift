@@ -306,11 +306,8 @@ public class LDClient {
             if let cachedFlags = self.flagCache.retrieveFeatureFlags(forUserWithKey: self.user.key, andMobileKey: self.config.mobileKey), !cachedFlags.isEmpty {
                 flagStore.replaceStore(newFlags: cachedFlags, completion: nil)
             } else {
-                if let userFlagStore = user.flagStore {
-                    flagStore.replaceStore(newFlags: userFlagStore.featureFlags, completion: nil)
-                } else {
-                    flagStore.replaceStore(newFlags: [:], completion: nil)
-                }
+                // Deprecated behavior of setting flags from user init dictionary
+                flagStore.replaceStore(newFlags: user.flagStore?.featureFlags ?? [:], completion: nil)
             }
             self.service.user = self.user
             flagSynchronizer = serviceFactory.makeFlagSynchronizer(streamingMode: ConnectionInformation.effectiveStreamingMode(config: config, ldClient: self),
@@ -326,7 +323,7 @@ public class LDClient {
             self.internalSetOnline(wasOnline, completion: completion)
 
             if !config.autoAliasingOptOut && previousUser.isAnonymous && !newUser.isAnonymous {
-                self.internalAlias(context: newUser, previousContext: previousUser)
+                self.alias(context: newUser, previousContext: previousUser)
             }
 
             self.service.clearFlagResponseCache()
@@ -715,7 +712,7 @@ public class LDClient {
 
     private func updateCacheAndReportChanges(user: LDUser,
                                              oldFlags: [LDFlagKey: FeatureFlag]) {
-        flagCache.storeFeatureFlags(flagStore.featureFlags, forUser: user, andMobileKey: config.mobileKey, lastUpdated: Date(), storeMode: .async)
+        flagCache.storeFeatureFlags(flagStore.featureFlags, userKey: user.key, mobileKey: config.mobileKey, lastUpdated: Date(), storeMode: .async)
         flagChangeNotifier.notifyObservers(flagStore: flagStore, oldFlags: oldFlags)
     }
 
@@ -771,10 +768,6 @@ public class LDClient {
             return
         }
 
-        internalAlias(context: new, previousContext: old)
-    }
-
-    private func internalAlias(context new: LDUser, previousContext old: LDUser) {
         self.eventReporter.record(Event.aliasEvent(newUser: new, oldUser: old))
     }
 

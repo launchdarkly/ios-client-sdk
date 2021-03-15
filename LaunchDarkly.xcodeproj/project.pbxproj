@@ -259,6 +259,7 @@
 		83FEF8DF1F2667E4001CF12C /* EventReporter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 83FEF8DE1F2667E4001CF12C /* EventReporter.swift */; };
 		B40B419C249ADA6B00CD0726 /* DiagnosticCacheSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = B40B419B249ADA6B00CD0726 /* DiagnosticCacheSpec.swift */; };
 		B4265EB124E7390C001CFD2C /* TestUtil.swift in Sources */ = {isa = PBXBuildFile; fileRef = B4265EB024E7390C001CFD2C /* TestUtil.swift */; };
+		B43D5AD025FBE1C30022EC90 /* DeprecatedCacheModelSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = B43D5ACF25FBE1C30022EC90 /* DeprecatedCacheModelSpec.swift */; };
 		B467791324D8AEEC00897F00 /* LDSwiftEventSourceStatic in Frameworks */ = {isa = PBXBuildFile; productRef = B467791224D8AEEC00897F00 /* LDSwiftEventSourceStatic */; };
 		B467791524D8AEF300897F00 /* LDSwiftEventSourceStatic in Frameworks */ = {isa = PBXBuildFile; productRef = B467791424D8AEF300897F00 /* LDSwiftEventSourceStatic */; };
 		B467791724D8AEF800897F00 /* LDSwiftEventSourceStatic in Frameworks */ = {isa = PBXBuildFile; productRef = B467791624D8AEF800897F00 /* LDSwiftEventSourceStatic */; };
@@ -476,6 +477,7 @@
 		83FEF8DE1F2667E4001CF12C /* EventReporter.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = EventReporter.swift; sourceTree = "<group>"; };
 		B40B419B249ADA6B00CD0726 /* DiagnosticCacheSpec.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiagnosticCacheSpec.swift; sourceTree = "<group>"; };
 		B4265EB024E7390C001CFD2C /* TestUtil.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TestUtil.swift; sourceTree = "<group>"; };
+		B43D5ACF25FBE1C30022EC90 /* DeprecatedCacheModelSpec.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeprecatedCacheModelSpec.swift; sourceTree = "<group>"; };
 		B468E70F24B3C3AC00E0C883 /* ObjcLDEvaluationDetail.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ObjcLDEvaluationDetail.swift; sourceTree = "<group>"; };
 		B46F344025E6DB7D0078D45F /* DiagnosticReporterSpec.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiagnosticReporterSpec.swift; sourceTree = "<group>"; };
 		B4C9D42D2489B5FF004A9B03 /* DiagnosticEvent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiagnosticEvent.swift; sourceTree = "<group>"; };
@@ -637,6 +639,7 @@
 				83D5597D1FDA01F9002D10C8 /* KeyedValueCacheSpec.swift */,
 				8354AC76224316F800CDE602 /* UserEnvironmentFlagCacheSpec.swift */,
 				832D68AB224B3321005F052A /* CacheConverterSpec.swift */,
+				B43D5ACF25FBE1C30022EC90 /* DeprecatedCacheModelSpec.swift */,
 				83D1523A22545BB20054B6D4 /* DeprecatedCacheModelV5Spec.swift */,
 				83D15238225455D40054B6D4 /* DeprecatedCacheModelV4Spec.swift */,
 				83D15236225400CE0054B6D4 /* DeprecatedCacheModelV3Spec.swift */,
@@ -1463,6 +1466,7 @@
 				83F0A5641FB5F33800550A95 /* LDConfigSpec.swift in Sources */,
 				83CFE7D11F7AD8DC0010544E /* DarklyServiceMock.swift in Sources */,
 				832EA061203D03B700A93C0E /* AnyComparerSpec.swift in Sources */,
+				B43D5AD025FBE1C30022EC90 /* DeprecatedCacheModelSpec.swift in Sources */,
 				832307AA1F7ECA630029815A /* LDConfigStub.swift in Sources */,
 				8354AC77224316F800CDE602 /* UserEnvironmentFlagCacheSpec.swift in Sources */,
 				83EBCBB120D9C7B5003A7142 /* FlagCounterSpec.swift in Sources */,
