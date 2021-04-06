@@ -128,7 +128,7 @@ final class ClientServiceMockFactory: ClientServiceCreating {
         return makeEnvironmentReporterReturnValue
     }
 
-    func makeThrottler(maxDelay: TimeInterval, environmentReporter: EnvironmentReporting) -> Throttling {
+    func makeThrottler(environmentReporter: EnvironmentReporting) -> Throttling {
         let throttlingMock = ThrottlingMock()
         throttlingMock.runThrottledCallback = {
             throttlingMock.runThrottledReceivedRunClosure?()

@@ -942,7 +942,7 @@ public class LDClient {
         LDUserWrapper.configureKeyedArchiversToHandleVersion2_3_0AndOlderUserCacheFormat()
         cacheConverter = self.serviceFactory.makeCacheConverter(maxCachedUsers: configuration.maxCachedUsers)
         flagChangeNotifier = self.serviceFactory.makeFlagChangeNotifier()
-        throttler = self.serviceFactory.makeThrottler(maxDelay: Throttler.Constants.defaultDelay, environmentReporter: environmentReporter)
+        throttler = self.serviceFactory.makeThrottler(environmentReporter: environmentReporter)
 
         config = configuration
         let anonymousUser = LDUser(environmentReporter: environmentReporter)

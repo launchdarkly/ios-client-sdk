@@ -26,7 +26,7 @@ protocol ClientServiceCreating {
     func makeStreamingProvider(url: URL, httpHeaders: [String: String], handler: EventHandler, delegate: RequestHeaderTransform?, errorHandler: ConnectionErrorHandler?) -> DarklyStreamingProvider
     func makeStreamingProvider(url: URL, httpHeaders: [String: String], connectMethod: String?, connectBody: Data?, handler: EventHandler, delegate: RequestHeaderTransform?, errorHandler: ConnectionErrorHandler?) -> DarklyStreamingProvider
     func makeEnvironmentReporter() -> EnvironmentReporting
-    func makeThrottler(maxDelay: TimeInterval, environmentReporter: EnvironmentReporting) -> Throttling
+    func makeThrottler(environmentReporter: EnvironmentReporting) -> Throttling
     func makeErrorNotifier() -> ErrorNotifying
     func makeConnectionInformation() -> ConnectionInformation
     func makeDiagnosticCache(sdkKey: String) -> DiagnosticCaching
@@ -124,8 +124,8 @@ final class ClientServiceFactory: ClientServiceCreating {
         EnvironmentReporter()
     }
 
-    func makeThrottler(maxDelay: TimeInterval, environmentReporter: EnvironmentReporting) -> Throttling {
-        Throttler(maxDelay: maxDelay, environmentReporter: environmentReporter)
+    func makeThrottler(environmentReporter: EnvironmentReporting) -> Throttling {
+        Throttler(environmentReporter: environmentReporter)
     }
 
     func makeErrorNotifier() -> ErrorNotifying {
