@@ -55,16 +55,8 @@ final class FlagStore: FlagMaintaining {
         }
     }
 
-    /* updateDictionary should have the form:
-       {
-            "key": <flag-key>,
-            "value": <new-flag-value>,
-            "variation": <new-flag-variation>,
-            "version": <new-flag-version>,
-            "flagVersion": <new-flag-flagVersion>,
-            "reason": <new-flag-reason>
-        }
-    */
+    // An update dictionary is the same as a flag dictionary. The version will be validated and if it's newer than the
+    // stored flag, the store will replace the flag with the updated flag.
     func updateStore(updateDictionary: [LDFlagKey: Any], completion: CompletionClosure?) {
         flagQueue.async(flags: .barrier) {
             defer {

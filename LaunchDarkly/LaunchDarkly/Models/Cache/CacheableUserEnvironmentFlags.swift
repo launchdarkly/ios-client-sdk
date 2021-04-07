@@ -36,7 +36,7 @@ import Foundation
 ]
 */
 struct CacheableUserEnvironmentFlags {
-    enum CodingKeys: String, CodingKey {
+    enum CodingKeys: String, CodingKey, CaseIterable {
         case userKey, environmentFlags, lastUpdated
     }
 
@@ -45,7 +45,9 @@ struct CacheableUserEnvironmentFlags {
     let lastUpdated: Date
 
     init(userKey: String, environmentFlags: [MobileKey: CacheableEnvironmentFlags], lastUpdated: Date) {
-        (self.userKey, self.environmentFlags, self.lastUpdated) = (userKey, environmentFlags, lastUpdated)
+        self.userKey = userKey
+        self.environmentFlags = environmentFlags
+        self.lastUpdated = lastUpdated
     }
 
     init?(dictionary: [String: Any]) {
@@ -53,7 +55,7 @@ struct CacheableUserEnvironmentFlags {
             let environmentFlagsDictionary = dictionary[CodingKeys.environmentFlags.rawValue] as? [MobileKey: [LDFlagKey: Any]],
             let lastUpdated = (dictionary[CodingKeys.lastUpdated.rawValue] as? String)?.dateValue
         else { return nil }
-        let environmentFlags = environmentFlagsDictionary.compactMapValues { (cacheableEnvironmentFlagsDictionary) in
+        let environmentFlags = environmentFlagsDictionary.compactMapValues { cacheableEnvironmentFlagsDictionary in
             CacheableEnvironmentFlags(dictionary: cacheableEnvironmentFlagsDictionary)
         }
         self.init(userKey: userKey, environmentFlags: environmentFlags, lastUpdated: lastUpdated)
@@ -65,19 +67,11 @@ struct CacheableUserEnvironmentFlags {
         self.init(dictionary: dictionary)
     }
 
-    static func makeCollection(from dictionary: [String: Any]) -> [UserKey: CacheableUserEnvironmentFlags] {
-        dictionary.compactMapValues { CacheableUserEnvironmentFlags(object: $0) }
-    }
-
     var dictionaryValue: [String: Any] {
         [CodingKeys.userKey.rawValue: userKey,
          CodingKeys.lastUpdated.rawValue: lastUpdated.stringValue,
          CodingKeys.environmentFlags.rawValue: environmentFlags.compactMapValues { $0.dictionaryValue } ]
     }
-}
-
-extension Dictionary where Key == UserKey, Value == CacheableUserEnvironmentFlags {
-    var dictionaryValues: [UserKey: [String: Any]] { compactMapValues { $0.dictionaryValue } }
 }
 
 extension DateFormatter {

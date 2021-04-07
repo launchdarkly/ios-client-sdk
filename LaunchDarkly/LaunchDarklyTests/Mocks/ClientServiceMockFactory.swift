@@ -73,21 +73,18 @@ final class ClientServiceMockFactory: ClientServiceCreating {
     }
 
     var makeEventReporterCallCount = 0
-    var makeEventReporterReceivedParameters: (config: LDConfig, service: DarklyServiceProvider)? = nil
+    var makeEventReporterReceivedService: DarklyServiceProvider? = nil
     var onEventSyncComplete: EventSyncCompleteClosure? = nil
-    func makeEventReporter(config: LDConfig, service: DarklyServiceProvider, onSyncComplete: EventSyncCompleteClosure?) -> EventReporting {
+    func makeEventReporter(service: DarklyServiceProvider, onSyncComplete: EventSyncCompleteClosure?) -> EventReporting {
         makeEventReporterCallCount += 1
-        makeEventReporterReceivedParameters = (config: config, service: service)
+        makeEventReporterReceivedService = service
         onEventSyncComplete = onSyncComplete
 
-        let reporterMock = EventReportingMock()
-        reporterMock.config = config
-        reporterMock.service = service
-        return reporterMock
+        return EventReportingMock()
     }
 
-    func makeEventReporter(config: LDConfig, service: DarklyServiceProvider) -> EventReporting {
-        return makeEventReporter(config: config, service: service, onSyncComplete: nil)
+    func makeEventReporter(service: DarklyServiceProvider) -> EventReporting {
+        return makeEventReporter(service: service, onSyncComplete: nil)
     }
 
     var makeStreamingProviderCallCount = 0
@@ -131,7 +128,7 @@ final class ClientServiceMockFactory: ClientServiceCreating {
         return makeEnvironmentReporterReturnValue
     }
 
-    func makeThrottler(maxDelay: TimeInterval, environmentReporter: EnvironmentReporting) -> Throttling {
+    func makeThrottler(environmentReporter: EnvironmentReporting) -> Throttling {
         let throttlingMock = ThrottlingMock()
         throttlingMock.runThrottledCallback = {
             throttlingMock.runThrottledReceivedRunClosure?()

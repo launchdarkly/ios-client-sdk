@@ -12,407 +12,99 @@ import Nimble
 
 final class CacheableUserEnvironmentFlagsSpec: QuickSpec {
 
-    struct Constants {
-        static let environmentCount = 3
-        static let badDictionaryValue = 12
-    }
+    private struct TestValues {
+        static let userKey = UUID().uuidString
+        static let environments = CacheableEnvironmentFlags.stubCollection(userKey: TestValues.userKey, environmentCount: 3)
+        static let updated = Date().stringEquivalentDate
 
-    struct TestContext {
-        //single user
-        var user: LDUser
-        var environmentFlags = [MobileKey: CacheableEnvironmentFlags]()
-        var cacheableUserEnvironmentFlags: CacheableUserEnvironmentFlags
-
-        //multiple users
-        var users = [LDUser]()
-        var userEnvironmentFlagsCollection = [UserKey: CacheableUserEnvironmentFlags]()
-
-        var extraCacheableUserEnvironmentFlags: CacheableUserEnvironmentFlags!  //The ! allows init to populate users before creating this property
-
-        init(environmentCount: Int = Constants.environmentCount, userCount: Int = 1) {
-            let effectiveUserCount = userCount > 0 ? userCount : 1
-
-            (users, userEnvironmentFlagsCollection, _) = CacheableUserEnvironmentFlags.stubCollection(environmentCount: environmentCount, userCount: effectiveUserCount + 1)
-
-            user = users.first!
-            cacheableUserEnvironmentFlags = userEnvironmentFlagsCollection[user.key]!
-            environmentFlags = cacheableUserEnvironmentFlags.environmentFlags
-
-            let extraUser = users.removeLast()
-            extraCacheableUserEnvironmentFlags = userEnvironmentFlagsCollection.removeValue(forKey: extraUser.key)
+        static func defaultEnvironment(withEnvironments: [String: CacheableEnvironmentFlags] = environments) -> CacheableUserEnvironmentFlags {
+            CacheableUserEnvironmentFlags(userKey: userKey, environmentFlags: withEnvironments, lastUpdated: updated)
         }
     }
 
     override func spec() {
-        initSpec()
-        dictionaryValueSpec()
-        dictionaryValuesSpec()  //For a collection of CacheableUserEnvironments
-        makeCacheableUserEnvironmentsCollectionSpec()
-    }
-
-    private func initSpec() {
         initWithElementsSpec()
         initWithDictionarySpec()
         initWithObjectSpec()
+        dictionaryValueSpec()
     }
 
     private func initWithElementsSpec() {
-        var testContext: TestContext!
-        var cacheableUserEnvironments: CacheableUserEnvironmentFlags!
         describe("init") {
-            context("with elements") {
-                beforeEach {
-                    testContext = TestContext()
-
-                    cacheableUserEnvironments = CacheableUserEnvironmentFlags(userKey: testContext.user.key,
-                                                                              environmentFlags: testContext.environmentFlags,
-                                                                              lastUpdated: Date.stubDate)
-                }
-                it("creates a cacheableUserEnvironments with matching elements") {
-                    expect(cacheableUserEnvironments.userKey) == testContext.user.key
-                    expect(cacheableUserEnvironments.environmentFlags) == testContext.environmentFlags
-                }
+            it("with no environments") {
+                let userEnvironmentFlags = TestValues.defaultEnvironment(withEnvironments: [:])
+                expect(userEnvironmentFlags.userKey) == TestValues.userKey
+                expect(userEnvironmentFlags.environmentFlags) == [:]
+                expect(userEnvironmentFlags.lastUpdated) == TestValues.updated
             }
-            context("with empty featureFlags") {
-                beforeEach {
-                    testContext = TestContext(environmentCount: 0)
-
-                    cacheableUserEnvironments = CacheableUserEnvironmentFlags(userKey: testContext.user.key,
-                                                                              environmentFlags: testContext.environmentFlags,
-                                                                              lastUpdated: Date.stubDate)
-                }
-                it("creates a cacheableUserEnvironments with no feature flags") {
-                    expect(cacheableUserEnvironments.userKey) == testContext.user.key
-                    expect(cacheableUserEnvironments.environmentFlags.isEmpty) == true
-                }
+            it("with environments") {
+                let userEnvironmentFlags = TestValues.defaultEnvironment()
+                expect(userEnvironmentFlags.userKey) == TestValues.userKey
+                expect(userEnvironmentFlags.environmentFlags) == TestValues.environments
+                expect(userEnvironmentFlags.lastUpdated) == TestValues.updated
             }
         }
     }
 
     private func initWithDictionarySpec() {
-        var testContext: TestContext!
-        var cacheableUserEnvironmentsDictionary: [String: Any]!
-        var cacheableUserEnvironments: CacheableUserEnvironmentFlags?
+        let defaultDictionary = TestValues.defaultEnvironment().dictionaryValue
         describe("initWithDictionary") {
-            context("with elements") {
-                beforeEach {
-                    testContext = TestContext()
-                    cacheableUserEnvironmentsDictionary = testContext.cacheableUserEnvironmentFlags.dictionaryValue
-
-                    cacheableUserEnvironments = CacheableUserEnvironmentFlags(dictionary: cacheableUserEnvironmentsDictionary)
+            context("creates a matching cacheableUserEnvironments") {
+                it("with all elements") {
+                    let userEnv = CacheableUserEnvironmentFlags(dictionary: defaultDictionary)
+                    expect(userEnv?.userKey) == TestValues.userKey
+                    expect(userEnv?.environmentFlags) == TestValues.environments
+                    expect(userEnv?.lastUpdated) == TestValues.updated
                 }
-                it("creates a matching cacheableUserEnvironments") {
-                    expect(cacheableUserEnvironments?.userKey) == cacheableUserEnvironmentsDictionary.userKey
-                    expect(cacheableUserEnvironments?.environmentFlags) == cacheableUserEnvironmentsDictionary.environmentFlags
-                }
-            }
-            context("with no feature flags") {
-                beforeEach {
-                    testContext = TestContext(environmentCount: 0)
-                    cacheableUserEnvironmentsDictionary = testContext.cacheableUserEnvironmentFlags.dictionaryValue
-
-                    cacheableUserEnvironments = CacheableUserEnvironmentFlags(dictionary: cacheableUserEnvironmentsDictionary)
-                }
-                it("creates a matching cacheableUserEnvironments with no feature flags") {
-                    expect(cacheableUserEnvironments?.userKey) == cacheableUserEnvironmentsDictionary.userKey
-                    expect(cacheableUserEnvironments?.environmentFlags.isEmpty) == true
+                it("with extra dictionary items") {
+                    var testDictionary = defaultDictionary
+                    testDictionary["extraKey"] = "abc"
+                    let userEnv = CacheableUserEnvironmentFlags(dictionary: testDictionary)
+                    expect(userEnv?.userKey) == TestValues.userKey
+                    expect(userEnv?.environmentFlags) == TestValues.environments
+                    expect(userEnv?.lastUpdated) == TestValues.updated
                 }
             }
-            context("with extra dictionary items") {
-                beforeEach {
-                    testContext = TestContext()
-                    cacheableUserEnvironmentsDictionary = testContext.cacheableUserEnvironmentFlags.dictionaryValue
-                    cacheableUserEnvironmentsDictionary.merge(testContext.user.dictionaryValueWithAllAttributes(), uniquingKeysWith: { original, _ in
-                        original
-                    })
-
-                    cacheableUserEnvironments = CacheableUserEnvironmentFlags(dictionary: cacheableUserEnvironmentsDictionary)
-                }
-                it("creates a matching cacheableUserEnvironments") {
-                    expect(cacheableUserEnvironments?.userKey) == cacheableUserEnvironmentsDictionary.userKey
-                    expect(cacheableUserEnvironments?.environmentFlags) == cacheableUserEnvironmentsDictionary.environmentFlags
-                }
-            }
-            context("without an element") {
-                context("without userKey") {
-                    beforeEach {
-                        testContext = TestContext()
-                        cacheableUserEnvironmentsDictionary = testContext.cacheableUserEnvironmentFlags.dictionaryValue
-                        cacheableUserEnvironmentsDictionary.removeValue(forKey: CacheableUserEnvironmentFlags.CodingKeys.userKey.rawValue)
-
-                        cacheableUserEnvironments = CacheableUserEnvironmentFlags(dictionary: cacheableUserEnvironmentsDictionary)
-                    }
-                    it("returns nil") {
-                        expect(cacheableUserEnvironments).to(beNil())
-                    }
-                }
-                context("without environmentFlags") {
-                    beforeEach {
-                        testContext = TestContext()
-                        cacheableUserEnvironmentsDictionary = testContext.cacheableUserEnvironmentFlags.dictionaryValue
-                        cacheableUserEnvironmentsDictionary.removeValue(forKey: CacheableUserEnvironmentFlags.CodingKeys.environmentFlags.rawValue)
-
-                        cacheableUserEnvironments = CacheableUserEnvironmentFlags(dictionary: cacheableUserEnvironmentsDictionary)
-                    }
-                    it("returns nil") {
-                        expect(cacheableUserEnvironments).to(beNil())
-                    }
-                }
-            }
-            context("with a type mismatched element") {
-                context("with a type mismatched userKey") {
-                    beforeEach {
-                        testContext = TestContext()
-                        cacheableUserEnvironmentsDictionary = testContext.cacheableUserEnvironmentFlags.dictionaryValue
-                        cacheableUserEnvironmentsDictionary[CacheableUserEnvironmentFlags.CodingKeys.userKey.rawValue] = Constants.badDictionaryValue
-
-                        cacheableUserEnvironments = CacheableUserEnvironmentFlags(dictionary: cacheableUserEnvironmentsDictionary)
-                    }
-                    it("returns nil") {
-                        expect(cacheableUserEnvironments).to(beNil())
-                    }
-                }
-                context("with a type mismatched environmentFlags") {
-                    beforeEach {
-                        testContext = TestContext()
-                        cacheableUserEnvironmentsDictionary = testContext.cacheableUserEnvironmentFlags.dictionaryValue
-                        cacheableUserEnvironmentsDictionary[CacheableUserEnvironmentFlags.CodingKeys.environmentFlags.rawValue] = Constants.badDictionaryValue
-
-                        cacheableUserEnvironments = CacheableUserEnvironmentFlags(dictionary: cacheableUserEnvironmentsDictionary)
-                    }
-                    it("returns nil") {
-                        expect(cacheableUserEnvironments).to(beNil())
-                    }
+            for key in CacheableUserEnvironmentFlags.CodingKeys.allCases {
+                it("returns nil when \(key.rawValue) missing or invalid") {
+                    var testDictionary = defaultDictionary
+                    testDictionary[key.rawValue] = 3 // Invalid value for all fields
+                    expect(CacheableUserEnvironmentFlags(dictionary: testDictionary)).to(beNil())
+                    testDictionary.removeValue(forKey: key.rawValue)
+                    expect(CacheableUserEnvironmentFlags(dictionary: testDictionary)).to(beNil())
                 }
             }
         }
     }
 
     private func initWithObjectSpec() {
-        var testContext: TestContext!
-        var object: Any!
-        var cacheableUserEnvironments: CacheableUserEnvironmentFlags?
         describe("initWithObject") {
-            context("object is a valid dictionary") {
-                beforeEach {
-                    testContext = TestContext()
-                    object = testContext.cacheableUserEnvironmentFlags.dictionaryValue
-
-                    cacheableUserEnvironments = CacheableUserEnvironmentFlags(object: object!)
-                }
-                it("creates a matching cacheableUserEnvironments object") {
-                    expect(cacheableUserEnvironments?.userKey) == testContext.cacheableUserEnvironmentFlags.userKey
-                    expect(cacheableUserEnvironments?.environmentFlags) == testContext.cacheableUserEnvironmentFlags.environmentFlags
-                }
+            it("inits when object is a valid dictionary") {
+                let userEnv = CacheableUserEnvironmentFlags(object: TestValues.defaultEnvironment().dictionaryValue)
+                expect(userEnv?.userKey) == TestValues.userKey
+                expect(userEnv?.environmentFlags) == TestValues.environments
+                expect(userEnv?.lastUpdated) == TestValues.updated
             }
-            context("object is not a valid dictionary") {
-                beforeEach {
-                    object = Constants.badDictionaryValue
-
-                    cacheableUserEnvironments = CacheableUserEnvironmentFlags(object: object!)
-                }
-                it("returns nil") {
-                    expect(cacheableUserEnvironments).to(beNil())
-                }
+            it("return nil when object is not a valid dictionary") {
+                expect(CacheableUserEnvironmentFlags(object: 12 as Any)).to(beNil())
             }
         }
     }
 
     private func dictionaryValueSpec() {
-        var testContext: TestContext!
-        var cacheableUserEnvironmentsDictionary: [String: Any]!
         describe("dictionaryValue") {
-            context("when environmentFlags exist") {
-                beforeEach {
-                    testContext = TestContext()
-
-                    cacheableUserEnvironmentsDictionary = testContext.cacheableUserEnvironmentFlags.dictionaryValue
-                }
-                it("creates a dictionary with matching elements") {
-                    expect(cacheableUserEnvironmentsDictionary.userKey) == testContext.cacheableUserEnvironmentFlags.userKey
-                    expect(cacheableUserEnvironmentsDictionary.environmentFlags) == testContext.cacheableUserEnvironmentFlags.environmentFlags
-                }
+            it("creates a dictionary with matching elements") {
+                let dict = TestValues.defaultEnvironment().dictionaryValue
+                expect(dict["userKey"] as? String) == TestValues.userKey
+                let dictEnvs = dict["environmentFlags"] as? [String: [String: Any]]
+                expect(dictEnvs?.compactMapValues { CacheableEnvironmentFlags(dictionary: $0)}) == TestValues.environments
+                expect(dict["lastUpdated"] as? String) == TestValues.updated.stringValue
             }
-            context("when environmentFlags is empty") {
-                beforeEach {
-                    testContext = TestContext(environmentCount: 0)
-
-                    cacheableUserEnvironmentsDictionary = testContext.cacheableUserEnvironmentFlags.dictionaryValue
-                }
-                it("creates a dictionary with no environmentFlags") {
-                    expect(cacheableUserEnvironmentsDictionary.userKey) == testContext.cacheableUserEnvironmentFlags.userKey
-                    expect(cacheableUserEnvironmentsDictionary.environmentFlags?.isEmpty) == true
-                }
-            }
-        }
-    }
-
-    // Verifies converting a collection of [UserKey: CacheableUserEnvironments] into a dictionary
-    private func dictionaryValuesSpec() {
-        var testContext: TestContext!
-        var cacheableUserEnvironmentsCollectionDictionary: [UserKey: Any]!
-        describe("dictionaryValues") {
-            context("with multiple CacheableUserEnvironments") {
-                beforeEach {
-                    testContext = TestContext(userCount: LDConfig.Defaults.maxCachedUsers)
-
-                    cacheableUserEnvironmentsCollectionDictionary = testContext.userEnvironmentFlagsCollection.dictionaryValues
-                }
-                it("creates a matching dictionary") {
-                    testContext.userEnvironmentFlagsCollection.forEach { userKey, cacheableUserEnvironments in
-                        let cacheableUserEnvironmentsDictionary = cacheableUserEnvironmentsCollectionDictionary[userKey] as? [String: Any]
-                        expect(cacheableUserEnvironmentsDictionary?.userKey) == userKey
-                        expect(cacheableUserEnvironmentsDictionary?.environmentFlags) == cacheableUserEnvironments.environmentFlags
-                    }
-                }
-            }
-            context("with no environments") {
-                beforeEach {
-                    let cacheableUserEnvironmentsCollection = [UserKey: CacheableUserEnvironmentFlags]()
-
-                    cacheableUserEnvironmentsCollectionDictionary = cacheableUserEnvironmentsCollection.dictionaryValues
-                }
-                it("creates an empty dictionary") {
-                    expect(cacheableUserEnvironmentsCollectionDictionary.isEmpty) == true
-                }
-            }
-        }
-    }
-
-    private func makeCacheableUserEnvironmentsCollectionSpec() {
-        var testContext: TestContext!
-        var cacheableUserEnvironmentsCollectionDictionary: [String: Any]!
-        var cacheableUserEnvironmentsCollection: [UserKey: CacheableUserEnvironmentFlags]!
-        describe("makeCacheableUserEnvironmentsCollection") {
-            context("with multiple CacheableUserEnvironments dictionaries") {
-                beforeEach {
-                    testContext = TestContext(userCount: LDConfig.Defaults.maxCachedUsers)
-                    cacheableUserEnvironmentsCollectionDictionary = testContext.userEnvironmentFlagsCollection.dictionaryValues
-
-                    cacheableUserEnvironmentsCollection = CacheableUserEnvironmentFlags.makeCollection(from: cacheableUserEnvironmentsCollectionDictionary)
-                }
-                it("creates a matching CacheableUserEnvironments collection") {
-                    expect(cacheableUserEnvironmentsCollection.count) == testContext.userEnvironmentFlagsCollection.count
-                    testContext.userEnvironmentFlagsCollection.forEach { userKey, originalCacheableUserEnvironments in
-                        let reinflatedCacheableUserEnvironment = cacheableUserEnvironmentsCollection[userKey]
-                        expect(reinflatedCacheableUserEnvironment?.userKey) == userKey
-                        expect(reinflatedCacheableUserEnvironment?.environmentFlags) == originalCacheableUserEnvironments.environmentFlags
-                    }
-                }
-            }
-            context("with no dictionaries") {
-                beforeEach {
-                    cacheableUserEnvironmentsCollection = CacheableUserEnvironmentFlags.makeCollection(from: [:])
-                }
-                it("creates an empty CacheableUserEnvironments collection") {
-                    expect(cacheableUserEnvironmentsCollection.isEmpty) == true
-                }
-            }
-            context("with no well-formed dictionaries") {
-                beforeEach {
-                    cacheableUserEnvironmentsCollection = CacheableUserEnvironmentFlags.makeCollection(from: [0.userKey: [0.mobileKey: "dummy"]])
-                }
-                it("returns empty dictionary") {
-                    expect(cacheableUserEnvironmentsCollection.isEmpty) == true
-                }
-            }
-            context("with missing sub-dictionary element") {
-                var badUserKey: String!
-                context("missing userKey") {
-                    beforeEach {
-                        testContext = TestContext(userCount: LDConfig.Defaults.maxCachedUsers)
-                        cacheableUserEnvironmentsCollectionDictionary = testContext.userEnvironmentFlagsCollection.dictionaryValues
-
-                        //Create a new CacheableUserEnvironment
-                        badUserKey = testContext.extraCacheableUserEnvironmentFlags.userKey
-                        var badCacheableUserEnvironmentsDictionary = testContext.extraCacheableUserEnvironmentFlags.dictionaryValue
-                        badCacheableUserEnvironmentsDictionary.removeValue(forKey: CacheableUserEnvironmentFlags.CodingKeys.userKey.rawValue)
-                        cacheableUserEnvironmentsCollectionDictionary[badUserKey] = badCacheableUserEnvironmentsDictionary
-
-                        cacheableUserEnvironmentsCollection = CacheableUserEnvironmentFlags.makeCollection(from: cacheableUserEnvironmentsCollectionDictionary)
-                    }
-                    it("creates a CacheableUserEnvironments collection omitting the malformed sub-dictionary") {
-                        expect(cacheableUserEnvironmentsCollection.count) == testContext.userEnvironmentFlagsCollection.count
-                        expect(cacheableUserEnvironmentsCollection.keys.contains(badUserKey)) == false
-                        testContext.userEnvironmentFlagsCollection.forEach { userKey, originalCacheableUserEnvironments in
-                            let reinflatedCacheableUserEnvironment = cacheableUserEnvironmentsCollection[userKey]
-                            expect(reinflatedCacheableUserEnvironment?.userKey) == userKey
-                            expect(reinflatedCacheableUserEnvironment?.environmentFlags) == originalCacheableUserEnvironments.environmentFlags
-                        }
-                    }
-                }
-                context("missing environmentFlags") {
-                    beforeEach {
-                        testContext = TestContext(userCount: LDConfig.Defaults.maxCachedUsers)
-                        cacheableUserEnvironmentsCollectionDictionary = testContext.userEnvironmentFlagsCollection.dictionaryValues
-
-                        //Create a new CacheableUserEnvironment
-                        badUserKey = testContext.extraCacheableUserEnvironmentFlags.userKey
-                        var badCacheableUserEnvironmentsDictionary = testContext.extraCacheableUserEnvironmentFlags.dictionaryValue
-                        badCacheableUserEnvironmentsDictionary.removeValue(forKey: CacheableUserEnvironmentFlags.CodingKeys.environmentFlags.rawValue)
-                        cacheableUserEnvironmentsCollectionDictionary[badUserKey] = badCacheableUserEnvironmentsDictionary
-
-                        cacheableUserEnvironmentsCollection = CacheableUserEnvironmentFlags.makeCollection(from: cacheableUserEnvironmentsCollectionDictionary)
-                    }
-                    it("creates a CacheableUserEnvironments collection omitting the malformed sub-dictionary") {
-                    expect(cacheableUserEnvironmentsCollection.count) == testContext.userEnvironmentFlagsCollection.count
-                        expect(cacheableUserEnvironmentsCollection.keys.contains(badUserKey)) == false
-                        testContext.userEnvironmentFlagsCollection.forEach { userKey, originalCacheableUserEnvironments in
-                            let reinflatedCacheableUserEnvironment = cacheableUserEnvironmentsCollection[userKey]
-                            expect(reinflatedCacheableUserEnvironment?.userKey) == userKey
-                            expect(reinflatedCacheableUserEnvironment?.environmentFlags) == originalCacheableUserEnvironments.environmentFlags
-                        }
-                    }
-                }
-            }
-            context("with type mismatch for sub-dictionary") {
-                var badUserKey: String!
-                context("type mismatched userKey") {
-                    beforeEach {
-                        testContext = TestContext(userCount: LDConfig.Defaults.maxCachedUsers)
-                        cacheableUserEnvironmentsCollectionDictionary = testContext.userEnvironmentFlagsCollection.dictionaryValues
-
-                        //Create a new CacheableUserEnvironment
-                        badUserKey = testContext.extraCacheableUserEnvironmentFlags.userKey
-                        var badCacheableUserEnvironmentsDictionary = testContext.extraCacheableUserEnvironmentFlags.dictionaryValue
-                        badCacheableUserEnvironmentsDictionary[CacheableUserEnvironmentFlags.CodingKeys.userKey.rawValue] = Constants.badDictionaryValue
-                        cacheableUserEnvironmentsCollectionDictionary[badUserKey] = badCacheableUserEnvironmentsDictionary
-
-                        cacheableUserEnvironmentsCollection = CacheableUserEnvironmentFlags.makeCollection(from: cacheableUserEnvironmentsCollectionDictionary)
-                    }
-                    it("creates a CacheableUserEnvironments collection omitting the malformed sub-dictionary") {
-                        expect(cacheableUserEnvironmentsCollection.count) == testContext.userEnvironmentFlagsCollection.count
-                        expect(cacheableUserEnvironmentsCollection.keys.contains(badUserKey)) == false
-                        testContext.userEnvironmentFlagsCollection.forEach { userKey, originalCacheableUserEnvironments in
-                            let reinflatedCacheableUserEnvironment = cacheableUserEnvironmentsCollection[userKey]
-                            expect(reinflatedCacheableUserEnvironment?.userKey) == userKey
-                            expect(reinflatedCacheableUserEnvironment?.environmentFlags) == originalCacheableUserEnvironments.environmentFlags
-                        }
-                    }
-                }
-                context("type mismatched environmentFlags") {
-                    beforeEach {
-                        testContext = TestContext(userCount: LDConfig.Defaults.maxCachedUsers)
-                        cacheableUserEnvironmentsCollectionDictionary = testContext.userEnvironmentFlagsCollection.dictionaryValues
-
-                        //Create a new CacheableUserEnvironment
-                        badUserKey = testContext.extraCacheableUserEnvironmentFlags.userKey
-                        var badCacheableUserEnvironmentsDictionary = testContext.extraCacheableUserEnvironmentFlags.dictionaryValue
-                        badCacheableUserEnvironmentsDictionary[CacheableUserEnvironmentFlags.CodingKeys.environmentFlags.rawValue] = Constants.badDictionaryValue
-                        cacheableUserEnvironmentsCollectionDictionary[badUserKey] = badCacheableUserEnvironmentsDictionary
-
-                        cacheableUserEnvironmentsCollection = CacheableUserEnvironmentFlags.makeCollection(from: cacheableUserEnvironmentsCollectionDictionary)
-                    }
-                    it("creates a CacheableUserEnvironments collection omitting the malformed sub-dictionary") {
-                        expect(cacheableUserEnvironmentsCollection.count) == testContext.userEnvironmentFlagsCollection.count
-                        expect(cacheableUserEnvironmentsCollection.keys.contains(badUserKey)) == false
-                        testContext.userEnvironmentFlagsCollection.forEach { userKey, originalCacheableUserEnvironments in
-                            let reinflatedCacheableUserEnvironment = cacheableUserEnvironmentsCollection[userKey]
-                            expect(reinflatedCacheableUserEnvironment?.userKey) == userKey
-                            expect(reinflatedCacheableUserEnvironment?.environmentFlags) == originalCacheableUserEnvironments.environmentFlags
-                        }
-                    }
-                }
+            it("creates a dictionary without environments") {
+                let dict = TestValues.defaultEnvironment(withEnvironments: [:]).dictionaryValue
+                expect(dict["userKey"] as? String) == TestValues.userKey
+                expect((dict["environmentFlags"] as? [String: Any])?.isEmpty) == true
+                expect(dict["lastUpdated"] as? String) == TestValues.updated.stringValue
             }
         }
     }
@@ -452,19 +144,14 @@ extension Date {
     static let stubDate = stubString.dateValue
 }
 
-extension Dictionary where Key == String, Value == Any {
-    var environmentFlags: [MobileKey: CacheableEnvironmentFlags]? {
-        let environmentFlagsDictionary = self[CacheableUserEnvironmentFlags.CodingKeys.environmentFlags.rawValue] as? [MobileKey: Any]
-        return environmentFlagsDictionary?.compactMapValues { CacheableEnvironmentFlags(dictionary: $0 as! [String: Any]) }
+extension CacheableEnvironmentFlags {
+    static func stubCollection(userKey: String, environmentCount: Int) -> [MobileKey: CacheableEnvironmentFlags] {
+        (0..<environmentCount).reduce(into: [:]) { (collection: inout [MobileKey: CacheableEnvironmentFlags], index) in
+            let mobileKey = "MobileKey.\(index)"
+            let featureFlags = FeatureFlag.stubFlagCollection(userKey: userKey, mobileKey: mobileKey)
+            collection[mobileKey] = CacheableEnvironmentFlags(userKey: userKey, mobileKey: mobileKey, featureFlags: featureFlags)
+        }
     }
-}
-
-extension Int {
-    static let userKeyPrefix = "User."
-    static let mobileKeyPrefix = "MobileKey."
-
-    var userKey: String { "\(Int.userKeyPrefix)\(self)" }
-    var mobileKey: String { "\(Int.mobileKeyPrefix)\(self)" }
 }
 
 extension CacheableUserEnvironmentFlags {
@@ -473,18 +160,17 @@ extension CacheableUserEnvironmentFlags {
         static let userCount = LDConfig.Defaults.maxCachedUsers
     }
 
-    static func stubCollection(environmentCount: Int = Constants.environmentCount,
-                               userCount: Int = Constants.userCount) -> (users: [LDUser], collection: [UserKey: CacheableUserEnvironmentFlags], mobileKeys: [MobileKey]) {
+    static func stubCollection(userCount: Int = Constants.userCount) -> (users: [LDUser], collection: [UserKey: CacheableUserEnvironmentFlags], mobileKeys: [MobileKey]) {
         var pastSeconds = 0.0
 
-        let users = (0..<userCount).map { i in LDUser.stub(key: (i + 1).userKey) }
+        let users = (0..<userCount).map { i in LDUser.stub(key: "User.\(i)") }
 
-        var userEnvironmentsCollection = [UserKey: CacheableUserEnvironmentFlags]()
-        var mobileKeys = [MobileKey]()
+        var userEnvironmentsCollection: [UserKey: CacheableUserEnvironmentFlags] = [:]
+        var mobileKeys: [MobileKey] = []
         users.forEach { user in
             let environmentFlags: [MobileKey: CacheableEnvironmentFlags]
-            environmentFlags = CacheableEnvironmentFlags.stubCollection(userKey: user.key, environmentCount: environmentCount)
-            if mobileKeys.isEmpty && environmentCount > 0 {
+            environmentFlags = CacheableEnvironmentFlags.stubCollection(userKey: user.key, environmentCount: Constants.environmentCount)
+            if mobileKeys.isEmpty {
                 mobileKeys.append(contentsOf: environmentFlags.keys)
             }
             let lastUpdated = Date.stubDate.addingTimeInterval(pastSeconds)

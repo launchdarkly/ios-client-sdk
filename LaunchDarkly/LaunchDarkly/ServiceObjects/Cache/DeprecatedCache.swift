@@ -35,7 +35,7 @@ extension DeprecatedCache {
     }
 }
 
-enum DeprecatedCacheModel: CaseIterable {
+enum DeprecatedCacheModel: String, CaseIterable {
     case version5, version4, version3, version2     //version1 is not supported
 }
 

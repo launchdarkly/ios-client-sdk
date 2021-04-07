@@ -2,6 +2,10 @@
 
 All notable changes to the LaunchDarkly iOS SDK will be documented in this file. This project adheres to [Semantic Versioning](http://semver.org).
 
+## [5.4.1] - 2021-04-06
+### Fixed
+- Internal throttling logic would sometimes delay new poll or stream connections even when there were no recent connections. This caused switching active user contexts using `identify` to sometimes delay retrieving the most recent flags and calling the completion.
+
 ## [5.4.0] - 2021-02-26
 ### Added
 - Added the `alias` method to `LDClient`. This can be used to associate two user objects for analytics purposes with an alias event.

@@ -170,12 +170,6 @@ struct Event {
     }
 }
 
-extension Array where Element == Event {
-    func dictionaryValues(config: LDConfig) -> [[String: Any]] {
-        self.map { $0.dictionaryValue(config: config) }
-    }
-}
-
 extension Array where Element == [String: Any] {
     var jsonData: Data? {
         guard JSONSerialization.isValidJSONObject(self)

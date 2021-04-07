@@ -10,223 +10,49 @@ import Quick
 import Nimble
 @testable import LaunchDarkly
 
-final class DeprecatedCacheModelV5Spec: QuickSpec {
+final class DeprecatedCacheModelV5Spec: QuickSpec, CacheModelTestInterface {
+    let cacheKey = DeprecatedCacheModelV5.CacheKeys.userEnvironments
+    let supportsMultiEnv = true
 
-    struct Constants {
-        static let offsetInterval: TimeInterval = 0.1
+    func createDeprecatedCache(keyedValueCache: KeyedValueCaching) -> DeprecatedCache {
+        DeprecatedCacheModelV5(keyedValueCache: keyedValueCache)
     }
 
-    struct TestContext {
-        var clientServiceFactoryMock = ClientServiceMockFactory()
-        var keyedValueCacheMock: KeyedValueCachingMock
-        var modelV5cache: DeprecatedCacheModelV5
-        var users: [LDUser]
-        var userEnvironmentsCollection: [UserKey: CacheableUserEnvironmentFlags]
-        var uncachedUser: LDUser
-        var mobileKeys: [MobileKey]
-        var uncachedMobileKey: MobileKey
-        var sortedLastUpdatedDates: [(userKey: UserKey, lastUpdated: Date)] {
-            userEnvironmentsCollection.map { ($0, $1.lastUpdated) }.sorted { tuple1, tuple2 in
-                tuple1.lastUpdated.isEarlierThan(tuple2.lastUpdated)
-            }
-        }
-        var userKeys: [UserKey] { users.map { $0.key } }
+    func modelDictionary(for users: [LDUser], and userEnvironmentsCollection: [UserKey: CacheableUserEnvironmentFlags], mobileKeys: [MobileKey]) -> [UserKey: Any]? {
+        guard !users.isEmpty
+        else { return nil }
 
-        init(userCount: Int = 0) {
-            keyedValueCacheMock = clientServiceFactoryMock.makeKeyedValueCache() as! KeyedValueCachingMock
-            modelV5cache = DeprecatedCacheModelV5(keyedValueCache: keyedValueCacheMock)
-
-            (users, userEnvironmentsCollection, mobileKeys) = CacheableUserEnvironmentFlags.stubCollection(userCount: userCount)
-
-            uncachedUser = LDUser.stub()
-            uncachedMobileKey = UUID().uuidString
-
-            keyedValueCacheMock.dictionaryReturnValue = modelV5Dictionary(for: users, and: userEnvironmentsCollection, mobileKeys: mobileKeys)
-        }
-
-        func featureFlags(for userKey: UserKey, and mobileKey: MobileKey) -> [LDFlagKey: FeatureFlag]? {
-            userEnvironmentsCollection[userKey]?.environmentFlags[mobileKey]?.featureFlags.modelV5flagCollection
-        }
-
-        func modelV5Dictionary(for users: [LDUser], and userEnvironmentsCollection: [UserKey: CacheableUserEnvironmentFlags], mobileKeys: [MobileKey]) -> [UserKey: Any]? {
-            guard !users.isEmpty
-            else { return nil }
-
-            var cacheDictionary = [UserKey: [String: Any]]()
-            users.forEach { user in
-                guard let userEnvironment = userEnvironmentsCollection[user.key]
+        var cacheDictionary = [UserKey: [String: Any]]()
+        users.forEach { user in
+            guard let userEnvironment = userEnvironmentsCollection[user.key]
+            else { return }
+            var environmentsDictionary = [MobileKey: Any]()
+            let lastUpdated = userEnvironmentsCollection[user.key]?.lastUpdated
+            mobileKeys.forEach { mobileKey in
+                guard let featureFlags = userEnvironment.environmentFlags[mobileKey]?.featureFlags
                 else { return }
-                var environmentsDictionary = [MobileKey: Any]()
-                let lastUpdated = userEnvironmentsCollection[user.key]?.lastUpdated
-                mobileKeys.forEach { mobileKey in
-                    guard let featureFlags = userEnvironment.environmentFlags[mobileKey]?.featureFlags
-                    else { return }
-                    environmentsDictionary[mobileKey] = user.modelV5DictionaryValue(including: featureFlags, using: lastUpdated)
-                }
-                cacheDictionary[user.key] = [CacheableEnvironmentFlags.CodingKeys.userKey.rawValue: user.key,
-                                             DeprecatedCacheModelV5.CacheKeys.environments: environmentsDictionary]
+                environmentsDictionary[mobileKey] = user.modelV5DictionaryValue(including: featureFlags, using: lastUpdated)
             }
-            return cacheDictionary
+            cacheDictionary[user.key] = [CacheableEnvironmentFlags.CodingKeys.userKey.rawValue: user.key,
+                                         DeprecatedCacheModelV5.CacheKeys.environments: environmentsDictionary]
         }
+        return cacheDictionary
+    }
 
-        func expiredUserKeys(for expirationDate: Date) -> [UserKey] {
-            sortedLastUpdatedDates.compactMap { tuple in
-                tuple.lastUpdated.isEarlierThan(expirationDate) ? tuple.userKey : nil
-            }
+    func expectedFeatureFlags(originalFlags: [LDFlagKey: FeatureFlag]) -> [LDFlagKey: FeatureFlag] {
+        originalFlags.filter { $0.value.value != nil }.compactMapValues { orig in
+            FeatureFlag(flagKey: orig.flagKey,
+                        value: orig.value,
+                        variation: orig.variation,
+                        version: orig.version,
+                        flagVersion: orig.flagVersion,
+                        trackEvents: orig.trackEvents,
+                        debugEventsUntilDate: orig.debugEventsUntilDate)
         }
     }
 
     override func spec() {
-        initSpec()
-        retrieveFlagsSpec()
-        removeDataSpec()
-    }
-
-    private func initSpec() {
-        var testContext: TestContext!
-        describe("init") {
-            context("with keyed value cache") {
-                beforeEach {
-                    testContext = TestContext()
-                }
-                it("creates a model version 5 cache with the keyed value cache") {
-                    expect(testContext.modelV5cache.keyedValueCache) === testContext.keyedValueCacheMock
-                }
-            }
-        }
-    }
-
-    private func retrieveFlagsSpec() {
-        var testContext: TestContext!
-        var cachedData: (featureFlags: [LDFlagKey: FeatureFlag]?, lastUpdated: Date?)!
-        describe("retrieveFlags") {
-            context("when no cached data exists") {
-                beforeEach {
-                    testContext = TestContext()
-
-                    cachedData = testContext.modelV5cache.retrieveFlags(for: testContext.uncachedUser.key, and: testContext.uncachedMobileKey)
-                }
-                it("returns nil values") {
-                    expect(cachedData.featureFlags).to(beNil())
-                    expect(cachedData.lastUpdated).to(beNil())
-                }
-            }
-            context("when cached data exists") {
-                context("and a cached user is requested") {
-                    beforeEach {
-                        testContext = TestContext(userCount: LDConfig.Defaults.maxCachedUsers)
-                    }
-                    it("retrieves the cached data") {
-                        testContext.users.forEach { user in
-                            let expectedLastUpdated = testContext.userEnvironmentsCollection.lastUpdated(forKey: user.key)?.stringEquivalentDate
-                            testContext.mobileKeys.forEach { mobileKey in
-                                let expectedFlags = testContext.featureFlags(for: user.key, and: mobileKey)
-                                cachedData = testContext.modelV5cache.retrieveFlags(for: user.key, and: mobileKey)
-                                expect(cachedData.featureFlags) == expectedFlags
-                                expect(cachedData.lastUpdated) == expectedLastUpdated
-                            }
-                        }
-                    }
-                }
-                context("and an uncached mobileKey is requested") {
-                    beforeEach {
-                        testContext = TestContext(userCount: LDConfig.Defaults.maxCachedUsers)
-
-                        cachedData = testContext.modelV5cache.retrieveFlags(for: testContext.users.first!.key, and: testContext.uncachedMobileKey)
-                    }
-                    it("returns nil values") {
-                        expect(cachedData.featureFlags).to(beNil())
-                        expect(cachedData.lastUpdated).to(beNil())
-                    }
-                }
-                context("and an uncached user is requested") {
-                    beforeEach {
-                        testContext = TestContext(userCount: LDConfig.Defaults.maxCachedUsers)
-
-                        cachedData = testContext.modelV5cache.retrieveFlags(for: testContext.uncachedUser.key, and: testContext.mobileKeys.first!)
-                    }
-                    it("returns nil values") {
-                        expect(cachedData.featureFlags).to(beNil())
-                        expect(cachedData.lastUpdated).to(beNil())
-                    }
-                }
-            }
-        }
-    }
-
-    private func removeDataSpec() {
-        var testContext: TestContext!
-        var expirationDate: Date!
-        describe("removeData") {
-            context("no modelV5 cached data expired") {
-                beforeEach {
-                    testContext = TestContext(userCount: LDConfig.Defaults.maxCachedUsers)
-                    let oldestLastUpdatedDate = testContext.sortedLastUpdatedDates.first!
-                    expirationDate = oldestLastUpdatedDate.lastUpdated.addingTimeInterval(-Constants.offsetInterval)
-
-                    testContext.modelV5cache.removeData(olderThan: expirationDate)
-                }
-                it("does not remove any modelV5 cached data") {
-                    expect(testContext.keyedValueCacheMock.setCallCount) == 0
-                }
-            }
-            context("some modelV5 cached data expired") {
-                beforeEach {
-                    testContext = TestContext(userCount: LDConfig.Defaults.maxCachedUsers)
-                    let selectedLastUpdatedDate = testContext.sortedLastUpdatedDates[testContext.users.count / 2]
-                    expirationDate = selectedLastUpdatedDate.lastUpdated.addingTimeInterval(-Constants.offsetInterval)
-
-                    testContext.modelV5cache.removeData(olderThan: expirationDate)
-                }
-                it("removes expired modelV5 cached data") {
-                    expect(testContext.keyedValueCacheMock.setCallCount) == 1
-                    expect(testContext.keyedValueCacheMock.setReceivedArguments?.forKey) == DeprecatedCacheModelV5.CacheKeys.userEnvironments
-                    let recachedData = testContext.keyedValueCacheMock.setReceivedArguments?.value as? [String: Any]
-                    let expiredUserKeys = testContext.expiredUserKeys(for: expirationDate)
-                    testContext.userKeys.forEach { userKey in
-                        expect(recachedData?.keys.contains(userKey)) == !expiredUserKeys.contains(userKey)
-                    }
-                }
-            }
-            context("all modelV5 cached data expired") {
-                beforeEach {
-                    testContext = TestContext(userCount: LDConfig.Defaults.maxCachedUsers)
-                    let newestLastUpdatedDate = testContext.sortedLastUpdatedDates.last!
-                    expirationDate = newestLastUpdatedDate.lastUpdated.addingTimeInterval(Constants.offsetInterval)
-
-                    testContext.modelV5cache.removeData(olderThan: expirationDate)
-                }
-                it("removes all modelV5 cached data") {
-                    expect(testContext.keyedValueCacheMock.removeObjectCallCount) == 1
-                    expect(testContext.keyedValueCacheMock.removeObjectReceivedForKey) == DeprecatedCacheModelV5.CacheKeys.userEnvironments
-                }
-            }
-            context("no modelV5 cached data exists") {
-                beforeEach {
-                    testContext = TestContext(userCount: LDConfig.Defaults.maxCachedUsers)
-                    let newestLastUpdatedDate = testContext.sortedLastUpdatedDates.last!
-                    expirationDate = newestLastUpdatedDate.lastUpdated.addingTimeInterval(Constants.offsetInterval)
-                    testContext.keyedValueCacheMock.dictionaryReturnValue = nil     //mock simulates no modelV5 cached data
-
-                    testContext.modelV5cache.removeData(olderThan: expirationDate)
-                }
-                it("makes no cached data changes") {
-                    expect(testContext.keyedValueCacheMock.setCallCount) == 0
-                }
-            }
-        }
-    }
-}
-
-// MARK: Expected value from conversion
-
-extension Dictionary where Key == LDFlagKey, Value == FeatureFlag {
-    var modelV5flagCollection: [LDFlagKey: FeatureFlag] { compactMapValues { $0.value != nil ? $0.modelV5FeatureFlag : nil } }
-}
-
-extension FeatureFlag {
-    var modelV5FeatureFlag: FeatureFlag {
-        FeatureFlag(flagKey: flagKey, value: value, variation: variation, version: version, flagVersion: flagVersion, trackEvents: trackEvents, debugEventsUntilDate: debugEventsUntilDate)
+        DeprecatedCacheModelSpec(cacheModelInterface: self).spec()
     }
 }
 

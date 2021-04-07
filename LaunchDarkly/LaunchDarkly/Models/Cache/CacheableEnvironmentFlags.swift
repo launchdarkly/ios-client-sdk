@@ -9,7 +9,7 @@ import Foundation
 
 //Data structure used to cache feature flags for a specific user from a specific environment
 struct CacheableEnvironmentFlags {
-    enum CodingKeys: String, CodingKey {
+    enum CodingKeys: String, CodingKey, CaseIterable {
         case userKey, mobileKey, featureFlags
     }
 

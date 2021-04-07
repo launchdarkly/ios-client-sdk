@@ -42,7 +42,6 @@ final class EventSpec: QuickSpec {
         identifyEventSpec()
         summaryEventSpec()
         dictionaryValueSpec()
-        dictionaryValuesSpec()
         eventDictionarySpec()
     }
 
@@ -765,53 +764,6 @@ final class EventSpec: QuickSpec {
         }
     }
 
-    private func dictionaryValuesSpec() {
-        let config = LDConfig.stub
-        let user = LDUser.stub()
-        describe("dictionaryValues") {
-            var events: [Event]!
-            var eventDictionaries: [[String: Any]]!
-            beforeEach {
-                events = Event.stubEvents(for: user)
-
-                eventDictionaries = events.dictionaryValues(config: config)
-            }
-            it("creates an array of event dictionaries with matching elements") {
-                expect(eventDictionaries.count) == events.count
-                events.forEach { event in
-                    expect(eventDictionaries.eventDictionary(for: event)).toNot(beNil())
-                    guard let eventDictionary = eventDictionaries.eventDictionary(for: event)
-                    else { return }
-                    expect(eventDictionary.eventKind) == event.kind
-                    if let eventCreationDate = event.creationDate {
-                        expect(eventDictionary.eventCreationDate?.isWithin(0.001, of: eventCreationDate)).to(beTrue())
-                    }
-                    if event.kind.isAlwaysInlineUserKind {
-                        expect(AnyComparer.isEqual(eventDictionary.eventUserDictionary, to: user.dictionaryValue(includePrivateAttributes: false, config: config))).to(beTrue())
-                        expect(eventDictionary.eventUserKey).to(beNil())
-                    } else {
-                        if let eventUserKey = event.user?.key {
-                            expect(eventDictionary.eventUserKey) == eventUserKey
-                        }
-                        expect(eventDictionary.eventUser).to(beNil())
-                    }
-                    expect(AnyComparer.isEqual(eventDictionary.eventValue, to: event.value)) == true
-                    expect(AnyComparer.isEqual(eventDictionary.eventDefaultValue, to: event.defaultValue)) == true
-                    expect(AnyComparer.isEqual(eventDictionary.eventVariation, to: event.featureFlag?.variation)) == true
-                    expect(AnyComparer.isEqual(eventDictionary.eventVersion, to: event.featureFlag?.flagVersion)) == true
-                    if let eventData = event.data {
-                        expect(eventDictionary.eventData).toNot(beNil())
-                        if let eventDictionaryData = eventDictionary.eventData {
-                            expect(AnyComparer.isEqual(eventDictionaryData, to: eventData)).to(beTrue())
-                        }
-                    } else {
-                        expect(eventDictionary.eventData).to(beNil())
-                    }
-                }
-            }
-        }
-    }
-
     //Dictionary extension methods that extract an event key, or creationDateMillis, and compare them with another dictionary
     private func eventDictionarySpec() {
         let config = LDConfig.stub
@@ -1050,9 +1002,6 @@ extension Array where Element == [String: Any] {
         guard selectedDictionaries.count == 1
         else { return nil }
         return selectedDictionaries.first
-    }
-    var eventKinds: [Event.Kind] {
-        self.compactMap { $0.eventKind }
     }
 }
 
