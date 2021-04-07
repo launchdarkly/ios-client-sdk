@@ -23,7 +23,7 @@ final class EventReporterSpec: QuickSpec {
         var config: LDConfig!
         var user: LDUser!
         var serviceMock: DarklyServiceMock!
-        var events: [Event]!
+        var events: [Event] = []
         var eventKeys: [String]! { events.compactMap { $0.key } }
         var lastEventResponseDate: Date?
         var flagKey: LDFlagKey!
@@ -31,15 +31,12 @@ final class EventReporterSpec: QuickSpec {
         var featureFlagWithReason: FeatureFlag!
         var featureFlagWithReasonAndTrackReason: FeatureFlag!
         var eventStubResponseDate: Date?
-        var flagRequestTracker: FlagRequestTracker?
-        var reportersTracker: FlagRequestTracker? { eventReporter.flagRequestTracker }
-        var flagRequestCount: Int
+        var flagRequestTracker: FlagRequestTracker? { eventReporter.flagRequestTracker }
         var syncResult: EventSyncResult? = nil
         var diagnosticCache: DiagnosticCachingMock
 
         init(eventCount: Int = 0,
              eventFlushInterval: TimeInterval? = nil,
-             flagRequestCount: Int = 1,
              lastEventResponseDate: Date? = nil,
              stubResponseSuccess: Bool = true,
              stubResponseOnly: Bool = false,
@@ -47,7 +44,6 @@ final class EventReporterSpec: QuickSpec {
              eventStubResponseDate: Date? = nil,
              trackEvents: Bool? = true,
              debugEventsUntilDate: Date? = nil,
-             flagRequestTracker: FlagRequestTracker? = nil,
              onSyncComplete: EventSyncCompleteClosure? = nil) {
 
             config = LDConfig.stub
@@ -58,27 +54,25 @@ final class EventReporterSpec: QuickSpec {
 
             self.eventStubResponseDate = eventStubResponseDate?.adjustedForHttpUrlHeaderUse
             serviceMock = DarklyServiceMock()
+            serviceMock.config = config
             serviceMock.stubEventResponse(success: stubResponseSuccess, responseOnly: stubResponseOnly, errorOnly: stubResponseErrorOnly, responseDate: self.eventStubResponseDate)
 
             diagnosticCache = DiagnosticCachingMock()
             serviceMock.diagnosticCache = diagnosticCache
 
-            events = (0..<eventCount).map { [user] in Event.stub(Event.eventKind(for: $0), with: user!) }
-
             self.lastEventResponseDate = lastEventResponseDate?.adjustedForHttpUrlHeaderUse
-            self.flagRequestTracker = flagRequestTracker
-            eventReporter = EventReporter(config: config,
-                                          service: serviceMock,
-                                          events: events,
-                                          lastEventResponseDate: self.lastEventResponseDate,
-                                          flagRequestTracker: flagRequestTracker,
-                                          onSyncComplete: onSyncComplete)
+            eventReporter = EventReporter(service: serviceMock, onSyncComplete: onSyncComplete)
+            (0..<eventCount).forEach {
+                let event = Event.stub(Event.eventKind(for: $0), with: user!)
+                events.append(event)
+                eventReporter.record(event)
+            }
+            eventReporter.setLastEventResponseDate(self.lastEventResponseDate)
 
             flagKey = UUID().uuidString
             featureFlag = DarklyServiceMock.Constants.stubFeatureFlag(for: DarklyServiceMock.FlagKeys.bool, trackEvents: trackEvents, debugEventsUntilDate: debugEventsUntilDate)
             featureFlagWithReason = DarklyServiceMock.Constants.stubFeatureFlag(for: DarklyServiceMock.FlagKeys.bool, trackEvents: trackEvents, debugEventsUntilDate: debugEventsUntilDate, includeEvaluationReason: true)
             featureFlagWithReasonAndTrackReason = DarklyServiceMock.Constants.stubFeatureFlag(for: DarklyServiceMock.FlagKeys.bool, trackEvents: trackEvents, debugEventsUntilDate: debugEventsUntilDate, includeEvaluationReason: true, includeTrackReason: true)
-            self.flagRequestCount = flagRequestCount
         }
 
         mutating func recordEvents(_ eventCount: Int) {
@@ -89,13 +83,8 @@ final class EventReporterSpec: QuickSpec {
             }
         }
 
-        mutating func addEvents(_ eventCount: Int) {
-            events += (events.count..<eventCount + events.count).map { Event.stub(Event.eventKind(for: $0), with: user) }
-            eventReporter?.add(events)
-        }
-
         func flagCounter(for key: LDFlagKey) -> FlagCounter? {
-            reportersTracker?.flagCounters[key]
+            flagRequestTracker?.flagCounters[key]
         }
 
         func flagValueCounter(for key: LDFlagKey, and featureFlag: FeatureFlag?) -> CounterValue? {
@@ -117,15 +106,12 @@ final class EventReporterSpec: QuickSpec {
             var testContext: TestContext!
             beforeEach {
                 testContext = TestContext()
-
-                testContext.eventReporter = EventReporter(config: testContext.config, service: testContext.serviceMock) { _ in }
+                testContext.eventReporter = EventReporter(service: testContext.serviceMock) { _ in }
             }
             it("starts offline without reporting events") {
-                expect(testContext.eventReporter.config) == testContext.config
                 expect(testContext.eventReporter.service) === testContext.serviceMock
                 expect(testContext.eventReporter.isOnline) == false
                 expect(testContext.eventReporter.isReportingActive) == false
-                expect(testContext.eventReporter.testOnSyncComplete).toNot(beNil())
                 expect(testContext.serviceMock.publishEventDictionariesCallCount) == 0
             }
         }
@@ -268,9 +254,8 @@ final class EventReporterSpec: QuickSpec {
                                     syncComplete()
                                 })
                                 testContext.eventReporter.isOnline = true
-                                testContext.addEvents(Event.Kind.nonSummaryKinds.count)
-                                testContext.flagRequestTracker = FlagRequestTracker.stub()
-                                testContext.eventReporter.setFlagRequestTracker(testContext.flagRequestTracker!)
+                                testContext.recordEvents(Event.Kind.nonSummaryKinds.count)
+                                testContext.eventReporter.setFlagRequestTracker(FlagRequestTracker.stub())
                                 testContext.eventReporter.flush(completion: nil)
                             }
                         }
@@ -303,7 +288,7 @@ final class EventReporterSpec: QuickSpec {
                                     syncComplete()
                                 })
                                 testContext.eventReporter.isOnline = true
-                                testContext.addEvents(Event.Kind.nonSummaryKinds.count)
+                                testContext.recordEvents(Event.Kind.nonSummaryKinds.count)
                                 testContext.eventReporter.flush(completion: nil)
                             }
                         }
@@ -336,8 +321,7 @@ final class EventReporterSpec: QuickSpec {
                                     syncComplete()
                                 })
                                 testContext.eventReporter.isOnline = true
-                                testContext.flagRequestTracker = FlagRequestTracker.stub()
-                                testContext.eventReporter.setFlagRequestTracker(testContext.flagRequestTracker!)
+                                testContext.eventReporter.setFlagRequestTracker(FlagRequestTracker.stub())
                                 testContext.eventReporter.flush(completion: nil)
                             }
                         }
@@ -397,9 +381,8 @@ final class EventReporterSpec: QuickSpec {
                                     syncComplete()
                                 })
                                 testContext.eventReporter.isOnline = true
-                                testContext.addEvents(Event.Kind.nonSummaryKinds.count)
-                                testContext.flagRequestTracker = FlagRequestTracker.stub()
-                                testContext.eventReporter.setFlagRequestTracker(testContext.flagRequestTracker!)
+                                testContext.recordEvents(Event.Kind.nonSummaryKinds.count)
+                                testContext.eventReporter.setFlagRequestTracker(FlagRequestTracker.stub())
                                 testContext.eventReporter.flush(completion: nil)
                             }
                         }
@@ -431,9 +414,8 @@ final class EventReporterSpec: QuickSpec {
                                     syncComplete()
                                 })
                                 testContext.eventReporter.isOnline = true
-                                testContext.addEvents(Event.Kind.nonSummaryKinds.count)
-                                testContext.flagRequestTracker = FlagRequestTracker.stub()
-                                testContext.eventReporter.setFlagRequestTracker(testContext.flagRequestTracker!)
+                                testContext.recordEvents(Event.Kind.nonSummaryKinds.count)
+                                testContext.eventReporter.setFlagRequestTracker(FlagRequestTracker.stub())
                                 testContext.eventReporter.flush(completion: nil)
                             }
                         }
@@ -468,9 +450,8 @@ final class EventReporterSpec: QuickSpec {
                                     syncComplete()
                                 })
                                 testContext.eventReporter.isOnline = true
-                                testContext.addEvents(Event.Kind.nonSummaryKinds.count)
-                                testContext.flagRequestTracker = FlagRequestTracker.stub()
-                                testContext.eventReporter.setFlagRequestTracker(testContext.flagRequestTracker!)
+                                testContext.recordEvents(Event.Kind.nonSummaryKinds.count)
+                                testContext.eventReporter.setFlagRequestTracker(FlagRequestTracker.stub())
                                 testContext.eventReporter.flush(completion: nil)
                             }
                         }
@@ -503,9 +484,8 @@ final class EventReporterSpec: QuickSpec {
                             testContext.syncResult = result
                             syncComplete()
                         })
-                        testContext.addEvents(Event.Kind.nonSummaryKinds.count)
-                        testContext.flagRequestTracker = FlagRequestTracker.stub()
-                        testContext.eventReporter.setFlagRequestTracker(testContext.flagRequestTracker!)
+                        testContext.recordEvents(Event.Kind.nonSummaryKinds.count)
+                        testContext.eventReporter.setFlagRequestTracker(FlagRequestTracker.stub())
                         testContext.eventReporter.flush(completion: nil)
                     }
                 }
@@ -682,7 +662,7 @@ final class EventReporterSpec: QuickSpec {
                     expect(testContext.eventReporter.eventStoreKeys.filter { eventKey in
                         eventKey == testContext.flagKey
                         }.count == 2).to(beTrue())
-                    expect(testContext.eventReporter.eventStore.eventKinds).to(contain([.feature, .debug]))
+                    expect(testContext.eventReporter.eventStoreKinds).to(contain([.feature, .debug]))
                 }
                 it("tracks the flag request") {
                     let flagValueCounter = testContext.flagValueCounter(for: testContext.flagKey, and: testContext.featureFlag)
@@ -698,12 +678,10 @@ final class EventReporterSpec: QuickSpec {
                 }
                 it("records a feature and debug event") {
                     expect(testContext.eventReporter.eventStore.count == 2).to(beTrue())
-                    expect(testContext.eventReporter.eventStore[0]["reason"] as? [String: Any] == DarklyServiceMock.Constants.reason).to(beTrue())
-                    expect(testContext.eventReporter.eventStore[1]["reason"] as? [String: Any] == DarklyServiceMock.Constants.reason).to(beTrue())
                     expect(testContext.eventReporter.eventStoreKeys.filter { eventKey in
                         eventKey == testContext.flagKey
                         }.count == 2).to(beTrue())
-                    expect(testContext.eventReporter.eventStore.eventKinds).to(contain([.feature, .debug]))
+                    expect(testContext.eventReporter.eventStoreKinds).to(contain([.feature, .debug]))
                 }
                 it("tracks the flag request") {
                     let flagValueCounter = testContext.flagValueCounter(for: testContext.flagKey, and: testContext.featureFlag)
@@ -750,8 +728,8 @@ final class EventReporterSpec: QuickSpec {
             context("when multiple flag requests are made") {
                 context("serially") {
                     beforeEach {
-                        testContext = TestContext(flagRequestCount: 3, trackEvents: false)
-                        for _ in 1...testContext.flagRequestCount {
+                        testContext = TestContext(trackEvents: false)
+                        for _ in 1...3 {
                             testContext.eventReporter.recordFlagEvaluationEvents(flagKey: testContext.flagKey,
                                                                                  value: testContext.featureFlag.value!,
                                                                                  defaultValue: Constants.defaultValue,
@@ -764,7 +742,7 @@ final class EventReporterSpec: QuickSpec {
                         let flagValueCounter = testContext.flagValueCounter(for: testContext.flagKey, and: testContext.featureFlag)
                         expect(flagValueCounter).toNot(beNil())
                         expect(AnyComparer.isEqual(flagValueCounter?.value, to: testContext.featureFlag.value)).to(beTrue())
-                        expect(flagValueCounter?.count) == testContext.flagRequestCount
+                        expect(flagValueCounter?.count) == 3
                     }
                 }
                 context("concurrently") {
@@ -772,19 +750,19 @@ final class EventReporterSpec: QuickSpec {
                     var recordFlagEvaluationCompletionCallCount = 0
                     var recordFlagEvaluationCompletion: (() -> Void)!
                     beforeEach {
-                        testContext = TestContext(flagRequestCount: 5, trackEvents: false)
+                        testContext = TestContext(trackEvents: false)
 
                         waitUntil { done in
                             recordFlagEvaluationCompletion = {
                                 DispatchQueue.main.async {
                                     recordFlagEvaluationCompletionCallCount += 1
-                                    if recordFlagEvaluationCompletionCallCount == testContext.flagRequestCount {
+                                    if recordFlagEvaluationCompletionCallCount == 5 {
                                         done()
                                     }
                                 }
                             }
                             let fireTime = DispatchTime.now() + 0.1
-                            for _ in 1...testContext.flagRequestCount {
+                            for _ in 1...5 {
                                 requestQueue.asyncAfter(deadline: fireTime) {
                                     testContext.eventReporter.recordFlagEvaluationEvents(flagKey: testContext.flagKey,
                                                                                          value: testContext.featureFlag.value!,
@@ -801,7 +779,7 @@ final class EventReporterSpec: QuickSpec {
                         let flagValueCounter = testContext.flagValueCounter(for: testContext.flagKey, and: testContext.featureFlag)
                         expect(flagValueCounter).toNot(beNil())
                         expect(AnyComparer.isEqual(flagValueCounter?.value, to: testContext.featureFlag.value)).to(beTrue())
-                        expect(flagValueCounter?.count) == testContext.flagRequestCount
+                        expect(flagValueCounter?.count) == 5
                     }
                 }
             }
@@ -824,7 +802,7 @@ final class EventReporterSpec: QuickSpec {
                 let flagValueCounter = testContext.flagValueCounter(for: testContext.flagKey, and: testContext.featureFlag)
                 expect(flagValueCounter).toNot(beNil())
                 expect(AnyComparer.isEqual(flagValueCounter?.value, to: testContext.featureFlag.value)).to(beTrue())
-                expect(flagValueCounter?.count) == testContext.flagRequestCount
+                expect(flagValueCounter?.count) == 1
             }
         }
     }
@@ -869,8 +847,8 @@ final class EventReporterSpec: QuickSpec {
 }
 
 extension EventReporter {
-    var eventStoreKeys: [String] { eventStore.compactMap { $0.eventKey } }
-    var eventStoreKinds: [Event.Kind] { eventStore.compactMap { $0.eventKind } }
+    var eventStoreKeys: [String] { eventStore.compactMap { $0.key } }
+    var eventStoreKinds: [Event.Kind] { eventStore.compactMap { $0.kind } }
 }
 
 extension TimeInterval {

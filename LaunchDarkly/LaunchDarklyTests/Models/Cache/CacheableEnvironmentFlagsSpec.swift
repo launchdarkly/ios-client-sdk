@@ -12,274 +12,115 @@ import Nimble
 
 final class CacheableEnvironmentFlagsSpec: QuickSpec {
 
-    struct Constants {
-        static let int = 3
-    }
+    private struct TestValues {
+        static let userKey = UUID().uuidString
+        static let mobKey = UUID().uuidString
+        static let flags = FlagMaintainingMock.stubFlags()
 
-    private struct TestContext {
-        var flagStore: FlagMaintaining
-        var mobileKey = UUID().uuidString
-        var cacheableEnvironmentFlags: CacheableEnvironmentFlags
-        let key = "stub.user.key"
-
-        init(includeNullValue: Bool = true, emptyFeatureFlags: Bool = false) {
-            flagStore = FlagMaintainingMock(flags: FlagMaintainingMock.stubFlags(includeNullValue: includeNullValue, includeVersions: true))
-            if emptyFeatureFlags {
-                flagStore = FlagMaintainingMock(flags: [:])
-            }
-            cacheableEnvironmentFlags = CacheableEnvironmentFlags(userKey: key, mobileKey: mobileKey, featureFlags: flagStore.featureFlags)
+        static func defaultEnvironment(withFlags: [String: FeatureFlag] = flags) -> CacheableEnvironmentFlags {
+            CacheableEnvironmentFlags(userKey: userKey, mobileKey: mobKey, featureFlags: withFlags)
         }
     }
 
     override func spec() {
-        initSpec()
+        initWithElementsSpec()
+        initWithDictionarySpec()
         dictionaryValueSpec()
         equalsSpec()
     }
 
-    private func initSpec() {
-        initWithElementsSpec()
-        initWithDictionarySpec()
-    }
-
     private func initWithElementsSpec() {
-        var testContext: TestContext!
         describe("initWithElements") {
-            context("with elements") {
-                beforeEach {
-                    testContext = TestContext()
-                }
-                it("creates a CacheableEnvironmentFlags with the elements") {
-                    expect(testContext.cacheableEnvironmentFlags.userKey) == testContext.key
-                    expect(testContext.cacheableEnvironmentFlags.mobileKey) == testContext.mobileKey
-                    expect(testContext.cacheableEnvironmentFlags.featureFlags) == testContext.flagStore.featureFlags
-                }
+            it("creates a CacheableEnvironmentFlags with the elements") {
+                let environmentFlags = TestValues.defaultEnvironment()
+                expect(environmentFlags.userKey) == TestValues.userKey
+                expect(environmentFlags.mobileKey) == TestValues.mobKey
+                expect(environmentFlags.featureFlags) == TestValues.flags
             }
         }
     }
 
     private func initWithDictionarySpec() {
-        var testContext: TestContext!
-        var otherDictionary: [String: Any]!
-        var other: CacheableEnvironmentFlags?
+        let defaultDictionary = TestValues.defaultEnvironment().dictionaryValue
         describe("initWithDictionary") {
-            context("with elements") {
-                beforeEach {
-                    testContext = TestContext()
-                    otherDictionary = testContext.cacheableEnvironmentFlags.dictionaryValue
-
-                    other = CacheableEnvironmentFlags(dictionary: otherDictionary)
+            context("creates a new CacheableEnvironmentFlags") {
+                it("with all elements") {
+                    let other = CacheableEnvironmentFlags(dictionary: defaultDictionary)
+                    expect(other?.userKey) == TestValues.userKey
+                    expect(other?.mobileKey) == TestValues.mobKey
+                    expect(other?.featureFlags) == TestValues.flags
                 }
-                it("creates a new CacheableEnvironmentFlags") {
-                    expect(other?.userKey) == testContext.key
-                    expect(other?.mobileKey) == testContext.mobileKey
-                    expect(other?.featureFlags) == testContext.flagStore.featureFlags
-                }
-            }
-            context("has other keys") {
-                beforeEach {
-                    testContext = TestContext()
-                    otherDictionary = testContext.cacheableEnvironmentFlags.dictionaryValue
-                    let user = LDUser.stub()
-                    otherDictionary.merge(user.dictionaryValueWithAllAttributes(), uniquingKeysWith: { current, _ in
-                        current
-                    })
-
-                    other = CacheableEnvironmentFlags(dictionary: otherDictionary)
-                }
-                it("creates a new CacheableEnvironmentFlags") {
-                    expect(other?.userKey) == testContext.key
-                    expect(other?.mobileKey) == testContext.mobileKey
-                    expect(other?.featureFlags) == testContext.flagStore.featureFlags
+                it("with extra elements") {
+                    var testDictionary = defaultDictionary
+                    testDictionary["extraKey"] = "abc"
+                    let other = CacheableEnvironmentFlags(dictionary: testDictionary)
+                    expect(other?.userKey) == TestValues.userKey
+                    expect(other?.mobileKey) == TestValues.mobKey
+                    expect(other?.featureFlags) == TestValues.flags
                 }
             }
-            context("missing an element") {
-                context("missing userKey") {
-                    beforeEach {
-                        testContext = TestContext()
-                        otherDictionary = testContext.cacheableEnvironmentFlags.dictionaryValue
-                        otherDictionary.removeValue(forKey: CacheableEnvironmentFlags.CodingKeys.userKey.rawValue)
-
-                        other = CacheableEnvironmentFlags(dictionary: otherDictionary)
-                    }
-                    it("returns nil") {
-                        expect(other).to(beNil())
-                    }
-                }
-                context("missing mobileKey") {
-                    beforeEach {
-                        testContext = TestContext()
-                        otherDictionary = testContext.cacheableEnvironmentFlags.dictionaryValue
-                        otherDictionary.removeValue(forKey: CacheableEnvironmentFlags.CodingKeys.mobileKey.rawValue)
-
-                        other = CacheableEnvironmentFlags(dictionary: otherDictionary)
-                    }
-                    it("returns nil") {
-                        expect(other).to(beNil())
-                    }
-                }
-                context("missing featureFlags") {
-                    beforeEach {
-                        testContext = TestContext()
-                        otherDictionary = testContext.cacheableEnvironmentFlags.dictionaryValue
-                        otherDictionary.removeValue(forKey: CacheableEnvironmentFlags.CodingKeys.featureFlags.rawValue)
-
-                        other = CacheableEnvironmentFlags(dictionary: otherDictionary)
-                    }
-                    it("returns nil") {
-                        expect(other).to(beNil())
-                    }
-                }
-            }
-            context("type mismatch on an element") {
-                context("mismatched userKey") {
-                    beforeEach {
-                        testContext = TestContext()
-                        otherDictionary = testContext.cacheableEnvironmentFlags.dictionaryValue
-                        otherDictionary?[CacheableEnvironmentFlags.CodingKeys.userKey.rawValue] = Constants.int
-
-                        other = CacheableEnvironmentFlags(dictionary: otherDictionary)
-                    }
-                    it("returns nil") {
-                        expect(other).to(beNil())
-                    }
-                }
-                context("mismatched mobileKey") {
-                    beforeEach {
-                        testContext = TestContext()
-                        otherDictionary = testContext.cacheableEnvironmentFlags.dictionaryValue
-                        otherDictionary?[CacheableEnvironmentFlags.CodingKeys.mobileKey.rawValue] = Constants.int
-
-                        other = CacheableEnvironmentFlags(dictionary: otherDictionary)
-                    }
-                    it("returns nil") {
-                        expect(other).to(beNil())
-                    }
-                }
-                context("mismatched featureFlags") {
-                    beforeEach {
-                        testContext = TestContext()
-                        otherDictionary = testContext.cacheableEnvironmentFlags.dictionaryValue
-                        otherDictionary?[CacheableEnvironmentFlags.CodingKeys.featureFlags.rawValue] = Constants.int
-
-                        other = CacheableEnvironmentFlags(dictionary: otherDictionary)
-                    }
-                    it("returns nil") {
-                        expect(other).to(beNil())
-                    }
+            for key in CacheableEnvironmentFlags.CodingKeys.allCases {
+                it("returns nil when \(key.rawValue) missing or invalid") {
+                    var testDictionary = defaultDictionary
+                    testDictionary[key.rawValue] = 3 // Invalid value for all fields
+                    expect(CacheableEnvironmentFlags(dictionary: testDictionary)).to(beNil())
+                    testDictionary.removeValue(forKey: key.rawValue)
+                    expect(CacheableEnvironmentFlags(dictionary: testDictionary)).to(beNil())
                 }
             }
         }
     }
 
     private func dictionaryValueSpec() {
-        var testContext: TestContext!
-        var cacheableEnvironmentFlagsDictionary: [String: Any]!
         describe("dictionaryValue") {
-            context("with null feature flag value") {
-                beforeEach {
-                    testContext = TestContext(includeNullValue: true)
-
-                    cacheableEnvironmentFlagsDictionary = testContext.cacheableEnvironmentFlags.dictionaryValue
+            context("creates a dictionary with the elements") {
+                it("with null feature flag value") {
+                    let cacheDictionary = TestValues.defaultEnvironment().dictionaryValue
+                    expect(cacheDictionary["userKey"] as? String) == TestValues.userKey
+                    expect(cacheDictionary["mobileKey"] as? String) == TestValues.mobKey
+                    expect((cacheDictionary["featureFlags"] as? [LDFlagKey: Any])?.flagCollection) == TestValues.flags
                 }
-                it("creates a dictionary with the elements") {
-                    expect(cacheableEnvironmentFlagsDictionary.userKey) == testContext.key
-                    expect(cacheableEnvironmentFlagsDictionary.mobileKey) == testContext.mobileKey
-                    expect(cacheableEnvironmentFlagsDictionary.featureFlags) == testContext.flagStore.featureFlags
-                }
-            }
-            context("without feature flags") {
-                beforeEach {
-                    testContext = TestContext(emptyFeatureFlags: true)
-
-                    cacheableEnvironmentFlagsDictionary = testContext.cacheableEnvironmentFlags.dictionaryValue
-                }
-                it("creates a dictionary with the elements") {
-                    expect(cacheableEnvironmentFlagsDictionary.userKey) == testContext.key
-                    expect(cacheableEnvironmentFlagsDictionary.mobileKey) == testContext.mobileKey
-                    expect(cacheableEnvironmentFlagsDictionary.featureFlags?.isEmpty) == true
+                it("without feature flags") {
+                    let cacheDictionary = TestValues.defaultEnvironment(withFlags: [:]).dictionaryValue
+                    expect(cacheDictionary["userKey"] as? String) == TestValues.userKey
+                    expect(cacheDictionary["mobileKey"] as? String) == TestValues.mobKey
+                    expect(AnyComparer.isEqual(cacheDictionary["featureFlags"], to: [:])) == true
                 }
             }
         }
     }
 
     private func equalsSpec() {
-        var testContext: TestContext!
-        var other: CacheableEnvironmentFlags!
+        let environmentFlags = TestValues.defaultEnvironment()
         describe("equals") {
-            context("when elements are equal") {
-                beforeEach {
-                    testContext = TestContext()
-                    other = CacheableEnvironmentFlags(userKey: testContext.key,
-                                                      mobileKey: testContext.mobileKey,
-                                                      featureFlags: testContext.flagStore.featureFlags)
-                }
-                it("returns true") {
-                    expect(testContext.cacheableEnvironmentFlags == other) == true
-                }
+            it("returns true when elements are equal") {
+                let other = CacheableEnvironmentFlags(userKey: environmentFlags.userKey,
+                                                      mobileKey: environmentFlags.mobileKey,
+                                                      featureFlags: environmentFlags.featureFlags)
+                expect(environmentFlags == other) == true
             }
-            context("when an element differs") {
-                context("when the userKey differs") {
-                    beforeEach {
-                        testContext = TestContext()
-                        other = CacheableEnvironmentFlags(userKey: UUID().uuidString,
-                                                          mobileKey: testContext.mobileKey,
-                                                          featureFlags: testContext.flagStore.featureFlags)
-                    }
-                    it("returns false") {
-                        expect(testContext.cacheableEnvironmentFlags == other) == false
-                    }
+            context("returns false") {
+                it("when the userKey differs") {
+                    let other = CacheableEnvironmentFlags(userKey: UUID().uuidString,
+                                                          mobileKey: environmentFlags.mobileKey,
+                                                          featureFlags: environmentFlags.featureFlags)
+                    expect(environmentFlags == other) == false
                 }
-                context("when the mobileKey differs") {
-                    beforeEach {
-                        testContext = TestContext()
-                        other = CacheableEnvironmentFlags(userKey: testContext.key,
+                it("when the mobileKey differs") {
+                    let other = CacheableEnvironmentFlags(userKey: environmentFlags.userKey,
                                                           mobileKey: UUID().uuidString,
-                                                          featureFlags: testContext.flagStore.featureFlags)
-                    }
-                    it("returns false") {
-                        expect(testContext.cacheableEnvironmentFlags == other) == false
-                    }
+                                                          featureFlags: environmentFlags.featureFlags)
+                    expect(environmentFlags == other) == false
                 }
-                context("when the featureFlags differ") {
-                    beforeEach {
-                        testContext = TestContext()
-                        var otherFlags = testContext.flagStore.featureFlags
-                        otherFlags.removeValue(forKey: otherFlags.first!.key)
-                        other = CacheableEnvironmentFlags(userKey: testContext.key,
-                                                          mobileKey: testContext.mobileKey,
+                it("when the featureFlags differ") {
+                    var otherFlags = environmentFlags.featureFlags
+                    otherFlags.removeValue(forKey: otherFlags.first!.key)
+                    let other = CacheableEnvironmentFlags(userKey: environmentFlags.userKey,
+                                                          mobileKey: environmentFlags.mobileKey,
                                                           featureFlags: otherFlags)
-                    }
-                    it("returns false") {
-                        expect(testContext.cacheableEnvironmentFlags == other) == false
-                    }
+                    expect(environmentFlags == other) == false
                 }
             }
         }
-    }
-}
-
-extension Dictionary where Key == String, Value == Any {
-    var userKey: String? {
-        self[CacheableEnvironmentFlags.CodingKeys.userKey.rawValue] as? String
-    }
-    var mobileKey: String? {
-        self[CacheableEnvironmentFlags.CodingKeys.mobileKey.rawValue] as? String
-    }
-    var featureFlags: [LDFlagKey: FeatureFlag]? {
-        let flagDictionary = self[CacheableEnvironmentFlags.CodingKeys.featureFlags.rawValue] as? [LDFlagKey: Any]
-        return flagDictionary?.flagCollection
-    }
-}
-
-extension CacheableEnvironmentFlags {
-    static func stubCollection(userKey: String, environmentCount: Int) -> [MobileKey: CacheableEnvironmentFlags] {
-        var environmentFlags = [MobileKey: CacheableEnvironmentFlags]()
-        while environmentFlags.count < environmentCount {
-            let mobileKey = (environmentFlags.count + 1).mobileKey
-            let featureFlags = FeatureFlag.stubFlagCollection(userKey: userKey, mobileKey: mobileKey)
-            environmentFlags[mobileKey] = CacheableEnvironmentFlags(userKey: userKey, mobileKey: mobileKey, featureFlags: featureFlags)
-        }
-        return environmentFlags
     }
 }

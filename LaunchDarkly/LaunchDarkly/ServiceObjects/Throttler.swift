@@ -17,25 +17,26 @@ protocol Throttling {
 
 final class Throttler: Throttling {
     struct Constants {
-        static let defaultDelay: TimeInterval = 600.0
+        static let defaultDelay: TimeInterval = 60.0
         fileprivate static let runQueueName = "LaunchDarkly.Throttler.runQueue"
     }
 
-    private let runQueue = DispatchQueue(label: Constants.runQueueName, qos: .userInitiated)
-
+    // Exposed to let tests keep tsan happy
+    let runQueue = DispatchQueue(label: Constants.runQueueName, qos: .userInitiated)
+    let dispatcher: ((@escaping RunClosure) -> Void)
     let throttlingEnabled: Bool
     let maxDelay: TimeInterval
 
-    private (set) var runAttempts: Int = 0
-    private (set) var delay: TimeInterval = 0.0
+    private (set) var runAttempts = -1
     private (set) var delayTimer: TimeResponding?
-
-    private var maxAttemptsReached: Bool = false
     private var runClosure: RunClosure?
 
-    init(maxDelay: TimeInterval = Constants.defaultDelay, environmentReporter: EnvironmentReporting = EnvironmentReporter()) {
+    init(maxDelay: TimeInterval = Constants.defaultDelay,
+         environmentReporter: EnvironmentReporting = EnvironmentReporter(),
+         dispatcher: ((@escaping RunClosure) -> Void)? = nil) {
         self.throttlingEnabled = environmentReporter.shouldThrottleOnlineCalls
         self.maxDelay = maxDelay
+        self.dispatcher = dispatcher ?? { DispatchQueue.global(qos: .userInitiated).async(execute: $0) }
     }
 
     func runThrottled(_ runClosure: @escaping RunClosure) {
@@ -44,24 +45,28 @@ final class Throttler: Throttling {
 
     func runThrottledSync(_ runClosure: @escaping RunClosure) -> String? {
         runQueue.sync {
-            if !throttlingEnabled || runAttempts == 0 {
-                runAttempts = 1
-                DispatchQueue.global(qos: .userInitiated).async(execute: runClosure)
-                return typeName(and: #function) + "Executing run closure unthrottled. Run Attempts: \(runAttempts). throttlingEnabled: \(throttlingEnabled)."
+            if !throttlingEnabled {
+                dispatcher(runClosure)
+                return typeName(and: #function) + "Executing run closure unthrottled, as throttling is disabled."
             }
 
+            runAttempts += 1
+
+            let resetDelay = min(maxDelay, TimeInterval(pow(2.0, Double(runAttempts - 1))))
+            if runAttempts > 0 {
+                runQueue.asyncAfter(deadline: .now() + resetDelay) { self.decrementRunAttempts() }
+            }
+
+            if runAttempts <= 1 {
+                dispatcher(runClosure)
+                return typeName(and: #function) + "Executing run closure unthrottled."
+            }
+
+            let jittered = resetDelay / 2 + Double.random(in: 0.0...(resetDelay / 2))
             self.runClosure = runClosure
-
-            if maxAttemptsReached {
-                return typeName(and: #function) + "Delay interval at max, allowing delay timer to expire. Run Attempts: \(runAttempts)"
-            }
-
-            self.delay = delayForAttempt(runAttempts)
-            self.runAttempts += 1
             self.delayTimer?.cancel()
-            self.delayTimer = LDTimer(withTimeInterval: delay, repeats: false, fireQueue: runQueue, execute: timerFired)
-
-            return typeName(and: #function) + "Throttling run closure. Run attempts: \(runAttempts), Delay: \(delay)"
+            self.delayTimer = LDTimer(withTimeInterval: jittered, repeats: false, fireQueue: runQueue, execute: timerFired)
+            return typeName(and: #function) + "Throttling run closure. Run attempts: \(runAttempts), Delay: \(jittered)"
         }
     }
 
@@ -73,24 +78,19 @@ final class Throttler: Throttling {
     }
 
     private func reset() {
-        runAttempts = 0
-        delay = 0.0
-        maxAttemptsReached = false
         delayTimer = nil
         runClosure = nil
     }
 
-    private func delayForAttempt(_ attempt: Int) -> TimeInterval {
-        let exponential = pow(2.0, Double(attempt))
-        if exponential >= maxDelay { self.maxAttemptsReached = true }
-        let exponentialBackoff = min(maxDelay, exponential) / 2
-        let jitterBackoff = Double.random(in: 0.0...exponentialBackoff)
-        return exponentialBackoff + jitterBackoff
+    private func decrementRunAttempts() {
+        if runAttempts > 0 {
+            runAttempts -= 1
+        }
     }
 
     @objc func timerFired() {
         if let run = runClosure {
-            DispatchQueue.global(qos: .userInitiated).async(execute: run)
+            dispatcher(run)
         }
         reset()
     }

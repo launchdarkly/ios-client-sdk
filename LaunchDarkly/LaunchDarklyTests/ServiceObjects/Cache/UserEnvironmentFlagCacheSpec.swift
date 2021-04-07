@@ -12,73 +12,69 @@ import Nimble
 
 final class UserEnvironmentFlagCacheSpec: QuickSpec {
 
-    struct Constants {
-        static let newFlagKey = "newFlagKey"
-        static let newFlagValue = "newFlagValue"
+    private struct TestValues {
+        static let replacementFlags = ["newFlagKey": FeatureFlag.stub(flagKey: "newFlagKey", flagValue: "newFlagValue")]
+        static let newUserEnv = CacheableEnvironmentFlags(userKey: UUID().uuidString,
+                                                          mobileKey: UUID().uuidString,
+                                                          featureFlags: TestValues.replacementFlags)
+        static let lastUpdated = Date().addingTimeInterval(60.0).stringEquivalentDate
     }
 
     struct TestContext {
         var keyedValueCacheMock = KeyedValueCachingMock()
-        var userEnvironmentFlagCache: UserEnvironmentFlagCache
-        var users: [LDUser]
-        var userEnvironmentsCollection: [UserKey: CacheableUserEnvironmentFlags]
-        var mobileKeys = Set<MobileKey>()
-        var selectedUser: LDUser {
-            users.selectedUser
+        let storeMode: FlagCachingStoreMode
+        var subject: UserEnvironmentFlagCache
+        var userEnvironmentsCollection: [UserKey: CacheableUserEnvironmentFlags]!
+        var selectedUser: String {
+            userEnvironmentsCollection.randomElement()!.key
         }
         var selectedMobileKey: String {
-            userEnvironmentsCollection[selectedUser.key]!.environmentFlags.keys.selectedMobileKey
+            userEnvironmentsCollection[selectedUser]!.environmentFlags.randomElement()!.key
         }
-        var oldestUser: LDUser {
-            //sort <userKey, lastUpdated> pairs youngest to oldest
-            let sortedLastUpdatedPairs = userEnvironmentsCollection.compactMapValues { cacheableUserEnvironments in
-                return cacheableUserEnvironments.lastUpdated
-            }.sorted { pair1, pair2 -> Bool in
-                return pair2.value.isEarlierThan(pair1.value)
-            }
-            let oldestUserKey = sortedLastUpdatedPairs.last!.key
-            return users.first { user in
-                user.key == oldestUserKey
-            }!
+        var oldestUser: String {
+            userEnvironmentsCollection.compactMapValues { $0.lastUpdated }
+                .max { $1.value.isEarlierThan($0.value) }!
+                .key
+        }
+        var setUserEnvironments: [UserKey: CacheableUserEnvironmentFlags]? {
+            (keyedValueCacheMock.setReceivedArguments?.value as? [UserKey: Any])?.compactMapValues { CacheableUserEnvironmentFlags(object: $0) }
         }
 
-        init(userCount: Int = 1, maxUsers: Int = 5) {
-            userEnvironmentFlagCache = UserEnvironmentFlagCache(withKeyedValueCache: keyedValueCacheMock, maxCachedUsers: maxUsers)
-            let mobileKeys: [MobileKey]
-            (users, userEnvironmentsCollection, mobileKeys) = CacheableUserEnvironmentFlags.stubCollection(userCount: userCount)
-            self.mobileKeys.formUnion(Set(mobileKeys))
-            keyedValueCacheMock.dictionaryReturnValue = userEnvironmentsCollection.dictionaryValues
+        init(maxUsers: Int = 5, storeMode: FlagCachingStoreMode = .async) {
+            self.storeMode = storeMode
+            subject = UserEnvironmentFlagCache(withKeyedValueCache: keyedValueCacheMock, maxCachedUsers: maxUsers)
         }
 
-        func featureFlags(forUserKey userKey: UserKey, andMobileKey mobileKey: MobileKey) -> [LDFlagKey: FeatureFlag]? {
-            userEnvironmentsCollection[userKey]?.environmentFlags[mobileKey]?.featureFlags
+        mutating func withCached(userCount: Int = 1) {
+            userEnvironmentsCollection = CacheableUserEnvironmentFlags.stubCollection(userCount: userCount).collection
+            keyedValueCacheMock.dictionaryReturnValue = userEnvironmentsCollection.compactMapValues { $0.dictionaryValue }
+        }
+
+        func storeNewUser() -> CacheableUserEnvironmentFlags {
+            let env = storeNewUserEnv(userKey: UUID().uuidString)
+            return CacheableUserEnvironmentFlags(userKey: env.userKey,
+                                                 environmentFlags: [env.mobileKey: env],
+                                                 lastUpdated: TestValues.lastUpdated)
+        }
+
+        func storeNewUserEnv(userKey: String) -> CacheableEnvironmentFlags {
+            storeUserEnvUpdate(userKey: userKey, mobileKey: UUID().uuidString)
+        }
+
+        func storeUserEnvUpdate(userKey: String, mobileKey: String) -> CacheableEnvironmentFlags {
+            storeFlags(TestValues.replacementFlags, userKey: userKey, mobileKey: mobileKey, lastUpdated: TestValues.lastUpdated)
+            return CacheableEnvironmentFlags(userKey: userKey, mobileKey: mobileKey, featureFlags: TestValues.replacementFlags)
         }
 
         func storeFlags(_ featureFlags: [LDFlagKey: FeatureFlag],
-                        forUser user: LDUser,
-                        andMobileKey mobileKey: String,
-                        lastUpdated: Date,
-                        storeMode: FlagCachingStoreMode = .async) {
-            switch storeMode {
-            case .async:
-                waitUntil { done in
-                    self.userEnvironmentFlagCache.storeFeatureFlags(featureFlags,
-                                                                    forUser: user,
-                                                                    andMobileKey: mobileKey,
-                                                                    lastUpdated: lastUpdated,
-                                                                    storeMode: .async,
-                                                                    completion: {
-                        done()
-                    })
-                }
-            case .sync:
-                self.userEnvironmentFlagCache.storeFeatureFlags(featureFlags,
-                                                                forUser: user,
-                                                                andMobileKey: mobileKey,
-                                                                lastUpdated: lastUpdated,
-                                                                storeMode: .async,
-                                                                completion: nil)
+                        userKey: String,
+                        mobileKey: String,
+                        lastUpdated: Date) {
+            waitUntil { done in
+                self.subject.storeFeatureFlags(featureFlags, userKey: userKey, mobileKey: mobileKey, lastUpdated: lastUpdated, storeMode: storeMode, completion: done)
+                if storeMode == .sync { done() }
             }
+            expect(keyedValueCacheMock.setReceivedArguments?.forKey) == UserEnvironmentFlagCache.CacheKeys.cachedUserEnvironmentFlags
         }
     }
 
@@ -87,143 +83,58 @@ final class UserEnvironmentFlagCacheSpec: QuickSpec {
         retrieveFeatureFlagsSpec()
         storeFeatureFlagsSpec(maxUsers: LDConfig.Defaults.maxCachedUsers)
         storeFeatureFlagsSpec(maxUsers: 3)
-        storeUnlimitedUsersSpec(maxUsers: -1)
+        storeUnlimitedUsersSpec()
     }
 
     private func initSpec() {
-        var testContext: TestContext!
         describe("init") {
-            it("creates a UserEnvironmentCache with the passed in keyedValueCache") {
-                testContext = TestContext()
-                expect(testContext.userEnvironmentFlagCache.keyedValueCache) === testContext.keyedValueCacheMock
+            it("creates a UserEnvironmentFlagCache") {
+                let testContext = TestContext(maxUsers: 5)
+                expect(testContext.subject.keyedValueCache) === testContext.keyedValueCacheMock
+                expect(testContext.subject.maxCachedUsers) == 5
             }
         }
     }
 
     private func retrieveFeatureFlagsSpec() {
         var testContext: TestContext!
-        var retrievingUser: LDUser!
-        var retrievingMobileKey: MobileKey!
-        var retrievedFlags: [LDFlagKey: FeatureFlag]?
         describe("retrieveFeatureFlags") {
-            context("when no feature flags are stored") {
-                beforeEach {
-                    testContext = TestContext(userCount: 0)
-                    retrievingUser = LDUser.stub()
-                    retrievingMobileKey = UUID().uuidString
-
-                    retrievedFlags = testContext.userEnvironmentFlagCache.retrieveFeatureFlags(forUserWithKey: retrievingUser.key, andMobileKey: retrievingMobileKey)
+            beforeEach {
+                testContext = TestContext()
+            }
+            context("returns nil") {
+                it("when no flags are stored") {
+                    expect(testContext.subject.retrieveFeatureFlags(forUserWithKey: "unknown", andMobileKey: "unknown")).to(beNil())
                 }
-                it("returns nil") {
-                    expect(retrievedFlags).to(beNil())
+                it("when no flags are stored for user") {
+                    testContext.withCached(userCount: LDConfig.Defaults.maxCachedUsers)
+                    expect(testContext.subject.retrieveFeatureFlags(forUserWithKey: "unknown", andMobileKey: testContext.selectedMobileKey)).to(beNil())
+                }
+                it("when no flags are stored for environment") {
+                    testContext.withCached(userCount: LDConfig.Defaults.maxCachedUsers)
+                    expect(testContext.subject.retrieveFeatureFlags(forUserWithKey: testContext.selectedUser, andMobileKey: "unknown")).to(beNil())
                 }
             }
-            context("when feature flags are stored") {
-                context("the user is stored") {
-                    context("and the environment is stored") {
-                        beforeEach {
-                            testContext = TestContext(userCount: LDConfig.Defaults.maxCachedUsers)
-                            retrievingUser = testContext.selectedUser
-                            retrievingMobileKey = testContext.selectedMobileKey
-
-                            retrievedFlags = testContext.userEnvironmentFlagCache.retrieveFeatureFlags(forUserWithKey: retrievingUser.key, andMobileKey: retrievingMobileKey)
-                        }
-                        it("returns the feature flags") {
-                            expect(retrievedFlags) == testContext.userEnvironmentsCollection[retrievingUser.key]?.environmentFlags[retrievingMobileKey]?.featureFlags
-                        }
-                    }
-                    context("and the environment is not stored") {
-                        beforeEach {
-                            testContext = TestContext(userCount: LDConfig.Defaults.maxCachedUsers)
-                            retrievingUser = testContext.selectedUser
-                            retrievingMobileKey = (CacheableUserEnvironmentFlags.Constants.environmentCount + 1).mobileKey
-
-                            retrievedFlags = testContext.userEnvironmentFlagCache.retrieveFeatureFlags(forUserWithKey: retrievingUser.key, andMobileKey: retrievingMobileKey)
-                        }
-                        it("returns nil") {
-                            expect(retrievedFlags).to(beNil())
-                        }
-                    }
-                }
-                context("the user is not stored") {
-                    beforeEach {
-                        testContext = TestContext(userCount: LDConfig.Defaults.maxCachedUsers)
-                        retrievingUser = LDUser.stub()
-                        retrievingMobileKey = testContext.selectedMobileKey
-
-                        retrievedFlags = testContext.userEnvironmentFlagCache.retrieveFeatureFlags(forUserWithKey: retrievingUser.key, andMobileKey: retrievingMobileKey)
-                    }
-                    it("returns nil") {
-                        expect(retrievedFlags).to(beNil())
-                    }
-                }
+            it("returns the flags for user and environment") {
+                testContext.withCached(userCount: LDConfig.Defaults.maxCachedUsers)
+                let toRetrieve = testContext.userEnvironmentsCollection.randomElement()!.value.environmentFlags.randomElement()!.value
+                expect(testContext.subject.retrieveFeatureFlags(forUserWithKey: toRetrieve.userKey, andMobileKey: toRetrieve.mobileKey)) == toRetrieve.featureFlags
             }
         }
     }
     
-    private func storeUnlimitedUsersSpec(maxUsers: Int) {
-        var testContext: TestContext!
-        var storingUser: LDUser!
-        var storingMobileKey: String!
-        var storingLastUpdated: Date!
-        var userCount: Int!
-        var newFeatureFlags: [LDFlagKey: FeatureFlag]!
-        
-        context("and an existing user adds a new environment") {
-            beforeEach {
-                userCount = 5
-                testContext = TestContext(userCount: userCount, maxUsers: maxUsers)
-                storingUser = testContext.selectedUser
-                storingMobileKey = (CacheableUserEnvironmentFlags.Constants.environmentCount + 1).mobileKey
-                newFeatureFlags = [Constants.newFlagKey: FeatureFlag.stub(flagKey: Constants.newFlagKey, flagValue: Constants.newFlagValue)]
-                storingLastUpdated = Date()
-            }
-            it("stores the users flags") {
-                FlagCachingStoreMode.allCases.forEach { storeMode in
-                    testContext.storeFlags(newFeatureFlags,
-                                           forUser: storingUser,
-                                           andMobileKey: storingMobileKey,
-                                           lastUpdated: storingLastUpdated,
-                                           storeMode: storeMode)
+    private func storeUnlimitedUsersSpec() {
+        describe("storeFeatureFlags with no cached limit") {
+            FlagCachingStoreMode.allCases.forEach { storeMode in
+                it("and a new users flags are stored") {
+                    var testContext = TestContext(maxUsers: -1, storeMode: storeMode)
+                    testContext.withCached(userCount: LDConfig.Defaults.maxCachedUsers)
+                    let expectedEnv = testContext.storeNewUser()
 
-                    expect(testContext.keyedValueCacheMock.setReceivedArguments?.forKey) == UserEnvironmentFlagCache.CacheKeys.cachedUserEnvironmentFlags
-
-                    let setCachedUserEnvironmentsCollection = testContext.keyedValueCacheMock.setReceivedArguments?.value as? [UserKey: [String: Any]]
-                    expect(setCachedUserEnvironmentsCollection?.count) == userCount
-                    testContext.users.forEach { user in
-                        expect(setCachedUserEnvironmentsCollection?.keys.contains(user.key)) == true
-
-                        let setCachedUserEnvironments = setCachedUserEnvironmentsCollection?[user.key]
-                        expect(setCachedUserEnvironments?.userKey) == user.key
-                        if user.key == storingUser.key {
-                            expect(setCachedUserEnvironments?.cacheableLastUpdated) == storingLastUpdated.stringEquivalentDate
-                        } else {
-                            expect(setCachedUserEnvironments?.cacheableLastUpdated) == testContext.userEnvironmentsCollection.lastUpdated(forKey: user.key)?.stringEquivalentDate
-                        }
-
-                        let setCachedEnvironmentFlagsCollection = setCachedUserEnvironments?.environmentFlags
-                        if user.key == storingUser.key {
-                            expect(setCachedEnvironmentFlagsCollection?.count) == CacheableUserEnvironmentFlags.Constants.environmentCount + 1
-                        } else {
-                            expect(setCachedEnvironmentFlagsCollection?.count) == CacheableUserEnvironmentFlags.Constants.environmentCount
-                        }
-
-                        var mobileKeys = [MobileKey](testContext.mobileKeys)
-                        mobileKeys.append(storingMobileKey)
-                        mobileKeys.forEach { mobileKey in
-                            guard mobileKey != storingMobileKey || user.key == storingUser.key
-                            else { return }
-                            expect(setCachedEnvironmentFlagsCollection?.keys.contains(mobileKey)) == true
-
-                            let setCachedEnvironmentFlags = setCachedEnvironmentFlagsCollection?[mobileKey]
-                            expect(setCachedEnvironmentFlags?.userKey) == user.key
-                            expect(setCachedEnvironmentFlags?.mobileKey) == mobileKey
-                            if user.key == storingUser.key && mobileKey == storingMobileKey {
-                                expect(setCachedEnvironmentFlags?.featureFlags) == newFeatureFlags
-                            } else {
-                                expect(setCachedEnvironmentFlags?.featureFlags) == testContext.featureFlags(forUserKey: user.key, andMobileKey: mobileKey)
-                            }
-                        }
+                    expect(testContext.setUserEnvironments?.count) == LDConfig.Defaults.maxCachedUsers + 1
+                    expect(testContext.setUserEnvironments?[expectedEnv.userKey]) == expectedEnv
+                    testContext.userEnvironmentsCollection.forEach { userKey, userEnv in
+                        expect(testContext.setUserEnvironments?[userKey]) == userEnv
                     }
                 }
             }
@@ -231,395 +142,111 @@ final class UserEnvironmentFlagCacheSpec: QuickSpec {
     }
 
     private func storeFeatureFlagsSpec(maxUsers: Int) {
+        FlagCachingStoreMode.allCases.forEach { storeMode in
+            storeFeatureFlagsSpec(maxUsers: maxUsers, storeMode: storeMode)
+        }
+    }
+
+    private func storeFeatureFlagsSpec(maxUsers: Int, storeMode: FlagCachingStoreMode) {
         var testContext: TestContext!
-        var storingUser: LDUser!
-        var storingMobileKey: String!
-        var storingLastUpdated: Date!
-        var userCount: Int!
-        var newFeatureFlags: [LDFlagKey: FeatureFlag]!
-        var flagStore: FlagMaintaining!
+        describe(storeMode == .async ? "storeFeatureFlagsAsync" : "storeFeatureFlagsSync") {
+            beforeEach {
+                testContext = TestContext(maxUsers: maxUsers, storeMode: storeMode)
+            }
+            it("when store is empty") {
+                let expectedEnv = testContext.storeNewUser()
 
-        describe("storeFeatureFlags") {
-            context("when no user flags are stored") {
-                beforeEach {
-                    userCount = 0
-                    testContext = TestContext(userCount: userCount, maxUsers: maxUsers)
-                    storingUser = LDUser.stub()
-                    flagStore = FlagMaintainingMock(flags: FlagMaintainingMock.stubFlags())
-                    storingLastUpdated = Date().addingTimeInterval(-1.0 * 24 * 60 * 60) // one day
-                    storingMobileKey = UUID().uuidString
-                }
-                it("stores the users flags") {
-                    FlagCachingStoreMode.allCases.forEach { storeMode in
-                        testContext.storeFlags(flagStore.featureFlags,
-                                               forUser: storingUser,
-                                               andMobileKey: storingMobileKey,
-                                               lastUpdated: storingLastUpdated,
-                                               storeMode: storeMode)
-
-                        expect(testContext.keyedValueCacheMock.setReceivedArguments?.forKey) == UserEnvironmentFlagCache.CacheKeys.cachedUserEnvironmentFlags
-
-                        let setCachedUserEnvironmentsCollection = testContext.keyedValueCacheMock.setReceivedArguments?.value as? [UserKey: [String: Any]]
-                        expect(setCachedUserEnvironmentsCollection?.count) == userCount + 1
-                        expect(setCachedUserEnvironmentsCollection?.keys.first) == storingUser.key
-
-                        let setCachedUserEnvironments = setCachedUserEnvironmentsCollection?[storingUser.key]
-                        expect(setCachedUserEnvironments?.userKey) == storingUser.key
-                        expect(setCachedUserEnvironments?.cacheableLastUpdated) == storingLastUpdated.stringEquivalentDate
-
-                        let setCachedEnvironmentFlagsCollection = setCachedUserEnvironments?.environmentFlags
-                        expect(setCachedEnvironmentFlagsCollection?.count) == 1
-                        expect(setCachedEnvironmentFlagsCollection?.keys.first) == storingMobileKey
-
-                        let setCachedEnvironmentFlags = setCachedEnvironmentFlagsCollection?[storingMobileKey]
-                        expect(setCachedEnvironmentFlags?.userKey) == storingUser.key
-                        expect(setCachedEnvironmentFlags?.mobileKey) == storingMobileKey
-                        expect(setCachedEnvironmentFlags?.featureFlags) == flagStore.featureFlags
-                    }
-                }
+                expect(testContext.setUserEnvironments?.count) == 1
+                expect(testContext.setUserEnvironments?[expectedEnv.userKey]) == expectedEnv
             }
             context("when less than the max number of users flags are stored") {
-                context("and an existing users flags are changed") {
-                    beforeEach {
-                        userCount = maxUsers - 1
-                        testContext = TestContext(userCount: userCount, maxUsers: maxUsers)
-                        storingUser = testContext.selectedUser
-                        storingMobileKey = testContext.selectedMobileKey
-                        newFeatureFlags = [Constants.newFlagKey: FeatureFlag.stub(flagKey: Constants.newFlagKey, flagValue: Constants.newFlagValue)]
-                        flagStore = FlagMaintainingMock(flags: newFeatureFlags)
-                        storingLastUpdated = Date()
-                    }
-                    it("stores the users flags") {
-                        FlagCachingStoreMode.allCases.forEach { storeMode in
-                            testContext.storeFlags(flagStore.featureFlags,
-                                                   forUser: storingUser,
-                                                   andMobileKey: storingMobileKey,
-                                                   lastUpdated: storingLastUpdated,
-                                                   storeMode: storeMode)
+                it("and an existing users flags are changed") {
+                    testContext.withCached(userCount: maxUsers - 1)
+                    let expectedEnv = testContext.storeUserEnvUpdate(userKey: testContext.selectedUser, mobileKey: testContext.selectedMobileKey)
 
-                            expect(testContext.keyedValueCacheMock.setReceivedArguments?.forKey) == UserEnvironmentFlagCache.CacheKeys.cachedUserEnvironmentFlags
-
-                            let setCachedUserEnvironmentsCollection = testContext.keyedValueCacheMock.setReceivedArguments?.value as? [UserKey: [String: Any]]
-                            expect(setCachedUserEnvironmentsCollection?.count) == userCount
-                            testContext.users.forEach { user in
-                                expect(setCachedUserEnvironmentsCollection?.keys.contains(user.key)) == true
-
-                                let setCachedUserEnvironments = setCachedUserEnvironmentsCollection?[user.key]
-                                expect(setCachedUserEnvironments?.userKey) == user.key
-                                if user.key == storingUser.key {
-                                    expect(setCachedUserEnvironments?.cacheableLastUpdated) == storingLastUpdated.stringEquivalentDate
-                                } else {
-                                    expect(setCachedUserEnvironments?.cacheableLastUpdated) == testContext.userEnvironmentsCollection.lastUpdated(forKey: user.key)?.stringEquivalentDate
-                                }
-
-                                let setCachedEnvironmentFlagsCollection = setCachedUserEnvironments?.environmentFlags
-                                expect(setCachedEnvironmentFlagsCollection?.count) == CacheableUserEnvironmentFlags.Constants.environmentCount
-                                testContext.mobileKeys.forEach { mobileKey in
-                                    expect(setCachedEnvironmentFlagsCollection?.keys.contains(mobileKey)) == true
-
-                                    let setCachedEnvironmentFlags = setCachedEnvironmentFlagsCollection?[mobileKey]
-                                    expect(setCachedEnvironmentFlags?.userKey) == user.key
-                                    expect(setCachedEnvironmentFlags?.mobileKey) == mobileKey
-                                    //verify the storing user feature flags
-                                    if user.key == storingUser.key && mobileKey == storingMobileKey {
-                                        expect(setCachedEnvironmentFlags?.featureFlags) == newFeatureFlags
-                                    } else {
-                                        expect(setCachedEnvironmentFlags?.featureFlags) == testContext.featureFlags(forUserKey: user.key, andMobileKey: mobileKey)
-                                    }
-                                }
-                            }
+                    expect(testContext.setUserEnvironments?.count) == maxUsers - 1
+                    testContext.userEnvironmentsCollection.forEach { userKey, userEnv in
+                        if userKey != expectedEnv.userKey {
+                            expect(testContext.setUserEnvironments?[userKey]) == userEnv
+                            return
                         }
+
+                        var userFlags = userEnv.environmentFlags
+                        userFlags[expectedEnv.mobileKey] = expectedEnv
+                        expect(testContext.setUserEnvironments?[userKey]) == CacheableUserEnvironmentFlags(userKey: userKey, environmentFlags: userFlags, lastUpdated: TestValues.lastUpdated)
                     }
                 }
-                context("and an existing user adds a new environment") {
-                    beforeEach {
-                        userCount = maxUsers - 1
-                        testContext = TestContext(userCount: userCount, maxUsers: maxUsers)
-                        storingUser = testContext.selectedUser
-                        storingMobileKey = (CacheableUserEnvironmentFlags.Constants.environmentCount + 1).mobileKey
-                        newFeatureFlags = [Constants.newFlagKey: FeatureFlag.stub(flagKey: Constants.newFlagKey, flagValue: Constants.newFlagValue)]
-                        flagStore = FlagMaintainingMock(flags: newFeatureFlags)
-                        storingLastUpdated = Date()
-                    }
-                    it("stores the users flags") {
-                        FlagCachingStoreMode.allCases.forEach { storeMode in
-                            testContext.storeFlags(newFeatureFlags,
-                                                   forUser: storingUser,
-                                                   andMobileKey: storingMobileKey,
-                                                   lastUpdated: storingLastUpdated,
-                                                   storeMode: storeMode)
+                it("and an existing user adds a new environment") {
+                    testContext.withCached(userCount: maxUsers - 1)
+                    let expectedEnv = testContext.storeNewUserEnv(userKey: testContext.selectedUser)
 
-                            expect(testContext.keyedValueCacheMock.setReceivedArguments?.forKey) == UserEnvironmentFlagCache.CacheKeys.cachedUserEnvironmentFlags
-
-                            let setCachedUserEnvironmentsCollection = testContext.keyedValueCacheMock.setReceivedArguments?.value as? [UserKey: [String: Any]]
-                            expect(setCachedUserEnvironmentsCollection?.count) == userCount
-                            testContext.users.forEach { user in
-                                expect(setCachedUserEnvironmentsCollection?.keys.contains(user.key)) == true
-
-                                let setCachedUserEnvironments = setCachedUserEnvironmentsCollection?[user.key]
-                                expect(setCachedUserEnvironments?.userKey) == user.key
-                                if user.key == storingUser.key {
-                                    expect(setCachedUserEnvironments?.cacheableLastUpdated) == storingLastUpdated.stringEquivalentDate
-                                } else {
-                                    expect(setCachedUserEnvironments?.cacheableLastUpdated) == testContext.userEnvironmentsCollection.lastUpdated(forKey: user.key)?.stringEquivalentDate
-                                }
-
-                                let setCachedEnvironmentFlagsCollection = setCachedUserEnvironments?.environmentFlags
-                                if user.key == storingUser.key {
-                                    expect(setCachedEnvironmentFlagsCollection?.count) == CacheableUserEnvironmentFlags.Constants.environmentCount + 1
-                                } else {
-                                    expect(setCachedEnvironmentFlagsCollection?.count) == CacheableUserEnvironmentFlags.Constants.environmentCount
-                                }
-
-                                var mobileKeys = [MobileKey](testContext.mobileKeys)
-                                mobileKeys.append(storingMobileKey)
-                                mobileKeys.forEach { mobileKey in
-                                    guard mobileKey != storingMobileKey || user.key == storingUser.key
-                                    else { return }
-                                    expect(setCachedEnvironmentFlagsCollection?.keys.contains(mobileKey)) == true
-
-                                    let setCachedEnvironmentFlags = setCachedEnvironmentFlagsCollection?[mobileKey]
-                                    expect(setCachedEnvironmentFlags?.userKey) == user.key
-                                    expect(setCachedEnvironmentFlags?.mobileKey) == mobileKey
-                                    if user.key == storingUser.key && mobileKey == storingMobileKey {
-                                        expect(setCachedEnvironmentFlags?.featureFlags) == newFeatureFlags
-                                    } else {
-                                        expect(setCachedEnvironmentFlags?.featureFlags) == testContext.featureFlags(forUserKey: user.key, andMobileKey: mobileKey)
-                                    }
-                                }
-                            }
+                    expect(testContext.setUserEnvironments?.count) == maxUsers - 1
+                    testContext.userEnvironmentsCollection.forEach { userKey, userEnv in
+                        if userKey != expectedEnv.userKey {
+                            expect(testContext.setUserEnvironments?[userKey]) == userEnv
+                            return
                         }
+
+                        var userFlags = userEnv.environmentFlags
+                        userFlags[expectedEnv.mobileKey] = expectedEnv
+                        expect(testContext.setUserEnvironments?[userKey]) == CacheableUserEnvironmentFlags(userKey: userKey, environmentFlags: userFlags, lastUpdated: TestValues.lastUpdated)
                     }
                 }
-                context("and a new users flags are stored") {
-                    beforeEach {
-                        userCount = maxUsers - 1
-                        testContext = TestContext(userCount: userCount, maxUsers: maxUsers)
-                        storingUser = LDUser.stub(key: (userCount + 1).userKey)
-                        storingMobileKey = 1.mobileKey
-                        newFeatureFlags = [Constants.newFlagKey: FeatureFlag.stub(flagKey: Constants.newFlagKey, flagValue: Constants.newFlagValue)]
-                        flagStore = FlagMaintainingMock(flags: newFeatureFlags)
-                        storingLastUpdated = Date()
-                    }
-                    it("stores the users flags") {
-                        FlagCachingStoreMode.allCases.forEach { storeMode in
-                            testContext.storeFlags(newFeatureFlags,
-                                                   forUser: storingUser,
-                                                   andMobileKey: storingMobileKey,
-                                                   lastUpdated: storingLastUpdated,
-                                                   storeMode: storeMode)
+                it("and a new users flags are stored") {
+                    testContext.withCached(userCount: maxUsers - 1)
+                    let expectedEnv = testContext.storeNewUser()
 
-                            expect(testContext.keyedValueCacheMock.setReceivedArguments?.forKey) == UserEnvironmentFlagCache.CacheKeys.cachedUserEnvironmentFlags
-
-                            let setCachedUserEnvironmentsCollection = testContext.keyedValueCacheMock.setReceivedArguments?.value as? [UserKey: [String: Any]]
-                            expect(setCachedUserEnvironmentsCollection?.count) == userCount + 1
-
-                            var users = testContext.users
-                            users.append(storingUser)
-                            users.forEach { user in
-                                expect(setCachedUserEnvironmentsCollection?.keys.contains(user.key)) == true
-
-                                let setCachedUserEnvironments = setCachedUserEnvironmentsCollection?[user.key]
-                                expect(setCachedUserEnvironments?.userKey) == user.key
-                                if user.key == storingUser.key {
-                                    expect(setCachedUserEnvironments?.cacheableLastUpdated) == storingLastUpdated.stringEquivalentDate
-                                } else {
-                                    expect(setCachedUserEnvironments?.cacheableLastUpdated) == testContext.userEnvironmentsCollection.lastUpdated(forKey: user.key)?.stringEquivalentDate
-                                }
-
-                                let setCachedEnvironmentFlagsCollection = setCachedUserEnvironments?.environmentFlags
-                                expect(setCachedEnvironmentFlagsCollection?.count) == (user.key != storingUser.key ? CacheableUserEnvironmentFlags.Constants.environmentCount : 1)
-                                testContext.mobileKeys.forEach { mobileKey in
-                                    guard user.key != storingUser.key || mobileKey == storingMobileKey
-                                    else { return }
-                                    expect(setCachedEnvironmentFlagsCollection?.keys.contains(mobileKey)) == true
-
-                                    let setCachedEnvironmentFlags = setCachedEnvironmentFlagsCollection?[mobileKey]
-                                    expect(setCachedEnvironmentFlags?.userKey) == user.key
-                                    expect(setCachedEnvironmentFlags?.mobileKey) == mobileKey
-
-                                    if user.key == storingUser.key && mobileKey == storingMobileKey {
-                                        expect(setCachedEnvironmentFlags?.featureFlags) == newFeatureFlags
-                                    } else {
-                                        expect(setCachedEnvironmentFlags?.featureFlags) == testContext.featureFlags(forUserKey: user.key, andMobileKey: mobileKey)
-                                    }
-                                }
-                            }
-                        }
+                    expect(testContext.setUserEnvironments?.count) == maxUsers
+                    expect(testContext.setUserEnvironments?[expectedEnv.userKey]) == expectedEnv
+                    testContext.userEnvironmentsCollection.forEach { userKey, userEnv in
+                        expect(testContext.setUserEnvironments?[userKey]) == userEnv
                     }
                 }
             }
             context("when max number of users flags are stored") {
-                context("and an existing users flags are changed") {
-                    beforeEach {
-                        userCount = maxUsers
-                        testContext = TestContext(userCount: userCount, maxUsers: maxUsers)
-                        storingUser = testContext.selectedUser
-                        storingMobileKey = testContext.selectedMobileKey
-                        newFeatureFlags = [Constants.newFlagKey: FeatureFlag.stub(flagKey: Constants.newFlagKey, flagValue: Constants.newFlagValue)]
-                        flagStore = FlagMaintainingMock(flags: newFeatureFlags)
-                        storingLastUpdated = Date()
-                    }
-                    it("stores the users flags") {
-                        FlagCachingStoreMode.allCases.forEach { storeMode in
-                            testContext.storeFlags(newFeatureFlags,
-                                                   forUser: storingUser,
-                                                   andMobileKey: storingMobileKey,
-                                                   lastUpdated: storingLastUpdated,
-                                                   storeMode: storeMode)
+                it("and an existing users flags are changed") {
+                    testContext.withCached(userCount: maxUsers)
+                    let expectedEnv = testContext.storeUserEnvUpdate(userKey: testContext.selectedUser, mobileKey: testContext.selectedMobileKey)
 
-                            expect(testContext.keyedValueCacheMock.setReceivedArguments?.forKey) == UserEnvironmentFlagCache.CacheKeys.cachedUserEnvironmentFlags
-
-                            let setCachedUserEnvironmentsCollection = testContext.keyedValueCacheMock.setReceivedArguments?.value as? [UserKey: [String: Any]]
-                            expect(setCachedUserEnvironmentsCollection?.count) == userCount
-                            testContext.users.forEach { user in
-                                expect(setCachedUserEnvironmentsCollection?.keys.contains(user.key)) == true
-
-                                let setCachedUserEnvironments = setCachedUserEnvironmentsCollection?[user.key]
-                                expect(setCachedUserEnvironments?.userKey) == user.key
-                                if user.key == storingUser.key {
-                                    expect(setCachedUserEnvironments?.cacheableLastUpdated) == storingLastUpdated.stringEquivalentDate
-                                } else {
-                                    expect(setCachedUserEnvironments?.cacheableLastUpdated) == testContext.userEnvironmentsCollection.lastUpdated(forKey: user.key)?.stringEquivalentDate
-                                }
-
-                                let setCachedEnvironmentFlagsCollection = setCachedUserEnvironments?.environmentFlags
-                                expect(setCachedEnvironmentFlagsCollection?.count) == CacheableUserEnvironmentFlags.Constants.environmentCount
-                                testContext.mobileKeys.forEach { mobileKey in
-                                    expect(setCachedEnvironmentFlagsCollection?.keys.contains(mobileKey)) == true
-
-                                    let setCachedEnvironmentFlags = setCachedEnvironmentFlagsCollection?[mobileKey]
-                                    expect(setCachedEnvironmentFlags?.userKey) == user.key
-                                    expect(setCachedEnvironmentFlags?.mobileKey) == mobileKey
-
-                                    if user.key == storingUser.key && mobileKey == storingMobileKey {
-                                        expect(setCachedEnvironmentFlags?.featureFlags) == newFeatureFlags
-                                    } else {
-                                        expect(setCachedEnvironmentFlags?.featureFlags) == testContext.featureFlags(forUserKey: user.key, andMobileKey: mobileKey)
-                                    }
-                                }
-                            }
+                    expect(testContext.setUserEnvironments?.count) == maxUsers
+                    testContext.userEnvironmentsCollection.forEach { userKey, userEnv in
+                        if userKey != expectedEnv.userKey {
+                            expect(testContext.setUserEnvironments?[userKey]) == userEnv
+                            return
                         }
+
+                        var userFlags = userEnv.environmentFlags
+                        userFlags[expectedEnv.mobileKey] = expectedEnv
+                        expect(testContext.setUserEnvironments?[userKey]) == CacheableUserEnvironmentFlags(userKey: userKey, environmentFlags: userFlags, lastUpdated: TestValues.lastUpdated)
                     }
                 }
-                context("and an existing user adds a new environment") {
-                    beforeEach {
-                        userCount = maxUsers
-                        testContext = TestContext(userCount: userCount, maxUsers: maxUsers)
-                        storingUser = testContext.selectedUser
-                        storingMobileKey = (CacheableUserEnvironmentFlags.Constants.environmentCount + 1).mobileKey
-                        newFeatureFlags = [Constants.newFlagKey: FeatureFlag.stub(flagKey: Constants.newFlagKey, flagValue: Constants.newFlagValue)]
-                        flagStore = FlagMaintainingMock(flags: newFeatureFlags)
-                        storingLastUpdated = Date()
-                    }
-                    it("stores the users flags") {
-                        FlagCachingStoreMode.allCases.forEach { storeMode in
-                            testContext.storeFlags(newFeatureFlags,
-                                                   forUser: storingUser,
-                                                   andMobileKey: storingMobileKey,
-                                                   lastUpdated: storingLastUpdated,
-                                                   storeMode: storeMode)
+                it("and an existing user adds a new environment") {
+                    testContext.withCached(userCount: maxUsers)
+                    let expectedEnv = testContext.storeNewUserEnv(userKey: testContext.selectedUser)
 
-                            expect(testContext.keyedValueCacheMock.setReceivedArguments?.forKey) == UserEnvironmentFlagCache.CacheKeys.cachedUserEnvironmentFlags
-
-                            let setCachedUserEnvironmentsCollection = testContext.keyedValueCacheMock.setReceivedArguments?.value as? [UserKey: [String: Any]]
-                            expect(setCachedUserEnvironmentsCollection?.count) == userCount
-                            testContext.users.forEach { user in
-                                expect(setCachedUserEnvironmentsCollection?.keys.contains(user.key)) == true
-
-                                let setCachedUserEnvironments = setCachedUserEnvironmentsCollection?[user.key]
-                                expect(setCachedUserEnvironments?.userKey) == user.key
-                                if user.key == storingUser.key {
-                                    expect(setCachedUserEnvironments?.cacheableLastUpdated) == storingLastUpdated.stringEquivalentDate
-                                } else {
-                                    expect(setCachedUserEnvironments?.cacheableLastUpdated) == testContext.userEnvironmentsCollection.lastUpdated(forKey: user.key)?.stringEquivalentDate
-                                }
-
-                                let setCachedEnvironmentFlagsCollection = setCachedUserEnvironments?.environmentFlags
-                                if user.key == storingUser.key {
-                                    expect(setCachedEnvironmentFlagsCollection?.count) == CacheableUserEnvironmentFlags.Constants.environmentCount + 1
-                                } else {
-                                    expect(setCachedEnvironmentFlagsCollection?.count) == CacheableUserEnvironmentFlags.Constants.environmentCount
-                                }
-
-                                var mobileKeys = [MobileKey](testContext.mobileKeys)
-                                mobileKeys.append(storingMobileKey)
-                                mobileKeys.forEach { mobileKey in
-                                    guard mobileKey != storingMobileKey || user.key == storingUser.key
-                                    else { return }
-                                    expect(setCachedEnvironmentFlagsCollection?.keys.contains(mobileKey)) == true
-
-                                    let setCachedEnvironmentFlags = setCachedEnvironmentFlagsCollection?[mobileKey]
-                                    expect(setCachedEnvironmentFlags?.userKey) == user.key
-                                    expect(setCachedEnvironmentFlags?.mobileKey) == mobileKey
-                                    if user.key == storingUser.key && mobileKey == storingMobileKey {
-                                        expect(setCachedEnvironmentFlags?.featureFlags) == newFeatureFlags
-                                    } else {
-                                        expect(setCachedEnvironmentFlags?.featureFlags) == testContext.featureFlags(forUserKey: user.key, andMobileKey: mobileKey)
-                                    }
-                                }
-                            }
+                    expect(testContext.setUserEnvironments?.count) == maxUsers
+                    testContext.userEnvironmentsCollection.forEach { userKey, userEnv in
+                        if userKey != expectedEnv.userKey {
+                            expect(testContext.setUserEnvironments?[userKey]) == userEnv
+                            return
                         }
+
+                        var userFlags = userEnv.environmentFlags
+                        userFlags[expectedEnv.mobileKey] = expectedEnv
+                        expect(testContext.setUserEnvironments?[userKey]) == CacheableUserEnvironmentFlags(userKey: userKey, environmentFlags: userFlags, lastUpdated: TestValues.lastUpdated)
                     }
                 }
-                context("and a new users flags are stored") {
-                    beforeEach {
-                        userCount = maxUsers
-                        testContext = TestContext(userCount: userCount, maxUsers: maxUsers)
-                        storingUser = LDUser.stub(key: (userCount + 1).userKey)
-                        storingMobileKey = 1.mobileKey
-                        newFeatureFlags = [Constants.newFlagKey: FeatureFlag.stub(flagKey: Constants.newFlagKey, flagValue: Constants.newFlagValue)]
-                        flagStore = FlagMaintainingMock(flags: newFeatureFlags)
-                        storingLastUpdated = Date()
-                    }
-                    it("stores the youngest users flags") {
-                        FlagCachingStoreMode.allCases.forEach { storeMode in
-                            testContext.storeFlags(newFeatureFlags,
-                                                   forUser: storingUser,
-                                                   andMobileKey: storingMobileKey,
-                                                   lastUpdated: storingLastUpdated,
-                                                   storeMode: storeMode)
+                it("and a new users flags are stored overwrites oldest user") {
+                    testContext.withCached(userCount: maxUsers)
+                    let expectedEnv = testContext.storeNewUser()
 
-                            expect(testContext.keyedValueCacheMock.setReceivedArguments?.forKey) == UserEnvironmentFlagCache.CacheKeys.cachedUserEnvironmentFlags
-
-                            let setCachedUserEnvironmentsCollection = testContext.keyedValueCacheMock.setReceivedArguments?.value as? [UserKey: [String: Any]]
-                            expect(setCachedUserEnvironmentsCollection?.count) == userCount
-
-                            var users = testContext.users
-                            users.append(storingUser)
-                            users.forEach { user in
-                                if user.key == testContext.oldestUser.key {
-                                    expect(setCachedUserEnvironmentsCollection?.keys.contains(user.key)) == false
-                                    return
-                                }
-                                expect(setCachedUserEnvironmentsCollection?.keys.contains(user.key)) == true
-
-                                let setCachedUserEnvironments = setCachedUserEnvironmentsCollection?[user.key]
-                                expect(setCachedUserEnvironments?.userKey) == user.key
-                                if user.key == storingUser.key {
-                                    expect(setCachedUserEnvironments?.cacheableLastUpdated) == storingLastUpdated.stringEquivalentDate
-                                } else {
-                                    expect(setCachedUserEnvironments?.cacheableLastUpdated) == testContext.userEnvironmentsCollection.lastUpdated(forKey: user.key)?.stringEquivalentDate
-                                }
-
-                                let setCachedEnvironmentFlagsCollection = setCachedUserEnvironments?.environmentFlags
-                                expect(setCachedEnvironmentFlagsCollection?.count) == (user.key != storingUser.key ? CacheableUserEnvironmentFlags.Constants.environmentCount : 1)
-                                testContext.mobileKeys.forEach { mobileKey in
-                                    guard user.key != storingUser.key || mobileKey == storingMobileKey
-                                    else { return }
-                                    expect(setCachedEnvironmentFlagsCollection?.keys.contains(mobileKey)) == true
-
-                                    let setCachedEnvironmentFlags = setCachedEnvironmentFlagsCollection?[mobileKey]
-                                    expect(setCachedEnvironmentFlags?.userKey) == user.key
-                                    expect(setCachedEnvironmentFlags?.mobileKey) == mobileKey
-                                    if user.key == storingUser.key && mobileKey == storingMobileKey {
-                                        expect(setCachedEnvironmentFlags?.featureFlags) == newFeatureFlags
-                                    } else {
-                                        expect(setCachedEnvironmentFlags?.featureFlags) == testContext.featureFlags(forUserKey: user.key, andMobileKey: mobileKey)
-                                    }
-                                }
-                            }
-                        }
+                    expect(testContext.setUserEnvironments?.count) == maxUsers
+                    expect(testContext.setUserEnvironments?.keys.contains(testContext.oldestUser)) == false
+                    expect(testContext.setUserEnvironments?[expectedEnv.userKey]) == expectedEnv
+                    testContext.userEnvironmentsCollection.forEach { userKey, userEnv in
+                        guard userKey != testContext.oldestUser
+                        else { return }
+                        expect(testContext.setUserEnvironments?[userKey]) == userEnv
                     }
                 }
             }
@@ -627,41 +254,24 @@ final class UserEnvironmentFlagCacheSpec: QuickSpec {
     }
 }
 
-private extension Array where Element == LDUser {
-    var selectedUser: LDUser {
-        self[count / 2]
+extension CacheableUserEnvironmentFlags: Equatable {
+    public static func == (lhs: CacheableUserEnvironmentFlags, rhs: CacheableUserEnvironmentFlags) -> Bool {
+        lhs.userKey == rhs.userKey &&
+            lhs.lastUpdated == rhs.lastUpdated &&
+            lhs.environmentFlags == rhs.environmentFlags
     }
 }
 
-private extension Dictionary.Keys where Key == MobileKey {
-    var selectedMobileKey: MobileKey {
-        let mobileKeys = [MobileKey](self)
-        return mobileKeys[mobileKeys.count / 2]
-    }
-}
-
-extension FeatureFlag {
+private extension FeatureFlag {
     static func stub(flagKey: LDFlagKey, flagValue: Any?) -> FeatureFlag {
-        return FeatureFlag(flagKey: flagKey,
-                           value: flagValue,
-                           variation: DarklyServiceMock.Constants.variation,
-                           version: DarklyServiceMock.Constants.version,
-                           flagVersion: DarklyServiceMock.Constants.flagVersion,
-                           trackEvents: true,
-                           debugEventsUntilDate: Date().addingTimeInterval(30.0),
-                           reason: DarklyServiceMock.Constants.reason,
-                           trackReason: false)
-    }
-}
-
-extension Dictionary where Key == String {
-    var cacheableLastUpdated: Date? {
-        (self[CacheableUserEnvironmentFlags.CodingKeys.lastUpdated.rawValue] as? String)?.dateValue
-    }
-}
-
-extension Dictionary where Key == UserKey, Value == CacheableUserEnvironmentFlags {
-    func lastUpdated(forKey key: UserKey) -> Date? {
-        self[key]?.lastUpdated
+        FeatureFlag(flagKey: flagKey,
+                    value: flagValue,
+                    variation: DarklyServiceMock.Constants.variation,
+                    version: DarklyServiceMock.Constants.version,
+                    flagVersion: DarklyServiceMock.Constants.flagVersion,
+                    trackEvents: true,
+                    debugEventsUntilDate: Date().addingTimeInterval(30.0),
+                    reason: DarklyServiceMock.Constants.reason,
+                    trackReason: false)
     }
 }

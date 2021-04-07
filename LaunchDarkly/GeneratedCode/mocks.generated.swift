@@ -245,30 +245,12 @@ final class ErrorNotifyingMock: ErrorNotifying {
 // MARK: - EventReportingMock
 final class EventReportingMock: EventReporting {
 
-    var configSetCount = 0
-    var setConfigCallback: (() -> Void)?
-    var config: LDConfig = LDConfig.stub {
-        didSet {
-            configSetCount += 1
-            setConfigCallback?()
-        }
-    }
-
     var isOnlineSetCount = 0
     var setIsOnlineCallback: (() -> Void)?
     var isOnline: Bool = false {
         didSet {
             isOnlineSetCount += 1
             setIsOnlineCallback?()
-        }
-    }
-
-    var serviceSetCount = 0
-    var setServiceCallback: (() -> Void)?
-    var service: DarklyServiceProvider = DarklyServiceMock() {
-        didSet {
-            serviceSetCount += 1
-            setServiceCallback?()
         }
     }
 
@@ -334,10 +316,10 @@ final class FeatureFlagCachingMock: FeatureFlagCaching {
 
     var storeFeatureFlagsCallCount = 0
     var storeFeatureFlagsCallback: (() -> Void)?
-    var storeFeatureFlagsReceivedArguments: (featureFlags: [LDFlagKey: FeatureFlag], user: LDUser, mobileKey: String, lastUpdated: Date, storeMode: FlagCachingStoreMode)?
-    func storeFeatureFlags(_ featureFlags: [LDFlagKey: FeatureFlag], forUser user: LDUser, andMobileKey mobileKey: String, lastUpdated: Date, storeMode: FlagCachingStoreMode) {
+    var storeFeatureFlagsReceivedArguments: (featureFlags: [LDFlagKey: FeatureFlag], userKey: String, mobileKey: String, lastUpdated: Date, storeMode: FlagCachingStoreMode)?
+    func storeFeatureFlags(_ featureFlags: [LDFlagKey: FeatureFlag], userKey: String, mobileKey: String, lastUpdated: Date, storeMode: FlagCachingStoreMode) {
         storeFeatureFlagsCallCount += 1
-        storeFeatureFlagsReceivedArguments = (featureFlags: featureFlags, user: user, mobileKey: mobileKey, lastUpdated: lastUpdated, storeMode: storeMode)
+        storeFeatureFlagsReceivedArguments = (featureFlags: featureFlags, userKey: userKey, mobileKey: mobileKey, lastUpdated: lastUpdated, storeMode: storeMode)
         storeFeatureFlagsCallback?()
     }
 }

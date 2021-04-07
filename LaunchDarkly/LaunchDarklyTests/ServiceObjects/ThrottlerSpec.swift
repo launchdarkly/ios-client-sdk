@@ -14,7 +14,16 @@ final class ThrottlerSpec: QuickSpec {
 
     struct Constants {
         static let maxDelay: TimeInterval = 10.0
-        static let testThreshold: TimeInterval = 0.15
+    }
+
+    let dispatchQueue = DispatchQueue(label: "ThrottlerSpecQueue")
+
+    func testThrottler(throttlingDisabled: Bool = false) -> Throttler {
+        let environmentReporterMock = EnvironmentReportingMock()
+        environmentReporterMock.shouldThrottleOnlineCalls = !throttlingDisabled
+        return Throttler(maxDelay: Constants.maxDelay,
+                         environmentReporter: environmentReporterMock,
+                         dispatcher: { self.dispatchQueue.sync(execute: $0) })
     }
 
     override func spec() {
@@ -25,69 +34,31 @@ final class ThrottlerSpec: QuickSpec {
 
     func initSpec() {
         describe("init") {
-            var throttler: Throttler!
-            context("with a maxDelay parameter") {
-                beforeEach {
-                    throttler = Throttler(maxDelay: Constants.maxDelay)
-                }
-                it("sets the maxDelay") {
-                    expect(throttler.maxDelay) == Constants.maxDelay
-                }
-                it("is ready for the first run") {
-                    expect(throttler.runAttempts) == 0
-                    expect(throttler.delay) == 0.0
-                    expect(throttler.delayTimer).to(beNil())
-                }
+            it("with a maxDelay parameter") {
+                let throttler = Throttler(maxDelay: Constants.maxDelay)
+                expect(throttler.maxDelay) == Constants.maxDelay
+                expect(throttler.runAttempts) == -1
+                expect(throttler.delayTimer).to(beNil())
             }
-            context("without a maxDelay parameter") {
-                beforeEach {
-                    throttler = Throttler()
-                }
-                it("sets the maxDelay constant") {
-                    expect(throttler.maxDelay) == Throttler.Constants.defaultDelay
-                }
-                it("is ready for the first run") {
-                    expect(throttler.runAttempts) == 0
-                    expect(throttler.delay) == 0.0
-                    expect(throttler.delayTimer).to(beNil())
-                }
+            it("without a maxDelay parameter") {
+                let throttler = Throttler()
+                expect(throttler.maxDelay) == Throttler.Constants.defaultDelay
+                expect(throttler.runAttempts) == -1
+                expect(throttler.delayTimer).to(beNil())
             }
-            context("with an environment reporter") {
-                var environmentReportingMock: EnvironmentReportingMock!
-                beforeEach {
-                    environmentReportingMock = EnvironmentReportingMock()
-                }
-                context("throttling enabled") {
-                    beforeEach {
-                        throttler = Throttler(environmentReporter: environmentReportingMock)
-                    }
-                    it("should throttle") {
-                        expect(throttler.throttlingEnabled) == true
-                    }
-                }
-                context("throttling disabled") {
-                    beforeEach {
-                        environmentReportingMock.shouldThrottleOnlineCalls = false
-
-                        throttler = Throttler(environmentReporter: environmentReportingMock)
-                    }
-                    it("should not throttle") {
-                        expect(throttler.throttlingEnabled) == false
-                    }
-                }
+            it("throttling controlled by environment reporter") {
+                expect(self.testThrottler(throttlingDisabled: false).throttlingEnabled) == true
+                expect(self.testThrottler(throttlingDisabled: true).throttlingEnabled) == false
             }
         }
     }
 
-    //The upper bound on the max delay is always 2^runAttempt, exclusive.
-    func maxDelay(runAttempt: Int) -> DispatchTimeInterval { .seconds(Int(pow(2.0, Double(runAttempt)))) }
-
     func runSpec() {
         describe("runThrottled") {
             context("throttling enabled") {
-                firstRunSpec()
-                secondRunSpec()
-                multipleRunSpec()
+                firstRunsSpec()
+                immediateAfterDelaySpec()
+                throttledRunSpec()
                 maxDelaySpec()
             }
             context("throttling disabled") {
@@ -96,176 +67,116 @@ final class ThrottlerSpec: QuickSpec {
         }
     }
 
-    func firstRunSpec() {
-        var throttler: Throttler!
-        var runCalled: Date!
-        var runExecuted: Date?
-        context("one runThrottled call") {
-            beforeEach {
-                throttler = Throttler(maxDelay: Constants.maxDelay, environmentReporter: EnvironmentReportingMock())
-
-                runCalled = Date()
-                waitUntil(timeout: self.maxDelay(runAttempt: 1)) { done in
-                    throttler.runThrottled({
-                        runExecuted = Date()
-                        done()
-                    })
-                }
+    func firstRunsSpec() {
+        it("first runs immediate") {
+            var hasRun = false
+            let throttler = self.testThrottler()
+            throttler.runThrottled {
+                hasRun = true
             }
-            it("calls the run closure right away") {
-                expect(runExecuted).toNot(beNil())
-                guard let runExecuted = runExecuted
-                else { return }
-                expect(runExecuted.timeIntervalSince(runCalled)) <= Constants.testThreshold
+            expect(hasRun) == true
+            expect(throttler.safeRunAttempts) == 0
+            expect(throttler.delayTimer).to(beNil())
+            hasRun = false
+            throttler.runThrottled {
+                hasRun = true
             }
-            it("resets itself for the next runThrottled call when the timer fires") {
-                expect(throttler.runAttempts) == 1
-                expect(throttler.delay) == 0.0
-                expect(throttler.delayTimer).to(beNil())
-            }
+            expect(hasRun) == true
+            expect(throttler.safeRunAttempts) == 1
+            expect(throttler.delayTimer).to(beNil())
         }
     }
 
-    func secondRunSpec() {
-        var throttler: Throttler!
-        var runCalled: Date!
-        var runExecuted: [Date]!
-        context("two runThrottled calls") {
-            beforeEach {
-                runExecuted = [Date]()
-                throttler = Throttler(maxDelay: Constants.maxDelay, environmentReporter: EnvironmentReportingMock())
-
-                runCalled = Date()
-                waitUntil(timeout: .seconds(5)) { done in
-                    for _ in 0..<2 {
-                        throttler.runThrottled({
-                            runExecuted.append(Date())
-                            if runExecuted.count >= 2 {
-                                done()
-                            }
-                        })
-                    }
-                }
+    func immediateAfterDelaySpec() {
+        it("delay resets throttling") {
+            let throttler = self.testThrottler()
+            // First two run immediate
+            throttler.runThrottled { }
+            throttler.runThrottled { }
+            // Keep tsan happy by accessing runAttempts on the appropriate thread
+            expect(throttler.safeRunAttempts) == 1
+            Thread.sleep(forTimeInterval: 1.5)
+            expect(throttler.safeRunAttempts) == 0
+            var hasRun = false
+            throttler.runThrottled {
+                hasRun = true
             }
-            //Normally, this would be 3 "it" closures. Since this test takes ~2-4 seconds to setup, all 3 it closures are squashed into 1
-            it("calls the run closure right away, calls the run closure a second time after a delay, and resets itself for the next runThrottled call") {
-                //calls the run closure right away
-                expect(runExecuted.first).toNot(beNil())
-                guard let firstRunExecuted = runExecuted.first
-                else { return }
-                expect(firstRunExecuted.timeIntervalSince(runCalled)) <= Constants.testThreshold
-
-                //calls the run closure a second time after a delay
-                expect(runExecuted.count) == 2
-                guard let secondRunExecuted = runExecuted.last
-                else { return }
-                //The delay is a random interval in the range [1.0, 2.0) seconds, with a test threshold on the upper limit to account for delay in executing the task.
-                expect(secondRunExecuted.timeIntervalSince(runCalled)) >= 1.0
-                expect(secondRunExecuted.timeIntervalSince(runCalled)) <= 2.0 + Constants.testThreshold
-
-                //resets itself for the next runThrottled call
-                expect(throttler.runAttempts) == 0
-                expect(throttler.delay) == 0.0
-                expect(throttler.delayTimer).to(beNil())
-            }
+            expect(hasRun) == true
+            expect(throttler.safeRunAttempts) == 1
         }
     }
 
-    func multipleRunSpec() {
-        //This spec just tests that the delay is increased appropriately
-        var throttler: Throttler!
-        var delayIntervals = [TimeInterval]()
-        var timersExisted = [Bool]()
-
-        context("multiple runThrottled calls") {
-            beforeEach {
-                throttler = Throttler(maxDelay: Constants.maxDelay, environmentReporter: EnvironmentReportingMock())
-
-                for _ in 0..<throttler.maxAttempts {
-                    throttler.runThrottled { }
-                    delayIntervals.append(throttler.delay)
-                    timersExisted.append(throttler.delayTimer != nil)
+    func throttledRunSpec() {
+        it("sequential calls are throttled") {
+            let throttler = self.testThrottler()
+            // First two run immediate
+            throttler.runThrottled { }
+            throttler.runThrottled { }
+            expect(throttler.safeRunAttempts) == 1
+            var hasRun = false
+            waitUntil(timeout: .seconds(3)) { done in
+                let callDate = Date()
+                throttler.runThrottled {
+                    hasRun = true
+                    done()
                 }
+                expect(hasRun) == false
+                expect(throttler.delayTimer?.fireDate) >= callDate + 1
+                expect(throttler.delayTimer?.fireDate) <= callDate + 2.5
             }
-            it("increases the delay") {
-                for runAttempt in 1..<throttler.maxAttempts {
-                    //Because maxDelay for a runAttempt is in the range [2^(runAttempt -1), 2^runAttempt), the sequence of delay times for run attempts must be increasing
-                    expect(delayIntervals[runAttempt - 1]) < delayIntervals[runAttempt]
-                }
-            }
-            it("creates a timer") {
-                expect(throttler.delayTimer).toNot(beNil())
-            }
+            expect(hasRun) == true
         }
     }
 
     func maxDelaySpec() {
-        var throttler: Throttler!
-        context("max delay is reached") {
-            beforeEach {
-                throttler = Throttler(maxDelay: Constants.maxDelay, environmentReporter: EnvironmentReportingMock())
-                (0..<10).forEach { _ in throttler.runThrottled { } }
-            }
-            afterEach { throttler?.cancelThrottledRun() }
-            for _ in 0..<10 {
-                it("limits the delay to the maximum") {
-                    expect(throttler.delay) <= throttler.maxDelay
-                }
-            }
+        it("limits delay to maxDelay") {
+            let throttler = self.testThrottler()
+            (0..<10).forEach { _ in throttler.runThrottled { } }
+            let now = Date()
+            expect(throttler.delayTimer?.fireDate) <= now.addingTimeInterval(Constants.maxDelay)
+            expect(throttler.delayTimer?.fireDate) >= now.addingTimeInterval(Constants.maxDelay / 2) - 0.5
+            throttler.cancelThrottledRun()
         }
     }
 
     func throttlingDisabledRunSpec() {
-        var throttler: Throttler!
-        beforeEach {
-            let environmentReportingMock = EnvironmentReportingMock()
-            environmentReportingMock.shouldThrottleOnlineCalls = false
-            throttler = Throttler(maxDelay: Constants.maxDelay, environmentReporter: environmentReportingMock)
-        }
-        for _ in 0..<5 {
-            context("max runThrottled calls") {
-                beforeEach {
-                    waitUntil(timeout: .milliseconds(100)) { done in
-                        throttler.runThrottled(done)
-                    }
+        it("never throttles") {
+            let throttler = self.testThrottler(throttlingDisabled: true)
+            for _ in 0..<5 {
+                var hasRun = false
+                throttler.runThrottled {
+                    hasRun = true
                 }
-                it("calls the run closure right away and does not prep for a throttled run") {
-                    expect(throttler.runAttempts) == 1
-                    expect(throttler.delay) == 0.0
-                    expect(throttler.delayTimer).to(beNil())
-                }
+                expect(hasRun).to(beTrue())
+                hasRun = false
             }
         }
     }
 
     func cancelSpec() {
-        var throttler: Throttler!
-        var runCount = 0
-        context("cancel") {
-            beforeEach {
-                throttler = Throttler(maxDelay: Constants.maxDelay, environmentReporter: EnvironmentReportingMock())
-
-                for _ in 0..<throttler.maxAttempts {
-                    throttler.runThrottled {
-                        runCount += 1
-                        if runCount > 1 {
-                            fail("run closure called more than once.")
-                        }
-                    }
-                }
-
-                throttler.cancelThrottledRun()
+        it("can be cancelled") {
+            let throttler = self.testThrottler()
+            // Two immediate runs
+            throttler.runThrottled { }
+            throttler.runThrottled { }
+            // Should be throttled
+            var hasRun = false
+            throttler.runThrottled {
+                hasRun = true
             }
-            it("cancels the scheduled run") {
-                expect(throttler.runAttempts) == 0
-                expect(throttler.delay) == 0.0
-                expect(throttler.delayTimer).to(beNil())
-                expect(runCount) == 1   //First run should proceed directly
-            }
+            throttler.cancelThrottledRun()
+            expect(throttler.safeRunAttempts) == 2
+            expect(throttler.delayTimer).to(beNil())
+            // Wait until run would have occured
+            Thread.sleep(forTimeInterval: 1.0)
+            expect(hasRun).to(beFalse())
         }
     }
 }
 
+// Used to keep tsan happy by accessing runAttempts on the appropriate thread
 fileprivate extension Throttler {
-    var maxAttempts: Int { Int(log2(maxDelay)) }
+    var safeRunAttempts: Int {
+        runQueue.sync { runAttempts }
+    }
 }

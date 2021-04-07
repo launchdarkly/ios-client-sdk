@@ -143,16 +143,8 @@ final class DarklyServiceMock: DarklyServiceProvider {
             alternateValueKeys.contains(flagKey)
         }
 
-        private static func value(for flagKey: LDFlagKey, alternateValueKeys: [LDFlagKey]) -> Any? {
-            value(for: flagKey, useAlternateValue: useAlternateValue(for: flagKey, alternateValueKeys: alternateValueKeys))
-        }
-
         private static func value(for flagKey: LDFlagKey, useAlternateValue: Bool) -> Any? {
             useAlternateValue ? FlagValues.alternateValue(from: flagKey) : FlagValues.value(from: flagKey)
-        }
-
-        private static func variation(for flagKey: LDFlagKey, includeVariation: Bool, alternateValueKeys: [LDFlagKey]) -> Int? {
-            variation(for: flagKey, includeVariation: includeVariation, useAlternateValue: useAlternateValue(for: flagKey, alternateValueKeys: alternateValueKeys))
         }
 
         private static func variation(for flagKey: LDFlagKey, includeVariation: Bool, useAlternateValue: Bool) -> Int? {
@@ -167,18 +159,12 @@ final class DarklyServiceMock: DarklyServiceProvider {
             return variation
         }
 
-        private static func version(for flagKey: LDFlagKey, includeVersion: Bool, alternateValueKeys: [LDFlagKey]) -> Int? {
-            version(for: flagKey, includeVersion: includeVersion, useAlternateVersion: useAlternateValue(for: flagKey, alternateValueKeys: alternateValueKeys))
-        }
         private static func version(for flagKey: LDFlagKey, includeVersion: Bool, useAlternateVersion: Bool) -> Int? {
             guard includeVersion
             else { return nil }
             return useAlternateVersion ? version + 1 : version
         }
 
-        private static func flagVersion(for flagKey: LDFlagKey, includeFlagVersion: Bool, alternateValueKeys: [LDFlagKey]) -> Int? {
-            flagVersion(for: flagKey, includeFlagVersion: includeFlagVersion, useAlternateFlagVersion: useAlternateValue(for: flagKey, alternateValueKeys: alternateValueKeys))
-        }
         private static func flagVersion(for flagKey: LDFlagKey, includeFlagVersion: Bool, useAlternateFlagVersion: Bool) -> Int? {
             guard includeFlagVersion
             else { return nil }
