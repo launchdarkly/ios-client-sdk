@@ -124,12 +124,12 @@ struct DiagnosticConfig: Codable {
         customEventsURI = config.eventsUrl != LDConfig.Defaults.eventsUrl
         customStreamURI = config.streamUrl != LDConfig.Defaults.streamUrl
         eventsCapacity = config.eventCapacity
-        connectTimeoutMillis = Int(round(config.connectionTimeout * 1_000))
-        eventsFlushIntervalMillis = Int(round(config.eventFlushInterval * 1_000))
+        connectTimeoutMillis = Int(exactly: round(config.connectionTimeout * 1_000)) ?? .max
+        eventsFlushIntervalMillis = Int(exactly: round(config.eventFlushInterval * 1_000)) ?? .max
         streamingDisabled = config.streamingMode == .polling
         allAttributesPrivate = config.allUserAttributesPrivate
-        pollingIntervalMillis = Int(round(config.flagPollingInterval * 1_000))
-        backgroundPollingIntervalMillis = Int(round(config.backgroundFlagPollingInterval * 1_000))
+        pollingIntervalMillis = Int(exactly: round(config.flagPollingInterval * 1_000)) ?? .max
+        backgroundPollingIntervalMillis = Int(exactly: round(config.backgroundFlagPollingInterval * 1_000)) ?? .max
         inlineUsersInEvents = config.inlineUserInEvents
         useReport = config.useReport
         backgroundPollingDisabled = !config.enableBackgroundUpdates
@@ -137,7 +137,7 @@ struct DiagnosticConfig: Codable {
         // While the SDK treats all negative values as unlimited, for consistency we only send -1 for diagnostics
         maxCachedUsers = config.maxCachedUsers >= 0 ? config.maxCachedUsers : -1
         mobileKeyCount = 1 + (config.getSecondaryMobileKeys().count)
-        diagnosticRecordingIntervalMillis = Int(round(config.diagnosticRecordingInterval * 1_000))
+        diagnosticRecordingIntervalMillis = Int(exactly: round(config.diagnosticRecordingInterval * 1_000)) ?? .max
         customHeaders = !config.additionalHeaders.isEmpty || config.headerDelegate != nil
     }
 }
