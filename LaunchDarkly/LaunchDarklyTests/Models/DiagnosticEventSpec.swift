@@ -265,6 +265,22 @@ final class DiagnosticEventSpec: QuickSpec {
                     expect(diagnosticConfig.customHeaders) == false
                 }
             }
+            context("init with overflowing config values") {
+                it("has expected values") {
+                    var overflowingConfig = customConfig
+                    overflowingConfig.backgroundFlagPollingInterval = .greatestFiniteMagnitude
+                    overflowingConfig.connectionTimeout = .greatestFiniteMagnitude
+                    overflowingConfig.diagnosticRecordingInterval = .greatestFiniteMagnitude
+                    overflowingConfig.eventFlushInterval = .greatestFiniteMagnitude
+                    overflowingConfig.flagPollingInterval = .greatestFiniteMagnitude
+                    let diagnosticConfig = DiagnosticConfig(config: overflowingConfig)
+                    expect(diagnosticConfig.backgroundPollingIntervalMillis) == Int.max
+                    expect(diagnosticConfig.connectTimeoutMillis) == Int.max
+                    expect(diagnosticConfig.diagnosticRecordingIntervalMillis) == Int.max
+                    expect(diagnosticConfig.eventsFlushIntervalMillis) == Int.max
+                    expect(diagnosticConfig.pollingIntervalMillis) == Int.max
+                }
+            }
             var diagnosticConfig: DiagnosticConfig!
             for (name, config) in [("default", defaultConfig), ("custom", customConfig)] {
                 context("with \(name) config") {
