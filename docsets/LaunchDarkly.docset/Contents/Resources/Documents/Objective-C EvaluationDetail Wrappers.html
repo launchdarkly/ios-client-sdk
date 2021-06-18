@@ -8,14 +8,22 @@
     <script src="js/jquery.min.js" defer></script>
     <script src="js/jazzy.js" defer></script>
     
+    <script src="js/lunr.min.js" defer></script>
+    <script src="js/typeahead.jquery.js" defer></script>
+    <script src="js/jazzy.search.js" defer></script>
   </head>
   <body>
     <a name="//apple_ref/swift/Section/Objective-C EvaluationDetail Wrappers" class="dashAnchor"></a>
     <a title="Objective-C EvaluationDetail Wrappers  Reference"></a>
     <header>
       <div class="content-wrapper">
-        <p><a href="index.html">LaunchDarkly 5.4.1 Docs</a> (84% documented)</p>
+        <p><a href="index.html">LaunchDarkly 5.4.2 Docs</a> (84% documented)</p>
         <p class="header-right"><a href="https://github.com/launchdarkly/ios-client-sdk"><img src="img/gh.png"/>View on GitHub</a></p>
+        <p class="header-right">
+          <form role="search" action="search.json">
+            <input type="text" placeholder="Search documentation" data-typeahead>
+          </form>
+        </p>
       </div>
     </header>
     <div class="content-wrapper">
@@ -231,7 +239,7 @@
                         <h4>Declaration</h4>
                         <div class="language">
                           <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="kd">@objc</span><span class="p">(</span><span class="kt">LDBoolEvaluationDetail</span><span class="p">)</span>
+                          <pre class="highlight swift"><code><span class="kd">@objc(LDBoolEvaluationDetail)</span>
 <span class="kd">public</span> <span class="kd">final</span> <span class="kd">class</span> <span class="kt">ObjcLDBoolEvaluationDetail</span> <span class="p">:</span> <span class="kt">NSObject</span></code></pre>
 
                         </div>
@@ -260,7 +268,7 @@
                         <h4>Declaration</h4>
                         <div class="language">
                           <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="kd">@objc</span><span class="p">(</span><span class="kt">LDIntegerEvaluationDetail</span><span class="p">)</span>
+                          <pre class="highlight swift"><code><span class="kd">@objc(LDIntegerEvaluationDetail)</span>
 <span class="kd">public</span> <span class="kd">final</span> <span class="kd">class</span> <span class="kt">ObjcLDIntegerEvaluationDetail</span> <span class="p">:</span> <span class="kt">NSObject</span></code></pre>
 
                         </div>
@@ -289,7 +297,7 @@
                         <h4>Declaration</h4>
                         <div class="language">
                           <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="kd">@objc</span><span class="p">(</span><span class="kt">LDDoubleEvaluationDetail</span><span class="p">)</span>
+                          <pre class="highlight swift"><code><span class="kd">@objc(LDDoubleEvaluationDetail)</span>
 <span class="kd">public</span> <span class="kd">final</span> <span class="kd">class</span> <span class="kt">ObjcLDDoubleEvaluationDetail</span> <span class="p">:</span> <span class="kt">NSObject</span></code></pre>
 
                         </div>
@@ -318,7 +326,7 @@
                         <h4>Declaration</h4>
                         <div class="language">
                           <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="kd">@objc</span><span class="p">(</span><span class="kt">LDStringEvaluationDetail</span><span class="p">)</span>
+                          <pre class="highlight swift"><code><span class="kd">@objc(LDStringEvaluationDetail)</span>
 <span class="kd">public</span> <span class="kd">final</span> <span class="kd">class</span> <span class="kt">ObjcLDStringEvaluationDetail</span> <span class="p">:</span> <span class="kt">NSObject</span></code></pre>
 
                         </div>
@@ -347,7 +355,7 @@
                         <h4>Declaration</h4>
                         <div class="language">
                           <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="kd">@objc</span><span class="p">(</span><span class="kt">ArrayEvaluationDetail</span><span class="p">)</span>
+                          <pre class="highlight swift"><code><span class="kd">@objc(ArrayEvaluationDetail)</span>
 <span class="kd">public</span> <span class="kd">final</span> <span class="kd">class</span> <span class="kt">ObjcLDArrayEvaluationDetail</span> <span class="p">:</span> <span class="kt">NSObject</span></code></pre>
 
                         </div>
@@ -376,7 +384,7 @@
                         <h4>Declaration</h4>
                         <div class="language">
                           <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="kd">@objc</span><span class="p">(</span><span class="kt">DictionaryEvaluationDetail</span><span class="p">)</span>
+                          <pre class="highlight swift"><code><span class="kd">@objc(DictionaryEvaluationDetail)</span>
 <span class="kd">public</span> <span class="kd">final</span> <span class="kd">class</span> <span class="kt">ObjcLDDictionaryEvaluationDetail</span> <span class="p">:</span> <span class="kt">NSObject</span></code></pre>
 
                         </div>
@@ -390,7 +398,7 @@
         </section>
         <section id="footer">
           <p>Copyright © 2019 Catamorphic Co.</p>
-          <p>Generated by <a class="link" href="https://github.com/realm/jazzy" target="_blank" rel="external">jazzy ♪♫ v0.13.3</a>, a <a class="link" href="https://realm.io" target="_blank" rel="external">Realm</a> project.</p>
+          <p>Generated by <a class="link" href="https://github.com/realm/jazzy" target="_blank" rel="external">jazzy ♪♫ v0.13.7</a>, a <a class="link" href="https://realm.io" target="_blank" rel="external">Realm</a> project.</p>
         </section>
       </article>
     </div>
