@@ -219,6 +219,7 @@
 <h3 id='fixed' class='heading'>Fixed</h3>
 
 <ul>
+<li>Avoid crash when <code>TimeInterval</code> configuration options are set to sufficiently large values. This was caused when converting these values to an <code>Int</code> value of milliseconds. (Thanks, <a href="https://github.com/launchdarkly/ios-client-sdk/pull/246">@delannoyk</a>!)</li>
 <li>Update <code>Package.swift</code> to use SwiftPM tools version 5.2. This prevents test dependencies from being included transitively. (Thanks, <a href="https://github.com/launchdarkly/ios-client-sdk/pull/234">@escakot</a>!)</li>
 <li>Update <code>Quick</code> test dependency to 3.1.2 to avoid build warnings and adopt security fixes. (<a href="https://github.com/launchdarkly/ios-client-sdk/issues/243">#243</a>)</li>
 <li>Use <code>AnyObject</code> over <code>class</code> in protocol inheritance to avoid compiler warnings. (<a href="https://github.com/launchdarkly/ios-client-sdk/issues/247">#247</a>)</li>
