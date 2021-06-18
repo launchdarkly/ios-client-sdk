@@ -12,14 +12,14 @@ typealias ServiceResponse = (data: Data?, urlResponse: URLResponse?, error: Erro
 typealias ServiceCompletionHandler = (ServiceResponse) -> Void
 
 //sourcery: autoMockable
-protocol DarklyStreamingProvider: class {
+protocol DarklyStreamingProvider: AnyObject {
     func start()
     func stop()
 }
 
 extension EventSource: DarklyStreamingProvider {}
 
-protocol DarklyServiceProvider: class {
+protocol DarklyServiceProvider: AnyObject {
     var config: LDConfig { get }
     var user: LDUser { get set }
     var diagnosticCache: DiagnosticCaching? { get }

@@ -209,7 +209,7 @@ final class DarklyServiceSpec: QuickSpec {
                             } else {
                                 fail("request path is missing")
                             }
-                            expect(urlRequest?.cachePolicy) == .reloadRevalidatingCacheData
+                            expect([.reloadIgnoringLocalCacheData, .reloadRevalidatingCacheData]).to(contain(urlRequest?.cachePolicy))
                             expect(urlRequest?.timeoutInterval) == testContext.config.connectionTimeout
                             expect(urlRequest?.httpMethod) == URLRequest.HTTPMethods.get
                             expect(urlRequest?.httpBody).to(beNil())
@@ -382,7 +382,7 @@ final class DarklyServiceSpec: QuickSpec {
                             } else {
                                 fail("request path is missing")
                             }
-                            expect(urlRequest?.cachePolicy) == .reloadRevalidatingCacheData
+                            expect([.reloadIgnoringLocalCacheData, .reloadRevalidatingCacheData]).to(contain(urlRequest?.cachePolicy))
                             expect(urlRequest?.timeoutInterval) == testContext.config.connectionTimeout
                             expect(urlRequest?.httpMethod) == URLRequest.HTTPMethods.report
                             expect(urlRequest?.httpBodyStream).toNot(beNil())   //Although the service sets the httpBody, OHHTTPStubs seems to convert that into an InputStream, which should be ok

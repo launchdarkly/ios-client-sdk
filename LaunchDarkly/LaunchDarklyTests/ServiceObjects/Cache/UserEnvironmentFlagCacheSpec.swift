@@ -71,10 +71,10 @@ final class UserEnvironmentFlagCacheSpec: QuickSpec {
                         mobileKey: String,
                         lastUpdated: Date) {
             waitUntil { done in
-                self.subject.storeFeatureFlags(featureFlags, userKey: userKey, mobileKey: mobileKey, lastUpdated: lastUpdated, storeMode: storeMode, completion: done)
-                if storeMode == .sync { done() }
+                self.subject.storeFeatureFlags(featureFlags, userKey: userKey, mobileKey: mobileKey, lastUpdated: lastUpdated, storeMode: self.storeMode, completion: done)
+                if self.storeMode == .sync { done() }
             }
-            expect(keyedValueCacheMock.setReceivedArguments?.forKey) == UserEnvironmentFlagCache.CacheKeys.cachedUserEnvironmentFlags
+            expect(self.keyedValueCacheMock.setReceivedArguments?.forKey) == UserEnvironmentFlagCache.CacheKeys.cachedUserEnvironmentFlags
         }
     }
 

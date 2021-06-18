@@ -8,3 +8,6 @@ xcuserdata
 /docs
 /Carthage/Checkouts
 /.swiftpm
+/Package.resolved
+/LaunchDarkly.xcworkspace/xcshareddata/swiftpm/Package.resolved
+/LaunchDarkly.xcodeproj/project.xcworkspace/xcshareddata/swiftpm/Package.resolved
