@@ -2,6 +2,14 @@
 
 All notable changes to the LaunchDarkly iOS SDK will be documented in this file. This project adheres to [Semantic Versioning](http://semver.org).
 
+## [5.4.2] - 2021-06-17
+### Fixed
+- Update `Package.swift` to use SwiftPM tools version 5.2. This prevents test dependencies from being included transitively. (Thanks, [@escakot](https://github.com/launchdarkly/ios-client-sdk/pull/234)!)
+- Update `Quick` test dependency to 3.1.2 to avoid build warnings and adopt security fixes. ([#243](https://github.com/launchdarkly/ios-client-sdk/issues/243))
+- Use `AnyObject` over `class` in protocol inheritance to avoid compiler warnings. ([#247](https://github.com/launchdarkly/ios-client-sdk/issues/247))
+- Improve CI to test against multiple supported Xcode and Swift language versions.
+- Restored test suite compatibility with Xcode 11.4 and Swift 5.2.
+
 ## [5.4.1] - 2021-04-06
 ### Fixed
 - Internal throttling logic would sometimes delay new poll or stream connections even when there were no recent connections. This caused switching active user contexts using `identify` to sometimes delay retrieving the most recent flags and calling the completion.
