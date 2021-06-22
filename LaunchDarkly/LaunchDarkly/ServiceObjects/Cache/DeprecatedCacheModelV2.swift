@@ -7,7 +7,7 @@
 
 import Foundation
 
-//Cache model in use from 2.3.3 up to 2.11.0
+// Cache model in use from 2.3.3 up to 2.11.0
 /* Cache model v2 schema
 [<userKey>: [
     “key: <userKey>,                            //LDUserModel dictionary

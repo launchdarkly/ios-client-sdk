@@ -133,19 +133,19 @@ public final class ObjcLDConfig: NSObject {
         set { config.inlineUserInEvents = newValue }
     }
 
-    ///Enables logging for debugging. (Default: NO)
+    /// Enables logging for debugging. (Default: NO)
     @objc public var debugMode: Bool {
         get { config.isDebugMode }
         set { config.isDebugMode = newValue }
     }
 
-    ///Enables requesting evaluation reasons for all flags. (Default: NO)
+    /// Enables requesting evaluation reasons for all flags. (Default: NO)
     @objc public var evaluationReasons: Bool {
         get { config.evaluationReasons }
         set { config.evaluationReasons = newValue }
     }
 
-    ///An Integer that tells UserEnvironmentFlagCache the maximum number of users to locally cache. Can be set to -1 for unlimited cached users. (Default: 5)
+    /// An Integer that tells UserEnvironmentFlagCache the maximum number of users to locally cache. Can be set to -1 for unlimited cached users. (Default: 5)
     @objc public var maxCachedUsers: Int {
         get { config.maxCachedUsers }
         set { config.maxCachedUsers = newValue }
@@ -197,17 +197,17 @@ public final class ObjcLDConfig: NSObject {
         try config.setSecondaryMobileKeys(keys)
     }
     
-    ///LDConfig constructor. Configurable values are all set to their default values. The client app can modify these values as desired. Note that client app developers may prefer to get the LDConfig from `LDClient.config` (`ObjcLDClient.config`) in order to retain previously set values.
+    /// LDConfig constructor. Configurable values are all set to their default values. The client app can modify these values as desired. Note that client app developers may prefer to get the LDConfig from `LDClient.config` (`ObjcLDClient.config`) in order to retain previously set values.
     @objc public init(mobileKey: String) {
         config = LDConfig(mobileKey: mobileKey)
     }
 
-    //Initializer to wrap the Swift LDConfig into ObjcLDConfig for use in Objective-C apps.
+    // Initializer to wrap the Swift LDConfig into ObjcLDConfig for use in Objective-C apps.
     init(_ config: LDConfig) {
         self.config = config
     }
 
-    ///Compares the settable properties in 2 LDConfig structs
+    /// Compares the settable properties in 2 LDConfig structs
     @objc public func isEqual(object: Any?) -> Bool {
         guard let other = object as? ObjcLDConfig
         else { return false }

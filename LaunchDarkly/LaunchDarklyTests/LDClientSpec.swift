@@ -110,7 +110,7 @@ final class LDClientSpec: QuickSpec {
             config.startOnline = startOnline
             config.streamingMode = streamingMode
             config.enableBackgroundUpdates = enableBackgroundUpdates
-            config.eventFlushInterval = 300.0   //5 min...don't want this to trigger
+            config.eventFlushInterval = 300.0   // 5 min...don't want this to trigger
             config.autoAliasingOptOut = autoAliasingOptOut
 
             user = LDUser.stub()
@@ -350,17 +350,17 @@ final class LDClientSpec: QuickSpec {
                     expect(testContext.serviceFactoryMock.makeEventReporterReceivedService?.user) == testContext.user
                 }
                 it("uncaches the new users flags") {
-                    expect(testContext.featureFlagCachingMock.retrieveFeatureFlagsCallCount) == 2 //called on init and subsequent identify
+                    expect(testContext.featureFlagCachingMock.retrieveFeatureFlagsCallCount) == 2 // called on init and subsequent identify
                     expect(testContext.featureFlagCachingMock.retrieveFeatureFlagsReceivedArguments?.userKey) == testContext.user.key
                     expect(testContext.featureFlagCachingMock.retrieveFeatureFlagsReceivedArguments?.mobileKey) == testContext.config.mobileKey
                 }
                 it("records an identify event") {
-                    expect(testContext.eventReporterMock.recordCallCount) == 2 //both start and internalIdentify
+                    expect(testContext.eventReporterMock.recordCallCount) == 2 // both start and internalIdentify
                     expect(testContext.recordedEvent?.kind) == .identify
                     expect(testContext.recordedEvent?.key) == testContext.user.key
                 }
                 it("converts cached data") {
-                    expect(testContext.cacheConvertingMock.convertCacheDataCallCount) == 2 //Both start and internalIdentify
+                    expect(testContext.cacheConvertingMock.convertCacheDataCallCount) == 2 // Both start and internalIdentify
                     expect(testContext.cacheConvertingMock.convertCacheDataReceivedArguments?.user) == testContext.user
                     expect(testContext.cacheConvertingMock.convertCacheDataReceivedArguments?.config) == testContext.config
                 }
@@ -973,7 +973,7 @@ final class LDClientSpec: QuickSpec {
                 }
                 context("non-Optional default value") {
                     it("returns the flag value") {
-                        //The casts in the expect() calls allow the compiler to determine which variation method to use. This test calls the non-Optional variation method
+                        // The casts in the expect() calls allow the compiler to determine which variation method to use. This test calls the non-Optional variation method
                         expect(testContext.subject.variation(forKey: DarklyServiceMock.FlagKeys.bool, defaultValue: DefaultFlagValues.bool) as Bool) == DarklyServiceMock.FlagValues.bool
                         expect(testContext.subject.variation(forKey: DarklyServiceMock.FlagKeys.int, defaultValue: DefaultFlagValues.int) as Int) == DarklyServiceMock.FlagValues.int
                         expect(testContext.subject.variation(forKey: DarklyServiceMock.FlagKeys.double, defaultValue: DefaultFlagValues.double) as Double) == DarklyServiceMock.FlagValues.double
@@ -994,7 +994,7 @@ final class LDClientSpec: QuickSpec {
                 }
                 context("Optional default value") {
                     it("returns the flag value") {
-                        //The casts in the expect() calls allow the compiler to determine which variation method to use. This test calls the Optional variation method
+                        // The casts in the expect() calls allow the compiler to determine which variation method to use. This test calls the Optional variation method
                         expect(testContext.subject.variation(forKey: DarklyServiceMock.FlagKeys.bool, defaultValue: DefaultFlagValues.bool as Bool?)) == DarklyServiceMock.FlagValues.bool
                         expect(testContext.subject.variation(forKey: DarklyServiceMock.FlagKeys.int, defaultValue: DefaultFlagValues.int  as Int?)) == DarklyServiceMock.FlagValues.int
                         expect(testContext.subject.variation(forKey: DarklyServiceMock.FlagKeys.double, defaultValue: DefaultFlagValues.double as Double?)) == DarklyServiceMock.FlagValues.double
@@ -1004,7 +1004,7 @@ final class LDClientSpec: QuickSpec {
                             == DarklyServiceMock.FlagValues.dictionary).to(beTrue())
                     }
                     it("records a flag evaluation event") {
-                        //The cast in the variation call directs the compiler to the Optional variation method
+                        // The cast in the variation call directs the compiler to the Optional variation method
                         _ = testContext.subject.variation(forKey: DarklyServiceMock.FlagKeys.bool, defaultValue: DefaultFlagValues.bool as Bool?)
                         expect(testContext.eventReporterMock.recordFlagEvaluationEventsCallCount) == 1
                         expect(testContext.eventReporterMock.recordFlagEvaluationEventsReceivedArguments?.flagKey) == DarklyServiceMock.FlagKeys.bool
@@ -1016,7 +1016,7 @@ final class LDClientSpec: QuickSpec {
                 }
                 context("No default value") {
                     it("returns the flag value") {
-                        //The casts in the expect() calls allow the compiler to determine the return type.
+                        // The casts in the expect() calls allow the compiler to determine the return type.
                         expect(testContext.subject.variation(forKey: DarklyServiceMock.FlagKeys.bool, defaultValue: nil as Bool?)) == DarklyServiceMock.FlagValues.bool
                         expect(testContext.subject.variation(forKey: DarklyServiceMock.FlagKeys.int, defaultValue: nil  as Int?)) == DarklyServiceMock.FlagValues.int
                         expect(testContext.subject.variation(forKey: DarklyServiceMock.FlagKeys.double, defaultValue: nil as Double?)) == DarklyServiceMock.FlagValues.double
@@ -1026,7 +1026,7 @@ final class LDClientSpec: QuickSpec {
                             == DarklyServiceMock.FlagValues.dictionary).to(beTrue())
                     }
                     it("records a flag evaluation event") {
-                        //The cast in the variation call allows the compiler to determine the return type
+                        // The cast in the variation call allows the compiler to determine the return type
                         _ = testContext.subject.variation(forKey: DarklyServiceMock.FlagKeys.bool, defaultValue: nil as Bool?)
                         expect(testContext.eventReporterMock.recordFlagEvaluationEventsCallCount) == 1
                         expect(testContext.eventReporterMock.recordFlagEvaluationEventsReceivedArguments?.flagKey) == DarklyServiceMock.FlagKeys.bool
@@ -1040,7 +1040,7 @@ final class LDClientSpec: QuickSpec {
             context("flag store does not contain the requested value") {
                 context("non-Optional default value") {
                     it("returns the default value") {
-                        //The casts in the expect() calls allow the compiler to determine which variation method to use. This test calls the non-Optional variation method
+                        // The casts in the expect() calls allow the compiler to determine which variation method to use. This test calls the non-Optional variation method
                         expect(testContext.subject.variation(forKey: DarklyServiceMock.FlagKeys.bool, defaultValue: DefaultFlagValues.bool) as Bool) == DefaultFlagValues.bool
                         expect(testContext.subject.variation(forKey: DarklyServiceMock.FlagKeys.int, defaultValue: DefaultFlagValues.int) as Int) == DefaultFlagValues.int
                         expect(testContext.subject.variation(forKey: DarklyServiceMock.FlagKeys.double, defaultValue: DefaultFlagValues.double) as Double) == DefaultFlagValues.double
@@ -1060,7 +1060,7 @@ final class LDClientSpec: QuickSpec {
                 }
                 context("Optional default value") {
                     it("returns the default value") {
-                        //The casts in the expect() calls allow the compiler to determine which variation method to use. This test calls the non-Optional variation method
+                        // The casts in the expect() calls allow the compiler to determine which variation method to use. This test calls the non-Optional variation method
                         expect(testContext.subject.variation(forKey: DarklyServiceMock.FlagKeys.bool, defaultValue: DefaultFlagValues.bool as Bool?)) == DefaultFlagValues.bool
                         expect(testContext.subject.variation(forKey: DarklyServiceMock.FlagKeys.int, defaultValue: DefaultFlagValues.int as Int?)) == DefaultFlagValues.int
                         expect(testContext.subject.variation(forKey: DarklyServiceMock.FlagKeys.double, defaultValue: DefaultFlagValues.double as Double?)) == DefaultFlagValues.double
@@ -1069,7 +1069,7 @@ final class LDClientSpec: QuickSpec {
                         expect(testContext.subject.variation(forKey: DarklyServiceMock.FlagKeys.dictionary, defaultValue: DefaultFlagValues.dictionary as [String: Any]?) == DefaultFlagValues.dictionary).to(beTrue())
                     }
                     it("records a flag evaluation event") {
-                        //The cast in the variation call directs the compiler to the Optional variation method
+                        // The cast in the variation call directs the compiler to the Optional variation method
                         _ = testContext.subject.variation(forKey: DarklyServiceMock.FlagKeys.bool, defaultValue: DefaultFlagValues.bool as Bool?)
                         expect(testContext.eventReporterMock.recordFlagEvaluationEventsCallCount) == 1
                         expect(testContext.eventReporterMock.recordFlagEvaluationEventsReceivedArguments?.flagKey) == DarklyServiceMock.FlagKeys.bool
@@ -1081,7 +1081,7 @@ final class LDClientSpec: QuickSpec {
                 }
                 context("no default value") {
                     it("returns nil") {
-                        //The casts in the expect() calls allow the compiler to determine which variation method to use. This test calls the non-Optional variation method
+                        // The casts in the expect() calls allow the compiler to determine which variation method to use. This test calls the non-Optional variation method
                         expect(testContext.subject.variation(forKey: DarklyServiceMock.FlagKeys.bool, defaultValue: nil as Bool?)).to(beNil())
                         expect(testContext.subject.variation(forKey: DarklyServiceMock.FlagKeys.int, defaultValue: nil as Int?)).to(beNil())
                         expect(testContext.subject.variation(forKey: DarklyServiceMock.FlagKeys.double, defaultValue: nil as Double?)).to(beNil())
@@ -1090,7 +1090,7 @@ final class LDClientSpec: QuickSpec {
                         expect(testContext.subject.variation(forKey: DarklyServiceMock.FlagKeys.dictionary, defaultValue: nil as [String: Any]?)).to(beNil())
                     }
                     it("records a flag evaluation event") {
-                        //The cast in the variation call directs the compiler to the Optional variation method
+                        // The cast in the variation call directs the compiler to the Optional variation method
                         _ = testContext.subject.variation(forKey: DarklyServiceMock.FlagKeys.bool, defaultValue: nil as Bool?)
                         expect(testContext.eventReporterMock.recordFlagEvaluationEventsCallCount) == 1
                         expect(testContext.eventReporterMock.recordFlagEvaluationEventsReceivedArguments?.flagKey) == DarklyServiceMock.FlagKeys.bool

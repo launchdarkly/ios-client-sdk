@@ -26,7 +26,7 @@ public struct ConnectionInformation: Codable, CustomStringConvertible {
             }
         }
 
-        case unauthorized, httpError(Int), unknownError(String), none //We need .none for a non-failable initializer to conform to Codable
+        case unauthorized, httpError(Int), unknownError(String), none // We need .none for a non-failable initializer to conform to Codable
 
         var unknownValue: String? {
             guard case let .unknownError(value) = self

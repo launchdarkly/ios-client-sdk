@@ -54,9 +54,9 @@ final class LDTimerSpec: QuickSpec {
                     expect(testContext.ldTimer).toNot(beNil())
                     expect(testContext.ldTimer.timer).toNot(beNil())
                     expect(testContext.ldTimer.testFireQueue.label) == Constants.fireQueueLabel
-                    expect(testContext.ldTimer.isRepeating) == testContext.repeats      //true
+                    expect(testContext.ldTimer.isRepeating) == testContext.repeats      // true
                     expect(testContext.ldTimer.isCancelled) == false
-                    expect(testContext.ldTimer.fireDate?.isWithin(1.0, of: testContext.fireDate)).to(beTrue())  //1 second is arbitrary...just want it to be "close"
+                    expect(testContext.ldTimer.fireDate?.isWithin(1.0, of: testContext.fireDate)).to(beTrue())  // 1 second is arbitrary...just want it to be "close"
                 }
             }
             context("one-time timer") {
@@ -67,9 +67,9 @@ final class LDTimerSpec: QuickSpec {
                     expect(testContext.ldTimer).toNot(beNil())
                     expect(testContext.ldTimer.timer).toNot(beNil())
                     expect(testContext.ldTimer.testFireQueue.label) == Constants.fireQueueLabel
-                    expect(testContext.ldTimer.isRepeating) == testContext.repeats      //false
+                    expect(testContext.ldTimer.isRepeating) == testContext.repeats      // false
                     expect(testContext.ldTimer.isCancelled) == false
-                    expect(testContext.ldTimer.fireDate?.isWithin(1.0, of: testContext.fireDate)).to(beTrue())  //1 second is arbitrary...just want it to be "close"
+                    expect(testContext.ldTimer.fireDate?.isWithin(1.0, of: testContext.fireDate)).to(beTrue())  // 1 second is arbitrary...just want it to be "close"
                 }
             }
         }
@@ -83,7 +83,7 @@ final class LDTimerSpec: QuickSpec {
             context("one-time timer") {
                 beforeEach {
                     waitUntil { done in
-                        //timeInterval is arbitrary here. "Fast" so the test doesn't take a long time.
+                        // timeInterval is arbitrary here. "Fast" so the test doesn't take a long time.
                         testContext = TestContext(timeInterval: Constants.oneMilli, repeats: false, execute: {
                             fireQueueLabel = DispatchQueue.currentQueueLabel
                             done()
@@ -99,13 +99,13 @@ final class LDTimerSpec: QuickSpec {
             context("repeating timer") {
                 beforeEach {
                     waitUntil { done in
-                        //timeInterval is arbitrary here. "Fast" so the test doesn't take a long time.
+                        // timeInterval is arbitrary here. "Fast" so the test doesn't take a long time.
                         testContext = TestContext(timeInterval: Constants.oneMilli, repeats: true, execute: {
                             if fireQueueLabel == nil {
                                 fireQueueLabel = DispatchQueue.currentQueueLabel
                             }
                             if fireCount < Constants.targetFireCount {
-                                fireCount += 1  //If the timer fires again before the test is done, that's ok. This just measures an arbitrary point in time.
+                                fireCount += 1  // If the timer fires again before the test is done, that's ok. This just measures an arbitrary point in time.
                                 if fireCount == Constants.targetFireCount {
                                     done()
                                 }
@@ -121,7 +121,7 @@ final class LDTimerSpec: QuickSpec {
                     expect(testContext.ldTimer.timer?.isValid) == true
                     expect(fireQueueLabel).toNot(beNil())
                     expect(fireQueueLabel) == Constants.fireQueueLabel
-                    expect(fireCount) == Constants.targetFireCount      //targetFireCount is 5, and totally arbitrary. Want to measure that the repeating timer does in fact repeat.
+                    expect(fireCount) == Constants.targetFireCount      // targetFireCount is 5, and totally arbitrary. Want to measure that the repeating timer does in fact repeat.
                 }
             }
         }
@@ -137,7 +137,7 @@ final class LDTimerSpec: QuickSpec {
                     testContext.ldTimer.cancel()
                 }
                 it("cancels the timer") {
-                    expect(testContext.ldTimer.timer?.isValid ?? false) == false    //the timer either doesn't exist or is invalid...could be either depending on timing
+                    expect(testContext.ldTimer.timer?.isValid ?? false) == false    // the timer either doesn't exist or is invalid...could be either depending on timing
                     expect(testContext.ldTimer.isCancelled) == true
                 }
             }
@@ -148,7 +148,7 @@ final class LDTimerSpec: QuickSpec {
                     testContext.ldTimer.cancel()
                 }
                 it("cancels the timer") {
-                    expect(testContext.ldTimer.timer?.isValid ?? false) == false    //the timer either doesn't exist or is invalid...could be either depending on timing
+                    expect(testContext.ldTimer.timer?.isValid ?? false) == false    // the timer either doesn't exist or is invalid...could be either depending on timing
                     expect(testContext.ldTimer.isCancelled) == true
                 }
             }
@@ -158,6 +158,6 @@ final class LDTimerSpec: QuickSpec {
 
 extension DispatchQueue {
     class var currentQueueLabel: String? {
-        String(validatingUTF8: __dispatch_queue_get_label(nil))    //from https://gitlab.com/theswiftdev/swift/snippets/1741827/raw
+        String(validatingUTF8: __dispatch_queue_get_label(nil))    // from https://gitlab.com/theswiftdev/swift/snippets/1741827/raw
     }
 }

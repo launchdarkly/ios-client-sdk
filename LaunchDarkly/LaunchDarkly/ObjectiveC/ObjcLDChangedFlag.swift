@@ -19,7 +19,7 @@ public class ObjcLDChangedFlag: NSObject {
         changedFlag.oldValue ?? changedFlag.newValue
     }
 
-    ///The changed feature flag's key
+    /// The changed feature flag's key
     @objc public var key: String {
         changedFlag.key
     }
@@ -29,16 +29,16 @@ public class ObjcLDChangedFlag: NSObject {
     }
 }
 
-///Wraps the changed feature flag's BOOL values.
+/// Wraps the changed feature flag's BOOL values.
 ///
-///If the flag is not actually a BOOL the SDK sets the old and new value to false, and `typeMismatch` will be `YES`.
+/// If the flag is not actually a BOOL the SDK sets the old and new value to false, and `typeMismatch` will be `YES`.
 @objc(LDBoolChangedFlag)
 public final class ObjcLDBoolChangedFlag: ObjcLDChangedFlag {
-    ///The changed flag's value before it changed
+    /// The changed flag's value before it changed
     @objc public var oldValue: Bool {
         (changedFlag.oldValue as? Bool) ?? false
     }
-    ///The changed flag's value after it changed
+    /// The changed flag's value after it changed
     @objc public var newValue: Bool {
         (changedFlag.newValue as? Bool) ?? false
     }
@@ -52,16 +52,16 @@ public final class ObjcLDBoolChangedFlag: ObjcLDChangedFlag {
     }
 }
 
-///Wraps the changed feature flag's NSInteger values.
+/// Wraps the changed feature flag's NSInteger values.
 ///
-///If the flag is not actually an NSInteger the SDK sets the old and new value to 0, and `typeMismatch` will be `YES`.
+/// If the flag is not actually an NSInteger the SDK sets the old and new value to 0, and `typeMismatch` will be `YES`.
 @objc(LDIntegerChangedFlag)
 public final class ObjcLDIntegerChangedFlag: ObjcLDChangedFlag {
-    ///The changed flag's value before it changed
+    /// The changed flag's value before it changed
     @objc public var oldValue: Int {
         (changedFlag.oldValue as? Int) ?? 0
     }
-    ///The changed flag's value after it changed
+    /// The changed flag's value after it changed
     @objc public var newValue: Int {
         (changedFlag.newValue as? Int) ?? 0
     }
@@ -75,16 +75,16 @@ public final class ObjcLDIntegerChangedFlag: ObjcLDChangedFlag {
     }
 }
 
-///Wraps the changed feature flag's double values.
+/// Wraps the changed feature flag's double values.
 ///
-///If the flag is not actually a double the SDK sets the old and new value to 0.0, and `typeMismatch` will be `YES`.
+/// If the flag is not actually a double the SDK sets the old and new value to 0.0, and `typeMismatch` will be `YES`.
 @objc(LDDoubleChangedFlag)
 public final class ObjcLDDoubleChangedFlag: ObjcLDChangedFlag {
-    ///The changed flag's value before it changed
+    /// The changed flag's value before it changed
     @objc public var oldValue: Double {
         (changedFlag.oldValue as? Double) ?? 0.0
     }
-    ///The changed flag's value after it changed
+    /// The changed flag's value after it changed
     @objc public var newValue: Double {
         (changedFlag.newValue as? Double) ?? 0.0
     }
@@ -98,16 +98,16 @@ public final class ObjcLDDoubleChangedFlag: ObjcLDChangedFlag {
     }
 }
 
-///Wraps the changed feature flag's NSString values.
+/// Wraps the changed feature flag's NSString values.
 ///
-///If the flag is not actually an NSString the SDK sets the old and new value to nil, and `typeMismatch` will be `YES`.
+/// If the flag is not actually an NSString the SDK sets the old and new value to nil, and `typeMismatch` will be `YES`.
 @objc(LDStringChangedFlag)
 public final class ObjcLDStringChangedFlag: ObjcLDChangedFlag {
-    ///The changed flag's value before it changed
+    /// The changed flag's value before it changed
     @objc public var oldValue: String? {
         (changedFlag.oldValue as? String)
     }
-    ///The changed flag's value after it changed
+    /// The changed flag's value after it changed
     @objc public var newValue: String? {
         (changedFlag.newValue as? String)
     }
@@ -121,16 +121,16 @@ public final class ObjcLDStringChangedFlag: ObjcLDChangedFlag {
     }
 }
 
-///Wraps the changed feature flag's NSArray values.
+/// Wraps the changed feature flag's NSArray values.
 ///
-///If the flag is not actually a NSArray the SDK sets the old and new value to nil, and `typeMismatch` will be `YES`.
+/// If the flag is not actually a NSArray the SDK sets the old and new value to nil, and `typeMismatch` will be `YES`.
 @objc(LDArrayChangedFlag)
 public final class ObjcLDArrayChangedFlag: ObjcLDChangedFlag {
-    ///The changed flag's value before it changed
+    /// The changed flag's value before it changed
     @objc public var oldValue: [Any]? {
         changedFlag.oldValue as? [Any]
     }
-    ///The changed flag's value after it changed
+    /// The changed flag's value after it changed
     @objc public var newValue: [Any]? {
         changedFlag.newValue as? [Any]
     }
@@ -144,16 +144,16 @@ public final class ObjcLDArrayChangedFlag: ObjcLDChangedFlag {
     }
 }
 
-///Wraps the changed feature flag's NSDictionary values.
+/// Wraps the changed feature flag's NSDictionary values.
 ///
-///If the flag is not actually an NSDictionary the SDK sets the old and new value to nil, and `typeMismatch` will be `YES`.
+/// If the flag is not actually an NSDictionary the SDK sets the old and new value to nil, and `typeMismatch` will be `YES`.
 @objc(LDDictionaryChangedFlag)
 public final class ObjcLDDictionaryChangedFlag: ObjcLDChangedFlag {
-    ///The changed flag's value before it changed
+    /// The changed flag's value before it changed
     @objc public var oldValue: [String: Any]? {
         changedFlag.oldValue as? [String: Any]
     }
-    ///The changed flag's value after it changed
+    /// The changed flag's value after it changed
     @objc public var newValue: [String: Any]? {
         changedFlag.newValue as? [String: Any]
     }
@@ -168,7 +168,7 @@ public final class ObjcLDDictionaryChangedFlag: ObjcLDChangedFlag {
 }
 
 public extension LDChangedFlag {
-    ///An NSObject wrapper for the Swift LDChangeFlag enum. Intended for use in mixed apps when Swift code needs to pass a LDChangeFlag into an Objective-C method.
+    /// An NSObject wrapper for the Swift LDChangeFlag enum. Intended for use in mixed apps when Swift code needs to pass a LDChangeFlag into an Objective-C method.
     var objcChangedFlag: ObjcLDChangedFlag {
         let extantValue = oldValue ?? newValue
         switch extantValue {

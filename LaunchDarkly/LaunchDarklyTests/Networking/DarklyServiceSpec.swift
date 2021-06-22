@@ -133,7 +133,7 @@ final class DarklyServiceSpec: QuickSpec {
                             expect(reportRequestCount) == 0
                         }
                         it("creates a GET request") {
-                            //GET request url has the form https://<host>/msdk/evalx/users/<base64encodedUser>
+                            // GET request url has the form https://<host>/msdk/evalx/users/<base64encodedUser>
                             expect(urlRequest?.url?.host) == testContext.config.baseUrl.host
                             if let path = urlRequest?.url?.path {
                                 expect(path.hasPrefix("/\(DarklyService.FlagRequestPath.get)")).to(beTrue())
@@ -196,7 +196,7 @@ final class DarklyServiceSpec: QuickSpec {
                             expect(reportRequestCount) == 0
                         }
                         it("creates a GET request") {
-                            //GET request url has the form https://<host>/msdk/evalx/users/<base64encodedUser>
+                            // GET request url has the form https://<host>/msdk/evalx/users/<base64encodedUser>
                             expect(urlRequest?.url?.host) == testContext.config.baseUrl.host
                             if let path = urlRequest?.url?.path {
                                 expect(path.hasPrefix("/\(DarklyService.FlagRequestPath.get)")).to(beTrue())
@@ -319,7 +319,7 @@ final class DarklyServiceSpec: QuickSpec {
                             expect(reportRequestCount) == 1
                         }
                         it("creates a REPORT request") {
-                            //REPORT request url has the form https://<host>/msdk/evalx/user; httpBody contains the user dictionary
+                            // REPORT request url has the form https://<host>/msdk/evalx/user; httpBody contains the user dictionary
                             expect(urlRequest?.url?.host) == testContext.config.baseUrl.host
                             if let path = urlRequest?.url?.path {
                                 expect(path.hasSuffix(DarklyService.FlagRequestPath.report)).to(beTrue())
@@ -329,7 +329,7 @@ final class DarklyServiceSpec: QuickSpec {
                             expect(urlRequest?.cachePolicy) == .reloadIgnoringLocalCacheData
                             expect(urlRequest?.timeoutInterval) == testContext.config.connectionTimeout
                             expect(urlRequest?.httpMethod) == URLRequest.HTTPMethods.report
-                            expect(urlRequest?.httpBodyStream).toNot(beNil())   //Although the service sets the httpBody, OHHTTPStubs seems to convert that into an InputStream, which should be ok
+                            expect(urlRequest?.httpBodyStream).toNot(beNil())   // Although the service sets the httpBody, OHHTTPStubs seems to convert that into an InputStream, which should be ok
                             guard let headers = urlRequest?.allHTTPHeaderFields
                             else {
                                 fail("request is missing HTTP headers")
@@ -375,7 +375,7 @@ final class DarklyServiceSpec: QuickSpec {
                             expect(reportRequestCount) == 1
                         }
                         it("creates a REPORT request") {
-                            //REPORT request url has the form https://<host>/msdk/evalx/user; httpBody contains the user dictionary
+                            // REPORT request url has the form https://<host>/msdk/evalx/user; httpBody contains the user dictionary
                             expect(urlRequest?.url?.host) == testContext.config.baseUrl.host
                             if let path = urlRequest?.url?.path {
                                 expect(path.hasSuffix(DarklyService.FlagRequestPath.report)).to(beTrue())
@@ -385,7 +385,7 @@ final class DarklyServiceSpec: QuickSpec {
                             expect([.reloadIgnoringLocalCacheData, .reloadRevalidatingCacheData]).to(contain(urlRequest?.cachePolicy))
                             expect(urlRequest?.timeoutInterval) == testContext.config.connectionTimeout
                             expect(urlRequest?.httpMethod) == URLRequest.HTTPMethods.report
-                            expect(urlRequest?.httpBodyStream).toNot(beNil())   //Although the service sets the httpBody, OHHTTPStubs seems to convert that into an InputStream, which should be ok
+                            expect(urlRequest?.httpBodyStream).toNot(beNil())   // Although the service sets the httpBody, OHHTTPStubs seems to convert that into an InputStream, which should be ok
                             guard let headers = urlRequest?.allHTTPHeaderFields
                             else {
                                 fail("request is missing HTTP headers")
@@ -507,7 +507,7 @@ final class DarklyServiceSpec: QuickSpec {
                 }
                 context("on not modified") {
                     context("response has etag") {
-                        //This should never happen, without an original etag the server should not send a 304 NOT MODIFIED. If it does ignore it.
+                        // This should never happen, without an original etag the server should not send a 304 NOT MODIFIED. If it does ignore it.
                         beforeEach {
                             testContext = TestContext()
                             flagRequestEtag = UUID().uuidString
@@ -528,7 +528,7 @@ final class DarklyServiceSpec: QuickSpec {
                         }
                     }
                     context("response has no etag") {
-                        //This should never happen, without an original etag the server should not send a 304 NOT MODIFIED. If it does ignore it.
+                        // This should never happen, without an original etag the server should not send a 304 NOT MODIFIED. If it does ignore it.
                         beforeEach {
                             testContext = TestContext()
                             testContext.serviceMock.stubFlagRequest(statusCode: HTTPURLResponse.StatusCodes.notModified,
@@ -549,7 +549,7 @@ final class DarklyServiceSpec: QuickSpec {
                 }
                 context("on failure") {
                     context("response has etag") {
-                        //This should never happen. The server should not send an etag with a failure status code If it does ignore it.
+                        // This should never happen. The server should not send an etag with a failure status code If it does ignore it.
                         beforeEach {
                             testContext = TestContext()
                             flagRequestEtag = UUID().uuidString
@@ -674,7 +674,7 @@ final class DarklyServiceSpec: QuickSpec {
                             }
                         }
                         context("that differs from the original etag") {
-                            //This should not happen. If the response was not modified then the etags should match. In that case ignore the new etag
+                            // This should not happen. If the response was not modified then the etags should match. In that case ignore the new etag
                             beforeEach {
                                 testContext = TestContext(mobileKeyCount: Constants.mobileKeyCount)
                                 HTTPHeaders.loadFlagRequestEtags(testContext.flagRequestEtags)
@@ -697,7 +697,7 @@ final class DarklyServiceSpec: QuickSpec {
                         }
                     }
                     context("response has no etag") {
-                        //This should not happen. If the response was not modified then the etags should match. In that case ignore the new etag
+                        // This should not happen. If the response was not modified then the etags should match. In that case ignore the new etag
                         beforeEach {
                             testContext = TestContext(mobileKeyCount: Constants.mobileKeyCount)
                             HTTPHeaders.loadFlagRequestEtags(testContext.flagRequestEtags)
@@ -720,7 +720,7 @@ final class DarklyServiceSpec: QuickSpec {
                 }
                 context("on failure") {
                     context("response has etag") {
-                        //This should not happen. If the response was an error then there should be no new etag. Because of the error, clear the etag
+                        // This should not happen. If the response was an error then there should be no new etag. Because of the error, clear the etag
                         beforeEach {
                             testContext = TestContext(mobileKeyCount: Constants.mobileKeyCount)
                             HTTPHeaders.loadFlagRequestEtags(testContext.flagRequestEtags)
@@ -1006,7 +1006,7 @@ final class DarklyServiceSpec: QuickSpec {
                     expect(diagnosticRequest?.httpMethod) == URLRequest.HTTPMethods.post
                     // Unfortunately, we can't actually test the body here, see:
                     // https://github.com/AliSoftware/OHHTTPStubs#known-limitations
-                    //expect(diagnosticRequest?.httpBody) == try? JSONEncoder().encode(self.stubDiagnostic())
+                    // expect(diagnosticRequest?.httpBody) == try? JSONEncoder().encode(self.stubDiagnostic())
 
                     // Actual header values are tested in HTTPHeadersSpec
                     for (key, value) in testContext.httpHeaders.diagnosticRequestHeaders {
@@ -1037,7 +1037,7 @@ final class DarklyServiceSpec: QuickSpec {
                     expect(diagnosticRequest?.httpMethod) == URLRequest.HTTPMethods.post
                     // Unfortunately, we can't actually test the body here, see:
                     // https://github.com/AliSoftware/OHHTTPStubs#known-limitations
-                    //expect(diagnosticRequest?.httpBody) == try? JSONEncoder().encode(self.stubDiagnostic())
+                    // expect(diagnosticRequest?.httpBody) == try? JSONEncoder().encode(self.stubDiagnostic())
 
                     // Actual header values are tested in HTTPHeadersSpec
                     for (key, value) in testContext.httpHeaders.diagnosticRequestHeaders {

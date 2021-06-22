@@ -42,7 +42,7 @@ final class FlagStore: FlagMaintaining {
         self.init(featureFlags: featureFlagDictionary?.flagCollection)
     }
 
-    ///Replaces all feature flags with new flags. Pass nil to reset to an empty flag store
+    /// Replaces all feature flags with new flags. Pass nil to reset to an empty flag store
     func replaceStore(newFlags: [LDFlagKey: Any], completion: CompletionClosure?) {
         Log.debug(typeName(and: #function) + "newFlags: \(String(describing: newFlags))")
         flagQueue.async(flags: .barrier) {

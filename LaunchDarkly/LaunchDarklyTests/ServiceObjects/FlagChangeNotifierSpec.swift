@@ -30,7 +30,7 @@ final class FlagChangeNotifierSpec: QuickSpec {
 
         let alternateFlagKeys = ["flag-key-1", "flag-key-2", "flag-key-3"]
 
-        //Use this initializer when stubbing observers for observer add & remove tests
+        // Use this initializer when stubbing observers for observer add & remove tests
         init(observers observerCount: Int = 0, observerType: ObserverType = .any, repeatFirstObserver: Bool = false) {
             subject = FlagChangeNotifier()
             guard observerCount > 0
@@ -53,7 +53,7 @@ final class FlagChangeNotifierSpec: QuickSpec {
             flagsUnchangedOwnerKey = flagChangeObservers.first!.flagKeys.observerKey
 
             var flagsUnchangedObservers = [FlagsUnchangedObserver]()
-            //use the flag change observer owners to own the flagsUnchangedObservers
+            // use the flag change observer owners to own the flagsUnchangedObservers
             flagChangeObservers.forEach { flagChangeObserver in
                 flagsUnchangedObservers.append(FlagsUnchangedObserver(owner: flagChangeObserver.owner!, flagsUnchangedHandler: flagsUnchangedHandler))
             }
@@ -61,7 +61,7 @@ final class FlagChangeNotifierSpec: QuickSpec {
             originalFlagChangeObservers = subject.flagObservers
         }
 
-        //Use this initializer when stubbing observers that should execute a LDFlagChangeHandler during the test
+        // Use this initializer when stubbing observers that should execute a LDFlagChangeHandler during the test
         init(keys: [LDFlagKey], flagChangeHandler: @escaping LDFlagChangeHandler, flagsUnchangedHandler: @escaping LDFlagsUnchangedHandler) {
             subject = FlagChangeNotifier()
             guard !keys.isEmpty
@@ -74,7 +74,7 @@ final class FlagChangeNotifierSpec: QuickSpec {
             }
             flagsUnchangedOwnerKey = flagChangeObservers.first!.flagKeys.observerKey
             var flagsUnchangedObservers = [FlagsUnchangedObserver]()
-            //use the flag change observer owners to own the flagsUnchangedObservers
+            // use the flag change observer owners to own the flagsUnchangedObservers
             flagChangeObservers.forEach { flagChangeObserver in
                 flagsUnchangedObservers.append(FlagsUnchangedObserver(owner: flagChangeObserver.owner!, flagsUnchangedHandler: flagsUnchangedHandler))
             }
@@ -82,8 +82,8 @@ final class FlagChangeNotifierSpec: QuickSpec {
             originalFlagChangeObservers = subject.flagObservers
         }
 
-        //Use this initializer when stubbing observers that should execute a LDFlagCollectionChangeHandler during the test
-        //This initializer sets 2 observers, one for the specified flags, and a second for a disjoint set of flags. That way tests verify the notifier is choosing the correct observers
+        // Use this initializer when stubbing observers that should execute a LDFlagCollectionChangeHandler during the test
+        // This initializer sets 2 observers, one for the specified flags, and a second for a disjoint set of flags. That way tests verify the notifier is choosing the correct observers
         init(keys: [LDFlagKey], flagCollectionChangeHandler: @escaping LDFlagCollectionChangeHandler, flagsUnchangedHandler: @escaping LDFlagsUnchangedHandler) {
             subject = FlagChangeNotifier()
             guard !keys.isEmpty
@@ -112,7 +112,7 @@ final class FlagChangeNotifierSpec: QuickSpec {
             stubOwner(key: keys.observerKey)
         }
 
-        //Flag change handler stubs
+        // Flag change handler stubs
         func flagChangeHandler(changedFlag: LDChangedFlag) { }
 
         func flagCollectionChangeHandler(changedFlags: [LDFlagKey: LDChangedFlag]) { }
@@ -201,7 +201,7 @@ final class FlagChangeNotifierSpec: QuickSpec {
             context("when several observers exist") {
                 beforeEach {
                     testContext = TestContext(observers: Constants.observerCount)
-                    targetObserver = testContext.subject.flagObservers[Constants.observerCount - 2]  //Take the middle one
+                    targetObserver = testContext.subject.flagObservers[Constants.observerCount - 2]  // Take the middle one
 
                     testContext.subject.removeObserver(owner: targetObserver.owner!)
                 }

@@ -15,7 +15,7 @@ extension HTTPURLResponse {
     }
 
     struct StatusCodes {
-        //swiftlint:disable:next identifier_name
+        // swiftlint:disable:next identifier_name
         static let ok = 200
         static let accepted = 202
         static let notModified = 304

@@ -195,7 +195,7 @@ final class LDConfigSpec: XCTestCase {
 
     func testEquals() {
         let environmentReporter = EnvironmentReportingMock()
-        //must use a background enabled OS to test inequality of background enabled
+        // must use a background enabled OS to test inequality of background enabled
         environmentReporter.operatingSystem = OperatingSystem.backgroundEnabledOperatingSystems.first!
         let defaultConfig = LDConfig(mobileKey: LDConfig.Constants.mockMobileKey, environmentReporter: environmentReporter)
         // same config

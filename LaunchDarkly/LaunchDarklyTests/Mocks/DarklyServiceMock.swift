@@ -24,7 +24,7 @@ final class DarklyServiceMock: DarklyServiceProvider {
         static let null = "null-flag"
         static let unknown = "unknown-flag"
 
-        static var knownFlags: [LDFlagKey] {        //known means the SDK has the feature flag value
+        static var knownFlags: [LDFlagKey] {        // known means the SDK has the feature flag value
             [bool, int, double, string, array, dictionary, null]
         }
         static var flagsWithAnAlternateValue: [LDFlagKey] {
@@ -70,7 +70,7 @@ final class DarklyServiceMock: DarklyServiceProvider {
             case let value as String: return value + "-alternate" as! T
             case var value as [Any]:
                 value.append(4)
-                return value as! T  //Not sure why, but this crashes if you combine append the value into the return
+                return value as! T  // Not sure why, but this crashes if you combine append the value into the return
             case var value as [String: Any]:
                 value["new-flag"] = "new-value"
                 return value as! T
@@ -282,7 +282,7 @@ extension DarklyServiceMock {
         flagRequestStubTest && isMethodREPORT()
     }
 
-    ///Use when testing requires the mock service to actually make a flag request
+    /// Use when testing requires the mock service to actually make a flag request
     func stubFlagRequest(statusCode: Int,
                          featureFlags: [LDFlagKey: FeatureFlag]? = nil,
                          useReport: Bool,
@@ -304,7 +304,7 @@ extension DarklyServiceMock {
                     name: flagStubName(statusCode: statusCode, useReport: useReport), onActivation: activate)
     }
 
-    ///Use when testing requires the mock service to simulate a service response to the flag request callback
+    /// Use when testing requires the mock service to simulate a service response to the flag request callback
     func stubFlagResponse(statusCode: Int, badData: Bool = false, responseOnly: Bool = false, errorOnly: Bool = false, responseDate: Date? = nil) {
         let response = HTTPURLResponse(url: config.baseUrl, statusCode: statusCode, httpVersion: Constants.httpVersion, headerFields: HTTPURLResponse.dateHeader(from: responseDate))
         if statusCode == HTTPURLResponse.StatusCodes.ok {
@@ -342,7 +342,7 @@ extension DarklyServiceMock {
         isScheme(Constants.schemeHttps) && isHost(streamHost!) && isMethodREPORT()
     }
 
-    ///Use when testing requires the mock service to actually make an event source connection request
+    /// Use when testing requires the mock service to actually make an event source connection request
     func stubStreamRequest(useReport: Bool, success: Bool, onActivation activate: ((URLRequest, HTTPStubsDescriptor, HTTPStubsResponse) -> Void)? = nil) {
         var stubResponse: HTTPStubsResponseBlock = { _ in
             HTTPStubsResponse(error: Constants.error)
@@ -364,7 +364,7 @@ extension DarklyServiceMock {
         isScheme(Constants.schemeHttps) && isHost(eventHost!) && isMethodPOST()
     }
 
-    ///Use when testing requires the mock service to actually make an event request
+    /// Use when testing requires the mock service to actually make an event request
     func stubEventRequest(success: Bool, onActivation activate: ((URLRequest, HTTPStubsDescriptor, HTTPStubsResponse) -> Void)? = nil) {
         let stubResponse: HTTPStubsResponseBlock = success ? { _ in
             HTTPStubsResponse(data: Data(), statusCode: Int32(HTTPURLResponse.StatusCodes.accepted), headers: nil)
@@ -374,7 +374,7 @@ extension DarklyServiceMock {
         stubRequest(passingTest: eventRequestStubTest, stub: stubResponse, name: Constants.stubNameEvent, onActivation: activate)
     }
 
-    ///Use when testing requires the mock service to provide a service response to the event request callback
+    /// Use when testing requires the mock service to provide a service response to the event request callback
     func stubEventResponse(success: Bool, responseOnly: Bool = false, errorOnly: Bool = false, responseDate: Date? = nil) {
         if success {
             let response = HTTPURLResponse(url: config.eventsUrl,
@@ -399,7 +399,7 @@ extension DarklyServiceMock {
 
     // MARK: Publish Diagnostic
 
-    ///Use when testing requires the mock service to actually make an diagnostic request
+    /// Use when testing requires the mock service to actually make an diagnostic request
     func stubDiagnosticRequest(success: Bool, onActivation activate: ((URLRequest, HTTPStubsDescriptor, HTTPStubsResponse) -> Void)? = nil) {
         let stubResponse: HTTPStubsResponseBlock = success ? { _ in
             HTTPStubsResponse(data: Data(), statusCode: Int32(HTTPURLResponse.StatusCodes.accepted), headers: nil)

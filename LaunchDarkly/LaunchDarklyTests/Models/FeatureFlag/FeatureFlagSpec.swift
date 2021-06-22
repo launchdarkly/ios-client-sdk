@@ -367,7 +367,7 @@ final class FeatureFlagSpec: QuickSpec {
                     }
                 }
                 context("when values differ") {
-                    it("returns true") {    //This is a weird effect of comparing the variation, and not the value itself. The server should not return different values for the same variation.
+                    it("returns true") {    // This is a weird effect of comparing the variation, and not the value itself. The server should not return different values for the same variation.
                         originalFlags.forEach { _, originalFlag in
                             if originalFlag.value == nil {
                                 return
@@ -519,7 +519,7 @@ final class FeatureFlagSpec: QuickSpec {
                 }
                 context("debugEventsUntilDate is system date") {
                     beforeEach {
-                        //Without creating a SystemDateServiceMock and corresponding service protocol, this is really difficult to test, but the level of accuracy is not crucial. Since the debugEventsUntilDate comes in millisSince1970, setting the debugEventsUntilDate to 1 millisecond beyond the date seems like it will get "close enough" to the current date
+                        // Without creating a SystemDateServiceMock and corresponding service protocol, this is really difficult to test, but the level of accuracy is not crucial. Since the debugEventsUntilDate comes in millisSince1970, setting the debugEventsUntilDate to 1 millisecond beyond the date seems like it will get "close enough" to the current date
                         flag = FeatureFlag(copying: flag, trackEvents: true, debugEventsUntilDate: Date().addingTimeInterval(0.001))
                         shouldCreateDebugEvents = flag.shouldCreateDebugEvents(lastEventReportResponseTime: nil)
                     }

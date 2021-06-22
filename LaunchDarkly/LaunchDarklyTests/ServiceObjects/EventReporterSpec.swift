@@ -247,7 +247,7 @@ final class EventReporterSpec: QuickSpec {
                 context("success") {
                     context("with events and tracked requests") {
                         beforeEach {
-                            //The EventReporter will try to report events if it's started online with events. By starting online without events, then adding them, we "beat the timer" by reporting them right away
+                            // The EventReporter will try to report events if it's started online with events. By starting online without events, then adding them, we "beat the timer" by reporting them right away
                             waitUntil { syncComplete in
                                 testContext = TestContext(eventStubResponseDate: eventStubResponseDate, onSyncComplete: { result in
                                     testContext.syncResult = result
@@ -264,7 +264,7 @@ final class EventReporterSpec: QuickSpec {
                             expect(testContext.eventReporter.isReportingActive) == true
                             expect(testContext.serviceMock.publishEventDictionariesCallCount) == 1
                             expect(testContext.serviceMock.publishedEventDictionaries?.count) == Event.Kind.nonSummaryKinds.count + 1
-                            expect(testContext.serviceMock.publishedEventDictionaryKeys) == testContext.eventKeys //summary events have no key, this verifies non-summary events
+                            expect(testContext.serviceMock.publishedEventDictionaryKeys) == testContext.eventKeys // summary events have no key, this verifies non-summary events
                             expect(testContext.serviceMock.publishedEventDictionaryKinds?.contains(.summary)) == true
                             expect(testContext.diagnosticCache.recordEventsInLastBatchCallCount) == 1
                             expect(testContext.diagnosticCache.recordEventsInLastBatchReceivedEventsInLastBatch) == Event.Kind.nonSummaryKinds.count + 1
@@ -281,7 +281,7 @@ final class EventReporterSpec: QuickSpec {
                     }
                     context("with events only") {
                         beforeEach {
-                            //The EventReporter will try to report events if it's started online with events. By starting online without events, then adding them, we "beat the timer" by reporting them right away
+                            // The EventReporter will try to report events if it's started online with events. By starting online without events, then adding them, we "beat the timer" by reporting them right away
                             waitUntil { syncComplete in
                                 testContext = TestContext(eventStubResponseDate: eventStubResponseDate, onSyncComplete: { result in
                                     testContext.syncResult = result
@@ -297,7 +297,7 @@ final class EventReporterSpec: QuickSpec {
                             expect(testContext.eventReporter.isReportingActive) == true
                             expect(testContext.serviceMock.publishEventDictionariesCallCount) == 1
                             expect(testContext.serviceMock.publishedEventDictionaries?.count) == Event.Kind.nonSummaryKinds.count
-                            expect(testContext.serviceMock.publishedEventDictionaryKeys) == testContext.eventKeys //summary events have no key, this verifies non-summary events
+                            expect(testContext.serviceMock.publishedEventDictionaryKeys) == testContext.eventKeys // summary events have no key, this verifies non-summary events
                             expect(testContext.serviceMock.publishedEventDictionaryKinds?.contains(.summary)) == false
                             expect(testContext.diagnosticCache.recordEventsInLastBatchCallCount) == 1
                             expect(testContext.diagnosticCache.recordEventsInLastBatchReceivedEventsInLastBatch) == Event.Kind.nonSummaryKinds.count
@@ -314,7 +314,7 @@ final class EventReporterSpec: QuickSpec {
                     }
                     context("with tracked requests only") {
                         beforeEach {
-                            //The EventReporter will try to report events if it's started online with events. By starting online without events, then adding them, we "beat the timer" by reporting them right away
+                            // The EventReporter will try to report events if it's started online with events. By starting online without events, then adding them, we "beat the timer" by reporting them right away
                             waitUntil { syncComplete in
                                 testContext = TestContext(eventStubResponseDate: eventStubResponseDate, onSyncComplete: { result in
                                     testContext.syncResult = result
@@ -389,7 +389,7 @@ final class EventReporterSpec: QuickSpec {
                         it("drops events after the failure") {
                             expect(testContext.eventReporter.isOnline) == true
                             expect(testContext.eventReporter.isReportingActive) == true
-                            expect(testContext.serviceMock.publishEventDictionariesCallCount) == 2 //1 retry attempt
+                            expect(testContext.serviceMock.publishEventDictionariesCallCount) == 2 // 1 retry attempt
                             expect(testContext.eventReporter.eventStoreKeys) == []
                             expect(testContext.eventReporter.eventStoreKinds.contains(.summary)) == false
                             expect(testContext.serviceMock.publishedEventDictionaryKeys) == testContext.eventKeys
@@ -422,7 +422,7 @@ final class EventReporterSpec: QuickSpec {
                         it("drops events after the failure") {
                             expect(testContext.eventReporter.isOnline) == true
                             expect(testContext.eventReporter.isReportingActive) == true
-                            expect(testContext.serviceMock.publishEventDictionariesCallCount) == 2 //1 retry attempt
+                            expect(testContext.serviceMock.publishEventDictionariesCallCount) == 2 // 1 retry attempt
                             expect(testContext.eventReporter.eventStoreKeys) == []
                             expect(testContext.eventReporter.eventStoreKinds.contains(.summary)) == false
                             expect(testContext.serviceMock.publishedEventDictionaryKeys) == testContext.eventKeys
@@ -458,7 +458,7 @@ final class EventReporterSpec: QuickSpec {
                         it("drops events events after the failure") {
                             expect(testContext.eventReporter.isOnline) == true
                             expect(testContext.eventReporter.isReportingActive) == true
-                            expect(testContext.serviceMock.publishEventDictionariesCallCount) == 2 //1 retry attempt
+                            expect(testContext.serviceMock.publishEventDictionariesCallCount) == 2 // 1 retry attempt
                             expect(testContext.eventReporter.eventStoreKeys) == []
                             expect(testContext.eventReporter.eventStoreKinds.contains(.summary)) == false
                             expect(testContext.serviceMock.publishedEventDictionaryKeys) == testContext.eventKeys

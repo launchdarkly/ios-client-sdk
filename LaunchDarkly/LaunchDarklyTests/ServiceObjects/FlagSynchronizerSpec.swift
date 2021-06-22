@@ -62,7 +62,7 @@ final class FlagSynchronizerSpec: QuickSpec {
                                            streamClosed: Bool? = nil) -> ToMatchResult {
             var messages = [String]()
 
-            //synchronizer state
+            // synchronizer state
             if flagSynchronizer.isOnline != isOnline {
                 messages.append("isOnline equals \(flagSynchronizer.isOnline)")
             }
@@ -76,7 +76,7 @@ final class FlagSynchronizerSpec: QuickSpec {
                 messages.append("pollingActive equals \(flagSynchronizer.pollingActive)")
             }
 
-            //flag requests
+            // flag requests
             if serviceMock.getFeatureFlagsCallCount != flagRequests {
                 messages.append("flag requests equals \(serviceMock.getFeatureFlagsCallCount)")
             }
@@ -214,7 +214,7 @@ final class FlagSynchronizerSpec: QuickSpec {
                         testContext.flagSynchronizer.isOnline = true
                     }
                     it("starts streaming") {
-                        //streaming expects a ping on successful connection that triggers a flag request. No ping means no flag requests
+                        // streaming expects a ping on successful connection that triggers a flag request. No ping means no flag requests
                         expect({ testContext.synchronizerState(synchronizerOnline: true,
                                                                streamingMode: .streaming,
                                                                flagRequests: 0,
@@ -235,7 +235,7 @@ final class FlagSynchronizerSpec: QuickSpec {
                         testContext.flagSynchronizer.isOnline = false
                     }
                     it("starts polling") {
-                        //polling starts by requesting flags
+                        // polling starts by requesting flags
                         expect({ testContext.synchronizerState(synchronizerOnline: true, streamingMode: .polling, flagRequests: 1, streamCreated: false) }).to(match())
                     }
                 }
@@ -997,7 +997,7 @@ final class FlagSynchronizerSpec: QuickSpec {
                     testContext.flagSynchronizer.isOnline = true
 
                     waitUntil(timeout: .seconds(2)) { done in
-                        //In polling mode, the flagSynchronizer makes a flag request when set online right away. To verify the timer this test waits the polling interval (1s) for a second flag request
+                        // In polling mode, the flagSynchronizer makes a flag request when set online right away. To verify the timer this test waits the polling interval (1s) for a second flag request
                         testContext.flagSynchronizer.onSyncComplete = { result in
                             if case .success(let flags, let streamEvent) = result {
                                 (newFlags, streamingEvent) = (flags.flagCollection, streamEvent)
@@ -1014,7 +1014,7 @@ final class FlagSynchronizerSpec: QuickSpec {
                     expect(newFlags == DarklyServiceMock.Constants.stubFeatureFlags(includeNullValue: false, includeVariations: true, includeVersions: true)).to(beTrue())
                     expect(streamingEvent).to(beNil())
                 }
-                //This particular test causes a retain cycle between the FlagSynchronizer and something else. By removing onSyncComplete, the closure is no longer called after the test is complete.
+                // This particular test causes a retain cycle between the FlagSynchronizer and something else. By removing onSyncComplete, the closure is no longer called after the test is complete.
                 afterEach {
                     testContext.flagSynchronizer.onSyncComplete = nil
                 }
@@ -1143,7 +1143,7 @@ final class FlagSynchronizerSpec: QuickSpec {
         }
         describe("makeFlagRequest") {
             var testContext: TestContext!
-            //This test completes the test suite on makeFlagRequest by validating the method bails out if it's called and the synchronizer is offline. While that shouldn't happen, there are 2 code paths that don't directly verify the SDK is online before calling the method, so it seems a wise precaution to validate that the method does bailout. Other tests exercise the rest of the method.
+            // This test completes the test suite on makeFlagRequest by validating the method bails out if it's called and the synchronizer is offline. While that shouldn't happen, there are 2 code paths that don't directly verify the SDK is online before calling the method, so it seems a wise precaution to validate that the method does bailout. Other tests exercise the rest of the method.
             context("offline") {
                 var synchronizingError: SynchronizingError?
                 beforeEach {

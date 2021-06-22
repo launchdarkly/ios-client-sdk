@@ -10,8 +10,8 @@ import Foundation
 struct AnyComparer {
     private init() { }
 
-    //If editing this method to add classes here, update AnySpec with tests that verify the comparison for that class
-    //swiftlint:disable:next cyclomatic_complexity
+    // If editing this method to add classes here, update AnySpec with tests that verify the comparison for that class
+    // swiftlint:disable:next cyclomatic_complexity
     static func isEqual(_ value: Any, to other: Any) -> Bool {
         switch (value, other) {
         case let (value, other) as (Bool, Bool):

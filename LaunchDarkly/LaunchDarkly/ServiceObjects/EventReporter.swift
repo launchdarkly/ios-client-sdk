@@ -13,9 +13,9 @@ enum EventSyncResult {
 }
 
 typealias EventSyncCompleteClosure = ((EventSyncResult) -> Void)
-//sourcery: autoMockable
+// sourcery: autoMockable
 protocol EventReporting {
-    //sourcery: defaultMockValue = false
+    // sourcery: defaultMockValue = false
     var isOnline: Bool { get set }
     var lastEventResponseDate: Date? { get }
 
@@ -63,7 +63,7 @@ class EventReporter: EventReporting {
     }
 
     func record(_ event: Event) {
-        //The eventReporter is created when the LDClient singleton is created, and kept for the app's lifetime. So while the use of self in the async block does setup a retain cycle, it's not going to cause a memory leak
+        // The eventReporter is created when the LDClient singleton is created, and kept for the app's lifetime. So while the use of self in the async block does setup a retain cycle, it's not going to cause a memory leak
         eventQueue.sync { recordNoSync(event) }
     }
 
@@ -197,7 +197,7 @@ class EventReporter: EventReporting {
     }
 
     private func reportSyncComplete(_ result: EventSyncResult) {
-        //The eventReporter is created when the LDClient singleton is created, and kept for the app's lifetime. So while the use of self in the async block does setup a retain cycle, it's not going to cause a memory leak
+        // The eventReporter is created when the LDClient singleton is created, and kept for the app's lifetime. So while the use of self in the async block does setup a retain cycle, it's not going to cause a memory leak
         guard let onSyncComplete = onSyncComplete
         else { return }
         DispatchQueue.main.async {

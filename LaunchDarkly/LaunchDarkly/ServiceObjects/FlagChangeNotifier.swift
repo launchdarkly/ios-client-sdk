@@ -7,7 +7,7 @@
 
 import Foundation
 
-//sourcery: autoMockable
+// sourcery: autoMockable
 protocol FlagChangeNotifying {
     func addFlagChangeObserver(_ observer: FlagChangeObserver)
     func addFlagsUnchangedObserver(_ observer: FlagsUnchangedObserver)
@@ -40,7 +40,7 @@ final class FlagChangeNotifier: FlagChangeNotifying {
         connectionModeChangedQueue.sync { connectionModeChangedObservers.append(observer) }
     }
 
-    ///Removes all change handling closures from owner
+    /// Removes all change handling closures from owner
     func removeObserver(owner: LDObserverOwner) {
         Log.debug(typeName(and: #function) + "owner: \(owner)")
         flagChangeQueue.sync { flagChangeObservers.removeAll { $0.owner === owner } }
@@ -117,7 +117,7 @@ final class FlagChangeNotifier: FlagChangeNotifying {
     }
 
     private func findChangedFlagKeys(oldFlags: [LDFlagKey: FeatureFlag], newFlags: [LDFlagKey: FeatureFlag]) -> [LDFlagKey] {
-        oldFlags.symmetricDifference(newFlags)     //symmetricDifference tests for equality, which includes version. Exclude version here.
+        oldFlags.symmetricDifference(newFlags)     // symmetricDifference tests for equality, which includes version. Exclude version here.
             .filter { flagKey in
                 guard let oldFeatureFlag = oldFlags[flagKey],
                     let newFeatureFlag = newFlags[flagKey]
@@ -131,7 +131,7 @@ final class FlagChangeNotifier: FlagChangeNotifying {
 }
 
 extension FlagChangeNotifier: TypeIdentifying { }
-//Test support
+// Test support
 #if DEBUG
     extension FlagChangeNotifier {
         var flagObservers: [FlagChangeObserver] { flagChangeObservers }

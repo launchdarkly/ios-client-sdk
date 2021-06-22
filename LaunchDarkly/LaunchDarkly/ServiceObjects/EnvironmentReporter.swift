@@ -39,29 +39,29 @@ enum OperatingSystem: String {
     }
 }
 
-//sourcery: autoMockable
+// sourcery: autoMockable
 protocol EnvironmentReporting {
-    //sourcery: defaultMockValue = true
+    // sourcery: defaultMockValue = true
     var isDebugBuild: Bool { get }
-    //sourcery: defaultMockValue = Constants.deviceType
+    // sourcery: defaultMockValue = Constants.deviceType
     var deviceType: String { get }
-    //sourcery: defaultMockValue = Constants.deviceModel
+    // sourcery: defaultMockValue = Constants.deviceModel
     var deviceModel: String { get }
-    //sourcery: defaultMockValue = Constants.systemVersion
+    // sourcery: defaultMockValue = Constants.systemVersion
     var systemVersion: String { get }
-    //sourcery: defaultMockValue = Constants.systemName
+    // sourcery: defaultMockValue = Constants.systemName
     var systemName: String { get }
-    //sourcery: defaultMockValue = .iOS
+    // sourcery: defaultMockValue = .iOS
     var operatingSystem: OperatingSystem { get }
-    //sourcery: defaultMockValue = EnvironmentReporter().backgroundNotification
+    // sourcery: defaultMockValue = EnvironmentReporter().backgroundNotification
     var backgroundNotification: Notification.Name? { get }
-    //sourcery: defaultMockValue = EnvironmentReporter().foregroundNotification
+    // sourcery: defaultMockValue = EnvironmentReporter().foregroundNotification
     var foregroundNotification: Notification.Name? { get }
-    //sourcery: defaultMockValue = Constants.vendorUUID
+    // sourcery: defaultMockValue = Constants.vendorUUID
     var vendorUUID: String? { get }
-    //sourcery: defaultMockValue = Constants.sdkVersion
+    // sourcery: defaultMockValue = Constants.sdkVersion
     var sdkVersion: String { get }
-    //sourcery: defaultMockValue = true
+    // sourcery: defaultMockValue = true
     var shouldThrottleOnlineCalls: Bool { get }
 }
 
@@ -80,11 +80,11 @@ struct EnvironmentReporter: EnvironmentReporting {
         #if os(OSX)
         return Sysctl.model
         #else
-        //Obtaining the device model from https://stackoverflow.com/questions/26028918/how-to-determine-the-current-iphone-device-model answer by Jens Schwarzer
+        // Obtaining the device model from https://stackoverflow.com/questions/26028918/how-to-determine-the-current-iphone-device-model answer by Jens Schwarzer
         if let simulatorModelIdentifier = ProcessInfo().environment[Constants.simulatorModelIdentifier] {
             return simulatorModelIdentifier
         }
-        //the physical device code here is not automatically testable. Manual testing on physical devices is required.
+        // the physical device code here is not automatically testable. Manual testing on physical devices is required.
         var systemInfo = utsname()
         _ = uname(&systemInfo)
         guard let deviceModel = String(bytes: Data(bytes: &systemInfo.machine, count: Int(_SYS_NAMELEN)), encoding: .ascii)
@@ -151,9 +151,9 @@ extension OperatingSystemVersion {
 
 extension Sysctl {
     static var modelWithoutVersion: String {
-        //swiftlint:disable:next force_try
+        // swiftlint:disable:next force_try
         let modelRegex = try! NSRegularExpression(pattern: "([A-Za-z]+)\\d{1,2},\\d")
-        let model = Sysctl.model    //e.g. "MacPro4,1"
+        let model = Sysctl.model    // e.g. "MacPro4,1"
         return modelRegex.firstCaptureGroup(in: model, options: [], range: model.range) ?? "mac"
     }
 }

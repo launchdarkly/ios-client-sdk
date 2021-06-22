@@ -11,7 +11,7 @@ import Nimble
 import OHHTTPStubs
 @testable import LaunchDarkly
 
-//Normally we would not build an AT for system provided services, like URLCache. The SDK uses the URLCache in a non-standard way, sending HTTP requests with a custom verb REPORT. So building this test validates that the URLCache behaves as expected for GET and REPORT requests. Retaining these tests helps provide that assurance through future revisions.
+// Normally we would not build an AT for system provided services, like URLCache. The SDK uses the URLCache in a non-standard way, sending HTTP requests with a custom verb REPORT. So building this test validates that the URLCache behaves as expected for GET and REPORT requests. Retaining these tests helps provide that assurance through future revisions.
 final class URLCacheSpec: QuickSpec {
 
     struct Constants {
@@ -25,7 +25,7 @@ final class URLCacheSpec: QuickSpec {
         var serviceFactoryMock: ClientServiceMockFactory
         var flagStore: FlagMaintaining
 
-        //per user
+        // per user
         var userServiceObjects = [String: (user: LDUser, service: DarklyService, serviceMock: DarklyServiceMock)]()
         var userKeys: Dictionary<String, (user: LDUser, service: DarklyService, serviceMock: DarklyServiceMock)>.Keys {
             userServiceObjects.keys
