@@ -43,6 +43,7 @@ enum SynchronizingError: Error {
 
 enum FlagSyncResult {
     case success([String: Any], FlagUpdateType?)
+    case upToDate
     case error(SynchronizingError)
 }
 
@@ -98,8 +99,6 @@ class FlagSynchronizer: LDFlagSynchronizing, EventHandler {
         self.useReport = useReport
         self.service = service
         self.onSyncComplete = onSyncComplete
-
-        configureCommunications(isOnline: isOnline)
     }
 
     private func configureCommunications(isOnline: Bool) {
@@ -229,6 +228,10 @@ class FlagSynchronizer: LDFlagSynchronizing, EventHandler {
         if let serviceResponseError = serviceResponse.error {
             Log.debug(typeName(and: #function) + "error: \(serviceResponseError)")
             reportSyncComplete(.error(.request(serviceResponseError)))
+            return
+        }
+        if serviceResponse.urlResponse?.httpStatusCode == HTTPURLResponse.StatusCodes.notModified {
+            reportSyncComplete(.upToDate)
             return
         }
         guard serviceResponse.urlResponse?.httpStatusCode == HTTPURLResponse.StatusCodes.ok

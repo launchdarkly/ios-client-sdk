@@ -8,7 +8,6 @@
 
 /* Begin PBXBuildFile section */
 		830BF933202D188E006DF9B1 /* HTTPURLRequest.swift in Sources */ = {isa = PBXBuildFile; fileRef = 830BF932202D188E006DF9B1 /* HTTPURLRequest.swift */; };
-		830DB3AA223409D800D65D25 /* URLCacheSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = 830DB3A9223409D800D65D25 /* URLCacheSpec.swift */; };
 		830DB3AC22380A3E00D65D25 /* HTTPHeadersSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = 830DB3AB22380A3E00D65D25 /* HTTPHeadersSpec.swift */; };
 		830DB3AE2239B54900D65D25 /* URLResponse.swift in Sources */ = {isa = PBXBuildFile; fileRef = 830DB3AD2239B54900D65D25 /* URLResponse.swift */; };
 		830DB3AF2239B54900D65D25 /* URLResponse.swift in Sources */ = {isa = PBXBuildFile; fileRef = 830DB3AD2239B54900D65D25 /* URLResponse.swift */; };
@@ -373,7 +372,6 @@
 
 /* Begin PBXFileReference section */
 		830BF932202D188E006DF9B1 /* HTTPURLRequest.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HTTPURLRequest.swift; sourceTree = "<group>"; };
-		830DB3A9223409D800D65D25 /* URLCacheSpec.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = URLCacheSpec.swift; sourceTree = "<group>"; };
 		830DB3AB22380A3E00D65D25 /* HTTPHeadersSpec.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HTTPHeadersSpec.swift; sourceTree = "<group>"; };
 		830DB3AD2239B54900D65D25 /* URLResponse.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = URLResponse.swift; sourceTree = "<group>"; };
 		831188382113A16900D77CB5 /* LaunchDarkly_tvOS.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = LaunchDarkly_tvOS.framework; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -583,7 +581,6 @@
 				83396BC81F7C3711000E256E /* DarklyServiceSpec.swift */,
 				832307A51F7D8D720029815A /* URLRequestSpec.swift */,
 				8392FFA22033565700320914 /* HTTPURLResponse.swift */,
-				830DB3A9223409D800D65D25 /* URLCacheSpec.swift */,
 				830DB3AB22380A3E00D65D25 /* HTTPHeadersSpec.swift */,
 			);
 			path = Networking;
@@ -708,14 +705,14 @@
 		8354EFE61F263E4200C05156 /* Models */ = {
 			isa = PBXGroup;
 			children = (
-				8354EFDD1F26380700C05156 /* LDConfig.swift */,
-				83EBCB9E20D9A120003A7142 /* User */,
-				83EBCB9D20D9A0A1003A7142 /* FeatureFlag */,
-				8354EFDE1F26380700C05156 /* Event.swift */,
-				83883DD4220B68A000EEAB95 /* ErrorObserver.swift */,
 				8354AC5F224150C300CDE602 /* Cache */,
 				C408884823033B7500420721 /* ConnectionInformation.swift */,
 				B4C9D42D2489B5FF004A9B03 /* DiagnosticEvent.swift */,
+				83883DD4220B68A000EEAB95 /* ErrorObserver.swift */,
+				8354EFDE1F26380700C05156 /* Event.swift */,
+				83EBCB9D20D9A0A1003A7142 /* FeatureFlag */,
+				8354EFDD1F26380700C05156 /* LDConfig.swift */,
+				83A2D6231F51CD7A00EA3BD4 /* LDUser.swift */,
 			);
 			path = Models;
 			sourceTree = "<group>";
@@ -790,14 +787,6 @@
 				83EBCBB220DABE1B003A7142 /* FlagRequestTracker.swift */,
 			);
 			path = FeatureFlag;
-			sourceTree = "<group>";
-		};
-		83EBCB9E20D9A120003A7142 /* User */ = {
-			isa = PBXGroup;
-			children = (
-				83A2D6231F51CD7A00EA3BD4 /* LDUser.swift */,
-			);
-			path = User;
 			sourceTree = "<group>";
 		};
 		83EBCB9F20D9A143003A7142 /* FlagChange */ = {
@@ -1474,7 +1463,6 @@
 				8335299E1FC37727001166F8 /* FlagMaintainingMock.swift in Sources */,
 				83383A5120460DD30024D975 /* SynchronizingErrorSpec.swift in Sources */,
 				8354AC6E22418C1F00CDE602 /* CacheableUserEnvironmentFlagsSpec.swift in Sources */,
-				830DB3AA223409D800D65D25 /* URLCacheSpec.swift in Sources */,
 				83B9A080204F56F4000C3F17 /* FlagChangeObserverSpec.swift in Sources */,
 				830DB3AC22380A3E00D65D25 /* HTTPHeadersSpec.swift in Sources */,
 				83D15235225299890054B6D4 /* DeprecatedCacheModelV2Spec.swift in Sources */,

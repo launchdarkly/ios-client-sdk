@@ -11,23 +11,24 @@ import XCTest
 @testable import LaunchDarkly
 
 final class URLRequestSpec: XCTestCase {
-    func testAppendHeadersNoInitial() {
-        var request: URLRequest = URLRequest(url: URL(string: "https://dummy.urlRequest.com")!)
-        request.appendHeaders(["headerA": "valueA", "headerB": "valueB"])
-        XCTAssertEqual(request.allHTTPHeaderFields, ["headerA": "valueA", "headerB": "valueB"])
-    }
+    func testInitExtension() {
+        var delegateArgs: (url: URL, headers: [String: String])?
 
-    func testAppendHeaders() {
-        var request: URLRequest = URLRequest(url: URL(string: "https://dummy.urlRequest.com")!)
-        request.allHTTPHeaderFields = ["header1": "value1"]
-        request.appendHeaders(["headerA": "valueA"])
-        XCTAssertEqual(request.allHTTPHeaderFields, ["header1": "value1", "headerA": "valueA"])
-    }
+        let url = URL(string: "https://dummy.urlRequest.com")!
+        var config = LDConfig(mobileKey: "testkey")
+        config.connectionTimeout = 15
+        config.headerDelegate = { url, headers in
+            delegateArgs = (url, headers)
+            return ["Proxy": "Other"]
+        }
+        let request: URLRequest = URLRequest(url: url,
+                                             ldHeaders: ["Authorization": "api_key foo"],
+                                             ldConfig: config)
 
-    func testAppendHeadersOverrides() {
-        var request: URLRequest = URLRequest(url: URL(string: "https://dummy.urlRequest.com")!)
-        request.allHTTPHeaderFields = ["header1": "value1", "header2": "value2"]
-        request.appendHeaders(["header1": "value3"])
-        XCTAssertEqual(request.allHTTPHeaderFields, ["header1": "value3", "header2": "value2"])
+        XCTAssertEqual(request.timeoutInterval, 15)
+        XCTAssertEqual(request.url, url)
+        XCTAssertEqual(delegateArgs?.url, url)
+        XCTAssertEqual(delegateArgs?.headers, ["Authorization": "api_key foo"])
+        XCTAssertEqual(request.allHTTPHeaderFields, ["Proxy": "Other"])
     }
 }

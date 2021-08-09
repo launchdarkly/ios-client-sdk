@@ -23,8 +23,7 @@ protocol ClientServiceCreating {
     func makeFlagChangeNotifier() -> FlagChangeNotifying
     func makeEventReporter(service: DarklyServiceProvider) -> EventReporting
     func makeEventReporter(service: DarklyServiceProvider, onSyncComplete: EventSyncCompleteClosure?) -> EventReporting
-    func makeStreamingProvider(url: URL, httpHeaders: [String: String], handler: EventHandler, delegate: RequestHeaderTransform?, errorHandler: ConnectionErrorHandler?) -> DarklyStreamingProvider
-    func makeStreamingProvider(url: URL, httpHeaders: [String: String], connectMethod: String?, connectBody: Data?, handler: EventHandler, delegate: RequestHeaderTransform?, errorHandler: ConnectionErrorHandler?) -> DarklyStreamingProvider
+    func makeStreamingProvider(url: URL, httpHeaders: [String: String], connectMethod: String, connectBody: Data?, handler: EventHandler, delegate: RequestHeaderTransform?, errorHandler: ConnectionErrorHandler?) -> DarklyStreamingProvider
     func makeEnvironmentReporter() -> EnvironmentReporting
     func makeThrottler(environmentReporter: EnvironmentReporting) -> Throttling
     func makeErrorNotifier() -> ErrorNotifying
@@ -85,22 +84,8 @@ final class ClientServiceFactory: ClientServiceCreating {
     }
 
     func makeStreamingProvider(url: URL, 
-                               httpHeaders: [String: String],
-                               handler: EventHandler,
-                               delegate: RequestHeaderTransform?,
-                               errorHandler: ConnectionErrorHandler?) -> DarklyStreamingProvider {
-        var config: EventSource.Config = EventSource.Config(handler: handler, url: url)
-        config.headers = httpHeaders
-        config.headerTransform = { delegate?(url, $0) ?? $0 }
-        if let errorHandler = errorHandler {
-            config.connectionErrorHandler = errorHandler
-        }
-        return EventSource(config: config)
-    }
-
-    func makeStreamingProvider(url: URL, 
                                httpHeaders: [String: String], 
-                               connectMethod: String?, 
+                               connectMethod: String,
                                connectBody: Data?, 
                                handler: EventHandler, 
                                delegate: RequestHeaderTransform?,
@@ -108,11 +93,9 @@ final class ClientServiceFactory: ClientServiceCreating {
         var config: EventSource.Config = EventSource.Config(handler: handler, url: url)
         config.headerTransform = { delegate?(url, $0) ?? $0 }
         config.headers = httpHeaders
+        config.method = connectMethod
         if let errorHandler = errorHandler {
             config.connectionErrorHandler = errorHandler
-        }
-        if let method = connectMethod {
-            config.method = method
         }
         if let body = connectBody {
             config.body = body

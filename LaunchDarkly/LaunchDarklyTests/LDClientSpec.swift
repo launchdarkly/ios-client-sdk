@@ -1158,7 +1158,7 @@ final class LDClientSpec: QuickSpec {
                 let receivedObserver = mockNotifier.addConnectionModeChangedObserverReceivedObserver
                 expect(mockNotifier.addConnectionModeChangedObserverCallCount) == 1
                 expect(receivedObserver?.owner) === self
-                receivedObserver?.connectionModeChangedHandler?(ConnectionInformation.ConnectionMode.offline)
+                receivedObserver?.connectionModeChangedHandler(ConnectionInformation.ConnectionMode.offline)
                 expect(callCount) == 1
             }
             it("observeError") {
@@ -1236,7 +1236,7 @@ final class LDClientSpec: QuickSpec {
         }
         it("informs the flag change notifier of the changed flags") {
             expect(testContext.changeNotifierMock.notifyObserversCallCount) == 1
-            expect(testContext.changeNotifierMock.notifyObserversReceivedArguments?.flagStore.featureFlags) == testContext.flagStoreMock.featureFlags
+            expect(testContext.changeNotifierMock.notifyObserversReceivedArguments?.newFlags) == testContext.flagStoreMock.featureFlags
             expect(testContext.changeNotifierMock.notifyObserversReceivedArguments?.oldFlags == testContext.cachedFlags).to(beTrue())
         }
     }
@@ -1275,7 +1275,7 @@ final class LDClientSpec: QuickSpec {
         }
         it("informs the flag change notifier of the changed flag") {
             expect(testContext.changeNotifierMock.notifyObserversCallCount) == 1
-            expect(testContext.changeNotifierMock.notifyObserversReceivedArguments?.flagStore.featureFlags) == testContext.flagStoreMock.featureFlags
+            expect(testContext.changeNotifierMock.notifyObserversReceivedArguments?.newFlags) == testContext.flagStoreMock.featureFlags
             expect(testContext.changeNotifierMock.notifyObserversReceivedArguments?.oldFlags == stubFlags).to(beTrue())
         }
     }
@@ -1311,7 +1311,7 @@ final class LDClientSpec: QuickSpec {
         }
         it("informs the flag change notifier of the changed flag") {
             expect(testContext.changeNotifierMock.notifyObserversCallCount) == 1
-            expect(testContext.changeNotifierMock.notifyObserversReceivedArguments?.flagStore.featureFlags) == testContext.flagStoreMock.featureFlags
+            expect(testContext.changeNotifierMock.notifyObserversReceivedArguments?.newFlags) == testContext.flagStoreMock.featureFlags
             expect(testContext.changeNotifierMock.notifyObserversReceivedArguments?.oldFlags == stubFlags).to(beTrue())
         }
     }

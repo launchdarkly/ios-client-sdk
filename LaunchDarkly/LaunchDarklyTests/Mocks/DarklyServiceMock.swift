@@ -98,8 +98,6 @@ final class DarklyServiceMock: DarklyServiceProvider {
         static let mockEventsUrl = URL(string: "https://dummy.events.com")!
         static let mockStreamUrl = URL(string: "https://dummy.stream.com")!
 
-        static let requestPathStream = "/mping"
-
         static let stubNameFlag = "Flag Request Stub"
         static let stubNameStream = "Stream Connect Stub"
         static let stubNameEvent = "Event Report Stub"
@@ -287,21 +285,22 @@ extension DarklyServiceMock {
                          featureFlags: [LDFlagKey: FeatureFlag]? = nil,
                          useReport: Bool,
                          flagResponseEtag: String? = nil,
-                         onActivation activate: ((URLRequest, HTTPStubsDescriptor, HTTPStubsResponse) -> Void)? = nil) {
-
+                         onActivation activate: ((URLRequest) -> Void)? = nil) {
         let stubbedFeatureFlags = featureFlags ?? Constants.stubFeatureFlags()
         let responseData = statusCode == HTTPURLResponse.StatusCodes.ok ? stubbedFeatureFlags.dictionaryValue.jsonData! : Data()
         let stubResponse: HTTPStubsResponseBlock = { _ in
-            var headers = [String: String]()
+            var headers: [String: String] = [:]
             if let flagResponseEtag = flagResponseEtag {
                 headers = [HTTPURLResponse.HeaderKeys.etag: flagResponseEtag,
-                           HTTPURLResponse.HeaderKeys.cacheControl: HTTPURLResponse.HeaderValues.maxAge]
+                           "Cache-Control": "max-age=0"]
             }
             return HTTPStubsResponse(data: responseData, statusCode: Int32(statusCode), headers: headers)
         }
         stubRequest(passingTest: useReport ? reportFlagRequestStubTest : getFlagRequestStubTest,
                     stub: stubResponse,
-                    name: flagStubName(statusCode: statusCode, useReport: useReport), onActivation: activate)
+                    name: flagStubName(statusCode: statusCode, useReport: useReport)) { request, _, _ in
+            activate?(request)
+        }
     }
 
     /// Use when testing requires the mock service to simulate a service response to the flag request callback
@@ -365,13 +364,15 @@ extension DarklyServiceMock {
     }
 
     /// Use when testing requires the mock service to actually make an event request
-    func stubEventRequest(success: Bool, onActivation activate: ((URLRequest, HTTPStubsDescriptor, HTTPStubsResponse) -> Void)? = nil) {
+    func stubEventRequest(success: Bool, onActivation activate: ((URLRequest) -> Void)? = nil) {
         let stubResponse: HTTPStubsResponseBlock = success ? { _ in
             HTTPStubsResponse(data: Data(), statusCode: Int32(HTTPURLResponse.StatusCodes.accepted), headers: nil)
         } : { _ in
             HTTPStubsResponse(error: Constants.error)
         }
-        stubRequest(passingTest: eventRequestStubTest, stub: stubResponse, name: Constants.stubNameEvent, onActivation: activate)
+        stubRequest(passingTest: eventRequestStubTest, stub: stubResponse, name: Constants.stubNameEvent) { request, _, _ in
+            activate?(request)
+        }
     }
 
     /// Use when testing requires the mock service to provide a service response to the event request callback
@@ -411,8 +412,6 @@ extension DarklyServiceMock {
 
     // MARK: Stub
 
-    var anyRequestStubTest: HTTPStubsTestBlock { { _ in true } }
-
     private func stubRequest(passingTest test: @escaping HTTPStubsTestBlock,
                              stub: @escaping HTTPStubsResponseBlock,
                              name: String,
@@ -432,12 +431,6 @@ extension DarklyServiceMock {
             activationBlock.callback(request, stubDescriptor, stubResponse)
             return
         }
-    }
-}
-
-extension HTTPStubs {
-    class func stub(named name: String) -> HTTPStubsDescriptor? {
-        (HTTPStubs.allStubs() as? [HTTPStubsDescriptor])?.first { $0.name == name }
     }
 }
 

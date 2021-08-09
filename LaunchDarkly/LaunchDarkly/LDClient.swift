@@ -269,6 +269,7 @@ public class LDClient {
     }
 
     let config: LDConfig
+    let service: DarklyServiceProvider
     private(set) var user: LDUser
     
     /**
@@ -310,6 +311,7 @@ public class LDClient {
                 flagStore.replaceStore(newFlags: user.flagStore?.featureFlags ?? [:], completion: nil)
             }
             self.service.user = self.user
+            self.service.clearFlagResponseCache()
             flagSynchronizer = serviceFactory.makeFlagSynchronizer(streamingMode: ConnectionInformation.effectiveStreamingMode(config: config, ldClient: self),
                                                                    pollingInterval: config.flagPollingInterval(runMode: runMode),
                                                                    useReport: config.useReport,
@@ -325,14 +327,10 @@ public class LDClient {
             if !config.autoAliasingOptOut && previousUser.isAnonymous && !newUser.isAnonymous {
                 self.alias(context: newUser, previousContext: previousUser)
             }
-
-            self.service.clearFlagResponseCache()
         }
     }
 
     private let internalIdentifyQueue: DispatchQueue = DispatchQueue(label: "InternalIdentifyQueue")
-
-    let service: DarklyServiceProvider
 
     // MARK: Retrieving Flag Values
 
@@ -694,6 +692,9 @@ public class LDClient {
                     self.updateCacheAndReportChanges(user: self.user, oldFlags: oldFlags)
                 }
             }
+        case .upToDate:
+            connectionInformation.lastKnownFlagValidity = Date()
+            flagChangeNotifier.notifyUnchanged()
         case .error(let synchronizingError):
             process(synchronizingError, logPrefix: typeName(and: #function, appending: ": "))
         }
@@ -713,7 +714,7 @@ public class LDClient {
     private func updateCacheAndReportChanges(user: LDUser,
                                              oldFlags: [LDFlagKey: FeatureFlag]) {
         flagCache.storeFeatureFlags(flagStore.featureFlags, userKey: user.key, mobileKey: config.mobileKey, lastUpdated: Date(), storeMode: .async)
-        flagChangeNotifier.notifyObservers(flagStore: flagStore, oldFlags: oldFlags)
+        flagChangeNotifier.notifyObservers(oldFlags: oldFlags, newFlags: flagStore.featureFlags)
     }
 
     // MARK: Events
@@ -827,8 +828,6 @@ public class LDClient {
             Log.debug("LDClient.start() was called more than once!")
             return
         }
-
-        HTTPHeaders.removeFlagRequestEtags()
 
         let internalUser = user
 
