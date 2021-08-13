@@ -38,9 +38,32 @@ extension Dictionary where Key == String {
 
 extension Dictionary where Key == String, Value == Any {
     var withNullValuesRemoved: [String: Any] {
-        self.filter { !($1 is NSNull) }.mapValues { value in
+        (self as [String: Any?]).compactMapValues { value in
+            if value is NSNull {
+                return nil
+            }
             if let dictionary = value as? [String: Any] {
                 return dictionary.withNullValuesRemoved
+            }
+            if let arr = value as? [Any] {
+                return arr.withNullValuesRemoved
+            }
+            return value
+        }
+    }
+}
+
+private extension Array where Element == Any {
+    var withNullValuesRemoved: [Any] {
+        (self as [Any?]).compactMap { value in
+            if value is NSNull {
+                return nil
+            }
+            if let arr = value as? [Any] {
+                return arr.withNullValuesRemoved
+            }
+            if let dict = value as? [String: Any] {
+                return dict.withNullValuesRemoved
             }
             return value
         }

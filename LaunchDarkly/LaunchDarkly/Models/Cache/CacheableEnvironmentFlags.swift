@@ -35,11 +35,3 @@ struct CacheableEnvironmentFlags {
         self.init(userKey: userKey, mobileKey: mobileKey, featureFlags: featureFlags)
     }
 }
-
-extension CacheableEnvironmentFlags: Equatable {
-    static func == (lhs: CacheableEnvironmentFlags, rhs: CacheableEnvironmentFlags) -> Bool {
-        lhs.userKey == rhs.userKey
-        && lhs.mobileKey == rhs.mobileKey
-        && lhs.featureFlags == rhs.featureFlags
-    }
-}

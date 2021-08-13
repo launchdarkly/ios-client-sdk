@@ -26,7 +26,6 @@ final class CacheableEnvironmentFlagsSpec: QuickSpec {
         initWithElementsSpec()
         initWithDictionarySpec()
         dictionaryValueSpec()
-        equalsSpec()
     }
 
     private func initWithElementsSpec() {
@@ -86,41 +85,30 @@ final class CacheableEnvironmentFlagsSpec: QuickSpec {
                     expect(cacheDictionary["mobileKey"] as? String) == TestValues.mobKey
                     expect(AnyComparer.isEqual(cacheDictionary["featureFlags"], to: [:])) == true
                 }
+                // Ultimately, this is not desired behavior, but currently we are unable to store internal nil/null values
+                // inside of the `KeyedValueCache`. When we update our cache format, we can encode all data to get around this.
+                it("removes internal nulls") {
+                    let flags = ["flag1": FeatureFlag(flagKey: "flag1", value: ["abc": [1, nil, 3]]),
+                                 "flag2": FeatureFlag(flagKey: "flag2", value: [1, ["abc": nil], 3])]
+                    let cacheable = CacheableEnvironmentFlags(userKey: "user", mobileKey: "mobile", featureFlags: flags)
+                    let dictionaryFlags = cacheable.dictionaryValue["featureFlags"] as! [String: [String: Any]]
+                    let flag1 = FeatureFlag(dictionary: dictionaryFlags["flag1"])
+                    let flag2 = FeatureFlag(dictionary: dictionaryFlags["flag2"])
+                    // Manually comparing fields, `==` on `FeatureFlag` does not compare values.
+                    expect(flag1?.flagKey) == "flag1"
+                    expect(AnyComparer.isEqual(flag1?.value, to: ["abc": [1, 3]])).to(beTrue())
+                    expect(flag2?.flagKey) == "flag2"
+                    expect(AnyComparer.isEqual(flag2?.value, to: [1, [:], 3])).to(beTrue())
+                }
             }
         }
     }
+}
 
-    private func equalsSpec() {
-        let environmentFlags = TestValues.defaultEnvironment()
-        describe("equals") {
-            it("returns true when elements are equal") {
-                let other = CacheableEnvironmentFlags(userKey: environmentFlags.userKey,
-                                                      mobileKey: environmentFlags.mobileKey,
-                                                      featureFlags: environmentFlags.featureFlags)
-                expect(environmentFlags == other) == true
-            }
-            context("returns false") {
-                it("when the userKey differs") {
-                    let other = CacheableEnvironmentFlags(userKey: UUID().uuidString,
-                                                          mobileKey: environmentFlags.mobileKey,
-                                                          featureFlags: environmentFlags.featureFlags)
-                    expect(environmentFlags == other) == false
-                }
-                it("when the mobileKey differs") {
-                    let other = CacheableEnvironmentFlags(userKey: environmentFlags.userKey,
-                                                          mobileKey: UUID().uuidString,
-                                                          featureFlags: environmentFlags.featureFlags)
-                    expect(environmentFlags == other) == false
-                }
-                it("when the featureFlags differ") {
-                    var otherFlags = environmentFlags.featureFlags
-                    otherFlags.removeValue(forKey: otherFlags.first!.key)
-                    let other = CacheableEnvironmentFlags(userKey: environmentFlags.userKey,
-                                                          mobileKey: environmentFlags.mobileKey,
-                                                          featureFlags: otherFlags)
-                    expect(environmentFlags == other) == false
-                }
-            }
-        }
+extension CacheableEnvironmentFlags: Equatable {
+    public static func == (lhs: CacheableEnvironmentFlags, rhs: CacheableEnvironmentFlags) -> Bool {
+        lhs.userKey == rhs.userKey
+        && lhs.mobileKey == rhs.mobileKey
+        && lhs.featureFlags == rhs.featureFlags
     }
 }
