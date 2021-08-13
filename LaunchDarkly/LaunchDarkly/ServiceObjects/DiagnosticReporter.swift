@@ -7,7 +7,7 @@
 
 import Foundation
 
-//sourcery: autoMockable
+// sourcery: autoMockable
 protocol DiagnosticReporting {
     func setMode(_ runMode: LDClientRunMode, online: Bool)
 }

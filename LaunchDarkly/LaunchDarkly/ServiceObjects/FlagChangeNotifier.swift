@@ -7,20 +7,22 @@
 
 import Foundation
 
-//sourcery: autoMockable
+// sourcery: autoMockable
 protocol FlagChangeNotifying {
     func addFlagChangeObserver(_ observer: FlagChangeObserver)
     func addFlagsUnchangedObserver(_ observer: FlagsUnchangedObserver)
     func addConnectionModeChangedObserver(_ observer: ConnectionModeChangedObserver)
     func removeObserver(owner: LDObserverOwner)
     func notifyConnectionModeChangedObservers(connectionMode: ConnectionInformation.ConnectionMode)
-    func notifyObservers(flagStore: FlagMaintaining, oldFlags: [LDFlagKey: FeatureFlag])
+    func notifyUnchanged()
+    func notifyObservers(oldFlags: [LDFlagKey: FeatureFlag], newFlags: [LDFlagKey: FeatureFlag])
 }
 
 final class FlagChangeNotifier: FlagChangeNotifying {
-    private var flagChangeObservers = [FlagChangeObserver]()
-    private var flagsUnchangedObservers = [FlagsUnchangedObserver]()
-    private var connectionModeChangedObservers = [ConnectionModeChangedObserver]()
+    // Exposed for testing
+    private (set) var flagChangeObservers = [FlagChangeObserver]()
+    private (set) var flagsUnchangedObservers = [FlagsUnchangedObserver]()
+    private (set) var connectionModeChangedObservers = [ConnectionModeChangedObserver]()
     private var flagChangeQueue = DispatchQueue(label: "com.launchdarkly.FlagChangeNotifier.FlagChangeQueue")
     private var flagsUnchangedQueue = DispatchQueue(label: "com.launchdarkly.FlagChangeNotifier.FlagsUnchangedQueue")
     private var connectionModeChangedQueue = DispatchQueue(label: "com.launchdarkly.FlagChangeNotifier.ConnectionModeChangedQueue")
@@ -40,7 +42,7 @@ final class FlagChangeNotifier: FlagChangeNotifying {
         connectionModeChangedQueue.sync { connectionModeChangedObservers.append(observer) }
     }
 
-    ///Removes all change handling closures from owner
+    /// Removes all change handling closures from owner
     func removeObserver(owner: LDObserverOwner) {
         Log.debug(typeName(and: #function) + "owner: \(owner)")
         flagChangeQueue.sync { flagChangeObservers.removeAll { $0.owner === owner } }
@@ -50,37 +52,41 @@ final class FlagChangeNotifier: FlagChangeNotifying {
 
     func notifyConnectionModeChangedObservers(connectionMode: ConnectionInformation.ConnectionMode) {
         connectionModeChangedQueue.sync {
-            connectionModeChangedObservers.forEach { connectionModeChangedObserver in
-                if let connectionModeChangedHandler = connectionModeChangedObserver.connectionModeChangedHandler {
-                    DispatchQueue.main.async {
-                        connectionModeChangedHandler(connectionMode)
-                    }
+            connectionModeChangedObservers.removeAll { $0.owner == nil }
+            connectionModeChangedObservers.forEach { observer in
+                DispatchQueue.main.async {
+                    observer.connectionModeChangedHandler(connectionMode)
                 }
             }
         }
     }
 
-    func notifyObservers(flagStore: FlagMaintaining, oldFlags: [LDFlagKey: FeatureFlag]) {
+    func notifyUnchanged() {
         removeOldObservers()
 
-        let changedFlagKeys = findChangedFlagKeys(oldFlags: oldFlags, newFlags: flagStore.featureFlags)
-        guard !changedFlagKeys.isEmpty
-        else {
-            if flagsUnchangedObservers.isEmpty {
-                Log.debug(typeName(and: #function) + "aborted. Flags unchanged and no flagsUnchanged observers set.")
-            } else {
-                Log.debug(typeName(and: #function) + "notifying observers that flags are unchanged.")
-            }
-            flagsUnchangedQueue.sync {
-                flagsUnchangedObservers.forEach { flagsUnchangedObserver in
-                    DispatchQueue.main.async {
-                        flagsUnchangedObserver.flagsUnchangedHandler()
-                    }
+        if flagsUnchangedObservers.isEmpty {
+            Log.debug(typeName(and: #function) + "aborted. Flags unchanged and no flagsUnchanged observers set.")
+        } else {
+            Log.debug(typeName(and: #function) + "notifying observers that flags are unchanged.")
+        }
+        flagsUnchangedQueue.sync {
+            flagsUnchangedObservers.forEach { flagsUnchangedObserver in
+                DispatchQueue.main.async {
+                    flagsUnchangedObserver.flagsUnchangedHandler()
                 }
             }
+        }
+    }
+
+    func notifyObservers(oldFlags: [LDFlagKey: FeatureFlag], newFlags: [LDFlagKey: FeatureFlag]) {
+        let changedFlagKeys = findChangedFlagKeys(oldFlags: oldFlags, newFlags: newFlags)
+        guard !changedFlagKeys.isEmpty
+        else {
+            notifyUnchanged()
             return
         }
 
+        removeOldObservers()
         let selectedObservers = flagChangeQueue.sync {
             flagChangeObservers.filter { $0.flagKeys == LDFlagKey.anyKey || $0.flagKeys.contains { changedFlagKeys.contains($0) } }
         }
@@ -90,10 +96,8 @@ final class FlagChangeNotifier: FlagChangeNotifying {
             return
         }
 
-        let changedFlags = [LDFlagKey: LDChangedFlag](uniqueKeysWithValues: changedFlagKeys.map { flagKey in
-            (flagKey, LDChangedFlag(key: flagKey,
-                                    oldValue: oldFlags[flagKey]?.value,
-                                    newValue: flagStore.featureFlags[flagKey]?.value))
+        let changedFlags = [LDFlagKey: LDChangedFlag](uniqueKeysWithValues: changedFlagKeys.map {
+            ($0, LDChangedFlag(key: $0, oldValue: oldFlags[$0]?.value, newValue: newFlags[$0]?.value))
         })
         Log.debug(typeName(and: #function) + "notifying observers for changes to flags: \(changedFlags.keys.joined(separator: ", ")).")
         selectedObservers.forEach { observer in
@@ -108,46 +112,21 @@ final class FlagChangeNotifier: FlagChangeNotifying {
             }
         }
     }
-    
+
     private func removeOldObservers() {
         Log.debug(typeName(and: #function))
         flagChangeQueue.sync { flagChangeObservers.removeAll { $0.owner == nil } }
         flagsUnchangedQueue.sync { flagsUnchangedObservers.removeAll { $0.owner == nil } }
-        connectionModeChangedQueue.sync { connectionModeChangedObservers.removeAll { $0.owner == nil } }
     }
 
     private func findChangedFlagKeys(oldFlags: [LDFlagKey: FeatureFlag], newFlags: [LDFlagKey: FeatureFlag]) -> [LDFlagKey] {
-        oldFlags.symmetricDifference(newFlags)     //symmetricDifference tests for equality, which includes version. Exclude version here.
-            .filter { flagKey in
-                guard let oldFeatureFlag = oldFlags[flagKey],
-                    let newFeatureFlag = newFlags[flagKey]
-                else {
-                    return true
-                }
-                return !(oldFeatureFlag.variation == newFeatureFlag.variation &&
-                         AnyComparer.isEqual(oldFeatureFlag.value, to: newFeatureFlag.value))
+        oldFlags.symmetricDifference(newFlags) // symmetricDifference tests for equality, which includes version. Exclude version here.
+            .filter {
+                guard let old = oldFlags[$0], let new = newFlags[$0]
+                else { return true }
+                return !(old.variation == new.variation && AnyComparer.isEqual(old.value, to: new.value))
         }
     }
 }
 
 extension FlagChangeNotifier: TypeIdentifying { }
-//Test support
-#if DEBUG
-    extension FlagChangeNotifier {
-        var flagObservers: [FlagChangeObserver] { flagChangeObservers }
-        var noChangeObservers: [FlagsUnchangedObserver] { flagsUnchangedObservers }
-
-        convenience init(flagChangeObservers: [FlagChangeObserver], flagsUnchangedObservers: [FlagsUnchangedObserver]) {
-            self.init()
-            self.flagChangeObservers = flagChangeObservers
-            self.flagsUnchangedObservers = flagsUnchangedObservers
-        }
-
-        func notifyObservers(flagStore: FlagMaintaining, oldFlags: [LDFlagKey: FeatureFlag], completion: @escaping () -> Void) {
-            notifyObservers(flagStore: flagStore, oldFlags: oldFlags)
-            DispatchQueue.main.async {
-                completion()
-            }
-        }
-    }
-#endif

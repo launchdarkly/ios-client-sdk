@@ -7,9 +7,9 @@
 
 import Foundation
 
-///Protocol to convert LDFlagValue into it's Base Type.
+/// Protocol to convert LDFlagValue into it's Base Type.
 protocol LDFlagBaseTypeConvertible {
-    ///Failable initializer. Client app developers should not use LDFlagBaseTypeConvertible. The SDK uses this protocol to limit feature flag types to those defined in `LDFlagValue`.
+    /// Failable initializer. Client app developers should not use LDFlagBaseTypeConvertible. The SDK uses this protocol to limit feature flag types to those defined in `LDFlagValue`.
     init?(_ flag: LDFlagValue?)
 }
 

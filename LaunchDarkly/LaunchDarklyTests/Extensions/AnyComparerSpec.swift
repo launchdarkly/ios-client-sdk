@@ -189,7 +189,7 @@ final class AnyComparerSpec: QuickSpec {
                         featureFlags = DarklyServiceMock.Constants.stubFeatureFlags(includeVariations: false, includeVersions: false, includeFlagVersions: false)
                     }
                     context("with differing value") {
-                        it("returns true") {    //Yeah, this is weird. Since the variation is missing the comparison succeeds
+                        it("returns true") {    // Yeah, this is weird. Since the variation is missing the comparison succeeds
                             featureFlags.forEach { flagKey, featureFlag in
                                 otherFlag = DarklyServiceMock.Constants.stubFeatureFlag(for: flagKey,
                                                                                         includeVariation: false,

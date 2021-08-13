@@ -12,50 +12,6 @@ import XCTest
 
 final class HTTPHeadersSpec: XCTestCase {
 
-    private static var stubEtags: [String: String] = {
-        var etags: [String: String] = [:]
-        (0..<3).forEach { _ in etags[UUID().uuidString] = UUID().uuidString }
-        return etags
-    }()
-
-    override func tearDown() {
-        HTTPHeaders.removeFlagRequestEtags()
-    }
-
-    func testSettingFlagRequestEtags() {
-        HTTPHeadersSpec.stubEtags.forEach { mobileKey, etag in
-            HTTPHeaders.setFlagRequestEtag(etag, for: mobileKey)
-        }
-        XCTAssertEqual(HTTPHeaders.flagRequestEtags, HTTPHeadersSpec.stubEtags)
-    }
-
-    func testClearingIndividialFlagRequestEtags() {
-        HTTPHeadersSpec.stubEtags.forEach { mobileKey, etag in
-            HTTPHeaders.setFlagRequestEtag(etag, for: mobileKey)
-        }
-        HTTPHeadersSpec.stubEtags.forEach { mobileKey, _ in
-            HTTPHeaders.setFlagRequestEtag(nil, for: mobileKey)
-        }
-        XCTAssert(HTTPHeaders.flagRequestEtags.isEmpty)
-    }
-
-    func testClearingAllFlagRequestEtags() {
-        HTTPHeadersSpec.stubEtags.forEach { mobileKey, etag in
-            HTTPHeaders.setFlagRequestEtag(etag, for: mobileKey)
-        }
-        HTTPHeaders.removeFlagRequestEtags()
-        XCTAssert(HTTPHeaders.flagRequestEtags.isEmpty)
-    }
-
-    func testHasFlagRequestEtag() {
-        let config = LDConfig(mobileKey: "with-etag")
-        HTTPHeaders.setFlagRequestEtag("foo", for: "with-etag")
-        let withoutEtag = HTTPHeaders(config: LDConfig.stub, environmentReporter: EnvironmentReportingMock())
-        let withEtag = HTTPHeaders(config: config, environmentReporter: EnvironmentReportingMock())
-        XCTAssertFalse(withoutEtag.hasFlagRequestEtag)
-        XCTAssert(withEtag.hasFlagRequestEtag)
-    }
-
     func testFlagRequestDefaultHeaders() {
         let config = LDConfig.stub
         let httpHeaders = HTTPHeaders(config: config, environmentReporter: EnvironmentReportingMock())
@@ -65,18 +21,6 @@ final class HTTPHeadersSpec: XCTestCase {
         XCTAssertEqual(headers[HTTPHeaders.HeaderKey.userAgent],
                "\(EnvironmentReportingMock.Constants.systemName)/\(EnvironmentReportingMock.Constants.sdkVersion)")
         XCTAssertNil(headers[HTTPHeaders.HeaderKey.ifNoneMatch])
-    }
-
-    func testFlagRequestHeadersWithEtag() {
-        let config = LDConfig.stub
-        HTTPHeaders.setFlagRequestEtag("etag", for: config.mobileKey)
-        let httpHeaders = HTTPHeaders(config: config, environmentReporter: EnvironmentReportingMock())
-        let headers = httpHeaders.flagRequestHeaders
-        XCTAssertEqual(headers[HTTPHeaders.HeaderKey.authorization],
-                       "\(HTTPHeaders.HeaderValue.apiKey) \(config.mobileKey)")
-        XCTAssertEqual(headers[HTTPHeaders.HeaderKey.userAgent],
-               "\(EnvironmentReportingMock.Constants.systemName)/\(EnvironmentReportingMock.Constants.sdkVersion)")
-        XCTAssertEqual(headers[HTTPHeaders.HeaderKey.ifNoneMatch], "etag")
     }
 
     func testEventSourceDefaultHeaders() {

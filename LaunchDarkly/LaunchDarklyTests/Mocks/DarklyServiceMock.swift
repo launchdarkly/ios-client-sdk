@@ -24,7 +24,7 @@ final class DarklyServiceMock: DarklyServiceProvider {
         static let null = "null-flag"
         static let unknown = "unknown-flag"
 
-        static var knownFlags: [LDFlagKey] {        //known means the SDK has the feature flag value
+        static var knownFlags: [LDFlagKey] {        // known means the SDK has the feature flag value
             [bool, int, double, string, array, dictionary, null]
         }
         static var flagsWithAnAlternateValue: [LDFlagKey] {
@@ -70,7 +70,7 @@ final class DarklyServiceMock: DarklyServiceProvider {
             case let value as String: return value + "-alternate" as! T
             case var value as [Any]:
                 value.append(4)
-                return value as! T  //Not sure why, but this crashes if you combine append the value into the return
+                return value as! T  // Not sure why, but this crashes if you combine append the value into the return
             case var value as [String: Any]:
                 value["new-flag"] = "new-value"
                 return value as! T
@@ -97,8 +97,6 @@ final class DarklyServiceMock: DarklyServiceProvider {
         static let mockBaseUrl = URL(string: "https://dummy.base.com")!
         static let mockEventsUrl = URL(string: "https://dummy.events.com")!
         static let mockStreamUrl = URL(string: "https://dummy.stream.com")!
-
-        static let requestPathStream = "/mping"
 
         static let stubNameFlag = "Flag Request Stub"
         static let stubNameStream = "Stream Connect Stub"
@@ -282,29 +280,30 @@ extension DarklyServiceMock {
         flagRequestStubTest && isMethodREPORT()
     }
 
-    ///Use when testing requires the mock service to actually make a flag request
+    /// Use when testing requires the mock service to actually make a flag request
     func stubFlagRequest(statusCode: Int,
                          featureFlags: [LDFlagKey: FeatureFlag]? = nil,
                          useReport: Bool,
                          flagResponseEtag: String? = nil,
-                         onActivation activate: ((URLRequest, HTTPStubsDescriptor, HTTPStubsResponse) -> Void)? = nil) {
-
+                         onActivation activate: ((URLRequest) -> Void)? = nil) {
         let stubbedFeatureFlags = featureFlags ?? Constants.stubFeatureFlags()
         let responseData = statusCode == HTTPURLResponse.StatusCodes.ok ? stubbedFeatureFlags.dictionaryValue.jsonData! : Data()
         let stubResponse: HTTPStubsResponseBlock = { _ in
-            var headers = [String: String]()
+            var headers: [String: String] = [:]
             if let flagResponseEtag = flagResponseEtag {
                 headers = [HTTPURLResponse.HeaderKeys.etag: flagResponseEtag,
-                           HTTPURLResponse.HeaderKeys.cacheControl: HTTPURLResponse.HeaderValues.maxAge]
+                           "Cache-Control": "max-age=0"]
             }
             return HTTPStubsResponse(data: responseData, statusCode: Int32(statusCode), headers: headers)
         }
         stubRequest(passingTest: useReport ? reportFlagRequestStubTest : getFlagRequestStubTest,
                     stub: stubResponse,
-                    name: flagStubName(statusCode: statusCode, useReport: useReport), onActivation: activate)
+                    name: flagStubName(statusCode: statusCode, useReport: useReport)) { request, _, _ in
+            activate?(request)
+        }
     }
 
-    ///Use when testing requires the mock service to simulate a service response to the flag request callback
+    /// Use when testing requires the mock service to simulate a service response to the flag request callback
     func stubFlagResponse(statusCode: Int, badData: Bool = false, responseOnly: Bool = false, errorOnly: Bool = false, responseDate: Date? = nil) {
         let response = HTTPURLResponse(url: config.baseUrl, statusCode: statusCode, httpVersion: Constants.httpVersion, headerFields: HTTPURLResponse.dateHeader(from: responseDate))
         if statusCode == HTTPURLResponse.StatusCodes.ok {
@@ -342,7 +341,7 @@ extension DarklyServiceMock {
         isScheme(Constants.schemeHttps) && isHost(streamHost!) && isMethodREPORT()
     }
 
-    ///Use when testing requires the mock service to actually make an event source connection request
+    /// Use when testing requires the mock service to actually make an event source connection request
     func stubStreamRequest(useReport: Bool, success: Bool, onActivation activate: ((URLRequest, HTTPStubsDescriptor, HTTPStubsResponse) -> Void)? = nil) {
         var stubResponse: HTTPStubsResponseBlock = { _ in
             HTTPStubsResponse(error: Constants.error)
@@ -364,17 +363,19 @@ extension DarklyServiceMock {
         isScheme(Constants.schemeHttps) && isHost(eventHost!) && isMethodPOST()
     }
 
-    ///Use when testing requires the mock service to actually make an event request
-    func stubEventRequest(success: Bool, onActivation activate: ((URLRequest, HTTPStubsDescriptor, HTTPStubsResponse) -> Void)? = nil) {
+    /// Use when testing requires the mock service to actually make an event request
+    func stubEventRequest(success: Bool, onActivation activate: ((URLRequest) -> Void)? = nil) {
         let stubResponse: HTTPStubsResponseBlock = success ? { _ in
             HTTPStubsResponse(data: Data(), statusCode: Int32(HTTPURLResponse.StatusCodes.accepted), headers: nil)
         } : { _ in
             HTTPStubsResponse(error: Constants.error)
         }
-        stubRequest(passingTest: eventRequestStubTest, stub: stubResponse, name: Constants.stubNameEvent, onActivation: activate)
+        stubRequest(passingTest: eventRequestStubTest, stub: stubResponse, name: Constants.stubNameEvent) { request, _, _ in
+            activate?(request)
+        }
     }
 
-    ///Use when testing requires the mock service to provide a service response to the event request callback
+    /// Use when testing requires the mock service to provide a service response to the event request callback
     func stubEventResponse(success: Bool, responseOnly: Bool = false, errorOnly: Bool = false, responseDate: Date? = nil) {
         if success {
             let response = HTTPURLResponse(url: config.eventsUrl,
@@ -399,7 +400,7 @@ extension DarklyServiceMock {
 
     // MARK: Publish Diagnostic
 
-    ///Use when testing requires the mock service to actually make an diagnostic request
+    /// Use when testing requires the mock service to actually make an diagnostic request
     func stubDiagnosticRequest(success: Bool, onActivation activate: ((URLRequest, HTTPStubsDescriptor, HTTPStubsResponse) -> Void)? = nil) {
         let stubResponse: HTTPStubsResponseBlock = success ? { _ in
             HTTPStubsResponse(data: Data(), statusCode: Int32(HTTPURLResponse.StatusCodes.accepted), headers: nil)
@@ -410,8 +411,6 @@ extension DarklyServiceMock {
     }
 
     // MARK: Stub
-
-    var anyRequestStubTest: HTTPStubsTestBlock { { _ in true } }
 
     private func stubRequest(passingTest test: @escaping HTTPStubsTestBlock,
                              stub: @escaping HTTPStubsResponseBlock,
@@ -432,12 +431,6 @@ extension DarklyServiceMock {
             activationBlock.callback(request, stubDescriptor, stubResponse)
             return
         }
-    }
-}
-
-extension HTTPStubs {
-    class func stub(named name: String) -> HTTPStubsDescriptor? {
-        (HTTPStubs.allStubs() as? [HTTPStubsDescriptor])?.first { $0.name == name }
     }
 }
 

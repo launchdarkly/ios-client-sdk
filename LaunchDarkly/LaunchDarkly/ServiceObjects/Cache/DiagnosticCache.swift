@@ -7,7 +7,7 @@
 
 import Foundation
 
-//sourcery: autoMockable
+// sourcery: autoMockable
 protocol DiagnosticCaching {
     var lastStats: DiagnosticStats? { get }
 
@@ -47,7 +47,7 @@ final class DiagnosticCache: DiagnosticCaching {
 
     func getCurrentStatsAndReset() -> DiagnosticStats {
         let now = Date().millisSince1970
-        //swiftlint:disable:next implicitly_unwrapped_optional
+        // swiftlint:disable:next implicitly_unwrapped_optional
         var stored: StoreData!
         cacheQueue.sync {
             stored = loadOrSetup()

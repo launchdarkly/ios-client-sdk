@@ -44,7 +44,7 @@ struct Sysctl {
             }
 
             // Run the actual request with an appropriately sized array buffer
-            let data = Array<Int8>(repeating: 0, count: requiredSize)
+            let data = [Int8](repeating: 0, count: requiredSize)
             let result = data.withUnsafeBufferPointer { dataBuffer -> Int32 in
                 return Darwin.sysctl(UnsafeMutablePointer<Int32>(mutating: keysPointer.baseAddress), UInt32(keys.count), UnsafeMutableRawPointer(mutating: dataBuffer.baseAddress), &requiredSize, nil, 0)
             }
@@ -74,7 +74,7 @@ struct Sysctl {
 
     /// e.g. "MacPro4,1"
     static var model: String {
-        //swiftlint:disable:next force_try
+        // swiftlint:disable:next force_try
         return try! Sysctl.stringForKeys([CTL_HW, HW_MODEL])
     }
 }

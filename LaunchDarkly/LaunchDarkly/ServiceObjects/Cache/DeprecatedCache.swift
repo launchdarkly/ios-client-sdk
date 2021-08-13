@@ -13,7 +13,7 @@ protocol DeprecatedCache {
 
     func retrieveFlags(for userKey: UserKey, and mobileKey: MobileKey) -> (featureFlags: [LDFlagKey: FeatureFlag]?, lastUpdated: Date?)
     func userKeys(from cachedUserData: [UserKey: [String: Any]], olderThan: Date) -> [UserKey]
-    func removeData(olderThan expirationDate: Date)     //provided for testing, to allow the mock to override the protocol extension
+    func removeData(olderThan expirationDate: Date)     // provided for testing, to allow the mock to override the protocol extension
 }
 
 extension DeprecatedCache {
@@ -25,7 +25,7 @@ extension DeprecatedCache {
         else { return } // no expired user cached data, leave the cache alone
         guard expiredUserKeys.count != cachedUserData.count
         else {
-            keyedValueCache.removeObject(forKey: cachedDataKey)        //all user cached data is expired, remove the cache key & values
+            keyedValueCache.removeObject(forKey: cachedDataKey)        // all user cached data is expired, remove the cache key & values
             return
         }
         let unexpiredUserData: [UserKey: [String: Any]] = cachedUserData.filter { userKey, _ in
@@ -36,12 +36,12 @@ extension DeprecatedCache {
 }
 
 enum DeprecatedCacheModel: String, CaseIterable {
-    case version5, version4, version3, version2     //version1 is not supported
+    case version5, version4, version3, version2     // version1 is not supported
 }
 
 // updatedAt in cached data was used as the LDUser.lastUpdated, which is deprecated in the Swift SDK
 private extension LDUser.CodingKeys {
-    static let lastUpdated = "updatedAt"    //Can't use the CodingKey protocol here, this keeps the usage similar
+    static let lastUpdated = "updatedAt"    // Can't use the CodingKey protocol here, this keeps the usage similar
 }
 
 extension Dictionary where Key == String, Value == Any {

@@ -7,7 +7,7 @@
 
 import Foundation
 
-//Data structure used to cache feature flags for a specific user from a specific environment
+// Data structure used to cache feature flags for a specific user from a specific environment
 struct CacheableEnvironmentFlags {
     enum CodingKeys: String, CodingKey, CaseIterable {
         case userKey, mobileKey, featureFlags
@@ -33,13 +33,5 @@ struct CacheableEnvironmentFlags {
             let featureFlags = (dictionary[CodingKeys.featureFlags.rawValue] as? [String: Any])?.flagCollection
         else { return nil }
         self.init(userKey: userKey, mobileKey: mobileKey, featureFlags: featureFlags)
-    }
-}
-
-extension CacheableEnvironmentFlags: Equatable {
-    static func == (lhs: CacheableEnvironmentFlags, rhs: CacheableEnvironmentFlags) -> Bool {
-        lhs.userKey == rhs.userKey
-        && lhs.mobileKey == rhs.mobileKey
-        && lhs.featureFlags == rhs.featureFlags
     }
 }

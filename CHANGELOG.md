@@ -2,6 +2,11 @@
 
 All notable changes to the LaunchDarkly iOS SDK will be documented in this file. This project adheres to [Semantic Versioning](http://semver.org).
 
+## [5.4.3] - 2021-08-13
+### Fixed
+- Fixed an issue where `304 NOT_MODIFIED` responses to SDK polling mode requests would be considered error responses. This could cause the completion on a `identify` request to not complete, and gave erroneous connection information data and logging output. 
+- Fixed a crash when attempting to cache flag data containing variation JSON values containing a JSON `null` value nested within a JSON array.
+
 ## [5.4.2] - 2021-06-17
 ### Fixed
 - Avoid crash when `TimeInterval` configuration options are set to sufficiently large values. This was caused when converting these values to an `Int` value of milliseconds. (Thanks, [@delannoyk](https://github.com/launchdarkly/ios-client-sdk/pull/246)!)

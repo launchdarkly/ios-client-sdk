@@ -104,7 +104,7 @@ struct Event {
     static func customEvent(key: String, user: LDUser, data: Any? = nil, metricValue: Double? = nil) throws -> Event {
         Log.debug(typeName(and: #function) + "key: " + key + ", data: \(String(describing: data)), metricValue: \(String(describing: metricValue))")
         if let data = data {
-            guard JSONSerialization.isValidJSONObject([CodingKeys.data.rawValue: data]) //the top level object must be either an array or an object for isValidJSONObject to work correctly
+            guard JSONSerialization.isValidJSONObject([CodingKeys.data.rawValue: data]) // the top level object must be either an array or an object for isValidJSONObject to work correctly
             else {
                 throw LDInvalidArgumentError("data is not a JSON convertible value")
             }
@@ -145,7 +145,7 @@ struct Event {
             eventDictionary[CodingKeys.defaultValue.rawValue] = defaultValue ?? NSNull()
         }
         eventDictionary[CodingKeys.variation.rawValue] = featureFlag?.variation
-        //If the flagVersion exists, it is reported as the "version". If not, the version is reported using the "version" key.
+        // If the flagVersion exists, it is reported as the "version". If not, the version is reported using the "version" key.
         eventDictionary[CodingKeys.version.rawValue] = featureFlag?.flagVersion ?? featureFlag?.version
         eventDictionary[CodingKeys.data.rawValue] = data
         if let flagRequestTracker = flagRequestTracker {

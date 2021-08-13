@@ -7,12 +7,12 @@
 
 import Foundation
 
-//sourcery: autoMockable
+// sourcery: autoMockable
 protocol CacheConverting {
     func convertCacheData(for user: LDUser, and config: LDConfig)
 }
 
-//CacheConverter is not thread-safe; run it from a single thread and don't allow other threads to call convertCacheData or data corruption could occur
+// CacheConverter is not thread-safe; run it from a single thread and don't allow other threads to call convertCacheData or data corruption could occur
 final class CacheConverter: CacheConverting {
 
     struct Constants {
@@ -48,7 +48,7 @@ final class CacheConverter: CacheConverting {
                 let cachedFlags = cachedData.featureFlags
             else { continue }
             currentCache.storeFeatureFlags(cachedFlags, userKey: user.key, mobileKey: mobileKey, lastUpdated: cachedData.lastUpdated ?? Date(), storeMode: .sync)
-            return  //If we hit on a cached user, bailout since we converted the flags for that userKey-mobileKey combination; This prefers newer caches over older
+            return  // If we hit on a cached user, bailout since we converted the flags for that userKey-mobileKey combination; This prefers newer caches over older
         }
     }
 

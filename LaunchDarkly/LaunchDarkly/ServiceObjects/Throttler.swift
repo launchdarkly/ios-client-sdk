@@ -9,7 +9,7 @@ import Foundation
 
 typealias RunClosure = () -> Void
 
-//sourcery: autoMockable
+// sourcery: autoMockable
 protocol Throttling {
     func runThrottled(_ runClosure: @escaping RunClosure)
     func cancelThrottledRun()

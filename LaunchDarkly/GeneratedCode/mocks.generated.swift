@@ -1,6 +1,5 @@
-// Generated using Sourcery 0.16.1 — https://github.com/krzysztofzablocki/Sourcery
+// Generated using Sourcery 1.2.1 — https://github.com/krzysztofzablocki/Sourcery
 // DO NOT EDIT
-
 
 import Foundation
 import LDSwiftEventSource
@@ -372,12 +371,19 @@ final class FlagChangeNotifyingMock: FlagChangeNotifying {
         notifyConnectionModeChangedObserversCallback?()
     }
 
+    var notifyUnchangedCallCount = 0
+    var notifyUnchangedCallback: (() -> Void)?
+    func notifyUnchanged() {
+        notifyUnchangedCallCount += 1
+        notifyUnchangedCallback?()
+    }
+
     var notifyObserversCallCount = 0
     var notifyObserversCallback: (() -> Void)?
-    var notifyObserversReceivedArguments: (flagStore: FlagMaintaining, oldFlags: [LDFlagKey: FeatureFlag])?
-    func notifyObservers(flagStore: FlagMaintaining, oldFlags: [LDFlagKey: FeatureFlag]) {
+    var notifyObserversReceivedArguments: (oldFlags: [LDFlagKey: FeatureFlag], newFlags: [LDFlagKey: FeatureFlag])?
+    func notifyObservers(oldFlags: [LDFlagKey: FeatureFlag], newFlags: [LDFlagKey: FeatureFlag]) {
         notifyObserversCallCount += 1
-        notifyObserversReceivedArguments = (flagStore: flagStore, oldFlags: oldFlags)
+        notifyObserversReceivedArguments = (oldFlags: oldFlags, newFlags: newFlags)
         notifyObserversCallback?()
     }
 }

@@ -9,13 +9,13 @@ import Foundation
 import Dispatch
 import LDSwiftEventSource
 
-//sourcery: autoMockable
+// sourcery: autoMockable
 protocol LDFlagSynchronizing {
-    //sourcery: defaultMockValue = false
+    // sourcery: defaultMockValue = false
     var isOnline: Bool { get set }
-    //sourcery: defaultMockValue = .streaming
+    // sourcery: defaultMockValue = .streaming
     var streamingMode: LDStreamingMode { get }
-    //sourcery: defaultMockValue = 60_000
+    // sourcery: defaultMockValue = 60_000
     var pollingInterval: TimeInterval { get }
 }
 
@@ -43,6 +43,7 @@ enum SynchronizingError: Error {
 
 enum FlagSyncResult {
     case success([String: Any], FlagUpdateType?)
+    case upToDate
     case error(SynchronizingError)
 }
 
@@ -98,8 +99,6 @@ class FlagSynchronizer: LDFlagSynchronizing, EventHandler {
         self.useReport = useReport
         self.service = service
         self.onSyncComplete = onSyncComplete
-
-        configureCommunications(isOnline: isOnline)
     }
 
     private func configureCommunications(isOnline: Bool) {
@@ -141,9 +140,9 @@ class FlagSynchronizer: LDFlagSynchronizing, EventHandler {
 
         Log.debug(typeName(and: #function))
         eventSourceStarted = Date()
-        //The LDConfig.connectionTimeout should NOT be set here. Heartbeat is sent every 3m. ES default timeout is 5m. This is an async operation.
-        //LDEventSource reacts to connection errors by closing the connection and establishing a new one after an exponentially increasing wait. That makes it self healing.
-        //While we could keep the LDEventSource state, there's not much we can do to help it connect. If it can't connect, it's likely we won't be able to poll the server either...so it seems best to just do nothing and let it heal itself.
+        // The LDConfig.connectionTimeout should NOT be set here. Heartbeat is sent every 3m. ES default timeout is 5m. This is an async operation.
+        // LDEventSource reacts to connection errors by closing the connection and establishing a new one after an exponentially increasing wait. That makes it self healing.
+        // While we could keep the LDEventSource state, there's not much we can do to help it connect. If it can't connect, it's likely we won't be able to poll the server either...so it seems best to just do nothing and let it heal itself.
         eventSource = service.createEventSource(useReport: useReport, handler: self, errorHandler: eventSourceErrorHandler)
         eventSource?.start()
     }
@@ -231,6 +230,10 @@ class FlagSynchronizer: LDFlagSynchronizing, EventHandler {
             reportSyncComplete(.error(.request(serviceResponseError)))
             return
         }
+        if serviceResponse.urlResponse?.httpStatusCode == HTTPURLResponse.StatusCodes.notModified {
+            reportSyncComplete(.upToDate)
+            return
+        }
         guard serviceResponse.urlResponse?.httpStatusCode == HTTPURLResponse.StatusCodes.ok
         else {
             Log.debug(typeName(and: #function) + "response: \(String(describing: serviceResponse.urlResponse))")
@@ -264,7 +267,7 @@ class FlagSynchronizer: LDFlagSynchronizing, EventHandler {
         }
     }
     
-    //sourcery: noMock
+    // sourcery: noMock
     deinit {
         onSyncComplete = nil
         stopEventSource()
@@ -294,7 +297,7 @@ class FlagSynchronizer: LDFlagSynchronizing, EventHandler {
     }
 
     func shouldAbortStreamUpdate() -> Bool {
-        //Because this method is called asynchronously by the LDEventSource, need to check these conditions prior to processing the event.
+        // Because this method is called asynchronously by the LDEventSource, need to check these conditions prior to processing the event.
         if !isOnline {
             Log.debug(typeName(and: #function) + "aborted. " + "Flag Synchronizer is offline.")
             reportSyncComplete(.error(.isOffline))
@@ -306,7 +309,7 @@ class FlagSynchronizer: LDFlagSynchronizing, EventHandler {
             return true
         }
         if !streamingActive {
-            //Since eventSource.close() is async, this prevents responding to events after .close() is called, but before it's actually closed
+            // Since eventSource.close() is async, this prevents responding to events after .close() is called, but before it's actually closed
             Log.debug(typeName(and: #function) + "aborted. " + "Clientstream is not active.")
             reportSyncComplete(.error(.isOffline))
             return true

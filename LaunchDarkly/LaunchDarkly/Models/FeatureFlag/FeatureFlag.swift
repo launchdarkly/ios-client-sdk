@@ -16,9 +16,9 @@ struct FeatureFlag {
     let flagKey: LDFlagKey
     let value: Any?
     let variation: Int?
-    ///The "environment" version. It changes whenever any feature flag in the environment changes. Used for version comparisons for streaming patch and delete.
+    /// The "environment" version. It changes whenever any feature flag in the environment changes. Used for version comparisons for streaming patch and delete.
     let version: Int?
-    ///The feature flag version. It changes whenever this feature flag changes. Used for event reporting only. Server json lists this as "flagVersion". Event json lists this as "version".
+    /// The feature flag version. It changes whenever this feature flag changes. Used for event reporting only. Server json lists this as "flagVersion". Event json lists this as "version".
     let flagVersion: Int?
     let trackEvents: Bool?
     let debugEventsUntilDate: Date?

@@ -7,8 +7,8 @@
 
 import Foundation
 
-//Data structure used to cache feature flags for a specific user for multiple environments
-//Cache model in use from 4.0.0
+// Data structure used to cache feature flags for a specific user for multiple environments
+// Cache model in use from 4.0.0
 /*
 [<userKey>: [
     “userKey”: <userKey>,                               //CacheableUserEnvironmentFlags dictionary
@@ -88,13 +88,13 @@ extension Date {
     /// Date string using the format 2018-08-13T19:06:38.123Z
     var stringValue: String { DateFormatter.ldDateFormatter.string(from: self) }
 
-    //When a date is converted to JSON, the resulting string is not as precise as the original date (only to the nearest .001s)
-    //By converting the date to json, then back into a date, the result can be compared with any date re-inflated from json
-    ///Date truncated to the nearest millisecond, which is the precision for string formatted dates
+    // When a date is converted to JSON, the resulting string is not as precise as the original date (only to the nearest .001s)
+    // By converting the date to json, then back into a date, the result can be compared with any date re-inflated from json
+    /// Date truncated to the nearest millisecond, which is the precision for string formatted dates
     var stringEquivalentDate: Date { stringValue.dateValue }
 }
 
 extension String {
-    ///Date converted from a string using the format 2018-08-13T19:06:38.123Z
+    /// Date converted from a string using the format 2018-08-13T19:06:38.123Z
     var dateValue: Date { DateFormatter.ldDateFormatter.date(from: self) ?? Date() }
 }

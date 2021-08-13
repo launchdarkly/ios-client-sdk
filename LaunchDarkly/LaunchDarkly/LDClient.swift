@@ -126,13 +126,13 @@ public class LDClient {
         internalSetOnlineQueue.sync {
             guard goOnline, self.canGoOnline
                 else {
-                    //go offline, which is not throttled
+                    // go offline, which is not throttled
                     self.go(online: false, reasonOnlineUnavailable: self.reasonOnlineUnavailable(goOnline: goOnline), completion: completion)
                     return
             }
 
             self.throttler.runThrottled {
-                //since going online was throttled, check the last called setOnline value and whether we can go online
+                // since going online was throttled, check the last called setOnline value and whether we can go online
                 self.go(online: goOnline && self.canGoOnline, reasonOnlineUnavailable: self.reasonOnlineUnavailable(goOnline: goOnline), completion: completion)
             }
         }
@@ -269,6 +269,7 @@ public class LDClient {
     }
 
     let config: LDConfig
+    let service: DarklyServiceProvider
     private(set) var user: LDUser
     
     /**
@@ -310,6 +311,7 @@ public class LDClient {
                 flagStore.replaceStore(newFlags: user.flagStore?.featureFlags ?? [:], completion: nil)
             }
             self.service.user = self.user
+            self.service.clearFlagResponseCache()
             flagSynchronizer = serviceFactory.makeFlagSynchronizer(streamingMode: ConnectionInformation.effectiveStreamingMode(config: config, ldClient: self),
                                                                    pollingInterval: config.flagPollingInterval(runMode: runMode),
                                                                    useReport: config.useReport,
@@ -325,14 +327,10 @@ public class LDClient {
             if !config.autoAliasingOptOut && previousUser.isAnonymous && !newUser.isAnonymous {
                 self.alias(context: newUser, previousContext: previousUser)
             }
-
-            self.service.clearFlagResponseCache()
         }
     }
 
     private let internalIdentifyQueue: DispatchQueue = DispatchQueue(label: "InternalIdentifyQueue")
-
-    let service: DarklyServiceProvider
 
     // MARK: Retrieving Flag Values
 
@@ -375,7 +373,7 @@ public class LDClient {
     */
     /// - Tag: variationWithdefaultValue
     public func variation<T: LDFlagValueConvertible>(forKey flagKey: LDFlagKey, defaultValue: T) -> T {
-        //the defaultValue cast to 'as T?' directs the call to the Optional-returning variation method
+        // the defaultValue cast to 'as T?' directs the call to the Optional-returning variation method
         variation(forKey: flagKey, defaultValue: defaultValue as T?) ?? defaultValue
     }
 
@@ -694,6 +692,9 @@ public class LDClient {
                     self.updateCacheAndReportChanges(user: self.user, oldFlags: oldFlags)
                 }
             }
+        case .upToDate:
+            connectionInformation.lastKnownFlagValidity = Date()
+            flagChangeNotifier.notifyUnchanged()
         case .error(let synchronizingError):
             process(synchronizingError, logPrefix: typeName(and: #function, appending: ": "))
         }
@@ -713,7 +714,7 @@ public class LDClient {
     private func updateCacheAndReportChanges(user: LDUser,
                                              oldFlags: [LDFlagKey: FeatureFlag]) {
         flagCache.storeFeatureFlags(flagStore.featureFlags, userKey: user.key, mobileKey: config.mobileKey, lastUpdated: Date(), storeMode: .async)
-        flagChangeNotifier.notifyObservers(flagStore: flagStore, oldFlags: oldFlags)
+        flagChangeNotifier.notifyObservers(oldFlags: oldFlags, newFlags: flagStore.featureFlags)
     }
 
     // MARK: Events
@@ -790,7 +791,7 @@ public class LDClient {
         Log.debug(typeName(and: #function) + "result: \(result)")
         switch result {
         case .success:
-            break   //EventReporter handles removing events from the event store, so there's nothing to do here. It's here in case we want to do something in the future.
+            break   // EventReporter handles removing events from the event store, so there's nothing to do here. It's here in case we want to do something in the future.
         case .error(let synchronizingError):
             process(synchronizingError, logPrefix: typeName(and: #function, appending: ": "))
         }
@@ -827,8 +828,6 @@ public class LDClient {
             Log.debug("LDClient.start() was called more than once!")
             return
         }
-
-        HTTPHeaders.removeFlagRequestEtags()
 
         let internalUser = user
 

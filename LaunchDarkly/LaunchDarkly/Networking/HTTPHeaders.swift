@@ -26,16 +26,6 @@ struct HTTPHeaders {
         static let eventSchema3 = "3"
     }
 
-    private(set) static var flagRequestEtags = [String: String]()
-
-    static func removeFlagRequestEtags() {
-        flagRequestEtags.removeAll()
-    }
-
-    static func setFlagRequestEtag(_ etag: String?, for mobileKey: String) {
-        flagRequestEtags[mobileKey] = etag
-    }
-
     private let mobileKey: String
     private let additionalHeaders: [String: String]
     private let authKey: String
@@ -71,18 +61,7 @@ struct HTTPHeaders {
     }
 
     var eventSourceHeaders: [String: String] { withAdditionalHeaders(baseHeaders) }
-
-    var flagRequestHeaders: [String: String] {
-        var headers = baseHeaders
-        if let etag = HTTPHeaders.flagRequestEtags[mobileKey] {
-            headers[HeaderKey.ifNoneMatch] = etag
-        }
-        return withAdditionalHeaders(headers)
-    }
-
-    var hasFlagRequestEtag: Bool {
-        HTTPHeaders.flagRequestEtags[mobileKey] != nil
-    }
+    var flagRequestHeaders: [String: String] { withAdditionalHeaders(baseHeaders) }
 
     var eventRequestHeaders: [String: String] {
         var headers = baseHeaders

@@ -11,7 +11,7 @@ import LDSwiftEventSource
 typealias ServiceResponse = (data: Data?, urlResponse: URLResponse?, error: Error?)
 typealias ServiceCompletionHandler = (ServiceResponse) -> Void
 
-//sourcery: autoMockable
+// sourcery: autoMockable
 protocol DarklyStreamingProvider: AnyObject {
     func start()
     func stop()
@@ -52,16 +52,13 @@ final class DarklyService: DarklyServiceProvider {
         static let report = "REPORT"
     }
 
-    struct ReasonsPath {
-        static let reasons = URLQueryItem(name: "withReasons", value: "true")
-    }
-
     let config: LDConfig
     var user: LDUser
     let httpHeaders: HTTPHeaders
     let diagnosticCache: DiagnosticCaching?
     private (set) var serviceFactory: ClientServiceCreating
     private var session: URLSession
+    var flagRequestEtag: String?
 
     init(config: LDConfig, user: LDUser, serviceFactory: ClientServiceCreating) {
         self.config = config
@@ -75,85 +72,66 @@ final class DarklyService: DarklyServiceProvider {
         }
 
         self.httpHeaders = HTTPHeaders(config: config, environmentReporter: serviceFactory.makeEnvironmentReporter())
-        self.session = URLSession(configuration: URLSessionConfiguration.default)
+        // URLSessionConfiguration is a class, but `.default` creates a new instance. This does not effect other session configuration.
+        let sessionConfig = URLSessionConfiguration.default
+        // We always revalidate the cache which we handle manually
+        sessionConfig.requestCachePolicy = .reloadIgnoringLocalCacheData
+        sessionConfig.urlCache = nil
+        self.session = URLSession(configuration: sessionConfig)
     }
 
     // MARK: Feature Flags
 
-    private func requestTask(with: URLRequest, 
-                             completionHandler: @escaping (Data?, URLResponse?, Error?) -> Void
-                             ) -> URLSessionDataTask {
-        // copying the request is needed because swift passes by const reference without any real way of changing that
-        var req = with
-        if let headerDelegate = config.headerDelegate {
-            req.allHTTPHeaderFields = headerDelegate(with.url!, req.allHTTPHeaderFields ?? [:])
-        }
-        return self.session.dataTask(with: req, completionHandler: completionHandler)
+    func clearFlagResponseCache() {
+        flagRequestEtag = nil
     }
 
     func getFeatureFlags(useReport: Bool, completion: ServiceCompletionHandler?) {
-        guard !config.mobileKey.isEmpty,
-            let flagRequest = flagRequest(useReport: useReport)
+        guard hasMobileKey(#function) else { return }
+        guard let userJson = user.dictionaryValue(includePrivateAttributes: true, config: config).jsonData
         else {
-            if config.mobileKey.isEmpty {
-                Log.debug(typeName(and: #function, appending: ": ") + "Aborting. No mobileKey.")
-            } else {
-                Log.debug(typeName(and: #function, appending: ": ") + "Aborting. Unable to create flagRequest.")
-            }
+            Log.debug(typeName(and: #function, appending: ": ") + "Aborting. Unable to create flagRequest.")
             return
         }
-        let dataTask = requestTask(with: flagRequest) { [weak self] data, response, error in
+
+        var headers = httpHeaders.flagRequestHeaders
+        if let etag = flagRequestEtag {
+            headers.merge([HTTPHeaders.HeaderKey.ifNoneMatch: etag]) { orig, _ in orig }
+        }
+        var request = URLRequest(url: flagRequestUrl(useReport: useReport, getData: userJson),
+                                 ldHeaders: headers,
+                                 ldConfig: config)
+        if useReport {
+            request.httpMethod = URLRequest.HTTPMethods.report
+            request.httpBody = userJson
+        }
+
+        self.session.dataTask(with: request) { [weak self] data, response, error in
             DispatchQueue.main.async {
                 self?.processEtag(from: (data, response, error))
                 completion?((data, response, error))
             }
-        }
-        dataTask.resume()
+        }.resume()
     }
 
-    private func flagRequest(useReport: Bool) -> URLRequest? {
-        guard let flagRequestUrl = flagRequestUrl(useReport: useReport)
-        else { return nil }
-        var request = URLRequest(url: flagRequestUrl, cachePolicy: flagRequestCachePolicy, timeoutInterval: config.connectionTimeout)
-        request.appendHeaders(httpHeaders.flagRequestHeaders)
-        if useReport {
-            guard let userData = user.dictionaryValue(includePrivateAttributes: true, config: config).jsonData
-            else { return nil }
-            request.httpMethod = URLRequest.HTTPMethods.report
-            request.httpBody = userData
-        }
-
-        return request
-    }
-
-    //The flagRequestCachePolicy varies to allow the SDK to force a reload from the source on a user change. Both the SDK and iOS keep the etag from the last request. On a user change if we use .useProtocolCachePolicy, even though the SDK doesn't supply the etag, iOS does (despite clearing the URLCache!!!). In order to force iOS to ignore the etag, change the policy to .reloadIgnoringLocalCache when there is no etag.
-    //Note that after setting .reloadRevalidatingCacheData on the request, the property appears not to accept it, and instead sets .reloadIgnoringLocalCacheData. Despite this, there does appear to be a difference in cache policy, because the SDK behaves as expected: on a new user it requests flags without the cache, and on a request with an etag it requests flags allowing the cache. Although testing shows that we could always set .reloadIgnoringLocalCacheData here, because that is NOT symantecally the desired behavior, the method distinguishes between the use cases.
-    //watchOS logs an error when .useProtocolCachePolicy is set for flag requests with an etag. By setting .reloadRevalidatingCacheData, the SDK behaves correctly, but watchOS does not log an error.
-    private var flagRequestCachePolicy: URLRequest.CachePolicy {
-        return httpHeaders.hasFlagRequestEtag ? .reloadRevalidatingCacheData : .reloadIgnoringLocalCacheData
-    }
-    
-    private func flagRequestUrl(useReport: Bool) -> URL? {
-        if useReport {
-            return shouldGetReasons(url: config.baseUrl.appendingPathComponent(FlagRequestPath.report))
-        }
-        guard let encodedUser = user
-            .dictionaryValue(includePrivateAttributes: true, config: config)
-            .base64UrlEncodedString
-        else {
-            return nil
-        }
-        return shouldGetReasons(url: config.baseUrl.appendingPathComponent(FlagRequestPath.get).appendingPathComponent(encodedUser))
-    }
-    
-    private func shouldGetReasons(url: URL) -> URL {
-        if config.evaluationReasons {
-            var urlComponent = URLComponents(url: url, resolvingAgainstBaseURL: false)
-            urlComponent?.queryItems = [ReasonsPath.reasons]
-            return urlComponent?.url ?? url
+    private func flagRequestUrl(useReport: Bool, getData: Data) -> URL {
+        var flagRequestUrl = config.baseUrl
+        if !useReport {
+            flagRequestUrl.appendPathComponent(FlagRequestPath.get, isDirectory: true)
+            flagRequestUrl.appendPathComponent(getData.base64UrlEncodedString, isDirectory: false)
         } else {
-            return url
+            flagRequestUrl.appendPathComponent(FlagRequestPath.report, isDirectory: false)
         }
+        return shouldGetReasons(url: flagRequestUrl)
+    }
+
+    private func shouldGetReasons(url: URL) -> URL {
+        guard config.evaluationReasons
+        else { return url }
+
+        var urlComponent = URLComponents(url: url, resolvingAgainstBaseURL: false)
+        urlComponent?.queryItems = [URLQueryItem(name: "withReasons", value: "true")]
+        return urlComponent?.url ?? url
     }
 
     private func processEtag(from serviceResponse: ServiceResponse) {
@@ -162,17 +140,11 @@ final class DarklyService: DarklyServiceProvider {
             serviceResponse.data?.jsonDictionary != nil
         else {
             if serviceResponse.urlResponse?.httpStatusCode != HTTPURLResponse.StatusCodes.notModified {
-                HTTPHeaders.setFlagRequestEtag(nil, for: config.mobileKey)
+                flagRequestEtag = nil
             }
             return
         }
-        HTTPHeaders.setFlagRequestEtag(serviceResponse.urlResponse?.httpHeaderEtag, for: config.mobileKey)
-    }
-
-    //Although this does not need any info stored in the DarklyService instance, LDClient shouldn't have to distinguish between an actual and a mock. Making this an instance method does that.
-    func clearFlagResponseCache() {
-        URLCache.shared.removeAllCachedResponses()
-        HTTPHeaders.removeFlagRequestEtags()
+        flagRequestEtag = serviceResponse.urlResponse?.httpHeaderEtag
     }
 
     // MARK: Streaming
@@ -180,98 +152,76 @@ final class DarklyService: DarklyServiceProvider {
     func createEventSource(useReport: Bool, 
                            handler: EventHandler, 
                            errorHandler: ConnectionErrorHandler?) -> DarklyStreamingProvider {
+        let userJsonData = user.dictionaryValue(includePrivateAttributes: true, config: config).jsonData
+
+        var streamRequestUrl = config.streamUrl.appendingPathComponent(StreamRequestPath.meval)
+        var connectMethod = HTTPRequestMethod.get
+        var connectBody: Data?
+
         if useReport {
-            return serviceFactory.makeStreamingProvider(url: reportStreamRequestUrl,
-                                                        httpHeaders: httpHeaders.eventSourceHeaders,
-                                                        connectMethod: DarklyService.HTTPRequestMethod.report,
-                                                        connectBody: user
-                                                            .dictionaryValue(includePrivateAttributes: true, config: config)
-                                                            .jsonData,
-                                                        handler: handler,
-                                                        delegate: config.headerDelegate,
-                                                        errorHandler: errorHandler)
+            connectMethod = HTTPRequestMethod.report
+            connectBody = userJsonData
+        } else {
+            streamRequestUrl.appendPathComponent(userJsonData?.base64UrlEncodedString ?? "", isDirectory: false)
         }
-        return serviceFactory.makeStreamingProvider(url: getStreamRequestUrl,
+
+        return serviceFactory.makeStreamingProvider(url: shouldGetReasons(url: streamRequestUrl),
                                                     httpHeaders: httpHeaders.eventSourceHeaders,
+                                                    connectMethod: connectMethod,
+                                                    connectBody: connectBody,
                                                     handler: handler,
                                                     delegate: config.headerDelegate,
                                                     errorHandler: errorHandler)
     }
 
-    private var getStreamRequestUrl: URL {
-        shouldGetReasons(url: config.streamUrl.appendingPathComponent(StreamRequestPath.meval)
-            .appendingPathComponent(user
-                .dictionaryValue(includePrivateAttributes: true, config: config)
-                .base64UrlEncodedString ?? ""))
-    }
-    private var reportStreamRequestUrl: URL {
-        shouldGetReasons(url: config.streamUrl.appendingPathComponent(StreamRequestPath.meval))
-    }
-
     // MARK: Publish Events
 
     func publishEventDictionaries(_ eventDictionaries: [[String: Any]], _ payloadId: String, completion: ServiceCompletionHandler?) {
-        guard !config.mobileKey.isEmpty,
-            !eventDictionaries.isEmpty
+        guard hasMobileKey(#function) else { return }
+        guard !eventDictionaries.isEmpty, let eventData = eventDictionaries.jsonData
         else {
-            if config.mobileKey.isEmpty {
-                Log.debug(typeName(and: #function, appending: ": ") + "Aborting. No mobileKey.")
-            } else {
-                Log.debug(typeName(and: #function, appending: ": ") + "Aborting. No event dictionary.")
-            }
-            return
+            return Log.debug(typeName(and: #function, appending: ": ") + "Aborting. No event dictionary.")
         }
-        let dataTask = requestTask(with: eventRequest(eventDictionaries: eventDictionaries, payloadId: payloadId)) { (data, response, error) in
-            completion?((data, response, error))
-        }
-        dataTask.resume()
-    }
 
-    private func eventRequest(eventDictionaries: [[String: Any]], payloadId: String) -> URLRequest {
-        var request = URLRequest(url: eventUrl, cachePolicy: .useProtocolCachePolicy, timeoutInterval: config.connectionTimeout)
-        request.appendHeaders([HTTPHeaders.HeaderKey.eventPayloadIDHeader: payloadId])
-        request.appendHeaders(httpHeaders.eventRequestHeaders)
-        request.httpMethod = URLRequest.HTTPMethods.post
-        request.httpBody = eventDictionaries.jsonData
-
-        return request
-    }
-
-    private var eventUrl: URL {
-        config.eventsUrl.appendingPathComponent(EventRequestPath.bulk)
+        let url = config.eventsUrl.appendingPathComponent(EventRequestPath.bulk)
+        let headers = [HTTPHeaders.HeaderKey.eventPayloadIDHeader: payloadId].merging(httpHeaders.eventRequestHeaders) { $1 }
+        doPublish(url: url, headers: headers, body: eventData, completion: completion)
     }
 
     func publishDiagnostic<T: DiagnosticEvent & Encodable>(diagnosticEvent: T, completion: ServiceCompletionHandler?) {
-        guard !config.mobileKey.isEmpty
-        else {
-            Log.debug(typeName(and: #function, appending: ": ") + "Aborting. No mobile key.")
-            return
-        }
-        let dataTask = requestTask(with: diagnosticRequest(diagnosticEvent: diagnosticEvent)) { data, response, error in
-            completion?((data, response, error))
-        }
-        dataTask.resume()
+        guard hasMobileKey(#function),
+              let bodyData = try? JSONEncoder().encode(diagnosticEvent)
+        else { return }
+
+        let url = config.eventsUrl.appendingPathComponent(EventRequestPath.diagnostic)
+        doPublish(url: url, headers: httpHeaders.diagnosticRequestHeaders, body: bodyData, completion: completion)
     }
 
-    private func diagnosticRequest<T: DiagnosticEvent & Encodable>(diagnosticEvent: T) -> URLRequest {
-        var request = URLRequest(url: diagnosticUrl, cachePolicy: .useProtocolCachePolicy, timeoutInterval: config.connectionTimeout)
-        request.appendHeaders(httpHeaders.diagnosticRequestHeaders)
+    private func doPublish(url: URL, headers: [String: String], body: Data, completion: ServiceCompletionHandler?) {
+        var request = URLRequest(url: url, ldHeaders: headers, ldConfig: config)
         request.httpMethod = URLRequest.HTTPMethods.post
-        request.httpBody = try? JSONEncoder().encode(diagnosticEvent)
-        return request
+        request.httpBody = body
+
+        session.dataTask(with: request) { data, response, error in
+            completion?((data, response, error))
+        }.resume()
     }
 
-    private var diagnosticUrl: URL {
-        config.eventsUrl.appendingPathComponent(EventRequestPath.diagnostic)
+    private func hasMobileKey(_ location: String) -> Bool {
+        if config.mobileKey.isEmpty {
+            Log.debug(typeName(and: location, appending: ": ") + "Aborting. No mobile key.")
+        }
+        return !config.mobileKey.isEmpty
     }
 }
 
 extension DarklyService: TypeIdentifying { }
 
 extension URLRequest {
-    mutating func appendHeaders(_ newHeaders: [String: String]) {
+    init(url: URL, ldHeaders: [String: String], ldConfig: LDConfig) {
+        self.init(url: url, cachePolicy: .reloadIgnoringLocalCacheData, timeoutInterval: ldConfig.connectionTimeout)
         var headers = self.allHTTPHeaderFields ?? [:]
-        headers.merge(newHeaders) { $1 }
-        self.allHTTPHeaderFields = headers
+        headers.merge(ldHeaders) { $1 }
+        self.allHTTPHeaderFields = ldConfig.headerDelegate?(url, headers) ?? headers
     }
 }

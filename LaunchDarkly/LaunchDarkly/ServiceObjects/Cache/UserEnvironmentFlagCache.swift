@@ -11,9 +11,9 @@ enum FlagCachingStoreMode: CaseIterable {
     case async, sync
 }
 
-//sourcery: autoMockable
+// sourcery: autoMockable
 protocol FeatureFlagCaching {
-    //sourcery: defaultMockValue = 5
+    // sourcery: defaultMockValue = 5
     var maxCachedUsers: Int { get set }
 
     func retrieveFeatureFlags(forUserWithKey userKey: String, andMobileKey mobileKey: String) -> [LDFlagKey: FeatureFlag]?
@@ -89,7 +89,7 @@ final class UserEnvironmentFlagCache: FeatureFlagCaching {
         else {
             return cacheableUserEnvironmentsCollection
         }
-        //sort collection into key-value pairs in descending order...youngest to oldest
+        // sort collection into key-value pairs in descending order...youngest to oldest
         var userEnvironmentsCollection = cacheableUserEnvironmentsCollection.sorted { pair1, pair2 -> Bool in
             pair2.value.lastUpdated.isEarlierThan(pair1.value.lastUpdated)
         }

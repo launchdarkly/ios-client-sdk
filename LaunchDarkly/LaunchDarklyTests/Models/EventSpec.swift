@@ -320,7 +320,7 @@ final class EventSpec: QuickSpec {
                 beforeEach {
                     let featureFlagWithReason = DarklyServiceMock.Constants.stubFeatureFlag(for: DarklyServiceMock.FlagKeys.bool, includeEvaluationReason: true, includeTrackReason: true)
                     event = Event.featureEvent(key: Constants.eventKey, value: true, defaultValue: false, featureFlag: featureFlagWithReason, user: user, includeReason: true)
-                    config.inlineUserInEvents = false   //Default value, here for clarity
+                    config.inlineUserInEvents = false   // Default value, here for clarity
                     eventDictionary = event.dictionaryValue(config: config)
                 }
                 it("creates a dictionary with matching non-user elements") {
@@ -330,7 +330,7 @@ final class EventSpec: QuickSpec {
                     expect(AnyComparer.isEqual(eventDictionary.eventValue, to: true)).to(beTrue())
                     expect(AnyComparer.isEqual(eventDictionary.eventDefaultValue, to: false)).to(beTrue())
                     expect(eventDictionary.eventVariation) == featureFlag.variation
-                    expect(eventDictionary.eventVersion) == featureFlag.flagVersion     //Since feature flags include the flag version, it should be used.
+                    expect(eventDictionary.eventVersion) == featureFlag.flagVersion     // Since feature flags include the flag version, it should be used.
                     expect(eventDictionary.eventData).to(beNil())
                     expect(AnyComparer.isEqual(eventDictionary.reason, to: DarklyServiceMock.Constants.reason)).to(beTrue())
                     expect(eventDictionary.eventPreviousKey).to(beNil())
@@ -355,7 +355,7 @@ final class EventSpec: QuickSpec {
                     expect(AnyComparer.isEqual(eventDictionary.eventValue, to: true)).to(beTrue())
                     expect(AnyComparer.isEqual(eventDictionary.eventDefaultValue, to: false)).to(beTrue())
                     expect(eventDictionary.eventVariation) == featureFlag.variation
-                    expect(eventDictionary.eventVersion) == featureFlag.flagVersion     //Since feature flags include the flag version, it should be used.
+                    expect(eventDictionary.eventVersion) == featureFlag.flagVersion     // Since feature flags include the flag version, it should be used.
                     expect(eventDictionary.eventData).to(beNil())
                     expect(eventDictionary.reason).to(beNil())
                 }
@@ -415,7 +415,7 @@ final class EventSpec: QuickSpec {
                     expect(AnyComparer.isEqual(eventDictionary.eventValue, to: NSNull())).to(beTrue())
                     expect(AnyComparer.isEqual(eventDictionary.eventDefaultValue, to: NSNull())).to(beTrue())
                     expect(eventDictionary.eventVariation) == featureFlag.variation
-                    expect(eventDictionary.eventVersion) == featureFlag.flagVersion     //Since feature flags include the flag version, it should be used.
+                    expect(eventDictionary.eventVersion) == featureFlag.flagVersion     // Since feature flags include the flag version, it should be used.
                     expect(eventDictionary.eventData).to(beNil())
                 }
                 it("creates a dictionary with the user key only") {
@@ -563,7 +563,7 @@ final class EventSpec: QuickSpec {
                     } catch {
                         fail("customEvent threw an exception")
                     }
-                    config.inlineUserInEvents = false   //Default value, here for clarity
+                    config.inlineUserInEvents = false   // Default value, here for clarity
                     eventDictionary = event.dictionaryValue(config: config)
                 }
                 it("creates a dictionary with matching non-user elements") {
@@ -649,7 +649,7 @@ final class EventSpec: QuickSpec {
                         expect(AnyComparer.isEqual(eventDictionary.eventValue, to: true)).to(beTrue())
                         expect(AnyComparer.isEqual(eventDictionary.eventDefaultValue, to: false)).to(beTrue())
                         expect(eventDictionary.eventVariation) == featureFlag.variation
-                        expect(eventDictionary.eventVersion) == featureFlag.flagVersion     //Since feature flags include the flag version, it should be used.
+                        expect(eventDictionary.eventVersion) == featureFlag.flagVersion     // Since feature flags include the flag version, it should be used.
                         expect(eventDictionary.eventData).to(beNil())
                     }
                     it("creates a dictionary with the full user") {
@@ -714,7 +714,7 @@ final class EventSpec: QuickSpec {
                     expect(AnyComparer.isEqual(eventDictionary.eventUserDictionary, to: user.dictionaryValue(includePrivateAttributes: false, config: config))).to(beTrue())
                     expect(eventDictionary.eventUserKey).to(beNil())
                     expect(eventDictionary.eventVariation) == featureFlag.variation
-                    expect(eventDictionary.eventVersion) == featureFlag.flagVersion     //Since feature flags include the flag version, it should be used.
+                    expect(eventDictionary.eventVersion) == featureFlag.flagVersion     // Since feature flags include the flag version, it should be used.
                     expect(eventDictionary.eventData).to(beNil())
                 }
             }
@@ -764,7 +764,7 @@ final class EventSpec: QuickSpec {
         }
     }
 
-    //Dictionary extension methods that extract an event key, or creationDateMillis, and compare them with another dictionary
+    // Dictionary extension methods that extract an event key, or creationDateMillis, and compare them with another dictionary
     private func eventDictionarySpec() {
         let config = LDConfig.stub
         let user = LDUser.stub()
