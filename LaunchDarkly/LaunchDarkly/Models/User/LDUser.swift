@@ -40,7 +40,7 @@ public struct LDUser {
 
     ///Client app defined string that uniquely identifies the user. If the client app does not define a key, the SDK will assign an identifier associated with the anonymous user. The key cannot be made private.
     public var key: String
-    ///The secondary key for the user. See the [documentation](https://docs.launchdarkly.com/home/managing-flags/targeting-users#percentage-rollout-logic) for more information on it's use for percentage rollout bucketing.
+    ///The secondary key for the user. See the [documentation](https://docs.launchdarkly.com/home/flags/targeting-users#percentage-rollouts) for more information on it's use for percentage rollout bucketing.
     public var secondary: String?
     ///Client app defined name for the user. (Default: nil)
     public var name: String?
@@ -129,7 +129,7 @@ public struct LDUser {
     }
 
     /**
-     Initializer that takes a [String: Any] and creates a LDUser from the contents. Uses any keys present to define corresponding attribute values. Initializes attributes not present in the dictionary to their default value. Attempts to set `device` and `operatingSystem` from corresponding values embedded in `custom`. DEPRECATED: Attempts to set feature flags from values set in `config`. 
+     Initializer that takes a [String: Any] and creates a LDUser from the contents. Uses any keys present to define corresponding attribute values. Initializes attributes not present in the dictionary to their default value. Attempts to set `device` and `operatingSystem` from corresponding values embedded in `custom`. DEPRECATED: Attempts to set feature flags from values set in `config`.
      - parameter userDictionary: Dictionary with LDUser attribute keys and values.
      */
     public init(userDictionary: [String: Any]) {

@@ -4,7 +4,7 @@ All notable changes to the LaunchDarkly iOS SDK will be documented in this file.
 
 ## [5.4.2] - 2021-06-17
 ### Fixed
-- Avoid crash when `TimeInterval` configuration options are set to sufficiently large values. This was caused when converting these values to an `Int` value of milliseconds. (Thanks, [@delannoyk](https://github.com/launchdarkly/ios-client-sdk/pull/246)!) 
+- Avoid crash when `TimeInterval` configuration options are set to sufficiently large values. This was caused when converting these values to an `Int` value of milliseconds. (Thanks, [@delannoyk](https://github.com/launchdarkly/ios-client-sdk/pull/246)!)
 - Update `Package.swift` to use SwiftPM tools version 5.2. This prevents test dependencies from being included transitively. (Thanks, [@escakot](https://github.com/launchdarkly/ios-client-sdk/pull/234)!)
 - Update `Quick` test dependency to 3.1.2 to avoid build warnings and adopt security fixes. ([#243](https://github.com/launchdarkly/ios-client-sdk/issues/243))
 - Use `AnyObject` over `class` in protocol inheritance to avoid compiler warnings. ([#247](https://github.com/launchdarkly/ios-client-sdk/issues/247))
@@ -42,7 +42,7 @@ All notable changes to the LaunchDarkly iOS SDK will be documented in this file.
 
 ## [5.2.0] - 2020-10-09
 ### Added
-- `LDUser` now has an optional `secondary` attribute to match other LaunchDarkly SDKs. For more on the behavior of this attribute see [the documentation on targeting users](https://docs.launchdarkly.com/home/managing-flags/targeting-users).
+- `LDUser` now has an optional `secondary` attribute to match other LaunchDarkly SDKs. For more on the behavior of this attribute see [the documentation on targeting users](https://docs.launchdarkly.com/home/flags/targeting-users).
 
 ### Fixed
 - Corrected a bug preventing private custom attribute names being recorded in events when all custom attributes are set to be private by including "custom" in the `LDUser.privateAttributes` or `LDConfig.privateUserAttributes` properties.
@@ -205,7 +205,7 @@ This is the non-beta first release of the Swift SDK. It follows the beta.3 relea
 - Retains prior cached data for 90 days following upgrade to `4.0.0`. Does not keep older cached data up-to-date. Downgrading to a prior version within 90 days allows the downgraded app to read the last cached data from the downgraded version.
 
 ### Fixed
-- Prevents a log message that incorrectly reported a network error on watchOS 
+- Prevents a log message that incorrectly reported a network error on watchOS
 
 ## [4.0.0-beta.3] - 2019-03-07
 This is part of the Swift SDK beta and was originally released as  `3.0.0-beta.3`.
@@ -242,7 +242,7 @@ This is part of the Swift SDK beta and was originally released as  `3.0.0-beta.1
 ### Changed
 - Replaced Objective-C SDK with Swift SDK. See [MigrationGuide.md](./MigrationGuide.md) for details on converting to v3.
 - `LDConfig` and `LDUser` are Swift `struct`s, giving you value semantics which makes it easier to control the SDK.
-- `LDClient` controls remain similar to v2.x. Setting a `config` or `user` is possible before, during, and after start. 
+- `LDClient` controls remain similar to v2.x. Setting a `config` or `user` is possible before, during, and after start.
 - `LDClient` uses Swift generics to get feature flag values. Swift client apps use a `variation` method (without the type) to get flag values.
 - `LDClientDelegate` was removed. Observe feature flags using `observe` methods on `LDClient`. Set a closure the `LDClient` will execute when the server is unavailable.
 
@@ -353,7 +353,7 @@ This is part of the Swift SDK beta and was renamed to `4.0.0-beta.1`. See [4.0.0
 
 ## [2.13.0] - 2018-06-01
 ### Added
-- To reduce the network bandwidth used for analytics events, feature request events are now sent as counters rather than individual events, and user details are now sent only at intervals rather than in each event. These behaviors can be modified through the LaunchDarkly UI and with the new configuration option `inlineUsersInEvents`. For more details, see [Analytics Data Stream Reference](https://docs.launchdarkly.com/v2.0/docs/analytics-data-stream-reference).
+- To reduce the network bandwidth used for analytics events, feature request events are now sent as counters rather than individual events, and user details are now sent only at intervals rather than in each event. These behaviors can be modified through the LaunchDarkly UI and with the new configuration option `inlineUsersInEvents`. For more details, see [Data Export](https://docs.launchdarkly.com/home/data-export).
 - New property `inlineUserInEvents` in `LDConfig`. When `YES` includes the full user (excluding private attributes) in analytics `feature` and `custom` events. When `NO` includes only the `userKey`. Default: `NO`.
 - Calling `start` or `updateUser` (when started) on `LDClient` logs an analytics `identify` event. `identify` events contain the full user (excluding private attributes) regardless of `inlineUserInEvents`.
 - Adds analytics `summary` event used to track feature flag requests to the SDK.
@@ -409,7 +409,7 @@ This is part of the Swift SDK beta and was renamed to `4.0.0-beta.1`. See [4.0.0
 
 ## [2.10.0] - 2018-02-01
 ### Added
-- Support for specifying [private user attributes](https://docs.launchdarkly.com/docs/private-user-attributes) in order to prevent user attributes from being sent in analytics events back to LaunchDarkly. See the `allUserAttributesPrivate` and `privateUserAttributes` properties of `LDConfig` as well as the `privateAttributes` property of `LDUserBuilder`.
+- Support for specifying [private user attributes](https://docs.launchdarkly.com/home/users/attributes#creating-private-user-attributes) in order to prevent user attributes from being sent in analytics events back to LaunchDarkly. See the `allUserAttributesPrivate` and `privateUserAttributes` properties of `LDConfig` as well as the `privateAttributes` property of `LDUserBuilder`.
 
 ## [2.9.1] - 2017-12-05
 ### Fixed
@@ -573,7 +573,7 @@ This is part of the Swift SDK beta and was renamed to `4.0.0-beta.1`. See [4.0.0
 ### Added
 - Support for multivariate feature flags.  New methods for multivariate flags: `stringVariation`, `numberVariation`, `arrayVariation`, and `dictionaryVariation` have been added to `LDClient`.
 - Support for streaming and real-time feature flag updates
-- Added support for [background fetching](http://docs.launchdarkly.com/docs/ios-sdk-reference#background-fetch)
+- Added support for [background fetching](https://docs.launchdarkly.com/sdk/client-side/ios#background-fetch)
 
 ### Changed
 - In `LDClient`, `toggle` value is now called `boolVariation`
@@ -590,5 +590,5 @@ This is part of the Swift SDK beta and was renamed to `4.0.0-beta.1`. See [4.0.0
 ### Fixed
 - Device information is included in user custom attributes in events
 - Actual and default flag values are sent in Feature Request Events
-- Existing flag config data is no longer sent with evaluation requests, which 
+- Existing flag config data is no longer sent with evaluation requests, which
 avoids `Too long request string` errors
