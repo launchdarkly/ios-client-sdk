@@ -16,7 +16,7 @@
     <a title="CHANGELOG  Reference"></a>
     <header>
       <div class="content-wrapper">
-        <p><a href="index.html">LaunchDarkly 5.4.2 Docs</a> (84% documented)</p>
+        <p><a href="index.html">LaunchDarkly 5.4.3 Docs</a> (84% documented)</p>
         <p class="header-right"><a href="https://github.com/launchdarkly/ios-client-sdk"><img src="img/gh.png"/>View on GitHub</a></p>
         <p class="header-right">
           <form role="search" action="search.json">
@@ -215,6 +215,13 @@
             <h1 id='change-log' class='heading'>Change log</h1>
 
 <p>All notable changes to the LaunchDarkly iOS SDK will be documented in this file. This project adheres to <a href="http://semver.org">Semantic Versioning</a>.</p>
+<h2 id='5-4-3-2021-08-13' class='heading'>[5.4.3] - 2021-08-13</h2>
+<h3 id='fixed' class='heading'>Fixed</h3>
+
+<ul>
+<li>Fixed an issue where <code>304 NOT_MODIFIED</code> responses to SDK polling mode requests would be considered error responses. This could cause the completion on a <code>identify</code> request to not complete, and gave erroneous connection information data and logging output.</li>
+<li>Fixed a crash when attempting to cache flag data containing variation JSON values containing a JSON <code>null</code> value nested within a JSON array.</li>
+</ul>
 <h2 id='5-4-2-2021-06-17' class='heading'>[5.4.2] - 2021-06-17</h2>
 <h3 id='fixed' class='heading'>Fixed</h3>
 
@@ -273,7 +280,7 @@
 <h3 id='added' class='heading'>Added</h3>
 
 <ul>
-<li><code><a href="Structs/LDUser.html">LDUser</a></code> now has an optional <code>secondary</code> attribute to match other LaunchDarkly SDKs. For more on the behavior of this attribute see <a href="https://docs.launchdarkly.com/home/managing-flags/targeting-users">the documentation on targeting users</a>.</li>
+<li><code><a href="Structs/LDUser.html">LDUser</a></code> now has an optional <code>secondary</code> attribute to match other LaunchDarkly SDKs. For more on the behavior of this attribute see <a href="https://docs.launchdarkly.com/home/flags/targeting-users">the documentation on targeting users</a>.</li>
 </ul>
 <h3 id='fixed' class='heading'>Fixed</h3>
 
@@ -704,7 +711,7 @@ NOTE: See <code>LDClient.h</code> for the requirements to add <code>secondaryMob
 <h3 id='added' class='heading'>Added</h3>
 
 <ul>
-<li>To reduce the network bandwidth used for analytics events, feature request events are now sent as counters rather than individual events, and user details are now sent only at intervals rather than in each event. These behaviors can be modified through the LaunchDarkly UI and with the new configuration option <code>inlineUsersInEvents</code>. For more details, see <a href="https://docs.launchdarkly.com/v2.0/docs/analytics-data-stream-reference">Analytics Data Stream Reference</a>.</li>
+<li>To reduce the network bandwidth used for analytics events, feature request events are now sent as counters rather than individual events, and user details are now sent only at intervals rather than in each event. These behaviors can be modified through the LaunchDarkly UI and with the new configuration option <code>inlineUsersInEvents</code>. For more details, see <a href="https://docs.launchdarkly.com/home/data-export">Data Export</a>.</li>
 <li>New property <code>inlineUserInEvents</code> in <code><a href="Structs/LDConfig.html">LDConfig</a></code>. When <code>YES</code> includes the full user (excluding private attributes) in analytics <code>feature</code> and <code>custom</code> events. When <code>NO</code> includes only the <code>userKey</code>. Default: <code>NO</code>.</li>
 <li>Calling <code>start</code> or <code>updateUser</code> (when started) on <code><a href="Classes/LDClient.html">LDClient</a></code> logs an analytics <code>identify</code> event. <code>identify</code> events contain the full user (excluding private attributes) regardless of <code>inlineUserInEvents</code>.</li>
 <li>Adds analytics <code>summary</code> event used to track feature flag requests to the SDK.</li>
@@ -786,7 +793,7 @@ NOTE: See <code>LDClient.h</code> for the requirements to add <code>secondaryMob
 <h3 id='added' class='heading'>Added</h3>
 
 <ul>
-<li>Support for specifying <a href="https://docs.launchdarkly.com/docs/private-user-attributes">private user attributes</a> in order to prevent user attributes from being sent in analytics events back to LaunchDarkly. See the <code>allUserAttributesPrivate</code> and <code>privateUserAttributes</code> properties of <code><a href="Structs/LDConfig.html">LDConfig</a></code> as well as the <code>privateAttributes</code> property of <code>LDUserBuilder</code>.</li>
+<li>Support for specifying <a href="https://docs.launchdarkly.com/home/users/attributes#creating-private-user-attributes">private user attributes</a> in order to prevent user attributes from being sent in analytics events back to LaunchDarkly. See the <code>allUserAttributesPrivate</code> and <code>privateUserAttributes</code> properties of <code><a href="Structs/LDConfig.html">LDConfig</a></code> as well as the <code>privateAttributes</code> property of <code>LDUserBuilder</code>.</li>
 </ul>
 <h2 id='2-9-1-2017-12-05' class='heading'>[2.9.1] - 2017-12-05</h2>
 <h3 id='fixed' class='heading'>Fixed</h3>
@@ -1024,7 +1031,7 @@ NOTE: See <code>LDClient.h</code> for the requirements to add <code>secondaryMob
 <ul>
 <li>Support for multivariate feature flags.  New methods for multivariate flags: <code>stringVariation</code>, <code>numberVariation</code>, <code>arrayVariation</code>, and <code>dictionaryVariation</code> have been added to <code><a href="Classes/LDClient.html">LDClient</a></code>.</li>
 <li>Support for streaming and real-time feature flag updates</li>
-<li>Added support for <a href="http://docs.launchdarkly.com/docs/ios-sdk-reference#background-fetch">background fetching</a></li>
+<li>Added support for <a href="https://docs.launchdarkly.com/sdk/client-side/ios#background-fetch">background fetching</a></li>
 </ul>
 <h3 id='changed' class='heading'>Changed</h3>
 
@@ -1047,7 +1054,7 @@ NOTE: See <code>LDClient.h</code> for the requirements to add <code>secondaryMob
 <ul>
 <li>Device information is included in user custom attributes in events</li>
 <li>Actual and default flag values are sent in Feature Request Events</li>
-<li>Existing flag config data is no longer sent with evaluation requests, which 
+<li>Existing flag config data is no longer sent with evaluation requests, which
 avoids <code>Too long request string</code> errors</li>
 </ul>
 

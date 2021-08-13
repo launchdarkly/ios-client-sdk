@@ -16,7 +16,7 @@
     <a title="LaunchDarkly  Reference"></a>
     <header>
       <div class="content-wrapper">
-        <p><a href="index.html">LaunchDarkly 5.4.2 Docs</a> (84% documented)</p>
+        <p><a href="index.html">LaunchDarkly 5.4.3 Docs</a> (84% documented)</p>
         <p class="header-right"><a href="https://github.com/launchdarkly/ios-client-sdk"><img src="img/gh.png"/>View on GitHub</a></p>
         <p class="header-right">
           <form role="search" action="search.json">
@@ -218,10 +218,10 @@
 <a href="https://swift.org/package-manager/"><img src="https://img.shields.io/badge/SwiftPM-compatible-4BC51D.svg?style=flat" alt="SwiftPM compatible"></a>
 <a href="https://cocoapods.org/pods/LaunchDarkly"><img src="https://img.shields.io/cocoapods/v/LaunchDarkly.svg" alt="CocoaPods compatible"></a>
 <a href="https://github.com/Carthage/Carthage"><img src="https://img.shields.io/badge/Carthage-compatible-4BC51D.svg?style=flat" alt="Carthage compatible"></a>
-<a href="http://docs.launchdarkly.com/docs/ios-sdk-reference"><img src="https://img.shields.io/cocoapods/p/LaunchDarkly.svg?style=flat" alt="Platform"></a></p>
+<a href="https://docs.launchdarkly.com/sdk/client-side/ios"><img src="https://img.shields.io/cocoapods/p/LaunchDarkly.svg?style=flat" alt="Platform"></a></p>
 <h2 id='launchdarkly-overview' class='heading'>LaunchDarkly overview</h2>
 
-<p><a href="https://www.launchdarkly.com">LaunchDarkly</a> is a feature management platform that serves over 100 billion feature flags daily to help teams build better software, faster. <a href="https://docs.launchdarkly.com/docs/getting-started">Get started</a> using LaunchDarkly today!</p>
+<p><a href="https://www.launchdarkly.com">LaunchDarkly</a> is a feature management platform that serves over 100 billion feature flags daily to help teams build better software, faster. <a href="https://docs.launchdarkly.com/home/getting-started">Get started</a> using LaunchDarkly today!</p>
 
 <p><a href="https://twitter.com/intent/follow?screen_name=launchdarkly"><img src="https://img.shields.io/twitter/follow/launchdarkly.svg?style=social&label=Follow&maxAge=2592000" alt="Twitter Follow"></a></p>
 <h2 id='supported-ios-and-xcode-versions' class='heading'>Supported iOS and Xcode versions</h2>
@@ -273,7 +273,7 @@
 </tbody></table>
 <h2 id='installation' class='heading'>Installation</h2>
 
-<p>LaunchDarkly supports multiple methods for installing the library in a project. Once installed, head over to the <a href="https://docs.launchdarkly.com/docs/ios-sdk-reference#section-getting-started">SDK documentation</a> for complete instructions on getting started with using the SDK.</p>
+<p>LaunchDarkly supports multiple methods for installing the library in a project. Once installed, head over to the <a href="https://docs.launchdarkly.com/sdk/client-side/ios#getting-started">SDK documentation</a> for complete instructions on getting started with using the SDK.</p>
 <h3 id='swift-package-manager' class='heading'>Swift Package Manager</h3>
 
 <p>The <a href="https://swift.org/package-manager/">Swift Package Manager</a> is a dependency manager integrated into the <code>swift</code> compiler and Xcode.</p>
@@ -282,7 +282,7 @@
 
 <p>To include LaunchDarkly in a Swift package, simply add it to the dependencies section of your <code>Package.swift</code> file. And add the product &ldquo;LaunchDarkly&rdquo; as a dependency for your targets.</p>
 <pre class="highlight swift"><code><span class="nv">dependencies</span><span class="p">:</span> <span class="p">[</span>
-    <span class="o">.</span><span class="nf">package</span><span class="p">(</span><span class="nv">url</span><span class="p">:</span> <span class="s">"https://github.com/launchdarkly/ios-client-sdk.git"</span><span class="p">,</span> <span class="o">.</span><span class="nf">upToNextMinor</span><span class="p">(</span><span class="nv">from</span><span class="p">:</span> <span class="s">"5.4.2"</span><span class="p">))</span>
+    <span class="o">.</span><span class="nf">package</span><span class="p">(</span><span class="nv">url</span><span class="p">:</span> <span class="s">"https://github.com/launchdarkly/ios-client-sdk.git"</span><span class="p">,</span> <span class="o">.</span><span class="nf">upToNextMinor</span><span class="p">(</span><span class="nv">from</span><span class="p">:</span> <span class="s">"5.4.3"</span><span class="p">))</span>
 <span class="p">]</span>
 </code></pre>
 <h3 id='cocoapods' class='heading'>CocoaPods</h3>
@@ -336,7 +336,7 @@
 <li>Turn off a feature that you realize is causing performance problems in production, without needing to re-deploy, or even restart the application with a changed configuration file.</li>
 <li>Grant access to certain features based on user attributes, like payment plan (eg: users on the ‘gold’ plan get access to more features than users in the ‘silver’ plan). Disable parts of your application to facilitate maintenance, without taking everything offline.</li>
 </ul></li>
-<li>LaunchDarkly provides feature flag SDKs for a wide variety of languages and technologies. Check out <a href="https://docs.launchdarkly.com/docs">our documentation</a> for a complete list.</li>
+<li>LaunchDarkly provides feature flag SDKs for a wide variety of languages and technologies. Check out <a href="https://docs.launchdarkly.com/sdk">our documentation</a> for a complete list.</li>
 <li>Explore LaunchDarkly
 
 <ul>

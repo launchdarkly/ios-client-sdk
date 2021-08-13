@@ -2,7 +2,7 @@
   "warnings": [
     {
       "file": "/Users/demo/SDKs/ios-swift-client-sdk-private/LaunchDarkly/LaunchDarkly/LDClient.swift",
-      "line": 672,
+      "line": 670,
       "symbol": "LDClient.observeError(owner:handler:)",
       "symbol_kind": "source.lang.swift.decl.function.method.instance",
       "warning": "undocumented"
