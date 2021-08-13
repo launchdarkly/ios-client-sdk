@@ -69,7 +69,7 @@ public final class ObjcLDUser: NSObject {
     @objc public var key: String {
         return user.key
     }
-    ///The secondary key for the user. See the [documentation](https://docs.launchdarkly.com/home/managing-flags/targeting-users#percentage-rollout-logic) for more information on it's use for percentage rollout bucketing.
+    ///The secondary key for the user. See the [documentation](https://docs.launchdarkly.com/home/flags/targeting-users#percentage-rollouts) for more information on it's use for percentage rollout bucketing.
     @objc public var secondary: String? {
         get { user.secondary }
         set { user.secondary = newValue }
