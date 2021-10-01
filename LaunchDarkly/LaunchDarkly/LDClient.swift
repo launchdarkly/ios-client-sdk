@@ -304,12 +304,14 @@ public class LDClient {
             self.internalSetOnline(false)
 
             cacheConverter.convertCacheData(for: user, and: config)
+            let oldFlags = self.flagStore.featureFlags
             if let cachedFlags = self.flagCache.retrieveFeatureFlags(forUserWithKey: self.user.key, andMobileKey: self.config.mobileKey), !cachedFlags.isEmpty {
                 flagStore.replaceStore(newFlags: cachedFlags, completion: nil)
             } else {
                 // Deprecated behavior of setting flags from user init dictionary
                 flagStore.replaceStore(newFlags: user.flagStore?.featureFlags ?? [:], completion: nil)
             }
+            flagChangeNotifier.notifyObservers(oldFlags: oldFlags, newFlags: self.flagStore.featureFlags)
             self.service.user = self.user
             self.service.clearFlagResponseCache()
             flagSynchronizer = serviceFactory.makeFlagSynchronizer(streamingMode: ConnectionInformation.effectiveStreamingMode(config: config, ldClient: self),
