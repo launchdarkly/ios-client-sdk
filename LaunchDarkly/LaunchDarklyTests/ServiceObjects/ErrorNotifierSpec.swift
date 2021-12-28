@@ -1,89 +1,65 @@
-//
-//  ErrorNotifyingSpec.swift
-//  LaunchDarklyTests
-//
-//  Copyright © 2019 Catamorphic Co. All rights reserved.
-//
-
 import Foundation
 import XCTest
 
 @testable import LaunchDarkly
 
 final class ErrorNotifierSpec: XCTestCase {
-
-    func testInit() {
+    func testAddAndRemoveObservers() {
         let errorNotifier = ErrorNotifier()
         XCTAssertEqual(errorNotifier.errorObservers.count, 0)
-    }
 
-    func testAddErrorObserver() {
-        let errorNotifier = ErrorNotifier()
-        for index in 0..<4 {
-            let owner = ErrorOwnerMock()
-            errorNotifier.addErrorObserver(ErrorObserver(owner: owner, errorHandler: { _ in }))
-            XCTAssertEqual(errorNotifier.errorObservers.count, index + 1)
-            XCTAssert(errorNotifier.errorObservers[index].owner === owner)
-        }
-    }
-
-    func testRemoveObserversNoObservers() {
-        let errorNotifier = ErrorNotifier()
-        let owner = ErrorOwnerMock()
-        errorNotifier.removeObservers(for: owner)
+        errorNotifier.removeObservers(for: ErrorObserverOwner())
         XCTAssertEqual(errorNotifier.errorObservers.count, 0)
-    }
 
-    func testRemoveObserversMatchingAll() {
-        let errorNotifier = ErrorNotifier()
-        let owner = ErrorOwnerMock()
-        errorNotifier.addErrorObserver(ErrorObserver(owner: owner, errorHandler: { _ in }))
-        errorNotifier.removeObservers(for: owner)
-        XCTAssertEqual(errorNotifier.errorObservers.count, 0)
-    }
-
-    func testRemoveObserversMatchingNone() {
-        let errorNotifier = ErrorNotifier()
-        (0..<4).forEach { _ in
-            errorNotifier.addErrorObserver(ErrorObserver(owner: ErrorOwnerMock(), errorHandler: { _ in }))
-        }
-        let owner = ErrorOwnerMock()
-        errorNotifier.removeObservers(for: owner)
+        let firstContext = ErrorObserverContext()
+        let secondContext = ErrorObserverContext()
+        errorNotifier.addErrorObserver(firstContext.observer())
+        errorNotifier.addErrorObserver(secondContext.observer())
+        errorNotifier.addErrorObserver(firstContext.observer())
+        errorNotifier.addErrorObserver(secondContext.observer())
         XCTAssertEqual(errorNotifier.errorObservers.count, 4)
-    }
 
-    func testRemoveObserversMatchingSome() {
-        let errorNotifier = ErrorNotifier()
-        let owner = ErrorOwnerMock()
-        (0..<4).forEach { _ in
-            errorNotifier.addErrorObserver(ErrorObserver(owner: ErrorOwnerMock(), errorHandler: { _ in }))
-            errorNotifier.addErrorObserver(ErrorObserver(owner: owner, errorHandler: { _ in }))
-        }
-        errorNotifier.removeObservers(for: owner)
+        errorNotifier.removeObservers(for: ErrorObserverOwner())
         XCTAssertEqual(errorNotifier.errorObservers.count, 4)
-        XCTAssert(!errorNotifier.errorObservers.contains { $0.owner === owner })
+
+        errorNotifier.removeObservers(for: firstContext.owner!)
+        XCTAssertEqual(errorNotifier.errorObservers.count, 2)
+        XCTAssert(!errorNotifier.errorObservers.contains { $0.owner !== secondContext.owner })
+
+        errorNotifier.removeObservers(for: secondContext.owner!)
+        XCTAssertEqual(errorNotifier.errorObservers.count, 0)
+
+        XCTAssertEqual(firstContext.errors.count, 0)
+        XCTAssertEqual(secondContext.errors.count, 0)
     }
 
     func testNotifyObservers() {
         let errorNotifier = ErrorNotifier()
-        let owner = ErrorOwnerMock()
-        var otherOwners: [ErrorOwnerMock] = []
-        (0..<4).forEach { _ in
-            let newOwner = ErrorOwnerMock()
-            otherOwners.append(newOwner)
-            errorNotifier.addErrorObserver(ErrorObserver(owner: newOwner, errorHandler: newOwner.handle))
-            errorNotifier.addErrorObserver(ErrorObserver(owner: owner, errorHandler: owner.handle))
+        let firstContext = ErrorObserverContext()
+        let secondContext = ErrorObserverContext()
+        let thirdContext = ErrorObserverContext()
+
+        (0..<2).forEach { _ in
+            [firstContext, secondContext, thirdContext].forEach {
+                errorNotifier.addErrorObserver($0.observer())
+            }
         }
-        errorNotifier.erase(owner: owner)
+        // remove reference to owner in secondContext
+        secondContext.owner = nil
+
         let errorMock = ErrorMock()
         errorNotifier.notifyObservers(of: errorMock)
-        XCTAssertEqual(errorNotifier.errorObservers.count, 4)
-        XCTAssert(!errorNotifier.errorObservers.contains { $0.owner === owner })
-        XCTAssertEqual(owner.errors.count, 0)
-        for owner in otherOwners {
-            XCTAssertEqual(owner.errors.count, 1)
-            XCTAssert(owner.errors[0] as? ErrorMock === errorMock)
+        [firstContext, thirdContext].forEach {
+            XCTAssertEqual($0.errors.count, 2)
+            XCTAssert($0.errors[0] as? ErrorMock === errorMock)
+            XCTAssert($0.errors[1] as? ErrorMock === errorMock)
         }
+
+        // Ownerless observer should not be notified
+        XCTAssertEqual(secondContext.errors.count, 0)
+        // Should remove the observers that no longer have an owner
+        XCTAssertEqual(errorNotifier.errorObservers.count, 4)
+        XCTAssert(!errorNotifier.errorObservers.contains { $0.owner !== firstContext.owner && $0.owner !== thirdContext.owner })
     }
 }
 

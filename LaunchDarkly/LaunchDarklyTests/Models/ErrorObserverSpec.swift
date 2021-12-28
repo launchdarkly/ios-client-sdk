@@ -10,25 +10,27 @@ import XCTest
 
 @testable import LaunchDarkly
 
-final class ErrorOwnerMock {
+final class ErrorObserverContext {
+    var owner: ErrorObserverOwner? = ErrorObserverOwner()
     var errors = [Error]()
-    func handle(error: Error) {
-        errors.append(error)
-    }
+
+    func handler(error: Error) { errors.append(error) }
+    func observer() -> ErrorObserver { ErrorObserver(owner: owner!, errorHandler: handler) }
 }
 
+class ErrorObserverOwner { }
 private class ErrorMock: Error { }
 
 final class ErrorObserverSpec: XCTestCase {
     func testInit() {
-        let errorOwner = ErrorOwnerMock()
-        let errorObserver = ErrorObserver(owner: errorOwner, errorHandler: errorOwner.handle)
-        XCTAssert(errorObserver.owner === errorOwner)
+        let context = ErrorObserverContext()
+        let errorObserver = context.observer()
+        XCTAssert(errorObserver.owner === context.owner)
+        XCTAssertNotNil(errorObserver.errorHandler)
 
         let errorMock = ErrorMock()
-        XCTAssertNotNil(errorObserver.errorHandler)
-        errorObserver.errorHandler?(errorMock)
-        XCTAssertEqual(errorOwner.errors.count, 1)
-        XCTAssert(errorOwner.errors[0] as? ErrorMock === errorMock)
+        errorObserver.errorHandler(errorMock)
+        XCTAssertEqual(context.errors.count, 1)
+        XCTAssert(context.errors[0] as? ErrorMock === errorMock)
     }
 }

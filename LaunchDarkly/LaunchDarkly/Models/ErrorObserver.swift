@@ -9,7 +9,7 @@ import Foundation
 
 struct ErrorObserver {
     weak var owner: LDObserverOwner?
-    var errorHandler: LDErrorHandler?
+    let errorHandler: LDErrorHandler
 
     init(owner: LDObserverOwner, errorHandler: @escaping LDErrorHandler) {
         self.owner = owner
