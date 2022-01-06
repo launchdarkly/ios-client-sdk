@@ -298,8 +298,7 @@ public class LDClient {
             if let cachedFlags = self.flagCache.retrieveFeatureFlags(forUserWithKey: self.user.key, andMobileKey: self.config.mobileKey), !cachedFlags.isEmpty {
                 flagStore.replaceStore(newFlags: cachedFlags, completion: nil)
             } else {
-                // Deprecated behavior of setting flags from user init dictionary
-                flagStore.replaceStore(newFlags: user.flagStore?.featureFlags ?? [:], completion: nil)
+                flagStore.replaceStore(newFlags: [:], completion: nil)
             }
             self.service.user = self.user
             self.service.clearFlagResponseCache()
@@ -759,9 +758,6 @@ public class LDClient {
         environmentReporter = self.serviceFactory.makeEnvironmentReporter()
         flagCache = self.serviceFactory.makeFeatureFlagCache(maxCachedUsers: configuration.maxCachedUsers)
         flagStore = self.serviceFactory.makeFlagStore()
-        if let userFlagStore = startUser?.flagStore {
-            flagStore.replaceStore(newFlags: userFlagStore.featureFlags, completion: nil)
-        }
         LDUserWrapper.configureKeyedArchiversToHandleVersion2_3_0AndOlderUserCacheFormat()
         cacheConverter = self.serviceFactory.makeCacheConverter(maxCachedUsers: configuration.maxCachedUsers)
         flagChangeNotifier = self.serviceFactory.makeFlagChangeNotifier()
