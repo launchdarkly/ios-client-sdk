@@ -252,6 +252,10 @@
 		B4903D9824BD61B200F087C4 /* OHHTTPStubsSwift in Frameworks */ = {isa = PBXBuildFile; productRef = B4903D9724BD61B200F087C4 /* OHHTTPStubsSwift */; };
 		B4903D9B24BD61D000F087C4 /* Nimble in Frameworks */ = {isa = PBXBuildFile; productRef = B4903D9A24BD61D000F087C4 /* Nimble */; };
 		B4903D9E24BD61EF00F087C4 /* Quick in Frameworks */ = {isa = PBXBuildFile; productRef = B4903D9D24BD61EF00F087C4 /* Quick */; };
+		B495A8A22787762C0051977C /* LDClientVariation.swift in Sources */ = {isa = PBXBuildFile; fileRef = B495A8A12787762C0051977C /* LDClientVariation.swift */; };
+		B495A8A32787762C0051977C /* LDClientVariation.swift in Sources */ = {isa = PBXBuildFile; fileRef = B495A8A12787762C0051977C /* LDClientVariation.swift */; };
+		B495A8A42787762C0051977C /* LDClientVariation.swift in Sources */ = {isa = PBXBuildFile; fileRef = B495A8A12787762C0051977C /* LDClientVariation.swift */; };
+		B495A8A52787762C0051977C /* LDClientVariation.swift in Sources */ = {isa = PBXBuildFile; fileRef = B495A8A12787762C0051977C /* LDClientVariation.swift */; };
 		B4C9D42E2489B5FF004A9B03 /* DiagnosticEvent.swift in Sources */ = {isa = PBXBuildFile; fileRef = B4C9D42D2489B5FF004A9B03 /* DiagnosticEvent.swift */; };
 		B4C9D42F2489B5FF004A9B03 /* DiagnosticEvent.swift in Sources */ = {isa = PBXBuildFile; fileRef = B4C9D42D2489B5FF004A9B03 /* DiagnosticEvent.swift */; };
 		B4C9D4302489B5FF004A9B03 /* DiagnosticEvent.swift in Sources */ = {isa = PBXBuildFile; fileRef = B4C9D42D2489B5FF004A9B03 /* DiagnosticEvent.swift */; };
@@ -452,6 +456,7 @@
 		B43D5ACF25FBE1C30022EC90 /* DeprecatedCacheModelSpec.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeprecatedCacheModelSpec.swift; sourceTree = "<group>"; };
 		B468E70F24B3C3AC00E0C883 /* ObjcLDEvaluationDetail.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ObjcLDEvaluationDetail.swift; sourceTree = "<group>"; };
 		B46F344025E6DB7D0078D45F /* DiagnosticReporterSpec.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiagnosticReporterSpec.swift; sourceTree = "<group>"; };
+		B495A8A12787762C0051977C /* LDClientVariation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LDClientVariation.swift; sourceTree = "<group>"; };
 		B4C9D42D2489B5FF004A9B03 /* DiagnosticEvent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiagnosticEvent.swift; sourceTree = "<group>"; };
 		B4C9D4322489C8FD004A9B03 /* DiagnosticCache.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiagnosticCache.swift; sourceTree = "<group>"; };
 		B4C9D4372489E20A004A9B03 /* DiagnosticReporter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiagnosticReporter.swift; sourceTree = "<group>"; };
@@ -642,6 +647,7 @@
 			children = (
 				83B6C4B51F4DE7630055351C /* LDCommon.swift */,
 				8354EFDC1F26380700C05156 /* LDClient.swift */,
+				B495A8A12787762C0051977C /* LDClientVariation.swift */,
 				8354EFE61F263E4200C05156 /* Models */,
 				83FEF8D91F2666BF001CF12C /* ServiceObjects */,
 				831D8B701F71D3A600ED65E8 /* Networking */,
@@ -1247,6 +1253,7 @@
 				831188472113ADCD00D77CB5 /* LDFlagValue.swift in Sources */,
 				831188442113ADC200D77CB5 /* LDConfig.swift in Sources */,
 				83906A7721190B1900D7D3C5 /* FlagRequestTracker.swift in Sources */,
+				B495A8A52787762C0051977C /* LDClientVariation.swift in Sources */,
 				831188622113AE3A00D77CB5 /* Data.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -1302,6 +1309,7 @@
 				83EBCBB520DABE1B003A7142 /* FlagRequestTracker.swift in Sources */,
 				831EF36220655E730001C643 /* JSONSerialization.swift in Sources */,
 				8347BB0E21F147E100E56BCD /* LDTimer.swift in Sources */,
+				B495A8A42787762C0051977C /* LDClientVariation.swift in Sources */,
 				831EF36320655E730001C643 /* Date.swift in Sources */,
 				831EF36420655E730001C643 /* AnyComparer.swift in Sources */,
 				831EF36520655E730001C643 /* Thread.swift in Sources */,
@@ -1372,6 +1380,7 @@
 				83B8C2471FE4071F0082B8A9 /* HTTPURLResponse.swift in Sources */,
 				830DB3AE2239B54900D65D25 /* URLResponse.swift in Sources */,
 				83DDBEF61FA24A7E00E428B6 /* Data.swift in Sources */,
+				B495A8A22787762C0051977C /* LDClientVariation.swift in Sources */,
 				838F96781FBA504A009CFC45 /* ClientServiceFactory.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -1487,6 +1496,7 @@
 				83D9EC992062DEAB004D7FA6 /* ObjcLDConfig.swift in Sources */,
 				830DB3AF2239B54900D65D25 /* URLResponse.swift in Sources */,
 				83D9EC9A2062DEAB004D7FA6 /* ObjcLDUser.swift in Sources */,
+				B495A8A32787762C0051977C /* LDClientVariation.swift in Sources */,
 				83D9EC9C2062DEAB004D7FA6 /* ObjcLDChangedFlag.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
