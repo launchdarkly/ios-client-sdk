@@ -69,7 +69,7 @@ final class CacheConverterSpec: QuickSpec {
     }
 
     private func convertCacheDataSpec() {
-        let cacheCases: [DeprecatedCacheModel?] = [.version5, .version4, .version3, .version2, nil] // Nil for no deprecated cache
+        let cacheCases: [DeprecatedCacheModel?] = [.version5, nil] // Nil for no deprecated cache
         var testContext: TestContext!
         describe("convertCacheData") {
             afterEach {

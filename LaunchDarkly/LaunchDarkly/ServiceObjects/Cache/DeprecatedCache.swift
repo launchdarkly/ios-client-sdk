@@ -36,7 +36,7 @@ extension DeprecatedCache {
 }
 
 enum DeprecatedCacheModel: String, CaseIterable {
-    case version5, version4, version3, version2     // version1 is not supported
+    case version5 // earlier versions are not supported
 }
 
 // updatedAt in cached data was used as the LDUser.lastUpdated, which is deprecated in the Swift SDK

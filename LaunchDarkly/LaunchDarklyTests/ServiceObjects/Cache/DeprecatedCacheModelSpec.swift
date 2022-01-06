@@ -5,7 +5,6 @@ import Nimble
 
 protocol CacheModelTestInterface {
     var cacheKey: String { get }
-    var supportsMultiEnv: Bool { get }
     func createDeprecatedCache(keyedValueCache: KeyedValueCaching) -> DeprecatedCache
     func modelDictionary(for users: [LDUser], and userEnvironmentsCollection: [UserKey: CacheableUserEnvironmentFlags], mobileKeys: [MobileKey]) -> [UserKey: Any]?
     func expectedFeatureFlags(originalFlags: [LDFlagKey: FeatureFlag]) -> [LDFlagKey: FeatureFlag]
@@ -96,13 +95,11 @@ class DeprecatedCacheModelSpec {
                         }
                     }
                 }
-                if self.cacheModelInterface.supportsMultiEnv {
-                    it("returns nil for uncached environment") {
-                        testContext = TestContext(self.cacheModelInterface, userCount: LDConfig.Defaults.maxCachedUsers)
-                        cachedData = testContext.deprecatedCache.retrieveFlags(for: testContext.users.first!.key, and: UUID().uuidString)
-                        expect(cachedData.featureFlags).to(beNil())
-                        expect(cachedData.lastUpdated).to(beNil())
-                    }
+                it("returns nil for uncached environment") {
+                    testContext = TestContext(self.cacheModelInterface, userCount: LDConfig.Defaults.maxCachedUsers)
+                    cachedData = testContext.deprecatedCache.retrieveFlags(for: testContext.users.first!.key, and: UUID().uuidString)
+                    expect(cachedData.featureFlags).to(beNil())
+                    expect(cachedData.lastUpdated).to(beNil())
                 }
                 it("returns nil for uncached user") {
                     testContext = TestContext(self.cacheModelInterface, userCount: LDConfig.Defaults.maxCachedUsers)
