@@ -176,7 +176,7 @@ class FlagSynchronizer: LDFlagSynchronizing, EventHandler {
             return
         }
         Log.debug(typeName(and: #function))
-        flagRequestTimer = LDTimer(withTimeInterval: pollingInterval, repeats: true, fireQueue: syncQueue, execute: processTimer)
+        flagRequestTimer = LDTimer(withTimeInterval: pollingInterval, fireQueue: syncQueue, execute: processTimer)
         makeFlagRequest(isOnline: isOnline)
     }
 
