@@ -294,7 +294,7 @@ public final class ObjcLDClient: NSObject {
     }
 
     /**
-     Returns the NSString variation for the given feature flag. If the flag does not exist, cannot be cast to a NSString, or the LDClient is not started, returns the default value, which may be nil.
+     Returns the NSString variation for the given feature flag. If the flag does not exist, cannot be cast to a NSString, or the LDClient is not started, returns the default value.
 
      A *variation* is a specific flag value. For example a boolean feature flag has 2 variations, *YES* and *NO*. You can create feature flags with more than 2 variations using other feature flag types. See `LDFlagValue` for the available types.
 
@@ -312,12 +312,12 @@ public final class ObjcLDClient: NSObject {
      ````
 
      - parameter key: The LDFlagKey for the requested feature flag.
-     - parameter defaultValue: The default value to return if the feature flag key does not exist. The default value may be nil.
+     - parameter defaultValue: The default value to return if the feature flag key does not exist.
 
-     - returns: The requested NSString feature flag value, or the default value (which may be nil) if the flag is missing or cannot be cast to a NSString, or the client is not started.
+     - returns: The requested NSString feature flag value, or the default value if the flag is missing or cannot be cast to a NSString, or the client is not started.
      */
     /// - Tag: stringVariation
-    @objc public func stringVariation(forKey key: LDFlagKey, defaultValue: String?) -> String? {
+    @objc public func stringVariation(forKey key: LDFlagKey, defaultValue: String) -> String {
         ldClient.variation(forKey: key, defaultValue: defaultValue)
     }
     
@@ -325,17 +325,17 @@ public final class ObjcLDClient: NSObject {
      See [stringVariation](x-source-tag://stringVariation) for more information on variation methods.
      
      - parameter key: The LDFlagKey for the requested feature flag.
-     - parameter defaultValue: The default value to return if the feature flag key does not exist. The default value may be nil.
+     - parameter defaultValue: The default value to return if the feature flag key does not exist.
      
      - returns: ObjcLDStringEvaluationDetail containing your value as well as useful information on why that value was returned.
      */
-    @objc public func stringVariationDetail(forKey key: LDFlagKey, defaultValue: String?) -> ObjcLDStringEvaluationDetail {
+    @objc public func stringVariationDetail(forKey key: LDFlagKey, defaultValue: String) -> ObjcLDStringEvaluationDetail {
         let evaluationDetail = ldClient.variationDetail(forKey: key, defaultValue: defaultValue)
         return ObjcLDStringEvaluationDetail(value: evaluationDetail.value, variationIndex: evaluationDetail.variationIndex, reason: evaluationDetail.reason)
     }
 
     /**
-     Returns the NSArray variation for the given feature flag. If the flag does not exist, cannot be cast to a NSArray, or the LDClient is not started, returns the default value, which may be nil..
+     Returns the NSArray variation for the given feature flag. If the flag does not exist, cannot be cast to a NSArray, or the LDClient is not started, returns the default value.
 
      A *variation* is a specific flag value. For example a boolean feature flag has 2 variations, *YES* and *NO*. You can create feature flags with more than 2 variations using other feature flag types. See `LDFlagValue` for the available types.
 
@@ -353,12 +353,12 @@ public final class ObjcLDClient: NSObject {
      ````
 
      - parameter key: The LDFlagKey for the requested feature flag.
-     - parameter defaultValue: The default value to return if the feature flag key does not exist. The default value may be nil.
+     - parameter defaultValue: The default value to return if the feature flag key does not exist.
 
-     - returns: The requested NSArray feature flag value, or the default value (which may be nil) if the flag is missing or cannot be cast to a NSArray, or the client is not started
+     - returns: The requested NSArray feature flag value, or the default value if the flag is missing or cannot be cast to a NSArray, or the client is not started
      */
     /// - Tag: arrayVariation
-    @objc public func arrayVariation(forKey key: LDFlagKey, defaultValue: [Any]?) -> [Any]? {
+    @objc public func arrayVariation(forKey key: LDFlagKey, defaultValue: [Any]) -> [Any] {
         ldClient.variation(forKey: key, defaultValue: defaultValue)
     }
     
@@ -366,17 +366,17 @@ public final class ObjcLDClient: NSObject {
      See [arrayVariation](x-source-tag://arrayVariation) for more information on variation methods.
      
      - parameter key: The LDFlagKey for the requested feature flag.
-     - parameter defaultValue: The default value to return if the feature flag key does not exist. The default value may be nil.
+     - parameter defaultValue: The default value to return if the feature flag key does not exist.
      
      - returns: ObjcLDArrayEvaluationDetail containing your value as well as useful information on why that value was returned.
      */
-    @objc public func arrayVariationDetail(forKey key: LDFlagKey, defaultValue: [Any]?) -> ObjcLDArrayEvaluationDetail {
+    @objc public func arrayVariationDetail(forKey key: LDFlagKey, defaultValue: [Any]) -> ObjcLDArrayEvaluationDetail {
         let evaluationDetail = ldClient.variationDetail(forKey: key, defaultValue: defaultValue)
         return ObjcLDArrayEvaluationDetail(value: evaluationDetail.value, variationIndex: evaluationDetail.variationIndex, reason: evaluationDetail.reason)
     }
     
     /**
-     Returns the NSDictionary variation for the given feature flag. If the flag does not exist, cannot be cast to a NSDictionary, or the LDClient is not started, returns the default value, which may be nil..
+     Returns the NSDictionary variation for the given feature flag. If the flag does not exist, cannot be cast to a NSDictionary, or the LDClient is not started, returns the default value.
 
      A *variation* is a specific flag value. For example a boolean feature flag has 2 variations, *YES* and *NO*. You can create feature flags with more than 2 variations using other feature flag types. See `LDFlagValue` for the available types.
 
@@ -394,12 +394,12 @@ public final class ObjcLDClient: NSObject {
      ````
 
      - parameter key: The LDFlagKey for the requested feature flag.
-     - parameter defaultValue: The default value to return if the feature flag key does not exist. The default value may be nil.
+     - parameter defaultValue: The default value to return if the feature flag key does not exist.
 
-     - returns: The requested NSDictionary feature flag value, or the default value (which may be nil) if the flag is missing or cannot be cast to a NSDictionary, or the client is not started
+     - returns: The requested NSDictionary feature flag value, or the default value if the flag is missing or cannot be cast to a NSDictionary, or the client is not started
      */
     /// - Tag: dictionaryVariation
-    @objc public func dictionaryVariation(forKey key: LDFlagKey, defaultValue: [String: Any]?) -> [String: Any]? {
+    @objc public func dictionaryVariation(forKey key: LDFlagKey, defaultValue: [String: Any]) -> [String: Any] {
         ldClient.variation(forKey: key, defaultValue: defaultValue)
     }
     
@@ -407,11 +407,11 @@ public final class ObjcLDClient: NSObject {
      See [dictionaryVariation](x-source-tag://dictionaryVariation) for more information on variation methods.
      
      - parameter key: The LDFlagKey for the requested feature flag.
-     - parameter defaultValue: The default value to return if the feature flag key does not exist. The default value may be nil.
+     - parameter defaultValue: The default value to return if the feature flag key does not exist.
      
      - returns: ObjcLDDictionaryEvaluationDetail containing your value as well as useful information on why that value was returned.
      */
-    @objc public func dictionaryVariationDetail(forKey key: LDFlagKey, defaultValue: [String: Any]?) -> ObjcLDDictionaryEvaluationDetail {
+    @objc public func dictionaryVariationDetail(forKey key: LDFlagKey, defaultValue: [String: Any]) -> ObjcLDDictionaryEvaluationDetail {
         let evaluationDetail = ldClient.variationDetail(forKey: key, defaultValue: defaultValue)
         return ObjcLDDictionaryEvaluationDetail(value: evaluationDetail.value, variationIndex: evaluationDetail.variationIndex, reason: evaluationDetail.reason)
     }
