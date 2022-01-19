@@ -175,9 +175,19 @@ final class FlagStoreSpec: QuickSpec {
             beforeEach {
                 subject = FlagStore(featureFlags: DarklyServiceMock.Constants.stubFeatureFlags())
             }
-            it("removes the feature flag from the store") {
-                deleteFlag(FlagMaintainingMock.stubDeleteDictionary(key: DarklyServiceMock.FlagKeys.int, version: DarklyServiceMock.Constants.version + 1))
-                expect(subject.featureFlags[DarklyServiceMock.FlagKeys.int]).to(beNil())
+            context("removes flag") {
+                it("with exact dictionary") {
+                    deleteFlag(FlagMaintainingMock.stubDeleteDictionary(key: DarklyServiceMock.FlagKeys.int, version: DarklyServiceMock.Constants.version + 1))
+                    expect(subject.featureFlags.count) == self.stubFlags.count - 1
+                    expect(subject.featureFlags[DarklyServiceMock.FlagKeys.int]).to(beNil())
+                }
+                it("with extra fields on dictionary") {
+                    var deleteDictionary = FlagMaintainingMock.stubDeleteDictionary(key: DarklyServiceMock.FlagKeys.int, version: DarklyServiceMock.Constants.version + 1)
+                    deleteDictionary["new-field"] = 10
+                    deleteFlag(deleteDictionary)
+                    expect(subject.featureFlags.count) == self.stubFlags.count - 1
+                    expect(subject.featureFlags[DarklyServiceMock.FlagKeys.int]).to(beNil())
+                }
             }
             context("makes no changes to the flag store") {
                 it("when the version is the same") {

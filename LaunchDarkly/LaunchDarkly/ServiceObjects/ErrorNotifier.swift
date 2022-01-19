@@ -22,27 +22,15 @@ final class ErrorNotifier: ErrorNotifying {
     }
 
     func removeObservers(for owner: LDObserverOwner) {
-        errorObservers = errorObservers.filter { $0.owner !== owner }
+        errorObservers.removeAll { $0.owner === owner }
     }
 
     func notifyObservers(of error: Error) {
         removeOldObservers()
-        errorObservers.forEach { $0.errorHandler?(error) }
+        errorObservers.forEach { $0.errorHandler(error) }
     }
 
     private func removeOldObservers() {
         errorObservers = errorObservers.filter { $0.owner != nil }
     }
 }
-
-#if DEBUG
-extension ErrorNotifier {
-    func erase(owner: LDObserverOwner) {
-        for index in 0..<errorObservers.count {
-            guard errorObservers[index].owner === owner
-            else { continue }
-            errorObservers[index].owner = nil
-        }
-    }
-}
-#endif

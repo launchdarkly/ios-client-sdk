@@ -2,6 +2,13 @@
 
 All notable changes to the LaunchDarkly iOS SDK will be documented in this file. This project adheres to [Semantic Versioning](http://semver.org).
 
+## [5.4.4] - 2022-01-19
+### Fixed
+- Fixed memory leak when stream connections are terminated by updating `LDSwiftEventSource` dependency to [1.3.0](https://github.com/launchdarkly/swift-eventsource/releases/tag/1.3.0).
+- The SDK would not allow additional fields on `delete` flag stream events. This has been updated to allow additional fields for improved future compatibility.
+- Improved internal `Throttler` implementation to reduce concurrency concerns.
+- Removed unneeded `Cartfile` definining `LDSwiftEventSource` dependency, which when bundled could lead to warning messages that `LDSwiftEventSource` definitions are implemented in multiple frameworks.
+
 ## [5.4.3] - 2021-08-13
 ### Fixed
 - Fixed an issue where `304 NOT_MODIFIED` responses to SDK polling mode requests would be considered error responses. This could cause the completion on a `identify` request to not complete, and gave erroneous connection information data and logging output. 

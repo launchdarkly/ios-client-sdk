@@ -97,7 +97,7 @@ class EventReporter: EventReporting {
     private func startReporting(isOnline: Bool) {
         guard isOnline && !isReportingActive
         else { return }
-        eventReportTimer = LDTimer(withTimeInterval: service.config.eventFlushInterval, repeats: true, fireQueue: eventQueue, execute: reportEvents)
+        eventReportTimer = LDTimer(withTimeInterval: service.config.eventFlushInterval, fireQueue: eventQueue, execute: reportEvents)
     }
     
     private func stopReporting() {
