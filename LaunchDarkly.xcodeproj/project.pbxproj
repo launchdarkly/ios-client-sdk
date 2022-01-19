@@ -1962,7 +1962,7 @@
 			repositoryURL = "https://github.com/LaunchDarkly/swift-eventsource.git";
 			requirement = {
 				kind = exactVersion;
-				version = 1.2.1;
+				version = 1.3.0;
 			};
 		};
 		B4903D9624BD61B200F087C4 /* XCRemoteSwiftPackageReference "OHHTTPStubs" */ = {
@@ -1978,7 +1978,7 @@
 			repositoryURL = "https://github.com/Quick/Nimble.git";
 			requirement = {
 				kind = exactVersion;
-				version = 9.2.0;
+				version = 9.2.1;
 			};
 		};
 		B4903D9C24BD61EF00F087C4 /* XCRemoteSwiftPackageReference "Quick" */ = {
@@ -1986,7 +1986,7 @@
 			repositoryURL = "https://github.com/Quick/Quick.git";
 			requirement = {
 				kind = exactVersion;
-				version = 3.1.2;
+				version = 4.0.0;
 			};
 		};
 /* End XCRemoteSwiftPackageReference section */
