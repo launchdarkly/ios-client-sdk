@@ -1,10 +1,3 @@
-//
-//  Throttler.swift
-//  LaunchDarkly
-//
-//  Copyright © 2018 Catamorphic Co. All rights reserved.
-//
-
 import Foundation
 
 typealias RunClosure = () -> Void
@@ -28,8 +21,7 @@ final class Throttler: Throttling {
     let maxDelay: TimeInterval
 
     private (set) var runAttempts = -1
-    private (set) var delayTimer: TimeResponding?
-    private var runClosure: RunClosure?
+    private (set) var workItem: DispatchWorkItem?
 
     init(maxDelay: TimeInterval = Constants.defaultDelay,
          environmentReporter: EnvironmentReporting = EnvironmentReporter(),
@@ -44,17 +36,18 @@ final class Throttler: Throttling {
     }
 
     func runThrottledSync(_ runClosure: @escaping RunClosure) -> String? {
-        runQueue.sync {
-            if !throttlingEnabled {
-                dispatcher(runClosure)
-                return typeName(and: #function) + "Executing run closure unthrottled, as throttling is disabled."
-            }
+        if !throttlingEnabled {
+            dispatcher(runClosure)
+            return typeName(and: #function) + "Executing run closure unthrottled, as throttling is disabled."
+        }
 
+        return runQueue.sync {
             runAttempts += 1
 
             let resetDelay = min(maxDelay, TimeInterval(pow(2.0, Double(runAttempts - 1))))
-            if runAttempts > 0 {
-                runQueue.asyncAfter(deadline: .now() + resetDelay) { self.decrementRunAttempts() }
+            runQueue.asyncAfter(deadline: .now() + resetDelay) { [weak self] in
+                guard let self = self else { return }
+                self.runAttempts = max(0, self.runAttempts - 1)
             }
 
             if runAttempts <= 1 {
@@ -63,36 +56,23 @@ final class Throttler: Throttling {
             }
 
             let jittered = resetDelay / 2 + Double.random(in: 0.0...(resetDelay / 2))
-            self.runClosure = runClosure
-            self.delayTimer?.cancel()
-            self.delayTimer = LDTimer(withTimeInterval: jittered, repeats: false, fireQueue: runQueue, execute: timerFired)
+            let workItem = DispatchWorkItem { [weak self] in
+                guard let self = self else { return }
+                self.dispatcher(runClosure)
+                self.workItem = nil
+            }
+            self.workItem?.cancel()
+            self.workItem = workItem
+            runQueue.asyncAfter(deadline: .now() + jittered, execute: workItem)
             return typeName(and: #function) + "Throttling run closure. Run attempts: \(runAttempts), Delay: \(jittered)"
         }
     }
 
     func cancelThrottledRun() {
         runQueue.sync {
-            delayTimer?.cancel()
-            reset()
+            self.workItem?.cancel()
+            self.workItem = nil
         }
-    }
-
-    private func reset() {
-        delayTimer = nil
-        runClosure = nil
-    }
-
-    private func decrementRunAttempts() {
-        if runAttempts > 0 {
-            runAttempts -= 1
-        }
-    }
-
-    @objc func timerFired() {
-        if let run = runClosure {
-            dispatcher(run)
-        }
-        reset()
     }
 }
 

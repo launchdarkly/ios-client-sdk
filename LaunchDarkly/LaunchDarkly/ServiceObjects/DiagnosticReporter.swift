@@ -47,7 +47,7 @@ class DiagnosticReporter: DiagnosticReporting {
                     sendDiagnosticEventAsync(diagnosticEvent: initEvent)
                 }
 
-                timer = LDTimer(withTimeInterval: service.config.diagnosticRecordingInterval, repeats: true, fireQueue: workQueue) {
+                timer = LDTimer(withTimeInterval: service.config.diagnosticRecordingInterval, fireQueue: workQueue) {
                     self.sendDiagnosticEventSync(diagnosticEvent: cache.getCurrentStatsAndReset())
                 }
             }
