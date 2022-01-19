@@ -12,7 +12,6 @@ import Nimble
 
 final class DeprecatedCacheModelV5Spec: QuickSpec, CacheModelTestInterface {
     let cacheKey = DeprecatedCacheModelV5.CacheKeys.userEnvironments
-    let supportsMultiEnv = true
 
     func createDeprecatedCache(keyedValueCache: KeyedValueCaching) -> DeprecatedCache {
         DeprecatedCacheModelV5(keyedValueCache: keyedValueCache)
