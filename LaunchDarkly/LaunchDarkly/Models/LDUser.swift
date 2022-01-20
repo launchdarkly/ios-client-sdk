@@ -76,8 +76,6 @@ public struct LDUser {
     /// An NSObject wrapper for the Swift LDUser struct. Intended for use in mixed apps when Swift code needs to pass a user into an Objective-C method.
     public var objcLdUser: ObjcLDUser { ObjcLDUser(self) }
 
-    internal var flagStore: FlagMaintaining?
-
     /**
      Initializer to create a LDUser. Client configurable attributes each have an optional parameter to facilitate setting user information into the LDUser. The SDK will automatically set `key`, `device`, `operatingSystem`, and `isAnonymous` attributes if the client does not provide them. The SDK embeds `device` and `operatingSystem` into the `custom` dictionary for transmission to LaunchDarkly.
      - parameter key: String that uniquely identifies the user. If the client app does not define a key, the SDK will assign an identifier associated with the anonymous user.
@@ -150,7 +148,6 @@ public struct LDUser {
         device = custom?[CodingKeys.device.rawValue] as? String
         operatingSystem = custom?[CodingKeys.operatingSystem.rawValue] as? String
 
-        flagStore = FlagStore(featureFlagDictionary: userDictionary[CodingKeys.config.rawValue] as? [String: Any])
         Log.debug(typeName(and: #function) + "user: \(self)")
     }
 
@@ -177,7 +174,6 @@ public struct LDUser {
         case CodingKeys.custom.rawValue: return custom
         case CodingKeys.device.rawValue: return device
         case CodingKeys.operatingSystem.rawValue: return operatingSystem
-        case CodingKeys.config.rawValue: return flagStore?.featureFlags
         case CodingKeys.privateAttributes.rawValue: return privateAttributes
         default: return nil
         }
@@ -282,7 +278,6 @@ extension LDUserWrapper: NSCoding {
         encoder.encode(wrapped.device, forKey: LDUser.CodingKeys.device.rawValue)
         encoder.encode(wrapped.operatingSystem, forKey: LDUser.CodingKeys.operatingSystem.rawValue)
         encoder.encode(wrapped.privateAttributes, forKey: LDUser.CodingKeys.privateAttributes.rawValue)
-        encoder.encode([Keys.featureFlags: wrapped.flagStore?.featureFlags.dictionaryValue.withNullValuesRemoved], forKey: LDUser.CodingKeys.config.rawValue)
     }
 
     convenience init?(coder decoder: NSCoder) {
@@ -301,8 +296,6 @@ extension LDUserWrapper: NSCoding {
         )
         user.device = decoder.decodeObject(forKey: LDUser.CodingKeys.device.rawValue) as? String
         user.operatingSystem = decoder.decodeObject(forKey: LDUser.CodingKeys.operatingSystem.rawValue) as? String
-        let wrappedFlags = decoder.decodeObject(forKey: LDUser.CodingKeys.config.rawValue) as? [String: Any]
-        user.flagStore = FlagStore(featureFlagDictionary: wrappedFlags?[Keys.featureFlags] as? [String: Any])
         self.init(user: user)
     }
 
