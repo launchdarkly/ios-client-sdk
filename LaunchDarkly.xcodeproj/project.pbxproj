@@ -19,7 +19,6 @@
 		831188462113ADCA00D77CB5 /* LDUser.swift in Sources */ = {isa = PBXBuildFile; fileRef = 83A2D6231F51CD7A00EA3BD4 /* LDUser.swift */; };
 		831188472113ADCD00D77CB5 /* LDFlagValue.swift in Sources */ = {isa = PBXBuildFile; fileRef = 838838401F5EFADF0023D11B /* LDFlagValue.swift */; };
 		831188482113ADD100D77CB5 /* LDFlagValueConvertible.swift in Sources */ = {isa = PBXBuildFile; fileRef = 838838441F5EFBAF0023D11B /* LDFlagValueConvertible.swift */; };
-		831188492113ADD400D77CB5 /* LDFlagBaseTypeConvertible.swift in Sources */ = {isa = PBXBuildFile; fileRef = 838838421F5EFB9C0023D11B /* LDFlagBaseTypeConvertible.swift */; };
 		8311884A2113ADD700D77CB5 /* FeatureFlag.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8354EFE41F263DAC00C05156 /* FeatureFlag.swift */; };
 		8311884B2113ADDA00D77CB5 /* LDChangedFlag.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8358F25D1F474E5900ECE1AF /* LDChangedFlag.swift */; };
 		8311884C2113ADDE00D77CB5 /* FlagChangeObserver.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8358F2611F47747F00ECE1AF /* FlagChangeObserver.swift */; };
@@ -69,7 +68,6 @@
 		831EF34620655E730001C643 /* LDUser.swift in Sources */ = {isa = PBXBuildFile; fileRef = 83A2D6231F51CD7A00EA3BD4 /* LDUser.swift */; };
 		831EF34720655E730001C643 /* LDFlagValue.swift in Sources */ = {isa = PBXBuildFile; fileRef = 838838401F5EFADF0023D11B /* LDFlagValue.swift */; };
 		831EF34820655E730001C643 /* LDFlagValueConvertible.swift in Sources */ = {isa = PBXBuildFile; fileRef = 838838441F5EFBAF0023D11B /* LDFlagValueConvertible.swift */; };
-		831EF34920655E730001C643 /* LDFlagBaseTypeConvertible.swift in Sources */ = {isa = PBXBuildFile; fileRef = 838838421F5EFB9C0023D11B /* LDFlagBaseTypeConvertible.swift */; };
 		831EF34A20655E730001C643 /* FeatureFlag.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8354EFE41F263DAC00C05156 /* FeatureFlag.swift */; };
 		831EF34B20655E730001C643 /* LDChangedFlag.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8358F25D1F474E5900ECE1AF /* LDChangedFlag.swift */; };
 		831EF34C20655E730001C643 /* FlagChangeObserver.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8358F2611F47747F00ECE1AF /* FlagChangeObserver.swift */; };
@@ -158,7 +156,6 @@
 		837E38C921E804ED0008A50C /* EnvironmentReporterSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = 837E38C821E804ED0008A50C /* EnvironmentReporterSpec.swift */; };
 		837EF3742059C237009D628A /* Log.swift in Sources */ = {isa = PBXBuildFile; fileRef = 837EF3732059C237009D628A /* Log.swift */; };
 		838838411F5EFADF0023D11B /* LDFlagValue.swift in Sources */ = {isa = PBXBuildFile; fileRef = 838838401F5EFADF0023D11B /* LDFlagValue.swift */; };
-		838838431F5EFB9C0023D11B /* LDFlagBaseTypeConvertible.swift in Sources */ = {isa = PBXBuildFile; fileRef = 838838421F5EFB9C0023D11B /* LDFlagBaseTypeConvertible.swift */; };
 		838838451F5EFBAF0023D11B /* LDFlagValueConvertible.swift in Sources */ = {isa = PBXBuildFile; fileRef = 838838441F5EFBAF0023D11B /* LDFlagValueConvertible.swift */; };
 		83883DD5220B68A000EEAB95 /* ErrorObserver.swift in Sources */ = {isa = PBXBuildFile; fileRef = 83883DD4220B68A000EEAB95 /* ErrorObserver.swift */; };
 		83883DD6220B68A000EEAB95 /* ErrorObserver.swift in Sources */ = {isa = PBXBuildFile; fileRef = 83883DD4220B68A000EEAB95 /* ErrorObserver.swift */; };
@@ -197,7 +194,6 @@
 		83D9EC782062DEAB004D7FA6 /* LDUser.swift in Sources */ = {isa = PBXBuildFile; fileRef = 83A2D6231F51CD7A00EA3BD4 /* LDUser.swift */; };
 		83D9EC792062DEAB004D7FA6 /* LDFlagValue.swift in Sources */ = {isa = PBXBuildFile; fileRef = 838838401F5EFADF0023D11B /* LDFlagValue.swift */; };
 		83D9EC7A2062DEAB004D7FA6 /* LDFlagValueConvertible.swift in Sources */ = {isa = PBXBuildFile; fileRef = 838838441F5EFBAF0023D11B /* LDFlagValueConvertible.swift */; };
-		83D9EC7B2062DEAB004D7FA6 /* LDFlagBaseTypeConvertible.swift in Sources */ = {isa = PBXBuildFile; fileRef = 838838421F5EFB9C0023D11B /* LDFlagBaseTypeConvertible.swift */; };
 		83D9EC7C2062DEAB004D7FA6 /* FeatureFlag.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8354EFE41F263DAC00C05156 /* FeatureFlag.swift */; };
 		83D9EC7D2062DEAB004D7FA6 /* LDChangedFlag.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8358F25D1F474E5900ECE1AF /* LDChangedFlag.swift */; };
 		83D9EC7E2062DEAB004D7FA6 /* FlagChangeObserver.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8358F2611F47747F00ECE1AF /* FlagChangeObserver.swift */; };
@@ -411,7 +407,6 @@
 		837E38C821E804ED0008A50C /* EnvironmentReporterSpec.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EnvironmentReporterSpec.swift; sourceTree = "<group>"; };
 		837EF3732059C237009D628A /* Log.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Log.swift; sourceTree = "<group>"; };
 		838838401F5EFADF0023D11B /* LDFlagValue.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = LDFlagValue.swift; sourceTree = "<group>"; };
-		838838421F5EFB9C0023D11B /* LDFlagBaseTypeConvertible.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = LDFlagBaseTypeConvertible.swift; sourceTree = "<group>"; };
 		838838441F5EFBAF0023D11B /* LDFlagValueConvertible.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = LDFlagValueConvertible.swift; sourceTree = "<group>"; };
 		83883DD4220B68A000EEAB95 /* ErrorObserver.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ErrorObserver.swift; sourceTree = "<group>"; };
 		83883DD9220B6A9A00EEAB95 /* ErrorNotifier.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ErrorNotifier.swift; sourceTree = "<group>"; };
@@ -778,7 +773,6 @@
 			children = (
 				838838401F5EFADF0023D11B /* LDFlagValue.swift */,
 				838838441F5EFBAF0023D11B /* LDFlagValueConvertible.swift */,
-				838838421F5EFB9C0023D11B /* LDFlagBaseTypeConvertible.swift */,
 			);
 			path = FlagValue;
 			sourceTree = "<group>";
@@ -1230,7 +1224,6 @@
 				8354AC642241511D00CDE602 /* CacheableEnvironmentFlags.swift in Sources */,
 				C443A40823145FEE00145710 /* ConnectionInformationStore.swift in Sources */,
 				831188662113AE4A00D77CB5 /* AnyComparer.swift in Sources */,
-				831188492113ADD400D77CB5 /* LDFlagBaseTypeConvertible.swift in Sources */,
 				8311885C2113AE2200D77CB5 /* HTTPHeaders.swift in Sources */,
 				831188562113AE0800D77CB5 /* FlagSynchronizer.swift in Sources */,
 				8311884A2113ADD700D77CB5 /* FeatureFlag.swift in Sources */,
@@ -1272,7 +1265,6 @@
 				831EF34720655E730001C643 /* LDFlagValue.swift in Sources */,
 				830DB3B02239B54900D65D25 /* URLResponse.swift in Sources */,
 				831EF34820655E730001C643 /* LDFlagValueConvertible.swift in Sources */,
-				831EF34920655E730001C643 /* LDFlagBaseTypeConvertible.swift in Sources */,
 				B4C9D4352489C8FD004A9B03 /* DiagnosticCache.swift in Sources */,
 				831EF34A20655E730001C643 /* FeatureFlag.swift in Sources */,
 				C443A40C2315AA4D00145710 /* NetworkReporter.swift in Sources */,
@@ -1357,7 +1349,6 @@
 				838838451F5EFBAF0023D11B /* LDFlagValueConvertible.swift in Sources */,
 				832D689D224A3896005F052A /* DeprecatedCacheModelV5.swift in Sources */,
 				838838411F5EFADF0023D11B /* LDFlagValue.swift in Sources */,
-				838838431F5EFB9C0023D11B /* LDFlagBaseTypeConvertible.swift in Sources */,
 				835E1D411F63450A00184DB4 /* ObjcLDUser.swift in Sources */,
 				8354AC612241511D00CDE602 /* CacheableEnvironmentFlags.swift in Sources */,
 				83FEF8DF1F2667E4001CF12C /* EventReporter.swift in Sources */,
@@ -1453,7 +1444,6 @@
 				83D9EC7A2062DEAB004D7FA6 /* LDFlagValueConvertible.swift in Sources */,
 				83883DD6220B68A000EEAB95 /* ErrorObserver.swift in Sources */,
 				B4C9D4342489C8FD004A9B03 /* DiagnosticCache.swift in Sources */,
-				83D9EC7B2062DEAB004D7FA6 /* LDFlagBaseTypeConvertible.swift in Sources */,
 				83D9EC7C2062DEAB004D7FA6 /* FeatureFlag.swift in Sources */,
 				8372668D20D4439600BD1088 /* DateFormatter.swift in Sources */,
 				83D9EC7D2062DEAB004D7FA6 /* LDChangedFlag.swift in Sources */,
